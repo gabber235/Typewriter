@@ -25,7 +25,7 @@ final class _ApplyScenario extends HookWidget {
   @override
   Widget build(BuildContext context) {
     final owner = useMemoized(
-      () => ValueEditing(
+      () => fakeValueEditing(
         document: EditorDocument(
           rootType: skir.TypeUse.wrapScalar(skir.ScalarKind.text),
           catalog: skir.EditorCatalogWireSnapshot.defaultInstance

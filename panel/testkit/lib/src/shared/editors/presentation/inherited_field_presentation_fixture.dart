@@ -2,7 +2,7 @@ import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
     as skir;
 import "package:typewriter_panel/typewriter_panel.dart";
 
-import "../shared/editors/presentation_builders.dart";
+import "package:typewriter_testkit/typewriter_testkit.dart";
 
 enum InheritedFieldVariant { inherited, localLabel, explicitControl, disabled }
 

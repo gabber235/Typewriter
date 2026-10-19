@@ -1,7 +1,5 @@
 import "package:typewriter_panel/typewriter_panel.dart";
 
-// ignore: depend_on_referenced_packages, implementation_imports
-
 /// Reusable shell for All Mock applications.
 class FakeApp extends StatelessWidget {
   const FakeApp({

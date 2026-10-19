@@ -72,7 +72,7 @@ final class _ServiceInspectorStory extends StatefulWidget {
 final class _ServiceInspectorStoryState extends State<_ServiceInspectorStory> {
   late final Service _service =
       widget.service ?? completeTopologyScenario().services.first;
-  late final ValueEditing _source = ValueEditing(
+  late final ValueEditing _source = fakeValueEditing(
     document: _service.editorSnapshot.document,
     snapshot: _service.editorSnapshot,
     commitPolicy: EditorCommitPolicy.applyResource,
@@ -164,12 +164,12 @@ final class _HostInspectorStoryState extends State<_HostInspectorStory> {
     _hostValue,
     _scenario.topology,
   );
-  late final _configuration = ValueEditing(
+  late final _configuration = fakeValueEditing(
     document: _configurationSnapshot.document,
     snapshot: _configurationSnapshot,
     commitPolicy: EditorCommitPolicy.applyResource,
   );
-  late final _identity = ValueEditing(
+  late final _identity = fakeValueEditing(
     document: _service.editorSnapshot.document,
     snapshot: _service.editorSnapshot,
   );

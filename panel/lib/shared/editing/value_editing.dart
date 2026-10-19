@@ -2,68 +2,19 @@ import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
     as skir;
 import "package:typewriter_panel/typewriter_panel.dart";
 
-typedef EditorCommitter = Future<TypedMutationResult> Function(
-  EditorCommit commit,
-);
-typedef EditorMutationValidator = EditorMutationResult Function(
-  skir.ValuePath path,
-  skir.DataValue value,
-);
-
 /// Exposes typed path editing through one group in an [EditingWorkspace].
 ///
-/// The default factory owns its workspace and any privately created work
-/// session. [ValueEditing.fromWorkspace] is a borrowed view whose disposal
-/// leaves the shared owner alive. [ValueEditingRegistration] supplies this
-/// borrowed form for resource views retained by the local work session.
+/// The view borrows its workspace, so disposal leaves the shared owner alive.
+/// A creator that hands ownership of the workspace to the view releases it
+/// through [onDispose]. [ValueEditingRegistration] supplies the borrowed form
+/// for resource views retained by the local work session.
 final class ValueEditing
     implements EditOwner, EditingControlOwner, EditingStageOwner {
-  factory ValueEditing({
-    required EditorDocument document,
-    EditorCommitter? commit,
-    ValueEditPersistence? persistence,
-    LocalWorkCommands? workspace,
-    EditorSnapshot? snapshot,
-    EditorMutationValidator? validation,
-    List<EditorDiagnostic> Function(skir.DataValue)? validateDraft,
-    EditorCommitPolicy commitPolicy = EditorCommitPolicy.autosaveChanges,
-    EditorDelayScheduler scheduler = const TimerEditorDelayScheduler(),
-    EditorJitterSource? jitter,
-    Duration debounce = const Duration(milliseconds: 250),
-  }) {
-    final metadata =
-        snapshot ?? CallbackEditorSnapshot(document, validation, validateDraft);
-    final session = workspace ?? ScopedWorkSession();
-    final boundary =
-        persistence ?? CallbackValueEditPersistence(metadata, commit);
-    final owner = EditingWorkspace<ValueEditDocument, ValueEdit>(
-      model: const ValueEditModel(),
-      persistence: boundary,
-      submissions: session,
-      initial: ValueEditDocument.fromSnapshot(metadata, identity: boundary.key),
-      scheduler: scheduler,
-      jitter: jitter,
-      debounce: debounce,
-    );
-    final group = owner.createGroup(
-      label: "Edit value",
-      key: boundary.key,
-      policy: commitPolicy,
-      admission: commitPolicy == EditorCommitPolicy.applyResource
-          ? EditWriteAdmission.lockWhileSubmitted
-          : EditWriteAdmission.allowWhileSubmitted,
-      repair: EditRepairAdmission.acceptCorrections,
-      commits: commitPolicy == EditorCommitPolicy.applyResource
-          ? EditCommitAdmission.completeGroup
-          : EditCommitAdmission.applicableOperations,
-    );
-    return ValueEditing._(owner, group, () {
-      owner.dispose();
-      if (workspace == null) (session as ScopedWorkSession).dispose();
-    });
-  }
-  ValueEditing._(this.workspace, this.groupId, this._dispose);
-  ValueEditing.fromWorkspace(this.workspace, this.groupId) : _dispose = null;
+  ValueEditing.fromWorkspace(
+    this.workspace,
+    this.groupId, {
+    VoidCallback? onDispose,
+  }) : _dispose = onDispose;
   final EditingWorkspace<ValueEditDocument, ValueEdit> workspace;
   final EditGroupId groupId;
   final VoidCallback? _dispose;
@@ -366,71 +317,6 @@ final class ValueEditingInteraction implements EditorInteractionSession {
   Future<void> commit() => interaction.commit();
   @override
   void cancel() => interaction.cancel();
-}
-
-final class CallbackEditorSnapshot extends EditorSnapshot {
-  const CallbackEditorSnapshot(this.document, this.admit, this.admitDraft);
-  @override
-  final EditorDocument document;
-  final EditorMutationValidator? admit;
-  final List<EditorDiagnostic> Function(skir.DataValue)? admitDraft;
-  @override
-  EditorMutationResult validate(skir.ValuePath path, skir.DataValue value) =>
-      admit?.call(path, value) ??
-      EditorMutationResult.invalid([
-        _valueDiagnostic("No editor admission policy is installed", path),
-      ]);
-  @override
-  List<EditorDiagnostic> validateDraft(skir.DataValue value) =>
-      admitDraft?.call(value) ?? super.validateDraft(value);
-}
-
-/// Explicit callback boundary for local values and deterministic fixtures.
-final class CallbackValueEditPersistence extends ValueEditPersistence {
-  CallbackValueEditPersistence(this.snapshot, this.committer);
-  final EditorSnapshot snapshot;
-  final EditorCommitter? committer;
-  @override
-  final EditorResourceKey key = EditorResourceKey(
-    scope: null,
-    identity: Object(),
-  );
-  @override
-  Set<Object> get reservations => {};
-  @override
-  Future<EditorSnapshot?> refreshSnapshot() async => snapshot;
-  @override
-  Future<ValueEditDocument> observeForCommit(ValueEditDocument known) async =>
-      known;
-  @override
-  PreparedCommit<TypedMutationResult> prepareValue(
-    EditorSnapshot snapshot,
-    EditorCommit commit,
-  ) => PreparedCommit(
-    id: Object(),
-    label: "Apply value",
-    send: () async {
-      final result =
-          await committer?.call(commit) ??
-          TypedMutationResult.success(
-            revision: commit.expectedRevision + 1,
-            value: commit.rootValue,
-          );
-      return switch (result) {
-        MutationUncertain(:final message, :final cause, :final stackTrace) =>
-          SubmissionResult.uncertain(
-            message: message,
-            cause: cause,
-            stackTrace: stackTrace,
-          ),
-        MutationSuccess() => SubmissionResult.confirmed(result),
-        _ => SubmissionResult.rejected(
-          message: "Value edit rejected",
-          response: result,
-        ),
-      };
-    },
-  );
 }
 
 EditorDiagnostic _valueDiagnostic(String message, [skir.ValuePath? path]) =>

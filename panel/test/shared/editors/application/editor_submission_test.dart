@@ -24,7 +24,7 @@ void main() {
     "uncertain delivery blocks fresh requests and cannot discard evidence",
     () async {
       var sends = 0;
-      final source = ValueEditing(
+      final source = fakeValueEditing(
         document: _document("Original", 1),
         validation: acceptTestEditorMutation,
         debounce: const Duration(days: 1),
@@ -53,7 +53,7 @@ void main() {
     "Apply ignores interaction commits and validates the whole draft",
     () async {
       var sends = 0;
-      final source = ValueEditing(
+      final source = fakeValueEditing(
         document: _document("Original", 1),
         validation: acceptTestEditorMutation,
         commitPolicy: EditorCommitPolicy.applyResource,

@@ -2,10 +2,7 @@ import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
     as skir;
 import "package:typewriter_panel/typewriter_panel.dart";
 
-import "../shared/editors/presentation_builders.dart";
-
-import "authoring_workspace_fixture.dart";
-import "compiled_tag_inheritance_fixture.dart";
+import "package:typewriter_testkit/typewriter_testkit.dart";
 
 enum CollectionEditorExample {
   textList,

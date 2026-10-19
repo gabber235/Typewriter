@@ -2,9 +2,7 @@ import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
     as skir;
 import "package:typewriter_panel/typewriter_panel.dart";
 
-import "publication_fixture.dart";
-import "realm_catalog_fixture.dart";
-import "../shared/testing/testing.dart";
+import "package:typewriter_testkit/typewriter_testkit.dart";
 
 /// Controls replies and confirmed observations independently. It never simulates Realm mutations.
 final class ScriptedAuthoringTransport extends ChangeNotifier {

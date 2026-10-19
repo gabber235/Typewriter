@@ -218,8 +218,7 @@ sealed class EditStageResult with _$EditStageResult {
 extension EditStagePresentation on EditStageResult {
   void report(BuildContext context) {
     if (this case EditStageRejected(:final message)) {
-      ScaffoldMessenger.maybeOf(context)
-          ?.showSnackBar(SnackBar(content: Text(message)));
+      showErrorSnackBar(context, message);
     }
   }
 }

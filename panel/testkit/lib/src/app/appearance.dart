@@ -1,7 +1,5 @@
 import "package:typewriter_panel/typewriter_panel.dart";
 
-// ignore: depend_on_referenced_packages, implementation_imports
-
 class AppearanceMock extends Appearance {
   @override
   ThemeMode build() {

@@ -113,7 +113,7 @@ void _testInspectorNameRefresh() {
     final service = _draftService();
     final snapshot = service.editorSnapshot;
     final commits = <EditorCommit>[];
-    final owner = ValueEditing(
+    final owner = fakeValueEditing(
       document: snapshot.document,
       snapshot: snapshot,
       commitPolicy: EditorCommitPolicy.applyResource,
@@ -144,7 +144,7 @@ void _testInspectorNameRefresh() {
 
   test("invalid service name remains an unsaved attempt", () {
     final snapshot = _draftService().editorSnapshot;
-    final owner = ValueEditing(
+    final owner = fakeValueEditing(
       document: snapshot.document,
       snapshot: snapshot,
       commitPolicy: EditorCommitPolicy.applyResource,

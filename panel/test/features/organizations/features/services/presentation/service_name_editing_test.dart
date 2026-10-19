@@ -2,6 +2,7 @@ import "package:flutter_test/flutter_test.dart";
 import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
     as skir;
 import "package:typewriter_panel/typewriter_panel.dart";
+import "package:typewriter_testkit/typewriter_testkit.dart";
 
 import "../../../../../support/test_utils.dart";
 
@@ -236,7 +237,7 @@ final class _Fixture {
       createdAt: DateTime.utc(2026),
     );
     final snapshot = service.editorSnapshot;
-    owner = ValueEditing(
+    owner = fakeValueEditing(
       document: snapshot.document,
       snapshot: snapshot,
       commitPolicy: EditorCommitPolicy.applyResource,

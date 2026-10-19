@@ -2,7 +2,7 @@ import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
     as skir;
 import "package:typewriter_panel/typewriter_panel.dart";
 
-import "compiled_sdk_control_fixture.dart";
+import "package:typewriter_testkit/typewriter_testkit.dart";
 
 final compiledEntryPageId = skir.ResourceId(value: "page:entry-nodes");
 final compiledEntryBookId = skir.ResourceId(value: "book:entry-nodes");

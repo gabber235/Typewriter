@@ -3,8 +3,6 @@ import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
 import "package:typewriter_panel/typewriter_panel.dart";
 import "package:faker/faker.dart";
 
-// ignore: depend_on_referenced_packages, implementation_imports
-
 export "features/features.dart";
 
 final fixturePageType = skir.NamedTypeUse(

@@ -2,11 +2,12 @@ import "package:flutter_test/flutter_test.dart";
 import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
     as skir;
 import "package:typewriter_panel/typewriter_panel.dart";
+import "package:typewriter_testkit/typewriter_testkit.dart";
 
 import "../../../support/editor_fixture.dart";
 
 final _title = editorRootPath.field("title");
-ValueEditing _source() => ValueEditing(
+ValueEditing _source() => fakeValueEditing(
   document: recordEditorDocument(
     {
       "title": skir.DataValue.wrapStringValue("Original"),

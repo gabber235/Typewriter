@@ -1,8 +1,6 @@
 import "package:typewriter_panel/typewriter_panel.dart";
 
-import "authoring_workspace_fixture.dart";
-import "fake_app.dart";
-import "../shared/testing/testing.dart";
+import "package:typewriter_testkit/typewriter_testkit.dart";
 
 /// Retains a story's external fixture across ordinary rebuilds.
 /// A scenario change creates new seed values and deliberately starts a new scope.

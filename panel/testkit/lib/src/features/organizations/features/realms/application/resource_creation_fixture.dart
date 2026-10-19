@@ -2,7 +2,7 @@ import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
     as skir;
 import "package:typewriter_panel/typewriter_panel.dart";
 
-import "authoring_workspace_fixture.dart";
+import "package:typewriter_testkit/typewriter_testkit.dart";
 
 /// A small catalog of ordinary value requirements, independent of ownership policy.
 final class ResourceCreationFixture {
