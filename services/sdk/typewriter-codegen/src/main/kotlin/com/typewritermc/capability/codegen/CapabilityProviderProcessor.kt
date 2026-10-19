@@ -326,10 +326,7 @@ private fun KSAnnotated.hasAnnotation(qualifiedName: String): Boolean =
             ?.asString() == qualifiedName
     }
 
-private fun String.sha256(): String =
-    MessageDigest.getInstance("SHA-256").digest(encodeToByteArray()).joinToString("") { byte ->
-        "%02x".format(byte.toInt() and 0xff)
-    }
+private fun String.sha256(): String = MessageDigest.getInstance("SHA-256").digest(encodeToByteArray()).toHexString()
 
 private val CAPABILITY_ANNOTATIONS = listOf(REALM_SEARCH_ANNOTATION, REALM_COMPUTATION_ANNOTATION, REALM_COMMAND_ANNOTATION)
 private const val REALM_CAPABILITIES = "com.typewritermc.capability.RealmCapabilities"

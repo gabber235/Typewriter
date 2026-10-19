@@ -45,6 +45,7 @@ import com.typewritermc.services.libs.telemetry.childSpan
 import com.typewritermc.services.libs.telemetry.mainSpan
 import com.typewritermc.services.libs.utils.DelayScheduler
 import com.typewritermc.services.libs.utils.RetryPolicy
+import com.typewritermc.services.libs.utils.closeAll
 import com.typewritermc.services.libs.utils.rethrowExceptional
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.CoroutineScope
@@ -186,50 +187,40 @@ internal class Realm(
             name = "realm.routes.shutdown",
             unhandledFailureSlug = ErrorSlug.of("realm-routes-shutdown-failed"),
         ) {
-            val failures = mutableListOf<Throwable>()
-            closeStartedResources(failures)
-            if (failures.isNotEmpty()) {
-                val failure = failures.first()
-                failures.drop(1).forEach(failure::addSuppressed)
-                throw failure
-            }
+            closeStartedResources()
             it.annotate { operationOutcome("completed") }
         }
     }
 
-    private suspend fun closeStartedResources(failure: Throwable) {
-        val failures = mutableListOf<Throwable>()
-        closeStartedResources(failures)
-        failures.forEach(failure::addSuppressed)
-    }
-
-    private suspend fun closeStartedResources(failures: MutableList<Throwable>) {
-        runCatching { serviceMonitor?.cancelAndJoin() }.exceptionOrNull()?.let(failures::add)
-        serviceMonitor = null
-        runCatching { catalogInvalidations.stop() }.exceptionOrNull()?.let(failures::add)
-        runCatching {
-            lifecycle.withLock {
-                val active = router
-                router = null
-                routerSession = null
-                active?.closeIfNeeded("stop")
+    /** Closes started resources in reverse dependency order, suppressing failures into [primary] when given. */
+    private suspend fun closeStartedResources(primary: Throwable? = null) =
+        closeAll(primary) {
+            attempt { serviceMonitor?.cancelAndJoin() }
+            serviceMonitor = null
+            attempt { catalogInvalidations.stop() }
+            attempt {
+                lifecycle.withLock {
+                    val active = router
+                    router = null
+                    routerSession = null
+                    active?.closeIfNeeded("stop")
+                }
             }
-        }.exceptionOrNull()?.let(failures::add)
-        routeFactory = null
-        runCatching { publication?.close() }.exceptionOrNull()?.let(failures::add)
-        publication = null
-        runCatching { checks?.close() }.exceptionOrNull()?.let(failures::add)
-        checks = null
-        runCatching { checkEvents?.close() }.exceptionOrNull()?.let(failures::add)
-        checkEvents = null
-        runCatching { registrarScope?.shutdown() }.exceptionOrNull()?.let(failures::add)
-        registrarScope = null
-        runCatching { snapshots?.close() }.exceptionOrNull()?.let(failures::add)
-        snapshots = null
-        val activeDatabase = database
-        database = null
-        runCatching { activeDatabase?.let { databaseProvider.close(it) } }.exceptionOrNull()?.let(failures::add)
-    }
+            routeFactory = null
+            attempt { publication?.close() }
+            publication = null
+            attempt { checks?.close() }
+            checks = null
+            attempt { checkEvents?.close() }
+            checkEvents = null
+            attempt { registrarScope?.shutdown() }
+            registrarScope = null
+            attempt { snapshots?.close() }
+            snapshots = null
+            val activeDatabase = database
+            database = null
+            attempt { activeDatabase?.let { databaseProvider.close(it) } }
+        }
 
     private suspend fun replaceRouter(
         realmId: String,

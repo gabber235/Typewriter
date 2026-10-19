@@ -360,7 +360,7 @@ class FileDigestBlobStore(
                 read = input.read(buffer)
             }
         }
-        return ArtifactDigest(DigestAlgorithm.SHA_256, messageDigest.digest().joinToString("") { "%02x".format(it) })
+        return ArtifactDigest(DigestAlgorithm.SHA_256, messageDigest.digest().toHexString())
     }
 
     private fun moveAtomically(

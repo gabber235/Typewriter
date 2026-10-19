@@ -38,6 +38,7 @@ import com.typewritermc.types.catalog.resolve
 import com.typewritermc.types.skir.SkirTypeCodec
 import com.typewritermc.types.skir.getOrThrow
 import com.typewritermc.types.toTemplate
+import kotlinx.coroutines.CancellationException
 import skirout.editor.v1.expression.ExpressionNode
 import kotlin.reflect.KClass
 
@@ -252,7 +253,7 @@ fun bindOperations(
                 ) { "Destination placement collection must contain references." }
                 placements += placement
             }
-        } catch (cancelled: java.util.concurrent.CancellationException) {
+        } catch (cancelled: CancellationException) {
             throw cancelled
         } catch (failure: Exception) {
             definitions.clear()
@@ -273,7 +274,7 @@ fun bindOperations(
     definitions.values.forEach { definition ->
         try {
             validateResourceActions(listOf(definition), catalog, existingCapabilities + providers.map { it.capability })
-        } catch (cancelled: java.util.concurrent.CancellationException) {
+        } catch (cancelled: CancellationException) {
             throw cancelled
         } catch (failure: Exception) {
             invalid += definition.id

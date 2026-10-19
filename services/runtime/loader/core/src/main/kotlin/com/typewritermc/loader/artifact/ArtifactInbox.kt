@@ -262,7 +262,7 @@ class ArtifactInboxReconciler(
             var read = input.read(buffer)
             while (read >= 0) read = input.read(buffer)
         }
-        return ArtifactDigest(DigestAlgorithm.SHA_256, digest.digest().joinToString("") { "%02x".format(it) })
+        return ArtifactDigest(DigestAlgorithm.SHA_256, digest.digest().toHexString())
     }
 
     private fun readManifest(path: Path): ImprintManifest = ImprintArchive.require(path)

@@ -18,6 +18,7 @@ import com.typewritermc.presentation.PresentationReference
 import com.typewritermc.types.ResourceId
 import com.typewritermc.types.TypeTemplate
 import com.typewritermc.types.TypeUse
+import kotlinx.coroutines.CancellationException
 import kotlin.reflect.KType
 import kotlin.reflect.typeOf
 
@@ -449,7 +450,7 @@ fun <D : ResourceDraft> collectOperations(
             scope.primary,
             scope.placements.toList(),
         )
-    } catch (cancelled: java.util.concurrent.CancellationException) {
+    } catch (cancelled: CancellationException) {
         throw cancelled
     } catch (failure: Exception) {
         OperationDeclaration(origin, declaration, target, emptyList(), emptyList(), null, emptyList(), failure)

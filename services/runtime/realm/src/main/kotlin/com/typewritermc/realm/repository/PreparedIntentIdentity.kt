@@ -7,6 +7,7 @@ import com.typewritermc.authoring.ItemId
 import com.typewritermc.authoring.PreparedEdit
 import com.typewritermc.authoring.ValueLocation
 import com.typewritermc.realm.authoring.authoringStorageJson
+import com.typewritermc.services.libs.utils.sha256Hex
 import com.typewritermc.types.ResourceId
 import com.typewritermc.types.TypeUse
 import kotlinx.serialization.KSerializer
@@ -14,14 +15,10 @@ import kotlinx.serialization.json.JsonArray
 import kotlinx.serialization.json.JsonElement
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
-import java.security.MessageDigest
 
 /** Derives stable counterpart item identities from intent without retaining operation history. */
 internal fun canonicalPreparedIntentDigest(edit: PreparedEdit): String =
-    frame("intents", *edit.intents.map(EditIntent::canonical).toTypedArray()).sha256()
-
-private fun String.sha256(): String =
-    MessageDigest.getInstance("SHA-256").digest(toByteArray()).joinToString("") { byte -> "%02x".format(byte.toInt() and 0xff) }
+    frame("intents", *edit.intents.map(EditIntent::canonical).toTypedArray()).sha256Hex()
 
 private fun EditIntent.canonical(): String =
     when (this) {

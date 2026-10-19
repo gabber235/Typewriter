@@ -43,6 +43,7 @@ import com.typewritermc.realm.authoring.AuthoredReadView
 import com.typewritermc.realm.authoring.RESOURCE_SELECTION_INPUT
 import com.typewritermc.realm.repository.CapturedAuthoringValues
 import com.typewritermc.realm.repository.ResourceValueMapper
+import com.typewritermc.services.libs.utils.rethrowExceptional
 import com.typewritermc.types.DataValue
 import com.typewritermc.types.ListItem
 import com.typewritermc.types.MapRow
@@ -54,7 +55,6 @@ import com.typewritermc.types.catalog.CheckedType
 import com.typewritermc.types.catalog.Resolution
 import com.typewritermc.types.unwrapNamed
 import skirout.editor.v1.expression.ExpressionNode
-import java.util.concurrent.CancellationException
 
 fun interface SelectionPredicateEvaluator {
     fun evaluate(
@@ -113,9 +113,8 @@ class CapturedAuthoringReads(
                     .bind(complete.value.schema)
             @Suppress("UNCHECKED_CAST")
             Availability.Available(binding.decode(complete.value) as T)
-        } catch (cancellation: CancellationException) {
-            throw cancellation
         } catch (failure: Exception) {
+            failure.rethrowExceptional()
             failed(
                 "native_read_failed",
                 failure.message ?: failure::class.simpleName.orEmpty(),
@@ -179,9 +178,8 @@ class CapturedAuthoringReads(
                     .decode(complete)
             @Suppress("UNCHECKED_CAST")
             Availability.Available(native as T)
-        } catch (cancellation: CancellationException) {
-            throw cancellation
         } catch (failure: Exception) {
+            failure.rethrowExceptional()
             failed(
                 "representation_read_failed",
                 failure.message ?: failure::class.simpleName.orEmpty(),

@@ -16,13 +16,13 @@ import com.typewritermc.engine.RuntimeRelationFact
 import com.typewritermc.engine.canonicalized
 import com.typewritermc.engine.semanticDigest
 import com.typewritermc.realm.authoring.AuthoringView
+import com.typewritermc.services.libs.utils.sha256Hex
 import com.typewritermc.types.DataValue
 import com.typewritermc.types.RESOURCE_OWNERSHIP_FAMILY_ID
 import com.typewritermc.types.RelationFamilyId
 import com.typewritermc.types.RelationId
 import com.typewritermc.types.ResourceId
 import com.typewritermc.types.catalog.runtimeDefinitions
-import java.security.MessageDigest
 
 /**
  * Compiles a Page and its ownership closure from one assessed authoring view.
@@ -211,12 +211,7 @@ private fun com.typewritermc.authoring.AuthoringRecord.compile(
     )
 }
 
-private fun digest(value: String): ContentDigest =
-    ContentDigest(
-        MessageDigest.getInstance("SHA-256").digest(value.encodeToByteArray()).joinToString("") { byte ->
-            "%02x".format(byte.toInt() and 0xff)
-        },
-    )
+private fun digest(value: String): ContentDigest = ContentDigest(value.sha256Hex())
 
 internal fun compilationDiagnostic(
     code: String,

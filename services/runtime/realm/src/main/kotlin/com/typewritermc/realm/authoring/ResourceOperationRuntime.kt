@@ -33,6 +33,7 @@ import com.typewritermc.operations.ResourceRelationPreparation
 import com.typewritermc.operations.UnavailableAuthoredValue
 import com.typewritermc.operations.asClosedUse
 import com.typewritermc.realm.checking.CapturedAuthoringReads
+import com.typewritermc.services.libs.utils.rethrowExceptional
 import com.typewritermc.types.DataValue
 import com.typewritermc.types.ResourceId
 import com.typewritermc.types.TypeTemplate
@@ -161,9 +162,8 @@ internal class ResourceOperationRuntime(
                 } else {
                     OperationPreparationResult.Invalid(missing.locations.map { ValueProblem(it, "required_authored_value_missing") })
                 }
-            } catch (cancelled: CancellationException) {
-                throw cancelled
             } catch (failure: Exception) {
+                failure.rethrowExceptional()
                 OperationPreparationResult.Failed(failure)
             }
         }
@@ -229,9 +229,8 @@ internal class ResourceOperationRuntime(
                         "Operation availability reads did not produce complete evidence: $health"
                     }
                     value
-                } catch (cancelled: CancellationException) {
-                    throw cancelled
                 } catch (failure: Exception) {
+                    failure.rethrowExceptional()
                     throw OperationResolutionFailure(provider.origin, failure)
                 }
             }

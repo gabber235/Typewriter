@@ -66,7 +66,7 @@ import com.typewritermc.types.skir.SkirConversionResult
 import com.typewritermc.types.skir.SkirDataValueCodec
 import com.typewritermc.types.skir.SkirTypeCodec
 import com.typewritermc.types.substitute
-import java.util.concurrent.CancellationException
+import kotlinx.coroutines.CancellationException
 
 data class OwnedTypeDeclaration(
     val origin: ProviderOrigin,

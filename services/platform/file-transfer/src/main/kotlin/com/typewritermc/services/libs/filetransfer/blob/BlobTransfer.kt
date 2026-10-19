@@ -30,7 +30,7 @@ data class ArtifactDigest(
         fun sha256(bytes: ByteArray): ArtifactDigest =
             ArtifactDigest(
                 DigestAlgorithm.SHA_256,
-                MessageDigest.getInstance("SHA-256").digest(bytes).joinToString("") { byte -> "%02x".format(byte) },
+                MessageDigest.getInstance("SHA-256").digest(bytes).toHexString(),
             )
     }
 }

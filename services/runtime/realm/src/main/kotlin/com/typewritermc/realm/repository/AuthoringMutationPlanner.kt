@@ -24,6 +24,7 @@ import com.typewritermc.authoring.validateStructure
 import com.typewritermc.authoring.writeField
 import com.typewritermc.realm.authoring.RESOURCE_SELECTION_INPUT
 import com.typewritermc.realm.authoring.authoredTypeAt
+import com.typewritermc.services.libs.utils.sha256Hex
 import com.typewritermc.types.CollectionKind
 import com.typewritermc.types.DataValue
 import com.typewritermc.types.EndpointBindingTemplate
@@ -39,7 +40,6 @@ import com.typewritermc.types.TypeUse
 import com.typewritermc.types.catalog.CheckedCatalog
 import com.typewritermc.types.catalog.Resolution
 import com.typewritermc.types.catalog.ResolvedRepresentation
-import java.security.MessageDigest
 
 internal sealed interface MutationPlanningResult {
     data class Accepted(
@@ -927,12 +927,7 @@ private fun deterministicItem(
     containing: ValueLocation,
 ): ItemId {
     val content = "$batch:$ordinal:${containing.resource.value}:${containing.path}"
-    val digest =
-        MessageDigest
-            .getInstance("SHA-256")
-            .digest(content.toByteArray())
-            .joinToString("") { byte -> "%02x".format(byte.toInt() and 0xff) }
-    return ItemId("relation:$digest")
+    return ItemId("relation:${content.sha256Hex()}")
 }
 
 private fun ValuePath.startsWith(prefix: ValuePath): Boolean =

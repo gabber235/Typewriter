@@ -2,6 +2,7 @@ package com.typewritermc.realm.routes
 
 import com.typewritermc.realm.catalog.RealmCatalogStore
 import com.typewritermc.realm.catalog.installTestCatalog
+import com.typewritermc.services.libs.utils.sha256Hex
 import de.infix.testBalloon.framework.core.testSuite
 import io.kotest.matchers.shouldBe
 import kotlinx.coroutines.test.runTest
@@ -11,7 +12,6 @@ import skirout.editor.v1.catalog.CatalogUnavailableReason
 import skirout.editor.v1.catalog.EditorCatalogWireSnapshot
 import skirout.editor.v1.catalog.WatchEditorCatalogRequest
 import skirout.editor.v1.type_catalog.CatalogGeneration
-import java.security.MessageDigest
 
 val SnapshotRealmEditorCatalogSourceTest by testSuite {
     test("fetch returns one coherent full catalog snapshot") {
@@ -46,7 +46,7 @@ val SnapshotRealmEditorCatalogSourceTest by testSuite {
                                 .toByteArray()
                         }.fold(byteArrayOf()) { combined, bytes -> combined + bytes }
                 encoded.size.toLong() shouldBe first.value.transfer.encodedSize
-                MessageDigest.getInstance("SHA-256").digest(encoded).toHex() shouldBe first.value.transfer.sha256
+                encoded.sha256Hex() shouldBe first.value.transfer.sha256
                 val snapshot = EditorCatalogWireSnapshot.serializer.fromBytes(encoded)
                 snapshot.generation.value shouldBe "catalog_a"
                 snapshot.types.isNotEmpty() shouldBe true
@@ -136,5 +136,3 @@ val SnapshotRealmEditorCatalogSourceTest by testSuite {
         }
     }
 }
-
-private fun ByteArray.toHex(): String = joinToString("") { byte -> "%02x".format(byte) }

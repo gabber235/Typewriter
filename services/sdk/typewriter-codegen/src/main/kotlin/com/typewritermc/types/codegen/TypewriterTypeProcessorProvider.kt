@@ -517,7 +517,7 @@ object $generatedName : com.typewritermc.discovery.GeneratedRelationProvider {
             java.security.MessageDigest
                 .getInstance("SHA-256")
                 .digest(definition.id.toString().toByteArray())
-                .joinToString("") { "%02x".format(it) }
+                .toHexString()
         val packageName = "com.typewritermc.generated.types"
         val objectName = "GeneratedSupportType_$identity"
         val source =

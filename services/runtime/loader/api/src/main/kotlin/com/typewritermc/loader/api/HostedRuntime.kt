@@ -99,7 +99,7 @@ data class EngineImplementationTarget(
         digest.updateFramed(placement.name)
         digest.updateArtifact(engine)
         extensions.forEach(digest::updateArtifact)
-        return digest.digest().joinToString("") { byte -> "%02x".format(byte.toInt() and 0xff) }
+        return digest.digest().toHexString()
     }
 }
 

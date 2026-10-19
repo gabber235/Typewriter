@@ -19,6 +19,7 @@ import com.typewritermc.realm.authoring.OperationPreparationResult
 import com.typewritermc.realm.authoring.ResourceOperationRuntime
 import com.typewritermc.realm.authoring.StaleOperationObservation
 import com.typewritermc.realm.authoring.operationObservation
+import com.typewritermc.services.libs.utils.rethrowExceptional
 import com.typewritermc.types.DataValue
 import com.typewritermc.types.NativeBinding
 import com.typewritermc.types.TypeTemplate
@@ -189,9 +190,8 @@ internal class OperationRealmPresentationSearchSource(
                     }
                 } catch (stale: StaleOperationObservation) {
                     updates.publish(staleSearch(request.subscriptionId, stale.actual))
-                } catch (cancelled: CancellationException) {
-                    throw cancelled
                 } catch (failure: Exception) {
+                    failure.rethrowExceptional()
                     updates.publish(
                         unavailableRealmPresentationSearchUpdate(
                             request.subscriptionId,

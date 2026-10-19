@@ -14,6 +14,7 @@ import com.typewritermc.realm.authoring.authoringStorageJson
 import com.typewritermc.realm.repository.conflicts
 import com.typewritermc.realm.repository.utils.StructuredDatabaseCodec
 import com.typewritermc.realm.repository.utils.inTransaction
+import com.typewritermc.services.libs.utils.rethrowExceptional
 import com.typewritermc.types.TypeDefinitionId
 import com.typewritermc.types.TypeId
 import kotlinx.coroutines.CancellationException
@@ -295,11 +296,8 @@ internal class RealmPublicationCoordinator(
                         }
                     }
                 }
-            } catch (cancelled: CancellationException) {
-                throw cancelled
-            } catch (fatal: VirtualMachineError) {
-                throw fatal
             } catch (failure: Exception) {
+                failure.rethrowExceptional()
                 synchronized(lock) {
                     if (!closed && releasing == null) {
                         update(
@@ -480,13 +478,8 @@ internal class RealmPublicationCoordinator(
     ) {
         try {
             callback(attempt)
-        } catch (
-            cancelled: CancellationException,
-        ) {
-            throw cancelled
-        } catch (fatal: VirtualMachineError) {
-            throw fatal
-        } catch (_: Exception) {
+        } catch (failure: Exception) {
+            failure.rethrowExceptional()
         }
     }
 

@@ -26,6 +26,8 @@ import com.typewritermc.realm.authoring.AuthoringLease
 import com.typewritermc.realm.authoring.AuthoringViewStore
 import com.typewritermc.realm.authoring.RESOURCE_SELECTION_INPUT
 import com.typewritermc.realm.repository.conflicts
+import com.typewritermc.services.libs.utils.closeAll
+import com.typewritermc.services.libs.utils.rethrowExceptional
 import com.typewritermc.types.ResourceId
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
@@ -36,7 +38,6 @@ import kotlinx.coroutines.cancel
 import kotlinx.coroutines.joinAll
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
-import java.util.concurrent.CancellationException
 import java.util.concurrent.atomic.AtomicLong
 
 interface CheckScheduler : AutoCloseable {
@@ -556,9 +557,8 @@ class RealmCheckRuntime(
                         findings += plan.findings
                     }
                 }
-            } catch (cancellation: CancellationException) {
-                throw cancellation
             } catch (failure: Exception) {
+                failure.rethrowExceptional()
                 explicitOutcome =
                     CheckOutcome.Failed(
                         listOf(
@@ -597,9 +597,8 @@ class RealmCheckRuntime(
                 try {
                     owned.provider.run { collector.register() }
                     plans += collector.plans
-                } catch (cancellation: CancellationException) {
-                    throw cancellation
                 } catch (failure: Exception) {
+                    failure.rethrowExceptional()
                     plans +=
                         CheckPlan.RegistrationFailure(
                             rule = RuleId(owned.ruleOrigin, 0),
@@ -615,7 +614,7 @@ class RealmCheckRuntime(
             }
             return ActiveCatalog(root.catalog.generation, incarnation, plans, leases, snapshot)
         } catch (failure: Throwable) {
-            closeAll(leases.asReversed(), failure)
+            leases.asReversed().closeAll(failure)
             throw failure
         }
     }
@@ -737,7 +736,7 @@ private class ActiveCatalog(
                 references -= 1
                 references == 0
             }
-        if (releaseResources) closeAll(providerLeases.asReversed() + snapshot)
+        if (releaseResources) (providerLeases.asReversed() + snapshot).closeAll()
     }
 
     private class ActiveCatalogLease(
@@ -748,22 +747,6 @@ private class ActiveCatalog(
             current.release(owner = false)
         }
     }
-}
-
-private fun closeAll(
-    closeables: Iterable<AutoCloseable>,
-    primaryFailure: Throwable? = null,
-) {
-    var failure = primaryFailure
-    closeables.forEach { closeable ->
-        val closeFailure = runCatching { closeable.close() }.exceptionOrNull() ?: return@forEach
-        if (failure == null) {
-            failure = closeFailure
-        } else {
-            failure.addSuppressed(closeFailure)
-        }
-    }
-    if (primaryFailure == null) failure?.let { throw it }
 }
 
 private sealed interface CheckPlan {

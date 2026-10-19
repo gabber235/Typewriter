@@ -28,7 +28,7 @@ object DefaultCanonicalValueEquality : CanonicalValueEquality {
     override fun hash(value: CompleteValue): CanonicalValueHash {
         val input = listOf(value.schema.use.semanticForm(), value.value.canonicalValueKey()).framed("value").encodeToByteArray()
         val digest = MessageDigest.getInstance("SHA256").digest(input)
-        return CanonicalValueHash(digest.joinToString("") { byte -> "%02x".format(byte) })
+        return CanonicalValueHash(digest.toHexString())
     }
 }
 

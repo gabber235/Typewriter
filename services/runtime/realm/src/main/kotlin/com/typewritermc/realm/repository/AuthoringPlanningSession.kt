@@ -20,6 +20,7 @@ import com.typewritermc.authoring.mapKey
 import com.typewritermc.authoring.mapValue
 import com.typewritermc.realm.authoring.AuthoringView
 import com.typewritermc.realm.authoring.authoredTypeAt
+import com.typewritermc.services.libs.utils.sha256Hex
 import com.typewritermc.types.DataValue
 import com.typewritermc.types.LinkTarget
 import com.typewritermc.types.ListItem
@@ -29,7 +30,6 @@ import com.typewritermc.types.catalog.Resolution
 import com.typewritermc.types.catalog.ResolvedRepresentation
 import com.typewritermc.types.immutableCopy
 import com.typewritermc.types.immutableListCopy
-import java.security.MessageDigest
 
 /**
  * Owns the request local graph and normalized intent sequence used during operation preparation.
@@ -291,10 +291,7 @@ internal class AuthoringPlanningSession(
             }
         }
 
-    private fun item(key: String): ItemId {
-        val bytes = MessageDigest.getInstance("SHA-256").digest("$invocationId:$key:${allocation++}".toByteArray())
-        return ItemId("operation:" + bytes.joinToString("") { "%02x".format(it.toInt() and 255) })
-    }
+    private fun item(key: String): ItemId = ItemId("operation:" + "$invocationId:$key:${allocation++}".sha256Hex())
 
     private fun accepted(result: MutationPlanningResult): AuthoringMutationPlan =
         when (result) {

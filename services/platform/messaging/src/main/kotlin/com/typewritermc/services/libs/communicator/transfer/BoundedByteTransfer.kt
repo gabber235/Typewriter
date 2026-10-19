@@ -1,7 +1,7 @@
 package com.typewritermc.services.libs.communicator.transfer
 
 import com.typewritermc.services.libs.communicator.transport.Payload
-import java.security.MessageDigest
+import com.typewritermc.services.libs.utils.sha256Hex
 import java.util.UUID
 
 data class BoundedTransferLimits(
@@ -60,7 +60,7 @@ class BoundedByteTransferEncoder(
                 }
             }
         val transferId = nextTransferId()
-        val digest = MessageDigest.getInstance("SHA-256").digest(bytes).toHex()
+        val digest = bytes.sha256Hex()
         return BoundedTransferPlan.Ready(
             payloads.mapIndexed { index, payload ->
                 BoundedTransferChunk(
@@ -113,12 +113,10 @@ class BoundedByteTransferAssembler(
         repeat(chunk.chunkCount) { complete.write(parts.getValue(it)) }
         val result = complete.toByteArray()
         require(result.size.toLong() == chunk.encodedSize)
-        require(MessageDigest.getInstance("SHA-256").digest(result).toHex() == chunk.sha256) { "Transfer digest verification failed" }
+        require(result.sha256Hex() == chunk.sha256) { "Transfer digest verification failed" }
         return result
     }
 }
 
 const val DEFAULT_BOUNDED_TRANSFER_CHUNK_SIZE = 512 * 1024
 const val DEFAULT_BOUNDED_TRANSFER_MAX_CHUNKS = 64
-
-private fun ByteArray.toHex(): String = joinToString("") { byte -> "%02x".format(byte) }

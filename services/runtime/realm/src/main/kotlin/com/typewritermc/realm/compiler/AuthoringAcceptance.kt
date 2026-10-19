@@ -22,6 +22,7 @@ import com.typewritermc.realm.authoring.AuthoringView
 import com.typewritermc.realm.authoring.AuthoringViewStore
 import com.typewritermc.realm.checking.CheckAdmissionTarget
 import com.typewritermc.realm.checking.RealmCheckRuntime
+import com.typewritermc.services.libs.utils.rethrowExceptional
 import com.typewritermc.types.DataValue
 import com.typewritermc.types.NativeBindingException
 import com.typewritermc.types.ResourceId
@@ -32,7 +33,6 @@ import com.typewritermc.types.canonicalValueKey
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import kotlinx.serialization.Serializable
-import java.util.concurrent.CancellationException
 
 data class NativeBindingRequirement(
     val actual: TypeUse.Named,
@@ -283,11 +283,8 @@ internal class AuthoringAcceptance(
                                     complete.value,
                                     NativeBindingRequirement(actual, binding.provider, binding.signature),
                                 )
-                        } catch (cancelled: CancellationException) {
-                            throw cancelled
-                        } catch (fatal: VirtualMachineError) {
-                            throw fatal
                         } catch (failure: Exception) {
+                            failure.rethrowExceptional()
                             val code = (failure as? NativeBindingException)?.code ?: "native_construction_failed"
                             findings += diagnostic(code, failure.message ?: "Native construction failed.", ValueLocation(id, ValuePath()))
                         }

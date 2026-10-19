@@ -49,7 +49,7 @@ fun RuntimeCompilationFacts.semanticDigest(): ContentDigest =
         MessageDigest
             .getInstance("SHA-256")
             .digest(canonicalBytes())
-            .joinToString("") { byte -> "%02x".format(byte.toInt() and 0xff) },
+            .toHexString(),
     )
 
 fun RuntimeCompilationFacts.encodeShard(): ByteArray {

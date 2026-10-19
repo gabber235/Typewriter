@@ -18,6 +18,7 @@ import com.typewritermc.realm.authoring.OperationResolutionFailure
 import com.typewritermc.realm.authoring.ResourceOperationRuntime
 import com.typewritermc.realm.authoring.StaleOperationObservation
 import com.typewritermc.services.libs.communicator.router.CommunicatorRoutesBuilder
+import com.typewritermc.services.libs.utils.rethrowExceptional
 import com.typewritermc.types.ResourceId
 import com.typewritermc.types.skir.SkirAuthoringValueCodec
 import com.typewritermc.types.skir.SkirDataValueCodec
@@ -109,9 +110,8 @@ internal class ResourceOperationRoutes(
                         ),
                 )
             }
-        } catch (cancelled: CancellationException) {
-            throw cancelled
         } catch (invalid: IllegalArgumentException) {
+            invalid.rethrowExceptional()
             ResolveResourceOperationsResult.createInvalid(
                 diagnostics =
                     listOf(
@@ -273,9 +273,8 @@ internal class ResourceOperationRoutes(
                         ),
                 )
             }
-        } catch (cancelled: CancellationException) {
-            throw cancelled
         } catch (invalid: IllegalArgumentException) {
+            invalid.rethrowExceptional()
             AuthoringActionResult.createInvalid(
                 diagnostics =
                     listOf(

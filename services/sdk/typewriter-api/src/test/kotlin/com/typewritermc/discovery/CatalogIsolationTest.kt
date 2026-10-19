@@ -27,7 +27,7 @@ import com.typewritermc.types.catalog.DefaultCheckedCatalog
 import de.infix.testBalloon.framework.core.testSuite
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.matchers.shouldBe
-import java.util.concurrent.CancellationException
+import kotlinx.coroutines.CancellationException
 
 val CatalogIsolationTest by testSuite {
     test("unknown field dependency cannot remain a published resource family") {

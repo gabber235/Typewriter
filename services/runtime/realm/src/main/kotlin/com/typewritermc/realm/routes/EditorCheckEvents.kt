@@ -9,6 +9,7 @@ import com.typewritermc.realm.checking.FindingSet
 import com.typewritermc.realm.checking.toWire
 import com.typewritermc.realm.repository.conflicts
 import com.typewritermc.services.libs.communicator.client.Communicator
+import com.typewritermc.services.libs.utils.rethrowExceptional
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.cancelAndJoin
@@ -39,9 +40,8 @@ internal class EditorCheckEvents(
                                 connection.address,
                                 view.changed(),
                             ).requirePublished()
-                    } catch (cancelled: CancellationException) {
-                        throw cancelled
-                    } catch (_: Exception) {
+                    } catch (failure: Exception) {
+                        failure.rethrowExceptional()
                     }
                 }
             }
@@ -61,9 +61,8 @@ internal class EditorCheckEvents(
                                 current.address,
                                 AuthoringChanged(generation = CatalogGeneration(value = generation)),
                             ).requirePublished()
-                    } catch (cancelled: CancellationException) {
-                        throw cancelled
-                    } catch (_: Exception) {
+                    } catch (failure: Exception) {
+                        failure.rethrowExceptional()
                     }
                 }
             }

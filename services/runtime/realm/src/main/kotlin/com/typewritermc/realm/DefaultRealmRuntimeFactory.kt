@@ -43,6 +43,7 @@ import com.typewritermc.services.libs.telemetry.mainSpan
 import com.typewritermc.services.libs.telemetry.serviceTelemetry
 import com.typewritermc.services.libs.utils.CoroutineDelayScheduler
 import com.typewritermc.services.libs.utils.RetryPolicy
+import com.typewritermc.services.libs.utils.closeAll
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
@@ -143,9 +144,7 @@ class DefaultRealmRuntimeFactory : RealmRuntimeFactory {
             )
         } catch (failure: Throwable) {
             applicationScope.cancel()
-            runCatching { catalogs?.close() }.exceptionOrNull()?.let(failure::addSuppressed)
-            runCatching { deployment?.close() }.exceptionOrNull()?.let(failure::addSuppressed)
-            runCatching { logback?.close() }.exceptionOrNull()?.let(failure::addSuppressed)
+            listOf(catalogs, deployment, logback).closeAll(failure)
             throw failure
         }
     }

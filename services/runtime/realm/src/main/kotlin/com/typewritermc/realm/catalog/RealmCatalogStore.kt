@@ -11,6 +11,7 @@ import com.typewritermc.discovery.OwnedProviderRegistry
 import com.typewritermc.discovery.RetainedOwnedProviderRegistry
 import com.typewritermc.presentation.CollectionProjectionSpec
 import com.typewritermc.realm.authoring.AuthoringCatalogLease
+import com.typewritermc.services.libs.utils.closeAll
 import com.typewritermc.types.EndpointBindingTemplate
 import com.typewritermc.types.NativeBindingRegistry
 import com.typewritermc.types.RelationContract
@@ -87,12 +88,7 @@ class RealmCatalogStore : AutoCloseable {
                 current = null
                 values.filter { it.leases == 0 }
             }
-        val failures = retired.mapNotNull { runCatching { it.close() }.exceptionOrNull() }
-        if (failures.isNotEmpty()) {
-            val failure = failures.first()
-            failures.drop(1).forEach(failure::addSuppressed)
-            throw failure
-        }
+        retired.closeAll()
     }
 
     private fun retain(retention: Retention): RealmCatalogLease {

@@ -19,13 +19,13 @@ import com.typewritermc.checking.DiagnosticSeverity
 import com.typewritermc.configuration.FieldPatternSegment
 import com.typewritermc.configuration.RelativeFieldPattern
 import com.typewritermc.expression.EvaluationDiagnostic
+import com.typewritermc.services.libs.utils.rethrowExceptional
 import com.typewritermc.types.DataValue
 import com.typewritermc.types.TypeUse
 import com.typewritermc.types.catalog.CheckedCatalog
 import com.typewritermc.types.catalog.CheckedType
 import com.typewritermc.types.catalog.Resolution
 import com.typewritermc.types.catalog.ResolvedRepresentation
-import java.util.concurrent.CancellationException
 import java.util.concurrent.atomic.AtomicLong
 
 /**
@@ -90,9 +90,8 @@ class RealmCheckInputs(
                 if (!recipe.predicate.invoke(complete)) {
                     findings += finding(recipe, subject, tuple, snapshotReads)
                 }
-            } catch (cancellation: CancellationException) {
-                throw cancellation
             } catch (failure: Exception) {
+                failure.rethrowExceptional()
                 return failed(
                     recipe,
                     EvaluationDiagnostic(

@@ -8,6 +8,7 @@ import com.typewritermc.discovery.GeneratedProviderArtifact
 import com.typewritermc.discovery.GeneratedProviderKind
 import com.typewritermc.discovery.GeneratedProviderLoader
 import com.typewritermc.discovery.assemble
+import com.typewritermc.imprint.COMMON_SOURCE_PART
 import com.typewritermc.imprint.ImprintRuntimeEntrypoint
 import com.typewritermc.loader.api.HostedDeploymentContext
 import com.typewritermc.loader.api.HostedRuntimeEntrypoint
@@ -90,5 +91,3 @@ private val EXECUTION_PROVIDER_KINDS =
         GeneratedProviderKind.EndpointBindings,
         GeneratedProviderKind.Registrar,
     )
-
-private const val COMMON_SOURCE_PART = "common"

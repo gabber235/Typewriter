@@ -15,6 +15,7 @@ import com.typewritermc.types.skir.SkirConversionResult
 import com.typewritermc.types.skir.SkirDataValueCodec
 import com.typewritermc.types.skir.getOrThrow
 import com.typewritermc.types.unwrapNamed
+import kotlinx.coroutines.CancellationException
 import skirout.editor.v1.expression.BoundDirection
 import skirout.editor.v1.expression.ConditionalExpression
 import skirout.editor.v1.expression.EntryBranch
@@ -33,7 +34,6 @@ import skirout.editor.v1.expression.TimestampBoundDirection
 import skirout.editor.v1.expression.ValueCompareOperation
 import java.math.BigDecimal
 import java.math.MathContext
-import java.util.concurrent.CancellationException
 
 interface ExpressionEvaluator {
     context(reads: AuthoredReads)
