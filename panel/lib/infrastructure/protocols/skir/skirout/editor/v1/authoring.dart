@@ -25,7 +25,9 @@ import "../../kernel/v1/bounded_transfer.dart"
     as _lib_kernel_v1_bounded_transfer;
 import "../../kernel/v1/errors.dart" as _lib_kernel_v1_errors;
 
+// -----------------------------------------------------------------------------
 // struct AuthoringResource
+// -----------------------------------------------------------------------------
 
 sealed class AuthoringResource_orMutable {
   _lib_editor_v1_type_catalog.ResourceId_orMutable get id;
@@ -72,7 +74,7 @@ final class AuthoringResource implements AuthoringResource_orMutable {
     _lib_editor_v1_type_catalog.AuthoringRecord.defaultInstance,
   );
 
-  /// Returns this instance (no operation).
+  /// Returns this instance (no-op).
   @_core.Deprecated("This instance is already frozen.")
   @_core.override
   AuthoringResource toFrozen() => this;
@@ -155,7 +157,7 @@ final class AuthoringResource_mutable implements AuthoringResource_orMutable {
 
   AuthoringResource_mutable._(this.id, this.definition, this.content);
 
-  /// If the value of [id] is already mutable, returns it as is.
+  /// If the value of [id] is already mutable, returns it as-is.
   /// Otherwise, makes a mutable copy, assigns it back to [id] and returns it.
   _lib_editor_v1_type_catalog.ResourceId_mutable get mutableId {
     final value = this.id;
@@ -167,7 +169,7 @@ final class AuthoringResource_mutable implements AuthoringResource_orMutable {
     }
   }
 
-  /// If the value of [definition] is already mutable, returns it as is.
+  /// If the value of [definition] is already mutable, returns it as-is.
   /// Otherwise, makes a mutable copy, assigns it back to [definition] and returns it.
   _lib_editor_v1_catalog.ResourceDefinitionId_mutable get mutableDefinition {
     final value = this.definition;
@@ -179,7 +181,7 @@ final class AuthoringResource_mutable implements AuthoringResource_orMutable {
     }
   }
 
-  /// If the value of [content] is already mutable, returns it as is.
+  /// If the value of [content] is already mutable, returns it as-is.
   /// Otherwise, makes a mutable copy, assigns it back to [content] and returns it.
   _lib_editor_v1_type_catalog.AuthoringRecord_mutable get mutableContent {
     final value = this.content;
@@ -200,7 +202,9 @@ final class AuthoringResource_mutable implements AuthoringResource_orMutable {
   ).._u = this._u;
 }
 
+// -----------------------------------------------------------------------------
 // struct LinkOccurrenceId
+// -----------------------------------------------------------------------------
 
 sealed class LinkOccurrenceId_orMutable {
   _lib_editor_v1_type_catalog.EndpointId_orMutable get endpoint;
@@ -239,7 +243,7 @@ final class LinkOccurrenceId implements LinkOccurrenceId_orMutable {
     _lib_editor_v1_type_catalog.ValueLocation.defaultInstance,
   );
 
-  /// Returns this instance (no operation).
+  /// Returns this instance (no-op).
   @_core.Deprecated("This instance is already frozen.")
   @_core.override
   LinkOccurrenceId toFrozen() => this;
@@ -312,7 +316,7 @@ final class LinkOccurrenceId_mutable implements LinkOccurrenceId_orMutable {
 
   LinkOccurrenceId_mutable._(this.endpoint, this.location);
 
-  /// If the value of [endpoint] is already mutable, returns it as is.
+  /// If the value of [endpoint] is already mutable, returns it as-is.
   /// Otherwise, makes a mutable copy, assigns it back to [endpoint] and returns it.
   _lib_editor_v1_type_catalog.EndpointId_mutable get mutableEndpoint {
     final value = this.endpoint;
@@ -324,7 +328,7 @@ final class LinkOccurrenceId_mutable implements LinkOccurrenceId_orMutable {
     }
   }
 
-  /// If the value of [location] is already mutable, returns it as is.
+  /// If the value of [location] is already mutable, returns it as-is.
   /// Otherwise, makes a mutable copy, assigns it back to [location] and returns it.
   _lib_editor_v1_type_catalog.ValueLocation_mutable get mutableLocation {
     final value = this.location;
@@ -343,7 +347,9 @@ final class LinkOccurrenceId_mutable implements LinkOccurrenceId_orMutable {
         .._u = this._u;
 }
 
+// -----------------------------------------------------------------------------
 // struct LinkOccurrence
+// -----------------------------------------------------------------------------
 
 sealed class LinkOccurrence_orMutable {
   LinkOccurrenceId_orMutable get id;
@@ -386,7 +392,7 @@ final class LinkOccurrence implements LinkOccurrence_orMutable {
     _lib_editor_v1_type_catalog.LinkTarget.defaultInstance,
   );
 
-  /// Returns this instance (no operation).
+  /// Returns this instance (no-op).
   @_core.Deprecated("This instance is already frozen.")
   @_core.override
   LinkOccurrence toFrozen() => this;
@@ -469,7 +475,7 @@ final class LinkOccurrence_mutable implements LinkOccurrence_orMutable {
 
   LinkOccurrence_mutable._(this.id, this.source, this.target);
 
-  /// If the value of [id] is already mutable, returns it as is.
+  /// If the value of [id] is already mutable, returns it as-is.
   /// Otherwise, makes a mutable copy, assigns it back to [id] and returns it.
   LinkOccurrenceId_mutable get mutableId {
     final value = this.id;
@@ -480,7 +486,7 @@ final class LinkOccurrence_mutable implements LinkOccurrence_orMutable {
     }
   }
 
-  /// If the value of [source] is already mutable, returns it as is.
+  /// If the value of [source] is already mutable, returns it as-is.
   /// Otherwise, makes a mutable copy, assigns it back to [source] and returns it.
   _lib_editor_v1_type_catalog.ResourceId_mutable get mutableSource {
     final value = this.source;
@@ -492,7 +498,7 @@ final class LinkOccurrence_mutable implements LinkOccurrence_orMutable {
     }
   }
 
-  /// If the value of [target] is already mutable, returns it as is.
+  /// If the value of [target] is already mutable, returns it as-is.
   /// Otherwise, makes a mutable copy, assigns it back to [target] and returns it.
   _lib_editor_v1_type_catalog.LinkTarget_mutable get mutableTarget {
     final value = this.target;
@@ -511,7 +517,9 @@ final class LinkOccurrence_mutable implements LinkOccurrence_orMutable {
         .._u = this._u;
 }
 
+// -----------------------------------------------------------------------------
 // struct RelationProjectionDelta
+// -----------------------------------------------------------------------------
 
 sealed class RelationProjectionDelta_orMutable {
   _core.Iterable<_lib_editor_v1_authoring_facts.LinkProjection_orMutable>
@@ -575,7 +583,7 @@ final class RelationProjectionDelta
         _skir.KeyedIterable.empty,
       );
 
-  /// Returns this instance (no operation).
+  /// Returns this instance (no-op).
   @_core.Deprecated("This instance is already frozen.")
   @_core.override
   RelationProjectionDelta toFrozen() => this;
@@ -683,7 +691,7 @@ final class RelationProjectionDelta_mutable
     this.metadataChanged,
   );
 
-  /// If the value of [removals] is already mutable, returns it as is.
+  /// If the value of [removals] is already mutable, returns it as-is.
   /// Otherwise, makes a mutable copy, assigns it back to [removals] and returns it.
   _core.List<_lib_editor_v1_authoring_facts.LinkProjection_orMutable>
   get mutableRemovals {
@@ -698,7 +706,7 @@ final class RelationProjectionDelta_mutable
     }
   }
 
-  /// If the value of [created] is already mutable, returns it as is.
+  /// If the value of [created] is already mutable, returns it as-is.
   /// Otherwise, makes a mutable copy, assigns it back to [created] and returns it.
   _core.List<_lib_editor_v1_authoring_facts.LinkProjection_orMutable>
   get mutableCreated {
@@ -713,7 +721,7 @@ final class RelationProjectionDelta_mutable
     }
   }
 
-  /// If the value of [metadataChanged] is already mutable, returns it as is.
+  /// If the value of [metadataChanged] is already mutable, returns it as-is.
   /// Otherwise, makes a mutable copy, assigns it back to [metadataChanged] and returns it.
   _core.List<_lib_editor_v1_authoring_facts.LinkProjection_orMutable>
   get mutableMetadataChanged {
@@ -737,7 +745,9 @@ final class RelationProjectionDelta_mutable
   ).._u = this._u;
 }
 
+// -----------------------------------------------------------------------------
 // struct FamilyRelationSelection
+// -----------------------------------------------------------------------------
 
 sealed class FamilyRelationSelection_orMutable {
   _lib_editor_v1_type_catalog.RelationFamilyId_orMutable get id;
@@ -776,7 +786,7 @@ final class FamilyRelationSelection
         _lib_editor_v1_authoring_facts.TraversalDirection.unknown,
       );
 
-  /// Returns this instance (no operation).
+  /// Returns this instance (no-op).
   @_core.Deprecated("This instance is already frozen.")
   @_core.override
   FamilyRelationSelection toFrozen() => this;
@@ -853,7 +863,7 @@ final class FamilyRelationSelection_mutable
 
   FamilyRelationSelection_mutable._(this.id, this.direction);
 
-  /// If the value of [id] is already mutable, returns it as is.
+  /// If the value of [id] is already mutable, returns it as-is.
   /// Otherwise, makes a mutable copy, assigns it back to [id] and returns it.
   _lib_editor_v1_type_catalog.RelationFamilyId_mutable get mutableId {
     final value = this.id;
@@ -872,7 +882,9 @@ final class FamilyRelationSelection_mutable
         .._u = this._u;
 }
 
+// -----------------------------------------------------------------------------
 // struct ContractRelationSelection
+// -----------------------------------------------------------------------------
 
 sealed class ContractRelationSelection_orMutable {
   _core.Iterable<_lib_editor_v1_type_catalog.RelationId_orMutable> get ids;
@@ -915,7 +927,7 @@ final class ContractRelationSelection
         _lib_editor_v1_authoring_facts.TraversalDirection.unknown,
       );
 
-  /// Returns this instance (no operation).
+  /// Returns this instance (no-op).
   @_core.Deprecated("This instance is already frozen.")
   @_core.override
   ContractRelationSelection toFrozen() => this;
@@ -994,7 +1006,7 @@ final class ContractRelationSelection_mutable
 
   ContractRelationSelection_mutable._(this.ids, this.direction);
 
-  /// If the value of [ids] is already mutable, returns it as is.
+  /// If the value of [ids] is already mutable, returns it as-is.
   /// Otherwise, makes a mutable copy, assigns it back to [ids] and returns it.
   _core.List<_lib_editor_v1_type_catalog.RelationId_orMutable> get mutableIds {
     final value = this.ids;
@@ -1015,7 +1027,9 @@ final class ContractRelationSelection_mutable
         .._u = this._u;
 }
 
+// -----------------------------------------------------------------------------
 // struct AllRelationSelection
+// -----------------------------------------------------------------------------
 
 sealed class AllRelationSelection_orMutable {
   _lib_editor_v1_authoring_facts.TraversalDirection get direction;
@@ -1047,7 +1061,7 @@ final class AllRelationSelection implements AllRelationSelection_orMutable {
         _lib_editor_v1_authoring_facts.TraversalDirection.unknown,
       );
 
-  /// Returns this instance (no operation).
+  /// Returns this instance (no-op).
   @_core.Deprecated("This instance is already frozen.")
   @_core.override
   AllRelationSelection toFrozen() => this;
@@ -1120,7 +1134,9 @@ final class AllRelationSelection_mutable
       AllRelationSelection(direction: this.direction).._u = this._u;
 }
 
+// -----------------------------------------------------------------------------
 // enum RelationSelection
+// -----------------------------------------------------------------------------
 
 /// To switch on the variants:
 ///   ```
@@ -1301,7 +1317,9 @@ final class RelationSelection_allWrapper extends _RelationSelection_wrapper {
   RelationSelection_kind get kind => RelationSelection_kind.allWrapper;
 }
 
+// -----------------------------------------------------------------------------
 // struct TraversalBudget
+// -----------------------------------------------------------------------------
 
 sealed class TraversalBudget_orMutable {
   _core.int get maxResources;
@@ -1346,7 +1364,7 @@ final class TraversalBudget implements TraversalBudget_orMutable {
   static TraversalBudget_mutable mutable() =>
       TraversalBudget_mutable._(0, 0, 0, 0);
 
-  /// Returns this instance (no operation).
+  /// Returns this instance (no-op).
   @_core.Deprecated("This instance is already frozen.")
   @_core.override
   TraversalBudget toFrozen() => this;
@@ -1463,7 +1481,9 @@ final class TraversalBudget_mutable implements TraversalBudget_orMutable {
   ).._u = this._u;
 }
 
+// -----------------------------------------------------------------------------
 // struct GraphEndpoint
+// -----------------------------------------------------------------------------
 
 sealed class GraphEndpoint_orMutable {
   _lib_editor_v1_type_catalog.ResourceId_orMutable get resource;
@@ -1510,7 +1530,7 @@ final class GraphEndpoint implements GraphEndpoint_orMutable {
     null,
   );
 
-  /// Returns this instance (no operation).
+  /// Returns this instance (no-op).
   @_core.Deprecated("This instance is already frozen.")
   @_core.override
   GraphEndpoint toFrozen() => this;
@@ -1595,7 +1615,7 @@ final class GraphEndpoint_mutable implements GraphEndpoint_orMutable {
 
   GraphEndpoint_mutable._(this.resource, this.endpoint, this.path);
 
-  /// If the value of [resource] is already mutable, returns it as is.
+  /// If the value of [resource] is already mutable, returns it as-is.
   /// Otherwise, makes a mutable copy, assigns it back to [resource] and returns it.
   _lib_editor_v1_type_catalog.ResourceId_mutable get mutableResource {
     final value = this.resource;
@@ -1607,7 +1627,7 @@ final class GraphEndpoint_mutable implements GraphEndpoint_orMutable {
     }
   }
 
-  /// If the value of [endpoint] is already mutable, returns it as is.
+  /// If the value of [endpoint] is already mutable, returns it as-is.
   /// Otherwise, makes a mutable copy, assigns it back to [endpoint] and returns it.
   _lib_editor_v1_type_catalog.EndpointId_mutable get mutableEndpoint {
     final value = this.endpoint;
@@ -1628,7 +1648,9 @@ final class GraphEndpoint_mutable implements GraphEndpoint_orMutable {
   ).._u = this._u;
 }
 
+// -----------------------------------------------------------------------------
 // struct GraphStep
+// -----------------------------------------------------------------------------
 
 sealed class GraphStep_orMutable {
   _lib_editor_v1_type_catalog.RelationId_orMutable get relation;
@@ -1671,7 +1693,7 @@ final class GraphStep implements GraphStep_orMutable {
     GraphEndpoint.defaultInstance,
   );
 
-  /// Returns this instance (no operation).
+  /// Returns this instance (no-op).
   @_core.Deprecated("This instance is already frozen.")
   @_core.override
   GraphStep toFrozen() => this;
@@ -1753,7 +1775,7 @@ final class GraphStep_mutable implements GraphStep_orMutable {
 
   GraphStep_mutable._(this.relation, this.from, this.to);
 
-  /// If the value of [relation] is already mutable, returns it as is.
+  /// If the value of [relation] is already mutable, returns it as-is.
   /// Otherwise, makes a mutable copy, assigns it back to [relation] and returns it.
   _lib_editor_v1_type_catalog.RelationId_mutable get mutableRelation {
     final value = this.relation;
@@ -1765,7 +1787,7 @@ final class GraphStep_mutable implements GraphStep_orMutable {
     }
   }
 
-  /// If the value of [from] is already mutable, returns it as is.
+  /// If the value of [from] is already mutable, returns it as-is.
   /// Otherwise, makes a mutable copy, assigns it back to [from] and returns it.
   GraphEndpoint_mutable get mutableFrom {
     final value = this.from;
@@ -1776,7 +1798,7 @@ final class GraphStep_mutable implements GraphStep_orMutable {
     }
   }
 
-  /// If the value of [to] is already mutable, returns it as is.
+  /// If the value of [to] is already mutable, returns it as-is.
   /// Otherwise, makes a mutable copy, assigns it back to [to] and returns it.
   GraphEndpoint_mutable get mutableTo {
     final value = this.to;
@@ -1794,7 +1816,9 @@ final class GraphStep_mutable implements GraphStep_orMutable {
         .._u = this._u;
 }
 
+// -----------------------------------------------------------------------------
 // enum UnresolvedLink
+// -----------------------------------------------------------------------------
 
 /// To switch on the variants:
 ///   ```
@@ -1944,7 +1968,9 @@ final class UnresolvedLink_unavailableTargetWrapper
   UnresolvedLink_kind get kind => UnresolvedLink_kind.unavailableTargetWrapper;
 }
 
+// -----------------------------------------------------------------------------
 // struct PresentationSubject
+// -----------------------------------------------------------------------------
 
 sealed class PresentationSubject_orMutable {
   _lib_editor_v1_type_catalog.ResourceId_orMutable get resource;
@@ -2006,7 +2032,7 @@ final class PresentationSubject implements PresentationSubject_orMutable {
     _lib_editor_v1_type_catalog.DataValue.unknown,
   );
 
-  /// Returns this instance (no operation).
+  /// Returns this instance (no-op).
   @_core.Deprecated("This instance is already frozen.")
   @_core.override
   PresentationSubject toFrozen() => this;
@@ -2117,7 +2143,7 @@ final class PresentationSubject_mutable
     this.descriptor,
   );
 
-  /// If the value of [resource] is already mutable, returns it as is.
+  /// If the value of [resource] is already mutable, returns it as-is.
   /// Otherwise, makes a mutable copy, assigns it back to [resource] and returns it.
   _lib_editor_v1_type_catalog.ResourceId_mutable get mutableResource {
     final value = this.resource;
@@ -2129,7 +2155,7 @@ final class PresentationSubject_mutable
     }
   }
 
-  /// If the value of [definition] is already mutable, returns it as is.
+  /// If the value of [definition] is already mutable, returns it as-is.
   /// Otherwise, makes a mutable copy, assigns it back to [definition] and returns it.
   _lib_editor_v1_catalog.ResourceDefinitionId_mutable get mutableDefinition {
     final value = this.definition;
@@ -2141,7 +2167,7 @@ final class PresentationSubject_mutable
     }
   }
 
-  /// If the value of [content] is already mutable, returns it as is.
+  /// If the value of [content] is already mutable, returns it as-is.
   /// Otherwise, makes a mutable copy, assigns it back to [content] and returns it.
   _lib_editor_v1_type_catalog.AuthoringRecord_mutable get mutableContent {
     final value = this.content;
@@ -2163,7 +2189,9 @@ final class PresentationSubject_mutable
   ).._u = this._u;
 }
 
+// -----------------------------------------------------------------------------
 // struct PresentationSubjectChange.Upsert
+// -----------------------------------------------------------------------------
 
 sealed class PresentationSubjectChange_Upsert_orMutable {
   _lib_editor_v1_type_catalog.ResourceId_orMutable get resource;
@@ -2205,7 +2233,7 @@ final class PresentationSubjectChange_Upsert
         PresentationSubject.defaultInstance,
       );
 
-  /// Returns this instance (no operation).
+  /// Returns this instance (no-op).
   @_core.Deprecated("This instance is already frozen.")
   @_core.override
   PresentationSubjectChange_Upsert toFrozen() => this;
@@ -2282,7 +2310,7 @@ final class PresentationSubjectChange_Upsert_mutable
 
   PresentationSubjectChange_Upsert_mutable._(this.resource, this.subject);
 
-  /// If the value of [resource] is already mutable, returns it as is.
+  /// If the value of [resource] is already mutable, returns it as-is.
   /// Otherwise, makes a mutable copy, assigns it back to [resource] and returns it.
   _lib_editor_v1_type_catalog.ResourceId_mutable get mutableResource {
     final value = this.resource;
@@ -2294,7 +2322,7 @@ final class PresentationSubjectChange_Upsert_mutable
     }
   }
 
-  /// If the value of [subject] is already mutable, returns it as is.
+  /// If the value of [subject] is already mutable, returns it as-is.
   /// Otherwise, makes a mutable copy, assigns it back to [subject] and returns it.
   PresentationSubject_mutable get mutableSubject {
     final value = this.subject;
@@ -2314,7 +2342,9 @@ final class PresentationSubjectChange_Upsert_mutable
       ).._u = this._u;
 }
 
+// -----------------------------------------------------------------------------
 // enum PresentationSubjectChange
+// -----------------------------------------------------------------------------
 
 /// To switch on the variants:
 ///   ```
@@ -2472,7 +2502,9 @@ final class PresentationSubjectChange_removeWrapper
       PresentationSubjectChange_kind.removeWrapper;
 }
 
+// -----------------------------------------------------------------------------
 // struct AuthoringDiagnostic
+// -----------------------------------------------------------------------------
 
 sealed class AuthoringDiagnostic_orMutable {
   _core.String get code;
@@ -2517,7 +2549,7 @@ final class AuthoringDiagnostic implements AuthoringDiagnostic_orMutable {
   static AuthoringDiagnostic_mutable mutable() =>
       AuthoringDiagnostic_mutable._("", "", null, null);
 
-  /// Returns this instance (no operation).
+  /// Returns this instance (no-op).
   @_core.Deprecated("This instance is already frozen.")
   @_core.override
   AuthoringDiagnostic toFrozen() => this;
@@ -2642,7 +2674,9 @@ final class AuthoringDiagnostic_mutable
   ).._u = this._u;
 }
 
+// -----------------------------------------------------------------------------
 // struct AuthoringInvalid
+// -----------------------------------------------------------------------------
 
 sealed class AuthoringInvalid_orMutable {
   _core.Iterable<AuthoringDiagnostic_orMutable> get diagnostics;
@@ -2672,7 +2706,7 @@ final class AuthoringInvalid implements AuthoringInvalid_orMutable {
   static AuthoringInvalid_mutable mutable() =>
       AuthoringInvalid_mutable._(_skir.KeyedIterable.empty);
 
-  /// Returns this instance (no operation).
+  /// Returns this instance (no-op).
   @_core.Deprecated("This instance is already frozen.")
   @_core.override
   AuthoringInvalid toFrozen() => this;
@@ -2735,7 +2769,7 @@ final class AuthoringInvalid_mutable implements AuthoringInvalid_orMutable {
 
   AuthoringInvalid_mutable._(this.diagnostics);
 
-  /// If the value of [diagnostics] is already mutable, returns it as is.
+  /// If the value of [diagnostics] is already mutable, returns it as-is.
   /// Otherwise, makes a mutable copy, assigns it back to [diagnostics] and returns it.
   _core.List<AuthoringDiagnostic_orMutable> get mutableDiagnostics {
     final value = this.diagnostics;
@@ -2752,7 +2786,9 @@ final class AuthoringInvalid_mutable implements AuthoringInvalid_orMutable {
       AuthoringInvalid(diagnostics: this.diagnostics).._u = this._u;
 }
 
+// -----------------------------------------------------------------------------
 // struct CatalogChanged
+// -----------------------------------------------------------------------------
 
 sealed class CatalogChanged_orMutable {
   _lib_editor_v1_type_catalog.CatalogGeneration_orMutable get actualGeneration;
@@ -2784,7 +2820,7 @@ final class CatalogChanged implements CatalogChanged_orMutable {
     _lib_editor_v1_type_catalog.CatalogGeneration.defaultInstance,
   );
 
-  /// Returns this instance (no operation).
+  /// Returns this instance (no-op).
   @_core.Deprecated("This instance is already frozen.")
   @_core.override
   CatalogChanged toFrozen() => this;
@@ -2847,7 +2883,7 @@ final class CatalogChanged_mutable implements CatalogChanged_orMutable {
 
   CatalogChanged_mutable._(this.actualGeneration);
 
-  /// If the value of [actualGeneration] is already mutable, returns it as is.
+  /// If the value of [actualGeneration] is already mutable, returns it as-is.
   /// Otherwise, makes a mutable copy, assigns it back to [actualGeneration] and returns it.
   _lib_editor_v1_type_catalog.CatalogGeneration_mutable
   get mutableActualGeneration {
@@ -2866,7 +2902,9 @@ final class CatalogChanged_mutable implements CatalogChanged_orMutable {
       CatalogChanged(actualGeneration: this.actualGeneration).._u = this._u;
 }
 
+// -----------------------------------------------------------------------------
 // struct AuthoringState
+// -----------------------------------------------------------------------------
 
 sealed class AuthoringState_orMutable {
   _lib_editor_v1_type_catalog.CatalogGeneration_orMutable get generation;
@@ -2942,7 +2980,7 @@ final class AuthoringState implements AuthoringState_orMutable {
     AuthoringObservationId.defaultInstance,
   );
 
-  /// Returns this instance (no operation).
+  /// Returns this instance (no-op).
   @_core.Deprecated("This instance is already frozen.")
   @_core.override
   AuthoringState toFrozen() => this;
@@ -3066,7 +3104,7 @@ final class AuthoringState_mutable implements AuthoringState_orMutable {
     this.confirmedObservation,
   );
 
-  /// If the value of [generation] is already mutable, returns it as is.
+  /// If the value of [generation] is already mutable, returns it as-is.
   /// Otherwise, makes a mutable copy, assigns it back to [generation] and returns it.
   _lib_editor_v1_type_catalog.CatalogGeneration_mutable get mutableGeneration {
     final value = this.generation;
@@ -3078,7 +3116,7 @@ final class AuthoringState_mutable implements AuthoringState_orMutable {
     }
   }
 
-  /// If the value of [resources] is already mutable, returns it as is.
+  /// If the value of [resources] is already mutable, returns it as-is.
   /// Otherwise, makes a mutable copy, assigns it back to [resources] and returns it.
   _core.List<AuthoringResource_orMutable> get mutableResources {
     final value = this.resources;
@@ -3089,7 +3127,7 @@ final class AuthoringState_mutable implements AuthoringState_orMutable {
     }
   }
 
-  /// If the value of [links] is already mutable, returns it as is.
+  /// If the value of [links] is already mutable, returns it as-is.
   /// Otherwise, makes a mutable copy, assigns it back to [links] and returns it.
   _core.List<_lib_editor_v1_authoring_facts.LinkProjection_orMutable>
   get mutableLinks {
@@ -3104,7 +3142,7 @@ final class AuthoringState_mutable implements AuthoringState_orMutable {
     }
   }
 
-  /// If the value of [findings] is already mutable, returns it as is.
+  /// If the value of [findings] is already mutable, returns it as-is.
   /// Otherwise, makes a mutable copy, assigns it back to [findings] and returns it.
   _core.List<_lib_editor_v1_checking.FindingSet_orMutable> get mutableFindings {
     final value = this.findings;
@@ -3118,7 +3156,7 @@ final class AuthoringState_mutable implements AuthoringState_orMutable {
     }
   }
 
-  /// If the value of [confirmedObservation] is already mutable, returns it as is.
+  /// If the value of [confirmedObservation] is already mutable, returns it as-is.
   /// Otherwise, makes a mutable copy, assigns it back to [confirmedObservation] and returns it.
   AuthoringObservationId_mutable get mutableConfirmedObservation {
     final value = this.confirmedObservation;
@@ -3141,7 +3179,9 @@ final class AuthoringState_mutable implements AuthoringState_orMutable {
   ).._u = this._u;
 }
 
+// -----------------------------------------------------------------------------
 // struct SetValueIntent
+// -----------------------------------------------------------------------------
 
 sealed class SetValueIntent_orMutable {
   _lib_editor_v1_type_catalog.ValueLocation_orMutable get at;
@@ -3178,7 +3218,7 @@ final class SetValueIntent implements SetValueIntent_orMutable {
     _lib_editor_v1_type_catalog.DataValue.unknown,
   );
 
-  /// Returns this instance (no operation).
+  /// Returns this instance (no-op).
   @_core.Deprecated("This instance is already frozen.")
   @_core.override
   SetValueIntent toFrozen() => this;
@@ -3251,7 +3291,7 @@ final class SetValueIntent_mutable implements SetValueIntent_orMutable {
 
   SetValueIntent_mutable._(this.at, this.value);
 
-  /// If the value of [at] is already mutable, returns it as is.
+  /// If the value of [at] is already mutable, returns it as-is.
   /// Otherwise, makes a mutable copy, assigns it back to [at] and returns it.
   _lib_editor_v1_type_catalog.ValueLocation_mutable get mutableAt {
     final value = this.at;
@@ -3269,7 +3309,9 @@ final class SetValueIntent_mutable implements SetValueIntent_orMutable {
       SetValueIntent(at: this.at, value: this.value).._u = this._u;
 }
 
+// -----------------------------------------------------------------------------
 // struct InsertIntent
+// -----------------------------------------------------------------------------
 
 sealed class InsertIntent_orMutable {
   _lib_editor_v1_type_catalog.ValueLocation_orMutable get at;
@@ -3316,7 +3358,7 @@ final class InsertIntent implements InsertIntent_orMutable {
     _lib_editor_v1_type_catalog.ListItem.defaultInstance,
   );
 
-  /// Returns this instance (no operation).
+  /// Returns this instance (no-op).
   @_core.Deprecated("This instance is already frozen.")
   @_core.override
   InsertIntent toFrozen() => this;
@@ -3401,7 +3443,7 @@ final class InsertIntent_mutable implements InsertIntent_orMutable {
 
   InsertIntent_mutable._(this.at, this.after, this.item);
 
-  /// If the value of [at] is already mutable, returns it as is.
+  /// If the value of [at] is already mutable, returns it as-is.
   /// Otherwise, makes a mutable copy, assigns it back to [at] and returns it.
   _lib_editor_v1_type_catalog.ValueLocation_mutable get mutableAt {
     final value = this.at;
@@ -3413,7 +3455,7 @@ final class InsertIntent_mutable implements InsertIntent_orMutable {
     }
   }
 
-  /// If the value of [item] is already mutable, returns it as is.
+  /// If the value of [item] is already mutable, returns it as-is.
   /// Otherwise, makes a mutable copy, assigns it back to [item] and returns it.
   _lib_editor_v1_type_catalog.ListItem_mutable get mutableItem {
     final value = this.item;
@@ -3432,7 +3474,9 @@ final class InsertIntent_mutable implements InsertIntent_orMutable {
         .._u = this._u;
 }
 
+// -----------------------------------------------------------------------------
 // struct RemoveIntent
+// -----------------------------------------------------------------------------
 
 sealed class RemoveIntent_orMutable {
   _lib_editor_v1_type_catalog.ValueLocation_orMutable get at;
@@ -3469,7 +3513,7 @@ final class RemoveIntent implements RemoveIntent_orMutable {
     _lib_editor_v1_type_catalog.ItemId.defaultInstance,
   );
 
-  /// Returns this instance (no operation).
+  /// Returns this instance (no-op).
   @_core.Deprecated("This instance is already frozen.")
   @_core.override
   RemoveIntent toFrozen() => this;
@@ -3542,7 +3586,7 @@ final class RemoveIntent_mutable implements RemoveIntent_orMutable {
 
   RemoveIntent_mutable._(this.at, this.item);
 
-  /// If the value of [at] is already mutable, returns it as is.
+  /// If the value of [at] is already mutable, returns it as-is.
   /// Otherwise, makes a mutable copy, assigns it back to [at] and returns it.
   _lib_editor_v1_type_catalog.ValueLocation_mutable get mutableAt {
     final value = this.at;
@@ -3554,7 +3598,7 @@ final class RemoveIntent_mutable implements RemoveIntent_orMutable {
     }
   }
 
-  /// If the value of [item] is already mutable, returns it as is.
+  /// If the value of [item] is already mutable, returns it as-is.
   /// Otherwise, makes a mutable copy, assigns it back to [item] and returns it.
   _lib_editor_v1_type_catalog.ItemId_mutable get mutableItem {
     final value = this.item;
@@ -3572,7 +3616,9 @@ final class RemoveIntent_mutable implements RemoveIntent_orMutable {
       RemoveIntent(at: this.at, item: this.item).._u = this._u;
 }
 
+// -----------------------------------------------------------------------------
 // struct MoveIntent
+// -----------------------------------------------------------------------------
 
 sealed class MoveIntent_orMutable {
   _lib_editor_v1_type_catalog.ValueLocation_orMutable get at;
@@ -3619,7 +3665,7 @@ final class MoveIntent implements MoveIntent_orMutable {
     null,
   );
 
-  /// Returns this instance (no operation).
+  /// Returns this instance (no-op).
   @_core.Deprecated("This instance is already frozen.")
   @_core.override
   MoveIntent toFrozen() => this;
@@ -3703,7 +3749,7 @@ final class MoveIntent_mutable implements MoveIntent_orMutable {
 
   MoveIntent_mutable._(this.at, this.item, this.after);
 
-  /// If the value of [at] is already mutable, returns it as is.
+  /// If the value of [at] is already mutable, returns it as-is.
   /// Otherwise, makes a mutable copy, assigns it back to [at] and returns it.
   _lib_editor_v1_type_catalog.ValueLocation_mutable get mutableAt {
     final value = this.at;
@@ -3715,7 +3761,7 @@ final class MoveIntent_mutable implements MoveIntent_orMutable {
     }
   }
 
-  /// If the value of [item] is already mutable, returns it as is.
+  /// If the value of [item] is already mutable, returns it as-is.
   /// Otherwise, makes a mutable copy, assigns it back to [item] and returns it.
   _lib_editor_v1_type_catalog.ItemId_mutable get mutableItem {
     final value = this.item;
@@ -3733,7 +3779,9 @@ final class MoveIntent_mutable implements MoveIntent_orMutable {
       MoveIntent(at: this.at, item: this.item, after: this.after).._u = this._u;
 }
 
+// -----------------------------------------------------------------------------
 // struct CreateResourceIntent
+// -----------------------------------------------------------------------------
 
 sealed class CreateResourceIntent_orMutable {
   _lib_editor_v1_type_catalog.ResourceId_orMutable get id;
@@ -3771,7 +3819,7 @@ final class CreateResourceIntent implements CreateResourceIntent_orMutable {
         _lib_editor_v1_type_catalog.AuthoringRecord.defaultInstance,
       );
 
-  /// Returns this instance (no operation).
+  /// Returns this instance (no-op).
   @_core.Deprecated("This instance is already frozen.")
   @_core.override
   CreateResourceIntent toFrozen() => this;
@@ -3848,7 +3896,7 @@ final class CreateResourceIntent_mutable
 
   CreateResourceIntent_mutable._(this.id, this.record);
 
-  /// If the value of [id] is already mutable, returns it as is.
+  /// If the value of [id] is already mutable, returns it as-is.
   /// Otherwise, makes a mutable copy, assigns it back to [id] and returns it.
   _lib_editor_v1_type_catalog.ResourceId_mutable get mutableId {
     final value = this.id;
@@ -3860,7 +3908,7 @@ final class CreateResourceIntent_mutable
     }
   }
 
-  /// If the value of [record] is already mutable, returns it as is.
+  /// If the value of [record] is already mutable, returns it as-is.
   /// Otherwise, makes a mutable copy, assigns it back to [record] and returns it.
   _lib_editor_v1_type_catalog.AuthoringRecord_mutable get mutableRecord {
     final value = this.record;
@@ -3878,7 +3926,9 @@ final class CreateResourceIntent_mutable
       CreateResourceIntent(id: this.id, record: this.record).._u = this._u;
 }
 
+// -----------------------------------------------------------------------------
 // struct DeleteResourceIntent
+// -----------------------------------------------------------------------------
 
 sealed class DeleteResourceIntent_orMutable {
   _lib_editor_v1_type_catalog.ResourceId_orMutable get id;
@@ -3910,7 +3960,7 @@ final class DeleteResourceIntent implements DeleteResourceIntent_orMutable {
         _lib_editor_v1_type_catalog.ResourceId.defaultInstance,
       );
 
-  /// Returns this instance (no operation).
+  /// Returns this instance (no-op).
   @_core.Deprecated("This instance is already frozen.")
   @_core.override
   DeleteResourceIntent toFrozen() => this;
@@ -3977,7 +4027,7 @@ final class DeleteResourceIntent_mutable
 
   DeleteResourceIntent_mutable._(this.id);
 
-  /// If the value of [id] is already mutable, returns it as is.
+  /// If the value of [id] is already mutable, returns it as-is.
   /// Otherwise, makes a mutable copy, assigns it back to [id] and returns it.
   _lib_editor_v1_type_catalog.ResourceId_mutable get mutableId {
     final value = this.id;
@@ -3995,7 +4045,9 @@ final class DeleteResourceIntent_mutable
       DeleteResourceIntent(id: this.id).._u = this._u;
 }
 
+// -----------------------------------------------------------------------------
 // struct NewCounterpartChoice
+// -----------------------------------------------------------------------------
 
 sealed class NewCounterpartChoice_orMutable {
   _lib_editor_v1_type_catalog.ValueLocation_orMutable get containing;
@@ -4033,7 +4085,7 @@ final class NewCounterpartChoice implements NewCounterpartChoice_orMutable {
         _lib_editor_v1_catalog.PreparedValue.defaultInstance,
       );
 
-  /// Returns this instance (no operation).
+  /// Returns this instance (no-op).
   @_core.Deprecated("This instance is already frozen.")
   @_core.override
   NewCounterpartChoice toFrozen() => this;
@@ -4110,7 +4162,7 @@ final class NewCounterpartChoice_mutable
 
   NewCounterpartChoice_mutable._(this.containing, this.prepared);
 
-  /// If the value of [containing] is already mutable, returns it as is.
+  /// If the value of [containing] is already mutable, returns it as-is.
   /// Otherwise, makes a mutable copy, assigns it back to [containing] and returns it.
   _lib_editor_v1_type_catalog.ValueLocation_mutable get mutableContaining {
     final value = this.containing;
@@ -4122,7 +4174,7 @@ final class NewCounterpartChoice_mutable
     }
   }
 
-  /// If the value of [prepared] is already mutable, returns it as is.
+  /// If the value of [prepared] is already mutable, returns it as-is.
   /// Otherwise, makes a mutable copy, assigns it back to [prepared] and returns it.
   _lib_editor_v1_catalog.PreparedValue_mutable get mutablePrepared {
     final value = this.prepared;
@@ -4141,7 +4193,9 @@ final class NewCounterpartChoice_mutable
         .._u = this._u;
 }
 
+// -----------------------------------------------------------------------------
 // enum CounterpartChoice
+// -----------------------------------------------------------------------------
 
 /// To switch on the variants:
 ///   ```
@@ -4292,7 +4346,9 @@ final class CounterpartChoice_newWrapper extends _CounterpartChoice_wrapper {
   CounterpartChoice_kind get kind => CounterpartChoice_kind.newWrapper;
 }
 
+// -----------------------------------------------------------------------------
 // struct ConnectIntent
+// -----------------------------------------------------------------------------
 
 sealed class ConnectIntent_orMutable {
   LinkOccurrence_orMutable get source;
@@ -4335,7 +4391,7 @@ final class ConnectIntent implements ConnectIntent_orMutable {
     null,
   );
 
-  /// Returns this instance (no operation).
+  /// Returns this instance (no-op).
   @_core.Deprecated("This instance is already frozen.")
   @_core.override
   ConnectIntent toFrozen() => this;
@@ -4422,7 +4478,7 @@ final class ConnectIntent_mutable implements ConnectIntent_orMutable {
 
   ConnectIntent_mutable._(this.source, this.target, this.counterpart);
 
-  /// If the value of [source] is already mutable, returns it as is.
+  /// If the value of [source] is already mutable, returns it as-is.
   /// Otherwise, makes a mutable copy, assigns it back to [source] and returns it.
   LinkOccurrence_mutable get mutableSource {
     final value = this.source;
@@ -4433,7 +4489,7 @@ final class ConnectIntent_mutable implements ConnectIntent_orMutable {
     }
   }
 
-  /// If the value of [target] is already mutable, returns it as is.
+  /// If the value of [target] is already mutable, returns it as-is.
   /// Otherwise, makes a mutable copy, assigns it back to [target] and returns it.
   _lib_editor_v1_type_catalog.ResourceId_mutable get mutableTarget {
     final value = this.target;
@@ -4454,7 +4510,9 @@ final class ConnectIntent_mutable implements ConnectIntent_orMutable {
   ).._u = this._u;
 }
 
+// -----------------------------------------------------------------------------
 // struct RetagIntent
+// -----------------------------------------------------------------------------
 
 sealed class RetagIntent_orMutable {
   _lib_editor_v1_type_catalog.ValueLocation_orMutable get at;
@@ -4491,7 +4549,7 @@ final class RetagIntent implements RetagIntent_orMutable {
     _lib_editor_v1_type_catalog.NamedTypeUse.defaultInstance,
   );
 
-  /// Returns this instance (no operation).
+  /// Returns this instance (no-op).
   @_core.Deprecated("This instance is already frozen.")
   @_core.override
   RetagIntent toFrozen() => this;
@@ -4563,7 +4621,7 @@ final class RetagIntent_mutable implements RetagIntent_orMutable {
 
   RetagIntent_mutable._(this.at, this.type);
 
-  /// If the value of [at] is already mutable, returns it as is.
+  /// If the value of [at] is already mutable, returns it as-is.
   /// Otherwise, makes a mutable copy, assigns it back to [at] and returns it.
   _lib_editor_v1_type_catalog.ValueLocation_mutable get mutableAt {
     final value = this.at;
@@ -4575,7 +4633,7 @@ final class RetagIntent_mutable implements RetagIntent_orMutable {
     }
   }
 
-  /// If the value of [type] is already mutable, returns it as is.
+  /// If the value of [type] is already mutable, returns it as-is.
   /// Otherwise, makes a mutable copy, assigns it back to [type] and returns it.
   _lib_editor_v1_type_catalog.NamedTypeUse_mutable get mutableType {
     final value = this.type;
@@ -4593,7 +4651,9 @@ final class RetagIntent_mutable implements RetagIntent_orMutable {
       RetagIntent(at: this.at, type: this.type).._u = this._u;
 }
 
+// -----------------------------------------------------------------------------
 // struct ResourceConfigurationIntent
+// -----------------------------------------------------------------------------
 
 sealed class ResourceConfigurationIntent_orMutable {
   _lib_editor_v1_type_catalog.ResourceId_orMutable get resource;
@@ -4632,7 +4692,7 @@ final class ResourceConfigurationIntent
         _lib_editor_v1_type_catalog.TypeSelection.unknown,
       );
 
-  /// Returns this instance (no operation).
+  /// Returns this instance (no-op).
   @_core.Deprecated("This instance is already frozen.")
   @_core.override
   ResourceConfigurationIntent toFrozen() => this;
@@ -4709,7 +4769,7 @@ final class ResourceConfigurationIntent_mutable
 
   ResourceConfigurationIntent_mutable._(this.resource, this.configuration);
 
-  /// If the value of [resource] is already mutable, returns it as is.
+  /// If the value of [resource] is already mutable, returns it as-is.
   /// Otherwise, makes a mutable copy, assigns it back to [resource] and returns it.
   _lib_editor_v1_type_catalog.ResourceId_mutable get mutableResource {
     final value = this.resource;
@@ -4729,7 +4789,9 @@ final class ResourceConfigurationIntent_mutable
   ).._u = this._u;
 }
 
+// -----------------------------------------------------------------------------
 // enum EditIntent
+// -----------------------------------------------------------------------------
 
 /// Ordered proposed mutations. Relation intent names exact authored occurrences so admission can
 /// synchronize inverses and validate the resulting graph before persistence.
@@ -5138,7 +5200,9 @@ final class EditIntent_configureResourceWrapper extends _EditIntent_wrapper {
   EditIntent_kind get kind => EditIntent_kind.configureResourceWrapper;
 }
 
+// -----------------------------------------------------------------------------
 // struct PreparedEdit
+// -----------------------------------------------------------------------------
 
 sealed class PreparedEdit_orMutable {
   _lib_editor_v1_type_catalog.CatalogGeneration_orMutable get catalog;
@@ -5192,7 +5256,7 @@ final class PreparedEdit implements PreparedEdit_orMutable {
     _skir.KeyedIterable.empty,
   );
 
-  /// Returns this instance (no operation).
+  /// Returns this instance (no-op).
   @_core.Deprecated("This instance is already frozen.")
   @_core.override
   PreparedEdit toFrozen() => this;
@@ -5281,7 +5345,7 @@ final class PreparedEdit_mutable implements PreparedEdit_orMutable {
 
   PreparedEdit_mutable._(this.catalog, this.expectations, this.intents);
 
-  /// If the value of [catalog] is already mutable, returns it as is.
+  /// If the value of [catalog] is already mutable, returns it as-is.
   /// Otherwise, makes a mutable copy, assigns it back to [catalog] and returns it.
   _lib_editor_v1_type_catalog.CatalogGeneration_mutable get mutableCatalog {
     final value = this.catalog;
@@ -5293,7 +5357,7 @@ final class PreparedEdit_mutable implements PreparedEdit_orMutable {
     }
   }
 
-  /// If the value of [expectations] is already mutable, returns it as is.
+  /// If the value of [expectations] is already mutable, returns it as-is.
   /// Otherwise, makes a mutable copy, assigns it back to [expectations] and returns it.
   _core.List<_lib_editor_v1_authoring_facts.EditExpectation>
   get mutableExpectations {
@@ -5308,7 +5372,7 @@ final class PreparedEdit_mutable implements PreparedEdit_orMutable {
     }
   }
 
-  /// If the value of [intents] is already mutable, returns it as is.
+  /// If the value of [intents] is already mutable, returns it as-is.
   /// Otherwise, makes a mutable copy, assigns it back to [intents] and returns it.
   _core.List<EditIntent> get mutableIntents {
     final value = this.intents;
@@ -5328,7 +5392,9 @@ final class PreparedEdit_mutable implements PreparedEdit_orMutable {
   ).._u = this._u;
 }
 
+// -----------------------------------------------------------------------------
 // struct PreparedEditReady
+// -----------------------------------------------------------------------------
 
 sealed class PreparedEditReady_orMutable {
   PreparedEdit_orMutable get edit;
@@ -5357,7 +5423,7 @@ final class PreparedEditReady implements PreparedEditReady_orMutable {
   static PreparedEditReady_mutable mutable() =>
       PreparedEditReady_mutable._(PreparedEdit.defaultInstance);
 
-  /// Returns this instance (no operation).
+  /// Returns this instance (no-op).
   @_core.Deprecated("This instance is already frozen.")
   @_core.override
   PreparedEditReady toFrozen() => this;
@@ -5420,7 +5486,7 @@ final class PreparedEditReady_mutable implements PreparedEditReady_orMutable {
 
   PreparedEditReady_mutable._(this.edit);
 
-  /// If the value of [edit] is already mutable, returns it as is.
+  /// If the value of [edit] is already mutable, returns it as-is.
   /// Otherwise, makes a mutable copy, assigns it back to [edit] and returns it.
   PreparedEdit_mutable get mutableEdit {
     final value = this.edit;
@@ -5437,7 +5503,9 @@ final class PreparedEditReady_mutable implements PreparedEditReady_orMutable {
       PreparedEditReady(edit: this.edit).._u = this._u;
 }
 
+// -----------------------------------------------------------------------------
 // enum PreparedEditResult
+// -----------------------------------------------------------------------------
 
 /// To switch on the variants:
 ///   ```
@@ -5610,7 +5678,9 @@ final class PreparedEditResult_rejectedWrapper
   PreparedEditResult_kind get kind => PreparedEditResult_kind.rejectedWrapper;
 }
 
+// -----------------------------------------------------------------------------
 // enum CommitResult
+// -----------------------------------------------------------------------------
 
 /// committed confirms installation of saved authoring state. It does not confirm check completion,
 /// compilation, publication selection, or engine application. Conflict requires refreshing original
@@ -5810,7 +5880,9 @@ final class CommitResult_catalogChangedWrapper extends _CommitResult_wrapper {
   CommitResult_kind get kind => CommitResult_kind.catalogChangedWrapper;
 }
 
+// -----------------------------------------------------------------------------
 // enum AuthoringOperation
+// -----------------------------------------------------------------------------
 
 /// To switch on the variants:
 ///   ```
@@ -5935,7 +6007,9 @@ final class AuthoringOperation_commitPreparedWrapper
       AuthoringOperation_kind.commitPreparedWrapper;
 }
 
+// -----------------------------------------------------------------------------
 // struct AuthoringChanged
+// -----------------------------------------------------------------------------
 
 sealed class AuthoringChanged_orMutable {
   _lib_editor_v1_type_catalog.CatalogGeneration_orMutable get generation;
@@ -5968,7 +6042,7 @@ final class AuthoringChanged implements AuthoringChanged_orMutable {
     _lib_editor_v1_type_catalog.CatalogGeneration.defaultInstance,
   );
 
-  /// Returns this instance (no operation).
+  /// Returns this instance (no-op).
   @_core.Deprecated("This instance is already frozen.")
   @_core.override
   AuthoringChanged toFrozen() => this;
@@ -6031,7 +6105,7 @@ final class AuthoringChanged_mutable implements AuthoringChanged_orMutable {
 
   AuthoringChanged_mutable._(this.generation);
 
-  /// If the value of [generation] is already mutable, returns it as is.
+  /// If the value of [generation] is already mutable, returns it as-is.
   /// Otherwise, makes a mutable copy, assigns it back to [generation] and returns it.
   _lib_editor_v1_type_catalog.CatalogGeneration_mutable get mutableGeneration {
     final value = this.generation;
@@ -6049,7 +6123,9 @@ final class AuthoringChanged_mutable implements AuthoringChanged_orMutable {
       AuthoringChanged(generation: this.generation).._u = this._u;
 }
 
+// -----------------------------------------------------------------------------
 // enum LinkRepairIntent
+// -----------------------------------------------------------------------------
 
 /// To switch on the variants:
 ///   ```
@@ -6198,7 +6274,9 @@ final class LinkRepairIntent_removeWrapper extends _LinkRepairIntent_wrapper {
   LinkRepairIntent_kind get kind => LinkRepairIntent_kind.removeWrapper;
 }
 
+// -----------------------------------------------------------------------------
 // struct TypeArgumentChangePreview
+// -----------------------------------------------------------------------------
 
 sealed class TypeArgumentChangePreview_orMutable {
   _lib_editor_v1_type_catalog.ResourceId_orMutable get resource;
@@ -6273,7 +6351,7 @@ final class TypeArgumentChangePreview
         _skir.KeyedIterable.empty,
       );
 
-  /// Returns this instance (no operation).
+  /// Returns this instance (no-op).
   @_core.Deprecated("This instance is already frozen.")
   @_core.override
   TypeArgumentChangePreview toFrozen() => this;
@@ -6401,7 +6479,7 @@ final class TypeArgumentChangePreview_mutable
     this.clearedLocations,
   );
 
-  /// If the value of [resource] is already mutable, returns it as is.
+  /// If the value of [resource] is already mutable, returns it as-is.
   /// Otherwise, makes a mutable copy, assigns it back to [resource] and returns it.
   _lib_editor_v1_type_catalog.ResourceId_mutable get mutableResource {
     final value = this.resource;
@@ -6413,7 +6491,7 @@ final class TypeArgumentChangePreview_mutable
     }
   }
 
-  /// If the value of [edit] is already mutable, returns it as is.
+  /// If the value of [edit] is already mutable, returns it as-is.
   /// Otherwise, makes a mutable copy, assigns it back to [edit] and returns it.
   PreparedEdit_mutable get mutableEdit {
     final value = this.edit;
@@ -6424,7 +6502,7 @@ final class TypeArgumentChangePreview_mutable
     }
   }
 
-  /// If the value of [linkRepairs] is already mutable, returns it as is.
+  /// If the value of [linkRepairs] is already mutable, returns it as-is.
   /// Otherwise, makes a mutable copy, assigns it back to [linkRepairs] and returns it.
   _core.List<LinkRepairIntent> get mutableLinkRepairs {
     final value = this.linkRepairs;
@@ -6435,7 +6513,7 @@ final class TypeArgumentChangePreview_mutable
     }
   }
 
-  /// If the value of [clearedLocations] is already mutable, returns it as is.
+  /// If the value of [clearedLocations] is already mutable, returns it as-is.
   /// Otherwise, makes a mutable copy, assigns it back to [clearedLocations] and returns it.
   _core.List<_lib_editor_v1_type_catalog.ValueLocation_orMutable>
   get mutableClearedLocations {
@@ -6461,7 +6539,9 @@ final class TypeArgumentChangePreview_mutable
   ).._u = this._u;
 }
 
+// -----------------------------------------------------------------------------
 // struct ArgumentLocation
+// -----------------------------------------------------------------------------
 
 sealed class ArgumentLocation_orMutable {
   _core.int get index;
@@ -6487,7 +6567,7 @@ final class ArgumentLocation implements ArgumentLocation_orMutable {
   /// Fields are initialized to their default values.
   static ArgumentLocation_mutable mutable() => ArgumentLocation_mutable._(0);
 
-  /// Returns this instance (no operation).
+  /// Returns this instance (no-op).
   @_core.Deprecated("This instance is already frozen.")
   @_core.override
   ArgumentLocation toFrozen() => this;
@@ -6556,7 +6636,9 @@ final class ArgumentLocation_mutable implements ArgumentLocation_orMutable {
       ArgumentLocation(index: this.index).._u = this._u;
 }
 
+// -----------------------------------------------------------------------------
 // enum TypePreviewResult
+// -----------------------------------------------------------------------------
 
 /// To switch on the variants:
 ///   ```
@@ -6768,7 +6850,9 @@ final class TypePreviewResult_rejectedWrapper
   TypePreviewResult_kind get kind => TypePreviewResult_kind.rejectedWrapper;
 }
 
+// -----------------------------------------------------------------------------
 // struct AuthoringSearchHit
+// -----------------------------------------------------------------------------
 
 sealed class AuthoringSearchHit_orMutable {
   _lib_editor_v1_type_catalog.ResourceId_orMutable get resource;
@@ -6827,7 +6911,7 @@ final class AuthoringSearchHit implements AuthoringSearchHit_orMutable {
     _lib_editor_v1_typed_value.PortableValue.defaultInstance,
   );
 
-  /// Returns this instance (no operation).
+  /// Returns this instance (no-op).
   @_core.Deprecated("This instance is already frozen.")
   @_core.override
   AuthoringSearchHit toFrozen() => this;
@@ -6934,7 +7018,7 @@ final class AuthoringSearchHit_mutable implements AuthoringSearchHit_orMutable {
     this.context,
   );
 
-  /// If the value of [resource] is already mutable, returns it as is.
+  /// If the value of [resource] is already mutable, returns it as-is.
   /// Otherwise, makes a mutable copy, assigns it back to [resource] and returns it.
   _lib_editor_v1_type_catalog.ResourceId_mutable get mutableResource {
     final value = this.resource;
@@ -6946,7 +7030,7 @@ final class AuthoringSearchHit_mutable implements AuthoringSearchHit_orMutable {
     }
   }
 
-  /// If the value of [definition] is already mutable, returns it as is.
+  /// If the value of [definition] is already mutable, returns it as-is.
   /// Otherwise, makes a mutable copy, assigns it back to [definition] and returns it.
   _lib_editor_v1_catalog.ResourceDefinitionId_mutable get mutableDefinition {
     final value = this.definition;
@@ -6958,7 +7042,7 @@ final class AuthoringSearchHit_mutable implements AuthoringSearchHit_orMutable {
     }
   }
 
-  /// If the value of [subject] is already mutable, returns it as is.
+  /// If the value of [subject] is already mutable, returns it as-is.
   /// Otherwise, makes a mutable copy, assigns it back to [subject] and returns it.
   PresentationSubject_mutable get mutableSubject {
     final value = this.subject;
@@ -6969,7 +7053,7 @@ final class AuthoringSearchHit_mutable implements AuthoringSearchHit_orMutable {
     }
   }
 
-  /// If the value of [context] is already mutable, returns it as is.
+  /// If the value of [context] is already mutable, returns it as-is.
   /// Otherwise, makes a mutable copy, assigns it back to [context] and returns it.
   _lib_editor_v1_typed_value.PortableValue_mutable get mutableContext {
     final value = this.context;
@@ -6991,7 +7075,9 @@ final class AuthoringSearchHit_mutable implements AuthoringSearchHit_orMutable {
   ).._u = this._u;
 }
 
+// -----------------------------------------------------------------------------
 // struct AuthoringSearchResult
+// -----------------------------------------------------------------------------
 
 sealed class AuthoringSearchResult_orMutable {
   _lib_editor_v1_type_catalog.CatalogGeneration_orMutable get generation;
@@ -7041,7 +7127,7 @@ final class AuthoringSearchResult implements AuthoringSearchResult_orMutable {
         _skir.KeyedIterable.empty,
       );
 
-  /// Returns this instance (no operation).
+  /// Returns this instance (no-op).
   @_core.Deprecated("This instance is already frozen.")
   @_core.override
   AuthoringSearchResult toFrozen() => this;
@@ -7137,7 +7223,7 @@ final class AuthoringSearchResult_mutable
 
   AuthoringSearchResult_mutable._(this.generation, this.hits, this.diagnostics);
 
-  /// If the value of [generation] is already mutable, returns it as is.
+  /// If the value of [generation] is already mutable, returns it as-is.
   /// Otherwise, makes a mutable copy, assigns it back to [generation] and returns it.
   _lib_editor_v1_type_catalog.CatalogGeneration_mutable get mutableGeneration {
     final value = this.generation;
@@ -7149,7 +7235,7 @@ final class AuthoringSearchResult_mutable
     }
   }
 
-  /// If the value of [hits] is already mutable, returns it as is.
+  /// If the value of [hits] is already mutable, returns it as-is.
   /// Otherwise, makes a mutable copy, assigns it back to [hits] and returns it.
   _core.List<AuthoringSearchHit_orMutable> get mutableHits {
     final value = this.hits;
@@ -7160,7 +7246,7 @@ final class AuthoringSearchResult_mutable
     }
   }
 
-  /// If the value of [diagnostics] is already mutable, returns it as is.
+  /// If the value of [diagnostics] is already mutable, returns it as-is.
   /// Otherwise, makes a mutable copy, assigns it back to [diagnostics] and returns it.
   _core.List<_lib_editor_v1_diagnostic.Diagnostic_orMutable>
   get mutableDiagnostics {
@@ -7184,7 +7270,9 @@ final class AuthoringSearchResult_mutable
   ).._u = this._u;
 }
 
+// -----------------------------------------------------------------------------
 // enum CollectionProjectionSource
+// -----------------------------------------------------------------------------
 
 /// To switch on the variants:
 ///   ```
@@ -7358,7 +7446,9 @@ final class CollectionProjectionSource_literalWrapper
       CollectionProjectionSource_kind.literalWrapper;
 }
 
+// -----------------------------------------------------------------------------
 // struct CollectionProjectionField
+// -----------------------------------------------------------------------------
 
 sealed class CollectionProjectionField_orMutable {
   _lib_editor_v1_type_catalog.ValuePath_orMutable get target;
@@ -7397,7 +7487,7 @@ final class CollectionProjectionField
         CollectionProjectionSource.unknown,
       );
 
-  /// Returns this instance (no operation).
+  /// Returns this instance (no-op).
   @_core.Deprecated("This instance is already frozen.")
   @_core.override
   CollectionProjectionField toFrozen() => this;
@@ -7474,7 +7564,7 @@ final class CollectionProjectionField_mutable
 
   CollectionProjectionField_mutable._(this.target, this.source);
 
-  /// If the value of [target] is already mutable, returns it as is.
+  /// If the value of [target] is already mutable, returns it as-is.
   /// Otherwise, makes a mutable copy, assigns it back to [target] and returns it.
   _lib_editor_v1_type_catalog.ValuePath_mutable get mutableTarget {
     final value = this.target;
@@ -7493,7 +7583,9 @@ final class CollectionProjectionField_mutable
         .._u = this._u;
 }
 
+// -----------------------------------------------------------------------------
 // struct CollectionProjectionDefinition
+// -----------------------------------------------------------------------------
 
 sealed class CollectionProjectionDefinition_orMutable {
   _core.String get sourceId;
@@ -7554,7 +7646,7 @@ final class CollectionProjectionDefinition
         _skir.KeyedIterable.empty,
       );
 
-  /// Returns this instance (no operation).
+  /// Returns this instance (no-op).
   @_core.Deprecated("This instance is already frozen.")
   @_core.override
   CollectionProjectionDefinition toFrozen() => this;
@@ -7666,7 +7758,7 @@ final class CollectionProjectionDefinition_mutable
     this.fields,
   );
 
-  /// If the value of [root] is already mutable, returns it as is.
+  /// If the value of [root] is already mutable, returns it as-is.
   /// Otherwise, makes a mutable copy, assigns it back to [root] and returns it.
   _lib_editor_v1_type_catalog.TypeDefinitionId_mutable get mutableRoot {
     final value = this.root;
@@ -7678,7 +7770,7 @@ final class CollectionProjectionDefinition_mutable
     }
   }
 
-  /// If the value of [rowType] is already mutable, returns it as is.
+  /// If the value of [rowType] is already mutable, returns it as-is.
   /// Otherwise, makes a mutable copy, assigns it back to [rowType] and returns it.
   _lib_editor_v1_type_catalog.NamedTypeUse_mutable get mutableRowType {
     final value = this.rowType;
@@ -7690,7 +7782,7 @@ final class CollectionProjectionDefinition_mutable
     }
   }
 
-  /// If the value of [fields] is already mutable, returns it as is.
+  /// If the value of [fields] is already mutable, returns it as-is.
   /// Otherwise, makes a mutable copy, assigns it back to [fields] and returns it.
   _core.List<CollectionProjectionField_orMutable> get mutableFields {
     final value = this.fields;
@@ -7712,7 +7804,9 @@ final class CollectionProjectionDefinition_mutable
   ).._u = this._u;
 }
 
+// -----------------------------------------------------------------------------
 // struct AuthoringStateTransferChunk
+// -----------------------------------------------------------------------------
 
 sealed class AuthoringStateTransferChunk_orMutable {
   _lib_editor_v1_type_catalog.CatalogGeneration_orMutable get generation;
@@ -7753,7 +7847,7 @@ final class AuthoringStateTransferChunk
         _lib_kernel_v1_bounded_transfer.BoundedTransferChunk.defaultInstance,
       );
 
-  /// Returns this instance (no operation).
+  /// Returns this instance (no-op).
   @_core.Deprecated("This instance is already frozen.")
   @_core.override
   AuthoringStateTransferChunk toFrozen() => this;
@@ -7830,7 +7924,7 @@ final class AuthoringStateTransferChunk_mutable
 
   AuthoringStateTransferChunk_mutable._(this.generation, this.transfer);
 
-  /// If the value of [generation] is already mutable, returns it as is.
+  /// If the value of [generation] is already mutable, returns it as-is.
   /// Otherwise, makes a mutable copy, assigns it back to [generation] and returns it.
   _lib_editor_v1_type_catalog.CatalogGeneration_mutable get mutableGeneration {
     final value = this.generation;
@@ -7842,7 +7936,7 @@ final class AuthoringStateTransferChunk_mutable
     }
   }
 
-  /// If the value of [transfer] is already mutable, returns it as is.
+  /// If the value of [transfer] is already mutable, returns it as-is.
   /// Otherwise, makes a mutable copy, assigns it back to [transfer] and returns it.
   _lib_kernel_v1_bounded_transfer.BoundedTransferChunk_mutable
   get mutableTransfer {
@@ -7864,7 +7958,9 @@ final class AuthoringStateTransferChunk_mutable
   ).._u = this._u;
 }
 
+// -----------------------------------------------------------------------------
 // enum AuthoringTransferUnavailableReason
+// -----------------------------------------------------------------------------
 
 /// To switch on the variants:
 ///   ```
@@ -7968,7 +8064,9 @@ enum _AuthoringTransferUnavailableReason_consts
   );
 }
 
+// -----------------------------------------------------------------------------
 // struct AuthoringTransferUnavailable
+// -----------------------------------------------------------------------------
 
 sealed class AuthoringTransferUnavailable_orMutable {
   _lib_editor_v1_type_catalog.CatalogGeneration_orMutable get generation;
@@ -8029,7 +8127,7 @@ final class AuthoringTransferUnavailable
         0,
       );
 
-  /// Returns this instance (no operation).
+  /// Returns this instance (no-op).
   @_core.Deprecated("This instance is already frozen.")
   @_core.override
   AuthoringTransferUnavailable toFrozen() => this;
@@ -8141,7 +8239,7 @@ final class AuthoringTransferUnavailable_mutable
     this.maxEncodedSize,
   );
 
-  /// If the value of [generation] is already mutable, returns it as is.
+  /// If the value of [generation] is already mutable, returns it as-is.
   /// Otherwise, makes a mutable copy, assigns it back to [generation] and returns it.
   _lib_editor_v1_type_catalog.CatalogGeneration_mutable get mutableGeneration {
     final value = this.generation;
@@ -8163,7 +8261,9 @@ final class AuthoringTransferUnavailable_mutable
   ).._u = this._u;
 }
 
+// -----------------------------------------------------------------------------
 // struct AuthoringObservationId
+// -----------------------------------------------------------------------------
 
 sealed class AuthoringObservationId_orMutable {
   _core.String get value;
@@ -8194,7 +8294,7 @@ final class AuthoringObservationId implements AuthoringObservationId_orMutable {
   static AuthoringObservationId_mutable mutable() =>
       AuthoringObservationId_mutable._("");
 
-  /// Returns this instance (no operation).
+  /// Returns this instance (no-op).
   @_core.Deprecated("This instance is already frozen.")
   @_core.override
   AuthoringObservationId toFrozen() => this;
@@ -8267,7 +8367,9 @@ final class AuthoringObservationId_mutable
       AuthoringObservationId(value: this.value).._u = this._u;
 }
 
+// -----------------------------------------------------------------------------
 // struct QueryAuthoringStateRequest
+// -----------------------------------------------------------------------------
 
 sealed class QueryAuthoringStateRequest_orMutable {
   _lib_editor_v1_type_catalog.CatalogGeneration_orMutable get generation;
@@ -8306,7 +8408,7 @@ final class QueryAuthoringStateRequest
         "",
       );
 
-  /// Returns this instance (no operation).
+  /// Returns this instance (no-op).
   @_core.Deprecated("This instance is already frozen.")
   @_core.override
   QueryAuthoringStateRequest toFrozen() => this;
@@ -8383,7 +8485,7 @@ final class QueryAuthoringStateRequest_mutable
 
   QueryAuthoringStateRequest_mutable._(this.generation, this.transferId);
 
-  /// If the value of [generation] is already mutable, returns it as is.
+  /// If the value of [generation] is already mutable, returns it as-is.
   /// Otherwise, makes a mutable copy, assigns it back to [generation] and returns it.
   _lib_editor_v1_type_catalog.CatalogGeneration_mutable get mutableGeneration {
     final value = this.generation;
@@ -8403,7 +8505,9 @@ final class QueryAuthoringStateRequest_mutable
   ).._u = this._u;
 }
 
+// -----------------------------------------------------------------------------
 // enum QueryAuthoringStateResponse
+// -----------------------------------------------------------------------------
 
 /// To switch on the variants:
 ///   ```
@@ -8641,7 +8745,9 @@ final class QueryAuthoringStateResponse_internalErrorWrapper
       QueryAuthoringStateResponse_kind.internalErrorWrapper;
 }
 
+// -----------------------------------------------------------------------------
 // struct SearchAuthoringRequest
+// -----------------------------------------------------------------------------
 
 sealed class SearchAuthoringRequest_orMutable {
   _lib_editor_v1_type_catalog.CatalogGeneration_orMutable get generation;
@@ -8714,7 +8820,7 @@ final class SearchAuthoringRequest implements SearchAuthoringRequest_orMutable {
         null,
       );
 
-  /// Returns this instance (no operation).
+  /// Returns this instance (no-op).
   @_core.Deprecated("This instance is already frozen.")
   @_core.override
   SearchAuthoringRequest toFrozen() => this;
@@ -8845,7 +8951,7 @@ final class SearchAuthoringRequest_mutable
     this.target,
   );
 
-  /// If the value of [generation] is already mutable, returns it as is.
+  /// If the value of [generation] is already mutable, returns it as-is.
   /// Otherwise, makes a mutable copy, assigns it back to [generation] and returns it.
   _lib_editor_v1_type_catalog.CatalogGeneration_mutable get mutableGeneration {
     final value = this.generation;
@@ -8857,7 +8963,7 @@ final class SearchAuthoringRequest_mutable
     }
   }
 
-  /// If the value of [roots] is already mutable, returns it as is.
+  /// If the value of [roots] is already mutable, returns it as-is.
   /// Otherwise, makes a mutable copy, assigns it back to [roots] and returns it.
   _core.List<_lib_editor_v1_type_catalog.TypeDefinitionId_orMutable>
   get mutableRoots {
@@ -8872,7 +8978,7 @@ final class SearchAuthoringRequest_mutable
     }
   }
 
-  /// If the value of [contexts] is already mutable, returns it as is.
+  /// If the value of [contexts] is already mutable, returns it as-is.
   /// Otherwise, makes a mutable copy, assigns it back to [contexts] and returns it.
   _core.List<_lib_editor_v1_type_catalog.ResourceId_orMutable>
   get mutableContexts {
@@ -8898,7 +9004,9 @@ final class SearchAuthoringRequest_mutable
   ).._u = this._u;
 }
 
+// -----------------------------------------------------------------------------
 // enum SearchAuthoringResponse
+// -----------------------------------------------------------------------------
 
 /// To switch on the variants:
 ///   ```
@@ -9127,7 +9235,9 @@ final class SearchAuthoringResponse_internalErrorWrapper
       SearchAuthoringResponse_kind.internalErrorWrapper;
 }
 
+// -----------------------------------------------------------------------------
 // enum CommitPreparedEditResponse
+// -----------------------------------------------------------------------------
 
 /// To switch on the variants:
 ///   ```
@@ -9275,7 +9385,9 @@ final class CommitPreparedEditResponse_internalErrorWrapper
       CommitPreparedEditResponse_kind.internalErrorWrapper;
 }
 
+// -----------------------------------------------------------------------------
 // struct PreviewTypeArgumentChangeRequest
+// -----------------------------------------------------------------------------
 
 sealed class PreviewTypeArgumentChangeRequest_orMutable {
   _lib_editor_v1_type_catalog.ResourceId_orMutable get resource;
@@ -9328,7 +9440,7 @@ final class PreviewTypeArgumentChangeRequest
         _lib_editor_v1_type_catalog.CatalogGeneration.defaultInstance,
       );
 
-  /// Returns this instance (no operation).
+  /// Returns this instance (no-op).
   @_core.Deprecated("This instance is already frozen.")
   @_core.override
   PreviewTypeArgumentChangeRequest toFrozen() => this;
@@ -9427,7 +9539,7 @@ final class PreviewTypeArgumentChangeRequest_mutable
     this.catalog,
   );
 
-  /// If the value of [resource] is already mutable, returns it as is.
+  /// If the value of [resource] is already mutable, returns it as-is.
   /// Otherwise, makes a mutable copy, assigns it back to [resource] and returns it.
   _lib_editor_v1_type_catalog.ResourceId_mutable get mutableResource {
     final value = this.resource;
@@ -9439,7 +9551,7 @@ final class PreviewTypeArgumentChangeRequest_mutable
     }
   }
 
-  /// If the value of [catalog] is already mutable, returns it as is.
+  /// If the value of [catalog] is already mutable, returns it as-is.
   /// Otherwise, makes a mutable copy, assigns it back to [catalog] and returns it.
   _lib_editor_v1_type_catalog.CatalogGeneration_mutable get mutableCatalog {
     final value = this.catalog;
@@ -9461,7 +9573,9 @@ final class PreviewTypeArgumentChangeRequest_mutable
       ).._u = this._u;
 }
 
+// -----------------------------------------------------------------------------
 // enum PreviewTypeArgumentChangeResponse
+// -----------------------------------------------------------------------------
 
 /// To switch on the variants:
 ///   ```
@@ -9619,7 +9733,9 @@ final class PreviewTypeArgumentChangeResponse_internalErrorWrapper
       PreviewTypeArgumentChangeResponse_kind.internalErrorWrapper;
 }
 
+// -----------------------------------------------------------------------------
 // enum PrepareTypeArgumentChangeResponse
+// -----------------------------------------------------------------------------
 
 /// To switch on the variants:
 ///   ```

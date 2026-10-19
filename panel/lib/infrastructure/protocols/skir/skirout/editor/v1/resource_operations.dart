@@ -21,7 +21,9 @@ import "./operation.dart" as _lib_editor_v1_operation;
 import "./type_catalog.dart" as _lib_editor_v1_type_catalog;
 import "../../kernel/v1/errors.dart" as _lib_kernel_v1_errors;
 
+// -----------------------------------------------------------------------------
 // struct OperationOrigin
+// -----------------------------------------------------------------------------
 
 sealed class OperationOrigin_orMutable {
   _lib_editor_v1_type_catalog.ResourceId_orMutable? get container;
@@ -61,7 +63,7 @@ final class OperationOrigin implements OperationOrigin_orMutable {
   static OperationOrigin_mutable mutable() =>
       OperationOrigin_mutable._(null, _skir.KeyedIterable.empty);
 
-  /// Returns this instance (no operation).
+  /// Returns this instance (no-op).
   @_core.Deprecated("This instance is already frozen.")
   @_core.override
   OperationOrigin toFrozen() => this;
@@ -138,7 +140,7 @@ final class OperationOrigin_mutable implements OperationOrigin_orMutable {
 
   OperationOrigin_mutable._(this.container, this.occurrences);
 
-  /// If the value of [occurrences] is already mutable, returns it as is.
+  /// If the value of [occurrences] is already mutable, returns it as-is.
   /// Otherwise, makes a mutable copy, assigns it back to [occurrences] and returns it.
   _core.List<_lib_editor_v1_authoring.LinkOccurrence_orMutable>
   get mutableOccurrences {
@@ -160,7 +162,9 @@ final class OperationOrigin_mutable implements OperationOrigin_orMutable {
         .._u = this._u;
 }
 
+// -----------------------------------------------------------------------------
 // struct OperationInvocation
+// -----------------------------------------------------------------------------
 
 sealed class OperationInvocation_orMutable {
   _lib_editor_v1_capability.InvocationId_orMutable get invocationId;
@@ -224,7 +228,7 @@ final class OperationInvocation implements OperationInvocation_orMutable {
     OperationOrigin.defaultInstance,
   );
 
-  /// Returns this instance (no operation).
+  /// Returns this instance (no-op).
   @_core.Deprecated("This instance is already frozen.")
   @_core.override
   OperationInvocation toFrozen() => this;
@@ -337,7 +341,7 @@ final class OperationInvocation_mutable
     this.origin,
   );
 
-  /// If the value of [invocationId] is already mutable, returns it as is.
+  /// If the value of [invocationId] is already mutable, returns it as-is.
   /// Otherwise, makes a mutable copy, assigns it back to [invocationId] and returns it.
   _lib_editor_v1_capability.InvocationId_mutable get mutableInvocationId {
     final value = this.invocationId;
@@ -349,7 +353,7 @@ final class OperationInvocation_mutable
     }
   }
 
-  /// If the value of [catalog] is already mutable, returns it as is.
+  /// If the value of [catalog] is already mutable, returns it as-is.
   /// Otherwise, makes a mutable copy, assigns it back to [catalog] and returns it.
   _lib_editor_v1_type_catalog.CatalogGeneration_mutable get mutableCatalog {
     final value = this.catalog;
@@ -361,7 +365,7 @@ final class OperationInvocation_mutable
     }
   }
 
-  /// If the value of [targets] is already mutable, returns it as is.
+  /// If the value of [targets] is already mutable, returns it as-is.
   /// Otherwise, makes a mutable copy, assigns it back to [targets] and returns it.
   _core.List<_lib_editor_v1_type_catalog.ResourceId_orMutable>
   get mutableTargets {
@@ -376,7 +380,7 @@ final class OperationInvocation_mutable
     }
   }
 
-  /// If the value of [origin] is already mutable, returns it as is.
+  /// If the value of [origin] is already mutable, returns it as-is.
   /// Otherwise, makes a mutable copy, assigns it back to [origin] and returns it.
   OperationOrigin_mutable get mutableOrigin {
     final value = this.origin;
@@ -397,7 +401,9 @@ final class OperationInvocation_mutable
   ).._u = this._u;
 }
 
+// -----------------------------------------------------------------------------
 // struct OperationResourceUpsert
+// -----------------------------------------------------------------------------
 
 sealed class OperationResourceUpsert_orMutable {
   _lib_editor_v1_type_catalog.ResourceId_orMutable get resource;
@@ -436,7 +442,7 @@ final class OperationResourceUpsert
         _lib_editor_v1_type_catalog.AuthoringRecord.defaultInstance,
       );
 
-  /// Returns this instance (no operation).
+  /// Returns this instance (no-op).
   @_core.Deprecated("This instance is already frozen.")
   @_core.override
   OperationResourceUpsert toFrozen() => this;
@@ -513,7 +519,7 @@ final class OperationResourceUpsert_mutable
 
   OperationResourceUpsert_mutable._(this.resource, this.content);
 
-  /// If the value of [resource] is already mutable, returns it as is.
+  /// If the value of [resource] is already mutable, returns it as-is.
   /// Otherwise, makes a mutable copy, assigns it back to [resource] and returns it.
   _lib_editor_v1_type_catalog.ResourceId_mutable get mutableResource {
     final value = this.resource;
@@ -525,7 +531,7 @@ final class OperationResourceUpsert_mutable
     }
   }
 
-  /// If the value of [content] is already mutable, returns it as is.
+  /// If the value of [content] is already mutable, returns it as-is.
   /// Otherwise, makes a mutable copy, assigns it back to [content] and returns it.
   _lib_editor_v1_type_catalog.AuthoringRecord_mutable get mutableContent {
     final value = this.content;
@@ -544,7 +550,9 @@ final class OperationResourceUpsert_mutable
         .._u = this._u;
 }
 
+// -----------------------------------------------------------------------------
 // struct OperationWorkingOverlay
+// -----------------------------------------------------------------------------
 
 sealed class OperationWorkingOverlay_orMutable {
   _core.Iterable<OperationResourceUpsert_orMutable> get upserts;
@@ -590,7 +598,7 @@ final class OperationWorkingOverlay
         _skir.KeyedIterable.empty,
       );
 
-  /// Returns this instance (no operation).
+  /// Returns this instance (no-op).
   @_core.Deprecated("This instance is already frozen.")
   @_core.override
   OperationWorkingOverlay toFrozen() => this;
@@ -669,7 +677,7 @@ final class OperationWorkingOverlay_mutable
 
   OperationWorkingOverlay_mutable._(this.upserts, this.removals);
 
-  /// If the value of [upserts] is already mutable, returns it as is.
+  /// If the value of [upserts] is already mutable, returns it as-is.
   /// Otherwise, makes a mutable copy, assigns it back to [upserts] and returns it.
   _core.List<OperationResourceUpsert_orMutable> get mutableUpserts {
     final value = this.upserts;
@@ -681,7 +689,7 @@ final class OperationWorkingOverlay_mutable
     }
   }
 
-  /// If the value of [removals] is already mutable, returns it as is.
+  /// If the value of [removals] is already mutable, returns it as-is.
   /// Otherwise, makes a mutable copy, assigns it back to [removals] and returns it.
   _core.List<_lib_editor_v1_type_catalog.ResourceId_orMutable>
   get mutableRemovals {
@@ -703,7 +711,9 @@ final class OperationWorkingOverlay_mutable
         .._u = this._u;
 }
 
+// -----------------------------------------------------------------------------
 // struct OperationWorkingContext
+// -----------------------------------------------------------------------------
 
 sealed class OperationWorkingContext_orMutable {
   _lib_editor_v1_authoring.AuthoringObservationId_orMutable
@@ -750,7 +760,7 @@ final class OperationWorkingContext
         OperationWorkingOverlay.defaultInstance,
       );
 
-  /// Returns this instance (no operation).
+  /// Returns this instance (no-op).
   @_core.Deprecated("This instance is already frozen.")
   @_core.override
   OperationWorkingContext toFrozen() => this;
@@ -831,7 +841,7 @@ final class OperationWorkingContext_mutable
 
   OperationWorkingContext_mutable._(this.confirmedObservation, this.overlay);
 
-  /// If the value of [confirmedObservation] is already mutable, returns it as is.
+  /// If the value of [confirmedObservation] is already mutable, returns it as-is.
   /// Otherwise, makes a mutable copy, assigns it back to [confirmedObservation] and returns it.
   _lib_editor_v1_authoring.AuthoringObservationId_mutable
   get mutableConfirmedObservation {
@@ -845,7 +855,7 @@ final class OperationWorkingContext_mutable
     }
   }
 
-  /// If the value of [overlay] is already mutable, returns it as is.
+  /// If the value of [overlay] is already mutable, returns it as-is.
   /// Otherwise, makes a mutable copy, assigns it back to [overlay] and returns it.
   OperationWorkingOverlay_mutable get mutableOverlay {
     final value = this.overlay;
@@ -864,7 +874,9 @@ final class OperationWorkingContext_mutable
   ).._u = this._u;
 }
 
+// -----------------------------------------------------------------------------
 // struct PreparationChoiceId
+// -----------------------------------------------------------------------------
 
 sealed class PreparationChoiceId_orMutable {
   _core.String get value;
@@ -891,7 +903,7 @@ final class PreparationChoiceId implements PreparationChoiceId_orMutable {
   static PreparationChoiceId_mutable mutable() =>
       PreparationChoiceId_mutable._("");
 
-  /// Returns this instance (no operation).
+  /// Returns this instance (no-op).
   @_core.Deprecated("This instance is already frozen.")
   @_core.override
   PreparationChoiceId toFrozen() => this;
@@ -964,7 +976,9 @@ final class PreparationChoiceId_mutable
       PreparationChoiceId(value: this.value).._u = this._u;
 }
 
+// -----------------------------------------------------------------------------
 // struct PreparationSourceOption
+// -----------------------------------------------------------------------------
 
 sealed class PreparationSourceOption_orMutable {
   _core.String get label;
@@ -1003,7 +1017,7 @@ final class PreparationSourceOption
         _lib_editor_v1_authoring.LinkOccurrence.defaultInstance,
       );
 
-  /// Returns this instance (no operation).
+  /// Returns this instance (no-op).
   @_core.Deprecated("This instance is already frozen.")
   @_core.override
   PreparationSourceOption toFrozen() => this;
@@ -1080,7 +1094,7 @@ final class PreparationSourceOption_mutable
 
   PreparationSourceOption_mutable._(this.label, this.occurrence);
 
-  /// If the value of [occurrence] is already mutable, returns it as is.
+  /// If the value of [occurrence] is already mutable, returns it as-is.
   /// Otherwise, makes a mutable copy, assigns it back to [occurrence] and returns it.
   _lib_editor_v1_authoring.LinkOccurrence_mutable get mutableOccurrence {
     final value = this.occurrence;
@@ -1099,7 +1113,9 @@ final class PreparationSourceOption_mutable
         .._u = this._u;
 }
 
+// -----------------------------------------------------------------------------
 // struct PreparationCounterpartOption
+// -----------------------------------------------------------------------------
 
 sealed class PreparationCounterpartOption_orMutable {
   _core.String get label;
@@ -1138,7 +1154,7 @@ final class PreparationCounterpartOption
         _lib_editor_v1_authoring.CounterpartChoice.unknown,
       );
 
-  /// Returns this instance (no operation).
+  /// Returns this instance (no-op).
   @_core.Deprecated("This instance is already frozen.")
   @_core.override
   PreparationCounterpartOption toFrozen() => this;
@@ -1223,7 +1239,9 @@ final class PreparationCounterpartOption_mutable
   ).._u = this._u;
 }
 
+// -----------------------------------------------------------------------------
 // struct PreparationChoice.Source
+// -----------------------------------------------------------------------------
 
 sealed class PreparationChoice_Source_orMutable {
   PreparationChoiceId_orMutable get choiceId;
@@ -1272,7 +1290,7 @@ final class PreparationChoice_Source
         _skir.KeyedIterable.empty,
       );
 
-  /// Returns this instance (no operation).
+  /// Returns this instance (no-op).
   @_core.Deprecated("This instance is already frozen.")
   @_core.override
   PreparationChoice_Source toFrozen() => this;
@@ -1371,7 +1389,7 @@ final class PreparationChoice_Source_mutable
     this.candidates,
   );
 
-  /// If the value of [choiceId] is already mutable, returns it as is.
+  /// If the value of [choiceId] is already mutable, returns it as-is.
   /// Otherwise, makes a mutable copy, assigns it back to [choiceId] and returns it.
   PreparationChoiceId_mutable get mutableChoiceId {
     final value = this.choiceId;
@@ -1382,7 +1400,7 @@ final class PreparationChoice_Source_mutable
     }
   }
 
-  /// If the value of [candidates] is already mutable, returns it as is.
+  /// If the value of [candidates] is already mutable, returns it as-is.
   /// Otherwise, makes a mutable copy, assigns it back to [candidates] and returns it.
   _core.List<PreparationSourceOption_orMutable> get mutableCandidates {
     final value = this.candidates;
@@ -1403,7 +1421,9 @@ final class PreparationChoice_Source_mutable
   ).._u = this._u;
 }
 
+// -----------------------------------------------------------------------------
 // struct PreparationChoice.Counterpart
+// -----------------------------------------------------------------------------
 
 sealed class PreparationChoice_Counterpart_orMutable {
   PreparationChoiceId_orMutable get choiceId;
@@ -1464,7 +1484,7 @@ final class PreparationChoice_Counterpart
         _skir.KeyedIterable.empty,
       );
 
-  /// Returns this instance (no operation).
+  /// Returns this instance (no-op).
   @_core.Deprecated("This instance is already frozen.")
   @_core.override
   PreparationChoice_Counterpart toFrozen() => this;
@@ -1577,7 +1597,7 @@ final class PreparationChoice_Counterpart_mutable
     this.candidates,
   );
 
-  /// If the value of [choiceId] is already mutable, returns it as is.
+  /// If the value of [choiceId] is already mutable, returns it as-is.
   /// Otherwise, makes a mutable copy, assigns it back to [choiceId] and returns it.
   PreparationChoiceId_mutable get mutableChoiceId {
     final value = this.choiceId;
@@ -1588,7 +1608,7 @@ final class PreparationChoice_Counterpart_mutable
     }
   }
 
-  /// If the value of [source] is already mutable, returns it as is.
+  /// If the value of [source] is already mutable, returns it as-is.
   /// Otherwise, makes a mutable copy, assigns it back to [source] and returns it.
   _lib_editor_v1_authoring.LinkOccurrence_mutable get mutableSource {
     final value = this.source;
@@ -1600,7 +1620,7 @@ final class PreparationChoice_Counterpart_mutable
     }
   }
 
-  /// If the value of [candidates] is already mutable, returns it as is.
+  /// If the value of [candidates] is already mutable, returns it as-is.
   /// Otherwise, makes a mutable copy, assigns it back to [candidates] and returns it.
   _core.List<PreparationCounterpartOption_orMutable> get mutableCandidates {
     final value = this.candidates;
@@ -1624,7 +1644,9 @@ final class PreparationChoice_Counterpart_mutable
   ).._u = this._u;
 }
 
+// -----------------------------------------------------------------------------
 // enum PreparationChoice
+// -----------------------------------------------------------------------------
 
 /// To switch on the variants:
 ///   ```
@@ -1787,7 +1809,9 @@ final class PreparationChoice_counterpartWrapper
   PreparationChoice_kind get kind => PreparationChoice_kind.counterpartWrapper;
 }
 
+// -----------------------------------------------------------------------------
 // struct PreparationChoiceAnswer.Source
+// -----------------------------------------------------------------------------
 
 sealed class PreparationChoiceAnswer_Source_orMutable {
   PreparationChoiceId_orMutable get choiceId;
@@ -1829,7 +1853,7 @@ final class PreparationChoiceAnswer_Source
         _lib_editor_v1_authoring.LinkOccurrence.defaultInstance,
       );
 
-  /// Returns this instance (no operation).
+  /// Returns this instance (no-op).
   @_core.Deprecated("This instance is already frozen.")
   @_core.override
   PreparationChoiceAnswer_Source toFrozen() => this;
@@ -1907,7 +1931,7 @@ final class PreparationChoiceAnswer_Source_mutable
 
   PreparationChoiceAnswer_Source_mutable._(this.choiceId, this.occurrence);
 
-  /// If the value of [choiceId] is already mutable, returns it as is.
+  /// If the value of [choiceId] is already mutable, returns it as-is.
   /// Otherwise, makes a mutable copy, assigns it back to [choiceId] and returns it.
   PreparationChoiceId_mutable get mutableChoiceId {
     final value = this.choiceId;
@@ -1918,7 +1942,7 @@ final class PreparationChoiceAnswer_Source_mutable
     }
   }
 
-  /// If the value of [occurrence] is already mutable, returns it as is.
+  /// If the value of [occurrence] is already mutable, returns it as-is.
   /// Otherwise, makes a mutable copy, assigns it back to [occurrence] and returns it.
   _lib_editor_v1_authoring.LinkOccurrence_mutable get mutableOccurrence {
     final value = this.occurrence;
@@ -1938,7 +1962,9 @@ final class PreparationChoiceAnswer_Source_mutable
   ).._u = this._u;
 }
 
+// -----------------------------------------------------------------------------
 // struct PreparationChoiceAnswer.Counterpart
+// -----------------------------------------------------------------------------
 
 sealed class PreparationChoiceAnswer_Counterpart_orMutable {
   PreparationChoiceId_orMutable get choiceId;
@@ -1977,7 +2003,7 @@ final class PreparationChoiceAnswer_Counterpart
         _lib_editor_v1_authoring.CounterpartChoice.unknown,
       );
 
-  /// Returns this instance (no operation).
+  /// Returns this instance (no-op).
   @_core.Deprecated("This instance is already frozen.")
   @_core.override
   PreparationChoiceAnswer_Counterpart toFrozen() => this;
@@ -2060,7 +2086,7 @@ final class PreparationChoiceAnswer_Counterpart_mutable
     this.counterpart,
   );
 
-  /// If the value of [choiceId] is already mutable, returns it as is.
+  /// If the value of [choiceId] is already mutable, returns it as-is.
   /// Otherwise, makes a mutable copy, assigns it back to [choiceId] and returns it.
   PreparationChoiceId_mutable get mutableChoiceId {
     final value = this.choiceId;
@@ -2080,7 +2106,9 @@ final class PreparationChoiceAnswer_Counterpart_mutable
       ).._u = this._u;
 }
 
+// -----------------------------------------------------------------------------
 // enum PreparationChoiceAnswer
+// -----------------------------------------------------------------------------
 
 /// To switch on the variants:
 ///   ```
@@ -2240,7 +2268,9 @@ final class PreparationChoiceAnswer_counterpartWrapper
       PreparationChoiceAnswer_kind.counterpartWrapper;
 }
 
+// -----------------------------------------------------------------------------
 // struct OperationInputProblem
+// -----------------------------------------------------------------------------
 
 sealed class OperationInputProblem_orMutable {
   _lib_editor_v1_type_catalog.ValuePath_orMutable get path;
@@ -2284,7 +2314,7 @@ final class OperationInputProblem implements OperationInputProblem_orMutable {
         "",
       );
 
-  /// Returns this instance (no operation).
+  /// Returns this instance (no-op).
   @_core.Deprecated("This instance is already frozen.")
   @_core.override
   OperationInputProblem toFrozen() => this;
@@ -2371,7 +2401,7 @@ final class OperationInputProblem_mutable
 
   OperationInputProblem_mutable._(this.path, this.code, this.message);
 
-  /// If the value of [path] is already mutable, returns it as is.
+  /// If the value of [path] is already mutable, returns it as-is.
   /// Otherwise, makes a mutable copy, assigns it back to [path] and returns it.
   _lib_editor_v1_type_catalog.ValuePath_mutable get mutablePath {
     final value = this.path;
@@ -2392,7 +2422,9 @@ final class OperationInputProblem_mutable
   ).._u = this._u;
 }
 
+// -----------------------------------------------------------------------------
 // enum OperationSelectionEffect
+// -----------------------------------------------------------------------------
 
 /// To switch on the variants:
 ///   ```
@@ -2533,7 +2565,9 @@ final class OperationSelectionEffect_replaceWrapper
       OperationSelectionEffect_kind.replaceWrapper;
 }
 
+// -----------------------------------------------------------------------------
 // struct StaleAuthoringObservation
+// -----------------------------------------------------------------------------
 
 sealed class StaleAuthoringObservation_orMutable {
   _lib_editor_v1_authoring.AuthoringObservationId_orMutable get actual;
@@ -2566,7 +2600,7 @@ final class StaleAuthoringObservation
         _lib_editor_v1_authoring.AuthoringObservationId.defaultInstance,
       );
 
-  /// Returns this instance (no operation).
+  /// Returns this instance (no-op).
   @_core.Deprecated("This instance is already frozen.")
   @_core.override
   StaleAuthoringObservation toFrozen() => this;
@@ -2633,7 +2667,7 @@ final class StaleAuthoringObservation_mutable
 
   StaleAuthoringObservation_mutable._(this.actual);
 
-  /// If the value of [actual] is already mutable, returns it as is.
+  /// If the value of [actual] is already mutable, returns it as-is.
   /// Otherwise, makes a mutable copy, assigns it back to [actual] and returns it.
   _lib_editor_v1_authoring.AuthoringObservationId_mutable get mutableActual {
     final value = this.actual;
@@ -2652,7 +2686,9 @@ final class StaleAuthoringObservation_mutable
       StaleAuthoringObservation(actual: this.actual).._u = this._u;
 }
 
+// -----------------------------------------------------------------------------
 // struct ResourceOperationFailure
+// -----------------------------------------------------------------------------
 
 sealed class ResourceOperationFailure_orMutable {
   _core.Iterable<_lib_editor_v1_authoring.AuthoringDiagnostic_orMutable>
@@ -2690,7 +2726,7 @@ final class ResourceOperationFailure
   static ResourceOperationFailure_mutable mutable() =>
       ResourceOperationFailure_mutable._(_skir.KeyedIterable.empty);
 
-  /// Returns this instance (no operation).
+  /// Returns this instance (no-op).
   @_core.Deprecated("This instance is already frozen.")
   @_core.override
   ResourceOperationFailure toFrozen() => this;
@@ -2760,7 +2796,7 @@ final class ResourceOperationFailure_mutable
 
   ResourceOperationFailure_mutable._(this.diagnostics);
 
-  /// If the value of [diagnostics] is already mutable, returns it as is.
+  /// If the value of [diagnostics] is already mutable, returns it as-is.
   /// Otherwise, makes a mutable copy, assigns it back to [diagnostics] and returns it.
   _core.List<_lib_editor_v1_authoring.AuthoringDiagnostic_orMutable>
   get mutableDiagnostics {
@@ -2781,7 +2817,9 @@ final class ResourceOperationFailure_mutable
       ResourceOperationFailure(diagnostics: this.diagnostics).._u = this._u;
 }
 
+// -----------------------------------------------------------------------------
 // struct ResolveResourceOperationsRequest
+// -----------------------------------------------------------------------------
 
 sealed class ResolveResourceOperationsRequest_orMutable {
   OperationInvocation_orMutable get invocation;
@@ -2823,7 +2861,7 @@ final class ResolveResourceOperationsRequest
         OperationWorkingContext.defaultInstance,
       );
 
-  /// Returns this instance (no operation).
+  /// Returns this instance (no-op).
   @_core.Deprecated("This instance is already frozen.")
   @_core.override
   ResolveResourceOperationsRequest toFrozen() => this;
@@ -2901,7 +2939,7 @@ final class ResolveResourceOperationsRequest_mutable
 
   ResolveResourceOperationsRequest_mutable._(this.invocation, this.context);
 
-  /// If the value of [invocation] is already mutable, returns it as is.
+  /// If the value of [invocation] is already mutable, returns it as-is.
   /// Otherwise, makes a mutable copy, assigns it back to [invocation] and returns it.
   OperationInvocation_mutable get mutableInvocation {
     final value = this.invocation;
@@ -2912,7 +2950,7 @@ final class ResolveResourceOperationsRequest_mutable
     }
   }
 
-  /// If the value of [context] is already mutable, returns it as is.
+  /// If the value of [context] is already mutable, returns it as-is.
   /// Otherwise, makes a mutable copy, assigns it back to [context] and returns it.
   OperationWorkingContext_mutable get mutableContext {
     final value = this.context;
@@ -2932,7 +2970,9 @@ final class ResolveResourceOperationsRequest_mutable
       ).._u = this._u;
 }
 
+// -----------------------------------------------------------------------------
 // enum ResolveResourceOperationsResult
+// -----------------------------------------------------------------------------
 
 /// To switch on the variants:
 ///   ```
@@ -3292,7 +3332,9 @@ final class ResolveResourceOperationsResult_internalErrorWrapper
       ResolveResourceOperationsResult_kind.internalErrorWrapper;
 }
 
+// -----------------------------------------------------------------------------
 // struct PrepareAuthoringActionRequest
+// -----------------------------------------------------------------------------
 
 sealed class PrepareAuthoringActionRequest_orMutable {
   OperationInvocation_orMutable get invocation;
@@ -3372,7 +3414,7 @@ final class PrepareAuthoringActionRequest
         _skir.KeyedIterable.empty,
       );
 
-  /// Returns this instance (no operation).
+  /// Returns this instance (no-op).
   @_core.Deprecated("This instance is already frozen.")
   @_core.override
   PrepareAuthoringActionRequest toFrozen() => this;
@@ -3513,7 +3555,7 @@ final class PrepareAuthoringActionRequest_mutable
     this.choices,
   );
 
-  /// If the value of [invocation] is already mutable, returns it as is.
+  /// If the value of [invocation] is already mutable, returns it as-is.
   /// Otherwise, makes a mutable copy, assigns it back to [invocation] and returns it.
   OperationInvocation_mutable get mutableInvocation {
     final value = this.invocation;
@@ -3524,7 +3566,7 @@ final class PrepareAuthoringActionRequest_mutable
     }
   }
 
-  /// If the value of [capability] is already mutable, returns it as is.
+  /// If the value of [capability] is already mutable, returns it as-is.
   /// Otherwise, makes a mutable copy, assigns it back to [capability] and returns it.
   _lib_editor_v1_type_catalog.CapabilityId_mutable get mutableCapability {
     final value = this.capability;
@@ -3536,7 +3578,7 @@ final class PrepareAuthoringActionRequest_mutable
     }
   }
 
-  /// If the value of [context] is already mutable, returns it as is.
+  /// If the value of [context] is already mutable, returns it as-is.
   /// Otherwise, makes a mutable copy, assigns it back to [context] and returns it.
   OperationWorkingContext_mutable get mutableContext {
     final value = this.context;
@@ -3547,7 +3589,7 @@ final class PrepareAuthoringActionRequest_mutable
     }
   }
 
-  /// If the value of [choices] is already mutable, returns it as is.
+  /// If the value of [choices] is already mutable, returns it as-is.
   /// Otherwise, makes a mutable copy, assigns it back to [choices] and returns it.
   _core.List<PreparationChoiceAnswer> get mutableChoices {
     final value = this.choices;
@@ -3570,7 +3612,9 @@ final class PrepareAuthoringActionRequest_mutable
   ).._u = this._u;
 }
 
+// -----------------------------------------------------------------------------
 // struct AuthoringActionNeedsInput
+// -----------------------------------------------------------------------------
 
 sealed class AuthoringActionNeedsInput_orMutable {
   _lib_editor_v1_capability.InvocationId_orMutable get invocationId;
@@ -3639,7 +3683,7 @@ final class AuthoringActionNeedsInput
         _skir.KeyedIterable.empty,
       );
 
-  /// Returns this instance (no operation).
+  /// Returns this instance (no-op).
   @_core.Deprecated("This instance is already frozen.")
   @_core.override
   AuthoringActionNeedsInput toFrozen() => this;
@@ -3766,7 +3810,7 @@ final class AuthoringActionNeedsInput_mutable
     this.choices,
   );
 
-  /// If the value of [invocationId] is already mutable, returns it as is.
+  /// If the value of [invocationId] is already mutable, returns it as-is.
   /// Otherwise, makes a mutable copy, assigns it back to [invocationId] and returns it.
   _lib_editor_v1_capability.InvocationId_mutable get mutableInvocationId {
     final value = this.invocationId;
@@ -3778,7 +3822,7 @@ final class AuthoringActionNeedsInput_mutable
     }
   }
 
-  /// If the value of [problems] is already mutable, returns it as is.
+  /// If the value of [problems] is already mutable, returns it as-is.
   /// Otherwise, makes a mutable copy, assigns it back to [problems] and returns it.
   _core.List<OperationInputProblem_orMutable> get mutableProblems {
     final value = this.problems;
@@ -3789,7 +3833,7 @@ final class AuthoringActionNeedsInput_mutable
     }
   }
 
-  /// If the value of [choices] is already mutable, returns it as is.
+  /// If the value of [choices] is already mutable, returns it as-is.
   /// Otherwise, makes a mutable copy, assigns it back to [choices] and returns it.
   _core.List<PreparationChoice> get mutableChoices {
     final value = this.choices;
@@ -3811,7 +3855,9 @@ final class AuthoringActionNeedsInput_mutable
   ).._u = this._u;
 }
 
+// -----------------------------------------------------------------------------
 // struct AuthoringActionPreview
+// -----------------------------------------------------------------------------
 
 sealed class AuthoringActionPreview_orMutable {
   _lib_editor_v1_capability.InvocationId_orMutable get invocationId;
@@ -3883,7 +3929,7 @@ final class AuthoringActionPreview implements AuthoringActionPreview_orMutable {
         OperationSelectionEffect.unknown,
       );
 
-  /// Returns this instance (no operation).
+  /// Returns this instance (no-op).
   @_core.Deprecated("This instance is already frozen.")
   @_core.override
   AuthoringActionPreview toFrozen() => this;
@@ -4010,7 +4056,7 @@ final class AuthoringActionPreview_mutable
     this.selection,
   );
 
-  /// If the value of [invocationId] is already mutable, returns it as is.
+  /// If the value of [invocationId] is already mutable, returns it as-is.
   /// Otherwise, makes a mutable copy, assigns it back to [invocationId] and returns it.
   _lib_editor_v1_capability.InvocationId_mutable get mutableInvocationId {
     final value = this.invocationId;
@@ -4022,7 +4068,7 @@ final class AuthoringActionPreview_mutable
     }
   }
 
-  /// If the value of [edit] is already mutable, returns it as is.
+  /// If the value of [edit] is already mutable, returns it as-is.
   /// Otherwise, makes a mutable copy, assigns it back to [edit] and returns it.
   _lib_editor_v1_authoring.PreparedEdit_mutable get mutableEdit {
     final value = this.edit;
@@ -4045,7 +4091,9 @@ final class AuthoringActionPreview_mutable
   ).._u = this._u;
 }
 
+// -----------------------------------------------------------------------------
 // enum AuthoringActionResult
+// -----------------------------------------------------------------------------
 
 /// Separates missing interactive input from a usable preview, stale baseline, unavailable action,
 /// validation rejection, permission failure, and callback failure. Refresh catalog or saved state
@@ -4478,7 +4526,9 @@ final class AuthoringActionResult_internalErrorWrapper
       AuthoringActionResult_kind.internalErrorWrapper;
 }
 
+// -----------------------------------------------------------------------------
 // struct OperationSearchContext
+// -----------------------------------------------------------------------------
 
 sealed class OperationSearchContext_orMutable {
   OperationInvocation_orMutable get invocation;
@@ -4528,7 +4578,7 @@ final class OperationSearchContext implements OperationSearchContext_orMutable {
         0,
       );
 
-  /// Returns this instance (no operation).
+  /// Returns this instance (no-op).
   @_core.Deprecated("This instance is already frozen.")
   @_core.override
   OperationSearchContext toFrozen() => this;
@@ -4627,7 +4677,7 @@ final class OperationSearchContext_mutable
     this.inputRevision,
   );
 
-  /// If the value of [invocation] is already mutable, returns it as is.
+  /// If the value of [invocation] is already mutable, returns it as-is.
   /// Otherwise, makes a mutable copy, assigns it back to [invocation] and returns it.
   OperationInvocation_mutable get mutableInvocation {
     final value = this.invocation;
@@ -4638,7 +4688,7 @@ final class OperationSearchContext_mutable
     }
   }
 
-  /// If the value of [context] is already mutable, returns it as is.
+  /// If the value of [context] is already mutable, returns it as-is.
   /// Otherwise, makes a mutable copy, assigns it back to [context] and returns it.
   OperationWorkingContext_mutable get mutableContext {
     final value = this.context;

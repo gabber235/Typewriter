@@ -18,7 +18,9 @@ import "package:skir_client/skir_client.dart" as _skir;
 import "../../kernel/v1/errors.dart" as _lib_kernel_v1_errors;
 import "./service.dart" as _lib_service_v1_service;
 
+// -----------------------------------------------------------------------------
 // struct IssueServiceIdentityRequest
+// -----------------------------------------------------------------------------
 
 sealed class IssueServiceIdentityRequest_orMutable {
   _lib_service_v1_service.ServiceRole get role;
@@ -51,7 +53,7 @@ final class IssueServiceIdentityRequest
         _lib_service_v1_service.ServiceRole.unknown,
       );
 
-  /// Returns this instance (no operation).
+  /// Returns this instance (no-op).
   @_core.Deprecated("This instance is already frozen.")
   @_core.override
   IssueServiceIdentityRequest toFrozen() => this;
@@ -124,7 +126,9 @@ final class IssueServiceIdentityRequest_mutable
       IssueServiceIdentityRequest(role: this.role).._u = this._u;
 }
 
+// -----------------------------------------------------------------------------
 // struct IssueServiceIdentityResponse.Success
+// -----------------------------------------------------------------------------
 
 sealed class IssueServiceIdentityResponse_Success_orMutable {
   _core.String get serviceId;
@@ -180,7 +184,7 @@ final class IssueServiceIdentityResponse_Success
   static IssueServiceIdentityResponse_Success_mutable mutable() =>
       IssueServiceIdentityResponse_Success_mutable._("", "", "", "");
 
-  /// Returns this instance (no operation).
+  /// Returns this instance (no-op).
   @_core.Deprecated("This instance is already frozen.")
   @_core.override
   IssueServiceIdentityResponse_Success toFrozen() => this;
@@ -304,7 +308,9 @@ final class IssueServiceIdentityResponse_Success_mutable
       ).._u = this._u;
 }
 
+// -----------------------------------------------------------------------------
 // struct IssueServiceIdentityResponse.MalformedRequestError
+// -----------------------------------------------------------------------------
 
 sealed class IssueServiceIdentityResponse_MalformedRequestError_orMutable {
   IssueServiceIdentityResponse_MalformedRequestError toFrozen();
@@ -329,7 +335,7 @@ final class IssueServiceIdentityResponse_MalformedRequestError
   static IssueServiceIdentityResponse_MalformedRequestError_mutable mutable() =>
       IssueServiceIdentityResponse_MalformedRequestError_mutable._();
 
-  /// Returns this instance (no operation).
+  /// Returns this instance (no-op).
   @_core.Deprecated("This instance is already frozen.")
   @_core.override
   IssueServiceIdentityResponse_MalformedRequestError toFrozen() => this;
@@ -394,7 +400,9 @@ final class IssueServiceIdentityResponse_MalformedRequestError_mutable
       IssueServiceIdentityResponse_MalformedRequestError().._u = this._u;
 }
 
+// -----------------------------------------------------------------------------
 // struct IssueServiceIdentityResponse.UnknownRoleError
+// -----------------------------------------------------------------------------
 
 sealed class IssueServiceIdentityResponse_UnknownRoleError_orMutable {
   IssueServiceIdentityResponse_UnknownRoleError toFrozen();
@@ -419,7 +427,7 @@ final class IssueServiceIdentityResponse_UnknownRoleError
   static IssueServiceIdentityResponse_UnknownRoleError_mutable mutable() =>
       IssueServiceIdentityResponse_UnknownRoleError_mutable._();
 
-  /// Returns this instance (no operation).
+  /// Returns this instance (no-op).
   @_core.Deprecated("This instance is already frozen.")
   @_core.override
   IssueServiceIdentityResponse_UnknownRoleError toFrozen() => this;
@@ -483,7 +491,9 @@ final class IssueServiceIdentityResponse_UnknownRoleError_mutable
       IssueServiceIdentityResponse_UnknownRoleError().._u = this._u;
 }
 
+// -----------------------------------------------------------------------------
 // struct IssueServiceIdentityResponse.RoleUnknownPropertyError
+// -----------------------------------------------------------------------------
 
 sealed class IssueServiceIdentityResponse_RoleUnknownPropertyError_orMutable {
   IssueServiceIdentityResponse_RoleUnknownPropertyError toFrozen();
@@ -509,7 +519,7 @@ final class IssueServiceIdentityResponse_RoleUnknownPropertyError
   mutable() =>
       IssueServiceIdentityResponse_RoleUnknownPropertyError_mutable._();
 
-  /// Returns this instance (no operation).
+  /// Returns this instance (no-op).
   @_core.Deprecated("This instance is already frozen.")
   @_core.override
   IssueServiceIdentityResponse_RoleUnknownPropertyError toFrozen() => this;
@@ -575,7 +585,9 @@ final class IssueServiceIdentityResponse_RoleUnknownPropertyError_mutable
       IssueServiceIdentityResponse_RoleUnknownPropertyError().._u = this._u;
 }
 
+// -----------------------------------------------------------------------------
 // struct IssueServiceIdentityResponse.RoleTypeInvalidError
+// -----------------------------------------------------------------------------
 
 sealed class IssueServiceIdentityResponse_RoleTypeInvalidError_orMutable {
   IssueServiceIdentityResponse_RoleTypeInvalidError toFrozen();
@@ -600,7 +612,7 @@ final class IssueServiceIdentityResponse_RoleTypeInvalidError
   static IssueServiceIdentityResponse_RoleTypeInvalidError_mutable mutable() =>
       IssueServiceIdentityResponse_RoleTypeInvalidError_mutable._();
 
-  /// Returns this instance (no operation).
+  /// Returns this instance (no-op).
   @_core.Deprecated("This instance is already frozen.")
   @_core.override
   IssueServiceIdentityResponse_RoleTypeInvalidError toFrozen() => this;
@@ -665,7 +677,9 @@ final class IssueServiceIdentityResponse_RoleTypeInvalidError_mutable
       IssueServiceIdentityResponse_RoleTypeInvalidError().._u = this._u;
 }
 
+// -----------------------------------------------------------------------------
 // struct IssueServiceIdentityResponse.RoleVersionInvalidError
+// -----------------------------------------------------------------------------
 
 sealed class IssueServiceIdentityResponse_RoleVersionInvalidError_orMutable {
   IssueServiceIdentityResponse_RoleVersionInvalidError toFrozen();
@@ -690,7 +704,7 @@ final class IssueServiceIdentityResponse_RoleVersionInvalidError
   static IssueServiceIdentityResponse_RoleVersionInvalidError_mutable
   mutable() => IssueServiceIdentityResponse_RoleVersionInvalidError_mutable._();
 
-  /// Returns this instance (no operation).
+  /// Returns this instance (no-op).
   @_core.Deprecated("This instance is already frozen.")
   @_core.override
   IssueServiceIdentityResponse_RoleVersionInvalidError toFrozen() => this;
@@ -756,7 +770,9 @@ final class IssueServiceIdentityResponse_RoleVersionInvalidError_mutable
       IssueServiceIdentityResponse_RoleVersionInvalidError().._u = this._u;
 }
 
+// -----------------------------------------------------------------------------
 // struct IssueServiceIdentityResponse.CustomRoleNameRequiredError
+// -----------------------------------------------------------------------------
 
 sealed class IssueServiceIdentityResponse_CustomRoleNameRequiredError_orMutable {
   IssueServiceIdentityResponse_CustomRoleNameRequiredError toFrozen();
@@ -783,7 +799,7 @@ final class IssueServiceIdentityResponse_CustomRoleNameRequiredError
   mutable() =>
       IssueServiceIdentityResponse_CustomRoleNameRequiredError_mutable._();
 
-  /// Returns this instance (no operation).
+  /// Returns this instance (no-op).
   @_core.Deprecated("This instance is already frozen.")
   @_core.override
   IssueServiceIdentityResponse_CustomRoleNameRequiredError toFrozen() => this;
@@ -851,7 +867,9 @@ final class IssueServiceIdentityResponse_CustomRoleNameRequiredError_mutable
       IssueServiceIdentityResponse_CustomRoleNameRequiredError().._u = this._u;
 }
 
+// -----------------------------------------------------------------------------
 // struct IssueServiceIdentityResponse.CustomRoleNameInvalidError
+// -----------------------------------------------------------------------------
 
 sealed class IssueServiceIdentityResponse_CustomRoleNameInvalidError_orMutable {
   IssueServiceIdentityResponse_CustomRoleNameInvalidError toFrozen();
@@ -878,7 +896,7 @@ final class IssueServiceIdentityResponse_CustomRoleNameInvalidError
   mutable() =>
       IssueServiceIdentityResponse_CustomRoleNameInvalidError_mutable._();
 
-  /// Returns this instance (no operation).
+  /// Returns this instance (no-op).
   @_core.Deprecated("This instance is already frozen.")
   @_core.override
   IssueServiceIdentityResponse_CustomRoleNameInvalidError toFrozen() => this;
@@ -945,7 +963,9 @@ final class IssueServiceIdentityResponse_CustomRoleNameInvalidError_mutable
       IssueServiceIdentityResponse_CustomRoleNameInvalidError().._u = this._u;
 }
 
+// -----------------------------------------------------------------------------
 // struct IssueServiceIdentityResponse.BuiltinRoleNameForbiddenError
+// -----------------------------------------------------------------------------
 
 sealed class IssueServiceIdentityResponse_BuiltinRoleNameForbiddenError_orMutable {
   IssueServiceIdentityResponse_BuiltinRoleNameForbiddenError toFrozen();
@@ -972,7 +992,7 @@ final class IssueServiceIdentityResponse_BuiltinRoleNameForbiddenError
   mutable() =>
       IssueServiceIdentityResponse_BuiltinRoleNameForbiddenError_mutable._();
 
-  /// Returns this instance (no operation).
+  /// Returns this instance (no-op).
   @_core.Deprecated("This instance is already frozen.")
   @_core.override
   IssueServiceIdentityResponse_BuiltinRoleNameForbiddenError toFrozen() => this;
@@ -1041,7 +1061,9 @@ final class IssueServiceIdentityResponse_BuiltinRoleNameForbiddenError_mutable
         .._u = this._u;
 }
 
+// -----------------------------------------------------------------------------
 // struct IssueServiceIdentityResponse.IdentityProviderUnavailableError
+// -----------------------------------------------------------------------------
 
 sealed class IssueServiceIdentityResponse_IdentityProviderUnavailableError_orMutable {
   IssueServiceIdentityResponse_IdentityProviderUnavailableError toFrozen();
@@ -1068,7 +1090,7 @@ final class IssueServiceIdentityResponse_IdentityProviderUnavailableError
   mutable() =>
       IssueServiceIdentityResponse_IdentityProviderUnavailableError_mutable._();
 
-  /// Returns this instance (no operation).
+  /// Returns this instance (no-op).
   @_core.Deprecated("This instance is already frozen.")
   @_core.override
   IssueServiceIdentityResponse_IdentityProviderUnavailableError toFrozen() =>
@@ -1138,7 +1160,9 @@ final class IssueServiceIdentityResponse_IdentityProviderUnavailableError_mutabl
         .._u = this._u;
 }
 
+// -----------------------------------------------------------------------------
 // enum IssueServiceIdentityResponse
+// -----------------------------------------------------------------------------
 
 /// To switch on the variants:
 ///   ```

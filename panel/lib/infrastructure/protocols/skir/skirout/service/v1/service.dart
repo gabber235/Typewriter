@@ -17,7 +17,9 @@ import "package:skir_client/skir_client.dart" as _skir;
 
 import "../../kernel/v1/record_id.dart" as _lib_kernel_v1_record_id;
 
+// -----------------------------------------------------------------------------
 // struct Service
+// -----------------------------------------------------------------------------
 
 sealed class Service_orMutable {
   _lib_kernel_v1_record_id.RecordId_orMutable get serviceId;
@@ -108,7 +110,7 @@ final class Service implements Service_orMutable {
     null,
   );
 
-  /// Returns this instance (no operation).
+  /// Returns this instance (no-op).
   @_core.Deprecated("This instance is already frozen.")
   @_core.override
   Service toFrozen() => this;
@@ -268,7 +270,7 @@ final class Service_mutable implements Service_orMutable {
     this.state,
   );
 
-  /// If the value of [serviceId] is already mutable, returns it as is.
+  /// If the value of [serviceId] is already mutable, returns it as-is.
   /// Otherwise, makes a mutable copy, assigns it back to [serviceId] and returns it.
   _lib_kernel_v1_record_id.RecordId_mutable get mutableServiceId {
     final value = this.serviceId;
@@ -294,7 +296,9 @@ final class Service_mutable implements Service_orMutable {
   ).._u = this._u;
 }
 
+// -----------------------------------------------------------------------------
 // struct ServiceRole.Host
+// -----------------------------------------------------------------------------
 
 sealed class ServiceRole_Host_orMutable {
   _core.String get version;
@@ -320,7 +324,7 @@ final class ServiceRole_Host implements ServiceRole_Host_orMutable {
   /// Fields are initialized to their default values.
   static ServiceRole_Host_mutable mutable() => ServiceRole_Host_mutable._("");
 
-  /// Returns this instance (no operation).
+  /// Returns this instance (no-op).
   @_core.Deprecated("This instance is already frozen.")
   @_core.override
   ServiceRole_Host toFrozen() => this;
@@ -389,7 +393,9 @@ final class ServiceRole_Host_mutable implements ServiceRole_Host_orMutable {
       ServiceRole_Host(version: this.version).._u = this._u;
 }
 
+// -----------------------------------------------------------------------------
 // struct ServiceRole.Custom
+// -----------------------------------------------------------------------------
 
 sealed class ServiceRole_Custom_orMutable {
   _core.String get name;
@@ -421,7 +427,7 @@ final class ServiceRole_Custom implements ServiceRole_Custom_orMutable {
   static ServiceRole_Custom_mutable mutable() =>
       ServiceRole_Custom_mutable._("", "");
 
-  /// Returns this instance (no operation).
+  /// Returns this instance (no-op).
   @_core.Deprecated("This instance is already frozen.")
   @_core.override
   ServiceRole_Custom toFrozen() => this;
@@ -500,7 +506,9 @@ final class ServiceRole_Custom_mutable implements ServiceRole_Custom_orMutable {
       ServiceRole_Custom(name: this.name, version: this.version).._u = this._u;
 }
 
+// -----------------------------------------------------------------------------
 // enum ServiceRole
+// -----------------------------------------------------------------------------
 
 /// To switch on the variants:
 ///   ```
@@ -644,7 +652,9 @@ final class ServiceRole_customWrapper extends _ServiceRole_wrapper {
   ServiceRole_kind get kind => ServiceRole_kind.customWrapper;
 }
 
+// -----------------------------------------------------------------------------
 // enum ServiceStatus
+// -----------------------------------------------------------------------------
 
 /// To switch on the variants:
 ///   ```
@@ -739,7 +749,9 @@ enum _ServiceStatus_consts implements ServiceStatus {
       _skir.internal__stringify(this, ServiceStatus.serializer);
 }
 
+// -----------------------------------------------------------------------------
 // struct ServiceState
+// -----------------------------------------------------------------------------
 
 sealed class ServiceState_orMutable {
   ServiceStatus get status;
@@ -774,7 +786,7 @@ final class ServiceState implements ServiceState_orMutable {
   static ServiceState_mutable mutable() =>
       ServiceState_mutable._(ServiceStatus.unknown, _skir.unixEpoch);
 
-  /// Returns this instance (no operation).
+  /// Returns this instance (no-op).
   @_core.Deprecated("This instance is already frozen.")
   @_core.override
   ServiceState toFrozen() => this;
@@ -853,7 +865,9 @@ final class ServiceState_mutable implements ServiceState_orMutable {
       ServiceState(status: this.status, lastSeen: this.lastSeen).._u = this._u;
 }
 
+// -----------------------------------------------------------------------------
 // struct ServiceRegistration
+// -----------------------------------------------------------------------------
 
 sealed class ServiceRegistration_orMutable {
   _core.String get token;
@@ -885,7 +899,7 @@ final class ServiceRegistration implements ServiceRegistration_orMutable {
   static ServiceRegistration_mutable mutable() =>
       ServiceRegistration_mutable._("", _skir.unixEpoch);
 
-  /// Returns this instance (no operation).
+  /// Returns this instance (no-op).
   @_core.Deprecated("This instance is already frozen.")
   @_core.override
   ServiceRegistration toFrozen() => this;

@@ -17,7 +17,9 @@ import "package:skir_client/skir_client.dart" as _skir;
 
 import "./type_catalog.dart" as _lib_editor_v1_type_catalog;
 
+// -----------------------------------------------------------------------------
 // enum ConversionSafety
+// -----------------------------------------------------------------------------
 
 /// To switch on the variants:
 ///   ```
@@ -112,7 +114,9 @@ enum _ConversionSafety_consts implements ConversionSafety {
       _skir.internal__stringify(this, ConversionSafety.serializer);
 }
 
+// -----------------------------------------------------------------------------
 // enum ConversionFallibility
+// -----------------------------------------------------------------------------
 
 /// To switch on the variants:
 ///   ```
@@ -214,7 +218,9 @@ enum _ConversionFallibility_consts implements ConversionFallibility {
       _skir.internal__stringify(this, ConversionFallibility.serializer);
 }
 
+// -----------------------------------------------------------------------------
 // enum ConversionLocality
+// -----------------------------------------------------------------------------
 
 /// To switch on the variants:
 ///   ```
@@ -304,7 +310,9 @@ enum _ConversionLocality_consts implements ConversionLocality {
       _skir.internal__stringify(this, ConversionLocality.serializer);
 }
 
+// -----------------------------------------------------------------------------
 // enum ScalarCastKind
+// -----------------------------------------------------------------------------
 
 /// To switch on the variants:
 ///   ```
@@ -517,7 +525,9 @@ enum _ScalarCastKind_consts implements ScalarCastKind {
       _skir.internal__stringify(this, ScalarCastKind.serializer);
 }
 
+// -----------------------------------------------------------------------------
 // struct RecordProjectionField
+// -----------------------------------------------------------------------------
 
 sealed class RecordProjectionField_orMutable {
   _lib_editor_v1_type_catalog.ValuePath_orMutable get source;
@@ -565,7 +575,7 @@ final class RecordProjectionField implements RecordProjectionField_orMutable {
         null,
       );
 
-  /// Returns this instance (no operation).
+  /// Returns this instance (no-op).
   @_core.Deprecated("This instance is already frozen.")
   @_core.override
   RecordProjectionField toFrozen() => this;
@@ -661,7 +671,7 @@ final class RecordProjectionField_mutable
 
   RecordProjectionField_mutable._(this.source, this.target, this.conversionId);
 
-  /// If the value of [source] is already mutable, returns it as is.
+  /// If the value of [source] is already mutable, returns it as-is.
   /// Otherwise, makes a mutable copy, assigns it back to [source] and returns it.
   _lib_editor_v1_type_catalog.ValuePath_mutable get mutableSource {
     final value = this.source;
@@ -673,7 +683,7 @@ final class RecordProjectionField_mutable
     }
   }
 
-  /// If the value of [target] is already mutable, returns it as is.
+  /// If the value of [target] is already mutable, returns it as-is.
   /// Otherwise, makes a mutable copy, assigns it back to [target] and returns it.
   _lib_editor_v1_type_catalog.ValuePath_mutable get mutableTarget {
     final value = this.target;
@@ -694,7 +704,9 @@ final class RecordProjectionField_mutable
   ).._u = this._u;
 }
 
+// -----------------------------------------------------------------------------
 // struct RecordProjectionRule
+// -----------------------------------------------------------------------------
 
 sealed class RecordProjectionRule_orMutable {
   _core.Iterable<RecordProjectionField_orMutable> get fields;
@@ -726,7 +738,7 @@ final class RecordProjectionRule implements RecordProjectionRule_orMutable {
   static RecordProjectionRule_mutable mutable() =>
       RecordProjectionRule_mutable._(_skir.KeyedIterable.empty);
 
-  /// Returns this instance (no operation).
+  /// Returns this instance (no-op).
   @_core.Deprecated("This instance is already frozen.")
   @_core.override
   RecordProjectionRule toFrozen() => this;
@@ -793,7 +805,7 @@ final class RecordProjectionRule_mutable
 
   RecordProjectionRule_mutable._(this.fields);
 
-  /// If the value of [fields] is already mutable, returns it as is.
+  /// If the value of [fields] is already mutable, returns it as-is.
   /// Otherwise, makes a mutable copy, assigns it back to [fields] and returns it.
   _core.List<RecordProjectionField_orMutable> get mutableFields {
     final value = this.fields;
@@ -810,7 +822,9 @@ final class RecordProjectionRule_mutable
       RecordProjectionRule(fields: this.fields).._u = this._u;
 }
 
+// -----------------------------------------------------------------------------
 // struct RecordConstructionField
+// -----------------------------------------------------------------------------
 
 sealed class RecordConstructionField_orMutable {
   _core.String get targetField;
@@ -859,7 +873,7 @@ final class RecordConstructionField
         null,
       );
 
-  /// Returns this instance (no operation).
+  /// Returns this instance (no-op).
   @_core.Deprecated("This instance is already frozen.")
   @_core.override
   RecordConstructionField toFrozen() => this;
@@ -960,7 +974,7 @@ final class RecordConstructionField_mutable
     this.conversionId,
   );
 
-  /// If the value of [source] is already mutable, returns it as is.
+  /// If the value of [source] is already mutable, returns it as-is.
   /// Otherwise, makes a mutable copy, assigns it back to [source] and returns it.
   _lib_editor_v1_type_catalog.ValuePath_mutable get mutableSource {
     final value = this.source;
@@ -981,7 +995,9 @@ final class RecordConstructionField_mutable
   ).._u = this._u;
 }
 
+// -----------------------------------------------------------------------------
 // struct RecordConstructionRule
+// -----------------------------------------------------------------------------
 
 sealed class RecordConstructionRule_orMutable {
   _core.Iterable<RecordConstructionField_orMutable> get fields;
@@ -1018,7 +1034,7 @@ final class RecordConstructionRule implements RecordConstructionRule_orMutable {
   static RecordConstructionRule_mutable mutable() =>
       RecordConstructionRule_mutable._(_skir.KeyedIterable.empty);
 
-  /// Returns this instance (no operation).
+  /// Returns this instance (no-op).
   @_core.Deprecated("This instance is already frozen.")
   @_core.override
   RecordConstructionRule toFrozen() => this;
@@ -1089,7 +1105,7 @@ final class RecordConstructionRule_mutable
 
   RecordConstructionRule_mutable._(this.fields);
 
-  /// If the value of [fields] is already mutable, returns it as is.
+  /// If the value of [fields] is already mutable, returns it as-is.
   /// Otherwise, makes a mutable copy, assigns it back to [fields] and returns it.
   _core.List<RecordConstructionField_orMutable> get mutableFields {
     final value = this.fields;
@@ -1107,7 +1123,9 @@ final class RecordConstructionRule_mutable
       RecordConstructionRule(fields: this.fields).._u = this._u;
 }
 
+// -----------------------------------------------------------------------------
 // struct CollectionMappingRule
+// -----------------------------------------------------------------------------
 
 sealed class CollectionMappingRule_orMutable {
   _lib_editor_v1_type_catalog.ConversionId_orMutable get elementConversionId;
@@ -1140,7 +1158,7 @@ final class CollectionMappingRule implements CollectionMappingRule_orMutable {
         _lib_editor_v1_type_catalog.ConversionId.defaultInstance,
       );
 
-  /// Returns this instance (no operation).
+  /// Returns this instance (no-op).
   @_core.Deprecated("This instance is already frozen.")
   @_core.override
   CollectionMappingRule toFrozen() => this;
@@ -1207,7 +1225,7 @@ final class CollectionMappingRule_mutable
 
   CollectionMappingRule_mutable._(this.elementConversionId);
 
-  /// If the value of [elementConversionId] is already mutable, returns it as is.
+  /// If the value of [elementConversionId] is already mutable, returns it as-is.
   /// Otherwise, makes a mutable copy, assigns it back to [elementConversionId] and returns it.
   _lib_editor_v1_type_catalog.ConversionId_mutable
   get mutableElementConversionId {
@@ -1227,7 +1245,9 @@ final class CollectionMappingRule_mutable
         .._u = this._u;
 }
 
+// -----------------------------------------------------------------------------
 // struct ConversionCompositionRule
+// -----------------------------------------------------------------------------
 
 sealed class ConversionCompositionRule_orMutable {
   _core.Iterable<_lib_editor_v1_type_catalog.ConversionId_orMutable> get steps;
@@ -1263,7 +1283,7 @@ final class ConversionCompositionRule
   static ConversionCompositionRule_mutable mutable() =>
       ConversionCompositionRule_mutable._(_skir.KeyedIterable.empty);
 
-  /// Returns this instance (no operation).
+  /// Returns this instance (no-op).
   @_core.Deprecated("This instance is already frozen.")
   @_core.override
   ConversionCompositionRule toFrozen() => this;
@@ -1332,7 +1352,7 @@ final class ConversionCompositionRule_mutable
 
   ConversionCompositionRule_mutable._(this.steps);
 
-  /// If the value of [steps] is already mutable, returns it as is.
+  /// If the value of [steps] is already mutable, returns it as-is.
   /// Otherwise, makes a mutable copy, assigns it back to [steps] and returns it.
   _core.List<_lib_editor_v1_type_catalog.ConversionId_orMutable>
   get mutableSteps {
@@ -1353,7 +1373,9 @@ final class ConversionCompositionRule_mutable
       ConversionCompositionRule(steps: this.steps).._u = this._u;
 }
 
+// -----------------------------------------------------------------------------
 // struct RealmConversionRule
+// -----------------------------------------------------------------------------
 
 sealed class RealmConversionRule_orMutable {
   RealmConversionRule toFrozen();
@@ -1375,7 +1397,7 @@ final class RealmConversionRule implements RealmConversionRule_orMutable {
   static RealmConversionRule_mutable mutable() =>
       RealmConversionRule_mutable._();
 
-  /// Returns this instance (no operation).
+  /// Returns this instance (no-op).
   @_core.Deprecated("This instance is already frozen.")
   @_core.override
   RealmConversionRule toFrozen() => this;
@@ -1436,7 +1458,9 @@ final class RealmConversionRule_mutable
   RealmConversionRule toFrozen() => RealmConversionRule().._u = this._u;
 }
 
+// -----------------------------------------------------------------------------
 // enum ConversionRule
+// -----------------------------------------------------------------------------
 
 /// To switch on the variants:
 ///   ```
@@ -1751,7 +1775,9 @@ final class ConversionRule_realmWrapper extends _ConversionRule_wrapper {
   ConversionRule_kind get kind => ConversionRule_kind.realmWrapper;
 }
 
+// -----------------------------------------------------------------------------
 // struct ConversionDefinition
+// -----------------------------------------------------------------------------
 
 sealed class ConversionDefinition_orMutable {
   _lib_editor_v1_type_catalog.ConversionId_orMutable get conversionId;
@@ -1843,7 +1869,7 @@ final class ConversionDefinition implements ConversionDefinition_orMutable {
         ConversionRule.unknown,
       );
 
-  /// Returns this instance (no operation).
+  /// Returns this instance (no-op).
   @_core.Deprecated("This instance is already frozen.")
   @_core.override
   ConversionDefinition toFrozen() => this;
@@ -2006,7 +2032,7 @@ final class ConversionDefinition_mutable
     this.rule,
   );
 
-  /// If the value of [conversionId] is already mutable, returns it as is.
+  /// If the value of [conversionId] is already mutable, returns it as-is.
   /// Otherwise, makes a mutable copy, assigns it back to [conversionId] and returns it.
   _lib_editor_v1_type_catalog.ConversionId_mutable get mutableConversionId {
     final value = this.conversionId;

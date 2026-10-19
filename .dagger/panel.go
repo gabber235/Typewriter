@@ -66,20 +66,12 @@ func (m *Typewriter) buildRunner(
 	panelSource := source.Directory("/panel", defaultWorkspaceOpts)
 	workspaceSource := dag.Directory().WithDirectory("panel", panelSource)
 	generated := m.panelGeneratorContainer(source, packageName).
-		WithFile("/tmp/normalize_generated_dart.dart", source.Directory("/services/protocol/transport-generator", defaultWorkspaceOpts).File("normalize_generated_dart.dart")).
 		WithWorkdir("/workspace/panel").
 		WithExec([]string{"git", "init", "--quiet"}).
 		WithExec([]string{"git", "add", "--all"}).
 		WithWorkdir(dir).
 		WithExec([]string{"flutter", "pub", "get", "--enforce-lockfile"}).
 		WithExec([]string{"dart", "run", "build_runner", "build"}).
-		WithWorkdir("/workspace/panel").
-		WithExec([]string{
-			"sh",
-			"-c",
-			"(git diff --name-only --diff-filter=ACM -z -- ':(glob)**/*.g.dart' ':(glob)**/*.freezed.dart'; git ls-files --others --exclude-standard -z -- ':(glob)**/*.g.dart' ':(glob)**/*.freezed.dart') | xargs -0 -r dart /tmp/normalize_generated_dart.dart",
-		}).
-		WithWorkdir(dir).
 		WithExec([]string{"dart", "format", "--output=none", "."}).
 		WithoutMount("/root/.pub-cache").
 		WithoutMount("/workspace/panel/.dart_tool").

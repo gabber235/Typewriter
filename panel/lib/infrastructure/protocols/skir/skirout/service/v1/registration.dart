@@ -18,7 +18,9 @@ import "package:skir_client/skir_client.dart" as _skir;
 import "../../kernel/v1/errors.dart" as _lib_kernel_v1_errors;
 import "./service.dart" as _lib_service_v1_service;
 
+// -----------------------------------------------------------------------------
 // struct BindServiceRequest
+// -----------------------------------------------------------------------------
 
 sealed class BindServiceRequest_orMutable {
   _core.String get registrationToken;
@@ -45,7 +47,7 @@ final class BindServiceRequest implements BindServiceRequest_orMutable {
   static BindServiceRequest_mutable mutable() =>
       BindServiceRequest_mutable._("");
 
-  /// Returns this instance (no operation).
+  /// Returns this instance (no-op).
   @_core.Deprecated("This instance is already frozen.")
   @_core.override
   BindServiceRequest toFrozen() => this;
@@ -115,7 +117,9 @@ final class BindServiceRequest_mutable implements BindServiceRequest_orMutable {
         .._u = this._u;
 }
 
+// -----------------------------------------------------------------------------
 // struct BindServiceResponse.Success
+// -----------------------------------------------------------------------------
 
 sealed class BindServiceResponse_Success_orMutable {
   _core.String get serviceId;
@@ -164,7 +168,7 @@ final class BindServiceResponse_Success
         _lib_service_v1_service.ServiceRole.unknown,
       );
 
-  /// Returns this instance (no operation).
+  /// Returns this instance (no-op).
   @_core.Deprecated("This instance is already frozen.")
   @_core.override
   BindServiceResponse_Success toFrozen() => this;
@@ -272,7 +276,9 @@ final class BindServiceResponse_Success_mutable
   ).._u = this._u;
 }
 
+// -----------------------------------------------------------------------------
 // struct BindServiceResponse.InvalidRegistrationTokenError
+// -----------------------------------------------------------------------------
 
 sealed class BindServiceResponse_InvalidRegistrationTokenError_orMutable {
   BindServiceResponse_InvalidRegistrationTokenError toFrozen();
@@ -297,7 +303,7 @@ final class BindServiceResponse_InvalidRegistrationTokenError
   static BindServiceResponse_InvalidRegistrationTokenError_mutable mutable() =>
       BindServiceResponse_InvalidRegistrationTokenError_mutable._();
 
-  /// Returns this instance (no operation).
+  /// Returns this instance (no-op).
   @_core.Deprecated("This instance is already frozen.")
   @_core.override
   BindServiceResponse_InvalidRegistrationTokenError toFrozen() => this;
@@ -362,7 +368,9 @@ final class BindServiceResponse_InvalidRegistrationTokenError_mutable
       BindServiceResponse_InvalidRegistrationTokenError().._u = this._u;
 }
 
+// -----------------------------------------------------------------------------
 // struct BindServiceResponse.OrganizationNotFoundError
+// -----------------------------------------------------------------------------
 
 sealed class BindServiceResponse_OrganizationNotFoundError_orMutable {
   BindServiceResponse_OrganizationNotFoundError toFrozen();
@@ -387,7 +395,7 @@ final class BindServiceResponse_OrganizationNotFoundError
   static BindServiceResponse_OrganizationNotFoundError_mutable mutable() =>
       BindServiceResponse_OrganizationNotFoundError_mutable._();
 
-  /// Returns this instance (no operation).
+  /// Returns this instance (no-op).
   @_core.Deprecated("This instance is already frozen.")
   @_core.override
   BindServiceResponse_OrganizationNotFoundError toFrozen() => this;
@@ -451,7 +459,9 @@ final class BindServiceResponse_OrganizationNotFoundError_mutable
       BindServiceResponse_OrganizationNotFoundError().._u = this._u;
 }
 
+// -----------------------------------------------------------------------------
 // enum BindServiceResponse
+// -----------------------------------------------------------------------------
 
 /// To switch on the variants:
 ///   ```
@@ -679,7 +689,9 @@ final class BindServiceResponse_organizationNotFoundErrorWrapper
       BindServiceResponse_kind.organizationNotFoundErrorWrapper;
 }
 
+// -----------------------------------------------------------------------------
 // struct ServiceBoundNotification
+// -----------------------------------------------------------------------------
 
 sealed class ServiceBoundNotification_orMutable {
   _core.String get organizationId;
@@ -712,7 +724,7 @@ final class ServiceBoundNotification
   static ServiceBoundNotification_mutable mutable() =>
       ServiceBoundNotification_mutable._("", null);
 
-  /// Returns this instance (no operation).
+  /// Returns this instance (no-op).
   @_core.Deprecated("This instance is already frozen.")
   @_core.override
   ServiceBoundNotification toFrozen() => this;
@@ -806,7 +818,9 @@ final class ServiceBoundNotification_mutable
   ).._u = this._u;
 }
 
+// -----------------------------------------------------------------------------
 // struct UnbindServiceRequest
+// -----------------------------------------------------------------------------
 
 sealed class UnbindServiceRequest_orMutable {
   _core.String get serviceId;
@@ -833,7 +847,7 @@ final class UnbindServiceRequest implements UnbindServiceRequest_orMutable {
   static UnbindServiceRequest_mutable mutable() =>
       UnbindServiceRequest_mutable._("");
 
-  /// Returns this instance (no operation).
+  /// Returns this instance (no-op).
   @_core.Deprecated("This instance is already frozen.")
   @_core.override
   UnbindServiceRequest toFrozen() => this;
@@ -906,7 +920,9 @@ final class UnbindServiceRequest_mutable
       UnbindServiceRequest(serviceId: this.serviceId).._u = this._u;
 }
 
+// -----------------------------------------------------------------------------
 // struct UnbindServiceResponse.Success
+// -----------------------------------------------------------------------------
 
 sealed class UnbindServiceResponse_Success_orMutable {
   UnbindServiceResponse_Success toFrozen();
@@ -929,7 +945,7 @@ final class UnbindServiceResponse_Success
   static UnbindServiceResponse_Success_mutable mutable() =>
       UnbindServiceResponse_Success_mutable._();
 
-  /// Returns this instance (no operation).
+  /// Returns this instance (no-op).
   @_core.Deprecated("This instance is already frozen.")
   @_core.override
   UnbindServiceResponse_Success toFrozen() => this;
@@ -992,7 +1008,9 @@ final class UnbindServiceResponse_Success_mutable
       UnbindServiceResponse_Success().._u = this._u;
 }
 
+// -----------------------------------------------------------------------------
 // struct UnbindServiceResponse.ServiceNotFoundError
+// -----------------------------------------------------------------------------
 
 sealed class UnbindServiceResponse_ServiceNotFoundError_orMutable {
   UnbindServiceResponse_ServiceNotFoundError toFrozen();
@@ -1016,7 +1034,7 @@ final class UnbindServiceResponse_ServiceNotFoundError
   static UnbindServiceResponse_ServiceNotFoundError_mutable mutable() =>
       UnbindServiceResponse_ServiceNotFoundError_mutable._();
 
-  /// Returns this instance (no operation).
+  /// Returns this instance (no-op).
   @_core.Deprecated("This instance is already frozen.")
   @_core.override
   UnbindServiceResponse_ServiceNotFoundError toFrozen() => this;
@@ -1080,7 +1098,9 @@ final class UnbindServiceResponse_ServiceNotFoundError_mutable
       UnbindServiceResponse_ServiceNotFoundError().._u = this._u;
 }
 
+// -----------------------------------------------------------------------------
 // enum UnbindServiceResponse
+// -----------------------------------------------------------------------------
 
 /// To switch on the variants:
 ///   ```

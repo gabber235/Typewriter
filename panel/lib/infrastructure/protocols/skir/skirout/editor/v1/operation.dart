@@ -19,7 +19,9 @@ import "./action.dart" as _lib_editor_v1_action;
 import "./presentation.dart" as _lib_editor_v1_presentation;
 import "./type_catalog.dart" as _lib_editor_v1_type_catalog;
 
+// -----------------------------------------------------------------------------
 // struct ResourceOperationId
+// -----------------------------------------------------------------------------
 
 sealed class ResourceOperationId_orMutable {
   _core.String get artifact;
@@ -66,7 +68,7 @@ final class ResourceOperationId implements ResourceOperationId_orMutable {
   static ResourceOperationId_mutable mutable() =>
       ResourceOperationId_mutable._("", "", "", "");
 
-  /// Returns this instance (no operation).
+  /// Returns this instance (no-op).
   @_core.Deprecated("This instance is already frozen.")
   @_core.override
   ResourceOperationId toFrozen() => this;
@@ -187,7 +189,9 @@ final class ResourceOperationId_mutable
   ).._u = this._u;
 }
 
+// -----------------------------------------------------------------------------
 // enum OperationTargets
+// -----------------------------------------------------------------------------
 
 /// To switch on the variants:
 ///   ```
@@ -360,7 +364,9 @@ final class OperationTargets_selectionWrapper
   OperationTargets_kind get kind => OperationTargets_kind.selectionWrapper;
 }
 
+// -----------------------------------------------------------------------------
 // enum OperationGroup
+// -----------------------------------------------------------------------------
 
 /// To switch on the variants:
 ///   ```
@@ -477,7 +483,9 @@ enum _OperationGroup_consts implements OperationGroup {
       _skir.internal__stringify(this, OperationGroup.serializer);
 }
 
+// -----------------------------------------------------------------------------
 // struct OperationConfirmation
+// -----------------------------------------------------------------------------
 
 sealed class OperationConfirmation_orMutable {
   _core.String get title;
@@ -513,7 +521,7 @@ final class OperationConfirmation implements OperationConfirmation_orMutable {
   static OperationConfirmation_mutable mutable() =>
       OperationConfirmation_mutable._("", "", "");
 
-  /// Returns this instance (no operation).
+  /// Returns this instance (no-op).
   @_core.Deprecated("This instance is already frozen.")
   @_core.override
   OperationConfirmation toFrozen() => this;
@@ -620,7 +628,9 @@ final class OperationConfirmation_mutable
   ).._u = this._u;
 }
 
+// -----------------------------------------------------------------------------
 // struct OperationPresentation
+// -----------------------------------------------------------------------------
 
 sealed class OperationPresentation_orMutable {
   _core.String get label;
@@ -728,7 +738,7 @@ final class OperationPresentation implements OperationPresentation_orMutable {
         false,
       );
 
-  /// Returns this instance (no operation).
+  /// Returns this instance (no-op).
   @_core.Deprecated("This instance is already frozen.")
   @_core.override
   OperationPresentation toFrozen() => this;
@@ -923,7 +933,9 @@ final class OperationPresentation_mutable
   ).._u = this._u;
 }
 
+// -----------------------------------------------------------------------------
 // struct OperationInputDefinition
+// -----------------------------------------------------------------------------
 
 sealed class OperationInputDefinition_orMutable {
   _lib_editor_v1_type_catalog.TypeUse get type;
@@ -965,7 +977,7 @@ final class OperationInputDefinition
         null,
       );
 
-  /// Returns this instance (no operation).
+  /// Returns this instance (no-op).
   @_core.Deprecated("This instance is already frozen.")
   @_core.override
   OperationInputDefinition toFrozen() => this;
@@ -1051,7 +1063,9 @@ final class OperationInputDefinition_mutable
         .._u = this._u;
 }
 
+// -----------------------------------------------------------------------------
 // struct ResourceOperationDefinition
+// -----------------------------------------------------------------------------
 
 sealed class ResourceOperationDefinition_orMutable {
   ResourceOperationId_orMutable get id;
@@ -1112,7 +1126,7 @@ final class ResourceOperationDefinition
         _lib_editor_v1_action.EditorAction.unknown,
       );
 
-  /// Returns this instance (no operation).
+  /// Returns this instance (no-op).
   @_core.Deprecated("This instance is already frozen.")
   @_core.override
   ResourceOperationDefinition toFrozen() => this;
@@ -1224,7 +1238,7 @@ final class ResourceOperationDefinition_mutable
     this.action,
   );
 
-  /// If the value of [id] is already mutable, returns it as is.
+  /// If the value of [id] is already mutable, returns it as-is.
   /// Otherwise, makes a mutable copy, assigns it back to [id] and returns it.
   ResourceOperationId_mutable get mutableId {
     final value = this.id;
@@ -1235,7 +1249,7 @@ final class ResourceOperationDefinition_mutable
     }
   }
 
-  /// If the value of [presentation] is already mutable, returns it as is.
+  /// If the value of [presentation] is already mutable, returns it as-is.
   /// Otherwise, makes a mutable copy, assigns it back to [presentation] and returns it.
   OperationPresentation_mutable get mutablePresentation {
     final value = this.presentation;
@@ -1256,7 +1270,9 @@ final class ResourceOperationDefinition_mutable
   ).._u = this._u;
 }
 
+// -----------------------------------------------------------------------------
 // struct ResourceOperationContribution
+// -----------------------------------------------------------------------------
 
 sealed class ResourceOperationContribution_orMutable {
   _lib_editor_v1_type_catalog.TypeTemplate get target;
@@ -1309,7 +1325,7 @@ final class ResourceOperationContribution
         null,
       );
 
-  /// Returns this instance (no operation).
+  /// Returns this instance (no-op).
   @_core.Deprecated("This instance is already frozen.")
   @_core.override
   ResourceOperationContribution toFrozen() => this;
@@ -1408,7 +1424,7 @@ final class ResourceOperationContribution_mutable
     this.primary,
   );
 
-  /// If the value of [operations] is already mutable, returns it as is.
+  /// If the value of [operations] is already mutable, returns it as-is.
   /// Otherwise, makes a mutable copy, assigns it back to [operations] and returns it.
   _core.List<ResourceOperationId_orMutable> get mutableOperations {
     final value = this.operations;
@@ -1428,7 +1444,9 @@ final class ResourceOperationContribution_mutable
   ).._u = this._u;
 }
 
+// -----------------------------------------------------------------------------
 // enum OperationAvailability
+// -----------------------------------------------------------------------------
 
 /// hidden omits an affordance, disabled retains its explanation, and enabled permits attempting
 /// dispatch. Availability is evaluated against current working facts and must be rechecked at preparation.
@@ -1571,7 +1589,9 @@ final class OperationAvailability_disabledWrapper
       OperationAvailability_kind.disabledWrapper;
 }
 
+// -----------------------------------------------------------------------------
 // struct ResolvedResourceOperation
+// -----------------------------------------------------------------------------
 
 sealed class ResolvedResourceOperation_orMutable {
   ResourceOperationDefinition_orMutable get definition;
@@ -1610,7 +1630,7 @@ final class ResolvedResourceOperation
         OperationAvailability.unknown,
       );
 
-  /// Returns this instance (no operation).
+  /// Returns this instance (no-op).
   @_core.Deprecated("This instance is already frozen.")
   @_core.override
   ResolvedResourceOperation toFrozen() => this;
@@ -1687,7 +1707,7 @@ final class ResolvedResourceOperation_mutable
 
   ResolvedResourceOperation_mutable._(this.definition, this.availability);
 
-  /// If the value of [definition] is already mutable, returns it as is.
+  /// If the value of [definition] is already mutable, returns it as-is.
   /// Otherwise, makes a mutable copy, assigns it back to [definition] and returns it.
   ResourceOperationDefinition_mutable get mutableDefinition {
     final value = this.definition;
@@ -1707,7 +1727,9 @@ final class ResolvedResourceOperation_mutable
   ).._u = this._u;
 }
 
+// -----------------------------------------------------------------------------
 // struct ResolvedResourceOperations
+// -----------------------------------------------------------------------------
 
 sealed class ResolvedResourceOperations_orMutable {
   _core.Iterable<ResolvedResourceOperation_orMutable> get operations;
@@ -1746,7 +1768,7 @@ final class ResolvedResourceOperations
   static ResolvedResourceOperations_mutable mutable() =>
       ResolvedResourceOperations_mutable._(_skir.KeyedIterable.empty, null);
 
-  /// Returns this instance (no operation).
+  /// Returns this instance (no-op).
   @_core.Deprecated("This instance is already frozen.")
   @_core.override
   ResolvedResourceOperations toFrozen() => this;
@@ -1826,7 +1848,7 @@ final class ResolvedResourceOperations_mutable
 
   ResolvedResourceOperations_mutable._(this.operations, this.primaryOperation);
 
-  /// If the value of [operations] is already mutable, returns it as is.
+  /// If the value of [operations] is already mutable, returns it as-is.
   /// Otherwise, makes a mutable copy, assigns it back to [operations] and returns it.
   _core.List<ResolvedResourceOperation_orMutable> get mutableOperations {
     final value = this.operations;

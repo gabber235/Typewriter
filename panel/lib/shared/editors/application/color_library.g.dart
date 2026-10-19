@@ -1,4 +1,4 @@
-// GENERATED CODE. DO NOT MODIFY BY HAND
+// GENERATED CODE - DO NOT MODIFY BY HAND
 
 part of 'color_library.dart';
 
@@ -6,7 +6,7 @@ part of 'color_library.dart';
 // RiverpodGenerator
 // **************************************************************************
 
-// GENERATED CODE. DO NOT MODIFY BY HAND
+// GENERATED CODE - DO NOT MODIFY BY HAND
 // ignore_for_file: type=lint, type=warning
 
 @ProviderFor(colorLibraryStorage)

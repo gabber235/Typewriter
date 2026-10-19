@@ -22,7 +22,9 @@ import "../../kernel/v1/bounded_transfer.dart"
     as _lib_kernel_v1_bounded_transfer;
 import "../../kernel/v1/errors.dart" as _lib_kernel_v1_errors;
 
+// -----------------------------------------------------------------------------
 // struct CompiledBlobPointer
+// -----------------------------------------------------------------------------
 
 sealed class CompiledBlobPointer_orMutable {
   _core.String get digest;
@@ -57,7 +59,7 @@ final class CompiledBlobPointer implements CompiledBlobPointer_orMutable {
   static CompiledBlobPointer_mutable mutable() =>
       CompiledBlobPointer_mutable._("", 0);
 
-  /// Returns this instance (no operation).
+  /// Returns this instance (no-op).
   @_core.Deprecated("This instance is already frozen.")
   @_core.override
   CompiledBlobPointer toFrozen() => this;
@@ -140,7 +142,9 @@ final class CompiledBlobPointer_mutable
       CompiledBlobPointer(digest: this.digest, size: this.size).._u = this._u;
 }
 
+// -----------------------------------------------------------------------------
 // struct CompiledArtifactReference
+// -----------------------------------------------------------------------------
 
 sealed class CompiledArtifactReference_orMutable {
   _lib_editor_v1_compilation_root.CompilationRoot_orMutable get root;
@@ -201,7 +205,7 @@ final class CompiledArtifactReference
         "",
       );
 
-  /// Returns this instance (no operation).
+  /// Returns this instance (no-op).
   @_core.Deprecated("This instance is already frozen.")
   @_core.override
   CompiledArtifactReference toFrozen() => this;
@@ -313,7 +317,7 @@ final class CompiledArtifactReference_mutable
     this.semanticDigest,
   );
 
-  /// If the value of [root] is already mutable, returns it as is.
+  /// If the value of [root] is already mutable, returns it as-is.
   /// Otherwise, makes a mutable copy, assigns it back to [root] and returns it.
   _lib_editor_v1_compilation_root.CompilationRoot_mutable get mutableRoot {
     final value = this.root;
@@ -336,7 +340,9 @@ final class CompiledArtifactReference_mutable
   ).._u = this._u;
 }
 
+// -----------------------------------------------------------------------------
 // struct PublishedOutput
+// -----------------------------------------------------------------------------
 
 sealed class PublishedOutput_orMutable {
   CompiledArtifactReference_orMutable get reference;
@@ -373,7 +379,7 @@ final class PublishedOutput implements PublishedOutput_orMutable {
     CompiledBlobPointer.defaultInstance,
   );
 
-  /// Returns this instance (no operation).
+  /// Returns this instance (no-op).
   @_core.Deprecated("This instance is already frozen.")
   @_core.override
   PublishedOutput toFrozen() => this;
@@ -446,7 +452,7 @@ final class PublishedOutput_mutable implements PublishedOutput_orMutable {
 
   PublishedOutput_mutable._(this.reference, this.blob);
 
-  /// If the value of [reference] is already mutable, returns it as is.
+  /// If the value of [reference] is already mutable, returns it as-is.
   /// Otherwise, makes a mutable copy, assigns it back to [reference] and returns it.
   CompiledArtifactReference_mutable get mutableReference {
     final value = this.reference;
@@ -457,7 +463,7 @@ final class PublishedOutput_mutable implements PublishedOutput_orMutable {
     }
   }
 
-  /// If the value of [blob] is already mutable, returns it as is.
+  /// If the value of [blob] is already mutable, returns it as-is.
   /// Otherwise, makes a mutable copy, assigns it back to [blob] and returns it.
   CompiledBlobPointer_mutable get mutableBlob {
     final value = this.blob;
@@ -474,7 +480,9 @@ final class PublishedOutput_mutable implements PublishedOutput_orMutable {
       PublishedOutput(reference: this.reference, blob: this.blob).._u = this._u;
 }
 
+// -----------------------------------------------------------------------------
 // struct PublishedContent
+// -----------------------------------------------------------------------------
 
 sealed class PublishedContent_orMutable {
   _lib_editor_v1_type_catalog.PublicationId_orMutable get publication;
@@ -557,7 +565,7 @@ final class PublishedContent implements PublishedContent_orMutable {
     _skir.KeyedIterable.empty,
   );
 
-  /// Returns this instance (no operation).
+  /// Returns this instance (no-op).
   @_core.Deprecated("This instance is already frozen.")
   @_core.override
   PublishedContent toFrozen() => this;
@@ -693,7 +701,7 @@ final class PublishedContent_mutable implements PublishedContent_orMutable {
     this.outputs,
   );
 
-  /// If the value of [publication] is already mutable, returns it as is.
+  /// If the value of [publication] is already mutable, returns it as-is.
   /// Otherwise, makes a mutable copy, assigns it back to [publication] and returns it.
   _lib_editor_v1_type_catalog.PublicationId_mutable get mutablePublication {
     final value = this.publication;
@@ -705,7 +713,7 @@ final class PublishedContent_mutable implements PublishedContent_orMutable {
     }
   }
 
-  /// If the value of [catalog] is already mutable, returns it as is.
+  /// If the value of [catalog] is already mutable, returns it as-is.
   /// Otherwise, makes a mutable copy, assigns it back to [catalog] and returns it.
   _lib_editor_v1_type_catalog.CatalogGeneration_mutable get mutableCatalog {
     final value = this.catalog;
@@ -717,7 +725,7 @@ final class PublishedContent_mutable implements PublishedContent_orMutable {
     }
   }
 
-  /// If the value of [runtimeSignatures] is already mutable, returns it as is.
+  /// If the value of [runtimeSignatures] is already mutable, returns it as-is.
   /// Otherwise, makes a mutable copy, assigns it back to [runtimeSignatures] and returns it.
   _core.List<_lib_editor_v1_publication.RuntimeMemberSignature_orMutable>
   get mutableRuntimeSignatures {
@@ -732,7 +740,7 @@ final class PublishedContent_mutable implements PublishedContent_orMutable {
     }
   }
 
-  /// If the value of [outputs] is already mutable, returns it as is.
+  /// If the value of [outputs] is already mutable, returns it as-is.
   /// Otherwise, makes a mutable copy, assigns it back to [outputs] and returns it.
   _core.List<PublishedOutput_orMutable> get mutableOutputs {
     final value = this.outputs;
@@ -755,7 +763,9 @@ final class PublishedContent_mutable implements PublishedContent_orMutable {
   ).._u = this._u;
 }
 
+// -----------------------------------------------------------------------------
 // struct PublishedContentChunk
+// -----------------------------------------------------------------------------
 
 sealed class PublishedContentChunk_orMutable {
   _lib_kernel_v1_bounded_transfer.BoundedTransferChunk_orMutable get transfer;
@@ -788,7 +798,7 @@ final class PublishedContentChunk implements PublishedContentChunk_orMutable {
         _lib_kernel_v1_bounded_transfer.BoundedTransferChunk.defaultInstance,
       );
 
-  /// Returns this instance (no operation).
+  /// Returns this instance (no-op).
   @_core.Deprecated("This instance is already frozen.")
   @_core.override
   PublishedContentChunk toFrozen() => this;
@@ -855,7 +865,7 @@ final class PublishedContentChunk_mutable
 
   PublishedContentChunk_mutable._(this.transfer);
 
-  /// If the value of [transfer] is already mutable, returns it as is.
+  /// If the value of [transfer] is already mutable, returns it as-is.
   /// Otherwise, makes a mutable copy, assigns it back to [transfer] and returns it.
   _lib_kernel_v1_bounded_transfer.BoundedTransferChunk_mutable
   get mutableTransfer {
@@ -875,7 +885,9 @@ final class PublishedContentChunk_mutable
       PublishedContentChunk(transfer: this.transfer).._u = this._u;
 }
 
+// -----------------------------------------------------------------------------
 // enum CompiledResourceState
+// -----------------------------------------------------------------------------
 
 /// Membership in the Realm selected publication. active does not confirm application by any engine,
 /// nor that the currently saved root still compiles to the selected artifact.
@@ -1020,7 +1032,9 @@ final class CompiledResourceState_activeWrapper
       CompiledResourceState_kind.activeWrapper;
 }
 
+// -----------------------------------------------------------------------------
 // struct CompiledResourceStatus
+// -----------------------------------------------------------------------------
 
 sealed class CompiledResourceStatus_orMutable {
   _lib_editor_v1_compilation_root.CompilationRoot_orMutable get root;
@@ -1058,7 +1072,7 @@ final class CompiledResourceStatus implements CompiledResourceStatus_orMutable {
         CompiledResourceState.unknown,
       );
 
-  /// Returns this instance (no operation).
+  /// Returns this instance (no-op).
   @_core.Deprecated("This instance is already frozen.")
   @_core.override
   CompiledResourceStatus toFrozen() => this;
@@ -1135,7 +1149,7 @@ final class CompiledResourceStatus_mutable
 
   CompiledResourceStatus_mutable._(this.root, this.state);
 
-  /// If the value of [root] is already mutable, returns it as is.
+  /// If the value of [root] is already mutable, returns it as-is.
   /// Otherwise, makes a mutable copy, assigns it back to [root] and returns it.
   _lib_editor_v1_compilation_root.CompilationRoot_mutable get mutableRoot {
     final value = this.root;
@@ -1154,7 +1168,9 @@ final class CompiledResourceStatus_mutable
       CompiledResourceStatus(root: this.root, state: this.state).._u = this._u;
 }
 
+// -----------------------------------------------------------------------------
 // struct CompiledContentChanged
+// -----------------------------------------------------------------------------
 
 sealed class CompiledContentChanged_orMutable {
   _lib_editor_v1_type_catalog.CatalogGeneration_orMutable get generation;
@@ -1188,7 +1204,7 @@ final class CompiledContentChanged implements CompiledContentChanged_orMutable {
         _lib_editor_v1_type_catalog.CatalogGeneration.defaultInstance,
       );
 
-  /// Returns this instance (no operation).
+  /// Returns this instance (no-op).
   @_core.Deprecated("This instance is already frozen.")
   @_core.override
   CompiledContentChanged toFrozen() => this;
@@ -1255,7 +1271,7 @@ final class CompiledContentChanged_mutable
 
   CompiledContentChanged_mutable._(this.generation);
 
-  /// If the value of [generation] is already mutable, returns it as is.
+  /// If the value of [generation] is already mutable, returns it as-is.
   /// Otherwise, makes a mutable copy, assigns it back to [generation] and returns it.
   _lib_editor_v1_type_catalog.CatalogGeneration_mutable get mutableGeneration {
     final value = this.generation;
@@ -1273,7 +1289,9 @@ final class CompiledContentChanged_mutable
       CompiledContentChanged(generation: this.generation).._u = this._u;
 }
 
+// -----------------------------------------------------------------------------
 // enum CompilationStatusSelection
+// -----------------------------------------------------------------------------
 
 /// To switch on the variants:
 ///   ```
@@ -1414,7 +1432,9 @@ final class CompilationStatusSelection_suppliedRootsWrapper
       CompilationStatusSelection_kind.suppliedRootsWrapper;
 }
 
+// -----------------------------------------------------------------------------
 // struct QueryPublishedContentRequest
+// -----------------------------------------------------------------------------
 
 sealed class QueryPublishedContentRequest_orMutable {
   _core.String get transferId;
@@ -1442,7 +1462,7 @@ final class QueryPublishedContentRequest
   static QueryPublishedContentRequest_mutable mutable() =>
       QueryPublishedContentRequest_mutable._("");
 
-  /// Returns this instance (no operation).
+  /// Returns this instance (no-op).
   @_core.Deprecated("This instance is already frozen.")
   @_core.override
   QueryPublishedContentRequest toFrozen() => this;
@@ -1515,7 +1535,9 @@ final class QueryPublishedContentRequest_mutable
       QueryPublishedContentRequest(transferId: this.transferId).._u = this._u;
 }
 
+// -----------------------------------------------------------------------------
 // struct QueryPublishedContentResponse.Absent
+// -----------------------------------------------------------------------------
 
 sealed class QueryPublishedContentResponse_Absent_orMutable {
   QueryPublishedContentResponse_Absent toFrozen();
@@ -1539,7 +1561,7 @@ final class QueryPublishedContentResponse_Absent
   static QueryPublishedContentResponse_Absent_mutable mutable() =>
       QueryPublishedContentResponse_Absent_mutable._();
 
-  /// Returns this instance (no operation).
+  /// Returns this instance (no-op).
   @_core.Deprecated("This instance is already frozen.")
   @_core.override
   QueryPublishedContentResponse_Absent toFrozen() => this;
@@ -1604,7 +1626,9 @@ final class QueryPublishedContentResponse_Absent_mutable
       QueryPublishedContentResponse_Absent().._u = this._u;
 }
 
+// -----------------------------------------------------------------------------
 // struct QueryPublishedContentResponse.Unavailable
+// -----------------------------------------------------------------------------
 
 sealed class QueryPublishedContentResponse_Unavailable_orMutable {
   QueryPublishedContentResponse_Unavailable toFrozen();
@@ -1628,7 +1652,7 @@ final class QueryPublishedContentResponse_Unavailable
   static QueryPublishedContentResponse_Unavailable_mutable mutable() =>
       QueryPublishedContentResponse_Unavailable_mutable._();
 
-  /// Returns this instance (no operation).
+  /// Returns this instance (no-op).
   @_core.Deprecated("This instance is already frozen.")
   @_core.override
   QueryPublishedContentResponse_Unavailable toFrozen() => this;
@@ -1692,7 +1716,9 @@ final class QueryPublishedContentResponse_Unavailable_mutable
       QueryPublishedContentResponse_Unavailable().._u = this._u;
 }
 
+// -----------------------------------------------------------------------------
 // enum QueryPublishedContentResponse
+// -----------------------------------------------------------------------------
 
 /// To switch on the variants:
 ///   ```
@@ -1920,7 +1946,9 @@ final class QueryPublishedContentResponse_internalErrorWrapper
       QueryPublishedContentResponse_kind.internalErrorWrapper;
 }
 
+// -----------------------------------------------------------------------------
 // struct QueryCompiledResourceStatusRequest
+// -----------------------------------------------------------------------------
 
 sealed class QueryCompiledResourceStatusRequest_orMutable {
   CompilationStatusSelection get selection;
@@ -1953,7 +1981,7 @@ final class QueryCompiledResourceStatusRequest
         CompilationStatusSelection.unknown,
       );
 
-  /// Returns this instance (no operation).
+  /// Returns this instance (no-op).
   @_core.Deprecated("This instance is already frozen.")
   @_core.override
   QueryCompiledResourceStatusRequest toFrozen() => this;
@@ -2028,7 +2056,9 @@ final class QueryCompiledResourceStatusRequest_mutable
         .._u = this._u;
 }
 
+// -----------------------------------------------------------------------------
 // struct QueryCompiledResourceStatusResponse.Success
+// -----------------------------------------------------------------------------
 
 sealed class QueryCompiledResourceStatusResponse_Success_orMutable {
   _core.Iterable<CompiledResourceStatus_orMutable> get statuses;
@@ -2063,7 +2093,7 @@ final class QueryCompiledResourceStatusResponse_Success
         _skir.KeyedIterable.empty,
       );
 
-  /// Returns this instance (no operation).
+  /// Returns this instance (no-op).
   @_core.Deprecated("This instance is already frozen.")
   @_core.override
   QueryCompiledResourceStatusResponse_Success toFrozen() => this;
@@ -2131,7 +2161,7 @@ final class QueryCompiledResourceStatusResponse_Success_mutable
 
   QueryCompiledResourceStatusResponse_Success_mutable._(this.statuses);
 
-  /// If the value of [statuses] is already mutable, returns it as is.
+  /// If the value of [statuses] is already mutable, returns it as-is.
   /// Otherwise, makes a mutable copy, assigns it back to [statuses] and returns it.
   _core.List<CompiledResourceStatus_orMutable> get mutableStatuses {
     final value = this.statuses;
@@ -2150,7 +2180,9 @@ final class QueryCompiledResourceStatusResponse_Success_mutable
         .._u = this._u;
 }
 
+// -----------------------------------------------------------------------------
 // enum QueryCompiledResourceStatusResponse
+// -----------------------------------------------------------------------------
 
 /// To switch on the variants:
 ///   ```

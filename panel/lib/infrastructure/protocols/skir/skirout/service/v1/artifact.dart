@@ -15,7 +15,9 @@ import "dart:core" as _core;
 
 import "package:skir_client/skir_client.dart" as _skir;
 
+// -----------------------------------------------------------------------------
 // struct ArtifactDigest
+// -----------------------------------------------------------------------------
 
 sealed class ArtifactDigest_orMutable {
   DigestAlgorithm get algorithm;
@@ -47,7 +49,7 @@ final class ArtifactDigest implements ArtifactDigest_orMutable {
   static ArtifactDigest_mutable mutable() =>
       ArtifactDigest_mutable._(DigestAlgorithm.unknown, "");
 
-  /// Returns this instance (no operation).
+  /// Returns this instance (no-op).
   @_core.Deprecated("This instance is already frozen.")
   @_core.override
   ArtifactDigest toFrozen() => this;
@@ -127,7 +129,9 @@ final class ArtifactDigest_mutable implements ArtifactDigest_orMutable {
         .._u = this._u;
 }
 
+// -----------------------------------------------------------------------------
 // enum DigestAlgorithm
+// -----------------------------------------------------------------------------
 
 /// To switch on the variants:
 ///   ```
@@ -211,7 +215,9 @@ enum _DigestAlgorithm_consts implements DigestAlgorithm {
       _skir.internal__stringify(this, DigestAlgorithm.serializer);
 }
 
+// -----------------------------------------------------------------------------
 // struct BlobMetadata
+// -----------------------------------------------------------------------------
 
 sealed class BlobMetadata_orMutable {
   ArtifactDigest_orMutable get digest;
@@ -246,7 +252,7 @@ final class BlobMetadata implements BlobMetadata_orMutable {
   static BlobMetadata_mutable mutable() =>
       BlobMetadata_mutable._(ArtifactDigest.defaultInstance, 0);
 
-  /// Returns this instance (no operation).
+  /// Returns this instance (no-op).
   @_core.Deprecated("This instance is already frozen.")
   @_core.override
   BlobMetadata toFrozen() => this;
@@ -319,7 +325,7 @@ final class BlobMetadata_mutable implements BlobMetadata_orMutable {
 
   BlobMetadata_mutable._(this.digest, this.size);
 
-  /// If the value of [digest] is already mutable, returns it as is.
+  /// If the value of [digest] is already mutable, returns it as-is.
   /// Otherwise, makes a mutable copy, assigns it back to [digest] and returns it.
   ArtifactDigest_mutable get mutableDigest {
     final value = this.digest;
@@ -336,7 +342,9 @@ final class BlobMetadata_mutable implements BlobMetadata_orMutable {
       BlobMetadata(digest: this.digest, size: this.size).._u = this._u;
 }
 
+// -----------------------------------------------------------------------------
 // struct BlobChunk
+// -----------------------------------------------------------------------------
 
 sealed class BlobChunk_orMutable {
   _core.int get offset;
@@ -372,7 +380,7 @@ final class BlobChunk implements BlobChunk_orMutable {
   static BlobChunk_mutable mutable() =>
       BlobChunk_mutable._(0, _skir.ByteString.empty, false);
 
-  /// Returns this instance (no operation).
+  /// Returns this instance (no-op).
   @_core.Deprecated("This instance is already frozen.")
   @_core.override
   BlobChunk toFrozen() => this;
@@ -461,7 +469,9 @@ final class BlobChunk_mutable implements BlobChunk_orMutable {
         .._u = this._u;
 }
 
+// -----------------------------------------------------------------------------
 // struct SharedArtifactDescriptor
+// -----------------------------------------------------------------------------
 
 sealed class SharedArtifactDescriptor_orMutable {
   _core.String get id;
@@ -562,7 +572,7 @@ final class SharedArtifactDescriptor
         false,
       );
 
-  /// Returns this instance (no operation).
+  /// Returns this instance (no-op).
   @_core.Deprecated("This instance is already frozen.")
   @_core.override
   SharedArtifactDescriptor toFrozen() => this;
@@ -754,7 +764,9 @@ final class SharedArtifactDescriptor_mutable
   ).._u = this._u;
 }
 
+// -----------------------------------------------------------------------------
 // struct SharedArtifactProvenance.LocalInbox
+// -----------------------------------------------------------------------------
 
 sealed class SharedArtifactProvenance_LocalInbox_orMutable {
   _core.String get relativePath;
@@ -783,7 +795,7 @@ final class SharedArtifactProvenance_LocalInbox
   static SharedArtifactProvenance_LocalInbox_mutable mutable() =>
       SharedArtifactProvenance_LocalInbox_mutable._("");
 
-  /// Returns this instance (no operation).
+  /// Returns this instance (no-op).
   @_core.Deprecated("This instance is already frozen.")
   @_core.override
   SharedArtifactProvenance_LocalInbox toFrozen() => this;
@@ -857,7 +869,9 @@ final class SharedArtifactProvenance_LocalInbox_mutable
         .._u = this._u;
 }
 
+// -----------------------------------------------------------------------------
 // struct SharedArtifactProvenance.Panel
+// -----------------------------------------------------------------------------
 
 sealed class SharedArtifactProvenance_Panel_orMutable {
   _core.String get userId;
@@ -885,7 +899,7 @@ final class SharedArtifactProvenance_Panel
   static SharedArtifactProvenance_Panel_mutable mutable() =>
       SharedArtifactProvenance_Panel_mutable._("");
 
-  /// Returns this instance (no operation).
+  /// Returns this instance (no-op).
   @_core.Deprecated("This instance is already frozen.")
   @_core.override
   SharedArtifactProvenance_Panel toFrozen() => this;
@@ -958,7 +972,9 @@ final class SharedArtifactProvenance_Panel_mutable
       SharedArtifactProvenance_Panel(userId: this.userId).._u = this._u;
 }
 
+// -----------------------------------------------------------------------------
 // struct SharedArtifactProvenance.Service
+// -----------------------------------------------------------------------------
 
 sealed class SharedArtifactProvenance_Service_orMutable {
   _core.String get serviceId;
@@ -991,7 +1007,7 @@ final class SharedArtifactProvenance_Service
   static SharedArtifactProvenance_Service_mutable mutable() =>
       SharedArtifactProvenance_Service_mutable._("", "");
 
-  /// Returns this instance (no operation).
+  /// Returns this instance (no-op).
   @_core.Deprecated("This instance is already frozen.")
   @_core.override
   SharedArtifactProvenance_Service toFrozen() => this;
@@ -1080,7 +1096,9 @@ final class SharedArtifactProvenance_Service_mutable
       ).._u = this._u;
 }
 
+// -----------------------------------------------------------------------------
 // enum SharedArtifactProvenance
+// -----------------------------------------------------------------------------
 
 /// To switch on the variants:
 ///   ```
@@ -1276,7 +1294,9 @@ final class SharedArtifactProvenance_serviceWrapper
       SharedArtifactProvenance_kind.serviceWrapper;
 }
 
+// -----------------------------------------------------------------------------
 // struct SharedArtifactCatalog
+// -----------------------------------------------------------------------------
 
 sealed class SharedArtifactCatalog_orMutable {
   _core.int get revision;
@@ -1314,7 +1334,7 @@ final class SharedArtifactCatalog implements SharedArtifactCatalog_orMutable {
   static SharedArtifactCatalog_mutable mutable() =>
       SharedArtifactCatalog_mutable._(0, _skir.KeyedIterable.empty);
 
-  /// Returns this instance (no operation).
+  /// Returns this instance (no-op).
   @_core.Deprecated("This instance is already frozen.")
   @_core.override
   SharedArtifactCatalog toFrozen() => this;
@@ -1391,7 +1411,7 @@ final class SharedArtifactCatalog_mutable
 
   SharedArtifactCatalog_mutable._(this.revision, this.artifacts);
 
-  /// If the value of [artifacts] is already mutable, returns it as is.
+  /// If the value of [artifacts] is already mutable, returns it as-is.
   /// Otherwise, makes a mutable copy, assigns it back to [artifacts] and returns it.
   _core.List<SharedArtifactDescriptor_orMutable> get mutableArtifacts {
     final value = this.artifacts;
@@ -1410,7 +1430,9 @@ final class SharedArtifactCatalog_mutable
         .._u = this._u;
 }
 
+// -----------------------------------------------------------------------------
 // struct ProducerMetadataEntry
+// -----------------------------------------------------------------------------
 
 sealed class ProducerMetadataEntry_orMutable {
   _core.String get key;
@@ -1442,7 +1464,7 @@ final class ProducerMetadataEntry implements ProducerMetadataEntry_orMutable {
   static ProducerMetadataEntry_mutable mutable() =>
       ProducerMetadataEntry_mutable._("", "");
 
-  /// Returns this instance (no operation).
+  /// Returns this instance (no-op).
   @_core.Deprecated("This instance is already frozen.")
   @_core.override
   ProducerMetadataEntry toFrozen() => this;
@@ -1525,7 +1547,9 @@ final class ProducerMetadataEntry_mutable
       ProducerMetadataEntry(key: this.key, value: this.value).._u = this._u;
 }
 
+// -----------------------------------------------------------------------------
 // struct ProducerMetadata
+// -----------------------------------------------------------------------------
 
 sealed class ProducerMetadata_orMutable {
   _core.Iterable<ProducerMetadataEntry_orMutable> get entries;
@@ -1555,7 +1579,7 @@ final class ProducerMetadata implements ProducerMetadata_orMutable {
   static ProducerMetadata_mutable mutable() =>
       ProducerMetadata_mutable._(_skir.KeyedIterable.empty);
 
-  /// Returns this instance (no operation).
+  /// Returns this instance (no-op).
   @_core.Deprecated("This instance is already frozen.")
   @_core.override
   ProducerMetadata toFrozen() => this;
@@ -1618,7 +1642,7 @@ final class ProducerMetadata_mutable implements ProducerMetadata_orMutable {
 
   ProducerMetadata_mutable._(this.entries);
 
-  /// If the value of [entries] is already mutable, returns it as is.
+  /// If the value of [entries] is already mutable, returns it as-is.
   /// Otherwise, makes a mutable copy, assigns it back to [entries] and returns it.
   _core.List<ProducerMetadataEntry_orMutable> get mutableEntries {
     final value = this.entries;
@@ -1635,7 +1659,9 @@ final class ProducerMetadata_mutable implements ProducerMetadata_orMutable {
       ProducerMetadata(entries: this.entries).._u = this._u;
 }
 
+// -----------------------------------------------------------------------------
 // struct FetchSharedArtifactCatalogRequest
+// -----------------------------------------------------------------------------
 
 sealed class FetchSharedArtifactCatalogRequest_orMutable {
   _core.int? get afterRevision;
@@ -1664,7 +1690,7 @@ final class FetchSharedArtifactCatalogRequest
   static FetchSharedArtifactCatalogRequest_mutable mutable() =>
       FetchSharedArtifactCatalogRequest_mutable._(null);
 
-  /// Returns this instance (no operation).
+  /// Returns this instance (no-op).
   @_core.Deprecated("This instance is already frozen.")
   @_core.override
   FetchSharedArtifactCatalogRequest toFrozen() => this;
@@ -1738,7 +1764,9 @@ final class FetchSharedArtifactCatalogRequest_mutable
         .._u = this._u;
 }
 
+// -----------------------------------------------------------------------------
 // struct FetchSharedArtifactCatalogResponse.Unavailable
+// -----------------------------------------------------------------------------
 
 sealed class FetchSharedArtifactCatalogResponse_Unavailable_orMutable {
   FetchSharedArtifactCatalogResponse_Unavailable toFrozen();
@@ -1763,7 +1791,7 @@ final class FetchSharedArtifactCatalogResponse_Unavailable
   static FetchSharedArtifactCatalogResponse_Unavailable_mutable mutable() =>
       FetchSharedArtifactCatalogResponse_Unavailable_mutable._();
 
-  /// Returns this instance (no operation).
+  /// Returns this instance (no-op).
   @_core.Deprecated("This instance is already frozen.")
   @_core.override
   FetchSharedArtifactCatalogResponse_Unavailable toFrozen() => this;
@@ -1827,7 +1855,9 @@ final class FetchSharedArtifactCatalogResponse_Unavailable_mutable
       FetchSharedArtifactCatalogResponse_Unavailable().._u = this._u;
 }
 
+// -----------------------------------------------------------------------------
 // enum FetchSharedArtifactCatalogResponse
+// -----------------------------------------------------------------------------
 
 /// To switch on the variants:
 ///   ```
@@ -1993,7 +2023,9 @@ final class FetchSharedArtifactCatalogResponse_unavailableWrapper
       FetchSharedArtifactCatalogResponse_kind.unavailableWrapper;
 }
 
+// -----------------------------------------------------------------------------
 // struct PublishSharedArtifactRequest
+// -----------------------------------------------------------------------------
 
 sealed class PublishSharedArtifactRequest_orMutable {
   _core.String get id;
@@ -2094,7 +2126,7 @@ final class PublishSharedArtifactRequest
         false,
       );
 
-  /// Returns this instance (no operation).
+  /// Returns this instance (no-op).
   @_core.Deprecated("This instance is already frozen.")
   @_core.override
   PublishSharedArtifactRequest toFrozen() => this;
@@ -2286,7 +2318,9 @@ final class PublishSharedArtifactRequest_mutable
   ).._u = this._u;
 }
 
+// -----------------------------------------------------------------------------
 // struct PublishSharedArtifactResponse.Unavailable
+// -----------------------------------------------------------------------------
 
 sealed class PublishSharedArtifactResponse_Unavailable_orMutable {
   PublishSharedArtifactResponse_Unavailable toFrozen();
@@ -2310,7 +2344,7 @@ final class PublishSharedArtifactResponse_Unavailable
   static PublishSharedArtifactResponse_Unavailable_mutable mutable() =>
       PublishSharedArtifactResponse_Unavailable_mutable._();
 
-  /// Returns this instance (no operation).
+  /// Returns this instance (no-op).
   @_core.Deprecated("This instance is already frozen.")
   @_core.override
   PublishSharedArtifactResponse_Unavailable toFrozen() => this;
@@ -2375,7 +2409,9 @@ final class PublishSharedArtifactResponse_Unavailable_mutable
       PublishSharedArtifactResponse_Unavailable().._u = this._u;
 }
 
+// -----------------------------------------------------------------------------
 // enum PublishSharedArtifactResponse
+// -----------------------------------------------------------------------------
 
 /// To switch on the variants:
 ///   ```
@@ -2631,7 +2667,9 @@ final class PublishSharedArtifactResponse_unavailableWrapper
       PublishSharedArtifactResponse_kind.unavailableWrapper;
 }
 
+// -----------------------------------------------------------------------------
 // struct ReadArtifactBlobRequest
+// -----------------------------------------------------------------------------
 
 sealed class ReadArtifactBlobRequest_orMutable {
   ArtifactDigest_orMutable get digest;
@@ -2672,7 +2710,7 @@ final class ReadArtifactBlobRequest
   static ReadArtifactBlobRequest_mutable mutable() =>
       ReadArtifactBlobRequest_mutable._(ArtifactDigest.defaultInstance, 0, 0);
 
-  /// Returns this instance (no operation).
+  /// Returns this instance (no-op).
   @_core.Deprecated("This instance is already frozen.")
   @_core.override
   ReadArtifactBlobRequest toFrozen() => this;
@@ -2771,7 +2809,7 @@ final class ReadArtifactBlobRequest_mutable
     this.maximumBytes,
   );
 
-  /// If the value of [digest] is already mutable, returns it as is.
+  /// If the value of [digest] is already mutable, returns it as-is.
   /// Otherwise, makes a mutable copy, assigns it back to [digest] and returns it.
   ArtifactDigest_mutable get mutableDigest {
     final value = this.digest;
@@ -2791,7 +2829,9 @@ final class ReadArtifactBlobRequest_mutable
   ).._u = this._u;
 }
 
+// -----------------------------------------------------------------------------
 // struct ReadArtifactBlobResponse.NotFound
+// -----------------------------------------------------------------------------
 
 sealed class ReadArtifactBlobResponse_NotFound_orMutable {
   ReadArtifactBlobResponse_NotFound toFrozen();
@@ -2815,7 +2855,7 @@ final class ReadArtifactBlobResponse_NotFound
   static ReadArtifactBlobResponse_NotFound_mutable mutable() =>
       ReadArtifactBlobResponse_NotFound_mutable._();
 
-  /// Returns this instance (no operation).
+  /// Returns this instance (no-op).
   @_core.Deprecated("This instance is already frozen.")
   @_core.override
   ReadArtifactBlobResponse_NotFound toFrozen() => this;
@@ -2878,7 +2918,9 @@ final class ReadArtifactBlobResponse_NotFound_mutable
       ReadArtifactBlobResponse_NotFound().._u = this._u;
 }
 
+// -----------------------------------------------------------------------------
 // struct ReadArtifactBlobResponse.Invalid
+// -----------------------------------------------------------------------------
 
 sealed class ReadArtifactBlobResponse_Invalid_orMutable {
   _core.String get reason;
@@ -2906,7 +2948,7 @@ final class ReadArtifactBlobResponse_Invalid
   static ReadArtifactBlobResponse_Invalid_mutable mutable() =>
       ReadArtifactBlobResponse_Invalid_mutable._("");
 
-  /// Returns this instance (no operation).
+  /// Returns this instance (no-op).
   @_core.Deprecated("This instance is already frozen.")
   @_core.override
   ReadArtifactBlobResponse_Invalid toFrozen() => this;
@@ -2979,7 +3021,9 @@ final class ReadArtifactBlobResponse_Invalid_mutable
       ReadArtifactBlobResponse_Invalid(reason: this.reason).._u = this._u;
 }
 
+// -----------------------------------------------------------------------------
 // struct ReadArtifactBlobResponse.Unavailable
+// -----------------------------------------------------------------------------
 
 sealed class ReadArtifactBlobResponse_Unavailable_orMutable {
   ReadArtifactBlobResponse_Unavailable toFrozen();
@@ -3003,7 +3047,7 @@ final class ReadArtifactBlobResponse_Unavailable
   static ReadArtifactBlobResponse_Unavailable_mutable mutable() =>
       ReadArtifactBlobResponse_Unavailable_mutable._();
 
-  /// Returns this instance (no operation).
+  /// Returns this instance (no-op).
   @_core.Deprecated("This instance is already frozen.")
   @_core.override
   ReadArtifactBlobResponse_Unavailable toFrozen() => this;
@@ -3067,7 +3111,9 @@ final class ReadArtifactBlobResponse_Unavailable_mutable
       ReadArtifactBlobResponse_Unavailable().._u = this._u;
 }
 
+// -----------------------------------------------------------------------------
 // enum ReadArtifactBlobResponse
+// -----------------------------------------------------------------------------
 
 /// To switch on the variants:
 ///   ```
@@ -3293,7 +3339,9 @@ final class ReadArtifactBlobResponse_unavailableWrapper
       ReadArtifactBlobResponse_kind.unavailableWrapper;
 }
 
+// -----------------------------------------------------------------------------
 // struct BeginArtifactBlobWriteRequest
+// -----------------------------------------------------------------------------
 
 sealed class BeginArtifactBlobWriteRequest_orMutable {
   _core.String get transferId;
@@ -3329,7 +3377,7 @@ final class BeginArtifactBlobWriteRequest
   static BeginArtifactBlobWriteRequest_mutable mutable() =>
       BeginArtifactBlobWriteRequest_mutable._("", BlobMetadata.defaultInstance);
 
-  /// Returns this instance (no operation).
+  /// Returns this instance (no-op).
   @_core.Deprecated("This instance is already frozen.")
   @_core.override
   BeginArtifactBlobWriteRequest toFrozen() => this;
@@ -3406,7 +3454,7 @@ final class BeginArtifactBlobWriteRequest_mutable
 
   BeginArtifactBlobWriteRequest_mutable._(this.transferId, this.expected);
 
-  /// If the value of [expected] is already mutable, returns it as is.
+  /// If the value of [expected] is already mutable, returns it as-is.
   /// Otherwise, makes a mutable copy, assigns it back to [expected] and returns it.
   BlobMetadata_mutable get mutableExpected {
     final value = this.expected;
@@ -3425,7 +3473,9 @@ final class BeginArtifactBlobWriteRequest_mutable
   ).._u = this._u;
 }
 
+// -----------------------------------------------------------------------------
 // struct BeginArtifactBlobWriteResponse.Accepted
+// -----------------------------------------------------------------------------
 
 sealed class BeginArtifactBlobWriteResponse_Accepted_orMutable {
   _core.int get offset;
@@ -3454,7 +3504,7 @@ final class BeginArtifactBlobWriteResponse_Accepted
   static BeginArtifactBlobWriteResponse_Accepted_mutable mutable() =>
       BeginArtifactBlobWriteResponse_Accepted_mutable._(0);
 
-  /// Returns this instance (no operation).
+  /// Returns this instance (no-op).
   @_core.Deprecated("This instance is already frozen.")
   @_core.override
   BeginArtifactBlobWriteResponse_Accepted toFrozen() => this;
@@ -3530,7 +3580,9 @@ final class BeginArtifactBlobWriteResponse_Accepted_mutable
         .._u = this._u;
 }
 
+// -----------------------------------------------------------------------------
 // struct BeginArtifactBlobWriteResponse.Invalid
+// -----------------------------------------------------------------------------
 
 sealed class BeginArtifactBlobWriteResponse_Invalid_orMutable {
   _core.String get reason;
@@ -3559,7 +3611,7 @@ final class BeginArtifactBlobWriteResponse_Invalid
   static BeginArtifactBlobWriteResponse_Invalid_mutable mutable() =>
       BeginArtifactBlobWriteResponse_Invalid_mutable._("");
 
-  /// Returns this instance (no operation).
+  /// Returns this instance (no-op).
   @_core.Deprecated("This instance is already frozen.")
   @_core.override
   BeginArtifactBlobWriteResponse_Invalid toFrozen() => this;
@@ -3633,7 +3685,9 @@ final class BeginArtifactBlobWriteResponse_Invalid_mutable
       BeginArtifactBlobWriteResponse_Invalid(reason: this.reason).._u = this._u;
 }
 
+// -----------------------------------------------------------------------------
 // struct BeginArtifactBlobWriteResponse.Conflict
+// -----------------------------------------------------------------------------
 
 sealed class BeginArtifactBlobWriteResponse_Conflict_orMutable {
   _core.String get reason;
@@ -3662,7 +3716,7 @@ final class BeginArtifactBlobWriteResponse_Conflict
   static BeginArtifactBlobWriteResponse_Conflict_mutable mutable() =>
       BeginArtifactBlobWriteResponse_Conflict_mutable._("");
 
-  /// Returns this instance (no operation).
+  /// Returns this instance (no-op).
   @_core.Deprecated("This instance is already frozen.")
   @_core.override
   BeginArtifactBlobWriteResponse_Conflict toFrozen() => this;
@@ -3738,7 +3792,9 @@ final class BeginArtifactBlobWriteResponse_Conflict_mutable
         .._u = this._u;
 }
 
+// -----------------------------------------------------------------------------
 // struct BeginArtifactBlobWriteResponse.Unavailable
+// -----------------------------------------------------------------------------
 
 sealed class BeginArtifactBlobWriteResponse_Unavailable_orMutable {
   BeginArtifactBlobWriteResponse_Unavailable toFrozen();
@@ -3762,7 +3818,7 @@ final class BeginArtifactBlobWriteResponse_Unavailable
   static BeginArtifactBlobWriteResponse_Unavailable_mutable mutable() =>
       BeginArtifactBlobWriteResponse_Unavailable_mutable._();
 
-  /// Returns this instance (no operation).
+  /// Returns this instance (no-op).
   @_core.Deprecated("This instance is already frozen.")
   @_core.override
   BeginArtifactBlobWriteResponse_Unavailable toFrozen() => this;
@@ -3827,7 +3883,9 @@ final class BeginArtifactBlobWriteResponse_Unavailable_mutable
       BeginArtifactBlobWriteResponse_Unavailable().._u = this._u;
 }
 
+// -----------------------------------------------------------------------------
 // enum BeginArtifactBlobWriteResponse
+// -----------------------------------------------------------------------------
 
 /// To switch on the variants:
 ///   ```
@@ -4059,7 +4117,9 @@ final class BeginArtifactBlobWriteResponse_unavailableWrapper
       BeginArtifactBlobWriteResponse_kind.unavailableWrapper;
 }
 
+// -----------------------------------------------------------------------------
 // struct WriteArtifactBlobChunkRequest
+// -----------------------------------------------------------------------------
 
 sealed class WriteArtifactBlobChunkRequest_orMutable {
   _core.String get transferId;
@@ -4100,7 +4160,7 @@ final class WriteArtifactBlobChunkRequest
   static WriteArtifactBlobChunkRequest_mutable mutable() =>
       WriteArtifactBlobChunkRequest_mutable._("", 0, _skir.ByteString.empty);
 
-  /// Returns this instance (no operation).
+  /// Returns this instance (no-op).
   @_core.Deprecated("This instance is already frozen.")
   @_core.override
   WriteArtifactBlobChunkRequest toFrozen() => this;
@@ -4204,7 +4264,9 @@ final class WriteArtifactBlobChunkRequest_mutable
   ).._u = this._u;
 }
 
+// -----------------------------------------------------------------------------
 // struct WriteArtifactBlobChunkResponse.Accepted
+// -----------------------------------------------------------------------------
 
 sealed class WriteArtifactBlobChunkResponse_Accepted_orMutable {
   _core.int get offset;
@@ -4233,7 +4295,7 @@ final class WriteArtifactBlobChunkResponse_Accepted
   static WriteArtifactBlobChunkResponse_Accepted_mutable mutable() =>
       WriteArtifactBlobChunkResponse_Accepted_mutable._(0);
 
-  /// Returns this instance (no operation).
+  /// Returns this instance (no-op).
   @_core.Deprecated("This instance is already frozen.")
   @_core.override
   WriteArtifactBlobChunkResponse_Accepted toFrozen() => this;
@@ -4309,7 +4371,9 @@ final class WriteArtifactBlobChunkResponse_Accepted_mutable
         .._u = this._u;
 }
 
+// -----------------------------------------------------------------------------
 // struct WriteArtifactBlobChunkResponse.NotFound
+// -----------------------------------------------------------------------------
 
 sealed class WriteArtifactBlobChunkResponse_NotFound_orMutable {
   WriteArtifactBlobChunkResponse_NotFound toFrozen();
@@ -4333,7 +4397,7 @@ final class WriteArtifactBlobChunkResponse_NotFound
   static WriteArtifactBlobChunkResponse_NotFound_mutable mutable() =>
       WriteArtifactBlobChunkResponse_NotFound_mutable._();
 
-  /// Returns this instance (no operation).
+  /// Returns this instance (no-op).
   @_core.Deprecated("This instance is already frozen.")
   @_core.override
   WriteArtifactBlobChunkResponse_NotFound toFrozen() => this;
@@ -4398,7 +4462,9 @@ final class WriteArtifactBlobChunkResponse_NotFound_mutable
       WriteArtifactBlobChunkResponse_NotFound().._u = this._u;
 }
 
+// -----------------------------------------------------------------------------
 // struct WriteArtifactBlobChunkResponse.Invalid
+// -----------------------------------------------------------------------------
 
 sealed class WriteArtifactBlobChunkResponse_Invalid_orMutable {
   _core.String get reason;
@@ -4427,7 +4493,7 @@ final class WriteArtifactBlobChunkResponse_Invalid
   static WriteArtifactBlobChunkResponse_Invalid_mutable mutable() =>
       WriteArtifactBlobChunkResponse_Invalid_mutable._("");
 
-  /// Returns this instance (no operation).
+  /// Returns this instance (no-op).
   @_core.Deprecated("This instance is already frozen.")
   @_core.override
   WriteArtifactBlobChunkResponse_Invalid toFrozen() => this;
@@ -4501,7 +4567,9 @@ final class WriteArtifactBlobChunkResponse_Invalid_mutable
       WriteArtifactBlobChunkResponse_Invalid(reason: this.reason).._u = this._u;
 }
 
+// -----------------------------------------------------------------------------
 // struct WriteArtifactBlobChunkResponse.Conflict
+// -----------------------------------------------------------------------------
 
 sealed class WriteArtifactBlobChunkResponse_Conflict_orMutable {
   _core.String get reason;
@@ -4530,7 +4598,7 @@ final class WriteArtifactBlobChunkResponse_Conflict
   static WriteArtifactBlobChunkResponse_Conflict_mutable mutable() =>
       WriteArtifactBlobChunkResponse_Conflict_mutable._("");
 
-  /// Returns this instance (no operation).
+  /// Returns this instance (no-op).
   @_core.Deprecated("This instance is already frozen.")
   @_core.override
   WriteArtifactBlobChunkResponse_Conflict toFrozen() => this;
@@ -4606,7 +4674,9 @@ final class WriteArtifactBlobChunkResponse_Conflict_mutable
         .._u = this._u;
 }
 
+// -----------------------------------------------------------------------------
 // struct WriteArtifactBlobChunkResponse.Unavailable
+// -----------------------------------------------------------------------------
 
 sealed class WriteArtifactBlobChunkResponse_Unavailable_orMutable {
   WriteArtifactBlobChunkResponse_Unavailable toFrozen();
@@ -4630,7 +4700,7 @@ final class WriteArtifactBlobChunkResponse_Unavailable
   static WriteArtifactBlobChunkResponse_Unavailable_mutable mutable() =>
       WriteArtifactBlobChunkResponse_Unavailable_mutable._();
 
-  /// Returns this instance (no operation).
+  /// Returns this instance (no-op).
   @_core.Deprecated("This instance is already frozen.")
   @_core.override
   WriteArtifactBlobChunkResponse_Unavailable toFrozen() => this;
@@ -4695,7 +4765,9 @@ final class WriteArtifactBlobChunkResponse_Unavailable_mutable
       WriteArtifactBlobChunkResponse_Unavailable().._u = this._u;
 }
 
+// -----------------------------------------------------------------------------
 // enum WriteArtifactBlobChunkResponse
+// -----------------------------------------------------------------------------
 
 /// To switch on the variants:
 ///   ```
@@ -4961,7 +5033,9 @@ final class WriteArtifactBlobChunkResponse_unavailableWrapper
       WriteArtifactBlobChunkResponse_kind.unavailableWrapper;
 }
 
+// -----------------------------------------------------------------------------
 // struct CompleteArtifactBlobWriteRequest
+// -----------------------------------------------------------------------------
 
 sealed class CompleteArtifactBlobWriteRequest_orMutable {
   _core.String get transferId;
@@ -4990,7 +5064,7 @@ final class CompleteArtifactBlobWriteRequest
   static CompleteArtifactBlobWriteRequest_mutable mutable() =>
       CompleteArtifactBlobWriteRequest_mutable._("");
 
-  /// Returns this instance (no operation).
+  /// Returns this instance (no-op).
   @_core.Deprecated("This instance is already frozen.")
   @_core.override
   CompleteArtifactBlobWriteRequest toFrozen() => this;
@@ -5064,7 +5138,9 @@ final class CompleteArtifactBlobWriteRequest_mutable
         .._u = this._u;
 }
 
+// -----------------------------------------------------------------------------
 // struct CompleteArtifactBlobWriteResponse.NotFound
+// -----------------------------------------------------------------------------
 
 sealed class CompleteArtifactBlobWriteResponse_NotFound_orMutable {
   CompleteArtifactBlobWriteResponse_NotFound toFrozen();
@@ -5088,7 +5164,7 @@ final class CompleteArtifactBlobWriteResponse_NotFound
   static CompleteArtifactBlobWriteResponse_NotFound_mutable mutable() =>
       CompleteArtifactBlobWriteResponse_NotFound_mutable._();
 
-  /// Returns this instance (no operation).
+  /// Returns this instance (no-op).
   @_core.Deprecated("This instance is already frozen.")
   @_core.override
   CompleteArtifactBlobWriteResponse_NotFound toFrozen() => this;
@@ -5153,7 +5229,9 @@ final class CompleteArtifactBlobWriteResponse_NotFound_mutable
       CompleteArtifactBlobWriteResponse_NotFound().._u = this._u;
 }
 
+// -----------------------------------------------------------------------------
 // struct CompleteArtifactBlobWriteResponse.Invalid
+// -----------------------------------------------------------------------------
 
 sealed class CompleteArtifactBlobWriteResponse_Invalid_orMutable {
   _core.String get reason;
@@ -5184,7 +5262,7 @@ final class CompleteArtifactBlobWriteResponse_Invalid
   static CompleteArtifactBlobWriteResponse_Invalid_mutable mutable() =>
       CompleteArtifactBlobWriteResponse_Invalid_mutable._("");
 
-  /// Returns this instance (no operation).
+  /// Returns this instance (no-op).
   @_core.Deprecated("This instance is already frozen.")
   @_core.override
   CompleteArtifactBlobWriteResponse_Invalid toFrozen() => this;
@@ -5260,7 +5338,9 @@ final class CompleteArtifactBlobWriteResponse_Invalid_mutable
         .._u = this._u;
 }
 
+// -----------------------------------------------------------------------------
 // struct CompleteArtifactBlobWriteResponse.Conflict
+// -----------------------------------------------------------------------------
 
 sealed class CompleteArtifactBlobWriteResponse_Conflict_orMutable {
   _core.String get reason;
@@ -5291,7 +5371,7 @@ final class CompleteArtifactBlobWriteResponse_Conflict
   static CompleteArtifactBlobWriteResponse_Conflict_mutable mutable() =>
       CompleteArtifactBlobWriteResponse_Conflict_mutable._("");
 
-  /// Returns this instance (no operation).
+  /// Returns this instance (no-op).
   @_core.Deprecated("This instance is already frozen.")
   @_core.override
   CompleteArtifactBlobWriteResponse_Conflict toFrozen() => this;
@@ -5367,7 +5447,9 @@ final class CompleteArtifactBlobWriteResponse_Conflict_mutable
         .._u = this._u;
 }
 
+// -----------------------------------------------------------------------------
 // struct CompleteArtifactBlobWriteResponse.Unavailable
+// -----------------------------------------------------------------------------
 
 sealed class CompleteArtifactBlobWriteResponse_Unavailable_orMutable {
   CompleteArtifactBlobWriteResponse_Unavailable toFrozen();
@@ -5392,7 +5474,7 @@ final class CompleteArtifactBlobWriteResponse_Unavailable
   static CompleteArtifactBlobWriteResponse_Unavailable_mutable mutable() =>
       CompleteArtifactBlobWriteResponse_Unavailable_mutable._();
 
-  /// Returns this instance (no operation).
+  /// Returns this instance (no-op).
   @_core.Deprecated("This instance is already frozen.")
   @_core.override
   CompleteArtifactBlobWriteResponse_Unavailable toFrozen() => this;
@@ -5456,7 +5538,9 @@ final class CompleteArtifactBlobWriteResponse_Unavailable_mutable
       CompleteArtifactBlobWriteResponse_Unavailable().._u = this._u;
 }
 
+// -----------------------------------------------------------------------------
 // enum CompleteArtifactBlobWriteResponse
+// -----------------------------------------------------------------------------
 
 /// To switch on the variants:
 ///   ```
@@ -5726,7 +5810,9 @@ final class CompleteArtifactBlobWriteResponse_unavailableWrapper
       CompleteArtifactBlobWriteResponse_kind.unavailableWrapper;
 }
 
+// -----------------------------------------------------------------------------
 // struct FetchArtifactBlobMetadataRequest
+// -----------------------------------------------------------------------------
 
 sealed class FetchArtifactBlobMetadataRequest_orMutable {
   ArtifactDigest_orMutable get digest;
@@ -5759,7 +5845,7 @@ final class FetchArtifactBlobMetadataRequest
         ArtifactDigest.defaultInstance,
       );
 
-  /// Returns this instance (no operation).
+  /// Returns this instance (no-op).
   @_core.Deprecated("This instance is already frozen.")
   @_core.override
   FetchArtifactBlobMetadataRequest toFrozen() => this;
@@ -5826,7 +5912,7 @@ final class FetchArtifactBlobMetadataRequest_mutable
 
   FetchArtifactBlobMetadataRequest_mutable._(this.digest);
 
-  /// If the value of [digest] is already mutable, returns it as is.
+  /// If the value of [digest] is already mutable, returns it as-is.
   /// Otherwise, makes a mutable copy, assigns it back to [digest] and returns it.
   ArtifactDigest_mutable get mutableDigest {
     final value = this.digest;
@@ -5843,7 +5929,9 @@ final class FetchArtifactBlobMetadataRequest_mutable
       FetchArtifactBlobMetadataRequest(digest: this.digest).._u = this._u;
 }
 
+// -----------------------------------------------------------------------------
 // struct FetchArtifactBlobMetadataResponse.NotFound
+// -----------------------------------------------------------------------------
 
 sealed class FetchArtifactBlobMetadataResponse_NotFound_orMutable {
   FetchArtifactBlobMetadataResponse_NotFound toFrozen();
@@ -5867,7 +5955,7 @@ final class FetchArtifactBlobMetadataResponse_NotFound
   static FetchArtifactBlobMetadataResponse_NotFound_mutable mutable() =>
       FetchArtifactBlobMetadataResponse_NotFound_mutable._();
 
-  /// Returns this instance (no operation).
+  /// Returns this instance (no-op).
   @_core.Deprecated("This instance is already frozen.")
   @_core.override
   FetchArtifactBlobMetadataResponse_NotFound toFrozen() => this;
@@ -5932,7 +6020,9 @@ final class FetchArtifactBlobMetadataResponse_NotFound_mutable
       FetchArtifactBlobMetadataResponse_NotFound().._u = this._u;
 }
 
+// -----------------------------------------------------------------------------
 // struct FetchArtifactBlobMetadataResponse.Invalid
+// -----------------------------------------------------------------------------
 
 sealed class FetchArtifactBlobMetadataResponse_Invalid_orMutable {
   _core.String get reason;
@@ -5963,7 +6053,7 @@ final class FetchArtifactBlobMetadataResponse_Invalid
   static FetchArtifactBlobMetadataResponse_Invalid_mutable mutable() =>
       FetchArtifactBlobMetadataResponse_Invalid_mutable._("");
 
-  /// Returns this instance (no operation).
+  /// Returns this instance (no-op).
   @_core.Deprecated("This instance is already frozen.")
   @_core.override
   FetchArtifactBlobMetadataResponse_Invalid toFrozen() => this;
@@ -6039,7 +6129,9 @@ final class FetchArtifactBlobMetadataResponse_Invalid_mutable
         .._u = this._u;
 }
 
+// -----------------------------------------------------------------------------
 // struct FetchArtifactBlobMetadataResponse.Unavailable
+// -----------------------------------------------------------------------------
 
 sealed class FetchArtifactBlobMetadataResponse_Unavailable_orMutable {
   FetchArtifactBlobMetadataResponse_Unavailable toFrozen();
@@ -6064,7 +6156,7 @@ final class FetchArtifactBlobMetadataResponse_Unavailable
   static FetchArtifactBlobMetadataResponse_Unavailable_mutable mutable() =>
       FetchArtifactBlobMetadataResponse_Unavailable_mutable._();
 
-  /// Returns this instance (no operation).
+  /// Returns this instance (no-op).
   @_core.Deprecated("This instance is already frozen.")
   @_core.override
   FetchArtifactBlobMetadataResponse_Unavailable toFrozen() => this;
@@ -6128,7 +6220,9 @@ final class FetchArtifactBlobMetadataResponse_Unavailable_mutable
       FetchArtifactBlobMetadataResponse_Unavailable().._u = this._u;
 }
 
+// -----------------------------------------------------------------------------
 // enum FetchArtifactBlobMetadataResponse
+// -----------------------------------------------------------------------------
 
 /// To switch on the variants:
 ///   ```

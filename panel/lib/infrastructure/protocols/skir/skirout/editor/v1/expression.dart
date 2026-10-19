@@ -17,7 +17,9 @@ import "package:skir_client/skir_client.dart" as _skir;
 
 import "./type_catalog.dart" as _lib_editor_v1_type_catalog;
 
+// -----------------------------------------------------------------------------
 // struct ExpressionInput
+// -----------------------------------------------------------------------------
 
 sealed class ExpressionInput_orMutable {
   _lib_editor_v1_type_catalog.ExpressionBindingId_orMutable get binding;
@@ -56,7 +58,7 @@ final class ExpressionInput implements ExpressionInput_orMutable {
     _lib_editor_v1_type_catalog.ValuePath.defaultInstance,
   );
 
-  /// Returns this instance (no operation).
+  /// Returns this instance (no-op).
   @_core.Deprecated("This instance is already frozen.")
   @_core.override
   ExpressionInput toFrozen() => this;
@@ -129,7 +131,7 @@ final class ExpressionInput_mutable implements ExpressionInput_orMutable {
 
   ExpressionInput_mutable._(this.binding, this.path);
 
-  /// If the value of [binding] is already mutable, returns it as is.
+  /// If the value of [binding] is already mutable, returns it as-is.
   /// Otherwise, makes a mutable copy, assigns it back to [binding] and returns it.
   _lib_editor_v1_type_catalog.ExpressionBindingId_mutable get mutableBinding {
     final value = this.binding;
@@ -142,7 +144,7 @@ final class ExpressionInput_mutable implements ExpressionInput_orMutable {
     }
   }
 
-  /// If the value of [path] is already mutable, returns it as is.
+  /// If the value of [path] is already mutable, returns it as-is.
   /// Otherwise, makes a mutable copy, assigns it back to [path] and returns it.
   _lib_editor_v1_type_catalog.ValuePath_mutable get mutablePath {
     final value = this.path;
@@ -160,7 +162,9 @@ final class ExpressionInput_mutable implements ExpressionInput_orMutable {
       ExpressionInput(binding: this.binding, path: this.path).._u = this._u;
 }
 
+// -----------------------------------------------------------------------------
 // struct ExpressionLocal
+// -----------------------------------------------------------------------------
 
 sealed class ExpressionLocal_orMutable {
   _core.int get depth;
@@ -206,7 +210,7 @@ final class ExpressionLocal implements ExpressionLocal_orMutable {
     _lib_editor_v1_type_catalog.ValuePath.defaultInstance,
   );
 
-  /// Returns this instance (no operation).
+  /// Returns this instance (no-op).
   @_core.Deprecated("This instance is already frozen.")
   @_core.override
   ExpressionLocal toFrozen() => this;
@@ -289,7 +293,7 @@ final class ExpressionLocal_mutable implements ExpressionLocal_orMutable {
 
   ExpressionLocal_mutable._(this.depth, this.slot, this.path);
 
-  /// If the value of [path] is already mutable, returns it as is.
+  /// If the value of [path] is already mutable, returns it as-is.
   /// Otherwise, makes a mutable copy, assigns it back to [path] and returns it.
   _lib_editor_v1_type_catalog.ValuePath_mutable get mutablePath {
     final value = this.path;
@@ -308,7 +312,9 @@ final class ExpressionLocal_mutable implements ExpressionLocal_orMutable {
         .._u = this._u;
 }
 
+// -----------------------------------------------------------------------------
 // struct ExpressionField
+// -----------------------------------------------------------------------------
 
 sealed class ExpressionField_orMutable {
   ExpressionNode get source;
@@ -342,7 +348,7 @@ final class ExpressionField implements ExpressionField_orMutable {
   static ExpressionField_mutable mutable() =>
       ExpressionField_mutable._(ExpressionNode.unknown, "");
 
-  /// Returns this instance (no operation).
+  /// Returns this instance (no-op).
   @_core.Deprecated("This instance is already frozen.")
   @_core.override
   ExpressionField toFrozen() => this;
@@ -421,7 +427,9 @@ final class ExpressionField_mutable implements ExpressionField_orMutable {
       ExpressionField(source: this.source, name: this.name).._u = this._u;
 }
 
+// -----------------------------------------------------------------------------
 // enum EntryBranch
+// -----------------------------------------------------------------------------
 
 /// To switch on the variants:
 ///   ```
@@ -510,7 +518,9 @@ enum _EntryBranch_consts implements EntryBranch {
       _skir.internal__stringify(this, EntryBranch.serializer);
 }
 
+// -----------------------------------------------------------------------------
 // struct ExpressionEntryProjection
+// -----------------------------------------------------------------------------
 
 sealed class ExpressionEntryProjection_orMutable {
   ExpressionNode get source;
@@ -549,7 +559,7 @@ final class ExpressionEntryProjection
         EntryBranch.unknown,
       );
 
-  /// Returns this instance (no operation).
+  /// Returns this instance (no-op).
   @_core.Deprecated("This instance is already frozen.")
   @_core.override
   ExpressionEntryProjection toFrozen() => this;
@@ -633,7 +643,9 @@ final class ExpressionEntryProjection_mutable
         .._u = this._u;
 }
 
+// -----------------------------------------------------------------------------
 // struct BinaryExpression
+// -----------------------------------------------------------------------------
 
 sealed class BinaryExpression_orMutable {
   ExpressionNode get left;
@@ -670,7 +682,7 @@ final class BinaryExpression implements BinaryExpression_orMutable {
     ExpressionNode.unknown,
   );
 
-  /// Returns this instance (no operation).
+  /// Returns this instance (no-op).
   @_core.Deprecated("This instance is already frozen.")
   @_core.override
   BinaryExpression toFrozen() => this;
@@ -749,7 +761,9 @@ final class BinaryExpression_mutable implements BinaryExpression_orMutable {
       BinaryExpression(left: this.left, right: this.right).._u = this._u;
 }
 
+// -----------------------------------------------------------------------------
 // struct ConditionalExpression
+// -----------------------------------------------------------------------------
 
 sealed class ConditionalExpression_orMutable {
   ExpressionNode get test;
@@ -793,7 +807,7 @@ final class ConditionalExpression implements ConditionalExpression_orMutable {
         ExpressionNode.unknown,
       );
 
-  /// Returns this instance (no operation).
+  /// Returns this instance (no-op).
   @_core.Deprecated("This instance is already frozen.")
   @_core.override
   ConditionalExpression toFrozen() => this;
@@ -887,7 +901,9 @@ final class ConditionalExpression_mutable
         .._u = this._u;
 }
 
+// -----------------------------------------------------------------------------
 // struct OrElseExpression
+// -----------------------------------------------------------------------------
 
 sealed class OrElseExpression_orMutable {
   ExpressionNode get input;
@@ -927,7 +943,7 @@ final class OrElseExpression implements OrElseExpression_orMutable {
     ExpressionNode.unknown,
   );
 
-  /// Returns this instance (no operation).
+  /// Returns this instance (no-op).
   @_core.Deprecated("This instance is already frozen.")
   @_core.override
   OrElseExpression toFrozen() => this;
@@ -1007,7 +1023,9 @@ final class OrElseExpression_mutable implements OrElseExpression_orMutable {
         .._u = this._u;
 }
 
+// -----------------------------------------------------------------------------
 // enum TextUnaryOperation
+// -----------------------------------------------------------------------------
 
 /// To switch on the variants:
 ///   ```
@@ -1112,7 +1130,9 @@ enum _TextUnaryOperation_consts implements TextUnaryOperation {
       _skir.internal__stringify(this, TextUnaryOperation.serializer);
 }
 
+// -----------------------------------------------------------------------------
 // struct TextUnaryExpression
+// -----------------------------------------------------------------------------
 
 sealed class TextUnaryExpression_orMutable {
   TextUnaryOperation get operation;
@@ -1149,7 +1169,7 @@ final class TextUnaryExpression implements TextUnaryExpression_orMutable {
     ExpressionNode.unknown,
   );
 
-  /// Returns this instance (no operation).
+  /// Returns this instance (no-op).
   @_core.Deprecated("This instance is already frozen.")
   @_core.override
   TextUnaryExpression toFrozen() => this;
@@ -1233,7 +1253,9 @@ final class TextUnaryExpression_mutable
         .._u = this._u;
 }
 
+// -----------------------------------------------------------------------------
 // enum TextCompareOperation
+// -----------------------------------------------------------------------------
 
 /// To switch on the variants:
 ///   ```
@@ -1346,7 +1368,9 @@ enum _TextCompareOperation_consts implements TextCompareOperation {
       _skir.internal__stringify(this, TextCompareOperation.serializer);
 }
 
+// -----------------------------------------------------------------------------
 // struct TextCompareExpression
+// -----------------------------------------------------------------------------
 
 sealed class TextCompareExpression_orMutable {
   TextCompareOperation get operation;
@@ -1390,7 +1414,7 @@ final class TextCompareExpression implements TextCompareExpression_orMutable {
         ExpressionNode.unknown,
       );
 
-  /// Returns this instance (no operation).
+  /// Returns this instance (no-op).
   @_core.Deprecated("This instance is already frozen.")
   @_core.override
   TextCompareExpression toFrozen() => this;
@@ -1486,7 +1510,9 @@ final class TextCompareExpression_mutable
   ).._u = this._u;
 }
 
+// -----------------------------------------------------------------------------
 // struct TextReplaceExpression
+// -----------------------------------------------------------------------------
 
 sealed class TextReplaceExpression_orMutable {
   ExpressionNode get source;
@@ -1530,7 +1556,7 @@ final class TextReplaceExpression implements TextReplaceExpression_orMutable {
         ExpressionNode.unknown,
       );
 
-  /// Returns this instance (no operation).
+  /// Returns this instance (no-op).
   @_core.Deprecated("This instance is already frozen.")
   @_core.override
   TextReplaceExpression toFrozen() => this;
@@ -1633,7 +1659,9 @@ final class TextReplaceExpression_mutable
   ).._u = this._u;
 }
 
+// -----------------------------------------------------------------------------
 // struct TextSplitExpression
+// -----------------------------------------------------------------------------
 
 sealed class TextSplitExpression_orMutable {
   ExpressionNode get source;
@@ -1670,7 +1698,7 @@ final class TextSplitExpression implements TextSplitExpression_orMutable {
     ExpressionNode.unknown,
   );
 
-  /// Returns this instance (no operation).
+  /// Returns this instance (no-op).
   @_core.Deprecated("This instance is already frozen.")
   @_core.override
   TextSplitExpression toFrozen() => this;
@@ -1754,7 +1782,9 @@ final class TextSplitExpression_mutable
         .._u = this._u;
 }
 
+// -----------------------------------------------------------------------------
 // struct TextJoinExpression
+// -----------------------------------------------------------------------------
 
 sealed class TextJoinExpression_orMutable {
   ExpressionNode get source;
@@ -1791,7 +1821,7 @@ final class TextJoinExpression implements TextJoinExpression_orMutable {
     ExpressionNode.unknown,
   );
 
-  /// Returns this instance (no operation).
+  /// Returns this instance (no-op).
   @_core.Deprecated("This instance is already frozen.")
   @_core.override
   TextJoinExpression toFrozen() => this;
@@ -1871,7 +1901,9 @@ final class TextJoinExpression_mutable implements TextJoinExpression_orMutable {
         .._u = this._u;
 }
 
+// -----------------------------------------------------------------------------
 // struct TextSubstringExpression
+// -----------------------------------------------------------------------------
 
 sealed class TextSubstringExpression_orMutable {
   ExpressionNode get source;
@@ -1916,7 +1948,7 @@ final class TextSubstringExpression
         null,
       );
 
-  /// Returns this instance (no operation).
+  /// Returns this instance (no-op).
   @_core.Deprecated("This instance is already frozen.")
   @_core.override
   TextSubstringExpression toFrozen() => this;
@@ -2012,7 +2044,9 @@ final class TextSubstringExpression_mutable
   ).._u = this._u;
 }
 
+// -----------------------------------------------------------------------------
 // struct TextInterpolateExpression
+// -----------------------------------------------------------------------------
 
 sealed class TextInterpolateExpression_orMutable {
   _core.Iterable<ExpressionNode> get parts;
@@ -2043,7 +2077,7 @@ final class TextInterpolateExpression
   static TextInterpolateExpression_mutable mutable() =>
       TextInterpolateExpression_mutable._(_skir.KeyedIterable.empty);
 
-  /// Returns this instance (no operation).
+  /// Returns this instance (no-op).
   @_core.Deprecated("This instance is already frozen.")
   @_core.override
   TextInterpolateExpression toFrozen() => this;
@@ -2116,7 +2150,9 @@ final class TextInterpolateExpression_mutable
       TextInterpolateExpression(parts: this.parts).._u = this._u;
 }
 
+// -----------------------------------------------------------------------------
 // enum RegexMatchMode
+// -----------------------------------------------------------------------------
 
 /// To switch on the variants:
 ///   ```
@@ -2211,7 +2247,9 @@ enum _RegexMatchMode_consts implements RegexMatchMode {
       _skir.internal__stringify(this, RegexMatchMode.serializer);
 }
 
+// -----------------------------------------------------------------------------
 // struct RegexTestExpression
+// -----------------------------------------------------------------------------
 
 sealed class RegexTestExpression_orMutable {
   RegexMatchMode get mode;
@@ -2254,7 +2292,7 @@ final class RegexTestExpression implements RegexTestExpression_orMutable {
     ExpressionNode.unknown,
   );
 
-  /// Returns this instance (no operation).
+  /// Returns this instance (no-op).
   @_core.Deprecated("This instance is already frozen.")
   @_core.override
   RegexTestExpression toFrozen() => this;
@@ -2350,7 +2388,9 @@ final class RegexTestExpression_mutable
   ).._u = this._u;
 }
 
+// -----------------------------------------------------------------------------
 // struct RegexCaptureExpression
+// -----------------------------------------------------------------------------
 
 sealed class RegexCaptureExpression_orMutable {
   ExpressionNode get source;
@@ -2394,7 +2434,7 @@ final class RegexCaptureExpression implements RegexCaptureExpression_orMutable {
         ExpressionNode.unknown,
       );
 
-  /// Returns this instance (no operation).
+  /// Returns this instance (no-op).
   @_core.Deprecated("This instance is already frozen.")
   @_core.override
   RegexCaptureExpression toFrozen() => this;
@@ -2490,7 +2530,9 @@ final class RegexCaptureExpression_mutable
   ).._u = this._u;
 }
 
+// -----------------------------------------------------------------------------
 // struct RegexReplaceExpression
+// -----------------------------------------------------------------------------
 
 sealed class RegexReplaceExpression_orMutable {
   ExpressionNode get source;
@@ -2534,7 +2576,7 @@ final class RegexReplaceExpression implements RegexReplaceExpression_orMutable {
         ExpressionNode.unknown,
       );
 
-  /// Returns this instance (no operation).
+  /// Returns this instance (no-op).
   @_core.Deprecated("This instance is already frozen.")
   @_core.override
   RegexReplaceExpression toFrozen() => this;
@@ -2638,7 +2680,9 @@ final class RegexReplaceExpression_mutable
   ).._u = this._u;
 }
 
+// -----------------------------------------------------------------------------
 // enum ValueCompareOperation
+// -----------------------------------------------------------------------------
 
 /// To switch on the variants:
 ///   ```
@@ -2734,7 +2778,9 @@ enum _ValueCompareOperation_consts implements ValueCompareOperation {
       _skir.internal__stringify(this, ValueCompareOperation.serializer);
 }
 
+// -----------------------------------------------------------------------------
 // struct ValueCompareExpression
+// -----------------------------------------------------------------------------
 
 sealed class ValueCompareExpression_orMutable {
   ValueCompareOperation get operation;
@@ -2778,7 +2824,7 @@ final class ValueCompareExpression implements ValueCompareExpression_orMutable {
         ExpressionNode.unknown,
       );
 
-  /// Returns this instance (no operation).
+  /// Returns this instance (no-op).
   @_core.Deprecated("This instance is already frozen.")
   @_core.override
   ValueCompareExpression toFrozen() => this;
@@ -2874,7 +2920,9 @@ final class ValueCompareExpression_mutable
   ).._u = this._u;
 }
 
+// -----------------------------------------------------------------------------
 // enum NumberArithmeticOperation
+// -----------------------------------------------------------------------------
 
 /// To switch on the variants:
 ///   ```
@@ -2999,7 +3047,9 @@ enum _NumberArithmeticOperation_consts implements NumberArithmeticOperation {
       _skir.internal__stringify(this, NumberArithmeticOperation.serializer);
 }
 
+// -----------------------------------------------------------------------------
 // struct NumberArithmeticExpression
+// -----------------------------------------------------------------------------
 
 sealed class NumberArithmeticExpression_orMutable {
   NumberArithmeticOperation get operation;
@@ -3063,7 +3113,7 @@ final class NumberArithmeticExpression
         _skir.KeyedIterable.empty,
       );
 
-  /// Returns this instance (no operation).
+  /// Returns this instance (no-op).
   @_core.Deprecated("This instance is already frozen.")
   @_core.override
   NumberArithmeticExpression toFrozen() => this;
@@ -3185,7 +3235,9 @@ final class NumberArithmeticExpression_mutable
   ).._u = this._u;
 }
 
+// -----------------------------------------------------------------------------
 // enum NumberCompareOperation
+// -----------------------------------------------------------------------------
 
 /// To switch on the variants:
 ///   ```
@@ -3303,7 +3355,9 @@ enum _NumberCompareOperation_consts implements NumberCompareOperation {
       _skir.internal__stringify(this, NumberCompareOperation.serializer);
 }
 
+// -----------------------------------------------------------------------------
 // struct NumberCompareExpression
+// -----------------------------------------------------------------------------
 
 sealed class NumberCompareExpression_orMutable {
   NumberCompareOperation get operation;
@@ -3348,7 +3402,7 @@ final class NumberCompareExpression
         ExpressionNode.unknown,
       );
 
-  /// Returns this instance (no operation).
+  /// Returns this instance (no-op).
   @_core.Deprecated("This instance is already frozen.")
   @_core.override
   NumberCompareExpression toFrozen() => this;
@@ -3444,7 +3498,9 @@ final class NumberCompareExpression_mutable
   ).._u = this._u;
 }
 
+// -----------------------------------------------------------------------------
 // struct NumberRoundExpression
+// -----------------------------------------------------------------------------
 
 sealed class NumberRoundExpression_orMutable {
   ExpressionNode get source;
@@ -3488,7 +3544,7 @@ final class NumberRoundExpression implements NumberRoundExpression_orMutable {
         ExpressionNode.unknown,
       );
 
-  /// Returns this instance (no operation).
+  /// Returns this instance (no-op).
   @_core.Deprecated("This instance is already frozen.")
   @_core.override
   NumberRoundExpression toFrozen() => this;
@@ -3591,7 +3647,9 @@ final class NumberRoundExpression_mutable
   ).._u = this._u;
 }
 
+// -----------------------------------------------------------------------------
 // struct NumberFormatExpression
+// -----------------------------------------------------------------------------
 
 sealed class NumberFormatExpression_orMutable {
   ExpressionNode get source;
@@ -3635,7 +3693,7 @@ final class NumberFormatExpression implements NumberFormatExpression_orMutable {
         ExpressionNode.unknown,
       );
 
-  /// Returns this instance (no operation).
+  /// Returns this instance (no-op).
   @_core.Deprecated("This instance is already frozen.")
   @_core.override
   NumberFormatExpression toFrozen() => this;
@@ -3743,7 +3801,9 @@ final class NumberFormatExpression_mutable
   ).._u = this._u;
 }
 
+// -----------------------------------------------------------------------------
 // struct DurationFormatExpression
+// -----------------------------------------------------------------------------
 
 sealed class DurationFormatExpression_orMutable {
   ExpressionNode get source;
@@ -3788,7 +3848,7 @@ final class DurationFormatExpression
         ExpressionNode.unknown,
       );
 
-  /// Returns this instance (no operation).
+  /// Returns this instance (no-op).
   @_core.Deprecated("This instance is already frozen.")
   @_core.override
   DurationFormatExpression toFrozen() => this;
@@ -3896,7 +3956,9 @@ final class DurationFormatExpression_mutable
   ).._u = this._u;
 }
 
+// -----------------------------------------------------------------------------
 // struct TimestampFormatExpression
+// -----------------------------------------------------------------------------
 
 sealed class TimestampFormatExpression_orMutable {
   ExpressionNode get source;
@@ -3952,7 +4014,7 @@ final class TimestampFormatExpression
         ExpressionNode.unknown,
       );
 
-  /// Returns this instance (no operation).
+  /// Returns this instance (no-op).
   @_core.Deprecated("This instance is already frozen.")
   @_core.override
   TimestampFormatExpression toFrozen() => this;
@@ -4074,7 +4136,9 @@ final class TimestampFormatExpression_mutable
   ).._u = this._u;
 }
 
+// -----------------------------------------------------------------------------
 // struct CollectionAccessExpression
+// -----------------------------------------------------------------------------
 
 sealed class CollectionAccessExpression_orMutable {
   ExpressionNode get source;
@@ -4113,7 +4177,7 @@ final class CollectionAccessExpression
         ExpressionNode.unknown,
       );
 
-  /// Returns this instance (no operation).
+  /// Returns this instance (no-op).
   @_core.Deprecated("This instance is already frozen.")
   @_core.override
   CollectionAccessExpression toFrozen() => this;
@@ -4197,7 +4261,9 @@ final class CollectionAccessExpression_mutable
         .._u = this._u;
 }
 
+// -----------------------------------------------------------------------------
 // struct CollectionContainsExpression
+// -----------------------------------------------------------------------------
 
 sealed class CollectionContainsExpression_orMutable {
   ExpressionNode get source;
@@ -4236,7 +4302,7 @@ final class CollectionContainsExpression
         ExpressionNode.unknown,
       );
 
-  /// Returns this instance (no operation).
+  /// Returns this instance (no-op).
   @_core.Deprecated("This instance is already frozen.")
   @_core.override
   CollectionContainsExpression toFrozen() => this;
@@ -4320,7 +4386,9 @@ final class CollectionContainsExpression_mutable
         .._u = this._u;
 }
 
+// -----------------------------------------------------------------------------
 // struct ColorWithAlphaExpression
+// -----------------------------------------------------------------------------
 
 sealed class ColorWithAlphaExpression_orMutable {
   ExpressionNode get source;
@@ -4359,7 +4427,7 @@ final class ColorWithAlphaExpression
         ExpressionNode.unknown,
       );
 
-  /// Returns this instance (no operation).
+  /// Returns this instance (no-op).
   @_core.Deprecated("This instance is already frozen.")
   @_core.override
   ColorWithAlphaExpression toFrozen() => this;
@@ -4443,7 +4511,9 @@ final class ColorWithAlphaExpression_mutable
         .._u = this._u;
 }
 
+// -----------------------------------------------------------------------------
 // enum RuleUnaryOperation
+// -----------------------------------------------------------------------------
 
 /// To switch on the variants:
 ///   ```
@@ -4599,7 +4669,9 @@ enum _RuleUnaryOperation_consts implements RuleUnaryOperation {
       _skir.internal__stringify(this, RuleUnaryOperation.serializer);
 }
 
+// -----------------------------------------------------------------------------
 // struct RuleUnaryExpression
+// -----------------------------------------------------------------------------
 
 sealed class RuleUnaryExpression_orMutable {
   RuleUnaryOperation get operation;
@@ -4636,7 +4708,7 @@ final class RuleUnaryExpression implements RuleUnaryExpression_orMutable {
     ExpressionNode.unknown,
   );
 
-  /// Returns this instance (no operation).
+  /// Returns this instance (no-op).
   @_core.Deprecated("This instance is already frozen.")
   @_core.override
   RuleUnaryExpression toFrozen() => this;
@@ -4720,7 +4792,9 @@ final class RuleUnaryExpression_mutable
         .._u = this._u;
 }
 
+// -----------------------------------------------------------------------------
 // struct RuleOneOfExpression
+// -----------------------------------------------------------------------------
 
 sealed class RuleOneOfExpression_orMutable {
   ExpressionNode get source;
@@ -4771,7 +4845,7 @@ final class RuleOneOfExpression implements RuleOneOfExpression_orMutable {
     _skir.KeyedIterable.empty,
   );
 
-  /// Returns this instance (no operation).
+  /// Returns this instance (no-op).
   @_core.Deprecated("This instance is already frozen.")
   @_core.override
   RuleOneOfExpression toFrozen() => this;
@@ -4878,7 +4952,9 @@ final class RuleOneOfExpression_mutable
   ).._u = this._u;
 }
 
+// -----------------------------------------------------------------------------
 // enum BoundDirection
+// -----------------------------------------------------------------------------
 
 /// To switch on the variants:
 ///   ```
@@ -4979,7 +5055,9 @@ enum _BoundDirection_consts implements BoundDirection {
       _skir.internal__stringify(this, BoundDirection.serializer);
 }
 
+// -----------------------------------------------------------------------------
 // enum SizeBoundMetric
+// -----------------------------------------------------------------------------
 
 /// To switch on the variants:
 ///   ```
@@ -5091,7 +5169,9 @@ enum _SizeBoundMetric_consts implements SizeBoundMetric {
       _skir.internal__stringify(this, SizeBoundMetric.serializer);
 }
 
+// -----------------------------------------------------------------------------
 // enum SizeRangeMetric
+// -----------------------------------------------------------------------------
 
 /// To switch on the variants:
 ///   ```
@@ -5192,7 +5272,9 @@ enum _SizeRangeMetric_consts implements SizeRangeMetric {
       _skir.internal__stringify(this, SizeRangeMetric.serializer);
 }
 
+// -----------------------------------------------------------------------------
 // struct RuleSizeBoundExpression
+// -----------------------------------------------------------------------------
 
 sealed class RuleSizeBoundExpression_orMutable {
   SizeBoundMetric get metric;
@@ -5248,7 +5330,7 @@ final class RuleSizeBoundExpression
         ExpressionNode.unknown,
       );
 
-  /// Returns this instance (no operation).
+  /// Returns this instance (no-op).
   @_core.Deprecated("This instance is already frozen.")
   @_core.override
   RuleSizeBoundExpression toFrozen() => this;
@@ -5370,7 +5452,9 @@ final class RuleSizeBoundExpression_mutable
   ).._u = this._u;
 }
 
+// -----------------------------------------------------------------------------
 // struct RuleSizeRangeExpression
+// -----------------------------------------------------------------------------
 
 sealed class RuleSizeRangeExpression_orMutable {
   SizeRangeMetric get metric;
@@ -5426,7 +5510,7 @@ final class RuleSizeRangeExpression
         ExpressionNode.unknown,
       );
 
-  /// Returns this instance (no operation).
+  /// Returns this instance (no-op).
   @_core.Deprecated("This instance is already frozen.")
   @_core.override
   RuleSizeRangeExpression toFrozen() => this;
@@ -5548,7 +5632,9 @@ final class RuleSizeRangeExpression_mutable
   ).._u = this._u;
 }
 
+// -----------------------------------------------------------------------------
 // struct RuleNumericBoundExpression
+// -----------------------------------------------------------------------------
 
 sealed class RuleNumericBoundExpression_orMutable {
   BoundDirection get direction;
@@ -5604,7 +5690,7 @@ final class RuleNumericBoundExpression
         ExpressionNode.unknown,
       );
 
-  /// Returns this instance (no operation).
+  /// Returns this instance (no-op).
   @_core.Deprecated("This instance is already frozen.")
   @_core.override
   RuleNumericBoundExpression toFrozen() => this;
@@ -5726,7 +5812,9 @@ final class RuleNumericBoundExpression_mutable
   ).._u = this._u;
 }
 
+// -----------------------------------------------------------------------------
 // struct RuleNumericRangeExpression
+// -----------------------------------------------------------------------------
 
 sealed class RuleNumericRangeExpression_orMutable {
   ExpressionNode get source;
@@ -5771,7 +5859,7 @@ final class RuleNumericRangeExpression
         ExpressionNode.unknown,
       );
 
-  /// Returns this instance (no operation).
+  /// Returns this instance (no-op).
   @_core.Deprecated("This instance is already frozen.")
   @_core.override
   RuleNumericRangeExpression toFrozen() => this;
@@ -5871,7 +5959,9 @@ final class RuleNumericRangeExpression_mutable
   ).._u = this._u;
 }
 
+// -----------------------------------------------------------------------------
 // struct RuleMultipleOfExpression
+// -----------------------------------------------------------------------------
 
 sealed class RuleMultipleOfExpression_orMutable {
   ExpressionNode get source;
@@ -5910,7 +6000,7 @@ final class RuleMultipleOfExpression
         ExpressionNode.unknown,
       );
 
-  /// Returns this instance (no operation).
+  /// Returns this instance (no-op).
   @_core.Deprecated("This instance is already frozen.")
   @_core.override
   RuleMultipleOfExpression toFrozen() => this;
@@ -5994,7 +6084,9 @@ final class RuleMultipleOfExpression_mutable
         .._u = this._u;
 }
 
+// -----------------------------------------------------------------------------
 // struct RuleMaximumScaleExpression
+// -----------------------------------------------------------------------------
 
 sealed class RuleMaximumScaleExpression_orMutable {
   ExpressionNode get source;
@@ -6033,7 +6125,7 @@ final class RuleMaximumScaleExpression
         ExpressionNode.unknown,
       );
 
-  /// Returns this instance (no operation).
+  /// Returns this instance (no-op).
   @_core.Deprecated("This instance is already frozen.")
   @_core.override
   RuleMaximumScaleExpression toFrozen() => this;
@@ -6117,7 +6209,9 @@ final class RuleMaximumScaleExpression_mutable
         .._u = this._u;
 }
 
+// -----------------------------------------------------------------------------
 // enum TimestampBoundDirection
+// -----------------------------------------------------------------------------
 
 /// To switch on the variants:
 ///   ```
@@ -6219,7 +6313,9 @@ enum _TimestampBoundDirection_consts implements TimestampBoundDirection {
       _skir.internal__stringify(this, TimestampBoundDirection.serializer);
 }
 
+// -----------------------------------------------------------------------------
 // struct RuleTimestampBoundExpression
+// -----------------------------------------------------------------------------
 
 sealed class RuleTimestampBoundExpression_orMutable {
   TimestampBoundDirection get direction;
@@ -6264,7 +6360,7 @@ final class RuleTimestampBoundExpression
         ExpressionNode.unknown,
       );
 
-  /// Returns this instance (no operation).
+  /// Returns this instance (no-op).
   @_core.Deprecated("This instance is already frozen.")
   @_core.override
   RuleTimestampBoundExpression toFrozen() => this;
@@ -6368,7 +6464,9 @@ final class RuleTimestampBoundExpression_mutable
   ).._u = this._u;
 }
 
+// -----------------------------------------------------------------------------
 // struct UnaryCollectionExpression
+// -----------------------------------------------------------------------------
 
 sealed class UnaryCollectionExpression_orMutable {
   ExpressionNode get source;
@@ -6409,7 +6507,7 @@ final class UnaryCollectionExpression
         ExpressionNode.unknown,
       );
 
-  /// Returns this instance (no operation).
+  /// Returns this instance (no-op).
   @_core.Deprecated("This instance is already frozen.")
   @_core.override
   UnaryCollectionExpression toFrozen() => this;
@@ -6493,7 +6591,9 @@ final class UnaryCollectionExpression_mutable
         .._u = this._u;
 }
 
+// -----------------------------------------------------------------------------
 // struct FoldExpression
+// -----------------------------------------------------------------------------
 
 sealed class FoldExpression_orMutable {
   ExpressionNode get source;
@@ -6538,7 +6638,7 @@ final class FoldExpression implements FoldExpression_orMutable {
     ExpressionNode.unknown,
   );
 
-  /// Returns this instance (no operation).
+  /// Returns this instance (no-op).
   @_core.Deprecated("This instance is already frozen.")
   @_core.override
   FoldExpression toFrozen() => this;
@@ -6630,7 +6730,9 @@ final class FoldExpression_mutable implements FoldExpression_orMutable {
   ).._u = this._u;
 }
 
+// -----------------------------------------------------------------------------
 // struct SortByExpression
+// -----------------------------------------------------------------------------
 
 sealed class SortByExpression_orMutable {
   ExpressionNode get source;
@@ -6675,7 +6777,7 @@ final class SortByExpression implements SortByExpression_orMutable {
     ExpressionNode.unknown,
   );
 
-  /// Returns this instance (no operation).
+  /// Returns this instance (no-op).
   @_core.Deprecated("This instance is already frozen.")
   @_core.override
   SortByExpression toFrozen() => this;
@@ -6767,7 +6869,9 @@ final class SortByExpression_mutable implements SortByExpression_orMutable {
   ).._u = this._u;
 }
 
+// -----------------------------------------------------------------------------
 // struct SortWithExpression
+// -----------------------------------------------------------------------------
 
 sealed class SortWithExpression_orMutable {
   ExpressionNode get source;
@@ -6806,7 +6910,7 @@ final class SortWithExpression implements SortWithExpression_orMutable {
     ExpressionNode.unknown,
   );
 
-  /// Returns this instance (no operation).
+  /// Returns this instance (no-op).
   @_core.Deprecated("This instance is already frozen.")
   @_core.override
   SortWithExpression toFrozen() => this;
@@ -6886,7 +6990,9 @@ final class SortWithExpression_mutable implements SortWithExpression_orMutable {
         .._u = this._u;
 }
 
+// -----------------------------------------------------------------------------
 // struct CollectionSliceExpression
+// -----------------------------------------------------------------------------
 
 sealed class CollectionSliceExpression_orMutable {
   ExpressionNode get source;
@@ -6925,7 +7031,7 @@ final class CollectionSliceExpression
         ExpressionNode.unknown,
       );
 
-  /// Returns this instance (no operation).
+  /// Returns this instance (no-op).
   @_core.Deprecated("This instance is already frozen.")
   @_core.override
   CollectionSliceExpression toFrozen() => this;
@@ -7009,7 +7115,9 @@ final class CollectionSliceExpression_mutable
         .._u = this._u;
 }
 
+// -----------------------------------------------------------------------------
 // struct ResourceIdentityQuerySource
+// -----------------------------------------------------------------------------
 
 sealed class ResourceIdentityQuerySource_orMutable {
   ExpressionNode get identity;
@@ -7050,7 +7158,7 @@ final class ResourceIdentityQuerySource
         _lib_editor_v1_type_catalog.TypeUse.unknown,
       );
 
-  /// Returns this instance (no operation).
+  /// Returns this instance (no-op).
   @_core.Deprecated("This instance is already frozen.")
   @_core.override
   ResourceIdentityQuerySource toFrozen() => this;
@@ -7134,7 +7242,9 @@ final class ResourceIdentityQuerySource_mutable
         .._u = this._u;
 }
 
+// -----------------------------------------------------------------------------
 // enum ResourceQuerySource
+// -----------------------------------------------------------------------------
 
 /// To switch on the variants:
 ///   ```
@@ -7279,7 +7389,9 @@ final class ResourceQuerySource_identityWrapper
   ResourceQuerySource_kind get kind => ResourceQuerySource_kind.identityWrapper;
 }
 
+// -----------------------------------------------------------------------------
 // enum ExpressionQuery
+// -----------------------------------------------------------------------------
 
 /// To switch on the variants:
 ///   ```
@@ -7496,7 +7608,9 @@ final class ExpressionQuery_catalogDeclarationWrapper
       ExpressionQuery_kind.catalogDeclarationWrapper;
 }
 
+// -----------------------------------------------------------------------------
 // enum ExpressionNode
+// -----------------------------------------------------------------------------
 
 /// Closed expression language shared by producers, checkers and evaluators.
 /// Boolean and conditional branches evaluate only the needed branch. Collection bodies
@@ -9801,7 +9915,9 @@ final class ExpressionNode_queryWrapper extends _ExpressionNode_wrapper {
   ExpressionNode_kind get kind => ExpressionNode_kind.queryWrapper;
 }
 
+// -----------------------------------------------------------------------------
 // enum ExpressionValueType
+// -----------------------------------------------------------------------------
 
 /// Structural expression results retain nominal catalog identities only where they are meaningful.
 /// Null is a value; unavailable input is represented separately by ExpressionType.may_be_missing.
@@ -10075,7 +10191,9 @@ final class ExpressionValueType_nullableWrapper
   ExpressionValueType_kind get kind => ExpressionValueType_kind.nullableWrapper;
 }
 
+// -----------------------------------------------------------------------------
 // struct ExpressionMappingType
+// -----------------------------------------------------------------------------
 
 sealed class ExpressionMappingType_orMutable {
   ExpressionType_orMutable get key;
@@ -10113,7 +10231,7 @@ final class ExpressionMappingType implements ExpressionMappingType_orMutable {
         ExpressionType.defaultInstance,
       );
 
-  /// Returns this instance (no operation).
+  /// Returns this instance (no-op).
   @_core.Deprecated("This instance is already frozen.")
   @_core.override
   ExpressionMappingType toFrozen() => this;
@@ -10196,7 +10314,9 @@ final class ExpressionMappingType_mutable
       ExpressionMappingType(key: this.key, value: this.value).._u = this._u;
 }
 
+// -----------------------------------------------------------------------------
 // struct ExpressionType
+// -----------------------------------------------------------------------------
 
 sealed class ExpressionType_orMutable {
   ExpressionValueType get value;
@@ -10231,7 +10351,7 @@ final class ExpressionType implements ExpressionType_orMutable {
   static ExpressionType_mutable mutable() =>
       ExpressionType_mutable._(ExpressionValueType.unknown, false);
 
-  /// Returns this instance (no operation).
+  /// Returns this instance (no-op).
   @_core.Deprecated("This instance is already frozen.")
   @_core.override
   ExpressionType toFrozen() => this;
@@ -10311,7 +10431,9 @@ final class ExpressionType_mutable implements ExpressionType_orMutable {
         .._u = this._u;
 }
 
+// -----------------------------------------------------------------------------
 // struct EvaluationBudget
+// -----------------------------------------------------------------------------
 
 sealed class EvaluationBudget_orMutable {
   _core.int get maxSteps;
@@ -10345,7 +10467,7 @@ final class EvaluationBudget implements EvaluationBudget_orMutable {
   /// Fields are initialized to their default values.
   static EvaluationBudget_mutable mutable() => EvaluationBudget_mutable._(0, 0);
 
-  /// Returns this instance (no operation).
+  /// Returns this instance (no-op).
   @_core.Deprecated("This instance is already frozen.")
   @_core.override
   EvaluationBudget toFrozen() => this;
@@ -10426,7 +10548,9 @@ final class EvaluationBudget_mutable implements EvaluationBudget_orMutable {
   ).._u = this._u;
 }
 
+// -----------------------------------------------------------------------------
 // struct ExpressionBinding
+// -----------------------------------------------------------------------------
 
 sealed class ExpressionBinding_orMutable {
   _lib_editor_v1_type_catalog.ExpressionBindingId_orMutable get id;
@@ -10463,7 +10587,7 @@ final class ExpressionBinding implements ExpressionBinding_orMutable {
     _lib_editor_v1_type_catalog.ValueLocation.defaultInstance,
   );
 
-  /// Returns this instance (no operation).
+  /// Returns this instance (no-op).
   @_core.Deprecated("This instance is already frozen.")
   @_core.override
   ExpressionBinding toFrozen() => this;
@@ -10536,7 +10660,7 @@ final class ExpressionBinding_mutable implements ExpressionBinding_orMutable {
 
   ExpressionBinding_mutable._(this.id, this.location);
 
-  /// If the value of [id] is already mutable, returns it as is.
+  /// If the value of [id] is already mutable, returns it as-is.
   /// Otherwise, makes a mutable copy, assigns it back to [id] and returns it.
   _lib_editor_v1_type_catalog.ExpressionBindingId_mutable get mutableId {
     final value = this.id;
@@ -10549,7 +10673,7 @@ final class ExpressionBinding_mutable implements ExpressionBinding_orMutable {
     }
   }
 
-  /// If the value of [location] is already mutable, returns it as is.
+  /// If the value of [location] is already mutable, returns it as-is.
   /// Otherwise, makes a mutable copy, assigns it back to [location] and returns it.
   _lib_editor_v1_type_catalog.ValueLocation_mutable get mutableLocation {
     final value = this.location;
@@ -10567,7 +10691,9 @@ final class ExpressionBinding_mutable implements ExpressionBinding_orMutable {
       ExpressionBinding(id: this.id, location: this.location).._u = this._u;
 }
 
+// -----------------------------------------------------------------------------
 // struct ExpressionBindings
+// -----------------------------------------------------------------------------
 
 sealed class ExpressionBindings_orMutable {
   _core.Iterable<ExpressionBinding_orMutable> get values;
@@ -10599,7 +10725,7 @@ final class ExpressionBindings implements ExpressionBindings_orMutable {
   static ExpressionBindings_mutable mutable() =>
       ExpressionBindings_mutable._(_skir.KeyedIterable.empty);
 
-  /// Returns this instance (no operation).
+  /// Returns this instance (no-op).
   @_core.Deprecated("This instance is already frozen.")
   @_core.override
   ExpressionBindings toFrozen() => this;
@@ -10662,7 +10788,7 @@ final class ExpressionBindings_mutable implements ExpressionBindings_orMutable {
 
   ExpressionBindings_mutable._(this.values);
 
-  /// If the value of [values] is already mutable, returns it as is.
+  /// If the value of [values] is already mutable, returns it as-is.
   /// Otherwise, makes a mutable copy, assigns it back to [values] and returns it.
   _core.List<ExpressionBinding_orMutable> get mutableValues {
     final value = this.values;
@@ -10679,7 +10805,9 @@ final class ExpressionBindings_mutable implements ExpressionBindings_orMutable {
       ExpressionBindings(values: this.values).._u = this._u;
 }
 
+// -----------------------------------------------------------------------------
 // struct EvaluationDiagnostic
+// -----------------------------------------------------------------------------
 
 sealed class EvaluationDiagnostic_orMutable {
   _core.String get code;
@@ -10725,7 +10853,7 @@ final class EvaluationDiagnostic implements EvaluationDiagnostic_orMutable {
   static EvaluationDiagnostic_mutable mutable() =>
       EvaluationDiagnostic_mutable._("", "", _skir.KeyedIterable.empty);
 
-  /// Returns this instance (no operation).
+  /// Returns this instance (no-op).
   @_core.Deprecated("This instance is already frozen.")
   @_core.override
   EvaluationDiagnostic toFrozen() => this;
@@ -10814,7 +10942,7 @@ final class EvaluationDiagnostic_mutable
 
   EvaluationDiagnostic_mutable._(this.code, this.message, this.locations);
 
-  /// If the value of [locations] is already mutable, returns it as is.
+  /// If the value of [locations] is already mutable, returns it as-is.
   /// Otherwise, makes a mutable copy, assigns it back to [locations] and returns it.
   _core.List<_lib_editor_v1_type_catalog.ValueLocation_orMutable>
   get mutableLocations {

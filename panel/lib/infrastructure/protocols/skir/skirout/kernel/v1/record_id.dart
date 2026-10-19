@@ -15,7 +15,9 @@ import "dart:core" as _core;
 
 import "package:skir_client/skir_client.dart" as _skir;
 
+// -----------------------------------------------------------------------------
 // struct RecordId
+// -----------------------------------------------------------------------------
 
 sealed class RecordId_orMutable {
   _core.String get table;
@@ -45,7 +47,7 @@ final class RecordId implements RecordId_orMutable {
   static RecordId_mutable mutable() =>
       RecordId_mutable._("", RecordIdKey.unknown);
 
-  /// Returns this instance (no operation).
+  /// Returns this instance (no-op).
   @_core.Deprecated("This instance is already frozen.")
   @_core.override
   RecordId toFrozen() => this;
@@ -122,7 +124,9 @@ final class RecordId_mutable implements RecordId_orMutable {
       RecordId(table: this.table, key: this.key).._u = this._u;
 }
 
+// -----------------------------------------------------------------------------
 // enum RecordIdKey
+// -----------------------------------------------------------------------------
 
 /// To switch on the variants:
 ///   ```
@@ -335,7 +339,9 @@ final class RecordIdKey_objectWrapper extends _RecordIdKey_wrapper {
   RecordIdKey_kind get kind => RecordIdKey_kind.objectWrapper;
 }
 
+// -----------------------------------------------------------------------------
 // struct ObjectRecordIdKey
+// -----------------------------------------------------------------------------
 
 sealed class ObjectRecordIdKey_orMutable {
   _core.String get key;
@@ -367,7 +373,7 @@ final class ObjectRecordIdKey implements ObjectRecordIdKey_orMutable {
   static ObjectRecordIdKey_mutable mutable() =>
       ObjectRecordIdKey_mutable._("", RecordIdValue.unknown);
 
-  /// Returns this instance (no operation).
+  /// Returns this instance (no-op).
   @_core.Deprecated("This instance is already frozen.")
   @_core.override
   ObjectRecordIdKey toFrozen() => this;
@@ -446,7 +452,9 @@ final class ObjectRecordIdKey_mutable implements ObjectRecordIdKey_orMutable {
       ObjectRecordIdKey(key: this.key, value: this.value).._u = this._u;
 }
 
+// -----------------------------------------------------------------------------
 // enum RecordIdValue
+// -----------------------------------------------------------------------------
 
 /// To switch on the variants:
 ///   ```
@@ -702,7 +710,9 @@ final class RecordIdValue_objectWrapper extends _RecordIdValue_wrapper {
   RecordIdValue_kind get kind => RecordIdValue_kind.objectWrapper;
 }
 
+// -----------------------------------------------------------------------------
 // struct ObjectRecordIdValue
+// -----------------------------------------------------------------------------
 
 sealed class ObjectRecordIdValue_orMutable {
   _core.String get key;
@@ -737,7 +747,7 @@ final class ObjectRecordIdValue implements ObjectRecordIdValue_orMutable {
   static ObjectRecordIdValue_mutable mutable() =>
       ObjectRecordIdValue_mutable._("", RecordIdValue.unknown);
 
-  /// Returns this instance (no operation).
+  /// Returns this instance (no-op).
   @_core.Deprecated("This instance is already frozen.")
   @_core.override
   ObjectRecordIdValue toFrozen() => this;

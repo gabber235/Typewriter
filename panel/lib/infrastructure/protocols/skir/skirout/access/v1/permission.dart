@@ -18,7 +18,9 @@ import "package:skir_client/skir_client.dart" as _skir;
 import "../../kernel/v1/duration.dart" as _lib_kernel_v1_duration;
 import "../../kernel/v1/record_id.dart" as _lib_kernel_v1_record_id;
 
+// -----------------------------------------------------------------------------
 // struct EntityPermissionQualifier.User
+// -----------------------------------------------------------------------------
 
 sealed class EntityPermissionQualifier_User_orMutable {
   _lib_kernel_v1_record_id.RecordId_orMutable? get organizationId;
@@ -54,7 +56,7 @@ final class EntityPermissionQualifier_User
   static EntityPermissionQualifier_User_mutable mutable() =>
       EntityPermissionQualifier_User_mutable._(null, "");
 
-  /// Returns this instance (no operation).
+  /// Returns this instance (no-op).
   @_core.Deprecated("This instance is already frozen.")
   @_core.override
   EntityPermissionQualifier_User toFrozen() => this;
@@ -150,7 +152,9 @@ final class EntityPermissionQualifier_User_mutable
   ).._u = this._u;
 }
 
+// -----------------------------------------------------------------------------
 // struct EntityPermissionQualifier.Service
+// -----------------------------------------------------------------------------
 
 sealed class EntityPermissionQualifier_Service_orMutable {
   EntityPermissionQualifier_Service toFrozen();
@@ -174,7 +178,7 @@ final class EntityPermissionQualifier_Service
   static EntityPermissionQualifier_Service_mutable mutable() =>
       EntityPermissionQualifier_Service_mutable._();
 
-  /// Returns this instance (no operation).
+  /// Returns this instance (no-op).
   @_core.Deprecated("This instance is already frozen.")
   @_core.override
   EntityPermissionQualifier_Service toFrozen() => this;
@@ -237,7 +241,9 @@ final class EntityPermissionQualifier_Service_mutable
       EntityPermissionQualifier_Service().._u = this._u;
 }
 
+// -----------------------------------------------------------------------------
 // enum EntityPermissionQualifier
+// -----------------------------------------------------------------------------
 
 /// To switch on the variants:
 ///   ```
@@ -397,7 +403,9 @@ final class EntityPermissionQualifier_serviceWrapper
       EntityPermissionQualifier_kind.serviceWrapper;
 }
 
+// -----------------------------------------------------------------------------
 // struct Permission
+// -----------------------------------------------------------------------------
 
 sealed class Permission_orMutable {
   _core.Iterable<_core.String> get allow;
@@ -437,7 +445,7 @@ final class Permission implements Permission_orMutable {
     _skir.KeyedIterable.empty,
   );
 
-  /// Returns this instance (no operation).
+  /// Returns this instance (no-op).
   @_core.Deprecated("This instance is already frozen.")
   @_core.override
   Permission toFrozen() => this;
@@ -508,7 +516,7 @@ final class Permission_mutable implements Permission_orMutable {
 
   Permission_mutable._(this.allow, this.deny);
 
-  /// If the value of [allow] is already mutable, returns it as is.
+  /// If the value of [allow] is already mutable, returns it as-is.
   /// Otherwise, makes a mutable copy, assigns it back to [allow] and returns it.
   _core.List<_core.String> get mutableAllow {
     final value = this.allow;
@@ -519,7 +527,7 @@ final class Permission_mutable implements Permission_orMutable {
     }
   }
 
-  /// If the value of [deny] is already mutable, returns it as is.
+  /// If the value of [deny] is already mutable, returns it as-is.
   /// Otherwise, makes a mutable copy, assigns it back to [deny] and returns it.
   _core.List<_core.String> get mutableDeny {
     final value = this.deny;
@@ -536,7 +544,9 @@ final class Permission_mutable implements Permission_orMutable {
       Permission(allow: this.allow, deny: this.deny).._u = this._u;
 }
 
+// -----------------------------------------------------------------------------
 // struct ResponsePermission
+// -----------------------------------------------------------------------------
 
 sealed class ResponsePermission_orMutable {
   _core.int? get maxMessages;
@@ -569,7 +579,7 @@ final class ResponsePermission implements ResponsePermission_orMutable {
   static ResponsePermission_mutable mutable() =>
       ResponsePermission_mutable._(null, null);
 
-  /// Returns this instance (no operation).
+  /// Returns this instance (no-op).
   @_core.Deprecated("This instance is already frozen.")
   @_core.override
   ResponsePermission toFrozen() => this;
@@ -649,7 +659,9 @@ final class ResponsePermission_mutable implements ResponsePermission_orMutable {
         .._u = this._u;
 }
 
+// -----------------------------------------------------------------------------
 // struct Permissions
+// -----------------------------------------------------------------------------
 
 sealed class Permissions_orMutable {
   Permission_orMutable get publish;
@@ -696,7 +708,7 @@ final class Permissions implements Permissions_orMutable {
     null,
   );
 
-  /// Returns this instance (no operation).
+  /// Returns this instance (no-op).
   @_core.Deprecated("This instance is already frozen.")
   @_core.override
   Permissions toFrozen() => this;
@@ -783,7 +795,7 @@ final class Permissions_mutable implements Permissions_orMutable {
 
   Permissions_mutable._(this.publish, this.subscribe, this.response);
 
-  /// If the value of [publish] is already mutable, returns it as is.
+  /// If the value of [publish] is already mutable, returns it as-is.
   /// Otherwise, makes a mutable copy, assigns it back to [publish] and returns it.
   Permission_mutable get mutablePublish {
     final value = this.publish;
@@ -794,7 +806,7 @@ final class Permissions_mutable implements Permissions_orMutable {
     }
   }
 
-  /// If the value of [subscribe] is already mutable, returns it as is.
+  /// If the value of [subscribe] is already mutable, returns it as-is.
   /// Otherwise, makes a mutable copy, assigns it back to [subscribe] and returns it.
   Permission_mutable get mutableSubscribe {
     final value = this.subscribe;
@@ -814,7 +826,9 @@ final class Permissions_mutable implements Permissions_orMutable {
   ).._u = this._u;
 }
 
+// -----------------------------------------------------------------------------
 // struct GetEntityPermissionRequest
+// -----------------------------------------------------------------------------
 
 sealed class GetEntityPermissionRequest_orMutable {
   EntityPermissionQualifier get qualifier;
@@ -853,7 +867,7 @@ final class GetEntityPermissionRequest
         _skir.ByteString.empty,
       );
 
-  /// Returns this instance (no operation).
+  /// Returns this instance (no-op).
   @_core.Deprecated("This instance is already frozen.")
   @_core.override
   GetEntityPermissionRequest toFrozen() => this;
@@ -938,7 +952,9 @@ final class GetEntityPermissionRequest_mutable
   ).._u = this._u;
 }
 
+// -----------------------------------------------------------------------------
 // struct GetEntityPermissionResponse
+// -----------------------------------------------------------------------------
 
 sealed class GetEntityPermissionResponse_orMutable {
   Permissions_orMutable get permissions;
@@ -980,7 +996,7 @@ final class GetEntityPermissionResponse
         _skir.KeyedIterable.empty,
       );
 
-  /// Returns this instance (no operation).
+  /// Returns this instance (no-op).
   @_core.Deprecated("This instance is already frozen.")
   @_core.override
   GetEntityPermissionResponse toFrozen() => this;
@@ -1057,7 +1073,7 @@ final class GetEntityPermissionResponse_mutable
 
   GetEntityPermissionResponse_mutable._(this.permissions, this.tags);
 
-  /// If the value of [permissions] is already mutable, returns it as is.
+  /// If the value of [permissions] is already mutable, returns it as-is.
   /// Otherwise, makes a mutable copy, assigns it back to [permissions] and returns it.
   Permissions_mutable get mutablePermissions {
     final value = this.permissions;
@@ -1068,7 +1084,7 @@ final class GetEntityPermissionResponse_mutable
     }
   }
 
-  /// If the value of [tags] is already mutable, returns it as is.
+  /// If the value of [tags] is already mutable, returns it as-is.
   /// Otherwise, makes a mutable copy, assigns it back to [tags] and returns it.
   _core.List<_core.String> get mutableTags {
     final value = this.tags;

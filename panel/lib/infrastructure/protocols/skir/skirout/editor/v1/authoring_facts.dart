@@ -17,7 +17,9 @@ import "package:skir_client/skir_client.dart" as _skir;
 
 import "./type_catalog.dart" as _lib_editor_v1_type_catalog;
 
+// -----------------------------------------------------------------------------
 // struct LinkProjection
+// -----------------------------------------------------------------------------
 
 sealed class LinkProjection_orMutable {
   _lib_editor_v1_type_catalog.RelationId_orMutable get contract;
@@ -87,7 +89,7 @@ final class LinkProjection implements LinkProjection_orMutable {
     null,
   );
 
-  /// Returns this instance (no operation).
+  /// Returns this instance (no-op).
   @_core.Deprecated("This instance is already frozen.")
   @_core.override
   LinkProjection toFrozen() => this;
@@ -211,7 +213,7 @@ final class LinkProjection_mutable implements LinkProjection_orMutable {
     this.secondLocation,
   );
 
-  /// If the value of [contract] is already mutable, returns it as is.
+  /// If the value of [contract] is already mutable, returns it as-is.
   /// Otherwise, makes a mutable copy, assigns it back to [contract] and returns it.
   _lib_editor_v1_type_catalog.RelationId_mutable get mutableContract {
     final value = this.contract;
@@ -223,7 +225,7 @@ final class LinkProjection_mutable implements LinkProjection_orMutable {
     }
   }
 
-  /// If the value of [first] is already mutable, returns it as is.
+  /// If the value of [first] is already mutable, returns it as-is.
   /// Otherwise, makes a mutable copy, assigns it back to [first] and returns it.
   _lib_editor_v1_type_catalog.ResourceId_mutable get mutableFirst {
     final value = this.first;
@@ -235,7 +237,7 @@ final class LinkProjection_mutable implements LinkProjection_orMutable {
     }
   }
 
-  /// If the value of [second] is already mutable, returns it as is.
+  /// If the value of [second] is already mutable, returns it as-is.
   /// Otherwise, makes a mutable copy, assigns it back to [second] and returns it.
   _lib_editor_v1_type_catalog.ResourceId_mutable get mutableSecond {
     final value = this.second;
@@ -258,7 +260,9 @@ final class LinkProjection_mutable implements LinkProjection_orMutable {
   ).._u = this._u;
 }
 
+// -----------------------------------------------------------------------------
 // enum TraversalDirection
+// -----------------------------------------------------------------------------
 
 /// To switch on the variants:
 ///   ```
@@ -365,7 +369,9 @@ enum _TraversalDirection_consts implements TraversalDirection {
       _skir.internal__stringify(this, TraversalDirection.serializer);
 }
 
+// -----------------------------------------------------------------------------
 // struct EditExpectation.Value
+// -----------------------------------------------------------------------------
 
 sealed class EditExpectation_Value_orMutable {
   _lib_editor_v1_type_catalog.ValueLocation_orMutable get at;
@@ -403,7 +409,7 @@ final class EditExpectation_Value implements EditExpectation_Value_orMutable {
         null,
       );
 
-  /// Returns this instance (no operation).
+  /// Returns this instance (no-op).
   @_core.Deprecated("This instance is already frozen.")
   @_core.override
   EditExpectation_Value toFrozen() => this;
@@ -482,7 +488,7 @@ final class EditExpectation_Value_mutable
 
   EditExpectation_Value_mutable._(this.at, this.expected);
 
-  /// If the value of [at] is already mutable, returns it as is.
+  /// If the value of [at] is already mutable, returns it as-is.
   /// Otherwise, makes a mutable copy, assigns it back to [at] and returns it.
   _lib_editor_v1_type_catalog.ValueLocation_mutable get mutableAt {
     final value = this.at;
@@ -500,7 +506,9 @@ final class EditExpectation_Value_mutable
       EditExpectation_Value(at: this.at, expected: this.expected).._u = this._u;
 }
 
+// -----------------------------------------------------------------------------
 // struct EditExpectation.Resource
+// -----------------------------------------------------------------------------
 
 sealed class EditExpectation_Resource_orMutable {
   _lib_editor_v1_type_catalog.ResourceId_orMutable get id;
@@ -542,7 +550,7 @@ final class EditExpectation_Resource
         null,
       );
 
-  /// Returns this instance (no operation).
+  /// Returns this instance (no-op).
   @_core.Deprecated("This instance is already frozen.")
   @_core.override
   EditExpectation_Resource toFrozen() => this;
@@ -621,7 +629,7 @@ final class EditExpectation_Resource_mutable
 
   EditExpectation_Resource_mutable._(this.id, this.expected);
 
-  /// If the value of [id] is already mutable, returns it as is.
+  /// If the value of [id] is already mutable, returns it as-is.
   /// Otherwise, makes a mutable copy, assigns it back to [id] and returns it.
   _lib_editor_v1_type_catalog.ResourceId_mutable get mutableId {
     final value = this.id;
@@ -640,7 +648,9 @@ final class EditExpectation_Resource_mutable
         .._u = this._u;
 }
 
+// -----------------------------------------------------------------------------
 // struct EditExpectation.ResourceExists
+// -----------------------------------------------------------------------------
 
 sealed class EditExpectation_ResourceExists_orMutable {
   _lib_editor_v1_type_catalog.ResourceId_orMutable get id;
@@ -679,7 +689,7 @@ final class EditExpectation_ResourceExists
         false,
       );
 
-  /// Returns this instance (no operation).
+  /// Returns this instance (no-op).
   @_core.Deprecated("This instance is already frozen.")
   @_core.override
   EditExpectation_ResourceExists toFrozen() => this;
@@ -756,7 +766,7 @@ final class EditExpectation_ResourceExists_mutable
 
   EditExpectation_ResourceExists_mutable._(this.id, this.expected);
 
-  /// If the value of [id] is already mutable, returns it as is.
+  /// If the value of [id] is already mutable, returns it as-is.
   /// Otherwise, makes a mutable copy, assigns it back to [id] and returns it.
   _lib_editor_v1_type_catalog.ResourceId_mutable get mutableId {
     final value = this.id;
@@ -775,7 +785,9 @@ final class EditExpectation_ResourceExists_mutable
         .._u = this._u;
 }
 
+// -----------------------------------------------------------------------------
 // struct EditExpectation.Configuration
+// -----------------------------------------------------------------------------
 
 sealed class EditExpectation_Configuration_orMutable {
   _lib_editor_v1_type_catalog.ValueLocation_orMutable get at;
@@ -814,7 +826,7 @@ final class EditExpectation_Configuration
         null,
       );
 
-  /// Returns this instance (no operation).
+  /// Returns this instance (no-op).
   @_core.Deprecated("This instance is already frozen.")
   @_core.override
   EditExpectation_Configuration toFrozen() => this;
@@ -893,7 +905,7 @@ final class EditExpectation_Configuration_mutable
 
   EditExpectation_Configuration_mutable._(this.at, this.expected);
 
-  /// If the value of [at] is already mutable, returns it as is.
+  /// If the value of [at] is already mutable, returns it as-is.
   /// Otherwise, makes a mutable copy, assigns it back to [at] and returns it.
   _lib_editor_v1_type_catalog.ValueLocation_mutable get mutableAt {
     final value = this.at;
@@ -912,7 +924,9 @@ final class EditExpectation_Configuration_mutable
         .._u = this._u;
 }
 
+// -----------------------------------------------------------------------------
 // struct EditExpectation.Links
+// -----------------------------------------------------------------------------
 
 sealed class EditExpectation_Links_orMutable {
   _lib_editor_v1_type_catalog.ResourceId_orMutable get resource;
@@ -972,7 +986,7 @@ final class EditExpectation_Links implements EditExpectation_Links_orMutable {
         _skir.KeyedIterable.empty,
       );
 
-  /// Returns this instance (no operation).
+  /// Returns this instance (no-op).
   @_core.Deprecated("This instance is already frozen.")
   @_core.override
   EditExpectation_Links toFrozen() => this;
@@ -1083,7 +1097,7 @@ final class EditExpectation_Links_mutable
     this.expected,
   );
 
-  /// If the value of [resource] is already mutable, returns it as is.
+  /// If the value of [resource] is already mutable, returns it as-is.
   /// Otherwise, makes a mutable copy, assigns it back to [resource] and returns it.
   _lib_editor_v1_type_catalog.ResourceId_mutable get mutableResource {
     final value = this.resource;
@@ -1095,7 +1109,7 @@ final class EditExpectation_Links_mutable
     }
   }
 
-  /// If the value of [contract] is already mutable, returns it as is.
+  /// If the value of [contract] is already mutable, returns it as-is.
   /// Otherwise, makes a mutable copy, assigns it back to [contract] and returns it.
   _lib_editor_v1_type_catalog.RelationId_mutable get mutableContract {
     final value = this.contract;
@@ -1107,7 +1121,7 @@ final class EditExpectation_Links_mutable
     }
   }
 
-  /// If the value of [expected] is already mutable, returns it as is.
+  /// If the value of [expected] is already mutable, returns it as-is.
   /// Otherwise, makes a mutable copy, assigns it back to [expected] and returns it.
   _core.List<LinkProjection_orMutable> get mutableExpected {
     final value = this.expected;
@@ -1128,7 +1142,9 @@ final class EditExpectation_Links_mutable
   ).._u = this._u;
 }
 
+// -----------------------------------------------------------------------------
 // enum EditExpectation
+// -----------------------------------------------------------------------------
 
 /// Records a saved fact required by proposed work. Missing values and absent resources are valid
 /// observations. Staged writes do not replace this original evidence with their proposed output.
@@ -1419,7 +1435,9 @@ final class EditExpectation_linksWrapper extends _EditExpectation_wrapper {
   EditExpectation_kind get kind => EditExpectation_kind.linksWrapper;
 }
 
+// -----------------------------------------------------------------------------
 // struct ExpectationConflict
+// -----------------------------------------------------------------------------
 
 sealed class ExpectationConflict_orMutable {
   EditExpectation get expected;
@@ -1458,7 +1476,7 @@ final class ExpectationConflict implements ExpectationConflict_orMutable {
     EditExpectation.unknown,
   );
 
-  /// Returns this instance (no operation).
+  /// Returns this instance (no-op).
   @_core.Deprecated("This instance is already frozen.")
   @_core.override
   ExpectationConflict toFrozen() => this;

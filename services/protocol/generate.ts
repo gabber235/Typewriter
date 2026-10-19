@@ -17,11 +17,6 @@ run("services/protocol/transport-generator/target/release/typewriter-transport-g
   "--deployment", "backend/access/auth-typewriter-permissions/deploy/base/workloaddeployment.yaml",
 ]);
 run("bunx", ["--bun", "--no-install", "skir", "gen"]);
-run("dart", [
-  "services/protocol/transport-generator/normalize_generated_dart.dart",
-  "panel/lib/infrastructure/protocols/skir/skirout",
-  "panel/lib/infrastructure/messaging/generated/skirout",
-]);
 run("rustfmt", [
   "--edition", "2024",
   "backend/wasmcloud-utils/src/skirout/base.rs",

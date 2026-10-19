@@ -19,7 +19,9 @@ import "./diagnostic.dart" as _lib_editor_v1_diagnostic;
 import "./resource_operations.dart" as _lib_editor_v1_resource_operations;
 import "./type_catalog.dart" as _lib_editor_v1_type_catalog;
 
+// -----------------------------------------------------------------------------
 // struct RealmSearchSelector
+// -----------------------------------------------------------------------------
 
 sealed class RealmSearchSelector_orMutable {
   _core.String get selectorId;
@@ -55,7 +57,7 @@ final class RealmSearchSelector implements RealmSearchSelector_orMutable {
   static RealmSearchSelector_mutable mutable() =>
       RealmSearchSelector_mutable._("", "", null);
 
-  /// Returns this instance (no operation).
+  /// Returns this instance (no-op).
   @_core.Deprecated("This instance is already frozen.")
   @_core.override
   RealmSearchSelector toFrozen() => this;
@@ -151,7 +153,9 @@ final class RealmSearchSelector_mutable
   ).._u = this._u;
 }
 
+// -----------------------------------------------------------------------------
 // enum RealmSearchSelectorOperator
+// -----------------------------------------------------------------------------
 
 /// To switch on the variants:
 ///   ```
@@ -244,7 +248,9 @@ enum _RealmSearchSelectorOperator_consts
       _skir.internal__stringify(this, RealmSearchSelectorOperator.serializer);
 }
 
+// -----------------------------------------------------------------------------
 // struct RealmSearchSelectorBinaryExpression
+// -----------------------------------------------------------------------------
 
 sealed class RealmSearchSelectorBinaryExpression_orMutable {
   RealmSearchSelectorOperator get operator_;
@@ -289,7 +295,7 @@ final class RealmSearchSelectorBinaryExpression
         RealmSearchSelectorExpression.unknown,
       );
 
-  /// Returns this instance (no operation).
+  /// Returns this instance (no-op).
   @_core.Deprecated("This instance is already frozen.")
   @_core.override
   RealmSearchSelectorBinaryExpression toFrozen() => this;
@@ -394,7 +400,9 @@ final class RealmSearchSelectorBinaryExpression_mutable
       ).._u = this._u;
 }
 
+// -----------------------------------------------------------------------------
 // struct RealmSearchSelectorNotExpression
+// -----------------------------------------------------------------------------
 
 sealed class RealmSearchSelectorNotExpression_orMutable {
   RealmSearchSelectorExpression get expression;
@@ -427,7 +435,7 @@ final class RealmSearchSelectorNotExpression
         RealmSearchSelectorExpression.unknown,
       );
 
-  /// Returns this instance (no operation).
+  /// Returns this instance (no-op).
   @_core.Deprecated("This instance is already frozen.")
   @_core.override
   RealmSearchSelectorNotExpression toFrozen() => this;
@@ -501,7 +509,9 @@ final class RealmSearchSelectorNotExpression_mutable
         .._u = this._u;
 }
 
+// -----------------------------------------------------------------------------
 // enum RealmSearchSelectorExpression
+// -----------------------------------------------------------------------------
 
 /// To switch on the variants:
 ///   ```
@@ -702,7 +712,9 @@ final class RealmSearchSelectorExpression_notWrapper
       RealmSearchSelectorExpression_kind.notWrapper;
 }
 
+// -----------------------------------------------------------------------------
 // struct RealmSearchQuery
+// -----------------------------------------------------------------------------
 
 sealed class RealmSearchQuery_orMutable {
   _core.String get normalizedQuery;
@@ -764,7 +776,7 @@ final class RealmSearchQuery implements RealmSearchQuery_orMutable {
     _skir.KeyedIterable.empty,
   );
 
-  /// Returns this instance (no operation).
+  /// Returns this instance (no-op).
   @_core.Deprecated("This instance is already frozen.")
   @_core.override
   RealmSearchQuery toFrozen() => this;
@@ -871,7 +883,7 @@ final class RealmSearchQuery_mutable implements RealmSearchQuery_orMutable {
     this.terms,
   );
 
-  /// If the value of [selectors] is already mutable, returns it as is.
+  /// If the value of [selectors] is already mutable, returns it as-is.
   /// Otherwise, makes a mutable copy, assigns it back to [selectors] and returns it.
   _core.List<RealmSearchSelector_orMutable> get mutableSelectors {
     final value = this.selectors;
@@ -882,7 +894,7 @@ final class RealmSearchQuery_mutable implements RealmSearchQuery_orMutable {
     }
   }
 
-  /// If the value of [terms] is already mutable, returns it as is.
+  /// If the value of [terms] is already mutable, returns it as-is.
   /// Otherwise, makes a mutable copy, assigns it back to [terms] and returns it.
   _core.List<_core.String> get mutableTerms {
     final value = this.terms;
@@ -903,7 +915,9 @@ final class RealmSearchQuery_mutable implements RealmSearchQuery_orMutable {
   ).._u = this._u;
 }
 
+// -----------------------------------------------------------------------------
 // struct RealmPresentationSearchRequest
+// -----------------------------------------------------------------------------
 
 sealed class RealmPresentationSearchRequest_orMutable {
   _core.String get subscriptionId;
@@ -994,7 +1008,7 @@ final class RealmPresentationSearchRequest
         null,
       );
 
-  /// Returns this instance (no operation).
+  /// Returns this instance (no-op).
   @_core.Deprecated("This instance is already frozen.")
   @_core.override
   RealmPresentationSearchRequest toFrozen() => this;
@@ -1148,7 +1162,7 @@ final class RealmPresentationSearchRequest_mutable
     this.operationContext,
   );
 
-  /// If the value of [generation] is already mutable, returns it as is.
+  /// If the value of [generation] is already mutable, returns it as-is.
   /// Otherwise, makes a mutable copy, assigns it back to [generation] and returns it.
   _lib_editor_v1_type_catalog.CatalogGeneration_mutable get mutableGeneration {
     final value = this.generation;
@@ -1160,7 +1174,7 @@ final class RealmPresentationSearchRequest_mutable
     }
   }
 
-  /// If the value of [capabilityId] is already mutable, returns it as is.
+  /// If the value of [capabilityId] is already mutable, returns it as-is.
   /// Otherwise, makes a mutable copy, assigns it back to [capabilityId] and returns it.
   _lib_editor_v1_type_catalog.CapabilityId_mutable get mutableCapabilityId {
     final value = this.capabilityId;
@@ -1172,7 +1186,7 @@ final class RealmPresentationSearchRequest_mutable
     }
   }
 
-  /// If the value of [query] is already mutable, returns it as is.
+  /// If the value of [query] is already mutable, returns it as-is.
   /// Otherwise, makes a mutable copy, assigns it back to [query] and returns it.
   RealmSearchQuery_mutable get mutableQuery {
     final value = this.query;
@@ -1196,7 +1210,9 @@ final class RealmPresentationSearchRequest_mutable
   ).._u = this._u;
 }
 
+// -----------------------------------------------------------------------------
 // enum RealmPresentationSearchStatus
+// -----------------------------------------------------------------------------
 
 /// To switch on the variants:
 ///   ```
@@ -1301,7 +1317,9 @@ enum _RealmPresentationSearchStatus_consts
       _skir.internal__stringify(this, RealmPresentationSearchStatus.serializer);
 }
 
+// -----------------------------------------------------------------------------
 // struct RealmPresentationSearchSnapshot
+// -----------------------------------------------------------------------------
 
 sealed class RealmPresentationSearchSnapshot_orMutable {
   _core.String get subscriptionId;
@@ -1375,7 +1393,7 @@ final class RealmPresentationSearchSnapshot
         _skir.KeyedIterable.empty,
       );
 
-  /// Returns this instance (no operation).
+  /// Returns this instance (no-op).
   @_core.Deprecated("This instance is already frozen.")
   @_core.override
   RealmPresentationSearchSnapshot toFrozen() => this;
@@ -1504,7 +1522,7 @@ final class RealmPresentationSearchSnapshot_mutable
     this.diagnostics,
   );
 
-  /// If the value of [values] is already mutable, returns it as is.
+  /// If the value of [values] is already mutable, returns it as-is.
   /// Otherwise, makes a mutable copy, assigns it back to [values] and returns it.
   _core.List<_lib_editor_v1_type_catalog.DataValue> get mutableValues {
     final value = this.values;
@@ -1516,7 +1534,7 @@ final class RealmPresentationSearchSnapshot_mutable
     }
   }
 
-  /// If the value of [guidance] is already mutable, returns it as is.
+  /// If the value of [guidance] is already mutable, returns it as-is.
   /// Otherwise, makes a mutable copy, assigns it back to [guidance] and returns it.
   _core.List<_core.String> get mutableGuidance {
     final value = this.guidance;
@@ -1527,7 +1545,7 @@ final class RealmPresentationSearchSnapshot_mutable
     }
   }
 
-  /// If the value of [diagnostics] is already mutable, returns it as is.
+  /// If the value of [diagnostics] is already mutable, returns it as-is.
   /// Otherwise, makes a mutable copy, assigns it back to [diagnostics] and returns it.
   _core.List<_lib_editor_v1_diagnostic.Diagnostic_orMutable>
   get mutableDiagnostics {
@@ -1553,7 +1571,9 @@ final class RealmPresentationSearchSnapshot_mutable
   ).._u = this._u;
 }
 
+// -----------------------------------------------------------------------------
 // struct RealmPresentationSearchUnavailable
+// -----------------------------------------------------------------------------
 
 sealed class RealmPresentationSearchUnavailable_orMutable {
   _core.String get subscriptionId;
@@ -1597,7 +1617,7 @@ final class RealmPresentationSearchUnavailable
         _skir.KeyedIterable.empty,
       );
 
-  /// Returns this instance (no operation).
+  /// Returns this instance (no-op).
   @_core.Deprecated("This instance is already frozen.")
   @_core.override
   RealmPresentationSearchUnavailable toFrozen() => this;
@@ -1682,7 +1702,7 @@ final class RealmPresentationSearchUnavailable_mutable
     this.diagnostics,
   );
 
-  /// If the value of [diagnostics] is already mutable, returns it as is.
+  /// If the value of [diagnostics] is already mutable, returns it as-is.
   /// Otherwise, makes a mutable copy, assigns it back to [diagnostics] and returns it.
   _core.List<_lib_editor_v1_diagnostic.Diagnostic_orMutable>
   get mutableDiagnostics {
@@ -1706,7 +1726,9 @@ final class RealmPresentationSearchUnavailable_mutable
       ).._u = this._u;
 }
 
+// -----------------------------------------------------------------------------
 // struct RealmPresentationSearchUpdate.StaleObservation
+// -----------------------------------------------------------------------------
 
 sealed class RealmPresentationSearchUpdate_StaleObservation_orMutable {
   _core.String get subscriptionId;
@@ -1759,7 +1781,7 @@ final class RealmPresentationSearchUpdate_StaleObservation
             .defaultInstance,
       );
 
-  /// Returns this instance (no operation).
+  /// Returns this instance (no-op).
   @_core.Deprecated("This instance is already frozen.")
   @_core.override
   RealmPresentationSearchUpdate_StaleObservation toFrozen() => this;
@@ -1845,7 +1867,7 @@ final class RealmPresentationSearchUpdate_StaleObservation_mutable
     this.observation,
   );
 
-  /// If the value of [observation] is already mutable, returns it as is.
+  /// If the value of [observation] is already mutable, returns it as-is.
   /// Otherwise, makes a mutable copy, assigns it back to [observation] and returns it.
   _lib_editor_v1_resource_operations.StaleAuthoringObservation_mutable
   get mutableObservation {
@@ -1869,7 +1891,9 @@ final class RealmPresentationSearchUpdate_StaleObservation_mutable
       ).._u = this._u;
 }
 
+// -----------------------------------------------------------------------------
 // enum RealmPresentationSearchUpdate
+// -----------------------------------------------------------------------------
 
 /// To switch on the variants:
 ///   ```
@@ -2084,7 +2108,9 @@ final class RealmPresentationSearchUpdate_staleObservationWrapper
       RealmPresentationSearchUpdate_kind.staleObservationWrapper;
 }
 
+// -----------------------------------------------------------------------------
 // struct CancelRealmPresentationSearchRequest
+// -----------------------------------------------------------------------------
 
 sealed class CancelRealmPresentationSearchRequest_orMutable {
   _core.String get subscriptionId;
@@ -2113,7 +2139,7 @@ final class CancelRealmPresentationSearchRequest
   static CancelRealmPresentationSearchRequest_mutable mutable() =>
       CancelRealmPresentationSearchRequest_mutable._("");
 
-  /// Returns this instance (no operation).
+  /// Returns this instance (no-op).
   @_core.Deprecated("This instance is already frozen.")
   @_core.override
   CancelRealmPresentationSearchRequest toFrozen() => this;
@@ -2188,7 +2214,9 @@ final class CancelRealmPresentationSearchRequest_mutable
         .._u = this._u;
 }
 
+// -----------------------------------------------------------------------------
 // enum CancelRealmPresentationSearchResult
+// -----------------------------------------------------------------------------
 
 /// To switch on the variants:
 ///   ```

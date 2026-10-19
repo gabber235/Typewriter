@@ -24,7 +24,9 @@ import "../../kernel/v1/bounded_transfer.dart"
     as _lib_kernel_v1_bounded_transfer;
 import "../../kernel/v1/errors.dart" as _lib_kernel_v1_errors;
 
+// -----------------------------------------------------------------------------
 // struct OwnedPortableTypes
+// -----------------------------------------------------------------------------
 
 sealed class OwnedPortableTypes_orMutable {
   _lib_editor_v1_type_catalog.DeclarationOwner_orMutable get owner;
@@ -68,7 +70,7 @@ final class OwnedPortableTypes implements OwnedPortableTypes_orMutable {
     _skir.KeyedIterable.empty,
   );
 
-  /// Returns this instance (no operation).
+  /// Returns this instance (no-op).
   @_core.Deprecated("This instance is already frozen.")
   @_core.override
   OwnedPortableTypes toFrozen() => this;
@@ -144,7 +146,7 @@ final class OwnedPortableTypes_mutable implements OwnedPortableTypes_orMutable {
 
   OwnedPortableTypes_mutable._(this.owner, this.definitions);
 
-  /// If the value of [owner] is already mutable, returns it as is.
+  /// If the value of [owner] is already mutable, returns it as-is.
   /// Otherwise, makes a mutable copy, assigns it back to [owner] and returns it.
   _lib_editor_v1_type_catalog.DeclarationOwner_mutable get mutableOwner {
     final value = this.owner;
@@ -156,7 +158,7 @@ final class OwnedPortableTypes_mutable implements OwnedPortableTypes_orMutable {
     }
   }
 
-  /// If the value of [definitions] is already mutable, returns it as is.
+  /// If the value of [definitions] is already mutable, returns it as-is.
   /// Otherwise, makes a mutable copy, assigns it back to [definitions] and returns it.
   _core.List<_lib_editor_v1_type_catalog.TypeDefinition_orMutable>
   get mutableDefinitions {
@@ -178,7 +180,9 @@ final class OwnedPortableTypes_mutable implements OwnedPortableTypes_orMutable {
         .._u = this._u;
 }
 
+// -----------------------------------------------------------------------------
 // struct RuntimeMemberTemplate
+// -----------------------------------------------------------------------------
 
 sealed class RuntimeMemberTemplate_orMutable {
   _lib_editor_v1_type_catalog.RuntimeMemberId_orMutable get id;
@@ -254,7 +258,7 @@ final class RuntimeMemberTemplate implements RuntimeMemberTemplate_orMutable {
         _skir.KeyedIterable.empty,
       );
 
-  /// Returns this instance (no operation).
+  /// Returns this instance (no-op).
   @_core.Deprecated("This instance is already frozen.")
   @_core.override
   RuntimeMemberTemplate toFrozen() => this;
@@ -385,7 +389,7 @@ final class RuntimeMemberTemplate_mutable
     this.requiredCapabilities,
   );
 
-  /// If the value of [id] is already mutable, returns it as is.
+  /// If the value of [id] is already mutable, returns it as-is.
   /// Otherwise, makes a mutable copy, assigns it back to [id] and returns it.
   _lib_editor_v1_type_catalog.RuntimeMemberId_mutable get mutableId {
     final value = this.id;
@@ -397,7 +401,7 @@ final class RuntimeMemberTemplate_mutable
     }
   }
 
-  /// If the value of [arguments] is already mutable, returns it as is.
+  /// If the value of [arguments] is already mutable, returns it as-is.
   /// Otherwise, makes a mutable copy, assigns it back to [arguments] and returns it.
   _core.List<_lib_editor_v1_type_catalog.TypeTemplate> get mutableArguments {
     final value = this.arguments;
@@ -411,7 +415,7 @@ final class RuntimeMemberTemplate_mutable
     }
   }
 
-  /// If the value of [requiredCapabilities] is already mutable, returns it as is.
+  /// If the value of [requiredCapabilities] is already mutable, returns it as-is.
   /// Otherwise, makes a mutable copy, assigns it back to [requiredCapabilities] and returns it.
   _core.List<_lib_editor_v1_type_catalog.ScriptCapabilityId_orMutable>
   get mutableRequiredCapabilities {
@@ -439,7 +443,9 @@ final class RuntimeMemberTemplate_mutable
   ).._u = this._u;
 }
 
+// -----------------------------------------------------------------------------
 // struct RuntimeMemberSignature
+// -----------------------------------------------------------------------------
 
 sealed class RuntimeMemberSignature_orMutable {
   _lib_editor_v1_type_catalog.RuntimeMemberId_orMutable get id;
@@ -515,7 +521,7 @@ final class RuntimeMemberSignature implements RuntimeMemberSignature_orMutable {
         _skir.KeyedIterable.empty,
       );
 
-  /// Returns this instance (no operation).
+  /// Returns this instance (no-op).
   @_core.Deprecated("This instance is already frozen.")
   @_core.override
   RuntimeMemberSignature toFrozen() => this;
@@ -647,7 +653,7 @@ final class RuntimeMemberSignature_mutable
     this.requiredCapabilities,
   );
 
-  /// If the value of [id] is already mutable, returns it as is.
+  /// If the value of [id] is already mutable, returns it as-is.
   /// Otherwise, makes a mutable copy, assigns it back to [id] and returns it.
   _lib_editor_v1_type_catalog.RuntimeMemberId_mutable get mutableId {
     final value = this.id;
@@ -659,7 +665,7 @@ final class RuntimeMemberSignature_mutable
     }
   }
 
-  /// If the value of [parameters] is already mutable, returns it as is.
+  /// If the value of [parameters] is already mutable, returns it as-is.
   /// Otherwise, makes a mutable copy, assigns it back to [parameters] and returns it.
   _core.List<_lib_editor_v1_type_catalog.TypeUse> get mutableParameters {
     final value = this.parameters;
@@ -671,7 +677,7 @@ final class RuntimeMemberSignature_mutable
     }
   }
 
-  /// If the value of [requiredCapabilities] is already mutable, returns it as is.
+  /// If the value of [requiredCapabilities] is already mutable, returns it as-is.
   /// Otherwise, makes a mutable copy, assigns it back to [requiredCapabilities] and returns it.
   _core.List<_lib_editor_v1_type_catalog.ScriptCapabilityId_orMutable>
   get mutableRequiredCapabilities {
@@ -699,7 +705,9 @@ final class RuntimeMemberSignature_mutable
   ).._u = this._u;
 }
 
+// -----------------------------------------------------------------------------
 // struct ScriptContextDescriptor
+// -----------------------------------------------------------------------------
 
 sealed class ScriptContextDescriptor_orMutable {
   _core.Iterable<_lib_editor_v1_type_catalog.TypeDefinitionId_orMutable>
@@ -761,7 +769,7 @@ final class ScriptContextDescriptor
         _skir.KeyedIterable.empty,
       );
 
-  /// Returns this instance (no operation).
+  /// Returns this instance (no-op).
   @_core.Deprecated("This instance is already frozen.")
   @_core.override
   ScriptContextDescriptor toFrozen() => this;
@@ -867,7 +875,7 @@ final class ScriptContextDescriptor_mutable
     this.capabilities,
   );
 
-  /// If the value of [types] is already mutable, returns it as is.
+  /// If the value of [types] is already mutable, returns it as-is.
   /// Otherwise, makes a mutable copy, assigns it back to [types] and returns it.
   _core.List<_lib_editor_v1_type_catalog.TypeDefinitionId_orMutable>
   get mutableTypes {
@@ -882,7 +890,7 @@ final class ScriptContextDescriptor_mutable
     }
   }
 
-  /// If the value of [members] is already mutable, returns it as is.
+  /// If the value of [members] is already mutable, returns it as-is.
   /// Otherwise, makes a mutable copy, assigns it back to [members] and returns it.
   _core.List<_lib_editor_v1_type_catalog.RuntimeMemberId_orMutable>
   get mutableMembers {
@@ -897,7 +905,7 @@ final class ScriptContextDescriptor_mutable
     }
   }
 
-  /// If the value of [capabilities] is already mutable, returns it as is.
+  /// If the value of [capabilities] is already mutable, returns it as-is.
   /// Otherwise, makes a mutable copy, assigns it back to [capabilities] and returns it.
   _core.List<_lib_editor_v1_type_catalog.ScriptCapabilityId_orMutable>
   get mutableCapabilities {
@@ -921,7 +929,9 @@ final class ScriptContextDescriptor_mutable
   ).._u = this._u;
 }
 
+// -----------------------------------------------------------------------------
 // struct EngineImplementationInputs
+// -----------------------------------------------------------------------------
 
 sealed class EngineImplementationInputs_orMutable {
   _core.Iterable<RuntimeMemberSignature_orMutable> get signatures;
@@ -965,7 +975,7 @@ final class EngineImplementationInputs
         _lib_editor_v1_type_catalog.InputToken.defaultInstance,
       );
 
-  /// Returns this instance (no operation).
+  /// Returns this instance (no-op).
   @_core.Deprecated("This instance is already frozen.")
   @_core.override
   EngineImplementationInputs toFrozen() => this;
@@ -1042,7 +1052,7 @@ final class EngineImplementationInputs_mutable
 
   EngineImplementationInputs_mutable._(this.signatures, this.token);
 
-  /// If the value of [signatures] is already mutable, returns it as is.
+  /// If the value of [signatures] is already mutable, returns it as-is.
   /// Otherwise, makes a mutable copy, assigns it back to [signatures] and returns it.
   _core.List<RuntimeMemberSignature_orMutable> get mutableSignatures {
     final value = this.signatures;
@@ -1054,7 +1064,7 @@ final class EngineImplementationInputs_mutable
     }
   }
 
-  /// If the value of [token] is already mutable, returns it as is.
+  /// If the value of [token] is already mutable, returns it as-is.
   /// Otherwise, makes a mutable copy, assigns it back to [token] and returns it.
   _lib_editor_v1_type_catalog.InputToken_mutable get mutableToken {
     final value = this.token;
@@ -1073,7 +1083,9 @@ final class EngineImplementationInputs_mutable
         .._u = this._u;
 }
 
+// -----------------------------------------------------------------------------
 // enum PublicationState
+// -----------------------------------------------------------------------------
 
 /// Durable attempt progress, separate from review status. complete means the Realm selected its
 /// descriptor, while blocked or interrupted attempts do not replace the prior selected publication.
@@ -1255,7 +1267,9 @@ final class PublicationState_blockedWrapper extends _PublicationState_wrapper {
   PublicationState_kind get kind => PublicationState_kind.blockedWrapper;
 }
 
+// -----------------------------------------------------------------------------
 // struct PublicationAttempt
+// -----------------------------------------------------------------------------
 
 sealed class PublicationAttempt_orMutable {
   _lib_editor_v1_type_catalog.PublicationId_orMutable get id;
@@ -1309,7 +1323,7 @@ final class PublicationAttempt implements PublicationAttempt_orMutable {
     PublicationState.unknown,
   );
 
-  /// Returns this instance (no operation).
+  /// Returns this instance (no-op).
   @_core.Deprecated("This instance is already frozen.")
   @_core.override
   PublicationAttempt toFrozen() => this;
@@ -1416,7 +1430,7 @@ final class PublicationAttempt_mutable implements PublicationAttempt_orMutable {
     this.state,
   );
 
-  /// If the value of [id] is already mutable, returns it as is.
+  /// If the value of [id] is already mutable, returns it as-is.
   /// Otherwise, makes a mutable copy, assigns it back to [id] and returns it.
   _lib_editor_v1_type_catalog.PublicationId_mutable get mutableId {
     final value = this.id;
@@ -1428,7 +1442,7 @@ final class PublicationAttempt_mutable implements PublicationAttempt_orMutable {
     }
   }
 
-  /// If the value of [catalog] is already mutable, returns it as is.
+  /// If the value of [catalog] is already mutable, returns it as-is.
   /// Otherwise, makes a mutable copy, assigns it back to [catalog] and returns it.
   _lib_editor_v1_type_catalog.CatalogGeneration_mutable get mutableCatalog {
     final value = this.catalog;
@@ -1440,7 +1454,7 @@ final class PublicationAttempt_mutable implements PublicationAttempt_orMutable {
     }
   }
 
-  /// If the value of [engineInputs] is already mutable, returns it as is.
+  /// If the value of [engineInputs] is already mutable, returns it as-is.
   /// Otherwise, makes a mutable copy, assigns it back to [engineInputs] and returns it.
   EngineImplementationInputs_mutable get mutableEngineInputs {
     final value = this.engineInputs;
@@ -1462,7 +1476,9 @@ final class PublicationAttempt_mutable implements PublicationAttempt_orMutable {
   ).._u = this._u;
 }
 
+// -----------------------------------------------------------------------------
 // struct PublicationResult.Activated
+// -----------------------------------------------------------------------------
 
 sealed class PublicationResult_Activated_orMutable {
   _lib_editor_v1_type_catalog.PublicationId_orMutable get publication;
@@ -1495,7 +1511,7 @@ final class PublicationResult_Activated
         _lib_editor_v1_type_catalog.PublicationId.defaultInstance,
       );
 
-  /// Returns this instance (no operation).
+  /// Returns this instance (no-op).
   @_core.Deprecated("This instance is already frozen.")
   @_core.override
   PublicationResult_Activated toFrozen() => this;
@@ -1562,7 +1578,7 @@ final class PublicationResult_Activated_mutable
 
   PublicationResult_Activated_mutable._(this.publication);
 
-  /// If the value of [publication] is already mutable, returns it as is.
+  /// If the value of [publication] is already mutable, returns it as-is.
   /// Otherwise, makes a mutable copy, assigns it back to [publication] and returns it.
   _lib_editor_v1_type_catalog.PublicationId_mutable get mutablePublication {
     final value = this.publication;
@@ -1580,7 +1596,9 @@ final class PublicationResult_Activated_mutable
       PublicationResult_Activated(publication: this.publication).._u = this._u;
 }
 
+// -----------------------------------------------------------------------------
 // enum PublicationResult
+// -----------------------------------------------------------------------------
 
 /// Reports release admission and selection. activated identifies the newly selected publication,
 /// not an acknowledgement from engine hosts. candidate_changed requires a fresh review; publishing
@@ -1837,7 +1855,9 @@ final class PublicationResult_candidateChangedWrapper
       PublicationResult_kind.candidateChangedWrapper;
 }
 
+// -----------------------------------------------------------------------------
 // struct PublicationReport
+// -----------------------------------------------------------------------------
 
 sealed class PublicationReport_orMutable {
   _lib_editor_v1_type_catalog.PublicationId_orMutable get id;
@@ -1885,7 +1905,7 @@ final class PublicationReport implements PublicationReport_orMutable {
     _skir.KeyedIterable.empty,
   );
 
-  /// Returns this instance (no operation).
+  /// Returns this instance (no-op).
   @_core.Deprecated("This instance is already frozen.")
   @_core.override
   PublicationReport toFrozen() => this;
@@ -1970,7 +1990,7 @@ final class PublicationReport_mutable implements PublicationReport_orMutable {
 
   PublicationReport_mutable._(this.id, this.state, this.findings);
 
-  /// If the value of [id] is already mutable, returns it as is.
+  /// If the value of [id] is already mutable, returns it as-is.
   /// Otherwise, makes a mutable copy, assigns it back to [id] and returns it.
   _lib_editor_v1_type_catalog.PublicationId_mutable get mutableId {
     final value = this.id;
@@ -1982,7 +2002,7 @@ final class PublicationReport_mutable implements PublicationReport_orMutable {
     }
   }
 
-  /// If the value of [findings] is already mutable, returns it as is.
+  /// If the value of [findings] is already mutable, returns it as-is.
   /// Otherwise, makes a mutable copy, assigns it back to [findings] and returns it.
   _core.List<_lib_editor_v1_diagnostic.Diagnostic_orMutable>
   get mutableFindings {
@@ -2004,7 +2024,9 @@ final class PublicationReport_mutable implements PublicationReport_orMutable {
         .._u = this._u;
 }
 
+// -----------------------------------------------------------------------------
 // struct PublicationCandidateId
+// -----------------------------------------------------------------------------
 
 sealed class PublicationCandidateId_orMutable {
   _core.String get value;
@@ -2034,7 +2056,7 @@ final class PublicationCandidateId implements PublicationCandidateId_orMutable {
   static PublicationCandidateId_mutable mutable() =>
       PublicationCandidateId_mutable._("");
 
-  /// Returns this instance (no operation).
+  /// Returns this instance (no-op).
   @_core.Deprecated("This instance is already frozen.")
   @_core.override
   PublicationCandidateId toFrozen() => this;
@@ -2107,7 +2129,9 @@ final class PublicationCandidateId_mutable
       PublicationCandidateId(value: this.value).._u = this._u;
 }
 
+// -----------------------------------------------------------------------------
 // struct PublicationViewId
+// -----------------------------------------------------------------------------
 
 sealed class PublicationViewId_orMutable {
   _core.String get value;
@@ -2136,7 +2160,7 @@ final class PublicationViewId implements PublicationViewId_orMutable {
   /// Fields are initialized to their default values.
   static PublicationViewId_mutable mutable() => PublicationViewId_mutable._("");
 
-  /// Returns this instance (no operation).
+  /// Returns this instance (no-op).
   @_core.Deprecated("This instance is already frozen.")
   @_core.override
   PublicationViewId toFrozen() => this;
@@ -2205,7 +2229,9 @@ final class PublicationViewId_mutable implements PublicationViewId_orMutable {
       PublicationViewId(value: this.value).._u = this._u;
 }
 
+// -----------------------------------------------------------------------------
 // enum PublicationBaseline
+// -----------------------------------------------------------------------------
 
 /// To switch on the variants:
 ///   ```
@@ -2346,7 +2372,9 @@ final class PublicationBaseline_selectedWrapper
   PublicationBaseline_kind get kind => PublicationBaseline_kind.selectedWrapper;
 }
 
+// -----------------------------------------------------------------------------
 // struct DiagnosticEvidence
+// -----------------------------------------------------------------------------
 
 sealed class DiagnosticEvidence_orMutable {
   _lib_editor_v1_type_catalog.CatalogGeneration_orMutable get catalog;
@@ -2392,7 +2420,7 @@ final class DiagnosticEvidence implements DiagnosticEvidence_orMutable {
     _skir.KeyedIterable.empty,
   );
 
-  /// Returns this instance (no operation).
+  /// Returns this instance (no-op).
   @_core.Deprecated("This instance is already frozen.")
   @_core.override
   DiagnosticEvidence toFrozen() => this;
@@ -2467,7 +2495,7 @@ final class DiagnosticEvidence_mutable implements DiagnosticEvidence_orMutable {
 
   DiagnosticEvidence_mutable._(this.catalog, this.expectations);
 
-  /// If the value of [catalog] is already mutable, returns it as is.
+  /// If the value of [catalog] is already mutable, returns it as-is.
   /// Otherwise, makes a mutable copy, assigns it back to [catalog] and returns it.
   _lib_editor_v1_type_catalog.CatalogGeneration_mutable get mutableCatalog {
     final value = this.catalog;
@@ -2479,7 +2507,7 @@ final class DiagnosticEvidence_mutable implements DiagnosticEvidence_orMutable {
     }
   }
 
-  /// If the value of [expectations] is already mutable, returns it as is.
+  /// If the value of [expectations] is already mutable, returns it as-is.
   /// Otherwise, makes a mutable copy, assigns it back to [expectations] and returns it.
   _core.List<_lib_editor_v1_authoring_facts.EditExpectation>
   get mutableExpectations {
@@ -2501,7 +2529,9 @@ final class DiagnosticEvidence_mutable implements DiagnosticEvidence_orMutable {
         .._u = this._u;
 }
 
+// -----------------------------------------------------------------------------
 // struct PublicationDiagnosticDetails
+// -----------------------------------------------------------------------------
 
 sealed class PublicationDiagnosticDetails_orMutable {
   _lib_editor_v1_type_catalog.DiagnosticId_orMutable get id;
@@ -2588,7 +2618,7 @@ final class PublicationDiagnosticDetails
         null,
       );
 
-  /// Returns this instance (no operation).
+  /// Returns this instance (no-op).
   @_core.Deprecated("This instance is already frozen.")
   @_core.override
   PublicationDiagnosticDetails toFrozen() => this;
@@ -2743,7 +2773,7 @@ final class PublicationDiagnosticDetails_mutable
     this.evidence,
   );
 
-  /// If the value of [id] is already mutable, returns it as is.
+  /// If the value of [id] is already mutable, returns it as-is.
   /// Otherwise, makes a mutable copy, assigns it back to [id] and returns it.
   _lib_editor_v1_type_catalog.DiagnosticId_mutable get mutableId {
     final value = this.id;
@@ -2755,7 +2785,7 @@ final class PublicationDiagnosticDetails_mutable
     }
   }
 
-  /// If the value of [origin] is already mutable, returns it as is.
+  /// If the value of [origin] is already mutable, returns it as-is.
   /// Otherwise, makes a mutable copy, assigns it back to [origin] and returns it.
   _lib_editor_v1_type_catalog.RuleOrigin_mutable get mutableOrigin {
     final value = this.origin;
@@ -2767,7 +2797,7 @@ final class PublicationDiagnosticDetails_mutable
     }
   }
 
-  /// If the value of [related] is already mutable, returns it as is.
+  /// If the value of [related] is already mutable, returns it as-is.
   /// Otherwise, makes a mutable copy, assigns it back to [related] and returns it.
   _core.List<_lib_editor_v1_type_catalog.ValueLocation_orMutable>
   get mutableRelated {
@@ -2795,7 +2825,9 @@ final class PublicationDiagnosticDetails_mutable
   ).._u = this._u;
 }
 
+// -----------------------------------------------------------------------------
 // enum PublicationNotice
+// -----------------------------------------------------------------------------
 
 /// To switch on the variants:
 ///   ```
@@ -2975,7 +3007,9 @@ final class PublicationNotice_warningWrapper
   PublicationNotice_kind get kind => PublicationNotice_kind.warningWrapper;
 }
 
+// -----------------------------------------------------------------------------
 // struct PublicationBlocker
+// -----------------------------------------------------------------------------
 
 sealed class PublicationBlocker_orMutable {
   PublicationDiagnosticDetails_orMutable get details;
@@ -3006,7 +3040,7 @@ final class PublicationBlocker implements PublicationBlocker_orMutable {
     PublicationDiagnosticDetails.defaultInstance,
   );
 
-  /// Returns this instance (no operation).
+  /// Returns this instance (no-op).
   @_core.Deprecated("This instance is already frozen.")
   @_core.override
   PublicationBlocker toFrozen() => this;
@@ -3069,7 +3103,7 @@ final class PublicationBlocker_mutable implements PublicationBlocker_orMutable {
 
   PublicationBlocker_mutable._(this.details);
 
-  /// If the value of [details] is already mutable, returns it as is.
+  /// If the value of [details] is already mutable, returns it as-is.
   /// Otherwise, makes a mutable copy, assigns it back to [details] and returns it.
   PublicationDiagnosticDetails_mutable get mutableDetails {
     final value = this.details;
@@ -3086,7 +3120,9 @@ final class PublicationBlocker_mutable implements PublicationBlocker_orMutable {
       PublicationBlocker(details: this.details).._u = this._u;
 }
 
+// -----------------------------------------------------------------------------
 // enum PublicationChange
+// -----------------------------------------------------------------------------
 
 /// Semantic runtime changes relative to selection. A root update compares artifact meaning and
 /// format, independently of blob storage location or a newly allocated publication identity.
@@ -3314,7 +3350,9 @@ final class PublicationChange_rootRemovedWrapper
   PublicationChange_kind get kind => PublicationChange_kind.rootRemovedWrapper;
 }
 
+// -----------------------------------------------------------------------------
 // struct PublicationDelta
+// -----------------------------------------------------------------------------
 
 sealed class PublicationDelta_orMutable {
   PublicationChange get first;
@@ -3353,7 +3391,7 @@ final class PublicationDelta implements PublicationDelta_orMutable {
     _skir.KeyedIterable.empty,
   );
 
-  /// Returns this instance (no operation).
+  /// Returns this instance (no-op).
   @_core.Deprecated("This instance is already frozen.")
   @_core.override
   PublicationDelta toFrozen() => this;
@@ -3426,7 +3464,7 @@ final class PublicationDelta_mutable implements PublicationDelta_orMutable {
 
   PublicationDelta_mutable._(this.first, this.additional);
 
-  /// If the value of [additional] is already mutable, returns it as is.
+  /// If the value of [additional] is already mutable, returns it as-is.
   /// Otherwise, makes a mutable copy, assigns it back to [additional] and returns it.
   _core.List<PublicationChange> get mutableAdditional {
     final value = this.additional;
@@ -3444,7 +3482,9 @@ final class PublicationDelta_mutable implements PublicationDelta_orMutable {
         .._u = this._u;
 }
 
+// -----------------------------------------------------------------------------
 // struct PublicationBlockers
+// -----------------------------------------------------------------------------
 
 sealed class PublicationBlockers_orMutable {
   PublicationBlocker_orMutable get first;
@@ -3484,7 +3524,7 @@ final class PublicationBlockers implements PublicationBlockers_orMutable {
     _skir.KeyedIterable.empty,
   );
 
-  /// Returns this instance (no operation).
+  /// Returns this instance (no-op).
   @_core.Deprecated("This instance is already frozen.")
   @_core.override
   PublicationBlockers toFrozen() => this;
@@ -3561,7 +3601,7 @@ final class PublicationBlockers_mutable
 
   PublicationBlockers_mutable._(this.first, this.additional);
 
-  /// If the value of [first] is already mutable, returns it as is.
+  /// If the value of [first] is already mutable, returns it as-is.
   /// Otherwise, makes a mutable copy, assigns it back to [first] and returns it.
   PublicationBlocker_mutable get mutableFirst {
     final value = this.first;
@@ -3572,7 +3612,7 @@ final class PublicationBlockers_mutable
     }
   }
 
-  /// If the value of [additional] is already mutable, returns it as is.
+  /// If the value of [additional] is already mutable, returns it as-is.
   /// Otherwise, makes a mutable copy, assigns it back to [additional] and returns it.
   _core.List<PublicationBlocker_orMutable> get mutableAdditional {
     final value = this.additional;
@@ -3590,7 +3630,9 @@ final class PublicationBlockers_mutable
         .._u = this._u;
 }
 
+// -----------------------------------------------------------------------------
 // enum PublicationActivationPhase
+// -----------------------------------------------------------------------------
 
 /// To switch on the variants:
 ///   ```
@@ -3694,7 +3736,9 @@ enum _PublicationActivationPhase_consts implements PublicationActivationPhase {
       _skir.internal__stringify(this, PublicationActivationPhase.serializer);
 }
 
+// -----------------------------------------------------------------------------
 // struct PublicationPendingReview
+// -----------------------------------------------------------------------------
 
 sealed class PublicationPendingReview_orMutable {
   _core.Iterable<_lib_editor_v1_checking.FindingSet_orMutable> get findings;
@@ -3769,7 +3813,7 @@ final class PublicationPendingReview
         _skir.KeyedIterable.empty,
       );
 
-  /// Returns this instance (no operation).
+  /// Returns this instance (no-op).
   @_core.Deprecated("This instance is already frozen.")
   @_core.override
   PublicationPendingReview toFrozen() => this;
@@ -3899,7 +3943,7 @@ final class PublicationPendingReview_mutable
     this.notices,
   );
 
-  /// If the value of [findings] is already mutable, returns it as is.
+  /// If the value of [findings] is already mutable, returns it as-is.
   /// Otherwise, makes a mutable copy, assigns it back to [findings] and returns it.
   _core.List<_lib_editor_v1_checking.FindingSet_orMutable> get mutableFindings {
     final value = this.findings;
@@ -3913,7 +3957,7 @@ final class PublicationPendingReview_mutable
     }
   }
 
-  /// If the value of [confirmedChanges] is already mutable, returns it as is.
+  /// If the value of [confirmedChanges] is already mutable, returns it as-is.
   /// Otherwise, makes a mutable copy, assigns it back to [confirmedChanges] and returns it.
   _core.List<PublicationChange> get mutableConfirmedChanges {
     final value = this.confirmedChanges;
@@ -3924,7 +3968,7 @@ final class PublicationPendingReview_mutable
     }
   }
 
-  /// If the value of [pendingRoots] is already mutable, returns it as is.
+  /// If the value of [pendingRoots] is already mutable, returns it as-is.
   /// Otherwise, makes a mutable copy, assigns it back to [pendingRoots] and returns it.
   _core.List<_lib_editor_v1_compilation_root.CompilationRoot_orMutable>
   get mutablePendingRoots {
@@ -3939,7 +3983,7 @@ final class PublicationPendingReview_mutable
     }
   }
 
-  /// If the value of [blockers] is already mutable, returns it as is.
+  /// If the value of [blockers] is already mutable, returns it as-is.
   /// Otherwise, makes a mutable copy, assigns it back to [blockers] and returns it.
   _core.List<PublicationBlocker_orMutable> get mutableBlockers {
     final value = this.blockers;
@@ -3950,7 +3994,7 @@ final class PublicationPendingReview_mutable
     }
   }
 
-  /// If the value of [notices] is already mutable, returns it as is.
+  /// If the value of [notices] is already mutable, returns it as-is.
   /// Otherwise, makes a mutable copy, assigns it back to [notices] and returns it.
   _core.List<PublicationNotice> get mutableNotices {
     final value = this.notices;
@@ -3972,7 +4016,9 @@ final class PublicationPendingReview_mutable
   ).._u = this._u;
 }
 
+// -----------------------------------------------------------------------------
 // enum PublicationFailure
+// -----------------------------------------------------------------------------
 
 /// To switch on the variants:
 ///   ```
@@ -4147,7 +4193,9 @@ final class PublicationFailure_publicationInterruptedWrapper
       PublicationFailure_kind.publicationInterruptedWrapper;
 }
 
+// -----------------------------------------------------------------------------
 // struct PublicationStatus.Empty
+// -----------------------------------------------------------------------------
 
 sealed class PublicationStatus_Empty_orMutable {
   _core.Iterable<PublicationNotice> get notices;
@@ -4178,7 +4226,7 @@ final class PublicationStatus_Empty
   static PublicationStatus_Empty_mutable mutable() =>
       PublicationStatus_Empty_mutable._(_skir.KeyedIterable.empty);
 
-  /// Returns this instance (no operation).
+  /// Returns this instance (no-op).
   @_core.Deprecated("This instance is already frozen.")
   @_core.override
   PublicationStatus_Empty toFrozen() => this;
@@ -4245,7 +4293,7 @@ final class PublicationStatus_Empty_mutable
 
   PublicationStatus_Empty_mutable._(this.notices);
 
-  /// If the value of [notices] is already mutable, returns it as is.
+  /// If the value of [notices] is already mutable, returns it as-is.
   /// Otherwise, makes a mutable copy, assigns it back to [notices] and returns it.
   _core.List<PublicationNotice> get mutableNotices {
     final value = this.notices;
@@ -4262,7 +4310,9 @@ final class PublicationStatus_Empty_mutable
       PublicationStatus_Empty(notices: this.notices).._u = this._u;
 }
 
+// -----------------------------------------------------------------------------
 // struct PublicationStatus.Current
+// -----------------------------------------------------------------------------
 
 sealed class PublicationStatus_Current_orMutable {
   _lib_editor_v1_type_catalog.PublicationId_orMutable get selected;
@@ -4304,7 +4354,7 @@ final class PublicationStatus_Current
         _skir.KeyedIterable.empty,
       );
 
-  /// Returns this instance (no operation).
+  /// Returns this instance (no-op).
   @_core.Deprecated("This instance is already frozen.")
   @_core.override
   PublicationStatus_Current toFrozen() => this;
@@ -4381,7 +4431,7 @@ final class PublicationStatus_Current_mutable
 
   PublicationStatus_Current_mutable._(this.selected, this.notices);
 
-  /// If the value of [selected] is already mutable, returns it as is.
+  /// If the value of [selected] is already mutable, returns it as-is.
   /// Otherwise, makes a mutable copy, assigns it back to [selected] and returns it.
   _lib_editor_v1_type_catalog.PublicationId_mutable get mutableSelected {
     final value = this.selected;
@@ -4393,7 +4443,7 @@ final class PublicationStatus_Current_mutable
     }
   }
 
-  /// If the value of [notices] is already mutable, returns it as is.
+  /// If the value of [notices] is already mutable, returns it as-is.
   /// Otherwise, makes a mutable copy, assigns it back to [notices] and returns it.
   _core.List<PublicationNotice> get mutableNotices {
     final value = this.notices;
@@ -4411,7 +4461,9 @@ final class PublicationStatus_Current_mutable
         .._u = this._u;
 }
 
+// -----------------------------------------------------------------------------
 // struct PublicationStatus.Ready
+// -----------------------------------------------------------------------------
 
 sealed class PublicationStatus_Ready_orMutable {
   PublicationCandidateId_orMutable get candidate;
@@ -4472,7 +4524,7 @@ final class PublicationStatus_Ready
         _skir.KeyedIterable.empty,
       );
 
-  /// Returns this instance (no operation).
+  /// Returns this instance (no-op).
   @_core.Deprecated("This instance is already frozen.")
   @_core.override
   PublicationStatus_Ready toFrozen() => this;
@@ -4584,7 +4636,7 @@ final class PublicationStatus_Ready_mutable
     this.notices,
   );
 
-  /// If the value of [candidate] is already mutable, returns it as is.
+  /// If the value of [candidate] is already mutable, returns it as-is.
   /// Otherwise, makes a mutable copy, assigns it back to [candidate] and returns it.
   PublicationCandidateId_mutable get mutableCandidate {
     final value = this.candidate;
@@ -4595,7 +4647,7 @@ final class PublicationStatus_Ready_mutable
     }
   }
 
-  /// If the value of [changes] is already mutable, returns it as is.
+  /// If the value of [changes] is already mutable, returns it as-is.
   /// Otherwise, makes a mutable copy, assigns it back to [changes] and returns it.
   PublicationDelta_mutable get mutableChanges {
     final value = this.changes;
@@ -4606,7 +4658,7 @@ final class PublicationStatus_Ready_mutable
     }
   }
 
-  /// If the value of [notices] is already mutable, returns it as is.
+  /// If the value of [notices] is already mutable, returns it as-is.
   /// Otherwise, makes a mutable copy, assigns it back to [notices] and returns it.
   _core.List<PublicationNotice> get mutableNotices {
     final value = this.notices;
@@ -4627,7 +4679,9 @@ final class PublicationStatus_Ready_mutable
   ).._u = this._u;
 }
 
+// -----------------------------------------------------------------------------
 // struct PublicationStatus.Blocked
+// -----------------------------------------------------------------------------
 
 sealed class PublicationStatus_Blocked_orMutable {
   PublicationBaseline get baseline;
@@ -4701,7 +4755,7 @@ final class PublicationStatus_Blocked
         _skir.KeyedIterable.empty,
       );
 
-  /// Returns this instance (no operation).
+  /// Returns this instance (no-op).
   @_core.Deprecated("This instance is already frozen.")
   @_core.override
   PublicationStatus_Blocked toFrozen() => this;
@@ -4829,7 +4883,7 @@ final class PublicationStatus_Blocked_mutable
     this.pendingRoots,
   );
 
-  /// If the value of [blockers] is already mutable, returns it as is.
+  /// If the value of [blockers] is already mutable, returns it as-is.
   /// Otherwise, makes a mutable copy, assigns it back to [blockers] and returns it.
   PublicationBlockers_mutable get mutableBlockers {
     final value = this.blockers;
@@ -4840,7 +4894,7 @@ final class PublicationStatus_Blocked_mutable
     }
   }
 
-  /// If the value of [notices] is already mutable, returns it as is.
+  /// If the value of [notices] is already mutable, returns it as-is.
   /// Otherwise, makes a mutable copy, assigns it back to [notices] and returns it.
   _core.List<PublicationNotice> get mutableNotices {
     final value = this.notices;
@@ -4851,7 +4905,7 @@ final class PublicationStatus_Blocked_mutable
     }
   }
 
-  /// If the value of [confirmedChanges] is already mutable, returns it as is.
+  /// If the value of [confirmedChanges] is already mutable, returns it as-is.
   /// Otherwise, makes a mutable copy, assigns it back to [confirmedChanges] and returns it.
   _core.List<PublicationChange> get mutableConfirmedChanges {
     final value = this.confirmedChanges;
@@ -4862,7 +4916,7 @@ final class PublicationStatus_Blocked_mutable
     }
   }
 
-  /// If the value of [pendingRoots] is already mutable, returns it as is.
+  /// If the value of [pendingRoots] is already mutable, returns it as-is.
   /// Otherwise, makes a mutable copy, assigns it back to [pendingRoots] and returns it.
   _core.List<_lib_editor_v1_compilation_root.CompilationRoot_orMutable>
   get mutablePendingRoots {
@@ -4888,7 +4942,9 @@ final class PublicationStatus_Blocked_mutable
   ).._u = this._u;
 }
 
+// -----------------------------------------------------------------------------
 // struct PublicationStatus.Checking
+// -----------------------------------------------------------------------------
 
 sealed class PublicationStatus_Checking_orMutable {
   PublicationBaseline get baseline;
@@ -4931,7 +4987,7 @@ final class PublicationStatus_Checking
         _skir.KeyedIterable.empty,
       );
 
-  /// Returns this instance (no operation).
+  /// Returns this instance (no-op).
   @_core.Deprecated("This instance is already frozen.")
   @_core.override
   PublicationStatus_Checking toFrozen() => this;
@@ -5010,7 +5066,7 @@ final class PublicationStatus_Checking_mutable
 
   PublicationStatus_Checking_mutable._(this.baseline, this.findings);
 
-  /// If the value of [findings] is already mutable, returns it as is.
+  /// If the value of [findings] is already mutable, returns it as-is.
   /// Otherwise, makes a mutable copy, assigns it back to [findings] and returns it.
   _core.List<_lib_editor_v1_checking.FindingSet_orMutable> get mutableFindings {
     final value = this.findings;
@@ -5032,7 +5088,9 @@ final class PublicationStatus_Checking_mutable
   ).._u = this._u;
 }
 
+// -----------------------------------------------------------------------------
 // struct PublicationStatus.Publishing
+// -----------------------------------------------------------------------------
 
 sealed class PublicationStatus_Publishing_orMutable {
   _lib_editor_v1_type_catalog.PublicationId_orMutable get publication;
@@ -5093,7 +5151,7 @@ final class PublicationStatus_Publishing
         PublicationPendingReview.defaultInstance,
       );
 
-  /// Returns this instance (no operation).
+  /// Returns this instance (no-op).
   @_core.Deprecated("This instance is already frozen.")
   @_core.override
   PublicationStatus_Publishing toFrozen() => this;
@@ -5205,7 +5263,7 @@ final class PublicationStatus_Publishing_mutable
     this.next,
   );
 
-  /// If the value of [publication] is already mutable, returns it as is.
+  /// If the value of [publication] is already mutable, returns it as-is.
   /// Otherwise, makes a mutable copy, assigns it back to [publication] and returns it.
   _lib_editor_v1_type_catalog.PublicationId_mutable get mutablePublication {
     final value = this.publication;
@@ -5217,7 +5275,7 @@ final class PublicationStatus_Publishing_mutable
     }
   }
 
-  /// If the value of [releasing] is already mutable, returns it as is.
+  /// If the value of [releasing] is already mutable, returns it as-is.
   /// Otherwise, makes a mutable copy, assigns it back to [releasing] and returns it.
   PublicationDelta_mutable get mutableReleasing {
     final value = this.releasing;
@@ -5228,7 +5286,7 @@ final class PublicationStatus_Publishing_mutable
     }
   }
 
-  /// If the value of [next] is already mutable, returns it as is.
+  /// If the value of [next] is already mutable, returns it as-is.
   /// Otherwise, makes a mutable copy, assigns it back to [next] and returns it.
   PublicationPendingReview_mutable get mutableNext {
     final value = this.next;
@@ -5249,7 +5307,9 @@ final class PublicationStatus_Publishing_mutable
   ).._u = this._u;
 }
 
+// -----------------------------------------------------------------------------
 // struct PublicationStatus.Unavailable
+// -----------------------------------------------------------------------------
 
 sealed class PublicationStatus_Unavailable_orMutable {
   PublicationBaseline get baseline;
@@ -5299,7 +5359,7 @@ final class PublicationStatus_Unavailable
         _skir.KeyedIterable.empty,
       );
 
-  /// Returns this instance (no operation).
+  /// Returns this instance (no-op).
   @_core.Deprecated("This instance is already frozen.")
   @_core.override
   PublicationStatus_Unavailable toFrozen() => this;
@@ -5400,7 +5460,7 @@ final class PublicationStatus_Unavailable_mutable
     this.findings,
   );
 
-  /// If the value of [findings] is already mutable, returns it as is.
+  /// If the value of [findings] is already mutable, returns it as-is.
   /// Otherwise, makes a mutable copy, assigns it back to [findings] and returns it.
   _core.List<_lib_editor_v1_checking.FindingSet_orMutable> get mutableFindings {
     final value = this.findings;
@@ -5423,7 +5483,9 @@ final class PublicationStatus_Unavailable_mutable
   ).._u = this._u;
 }
 
+// -----------------------------------------------------------------------------
 // enum PublicationStatus
+// -----------------------------------------------------------------------------
 
 /// Current saved review state. ready authorizes only its issued candidate; blocked can still
 /// report confirmed changes while failed roots remain pending. During publishing, releasing is
@@ -5778,7 +5840,9 @@ final class PublicationStatus_unavailableWrapper
   PublicationStatus_kind get kind => PublicationStatus_kind.unavailableWrapper;
 }
 
+// -----------------------------------------------------------------------------
 // struct PublicationView
+// -----------------------------------------------------------------------------
 
 sealed class PublicationView_orMutable {
   PublicationViewId_orMutable get id;
@@ -5815,7 +5879,7 @@ final class PublicationView implements PublicationView_orMutable {
     PublicationStatus.unknown,
   );
 
-  /// Returns this instance (no operation).
+  /// Returns this instance (no-op).
   @_core.Deprecated("This instance is already frozen.")
   @_core.override
   PublicationView toFrozen() => this;
@@ -5888,7 +5952,7 @@ final class PublicationView_mutable implements PublicationView_orMutable {
 
   PublicationView_mutable._(this.id, this.status);
 
-  /// If the value of [id] is already mutable, returns it as is.
+  /// If the value of [id] is already mutable, returns it as-is.
   /// Otherwise, makes a mutable copy, assigns it back to [id] and returns it.
   PublicationViewId_mutable get mutableId {
     final value = this.id;
@@ -5905,7 +5969,9 @@ final class PublicationView_mutable implements PublicationView_orMutable {
       PublicationView(id: this.id, status: this.status).._u = this._u;
 }
 
+// -----------------------------------------------------------------------------
 // struct PublicationViewChanged
+// -----------------------------------------------------------------------------
 
 sealed class PublicationViewChanged_orMutable {
   PublicationViewId_orMutable get current;
@@ -5937,7 +6003,7 @@ final class PublicationViewChanged implements PublicationViewChanged_orMutable {
   static PublicationViewChanged_mutable mutable() =>
       PublicationViewChanged_mutable._(PublicationViewId.defaultInstance);
 
-  /// Returns this instance (no operation).
+  /// Returns this instance (no-op).
   @_core.Deprecated("This instance is already frozen.")
   @_core.override
   PublicationViewChanged toFrozen() => this;
@@ -6004,7 +6070,7 @@ final class PublicationViewChanged_mutable
 
   PublicationViewChanged_mutable._(this.current);
 
-  /// If the value of [current] is already mutable, returns it as is.
+  /// If the value of [current] is already mutable, returns it as-is.
   /// Otherwise, makes a mutable copy, assigns it back to [current] and returns it.
   PublicationViewId_mutable get mutableCurrent {
     final value = this.current;
@@ -6021,7 +6087,9 @@ final class PublicationViewChanged_mutable
       PublicationViewChanged(current: this.current).._u = this._u;
 }
 
+// -----------------------------------------------------------------------------
 // struct PublicationViewChunk
+// -----------------------------------------------------------------------------
 
 sealed class PublicationViewChunk_orMutable {
   PublicationViewId_orMutable get view;
@@ -6060,7 +6128,7 @@ final class PublicationViewChunk implements PublicationViewChunk_orMutable {
         _lib_kernel_v1_bounded_transfer.BoundedTransferChunk.defaultInstance,
       );
 
-  /// Returns this instance (no operation).
+  /// Returns this instance (no-op).
   @_core.Deprecated("This instance is already frozen.")
   @_core.override
   PublicationViewChunk toFrozen() => this;
@@ -6137,7 +6205,7 @@ final class PublicationViewChunk_mutable
 
   PublicationViewChunk_mutable._(this.view, this.transfer);
 
-  /// If the value of [view] is already mutable, returns it as is.
+  /// If the value of [view] is already mutable, returns it as-is.
   /// Otherwise, makes a mutable copy, assigns it back to [view] and returns it.
   PublicationViewId_mutable get mutableView {
     final value = this.view;
@@ -6148,7 +6216,7 @@ final class PublicationViewChunk_mutable
     }
   }
 
-  /// If the value of [transfer] is already mutable, returns it as is.
+  /// If the value of [transfer] is already mutable, returns it as-is.
   /// Otherwise, makes a mutable copy, assigns it back to [transfer] and returns it.
   _lib_kernel_v1_bounded_transfer.BoundedTransferChunk_mutable
   get mutableTransfer {
@@ -6169,7 +6237,9 @@ final class PublicationViewChunk_mutable
         .._u = this._u;
 }
 
+// -----------------------------------------------------------------------------
 // struct PublicationTransferUnavailable
+// -----------------------------------------------------------------------------
 
 sealed class PublicationTransferUnavailable_orMutable {
   PublicationViewId_orMutable get view;
@@ -6222,7 +6292,7 @@ final class PublicationTransferUnavailable
         0,
       );
 
-  /// Returns this instance (no operation).
+  /// Returns this instance (no-op).
   @_core.Deprecated("This instance is already frozen.")
   @_core.override
   PublicationTransferUnavailable toFrozen() => this;
@@ -6321,7 +6391,7 @@ final class PublicationTransferUnavailable_mutable
     this.maxEncodedSize,
   );
 
-  /// If the value of [view] is already mutable, returns it as is.
+  /// If the value of [view] is already mutable, returns it as-is.
   /// Otherwise, makes a mutable copy, assigns it back to [view] and returns it.
   PublicationViewId_mutable get mutableView {
     final value = this.view;
@@ -6341,7 +6411,9 @@ final class PublicationTransferUnavailable_mutable
   ).._u = this._u;
 }
 
+// -----------------------------------------------------------------------------
 // struct PublishAuthoringRequest
+// -----------------------------------------------------------------------------
 
 sealed class PublishAuthoringRequest_orMutable {
   PublicationCandidateId_orMutable get candidate;
@@ -6372,7 +6444,7 @@ final class PublishAuthoringRequest
   static PublishAuthoringRequest_mutable mutable() =>
       PublishAuthoringRequest_mutable._(PublicationCandidateId.defaultInstance);
 
-  /// Returns this instance (no operation).
+  /// Returns this instance (no-op).
   @_core.Deprecated("This instance is already frozen.")
   @_core.override
   PublishAuthoringRequest toFrozen() => this;
@@ -6439,7 +6511,7 @@ final class PublishAuthoringRequest_mutable
 
   PublishAuthoringRequest_mutable._(this.candidate);
 
-  /// If the value of [candidate] is already mutable, returns it as is.
+  /// If the value of [candidate] is already mutable, returns it as-is.
   /// Otherwise, makes a mutable copy, assigns it back to [candidate] and returns it.
   PublicationCandidateId_mutable get mutableCandidate {
     final value = this.candidate;
@@ -6456,7 +6528,9 @@ final class PublishAuthoringRequest_mutable
       PublishAuthoringRequest(candidate: this.candidate).._u = this._u;
 }
 
+// -----------------------------------------------------------------------------
 // enum PublishAuthoringResponse
+// -----------------------------------------------------------------------------
 
 /// To switch on the variants:
 ///   ```
@@ -6604,7 +6678,9 @@ final class PublishAuthoringResponse_internalErrorWrapper
       PublishAuthoringResponse_kind.internalErrorWrapper;
 }
 
+// -----------------------------------------------------------------------------
 // struct WatchPublicationRequest
+// -----------------------------------------------------------------------------
 
 sealed class WatchPublicationRequest_orMutable {
   WatchPublicationRequest toFrozen();
@@ -6627,7 +6703,7 @@ final class WatchPublicationRequest
   static WatchPublicationRequest_mutable mutable() =>
       WatchPublicationRequest_mutable._();
 
-  /// Returns this instance (no operation).
+  /// Returns this instance (no-op).
   @_core.Deprecated("This instance is already frozen.")
   @_core.override
   WatchPublicationRequest toFrozen() => this;
@@ -6689,7 +6765,9 @@ final class WatchPublicationRequest_mutable
   WatchPublicationRequest toFrozen() => WatchPublicationRequest().._u = this._u;
 }
 
+// -----------------------------------------------------------------------------
 // struct QueryPublicationViewRequest
+// -----------------------------------------------------------------------------
 
 sealed class QueryPublicationViewRequest_orMutable {
   PublicationViewId_orMutable get expected;
@@ -6728,7 +6806,7 @@ final class QueryPublicationViewRequest
         "",
       );
 
-  /// Returns this instance (no operation).
+  /// Returns this instance (no-op).
   @_core.Deprecated("This instance is already frozen.")
   @_core.override
   QueryPublicationViewRequest toFrozen() => this;
@@ -6805,7 +6883,7 @@ final class QueryPublicationViewRequest_mutable
 
   QueryPublicationViewRequest_mutable._(this.expected, this.transferId);
 
-  /// If the value of [expected] is already mutable, returns it as is.
+  /// If the value of [expected] is already mutable, returns it as-is.
   /// Otherwise, makes a mutable copy, assigns it back to [expected] and returns it.
   PublicationViewId_mutable get mutableExpected {
     final value = this.expected;
@@ -6824,7 +6902,9 @@ final class QueryPublicationViewRequest_mutable
   ).._u = this._u;
 }
 
+// -----------------------------------------------------------------------------
 // enum QueryPublicationViewResponse
+// -----------------------------------------------------------------------------
 
 /// To switch on the variants:
 ///   ```

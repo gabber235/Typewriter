@@ -92,11 +92,6 @@ func (m *Typewriter) formatGeneratedProtocol(source *dagger.Directory) *dagger.D
 		WithDirectory("/workspace", rust).
 		WithWorkdir("/workspace").
 		WithExec([]string{
-			"dart", "services/protocol/transport-generator/normalize_generated_dart.dart",
-			"panel/lib/infrastructure/protocols/skir/skirout",
-			"panel/lib/infrastructure/messaging/generated/skirout",
-		}).
-		WithExec([]string{
 			"dart", "format",
 			"panel/lib/infrastructure/protocols/skir/skirout",
 			"panel/lib/infrastructure/messaging/generated/skirout",

@@ -17,7 +17,9 @@ import "package:skir_client/skir_client.dart" as _skir;
 
 import "./type_catalog.dart" as _lib_editor_v1_type_catalog;
 
+// -----------------------------------------------------------------------------
 // struct BindingRef
+// -----------------------------------------------------------------------------
 
 sealed class BindingRef_orMutable {
   _lib_editor_v1_type_catalog.ValuePath_orMutable get path;
@@ -58,7 +60,7 @@ final class BindingRef implements BindingRef_orMutable {
     _lib_editor_v1_type_catalog.ExpressionBindingId.defaultInstance,
   );
 
-  /// Returns this instance (no operation).
+  /// Returns this instance (no-op).
   @_core.Deprecated("This instance is already frozen.")
   @_core.override
   BindingRef toFrozen() => this;
@@ -130,7 +132,7 @@ final class BindingRef_mutable implements BindingRef_orMutable {
 
   BindingRef_mutable._(this.path, this.bindingId);
 
-  /// If the value of [path] is already mutable, returns it as is.
+  /// If the value of [path] is already mutable, returns it as-is.
   /// Otherwise, makes a mutable copy, assigns it back to [path] and returns it.
   _lib_editor_v1_type_catalog.ValuePath_mutable get mutablePath {
     final value = this.path;
@@ -142,7 +144,7 @@ final class BindingRef_mutable implements BindingRef_orMutable {
     }
   }
 
-  /// If the value of [bindingId] is already mutable, returns it as is.
+  /// If the value of [bindingId] is already mutable, returns it as-is.
   /// Otherwise, makes a mutable copy, assigns it back to [bindingId] and returns it.
   _lib_editor_v1_type_catalog.ExpressionBindingId_mutable get mutableBindingId {
     final value = this.bindingId;
@@ -161,7 +163,9 @@ final class BindingRef_mutable implements BindingRef_orMutable {
       BindingRef(path: this.path, bindingId: this.bindingId).._u = this._u;
 }
 
+// -----------------------------------------------------------------------------
 // struct ResolvedBinding
+// -----------------------------------------------------------------------------
 
 sealed class ResolvedBinding_orMutable {
   BindingRef_orMutable get reference;
@@ -228,7 +232,7 @@ final class ResolvedBinding implements ResolvedBinding_orMutable {
     0,
   );
 
-  /// Returns this instance (no operation).
+  /// Returns this instance (no-op).
   @_core.Deprecated("This instance is already frozen.")
   @_core.override
   ResolvedBinding toFrozen() => this;
@@ -348,7 +352,7 @@ final class ResolvedBinding_mutable implements ResolvedBinding_orMutable {
     this.revision,
   );
 
-  /// If the value of [reference] is already mutable, returns it as is.
+  /// If the value of [reference] is already mutable, returns it as-is.
   /// Otherwise, makes a mutable copy, assigns it back to [reference] and returns it.
   BindingRef_mutable get mutableReference {
     final value = this.reference;
@@ -370,7 +374,9 @@ final class ResolvedBinding_mutable implements ResolvedBinding_orMutable {
   ).._u = this._u;
 }
 
+// -----------------------------------------------------------------------------
 // struct BindingDiagnostic
+// -----------------------------------------------------------------------------
 
 sealed class BindingDiagnostic_orMutable {
   _core.String get code;
@@ -402,7 +408,7 @@ final class BindingDiagnostic implements BindingDiagnostic_orMutable {
   static BindingDiagnostic_mutable mutable() =>
       BindingDiagnostic_mutable._("", "");
 
-  /// Returns this instance (no operation).
+  /// Returns this instance (no-op).
   @_core.Deprecated("This instance is already frozen.")
   @_core.override
   BindingDiagnostic toFrozen() => this;
@@ -481,7 +487,9 @@ final class BindingDiagnostic_mutable implements BindingDiagnostic_orMutable {
       BindingDiagnostic(code: this.code, message: this.message).._u = this._u;
 }
 
+// -----------------------------------------------------------------------------
 // enum BindingResolution
+// -----------------------------------------------------------------------------
 
 /// To switch on the variants:
 ///   ```

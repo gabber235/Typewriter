@@ -17,7 +17,9 @@ import "package:skir_client/skir_client.dart" as _skir;
 
 import "../../kernel/v1/errors.dart" as _lib_kernel_v1_errors;
 
+// -----------------------------------------------------------------------------
 // struct ServiceBinding.Bound
+// -----------------------------------------------------------------------------
 
 sealed class ServiceBinding_Bound_orMutable {
   _core.String get organizationId;
@@ -49,7 +51,7 @@ final class ServiceBinding_Bound implements ServiceBinding_Bound_orMutable {
   static ServiceBinding_Bound_mutable mutable() =>
       ServiceBinding_Bound_mutable._("", null);
 
-  /// Returns this instance (no operation).
+  /// Returns this instance (no-op).
   @_core.Deprecated("This instance is already frozen.")
   @_core.override
   ServiceBinding_Bound toFrozen() => this;
@@ -139,7 +141,9 @@ final class ServiceBinding_Bound_mutable
   ).._u = this._u;
 }
 
+// -----------------------------------------------------------------------------
 // enum ServiceBinding
+// -----------------------------------------------------------------------------
 
 /// To switch on the variants:
 ///   ```
@@ -282,7 +286,9 @@ final class ServiceBinding_boundWrapper extends _ServiceBinding_wrapper {
   ServiceBinding_kind get kind => ServiceBinding_kind.boundWrapper;
 }
 
+// -----------------------------------------------------------------------------
 // struct RegistrationLease
+// -----------------------------------------------------------------------------
 
 sealed class RegistrationLease_orMutable {
   _core.String get token;
@@ -314,7 +320,7 @@ final class RegistrationLease implements RegistrationLease_orMutable {
   static RegistrationLease_mutable mutable() =>
       RegistrationLease_mutable._("", _skir.unixEpoch);
 
-  /// Returns this instance (no operation).
+  /// Returns this instance (no-op).
   @_core.Deprecated("This instance is already frozen.")
   @_core.override
   RegistrationLease toFrozen() => this;
@@ -394,7 +400,9 @@ final class RegistrationLease_mutable implements RegistrationLease_orMutable {
         .._u = this._u;
 }
 
+// -----------------------------------------------------------------------------
 // struct QueryServiceBindingRequest
+// -----------------------------------------------------------------------------
 
 sealed class QueryServiceBindingRequest_orMutable {
   QueryServiceBindingRequest toFrozen();
@@ -417,7 +425,7 @@ final class QueryServiceBindingRequest
   static QueryServiceBindingRequest_mutable mutable() =>
       QueryServiceBindingRequest_mutable._();
 
-  /// Returns this instance (no operation).
+  /// Returns this instance (no-op).
   @_core.Deprecated("This instance is already frozen.")
   @_core.override
   QueryServiceBindingRequest toFrozen() => this;
@@ -480,7 +488,9 @@ final class QueryServiceBindingRequest_mutable
       QueryServiceBindingRequest().._u = this._u;
 }
 
+// -----------------------------------------------------------------------------
 // struct QueryServiceBindingResponse.Binding
+// -----------------------------------------------------------------------------
 
 sealed class QueryServiceBindingResponse_Binding_orMutable {
   ServiceBinding get binding;
@@ -511,7 +521,7 @@ final class QueryServiceBindingResponse_Binding
   static QueryServiceBindingResponse_Binding_mutable mutable() =>
       QueryServiceBindingResponse_Binding_mutable._(ServiceBinding.unknown);
 
-  /// Returns this instance (no operation).
+  /// Returns this instance (no-op).
   @_core.Deprecated("This instance is already frozen.")
   @_core.override
   QueryServiceBindingResponse_Binding toFrozen() => this;
@@ -584,7 +594,9 @@ final class QueryServiceBindingResponse_Binding_mutable
       QueryServiceBindingResponse_Binding(binding: this.binding).._u = this._u;
 }
 
+// -----------------------------------------------------------------------------
 // struct QueryServiceBindingResponse.ServiceNotFoundError
+// -----------------------------------------------------------------------------
 
 sealed class QueryServiceBindingResponse_ServiceNotFoundError_orMutable {
   QueryServiceBindingResponse_ServiceNotFoundError toFrozen();
@@ -609,7 +621,7 @@ final class QueryServiceBindingResponse_ServiceNotFoundError
   static QueryServiceBindingResponse_ServiceNotFoundError_mutable mutable() =>
       QueryServiceBindingResponse_ServiceNotFoundError_mutable._();
 
-  /// Returns this instance (no operation).
+  /// Returns this instance (no-op).
   @_core.Deprecated("This instance is already frozen.")
   @_core.override
   QueryServiceBindingResponse_ServiceNotFoundError toFrozen() => this;
@@ -674,7 +686,9 @@ final class QueryServiceBindingResponse_ServiceNotFoundError_mutable
       QueryServiceBindingResponse_ServiceNotFoundError().._u = this._u;
 }
 
+// -----------------------------------------------------------------------------
 // enum QueryServiceBindingResponse
+// -----------------------------------------------------------------------------
 
 /// To switch on the variants:
 ///   ```
@@ -866,7 +880,9 @@ final class QueryServiceBindingResponse_internalErrorWrapper
       QueryServiceBindingResponse_kind.internalErrorWrapper;
 }
 
+// -----------------------------------------------------------------------------
 // struct EnsureRegistrationLeaseRequest
+// -----------------------------------------------------------------------------
 
 sealed class EnsureRegistrationLeaseRequest_orMutable {
   EnsureRegistrationLeaseRequest toFrozen();
@@ -890,7 +906,7 @@ final class EnsureRegistrationLeaseRequest
   static EnsureRegistrationLeaseRequest_mutable mutable() =>
       EnsureRegistrationLeaseRequest_mutable._();
 
-  /// Returns this instance (no operation).
+  /// Returns this instance (no-op).
   @_core.Deprecated("This instance is already frozen.")
   @_core.override
   EnsureRegistrationLeaseRequest toFrozen() => this;
@@ -953,7 +969,9 @@ final class EnsureRegistrationLeaseRequest_mutable
       EnsureRegistrationLeaseRequest().._u = this._u;
 }
 
+// -----------------------------------------------------------------------------
 // struct EnsureRegistrationLeaseResponse.AlreadyBound
+// -----------------------------------------------------------------------------
 
 sealed class EnsureRegistrationLeaseResponse_AlreadyBound_orMutable {
   _core.String get organizationId;
@@ -995,7 +1013,7 @@ final class EnsureRegistrationLeaseResponse_AlreadyBound
   static EnsureRegistrationLeaseResponse_AlreadyBound_mutable mutable() =>
       EnsureRegistrationLeaseResponse_AlreadyBound_mutable._("", null);
 
-  /// Returns this instance (no operation).
+  /// Returns this instance (no-op).
   @_core.Deprecated("This instance is already frozen.")
   @_core.override
   EnsureRegistrationLeaseResponse_AlreadyBound toFrozen() => this;
@@ -1092,7 +1110,9 @@ final class EnsureRegistrationLeaseResponse_AlreadyBound_mutable
       ).._u = this._u;
 }
 
+// -----------------------------------------------------------------------------
 // struct EnsureRegistrationLeaseResponse.ServiceNotFoundError
+// -----------------------------------------------------------------------------
 
 sealed class EnsureRegistrationLeaseResponse_ServiceNotFoundError_orMutable {
   EnsureRegistrationLeaseResponse_ServiceNotFoundError toFrozen();
@@ -1117,7 +1137,7 @@ final class EnsureRegistrationLeaseResponse_ServiceNotFoundError
   static EnsureRegistrationLeaseResponse_ServiceNotFoundError_mutable
   mutable() => EnsureRegistrationLeaseResponse_ServiceNotFoundError_mutable._();
 
-  /// Returns this instance (no operation).
+  /// Returns this instance (no-op).
   @_core.Deprecated("This instance is already frozen.")
   @_core.override
   EnsureRegistrationLeaseResponse_ServiceNotFoundError toFrozen() => this;
@@ -1183,7 +1203,9 @@ final class EnsureRegistrationLeaseResponse_ServiceNotFoundError_mutable
       EnsureRegistrationLeaseResponse_ServiceNotFoundError().._u = this._u;
 }
 
+// -----------------------------------------------------------------------------
 // enum EnsureRegistrationLeaseResponse
+// -----------------------------------------------------------------------------
 
 /// To switch on the variants:
 ///   ```

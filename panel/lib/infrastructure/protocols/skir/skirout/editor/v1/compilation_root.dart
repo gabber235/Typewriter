@@ -17,7 +17,9 @@ import "package:skir_client/skir_client.dart" as _skir;
 
 import "./type_catalog.dart" as _lib_editor_v1_type_catalog;
 
+// -----------------------------------------------------------------------------
 // struct CompilationProjectionId
+// -----------------------------------------------------------------------------
 
 sealed class CompilationProjectionId_orMutable {
   _core.String get value;
@@ -45,7 +47,7 @@ final class CompilationProjectionId
   static CompilationProjectionId_mutable mutable() =>
       CompilationProjectionId_mutable._("");
 
-  /// Returns this instance (no operation).
+  /// Returns this instance (no-op).
   @_core.Deprecated("This instance is already frozen.")
   @_core.override
   CompilationProjectionId toFrozen() => this;
@@ -118,7 +120,9 @@ final class CompilationProjectionId_mutable
       CompilationProjectionId(value: this.value).._u = this._u;
 }
 
+// -----------------------------------------------------------------------------
 // struct CompilationRoot
+// -----------------------------------------------------------------------------
 
 sealed class CompilationRoot_orMutable {
   CompilationProjectionId_orMutable get projection;
@@ -158,7 +162,7 @@ final class CompilationRoot implements CompilationRoot_orMutable {
     _lib_editor_v1_type_catalog.ResourceId.defaultInstance,
   );
 
-  /// Returns this instance (no operation).
+  /// Returns this instance (no-op).
   @_core.Deprecated("This instance is already frozen.")
   @_core.override
   CompilationRoot toFrozen() => this;
@@ -231,7 +235,7 @@ final class CompilationRoot_mutable implements CompilationRoot_orMutable {
 
   CompilationRoot_mutable._(this.projection, this.resource);
 
-  /// If the value of [projection] is already mutable, returns it as is.
+  /// If the value of [projection] is already mutable, returns it as-is.
   /// Otherwise, makes a mutable copy, assigns it back to [projection] and returns it.
   CompilationProjectionId_mutable get mutableProjection {
     final value = this.projection;
@@ -242,7 +246,7 @@ final class CompilationRoot_mutable implements CompilationRoot_orMutable {
     }
   }
 
-  /// If the value of [resource] is already mutable, returns it as is.
+  /// If the value of [resource] is already mutable, returns it as-is.
   /// Otherwise, makes a mutable copy, assigns it back to [resource] and returns it.
   _lib_editor_v1_type_catalog.ResourceId_mutable get mutableResource {
     final value = this.resource;
