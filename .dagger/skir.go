@@ -48,7 +48,7 @@ func (m *Typewriter) protocolGenerationContainer(source *dagger.Directory) *dagg
 		WithWorkdir("/workspace").
 		WithExec([]string{"git", "init", "--quiet"}).
 		WithExec([]string{"git", "add", "--all", "--force"}).
-		WithExec([]string{"bun", "install", "--frozen-lockfile"}).
+		WithExec([]string{"bun", "install", "--frozen-lockfile", "--ignore-scripts"}).
 		WithExec([]string{"bun", "run", "generate:protocol"}).
 		WithExec([]string{"git", "clean", "-fdX", "--quiet"})
 }
@@ -62,7 +62,7 @@ func (m *Typewriter) ProtocolGenerationCheck(
 	source *dagger.Directory,
 ) *dagger.Container {
 	return m.protocolGenerationContainer(source).
-		WithExec([]string{"sh", "-c", "git add --all --force && git diff --cached --exit-code --stat"})
+		WithExec([]string{"sh", "-c", "git add --all --intent-to-add && git diff --exit-code --stat"})
 }
 
 // +check
