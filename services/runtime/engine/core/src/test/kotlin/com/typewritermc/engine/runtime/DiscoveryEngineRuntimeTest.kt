@@ -16,7 +16,9 @@ import com.typewritermc.types.catalog.DefaultCheckedCatalog
 import de.infix.testBalloon.framework.core.testSuite
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.matchers.collections.shouldContainExactly
+import io.kotest.matchers.nulls.shouldNotBeNull
 import io.kotest.matchers.shouldBe
+import io.kotest.matchers.types.shouldBeSameInstanceAs
 import kotlinx.coroutines.test.TestScope
 import kotlinx.coroutines.test.runTest
 
@@ -68,20 +70,17 @@ val DiscoveryEngineRuntimeTest by testSuite {
         }
     }
 
-    test("assembly failure retains the active content snapshot") {
+    test("admission failure retains the active compiled graph") {
         runTest {
             val gateway =
-                AssemblingEngineContentGateway(
-                    listOf(
-                        PageCompiledArtifactConsumer(
-                            catalog = EMPTY_CATALOG,
-                            bindings = FactoryNativeBindingRegistry(EMPTY_CATALOG, emptyList()),
-                            relations = emptyList(),
-                        ),
-                    ),
+                PageContentGateway(
+                    catalog = EMPTY_CATALOG,
+                    bindings = FactoryNativeBindingRegistry(EMPTY_CATALOG, emptyList()),
+                    relations = emptyList(),
                 )
             val active = content(1, '4')
             gateway.apply(active)
+            val graph = gateway.graph.shouldNotBeNull()
 
             shouldThrow<IllegalArgumentException> {
                 gateway.apply(
@@ -91,7 +90,7 @@ val DiscoveryEngineRuntimeTest by testSuite {
                 )
             }
 
-            gateway.snapshot.value?.descriptor shouldBe active.descriptor
+            gateway.graph shouldBeSameInstanceAs graph
         }
     }
 

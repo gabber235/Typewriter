@@ -15,8 +15,8 @@ import com.typewritermc.types.TypewriterType
 /**
  * Marks entries accepted by the core sequence graph page.
  *
- * The marker defines an editor role. Runtime registrars own execution setup, while engine content consumers own typed
- * [com.typewritermc.engine.runtime.EngineContentFacet] assembly from compiled artifacts.
+ * The marker defines an editor role. Runtime registrars own execution setup, while
+ * [com.typewritermc.engine.runtime.PageContentGateway] admits compiled artifacts into the engine resource graph.
  */
 interface SequenceEntry : Entry {
     override val page: Ref<PageElements.Element, SequencePage>

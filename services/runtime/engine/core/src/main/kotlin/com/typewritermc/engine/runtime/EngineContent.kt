@@ -1,22 +1,15 @@
 package com.typewritermc.engine.runtime
 
-import com.typewritermc.elements.Cue
-import com.typewritermc.elements.Element
 import com.typewritermc.engine.CompilationProjectionId
-import com.typewritermc.engine.CompiledArtifactReference
-import com.typewritermc.engine.CompiledResourceKey
 import com.typewritermc.engine.LoadedCompiledArtifact
 import com.typewritermc.engine.LoadedPublishedContent
 import com.typewritermc.engine.PAGE_COMPILATION_FORMAT_REVISION
 import com.typewritermc.engine.PUBLISHED_CONTENT_FORMAT_REVISION
-import com.typewritermc.engine.PublishedContent
 import com.typewritermc.engine.RuntimeCompilationFacts
 import com.typewritermc.engine.decodeCompiledPageShard
 import com.typewritermc.types.NativeBindingRegistry
 import com.typewritermc.types.RelationContract
 import com.typewritermc.types.catalog.CheckedCatalog
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.StateFlow
 
 /**
  * Accepts loaded compiled content at the engine content boundary.
@@ -27,68 +20,34 @@ fun interface EngineContentGateway {
     suspend fun apply(content: LoadedPublishedContent)
 }
 
-/** Typed identity for one independently contributed engine content facet. */
-class EngineContentFacet<Value : Any>(
-    val id: String,
-) {
-    init {
-        require(id.isNotBlank()) { "Engine content facet ids must not be blank." }
-    }
-
-    override fun equals(other: Any?): Boolean = other is EngineContentFacet<*> && id == other.id
-
-    override fun hashCode(): Int = id.hashCode()
-}
-
-/** Mutable assembly target that rejects competing owners for one content facet. */
-class EngineContentBuilder {
-    private val values = linkedMapOf<EngineContentFacet<*>, Any>()
-
-    fun <Value : Any> set(
-        facet: EngineContentFacet<Value>,
-        value: Value,
-    ) {
-        require(values.put(facet, value) == null) { "Engine content facet ${facet.id} was contributed more than once." }
-    }
-
-    internal fun build(descriptor: PublishedContent): EngineContentSnapshot = EngineContentSnapshot(descriptor, values.toMap())
-}
-
-/** Publishes all registered content facets after every consumer assembles successfully. */
-data class EngineContentSnapshot(
-    val descriptor: PublishedContent,
-    private val facets: Map<EngineContentFacet<*>, Any>,
-) {
-    @Suppress("UNCHECKED_CAST")
-    operator fun <Value : Any> get(facet: EngineContentFacet<Value>): Value? = facets[facet] as? Value
-
-    val graph: CompiledResourceGraph?
-        get() = get(Resources)
-
-    val elements: Map<CompiledResourceKey, Element>
-        get() = graph?.elements.orEmpty()
-
-    val cues: Map<CompiledResourceKey, Cue>
-        get() = graph?.cues.orEmpty()
-
-    companion object {
-        val Resources = EngineContentFacet<CompiledResourceGraph>("typewriter.resources")
-    }
-}
-
-/** Decodes and contributes the Page projection without making the generic delivery path Page specific. */
-class PageCompiledArtifactConsumer(
+/**
+ * Admits complete Page publications and holds the compiled resource graph of the last accepted one.
+ *
+ * Every artifact must be a Page shard whose payload matches its manifest and passes admission against the
+ * execution catalog. [graph] changes only after the whole publication is admitted, so any decoding or admission
+ * failure retains the previous graph. The delivery owner serializes [apply].
+ */
+class PageContentGateway(
     private val catalog: CheckedCatalog,
     private val bindings: NativeBindingRegistry,
     private val relations: Collection<RelationContract>,
-) : CompiledArtifactConsumer {
-    override val projection: CompilationProjectionId = CompilationProjectionId("typewriter.page")
-    override val mediaType: String = PAGE_MEDIA_TYPE
+) : EngineContentGateway {
+    @Volatile
+    var graph: CompiledResourceGraph? = null
+        private set
 
-    private fun decode(
-        reference: CompiledArtifactReference,
-        payload: ByteArray,
-    ): RuntimeCompilationFacts {
+    override suspend fun apply(content: LoadedPublishedContent) {
+        require(content.descriptor.formatRevision == PUBLISHED_CONTENT_FORMAT_REVISION) {
+            "Unsupported compiled content format ${content.descriptor.formatRevision}."
+        }
+        val facts = content.artifacts.map { it.admittedPageFacts() }
+        graph = CompiledResourceGraph.assemble(facts, relations, catalog, bindings)
+    }
+
+    private fun LoadedCompiledArtifact.admittedPageFacts(): RuntimeCompilationFacts {
+        require(reference.root.projection == PAGE_PROJECTION && reference.mediaType == PAGE_MEDIA_TYPE) {
+            "Engine content does not support ${reference.root.projection.value} and ${reference.mediaType}."
+        }
         val shard = payload.decodeCompiledPageShard()
         require(shard.digest == reference.semanticDigest) {
             "Compiled Page artifact identity does not match its manifest."
@@ -104,43 +63,9 @@ class PageCompiledArtifactConsumer(
         return facts
     }
 
-    override fun contribute(
-        artifacts: List<LoadedCompiledArtifact>,
-        target: EngineContentBuilder,
-    ) {
-        val facts = artifacts.map { decode(it.reference, it.payload) }
-        target.set(
-            EngineContentSnapshot.Resources,
-            CompiledResourceGraph.assemble(facts, relations, catalog, bindings),
-        )
-    }
-
     companion object {
+        val PAGE_PROJECTION = CompilationProjectionId("typewriter.page")
         const val PAGE_MEDIA_TYPE = "application/vnd.typewriter.page+json"
-    }
-}
-
-/**
- * Owns the engine visible snapshot assembled from one complete publication.
- *
- * Consumers fill a fresh [EngineContentBuilder]. The snapshot changes only after every consumer returns,
- * so decoding, admission, or contribution failure retains the previous snapshot. Consumers own the meaning
- * of their facets; the gateway owns the single publication point for their combined state.
- */
-class AssemblingEngineContentGateway(
-    consumers: Collection<CompiledArtifactConsumer>,
-) : EngineContentGateway {
-    private val consumers = CompiledArtifactConsumerRegistry(consumers)
-    private val mutableSnapshot = MutableStateFlow<EngineContentSnapshot?>(null)
-    val snapshot: StateFlow<EngineContentSnapshot?> = mutableSnapshot
-
-    override suspend fun apply(content: LoadedPublishedContent) {
-        require(content.descriptor.formatRevision == PUBLISHED_CONTENT_FORMAT_REVISION) {
-            "Unsupported compiled content format ${content.descriptor.formatRevision}."
-        }
-        val target = EngineContentBuilder()
-        consumers.contribute(content, target)
-        mutableSnapshot.value = target.build(content.descriptor)
     }
 }
 

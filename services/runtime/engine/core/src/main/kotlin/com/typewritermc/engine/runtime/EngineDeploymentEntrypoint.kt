@@ -67,16 +67,7 @@ class EngineDeploymentEntrypoint : HostedRuntimeEntrypoint {
                 implementationToken = implementation.fingerprint(),
                 enforceImplementationCompatibility =
                     context.identity.placement == RuntimePlacement.PRIMARY_ENGINE,
-                contentGateway =
-                    AssemblingEngineContentGateway(
-                        listOf(
-                            PageCompiledArtifactConsumer(
-                                assembly.checked,
-                                assembly.bindings,
-                                assembly.snapshot.relations,
-                            ),
-                        ),
-                    ),
+                contentGateway = PageContentGateway(assembly.checked, assembly.bindings, assembly.snapshot.relations),
                 contentDelivery = MessagingEngineContentDelivery(context.host, context.identity.realmId, parentScope),
             )
         } catch (failure: Throwable) {

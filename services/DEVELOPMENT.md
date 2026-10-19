@@ -62,7 +62,7 @@ Imprint assembles one canonical manifest for each artifact. KSP processors contr
 
 `DeploymentRuntimeOwners` resolves generated providers, capability owners, and registrars from one deployment scoped set of explicitly supplied runtime services. Realm and engines use the same construction policy. Owner instances are shared within that deployment and are never borrowed from a global registry. `RuntimeScope` owns activated effects, while `RuntimeCleanupOwner` disposes registered resources in reverse order and preserves cleanup failures.
 
-Generated registrars contribute runtime setup only to their declared domains. Compiled artifact producers own source specific compilation, while engine content consumers assemble compiled artifacts into typed `EngineContentFacet` values. Element declarations provide authored data and editor semantics. They do not own execution setup or compiled content assembly.
+Generated registrars contribute runtime setup only to their declared domains. Compiled artifact producers own source specific compilation, while the engine content gateway admits compiled artifacts into the engine resource graph. Element declarations provide authored data and editor semantics. They do not own execution setup or compiled content assembly.
 
 The conformance extension proves declared type identities, generated prototypes, element descriptors, source part eligibility, generated registrars, and engine targeting.
 

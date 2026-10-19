@@ -3,7 +3,6 @@ package com.typewritermc.engine.runtime
 import com.typewritermc.authoring.PublicationId
 import com.typewritermc.checking.CatalogGeneration
 import com.typewritermc.engine.CompilationContext
-import com.typewritermc.engine.CompilationProjectionId
 import com.typewritermc.engine.CompilationRoot
 import com.typewritermc.engine.CompiledArtifactReference
 import com.typewritermc.engine.CompiledBlobPointer
@@ -151,9 +150,9 @@ private fun activation(
         shards.map { shard ->
             PublishedOutput(
                 CompiledArtifactReference(
-                    CompilationRoot(CompilationProjectionId("typewriter.page"), shard.facts.root.source),
+                    CompilationRoot(PageContentGateway.PAGE_PROJECTION, shard.facts.root.source),
                     shard.facts.formatRevision,
-                    PageCompiledArtifactConsumer.PAGE_MEDIA_TYPE,
+                    PageContentGateway.PAGE_MEDIA_TYPE,
                     shard.digest,
                 ),
                 blobs.put(Json.encodeToString(shard).encodeToByteArray()),
