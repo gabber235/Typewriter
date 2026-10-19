@@ -14,95 +14,6 @@
 //   cargo add skir-client
 
 // ==============================================================================
-// enum InspectionCompletion
-// ==============================================================================
-
-/// Describes whether an inspection covered its requested scope. Interrupted inspections may
-/// still return useful partial matches, but cannot establish that omitted matches do not exist.
-#[derive(Debug, Clone, PartialEq)]
-pub enum InspectionCompletion {
-    Unknown(Option<crate::skir_client::UnrecognizedVariant<InspectionCompletion>>),
-    Complete,
-    Interrupted(String),
-}
-
-impl Default for InspectionCompletion {
-    fn default() -> Self {
-        InspectionCompletion::Unknown(None)
-    }
-}
-
-impl InspectionCompletion {
-    fn _adapter() -> &'static crate::skir_client::internal::EnumAdapter<InspectionCompletion> {
-        static ADAPTER: std::sync::LazyLock<
-            crate::skir_client::internal::EnumAdapter<InspectionCompletion>,
-        > = std::sync::LazyLock::new(|| {
-            crate::skir_client::internal::EnumAdapter::new(
-                |x: &InspectionCompletion| match x {
-                    InspectionCompletion::Unknown(_) => 0,
-                    InspectionCompletion::Complete => 1,
-                    InspectionCompletion::Interrupted(_) => 2,
-                },
-                |u| InspectionCompletion::Unknown(Some(u)),
-                |x: &InspectionCompletion| match x {
-                    InspectionCompletion::Unknown(Some(u)) => Some(u.as_ref()),
-                    _ => None,
-                },
-                "editor/v1/checking.skir",
-                "InspectionCompletion",
-                "Describes whether an inspection covered its requested scope. Interrupted inspections may\nstill return useful partial matches, but cannot establish that omitted matches do not exist.",
-            )
-        });
-        &*ADAPTER
-    }
-    pub fn serializer() -> crate::skir_client::Serializer<InspectionCompletion> {
-        initialize_module_serializers();
-        crate::skir_client::internal::enum_serializer_from_static(InspectionCompletion::_adapter())
-    }
-}
-
-// ==============================================================================
-// struct UndecidedCandidate
-// ==============================================================================
-
-#[derive(Clone, Debug, PartialEq, Default)]
-pub struct UndecidedCandidate {
-    pub resource: crate::skirout::base::editor::v1::type_catalog::ResourceId,
-    pub inputs: Vec<crate::skirout::base::editor::v1::type_catalog::ValueLocation>,
-    /// Set this to None when you're creating a struct.
-    pub _unrecognized: Option<crate::skir_client::UnrecognizedFields<UndecidedCandidate>>,
-}
-
-impl UndecidedCandidate {
-    pub fn default_ref() -> &'static UndecidedCandidate {
-        static D: std::sync::LazyLock<UndecidedCandidate> =
-            std::sync::LazyLock::new(UndecidedCandidate::default);
-        &D
-    }
-}
-
-impl UndecidedCandidate {
-    fn _adapter() -> &'static crate::skir_client::internal::StructAdapter<UndecidedCandidate> {
-        static ADAPTER: std::sync::LazyLock<
-            crate::skir_client::internal::StructAdapter<UndecidedCandidate>,
-        > = std::sync::LazyLock::new(|| {
-            crate::skir_client::internal::StructAdapter::new(
-                "editor/v1/checking.skir",
-                "UndecidedCandidate",
-                "",
-                |x: &UndecidedCandidate| &x._unrecognized,
-                |x: &mut UndecidedCandidate, u| x._unrecognized = u,
-            )
-        });
-        &*ADAPTER
-    }
-    pub fn serializer() -> crate::skir_client::Serializer<UndecidedCandidate> {
-        initialize_module_serializers();
-        crate::skir_client::internal::struct_serializer_from_static(UndecidedCandidate::_adapter())
-    }
-}
-
-// ==============================================================================
 // enum CheckOutcome
 // ==============================================================================
 
@@ -373,95 +284,11 @@ impl CheckResult {
 }
 
 // ==============================================================================
-// struct SelectionInspection
-// ==============================================================================
-
-#[derive(Clone, Debug, PartialEq, Default)]
-pub struct SelectionInspection {
-    pub known_matches: Vec<crate::skirout::base::editor::v1::type_catalog::ResourceId>,
-    pub undecided: Vec<UndecidedCandidate>,
-    pub completion: InspectionCompletion,
-    pub failures: Vec<crate::skirout::base::editor::v1::expression::EvaluationDiagnostic>,
-    /// Set this to None when you're creating a struct.
-    pub _unrecognized: Option<crate::skir_client::UnrecognizedFields<SelectionInspection>>,
-}
-
-impl SelectionInspection {
-    pub fn default_ref() -> &'static SelectionInspection {
-        static D: std::sync::LazyLock<SelectionInspection> =
-            std::sync::LazyLock::new(SelectionInspection::default);
-        &D
-    }
-}
-
-impl SelectionInspection {
-    fn _adapter() -> &'static crate::skir_client::internal::StructAdapter<SelectionInspection> {
-        static ADAPTER: std::sync::LazyLock<
-            crate::skir_client::internal::StructAdapter<SelectionInspection>,
-        > = std::sync::LazyLock::new(|| {
-            crate::skir_client::internal::StructAdapter::new(
-                "editor/v1/checking.skir",
-                "SelectionInspection",
-                "",
-                |x: &SelectionInspection| &x._unrecognized,
-                |x: &mut SelectionInspection, u| x._unrecognized = u,
-            )
-        });
-        &*ADAPTER
-    }
-    pub fn serializer() -> crate::skir_client::Serializer<SelectionInspection> {
-        initialize_module_serializers();
-        crate::skir_client::internal::struct_serializer_from_static(SelectionInspection::_adapter())
-    }
-}
-
-// ==============================================================================
 // initialize_module_serializers()
 // ==============================================================================
 
 fn initialize_module_serializers() {
     static INIT: std::sync::LazyLock<()> = std::sync::LazyLock::new(|| {
-        unsafe {
-            let a: *mut crate::skir_client::internal::EnumAdapter<InspectionCompletion> =
-                InspectionCompletion::_adapter() as *const _ as *mut _;
-            (*a).add_constant_variant("complete", 1, 1, "", InspectionCompletion::Complete);
-            (*a).add_wrapper_variant(
-                "interrupted",
-                2,
-                2,
-                crate::skir_client::Serializer::string(),
-                "",
-                |v| InspectionCompletion::Interrupted(v),
-                |x| match x {
-                    InspectionCompletion::Interrupted(v) => v,
-                    _ => unreachable!(),
-                },
-            );
-            (*a).finalize();
-        }
-        unsafe {
-            let a: *mut crate::skir_client::internal::StructAdapter<UndecidedCandidate> =
-                UndecidedCandidate::_adapter() as *const _ as *mut _;
-            (*a).add_field(
-                "resource",
-                0,
-                crate::skirout::base::editor::v1::type_catalog::ResourceId::serializer(),
-                "",
-                |x: &UndecidedCandidate| &x.resource,
-                |x: &mut UndecidedCandidate, v| x.resource = v,
-            );
-            (*a).add_field(
-                "inputs",
-                1,
-                crate::skir_client::Serializer::array(
-                    crate::skirout::base::editor::v1::type_catalog::ValueLocation::serializer(),
-                ),
-                "",
-                |x: &UndecidedCandidate| &x.inputs,
-                |x: &mut UndecidedCandidate, v| x.inputs = v,
-            );
-            (*a).finalize();
-        }
         unsafe {
             let a: *mut crate::skir_client::internal::EnumAdapter<CheckOutcome> =
                 CheckOutcome::_adapter() as *const _ as *mut _;
@@ -643,54 +470,6 @@ fn initialize_module_serializers() {
                 "",
                 |x: &CheckResult| &x.findings,
                 |x: &mut CheckResult, v| x.findings = v,
-            );
-            (*a).finalize();
-        }
-        unsafe {
-            let a: *mut crate::skir_client::internal::StructAdapter<SelectionInspection> =
-                SelectionInspection::_adapter() as *const _ as *mut _;
-            (*a).add_field(
-                "known_matches",
-                0,
-                crate::skir_client::Serializer::array(
-                    crate::skirout::base::editor::v1::type_catalog::ResourceId::serializer(),
-                ),
-                "",
-                |x: &SelectionInspection| &x.known_matches,
-                |x: &mut SelectionInspection, v| x.known_matches = v,
-            );
-            (*a).add_field(
-                "undecided",
-                1,
-                crate::skir_client::Serializer::array(
-                    crate::skir_client::internal::struct_serializer_from_static(
-                        UndecidedCandidate::_adapter(),
-                    ),
-                ),
-                "",
-                |x: &SelectionInspection| &x.undecided,
-                |x: &mut SelectionInspection, v| x.undecided = v,
-            );
-            (*a).add_field(
-                "completion",
-                2,
-                crate::skir_client::internal::enum_serializer_from_static(
-                    InspectionCompletion::_adapter(),
-                ),
-                "",
-                |x: &SelectionInspection| &x.completion,
-                |x: &mut SelectionInspection, v| x.completion = v,
-            );
-            (*a).add_field(
-                "failures",
-                3,
-                crate::skir_client::Serializer::array(
-                    crate::skirout::base::editor::v1::expression::EvaluationDiagnostic::serializer(
-                    ),
-                ),
-                "",
-                |x: &SelectionInspection| &x.failures,
-                |x: &mut SelectionInspection, v| x.failures = v,
             );
             (*a).finalize();
         }

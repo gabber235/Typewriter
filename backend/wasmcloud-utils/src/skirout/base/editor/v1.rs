@@ -22,7 +22,6 @@ pub mod catalog_presentation;
 pub mod checking;
 pub mod compilation_root;
 pub mod compiled_content;
-pub mod conversion;
 pub mod diagnostic;
 pub mod expression;
 pub mod operation;

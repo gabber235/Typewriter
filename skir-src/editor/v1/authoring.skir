@@ -118,14 +118,6 @@ struct PresentationSubject(812200013) {
   descriptor: DataValue = 3;
 }
 
-enum PresentationSubjectChange(812200014) {
-  upsert: struct {
-    resource: ResourceId = 0;
-    subject: PresentationSubject = 1;
-  } = 1;
-  remove: ResourceId = 2;
-}
-
 struct AuthoringDiagnostic(812200015) {
   code: string = 0;
   message: string = 1;
@@ -299,24 +291,6 @@ struct AuthoringSearchResult(812200042) {
   generation: CatalogGeneration = 0;
   hits: [AuthoringSearchHit] = 1;
   diagnostics: [Diagnostic] = 2;
-}
-
-enum CollectionProjectionSource(812200043) {
-  resource_id = 1;
-  content: ValuePath = 2;
-  literal: DataValue = 3;
-}
-
-struct CollectionProjectionField(812200044) {
-  target: ValuePath = 0;
-  source: CollectionProjectionSource = 1;
-}
-
-struct CollectionProjectionDefinition(812200045) {
-  source_id: string = 0;
-  root: TypeDefinitionId = 1;
-  row_type: NamedTypeUse = 2;
-  fields: [CollectionProjectionField] = 3;
 }
 
 struct AuthoringStateTransferChunk(812200046) {

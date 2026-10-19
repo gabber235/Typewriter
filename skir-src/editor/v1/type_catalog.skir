@@ -331,9 +331,6 @@ struct RelationId(810100070) {
 struct RelationFamilyId(810100071) {
   value: string = 0;
 }
-struct TypeCatalog(810100072) {
-  definitions: [TypeDefinition] = 0;
-}
 
 struct ScalarResolvedRepresentation(810100073) {
   kind: ScalarKind = 0;

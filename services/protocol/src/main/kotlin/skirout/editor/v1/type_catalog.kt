@@ -9386,131 +9386,6 @@ class RelationFamilyId private constructor(
     }
 }
 
-sealed interface TypeCatalog_OrMutable {
-    val definitions: kotlin.collections.List<skirout.editor.v1.type_catalog.TypeDefinition_OrMutable>;
-
-    fun toFrozen(): skirout.editor.v1.type_catalog.TypeCatalog;
-}
-
-/** Deeply immutable. */
-@kotlin.Suppress("UNUSED_PARAMETER")
-class TypeCatalog private constructor(
-    override val definitions: kotlin.collections.List<skirout.editor.v1.type_catalog.TypeDefinition>,
-    internal val _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.type_catalog.TypeCatalog>? =
-        null,
-): skirout.editor.v1.type_catalog.TypeCatalog_OrMutable {
-    constructor(
-        _mustNameArguments: _MustNameArguments =
-            _MustNameArguments,
-        definitions: kotlin.collections.Iterable<skirout.editor.v1.type_catalog.TypeDefinition_OrMutable>,
-        _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.type_catalog.TypeCatalog>? =
-            null,
-    ): this(
-        build.skir.internal.toFrozenList(definitions, { it.toFrozen() }),
-        _unrecognizedFields,
-    ) {}
-
-    @kotlin.Deprecated("Already frozen", kotlin.ReplaceWith("this"))
-    override fun toFrozen() = this;
-
-    /** Returns a mutable shallow copy of this instance */
-    fun toMutable() = Mutable(
-        definitions = this.definitions,
-    );
-
-    /** Returns a shallow copy of this instance with the specified fields replaced. */
-    fun copy(
-        _mustNameArguments: _MustNameArguments =
-            _MustNameArguments,
-        definitions: kotlin.collections.Iterable<skirout.editor.v1.type_catalog.TypeDefinition_OrMutable> =
-            this.definitions,
-    ) = skirout.editor.v1.type_catalog.TypeCatalog(
-        build.skir.internal.toFrozenList(definitions, { it.toFrozen() }),
-        this._unrecognizedFields,
-    );
-
-    @kotlin.Deprecated("No point in creating an exact copy of an immutable object", kotlin.ReplaceWith("this"))
-    fun copy() = this;
-
-    override fun equals(other: kotlin.Any?): kotlin.Boolean {
-        return this === other || (other is skirout.editor.v1.type_catalog.TypeCatalog && this.definitions == other.definitions);
-    }
-
-    override fun hashCode(): kotlin.Int {
-        return kotlin.collections.listOf<kotlin.Any?>(this.definitions).hashCode();
-    }
-
-    override fun toString(): kotlin.String {
-        return build.skir.internal.toStringImpl(
-            this,
-            _SerializerRegistry.TypeCatalogSerializerImpl,
-        )
-    }
-
-    /** Mutable version of [TypeCatalog]. */
-    class Mutable internal constructor(
-        _mustNameArguments: _MustNameArguments =
-            _MustNameArguments,
-        override var definitions: kotlin.collections.List<skirout.editor.v1.type_catalog.TypeDefinition_OrMutable> =
-            build.skir.internal.emptyFrozenList<skirout.editor.v1.type_catalog.TypeDefinition>(),
-        internal var _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.type_catalog.TypeCatalog>? =
-            null,
-    ): skirout.editor.v1.type_catalog.TypeCatalog_OrMutable {
-        /** Returns a deeply immutable copy of this instance */
-        override fun toFrozen() = skirout.editor.v1.type_catalog.TypeCatalog(
-            definitions = this.definitions,
-            _unrecognizedFields = this._unrecognizedFields,
-        );
-
-        /**
-         * If the value of [definitions] is already mutable, returns it as-is.
-         * Otherwise, makes a mutable copy, assigns it back to [definitions] and returns it.
-         */
-        val mutableDefinitions: kotlin.collections.MutableList<skirout.editor.v1.type_catalog.TypeDefinition_OrMutable> get() {
-            var value = this.definitions;
-            return when (value) {
-                is build.skir.internal.MutableList -> value;
-                else -> {
-                    value = build.skir.internal.MutableList(value);
-                    this.definitions = value;
-                    value;
-                }
-            }
-        }
-    }
-
-    companion object {
-        private val default =
-            skirout.editor.v1.type_catalog.TypeCatalog(
-                build.skir.internal.emptyFrozenList<skirout.editor.v1.type_catalog.TypeDefinition>(),
-            );
-
-        /** Returns an instance with all fields set to their default values. */
-        fun partial() = default;
-
-        /**
-         * Creates a new instance of [TypeCatalog].
-         * Unlike the constructor, does not require all fields to be specified.
-         * Missing fields will be set to their default values.
-         */
-        fun partial(
-            _mustNameArguments: _MustNameArguments =
-                _MustNameArguments,
-            definitions: kotlin.collections.Iterable<skirout.editor.v1.type_catalog.TypeDefinition_OrMutable> =
-                build.skir.internal.emptyFrozenList<skirout.editor.v1.type_catalog.TypeDefinition>(),
-        ) = skirout.editor.v1.type_catalog.TypeCatalog(
-            definitions = definitions,
-            _unrecognizedFields = null,
-        );
-
-        /** Serializer for [TypeCatalog] instances. */
-        val serializer get() = _SerializerRegistry.TypeCatalogSerializer;
-
-        /** Describes the [TypeCatalog] type. Provides runtime introspection capabilities. */
-        val typeDescriptor get() = _SerializerRegistry.TypeCatalogSerializerImpl.typeDescriptor;
-    }
-}
-
 sealed interface ScalarResolvedRepresentation_OrMutable {
     val kind: skirout.editor.v1.type_catalog.ScalarKind;
 
@@ -13170,18 +13045,6 @@ private object _SerializerRegistry {
 
     val SequenceResolvedRepresentationSerializer = build.skir.internal.makeSerializer(SequenceResolvedRepresentationSerializerImpl);
 
-    val TypeCatalogSerializerImpl = build.skir.internal.StructSerializer(
-        recordId = "editor/v1/type_catalog.skir:TypeCatalog",
-        doc = "",
-        defaultInstance = skirout.editor.v1.type_catalog.TypeCatalog.partial(),
-        newMutableFn = { it?.toMutable() ?: skirout.editor.v1.type_catalog.TypeCatalog.Mutable() },
-        toFrozenFn = { it.toFrozen() },
-        getUnrecognizedFields = { it._unrecognizedFields },
-        setUnrecognizedFields = { m, u -> m._unrecognizedFields = u },
-    );
-
-    val TypeCatalogSerializer = build.skir.internal.makeSerializer(TypeCatalogSerializerImpl);
-
     val TypeDefinitionSerializerImpl = build.skir.internal.StructSerializer(
         recordId = "editor/v1/type_catalog.skir:TypeDefinition",
         doc = "Canonical declaration meaning before application of generic arguments and inherited fields.\nDisplay metadata, editor controls, and native constructors are owned by adjacent catalog services.",
@@ -15038,19 +14901,6 @@ private object _SerializerRegistry {
             { mut, v -> mut.kind = v },
         );
         SequenceResolvedRepresentationSerializerImpl.finalizeStruct();
-
-        TypeCatalogSerializerImpl.addField(
-            "definitions",
-            "definitions",
-            0,
-            build.skir.Serializers.list(
-                _SerializerRegistry.TypeDefinitionSerializer,
-            ),
-            "",
-            { it.definitions },
-            { mut, v -> mut.definitions = v },
-        );
-        TypeCatalogSerializerImpl.finalizeStruct();
 
         TypeDefinitionSerializerImpl.addField(
             "id",

@@ -1,7 +1,5 @@
 import {
-  DataValue,
   ExpressionBindingId,
-  TypeUse,
   ValuePath,
 } from "editor/v1/type_catalog.skir";
 
@@ -10,22 +8,4 @@ import {
 struct BindingRef(810400001) {
   path: ValuePath = 0;
   binding_id: ExpressionBindingId = 1;
-}
-
-struct ResolvedBinding(810400002) {
-  reference: BindingRef = 0;
-  value_type: TypeUse = 1;
-  value: DataValue = 2;
-  writable: bool = 3;
-  revision: int64 = 4;
-}
-
-struct BindingDiagnostic(810400003) {
-  code: string = 0;
-  message: string = 1;
-}
-
-enum BindingResolution(810400004) {
-  resolved: ResolvedBinding = 1;
-  diagnostics: [BindingDiagnostic] = 2;
 }

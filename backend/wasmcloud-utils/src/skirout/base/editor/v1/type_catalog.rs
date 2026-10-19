@@ -3094,45 +3094,6 @@ impl RelationFamilyId {
 }
 
 // ==============================================================================
-// struct TypeCatalog
-// ==============================================================================
-
-#[derive(Clone, Debug, PartialEq, Default)]
-pub struct TypeCatalog {
-    pub definitions: Vec<TypeDefinition>,
-    /// Set this to None when you're creating a struct.
-    pub _unrecognized: Option<crate::skir_client::UnrecognizedFields<TypeCatalog>>,
-}
-
-impl TypeCatalog {
-    pub fn default_ref() -> &'static TypeCatalog {
-        static D: std::sync::LazyLock<TypeCatalog> = std::sync::LazyLock::new(TypeCatalog::default);
-        &D
-    }
-}
-
-impl TypeCatalog {
-    fn _adapter() -> &'static crate::skir_client::internal::StructAdapter<TypeCatalog> {
-        static ADAPTER: std::sync::LazyLock<
-            crate::skir_client::internal::StructAdapter<TypeCatalog>,
-        > = std::sync::LazyLock::new(|| {
-            crate::skir_client::internal::StructAdapter::new(
-                "editor/v1/type_catalog.skir",
-                "TypeCatalog",
-                "",
-                |x: &TypeCatalog| &x._unrecognized,
-                |x: &mut TypeCatalog, u| x._unrecognized = u,
-            )
-        });
-        &*ADAPTER
-    }
-    pub fn serializer() -> crate::skir_client::Serializer<TypeCatalog> {
-        initialize_module_serializers();
-        crate::skir_client::internal::struct_serializer_from_static(TypeCatalog::_adapter())
-    }
-}
-
-// ==============================================================================
 // struct ScalarResolvedRepresentation
 // ==============================================================================
 
@@ -5551,23 +5512,6 @@ fn initialize_module_serializers() {
                 "",
                 |x: &RelationFamilyId| &x.value,
                 |x: &mut RelationFamilyId, v| x.value = v,
-            );
-            (*a).finalize();
-        }
-        unsafe {
-            let a: *mut crate::skir_client::internal::StructAdapter<TypeCatalog> =
-                TypeCatalog::_adapter() as *const _ as *mut _;
-            (*a).add_field(
-                "definitions",
-                0,
-                crate::skir_client::Serializer::array(
-                    crate::skir_client::internal::struct_serializer_from_static(
-                        TypeDefinition::_adapter(),
-                    ),
-                ),
-                "",
-                |x: &TypeCatalog| &x.definitions,
-                |x: &mut TypeCatalog, v| x.definitions = v,
             );
             (*a).finalize();
         }

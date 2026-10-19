@@ -4,26 +4,12 @@
 
 import { EditExpectation } from "editor/v1/authoring_facts.skir";
 import { Diagnostic } from "editor/v1/diagnostic.skir";
-import { EvaluationDiagnostic } from "editor/v1/expression.skir";
 import {
   CatalogGeneration,
   CheckExecutionId,
-  ResourceId,
   RuleId,
   ValueLocation,
 } from "editor/v1/type_catalog.skir";
-
-/// Describes whether an inspection covered its requested scope. Interrupted inspections may
-/// still return useful partial matches, but cannot establish that omitted matches do not exist.
-enum InspectionCompletion(811300001) {
-  complete = 1;
-  interrupted: string = 2;
-}
-
-struct UndecidedCandidate(811300002) {
-  resource: ResourceId = 0;
-  inputs: [ValueLocation] = 1;
-}
 
 /// Evaluation completion, separate from the diagnostics it emitted. finished may still have
 /// error findings; needs_input, failed, and incomplete cannot establish publication readiness.
@@ -68,11 +54,4 @@ struct CheckResult(811300008) {
   outcome: CheckOutcome = 1;
   expectations: [EditExpectation] = 2;
   findings: [Diagnostic] = 3;
-}
-
-struct SelectionInspection(811300009) {
-  known_matches: [ResourceId] = 0;
-  undecided: [UndecidedCandidate] = 1;
-  completion: InspectionCompletion = 2;
-  failures: [EvaluationDiagnostic] = 3;
 }

@@ -24,7 +24,6 @@ export "skirout/editor/v1/catalog_presentation.dart";
 export "skirout/editor/v1/checking.dart";
 export "skirout/editor/v1/compilation_root.dart";
 export "skirout/editor/v1/compiled_content.dart";
-export "skirout/editor/v1/conversion.dart";
 export "skirout/editor/v1/diagnostic.dart";
 export "skirout/editor/v1/expression.dart";
 export "skirout/editor/v1/operation.dart";

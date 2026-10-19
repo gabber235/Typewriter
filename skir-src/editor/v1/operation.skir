@@ -4,7 +4,10 @@
 // preparation remain separate from labels, grouping, and primary operation nomination.
 
 import { EditorAction } from "editor/v1/action.skir";
-import { ButtonVariant, HeaderActionTone } from "editor/v1/presentation.skir";
+import {
+  ButtonVariant,
+  HeaderActionTone,
+} from "editor/v1/presentation.skir";
 import {
   PresentationId,
   TypeTemplate,
