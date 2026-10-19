@@ -4,7 +4,7 @@ import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
 import "package:typewriter_panel/typewriter_panel.dart";
 import "package:typewriter_testkit/typewriter_testkit.dart";
 
-import "../../../../../support/test_utils.dart";
+import "../../../../support/test_utils.dart";
 
 void main() {
   testWidgets("resource collection lookup binds the selected authored row", (

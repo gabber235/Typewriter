@@ -7,7 +7,7 @@ import "package:typewriter_testkit/typewriter_testkit.dart";
 final _refProvider = Provider<Ref>((ref) => ref);
 
 void main() {
-  test("Realm results replace the removed local element type index", () async {
+  test("an empty query issues one Realm search and becomes ready", () async {
     final fixture = _fixture();
     addTearDown(fixture.container.dispose);
     addTearDown(fixture.subscription.close);

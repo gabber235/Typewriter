@@ -4,7 +4,7 @@ import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
 import "package:typewriter_panel/typewriter_panel.dart";
 import "package:typewriter_testkit/typewriter_testkit.dart";
 
-import "../../../support/editor_fixture.dart";
+import "../../support/editor_fixture.dart";
 
 const _key = EditorResourceKey(
   scope: "original organization",

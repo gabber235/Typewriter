@@ -3,7 +3,7 @@ import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
     as skir;
 import "package:typewriter_panel/typewriter_panel.dart";
 
-import "../../../../../../../../../../../../../support/test_utils.dart";
+import "../../../support/test_utils.dart";
 
 void main() {
   testWidgets("does not register realm mode shortcuts while suspended", (

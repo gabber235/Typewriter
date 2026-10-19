@@ -313,9 +313,7 @@ void main() {
     },
   );
 
-  testWidgets("ordinary book opening still opens the page editor", (
-    tester,
-  ) async {
+  testWidgets("ordinary book opening opens the page editor", (tester) async {
     final fixture = _navigation();
     final resource = fixture.document.entry(_book.bookId)!;
 
