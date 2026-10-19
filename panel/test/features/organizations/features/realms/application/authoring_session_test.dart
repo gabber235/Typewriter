@@ -4,6 +4,7 @@ import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
 import "package:typewriter_panel/typewriter_panel.dart";
 import "package:typewriter_testkit/src/infrastructure/messaging/nats.dart";
 
+import "../../../../../support/catalog_fixture.dart";
 import "../../../../../support/provider_test_utils.dart";
 
 const _catalogSubject =
@@ -17,7 +18,9 @@ const _catalogInvalidationEventSubject =
 
 void main() {
   test("current state exposes one coherent authored view", () {
-    final checked = CheckedEditorCatalog(_catalog());
+    final checked = CheckedEditorCatalog(
+      testCatalogSnapshot(generation: _generation),
+    );
     final state = AuthoringSessionState(
       snapshot: _snapshot("Initial", 1),
       catalog: checked,
@@ -31,7 +34,9 @@ void main() {
     final state = AuthoringSessionState(
       snapshot: _snapshot("Initial", 1),
       catalog: CheckedEditorCatalog(
-        _catalog(generation: skir.CatalogGeneration(value: "replacement")),
+        testCatalogSnapshot(
+          generation: skir.CatalogGeneration(value: "replacement"),
+        ),
       ),
     );
     expect(state.confirmedDocument, isNull);
@@ -276,7 +281,7 @@ Uint8List _snapshotResponse(skir.AuthoringState snapshot) {
 }
 
 Uint8List _catalogResponse({skir.CatalogGeneration? generation}) {
-  final catalog = _catalog(generation: generation ?? _generation);
+  final catalog = testCatalogSnapshot(generation: generation ?? _generation);
   final encoded = skir.EditorCatalogWireSnapshot.serializer.toBytes(catalog);
   return skir.CatalogFetchResult.serializer.toBytes(
     skir.CatalogFetchResult.wrapChunk(
@@ -287,25 +292,6 @@ Uint8List _catalogResponse({skir.CatalogGeneration? generation}) {
     ),
   );
 }
-
-skir.EditorCatalogWireSnapshot _catalog({skir.CatalogGeneration? generation}) =>
-    skir.EditorCatalogWireSnapshot(
-      resourceOperations: const [],
-      resourceOperationContributions: const [],
-      generation: generation ?? _generation,
-      types: const [],
-      relations: const [],
-      resourceDefinitions: const [],
-      presentations: const [],
-      presentationMaterials: const [],
-      configuration: const [],
-      diagnostics: const [],
-
-      endpointBindings: const [],
-      capabilities: const [],
-      recommendations: const [],
-      roleFallbacks: const [],
-    );
 
 skir.BoundedTransferChunk _transfer(String id, Uint8List encoded) =>
     skir.BoundedTransferChunk(

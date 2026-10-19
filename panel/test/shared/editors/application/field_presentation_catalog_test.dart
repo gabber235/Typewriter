@@ -4,6 +4,8 @@ import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
 import "package:typewriter_panel/typewriter_panel.dart";
 import "package:typewriter_testkit/typewriter_testkit.dart";
 
+import "../../../support/catalog_fixture.dart";
+
 void main() {
   test(
     "equal canonical nodes reused in local decoration remain unambiguous",
@@ -1141,17 +1143,15 @@ skir.PresentationMaterial _material(
 CheckedEditorCatalog _catalog(
   List<skir.PresentationDescriptor> descriptors,
   List<skir.PresentationMaterial> materials,
-) => CheckedEditorCatalog(
-  (skir.EditorCatalogWireSnapshot.defaultInstance.toMutable()
-        ..types = [
-          _type(_base, const []),
-          _type(_left, [_base]),
-          _type(_right, [_base]),
-          _type(_child, [_left, _right, _base]),
-        ]
-        ..presentations = descriptors
-        ..presentationMaterials = materials)
-      .toFrozen(),
+) => testCheckedCatalog(
+  types: [
+    _type(_base, const []),
+    _type(_left, [_base]),
+    _type(_right, [_base]),
+    _type(_child, [_left, _right, _base]),
+  ],
+  presentations: descriptors,
+  presentationMaterials: materials,
 );
 
 skir.PublishedType _type(

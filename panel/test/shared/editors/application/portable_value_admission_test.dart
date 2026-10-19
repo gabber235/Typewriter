@@ -3,26 +3,31 @@ import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
     as skir;
 import "package:typewriter_panel/typewriter_panel.dart";
 
+import "../../../support/catalog_fixture.dart";
+
 void main() {
   test(
     "inspection locates unfinished fields without admitting missing fields",
     () {
       final page = _definition("Page");
       final named = skir.NamedTypeUse(definition: page, arguments: const []);
-      final checked = _catalog([
-        _published(
-          page,
-          effectiveFields: [
-            for (final name in ["name", "title"])
-              skir.EffectiveFieldTemplate(
-                key: name,
-                owner: skir.FieldOwner(definition: page, name: name),
-                type: skir.TypeTemplate.wrapScalar(skir.ScalarKind.text),
-                rules: const [],
-              ),
-          ],
-        ),
-      ]);
+      final checked = testCheckedCatalog(
+        generation: _admissionGeneration,
+        types: [
+          _published(
+            page,
+            effectiveFields: [
+              for (final name in ["name", "title"])
+                skir.EffectiveFieldTemplate(
+                  key: name,
+                  owner: skir.FieldOwner(definition: page, name: name),
+                  type: skir.TypeTemplate.wrapScalar(skir.ScalarKind.text),
+                  rules: const [],
+                ),
+            ],
+          ),
+        ],
+      );
       skir.DataValue value(List<skir.FieldValue> fields) =>
           skir.DataValue.createNamed(
             actualType: named,
@@ -68,28 +73,31 @@ void main() {
       definition: chapter,
       arguments: const [],
     );
-    final checked = _catalog([
-      _published(
-        chapter,
-        representation: skir.RepresentationTemplate.createScalar(
-          kind: skir.ScalarKind.text,
-        ),
-      ),
-      _published(
-        page,
-        effectiveFields: [
-          skir.EffectiveFieldTemplate(
-            key: "chapter",
-            owner: skir.FieldOwner(definition: page, name: "chapter"),
-            type: skir.TypeTemplate.createNamed(
-              definition: chapter,
-              arguments: const [],
-            ),
-            rules: const [],
+    final checked = testCheckedCatalog(
+      generation: _admissionGeneration,
+      types: [
+        _published(
+          chapter,
+          representation: skir.RepresentationTemplate.createScalar(
+            kind: skir.ScalarKind.text,
           ),
-        ],
-      ),
-    ]);
+        ),
+        _published(
+          page,
+          effectiveFields: [
+            skir.EffectiveFieldTemplate(
+              key: "chapter",
+              owner: skir.FieldOwner(definition: page, name: "chapter"),
+              type: skir.TypeTemplate.createNamed(
+                definition: chapter,
+                arguments: const [],
+              ),
+              rules: const [],
+            ),
+          ],
+        ),
+      ],
+    );
     final payload = skir.DataValue.wrapStringValue("opening");
 
     expect(checked.admitsPortableValue(expected, payload), isFalse);
@@ -113,24 +121,27 @@ void main() {
     final marker = _definition("Marker");
     final box = _definition("Box");
     final parameter = skir.ParameterKey(owner: box, index: 0);
-    final checked = _catalog([
-      _published(marker),
-      _published(
-        box,
-        parameters: [
-          skir.TypeParameter(
-            key: parameter,
-            name: "T",
-            bounds: [
-              skir.TypeTemplate.createNamed(
-                definition: marker,
-                arguments: const [],
-              ),
-            ],
-          ),
-        ],
-      ),
-    ]);
+    final checked = testCheckedCatalog(
+      generation: _admissionGeneration,
+      types: [
+        _published(marker),
+        _published(
+          box,
+          parameters: [
+            skir.TypeParameter(
+              key: parameter,
+              name: "T",
+              bounds: [
+                skir.TypeTemplate.createNamed(
+                  definition: marker,
+                  arguments: const [],
+                ),
+              ],
+            ),
+          ],
+        ),
+      ],
+    );
     final invalid = skir.NamedTypeUse(
       definition: box,
       arguments: [skir.TypeUse.wrapScalar(skir.ScalarKind.text)],
@@ -168,12 +179,15 @@ void main() {
 
   test("rejects values whose declaration is unavailable", () {
     final unavailable = _definition("Unavailable");
-    final checked = _catalog([
-      _published(
-        unavailable,
-        status: skir.DeclarationStatus.wrapUnavailable(const []),
-      ),
-    ]);
+    final checked = testCheckedCatalog(
+      generation: _admissionGeneration,
+      types: [
+        _published(
+          unavailable,
+          status: skir.DeclarationStatus.wrapUnavailable(const []),
+        ),
+      ],
+    );
     final use = skir.NamedTypeUse(definition: unavailable, arguments: const []);
 
     expect(
@@ -196,14 +210,17 @@ void main() {
   test("rejects unknown scalar kinds inside named applications", () {
     final box = _definition("Box");
     final parameter = skir.ParameterKey(owner: box, index: 0);
-    final checked = _catalog([
-      _published(
-        box,
-        parameters: [
-          skir.TypeParameter(key: parameter, name: "T", bounds: const []),
-        ],
-      ),
-    ]);
+    final checked = testCheckedCatalog(
+      generation: _admissionGeneration,
+      types: [
+        _published(
+          box,
+          parameters: [
+            skir.TypeParameter(key: parameter, name: "T", bounds: const []),
+          ],
+        ),
+      ],
+    );
     final applications = [
       skir.NamedTypeUse(
         definition: box,
@@ -240,27 +257,6 @@ void main() {
   });
 }
 
-CheckedEditorCatalog _catalog(List<skir.PublishedType> published) =>
-    CheckedEditorCatalog(
-      skir.EditorCatalogWireSnapshot(
-        resourceOperations: const [],
-        resourceOperationContributions: const [],
-        generation: skir.CatalogGeneration(value: "catalog:admission"),
-        types: published,
-        relations: const [],
-        resourceDefinitions: const [],
-        presentations: const [],
-        presentationMaterials: const [],
-        configuration: const [],
-        diagnostics: const [],
-
-        endpointBindings: const [],
-        capabilities: const [],
-        recommendations: const [],
-        roleFallbacks: const [],
-      ),
-    );
-
 skir.PublishedType _published(
   skir.TypeDefinitionId definition, {
   List<skir.TypeParameter> parameters = const [],
@@ -295,3 +291,5 @@ skir.TypeDefinitionId _definition(String name) => skir.TypeDefinitionId(
   typeId: skir.TypeId.createQualified(namespace: "test", name: name),
   revision: 1,
 );
+
+final _admissionGeneration = skir.CatalogGeneration(value: "catalog:admission");

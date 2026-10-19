@@ -4,6 +4,8 @@ import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
 import "package:typewriter_panel/typewriter_panel.dart";
 import "package:typewriter_testkit/typewriter_testkit.dart";
 
+import "../../../../../../../support/catalog_fixture.dart";
+
 final _refProvider = Provider<Ref>((ref) => ref);
 
 void main() {
@@ -228,59 +230,46 @@ CheckedEditorCatalog _catalog({
     cardinality: skir.EndpointCardinality.many,
     onDelete: skir.RelationDeletePolicy.cascade,
   );
-  return CheckedEditorCatalog(
-    skir.EditorCatalogWireSnapshot(
-      resourceOperations: const [],
-      resourceOperationContributions: const [],
-      generation: skir.CatalogGeneration(value: "catalog:test"),
-      types: [
-        _published(
-          book,
-          display: skir.TypeDisplay(
-            name: "Quest Book",
-            description: "A reusable quest collection",
-            icon: "material-symbols:book",
-            color: "#3F51B5",
-          ),
+  return testCheckedCatalog(
+    generation: skir.CatalogGeneration(value: "catalog:test"),
+    types: [
+      _published(
+        book,
+        display: skir.TypeDisplay(
+          name: "Quest Book",
+          description: "A reusable quest collection",
+          icon: "material-symbols:book",
+          color: "#3F51B5",
         ),
-        _published(entry, abstract: true),
-        _published(_definition("SimpleMessage"), parent: entry),
-        if (manyEntries) ...[
-          for (var index = 0; index < 25; index++)
-            _published(_definition("Entry$index"), parent: entry),
-          _published(_definition("ZMessage"), parent: entry),
-        ],
+      ),
+      _published(entry, abstract: true),
+      _published(_definition("SimpleMessage"), parent: entry),
+      if (manyEntries) ...[
+        for (var index = 0; index < 25; index++)
+          _published(_definition("Entry$index"), parent: entry),
+        _published(_definition("ZMessage"), parent: entry),
       ],
-      relations: [
-        skir.RelationContract(
-          id: skir.RelationId(value: "book.entries"),
-          first: reversedOwnership ? child : owner,
-          second: reversedOwnership ? owner : child,
-          families: [skir.RelationFamilyId(value: "resource.ownership")],
-        ),
-      ],
-      resourceDefinitions: [
-        skir.AuthoringResourceDefinition(
-          id: skir.ResourceDefinitionId(value: "test.book"),
-          root: book,
-          navigationHandler: skir.AuthoringNavigationHandler.generic,
-        ),
-        skir.AuthoringResourceDefinition(
-          id: skir.ResourceDefinitionId(value: "test.entry"),
-          root: entry,
-          navigationHandler: skir.AuthoringNavigationHandler.generic,
-        ),
-      ],
-      presentations: const [],
-      presentationMaterials: const [],
-      configuration: const [],
-      diagnostics: const [],
-
-      endpointBindings: const [],
-      capabilities: const [],
-      recommendations: const [],
-      roleFallbacks: const [],
-    ),
+    ],
+    relations: [
+      skir.RelationContract(
+        id: skir.RelationId(value: "book.entries"),
+        first: reversedOwnership ? child : owner,
+        second: reversedOwnership ? owner : child,
+        families: [skir.RelationFamilyId(value: "resource.ownership")],
+      ),
+    ],
+    resourceDefinitions: [
+      skir.AuthoringResourceDefinition(
+        id: skir.ResourceDefinitionId(value: "test.book"),
+        root: book,
+        navigationHandler: skir.AuthoringNavigationHandler.generic,
+      ),
+      skir.AuthoringResourceDefinition(
+        id: skir.ResourceDefinitionId(value: "test.entry"),
+        root: entry,
+        navigationHandler: skir.AuthoringNavigationHandler.generic,
+      ),
+    ],
   );
 }
 

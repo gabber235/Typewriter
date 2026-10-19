@@ -4,6 +4,8 @@ import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
 import "package:typewriter_panel/typewriter_panel.dart";
 import "package:typewriter_testkit/typewriter_testkit.dart";
 
+import "../../../support/catalog_fixture.dart";
+
 final _catalog = CheckedEditorCatalog(
   skir.EditorCatalogWireSnapshot.defaultInstance,
 );
@@ -204,16 +206,18 @@ void main() {
         owner: setUse.value.definition,
         index: 0,
       );
-      final setCatalog = _typeCatalog([
-        _published(
-          setUse.value.definition,
-          skir.RepresentationTemplate.createSequence(
-            kind: skir.CollectionKind.set_,
-            item: skir.TypeTemplate.wrapParameter(setItem),
+      final setCatalog = testCheckedCatalog(
+        types: [
+          _published(
+            setUse.value.definition,
+            skir.RepresentationTemplate.createSequence(
+              kind: skir.CollectionKind.set_,
+              item: skir.TypeTemplate.wrapParameter(setItem),
+            ),
+            parameters: [setItem],
           ),
-          parameters: [setItem],
-        ),
-      ]);
+        ],
+      );
       expect(setCatalog.isReadyTypeUse(setUse), isTrue);
       expect(
         checkPortableExpression(
@@ -320,28 +324,30 @@ void main() {
     final boxItem = skir.ParameterKey(owner: box, index: 0);
     final key = skir.ParameterKey(owner: dictionary, index: 0);
     final value = skir.ParameterKey(owner: dictionary, index: 1);
-    final catalog = _typeCatalog([
-      _published(
-        box,
-        skir.RepresentationTemplate.createSequence(
-          kind: skir.CollectionKind.list,
-          item: skir.TypeTemplate.wrapParameter(boxItem),
+    final catalog = testCheckedCatalog(
+      types: [
+        _published(
+          box,
+          skir.RepresentationTemplate.createSequence(
+            kind: skir.CollectionKind.list,
+            item: skir.TypeTemplate.wrapParameter(boxItem),
+          ),
+          parameters: [boxItem],
         ),
-        parameters: [boxItem],
-      ),
-      _published(
-        dictionary,
-        skir.RepresentationTemplate.createMapping(
-          key: skir.TypeTemplate.wrapParameter(key),
-          value: skir.TypeTemplate.wrapParameter(value),
+        _published(
+          dictionary,
+          skir.RepresentationTemplate.createMapping(
+            key: skir.TypeTemplate.wrapParameter(key),
+            value: skir.TypeTemplate.wrapParameter(value),
+          ),
+          parameters: [key, value],
         ),
-        parameters: [key, value],
-      ),
-      _published(
-        caption,
-        skir.RepresentationTemplate.createScalar(kind: skir.ScalarKind.text),
-      ),
-    ]);
+        _published(
+          caption,
+          skir.RepresentationTemplate.createScalar(kind: skir.ScalarKind.text),
+        ),
+      ],
+    );
     final boxUse = skir.TypeUse.createNamed(
       definition: box,
       arguments: [_text],
@@ -497,18 +503,20 @@ void main() {
       ),
       parameters: [key],
     );
-    final catalog = _typeCatalog([
-      (published.toMutable()
-            ..effectiveFields = [
-              skir.EffectiveFieldTemplate(
-                key: "title",
-                owner: owner,
-                type: text,
-                rules: const [],
-              ),
-            ])
-          .toFrozen(),
-    ]);
+    final catalog = testCheckedCatalog(
+      types: [
+        (published.toMutable()
+              ..effectiveFields = [
+                skir.EffectiveFieldTemplate(
+                  key: "title",
+                  owner: owner,
+                  type: text,
+                  rules: const [],
+                ),
+              ])
+            .toFrozen(),
+      ],
+    );
     final selection = skir.TypeSelection.createPending(
       definition: root,
       arguments: [skir.ArgumentSelection.unfilled],
@@ -680,9 +688,3 @@ skir.PublishedType _published(
   effectiveFields: const [],
   ancestorTemplates: const [],
 );
-CheckedEditorCatalog _typeCatalog(List<skir.PublishedType> types) =>
-    CheckedEditorCatalog(
-      (skir.EditorCatalogWireSnapshot.defaultInstance.toMutable()
-            ..types = types)
-          .toFrozen(),
-    );

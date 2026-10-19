@@ -5,6 +5,8 @@ import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
 import "package:typewriter_panel/typewriter_panel.dart";
 import "package:typewriter_testkit/typewriter_testkit.dart";
 
+import "../../../../support/catalog_fixture.dart";
+
 void main() {
   test(
     "HTTP context survives mapping into the typed row presentation",
@@ -462,7 +464,9 @@ _SearchFixture _fixture({
   String historyNamespace = "user:test:organization:test",
 }) {
   final generation = skir.CatalogGeneration(value: "catalog:test");
-  final catalog = CheckedEditorCatalog(_catalog(generation));
+  final catalog = CheckedEditorCatalog(
+    testCatalogSnapshot(generation: generation),
+  );
   final chosen = selected ?? skir.DataValue.wrapStringValue("chosen");
   final rowRead = skir.ExpressionNode.createInput(
     binding: _rowBinding,
@@ -590,25 +594,6 @@ skir.SearchProvider _staticProvider(
     selectors: const [],
   );
 }
-
-skir.EditorCatalogWireSnapshot _catalog(skir.CatalogGeneration generation) =>
-    skir.EditorCatalogWireSnapshot(
-      resourceOperations: const [],
-      resourceOperationContributions: const [],
-      generation: generation,
-      types: const [],
-      relations: const [],
-      resourceDefinitions: const [],
-      presentations: const [],
-      presentationMaterials: const [],
-      configuration: const [],
-      diagnostics: const [],
-
-      endpointBindings: const [],
-      capabilities: const [],
-      recommendations: const [],
-      roleFallbacks: const [],
-    );
 
 Future<SearchResult> _firstResult(SearchSource source) async {
   final ready = source.snapshots.firstWhere(

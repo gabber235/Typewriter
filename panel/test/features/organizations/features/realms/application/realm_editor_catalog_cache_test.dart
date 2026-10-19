@@ -3,9 +3,11 @@ import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
     as skir;
 import "package:typewriter_panel/typewriter_panel.dart";
 
+import "../../../../../support/catalog_fixture.dart";
+
 void main() {
   test("checked catalog retains the complete received snapshot", () {
-    final received = _catalog(
+    final received = testCatalogSnapshot(
       generation: skir.CatalogGeneration(value: "catalog:7"),
     );
     final checked = CheckedEditorCatalog(received);
@@ -37,7 +39,9 @@ void main() {
     );
     final state = AuthoringSessionState(
       snapshot: snapshot,
-      catalog: CheckedEditorCatalog(_catalog(generation: generation)),
+      catalog: CheckedEditorCatalog(
+        testCatalogSnapshot(generation: generation),
+      ),
     );
 
     expect(state.snapshot, snapshot);
@@ -56,30 +60,12 @@ void main() {
     final state = AuthoringSessionState(
       snapshot: snapshot,
       catalog: CheckedEditorCatalog(
-        _catalog(generation: skir.CatalogGeneration(value: "catalog:8")),
+        testCatalogSnapshot(
+          generation: skir.CatalogGeneration(value: "catalog:8"),
+        ),
       ),
     );
 
     expect(state.confirmedDocument, isNull);
   });
 }
-
-skir.EditorCatalogWireSnapshot _catalog({
-  required skir.CatalogGeneration generation,
-}) => skir.EditorCatalogWireSnapshot(
-  resourceOperations: const [],
-  resourceOperationContributions: const [],
-  generation: generation,
-  types: const [],
-  relations: const [],
-  resourceDefinitions: const [],
-  presentations: const [],
-  presentationMaterials: const [],
-  configuration: const [],
-  diagnostics: const [],
-
-  endpointBindings: const [],
-  capabilities: const [],
-  recommendations: const [],
-  roleFallbacks: const [],
-);

@@ -4,6 +4,8 @@ import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
 import "package:typewriter_panel/typewriter_panel.dart";
 import "package:typewriter_testkit/typewriter_testkit.dart";
 
+import "../../../support/catalog_fixture.dart";
+
 void main() {
   test(
     "canonical resource fields remain pinned across same generation documents",
@@ -1080,24 +1082,22 @@ CheckedEditorCatalog _catalog({bool generic = false, bool display = true}) {
     ),
     parents: const [],
   );
-  return CheckedEditorCatalog(
-    (skir.EditorCatalogWireSnapshot.mutable()
-          ..types = [
-            _published(
-              page,
-              display: display
-                  ? skir.TypeDisplay(
-                      name: "Page",
-                      description: "Page type",
-                      icon: "page",
-                      color: "#336699",
-                    )
-                  : null,
-            ),
-            _published(other),
-            _published(resourceId),
-          ])
-        .toFrozen(),
+  return testCheckedCatalog(
+    types: [
+      _published(
+        page,
+        display: display
+            ? skir.TypeDisplay(
+                name: "Page",
+                description: "Page type",
+                icon: "page",
+                color: "#336699",
+              )
+            : null,
+      ),
+      _published(other),
+      _published(resourceId),
+    ],
   );
 }
 

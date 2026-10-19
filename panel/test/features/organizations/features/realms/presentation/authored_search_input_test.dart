@@ -4,6 +4,7 @@ import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
     as skir;
 import "package:typewriter_panel/typewriter_panel.dart";
 
+import "../../../../../support/catalog_fixture.dart";
 import "../../../../../support/test_utils.dart";
 
 void main() {
@@ -61,7 +62,11 @@ void main() {
         },
         budget: skir.EvaluationBudget(maxSteps: 100, maxCollectionItems: 100),
         host: _TestHost(
-          catalog: CheckedEditorCatalog(_emptyCatalog("configured.search")),
+          catalog: CheckedEditorCatalog(
+            testCatalogSnapshot(
+              generation: skir.CatalogGeneration(value: "configured.search"),
+            ),
+          ),
           initial: skir.DataValue.wrapStringValue(""),
           onWrite: (_) {},
         ),
@@ -230,7 +235,11 @@ void main() {
       },
       budget: skir.EvaluationBudget(maxSteps: 100, maxCollectionItems: 100),
       host: _TestHost(
-        catalog: CheckedEditorCatalog(_emptyCatalog("catalog:static")),
+        catalog: CheckedEditorCatalog(
+          testCatalogSnapshot(
+            generation: skir.CatalogGeneration(value: "catalog:static"),
+          ),
+        ),
         initial: skir.DataValue.wrapStringValue("Alpha"),
         onWrite: (value) => written = value,
       ),
@@ -289,7 +298,11 @@ void main() {
               maxCollectionItems: 100,
             ),
             host: _TestHost(
-              catalog: CheckedEditorCatalog(_emptyCatalog("catalog:empty")),
+              catalog: CheckedEditorCatalog(
+                testCatalogSnapshot(
+                  generation: skir.CatalogGeneration(value: "catalog:empty"),
+                ),
+              ),
               initial: skir.DataValue.wrapStringValue(""),
               onWrite: (value) => written = value,
             ),
@@ -511,7 +524,11 @@ void main() {
   testWidgets("late selection cannot close a rebound search input", (
     tester,
   ) async {
-    final catalog = CheckedEditorCatalog(_emptyCatalog("catalog:pending"));
+    final catalog = CheckedEditorCatalog(
+      testCatalogSnapshot(
+        generation: skir.CatalogGeneration(value: "catalog:pending"),
+      ),
+    );
     final completion = Completer<PortablePresentationWriteResult>();
     final pendingHost = _TestHost(
       catalog: catalog,
@@ -668,25 +685,6 @@ final class _TrackingClient extends MockClient {
     super.close();
   }
 }
-
-skir.EditorCatalogWireSnapshot _emptyCatalog(String generation) =>
-    skir.EditorCatalogWireSnapshot(
-      resourceOperations: const [],
-      resourceOperationContributions: const [],
-      generation: skir.CatalogGeneration(value: generation),
-      types: const [],
-      relations: const [],
-      resourceDefinitions: const [],
-      presentations: const [],
-      presentationMaterials: const [],
-      configuration: const [],
-      diagnostics: const [],
-
-      endpointBindings: const [],
-      capabilities: const [],
-      recommendations: const [],
-      roleFallbacks: const [],
-    );
 
 final class _TestHost extends ChangeNotifier
     implements PortablePresentationHost {

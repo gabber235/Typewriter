@@ -3,9 +3,16 @@ import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
     as skir;
 import "package:typewriter_panel/typewriter_panel.dart";
 
+import "../../../../../support/catalog_fixture.dart";
+
 void main() {
   test("adopts a complete transfer only after every validated chunk", () {
-    final fixture = _TransferFixture(_snapshot("catalog:2"), chunkCount: 3);
+    final fixture = _TransferFixture(
+      testCatalogSnapshot(
+        generation: skir.CatalogGeneration(value: "catalog:2"),
+      ),
+      chunkCount: 3,
+    );
     final assembler = catalogTransferAssembler();
 
     expect(
@@ -26,7 +33,12 @@ void main() {
   });
 
   test("rejects chunks belonging to another scoped transfer", () {
-    final fixture = _TransferFixture(_snapshot("catalog:2"), chunkCount: 2);
+    final fixture = _TransferFixture(
+      testCatalogSnapshot(
+        generation: skir.CatalogGeneration(value: "catalog:2"),
+      ),
+      chunkCount: 2,
+    );
     final assembler = catalogTransferAssembler()..accept(fixture.chunk(0));
 
     expect(
@@ -48,7 +60,12 @@ void main() {
   });
 
   test("rejects duplicate indexes and changed shared metadata", () {
-    final fixture = _TransferFixture(_snapshot("catalog:2"), chunkCount: 2);
+    final fixture = _TransferFixture(
+      testCatalogSnapshot(
+        generation: skir.CatalogGeneration(value: "catalog:2"),
+      ),
+      chunkCount: 2,
+    );
     final duplicates = catalogTransferAssembler()..accept(fixture.chunk(0));
 
     expect(
@@ -66,7 +83,12 @@ void main() {
   });
 
   test("rejects corrupted bytes from the transfer stream", () async {
-    final fixture = _TransferFixture(_snapshot("catalog:2"), chunkCount: 2);
+    final fixture = _TransferFixture(
+      testCatalogSnapshot(
+        generation: skir.CatalogGeneration(value: "catalog:2"),
+      ),
+      chunkCount: 2,
+    );
     final last = fixture.chunk(1);
     final corrupted = Uint8List.fromList(
       last.transfer.payload.asUnmodifiableList,
@@ -91,8 +113,15 @@ void main() {
   });
 
   test("retains the active catalog when the final chunk never arrives", () async {
-    final active = _snapshot("catalog:1");
-    final fixture = _TransferFixture(_snapshot("catalog:2"), chunkCount: 2);
+    final active = testCatalogSnapshot(
+      generation: skir.CatalogGeneration(value: "catalog:1"),
+    );
+    final fixture = _TransferFixture(
+      testCatalogSnapshot(
+        generation: skir.CatalogGeneration(value: "catalog:2"),
+      ),
+      chunkCount: 2,
+    );
     final chunks = StreamController<skir.CatalogTransferChunk>();
     var adopted = active;
     chunks.add(fixture.chunk(0));
@@ -111,7 +140,12 @@ void main() {
   });
 
   test("cancellation releases an incomplete catalog transfer", () async {
-    final fixture = _TransferFixture(_snapshot("catalog:2"), chunkCount: 2);
+    final fixture = _TransferFixture(
+      testCatalogSnapshot(
+        generation: skir.CatalogGeneration(value: "catalog:2"),
+      ),
+      chunkCount: 2,
+    );
     final chunks = StreamController<skir.CatalogTransferChunk>();
     final cancelled = Completer<void>();
     var sourceCancelled = false;
@@ -150,7 +184,12 @@ void main() {
   );
 
   test("bounds advertised and cumulative transfer sizes", () {
-    final fixture = _TransferFixture(_snapshot("catalog:2"), chunkCount: 1);
+    final fixture = _TransferFixture(
+      testCatalogSnapshot(
+        generation: skir.CatalogGeneration(value: "catalog:2"),
+      ),
+      chunkCount: 1,
+    );
     final chunk = fixture.chunk(0);
     final oversizedCount = skir.CatalogTransferChunk(
       generation: chunk.generation,
@@ -188,7 +227,9 @@ void main() {
 
   test("rejects a payload whose generation differs from transfer metadata", () {
     final fixture = _TransferFixture(
-      _snapshot("catalog:2"),
+      testCatalogSnapshot(
+        generation: skir.CatalogGeneration(value: "catalog:2"),
+      ),
       chunkCount: 1,
       transferGeneration: skir.CatalogGeneration(value: "catalog:3"),
     );
@@ -206,46 +247,14 @@ void main() {
   });
 }
 
-skir.EditorCatalogWireSnapshot _snapshot(String generation) =>
-    skir.EditorCatalogWireSnapshot(
-      resourceOperations: const [],
-      resourceOperationContributions: const [],
-      generation: skir.CatalogGeneration(value: generation),
-      types: const [],
-      relations: const [],
-      resourceDefinitions: const [],
-      presentations: const [],
-      presentationMaterials: const [],
-      configuration: const [],
-      diagnostics: const [],
-
-      endpointBindings: const [],
-      capabilities: const [],
-      recommendations: const [],
-      roleFallbacks: const [],
-    );
-
 skir.EditorCatalogWireSnapshot _largeSnapshot() {
   final types = [
     for (var typeIndex = 0; typeIndex < 5000; typeIndex++)
       _publishedType(typeIndex),
   ];
-  return skir.EditorCatalogWireSnapshot(
-    resourceOperations: const [],
-    resourceOperationContributions: const [],
+  return testCatalogSnapshot(
     generation: skir.CatalogGeneration(value: "catalog:large"),
     types: types,
-    relations: const [],
-    resourceDefinitions: const [],
-    presentations: const [],
-    presentationMaterials: const [],
-    configuration: const [],
-    diagnostics: const [],
-
-    endpointBindings: const [],
-    capabilities: const [],
-    recommendations: const [],
-    roleFallbacks: const [],
   );
 }
 

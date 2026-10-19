@@ -4,6 +4,8 @@ import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
 import "package:typewriter_panel/typewriter_panel.dart";
 import "package:typewriter_testkit/typewriter_testkit.dart";
 
+import "../../../support/catalog_fixture.dart";
+
 void main() {
   test("matches the shared portable expression corpus", () async {
     final source = await File(
@@ -1372,16 +1374,12 @@ skir.DataValue _map(String prefix, List<(String, String)> values) {
 }
 
 CheckedEditorCatalog _fixtureCatalog(Map<String, Object?> fixture) =>
-    CheckedEditorCatalog(
-      (skir.EditorCatalogWireSnapshot.defaultInstance.toMutable()
-            ..types = [
-              for (final encoded
-                  in fixture["typeDefinitions"] as List<Object?>? ?? const [])
-                _fixturePublished(
-                  skir.TypeDefinition.serializer.fromJson(encoded),
-                ),
-            ])
-          .toFrozen(),
+    testCheckedCatalog(
+      types: [
+        for (final encoded
+            in fixture["typeDefinitions"] as List<Object?>? ?? const [])
+          _fixturePublished(skir.TypeDefinition.serializer.fromJson(encoded)),
+      ],
     );
 
 skir.PublishedType _fixturePublished(skir.TypeDefinition definition) =>

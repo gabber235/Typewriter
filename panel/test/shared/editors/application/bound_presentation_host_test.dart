@@ -3,6 +3,8 @@ import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
     as skir;
 import "package:typewriter_panel/typewriter_panel.dart";
 
+import "../../../support/catalog_fixture.dart";
+
 void main() {
   test("document freezes caller owned containers", () {
     final bindings = <skir.ExpressionBindingId, PortablePresentationBinding>{
@@ -17,7 +19,7 @@ void main() {
     };
 
     final document = PortablePresentationDocument(
-      catalog: _emptyCatalog(),
+      catalog: testCheckedCatalog(),
       root: skir.PresentationNode.defaultInstance,
       bindings: bindings,
       budget: skir.EvaluationBudget.defaultInstance,
@@ -243,16 +245,22 @@ void main() {
     final message = _definition("Message");
     final textMessage = _definition("TextMessage");
     final textOwner = skir.FieldOwner(definition: textMessage, name: "text");
-    final catalog = _checkedCatalog([
-      _publishedType(message, abstract: true),
-      _publishedType(
-        textMessage,
-        parents: [_namedTemplate(message)],
-        fields: [
-          _field(textOwner, skir.TypeTemplate.wrapScalar(skir.ScalarKind.text)),
-        ],
-      ),
-    ]);
+    final catalog = testCheckedCatalog(
+      generation: _hostCatalogGeneration,
+      types: [
+        _publishedType(message, abstract: true),
+        _publishedType(
+          textMessage,
+          parents: [_namedTemplate(message)],
+          fields: [
+            _field(
+              textOwner,
+              skir.TypeTemplate.wrapScalar(skir.ScalarKind.text),
+            ),
+          ],
+        ),
+      ],
+    );
     final declared = skir.NamedTypeUse(
       definition: message,
       arguments: const [],
@@ -303,24 +311,27 @@ void main() {
     final variable = _definition("Variable");
     final parameter = skir.ParameterKey(owner: variable, index: 0);
     final valueOwner = skir.FieldOwner(definition: variable, name: "value");
-    final catalog = _checkedCatalog([
-      _publishedType(reward, abstract: true),
-      _publishedType(coin, parents: [_namedTemplate(reward)]),
-      _publishedType(item, parents: [_namedTemplate(reward)]),
-      _publishedType(
-        variable,
-        parameters: [
-          skir.TypeParameter(
-            key: parameter,
-            name: "T",
-            bounds: [skir.TypeTemplate.wrapNamed(_namedTemplate(reward))],
-          ),
-        ],
-        fields: [
-          _field(valueOwner, skir.TypeTemplate.wrapParameter(parameter)),
-        ],
-      ),
-    ]);
+    final catalog = testCheckedCatalog(
+      generation: _hostCatalogGeneration,
+      types: [
+        _publishedType(reward, abstract: true),
+        _publishedType(coin, parents: [_namedTemplate(reward)]),
+        _publishedType(item, parents: [_namedTemplate(reward)]),
+        _publishedType(
+          variable,
+          parameters: [
+            skir.TypeParameter(
+              key: parameter,
+              name: "T",
+              bounds: [skir.TypeTemplate.wrapNamed(_namedTemplate(reward))],
+            ),
+          ],
+          fields: [
+            _field(valueOwner, skir.TypeTemplate.wrapParameter(parameter)),
+          ],
+        ),
+      ],
+    );
     final declared = skir.NamedTypeUse(
       definition: variable,
       arguments: [
@@ -445,7 +456,7 @@ BoundPresentationHost _host({
   required Iterable<BoundPresentationBinding> bindings,
   CheckedEditorCatalog? catalog,
 }) => BoundPresentationHost(
-  catalog: catalog ?? _emptyCatalog(),
+  catalog: catalog ?? testCheckedCatalog(),
   root: () => skir.PresentationNode.defaultInstance,
   bindings: bindings,
   budget: skir.EvaluationBudget(maxSteps: 256, maxCollectionItems: 32),
@@ -463,9 +474,6 @@ BoundPresentationBinding _binding({
   write: write,
   owner: owner,
 );
-
-CheckedEditorCatalog _emptyCatalog() =>
-    CheckedEditorCatalog(skir.EditorCatalogWireSnapshot.defaultInstance);
 
 final _bindingId = skir.ExpressionBindingId(value: "value");
 final _presentationId = skir.PresentationId(
@@ -525,27 +533,6 @@ skir.PublishedType _publishedType(
   effectiveFields: fields,
   ancestorTemplates: parents,
 );
-
-CheckedEditorCatalog _checkedCatalog(List<skir.PublishedType> published) =>
-    CheckedEditorCatalog(
-      skir.EditorCatalogWireSnapshot(
-        resourceOperations: const [],
-        resourceOperationContributions: const [],
-        generation: _hostCatalogGeneration,
-        types: published,
-        relations: const [],
-        resourceDefinitions: const [],
-        presentations: const [],
-        presentationMaterials: const [],
-        configuration: const [],
-        diagnostics: const [],
-
-        endpointBindings: const [],
-        capabilities: const [],
-        recommendations: const [],
-        roleFallbacks: const [],
-      ),
-    );
 
 final _hostCatalogGeneration = skir.CatalogGeneration(value: "host:test");
 

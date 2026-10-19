@@ -2,6 +2,8 @@ import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
     as skir;
 import "package:typewriter_panel/typewriter_panel.dart";
 
+import "catalog_fixture.dart";
+
 EditorDocument recordEditorDocument(
   Map<String, skir.DataValue> values,
   Map<String, skir.TypeTemplate> fieldTypes,
@@ -20,48 +22,33 @@ EditorDocument recordEditorDocument(
         rules: const [],
       ),
   ];
-  final catalog = CheckedEditorCatalog(
-    skir.EditorCatalogWireSnapshot(
-      resourceOperations: const [],
-      resourceOperationContributions: const [],
-      generation: skir.CatalogGeneration(value: "fixture"),
-      types: [
-        skir.PublishedType(
-          display: null,
-          definition: skir.TypeDefinition(
-            id: definition,
-            parameters: const [],
-            representation: skir.RepresentationTemplate.createRecord(
-              fields: [
-                for (final field in fields)
-                  skir.FieldDeclaration(
-                    owner: field.owner,
-                    type: field.type,
-                    overrides: const [],
-                    hasConstructorDefault: false,
-                  ),
-              ],
-              abstract_: false,
-            ),
-            parents: const [],
+  final catalog = testCheckedCatalog(
+    generation: skir.CatalogGeneration(value: "fixture"),
+    types: [
+      skir.PublishedType(
+        display: null,
+        definition: skir.TypeDefinition(
+          id: definition,
+          parameters: const [],
+          representation: skir.RepresentationTemplate.createRecord(
+            fields: [
+              for (final field in fields)
+                skir.FieldDeclaration(
+                  owner: field.owner,
+                  type: field.type,
+                  overrides: const [],
+                  hasConstructorDefault: false,
+                ),
+            ],
+            abstract_: false,
           ),
-          status: skir.DeclarationStatus.ready,
-          effectiveFields: fields,
-          ancestorTemplates: const [],
+          parents: const [],
         ),
-      ],
-      relations: const [],
-      resourceDefinitions: const [],
-      presentations: const [],
-      presentationMaterials: const [],
-      configuration: const [],
-      diagnostics: const [],
-
-      endpointBindings: const [],
-      capabilities: const [],
-      recommendations: const [],
-      roleFallbacks: const [],
-    ),
+        status: skir.DeclarationStatus.ready,
+        effectiveFields: fields,
+        ancestorTemplates: const [],
+      ),
+    ],
   );
   return EditorDocument(
     rootType: skir.TypeUse.wrapNamed(
