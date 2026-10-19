@@ -22,33 +22,47 @@ func (m *Typewriter) transportGeneratorContainer(source *dagger.Directory) *dagg
 		WithMountedCache("/usr/local/cargo/git", lockedCache("transport-generator-cargo-git"))
 }
 
-func (m *Typewriter) transportGenerator(source *dagger.Directory) *dagger.File {
-	return m.transportGeneratorContainer(source).
-		WithExec([]string{"cargo", "build", "--locked", "--release"}).
-		File("/generator/target/release/typewriter-transport-generator")
-}
+// protocolGenerationContainer runs the single protocol generation entry point, `bun run generate:protocol`, with
+// the panel's Dart SDK plus Rust, Bun and the JDK the services build needs. The source is staged in a scratch Git
+// index first, so ignored build artifacts can be cleaned afterwards and generated drift stays visible.
+func (m *Typewriter) protocolGenerationContainer(source *dagger.Directory) *dagger.Container {
+	rust := dag.Container().
+		From("rust:1.95-bookworm").
+		WithExec([]string{"rustup", "component", "add", "rustfmt"})
 
-func (m *Typewriter) transportGenerationContainer(source *dagger.Directory) *dagger.Container {
-	return m.skirContainer(source).
-		WithFile("/workspace/services/protocol/transport-generator/target/release/typewriter-transport-generator", m.transportGenerator(source)).
-		WithExec([]string{
-			"services/protocol/transport-generator/target/release/typewriter-transport-generator",
-			"validate-subscriptions",
-			"--manifest", "services/protocol/transport-routes.yaml",
-			"--component", "auth-typewriter-permissions",
-			"--deployment", "backend/access/auth-typewriter-permissions/deploy/base/workloaddeployment.yaml",
-		}).
-		WithExec([]string{"bunx", "--bun", "--no-install", "skir", "gen"})
+	return m.dartContainer().
+		WithDirectory("/usr/local/rustup", rust.Directory("/usr/local/rustup")).
+		WithDirectory("/usr/local/cargo", rust.Directory("/usr/local/cargo")).
+		WithEnvVariable("RUSTUP_HOME", "/usr/local/rustup").
+		WithEnvVariable("CARGO_HOME", "/usr/local/cargo").
+		WithEnvVariable("CARGO_BUILD_JOBS", "2").
+		WithEnvVariable("PATH", "/usr/local/cargo/bin:${PATH}", dagger.ContainerWithEnvVariableOpts{Expand: true}).
+		WithFile("/usr/local/bin/bun", dag.Container().From("oven/bun").File("/usr/local/bin/bun")).
+		WithExec([]string{"ln", "-s", "bun", "/usr/local/bin/bunx"}).
+		WithEnvVariable("GRADLE_OPTS", "-Dorg.gradle.daemon=false -Dorg.gradle.workers.max=2").
+		WithMountedCache("/usr/local/cargo/registry", lockedCache("transport-generator-cargo-registry")).
+		WithMountedCache("/usr/local/cargo/git", lockedCache("transport-generator-cargo-git")).
+		WithMountedCache("/root/.gradle/caches", dag.CacheVolume("services-gradle-caches")).
+		WithMountedCache("/root/.gradle/wrapper", dag.CacheVolume("services-gradle-wrapper")).
+		WithDirectory("/workspace", source).
+		WithWorkdir("/workspace").
+		WithExec([]string{"git", "init", "--quiet"}).
+		WithExec([]string{"git", "add", "--all", "--force"}).
+		WithExec([]string{"bun", "install", "--frozen-lockfile"}).
+		WithExec([]string{"bun", "run", "generate:protocol"}).
+		WithExec([]string{"git", "clean", "-fdX", "--quiet"})
 }
 
 // +check
-func (m *Typewriter) TransportManifestCheck(
+// ProtocolGenerationCheck fails when `bun run generate:protocol` changes committed generated output.
+func (m *Typewriter) ProtocolGenerationCheck(
 	// +optional
 	// +defaultPath="/"
-	// +ignore=["*", "!package.json", "!bun.lock", "!skir.yml", "!skir-src", "!services/protocol/transport-routes.yaml", "!services/protocol/transport-generator", "!backend/access/auth-typewriter-permissions/deploy/base/workloaddeployment.yaml", "**/target", "**/node_modules"]
+	// +ignore=["*", "!.gitignore", "!package.json", "!bun.lock", "!skir.yml", "!skir-src", "!services", "!backend/access/auth-typewriter-permissions/deploy/base/workloaddeployment.yaml", "!backend/wasmcloud-utils/src/skirout", "!backend/wasmcloud-utils/src/transport_routes", "!panel/lib/infrastructure/protocols/skir/skirout", "!panel/lib/infrastructure/messaging/generated", "!panel/lib/shared/editors/application/canonical_read_models.generated.dart", "**/target", "**/node_modules", "**/build", "**/.gradle", "**/.kotlin"]
 	source *dagger.Directory,
 ) *dagger.Container {
-	return m.transportGenerationContainer(source)
+	return m.protocolGenerationContainer(source).
+		WithExec([]string{"sh", "-c", "git add --all --force && git diff --cached --exit-code --stat"})
 }
 
 // +check
@@ -73,30 +87,6 @@ func (m *Typewriter) TransportBindingCheck(
 	return m.skirContainer(source).
 		WithExec([]string{"bun", "run", "--cwd", "services/protocol/transport-generator/skir-bridge", "check"}).
 		WithExec([]string{"bun", "run", "test:transport-metadata"})
-}
-
-func (m *Typewriter) formatGeneratedProtocol(source *dagger.Directory) *dagger.Directory {
-	rust := dag.Container().
-		From("rust:1.95-bookworm").
-		WithExec([]string{"rustup", "component", "add", "rustfmt"}).
-		WithDirectory("/workspace", source).
-		WithWorkdir("/workspace").
-		WithExec([]string{
-			"rustfmt", "--edition", "2024",
-			"backend/wasmcloud-utils/src/skirout/base.rs",
-			"backend/wasmcloud-utils/src/transport_routes/skirout/mod.rs",
-		}).
-		Directory("/workspace")
-
-	return m.dartContainer().
-		WithDirectory("/workspace", rust).
-		WithWorkdir("/workspace").
-		WithExec([]string{
-			"dart", "format",
-			"panel/lib/infrastructure/protocols/skir/skirout",
-			"panel/lib/infrastructure/messaging/generated/skirout",
-		}).
-		Directory("/workspace")
 }
 
 // +check
@@ -146,13 +136,12 @@ func (m *Typewriter) SkirSnapshot(
 func (m *Typewriter) SkirGenerate(
 	// +optional
 	// +defaultPath="/"
-	// +ignore=["*", "!package.json", "!bun.lock", "!skir.yml", "!skir-src", "!services/protocol/transport-routes.yaml", "!services/protocol/transport-generator", "!backend/access/auth-typewriter-permissions/deploy/base/workloaddeployment.yaml", "!panel/lib/infrastructure/protocols/skir/skirout", "!panel/lib/infrastructure/messaging/generated", "!backend/wasmcloud-utils/src/skirout", "!backend/wasmcloud-utils/src/transport_routes", "!services/protocol/src/main/kotlin/skirout", "!services/protocol/transport-adapters", "**/target", "**/node_modules"]
+	// +ignore=["*", "!.gitignore", "!package.json", "!bun.lock", "!skir.yml", "!skir-src", "!services", "!backend/access/auth-typewriter-permissions/deploy/base/workloaddeployment.yaml", "!backend/wasmcloud-utils/src/skirout", "!backend/wasmcloud-utils/src/transport_routes", "!panel/lib/infrastructure/protocols/skir/skirout", "!panel/lib/infrastructure/messaging/generated", "!panel/lib/shared/editors/application/canonical_read_models.generated.dart", "**/target", "**/node_modules", "**/build", "**/.gradle", "**/.kotlin"]
 	source *dagger.Directory,
 ) (*dagger.Changeset, error) {
-	generated := m.transportGenerationContainer(source).
+	generated := m.protocolGenerationContainer(source).
 		Directory("/workspace").
-		WithoutDirectory("node_modules").
-		WithoutDirectory("services/protocol/transport-generator/target")
+		WithoutDirectory(".git")
 
-	return m.formatGeneratedProtocol(generated).Changes(source), nil
+	return generated.Changes(source), nil
 }
