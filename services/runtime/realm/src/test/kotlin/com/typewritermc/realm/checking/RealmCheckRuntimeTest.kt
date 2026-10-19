@@ -69,6 +69,9 @@ import com.typewritermc.types.TypeParameter
 import com.typewritermc.types.TypeTemplate
 import com.typewritermc.types.TypeUse
 import de.infix.testBalloon.framework.core.testSuite
+import io.kotest.assertions.throwables.shouldThrow
+import io.kotest.matchers.shouldBe
+import io.kotest.matchers.types.shouldBeInstanceOf
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.asCoroutineDispatcher
 import kotlinx.coroutines.test.StandardTestDispatcher
@@ -93,7 +96,7 @@ val RealmCheckRuntimeTest by testSuite {
             )
         val runtime = RealmCheckRuntime(store)
 
-        assertFailsWith<IllegalArgumentException> {
+        shouldThrow<IllegalArgumentException> {
             kotlinx.coroutines.runBlocking {
                 runtime.evaluateCapture(
                     CheckAdmissionTarget.CapturedAcceptance(
@@ -107,7 +110,7 @@ val RealmCheckRuntimeTest by testSuite {
 
         runtime.close()
         store.close()
-        assertEquals(0, catalog.openCount)
+        catalog.openCount shouldBe 0
     }
 
     test("partialCatalogCollectionReleasesEveryAcquiredProviderLease") {
@@ -131,14 +134,14 @@ val RealmCheckRuntimeTest by testSuite {
             )
         val runtime = RealmCheckRuntime(store)
 
-        assertFailsWith<IllegalStateException> {
+        shouldThrow<IllegalStateException> {
             kotlinx.coroutines.runBlocking { runtime.reloadCatalog() }
         }
 
-        assertEquals(0, providers.openLeases.get())
+        providers.openLeases.get() shouldBe 0
         runtime.close()
         store.close()
-        assertEquals(0, catalog.openCount)
+        catalog.openCount shouldBe 0
     }
 
     test("concurrentReloadRetainsTheCatalogUsedBySubjectDiscovery") {
@@ -159,18 +162,18 @@ val RealmCheckRuntimeTest by testSuite {
         val runtime = RealmCheckRuntime(store)
         val executor = Executors.newFixedThreadPool(2)
         val first = executor.submit { kotlinx.coroutines.runBlocking { runtime.reloadCatalog() } }
-        assertTrue(store.entered.await(5, TimeUnit.SECONDS))
+        store.entered.await(5, TimeUnit.SECONDS) shouldBe true
 
         val second = executor.submit { kotlinx.coroutines.runBlocking { runtime.reloadCatalog() } }
         second.get(5, TimeUnit.SECONDS)
-        assertEquals(2, providers.openLeases.get())
+        providers.openLeases.get() shouldBe 2
 
         store.release.countDown()
         first.get(5, TimeUnit.SECONDS)
-        assertEquals(1, providers.openLeases.get())
+        providers.openLeases.get() shouldBe 1
 
         runtime.close()
-        assertEquals(0, providers.openLeases.get())
+        providers.openLeases.get() shouldBe 0
         executor.shutdownNow()
         base.close()
     }
@@ -206,9 +209,9 @@ val RealmCheckRuntimeTest by testSuite {
             advanceUntilIdle()
             runtime.drain()
 
-            assertEquals(2, runtime.findings().size)
-            assertEquals(setOf(0, 1), runtime.findings().map { it.ticket.instance.rule.localIndex }.toSet())
-            assertEquals(1, executions.getValue(first).get())
+            runtime.findings().size shouldBe 2
+            runtime.findings().map { it.ticket.instance.rule.localIndex }.toSet() shouldBe setOf(0, 1)
+            executions.getValue(first).get() shouldBe 1
 
             val second = ResourceId("second")
             val added = record(name = "bad")
@@ -224,9 +227,9 @@ val RealmCheckRuntimeTest by testSuite {
             runtime.invalidateCurrent()
             advanceUntilIdle()
             runtime.drain()
-            assertEquals(3, runtime.findings().size)
-            assertEquals(1, executions.getValue(first).get())
-            assertEquals(1, executions.getValue(second).get())
+            runtime.findings().size shouldBe 3
+            executions.getValue(first).get() shouldBe 1
+            executions.getValue(second).get() shouldBe 1
 
             val edited = record(name = "valid")
             val edit =
@@ -238,9 +241,9 @@ val RealmCheckRuntimeTest by testSuite {
             runtime.invalidateCurrent()
             advanceUntilIdle()
             runtime.drain()
-            assertEquals(3, runtime.findings().size)
-            assertEquals(1, executions.getValue(first).get())
-            assertEquals(2, executions.getValue(second).get())
+            runtime.findings().size shouldBe 3
+            executions.getValue(first).get() shouldBe 1
+            executions.getValue(second).get() shouldBe 2
 
             val secondRoot = ValueLocation(second, ValuePath())
             val removal =
@@ -252,10 +255,10 @@ val RealmCheckRuntimeTest by testSuite {
             runtime.invalidateCurrent()
             advanceUntilIdle()
             runtime.drain()
-            assertEquals(2, runtime.findings().size)
+            runtime.findings().size shouldBe 2
 
             runtime.close()
-            assertEquals(0, providers.openLeases.get())
+            providers.openLeases.get() shouldBe 0
             store.close()
         }
     }
@@ -283,17 +286,17 @@ val RealmCheckRuntimeTest by testSuite {
         val closer = Executors.newSingleThreadExecutor()
         val runtime = RealmCheckRuntime(store, worker)
         kotlinx.coroutines.runBlocking { runtime.reloadCatalog() }
-        assertTrue(started.await(5, TimeUnit.SECONDS))
-        assertEquals(1, providers.openLeases.get())
+        started.await(5, TimeUnit.SECONDS) shouldBe true
+        providers.openLeases.get() shouldBe 1
 
         val closed = closer.submit { runtime.close() }
         Thread.sleep(50)
-        assertFalse(closed.isDone)
-        assertEquals(1, providers.openLeases.get())
+        closed.isDone shouldBe false
+        providers.openLeases.get() shouldBe 1
 
         release.countDown()
         closed.get(5, TimeUnit.SECONDS)
-        assertEquals(0, providers.openLeases.get())
+        providers.openLeases.get() shouldBe 0
         worker.close()
         closer.shutdownNow()
         store.close()
@@ -340,13 +343,11 @@ val RealmCheckRuntimeTest by testSuite {
             runtime.drain()
 
             val finding = runtime.findings().single()
-            assertEquals(
+            finding.outcome shouldBe
                 com.typewritermc.checking.CheckOutcome
-                    .Incomplete("graph traversal limit exceeded"),
-                finding.outcome,
-            )
-            assertEquals(com.typewritermc.checking.FindingStatus.Current, finding.status)
-            assertEquals(listOf("Partial finding."), finding.findings.map { it.message })
+                    .Incomplete("graph traversal limit exceeded")
+            finding.status shouldBe com.typewritermc.checking.FindingStatus.Current
+            finding.findings.map { it.message } shouldBe listOf("Partial finding.")
 
             runtime.close()
             store.close()
@@ -390,19 +391,16 @@ val RealmCheckRuntimeTest by testSuite {
             runtime.drain()
 
             val current = runtime.findings().single()
-            assertEquals(RuleId(origin, 0), current.ticket.instance.rule)
-            assertEquals(location(resource, "name"), current.ticket.instance.location)
-            assertEquals(listOf("name_empty"), current.findings.map { it.code })
+            current.ticket.instance.rule shouldBe RuleId(origin, 0)
+            current.ticket.instance.location shouldBe location(resource, "name")
+            current.findings.map { it.code } shouldBe listOf("name_empty")
 
             val captured = runtime.evaluateCapture(CheckAdmissionTarget.CapturedAcceptance(store.capture().use { it.root }))
-            assertTrue(captured.complete)
-            assertEquals(
-                listOf("name_empty"),
-                captured.results
-                    .single()
-                    .findings
-                    .map { it.code },
-            )
+            captured.complete shouldBe true
+            captured.results
+                .single()
+                .findings
+                .map { it.code } shouldBe listOf("name_empty")
 
             runtime.close()
             store.close()
@@ -434,23 +432,15 @@ val RealmCheckRuntimeTest by testSuite {
 
             val blocked = capturedAcceptance(store, runtime, catalog.generation)
 
-            assertEquals(catalog.generation, blocked.evidence.getValue(blocked.findings.single().id).catalog)
-            assertEquals(
+            blocked.evidence.getValue(blocked.findings.single().id).catalog shouldBe catalog.generation
+            blocked.evidence.getValue(blocked.findings.single().id).expectations shouldBe
                 blocked.checks.results
                     .single()
-                    .expectations,
-                blocked.evidence.getValue(blocked.findings.single().id).expectations,
-            )
-            assertEquals(
-                listOf("check_needs_input"),
-                blocked.findings
-                    .map { it.code },
-            )
-            assertEquals(
-                listOf(unavailable),
-                blocked.findings
-                    .map { it.primary },
-            )
+                    .expectations
+            blocked.findings
+                .map { it.code } shouldBe listOf("check_needs_input")
+            blocked.findings
+                .map { it.primary } shouldBe listOf(unavailable)
 
             runtime.close()
             store.close()
@@ -524,8 +514,8 @@ val RealmCheckRuntimeTest by testSuite {
                         )
                 }
 
-            assertEquals(listOf("duplicate_set_value", "duplicate_map_key"), intrinsic.map { it.code })
-            assertEquals(
+            intrinsic.map { it.code } shouldBe listOf("duplicate_set_value", "duplicate_map_key")
+            intrinsic.map { it.primary } shouldBe
                 listOf(
                     ValueLocation(
                         resource,
@@ -541,9 +531,7 @@ val RealmCheckRuntimeTest by testSuite {
                             ),
                         ),
                     ),
-                ),
-                intrinsic.map { it.primary },
-            )
+                )
 
             runtime.close()
             store.close()
@@ -567,23 +555,15 @@ val RealmCheckRuntimeTest by testSuite {
 
             val blocked = capturedAcceptance(store, runtime, catalog.generation)
 
-            assertEquals(
+            blocked.evidence.getValue(blocked.findings.single().id).expectations shouldBe
                 listOf(
                     com.typewritermc.authoring.EditExpectation
                         .Resource(resource, authored),
-                ),
-                blocked.evidence.getValue(blocked.findings.single().id).expectations,
-            )
-            assertEquals(
-                listOf("pending_type"),
-                blocked.findings
-                    .map { it.code },
-            )
-            assertEquals(
-                listOf(ValueLocation(resource, ValuePath())),
-                blocked.findings
-                    .map { it.primary },
-            )
+                )
+            blocked.findings
+                .map { it.code } shouldBe listOf("pending_type")
+            blocked.findings
+                .map { it.primary } shouldBe listOf(ValueLocation(resource, ValuePath()))
 
             runtime.close()
             store.close()
@@ -632,20 +612,18 @@ val RealmCheckRuntimeTest by testSuite {
             runtime.drain()
 
             val current = runtime.findings()
-            assertTrue(current.any { it.ticket.instance.location == location(resource, "name") })
+            current.any { it.ticket.instance.location == location(resource, "name") } shouldBe true
             val discovery = current.single { it.ticket.instance.location == DISCOVERY_LOCATION_FOR_TEST }
-            assertIs<com.typewritermc.checking.CheckOutcome.Incomplete>(discovery.outcome)
-            assertEquals(listOf("check_discovery_incomplete"), discovery.findings.map { it.code })
+            discovery.outcome.shouldBeInstanceOf<com.typewritermc.checking.CheckOutcome.Incomplete>()
+            discovery.findings.map { it.code } shouldBe listOf("check_discovery_incomplete")
 
             val captured = runtime.evaluateCapture(CheckAdmissionTarget.CapturedAcceptance(store.capture().use { it.root }))
-            assertFalse(captured.complete)
-            assertTrue(captured.results.any { it.ticket.instance.location == location(resource, "name") })
-            assertTrue(
-                captured.results.any {
-                    it.ticket.instance.location == DISCOVERY_LOCATION_FOR_TEST &&
-                        it.outcome is com.typewritermc.checking.CheckOutcome.Incomplete
-                },
-            )
+            captured.complete shouldBe false
+            captured.results.any { it.ticket.instance.location == location(resource, "name") } shouldBe true
+            captured.results.any {
+                it.ticket.instance.location == DISCOVERY_LOCATION_FOR_TEST &&
+                    it.outcome is com.typewritermc.checking.CheckOutcome.Incomplete
+            } shouldBe true
 
             runtime.close()
             store.close()
@@ -683,7 +661,7 @@ val RealmCheckRuntimeTest by testSuite {
         val waiter = Executors.newSingleThreadExecutor()
         val runtime = RealmCheckRuntime(store, worker)
         kotlinx.coroutines.runBlocking { runtime.reloadCatalog() }
-        assertTrue(started.await(5, TimeUnit.SECONDS))
+        started.await(5, TimeUnit.SECONDS) shouldBe true
 
         val removal =
             store.install(
@@ -695,13 +673,13 @@ val RealmCheckRuntimeTest by testSuite {
         val drained = waiter.submit { kotlinx.coroutines.runBlocking { runtime.drain() } }
         Thread.sleep(50)
 
-        assertFalse(drained.isDone)
-        assertEquals(1, providers.openLeases.get())
+        drained.isDone shouldBe false
+        providers.openLeases.get() shouldBe 1
 
         release.countDown()
         drained.get(5, TimeUnit.SECONDS)
         runtime.close()
-        assertEquals(0, providers.openLeases.get())
+        providers.openLeases.get() shouldBe 0
         worker.close()
         waiter.shutdownNow()
         store.close()
@@ -758,7 +736,7 @@ val RealmCheckRuntimeTest by testSuite {
                 ),
             )
         runtime.invalidateCurrent()
-        assertTrue(blocked.await(5, TimeUnit.SECONDS))
+        blocked.await(5, TimeUnit.SECONDS) shouldBe true
 
         val secondEdit = record(name = "third")
         val secondChange =
@@ -768,17 +746,17 @@ val RealmCheckRuntimeTest by testSuite {
                 ),
             )
         runtime.invalidateCurrent()
-        assertTrue(replacement.await(5, TimeUnit.SECONDS))
+        replacement.await(5, TimeUnit.SECONDS) shouldBe true
         val drained = waiter.submit { kotlinx.coroutines.runBlocking { runtime.drain() } }
         Thread.sleep(50)
 
-        assertFalse(drained.isDone)
-        assertEquals(1, providers.openLeases.get())
+        drained.isDone shouldBe false
+        providers.openLeases.get() shouldBe 1
 
         release.countDown()
         drained.get(5, TimeUnit.SECONDS)
         runtime.close()
-        assertEquals(0, providers.openLeases.get())
+        providers.openLeases.get() shouldBe 0
         worker.close()
         waiter.shutdownNow()
         store.close()
@@ -809,29 +787,27 @@ val RealmCheckRuntimeTest by testSuite {
         val invalidator = Executors.newSingleThreadExecutor()
         val runtime = RealmCheckRuntime(store, worker, dependencies)
         kotlinx.coroutines.runBlocking { runtime.reloadCatalog() }
-        assertTrue(dependencies.entered.await(5, TimeUnit.SECONDS))
+        dependencies.entered.await(5, TimeUnit.SECONDS) shouldBe true
 
         val invalidated =
             invalidator.submit {
                 store.install(store.prepare(AuthoringViewDelta(upsertedResources = mapOf(resource to record(name = "new")))))
                 runtime.invalidateCurrent()
             }
-        assertFalse(invalidated.isDone)
+        invalidated.isDone shouldBe false
 
         dependencies.release.countDown()
         invalidated.get(5, TimeUnit.SECONDS)
         kotlinx.coroutines.runBlocking { runtime.drain() }
 
-        assertTrue(executions.get() >= 2)
-        assertTrue(
-            runtime.findings().all { finding ->
-                store.capture().use {
-                    it.root.values
-                        .conflicts(finding.expectations)
-                        .isEmpty()
-                }
-            },
-        )
+        (executions.get() >= 2) shouldBe true
+        runtime.findings().all { finding ->
+            store.capture().use {
+                it.root.values
+                    .conflicts(finding.expectations)
+                    .isEmpty()
+            }
+        } shouldBe true
         runtime.close()
         worker.close()
         invalidator.shutdownNow()

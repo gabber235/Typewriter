@@ -12,6 +12,7 @@ import com.typewritermc.types.ListItem
 import com.typewritermc.types.MapRow
 import com.typewritermc.types.TypeUse
 import de.infix.testBalloon.framework.core.testSuite
+import io.kotest.matchers.shouldBe
 import java.math.BigInteger
 
 val NativeAuthoringStorageTestSuite by testSuite {
@@ -43,11 +44,11 @@ val NativeAuthoringStorageTestSuite by testSuite {
                     mapOf("content" to authoredDatabaseValues.encode(AuthoringRecord.serializer(), record)),
                 ).take(0)
             val content = database.query("SELECT VALUE content FROM ONLY resource:quest;").take(0)
-            assertTrue(content.isObject)
-            assertTrue(content.getObject().get("fields").isObject)
-            assertEquals(record, authoredDatabaseValues.decode(AuthoringRecord.serializer(), content))
+            content.isObject shouldBe true
+            content.getObject().get("fields").isObject shouldBe true
+            authoredDatabaseValues.decode(AuthoringRecord.serializer(), content) shouldBe record
             val title = database.query("SELECT VALUE content.fields.list.items[0].value.value FROM ONLY resource:quest;").take(0)
-            assertEquals("Quest", title.getString())
+            title.getString() shouldBe "Quest"
         }
     }
 }

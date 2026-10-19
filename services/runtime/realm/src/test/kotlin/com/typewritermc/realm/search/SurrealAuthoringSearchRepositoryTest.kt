@@ -36,6 +36,7 @@ import com.typewritermc.types.TypeUse
 import com.typewritermc.types.catalog.DefaultCheckedCatalog
 import com.typewritermc.types.endpointId
 import de.infix.testBalloon.framework.core.testSuite
+import io.kotest.matchers.shouldBe
 import kotlinx.serialization.encodeToString
 
 class SurrealAuthoringSearchRepositoryTest {
@@ -74,7 +75,7 @@ class SurrealAuthoringSearchRepositoryTest {
                         limit = 100,
                     )
 
-            assertEquals(listOf(ResourceId("z_compatible")), results.map { it.resource })
+            results.map { it.resource } shouldBe listOf(ResourceId("z_compatible"))
         }
     }
 
@@ -98,7 +99,7 @@ class SurrealAuthoringSearchRepositoryTest {
                     null,
                     10,
                 )
-            assertEquals(listOf(ResourceId("inside")), results.map { it.resource })
+            results.map { it.resource } shouldBe listOf(ResourceId("inside"))
         }
     }
 
@@ -149,8 +150,8 @@ class SurrealAuthoringSearchRepositoryTest {
                         limit = 10,
                     )
 
-            assertEquals(listOf(ResourceId("pending")), matching.map { it.resource })
-            assertEquals(emptyList<ResourceId>(), mismatched.map { it.resource })
+            matching.map { it.resource } shouldBe listOf(ResourceId("pending"))
+            mismatched.map { it.resource } shouldBe emptyList<ResourceId>()
         }
     }
 
@@ -184,7 +185,7 @@ class SurrealAuthoringSearchRepositoryTest {
                         limit = 10,
                     )
 
-            assertEquals(listOf(ResourceId("book")), results.map { it.resource })
+            results.map { it.resource } shouldBe listOf(ResourceId("book"))
         }
     }
 }
@@ -319,7 +320,7 @@ val SurrealAuthoringSearchRepositoryTestSuite by testSuite {
             )
         val occurrences = ResourceValueMapper.discover(resources).associateBy { it.id }
         val view = AuthoringView(lease, resources, emptyMap(), occurrences)
-        assertEquals(setOf(root, child, grandchild), view.ownershipClosure(setOf(root)))
+        view.ownershipClosure(setOf(root)) shouldBe setOf(root, child, grandchild)
         lease.close()
     }
     test("indexedSearchPagesPastIncompatibleCandidates") {

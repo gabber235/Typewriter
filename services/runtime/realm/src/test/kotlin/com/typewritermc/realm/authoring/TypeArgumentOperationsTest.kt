@@ -51,6 +51,8 @@ import com.typewritermc.types.TypeUse
 import com.typewritermc.types.catalog.CheckedCatalog
 import com.typewritermc.types.catalog.DefaultCheckedCatalog
 import de.infix.testBalloon.framework.core.testSuite
+import io.kotest.matchers.shouldBe
+import io.kotest.matchers.types.shouldBeInstanceOf
 import kotlinx.coroutines.test.runTest
 
 class TypeArgumentOperationsTest {
@@ -66,9 +68,12 @@ class TypeArgumentOperationsTest {
         val operations = DefaultTypeArgumentOperations(store)
 
         store.capture().use { snapshot ->
-            assertIs<TypePreviewResult.InvalidArguments>(
-                operations.preview(resource, TypeSelection.Complete(BUNDLE_COIN), snapshot),
-            )
+            operations
+                .preview(
+                    resource,
+                    TypeSelection.Complete(BUNDLE_COIN),
+                    snapshot,
+                ).shouldBeInstanceOf<TypePreviewResult.InvalidArguments>()
         }
         store.close()
 
@@ -80,10 +85,9 @@ class TypeArgumentOperationsTest {
                 AuthoringSeed(mapOf(resource to invalid)),
             )
         invalidStore.capture().use { snapshot ->
-            assertIs<TypePreviewResult.Rejected>(
-                DefaultTypeArgumentOperations(invalidStore)
-                    .preview(resource, TypeSelection.Complete(CONTAINER_COIN), snapshot),
-            )
+            DefaultTypeArgumentOperations(invalidStore)
+                .preview(resource, TypeSelection.Complete(CONTAINER_COIN), snapshot)
+                .shouldBeInstanceOf<TypePreviewResult.Rejected>()
         }
         invalidStore.close()
     }
@@ -103,9 +107,13 @@ class TypeArgumentOperationsTest {
 
         val preview =
             store.capture().use { snapshot ->
-                assertIs<TypePreviewResult.Ready>(
-                    operations.preview(resource, TypeSelection.Complete(CONTAINER_COIN), snapshot),
-                ).preview
+                operations
+                    .preview(
+                        resource,
+                        TypeSelection.Complete(CONTAINER_COIN),
+                        snapshot,
+                    ).shouldBeInstanceOf<TypePreviewResult.Ready>()
+                    .preview
             }
 
         val bundles = location(resource, "bundles")
@@ -137,23 +145,21 @@ class TypeArgumentOperationsTest {
                 ),
             )
         val compatible = location(resource, "reward")
-        assertEquals(
+        preview.edit.intents shouldBe
             listOf(
                 EditIntent.ConfigureResource(resource, TypeSelection.Complete(CONTAINER_COIN)),
                 EditIntent.Retag(bundles, LIST_BUNDLE_COIN),
                 EditIntent.Retag(bundle, BUNDLE_COIN),
                 EditIntent.SetValue(incompatible, DataValue.Unfilled),
-            ),
-            preview.edit.intents,
-        )
-        assertEquals(listOf(incompatible), preview.clearedLocations)
+            )
+        preview.clearedLocations shouldBe listOf(incompatible)
         val observed = preview.edit.expectations.flatMapTo(linkedSetOf()) { it.dependencies() }
-        assertTrue(InputIdentity.Value(title) in observed)
-        assertTrue(InputIdentity.Value(compatible) in observed)
-        assertTrue(InputIdentity.Value(incompatible) in observed)
-        assertTrue(InputIdentity.Value(bundles) in observed)
-        assertTrue(InputIdentity.Value(bundles) in observed)
-        assertFalse(preview.edit.intents.any { it == EditIntent.SetValue(compatible, DataValue.Unfilled) })
+        (InputIdentity.Value(title) in observed) shouldBe true
+        (InputIdentity.Value(compatible) in observed) shouldBe true
+        (InputIdentity.Value(incompatible) in observed) shouldBe true
+        (InputIdentity.Value(bundles) in observed) shouldBe true
+        (InputIdentity.Value(bundles) in observed) shouldBe true
+        preview.edit.intents.any { it == EditIntent.SetValue(compatible, DataValue.Unfilled) } shouldBe false
 
         store.close()
     }
@@ -172,15 +178,19 @@ class TypeArgumentOperationsTest {
             val operations = DefaultTypeArgumentOperations(store)
             val preview =
                 store.capture().use { snapshot ->
-                    assertIs<TypePreviewResult.Ready>(
-                        operations.preview(resource, TypeSelection.Complete(CONTAINER_COIN), snapshot),
-                    ).preview
+                    operations
+                        .preview(
+                            resource,
+                            TypeSelection.Complete(CONTAINER_COIN),
+                            snapshot,
+                        ).shouldBeInstanceOf<TypePreviewResult.Ready>()
+                        .preview
                 }
 
-            val edit = assertIs<PreparedEditResult.Prepared>(operations.prepare(preview)).edit
+            val edit = operations.prepare(preview).shouldBeInstanceOf<PreparedEditResult.Prepared>().edit
             repository.commit(edit)
-            assertTrue(edit.expectations.any { InputIdentity.Value(location(resource, "reward")) in it.dependencies() })
-            assertEquals(edit, repository.edit)
+            edit.expectations.any { InputIdentity.Value(location(resource, "reward")) in it.dependencies() } shouldBe true
+            repository.edit shouldBe edit
             store.close()
         }
 
@@ -204,25 +214,26 @@ class TypeArgumentOperationsTest {
 
             val pendingPreview =
                 store.capture().use { snapshot ->
-                    assertIs<TypePreviewResult.Ready>(operations.preview(resource, pending, snapshot)).preview
+                    operations.preview(resource, pending, snapshot).shouldBeInstanceOf<TypePreviewResult.Ready>().preview
                 }
 
-            assertEquals(pending, pendingPreview.next)
-            assertTrue(pendingPreview.edit.intents.contains(EditIntent.ConfigureResource(resource, pending)))
-            assertTrue(pendingPreview.edit.intents.contains(EditIntent.SetValue(location(resource, "second"), DataValue.Unfilled)))
-            assertFalse(pendingPreview.edit.intents.contains(EditIntent.SetValue(location(resource, "name"), DataValue.Unfilled)))
-            assertFalse(pendingPreview.edit.intents.contains(EditIntent.SetValue(location(resource, "first"), DataValue.Unfilled)))
+            pendingPreview.next shouldBe pending
+            pendingPreview.edit.intents.contains(EditIntent.ConfigureResource(resource, pending)) shouldBe true
+            pendingPreview.edit.intents.contains(EditIntent.SetValue(location(resource, "second"), DataValue.Unfilled)) shouldBe true
+            pendingPreview.edit.intents.contains(EditIntent.SetValue(location(resource, "name"), DataValue.Unfilled)) shouldBe false
+            pendingPreview.edit.intents.contains(EditIntent.SetValue(location(resource, "first"), DataValue.Unfilled)) shouldBe false
 
-            val pendingEdit = assertIs<PreparedEditResult.Prepared>(operations.prepare(pendingPreview)).edit
+            val pendingEdit = operations.prepare(pendingPreview).shouldBeInstanceOf<PreparedEditResult.Prepared>().edit
             val pendingPlan =
-                assertIs<MutationPlanningResult.Accepted>(
-                    AuthoringMutationPlanner(catalog.checked, emptyList()).plan(mapOf(resource to original), pendingEdit),
-                ).plan
+                AuthoringMutationPlanner(
+                    catalog.checked,
+                    emptyList(),
+                ).plan(mapOf(resource to original), pendingEdit).shouldBeInstanceOf<MutationPlanningResult.Accepted>().plan
             val pendingRecord = pendingPlan.resources.getValue(resource)
-            assertEquals(pending, pendingRecord.configuration)
-            assertEquals(DataValue.StringValue("kept"), pendingRecord.fields.getValue("name"))
-            assertEquals(original.fields.getValue("first"), pendingRecord.fields.getValue("first"))
-            assertEquals(DataValue.Unfilled, pendingRecord.fields.getValue("second"))
+            pendingRecord.configuration shouldBe pending
+            pendingRecord.fields.getValue("name") shouldBe DataValue.StringValue("kept")
+            pendingRecord.fields.getValue("first") shouldBe original.fields.getValue("first")
+            pendingRecord.fields.getValue("second") shouldBe DataValue.Unfilled
 
             val pendingStore =
                 InMemoryAuthoringViewStore(
@@ -232,11 +243,11 @@ class TypeArgumentOperationsTest {
             val complete = TypeSelection.Complete(DUAL_COIN_COIN)
             val completePreview =
                 pendingStore.capture().use { snapshot ->
-                    assertIs<TypePreviewResult.Ready>(operations.preview(resource, complete, snapshot)).preview
+                    operations.preview(resource, complete, snapshot).shouldBeInstanceOf<TypePreviewResult.Ready>().preview
                 }
-            assertEquals(complete, completePreview.next)
-            assertTrue(completePreview.edit.intents.contains(EditIntent.ConfigureResource(resource, complete)))
-            assertFalse(completePreview.edit.intents.contains(EditIntent.SetValue(location(resource, "first"), DataValue.Unfilled)))
+            completePreview.next shouldBe complete
+            completePreview.edit.intents.contains(EditIntent.ConfigureResource(resource, complete)) shouldBe true
+            completePreview.edit.intents.contains(EditIntent.SetValue(location(resource, "first"), DataValue.Unfilled)) shouldBe false
 
             pendingStore.close()
             store.close()
@@ -261,31 +272,29 @@ class TypeArgumentOperationsTest {
                 )
             val preview =
                 store.capture().use { snapshot ->
-                    assertIs<TypePreviewResult.Ready>(operations.preview(resource, pending, snapshot)).preview
+                    operations.preview(resource, pending, snapshot).shouldBeInstanceOf<TypePreviewResult.Ready>().preview
                 }
 
-            assertIs<PreparedEditResult.Rejected>(
-                operations.prepare(
+            operations
+                .prepare(
                     preview.copy(
                         edit =
                             preview.edit.copy(
                                 intents = listOf(EditIntent.ConfigureResource(resource, TypeSelection.Complete(DUAL_COIN_COIN))),
                             ),
                     ),
-                ),
-            )
-            assertEquals(null, repository.edit)
-            assertIs<PreparedEditResult.Rejected>(
-                operations.prepare(
+                ).shouldBeInstanceOf<PreparedEditResult.Rejected>()
+            repository.edit shouldBe null
+            operations
+                .prepare(
                     preview.copy(edit = preview.edit.copy(expectations = preview.edit.expectations.dropLast(1))),
-                ),
-            )
-            assertEquals(null, repository.edit)
+                ).shouldBeInstanceOf<PreparedEditResult.Rejected>()
+            repository.edit shouldBe null
 
-            val prepared = assertIs<PreparedEditResult.Prepared>(operations.prepare(preview)).edit
-            assertEquals(null, repository.edit)
-            assertIs<CommitResult.Committed>(repository.commit(prepared))
-            assertEquals(prepared, repository.edit)
+            val prepared = operations.prepare(preview).shouldBeInstanceOf<PreparedEditResult.Prepared>().edit
+            repository.edit shouldBe null
+            repository.commit(prepared).shouldBeInstanceOf<CommitResult.Committed>()
+            repository.edit shouldBe prepared
             store.close()
         }
 
@@ -323,22 +332,20 @@ class TypeArgumentOperationsTest {
             )
         val preview =
             store.capture().use { snapshot ->
-                assertIs<TypePreviewResult.Ready>(
-                    DefaultTypeArgumentOperations(store).preview(resource, pending, snapshot),
-                ).preview
+                DefaultTypeArgumentOperations(
+                    store,
+                ).preview(resource, pending, snapshot).shouldBeInstanceOf<TypePreviewResult.Ready>().preview
             }
 
-        assertTrue(preview.clearedLocations.contains(linkLocation))
-        assertTrue(preview.edit.intents.none { it == EditIntent.SetValue(linkLocation, DataValue.Unfilled) })
-        assertEquals(
+        preview.clearedLocations.contains(linkLocation) shouldBe true
+        preview.edit.intents.none { it == EditIntent.SetValue(linkLocation, DataValue.Unfilled) } shouldBe true
+        preview.linkRepairs shouldBe
             listOf(
                 LinkRepairIntent.Clear(
                     com.typewritermc.authoring.LinkOccurrenceId(SOURCE_ENDPOINT, linkLocation),
                 ),
-            ),
-            preview.linkRepairs,
-        )
-        assertTrue(preview.edit.expectations.any { InputIdentity.Incoming(resource, RELATION) in it.dependencies() })
+            )
+        preview.edit.expectations.any { InputIdentity.Incoming(resource, RELATION) in it.dependencies() } shouldBe true
         store.close()
     }
 }

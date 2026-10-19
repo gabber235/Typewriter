@@ -34,6 +34,8 @@ import com.typewritermc.types.TypeParameter
 import com.typewritermc.types.TypeTemplate
 import com.typewritermc.types.TypeUse
 import de.infix.testBalloon.framework.core.testSuite
+import io.kotest.matchers.shouldBe
+import io.kotest.matchers.types.shouldBeInstanceOf
 
 val CapturedAuthoringReadsTest by testSuite {
     test("projection reads preserve partial bindings and exact value evidence") {
@@ -62,23 +64,21 @@ val CapturedAuthoringReadsTest by testSuite {
         val lease = store.capture()
         val reads = CapturedAuthoringReads(lease.originalView())
 
-        assertIs<com.typewritermc.authoring.DraftExpectation.PartialRoot>(
-            assertIs<Availability.Available<com.typewritermc.authoring.DraftBinding>>(
-                reads.binding(boundPath<Any>(root, TypeUse.Named(TEST_TYPE))),
-            ).value.expected,
-        )
-        assertEquals(Availability.Available(false), reads.presence(boundPath<Any?>(nullValue, TypeUse.Nullable(TEXT_USE))))
-        assertIs<Availability.Unavailable>(reads.presence(boundPath<Any>(missingValue, TEXT_USE)))
-        assertEquals(
-            Availability.Available("value"),
-            reads.readRepresentation<String>(
-                boundPath<Any>(representation, TypeUse.Named(REPRESENTATION_TYPE)),
-                TEXT_USE,
-            ),
-        )
-        assertTrue(reads.observations().any { InputIdentity.Form(root) in it.dependencies() })
-        assertTrue(reads.observations().any { InputIdentity.Value(nullValue) in it.dependencies() })
-        assertTrue(reads.observations().any { InputIdentity.Value(representation) in it.dependencies() })
+        reads
+            .binding(
+                boundPath<Any>(root, TypeUse.Named(TEST_TYPE)),
+            ).shouldBeInstanceOf<Availability.Available<com.typewritermc.authoring.DraftBinding>>()
+            .value.expected
+            .shouldBeInstanceOf<com.typewritermc.authoring.DraftExpectation.PartialRoot>()
+        reads.presence(boundPath<Any?>(nullValue, TypeUse.Nullable(TEXT_USE))) shouldBe Availability.Available(false)
+        reads.presence(boundPath<Any>(missingValue, TEXT_USE)).shouldBeInstanceOf<Availability.Unavailable>()
+        reads.readRepresentation<String>(
+            boundPath<Any>(representation, TypeUse.Named(REPRESENTATION_TYPE)),
+            TEXT_USE,
+        ) shouldBe Availability.Available("value")
+        reads.observations().any { InputIdentity.Form(root) in it.dependencies() } shouldBe true
+        reads.observations().any { InputIdentity.Value(nullValue) in it.dependencies() } shouldBe true
+        reads.observations().any { InputIdentity.Value(representation) in it.dependencies() } shouldBe true
 
         lease.close()
         store.close()
@@ -106,27 +106,22 @@ val CapturedAuthoringReadsTest by testSuite {
         val unfilledChild =
             ValueLocation(resource, ValuePath(listOf(PathSegment.Field("missingParent"), PathSegment.Field("child"))))
 
-        assertIs<Availability.Unavailable>(reads.read(boundPath<String>(nullChild, TEXT_USE)))
-        assertIs<Availability.Unavailable>(reads.read(boundPath<String>(unfilledChild, TEXT_USE)))
-        assertTrue(
-            reads
-                .expand(
-                    ValueLocation(resource, ValuePath()),
-                    RelativeFieldPattern(
-                        listOf(FieldPatternSegment.Field("nullParent"), FieldPatternSegment.Field("child")),
-                    ),
-                ).isEmpty(),
-        )
-        assertEquals(
-            listOf(unfilledChild),
-            reads.expand(
+        reads.read(boundPath<String>(nullChild, TEXT_USE)).shouldBeInstanceOf<Availability.Unavailable>()
+        reads.read(boundPath<String>(unfilledChild, TEXT_USE)).shouldBeInstanceOf<Availability.Unavailable>()
+        reads
+            .expand(
                 ValueLocation(resource, ValuePath()),
                 RelativeFieldPattern(
-                    listOf(FieldPatternSegment.Field("missingParent"), FieldPatternSegment.Field("child")),
+                    listOf(FieldPatternSegment.Field("nullParent"), FieldPatternSegment.Field("child")),
                 ),
+            ).isEmpty() shouldBe true
+        reads.expand(
+            ValueLocation(resource, ValuePath()),
+            RelativeFieldPattern(
+                listOf(FieldPatternSegment.Field("missingParent"), FieldPatternSegment.Field("child")),
             ),
-        )
-        assertTrue(reads.health().failures.isEmpty())
+        ) shouldBe listOf(unfilledChild)
+        reads.health().failures.isEmpty() shouldBe true
 
         lease.close()
         store.close()
@@ -162,10 +157,10 @@ val CapturedAuthoringReadsTest by testSuite {
 
         val selected = reads.select(TypedSelection(TestDraftType(ResourceTypeMatch.Definition(TEST_TYPE))))
 
-        assertEquals(listOf(available), selected.knownMatches.map { it.binding.location.resource })
-        assertTrue(selected.undecided.isEmpty())
-        assertTrue(selected.failures.isEmpty())
-        assertTrue(reads.health().failures.isEmpty())
+        selected.knownMatches.map { it.binding.location.resource } shouldBe listOf(available)
+        selected.undecided.isEmpty() shouldBe true
+        selected.failures.isEmpty() shouldBe true
+        reads.health().failures.isEmpty() shouldBe true
 
         lease.close()
         store.close()
@@ -197,8 +192,8 @@ val CapturedAuthoringReadsTest by testSuite {
 
         val found = CapturedAuthoringReads(lease.originalView()).discoverResources(TestDraftType(ResourceTypeMatch.Definition(TEST_TYPE)))
 
-        assertEquals(listOf(resource), found.map { it.location.resource })
-        assertIs<com.typewritermc.authoring.DraftExpectation.PartialRoot>(found.single().expected)
+        found.map { it.location.resource } shouldBe listOf(resource)
+        found.single().expected.shouldBeInstanceOf<com.typewritermc.authoring.DraftExpectation.PartialRoot>()
 
         lease.close()
         store.close()
@@ -227,11 +222,11 @@ val CapturedAuthoringReadsTest by testSuite {
                 TypedSelection(TestDraftType(ResourceTypeMatch.Application(TypeUse.Named(TEST_TYPE)))),
             )
 
-        assertEquals(1, result.knownMatches.size)
-        assertEquals(listOf(pending), result.undecided.map { it.resource })
-        assertEquals(Availability.Available(true), result.atLeast(1))
-        assertEquals(Availability.Available(false), result.atMost(0))
-        assertIs<Availability.Unavailable>(result.count())
+        result.knownMatches.size shouldBe 1
+        result.undecided.map { it.resource } shouldBe listOf(pending)
+        result.atLeast(1) shouldBe Availability.Available(true)
+        result.atMost(0) shouldBe Availability.Available(false)
+        result.count().shouldBeInstanceOf<Availability.Unavailable>()
 
         lease.close()
         store.close()
@@ -268,8 +263,8 @@ val CapturedAuthoringReadsTest by testSuite {
                 TypedSelection(TestDraftType(ResourceTypeMatch.Application(textUse))),
             )
 
-        assertEquals(listOf(text), selected.knownMatches.map { it.binding.location.resource })
-        assertTrue(selected.undecided.isEmpty())
+        selected.knownMatches.map { it.binding.location.resource } shouldBe listOf(text)
+        selected.undecided.isEmpty() shouldBe true
 
         lease.close()
         store.close()
@@ -317,9 +312,9 @@ val CapturedAuthoringReadsTest by testSuite {
                 boundPath<Any>(ValueLocation(unresolved, ValuePath()), textUse),
             )
 
-        assertIs<Availability.Available<DraftBinding>>(matching)
-        assertIs<Availability.Failed>(mismatched)
-        assertIs<Availability.Available<DraftBinding>>(unresolvedBinding)
+        matching.shouldBeInstanceOf<Availability.Available<DraftBinding>>()
+        mismatched.shouldBeInstanceOf<Availability.Failed>()
+        unresolvedBinding.shouldBeInstanceOf<Availability.Available<DraftBinding>>()
         lease.close()
         store.close()
     }
@@ -342,7 +337,7 @@ val CapturedAuthoringReadsTest by testSuite {
                 RelativeFieldPattern(listOf(FieldPatternSegment.Field("numbers"), FieldPatternSegment.Items)),
             )
 
-        assertEquals(
+        expanded shouldBe
             listOf(
                 ValueLocation(
                     resource,
@@ -352,10 +347,8 @@ val CapturedAuthoringReadsTest by testSuite {
                     resource,
                     ValuePath(listOf(PathSegment.Field("numbers"), PathSegment.Item(com.typewritermc.authoring.ItemId("b")))),
                 ),
-            ),
-            expanded,
-        )
-        assertTrue(reads.observations().any { InputIdentity.Value(location(resource, "numbers")) in it.dependencies() })
+            )
+        reads.observations().any { InputIdentity.Value(location(resource, "numbers")) in it.dependencies() } shouldBe true
 
         lease.close()
         store.close()
@@ -375,7 +368,7 @@ val CapturedAuthoringReadsTest by testSuite {
 
         val outcome = reads.health().outcome(RuleOrigin(TEST_TYPE, 0))
 
-        assertEquals(CheckOutcome.Incomplete("graph traversal limit exceeded"), outcome)
+        outcome shouldBe CheckOutcome.Incomplete("graph traversal limit exceeded")
         lease.close()
         store.close()
     }
@@ -432,7 +425,7 @@ val CapturedAuthoringReadsTest by testSuite {
                 index.replace(id, observations)
             }
             val full = listOf(nameId, countId).associateWith { evaluate(it).first }
-            assertEquals(full, incremental)
+            incremental shouldBe full
         }
 
         store.close()

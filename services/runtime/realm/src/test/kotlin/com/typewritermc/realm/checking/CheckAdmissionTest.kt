@@ -13,6 +13,7 @@ import com.typewritermc.realm.authoring.InMemoryAuthoringViewStore
 import com.typewritermc.types.DataValue
 import com.typewritermc.types.ResourceId
 import de.infix.testBalloon.framework.core.testSuite
+import io.kotest.matchers.shouldBe
 
 val CheckAdmissionTest by testSuite {
     val id = ResourceId("page")
@@ -36,14 +37,14 @@ val CheckAdmissionTest by testSuite {
                 },
             )
         var installed = 0
-        assertEquals(AdmissionResult.Published, admission.requireCurrentExecutionAndInputs(result) { installed++ })
+        admission.requireCurrentExecutionAndInputs(result) { installed++ } shouldBe AdmissionResult.Published
         store.install(store.prepare(AuthoringViewDelta(mapOf(id to record(name = "Story")))))
-        assertEquals(AdmissionResult.RetryRequired, admission.requireCurrentExecutionAndInputs(result) { installed++ })
+        admission.requireCurrentExecutionAndInputs(result) { installed++ } shouldBe AdmissionResult.RetryRequired
         store.install(store.prepare(AuthoringViewDelta(mapOf(id to record(name = "Quest")))))
-        assertEquals(AdmissionResult.Published, admission.requireCurrentExecutionAndInputs(result) { installed++ })
+        admission.requireCurrentExecutionAndInputs(result) { installed++ } shouldBe AdmissionResult.Published
         ticket = ticket.copy(execution = CheckExecutionId("replacement"))
-        assertEquals(AdmissionResult.Discarded, admission.requireCurrentExecutionAndInputs(result) { installed++ })
-        assertEquals(2, installed)
+        admission.requireCurrentExecutionAndInputs(result) { installed++ } shouldBe AdmissionResult.Discarded
+        installed shouldBe 2
         store.close()
     }
     test("captured acceptance compares with its retained view and requires finished checks") {
@@ -67,11 +68,9 @@ val CheckAdmissionTest by testSuite {
                 )
             store.install(store.prepare(AuthoringViewDelta(mapOf(id to record(name = "Story")))))
             val target = CheckAdmissionTarget.CapturedAcceptance(captured.root)
-            assertEquals(AdmissionResult.Captured, admission.requireEvidenceForCapture(result, target))
-            assertEquals(
-                AdmissionResult.RetryRequired,
-                admission.requireEvidenceForCapture(result.copy(outcome = CheckOutcome.Incomplete("interrupted")), target),
-            )
+            admission.requireEvidenceForCapture(result, target) shouldBe AdmissionResult.Captured
+            admission.requireEvidenceForCapture(result.copy(outcome = CheckOutcome.Incomplete("interrupted")), target) shouldBe
+                AdmissionResult.RetryRequired
         }
         store.close()
     }

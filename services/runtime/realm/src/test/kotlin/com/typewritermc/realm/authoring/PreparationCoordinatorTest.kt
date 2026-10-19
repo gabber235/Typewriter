@@ -15,6 +15,8 @@ import com.typewritermc.types.DataValue
 import com.typewritermc.types.TypeDefinitionId
 import com.typewritermc.types.TypeId
 import de.infix.testBalloon.framework.core.testSuite
+import io.kotest.assertions.throwables.shouldThrow
+import io.kotest.matchers.shouldBe
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
@@ -40,9 +42,9 @@ val PreparationCoordinatorTestSuite by testSuite {
             val callers = List(12) { async { coordinator.prepare(request) } }
             release.complete(Unit)
             val results = callers.awaitAll()
-            assertEquals(12, results.toSet().size)
-            assertEquals(12, evaluations.get())
-            assertEquals(prepared("13"), coordinator.prepare(request))
+            results.toSet().size shouldBe 12
+            evaluations.get() shouldBe 12
+            coordinator.prepare(request) shouldBe prepared("13")
         }
     }
     test("changed supplied values are independently evaluated") {
@@ -57,8 +59,8 @@ val PreparationCoordinatorTestSuite by testSuite {
                             PreparationStep.Ready(prepared(seed.value))
                         },
                 )
-            assertEquals(prepared("first"), coordinator.prepare(request("first")))
-            assertEquals(prepared("second"), coordinator.prepare(request("second")))
+            coordinator.prepare(request("first")) shouldBe prepared("first")
+            coordinator.prepare(request("second")) shouldBe prepared("second")
         }
     }
     test("an old request is rejected after catalog replacement") {
@@ -70,9 +72,9 @@ val PreparationCoordinatorTestSuite by testSuite {
                     evaluator = PreparationEvaluator { _, _ -> PreparationStep.Ready(prepared("captured")) },
                 )
             val request = request()
-            assertEquals(prepared("captured"), coordinator.prepare(request))
+            coordinator.prepare(request) shouldBe prepared("captured")
             generation = CatalogGeneration("next")
-            assertEquals(generation, assertFailsWith<PreparationCatalogChanged> { coordinator.prepare(request) }.actual)
+            shouldThrow<PreparationCatalogChanged> { coordinator.prepare(request) }.actual shouldBe generation
         }
     }
 }

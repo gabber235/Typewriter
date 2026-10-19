@@ -61,6 +61,8 @@ import com.typewritermc.types.TypeUse
 import com.typewritermc.types.catalog.CheckedCatalog
 import com.typewritermc.types.catalog.DefaultCheckedCatalog
 import de.infix.testBalloon.framework.core.testSuite
+import io.kotest.matchers.shouldBe
+import io.kotest.matchers.types.shouldBeInstanceOf
 
 class RealmGraphReadsTest {
     fun traversalUsesTheSelectedStagedGraphWithBoundedBreadthFirstSearch() {
@@ -106,21 +108,18 @@ class RealmGraphReadsTest {
                     ReachabilityQuery(setOf(a), selection, ResourceDrafts, maxDepth = 3),
                 )
             }
-        assertEquals(listOf(a, b, c, d, e), reachable.resources.map { it.id })
-        assertEquals(
-            5,
-            reachable.resources
-                .map { it.id }
-                .distinct()
-                .size,
-        )
-        assertTrue(reachable.failures.isEmpty())
-        val unavailable = assertIs<UnresolvedLink.UnavailableTarget>(reachable.unresolved.single())
-        assertEquals(ResourceId("missing_selected"), unavailable.target)
-        assertIs<InspectionCompletion.Interrupted>(reachable.completion)
+        reachable.resources.map { it.id } shouldBe listOf(a, b, c, d, e)
+        reachable.resources
+            .map { it.id }
+            .distinct()
+            .size shouldBe 5
+        reachable.failures.isEmpty() shouldBe true
+        val unavailable = reachable.unresolved.single().shouldBeInstanceOf<UnresolvedLink.UnavailableTarget>()
+        unavailable.target shouldBe ResourceId("missing_selected")
+        reachable.completion.shouldBeInstanceOf<InspectionCompletion.Interrupted>()
         val dependencies = reads.observations().flatMapTo(linkedSetOf()) { it.dependencies() }
-        assertTrue(InputIdentity.Incoming(a, EDGE.id) in dependencies)
-        assertTrue(
+        (InputIdentity.Incoming(a, EDGE.id) in dependencies) shouldBe true
+        (
             InputIdentity.Value(
                 ValueLocation(
                     a,
@@ -131,17 +130,17 @@ class RealmGraphReadsTest {
                         ),
                     ),
                 ),
-            ) in dependencies,
-        )
-        assertFalse(InputIdentity.Incoming(a, BAD.id) in dependencies)
-        assertFalse(InputIdentity.Incoming(a, null) in dependencies)
+            ) in dependencies
+        ) shouldBe true
+        (InputIdentity.Incoming(a, BAD.id) in dependencies) shouldBe false
+        (InputIdentity.Incoming(a, null) in dependencies) shouldBe false
 
         val routes =
             with(reads) {
                 RealmGraphReads.routes(RouteQuery(setOf(a), d, selection, maxDepth = 3))
             }
-        assertEquals(2, routes.paths.size)
-        assertTrue(routes.paths.all { it.size == 2 })
+        routes.paths.size shouldBe 2
+        routes.paths.all { it.size == 2 } shouldBe true
 
         val exactBudget = CapturedAuthoringReads(lease.originalView())
         val oneRoute =
@@ -156,8 +155,8 @@ class RealmGraphReadsTest {
                     ),
                 )
             }
-        assertEquals(1, oneRoute.paths.size)
-        assertIs<InspectionCompletion.Complete>(oneRoute.completion)
+        oneRoute.paths.size shouldBe 1
+        oneRoute.completion.shouldBeInstanceOf<InspectionCompletion.Complete>()
 
         val exactResourceBudget = CapturedAuthoringReads(lease.originalView())
         val exactResourceRoute =
@@ -172,8 +171,8 @@ class RealmGraphReadsTest {
                     ),
                 )
             }
-        assertEquals(1, exactResourceRoute.paths.size)
-        assertIs<InspectionCompletion.Complete>(exactResourceRoute.completion)
+        exactResourceRoute.paths.size shouldBe 1
+        exactResourceRoute.completion.shouldBeInstanceOf<InspectionCompletion.Complete>()
 
         val truncatedResourceBudget = CapturedAuthoringReads(lease.originalView())
         val truncatedResourceRoute =
@@ -188,8 +187,8 @@ class RealmGraphReadsTest {
                     ),
                 )
             }
-        assertTrue(truncatedResourceRoute.paths.isEmpty())
-        assertIs<InspectionCompletion.Interrupted>(truncatedResourceRoute.completion)
+        truncatedResourceRoute.paths.isEmpty() shouldBe true
+        truncatedResourceRoute.completion.shouldBeInstanceOf<InspectionCompletion.Interrupted>()
 
         val truncatedReads = CapturedAuthoringReads(lease.originalView())
         val truncatedRoutes =
@@ -204,8 +203,8 @@ class RealmGraphReadsTest {
                     ),
                 )
             }
-        assertEquals(1, truncatedRoutes.paths.size)
-        assertIs<InspectionCompletion.Interrupted>(truncatedRoutes.completion)
+        truncatedRoutes.paths.size shouldBe 1
+        truncatedRoutes.completion.shouldBeInstanceOf<InspectionCompletion.Interrupted>()
 
         val reverse = CapturedAuthoringReads(lease.originalView())
         val incoming =
@@ -219,7 +218,7 @@ class RealmGraphReadsTest {
                     ),
                 )
             }
-        assertEquals(setOf(b, c, d), incoming.resources.mapTo(linkedSetOf()) { it.id })
+        incoming.resources.mapTo(linkedSetOf()) { it.id } shouldBe setOf(b, c, d)
 
         val bounded = CapturedAuthoringReads(lease.originalView())
         val interrupted =
@@ -233,7 +232,7 @@ class RealmGraphReadsTest {
                     ),
                 )
             }
-        assertIs<InspectionCompletion.Interrupted>(interrupted.completion)
+        interrupted.completion.shouldBeInstanceOf<InspectionCompletion.Interrupted>()
 
         val stagedRecord = graphRecord(a, listOf(c))
         val stagedReads = CapturedAuthoringReads(lease.stagedView(mapOf(a to stagedRecord)))
@@ -243,8 +242,8 @@ class RealmGraphReadsTest {
                     ReachabilityQuery(setOf(a), selection, ResourceDrafts, maxDepth = 1),
                 )
             }
-        assertEquals(setOf(a, c), staged.resources.mapTo(linkedSetOf()) { it.id })
-        assertFalse(staged.resources.any { it.id == b })
+        staged.resources.mapTo(linkedSetOf()) { it.id } shouldBe setOf(a, c)
+        staged.resources.any { it.id == b } shouldBe false
 
         lease.close()
         store.close()
@@ -274,7 +273,7 @@ class RealmGraphReadsTest {
                     ReachabilityQuery(setOf(source), selection, ResourceDrafts, maxDepth = 1),
                 )
             }
-        assertEquals(setOf(source, originalTarget), originalReachable.resources.mapTo(linkedSetOf()) { it.id })
+        originalReachable.resources.mapTo(linkedSetOf()) { it.id } shouldBe setOf(source, originalTarget)
 
         val stagedReads =
             CapturedAuthoringReads(
@@ -285,10 +284,10 @@ class RealmGraphReadsTest {
                 RealmGraphReads.reachable(
                     ReachabilityQuery(setOf(source), selection, ResourceDrafts, maxDepth = 1),
                 )
-            assertEquals(setOf(source, stagedTarget), stagedReachable.resources.mapTo(linkedSetOf()) { it.id })
+            stagedReachable.resources.mapTo(linkedSetOf()) { it.id } shouldBe setOf(source, stagedTarget)
             val occurrence = RealmGraphReads.occurrences(LinkInspectionQuery(setOf(source), selection)).occurrences.single()
-            val followed = assertIs<Availability.Available<DraftBinding>>(RealmGraphReads.follow(occurrence))
-            assertEquals(stagedTarget, followed.value.location.resource)
+            val followed = RealmGraphReads.follow(occurrence).shouldBeInstanceOf<Availability.Available<DraftBinding>>()
+            followed.value.location.resource shouldBe stagedTarget
         }
         val outgoing =
             ValueLocation(
@@ -301,8 +300,8 @@ class RealmGraphReadsTest {
                 ),
             )
         val dependencies = stagedReads.observations().flatMapTo(linkedSetOf()) { it.dependencies() }
-        assertTrue(InputIdentity.Incoming(source, EDGE.id) in dependencies)
-        assertTrue(InputIdentity.Value(outgoing) in dependencies)
+        (InputIdentity.Incoming(source, EDGE.id) in dependencies) shouldBe true
+        (InputIdentity.Value(outgoing) in dependencies) shouldBe true
         lease.close()
         store.close()
     }
@@ -326,11 +325,11 @@ class RealmGraphReadsTest {
                 RealmGraphReads.incomingResources(target, RelationFamilyId("selected"))
             }
 
-        assertTrue(selection.knownMatches.isEmpty())
-        assertEquals(listOf(source), selection.undecided.map { it.resource })
-        assertIs<InspectionCompletion.Complete>(selection.completion)
+        selection.knownMatches.isEmpty() shouldBe true
+        selection.undecided.map { it.resource } shouldBe listOf(source)
+        selection.completion.shouldBeInstanceOf<InspectionCompletion.Complete>()
         val identities = reads.observations().flatMapTo(linkedSetOf()) { it.dependencies() }
-        assertTrue(InputIdentity.Form(ValueLocation(target, ValuePath())) in identities)
+        (InputIdentity.Form(ValueLocation(target, ValuePath())) in identities) shouldBe true
         lease.close()
         store.close()
     }
@@ -363,17 +362,14 @@ class RealmGraphReadsTest {
                     ReachabilityQuery(setOf(source), selection, ResourceDrafts, maxDepth = 1),
                 )
             }
-        assertEquals(setOf(source, target), reachable.resources.mapTo(linkedSetOf()) { it.id })
-        assertEquals(
-            BAD_ENDPOINT,
-            reachable.unresolved
-                .filterIsInstance<UnresolvedLink.Unfilled>()
-                .single { it.occurrence.location.resource == source }
-                .occurrence.endpoint,
-        )
-        assertIs<InspectionCompletion.Complete>(reachable.completion)
+        reachable.resources.mapTo(linkedSetOf()) { it.id } shouldBe setOf(source, target)
+        reachable.unresolved
+            .filterIsInstance<UnresolvedLink.Unfilled>()
+            .single { it.occurrence.location.resource == source }
+            .occurrence.endpoint shouldBe BAD_ENDPOINT
+        reachable.completion.shouldBeInstanceOf<InspectionCompletion.Complete>()
         val dependencies = reachableReads.observations().flatMapTo(linkedSetOf()) { it.dependencies() }
-        assertTrue(
+        (
             InputIdentity.Value(
                 ValueLocation(
                     source,
@@ -384,9 +380,9 @@ class RealmGraphReadsTest {
                         ),
                     ),
                 ),
-            ) in dependencies,
-        )
-        assertTrue(
+            ) in dependencies
+        ) shouldBe true
+        (
             InputIdentity.Value(
                 ValueLocation(
                     source,
@@ -397,9 +393,9 @@ class RealmGraphReadsTest {
                         ),
                     ),
                 ),
-            ) in dependencies,
-        )
-        assertTrue(
+            ) in dependencies
+        ) shouldBe true
+        (
             InputIdentity.Value(
                 ValueLocation(
                     source,
@@ -410,9 +406,9 @@ class RealmGraphReadsTest {
                         ),
                     ),
                 ),
-            ) in dependencies,
-        )
-        assertTrue(
+            ) in dependencies
+        ) shouldBe true
+        (
             InputIdentity.Form(
                 ValueLocation(
                     source,
@@ -423,10 +419,10 @@ class RealmGraphReadsTest {
                         ),
                     ),
                 ),
-            ) in dependencies,
-        )
+            ) in dependencies
+        ) shouldBe true
         listOf("message", "nested", "expanding").forEach { field ->
-            assertTrue(
+            (
                 InputIdentity.Form(
                     ValueLocation(
                         source,
@@ -437,37 +433,31 @@ class RealmGraphReadsTest {
                             ),
                         ),
                     ),
-                ) in dependencies,
-            )
+                ) in dependencies
+            ) shouldBe true
         }
 
         val routes =
             with(CapturedAuthoringReads(lease.originalView())) {
                 RealmGraphReads.routes(RouteQuery(setOf(source), target, selection, maxDepth = 1))
             }
-        assertEquals(1, routes.paths.size)
-        assertEquals(
-            BAD_ENDPOINT,
-            routes.unresolved
-                .filterIsInstance<UnresolvedLink.Unfilled>()
-                .single { it.occurrence.location.resource == source }
-                .occurrence.endpoint,
-        )
-        assertIs<InspectionCompletion.Complete>(routes.completion)
+        routes.paths.size shouldBe 1
+        routes.unresolved
+            .filterIsInstance<UnresolvedLink.Unfilled>()
+            .single { it.occurrence.location.resource == source }
+            .occurrence.endpoint shouldBe BAD_ENDPOINT
+        routes.completion.shouldBeInstanceOf<InspectionCompletion.Complete>()
 
         val occurrences =
             with(CapturedAuthoringReads(lease.originalView())) {
                 RealmGraphReads.occurrences(LinkInspectionQuery(setOf(source), selection))
             }
-        assertEquals(1, occurrences.occurrences.size)
-        assertEquals(
-            EDGE_SOURCE,
-            occurrences.occurrences
-                .single()
-                .id.endpoint,
-        )
-        assertIs<UnresolvedLink.Unfilled>(occurrences.unresolved.single())
-        assertIs<InspectionCompletion.Complete>(occurrences.completion)
+        occurrences.occurrences.size shouldBe 1
+        occurrences.occurrences
+            .single()
+            .id.endpoint shouldBe EDGE_SOURCE
+        occurrences.unresolved.single().shouldBeInstanceOf<UnresolvedLink.Unfilled>()
+        occurrences.completion.shouldBeInstanceOf<InspectionCompletion.Complete>()
 
         val changedSource =
             resources.getValue(source).copy(
@@ -554,7 +544,7 @@ class RealmGraphReadsTest {
         val actual =
             com.typewritermc.realm.repository
                 .CapturedAuthoringValues(mapOf(source to changedSource), emptyList())
-        assertEquals(1, actual.conflicts(listOf(expected)).size)
+        actual.conflicts(listOf(expected)).size shouldBe 1
         store.install(
             store.prepare(
                 AuthoringViewDelta(upsertedResources = mapOf(source to changedSource)),
@@ -574,7 +564,7 @@ class RealmGraphReadsTest {
                     ).unresolved
                     .filterIsInstance<UnresolvedLink.Unfilled>()
             }
-        assertEquals(
+        changedUnresolved.mapTo(linkedSetOf()) { it.occurrence.location.path } shouldBe
             setOf(
                 ValuePath(
                     listOf(
@@ -600,9 +590,7 @@ class RealmGraphReadsTest {
                             .Field("target"),
                     ),
                 ),
-            ),
-            changedUnresolved.mapTo(linkedSetOf()) { it.occurrence.location.path },
-        )
+            )
         changedLease.close()
 
         lease.close()

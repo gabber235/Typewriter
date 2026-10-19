@@ -55,6 +55,8 @@ import com.typewritermc.types.TypeUse
 import com.typewritermc.types.catalog.CheckedCatalog
 import com.typewritermc.types.catalog.DefaultCheckedCatalog
 import de.infix.testBalloon.framework.core.testSuite
+import io.kotest.assertions.throwables.shouldThrow
+import io.kotest.matchers.shouldBe
 import java.math.BigInteger
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.Executors
@@ -69,30 +71,24 @@ val AuthoringViewStoreTest by testSuite {
             val token =
                 store.capture().use { saved ->
                     val working = saved.operationObservation(saved.root.observationId, mapOf(id to record(name = "Draft")), emptySet())
-                    assertEquals(
-                        "Draft",
-                        (
-                            working.resources
-                                .getValue(id)
-                                .fields
-                                .getValue("name") as DataValue.StringValue
-                        ).value,
-                    )
-                    assertEquals(
-                        "Saved",
-                        (
-                            saved.root.resources
-                                .getValue(id)
-                                .fields
-                                .getValue("name") as DataValue.StringValue
-                        ).value,
-                    )
+                    (
+                        working.resources
+                            .getValue(id)
+                            .fields
+                            .getValue("name") as DataValue.StringValue
+                    ).value shouldBe "Draft"
+                    (
+                        saved.root.resources
+                            .getValue(id)
+                            .fields
+                            .getValue("name") as DataValue.StringValue
+                    ).value shouldBe "Saved"
                     saved.root.observationId
                 }
             store.install(store.prepare(AuthoringViewDelta(mapOf(id to record(name = "Other panel")))))
             store.capture().use { next ->
-                assertTrue(next.root.observationId != token)
-                assertFailsWith<com.typewritermc.realm.authoring.StaleOperationObservation> {
+                (next.root.observationId != token) shouldBe true
+                shouldThrow<com.typewritermc.realm.authoring.StaleOperationObservation> {
                     next.operationObservation(token, mapOf(id to record(name = "Draft")), emptySet())
                 }
             }
@@ -107,20 +103,15 @@ val AuthoringViewStoreTest by testSuite {
         val store = InMemoryAuthoringViewStore(catalog, AuthoringSeed(mapOf(id to original)))
         val retained = store.capture()
         store.install(store.prepare(AuthoringViewDelta(mapOf(id to record(name = "Story", numbers = listOf("b" to 2, "a" to 1))))))
-        assertEquals(original, retained.root.resources[id])
-        assertEquals(
-            "Story",
-            store.capture().use {
-                CapturedAuthoringReads(it.originalView()).read(boundPath<String>(location(id, "name"), TEXT_USE)).available()
-            },
-        )
-        assertEquals(
-            listOf(ItemId("a"), ItemId("b")),
-            CapturedAuthoringReads(retained.originalView()).members(boundCollectionPath(location(id, "numbers"))),
-        )
+        retained.root.resources[id] shouldBe original
+        store.capture().use {
+            CapturedAuthoringReads(it.originalView()).read(boundPath<String>(location(id, "name"), TEXT_USE)).available()
+        } shouldBe "Story"
+        CapturedAuthoringReads(retained.originalView()).members(boundCollectionPath(location(id, "numbers"))) shouldBe
+            listOf(ItemId("a"), ItemId("b"))
         retained.close()
         store.close()
-        assertEquals(0, catalog.openCount)
+        catalog.openCount shouldBe 0
     }
     test("read contexts belong to one retained original view") {
         val catalog = TestCatalogLease()
@@ -128,9 +119,9 @@ val AuthoringViewStoreTest by testSuite {
         val original = store.capture()
         val context = original.root.readContext
         store.install(store.prepare(AuthoringViewDelta()))
-        store.retain(context).use { assertTrue(it.root === original.root) }
+        store.retain(context).use { (it.root === original.root) shouldBe true }
         original.close()
-        assertFailsWith<IllegalArgumentException> { store.retain(context) }
+        shouldThrow<IllegalArgumentException> { store.retain(context) }
         store.close()
     }
     test("reload failure prevents serving old current state but preserves retained reads") {
@@ -146,13 +137,13 @@ val AuthoringViewStoreTest by testSuite {
             if (fail) error("storage unavailable")
             AuthoringSeed(mapOf(id to record(name = "Story")))
         }
-        assertFailsWith<IllegalStateException> { store.capture() }
-        assertEquals(original, retained.root.resources[id])
+        shouldThrow<IllegalStateException> { store.capture() }
+        retained.root.resources[id] shouldBe original
         fail = false
-        assertEquals(record(name = "Story"), store.capture().use { it.root.resources[id] })
-        assertEquals(2, loads)
+        store.capture().use { it.root.resources[id] } shouldBe record(name = "Story")
+        loads shouldBe 2
         store.capture().close()
-        assertEquals(2, loads)
+        loads shouldBe 2
         retained.close()
         store.close()
     }
@@ -162,13 +153,13 @@ val AuthoringViewStoreTest by testSuite {
         val store = InMemoryAuthoringViewStore(TestCatalogLease(), AuthoringSeed(mapOf(id to original)))
         store.capture().use { lease ->
             val reads = CapturedAuthoringReads(lease.stagedView(mapOf(id to record(name = "Story"))))
-            assertEquals("Story", reads.read(boundPath<String>(location(id, "name"), TEXT_USE)).available())
+            reads.read(boundPath<String>(location(id, "name"), TEXT_USE)).available() shouldBe "Story"
             val expected =
                 reads.observations().filterIsInstance<com.typewritermc.authoring.EditExpectation.Value>().single {
                     it.at ==
                         location(id, "name")
                 }
-            assertEquals(DataValue.StringValue("Quest"), expected.expected)
+            expected.expected shouldBe DataValue.StringValue("Quest")
         }
         store.close()
     }
@@ -192,15 +183,15 @@ val AuthoringViewStoreTest by testSuite {
 
         store.capture().use { lease ->
             val retained = lease.root.resources.getValue(id)
-            assertEquals(DataValue.StringValue("Quest"), retained.fields.getValue("name"))
+            retained.fields.getValue("name") shouldBe DataValue.StringValue("Quest")
             val retainedNumbers = retained.fields.getValue("numbers") as DataValue.Named
-            assertEquals(listOf(INT_USE), retainedNumbers.actualType.arguments)
-            assertEquals(listOf(ItemId("root")), (retainedNumbers.payload as DataValue.ListValue).items.map(ListItem::id))
-            assertFailsWith<UnsupportedOperationException> {
+            retainedNumbers.actualType.arguments shouldBe listOf(INT_USE)
+            (retainedNumbers.payload as DataValue.ListValue).items.map(ListItem::id) shouldBe listOf(ItemId("root"))
+            shouldThrow<UnsupportedOperationException> {
                 @Suppress("UNCHECKED_CAST")
                 (lease.root.resources as MutableMap<ResourceId, AuthoringRecord>)[ResourceId("other")] = retained
             }
-            assertFailsWith<UnsupportedOperationException> {
+            shouldThrow<UnsupportedOperationException> {
                 @Suppress("UNCHECKED_CAST")
                 (retainedNumbers.actualType.arguments as MutableList<TypeUse>) += TEXT_USE
             }
@@ -219,10 +210,10 @@ val AuthoringViewStoreTest by testSuite {
             stagedItems.clear()
 
             val retainedStaged = staged.resources.getValue(id)
-            assertEquals(DataValue.StringValue("Story"), retainedStaged.fields.getValue("name"))
+            retainedStaged.fields.getValue("name") shouldBe DataValue.StringValue("Story")
             val stagedNumbers = retainedStaged.fields.getValue("numbers") as DataValue.Named
-            assertEquals(listOf(ItemId("staged")), (stagedNumbers.payload as DataValue.ListValue).items.map(ListItem::id))
-            assertFailsWith<UnsupportedOperationException> {
+            (stagedNumbers.payload as DataValue.ListValue).items.map(ListItem::id) shouldBe listOf(ItemId("staged"))
+            shouldThrow<UnsupportedOperationException> {
                 @Suppress("UNCHECKED_CAST")
                 ((stagedNumbers.payload as DataValue.ListValue).items as MutableList<ListItem>).clear()
             }
@@ -241,16 +232,16 @@ val AuthoringViewStoreTest by testSuite {
                     store.read { current ->
                         reading.countDown()
                         release.await()
-                        assertEquals(record(name = "Quest"), current.resources[id])
+                        current.resources[id] shouldBe record(name = "Quest")
                     }
                 }
-            assertTrue(reading.await(2, TimeUnit.SECONDS))
+            reading.await(2, TimeUnit.SECONDS) shouldBe true
             val write = executor.submit { store.install(store.prepare(AuthoringViewDelta(mapOf(id to record(name = "Story"))))) }
-            assertFalse(write.isDone)
+            write.isDone shouldBe false
             release.countDown()
             read.get(2, TimeUnit.SECONDS)
             write.get(2, TimeUnit.SECONDS)
-            assertEquals(record(name = "Story"), store.capture().use { it.root.resources[id] })
+            store.capture().use { it.root.resources[id] } shouldBe record(name = "Story")
         } finally {
             release.countDown()
             executor.shutdownNow()

@@ -42,6 +42,8 @@ import com.typewritermc.types.TypeTemplate
 import com.typewritermc.types.TypeUse
 import com.typewritermc.types.catalog.Resolution
 import de.infix.testBalloon.framework.core.testSuite
+import io.kotest.matchers.shouldBe
+import io.kotest.matchers.types.shouldBeInstanceOf
 import java.math.BigInteger
 import java.util.concurrent.atomic.AtomicInteger
 
@@ -114,9 +116,9 @@ val RealmCheckInputsTest by testSuite {
 
         val result = with(reads) { RealmCheckInputs().evaluate(recipe, binding(catalog, resource)) }
 
-        assertEquals(CheckOutcome.Finished, result.outcome)
-        assertTrue(result.findings.isEmpty())
-        assertEquals(2, calls.get())
+        result.outcome shouldBe CheckOutcome.Finished
+        result.findings.isEmpty() shouldBe true
+        calls.get() shouldBe 2
         lease.close()
         store.close()
     }
@@ -152,19 +154,16 @@ val RealmCheckInputsTest by testSuite {
 
         val result = with(reads) { RealmCheckInputs().evaluate(recipe, binding(catalog, resource)) }
 
-        assertIs<CheckOutcome.NeedsInput>(result.outcome)
-        assertEquals(1, result.findings.size)
-        assertEquals(
-            ItemId("known"),
-            (
-                result.findings
-                    .single()
-                    .primary
-                    ?.path
-                    ?.segments
-                    ?.last() as PathSegment.Item
-            ).id,
-        )
+        result.outcome.shouldBeInstanceOf<CheckOutcome.NeedsInput>()
+        result.findings.size shouldBe 1
+        (
+            result.findings
+                .single()
+                .primary
+                ?.path
+                ?.segments
+                ?.last() as PathSegment.Item
+        ).id shouldBe ItemId("known")
         lease.close()
         store.close()
     }
@@ -184,7 +183,7 @@ val RealmCheckInputsTest by testSuite {
 
         with(reads) { RealmCheckInputs().evaluate(recipe, binding(catalog, resource)) }
 
-        assertEquals(listOf("check occurrence tuple limit exceeded"), reads.health().incomplete)
+        reads.health().incomplete shouldBe listOf("check occurrence tuple limit exceeded")
         lease.close()
         store.close()
     }

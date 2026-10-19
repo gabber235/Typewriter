@@ -59,6 +59,8 @@ import com.typewritermc.types.TypeUse
 import com.typewritermc.types.catalog.DefaultCheckedCatalog
 import com.typewritermc.types.skir.getOrThrow
 import de.infix.testBalloon.framework.core.testSuite
+import io.kotest.matchers.shouldBe
+import io.kotest.matchers.types.shouldBeInstanceOf
 import kotlinx.coroutines.runBlocking
 
 class AuthoringMutationPlannerTest {
@@ -107,7 +109,7 @@ class AuthoringMutationPlannerTest {
                         baseline,
                         reads,
                     ).availability(com.typewritermc.operations.BuiltinResourceOperation.LinkWithDuplicate, listOf(id))
-            assertEquals(com.typewritermc.operations.OperationAvailability.Hidden, result)
+            result shouldBe com.typewritermc.operations.OperationAvailability.Hidden
         } finally {
             catalog.close()
         }
@@ -211,10 +213,10 @@ class AuthoringMutationPlannerTest {
                         working,
                     )
                 with(session) { layouts.prepareMove(listOf(layouts.draft(first), layouts.draft(second)), owner, null).apply() }
-                assertEquals(listOf(fieldPath("children"), fieldPath("manyFirst")), requests.map { it.collection.path })
-                assertEquals(listOf(listOf(first), listOf(second)), requests.map { it.subjects.map { draft -> draft.id } })
-                assertEquals(listOf(listOf(first), listOf(second)), requests.map { it.occupants.map { draft -> draft.id } })
-                assertEquals(resources, baseline.resources)
+                requests.map { it.collection.path } shouldBe listOf(fieldPath("children"), fieldPath("manyFirst"))
+                requests.map { it.subjects.map { draft -> draft.id } } shouldBe listOf(listOf(first), listOf(second))
+                requests.map { it.occupants.map { draft -> draft.id } } shouldBe listOf(listOf(first), listOf(second))
+                baseline.resources shouldBe resources
             } finally {
                 baseline.catalog.close()
             }
@@ -313,26 +315,35 @@ class AuthoringMutationPlannerTest {
                 val token = store.capture().use { it.root.observationId }
                 val overlay = mapOf(first to record(label = "Draft"))
                 val resolved = runtime.resolve(invocation, GENERATION, token, overlay, emptySet())
-                assertEquals(listOf("Add suffix"), resolved.operations.map { it.definition.presentation.label })
+                resolved.operations.map { it.definition.presentation.label } shouldBe listOf("Add suffix")
                 val partial = record().let { it.copy(fields = it.fields + ("label" to DataValue.Unfilled)) }
                 val partialResolution = runtime.resolve(invocation, GENERATION, token, mapOf(first to partial), emptySet())
-                assertIs<com.typewritermc.operations.OperationAvailability.Disabled>(partialResolution.operations.single().availability)
+                partialResolution.operations
+                    .single()
+                    .availability
+                    .shouldBeInstanceOf<com.typewritermc.operations.OperationAvailability.Disabled>()
                 val capability =
                     resolved.operations
                         .single()
                         .definition.id.capability
                 val preview =
-                    assertIs<com.typewritermc.realm.authoring.OperationPreparationResult.Preview>(
-                        runtime.prepare(invocation, GENERATION, capability, token, overlay, emptySet(), null, PreparationChoices()),
-                    )
-                assertTrue(preview.edit.intents.any { it is EditIntent.SetValue && it.value == DataValue.StringValue("Draft!") })
-                assertTrue(
-                    preview.edit.expectations.any {
-                        it is com.typewritermc.authoring.EditExpectation.Value &&
-                            it.at == location(first, "label") &&
-                            it.expected == DataValue.StringValue("Draft")
-                    },
-                )
+                    runtime
+                        .prepare(
+                            invocation,
+                            GENERATION,
+                            capability,
+                            token,
+                            overlay,
+                            emptySet(),
+                            null,
+                            PreparationChoices(),
+                        ).shouldBeInstanceOf<com.typewritermc.realm.authoring.OperationPreparationResult.Preview>()
+                preview.edit.intents.any { it is EditIntent.SetValue && it.value == DataValue.StringValue("Draft!") } shouldBe true
+                preview.edit.expectations.any {
+                    it is com.typewritermc.authoring.EditExpectation.Value &&
+                        it.at == location(first, "label") &&
+                        it.expected == DataValue.StringValue("Draft")
+                } shouldBe true
                 val failed =
                     runtime.prepare(
                         invocation,
@@ -344,8 +355,8 @@ class AuthoringMutationPlannerTest {
                         null,
                         PreparationChoices(),
                     )
-                assertTrue(failed is com.typewritermc.realm.authoring.OperationPreparationResult.Failed)
-                assertEquals(resources, store.capture().use { it.root.resources })
+                (failed is com.typewritermc.realm.authoring.OperationPreparationResult.Failed) shouldBe true
+                store.capture().use { it.root.resources } shouldBe resources
                 var resolutionFailure: com.typewritermc.realm.authoring.OperationResolutionFailure? = null
                 try {
                     runtime.resolve(invocation, GENERATION, token, mapOf(second to record(label = "availability-failure")), emptySet())
@@ -354,8 +365,8 @@ class AuthoringMutationPlannerTest {
                 ) {
                     resolutionFailure = failure
                 }
-                assertEquals(origin, resolutionFailure?.origin)
-                assertEquals("Availability provider failed", resolutionFailure?.cause?.message)
+                resolutionFailure?.origin shouldBe origin
+                resolutionFailure?.cause?.message shouldBe "Availability provider failed"
                 val routes =
                     com.typewritermc.realm.routes.ResourceOperationRoutes(
                         runtime,
@@ -408,13 +419,14 @@ class AuthoringMutationPlannerTest {
                             ),
                     )
                 val wireFailure =
-                    assertIs<skirout.editor.v1.resource_operations.ResolveResourceOperationsResult.FailedWrapper>(routes.resolve(wire))
-                assertTrue(
-                    wireFailure.value.diagnostics
-                        .single()
-                        .message
-                        .contains("fixture.InlineOperations"),
-                )
+                    routes
+                        .resolve(
+                            wire,
+                        ).shouldBeInstanceOf<skirout.editor.v1.resource_operations.ResolveResourceOperationsResult.FailedWrapper>()
+                wireFailure.value.diagnostics
+                    .single()
+                    .message
+                    .contains("fixture.InlineOperations") shouldBe true
             } finally {
                 store.close()
                 baseline.catalog.close()
@@ -440,10 +452,13 @@ class AuthoringMutationPlannerTest {
             }
         val planner = planner(contract)
         val complete =
-            assertIs<MutationPlanningResult.Accepted>(
-                planner.plan(resources, edit(EditIntent.DeleteResource(first), EditIntent.DeleteResource(second))),
-            ).plan
-        assertEquals(setOf(first, second), complete.removedResources)
+            planner
+                .plan(
+                    resources,
+                    edit(EditIntent.DeleteResource(first), EditIntent.DeleteResource(second)),
+                ).shouldBeInstanceOf<MutationPlanningResult.Accepted>()
+                .plan
+        complete.removedResources shouldBe setOf(first, second)
         val separated =
             planner.plan(
                 resources,
@@ -453,7 +468,7 @@ class AuthoringMutationPlannerTest {
                     EditIntent.DeleteResource(second),
                 ),
             )
-        assertTrue(separated is MutationPlanningResult.Rejected)
+        (separated is MutationPlanningResult.Rejected) shouldBe true
     }
 
     fun deletionSelectionIncludesCascadeAndExplicitDescendantOnce() =
@@ -478,8 +493,8 @@ class AuthoringMutationPlannerTest {
                     )
                 session.deleteSelection(listOf(parent, child))
                 val result = edit.finish()
-                assertTrue(edit.session.resources.isEmpty())
-                assertEquals(2, result.intents.filterIsInstance<EditIntent.DeleteResource>().size)
+                edit.session.resources.isEmpty() shouldBe true
+                result.intents.filterIsInstance<EditIntent.DeleteResource>().size shouldBe 2
             } finally {
                 baseline.catalog.close()
             }
@@ -538,24 +553,19 @@ class AuthoringMutationPlannerTest {
                 val subjects = listOf(first, second).map(OperationLayoutPreparation(edit, baseline)::draft)
                 with(session) { relations.requireMove(subjects, to, origin, choices).apply() }
                 val prepared = edit.finish()
-                assertTrue(
-                    prepared.intents.filterIsInstance<EditIntent.ConnectRelation>().all {
-                        it.intent.counterpart is CounterpartChoice.Existing
-                    },
-                )
+                prepared.intents.filterIsInstance<EditIntent.ConnectRelation>().all {
+                    it.intent.counterpart is CounterpartChoice.Existing
+                } shouldBe true
                 val final = ResourceValueMapper.discover(edit.session.resources)
-                assertEquals(setOf(first, second), final.filter { it.source == to }.map { it.target.resource }.toSet())
-                assertTrue(final.none { it.source == from })
-                assertEquals(
-                    "first",
-                    (
-                        edit.session.resources
-                            .getValue(first)
-                            .fields
-                            .getValue("label") as DataValue.StringValue
-                    ).value,
-                )
-                assertEquals(resources, baseline.resources)
+                final.filter { it.source == to }.map { it.target.resource }.toSet() shouldBe setOf(first, second)
+                final.none { it.source == from } shouldBe true
+                (
+                    edit.session.resources
+                        .getValue(first)
+                        .fields
+                        .getValue("label") as DataValue.StringValue
+                ).value shouldBe "first"
+                baseline.resources shouldBe resources
             } finally {
                 baseline.catalog.close()
             }
@@ -596,9 +606,9 @@ class AuthoringMutationPlannerTest {
                     rejected =
                         true
                 }
-                assertTrue(rejected)
-                assertTrue(edit.session.intents.isEmpty())
-                assertEquals(resources, edit.session.resources)
+                rejected shouldBe true
+                edit.session.intents.isEmpty() shouldBe true
+                edit.session.resources shouldBe resources
             } finally {
                 baseline.catalog.close()
             }
@@ -664,9 +674,9 @@ class AuthoringMutationPlannerTest {
                     )
                 val result = with(session) { cloner.duplicateOwned(listOf(book, page)) }
                 val final = edit.finish()
-                assertEquals(2, result.selectedCopies.size)
-                assertEquals(3, final.intents.filterIsInstance<EditIntent.CreateResource>().size)
-                assertEquals(7, edit.session.resources.size)
+                result.selectedCopies.size shouldBe 2
+                final.intents.filterIsInstance<EditIntent.CreateResource>().size shouldBe 3
+                edit.session.resources.size shouldBe 7
                 val copy = edit.session.resources.getValue(result.selectedCopies[0])
                 val copiedChildItem =
                     (
@@ -684,8 +694,8 @@ class AuthoringMutationPlannerTest {
                             ) as DataValue.Named
                         ).payload as DataValue.ListValue
                     ).items.single().id
-                assertTrue(copiedChildItem != copiedOrdinaryItem)
-                assertEquals(resources, baseline.resources)
+                (copiedChildItem != copiedOrdinaryItem) shouldBe true
+                baseline.resources shouldBe resources
                 val copied =
                     ResourceValueMapper.project(
                         ResourceValueMapper.discover(edit.session.resources),
@@ -693,8 +703,8 @@ class AuthoringMutationPlannerTest {
                         baseline.catalog.relations,
                         baseline.catalog.checked,
                     )
-                assertTrue(copied.problems.isEmpty())
-                assertTrue(copied.projections.any { it.first == result.selectedCopies[0] && it.second == result.selectedCopies[1] })
+                copied.problems.isEmpty() shouldBe true
+                copied.projections.any { it.first == result.selectedCopies[0] && it.second == result.selectedCopies[1] } shouldBe true
             } finally {
                 baseline.catalog.close()
             }
@@ -757,10 +767,10 @@ class AuthoringMutationPlannerTest {
                 val copy = with(session) { cloner.duplicateOwned(listOf(source)).selectedCopies.single() }
                 edit.finish()
                 val links = ResourceValueMapper.discover(edit.session.resources)
-                assertTrue(links.any { it.source == copy && it.target.resource == outside })
-                assertTrue(links.none { it.source == incoming && it.target.resource == copy })
-                assertEquals(resources.getValue(incoming), edit.session.resources.getValue(incoming))
-                assertTrue(links.none { it.source == copy && it.target.resource == incoming })
+                links.any { it.source == copy && it.target.resource == outside } shouldBe true
+                links.none { it.source == incoming && it.target.resource == copy } shouldBe true
+                edit.session.resources.getValue(incoming) shouldBe resources.getValue(incoming)
+                links.none { it.source == copy && it.target.resource == incoming } shouldBe true
             } finally {
                 baseline.catalog.close()
             }
@@ -786,8 +796,8 @@ class AuthoringMutationPlannerTest {
                 } catch (_: IllegalArgumentException) {
                     rejected = true
                 }
-                assertTrue(rejected)
-                assertEquals(resources, baseline.resources)
+                rejected shouldBe true
+                baseline.resources shouldBe resources
             } finally {
                 baseline.catalog.close()
             }
@@ -856,11 +866,12 @@ class AuthoringMutationPlannerTest {
             session.append(EditIntent.ConnectRelation(ConnectIntent(occurrence, target, choice)))
             val (prepared, _) = session.finish()
             val inserts = prepared.intents.filterIsInstance<EditIntent.Insert>()
-            assertEquals(2, inserts.size)
-            assertTrue(inserts[0].item.id != inserts[1].item.id)
-            assertTrue(
-                prepared.intents.filterIsInstance<EditIntent.ConnectRelation>().all { it.intent.counterpart is CounterpartChoice.Existing },
-            )
+            inserts.size shouldBe 2
+            (inserts[0].item.id != inserts[1].item.id) shouldBe true
+            prepared.intents.filterIsInstance<EditIntent.ConnectRelation>().all {
+                it.intent.counterpart is CounterpartChoice.Existing
+            } shouldBe
+                true
         } finally {
             catalog.close()
         }
@@ -891,17 +902,21 @@ class AuthoringMutationPlannerTest {
                 EditIntent.ConnectRelation(ConnectIntent(occurrence(PARENT_SECOND, location(child, "parent"), parent, null), parent, null)),
             )
             val inverse = ResourceValueMapper.discover(session.resources).single { it.source == parent }
-            assertTrue((session.intents.single() as EditIntent.ConnectRelation).intent.counterpart is CounterpartChoice.Existing)
+            ((session.intents.single() as EditIntent.ConnectRelation).intent.counterpart is CounterpartChoice.Existing) shouldBe true
             session.append(EditIntent.SetValue(location(child, "label"), DataValue.StringValue("later write")))
             val (prepared, plan) = session.finish()
-            assertEquals(session.resources, resources + plan.resources - plan.removedResources)
+            resources + plan.resources - plan.removedResources shouldBe session.resources
             val composed =
                 prepared.copy(
                     intents =
                         listOf(EditIntent.SetValue(location(parent, "label"), DataValue.StringValue("earlier draft"))) + prepared.intents,
                 )
-            val final = assertIs<MutationPlanningResult.Accepted>(session.planner.plan(resources, composed)).plan
-            assertTrue(ResourceValueMapper.discover(resources + final.resources).any { it.id == inverse.id })
+            val final =
+                session.planner
+                    .plan(resources, composed)
+                    .shouldBeInstanceOf<MutationPlanningResult.Accepted>()
+                    .plan
+            ResourceValueMapper.discover(resources + final.resources).any { it.id == inverse.id } shouldBe true
         } finally {
             catalog.close()
         }
@@ -909,22 +924,13 @@ class AuthoringMutationPlannerTest {
 
     fun counterpartClassificationPreservesBroaderServerCapabilities() {
         val resource = ResourceId("counterpart")
-        assertEquals(
-            CounterpartBinding.Scalar(location(resource, "second")),
-            ResourceValueMapper.counterpartBinding(PAIR_SECOND, resource, record(), CATALOG),
-        )
-        assertEquals(
-            CounterpartBinding.Collection(location(resource, "children")),
-            ResourceValueMapper.counterpartBinding(PARENT_FIRST, resource, record(), CATALOG),
-        )
-        assertEquals(
-            CounterpartBinding.Scalar(ValueLocation(resource, ValuePath(listOf(PathSegment.Field("wrapper"), PathSegment.Field("inner"))))),
-            ResourceValueMapper.counterpartBinding(NESTED_FIRST, resource, record(), CATALOG),
-        )
-        assertEquals(
-            CounterpartBinding.Missing,
-            ResourceValueMapper.counterpartBinding(EndpointId("absent"), resource, record(), CATALOG),
-        )
+        ResourceValueMapper.counterpartBinding(PAIR_SECOND, resource, record(), CATALOG) shouldBe
+            CounterpartBinding.Scalar(location(resource, "second"))
+        ResourceValueMapper.counterpartBinding(PARENT_FIRST, resource, record(), CATALOG) shouldBe
+            CounterpartBinding.Collection(location(resource, "children"))
+        ResourceValueMapper.counterpartBinding(NESTED_FIRST, resource, record(), CATALOG) shouldBe
+            CounterpartBinding.Scalar(ValueLocation(resource, ValuePath(listOf(PathSegment.Field("wrapper"), PathSegment.Field("inner")))))
+        ResourceValueMapper.counterpartBinding(EndpointId("absent"), resource, record(), CATALOG) shouldBe CounterpartBinding.Missing
 
         val node = DEFINITIONS.single { it.id == NODE }
         val shape = node.representation as RepresentationTemplate.Record
@@ -938,27 +944,23 @@ class AuthoringMutationPlannerTest {
             )
         val catalog = DefaultCheckedCatalog(GENERATION, DEFINITIONS.map { if (it.id == NODE) ambiguous else it })
         val target = record().copy(fields = record().fields + ("secondAlternative" to DataValue.Unfilled))
-        assertEquals(
-            CounterpartBinding.ExplicitChoice,
-            ResourceValueMapper.counterpartBinding(PAIR_SECOND, resource, target, catalog),
-        )
+        ResourceValueMapper.counterpartBinding(PAIR_SECOND, resource, target, catalog) shouldBe CounterpartBinding.ExplicitChoice
     }
 
     fun unknownConnectEndpointIsRejectedBeforeInferringACounterpart() {
         val source = ResourceId("source")
         val target = ResourceId("target")
         val result =
-            assertIs<MutationPlanningResult.Rejected>(
-                planner(pairContract()).plan(
+            planner(pairContract())
+                .plan(
                     mapOf(source to record(), target to record()),
                     edit(
                         EditIntent.ConnectRelation(
                             ConnectIntent(occurrence(EndpointId("absent"), location(source, "first"), target, null), target, null),
                         ),
                     ),
-                ),
-            )
-        assertEquals(listOf("unknown_endpoint"), result.problems.map { it.code })
+                ).shouldBeInstanceOf<MutationPlanningResult.Rejected>()
+        result.problems.map { it.code } shouldBe listOf("unknown_endpoint")
     }
 
     fun insertMaterializesTheCheckedUnfilledSequenceShape() {
@@ -1002,25 +1004,27 @@ class AuthoringMutationPlannerTest {
                 )
             val item = ListItem(ItemId("stable_item"), DataValue.StringValue("value"))
             val accepted =
-                assertIs<MutationPlanningResult.Accepted>(
-                    planner.plan(before, edit(EditIntent.Insert(location, null, item))),
-                ).plan
+                planner
+                    .plan(
+                        before,
+                        edit(EditIntent.Insert(location, null, item)),
+                    ).shouldBeInstanceOf<MutationPlanningResult.Accepted>()
+                    .plan
             val collection =
-                assertIs<DataValue.Named>(
-                    before
-                        .apply(accepted)
-                        .getValue(resource)
-                        .fields
-                        .getValue("values"),
-                )
+                before
+                    .apply(accepted)
+                    .getValue(resource)
+                    .fields
+                    .getValue("values")
+                    .shouldBeInstanceOf<DataValue.Named>()
 
-            assertEquals(collectionUse, collection.actualType)
+            collection.actualType shouldBe collectionUse
             when (kind) {
-                CollectionKind.List -> assertEquals(listOf(item), assertIs<DataValue.ListValue>(collection.payload).items)
-                CollectionKind.Set -> assertEquals(listOf(item), assertIs<DataValue.SetValue>(collection.payload).items)
+                CollectionKind.List -> collection.payload.shouldBeInstanceOf<DataValue.ListValue>().items shouldBe listOf(item)
+                CollectionKind.Set -> collection.payload.shouldBeInstanceOf<DataValue.SetValue>().items shouldBe listOf(item)
             }
-            assertIs<MutationPlanningResult.Rejected>(
-                planner.plan(
+            planner
+                .plan(
                     before,
                     edit(
                         EditIntent.Insert(
@@ -1029,8 +1033,7 @@ class AuthoringMutationPlannerTest {
                             ListItem(ItemId("invalid_item"), DataValue.Boolean(true)),
                         ),
                     ),
-                ),
-            )
+                ).shouldBeInstanceOf<MutationPlanningResult.Rejected>()
         }
     }
 
@@ -1094,10 +1097,7 @@ class AuthoringMutationPlannerTest {
                 ResourceId("target"),
                 null,
             )
-        assertEquals(
-            targetUse,
-            ResourceValueMapper.expectedTarget(occurrence, record, catalog),
-        )
+        ResourceValueMapper.expectedTarget(occurrence, record, catalog) shouldBe targetUse
     }
 
     fun pendingTargetsRequireProvableAppliedArguments() {
@@ -1192,8 +1192,9 @@ class AuthoringMutationPlannerTest {
             val resources = mapOf(source to sourceRecord, target to AuthoringRecord(selection, emptyMap()))
             val projection = ResourceValueMapper.project(ResourceValueMapper.discover(resources), resources, listOf(contract), catalog)
 
-            assertTrue(projection.projections.isEmpty())
-            assertTrue(projection.problems.any { it.location == location(source, "target") && it.code == "target_resource_type_mismatch" })
+            projection.projections.isEmpty() shouldBe true
+            projection.problems.any { it.location == location(source, "target") && it.code == "target_resource_type_mismatch" } shouldBe
+                true
         }
     }
 
@@ -1283,8 +1284,8 @@ class AuthoringMutationPlannerTest {
 
         val projection = ResourceValueMapper.project(ResourceValueMapper.discover(resources), resources, listOf(contract), catalog)
 
-        assertEquals(1, projection.projections.size)
-        assertTrue(projection.problems.isEmpty())
+        projection.projections.size shouldBe 1
+        projection.problems.isEmpty() shouldBe true
     }
 
     fun connectAndDisconnectSynchronizeBothDirectSides() {
@@ -1298,40 +1299,35 @@ class AuthoringMutationPlannerTest {
         val before = mapOf(source to record(), target to record())
 
         val connected =
-            assertIs<MutationPlanningResult.Accepted>(
-                planner.plan(
+            planner
+                .plan(
                     before,
                     edit(
                         EditIntent.ConnectRelation(
                             ConnectIntent(sourceOccurrence, target, CounterpartChoice.Existing(targetOccurrence)),
                         ),
                     ),
-                ),
-            ).plan
+                ).shouldBeInstanceOf<MutationPlanningResult.Accepted>()
+                .plan
         val connectedResources = before.apply(connected)
 
-        assertEquals(
-            link(PAIR_FIRST_TYPE, PAIR_FIRST, target, targetLocation.path),
-            connectedResources.getValue(source).fields.getValue("first"),
-        )
-        assertEquals(
-            link(PAIR_SECOND_TYPE, PAIR_SECOND, source, sourceLocation.path),
-            connectedResources.getValue(target).fields.getValue("second"),
-        )
-        assertEquals(1, connected.relations.created.size)
+        connectedResources.getValue(source).fields.getValue("first") shouldBe link(PAIR_FIRST_TYPE, PAIR_FIRST, target, targetLocation.path)
+        connectedResources.getValue(target).fields.getValue("second") shouldBe
+            link(PAIR_SECOND_TYPE, PAIR_SECOND, source, sourceLocation.path)
+        connected.relations.created.size shouldBe 1
 
         val disconnected =
-            assertIs<MutationPlanningResult.Accepted>(
-                planner.plan(
+            planner
+                .plan(
                     connectedResources,
                     edit(EditIntent.DisconnectRelation(sourceOccurrence.id)),
-                ),
-            ).plan
+                ).shouldBeInstanceOf<MutationPlanningResult.Accepted>()
+                .plan
         val disconnectedResources = connectedResources.apply(disconnected)
 
-        assertEquals(DataValue.Unfilled, disconnectedResources.getValue(source).fields.getValue("first"))
-        assertEquals(DataValue.Unfilled, disconnectedResources.getValue(target).fields.getValue("second"))
-        assertEquals(1, disconnected.relations.removed.size)
+        disconnectedResources.getValue(source).fields.getValue("first") shouldBe DataValue.Unfilled
+        disconnectedResources.getValue(target).fields.getValue("second") shouldBe DataValue.Unfilled
+        disconnected.relations.removed.size shouldBe 1
     }
 
     fun scalarConnectAppendsItsDirectCollectionCounterpart() {
@@ -1343,28 +1339,28 @@ class AuthoringMutationPlannerTest {
         val before = mapOf(parent to record(), child to record())
 
         val plan =
-            assertIs<MutationPlanningResult.Accepted>(
-                planner.plan(
+            planner
+                .plan(
                     before,
                     edit(EditIntent.ConnectRelation(ConnectIntent(source, parent, null))),
-                ),
-            ).plan
+                ).shouldBeInstanceOf<MutationPlanningResult.Accepted>()
+                .plan
         val resources = before.apply(plan)
         val children =
-            assertIs<DataValue.ListValue>(
-                assertIs<DataValue.Named>(resources.getValue(parent).fields.getValue("children")).payload,
-            ).items
+            resources
+                .getValue(
+                    parent,
+                ).fields
+                .getValue("children")
+                .shouldBeInstanceOf<DataValue.Named>()
+                .payload
+                .shouldBeInstanceOf<DataValue.ListValue>()
+                .items
 
-        assertEquals(1, children.size)
+        children.size shouldBe 1
         val counterpartPath = ValuePath(listOf(PathSegment.Field("children"), PathSegment.Item(children.single().id)))
-        assertEquals(
-            link(PARENT_SECOND_TYPE, PARENT_SECOND, parent, counterpartPath),
-            resources.getValue(child).fields.getValue("parent"),
-        )
-        assertEquals(
-            link(PARENT_FIRST_TYPE, PARENT_FIRST, child, sourceLocation.path),
-            children.single().value,
-        )
+        resources.getValue(child).fields.getValue("parent") shouldBe link(PARENT_SECOND_TYPE, PARENT_SECOND, parent, counterpartPath)
+        children.single().value shouldBe link(PARENT_FIRST_TYPE, PARENT_FIRST, child, sourceLocation.path)
     }
 
     fun scalarConnectMaterializesItsUnfilledDirectCollectionCounterpart() {
@@ -1377,20 +1373,33 @@ class AuthoringMutationPlannerTest {
         val before = mapOf(parent to parentRecord, child to record())
 
         val plan =
-            assertIs<MutationPlanningResult.Accepted>(
-                planner.plan(
+            planner
+                .plan(
                     before,
                     edit(EditIntent.ConnectRelation(ConnectIntent(source, parent, null))),
-                ),
-            ).plan
+                ).shouldBeInstanceOf<MutationPlanningResult.Accepted>()
+                .plan
         val resources = before.apply(plan)
         val children =
-            assertIs<DataValue.ListValue>(
-                assertIs<DataValue.Named>(resources.getValue(parent).fields.getValue("children")).payload,
-            ).items
+            resources
+                .getValue(
+                    parent,
+                ).fields
+                .getValue("children")
+                .shouldBeInstanceOf<DataValue.Named>()
+                .payload
+                .shouldBeInstanceOf<DataValue.ListValue>()
+                .items
 
-        assertEquals(1, children.size)
-        assertEquals(child, assertIs<DataValue.Link>(assertIs<DataValue.Named>(children.single().value).payload).target.resource)
+        children.size shouldBe 1
+        children
+            .single()
+            .value
+            .shouldBeInstanceOf<DataValue.Named>()
+            .payload
+            .shouldBeInstanceOf<DataValue.Link>()
+            .target.resource shouldBe
+            child
     }
 
     fun newCounterpartEvidenceProtectsPriorStateWithoutRequiringThePlannedLocation() {
@@ -1455,10 +1464,10 @@ class AuthoringMutationPlannerTest {
 
         val values = CapturedAuthoringValues(before, emptyList())
         val evidence = values.requiredExpectations(edit, before, setOf(nestedContract().id), plan)
-        assertTrue(evidence.any { it is com.typewritermc.authoring.EditExpectation.Value && it.at == sourceLocation })
-        assertTrue(evidence.any { it is com.typewritermc.authoring.EditExpectation.Configuration && it.at == containing })
-        assertTrue(evidence.any { it is com.typewritermc.authoring.EditExpectation.Links && it.resource == source })
-        assertTrue(evidence.any { it is com.typewritermc.authoring.EditExpectation.Links && it.resource == target })
+        evidence.any { it is com.typewritermc.authoring.EditExpectation.Value && it.at == sourceLocation } shouldBe true
+        evidence.any { it is com.typewritermc.authoring.EditExpectation.Configuration && it.at == containing } shouldBe true
+        evidence.any { it is com.typewritermc.authoring.EditExpectation.Links && it.resource == source } shouldBe true
+        evidence.any { it is com.typewritermc.authoring.EditExpectation.Links && it.resource == target } shouldBe true
     }
 
     fun proposedCollectionOccurrenceConnectsItsDirectScalarCounterpart() {
@@ -1472,27 +1481,27 @@ class AuthoringMutationPlannerTest {
         val before = mapOf(parent to record(), child to record())
 
         val plan =
-            assertIs<MutationPlanningResult.Accepted>(
-                planner.plan(
+            planner
+                .plan(
                     before,
                     edit(EditIntent.ConnectRelation(ConnectIntent(source, child, null))),
-                ),
-            ).plan
+                ).shouldBeInstanceOf<MutationPlanningResult.Accepted>()
+                .plan
         val resources = before.apply(plan)
         val children =
-            assertIs<DataValue.ListValue>(
-                assertIs<DataValue.Named>(resources.getValue(parent).fields.getValue("children")).payload,
-            ).items
+            resources
+                .getValue(
+                    parent,
+                ).fields
+                .getValue("children")
+                .shouldBeInstanceOf<DataValue.Named>()
+                .payload
+                .shouldBeInstanceOf<DataValue.ListValue>()
+                .items
 
-        assertEquals(listOf(item), children.map(ListItem::id))
-        assertEquals(
-            link(PARENT_FIRST_TYPE, PARENT_FIRST, child, fieldPath("parent")),
-            children.single().value,
-        )
-        assertEquals(
-            link(PARENT_SECOND_TYPE, PARENT_SECOND, parent, sourceLocation.path),
-            resources.getValue(child).fields.getValue("parent"),
-        )
+        children.map(ListItem::id) shouldBe listOf(item)
+        children.single().value shouldBe link(PARENT_FIRST_TYPE, PARENT_FIRST, child, fieldPath("parent"))
+        resources.getValue(child).fields.getValue("parent") shouldBe link(PARENT_SECOND_TYPE, PARENT_SECOND, parent, sourceLocation.path)
     }
 
     fun proposedCollectionOccurrenceMaterializesItsUnfilledCollection() {
@@ -1507,23 +1516,26 @@ class AuthoringMutationPlannerTest {
         val before = mapOf(parent to parentRecord, child to record())
 
         val plan =
-            assertIs<MutationPlanningResult.Accepted>(
-                planner.plan(
+            planner
+                .plan(
                     before,
                     edit(EditIntent.ConnectRelation(ConnectIntent(source, child, null))),
-                ),
-            ).plan
+                ).shouldBeInstanceOf<MutationPlanningResult.Accepted>()
+                .plan
         val resources = before.apply(plan)
         val children =
-            assertIs<DataValue.ListValue>(
-                assertIs<DataValue.Named>(resources.getValue(parent).fields.getValue("children")).payload,
-            ).items
+            resources
+                .getValue(
+                    parent,
+                ).fields
+                .getValue("children")
+                .shouldBeInstanceOf<DataValue.Named>()
+                .payload
+                .shouldBeInstanceOf<DataValue.ListValue>()
+                .items
 
-        assertEquals(listOf(item), children.map(ListItem::id))
-        assertEquals(
-            link(PARENT_SECOND_TYPE, PARENT_SECOND, parent, sourceLocation.path),
-            resources.getValue(child).fields.getValue("parent"),
-        )
+        children.map(ListItem::id) shouldBe listOf(item)
+        resources.getValue(child).fields.getValue("parent") shouldBe link(PARENT_SECOND_TYPE, PARENT_SECOND, parent, sourceLocation.path)
     }
 
     fun ordinaryLinkSetAndClearSynchronizeTheDirectCounterpart() {
@@ -1534,8 +1546,8 @@ class AuthoringMutationPlannerTest {
         val before = mapOf(parent to record(), child to record())
 
         val connected =
-            assertIs<MutationPlanningResult.Accepted>(
-                planner.plan(
+            planner
+                .plan(
                     before,
                     edit(
                         EditIntent.SetValue(
@@ -1543,30 +1555,42 @@ class AuthoringMutationPlannerTest {
                             link(PARENT_SECOND_TYPE, PARENT_SECOND, parent, null),
                         ),
                     ),
-                ),
-            ).plan
+                ).shouldBeInstanceOf<MutationPlanningResult.Accepted>()
+                .plan
         val connectedResources = before.apply(connected)
         val children =
-            assertIs<DataValue.ListValue>(
-                assertIs<DataValue.Named>(connectedResources.getValue(parent).fields.getValue("children")).payload,
-            ).items
+            connectedResources
+                .getValue(
+                    parent,
+                ).fields
+                .getValue("children")
+                .shouldBeInstanceOf<DataValue.Named>()
+                .payload
+                .shouldBeInstanceOf<DataValue.ListValue>()
+                .items
 
-        assertEquals(1, children.size)
+        children.size shouldBe 1
         val cleared =
-            assertIs<MutationPlanningResult.Accepted>(
-                planner.plan(
+            planner
+                .plan(
                     connectedResources,
                     edit(EditIntent.SetValue(parentLocation, DataValue.Unfilled)),
-                ),
-            ).plan
+                ).shouldBeInstanceOf<MutationPlanningResult.Accepted>()
+                .plan
         val clearedResources = connectedResources.apply(cleared)
         val remaining =
-            assertIs<DataValue.ListValue>(
-                assertIs<DataValue.Named>(clearedResources.getValue(parent).fields.getValue("children")).payload,
-            ).items
+            clearedResources
+                .getValue(
+                    parent,
+                ).fields
+                .getValue("children")
+                .shouldBeInstanceOf<DataValue.Named>()
+                .payload
+                .shouldBeInstanceOf<DataValue.ListValue>()
+                .items
 
-        assertTrue(remaining.isEmpty())
-        assertEquals(DataValue.Unfilled, clearedResources.getValue(child).fields.getValue("parent"))
+        remaining.isEmpty() shouldBe true
+        clearedResources.getValue(child).fields.getValue("parent") shouldBe DataValue.Unfilled
     }
 
     fun ordinaryCollectionRemoveClearsTheDirectScalarCounterpart() {
@@ -1591,20 +1615,26 @@ class AuthoringMutationPlannerTest {
             )
 
         val plan =
-            assertIs<MutationPlanningResult.Accepted>(
-                planner.plan(
+            planner
+                .plan(
                     resources,
                     edit(EditIntent.Remove(location(parent, "children"), item)),
-                ),
-            ).plan
+                ).shouldBeInstanceOf<MutationPlanningResult.Accepted>()
+                .plan
         val next = resources.apply(plan)
 
-        assertEquals(DataValue.Unfilled, next.getValue(child).fields.getValue("parent"))
+        next.getValue(child).fields.getValue("parent") shouldBe DataValue.Unfilled
         val items =
-            assertIs<DataValue.ListValue>(
-                assertIs<DataValue.Named>(next.getValue(parent).fields.getValue("children")).payload,
-            ).items
-        assertTrue(items.isEmpty())
+            next
+                .getValue(
+                    parent,
+                ).fields
+                .getValue("children")
+                .shouldBeInstanceOf<DataValue.Named>()
+                .payload
+                .shouldBeInstanceOf<DataValue.ListValue>()
+                .items
+        items.isEmpty() shouldBe true
     }
 
     fun ordinaryContainingRecordSetAndClearSynchronizeNestedLinks() {
@@ -1617,8 +1647,8 @@ class AuthoringMutationPlannerTest {
         val before = mapOf(source to record(), target to record())
 
         val connected =
-            assertIs<MutationPlanningResult.Accepted>(
-                planner.plan(
+            planner
+                .plan(
                     before,
                     edit(
                         EditIntent.SetValue(
@@ -1626,31 +1656,35 @@ class AuthoringMutationPlannerTest {
                             wrapper(link(NESTED_FIRST_TYPE, NESTED_FIRST, target, null)),
                         ),
                     ),
-                ),
-            ).plan
+                ).shouldBeInstanceOf<MutationPlanningResult.Accepted>()
+                .plan
         val connectedResources = before.apply(connected)
 
-        assertEquals(
-            link(NESTED_FIRST_TYPE, NESTED_FIRST, target, oppositePath),
-            assertIs<DataValue.Record>(
-                assertIs<DataValue.Named>(connectedResources.getValue(source).fields.getValue("wrapper")).payload,
-            ).fields.getValue("inner"),
-        )
-        assertEquals(
-            link(NESTED_SECOND_TYPE, NESTED_SECOND, source, nestedPath),
-            connectedResources.getValue(target).fields.getValue("nestedSecond"),
-        )
+        connectedResources
+            .getValue(
+                source,
+            ).fields
+            .getValue(
+                "wrapper",
+            ).shouldBeInstanceOf<DataValue.Named>()
+            .payload
+            .shouldBeInstanceOf<DataValue.Record>()
+            .fields
+            .getValue("inner") shouldBe
+            link(NESTED_FIRST_TYPE, NESTED_FIRST, target, oppositePath)
+        connectedResources.getValue(target).fields.getValue("nestedSecond") shouldBe
+            link(NESTED_SECOND_TYPE, NESTED_SECOND, source, nestedPath)
 
         val cleared =
-            assertIs<MutationPlanningResult.Accepted>(
-                planner.plan(
+            planner
+                .plan(
                     connectedResources,
                     edit(EditIntent.SetValue(location(source, "wrapper"), wrapper(DataValue.Unfilled))),
-                ),
-            ).plan
+                ).shouldBeInstanceOf<MutationPlanningResult.Accepted>()
+                .plan
         val clearedResources = connectedResources.apply(cleared)
 
-        assertEquals(DataValue.Unfilled, clearedResources.getValue(target).fields.getValue("nestedSecond"))
+        clearedResources.getValue(target).fields.getValue("nestedSecond") shouldBe DataValue.Unfilled
     }
 
     fun clearRemovesCollectionOccurrenceWithoutRetainingItsItemIdentity() {
@@ -1676,23 +1710,23 @@ class AuthoringMutationPlannerTest {
             )
 
         val deletedChild =
-            assertIs<MutationPlanningResult.Accepted>(
-                planner.plan(before, edit(EditIntent.DeleteResource(child))),
-            ).plan
+            planner.plan(before, edit(EditIntent.DeleteResource(child))).shouldBeInstanceOf<MutationPlanningResult.Accepted>().plan
         val retainedParent = before.apply(deletedChild).getValue(parent)
-        val children = assertIs<DataValue.Named>(retainedParent.fields.getValue("children")).payload
+        val children =
+            retainedParent.fields
+                .getValue("children")
+                .shouldBeInstanceOf<DataValue.Named>()
+                .payload
 
-        assertTrue(assertIs<DataValue.ListValue>(children).items.isEmpty())
-        assertEquals(setOf(child), deletedChild.removedResources)
+        children.shouldBeInstanceOf<DataValue.ListValue>().items.isEmpty() shouldBe true
+        deletedChild.removedResources shouldBe setOf(child)
 
         val deletedParent =
-            assertIs<MutationPlanningResult.Accepted>(
-                planner.plan(before, edit(EditIntent.DeleteResource(parent))),
-            ).plan
+            planner.plan(before, edit(EditIntent.DeleteResource(parent))).shouldBeInstanceOf<MutationPlanningResult.Accepted>().plan
         val retainedChild = before.apply(deletedParent).getValue(child)
 
-        assertEquals(DataValue.Unfilled, retainedChild.fields.getValue("parent"))
-        assertEquals(setOf(parent), deletedParent.removedResources)
+        retainedChild.fields.getValue("parent") shouldBe DataValue.Unfilled
+        deletedParent.removedResources shouldBe setOf(parent)
     }
 
     fun cascadeComputesTheCompleteClosureBeforeRemovingResources() {
@@ -1717,12 +1751,10 @@ class AuthoringMutationPlannerTest {
             )
 
         val plan =
-            assertIs<MutationPlanningResult.Accepted>(
-                planner.plan(before, edit(EditIntent.DeleteResource(parent))),
-            ).plan
+            planner.plan(before, edit(EditIntent.DeleteResource(parent))).shouldBeInstanceOf<MutationPlanningResult.Accepted>().plan
 
-        assertEquals(setOf(parent, child), plan.removedResources)
-        assertTrue(before.apply(plan).isEmpty())
+        plan.removedResources shouldBe setOf(parent, child)
+        before.apply(plan).isEmpty() shouldBe true
     }
 
     fun repeatedManyOccurrencesKeepTheirExactLocations() {
@@ -1751,14 +1783,12 @@ class AuthoringMutationPlannerTest {
                 CATALOG,
             )
 
-        assertTrue(projection.problems.isEmpty())
-        assertEquals(
+        projection.problems.isEmpty() shouldBe true
+        projection.projections.mapNotNullTo(linkedSetOf()) { it.firstLocation } shouldBe
             setOf(
                 ValuePath(listOf(PathSegment.Field("manyFirst"), PathSegment.Item(first))),
                 ValuePath(listOf(PathSegment.Field("manyFirst"), PathSegment.Item(second))),
-            ),
-            projection.projections.mapNotNullTo(linkedSetOf()) { it.firstLocation },
-        )
+            )
     }
 
     fun shrinkingRepeatedPairRemovesOnlyTheExactOldOccurrence() {
@@ -1781,19 +1811,19 @@ class AuthoringMutationPlannerTest {
             )
 
         val plan =
-            assertIs<MutationPlanningResult.Accepted>(
-                planner.plan(before, edit(EditIntent.Remove(location(source, "manyFirst"), removed))),
-            ).plan
+            planner
+                .plan(
+                    before,
+                    edit(EditIntent.Remove(location(source, "manyFirst"), removed)),
+                ).shouldBeInstanceOf<MutationPlanningResult.Accepted>()
+                .plan
 
-        assertEquals(1, plan.relations.removed.size)
-        assertEquals(
-            ValuePath(listOf(PathSegment.Field("manyFirst"), PathSegment.Item(removed))),
-            plan.relations.removed
-                .single()
-                .firstLocation,
-        )
-        assertTrue(plan.relations.created.isEmpty())
-        assertTrue(plan.relations.metadataChanged.isEmpty())
+        plan.relations.removed.size shouldBe 1
+        plan.relations.removed
+            .single()
+            .firstLocation shouldBe ValuePath(listOf(PathSegment.Field("manyFirst"), PathSegment.Item(removed)))
+        plan.relations.created.isEmpty() shouldBe true
+        plan.relations.metadataChanged.isEmpty() shouldBe true
     }
 
     fun pairingOneSidedOccurrencesReplacesTheirExactProjections() {
@@ -1819,36 +1849,28 @@ class AuthoringMutationPlannerTest {
             )
 
         val plan =
-            assertIs<MutationPlanningResult.Accepted>(
-                planner.plan(
+            planner
+                .plan(
                     before,
                     edit(
                         EditIntent.ConnectRelation(
                             ConnectIntent(sourceOccurrence, target, CounterpartChoice.Existing(targetOccurrence)),
                         ),
                     ),
-                ),
-            ).plan
+                ).shouldBeInstanceOf<MutationPlanningResult.Accepted>()
+                .plan
 
-        assertEquals(2, plan.relations.removed.size)
-        assertEquals(
-            setOf(sourcePath to null, null to targetPath),
-            plan.relations.removed.mapTo(linkedSetOf()) { it.firstLocation to it.secondLocation },
-        )
-        assertEquals(1, plan.relations.created.size)
-        assertEquals(
-            sourcePath,
-            plan.relations.created
-                .single()
-                .firstLocation,
-        )
-        assertEquals(
-            targetPath,
-            plan.relations.created
-                .single()
-                .secondLocation,
-        )
-        assertTrue(plan.relations.metadataChanged.isEmpty())
+        plan.relations.removed.size shouldBe 2
+        plan.relations.removed.mapTo(linkedSetOf()) { it.firstLocation to it.secondLocation } shouldBe
+            setOf(sourcePath to null, null to targetPath)
+        plan.relations.created.size shouldBe 1
+        plan.relations.created
+            .single()
+            .firstLocation shouldBe sourcePath
+        plan.relations.created
+            .single()
+            .secondLocation shouldBe targetPath
+        plan.relations.metadataChanged.isEmpty() shouldBe true
     }
 
     fun manyOccurrencesRejectCrossedReciprocalLocations() {
@@ -1890,17 +1912,15 @@ class AuthoringMutationPlannerTest {
                 CATALOG,
             )
 
-        assertTrue(projection.projections.isEmpty())
-        assertEquals(
+        projection.projections.isEmpty() shouldBe true
+        projection.problems.mapTo(linkedSetOf()) { it.location } shouldBe
             setOf(
                 ValueLocation(source, sourceFirstPath),
                 ValueLocation(source, sourceSecondPath),
                 ValueLocation(target, targetFirstPath),
                 ValueLocation(target, targetSecondPath),
-            ),
-            projection.problems.mapTo(linkedSetOf()) { it.location },
-        )
-        assertEquals(setOf("opposite_occurrence_mismatch"), projection.problems.mapTo(linkedSetOf()) { it.code })
+            )
+        projection.problems.mapTo(linkedSetOf()) { it.code } shouldBe setOf("opposite_occurrence_mismatch")
     }
 
     fun concreteSubtypeLinkIsAuthorizedByItsActualTaggedSchema() {
@@ -1958,11 +1978,8 @@ class AuthoringMutationPlannerTest {
 
         val projection = ResourceValueMapper.project(ResourceValueMapper.discover(resources), resources, listOf(contract), catalog)
 
-        assertTrue(projection.problems.isEmpty())
-        assertEquals(
-            ValuePath(listOf(PathSegment.Field("message"), PathSegment.Field("target"))),
-            projection.projections.single().firstLocation,
-        )
+        projection.problems.isEmpty() shouldBe true
+        projection.projections.single().firstLocation shouldBe ValuePath(listOf(PathSegment.Field("message"), PathSegment.Field("target")))
     }
 
     fun recursiveLinkIsAuthorizedAtItsExactAuthoredDepth() {
@@ -2031,17 +2048,15 @@ class AuthoringMutationPlannerTest {
 
         val projection = ResourceValueMapper.project(ResourceValueMapper.discover(resources), resources, listOf(contract), catalog)
 
-        assertTrue(projection.problems.isEmpty())
-        assertEquals(
+        projection.problems.isEmpty() shouldBe true
+        projection.projections.single().firstLocation shouldBe
             ValuePath(
                 listOf(
                     PathSegment.Field("tree"),
                     PathSegment.Field("next"),
                     PathSegment.Field("target"),
                 ),
-            ),
-            projection.projections.single().firstLocation,
-        )
+            )
     }
 
     fun appliedLinkTargetRejectsAResourceOutsideItsRefinedBound() {
@@ -2111,8 +2126,8 @@ class AuthoringMutationPlannerTest {
 
         val projection = ResourceValueMapper.project(ResourceValueMapper.discover(resources), resources, listOf(contract), catalog)
 
-        assertTrue(projection.problems.any { it.code == "binding_target_type_mismatch" })
-        assertTrue(projection.projections.isEmpty())
+        projection.problems.any { it.code == "binding_target_type_mismatch" } shouldBe true
+        projection.projections.isEmpty() shouldBe true
     }
 
     fun unavailableSelectedFormCannotAuthorizeAnAuthoredLink() {
@@ -2148,8 +2163,8 @@ class AuthoringMutationPlannerTest {
 
         val projection = ResourceValueMapper.project(ResourceValueMapper.discover(resources), resources, listOf(contract), catalog)
 
-        assertTrue(projection.problems.any { it.code == "source_resource_type_mismatch" })
-        assertTrue(projection.projections.isEmpty())
+        projection.problems.any { it.code == "source_resource_type_mismatch" } shouldBe true
+        projection.projections.isEmpty() shouldBe true
     }
 
     fun ownershipRejectsTwoImmediateOwners() {
@@ -2165,14 +2180,13 @@ class AuthoringMutationPlannerTest {
             )
 
         val rejected =
-            assertIs<MutationPlanningResult.Rejected>(
-                planner.plan(
+            planner
+                .plan(
                     resources,
                     edit(EditIntent.CreateResource(second, record(first = link(PAIR_FIRST_TYPE, PAIR_FIRST, target, null)))),
-                ),
-            )
+                ).shouldBeInstanceOf<MutationPlanningResult.Rejected>()
 
-        assertTrue(rejected.problems.any { it.code == "multiple_immediate_owners" })
+        rejected.problems.any { it.code == "multiple_immediate_owners" } shouldBe true
     }
 
     fun oneEndpointRejectsASecondResourceRelation() {
@@ -2187,14 +2201,13 @@ class AuthoringMutationPlannerTest {
             )
 
         val rejected =
-            assertIs<MutationPlanningResult.Rejected>(
-                planner.plan(
+            planner
+                .plan(
                     resources,
                     edit(EditIntent.CreateResource(second, record(first = link(PAIR_FIRST_TYPE, PAIR_FIRST, target, null)))),
-                ),
-            )
+                ).shouldBeInstanceOf<MutationPlanningResult.Rejected>()
 
-        assertTrue(rejected.problems.any { it.code == "first_endpoint_cardinality_exceeded" })
+        rejected.problems.any { it.code == "first_endpoint_cardinality_exceeded" } shouldBe true
     }
 
     fun unrelatedInvalidResourceDoesNotBlockAValidEdit() {
@@ -2210,7 +2223,7 @@ class AuthoringMutationPlannerTest {
                 edit(EditIntent.SetValue(location(valid, "label"), DataValue.StringValue("changed"))),
             )
 
-        assertIs<MutationPlanningResult.Accepted>(result)
+        result.shouldBeInstanceOf<MutationPlanningResult.Accepted>()
     }
 }
 
