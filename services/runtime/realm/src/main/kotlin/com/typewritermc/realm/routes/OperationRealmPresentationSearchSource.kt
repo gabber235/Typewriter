@@ -22,23 +22,23 @@ import com.typewritermc.realm.authoring.operationObservation
 import com.typewritermc.services.libs.utils.rethrowExceptional
 import com.typewritermc.types.DataValue
 import com.typewritermc.types.NativeBinding
-import com.typewritermc.types.TypeTemplate
-import com.typewritermc.types.TypeUse
 import com.typewritermc.types.catalog.Resolution
 import com.typewritermc.types.skir.SkirDataValueCodec
 import com.typewritermc.types.skir.SkirTypeCodec
 import com.typewritermc.types.skir.getOrThrow
 import com.typewritermc.types.toTemplate
-import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.CoroutineStart
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.ensureActive
 import kotlinx.coroutines.launch
+import skirout.editor.v1.authoring.AuthoringObservationId
+import skirout.editor.v1.resource_operations.StaleAuthoringObservation
 import skirout.editor.v1.search.RealmPresentationSearchRequest
 import skirout.editor.v1.search.RealmPresentationSearchStatus
 import skirout.editor.v1.search.RealmPresentationSearchUpdate
 import java.util.concurrent.ConcurrentHashMap
+import skirout.editor.v1.type_catalog.DataValue as SkirDataValue
 
 /** Searches through the same pure preparation used by menus and drops. */
 internal class OperationRealmPresentationSearchSource(
@@ -138,7 +138,7 @@ internal class OperationRealmPresentationSearchSource(
                             .sortedWith(
                                 compareBy({ it.label.lowercase() }, { it.id.value }),
                             ).toList()
-                    val values = mutableListOf<skirout.editor.v1.type_catalog.DataValue>()
+                    val values = mutableListOf<SkirDataValue>()
                     for (candidate in candidates) {
                         coroutineContext.ensureActive()
                         val input: Any =
@@ -228,10 +228,9 @@ internal fun staleSearch(
 ) = RealmPresentationSearchUpdate.createStaleObservation(
     subscriptionId = subscriptionId,
     observation =
-        skirout.editor.v1.resource_operations.StaleAuthoringObservation(
+        StaleAuthoringObservation(
             actual =
-                skirout.editor.v1.authoring
-                    .AuthoringObservationId(value = actual),
+                AuthoringObservationId(value = actual),
         ),
 )
 

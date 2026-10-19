@@ -34,8 +34,6 @@ import com.typewritermc.types.catalog.ResolvedRepresentation
 import com.typewritermc.types.catalog.apply
 import com.typewritermc.types.catalog.isNominalSubtype
 import com.typewritermc.types.catalog.resolve
-import com.typewritermc.types.skir.SkirTypeCodec
-import com.typewritermc.types.skir.getOrThrow
 import com.typewritermc.types.toTemplate
 import kotlinx.coroutines.CancellationException
 import skirout.editor.v1.expression.ExpressionNode

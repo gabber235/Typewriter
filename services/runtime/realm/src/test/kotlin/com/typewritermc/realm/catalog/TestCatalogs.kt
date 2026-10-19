@@ -2,10 +2,8 @@ package com.typewritermc.realm.catalog
 
 import com.typewritermc.checking.CatalogGeneration
 import com.typewritermc.discovery.CatalogAssemblyContext
-import com.typewritermc.discovery.CatalogContributions
 import com.typewritermc.discovery.DeploymentFacts
 import com.typewritermc.discovery.DiscoveryDomains
-import com.typewritermc.discovery.GeneratedProviderDeployment
 import com.typewritermc.discovery.GeneratedProviderLoader
 import com.typewritermc.discovery.assemble
 

@@ -5,6 +5,7 @@ import com.typewritermc.authoring.LinkOccurrence
 import com.typewritermc.authoring.LinkOccurrenceId
 import com.typewritermc.authoring.LinkProjection
 import com.typewritermc.authoring.PathSegment
+import com.typewritermc.authoring.TypeSelection
 import com.typewritermc.authoring.ValueLocation
 import com.typewritermc.authoring.ValuePath
 import com.typewritermc.authoring.ValueProblem
@@ -15,6 +16,7 @@ import com.typewritermc.authoring.mapKey
 import com.typewritermc.authoring.mapValue
 import com.typewritermc.types.DataValue
 import com.typewritermc.types.EndpointCardinality
+import com.typewritermc.types.EndpointId
 import com.typewritermc.types.EndpointSlot
 import com.typewritermc.types.LinkTarget
 import com.typewritermc.types.RelationContract
@@ -24,6 +26,7 @@ import com.typewritermc.types.TypeTemplate
 import com.typewritermc.types.TypeUse
 import com.typewritermc.types.catalog.CheckedCatalog
 import com.typewritermc.types.catalog.Resolution
+import com.typewritermc.types.catalog.ResolvedRepresentation
 import java.util.concurrent.ConcurrentHashMap
 
 internal data class StoredDeclaredEdge(
@@ -49,16 +52,16 @@ internal data class DeclaredLinkEvidence(
 internal class LinkSchemaCapabilities(
     private val catalog: CheckedCatalog,
 ) {
-    private val cache = ConcurrentHashMap<Pair<TypeUse, com.typewritermc.types.EndpointId>, Boolean>()
+    private val cache = ConcurrentHashMap<Pair<TypeUse, EndpointId>, Boolean>()
 
     fun contains(
         use: TypeUse,
-        endpoint: com.typewritermc.types.EndpointId,
+        endpoint: EndpointId,
     ): Boolean = cache.computeIfAbsent(use to endpoint) { contains(it.first, it.second, emptySet(), 0) }
 
     private fun contains(
         use: TypeUse,
-        endpoint: com.typewritermc.types.EndpointId,
+        endpoint: EndpointId,
         visited: Set<TypeUse>,
         depth: Int,
     ): Boolean {
@@ -68,20 +71,20 @@ internal class LinkSchemaCapabilities(
         val resolved = catalog.resolve(nonNull) as? Resolution.Ready ?: return true
         val nextVisited = visited + nonNull
         return when (val representation = resolved.value.schema.representation) {
-            is com.typewritermc.types.catalog.ResolvedRepresentation.Link -> {
+            is ResolvedRepresentation.Link -> {
                 representation.endpoint == endpoint
             }
 
-            is com.typewritermc.types.catalog.ResolvedRepresentation.Record -> {
+            is ResolvedRepresentation.Record -> {
                 representation.abstract ||
                     representation.fields.any { contains(it.type, endpoint, nextVisited, depth + 1) }
             }
 
-            is com.typewritermc.types.catalog.ResolvedRepresentation.Sequence -> {
+            is ResolvedRepresentation.Sequence -> {
                 contains(representation.item, endpoint, nextVisited, depth + 1)
             }
 
-            is com.typewritermc.types.catalog.ResolvedRepresentation.Mapping -> {
+            is ResolvedRepresentation.Mapping -> {
                 contains(representation.key, endpoint, nextVisited, depth + 1) ||
                     contains(representation.value, endpoint, nextVisited, depth + 1)
             }
@@ -223,14 +226,14 @@ internal object ResourceValueMapper {
     }
 
     fun declaredLocations(
-        endpoint: com.typewritermc.types.EndpointId,
+        endpoint: EndpointId,
         resource: ResourceId,
         record: AuthoringRecord,
         catalog: CheckedCatalog,
     ): List<ValueLocation> = declaredEvidence(endpoint, resource, record, catalog).values
 
     fun declaredEvidence(
-        endpoint: com.typewritermc.types.EndpointId,
+        endpoint: EndpointId,
         resource: ResourceId,
         record: AuthoringRecord,
         catalog: CheckedCatalog,
@@ -261,7 +264,7 @@ internal object ResourceValueMapper {
     }
 
     fun counterpartBinding(
-        endpoint: com.typewritermc.types.EndpointId,
+        endpoint: EndpointId,
         resource: ResourceId,
         record: AuthoringRecord,
         catalog: CheckedCatalog,
@@ -293,7 +296,7 @@ internal object ResourceValueMapper {
 }
 
 private data class LinkSchemaSlot(
-    val endpoint: com.typewritermc.types.EndpointId,
+    val endpoint: EndpointId,
     val target: TypeUse,
     val location: ValuePath?,
     val containsCollection: Boolean,
@@ -318,14 +321,14 @@ private fun AuthoringRecord.linkSlots(catalog: CheckedCatalog): List<LinkSchemaS
 
 private fun AuthoringRecord.resolvedFields(catalog: CheckedCatalog) =
     when (val selected = configuration) {
-        is com.typewritermc.authoring.TypeSelection.Complete -> {
+        is TypeSelection.Complete -> {
             val resolved = catalog.resolve(selected.use) as? Resolution.Ready
             val record =
-                resolved?.value?.schema?.representation as? com.typewritermc.types.catalog.ResolvedRepresentation.Record
+                resolved?.value?.schema?.representation as? ResolvedRepresentation.Record
             record?.fields.orEmpty()
         }
 
-        is com.typewritermc.authoring.TypeSelection.Pending -> {
+        is TypeSelection.Pending -> {
             val partial = catalog.resolvePartial(selected) as? Resolution.Ready
             partial?.value?.knownFields.orEmpty()
         }
@@ -335,7 +338,7 @@ private fun collectLinkEvidence(
     declared: TypeUse,
     value: DataValue,
     path: ValuePath,
-    endpoint: com.typewritermc.types.EndpointId,
+    endpoint: EndpointId,
     catalog: CheckedCatalog,
     capabilities: LinkSchemaCapabilities,
     values: MutableSet<ValuePath>,
@@ -356,11 +359,11 @@ private fun collectLinkEvidence(
     val resolved = catalog.resolve(effective) as? Resolution.Ready ?: return
     val payload = named?.payload ?: value
     when (val representation = resolved.value.schema.representation) {
-        is com.typewritermc.types.catalog.ResolvedRepresentation.Link -> {
+        is ResolvedRepresentation.Link -> {
             if (representation.endpoint == endpoint) values += path
         }
 
-        is com.typewritermc.types.catalog.ResolvedRepresentation.Record -> {
+        is ResolvedRepresentation.Record -> {
             if (!capabilities.contains(effective, endpoint)) return
             forms += path
             val record = payload as? DataValue.Record ?: return
@@ -379,7 +382,7 @@ private fun collectLinkEvidence(
             }
         }
 
-        is com.typewritermc.types.catalog.ResolvedRepresentation.Sequence -> {
+        is ResolvedRepresentation.Sequence -> {
             if (!capabilities.contains(representation.item, endpoint)) return
             forms += path
             memberships += path
@@ -404,7 +407,7 @@ private fun collectLinkEvidence(
             }
         }
 
-        is com.typewritermc.types.catalog.ResolvedRepresentation.Mapping -> {
+        is ResolvedRepresentation.Mapping -> {
             val keyContains = capabilities.contains(representation.key, endpoint)
             val valueContains = capabilities.contains(representation.value, endpoint)
             if (!keyContains && !valueContains) return
@@ -469,7 +472,7 @@ private fun collectLinkSlots(
     val resolved = catalog.resolve(effective) as? Resolution.Ready ?: return
     val payload = named?.payload ?: value
     when (val representation = resolved.value.schema.representation) {
-        is com.typewritermc.types.catalog.ResolvedRepresentation.Link -> {
+        is ResolvedRepresentation.Link -> {
             slots +=
                 LinkSchemaSlot(
                     endpoint = representation.endpoint,
@@ -480,7 +483,7 @@ private fun collectLinkSlots(
                 )
         }
 
-        is com.typewritermc.types.catalog.ResolvedRepresentation.Record -> {
+        is ResolvedRepresentation.Record -> {
             val record = payload as? DataValue.Record ?: return
             representation.fields.forEach { field ->
                 val child = record.fields[field.key] ?: DataValue.Unfilled
@@ -496,7 +499,7 @@ private fun collectLinkSlots(
             }
         }
 
-        is com.typewritermc.types.catalog.ResolvedRepresentation.Sequence -> {
+        is ResolvedRepresentation.Sequence -> {
             val items =
                 when (payload) {
                     is DataValue.ListValue -> payload.items
@@ -506,7 +509,7 @@ private fun collectLinkSlots(
             val itemRepresentation = catalog.resolve(representation.item) as? Resolution.Ready
             val directLink =
                 itemRepresentation?.value?.schema?.representation
-                    as? com.typewritermc.types.catalog.ResolvedRepresentation.Link
+                    as? ResolvedRepresentation.Link
             if (directLink != null) {
                 val link = directLink
                 slots += LinkSchemaSlot(link.endpoint, link.target, null, true, path)
@@ -524,7 +527,7 @@ private fun collectLinkSlots(
             }
         }
 
-        is com.typewritermc.types.catalog.ResolvedRepresentation.Mapping -> {
+        is ResolvedRepresentation.Mapping -> {
             val mapping = payload as? DataValue.MapValue ?: return
             mapping.rows.forEach { row ->
                 collectLinkSlots(
@@ -558,11 +561,11 @@ private fun AuthoringRecord.matches(
     catalog: CheckedCatalog,
 ): Boolean =
     when (val selected = configuration) {
-        is com.typewritermc.authoring.TypeSelection.Complete -> {
+        is TypeSelection.Complete -> {
             catalog.isReadableAs(selected.use, expected)
         }
 
-        is com.typewritermc.authoring.TypeSelection.Pending -> {
+        is TypeSelection.Pending -> {
             catalog.knownApplications(selected).any { application -> catalog.isReadableAs(application, expected) }
         }
     }
@@ -573,12 +576,12 @@ private fun AuthoringRecord.matches(
 ): Boolean {
     val expectedUse = expected.toUseOrNull()
     return when (val selected = configuration) {
-        is com.typewritermc.authoring.TypeSelection.Complete -> {
+        is TypeSelection.Complete -> {
             expectedUse?.let { catalog.isReadableAs(selected.use, it) }
                 ?: catalog.isNominalSubtype(selected.use.definition, expected.definition)
         }
 
-        is com.typewritermc.authoring.TypeSelection.Pending -> {
+        is TypeSelection.Pending -> {
             expectedUse?.let { concrete ->
                 catalog.knownApplications(selected).any { application -> catalog.isReadableAs(application, concrete) }
             } ?: catalog.isNominalSubtype(selected.definition, expected.definition)

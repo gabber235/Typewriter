@@ -12,7 +12,6 @@ import com.typewritermc.authoring.ValuePath
 import com.typewritermc.authoring.boundPath
 import com.typewritermc.checking.CheckOutcome
 import com.typewritermc.checking.InputIdentity
-import com.typewritermc.checking.InputToken
 import com.typewritermc.checking.ResourceTypeMatch
 import com.typewritermc.checking.TypedSelection
 import com.typewritermc.configuration.FieldPatternSegment

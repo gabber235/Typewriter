@@ -18,7 +18,6 @@ import com.typewritermc.discovery.OwnedCheckRecipe
 import com.typewritermc.discovery.OwnedProviderRegistry
 import com.typewritermc.realm.checking.EmptyProviders
 import com.typewritermc.realm.checking.dependencies
-import com.typewritermc.realm.checking.tokensFor
 import com.typewritermc.realm.repository.AuthoringMutationPlanner
 import com.typewritermc.realm.repository.AuthoringRepository
 import com.typewritermc.realm.repository.MutationPlanningResult

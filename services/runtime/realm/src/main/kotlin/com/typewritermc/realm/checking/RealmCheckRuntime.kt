@@ -1,11 +1,14 @@
 package com.typewritermc.realm.checking
 
+import com.typewritermc.authoring.Availability
 import com.typewritermc.authoring.CheckExecutionId
 import com.typewritermc.authoring.DiagnosticId
 import com.typewritermc.authoring.DraftBinding
+import com.typewritermc.authoring.ReadContext
 import com.typewritermc.authoring.ValueLocation
 import com.typewritermc.authoring.ValuePath
 import com.typewritermc.authoring.field
+import com.typewritermc.checking.CatalogGeneration
 import com.typewritermc.checking.CheckContext
 import com.typewritermc.checking.CheckOutcome
 import com.typewritermc.checking.Diagnostic
@@ -22,7 +25,6 @@ import com.typewritermc.configuration.RuleOrigin
 import com.typewritermc.discovery.OwnedCheck
 import com.typewritermc.discovery.OwnedCheckRecipe
 import com.typewritermc.discovery.ProviderLease
-import com.typewritermc.expression.EvaluationDiagnostic
 import com.typewritermc.realm.authoring.AuthoringLease
 import com.typewritermc.realm.authoring.AuthoringViewStore
 import com.typewritermc.realm.authoring.RESOURCE_SELECTION_INPUT
@@ -51,8 +53,8 @@ interface CheckScheduler : AutoCloseable {
 }
 
 data class CapturedCheckReport(
-    val context: com.typewritermc.authoring.ReadContext,
-    val catalog: com.typewritermc.checking.CatalogGeneration,
+    val context: ReadContext,
+    val catalog: CatalogGeneration,
     val required: Set<CheckInstanceId>,
     val results: List<CheckResult>,
 ) {
@@ -501,15 +503,15 @@ class RealmCheckRuntime(
                                         reads,
                                     )
                             ) {
-                                is com.typewritermc.authoring.Availability.Available -> {
+                                is Availability.Available -> {
                                     if (!evaluation.value) findings += portableDiagnostic(plan, subject, reads)
                                 }
 
-                                is com.typewritermc.authoring.Availability.Unavailable -> {
+                                is Availability.Unavailable -> {
                                     explicitOutcome = CheckOutcome.NeedsInput(evaluation.locations)
                                 }
 
-                                is com.typewritermc.authoring.Availability.Failed -> {
+                                is Availability.Failed -> {
                                     explicitOutcome =
                                         CheckOutcome.Failed(
                                             listOf(
@@ -713,7 +715,7 @@ private data class RetainedCatalog(
 )
 
 private class ActiveCatalog(
-    val generation: com.typewritermc.checking.CatalogGeneration,
+    val generation: CatalogGeneration,
     val incarnation: String,
     val plans: List<CheckPlan>,
     private val providerLeases: List<ProviderLease>,

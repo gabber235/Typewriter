@@ -1,5 +1,6 @@
 package com.typewritermc.realm.compiler
 
+import com.typewritermc.authoring.DiagnosticId
 import com.typewritermc.authoring.PublicationId
 import com.typewritermc.engine.CompilationRoot
 import com.typewritermc.realm.checking.FindingSet
@@ -110,5 +111,5 @@ sealed interface PublicationStatus {
 data class PublicationView(
     val id: PublicationViewId,
     val status: PublicationStatus,
-    internal val evidence: Map<com.typewritermc.authoring.DiagnosticId, DiagnosticEvidence> = emptyMap(),
+    internal val evidence: Map<DiagnosticId, DiagnosticEvidence> = emptyMap(),
 )

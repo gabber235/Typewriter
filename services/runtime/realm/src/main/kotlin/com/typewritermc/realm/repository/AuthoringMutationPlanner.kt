@@ -7,6 +7,7 @@ import com.typewritermc.authoring.EditIntent
 import com.typewritermc.authoring.ItemId
 import com.typewritermc.authoring.LinkOccurrence
 import com.typewritermc.authoring.LinkOccurrenceId
+import com.typewritermc.authoring.LinkProjection
 import com.typewritermc.authoring.LocatedPortableValue
 import com.typewritermc.authoring.PathSegment
 import com.typewritermc.authoring.PreparedContent
@@ -22,15 +23,15 @@ import com.typewritermc.authoring.item
 import com.typewritermc.authoring.locate
 import com.typewritermc.authoring.validateStructure
 import com.typewritermc.authoring.writeField
-import com.typewritermc.realm.authoring.RESOURCE_SELECTION_INPUT
 import com.typewritermc.realm.authoring.authoredTypeAt
 import com.typewritermc.services.libs.utils.sha256Hex
 import com.typewritermc.types.CollectionKind
 import com.typewritermc.types.DataValue
 import com.typewritermc.types.EndpointBindingTemplate
+import com.typewritermc.types.EndpointCardinality
+import com.typewritermc.types.EndpointId
 import com.typewritermc.types.LinkTarget
 import com.typewritermc.types.ListItem
-import com.typewritermc.types.MapRow
 import com.typewritermc.types.RelationContract
 import com.typewritermc.types.RelationDeletePolicy
 import com.typewritermc.types.ResourceId
@@ -615,7 +616,7 @@ internal class AuthoringMutationPlanner(
     private fun writeLink(
         resources: MutableMap<ResourceId, AuthoringRecord>,
         location: ValueLocation,
-        endpoint: com.typewritermc.types.EndpointId,
+        endpoint: EndpointId,
         target: LinkTarget,
         problems: MutableList<ValueProblem>,
     ) {
@@ -666,7 +667,7 @@ internal class AuthoringMutationPlanner(
     private fun appendDirectLink(
         resources: MutableMap<ResourceId, AuthoringRecord>,
         collection: ValueLocation,
-        endpoint: com.typewritermc.types.EndpointId,
+        endpoint: EndpointId,
         target: LinkTarget,
         batch: String,
         ordinal: Int,
@@ -798,7 +799,7 @@ internal class AuthoringMutationPlanner(
     private fun clearCounterpart(
         resources: MutableMap<ResourceId, AuthoringRecord>,
         deleted: ResourceId,
-        projection: com.typewritermc.authoring.LinkProjection,
+        projection: LinkProjection,
         problems: MutableList<ValueProblem>,
     ) {
         val candidates =
@@ -832,7 +833,7 @@ internal class AuthoringMutationPlanner(
 }
 
 private fun validateOwnership(
-    projections: List<com.typewritermc.authoring.LinkProjection>,
+    projections: List<LinkProjection>,
     contracts: List<RelationContract>,
     affected: Set<ResourceId>,
     problems: MutableList<ValueProblem>,
@@ -846,7 +847,7 @@ private fun validateOwnership(
 }
 
 private fun validateCardinality(
-    projections: List<com.typewritermc.authoring.LinkProjection>,
+    projections: List<LinkProjection>,
     contracts: List<RelationContract>,
     affected: Set<ResourceId>,
     problems: MutableList<ValueProblem>,
@@ -854,7 +855,7 @@ private fun validateCardinality(
     val byContract = projections.groupBy { it.contract }
     contracts.forEach { contract ->
         val links = byContract[contract.id].orEmpty()
-        if (contract.first.cardinality == com.typewritermc.types.EndpointCardinality.One) {
+        if (contract.first.cardinality == EndpointCardinality.One) {
             links
                 .groupBy { it.second }
                 .filterValues { grouped -> grouped.size > 1 && grouped.any { it.first in affected || it.second in affected } }
@@ -862,7 +863,7 @@ private fun validateCardinality(
                     problems += problem(resource, "first_endpoint_cardinality_exceeded")
                 }
         }
-        if (contract.second.cardinality == com.typewritermc.types.EndpointCardinality.One) {
+        if (contract.second.cardinality == EndpointCardinality.One) {
             links
                 .groupBy { it.first }
                 .filterValues { grouped -> grouped.size > 1 && grouped.any { it.first in affected || it.second in affected } }
@@ -944,11 +945,10 @@ private fun problem(
     code: String,
 ): ValueProblem = ValueProblem(ValueLocation(resource, ValuePath()), code)
 
-private fun projectionKey(value: com.typewritermc.authoring.LinkProjection): String =
+private fun projectionKey(value: LinkProjection): String =
     "${value.contract.value}:${value.first.value}:${value.second.value}:${value.firstLocation}:${value.secondLocation}"
 
-private fun projectionEndpoints(value: com.typewritermc.authoring.LinkProjection): String =
-    "${value.contract.value}:${value.first.value}:${value.second.value}"
+private fun projectionEndpoints(value: LinkProjection): String = "${value.contract.value}:${value.first.value}:${value.second.value}"
 
 private fun resourceLinks(
     resources: Map<ResourceId, AuthoringRecord>,

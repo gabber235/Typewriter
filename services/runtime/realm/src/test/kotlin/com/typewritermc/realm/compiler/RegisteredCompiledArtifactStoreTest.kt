@@ -5,7 +5,6 @@ import com.typewritermc.checking.CatalogGeneration
 import com.typewritermc.engine.CompilationProjectionId
 import com.typewritermc.engine.CompilationRoot
 import com.typewritermc.engine.CompiledArtifact
-import com.typewritermc.engine.CompiledArtifactReference
 import com.typewritermc.engine.ContentDigest
 import com.typewritermc.services.libs.filetransfer.blob.ArtifactDigest
 import com.typewritermc.services.libs.filetransfer.blob.BlobChunk

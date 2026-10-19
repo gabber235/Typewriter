@@ -9,6 +9,7 @@ import com.typewritermc.discovery.GeneratedProviderDeployment
 import com.typewritermc.discovery.OwnedCheckRecipe
 import com.typewritermc.discovery.OwnedProviderRegistry
 import com.typewritermc.discovery.RetainedOwnedProviderRegistry
+import com.typewritermc.operations.OperationCatalog
 import com.typewritermc.presentation.CollectionProjectionSpec
 import com.typewritermc.realm.authoring.AuthoringCatalogLease
 import com.typewritermc.services.libs.utils.closeAll
@@ -129,7 +130,7 @@ class RealmCatalogStore : AutoCloseable {
         override val endpointBindings: List<EndpointBindingTemplate> get() = assembly.snapshot.endpointBindings
         override val resources: List<AuthoringResourceDefinition> get() = assembly.snapshot.resourceDefinitions
         override val configuration: List<ConfigurationRecipe> get() = assembly.snapshot.configuration
-        override val operations: com.typewritermc.operations.OperationCatalog get() = assembly.operations
+        override val operations: OperationCatalog get() = assembly.operations
         override val editorSnapshot: EditorCatalogSnapshot get() = assembly.snapshot
         override val capabilities: List<RealmCapabilityProvider>
             get() =

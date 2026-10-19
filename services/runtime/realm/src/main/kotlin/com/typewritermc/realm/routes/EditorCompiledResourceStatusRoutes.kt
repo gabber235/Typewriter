@@ -1,11 +1,21 @@
 package com.typewritermc.realm.routes
 
+import com.typewritermc.engine.CompilationProjectionId
 import com.typewritermc.engine.CompilationRoot
 import com.typewritermc.realm.authoring.AuthoringViewStore
 import com.typewritermc.realm.compiler.CompilationStatusSelection
 import com.typewritermc.realm.compiler.CompiledRootStatuses
 import com.typewritermc.realm.compiler.RegisteredCompiledState
 import com.typewritermc.services.libs.communicator.router.CommunicatorRoutesBuilder
+import com.typewritermc.types.ResourceId
+import skirout.editor.v1.compiled_content.CompiledResourceState
+import skirout.editor.v1.compiled_content.CompiledResourceStatus
+import skirout.editor.v1.compiled_content.QueryCompiledResourceStatusResponse
+import skirout.editor.v1.type_catalog.PublicationId
+import skirout.editor.v1.compilation_root.CompilationProjectionId as SkirCompilationProjectionId
+import skirout.editor.v1.compilation_root.CompilationRoot as SkirCompilationRoot
+import skirout.editor.v1.compiled_content.CompilationStatusSelection as SkirCompilationStatusSelection
+import skirout.editor.v1.type_catalog.ResourceId as SkirResourceId
 
 /** Reports roots present in the Realm selected publication; it does not inspect engine application state. */
 internal class EditorCompiledResourceStatusRoutes(
@@ -18,20 +28,20 @@ internal class EditorCompiledResourceStatusRoutes(
             unary(contracts.queryCompiledResourceStatus) { call ->
                 val selection =
                     when (val requested = call.request.selection) {
-                        skirout.editor.v1.compiled_content.CompilationStatusSelection.ALL_ROOTS -> {
+                        SkirCompilationStatusSelection.ALL_ROOTS -> {
                             CompilationStatusSelection.All
                         }
 
-                        is skirout.editor.v1.compiled_content.CompilationStatusSelection.SuppliedRootsWrapper -> {
+                        is SkirCompilationStatusSelection.SuppliedRootsWrapper -> {
                             CompilationStatusSelection.Supplied(requested.value.mapTo(linkedSetOf()) { root -> root.toDomain() })
                         }
 
-                        is skirout.editor.v1.compiled_content.CompilationStatusSelection.Unknown -> {
+                        is SkirCompilationStatusSelection.Unknown -> {
                             error("Unknown compilation status selection.")
                         }
                     }
                 views.capture().use { capture ->
-                    skirout.editor.v1.compiled_content.QueryCompiledResourceStatusResponse.createSuccess(
+                    QueryCompiledResourceStatusResponse.createSuccess(
                         statuses =
                             statuses
                                 .query(capture.root, selection)
@@ -42,33 +52,30 @@ internal class EditorCompiledResourceStatusRoutes(
         }
 }
 
-private fun skirout.editor.v1.compilation_root.CompilationRoot.toDomain() =
+private fun SkirCompilationRoot.toDomain() =
     CompilationRoot(
-        projection = com.typewritermc.engine.CompilationProjectionId(projection.value),
-        resource = com.typewritermc.types.ResourceId(resource.value),
+        projection = CompilationProjectionId(projection.value),
+        resource = ResourceId(resource.value),
     )
 
 private fun RegisteredCompiledState.toWire(root: CompilationRoot) =
-    skirout.editor.v1.compiled_content.CompiledResourceStatus(
+    CompiledResourceStatus(
         root =
-            skirout.editor.v1.compilation_root.CompilationRoot(
+            SkirCompilationRoot(
                 projection =
-                    skirout.editor.v1.compilation_root
-                        .CompilationProjectionId(value = root.projection.value),
+                    SkirCompilationProjectionId(value = root.projection.value),
                 resource =
-                    skirout.editor.v1.type_catalog
-                        .ResourceId(value = root.resource.value),
+                    SkirResourceId(value = root.resource.value),
             ),
         state =
             when (this) {
                 RegisteredCompiledState.NotCompiled -> {
-                    skirout.editor.v1.compiled_content.CompiledResourceState.NOT_COMPILED
+                    CompiledResourceState.NOT_COMPILED
                 }
 
                 is RegisteredCompiledState.Active -> {
-                    skirout.editor.v1.compiled_content.CompiledResourceState.ActiveWrapper(
-                        skirout.editor.v1.type_catalog
-                            .PublicationId(value = publication.value),
+                    CompiledResourceState.ActiveWrapper(
+                        PublicationId(value = publication.value),
                     )
                 }
             },

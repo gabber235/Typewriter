@@ -1,7 +1,14 @@
 package com.typewritermc.realm.compiler
 
+import com.typewritermc.authoring.AuthoringRecord
+import com.typewritermc.authoring.DiagnosticId
 import com.typewritermc.authoring.TypeSelection
+import com.typewritermc.authoring.ValueLocation
+import com.typewritermc.authoring.ValuePath
 import com.typewritermc.authoring.descendants
+import com.typewritermc.checking.Diagnostic
+import com.typewritermc.checking.DiagnosticSeverity
+import com.typewritermc.configuration.RuleOrigin
 import com.typewritermc.engine.CompilationContext
 import com.typewritermc.engine.CompiledEdge
 import com.typewritermc.engine.CompiledEdgeOrigin
@@ -19,6 +26,7 @@ import com.typewritermc.engine.semanticDigest
 import com.typewritermc.realm.authoring.AuthoringView
 import com.typewritermc.services.libs.utils.sha256Hex
 import com.typewritermc.types.DataValue
+import com.typewritermc.types.EndpointSlot
 import com.typewritermc.types.RelationId
 import com.typewritermc.types.ResourceId
 import com.typewritermc.types.catalog.runtimeDefinitions
@@ -51,8 +59,8 @@ internal class PageCompiler(
                 .filter { it.id in ownershipRelations }
                 .flatMap { relation ->
                     listOf(
-                        relation.first.id to com.typewritermc.types.EndpointSlot.First,
-                        relation.second.id to com.typewritermc.types.EndpointSlot.Second,
+                        relation.first.id to EndpointSlot.First,
+                        relation.second.id to EndpointSlot.Second,
                     )
                 }.groupBy({ it.first }, { it.second })
         val childrenByOwner =
@@ -60,15 +68,15 @@ internal class PageCompiler(
                 .flatMap { occurrence ->
                     ownershipEndpoints[occurrence.id.endpoint].orEmpty().map { slot ->
                         when (slot) {
-                            com.typewritermc.types.EndpointSlot.First -> occurrence.source to occurrence.target.resource
-                            com.typewritermc.types.EndpointSlot.Second -> occurrence.target.resource to occurrence.source
+                            EndpointSlot.First -> occurrence.source to occurrence.target.resource
+                            EndpointSlot.Second -> occurrence.target.resource to occurrence.source
                         }
                     }
                 }.groupBy({ it.first }, { it.second })
         val owned = linkedSetOf(root)
         val pending = ArrayDeque<ResourceId>()
         pending += root
-        val diagnostics = mutableListOf<com.typewritermc.checking.Diagnostic>()
+        val diagnostics = mutableListOf<Diagnostic>()
         while (pending.isNotEmpty()) {
             childrenByOwner[pending.removeFirst()].orEmpty().forEach { child ->
                 if (child in snapshot.resources && owned.add(child)) pending += child
@@ -92,7 +100,7 @@ internal class PageCompiler(
                             } else {
                                 "Captured link projection is invalid at ${problem.location}."
                             },
-                        severity = com.typewritermc.checking.DiagnosticSeverity.Error,
+                        severity = DiagnosticSeverity.Error,
                         source = occurrence?.source ?: problem.location.resource,
                         location = problem.location,
                         target = occurrence?.target?.resource,
@@ -194,7 +202,7 @@ internal class PageCompiler(
 }
 
 context(snapshot: AuthoringView)
-private fun com.typewritermc.authoring.AuthoringRecord.compile(
+private fun AuthoringRecord.compile(
     id: ResourceId,
     readiness: ResourceReadiness.Ready,
 ): CompiledResource {
@@ -216,20 +224,20 @@ private fun digest(value: String): ContentDigest = ContentDigest(value.sha256Hex
 internal fun compilationDiagnostic(
     code: String,
     message: String,
-    severity: com.typewritermc.checking.DiagnosticSeverity = com.typewritermc.checking.DiagnosticSeverity.Error,
+    severity: DiagnosticSeverity = DiagnosticSeverity.Error,
     source: ResourceId? = null,
     target: ResourceId? = null,
-    location: com.typewritermc.authoring.ValueLocation? =
+    location: ValueLocation? =
         source?.let {
-            com.typewritermc.authoring.ValueLocation(it, com.typewritermc.authoring.ValuePath())
+            ValueLocation(it, ValuePath())
         },
-): com.typewritermc.checking.Diagnostic =
-    com.typewritermc.checking.Diagnostic(
-        com.typewritermc.authoring.DiagnosticId("publication:compiler:$location:${target?.value}:$code"),
-        com.typewritermc.configuration.RuleOrigin(PUBLICATION_DIAGNOSTIC_TYPE, 0),
+): Diagnostic =
+    Diagnostic(
+        DiagnosticId("publication:compiler:$location:${target?.value}:$code"),
+        RuleOrigin(PUBLICATION_DIAGNOSTIC_TYPE, 0),
         code,
         message,
         severity,
         location,
-        target?.let { listOf(com.typewritermc.authoring.ValueLocation(it, com.typewritermc.authoring.ValuePath())) }.orEmpty(),
+        target?.let { listOf(ValueLocation(it, ValuePath())) }.orEmpty(),
     )

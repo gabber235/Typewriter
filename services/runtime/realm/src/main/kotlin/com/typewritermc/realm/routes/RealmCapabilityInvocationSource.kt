@@ -22,9 +22,18 @@ import com.typewritermc.types.toTemplate
 import skirout.editor.v1.capability.CapabilityInvocationRequest
 import skirout.editor.v1.capability.CommandResult
 import skirout.editor.v1.capability.ComputationResult
+import skirout.editor.v1.capability.InvocationId
+import skirout.editor.v1.capability.ResourceAddress
+import skirout.editor.v1.diagnostic.Diagnostic
+import skirout.editor.v1.diagnostic.DiagnosticSeverity
 import skirout.editor.v1.type_catalog.CatalogGeneration
+import skirout.editor.v1.type_catalog.DataValue
+import skirout.editor.v1.type_catalog.DiagnosticId
+import skirout.editor.v1.type_catalog.RuleOrigin
 import skirout.editor.v1.capability.NotificationSeverity as WireNotificationSeverity
 import skirout.editor.v1.capability.PanelInstruction as WirePanelInstruction
+import skirout.editor.v1.type_catalog.TypeTemplate as SkirTypeTemplate
+import skirout.editor.v1.type_catalog.TypeUse as SkirTypeUse
 
 /**
  * Dispatches editor computation and command invocations through a retained Realm catalog.
@@ -126,7 +135,7 @@ private fun validateBase(
 ): InvocationValidationFailure? {
     if (request.invocationId.value.isBlank()) return InvocationValidationFailure.Invalid("Invocation ID must not be blank")
     if (request.capabilityId.value.isBlank()) return InvocationValidationFailure.Invalid("Capability ID must not be blank")
-    if (request.payload == skirout.editor.v1.type_catalog.DataValue.UNKNOWN) {
+    if (request.payload == DataValue.UNKNOWN) {
         return InvocationValidationFailure.Invalid("Capability payload is missing")
     }
     if (request.generation.value != generation) return InvocationValidationFailure.Stale(generation)
@@ -151,7 +160,7 @@ private data class CommandContext(
     override val invocationId: String,
 ) : RealmCommandContext
 
-private fun InvocationValidationFailure.toComputationResult(invocationId: skirout.editor.v1.capability.InvocationId): ComputationResult =
+private fun InvocationValidationFailure.toComputationResult(invocationId: InvocationId): ComputationResult =
     when (this) {
         is InvocationValidationFailure.Invalid -> {
             ComputationResult.createInvalid(invocationId = invocationId, diagnostics = listOf(realmDiagnostic(message)))
@@ -165,7 +174,7 @@ private fun InvocationValidationFailure.toComputationResult(invocationId: skirou
         }
     }
 
-private fun InvocationValidationFailure.toCommandResult(invocationId: skirout.editor.v1.capability.InvocationId): CommandResult =
+private fun InvocationValidationFailure.toCommandResult(invocationId: InvocationId): CommandResult =
     when (this) {
         is InvocationValidationFailure.Invalid -> {
             CommandResult.createInvalid(invocationId = invocationId, diagnostics = listOf(realmDiagnostic(message)))
@@ -179,7 +188,7 @@ private fun InvocationValidationFailure.toCommandResult(invocationId: skirout.ed
         }
     }
 
-private fun skirout.editor.v1.type_catalog.TypeTemplate.decode(): TypeTemplate? =
+private fun SkirTypeTemplate.decode(): TypeTemplate? =
     when (val result = SkirTypeCodec.decode(this)) {
         is SkirConversionResult.Success -> result.value
         is SkirConversionResult.Failure -> null
@@ -240,8 +249,8 @@ private fun PanelInstruction.toWire(): WirePanelInstruction =
         }
     }
 
-private fun TypeUse.toWireResource(identity: skirout.editor.v1.type_catalog.DataValue) =
-    skirout.editor.v1.capability.ResourceAddress(
+private fun TypeUse.toWireResource(identity: DataValue) =
+    ResourceAddress(
         resourceType = SkirTypeCodec.encode(this).getOrThrow(),
         identity = identity,
     )
@@ -254,23 +263,22 @@ private fun NotificationSeverity.toWire(): WireNotificationSeverity =
         NotificationSeverity.ERROR -> WireNotificationSeverity.ERROR
     }
 
-internal fun realmDiagnostic(message: String): skirout.editor.v1.diagnostic.Diagnostic =
-    skirout.editor.v1.diagnostic.Diagnostic(
+internal fun realmDiagnostic(message: String): Diagnostic =
+    Diagnostic(
         id =
-            skirout.editor.v1.type_catalog
-                .DiagnosticId(value = "realm:capability"),
+            DiagnosticId(value = "realm:capability"),
         origin =
-            skirout.editor.v1.type_catalog.RuleOrigin(
+            RuleOrigin(
                 owner =
                     (
                         SkirTypeCodec.encode(TypeUse.Named(REALM_CAPABILITY_DIAGNOSTIC_TYPE)).getOrThrow() as
-                            skirout.editor.v1.type_catalog.TypeUse.NamedWrapper
+                            SkirTypeUse.NamedWrapper
                     ).value.definition,
                 ordinal = 0,
             ),
         code = "realm_capability",
         message = message,
-        severity = skirout.editor.v1.diagnostic.DiagnosticSeverity.ERROR,
+        severity = DiagnosticSeverity.ERROR,
         primary = null,
         related = emptyList(),
     )

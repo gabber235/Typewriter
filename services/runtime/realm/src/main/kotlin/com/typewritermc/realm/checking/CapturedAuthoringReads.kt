@@ -12,7 +12,6 @@ import com.typewritermc.authoring.DraftExpectation
 import com.typewritermc.authoring.EditExpectation
 import com.typewritermc.authoring.ItemId
 import com.typewritermc.authoring.LocatedPortableValue
-import com.typewritermc.authoring.PathSegment
 import com.typewritermc.authoring.ReadContext
 import com.typewritermc.authoring.StructuralStep
 import com.typewritermc.authoring.TraversalDirection
@@ -41,8 +40,6 @@ import com.typewritermc.configuration.kind
 import com.typewritermc.expression.EvaluationDiagnostic
 import com.typewritermc.realm.authoring.AuthoredReadView
 import com.typewritermc.realm.authoring.RESOURCE_SELECTION_INPUT
-import com.typewritermc.realm.repository.CapturedAuthoringValues
-import com.typewritermc.realm.repository.ResourceValueMapper
 import com.typewritermc.services.libs.utils.rethrowExceptional
 import com.typewritermc.types.DataValue
 import com.typewritermc.types.ListItem

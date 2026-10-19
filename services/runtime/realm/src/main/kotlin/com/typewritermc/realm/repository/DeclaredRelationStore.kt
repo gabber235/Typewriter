@@ -2,6 +2,7 @@ package com.typewritermc.realm.repository
 
 import com.surrealdb.RecordId
 import com.surrealdb.Transaction
+import com.surrealdb.Value
 import com.typewritermc.authoring.LinkProjection
 import com.typewritermc.authoring.RelationProjectionDelta
 import com.typewritermc.authoring.ValuePath
@@ -118,8 +119,7 @@ private fun StoredDeclaredEdge.bindings(): Map<String, Any?> =
         "second_location" to targetLocation?.let { relationDatabaseValues.encode(ValuePath.serializer(), it) },
     )
 
-private fun com.surrealdb.Value.decodePath(): ValuePath? =
-    if (isNull || isNone) null else relationDatabaseValues.decode(ValuePath.serializer(), this)
+private fun Value.decodePath(): ValuePath? = if (isNull || isNone) null else relationDatabaseValues.decode(ValuePath.serializer(), this)
 
 private val relationJson =
     Json {

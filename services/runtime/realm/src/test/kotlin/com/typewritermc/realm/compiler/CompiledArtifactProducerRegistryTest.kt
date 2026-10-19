@@ -12,7 +12,6 @@ import com.typewritermc.types.ResourceId
 import de.infix.testBalloon.framework.core.testSuite
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.matchers.shouldBe
-import io.kotest.matchers.types.shouldBeInstanceOf
 
 val CompiledArtifactProducerRegistryTest by testSuite {
     test("one blocked producer retains a partial ready batch and every producer receives the retained inputs") {

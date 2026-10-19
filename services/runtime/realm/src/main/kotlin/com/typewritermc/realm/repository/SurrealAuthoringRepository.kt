@@ -2,13 +2,9 @@ package com.typewritermc.realm.repository
 
 import com.surrealdb.Surreal
 import com.typewritermc.authoring.AuthoringRecord
-import com.typewritermc.authoring.AuthoringResourceDefinition
 import com.typewritermc.authoring.CommitResult
 import com.typewritermc.authoring.EditExpectation
-import com.typewritermc.authoring.PathSegment
 import com.typewritermc.authoring.PreparedEdit
-import com.typewritermc.authoring.ResourceDefinitionId
-import com.typewritermc.authoring.TypeSelection
 import com.typewritermc.authoring.ValueLocation
 import com.typewritermc.authoring.ValuePath
 import com.typewritermc.authoring.ValueProblem
@@ -20,10 +16,6 @@ import com.typewritermc.realm.authoring.authoredDatabaseValues
 import com.typewritermc.realm.repository.utils.inTransaction
 import com.typewritermc.realm.repository.utils.surrealRecordId
 import com.typewritermc.realm.search.authoredSearchText
-import com.typewritermc.types.ResourceId
-import com.typewritermc.types.TypeDefinitionId
-import com.typewritermc.types.catalog.CheckedCatalog
-import com.typewritermc.types.catalog.Resolution
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 

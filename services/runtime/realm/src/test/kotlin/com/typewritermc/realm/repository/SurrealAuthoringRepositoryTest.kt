@@ -26,7 +26,6 @@ import de.infix.testBalloon.framework.core.testSuite
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.matchers.collections.shouldHaveSize
 import io.kotest.matchers.shouldBe
-import io.kotest.matchers.types.shouldBeInstanceOf
 
 val SurrealAuthoringRepositoryTestSuite by testSuite {
     val id = ResourceId("quest")

@@ -37,9 +37,7 @@ import com.typewritermc.realm.repository.AuthoringMutationPlanner
 import com.typewritermc.realm.repository.MutationPlanningResult
 import com.typewritermc.realm.repository.ResourceValueMapper
 import com.typewritermc.types.DataValue
-import com.typewritermc.types.FactoryNativeBindingRegistry
 import com.typewritermc.types.FieldOwner
-import com.typewritermc.types.LinkTarget
 import com.typewritermc.types.NativeBinding
 import com.typewritermc.types.Ref
 import com.typewritermc.types.RepresentationTemplate

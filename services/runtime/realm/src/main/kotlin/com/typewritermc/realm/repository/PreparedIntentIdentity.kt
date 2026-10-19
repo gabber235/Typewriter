@@ -4,10 +4,16 @@ import com.typewritermc.authoring.AuthoringRecord
 import com.typewritermc.authoring.CounterpartChoice
 import com.typewritermc.authoring.EditIntent
 import com.typewritermc.authoring.ItemId
+import com.typewritermc.authoring.LinkOccurrence
+import com.typewritermc.authoring.LinkOccurrenceId
 import com.typewritermc.authoring.PreparedEdit
+import com.typewritermc.authoring.PreparedValue
+import com.typewritermc.authoring.TypeSelection
 import com.typewritermc.authoring.ValueLocation
 import com.typewritermc.realm.authoring.authoringStorageJson
 import com.typewritermc.services.libs.utils.sha256Hex
+import com.typewritermc.types.DataValue
+import com.typewritermc.types.ListItem
 import com.typewritermc.types.ResourceId
 import com.typewritermc.types.TypeUse
 import kotlinx.serialization.KSerializer
@@ -35,7 +41,7 @@ private fun EditIntent.canonical(): String =
                 "set",
                 canonical(ValueLocation.serializer(), at),
                 canonical(
-                    com.typewritermc.types.DataValue
+                    DataValue
                         .serializer(),
                     value,
                 ),
@@ -48,7 +54,7 @@ private fun EditIntent.canonical(): String =
                 canonical(ValueLocation.serializer(), at),
                 after.canonicalNullable(),
                 canonical(
-                    com.typewritermc.types.ListItem
+                    ListItem
                         .serializer(),
                     item,
                 ),
@@ -80,7 +86,7 @@ private fun EditIntent.canonical(): String =
                         frame(
                             "existing",
                             canonical(
-                                com.typewritermc.authoring.LinkOccurrence
+                                LinkOccurrence
                                     .serializer(),
                                 choice.occurrence,
                             ),
@@ -92,7 +98,7 @@ private fun EditIntent.canonical(): String =
                             "new",
                             canonical(ValueLocation.serializer(), choice.containing),
                             canonical(
-                                com.typewritermc.authoring.PreparedValue
+                                PreparedValue
                                     .serializer(),
                                 choice.prepared,
                             ),
@@ -102,7 +108,7 @@ private fun EditIntent.canonical(): String =
             frame(
                 "connect",
                 canonical(
-                    com.typewritermc.authoring.LinkOccurrence
+                    LinkOccurrence
                         .serializer(),
                     value.source,
                 ),
@@ -115,7 +121,7 @@ private fun EditIntent.canonical(): String =
             frame(
                 "disconnect",
                 canonical(
-                    com.typewritermc.authoring.LinkOccurrenceId
+                    LinkOccurrenceId
                         .serializer(),
                     occurrence,
                 ),
@@ -131,7 +137,7 @@ private fun EditIntent.canonical(): String =
                 "configure_resource",
                 canonical(ResourceId.serializer(), resource),
                 canonical(
-                    com.typewritermc.authoring.TypeSelection
+                    TypeSelection
                         .serializer(),
                     configuration,
                 ),

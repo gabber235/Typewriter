@@ -1,12 +1,10 @@
 package com.typewritermc.realm.checking
 
-import com.typewritermc.authoring.ArgumentSelection
 import com.typewritermc.authoring.AuthoringRecord
 import com.typewritermc.authoring.AuthoringResourceDefinition
 import com.typewritermc.authoring.ItemId
 import com.typewritermc.authoring.PathSegment
 import com.typewritermc.authoring.ResourceDefinitionId
-import com.typewritermc.authoring.SelectionId
 import com.typewritermc.authoring.TypeSelection
 import com.typewritermc.authoring.ValueLocation
 import com.typewritermc.authoring.ValuePath
@@ -17,7 +15,6 @@ import com.typewritermc.checking.CatalogGeneration
 import com.typewritermc.checking.InputIdentity
 import com.typewritermc.checking.InputToken
 import com.typewritermc.checking.ResourceTypeMatch
-import com.typewritermc.checking.TypedSelection
 import com.typewritermc.discovery.OwnedCheckRecipe
 import com.typewritermc.discovery.OwnedConfiguration
 import com.typewritermc.discovery.OwnedNativeBinding
@@ -34,12 +31,10 @@ import com.typewritermc.realm.authoring.operationObservation
 import com.typewritermc.types.CollectionKind
 import com.typewritermc.types.DataValue
 import com.typewritermc.types.EndpointBindingTemplate
-import com.typewritermc.types.EndpointId
 import com.typewritermc.types.FactoryNativeBindingRegistry
 import com.typewritermc.types.FieldDeclaration
 import com.typewritermc.types.FieldOwner
 import com.typewritermc.types.IntegerWidth
-import com.typewritermc.types.LinkTarget
 import com.typewritermc.types.ListItem
 import com.typewritermc.types.NativeBindingFactory
 import com.typewritermc.types.NativeBindingRegistry

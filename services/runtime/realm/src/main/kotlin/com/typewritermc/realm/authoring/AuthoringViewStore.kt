@@ -2,10 +2,8 @@ package com.typewritermc.realm.authoring
 
 import com.typewritermc.authoring.AuthoringRecord
 import com.typewritermc.authoring.AuthoringResourceDefinition
-import com.typewritermc.authoring.ItemId
 import com.typewritermc.authoring.LinkOccurrence
 import com.typewritermc.authoring.LinkOccurrenceId
-import com.typewritermc.authoring.PathSegment
 import com.typewritermc.authoring.ReadContext
 import com.typewritermc.authoring.RelationSelection
 import com.typewritermc.authoring.ResourceDefinitionId
@@ -24,20 +22,24 @@ import com.typewritermc.checking.InputIdentity
 import com.typewritermc.configuration.ConfigurationRecipe
 import com.typewritermc.discovery.OwnedCheckRecipe
 import com.typewritermc.discovery.OwnedProviderRegistry
+import com.typewritermc.operations.OperationCatalog
+import com.typewritermc.realm.repository.CapturedAuthoringValues
+import com.typewritermc.realm.repository.ResourceValueMapper
 import com.typewritermc.types.DataValue
 import com.typewritermc.types.EndpointBindingTemplate
-import com.typewritermc.types.ListItem
 import com.typewritermc.types.NativeBindingRegistry
 import com.typewritermc.types.RelationContract
 import com.typewritermc.types.RelationId
 import com.typewritermc.types.ResourceId
+import com.typewritermc.types.TypeDefinitionId
 import com.typewritermc.types.catalog.CheckedCatalog
-import com.typewritermc.types.catalog.Resolution
 import com.typewritermc.types.immutableMapCopy
 import com.typewritermc.types.ownsResources
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import java.util.IdentityHashMap
+import java.util.UUID
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.atomic.AtomicBoolean
 
@@ -58,7 +60,7 @@ interface AuthoringCatalogLease : AutoCloseable {
     val endpointBindings: List<EndpointBindingTemplate>
     val resources: List<AuthoringResourceDefinition>
     val configuration: List<ConfigurationRecipe>
-    val operations: com.typewritermc.operations.OperationCatalog
+    val operations: OperationCatalog
 
     fun retain(): AuthoringCatalogLease
 }
@@ -82,14 +84,14 @@ data class AuthoringView internal constructor(
     val links: Map<LinkOccurrenceId, LinkOccurrence>,
     /** Identifies this saved view until replacement, including across state transfer chunks. */
     val observationId: String =
-        java.util.UUID
+        UUID
             .randomUUID()
             .toString(),
 ) {
     internal val readContext = ReadContext(catalog.generation)
     internal val graphIndexes = ConcurrentHashMap<RelationSelection, CapturedGraphIndex>()
     internal val projection by lazy {
-        com.typewritermc.realm.repository.ResourceValueMapper.project(
+        ResourceValueMapper.project(
             links.values,
             resources,
             catalog.relations,
@@ -97,8 +99,7 @@ data class AuthoringView internal constructor(
         )
     }
     internal val values by lazy {
-        com.typewritermc.realm.repository
-            .CapturedAuthoringValues(resources, projection.projections)
+        CapturedAuthoringValues(resources, projection.projections)
     }
 }
 
@@ -213,7 +214,7 @@ class InMemoryAuthoringViewStore(
     private val lock = Any()
     private val changed = MutableStateFlow(0L)
     override val changes: StateFlow<Long> = changed.asStateFlow()
-    private val roots = java.util.IdentityHashMap<ReadContext, RootRetention>()
+    private val roots = IdentityHashMap<ReadContext, RootRetention>()
     private var closed = false
     private var reload: (() -> AuthoringSeed)? = null
     private var current = createRoot(catalog, seed.resources, seed.resourceDefinitions).also { roots[it.root.readContext] = it }
@@ -421,14 +422,14 @@ private fun collectValueInputs(
 }
 
 private fun discoverLinks(resources: Map<ResourceId, AuthoringRecord>): Map<LinkOccurrenceId, LinkOccurrence> =
-    com.typewritermc.realm.repository.ResourceValueMapper
+    ResourceValueMapper
         .discover(resources)
         .associateBy(LinkOccurrence::id)
 
 private fun immutableResources(resources: Map<ResourceId, AuthoringRecord>): Map<ResourceId, AuthoringRecord> =
     resources.immutableAuthoringCopy()
 
-private fun TypeSelection.definition(): com.typewritermc.types.TypeDefinitionId =
+private fun TypeSelection.definition(): TypeDefinitionId =
     when (this) {
         is TypeSelection.Complete -> use.definition
         is TypeSelection.Pending -> definition

@@ -1,8 +1,6 @@
 package com.typewritermc.realm.checking
 
-import com.typewritermc.authoring.ArgumentSelection
 import com.typewritermc.authoring.AuthoringRecord
-import com.typewritermc.authoring.Availability
 import com.typewritermc.authoring.CompleteValue
 import com.typewritermc.authoring.DraftBinding
 import com.typewritermc.authoring.DraftExpectation
@@ -23,7 +21,6 @@ import com.typewritermc.configuration.RelativeFieldPattern
 import com.typewritermc.configuration.RuleOrigin
 import com.typewritermc.realm.authoring.AuthoringSeed
 import com.typewritermc.realm.authoring.InMemoryAuthoringViewStore
-import com.typewritermc.types.CollectionKind
 import com.typewritermc.types.DataValue
 import com.typewritermc.types.FieldDeclaration
 import com.typewritermc.types.FieldOwner

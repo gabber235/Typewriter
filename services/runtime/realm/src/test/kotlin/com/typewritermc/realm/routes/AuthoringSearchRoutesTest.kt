@@ -1,15 +1,12 @@
 package com.typewritermc.realm.routes
 
-import com.typewritermc.authoring.AuthoringRecord
 import com.typewritermc.authoring.ResourceDefinitionId
-import com.typewritermc.authoring.SearchSelectorId
 import com.typewritermc.checking.CatalogGeneration
 import com.typewritermc.realm.authoring.AuthoringSeed
 import com.typewritermc.realm.authoring.InMemoryAuthoringViewStore
 import com.typewritermc.realm.checking.TEST_TYPE
 import com.typewritermc.realm.checking.TestCatalogLease
 import com.typewritermc.realm.checking.record
-import com.typewritermc.realm.checking.tokensFor
 import com.typewritermc.realm.search.AuthoringSearchRepository
 import com.typewritermc.realm.search.IndexedAuthoringSearchCandidate
 import com.typewritermc.services.libs.communicator.router.communicatorRoutes
@@ -18,7 +15,6 @@ import com.typewritermc.types.ResourceId
 import com.typewritermc.types.ScalarKind
 import com.typewritermc.types.TypeDefinitionId
 import com.typewritermc.types.TypeUse
-import com.typewritermc.types.catalog.CheckedCatalog
 import com.typewritermc.types.skir.SkirAuthoringValueCodec
 import com.typewritermc.types.skir.SkirDataValueCodec
 import com.typewritermc.types.skir.SkirTypeCodec
@@ -28,8 +24,6 @@ import io.kotest.matchers.shouldBe
 import kotlinx.coroutines.test.runTest
 import skirout.editor.v1.authoring.SearchAuthoringRequest
 import skirout.editor.v1.authoring.SearchAuthoringResponse
-import skirout.editor.v1.search.RealmSearchQuery
-import skirout.editor.v1.search.RealmSearchSelector
 import skirout.editor.v1.type_catalog.CatalogGeneration as SkirCatalogGeneration
 import skirout.editor.v1.type_catalog.ResourceId as SkirResourceId
 import skirout.editor.v1.type_catalog.TypeUse as SkirTypeUse

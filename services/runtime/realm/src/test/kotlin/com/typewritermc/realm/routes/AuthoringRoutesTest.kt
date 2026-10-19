@@ -17,13 +17,11 @@ import com.typewritermc.checking.CatalogGeneration
 import com.typewritermc.checking.CheckOutcome
 import com.typewritermc.checking.FindingStatus
 import com.typewritermc.checking.InputIdentity
-import com.typewritermc.checking.InputToken
 import com.typewritermc.realm.authoring.AuthoringLease
 import com.typewritermc.realm.authoring.AuthoringSeed
 import com.typewritermc.realm.authoring.AuthoringViewDelta
 import com.typewritermc.realm.authoring.AuthoringViewStore
 import com.typewritermc.realm.authoring.InMemoryAuthoringViewStore
-import com.typewritermc.realm.authoring.RESOURCE_SELECTION_INPUT
 import com.typewritermc.realm.authoring.TypeArgumentChangePreview
 import com.typewritermc.realm.authoring.TypeArgumentOperations
 import com.typewritermc.realm.authoring.TypePreviewResult
@@ -34,7 +32,6 @@ import com.typewritermc.realm.checking.CheckTicket
 import com.typewritermc.realm.checking.FindingSet
 import com.typewritermc.realm.checking.TestCatalogLease
 import com.typewritermc.realm.checking.record
-import com.typewritermc.realm.checking.tokensFor
 import com.typewritermc.realm.repository.AuthoringRepository
 import com.typewritermc.services.libs.communicator.router.communicatorRoutes
 import com.typewritermc.types.DataValue

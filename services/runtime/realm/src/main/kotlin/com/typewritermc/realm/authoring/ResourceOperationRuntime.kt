@@ -13,6 +13,7 @@ import com.typewritermc.authoring.complete
 import com.typewritermc.capability.CapabilityId
 import com.typewritermc.checking.CatalogGeneration
 import com.typewritermc.checking.InputIdentity
+import com.typewritermc.discovery.ProviderOrigin
 import com.typewritermc.operations.NeedsChoices
 import com.typewritermc.operations.OperationAvailability
 import com.typewritermc.operations.OperationConfirmation
@@ -38,7 +39,6 @@ import com.typewritermc.services.libs.utils.rethrowExceptional
 import com.typewritermc.types.DataValue
 import com.typewritermc.types.ResourceId
 import com.typewritermc.types.TypeTemplate
-import kotlinx.coroutines.CancellationException
 import skirout.editor.v1.action.EditorAction
 import java.util.UUID
 
@@ -73,7 +73,7 @@ internal class OperationCatalogChanged(
 ) : IllegalStateException("The operation catalog changed")
 
 internal class OperationResolutionFailure(
-    val origin: com.typewritermc.discovery.ProviderOrigin,
+    val origin: ProviderOrigin,
     cause: Throwable,
 ) : IllegalStateException("Resource operation availability failed for ${origin.owner.localIdentity}", cause)
 

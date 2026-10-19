@@ -1,12 +1,13 @@
 package com.typewritermc.realm.repository.utils
 
+import com.surrealdb.RecordId
 import com.typewritermc.types.ResourceId
 
 /** Maps the opaque authored identity onto the single canonical resource table. */
-internal fun ResourceId.surrealRecordId(): com.surrealdb.RecordId = com.surrealdb.RecordId("resource", value)
+internal fun ResourceId.surrealRecordId(): RecordId = RecordId("resource", value)
 
 /** Recovers only the opaque authored identity. Database table identity never crosses this boundary. */
-internal fun com.surrealdb.RecordId.toResourceId(): ResourceId {
+internal fun RecordId.toResourceId(): ResourceId {
     require(table == "resource" && id.isString) { "Resource record ids must use string keys in the resource table." }
     return ResourceId(id.string)
 }

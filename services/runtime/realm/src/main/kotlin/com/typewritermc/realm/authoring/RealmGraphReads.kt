@@ -1,5 +1,6 @@
 package com.typewritermc.realm.authoring
 
+import com.typewritermc.authoring.AuthoringRecord
 import com.typewritermc.authoring.Availability
 import com.typewritermc.authoring.DraftBinding
 import com.typewritermc.authoring.GraphEndpoint
@@ -14,12 +15,15 @@ import com.typewritermc.authoring.ReachabilityQuery
 import com.typewritermc.authoring.ReachabilityResult
 import com.typewritermc.authoring.RelationSelection
 import com.typewritermc.authoring.ResourceDraft
+import com.typewritermc.authoring.ResourceDrafts
 import com.typewritermc.authoring.RouteQuery
 import com.typewritermc.authoring.RouteResult
 import com.typewritermc.authoring.TraversalDirection
+import com.typewritermc.authoring.TypeSelection
 import com.typewritermc.authoring.UnresolvedLink
 import com.typewritermc.authoring.ValueLocation
 import com.typewritermc.authoring.ValuePath
+import com.typewritermc.authoring.ValueProblem
 import com.typewritermc.authoring.locate
 import com.typewritermc.checking.DraftType
 import com.typewritermc.checking.InputIdentity
@@ -32,13 +36,9 @@ import com.typewritermc.realm.checking.CapturedAuthoringReads
 import com.typewritermc.realm.repository.LinkSchemaCapabilities
 import com.typewritermc.realm.repository.ResourceValueMapper
 import com.typewritermc.types.DataValue
-import com.typewritermc.types.EndpointBindingTemplate
-import com.typewritermc.types.EndpointSlot
 import com.typewritermc.types.RelationContract
 import com.typewritermc.types.RelationFamilyId
-import com.typewritermc.types.RelationId
 import com.typewritermc.types.ResourceId
-import com.typewritermc.types.TypeUse
 import com.typewritermc.types.catalog.Resolution
 
 /** Traverses only the graph derived from the retained authored reads. */
@@ -94,7 +94,7 @@ internal object RealmGraphReads {
         val known = mutableListOf<ResourceDraft>()
         val undecided = mutableListOf<UndecidedCandidate>()
         graph.edgesInto(target).map(DirectedEdge::from).distinct().sortedBy(ResourceId::value).forEach { resource ->
-            when (val bound = graph.bind(resource, com.typewritermc.authoring.ResourceDrafts)) {
+            when (val bound = graph.bind(resource, ResourceDrafts)) {
                 is BoundMatch.Match -> known += bound.value
                 is BoundMatch.Undecided -> undecided += bound.value
                 BoundMatch.No -> Unit
@@ -187,7 +187,7 @@ private class CapturedGraph(
     private val view = reads.view
     private val root = view.original
     private val index = view.graphIndex(selection)
-    private val reportedProblems = mutableSetOf<com.typewritermc.authoring.ValueProblem>()
+    private val reportedProblems = mutableSetOf<ValueProblem>()
 
     init {
         reads.observeInput(InputIdentity.Catalog(root.catalog.generation))
@@ -273,11 +273,11 @@ private class CapturedGraph(
 
                 is ResourceTypeMatch.Definition -> {
                     when (val actual = record.configuration) {
-                        is com.typewritermc.authoring.TypeSelection.Complete -> {
+                        is TypeSelection.Complete -> {
                             root.catalog.checked.isNominalSubtype(actual.use.definition, requested.id)
                         }
 
-                        is com.typewritermc.authoring.TypeSelection.Pending -> {
+                        is TypeSelection.Pending -> {
                             root.catalog.checked.isNominalSubtype(actual.definition, requested.id)
                         }
                     }
@@ -285,11 +285,11 @@ private class CapturedGraph(
 
                 is ResourceTypeMatch.Application -> {
                     when (val actual = record.configuration) {
-                        is com.typewritermc.authoring.TypeSelection.Complete -> {
+                        is TypeSelection.Complete -> {
                             actual.use == requested.use
                         }
 
-                        is com.typewritermc.authoring.TypeSelection.Pending -> {
+                        is TypeSelection.Pending -> {
                             return if (actual.definition == requested.use.definition) {
                                 BoundMatch.Undecided(UndecidedCandidate(resource, listOf(location)))
                             } else {
@@ -330,7 +330,7 @@ internal class CapturedGraphIndex(
                 ResourceValueMapper.declaredEvidence(endpoint, resource, record, root.catalog.checked, capabilities)
             }
         }
-    val projectionProblems: Map<ResourceId, List<com.typewritermc.authoring.ValueProblem>>
+    val projectionProblems: Map<ResourceId, List<ValueProblem>>
     val outgoing: Map<ResourceId, List<DirectedEdge>>
     val incoming: Map<ResourceId, List<DirectedEdge>>
 
@@ -358,11 +358,11 @@ internal class CapturedGraphIndex(
     private fun hasUnavailableTarget(occurrence: LinkOccurrence): Boolean {
         val target = view.resources[occurrence.target.resource] ?: return true
         return when (val selected = target.configuration) {
-            is com.typewritermc.authoring.TypeSelection.Pending -> {
+            is TypeSelection.Pending -> {
                 true
             }
 
-            is com.typewritermc.authoring.TypeSelection.Complete -> {
+            is TypeSelection.Complete -> {
                 root.catalog.checked.resolve(selected.use) !is Resolution.Ready
             }
         }
@@ -442,7 +442,7 @@ private fun direction(selection: RelationSelection): TraversalDirection =
     }
 
 private fun rawValue(
-    record: com.typewritermc.authoring.AuthoringRecord?,
+    record: AuthoringRecord?,
     path: ValuePath,
 ): DataValue? {
     val fields = record?.fields ?: return null

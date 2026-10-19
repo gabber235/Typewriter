@@ -11,7 +11,6 @@ import com.typewritermc.authoring.complete
 import com.typewritermc.authoring.map
 import com.typewritermc.authoring.read
 import com.typewritermc.authoring.replace
-import com.typewritermc.capability.CapabilityId
 import com.typewritermc.discovery.ProviderOrigin
 import com.typewritermc.presentation.ButtonVariant
 import com.typewritermc.presentation.PresentationReference

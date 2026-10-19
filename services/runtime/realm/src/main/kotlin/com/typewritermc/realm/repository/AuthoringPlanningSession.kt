@@ -30,6 +30,7 @@ import com.typewritermc.types.catalog.Resolution
 import com.typewritermc.types.catalog.ResolvedRepresentation
 import com.typewritermc.types.immutableCopy
 import com.typewritermc.types.immutableListCopy
+import java.util.Collections
 
 /**
  * Owns the request local graph and normalized intent sequence used during operation preparation.
@@ -45,7 +46,7 @@ internal class AuthoringPlanningSession(
     val planner = AuthoringMutationPlanner(baseline.catalog.checked, baseline.catalog.relations, baseline.catalog.endpointBindings)
     private val staged = baseline.resources.toMutableMap()
     private val removed = linkedSetOf<ResourceId>()
-    val resources: Map<ResourceId, AuthoringRecord> = java.util.Collections.unmodifiableMap(staged)
+    val resources: Map<ResourceId, AuthoringRecord> = Collections.unmodifiableMap(staged)
     private val emitted = mutableListOf<EditIntent>()
     val intents: List<EditIntent> get() = emitted.immutableListCopy()
     private var allocation = 0L

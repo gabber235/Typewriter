@@ -1,9 +1,25 @@
 package com.typewritermc.realm.routes
 
+import com.typewritermc.authoring.DiagnosticId
 import com.typewritermc.authoring.skir.SkirAuthoringOperationCodec
+import com.typewritermc.checking.Diagnostic
+import com.typewritermc.engine.CompilationRoot
 import com.typewritermc.protocol.transport.generated.RealmRouteScope
 import com.typewritermc.realm.checking.toWire
+import com.typewritermc.realm.compiler.DiagnosticEvidence
+import com.typewritermc.realm.compiler.PublicationActivationPhase
+import com.typewritermc.realm.compiler.PublicationBaseline
+import com.typewritermc.realm.compiler.PublicationBlocker
+import com.typewritermc.realm.compiler.PublicationBlockers
+import com.typewritermc.realm.compiler.PublicationCandidateId
+import com.typewritermc.realm.compiler.PublicationChange
+import com.typewritermc.realm.compiler.PublicationDelta
+import com.typewritermc.realm.compiler.PublicationFailure
+import com.typewritermc.realm.compiler.PublicationNotice
+import com.typewritermc.realm.compiler.PublicationResult
 import com.typewritermc.realm.compiler.PublicationState
+import com.typewritermc.realm.compiler.PublicationStatus
+import com.typewritermc.realm.compiler.PublicationView
 import com.typewritermc.realm.compiler.RealmPublicationCoordinator
 import com.typewritermc.services.libs.communicator.router.CommunicatorRoutesBuilder
 import com.typewritermc.services.libs.communicator.transfer.BoundedByteTransferEncoder
@@ -11,16 +27,29 @@ import com.typewritermc.services.libs.communicator.transfer.BoundedTransferPlan
 import com.typewritermc.types.skir.SkirTypeCodec
 import com.typewritermc.types.skir.getOrThrow
 import okio.ByteString.Companion.toByteString
+import skirout.editor.v1.compilation_root.CompilationProjectionId
+import skirout.editor.v1.compiled_content.CompiledContentChanged
 import skirout.editor.v1.publication.PublicationDiagnosticDetails
+import skirout.editor.v1.publication.PublicationPendingReview
 import skirout.editor.v1.publication.PublicationTransferUnavailable
 import skirout.editor.v1.publication.PublicationViewChanged
 import skirout.editor.v1.publication.PublicationViewChunk
+import skirout.editor.v1.publication.PublicationViewId
 import skirout.editor.v1.publication.PublishAuthoringResponse
 import skirout.editor.v1.publication.QueryPublicationViewResponse
+import skirout.editor.v1.type_catalog.CatalogGeneration
+import skirout.editor.v1.type_catalog.PublicationId
+import skirout.editor.v1.type_catalog.ResourceId
+import skirout.kernel.v1.bounded_transfer.BoundedTransferChunk
+import skirout.editor.v1.compilation_root.CompilationRoot as SkirCompilationRoot
+import skirout.editor.v1.publication.DiagnosticEvidence as SkirDiagnosticEvidence
+import skirout.editor.v1.publication.PublicationActivationPhase as SkirPublicationActivationPhase
 import skirout.editor.v1.publication.PublicationBaseline as WirePublicationBaseline
 import skirout.editor.v1.publication.PublicationBlocker as WirePublicationBlocker
 import skirout.editor.v1.publication.PublicationBlockers as WirePublicationBlockers
+import skirout.editor.v1.publication.PublicationCandidateId as SkirPublicationCandidateId
 import skirout.editor.v1.publication.PublicationChange as WirePublicationChange
+import skirout.editor.v1.publication.PublicationDelta as SkirPublicationDelta
 import skirout.editor.v1.publication.PublicationFailure as WirePublicationFailure
 import skirout.editor.v1.publication.PublicationNotice as WirePublicationNotice
 import skirout.editor.v1.publication.PublicationResult as WirePublicationResult
@@ -45,18 +74,16 @@ internal class PublicationRoutes(
                 }
                 val result =
                     publisher.publish(
-                        com.typewritermc.realm.compiler
-                            .PublicationCandidateId(call.request.candidate.value),
+                        PublicationCandidateId(call.request.candidate.value),
                     ) { attempt ->
                         if (attempt.state == PublicationState.Complete) {
                             call.communicator
                                 .publish(
                                     contracts.compiledContentChanged,
                                     address,
-                                    skirout.editor.v1.compiled_content.CompiledContentChanged(
+                                    CompiledContentChanged(
                                         generation =
-                                            skirout.editor.v1.type_catalog
-                                                .CatalogGeneration(value = attempt.catalog.value),
+                                            CatalogGeneration(value = attempt.catalog.value),
                                     ),
                                 ).requirePublished()
                         }
@@ -86,7 +113,7 @@ internal class PublicationRoutes(
                                     PublicationViewChunk(
                                         view = view.wireId(),
                                         transfer =
-                                            skirout.kernel.v1.bounded_transfer.BoundedTransferChunk(
+                                            BoundedTransferChunk(
                                                 transferId = chunk.transferId,
                                                 index = chunk.index,
                                                 chunkCount = chunk.chunkCount,
@@ -105,36 +132,30 @@ internal class PublicationRoutes(
         }
 }
 
-internal fun com.typewritermc.realm.compiler.PublicationView.changed() = PublicationViewChanged(current = wireId())
+internal fun PublicationView.changed() = PublicationViewChanged(current = wireId())
 
-private fun com.typewritermc.realm.compiler.PublicationView.wireId() =
-    skirout.editor.v1.publication
-        .PublicationViewId(value = id.value)
+private fun PublicationView.wireId() = PublicationViewId(value = id.value)
 
-internal fun com.typewritermc.realm.compiler.PublicationView.toWire() = WirePublicationView(id = wireId(), status = status.toWire(evidence))
+internal fun PublicationView.toWire() = WirePublicationView(id = wireId(), status = status.toWire(evidence))
 
-private fun com.typewritermc.realm.compiler.PublicationStatus.toWire(
-    evidence: Map<com.typewritermc.authoring.DiagnosticId, com.typewritermc.realm.compiler.DiagnosticEvidence>,
-): WirePublicationStatus =
+private fun PublicationStatus.toWire(evidence: Map<DiagnosticId, DiagnosticEvidence>): WirePublicationStatus =
     when (this) {
-        is com.typewritermc.realm.compiler.PublicationStatus.Empty -> {
+        is PublicationStatus.Empty -> {
             WirePublicationStatus.createEmpty(notices = notices.map { it.toWire(evidence) })
         }
 
-        is com.typewritermc.realm.compiler.PublicationStatus.Current -> {
+        is PublicationStatus.Current -> {
             WirePublicationStatus.createCurrent(
                 selected =
-                    skirout.editor.v1.type_catalog
-                        .PublicationId(value = selected.value),
+                    PublicationId(value = selected.value),
                 notices = notices.map { it.toWire(evidence) },
             )
         }
 
-        is com.typewritermc.realm.compiler.PublicationStatus.Ready -> {
+        is PublicationStatus.Ready -> {
             WirePublicationStatus.createReady(
                 candidate =
-                    skirout.editor.v1.publication
-                        .PublicationCandidateId(value = candidate.value),
+                    SkirPublicationCandidateId(value = candidate.value),
                 baseline = baseline.toWire(),
                 changes = changes.toWire(),
                 notices =
@@ -144,7 +165,7 @@ private fun com.typewritermc.realm.compiler.PublicationStatus.toWire(
             )
         }
 
-        is com.typewritermc.realm.compiler.PublicationStatus.Blocked -> {
+        is PublicationStatus.Blocked -> {
             WirePublicationStatus.createBlocked(
                 baseline = baseline.toWire(),
                 blockers = blockers.toWire(evidence),
@@ -157,28 +178,27 @@ private fun com.typewritermc.realm.compiler.PublicationStatus.toWire(
             )
         }
 
-        is com.typewritermc.realm.compiler.PublicationStatus.Checking -> {
+        is PublicationStatus.Checking -> {
             WirePublicationStatus.createChecking(baseline = baseline.toWire(), findings = findings.map { it.toWire() })
         }
 
-        is com.typewritermc.realm.compiler.PublicationStatus.Publishing -> {
+        is PublicationStatus.Publishing -> {
             WirePublicationStatus.createPublishing(
                 publication =
-                    skirout.editor.v1.type_catalog
-                        .PublicationId(value = publication.value),
+                    PublicationId(value = publication.value),
                 phase =
                     when (phase) {
-                        com.typewritermc.realm.compiler.PublicationActivationPhase.Storing -> {
-                            skirout.editor.v1.publication.PublicationActivationPhase.STORING
+                        PublicationActivationPhase.Storing -> {
+                            SkirPublicationActivationPhase.STORING
                         }
 
-                        com.typewritermc.realm.compiler.PublicationActivationPhase.Activating -> {
-                            skirout.editor.v1.publication.PublicationActivationPhase.ACTIVATING
+                        PublicationActivationPhase.Activating -> {
+                            SkirPublicationActivationPhase.ACTIVATING
                         }
                     },
                 releasing = releasing.toWire(),
                 next =
-                    skirout.editor.v1.publication.PublicationPendingReview(
+                    PublicationPendingReview(
                         findings =
                             next.findings.map {
                                 it.toWire()
@@ -191,7 +211,7 @@ private fun com.typewritermc.realm.compiler.PublicationStatus.toWire(
             )
         }
 
-        is com.typewritermc.realm.compiler.PublicationStatus.Unavailable -> {
+        is PublicationStatus.Unavailable -> {
             WirePublicationStatus.createUnavailable(
                 baseline = baseline.toWire(),
                 failure = failure.toWire(),
@@ -200,98 +220,88 @@ private fun com.typewritermc.realm.compiler.PublicationStatus.toWire(
         }
     }
 
-private fun com.typewritermc.realm.compiler.PublicationBaseline.toWire(): WirePublicationBaseline =
+private fun PublicationBaseline.toWire(): WirePublicationBaseline =
     when (this) {
-        com.typewritermc.realm.compiler.PublicationBaseline.Initial -> {
+        PublicationBaseline.Initial -> {
             WirePublicationBaseline.INITIAL
         }
 
-        is com.typewritermc.realm.compiler.PublicationBaseline.Selected -> {
+        is PublicationBaseline.Selected -> {
             WirePublicationBaseline.SelectedWrapper(
-                skirout.editor.v1.type_catalog
-                    .PublicationId(value = publication.value),
+                PublicationId(value = publication.value),
             )
         }
     }
 
-private fun com.typewritermc.realm.compiler.PublicationFailure.toWire(): WirePublicationFailure =
+private fun PublicationFailure.toWire(): WirePublicationFailure =
     when (this) {
-        is com.typewritermc.realm.compiler.PublicationFailure.EvaluationInterrupted -> {
+        is PublicationFailure.EvaluationInterrupted -> {
             WirePublicationFailure.EvaluationInterruptedWrapper(
                 message,
             )
         }
 
-        is com.typewritermc.realm.compiler.PublicationFailure.ImplementationUnavailable -> {
+        is PublicationFailure.ImplementationUnavailable -> {
             WirePublicationFailure
                 .ImplementationUnavailableWrapper(
                     message,
                 )
         }
 
-        is com.typewritermc.realm.compiler.PublicationFailure.PublicationInterrupted -> {
+        is PublicationFailure.PublicationInterrupted -> {
             WirePublicationFailure.PublicationInterruptedWrapper(
-                skirout.editor.v1.type_catalog
-                    .PublicationId(value = publication.value),
+                PublicationId(value = publication.value),
             )
         }
     }
 
-private fun com.typewritermc.realm.compiler.PublicationChange.toWire(): WirePublicationChange =
+private fun PublicationChange.toWire(): WirePublicationChange =
     when (this) {
-        is com.typewritermc.realm.compiler.PublicationChange.RootAdded -> WirePublicationChange.RootAddedWrapper(root.toWire())
-        is com.typewritermc.realm.compiler.PublicationChange.RootUpdated -> WirePublicationChange.RootUpdatedWrapper(root.toWire())
-        is com.typewritermc.realm.compiler.PublicationChange.RootRemoved -> WirePublicationChange.RootRemovedWrapper(root.toWire())
-        com.typewritermc.realm.compiler.PublicationChange.RequirementsChanged -> WirePublicationChange.REQUIREMENTS_CHANGED
+        is PublicationChange.RootAdded -> WirePublicationChange.RootAddedWrapper(root.toWire())
+        is PublicationChange.RootUpdated -> WirePublicationChange.RootUpdatedWrapper(root.toWire())
+        is PublicationChange.RootRemoved -> WirePublicationChange.RootRemovedWrapper(root.toWire())
+        PublicationChange.RequirementsChanged -> WirePublicationChange.REQUIREMENTS_CHANGED
     }
 
-private fun com.typewritermc.engine.CompilationRoot.toWire() =
-    skirout.editor.v1.compilation_root.CompilationRoot(
+private fun CompilationRoot.toWire() =
+    SkirCompilationRoot(
         projection =
-            skirout.editor.v1.compilation_root
-                .CompilationProjectionId(value = projection.value),
+            CompilationProjectionId(value = projection.value),
         resource =
-            skirout.editor.v1.type_catalog
-                .ResourceId(value = resource.value),
+            ResourceId(value = resource.value),
     )
 
-private fun com.typewritermc.realm.compiler.PublicationDelta.toWire() =
-    skirout.editor.v1.publication.PublicationDelta(
+private fun PublicationDelta.toWire() =
+    SkirPublicationDelta(
         first = first.toWire(),
         additional = additional.map { it.toWire() },
     )
 
-private fun com.typewritermc.realm.compiler.PublicationBlockers.toWire(
-    evidence: Map<com.typewritermc.authoring.DiagnosticId, com.typewritermc.realm.compiler.DiagnosticEvidence> = emptyMap(),
-) = WirePublicationBlockers(
-    first = first.toWire(evidence),
-    additional = additional.map { it.toWire(evidence) },
-)
+private fun PublicationBlockers.toWire(evidence: Map<DiagnosticId, DiagnosticEvidence> = emptyMap()) =
+    WirePublicationBlockers(
+        first = first.toWire(evidence),
+        additional = additional.map { it.toWire(evidence) },
+    )
 
-private fun com.typewritermc.realm.compiler.PublicationBlocker.toWire(
-    evidence: Map<com.typewritermc.authoring.DiagnosticId, com.typewritermc.realm.compiler.DiagnosticEvidence> = emptyMap(),
-) = WirePublicationBlocker(details = diagnostic.details(evidence[diagnostic.id]))
+private fun PublicationBlocker.toWire(evidence: Map<DiagnosticId, DiagnosticEvidence> = emptyMap()) =
+    WirePublicationBlocker(details = diagnostic.details(evidence[diagnostic.id]))
 
-private fun com.typewritermc.realm.compiler.PublicationNotice.toWire(
-    evidence: Map<com.typewritermc.authoring.DiagnosticId, com.typewritermc.realm.compiler.DiagnosticEvidence>,
-): WirePublicationNotice =
+private fun PublicationNotice.toWire(evidence: Map<DiagnosticId, DiagnosticEvidence>): WirePublicationNotice =
     when (this) {
-        is com.typewritermc.realm.compiler.PublicationNotice.Information -> {
+        is PublicationNotice.Information -> {
             WirePublicationNotice.InformationWrapper(
                 diagnostic.details(evidence[diagnostic.id]),
             )
         }
 
-        is com.typewritermc.realm.compiler.PublicationNotice.Warning -> {
+        is PublicationNotice.Warning -> {
             WirePublicationNotice.WarningWrapper(
                 diagnostic.details(evidence[diagnostic.id]),
             )
         }
     }
 
-private fun com.typewritermc.checking.Diagnostic.details(
-    evidence: com.typewritermc.realm.compiler.DiagnosticEvidence?,
-): PublicationDiagnosticDetails {
+private fun Diagnostic.details(evidence: DiagnosticEvidence?): PublicationDiagnosticDetails {
     val encoded = SkirTypeCodec.encode(this).getOrThrow()
     return PublicationDiagnosticDetails(
         id = encoded.id,
@@ -302,51 +312,47 @@ private fun com.typewritermc.checking.Diagnostic.details(
         related = encoded.related,
         evidence =
             evidence?.let { captured ->
-                skirout.editor.v1.publication.DiagnosticEvidence(
+                SkirDiagnosticEvidence(
                     catalog =
-                        skirout.editor.v1.type_catalog
-                            .CatalogGeneration(value = captured.catalog.value),
+                        CatalogGeneration(value = captured.catalog.value),
                     expectations = captured.expectations.map { SkirAuthoringOperationCodec.encode(it).getOrThrow() },
                 )
             },
     )
 }
 
-private fun com.typewritermc.realm.compiler.PublicationResult.toWire(): WirePublicationResult =
+private fun PublicationResult.toWire(): WirePublicationResult =
     when (this) {
-        com.typewritermc.realm.compiler.PublicationResult.Publishing -> {
+        PublicationResult.Publishing -> {
             WirePublicationResult.PUBLISHING
         }
 
-        is com.typewritermc.realm.compiler.PublicationResult.Activated -> {
+        is PublicationResult.Activated -> {
             WirePublicationResult.createActivated(
                 publication =
-                    skirout.editor.v1.type_catalog
-                        .PublicationId(value = publication.value),
+                    PublicationId(value = publication.value),
             )
         }
 
-        is com.typewritermc.realm.compiler.PublicationResult.Blocked -> {
+        is PublicationResult.Blocked -> {
             WirePublicationResult.BlockedWrapper(blockers.toWire())
         }
 
-        is com.typewritermc.realm.compiler.PublicationResult.Interrupted -> {
+        is PublicationResult.Interrupted -> {
             WirePublicationResult.InterruptedWrapper(
-                skirout.editor.v1.type_catalog
-                    .PublicationId(value = publication.value),
+                PublicationId(value = publication.value),
             )
         }
 
-        com.typewritermc.realm.compiler.PublicationResult.NoChanges -> {
+        PublicationResult.NoChanges -> {
             WirePublicationResult.NO_CHANGES
         }
 
-        is com.typewritermc.realm.compiler.PublicationResult.CandidateChanged -> {
+        is PublicationResult.CandidateChanged -> {
             WirePublicationResult.CandidateChangedWrapper(
                 PublicationViewChanged(
                     current =
-                        skirout.editor.v1.publication
-                            .PublicationViewId(value = view.value),
+                        PublicationViewId(value = view.value),
                 ),
             )
         }

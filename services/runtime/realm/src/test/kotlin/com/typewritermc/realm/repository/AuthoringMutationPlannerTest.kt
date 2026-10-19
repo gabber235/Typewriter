@@ -20,7 +20,6 @@ import com.typewritermc.authoring.ValuePath
 import com.typewritermc.authoring.append
 import com.typewritermc.authoring.item
 import com.typewritermc.checking.CatalogGeneration
-import com.typewritermc.checking.InputIdentity
 import com.typewritermc.configuration.FieldPatternSegment
 import com.typewritermc.configuration.RelativeFieldPattern
 import com.typewritermc.operations.OperationInvocation

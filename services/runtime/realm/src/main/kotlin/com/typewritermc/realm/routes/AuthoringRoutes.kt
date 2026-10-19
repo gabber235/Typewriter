@@ -11,6 +11,7 @@ import com.typewritermc.realm.authoring.LinkRepairIntent
 import com.typewritermc.realm.authoring.TypeArgumentChangePreview
 import com.typewritermc.realm.authoring.TypeArgumentOperations
 import com.typewritermc.realm.authoring.TypePreviewResult
+import com.typewritermc.realm.checking.FindingSet
 import com.typewritermc.realm.repository.AuthoringRepository
 import com.typewritermc.realm.repository.ResourceValueMapper
 import com.typewritermc.services.libs.communicator.router.CommunicatorRoutesBuilder
@@ -24,6 +25,7 @@ import com.typewritermc.types.skir.SkirAuthoringValueCodec
 import com.typewritermc.types.skir.SkirTypeCodec
 import com.typewritermc.types.skir.getOrThrow
 import okio.ByteString.Companion.toByteString
+import skirout.editor.v1.authoring.AuthoringObservationId
 import skirout.editor.v1.authoring.AuthoringStateTransferChunk
 import skirout.editor.v1.authoring.AuthoringTransferUnavailable
 import skirout.editor.v1.authoring.AuthoringTransferUnavailableReason
@@ -33,6 +35,7 @@ import skirout.editor.v1.authoring.PreviewTypeArgumentChangeRequest
 import skirout.editor.v1.authoring.PreviewTypeArgumentChangeResponse
 import skirout.editor.v1.authoring.QueryAuthoringStateRequest
 import skirout.editor.v1.authoring.QueryAuthoringStateResponse
+import skirout.editor.v1.type_catalog.RelationId
 import skirout.editor.v1.authoring.ArgumentLocation as SkirArgumentLocation
 import skirout.editor.v1.authoring.AuthoringResource as SkirAuthoringResource
 import skirout.editor.v1.authoring.AuthoringState as SkirAuthoringState
@@ -59,7 +62,7 @@ import skirout.kernel.v1.bounded_transfer.BoundedTransferChunk as SkirBoundedTra
 internal class AuthoringRoutes(
     private val repository: AuthoringRepository,
     private val views: AuthoringViewStore,
-    private val findings: () -> List<com.typewritermc.realm.checking.FindingSet>,
+    private val findings: () -> List<FindingSet>,
     private val typeArguments: TypeArgumentOperations = DefaultTypeArgumentOperations(views),
     private val contracts: EditorContracts,
 ) {
@@ -118,8 +121,7 @@ internal class AuthoringRoutes(
                 projection.projections.map { link ->
                     SkirLinkProjection(
                         contract =
-                            skirout.editor.v1.type_catalog
-                                .RelationId(value = link.contract.value),
+                            RelationId(value = link.contract.value),
                         first = SkirResourceId(value = link.first.value),
                         second = SkirResourceId(value = link.second.value),
                         firstLocation = link.firstLocation?.let { SkirAuthoringValueCodec.encode(it).getOrThrow() },
@@ -134,8 +136,7 @@ internal class AuthoringRoutes(
                     links = links,
                     findings = capturedFindings.findings,
                     confirmedObservation =
-                        skirout.editor.v1.authoring
-                            .AuthoringObservationId(value = root.observationId),
+                        AuthoringObservationId(value = root.observationId),
                 )
             return authored.toTransfer(request.transferId)
         }

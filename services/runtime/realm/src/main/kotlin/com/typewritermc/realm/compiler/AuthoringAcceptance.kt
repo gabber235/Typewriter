@@ -1,11 +1,11 @@
 package com.typewritermc.realm.compiler
 
+import com.typewritermc.authoring.CompleteValue
 import com.typewritermc.authoring.CompletenessResult
 import com.typewritermc.authoring.DiagnosticId
 import com.typewritermc.authoring.EditExpectation
 import com.typewritermc.authoring.NativeBindingId
 import com.typewritermc.authoring.PathSegment
-import com.typewritermc.authoring.PublicationId
 import com.typewritermc.authoring.TypeSelection
 import com.typewritermc.authoring.ValueLocation
 import com.typewritermc.authoring.ValuePath
@@ -20,6 +20,7 @@ import com.typewritermc.configuration.RuleOrigin
 import com.typewritermc.realm.authoring.AuthoringLease
 import com.typewritermc.realm.authoring.AuthoringView
 import com.typewritermc.realm.authoring.AuthoringViewStore
+import com.typewritermc.realm.checking.CapturedCheckReport
 import com.typewritermc.realm.checking.CheckAdmissionTarget
 import com.typewritermc.realm.checking.RealmCheckRuntime
 import com.typewritermc.services.libs.utils.rethrowExceptional
@@ -31,6 +32,7 @@ import com.typewritermc.types.TypeDefinitionId
 import com.typewritermc.types.TypeId
 import com.typewritermc.types.TypeUse
 import com.typewritermc.types.canonicalValueKey
+import com.typewritermc.types.catalog.Resolution
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import kotlinx.serialization.Serializable
@@ -129,7 +131,7 @@ data class PublicationBlockers(
 
 internal sealed interface ResourceReadiness {
     data class Ready(
-        val value: com.typewritermc.authoring.CompleteValue,
+        val value: CompleteValue,
         val binding: NativeBindingRequirement,
     ) : ResourceReadiness
 
@@ -150,7 +152,7 @@ data class DiagnosticEvidence(
 
 internal data class CapturedAssessment(
     val resources: Map<ResourceId, ResourceReadiness>,
-    val checks: com.typewritermc.realm.checking.CapturedCheckReport,
+    val checks: CapturedCheckReport,
     val findings: List<Diagnostic>,
     val evidence: Map<DiagnosticId, DiagnosticEvidence>,
 )
@@ -243,7 +245,7 @@ internal class AuthoringAcceptance(
                 val resolved =
                     snapshot.root.catalog.checked
                         .resolve(actual)
-                val checked = (resolved as? com.typewritermc.types.catalog.Resolution.Ready)?.value
+                val checked = (resolved as? Resolution.Ready)?.value
                 if (checked == null) {
                     findings +=
                         publicationDiagnostic(

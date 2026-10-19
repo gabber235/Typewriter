@@ -3,10 +3,12 @@ package com.typewritermc.realm.routes
 import com.typewritermc.capability.RealmSearchQuery
 import com.typewritermc.capability.RealmSearchSelector
 import com.typewritermc.capability.RealmSearchSelectorExpression
+import skirout.editor.v1.search.RealmSearchSelectorOperator
+import skirout.editor.v1.search.RealmSearchQuery as SkirRealmSearchQuery
 import skirout.editor.v1.search.RealmSearchSelectorExpression as WireSelectorExpression
 
 /** Converts the shared wire query without changing selector identity or boolean structure. */
-internal fun skirout.editor.v1.search.RealmSearchQuery.toDomain(): RealmSearchQuery =
+internal fun SkirRealmSearchQuery.toDomain(): RealmSearchQuery =
     RealmSearchQuery(
         normalizedQuery = normalizedQuery,
         terms = terms,
@@ -22,11 +24,11 @@ private fun WireSelectorExpression.toDomain(): RealmSearchSelectorExpression =
 
         is WireSelectorExpression.BinaryWrapper -> {
             when (value.operator_) {
-                skirout.editor.v1.search.RealmSearchSelectorOperator.AND -> {
+                RealmSearchSelectorOperator.AND -> {
                     RealmSearchSelectorExpression.And(value.left.toDomain(), value.right.toDomain())
                 }
 
-                skirout.editor.v1.search.RealmSearchSelectorOperator.OR -> {
+                RealmSearchSelectorOperator.OR -> {
                     RealmSearchSelectorExpression.Or(value.left.toDomain(), value.right.toDomain())
                 }
 

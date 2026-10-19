@@ -1,15 +1,12 @@
 package com.typewritermc.realm.search
 
-import com.surrealdb.RecordId
 import com.surrealdb.Surreal
 import com.typewritermc.authoring.ArgumentSelection
 import com.typewritermc.authoring.AuthoringRecord
 import com.typewritermc.authoring.ResourceDefinitionId
-import com.typewritermc.authoring.SearchSelectorId
 import com.typewritermc.authoring.TypeSelection
 import com.typewritermc.realm.authoring.AuthoringCatalogLease
 import com.typewritermc.realm.authoring.AuthoringView
-import com.typewritermc.realm.authoring.authoringStorageJson
 import com.typewritermc.realm.checking.TestCatalogLease
 import com.typewritermc.realm.repository.ResourceValueMapper
 import com.typewritermc.realm.repository.utils.surrealRecordId
@@ -37,7 +34,6 @@ import com.typewritermc.types.catalog.DefaultCheckedCatalog
 import com.typewritermc.types.endpointId
 import de.infix.testBalloon.framework.core.testSuite
 import io.kotest.matchers.shouldBe
-import kotlinx.serialization.encodeToString
 
 class SurrealAuthoringSearchRepositoryTest {
     fun indexedSearchPagesPastIncompatibleCandidates() {

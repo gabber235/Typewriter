@@ -7,10 +7,8 @@ import com.typewritermc.authoring.DraftBinding
 import com.typewritermc.authoring.ItemId
 import com.typewritermc.authoring.LinkInspectionQuery
 import com.typewritermc.authoring.ReachabilityQuery
-import com.typewritermc.authoring.ReadContext
 import com.typewritermc.authoring.RelationSelection
 import com.typewritermc.authoring.ResourceDefinitionId
-import com.typewritermc.authoring.ResourceDraft
 import com.typewritermc.authoring.ResourceDrafts
 import com.typewritermc.authoring.RouteQuery
 import com.typewritermc.authoring.TraversalBudget

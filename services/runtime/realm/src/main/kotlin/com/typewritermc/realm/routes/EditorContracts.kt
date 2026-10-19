@@ -34,6 +34,7 @@ import skirout.editor.v1.authoring.QueryAuthoringStateResponse
 import skirout.editor.v1.authoring.SearchAuthoringResponse
 import skirout.editor.v1.capability.CommandResult
 import skirout.editor.v1.capability.ComputationResult
+import skirout.editor.v1.capability.InvocationId
 import skirout.editor.v1.catalog.CatalogFetchResult
 import skirout.editor.v1.catalog.CatalogInvalidated
 import skirout.editor.v1.catalog.PrepareValueResult
@@ -42,6 +43,8 @@ import skirout.editor.v1.compiled_content.QueryPublishedContentResponse
 import skirout.editor.v1.publication.PublicationViewChanged
 import skirout.editor.v1.publication.PublishAuthoringResponse
 import skirout.editor.v1.publication.QueryPublicationViewResponse
+import skirout.editor.v1.resource_operations.AuthoringActionResult
+import skirout.editor.v1.resource_operations.ResolveResourceOperationsResult
 import skirout.editor.v1.search.CancelRealmPresentationSearchResult
 import skirout.editor.v1.search.RealmPresentationSearchStatus
 import skirout.editor.v1.search.RealmPresentationSearchUpdate
@@ -64,14 +67,14 @@ internal class EditorContracts(
     val resolveResourceOperations =
         address.resourceOperationsResolve(
             policy(
-                skirout.editor.v1.resource_operations.ResolveResourceOperationsResult
+                ResolveResourceOperationsResult
                     .createInternalError(),
             ),
         )
     val prepareAuthoringAction =
         address.authoringActionPrepare(
             policy(
-                skirout.editor.v1.resource_operations.AuthoringActionResult
+                AuthoringActionResult
                     .createInternalError(),
             ),
         )
@@ -90,8 +93,7 @@ internal class EditorContracts(
             policy(
                 ComputationResult.createUnavailable(
                     invocationId =
-                        skirout.editor.v1.capability
-                            .InvocationId(value = ""),
+                        InvocationId(value = ""),
                     diagnostics = emptyList(),
                 ),
             ),
@@ -101,8 +103,7 @@ internal class EditorContracts(
             policy(
                 CommandResult.createUnavailable(
                     invocationId =
-                        skirout.editor.v1.capability
-                            .InvocationId(value = ""),
+                        InvocationId(value = ""),
                     diagnostics = emptyList(),
                 ),
             ),

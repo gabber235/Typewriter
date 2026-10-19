@@ -1,6 +1,6 @@
 package com.typewritermc.realm.compiler
 
-import com.typewritermc.engine.CompilationProjectionId
+import com.typewritermc.authoring.TypeSelection
 import com.typewritermc.engine.CompilationResult
 import com.typewritermc.engine.CompilationRoot
 import com.typewritermc.engine.CompiledArtifact
@@ -11,7 +11,6 @@ import com.typewritermc.engine.encodeShard
 import com.typewritermc.library.PAGE_CONTRACT_TYPE
 import com.typewritermc.realm.authoring.AuthoringView
 import com.typewritermc.realm.authoring.ownershipRelationIds
-import com.typewritermc.types.RelationContract
 
 /** Owns nominal Page root selection, ownership traversal, and the serialized Page shard format. */
 internal class PageCompiledArtifactProducer : CompiledArtifactProducer {
@@ -22,7 +21,7 @@ internal class PageCompiledArtifactProducer : CompiledArtifactProducer {
         view.resources.entries
             .asSequence()
             .filter { (_, record) ->
-                val selection = record.configuration as? com.typewritermc.authoring.TypeSelection.Complete
+                val selection = record.configuration as? TypeSelection.Complete
                 selection != null && view.catalog.checked.isNominalSubtype(selection.use.definition, PAGE_CONTRACT_TYPE)
             }.map { (resource, _) -> CompilationRoot(projection, resource) }
             .sortedBy { root -> root.resource.value }

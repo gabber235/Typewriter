@@ -11,7 +11,6 @@ import com.typewritermc.authoring.ValueLocation
 import com.typewritermc.authoring.ValuePath
 import com.typewritermc.authoring.boundPath
 import com.typewritermc.checking.CatalogGeneration
-import com.typewritermc.checking.CheckContext
 import com.typewritermc.checking.DiagnosticSeverity
 import com.typewritermc.checking.DiagnosticTemplate
 import com.typewritermc.checking.RealmCheckProvider
@@ -43,7 +42,6 @@ import com.typewritermc.imprint.ProducerId
 import com.typewritermc.realm.authoring.AuthoringSeed
 import com.typewritermc.realm.authoring.AuthoringViewDelta
 import com.typewritermc.realm.authoring.InMemoryAuthoringViewStore
-import com.typewritermc.realm.authoring.RESOURCE_SELECTION_INPUT
 import com.typewritermc.realm.compiler.AuthoringAcceptance
 import com.typewritermc.realm.compiler.CapturedAssessment
 import com.typewritermc.realm.repository.conflicts

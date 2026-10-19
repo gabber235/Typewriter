@@ -1,13 +1,12 @@
 package com.typewritermc.realm.checking
 
 import com.typewritermc.authoring.Availability
-import com.typewritermc.authoring.CompleteValue
 import com.typewritermc.authoring.DiagnosticId
 import com.typewritermc.authoring.DraftBinding
 import com.typewritermc.authoring.DraftExpectation
+import com.typewritermc.authoring.PartialSchema
 import com.typewritermc.authoring.PathSegment
 import com.typewritermc.authoring.ValueLocation
-import com.typewritermc.authoring.ValuePath
 import com.typewritermc.authoring.boundPath
 import com.typewritermc.checking.CheckEvaluation
 import com.typewritermc.checking.CheckInput
@@ -231,7 +230,7 @@ private sealed interface TypeCursor {
     ) : TypeCursor
 
     data class Partial(
-        val schema: com.typewritermc.authoring.PartialSchema,
+        val schema: PartialSchema,
     ) : TypeCursor {
         override val use: TypeUse? = null
     }

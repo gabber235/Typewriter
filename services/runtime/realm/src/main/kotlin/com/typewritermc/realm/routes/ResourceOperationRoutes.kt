@@ -24,7 +24,6 @@ import com.typewritermc.types.skir.SkirAuthoringValueCodec
 import com.typewritermc.types.skir.SkirDataValueCodec
 import com.typewritermc.types.skir.SkirOperationCodec
 import com.typewritermc.types.skir.getOrThrow
-import kotlinx.coroutines.CancellationException
 import skirout.editor.v1.authoring.AuthoringDiagnostic
 import skirout.editor.v1.authoring.AuthoringObservationId
 import skirout.editor.v1.resource_operations.AuthoringActionResult
@@ -38,8 +37,11 @@ import skirout.editor.v1.resource_operations.PrepareAuthoringActionRequest
 import skirout.editor.v1.resource_operations.ResolveResourceOperationsRequest
 import skirout.editor.v1.resource_operations.ResolveResourceOperationsResult
 import skirout.editor.v1.authoring.CounterpartChoice as WireCounterpart
+import skirout.editor.v1.resource_operations.OperationInvocation as SkirOperationInvocation
 import skirout.editor.v1.resource_operations.PreparationChoice as WireChoice
 import skirout.editor.v1.resource_operations.PreparationChoiceAnswer as WireAnswer
+import skirout.editor.v1.type_catalog.CatalogGeneration as SkirCatalogGeneration
+import skirout.editor.v1.type_catalog.ResourceId as SkirResourceId
 
 /**
  * Adapts operation requests on generated Realm routes into validated working observations.
@@ -75,8 +77,7 @@ internal class ResourceOperationRoutes(
         } catch (stale: OperationCatalogChanged) {
             ResolveResourceOperationsResult.createCatalogChanged(
                 actualGeneration =
-                    skirout.editor.v1.type_catalog
-                        .CatalogGeneration(value = stale.actual.value),
+                    SkirCatalogGeneration(value = stale.actual.value),
             )
         } catch (denied: RealmCapabilityPermissionDeniedException) {
             ResolveResourceOperationsResult.createPermissionDenied(
@@ -178,8 +179,7 @@ internal class ResourceOperationRoutes(
                             result.selection?.let {
                                 OperationSelectionEffect.ReplaceWrapper(
                                     it.map { id ->
-                                        skirout.editor.v1.type_catalog
-                                            .ResourceId(value = id.value)
+                                        SkirResourceId(value = id.value)
                                     },
                                 )
                             }
@@ -248,8 +248,7 @@ internal class ResourceOperationRoutes(
         } catch (stale: OperationCatalogChanged) {
             AuthoringActionResult.createCatalogChanged(
                 actualGeneration =
-                    skirout.editor.v1.type_catalog
-                        .CatalogGeneration(value = stale.actual.value),
+                    SkirCatalogGeneration(value = stale.actual.value),
             )
         } catch (failed: OperationResolutionFailure) {
             if (failed.cause is RealmCapabilityPermissionDeniedException) {
@@ -307,7 +306,7 @@ internal fun OperationWorkingContext.decodeWorkingContext(): DecodedOperationCon
     return DecodedOperationContext(confirmedObservation.value, upserts.toMap(), removals.toSet())
 }
 
-internal fun skirout.editor.v1.resource_operations.OperationInvocation.decodeInvocation(): OperationInvocation {
+internal fun SkirOperationInvocation.decodeInvocation(): OperationInvocation {
     require(catalog.value.isNotBlank()) { "The catalog generation is required." }
     return OperationInvocation(
         invocationId.value,
@@ -408,8 +407,7 @@ private fun operationDiagnostic(
     message = message,
     resource =
         location?.let {
-            skirout.editor.v1.type_catalog
-                .ResourceId(value = it.resource.value)
+            SkirResourceId(value = it.resource.value)
         },
     path = location?.let { SkirAuthoringValueCodec.encode(it.path).getOrThrow() },
 )

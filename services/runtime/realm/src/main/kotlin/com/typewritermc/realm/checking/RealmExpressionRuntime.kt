@@ -3,6 +3,7 @@ package com.typewritermc.realm.checking
 import com.typewritermc.authoring.AuthoredReads
 import com.typewritermc.authoring.Availability
 import com.typewritermc.authoring.DraftBinding
+import com.typewritermc.authoring.ValueLocation
 import com.typewritermc.expression.DefaultExpressionEvaluator
 import com.typewritermc.expression.EvaluationBudget
 import com.typewritermc.expression.EvaluationDiagnostic
@@ -18,7 +19,7 @@ internal class RealmExpressionRuntime(
 ) {
     fun evaluateBoolean(
         expression: ExpressionNode,
-        location: com.typewritermc.authoring.ValueLocation,
+        location: ValueLocation,
         reads: AuthoredReads,
     ): Availability<Boolean> {
         val snapshot =

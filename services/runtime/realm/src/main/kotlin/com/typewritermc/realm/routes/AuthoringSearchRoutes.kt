@@ -23,6 +23,7 @@ import skirout.editor.v1.catalog.ResourceDefinitionId as SkirResourceDefinitionI
 import skirout.editor.v1.type_catalog.CatalogGeneration as SkirCatalogGeneration
 import skirout.editor.v1.type_catalog.NamedTypeUse as SkirNamedTypeUse
 import skirout.editor.v1.type_catalog.ResourceId as SkirResourceId
+import skirout.editor.v1.type_catalog.TypeDefinitionId as SkirTypeDefinitionId
 import skirout.editor.v1.type_catalog.TypeUse as SkirTypeUse
 import skirout.editor.v1.typed_value.PortableValue as SkirPortableValue
 
@@ -118,7 +119,7 @@ private fun DataValue.displayText(): String? =
         else -> null
     }
 
-private fun skirout.editor.v1.type_catalog.TypeDefinitionId.toDomain(): TypeDefinitionId =
+private fun SkirTypeDefinitionId.toDomain(): TypeDefinitionId =
     (
         SkirTypeCodec
             .decode(SkirTypeUse.NamedWrapper(SkirNamedTypeUse(definition = this, arguments = emptyList())))

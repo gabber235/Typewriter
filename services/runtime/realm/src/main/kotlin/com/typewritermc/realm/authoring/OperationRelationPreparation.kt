@@ -4,16 +4,13 @@ import com.typewritermc.authoring.ConnectIntent
 import com.typewritermc.authoring.CounterpartChoice
 import com.typewritermc.authoring.DefaultInitializationRuntime
 import com.typewritermc.authoring.InitializationRequest
-import com.typewritermc.authoring.ItemId
 import com.typewritermc.authoring.LinkOccurrence
 import com.typewritermc.authoring.LinkOccurrenceId
-import com.typewritermc.authoring.PathSegment
 import com.typewritermc.authoring.PreparationTarget
 import com.typewritermc.authoring.PreparedContent
 import com.typewritermc.authoring.ResourceDraft
 import com.typewritermc.authoring.TypeSelection
 import com.typewritermc.authoring.ValueLocation
-import com.typewritermc.authoring.ValuePath
 import com.typewritermc.authoring.item
 import com.typewritermc.checking.InputIdentity
 import com.typewritermc.library.TAG_PARENTS_RELATION_ID

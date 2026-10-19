@@ -1,7 +1,9 @@
 package com.typewritermc.realm.authoring
 
 import com.typewritermc.authoring.ArgumentLocation
+import com.typewritermc.authoring.AuthoringRecord
 import com.typewritermc.authoring.EditIntent
+import com.typewritermc.authoring.LinkOccurrence
 import com.typewritermc.authoring.LinkOccurrenceId
 import com.typewritermc.authoring.PathSegment
 import com.typewritermc.authoring.PreparedEdit
@@ -65,7 +67,7 @@ internal sealed interface TypePreviewResult {
     ) : TypePreviewResult
 
     data class Rejected(
-        val problems: List<com.typewritermc.authoring.ValueProblem>,
+        val problems: List<ValueProblem>,
     ) : TypePreviewResult
 }
 
@@ -434,8 +436,8 @@ private fun collectRepairs(
 private fun incompatibleLinks(
     resource: ResourceId,
     requested: TypeSelection,
-    resources: Map<ResourceId, com.typewritermc.authoring.AuthoringRecord>,
-    occurrences: Collection<com.typewritermc.authoring.LinkOccurrence>,
+    resources: Map<ResourceId, AuthoringRecord>,
+    occurrences: Collection<LinkOccurrence>,
     contracts: List<RelationContract>,
     catalog: CheckedCatalog,
     inspected: MutableSet<InputIdentity>,
@@ -475,12 +477,12 @@ private fun incompatibleLinks(
         }.distinct()
 }
 
-private fun com.typewritermc.authoring.AuthoringRecord.proposedIf(
+private fun AuthoringRecord.proposedIf(
     proposed: Boolean,
     requested: TypeSelection,
-): com.typewritermc.authoring.AuthoringRecord = if (proposed) copy(configuration = requested) else this
+): AuthoringRecord = if (proposed) copy(configuration = requested) else this
 
-private fun com.typewritermc.authoring.AuthoringRecord.matches(
+private fun AuthoringRecord.matches(
     expected: TypeUse,
     catalog: CheckedCatalog,
 ): Boolean =
@@ -489,7 +491,7 @@ private fun com.typewritermc.authoring.AuthoringRecord.matches(
         is TypeSelection.Pending -> catalog.knownApplications(selected).any { catalog.isReadableAs(it, expected) }
     }
 
-private fun com.typewritermc.authoring.AuthoringRecord.matches(
+private fun AuthoringRecord.matches(
     expected: TypeTemplate.Named,
     catalog: CheckedCatalog,
 ): Boolean {

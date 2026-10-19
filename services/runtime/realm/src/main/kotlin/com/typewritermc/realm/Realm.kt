@@ -2,6 +2,7 @@ package com.typewritermc.realm
 
 import com.surrealdb.Surreal
 import com.typewritermc.authoring.CommitResult
+import com.typewritermc.authoring.PreparedEdit
 import com.typewritermc.discovery.DeploymentFacts
 import com.typewritermc.discovery.RuntimeCleanupOwner
 import com.typewritermc.discovery.RuntimeRegistrar
@@ -306,7 +307,7 @@ private class CheckingAuthoringRepository(
     private val checks: RealmCheckRuntime,
     private val events: EditorUpdatePublisher,
 ) : AuthoringRepository {
-    override suspend fun commit(edit: com.typewritermc.authoring.PreparedEdit): CommitResult =
+    override suspend fun commit(edit: PreparedEdit): CommitResult =
         delegate.commit(edit).also { result ->
             if (result is CommitResult.Committed) {
                 checks.invalidateCurrent()

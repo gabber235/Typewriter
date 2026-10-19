@@ -8,6 +8,7 @@ import com.typewritermc.authoring.ValueLocation
 import com.typewritermc.authoring.ValuePath
 import com.typewritermc.authoring.boundCollectionPath
 import com.typewritermc.checking.InputIdentity
+import com.typewritermc.library.PAGE_CONTRACT_TYPE
 import com.typewritermc.operations.DestinationPlacementRequest
 import com.typewritermc.operations.OperationPreparation
 import com.typewritermc.operations.PlacementAnchor
@@ -37,7 +38,7 @@ internal class OperationLayoutPreparation(
         val type =
             (record.configuration as? TypeSelection.Complete)?.use
                 ?: error("Configure the destination type before moving resources.")
-        val requiresPlacement = baseline.catalog.checked.isNominalSubtype(type.definition, com.typewritermc.library.PAGE_CONTRACT_TYPE)
+        val requiresPlacement = baseline.catalog.checked.isNominalSubtype(type.definition, PAGE_CONTRACT_TYPE)
         val destinationPolicies =
             baseline.catalog.operations.placements.filter {
                 baseline.catalog.checked.isReadableAs(type, it.target.asClosedUse())

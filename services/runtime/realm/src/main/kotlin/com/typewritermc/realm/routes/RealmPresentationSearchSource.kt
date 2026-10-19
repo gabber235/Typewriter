@@ -7,6 +7,7 @@ import com.typewritermc.capability.RealmCapabilityRuntime
 import com.typewritermc.capability.RealmSearchContext
 import com.typewritermc.capability.RealmSearchUpdate
 import com.typewritermc.capability.ResourceOperationSearchContext
+import com.typewritermc.operations.OperationInvocation
 import com.typewritermc.operations.OperationSearch
 import com.typewritermc.realm.authoring.AuthoredReadView
 import com.typewritermc.realm.authoring.AuthoringLease
@@ -16,8 +17,6 @@ import com.typewritermc.realm.authoring.operationObservation
 import com.typewritermc.realm.catalog.RealmCatalogLease
 import com.typewritermc.realm.catalog.RealmCatalogStore
 import com.typewritermc.realm.checking.CapturedAuthoringReads
-import com.typewritermc.types.TypeTemplate
-import com.typewritermc.types.TypeUse
 import com.typewritermc.types.skir.SkirConversionResult
 import com.typewritermc.types.skir.SkirDataValueCodec
 import com.typewritermc.types.skir.SkirTypeCodec
@@ -32,6 +31,7 @@ import kotlinx.coroutines.launch
 import skirout.editor.v1.search.RealmPresentationSearchRequest
 import skirout.editor.v1.search.RealmPresentationSearchStatus
 import skirout.editor.v1.search.RealmPresentationSearchUpdate
+import skirout.editor.v1.type_catalog.DataValue
 import java.util.concurrent.ConcurrentHashMap
 
 interface RealmPresentationSearchSource {
@@ -103,7 +103,7 @@ class CapabilityRealmPresentationSearchSource(
 
         val job =
             scope.launch(start = CoroutineStart.LAZY) {
-                val values = mutableListOf<skirout.editor.v1.type_catalog.DataValue>()
+                val values = mutableListOf<DataValue>()
                 try {
                     val registry = RealmCapabilityRegistry(catalog.capabilities)
                     val provider = registry.requireSearch(CapabilityId(request.capabilityId.value))
@@ -240,7 +240,7 @@ private data class SearchContext(
 
 private data class CapturedOperationSearch(
     val lease: AuthoringLease,
-    val invocation: com.typewritermc.operations.OperationInvocation,
+    val invocation: OperationInvocation,
     val reads: CapturedAuthoringReads,
     val observation: String,
     val views: AuthoringViewStore,
@@ -258,7 +258,7 @@ private data class CapturedOperationSearch(
 private fun searchSnapshot(
     subscriptionId: String,
     status: RealmPresentationSearchStatus,
-    values: List<skirout.editor.v1.type_catalog.DataValue>,
+    values: List<DataValue>,
     guidance: List<String> = emptyList(),
 ): RealmPresentationSearchUpdate =
     RealmPresentationSearchUpdate.createSnapshot(

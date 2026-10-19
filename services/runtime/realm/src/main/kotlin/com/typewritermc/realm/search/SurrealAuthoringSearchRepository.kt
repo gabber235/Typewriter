@@ -7,9 +7,11 @@ import com.typewritermc.authoring.TypeSelection
 import com.typewritermc.realm.authoring.AuthoringView
 import com.typewritermc.realm.authoring.authoredDatabaseValues
 import com.typewritermc.realm.authoring.ownershipRelationIds
+import com.typewritermc.realm.repository.ResourceValueMapper
 import com.typewritermc.realm.repository.utils.inPreviewTransaction
 import com.typewritermc.realm.repository.utils.surrealRecordId
 import com.typewritermc.realm.repository.utils.toResourceId
+import com.typewritermc.types.RelationId
 import com.typewritermc.types.ResourceId
 import com.typewritermc.types.TypeDefinitionId
 import com.typewritermc.types.TypeUse
@@ -114,8 +116,8 @@ internal fun AuthoringView.ownershipClosure(contexts: Set<ResourceId>): Set<Reso
     return reached
 }
 
-private fun AuthoringView.linksForOwnership(contracts: Set<com.typewritermc.types.RelationId>): Map<ResourceId, List<ResourceId>> =
-    com.typewritermc.realm.repository.ResourceValueMapper
+private fun AuthoringView.linksForOwnership(contracts: Set<RelationId>): Map<ResourceId, List<ResourceId>> =
+    ResourceValueMapper
         .project(links.values, resources, catalog.relations, catalog.checked)
         .projections
         .filter { it.contract in contracts }

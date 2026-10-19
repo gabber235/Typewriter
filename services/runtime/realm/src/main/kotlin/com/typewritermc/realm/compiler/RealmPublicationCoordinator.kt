@@ -3,13 +3,19 @@ package com.typewritermc.realm.compiler
 import com.surrealdb.RecordId
 import com.surrealdb.Surreal
 import com.typewritermc.authoring.DiagnosticId
+import com.typewritermc.authoring.EditExpectation
 import com.typewritermc.authoring.PublicationId
 import com.typewritermc.checking.CatalogGeneration
 import com.typewritermc.checking.Diagnostic
 import com.typewritermc.checking.DiagnosticSeverity
+import com.typewritermc.checking.FindingStatus
+import com.typewritermc.engine.CompilationResult
 import com.typewritermc.engine.CompiledArtifact
 import com.typewritermc.engine.PublishedContent
+import com.typewritermc.realm.authoring.AuthoringLease
+import com.typewritermc.realm.authoring.AuthoringView
 import com.typewritermc.realm.authoring.authoringStorageJson
+import com.typewritermc.realm.checking.FindingSet
 import com.typewritermc.realm.repository.conflicts
 import com.typewritermc.realm.repository.utils.StructuredDatabaseCodec
 import com.typewritermc.realm.repository.utils.inTransaction
@@ -17,17 +23,24 @@ import com.typewritermc.services.libs.telemetry.ErrorSlug
 import com.typewritermc.services.libs.telemetry.mainSpanScope
 import com.typewritermc.services.libs.utils.rethrowExceptional
 import io.opentelemetry.context.Context
-import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.cancelAndJoin
+import kotlinx.coroutines.channels.Channel
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.merge
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.builtins.ListSerializer
+import java.util.UUID
 
 data class PublicationAttempt(
     val id: PublicationId,
@@ -115,22 +128,22 @@ internal class RealmPublicationCoordinator(
     private val engine: EngineImplementationSource,
     private val compilation: CompiledArtifactProducerRegistry,
     private val results: PublicationResults,
-    private val findings: () -> List<com.typewritermc.realm.checking.FindingSet>,
+    private val findings: () -> List<FindingSet>,
 ) {
     private val gate = Mutex()
     private val evaluation = Mutex()
     private val lock = Any()
-    private val wakeups = kotlinx.coroutines.channels.Channel<Unit>(kotlinx.coroutines.channels.Channel.CONFLATED)
-    private var observer: kotlinx.coroutines.Job? = null
+    private val wakeups = Channel<Unit>(Channel.CONFLATED)
+    private var observer: Job? = null
     private var prepared: Prepared? = null
     private var releasing: Release? = null
     private var closed = false
     private var invalidationRevision = 0L
     private val mutableView =
-        kotlinx.coroutines.flow.MutableStateFlow(
+        MutableStateFlow(
             PublicationView(nextViewId(), PublicationStatus.Checking(PublicationBaseline.Initial, emptyList())),
         )
-    val views: kotlinx.coroutines.flow.StateFlow<PublicationView> = mutableView
+    val views: StateFlow<PublicationView> = mutableView
 
     @Volatile private var latest: PublicationAttempt? = null
 
@@ -154,14 +167,13 @@ internal class RealmPublicationCoordinator(
         }
 
     fun start(
-        scope: kotlinx.coroutines.CoroutineScope,
-        changes: kotlinx.coroutines.flow.Flow<Long>,
+        scope: CoroutineScope,
+        changes: Flow<Long>,
     ) {
         check(observer == null)
         observer =
             scope.launch {
-                kotlinx.coroutines.flow
-                    .merge(changes.map { Unit }, wakeups.receiveAsFlow())
+                merge(changes.map { Unit }, wakeups.receiveAsFlow())
                     .collectLatest { refresh() }
             }
     }
@@ -188,7 +200,7 @@ internal class RealmPublicationCoordinator(
     suspend fun refresh() =
         evaluation.withLock {
             val revision = synchronized(lock) { invalidationRevision }
-            var capture: com.typewritermc.realm.authoring.AuthoringLease? = null
+            var capture: AuthoringLease? = null
             var retained = false
             var baseline: PublicationBaseline = PublicationBaseline.Initial
             try {
@@ -212,8 +224,8 @@ internal class RealmPublicationCoordinator(
                 val assessment = acceptance.evaluate(captured)
                 val compilationInputs = CompilationInputs(captured.root, assessment.resources)
                 val compiled = with(compilationInputs) { compilation.compile() }
-                val successful = compiled.filterIsInstance<com.typewritermc.engine.CompilationResult.Success>().map { it.artifact }
-                val failed = compiled.filterIsInstance<com.typewritermc.engine.CompilationResult.Blocked>()
+                val successful = compiled.filterIsInstance<CompilationResult.Success>().map { it.artifact }
+                val failed = compiled.filterIsInstance<CompilationResult.Blocked>()
                 val evidence = assessment.evidence.toMutableMap()
                 val projectionLocations =
                     captured.root.projection.problems
@@ -225,8 +237,7 @@ internal class RealmPublicationCoordinator(
                             DiagnosticEvidence(
                                 captured.root.catalog.generation,
                                 dependencies.map { id ->
-                                    com.typewritermc.authoring.EditExpectation
-                                        .Resource(id, captured.root.resources[id])
+                                    EditExpectation.Resource(id, captured.root.resources[id])
                                 },
                             )
                     }
@@ -273,7 +284,7 @@ internal class RealmPublicationCoordinator(
                             is PublicationComparison.Changed -> {
                                 PublicationStatus.Ready(
                                     PublicationCandidateId(
-                                        java.util.UUID
+                                        UUID
                                             .randomUUID()
                                             .toString(),
                                     ),
@@ -337,7 +348,7 @@ internal class RealmPublicationCoordinator(
                             Release(
                                 prepared,
                                 PublicationId(
-                                    java.util.UUID
+                                    UUID
                                         .randomUUID()
                                         .toString(),
                                 ),
@@ -418,13 +429,13 @@ internal class RealmPublicationCoordinator(
         }
     }
 
-    private fun capturedFindings(root: com.typewritermc.realm.authoring.AuthoringView) =
+    private fun capturedFindings(root: AuthoringView) =
         findings().map { set ->
             val current =
-                set.status == com.typewritermc.checking.FindingStatus.Current &&
+                set.status == FindingStatus.Current &&
                     set.ticket.catalog == root.catalog.generation && root.values.conflicts(set.expectations).isEmpty()
             set.copy(
-                status = if (current) com.typewritermc.checking.FindingStatus.Current else com.typewritermc.checking.FindingStatus.Outdated,
+                status = if (current) FindingStatus.Current else FindingStatus.Outdated,
             )
         }
 
@@ -485,10 +496,10 @@ internal class RealmPublicationCoordinator(
     }
 
     private data class Prepared(
-        val lease: com.typewritermc.realm.authoring.AuthoringLease,
+        val lease: AuthoringLease,
         val engine: EngineImplementationInputs,
         val baseline: PublicationBaseline,
-        val artifacts: List<com.typewritermc.engine.CompiledArtifact>,
+        val artifacts: List<CompiledArtifact>,
         val status: PublicationStatus,
         val revision: Long,
         val evidence: Map<DiagnosticId, DiagnosticEvidence>,
@@ -506,7 +517,7 @@ private fun PublishedContent?.baseline(): PublicationBaseline =
 
 private fun nextViewId() =
     PublicationViewId(
-        java.util.UUID
+        UUID
             .randomUUID()
             .toString(),
     )

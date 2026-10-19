@@ -3,6 +3,7 @@ package com.typewritermc.realm.routes
 import com.typewritermc.authoring.InitializationRuntime
 import com.typewritermc.protocol.transport.generated.RealmRouteScope
 import com.typewritermc.realm.authoring.AuthoringViewStore
+import com.typewritermc.realm.authoring.ResourceOperationRuntime
 import com.typewritermc.realm.checking.RealmCheckRuntime
 import com.typewritermc.realm.compiler.CompiledRootStatuses
 import com.typewritermc.realm.compiler.PublicationResults
@@ -44,8 +45,7 @@ internal class RealmRouteFactory(
         val capabilityInvocationRoutes = RealmCapabilityInvocationRoutes(capabilityInvocations, contracts)
         val resourceOperationRoutes =
             ResourceOperationRoutes(
-                com.typewritermc.realm.authoring
-                    .ResourceOperationRuntime(views),
+                ResourceOperationRuntime(views),
                 contracts,
             )
         return communicatorRoutes {
