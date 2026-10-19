@@ -31,15 +31,14 @@ import com.typewritermc.types.EndpointBindingTemplate
 import com.typewritermc.types.LinkTarget
 import com.typewritermc.types.ListItem
 import com.typewritermc.types.MapRow
-import com.typewritermc.types.RESOURCE_OWNERSHIP_FAMILY_ID
 import com.typewritermc.types.RelationContract
 import com.typewritermc.types.RelationDeletePolicy
-import com.typewritermc.types.RelationFamilyId
 import com.typewritermc.types.ResourceId
 import com.typewritermc.types.TypeUse
 import com.typewritermc.types.catalog.CheckedCatalog
 import com.typewritermc.types.catalog.Resolution
 import com.typewritermc.types.catalog.ResolvedRepresentation
+import com.typewritermc.types.ownsResources
 
 internal sealed interface MutationPlanningResult {
     data class Accepted(
@@ -839,7 +838,7 @@ private fun validateOwnership(
     problems: MutableList<ValueProblem>,
 ) {
     val ownership =
-        contracts.filter { RelationFamilyId(RESOURCE_OWNERSHIP_FAMILY_ID) in it.families }.mapTo(hashSetOf()) { it.id }
+        contracts.filter { it.ownsResources }.mapTo(hashSetOf(), RelationContract::id)
     val owned = projections.filter { it.contract in ownership }.groupBy { it.second }
     owned
         .filterValues { links -> links.size > 1 && links.any { it.first in affected || it.second in affected } }

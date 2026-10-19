@@ -16,9 +16,9 @@ import com.typewritermc.operations.ResourceLayoutPreparation
 import com.typewritermc.operations.UnavailableAuthoredValue
 import com.typewritermc.operations.asClosedUse
 import com.typewritermc.realm.repository.ResourceValueMapper
-import com.typewritermc.types.RESOURCE_OWNERSHIP_FAMILY_ID
 import com.typewritermc.types.ResourceId
 import com.typewritermc.types.TypeUse
+import com.typewritermc.types.ownsResources
 
 /** Selects declared destination policy without inferring domain layout from presentation. */
 internal class OperationLayoutPreparation(
@@ -48,9 +48,8 @@ internal class OperationLayoutPreparation(
         }
         val owningEndpoints =
             baseline.catalog.relations
-                .filter { relation ->
-                    relation.families.any { it.value == RESOURCE_OWNERSHIP_FAMILY_ID }
-                }.mapTo(hashSetOf()) { it.first.id }
+                .filter { it.ownsResources }
+                .mapTo(hashSetOf()) { it.first.id }
         val memberships =
             ResourceValueMapper.discover(edit.session.resources).filter {
                 it.source == destination && it.id.endpoint in owningEndpoints

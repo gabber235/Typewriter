@@ -6,11 +6,10 @@ import com.typewritermc.authoring.ResourceDefinitionId
 import com.typewritermc.authoring.TypeSelection
 import com.typewritermc.realm.authoring.AuthoringView
 import com.typewritermc.realm.authoring.authoredDatabaseValues
+import com.typewritermc.realm.authoring.ownershipRelationIds
 import com.typewritermc.realm.repository.utils.inPreviewTransaction
 import com.typewritermc.realm.repository.utils.toUnifiedResourceId
 import com.typewritermc.realm.repository.utils.unifiedSurrealId
-import com.typewritermc.types.RESOURCE_OWNERSHIP_FAMILY_ID
-import com.typewritermc.types.RelationFamilyId
 import com.typewritermc.types.ResourceId
 import com.typewritermc.types.TypeDefinitionId
 import com.typewritermc.types.TypeUse
@@ -106,8 +105,7 @@ internal class SurrealAuthoringSearchRepository(
 }
 
 internal fun AuthoringView.ownershipClosure(contexts: Set<ResourceId>): Set<ResourceId> {
-    val ownership = catalog.relations.filter { RelationFamilyId(RESOURCE_OWNERSHIP_FAMILY_ID) in it.families }.mapTo(hashSetOf()) { it.id }
-    val outgoing = linksForOwnership(ownership)
+    val outgoing = linksForOwnership(catalog.ownershipRelationIds)
     val reached = contexts.toMutableSet()
     val pending = ArrayDeque(contexts)
     while (pending.isNotEmpty()) {

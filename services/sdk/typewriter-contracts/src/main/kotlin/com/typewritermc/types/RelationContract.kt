@@ -57,4 +57,8 @@ data class EndpointBindingTemplate(
     val containsCollection: Boolean,
 )
 
+/** Reports whether this relation belongs to the resource ownership family. */
+val RelationContract.ownsResources: Boolean
+    get() = RelationFamilyId(RESOURCE_OWNERSHIP_FAMILY_ID) in families
+
 fun RelationId.endpointId(slot: EndpointSlot): EndpointId = EndpointId("$value:${slot.name.lowercase()}")

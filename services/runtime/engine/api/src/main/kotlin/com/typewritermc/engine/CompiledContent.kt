@@ -13,6 +13,12 @@ import kotlinx.serialization.Serializable
 
 const val PAGE_COMPILATION_FORMAT_REVISION = 1
 
+/** Identifies the Page compilation shared by the Realm producer and the engine consumer. */
+val PAGE_COMPILATION_PROJECTION = CompilationProjectionId("typewriter.page")
+
+/** Names the serialized Page shard format. */
+const val PAGE_COMPILATION_MEDIA_TYPE = "application/vnd.typewriter.page+json"
+
 /** Distinguishes one generated occurrence of an authored resource. */
 @Serializable
 data class InstancePath(

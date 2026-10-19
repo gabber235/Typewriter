@@ -10,11 +10,11 @@ import com.typewritermc.operations.OperationAvailability
 import com.typewritermc.realm.checking.CapturedAuthoringReads
 import com.typewritermc.realm.repository.CounterpartBinding
 import com.typewritermc.realm.repository.ResourceValueMapper
-import com.typewritermc.types.RESOURCE_OWNERSHIP_FAMILY_ID
 import com.typewritermc.types.ResourceId
 import com.typewritermc.types.TypeUse
 import com.typewritermc.types.catalog.Resolution
 import com.typewritermc.types.catalog.ResolvedRepresentation
+import com.typewritermc.types.ownsResources
 
 /** Built in policy uses checked reference contracts, rather than resource family names. */
 internal class BuiltinOperationAvailability(
@@ -47,13 +47,8 @@ internal class BuiltinOperationAvailability(
             }
 
             BuiltinResourceOperation.MoveToPage, BuiltinResourceOperation.MoveToBook -> {
-                val owned =
-                    baseline.projection.projections.filter { edge ->
-                        baseline.catalog.relations.any {
-                            it.id == edge.contract &&
-                                it.families.any { family -> family.value == RESOURCE_OWNERSHIP_FAMILY_ID }
-                        }
-                    }
+                val ownership = baseline.catalog.ownershipRelationIds
+                val owned = baseline.projection.projections.filter { edge -> edge.contract in ownership }
                 targets.forEach { reads.observeInput(InputIdentity.Incoming(it, null)) }
                 if (targets.all { target -> owned.count { it.second == target } == 1 }) {
                     OperationAvailability.Enabled
@@ -68,13 +63,7 @@ internal class BuiltinOperationAvailability(
         }
 
     private fun cloneAvailability(roots: List<ResourceId>): OperationAvailability {
-        val owning =
-            baseline.catalog.relations
-                .filter {
-                    it.families.any { family ->
-                        family.value == RESOURCE_OWNERSHIP_FAMILY_ID
-                    }
-                }.mapTo(hashSetOf()) { it.id }
+        val owning = baseline.catalog.ownershipRelationIds
         val closure = linkedSetOf<ResourceId>()
         val pending = ArrayDeque(roots)
         val ownership =
@@ -127,11 +116,8 @@ internal class BuiltinOperationAvailability(
         val record = baseline.resources.getValue(id)
         val slots = mutableListOf<Triple<ValueLocation, Boolean, TypeUse>>()
         baseline.catalog.relations
-            .filterNot {
-                it.families.any { family ->
-                    family.value == RESOURCE_OWNERSHIP_FAMILY_ID
-                }
-            }.forEach { relation ->
+            .filterNot { it.ownsResources }
+            .forEach { relation ->
                 listOf(relation.first.id).forEach { endpoint ->
                     val evidence = ResourceValueMapper.declaredEvidence(endpoint, id, record, baseline.catalog.checked)
                     evidence.forms.forEach { reads.observeInput(InputIdentity.Form(it)) }

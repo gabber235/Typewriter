@@ -30,11 +30,11 @@ import com.typewritermc.realm.repository.valueAt
 import com.typewritermc.types.DataValue
 import com.typewritermc.types.EndpointId
 import com.typewritermc.types.LinkTarget
-import com.typewritermc.types.RESOURCE_OWNERSHIP_FAMILY_ID
 import com.typewritermc.types.ResourceId
 import com.typewritermc.types.TypeUse
 import com.typewritermc.types.catalog.Resolution
 import com.typewritermc.types.catalog.ResolvedRepresentation
+import com.typewritermc.types.ownsResources
 
 /** Checks exact endpoints and prepares links through the same session used by menu and drag. */
 internal class OperationRelationPreparation(
@@ -55,7 +55,7 @@ internal class OperationRelationPreparation(
                     captured ?: ResourceValueMapper.discover(edit.session.resources).singleOrNull { occurrence ->
                         val relation = contract(occurrence.id.endpoint)
                         occurrence.target.resource == subject.id && occurrence.id.endpoint == relation.first.id &&
-                            relation.families.any { it.value == RESOURCE_OWNERSHIP_FAMILY_ID }
+                            relation.ownsResources
                     } ?: error("The resource does not have one exact owner occurrence")
                 require(ResourceValueMapper.discover(edit.session.resources).contains(membership)) { "The source ownership changed" }
                 observe(membership)
@@ -160,9 +160,8 @@ internal class OperationRelationPreparation(
         val current = ResourceValueMapper.discover(edit.session.resources).associateBy { it.id }
         val result = mutableListOf<LinkOccurrence>()
         baseline.catalog.relations
-            .filterNot { relation ->
-                relation.families.any { it.value == RESOURCE_OWNERSHIP_FAMILY_ID }
-            }.forEach { relation ->
+            .filterNot { it.ownsResources }
+            .forEach { relation ->
                 listOf(relation.first.id).forEach { endpoint ->
                     val evidence = ResourceValueMapper.declaredEvidence(endpoint, id, record, baseline.catalog.checked)
                     evidence.memberships.forEach { edit.capturedReads.observeInput(InputIdentity.Membership(it)) }

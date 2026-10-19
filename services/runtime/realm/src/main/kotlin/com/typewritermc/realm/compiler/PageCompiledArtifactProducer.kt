@@ -4,18 +4,19 @@ import com.typewritermc.engine.CompilationProjectionId
 import com.typewritermc.engine.CompilationResult
 import com.typewritermc.engine.CompilationRoot
 import com.typewritermc.engine.CompiledArtifact
+import com.typewritermc.engine.PAGE_COMPILATION_MEDIA_TYPE
+import com.typewritermc.engine.PAGE_COMPILATION_PROJECTION
 import com.typewritermc.engine.PageCompileResult
 import com.typewritermc.engine.encodeShard
 import com.typewritermc.library.PAGE_CONTRACT_TYPE
 import com.typewritermc.realm.authoring.AuthoringView
-import com.typewritermc.types.RESOURCE_OWNERSHIP_FAMILY_ID
+import com.typewritermc.realm.authoring.ownershipRelationIds
 import com.typewritermc.types.RelationContract
-import com.typewritermc.types.RelationFamilyId
 
 /** Owns nominal Page root selection, ownership traversal, and the serialized Page shard format. */
 internal class PageCompiledArtifactProducer : CompiledArtifactProducer {
-    override val projection = CompilationProjectionId("typewriter.page")
-    override val mediaType = "application/vnd.typewriter.page+json"
+    override val projection = PAGE_COMPILATION_PROJECTION
+    override val mediaType = PAGE_COMPILATION_MEDIA_TYPE
 
     override fun roots(view: AuthoringView): Set<CompilationRoot> =
         view.resources.entries
@@ -30,12 +31,7 @@ internal class PageCompiledArtifactProducer : CompiledArtifactProducer {
     context(inputs: CompilationInputs)
     override fun compile(roots: Set<CompilationRoot>): List<CompilationResult> {
         require(roots.all { root -> root.projection == projection })
-        val ownership =
-            inputs.view.catalog.relations
-                .filter { relation ->
-                    RelationFamilyId(RESOURCE_OWNERSHIP_FAMILY_ID) in relation.families
-                }.mapTo(linkedSetOf(), RelationContract::id)
-        val compiler = PageCompiler(ownership, inputs.resources)
+        val compiler = PageCompiler(inputs.view.catalog.ownershipRelationIds, inputs.resources)
         return roots.sortedBy { root -> root.resource.value }.map { root ->
             when (val result = with(inputs.view) { compiler.compile(root.resource) }) {
                 is PageCompileResult.Blocked -> {

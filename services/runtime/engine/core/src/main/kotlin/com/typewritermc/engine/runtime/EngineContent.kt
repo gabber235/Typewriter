@@ -1,9 +1,10 @@
 package com.typewritermc.engine.runtime
 
-import com.typewritermc.engine.CompilationProjectionId
 import com.typewritermc.engine.LoadedCompiledArtifact
 import com.typewritermc.engine.LoadedPublishedContent
 import com.typewritermc.engine.PAGE_COMPILATION_FORMAT_REVISION
+import com.typewritermc.engine.PAGE_COMPILATION_MEDIA_TYPE
+import com.typewritermc.engine.PAGE_COMPILATION_PROJECTION
 import com.typewritermc.engine.PUBLISHED_CONTENT_FORMAT_REVISION
 import com.typewritermc.engine.RuntimeCompilationFacts
 import com.typewritermc.engine.decodeCompiledPageShard
@@ -45,7 +46,7 @@ class PageContentGateway(
     }
 
     private fun LoadedCompiledArtifact.admittedPageFacts(): RuntimeCompilationFacts {
-        require(reference.root.projection == PAGE_PROJECTION && reference.mediaType == PAGE_MEDIA_TYPE) {
+        require(reference.root.projection == PAGE_COMPILATION_PROJECTION && reference.mediaType == PAGE_COMPILATION_MEDIA_TYPE) {
             "Engine content does not support ${reference.root.projection.value} and ${reference.mediaType}."
         }
         val shard = payload.decodeCompiledPageShard()
@@ -61,11 +62,6 @@ class PageContentGateway(
         }
         facts.requireAccepted(catalog, relations)
         return facts
-    }
-
-    companion object {
-        val PAGE_PROJECTION = CompilationProjectionId("typewriter.page")
-        const val PAGE_MEDIA_TYPE = "application/vnd.typewriter.page+json"
     }
 }
 

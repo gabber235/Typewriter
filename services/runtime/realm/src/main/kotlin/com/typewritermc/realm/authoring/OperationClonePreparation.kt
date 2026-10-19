@@ -25,8 +25,6 @@ import com.typewritermc.types.DeclaredTypeId
 import com.typewritermc.types.LinkTarget
 import com.typewritermc.types.ListItem
 import com.typewritermc.types.MapRow
-import com.typewritermc.types.RESOURCE_OWNERSHIP_FAMILY_ID
-import com.typewritermc.types.RelationFamilyId
 import com.typewritermc.types.ResourceId
 import com.typewritermc.types.TypeId
 
@@ -42,11 +40,7 @@ internal class OperationClonePreparation(
         val occurrences = ResourceValueMapper.discover(resources)
         val projection = ResourceValueMapper.project(occurrences, resources, baseline.catalog.relations, baseline.catalog.checked)
         require(projection.problems.isEmpty()) { "Repair the selected relations before duplicating resources." }
-        val owning =
-            baseline.catalog.relations
-                .filter {
-                    RelationFamilyId(RESOURCE_OWNERSHIP_FAMILY_ID) in it.families
-                }.mapTo(hashSetOf()) { it.id }
+        val owning = baseline.catalog.ownershipRelationIds
         val ownership = projection.projections.filter { it.contract in owning }
         val closure = linkedSetOf<ResourceId>()
         val pending = ArrayDeque(roots)

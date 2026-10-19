@@ -4,12 +4,11 @@ import com.typewritermc.authoring.descendants
 import com.typewritermc.engine.CompiledEdgeOrigin
 import com.typewritermc.engine.RuntimeCompilationFacts
 import com.typewritermc.types.DataValue
-import com.typewritermc.types.RESOURCE_OWNERSHIP_FAMILY_ID
 import com.typewritermc.types.RelationContract
-import com.typewritermc.types.RelationFamilyId
 import com.typewritermc.types.catalog.CheckedCatalog
 import com.typewritermc.types.catalog.Resolution
 import com.typewritermc.types.catalog.runtimeDefinitions
+import com.typewritermc.types.ownsResources
 
 internal fun RuntimeCompilationFacts.requireAccepted(
     checked: CheckedCatalog,
@@ -56,7 +55,7 @@ internal fun RuntimeCompilationFacts.requireAccepted(
             requireNotNull(acceptedRelations[fact.relation]) {
                 "Compiled relation is unavailable in the runtime catalog: ${fact.relation}."
             }
-        require(fact.ownsResources == (RelationFamilyId(RESOURCE_OWNERSHIP_FAMILY_ID) in accepted.families)) {
+        require(fact.ownsResources == accepted.ownsResources) {
             "Compiled relation ownership differs from the accepted runtime catalog."
         }
     }

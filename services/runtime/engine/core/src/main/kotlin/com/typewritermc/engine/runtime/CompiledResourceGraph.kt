@@ -11,12 +11,11 @@ import com.typewritermc.engine.CompiledResourceKey
 import com.typewritermc.engine.RuntimeCompilationFacts
 import com.typewritermc.library.Page
 import com.typewritermc.types.NativeBindingRegistry
-import com.typewritermc.types.RESOURCE_OWNERSHIP_FAMILY_ID
 import com.typewritermc.types.RelationContract
-import com.typewritermc.types.RelationFamilyId
 import com.typewritermc.types.RelationId
 import com.typewritermc.types.catalog.CheckedCatalog
 import com.typewritermc.types.catalog.Resolution
+import com.typewritermc.types.ownsResources
 
 /** Hydrated resource roles and the compiled links between them. */
 class CompiledResourceGraph private constructor(
@@ -113,7 +112,7 @@ class CompiledResourceGraph private constructor(
                 }
             val ownership =
                 knownRelations.values
-                    .filter { RelationFamilyId(RESOURCE_OWNERSHIP_FAMILY_ID) in it.families }
+                    .filter { it.ownsResources }
                     .mapTo(linkedSetOf(), RelationContract::id)
             return CompiledResourceGraph(decoded, edges.toList(), ownership)
         }

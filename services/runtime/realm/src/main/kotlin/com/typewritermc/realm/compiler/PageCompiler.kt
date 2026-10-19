@@ -18,11 +18,10 @@ import com.typewritermc.engine.semanticDigest
 import com.typewritermc.realm.authoring.AuthoringView
 import com.typewritermc.services.libs.utils.sha256Hex
 import com.typewritermc.types.DataValue
-import com.typewritermc.types.RESOURCE_OWNERSHIP_FAMILY_ID
-import com.typewritermc.types.RelationFamilyId
 import com.typewritermc.types.RelationId
 import com.typewritermc.types.ResourceId
 import com.typewritermc.types.catalog.runtimeDefinitions
+import com.typewritermc.types.ownsResources
 
 /**
  * Compiles a Page and its ownership closure from one assessed authoring view.
@@ -181,7 +180,7 @@ internal class PageCompiler(
                         .map { relation ->
                             RuntimeRelationFact(
                                 relation.id,
-                                RelationFamilyId(RESOURCE_OWNERSHIP_FAMILY_ID) in relation.families,
+                                relation.ownsResources,
                             )
                         },
             )

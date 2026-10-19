@@ -29,10 +29,12 @@ import com.typewritermc.types.EndpointBindingTemplate
 import com.typewritermc.types.ListItem
 import com.typewritermc.types.NativeBindingRegistry
 import com.typewritermc.types.RelationContract
+import com.typewritermc.types.RelationId
 import com.typewritermc.types.ResourceId
 import com.typewritermc.types.catalog.CheckedCatalog
 import com.typewritermc.types.catalog.Resolution
 import com.typewritermc.types.immutableMapCopy
+import com.typewritermc.types.ownsResources
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -63,6 +65,10 @@ interface AuthoringCatalogLease : AutoCloseable {
 
     fun retain(): AuthoringCatalogLease
 }
+
+/** Identifies the relations of this catalog that belong to the resource ownership family. */
+val AuthoringCatalogLease.ownershipRelationIds: Set<RelationId>
+    get() = relations.filter { it.ownsResources }.mapTo(hashSetOf(), RelationContract::id)
 
 /**
  * Captures saved resources and their catalog as the baseline for one authoring observation.
