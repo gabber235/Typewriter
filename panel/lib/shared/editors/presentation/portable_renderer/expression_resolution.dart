@@ -60,6 +60,24 @@ _Resolved<String> _string(
   PortableExpressionFailed(:final message) => _ResolvedFailure(message),
 };
 
+/// An icon element's value: an Iconify name or a typed icon value.
+_Resolved<IconValue> _icon(
+  PortablePresentationScope scope,
+  skir.ExpressionNode expressionNode,
+) => switch (scope.evaluate(expressionNode)) {
+  PortableExpressionAvailable(:final value) when value.authoredString != null =>
+    _ResolvedValue(IconValue.from(value.authoredString!)),
+  PortableExpressionAvailable(:final value) => switch (decodeIconValue(value)
+      ?.iconValue) {
+    final icon? => _ResolvedValue(icon),
+    null => const _ResolvedFailure("The presentation value is not an icon"),
+  },
+  PortableExpressionUnavailable() => const _ResolvedFailure(
+    "The presentation value is unavailable",
+  ),
+  PortableExpressionFailed(:final message) => _ResolvedFailure(message),
+};
+
 Widget _diagnostic(String message) => Builder(
   builder: (context) => Text(
     message,

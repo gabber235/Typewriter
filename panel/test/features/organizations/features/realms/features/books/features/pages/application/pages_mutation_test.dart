@@ -40,7 +40,15 @@ void main() {
         await tester.binding.setSurfaceSize(const Size(1200, 1200));
         addTearDown(() => tester.binding.setSurfaceSize(null));
         final state = _state(chapter: skir.DataValue.unfilled);
-        final page = Page.fromAuthoring(state.snapshot!.resources.single);
+        final resource = state.snapshot!.resources.single;
+        final page = Page.fromAuthoring(
+          resource,
+          ResourceAppearance(
+            label: "Opening",
+            accent: const Color(0xff607d8b),
+            icon: skir.Icon.wrapIconify("material-symbols:description"),
+          ),
+        );
         late WidgetRef ref;
         await tester.pumpTestApp(
           overrides: [

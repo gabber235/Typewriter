@@ -41,6 +41,7 @@ import com.typewritermc.types.FieldDeclaration
 import com.typewritermc.types.FieldOwner
 import com.typewritermc.types.ParameterKey
 import com.typewritermc.types.PresentationRole
+import com.typewritermc.types.RESOURCE_OWNERSHIP_FAMILY_ID
 import com.typewritermc.types.RelationContract
 import com.typewritermc.types.RepresentationTemplate
 import com.typewritermc.types.StandardTypes
@@ -72,11 +73,16 @@ import com.typewritermc.types.skir.SkirTypeCodec
 import com.typewritermc.types.substitute
 import kotlinx.coroutines.CancellationException
 
+/**
+ * One contributed type declaration. Codegen supplies the complete [display] of every declared type and the
+ * [searchKey] of every resource type; a declaration without a display publishes one derived from its type id.
+ */
 data class OwnedTypeDeclaration(
     val origin: ProviderOrigin,
     val definition: TypeDefinition,
     val display: TypeDisplay? = null,
     val nativeClass: kotlin.reflect.KClass<*>? = null,
+    val searchKey: String? = null,
 )
 
 data class CatalogAssemblyContext(
@@ -101,6 +107,7 @@ data class CatalogAssembly(
     val checks: List<OwnedCheckRecipe>,
     val operations: com.typewritermc.operations.OperationCatalog = com.typewritermc.operations.OperationCatalog(),
     val callbackFailures: List<CatalogCallbackFailure> = emptyList(),
+    val displays: com.typewritermc.authoring.ResourceDisplayCatalog = com.typewritermc.authoring.ResourceDisplayCatalog(),
 )
 
 /** Identifies the authored callback whose runtime cause is retained by an assembly. */
@@ -112,6 +119,10 @@ sealed interface CatalogCallback {
     data class Presentation(
         val subject: TypeTemplate,
         val role: PresentationRole,
+    ) : CatalogCallback
+
+    data class Display(
+        val target: com.typewritermc.types.ResourceTarget,
     ) : CatalogCallback
 }
 
@@ -208,6 +219,19 @@ fun CatalogContributions.assemble(context: CatalogAssemblyContext): CatalogAssem
             result.configuration.checks.map { OwnedCheckRecipe(result.owned.origin, it.bindNative(bindingRegistry)) }
         }
     val diagnostics = declarationGroups.keys.flatMap { checked.definition(it).diagnostics() }
+    val publishedRelations = (relations + context.relations).distinctBy(RelationContract::id)
+    val searchKeys = declarationGroups.mapNotNull { (id, owned) -> owned.first().searchKey?.let { id to it } }.toMap()
+    val searchKeyConflicts =
+        publishedRelations.ownerTypes().filter { it in searchKeys }.groupBy(searchKeys::getValue).filterValues {
+            it.size >
+                1
+        }
+    val searchKeyDiagnostics =
+        searchKeyConflicts.values.flatten().sortedBy { it.toString() }.map { id ->
+            DeclarationDiagnostic(id, "duplicate_search_key", declarationGroups.getValue(id).map { DeclarationOrigin(it.origin.owner) })
+        }
+    val conflictingKeys = searchKeyConflicts.values.flatten().toSet()
+    val displayCollection = collectResourceDisplays(displays, definitionIndex, searchKeys.keys.sortedBy { it.toString() }, checked)
     val placementDiagnostics = mutableListOf<DeclarationDiagnostic>()
     val published =
         declarationGroups.entries.sortedBy { it.key.toString() }.map { (id, owned) ->
@@ -221,7 +245,8 @@ fun CatalogContributions.assemble(context: CatalogAssemblyContext): CatalogAssem
                 status = status,
                 effectiveFields = effectiveFields,
                 ancestorTemplates = ancestry,
-                display = owned.first().display,
+                display = owned.first().display ?: id.derivedDisplay(),
+                searchKey = searchKeys[id]?.takeUnless { id in conflictingKeys },
                 placementField =
                     effectiveFields.placementField(checked) {
                         placementDiagnostics +=
@@ -253,7 +278,7 @@ fun CatalogContributions.assemble(context: CatalogAssemblyContext): CatalogAssem
         EditorCatalogSnapshot(
             generation = context.generation,
             types = published,
-            relations = (relations + context.relations).distinctBy(RelationContract::id),
+            relations = publishedRelations,
             resourceDefinitions = resourceDefinitions.filter { checked.isReady(it.root) },
             presentations = publishedPresentations.map(OwnedPresentation::descriptor),
             presentationMaterials =
@@ -265,7 +290,8 @@ fun CatalogContributions.assemble(context: CatalogAssemblyContext): CatalogAssem
                         }
                 },
             configuration = recipes,
-            diagnostics = diagnostics + placementDiagnostics + boundOperations.diagnostics,
+            diagnostics =
+                diagnostics + placementDiagnostics + boundOperations.diagnostics + searchKeyDiagnostics + displayCollection.diagnostics,
             endpointBindings = (endpointBindings + context.endpointBindings).distinct(),
             capabilities =
                 (
@@ -277,6 +303,7 @@ fun CatalogContributions.assemble(context: CatalogAssemblyContext): CatalogAssem
             resourceOperationContributions = boundOperations.contributions,
             recommendations = typeRecommendations(definitionIndex, checked),
             roleFallbacks = context.roleFallbacks,
+            resourceDisplays = displayCollection.displays.map { it.formulas },
         ).immutableCopy()
     return CatalogAssembly(
         snapshot,
@@ -285,9 +312,30 @@ fun CatalogContributions.assemble(context: CatalogAssemblyContext): CatalogAssem
         providerRegistry,
         simpleChecks,
         boundOperations,
-        callbackFailures = (configurationFailures.map { it.evidence } + materialCollection.callbackFailures).immutableListCopy(),
+        callbackFailures =
+            (configurationFailures.map { it.evidence } + materialCollection.callbackFailures + displayCollection.callbackFailures)
+                .immutableListCopy(),
+        displays = com.typewritermc.authoring.ResourceDisplayCatalog(displayCollection.displays, published),
     )
 }
+
+/** The owner endpoint types of ownership relations: the first endpoint, which holds the owned resources. */
+private fun List<RelationContract>.ownerTypes(): Set<TypeDefinitionId> =
+    filter { relation -> relation.families.any { it.value == RESOURCE_OWNERSHIP_FAMILY_ID } }
+        .mapTo(linkedSetOf()) { it.first.resource.definition }
+
+/** The display of a declaration codegen did not supply one for: its name from the type id, default icon and color. */
+private fun TypeDefinitionId.derivedDisplay(): TypeDisplay =
+    TypeDisplay(
+        name =
+            when (val id = type) {
+                is com.typewritermc.types.TypeId.Qualified -> id.name.substringAfterLast('.')
+                is com.typewritermc.types.TypeId.Declared -> "Type"
+            },
+        description = "",
+        icon = TypeDisplay.DEFAULT_ICON,
+        color = TypeDisplay.DEFAULT_COLOR,
+    )
 
 /**
  * The single effective field typed as a [com.typewritermc.authoring.Placement], or null when there is none.

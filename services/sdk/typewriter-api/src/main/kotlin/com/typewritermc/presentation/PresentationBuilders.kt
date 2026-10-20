@@ -8,6 +8,7 @@ import com.typewritermc.expression.Handled
 import com.typewritermc.expression.MayBeMissing
 import com.typewritermc.expression.literal
 import com.typewritermc.types.Color
+import com.typewritermc.types.Icon
 import com.typewritermc.types.Resource
 import com.typewritermc.types.ResourceId
 import com.typewritermc.types.TypeDefinitionId
@@ -272,6 +273,17 @@ data class IconOptions(
     val size: Double? = null,
     val color: PresentationColor? = null,
 )
+
+/**
+ * Draws a typed [Icon] such as a type display icon. The icon element accepts an Iconify name or an [Icon] value
+ * and editors render the variant they receive, so this shares the element of the text overload.
+ */
+@JvmName("typedIcon")
+@Suppress("UNCHECKED_CAST")
+fun PresentationContent.icon(
+    value: Expr<Icon, Handled>,
+    options: IconOptions = IconOptions(),
+) = icon(value as Expr<String, Handled>, options)
 
 data class StatusCase<V>(
     val value: V,

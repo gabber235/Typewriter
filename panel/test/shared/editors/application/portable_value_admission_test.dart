@@ -264,8 +264,9 @@ skir.PublishedType _published(
   skir.RepresentationTemplate? representation,
   List<skir.EffectiveFieldTemplate> effectiveFields = const [],
 }) => skir.PublishedType(
+  searchKey: null,
   placementField: null,
-  display: null,
+  display: defaultTypeDisplay(""),
   definition: skir.TypeDefinition(
     id: definition,
     parameters: parameters,

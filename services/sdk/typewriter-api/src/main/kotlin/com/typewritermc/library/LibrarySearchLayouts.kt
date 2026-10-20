@@ -11,6 +11,7 @@ import com.typewritermc.expression.literal
 import com.typewritermc.expression.not
 import com.typewritermc.expression.or
 import com.typewritermc.expression.orElse
+import com.typewritermc.expression.orIfBlank
 import com.typewritermc.expression.target
 import com.typewritermc.expression.trim
 import com.typewritermc.presentation.Layout

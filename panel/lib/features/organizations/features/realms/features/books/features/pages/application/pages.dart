@@ -22,14 +22,17 @@ abstract class Page with _$Page {
 
   const Page._();
 
-  factory Page.fromAuthoring(skir.AuthoringResource resource) {
+  /// The name comes from the page's [appearance], so a page reads the same
+  /// here as on every other surface.
+  factory Page.fromAuthoring(
+    skir.AuthoringResource resource,
+    ResourceAppearance appearance,
+  ) {
     final content = resource.content;
     return Page(
       pageId: resource.id,
       bookId: content.authoredField("book")?.authoredLink?.target.resource,
-      name: (content.authoredField("name")?.authoredString).displayLabel(
-        "Unnamed Page",
-      ),
+      name: appearance.label,
       configuration: content.configuration,
       chapter: content.authoredField("chapter")?.authoredString ?? "",
       priority:
@@ -51,7 +54,12 @@ AsyncValue<List<Page>> workingPages(Ref ref) {
   return AsyncData(
     source.requireValue.entries.values
         .where((entry) => entry.definition == corePageResourceDefinition)
-        .map(Page.fromAuthoring)
+        .map(
+          (entry) => Page.fromAuthoring(
+            entry,
+            source.requireValue.catalog.appearanceOf(entry.content),
+          ),
+        )
         .toList(growable: false),
   );
 }

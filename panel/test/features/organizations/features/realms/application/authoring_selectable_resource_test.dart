@@ -30,6 +30,9 @@ void main() {
           resourceId: book.bookId,
         ),
         resource: document.entry(book.bookId)!,
+        appearance: document.catalog.appearanceOf(
+          document.entry(book.bookId)!.content,
+        ),
         workspace: workspace,
         commands: fixtureAuthoringCommands(transport),
       );
@@ -68,6 +71,9 @@ void main() {
         resourceId: tag.tagId,
       ),
       resource: document.entry(tag.tagId)!,
+      appearance: document.catalog.appearanceOf(
+        document.entry(tag.tagId)!.content,
+      ),
       workspace: workspace,
       commands: fixtureAuthoringCommands(transport),
     );

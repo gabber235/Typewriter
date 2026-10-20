@@ -179,15 +179,15 @@ extension _PortableContentRendering on PortablePresentationNodeRenderer {
     skir.IconContent content,
     PortablePresentationScope childScope,
   ) {
-    final name = _string(childScope, content.name);
-    if (name case _ResolvedFailure(:final message)) {
+    final icon = _icon(childScope, content.name);
+    if (icon case _ResolvedFailure(:final message)) {
       return _diagnostic(message);
     }
     final color = _optionalTextColor(context, childScope, content.color);
     if (color case _ResolvedFailure(:final message)) {
       return _diagnostic(message);
     }
-    final iconName = (name as _ResolvedValue<String>).value;
+    final iconValue = (icon as _ResolvedValue<IconValue>).value;
     final label = content.semanticLabel == null
         ? null
         : switch (_string(childScope, content.semanticLabel!)) {
@@ -198,8 +198,8 @@ extension _PortableContentRendering on PortablePresentationNodeRenderer {
       label: label,
       image: true,
       child: ExcludeSemantics(
-        child: Icones(
-          iconName,
+        child: Icones.value(
+          iconValue,
           color: (color as _ResolvedValue<Color?>).value,
           size: _number(childScope, content.size),
         ),

@@ -1,6 +1,7 @@
 package com.typewritermc.realm.catalog
 
 import com.typewritermc.authoring.AuthoringResourceDefinition
+import com.typewritermc.authoring.ResourceDisplayCatalog
 import com.typewritermc.authoring.ValuePath
 import com.typewritermc.capability.RealmCapabilityProvider
 import com.typewritermc.checking.CatalogGeneration
@@ -134,6 +135,7 @@ class RealmCatalogStore : AutoCloseable {
         override val configuration: List<ConfigurationRecipe> get() = assembly.snapshot.configuration
         override val operations: OperationCatalog get() = assembly.operations
         override val placementFields: Map<TypeDefinitionId, ValuePath> get() = retention.placementFields
+        override val displays: ResourceDisplayCatalog get() = assembly.displays
         override val editorSnapshot: EditorCatalogSnapshot get() = assembly.snapshot
         override val capabilities: List<RealmCapabilityProvider>
             get() =

@@ -58,7 +58,7 @@ final class WorkingPagesProvider
   }
 }
 
-String _$workingPagesHash() => r'06ed22c601558b83a567733de5605ec307a6d3ce';
+String _$workingPagesHash() => r'2f4155c6a61c3c9d3acfc2413aea084ada57a8a9';
 
 @ProviderFor(workingBookPages)
 final workingBookPagesProvider = WorkingBookPagesFamily._();

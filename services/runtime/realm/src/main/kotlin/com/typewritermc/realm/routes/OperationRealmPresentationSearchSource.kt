@@ -13,12 +13,14 @@ import com.typewritermc.operations.OperationInvocation
 import com.typewritermc.operations.OperationResourceOption
 import com.typewritermc.operations.OperationSearch
 import com.typewritermc.operations.PreparationChoices
+import com.typewritermc.realm.authoring.AuthoredReadView
 import com.typewritermc.realm.authoring.AuthoringView
 import com.typewritermc.realm.authoring.AuthoringViewStore
 import com.typewritermc.realm.authoring.OperationPreparationResult
 import com.typewritermc.realm.authoring.ResourceOperationRuntime
 import com.typewritermc.realm.authoring.StaleOperationObservation
 import com.typewritermc.realm.authoring.operationObservation
+import com.typewritermc.realm.checking.CapturedAuthoringReads
 import com.typewritermc.services.libs.utils.rethrowExceptional
 import com.typewritermc.types.DataValue
 import com.typewritermc.types.NativeBinding
@@ -108,6 +110,7 @@ internal class OperationRealmPresentationSearchSource(
                         request.query.normalizedQuery
                             .trim()
                             .lowercase()
+                    val reads = CapturedAuthoringReads(AuthoredReadView.Original(baseline))
                     val candidates =
                         baseline.resources.entries
                             .asSequence()
@@ -133,7 +136,11 @@ internal class OperationRealmPresentationSearchSource(
                                     }
                                 }
                             }.map { (id, record) ->
-                                OperationResourceOption(id, record.displayLabel ?: "Unnamed resource")
+                                val label =
+                                    with(reads) {
+                                        baseline.catalog.displays.label(record, baseline.catalog.checked)
+                                    }
+                                OperationResourceOption(id, label ?: "Unnamed resource")
                             }.filter { query.isEmpty() || query in it.label.lowercase() }
                             .sortedWith(
                                 compareBy({ it.label.lowercase() }, { it.id.value }),

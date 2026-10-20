@@ -64,12 +64,18 @@ extension PortableResourceHeading on skir.ExpressionNode {
     return node(
       "visible",
       skir.PresentationElement.createConditional(
-        condition: skir.ExpressionNode.createValueCompare(operation: skir.ValueCompareOperation.equal,left:skir.ExpressionNode.createOrElse(
-              input: presentationSelectionCountBindingId.readExpression(),
-              fallback: skir.ExpressionNode.wrapLiteral(
-                skir.DataValue.wrapInteger("1"),
-              ),
-            ),right:skir.ExpressionNode.wrapLiteral(skir.DataValue.wrapInteger("1"))),
+        condition: skir.ExpressionNode.createValueCompare(
+          operation: skir.ValueCompareOperation.equal,
+          left: skir.ExpressionNode.createOrElse(
+            input: presentationSelectionCountBindingId.readExpression(),
+            fallback: skir.ExpressionNode.wrapLiteral(
+              skir.DataValue.wrapInteger("1"),
+            ),
+          ),
+          right: skir.ExpressionNode.wrapLiteral(
+            skir.DataValue.wrapInteger("1"),
+          ),
+        ),
         whenTrue: node(
           "content",
           skir.PresentationElement.wrapChildren(
@@ -83,7 +89,11 @@ extension PortableResourceHeading on skir.ExpressionNode {
                     node(
                       "identity.visible",
                       skir.PresentationElement.createConditional(
-                        condition: skir.ExpressionNode.createValueCompare(operation: skir.ValueCompareOperation.notEqual,left:identity,right:"".portableExpression),
+                        condition: skir.ExpressionNode.createValueCompare(
+                          operation: skir.ValueCompareOperation.notEqual,
+                          left: identity,
+                          right: "".portableExpression,
+                        ),
                         whenTrue: node(
                           "identity",
                           skir.PresentationElement.wrapText(

@@ -4,6 +4,7 @@ import com.typewritermc.expression.emptyListExpression
 import com.typewritermc.expression.literal
 import com.typewritermc.expression.map
 import com.typewritermc.expression.orElse
+import com.typewritermc.expression.orIfBlank
 import com.typewritermc.expression.target
 import com.typewritermc.expression.trim
 import com.typewritermc.presentation.AppliedPresentation

@@ -65,9 +65,7 @@ final class MutationReservation {
   /// Transfers reserved keys to the requests that actually captured them.
   /// Overlapping keys stay held until every request using that key settles.
   List<MutationReservation> share(Iterable<Set<Object>> members) {
-    final portions = members
-        .map(Set<Object>.unmodifiable)
-        .toList();
+    final portions = members.map(Set<Object>.unmodifiable).toList();
     if (_released ||
         portions.isEmpty ||
         portions.any((member) => !resources.containsAll(member))) {

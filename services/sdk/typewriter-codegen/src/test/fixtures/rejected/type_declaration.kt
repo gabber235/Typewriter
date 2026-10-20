@@ -1,6 +1,7 @@
 package fixture
 
 import com.typewritermc.imprint.ArtifactId
+import com.typewritermc.types.Resource
 import com.typewritermc.types.TypewriterDisplay
 import com.typewritermc.types.TypewriterType
 import kotlinx.serialization.SerialName
@@ -29,3 +30,11 @@ data class Retitled( // error: Authoring property title maps to conflicting seri
     @SerialName("caption")
     override val title: String,
 ) : Titled
+
+@TypewriterType(id = "a0000000000000000000000000000526")
+@TypewriterDisplay(searchKey = "note")
+data class SearchKeyedValue(val title: String) // error: TypewriterDisplay searchKey requires a type that implements Resource.
+
+@TypewriterType(id = "a0000000000000000000000000000527")
+@TypewriterDisplay(searchKey = "Main story")
+data class InvalidSearchKey(val title: String) : Resource // error: TypewriterDisplay searchKey must be a lower case letter followed by lower case letters or digits, found Main story.

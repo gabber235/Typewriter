@@ -51,6 +51,20 @@ sealed interface Icon {
     }
 }
 
+/** The kernel wire form of this icon, keeping the Iconify or SVG variant. */
+fun Icon.toWire(): skirout.kernel.v1.icon.Icon =
+    when (this) {
+        is Icon.Iconify -> {
+            skirout.kernel.v1.icon.Icon
+                .IconifyWrapper(value)
+        }
+
+        is Icon.Svg -> {
+            skirout.kernel.v1.icon.Icon
+                .SvgWrapper(source)
+        }
+    }
+
 /**
  * Stores color as an unsigned ARGB word shared by catalog and transport consumers.
  *

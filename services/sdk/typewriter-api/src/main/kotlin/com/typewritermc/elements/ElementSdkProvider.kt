@@ -1,5 +1,6 @@
 package com.typewritermc.elements
 
+import com.typewritermc.authoring.defaultLabel
 import com.typewritermc.expression.color
 import com.typewritermc.expression.display
 import com.typewritermc.expression.icon
@@ -7,16 +8,18 @@ import com.typewritermc.expression.literal
 import com.typewritermc.expression.name
 import com.typewritermc.expression.neq
 import com.typewritermc.expression.orElse
+import com.typewritermc.expression.orIfBlank
 import com.typewritermc.expression.trim
 import com.typewritermc.library.LibraryContext
 import com.typewritermc.library.fields
-import com.typewritermc.library.orIfBlank
 import com.typewritermc.library.pageLocation
 import com.typewritermc.presentation.asPresentationColor
+import com.typewritermc.presentation.icon
 import com.typewritermc.presentation.resource
 import com.typewritermc.presentation.resourceSearchResult
 import com.typewritermc.presentation.searchDescription
 import com.typewritermc.types.Color
+import com.typewritermc.types.Icon
 import com.typewritermc.types.PresentationRole
 
 object ElementSdkProvider : ElementConfiguration {
@@ -26,6 +29,11 @@ object ElementSdkProvider : ElementConfiguration {
             singleLine()
         }
     }
+}
+
+/** Every element names itself; accent and icon stay those of its element type. */
+object ElementNaming : ElementDisplay {
+    override fun ElementDisplayScope.label() = name.orIfBlank(defaultLabel())
 }
 
 object ElementInspectorPresentation : ElementPresentation {
@@ -53,7 +61,7 @@ object ElementSearchPresentation : ElementPresentation {
             title = element.fields.name.orIfBlank("Unnamed element"),
             accent = color,
             kind = literal("element"),
-            icon = { icon(display.icon.orIfBlank("fa6-solid:cube")) },
+            icon = { icon(display.icon.orElse(literal(Icon.Iconify("fa6-solid:cube")))) },
             details = {
                 clippedRow(spacing = 0.0) {
                     searchDescription(display.name.orIfBlank("Element"))
@@ -81,7 +89,7 @@ object ElementGraphNodePresentation : ElementPresentation {
         val display = element.type.display
         entryNode(
             title = element.fields.name.orIfBlank("Unnamed element"),
-            iconName = display.icon.orIfBlank("fa6-solid:cube"),
+            icon = display.icon.orElse(literal(Icon.Iconify("fa6-solid:cube"))),
             accent = display.color.orElse(literal(Color(0xff9c64bdu))),
         )
     }

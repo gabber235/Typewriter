@@ -78,7 +78,6 @@ void main() {
                 resource: id,
                 definition: document.entry(id)!.definition,
                 content: document.resource(id)!,
-                descriptor: skir.DataValue.wrapStringValue("Saved name"),
               ),
               context: context,
             ),

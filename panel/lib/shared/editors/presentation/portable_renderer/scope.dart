@@ -245,11 +245,11 @@ abstract class PortablePresentationScope with _$PortablePresentationScope {
       expression,
       lexicalTypes: bindings.lexicalSchemas,
     )) {
-      CheckedExpressionReady(:final program) =>
-        switch (program.result.declaredUse()) {
-          final use? => CompletePortablePresentationBinding(use),
-          _ => null,
-        },
+      CheckedExpressionReady(:final program) => switch (program.result
+          .declaredUse()) {
+        final use? => CompletePortablePresentationBinding(use),
+        _ => null,
+      },
       _ => null,
     };
   }

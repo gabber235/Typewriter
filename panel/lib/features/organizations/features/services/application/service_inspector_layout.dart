@@ -289,7 +289,11 @@ skir.PresentationNode _inspectorMessage(
 ) => _inspectorNode(
   "$id.visible",
   skir.PresentationElement.createConditional(
-    condition: skir.ExpressionNode.createValueCompare(operation: skir.ValueCompareOperation.notEqual,left:_portableRead(binding),right:_portableLiteral("None")),
+    condition: skir.ExpressionNode.createValueCompare(
+      operation: skir.ValueCompareOperation.notEqual,
+      left: _portableRead(binding),
+      right: _portableLiteral("None"),
+    ),
     whenTrue: _inspectorFact(
       id,
       "Message",

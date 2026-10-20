@@ -32,8 +32,10 @@ internal class SdkDeclaration(
     val shape: FieldShape,
     /** Resolves every type definition id this declaration's SDK mentions to the object that owns it. */
     val references: DefinitionReferences,
-    /** The validated `@TypewriterDisplay`, or null without one. */
-    val display: TypeDisplay?,
+    /** The complete display: the validated `@TypewriterDisplay` with every omitted part filled. */
+    val display: TypeDisplay,
+    /** The search scope keyword of a resource type, or null for a type that is not a resource. */
+    val searchKey: String?,
 ) {
     val resource: Boolean = source.implements(Resource::class)
     val record: Boolean = definition.representation is RepresentationTemplate.Record

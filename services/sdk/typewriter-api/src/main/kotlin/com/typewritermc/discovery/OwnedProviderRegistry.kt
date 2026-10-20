@@ -33,6 +33,12 @@ data class OwnedPresentation(
     val reference: com.typewritermc.presentation.PresentationReference? = null,
 )
 
+/** A resource display declared by [origin]; catalog assembly checks and compiles its formulas. */
+data class OwnedResourceDisplay(
+    val origin: ProviderOrigin,
+    val provider: GeneratedResourceDisplayProvider,
+)
+
 data class OwnedNativeBinding(
     val origin: ProviderOrigin,
     val factory: NativeBindingFactory,
@@ -73,4 +79,5 @@ data class CatalogContributions(
     val nativeBindings: List<OwnedNativeBinding> = emptyList(),
     val checks: List<OwnedCheck> = emptyList(),
     val operations: List<com.typewritermc.operations.OperationDeclaration> = emptyList(),
+    val displays: List<OwnedResourceDisplay> = emptyList(),
 )

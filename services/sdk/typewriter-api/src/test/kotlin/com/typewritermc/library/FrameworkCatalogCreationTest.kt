@@ -780,6 +780,7 @@ private fun exportFrameworkControlFixture(
             GeneratedProviderKind.Resource,
             GeneratedProviderKind.Relation,
             GeneratedProviderKind.EndpointBindings,
+            GeneratedProviderKind.ResourceDisplay,
         )
     val providers = entries.filter { it.kind in exportedKinds }.associateWith(::instance)
     val declarations =
@@ -790,6 +791,7 @@ private fun exportFrameworkControlFixture(
                 provider.definition,
                 provider.display,
                 provider.nativeClass,
+                provider.searchKey,
             )
         } +
             com.typewritermc.discovery.OwnedTypeDeclaration(
@@ -802,7 +804,8 @@ private fun exportFrameworkControlFixture(
                 com.typewritermc.types.TypeDisplay(
                     "Message action",
                     "Entry graph fixture",
-                    "fa6-solid:message",
+                    com.typewritermc.types.Icon
+                        .Iconify("fa6-solid:message"),
                     com.typewritermc.types.Color(0xFFE74C3Cu),
                 ),
             ) + inheritedInspectorDeclarations()
@@ -874,8 +877,16 @@ private fun exportFrameworkControlFixture(
                         it.kind == GeneratedProviderKind.EndpointBindings
                     }.values
                     .flatMap { (it as com.typewritermc.discovery.GeneratedEndpointBindingsProvider).bindings },
+            displays =
+                providers.filterKeys { it.kind == GeneratedProviderKind.ResourceDisplay }.map { (entry, value) ->
+                    com.typewritermc.discovery.OwnedResourceDisplay(
+                        origin(entry.providerClass.substringAfterLast('.').replace('$', '_')),
+                        value as com.typewritermc.discovery.GeneratedResourceDisplayProvider,
+                    )
+                },
         )
     val assembly = contributions.assemble(com.typewritermc.discovery.CatalogAssemblyContext(CatalogGeneration("compiled controls fixture")))
+    assembly.snapshot.diagnostics.filter { it.code.contains("display") || it.code.contains("search_key") } shouldBe emptyList()
     assembly.snapshot.diagnostics.filter { it.code.contains("presentation") } shouldBe emptyList()
     val elementMaterial =
         assembly.snapshot.presentationMaterials.single {

@@ -85,10 +85,12 @@ final class AuthoredResourceSearchResult extends HookWidget {
     final display = record == null
         ? null
         : source.catalog.selectionDisplay(record.configuration);
-    final icon = display?.icon.trim();
-    final leading = icon == null || icon.isEmpty
+    final icon = record == null
+        ? null
+        : source.catalog.appearanceOf(record).icon;
+    final leading = icon?.iconValue == null
         ? const Icon(Icons.link)
-        : Icones(icon);
+        : ResourceIcon(icon: icon);
     final label = record == null
         ? "resource"
         : source.catalog.typeSelectionName(record.configuration);

@@ -605,6 +605,7 @@ _nestedMaterialFixture() {
   );
   final checked = CheckedEditorCatalog(
     skir.EditorCatalogWireSnapshot(
+      resourceDisplays: const [],
       resourceOperations: const [],
       resourceOperationContributions: const [],
       generation: original.generation,
@@ -690,8 +691,9 @@ _fixture({
   );
   final generation = skir.CatalogGeneration(value: "catalog:collections");
   final published = skir.PublishedType(
+    searchKey: null,
     placementField: null,
-    display: null,
+    display: defaultTypeDisplay(""),
     definition: skir.TypeDefinition(
       id: type,
       parameters: const [],
@@ -721,14 +723,16 @@ _fixture({
   );
   final checked = CheckedEditorCatalog(
     skir.EditorCatalogWireSnapshot(
+      resourceDisplays: const [],
       resourceOperations: const [],
       resourceOperationContributions: const [],
       generation: generation,
       types: [
         published,
         skir.PublishedType(
+          searchKey: null,
           placementField: null,
-          display: null,
+          display: defaultTypeDisplay(""),
           definition: skir.TypeDefinition(
             id: list,
             parameters: [

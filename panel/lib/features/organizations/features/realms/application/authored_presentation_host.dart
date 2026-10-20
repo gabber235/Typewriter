@@ -492,7 +492,7 @@ final class AuthoredPresentationHost extends ChangeNotifier
         PortableCollectionRowProjection(
           resource: entry.key,
           configuration: record.configuration,
-          label: _resourceLabel(record) ?? entry.key.value,
+          label: checked.appearanceOf(record).label,
           row: row,
           schema: rowSchema,
           key: key.value,
@@ -510,7 +510,9 @@ final class AuthoredPresentationHost extends ChangeNotifier
     required PortableInvocationContext context,
   }) {
     final observation = context.queries?.authored;
+    final catalog = context.queries?.catalog;
     if (observation == null ||
+        catalog == null ||
         context.catalogGeneration != observation.generation) {
       return null;
     }
@@ -519,7 +521,7 @@ final class AuthoredPresentationHost extends ChangeNotifier
     return PortableResourceProjection(
       resource: resource,
       configuration: record.configuration,
-      label: _resourceLabel(record) ?? resource.value,
+      label: catalog.appearanceOf(record).label,
       value: _resourceRow(record),
       diagnosticFallback: PortableDiagnosticFallback.resource,
       diagnostics: context.resourceDiagnostics(resource),
@@ -848,7 +850,7 @@ final class AuthoredPresentationHost extends ChangeNotifier
     }
     return PortableTimelineCueProjection(
       resource: resource,
-      label: _resourceLabel(record) ?? resource.value,
+      label: authored.catalog.appearanceOf(record).label,
       placement: placement,
       children: children,
     );
@@ -1005,14 +1007,6 @@ final class AuthoredPresentationHost extends ChangeNotifier
     return current.withAuthoredPayload(
       skir.DataValue.createRecord(fields: fields),
     );
-  }
-
-  String? _resourceLabel(skir.AuthoringRecord record) {
-    for (final field in const ["name", "title"]) {
-      final value = record.authoredField(field)?.authoredString?.trim();
-      if (value != null && value.isNotEmpty) return value;
-    }
-    return null;
   }
 
   @override
@@ -1223,7 +1217,9 @@ final class AuthoredPresentationHost extends ChangeNotifier
           context,
           reads: [
             PortableExpressionRead(
-              source: PortableExpressionReadSource.input(value.target.bindingId),
+              source: PortableExpressionReadSource.input(
+                value.target.bindingId,
+              ),
               path: skir.ValuePath(
                 segments: [
                   ...value.target.path.segments,

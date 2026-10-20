@@ -667,14 +667,11 @@ final class CheckedEditorCatalog {
   skir.ValuePath? placementField(skir.TypeSelection selection) =>
       selected(selection)?.placementField;
 
-  skir.PublishedType? selected(skir.TypeSelection selection) {
-    final definition = switch (selection) {
-      skir.TypeSelection_completeWrapper(:final value) => value.definition,
-      skir.TypeSelection_pendingWrapper(:final value) => value.definition,
-      _ => null,
-    };
-    return definition == null ? null : published(definition);
-  }
+  skir.PublishedType? selected(skir.TypeSelection selection) =>
+      switch (selection.definition) {
+        final definition? => published(definition),
+        null => null,
+      };
 
   /// Applies effective field templates to the chosen type arguments.
   /// Unfinished arguments leave individual field types unavailable; missing or

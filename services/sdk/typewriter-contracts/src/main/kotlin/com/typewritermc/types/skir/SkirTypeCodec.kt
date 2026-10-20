@@ -37,6 +37,7 @@ import com.typewritermc.types.PresentationRole
 import com.typewritermc.types.RelationContract
 import com.typewritermc.types.RelationDeletePolicy
 import com.typewritermc.types.RepresentationTemplate
+import com.typewritermc.types.ResourceTarget
 import com.typewritermc.types.ScalarKind
 import com.typewritermc.types.TypeDefinition
 import com.typewritermc.types.TypeDefinitionId
@@ -50,7 +51,9 @@ import com.typewritermc.types.catalog.DeclarationStatus
 import com.typewritermc.types.catalog.EditorCatalogSnapshot
 import com.typewritermc.types.catalog.EffectiveFieldTemplate
 import com.typewritermc.types.catalog.PublishedType
+import com.typewritermc.types.catalog.ResourceDisplayFormulas
 import com.typewritermc.types.catalog.TypeRecommendation
+import com.typewritermc.types.toWire
 import skirout.editor.v1.catalog.EditorCatalogWireSnapshot
 import skirout.editor.v1.capability.CapabilityDefinition as SkirCapabilityDefinition
 import skirout.editor.v1.capability.CommandCapabilityDefinition as SkirCommandCapabilityDefinition
@@ -73,6 +76,7 @@ import skirout.editor.v1.catalog.PublishedType as SkirPublishedType
 import skirout.editor.v1.catalog.RelationContract as SkirRelationContract
 import skirout.editor.v1.catalog.RelationDeletePolicy as SkirRelationDeletePolicy
 import skirout.editor.v1.catalog.RepresentationKind as SkirRepresentationKind
+import skirout.editor.v1.catalog.ResourceDisplayFormulas as SkirResourceDisplayFormulas
 import skirout.editor.v1.catalog.RoleFallback as SkirRoleFallback
 import skirout.editor.v1.catalog.RuleDescriptor as SkirRuleDescriptor
 import skirout.editor.v1.catalog.TypeDisplay as SkirTypeDisplay
@@ -109,6 +113,7 @@ import skirout.editor.v1.type_catalog.ProducerId as SkirProducerId
 import skirout.editor.v1.type_catalog.QualifiedTypeId as SkirQualifiedTypeId
 import skirout.editor.v1.type_catalog.RelativeFieldPattern as SkirRelativeFieldPattern
 import skirout.editor.v1.type_catalog.RepresentationTemplate as SkirRepresentationTemplate
+import skirout.editor.v1.type_catalog.ResourceTarget as SkirResourceTarget
 import skirout.editor.v1.type_catalog.RuleId as SkirRuleId
 import skirout.editor.v1.type_catalog.RuleOrigin as SkirRuleOrigin
 import skirout.editor.v1.type_catalog.ScalarKind as SkirScalarKind
@@ -531,7 +536,22 @@ private fun ConversionScope.encodeSnapshot(snapshot: EditorCatalogSnapshot) =
             snapshot.resourceOperationContributions.mapIndexed { index, value ->
                 at("resource operation contribution $index") { encode(value) }
             },
+        resourceDisplays = snapshot.resourceDisplays.mapIndexed { index, value -> at("resource display $index") { encode(value) } },
     )
+
+private fun ConversionScope.encode(display: ResourceDisplayFormulas) =
+    SkirResourceDisplayFormulas(
+        target = encode(display.target),
+        label = display.label,
+        accent = display.accent,
+        icon = display.icon,
+    )
+
+internal fun ConversionScope.encode(target: ResourceTarget): SkirResourceTarget =
+    when (target) {
+        is ResourceTarget.Type -> SkirResourceTarget.TypeWrapper(encodeTypeTemplate(target.template))
+        ResourceTarget.AnyResource -> SkirResourceTarget.ANY_RESOURCE
+    }
 
 private fun encode(fallback: RoleFallback): SkirRoleFallback =
     SkirRoleFallback(
@@ -629,7 +649,8 @@ private fun ConversionScope.encode(type: PublishedType) =
             },
         effectiveFields = type.effectiveFields.map(::encode),
         ancestorTemplates = type.ancestorTemplates.map(::encodeNamedTypeTemplate),
-        display = type.display?.let(::encode),
+        display = encode(type.display),
+        searchKey = type.searchKey,
         placementField = type.placementField?.let { encodeValuePath(it) },
     )
 
@@ -637,7 +658,7 @@ private fun ConversionScope.encode(display: TypeDisplay) =
     SkirTypeDisplay(
         name = display.name,
         description = display.description,
-        icon = display.icon,
+        icon = display.icon.toWire(),
         color = SkirColor(argb = display.color.argb.toInt()),
     )
 

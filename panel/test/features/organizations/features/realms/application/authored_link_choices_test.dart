@@ -24,8 +24,9 @@ void main() {
       ..types = [
         ...original.types,
         skir.PublishedType(
+          searchKey: null,
           placementField: null,
-          display: null,
+          display: defaultTypeDisplay(""),
           definition: skir.TypeDefinition(
             id: child,
             parameters: const [],
@@ -747,8 +748,9 @@ _fixture({
     skir.TypeDefinition definition,
     List<skir.EffectiveFieldTemplate> fields,
   ) => skir.PublishedType(
+    searchKey: null,
     placementField: null,
-    display: null,
+    display: defaultTypeDisplay(""),
     definition: definition,
     status: skir.DeclarationStatus.ready,
     effectiveFields: fields,
@@ -772,6 +774,7 @@ _fixture({
   );
   final textTemplate = skir.TypeTemplate.wrapScalar(skir.ScalarKind.text);
   final snapshot = skir.EditorCatalogWireSnapshot(
+    resourceDisplays: const [],
     resourceOperations: const [],
     resourceOperationContributions: const [],
     generation: generation,

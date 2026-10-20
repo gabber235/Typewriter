@@ -8,6 +8,7 @@ import com.typewritermc.expression.literal
 import com.typewritermc.expression.map
 import com.typewritermc.expression.name
 import com.typewritermc.expression.orElse
+import com.typewritermc.expression.orIfBlank
 import com.typewritermc.expression.target
 import com.typewritermc.expression.trim
 import com.typewritermc.presentation.ContainerStyle
@@ -21,6 +22,7 @@ import com.typewritermc.presentation.PresentationRadius
 import com.typewritermc.presentation.PresentationThemeColor.FocusOutline
 import com.typewritermc.presentation.ambientBackground
 import com.typewritermc.presentation.asPresentationColor
+import com.typewritermc.presentation.icon
 import com.typewritermc.presentation.literalColor
 import com.typewritermc.presentation.monochromeOn
 import com.typewritermc.presentation.on
@@ -33,6 +35,7 @@ import com.typewritermc.presentation.stateColor
 import com.typewritermc.presentation.themeColor
 import com.typewritermc.presentation.withAlpha
 import com.typewritermc.types.Color
+import com.typewritermc.types.Icon
 import com.typewritermc.types.PresentationRole
 
 object TagInspectorPresentation : TagPresentation {
@@ -182,7 +185,7 @@ object PageSearchPresentation : PagePresentation {
             title = page.fields.name.orIfBlank("Unnamed page"),
             accent = color,
             kind = literal("page"),
-            icon = { icon(display.icon.orIfBlank("fa6-solid:file-lines")) },
+            icon = { icon(display.icon.orElse(literal(Icon.Iconify("fa6-solid:file-lines")))) },
             details = {
                 clippedRow(spacing = 8.0) {
                     searchDescription(display.name.orIfBlank("Page"))

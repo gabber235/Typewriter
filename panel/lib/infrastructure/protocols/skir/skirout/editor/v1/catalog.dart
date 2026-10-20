@@ -24,7 +24,186 @@ import "./type_catalog.dart" as _lib_editor_v1_type_catalog;
 import "../../kernel/v1/bounded_transfer.dart"
     as _lib_kernel_v1_bounded_transfer;
 import "../../kernel/v1/color.dart" as _lib_kernel_v1_color;
+import "../../kernel/v1/icon.dart" as _lib_kernel_v1_icon;
 import "../../kernel/v1/errors.dart" as _lib_kernel_v1_errors;
+
+// -----------------------------------------------------------------------------
+// struct ResourceDisplayFormulas
+// -----------------------------------------------------------------------------
+
+sealed class ResourceDisplayFormulas_orMutable {
+  _lib_editor_v1_type_catalog.ResourceTarget get target;
+  _lib_editor_v1_expression.ExpressionNode get label;
+  _lib_editor_v1_expression.ExpressionNode get accent;
+  _lib_editor_v1_expression.ExpressionNode get icon;
+
+  ResourceDisplayFormulas toFrozen();
+}
+
+/// Name, accent and icon formulas for resources of `target`. Each formula reads only the subject
+/// resource: its fields and its published type through the configured value binding.
+///
+/// Deeply immutable.
+final class ResourceDisplayFormulas
+    implements ResourceDisplayFormulas_orMutable {
+  @_core.override
+  final _lib_editor_v1_type_catalog.ResourceTarget target;
+  @_core.override
+  final _lib_editor_v1_expression.ExpressionNode label;
+  @_core.override
+  final _lib_editor_v1_expression.ExpressionNode accent;
+  @_core.override
+  final _lib_editor_v1_expression.ExpressionNode icon;
+  _skir.internal__UnrecognizedFields? _u;
+
+  factory ResourceDisplayFormulas({
+    required _lib_editor_v1_type_catalog.ResourceTarget target,
+    required _lib_editor_v1_expression.ExpressionNode label,
+    required _lib_editor_v1_expression.ExpressionNode accent,
+    required _lib_editor_v1_expression.ExpressionNode icon,
+  }) => ResourceDisplayFormulas._(target, label, accent, icon);
+
+  ResourceDisplayFormulas._(this.target, this.label, this.accent, this.icon);
+
+  /// Default instance with all fields set to their default values.
+  static final defaultInstance = ResourceDisplayFormulas._(
+    _lib_editor_v1_type_catalog.ResourceTarget.unknown,
+    _lib_editor_v1_expression.ExpressionNode.unknown,
+    _lib_editor_v1_expression.ExpressionNode.unknown,
+    _lib_editor_v1_expression.ExpressionNode.unknown,
+  );
+
+  /// Returns a new mutable instance.
+  /// Fields are initialized to their default values.
+  static ResourceDisplayFormulas_mutable mutable() =>
+      ResourceDisplayFormulas_mutable._(
+        _lib_editor_v1_type_catalog.ResourceTarget.unknown,
+        _lib_editor_v1_expression.ExpressionNode.unknown,
+        _lib_editor_v1_expression.ExpressionNode.unknown,
+        _lib_editor_v1_expression.ExpressionNode.unknown,
+      );
+
+  /// Returns this instance (no-op).
+  @_core.Deprecated("This instance is already frozen.")
+  @_core.override
+  ResourceDisplayFormulas toFrozen() => this;
+
+  /// Returns a mutable shallow copy of this instance.
+  ResourceDisplayFormulas_mutable toMutable() =>
+      ResourceDisplayFormulas_mutable._(
+        this.target,
+        this.label,
+        this.accent,
+        this.icon,
+      );
+
+  @_core.override
+  _core.bool operator ==(other) {
+    if (_core.identical(this, other)) return true;
+    if (other is! ResourceDisplayFormulas) return false;
+    return _skir.internal__listEquality.equals(
+      _equality_proxy,
+      other._equality_proxy,
+    );
+  }
+
+  @_core.override
+  _core.int get hashCode => _skir.internal__listEquality.hash(_equality_proxy);
+
+  _core.List get _equality_proxy => [
+    this.target,
+    this.label,
+    this.accent,
+    this.icon,
+  ];
+
+  @_core.override
+  _core.String toString() => _skir.internal__stringify(this, serializer);
+
+  /// Serializer for `ResourceDisplayFormulas` instances.
+  static _skir.StructSerializer<
+    ResourceDisplayFormulas,
+    ResourceDisplayFormulas_mutable
+  >
+  get serializer {
+    if (_serializerBuilder.mustInitialize()) {
+      _serializerBuilder.addField(
+        "target",
+        "target",
+        0,
+        _lib_editor_v1_type_catalog.ResourceTarget.serializer,
+        "",
+        (it) => it.target,
+        (it, v) => it.target = v,
+      );
+      _serializerBuilder.addField(
+        "label",
+        "label",
+        1,
+        _lib_editor_v1_expression.ExpressionNode.serializer,
+        "",
+        (it) => it.label,
+        (it, v) => it.label = v,
+      );
+      _serializerBuilder.addField(
+        "accent",
+        "accent",
+        2,
+        _lib_editor_v1_expression.ExpressionNode.serializer,
+        "",
+        (it) => it.accent,
+        (it, v) => it.accent = v,
+      );
+      _serializerBuilder.addField(
+        "icon",
+        "icon",
+        3,
+        _lib_editor_v1_expression.ExpressionNode.serializer,
+        "",
+        (it) => it.icon,
+        (it, v) => it.icon = v,
+      );
+      _serializerBuilder.finalize();
+    }
+    return _serializerBuilder.serializer;
+  }
+
+  static final _serializerBuilder = _skir.internal__StructSerializerBuilder(
+    recordId: "editor/v1/catalog.skir:ResourceDisplayFormulas",
+    doc: "Name, accent and icon formulas for resources of [target]. Each formula reads only the subject\nresource: its fields and its published type through the configured value binding.",
+    defaultInstance: defaultInstance,
+    newMutable: (it) => (it != null) ? it.toMutable() : mutable(),
+    toFrozen: (ResourceDisplayFormulas_mutable it) => it.toFrozen(),
+    getUnrecognizedFields: (it) => it._u,
+    setUnrecognizedFields: (it, u) => it._u = u,
+  );
+}
+
+/// Mutable version of [ResourceDisplayFormulas].
+final class ResourceDisplayFormulas_mutable
+    implements ResourceDisplayFormulas_orMutable {
+  _lib_editor_v1_type_catalog.ResourceTarget target;
+  _lib_editor_v1_expression.ExpressionNode label;
+  _lib_editor_v1_expression.ExpressionNode accent;
+  _lib_editor_v1_expression.ExpressionNode icon;
+  _skir.internal__UnrecognizedFields? _u;
+
+  ResourceDisplayFormulas_mutable._(
+    this.target,
+    this.label,
+    this.accent,
+    this.icon,
+  );
+
+  /// Returns a deeply immutable copy of this instance.
+  @_core.override
+  ResourceDisplayFormulas toFrozen() => ResourceDisplayFormulas(
+    target: this.target,
+    label: this.label,
+    accent: this.accent,
+    icon: this.icon,
+  ).._u = this._u;
+}
 
 // -----------------------------------------------------------------------------
 // struct ResourceDefinitionId
@@ -1403,7 +1582,11 @@ sealed class PublishedType_orMutable {
   _core.Iterable<EffectiveFieldTemplate_orMutable> get effectiveFields;
   _core.Iterable<_lib_editor_v1_type_catalog.NamedTypeTemplate_orMutable>
   get ancestorTemplates;
-  TypeDisplay_orMutable? get display;
+  TypeDisplay_orMutable get display;
+
+  /// Search scope keyword for resources of this type, such as book in book:"Main story".
+  /// Present for every resource type and absent for every other type.
+  _core.String? get searchKey;
 
   /// The single effective field typed as a placement, which editors and Realm read and write
   /// when they lay out resources of this type. Absent when the type declares no placement.
@@ -1425,7 +1608,12 @@ final class PublishedType implements PublishedType_orMutable {
   final _core.Iterable<_lib_editor_v1_type_catalog.NamedTypeTemplate>
   ancestorTemplates;
   @_core.override
-  final TypeDisplay? display;
+  final TypeDisplay display;
+
+  /// Search scope keyword for resources of this type, such as book in book:"Main story".
+  /// Present for every resource type and absent for every other type.
+  @_core.override
+  final _core.String? searchKey;
 
   /// The single effective field typed as a placement, which editors and Realm read and write
   /// when they lay out resources of this type. Absent when the type declares no placement.
@@ -1441,7 +1629,8 @@ final class PublishedType implements PublishedType_orMutable {
       _lib_editor_v1_type_catalog.NamedTypeTemplate_orMutable
     >
     ancestorTemplates,
-    required TypeDisplay_orMutable? display,
+    required TypeDisplay_orMutable display,
+    required _core.String? searchKey,
     required _lib_editor_v1_type_catalog.ValuePath_orMutable? placementField,
   }) => PublishedType._(
     definition.toFrozen(),
@@ -1453,7 +1642,8 @@ final class PublishedType implements PublishedType_orMutable {
       (it) => it.toFrozen(),
     ),
     _skir.internal__frozenMappedCopy(ancestorTemplates, (it) => it.toFrozen()),
-    (display != null) ? display.toFrozen() : null,
+    display.toFrozen(),
+    searchKey,
     (placementField != null) ? placementField.toFrozen() : null,
   );
 
@@ -1463,6 +1653,7 @@ final class PublishedType implements PublishedType_orMutable {
     this.effectiveFields,
     this.ancestorTemplates,
     this.display,
+    this.searchKey,
     this.placementField,
   );
 
@@ -1472,6 +1663,7 @@ final class PublishedType implements PublishedType_orMutable {
     DeclarationStatus.unknown,
     _skir.KeyedIterable.empty,
     _skir.KeyedIterable.empty,
+    TypeDisplay.defaultInstance,
     null,
     null,
   );
@@ -1483,6 +1675,7 @@ final class PublishedType implements PublishedType_orMutable {
     DeclarationStatus.unknown,
     _skir.KeyedIterable.empty,
     _skir.KeyedIterable.empty,
+    TypeDisplay.defaultInstance,
     null,
     null,
   );
@@ -1499,6 +1692,7 @@ final class PublishedType implements PublishedType_orMutable {
     this.effectiveFields,
     this.ancestorTemplates,
     this.display,
+    this.searchKey,
     this.placementField,
   );
 
@@ -1521,6 +1715,7 @@ final class PublishedType implements PublishedType_orMutable {
     this.effectiveFields,
     this.ancestorTemplates,
     this.display,
+    this.searchKey,
     this.placementField,
   ];
 
@@ -1577,15 +1772,24 @@ final class PublishedType implements PublishedType_orMutable {
         "display",
         "display",
         4,
-        _skir.Serializers.optional(TypeDisplay.serializer),
+        TypeDisplay.serializer,
         "",
         (it) => it.display,
         (it, v) => it.display = v,
       );
       _serializerBuilder.addField(
+        "search_key",
+        "searchKey",
+        5,
+        _skir.Serializers.optional(_skir.Serializers.string),
+        "Search scope keyword for resources of this type, such as book in book:\"Main story\".\nPresent for every resource type and absent for every other type.",
+        (it) => it.searchKey,
+        (it, v) => it.searchKey = v,
+      );
+      _serializerBuilder.addField(
         "placement_field",
         "placementField",
-        5,
+        6,
         _skir.Serializers.optional(
           _lib_editor_v1_type_catalog.ValuePath.serializer,
         ),
@@ -1616,7 +1820,11 @@ final class PublishedType_mutable implements PublishedType_orMutable {
   _core.Iterable<EffectiveFieldTemplate_orMutable> effectiveFields;
   _core.Iterable<_lib_editor_v1_type_catalog.NamedTypeTemplate_orMutable>
   ancestorTemplates;
-  TypeDisplay_orMutable? display;
+  TypeDisplay_orMutable display;
+
+  /// Search scope keyword for resources of this type, such as book in book:"Main story".
+  /// Present for every resource type and absent for every other type.
+  _core.String? searchKey;
 
   /// The single effective field typed as a placement, which editors and Realm read and write
   /// when they lay out resources of this type. Absent when the type declares no placement.
@@ -1629,6 +1837,7 @@ final class PublishedType_mutable implements PublishedType_orMutable {
     this.effectiveFields,
     this.ancestorTemplates,
     this.display,
+    this.searchKey,
     this.placementField,
   );
 
@@ -1671,6 +1880,17 @@ final class PublishedType_mutable implements PublishedType_orMutable {
     }
   }
 
+  /// If the value of [display] is already mutable, returns it as-is.
+  /// Otherwise, makes a mutable copy, assigns it back to [display] and returns it.
+  TypeDisplay_mutable get mutableDisplay {
+    final value = this.display;
+    if (value is TypeDisplay_mutable) {
+      return value;
+    } else {
+      return this.display = (value as TypeDisplay).toMutable();
+    }
+  }
+
   /// Returns a deeply immutable copy of this instance.
   @_core.override
   PublishedType toFrozen() => PublishedType(
@@ -1679,6 +1899,7 @@ final class PublishedType_mutable implements PublishedType_orMutable {
     effectiveFields: this.effectiveFields,
     ancestorTemplates: this.ancestorTemplates,
     display: this.display,
+    searchKey: this.searchKey,
     placementField: this.placementField,
   ).._u = this._u;
 }
@@ -1690,7 +1911,7 @@ final class PublishedType_mutable implements PublishedType_orMutable {
 sealed class TypeDisplay_orMutable {
   _core.String get name;
   _core.String get description;
-  _core.String get icon;
+  _lib_kernel_v1_icon.Icon get icon;
   _lib_kernel_v1_color.Color_orMutable get color;
 
   TypeDisplay toFrozen();
@@ -1703,7 +1924,7 @@ final class TypeDisplay implements TypeDisplay_orMutable {
   @_core.override
   final _core.String description;
   @_core.override
-  final _core.String icon;
+  final _lib_kernel_v1_icon.Icon icon;
   @_core.override
   final _lib_kernel_v1_color.Color color;
   _skir.internal__UnrecognizedFields? _u;
@@ -1711,7 +1932,7 @@ final class TypeDisplay implements TypeDisplay_orMutable {
   factory TypeDisplay({
     required _core.String name,
     required _core.String description,
-    required _core.String icon,
+    required _lib_kernel_v1_icon.Icon icon,
     required _lib_kernel_v1_color.Color_orMutable color,
   }) => TypeDisplay._(name, description, icon, color.toFrozen());
 
@@ -1721,7 +1942,7 @@ final class TypeDisplay implements TypeDisplay_orMutable {
   static final defaultInstance = TypeDisplay._(
     "",
     "",
-    "",
+    _lib_kernel_v1_icon.Icon.unknown,
     _lib_kernel_v1_color.Color.defaultInstance,
   );
 
@@ -1730,7 +1951,7 @@ final class TypeDisplay implements TypeDisplay_orMutable {
   static TypeDisplay_mutable mutable() => TypeDisplay_mutable._(
     "",
     "",
-    "",
+    _lib_kernel_v1_icon.Icon.unknown,
     _lib_kernel_v1_color.Color.defaultInstance,
   );
 
@@ -1792,7 +2013,7 @@ final class TypeDisplay implements TypeDisplay_orMutable {
         "icon",
         "icon",
         2,
-        _skir.Serializers.string,
+        _lib_kernel_v1_icon.Icon.serializer,
         "",
         (it) => it.icon,
         (it, v) => it.icon = v,
@@ -1826,7 +2047,7 @@ final class TypeDisplay implements TypeDisplay_orMutable {
 final class TypeDisplay_mutable implements TypeDisplay_orMutable {
   _core.String name;
   _core.String description;
-  _core.String icon;
+  _lib_kernel_v1_icon.Icon icon;
   _lib_kernel_v1_color.Color_orMutable color;
   _skir.internal__UnrecognizedFields? _u;
 
@@ -3579,6 +3800,7 @@ sealed class EditorCatalogWireSnapshot_orMutable {
     _lib_editor_v1_operation.ResourceOperationContribution_orMutable
   >
   get resourceOperationContributions;
+  _core.Iterable<ResourceDisplayFormulas_orMutable> get resourceDisplays;
 
   EditorCatalogWireSnapshot toFrozen();
 }
@@ -3622,6 +3844,8 @@ final class EditorCatalogWireSnapshot
   @_core.override
   final _core.Iterable<_lib_editor_v1_operation.ResourceOperationContribution>
   resourceOperationContributions;
+  @_core.override
+  final _core.Iterable<ResourceDisplayFormulas> resourceDisplays;
   _skir.internal__UnrecognizedFields? _u;
 
   factory EditorCatalogWireSnapshot({
@@ -3651,6 +3875,7 @@ final class EditorCatalogWireSnapshot
       _lib_editor_v1_operation.ResourceOperationContribution_orMutable
     >
     resourceOperationContributions,
+    required _core.Iterable<ResourceDisplayFormulas_orMutable> resourceDisplays,
   }) => EditorCatalogWireSnapshot._(
     generation.toFrozen(),
     _skir.internal__frozenMappedCopy(types, (it) => it.toFrozen()),
@@ -3675,6 +3900,7 @@ final class EditorCatalogWireSnapshot
       resourceOperationContributions,
       (it) => it.toFrozen(),
     ),
+    _skir.internal__frozenMappedCopy(resourceDisplays, (it) => it.toFrozen()),
   );
 
   EditorCatalogWireSnapshot._(
@@ -3692,11 +3918,13 @@ final class EditorCatalogWireSnapshot
     this.roleFallbacks,
     this.resourceOperations,
     this.resourceOperationContributions,
+    this.resourceDisplays,
   );
 
   /// Default instance with all fields set to their default values.
   static final defaultInstance = EditorCatalogWireSnapshot._(
     _lib_editor_v1_type_catalog.CatalogGeneration.defaultInstance,
+    _skir.KeyedIterable.empty,
     _skir.KeyedIterable.empty,
     _skir.KeyedIterable.empty,
     _skir.KeyedIterable.empty,
@@ -3717,6 +3945,7 @@ final class EditorCatalogWireSnapshot
   static EditorCatalogWireSnapshot_mutable mutable() =>
       EditorCatalogWireSnapshot_mutable._(
         _lib_editor_v1_type_catalog.CatalogGeneration.defaultInstance,
+        _skir.KeyedIterable.empty,
         _skir.KeyedIterable.empty,
         _skir.KeyedIterable.empty,
         _skir.KeyedIterable.empty,
@@ -3754,6 +3983,7 @@ final class EditorCatalogWireSnapshot
         this.roleFallbacks,
         this.resourceOperations,
         this.resourceOperationContributions,
+        this.resourceDisplays,
       );
 
   @_core.override
@@ -3784,6 +4014,7 @@ final class EditorCatalogWireSnapshot
     this.roleFallbacks,
     this.resourceOperations,
     this.resourceOperationContributions,
+    this.resourceDisplays,
   ];
 
   @_core.override
@@ -3930,6 +4161,15 @@ final class EditorCatalogWireSnapshot
         (it) => it.resourceOperationContributions,
         (it, v) => it.resourceOperationContributions = v,
       );
+      _serializerBuilder.addField(
+        "resource_displays",
+        "resourceDisplays",
+        14,
+        _skir.Serializers.iterable(ResourceDisplayFormulas.serializer),
+        "",
+        (it) => it.resourceDisplays,
+        (it, v) => it.resourceDisplays = v,
+      );
       _serializerBuilder.finalize();
     }
     return _serializerBuilder.serializer;
@@ -3968,6 +4208,7 @@ final class EditorCatalogWireSnapshot_mutable
     _lib_editor_v1_operation.ResourceOperationContribution_orMutable
   >
   resourceOperationContributions;
+  _core.Iterable<ResourceDisplayFormulas_orMutable> resourceDisplays;
   _skir.internal__UnrecognizedFields? _u;
 
   EditorCatalogWireSnapshot_mutable._(
@@ -3985,6 +4226,7 @@ final class EditorCatalogWireSnapshot_mutable
     this.roleFallbacks,
     this.resourceOperations,
     this.resourceOperationContributions,
+    this.resourceDisplays,
   );
 
   /// If the value of [generation] is already mutable, returns it as-is.
@@ -4166,6 +4408,18 @@ final class EditorCatalogWireSnapshot_mutable
     }
   }
 
+  /// If the value of [resourceDisplays] is already mutable, returns it as-is.
+  /// Otherwise, makes a mutable copy, assigns it back to [resourceDisplays] and returns it.
+  _core.List<ResourceDisplayFormulas_orMutable> get mutableResourceDisplays {
+    final value = this.resourceDisplays;
+    if (value
+        is _skir.internal__MutableList<ResourceDisplayFormulas_orMutable>) {
+      return value;
+    } else {
+      return this.resourceDisplays = _skir.internal__MutableList([...value]);
+    }
+  }
+
   /// Returns a deeply immutable copy of this instance.
   @_core.override
   EditorCatalogWireSnapshot toFrozen() => EditorCatalogWireSnapshot(
@@ -4183,6 +4437,7 @@ final class EditorCatalogWireSnapshot_mutable
     roleFallbacks: this.roleFallbacks,
     resourceOperations: this.resourceOperations,
     resourceOperationContributions: this.resourceOperationContributions,
+    resourceDisplays: this.resourceDisplays,
   ).._u = this._u;
 }
 

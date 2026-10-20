@@ -1,3 +1,5 @@
+import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
+    as skir;
 import "package:typewriter_panel/typewriter_panel.dart";
 
 /// Stable page identity in the navigation tree, independent of editor validity.
@@ -13,7 +15,7 @@ class PageNavigationLabel extends StatelessWidget {
   });
 
   final String name;
-  final String? icon;
+  final skir.Icon? icon;
   final bool expanded;
   final List<ResourceIssue> issues;
   final bool checking;
@@ -22,10 +24,9 @@ class PageNavigationLabel extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final foreground = Surface.foregroundOf(context);
-    final iconName = icon?.trim();
-    final marker = iconName == null || iconName.isEmpty
+    final marker = icon?.iconValue == null
         ? Icon(Icons.description_outlined, size: 11, color: foreground)
-        : Icones(iconName, size: 11, color: foreground);
+        : ResourceIcon(icon: icon, size: 11, color: foreground);
     final badge = ResourceIssueBadge(
       issues: issues,
       checking: checking,

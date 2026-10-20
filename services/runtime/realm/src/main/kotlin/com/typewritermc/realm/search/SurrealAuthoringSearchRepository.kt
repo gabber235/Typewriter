@@ -4,6 +4,7 @@ import com.surrealdb.Surreal
 import com.typewritermc.authoring.AuthoringRecord
 import com.typewritermc.authoring.ResourceDefinitionId
 import com.typewritermc.authoring.TypeSelection
+import com.typewritermc.authoring.definition
 import com.typewritermc.realm.authoring.AuthoringView
 import com.typewritermc.realm.authoring.authoredDatabaseValues
 import com.typewritermc.realm.authoring.ownershipRelationIds
@@ -128,11 +129,7 @@ private fun AuthoringRecord.matches(
     target: TypeUse.Named?,
     catalog: CheckedCatalog,
 ): Boolean {
-    val actualDefinition =
-        when (val selected = configuration) {
-            is TypeSelection.Complete -> selected.use.definition
-            is TypeSelection.Pending -> selected.definition
-        }
+    val actualDefinition = configuration.definition
     if (roots.isNotEmpty() && roots.none { catalog.isNominalSubtype(actualDefinition, it) }) return false
     if (target == null) return true
     return when (val selected = configuration) {

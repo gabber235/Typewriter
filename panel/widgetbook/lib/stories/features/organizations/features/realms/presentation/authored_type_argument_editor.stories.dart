@@ -60,6 +60,7 @@ CheckedEditorCatalog _catalog({required bool twoArguments}) {
     List<skir.TypeParameter> parameters = const [],
     List<skir.NamedTypeTemplate> parents = const [],
   }) => skir.PublishedType(
+    searchKey: null,
     placementField: null,
     definition: skir.TypeDefinition(
       id: id,
@@ -76,12 +77,13 @@ CheckedEditorCatalog _catalog({required bool twoArguments}) {
     display: skir.TypeDisplay(
       name: name,
       description: "$name for quest completion",
-      icon: "mdi:gift",
+      icon: skir.Icon.wrapIconify("mdi:gift"),
       color: skir.Color(argb: 0xffffb300.toSigned(32)),
     ),
   );
   return CheckedEditorCatalog(
     skir.EditorCatalogWireSnapshot(
+      resourceDisplays: const [],
       resourceOperations: const [],
       resourceOperationContributions: const [],
       generation: skir.CatalogGeneration(value: "catalog:rewards"),

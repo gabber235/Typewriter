@@ -297,13 +297,15 @@ void main() {
       final generation = skir.CatalogGeneration(value: "catalog:named");
       final checked = CheckedEditorCatalog(
         skir.EditorCatalogWireSnapshot(
+          resourceDisplays: const [],
           resourceOperations: const [],
           resourceOperationContributions: const [],
           generation: generation,
           types: [
             skir.PublishedType(
+              searchKey: null,
               placementField: null,
-              display: null,
+              display: defaultTypeDisplay(""),
               definition: skir.TypeDefinition(
                 id: alias,
                 parameters: const [],
@@ -319,8 +321,9 @@ void main() {
               ancestorTemplates: const [],
             ),
             skir.PublishedType(
+              searchKey: null,
               placementField: null,
-              display: null,
+              display: defaultTypeDisplay(""),
               definition: skir.TypeDefinition(
                 id: root,
                 parameters: const [],

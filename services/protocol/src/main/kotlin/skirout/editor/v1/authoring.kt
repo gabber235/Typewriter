@@ -1909,13 +1909,12 @@ sealed interface PresentationSubject_OrMutable {
     val resource: skirout.editor.v1.type_catalog.ResourceId_OrMutable;
     val definition: skirout.editor.v1.catalog.ResourceDefinitionId_OrMutable;
     val content: skirout.editor.v1.type_catalog.AuthoringRecord_OrMutable;
-    val descriptor: skirout.editor.v1.type_catalog.DataValue;
 
     fun toFrozen(): skirout.editor.v1.authoring.PresentationSubject;
 }
 
 /**
- * Supplies a resource identity, authored content, and display descriptor to portable resource presentations.
+ * Supplies a resource identity and authored content to portable resource presentations.
  * Catalog choices use CatalogPresentationSubject instead because they have no resource instance.
  *
  * Deeply immutable.
@@ -1925,7 +1924,6 @@ class PresentationSubject private constructor(
     override val resource: skirout.editor.v1.type_catalog.ResourceId,
     override val definition: skirout.editor.v1.catalog.ResourceDefinitionId,
     override val content: skirout.editor.v1.type_catalog.AuthoringRecord,
-    override val descriptor: skirout.editor.v1.type_catalog.DataValue,
     internal val _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.authoring.PresentationSubject>? =
         null,
 ): skirout.editor.v1.authoring.PresentationSubject_OrMutable {
@@ -1935,14 +1933,12 @@ class PresentationSubject private constructor(
         resource: skirout.editor.v1.type_catalog.ResourceId_OrMutable,
         definition: skirout.editor.v1.catalog.ResourceDefinitionId_OrMutable,
         content: skirout.editor.v1.type_catalog.AuthoringRecord_OrMutable,
-        descriptor: skirout.editor.v1.type_catalog.DataValue,
         _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.authoring.PresentationSubject>? =
             null,
     ): this(
         resource.toFrozen(),
         definition.toFrozen(),
         content.toFrozen(),
-        descriptor,
         _unrecognizedFields,
     ) {}
 
@@ -1954,7 +1950,6 @@ class PresentationSubject private constructor(
         resource = this.resource,
         definition = this.definition,
         content = this.content,
-        descriptor = this.descriptor,
     );
 
     /** Returns a shallow copy of this instance with the specified fields replaced. */
@@ -1967,13 +1962,10 @@ class PresentationSubject private constructor(
             this.definition,
         content: skirout.editor.v1.type_catalog.AuthoringRecord_OrMutable =
             this.content,
-        descriptor: skirout.editor.v1.type_catalog.DataValue =
-            this.descriptor,
     ) = skirout.editor.v1.authoring.PresentationSubject(
         resource.toFrozen(),
         definition.toFrozen(),
         content.toFrozen(),
-        descriptor,
         this._unrecognizedFields,
     );
 
@@ -1981,11 +1973,11 @@ class PresentationSubject private constructor(
     fun copy() = this;
 
     override fun equals(other: kotlin.Any?): kotlin.Boolean {
-        return this === other || (other is skirout.editor.v1.authoring.PresentationSubject && this.resource == other.resource && this.definition == other.definition && this.content == other.content && this.descriptor == other.descriptor);
+        return this === other || (other is skirout.editor.v1.authoring.PresentationSubject && this.resource == other.resource && this.definition == other.definition && this.content == other.content);
     }
 
     override fun hashCode(): kotlin.Int {
-        return kotlin.collections.listOf<kotlin.Any?>(this.resource, this.definition, this.content, this.descriptor).hashCode();
+        return kotlin.collections.listOf<kotlin.Any?>(this.resource, this.definition, this.content).hashCode();
     }
 
     override fun toString(): kotlin.String {
@@ -2005,8 +1997,6 @@ class PresentationSubject private constructor(
             skirout.editor.v1.catalog.ResourceDefinitionId.partial(),
         override var content: skirout.editor.v1.type_catalog.AuthoringRecord_OrMutable =
             skirout.editor.v1.type_catalog.AuthoringRecord.partial(),
-        override var descriptor: skirout.editor.v1.type_catalog.DataValue =
-            skirout.editor.v1.type_catalog.DataValue.UNKNOWN,
         internal var _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.authoring.PresentationSubject>? =
             null,
     ): skirout.editor.v1.authoring.PresentationSubject_OrMutable {
@@ -2015,7 +2005,6 @@ class PresentationSubject private constructor(
             resource = this.resource,
             definition = this.definition,
             content = this.content,
-            descriptor = this.descriptor,
             _unrecognizedFields = this._unrecognizedFields,
         );
 
@@ -2074,7 +2063,6 @@ class PresentationSubject private constructor(
                 skirout.editor.v1.type_catalog.ResourceId.partial(),
                 skirout.editor.v1.catalog.ResourceDefinitionId.partial(),
                 skirout.editor.v1.type_catalog.AuthoringRecord.partial(),
-                skirout.editor.v1.type_catalog.DataValue.UNKNOWN,
             );
 
         /** Returns an instance with all fields set to their default values. */
@@ -2094,13 +2082,10 @@ class PresentationSubject private constructor(
                 skirout.editor.v1.catalog.ResourceDefinitionId.partial(),
             content: skirout.editor.v1.type_catalog.AuthoringRecord_OrMutable =
                 skirout.editor.v1.type_catalog.AuthoringRecord.partial(),
-            descriptor: skirout.editor.v1.type_catalog.DataValue =
-                skirout.editor.v1.type_catalog.DataValue.UNKNOWN,
         ) = skirout.editor.v1.authoring.PresentationSubject(
             resource = resource,
             definition = definition,
             content = content,
-            descriptor = descriptor,
             _unrecognizedFields = null,
         );
 
@@ -8773,7 +8758,7 @@ private object _SerializerRegistry {
 
     val PresentationSubjectSerializerImpl = build.skir.internal.StructSerializer(
         recordId = "editor/v1/authoring.skir:PresentationSubject",
-        doc = "Supplies a resource identity, authored content, and display descriptor to portable resource presentations.\nCatalog choices use CatalogPresentationSubject instead because they have no resource instance.",
+        doc = "Supplies a resource identity and authored content to portable resource presentations.\nCatalog choices use CatalogPresentationSubject instead because they have no resource instance.",
         defaultInstance = skirout.editor.v1.authoring.PresentationSubject.partial(),
         newMutableFn = { it?.toMutable() ?: skirout.editor.v1.authoring.PresentationSubject.Mutable() },
         toFrozenFn = { it.toFrozen() },
@@ -9933,15 +9918,6 @@ private object _SerializerRegistry {
             "",
             { it.content },
             { mut, v -> mut.content = v },
-        );
-        PresentationSubjectSerializerImpl.addField(
-            "descriptor",
-            "descriptor",
-            3,
-            skirout.editor.v1.type_catalog.DataValue.serializer,
-            "",
-            { it.descriptor },
-            { mut, v -> mut.descriptor = v },
         );
         PresentationSubjectSerializerImpl.finalizeStruct();
 

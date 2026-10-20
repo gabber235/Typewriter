@@ -627,11 +627,20 @@ final class _PortableExpressionChecker {
             ((literalTypes.contains(actual) ||
                     literalTypes.contains(expected)) &&
                 family(an) != null &&
-                family(an) == family(en));
+                family(an) == family(en)) ||
+            isNominalSubtype(av, ev);
       default:
         return false;
     }
   }
+
+  /// Whether [actual] is a proper nominal subtype of [expected], such as an
+  /// Iconify icon where an icon is expected. Matches the Kotlin checker.
+  bool isNominalSubtype(skir.TypeUse actual, skir.TypeUse expected) =>
+      actual != expected &&
+      actual is skir.TypeUse_namedWrapper &&
+      expected is skir.TypeUse_namedWrapper &&
+      catalog.isReadableAs(actual, expected);
 
   skir.ExpressionType nullableType(skir.ExpressionType type) =>
       type.value == skir.ExpressionValueType.nullValue ||
@@ -662,7 +671,7 @@ final class _PortableExpressionChecker {
     final bc = b.value is skir.ExpressionValueType_nullableWrapper
         ? (b.value as skir.ExpressionValueType_nullableWrapper).value
         : b;
-    if (!compatible(ac, bc)) {
+    if (!compatible(ac, bc) && !compatible(bc, ac)) {
       throw const ExpressionProblem("incompatible_expression_types");
     }
     var result = switch ((ac.value, bc.value)) {
@@ -681,6 +690,12 @@ final class _PortableExpressionChecker {
         skir.ExpressionValueType_entryWrapper(value: final bv),
       ) =>
         entryType(join(av.key, bv.key), join(av.value, bv.value)),
+      (
+        skir.ExpressionValueType_nominalWrapper(value: final av),
+        skir.ExpressionValueType_nominalWrapper(value: final bv),
+      )
+          when isNominalSubtype(av, bv) =>
+        bc,
       _ => literalTypes.contains(ac) && !literalTypes.contains(bc) ? bc : ac,
     };
     if (a.value is skir.ExpressionValueType_nullableWrapper ||

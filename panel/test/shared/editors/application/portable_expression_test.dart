@@ -1384,6 +1384,7 @@ CheckedEditorCatalog _fixtureCatalog(Map<String, Object?> fixture) =>
 
 skir.PublishedType _fixturePublished(skir.TypeDefinition definition) =>
     skir.PublishedType(
+      searchKey: null,
       placementField: null,
       definition: definition,
       status: skir.DeclarationStatus.ready,
@@ -1399,7 +1400,7 @@ skir.PublishedType _fixturePublished(skir.TypeDefinition definition) =>
             ),
       ],
       ancestorTemplates: definition.parents,
-      display: null,
+      display: defaultTypeDisplay(""),
     );
 
 Map<skir.ExpressionBindingId, skir.DataValue> _reads(

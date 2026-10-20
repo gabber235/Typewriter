@@ -1603,6 +1603,7 @@ AuthoringDocument _document({
 }) => AuthoringDocument(
   catalog: CheckedEditorCatalog(
     skir.EditorCatalogWireSnapshot(
+      resourceDisplays: const [],
       resourceOperations: const [],
       resourceOperationContributions: const [],
       generation: skir.CatalogGeneration(value: "fixture"),

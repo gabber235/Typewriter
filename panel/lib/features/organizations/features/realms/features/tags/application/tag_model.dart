@@ -20,9 +20,13 @@ abstract class Tag with _$Tag {
 
   const Tag._();
 
-  factory Tag.fromAuthoring(skir.AuthoringResource resource) {
+  /// The name and color come from the Tag's [appearance], so a Tag reads the
+  /// same here as on every other surface.
+  factory Tag.fromAuthoring(
+    skir.AuthoringResource resource,
+    ResourceAppearance appearance,
+  ) {
     final content = resource.content;
-    final color = content.authoredField("color")?.authoredInteger;
     final parents =
         content.authoredField("parents")?.authoredItems ??
         const <skir.ListItem>[];
@@ -33,10 +37,8 @@ abstract class Tag with _$Tag {
     final height = placement?.authoredField("height")?.authoredInteger;
     return Tag(
       tagId: resource.id,
-      name: (content.authoredField("name")?.authoredString).displayLabel(
-        "Unnamed Tag",
-      ),
-      color: Color((color ?? BigInt.from(0xff9e9e9e)).toUnsigned(32).toInt()),
+      name: appearance.label,
+      color: appearance.accent,
       parentIds: parents
           .map((item) => item.value.authoredLink?.target.resource)
           .nonNulls

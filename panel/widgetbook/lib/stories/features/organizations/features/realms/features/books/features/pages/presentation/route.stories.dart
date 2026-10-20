@@ -250,6 +250,12 @@ _PageFixture _pageFixture() {
     _inspector(cueType, "cue.inspector"),
   ];
   final snapshot = skir.EditorCatalogWireSnapshot(
+    resourceDisplays: [
+      for (final type in [entryType, cueType])
+        nameResourceDisplay(
+          skir.TypeTemplate.createNamed(definition: type, arguments: const []),
+        ),
+    ],
     resourceOperations: const [],
     resourceOperationContributions: const [],
     generation: generation,
@@ -428,10 +434,11 @@ skir.TypeDefinitionId _qualified(String name) => skir.TypeDefinitionId(
 
 skir.PublishedType _published(skir.TypeDefinitionId id, List<_Field> fields) =>
     skir.PublishedType(
+      searchKey: null,
       placementField: fields.any((field) => field.name == "placement")
           ? editorRootPath.field("placement")
           : null,
-      display: null,
+      display: defaultTypeDisplay(""),
       definition: skir.TypeDefinition(
         id: id,
         parameters: const [],

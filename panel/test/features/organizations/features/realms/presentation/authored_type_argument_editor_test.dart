@@ -326,6 +326,7 @@ _concreteResourceFixture() {
     List<skir.NamedTypeTemplate> parents = const [],
     skir.TypeDisplay? display,
   }) => skir.PublishedType(
+    searchKey: null,
     placementField: null,
     definition: skir.TypeDefinition(
       id: id,
@@ -339,7 +340,7 @@ _concreteResourceFixture() {
     status: skir.DeclarationStatus.ready,
     effectiveFields: const [],
     ancestorTemplates: parents,
-    display: display,
+    display: display ?? defaultTypeDisplay(""),
   );
   final pageParent = skir.NamedTypeTemplate(
     definition: page,
@@ -348,6 +349,7 @@ _concreteResourceFixture() {
   return (
     catalog: CheckedEditorCatalog(
       skir.EditorCatalogWireSnapshot(
+        resourceDisplays: const [],
         resourceOperations: const [],
         resourceOperationContributions: const [],
         generation: skir.CatalogGeneration(value: "catalog:resources"),
@@ -428,6 +430,7 @@ _fixture({
     List<skir.TypeParameter> parameters = const [],
     List<skir.NamedTypeTemplate> parents = const [],
   }) => skir.PublishedType(
+    searchKey: null,
     placementField: null,
     definition: skir.TypeDefinition(
       id: id,
@@ -441,11 +444,12 @@ _fixture({
     status: skir.DeclarationStatus.ready,
     effectiveFields: const [],
     ancestorTemplates: parents,
-    display: null,
+    display: defaultTypeDisplay(""),
   );
   return (
     catalog: CheckedEditorCatalog(
       skir.EditorCatalogWireSnapshot(
+        resourceDisplays: const [],
         resourceOperations: const [],
         resourceOperationContributions: const [],
         generation: skir.CatalogGeneration(value: "catalog:1"),
@@ -503,7 +507,7 @@ skir.TypeDisplay _display(String name, String icon, int argb) =>
     skir.TypeDisplay(
       name: name,
       description: "$name page",
-      icon: icon,
+      icon: skir.Icon.wrapIconify(icon),
       color: skir.Color(argb: argb.toSigned(32)),
     );
 

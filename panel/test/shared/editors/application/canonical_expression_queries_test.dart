@@ -154,7 +154,7 @@ void main() {
   );
 
   test(
-    "unknown fields fail checking and missing optional metadata falls back",
+    "unknown fields fail checking and an undeclared display reads the defaults",
     () {
       final catalog = _catalog(display: false);
       final document = _document(catalog, "Page");
@@ -172,7 +172,7 @@ void main() {
       );
       expect(
         _evaluate(catalog, document, expression).value,
-        colorValue(0xff123456),
+        colorValue(0xff607d8b),
       );
       final invalid = catalog.evaluateExpression(
         fieldExpression(declaration, "unknown"),
@@ -1074,7 +1074,7 @@ CheckedEditorCatalog _catalog({bool generic = false, bool display = true}) {
             ? skir.TypeDisplay(
                 name: "Page",
                 description: "Page type",
-                icon: "page",
+                icon: skir.Icon.wrapIconify("page"),
                 color: skir.Color(argb: 0xff336699.toSigned(32)),
               )
             : null,
@@ -1089,6 +1089,7 @@ skir.PublishedType _published(
   skir.TypeDefinition definition, {
   skir.TypeDisplay? display,
 }) => skir.PublishedType(
+  searchKey: null,
   placementField: null,
   definition: definition,
   status: skir.DeclarationStatus.ready,
@@ -1104,7 +1105,7 @@ skir.PublishedType _published(
         ),
   ],
   ancestorTemplates: definition.parents,
-  display: display,
+  display: display ?? defaultTypeDisplay(""),
 );
 AuthoringDocument _document(
   CheckedEditorCatalog catalog,

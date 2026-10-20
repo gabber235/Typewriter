@@ -223,7 +223,7 @@ skir.PublishedType _subtype(
           ..display = skir.TypeDisplay(
             name: label,
             description: "Compiled result fixture",
-            icon: "material-symbols:book",
+            icon: skir.Icon.wrapIconify("material-symbols:book"),
             color: skir.Color(argb: argb.toSigned(32)),
           ))
         .toFrozen();

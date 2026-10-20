@@ -15,6 +15,8 @@ import com.typewritermc.types.TypeDefinitionId
 import com.typewritermc.types.TypeId
 import com.typewritermc.types.TypeTemplate
 import com.typewritermc.types.catalog.toWire
+import com.typewritermc.types.skir.SkirTypeCodec
+import com.typewritermc.types.skir.getOrThrow
 import de.infix.testBalloon.framework.core.testSuite
 import io.kotest.matchers.shouldBe
 
@@ -30,7 +32,7 @@ val PlacementFieldPublicationTest by testSuite {
         assembly.snapshot
             .toWire()
             .types
-            .single { it.display?.name == "Tag" }
+            .single { it.definition == SkirTypeCodec.encode(TagDefinition.declaration).getOrThrow() }
             .placementField
             ?.segments
             ?.size shouldBe 1

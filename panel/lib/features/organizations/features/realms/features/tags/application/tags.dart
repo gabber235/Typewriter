@@ -16,7 +16,12 @@ AsyncValue<List<Tag>> workingTags(Ref ref) {
   return AsyncData(
     source.requireValue.entries.values
         .where((entry) => entry.definition == coreTagResourceDefinition)
-        .map(Tag.fromAuthoring)
+        .map(
+          (entry) => Tag.fromAuthoring(
+            entry,
+            source.requireValue.catalog.appearanceOf(entry.content),
+          ),
+        )
         .toList(growable: false),
   );
 }

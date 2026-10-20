@@ -89,7 +89,10 @@ void main() {
       expect(option.definition, skir.ResourceDefinitionId(value: "test.book"));
       expect(option.label, "Quest Book");
       expect(option.display?.description, "A reusable quest collection");
-      expect(option.display?.icon, "material-symbols:book");
+      expect(
+        option.display?.icon,
+        skir.Icon.wrapIconify("material-symbols:book"),
+      );
       expect(option.display?.color, skir.Color(argb: 0xff3f51b5.toSigned(32)));
       expect(
         option.configuration,
@@ -238,7 +241,7 @@ CheckedEditorCatalog _catalog({
         display: skir.TypeDisplay(
           name: "Quest Book",
           description: "A reusable quest collection",
-          icon: "material-symbols:book",
+          icon: skir.Icon.wrapIconify("material-symbols:book"),
           color: skir.Color(argb: 0xff3f51b5.toSigned(32)),
         ),
       ),
@@ -279,6 +282,7 @@ skir.PublishedType _published(
   bool abstract = false,
   skir.TypeDefinitionId? parent,
 }) => skir.PublishedType(
+  searchKey: null,
   placementField: null,
   definition: skir.TypeDefinition(
     id: id,
@@ -298,7 +302,7 @@ skir.PublishedType _published(
     if (parent != null)
       skir.NamedTypeTemplate(definition: parent, arguments: const []),
   ],
-  display: display,
+  display: display ?? defaultTypeDisplay(""),
 );
 
 skir.TypeDefinitionId _definition(String name) => skir.TypeDefinitionId(

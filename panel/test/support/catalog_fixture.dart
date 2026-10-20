@@ -13,6 +13,7 @@ skir.EditorCatalogWireSnapshot testCatalogSnapshot({
   List<skir.PresentationDescriptor> presentations = const [],
   List<skir.PresentationMaterial> presentationMaterials = const [],
 }) => skir.EditorCatalogWireSnapshot(
+  resourceDisplays: const [],
   resourceOperations: const [],
   resourceOperationContributions: const [],
   generation:

@@ -5,6 +5,9 @@ import com.typewritermc.authoring.PathSegment
 import com.typewritermc.authoring.ValuePath
 import com.typewritermc.types.Color
 import com.typewritermc.types.DataValue
+import com.typewritermc.types.Icon
+import com.typewritermc.types.IconIconifyDefinition
+import com.typewritermc.types.IconSvgDefinition
 import com.typewritermc.types.Ref
 import com.typewritermc.types.RelationshipEndpoint
 import com.typewritermc.types.Resource
@@ -16,6 +19,7 @@ import com.typewritermc.types.skir.SkirDataValueCodec
 import com.typewritermc.types.skir.getOrThrow
 import skirout.editor.v1.expression.ExpressionNode
 import skirout.editor.v1.expression.NumberCompareOperation
+import skirout.editor.v1.expression.RuleUnaryOperation
 import skirout.editor.v1.expression.TextUnaryOperation
 import skirout.editor.v1.expression.ValueCompareOperation
 import java.math.BigDecimal
@@ -321,6 +325,24 @@ fun literal(value: Duration): Expr<Duration, Handled> = portableLiteral(DataValu
 
 fun literal(value: Color): Expr<Color, Handled> = portableLiteral(DataValue.Integer(value.argb.toString().toBigInteger()))
 
+fun literal(value: Icon): Expr<Icon, Handled> =
+    portableLiteral(
+        when (value) {
+            is Icon.Iconify -> {
+                DataValue.Named(
+                    IconIconifyDefinition.use,
+                    DataValue.Record(
+                        mapOf("value" to DataValue.StringValue(value.value)),
+                    ),
+                )
+            }
+
+            is Icon.Svg -> {
+                DataValue.Named(IconSvgDefinition.use, DataValue.Record(mapOf("source" to DataValue.StringValue(value.source))))
+            }
+        },
+    )
+
 fun <M : MissingPolicy> Expr<*, M>.isNull(): Expr<Boolean, M> = Expr { ExpressionNode.IsNullWrapper(lower(it)) }
 
 @GeneratedSdkApi
@@ -532,6 +554,27 @@ fun <T : Any, M : MissingPolicy> Expr<T?, M>.orElse(value: Expr<T, Handled>): Ex
 @JvmName("orElseMissing")
 fun <T : Any> Expr<T, MayBeMissing>.orElse(value: Expr<T, Handled>): Expr<T, Handled> =
     Expr { ExpressionNode.createOrElse(input = lower(it), fallback = value.lower(it)) }
+
+/** This text when it is present and not blank, otherwise [fallback]. */
+fun Expr<String, MissingPolicy>.orIfBlank(fallback: Expr<String, Handled>): Expr<String, Handled> {
+    val source = this
+    return Expr { environment ->
+        val input = source.lower(environment)
+        val fallbackNode = fallback.lower(environment)
+        ExpressionNode.createOrElse(
+            input =
+                ExpressionNode.createConditional(
+                    test = ExpressionNode.createRuleUnary(operation = RuleUnaryOperation.NON_BLANK, source = input),
+                    yes = input,
+                    no = fallbackNode,
+                ),
+            fallback = fallbackNode,
+        )
+    }
+}
+
+/** This text when it is present and not blank, otherwise the literal [fallback]. */
+fun Expr<String, MissingPolicy>.orIfBlank(fallback: String): Expr<String, Handled> = orIfBlank(literal(fallback))
 
 val <E : RelationshipEndpoint<*, *>, T : Resource, M : MissingPolicy> Expr<Ref<E, T>, M>.target: Expr<ResourceId, M>
     get() = Expr { ExpressionNode.LinkTargetWrapper(lower(it)) }

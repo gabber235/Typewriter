@@ -39,11 +39,7 @@ fun Collection<AuthoringResourceDefinition>.definitionFor(
     selection: TypeSelection,
     catalog: CheckedCatalog,
 ): AuthoringResourceDefinition {
-    val definition =
-        when (selection) {
-            is TypeSelection.Complete -> selection.use.definition
-            is TypeSelection.Pending -> selection.definition
-        }
+    val definition = selection.definition
     val candidates = filter { it.root == definition || catalog.isNominalSubtype(definition, it.root) }
     return requireNotNull(candidates.singleOrNull()) {
         "Authored type $definition must belong to exactly one resource definition."

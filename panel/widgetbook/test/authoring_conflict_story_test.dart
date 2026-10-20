@@ -82,7 +82,9 @@ void main() {
       await tester.pumpAndSettle();
       expect(find.text("Unfilled"), findsWidgets);
       if (relations) {
-        expect(find.textContaining("tag:location"), findsWidgets);
+        // The linked resource is absent from both documents, so the comparison
+        // names its missing state rather than a raw id.
+        expect(find.textContaining("Removed resource"), findsWidgets);
       }
       expect(tester.takeException(), isNull);
     });

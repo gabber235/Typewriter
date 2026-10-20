@@ -95,9 +95,20 @@ final class RealmEditingReview extends HookWidget {
             for (final resource
                 in group.resources.whereType<skir.ResourceId>()) ...[
               Text(
-                proposed.resource(resource)?.authoredLabel ??
-                    confirmed?.resource(resource)?.authoredLabel ??
-                    "Resource",
+                resourceAppearanceIn(
+                      proposed.catalog,
+                      proposed,
+                      resource,
+                    )?.label ??
+                    switch (confirmed) {
+                      final confirmed? => resourceAppearanceIn(
+                        confirmed.catalog,
+                        confirmed,
+                        resource,
+                      )?.label,
+                      null => null,
+                    } ??
+                    "Removed resource",
               ),
               SizedBox(height: context.spacing.space2),
               Row(

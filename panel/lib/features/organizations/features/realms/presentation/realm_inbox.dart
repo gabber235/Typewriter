@@ -190,19 +190,11 @@ class RealmInboxContent extends ConsumerWidget {
     return RealmInboxView(
       state: ref.watch(realmInboxProvider(scope)),
       work: ref.read(localWorkControllerProvider),
-      resourceLabel: (id) {
-        final resource = document?.entry(id);
-        if (resource == null) return id.value;
-        if (resource.definition == coreBookResourceDefinition) {
-          return Book.fromAuthoring(resource).title;
-        }
-        if (resource.definition == corePageResourceDefinition) {
-          return Page.fromAuthoring(resource).name.displayLabel("Unnamed page");
-        }
-        if (resource.definition == coreTagResourceDefinition) {
-          return Tag.fromAuthoring(resource).name;
-        }
-        return resource.content.authoredLabel ?? id.value;
+      resourceLabel: (id) => switch (document) {
+        final document? =>
+          resourceAppearanceIn(document.catalog, document, id)?.label ??
+              "Removed resource",
+        null => "Loading resource",
       },
       onClose: onClose,
       openLocation: (location) async {

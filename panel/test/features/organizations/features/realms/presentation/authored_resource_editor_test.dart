@@ -604,6 +604,7 @@ void main() {
           ...page.catalog.snapshot.types,
           ...child.catalog.snapshot.types,
           skir.PublishedType(
+            searchKey: null,
             placementField: null,
             definition: skir.TypeDefinition(
               id: frameworkResourceIdUse.definition,
@@ -614,7 +615,7 @@ void main() {
               parents: const [],
             ),
             status: skir.DeclarationStatus.ready,
-            display: null,
+            display: defaultTypeDisplay(""),
             effectiveFields: const [],
             ancestorTemplates: const [],
           ),
@@ -1068,13 +1069,15 @@ _emptyPageGraphFixture() {
   );
   final checked = CheckedEditorCatalog(
     skir.EditorCatalogWireSnapshot(
+      resourceDisplays: const [],
       resourceOperations: const [],
       resourceOperationContributions: const [],
       generation: generation,
       types: [
         skir.PublishedType(
+          searchKey: null,
           placementField: null,
-          display: null,
+          display: defaultTypeDisplay(""),
           definition: skir.TypeDefinition(
             id: definition,
             parameters: const [],
@@ -1103,8 +1106,9 @@ _emptyPageGraphFixture() {
           ancestorTemplates: const [],
         ),
         skir.PublishedType(
+          searchKey: null,
           placementField: null,
-          display: null,
+          display: defaultTypeDisplay(""),
           definition: skir.TypeDefinition(
             id: elementsDefinition,
             parameters: const [],
@@ -1249,13 +1253,15 @@ _numericFixture({
   );
   final checked = CheckedEditorCatalog(
     skir.EditorCatalogWireSnapshot(
+      resourceDisplays: const [],
       resourceOperations: const [],
       resourceOperationContributions: const [],
       generation: catalogGeneration,
       types: [
         skir.PublishedType(
+          searchKey: null,
           placementField: null,
-          display: null,
+          display: defaultTypeDisplay(""),
           definition: skir.TypeDefinition(
             id: definition,
             parameters: const [],
@@ -1576,14 +1582,16 @@ _fixture({
   );
   final checked = CheckedEditorCatalog(
     skir.EditorCatalogWireSnapshot(
+      resourceDisplays: const [],
       resourceOperations: const [],
       resourceOperationContributions: const [],
       generation: generation,
       types: [
         if (namedText != null)
           skir.PublishedType(
+            searchKey: null,
             placementField: null,
-            display: null,
+            display: defaultTypeDisplay(""),
             definition: skir.TypeDefinition(
               id: namedText.definition,
               parameters: const [],
@@ -1597,8 +1605,9 @@ _fixture({
             ancestorTemplates: const [],
           ),
         skir.PublishedType(
+          searchKey: null,
           placementField: null,
-          display: null,
+          display: defaultTypeDisplay(""),
           definition: skir.TypeDefinition(
             id: definition,
             parameters: const [],

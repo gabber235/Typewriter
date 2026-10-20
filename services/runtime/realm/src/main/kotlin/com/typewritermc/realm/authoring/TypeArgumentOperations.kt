@@ -12,6 +12,7 @@ import com.typewritermc.authoring.TypeSelection
 import com.typewritermc.authoring.ValueLocation
 import com.typewritermc.authoring.ValuePath
 import com.typewritermc.authoring.ValueProblem
+import com.typewritermc.authoring.definition
 import com.typewritermc.authoring.field
 import com.typewritermc.authoring.item
 import com.typewritermc.authoring.mapKey
@@ -515,10 +516,3 @@ private fun TypeTemplate.concreteUseOrNull(): TypeUse? {
         is TypeTemplate.Scalar -> TypeUse.Scalar(kind)
     }
 }
-
-private val TypeSelection.definition
-    get() =
-        when (this) {
-            is TypeSelection.Complete -> use.definition
-            is TypeSelection.Pending -> definition
-        }

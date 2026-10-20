@@ -59,6 +59,7 @@ skir.PublishedType _draftPublished(
   List<skir.NamedTypeTemplate> parents = const [],
   List<skir.EffectiveFieldTemplate> fields = const [],
 }) => skir.PublishedType(
+  searchKey: null,
   placementField: null,
   definition: skir.TypeDefinition(
     id: definition,
@@ -79,7 +80,7 @@ skir.PublishedType _draftPublished(
   status: skir.DeclarationStatus.ready,
   effectiveFields: fields,
   ancestorTemplates: parents,
-  display: null,
+  display: defaultTypeDisplay(""),
 );
 
 /// Local editor schema for the host draft, separate from a Realm catalog.
@@ -87,6 +88,7 @@ skir.PublishedType _draftPublished(
 /// Named variants preserve disabled and enabled choices while the snapshot
 /// translates the resulting value into a complete host configuration command.
 final _hostConfigurationCatalog = skir.EditorCatalogWireSnapshot(
+  resourceDisplays: const [],
   resourceOperations: const [],
   resourceOperationContributions: const [],
   generation: skir.CatalogGeneration(value: "panel.host.configuration"),

@@ -70,13 +70,15 @@ AuthoringSearchResultPayload _payload({
 }) {
   final catalog = CheckedEditorCatalog(
     skir.EditorCatalogWireSnapshot(
+      resourceDisplays: const [],
       resourceOperations: const [],
       resourceOperationContributions: const [],
       generation: skir.CatalogGeneration(value: "catalog:test"),
       types: [
         skir.PublishedType(
+          searchKey: null,
           placementField: null,
-          display: null,
+          display: defaultTypeDisplay(""),
           definition: skir.TypeDefinition(
             id: _book,
             parameters: const [],
@@ -138,7 +140,6 @@ AuthoringSearchResultPayload _payload({
         resource: resource,
         definition: definition,
         content: content,
-        descriptor: skir.DataValue.wrapStringValue("Main Book"),
       ),
       context: skir.PortableValue(
         actualType: skir.TypeUse.wrapScalar(skir.ScalarKind.text),

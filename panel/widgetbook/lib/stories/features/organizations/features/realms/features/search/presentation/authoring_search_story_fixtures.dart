@@ -145,7 +145,6 @@ final class AuthoringSearchStoryFixtures {
         resource: resource,
         definition: resourceDefinition,
         content: content,
-        descriptor: skir.DataValue.wrapStringValue(label),
       ),
       context: skir.PortableValue(
         actualType: skir.TypeUse.wrapScalar(skir.ScalarKind.text),

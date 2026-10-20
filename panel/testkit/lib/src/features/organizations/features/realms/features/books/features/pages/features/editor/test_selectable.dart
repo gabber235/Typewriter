@@ -237,13 +237,15 @@ final _testSelectableUse = skir.NamedTypeUse(
 );
 final _testSelectableCatalog = CheckedEditorCatalog(
   skir.EditorCatalogWireSnapshot(
+    resourceDisplays: const [],
     resourceOperations: const [],
     resourceOperationContributions: const [],
     generation: skir.CatalogGeneration(value: "testkit:selectable"),
     types: [
       skir.PublishedType(
+        searchKey: null,
         placementField: null,
-        display: null,
+        display: defaultTypeDisplay(""),
         definition: skir.TypeDefinition(
           id: _testSelectableDefinition,
           parameters: const [],

@@ -42,6 +42,10 @@ import com.typewritermc.presentation.projectedCollectionSource
 import com.typewritermc.types.PresentationRole
 import com.typewritermc.types.RepresentationTemplate
 import com.typewritermc.types.Resource
+import com.typewritermc.types.ResourceTarget
+import com.typewritermc.types.TypeTemplate
+import com.typewritermc.authoring.defaultLabel
+import com.typewritermc.expression.orIfBlank
 import com.typewritermc.types.ResourceId
 import com.typewritermc.types.TypeDisplay
 import com.typewritermc.types.TypeUse
@@ -54,6 +58,11 @@ import skirout.editor.v1.presentation.ChildrenElement
 import skirout.editor.v1.presentation.PresentationElement
 import skirout.editor.v1.presentation.PresentationNode
 import skirout.editor.v1.type_catalog.PathSegment
+
+/** Names an Example by its title, keeping the type display accent and icon. */
+object ExampleNaming : ExampleDisplay {
+    override fun ExampleDisplayScope.label() = title.orIfBlank(defaultLabel())
+}
 
 @TypewriterDisplay(
     name = "Example",
@@ -212,16 +221,26 @@ private class FixtureParent(
 }
 
 fun main(args: Array<String>) {
-    check(StoredContractDefinition.display == null)
+    check(
+        StoredContractDefinition.display ==
+            TypeDisplay(
+                name = "Stored contract",
+                description = "",
+                icon = TypeDisplay.DEFAULT_ICON,
+                color = TypeDisplay.DEFAULT_COLOR,
+            ),
+    )
+    check(StoredContractDefinition.searchKey == null)
     check(
         ExampleDefinition.display ==
             TypeDisplay(
                 name = "Example",
                 description = "Generated provider display fixture",
-                icon = "material-symbols:description",
+                icon = com.typewritermc.types.Icon.Iconify("material-symbols:description"),
                 color = com.typewritermc.types.Color(0xFF123456u),
             ),
     )
+    check(ExampleDefinition.searchKey == "example")
     val contractRepresentation = StoredContractDefinition.declaration.representation as RepresentationTemplate.Record
     check(contractRepresentation.fields.map { it.owner.name } == listOf("stored"))
     val valueRepresentation = StoredValueDefinition.declaration.representation as RepresentationTemplate.Record
@@ -245,6 +264,7 @@ fun main(args: Array<String>) {
                     GeneratedProviderKind.Resource,
                     GeneratedProviderKind.Configuration,
                     GeneratedProviderKind.Presentation,
+                    GeneratedProviderKind.ResourceDisplay,
                 ),
             runtimeServices = mapOf(PresentationRuntime::class.java to runtime),
             parentClassLoader = FixtureParent(requireNotNull(Example::class.java.classLoader)),
@@ -253,7 +273,10 @@ fun main(args: Array<String>) {
             check(contributions.configurations.size == 1)
             check(contributions.presentations.size == 1)
             check(contributions.resources.single().root == ExampleDefinition.id)
+            check(contributions.displays.single().provider.target == ResourceTarget.Type(TypeTemplate.Named(ExampleDefinition.id)))
             val assembly = contributions.assemble(CatalogAssemblyContext(CatalogGeneration("fixture")))
+            check(assembly.snapshot.resourceDisplays.single().target == ResourceTarget.Type(TypeTemplate.Named(ExampleDefinition.id)))
+            check(assembly.snapshot.types.single { it.definition.id == ExampleDefinition.id }.searchKey == "example")
             val configuredPaths = assembly.snapshot.configuration.filter { it.rules.isNotEmpty() }
                 .map { recipe -> recipe.relativePath.segments.joinToString(".") { segment ->
                     when (segment) {

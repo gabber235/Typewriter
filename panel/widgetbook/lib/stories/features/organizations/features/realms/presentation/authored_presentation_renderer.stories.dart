@@ -734,6 +734,7 @@ CheckedEditorCatalog _interactionCatalog() {
     skir.RepresentationTemplate representation, {
     List<skir.EffectiveFieldTemplate> effective = const [],
   }) => skir.PublishedType(
+    searchKey: null,
     placementField: null,
     definition: skir.TypeDefinition(
       id: id,
@@ -741,13 +742,14 @@ CheckedEditorCatalog _interactionCatalog() {
       representation: representation,
       parents: const [],
     ),
-    display: null,
+    display: defaultTypeDisplay(""),
     status: skir.DeclarationStatus.ready,
     effectiveFields: effective,
     ancestorTemplates: const [],
   );
   return CheckedEditorCatalog(
     skir.EditorCatalogWireSnapshot(
+      resourceDisplays: const [],
       generation: skir.CatalogGeneration(value: "catalog:interaction_story"),
       types: [
         published(

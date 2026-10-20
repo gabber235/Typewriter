@@ -109,13 +109,12 @@ enum UnresolvedLink(812200012) {
   unavailable_target: LinkOccurrenceId = 2;
 }
 
-/// Supplies a resource identity, authored content, and display descriptor to portable resource presentations.
+/// Supplies a resource identity and authored content to portable resource presentations.
 /// Catalog choices use CatalogPresentationSubject instead because they have no resource instance.
 struct PresentationSubject(812200013) {
   resource: ResourceId = 0;
   definition: ResourceDefinitionId = 1;
   content: AuthoringRecord = 2;
-  descriptor: DataValue = 3;
 }
 
 struct AuthoringDiagnostic(812200014) {

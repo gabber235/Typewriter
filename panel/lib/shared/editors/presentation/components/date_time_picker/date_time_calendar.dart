@@ -134,7 +134,8 @@ class _DateTimeCalendarState extends State<DateTimeCalendar> {
       _moveMonth(HardwareKeyboard.instance.isShiftPressed ? 12 : 1);
     } else if (key == LogicalKeyboardKey.enter ||
         key == LogicalKeyboardKey.space) {
-      if (widget.enabled && (widget.selectableDate?.call(_focusedDate) ?? true)) {
+      if (widget.enabled &&
+          (widget.selectableDate?.call(_focusedDate) ?? true)) {
         widget.onChanged(_focusedDate);
       }
     } else {

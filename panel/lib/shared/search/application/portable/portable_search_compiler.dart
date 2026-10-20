@@ -473,7 +473,9 @@ final class _PortableSearchEvaluation {
           .lexicalSchemas,
     );
     if (checked case CheckedExpressionReady(:final program)) {
-      final item = environment.catalog.collectionItem(program.result)?.declaredUse();
+      final item = environment.catalog
+          .collectionItem(program.result)
+          ?.declaredUse();
       if (item != null) return CompletePortablePresentationBinding(item);
     }
     return null;

@@ -25,6 +25,7 @@ import com.typewritermc.types.DataValue
 import com.typewritermc.types.EndpointId
 import com.typewritermc.types.FieldDeclaration
 import com.typewritermc.types.FieldOwner
+import com.typewritermc.types.Icon
 import com.typewritermc.types.LinkTarget
 import com.typewritermc.types.ListItem
 import com.typewritermc.types.Ref
@@ -371,7 +372,7 @@ private class QueryObservation(
                 DeclarationStatus.Ready,
                 emptyList(),
                 emptyList(),
-                TypeDisplay("Resource", "Description", "lucide:box", color),
+                TypeDisplay("Resource", "Description", Icon.Iconify("lucide:box"), color),
             ),
         )
 }

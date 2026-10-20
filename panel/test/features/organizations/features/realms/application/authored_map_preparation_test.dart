@@ -216,6 +216,7 @@ _MapFixture _fixture() {
   ) {
     final owner = skir.FieldOwner(definition: id(name), name: fieldName);
     return skir.PublishedType(
+      searchKey: null,
       placementField: null,
       definition: skir.TypeDefinition(
         id: id(name),
@@ -234,7 +235,7 @@ _MapFixture _fixture() {
         ),
       ),
       status: skir.DeclarationStatus.ready,
-      display: null,
+      display: defaultTypeDisplay(""),
       ancestorTemplates: const [],
       effectiveFields: [
         skir.EffectiveFieldTemplate(
@@ -257,6 +258,7 @@ _MapFixture _fixture() {
         skir.TypeTemplate.wrapScalar(skir.ScalarKind.text),
       ),
       skir.PublishedType(
+        searchKey: null,
         placementField: null,
         definition: skir.TypeDefinition(
           id: id("Entries"),
@@ -268,7 +270,7 @@ _MapFixture _fixture() {
           ),
         ),
         status: skir.DeclarationStatus.ready,
-        display: null,
+        display: defaultTypeDisplay(""),
         effectiveFields: const [],
         ancestorTemplates: const [],
       ),

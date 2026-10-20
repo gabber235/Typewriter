@@ -20,22 +20,24 @@ abstract class Book with _$Book {
 
   const Book._();
 
-  factory Book.fromAuthoring(skir.AuthoringResource resource) {
+  /// The title, color and icon come from the Book's [appearance], so a Book
+  /// reads the same here as on every other surface.
+  factory Book.fromAuthoring(
+    skir.AuthoringResource resource,
+    ResourceAppearance appearance,
+  ) {
     final content = resource.content;
-    final iconValue = content.authoredField("icon");
-    final icon =
-        iconValue?.authoredField("value")?.authoredString ??
-        iconValue?.authoredField("source")?.authoredString;
-    final color = content.authoredField("color")?.authoredInteger;
     final tags =
         content.authoredField("tags")?.authoredItems ?? const <skir.ListItem>[];
     return Book(
       bookId: resource.id,
-      title: (content.authoredField("title")?.authoredString).displayLabel(
-        "Unnamed Book",
-      ),
-      icon: icon.displayLabel("material-symbols:book"),
-      color: Color((color ?? BigInt.from(0xff3f51b5)).toUnsigned(32).toInt()),
+      title: appearance.label,
+      icon: switch (appearance.icon) {
+        skir.Icon_iconifyWrapper(:final value) => value,
+        skir.Icon_svgWrapper(:final value) => value,
+        _ => "material-symbols:book",
+      },
+      color: appearance.accent,
       tagIds: tags
           .map((item) => item.value.authoredLink?.target.resource)
           .nonNulls

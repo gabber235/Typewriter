@@ -67,7 +67,8 @@ final class _PresentationColorResolver {
     skir.PresentationInteractionState_kind.pressedConst => interaction.pressed,
     skir.PresentationInteractionState_kind.disabledConst =>
       interaction.disabled || !scope.enabled,
-    skir.PresentationInteractionState_kind.readOnlyConst => interaction.readOnly || scope.readOnly,
+    skir.PresentationInteractionState_kind.readOnlyConst =>
+      interaction.readOnly || scope.readOnly,
     skir.PresentationInteractionState_kind.invalidConst => interaction.invalid,
     _ => throw const PresentationColorFailure(
       "Presentation interaction state is unavailable",

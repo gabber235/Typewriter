@@ -208,14 +208,14 @@ Widget buildReferencePickerResult<T extends Object>(
   ReferencePickerCandidate<T> candidate,
   SearchResultRowContext row,
 ) {
-  final icon = candidate.display?.icon.trim();
+  final icon = candidate.display?.icon;
   return SearchResultRow(
     row: row,
     density: SearchResultDensity.card,
     accent: candidate.display?.searchResultAccent,
-    leading: icon == null || icon.isEmpty
+    leading: icon?.iconValue == null
         ? const Icon(Icons.link)
-        : Icones(icon),
+        : ResourceIcon(icon: icon),
     kindLabel: candidate.disabledReason == null ? "select" : "unavailable",
     body: SearchResultTitle(title: candidate.label),
     footer: referencePickerDescription(candidate),

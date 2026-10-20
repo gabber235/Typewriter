@@ -12074,6 +12074,87 @@ class DeclarationOwner private constructor(
     }
 }
 
+/**
+ * Which resources a display or operation applies to: every application of one type template,
+ * or every resource when nothing more specific is declared.
+ *
+ * Deeply immutable.
+ */
+sealed class ResourceTarget private constructor() {
+    /** The kind of variant held by a `ResourceTarget`. */
+    enum class Kind {
+        UNKNOWN,
+        ANY_RESOURCE_CONST,
+        TYPE_WRAPPER,
+    }
+
+    class Unknown @kotlin.Deprecated("For internal use", kotlin.ReplaceWith("skirout.editor.v1.type_catalog.ResourceTarget.UNKNOWN")) internal constructor(
+        internal val _kind: Kind,
+        internal override val _unrecognized: _UnrecognizedVariant<skirout.editor.v1.type_catalog.ResourceTarget>?,
+    ) : skirout.editor.v1.type_catalog.ResourceTarget() {
+        override val kind get() = _kind;
+
+        override fun equals(other: kotlin.Any?): kotlin.Boolean {
+            return other is skirout.editor.v1.type_catalog.ResourceTarget && other.kind == kind;
+        }
+
+        override fun hashCode(): kotlin.Int {
+            return kind.ordinal;
+        }
+    }
+
+    object ANY_RESOURCE : skirout.editor.v1.type_catalog.ResourceTarget() {
+        override val kind get() = Kind.ANY_RESOURCE_CONST;
+
+        override fun equals(other: kotlin.Any?): kotlin.Boolean {
+            return other is skirout.editor.v1.type_catalog.ResourceTarget && other.kind == Kind.ANY_RESOURCE_CONST;
+        }
+
+        override fun hashCode(): kotlin.Int {
+            return Kind.ANY_RESOURCE_CONST.ordinal;
+        }
+    }
+
+    class TypeWrapper(
+        val value: skirout.editor.v1.type_catalog.TypeTemplate,
+    ) : skirout.editor.v1.type_catalog.ResourceTarget() {
+        override val kind get() = Kind.TYPE_WRAPPER;
+
+        override fun equals(other: kotlin.Any?): kotlin.Boolean {
+            return other is skirout.editor.v1.type_catalog.ResourceTarget.TypeWrapper && value == other.value;
+        }
+
+        override fun hashCode(): kotlin.Int {
+            return this.value.hashCode() + 3575610;
+        }
+    }
+
+    internal open val _unrecognized: _UnrecognizedVariant<skirout.editor.v1.type_catalog.ResourceTarget>? get() = null;
+
+    abstract val kind: Kind;
+
+    override fun toString(): kotlin.String {
+        return build.skir.internal.toStringImpl(
+            this,
+            _SerializerRegistry.ResourceTargetSerializerImpl,
+        )
+    }
+
+    companion object {
+        /**
+         * Constant indicating an unknown [ResourceTarget].
+         * Default value for fields of type [ResourceTarget].
+         */
+        val UNKNOWN = @kotlin.Suppress("DEPRECATION") Unknown(Kind.UNKNOWN, null);
+
+        /** Serializer for [ResourceTarget] instances. */
+        val serializer get() = _SerializerRegistry.ResourceTargetSerializer;
+
+        /** Describes the [ResourceTarget] type. Provides runtime introspection capabilities. */
+        val typeDescriptor get() = _SerializerRegistry.ResourceTargetSerializerImpl.typeDescriptor;
+    }
+}
+
 private object _SerializerRegistry {
     val AppliedSchemaSerializerImpl = build.skir.internal.StructSerializer(
         recordId = "editor/v1/type_catalog.skir:AppliedSchema",
@@ -12947,6 +13028,19 @@ private object _SerializerRegistry {
     );
 
     val ResourceIdSerializer = build.skir.internal.makeSerializer(ResourceIdSerializerImpl);
+
+    val ResourceTargetSerializerImpl =
+        build.skir.internal.EnumSerializer.create<skirout.editor.v1.type_catalog.ResourceTarget, skirout.editor.v1.type_catalog.ResourceTarget.Unknown>(
+            recordId = "editor/v1/type_catalog.skir:ResourceTarget",
+            doc = "Which resources a display or operation applies to: every application of one type template,\nor every resource when nothing more specific is declared.",
+            getKindOrdinal = { it.kind.ordinal },
+            kindCount = skirout.editor.v1.type_catalog.ResourceTarget.Kind.values().size,
+            unknownInstance = skirout.editor.v1.type_catalog.ResourceTarget.UNKNOWN,
+            wrapUnrecognized = { @kotlin.Suppress("DEPRECATION") skirout.editor.v1.type_catalog.ResourceTarget.Unknown(skirout.editor.v1.type_catalog.ResourceTarget.Kind.UNKNOWN, it) },
+            getUnrecognized = { it._unrecognized },
+        );
+
+    val ResourceTargetSerializer = build.skir.internal.makeSerializer(ResourceTargetSerializerImpl);
 
     val RuleIdSerializerImpl = build.skir.internal.StructSerializer(
         recordId = "editor/v1/type_catalog.skir:RuleId",
@@ -14719,6 +14813,24 @@ private object _SerializerRegistry {
             { mut, v -> mut.value = v },
         );
         ResourceIdSerializerImpl.finalizeStruct();
+
+        ResourceTargetSerializerImpl.addWrapperVariant(
+            1,
+            "type",
+            skirout.editor.v1.type_catalog.ResourceTarget.Kind.TYPE_WRAPPER.ordinal,
+            _SerializerRegistry.TypeTemplateSerializer,
+            "",
+            { skirout.editor.v1.type_catalog.ResourceTarget.TypeWrapper(it) },
+            { it.value },
+        );
+        ResourceTargetSerializerImpl.addConstantVariant(
+            2,
+            "any_resource",
+            skirout.editor.v1.type_catalog.ResourceTarget.Kind.ANY_RESOURCE_CONST.ordinal,
+            "",
+            skirout.editor.v1.type_catalog.ResourceTarget.ANY_RESOURCE,
+        );
+        ResourceTargetSerializerImpl.finalizeEnum();
 
         RuleIdSerializerImpl.addField(
             "origin",

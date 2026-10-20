@@ -22,6 +22,8 @@ import com.typewritermc.presentation.PresentationDescriptor
 import com.typewritermc.presentation.PresentationTarget
 import com.typewritermc.types.ParameterKey
 import com.typewritermc.types.PresentationId
+import com.typewritermc.types.Resource
+import com.typewritermc.types.ResourceTarget
 import com.typewritermc.types.TypeDefinitionId
 import com.typewritermc.types.TypeTemplate
 import com.typewritermc.types.TypeUse
@@ -179,6 +181,54 @@ internal class ProviderAdapter(
                             ),
                             ownerClass,
                             targetNames.operationsScopeImpl.parameterizedOrSelf(arguments),
+                        ).build(),
+                ),
+        )
+    }
+
+    /**
+     * The display provider of an owner implementing `XDisplay` with [arguments], or the root `ResourceDisplay`
+     * when the target is the unpublished `Resource` marker, which applies to any resource.
+     */
+    fun display(arguments: List<TypeName>): FileSpec {
+        val anyResource = targetNames.source == Resource::class.asClassName()
+        val target =
+            if (anyResource) {
+                CodeBlock.of("%T", ResourceTarget.AnyResource::class)
+            } else {
+                CodeBlock.of("%T(%L)", ResourceTarget.Type::class, symbolicTarget())
+            }
+        val scope =
+            if (anyResource) {
+                CodeBlock.of("%T", Api.ResourceDisplaySubject)
+            } else {
+                CodeBlock.of("%T()", targetNames.displayScopeImpl.parameterizedOrSelf(arguments))
+            }
+        return file(
+            TypeSpec
+                .classBuilder(name)
+                .addSuperinterface(Api.GeneratedResourceDisplayProvider)
+                .addProperty(
+                    PropertySpec
+                        .builder("target", ResourceTarget::class, KModifier.OVERRIDE)
+                        .getter(FunSpec.getterBuilder().addStatement("return %L", target).build())
+                        .build(),
+                ).addFunction(
+                    FunSpec
+                        .builder("formulas")
+                        .addModifiers(KModifier.OVERRIDE)
+                        .returns(Api.DisplayFormulas)
+                        .addCode(
+                            """
+                            |return with(%T) {
+                            |    val scope = %L
+                            |    %T(label = scope.label(),♢accent = scope.accent(),♢icon = scope.icon())
+                            |}
+                            |
+                            """.trimMargin(),
+                            ownerClass,
+                            scope,
+                            Api.DisplayFormulas,
                         ).build(),
                 ),
         )

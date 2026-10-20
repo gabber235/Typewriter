@@ -14,6 +14,53 @@
 //   cargo add skir-client
 
 // ==============================================================================
+// struct ResourceDisplayFormulas
+// ==============================================================================
+
+/// Name, accent and icon formulas for resources of `target`. Each formula reads only the subject
+/// resource: its fields and its published type through the configured value binding.
+#[derive(Clone, Debug, PartialEq, Default)]
+pub struct ResourceDisplayFormulas {
+    pub target: crate::skirout::base::editor::v1::type_catalog::ResourceTarget,
+    pub label: crate::skirout::base::editor::v1::expression::ExpressionNode,
+    pub accent: crate::skirout::base::editor::v1::expression::ExpressionNode,
+    pub icon: crate::skirout::base::editor::v1::expression::ExpressionNode,
+    /// Set this to None when you're creating a struct.
+    pub _unrecognized: Option<crate::skir_client::UnrecognizedFields<ResourceDisplayFormulas>>,
+}
+
+impl ResourceDisplayFormulas {
+    pub fn default_ref() -> &'static ResourceDisplayFormulas {
+        static D: std::sync::LazyLock<ResourceDisplayFormulas> =
+            std::sync::LazyLock::new(ResourceDisplayFormulas::default);
+        &D
+    }
+}
+
+impl ResourceDisplayFormulas {
+    fn _adapter() -> &'static crate::skir_client::internal::StructAdapter<ResourceDisplayFormulas> {
+        static ADAPTER: std::sync::LazyLock<
+            crate::skir_client::internal::StructAdapter<ResourceDisplayFormulas>,
+        > = std::sync::LazyLock::new(|| {
+            crate::skir_client::internal::StructAdapter::new(
+                "editor/v1/catalog.skir",
+                "ResourceDisplayFormulas",
+                "Name, accent and icon formulas for resources of `target`. Each formula reads only the subject\nresource: its fields and its published type through the configured value binding.",
+                |x: &ResourceDisplayFormulas| &x._unrecognized,
+                |x: &mut ResourceDisplayFormulas, u| x._unrecognized = u,
+            )
+        });
+        &*ADAPTER
+    }
+    pub fn serializer() -> crate::skir_client::Serializer<ResourceDisplayFormulas> {
+        initialize_module_serializers();
+        crate::skir_client::internal::struct_serializer_from_static(
+            ResourceDisplayFormulas::_adapter(),
+        )
+    }
+}
+
+// ==============================================================================
 // struct ResourceDefinitionId
 // ==============================================================================
 
@@ -449,7 +496,10 @@ pub struct PublishedType {
     pub status: DeclarationStatus,
     pub effective_fields: crate::skir_client::KeyedVec<EffectiveFieldTemplate_byKey>,
     pub ancestor_templates: Vec<crate::skirout::base::editor::v1::type_catalog::NamedTypeTemplate>,
-    pub display: Option<TypeDisplay>,
+    pub display: TypeDisplay,
+    /// Search scope keyword for resources of this type, such as book in book:"Main story".
+    /// Present for every resource type and absent for every other type.
+    pub search_key: Option<String>,
     /// The single effective field typed as a placement, which editors and Realm read and write
     /// when they lay out resources of this type. Absent when the type declares no placement.
     pub placement_field: Option<crate::skirout::base::editor::v1::type_catalog::ValuePath>,
@@ -494,7 +544,7 @@ impl PublishedType {
 pub struct TypeDisplay {
     pub name: String,
     pub description: String,
-    pub icon: String,
+    pub icon: crate::skirout::base::kernel::v1::icon::Icon,
     pub color: crate::skirout::base::kernel::v1::color::Color,
     /// Set this to None when you're creating a struct.
     pub _unrecognized: Option<crate::skir_client::UnrecognizedFields<TypeDisplay>>,
@@ -994,6 +1044,7 @@ pub struct EditorCatalogWireSnapshot {
         Vec<crate::skirout::base::editor::v1::operation::ResourceOperationDefinition>,
     pub resource_operation_contributions:
         Vec<crate::skirout::base::editor::v1::operation::ResourceOperationContribution>,
+    pub resource_displays: Vec<ResourceDisplayFormulas>,
     /// Set this to None when you're creating a struct.
     pub _unrecognized: Option<crate::skir_client::UnrecognizedFields<EditorCatalogWireSnapshot>>,
 }
@@ -1982,6 +2033,43 @@ impl WatchEditorCatalogRequest {
 fn initialize_module_serializers() {
     static INIT: std::sync::LazyLock<()> = std::sync::LazyLock::new(|| {
         unsafe {
+            let a: *mut crate::skir_client::internal::StructAdapter<ResourceDisplayFormulas> =
+                ResourceDisplayFormulas::_adapter() as *const _ as *mut _;
+            (*a).add_field(
+                "target",
+                0,
+                crate::skirout::base::editor::v1::type_catalog::ResourceTarget::serializer(),
+                "",
+                |x: &ResourceDisplayFormulas| &x.target,
+                |x: &mut ResourceDisplayFormulas, v| x.target = v,
+            );
+            (*a).add_field(
+                "label",
+                1,
+                crate::skirout::base::editor::v1::expression::ExpressionNode::serializer(),
+                "",
+                |x: &ResourceDisplayFormulas| &x.label,
+                |x: &mut ResourceDisplayFormulas, v| x.label = v,
+            );
+            (*a).add_field(
+                "accent",
+                2,
+                crate::skirout::base::editor::v1::expression::ExpressionNode::serializer(),
+                "",
+                |x: &ResourceDisplayFormulas| &x.accent,
+                |x: &mut ResourceDisplayFormulas, v| x.accent = v,
+            );
+            (*a).add_field(
+                "icon",
+                3,
+                crate::skirout::base::editor::v1::expression::ExpressionNode::serializer(),
+                "",
+                |x: &ResourceDisplayFormulas| &x.icon,
+                |x: &mut ResourceDisplayFormulas, v| x.icon = v,
+            );
+            (*a).finalize();
+        }
+        unsafe {
             let a: *mut crate::skir_client::internal::StructAdapter<ResourceDefinitionId> =
                 ResourceDefinitionId::_adapter() as *const _ as *mut _;
             (*a).add_field(
@@ -2246,19 +2334,9 @@ fn initialize_module_serializers() {
                 |x: &PublishedType| &x.ancestor_templates,
                 |x: &mut PublishedType, v| x.ancestor_templates = v,
             );
-            (*a).add_field(
-                "display",
-                4,
-                crate::skir_client::Serializer::optional(
-                    crate::skir_client::internal::struct_serializer_from_static(
-                        TypeDisplay::_adapter(),
-                    ),
-                ),
-                "",
-                |x: &PublishedType| &x.display,
-                |x: &mut PublishedType, v| x.display = v,
-            );
-            (*a).add_field("placement_field", 5, crate::skir_client::Serializer::optional(crate::skirout::base::editor::v1::type_catalog::ValuePath::serializer()), "The single effective field typed as a placement, which editors and Realm read and write\nwhen they lay out resources of this type. Absent when the type declares no placement.", |x: &PublishedType| &x.placement_field, |x: &mut PublishedType, v| x.placement_field = v);
+            (*a).add_field("display", 4, crate::skir_client::internal::struct_serializer_from_static(TypeDisplay::_adapter()), "", |x: &PublishedType| &x.display, |x: &mut PublishedType, v| x.display = v);
+            (*a).add_field("search_key", 5, crate::skir_client::Serializer::optional(crate::skir_client::Serializer::string()), "Search scope keyword for resources of this type, such as book in book:\"Main story\".\nPresent for every resource type and absent for every other type.", |x: &PublishedType| &x.search_key, |x: &mut PublishedType, v| x.search_key = v);
+            (*a).add_field("placement_field", 6, crate::skir_client::Serializer::optional(crate::skirout::base::editor::v1::type_catalog::ValuePath::serializer()), "The single effective field typed as a placement, which editors and Realm read and write\nwhen they lay out resources of this type. Absent when the type declares no placement.", |x: &PublishedType| &x.placement_field, |x: &mut PublishedType, v| x.placement_field = v);
             (*a).finalize();
         }
         unsafe {
@@ -2283,7 +2361,7 @@ fn initialize_module_serializers() {
             (*a).add_field(
                 "icon",
                 2,
-                crate::skir_client::Serializer::string(),
+                crate::skirout::base::kernel::v1::icon::Icon::serializer(),
                 "",
                 |x: &TypeDisplay| &x.icon,
                 |x: &mut TypeDisplay, v| x.icon = v,
@@ -2762,6 +2840,18 @@ fn initialize_module_serializers() {
             );
             (*a).add_field("resource_operations", 12, crate::skir_client::Serializer::array(crate::skirout::base::editor::v1::operation::ResourceOperationDefinition::serializer()), "", |x: &EditorCatalogWireSnapshot| &x.resource_operations, |x: &mut EditorCatalogWireSnapshot, v| x.resource_operations = v);
             (*a).add_field("resource_operation_contributions", 13, crate::skir_client::Serializer::array(crate::skirout::base::editor::v1::operation::ResourceOperationContribution::serializer()), "", |x: &EditorCatalogWireSnapshot| &x.resource_operation_contributions, |x: &mut EditorCatalogWireSnapshot, v| x.resource_operation_contributions = v);
+            (*a).add_field(
+                "resource_displays",
+                14,
+                crate::skir_client::Serializer::array(
+                    crate::skir_client::internal::struct_serializer_from_static(
+                        ResourceDisplayFormulas::_adapter(),
+                    ),
+                ),
+                "",
+                |x: &EditorCatalogWireSnapshot| &x.resource_displays,
+                |x: &mut EditorCatalogWireSnapshot, v| x.resource_displays = v,
+            );
             (*a).finalize();
         }
         unsafe {

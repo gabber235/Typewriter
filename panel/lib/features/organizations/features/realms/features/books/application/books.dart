@@ -15,7 +15,12 @@ AsyncValue<List<Book>> workingBooks(Ref ref) {
   return AsyncData(
     source.requireValue.entries.values
         .where((entry) => entry.definition == coreBookResourceDefinition)
-        .map(Book.fromAuthoring)
+        .map(
+          (entry) => Book.fromAuthoring(
+            entry,
+            source.requireValue.catalog.appearanceOf(entry.content),
+          ),
+        )
         .toList(growable: false),
   );
 }

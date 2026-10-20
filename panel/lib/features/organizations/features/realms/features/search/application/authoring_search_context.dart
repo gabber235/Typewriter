@@ -150,11 +150,21 @@ extension AuthoringQueryOperations on SearchQueryContext {
   }) {
     final books = document.entries.values
         .where((entry) => entry.definition == coreBookResourceDefinition)
-        .map(Book.fromAuthoring)
+        .map(
+          (entry) => Book.fromAuthoring(
+            entry,
+            document.catalog.appearanceOf(entry.content),
+          ),
+        )
         .toList();
     final pages = document.entries.values
         .where((entry) => entry.definition == corePageResourceDefinition)
-        .map(Page.fromAuthoring)
+        .map(
+          (entry) => Page.fromAuthoring(
+            entry,
+            document.catalog.appearanceOf(entry.content),
+          ),
+        )
         .toList();
     final book = resolveBook(books);
     final page = resolvePage(books, pages);

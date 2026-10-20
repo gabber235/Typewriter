@@ -181,11 +181,13 @@ _CreationFixture _fixture() {
     value: "test.generic_resource",
   );
   final wire = skir.EditorCatalogWireSnapshot(
+    resourceDisplays: const [],
     resourceOperations: const [],
     resourceOperationContributions: const [],
     generation: generation,
     types: [
       skir.PublishedType(
+        searchKey: null,
         placementField: null,
         definition: skir.TypeDefinition(
           id: definition,
@@ -199,7 +201,7 @@ _CreationFixture _fixture() {
         status: skir.DeclarationStatus.ready,
         effectiveFields: const [],
         ancestorTemplates: const [],
-        display: null,
+        display: defaultTypeDisplay(""),
       ),
     ],
     relations: const [],

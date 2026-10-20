@@ -1158,6 +1158,7 @@ skir.PublishedType _type(
   skir.TypeDefinitionId definition,
   List<skir.TypeDefinitionId> ancestors,
 ) => skir.PublishedType(
+  searchKey: null,
   placementField: null,
   definition: skir.TypeDefinition(
     id: definition,
@@ -1199,7 +1200,7 @@ skir.PublishedType _type(
     for (final ancestor in ancestors)
       skir.NamedTypeTemplate(definition: ancestor, arguments: const []),
   ],
-  display: null,
+  display: defaultTypeDisplay(""),
 );
 
 skir.BoundControl _control(String field) =>

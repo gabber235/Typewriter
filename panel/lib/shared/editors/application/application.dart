@@ -24,4 +24,6 @@ export "presentation_binding_ids.dart";
 export "presentation_expression_checking.dart";
 export "reference_resources.dart";
 export "resource_action_dispatcher.dart";
+export "resource_appearance.dart";
 export "trusted_local_editor_catalog.dart";
+export "type_selection.dart";

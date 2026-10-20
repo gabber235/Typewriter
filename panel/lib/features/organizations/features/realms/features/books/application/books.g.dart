@@ -58,7 +58,7 @@ final class WorkingBooksProvider
   }
 }
 
-String _$workingBooksHash() => r'f4bf928031fcce20a2a79012e8e9e0f48fba8ce9';
+String _$workingBooksHash() => r'f81d9c580e0e98f3ffd9674a48820912422816bd';
 
 @ProviderFor(workingBook)
 final workingBookProvider = WorkingBookFamily._();

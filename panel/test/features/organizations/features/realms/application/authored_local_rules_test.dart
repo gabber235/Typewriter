@@ -458,6 +458,7 @@ _nestedRuleFixture({
   );
   final checked = CheckedEditorCatalog(
     skir.EditorCatalogWireSnapshot(
+      resourceDisplays: const [],
       resourceOperations: const [],
       resourceOperationContributions: const [],
       generation: generation,
@@ -502,8 +503,9 @@ _nestedRuleFixture({
         ),
         if (collection)
           skir.PublishedType(
+            searchKey: null,
             placementField: null,
-            display: null,
+            display: defaultTypeDisplay(""),
             definition: skir.TypeDefinition(
               id: placementList,
               parameters: const [],
@@ -632,8 +634,9 @@ skir.PublishedType _publishedRecord({
   required List<skir.FieldDeclaration> fields,
   required List<skir.EffectiveFieldTemplate> effectiveFields,
 }) => skir.PublishedType(
+  searchKey: null,
   placementField: null,
-  display: null,
+  display: defaultTypeDisplay(""),
   definition: skir.TypeDefinition(
     id: definition,
     parameters: const [],

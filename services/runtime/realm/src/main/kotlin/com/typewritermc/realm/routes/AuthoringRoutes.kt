@@ -3,6 +3,7 @@ package com.typewritermc.realm.routes
 import com.typewritermc.authoring.ArgumentLocation
 import com.typewritermc.authoring.PreparedEditResult
 import com.typewritermc.authoring.TypeSelection
+import com.typewritermc.authoring.definition
 import com.typewritermc.authoring.skir.SkirAuthoringOperationCodec
 import com.typewritermc.checking.CatalogGeneration
 import com.typewritermc.realm.authoring.AuthoringViewStore
@@ -226,13 +227,6 @@ private fun TypePreviewResult.toWire(): SkirTypePreviewResult =
             )
         }
     }
-
-private val TypeSelection.definition
-    get() =
-        when (this) {
-            is TypeSelection.Complete -> use.definition
-            is TypeSelection.Pending -> definition
-        }
 
 private fun TypeArgumentChangePreview.toWire(): SkirTypeArgumentChangePreview =
     SkirTypeArgumentChangePreview(

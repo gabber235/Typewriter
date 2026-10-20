@@ -238,6 +238,7 @@ class GeneratedProviderLoader {
                 GeneratedProviderKind.Registrar -> GeneratedRuntimeRegistrarProvider::class.java
                 GeneratedProviderKind.CollectionProjection -> GeneratedCollectionProjectionProvider::class.java
                 GeneratedProviderKind.ResourceOperation -> GeneratedResourceOperationProvider::class.java
+                GeneratedProviderKind.ResourceDisplay -> GeneratedResourceDisplayProvider::class.java
             }
         require(expected.isAssignableFrom(providerClass)) {
             "Generated ${kind.key} provider ${providerClass.name} must implement ${expected.name}."
@@ -426,13 +427,15 @@ class GeneratedProviderLoader {
         val registrarIds = mutableSetOf<Pair<ContributionSourceId, RuntimeRegistrarId>>()
         val collectionProjections = mutableListOf<OwnedCollectionProjection>()
         val operations = mutableListOf<com.typewritermc.operations.OperationDeclaration>()
+        val displays = mutableListOf<OwnedResourceDisplay>()
 
         loaded.forEach { loadedProvider ->
             val origin = loadedProvider.origin
             when (loadedProvider.entry.kind) {
                 GeneratedProviderKind.Type -> {
                     val provider = loadedProvider.require<GeneratedTypeProvider>()
-                    declarations += OwnedTypeDeclaration(origin, provider.definition, provider.display, provider.nativeClass)
+                    declarations +=
+                        OwnedTypeDeclaration(origin, provider.definition, provider.display, provider.nativeClass, provider.searchKey)
                 }
 
                 GeneratedProviderKind.NativeBinding -> {
@@ -489,6 +492,10 @@ class GeneratedProviderLoader {
                     operations += loadedProvider.require<GeneratedResourceOperationProvider>().contribute(origin)
                 }
 
+                GeneratedProviderKind.ResourceDisplay -> {
+                    displays += OwnedResourceDisplay(origin, loadedProvider.require<GeneratedResourceDisplayProvider>())
+                }
+
                 GeneratedProviderKind.CollectionProjection -> {
                     collectionProjections +=
                         OwnedCollectionProjection(
@@ -516,6 +523,7 @@ class GeneratedProviderLoader {
                     nativeBindings = nativeBindings,
                     checks = ownedChecks,
                     operations = operations,
+                    displays = displays,
                 ),
             capabilities = capabilities,
             registrars = registrars,

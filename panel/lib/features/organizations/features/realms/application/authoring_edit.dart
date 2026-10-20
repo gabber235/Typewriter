@@ -1255,8 +1255,7 @@ final class AuthoringEdit implements PortableAuthoringEdit {
   ) {
     final current = _resources[resource];
     if (current == null) throw StateError("The resource is absent");
-    if (_configurationRoot(current.configuration) !=
-        _configurationRoot(configuration)) {
+    if (current.configuration.definition != configuration.definition) {
       throw StateError("Resource configuration must retain its root type");
     }
     _observe(skir.EditExpectation.createResource(id: resource, expected: null));
@@ -1999,13 +1998,6 @@ bool _containsLink(skir.DataValue value) => switch (value) {
   ),
   _ => false,
 };
-
-skir.TypeDefinitionId? _configurationRoot(skir.TypeSelection selection) =>
-    switch (selection) {
-      skir.TypeSelection_completeWrapper(:final value) => value.definition,
-      skir.TypeSelection_pendingWrapper(:final value) => value.definition,
-      _ => null,
-    };
 
 final class _AuthoringDefaults {
   const _AuthoringDefaults(this.catalog);

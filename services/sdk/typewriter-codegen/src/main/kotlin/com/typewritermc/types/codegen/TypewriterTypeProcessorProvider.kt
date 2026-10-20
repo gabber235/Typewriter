@@ -42,6 +42,7 @@ import com.typewritermc.codegen.isOneOf
 import com.typewritermc.codegen.isType
 import com.typewritermc.codegen.portableScalarKind
 import com.typewritermc.codegen.rawAnnotation
+import com.typewritermc.codegen.sentenceCase
 import com.typewritermc.configuration.FieldPatternSegment
 import com.typewritermc.configuration.RelativeFieldPattern
 import com.typewritermc.discovery.GeneratedContract
@@ -54,6 +55,7 @@ import com.typewritermc.types.DeletionPolicy
 import com.typewritermc.types.EndpointBindingTemplate
 import com.typewritermc.types.EndpointCardinality
 import com.typewritermc.types.EndpointSlot
+import com.typewritermc.types.Icon
 import com.typewritermc.types.Many
 import com.typewritermc.types.One
 import com.typewritermc.types.ParameterKey
@@ -75,6 +77,7 @@ import com.typewritermc.types.TypewriterTypeImports
 import com.typewritermc.types.codegen.emit.CheckEmitter
 import com.typewritermc.types.codegen.emit.ConfigurationEmitter
 import com.typewritermc.types.codegen.emit.DefinitionEmitter
+import com.typewritermc.types.codegen.emit.DisplayEmitter
 import com.typewritermc.types.codegen.emit.DraftEmitter
 import com.typewritermc.types.codegen.emit.ExpressionsEmitter
 import com.typewritermc.types.codegen.emit.FieldsEmitter
@@ -108,6 +111,7 @@ internal val SDK_EMITTERS: List<SdkEmitter> =
         ConfigurationEmitter,
         OperationsEmitter,
         PresentationEmitter,
+        DisplayEmitter,
         CheckEmitter,
         DraftEmitter,
         DefinitionEmitter,
@@ -384,6 +388,7 @@ private class TypewriterTypeProcessor(
         if (!generatedTypes.add(qualified)) return
         val accessors = declaration.effectiveAccessorFields(typeDefinition, conversion) ?: return
         val display = declaration.validatedDisplay() ?: return
+        val searchKey = declaration.validatedSearchKey() ?: return
         val parameters = declaration.typeParameters.toTypeParameterResolver()
         val model =
             context(parameters) {
@@ -417,7 +422,8 @@ private class TypewriterTypeProcessor(
                                 },
                         ),
                     references = references,
-                    display = display.value,
+                    display = display,
+                    searchKey = searchKey.value,
                 )
             }
         val file = GeneratedFile.builder(model.names.definition.packageName, model.names.file)
@@ -440,15 +446,47 @@ private class TypewriterTypeProcessor(
             )
         }
 
-    /** The display of this declaration after validating its color; [Validated.value] is null without a display. */
-    private fun KSClassDeclaration.validatedDisplay(): Validated<TypeDisplay?>? {
-        val display = annotation<TypewriterDisplay>() ?: return Validated(null)
-        val color = runCatching { Color.parseRgb(display.color) }.getOrNull()
-        if (color == null) {
-            logger.error("TypewriterDisplay color must use #RRGGBB syntax, found ${display.color}.", this)
+    /**
+     * The complete display of this declaration: `@TypewriterDisplay` parts where given, otherwise the class name in
+     * sentence case and the framework default icon and color. Null after reporting an invalid color.
+     */
+    private fun KSClassDeclaration.validatedDisplay(): TypeDisplay? {
+        val display = annotation<TypewriterDisplay>()
+        val color =
+            display?.color?.takeIf(String::isNotEmpty)?.let { value ->
+                runCatching { Color.parseRgb(value) }.getOrNull() ?: run {
+                    logger.error("TypewriterDisplay color must use #RRGGBB syntax, found $value.", this)
+                    return null
+                }
+            }
+        return TypeDisplay(
+            name = display?.name?.takeIf(String::isNotBlank) ?: simpleName.asString().sentenceCase(),
+            description = display?.description.orEmpty(),
+            icon = display?.icon?.takeIf(String::isNotBlank)?.let(Icon::parse) ?: TypeDisplay.DEFAULT_ICON,
+            color = color ?: TypeDisplay.DEFAULT_COLOR,
+        )
+    }
+
+    /**
+     * The search scope keyword of a resource declaration, `@TypewriterDisplay(searchKey)` or the class name in lower
+     * case; [Validated.value] is null for a type that is not a resource. Null after reporting an invalid key.
+     */
+    private fun KSClassDeclaration.validatedSearchKey(): Validated<String?>? {
+        val declared = annotation<TypewriterDisplay>()?.searchKey.orEmpty()
+        if (!implements(Resource::class)) {
+            if (declared.isEmpty()) return Validated(null)
+            logger.error("TypewriterDisplay searchKey requires a type that implements Resource.", this)
             return null
         }
-        return Validated(TypeDisplay(display.name, display.description, display.icon, color))
+        val key = declared.ifEmpty { simpleName.asString().lowercase() }
+        if (!SEARCH_KEY.matches(key)) {
+            logger.error(
+                "TypewriterDisplay searchKey must be a lower case letter followed by lower case letters or digits, found $key.",
+                this,
+            )
+            return null
+        }
+        return Validated(key)
     }
 
     private fun KSClassDeclaration.effectiveAccessorFields(
@@ -556,10 +594,27 @@ private class TypewriterTypeProcessor(
             val adapter = ProviderAdapter(owner, target, kind)
             val file =
                 when (kind) {
-                    GeneratedContract.Kind.Configuration -> adapter.configuration()
-                    GeneratedContract.Kind.Presentation -> adapter.presentation()
-                    GeneratedContract.Kind.Check -> adapter.check()
-                    GeneratedContract.Kind.Operations -> operationsAdapter(adapter, owner, contract, target)
+                    GeneratedContract.Kind.Configuration -> {
+                        adapter.configuration()
+                    }
+
+                    GeneratedContract.Kind.Presentation -> {
+                        adapter.presentation()
+                    }
+
+                    GeneratedContract.Kind.Check -> {
+                        adapter.check()
+                    }
+
+                    GeneratedContract.Kind.Operations -> {
+                        operationsAdapter(adapter, owner, contract, target)
+                    }
+
+                    GeneratedContract.Kind.Display -> {
+                        adapter.display(
+                            contract.arguments.map { requireNotNull(it.type).resolve().toTypeName() },
+                        )
+                    }
                 } ?: return@forEach
             output.provide(file, adapter.name, kind.providerKind, owner)
         }
@@ -786,6 +841,8 @@ private fun KSType.isResolvedTypeGraph(): Boolean =
         arguments.all { argument ->
             argument.variance == Variance.STAR || argument.type?.resolve()?.isResolvedTypeGraph() == true
         }
+
+private val SEARCH_KEY = Regex("[a-z][a-z0-9]*")
 
 private const val ARTIFACT_OPTION = "typewriter.artifactId"
 private const val SOURCE_PART_OPTION = "typewriter.sourcePart"

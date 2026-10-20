@@ -17,16 +17,18 @@ import com.typewritermc.presentation.TextParagraph
 import com.typewritermc.presentation.TextSizing
 import com.typewritermc.presentation.TextStyle
 import com.typewritermc.presentation.asPresentationColor
+import com.typewritermc.presentation.icon
 import com.typewritermc.presentation.literalColor
 import com.typewritermc.presentation.monochromeOn
 import com.typewritermc.presentation.on
 import com.typewritermc.presentation.stateColor
 import com.typewritermc.types.Color
+import com.typewritermc.types.Icon
 
 /** Displays an entry identity with a fixed inset frame and an icon at compact widths. */
 fun Layout.entryNode(
     title: Expr<String, Handled>,
-    iconName: Expr<String, Handled>,
+    icon: Expr<Icon, Handled>,
     accent: Expr<Color, Handled>,
 ) {
     val fill = accent.asPresentationColor()
@@ -53,7 +55,7 @@ fun Layout.entryNode(
                 adaptiveLeading {
                     padding(PresentationInsets(12.0, 8.0, 12.0, 8.0))
                     compactPadding(PresentationInsets(4.0, 4.0, 4.0, 4.0))
-                    leading { icon(iconName, IconOptions(size = 18.0)) }
+                    leading { icon(icon, IconOptions(size = 18.0)) }
                     center {
                         align(PresentationAlignment.Center) {
                             text(

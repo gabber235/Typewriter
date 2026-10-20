@@ -26,7 +26,12 @@ void main() {
       final element = tester.element(input);
       final editable = tester.widget<EditableText>(find.byType(EditableText));
       expect(
-        Tag.fromAuthoring(fixture.editing.document.entry(_tag)!).name,
+        Tag.fromAuthoring(
+          fixture.editing.document.entry(_tag)!,
+          fixture.editing.document.catalog.appearanceOf(
+            fixture.editing.document.entry(_tag)!.content,
+          ),
+        ).name,
         "Renamed",
       );
       expect(fixture.editing.state.groups, hasLength(1));
@@ -112,7 +117,12 @@ void main() {
       await tester.pump();
       expect(fixture.boundary.requests, hasLength(1));
       expect(
-        Tag.fromAuthoring(fixture.editing.document.entry(_tag)!).name,
+        Tag.fromAuthoring(
+          fixture.editing.document.entry(_tag)!,
+          fixture.editing.document.catalog.appearanceOf(
+            fixture.editing.document.entry(_tag)!.content,
+          ),
+        ).name,
         "Later name",
       );
       actions.add(_inspectorActions());
@@ -124,7 +134,12 @@ void main() {
       );
       await tester.pump();
       expect(
-        Tag.fromAuthoring(fixture.editing.document.entry(_tag)!).name,
+        Tag.fromAuthoring(
+          fixture.editing.document.entry(_tag)!,
+          fixture.editing.document.catalog.appearanceOf(
+            fixture.editing.document.entry(_tag)!.content,
+          ),
+        ).name,
         "Later name",
       );
       actions.add(_inspectorActions());
@@ -164,7 +179,12 @@ void main() {
       await tester.tap(find.text("Discard"));
       await tester.pumpAndSettle();
       expect(
-        Tag.fromAuthoring(fixture.editing.document.entry(_tag)!).name,
+        Tag.fromAuthoring(
+          fixture.editing.document.entry(_tag)!,
+          fixture.editing.document.catalog.appearanceOf(
+            fixture.editing.document.entry(_tag)!.content,
+          ),
+        ).name,
         "Tag",
       );
       expect(fixture.editing.hasPendingWork, isFalse);
@@ -191,7 +211,12 @@ void main() {
     );
     expect(_inspectorActions(), containsAll(["Discard", "Retry", "Apply"]));
     expect(
-      Tag.fromAuthoring(fixture.editing.document.entry(_tag)!).name,
+      Tag.fromAuthoring(
+        fixture.editing.document.entry(_tag)!,
+        fixture.editing.document.catalog.appearanceOf(
+          fixture.editing.document.entry(_tag)!.content,
+        ),
+      ).name,
       "Retained draft",
     );
     expect(fixture.boundary.requests, hasLength(1));
@@ -215,7 +240,12 @@ void main() {
 
         await _move(tester, movement);
         expect(
-          Tag.fromAuthoring(fixture.editing.document.entry(_tag)!).placement.x,
+          Tag.fromAuthoring(
+            fixture.editing.document.entry(_tag)!,
+            fixture.editing.document.catalog.appearanceOf(
+              fixture.editing.document.entry(_tag)!.content,
+            ),
+          ).placement.x,
           3,
         );
         expect(fixture.boundary.requests, isEmpty);
@@ -287,7 +317,12 @@ void main() {
     await _move(tester, _Movement.keyboard);
     await _move(tester, _Movement.keyboard);
     expect(
-      Tag.fromAuthoring(fixture.editing.document.entry(_tag)!).placement.x,
+      Tag.fromAuthoring(
+        fixture.editing.document.entry(_tag)!,
+        fixture.editing.document.catalog.appearanceOf(
+          fixture.editing.document.entry(_tag)!.content,
+        ),
+      ).placement.x,
       4,
     );
     expect(fixture.editing.state.groups, hasLength(2));
@@ -310,7 +345,12 @@ void main() {
     await tester.pump();
     await tester.pump();
     expect(
-      Tag.fromAuthoring(fixture.editing.document.entry(_tag)!).placement.x,
+      Tag.fromAuthoring(
+        fixture.editing.document.entry(_tag)!,
+        fixture.editing.document.catalog.appearanceOf(
+          fixture.editing.document.entry(_tag)!.content,
+        ),
+      ).placement.x,
       4,
     );
     actions.add(_inspectorActions());
@@ -363,7 +403,12 @@ void main() {
     );
     expect(fixture.boundary.observations, isEmpty);
     expect(
-      Tag.fromAuthoring(fixture.editing.document.entry(_tag)!).placement.x,
+      Tag.fromAuthoring(
+        fixture.editing.document.entry(_tag)!,
+        fixture.editing.document.catalog.appearanceOf(
+          fixture.editing.document.entry(_tag)!.content,
+        ),
+      ).placement.x,
       3,
     );
 
@@ -372,7 +417,12 @@ void main() {
     expect(fixture.editing.hasPendingWork, isFalse);
     expect(_inspectorActions(), isEmpty);
     expect(
-      Tag.fromAuthoring(fixture.editing.document.entry(_tag)!).placement.x,
+      Tag.fromAuthoring(
+        fixture.editing.document.entry(_tag)!,
+        fixture.editing.document.catalog.appearanceOf(
+          fixture.editing.document.entry(_tag)!.content,
+        ),
+      ).placement.x,
       2,
     );
     expect(fixture.boundary.requests, hasLength(1));
@@ -403,7 +453,12 @@ void main() {
     );
     expect(_inspectorActions(), isNot(contains("Discard")));
     expect(
-      Tag.fromAuthoring(fixture.editing.document.entry(_tag)!).placement.x,
+      Tag.fromAuthoring(
+        fixture.editing.document.entry(_tag)!,
+        fixture.editing.document.catalog.appearanceOf(
+          fixture.editing.document.entry(_tag)!.content,
+        ),
+      ).placement.x,
       3,
     );
 
@@ -444,7 +499,12 @@ void main() {
     expect(fixture.editing.hasPendingWork, isFalse);
     expect(_inspectorActions(), isEmpty);
     expect(
-      Tag.fromAuthoring(fixture.editing.document.entry(_tag)!).name,
+      Tag.fromAuthoring(
+        fixture.editing.document.entry(_tag)!,
+        fixture.editing.document.catalog.appearanceOf(
+          fixture.editing.document.entry(_tag)!.content,
+        ),
+      ).name,
       "Tag",
     );
     expect(fixture.boundary.requests, isEmpty);

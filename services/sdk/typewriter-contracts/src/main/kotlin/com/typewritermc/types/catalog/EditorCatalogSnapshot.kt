@@ -12,6 +12,7 @@ import com.typewritermc.presentation.RoleFallback
 import com.typewritermc.types.EndpointBindingTemplate
 import com.typewritermc.types.FieldOwner
 import com.typewritermc.types.RelationContract
+import com.typewritermc.types.ResourceTarget
 import com.typewritermc.types.TypeDefinition
 import com.typewritermc.types.TypeDisplay
 import com.typewritermc.types.TypeTemplate
@@ -19,10 +20,12 @@ import com.typewritermc.types.TypeUse
 import com.typewritermc.types.skir.SkirTypeCodec
 import com.typewritermc.types.skir.getOrThrow
 import skirout.editor.v1.catalog.EditorCatalogWireSnapshot
+import skirout.editor.v1.expression.ExpressionNode
 
 /**
  * One declared type as published to editors.
  *
+ * [searchKey] is the search scope keyword of a resource type and null for every type that is not a resource.
  * [placementField] is the single effective field typed as a placement; editors and Realm read and write layout
  * through it instead of assuming a field name. It is null when the type has no placement field.
  */
@@ -31,8 +34,20 @@ data class PublishedType(
     val status: DeclarationStatus,
     val effectiveFields: List<EffectiveFieldTemplate>,
     val ancestorTemplates: List<TypeTemplate.Named>,
-    val display: TypeDisplay? = null,
+    val display: TypeDisplay,
+    val searchKey: String? = null,
     val placementField: ValuePath? = null,
+)
+
+/**
+ * Compiled name, accent and icon formulas of one declared resource display. Each formula reads only the subject
+ * resource through the configured value binding; editors evaluate the most specific formulas for a resource.
+ */
+data class ResourceDisplayFormulas(
+    val target: ResourceTarget,
+    val label: ExpressionNode,
+    val accent: ExpressionNode,
+    val icon: ExpressionNode,
 )
 
 data class EffectiveFieldTemplate(
@@ -67,6 +82,7 @@ data class EditorCatalogSnapshot(
     val roleFallbacks: List<RoleFallback> = emptyList(),
     val resourceOperations: List<com.typewritermc.operations.ResourceOperationDefinition> = emptyList(),
     val resourceOperationContributions: List<com.typewritermc.operations.ResourceOperationContribution> = emptyList(),
+    val resourceDisplays: List<ResourceDisplayFormulas> = emptyList(),
 )
 
 fun EditorCatalogSnapshot.toWire(): EditorCatalogWireSnapshot = SkirTypeCodec.encode(this).getOrThrow()

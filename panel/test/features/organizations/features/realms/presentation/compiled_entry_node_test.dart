@@ -313,8 +313,10 @@ AuthoringDocument _document({String? icon}) {
               for (final type in catalog.snapshot.types)
                 if (type.definition.id == actual.definition)
                   (type.toMutable()
-                        ..display = (type.display!.toMutable()..icon = icon)
-                            .toFrozen())
+                        ..display =
+                            (type.display.toMutable()
+                                  ..icon = skir.Icon.wrapIconify(icon))
+                                .toFrozen())
                       .toFrozen()
                 else
                   type,

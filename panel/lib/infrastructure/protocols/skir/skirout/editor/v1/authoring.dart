@@ -1976,12 +1976,11 @@ sealed class PresentationSubject_orMutable {
   _lib_editor_v1_type_catalog.ResourceId_orMutable get resource;
   _lib_editor_v1_catalog.ResourceDefinitionId_orMutable get definition;
   _lib_editor_v1_type_catalog.AuthoringRecord_orMutable get content;
-  _lib_editor_v1_type_catalog.DataValue get descriptor;
 
   PresentationSubject toFrozen();
 }
 
-/// Supplies a resource identity, authored content, and display descriptor to portable resource presentations.
+/// Supplies a resource identity and authored content to portable resource presentations.
 /// Catalog choices use CatalogPresentationSubject instead because they have no resource instance.
 ///
 /// Deeply immutable.
@@ -1992,35 +1991,25 @@ final class PresentationSubject implements PresentationSubject_orMutable {
   final _lib_editor_v1_catalog.ResourceDefinitionId definition;
   @_core.override
   final _lib_editor_v1_type_catalog.AuthoringRecord content;
-  @_core.override
-  final _lib_editor_v1_type_catalog.DataValue descriptor;
   _skir.internal__UnrecognizedFields? _u;
 
   factory PresentationSubject({
     required _lib_editor_v1_type_catalog.ResourceId_orMutable resource,
     required _lib_editor_v1_catalog.ResourceDefinitionId_orMutable definition,
     required _lib_editor_v1_type_catalog.AuthoringRecord_orMutable content,
-    required _lib_editor_v1_type_catalog.DataValue descriptor,
   }) => PresentationSubject._(
     resource.toFrozen(),
     definition.toFrozen(),
     content.toFrozen(),
-    descriptor,
   );
 
-  PresentationSubject._(
-    this.resource,
-    this.definition,
-    this.content,
-    this.descriptor,
-  );
+  PresentationSubject._(this.resource, this.definition, this.content);
 
   /// Default instance with all fields set to their default values.
   static final defaultInstance = PresentationSubject._(
     _lib_editor_v1_type_catalog.ResourceId.defaultInstance,
     _lib_editor_v1_catalog.ResourceDefinitionId.defaultInstance,
     _lib_editor_v1_type_catalog.AuthoringRecord.defaultInstance,
-    _lib_editor_v1_type_catalog.DataValue.unknown,
   );
 
   /// Returns a new mutable instance.
@@ -2029,7 +2018,6 @@ final class PresentationSubject implements PresentationSubject_orMutable {
     _lib_editor_v1_type_catalog.ResourceId.defaultInstance,
     _lib_editor_v1_catalog.ResourceDefinitionId.defaultInstance,
     _lib_editor_v1_type_catalog.AuthoringRecord.defaultInstance,
-    _lib_editor_v1_type_catalog.DataValue.unknown,
   );
 
   /// Returns this instance (no-op).
@@ -2042,7 +2030,6 @@ final class PresentationSubject implements PresentationSubject_orMutable {
     this.resource,
     this.definition,
     this.content,
-    this.descriptor,
   );
 
   @_core.override
@@ -2062,7 +2049,6 @@ final class PresentationSubject implements PresentationSubject_orMutable {
     this.resource,
     this.definition,
     this.content,
-    this.descriptor,
   ];
 
   @_core.override
@@ -2102,15 +2088,6 @@ final class PresentationSubject implements PresentationSubject_orMutable {
         (it) => it.content,
         (it, v) => it.content = v,
       );
-      _serializerBuilder.addField(
-        "descriptor",
-        "descriptor",
-        3,
-        _lib_editor_v1_type_catalog.DataValue.serializer,
-        "",
-        (it) => it.descriptor,
-        (it, v) => it.descriptor = v,
-      );
       _serializerBuilder.finalize();
     }
     return _serializerBuilder.serializer;
@@ -2118,7 +2095,7 @@ final class PresentationSubject implements PresentationSubject_orMutable {
 
   static final _serializerBuilder = _skir.internal__StructSerializerBuilder(
     recordId: "editor/v1/authoring.skir:PresentationSubject",
-    doc: "Supplies a resource identity, authored content, and display descriptor to portable resource presentations.\nCatalog choices use CatalogPresentationSubject instead because they have no resource instance.",
+    doc: "Supplies a resource identity and authored content to portable resource presentations.\nCatalog choices use CatalogPresentationSubject instead because they have no resource instance.",
     defaultInstance: defaultInstance,
     newMutable: (it) => (it != null) ? it.toMutable() : mutable(),
     toFrozen: (PresentationSubject_mutable it) => it.toFrozen(),
@@ -2133,15 +2110,9 @@ final class PresentationSubject_mutable
   _lib_editor_v1_type_catalog.ResourceId_orMutable resource;
   _lib_editor_v1_catalog.ResourceDefinitionId_orMutable definition;
   _lib_editor_v1_type_catalog.AuthoringRecord_orMutable content;
-  _lib_editor_v1_type_catalog.DataValue descriptor;
   _skir.internal__UnrecognizedFields? _u;
 
-  PresentationSubject_mutable._(
-    this.resource,
-    this.definition,
-    this.content,
-    this.descriptor,
-  );
+  PresentationSubject_mutable._(this.resource, this.definition, this.content);
 
   /// If the value of [resource] is already mutable, returns it as-is.
   /// Otherwise, makes a mutable copy, assigns it back to [resource] and returns it.
@@ -2185,7 +2156,6 @@ final class PresentationSubject_mutable
     resource: this.resource,
     definition: this.definition,
     content: this.content,
-    descriptor: this.descriptor,
   ).._u = this._u;
 }
 

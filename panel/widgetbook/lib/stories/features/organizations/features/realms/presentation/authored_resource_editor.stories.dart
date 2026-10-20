@@ -177,8 +177,9 @@ _fixture({bool unfilled = false}) {
     required bool abstract,
     skir.TypeDisplay? display,
   }) => skir.PublishedType(
+    searchKey: null,
     placementField: null,
-    display: display,
+    display: display ?? defaultTypeDisplay(""),
     definition: skir.TypeDefinition(
       id: id,
       parameters: const [],
@@ -200,7 +201,7 @@ _fixture({bool unfilled = false}) {
   ) => skir.TypeDisplay(
     name: name,
     description: description,
-    icon: icon,
+    icon: skir.Icon.wrapIconify(icon),
     color: skir.Color(argb: argb.toSigned(32)),
   );
   final presentationId = skir.PresentationId(
@@ -213,13 +214,15 @@ _fixture({bool unfilled = false}) {
   );
   final checked = CheckedEditorCatalog(
     skir.EditorCatalogWireSnapshot(
+      resourceDisplays: const [],
       resourceOperations: const [],
       resourceOperationContributions: const [],
       generation: generation,
       types: [
         skir.PublishedType(
+          searchKey: null,
           placementField: null,
-          display: null,
+          display: defaultTypeDisplay(""),
           definition: skir.TypeDefinition(
             id: definition,
             parameters: const [],

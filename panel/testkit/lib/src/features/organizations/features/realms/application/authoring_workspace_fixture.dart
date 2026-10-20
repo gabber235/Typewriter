@@ -757,6 +757,7 @@ CheckedEditorCatalog authoringFixtureCatalog({
   }
   return CheckedEditorCatalog(
     skir.EditorCatalogWireSnapshot(
+      resourceDisplays: _fixtureDisplays,
       resourceOperations: const [],
       resourceOperationContributions: const [],
       generation:
@@ -789,6 +790,53 @@ CheckedEditorCatalog authoringFixtureCatalog({
   );
 }
 
+/// The displays Realm publishes for the framework Book, Tag and Page and for
+/// any resource, retargeted to the fixture types standing in for them, so
+/// fixture resources are named exactly as Realm names them.
+final _fixtureDisplays = [
+  for (final display in compiledSdkControlCatalog.resourceDisplays)
+    if (display.target == skir.ResourceTarget.anyResource)
+      display
+    else if (_displayStandIns[_displayTarget(display)] case final name?)
+      skir.ResourceDisplayFormulas(
+        target: skir.ResourceTarget.wrapType(_template(name)),
+        label: display.label,
+        accent: display.accent,
+        icon: display.icon,
+      ),
+];
+
+final _displayStandIns = {
+  skir.TypeDefinitionId(
+    typeId: skir.TypeId.createDeclared(
+      value: "bbb646b300cf4dd2b7aab051854e4dd1",
+    ),
+    revision: 1,
+  ): "book",
+  skir.TypeDefinitionId(
+    typeId: skir.TypeId.createDeclared(
+      value: "ce1ae253a42d4509935c48b8ecba664a",
+    ),
+    revision: 1,
+  ): "tag",
+  skir.TypeDefinitionId(
+    typeId: skir.TypeId.createQualified(
+      namespace: "kotlin",
+      name: "com.typewritermc.library.Page",
+    ),
+    revision: 1,
+  ): "page",
+};
+
+skir.TypeDefinitionId? _displayTarget(skir.ResourceDisplayFormulas display) =>
+    switch (display.target) {
+      skir.ResourceTarget_typeWrapper(
+        value: skir.TypeTemplate_namedWrapper(:final value),
+      ) =>
+        value.definition,
+      _ => null,
+    };
+
 /// Fixture types standing in for framework types keep the framework identity,
 /// so production readers such as graph placement recognize their values.
 final _frameworkDefinitions = {"placement": graphPlacementTypeRef};
@@ -818,6 +866,7 @@ skir.PublishedType _published(
   skir.RepresentationTemplate representation, {
   Map<String, skir.TypeTemplate> fields = const {},
 }) => skir.PublishedType(
+  searchKey: null,
   placementField: fields.containsKey("placement")
       ? editorRootPath.field("placement")
       : null,
@@ -827,7 +876,7 @@ skir.PublishedType _published(
     representation: representation,
     parents: const [],
   ),
-  display: null,
+  display: defaultTypeDisplay(""),
   status: skir.DeclarationStatus.ready,
   effectiveFields: [
     for (final field in fields.entries)

@@ -19,6 +19,7 @@ import com.typewritermc.authoring.ValueLocation
 import com.typewritermc.authoring.ValuePath
 import com.typewritermc.authoring.ValueProblem
 import com.typewritermc.authoring.ValueReplacement
+import com.typewritermc.authoring.definition
 import com.typewritermc.authoring.item
 import com.typewritermc.authoring.locate
 import com.typewritermc.authoring.validateStructure
@@ -913,13 +914,6 @@ private fun validateAcyclic(
         }
     }
 }
-
-private val TypeSelection.definition
-    get() =
-        when (this) {
-            is TypeSelection.Complete -> use.definition
-            is TypeSelection.Pending -> definition
-        }
 
 internal fun AuthoringRecord.valueAt(path: ValuePath): DataValue? =
     (DataValue.Record(fields).locate(path) as? LocatedPortableValue.Value)?.value

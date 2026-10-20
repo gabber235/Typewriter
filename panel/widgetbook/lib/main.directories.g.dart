@@ -180,6 +180,8 @@ import 'package:widgetbook_workspace/stories/shared/ui/components/page_heading.s
     as _widgetbook_workspace_stories_shared_ui_components_page_heading_stories;
 import 'package:widgetbook_workspace/stories/shared/ui/components/query_bar.stories.dart'
     as _widgetbook_workspace_stories_shared_ui_components_query_bar_stories;
+import 'package:widgetbook_workspace/stories/shared/ui/components/resource_icon.stories.dart'
+    as _widgetbook_workspace_stories_shared_ui_components_resource_icon_stories;
 import 'package:widgetbook_workspace/stories/shared/ui/components/retry_indicator.stories.dart'
     as _widgetbook_workspace_stories_shared_ui_components_retry_indicator_stories;
 import 'package:widgetbook_workspace/stories/shared/ui/components/secret_field.stories.dart'
@@ -1822,6 +1824,17 @@ final directories = <_widgetbook.WidgetbookNode>[
                     builder:
                         _widgetbook_workspace_stories_shared_ui_components_query_bar_stories
                             .queryBarDefaultUseCase,
+                  ),
+                ],
+              ),
+              _widgetbook.WidgetbookComponent(
+                name: 'ResourceIcon',
+                useCases: [
+                  _widgetbook.WidgetbookUseCase(
+                    name: 'Variants',
+                    builder:
+                        _widgetbook_workspace_stories_shared_ui_components_resource_icon_stories
+                            .resourceIconVariantsUseCase,
                   ),
                 ],
               ),

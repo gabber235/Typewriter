@@ -4,7 +4,8 @@ import kotlin.reflect.KClass
 
 /**
  * Marks an interface generated for [target]. Objects implementing it receive a generated provider adapter of
- * [kind]. Codegen applies this annotation; hand written interfaces never receive adapters.
+ * [kind]. Codegen applies this annotation to the contracts it generates per type. The only hand written carrier is
+ * the root resource display, whose [target] is the unpublished `Resource` marker and so applies to any resource.
  */
 @Target(AnnotationTarget.CLASS)
 @Retention(AnnotationRetention.BINARY)
@@ -21,5 +22,6 @@ annotation class GeneratedContract(
         Presentation(GeneratedProviderKind.Presentation, "Presentation"),
         Check(GeneratedProviderKind.Check, "Check"),
         Operations(GeneratedProviderKind.ResourceOperation, "Operations"),
+        Display(GeneratedProviderKind.ResourceDisplay, "Display"),
     }
 }

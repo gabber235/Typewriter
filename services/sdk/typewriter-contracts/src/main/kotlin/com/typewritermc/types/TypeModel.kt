@@ -35,22 +35,40 @@ annotation class TypewriterTypeImports(
     vararg val types: KClass<*>,
 )
 
+/**
+ * Overrides parts of a type's display. Every type has a display: codegen derives an omitted [name] from the class
+ * name in sentence case and fills an omitted [icon] or [color] with the framework defaults, so the annotation is only
+ * needed for what differs.
+ *
+ * [icon] uses Iconify `prefix:name` syntax, or inline SVG source. [color] uses `#RRGGBB` syntax. [searchKey] is the
+ * search scope keyword of a resource type, such as `book` in `book:"Main story"`; resource types without one use the
+ * class name in lower case. Codegen rejects a search key on a type that is not a resource.
+ */
 @Target(AnnotationTarget.CLASS)
 @Retention(AnnotationRetention.BINARY)
 annotation class TypewriterDisplay(
-    val name: String,
+    val name: String = "",
     val description: String = "",
-    val icon: String,
-    val color: String,
+    val icon: String = "",
+    val color: String = "",
+    val searchKey: String = "",
 )
 
-/** Display data of a type. Codegen validates the [TypewriterDisplay] color and emits it as a [Color]. */
+/** Display data of a type, always complete: codegen fills every part [TypewriterDisplay] leaves out. */
 data class TypeDisplay(
     val name: String,
     val description: String,
-    val icon: String,
+    val icon: Icon,
     val color: Color,
-)
+) {
+    companion object {
+        /** The icon of a type whose display names none. */
+        val DEFAULT_ICON: Icon = Icon.Iconify("material-symbols:category")
+
+        /** The color of a type whose display names none. */
+        val DEFAULT_COLOR: Color = Color(0xFF607D8Bu)
+    }
+}
 
 @Target(AnnotationTarget.CLASS)
 @Retention(AnnotationRetention.BINARY)

@@ -251,6 +251,7 @@ void main() {
       final fallback = _definition("ScenePage");
       final checked = CheckedEditorCatalog(
         skir.EditorCatalogWireSnapshot(
+          resourceDisplays: const [],
           resourceOperations: const [],
           resourceOperationContributions: const [],
           generation: skir.CatalogGeneration(value: "catalog:display"),
@@ -261,7 +262,7 @@ void main() {
               display: skir.TypeDisplay(
                 name: "Sequence",
                 description: "A branching page",
-                icon: "material-symbols:account-tree",
+                icon: skir.Icon.wrapIconify("material-symbols:account-tree"),
                 color: skir.Color(argb: 0xff2196f3.toSigned(32)),
               ),
             ),
@@ -386,6 +387,7 @@ void main() {
     final parameter = skir.ParameterKey(owner: wrapper, index: 0);
     final checked = CheckedEditorCatalog(
       skir.EditorCatalogWireSnapshot(
+        resourceDisplays: const [],
         resourceOperations: const [],
         resourceOperationContributions: const [],
         generation: skir.CatalogGeneration(value: "catalog:covariance"),
@@ -393,6 +395,7 @@ void main() {
           _published(wrapper, [parameter]),
           _published(reward, const []),
           skir.PublishedType(
+            searchKey: null,
             placementField: null,
             definition: skir.TypeDefinition(
               id: coin,
@@ -407,7 +410,7 @@ void main() {
             ancestorTemplates: [
               skir.NamedTypeTemplate(definition: reward, arguments: const []),
             ],
-            display: null,
+            display: defaultTypeDisplay(""),
           ),
         ],
         relations: const [],
@@ -481,6 +484,7 @@ void main() {
     ];
     final checked = CheckedEditorCatalog(
       skir.EditorCatalogWireSnapshot(
+        resourceDisplays: const [],
         resourceOperations: const [],
         resourceOperationContributions: const [],
         generation: skir.CatalogGeneration(value: "catalog:specificity"),
@@ -488,6 +492,7 @@ void main() {
           _published(wrapper, [parameter]),
           _published(reward, const []),
           skir.PublishedType(
+            searchKey: null,
             placementField: null,
             definition: skir.TypeDefinition(
               id: coin,
@@ -502,7 +507,7 @@ void main() {
             ancestorTemplates: [
               skir.NamedTypeTemplate(definition: reward, arguments: const []),
             ],
-            display: null,
+            display: defaultTypeDisplay(""),
           ),
         ],
         relations: const [],
@@ -647,6 +652,7 @@ void main() {
     final original = fixture.catalog.snapshot;
     final checked = CheckedEditorCatalog(
       skir.EditorCatalogWireSnapshot(
+        resourceDisplays: const [],
         resourceOperations: const [],
         resourceOperationContributions: const [],
         generation: original.generation,
@@ -804,11 +810,13 @@ _patternCatalog({required bool repeated}) {
     ),
   ];
   final snapshot = skir.EditorCatalogWireSnapshot(
+    resourceDisplays: const [],
     resourceOperations: const [],
     resourceOperationContributions: const [],
     generation: skir.CatalogGeneration(value: "catalog:patterns"),
     types: [
       skir.PublishedType(
+        searchKey: null,
         placementField: null,
         definition: skir.TypeDefinition(
           id: pair,
@@ -833,7 +841,7 @@ _patternCatalog({required bool repeated}) {
         status: skir.DeclarationStatus.ready,
         effectiveFields: const [],
         ancestorTemplates: const [],
-        display: null,
+        display: defaultTypeDisplay(""),
       ),
     ],
     relations: const [],
@@ -883,6 +891,7 @@ _dependentCatalog() {
   final first = skir.ParameterKey(owner: root, index: 0);
   final second = skir.ParameterKey(owner: root, index: 1);
   final definition = skir.PublishedType(
+    searchKey: null,
     placementField: null,
     definition: skir.TypeDefinition(
       id: root,
@@ -900,11 +909,12 @@ _dependentCatalog() {
     status: skir.DeclarationStatus.ready,
     effectiveFields: const [],
     ancestorTemplates: const [],
-    display: null,
+    display: defaultTypeDisplay(""),
   );
   return (
     catalog: CheckedEditorCatalog(
       skir.EditorCatalogWireSnapshot(
+        resourceDisplays: const [],
         resourceOperations: const [],
         resourceOperationContributions: const [],
         generation: skir.CatalogGeneration(value: "catalog:dependent"),
@@ -957,6 +967,7 @@ _catalog() {
     skir.RepresentationKind.record,
   );
   final rootType = skir.PublishedType(
+    searchKey: null,
     placementField: null,
     definition: skir.TypeDefinition(
       id: root,
@@ -997,11 +1008,12 @@ _catalog() {
       ),
       skir.NamedTypeTemplate(definition: marker, arguments: const []),
     ],
-    display: null,
+    display: defaultTypeDisplay(""),
   );
   final baseType = _published(base, [baseParameter]);
   final markerType = _published(marker, const []);
   final snapshot = skir.EditorCatalogWireSnapshot(
+    resourceDisplays: const [],
     resourceOperations: const [],
     resourceOperationContributions: const [],
     generation: skir.CatalogGeneration(value: "catalog:1"),
@@ -1105,6 +1117,7 @@ skir.PublishedType _published(
   List<skir.ParameterKey> parameters, {
   skir.TypeDisplay? display,
 }) => skir.PublishedType(
+  searchKey: null,
   placementField: null,
   definition: skir.TypeDefinition(
     id: id,
@@ -1122,7 +1135,7 @@ skir.PublishedType _published(
   status: skir.DeclarationStatus.ready,
   effectiveFields: const [],
   ancestorTemplates: const [],
-  display: display,
+  display: display ?? defaultTypeDisplay(""),
 );
 
 skir.TypeDefinitionId _definition(String name) => skir.TypeDefinitionId(

@@ -117,6 +117,23 @@ extension PresentationExpressionAdmission on CheckedEditorCatalog {
       );
     }
 
+    // An icon is an Iconify name or a typed icon value, such as a type display icon.
+    void icon(
+      skir.ExpressionNode body,
+      Map<skir.ExpressionBindingId, skir.ExpressionType> env,
+    ) {
+      List<String> against(skir.TypeUse expected) => checkPortableExpression(
+        body,
+        catalog: this,
+        bindings: env,
+        expectedOutput: type(payload(expected), true),
+      );
+      final asText = against(text);
+      if (asText.isEmpty) return;
+      if (against(skir.TypeUse.wrapNamed(expressionIconUse)).isEmpty) return;
+      errors.addAll(asText);
+    }
+
     void resourceAction(
       skir.EditorAction? action,
       Map<skir.ExpressionBindingId, skir.ExpressionType> env,
@@ -732,7 +749,7 @@ extension PresentationExpressionAdmission on CheckedEditorCatalog {
           check(value.textAlignment, text, env);
           check(value.decoration, text, env);
         case skir.PresentationElement_iconWrapper(:final value):
-          check(value.name, text, env);
+          icon(value.name, env);
           check(value.semanticLabel, text, env);
           color(value.color, env);
           number(value.size, env);

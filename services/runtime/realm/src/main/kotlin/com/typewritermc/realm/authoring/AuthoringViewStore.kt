@@ -7,10 +7,12 @@ import com.typewritermc.authoring.LinkOccurrenceId
 import com.typewritermc.authoring.ReadContext
 import com.typewritermc.authoring.RelationSelection
 import com.typewritermc.authoring.ResourceDefinitionId
+import com.typewritermc.authoring.ResourceDisplayCatalog
 import com.typewritermc.authoring.SelectionId
 import com.typewritermc.authoring.TypeSelection
 import com.typewritermc.authoring.ValueLocation
 import com.typewritermc.authoring.ValuePath
+import com.typewritermc.authoring.definition
 import com.typewritermc.authoring.definitionFor
 import com.typewritermc.authoring.field
 import com.typewritermc.authoring.immutableAuthoringCopy
@@ -64,6 +66,10 @@ interface AuthoringCatalogLease : AutoCloseable {
 
     /** The published placement field of each declared type that has one; other types are absent. */
     val placementFields: Map<TypeDefinitionId, ValuePath>
+
+    /** The resource displays that name resources; a catalog without declared displays names none. */
+    val displays: ResourceDisplayCatalog
+        get() = ResourceDisplayCatalog()
 
     fun retain(): AuthoringCatalogLease
 }
@@ -431,11 +437,5 @@ private fun discoverLinks(resources: Map<ResourceId, AuthoringRecord>): Map<Link
 
 private fun immutableResources(resources: Map<ResourceId, AuthoringRecord>): Map<ResourceId, AuthoringRecord> =
     resources.immutableAuthoringCopy()
-
-private fun TypeSelection.definition(): TypeDefinitionId =
-    when (this) {
-        is TypeSelection.Complete -> use.definition
-        is TypeSelection.Pending -> definition
-    }
 
 internal val RESOURCE_SELECTION_INPUT: InputIdentity = InputIdentity.Selection(SelectionId("realm.resources"))

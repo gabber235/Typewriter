@@ -22,10 +22,11 @@ final class AuthoredGraphFixture {
       skir.RepresentationTemplate representation, {
       List<skir.EffectiveFieldTemplate> fields = const [],
     }) => skir.PublishedType(
+      searchKey: null,
       placementField: fields.any((field) => field.key == "placement")
           ? editorRootPath.field("placement")
           : null,
-      display: null,
+      display: defaultTypeDisplay(""),
       definition: skir.TypeDefinition(
         id: _type(name),
         parameters: const [],

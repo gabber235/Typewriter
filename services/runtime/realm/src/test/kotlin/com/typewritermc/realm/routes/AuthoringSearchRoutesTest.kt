@@ -67,8 +67,6 @@ val AuthoringSearchRoutesTest by testSuite {
                     hit.resource.value shouldBe resource.value
                     hit.definition.value shouldBe "book"
                     SkirAuthoringValueCodec.decode(hit.subject.content).getOrThrow() shouldBe authored
-                    SkirDataValueCodec.decode(hit.subject.descriptor).getOrThrow() shouldBe
-                        DataValue.StringValue("Readable Book")
                     SkirTypeCodec.decode(hit.context.actualType).getOrThrow() shouldBe TypeUse.Scalar(ScalarKind.Text)
                     SkirDataValueCodec.decode(hit.context.payload).getOrThrow() shouldBe
                         DataValue.StringValue("book Readable Book")

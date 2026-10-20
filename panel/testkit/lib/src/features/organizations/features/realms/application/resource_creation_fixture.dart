@@ -109,6 +109,7 @@ final class ResourceCreationFixture {
   }) {
     _types.add(
       skir.PublishedType(
+        searchKey: null,
         placementField: fields.any((field) => field.key == "placement")
             ? editorRootPath.field("placement")
             : null,
@@ -124,7 +125,7 @@ final class ResourceCreationFixture {
         display: skir.TypeDisplay(
           name: name,
           description: "",
-          icon: "",
+          icon: skir.Icon.wrapIconify(""),
           color: skir.Color(argb: 0xff607d8b.toSigned(32)),
         ),
       ),
@@ -266,6 +267,7 @@ final class ResourceCreationFixture {
   AuthoringDocument document({bool existing = false}) {
     final catalog = CheckedEditorCatalog(
       skir.EditorCatalogWireSnapshot(
+        resourceDisplays: const [],
         resourceOperations: const [],
         resourceOperationContributions: const [],
         generation: generation,

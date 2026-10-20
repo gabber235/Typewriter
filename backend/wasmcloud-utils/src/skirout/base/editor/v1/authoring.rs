@@ -535,14 +535,13 @@ impl UnresolvedLink {
 // struct PresentationSubject
 // ==============================================================================
 
-/// Supplies a resource identity, authored content, and display descriptor to portable resource presentations.
+/// Supplies a resource identity and authored content to portable resource presentations.
 /// Catalog choices use CatalogPresentationSubject instead because they have no resource instance.
 #[derive(Clone, Debug, PartialEq, Default)]
 pub struct PresentationSubject {
     pub resource: crate::skirout::base::editor::v1::type_catalog::ResourceId,
     pub definition: crate::skirout::base::editor::v1::catalog::ResourceDefinitionId,
     pub content: crate::skirout::base::editor::v1::type_catalog::AuthoringRecord,
-    pub descriptor: crate::skirout::base::editor::v1::type_catalog::DataValue,
     /// Set this to None when you're creating a struct.
     pub _unrecognized: Option<crate::skir_client::UnrecognizedFields<PresentationSubject>>,
 }
@@ -563,7 +562,7 @@ impl PresentationSubject {
             crate::skir_client::internal::StructAdapter::new(
                 "editor/v1/authoring.skir",
                 "PresentationSubject",
-                "Supplies a resource identity, authored content, and display descriptor to portable resource presentations.\nCatalog choices use CatalogPresentationSubject instead because they have no resource instance.",
+                "Supplies a resource identity and authored content to portable resource presentations.\nCatalog choices use CatalogPresentationSubject instead because they have no resource instance.",
                 |x: &PresentationSubject| &x._unrecognized,
                 |x: &mut PresentationSubject, u| x._unrecognized = u,
             )
@@ -2767,14 +2766,6 @@ fn initialize_module_serializers() {
                 "",
                 |x: &PresentationSubject| &x.content,
                 |x: &mut PresentationSubject, v| x.content = v,
-            );
-            (*a).add_field(
-                "descriptor",
-                3,
-                crate::skirout::base::editor::v1::type_catalog::DataValue::serializer(),
-                "",
-                |x: &PresentationSubject| &x.descriptor,
-                |x: &mut PresentationSubject, v| x.descriptor = v,
             );
             (*a).finalize();
         }

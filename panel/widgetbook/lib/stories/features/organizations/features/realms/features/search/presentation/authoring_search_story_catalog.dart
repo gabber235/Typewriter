@@ -67,14 +67,24 @@ CheckedEditorCatalog authoringSearchStoryCatalog() {
   }
   return CheckedEditorCatalog(
     skir.EditorCatalogWireSnapshot(
+      resourceDisplays: [
+        for (final definition in definitions.values)
+          nameResourceDisplay(
+            skir.TypeTemplate.createNamed(
+              definition: definition,
+              arguments: const [],
+            ),
+          ),
+      ],
       resourceOperations: const [],
       resourceOperationContributions: const [],
       generation: skir.CatalogGeneration(value: "catalog:widgetbook.search"),
       types: [
         for (final definition in definitions.values)
           skir.PublishedType(
+            searchKey: null,
             placementField: null,
-            display: null,
+            display: defaultTypeDisplay(""),
             definition: skir.TypeDefinition(
               id: definition,
               parameters: const [],

@@ -325,6 +325,16 @@ class PortableExpressionChecker(
 
         private fun text(missing: Boolean = false) = scalar(ScalarKind.Text, missing)
 
+        /** Whether [actual] is a proper nominal subtype of [expected], such as an Iconify icon where an icon is expected. */
+        private fun isNominalSubtype(
+            actual: TypeUse?,
+            expected: TypeUse?,
+        ): Boolean {
+            if (actual !is TypeUse.Named || expected !is TypeUse.Named || actual == expected) return false
+            val resolved = resolveType(actual) as? Resolution.Ready ?: return false
+            return expected in resolved.value.schema.ancestors
+        }
+
         private fun ready(use: TypeUse): CheckedType =
             when (val result = resolveType(use)) {
                 is Resolution.Ready -> result.value
@@ -408,7 +418,8 @@ class PortableExpressionChecker(
                     val au = a.nominalUseOrNull()
                     val eu = e.nominalUseOrNull()
                     au == eu || (scalarKind(a) != null && scalarKind(a) == scalarKind(e)) ||
-                        ((a in literalTypes || e in literalTypes) && numericFamily(a) != null && numericFamily(a) == numericFamily(e))
+                        ((a in literalTypes || e in literalTypes) && numericFamily(a) != null && numericFamily(a) == numericFamily(e)) ||
+                        isNominalSubtype(au, eu)
                 }
 
                 else -> {
@@ -454,6 +465,10 @@ class PortableExpressionChecker(
                     }
 
                     ac in literalTypes && bc !in literalTypes -> {
+                        bc
+                    }
+
+                    isNominalSubtype(ac.nominalUseOrNull(), bc.nominalUseOrNull()) -> {
                         bc
                     }
 

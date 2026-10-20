@@ -2,16 +2,17 @@ import "package:flutter_test/flutter_test.dart";
 import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
     as skir;
 import "package:typewriter_panel/typewriter_panel.dart";
+import "package:typewriter_testkit/typewriter_testkit.dart";
 
 void main() {
   test("book reads tagged visual values and relation items", () {
     final tag = skir.ResourceId(value: "tag:one");
-    final book = Book.fromAuthoring(
+    final book = _book(
       skir.AuthoringResource(
         id: skir.ResourceId(value: "book:one"),
         definition: skir.ResourceDefinitionId(value: "typewriter.book"),
         content: skir.AuthoringRecord(
-          configuration: skir.TypeSelection.unknown,
+          configuration: _bookSelection,
           fields: [
             _field("title", skir.DataValue.wrapStringValue("Guide")),
             _field(
@@ -55,12 +56,12 @@ void main() {
 
   test("book reads the generated SVG icon payload", () {
     const source = "<svg viewBox=\"0 0 1 1\"></svg>";
-    final book = Book.fromAuthoring(
+    final book = _book(
       skir.AuthoringResource(
         id: skir.ResourceId(value: "book:svg"),
         definition: skir.ResourceDefinitionId(value: "typewriter.book"),
         content: skir.AuthoringRecord(
-          configuration: skir.TypeSelection.unknown,
+          configuration: _bookSelection,
           fields: [
             _field("title", skir.DataValue.wrapStringValue("SVG guide")),
             _field(
@@ -86,12 +87,12 @@ void main() {
 
   test("tag reads tagged placement and parent links", () {
     final parent = skir.ResourceId(value: "tag:parent");
-    final tag = Tag.fromAuthoring(
+    final tag = _tag(
       skir.AuthoringResource(
         id: skir.ResourceId(value: "tag:child"),
         definition: skir.ResourceDefinitionId(value: "typewriter.tag"),
         content: skir.AuthoringRecord(
-          configuration: skir.TypeSelection.unknown,
+          configuration: _tagSelection,
           fields: [
             _field("name", skir.DataValue.wrapStringValue("Child")),
             _field("color", _named(skir.DataValue.wrapInteger("4289449455"))),
@@ -177,7 +178,7 @@ void main() {
         ],
       ),
     );
-    final page = Page.fromAuthoring(pageResource);
+    final page = Page.fromAuthoring(pageResource, _appearance("Opening"));
 
     expect(page.configuration, configuration);
     expect(page.bookId, skir.ResourceId(value: "book:one"));
@@ -195,8 +196,8 @@ void main() {
     final retainedTag = skir.ResourceId(value: "tag:retained");
     final retainedElement = skir.ResourceId(value: "element:retained");
     final books = [
-      Book.fromAuthoring(
-        _resource("book:complete", "typewriter.book", [
+      _book(
+        _resource("book:complete", "typewriter.book", _bookSelection, [
           _field("title", skir.DataValue.wrapStringValue("Complete")),
           _field(
             "icon",
@@ -216,8 +217,8 @@ void main() {
           _field("tags", _named(skir.DataValue.createSetValue(items: []))),
         ]),
       ),
-      Book.fromAuthoring(
-        _resource("book:incomplete", "typewriter.book", [
+      _book(
+        _resource("book:incomplete", "typewriter.book", _bookSelection, [
           _field("title", skir.DataValue.unfilled),
           _field("icon", skir.DataValue.unfilled),
           _field("color", skir.DataValue.unfilled),
@@ -242,8 +243,8 @@ void main() {
       ),
     ];
     final tags = [
-      Tag.fromAuthoring(
-        _resource("tag:complete", "typewriter.tag", [
+      _tag(
+        _resource("tag:complete", "typewriter.tag", _tagSelection, [
           _field("name", skir.DataValue.wrapStringValue("Complete")),
           _field("color", _named(skir.DataValue.wrapInteger("4289449455"))),
           _field("parents", _named(skir.DataValue.createSetValue(items: []))),
@@ -262,8 +263,8 @@ void main() {
           ),
         ]),
       ),
-      Tag.fromAuthoring(
-        _resource("tag:incomplete", "typewriter.tag", [
+      _tag(
+        _resource("tag:incomplete", "typewriter.tag", _tagSelection, [
           _field("name", skir.DataValue.unfilled),
           _field("color", skir.DataValue.unfilled),
           _field(
@@ -300,14 +301,14 @@ void main() {
       ),
     ];
     final pageResources = [
-      _resource("page:complete", "typewriter.page", [
+      _resource("page:complete", "typewriter.page", _pageSelection, [
         _field("book", _link(skir.ResourceId(value: "book:complete"))),
         _field("name", skir.DataValue.wrapStringValue("Complete")),
         _field("chapter", _named(skir.DataValue.wrapStringValue("one"))),
         _field("priority", skir.DataValue.wrapInteger("1")),
         _field("elements", _named(skir.DataValue.createListValue(items: []))),
       ]),
-      _resource("page:incomplete", "typewriter.page", [
+      _resource("page:incomplete", "typewriter.page", _pageSelection, [
         _field("book", skir.DataValue.unfilled),
         _field("name", skir.DataValue.unfilled),
         _field("chapter", skir.DataValue.unfilled),
@@ -331,14 +332,19 @@ void main() {
         ),
       ]),
     ];
-    final pages = pageResources.map(Page.fromAuthoring).toList();
+    final pages = [
+      Page.fromAuthoring(pageResources.first, _appearance("Complete")),
+      Page.fromAuthoring(pageResources.last, _appearance("Sequence")),
+    ];
 
-    expect(books.map((value) => value.title), ["Complete", "Unnamed Book"]);
+    // Unfinished fields fall back to the type display through the declared
+    // displays: a blank Book title shows Book, as on every other surface.
+    expect(books.map((value) => value.title), ["Complete", "Book"]);
     expect(books.last.icon, "material-symbols:book");
     expect(books.last.color.toARGB32(), 0xff3f51b5);
     expect(books.last.tagIds, [retainedTag]);
-    expect(tags.map((value) => value.name), ["Complete", "Unnamed Tag"]);
-    expect(tags.last.color.toARGB32(), 0xff9e9e9e);
+    expect(tags.map((value) => value.name), ["Complete", "Tag"]);
+    expect(tags.last.color.toARGB32(), 0xff795548);
     expect(tags.last.parentIds, [retainedTag]);
     expect(
       (
@@ -349,7 +355,7 @@ void main() {
       ),
       (0, 7, 1, 1),
     );
-    expect(pages.map((value) => value.name), ["Complete", "Unnamed Page"]);
+    expect(pages.map((value) => value.name), ["Complete", "Sequence"]);
     expect(pages.last.bookId, isNull);
     expect((pages.last.chapter, pages.last.priority), ("", 0));
     final retainedElementIds =
@@ -365,14 +371,48 @@ void main() {
 skir.AuthoringResource _resource(
   String id,
   String definition,
+  skir.TypeSelection configuration,
   List<skir.FieldValue> fields,
 ) => skir.AuthoringResource(
   id: skir.ResourceId(value: id),
   definition: skir.ResourceDefinitionId(value: definition),
-  content: skir.AuthoringRecord(
-    configuration: skir.TypeSelection.unknown,
-    fields: fields,
+  content: skir.AuthoringRecord(configuration: configuration, fields: fields),
+);
+
+final _catalog = CheckedEditorCatalog(compiledSdkControlCatalog);
+
+Book _book(skir.AuthoringResource resource) =>
+    Book.fromAuthoring(resource, _catalog.appearanceOf(resource.content));
+
+Tag _tag(skir.AuthoringResource resource) =>
+    Tag.fromAuthoring(resource, _catalog.appearanceOf(resource.content));
+
+ResourceAppearance _appearance(String label) => ResourceAppearance(
+  label: label,
+  accent: const Color(0xff607d8b),
+  icon: skir.Icon.wrapIconify("material-symbols:description"),
+);
+
+skir.TypeSelection _declared(String id) => skir.TypeSelection.wrapComplete(
+  skir.NamedTypeUse(
+    definition: skir.TypeDefinitionId(
+      typeId: skir.TypeId.createDeclared(value: id),
+      revision: 1,
+    ),
+    arguments: const [],
   ),
+);
+
+final _bookSelection = _declared("bbb646b300cf4dd2b7aab051854e4dd1");
+final _tagSelection = _declared("ce1ae253a42d4509935c48b8ecba664a");
+final _pageSelection = skir.TypeSelection.createPending(
+  definition: skir.TypeDefinitionId(
+    typeId: skir.TypeId.createDeclared(
+      value: "0123456789abcdef0123456789abcdef",
+    ),
+    revision: 1,
+  ),
+  arguments: const [],
 );
 
 skir.FieldValue _field(String name, skir.DataValue value) =>

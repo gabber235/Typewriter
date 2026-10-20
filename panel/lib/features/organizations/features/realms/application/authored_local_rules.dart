@@ -45,8 +45,6 @@ abstract class AuthoredRuleProjection with _$AuthoredRuleProjection {
       diagnostics: List.unmodifiable(builder.diagnostics),
     );
   }
-
-
 }
 
 final class _RuleProjectionBuilder {

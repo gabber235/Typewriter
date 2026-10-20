@@ -11960,3 +11960,140 @@ final class DeclarationOwner_mutable implements DeclarationOwner_orMutable {
       DeclarationOwner(source: this.source, localIdentity: this.localIdentity)
         .._u = this._u;
 }
+
+// -----------------------------------------------------------------------------
+// enum ResourceTarget
+// -----------------------------------------------------------------------------
+
+/// Which resources a display or operation applies to: every application of one type template,
+/// or every resource when nothing more specific is declared.
+///
+/// To switch on the variants:
+///   ```
+///   switch (e) {
+///     case ResourceTarget_unknown(): { ... }
+///     case ResourceTarget.anyResource: { ... }
+///     case ResourceTarget_type(:var value): { ... }
+///   }
+///   ```
+///
+/// Deeply immutable.
+sealed class ResourceTarget {
+  /// Constant indicating an unknown `ResourceTarget`.
+  /// Default value for fields of type `ResourceTarget`.
+  static const ResourceTarget unknown = ResourceTarget_unknown._instance;
+
+  static const anyResource = _ResourceTarget_consts.anyResourceConst;
+
+  /// Create a 'type' variant wrapping around the given value.
+  factory ResourceTarget.wrapType(TypeTemplate value) =>
+      ResourceTarget_typeWrapper._(value);
+
+  /// Returns the kind of variant held by this ResourceTarget.
+  ResourceTarget_kind get kind;
+
+  /// Serializer for `ResourceTarget` instances.
+  static _skir.EnumSerializer<ResourceTarget> get serializer {
+    if (_serializerBuilder.mustInitialize()) {
+      _serializerBuilder.addConstantVariant(
+        2,
+        "any_resource",
+        "anyResource",
+        "",
+        anyResource,
+      );
+      _serializerBuilder.addWrapperVariant(
+        1,
+        "type",
+        "wrapType",
+        TypeTemplate.serializer,
+        "",
+        ResourceTarget_typeWrapper._,
+        (it) => it.value,
+        ordinal: ResourceTarget_kind.typeWrapper._ordinal,
+      );
+      _serializerBuilder.finalize();
+    }
+    return _serializerBuilder.serializer;
+  }
+
+  static final _serializerBuilder = _skir.internal__EnumSerializerBuilder
+      .create(
+        recordId: "editor/v1/type_catalog.skir:ResourceTarget",
+        doc: "Which resources a display or operation applies to: every application of one type template,\nor every resource when nothing more specific is declared.",
+        unknownInstance: ResourceTarget_unknown._instance,
+        enumInstance: ResourceTarget.unknown,
+        getOrdinal: (it) => it.kind._ordinal,
+        wrapUnrecognized: ResourceTarget_unknown._unrecognized,
+        getUnrecognized: (it) => it._u,
+      );
+}
+
+/// The kind of variant held by a `ResourceTarget`.
+enum ResourceTarget_kind {
+  unknown(0),
+  anyResourceConst(1),
+  typeWrapper(2);
+
+  final _core.int _ordinal;
+
+  const ResourceTarget_kind(this._ordinal);
+}
+
+final class ResourceTarget_unknown implements ResourceTarget {
+  static const _instance = ResourceTarget_unknown._();
+
+  final _skir.internal__UnrecognizedVariant? _u;
+
+  const ResourceTarget_unknown._() : _u = null;
+  ResourceTarget_unknown._unrecognized(this._u);
+
+  @_core.override
+  ResourceTarget_kind get kind => ResourceTarget_kind.unknown;
+  @_core.override
+  _core.bool operator ==(other) => other is ResourceTarget_unknown;
+  @_core.override
+  _core.int get hashCode => 8118964;
+  @_core.override
+  _core.String toString() =>
+      _skir.internal__stringify(this, ResourceTarget.serializer);
+}
+
+enum _ResourceTarget_consts implements ResourceTarget {
+  anyResourceConst(ResourceTarget_kind.anyResourceConst);
+
+  @_core.override
+  final ResourceTarget_kind kind;
+
+  const _ResourceTarget_consts(this.kind);
+
+  @_core.override
+  _core.String toString() =>
+      _skir.internal__stringify(this, ResourceTarget.serializer);
+}
+
+sealed class _ResourceTarget_wrapper implements ResourceTarget {
+  _core.dynamic get value;
+
+  @_core.override
+  _core.bool operator ==(other) {
+    if (other is! _ResourceTarget_wrapper) return false;
+    return kind == other.kind && value == other.value;
+  }
+
+  @_core.override
+  _core.int get hashCode => (kind._ordinal * 31) ^ value.hashCode;
+
+  @_core.override
+  _core.String toString() =>
+      _skir.internal__stringify(this, ResourceTarget.serializer);
+}
+
+final class ResourceTarget_typeWrapper extends _ResourceTarget_wrapper {
+  final TypeTemplate value;
+
+  ResourceTarget_typeWrapper._(this.value);
+
+  @_core.override
+  ResourceTarget_kind get kind => ResourceTarget_kind.typeWrapper;
+}

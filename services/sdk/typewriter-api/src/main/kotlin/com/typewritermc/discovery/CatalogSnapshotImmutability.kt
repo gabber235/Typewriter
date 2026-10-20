@@ -50,6 +50,7 @@ internal fun EditorCatalogSnapshot.immutableCopy(): EditorCatalogSnapshot =
             roleFallbacks.immutableListCopy { fallback ->
                 fallback.copy(parents = fallback.parents.immutableListCopy())
             },
+        resourceDisplays = resourceDisplays.immutableListCopy { display -> display.copy(target = display.target.immutableCopy()) },
     )
 
 private fun PublishedType.immutableCopy(): PublishedType =

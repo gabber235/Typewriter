@@ -58,7 +58,7 @@ final class WorkingTagsProvider
   }
 }
 
-String _$workingTagsHash() => r'0cd206afa3b25f42715597e4555d078fcdd13afc';
+String _$workingTagsHash() => r'd6a3dc277ac0325aa99014af380b47c650b678dd';
 
 @ProviderFor(workingTag)
 final workingTagProvider = WorkingTagFamily._();

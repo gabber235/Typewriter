@@ -62,6 +62,7 @@ abstract class AuthoringResourceIdentifier extends SelectableIdentifier
       AuthoringSelectableResource(
         id: this,
         resource: resource,
+        appearance: document.catalog.appearanceOf(resource.content),
         workspace: workspace,
         commands: commands,
       ),
@@ -74,6 +75,7 @@ final class AuthoringSelectableResource
   const AuthoringSelectableResource({
     required this.id,
     required this.resource,
+    required this.appearance,
     required this.workspace,
     required this.commands,
   });
@@ -81,28 +83,16 @@ final class AuthoringSelectableResource
   @override
   final AuthoringResourceIdentifier id;
   final skir.AuthoringResource resource;
+
+  /// How the resource names and marks itself, from its declared display.
+  final ResourceAppearance appearance;
   final RealmEditing workspace;
   final AuthoredResourceCommands commands;
 
   @override
-  String get name => switch (resource.definition) {
-    final definition when definition == coreBookResourceDefinition =>
-      Book.fromAuthoring(resource).title,
-    final definition when definition == coreTagResourceDefinition =>
-      Tag.fromAuthoring(resource).name,
-    _ => resource.content.authoredLabel ?? id.resourceId.value,
-  };
+  String get name => appearance.label;
 
-  Color get color => switch (resource.definition) {
-    final definition when definition == coreBookResourceDefinition =>
-      Book.fromAuthoring(resource).color,
-    final definition when definition == coreTagResourceDefinition =>
-      Tag.fromAuthoring(resource).color,
-    _ => switch (resource.content.authoredField("color")?.authoredInteger) {
-      final value? => Color(value.toUnsigned(32).toInt()),
-      null => Colors.blueGrey,
-    },
-  };
+  Color get color => appearance.accent;
 
   @override
   List<SelectionCapability> get capabilities => const [];

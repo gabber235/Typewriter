@@ -1434,13 +1434,15 @@ _parentFixture({
       ? skir.TypeTemplate.createNullable(value: styleTemplate)
       : styleTemplate;
   final catalogSnapshot = skir.EditorCatalogWireSnapshot(
+    resourceDisplays: const [],
     resourceOperations: const [],
     resourceOperationContributions: const [],
     generation: skir.CatalogGeneration(value: generation),
     types: [
       skir.PublishedType(
+        searchKey: null,
         placementField: null,
-        display: null,
+        display: defaultTypeDisplay(""),
         definition: skir.TypeDefinition(
           id: root,
           parameters: const [],
@@ -1469,8 +1471,9 @@ _parentFixture({
         ancestorTemplates: const [],
       ),
       skir.PublishedType(
+        searchKey: null,
         placementField: null,
-        display: null,
+        display: defaultTypeDisplay(""),
         definition: skir.TypeDefinition(
           id: style,
           parameters: const [],
@@ -1592,8 +1595,9 @@ _parentFixture({
       ),
       if (inheritedBold)
         skir.PublishedType(
+          searchKey: null,
           placementField: null,
-          display: null,
+          display: defaultTypeDisplay(""),
           definition: skir.TypeDefinition(
             id: baseStyle,
             parameters: const [],
@@ -1623,8 +1627,9 @@ _parentFixture({
         ),
       if (includeItems)
         skir.PublishedType(
+          searchKey: null,
           placementField: null,
-          display: null,
+          display: defaultTypeDisplay(""),
           definition: skir.TypeDefinition(
             id: list,
             parameters: const [],
@@ -1790,8 +1795,9 @@ _pageCreationFixture({bool ambiguous = false}) {
     List<skir.NamedTypeTemplate> parents = const [],
     List<skir.EffectiveFieldTemplate> fields = const [],
   }) => skir.PublishedType(
+    searchKey: null,
     placementField: null,
-    display: null,
+    display: defaultTypeDisplay(""),
     definition: skir.TypeDefinition(
       id: id,
       parameters: const [],
@@ -1813,6 +1819,7 @@ _pageCreationFixture({bool ambiguous = false}) {
   final generation = skir.CatalogGeneration(value: "catalog:page creation");
   final pageResource = skir.ResourceDefinitionId(value: "typewriter.page");
   final snapshot = skir.EditorCatalogWireSnapshot(
+    resourceDisplays: const [],
     resourceOperations: const [],
     resourceOperationContributions: const [],
     generation: generation,
@@ -2138,6 +2145,7 @@ _relationFixture({
   );
   final checked = CheckedEditorCatalog(
     skir.EditorCatalogWireSnapshot(
+      resourceDisplays: const [],
       resourceOperations: const [],
       resourceOperationContributions: const [],
       generation: fixture.snapshot.generation,
@@ -2249,14 +2257,16 @@ _collectionRepairFixture() {
     skir.TypeDefinition definition,
     List<skir.EffectiveFieldTemplate> fields,
   ) => skir.PublishedType(
+    searchKey: null,
     placementField: null,
-    display: null,
+    display: defaultTypeDisplay(""),
     definition: definition,
     status: skir.DeclarationStatus.ready,
     effectiveFields: fields,
     ancestorTemplates: const [],
   );
   final catalogSnapshot = skir.EditorCatalogWireSnapshot(
+    resourceDisplays: const [],
     resourceOperations: const [],
     resourceOperationContributions: const [],
     generation: skir.CatalogGeneration(value: "catalog:collection-repair"),

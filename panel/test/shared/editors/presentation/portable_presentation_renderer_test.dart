@@ -667,10 +667,45 @@ void main() {
     );
 
     final icon = tester.widget<Icones>(find.byType(Icones));
-    expect(icon.icon, contains("<svg"));
+    expect((icon.iconValue! as SvgIconValue).source, contains("<svg"));
     expect(icon.color, color);
     expect(icon.size, 28);
     expect(find.bySemanticsLabel("Book icon"), findsOneWidget);
+  });
+
+  testWidgets("renders typed icon values such as a type display icon", (
+    tester,
+  ) async {
+    await tester.pumpTestApp(
+      child: Material(
+        child: PortablePresentationNodeRenderer(
+          node: presentationNode(
+            "icon",
+            skir.PresentationElement.createIcon(
+              name: skir.ExpressionNode.wrapLiteral(
+                iconValue(skir.Icon.wrapIconify("material-symbols:book")),
+              ),
+              semanticLabel: null,
+              color: null,
+              size: null,
+            ),
+          ),
+          scope: PortablePresentationScope(
+            operations: testPortableOperations(),
+            bindings: const {},
+            budget: skir.EvaluationBudget(
+              maxSteps: 100,
+              maxCollectionItems: 100,
+            ),
+          ),
+        ),
+      ),
+    );
+
+    expect(
+      tester.widget<Icones>(find.byType(Icones)).iconValue,
+      const IconValue.iconify("material-symbols:book"),
+    );
   });
 
   testWidgets("generated Tag cards adapt to one cell and wider placements", (
@@ -1850,6 +1885,7 @@ _linkCollectionFixture({
     arguments: const [],
   );
   final linksOwner = skir.FieldOwner(definition: rootDefinition, name: "links");
+  final nameOwner = skir.FieldOwner(definition: rootDefinition, name: "name");
   final rootTemplate = skir.TypeTemplate.createNamed(
     definition: rootDefinition,
     arguments: const [],
@@ -2003,13 +2039,15 @@ _linkCollectionFixture({
   );
   final checked = CheckedEditorCatalog(
     skir.EditorCatalogWireSnapshot(
+      resourceDisplays: [nameResourceDisplay(rootTemplate)],
       resourceOperations: const [],
       resourceOperationContributions: const [],
       generation: skir.CatalogGeneration(value: "catalog:links"),
       types: [
         skir.PublishedType(
+          searchKey: null,
           placementField: null,
-          display: null,
+          display: defaultTypeDisplay(""),
           definition: skir.TypeDefinition(
             id: rootDefinition,
             parameters: const [],
@@ -2018,6 +2056,12 @@ _linkCollectionFixture({
                 skir.FieldDeclaration(
                   owner: linksOwner,
                   type: setTemplate,
+                  overrides: const [],
+                  hasConstructorDefault: false,
+                ),
+                skir.FieldDeclaration(
+                  owner: nameOwner,
+                  type: skir.TypeTemplate.wrapScalar(skir.ScalarKind.text),
                   overrides: const [],
                   hasConstructorDefault: false,
                 ),
@@ -2034,12 +2078,19 @@ _linkCollectionFixture({
               type: setTemplate,
               rules: const [],
             ),
+            skir.EffectiveFieldTemplate(
+              key: "name",
+              owner: nameOwner,
+              type: skir.TypeTemplate.wrapScalar(skir.ScalarKind.text),
+              rules: const [],
+            ),
           ],
           ancestorTemplates: const [],
         ),
         skir.PublishedType(
+          searchKey: null,
           placementField: null,
-          display: null,
+          display: defaultTypeDisplay(""),
           definition: skir.TypeDefinition(
             id: setDefinition,
             parameters: const [],
@@ -2054,8 +2105,9 @@ _linkCollectionFixture({
           ancestorTemplates: const [],
         ),
         skir.PublishedType(
+          searchKey: null,
           placementField: null,
-          display: null,
+          display: defaultTypeDisplay(""),
           definition: skir.TypeDefinition(
             id: linkDefinition,
             parameters: const [],
@@ -2640,6 +2692,7 @@ CheckedEditorCatalog _collectionCatalog() {
     skir.RepresentationTemplate representation, {
     List<skir.EffectiveFieldTemplate> effective = const [],
   }) => skir.PublishedType(
+    searchKey: null,
     placementField: null,
     definition: skir.TypeDefinition(
       id: id,
@@ -2647,13 +2700,14 @@ CheckedEditorCatalog _collectionCatalog() {
       representation: representation,
       parents: const [],
     ),
-    display: null,
+    display: defaultTypeDisplay(""),
     status: skir.DeclarationStatus.ready,
     effectiveFields: effective,
     ancestorTemplates: const [],
   );
   return CheckedEditorCatalog(
     skir.EditorCatalogWireSnapshot(
+      resourceDisplays: const [],
       resourceOperations: const [],
       resourceOperationContributions: const [],
       generation: skir.CatalogGeneration(value: "catalog:test"),
@@ -2803,13 +2857,15 @@ final _polymorphicNode = presentationNode(
 );
 final _polymorphicCatalog = CheckedEditorCatalog(
   skir.EditorCatalogWireSnapshot(
+    resourceDisplays: const [],
     resourceOperations: const [],
     resourceOperationContributions: const [],
     generation: skir.CatalogGeneration(value: "test"),
     types: [
       skir.PublishedType(
+        searchKey: null,
         placementField: null,
-        display: null,
+        display: defaultTypeDisplay(""),
         definition: skir.TypeDefinition(
           id: _iconifyDefinition,
           parameters: const [],
@@ -3615,6 +3671,7 @@ void registerRemainingFieldsTests() {
           ),
       ];
       final published = skir.PublishedType(
+        searchKey: null,
         placementField: null,
         definition: skir.TypeDefinition(
           id: definition,
@@ -3625,7 +3682,7 @@ void registerRemainingFieldsTests() {
           ),
           parents: const [],
         ),
-        display: null,
+        display: defaultTypeDisplay(""),
         status: skir.DeclarationStatus.ready,
         effectiveFields: [
           for (final field in fields)

@@ -48,10 +48,8 @@ abstract class AuthoringSearchResultPayload
   skir.PortableValue get context => hit.context;
   skir.TypeSelection get configuration => hit.subject.content.configuration;
 
-  String get title =>
-      subject.descriptor.authoredString ??
-      subject.content.authoredLabel ??
-      id.value;
+  /// The hit's name from its declared display, read from the hit's content.
+  String get title => catalog.appearanceOf(subject.content).label;
 }
 
 /// Uses Realm search to choose saved resource hits, then renders surviving hits
@@ -193,7 +191,6 @@ final class RealmAuthoringSearchSource implements SearchSource {
                     resource: hit.resource,
                     definition: hit.definition,
                     content: document.resource(hit.resource)!,
-                    descriptor: skir.DataValue.unfilled,
                   ),
                   context: hit.context,
                 ),
