@@ -1,6 +1,7 @@
 package com.typewritermc.capability
 
 import com.typewritermc.authoring.CompletenessResult
+import com.typewritermc.authoring.GeneratedSdkApi
 import com.typewritermc.authoring.complete
 import com.typewritermc.types.DataValue
 import com.typewritermc.types.NativeBinding
@@ -15,24 +16,6 @@ import kotlinx.coroutines.flow.FlowCollector
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.map
 import kotlin.reflect.KClass
-
-@Target(AnnotationTarget.CLASS)
-@Retention(AnnotationRetention.BINARY)
-annotation class RealmCapabilities
-
-object RealmCapability {
-    @Target(AnnotationTarget.FUNCTION)
-    @Retention(AnnotationRetention.BINARY)
-    annotation class Search
-
-    @Target(AnnotationTarget.FUNCTION)
-    @Retention(AnnotationRetention.BINARY)
-    annotation class Computation
-
-    @Target(AnnotationTarget.FUNCTION)
-    @Retention(AnnotationRetention.BINARY)
-    annotation class Command
-}
 
 sealed interface RealmCapabilityRef<Request : Any> {
     val id: CapabilityId
@@ -177,6 +160,7 @@ data class RealmCommandOutcome(
     val instructions: List<PanelInstruction> = emptyList(),
 )
 
+@GeneratedSdkApi
 fun <Source : Any, Target : Any> RealmSearch<Source>.mapValues(transform: (Source) -> Target): RealmSearch<Target> =
     RealmSearch(
         updates.map { update ->

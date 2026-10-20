@@ -1,6 +1,9 @@
+@file:OptIn(GeneratedSdkApi::class)
+
 package com.typewritermc.realm
 
 import com.typewritermc.authoring.AppliedNativeArguments
+import com.typewritermc.authoring.GeneratedSdkApi
 import com.typewritermc.authoring.NativeBindingId
 import com.typewritermc.checking.CatalogGeneration
 import com.typewritermc.discovery.CatalogAssemblyContext
@@ -15,6 +18,7 @@ import com.typewritermc.discovery.GeneratedTypeProvider
 import com.typewritermc.discovery.ProviderOrigin
 import com.typewritermc.discovery.RuntimeRegistrar
 import com.typewritermc.discovery.RuntimeRegistrarDescriptor
+import com.typewritermc.discovery.RuntimeRegistrarId
 import com.typewritermc.discovery.RuntimeScope
 import com.typewritermc.discovery.assemble
 import com.typewritermc.imprint.ArtifactId
@@ -143,7 +147,7 @@ val RealmProviderArtifactsTest by testSuite {
                     PresentationTarget.Named(TypeTemplate.Named(RealmProviderFixture.type))
                 deployment.providers.registrars
                     .single()
-                    .descriptor.id shouldBe "fixture.realm"
+                    .descriptor.id shouldBe RuntimeRegistrarId("fixture.realm")
                 RealmProviderFixture.realmRegistrars shouldBe 1
                 RealmProviderFixture.executionRegistrars shouldBe 0
                 deployment.providers.contributions.declarations
@@ -196,7 +200,7 @@ class RealmCommonPresentationProvider : GeneratedPresentationProvider {
 }
 
 class RealmCommonRegistrarProvider : GeneratedRuntimeRegistrarProvider {
-    override val descriptor = RuntimeRegistrarDescriptor("fixture.realm", setOf(DiscoveryDomains.Realm))
+    override val descriptor = RuntimeRegistrarDescriptor(RuntimeRegistrarId("fixture.realm"), setOf(DiscoveryDomains.Realm))
 
     override fun bind(instantiator: GeneratedProviderInstantiator): RuntimeRegistrar {
         RealmProviderFixture.realmRegistrars += 1
@@ -205,7 +209,7 @@ class RealmCommonRegistrarProvider : GeneratedRuntimeRegistrarProvider {
 }
 
 class RealmExecutionRegistrarProvider : GeneratedRuntimeRegistrarProvider {
-    override val descriptor = RuntimeRegistrarDescriptor("fixture.execution", setOf(DiscoveryDomains.Execution))
+    override val descriptor = RuntimeRegistrarDescriptor(RuntimeRegistrarId("fixture.execution"), setOf(DiscoveryDomains.Execution))
 
     override fun bind(instantiator: GeneratedProviderInstantiator): RuntimeRegistrar {
         RealmProviderFixture.executionRegistrars += 1
