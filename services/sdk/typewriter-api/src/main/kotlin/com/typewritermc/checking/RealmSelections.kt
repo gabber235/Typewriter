@@ -2,6 +2,7 @@ package com.typewritermc.checking
 
 import com.typewritermc.authoring.Availability
 import com.typewritermc.authoring.DraftBinding
+import com.typewritermc.authoring.GeneratedSdkApi
 import com.typewritermc.authoring.ValuePath
 import com.typewritermc.expression.EvaluationDiagnostic
 import com.typewritermc.expression.Expr
@@ -39,6 +40,7 @@ data class TypedSelection<D>(
 
 fun <D> TypedSelection<D>.where(predicate: ExpressionNode): TypedSelection<D> = copy(predicate = predicate)
 
+@GeneratedSdkApi
 fun <D, S : Any> compileSelection(
     type: DraftType<D>,
     factory: ExpressionFactory<S>,

@@ -1,3 +1,5 @@
+@file:OptIn(GeneratedSdkApi::class)
+
 package com.typewritermc.authoring
 
 import com.typewritermc.types.FieldOwner
@@ -11,6 +13,7 @@ import kotlin.reflect.KParameter
 import kotlin.reflect.full.primaryConstructor
 
 /** Generated constructor identity, applied field type, and native accessor, in primary constructor order. */
+@GeneratedSdkApi
 class GeneratedConstructorField<T : Any>(
     val owner: FieldOwner,
     val sourceName: String,
@@ -23,6 +26,7 @@ class GeneratedConstructorField<T : Any>(
  * Retains constructor metadata with its generated provider. Applied codecs are resolved anew from each capture's
  * catalog. Creating the plan validates generated metadata without running a user constructor.
  */
+@GeneratedSdkApi
 fun <T : Any> KClass<T>.constructorDefaults(
     fields: List<GeneratedConstructorField<T>>,
     allowedOpaqueArguments: Set<Int> = emptySet(),

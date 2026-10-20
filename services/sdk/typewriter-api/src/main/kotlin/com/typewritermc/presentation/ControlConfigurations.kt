@@ -1,5 +1,6 @@
 package com.typewritermc.presentation
 
+import com.typewritermc.dsl.TypewriterDsl
 import com.typewritermc.expression.Expr
 import com.typewritermc.expression.Handled
 
@@ -18,6 +19,7 @@ interface GlyphContentScope {
     fun noIcon()
 }
 
+@TypewriterDsl
 interface InputContentScope : GlyphContentScope {
     fun placeholder(value: String)
 
@@ -28,6 +30,7 @@ interface InputContentScope : GlyphContentScope {
     fun suffix(body: Layout.() -> Unit)
 }
 
+@TypewriterDsl
 interface InputAppearanceScope {
     fun iconColor(value: PresentationColor)
 

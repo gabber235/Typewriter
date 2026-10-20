@@ -1,5 +1,6 @@
 package com.typewritermc.presentation
 
+import com.typewritermc.dsl.TypewriterDsl
 import com.typewritermc.expression.Expr
 import com.typewritermc.expression.Handled
 import com.typewritermc.types.Color
@@ -19,6 +20,7 @@ interface PresentedField<Value, Scope> {
     )
 }
 
+@TypewriterDsl
 interface Control {
     fun label(text: String)
 

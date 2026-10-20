@@ -2,6 +2,7 @@ package com.typewritermc.operations
 
 import com.typewritermc.authoring.AuthoredReads
 import com.typewritermc.authoring.Availability
+import com.typewritermc.authoring.GeneratedSdkApi
 import com.typewritermc.authoring.ReadProjection
 import com.typewritermc.authoring.ResourceDraft
 import com.typewritermc.authoring.TypedPath
@@ -12,6 +13,7 @@ import com.typewritermc.authoring.map
 import com.typewritermc.authoring.read
 import com.typewritermc.authoring.replace
 import com.typewritermc.discovery.ProviderOrigin
+import com.typewritermc.dsl.TypewriterDsl
 import com.typewritermc.presentation.ButtonVariant
 import com.typewritermc.presentation.PresentationReference
 import com.typewritermc.types.ResourceId
@@ -63,6 +65,7 @@ data class OperationHandle(
  * Contributions are additive across resource supertypes. Stable operation IDs deduplicate shared declarations;
  * this scope does not replace operations contributed by another provider. Generated providers retain the callbacks.
  */
+@TypewriterDsl
 interface ResourceOperationsScope<D : ResourceDraft> {
     fun <I> operation(
         id: String,
@@ -82,6 +85,7 @@ interface ResourceOperationsScope<D : ResourceDraft> {
     )
 }
 
+@TypewriterDsl
 interface ResourceOperationBuilder<D : ResourceDraft, I> {
     fun label(value: String)
 
@@ -119,11 +123,13 @@ interface ResourceOperationBuilder<D : ResourceDraft, I> {
     fun prepare(body: suspend OperationPrepareScope<D, I>.() -> Unit)
 }
 
+@TypewriterDsl
 class OperationReadScope<D : ResourceDraft>(
     val subjects: List<D>,
     reads: AuthoredReads,
 ) : AuthoredReads by reads
 
+@TypewriterDsl
 class OperationPrepareScope<D : ResourceDraft, I>(
     val subjects: List<D>,
     val input: I,
@@ -219,6 +225,7 @@ interface CollectedOperation {
     )
 }
 
+@GeneratedSdkApi
 class ResourceOperationsBuildScope<D : ResourceDraft> internal constructor(
     private val origin: ProviderOrigin,
     private val declaration: String,
@@ -432,6 +439,7 @@ private class OperationBuilder<D : ResourceDraft, I> : ResourceOperationBuilder<
     }
 }
 
+@GeneratedSdkApi
 fun <D : ResourceDraft> collectOperations(
     origin: ProviderOrigin,
     declaration: String,

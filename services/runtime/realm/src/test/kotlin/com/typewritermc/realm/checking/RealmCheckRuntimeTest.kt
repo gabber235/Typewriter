@@ -1,8 +1,11 @@
+@file:OptIn(GeneratedSdkApi::class)
+
 package com.typewritermc.realm.checking
 
 import com.typewritermc.authoring.AppliedNativeArguments
 import com.typewritermc.authoring.AuthoringRecord
 import com.typewritermc.authoring.Availability
+import com.typewritermc.authoring.GeneratedSdkApi
 import com.typewritermc.authoring.ItemId
 import com.typewritermc.authoring.NativeBindingId
 import com.typewritermc.authoring.PathSegment

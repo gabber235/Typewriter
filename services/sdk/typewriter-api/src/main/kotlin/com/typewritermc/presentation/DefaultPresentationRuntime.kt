@@ -1,5 +1,8 @@
+@file:OptIn(GeneratedSdkApi::class)
+
 package com.typewritermc.presentation
 
+import com.typewritermc.authoring.GeneratedSdkApi
 import com.typewritermc.expression.ExpressionFactories
 import java.util.IdentityHashMap
 

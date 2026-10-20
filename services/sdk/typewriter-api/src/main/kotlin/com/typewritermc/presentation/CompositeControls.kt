@@ -1,11 +1,13 @@
 package com.typewritermc.presentation
 
 import com.typewritermc.discovery.GraphDirection
+import com.typewritermc.dsl.TypewriterDsl
 import com.typewritermc.expression.Expr
 import com.typewritermc.expression.Handled
 import com.typewritermc.types.Resource
 
 /** Settings shared by collection editors without changing item identity or writes. */
+@TypewriterDsl
 interface CollectionAppearanceScope {
     fun itemSpacing(value: Double)
 
@@ -22,6 +24,7 @@ interface CollectionOperationAppearanceScope {
     fun operationDensity(value: ControlDensity)
 }
 
+@TypewriterDsl
 interface CollectionEmptyTextScope {
     fun emptyText(value: String)
 

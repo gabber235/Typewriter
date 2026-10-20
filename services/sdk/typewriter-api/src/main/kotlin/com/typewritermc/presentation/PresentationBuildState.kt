@@ -1,5 +1,8 @@
+@file:OptIn(GeneratedSdkApi::class)
+
 package com.typewritermc.presentation
 
+import com.typewritermc.authoring.GeneratedSdkApi
 import com.typewritermc.expression.ExpressionBindingId
 import com.typewritermc.expression.ExpressionFactories
 import com.typewritermc.types.PresentationRole

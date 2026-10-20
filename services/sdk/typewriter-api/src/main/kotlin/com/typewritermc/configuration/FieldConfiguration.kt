@@ -1,5 +1,6 @@
 package com.typewritermc.configuration
 
+import com.typewritermc.dsl.TypewriterDsl
 import com.typewritermc.expression.Expr
 import com.typewritermc.expression.MissingPolicy
 
@@ -13,6 +14,7 @@ typealias ConfigurationPredicate<Expressions> = Expressions.() -> Expr<Boolean, 
  * [rule] publishes an expression recipe for shared evaluation. [check] retains a server callback that requires
  * complete native inputs. Both return a declaration that is registered when [RuleDeclaration.error] supplies a diagnostic.
  */
+@TypewriterDsl
 interface Field<V, Expressions> {
     fun rule(predicate: ConfigurationPredicate<Expressions>): RuleDeclaration
 

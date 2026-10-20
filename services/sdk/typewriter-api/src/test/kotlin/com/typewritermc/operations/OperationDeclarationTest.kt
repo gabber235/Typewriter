@@ -1,9 +1,12 @@
+@file:OptIn(GeneratedSdkApi::class)
+
 package com.typewritermc.operations
 
 import com.typewritermc.authoring.AuthoredReads
 import com.typewritermc.authoring.AuthoringRecord
 import com.typewritermc.authoring.Availability
 import com.typewritermc.authoring.CounterpartChoice
+import com.typewritermc.authoring.GeneratedSdkApi
 import com.typewritermc.authoring.LinkOccurrence
 import com.typewritermc.authoring.LinkOccurrenceId
 import com.typewritermc.authoring.PreparedContent

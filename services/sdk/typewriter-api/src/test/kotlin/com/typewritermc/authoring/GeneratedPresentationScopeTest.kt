@@ -1,3 +1,5 @@
+@file:OptIn(GeneratedSdkApi::class)
+
 package com.typewritermc.authoring
 
 import com.typewritermc.checking.CatalogGeneration

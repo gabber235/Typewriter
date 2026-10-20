@@ -1,5 +1,8 @@
+@file:OptIn(GeneratedSdkApi::class)
+
 package com.typewritermc.discovery
 
+import com.typewritermc.authoring.GeneratedSdkApi
 import com.typewritermc.checking.CatalogGeneration
 import com.typewritermc.expression.literal
 import com.typewritermc.expression.orElse

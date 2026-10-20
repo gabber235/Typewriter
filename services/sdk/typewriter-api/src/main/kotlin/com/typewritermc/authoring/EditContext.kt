@@ -91,15 +91,7 @@ class EditablePath<Value> internal constructor(
     val location: ValueLocation = binding.location.append(relative)
 }
 
-@RequiresOptIn(
-    level = RequiresOptIn.Level.ERROR,
-    message = "Generated draft editors are the public typed editing surface.",
-)
-@Retention(AnnotationRetention.BINARY)
-@Target(AnnotationTarget.FUNCTION)
-annotation class GeneratedEditApi
-
-@GeneratedEditApi
+@GeneratedSdkApi
 fun <Value> DraftBinding.exactEditablePath(
     relative: ValuePath,
     expected: TypeUse,

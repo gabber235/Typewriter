@@ -1,3 +1,5 @@
+@file:OptIn(GeneratedSdkApi::class)
+
 package com.typewritermc.realm.repository
 
 import com.typewritermc.authoring.ArgumentSelection
@@ -5,6 +7,7 @@ import com.typewritermc.authoring.AuthoringRecord
 import com.typewritermc.authoring.ConnectIntent
 import com.typewritermc.authoring.CounterpartChoice
 import com.typewritermc.authoring.EditIntent
+import com.typewritermc.authoring.GeneratedSdkApi
 import com.typewritermc.authoring.ItemId
 import com.typewritermc.authoring.LinkOccurrence
 import com.typewritermc.authoring.LinkOccurrenceId

@@ -1,9 +1,12 @@
+@file:OptIn(GeneratedSdkApi::class)
+
 package com.typewritermc.realm.checking
 
 import com.typewritermc.authoring.Availability
 import com.typewritermc.authoring.DiagnosticId
 import com.typewritermc.authoring.DraftBinding
 import com.typewritermc.authoring.DraftExpectation
+import com.typewritermc.authoring.GeneratedSdkApi
 import com.typewritermc.authoring.PartialSchema
 import com.typewritermc.authoring.PathSegment
 import com.typewritermc.authoring.ValueLocation

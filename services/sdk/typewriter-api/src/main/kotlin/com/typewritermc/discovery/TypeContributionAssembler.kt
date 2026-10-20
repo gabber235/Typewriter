@@ -1,7 +1,10 @@
+@file:OptIn(GeneratedSdkApi::class)
+
 package com.typewritermc.discovery
 
 import com.typewritermc.authoring.AuthoringResourceDefinition
 import com.typewritermc.authoring.CompletenessResult
+import com.typewritermc.authoring.GeneratedSdkApi
 import com.typewritermc.authoring.PathSegment
 import com.typewritermc.authoring.ValuePath
 import com.typewritermc.authoring.complete
