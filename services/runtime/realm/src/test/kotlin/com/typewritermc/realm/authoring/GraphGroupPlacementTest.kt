@@ -1,7 +1,7 @@
 package com.typewritermc.realm.authoring
 
 import com.typewritermc.authoring.GraphPlacement
-import com.typewritermc.operations.PlacementAnchor
+import com.typewritermc.authoring.PlacementAnchor
 import de.infix.testBalloon.framework.core.testSuite
 import io.kotest.matchers.shouldBe
 

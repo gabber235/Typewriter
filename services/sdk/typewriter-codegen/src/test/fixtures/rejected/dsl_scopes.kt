@@ -1,6 +1,6 @@
 package fixture
 
-import com.typewritermc.operations.noInput
+import com.typewritermc.operations.PreparedOperation
 import com.typewritermc.types.Resource
 import com.typewritermc.types.TypewriterType
 
@@ -29,10 +29,11 @@ object CounterRules : CounterConfiguration {
     }
 }
 
-object ResetOperations : CounterOperations {
-    override fun CounterOperationsScope.operations() {
-        operation("reset", noInput()) {
-            operation("nested", noInput()) { } // error: cannot be called in this context with an implicit receiver.
+object Reset : CounterOperation<Unit> {
+    override fun CounterOperationSpec<Unit>.declare(): PreparedOperation {
+        appearance {
+            singleSubject() // error: cannot be called in this context with an implicit receiver.
         }
+        return prepare { }
     }
 }

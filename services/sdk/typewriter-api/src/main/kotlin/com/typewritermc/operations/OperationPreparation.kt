@@ -1,11 +1,14 @@
 package com.typewritermc.operations
 
+import com.typewritermc.authoring.AuthoredReads
+import com.typewritermc.authoring.Availability
 import com.typewritermc.authoring.CounterpartChoice
 import com.typewritermc.authoring.EditContext
 import com.typewritermc.authoring.LinkOccurrence
 import com.typewritermc.authoring.ResourceDraft
 import com.typewritermc.authoring.ValueLocation
-import com.typewritermc.types.DataValue
+import com.typewritermc.authoring.ValuePath
+import com.typewritermc.dsl.TypewriterDsl
 import com.typewritermc.types.ResourceId
 
 data class OperationOrigin(
@@ -94,61 +97,15 @@ interface OperationIdentities {
     fun item(key: String): com.typewritermc.authoring.ItemId
 }
 
-data class PlacementAnchor(
-    val x: Double,
-    val y: Double,
-)
-
-data class CloneResult(
-    val selectedCopies: List<ResourceId>,
-)
-
-fun interface RelationAssignment {
-    context(operation: OperationPreparation)
-    suspend fun apply()
-}
-
-fun interface PlacementPreparation {
-    context(operation: OperationPreparation)
-    suspend fun apply()
-}
-
-interface ResourceRelationPreparation {
-    context(operation: OperationPreparation)
-    suspend fun requireMove(
-        subjects: List<ResourceDraft>,
-        destination: ResourceId,
-        origin: OperationOrigin,
-        answers: PreparationChoices,
-    ): RelationAssignment
-
-    context(operation: OperationPreparation)
-    suspend fun linkWith(
-        targets: List<ResourceId>,
-        target: ResourceId,
-        choices: PreparationChoices,
-    )
-
-    context(operation: OperationPreparation)
-    suspend fun linkWithDuplicate(
-        original: ResourceId,
-        copy: ResourceId,
-        choices: PreparationChoices,
-    )
-}
-
-interface ResourceLayoutPreparation {
-    context(operation: OperationPreparation)
-    suspend fun prepareMove(
-        subjects: List<ResourceDraft>,
-        destination: ResourceId,
-        anchor: PlacementAnchor?,
-    ): PlacementPreparation
-}
-
-interface ResourceClonePreparation {
-    context(operation: OperationPreparation)
-    suspend fun duplicateOwned(roots: List<ResourceId>): CloneResult
+/**
+ * What operation callbacks read: authored values and graph facts of the invocation's working graph. Reads are
+ * recorded as observations of the attempt.
+ */
+interface OperationReads :
+    AuthoredReads,
+    AuthoringGraphFacts {
+    /** [id] bound as a draft of any resource, whatever its type. Operations on every resource read their subjects so. */
+    fun resourceDraft(id: ResourceId): ResourceDraft
 }
 
 /**
@@ -156,17 +113,77 @@ interface ResourceClonePreparation {
  * Reads include local staged changes. Writes remain private until the caller validates and stages the exact preview.
  * Implementations must not flush unrelated drafts or commit while preparing. Callbacks must not retain this context.
  */
-interface OperationPreparation : EditContext {
+interface OperationPreparation :
+    OperationReads,
+    EditContext,
+    AuthoringGraphEdits {
     val invocation: OperationInvocation
     val choices: PreparationChoices
     val identities: OperationIdentities
-    val relations: ResourceRelationPreparation
-    val layouts: ResourceLayoutPreparation
-    val cloner: ResourceClonePreparation
 
+    /** Replaces the editor selection with [ids] once the preview is staged. */
     fun selectAfterStaging(ids: List<ResourceId>)
-
-    fun confirm(confirmation: OperationConfirmation)
-
-    suspend fun deleteSelection(ids: List<ResourceId>)
 }
+
+/**
+ * Availability and candidate callbacks read [subjects] through authored reads and graph facts, never edits.
+ * [drafts] binds each subject as the operation's draft type on first use.
+ */
+@TypewriterDsl
+class OperationReadScope<D : ResourceDraft>(
+    val subjects: List<ResourceId>,
+    drafts: () -> List<D>,
+    reads: OperationReads,
+) : OperationReads by reads {
+    val drafts: List<D> by lazy(drafts)
+}
+
+/** Preparation reads like [OperationReadScope] and stages edits, including high level graph edits. */
+@TypewriterDsl
+class OperationPrepareScope<D : ResourceDraft, I>(
+    val subjects: List<ResourceId>,
+    drafts: () -> List<D>,
+    val input: I,
+    preparation: OperationPreparation,
+) : OperationPreparation by preparation {
+    val drafts: List<D> by lazy(drafts)
+}
+
+class UnavailableAuthoredValue(
+    val locations: List<ValueLocation>,
+) : IllegalStateException("Required authored values are missing")
+
+/** The operation input value is not yet complete at [paths], relative to the input root. */
+class UnfinishedOperationInput(
+    val paths: List<ValuePath>,
+) : IllegalStateException("Operation input is unfinished")
+
+class FailedAuthoredValue(
+    val diagnostic: com.typewritermc.expression.EvaluationDiagnostic,
+) : IllegalStateException(diagnostic.toString())
+
+/** Enabled when every value is authored, disabled with the missing locations otherwise. */
+fun authored(values: Iterable<Availability<*>>): OperationAvailability {
+    val missing = mutableListOf<ValueLocation>()
+    values.forEach { value ->
+        when (value) {
+            is Availability.Available -> Unit
+            is Availability.Unavailable -> missing += value.locations
+            is Availability.Failed -> throw FailedAuthoredValue(value.diagnostic)
+        }
+    }
+    return if (missing.isEmpty()) {
+        OperationAvailability.Enabled
+    } else {
+        OperationAvailability.Disabled(
+            "Required authored values are missing: ${missing.joinToString()}",
+        )
+    }
+}
+
+fun <T> requireAuthored(value: Availability<T>): T =
+    when (value) {
+        is Availability.Available -> value.value
+        is Availability.Unavailable -> throw UnavailableAuthoredValue(value.locations)
+        is Availability.Failed -> throw FailedAuthoredValue(value.diagnostic)
+    }

@@ -7636,6 +7636,10 @@ pub enum PresentationInteractionState {
     Invalid,
     /// The resource is the one open in the workspace.
     Routed,
+    /// A dragged resource hovers this item and at least one drop offer accepts it.
+    DropAccepted,
+    /// A dragged resource hovers this item and no drop offer accepts it.
+    DropRejected,
 }
 
 impl Default for PresentationInteractionState {
@@ -7661,6 +7665,8 @@ impl PresentationInteractionState {
                     PresentationInteractionState::ReadOnly => 6,
                     PresentationInteractionState::Invalid => 7,
                     PresentationInteractionState::Routed => 8,
+                    PresentationInteractionState::DropAccepted => 9,
+                    PresentationInteractionState::DropRejected => 10,
                 },
                 |u| PresentationInteractionState::Unknown(Some(u)),
                 |x: &PresentationInteractionState| match x {
@@ -19222,6 +19228,20 @@ fn initialize_module_serializers() {
                 8,
                 "The resource is the one open in the workspace.",
                 PresentationInteractionState::Routed,
+            );
+            (*a).add_constant_variant(
+                "drop_accepted",
+                9,
+                9,
+                "A dragged resource hovers this item and at least one drop offer accepts it.",
+                PresentationInteractionState::DropAccepted,
+            );
+            (*a).add_constant_variant(
+                "drop_rejected",
+                10,
+                10,
+                "A dragged resource hovers this item and no drop offer accepts it.",
+                PresentationInteractionState::DropRejected,
             );
             (*a).finalize();
         }

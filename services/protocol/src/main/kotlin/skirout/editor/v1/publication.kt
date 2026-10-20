@@ -5584,7 +5584,7 @@ val PublishAuthoring: build.skir.service.Method<
 > by kotlin.lazy {
     build.skir.service.Method(
         "PublishAuthoring",
-        920017,
+        920018,
         skirout.editor.v1.publication.PublishAuthoringRequest.serializer,
         skirout.editor.v1.publication.PublishAuthoringResponse.serializer,
         "Releases only the issued candidate while its captured saved inputs and engine requirements still match.",
@@ -5597,7 +5597,7 @@ val WatchPublication: build.skir.service.Method<
 > by kotlin.lazy {
     build.skir.service.Method(
         "WatchPublication",
-        920018,
+        920019,
         skirout.editor.v1.publication.WatchPublicationRequest.serializer,
         skirout.editor.v1.publication.PublicationViewChanged.serializer,
         "",
@@ -5614,7 +5614,7 @@ val QueryPublicationView: build.skir.service.Method<
 > by kotlin.lazy {
     build.skir.service.Method(
         "QueryPublicationView",
-        920019,
+        920020,
         skirout.editor.v1.publication.QueryPublicationViewRequest.serializer,
         skirout.editor.v1.publication.QueryPublicationViewResponse.serializer,
         "Transfers one immutable review view or reports that expected is no longer current.\nAll chunks share the view and transfer identities; later invalidations require a separate query.",

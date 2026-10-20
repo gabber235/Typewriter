@@ -521,10 +521,6 @@ private fun ConversionScope.encodeSnapshot(snapshot: EditorCatalogSnapshot) =
         recommendations = snapshot.recommendations.mapIndexed { index, value -> at("recommendation $index") { encode(value) } },
         roleFallbacks = snapshot.roleFallbacks.mapIndexed { index, value -> at("role fallback $index") { encode(value) } },
         resourceOperations = snapshot.resourceOperations.mapIndexed { index, value -> at("resource operation $index") { encode(value) } },
-        resourceOperationContributions =
-            snapshot.resourceOperationContributions.mapIndexed { index, value ->
-                at("resource operation contribution $index") { encode(value) }
-            },
         realmRoot = encodeDefinitionId(snapshot.realmRoot),
     )
 

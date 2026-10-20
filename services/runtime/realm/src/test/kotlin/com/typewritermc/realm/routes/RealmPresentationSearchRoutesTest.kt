@@ -1,11 +1,14 @@
 package com.typewritermc.realm.routes
 
-import com.typewritermc.operations.OperationSearch
-import com.typewritermc.realm.authoring.AuthoringSeed
-import com.typewritermc.realm.authoring.InMemoryAuthoringViewStore
+import com.typewritermc.authoring.complete
+import com.typewritermc.operations.MoveToOwner
+import com.typewritermc.operations.OperationResourceOption
+import com.typewritermc.realm.TestRealmStructure
 import com.typewritermc.realm.catalog.RealmCatalogStore
 import com.typewritermc.realm.catalog.installTestCatalog
-import com.typewritermc.realm.checking.TestCatalogLease
+import com.typewritermc.types.catalog.Resolution
+import com.typewritermc.types.skir.getOrThrow
+import com.typewritermc.types.toTemplate
 import de.infix.testBalloon.framework.core.testSuite
 import io.kotest.matchers.collections.shouldContainExactly
 import io.kotest.matchers.shouldBe
@@ -28,21 +31,58 @@ val RealmPresentationSearchRoutesTest by testSuite {
     test("switching from an operation search cancels its stream even when the next capability is unavailable") {
         runTest {
             RealmCatalogStore().use { catalogs ->
-                catalogs.installTestCatalog("generation")
-                val operation = PendingSearchSource(backgroundScope)
-                val views = InMemoryAuthoringViewStore(TestCatalogLease(), AuthoringSeed(emptyMap()))
-                val source = CapabilityRealmPresentationSearchSource(backgroundScope, catalogs, views, operation)
-                source.watch(validSearchRequest().copy(capabilityId = CapabilityId(value = OperationSearch.compatibleBooks.id.value))) { }
-                runCurrent()
-                operation.active.toSet() shouldBe setOf("search")
+                CoreOperationsFixture().use { fixture ->
+                    catalogs.installTestCatalog("generation")
+                    val operation = PendingSearchSource(backgroundScope)
+                    val source = CapabilityRealmPresentationSearchSource(backgroundScope, catalogs, fixture.views, operation)
+                    val candidates = fixture.candidateSearch(MoveToOwner, "destination")
+                    source.watch(validSearchRequest().copy(capabilityId = CapabilityId(value = candidates.value))) { }
+                    runCurrent()
+                    operation.active.toSet() shouldBe setOf("search")
 
-                val replacement = source.watch(validSearchRequest()) { }
-                runCurrent()
+                    val replacement = source.watch(validSearchRequest()) { }
+                    runCurrent()
 
-                (replacement as RealmPresentationSearchUpdate.SnapshotWrapper).value.status shouldBe RealmPresentationSearchStatus.ERROR
-                operation.active.toSet() shouldBe emptySet()
-                source.cancel("search") shouldBe false
-                views.close()
+                    (replacement as RealmPresentationSearchUpdate.SnapshotWrapper).value.status shouldBe RealmPresentationSearchStatus.ERROR
+                    operation.active.toSet() shouldBe emptySet()
+                    source.cancel("search") shouldBe false
+                }
+            }
+        }
+    }
+
+    test("an operation field search offers its declared candidates filtered by the query, never others") {
+        runTest {
+            CoreOperationsFixture(withElements = true).use { fixture ->
+                val source = OperationRealmPresentationSearchSource(backgroundScope, fixture.views)
+
+                suspend fun search(query: String): List<OperationResourceOption> {
+                    val published = mutableListOf<RealmPresentationSearchUpdate>()
+                    source.watch(fixture.candidateRequest(MoveToOwner, "destination", query, "graph-entry"), published::add)
+                    runCurrent()
+                    val snapshot = (published.single() as RealmPresentationSearchUpdate.SnapshotWrapper).value
+                    snapshot.status shouldBe RealmPresentationSearchStatus.READY
+                    return snapshot.values.map(fixture::option)
+                }
+
+                search("").map { it.id.value }.toSet() shouldBe setOf("canvas", "timeline")
+                search("page 2").map { it.id.value } shouldBe listOf("timeline")
+                search("nothing").map { it.id.value } shouldBe emptyList()
+            }
+        }
+    }
+
+    test("an operation field search is unavailable for a selection the operation does not apply to") {
+        runTest {
+            CoreOperationsFixture().use { fixture ->
+                val source = OperationRealmPresentationSearchSource(backgroundScope, fixture.views)
+                val response =
+                    source.watch(
+                        fixture.candidateRequest(MoveToOwner, "destination", "", TestRealmStructure.root.value).copy(
+                            capabilityId = CapabilityId(value = "unknown"),
+                        ),
+                    ) { }
+                (response is RealmPresentationSearchUpdate.UnavailableWrapper) shouldBe true
             }
         }
     }
@@ -182,3 +222,38 @@ private fun validSearchRequest() =
                 selectorExpression = null,
             ),
     )
+
+/** A search over the candidates of [field] in the input of the operation object [operation], for dragging [subjects]. */
+private fun CoreOperationsFixture.candidateRequest(
+    operation: Any,
+    field: String,
+    query: String,
+    vararg subjects: String,
+) = validSearchRequest().copy(
+    generation = CatalogGeneration(value = catalogGeneration()),
+    capabilityId = CapabilityId(value = candidateSearch(operation, field).value),
+    resultType =
+        com.typewritermc.types.skir.SkirTypeCodec
+            .encode(
+                com.typewritermc.operations.OperationResourceOptionDefinition.use
+                    .toTemplate(),
+            ).getOrThrow(),
+    operationContext = searchContext(*subjects),
+    query = RealmSearchQuery(normalizedQuery = query, terms = listOf(query), selectors = emptyList(), selectorExpression = null),
+)
+
+/** Decodes one search result value as an operation resource option. */
+private fun CoreOperationsFixture.option(value: DataValue): OperationResourceOption =
+    views.read { root ->
+        val checked =
+            (root.catalog.checked.resolve(com.typewritermc.operations.OperationResourceOptionDefinition.use) as Resolution.Ready).value
+        val complete =
+            checked.complete(
+                com.typewritermc.types.skir.SkirDataValueCodec
+                    .decode(value)
+                    .getOrThrow(),
+            ) as com.typewritermc.authoring.CompletenessResult.Complete
+        root.catalog.nativeBindings
+            .bind(checked)
+            .decode(complete.value) as OperationResourceOption
+    }

@@ -238,4 +238,6 @@ internal fun PresentationInteractionState.wire(): WireState =
         PresentationInteractionState.ReadOnly -> WireState.READ_ONLY
         PresentationInteractionState.Invalid -> WireState.INVALID
         PresentationInteractionState.Routed -> WireState.ROUTED
+        PresentationInteractionState.DropAccepted -> WireState.DROP_ACCEPTED
+        PresentationInteractionState.DropRejected -> WireState.DROP_REJECTED
     }

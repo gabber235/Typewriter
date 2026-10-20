@@ -1111,6 +1111,7 @@ internal fun frameworkContributions(
             GeneratedProviderKind.Relation,
             GeneratedProviderKind.EndpointBindings,
             GeneratedProviderKind.ResourceDisplay,
+            GeneratedProviderKind.ResourceOperation,
         )
     val providers = entries.filter { it.kind in exportedKinds }.associateWith(::instance)
     val declarations =
@@ -1167,6 +1168,11 @@ internal fun frameworkContributions(
                     origin(entry.providerClass.substringAfterLast('.').replace('$', '_')),
                     value as com.typewritermc.discovery.GeneratedResourceDisplayProvider,
                 )
+            },
+        operations =
+            providers.filterKeys { it.kind == GeneratedProviderKind.ResourceOperation }.map { (entry, value) ->
+                (value as com.typewritermc.discovery.GeneratedResourceOperationProvider)
+                    .contribute(origin(entry.providerClass.substringAfterLast('.').replace('$', '_')))
             },
     )
 }

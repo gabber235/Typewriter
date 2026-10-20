@@ -24,13 +24,13 @@ sealed interface ResourceOperationId_OrMutable {
     val artifact: kotlin.String;
     val sourcePart: kotlin.String;
     val declaration: kotlin.String;
-    val local: kotlin.String;
 
     fun toFrozen(): skirout.editor.v1.operation.ResourceOperationId;
 }
 
 /**
- * Stable declaration owned identity, independent of display labels and catalog generation.
+ * Stable identity owned by the declaring object, independent of display labels and catalog generation.
+ * declaration is the fully qualified name of the operation object.
  *
  * Deeply immutable.
  */
@@ -39,7 +39,6 @@ class ResourceOperationId private constructor(
     override val artifact: kotlin.String,
     override val sourcePart: kotlin.String,
     override val declaration: kotlin.String,
-    override val local: kotlin.String,
     internal val _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.operation.ResourceOperationId>? =
         null,
 ): skirout.editor.v1.operation.ResourceOperationId_OrMutable {
@@ -49,14 +48,12 @@ class ResourceOperationId private constructor(
         artifact: kotlin.String,
         sourcePart: kotlin.String,
         declaration: kotlin.String,
-        local: kotlin.String,
         _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.operation.ResourceOperationId>? =
             null,
     ): this(
         artifact,
         sourcePart,
         declaration,
-        local,
         _unrecognizedFields,
     ) {}
 
@@ -68,7 +65,6 @@ class ResourceOperationId private constructor(
         artifact = this.artifact,
         sourcePart = this.sourcePart,
         declaration = this.declaration,
-        local = this.local,
     );
 
     /** Returns a shallow copy of this instance with the specified fields replaced. */
@@ -81,13 +77,10 @@ class ResourceOperationId private constructor(
             this.sourcePart,
         declaration: kotlin.String =
             this.declaration,
-        local: kotlin.String =
-            this.local,
     ) = skirout.editor.v1.operation.ResourceOperationId(
         artifact,
         sourcePart,
         declaration,
-        local,
         this._unrecognizedFields,
     );
 
@@ -95,11 +88,11 @@ class ResourceOperationId private constructor(
     fun copy() = this;
 
     override fun equals(other: kotlin.Any?): kotlin.Boolean {
-        return this === other || (other is skirout.editor.v1.operation.ResourceOperationId && this.artifact == other.artifact && this.sourcePart == other.sourcePart && this.declaration == other.declaration && this.local == other.local);
+        return this === other || (other is skirout.editor.v1.operation.ResourceOperationId && this.artifact == other.artifact && this.sourcePart == other.sourcePart && this.declaration == other.declaration);
     }
 
     override fun hashCode(): kotlin.Int {
-        return kotlin.collections.listOf<kotlin.Any?>(this.artifact, this.sourcePart, this.declaration, this.local).hashCode();
+        return kotlin.collections.listOf<kotlin.Any?>(this.artifact, this.sourcePart, this.declaration).hashCode();
     }
 
     override fun toString(): kotlin.String {
@@ -119,8 +112,6 @@ class ResourceOperationId private constructor(
             "",
         override var declaration: kotlin.String =
             "",
-        override var local: kotlin.String =
-            "",
         internal var _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.operation.ResourceOperationId>? =
             null,
     ): skirout.editor.v1.operation.ResourceOperationId_OrMutable {
@@ -129,7 +120,6 @@ class ResourceOperationId private constructor(
             artifact = this.artifact,
             sourcePart = this.sourcePart,
             declaration = this.declaration,
-            local = this.local,
             _unrecognizedFields = this._unrecognizedFields,
         );
     }
@@ -137,7 +127,6 @@ class ResourceOperationId private constructor(
     companion object {
         private val default =
             skirout.editor.v1.operation.ResourceOperationId(
-                "",
                 "",
                 "",
                 "",
@@ -160,13 +149,10 @@ class ResourceOperationId private constructor(
                 "",
             declaration: kotlin.String =
                 "",
-            local: kotlin.String =
-                "",
         ) = skirout.editor.v1.operation.ResourceOperationId(
             artifact = artifact,
             sourcePart = sourcePart,
             declaration = declaration,
-            local = local,
             _unrecognizedFields = null,
         );
 
@@ -178,87 +164,71 @@ class ResourceOperationId private constructor(
     }
 }
 
-/** Deeply immutable. */
-sealed class OperationTargets private constructor() {
-    /** The kind of variant held by a `OperationTargets`. */
-    enum class Kind {
-        UNKNOWN,
-        CONTRIBUTED_SINGLE_CONST,
-        CONTRIBUTED_SELECTION_CONST,
-        SINGLE_WRAPPER,
-        SELECTION_WRAPPER,
+sealed interface OperationTargets_OrMutable {
+    val subject: skirout.editor.v1.type_catalog.ResourceTarget;
+    val cardinality: skirout.editor.v1.operation.OperationCardinality;
+
+    fun toFrozen(): skirout.editor.v1.operation.OperationTargets;
+}
+
+/**
+ * The resources an operation applies to and how many it accepts at once.
+ *
+ * Deeply immutable.
+ */
+@kotlin.Suppress("UNUSED_PARAMETER")
+class OperationTargets private constructor(
+    override val subject: skirout.editor.v1.type_catalog.ResourceTarget,
+    override val cardinality: skirout.editor.v1.operation.OperationCardinality,
+    internal val _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.operation.OperationTargets>? =
+        null,
+): skirout.editor.v1.operation.OperationTargets_OrMutable {
+    constructor(
+        _mustNameArguments: _MustNameArguments =
+            _MustNameArguments,
+        subject: skirout.editor.v1.type_catalog.ResourceTarget,
+        cardinality: skirout.editor.v1.operation.OperationCardinality,
+        _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.operation.OperationTargets>? =
+            null,
+    ): this(
+        subject,
+        cardinality,
+        _unrecognizedFields,
+    ) {}
+
+    @kotlin.Deprecated("Already frozen", kotlin.ReplaceWith("this"))
+    override fun toFrozen() = this;
+
+    /** Returns a mutable shallow copy of this instance */
+    fun toMutable() = Mutable(
+        subject = this.subject,
+        cardinality = this.cardinality,
+    );
+
+    /** Returns a shallow copy of this instance with the specified fields replaced. */
+    fun copy(
+        _mustNameArguments: _MustNameArguments =
+            _MustNameArguments,
+        subject: skirout.editor.v1.type_catalog.ResourceTarget =
+            this.subject,
+        cardinality: skirout.editor.v1.operation.OperationCardinality =
+            this.cardinality,
+    ) = skirout.editor.v1.operation.OperationTargets(
+        subject,
+        cardinality,
+        this._unrecognizedFields,
+    );
+
+    @kotlin.Deprecated("No point in creating an exact copy of an immutable object", kotlin.ReplaceWith("this"))
+    fun copy() = this;
+
+    override fun equals(other: kotlin.Any?): kotlin.Boolean {
+        return this === other || (other is skirout.editor.v1.operation.OperationTargets && this.subject == other.subject && this.cardinality == other.cardinality);
     }
 
-    class Unknown @kotlin.Deprecated("For internal use", kotlin.ReplaceWith("skirout.editor.v1.operation.OperationTargets.UNKNOWN")) internal constructor(
-        internal val _kind: Kind,
-        internal override val _unrecognized: _UnrecognizedVariant<skirout.editor.v1.operation.OperationTargets>?,
-    ) : skirout.editor.v1.operation.OperationTargets() {
-        override val kind get() = _kind;
-
-        override fun equals(other: kotlin.Any?): kotlin.Boolean {
-            return other is skirout.editor.v1.operation.OperationTargets && other.kind == kind;
-        }
-
-        override fun hashCode(): kotlin.Int {
-            return kind.ordinal;
-        }
+    override fun hashCode(): kotlin.Int {
+        return kotlin.collections.listOf<kotlin.Any?>(this.subject, this.cardinality).hashCode();
     }
-
-    object CONTRIBUTED_SINGLE : skirout.editor.v1.operation.OperationTargets() {
-        override val kind get() = Kind.CONTRIBUTED_SINGLE_CONST;
-
-        override fun equals(other: kotlin.Any?): kotlin.Boolean {
-            return other is skirout.editor.v1.operation.OperationTargets && other.kind == Kind.CONTRIBUTED_SINGLE_CONST;
-        }
-
-        override fun hashCode(): kotlin.Int {
-            return Kind.CONTRIBUTED_SINGLE_CONST.ordinal;
-        }
-    }
-
-    object CONTRIBUTED_SELECTION : skirout.editor.v1.operation.OperationTargets() {
-        override val kind get() = Kind.CONTRIBUTED_SELECTION_CONST;
-
-        override fun equals(other: kotlin.Any?): kotlin.Boolean {
-            return other is skirout.editor.v1.operation.OperationTargets && other.kind == Kind.CONTRIBUTED_SELECTION_CONST;
-        }
-
-        override fun hashCode(): kotlin.Int {
-            return Kind.CONTRIBUTED_SELECTION_CONST.ordinal;
-        }
-    }
-
-    class SingleWrapper(
-        val value: skirout.editor.v1.type_catalog.TypeTemplate,
-    ) : skirout.editor.v1.operation.OperationTargets() {
-        override val kind get() = Kind.SINGLE_WRAPPER;
-
-        override fun equals(other: kotlin.Any?): kotlin.Boolean {
-            return other is skirout.editor.v1.operation.OperationTargets.SingleWrapper && value == other.value;
-        }
-
-        override fun hashCode(): kotlin.Int {
-            return this.value.hashCode() + -902265784;
-        }
-    }
-
-    class SelectionWrapper(
-        val value: skirout.editor.v1.type_catalog.TypeTemplate,
-    ) : skirout.editor.v1.operation.OperationTargets() {
-        override val kind get() = Kind.SELECTION_WRAPPER;
-
-        override fun equals(other: kotlin.Any?): kotlin.Boolean {
-            return other is skirout.editor.v1.operation.OperationTargets.SelectionWrapper && value == other.value;
-        }
-
-        override fun hashCode(): kotlin.Int {
-            return this.value.hashCode() + -1715965556;
-        }
-    }
-
-    internal open val _unrecognized: _UnrecognizedVariant<skirout.editor.v1.operation.OperationTargets>? get() = null;
-
-    abstract val kind: Kind;
 
     override fun toString(): kotlin.String {
         return build.skir.internal.toStringImpl(
@@ -267,12 +237,52 @@ sealed class OperationTargets private constructor() {
         )
     }
 
+    /** Mutable version of [OperationTargets]. */
+    class Mutable internal constructor(
+        _mustNameArguments: _MustNameArguments =
+            _MustNameArguments,
+        override var subject: skirout.editor.v1.type_catalog.ResourceTarget =
+            skirout.editor.v1.type_catalog.ResourceTarget.UNKNOWN,
+        override var cardinality: skirout.editor.v1.operation.OperationCardinality =
+            skirout.editor.v1.operation.OperationCardinality.UNKNOWN,
+        internal var _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.operation.OperationTargets>? =
+            null,
+    ): skirout.editor.v1.operation.OperationTargets_OrMutable {
+        /** Returns a deeply immutable copy of this instance */
+        override fun toFrozen() = skirout.editor.v1.operation.OperationTargets(
+            subject = this.subject,
+            cardinality = this.cardinality,
+            _unrecognizedFields = this._unrecognizedFields,
+        );
+    }
+
     companion object {
+        private val default =
+            skirout.editor.v1.operation.OperationTargets(
+                skirout.editor.v1.type_catalog.ResourceTarget.UNKNOWN,
+                skirout.editor.v1.operation.OperationCardinality.UNKNOWN,
+            );
+
+        /** Returns an instance with all fields set to their default values. */
+        fun partial() = default;
+
         /**
-         * Constant indicating an unknown [OperationTargets].
-         * Default value for fields of type [OperationTargets].
+         * Creates a new instance of [OperationTargets].
+         * Unlike the constructor, does not require all fields to be specified.
+         * Missing fields will be set to their default values.
          */
-        val UNKNOWN = @kotlin.Suppress("DEPRECATION") Unknown(Kind.UNKNOWN, null);
+        fun partial(
+            _mustNameArguments: _MustNameArguments =
+                _MustNameArguments,
+            subject: skirout.editor.v1.type_catalog.ResourceTarget =
+                skirout.editor.v1.type_catalog.ResourceTarget.UNKNOWN,
+            cardinality: skirout.editor.v1.operation.OperationCardinality =
+                skirout.editor.v1.operation.OperationCardinality.UNKNOWN,
+        ) = skirout.editor.v1.operation.OperationTargets(
+            subject = subject,
+            cardinality = cardinality,
+            _unrecognizedFields = null,
+        );
 
         /** Serializer for [OperationTargets] instances. */
         val serializer get() = _SerializerRegistry.OperationTargetsSerializer;
@@ -282,12 +292,15 @@ sealed class OperationTargets private constructor() {
     }
 }
 
-/** Deeply immutable. */
+/**
+ * Menu sections, in display order.
+ *
+ * Deeply immutable.
+ */
 sealed class OperationGroup private constructor() {
     /** The kind of variant held by a `OperationGroup`. */
     enum class Kind {
         UNKNOWN,
-        NAVIGATION_CONST,
         EDIT_CONST,
         ORGANIZE_CONST,
         DESTRUCTIVE_CONST,
@@ -305,18 +318,6 @@ sealed class OperationGroup private constructor() {
 
         override fun hashCode(): kotlin.Int {
             return kind.ordinal;
-        }
-    }
-
-    object NAVIGATION : skirout.editor.v1.operation.OperationGroup() {
-        override val kind get() = Kind.NAVIGATION_CONST;
-
-        override fun equals(other: kotlin.Any?): kotlin.Boolean {
-            return other is skirout.editor.v1.operation.OperationGroup && other.kind == Kind.NAVIGATION_CONST;
-        }
-
-        override fun hashCode(): kotlin.Int {
-            return Kind.NAVIGATION_CONST.ordinal;
         }
     }
 
@@ -527,12 +528,13 @@ sealed interface OperationPresentation_OrMutable {
     val icon: kotlin.String;
     val group: skirout.editor.v1.operation.OperationGroup;
     val order: kotlin.Int;
+    /** Destructive for the destructive group, neutral otherwise. */
     val tone: skirout.editor.v1.presentation.HeaderActionTone;
     val confirmation: skirout.editor.v1.operation.OperationConfirmation_OrMutable?;
-    /** Inspector button emphasis, independent of tone. Context menu rows ignore this variant. */
-    val variant: skirout.editor.v1.presentation.ButtonVariant;
-    /** Whether this operation also appears among inspector controls. Menus and shortcuts remain available. */
-    val showInInspector: kotlin.Boolean;
+    /** Inspector presence. Menus, shortcuts and drops ignore it. */
+    val inspector: skirout.editor.v1.operation.OperationInspector;
+    /** The keyboard gesture that invokes this operation on the selection, if any. */
+    val shortcut: skirout.editor.v1.operation.OperationShortcut?;
 
     fun toFrozen(): skirout.editor.v1.operation.OperationPresentation;
 }
@@ -547,8 +549,8 @@ class OperationPresentation private constructor(
     override val order: kotlin.Int,
     override val tone: skirout.editor.v1.presentation.HeaderActionTone,
     override val confirmation: skirout.editor.v1.operation.OperationConfirmation?,
-    override val variant: skirout.editor.v1.presentation.ButtonVariant,
-    override val showInInspector: kotlin.Boolean,
+    override val inspector: skirout.editor.v1.operation.OperationInspector,
+    override val shortcut: skirout.editor.v1.operation.OperationShortcut?,
     internal val _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.operation.OperationPresentation>? =
         null,
 ): skirout.editor.v1.operation.OperationPresentation_OrMutable {
@@ -562,8 +564,8 @@ class OperationPresentation private constructor(
         order: kotlin.Int,
         tone: skirout.editor.v1.presentation.HeaderActionTone,
         confirmation: skirout.editor.v1.operation.OperationConfirmation_OrMutable?,
-        variant: skirout.editor.v1.presentation.ButtonVariant,
-        showInInspector: kotlin.Boolean,
+        inspector: skirout.editor.v1.operation.OperationInspector,
+        shortcut: skirout.editor.v1.operation.OperationShortcut?,
         _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.operation.OperationPresentation>? =
             null,
     ): this(
@@ -574,8 +576,8 @@ class OperationPresentation private constructor(
         order,
         tone,
         if (confirmation != null) confirmation.toFrozen() else null,
-        variant,
-        showInInspector,
+        inspector,
+        shortcut,
         _unrecognizedFields,
     ) {}
 
@@ -591,8 +593,8 @@ class OperationPresentation private constructor(
         order = this.order,
         tone = this.tone,
         confirmation = this.confirmation,
-        variant = this.variant,
-        showInInspector = this.showInInspector,
+        inspector = this.inspector,
+        shortcut = this.shortcut,
     );
 
     /** Returns a shallow copy of this instance with the specified fields replaced. */
@@ -613,10 +615,10 @@ class OperationPresentation private constructor(
             this.tone,
         confirmation: skirout.editor.v1.operation.OperationConfirmation_OrMutable? =
             this.confirmation,
-        variant: skirout.editor.v1.presentation.ButtonVariant =
-            this.variant,
-        showInInspector: kotlin.Boolean =
-            this.showInInspector,
+        inspector: skirout.editor.v1.operation.OperationInspector =
+            this.inspector,
+        shortcut: skirout.editor.v1.operation.OperationShortcut? =
+            this.shortcut,
     ) = skirout.editor.v1.operation.OperationPresentation(
         label,
         description,
@@ -625,8 +627,8 @@ class OperationPresentation private constructor(
         order,
         tone,
         if (confirmation != null) confirmation.toFrozen() else null,
-        variant,
-        showInInspector,
+        inspector,
+        shortcut,
         this._unrecognizedFields,
     );
 
@@ -634,11 +636,11 @@ class OperationPresentation private constructor(
     fun copy() = this;
 
     override fun equals(other: kotlin.Any?): kotlin.Boolean {
-        return this === other || (other is skirout.editor.v1.operation.OperationPresentation && this.label == other.label && this.description == other.description && this.icon == other.icon && this.group == other.group && this.order == other.order && this.tone == other.tone && this.confirmation == other.confirmation && this.variant == other.variant && this.showInInspector == other.showInInspector);
+        return this === other || (other is skirout.editor.v1.operation.OperationPresentation && this.label == other.label && this.description == other.description && this.icon == other.icon && this.group == other.group && this.order == other.order && this.tone == other.tone && this.confirmation == other.confirmation && this.inspector == other.inspector && this.shortcut == other.shortcut);
     }
 
     override fun hashCode(): kotlin.Int {
-        return kotlin.collections.listOf<kotlin.Any?>(this.label, this.description, this.icon, this.group, this.order, this.tone, this.confirmation, this.variant, this.showInInspector).hashCode();
+        return kotlin.collections.listOf<kotlin.Any?>(this.label, this.description, this.icon, this.group, this.order, this.tone, this.confirmation, this.inspector, this.shortcut).hashCode();
     }
 
     override fun toString(): kotlin.String {
@@ -666,10 +668,10 @@ class OperationPresentation private constructor(
             skirout.editor.v1.presentation.HeaderActionTone.UNKNOWN,
         override var confirmation: skirout.editor.v1.operation.OperationConfirmation_OrMutable? =
             null,
-        override var variant: skirout.editor.v1.presentation.ButtonVariant =
-            skirout.editor.v1.presentation.ButtonVariant.UNKNOWN,
-        override var showInInspector: kotlin.Boolean =
-            false,
+        override var inspector: skirout.editor.v1.operation.OperationInspector =
+            skirout.editor.v1.operation.OperationInspector.UNKNOWN,
+        override var shortcut: skirout.editor.v1.operation.OperationShortcut? =
+            null,
         internal var _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.operation.OperationPresentation>? =
             null,
     ): skirout.editor.v1.operation.OperationPresentation_OrMutable {
@@ -682,8 +684,8 @@ class OperationPresentation private constructor(
             order = this.order,
             tone = this.tone,
             confirmation = this.confirmation,
-            variant = this.variant,
-            showInInspector = this.showInInspector,
+            inspector = this.inspector,
+            shortcut = this.shortcut,
             _unrecognizedFields = this._unrecognizedFields,
         );
     }
@@ -698,8 +700,8 @@ class OperationPresentation private constructor(
                 0,
                 skirout.editor.v1.presentation.HeaderActionTone.UNKNOWN,
                 null,
-                skirout.editor.v1.presentation.ButtonVariant.UNKNOWN,
-                false,
+                skirout.editor.v1.operation.OperationInspector.UNKNOWN,
+                null,
             );
 
         /** Returns an instance with all fields set to their default values. */
@@ -727,10 +729,10 @@ class OperationPresentation private constructor(
                 skirout.editor.v1.presentation.HeaderActionTone.UNKNOWN,
             confirmation: skirout.editor.v1.operation.OperationConfirmation_OrMutable? =
                 null,
-            variant: skirout.editor.v1.presentation.ButtonVariant =
-                skirout.editor.v1.presentation.ButtonVariant.UNKNOWN,
-            showInInspector: kotlin.Boolean =
-                false,
+            inspector: skirout.editor.v1.operation.OperationInspector =
+                skirout.editor.v1.operation.OperationInspector.UNKNOWN,
+            shortcut: skirout.editor.v1.operation.OperationShortcut? =
+                null,
         ) = skirout.editor.v1.operation.OperationPresentation(
             label = label,
             description = description,
@@ -739,8 +741,8 @@ class OperationPresentation private constructor(
             order = order,
             tone = tone,
             confirmation = confirmation,
-            variant = variant,
-            showInInspector = showInInspector,
+            inspector = inspector,
+            shortcut = shortcut,
             _unrecognizedFields = null,
         );
 
@@ -879,8 +881,11 @@ class OperationInputDefinition private constructor(
 sealed interface ResourceOperationDefinition_OrMutable {
     val id: skirout.editor.v1.operation.ResourceOperationId_OrMutable;
     val presentation: skirout.editor.v1.operation.OperationPresentation_OrMutable;
-    val targets: skirout.editor.v1.operation.OperationTargets;
-    val action: skirout.editor.v1.action.EditorAction;
+    val targets: skirout.editor.v1.operation.OperationTargets_OrMutable;
+    /** Every catalog operation is an authoring action prepared through this capability. */
+    val capability: skirout.editor.v1.type_catalog.CapabilityId_OrMutable;
+    /** Set when a resource dropped onto another resource fills an input field. */
+    val drop: skirout.editor.v1.operation.OperationDrop_OrMutable?;
 
     fun toFrozen(): skirout.editor.v1.operation.ResourceOperationDefinition;
 }
@@ -891,7 +896,8 @@ class ResourceOperationDefinition private constructor(
     override val id: skirout.editor.v1.operation.ResourceOperationId,
     override val presentation: skirout.editor.v1.operation.OperationPresentation,
     override val targets: skirout.editor.v1.operation.OperationTargets,
-    override val action: skirout.editor.v1.action.EditorAction,
+    override val capability: skirout.editor.v1.type_catalog.CapabilityId,
+    override val drop: skirout.editor.v1.operation.OperationDrop?,
     internal val _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.operation.ResourceOperationDefinition>? =
         null,
 ): skirout.editor.v1.operation.ResourceOperationDefinition_OrMutable {
@@ -900,15 +906,17 @@ class ResourceOperationDefinition private constructor(
             _MustNameArguments,
         id: skirout.editor.v1.operation.ResourceOperationId_OrMutable,
         presentation: skirout.editor.v1.operation.OperationPresentation_OrMutable,
-        targets: skirout.editor.v1.operation.OperationTargets,
-        action: skirout.editor.v1.action.EditorAction,
+        targets: skirout.editor.v1.operation.OperationTargets_OrMutable,
+        capability: skirout.editor.v1.type_catalog.CapabilityId_OrMutable,
+        drop: skirout.editor.v1.operation.OperationDrop_OrMutable?,
         _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.operation.ResourceOperationDefinition>? =
             null,
     ): this(
         id.toFrozen(),
         presentation.toFrozen(),
-        targets,
-        action,
+        targets.toFrozen(),
+        capability.toFrozen(),
+        if (drop != null) drop.toFrozen() else null,
         _unrecognizedFields,
     ) {}
 
@@ -920,7 +928,8 @@ class ResourceOperationDefinition private constructor(
         id = this.id,
         presentation = this.presentation,
         targets = this.targets,
-        action = this.action,
+        capability = this.capability,
+        drop = this.drop,
     );
 
     /** Returns a shallow copy of this instance with the specified fields replaced. */
@@ -931,15 +940,18 @@ class ResourceOperationDefinition private constructor(
             this.id,
         presentation: skirout.editor.v1.operation.OperationPresentation_OrMutable =
             this.presentation,
-        targets: skirout.editor.v1.operation.OperationTargets =
+        targets: skirout.editor.v1.operation.OperationTargets_OrMutable =
             this.targets,
-        action: skirout.editor.v1.action.EditorAction =
-            this.action,
+        capability: skirout.editor.v1.type_catalog.CapabilityId_OrMutable =
+            this.capability,
+        drop: skirout.editor.v1.operation.OperationDrop_OrMutable? =
+            this.drop,
     ) = skirout.editor.v1.operation.ResourceOperationDefinition(
         id.toFrozen(),
         presentation.toFrozen(),
-        targets,
-        action,
+        targets.toFrozen(),
+        capability.toFrozen(),
+        if (drop != null) drop.toFrozen() else null,
         this._unrecognizedFields,
     );
 
@@ -947,11 +959,11 @@ class ResourceOperationDefinition private constructor(
     fun copy() = this;
 
     override fun equals(other: kotlin.Any?): kotlin.Boolean {
-        return this === other || (other is skirout.editor.v1.operation.ResourceOperationDefinition && this.id == other.id && this.presentation == other.presentation && this.targets == other.targets && this.action == other.action);
+        return this === other || (other is skirout.editor.v1.operation.ResourceOperationDefinition && this.id == other.id && this.presentation == other.presentation && this.targets == other.targets && this.capability == other.capability && this.drop == other.drop);
     }
 
     override fun hashCode(): kotlin.Int {
-        return kotlin.collections.listOf<kotlin.Any?>(this.id, this.presentation, this.targets, this.action).hashCode();
+        return kotlin.collections.listOf<kotlin.Any?>(this.id, this.presentation, this.targets, this.capability, this.drop).hashCode();
     }
 
     override fun toString(): kotlin.String {
@@ -969,10 +981,12 @@ class ResourceOperationDefinition private constructor(
             skirout.editor.v1.operation.ResourceOperationId.partial(),
         override var presentation: skirout.editor.v1.operation.OperationPresentation_OrMutable =
             skirout.editor.v1.operation.OperationPresentation.partial(),
-        override var targets: skirout.editor.v1.operation.OperationTargets =
-            skirout.editor.v1.operation.OperationTargets.UNKNOWN,
-        override var action: skirout.editor.v1.action.EditorAction =
-            skirout.editor.v1.action.EditorAction.UNKNOWN,
+        override var targets: skirout.editor.v1.operation.OperationTargets_OrMutable =
+            skirout.editor.v1.operation.OperationTargets.partial(),
+        override var capability: skirout.editor.v1.type_catalog.CapabilityId_OrMutable =
+            skirout.editor.v1.type_catalog.CapabilityId.partial(),
+        override var drop: skirout.editor.v1.operation.OperationDrop_OrMutable? =
+            null,
         internal var _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.operation.ResourceOperationDefinition>? =
             null,
     ): skirout.editor.v1.operation.ResourceOperationDefinition_OrMutable {
@@ -981,7 +995,8 @@ class ResourceOperationDefinition private constructor(
             id = this.id,
             presentation = this.presentation,
             targets = this.targets,
-            action = this.action,
+            capability = this.capability,
+            drop = this.drop,
             _unrecognizedFields = this._unrecognizedFields,
         );
 
@@ -1016,6 +1031,38 @@ class ResourceOperationDefinition private constructor(
                 is skirout.editor.v1.operation.OperationPresentation.Mutable -> value;
             }
         }
+
+        /**
+         * If the value of [targets] is already mutable, returns it as-is.
+         * Otherwise, makes a mutable copy, assigns it back to [targets] and returns it.
+         */
+        val mutableTargets: skirout.editor.v1.operation.OperationTargets.Mutable get() {
+            var value = this.targets;
+            return when (value) {
+                is skirout.editor.v1.operation.OperationTargets -> {
+                    value = value.toMutable();
+                    this.targets = value;
+                    return value;
+                }
+                is skirout.editor.v1.operation.OperationTargets.Mutable -> value;
+            }
+        }
+
+        /**
+         * If the value of [capability] is already mutable, returns it as-is.
+         * Otherwise, makes a mutable copy, assigns it back to [capability] and returns it.
+         */
+        val mutableCapability: skirout.editor.v1.type_catalog.CapabilityId.Mutable get() {
+            var value = this.capability;
+            return when (value) {
+                is skirout.editor.v1.type_catalog.CapabilityId -> {
+                    value = value.toMutable();
+                    this.capability = value;
+                    return value;
+                }
+                is skirout.editor.v1.type_catalog.CapabilityId.Mutable -> value;
+            }
+        }
     }
 
     companion object {
@@ -1023,8 +1070,9 @@ class ResourceOperationDefinition private constructor(
             skirout.editor.v1.operation.ResourceOperationDefinition(
                 skirout.editor.v1.operation.ResourceOperationId.partial(),
                 skirout.editor.v1.operation.OperationPresentation.partial(),
-                skirout.editor.v1.operation.OperationTargets.UNKNOWN,
-                skirout.editor.v1.action.EditorAction.UNKNOWN,
+                skirout.editor.v1.operation.OperationTargets.partial(),
+                skirout.editor.v1.type_catalog.CapabilityId.partial(),
+                null,
             );
 
         /** Returns an instance with all fields set to their default values. */
@@ -1042,15 +1090,18 @@ class ResourceOperationDefinition private constructor(
                 skirout.editor.v1.operation.ResourceOperationId.partial(),
             presentation: skirout.editor.v1.operation.OperationPresentation_OrMutable =
                 skirout.editor.v1.operation.OperationPresentation.partial(),
-            targets: skirout.editor.v1.operation.OperationTargets =
-                skirout.editor.v1.operation.OperationTargets.UNKNOWN,
-            action: skirout.editor.v1.action.EditorAction =
-                skirout.editor.v1.action.EditorAction.UNKNOWN,
+            targets: skirout.editor.v1.operation.OperationTargets_OrMutable =
+                skirout.editor.v1.operation.OperationTargets.partial(),
+            capability: skirout.editor.v1.type_catalog.CapabilityId_OrMutable =
+                skirout.editor.v1.type_catalog.CapabilityId.partial(),
+            drop: skirout.editor.v1.operation.OperationDrop_OrMutable? =
+                null,
         ) = skirout.editor.v1.operation.ResourceOperationDefinition(
             id = id,
             presentation = presentation,
             targets = targets,
-            action = action,
+            capability = capability,
+            drop = drop,
             _unrecognizedFields = null,
         );
 
@@ -1059,167 +1110,6 @@ class ResourceOperationDefinition private constructor(
 
         /** Describes the [ResourceOperationDefinition] type. Provides runtime introspection capabilities. */
         val typeDescriptor get() = _SerializerRegistry.ResourceOperationDefinitionSerializerImpl.typeDescriptor;
-    }
-}
-
-sealed interface ResourceOperationContribution_OrMutable {
-    val target: skirout.editor.v1.type_catalog.TypeTemplate;
-    val operations: kotlin.collections.List<skirout.editor.v1.operation.ResourceOperationId_OrMutable>;
-    val primary: skirout.editor.v1.operation.ResourceOperationId_OrMutable?;
-
-    fun toFrozen(): skirout.editor.v1.operation.ResourceOperationContribution;
-}
-
-/**
- * Adds operation identities to matching resource types and optionally nominates a primary action.
- * Resolution considers all selected targets; primary nomination applies to a single resource
- * and conflicting equally applicable nominations are rejected.
- *
- * Deeply immutable.
- */
-@kotlin.Suppress("UNUSED_PARAMETER")
-class ResourceOperationContribution private constructor(
-    override val target: skirout.editor.v1.type_catalog.TypeTemplate,
-    override val operations: kotlin.collections.List<skirout.editor.v1.operation.ResourceOperationId>,
-    override val primary: skirout.editor.v1.operation.ResourceOperationId?,
-    internal val _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.operation.ResourceOperationContribution>? =
-        null,
-): skirout.editor.v1.operation.ResourceOperationContribution_OrMutable {
-    constructor(
-        _mustNameArguments: _MustNameArguments =
-            _MustNameArguments,
-        target: skirout.editor.v1.type_catalog.TypeTemplate,
-        operations: kotlin.collections.Iterable<skirout.editor.v1.operation.ResourceOperationId_OrMutable>,
-        primary: skirout.editor.v1.operation.ResourceOperationId_OrMutable?,
-        _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.operation.ResourceOperationContribution>? =
-            null,
-    ): this(
-        target,
-        build.skir.internal.toFrozenList(operations, { it.toFrozen() }),
-        if (primary != null) primary.toFrozen() else null,
-        _unrecognizedFields,
-    ) {}
-
-    @kotlin.Deprecated("Already frozen", kotlin.ReplaceWith("this"))
-    override fun toFrozen() = this;
-
-    /** Returns a mutable shallow copy of this instance */
-    fun toMutable() = Mutable(
-        target = this.target,
-        operations = this.operations,
-        primary = this.primary,
-    );
-
-    /** Returns a shallow copy of this instance with the specified fields replaced. */
-    fun copy(
-        _mustNameArguments: _MustNameArguments =
-            _MustNameArguments,
-        target: skirout.editor.v1.type_catalog.TypeTemplate =
-            this.target,
-        operations: kotlin.collections.Iterable<skirout.editor.v1.operation.ResourceOperationId_OrMutable> =
-            this.operations,
-        primary: skirout.editor.v1.operation.ResourceOperationId_OrMutable? =
-            this.primary,
-    ) = skirout.editor.v1.operation.ResourceOperationContribution(
-        target,
-        build.skir.internal.toFrozenList(operations, { it.toFrozen() }),
-        if (primary != null) primary.toFrozen() else null,
-        this._unrecognizedFields,
-    );
-
-    @kotlin.Deprecated("No point in creating an exact copy of an immutable object", kotlin.ReplaceWith("this"))
-    fun copy() = this;
-
-    override fun equals(other: kotlin.Any?): kotlin.Boolean {
-        return this === other || (other is skirout.editor.v1.operation.ResourceOperationContribution && this.target == other.target && this.operations == other.operations && this.primary == other.primary);
-    }
-
-    override fun hashCode(): kotlin.Int {
-        return kotlin.collections.listOf<kotlin.Any?>(this.target, this.operations, this.primary).hashCode();
-    }
-
-    override fun toString(): kotlin.String {
-        return build.skir.internal.toStringImpl(
-            this,
-            _SerializerRegistry.ResourceOperationContributionSerializerImpl,
-        )
-    }
-
-    /** Mutable version of [ResourceOperationContribution]. */
-    class Mutable internal constructor(
-        _mustNameArguments: _MustNameArguments =
-            _MustNameArguments,
-        override var target: skirout.editor.v1.type_catalog.TypeTemplate =
-            skirout.editor.v1.type_catalog.TypeTemplate.UNKNOWN,
-        override var operations: kotlin.collections.List<skirout.editor.v1.operation.ResourceOperationId_OrMutable> =
-            build.skir.internal.emptyFrozenList<skirout.editor.v1.operation.ResourceOperationId>(),
-        override var primary: skirout.editor.v1.operation.ResourceOperationId_OrMutable? =
-            null,
-        internal var _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.operation.ResourceOperationContribution>? =
-            null,
-    ): skirout.editor.v1.operation.ResourceOperationContribution_OrMutable {
-        /** Returns a deeply immutable copy of this instance */
-        override fun toFrozen() = skirout.editor.v1.operation.ResourceOperationContribution(
-            target = this.target,
-            operations = this.operations,
-            primary = this.primary,
-            _unrecognizedFields = this._unrecognizedFields,
-        );
-
-        /**
-         * If the value of [operations] is already mutable, returns it as-is.
-         * Otherwise, makes a mutable copy, assigns it back to [operations] and returns it.
-         */
-        val mutableOperations: kotlin.collections.MutableList<skirout.editor.v1.operation.ResourceOperationId_OrMutable> get() {
-            var value = this.operations;
-            return when (value) {
-                is build.skir.internal.MutableList -> value;
-                else -> {
-                    value = build.skir.internal.MutableList(value);
-                    this.operations = value;
-                    value;
-                }
-            }
-        }
-    }
-
-    companion object {
-        private val default =
-            skirout.editor.v1.operation.ResourceOperationContribution(
-                skirout.editor.v1.type_catalog.TypeTemplate.UNKNOWN,
-                build.skir.internal.emptyFrozenList<skirout.editor.v1.operation.ResourceOperationId>(),
-                null,
-            );
-
-        /** Returns an instance with all fields set to their default values. */
-        fun partial() = default;
-
-        /**
-         * Creates a new instance of [ResourceOperationContribution].
-         * Unlike the constructor, does not require all fields to be specified.
-         * Missing fields will be set to their default values.
-         */
-        fun partial(
-            _mustNameArguments: _MustNameArguments =
-                _MustNameArguments,
-            target: skirout.editor.v1.type_catalog.TypeTemplate =
-                skirout.editor.v1.type_catalog.TypeTemplate.UNKNOWN,
-            operations: kotlin.collections.Iterable<skirout.editor.v1.operation.ResourceOperationId_OrMutable> =
-                build.skir.internal.emptyFrozenList<skirout.editor.v1.operation.ResourceOperationId>(),
-            primary: skirout.editor.v1.operation.ResourceOperationId_OrMutable? =
-                null,
-        ) = skirout.editor.v1.operation.ResourceOperationContribution(
-            target = target,
-            operations = operations,
-            primary = primary,
-            _unrecognizedFields = null,
-        );
-
-        /** Serializer for [ResourceOperationContribution] instances. */
-        val serializer get() = _SerializerRegistry.ResourceOperationContributionSerializer;
-
-        /** Describes the [ResourceOperationContribution] type. Provides runtime introspection capabilities. */
-        val typeDescriptor get() = _SerializerRegistry.ResourceOperationContributionSerializerImpl.typeDescriptor;
     }
 }
 
@@ -1459,16 +1349,18 @@ class ResolvedResourceOperation private constructor(
 
 sealed interface ResolvedResourceOperations_OrMutable {
     val operations: kotlin.collections.List<skirout.editor.v1.operation.ResolvedResourceOperation_OrMutable>;
-    val primaryOperation: skirout.editor.v1.operation.ResourceOperationId_OrMutable?;
 
     fun toFrozen(): skirout.editor.v1.operation.ResolvedResourceOperations;
 }
 
-/** Deeply immutable. */
+/**
+ * Applicable operations ordered by group, then order, then identity.
+ *
+ * Deeply immutable.
+ */
 @kotlin.Suppress("UNUSED_PARAMETER")
 class ResolvedResourceOperations private constructor(
     override val operations: kotlin.collections.List<skirout.editor.v1.operation.ResolvedResourceOperation>,
-    override val primaryOperation: skirout.editor.v1.operation.ResourceOperationId?,
     internal val _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.operation.ResolvedResourceOperations>? =
         null,
 ): skirout.editor.v1.operation.ResolvedResourceOperations_OrMutable {
@@ -1476,12 +1368,10 @@ class ResolvedResourceOperations private constructor(
         _mustNameArguments: _MustNameArguments =
             _MustNameArguments,
         operations: kotlin.collections.Iterable<skirout.editor.v1.operation.ResolvedResourceOperation_OrMutable>,
-        primaryOperation: skirout.editor.v1.operation.ResourceOperationId_OrMutable?,
         _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.operation.ResolvedResourceOperations>? =
             null,
     ): this(
         build.skir.internal.toFrozenList(operations, { it.toFrozen() }),
-        if (primaryOperation != null) primaryOperation.toFrozen() else null,
         _unrecognizedFields,
     ) {}
 
@@ -1491,7 +1381,6 @@ class ResolvedResourceOperations private constructor(
     /** Returns a mutable shallow copy of this instance */
     fun toMutable() = Mutable(
         operations = this.operations,
-        primaryOperation = this.primaryOperation,
     );
 
     /** Returns a shallow copy of this instance with the specified fields replaced. */
@@ -1500,11 +1389,8 @@ class ResolvedResourceOperations private constructor(
             _MustNameArguments,
         operations: kotlin.collections.Iterable<skirout.editor.v1.operation.ResolvedResourceOperation_OrMutable> =
             this.operations,
-        primaryOperation: skirout.editor.v1.operation.ResourceOperationId_OrMutable? =
-            this.primaryOperation,
     ) = skirout.editor.v1.operation.ResolvedResourceOperations(
         build.skir.internal.toFrozenList(operations, { it.toFrozen() }),
-        if (primaryOperation != null) primaryOperation.toFrozen() else null,
         this._unrecognizedFields,
     );
 
@@ -1512,11 +1398,11 @@ class ResolvedResourceOperations private constructor(
     fun copy() = this;
 
     override fun equals(other: kotlin.Any?): kotlin.Boolean {
-        return this === other || (other is skirout.editor.v1.operation.ResolvedResourceOperations && this.operations == other.operations && this.primaryOperation == other.primaryOperation);
+        return this === other || (other is skirout.editor.v1.operation.ResolvedResourceOperations && this.operations == other.operations);
     }
 
     override fun hashCode(): kotlin.Int {
-        return kotlin.collections.listOf<kotlin.Any?>(this.operations, this.primaryOperation).hashCode();
+        return kotlin.collections.listOf<kotlin.Any?>(this.operations).hashCode();
     }
 
     override fun toString(): kotlin.String {
@@ -1532,15 +1418,12 @@ class ResolvedResourceOperations private constructor(
             _MustNameArguments,
         override var operations: kotlin.collections.List<skirout.editor.v1.operation.ResolvedResourceOperation_OrMutable> =
             build.skir.internal.emptyFrozenList<skirout.editor.v1.operation.ResolvedResourceOperation>(),
-        override var primaryOperation: skirout.editor.v1.operation.ResourceOperationId_OrMutable? =
-            null,
         internal var _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.operation.ResolvedResourceOperations>? =
             null,
     ): skirout.editor.v1.operation.ResolvedResourceOperations_OrMutable {
         /** Returns a deeply immutable copy of this instance */
         override fun toFrozen() = skirout.editor.v1.operation.ResolvedResourceOperations(
             operations = this.operations,
-            primaryOperation = this.primaryOperation,
             _unrecognizedFields = this._unrecognizedFields,
         );
 
@@ -1565,7 +1448,6 @@ class ResolvedResourceOperations private constructor(
         private val default =
             skirout.editor.v1.operation.ResolvedResourceOperations(
                 build.skir.internal.emptyFrozenList<skirout.editor.v1.operation.ResolvedResourceOperation>(),
-                null,
             );
 
         /** Returns an instance with all fields set to their default values. */
@@ -1581,11 +1463,8 @@ class ResolvedResourceOperations private constructor(
                 _MustNameArguments,
             operations: kotlin.collections.Iterable<skirout.editor.v1.operation.ResolvedResourceOperation_OrMutable> =
                 build.skir.internal.emptyFrozenList<skirout.editor.v1.operation.ResolvedResourceOperation>(),
-            primaryOperation: skirout.editor.v1.operation.ResourceOperationId_OrMutable? =
-                null,
         ) = skirout.editor.v1.operation.ResolvedResourceOperations(
             operations = operations,
-            primaryOperation = primaryOperation,
             _unrecognizedFields = null,
         );
 
@@ -1594,6 +1473,369 @@ class ResolvedResourceOperations private constructor(
 
         /** Describes the [ResolvedResourceOperations] type. Provides runtime introspection capabilities. */
         val typeDescriptor get() = _SerializerRegistry.ResolvedResourceOperationsSerializerImpl.typeDescriptor;
+    }
+}
+
+/** Deeply immutable. */
+sealed class OperationCardinality private constructor() {
+    /** The kind of variant held by a `OperationCardinality`. */
+    enum class Kind {
+        UNKNOWN,
+        SINGLE_CONST,
+        SELECTION_CONST,
+    }
+
+    class Unknown @kotlin.Deprecated("For internal use", kotlin.ReplaceWith("skirout.editor.v1.operation.OperationCardinality.UNKNOWN")) internal constructor(
+        internal val _kind: Kind,
+        internal override val _unrecognized: _UnrecognizedVariant<skirout.editor.v1.operation.OperationCardinality>?,
+    ) : skirout.editor.v1.operation.OperationCardinality() {
+        override val kind get() = _kind;
+
+        override fun equals(other: kotlin.Any?): kotlin.Boolean {
+            return other is skirout.editor.v1.operation.OperationCardinality && other.kind == kind;
+        }
+
+        override fun hashCode(): kotlin.Int {
+            return kind.ordinal;
+        }
+    }
+
+    object SINGLE : skirout.editor.v1.operation.OperationCardinality() {
+        override val kind get() = Kind.SINGLE_CONST;
+
+        override fun equals(other: kotlin.Any?): kotlin.Boolean {
+            return other is skirout.editor.v1.operation.OperationCardinality && other.kind == Kind.SINGLE_CONST;
+        }
+
+        override fun hashCode(): kotlin.Int {
+            return Kind.SINGLE_CONST.ordinal;
+        }
+    }
+
+    object SELECTION : skirout.editor.v1.operation.OperationCardinality() {
+        override val kind get() = Kind.SELECTION_CONST;
+
+        override fun equals(other: kotlin.Any?): kotlin.Boolean {
+            return other is skirout.editor.v1.operation.OperationCardinality && other.kind == Kind.SELECTION_CONST;
+        }
+
+        override fun hashCode(): kotlin.Int {
+            return Kind.SELECTION_CONST.ordinal;
+        }
+    }
+
+    internal open val _unrecognized: _UnrecognizedVariant<skirout.editor.v1.operation.OperationCardinality>? get() = null;
+
+    abstract val kind: Kind;
+
+    override fun toString(): kotlin.String {
+        return build.skir.internal.toStringImpl(
+            this,
+            _SerializerRegistry.OperationCardinalitySerializerImpl,
+        )
+    }
+
+    companion object {
+        /**
+         * Constant indicating an unknown [OperationCardinality].
+         * Default value for fields of type [OperationCardinality].
+         */
+        val UNKNOWN = @kotlin.Suppress("DEPRECATION") Unknown(Kind.UNKNOWN, null);
+
+        /** Serializer for [OperationCardinality] instances. */
+        val serializer get() = _SerializerRegistry.OperationCardinalitySerializer;
+
+        /** Describes the [OperationCardinality] type. Provides runtime introspection capabilities. */
+        val typeDescriptor get() = _SerializerRegistry.OperationCardinalitySerializerImpl.typeDescriptor;
+    }
+}
+
+/**
+ * Inspector presence of an operation.
+ *
+ * Deeply immutable.
+ */
+sealed class OperationInspector private constructor() {
+    /** The kind of variant held by a `OperationInspector`. */
+    enum class Kind {
+        UNKNOWN,
+        HIDDEN_CONST,
+        BUTTON_WRAPPER,
+    }
+
+    class Unknown @kotlin.Deprecated("For internal use", kotlin.ReplaceWith("skirout.editor.v1.operation.OperationInspector.UNKNOWN")) internal constructor(
+        internal val _kind: Kind,
+        internal override val _unrecognized: _UnrecognizedVariant<skirout.editor.v1.operation.OperationInspector>?,
+    ) : skirout.editor.v1.operation.OperationInspector() {
+        override val kind get() = _kind;
+
+        override fun equals(other: kotlin.Any?): kotlin.Boolean {
+            return other is skirout.editor.v1.operation.OperationInspector && other.kind == kind;
+        }
+
+        override fun hashCode(): kotlin.Int {
+            return kind.ordinal;
+        }
+    }
+
+    object HIDDEN : skirout.editor.v1.operation.OperationInspector() {
+        override val kind get() = Kind.HIDDEN_CONST;
+
+        override fun equals(other: kotlin.Any?): kotlin.Boolean {
+            return other is skirout.editor.v1.operation.OperationInspector && other.kind == Kind.HIDDEN_CONST;
+        }
+
+        override fun hashCode(): kotlin.Int {
+            return Kind.HIDDEN_CONST.ordinal;
+        }
+    }
+
+    class ButtonWrapper(
+        val value: skirout.editor.v1.presentation.ButtonVariant,
+    ) : skirout.editor.v1.operation.OperationInspector() {
+        override val kind get() = Kind.BUTTON_WRAPPER;
+
+        override fun equals(other: kotlin.Any?): kotlin.Boolean {
+            return other is skirout.editor.v1.operation.OperationInspector.ButtonWrapper && value == other.value;
+        }
+
+        override fun hashCode(): kotlin.Int {
+            return this.value.hashCode() + -1377687758;
+        }
+    }
+
+    internal open val _unrecognized: _UnrecognizedVariant<skirout.editor.v1.operation.OperationInspector>? get() = null;
+
+    abstract val kind: Kind;
+
+    override fun toString(): kotlin.String {
+        return build.skir.internal.toStringImpl(
+            this,
+            _SerializerRegistry.OperationInspectorSerializerImpl,
+        )
+    }
+
+    companion object {
+        /**
+         * Constant indicating an unknown [OperationInspector].
+         * Default value for fields of type [OperationInspector].
+         */
+        val UNKNOWN = @kotlin.Suppress("DEPRECATION") Unknown(Kind.UNKNOWN, null);
+
+        /** Serializer for [OperationInspector] instances. */
+        val serializer get() = _SerializerRegistry.OperationInspectorSerializer;
+
+        /** Describes the [OperationInspector] type. Provides runtime introspection capabilities. */
+        val typeDescriptor get() = _SerializerRegistry.OperationInspectorSerializerImpl.typeDescriptor;
+    }
+}
+
+sealed interface OperationDrop_OrMutable {
+    val input: skirout.editor.v1.type_catalog.ValuePath_OrMutable;
+    val hint: kotlin.String;
+
+    fun toFrozen(): skirout.editor.v1.operation.OperationDrop;
+}
+
+/**
+ * The input field a drop fills with the resource dropped onto, and the hover hint.
+ *
+ * Deeply immutable.
+ */
+@kotlin.Suppress("UNUSED_PARAMETER")
+class OperationDrop private constructor(
+    override val input: skirout.editor.v1.type_catalog.ValuePath,
+    override val hint: kotlin.String,
+    internal val _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.operation.OperationDrop>? =
+        null,
+): skirout.editor.v1.operation.OperationDrop_OrMutable {
+    constructor(
+        _mustNameArguments: _MustNameArguments =
+            _MustNameArguments,
+        input: skirout.editor.v1.type_catalog.ValuePath_OrMutable,
+        hint: kotlin.String,
+        _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.operation.OperationDrop>? =
+            null,
+    ): this(
+        input.toFrozen(),
+        hint,
+        _unrecognizedFields,
+    ) {}
+
+    @kotlin.Deprecated("Already frozen", kotlin.ReplaceWith("this"))
+    override fun toFrozen() = this;
+
+    /** Returns a mutable shallow copy of this instance */
+    fun toMutable() = Mutable(
+        input = this.input,
+        hint = this.hint,
+    );
+
+    /** Returns a shallow copy of this instance with the specified fields replaced. */
+    fun copy(
+        _mustNameArguments: _MustNameArguments =
+            _MustNameArguments,
+        input: skirout.editor.v1.type_catalog.ValuePath_OrMutable =
+            this.input,
+        hint: kotlin.String =
+            this.hint,
+    ) = skirout.editor.v1.operation.OperationDrop(
+        input.toFrozen(),
+        hint,
+        this._unrecognizedFields,
+    );
+
+    @kotlin.Deprecated("No point in creating an exact copy of an immutable object", kotlin.ReplaceWith("this"))
+    fun copy() = this;
+
+    override fun equals(other: kotlin.Any?): kotlin.Boolean {
+        return this === other || (other is skirout.editor.v1.operation.OperationDrop && this.input == other.input && this.hint == other.hint);
+    }
+
+    override fun hashCode(): kotlin.Int {
+        return kotlin.collections.listOf<kotlin.Any?>(this.input, this.hint).hashCode();
+    }
+
+    override fun toString(): kotlin.String {
+        return build.skir.internal.toStringImpl(
+            this,
+            _SerializerRegistry.OperationDropSerializerImpl,
+        )
+    }
+
+    /** Mutable version of [OperationDrop]. */
+    class Mutable internal constructor(
+        _mustNameArguments: _MustNameArguments =
+            _MustNameArguments,
+        override var input: skirout.editor.v1.type_catalog.ValuePath_OrMutable =
+            skirout.editor.v1.type_catalog.ValuePath.partial(),
+        override var hint: kotlin.String =
+            "",
+        internal var _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.operation.OperationDrop>? =
+            null,
+    ): skirout.editor.v1.operation.OperationDrop_OrMutable {
+        /** Returns a deeply immutable copy of this instance */
+        override fun toFrozen() = skirout.editor.v1.operation.OperationDrop(
+            input = this.input,
+            hint = this.hint,
+            _unrecognizedFields = this._unrecognizedFields,
+        );
+
+        /**
+         * If the value of [input] is already mutable, returns it as-is.
+         * Otherwise, makes a mutable copy, assigns it back to [input] and returns it.
+         */
+        val mutableInput: skirout.editor.v1.type_catalog.ValuePath.Mutable get() {
+            var value = this.input;
+            return when (value) {
+                is skirout.editor.v1.type_catalog.ValuePath -> {
+                    value = value.toMutable();
+                    this.input = value;
+                    return value;
+                }
+                is skirout.editor.v1.type_catalog.ValuePath.Mutable -> value;
+            }
+        }
+    }
+
+    companion object {
+        private val default =
+            skirout.editor.v1.operation.OperationDrop(
+                skirout.editor.v1.type_catalog.ValuePath.partial(),
+                "",
+            );
+
+        /** Returns an instance with all fields set to their default values. */
+        fun partial() = default;
+
+        /**
+         * Creates a new instance of [OperationDrop].
+         * Unlike the constructor, does not require all fields to be specified.
+         * Missing fields will be set to their default values.
+         */
+        fun partial(
+            _mustNameArguments: _MustNameArguments =
+                _MustNameArguments,
+            input: skirout.editor.v1.type_catalog.ValuePath_OrMutable =
+                skirout.editor.v1.type_catalog.ValuePath.partial(),
+            hint: kotlin.String =
+                "",
+        ) = skirout.editor.v1.operation.OperationDrop(
+            input = input,
+            hint = hint,
+            _unrecognizedFields = null,
+        );
+
+        /** Serializer for [OperationDrop] instances. */
+        val serializer get() = _SerializerRegistry.OperationDropSerializer;
+
+        /** Describes the [OperationDrop] type. Provides runtime introspection capabilities. */
+        val typeDescriptor get() = _SerializerRegistry.OperationDropSerializerImpl.typeDescriptor;
+    }
+}
+
+/**
+ * Keyboard gestures an operation can claim.
+ *
+ * Deeply immutable.
+ */
+sealed class OperationShortcut private constructor() {
+    /** The kind of variant held by a `OperationShortcut`. */
+    enum class Kind {
+        UNKNOWN,
+        DELETE_CONST,
+    }
+
+    class Unknown @kotlin.Deprecated("For internal use", kotlin.ReplaceWith("skirout.editor.v1.operation.OperationShortcut.UNKNOWN")) internal constructor(
+        internal val _kind: Kind,
+        internal override val _unrecognized: _UnrecognizedVariant<skirout.editor.v1.operation.OperationShortcut>?,
+    ) : skirout.editor.v1.operation.OperationShortcut() {
+        override val kind get() = _kind;
+
+        override fun equals(other: kotlin.Any?): kotlin.Boolean {
+            return other is skirout.editor.v1.operation.OperationShortcut && other.kind == kind;
+        }
+
+        override fun hashCode(): kotlin.Int {
+            return kind.ordinal;
+        }
+    }
+
+    object DELETE : skirout.editor.v1.operation.OperationShortcut() {
+        override val kind get() = Kind.DELETE_CONST;
+
+        override fun equals(other: kotlin.Any?): kotlin.Boolean {
+            return other is skirout.editor.v1.operation.OperationShortcut && other.kind == Kind.DELETE_CONST;
+        }
+
+        override fun hashCode(): kotlin.Int {
+            return Kind.DELETE_CONST.ordinal;
+        }
+    }
+
+    internal open val _unrecognized: _UnrecognizedVariant<skirout.editor.v1.operation.OperationShortcut>? get() = null;
+
+    abstract val kind: Kind;
+
+    override fun toString(): kotlin.String {
+        return build.skir.internal.toStringImpl(
+            this,
+            _SerializerRegistry.OperationShortcutSerializerImpl,
+        )
+    }
+
+    companion object {
+        /**
+         * Constant indicating an unknown [OperationShortcut].
+         * Default value for fields of type [OperationShortcut].
+         */
+        val UNKNOWN = @kotlin.Suppress("DEPRECATION") Unknown(Kind.UNKNOWN, null);
+
+        /** Serializer for [OperationShortcut] instances. */
+        val serializer get() = _SerializerRegistry.OperationShortcutSerializer;
+
+        /** Describes the [OperationShortcut] type. Provides runtime introspection capabilities. */
+        val typeDescriptor get() = _SerializerRegistry.OperationShortcutSerializerImpl.typeDescriptor;
     }
 }
 
@@ -1611,6 +1853,19 @@ private object _SerializerRegistry {
 
     val OperationAvailabilitySerializer = build.skir.internal.makeSerializer(OperationAvailabilitySerializerImpl);
 
+    val OperationCardinalitySerializerImpl =
+        build.skir.internal.EnumSerializer.create<skirout.editor.v1.operation.OperationCardinality, skirout.editor.v1.operation.OperationCardinality.Unknown>(
+            recordId = "editor/v1/operation.skir:OperationCardinality",
+            doc = "",
+            getKindOrdinal = { it.kind.ordinal },
+            kindCount = skirout.editor.v1.operation.OperationCardinality.Kind.values().size,
+            unknownInstance = skirout.editor.v1.operation.OperationCardinality.UNKNOWN,
+            wrapUnrecognized = { @kotlin.Suppress("DEPRECATION") skirout.editor.v1.operation.OperationCardinality.Unknown(skirout.editor.v1.operation.OperationCardinality.Kind.UNKNOWN, it) },
+            getUnrecognized = { it._unrecognized },
+        );
+
+    val OperationCardinalitySerializer = build.skir.internal.makeSerializer(OperationCardinalitySerializerImpl);
+
     val OperationConfirmationSerializerImpl = build.skir.internal.StructSerializer(
         recordId = "editor/v1/operation.skir:OperationConfirmation",
         doc = "",
@@ -1623,10 +1878,22 @@ private object _SerializerRegistry {
 
     val OperationConfirmationSerializer = build.skir.internal.makeSerializer(OperationConfirmationSerializerImpl);
 
+    val OperationDropSerializerImpl = build.skir.internal.StructSerializer(
+        recordId = "editor/v1/operation.skir:OperationDrop",
+        doc = "The input field a drop fills with the resource dropped onto, and the hover hint.",
+        defaultInstance = skirout.editor.v1.operation.OperationDrop.partial(),
+        newMutableFn = { it?.toMutable() ?: skirout.editor.v1.operation.OperationDrop.Mutable() },
+        toFrozenFn = { it.toFrozen() },
+        getUnrecognizedFields = { it._unrecognizedFields },
+        setUnrecognizedFields = { m, u -> m._unrecognizedFields = u },
+    );
+
+    val OperationDropSerializer = build.skir.internal.makeSerializer(OperationDropSerializerImpl);
+
     val OperationGroupSerializerImpl =
         build.skir.internal.EnumSerializer.create<skirout.editor.v1.operation.OperationGroup, skirout.editor.v1.operation.OperationGroup.Unknown>(
             recordId = "editor/v1/operation.skir:OperationGroup",
-            doc = "",
+            doc = "Menu sections, in display order.",
             getKindOrdinal = { it.kind.ordinal },
             kindCount = skirout.editor.v1.operation.OperationGroup.Kind.values().size,
             unknownInstance = skirout.editor.v1.operation.OperationGroup.UNKNOWN,
@@ -1648,6 +1915,19 @@ private object _SerializerRegistry {
 
     val OperationInputDefinitionSerializer = build.skir.internal.makeSerializer(OperationInputDefinitionSerializerImpl);
 
+    val OperationInspectorSerializerImpl =
+        build.skir.internal.EnumSerializer.create<skirout.editor.v1.operation.OperationInspector, skirout.editor.v1.operation.OperationInspector.Unknown>(
+            recordId = "editor/v1/operation.skir:OperationInspector",
+            doc = "Inspector presence of an operation.",
+            getKindOrdinal = { it.kind.ordinal },
+            kindCount = skirout.editor.v1.operation.OperationInspector.Kind.values().size,
+            unknownInstance = skirout.editor.v1.operation.OperationInspector.UNKNOWN,
+            wrapUnrecognized = { @kotlin.Suppress("DEPRECATION") skirout.editor.v1.operation.OperationInspector.Unknown(skirout.editor.v1.operation.OperationInspector.Kind.UNKNOWN, it) },
+            getUnrecognized = { it._unrecognized },
+        );
+
+    val OperationInspectorSerializer = build.skir.internal.makeSerializer(OperationInspectorSerializerImpl);
+
     val OperationPresentationSerializerImpl = build.skir.internal.StructSerializer(
         recordId = "editor/v1/operation.skir:OperationPresentation",
         doc = "",
@@ -1660,16 +1940,28 @@ private object _SerializerRegistry {
 
     val OperationPresentationSerializer = build.skir.internal.makeSerializer(OperationPresentationSerializerImpl);
 
-    val OperationTargetsSerializerImpl =
-        build.skir.internal.EnumSerializer.create<skirout.editor.v1.operation.OperationTargets, skirout.editor.v1.operation.OperationTargets.Unknown>(
-            recordId = "editor/v1/operation.skir:OperationTargets",
-            doc = "",
+    val OperationShortcutSerializerImpl =
+        build.skir.internal.EnumSerializer.create<skirout.editor.v1.operation.OperationShortcut, skirout.editor.v1.operation.OperationShortcut.Unknown>(
+            recordId = "editor/v1/operation.skir:OperationShortcut",
+            doc = "Keyboard gestures an operation can claim.",
             getKindOrdinal = { it.kind.ordinal },
-            kindCount = skirout.editor.v1.operation.OperationTargets.Kind.values().size,
-            unknownInstance = skirout.editor.v1.operation.OperationTargets.UNKNOWN,
-            wrapUnrecognized = { @kotlin.Suppress("DEPRECATION") skirout.editor.v1.operation.OperationTargets.Unknown(skirout.editor.v1.operation.OperationTargets.Kind.UNKNOWN, it) },
+            kindCount = skirout.editor.v1.operation.OperationShortcut.Kind.values().size,
+            unknownInstance = skirout.editor.v1.operation.OperationShortcut.UNKNOWN,
+            wrapUnrecognized = { @kotlin.Suppress("DEPRECATION") skirout.editor.v1.operation.OperationShortcut.Unknown(skirout.editor.v1.operation.OperationShortcut.Kind.UNKNOWN, it) },
             getUnrecognized = { it._unrecognized },
         );
+
+    val OperationShortcutSerializer = build.skir.internal.makeSerializer(OperationShortcutSerializerImpl);
+
+    val OperationTargetsSerializerImpl = build.skir.internal.StructSerializer(
+        recordId = "editor/v1/operation.skir:OperationTargets",
+        doc = "The resources an operation applies to and how many it accepts at once.",
+        defaultInstance = skirout.editor.v1.operation.OperationTargets.partial(),
+        newMutableFn = { it?.toMutable() ?: skirout.editor.v1.operation.OperationTargets.Mutable() },
+        toFrozenFn = { it.toFrozen() },
+        getUnrecognizedFields = { it._unrecognizedFields },
+        setUnrecognizedFields = { m, u -> m._unrecognizedFields = u },
+    );
 
     val OperationTargetsSerializer = build.skir.internal.makeSerializer(OperationTargetsSerializerImpl);
 
@@ -1687,7 +1979,7 @@ private object _SerializerRegistry {
 
     val ResolvedResourceOperationsSerializerImpl = build.skir.internal.StructSerializer(
         recordId = "editor/v1/operation.skir:ResolvedResourceOperations",
-        doc = "",
+        doc = "Applicable operations ordered by group, then order, then identity.",
         defaultInstance = skirout.editor.v1.operation.ResolvedResourceOperations.partial(),
         newMutableFn = { it?.toMutable() ?: skirout.editor.v1.operation.ResolvedResourceOperations.Mutable() },
         toFrozenFn = { it.toFrozen() },
@@ -1696,18 +1988,6 @@ private object _SerializerRegistry {
     );
 
     val ResolvedResourceOperationsSerializer = build.skir.internal.makeSerializer(ResolvedResourceOperationsSerializerImpl);
-
-    val ResourceOperationContributionSerializerImpl = build.skir.internal.StructSerializer(
-        recordId = "editor/v1/operation.skir:ResourceOperationContribution",
-        doc = "Adds operation identities to matching resource types and optionally nominates a primary action.\nResolution considers all selected targets; primary nomination applies to a single resource\nand conflicting equally applicable nominations are rejected.",
-        defaultInstance = skirout.editor.v1.operation.ResourceOperationContribution.partial(),
-        newMutableFn = { it?.toMutable() ?: skirout.editor.v1.operation.ResourceOperationContribution.Mutable() },
-        toFrozenFn = { it.toFrozen() },
-        getUnrecognizedFields = { it._unrecognizedFields },
-        setUnrecognizedFields = { m, u -> m._unrecognizedFields = u },
-    );
-
-    val ResourceOperationContributionSerializer = build.skir.internal.makeSerializer(ResourceOperationContributionSerializerImpl);
 
     val ResourceOperationDefinitionSerializerImpl = build.skir.internal.StructSerializer(
         recordId = "editor/v1/operation.skir:ResourceOperationDefinition",
@@ -1723,7 +2003,7 @@ private object _SerializerRegistry {
 
     val ResourceOperationIdSerializerImpl = build.skir.internal.StructSerializer(
         recordId = "editor/v1/operation.skir:ResourceOperationId",
-        doc = "Stable declaration owned identity, independent of display labels and catalog generation.",
+        doc = "Stable identity owned by the declaring object, independent of display labels and catalog generation.\ndeclaration is the fully qualified name of the operation object.",
         defaultInstance = skirout.editor.v1.operation.ResourceOperationId.partial(),
         newMutableFn = { it?.toMutable() ?: skirout.editor.v1.operation.ResourceOperationId.Mutable() },
         toFrozenFn = { it.toFrozen() },
@@ -1759,6 +2039,22 @@ private object _SerializerRegistry {
         );
         OperationAvailabilitySerializerImpl.finalizeEnum();
 
+        OperationCardinalitySerializerImpl.addConstantVariant(
+            1,
+            "single",
+            skirout.editor.v1.operation.OperationCardinality.Kind.SINGLE_CONST.ordinal,
+            "",
+            skirout.editor.v1.operation.OperationCardinality.SINGLE,
+        );
+        OperationCardinalitySerializerImpl.addConstantVariant(
+            2,
+            "selection",
+            skirout.editor.v1.operation.OperationCardinality.Kind.SELECTION_CONST.ordinal,
+            "",
+            skirout.editor.v1.operation.OperationCardinality.SELECTION,
+        );
+        OperationCardinalitySerializerImpl.finalizeEnum();
+
         OperationConfirmationSerializerImpl.addField(
             "title",
             "title",
@@ -1788,29 +2084,42 @@ private object _SerializerRegistry {
         );
         OperationConfirmationSerializerImpl.finalizeStruct();
 
+        OperationDropSerializerImpl.addField(
+            "input",
+            "input",
+            0,
+            skirout.editor.v1.type_catalog.ValuePath.serializer,
+            "",
+            { it.input },
+            { mut, v -> mut.input = v },
+        );
+        OperationDropSerializerImpl.addField(
+            "hint",
+            "hint",
+            1,
+            build.skir.Serializers.string,
+            "",
+            { it.hint },
+            { mut, v -> mut.hint = v },
+        );
+        OperationDropSerializerImpl.finalizeStruct();
+
         OperationGroupSerializerImpl.addConstantVariant(
             1,
-            "navigation",
-            skirout.editor.v1.operation.OperationGroup.Kind.NAVIGATION_CONST.ordinal,
-            "",
-            skirout.editor.v1.operation.OperationGroup.NAVIGATION,
-        );
-        OperationGroupSerializerImpl.addConstantVariant(
-            2,
             "edit",
             skirout.editor.v1.operation.OperationGroup.Kind.EDIT_CONST.ordinal,
             "",
             skirout.editor.v1.operation.OperationGroup.EDIT,
         );
         OperationGroupSerializerImpl.addConstantVariant(
-            3,
+            2,
             "organize",
             skirout.editor.v1.operation.OperationGroup.Kind.ORGANIZE_CONST.ordinal,
             "",
             skirout.editor.v1.operation.OperationGroup.ORGANIZE,
         );
         OperationGroupSerializerImpl.addConstantVariant(
-            4,
+            3,
             "destructive",
             skirout.editor.v1.operation.OperationGroup.Kind.DESTRUCTIVE_CONST.ordinal,
             "",
@@ -1839,6 +2148,24 @@ private object _SerializerRegistry {
             { mut, v -> mut.presentation = v },
         );
         OperationInputDefinitionSerializerImpl.finalizeStruct();
+
+        OperationInspectorSerializerImpl.addConstantVariant(
+            1,
+            "hidden",
+            skirout.editor.v1.operation.OperationInspector.Kind.HIDDEN_CONST.ordinal,
+            "",
+            skirout.editor.v1.operation.OperationInspector.HIDDEN,
+        );
+        OperationInspectorSerializerImpl.addWrapperVariant(
+            2,
+            "button",
+            skirout.editor.v1.operation.OperationInspector.Kind.BUTTON_WRAPPER.ordinal,
+            skirout.editor.v1.presentation.ButtonVariant.serializer,
+            "",
+            { skirout.editor.v1.operation.OperationInspector.ButtonWrapper(it) },
+            { it.value },
+        );
+        OperationInspectorSerializerImpl.finalizeEnum();
 
         OperationPresentationSerializerImpl.addField(
             "label",
@@ -1890,7 +2217,7 @@ private object _SerializerRegistry {
             "tone",
             5,
             skirout.editor.v1.presentation.HeaderActionTone.serializer,
-            "",
+            "Destructive for the destructive group, neutral otherwise.",
             { it.tone },
             { mut, v -> mut.tone = v },
         );
@@ -1906,58 +2233,55 @@ private object _SerializerRegistry {
             { mut, v -> mut.confirmation = v },
         );
         OperationPresentationSerializerImpl.addField(
-            "variant",
-            "variant",
+            "inspector",
+            "inspector",
             7,
-            skirout.editor.v1.presentation.ButtonVariant.serializer,
-            "Inspector button emphasis, independent of tone. Context menu rows ignore this variant.",
-            { it.variant },
-            { mut, v -> mut.variant = v },
+            _SerializerRegistry.OperationInspectorSerializer,
+            "Inspector presence. Menus, shortcuts and drops ignore it.",
+            { it.inspector },
+            { mut, v -> mut.inspector = v },
         );
         OperationPresentationSerializerImpl.addField(
-            "show_in_inspector",
-            "showInInspector",
+            "shortcut",
+            "shortcut",
             8,
-            build.skir.Serializers.bool,
-            "Whether this operation also appears among inspector controls. Menus and shortcuts remain available.",
-            { it.showInInspector },
-            { mut, v -> mut.showInInspector = v },
+            build.skir.Serializers.optional(
+                _SerializerRegistry.OperationShortcutSerializer,
+            ),
+            "The keyboard gesture that invokes this operation on the selection, if any.",
+            { it.shortcut },
+            { mut, v -> mut.shortcut = v },
         );
         OperationPresentationSerializerImpl.finalizeStruct();
 
-        OperationTargetsSerializerImpl.addWrapperVariant(
+        OperationShortcutSerializerImpl.addConstantVariant(
             1,
-            "single",
-            skirout.editor.v1.operation.OperationTargets.Kind.SINGLE_WRAPPER.ordinal,
-            skirout.editor.v1.type_catalog.TypeTemplate.serializer,
+            "delete",
+            skirout.editor.v1.operation.OperationShortcut.Kind.DELETE_CONST.ordinal,
             "",
-            { skirout.editor.v1.operation.OperationTargets.SingleWrapper(it) },
-            { it.value },
+            skirout.editor.v1.operation.OperationShortcut.DELETE,
         );
-        OperationTargetsSerializerImpl.addWrapperVariant(
-            2,
-            "selection",
-            skirout.editor.v1.operation.OperationTargets.Kind.SELECTION_WRAPPER.ordinal,
-            skirout.editor.v1.type_catalog.TypeTemplate.serializer,
+        OperationShortcutSerializerImpl.finalizeEnum();
+
+        OperationTargetsSerializerImpl.addField(
+            "subject",
+            "subject",
+            0,
+            skirout.editor.v1.type_catalog.ResourceTarget.serializer,
             "",
-            { skirout.editor.v1.operation.OperationTargets.SelectionWrapper(it) },
-            { it.value },
+            { it.subject },
+            { mut, v -> mut.subject = v },
         );
-        OperationTargetsSerializerImpl.addConstantVariant(
-            3,
-            "contributed_single",
-            skirout.editor.v1.operation.OperationTargets.Kind.CONTRIBUTED_SINGLE_CONST.ordinal,
+        OperationTargetsSerializerImpl.addField(
+            "cardinality",
+            "cardinality",
+            1,
+            _SerializerRegistry.OperationCardinalitySerializer,
             "",
-            skirout.editor.v1.operation.OperationTargets.CONTRIBUTED_SINGLE,
+            { it.cardinality },
+            { mut, v -> mut.cardinality = v },
         );
-        OperationTargetsSerializerImpl.addConstantVariant(
-            4,
-            "contributed_selection",
-            skirout.editor.v1.operation.OperationTargets.Kind.CONTRIBUTED_SELECTION_CONST.ordinal,
-            "",
-            skirout.editor.v1.operation.OperationTargets.CONTRIBUTED_SELECTION,
-        );
-        OperationTargetsSerializerImpl.finalizeEnum();
+        OperationTargetsSerializerImpl.finalizeStruct();
 
         ResolvedResourceOperationSerializerImpl.addField(
             "definition",
@@ -1990,51 +2314,7 @@ private object _SerializerRegistry {
             { it.operations },
             { mut, v -> mut.operations = v },
         );
-        ResolvedResourceOperationsSerializerImpl.addField(
-            "primary_operation",
-            "primaryOperation",
-            1,
-            build.skir.Serializers.optional(
-                _SerializerRegistry.ResourceOperationIdSerializer,
-            ),
-            "",
-            { it.primaryOperation },
-            { mut, v -> mut.primaryOperation = v },
-        );
         ResolvedResourceOperationsSerializerImpl.finalizeStruct();
-
-        ResourceOperationContributionSerializerImpl.addField(
-            "target",
-            "target",
-            0,
-            skirout.editor.v1.type_catalog.TypeTemplate.serializer,
-            "",
-            { it.target },
-            { mut, v -> mut.target = v },
-        );
-        ResourceOperationContributionSerializerImpl.addField(
-            "operations",
-            "operations",
-            1,
-            build.skir.Serializers.list(
-                _SerializerRegistry.ResourceOperationIdSerializer,
-            ),
-            "",
-            { it.operations },
-            { mut, v -> mut.operations = v },
-        );
-        ResourceOperationContributionSerializerImpl.addField(
-            "primary",
-            "primary",
-            2,
-            build.skir.Serializers.optional(
-                _SerializerRegistry.ResourceOperationIdSerializer,
-            ),
-            "",
-            { it.primary },
-            { mut, v -> mut.primary = v },
-        );
-        ResourceOperationContributionSerializerImpl.finalizeStruct();
 
         ResourceOperationDefinitionSerializerImpl.addField(
             "id",
@@ -2064,13 +2344,24 @@ private object _SerializerRegistry {
             { mut, v -> mut.targets = v },
         );
         ResourceOperationDefinitionSerializerImpl.addField(
-            "action",
-            "action",
+            "capability",
+            "capability",
             3,
-            skirout.editor.v1.action.EditorAction.serializer,
-            "",
-            { it.action },
-            { mut, v -> mut.action = v },
+            skirout.editor.v1.type_catalog.CapabilityId.serializer,
+            "Every catalog operation is an authoring action prepared through this capability.",
+            { it.capability },
+            { mut, v -> mut.capability = v },
+        );
+        ResourceOperationDefinitionSerializerImpl.addField(
+            "drop",
+            "drop",
+            4,
+            build.skir.Serializers.optional(
+                _SerializerRegistry.OperationDropSerializer,
+            ),
+            "Set when a resource dropped onto another resource fills an input field.",
+            { it.drop },
+            { mut, v -> mut.drop = v },
         );
         ResourceOperationDefinitionSerializerImpl.finalizeStruct();
 
@@ -2100,15 +2391,6 @@ private object _SerializerRegistry {
             "",
             { it.declaration },
             { mut, v -> mut.declaration = v },
-        );
-        ResourceOperationIdSerializerImpl.addField(
-            "local",
-            "local",
-            3,
-            build.skir.Serializers.string,
-            "",
-            { it.local },
-            { mut, v -> mut.local = v },
         );
         ResourceOperationIdSerializerImpl.finalizeStruct();
     }

@@ -17,13 +17,13 @@
 // struct ResourceOperationId
 // ==============================================================================
 
-/// Stable declaration owned identity, independent of display labels and catalog generation.
+/// Stable identity owned by the declaring object, independent of display labels and catalog generation.
+/// declaration is the fully qualified name of the operation object.
 #[derive(Clone, Debug, PartialEq, Default)]
 pub struct ResourceOperationId {
     pub artifact: String,
     pub source_part: String,
     pub declaration: String,
-    pub local: String,
     /// Set this to None when you're creating a struct.
     pub _unrecognized: Option<crate::skir_client::UnrecognizedFields<ResourceOperationId>>,
 }
@@ -44,7 +44,7 @@ impl ResourceOperationId {
             crate::skir_client::internal::StructAdapter::new(
                 "editor/v1/operation.skir",
                 "ResourceOperationId",
-                "Stable declaration owned identity, independent of display labels and catalog generation.",
+                "Stable identity owned by the declaring object, independent of display labels and catalog generation.\ndeclaration is the fully qualified name of the operation object.",
                 |x: &ResourceOperationId| &x._unrecognized,
                 |x: &mut ResourceOperationId, u| x._unrecognized = u,
             )
@@ -58,52 +58,44 @@ impl ResourceOperationId {
 }
 
 // ==============================================================================
-// enum OperationTargets
+// struct OperationTargets
 // ==============================================================================
 
-#[derive(Debug, Clone, PartialEq)]
-pub enum OperationTargets {
-    Unknown(Option<crate::skir_client::UnrecognizedVariant<OperationTargets>>),
-    Single(Box<crate::skirout::base::editor::v1::type_catalog::TypeTemplate>),
-    Selection(Box<crate::skirout::base::editor::v1::type_catalog::TypeTemplate>),
-    ContributedSingle,
-    ContributedSelection,
+/// The resources an operation applies to and how many it accepts at once.
+#[derive(Clone, Debug, PartialEq, Default)]
+pub struct OperationTargets {
+    pub subject: crate::skirout::base::editor::v1::type_catalog::ResourceTarget,
+    pub cardinality: OperationCardinality,
+    /// Set this to None when you're creating a struct.
+    pub _unrecognized: Option<crate::skir_client::UnrecognizedFields<OperationTargets>>,
 }
 
-impl Default for OperationTargets {
-    fn default() -> Self {
-        OperationTargets::Unknown(None)
+impl OperationTargets {
+    pub fn default_ref() -> &'static OperationTargets {
+        static D: std::sync::LazyLock<OperationTargets> =
+            std::sync::LazyLock::new(OperationTargets::default);
+        &D
     }
 }
 
 impl OperationTargets {
-    fn _adapter() -> &'static crate::skir_client::internal::EnumAdapter<OperationTargets> {
+    fn _adapter() -> &'static crate::skir_client::internal::StructAdapter<OperationTargets> {
         static ADAPTER: std::sync::LazyLock<
-            crate::skir_client::internal::EnumAdapter<OperationTargets>,
+            crate::skir_client::internal::StructAdapter<OperationTargets>,
         > = std::sync::LazyLock::new(|| {
-            crate::skir_client::internal::EnumAdapter::new(
-                |x: &OperationTargets| match x {
-                    OperationTargets::Unknown(_) => 0,
-                    OperationTargets::Single(_) => 1,
-                    OperationTargets::Selection(_) => 2,
-                    OperationTargets::ContributedSingle => 3,
-                    OperationTargets::ContributedSelection => 4,
-                },
-                |u| OperationTargets::Unknown(Some(u)),
-                |x: &OperationTargets| match x {
-                    OperationTargets::Unknown(Some(u)) => Some(u.as_ref()),
-                    _ => None,
-                },
+            crate::skir_client::internal::StructAdapter::new(
                 "editor/v1/operation.skir",
                 "OperationTargets",
-                "",
+                "The resources an operation applies to and how many it accepts at once.",
+                |x: &OperationTargets| &x._unrecognized,
+                |x: &mut OperationTargets, u| x._unrecognized = u,
             )
         });
         &*ADAPTER
     }
     pub fn serializer() -> crate::skir_client::Serializer<OperationTargets> {
         initialize_module_serializers();
-        crate::skir_client::internal::enum_serializer_from_static(OperationTargets::_adapter())
+        crate::skir_client::internal::struct_serializer_from_static(OperationTargets::_adapter())
     }
 }
 
@@ -111,10 +103,10 @@ impl OperationTargets {
 // enum OperationGroup
 // ==============================================================================
 
+/// Menu sections, in display order.
 #[derive(Debug, Clone, PartialEq)]
 pub enum OperationGroup {
     Unknown(Option<crate::skir_client::UnrecognizedVariant<OperationGroup>>),
-    Navigation,
     Edit,
     Organize,
     Destructive,
@@ -134,10 +126,9 @@ impl OperationGroup {
             crate::skir_client::internal::EnumAdapter::new(
                 |x: &OperationGroup| match x {
                     OperationGroup::Unknown(_) => 0,
-                    OperationGroup::Navigation => 1,
-                    OperationGroup::Edit => 2,
-                    OperationGroup::Organize => 3,
-                    OperationGroup::Destructive => 4,
+                    OperationGroup::Edit => 1,
+                    OperationGroup::Organize => 2,
+                    OperationGroup::Destructive => 3,
                 },
                 |u| OperationGroup::Unknown(Some(u)),
                 |x: &OperationGroup| match x {
@@ -146,7 +137,7 @@ impl OperationGroup {
                 },
                 "editor/v1/operation.skir",
                 "OperationGroup",
-                "",
+                "Menu sections, in display order.",
             )
         });
         &*ADAPTER
@@ -212,12 +203,13 @@ pub struct OperationPresentation {
     pub icon: String,
     pub group: OperationGroup,
     pub order: i32,
+    /// Destructive for the destructive group, neutral otherwise.
     pub tone: crate::skirout::base::editor::v1::presentation::HeaderActionTone,
     pub confirmation: Option<OperationConfirmation>,
-    /// Inspector button emphasis, independent of tone. Context menu rows ignore this variant.
-    pub variant: crate::skirout::base::editor::v1::presentation::ButtonVariant,
-    /// Whether this operation also appears among inspector controls. Menus and shortcuts remain available.
-    pub show_in_inspector: bool,
+    /// Inspector presence. Menus, shortcuts and drops ignore it.
+    pub inspector: OperationInspector,
+    /// The keyboard gesture that invokes this operation on the selection, if any.
+    pub shortcut: Option<OperationShortcut>,
     /// Set this to None when you're creating a struct.
     pub _unrecognized: Option<crate::skir_client::UnrecognizedFields<OperationPresentation>>,
 }
@@ -306,7 +298,10 @@ pub struct ResourceOperationDefinition {
     pub id: ResourceOperationId,
     pub presentation: OperationPresentation,
     pub targets: OperationTargets,
-    pub action: crate::skirout::base::editor::v1::action::EditorAction,
+    /// Every catalog operation is an authoring action prepared through this capability.
+    pub capability: crate::skirout::base::editor::v1::type_catalog::CapabilityId,
+    /// Set when a resource dropped onto another resource fills an input field.
+    pub drop: Option<OperationDrop>,
     /// Set this to None when you're creating a struct.
     pub _unrecognized: Option<crate::skir_client::UnrecognizedFields<ResourceOperationDefinition>>,
 }
@@ -339,55 +334,6 @@ impl ResourceOperationDefinition {
         initialize_module_serializers();
         crate::skir_client::internal::struct_serializer_from_static(
             ResourceOperationDefinition::_adapter(),
-        )
-    }
-}
-
-// ==============================================================================
-// struct ResourceOperationContribution
-// ==============================================================================
-
-/// Adds operation identities to matching resource types and optionally nominates a primary action.
-/// Resolution considers all selected targets; primary nomination applies to a single resource
-/// and conflicting equally applicable nominations are rejected.
-#[derive(Clone, Debug, PartialEq, Default)]
-pub struct ResourceOperationContribution {
-    pub target: crate::skirout::base::editor::v1::type_catalog::TypeTemplate,
-    pub operations: Vec<ResourceOperationId>,
-    pub primary: Option<ResourceOperationId>,
-    /// Set this to None when you're creating a struct.
-    pub _unrecognized:
-        Option<crate::skir_client::UnrecognizedFields<ResourceOperationContribution>>,
-}
-
-impl ResourceOperationContribution {
-    pub fn default_ref() -> &'static ResourceOperationContribution {
-        static D: std::sync::LazyLock<ResourceOperationContribution> =
-            std::sync::LazyLock::new(ResourceOperationContribution::default);
-        &D
-    }
-}
-
-impl ResourceOperationContribution {
-    fn _adapter()
-    -> &'static crate::skir_client::internal::StructAdapter<ResourceOperationContribution> {
-        static ADAPTER: std::sync::LazyLock<
-            crate::skir_client::internal::StructAdapter<ResourceOperationContribution>,
-        > = std::sync::LazyLock::new(|| {
-            crate::skir_client::internal::StructAdapter::new(
-                "editor/v1/operation.skir",
-                "ResourceOperationContribution",
-                "Adds operation identities to matching resource types and optionally nominates a primary action.\nResolution considers all selected targets; primary nomination applies to a single resource\nand conflicting equally applicable nominations are rejected.",
-                |x: &ResourceOperationContribution| &x._unrecognized,
-                |x: &mut ResourceOperationContribution, u| x._unrecognized = u,
-            )
-        });
-        &*ADAPTER
-    }
-    pub fn serializer() -> crate::skir_client::Serializer<ResourceOperationContribution> {
-        initialize_module_serializers();
-        crate::skir_client::internal::struct_serializer_from_static(
-            ResourceOperationContribution::_adapter(),
         )
     }
 }
@@ -490,10 +436,10 @@ impl ResolvedResourceOperation {
 // struct ResolvedResourceOperations
 // ==============================================================================
 
+/// Applicable operations ordered by group, then order, then identity.
 #[derive(Clone, Debug, PartialEq, Default)]
 pub struct ResolvedResourceOperations {
     pub operations: Vec<ResolvedResourceOperation>,
-    pub primary_operation: Option<ResourceOperationId>,
     /// Set this to None when you're creating a struct.
     pub _unrecognized: Option<crate::skir_client::UnrecognizedFields<ResolvedResourceOperations>>,
 }
@@ -515,7 +461,7 @@ impl ResolvedResourceOperations {
             crate::skir_client::internal::StructAdapter::new(
                 "editor/v1/operation.skir",
                 "ResolvedResourceOperations",
-                "",
+                "Applicable operations ordered by group, then order, then identity.",
                 |x: &ResolvedResourceOperations| &x._unrecognized,
                 |x: &mut ResolvedResourceOperations, u| x._unrecognized = u,
             )
@@ -527,6 +473,186 @@ impl ResolvedResourceOperations {
         crate::skir_client::internal::struct_serializer_from_static(
             ResolvedResourceOperations::_adapter(),
         )
+    }
+}
+
+// ==============================================================================
+// enum OperationCardinality
+// ==============================================================================
+
+#[derive(Debug, Clone, PartialEq)]
+pub enum OperationCardinality {
+    Unknown(Option<crate::skir_client::UnrecognizedVariant<OperationCardinality>>),
+    Single,
+    Selection,
+}
+
+impl Default for OperationCardinality {
+    fn default() -> Self {
+        OperationCardinality::Unknown(None)
+    }
+}
+
+impl OperationCardinality {
+    fn _adapter() -> &'static crate::skir_client::internal::EnumAdapter<OperationCardinality> {
+        static ADAPTER: std::sync::LazyLock<
+            crate::skir_client::internal::EnumAdapter<OperationCardinality>,
+        > = std::sync::LazyLock::new(|| {
+            crate::skir_client::internal::EnumAdapter::new(
+                |x: &OperationCardinality| match x {
+                    OperationCardinality::Unknown(_) => 0,
+                    OperationCardinality::Single => 1,
+                    OperationCardinality::Selection => 2,
+                },
+                |u| OperationCardinality::Unknown(Some(u)),
+                |x: &OperationCardinality| match x {
+                    OperationCardinality::Unknown(Some(u)) => Some(u.as_ref()),
+                    _ => None,
+                },
+                "editor/v1/operation.skir",
+                "OperationCardinality",
+                "",
+            )
+        });
+        &*ADAPTER
+    }
+    pub fn serializer() -> crate::skir_client::Serializer<OperationCardinality> {
+        initialize_module_serializers();
+        crate::skir_client::internal::enum_serializer_from_static(OperationCardinality::_adapter())
+    }
+}
+
+// ==============================================================================
+// enum OperationInspector
+// ==============================================================================
+
+/// Inspector presence of an operation.
+#[derive(Debug, Clone, PartialEq)]
+pub enum OperationInspector {
+    Unknown(Option<crate::skir_client::UnrecognizedVariant<OperationInspector>>),
+    Hidden,
+    Button(Box<crate::skirout::base::editor::v1::presentation::ButtonVariant>),
+}
+
+impl Default for OperationInspector {
+    fn default() -> Self {
+        OperationInspector::Unknown(None)
+    }
+}
+
+impl OperationInspector {
+    fn _adapter() -> &'static crate::skir_client::internal::EnumAdapter<OperationInspector> {
+        static ADAPTER: std::sync::LazyLock<
+            crate::skir_client::internal::EnumAdapter<OperationInspector>,
+        > = std::sync::LazyLock::new(|| {
+            crate::skir_client::internal::EnumAdapter::new(
+                |x: &OperationInspector| match x {
+                    OperationInspector::Unknown(_) => 0,
+                    OperationInspector::Hidden => 1,
+                    OperationInspector::Button(_) => 2,
+                },
+                |u| OperationInspector::Unknown(Some(u)),
+                |x: &OperationInspector| match x {
+                    OperationInspector::Unknown(Some(u)) => Some(u.as_ref()),
+                    _ => None,
+                },
+                "editor/v1/operation.skir",
+                "OperationInspector",
+                "Inspector presence of an operation.",
+            )
+        });
+        &*ADAPTER
+    }
+    pub fn serializer() -> crate::skir_client::Serializer<OperationInspector> {
+        initialize_module_serializers();
+        crate::skir_client::internal::enum_serializer_from_static(OperationInspector::_adapter())
+    }
+}
+
+// ==============================================================================
+// struct OperationDrop
+// ==============================================================================
+
+/// The input field a drop fills with the resource dropped onto, and the hover hint.
+#[derive(Clone, Debug, PartialEq, Default)]
+pub struct OperationDrop {
+    pub input: crate::skirout::base::editor::v1::type_catalog::ValuePath,
+    pub hint: String,
+    /// Set this to None when you're creating a struct.
+    pub _unrecognized: Option<crate::skir_client::UnrecognizedFields<OperationDrop>>,
+}
+
+impl OperationDrop {
+    pub fn default_ref() -> &'static OperationDrop {
+        static D: std::sync::LazyLock<OperationDrop> =
+            std::sync::LazyLock::new(OperationDrop::default);
+        &D
+    }
+}
+
+impl OperationDrop {
+    fn _adapter() -> &'static crate::skir_client::internal::StructAdapter<OperationDrop> {
+        static ADAPTER: std::sync::LazyLock<
+            crate::skir_client::internal::StructAdapter<OperationDrop>,
+        > = std::sync::LazyLock::new(|| {
+            crate::skir_client::internal::StructAdapter::new(
+                "editor/v1/operation.skir",
+                "OperationDrop",
+                "The input field a drop fills with the resource dropped onto, and the hover hint.",
+                |x: &OperationDrop| &x._unrecognized,
+                |x: &mut OperationDrop, u| x._unrecognized = u,
+            )
+        });
+        &*ADAPTER
+    }
+    pub fn serializer() -> crate::skir_client::Serializer<OperationDrop> {
+        initialize_module_serializers();
+        crate::skir_client::internal::struct_serializer_from_static(OperationDrop::_adapter())
+    }
+}
+
+// ==============================================================================
+// enum OperationShortcut
+// ==============================================================================
+
+/// Keyboard gestures an operation can claim.
+#[derive(Debug, Clone, PartialEq)]
+pub enum OperationShortcut {
+    Unknown(Option<crate::skir_client::UnrecognizedVariant<OperationShortcut>>),
+    Delete,
+}
+
+impl Default for OperationShortcut {
+    fn default() -> Self {
+        OperationShortcut::Unknown(None)
+    }
+}
+
+impl OperationShortcut {
+    fn _adapter() -> &'static crate::skir_client::internal::EnumAdapter<OperationShortcut> {
+        static ADAPTER: std::sync::LazyLock<
+            crate::skir_client::internal::EnumAdapter<OperationShortcut>,
+        > = std::sync::LazyLock::new(|| {
+            crate::skir_client::internal::EnumAdapter::new(
+                |x: &OperationShortcut| match x {
+                    OperationShortcut::Unknown(_) => 0,
+                    OperationShortcut::Delete => 1,
+                },
+                |u| OperationShortcut::Unknown(Some(u)),
+                |x: &OperationShortcut| match x {
+                    OperationShortcut::Unknown(Some(u)) => Some(u.as_ref()),
+                    _ => None,
+                },
+                "editor/v1/operation.skir",
+                "OperationShortcut",
+                "Keyboard gestures an operation can claim.",
+            )
+        });
+        &*ADAPTER
+    }
+    pub fn serializer() -> crate::skir_client::Serializer<OperationShortcut> {
+        initialize_module_serializers();
+        crate::skir_client::internal::enum_serializer_from_static(OperationShortcut::_adapter())
     }
 }
 
@@ -563,66 +689,37 @@ fn initialize_module_serializers() {
                 |x: &ResourceOperationId| &x.declaration,
                 |x: &mut ResourceOperationId, v| x.declaration = v,
             );
-            (*a).add_field(
-                "local",
-                3,
-                crate::skir_client::Serializer::string(),
-                "",
-                |x: &ResourceOperationId| &x.local,
-                |x: &mut ResourceOperationId, v| x.local = v,
-            );
             (*a).finalize();
         }
         unsafe {
-            let a: *mut crate::skir_client::internal::EnumAdapter<OperationTargets> =
+            let a: *mut crate::skir_client::internal::StructAdapter<OperationTargets> =
                 OperationTargets::_adapter() as *const _ as *mut _;
-            (*a).add_wrapper_variant(
-                "single",
+            (*a).add_field(
+                "subject",
+                0,
+                crate::skirout::base::editor::v1::type_catalog::ResourceTarget::serializer(),
+                "",
+                |x: &OperationTargets| &x.subject,
+                |x: &mut OperationTargets, v| x.subject = v,
+            );
+            (*a).add_field(
+                "cardinality",
                 1,
-                1,
-                crate::skirout::base::editor::v1::type_catalog::TypeTemplate::serializer(),
+                crate::skir_client::internal::enum_serializer_from_static(
+                    OperationCardinality::_adapter(),
+                ),
                 "",
-                |v| OperationTargets::Single(Box::new(v)),
-                |x| match x {
-                    OperationTargets::Single(b) => b.as_ref(),
-                    _ => unreachable!(),
-                },
-            );
-            (*a).add_wrapper_variant(
-                "selection",
-                2,
-                2,
-                crate::skirout::base::editor::v1::type_catalog::TypeTemplate::serializer(),
-                "",
-                |v| OperationTargets::Selection(Box::new(v)),
-                |x| match x {
-                    OperationTargets::Selection(b) => b.as_ref(),
-                    _ => unreachable!(),
-                },
-            );
-            (*a).add_constant_variant(
-                "contributed_single",
-                3,
-                3,
-                "",
-                OperationTargets::ContributedSingle,
-            );
-            (*a).add_constant_variant(
-                "contributed_selection",
-                4,
-                4,
-                "",
-                OperationTargets::ContributedSelection,
+                |x: &OperationTargets| &x.cardinality,
+                |x: &mut OperationTargets, v| x.cardinality = v,
             );
             (*a).finalize();
         }
         unsafe {
             let a: *mut crate::skir_client::internal::EnumAdapter<OperationGroup> =
                 OperationGroup::_adapter() as *const _ as *mut _;
-            (*a).add_constant_variant("navigation", 1, 1, "", OperationGroup::Navigation);
-            (*a).add_constant_variant("edit", 2, 2, "", OperationGroup::Edit);
-            (*a).add_constant_variant("organize", 3, 3, "", OperationGroup::Organize);
-            (*a).add_constant_variant("destructive", 4, 4, "", OperationGroup::Destructive);
+            (*a).add_constant_variant("edit", 1, 1, "", OperationGroup::Edit);
+            (*a).add_constant_variant("organize", 2, 2, "", OperationGroup::Organize);
+            (*a).add_constant_variant("destructive", 3, 3, "", OperationGroup::Destructive);
             (*a).finalize();
         }
         unsafe {
@@ -703,7 +800,7 @@ fn initialize_module_serializers() {
                 "tone",
                 5,
                 crate::skirout::base::editor::v1::presentation::HeaderActionTone::serializer(),
-                "",
+                "Destructive for the destructive group, neutral otherwise.",
                 |x: &OperationPresentation| &x.tone,
                 |x: &mut OperationPresentation, v| x.tone = v,
             );
@@ -719,8 +816,28 @@ fn initialize_module_serializers() {
                 |x: &OperationPresentation| &x.confirmation,
                 |x: &mut OperationPresentation, v| x.confirmation = v,
             );
-            (*a).add_field("variant", 7, crate::skirout::base::editor::v1::presentation::ButtonVariant::serializer(), "Inspector button emphasis, independent of tone. Context menu rows ignore this variant.", |x: &OperationPresentation| &x.variant, |x: &mut OperationPresentation, v| x.variant = v);
-            (*a).add_field("show_in_inspector", 8, crate::skir_client::Serializer::bool(), "Whether this operation also appears among inspector controls. Menus and shortcuts remain available.", |x: &OperationPresentation| &x.show_in_inspector, |x: &mut OperationPresentation, v| x.show_in_inspector = v);
+            (*a).add_field(
+                "inspector",
+                7,
+                crate::skir_client::internal::enum_serializer_from_static(
+                    OperationInspector::_adapter(),
+                ),
+                "Inspector presence. Menus, shortcuts and drops ignore it.",
+                |x: &OperationPresentation| &x.inspector,
+                |x: &mut OperationPresentation, v| x.inspector = v,
+            );
+            (*a).add_field(
+                "shortcut",
+                8,
+                crate::skir_client::Serializer::optional(
+                    crate::skir_client::internal::enum_serializer_from_static(
+                        OperationShortcut::_adapter(),
+                    ),
+                ),
+                "The keyboard gesture that invokes this operation on the selection, if any.",
+                |x: &OperationPresentation| &x.shortcut,
+                |x: &mut OperationPresentation, v| x.shortcut = v,
+            );
             (*a).finalize();
         }
         unsafe {
@@ -772,7 +889,7 @@ fn initialize_module_serializers() {
             (*a).add_field(
                 "targets",
                 2,
-                crate::skir_client::internal::enum_serializer_from_static(
+                crate::skir_client::internal::struct_serializer_from_static(
                     OperationTargets::_adapter(),
                 ),
                 "",
@@ -780,49 +897,24 @@ fn initialize_module_serializers() {
                 |x: &mut ResourceOperationDefinition, v| x.targets = v,
             );
             (*a).add_field(
-                "action",
+                "capability",
                 3,
-                crate::skirout::base::editor::v1::action::EditorAction::serializer(),
-                "",
-                |x: &ResourceOperationDefinition| &x.action,
-                |x: &mut ResourceOperationDefinition, v| x.action = v,
-            );
-            (*a).finalize();
-        }
-        unsafe {
-            let a: *mut crate::skir_client::internal::StructAdapter<ResourceOperationContribution> =
-                ResourceOperationContribution::_adapter() as *const _ as *mut _;
-            (*a).add_field(
-                "target",
-                0,
-                crate::skirout::base::editor::v1::type_catalog::TypeTemplate::serializer(),
-                "",
-                |x: &ResourceOperationContribution| &x.target,
-                |x: &mut ResourceOperationContribution, v| x.target = v,
+                crate::skirout::base::editor::v1::type_catalog::CapabilityId::serializer(),
+                "Every catalog operation is an authoring action prepared through this capability.",
+                |x: &ResourceOperationDefinition| &x.capability,
+                |x: &mut ResourceOperationDefinition, v| x.capability = v,
             );
             (*a).add_field(
-                "operations",
-                1,
-                crate::skir_client::Serializer::array(
-                    crate::skir_client::internal::struct_serializer_from_static(
-                        ResourceOperationId::_adapter(),
-                    ),
-                ),
-                "",
-                |x: &ResourceOperationContribution| &x.operations,
-                |x: &mut ResourceOperationContribution, v| x.operations = v,
-            );
-            (*a).add_field(
-                "primary",
-                2,
+                "drop",
+                4,
                 crate::skir_client::Serializer::optional(
                     crate::skir_client::internal::struct_serializer_from_static(
-                        ResourceOperationId::_adapter(),
+                        OperationDrop::_adapter(),
                     ),
                 ),
-                "",
-                |x: &ResourceOperationContribution| &x.primary,
-                |x: &mut ResourceOperationContribution, v| x.primary = v,
+                "Set when a resource dropped onto another resource fills an input field.",
+                |x: &ResourceOperationDefinition| &x.drop,
+                |x: &mut ResourceOperationDefinition, v| x.drop = v,
             );
             (*a).finalize();
         }
@@ -885,18 +977,58 @@ fn initialize_module_serializers() {
                 |x: &ResolvedResourceOperations| &x.operations,
                 |x: &mut ResolvedResourceOperations, v| x.operations = v,
             );
-            (*a).add_field(
-                "primary_operation",
-                1,
-                crate::skir_client::Serializer::optional(
-                    crate::skir_client::internal::struct_serializer_from_static(
-                        ResourceOperationId::_adapter(),
-                    ),
-                ),
+            (*a).finalize();
+        }
+        unsafe {
+            let a: *mut crate::skir_client::internal::EnumAdapter<OperationCardinality> =
+                OperationCardinality::_adapter() as *const _ as *mut _;
+            (*a).add_constant_variant("single", 1, 1, "", OperationCardinality::Single);
+            (*a).add_constant_variant("selection", 2, 2, "", OperationCardinality::Selection);
+            (*a).finalize();
+        }
+        unsafe {
+            let a: *mut crate::skir_client::internal::EnumAdapter<OperationInspector> =
+                OperationInspector::_adapter() as *const _ as *mut _;
+            (*a).add_constant_variant("hidden", 1, 1, "", OperationInspector::Hidden);
+            (*a).add_wrapper_variant(
+                "button",
+                2,
+                2,
+                crate::skirout::base::editor::v1::presentation::ButtonVariant::serializer(),
                 "",
-                |x: &ResolvedResourceOperations| &x.primary_operation,
-                |x: &mut ResolvedResourceOperations, v| x.primary_operation = v,
+                |v| OperationInspector::Button(Box::new(v)),
+                |x| match x {
+                    OperationInspector::Button(b) => b.as_ref(),
+                    _ => unreachable!(),
+                },
             );
+            (*a).finalize();
+        }
+        unsafe {
+            let a: *mut crate::skir_client::internal::StructAdapter<OperationDrop> =
+                OperationDrop::_adapter() as *const _ as *mut _;
+            (*a).add_field(
+                "input",
+                0,
+                crate::skirout::base::editor::v1::type_catalog::ValuePath::serializer(),
+                "",
+                |x: &OperationDrop| &x.input,
+                |x: &mut OperationDrop, v| x.input = v,
+            );
+            (*a).add_field(
+                "hint",
+                1,
+                crate::skir_client::Serializer::string(),
+                "",
+                |x: &OperationDrop| &x.hint,
+                |x: &mut OperationDrop, v| x.hint = v,
+            );
+            (*a).finalize();
+        }
+        unsafe {
+            let a: *mut crate::skir_client::internal::EnumAdapter<OperationShortcut> =
+                OperationShortcut::_adapter() as *const _ as *mut _;
+            (*a).add_constant_variant("delete", 1, 1, "", OperationShortcut::Delete);
             (*a).finalize();
         }
     });

@@ -2958,11 +2958,9 @@ sealed class ResolveResourceOperationsResult private constructor() {
             _mustNameArguments: _MustNameArguments =
                 _MustNameArguments,
             operations: kotlin.collections.Iterable<skirout.editor.v1.operation.ResolvedResourceOperation_OrMutable>,
-            primaryOperation: skirout.editor.v1.operation.ResourceOperationId_OrMutable?,
         ) = ResolvedWrapper(
             skirout.editor.v1.operation.ResolvedResourceOperations(
                 operations = operations,
-                primaryOperation = primaryOperation,
             )
         );
 
@@ -4240,6 +4238,597 @@ class OperationSearchContext private constructor(
     }
 }
 
+sealed interface DropCandidates_OrMutable {
+    val operation: skirout.editor.v1.operation.ResourceOperationId_OrMutable;
+    val destinations: kotlin.collections.List<skirout.editor.v1.type_catalog.ResourceId_OrMutable>;
+    val complete: kotlin.Boolean;
+
+    fun toFrozen(): skirout.editor.v1.resource_operations.DropCandidates;
+}
+
+/**
+ * Destinations one operation accepts for the dragged resources, from its declared candidates and
+ * accepts. complete is false when the list was capped.
+ *
+ * Deeply immutable.
+ */
+@kotlin.Suppress("UNUSED_PARAMETER")
+class DropCandidates private constructor(
+    override val operation: skirout.editor.v1.operation.ResourceOperationId,
+    override val destinations: kotlin.collections.List<skirout.editor.v1.type_catalog.ResourceId>,
+    override val complete: kotlin.Boolean,
+    internal val _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.resource_operations.DropCandidates>? =
+        null,
+): skirout.editor.v1.resource_operations.DropCandidates_OrMutable {
+    constructor(
+        _mustNameArguments: _MustNameArguments =
+            _MustNameArguments,
+        operation: skirout.editor.v1.operation.ResourceOperationId_OrMutable,
+        destinations: kotlin.collections.Iterable<skirout.editor.v1.type_catalog.ResourceId_OrMutable>,
+        complete: kotlin.Boolean,
+        _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.resource_operations.DropCandidates>? =
+            null,
+    ): this(
+        operation.toFrozen(),
+        build.skir.internal.toFrozenList(destinations, { it.toFrozen() }),
+        complete,
+        _unrecognizedFields,
+    ) {}
+
+    @kotlin.Deprecated("Already frozen", kotlin.ReplaceWith("this"))
+    override fun toFrozen() = this;
+
+    /** Returns a mutable shallow copy of this instance */
+    fun toMutable() = Mutable(
+        operation = this.operation,
+        destinations = this.destinations,
+        complete = this.complete,
+    );
+
+    /** Returns a shallow copy of this instance with the specified fields replaced. */
+    fun copy(
+        _mustNameArguments: _MustNameArguments =
+            _MustNameArguments,
+        operation: skirout.editor.v1.operation.ResourceOperationId_OrMutable =
+            this.operation,
+        destinations: kotlin.collections.Iterable<skirout.editor.v1.type_catalog.ResourceId_OrMutable> =
+            this.destinations,
+        complete: kotlin.Boolean =
+            this.complete,
+    ) = skirout.editor.v1.resource_operations.DropCandidates(
+        operation.toFrozen(),
+        build.skir.internal.toFrozenList(destinations, { it.toFrozen() }),
+        complete,
+        this._unrecognizedFields,
+    );
+
+    @kotlin.Deprecated("No point in creating an exact copy of an immutable object", kotlin.ReplaceWith("this"))
+    fun copy() = this;
+
+    override fun equals(other: kotlin.Any?): kotlin.Boolean {
+        return this === other || (other is skirout.editor.v1.resource_operations.DropCandidates && this.operation == other.operation && this.destinations == other.destinations && this.complete == other.complete);
+    }
+
+    override fun hashCode(): kotlin.Int {
+        return kotlin.collections.listOf<kotlin.Any?>(this.operation, this.destinations, this.complete).hashCode();
+    }
+
+    override fun toString(): kotlin.String {
+        return build.skir.internal.toStringImpl(
+            this,
+            _SerializerRegistry.DropCandidatesSerializerImpl,
+        )
+    }
+
+    /** Mutable version of [DropCandidates]. */
+    class Mutable internal constructor(
+        _mustNameArguments: _MustNameArguments =
+            _MustNameArguments,
+        override var operation: skirout.editor.v1.operation.ResourceOperationId_OrMutable =
+            skirout.editor.v1.operation.ResourceOperationId.partial(),
+        override var destinations: kotlin.collections.List<skirout.editor.v1.type_catalog.ResourceId_OrMutable> =
+            build.skir.internal.emptyFrozenList<skirout.editor.v1.type_catalog.ResourceId>(),
+        override var complete: kotlin.Boolean =
+            false,
+        internal var _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.resource_operations.DropCandidates>? =
+            null,
+    ): skirout.editor.v1.resource_operations.DropCandidates_OrMutable {
+        /** Returns a deeply immutable copy of this instance */
+        override fun toFrozen() = skirout.editor.v1.resource_operations.DropCandidates(
+            operation = this.operation,
+            destinations = this.destinations,
+            complete = this.complete,
+            _unrecognizedFields = this._unrecognizedFields,
+        );
+
+        /**
+         * If the value of [operation] is already mutable, returns it as-is.
+         * Otherwise, makes a mutable copy, assigns it back to [operation] and returns it.
+         */
+        val mutableOperation: skirout.editor.v1.operation.ResourceOperationId.Mutable get() {
+            var value = this.operation;
+            return when (value) {
+                is skirout.editor.v1.operation.ResourceOperationId -> {
+                    value = value.toMutable();
+                    this.operation = value;
+                    return value;
+                }
+                is skirout.editor.v1.operation.ResourceOperationId.Mutable -> value;
+            }
+        }
+
+        /**
+         * If the value of [destinations] is already mutable, returns it as-is.
+         * Otherwise, makes a mutable copy, assigns it back to [destinations] and returns it.
+         */
+        val mutableDestinations: kotlin.collections.MutableList<skirout.editor.v1.type_catalog.ResourceId_OrMutable> get() {
+            var value = this.destinations;
+            return when (value) {
+                is build.skir.internal.MutableList -> value;
+                else -> {
+                    value = build.skir.internal.MutableList(value);
+                    this.destinations = value;
+                    value;
+                }
+            }
+        }
+    }
+
+    companion object {
+        private val default =
+            skirout.editor.v1.resource_operations.DropCandidates(
+                skirout.editor.v1.operation.ResourceOperationId.partial(),
+                build.skir.internal.emptyFrozenList<skirout.editor.v1.type_catalog.ResourceId>(),
+                false,
+            );
+
+        /** Returns an instance with all fields set to their default values. */
+        fun partial() = default;
+
+        /**
+         * Creates a new instance of [DropCandidates].
+         * Unlike the constructor, does not require all fields to be specified.
+         * Missing fields will be set to their default values.
+         */
+        fun partial(
+            _mustNameArguments: _MustNameArguments =
+                _MustNameArguments,
+            operation: skirout.editor.v1.operation.ResourceOperationId_OrMutable =
+                skirout.editor.v1.operation.ResourceOperationId.partial(),
+            destinations: kotlin.collections.Iterable<skirout.editor.v1.type_catalog.ResourceId_OrMutable> =
+                build.skir.internal.emptyFrozenList<skirout.editor.v1.type_catalog.ResourceId>(),
+            complete: kotlin.Boolean =
+                false,
+        ) = skirout.editor.v1.resource_operations.DropCandidates(
+            operation = operation,
+            destinations = destinations,
+            complete = complete,
+            _unrecognizedFields = null,
+        );
+
+        /** Serializer for [DropCandidates] instances. */
+        val serializer get() = _SerializerRegistry.DropCandidatesSerializer;
+
+        /** Describes the [DropCandidates] type. Provides runtime introspection capabilities. */
+        val typeDescriptor get() = _SerializerRegistry.DropCandidatesSerializerImpl.typeDescriptor;
+    }
+}
+
+sealed interface ResolveDropCandidatesRequest_OrMutable {
+    val invocation: skirout.editor.v1.resource_operations.OperationInvocation_OrMutable;
+    val context: skirout.editor.v1.resource_operations.OperationWorkingContext_OrMutable;
+
+    fun toFrozen(): skirout.editor.v1.resource_operations.ResolveDropCandidatesRequest;
+}
+
+/**
+ * invocation targets are the dragged resources.
+ *
+ * Deeply immutable.
+ */
+@kotlin.Suppress("UNUSED_PARAMETER")
+class ResolveDropCandidatesRequest private constructor(
+    override val invocation: skirout.editor.v1.resource_operations.OperationInvocation,
+    override val context: skirout.editor.v1.resource_operations.OperationWorkingContext,
+    internal val _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.resource_operations.ResolveDropCandidatesRequest>? =
+        null,
+): skirout.editor.v1.resource_operations.ResolveDropCandidatesRequest_OrMutable {
+    constructor(
+        _mustNameArguments: _MustNameArguments =
+            _MustNameArguments,
+        invocation: skirout.editor.v1.resource_operations.OperationInvocation_OrMutable,
+        context: skirout.editor.v1.resource_operations.OperationWorkingContext_OrMutable,
+        _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.resource_operations.ResolveDropCandidatesRequest>? =
+            null,
+    ): this(
+        invocation.toFrozen(),
+        context.toFrozen(),
+        _unrecognizedFields,
+    ) {}
+
+    @kotlin.Deprecated("Already frozen", kotlin.ReplaceWith("this"))
+    override fun toFrozen() = this;
+
+    /** Returns a mutable shallow copy of this instance */
+    fun toMutable() = Mutable(
+        invocation = this.invocation,
+        context = this.context,
+    );
+
+    /** Returns a shallow copy of this instance with the specified fields replaced. */
+    fun copy(
+        _mustNameArguments: _MustNameArguments =
+            _MustNameArguments,
+        invocation: skirout.editor.v1.resource_operations.OperationInvocation_OrMutable =
+            this.invocation,
+        context: skirout.editor.v1.resource_operations.OperationWorkingContext_OrMutable =
+            this.context,
+    ) = skirout.editor.v1.resource_operations.ResolveDropCandidatesRequest(
+        invocation.toFrozen(),
+        context.toFrozen(),
+        this._unrecognizedFields,
+    );
+
+    @kotlin.Deprecated("No point in creating an exact copy of an immutable object", kotlin.ReplaceWith("this"))
+    fun copy() = this;
+
+    override fun equals(other: kotlin.Any?): kotlin.Boolean {
+        return this === other || (other is skirout.editor.v1.resource_operations.ResolveDropCandidatesRequest && this.invocation == other.invocation && this.context == other.context);
+    }
+
+    override fun hashCode(): kotlin.Int {
+        return kotlin.collections.listOf<kotlin.Any?>(this.invocation, this.context).hashCode();
+    }
+
+    override fun toString(): kotlin.String {
+        return build.skir.internal.toStringImpl(
+            this,
+            _SerializerRegistry.ResolveDropCandidatesRequestSerializerImpl,
+        )
+    }
+
+    /** Mutable version of [ResolveDropCandidatesRequest]. */
+    class Mutable internal constructor(
+        _mustNameArguments: _MustNameArguments =
+            _MustNameArguments,
+        override var invocation: skirout.editor.v1.resource_operations.OperationInvocation_OrMutable =
+            skirout.editor.v1.resource_operations.OperationInvocation.partial(),
+        override var context: skirout.editor.v1.resource_operations.OperationWorkingContext_OrMutable =
+            skirout.editor.v1.resource_operations.OperationWorkingContext.partial(),
+        internal var _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.resource_operations.ResolveDropCandidatesRequest>? =
+            null,
+    ): skirout.editor.v1.resource_operations.ResolveDropCandidatesRequest_OrMutable {
+        /** Returns a deeply immutable copy of this instance */
+        override fun toFrozen() = skirout.editor.v1.resource_operations.ResolveDropCandidatesRequest(
+            invocation = this.invocation,
+            context = this.context,
+            _unrecognizedFields = this._unrecognizedFields,
+        );
+
+        /**
+         * If the value of [invocation] is already mutable, returns it as-is.
+         * Otherwise, makes a mutable copy, assigns it back to [invocation] and returns it.
+         */
+        val mutableInvocation: skirout.editor.v1.resource_operations.OperationInvocation.Mutable get() {
+            var value = this.invocation;
+            return when (value) {
+                is skirout.editor.v1.resource_operations.OperationInvocation -> {
+                    value = value.toMutable();
+                    this.invocation = value;
+                    return value;
+                }
+                is skirout.editor.v1.resource_operations.OperationInvocation.Mutable -> value;
+            }
+        }
+
+        /**
+         * If the value of [context] is already mutable, returns it as-is.
+         * Otherwise, makes a mutable copy, assigns it back to [context] and returns it.
+         */
+        val mutableContext: skirout.editor.v1.resource_operations.OperationWorkingContext.Mutable get() {
+            var value = this.context;
+            return when (value) {
+                is skirout.editor.v1.resource_operations.OperationWorkingContext -> {
+                    value = value.toMutable();
+                    this.context = value;
+                    return value;
+                }
+                is skirout.editor.v1.resource_operations.OperationWorkingContext.Mutable -> value;
+            }
+        }
+    }
+
+    companion object {
+        private val default =
+            skirout.editor.v1.resource_operations.ResolveDropCandidatesRequest(
+                skirout.editor.v1.resource_operations.OperationInvocation.partial(),
+                skirout.editor.v1.resource_operations.OperationWorkingContext.partial(),
+            );
+
+        /** Returns an instance with all fields set to their default values. */
+        fun partial() = default;
+
+        /**
+         * Creates a new instance of [ResolveDropCandidatesRequest].
+         * Unlike the constructor, does not require all fields to be specified.
+         * Missing fields will be set to their default values.
+         */
+        fun partial(
+            _mustNameArguments: _MustNameArguments =
+                _MustNameArguments,
+            invocation: skirout.editor.v1.resource_operations.OperationInvocation_OrMutable =
+                skirout.editor.v1.resource_operations.OperationInvocation.partial(),
+            context: skirout.editor.v1.resource_operations.OperationWorkingContext_OrMutable =
+                skirout.editor.v1.resource_operations.OperationWorkingContext.partial(),
+        ) = skirout.editor.v1.resource_operations.ResolveDropCandidatesRequest(
+            invocation = invocation,
+            context = context,
+            _unrecognizedFields = null,
+        );
+
+        /** Serializer for [ResolveDropCandidatesRequest] instances. */
+        val serializer get() = _SerializerRegistry.ResolveDropCandidatesRequestSerializer;
+
+        /** Describes the [ResolveDropCandidatesRequest] type. Provides runtime introspection capabilities. */
+        val typeDescriptor get() = _SerializerRegistry.ResolveDropCandidatesRequestSerializerImpl.typeDescriptor;
+    }
+}
+
+/**
+ * Resolved once when a drag starts, so hovering is a local lookup. Only enabled operations that
+ * declare a drop field contribute candidates.
+ *
+ * Deeply immutable.
+ */
+sealed class ResolveDropCandidatesResult private constructor() {
+    /** The kind of variant held by a `ResolveDropCandidatesResult`. */
+    enum class Kind {
+        UNKNOWN,
+        RESOLVED_WRAPPER,
+        STALE_OBSERVATION_WRAPPER,
+        INVALID_WRAPPER,
+        CATALOG_CHANGED_WRAPPER,
+        PERMISSION_DENIED_WRAPPER,
+        FAILED_WRAPPER,
+        INTERNAL_ERROR_WRAPPER,
+    }
+
+    class Unknown @kotlin.Deprecated("For internal use", kotlin.ReplaceWith("skirout.editor.v1.resource_operations.ResolveDropCandidatesResult.UNKNOWN")) internal constructor(
+        internal val _kind: Kind,
+        internal override val _unrecognized: _UnrecognizedVariant<skirout.editor.v1.resource_operations.ResolveDropCandidatesResult>?,
+    ) : skirout.editor.v1.resource_operations.ResolveDropCandidatesResult() {
+        override val kind get() = _kind;
+
+        override fun equals(other: kotlin.Any?): kotlin.Boolean {
+            return other is skirout.editor.v1.resource_operations.ResolveDropCandidatesResult && other.kind == kind;
+        }
+
+        override fun hashCode(): kotlin.Int {
+            return kind.ordinal;
+        }
+    }
+
+    class ResolvedWrapper private constructor (
+        val value: kotlin.collections.List<skirout.editor.v1.resource_operations.DropCandidates>,
+    ) : skirout.editor.v1.resource_operations.ResolveDropCandidatesResult() {
+        constructor(
+            value: kotlin.collections.Iterable<skirout.editor.v1.resource_operations.DropCandidates_OrMutable>,
+        ): this(build.skir.internal.toFrozenList(value, { it.toFrozen() })) {}
+
+        override val kind get() = Kind.RESOLVED_WRAPPER;
+
+        override fun equals(other: kotlin.Any?): kotlin.Boolean {
+            return other is skirout.editor.v1.resource_operations.ResolveDropCandidatesResult.ResolvedWrapper && value == other.value;
+        }
+
+        override fun hashCode(): kotlin.Int {
+            return this.value.hashCode() + -341328904;
+        }
+    }
+
+    class StaleObservationWrapper private constructor (
+        val value: skirout.editor.v1.resource_operations.StaleAuthoringObservation,
+    ) : skirout.editor.v1.resource_operations.ResolveDropCandidatesResult() {
+        constructor(
+            value: skirout.editor.v1.resource_operations.StaleAuthoringObservation_OrMutable,
+        ): this(value.toFrozen()) {}
+
+        override val kind get() = Kind.STALE_OBSERVATION_WRAPPER;
+
+        override fun equals(other: kotlin.Any?): kotlin.Boolean {
+            return other is skirout.editor.v1.resource_operations.ResolveDropCandidatesResult.StaleObservationWrapper && value == other.value;
+        }
+
+        override fun hashCode(): kotlin.Int {
+            return this.value.hashCode() + -1006347130;
+        }
+    }
+
+    class InvalidWrapper private constructor (
+        val value: skirout.editor.v1.resource_operations.ResourceOperationFailure,
+    ) : skirout.editor.v1.resource_operations.ResolveDropCandidatesResult() {
+        constructor(
+            value: skirout.editor.v1.resource_operations.ResourceOperationFailure_OrMutable,
+        ): this(value.toFrozen()) {}
+
+        override val kind get() = Kind.INVALID_WRAPPER;
+
+        override fun equals(other: kotlin.Any?): kotlin.Boolean {
+            return other is skirout.editor.v1.resource_operations.ResolveDropCandidatesResult.InvalidWrapper && value == other.value;
+        }
+
+        override fun hashCode(): kotlin.Int {
+            return this.value.hashCode() + 1959784951;
+        }
+    }
+
+    class CatalogChangedWrapper private constructor (
+        val value: skirout.editor.v1.authoring.CatalogChanged,
+    ) : skirout.editor.v1.resource_operations.ResolveDropCandidatesResult() {
+        constructor(
+            value: skirout.editor.v1.authoring.CatalogChanged_OrMutable,
+        ): this(value.toFrozen()) {}
+
+        override val kind get() = Kind.CATALOG_CHANGED_WRAPPER;
+
+        override fun equals(other: kotlin.Any?): kotlin.Boolean {
+            return other is skirout.editor.v1.resource_operations.ResolveDropCandidatesResult.CatalogChangedWrapper && value == other.value;
+        }
+
+        override fun hashCode(): kotlin.Int {
+            return this.value.hashCode() + 1862877326;
+        }
+    }
+
+    class PermissionDeniedWrapper private constructor (
+        val value: skirout.editor.v1.resource_operations.ResourceOperationFailure,
+    ) : skirout.editor.v1.resource_operations.ResolveDropCandidatesResult() {
+        constructor(
+            value: skirout.editor.v1.resource_operations.ResourceOperationFailure_OrMutable,
+        ): this(value.toFrozen()) {}
+
+        override val kind get() = Kind.PERMISSION_DENIED_WRAPPER;
+
+        override fun equals(other: kotlin.Any?): kotlin.Boolean {
+            return other is skirout.editor.v1.resource_operations.ResolveDropCandidatesResult.PermissionDeniedWrapper && value == other.value;
+        }
+
+        override fun hashCode(): kotlin.Int {
+            return this.value.hashCode() + 330128395;
+        }
+    }
+
+    class FailedWrapper private constructor (
+        val value: skirout.editor.v1.resource_operations.ResourceOperationFailure,
+    ) : skirout.editor.v1.resource_operations.ResolveDropCandidatesResult() {
+        constructor(
+            value: skirout.editor.v1.resource_operations.ResourceOperationFailure_OrMutable,
+        ): this(value.toFrozen()) {}
+
+        override val kind get() = Kind.FAILED_WRAPPER;
+
+        override fun equals(other: kotlin.Any?): kotlin.Boolean {
+            return other is skirout.editor.v1.resource_operations.ResolveDropCandidatesResult.FailedWrapper && value == other.value;
+        }
+
+        override fun hashCode(): kotlin.Int {
+            return this.value.hashCode() + -1281977283;
+        }
+    }
+
+    class InternalErrorWrapper private constructor (
+        val value: skirout.kernel.v1.errors.InternalError,
+    ) : skirout.editor.v1.resource_operations.ResolveDropCandidatesResult() {
+        constructor(
+            value: skirout.kernel.v1.errors.InternalError_OrMutable,
+        ): this(value.toFrozen()) {}
+
+        override val kind get() = Kind.INTERNAL_ERROR_WRAPPER;
+
+        override fun equals(other: kotlin.Any?): kotlin.Boolean {
+            return other is skirout.editor.v1.resource_operations.ResolveDropCandidatesResult.InternalErrorWrapper && value == other.value;
+        }
+
+        override fun hashCode(): kotlin.Int {
+            return this.value.hashCode() + 778975750;
+        }
+    }
+
+    internal open val _unrecognized: _UnrecognizedVariant<skirout.editor.v1.resource_operations.ResolveDropCandidatesResult>? get() = null;
+
+    abstract val kind: Kind;
+
+    override fun toString(): kotlin.String {
+        return build.skir.internal.toStringImpl(
+            this,
+            _SerializerRegistry.ResolveDropCandidatesResultSerializerImpl,
+        )
+    }
+
+    companion object {
+        /**
+         * Constant indicating an unknown [ResolveDropCandidatesResult].
+         * Default value for fields of type [ResolveDropCandidatesResult].
+         */
+        val UNKNOWN = @kotlin.Suppress("DEPRECATION") Unknown(Kind.UNKNOWN, null);
+
+        /** Shortcut for `StaleObservationWrapper(skirout.editor.v1.resource_operations.StaleAuthoringObservation(...))`. */
+        @kotlin.Suppress("UNUSED_PARAMETER")
+        fun createStaleObservation(
+            _mustNameArguments: _MustNameArguments =
+                _MustNameArguments,
+            actual: skirout.editor.v1.authoring.AuthoringObservationId_OrMutable,
+        ) = StaleObservationWrapper(
+            skirout.editor.v1.resource_operations.StaleAuthoringObservation(
+                actual = actual,
+            )
+        );
+
+        /** Shortcut for `InvalidWrapper(skirout.editor.v1.resource_operations.ResourceOperationFailure(...))`. */
+        @kotlin.Suppress("UNUSED_PARAMETER")
+        fun createInvalid(
+            _mustNameArguments: _MustNameArguments =
+                _MustNameArguments,
+            diagnostics: kotlin.collections.Iterable<skirout.editor.v1.authoring.AuthoringDiagnostic_OrMutable>,
+        ) = InvalidWrapper(
+            skirout.editor.v1.resource_operations.ResourceOperationFailure(
+                diagnostics = diagnostics,
+            )
+        );
+
+        /** Shortcut for `CatalogChangedWrapper(skirout.editor.v1.authoring.CatalogChanged(...))`. */
+        @kotlin.Suppress("UNUSED_PARAMETER")
+        fun createCatalogChanged(
+            _mustNameArguments: _MustNameArguments =
+                _MustNameArguments,
+            actualGeneration: skirout.editor.v1.type_catalog.CatalogGeneration_OrMutable,
+        ) = CatalogChangedWrapper(
+            skirout.editor.v1.authoring.CatalogChanged(
+                actualGeneration = actualGeneration,
+            )
+        );
+
+        /** Shortcut for `PermissionDeniedWrapper(skirout.editor.v1.resource_operations.ResourceOperationFailure(...))`. */
+        @kotlin.Suppress("UNUSED_PARAMETER")
+        fun createPermissionDenied(
+            _mustNameArguments: _MustNameArguments =
+                _MustNameArguments,
+            diagnostics: kotlin.collections.Iterable<skirout.editor.v1.authoring.AuthoringDiagnostic_OrMutable>,
+        ) = PermissionDeniedWrapper(
+            skirout.editor.v1.resource_operations.ResourceOperationFailure(
+                diagnostics = diagnostics,
+            )
+        );
+
+        /** Shortcut for `FailedWrapper(skirout.editor.v1.resource_operations.ResourceOperationFailure(...))`. */
+        @kotlin.Suppress("UNUSED_PARAMETER")
+        fun createFailed(
+            _mustNameArguments: _MustNameArguments =
+                _MustNameArguments,
+            diagnostics: kotlin.collections.Iterable<skirout.editor.v1.authoring.AuthoringDiagnostic_OrMutable>,
+        ) = FailedWrapper(
+            skirout.editor.v1.resource_operations.ResourceOperationFailure(
+                diagnostics = diagnostics,
+            )
+        );
+
+        /** Shortcut for `InternalErrorWrapper(skirout.kernel.v1.errors.InternalError(...))`. */
+        @kotlin.Suppress("UNUSED_PARAMETER")
+        fun createInternalError(
+            _mustNameArguments: _MustNameArguments =
+                _MustNameArguments,
+        ) = InternalErrorWrapper(
+            skirout.kernel.v1.errors.InternalError()
+        );
+
+        /** Serializer for [ResolveDropCandidatesResult] instances. */
+        val serializer get() = _SerializerRegistry.ResolveDropCandidatesResultSerializer;
+
+        /** Describes the [ResolveDropCandidatesResult] type. Provides runtime introspection capabilities. */
+        val typeDescriptor get() = _SerializerRegistry.ResolveDropCandidatesResultSerializerImpl.typeDescriptor;
+    }
+}
+
 val ResolveResourceOperations: build.skir.service.Method<
     skirout.editor.v1.resource_operations.ResolveResourceOperationsRequest,
     skirout.editor.v1.resource_operations.ResolveResourceOperationsResult,
@@ -4262,6 +4851,19 @@ val PrepareAuthoringAction: build.skir.service.Method<
         920016,
         skirout.editor.v1.resource_operations.PrepareAuthoringActionRequest.serializer,
         skirout.editor.v1.resource_operations.AuthoringActionResult.serializer,
+        "",
+    )
+}
+
+val ResolveDropCandidates: build.skir.service.Method<
+    skirout.editor.v1.resource_operations.ResolveDropCandidatesRequest,
+    skirout.editor.v1.resource_operations.ResolveDropCandidatesResult,
+> by kotlin.lazy {
+    build.skir.service.Method(
+        "ResolveDropCandidates",
+        920017,
+        skirout.editor.v1.resource_operations.ResolveDropCandidatesRequest.serializer,
+        skirout.editor.v1.resource_operations.ResolveDropCandidatesResult.serializer,
         "",
     )
 }
@@ -4303,6 +4905,18 @@ private object _SerializerRegistry {
         );
 
     val AuthoringActionResultSerializer = build.skir.internal.makeSerializer(AuthoringActionResultSerializerImpl);
+
+    val DropCandidatesSerializerImpl = build.skir.internal.StructSerializer(
+        recordId = "editor/v1/resource_operations.skir:DropCandidates",
+        doc = "Destinations one operation accepts for the dragged resources, from its declared candidates and\naccepts. complete is false when the list was capped.",
+        defaultInstance = skirout.editor.v1.resource_operations.DropCandidates.partial(),
+        newMutableFn = { it?.toMutable() ?: skirout.editor.v1.resource_operations.DropCandidates.Mutable() },
+        toFrozenFn = { it.toFrozen() },
+        getUnrecognizedFields = { it._unrecognizedFields },
+        setUnrecognizedFields = { m, u -> m._unrecognizedFields = u },
+    );
+
+    val DropCandidatesSerializer = build.skir.internal.makeSerializer(DropCandidatesSerializerImpl);
 
     val OperationInputProblemSerializerImpl = build.skir.internal.StructSerializer(
         recordId = "editor/v1/resource_operations.skir:OperationInputProblem",
@@ -4522,6 +5136,31 @@ private object _SerializerRegistry {
     );
 
     val PrepareAuthoringActionRequestSerializer = build.skir.internal.makeSerializer(PrepareAuthoringActionRequestSerializerImpl);
+
+    val ResolveDropCandidatesRequestSerializerImpl = build.skir.internal.StructSerializer(
+        recordId = "editor/v1/resource_operations.skir:ResolveDropCandidatesRequest",
+        doc = "invocation targets are the dragged resources.",
+        defaultInstance = skirout.editor.v1.resource_operations.ResolveDropCandidatesRequest.partial(),
+        newMutableFn = { it?.toMutable() ?: skirout.editor.v1.resource_operations.ResolveDropCandidatesRequest.Mutable() },
+        toFrozenFn = { it.toFrozen() },
+        getUnrecognizedFields = { it._unrecognizedFields },
+        setUnrecognizedFields = { m, u -> m._unrecognizedFields = u },
+    );
+
+    val ResolveDropCandidatesRequestSerializer = build.skir.internal.makeSerializer(ResolveDropCandidatesRequestSerializerImpl);
+
+    val ResolveDropCandidatesResultSerializerImpl =
+        build.skir.internal.EnumSerializer.create<skirout.editor.v1.resource_operations.ResolveDropCandidatesResult, skirout.editor.v1.resource_operations.ResolveDropCandidatesResult.Unknown>(
+            recordId = "editor/v1/resource_operations.skir:ResolveDropCandidatesResult",
+            doc = "Resolved once when a drag starts, so hovering is a local lookup. Only enabled operations that\ndeclare a drop field contribute candidates.",
+            getKindOrdinal = { it.kind.ordinal },
+            kindCount = skirout.editor.v1.resource_operations.ResolveDropCandidatesResult.Kind.values().size,
+            unknownInstance = skirout.editor.v1.resource_operations.ResolveDropCandidatesResult.UNKNOWN,
+            wrapUnrecognized = { @kotlin.Suppress("DEPRECATION") skirout.editor.v1.resource_operations.ResolveDropCandidatesResult.Unknown(skirout.editor.v1.resource_operations.ResolveDropCandidatesResult.Kind.UNKNOWN, it) },
+            getUnrecognized = { it._unrecognized },
+        );
+
+    val ResolveDropCandidatesResultSerializer = build.skir.internal.makeSerializer(ResolveDropCandidatesResultSerializerImpl);
 
     val ResolveResourceOperationsRequestSerializerImpl = build.skir.internal.StructSerializer(
         recordId = "editor/v1/resource_operations.skir:ResolveResourceOperationsRequest",
@@ -4757,6 +5396,37 @@ private object _SerializerRegistry {
             { it.value },
         );
         AuthoringActionResultSerializerImpl.finalizeEnum();
+
+        DropCandidatesSerializerImpl.addField(
+            "operation",
+            "operation",
+            0,
+            skirout.editor.v1.operation.ResourceOperationId.serializer,
+            "",
+            { it.operation },
+            { mut, v -> mut.operation = v },
+        );
+        DropCandidatesSerializerImpl.addField(
+            "destinations",
+            "destinations",
+            1,
+            build.skir.Serializers.list(
+                skirout.editor.v1.type_catalog.ResourceId.serializer,
+            ),
+            "",
+            { it.destinations },
+            { mut, v -> mut.destinations = v },
+        );
+        DropCandidatesSerializerImpl.addField(
+            "complete",
+            "complete",
+            2,
+            build.skir.Serializers.bool,
+            "",
+            { it.complete },
+            { mut, v -> mut.complete = v },
+        );
+        DropCandidatesSerializerImpl.finalizeStruct();
 
         OperationInputProblemSerializerImpl.addField(
             "path",
@@ -5225,6 +5895,93 @@ private object _SerializerRegistry {
             { mut, v -> mut.choices = v },
         );
         PrepareAuthoringActionRequestSerializerImpl.finalizeStruct();
+
+        ResolveDropCandidatesRequestSerializerImpl.addField(
+            "invocation",
+            "invocation",
+            0,
+            _SerializerRegistry.OperationInvocationSerializer,
+            "",
+            { it.invocation },
+            { mut, v -> mut.invocation = v },
+        );
+        ResolveDropCandidatesRequestSerializerImpl.addField(
+            "context",
+            "context",
+            1,
+            _SerializerRegistry.OperationWorkingContextSerializer,
+            "",
+            { it.context },
+            { mut, v -> mut.context = v },
+        );
+        ResolveDropCandidatesRequestSerializerImpl.finalizeStruct();
+
+        ResolveDropCandidatesResultSerializerImpl.addWrapperVariant(
+            1,
+            "resolved",
+            skirout.editor.v1.resource_operations.ResolveDropCandidatesResult.Kind.RESOLVED_WRAPPER.ordinal,
+            build.skir.Serializers.list(
+                _SerializerRegistry.DropCandidatesSerializer,
+            ),
+            "",
+            { skirout.editor.v1.resource_operations.ResolveDropCandidatesResult.ResolvedWrapper(it) },
+            { it.value },
+        );
+        ResolveDropCandidatesResultSerializerImpl.addWrapperVariant(
+            2,
+            "stale_observation",
+            skirout.editor.v1.resource_operations.ResolveDropCandidatesResult.Kind.STALE_OBSERVATION_WRAPPER.ordinal,
+            _SerializerRegistry.StaleAuthoringObservationSerializer,
+            "",
+            { skirout.editor.v1.resource_operations.ResolveDropCandidatesResult.StaleObservationWrapper(it) },
+            { it.value },
+        );
+        ResolveDropCandidatesResultSerializerImpl.addWrapperVariant(
+            3,
+            "invalid",
+            skirout.editor.v1.resource_operations.ResolveDropCandidatesResult.Kind.INVALID_WRAPPER.ordinal,
+            _SerializerRegistry.ResourceOperationFailureSerializer,
+            "",
+            { skirout.editor.v1.resource_operations.ResolveDropCandidatesResult.InvalidWrapper(it) },
+            { it.value },
+        );
+        ResolveDropCandidatesResultSerializerImpl.addWrapperVariant(
+            4,
+            "catalog_changed",
+            skirout.editor.v1.resource_operations.ResolveDropCandidatesResult.Kind.CATALOG_CHANGED_WRAPPER.ordinal,
+            skirout.editor.v1.authoring.CatalogChanged.serializer,
+            "",
+            { skirout.editor.v1.resource_operations.ResolveDropCandidatesResult.CatalogChangedWrapper(it) },
+            { it.value },
+        );
+        ResolveDropCandidatesResultSerializerImpl.addWrapperVariant(
+            5,
+            "permission_denied",
+            skirout.editor.v1.resource_operations.ResolveDropCandidatesResult.Kind.PERMISSION_DENIED_WRAPPER.ordinal,
+            _SerializerRegistry.ResourceOperationFailureSerializer,
+            "",
+            { skirout.editor.v1.resource_operations.ResolveDropCandidatesResult.PermissionDeniedWrapper(it) },
+            { it.value },
+        );
+        ResolveDropCandidatesResultSerializerImpl.addWrapperVariant(
+            6,
+            "failed",
+            skirout.editor.v1.resource_operations.ResolveDropCandidatesResult.Kind.FAILED_WRAPPER.ordinal,
+            _SerializerRegistry.ResourceOperationFailureSerializer,
+            "",
+            { skirout.editor.v1.resource_operations.ResolveDropCandidatesResult.FailedWrapper(it) },
+            { it.value },
+        );
+        ResolveDropCandidatesResultSerializerImpl.addWrapperVariant(
+            7,
+            "internal_error",
+            skirout.editor.v1.resource_operations.ResolveDropCandidatesResult.Kind.INTERNAL_ERROR_WRAPPER.ordinal,
+            skirout.kernel.v1.errors.InternalError.serializer,
+            "",
+            { skirout.editor.v1.resource_operations.ResolveDropCandidatesResult.InternalErrorWrapper(it) },
+            { it.value },
+        );
+        ResolveDropCandidatesResultSerializerImpl.finalizeEnum();
 
         ResolveResourceOperationsRequestSerializerImpl.addField(
             "invocation",

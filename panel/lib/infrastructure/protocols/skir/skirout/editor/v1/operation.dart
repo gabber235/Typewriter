@@ -15,7 +15,6 @@ import "dart:core" as _core;
 
 import "package:skir_client/skir_client.dart" as _skir;
 
-import "./action.dart" as _lib_editor_v1_action;
 import "./presentation.dart" as _lib_editor_v1_presentation;
 import "./type_catalog.dart" as _lib_editor_v1_type_catalog;
 
@@ -27,12 +26,12 @@ sealed class ResourceOperationId_orMutable {
   _core.String get artifact;
   _core.String get sourcePart;
   _core.String get declaration;
-  _core.String get local;
 
   ResourceOperationId toFrozen();
 }
 
-/// Stable declaration owned identity, independent of display labels and catalog generation.
+/// Stable identity owned by the declaring object, independent of display labels and catalog generation.
+/// declaration is the fully qualified name of the operation object.
 ///
 /// Deeply immutable.
 final class ResourceOperationId implements ResourceOperationId_orMutable {
@@ -42,31 +41,23 @@ final class ResourceOperationId implements ResourceOperationId_orMutable {
   final _core.String sourcePart;
   @_core.override
   final _core.String declaration;
-  @_core.override
-  final _core.String local;
   _skir.internal__UnrecognizedFields? _u;
 
   factory ResourceOperationId({
     required _core.String artifact,
     required _core.String sourcePart,
     required _core.String declaration,
-    required _core.String local,
-  }) => ResourceOperationId._(artifact, sourcePart, declaration, local);
+  }) => ResourceOperationId._(artifact, sourcePart, declaration);
 
-  ResourceOperationId._(
-    this.artifact,
-    this.sourcePart,
-    this.declaration,
-    this.local,
-  );
+  ResourceOperationId._(this.artifact, this.sourcePart, this.declaration);
 
   /// Default instance with all fields set to their default values.
-  static final defaultInstance = ResourceOperationId._("", "", "", "");
+  static final defaultInstance = ResourceOperationId._("", "", "");
 
   /// Returns a new mutable instance.
   /// Fields are initialized to their default values.
   static ResourceOperationId_mutable mutable() =>
-      ResourceOperationId_mutable._("", "", "", "");
+      ResourceOperationId_mutable._("", "", "");
 
   /// Returns this instance (no-op).
   @_core.Deprecated("This instance is already frozen.")
@@ -78,7 +69,6 @@ final class ResourceOperationId implements ResourceOperationId_orMutable {
     this.artifact,
     this.sourcePart,
     this.declaration,
-    this.local,
   );
 
   @_core.override
@@ -98,7 +88,6 @@ final class ResourceOperationId implements ResourceOperationId_orMutable {
     this.artifact,
     this.sourcePart,
     this.declaration,
-    this.local,
   ];
 
   @_core.override
@@ -138,15 +127,6 @@ final class ResourceOperationId implements ResourceOperationId_orMutable {
         (it) => it.declaration,
         (it, v) => it.declaration = v,
       );
-      _serializerBuilder.addField(
-        "local",
-        "local",
-        3,
-        _skir.Serializers.string,
-        "",
-        (it) => it.local,
-        (it, v) => it.local = v,
-      );
       _serializerBuilder.finalize();
     }
     return _serializerBuilder.serializer;
@@ -154,7 +134,7 @@ final class ResourceOperationId implements ResourceOperationId_orMutable {
 
   static final _serializerBuilder = _skir.internal__StructSerializerBuilder(
     recordId: "editor/v1/operation.skir:ResourceOperationId",
-    doc: "Stable declaration owned identity, independent of display labels and catalog generation.",
+    doc: "Stable identity owned by the declaring object, independent of display labels and catalog generation.\ndeclaration is the fully qualified name of the operation object.",
     defaultInstance: defaultInstance,
     newMutable: (it) => (it != null) ? it.toMutable() : mutable(),
     toFrozen: (ResourceOperationId_mutable it) => it.toFrozen(),
@@ -169,14 +149,12 @@ final class ResourceOperationId_mutable
   _core.String artifact;
   _core.String sourcePart;
   _core.String declaration;
-  _core.String local;
   _skir.internal__UnrecognizedFields? _u;
 
   ResourceOperationId_mutable._(
     this.artifact,
     this.sourcePart,
     this.declaration,
-    this.local,
   );
 
   /// Returns a deeply immutable copy of this instance.
@@ -185,194 +163,140 @@ final class ResourceOperationId_mutable
     artifact: this.artifact,
     sourcePart: this.sourcePart,
     declaration: this.declaration,
-    local: this.local,
   ).._u = this._u;
 }
 
 // -----------------------------------------------------------------------------
-// enum OperationTargets
+// struct OperationTargets
 // -----------------------------------------------------------------------------
 
-/// To switch on the variants:
-///   ```
-///   switch (e) {
-///     case OperationTargets_unknown(): { ... }
-///     case OperationTargets.contributedSingle: { ... }
-///     case OperationTargets.contributedSelection: { ... }
-///     case OperationTargets_single(:var value): { ... }
-///     case OperationTargets_selection(:var value): { ... }
-///   }
-///   ```
+sealed class OperationTargets_orMutable {
+  _lib_editor_v1_type_catalog.ResourceTarget get subject;
+  OperationCardinality get cardinality;
+
+  OperationTargets toFrozen();
+}
+
+/// The resources an operation applies to and how many it accepts at once.
 ///
 /// Deeply immutable.
-sealed class OperationTargets {
-  /// Constant indicating an unknown `OperationTargets`.
-  /// Default value for fields of type `OperationTargets`.
-  static const OperationTargets unknown = OperationTargets_unknown._instance;
+final class OperationTargets implements OperationTargets_orMutable {
+  @_core.override
+  final _lib_editor_v1_type_catalog.ResourceTarget subject;
+  @_core.override
+  final OperationCardinality cardinality;
+  _skir.internal__UnrecognizedFields? _u;
 
-  static const contributedSingle =
-      _OperationTargets_consts.contributedSingleConst;
-  static const contributedSelection =
-      _OperationTargets_consts.contributedSelectionConst;
+  factory OperationTargets({
+    required _lib_editor_v1_type_catalog.ResourceTarget subject,
+    required OperationCardinality cardinality,
+  }) => OperationTargets._(subject, cardinality);
 
-  /// Create a 'single' variant wrapping around the given value.
-  factory OperationTargets.wrapSingle(
-    _lib_editor_v1_type_catalog.TypeTemplate value,
-  ) => OperationTargets_singleWrapper._(value);
+  OperationTargets._(this.subject, this.cardinality);
 
-  /// Create a 'selection' variant wrapping around the given value.
-  factory OperationTargets.wrapSelection(
-    _lib_editor_v1_type_catalog.TypeTemplate value,
-  ) => OperationTargets_selectionWrapper._(value);
+  /// Default instance with all fields set to their default values.
+  static final defaultInstance = OperationTargets._(
+    _lib_editor_v1_type_catalog.ResourceTarget.unknown,
+    OperationCardinality.unknown,
+  );
 
-  /// Returns the kind of variant held by this OperationTargets.
-  OperationTargets_kind get kind;
+  /// Returns a new mutable instance.
+  /// Fields are initialized to their default values.
+  static OperationTargets_mutable mutable() => OperationTargets_mutable._(
+    _lib_editor_v1_type_catalog.ResourceTarget.unknown,
+    OperationCardinality.unknown,
+  );
+
+  /// Returns this instance (no-op).
+  @_core.Deprecated("This instance is already frozen.")
+  @_core.override
+  OperationTargets toFrozen() => this;
+
+  /// Returns a mutable shallow copy of this instance.
+  OperationTargets_mutable toMutable() =>
+      OperationTargets_mutable._(this.subject, this.cardinality);
+
+  @_core.override
+  _core.bool operator ==(other) {
+    if (_core.identical(this, other)) return true;
+    if (other is! OperationTargets) return false;
+    return _skir.internal__listEquality.equals(
+      _equality_proxy,
+      other._equality_proxy,
+    );
+  }
+
+  @_core.override
+  _core.int get hashCode => _skir.internal__listEquality.hash(_equality_proxy);
+
+  _core.List get _equality_proxy => [this.subject, this.cardinality];
+
+  @_core.override
+  _core.String toString() => _skir.internal__stringify(this, serializer);
 
   /// Serializer for `OperationTargets` instances.
-  static _skir.EnumSerializer<OperationTargets> get serializer {
+  static _skir.StructSerializer<OperationTargets, OperationTargets_mutable>
+  get serializer {
     if (_serializerBuilder.mustInitialize()) {
-      _serializerBuilder.addConstantVariant(
-        3,
-        "contributed_single",
-        "contributedSingle",
+      _serializerBuilder.addField(
+        "subject",
+        "subject",
+        0,
+        _lib_editor_v1_type_catalog.ResourceTarget.serializer,
         "",
-        contributedSingle,
+        (it) => it.subject,
+        (it, v) => it.subject = v,
       );
-      _serializerBuilder.addConstantVariant(
-        4,
-        "contributed_selection",
-        "contributedSelection",
-        "",
-        contributedSelection,
-      );
-      _serializerBuilder.addWrapperVariant(
+      _serializerBuilder.addField(
+        "cardinality",
+        "cardinality",
         1,
-        "single",
-        "wrapSingle",
-        _lib_editor_v1_type_catalog.TypeTemplate.serializer,
+        OperationCardinality.serializer,
         "",
-        OperationTargets_singleWrapper._,
-        (it) => it.value,
-        ordinal: OperationTargets_kind.singleWrapper._ordinal,
-      );
-      _serializerBuilder.addWrapperVariant(
-        2,
-        "selection",
-        "wrapSelection",
-        _lib_editor_v1_type_catalog.TypeTemplate.serializer,
-        "",
-        OperationTargets_selectionWrapper._,
-        (it) => it.value,
-        ordinal: OperationTargets_kind.selectionWrapper._ordinal,
+        (it) => it.cardinality,
+        (it, v) => it.cardinality = v,
       );
       _serializerBuilder.finalize();
     }
     return _serializerBuilder.serializer;
   }
 
-  static final _serializerBuilder = _skir.internal__EnumSerializerBuilder
-      .create(
-        recordId: "editor/v1/operation.skir:OperationTargets",
-        doc: "",
-        unknownInstance: OperationTargets_unknown._instance,
-        enumInstance: OperationTargets.unknown,
-        getOrdinal: (it) => it.kind._ordinal,
-        wrapUnrecognized: OperationTargets_unknown._unrecognized,
-        getUnrecognized: (it) => it._u,
-      );
+  static final _serializerBuilder = _skir.internal__StructSerializerBuilder(
+    recordId: "editor/v1/operation.skir:OperationTargets",
+    doc: "The resources an operation applies to and how many it accepts at once.",
+    defaultInstance: defaultInstance,
+    newMutable: (it) => (it != null) ? it.toMutable() : mutable(),
+    toFrozen: (OperationTargets_mutable it) => it.toFrozen(),
+    getUnrecognizedFields: (it) => it._u,
+    setUnrecognizedFields: (it, u) => it._u = u,
+  );
 }
 
-/// The kind of variant held by a `OperationTargets`.
-enum OperationTargets_kind {
-  unknown(0),
-  contributedSingleConst(1),
-  contributedSelectionConst(2),
-  singleWrapper(3),
-  selectionWrapper(4);
+/// Mutable version of [OperationTargets].
+final class OperationTargets_mutable implements OperationTargets_orMutable {
+  _lib_editor_v1_type_catalog.ResourceTarget subject;
+  OperationCardinality cardinality;
+  _skir.internal__UnrecognizedFields? _u;
 
-  final _core.int _ordinal;
+  OperationTargets_mutable._(this.subject, this.cardinality);
 
-  const OperationTargets_kind(this._ordinal);
-}
-
-final class OperationTargets_unknown implements OperationTargets {
-  static const _instance = OperationTargets_unknown._();
-
-  final _skir.internal__UnrecognizedVariant? _u;
-
-  const OperationTargets_unknown._() : _u = null;
-  OperationTargets_unknown._unrecognized(this._u);
-
+  /// Returns a deeply immutable copy of this instance.
   @_core.override
-  OperationTargets_kind get kind => OperationTargets_kind.unknown;
-  @_core.override
-  _core.bool operator ==(other) => other is OperationTargets_unknown;
-  @_core.override
-  _core.int get hashCode => 8118964;
-  @_core.override
-  _core.String toString() =>
-      _skir.internal__stringify(this, OperationTargets.serializer);
-}
-
-enum _OperationTargets_consts implements OperationTargets {
-  contributedSingleConst(OperationTargets_kind.contributedSingleConst),
-  contributedSelectionConst(OperationTargets_kind.contributedSelectionConst);
-
-  @_core.override
-  final OperationTargets_kind kind;
-
-  const _OperationTargets_consts(this.kind);
-
-  @_core.override
-  _core.String toString() =>
-      _skir.internal__stringify(this, OperationTargets.serializer);
-}
-
-sealed class _OperationTargets_wrapper implements OperationTargets {
-  _core.dynamic get value;
-
-  @_core.override
-  _core.bool operator ==(other) {
-    if (other is! _OperationTargets_wrapper) return false;
-    return kind == other.kind && value == other.value;
-  }
-
-  @_core.override
-  _core.int get hashCode => (kind._ordinal * 31) ^ value.hashCode;
-
-  @_core.override
-  _core.String toString() =>
-      _skir.internal__stringify(this, OperationTargets.serializer);
-}
-
-final class OperationTargets_singleWrapper extends _OperationTargets_wrapper {
-  final _lib_editor_v1_type_catalog.TypeTemplate value;
-
-  OperationTargets_singleWrapper._(this.value);
-
-  @_core.override
-  OperationTargets_kind get kind => OperationTargets_kind.singleWrapper;
-}
-
-final class OperationTargets_selectionWrapper
-    extends _OperationTargets_wrapper {
-  final _lib_editor_v1_type_catalog.TypeTemplate value;
-
-  OperationTargets_selectionWrapper._(this.value);
-
-  @_core.override
-  OperationTargets_kind get kind => OperationTargets_kind.selectionWrapper;
+  OperationTargets toFrozen() =>
+      OperationTargets(subject: this.subject, cardinality: this.cardinality)
+        .._u = this._u;
 }
 
 // -----------------------------------------------------------------------------
 // enum OperationGroup
 // -----------------------------------------------------------------------------
 
+/// Menu sections, in display order.
+///
 /// To switch on the variants:
 ///   ```
 ///   switch (e) {
 ///     case OperationGroup_unknown(): { ... }
-///     case OperationGroup.navigation: { ... }
 ///     case OperationGroup.edit: { ... }
 ///     case OperationGroup.organize: { ... }
 ///     case OperationGroup.destructive: { ... }
@@ -385,7 +309,6 @@ sealed class OperationGroup {
   /// Default value for fields of type `OperationGroup`.
   static const OperationGroup unknown = OperationGroup_unknown._instance;
 
-  static const navigation = _OperationGroup_consts.navigationConst;
   static const edit = _OperationGroup_consts.editConst;
   static const organize = _OperationGroup_consts.organizeConst;
   static const destructive = _OperationGroup_consts.destructiveConst;
@@ -396,23 +319,16 @@ sealed class OperationGroup {
   /// Serializer for `OperationGroup` instances.
   static _skir.EnumSerializer<OperationGroup> get serializer {
     if (_serializerBuilder.mustInitialize()) {
+      _serializerBuilder.addConstantVariant(1, "edit", "edit", "", edit);
       _serializerBuilder.addConstantVariant(
-        1,
-        "navigation",
-        "navigation",
-        "",
-        navigation,
-      );
-      _serializerBuilder.addConstantVariant(2, "edit", "edit", "", edit);
-      _serializerBuilder.addConstantVariant(
-        3,
+        2,
         "organize",
         "organize",
         "",
         organize,
       );
       _serializerBuilder.addConstantVariant(
-        4,
+        3,
         "destructive",
         "destructive",
         "",
@@ -426,7 +342,7 @@ sealed class OperationGroup {
   static final _serializerBuilder = _skir.internal__EnumSerializerBuilder
       .create(
         recordId: "editor/v1/operation.skir:OperationGroup",
-        doc: "",
+        doc: "Menu sections, in display order.",
         unknownInstance: OperationGroup_unknown._instance,
         enumInstance: OperationGroup.unknown,
         getOrdinal: (it) => it.kind._ordinal,
@@ -438,10 +354,9 @@ sealed class OperationGroup {
 /// The kind of variant held by a `OperationGroup`.
 enum OperationGroup_kind {
   unknown(0),
-  navigationConst(1),
-  editConst(2),
-  organizeConst(3),
-  destructiveConst(4);
+  editConst(1),
+  organizeConst(2),
+  destructiveConst(3);
 
   final _core.int _ordinal;
 
@@ -468,7 +383,6 @@ final class OperationGroup_unknown implements OperationGroup {
 }
 
 enum _OperationGroup_consts implements OperationGroup {
-  navigationConst(OperationGroup_kind.navigationConst),
   editConst(OperationGroup_kind.editConst),
   organizeConst(OperationGroup_kind.organizeConst),
   destructiveConst(OperationGroup_kind.destructiveConst);
@@ -638,14 +552,16 @@ sealed class OperationPresentation_orMutable {
   _core.String get icon;
   OperationGroup get group;
   _core.int get order;
+
+  /// Destructive for the destructive group, neutral otherwise.
   _lib_editor_v1_presentation.HeaderActionTone get tone;
   OperationConfirmation_orMutable? get confirmation;
 
-  /// Inspector button emphasis, independent of tone. Context menu rows ignore this variant.
-  _lib_editor_v1_presentation.ButtonVariant get variant;
+  /// Inspector presence. Menus, shortcuts and drops ignore it.
+  OperationInspector get inspector;
 
-  /// Whether this operation also appears among inspector controls. Menus and shortcuts remain available.
-  _core.bool get showInInspector;
+  /// The keyboard gesture that invokes this operation on the selection, if any.
+  OperationShortcut? get shortcut;
 
   OperationPresentation toFrozen();
 }
@@ -662,18 +578,20 @@ final class OperationPresentation implements OperationPresentation_orMutable {
   final OperationGroup group;
   @_core.override
   final _core.int order;
+
+  /// Destructive for the destructive group, neutral otherwise.
   @_core.override
   final _lib_editor_v1_presentation.HeaderActionTone tone;
   @_core.override
   final OperationConfirmation? confirmation;
 
-  /// Inspector button emphasis, independent of tone. Context menu rows ignore this variant.
+  /// Inspector presence. Menus, shortcuts and drops ignore it.
   @_core.override
-  final _lib_editor_v1_presentation.ButtonVariant variant;
+  final OperationInspector inspector;
 
-  /// Whether this operation also appears among inspector controls. Menus and shortcuts remain available.
+  /// The keyboard gesture that invokes this operation on the selection, if any.
   @_core.override
-  final _core.bool showInInspector;
+  final OperationShortcut? shortcut;
   _skir.internal__UnrecognizedFields? _u;
 
   factory OperationPresentation({
@@ -684,8 +602,8 @@ final class OperationPresentation implements OperationPresentation_orMutable {
     required _core.int order,
     required _lib_editor_v1_presentation.HeaderActionTone tone,
     required OperationConfirmation_orMutable? confirmation,
-    required _lib_editor_v1_presentation.ButtonVariant variant,
-    required _core.bool showInInspector,
+    required OperationInspector inspector,
+    required OperationShortcut? shortcut,
   }) => OperationPresentation._(
     label,
     description,
@@ -694,8 +612,8 @@ final class OperationPresentation implements OperationPresentation_orMutable {
     order,
     tone,
     (confirmation != null) ? confirmation.toFrozen() : null,
-    variant,
-    showInInspector,
+    inspector,
+    shortcut,
   );
 
   OperationPresentation._(
@@ -706,8 +624,8 @@ final class OperationPresentation implements OperationPresentation_orMutable {
     this.order,
     this.tone,
     this.confirmation,
-    this.variant,
-    this.showInInspector,
+    this.inspector,
+    this.shortcut,
   );
 
   /// Default instance with all fields set to their default values.
@@ -719,8 +637,8 @@ final class OperationPresentation implements OperationPresentation_orMutable {
     0,
     _lib_editor_v1_presentation.HeaderActionTone.unknown,
     null,
-    _lib_editor_v1_presentation.ButtonVariant.unknown,
-    false,
+    OperationInspector.unknown,
+    null,
   );
 
   /// Returns a new mutable instance.
@@ -734,8 +652,8 @@ final class OperationPresentation implements OperationPresentation_orMutable {
         0,
         _lib_editor_v1_presentation.HeaderActionTone.unknown,
         null,
-        _lib_editor_v1_presentation.ButtonVariant.unknown,
-        false,
+        OperationInspector.unknown,
+        null,
       );
 
   /// Returns this instance (no-op).
@@ -752,8 +670,8 @@ final class OperationPresentation implements OperationPresentation_orMutable {
     this.order,
     this.tone,
     this.confirmation,
-    this.variant,
-    this.showInInspector,
+    this.inspector,
+    this.shortcut,
   );
 
   @_core.override
@@ -777,8 +695,8 @@ final class OperationPresentation implements OperationPresentation_orMutable {
     this.order,
     this.tone,
     this.confirmation,
-    this.variant,
-    this.showInInspector,
+    this.inspector,
+    this.shortcut,
   ];
 
   @_core.override
@@ -841,7 +759,7 @@ final class OperationPresentation implements OperationPresentation_orMutable {
         "tone",
         5,
         _lib_editor_v1_presentation.HeaderActionTone.serializer,
-        "",
+        "Destructive for the destructive group, neutral otherwise.",
         (it) => it.tone,
         (it, v) => it.tone = v,
       );
@@ -855,22 +773,22 @@ final class OperationPresentation implements OperationPresentation_orMutable {
         (it, v) => it.confirmation = v,
       );
       _serializerBuilder.addField(
-        "variant",
-        "variant",
+        "inspector",
+        "inspector",
         7,
-        _lib_editor_v1_presentation.ButtonVariant.serializer,
-        "Inspector button emphasis, independent of tone. Context menu rows ignore this variant.",
-        (it) => it.variant,
-        (it, v) => it.variant = v,
+        OperationInspector.serializer,
+        "Inspector presence. Menus, shortcuts and drops ignore it.",
+        (it) => it.inspector,
+        (it, v) => it.inspector = v,
       );
       _serializerBuilder.addField(
-        "show_in_inspector",
-        "showInInspector",
+        "shortcut",
+        "shortcut",
         8,
-        _skir.Serializers.bool,
-        "Whether this operation also appears among inspector controls. Menus and shortcuts remain available.",
-        (it) => it.showInInspector,
-        (it, v) => it.showInInspector = v,
+        _skir.Serializers.optional(OperationShortcut.serializer),
+        "The keyboard gesture that invokes this operation on the selection, if any.",
+        (it) => it.shortcut,
+        (it, v) => it.shortcut = v,
       );
       _serializerBuilder.finalize();
     }
@@ -896,14 +814,16 @@ final class OperationPresentation_mutable
   _core.String icon;
   OperationGroup group;
   _core.int order;
+
+  /// Destructive for the destructive group, neutral otherwise.
   _lib_editor_v1_presentation.HeaderActionTone tone;
   OperationConfirmation_orMutable? confirmation;
 
-  /// Inspector button emphasis, independent of tone. Context menu rows ignore this variant.
-  _lib_editor_v1_presentation.ButtonVariant variant;
+  /// Inspector presence. Menus, shortcuts and drops ignore it.
+  OperationInspector inspector;
 
-  /// Whether this operation also appears among inspector controls. Menus and shortcuts remain available.
-  _core.bool showInInspector;
+  /// The keyboard gesture that invokes this operation on the selection, if any.
+  OperationShortcut? shortcut;
   _skir.internal__UnrecognizedFields? _u;
 
   OperationPresentation_mutable._(
@@ -914,8 +834,8 @@ final class OperationPresentation_mutable
     this.order,
     this.tone,
     this.confirmation,
-    this.variant,
-    this.showInInspector,
+    this.inspector,
+    this.shortcut,
   );
 
   /// Returns a deeply immutable copy of this instance.
@@ -928,8 +848,8 @@ final class OperationPresentation_mutable
     order: this.order,
     tone: this.tone,
     confirmation: this.confirmation,
-    variant: this.variant,
-    showInInspector: this.showInInspector,
+    inspector: this.inspector,
+    shortcut: this.shortcut,
   ).._u = this._u;
 }
 
@@ -1070,8 +990,13 @@ final class OperationInputDefinition_mutable
 sealed class ResourceOperationDefinition_orMutable {
   ResourceOperationId_orMutable get id;
   OperationPresentation_orMutable get presentation;
-  OperationTargets get targets;
-  _lib_editor_v1_action.EditorAction get action;
+  OperationTargets_orMutable get targets;
+
+  /// Every catalog operation is an authoring action prepared through this capability.
+  _lib_editor_v1_type_catalog.CapabilityId_orMutable get capability;
+
+  /// Set when a resource dropped onto another resource fills an input field.
+  OperationDrop_orMutable? get drop;
 
   ResourceOperationDefinition toFrozen();
 }
@@ -1085,35 +1010,45 @@ final class ResourceOperationDefinition
   final OperationPresentation presentation;
   @_core.override
   final OperationTargets targets;
+
+  /// Every catalog operation is an authoring action prepared through this capability.
   @_core.override
-  final _lib_editor_v1_action.EditorAction action;
+  final _lib_editor_v1_type_catalog.CapabilityId capability;
+
+  /// Set when a resource dropped onto another resource fills an input field.
+  @_core.override
+  final OperationDrop? drop;
   _skir.internal__UnrecognizedFields? _u;
 
   factory ResourceOperationDefinition({
     required ResourceOperationId_orMutable id,
     required OperationPresentation_orMutable presentation,
-    required OperationTargets targets,
-    required _lib_editor_v1_action.EditorAction action,
+    required OperationTargets_orMutable targets,
+    required _lib_editor_v1_type_catalog.CapabilityId_orMutable capability,
+    required OperationDrop_orMutable? drop,
   }) => ResourceOperationDefinition._(
     id.toFrozen(),
     presentation.toFrozen(),
-    targets,
-    action,
+    targets.toFrozen(),
+    capability.toFrozen(),
+    (drop != null) ? drop.toFrozen() : null,
   );
 
   ResourceOperationDefinition._(
     this.id,
     this.presentation,
     this.targets,
-    this.action,
+    this.capability,
+    this.drop,
   );
 
   /// Default instance with all fields set to their default values.
   static final defaultInstance = ResourceOperationDefinition._(
     ResourceOperationId.defaultInstance,
     OperationPresentation.defaultInstance,
-    OperationTargets.unknown,
-    _lib_editor_v1_action.EditorAction.unknown,
+    OperationTargets.defaultInstance,
+    _lib_editor_v1_type_catalog.CapabilityId.defaultInstance,
+    null,
   );
 
   /// Returns a new mutable instance.
@@ -1122,8 +1057,9 @@ final class ResourceOperationDefinition
       ResourceOperationDefinition_mutable._(
         ResourceOperationId.defaultInstance,
         OperationPresentation.defaultInstance,
-        OperationTargets.unknown,
-        _lib_editor_v1_action.EditorAction.unknown,
+        OperationTargets.defaultInstance,
+        _lib_editor_v1_type_catalog.CapabilityId.defaultInstance,
+        null,
       );
 
   /// Returns this instance (no-op).
@@ -1137,7 +1073,8 @@ final class ResourceOperationDefinition
         this.id,
         this.presentation,
         this.targets,
-        this.action,
+        this.capability,
+        this.drop,
       );
 
   @_core.override
@@ -1157,7 +1094,8 @@ final class ResourceOperationDefinition
     this.id,
     this.presentation,
     this.targets,
-    this.action,
+    this.capability,
+    this.drop,
   ];
 
   @_core.override
@@ -1198,13 +1136,22 @@ final class ResourceOperationDefinition
         (it, v) => it.targets = v,
       );
       _serializerBuilder.addField(
-        "action",
-        "action",
+        "capability",
+        "capability",
         3,
-        _lib_editor_v1_action.EditorAction.serializer,
-        "",
-        (it) => it.action,
-        (it, v) => it.action = v,
+        _lib_editor_v1_type_catalog.CapabilityId.serializer,
+        "Every catalog operation is an authoring action prepared through this capability.",
+        (it) => it.capability,
+        (it, v) => it.capability = v,
+      );
+      _serializerBuilder.addField(
+        "drop",
+        "drop",
+        4,
+        _skir.Serializers.optional(OperationDrop.serializer),
+        "Set when a resource dropped onto another resource fills an input field.",
+        (it) => it.drop,
+        (it, v) => it.drop = v,
       );
       _serializerBuilder.finalize();
     }
@@ -1227,15 +1174,21 @@ final class ResourceOperationDefinition_mutable
     implements ResourceOperationDefinition_orMutable {
   ResourceOperationId_orMutable id;
   OperationPresentation_orMutable presentation;
-  OperationTargets targets;
-  _lib_editor_v1_action.EditorAction action;
+  OperationTargets_orMutable targets;
+
+  /// Every catalog operation is an authoring action prepared through this capability.
+  _lib_editor_v1_type_catalog.CapabilityId_orMutable capability;
+
+  /// Set when a resource dropped onto another resource fills an input field.
+  OperationDrop_orMutable? drop;
   _skir.internal__UnrecognizedFields? _u;
 
   ResourceOperationDefinition_mutable._(
     this.id,
     this.presentation,
     this.targets,
-    this.action,
+    this.capability,
+    this.drop,
   );
 
   /// If the value of [id] is already mutable, returns it as-is.
@@ -1260,187 +1213,37 @@ final class ResourceOperationDefinition_mutable
     }
   }
 
+  /// If the value of [targets] is already mutable, returns it as-is.
+  /// Otherwise, makes a mutable copy, assigns it back to [targets] and returns it.
+  OperationTargets_mutable get mutableTargets {
+    final value = this.targets;
+    if (value is OperationTargets_mutable) {
+      return value;
+    } else {
+      return this.targets = (value as OperationTargets).toMutable();
+    }
+  }
+
+  /// If the value of [capability] is already mutable, returns it as-is.
+  /// Otherwise, makes a mutable copy, assigns it back to [capability] and returns it.
+  _lib_editor_v1_type_catalog.CapabilityId_mutable get mutableCapability {
+    final value = this.capability;
+    if (value is _lib_editor_v1_type_catalog.CapabilityId_mutable) {
+      return value;
+    } else {
+      return this.capability =
+          (value as _lib_editor_v1_type_catalog.CapabilityId).toMutable();
+    }
+  }
+
   /// Returns a deeply immutable copy of this instance.
   @_core.override
   ResourceOperationDefinition toFrozen() => ResourceOperationDefinition(
     id: this.id,
     presentation: this.presentation,
     targets: this.targets,
-    action: this.action,
-  ).._u = this._u;
-}
-
-// -----------------------------------------------------------------------------
-// struct ResourceOperationContribution
-// -----------------------------------------------------------------------------
-
-sealed class ResourceOperationContribution_orMutable {
-  _lib_editor_v1_type_catalog.TypeTemplate get target;
-  _core.Iterable<ResourceOperationId_orMutable> get operations;
-  ResourceOperationId_orMutable? get primary;
-
-  ResourceOperationContribution toFrozen();
-}
-
-/// Adds operation identities to matching resource types and optionally nominates a primary action.
-/// Resolution considers all selected targets; primary nomination applies to a single resource
-/// and conflicting equally applicable nominations are rejected.
-///
-/// Deeply immutable.
-final class ResourceOperationContribution
-    implements ResourceOperationContribution_orMutable {
-  @_core.override
-  final _lib_editor_v1_type_catalog.TypeTemplate target;
-  @_core.override
-  final _core.Iterable<ResourceOperationId> operations;
-  @_core.override
-  final ResourceOperationId? primary;
-  _skir.internal__UnrecognizedFields? _u;
-
-  factory ResourceOperationContribution({
-    required _lib_editor_v1_type_catalog.TypeTemplate target,
-    required _core.Iterable<ResourceOperationId_orMutable> operations,
-    required ResourceOperationId_orMutable? primary,
-  }) => ResourceOperationContribution._(
-    target,
-    _skir.internal__frozenMappedCopy(operations, (it) => it.toFrozen()),
-    (primary != null) ? primary.toFrozen() : null,
-  );
-
-  ResourceOperationContribution._(this.target, this.operations, this.primary);
-
-  /// Default instance with all fields set to their default values.
-  static final defaultInstance = ResourceOperationContribution._(
-    _lib_editor_v1_type_catalog.TypeTemplate.unknown,
-    _skir.KeyedIterable.empty,
-    null,
-  );
-
-  /// Returns a new mutable instance.
-  /// Fields are initialized to their default values.
-  static ResourceOperationContribution_mutable mutable() =>
-      ResourceOperationContribution_mutable._(
-        _lib_editor_v1_type_catalog.TypeTemplate.unknown,
-        _skir.KeyedIterable.empty,
-        null,
-      );
-
-  /// Returns this instance (no-op).
-  @_core.Deprecated("This instance is already frozen.")
-  @_core.override
-  ResourceOperationContribution toFrozen() => this;
-
-  /// Returns a mutable shallow copy of this instance.
-  ResourceOperationContribution_mutable toMutable() =>
-      ResourceOperationContribution_mutable._(
-        this.target,
-        this.operations,
-        this.primary,
-      );
-
-  @_core.override
-  _core.bool operator ==(other) {
-    if (_core.identical(this, other)) return true;
-    if (other is! ResourceOperationContribution) return false;
-    return _skir.internal__listEquality.equals(
-      _equality_proxy,
-      other._equality_proxy,
-    );
-  }
-
-  @_core.override
-  _core.int get hashCode => _skir.internal__listEquality.hash(_equality_proxy);
-
-  _core.List get _equality_proxy => [
-    this.target,
-    this.operations,
-    this.primary,
-  ];
-
-  @_core.override
-  _core.String toString() => _skir.internal__stringify(this, serializer);
-
-  /// Serializer for `ResourceOperationContribution` instances.
-  static _skir.StructSerializer<
-    ResourceOperationContribution,
-    ResourceOperationContribution_mutable
-  >
-  get serializer {
-    if (_serializerBuilder.mustInitialize()) {
-      _serializerBuilder.addField(
-        "target",
-        "target",
-        0,
-        _lib_editor_v1_type_catalog.TypeTemplate.serializer,
-        "",
-        (it) => it.target,
-        (it, v) => it.target = v,
-      );
-      _serializerBuilder.addField(
-        "operations",
-        "operations",
-        1,
-        _skir.Serializers.iterable(ResourceOperationId.serializer),
-        "",
-        (it) => it.operations,
-        (it, v) => it.operations = v,
-      );
-      _serializerBuilder.addField(
-        "primary",
-        "primary",
-        2,
-        _skir.Serializers.optional(ResourceOperationId.serializer),
-        "",
-        (it) => it.primary,
-        (it, v) => it.primary = v,
-      );
-      _serializerBuilder.finalize();
-    }
-    return _serializerBuilder.serializer;
-  }
-
-  static final _serializerBuilder = _skir.internal__StructSerializerBuilder(
-    recordId: "editor/v1/operation.skir:ResourceOperationContribution",
-    doc: "Adds operation identities to matching resource types and optionally nominates a primary action.\nResolution considers all selected targets; primary nomination applies to a single resource\nand conflicting equally applicable nominations are rejected.",
-    defaultInstance: defaultInstance,
-    newMutable: (it) => (it != null) ? it.toMutable() : mutable(),
-    toFrozen: (ResourceOperationContribution_mutable it) => it.toFrozen(),
-    getUnrecognizedFields: (it) => it._u,
-    setUnrecognizedFields: (it, u) => it._u = u,
-  );
-}
-
-/// Mutable version of [ResourceOperationContribution].
-final class ResourceOperationContribution_mutable
-    implements ResourceOperationContribution_orMutable {
-  _lib_editor_v1_type_catalog.TypeTemplate target;
-  _core.Iterable<ResourceOperationId_orMutable> operations;
-  ResourceOperationId_orMutable? primary;
-  _skir.internal__UnrecognizedFields? _u;
-
-  ResourceOperationContribution_mutable._(
-    this.target,
-    this.operations,
-    this.primary,
-  );
-
-  /// If the value of [operations] is already mutable, returns it as-is.
-  /// Otherwise, makes a mutable copy, assigns it back to [operations] and returns it.
-  _core.List<ResourceOperationId_orMutable> get mutableOperations {
-    final value = this.operations;
-    if (value is _skir.internal__MutableList<ResourceOperationId_orMutable>) {
-      return value;
-    } else {
-      return this.operations = _skir.internal__MutableList([...value]);
-    }
-  }
-
-  /// Returns a deeply immutable copy of this instance.
-  @_core.override
-  ResourceOperationContribution toFrozen() => ResourceOperationContribution(
-    target: this.target,
-    operations: this.operations,
-    primary: this.primary,
+    capability: this.capability,
+    drop: this.drop,
   ).._u = this._u;
 }
 
@@ -1733,40 +1536,36 @@ final class ResolvedResourceOperation_mutable
 
 sealed class ResolvedResourceOperations_orMutable {
   _core.Iterable<ResolvedResourceOperation_orMutable> get operations;
-  ResourceOperationId_orMutable? get primaryOperation;
 
   ResolvedResourceOperations toFrozen();
 }
 
+/// Applicable operations ordered by group, then order, then identity.
+///
 /// Deeply immutable.
 final class ResolvedResourceOperations
     implements ResolvedResourceOperations_orMutable {
   @_core.override
   final _core.Iterable<ResolvedResourceOperation> operations;
-  @_core.override
-  final ResourceOperationId? primaryOperation;
   _skir.internal__UnrecognizedFields? _u;
 
   factory ResolvedResourceOperations({
     required _core.Iterable<ResolvedResourceOperation_orMutable> operations,
-    required ResourceOperationId_orMutable? primaryOperation,
   }) => ResolvedResourceOperations._(
     _skir.internal__frozenMappedCopy(operations, (it) => it.toFrozen()),
-    (primaryOperation != null) ? primaryOperation.toFrozen() : null,
   );
 
-  ResolvedResourceOperations._(this.operations, this.primaryOperation);
+  ResolvedResourceOperations._(this.operations);
 
   /// Default instance with all fields set to their default values.
   static final defaultInstance = ResolvedResourceOperations._(
     _skir.KeyedIterable.empty,
-    null,
   );
 
   /// Returns a new mutable instance.
   /// Fields are initialized to their default values.
   static ResolvedResourceOperations_mutable mutable() =>
-      ResolvedResourceOperations_mutable._(_skir.KeyedIterable.empty, null);
+      ResolvedResourceOperations_mutable._(_skir.KeyedIterable.empty);
 
   /// Returns this instance (no-op).
   @_core.Deprecated("This instance is already frozen.")
@@ -1775,10 +1574,7 @@ final class ResolvedResourceOperations
 
   /// Returns a mutable shallow copy of this instance.
   ResolvedResourceOperations_mutable toMutable() =>
-      ResolvedResourceOperations_mutable._(
-        this.operations,
-        this.primaryOperation,
-      );
+      ResolvedResourceOperations_mutable._(this.operations);
 
   @_core.override
   _core.bool operator ==(other) {
@@ -1793,7 +1589,7 @@ final class ResolvedResourceOperations
   @_core.override
   _core.int get hashCode => _skir.internal__listEquality.hash(_equality_proxy);
 
-  _core.List get _equality_proxy => [this.operations, this.primaryOperation];
+  _core.List get _equality_proxy => [this.operations];
 
   @_core.override
   _core.String toString() => _skir.internal__stringify(this, serializer);
@@ -1814,15 +1610,6 @@ final class ResolvedResourceOperations
         (it) => it.operations,
         (it, v) => it.operations = v,
       );
-      _serializerBuilder.addField(
-        "primary_operation",
-        "primaryOperation",
-        1,
-        _skir.Serializers.optional(ResourceOperationId.serializer),
-        "",
-        (it) => it.primaryOperation,
-        (it, v) => it.primaryOperation = v,
-      );
       _serializerBuilder.finalize();
     }
     return _serializerBuilder.serializer;
@@ -1830,7 +1617,7 @@ final class ResolvedResourceOperations
 
   static final _serializerBuilder = _skir.internal__StructSerializerBuilder(
     recordId: "editor/v1/operation.skir:ResolvedResourceOperations",
-    doc: "",
+    doc: "Applicable operations ordered by group, then order, then identity.",
     defaultInstance: defaultInstance,
     newMutable: (it) => (it != null) ? it.toMutable() : mutable(),
     toFrozen: (ResolvedResourceOperations_mutable it) => it.toFrozen(),
@@ -1843,10 +1630,9 @@ final class ResolvedResourceOperations
 final class ResolvedResourceOperations_mutable
     implements ResolvedResourceOperations_orMutable {
   _core.Iterable<ResolvedResourceOperation_orMutable> operations;
-  ResourceOperationId_orMutable? primaryOperation;
   _skir.internal__UnrecognizedFields? _u;
 
-  ResolvedResourceOperations_mutable._(this.operations, this.primaryOperation);
+  ResolvedResourceOperations_mutable._(this.operations);
 
   /// If the value of [operations] is already mutable, returns it as-is.
   /// Otherwise, makes a mutable copy, assigns it back to [operations] and returns it.
@@ -1862,8 +1648,457 @@ final class ResolvedResourceOperations_mutable
 
   /// Returns a deeply immutable copy of this instance.
   @_core.override
-  ResolvedResourceOperations toFrozen() => ResolvedResourceOperations(
-    operations: this.operations,
-    primaryOperation: this.primaryOperation,
-  ).._u = this._u;
+  ResolvedResourceOperations toFrozen() =>
+      ResolvedResourceOperations(operations: this.operations).._u = this._u;
+}
+
+// -----------------------------------------------------------------------------
+// enum OperationCardinality
+// -----------------------------------------------------------------------------
+
+/// To switch on the variants:
+///   ```
+///   switch (e) {
+///     case OperationCardinality_unknown(): { ... }
+///     case OperationCardinality.single: { ... }
+///     case OperationCardinality.selection: { ... }
+///   }
+///   ```
+///
+/// Deeply immutable.
+sealed class OperationCardinality {
+  /// Constant indicating an unknown `OperationCardinality`.
+  /// Default value for fields of type `OperationCardinality`.
+  static const OperationCardinality unknown =
+      OperationCardinality_unknown._instance;
+
+  static const single = _OperationCardinality_consts.singleConst;
+  static const selection = _OperationCardinality_consts.selectionConst;
+
+  /// Returns the kind of variant held by this OperationCardinality.
+  OperationCardinality_kind get kind;
+
+  /// Serializer for `OperationCardinality` instances.
+  static _skir.EnumSerializer<OperationCardinality> get serializer {
+    if (_serializerBuilder.mustInitialize()) {
+      _serializerBuilder.addConstantVariant(1, "single", "single", "", single);
+      _serializerBuilder.addConstantVariant(
+        2,
+        "selection",
+        "selection",
+        "",
+        selection,
+      );
+      _serializerBuilder.finalize();
+    }
+    return _serializerBuilder.serializer;
+  }
+
+  static final _serializerBuilder = _skir.internal__EnumSerializerBuilder
+      .create(
+        recordId: "editor/v1/operation.skir:OperationCardinality",
+        doc: "",
+        unknownInstance: OperationCardinality_unknown._instance,
+        enumInstance: OperationCardinality.unknown,
+        getOrdinal: (it) => it.kind._ordinal,
+        wrapUnrecognized: OperationCardinality_unknown._unrecognized,
+        getUnrecognized: (it) => it._u,
+      );
+}
+
+/// The kind of variant held by a `OperationCardinality`.
+enum OperationCardinality_kind {
+  unknown(0),
+  singleConst(1),
+  selectionConst(2);
+
+  final _core.int _ordinal;
+
+  const OperationCardinality_kind(this._ordinal);
+}
+
+final class OperationCardinality_unknown implements OperationCardinality {
+  static const _instance = OperationCardinality_unknown._();
+
+  final _skir.internal__UnrecognizedVariant? _u;
+
+  const OperationCardinality_unknown._() : _u = null;
+  OperationCardinality_unknown._unrecognized(this._u);
+
+  @_core.override
+  OperationCardinality_kind get kind => OperationCardinality_kind.unknown;
+  @_core.override
+  _core.bool operator ==(other) => other is OperationCardinality_unknown;
+  @_core.override
+  _core.int get hashCode => 8118964;
+  @_core.override
+  _core.String toString() =>
+      _skir.internal__stringify(this, OperationCardinality.serializer);
+}
+
+enum _OperationCardinality_consts implements OperationCardinality {
+  singleConst(OperationCardinality_kind.singleConst),
+  selectionConst(OperationCardinality_kind.selectionConst);
+
+  @_core.override
+  final OperationCardinality_kind kind;
+
+  const _OperationCardinality_consts(this.kind);
+
+  @_core.override
+  _core.String toString() =>
+      _skir.internal__stringify(this, OperationCardinality.serializer);
+}
+
+// -----------------------------------------------------------------------------
+// enum OperationInspector
+// -----------------------------------------------------------------------------
+
+/// Inspector presence of an operation.
+///
+/// To switch on the variants:
+///   ```
+///   switch (e) {
+///     case OperationInspector_unknown(): { ... }
+///     case OperationInspector.hidden: { ... }
+///     case OperationInspector_button(:var value): { ... }
+///   }
+///   ```
+///
+/// Deeply immutable.
+sealed class OperationInspector {
+  /// Constant indicating an unknown `OperationInspector`.
+  /// Default value for fields of type `OperationInspector`.
+  static const OperationInspector unknown =
+      OperationInspector_unknown._instance;
+
+  static const hidden = _OperationInspector_consts.hiddenConst;
+
+  /// Create a 'button' variant wrapping around the given value.
+  factory OperationInspector.wrapButton(
+    _lib_editor_v1_presentation.ButtonVariant value,
+  ) => OperationInspector_buttonWrapper._(value);
+
+  /// Returns the kind of variant held by this OperationInspector.
+  OperationInspector_kind get kind;
+
+  /// Serializer for `OperationInspector` instances.
+  static _skir.EnumSerializer<OperationInspector> get serializer {
+    if (_serializerBuilder.mustInitialize()) {
+      _serializerBuilder.addConstantVariant(1, "hidden", "hidden", "", hidden);
+      _serializerBuilder.addWrapperVariant(
+        2,
+        "button",
+        "wrapButton",
+        _lib_editor_v1_presentation.ButtonVariant.serializer,
+        "",
+        OperationInspector_buttonWrapper._,
+        (it) => it.value,
+        ordinal: OperationInspector_kind.buttonWrapper._ordinal,
+      );
+      _serializerBuilder.finalize();
+    }
+    return _serializerBuilder.serializer;
+  }
+
+  static final _serializerBuilder = _skir.internal__EnumSerializerBuilder
+      .create(
+        recordId: "editor/v1/operation.skir:OperationInspector",
+        doc: "Inspector presence of an operation.",
+        unknownInstance: OperationInspector_unknown._instance,
+        enumInstance: OperationInspector.unknown,
+        getOrdinal: (it) => it.kind._ordinal,
+        wrapUnrecognized: OperationInspector_unknown._unrecognized,
+        getUnrecognized: (it) => it._u,
+      );
+}
+
+/// The kind of variant held by a `OperationInspector`.
+enum OperationInspector_kind {
+  unknown(0),
+  hiddenConst(1),
+  buttonWrapper(2);
+
+  final _core.int _ordinal;
+
+  const OperationInspector_kind(this._ordinal);
+}
+
+final class OperationInspector_unknown implements OperationInspector {
+  static const _instance = OperationInspector_unknown._();
+
+  final _skir.internal__UnrecognizedVariant? _u;
+
+  const OperationInspector_unknown._() : _u = null;
+  OperationInspector_unknown._unrecognized(this._u);
+
+  @_core.override
+  OperationInspector_kind get kind => OperationInspector_kind.unknown;
+  @_core.override
+  _core.bool operator ==(other) => other is OperationInspector_unknown;
+  @_core.override
+  _core.int get hashCode => 8118964;
+  @_core.override
+  _core.String toString() =>
+      _skir.internal__stringify(this, OperationInspector.serializer);
+}
+
+enum _OperationInspector_consts implements OperationInspector {
+  hiddenConst(OperationInspector_kind.hiddenConst);
+
+  @_core.override
+  final OperationInspector_kind kind;
+
+  const _OperationInspector_consts(this.kind);
+
+  @_core.override
+  _core.String toString() =>
+      _skir.internal__stringify(this, OperationInspector.serializer);
+}
+
+sealed class _OperationInspector_wrapper implements OperationInspector {
+  _core.dynamic get value;
+
+  @_core.override
+  _core.bool operator ==(other) {
+    if (other is! _OperationInspector_wrapper) return false;
+    return kind == other.kind && value == other.value;
+  }
+
+  @_core.override
+  _core.int get hashCode => (kind._ordinal * 31) ^ value.hashCode;
+
+  @_core.override
+  _core.String toString() =>
+      _skir.internal__stringify(this, OperationInspector.serializer);
+}
+
+final class OperationInspector_buttonWrapper
+    extends _OperationInspector_wrapper {
+  final _lib_editor_v1_presentation.ButtonVariant value;
+
+  OperationInspector_buttonWrapper._(this.value);
+
+  @_core.override
+  OperationInspector_kind get kind => OperationInspector_kind.buttonWrapper;
+}
+
+// -----------------------------------------------------------------------------
+// struct OperationDrop
+// -----------------------------------------------------------------------------
+
+sealed class OperationDrop_orMutable {
+  _lib_editor_v1_type_catalog.ValuePath_orMutable get input;
+  _core.String get hint;
+
+  OperationDrop toFrozen();
+}
+
+/// The input field a drop fills with the resource dropped onto, and the hover hint.
+///
+/// Deeply immutable.
+final class OperationDrop implements OperationDrop_orMutable {
+  @_core.override
+  final _lib_editor_v1_type_catalog.ValuePath input;
+  @_core.override
+  final _core.String hint;
+  _skir.internal__UnrecognizedFields? _u;
+
+  factory OperationDrop({
+    required _lib_editor_v1_type_catalog.ValuePath_orMutable input,
+    required _core.String hint,
+  }) => OperationDrop._(input.toFrozen(), hint);
+
+  OperationDrop._(this.input, this.hint);
+
+  /// Default instance with all fields set to their default values.
+  static final defaultInstance = OperationDrop._(
+    _lib_editor_v1_type_catalog.ValuePath.defaultInstance,
+    "",
+  );
+
+  /// Returns a new mutable instance.
+  /// Fields are initialized to their default values.
+  static OperationDrop_mutable mutable() => OperationDrop_mutable._(
+    _lib_editor_v1_type_catalog.ValuePath.defaultInstance,
+    "",
+  );
+
+  /// Returns this instance (no-op).
+  @_core.Deprecated("This instance is already frozen.")
+  @_core.override
+  OperationDrop toFrozen() => this;
+
+  /// Returns a mutable shallow copy of this instance.
+  OperationDrop_mutable toMutable() =>
+      OperationDrop_mutable._(this.input, this.hint);
+
+  @_core.override
+  _core.bool operator ==(other) {
+    if (_core.identical(this, other)) return true;
+    if (other is! OperationDrop) return false;
+    return _skir.internal__listEquality.equals(
+      _equality_proxy,
+      other._equality_proxy,
+    );
+  }
+
+  @_core.override
+  _core.int get hashCode => _skir.internal__listEquality.hash(_equality_proxy);
+
+  _core.List get _equality_proxy => [this.input, this.hint];
+
+  @_core.override
+  _core.String toString() => _skir.internal__stringify(this, serializer);
+
+  /// Serializer for `OperationDrop` instances.
+  static _skir.StructSerializer<OperationDrop, OperationDrop_mutable>
+  get serializer {
+    if (_serializerBuilder.mustInitialize()) {
+      _serializerBuilder.addField(
+        "input",
+        "input",
+        0,
+        _lib_editor_v1_type_catalog.ValuePath.serializer,
+        "",
+        (it) => it.input,
+        (it, v) => it.input = v,
+      );
+      _serializerBuilder.addField(
+        "hint",
+        "hint",
+        1,
+        _skir.Serializers.string,
+        "",
+        (it) => it.hint,
+        (it, v) => it.hint = v,
+      );
+      _serializerBuilder.finalize();
+    }
+    return _serializerBuilder.serializer;
+  }
+
+  static final _serializerBuilder = _skir.internal__StructSerializerBuilder(
+    recordId: "editor/v1/operation.skir:OperationDrop",
+    doc: "The input field a drop fills with the resource dropped onto, and the hover hint.",
+    defaultInstance: defaultInstance,
+    newMutable: (it) => (it != null) ? it.toMutable() : mutable(),
+    toFrozen: (OperationDrop_mutable it) => it.toFrozen(),
+    getUnrecognizedFields: (it) => it._u,
+    setUnrecognizedFields: (it, u) => it._u = u,
+  );
+}
+
+/// Mutable version of [OperationDrop].
+final class OperationDrop_mutable implements OperationDrop_orMutable {
+  _lib_editor_v1_type_catalog.ValuePath_orMutable input;
+  _core.String hint;
+  _skir.internal__UnrecognizedFields? _u;
+
+  OperationDrop_mutable._(this.input, this.hint);
+
+  /// If the value of [input] is already mutable, returns it as-is.
+  /// Otherwise, makes a mutable copy, assigns it back to [input] and returns it.
+  _lib_editor_v1_type_catalog.ValuePath_mutable get mutableInput {
+    final value = this.input;
+    if (value is _lib_editor_v1_type_catalog.ValuePath_mutable) {
+      return value;
+    } else {
+      return this.input = (value as _lib_editor_v1_type_catalog.ValuePath)
+          .toMutable();
+    }
+  }
+
+  /// Returns a deeply immutable copy of this instance.
+  @_core.override
+  OperationDrop toFrozen() =>
+      OperationDrop(input: this.input, hint: this.hint).._u = this._u;
+}
+
+// -----------------------------------------------------------------------------
+// enum OperationShortcut
+// -----------------------------------------------------------------------------
+
+/// Keyboard gestures an operation can claim.
+///
+/// To switch on the variants:
+///   ```
+///   switch (e) {
+///     case OperationShortcut_unknown(): { ... }
+///     case OperationShortcut.delete: { ... }
+///   }
+///   ```
+///
+/// Deeply immutable.
+sealed class OperationShortcut {
+  /// Constant indicating an unknown `OperationShortcut`.
+  /// Default value for fields of type `OperationShortcut`.
+  static const OperationShortcut unknown = OperationShortcut_unknown._instance;
+
+  static const delete = _OperationShortcut_consts.deleteConst;
+
+  /// Returns the kind of variant held by this OperationShortcut.
+  OperationShortcut_kind get kind;
+
+  /// Serializer for `OperationShortcut` instances.
+  static _skir.EnumSerializer<OperationShortcut> get serializer {
+    if (_serializerBuilder.mustInitialize()) {
+      _serializerBuilder.addConstantVariant(1, "delete", "delete", "", delete);
+      _serializerBuilder.finalize();
+    }
+    return _serializerBuilder.serializer;
+  }
+
+  static final _serializerBuilder = _skir.internal__EnumSerializerBuilder
+      .create(
+        recordId: "editor/v1/operation.skir:OperationShortcut",
+        doc: "Keyboard gestures an operation can claim.",
+        unknownInstance: OperationShortcut_unknown._instance,
+        enumInstance: OperationShortcut.unknown,
+        getOrdinal: (it) => it.kind._ordinal,
+        wrapUnrecognized: OperationShortcut_unknown._unrecognized,
+        getUnrecognized: (it) => it._u,
+      );
+}
+
+/// The kind of variant held by a `OperationShortcut`.
+enum OperationShortcut_kind {
+  unknown(0),
+  deleteConst(1);
+
+  final _core.int _ordinal;
+
+  const OperationShortcut_kind(this._ordinal);
+}
+
+final class OperationShortcut_unknown implements OperationShortcut {
+  static const _instance = OperationShortcut_unknown._();
+
+  final _skir.internal__UnrecognizedVariant? _u;
+
+  const OperationShortcut_unknown._() : _u = null;
+  OperationShortcut_unknown._unrecognized(this._u);
+
+  @_core.override
+  OperationShortcut_kind get kind => OperationShortcut_kind.unknown;
+  @_core.override
+  _core.bool operator ==(other) => other is OperationShortcut_unknown;
+  @_core.override
+  _core.int get hashCode => 8118964;
+  @_core.override
+  _core.String toString() =>
+      _skir.internal__stringify(this, OperationShortcut.serializer);
+}
+
+enum _OperationShortcut_consts implements OperationShortcut {
+  deleteConst(OperationShortcut_kind.deleteConst);
+
+  @_core.override
+  final OperationShortcut_kind kind;
+
+  const _OperationShortcut_consts(this.kind);
+
+  @_core.override
+  _core.String toString() =>
+      _skir.internal__stringify(this, OperationShortcut.serializer);
 }

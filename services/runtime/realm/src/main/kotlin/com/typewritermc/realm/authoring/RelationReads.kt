@@ -1,0 +1,198 @@
+package com.typewritermc.realm.authoring
+
+import com.typewritermc.authoring.AuthoringRecord
+import com.typewritermc.authoring.ItemId
+import com.typewritermc.authoring.LinkOccurrence
+import com.typewritermc.authoring.LinkOccurrenceId
+import com.typewritermc.authoring.LinkProjection
+import com.typewritermc.authoring.TypeSelection
+import com.typewritermc.authoring.ValueLocation
+import com.typewritermc.authoring.ValuePath
+import com.typewritermc.authoring.item
+import com.typewritermc.checking.InputIdentity
+import com.typewritermc.operations.OperationOrigin
+import com.typewritermc.realm.checking.CapturedAuthoringReads
+import com.typewritermc.realm.repository.CounterpartBinding
+import com.typewritermc.realm.repository.DeclaredLinkEvidence
+import com.typewritermc.realm.repository.ResourceValueMapper
+import com.typewritermc.realm.repository.valueAt
+import com.typewritermc.types.DataValue
+import com.typewritermc.types.EndpointId
+import com.typewritermc.types.LinkTarget
+import com.typewritermc.types.RelationContract
+import com.typewritermc.types.ResourceId
+import com.typewritermc.types.catalog.Resolution
+import com.typewritermc.types.catalog.ResolvedRepresentation
+import com.typewritermc.types.ownsResources
+
+/**
+ * Reads relation bindings, ownership and endpoint compatibility over one captured working graph.
+ *
+ * The graph is the view behind [reads], so staged edits are visible as soon as they are written. Every read that
+ * decides an answer is recorded on [reads], so a preview built from these answers is rejected when they change.
+ */
+internal class RelationReads(
+    val reads: CapturedAuthoringReads,
+) {
+    val catalog: AuthoringCatalogLease get() = reads.view.original.catalog
+    val resources: Map<ResourceId, AuthoringRecord> get() = reads.view.resources
+    val links: Map<LinkOccurrenceId, LinkOccurrence> get() = reads.view.links
+
+    private var projected: Pair<Map<ResourceId, AuthoringRecord>, List<LinkProjection>>? = null
+
+    /** Relation projections of the current graph, recomputed only after a staged write replaces it. */
+    val projections: List<LinkProjection>
+        get() {
+            val current = resources
+            projected?.let { (source, projections) -> if (source === current) return projections }
+            return ResourceValueMapper
+                .project(links.values, current, catalog.relations, catalog.checked)
+                .projections
+                .also { projected = current to it }
+        }
+
+    fun contract(endpoint: EndpointId): RelationContract = catalog.relations.single { it.first.id == endpoint || it.second.id == endpoint }
+
+    fun recordOf(id: ResourceId): AuthoringRecord = resources[id] ?: error("The linked resource is unavailable")
+
+    /** Records that the existence and type of [id] were read. */
+    fun observeForm(id: ResourceId) {
+        reads.observeInput(InputIdentity.Existence(id))
+        reads.observeInput(InputIdentity.Form(ValueLocation(id, ValuePath())))
+    }
+
+    fun observe(source: LinkOccurrence) {
+        reads.observeInput(InputIdentity.Value(source.id.location))
+        reads.observeInput(InputIdentity.Incoming(source.source, null))
+        reads.observeInput(InputIdentity.Incoming(source.target.resource, null))
+    }
+
+    /** Bindings this resource declares for [endpoint]; the evidence is recorded as read before anyone inspects it. */
+    fun ResourceId.bindingEvidence(endpoint: EndpointId): DeclaredLinkEvidence =
+        ResourceValueMapper.declaredEvidence(endpoint, this, recordOf(this), catalog.checked).also { evidence ->
+            evidence.memberships.forEach { reads.observeInput(InputIdentity.Membership(it)) }
+            evidence.forms.forEach { reads.observeInput(InputIdentity.Form(it)) }
+        }
+
+    /**
+     * The occurrence through which the current owner holds [subject], authored on the owner side. A captured origin
+     * occurrence wins, so a drag from one of several memberships moves that one.
+     */
+    fun ownership(
+        subject: ResourceId,
+        origin: OperationOrigin = OperationOrigin(),
+    ): LinkOccurrence? {
+        reads.observeInput(InputIdentity.Incoming(subject, null))
+        val membership =
+            origin.occurrences.singleOrNull { it.target.resource == subject }
+                ?: links.values.singleOrNull { occurrence ->
+                    val relation = contract(occurrence.id.endpoint)
+                    occurrence.target.resource == subject && occurrence.id.endpoint == relation.first.id && relation.ownsResources
+                }
+                ?: return null
+        require(links[membership.id] == membership) { "The source ownership changed" }
+        observe(membership)
+        return membership
+    }
+
+    /** The occurrence on [subject]'s inverse field that points at an owner of [membership]'s relation, if it has one. */
+    fun memberSource(
+        subject: ResourceId,
+        membership: LinkOccurrence,
+    ): LinkOccurrence? {
+        val inverse = membership.target.opposite ?: return null
+        val relation = contract(membership.id.endpoint)
+        val endpoint = if (relation.first.id == membership.id.endpoint) relation.second.id else relation.first.id
+        return LinkOccurrence(
+            LinkOccurrenceId(endpoint, ValueLocation(subject, inverse)),
+            subject,
+            LinkTarget(membership.source, membership.id.location.path),
+        )
+    }
+
+    /** Whether [target] has a type the binding of [source] accepts. */
+    fun accepts(
+        source: LinkOccurrence,
+        target: ResourceId,
+    ): Boolean {
+        val sourceRecord = resources[source.source] ?: return false
+        val destination = resources[target] ?: return false
+        val actual = (destination.configuration as? TypeSelection.Complete)?.use ?: return false
+        val expected =
+            ResourceValueMapper.expectedTarget(source, sourceRecord, catalog.checked) ?: run {
+                val type = sourceRecord.authoredTypeAt(source.id.location.path, catalog.checked) ?: return false
+                val checked = catalog.checked.resolve(type) as? Resolution.Ready ?: return false
+                (checked.value.schema.representation as? ResolvedRepresentation.Link)?.target ?: return false
+            }
+        return catalog.checked.isReadableAs(actual, expected)
+    }
+
+    /**
+     * Link occurrences that would connect [subject] and [target] through each non owning relation, the dragged side
+     * first. Bindings live at each relation's first endpoint, so the subject holds the link when it declares a binding
+     * for the relation and the target holds it only otherwise: a tag dropped onto a book is written to the book's tags
+     * while a tag dropped onto a tag gains the target as a parent. [item] names a new collection item.
+     */
+    fun linkSources(
+        subject: ResourceId,
+        target: ResourceId,
+        item: (String) -> ItemId,
+    ): List<LinkOccurrence> =
+        catalog.relations
+            .filterNot { it.ownsResources }
+            .flatMap { relation ->
+                val endpoint = relation.first.id
+                listOf(subject to target, target to subject).firstNotNullOfOrNull { (holder, linked) ->
+                    val evidence = holder.bindingEvidence(endpoint)
+                    if (evidence.isEmpty()) null else holder.occurrencesLinking(linked, endpoint, evidence, item)
+                } ?: emptyList()
+            }.distinctBy { it.id }
+
+    /** Occurrences on this resource's [endpoint] bindings that already link [linked] or have room to link it. */
+    private fun ResourceId.occurrencesLinking(
+        linked: ResourceId,
+        endpoint: EndpointId,
+        evidence: DeclaredLinkEvidence,
+        item: (String) -> ItemId,
+    ): List<LinkOccurrence> {
+        val record = recordOf(this)
+        val locations = evidence.values.toMutableList()
+        val collection = ResourceValueMapper.counterpartBinding(endpoint, this, record, catalog.checked) as? CounterpartBinding.Collection
+        if (collection != null && locations.none { links[LinkOccurrenceId(endpoint, it)]?.target?.resource == linked }) {
+            locations += collection.location.item(item("source:$this:$endpoint:$linked"))
+        }
+        return locations.mapNotNull { at ->
+            reads.observeInput(InputIdentity.Value(at))
+            val present = links[LinkOccurrenceId(endpoint, at)]
+            val value = record.valueAt(at.path)
+            if (present != null && present.target.resource != linked) return@mapNotNull null
+            if (present == null && value != null && !value.unfilled()) return@mapNotNull null
+            val occurrence = present ?: LinkOccurrence(LinkOccurrenceId(endpoint, at), this, LinkTarget(linked, null))
+            occurrence.takeIf { accepts(it, linked) }
+        }
+    }
+
+    /** Non owning link occurrences between [id] and [target], whichever of them holds each. */
+    fun linksBetween(
+        id: ResourceId,
+        target: ResourceId,
+    ): List<LinkOccurrence> = linksOf(id).filter { it.source == target || it.target.resource == target }
+
+    /** Non owning link occurrences held by [id] or pointing at it. */
+    fun linksOf(id: ResourceId): List<LinkOccurrence> {
+        reads.observeInput(InputIdentity.Value(ValueLocation(id, ValuePath())))
+        reads.observeInput(InputIdentity.Incoming(id, null))
+        return links.values.filter { occurrence ->
+            (occurrence.source == id || occurrence.target.resource == id) && !contract(occurrence.id.endpoint).ownsResources
+        }
+    }
+}
+
+private fun DeclaredLinkEvidence.isEmpty(): Boolean = values.isEmpty() && memberships.isEmpty() && forms.isEmpty()
+
+internal fun DataValue.unfilled(): Boolean =
+    when (this) {
+        DataValue.Unfilled, DataValue.Null -> true
+        is DataValue.Named -> payload.unfilled()
+        else -> false
+    }

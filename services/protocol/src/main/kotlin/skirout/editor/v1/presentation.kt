@@ -27559,6 +27559,8 @@ sealed class PresentationInteractionState private constructor() {
         READ_ONLY_CONST,
         INVALID_CONST,
         ROUTED_CONST,
+        DROP_ACCEPTED_CONST,
+        DROP_REJECTED_CONST,
     }
 
     class Unknown @kotlin.Deprecated("For internal use", kotlin.ReplaceWith("skirout.editor.v1.presentation.PresentationInteractionState.UNKNOWN")) internal constructor(
@@ -27670,6 +27672,32 @@ sealed class PresentationInteractionState private constructor() {
 
         override fun hashCode(): kotlin.Int {
             return Kind.ROUTED_CONST.ordinal;
+        }
+    }
+
+    /** A dragged resource hovers this item and at least one drop offer accepts it. */
+    object DROP_ACCEPTED : skirout.editor.v1.presentation.PresentationInteractionState() {
+        override val kind get() = Kind.DROP_ACCEPTED_CONST;
+
+        override fun equals(other: kotlin.Any?): kotlin.Boolean {
+            return other is skirout.editor.v1.presentation.PresentationInteractionState && other.kind == Kind.DROP_ACCEPTED_CONST;
+        }
+
+        override fun hashCode(): kotlin.Int {
+            return Kind.DROP_ACCEPTED_CONST.ordinal;
+        }
+    }
+
+    /** A dragged resource hovers this item and no drop offer accepts it. */
+    object DROP_REJECTED : skirout.editor.v1.presentation.PresentationInteractionState() {
+        override val kind get() = Kind.DROP_REJECTED_CONST;
+
+        override fun equals(other: kotlin.Any?): kotlin.Boolean {
+            return other is skirout.editor.v1.presentation.PresentationInteractionState && other.kind == Kind.DROP_REJECTED_CONST;
+        }
+
+        override fun hashCode(): kotlin.Int {
+            return Kind.DROP_REJECTED_CONST.ordinal;
         }
     }
 
@@ -50439,6 +50467,20 @@ private object _SerializerRegistry {
             skirout.editor.v1.presentation.PresentationInteractionState.Kind.ROUTED_CONST.ordinal,
             "The resource is the one open in the workspace.",
             skirout.editor.v1.presentation.PresentationInteractionState.ROUTED,
+        );
+        PresentationInteractionStateSerializerImpl.addConstantVariant(
+            9,
+            "drop_accepted",
+            skirout.editor.v1.presentation.PresentationInteractionState.Kind.DROP_ACCEPTED_CONST.ordinal,
+            "A dragged resource hovers this item and at least one drop offer accepts it.",
+            skirout.editor.v1.presentation.PresentationInteractionState.DROP_ACCEPTED,
+        );
+        PresentationInteractionStateSerializerImpl.addConstantVariant(
+            10,
+            "drop_rejected",
+            skirout.editor.v1.presentation.PresentationInteractionState.Kind.DROP_REJECTED_CONST.ordinal,
+            "A dragged resource hovers this item and no drop offer accepts it.",
+            skirout.editor.v1.presentation.PresentationInteractionState.DROP_REJECTED,
         );
         PresentationInteractionStateSerializerImpl.finalizeEnum();
 

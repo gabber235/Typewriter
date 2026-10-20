@@ -18,9 +18,11 @@ import com.google.devtools.ksp.symbol.Variance
 import com.google.devtools.ksp.validate
 import com.squareup.kotlinpoet.ClassName
 import com.squareup.kotlinpoet.FileSpec
+import com.squareup.kotlinpoet.TypeName
 import com.squareup.kotlinpoet.TypeVariableName
 import com.squareup.kotlinpoet.asClassName
 import com.squareup.kotlinpoet.ksp.TypeParameterResolver
+import com.squareup.kotlinpoet.ksp.toClassName
 import com.squareup.kotlinpoet.ksp.toTypeName
 import com.squareup.kotlinpoet.ksp.toTypeParameterResolver
 import com.typewritermc.capability.codegen.CapabilityProviderProcessor
@@ -39,6 +41,7 @@ import com.typewritermc.codegen.isOneOf
 import com.typewritermc.codegen.isType
 import com.typewritermc.codegen.portableScalarKind
 import com.typewritermc.codegen.rawAnnotation
+import com.typewritermc.codegen.referencedIds
 import com.typewritermc.codegen.sentenceCase
 import com.typewritermc.configuration.FieldPatternSegment
 import com.typewritermc.configuration.RelativeFieldPattern
@@ -79,7 +82,7 @@ import com.typewritermc.types.codegen.emit.DraftEmitter
 import com.typewritermc.types.codegen.emit.ExpressionsEmitter
 import com.typewritermc.types.codegen.emit.FieldsEmitter
 import com.typewritermc.types.codegen.emit.NativeBindingEmitter
-import com.typewritermc.types.codegen.emit.OperationsEmitter
+import com.typewritermc.types.codegen.emit.OperationEmitter
 import com.typewritermc.types.codegen.emit.PresentationEmitter
 import com.typewritermc.types.codegen.emit.SdkEndpoint
 import com.typewritermc.types.codegen.emit.SdkRelation
@@ -105,7 +108,7 @@ internal val SDK_EMITTERS: List<SdkEmitter> =
         FieldsEmitter,
         ExpressionsEmitter,
         ConfigurationEmitter,
-        OperationsEmitter,
+        OperationEmitter,
         PresentationEmitter,
         DisplayEmitter,
         CheckEmitter,
@@ -556,8 +559,8 @@ private class TypewriterTypeProcessor(
                         adapter.check()
                     }
 
-                    GeneratedContract.Kind.Operations -> {
-                        operationsAdapter(adapter, owner, contract, target)
+                    GeneratedContract.Kind.Operation -> {
+                        operationAdapter(adapter, owner, contract, target)
                     }
 
                     GeneratedContract.Kind.Display -> {
@@ -570,18 +573,31 @@ private class TypewriterTypeProcessor(
         }
     }
 
-    /** Validates an operations contract application and emits its provider, or reports why it cannot. */
+    /** Validates an operation contract application and its input, and emits its provider, or reports why it cannot. */
     context(resolver: Resolver)
-    private fun operationsAdapter(
+    private fun operationAdapter(
         adapter: ProviderAdapter,
         owner: KSClassDeclaration,
         contract: KSType,
         resource: KSClassDeclaration,
     ): FileSpec? {
+        val input =
+            operationInput(
+                owner,
+                contract.arguments
+                    .lastOrNull()
+                    ?.type
+                    ?.resolve(),
+            ) ?: return null
+        if (resource.toClassName() == Resource::class.asClassName()) {
+            val references = owners.references(input.declarations, input.referenced, owner) ?: return null
+            return context(references) { adapter.operation(null, emptyList(), emptyList(), input.type, input.use) }
+        }
         val count = resource.typeParameters.size
-        val nativeArguments = contract.arguments.take(count)
-        if (contract.arguments.size != count * 2 ||
-            contract.arguments.any { argument ->
+        val resourceArguments = contract.arguments.dropLast(1)
+        val nativeArguments = resourceArguments.take(count)
+        if (resourceArguments.size != count * 2 ||
+            resourceArguments.any { argument ->
                 val type = argument.type?.resolve()
                 type == null || type.isError || type.declaration is KSTypeParameter
             }
@@ -602,7 +618,7 @@ private class TypewriterTypeProcessor(
                 application.arguments.zip(nativeTypes) { use, type -> classify(use.toTemplate(), type) }
             }
         val expected = shapes.map { it.draftType(emptyList()) }
-        val actual = contract.arguments.drop(count).map { requireNotNull(it.type).resolve().toTypeName() }
+        val actual = resourceArguments.drop(count).map { requireNotNull(it.type).resolve().toTypeName() }
         if (expected != actual) {
             logger.error(
                 "Resource operation projection arguments must match their native arguments: expected ${expected.joinToString()}.",
@@ -610,11 +626,40 @@ private class TypewriterTypeProcessor(
             )
             return null
         }
-        val references = owners.references(conversion, owner, application.referencedIds()) ?: return null
+        val references =
+            owners.references(
+                conversion.declarations + input.declarations,
+                conversion.definitions.flatMap(TypeDefinition::referencedIds).toSet() + application.referencedIds() + input.referenced,
+                owner,
+            ) ?: return null
         return context(references) {
             val projections = context(TypeParameterBindings.from(emptyMap())) { shapes.map { it.draftProjection() } }
-            adapter.operations(application, nativeTypes.map { it.toTypeName() } + expected, projections)
+            adapter.operation(application, nativeTypes.map { it.toTypeName() } + expected, projections, input.type, input.use)
         }
+    }
+
+    /**
+     * The input of an operation from its last contract argument: [Unit], or a closed application of a
+     * `@TypewriterType`, whose portable type is computed here instead of by runtime reflection.
+     */
+    private fun operationInput(
+        owner: KSClassDeclaration,
+        type: KSType?,
+    ): OperationInputShape? {
+        if (type != null && !type.isError && type.declaration.qualifiedName?.asString() == Unit::class.qualifiedName) {
+            return OperationInputShape(type.toTypeName(), null, emptyMap(), emptySet())
+        }
+        val declaration = type?.declaration as? KSClassDeclaration
+        val conversion = type?.takeIf { !it.isError && !it.isMarkedNullable }?.let { KspTypeGraphConverter().convert(it) }
+        if (declaration?.rawAnnotation(TypewriterType::class) == null ||
+            conversion !is KspTypeConversionResult.Success ||
+            conversion.root !is TypeUse.Named
+        ) {
+            logger.error("Operation input must be Unit or a closed application of a @TypewriterType.", owner)
+            return null
+        }
+        val use = conversion.root as TypeUse.Named
+        return OperationInputShape(type.toTypeName(), use, conversion.declarations, use.referencedIds())
     }
 
     private fun validateOptions(): Boolean {
@@ -635,6 +680,14 @@ private class TypewriterTypeProcessor(
         return false
     }
 }
+
+/** The native and portable input of one operation object, with the declarations its portable type mentions. */
+private class OperationInputShape(
+    val type: TypeName,
+    val use: TypeUse.Named?,
+    val declarations: Map<TypeDefinitionId, KSClassDeclaration>,
+    val referenced: Set<TypeDefinitionId>,
+)
 
 /** A validation result whose [value] may itself be absent. */
 private class Validated<T>(

@@ -448,9 +448,9 @@ mod tests {
     #[test]
     fn complete_route_inventory_parses() {
         let manifest = Manifest::parse(include_str!("../../transport-routes.yaml")).unwrap();
-        assert_eq!(manifest.routes.len(), 64);
+        assert_eq!(manifest.routes.len(), 65);
         let symbols = manifest.requested_symbols();
-        assert_eq!(symbols.methods.len(), 54);
+        assert_eq!(symbols.methods.len(), 55);
         assert_eq!(symbols.records.len(), 17);
         manifest
             .validate_component_subscriptions(
@@ -478,6 +478,13 @@ mod tests {
                 "service.to.{realm}.organization.{organization}.realm.editor.resources.operations.resolve",
                 "editor.resources.operations.resolve",
                 "resource-operations-resolve-failed",
+            ),
+            (
+                "resource_drop_candidates_resolve",
+                "ResolveDropCandidates",
+                "service.to.{realm}.organization.{organization}.realm.editor.resources.drops.resolve",
+                "editor.resources.drops.resolve",
+                "resource-drop-candidates-resolve-failed",
             ),
             (
                 "authoring_action_prepare",

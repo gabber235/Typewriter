@@ -156,10 +156,15 @@ internal object TypewriterApi {
     val textRepresentation = MemberName(EXPRESSION, "textRepresentation")
 
     // Operations
+    val AnyResourceSubjects = ClassName(OPERATIONS, "AnyResourceSubjects")
     val OperationDeclaration = ClassName(OPERATIONS, "OperationDeclaration")
-    val ResourceOperationsBuildScope = ClassName(OPERATIONS, "ResourceOperationsBuildScope")
-    val ResourceOperationsScope = ClassName(OPERATIONS, "ResourceOperationsScope")
-    val collectOperations = MemberName(OPERATIONS, "collectOperations")
+    val OperationInputNone = ClassName(OPERATIONS, "OperationInput", "None")
+    val OperationInputTyped = ClassName(OPERATIONS, "OperationInput", "Typed")
+    val OperationSpec = ClassName(OPERATIONS, "OperationSpec")
+    val PreparedOperation = ClassName(OPERATIONS, "PreparedOperation")
+    val ResourceOperationSpecImpl = ClassName(OPERATIONS, "ResourceOperationSpecImpl")
+    val collectOperation = MemberName(OPERATIONS, "collectOperation")
+    val projectedSubjects = MemberName(OPERATIONS, "projectedSubjects")
 
     // Presentation
     val BooleanControl = ClassName(PRESENTATION, "BooleanControl")

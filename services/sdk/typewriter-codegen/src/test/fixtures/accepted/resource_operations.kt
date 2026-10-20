@@ -3,8 +3,8 @@ package fixture
 import com.typewritermc.checking.CatalogGeneration
 import com.typewritermc.discovery.*
 import com.typewritermc.imprint.ArtifactId
-import com.typewritermc.library.TagOperations
-import com.typewritermc.library.TagOperationsScope
+import com.typewritermc.library.TagOperation
+import com.typewritermc.library.TagOperationSpec
 import com.typewritermc.operations.*
 import com.typewritermc.presentation.DefaultPresentationRuntime
 import com.typewritermc.presentation.PresentationRuntime
@@ -59,30 +59,30 @@ data class RenameInput(
     val name: String,
 )
 
-object CoinVariableOperations : VariableOperations<CoinReward, CoinRewardDraft> {
-    override fun VariableOperationsScope<CoinReward, CoinRewardDraft>.operations() {
-        operation("reset", input = operationInput<RenameInput>()) {
-            label("Reset reward")
-            availability { authored(subjects.map { it.value }) }
-            prepare { subjects.forEach { it.setValue(CoinReward(input.name)) } }
-        }
+object ResetReward : VariableOperation<CoinReward, CoinRewardDraft, RenameInput> {
+    override fun VariableOperationSpec<CoinReward, CoinRewardDraft, RenameInput>.declare(): PreparedOperation {
+        availableWhen { authored(drafts.map { it.value }) }
+        return prepare { drafts.forEach { it.setValue(CoinReward(input.name)) } }
     }
 }
 
 // SDK dependency contract and implementation in another package.
-object ExtraTagOperations : TagOperations {
-    override fun TagOperationsScope.operations() {
-        operation("rename", input = operationInput<RenameInput>()) {
-            label("Rename")
-            prepare { subjects.forEach { it.setName(input.name) } }
-        }
+object Rename : TagOperation<RenameInput> {
+    override fun TagOperationSpec<RenameInput>.declare(): PreparedOperation {
+        appearance { icon("mdi:rename") }
+        return prepare { drafts.forEach { it.setName(input.name) } }
     }
+}
+
+/** An operation on every resource; the smallest valid declaration. */
+object TouchEverything : ResourceOperation<Unit> {
+    override fun ResourceOperationSpec<Unit>.declare(): PreparedOperation = prepare { }
 }
 
 fun main(args: Array<String>) {
     val artifact = Path.of(args.single())
     val index = GeneratedProviderIndex.parse(artifact.resolve(GENERATED_PROVIDER_INDEX_PATH).readText())
-    check(index.count { it.kind == GeneratedProviderKind.ResourceOperation } == 2)
+    check(index.count { it.kind == GeneratedProviderKind.ResourceOperation } == 3)
     GeneratedProviderLoader()
         .load(
             listOf(
@@ -90,7 +90,7 @@ fun main(args: Array<String>) {
                 GeneratedProviderArtifact(
                     ArtifactId("core"),
                     Path.of(
-                        TagOperations::class.java.protectionDomain.codeSource.location
+                        TagOperation::class.java.protectionDomain.codeSource.location
                             .toURI(),
                     ),
                 ),
@@ -101,18 +101,9 @@ fun main(args: Array<String>) {
         ).use { deployment ->
             val assembly = deployment.providers.contributions.assemble(CatalogAssemblyContext(CatalogGeneration("fixture")))
             check(assembly.operations.diagnostics.isEmpty()) { assembly.operations.failures.joinToString { it.cause.stackTraceToString() } }
-            check(assembly.operations.authoringProviders.count { it.descriptor.id.artifact == "fixture" } == 2)
-            check(
-                assembly.snapshot.resourceOperations
-                    .map { it.presentation.label }
-                    .toSet()
-                    .containsAll(setOf("Reset reward", "Rename")),
-            )
-            check(
-                assembly.operations.authoringProviders.filter { it.descriptor.id.artifact == "fixture" }.all {
-                    it.input.schema != null &&
-                        it.input.binding != null
-                },
-            )
+            val fixture = assembly.operations.operations.filter { it.definition.id.artifact == "fixture" }
+            check(fixture.map { it.definition.presentation.label }.toSet() == setOf("Reset reward", "Rename", "Touch everything"))
+            check(fixture.map { it.definition.id.declaration }.toSet() == setOf("fixture.ResetReward", "fixture.Rename", "fixture.TouchEverything"))
+            check(fixture.filter { it.definition.presentation.label != "Touch everything" }.all { it.input.schema != null && it.input.binding != null })
         }
 }

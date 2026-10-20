@@ -3499,10 +3499,6 @@ sealed class EditorCatalogWireSnapshot_orMutable {
   _core.Iterable<RoleFallback_orMutable> get roleFallbacks;
   _core.Iterable<_lib_editor_v1_operation.ResourceOperationDefinition_orMutable>
   get resourceOperations;
-  _core.Iterable<
-    _lib_editor_v1_operation.ResourceOperationContribution_orMutable
-  >
-  get resourceOperationContributions;
 
   /// The realm root type. The realm keeps exactly one instance, which owns every section.
   _lib_editor_v1_type_catalog.TypeDefinitionId_orMutable get realmRoot;
@@ -3546,9 +3542,6 @@ final class EditorCatalogWireSnapshot
   @_core.override
   final _core.Iterable<_lib_editor_v1_operation.ResourceOperationDefinition>
   resourceOperations;
-  @_core.override
-  final _core.Iterable<_lib_editor_v1_operation.ResourceOperationContribution>
-  resourceOperationContributions;
 
   /// The realm root type. The realm keeps exactly one instance, which owns every section.
   @_core.override
@@ -3577,10 +3570,6 @@ final class EditorCatalogWireSnapshot
       _lib_editor_v1_operation.ResourceOperationDefinition_orMutable
     >
     resourceOperations,
-    required _core.Iterable<
-      _lib_editor_v1_operation.ResourceOperationContribution_orMutable
-    >
-    resourceOperationContributions,
     required _lib_editor_v1_type_catalog.TypeDefinitionId_orMutable realmRoot,
   }) => EditorCatalogWireSnapshot._(
     generation.toFrozen(),
@@ -3599,10 +3588,6 @@ final class EditorCatalogWireSnapshot
     _skir.internal__frozenMappedCopy(recommendations, (it) => it.toFrozen()),
     _skir.internal__frozenMappedCopy(roleFallbacks, (it) => it.toFrozen()),
     _skir.internal__frozenMappedCopy(resourceOperations, (it) => it.toFrozen()),
-    _skir.internal__frozenMappedCopy(
-      resourceOperationContributions,
-      (it) => it.toFrozen(),
-    ),
     realmRoot.toFrozen(),
   );
 
@@ -3620,14 +3605,12 @@ final class EditorCatalogWireSnapshot
     this.recommendations,
     this.roleFallbacks,
     this.resourceOperations,
-    this.resourceOperationContributions,
     this.realmRoot,
   );
 
   /// Default instance with all fields set to their default values.
   static final defaultInstance = EditorCatalogWireSnapshot._(
     _lib_editor_v1_type_catalog.CatalogGeneration.defaultInstance,
-    _skir.KeyedIterable.empty,
     _skir.KeyedIterable.empty,
     _skir.KeyedIterable.empty,
     _skir.KeyedIterable.empty,
@@ -3648,7 +3631,6 @@ final class EditorCatalogWireSnapshot
   static EditorCatalogWireSnapshot_mutable mutable() =>
       EditorCatalogWireSnapshot_mutable._(
         _lib_editor_v1_type_catalog.CatalogGeneration.defaultInstance,
-        _skir.KeyedIterable.empty,
         _skir.KeyedIterable.empty,
         _skir.KeyedIterable.empty,
         _skir.KeyedIterable.empty,
@@ -3685,7 +3667,6 @@ final class EditorCatalogWireSnapshot
         this.recommendations,
         this.roleFallbacks,
         this.resourceOperations,
-        this.resourceOperationContributions,
         this.realmRoot,
       );
 
@@ -3716,7 +3697,6 @@ final class EditorCatalogWireSnapshot
     this.recommendations,
     this.roleFallbacks,
     this.resourceOperations,
-    this.resourceOperationContributions,
     this.realmRoot,
   ];
 
@@ -3854,20 +3834,9 @@ final class EditorCatalogWireSnapshot
         (it, v) => it.resourceOperations = v,
       );
       _serializerBuilder.addField(
-        "resource_operation_contributions",
-        "resourceOperationContributions",
-        13,
-        _skir.Serializers.iterable(
-          _lib_editor_v1_operation.ResourceOperationContribution.serializer,
-        ),
-        "",
-        (it) => it.resourceOperationContributions,
-        (it, v) => it.resourceOperationContributions = v,
-      );
-      _serializerBuilder.addField(
         "realm_root",
         "realmRoot",
-        14,
+        13,
         _lib_editor_v1_type_catalog.TypeDefinitionId.serializer,
         "The realm root type. The realm keeps exactly one instance, which owns every section.",
         (it) => it.realmRoot,
@@ -3907,10 +3876,6 @@ final class EditorCatalogWireSnapshot_mutable
   _core.Iterable<RoleFallback_orMutable> roleFallbacks;
   _core.Iterable<_lib_editor_v1_operation.ResourceOperationDefinition_orMutable>
   resourceOperations;
-  _core.Iterable<
-    _lib_editor_v1_operation.ResourceOperationContribution_orMutable
-  >
-  resourceOperationContributions;
 
   /// The realm root type. The realm keeps exactly one instance, which owns every section.
   _lib_editor_v1_type_catalog.TypeDefinitionId_orMutable realmRoot;
@@ -3930,7 +3895,6 @@ final class EditorCatalogWireSnapshot_mutable
     this.recommendations,
     this.roleFallbacks,
     this.resourceOperations,
-    this.resourceOperationContributions,
     this.realmRoot,
   );
 
@@ -4095,23 +4059,6 @@ final class EditorCatalogWireSnapshot_mutable
     }
   }
 
-  /// If the value of [resourceOperationContributions] is already mutable, returns it as-is.
-  /// Otherwise, makes a mutable copy, assigns it back to [resourceOperationContributions] and returns it.
-  _core.List<_lib_editor_v1_operation.ResourceOperationContribution_orMutable>
-  get mutableResourceOperationContributions {
-    final value = this.resourceOperationContributions;
-    if (value
-        is _skir.internal__MutableList<
-          _lib_editor_v1_operation.ResourceOperationContribution_orMutable
-        >) {
-      return value;
-    } else {
-      return this.resourceOperationContributions = _skir.internal__MutableList([
-        ...value,
-      ]);
-    }
-  }
-
   /// If the value of [realmRoot] is already mutable, returns it as-is.
   /// Otherwise, makes a mutable copy, assigns it back to [realmRoot] and returns it.
   _lib_editor_v1_type_catalog.TypeDefinitionId_mutable get mutableRealmRoot {
@@ -4140,7 +4087,6 @@ final class EditorCatalogWireSnapshot_mutable
     recommendations: this.recommendations,
     roleFallbacks: this.roleFallbacks,
     resourceOperations: this.resourceOperations,
-    resourceOperationContributions: this.resourceOperationContributions,
     realmRoot: this.realmRoot,
   ).._u = this._u;
 }

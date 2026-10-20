@@ -15,6 +15,7 @@ import { InvocationId } from "editor/v1/capability.skir";
 import {
   OperationConfirmation,
   ResolvedResourceOperations,
+  ResourceOperationId,
 } from "editor/v1/operation.skir";
 import {
   AuthoringRecord,
@@ -184,6 +185,32 @@ struct OperationSearchContext(812500021) {
   input_revision: int32 = 2;
 }
 
+/// Destinations one operation accepts for the dragged resources, from its declared candidates and
+/// accepts. complete is false when the list was capped.
+struct DropCandidates(812500022) {
+  operation: ResourceOperationId = 0;
+  destinations: [ResourceId] = 1;
+  complete: bool = 2;
+}
+
+/// invocation targets are the dragged resources.
+struct ResolveDropCandidatesRequest(812500023) {
+  invocation: OperationInvocation = 0;
+  context: OperationWorkingContext = 1;
+}
+
+/// Resolved once when a drag starts, so hovering is a local lookup. Only enabled operations that
+/// declare a drop field contribute candidates.
+enum ResolveDropCandidatesResult(812500024) {
+  resolved: [DropCandidates] = 1;
+  stale_observation: StaleAuthoringObservation = 2;
+  invalid: ResourceOperationFailure = 3;
+  catalog_changed: CatalogChanged = 4;
+  permission_denied: ResourceOperationFailure = 5;
+  failed: ResourceOperationFailure = 6;
+  internal_error: InternalError = 7;
+}
+
 method ResolveResourceOperations(
   ResolveResourceOperationsRequest
 ): ResolveResourceOperationsResult = 920015;
@@ -191,3 +218,7 @@ method ResolveResourceOperations(
 method PrepareAuthoringAction(
   PrepareAuthoringActionRequest
 ): AuthoringActionResult = 920016;
+
+method ResolveDropCandidates(
+  ResolveDropCandidatesRequest
+): ResolveDropCandidatesResult = 920017;

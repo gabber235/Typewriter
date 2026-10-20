@@ -27,6 +27,7 @@ import skirout.editor.v1.publication.PublishAuthoring
 import skirout.editor.v1.publication.QueryPublicationView
 import skirout.editor.v1.publication.WatchPublication
 import skirout.editor.v1.resource_operations.PrepareAuthoringAction
+import skirout.editor.v1.resource_operations.ResolveDropCandidates
 import skirout.editor.v1.resource_operations.ResolveResourceOperations
 import skirout.editor.v1.search.CancelRealmPresentationSearch
 import skirout.editor.v1.search.WatchRealmPresentationSearch
@@ -105,6 +106,13 @@ fun RealmRouteScope.resourceOperationsResolve(policy: ResponsePolicy<skirout.edi
     method = ResolveResourceOperations, name = OperationName.of("editor.resources.operations.resolve"),
     address = resourceOperationsResolveRequestAddress.subscribedAt(this), responsePolicy = policy,
     failureSlug = ErrorSlug.of("resource-operations-resolve-failed"),
+)
+
+private val resourceDropCandidatesResolveRequestAddress = "service.to.{realm}.organization.{organization}.realm.editor.resources.drops.resolve".realmTemplate()
+fun RealmRouteScope.resourceDropCandidatesResolve(policy: ResponsePolicy<skirout.editor.v1.resource_operations.ResolveDropCandidatesResult>) = skirUnaryContract(
+    method = ResolveDropCandidates, name = OperationName.of("editor.resources.drops.resolve"),
+    address = resourceDropCandidatesResolveRequestAddress.subscribedAt(this), responsePolicy = policy,
+    failureSlug = ErrorSlug.of("resource-drop-candidates-resolve-failed"),
 )
 
 private val authoringActionPrepareRequestAddress = "service.to.{realm}.organization.{organization}.realm.editor.resources.actions.prepare".realmTemplate()

@@ -149,8 +149,8 @@ private val ExpressionQuery.readsResource: Boolean
             this is ExpressionQuery.ResourceValueWrapper ||
             this is ExpressionQuery.ResourceConfigurationWrapper
 
-/** The type a display diagnostic is reported on; the any resource display reports on the unpublished Resource. */
-private val ResourceTarget.affected: TypeDefinitionId
+/** The type a diagnostic of a declaration is reported on; any resource declarations report on the unpublished Resource. */
+internal val ResourceTarget.affected: TypeDefinitionId
     get() =
         when (this) {
             is ResourceTarget.Type -> template.definition

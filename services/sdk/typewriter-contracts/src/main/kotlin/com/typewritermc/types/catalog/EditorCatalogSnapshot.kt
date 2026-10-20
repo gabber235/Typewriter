@@ -65,7 +65,7 @@ data class TypeRecommendation(
 /**
  * Publishes a generation's declarative authoring model to editor clients without executable provider callbacks.
  * Includes unavailable type entries and diagnostics so consumers can explain missing capabilities as well as render
- * valid definitions. Presentation materials and operation contributions travel with the same generation's schema.
+ * valid definitions. Presentation materials and operation definitions travel with the same generation's schema.
  */
 data class EditorCatalogSnapshot(
     val generation: CatalogGeneration,
@@ -81,7 +81,6 @@ data class EditorCatalogSnapshot(
     val recommendations: List<TypeRecommendation> = emptyList(),
     val roleFallbacks: List<RoleFallback> = emptyList(),
     val resourceOperations: List<com.typewritermc.operations.ResourceOperationDefinition> = emptyList(),
-    val resourceOperationContributions: List<com.typewritermc.operations.ResourceOperationContribution> = emptyList(),
     /** The realm root type. The realm keeps exactly one instance of it, which owns every section. */
     val realmRoot: TypeDefinitionId,
 )

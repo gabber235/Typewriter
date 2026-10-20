@@ -6,9 +6,9 @@ import com.typewritermc.authoring.GraphPlacement
 import com.typewritermc.authoring.GraphPlacementDefinition
 import com.typewritermc.authoring.GraphPlacementDraft
 import com.typewritermc.authoring.GraphPlacementDraftProjection
+import com.typewritermc.authoring.PlacementAnchor
 import com.typewritermc.authoring.TypeSelection
 import com.typewritermc.authoring.ValueLocation
-import com.typewritermc.operations.PlacementAnchor
 import com.typewritermc.operations.requireAuthored
 import com.typewritermc.realm.repository.valueAt
 import com.typewritermc.types.DataValue

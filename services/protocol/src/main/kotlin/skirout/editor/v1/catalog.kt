@@ -3182,7 +3182,6 @@ sealed interface EditorCatalogWireSnapshot_OrMutable {
     val recommendations: kotlin.collections.List<skirout.editor.v1.catalog.TypeRecommendation_OrMutable>;
     val roleFallbacks: kotlin.collections.List<skirout.editor.v1.catalog.RoleFallback_OrMutable>;
     val resourceOperations: kotlin.collections.List<skirout.editor.v1.operation.ResourceOperationDefinition_OrMutable>;
-    val resourceOperationContributions: kotlin.collections.List<skirout.editor.v1.operation.ResourceOperationContribution_OrMutable>;
     /** The realm root type. The realm keeps exactly one instance, which owns every section. */
     val realmRoot: skirout.editor.v1.type_catalog.TypeDefinitionId_OrMutable;
 
@@ -3211,7 +3210,6 @@ class EditorCatalogWireSnapshot private constructor(
     override val recommendations: kotlin.collections.List<skirout.editor.v1.catalog.TypeRecommendation>,
     override val roleFallbacks: kotlin.collections.List<skirout.editor.v1.catalog.RoleFallback>,
     override val resourceOperations: kotlin.collections.List<skirout.editor.v1.operation.ResourceOperationDefinition>,
-    override val resourceOperationContributions: kotlin.collections.List<skirout.editor.v1.operation.ResourceOperationContribution>,
     override val realmRoot: skirout.editor.v1.type_catalog.TypeDefinitionId,
     internal val _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.catalog.EditorCatalogWireSnapshot>? =
         null,
@@ -3232,7 +3230,6 @@ class EditorCatalogWireSnapshot private constructor(
         recommendations: kotlin.collections.Iterable<skirout.editor.v1.catalog.TypeRecommendation_OrMutable>,
         roleFallbacks: kotlin.collections.Iterable<skirout.editor.v1.catalog.RoleFallback_OrMutable>,
         resourceOperations: kotlin.collections.Iterable<skirout.editor.v1.operation.ResourceOperationDefinition_OrMutable>,
-        resourceOperationContributions: kotlin.collections.Iterable<skirout.editor.v1.operation.ResourceOperationContribution_OrMutable>,
         realmRoot: skirout.editor.v1.type_catalog.TypeDefinitionId_OrMutable,
         _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.catalog.EditorCatalogWireSnapshot>? =
             null,
@@ -3250,7 +3247,6 @@ class EditorCatalogWireSnapshot private constructor(
         build.skir.internal.toFrozenList(recommendations, { it.toFrozen() }),
         build.skir.internal.toFrozenList(roleFallbacks, { it.toFrozen() }),
         build.skir.internal.toFrozenList(resourceOperations, { it.toFrozen() }),
-        build.skir.internal.toFrozenList(resourceOperationContributions, { it.toFrozen() }),
         realmRoot.toFrozen(),
         _unrecognizedFields,
     ) {}
@@ -3273,7 +3269,6 @@ class EditorCatalogWireSnapshot private constructor(
         recommendations = this.recommendations,
         roleFallbacks = this.roleFallbacks,
         resourceOperations = this.resourceOperations,
-        resourceOperationContributions = this.resourceOperationContributions,
         realmRoot = this.realmRoot,
     );
 
@@ -3307,8 +3302,6 @@ class EditorCatalogWireSnapshot private constructor(
             this.roleFallbacks,
         resourceOperations: kotlin.collections.Iterable<skirout.editor.v1.operation.ResourceOperationDefinition_OrMutable> =
             this.resourceOperations,
-        resourceOperationContributions: kotlin.collections.Iterable<skirout.editor.v1.operation.ResourceOperationContribution_OrMutable> =
-            this.resourceOperationContributions,
         realmRoot: skirout.editor.v1.type_catalog.TypeDefinitionId_OrMutable =
             this.realmRoot,
     ) = skirout.editor.v1.catalog.EditorCatalogWireSnapshot(
@@ -3325,7 +3318,6 @@ class EditorCatalogWireSnapshot private constructor(
         build.skir.internal.toFrozenList(recommendations, { it.toFrozen() }),
         build.skir.internal.toFrozenList(roleFallbacks, { it.toFrozen() }),
         build.skir.internal.toFrozenList(resourceOperations, { it.toFrozen() }),
-        build.skir.internal.toFrozenList(resourceOperationContributions, { it.toFrozen() }),
         realmRoot.toFrozen(),
         this._unrecognizedFields,
     );
@@ -3334,11 +3326,11 @@ class EditorCatalogWireSnapshot private constructor(
     fun copy() = this;
 
     override fun equals(other: kotlin.Any?): kotlin.Boolean {
-        return this === other || (other is skirout.editor.v1.catalog.EditorCatalogWireSnapshot && this.generation == other.generation && this.types == other.types && this.relations == other.relations && this.resourceDisplays == other.resourceDisplays && this.presentations == other.presentations && this.presentationMaterials == other.presentationMaterials && this.configuration == other.configuration && this.diagnostics == other.diagnostics && this.endpointBindings == other.endpointBindings && this.capabilities == other.capabilities && this.recommendations == other.recommendations && this.roleFallbacks == other.roleFallbacks && this.resourceOperations == other.resourceOperations && this.resourceOperationContributions == other.resourceOperationContributions && this.realmRoot == other.realmRoot);
+        return this === other || (other is skirout.editor.v1.catalog.EditorCatalogWireSnapshot && this.generation == other.generation && this.types == other.types && this.relations == other.relations && this.resourceDisplays == other.resourceDisplays && this.presentations == other.presentations && this.presentationMaterials == other.presentationMaterials && this.configuration == other.configuration && this.diagnostics == other.diagnostics && this.endpointBindings == other.endpointBindings && this.capabilities == other.capabilities && this.recommendations == other.recommendations && this.roleFallbacks == other.roleFallbacks && this.resourceOperations == other.resourceOperations && this.realmRoot == other.realmRoot);
     }
 
     override fun hashCode(): kotlin.Int {
-        return kotlin.collections.listOf<kotlin.Any?>(this.generation, this.types, this.relations, this.resourceDisplays, this.presentations, this.presentationMaterials, this.configuration, this.diagnostics, this.endpointBindings, this.capabilities, this.recommendations, this.roleFallbacks, this.resourceOperations, this.resourceOperationContributions, this.realmRoot).hashCode();
+        return kotlin.collections.listOf<kotlin.Any?>(this.generation, this.types, this.relations, this.resourceDisplays, this.presentations, this.presentationMaterials, this.configuration, this.diagnostics, this.endpointBindings, this.capabilities, this.recommendations, this.roleFallbacks, this.resourceOperations, this.realmRoot).hashCode();
     }
 
     override fun toString(): kotlin.String {
@@ -3378,8 +3370,6 @@ class EditorCatalogWireSnapshot private constructor(
             build.skir.internal.emptyFrozenList<skirout.editor.v1.catalog.RoleFallback>(),
         override var resourceOperations: kotlin.collections.List<skirout.editor.v1.operation.ResourceOperationDefinition_OrMutable> =
             build.skir.internal.emptyFrozenList<skirout.editor.v1.operation.ResourceOperationDefinition>(),
-        override var resourceOperationContributions: kotlin.collections.List<skirout.editor.v1.operation.ResourceOperationContribution_OrMutable> =
-            build.skir.internal.emptyFrozenList<skirout.editor.v1.operation.ResourceOperationContribution>(),
         override var realmRoot: skirout.editor.v1.type_catalog.TypeDefinitionId_OrMutable =
             skirout.editor.v1.type_catalog.TypeDefinitionId.partial(),
         internal var _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.catalog.EditorCatalogWireSnapshot>? =
@@ -3400,7 +3390,6 @@ class EditorCatalogWireSnapshot private constructor(
             recommendations = this.recommendations,
             roleFallbacks = this.roleFallbacks,
             resourceOperations = this.resourceOperations,
-            resourceOperationContributions = this.resourceOperationContributions,
             realmRoot = this.realmRoot,
             _unrecognizedFields = this._unrecognizedFields,
         );
@@ -3614,22 +3603,6 @@ class EditorCatalogWireSnapshot private constructor(
         }
 
         /**
-         * If the value of [resourceOperationContributions] is already mutable, returns it as-is.
-         * Otherwise, makes a mutable copy, assigns it back to [resourceOperationContributions] and returns it.
-         */
-        val mutableResourceOperationContributions: kotlin.collections.MutableList<skirout.editor.v1.operation.ResourceOperationContribution_OrMutable> get() {
-            var value = this.resourceOperationContributions;
-            return when (value) {
-                is build.skir.internal.MutableList -> value;
-                else -> {
-                    value = build.skir.internal.MutableList(value);
-                    this.resourceOperationContributions = value;
-                    value;
-                }
-            }
-        }
-
-        /**
          * If the value of [realmRoot] is already mutable, returns it as-is.
          * Otherwise, makes a mutable copy, assigns it back to [realmRoot] and returns it.
          */
@@ -3662,7 +3635,6 @@ class EditorCatalogWireSnapshot private constructor(
                 build.skir.internal.emptyFrozenList<skirout.editor.v1.catalog.TypeRecommendation>(),
                 build.skir.internal.emptyFrozenList<skirout.editor.v1.catalog.RoleFallback>(),
                 build.skir.internal.emptyFrozenList<skirout.editor.v1.operation.ResourceOperationDefinition>(),
-                build.skir.internal.emptyFrozenList<skirout.editor.v1.operation.ResourceOperationContribution>(),
                 skirout.editor.v1.type_catalog.TypeDefinitionId.partial(),
             );
 
@@ -3703,8 +3675,6 @@ class EditorCatalogWireSnapshot private constructor(
                 build.skir.internal.emptyFrozenList<skirout.editor.v1.catalog.RoleFallback>(),
             resourceOperations: kotlin.collections.Iterable<skirout.editor.v1.operation.ResourceOperationDefinition_OrMutable> =
                 build.skir.internal.emptyFrozenList<skirout.editor.v1.operation.ResourceOperationDefinition>(),
-            resourceOperationContributions: kotlin.collections.Iterable<skirout.editor.v1.operation.ResourceOperationContribution_OrMutable> =
-                build.skir.internal.emptyFrozenList<skirout.editor.v1.operation.ResourceOperationContribution>(),
             realmRoot: skirout.editor.v1.type_catalog.TypeDefinitionId_OrMutable =
                 skirout.editor.v1.type_catalog.TypeDefinitionId.partial(),
         ) = skirout.editor.v1.catalog.EditorCatalogWireSnapshot(
@@ -3721,7 +3691,6 @@ class EditorCatalogWireSnapshot private constructor(
             recommendations = recommendations,
             roleFallbacks = roleFallbacks,
             resourceOperations = resourceOperations,
-            resourceOperationContributions = resourceOperationContributions,
             realmRoot = realmRoot,
             _unrecognizedFields = null,
         );
@@ -7467,20 +7436,9 @@ private object _SerializerRegistry {
             { mut, v -> mut.resourceOperations = v },
         );
         EditorCatalogWireSnapshotSerializerImpl.addField(
-            "resource_operation_contributions",
-            "resourceOperationContributions",
-            13,
-            build.skir.Serializers.list(
-                skirout.editor.v1.operation.ResourceOperationContribution.serializer,
-            ),
-            "",
-            { it.resourceOperationContributions },
-            { mut, v -> mut.resourceOperationContributions = v },
-        );
-        EditorCatalogWireSnapshotSerializerImpl.addField(
             "realm_root",
             "realmRoot",
-            14,
+            13,
             skirout.editor.v1.type_catalog.TypeDefinitionId.serializer,
             "The realm root type. The realm keeps exactly one instance, which owns every section.",
             { it.realmRoot },

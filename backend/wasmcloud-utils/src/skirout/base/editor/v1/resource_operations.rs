@@ -1174,6 +1174,156 @@ impl OperationSearchContext {
 }
 
 // ==============================================================================
+// struct DropCandidates
+// ==============================================================================
+
+/// Destinations one operation accepts for the dragged resources, from its declared candidates and
+/// accepts. complete is false when the list was capped.
+#[derive(Clone, Debug, PartialEq, Default)]
+pub struct DropCandidates {
+    pub operation: crate::skirout::base::editor::v1::operation::ResourceOperationId,
+    pub destinations: Vec<crate::skirout::base::editor::v1::type_catalog::ResourceId>,
+    pub complete: bool,
+    /// Set this to None when you're creating a struct.
+    pub _unrecognized: Option<crate::skir_client::UnrecognizedFields<DropCandidates>>,
+}
+
+impl DropCandidates {
+    pub fn default_ref() -> &'static DropCandidates {
+        static D: std::sync::LazyLock<DropCandidates> =
+            std::sync::LazyLock::new(DropCandidates::default);
+        &D
+    }
+}
+
+impl DropCandidates {
+    fn _adapter() -> &'static crate::skir_client::internal::StructAdapter<DropCandidates> {
+        static ADAPTER: std::sync::LazyLock<
+            crate::skir_client::internal::StructAdapter<DropCandidates>,
+        > = std::sync::LazyLock::new(|| {
+            crate::skir_client::internal::StructAdapter::new(
+                "editor/v1/resource_operations.skir",
+                "DropCandidates",
+                "Destinations one operation accepts for the dragged resources, from its declared candidates and\naccepts. complete is false when the list was capped.",
+                |x: &DropCandidates| &x._unrecognized,
+                |x: &mut DropCandidates, u| x._unrecognized = u,
+            )
+        });
+        &*ADAPTER
+    }
+    pub fn serializer() -> crate::skir_client::Serializer<DropCandidates> {
+        initialize_module_serializers();
+        crate::skir_client::internal::struct_serializer_from_static(DropCandidates::_adapter())
+    }
+}
+
+// ==============================================================================
+// struct ResolveDropCandidatesRequest
+// ==============================================================================
+
+/// invocation targets are the dragged resources.
+#[derive(Clone, Debug, PartialEq, Default)]
+pub struct ResolveDropCandidatesRequest {
+    pub invocation: OperationInvocation,
+    pub context: OperationWorkingContext,
+    /// Set this to None when you're creating a struct.
+    pub _unrecognized: Option<crate::skir_client::UnrecognizedFields<ResolveDropCandidatesRequest>>,
+}
+
+impl ResolveDropCandidatesRequest {
+    pub fn default_ref() -> &'static ResolveDropCandidatesRequest {
+        static D: std::sync::LazyLock<ResolveDropCandidatesRequest> =
+            std::sync::LazyLock::new(ResolveDropCandidatesRequest::default);
+        &D
+    }
+}
+
+impl ResolveDropCandidatesRequest {
+    fn _adapter()
+    -> &'static crate::skir_client::internal::StructAdapter<ResolveDropCandidatesRequest> {
+        static ADAPTER: std::sync::LazyLock<
+            crate::skir_client::internal::StructAdapter<ResolveDropCandidatesRequest>,
+        > = std::sync::LazyLock::new(|| {
+            crate::skir_client::internal::StructAdapter::new(
+                "editor/v1/resource_operations.skir",
+                "ResolveDropCandidatesRequest",
+                "invocation targets are the dragged resources.",
+                |x: &ResolveDropCandidatesRequest| &x._unrecognized,
+                |x: &mut ResolveDropCandidatesRequest, u| x._unrecognized = u,
+            )
+        });
+        &*ADAPTER
+    }
+    pub fn serializer() -> crate::skir_client::Serializer<ResolveDropCandidatesRequest> {
+        initialize_module_serializers();
+        crate::skir_client::internal::struct_serializer_from_static(
+            ResolveDropCandidatesRequest::_adapter(),
+        )
+    }
+}
+
+// ==============================================================================
+// enum ResolveDropCandidatesResult
+// ==============================================================================
+
+/// Resolved once when a drag starts, so hovering is a local lookup. Only enabled operations that
+/// declare a drop field contribute candidates.
+#[derive(Debug, Clone, PartialEq)]
+pub enum ResolveDropCandidatesResult {
+    Unknown(Option<crate::skir_client::UnrecognizedVariant<ResolveDropCandidatesResult>>),
+    Resolved(Vec<DropCandidates>),
+    StaleObservation(Box<StaleAuthoringObservation>),
+    Invalid(Box<ResourceOperationFailure>),
+    CatalogChanged(Box<crate::skirout::base::editor::v1::authoring::CatalogChanged>),
+    PermissionDenied(Box<ResourceOperationFailure>),
+    Failed(Box<ResourceOperationFailure>),
+    InternalError(Box<crate::skirout::base::kernel::v1::errors::InternalError>),
+}
+
+impl Default for ResolveDropCandidatesResult {
+    fn default() -> Self {
+        ResolveDropCandidatesResult::Unknown(None)
+    }
+}
+
+impl ResolveDropCandidatesResult {
+    fn _adapter() -> &'static crate::skir_client::internal::EnumAdapter<ResolveDropCandidatesResult>
+    {
+        static ADAPTER: std::sync::LazyLock<
+            crate::skir_client::internal::EnumAdapter<ResolveDropCandidatesResult>,
+        > = std::sync::LazyLock::new(|| {
+            crate::skir_client::internal::EnumAdapter::new(
+                |x: &ResolveDropCandidatesResult| match x {
+                    ResolveDropCandidatesResult::Unknown(_) => 0,
+                    ResolveDropCandidatesResult::Resolved(_) => 1,
+                    ResolveDropCandidatesResult::StaleObservation(_) => 2,
+                    ResolveDropCandidatesResult::Invalid(_) => 3,
+                    ResolveDropCandidatesResult::CatalogChanged(_) => 4,
+                    ResolveDropCandidatesResult::PermissionDenied(_) => 5,
+                    ResolveDropCandidatesResult::Failed(_) => 6,
+                    ResolveDropCandidatesResult::InternalError(_) => 7,
+                },
+                |u| ResolveDropCandidatesResult::Unknown(Some(u)),
+                |x: &ResolveDropCandidatesResult| match x {
+                    ResolveDropCandidatesResult::Unknown(Some(u)) => Some(u.as_ref()),
+                    _ => None,
+                },
+                "editor/v1/resource_operations.skir",
+                "ResolveDropCandidatesResult",
+                "Resolved once when a drag starts, so hovering is a local lookup. Only enabled operations that\ndeclare a drop field contribute candidates.",
+            )
+        });
+        &*ADAPTER
+    }
+    pub fn serializer() -> crate::skir_client::Serializer<ResolveDropCandidatesResult> {
+        initialize_module_serializers();
+        crate::skir_client::internal::enum_serializer_from_static(
+            ResolveDropCandidatesResult::_adapter(),
+        )
+    }
+}
+
+// ==============================================================================
 // initialize_module_serializers()
 // ==============================================================================
 
@@ -2092,6 +2242,163 @@ fn initialize_module_serializers() {
             );
             (*a).finalize();
         }
+        unsafe {
+            let a: *mut crate::skir_client::internal::StructAdapter<DropCandidates> =
+                DropCandidates::_adapter() as *const _ as *mut _;
+            (*a).add_field(
+                "operation",
+                0,
+                crate::skirout::base::editor::v1::operation::ResourceOperationId::serializer(),
+                "",
+                |x: &DropCandidates| &x.operation,
+                |x: &mut DropCandidates, v| x.operation = v,
+            );
+            (*a).add_field(
+                "destinations",
+                1,
+                crate::skir_client::Serializer::array(
+                    crate::skirout::base::editor::v1::type_catalog::ResourceId::serializer(),
+                ),
+                "",
+                |x: &DropCandidates| &x.destinations,
+                |x: &mut DropCandidates, v| x.destinations = v,
+            );
+            (*a).add_field(
+                "complete",
+                2,
+                crate::skir_client::Serializer::bool(),
+                "",
+                |x: &DropCandidates| &x.complete,
+                |x: &mut DropCandidates, v| x.complete = v,
+            );
+            (*a).finalize();
+        }
+        unsafe {
+            let a: *mut crate::skir_client::internal::StructAdapter<ResolveDropCandidatesRequest> =
+                ResolveDropCandidatesRequest::_adapter() as *const _ as *mut _;
+            (*a).add_field(
+                "invocation",
+                0,
+                crate::skir_client::internal::struct_serializer_from_static(
+                    OperationInvocation::_adapter(),
+                ),
+                "",
+                |x: &ResolveDropCandidatesRequest| &x.invocation,
+                |x: &mut ResolveDropCandidatesRequest, v| x.invocation = v,
+            );
+            (*a).add_field(
+                "context",
+                1,
+                crate::skir_client::internal::struct_serializer_from_static(
+                    OperationWorkingContext::_adapter(),
+                ),
+                "",
+                |x: &ResolveDropCandidatesRequest| &x.context,
+                |x: &mut ResolveDropCandidatesRequest, v| x.context = v,
+            );
+            (*a).finalize();
+        }
+        unsafe {
+            let a: *mut crate::skir_client::internal::EnumAdapter<ResolveDropCandidatesResult> =
+                ResolveDropCandidatesResult::_adapter() as *const _ as *mut _;
+            (*a).add_wrapper_variant(
+                "resolved",
+                1,
+                1,
+                crate::skir_client::Serializer::array(
+                    crate::skir_client::internal::struct_serializer_from_static(
+                        DropCandidates::_adapter(),
+                    ),
+                ),
+                "",
+                |v| ResolveDropCandidatesResult::Resolved(v),
+                |x| match x {
+                    ResolveDropCandidatesResult::Resolved(v) => v,
+                    _ => unreachable!(),
+                },
+            );
+            (*a).add_wrapper_variant(
+                "stale_observation",
+                2,
+                2,
+                crate::skir_client::internal::struct_serializer_from_static(
+                    StaleAuthoringObservation::_adapter(),
+                ),
+                "",
+                |v| ResolveDropCandidatesResult::StaleObservation(Box::new(v)),
+                |x| match x {
+                    ResolveDropCandidatesResult::StaleObservation(b) => b.as_ref(),
+                    _ => unreachable!(),
+                },
+            );
+            (*a).add_wrapper_variant(
+                "invalid",
+                3,
+                3,
+                crate::skir_client::internal::struct_serializer_from_static(
+                    ResourceOperationFailure::_adapter(),
+                ),
+                "",
+                |v| ResolveDropCandidatesResult::Invalid(Box::new(v)),
+                |x| match x {
+                    ResolveDropCandidatesResult::Invalid(b) => b.as_ref(),
+                    _ => unreachable!(),
+                },
+            );
+            (*a).add_wrapper_variant(
+                "catalog_changed",
+                4,
+                4,
+                crate::skirout::base::editor::v1::authoring::CatalogChanged::serializer(),
+                "",
+                |v| ResolveDropCandidatesResult::CatalogChanged(Box::new(v)),
+                |x| match x {
+                    ResolveDropCandidatesResult::CatalogChanged(b) => b.as_ref(),
+                    _ => unreachable!(),
+                },
+            );
+            (*a).add_wrapper_variant(
+                "permission_denied",
+                5,
+                5,
+                crate::skir_client::internal::struct_serializer_from_static(
+                    ResourceOperationFailure::_adapter(),
+                ),
+                "",
+                |v| ResolveDropCandidatesResult::PermissionDenied(Box::new(v)),
+                |x| match x {
+                    ResolveDropCandidatesResult::PermissionDenied(b) => b.as_ref(),
+                    _ => unreachable!(),
+                },
+            );
+            (*a).add_wrapper_variant(
+                "failed",
+                6,
+                6,
+                crate::skir_client::internal::struct_serializer_from_static(
+                    ResourceOperationFailure::_adapter(),
+                ),
+                "",
+                |v| ResolveDropCandidatesResult::Failed(Box::new(v)),
+                |x| match x {
+                    ResolveDropCandidatesResult::Failed(b) => b.as_ref(),
+                    _ => unreachable!(),
+                },
+            );
+            (*a).add_wrapper_variant(
+                "internal_error",
+                7,
+                7,
+                crate::skirout::base::kernel::v1::errors::InternalError::serializer(),
+                "",
+                |v| ResolveDropCandidatesResult::InternalError(Box::new(v)),
+                |x| match x {
+                    ResolveDropCandidatesResult::InternalError(b) => b.as_ref(),
+                    _ => unreachable!(),
+                },
+            );
+            (*a).finalize();
+        }
     });
     let _ = *INIT;
 }
@@ -2128,6 +2435,20 @@ pub fn prepare_authoring_action_method()
         number: 920016_i64,
         request_serializer: PrepareAuthoringActionRequest::serializer(),
         response_serializer: AuthoringActionResult::serializer(),
+        doc: "".to_string(),
+    });
+    &*METHOD
+}
+
+pub fn resolve_drop_candidates_method()
+-> &'static crate::skir_client::Method<ResolveDropCandidatesRequest, ResolveDropCandidatesResult> {
+    static METHOD: std::sync::LazyLock<
+        crate::skir_client::Method<ResolveDropCandidatesRequest, ResolveDropCandidatesResult>,
+    > = std::sync::LazyLock::new(|| crate::skir_client::Method {
+        name: "ResolveDropCandidates".to_string(),
+        number: 920017_i64,
+        request_serializer: ResolveDropCandidatesRequest::serializer(),
+        response_serializer: ResolveDropCandidatesResult::serializer(),
         doc: "".to_string(),
     });
     &*METHOD

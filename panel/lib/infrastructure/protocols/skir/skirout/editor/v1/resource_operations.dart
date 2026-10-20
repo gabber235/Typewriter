@@ -3006,13 +3006,8 @@ sealed class ResolveResourceOperationsResult {
       _lib_editor_v1_operation.ResolvedResourceOperation_orMutable
     >
     operations,
-    required _lib_editor_v1_operation.ResourceOperationId_orMutable?
-    primaryOperation,
   }) => ResolveResourceOperationsResult.wrapResolved(
-    _lib_editor_v1_operation.ResolvedResourceOperations(
-      operations: operations,
-      primaryOperation: primaryOperation,
-    ),
+    _lib_editor_v1_operation.ResolvedResourceOperations(operations: operations),
   );
 
   /// Create a 'stale_observation' variant wrapping around the given value.
@@ -4708,6 +4703,682 @@ final class OperationSearchContext_mutable
   ).._u = this._u;
 }
 
+// -----------------------------------------------------------------------------
+// struct DropCandidates
+// -----------------------------------------------------------------------------
+
+sealed class DropCandidates_orMutable {
+  _lib_editor_v1_operation.ResourceOperationId_orMutable get operation;
+  _core.Iterable<_lib_editor_v1_type_catalog.ResourceId_orMutable>
+  get destinations;
+  _core.bool get complete;
+
+  DropCandidates toFrozen();
+}
+
+/// Destinations one operation accepts for the dragged resources, from its declared candidates and
+/// accepts. complete is false when the list was capped.
+///
+/// Deeply immutable.
+final class DropCandidates implements DropCandidates_orMutable {
+  @_core.override
+  final _lib_editor_v1_operation.ResourceOperationId operation;
+  @_core.override
+  final _core.Iterable<_lib_editor_v1_type_catalog.ResourceId> destinations;
+  @_core.override
+  final _core.bool complete;
+  _skir.internal__UnrecognizedFields? _u;
+
+  factory DropCandidates({
+    required _lib_editor_v1_operation.ResourceOperationId_orMutable operation,
+    required _core.Iterable<_lib_editor_v1_type_catalog.ResourceId_orMutable>
+    destinations,
+    required _core.bool complete,
+  }) => DropCandidates._(
+    operation.toFrozen(),
+    _skir.internal__frozenMappedCopy(destinations, (it) => it.toFrozen()),
+    complete,
+  );
+
+  DropCandidates._(this.operation, this.destinations, this.complete);
+
+  /// Default instance with all fields set to their default values.
+  static final defaultInstance = DropCandidates._(
+    _lib_editor_v1_operation.ResourceOperationId.defaultInstance,
+    _skir.KeyedIterable.empty,
+    false,
+  );
+
+  /// Returns a new mutable instance.
+  /// Fields are initialized to their default values.
+  static DropCandidates_mutable mutable() => DropCandidates_mutable._(
+    _lib_editor_v1_operation.ResourceOperationId.defaultInstance,
+    _skir.KeyedIterable.empty,
+    false,
+  );
+
+  /// Returns this instance (no-op).
+  @_core.Deprecated("This instance is already frozen.")
+  @_core.override
+  DropCandidates toFrozen() => this;
+
+  /// Returns a mutable shallow copy of this instance.
+  DropCandidates_mutable toMutable() => DropCandidates_mutable._(
+    this.operation,
+    this.destinations,
+    this.complete,
+  );
+
+  @_core.override
+  _core.bool operator ==(other) {
+    if (_core.identical(this, other)) return true;
+    if (other is! DropCandidates) return false;
+    return _skir.internal__listEquality.equals(
+      _equality_proxy,
+      other._equality_proxy,
+    );
+  }
+
+  @_core.override
+  _core.int get hashCode => _skir.internal__listEquality.hash(_equality_proxy);
+
+  _core.List get _equality_proxy => [
+    this.operation,
+    this.destinations,
+    this.complete,
+  ];
+
+  @_core.override
+  _core.String toString() => _skir.internal__stringify(this, serializer);
+
+  /// Serializer for `DropCandidates` instances.
+  static _skir.StructSerializer<DropCandidates, DropCandidates_mutable>
+  get serializer {
+    if (_serializerBuilder.mustInitialize()) {
+      _serializerBuilder.addField(
+        "operation",
+        "operation",
+        0,
+        _lib_editor_v1_operation.ResourceOperationId.serializer,
+        "",
+        (it) => it.operation,
+        (it, v) => it.operation = v,
+      );
+      _serializerBuilder.addField(
+        "destinations",
+        "destinations",
+        1,
+        _skir.Serializers.iterable(
+          _lib_editor_v1_type_catalog.ResourceId.serializer,
+        ),
+        "",
+        (it) => it.destinations,
+        (it, v) => it.destinations = v,
+      );
+      _serializerBuilder.addField(
+        "complete",
+        "complete",
+        2,
+        _skir.Serializers.bool,
+        "",
+        (it) => it.complete,
+        (it, v) => it.complete = v,
+      );
+      _serializerBuilder.finalize();
+    }
+    return _serializerBuilder.serializer;
+  }
+
+  static final _serializerBuilder = _skir.internal__StructSerializerBuilder(
+    recordId: "editor/v1/resource_operations.skir:DropCandidates",
+    doc: "Destinations one operation accepts for the dragged resources, from its declared candidates and\naccepts. complete is false when the list was capped.",
+    defaultInstance: defaultInstance,
+    newMutable: (it) => (it != null) ? it.toMutable() : mutable(),
+    toFrozen: (DropCandidates_mutable it) => it.toFrozen(),
+    getUnrecognizedFields: (it) => it._u,
+    setUnrecognizedFields: (it, u) => it._u = u,
+  );
+}
+
+/// Mutable version of [DropCandidates].
+final class DropCandidates_mutable implements DropCandidates_orMutable {
+  _lib_editor_v1_operation.ResourceOperationId_orMutable operation;
+  _core.Iterable<_lib_editor_v1_type_catalog.ResourceId_orMutable> destinations;
+  _core.bool complete;
+  _skir.internal__UnrecognizedFields? _u;
+
+  DropCandidates_mutable._(this.operation, this.destinations, this.complete);
+
+  /// If the value of [operation] is already mutable, returns it as-is.
+  /// Otherwise, makes a mutable copy, assigns it back to [operation] and returns it.
+  _lib_editor_v1_operation.ResourceOperationId_mutable get mutableOperation {
+    final value = this.operation;
+    if (value is _lib_editor_v1_operation.ResourceOperationId_mutable) {
+      return value;
+    } else {
+      return this.operation =
+          (value as _lib_editor_v1_operation.ResourceOperationId).toMutable();
+    }
+  }
+
+  /// If the value of [destinations] is already mutable, returns it as-is.
+  /// Otherwise, makes a mutable copy, assigns it back to [destinations] and returns it.
+  _core.List<_lib_editor_v1_type_catalog.ResourceId_orMutable>
+  get mutableDestinations {
+    final value = this.destinations;
+    if (value
+        is _skir.internal__MutableList<
+          _lib_editor_v1_type_catalog.ResourceId_orMutable
+        >) {
+      return value;
+    } else {
+      return this.destinations = _skir.internal__MutableList([...value]);
+    }
+  }
+
+  /// Returns a deeply immutable copy of this instance.
+  @_core.override
+  DropCandidates toFrozen() => DropCandidates(
+    operation: this.operation,
+    destinations: this.destinations,
+    complete: this.complete,
+  ).._u = this._u;
+}
+
+// -----------------------------------------------------------------------------
+// struct ResolveDropCandidatesRequest
+// -----------------------------------------------------------------------------
+
+sealed class ResolveDropCandidatesRequest_orMutable {
+  OperationInvocation_orMutable get invocation;
+  OperationWorkingContext_orMutable get context;
+
+  ResolveDropCandidatesRequest toFrozen();
+}
+
+/// invocation targets are the dragged resources.
+///
+/// Deeply immutable.
+final class ResolveDropCandidatesRequest
+    implements ResolveDropCandidatesRequest_orMutable {
+  @_core.override
+  final OperationInvocation invocation;
+  @_core.override
+  final OperationWorkingContext context;
+  _skir.internal__UnrecognizedFields? _u;
+
+  factory ResolveDropCandidatesRequest({
+    required OperationInvocation_orMutable invocation,
+    required OperationWorkingContext_orMutable context,
+  }) =>
+      ResolveDropCandidatesRequest._(invocation.toFrozen(), context.toFrozen());
+
+  ResolveDropCandidatesRequest._(this.invocation, this.context);
+
+  /// Default instance with all fields set to their default values.
+  static final defaultInstance = ResolveDropCandidatesRequest._(
+    OperationInvocation.defaultInstance,
+    OperationWorkingContext.defaultInstance,
+  );
+
+  /// Returns a new mutable instance.
+  /// Fields are initialized to their default values.
+  static ResolveDropCandidatesRequest_mutable mutable() =>
+      ResolveDropCandidatesRequest_mutable._(
+        OperationInvocation.defaultInstance,
+        OperationWorkingContext.defaultInstance,
+      );
+
+  /// Returns this instance (no-op).
+  @_core.Deprecated("This instance is already frozen.")
+  @_core.override
+  ResolveDropCandidatesRequest toFrozen() => this;
+
+  /// Returns a mutable shallow copy of this instance.
+  ResolveDropCandidatesRequest_mutable toMutable() =>
+      ResolveDropCandidatesRequest_mutable._(this.invocation, this.context);
+
+  @_core.override
+  _core.bool operator ==(other) {
+    if (_core.identical(this, other)) return true;
+    if (other is! ResolveDropCandidatesRequest) return false;
+    return _skir.internal__listEquality.equals(
+      _equality_proxy,
+      other._equality_proxy,
+    );
+  }
+
+  @_core.override
+  _core.int get hashCode => _skir.internal__listEquality.hash(_equality_proxy);
+
+  _core.List get _equality_proxy => [this.invocation, this.context];
+
+  @_core.override
+  _core.String toString() => _skir.internal__stringify(this, serializer);
+
+  /// Serializer for `ResolveDropCandidatesRequest` instances.
+  static _skir.StructSerializer<
+    ResolveDropCandidatesRequest,
+    ResolveDropCandidatesRequest_mutable
+  >
+  get serializer {
+    if (_serializerBuilder.mustInitialize()) {
+      _serializerBuilder.addField(
+        "invocation",
+        "invocation",
+        0,
+        OperationInvocation.serializer,
+        "",
+        (it) => it.invocation,
+        (it, v) => it.invocation = v,
+      );
+      _serializerBuilder.addField(
+        "context",
+        "context",
+        1,
+        OperationWorkingContext.serializer,
+        "",
+        (it) => it.context,
+        (it, v) => it.context = v,
+      );
+      _serializerBuilder.finalize();
+    }
+    return _serializerBuilder.serializer;
+  }
+
+  static final _serializerBuilder = _skir.internal__StructSerializerBuilder(
+    recordId: "editor/v1/resource_operations.skir:ResolveDropCandidatesRequest",
+    doc: "invocation targets are the dragged resources.",
+    defaultInstance: defaultInstance,
+    newMutable: (it) => (it != null) ? it.toMutable() : mutable(),
+    toFrozen: (ResolveDropCandidatesRequest_mutable it) => it.toFrozen(),
+    getUnrecognizedFields: (it) => it._u,
+    setUnrecognizedFields: (it, u) => it._u = u,
+  );
+}
+
+/// Mutable version of [ResolveDropCandidatesRequest].
+final class ResolveDropCandidatesRequest_mutable
+    implements ResolveDropCandidatesRequest_orMutable {
+  OperationInvocation_orMutable invocation;
+  OperationWorkingContext_orMutable context;
+  _skir.internal__UnrecognizedFields? _u;
+
+  ResolveDropCandidatesRequest_mutable._(this.invocation, this.context);
+
+  /// If the value of [invocation] is already mutable, returns it as-is.
+  /// Otherwise, makes a mutable copy, assigns it back to [invocation] and returns it.
+  OperationInvocation_mutable get mutableInvocation {
+    final value = this.invocation;
+    if (value is OperationInvocation_mutable) {
+      return value;
+    } else {
+      return this.invocation = (value as OperationInvocation).toMutable();
+    }
+  }
+
+  /// If the value of [context] is already mutable, returns it as-is.
+  /// Otherwise, makes a mutable copy, assigns it back to [context] and returns it.
+  OperationWorkingContext_mutable get mutableContext {
+    final value = this.context;
+    if (value is OperationWorkingContext_mutable) {
+      return value;
+    } else {
+      return this.context = (value as OperationWorkingContext).toMutable();
+    }
+  }
+
+  /// Returns a deeply immutable copy of this instance.
+  @_core.override
+  ResolveDropCandidatesRequest toFrozen() => ResolveDropCandidatesRequest(
+    invocation: this.invocation,
+    context: this.context,
+  ).._u = this._u;
+}
+
+// -----------------------------------------------------------------------------
+// enum ResolveDropCandidatesResult
+// -----------------------------------------------------------------------------
+
+/// Resolved once when a drag starts, so hovering is a local lookup. Only enabled operations that
+/// declare a drop field contribute candidates.
+///
+/// To switch on the variants:
+///   ```
+///   switch (e) {
+///     case ResolveDropCandidatesResult_unknown(): { ... }
+///     case ResolveDropCandidatesResult_resolved(:var value): { ... }
+///     case ResolveDropCandidatesResult_staleObservation(:var value): { ... }
+///     case ResolveDropCandidatesResult_invalid(:var value): { ... }
+///     case ResolveDropCandidatesResult_catalogChanged(:var value): { ... }
+///     case ResolveDropCandidatesResult_permissionDenied(:var value): { ... }
+///     case ResolveDropCandidatesResult_failed(:var value): { ... }
+///     case ResolveDropCandidatesResult_internalError(:var value): { ... }
+///   }
+///   ```
+///
+/// Deeply immutable.
+sealed class ResolveDropCandidatesResult {
+  /// Constant indicating an unknown `ResolveDropCandidatesResult`.
+  /// Default value for fields of type `ResolveDropCandidatesResult`.
+  static const ResolveDropCandidatesResult unknown =
+      ResolveDropCandidatesResult_unknown._instance;
+
+  /// Create a 'resolved' variant wrapping around the given value.
+  factory ResolveDropCandidatesResult.wrapResolved(
+    _core.Iterable<DropCandidates> value,
+  ) => ResolveDropCandidatesResult_resolvedWrapper._(value);
+
+  /// Create a 'stale_observation' variant wrapping around the given value.
+  factory ResolveDropCandidatesResult.wrapStaleObservation(
+    StaleAuthoringObservation value,
+  ) => ResolveDropCandidatesResult_staleObservationWrapper._(value);
+
+  /// Same as `wrapStaleObservation(StaleAuthoringObservation(...))`.
+  factory ResolveDropCandidatesResult.createStaleObservation({
+    required _lib_editor_v1_authoring.AuthoringObservationId_orMutable actual,
+  }) => ResolveDropCandidatesResult.wrapStaleObservation(
+    StaleAuthoringObservation(actual: actual),
+  );
+
+  /// Create a 'invalid' variant wrapping around the given value.
+  factory ResolveDropCandidatesResult.wrapInvalid(
+    ResourceOperationFailure value,
+  ) => ResolveDropCandidatesResult_invalidWrapper._(value);
+
+  /// Same as `wrapInvalid(ResourceOperationFailure(...))`.
+  factory ResolveDropCandidatesResult.createInvalid({
+    required _core.Iterable<
+      _lib_editor_v1_authoring.AuthoringDiagnostic_orMutable
+    >
+    diagnostics,
+  }) => ResolveDropCandidatesResult.wrapInvalid(
+    ResourceOperationFailure(diagnostics: diagnostics),
+  );
+
+  /// Create a 'catalog_changed' variant wrapping around the given value.
+  factory ResolveDropCandidatesResult.wrapCatalogChanged(
+    _lib_editor_v1_authoring.CatalogChanged value,
+  ) => ResolveDropCandidatesResult_catalogChangedWrapper._(value);
+
+  /// Same as `wrapCatalogChanged(_lib_editor_v1_authoring.CatalogChanged(...))`.
+  factory ResolveDropCandidatesResult.createCatalogChanged({
+    required _lib_editor_v1_type_catalog.CatalogGeneration_orMutable
+    actualGeneration,
+  }) => ResolveDropCandidatesResult.wrapCatalogChanged(
+    _lib_editor_v1_authoring.CatalogChanged(actualGeneration: actualGeneration),
+  );
+
+  /// Create a 'permission_denied' variant wrapping around the given value.
+  factory ResolveDropCandidatesResult.wrapPermissionDenied(
+    ResourceOperationFailure value,
+  ) => ResolveDropCandidatesResult_permissionDeniedWrapper._(value);
+
+  /// Same as `wrapPermissionDenied(ResourceOperationFailure(...))`.
+  factory ResolveDropCandidatesResult.createPermissionDenied({
+    required _core.Iterable<
+      _lib_editor_v1_authoring.AuthoringDiagnostic_orMutable
+    >
+    diagnostics,
+  }) => ResolveDropCandidatesResult.wrapPermissionDenied(
+    ResourceOperationFailure(diagnostics: diagnostics),
+  );
+
+  /// Create a 'failed' variant wrapping around the given value.
+  factory ResolveDropCandidatesResult.wrapFailed(
+    ResourceOperationFailure value,
+  ) => ResolveDropCandidatesResult_failedWrapper._(value);
+
+  /// Same as `wrapFailed(ResourceOperationFailure(...))`.
+  factory ResolveDropCandidatesResult.createFailed({
+    required _core.Iterable<
+      _lib_editor_v1_authoring.AuthoringDiagnostic_orMutable
+    >
+    diagnostics,
+  }) => ResolveDropCandidatesResult.wrapFailed(
+    ResourceOperationFailure(diagnostics: diagnostics),
+  );
+
+  /// Create a 'internal_error' variant wrapping around the given value.
+  factory ResolveDropCandidatesResult.wrapInternalError(
+    _lib_kernel_v1_errors.InternalError value,
+  ) => ResolveDropCandidatesResult_internalErrorWrapper._(value);
+
+  /// Same as `wrapInternalError(_lib_kernel_v1_errors.InternalError(...))`.
+  factory ResolveDropCandidatesResult.createInternalError() =>
+      ResolveDropCandidatesResult.wrapInternalError(
+        _lib_kernel_v1_errors.InternalError(),
+      );
+
+  /// Returns the kind of variant held by this ResolveDropCandidatesResult.
+  ResolveDropCandidatesResult_kind get kind;
+
+  /// Serializer for `ResolveDropCandidatesResult` instances.
+  static _skir.EnumSerializer<ResolveDropCandidatesResult> get serializer {
+    if (_serializerBuilder.mustInitialize()) {
+      _serializerBuilder.addWrapperVariant(
+        1,
+        "resolved",
+        "wrapResolved",
+        _skir.Serializers.iterable(DropCandidates.serializer),
+        "",
+        ResolveDropCandidatesResult_resolvedWrapper._,
+        (it) => it.value,
+        ordinal: ResolveDropCandidatesResult_kind.resolvedWrapper._ordinal,
+      );
+      _serializerBuilder.addWrapperVariant(
+        2,
+        "stale_observation",
+        "wrapStaleObservation",
+        StaleAuthoringObservation.serializer,
+        "",
+        ResolveDropCandidatesResult_staleObservationWrapper._,
+        (it) => it.value,
+        ordinal:
+            ResolveDropCandidatesResult_kind.staleObservationWrapper._ordinal,
+      );
+      _serializerBuilder.addWrapperVariant(
+        3,
+        "invalid",
+        "wrapInvalid",
+        ResourceOperationFailure.serializer,
+        "",
+        ResolveDropCandidatesResult_invalidWrapper._,
+        (it) => it.value,
+        ordinal: ResolveDropCandidatesResult_kind.invalidWrapper._ordinal,
+      );
+      _serializerBuilder.addWrapperVariant(
+        4,
+        "catalog_changed",
+        "wrapCatalogChanged",
+        _lib_editor_v1_authoring.CatalogChanged.serializer,
+        "",
+        ResolveDropCandidatesResult_catalogChangedWrapper._,
+        (it) => it.value,
+        ordinal:
+            ResolveDropCandidatesResult_kind.catalogChangedWrapper._ordinal,
+      );
+      _serializerBuilder.addWrapperVariant(
+        5,
+        "permission_denied",
+        "wrapPermissionDenied",
+        ResourceOperationFailure.serializer,
+        "",
+        ResolveDropCandidatesResult_permissionDeniedWrapper._,
+        (it) => it.value,
+        ordinal:
+            ResolveDropCandidatesResult_kind.permissionDeniedWrapper._ordinal,
+      );
+      _serializerBuilder.addWrapperVariant(
+        6,
+        "failed",
+        "wrapFailed",
+        ResourceOperationFailure.serializer,
+        "",
+        ResolveDropCandidatesResult_failedWrapper._,
+        (it) => it.value,
+        ordinal: ResolveDropCandidatesResult_kind.failedWrapper._ordinal,
+      );
+      _serializerBuilder.addWrapperVariant(
+        7,
+        "internal_error",
+        "wrapInternalError",
+        _lib_kernel_v1_errors.InternalError.serializer,
+        "",
+        ResolveDropCandidatesResult_internalErrorWrapper._,
+        (it) => it.value,
+        ordinal: ResolveDropCandidatesResult_kind.internalErrorWrapper._ordinal,
+      );
+      _serializerBuilder.finalize();
+    }
+    return _serializerBuilder.serializer;
+  }
+
+  static final _serializerBuilder = _skir.internal__EnumSerializerBuilder
+      .create(
+        recordId:
+            "editor/v1/resource_operations.skir:ResolveDropCandidatesResult",
+        doc: "Resolved once when a drag starts, so hovering is a local lookup. Only enabled operations that\ndeclare a drop field contribute candidates.",
+        unknownInstance: ResolveDropCandidatesResult_unknown._instance,
+        enumInstance: ResolveDropCandidatesResult.unknown,
+        getOrdinal: (it) => it.kind._ordinal,
+        wrapUnrecognized: ResolveDropCandidatesResult_unknown._unrecognized,
+        getUnrecognized: (it) => it._u,
+      );
+}
+
+/// The kind of variant held by a `ResolveDropCandidatesResult`.
+enum ResolveDropCandidatesResult_kind {
+  unknown(0),
+  resolvedWrapper(1),
+  staleObservationWrapper(2),
+  invalidWrapper(3),
+  catalogChangedWrapper(4),
+  permissionDeniedWrapper(5),
+  failedWrapper(6),
+  internalErrorWrapper(7);
+
+  final _core.int _ordinal;
+
+  const ResolveDropCandidatesResult_kind(this._ordinal);
+}
+
+final class ResolveDropCandidatesResult_unknown
+    implements ResolveDropCandidatesResult {
+  static const _instance = ResolveDropCandidatesResult_unknown._();
+
+  final _skir.internal__UnrecognizedVariant? _u;
+
+  const ResolveDropCandidatesResult_unknown._() : _u = null;
+  ResolveDropCandidatesResult_unknown._unrecognized(this._u);
+
+  @_core.override
+  ResolveDropCandidatesResult_kind get kind =>
+      ResolveDropCandidatesResult_kind.unknown;
+  @_core.override
+  _core.bool operator ==(other) => other is ResolveDropCandidatesResult_unknown;
+  @_core.override
+  _core.int get hashCode => 8118964;
+  @_core.override
+  _core.String toString() =>
+      _skir.internal__stringify(this, ResolveDropCandidatesResult.serializer);
+}
+
+sealed class _ResolveDropCandidatesResult_wrapper
+    implements ResolveDropCandidatesResult {
+  _core.dynamic get value;
+
+  @_core.override
+  _core.bool operator ==(other) {
+    if (other is! _ResolveDropCandidatesResult_wrapper) return false;
+    return kind == other.kind && value == other.value;
+  }
+
+  @_core.override
+  _core.int get hashCode => (kind._ordinal * 31) ^ value.hashCode;
+
+  @_core.override
+  _core.String toString() =>
+      _skir.internal__stringify(this, ResolveDropCandidatesResult.serializer);
+}
+
+final class ResolveDropCandidatesResult_resolvedWrapper
+    extends _ResolveDropCandidatesResult_wrapper {
+  final _core.Iterable<DropCandidates> value;
+
+  ResolveDropCandidatesResult_resolvedWrapper._(this.value);
+
+  @_core.override
+  ResolveDropCandidatesResult_kind get kind =>
+      ResolveDropCandidatesResult_kind.resolvedWrapper;
+}
+
+final class ResolveDropCandidatesResult_staleObservationWrapper
+    extends _ResolveDropCandidatesResult_wrapper {
+  final StaleAuthoringObservation value;
+
+  ResolveDropCandidatesResult_staleObservationWrapper._(this.value);
+
+  @_core.override
+  ResolveDropCandidatesResult_kind get kind =>
+      ResolveDropCandidatesResult_kind.staleObservationWrapper;
+}
+
+final class ResolveDropCandidatesResult_invalidWrapper
+    extends _ResolveDropCandidatesResult_wrapper {
+  final ResourceOperationFailure value;
+
+  ResolveDropCandidatesResult_invalidWrapper._(this.value);
+
+  @_core.override
+  ResolveDropCandidatesResult_kind get kind =>
+      ResolveDropCandidatesResult_kind.invalidWrapper;
+}
+
+final class ResolveDropCandidatesResult_catalogChangedWrapper
+    extends _ResolveDropCandidatesResult_wrapper {
+  final _lib_editor_v1_authoring.CatalogChanged value;
+
+  ResolveDropCandidatesResult_catalogChangedWrapper._(this.value);
+
+  @_core.override
+  ResolveDropCandidatesResult_kind get kind =>
+      ResolveDropCandidatesResult_kind.catalogChangedWrapper;
+}
+
+final class ResolveDropCandidatesResult_permissionDeniedWrapper
+    extends _ResolveDropCandidatesResult_wrapper {
+  final ResourceOperationFailure value;
+
+  ResolveDropCandidatesResult_permissionDeniedWrapper._(this.value);
+
+  @_core.override
+  ResolveDropCandidatesResult_kind get kind =>
+      ResolveDropCandidatesResult_kind.permissionDeniedWrapper;
+}
+
+final class ResolveDropCandidatesResult_failedWrapper
+    extends _ResolveDropCandidatesResult_wrapper {
+  final ResourceOperationFailure value;
+
+  ResolveDropCandidatesResult_failedWrapper._(this.value);
+
+  @_core.override
+  ResolveDropCandidatesResult_kind get kind =>
+      ResolveDropCandidatesResult_kind.failedWrapper;
+}
+
+final class ResolveDropCandidatesResult_internalErrorWrapper
+    extends _ResolveDropCandidatesResult_wrapper {
+  final _lib_kernel_v1_errors.InternalError value;
+
+  ResolveDropCandidatesResult_internalErrorWrapper._(this.value);
+
+  @_core.override
+  ResolveDropCandidatesResult_kind get kind =>
+      ResolveDropCandidatesResult_kind.internalErrorWrapper;
+}
+
 final _skir.Method<
   ResolveResourceOperationsRequest,
   ResolveResourceOperationsResult
@@ -4726,5 +5397,14 @@ prepareAuthoringActionMethod = _skir.Method(
   920016,
   PrepareAuthoringActionRequest.serializer,
   AuthoringActionResult.serializer,
+  "",
+);
+
+final _skir.Method<ResolveDropCandidatesRequest, ResolveDropCandidatesResult>
+resolveDropCandidatesMethod = _skir.Method(
+  "ResolveDropCandidates",
+  920017,
+  ResolveDropCandidatesRequest.serializer,
+  ResolveDropCandidatesResult.serializer,
   "",
 );

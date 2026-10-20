@@ -17,8 +17,6 @@ import com.typewritermc.types.Ref
 import com.typewritermc.types.ReferenceContract
 import com.typewritermc.types.RelationDeletePolicy
 import com.typewritermc.types.Resource
-import com.typewritermc.types.TypeDefinitionId
-import com.typewritermc.types.TypeId
 import com.typewritermc.types.TypewriterRecordContract
 import com.typewritermc.types.TypewriterType
 
@@ -133,8 +131,6 @@ interface Page : CompilationUnit {
     val priority: Int
     val elements: List<Ref<PageElements.Page, Element>>
 }
-
-val PAGE_CONTRACT_TYPE = TypeDefinitionId(TypeId.Qualified("kotlin", "com.typewritermc.library.Page"), 1)
 
 @ReferenceContract(PAGE_ELEMENTS_RELATION_ID)
 interface PageElementsContract : Owning {

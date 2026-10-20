@@ -959,8 +959,6 @@ pub struct EditorCatalogWireSnapshot {
     pub role_fallbacks: Vec<RoleFallback>,
     pub resource_operations:
         Vec<crate::skirout::base::editor::v1::operation::ResourceOperationDefinition>,
-    pub resource_operation_contributions:
-        Vec<crate::skirout::base::editor::v1::operation::ResourceOperationContribution>,
     /// The realm root type. The realm keeps exactly one instance, which owns every section.
     pub realm_root: crate::skirout::base::editor::v1::type_catalog::TypeDefinitionId,
     /// Set this to None when you're creating a struct.
@@ -2641,8 +2639,7 @@ fn initialize_module_serializers() {
                 |x: &mut EditorCatalogWireSnapshot, v| x.role_fallbacks = v,
             );
             (*a).add_field("resource_operations", 12, crate::skir_client::Serializer::array(crate::skirout::base::editor::v1::operation::ResourceOperationDefinition::serializer()), "", |x: &EditorCatalogWireSnapshot| &x.resource_operations, |x: &mut EditorCatalogWireSnapshot, v| x.resource_operations = v);
-            (*a).add_field("resource_operation_contributions", 13, crate::skir_client::Serializer::array(crate::skirout::base::editor::v1::operation::ResourceOperationContribution::serializer()), "", |x: &EditorCatalogWireSnapshot| &x.resource_operation_contributions, |x: &mut EditorCatalogWireSnapshot, v| x.resource_operation_contributions = v);
-            (*a).add_field("realm_root", 14, crate::skirout::base::editor::v1::type_catalog::TypeDefinitionId::serializer(), "The realm root type. The realm keeps exactly one instance, which owns every section.", |x: &EditorCatalogWireSnapshot| &x.realm_root, |x: &mut EditorCatalogWireSnapshot, v| x.realm_root = v);
+            (*a).add_field("realm_root", 13, crate::skirout::base::editor::v1::type_catalog::TypeDefinitionId::serializer(), "The realm root type. The realm keeps exactly one instance, which owns every section.", |x: &EditorCatalogWireSnapshot| &x.realm_root, |x: &mut EditorCatalogWireSnapshot, v| x.realm_root = v);
             (*a).finalize();
         }
         unsafe {

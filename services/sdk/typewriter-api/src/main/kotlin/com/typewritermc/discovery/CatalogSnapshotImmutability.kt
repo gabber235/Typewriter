@@ -1,5 +1,6 @@
 package com.typewritermc.discovery
 
+import com.typewritermc.authoring.immutableCopy
 import com.typewritermc.capability.RealmCapabilityDescriptor
 import com.typewritermc.checking.DiagnosticTemplate
 import com.typewritermc.configuration.ConfigurationRecipe
@@ -27,13 +28,9 @@ internal fun EditorCatalogSnapshot.immutableCopy(): EditorCatalogSnapshot =
     copy(
         resourceOperations =
             resourceOperations.immutableListCopy { operation ->
-                operation.copy(targets = operation.targets.immutableCopy())
-            },
-        resourceOperationContributions =
-            resourceOperationContributions.immutableListCopy { contribution ->
-                contribution.copy(
-                    target = contribution.target.immutableCopy() as TypeTemplate.Named,
-                    operations = contribution.operations.immutableListCopy(),
+                operation.copy(
+                    targets = operation.targets.copy(subject = operation.targets.subject.immutableCopy()),
+                    drop = operation.drop?.let { it.copy(input = it.input.immutableCopy()) },
                 )
             },
         types = types.immutableListCopy(PublishedType::immutableCopy),
@@ -134,7 +131,7 @@ private fun RealmCapabilityDescriptor.immutableCopy(): RealmCapabilityDescriptor
         }
 
         is RealmCapabilityDescriptor.Authoring -> {
-            copy(requestType = requestType?.immutableCopy(), targets = targets.immutableCopy())
+            copy(requestType = requestType?.immutableCopy(), targets = targets.copy(subject = targets.subject.immutableCopy()))
         }
 
         is RealmCapabilityDescriptor.Command -> {
@@ -151,14 +148,3 @@ private fun DeclarationDiagnostic.immutableCopy(): DeclarationDiagnostic =
     )
 
 private fun RelativeFieldPattern.immutableCopy(): RelativeFieldPattern = copy(segments = segments.immutableListCopy())
-
-private fun com.typewritermc.operations.OperationTargets.immutableCopy(): com.typewritermc.operations.OperationTargets =
-    when (this) {
-        is com.typewritermc.operations.OperationTargets.Single -> copy(type = type.immutableCopy() as TypeTemplate.Named)
-
-        is com.typewritermc.operations.OperationTargets.Selection -> copy(type = type.immutableCopy() as TypeTemplate.Named)
-
-        com.typewritermc.operations.OperationTargets.ContributedSingle,
-        com.typewritermc.operations.OperationTargets.ContributedSelection,
-        -> this
-    }

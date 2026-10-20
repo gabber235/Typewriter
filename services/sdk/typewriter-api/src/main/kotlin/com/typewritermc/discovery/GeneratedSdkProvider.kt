@@ -55,6 +55,7 @@ interface GeneratedResourceDisplayProvider {
     fun formulas(): DisplayFormulas
 }
 
+/** One operation object: its identity, target and input from compile time, and the declaration it runs at assembly. */
 interface GeneratedResourceOperationProvider {
     fun contribute(origin: ProviderOrigin): com.typewritermc.operations.OperationDeclaration
 }

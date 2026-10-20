@@ -1258,6 +1258,10 @@ enum PresentationInteractionState(810800163) {
   invalid = 7;
   /// The resource is the one open in the workspace.
   routed = 8;
+  /// A dragged resource hovers this item and at least one drop offer accepts it.
+  drop_accepted = 9;
+  /// A dragged resource hovers this item and no drop offer accepts it.
+  drop_rejected = 10;
 }
 
 struct PresentationStateMatch(810800164) {

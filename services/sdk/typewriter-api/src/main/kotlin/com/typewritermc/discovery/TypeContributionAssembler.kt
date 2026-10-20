@@ -256,9 +256,7 @@ fun CatalogContributions.assemble(context: CatalogAssemblyContext): CatalogAssem
             operations,
             checked,
             bindingRegistry,
-            assembledDeclarations,
             publishedPresentations,
-            context.capabilities,
         )
     val snapshot =
         EditorCatalogSnapshot(
@@ -279,14 +277,8 @@ fun CatalogContributions.assemble(context: CatalogAssemblyContext): CatalogAssem
             diagnostics =
                 diagnostics + placementDiagnostics + boundOperations.diagnostics + searchKeyDiagnostics + displayCollection.diagnostics,
             endpointBindings = (endpointBindings + context.endpointBindings).distinct(),
-            capabilities =
-                (
-                    context.capabilities + boundOperations.authoringProviders.map { it.capability } +
-                        com.typewritermc.operations.OperationSearch
-                            .descriptorsFor(boundOperations.authoringProviders)
-                ).sortedBy { it.id.value },
+            capabilities = (context.capabilities + boundOperations.capabilities).sortedBy { it.id.value },
             resourceOperations = boundOperations.definitions,
-            resourceOperationContributions = boundOperations.contributions,
             recommendations = typeRecommendations(definitionIndex, checked),
             roleFallbacks = context.roleFallbacks,
             realmRoot = RealmRootDefinition.id,

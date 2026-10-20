@@ -5,7 +5,22 @@ import com.typewritermc.expression.Handled
 import com.typewritermc.expression.literal
 import com.typewritermc.types.Color
 
-enum class PresentationInteractionState { Hovered, Selected, Focused, Pressed, Disabled, ReadOnly, Invalid, Routed }
+enum class PresentationInteractionState {
+    Hovered,
+    Selected,
+    Focused,
+    Pressed,
+    Disabled,
+    ReadOnly,
+    Invalid,
+    Routed,
+
+    /** A dragged resource hovers the item and at least one drop offer accepts it. */
+    DropAccepted,
+
+    /** A dragged resource hovers the item and no drop offer accepts it. */
+    DropRejected,
+}
 
 enum class PresentationThemeColor { Primary, OnPrimary, Surface, OnSurface, OnSurfaceVariant, FocusOutline }
 

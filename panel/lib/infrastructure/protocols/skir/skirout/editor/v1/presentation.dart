@@ -31593,6 +31593,8 @@ final class TextSizing_fitWrapper extends _TextSizing_wrapper {
 ///     case PresentationInteractionState.readOnly: { ... }
 ///     case PresentationInteractionState.invalid: { ... }
 ///     case PresentationInteractionState.routed: { ... }
+///     case PresentationInteractionState.dropAccepted: { ... }
+///     case PresentationInteractionState.dropRejected: { ... }
 ///   }
 ///   ```
 ///
@@ -31613,6 +31615,14 @@ sealed class PresentationInteractionState {
 
   /// The resource is the one open in the workspace.
   static const routed = _PresentationInteractionState_consts.routedConst;
+
+  /// A dragged resource hovers this item and at least one drop offer accepts it.
+  static const dropAccepted =
+      _PresentationInteractionState_consts.dropAcceptedConst;
+
+  /// A dragged resource hovers this item and no drop offer accepts it.
+  static const dropRejected =
+      _PresentationInteractionState_consts.dropRejectedConst;
 
   /// Returns the kind of variant held by this PresentationInteractionState.
   PresentationInteractionState_kind get kind;
@@ -31676,6 +31686,20 @@ sealed class PresentationInteractionState {
         "The resource is the one open in the workspace.",
         routed,
       );
+      _serializerBuilder.addConstantVariant(
+        9,
+        "drop_accepted",
+        "dropAccepted",
+        "A dragged resource hovers this item and at least one drop offer accepts it.",
+        dropAccepted,
+      );
+      _serializerBuilder.addConstantVariant(
+        10,
+        "drop_rejected",
+        "dropRejected",
+        "A dragged resource hovers this item and no drop offer accepts it.",
+        dropRejected,
+      );
       _serializerBuilder.finalize();
     }
     return _serializerBuilder.serializer;
@@ -31703,7 +31727,9 @@ enum PresentationInteractionState_kind {
   disabledConst(5),
   readOnlyConst(6),
   invalidConst(7),
-  routedConst(8);
+  routedConst(8),
+  dropAcceptedConst(9),
+  dropRejectedConst(10);
 
   final _core.int _ordinal;
 
@@ -31741,7 +31767,9 @@ enum _PresentationInteractionState_consts
   disabledConst(PresentationInteractionState_kind.disabledConst),
   readOnlyConst(PresentationInteractionState_kind.readOnlyConst),
   invalidConst(PresentationInteractionState_kind.invalidConst),
-  routedConst(PresentationInteractionState_kind.routedConst);
+  routedConst(PresentationInteractionState_kind.routedConst),
+  dropAcceptedConst(PresentationInteractionState_kind.dropAcceptedConst),
+  dropRejectedConst(PresentationInteractionState_kind.dropRejectedConst);
 
   @_core.override
   final PresentationInteractionState_kind kind;

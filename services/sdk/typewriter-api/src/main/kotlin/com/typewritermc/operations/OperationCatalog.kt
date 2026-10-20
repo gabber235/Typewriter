@@ -1,28 +1,23 @@
 package com.typewritermc.operations
 
-import com.typewritermc.authoring.AuthoredReads
 import com.typewritermc.authoring.CompletenessResult
 import com.typewritermc.authoring.PathSegment
 import com.typewritermc.authoring.ValuePath
 import com.typewritermc.authoring.complete
-import com.typewritermc.authoring.map
+import com.typewritermc.capability.CapabilityId
 import com.typewritermc.capability.RealmCapabilityDescriptor
 import com.typewritermc.discovery.OwnedPresentation
-import com.typewritermc.discovery.OwnedTypeDeclaration
 import com.typewritermc.discovery.ProviderOrigin
-import com.typewritermc.expression.ExpressionBindingId
+import com.typewritermc.discovery.affected
 import com.typewritermc.presentation.PresentationTarget
 import com.typewritermc.presentation.matches
 import com.typewritermc.types.DataValue
-import com.typewritermc.types.FloatWidth
-import com.typewritermc.types.IntegerWidth
 import com.typewritermc.types.NativeBinding
 import com.typewritermc.types.NativeBindingRegistry
 import com.typewritermc.types.PresentationId
-import com.typewritermc.types.Resource
-import com.typewritermc.types.ResourceId
+import com.typewritermc.types.ResourceIdDefinition
+import com.typewritermc.types.ResourceTarget
 import com.typewritermc.types.ScalarKind
-import com.typewritermc.types.StandardTypes
 import com.typewritermc.types.TypeTemplate
 import com.typewritermc.types.TypeUse
 import com.typewritermc.types.catalog.CheckedCatalog
@@ -31,13 +26,8 @@ import com.typewritermc.types.catalog.DeclarationDiagnostic
 import com.typewritermc.types.catalog.DeclarationOrigin
 import com.typewritermc.types.catalog.Resolution
 import com.typewritermc.types.catalog.ResolvedRepresentation
-import com.typewritermc.types.catalog.apply
-import com.typewritermc.types.catalog.isNominalSubtype
 import com.typewritermc.types.catalog.resolve
-import com.typewritermc.types.toTemplate
 import kotlinx.coroutines.CancellationException
-import skirout.editor.v1.expression.ExpressionNode
-import kotlin.reflect.KClass
 
 class BoundOperationInput internal constructor(
     val schema: CheckedType?,
@@ -55,31 +45,52 @@ class BoundOperationInput internal constructor(
     }
 }
 
+/** An input field whose declared candidates back a search in generated forms. */
+class CandidateSearch internal constructor(
+    val operation: BoundResourceOperation,
+    val field: OperationInputField,
+) {
+    val descriptor: RealmCapabilityDescriptor.Search =
+        RealmCapabilityDescriptor.Search(
+            operation.definition.id.candidateSearch(field.path),
+            TypeUse.Scalar(ScalarKind.Text),
+            OperationResourceOptionDefinition.use,
+        )
+}
+
+/** A published operation together with its executable callbacks and bound input. */
 class BoundResourceOperation internal constructor(
     val origin: ProviderOrigin,
-    val descriptor: ResourceOperationDefinition,
+    val definition: ResourceOperationDefinition,
     val input: BoundOperationInput,
-    private val callback: CollectedOperation,
+    private val collected: CollectedOperation,
+    resourceFields: Set<ValuePath>,
 ) {
-    val builtin: BuiltinResourceOperation? get() = callback.builtin
     val capability: RealmCapabilityDescriptor.Authoring =
         RealmCapabilityDescriptor.Authoring(
-            descriptor.id.capability,
+            definition.capability,
             input.schema?.use,
-            descriptor.targets,
+            definition.targets,
             input.presentation,
         )
 
+    /** The field drops fill, when the operation declares one. */
+    val dropField: OperationInputField? = collected.fields.singleOrNull { it.drop != null }
+
+    /** Searches over the declared candidates of each resource identity field. */
+    val candidateSearches: List<CandidateSearch> =
+        collected.fields.filter { it.hasCandidates && it.path in resourceFields }.map { CandidateSearch(this, it) }
+
     fun availability(
-        targets: List<ResourceId>,
-        reads: AuthoredReads,
-    ): OperationAvailability = callback.availability(targets, reads)
+        subjects: List<com.typewritermc.types.ResourceId>,
+        reads: OperationReads,
+    ): OperationAvailability = collected.availability(subjects, reads)
 
     suspend fun prepare(
-        targets: List<ResourceId>,
+        subjects: List<com.typewritermc.types.ResourceId>,
         input: DataValue?,
         session: OperationPreparation,
-    ) = callback.prepare(targets, this.input.decode(input), session)
+    ) = collected.prepare(subjects, this.input.decode(input), session)
 }
 
 data class OperationBindingFailure(
@@ -88,190 +99,146 @@ data class OperationBindingFailure(
 )
 
 data class OperationCatalog(
-    val definitions: List<ResourceOperationDefinition> = emptyList(),
-    val contributions: List<ResourceOperationContribution> = emptyList(),
-    val authoringProviders: List<BoundResourceOperation> = emptyList(),
+    val operations: List<BoundResourceOperation> = emptyList(),
     val diagnostics: List<DeclarationDiagnostic> = emptyList(),
     val failures: List<OperationBindingFailure> = emptyList(),
 ) {
-    fun requireAuthoring(id: com.typewritermc.capability.CapabilityId): BoundResourceOperation =
-        requireNotNull(authoringProviders.singleOrNull { it.capability.id == id }) { "Authoring operation is unavailable: ${id.value}" }
+    val definitions: List<ResourceOperationDefinition> get() = operations.map { it.definition }
+
+    /** The authoring capability of every operation and the candidate search of every searchable field. */
+    val capabilities: List<RealmCapabilityDescriptor>
+        get() = operations.flatMap { operation -> listOf(operation.capability) + operation.candidateSearches.map { it.descriptor } }
+
+    fun requireAuthoring(id: CapabilityId): BoundResourceOperation =
+        requireNotNull(operations.singleOrNull { it.capability.id == id }) { "Authoring operation is unavailable: ${id.value}" }
+
+    /** The operation field whose candidates back the search capability [id], or null for any other capability. */
+    fun candidateSearch(id: CapabilityId): CandidateSearch? =
+        operations.firstNotNullOfOrNull { operation -> operation.candidateSearches.singleOrNull { it.descriptor.id == id } }
 }
 
 /**
  * Assembles published operation definitions together with executable callbacks after checked types and bindings exist.
  *
- * A declaration that fails binding contributes no partial definitions, providers, or contributions;
- * its origin and cause remain available as diagnostics and failures. Action validation then removes individual
- * invalid definitions and their references. Navigation stays a client action; authoring operations retain a provider
- * that decodes complete input before invoking preparation against the caller's working graph.
+ * A declaration that failed to collect or bind publishes nothing; its origin and cause remain available as a diagnostic
+ * (`invalid_resource_operation`) and a failure. Binding checks the target and input against the checked catalog, the
+ * declared fields against the input type, and resolves an explicit input form uniquely.
  */
 fun bindOperations(
     declarations: List<OperationDeclaration>,
     catalog: CheckedCatalog,
     bindings: NativeBindingRegistry,
-    nativeTypes: List<OwnedTypeDeclaration>,
     presentations: List<OwnedPresentation>,
-    existingCapabilities: List<RealmCapabilityDescriptor> = emptyList(),
 ): OperationCatalog {
-    val definitions = linkedMapOf<ResourceOperationId, ResourceOperationDefinition>()
-    val contributions = mutableListOf<ResourceOperationContribution>()
-    val providers = mutableListOf<BoundResourceOperation>()
+    val operations = mutableListOf<BoundResourceOperation>()
     val diagnostics = mutableListOf<DeclarationDiagnostic>()
     val failures = mutableListOf<OperationBindingFailure>()
     declarations.forEach { declaration ->
-        val previousDefinitions = definitions.toMap()
-        val previousProviders = providers.size
-        val previousContributions = contributions.size
         try {
             declaration.failure?.let { throw it }
-            require(
-                catalog.resolve(declaration.target.asClosedUse()) is Resolution.Ready,
-            ) { "Operation target is unavailable: ${declaration.target}." }
-            val ids = mutableListOf<ResourceOperationId>()
-
-            fun include(definition: ResourceOperationDefinition) {
-                val previous = definitions.putIfAbsent(definition.id, definition)
-                require(
-                    previous == null || previous == definition,
-                ) { "Conflicting operation definition ${definition.id} from ${declaration.origin}." }
-                ids += definition.id
-            }
-            declaration.included.forEach(::include)
-            declaration.operations.forEach { collected ->
-                require(definitions[collected.id] == null || collected.builtin != null) {
-                    "Duplicate operation ${collected.id} from ${declaration.origin}."
-                }
-                val input = collected.input.bind(catalog, bindings, nativeTypes, presentations)
-                val action =
-                    if (collected.builtin in setOf(BuiltinResourceOperation.Open, BuiltinResourceOperation.Edit)) {
-                        skirout.editor.v1.action.EditorAction.createNavigate(
-                            resource =
-                                ExpressionNode.createInput(
-                                    binding =
-                                        skirout.editor.v1.type_catalog
-                                            .ExpressionBindingId(value = "context:subject"),
-                                    path =
-                                        skirout.editor.v1.type_catalog
-                                            .ValuePath(segments = emptyList()),
-                                ),
-                            mode =
-                                if (collected.builtin ==
-                                    BuiltinResourceOperation.Open
-                                ) {
-                                    skirout.editor.v1.action.ResourceNavigationMode.OPEN
-                                } else {
-                                    skirout.editor.v1.action.ResourceNavigationMode.EDIT
-                                },
-                        )
-                    } else {
-                        skirout.editor.v1.action.EditorAction.createAuthoring(
-                            capability =
-                                skirout.editor.v1.type_catalog
-                                    .CapabilityId(value = collected.id.capability.value),
-                            targets =
-                                ExpressionNode.createInput(
-                                    binding =
-                                        skirout.editor.v1.type_catalog
-                                            .ExpressionBindingId(value = "context:selection"),
-                                    path =
-                                        skirout.editor.v1.type_catalog
-                                            .ValuePath(segments = emptyList()),
-                                ),
-                            initialInput = null,
-                        )
+            val collected = requireNotNull(declaration.collected)
+            require(operations.none { it.definition.id == declaration.id }) { "Duplicate operation ${declaration.id}." }
+            when (val target = declaration.target) {
+                is ResourceTarget.Type -> {
+                    require(catalog.resolve(target.template.asClosedUse()) is Resolution.Ready) {
+                        "Operation target is unavailable: ${target.template}."
                     }
-                val definition = ResourceOperationDefinition(collected.id, collected.presentation, collected.targets, action)
-                include(definition)
-                if (collected.builtin !in setOf(BuiltinResourceOperation.Open, BuiltinResourceOperation.Edit)) {
-                    val previous = providers.singleOrNull { it.descriptor.id == definition.id }
-                    require(
-                        previous == null || previous.builtin == collected.builtin,
-                    ) { "Conflicting authoring operation ${definition.id}." }
-                    if (previous == null) providers += BoundResourceOperation(declaration.origin, definition, input, collected)
+                }
+
+                ResourceTarget.AnyResource -> {
+                    Unit
                 }
             }
-            contributions += ResourceOperationContribution(declaration.target, ids.distinct(), declaration.primary)
+            val input = declaration.input.bind(collected, catalog, bindings, presentations)
+            val schema = input.schema
+            val resourceFields =
+                collected.fields
+                    .filter { field ->
+                        requireNotNull(schema) { "An operation without input declares no input fields." }
+                        val type = requireNotNull(schema.typeAt(field.path)) { "Unknown operation input field ${field.path}." }
+                        require(
+                            catalog.isOwnedBy(schema, field.owner),
+                        ) { "The operation input field ${field.path} belongs to another type." }
+                        val resource = type.withoutNullable() == ResourceIdDefinition.use
+                        require(field.drop == null || resource) { "Only resource identity fields can be filled on drop." }
+                        resource
+                    }.mapTo(hashSetOf()) { it.path }
+            val definition =
+                ResourceOperationDefinition(
+                    declaration.id,
+                    collected.presentation,
+                    OperationTargets(declaration.target, collected.cardinality),
+                    collected.fields.singleOrNull { it.drop != null }?.let { field ->
+                        OperationDrop(field.path, requireNotNull(field.drop))
+                    },
+                )
+            operations += BoundResourceOperation(declaration.origin, definition, input, collected, resourceFields)
         } catch (cancelled: CancellationException) {
             throw cancelled
         } catch (failure: Exception) {
-            definitions.clear()
-            definitions.putAll(previousDefinitions)
-            while (providers.size > previousProviders) providers.removeLast()
-            while (contributions.size > previousContributions) contributions.removeLast()
             diagnostics +=
                 DeclarationDiagnostic(
-                    declaration.target.definition,
+                    declaration.target.affected,
                     "invalid_resource_operation",
                     listOf(DeclarationOrigin(declaration.origin.owner)),
                 )
             failures += OperationBindingFailure(declaration.origin, failure)
         }
     }
-    val invalid = linkedSetOf<ResourceOperationId>()
-    definitions.values.forEach { definition ->
-        try {
-            validateResourceActions(listOf(definition), catalog, existingCapabilities + providers.map { it.capability })
-        } catch (cancelled: CancellationException) {
-            throw cancelled
-        } catch (failure: Exception) {
-            invalid += definition.id
-            declarations
-                .filter { declaration ->
-                    declaration.operations.any { it.id == definition.id } ||
-                        declaration.included.any { it.id == definition.id }
-                }.forEach { declaration ->
-                    diagnostics +=
-                        DeclarationDiagnostic(
-                            declaration.target.definition,
-                            "invalid_resource_operation_action",
-                            listOf(DeclarationOrigin(declaration.origin.owner)),
-                        )
-                    failures += OperationBindingFailure(declaration.origin, failure)
-                }
-        }
-    }
-    return OperationCatalog(
-        definitions.values.filterNot { it.id in invalid },
-        contributions.map {
-            it.copy(
-                operations = it.operations.filterNot(invalid::contains),
-                primary = it.primary?.takeUnless(invalid::contains),
-            )
-        },
-        providers.filterNot { it.descriptor.id in invalid },
-        diagnostics.distinct(),
-        failures.toList(),
-    )
+    return OperationCatalog(operations.toList(), diagnostics.distinct(), failures.toList())
 }
 
-private fun OperationInputDeclaration<*>.bind(
+private fun OperationInput.bind(
+    collected: CollectedOperation,
     catalog: CheckedCatalog,
     bindings: NativeBindingRegistry,
-    declarations: List<OwnedTypeDeclaration>,
     presentations: List<OwnedPresentation>,
-): BoundOperationInput {
-    val token = nativeType ?: return BoundOperationInput(null, null, null)
-    val native = token.classifier as? KClass<*> ?: error("Operation inputs require a concrete native type.")
-    require(applied != null || token.arguments.isEmpty()) { "Generic operation inputs require an AppliedInputToken." }
-    val inferred = token.resolveOperationType(declarations)
-    require(applied == null || applied == inferred) { "Applied operation input token does not match its native arguments." }
-    val type = applied ?: inferred
-    val checked = (catalog.resolve(type) as? Resolution.Ready)?.value ?: error("Operation input type is unavailable: $type.")
-    val binding = bindings.bind(checked)
-    require(binding.nativeClass == null || binding.nativeClass == native) { "Operation input native token does not match its binding." }
-    val presentationId =
-        presentation?.let { reference ->
-            val matches =
-                presentations.filter {
-                    it.reference === reference &&
-                        (it.descriptor.target as? PresentationTarget.Named)?.matches(checked) == true
-                }
-            require(matches.size == 1) { "Operation input presentation must resolve uniquely for $type." }
-            matches.single().descriptor.id
+): BoundOperationInput =
+    when (this) {
+        OperationInput.None -> {
+            require(collected.fields.isEmpty() && collected.form == null) { "An operation without input declares no input fields or form." }
+            BoundOperationInput(null, null, null)
         }
-    return BoundOperationInput(checked, binding, presentationId)
+
+        is OperationInput.Typed -> {
+            val checked = (catalog.resolve(use) as? Resolution.Ready)?.value ?: error("Operation input type is unavailable: $use.")
+            val presentation =
+                collected.form?.let { reference ->
+                    val matches =
+                        presentations.filter {
+                            it.reference === reference &&
+                                (it.descriptor.target as? PresentationTarget.Named)?.matches(checked) == true
+                        }
+                    require(matches.size == 1) { "Operation input form must resolve uniquely for $use." }
+                    matches.single().descriptor.id
+                }
+            BoundOperationInput(checked, bindings.bind(checked), presentation)
+        }
+    }
+
+/** The declared type of the field at [path] below this record type, or null when there is no such field. */
+private fun CheckedType.typeAt(path: ValuePath): TypeUse? {
+    var current: CheckedType = this
+    var type: TypeUse? = null
+    path.segments.forEachIndexed { index, segment ->
+        val name = (segment as? PathSegment.Field)?.name ?: return null
+        val record = current.schema.representation as? ResolvedRepresentation.Record ?: return null
+        type = record.fields.singleOrNull { it.key == name }?.type ?: return null
+        if (index < path.segments.lastIndex) {
+            current = (current.resolve(requireNotNull(type).withoutNullable()) as? Resolution.Ready)?.value ?: return null
+        }
+    }
+    return type
 }
+
+private fun TypeUse.withoutNullable(): TypeUse = if (this is TypeUse.Nullable) value.withoutNullable() else this
+
+private fun TypeUse.definitionOrNull() = (this as? TypeUse.Named)?.definition
+
+private fun CheckedCatalog.isOwnedBy(
+    input: CheckedType,
+    owner: com.typewritermc.types.TypeDefinitionId,
+): Boolean = input.use.definitionOrNull()?.let { isNominalSubtype(it, owner) } == true
 
 fun TypeTemplate.Named.asClosedUse(): TypeUse.Named = TypeUse.Named(definition, arguments.map { it.asClosedUse() })
 
@@ -282,141 +249,3 @@ private fun TypeTemplate.asClosedUse(): TypeUse =
         is TypeTemplate.Scalar -> TypeUse.Scalar(kind)
         is TypeTemplate.Parameter -> error("Resource operations require closed type applications.")
     }
-
-private fun validateResourceActions(
-    definitions: List<ResourceOperationDefinition>,
-    catalog: CheckedCatalog,
-    capabilities: List<RealmCapabilityDescriptor>,
-) {
-    val resource = TypeTemplate.Named(com.typewritermc.types.ResourceIdDefinition.id)
-    val selection = TypeTemplate.Named(StandardTypes.list, listOf(resource))
-    definitions.forEach { definition ->
-        val single = definition.targets is OperationTargets.Single || definition.targets == OperationTargets.ContributedSingle
-        val context =
-            buildMap {
-                put(ExpressionBindingId("context:selection"), selection)
-                if (single) put(ExpressionBindingId("context:subject"), resource)
-            }
-
-        fun check(
-            expression: skirout.editor.v1.expression.ExpressionNode,
-            expected: TypeTemplate,
-        ) {
-            val body =
-                expression
-            val problems =
-                com.typewritermc.presentation.checkPresentationExpression(
-                    body,
-                    context,
-                    expected,
-                    context.keys,
-                    catalog::resolve,
-                )
-            require(problems.isEmpty()) { "Invalid action for ${definition.id}: ${problems.joinToString()}" }
-        }
-        when (val action = definition.action) {
-            is skirout.editor.v1.action.EditorAction.NavigateWrapper -> {
-                require(single) { "Navigation requires one resource target." }
-                check(action.value.resource, resource)
-            }
-
-            is skirout.editor.v1.action.EditorAction.AuthoringWrapper -> {
-                val capability =
-                    capabilities
-                        .filterIsInstance<RealmCapabilityDescriptor.Authoring>()
-                        .singleOrNull { it.id.value == action.value.capability.value }
-                requireNotNull(capability) { "Missing authoring capability for ${definition.id}." }
-                check(action.value.targets, selection)
-                action.value.initialInput?.let { expression ->
-                    val input = requireNotNull(capability.requestType) { "An operation without input cannot provide initial input." }
-                    check(expression, input.toTemplate())
-                }
-            }
-
-            is skirout.editor.v1.action.EditorAction.RealmWrapper -> {
-                when (val realm = action.value) {
-                    is skirout.editor.v1.action.RealmEditorAction.ReloadWrapper -> {
-                        Unit
-                    }
-
-                    is skirout.editor.v1.action.RealmEditorAction.CommandWrapper -> {
-                        val capability =
-                            capabilities
-                                .filterIsInstance<RealmCapabilityDescriptor.Command>()
-                                .singleOrNull { it.id.value == realm.value.capabilityId.value }
-                        requireNotNull(capability) { "Missing command capability for ${definition.id}." }
-                        check(realm.value.payload, capability.requestType.toTemplate())
-                    }
-
-                    else -> {
-                        error("Unrecognized Realm action for ${definition.id}.")
-                    }
-                }
-            }
-
-            else -> {
-                error("Resource operations cannot execute local field actions without a field binding.")
-            }
-        }
-    }
-}
-
-private fun kotlin.reflect.KType.resolveOperationType(declarations: List<OwnedTypeDeclaration>): TypeUse {
-    val native = classifier as? KClass<*> ?: error("Operation input type arguments must be closed.")
-    val scalar =
-        when (native) {
-            Unit::class -> ScalarKind.Unit
-            String::class -> ScalarKind.Text
-            Boolean::class -> ScalarKind.Boolean
-            Byte::class -> ScalarKind.Integer(IntegerWidth.SIGNED_8)
-            Short::class -> ScalarKind.Integer(IntegerWidth.SIGNED_16)
-            Int::class -> ScalarKind.Integer(IntegerWidth.SIGNED_32)
-            Long::class -> ScalarKind.Integer(IntegerWidth.SIGNED_64)
-            UByte::class -> ScalarKind.Integer(IntegerWidth.UNSIGNED_8)
-            UShort::class -> ScalarKind.Integer(IntegerWidth.UNSIGNED_16)
-            UInt::class -> ScalarKind.Integer(IntegerWidth.UNSIGNED_32)
-            ULong::class -> ScalarKind.Integer(IntegerWidth.UNSIGNED_64)
-            Float::class -> ScalarKind.Float(FloatWidth.FLOAT_32)
-            Double::class -> ScalarKind.Float(FloatWidth.FLOAT_64)
-            ByteArray::class -> ScalarKind.Bytes
-            kotlin.time.Instant::class -> ScalarKind.Timestamp
-            kotlin.time.Duration::class -> ScalarKind.Duration
-            java.math.BigDecimal::class -> ScalarKind.Decimal
-            else -> null
-        }
-    val use =
-        if (scalar != null) {
-            TypeUse.Scalar(scalar)
-        } else {
-            val definition =
-                when (native) {
-                    List::class -> {
-                        StandardTypes.list
-                    }
-
-                    Set::class -> {
-                        StandardTypes.set
-                    }
-
-                    Map::class -> {
-                        StandardTypes.map
-                    }
-
-                    else -> {
-                        declarations
-                            .filter { it.nativeClass == native }
-                            .map { it.definition.id }
-                            .distinct()
-                            .singleOrNull()
-                            ?: error("No unambiguous native operation input type for $this.")
-                    }
-                }
-            TypeUse.Named(
-                definition,
-                arguments.map {
-                    requireNotNull(it.type) { "Operation input type arguments cannot use stars." }.resolveOperationType(declarations)
-                },
-            )
-        }
-    return if (isMarkedNullable) TypeUse.Nullable(use) else use
-}

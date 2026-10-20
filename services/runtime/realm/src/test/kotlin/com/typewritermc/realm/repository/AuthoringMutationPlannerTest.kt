@@ -29,7 +29,6 @@ import com.typewritermc.operations.OperationInvocation
 import com.typewritermc.operations.OperationOrigin
 import com.typewritermc.operations.PreparationChoices
 import com.typewritermc.realm.authoring.AuthoringView
-import com.typewritermc.realm.authoring.OperationLayoutPreparation
 import com.typewritermc.realm.authoring.RuntimeOperationPreparation
 import com.typewritermc.realm.authoring.WorkingViewEditContext
 import com.typewritermc.types.ACYCLIC_RELATION_FAMILY_ID
@@ -105,13 +104,13 @@ class AuthoringMutationPlannerTest {
                     com.typewritermc.realm.authoring.AuthoredReadView
                         .Original(baseline),
                 )
-            val result =
+            val facts =
                 com.typewritermc.realm.authoring
-                    .BuiltinOperationAvailability(
-                        baseline,
-                        reads,
-                    ).availability(com.typewritermc.operations.BuiltinResourceOperation.LinkWithDuplicate, listOf(id))
-            result shouldBe com.typewritermc.operations.OperationAvailability.Hidden
+                    .RealmGraphFacts(
+                        com.typewritermc.realm.authoring
+                            .RelationReads(reads),
+                    )
+            facts.linkCapacityOf(id) shouldBe com.typewritermc.operations.LinkCapacity.None
         } finally {
             catalog.close()
         }
@@ -138,17 +137,22 @@ class AuthoringMutationPlannerTest {
                     "main",
                 )
             val declaration =
-                com.typewritermc.operations.collectOperations(
+                com.typewritermc.operations.collectOperation<com.typewritermc.authoring.ResourceDraft, Unit>(
                     origin,
                     "fixture.InlineOperations",
-                    TypeTemplate.Named(NODE),
-                    com.typewritermc.authoring.draftViewProjection(NODE_USE, com.typewritermc.authoring.ResourceDrafts::bind),
-                ) { build ->
-                    build.operation("suffix", com.typewritermc.operations.noInput()) {
-                        label("Add suffix")
-                        availability {
+                    com.typewritermc.types.ResourceTarget
+                        .Type(TypeTemplate.Named(NODE)),
+                    com.typewritermc.operations.projectedSubjects(
+                        com.typewritermc.authoring.draftViewProjection(NODE_USE, com.typewritermc.authoring.ResourceDrafts::bind),
+                    ),
+                    com.typewritermc.operations.OperationInput.None,
+                    "Inline operations",
+                ) { spec ->
+                    with(spec) {
+                        appearance { label("Add suffix") }
+                        availableWhen {
                             val authoredValues =
-                                subjects.map {
+                                drafts.map {
                                     read(
                                         com.typewritermc.authoring.boundPath<String>(
                                             location(it.id, "label"),
@@ -157,7 +161,7 @@ class AuthoringMutationPlannerTest {
                                     )
                                 }
                             val state = com.typewritermc.operations.authored(authoredValues)
-                            if (state != com.typewritermc.operations.OperationAvailability.Enabled) return@availability state
+                            if (state != com.typewritermc.operations.OperationAvailability.Enabled) return@availableWhen state
                             val values = authoredValues.map { com.typewritermc.operations.requireAuthored(it) }
                             require(values.none { it == "availability-failure" }) { "Availability provider failed" }
                             com.typewritermc.operations.OperationAvailability.Enabled
@@ -168,13 +172,13 @@ class AuthoringMutationPlannerTest {
                                     com.typewritermc.operations.requireAuthored(
                                         read(
                                             com.typewritermc.authoring.boundPath<String>(
-                                                location(subject.id, "label"),
+                                                location(subject, "label"),
                                                 TypeUse.Scalar(ScalarKind.Text),
                                             ),
                                         ),
                                     )
                                 require(previous != "reject") { "The complete selection cannot be changed" }
-                                checkedSet(location(subject.id, "label"), DataValue.StringValue("$previous!"))
+                                checkedSet(location(subject, "label"), DataValue.StringValue("$previous!"))
                             }
                         }
                     }
@@ -184,7 +188,6 @@ class AuthoringMutationPlannerTest {
                     listOf(declaration),
                     baseline.catalog.checked,
                     baseline.catalog.nativeBindings,
-                    emptyList(),
                     emptyList(),
                 )
             check(operations.failures.isEmpty()) { operations.failures.joinToString { it.cause.toString() } }
@@ -220,7 +223,7 @@ class AuthoringMutationPlannerTest {
                 val capability =
                     resolved.operations
                         .single()
-                        .definition.id.capability
+                        .definition.capability
                 val preview =
                     runtime
                         .prepare(
@@ -384,9 +387,8 @@ class AuthoringMutationPlannerTest {
                         OperationInvocation("delete-overlap", listOf(parent, child)),
                         PreparationChoices(),
                         edit,
-                        baseline,
                     )
-                session.deleteSelection(listOf(parent, child))
+                session.delete(listOf(parent, child))
                 val result = edit.finish()
                 edit.session.resources.isEmpty() shouldBe true
                 result.intents.filterIsInstance<EditIntent.DeleteResource>().size shouldBe 2
@@ -456,10 +458,8 @@ class AuthoringMutationPlannerTest {
                         OperationInvocation("move-selection", listOf(first, second), origin),
                         PreparationChoices(),
                         edit,
-                        baseline,
                     )
-                val subjects = listOf(first, second).map(OperationLayoutPreparation(edit, baseline)::draft)
-                with(session) { relations.requireMove(subjects, to, origin, choices).apply() }
+                session.move(listOf(first, second), to, null)
                 val prepared = edit.finish()
                 prepared.intents.filterIsInstance<EditIntent.ConnectRelation>().all {
                     it.intent.counterpart is CounterpartChoice.Existing
@@ -503,12 +503,10 @@ class AuthoringMutationPlannerTest {
                         OperationInvocation("impossible-move", listOf(childA, childB)),
                         PreparationChoices(),
                         edit,
-                        baseline,
                     )
-                val subjects = listOf(childA, childB).map(OperationLayoutPreparation(edit, baseline)::draft)
                 var rejected = false
                 try {
-                    with(session) { relations.requireMove(subjects, destination, invocation.origin, choices).apply() }
+                    session.move(listOf(childA, childB), destination, null)
                 } catch (
                     _: IllegalArgumentException,
                 ) {
@@ -597,14 +595,13 @@ class AuthoringMutationPlannerTest {
                         OperationInvocation("clone-closure", listOf(book, page)),
                         PreparationChoices(),
                         edit,
-                        baseline,
                     )
-                val result = with(session) { cloner.duplicateOwned(listOf(book, page)) }
+                val result = session.duplicate(listOf(book, page))
                 val final = edit.finish()
-                result.selectedCopies.size shouldBe 2
+                result.size shouldBe 2
                 final.intents.filterIsInstance<EditIntent.CreateResource>().size shouldBe 3
                 edit.session.resources.size shouldBe 8
-                val copy = edit.session.resources.getValue(result.selectedCopies[0])
+                val copy = edit.session.resources.getValue(result[0])
                 val copiedChildItem =
                     (
                         (
@@ -631,7 +628,7 @@ class AuthoringMutationPlannerTest {
                         baseline.catalog.checked,
                     )
                 copied.problems.isEmpty() shouldBe true
-                copied.projections.any { it.first == result.selectedCopies[0] && it.second == result.selectedCopies[1] } shouldBe true
+                copied.projections.any { it.first == result[0] && it.second == result[1] } shouldBe true
             } finally {
                 baseline.catalog.close()
             }
@@ -690,8 +687,8 @@ class AuthoringMutationPlannerTest {
             try {
                 val edit = WorkingViewEditContext(baseline, "clone-outside")
                 val session =
-                    RuntimeOperationPreparation(OperationInvocation("clone-outside", listOf(source)), PreparationChoices(), edit, baseline)
-                val copy = with(session) { cloner.duplicateOwned(listOf(source)).selectedCopies.single() }
+                    RuntimeOperationPreparation(OperationInvocation("clone-outside", listOf(source)), PreparationChoices(), edit)
+                val copy = session.duplicate(listOf(source)).single()
                 edit.finish()
                 val links = ResourceValueMapper.discover(edit.session.resources)
                 links.any { it.source == copy && it.target.resource == outside } shouldBe true
@@ -716,10 +713,10 @@ class AuthoringMutationPlannerTest {
             try {
                 val edit = WorkingViewEditContext(baseline, "clone-scalar")
                 val session =
-                    RuntimeOperationPreparation(OperationInvocation("clone-scalar", listOf(source)), PreparationChoices(), edit, baseline)
+                    RuntimeOperationPreparation(OperationInvocation("clone-scalar", listOf(source)), PreparationChoices(), edit)
                 var rejected = false
                 try {
-                    with(session) { cloner.duplicateOwned(listOf(source)) }
+                    session.duplicate(listOf(source))
                 } catch (_: IllegalArgumentException) {
                     rejected = true
                 }

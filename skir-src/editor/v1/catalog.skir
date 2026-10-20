@@ -10,10 +10,7 @@ import {
   InitializationDiagnostic,
 } from "editor/v1/diagnostic.skir";
 import { ExpressionNode } from "editor/v1/expression.skir";
-import {
-  ResourceOperationContribution,
-  ResourceOperationDefinition,
-} from "editor/v1/operation.skir";
+import { ResourceOperationDefinition } from "editor/v1/operation.skir";
 import {
   PresentationDependencies,
   PresentationNode,
@@ -227,9 +224,8 @@ struct EditorCatalogWireSnapshot(810900020) {
   recommendations: [TypeRecommendation] = 10;
   role_fallbacks: [RoleFallback] = 11;
   resource_operations: [ResourceOperationDefinition] = 12;
-  resource_operation_contributions: [ResourceOperationContribution] = 13;
   /// The realm root type. The realm keeps exactly one instance, which owns every section.
-  realm_root: TypeDefinitionId = 14;
+  realm_root: TypeDefinitionId = 13;
 }
 
 struct CatalogTransferChunk(810900021) {
