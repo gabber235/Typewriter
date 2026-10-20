@@ -1,0 +1,82 @@
+diff --git a/dist/types.d.ts b/dist/types.d.ts
+index 1e6ecdbc568802289fee344fafa1b6dbc9d2c25e..8ef5aee1ddcba5ba837eae892144595309acaa88 100644
+--- a/dist/types.d.ts
++++ b/dist/types.d.ts
+@@ -10,6 +10,13 @@ export interface CodeGenerator<Config = unknown> {
+     readonly id: string;
+     readonly configType: z.ZodType<Config>;
+     generateCode(input: CodeGenerator.Input<Config>): CodeGenerator.Output;
++    /**
++     * Describes how hand written or generated companion code references the
++     * declarations that generateCode emits for the same input and config. Must
++     * agree with generateCode exactly. Optional: generators without companion
++     * support omit it.
++     */
++    symbols?(input: CodeGenerator.Input<Config>): CodeGenerator.SymbolProvider;
+ }
+ export declare namespace CodeGenerator {
+     interface Input<Config> {
+@@ -24,6 +31,21 @@ export declare namespace CodeGenerator {
+         readonly path: string;
+         readonly code: string;
+     }
++    /** A reference to one generated declaration from a file outside the generated module. */
++    interface Symbol {
++        /** Reference that compiles once `imports` are present, e.g. `_lib_editor_v1_catalog.CatalogFetchResult`. */
++        readonly reference: string;
++        /** Imports in the target language's own syntax, e.g. a Dart import URI with its alias. */
++        readonly imports: readonly string[];
++    }
++    interface SymbolProvider {
++        /** The generated type of a struct or enum. */
++        record(location: RecordLocation): Symbol;
++        /** The generated method descriptor value, e.g. Kotlin `CreateOrganization`, Rust `create_organization_method()`. */
++        method(module: Module, method: Method): Symbol;
++        /** The pattern or constant that matches one enum variant in an exhaustive match. */
++        variant(location: RecordLocation, variant: Field): Symbol;
++    }
+ }
+ /** One line in a module. */
+ export interface CodeLine {
+diff --git a/src/types.ts b/src/types.ts
+index 34adf25cf6a7c016a18955190886fae6bdf55f00..b87ea2db56a3be4fe242d6812f5f08006c579afc 100644
+--- a/src/types.ts
++++ b/src/types.ts
+@@ -15,6 +15,13 @@ export interface CodeGenerator<Config = unknown> {
+   readonly id: string;
+   readonly configType: z.ZodType<Config>;
+   generateCode(input: CodeGenerator.Input<Config>): CodeGenerator.Output;
++  /**
++   * Describes how hand written or generated companion code references the
++   * declarations that generateCode emits for the same input and config. Must
++   * agree with generateCode exactly. Optional: generators without companion
++   * support omit it.
++   */
++  symbols?(input: CodeGenerator.Input<Config>): CodeGenerator.SymbolProvider;
+ }
+ 
+ export declare namespace CodeGenerator {
+@@ -32,6 +39,23 @@ export declare namespace CodeGenerator {
+     readonly path: string;
+     readonly code: string;
+   }
++
++  /** A reference to one generated declaration from a file outside the generated module. */
++  export interface Symbol {
++    /** Reference that compiles once `imports` are present, e.g. `_lib_editor_v1_catalog.CatalogFetchResult`. */
++    readonly reference: string;
++    /** Imports in the target language's own syntax, e.g. a Dart import URI with its alias. */
++    readonly imports: readonly string[];
++  }
++
++  export interface SymbolProvider {
++    /** The generated type of a struct or enum. */
++    record(location: RecordLocation): Symbol;
++    /** The generated method descriptor value, e.g. Kotlin `CreateOrganization`, Rust `create_organization_method()`. */
++    method(module: Module, method: Method): Symbol;
++    /** The pattern or constant that matches one enum variant in an exhaustive match. */
++    variant(location: RecordLocation, variant: Field): Symbol;
++  }
+ }
+ 
+ // -----------------------------------------------------------------------------

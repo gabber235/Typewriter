@@ -1,7 +1,13 @@
 import { spawnSync } from "node:child_process";
 import { readFileSync, writeFileSync } from "node:fs";
 
-const transportGenerator = "services/protocol/transport-generator/target/release/typewriter-transport-generator";
+import { parseManifest } from "./transport-generator/src/routes/manifest.ts";
+import {
+  deploymentSubscriptions,
+  validateComponentSubscriptions,
+} from "./transport-generator/src/routes/subscriptions.ts";
+
+const transportManifest = "services/protocol/transport-routes.yaml";
 
 /** Backend components whose NATS core subscriptions the transport manifest owns. */
 const subscribedComponents = [
@@ -28,17 +34,13 @@ function run(command: string, args: string[], cwd?: string): void {
 }
 
 run("bun", ["services/protocol/check-skir-ids.ts", "skir-src"]);
-run("cargo", [
-  "build", "--locked", "--release", "--manifest-path",
-  "services/protocol/transport-generator/Cargo.toml",
-]);
+const routes = parseManifest(readFileSync(transportManifest, "utf8"), transportManifest);
 for (const { component, deployment } of subscribedComponents) {
-  run(transportGenerator, [
-    "validate-subscriptions",
-    "--manifest", "services/protocol/transport-routes.yaml",
-    "--component", component,
-    "--deployment", deployment,
-  ]);
+  validateComponentSubscriptions(
+    routes,
+    component,
+    deploymentSubscriptions(readFileSync(deployment, "utf8")),
+  );
 }
 run("bunx", ["--bun", "--no-install", "skir", "gen"]);
 run("rustfmt", [

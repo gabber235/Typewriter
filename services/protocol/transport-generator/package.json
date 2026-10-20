@@ -1,12 +1,11 @@
 {
-  "name": "typewriter-transport-skir-bridge",
+  "name": "typewriter-transport",
   "private": true,
   "type": "module",
   "scripts": {
     "check": "tsc -p tsconfig.json"
   },
   "exports": {
-    ".": "./src/index.ts",
     "./rust": "./src/rust.ts",
     "./kotlin": "./src/kotlin.ts",
     "./dart": "./src/dart.ts",
