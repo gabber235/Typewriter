@@ -1,5 +1,6 @@
 package com.typewritermc.realm.compiler
 
+import com.typewritermc.authoring.CompilationUnitDefinition
 import com.typewritermc.authoring.NativeBindingId
 import com.typewritermc.authoring.PublicationId
 import com.typewritermc.checking.CatalogGeneration
@@ -8,10 +9,9 @@ import com.typewritermc.engine.CompilationResult
 import com.typewritermc.engine.CompilationRoot
 import com.typewritermc.engine.CompiledArtifact
 import com.typewritermc.engine.ContentDigest
-import com.typewritermc.engine.PageCompileResult
 import com.typewritermc.engine.PublishedContent
+import com.typewritermc.engine.ResourceGraphCompileResult
 import com.typewritermc.engine.encodeShard
-import com.typewritermc.library.PAGE_CONTRACT_TYPE
 import com.typewritermc.realm.authoring.AuthoringLease
 import com.typewritermc.realm.authoring.AuthoringSeed
 import com.typewritermc.realm.authoring.AuthoringView
@@ -261,7 +261,7 @@ val RealmPublicationCoordinatorTest by testSuite {
         }
     }
     test("blocked compilation retains successful roots and source and target locations without effects") {
-        val fixture = PublicationFixture(producers = listOf(PageCompiledArtifactProducer(), blockedProducer()))
+        val fixture = PublicationFixture(producers = listOf(ResourceGraphArtifactProducer, blockedProducer()))
         fixture.publisher.refresh()
         val blocked =
             fixture.publisher.views.value.status
@@ -306,17 +306,23 @@ val RealmPublicationCoordinatorTest by testSuite {
             fixture.views.close()
         }
     }
-    test("Page compilation preserves shard bytes and format metadata") {
+    test("resource graph compilation preserves shard bytes and format metadata") {
         val fixture = PublicationFixture()
         fixture.views.capture().use { capture ->
             val expected =
                 with(capture.root) {
-                    PageCompiler(emptySet(), testAssessment(capture.root, fixture.bindings).resources).compile(ResourceId("page"))
-                }.shouldBeInstanceOf<PageCompileResult.Success>()
+                    OwnershipClosureCompiler(
+                        emptySet(),
+                        testAssessment(capture.root, fixture.bindings).resources,
+                    ).compile(ResourceId("page"))
+                }.shouldBeInstanceOf<ResourceGraphCompileResult.Success>()
             val inputs = CompilationInputs(capture.root, testAssessment(capture.root, fixture.bindings).resources)
-            val artifact = with(inputs) { pageCompilation().compile().single() }.shouldBeInstanceOf<CompilationResult.Success>().artifact
-            artifact.formatRevision shouldBe com.typewritermc.engine.PAGE_COMPILATION_FORMAT_REVISION
-            artifact.mediaType shouldBe "application/vnd.typewriter.page+json"
+            val artifact =
+                with(
+                    inputs,
+                ) { resourceGraphCompilation().compile().single() }.shouldBeInstanceOf<CompilationResult.Success>().artifact
+            artifact.formatRevision shouldBe com.typewritermc.engine.RESOURCE_GRAPH_FORMAT_REVISION
+            artifact.mediaType shouldBe "application/vnd.typewriter.resource-graph+json"
             artifact.inputFingerprint shouldBe expected.inputFingerprint
             artifact.semanticDigest shouldBe expected.shard.digest
             artifact.payload.toList() shouldBe
@@ -330,7 +336,7 @@ val RealmPublicationCoordinatorTest by testSuite {
 
 internal class PublicationFixture(
     initial: Map<ResourceId, com.typewritermc.authoring.AuthoringRecord> = mapOf(ResourceId("page") to publicationPageRecord("Quest")),
-    producers: List<CompiledArtifactProducer> = listOf(PageCompiledArtifactProducer()),
+    producers: List<CompiledArtifactProducer> = listOf(ResourceGraphArtifactProducer),
 ) {
     val views =
         InMemoryAuthoringViewStore(
@@ -339,7 +345,7 @@ internal class PublicationFixture(
         )
     val attempts = RecordingAttempts()
     val bindings = listOf(NativeBindingRequirement(PUBLICATION_PAGE_USE, NativeBindingId("publication_page"), "page:v1"))
-    val root = CompilationRoot(CompilationProjectionId("typewriter.page"), ResourceId("page"))
+    val root = CompilationRoot(CompilationProjectionId("typewriter.resource-graph"), ResourceId("page"))
     var engineInputs = testEngineInputs()
     var blobRequests = 0
     var captureFailure = false
@@ -401,7 +407,7 @@ internal class PublicationFixture(
         try {
             return store.capture().use { capture ->
                 with(CompilationInputs(capture.root, testAssessment(capture.root, bindings).resources)) {
-                    pageCompilation().compile().single()
+                    resourceGraphCompilation().compile().single()
                 }.shouldBeInstanceOf<CompilationResult.Success>().artifact
             }
         } finally {
@@ -493,7 +499,7 @@ private val PUBLICATION_PAGE_USE = TypeUse.Named(PUBLICATION_PAGE)
 private val PUBLICATION_DEFINITIONS =
     listOf(
         TypeDefinition(
-            PAGE_CONTRACT_TYPE,
+            CompilationUnitDefinition.id,
             representation = RepresentationTemplate.Record(emptyList(), abstract = true),
         ),
         TypeDefinition(
@@ -502,8 +508,8 @@ private val PUBLICATION_DEFINITIONS =
                 RepresentationTemplate.Record(
                     listOf(FieldDeclaration(FieldOwner(PUBLICATION_PAGE, "value"), TypeTemplate.Scalar(ScalarKind.Text))),
                 ),
-            parents = listOf(TypeTemplate.Named(PAGE_CONTRACT_TYPE)),
+            parents = listOf(TypeTemplate.Named(CompilationUnitDefinition.id)),
         ),
     )
 
-private fun pageCompilation() = CompiledArtifactProducerRegistry(listOf(PageCompiledArtifactProducer()))
+private fun resourceGraphCompilation() = CompiledArtifactProducerRegistry(listOf(ResourceGraphArtifactProducer))

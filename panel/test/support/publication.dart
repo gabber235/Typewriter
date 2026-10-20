@@ -3,7 +3,7 @@ import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
 import "package:typewriter_panel/typewriter_panel.dart";
 
 skir.CompilationRoot publicationRoot(String resource) => skir.CompilationRoot(
-  projection: skir.CompilationProjectionId(value: "typewriter.page"),
+  projection: skir.CompilationProjectionId(value: "typewriter.resource-graph"),
   resource: skir.ResourceId(value: resource),
 );
 

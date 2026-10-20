@@ -279,7 +279,7 @@ void main() {
     final candidate = skir.PublicationCandidateId(value: "candidate");
     final selection = skir.CompilationStatusSelection.wrapSuppliedRoots([
       skir.CompilationRoot(
-        projection: skir.CompilationProjectionId(value: "typewriter.page"),
+        projection: skir.CompilationProjectionId(value: "typewriter.resource-graph"),
         resource: skir.ResourceId(value: "saved"),
       ),
     ]);
@@ -305,7 +305,7 @@ void main() {
       ),
     );
     final root = skir.CompilationRoot(
-      projection: skir.CompilationProjectionId(value: "typewriter.page"),
+      projection: skir.CompilationProjectionId(value: "typewriter.resource-graph"),
       resource: skir.ResourceId(value: "saved"),
     );
     final selection = skir.CompilationStatusSelection.wrapSuppliedRoots([root]);

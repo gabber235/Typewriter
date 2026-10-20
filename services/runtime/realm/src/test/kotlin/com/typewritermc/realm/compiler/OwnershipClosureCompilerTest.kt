@@ -9,7 +9,7 @@ import com.typewritermc.checking.CatalogGeneration
 import com.typewritermc.configuration.FieldPatternSegment
 import com.typewritermc.configuration.RelativeFieldPattern
 import com.typewritermc.engine.CompiledEdgeOrigin
-import com.typewritermc.engine.PageCompileResult
+import com.typewritermc.engine.ResourceGraphCompileResult
 import com.typewritermc.engine.relation
 import com.typewritermc.realm.authoring.AuthoringCatalogLease
 import com.typewritermc.realm.authoring.AuthoringSeed
@@ -49,12 +49,12 @@ private val pageId = ResourceId("page")
 private val childId = ResourceId("child")
 private val missingId = ResourceId("missing")
 
-val PageCompilerTest by testSuite {
+val OwnershipClosureCompilerTest by testSuite {
     test("one sided ownership links compile the complete owned shard") {
         fixture(mapOf(pageId to pageRecord(listOf(childId)), childId to childRecord("first"))).use { captured ->
             val result = with(captured.root) { compiler(captured.root).compile(pageId) }
 
-            result as PageCompileResult.Success
+            result as ResourceGraphCompileResult.Success
             result.shard.facts.resources
                 .map { it.key.source }
                 .toSet() shouldBe setOf(pageId, childId)
@@ -70,8 +70,8 @@ val PageCompilerTest by testSuite {
         val first = fixture(mapOf(pageId to pageRecord(listOf(childId)), childId to childRecord("first")))
         val second = fixture(mapOf(pageId to pageRecord(listOf(childId)), childId to childRecord("second")), "snapshot_2")
         try {
-            val firstResult = with(first.root) { compiler(first.root).compile(pageId) } as PageCompileResult.Success
-            val secondResult = with(second.root) { compiler(second.root).compile(pageId) } as PageCompileResult.Success
+            val firstResult = with(first.root) { compiler(first.root).compile(pageId) } as ResourceGraphCompileResult.Success
+            val secondResult = with(second.root) { compiler(second.root).compile(pageId) } as ResourceGraphCompileResult.Success
 
             (secondResult.inputFingerprint == firstResult.inputFingerprint) shouldBe false
             (secondResult.shard.digest == firstResult.shard.digest) shouldBe false
@@ -85,14 +85,14 @@ val PageCompilerTest by testSuite {
         fixture(mapOf(pageId to pageRecord(listOf(missingId)))).use { captured ->
             val result = with(captured.root) { compiler(captured.root).compile(pageId) }
 
-            result as PageCompileResult.Blocked
+            result as ResourceGraphCompileResult.Blocked
             result.diagnostics.single().code shouldBe "missing_owned_resource"
         }
     }
 
     test("parallel occurrences retain distinct endpoint locations") {
         fixture(mapOf(pageId to pageRecord(listOf(childId, childId)), childId to childRecord("child"))).use { captured ->
-            val result = with(captured.root) { compiler(captured.root).compile(pageId) } as PageCompileResult.Success
+            val result = with(captured.root) { compiler(captured.root).compile(pageId) } as ResourceGraphCompileResult.Success
 
             result.shard.facts.edges.size shouldBe 2
             result.shard.facts.edges
@@ -113,7 +113,7 @@ val PageCompilerTest by testSuite {
             resources = mapOf(pageId to unavailable),
             resourceDefinitions = mapOf(pageId to ResourceDefinitionId("page")),
         ).use { captured ->
-            val result = with(captured.root) { compiler(captured.root).compile(pageId) } as PageCompileResult.Blocked
+            val result = with(captured.root) { compiler(captured.root).compile(pageId) } as ResourceGraphCompileResult.Blocked
 
             result.diagnostics.map { it.code }.toSet() shouldBe
                 setOf("unresolved_type")
@@ -124,8 +124,8 @@ val PageCompilerTest by testSuite {
         val other = ResourceId("other")
         fixture(mapOf(pageId to pageRecord(listOf(missingId)), other to pageRecord(emptyList()))).use { captured ->
             val compiler = compiler(captured.root)
-            with(captured.root) { compiler.compile(pageId) } as PageCompileResult.Blocked
-            val independent = with(captured.root) { compiler.compile(other) } as PageCompileResult.Success
+            with(captured.root) { compiler.compile(pageId) } as ResourceGraphCompileResult.Blocked
+            val independent = with(captured.root) { compiler.compile(other) } as ResourceGraphCompileResult.Success
             independent.shard.facts.resources
                 .map { it.key.source } shouldBe listOf(other)
         }
@@ -138,7 +138,7 @@ val PageCompilerTest by testSuite {
         val findings =
             listOf(original, original + (sibling to childRecord("complete"))).map { records ->
                 fixture(records).use { captured ->
-                    val result = with(captured.root) { compiler(captured.root).compile(pageId) } as PageCompileResult.Blocked
+                    val result = with(captured.root) { compiler(captured.root).compile(pageId) } as ResourceGraphCompileResult.Blocked
                     result.diagnostics
                 }
             }
@@ -149,7 +149,7 @@ val PageCompilerTest by testSuite {
 }
 
 private fun compiler(view: com.typewritermc.realm.authoring.AuthoringView) =
-    PageCompiler(
+    OwnershipClosureCompiler(
         setOf(OWNERSHIP),
         testAssessment(
             view,
@@ -221,6 +221,7 @@ private class CompilerCatalogLease private constructor(
 
     override val configuration: List<com.typewritermc.configuration.ConfigurationRecipe> = emptyList()
     override val operations = com.typewritermc.operations.OperationCatalog()
+    override val placementFields = emptyMap<com.typewritermc.types.TypeDefinitionId, com.typewritermc.authoring.ValuePath>()
 
     override fun retain(): AuthoringCatalogLease {
         references.incrementAndGet()

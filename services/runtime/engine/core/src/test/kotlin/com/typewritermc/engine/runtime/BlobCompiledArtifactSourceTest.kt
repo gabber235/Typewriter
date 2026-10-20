@@ -6,13 +6,13 @@ import com.typewritermc.engine.CompilationContext
 import com.typewritermc.engine.CompilationRoot
 import com.typewritermc.engine.CompiledArtifactReference
 import com.typewritermc.engine.CompiledBlobPointer
-import com.typewritermc.engine.CompiledPageShard
 import com.typewritermc.engine.CompiledResourceKey
 import com.typewritermc.engine.ContentDigest
-import com.typewritermc.engine.PAGE_COMPILATION_MEDIA_TYPE
-import com.typewritermc.engine.PAGE_COMPILATION_PROJECTION
 import com.typewritermc.engine.PublishedContent
 import com.typewritermc.engine.PublishedOutput
+import com.typewritermc.engine.RESOURCE_GRAPH_MEDIA_TYPE
+import com.typewritermc.engine.RESOURCE_GRAPH_PROJECTION
+import com.typewritermc.engine.ResourceGraphShard
 import com.typewritermc.engine.RuntimeCompilationFacts
 import com.typewritermc.services.libs.filetransfer.blob.ArtifactDigest
 import com.typewritermc.services.libs.filetransfer.blob.BlobChunk
@@ -44,7 +44,7 @@ val BlobCompiledArtifactSourceTest by testSuite {
                 .single()
                 .root.resource shouldBe ResourceId("page")
             Json.decodeFromString(
-                CompiledPageShard.serializer(),
+                ResourceGraphShard.serializer(),
                 loaded.artifacts
                     .single()
                     .payload
@@ -130,11 +130,11 @@ val BlobCompiledArtifactSourceTest by testSuite {
 private fun shard(
     digestCharacter: String,
     pageKey: String,
-) = CompiledPageShard(
+) = ResourceGraphShard(
     digest = ContentDigest(digestCharacter.repeat(64)),
     facts =
         RuntimeCompilationFacts(
-            formatRevision = com.typewritermc.engine.PAGE_COMPILATION_FORMAT_REVISION,
+            formatRevision = com.typewritermc.engine.RESOURCE_GRAPH_FORMAT_REVISION,
             root = CompiledResourceKey(ResourceId(pageKey), CompilationContext.Root),
             resources = emptyList(),
             edges = emptyList(),
@@ -145,16 +145,16 @@ private fun shard(
 
 private fun activation(
     revision: Long,
-    shards: List<CompiledPageShard>,
+    shards: List<ResourceGraphShard>,
     blobs: FakeBlobEndpoint,
 ): PublishedContent {
     val outputs =
         shards.map { shard ->
             PublishedOutput(
                 CompiledArtifactReference(
-                    CompilationRoot(PAGE_COMPILATION_PROJECTION, shard.facts.root.source),
+                    CompilationRoot(RESOURCE_GRAPH_PROJECTION, shard.facts.root.source),
                     shard.facts.formatRevision,
-                    PAGE_COMPILATION_MEDIA_TYPE,
+                    RESOURCE_GRAPH_MEDIA_TYPE,
                     shard.digest,
                 ),
                 blobs.put(Json.encodeToString(shard).encodeToByteArray()),

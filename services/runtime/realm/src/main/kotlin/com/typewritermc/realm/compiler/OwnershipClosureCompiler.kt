@@ -12,12 +12,12 @@ import com.typewritermc.configuration.RuleOrigin
 import com.typewritermc.engine.CompilationContext
 import com.typewritermc.engine.CompiledEdge
 import com.typewritermc.engine.CompiledEdgeOrigin
-import com.typewritermc.engine.CompiledPageShard
 import com.typewritermc.engine.CompiledResource
 import com.typewritermc.engine.CompiledResourceKey
 import com.typewritermc.engine.ContentDigest
-import com.typewritermc.engine.PAGE_COMPILATION_FORMAT_REVISION
-import com.typewritermc.engine.PageCompileResult
+import com.typewritermc.engine.RESOURCE_GRAPH_FORMAT_REVISION
+import com.typewritermc.engine.ResourceGraphCompileResult
+import com.typewritermc.engine.ResourceGraphShard
 import com.typewritermc.engine.RuntimeCompilationFacts
 import com.typewritermc.engine.RuntimeRelationFact
 import com.typewritermc.engine.canonicalized
@@ -33,20 +33,20 @@ import com.typewritermc.types.catalog.runtimeDefinitions
 import com.typewritermc.types.ownsResources
 
 /**
- * Compiles a Page and its ownership closure from one assessed authoring view.
+ * Compiles a compilation unit and its ownership closure from one assessed authoring view.
  *
  * The shard includes scalar resource records, native binding evidence, incident relation edges, and the
  * runtime declaration closure. Edges may refer outside the shard so the engine can assemble the complete
  * publication graph. The input fingerprint identifies captured authoring inputs; the shard semantic digest
  * identifies canonical runtime facts and is separate from its serialized blob digest.
  */
-internal class PageCompiler(
+internal class OwnershipClosureCompiler(
     private val ownershipRelations: Set<RelationId>,
     private val readiness: Map<ResourceId, ResourceReadiness>,
-    private val formatRevision: Int = PAGE_COMPILATION_FORMAT_REVISION,
+    private val formatRevision: Int = RESOURCE_GRAPH_FORMAT_REVISION,
 ) {
     context(snapshot: AuthoringView)
-    fun compile(root: ResourceId): PageCompileResult {
+    fun compile(root: ResourceId): ResourceGraphCompileResult {
         val projected = snapshot.projection
         val occurrencesByLocation = snapshot.links.values.associateBy { it.id.location }
         val relationByEndpoint =
@@ -161,7 +161,7 @@ internal class PageCompiler(
                     }
                 },
             )
-        if (diagnostics.isNotEmpty()) return PageCompileResult.Blocked(fingerprint, diagnostics.distinctBy { it.id })
+        if (diagnostics.isNotEmpty()) return ResourceGraphCompileResult.Blocked(fingerprint, diagnostics.distinctBy { it.id })
         val runtimeResources = resources.map { (id, record) -> record.compile(id, (readiness.getValue(id) as ResourceReadiness.Ready)) }
         val relationIds =
             projectedEdges.mapTo(linkedSetOf()) { edge ->
@@ -194,8 +194,8 @@ internal class PageCompiler(
                         },
             )
         val canonical = facts.canonicalized()
-        return PageCompileResult.Success(
-            shard = CompiledPageShard(canonical.semanticDigest(), canonical),
+        return ResourceGraphCompileResult.Success(
+            shard = ResourceGraphShard(canonical.semanticDigest(), canonical),
             inputFingerprint = fingerprint,
         )
     }

@@ -54,12 +54,12 @@ fun RuntimeCompilationFacts.semanticDigest(): ContentDigest =
 
 fun RuntimeCompilationFacts.encodeShard(): ByteArray {
     val canonical = canonicalized()
-    return canonicalText(CompiledPageShard(canonical.semanticDigest(), canonical)).encodeToByteArray()
+    return canonicalText(ResourceGraphShard(canonical.semanticDigest(), canonical)).encodeToByteArray()
 }
 
 /** Decodes a shard and checks its semantic digest; execution catalog admission happens in the engine consumer. */
-fun ByteArray.decodeCompiledPageShard(): CompiledPageShard {
-    val shard = runtimeFactsJson.decodeFromString<CompiledPageShard>(decodeToString())
+fun ByteArray.decodeResourceGraphShard(): ResourceGraphShard {
+    val shard = runtimeFactsJson.decodeFromString<ResourceGraphShard>(decodeToString())
     require(shard.digest == shard.facts.semanticDigest()) {
         "Runtime facts disagree with their semantic digest."
     }

@@ -11,13 +11,13 @@ import com.typewritermc.types.TypeUse
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
-const val PAGE_COMPILATION_FORMAT_REVISION = 1
+const val RESOURCE_GRAPH_FORMAT_REVISION = 1
 
-/** Identifies the Page compilation shared by the Realm producer and the engine consumer. */
-val PAGE_COMPILATION_PROJECTION = CompilationProjectionId("typewriter.page")
+/** The single compiled format for authored resource graphs, shared by the Realm producer and engine consumers. */
+val RESOURCE_GRAPH_PROJECTION = CompilationProjectionId("typewriter.resource-graph")
 
-/** Names the serialized Page shard format. */
-const val PAGE_COMPILATION_MEDIA_TYPE = "application/vnd.typewriter.page+json"
+/** Names the serialized resource graph shard format. */
+const val RESOURCE_GRAPH_MEDIA_TYPE = "application/vnd.typewriter.resource-graph+json"
 
 /** Distinguishes one generated occurrence of an authored resource. */
 @Serializable
@@ -114,9 +114,9 @@ data class RuntimeCompilationFacts(
     val relations: List<RuntimeRelationFact>,
 )
 
-/** A canonical Page rooted graph and its semantic identity. */
+/** A canonical graph rooted at one compilation unit, with its semantic identity. */
 @Serializable
-data class CompiledPageShard(
+data class ResourceGraphShard(
     val digest: ContentDigest,
     val facts: RuntimeCompilationFacts,
 )
@@ -137,25 +137,25 @@ data class CompiledBlobPointer(
 }
 
 /**
- * Returns a reusable page shard or diagnostics that block publication of that page.
+ * Returns a reusable shard or diagnostics that block publication of that compilation unit.
  *
  * Blocked output retains its input fingerprint so the coordinator can track which authoring state failed.
  */
 @Serializable
-sealed interface PageCompileResult {
+sealed interface ResourceGraphCompileResult {
     /** A complete shard that may be reused or included in a publication. */
     @Serializable
     @SerialName("success")
     data class Success(
-        val shard: CompiledPageShard,
+        val shard: ResourceGraphShard,
         val inputFingerprint: ContentDigest,
-    ) : PageCompileResult
+    ) : ResourceGraphCompileResult
 
-    /** A page that produced no publishable shard and retains the input state that generated its diagnostics. */
+    /** A compilation unit that produced no publishable shard and retains the input state behind its diagnostics. */
     @Serializable
     @SerialName("blocked")
     data class Blocked(
         val inputFingerprint: ContentDigest,
         val diagnostics: List<com.typewritermc.checking.Diagnostic>,
-    ) : PageCompileResult
+    ) : ResourceGraphCompileResult
 }
