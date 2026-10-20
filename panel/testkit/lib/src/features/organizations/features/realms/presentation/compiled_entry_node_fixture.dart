@@ -15,9 +15,7 @@ AuthoringDocument compiledEntryNodeDocument({
   bool narrow = false,
   bool graphEditor = false,
 }) {
-  var catalog = CheckedEditorCatalog(
-    withInheritedPageBindings(compiledSdkControlCatalog),
-  );
+  var catalog = CheckedEditorCatalog(compiledSdkControlCatalog);
   final elementType = compiledSdkElementValue.authoredActualType!;
   final pageType = skir.NamedTypeUse(
     definition: skir.TypeDefinitionId(
@@ -279,62 +277,3 @@ final compiledEntryGraphLayout = skir.PresentationNode(
     itemBindingId: skir.ExpressionBindingId(value: "resources.item"),
   ),
 );
-
-/// The framework catalog emits endpoint bindings for concrete resource types
-/// only, and the framework declares no concrete page or element. This adds
-/// the bindings every concrete page and element inherits from Page.book,
-/// Page.elements and Element.page, so the abstract types stand in for them.
-skir.EditorCatalogWireSnapshot withInheritedPageBindings(
-  skir.EditorCatalogWireSnapshot snapshot,
-) {
-  skir.NamedTypeTemplate named(String name) => skir.NamedTypeTemplate(
-    definition: skir.TypeDefinitionId(
-      typeId: skir.TypeId.createQualified(namespace: "kotlin", name: name),
-      revision: 1,
-    ),
-    arguments: const [],
-  );
-  final page = named("com.typewritermc.library.Page");
-  final element = named("com.typewritermc.elements.Element");
-  final book = skir.NamedTypeTemplate(
-    definition:
-        (compiledSdkBookRecord.configuration
-                as skir.TypeSelection_completeWrapper)
-            .value
-            .definition,
-    arguments: const [],
-  );
-  skir.EndpointBindingTemplate binding(
-    String endpoint,
-    skir.NamedTypeTemplate owner,
-    String field,
-    skir.NamedTypeTemplate target, {
-    bool collection = false,
-  }) => skir.EndpointBindingTemplate(
-    endpoint: skir.EndpointId(value: endpoint),
-    containingResource: owner,
-    valueOwner: owner.definition,
-    relativePath: skir.RelativeFieldPattern(
-      segments: [
-        skir.FieldPatternSegment.createField(name: field),
-        if (collection) skir.FieldPatternSegment.items,
-      ],
-    ),
-    target: skir.TypeTemplate.wrapNamed(target),
-    containsCollection: collection,
-  );
-  final augmented = snapshot.toMutable()
-    ..endpointBindings = [
-      ...snapshot.endpointBindings,
-      binding("4fbbe0dcedd84ccb8b7ce8c6a6105551:second", page, "book", book),
-      binding(
-        "349b4d11c4464d13ad4ca063ead60c62:first",
-        page,
-        "elements",
-        element,
-        collection: true,
-      ),
-      binding("349b4d11c4464d13ad4ca063ead60c62:second", element, "page", page),
-    ];
-  return augmented.toFrozen();
-}

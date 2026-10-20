@@ -22,7 +22,7 @@ final class CompiledSearchFixture {
       0xff9c64bd,
     );
     final catalog = CheckedEditorCatalog(
-      (withInheritedPageBindings(compiledSdkControlCatalog).toMutable()
+      (compiledSdkControlCatalog.toMutable()
             ..types = [
               ...compiledSdkControlCatalog.types,
               pageType,

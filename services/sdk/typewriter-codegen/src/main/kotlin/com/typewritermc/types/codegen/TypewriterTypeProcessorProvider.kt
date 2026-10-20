@@ -319,9 +319,13 @@ private class TypewriterTypeProcessor(
                 .filter { subclass -> subclass.rawAnnotation(TypewriterType::class) != null }
                 .forEach { generateType(it) }
         }
-        if (declaration.implements(Resource::class) && generatedEndpointBindingRoots.add(qualified)) {
-            emitEndpointBindings(declaration, definitions, references)
-        }
+        // Record contracts such as Page declare bindings of their own that every implementation inherits.
+        conversion.declarations.values
+            .asSequence()
+            .filter { resource -> resource == declaration || isEmittedHere(resource) }
+            .filter { resource -> resource.implements(Resource::class) }
+            .filter { resource -> resource.qualifiedName?.asString()?.let(generatedEndpointBindingRoots::add) == true }
+            .forEach { resource -> emitEndpointBindings(resource, definitions, references) }
     }
 
     private fun emitSdk(
