@@ -12,18 +12,8 @@ func (m *Typewriter) skirContainer(source *dagger.Directory) *dagger.Container {
 		WithExec([]string{"bun", "install", "--frozen-lockfile"})
 }
 
-func (m *Typewriter) transportGeneratorContainer(source *dagger.Directory) *dagger.Container {
-	return dag.Container().
-		From("rust:1.95-bookworm").
-		WithDirectory("/generator", source.Directory("services/protocol/transport-generator")).
-		WithWorkdir("/generator").
-		WithEnvVariable("CARGO_BUILD_JOBS", "2").
-		WithMountedCache("/usr/local/cargo/registry", lockedCache("transport-generator-cargo-registry")).
-		WithMountedCache("/usr/local/cargo/git", lockedCache("transport-generator-cargo-git"))
-}
-
 // protocolGenerationContainer runs the single protocol generation entry point, `bun run generate:protocol`, with
-// the panel's Dart SDK plus Rust, Bun and the JDK the services build needs. The source is staged in a scratch Git
+// the panel's Dart SDK plus rustfmt, Bun and the JDK the services build needs. The source is staged in a scratch Git
 // index first, so ignored build artifacts can be cleaned afterwards and generated drift stays visible.
 func (m *Typewriter) protocolGenerationContainer(source *dagger.Directory) *dagger.Container {
 	rust := dag.Container().
@@ -35,13 +25,10 @@ func (m *Typewriter) protocolGenerationContainer(source *dagger.Directory) *dagg
 		WithDirectory("/usr/local/cargo", rust.Directory("/usr/local/cargo")).
 		WithEnvVariable("RUSTUP_HOME", "/usr/local/rustup").
 		WithEnvVariable("CARGO_HOME", "/usr/local/cargo").
-		WithEnvVariable("CARGO_BUILD_JOBS", "2").
 		WithEnvVariable("PATH", "/usr/local/cargo/bin:${PATH}", dagger.ContainerWithEnvVariableOpts{Expand: true}).
 		WithFile("/usr/local/bin/bun", dag.Container().From("oven/bun").File("/usr/local/bin/bun")).
 		WithExec([]string{"ln", "-s", "bun", "/usr/local/bin/bunx"}).
 		WithEnvVariable("GRADLE_OPTS", "-Dorg.gradle.daemon=false -Dorg.gradle.workers.max=2").
-		WithMountedCache("/usr/local/cargo/registry", lockedCache("transport-generator-cargo-registry")).
-		WithMountedCache("/usr/local/cargo/git", lockedCache("transport-generator-cargo-git")).
 		WithMountedCache("/root/.gradle/caches", dag.CacheVolume("services-gradle-caches")).
 		WithMountedCache("/root/.gradle/wrapper", dag.CacheVolume("services-gradle-wrapper")).
 		WithDirectory("/workspace", source).
@@ -66,34 +53,24 @@ func (m *Typewriter) ProtocolGenerationCheck(
 }
 
 // +check
-func (m *Typewriter) TransportGeneratorTest(
+// TransportGeneratorCheck typechecks the transport Skir generator and runs its tests against the committed
+// route manifest and Skir sources.
+func (m *Typewriter) TransportGeneratorCheck(
 	// +optional
 	// +defaultPath="/"
-	// +ignore=["*", "!services/protocol/transport-routes.yaml", "!services/protocol/transport-generator", "**/target", "**/node_modules"]
-	source *dagger.Directory,
-) *dagger.Container {
-	return m.transportGeneratorContainer(source).
-		WithFile("/transport-routes.yaml", source.File("services/protocol/transport-routes.yaml")).
-		WithExec([]string{"cargo", "test", "--locked"})
-}
-
-// +check
-func (m *Typewriter) TransportBindingCheck(
-	// +optional
-	// +defaultPath="/"
-	// +ignore=["*", "!package.json", "!bun.lock", "!services/protocol/transport-generator/dependency-patches", "!services/protocol/transport-generator/skir-bridge"]
+	// +ignore=["*", "!package.json", "!bun.lock", "!skir-src", "!services/protocol/transport-routes.yaml", "!services/protocol/transport-generator", "**/node_modules"]
 	source *dagger.Directory,
 ) *dagger.Container {
 	return m.skirContainer(source).
-		WithExec([]string{"bun", "run", "--cwd", "services/protocol/transport-generator/skir-bridge", "check"}).
-		WithExec([]string{"bun", "run", "test:transport-metadata"})
+		WithExec([]string{"bun", "run", "--cwd", "services/protocol/transport-generator", "check"}).
+		WithExec([]string{"bun", "run", "test:transport-generator"})
 }
 
 // +check
 func (m *Typewriter) SkirCheck(
 	// +optional
 	// +defaultPath="/"
-	// +ignore=["*", "!package.json", "!bun.lock", "!skir.yml", "!skir-src", "!services/protocol/transport-generator/dependency-patches", "!services/protocol/transport-generator/skir-bridge"]
+	// +ignore=["*", "!package.json", "!bun.lock", "!skir.yml", "!skir-src", "!services/protocol/transport-generator", "**/node_modules"]
 	source *dagger.Directory,
 ) (*dagger.Changeset, error) {
 	generated := m.skirContainer(source).
@@ -107,7 +84,7 @@ func (m *Typewriter) SkirCheck(
 func (m *Typewriter) SkirFormat(
 	// +optional
 	// +defaultPath="/"
-	// +ignore=["*", "!package.json", "!bun.lock", "!skir.yml", "!skir-src", "!services/protocol/transport-generator/dependency-patches", "!services/protocol/transport-generator/skir-bridge"]
+	// +ignore=["*", "!package.json", "!bun.lock", "!skir.yml", "!skir-src", "!services/protocol/transport-generator", "**/node_modules"]
 	source *dagger.Directory,
 ) (*dagger.Changeset, error) {
 	generated := m.skirContainer(source).
@@ -121,7 +98,7 @@ func (m *Typewriter) SkirFormat(
 func (m *Typewriter) SkirSnapshot(
 	// +optional
 	// +defaultPath="/"
-	// +ignore=["*", "!package.json", "!bun.lock", "!skir.yml", "!skir-src", "!services/protocol/transport-generator/dependency-patches", "!services/protocol/transport-generator/skir-bridge"]
+	// +ignore=["*", "!package.json", "!bun.lock", "!skir.yml", "!skir-src", "!services/protocol/transport-generator", "**/node_modules"]
 	source *dagger.Directory,
 ) (*dagger.Changeset, error) {
 	generated := m.skirContainer(source).
