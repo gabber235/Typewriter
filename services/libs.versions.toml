@@ -32,6 +32,7 @@ gradle-buildconfig = "6.1.2"
 test-balloon = "1.1.0"
 kotest = "6.2.6"
 mockk = "1.14.11"
+kctfork = "0.14.0"
 
 [libraries]
 kotlin-reflect = { module = "org.jetbrains.kotlin:kotlin-reflect", version.ref = "kotlin" }
@@ -60,6 +61,8 @@ test-balloon-gradle-plugin = { module = "de.infix.testBalloon:de.infix.testBallo
 test-balloon-kotest-assertions = {module = "de.infix.testBalloon:testBalloon-integration-kotest-assertions", version.ref = "test-balloon"}
 kotest-assertions = { module = "io.kotest:kotest-assertions-core", version.ref = "kotest" }
 mockk = { module = "io.mockk:mockk", version.ref = "mockk" }
+kctfork-core = { module = "dev.zacsweers.kctfork:core", version.ref = "kctfork" }
+kctfork-ksp = { module = "dev.zacsweers.kctfork:ksp", version.ref = "kctfork" }
 
 skir-client = { module = "build.skir:skir-client", version.ref = "skir" }
 okio = { module = "com.squareup.okio:okio-jvm", version.ref = "okio" }

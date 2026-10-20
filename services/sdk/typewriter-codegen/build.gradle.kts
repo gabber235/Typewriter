@@ -11,4 +11,13 @@ dependencies {
     implementation(libs.kotlinpoet.ksp)
     implementation(libs.kotlin.serialize.cbor)
     testImplementation(libs.mockk)
+    testImplementation(libs.kctfork.core)
+    testImplementation(libs.kctfork.ksp)
+    testImplementation(project(":typewriter-api"))
+}
+
+tasks.test {
+    // Fixtures resolve relative to the module directory.
+    workingDir = projectDir
+    inputs.dir("src/test/fixtures")
 }
