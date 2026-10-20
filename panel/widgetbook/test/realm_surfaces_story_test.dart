@@ -3,7 +3,7 @@ import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
     as skir;
 import "package:typewriter_panel/typewriter_panel.dart";
 import "package:typewriter_testkit/typewriter_testkit.dart";
-import "package:widgetbook_workspace/stories/features/organizations/features/realms/presentation/resource_route.stories.dart";
+import "package:widgetbook_workspace/stories/features/organizations/features/realms/presentation/realm_showcase_story.dart";
 import "package:widgetbook_workspace/stories/shared/editors/presentation/portable_resources_layouts.stories.dart";
 
 import "support/network_images.dart";

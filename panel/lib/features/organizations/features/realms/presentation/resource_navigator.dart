@@ -12,6 +12,7 @@ class AuthoredResourceNavigator extends ConsumerStatefulWidget {
     required this.resource,
     this.routedResource,
     this.showHeader = false,
+    this.onOpen,
     super.key,
   });
 
@@ -22,6 +23,10 @@ class AuthoredResourceNavigator extends ConsumerStatefulWidget {
   /// Shows the resource's name and icon above the navigator, opening the
   /// resource when activated.
   final bool showHeader;
+
+  /// Runs before activating a member opens its surface, for example to close
+  /// the sheet holding the navigator.
+  final VoidCallback? onOpen;
 
   @override
   ConsumerState<AuthoredResourceNavigator> createState() =>
@@ -72,8 +77,11 @@ class _AuthoredResourceNavigatorState
     final commands = ref.watch(authoredResourceCommandsProvider(widget.scope));
     _attach(workspace);
     final binding = _binding!;
-    void open(skir.ResourceId target) =>
-        ref.read(realmSurfaceNavigationProvider).open(widget.scope, target);
+    void open(skir.ResourceId target) {
+      widget.onOpen?.call();
+      ref.read(realmSurfaceNavigationProvider).open(widget.scope, target);
+    }
+
     final navigator = AuthoredResourceEditor(
       resource: widget.resource,
       document: binding.document,

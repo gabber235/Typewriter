@@ -377,7 +377,7 @@ void main() {
           ),
           scope,
         ),
-        throwsA(isA<PresentationColorFailure>()),
+        throwsA(isA<PresentationValueFailure>()),
       );
     });
 
@@ -420,7 +420,7 @@ void main() {
           skir.PresentationNumber.wrapValue(textLiteral("wide")),
           scope,
         ),
-        throwsA(isA<PresentationColorFailure>()),
+        throwsA(isA<PresentationValueFailure>()),
       );
     });
   });

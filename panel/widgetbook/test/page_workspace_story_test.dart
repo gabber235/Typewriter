@@ -134,4 +134,35 @@ void main() {
     await tester.pump(const Duration(milliseconds: 250));
     await tester.pumpAndSettle();
   });
+
+  testWidgets("timeline track headers go through the member interaction", (
+    tester,
+  ) async {
+    final wrapped = <skir.ResourceId>[];
+    await tester.binding.setSurfaceSize(const Size(1280, 800));
+    addTearDown(() => tester.binding.setSurfaceSize(null));
+    await tester.pumpWidget(
+      FakeApp(
+        child: PortableResourcesInteractionScope(
+          itemBuilder: (context, view, member, child) {
+            wrapped.add(member.resource);
+            return child;
+          },
+          layoutBuilder: (context, view, child) => child,
+          child: const ResourcesWorkspaceStory(timeline: true),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    final headers = find.descendant(
+      of: find.byType(Timeline),
+      matching: find.byType(Card),
+    );
+    expect(headers, findsNWidgets(2));
+    expect(wrapped.toSet(), hasLength(2));
+    expect(tester.takeException(), isNull);
+    await tester.pump(const Duration(milliseconds: 250));
+    await tester.pumpAndSettle();
+  });
 }

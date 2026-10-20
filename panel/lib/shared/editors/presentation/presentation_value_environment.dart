@@ -53,13 +53,13 @@ abstract class PresentationValueEnvironment
       interaction.dropAccepted,
     skir.PresentationInteractionState_kind.dropRejectedConst =>
       interaction.dropRejected,
-    _ => throw const PresentationColorFailure(
+    _ => throw const PresentationValueFailure(
       "Presentation interaction state is unavailable",
     ),
   };
 
   /// Whether every required state is active and no excluded state is.
-  /// Throws [PresentationColorFailure] for a contradictory match.
+  /// Throws [PresentationValueFailure] for a contradictory match.
   bool matches(
     skir.PresentationStateMatch match,
     PortablePresentationScope scope,
@@ -67,7 +67,7 @@ abstract class PresentationValueEnvironment
     final required = match.required_.toSet();
     final excluded = match.excluded.toSet();
     if (required.intersection(excluded).isNotEmpty) {
-      throw const PresentationColorFailure(
+      throw const PresentationValueFailure(
         "Presentation state match is contradictory",
       );
     }
@@ -76,7 +76,7 @@ abstract class PresentationValueEnvironment
   }
 
   /// The value of [value] in the current state: the first matching rule, or
-  /// the fallback. Throws [PresentationColorFailure] when the chosen
+  /// the fallback. Throws [PresentationValueFailure] when the chosen
   /// expression is unavailable or not a finite number.
   double number(
     skir.PresentationNumber value,
@@ -90,7 +90,7 @@ abstract class PresentationValueEnvironment
                 .firstOrNull
                 ?.value ??
             value.fallback,
-      _ => throw const PresentationColorFailure(
+      _ => throw const PresentationValueFailure(
         "Presentation number variant is unavailable",
       ),
     };
@@ -103,11 +103,11 @@ abstract class PresentationValueEnvironment
           _ => null,
         },
       PortableExpressionFailed(:final message) =>
-        throw PresentationColorFailure(message),
+        throw PresentationValueFailure(message),
       _ => null,
     };
     if (result == null || !result.isFinite) {
-      throw const PresentationColorFailure(
+      throw const PresentationValueFailure(
         "Presentation number must be a finite number",
       );
     }
@@ -128,7 +128,7 @@ abstract class PresentationValueEnvironment
             ?.transition ??
         policy.fallback;
     if (transition.milliseconds < 0) {
-      throw const PresentationColorFailure(
+      throw const PresentationValueFailure(
         "Presentation duration cannot be negative",
       );
     }
@@ -142,7 +142,7 @@ abstract class PresentationValueEnvironment
     skir.PresentationCurve_elasticOutWrapper(:final value) =>
       value.isFinite && value > 0
           ? ElasticOutCurve(value)
-          : throw const PresentationColorFailure(
+          : throw const PresentationValueFailure(
               "Elastic curve periods must be finite and positive",
             ),
     _ => switch (curve.kind) {
@@ -151,7 +151,7 @@ abstract class PresentationValueEnvironment
       skir.PresentationCurve_kind.easeOutConst => Curves.easeOut,
       skir.PresentationCurve_kind.emphasizedConst =>
         Curves.fastEaseInToSlowEaseOut,
-      _ => throw const PresentationColorFailure(
+      _ => throw const PresentationValueFailure(
         "Presentation curve is unavailable",
       ),
     },
@@ -173,9 +173,10 @@ abstract class PresentationMotion with _$PresentationMotion {
   );
 }
 
-/// A paint value, such as a color, number or alignment, that cannot be
-/// resolved. Renderers show the message in place of the affected content.
-final class PresentationColorFailure implements Exception {
-  const PresentationColorFailure(this.message);
+/// A presentation value, such as a color, number, size, alignment or
+/// transform, that cannot be resolved. Renderers show the message in place of
+/// the affected content.
+final class PresentationValueFailure implements Exception {
+  const PresentationValueFailure(this.message);
   final String message;
 }

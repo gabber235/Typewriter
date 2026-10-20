@@ -54,6 +54,62 @@ void main() {
     },
   );
 
+  testWidgets(
+    "only the bound resource's own link fields receive dropped resources",
+    (tester) async {
+      final fixture = AuthoredGraphFixture(secondSource: true);
+      final binding = fixture.workspace.attach(fixture.page);
+      addTearDown(binding.detach);
+      final scope = PortablePresentationScope(
+        bindings: const {},
+        operations: testPortableOperations(),
+        budget: skir.EvaluationBudget(maxSteps: 1000, maxCollectionItems: 100),
+        resource: fixture.page,
+      );
+      Widget field(String key, skir.ResourceId resource) => Builder(
+        builder: (context) => PortableResourcesInteractionScope.wrapLinkField(
+          context,
+          scope,
+          skir.ValueLocation(
+            resource: resource,
+            path: editorRootPath.field("links"),
+          ),
+          SizedBox(key: ValueKey(key), height: 20),
+        ),
+      );
+      await tester.pumpTestApp(
+        overrides: [
+          ...authoringFixtureOverrides(
+            scope: fixture.scope,
+            transport: fixture.transport,
+            commands: fixture.commands,
+          ),
+          realmEditingProvider.overrideWith((ref, scope) => fixture.workspace),
+        ],
+        child: AuthoredResourcesInteractions(
+          authoringScope: fixture.scope,
+          binding: binding,
+          child: Column(
+            children: [
+              field("own", fixture.page),
+              // A reference preview of another resource nested in the editor.
+              field("foreign", fixture.second),
+            ],
+          ),
+        ),
+      );
+
+      Finder target(String key) => find.ancestor(
+        of: find.byKey(ValueKey(key)),
+        matching: find.byType(ResourceDropTarget),
+      );
+      expect(target("own"), findsOneWidget);
+      expect(target("foreign"), findsNothing);
+      await tester.pumpWidget(const SizedBox.shrink());
+      fixture.workspace.dispose();
+    },
+  );
+
   testWidgets("selection and focus reach portable node state", (tester) async {
     final fixture = AuthoredGraphFixture(secondSource: true);
     await _pump(tester, fixture);

@@ -105,7 +105,7 @@ extension PortableFieldPresentationScope on PortablePresentationScope {
     );
     final owner = withConfiguredValue(record);
     final type = owner?.configuredSelection;
-    final address = owner?.authoredAliases[_configuredValueBindingId];
+    final address = owner?.authoredAliases[configuredValueBindingId];
     if (owner == null || type == null || address == null) return null;
     final checked = owner.catalog;
     if (checked == null ||
@@ -123,7 +123,7 @@ extension PortableFieldPresentationScope on PortablePresentationScope {
   }
 
   skir.TypeSelection? get configuredSelection {
-    final configured = bindings[_configuredValueBindingId];
+    final configured = bindings[configuredValueBindingId];
     final actual = configured?.value.authoredActualType;
     if (actual != null) return skir.TypeSelection.wrapComplete(actual);
     switch (configured?.schema) {

@@ -1,9 +1,5 @@
 part of "../portable_presentation_renderer.dart";
 
-final _configuredValueBindingId = skir.ExpressionBindingId(
-  value: "configured_value",
-);
-
 typedef PortableSlotBuilder = Widget Function(PortablePresentationScope scope);
 
 /// Immutable lexical rendering context. Copies borrow the host, query observer
@@ -164,7 +160,7 @@ abstract class PortablePresentationScope with _$PortablePresentationScope {
           PortableAuthoredPart(
             nodeId: node.nodeId,
             part: part,
-            owner: lexicalAliases[_configuredValueBindingId],
+            owner: lexicalAliases[configuredValueBindingId],
           ),
         );
         return false;
@@ -494,7 +490,7 @@ abstract class PortablePresentationScope with _$PortablePresentationScope {
   // Collection replacements allocate owned values because generated copyWith
   // enters the private Freezed value constructor directly.
   PortablePresentationScope withNamedPayload(PortableNamedPayload payload) {
-    final configured = skir.ExpressionBindingId(value: "configured_value");
+    final configured = configuredValueBindingId;
     FutureOr<PortablePresentationWriteResult> writeConfigured(
       skir.BindingRef reference,
       skir.DataValue value, {
@@ -571,7 +567,7 @@ abstract class PortablePresentationScope with _$PortablePresentationScope {
   }
 
   PortablePresentationScope? withConfiguredValue(skir.BindingRef reference) =>
-      withBinding(reference, _configuredValueBindingId);
+      withBinding(reference, configuredValueBindingId);
 
   /// Rebinds an existing value and its schema, location and projected writer.
   /// An unavailable source returns null rather than inventing an editable value.
@@ -623,7 +619,7 @@ abstract class PortablePresentationScope with _$PortablePresentationScope {
     }
     return copyWith(
       bindings: {
-        ...(id == _configuredValueBindingId
+        ...(id == configuredValueBindingId
             ? bindings.withSubjectAt(location, _appearanceOf)
             : bindings),
         id: PortableExpressionBinding(
@@ -722,7 +718,7 @@ abstract class PortablePresentationScope with _$PortablePresentationScope {
             .toExpressionBinding(),
         presentationSubjectAppearanceBindingId: projected.appearance
             .toExpressionBinding(),
-        _configuredValueBindingId: PortableExpressionBinding(
+        configuredValueBindingId: PortableExpressionBinding(
           value: projected.value,
           schema: switch (projected.configuration) {
             skir.TypeSelection_completeWrapper(:final value) =>

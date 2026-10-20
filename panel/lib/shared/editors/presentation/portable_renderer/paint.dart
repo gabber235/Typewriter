@@ -15,7 +15,7 @@ extension _PortablePaintRendering on PortablePresentationNodeRenderer {
         final value? => _presentationAlignment(value),
         null => AlignmentDirectional.topStart,
       };
-    } on PresentationColorFailure catch (failure) {
+    } on PresentationValueFailure catch (failure) {
       return _diagnostic(failure.message);
     }
     final stack = Stack(
@@ -55,7 +55,7 @@ extension _PortablePaintRendering on PortablePresentationNodeRenderer {
       if (expression == null) return null;
       final value = _number(childScope, expression);
       if (value == null || !value.isFinite || value < 0) {
-        throw const PresentationColorFailure(
+        throw const PresentationValueFailure(
           "Sizes must be finite and nonnegative",
         );
       }
@@ -72,7 +72,7 @@ extension _PortablePaintRendering on PortablePresentationNodeRenderer {
       final maximumHeight = height ?? bound(layout.maximumHeight);
       if ((maximumWidth != null && minimumWidth > maximumWidth) ||
           (maximumHeight != null && minimumHeight > maximumHeight)) {
-        throw const PresentationColorFailure(
+        throw const PresentationValueFailure(
           "A minimum size cannot exceed its maximum",
         );
       }
@@ -82,7 +82,7 @@ extension _PortablePaintRendering on PortablePresentationNodeRenderer {
         minHeight: minimumHeight,
         maxHeight: maximumHeight ?? double.infinity,
       );
-    } on PresentationColorFailure catch (failure) {
+    } on PresentationValueFailure catch (failure) {
       return _diagnostic(failure.message);
     }
     return ConstrainedBox(
@@ -134,7 +134,7 @@ final class _PortablePositioned extends StatelessWidget {
       final height = inset(child.height);
       if ([start, end, width].nonNulls.length > 2 ||
           [top, bottom, height].nonNulls.length > 2) {
-        throw const PresentationColorFailure(
+        throw const PresentationValueFailure(
           "A positioned child declares at most two bounds per axis",
         );
       }
@@ -154,7 +154,7 @@ final class _PortablePositioned extends StatelessWidget {
           fillAvailableSpace: true,
         ),
       );
-    } on PresentationColorFailure catch (failure) {
+    } on PresentationValueFailure catch (failure) {
       return _diagnostic(failure.message);
     }
   }
@@ -223,7 +223,7 @@ final class _PortableTransform extends StatelessWidget {
         number == null ? fallback : environment.number(number, scope);
     try {
       if (!layout.perspective.isFinite) {
-        throw const PresentationColorFailure(
+        throw const PresentationValueFailure(
           "Transform perspective must be finite",
         );
       }
@@ -249,7 +249,7 @@ final class _PortableTransform extends StatelessWidget {
           child: child,
         ),
       );
-    } on PresentationColorFailure catch (failure) {
+    } on PresentationValueFailure catch (failure) {
       return _diagnostic(failure.message);
     }
   }

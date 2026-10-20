@@ -77,7 +77,7 @@ _ResolvedConnectorStyle? _resolveConnectorStyle(
   Color? color;
   try {
     color = colors.resolve(style.stroke.color, scope);
-  } on PresentationColorFailure catch (failure) {
+  } on PresentationValueFailure catch (failure) {
     diagnostics.add(failure.message);
   }
   final widthResult = _evaluateNonnegative(

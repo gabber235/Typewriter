@@ -49,9 +49,6 @@ skir.TypeDisplay defaultTypeDisplay(String name) => skir.TypeDisplay(
   color: skir.Color(argb: 0xFF607D8B),
 );
 
-/// Display formulas read their subject through the configured value binding.
-final _subjectBinding = skir.ExpressionBindingId(value: "configured_value");
-
 /// A display names a resource from a few fields; this bounds a pathological
 /// formula rather than a real one.
 final _displayBudget = skir.EvaluationBudget(
@@ -102,7 +99,7 @@ extension ResourceAppearanceCatalog on CheckedEditorCatalog {
     final formulas = displayFormulasFor(record.configuration);
     final queries = PortableExpressionQueries(catalog: this);
     final bindings = {
-      _subjectBinding: PortableExpressionBinding(
+      configuredValueBindingId: PortableExpressionBinding(
         value: _subjectValue(record),
         schema: switch (record.configuration) {
           skir.TypeSelection_completeWrapper(:final value) =>

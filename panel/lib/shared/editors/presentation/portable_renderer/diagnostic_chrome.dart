@@ -96,7 +96,7 @@ class PortableDiagnosticFrame extends HookWidget {
                         ),
                       ),
                 );
-        } on PresentationColorFailure catch (failure) {
+        } on PresentationValueFailure catch (failure) {
           return _diagnostic(failure.message);
         }
         final authoredLabelColor =

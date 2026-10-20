@@ -774,7 +774,7 @@ extension _CollectionHeaderFocus on PortablePresentationNodeRenderer {
           contained: contained,
           collectionControls: scopedHeader.controls,
         );
-      } on PresentationColorFailure catch (failure) {
+      } on PresentationValueFailure catch (failure) {
         return _diagnostic(failure.message);
       } on FormatException catch (failure) {
         return _diagnostic(failure.message);

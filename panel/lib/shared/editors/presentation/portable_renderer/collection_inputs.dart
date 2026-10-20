@@ -191,6 +191,7 @@ extension _PortableCollectionInputRendering
         ? rendered
         : PortableResourcesInteractionScope.wrapLinkField(
             context,
+            childScope,
             collection,
             rendered,
           );
@@ -432,7 +433,7 @@ String _operationText(
     ? fallback
     : switch (_string(scope, value)) {
         _ResolvedValue(:final value) => value,
-        _ResolvedFailure(:final message) => throw PresentationColorFailure(
+        _ResolvedFailure(:final message) => throw PresentationValueFailure(
           message,
         ),
       };
@@ -462,7 +463,7 @@ double _collectionSpacing(
 ) {
   final value = appearance?.itemSpacing ?? context.spacing.space2;
   if (!value.isFinite || value < 0) {
-    throw const PresentationColorFailure(
+    throw const PresentationValueFailure(
       "Collection spacing must be finite and nonnegative",
     );
   }

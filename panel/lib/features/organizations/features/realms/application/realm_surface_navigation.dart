@@ -60,6 +60,82 @@ skir.ResourceId? routedSection(Ref ref, AuthoringScope scope) {
   );
 }
 
+/// How the surface of a routed resource is laid out: the navigator in its
+/// rail, if any, and whether its type declares a workspace (otherwise the
+/// surface shows its inspector).
+@freezed
+abstract class ResourceSurfaceLayout with _$ResourceSurfaceLayout {
+  const factory ResourceSurfaceLayout({
+    required bool workspace,
+    skir.ResourceId? rail,
+  }) = _ResourceSurfaceLayout;
+}
+
+/// The layout of [resource]'s surface in [scope], or null while the resource
+/// is unavailable. Selects only the layout, so edits that keep it do not
+/// rebuild the surface.
+@riverpod
+ResourceSurfaceLayout? resourceSurfaceLayout(
+  Ref ref,
+  AuthoringScope scope,
+  skir.ResourceId resource,
+) => ref.watch(
+  workingAuthoringDocumentProvider(scope).select(
+    (document) => switch (document.value) {
+      final value? => switch (value.resource(resource)) {
+        final record? => ResourceSurfaceLayout(
+          workspace: value.catalog.declaresPresentation(
+            record.configuration,
+            skir.PresentationRole.workspace,
+          ),
+          rail: value.railNavigator(resource),
+        ),
+        null => null,
+      },
+      null => null,
+    },
+  ),
+);
+
+/// One owning link field of a resource whose members a person may create,
+/// such as the pages of a Book.
+@freezed
+abstract class ResourceCreationField with _$ResourceCreationField {
+  const factory ResourceCreationField({
+    /// The owning link field a created member joins.
+    required skir.ValueLocation owner,
+    required skir.TypeDefinitionId type,
+
+    /// The action label, such as "New Page".
+    required String label,
+  }) = _ResourceCreationField;
+}
+
+/// The owning link fields of [resource] whose members a person may create, in
+/// field order. Depends only on the resource's type and the catalog.
+@riverpod
+List<ResourceCreationField> resourceCreationFields(
+  Ref ref,
+  AuthoringScope scope,
+  skir.ResourceId resource,
+) {
+  final document = workingAuthoringDocumentProvider(scope);
+  final configuration = ref.watch(
+    document.select((value) => value.value?.resource(resource)?.configuration),
+  );
+  final catalog = ref.watch(document.select((value) => value.value?.catalog));
+  if (configuration == null || catalog == null) return const [];
+  return [
+    for (final field in catalog.owningFields(configuration))
+      if (catalog.resourceCreationTemplate(field.memberType) != null)
+        ResourceCreationField(
+          owner: skir.ValueLocation(resource: resource, path: field.path),
+          type: field.memberType,
+          label: "New ${catalog.typeDefinitionName(field.memberType)}",
+        ),
+  ];
+}
+
 /// A resource a breadcrumb can show, with its appearance.
 @freezed
 abstract class ResourceCrumbChoice with _$ResourceCrumbChoice {
@@ -69,13 +145,13 @@ abstract class ResourceCrumbChoice with _$ResourceCrumbChoice {
   }) = _ResourceCrumbChoice;
 }
 
-/// One breadcrumb: [resource] and the resources sharing its owner, ordered by
-/// label, including [resource] itself.
+/// One breadcrumb: [resource] and the resources sharing its owner, including
+/// [resource] itself, in ownership order.
 @freezed
 abstract class ResourceCrumb with _$ResourceCrumb {
   const factory ResourceCrumb({
     required skir.ResourceId resource,
-    required List<ResourceCrumbChoice> siblings,
+    required List<skir.ResourceId> siblings,
   }) = _ResourceCrumb;
 }
 
@@ -84,45 +160,58 @@ extension ResourceBreadcrumbTrail on AuthoringDocument {
   /// each with its siblings.
   List<ResourceCrumb> breadcrumbs(skir.ResourceId routed) {
     final ownership = relations;
-    ResourceCrumbChoice? choice(skir.ResourceId id) => switch (resource(id)) {
-      final record? => ResourceCrumbChoice(
-        resource: id,
-        appearance: catalog.appearanceOf(record),
-      ),
-      null => null,
-    };
     return [
       for (final id in surfaceTrail(routed))
         ResourceCrumb(
           resource: id,
-          siblings:
-              [
-                for (final sibling
-                    in switch (ownership.parents[id]?.singleOrNull) {
-                      final owner? => ownership.ownedBy(owner),
-                      null => [id],
-                    })
-                  ?choice(sibling),
-              ]..sort(
-                (left, right) => left.appearance.label.toLowerCase().compareTo(
-                  right.appearance.label.toLowerCase(),
-                ),
-              ),
+          siblings: [
+            for (final sibling in switch (ownership.parents[id]?.singleOrNull) {
+              final owner? => ownership.ownedBy(owner),
+              null => [id],
+            })
+              if (entry(sibling) != null) sibling,
+          ],
         ),
     ];
   }
 }
 
-/// The breadcrumbs of [scope]'s routed resource.
+/// The breadcrumbs of [scope]'s routed resource. Selects only the owner
+/// chain, so edits that keep it do not rebuild the crumbs.
 @riverpod
 List<ResourceCrumb> resourceBreadcrumbs(Ref ref, AuthoringScope scope) {
   final routed = ref.watch(routedResourceProvider(scope));
-  final document = ref.watch(workingAuthoringDocumentProvider(scope)).value;
-  if (routed == null || document == null || document.entry(routed) == null) {
-    return const [];
-  }
-  return document.breadcrumbs(routed);
+  if (routed == null) return const [];
+  return ref.watch(
+    workingAuthoringDocumentProvider(scope).select(
+      (document) => switch (document.value) {
+        final value? when value.entry(routed) != null => value.breadcrumbs(
+          routed,
+        ),
+        _ => const <ResourceCrumb>[],
+      },
+    ),
+  );
 }
+
+/// The resources [crumb] can switch to, ordered by label. Each choice reads
+/// its own appearance, so an edit recomputes only the choices it renames.
+@riverpod
+List<ResourceCrumbChoice> resourceCrumbChoices(
+  Ref ref,
+  AuthoringScope scope,
+  ResourceCrumb crumb,
+) =>
+    [
+      for (final sibling in crumb.siblings)
+        if (ref.watch(resourceAppearanceProvider(scope, sibling))
+            case final appearance?)
+          ResourceCrumbChoice(resource: sibling, appearance: appearance),
+    ]..sort(
+      (left, right) => left.appearance.label.toLowerCase().compareTo(
+        right.appearance.label.toLowerCase(),
+      ),
+    );
 
 /// The route that shows [target] in [scope].
 OrganizationRoute surfaceRoute(AuthoringScope scope, SurfaceTarget target) =>
@@ -241,6 +330,18 @@ class RealmSurfaceNavigation {
                   ?.entry(resource) ==
               null) {
         return;
+      }
+      // A surface without a side inspector shows only the routed resource's
+      // inspector, so another resource is inspected on its own surface.
+      if (ref.read(routedResourceProvider(scope)) != resource &&
+          !ref.read(showsSideInspectorProvider(scope))) {
+        await ref
+            .read(appRouterProvider)
+            .navigate(
+              surfaceRoute(scope, SurfaceTarget.resource(routed: resource)),
+              isCurrent: isCurrent,
+            );
+        if (!isCurrent()) return;
       }
       ref.read(selectionProvider.notifier).selectAll([id]);
       ref

@@ -505,6 +505,28 @@ void main() {
     );
   });
 
+  testWidgets(
+    "read only link input is never offered to the link field builder",
+    (tester) async {
+      final fixture = _fixture();
+      final editing = _LinkWorkspace(fixture.draft, fixture.source.resource);
+      final wrapped = <skir.ValueLocation>[];
+      await tester.pumpWidget(
+        _linkControl(
+          fixture,
+          editing: editing,
+          readOnly: true,
+          linkFieldBuilder: (context, location, control) {
+            wrapped.add(location);
+            return control;
+          },
+        ),
+      );
+      expect(wrapped, isEmpty);
+      expect(find.byTooltip("Choose linked resource"), findsOneWidget);
+    },
+  );
+
   testWidgets("link input preserves cancellation and chooses an exact location", (
     tester,
   ) async {
@@ -663,6 +685,7 @@ Widget _linkControl(
   Future<skir.PreparedValue> Function(skir.ValuePreparationRequest)?
   prepareValue,
   Widget Function(BuildContext, skir.ValueLocation, Widget)? linkFieldBuilder,
+  bool readOnly = false,
 }) {
   source ??= fixture.source;
   final root = skir.ExpressionBindingId(value: "configured_value");
@@ -725,6 +748,7 @@ Widget _linkControl(
             budget: budget,
             catalog: fixture.catalog,
             host: host,
+            readOnly: readOnly,
           ),
         ),
       ),

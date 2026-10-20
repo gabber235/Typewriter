@@ -65,7 +65,7 @@ extension _PortableDelegationRendering on PortablePresentationNodeRenderer {
       nested = rebound;
     }
     target ??= switch (nested
-        .bindings[_configuredValueBindingId]
+        .bindings[configuredValueBindingId]
         ?.value
         .authoredActualType) {
       final actual? => skir.TypeSelection.wrapComplete(actual),
@@ -267,7 +267,7 @@ extension _PortableDelegationRendering on PortablePresentationNodeRenderer {
     PortablePresentationScope childScope,
   ) {
     final checked = childScope.catalog;
-    final configured = childScope.bindings[_configuredValueBindingId];
+    final configured = childScope.bindings[configuredValueBindingId];
     if (checked == null || configured == null) {
       return _diagnostic("The remaining fields are unavailable");
     }
@@ -290,7 +290,7 @@ extension _PortableDelegationRendering on PortablePresentationNodeRenderer {
     for (final field in checked.fields(selection)) {
       if (excluded.contains(field.template.key)) continue;
       final reference = skir.BindingRef(
-        bindingId: _configuredValueBindingId,
+        bindingId: configuredValueBindingId,
         path: skir.ValuePath(
           segments: [skir.PathSegment.createField(name: field.template.key)],
         ),
@@ -391,7 +391,7 @@ extension _PortableDelegationRendering on PortablePresentationNodeRenderer {
                 element: skir.PresentationElement.wrapScopedBinding(
                   skir.ScopedBindingElement(
                     binding: reference,
-                    scopeBindingId: _configuredValueBindingId,
+                    scopeBindingId: configuredValueBindingId,
                     child: skir.PresentationNode(
                       nodeId: "${node.nodeId}.remainingFields",
                       properties: skir.PresentationProperties.defaultInstance,

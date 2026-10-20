@@ -232,7 +232,7 @@ extension _PortableContentRendering on PortablePresentationNodeRenderer {
         final value when value == skir.ImageFit.none => BoxFit.none,
         final value when value == skir.ImageFit.scaleDown => BoxFit.scaleDown,
         null => null,
-        _ => throw const PresentationColorFailure("Image fit is unavailable"),
+        _ => throw const PresentationValueFailure("Image fit is unavailable"),
       },
       alignment: options?.alignment == null
           ? Alignment.center
@@ -614,7 +614,7 @@ extension _PortableContentRendering on PortablePresentationNodeRenderer {
     Duration? duration(int? milliseconds) {
       if (milliseconds == null) return null;
       if (milliseconds < 0) {
-        throw const PresentationColorFailure(
+        throw const PresentationValueFailure(
           "Tooltip duration must be nonnegative",
         );
       }
@@ -820,7 +820,7 @@ double? _displayDimension(
   if (expression == null) return null;
   final value = _number(scope, expression);
   if (value == null || !value.isFinite || (positive ? value <= 0 : value < 0)) {
-    throw const PresentationColorFailure(
+    throw const PresentationValueFailure(
       "Display dimensions must be finite and within their allowed range",
     );
   }

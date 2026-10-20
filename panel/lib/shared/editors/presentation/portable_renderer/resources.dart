@@ -241,7 +241,8 @@ extension _PortableResourcesRendering on PortablePresentationNodeRenderer {
       tracks.add(
         TimelineTrack(
           id: TimelineIdentifier(member.resource.value),
-          header: (_) => _resourceTimelineHeader(member, view, host),
+          header: (context) =>
+              _resourceTimelineHeader(context, member, view, host),
           elements: cues,
         ),
       );
@@ -269,7 +270,11 @@ extension _PortableResourcesRendering on PortablePresentationNodeRenderer {
     );
   }
 
+  /// A track header: the member through its item presentation and the
+  /// application's member interaction, like every other layout, beside the
+  /// track's membership menu.
   Widget _resourceTimelineHeader(
+    BuildContext context,
     PortableResourceMember member,
     PortableResourcesView view,
     PortableResourcesHost host,
@@ -279,41 +284,51 @@ extension _PortableResourcesRendering on PortablePresentationNodeRenderer {
     return Card(
       margin: EdgeInsets.zero,
       clipBehavior: Clip.antiAlias,
-      child: InkWell(
-        onTap: childScope.openResource == null
-            ? null
-            : () => childScope.openResource!(member.resource),
-        child: Row(
-          children: [
-            Expanded(
-              child: Text(
-                member.appearance.label,
-                overflow: TextOverflow.ellipsis,
+      child: Row(
+        children: [
+          Expanded(
+            // Track headers can be narrower than an item row; the item keeps
+            // a usable width and is clipped instead of overflowing.
+            child: ConstraintsTransformBox(
+              alignment: AlignmentDirectional.centerStart,
+              clipBehavior: Clip.hardEdge,
+              constraintsTransform: (constraints) => constraints.copyWith(
+                minWidth: 0,
+                maxWidth: max(constraints.maxWidth, _minimumTrackItemWidth),
               ),
-            ),
-            PopupMenuButton<_ResourceMemberAction>(
-              enabled: editable,
-              onSelected: (action) => _reportResourcesWrite(
-                childScope,
-                host.removeMember(
+              child: KeyedSubtree(
+                key: ValueKey(member.resource),
+                child: _wrapResourceItem(
+                  context,
+                  view,
                   member,
-                  delete: action == _ResourceMemberAction.delete,
-                  context: childScope.invocation,
+                  _resourceItem(context, member, view),
                 ),
               ),
-              itemBuilder: (_) => const [
-                PopupMenuItem(
-                  value: _ResourceMemberAction.disconnect,
-                  child: Text("Disconnect"),
-                ),
-                PopupMenuItem(
-                  value: _ResourceMemberAction.delete,
-                  child: Text("Delete resource"),
-                ),
-              ],
             ),
-          ],
-        ),
+          ),
+          PopupMenuButton<_ResourceMemberAction>(
+            enabled: editable,
+            onSelected: (action) => _reportResourcesWrite(
+              childScope,
+              host.removeMember(
+                member,
+                delete: action == _ResourceMemberAction.delete,
+                context: childScope.invocation,
+              ),
+            ),
+            itemBuilder: (_) => const [
+              PopupMenuItem(
+                value: _ResourceMemberAction.disconnect,
+                child: Text("Disconnect"),
+              ),
+              PopupMenuItem(
+                value: _ResourceMemberAction.delete,
+                child: Text("Delete resource"),
+              ),
+            ],
+          ),
+        ],
       ),
     );
   }
@@ -797,6 +812,9 @@ int _compareOrderKeys(skir.DataValue? left, skir.DataValue? right) {
 
 enum _ResourceMemberAction { disconnect, delete }
 
+/// The narrowest width a timeline track header lays its member out at.
+const _minimumTrackItemWidth = 72.0;
+
 void _reportResourcesWrite(
   PortablePresentationScope scope,
   PortablePresentationWriteResult result,
@@ -862,7 +880,7 @@ TimelineStyle _resourceTimelineStyle(
   double dimension(double? value, double fallback, {bool positive = false}) {
     if (value == null) return fallback;
     if (!value.isFinite || (positive ? value <= 0 : value < 0)) {
-      throw const PresentationColorFailure(
+      throw const PresentationValueFailure(
         "Timeline dimensions must be finite and within their allowed range",
       );
     }

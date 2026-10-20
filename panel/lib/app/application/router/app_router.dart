@@ -45,9 +45,9 @@ Raw<AppRouter> appRouter(Ref ref) {
 /// Defines the panel's route tree and the guards protecting each scope.
 ///
 /// Authentication guards protect the public and private roots. The shared
-/// organization guard protects organization and book routes. Nested realm
-/// routes also check authentication but do not validate realm existence or
-/// realm specific access. Navigation admission consults [workSessionLoss]
+/// organization guard protects the organization route and everything nested
+/// beneath it. Nested realm routes also check authentication but do not
+/// validate realm existence or realm specific access. Navigation admission consults [workSessionLoss]
 /// before leaving the current local work scope, including platform URL changes.
 @AutoRouterConfig(replaceInRouteName: "Page,Route")
 class AppRouter extends RootStackRouter {

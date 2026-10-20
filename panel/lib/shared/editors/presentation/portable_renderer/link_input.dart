@@ -32,6 +32,7 @@ extension _PortableLinkInputRendering on PortablePresentationNodeRenderer {
     if (items == null) {
       return PortableResourcesInteractionScope.wrapLinkField(
         context,
+        childScope,
         location,
         _AuthoredLinkValueInput(
           key: ValueKey("${node.nodeId}.link"),
@@ -52,6 +53,7 @@ extension _PortableLinkInputRendering on PortablePresentationNodeRenderer {
             .toFrozen();
     return PortableResourcesInteractionScope.wrapLinkField(
       context,
+      childScope,
       location,
       collectionWithFocus(
         sourceScope: childScope,
@@ -210,9 +212,10 @@ extension _DirectLinkCollectionRow on PortablePresentationNodeRenderer {
                       node: node,
                       scope: targetScope,
                     ),
-                fallback: (appearance, problem) => Text(
-                  problem ?? appearance?.label ?? link.target.resource.value,
-                ),
+                fallback: (appearance, problem) => switch (appearance) {
+                  final known? when problem == null => Text(known.label),
+                  _ => _MissingLinkTarget(problem: problem),
+                },
               );
         final identityAndChoose = InputDecorator(
           decoration: style.decoration.copyWith(enabled: enabled),
@@ -438,9 +441,10 @@ final class _AuthoredLinkValueInput extends StatelessWidget {
               node: node,
               scope: targetScope,
             ),
-            fallback: (appearance, problem) => Text(
-              problem ?? appearance?.label ?? link.target.resource.value,
-            ),
+            fallback: (appearance, problem) => switch (appearance) {
+              final known? when problem == null => Text(known.label),
+              _ => _MissingLinkTarget(problem: problem),
+            },
           );
     final content = InputDecorator(
       decoration: style.decoration.copyWith(enabled: enabled),
@@ -561,6 +565,37 @@ final class _AuthoredLinkValueInput extends StatelessWidget {
           child: framedContent,
         ),
       ),
+    );
+  }
+}
+
+/// Stands in for a link whose target cannot be shown, such as a resource that
+/// no longer exists, instead of its raw identity.
+final class _MissingLinkTarget extends StatelessWidget {
+  const _MissingLinkTarget({this.problem});
+
+  /// Why the target cannot render, when known.
+  final String? problem;
+
+  @override
+  Widget build(BuildContext context) {
+    final color = Theme.of(context).colorScheme.error;
+    return Row(
+      spacing: context.spacing.space1,
+      children: [
+        Icon(
+          problem == null ? Icons.link_off : Icons.error_outline,
+          size: 16,
+          color: color,
+        ),
+        Flexible(
+          child: Text(
+            problem ?? "Missing resource",
+            overflow: TextOverflow.ellipsis,
+            style: DefaultTextStyle.of(context).style.copyWith(color: color),
+          ),
+        ),
+      ],
     );
   }
 }

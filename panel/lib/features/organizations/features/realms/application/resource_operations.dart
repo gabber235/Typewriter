@@ -166,22 +166,6 @@ List<SelectionOperation> resourceSelectionOperationsFor(
   ];
 }
 
-extension ResourceSelectionOperationQueries
-    on Iterable<ResourceSelectionOperation> {
-  /// Enabled operations that a drop can run.
-  Iterable<ResourceSelectionOperation> get droppable => where(
-    (selection) =>
-        selection.operation.definition.drop != null && selection.enabled,
-  );
-
-  /// The operation bound to the delete key, if any.
-  ResourceSelectionOperation? get deleteShortcut => firstWhereOrNull(
-    (selection) =>
-        selection.operation.definition.presentation.shortcut ==
-        skir.OperationShortcut.delete,
-  );
-}
-
 /// Menu sections of resource affordances, in display order.
 enum ResourceOperationMenuGroup { navigation, edit, organize, destructive }
 

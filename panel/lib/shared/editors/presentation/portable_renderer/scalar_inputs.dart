@@ -288,7 +288,7 @@ extension _PortableScalarInputRendering on PortablePresentationNodeRenderer {
         ? null
         : switch (_string(scope, localeExpression)) {
             _ResolvedValue(:final value) => value,
-            _ResolvedFailure(:final message) => throw PresentationColorFailure(
+            _ResolvedFailure(:final message) => throw PresentationValueFailure(
               message,
             ),
           };
@@ -299,7 +299,7 @@ extension _PortableScalarInputRendering on PortablePresentationNodeRenderer {
               onFailure: (_) => null,
             ) ==
             null) {
-      throw const PresentationColorFailure(
+      throw const PresentationValueFailure(
         "The numeric editing locale is unavailable",
       );
     }
@@ -342,7 +342,7 @@ extension _PortableScalarInputRendering on PortablePresentationNodeRenderer {
                 value is skir.DataValue_floatWrapper ||
                 value is skir.DataValue_decimalWrapper =>
           value,
-        _ => throw const PresentationColorFailure(
+        _ => throw const PresentationValueFailure(
           "Numeric options must produce an available numeric value",
         ),
       };

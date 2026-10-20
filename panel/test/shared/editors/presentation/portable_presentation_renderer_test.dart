@@ -1364,6 +1364,19 @@ void main() {
     expect(find.byType(DepthBox), findsWidgets);
   });
 
+  testWidgets("presents a link to a missing resource as missing", (
+    tester,
+  ) async {
+    final fixture = _linkCollectionFixture(
+      withPartialLinks: true,
+      missingTarget: true,
+    );
+    await tester.pumpTestApp(child: fixture.widget);
+
+    expect(find.text("Missing resource"), findsOneWidget);
+    expect(find.text(fixture.target.value), findsNothing);
+  });
+
   testWidgets("keeps selected link identity beside compact row actions", (
     tester,
   ) async {
@@ -1859,6 +1872,7 @@ void main() {
 })
 _linkCollectionFixture({
   bool withPartialLinks = false,
+  bool missingTarget = false,
   bool directCollection = false,
   bool adaptiveAppearance = false,
   String? label,
@@ -2256,7 +2270,7 @@ _linkCollectionFixture({
     catalog: checked,
     resources: {
       _resource: sourceRecord,
-      target: targetRecord("Target Alpha"),
+      if (!missingTarget) target: targetRecord("Target Alpha"),
       secondTarget: targetRecord("Target Beta"),
     },
   );

@@ -40,6 +40,9 @@ extension ResourceOwnershipRelation on skir.RelationContract {
 /// section types, and ownership relations below them. Nothing here names a
 /// library type; every fact comes from relation families and the published
 /// realm root.
+/// Creatable types by catalog identity. A checked catalog is immutable.
+final _creatableTypes = Expando<Set<skir.TypeDefinitionId>>();
+
 extension RealmStructureCatalog on CheckedEditorCatalog {
   /// Ownership relations with exactly one owner endpoint, in catalog order.
   List<OwnershipRelation> get ownershipRelations => [
@@ -106,13 +109,16 @@ extension RealmStructureCatalog on CheckedEditorCatalog {
     ];
   }
 
-  /// Concrete resource types a person may create: everything except the realm
-  /// root and its sections, which the realm creates itself.
-  Iterable<skir.TypeDefinitionId> get creatableTypes =>
-      concreteResourceTypes.where((type) {
-        final selection = beginSelection(type);
-        return !isRealmRoot(selection) && !isRealmSection(selection);
-      });
+  /// Concrete resource types a person may create, in catalog order:
+  /// everything except the realm root and its sections, which the realm
+  /// creates itself. Derived once per catalog.
+  Set<skir.TypeDefinitionId> get creatableTypes =>
+      _creatableTypes[this] ??= Set.unmodifiable(
+        concreteResourceTypes.where((type) {
+          final selection = beginSelection(type);
+          return !isRealmRoot(selection) && !isRealmSection(selection);
+        }),
+      );
 
   /// The link fields through which resources of [selection] own others, in
   /// field order. A field qualifies when its links are the owner endpoint of

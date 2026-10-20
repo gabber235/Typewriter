@@ -138,7 +138,7 @@ _Resolved<Color?> _optionalTextColor(
 ) {
   try {
     return _ResolvedValue(_color(context, scope, color));
-  } on PresentationColorFailure catch (failure) {
+  } on PresentationValueFailure catch (failure) {
     return _ResolvedFailure(failure.message);
   }
 }

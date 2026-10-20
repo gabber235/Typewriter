@@ -39,15 +39,35 @@ void main() {
       first,
       outro,
     ]);
-    expect(crumbs[0].siblings.map((choice) => choice.resource), [
-      fixtureLibraryId,
-      fixtureTaxonomyId,
-    ]);
-    expect(crumbs[1].siblings.map((choice) => choice.appearance.label), [
-      "Atlas",
-      "Zebra",
-    ]);
-    expect(crumbs[2].siblings.map((choice) => choice.resource), [intro, outro]);
+    expect(
+      crumbs[0].siblings,
+      unorderedEquals([fixtureLibraryId, fixtureTaxonomyId]),
+    );
+    expect(crumbs[1].siblings, unorderedEquals([first, second]));
+    expect(crumbs[2].siblings, unorderedEquals([intro, outro]));
+
+    final scope = AuthoringScope(
+      organizationId: skir.recordId("organization:crumbs"),
+      realmId: skir.recordId("realm:crumbs"),
+    );
+    final container = ProviderContainer.test(
+      overrides: [
+        workingAuthoringDocumentProvider(scope)
+            .overrideWithValue(AsyncData(document)),
+      ],
+    );
+    expect(
+      container
+          .read(resourceCrumbChoicesProvider(scope, crumbs[1]))
+          .map((choice) => choice.appearance.label),
+      ["Atlas", "Zebra"],
+    );
+    expect(
+      container
+          .read(resourceCrumbChoicesProvider(scope, crumbs[2]))
+          .map((choice) => choice.resource),
+      [intro, outro],
+    );
   });
 
   test("a section's breadcrumb is the section itself", () {

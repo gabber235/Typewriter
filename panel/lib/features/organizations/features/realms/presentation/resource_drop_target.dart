@@ -33,9 +33,18 @@ abstract class ResourceDropHover with _$ResourceDropHover {
 /// the drop chooser at the pointer.
 ///
 /// Candidates come from [dropCandidatesProvider], fetched once when the drag
-/// starts, so hovering costs no round trips. While they load the target
-/// stays neutral and accepts; a drop then waits for them. Acceptance is
-/// claimed from the gesture once, before any asynchronous work.
+/// starts, so hovering costs no round trips. Link field and group offers need
+/// no candidates and are known at once. While candidates load, a target whose
+/// resource destinations might still offer an operation stays neutral and
+/// accepts; a target with nothing to offer refuses, so the targets around it
+/// receive the drag.
+///
+/// Flutter delivers a drop only to the target that accepted the hover. A
+/// target that turns out to have nothing to offer hands the drop to the
+/// nearest enclosing [ResourceDropTarget], before claiming it when its offers
+/// are known, or after its candidates arrive otherwise. Acceptance is claimed
+/// from the gesture once, before any asynchronous work, and only when some
+/// target in that chain may still offer something.
 class ResourceDropTarget extends ConsumerStatefulWidget {
   const ResourceDropTarget({
     required this.scope,
@@ -106,8 +115,9 @@ class _ResourceDropTargetState extends ConsumerState<ResourceDropTarget> {
   bool _eligible(GraphDragPayload<ResourceDrag> offered) =>
       offered.canHover && offered.value.scope == widget.scope && _canMutate();
 
-  /// Offers at the pointer, or null while candidates load. Failed candidates
-  /// still allow link and group drops, which need no round trip.
+  /// Offers at the pointer, or null while candidates load and a resource
+  /// destination might still offer an operation. Failed candidates still
+  /// allow link and group drops, which need no round trip.
   List<DropOffer>? _offers(
     AsyncValue<DropCandidateIndex> candidates,
     AuthoringDocument? document,
@@ -115,15 +125,15 @@ class _ResourceDropTargetState extends ConsumerState<ResourceDropTarget> {
     Offset pointer,
   ) {
     if (document == null) return null;
-    final index = switch (candidates) {
-      AsyncValue(:final value?) => value,
+    final destinations = widget.destinations(pointer);
+    return switch (candidates) {
+      AsyncValue(:final value?) => value.offersFor(destinations, document),
       AsyncValue(hasError: true) => DropCandidateIndex(
         drag: offered.value,
         byOperation: const {},
-      ),
-      _ => null,
+      ).offersFor(destinations, document),
+      _ => offered.value.pendingOffersFor(destinations, document),
     };
-    return index?.offersFor(widget.destinations(pointer), document);
   }
 
   List<DropOffer>? _readOffers(
@@ -136,11 +146,56 @@ class _ResourceDropTargetState extends ConsumerState<ResourceDropTarget> {
     pointer,
   );
 
-  Future<void> _drop(
+  _ResourceDropTargetState? get _enclosing => context
+      .getInheritedWidgetOfExactType<_EnclosingResourceDropTarget>()
+      ?.target;
+
+  /// Accepts a drop Flutter delivered to this target, or hands it to the
+  /// enclosing target when this one has nothing to offer. Claims the gesture
+  /// only while an offer is known or may still arrive, and returns whether
+  /// this target claimed it.
+  bool _accept(GraphDragPayload<ResourceDrag> offered, Offset pointer) {
+    final offers = _eligible(offered)
+        ? _readOffers(offered, pointer)
+        : const <DropOffer>[];
+    if (offers != null && offers.isEmpty) {
+      _enclosing?._accept(offered, pointer);
+      return false;
+    }
+    if (!offered.claim()) return false;
+    // Claim is the handoff. Do not check hover phase after an await.
+    unawaited(_dropClaimed(offered, pointer));
+    return true;
+  }
+
+  Future<void> _dropClaimed(
     GraphDragPayload<ResourceDrag> offered,
     Offset pointer,
   ) async {
-    final drag = offered.value;
+    try {
+      if (!await _drop(offered.value, pointer)) {
+        await _enclosing?._dropFallback(offered.value, pointer);
+      }
+    } finally {
+      if (mounted && identical(_hovered, offered)) {
+        setState(() => _observeHover(null));
+      }
+    }
+  }
+
+  /// Runs what this target offers for a drop an inner target claimed but
+  /// could not use, or hands it further out.
+  Future<void> _dropFallback(ResourceDrag drag, Offset pointer) async {
+    if (!mounted) return;
+    if (drag.scope == widget.scope && _canMutate()) {
+      if (await _drop(drag, pointer)) return;
+    }
+    if (mounted) await _enclosing?._dropFallback(drag, pointer);
+  }
+
+  /// Runs what [drag] offers at [pointer] once its candidates are known.
+  /// Returns false when this target offers nothing.
+  Future<bool> _drop(ResourceDrag drag, Offset pointer) async {
     final destinations = widget.destinations(pointer);
     final candidates = ref.listenManual(
       dropCandidatesProvider(drag),
@@ -153,18 +208,20 @@ class _ResourceDropTargetState extends ConsumerState<ResourceDropTarget> {
       } on Object {
         index = DropCandidateIndex(drag: drag, byOperation: const {});
       }
+      if (!mounted) return true;
       final document = ref
           .read(workingAuthoringDocumentProvider(widget.scope))
           .value;
-      if (!mounted || document == null || !_canMutate()) return;
+      if (document == null || !_canMutate()) return true;
       final offers = index.offersFor(destinations, document);
+      if (offers.isEmpty) return false;
       final chosen = switch (offers) {
-        [] => null,
         [final offer] => offer,
         _ => await showDropChooser(context, pointer, offers),
       };
-      if (chosen == null || !mounted) return;
+      if (chosen == null || !mounted) return true;
       await chosen.run(ref, drag, canMutate: _canMutate);
+      return true;
     } finally {
       candidates.close();
     }
@@ -183,65 +240,76 @@ class _ResourceDropTargetState extends ConsumerState<ResourceDropTarget> {
       );
     }
 
-    return DragTarget<GraphDragPayload<ResourceDrag>>(
-      onWillAcceptWithDetails: (details) {
-        final offered = details.data;
-        if (!_eligible(offered)) return false;
-        if (!identical(_hovered, offered)) {
-          setState(() => _observeHover(offered));
-        }
-        final known = _readOffers(offered, offered.pointer ?? details.offset);
-        return known == null || known.isNotEmpty;
-      },
-      onLeave: (offered) {
-        if (mounted && identical(_hovered, offered)) {
-          setState(() => _observeHover(null));
-        }
-      },
-      onAcceptWithDetails: (details) async {
-        final offered = details.data;
-        final pointer = offered.pointer ?? details.offset;
-        if (!_eligible(offered) ||
-            _readOffers(offered, pointer)?.isEmpty == true ||
-            !offered.claim()) {
-          return;
-        }
-        // Claim is the handoff. Do not check hover phase after an await.
-        try {
-          await _drop(offered, pointer);
-        } finally {
+    return _EnclosingResourceDropTarget(
+      target: this,
+      child: _buildTarget(offers),
+    );
+  }
+
+  Widget _buildTarget(List<DropOffer>? offers) =>
+      DragTarget<GraphDragPayload<ResourceDrag>>(
+        onWillAcceptWithDetails: (details) {
+          final offered = details.data;
+          if (!_eligible(offered)) return false;
+          if (!identical(_hovered, offered)) {
+            setState(() => _observeHover(offered));
+          }
+          final known = _readOffers(offered, offered.pointer ?? details.offset);
+          return known == null || known.isNotEmpty;
+        },
+        onLeave: (offered) {
           if (mounted && identical(_hovered, offered)) {
             setState(() => _observeHover(null));
           }
-        }
-      },
-      builder: (context, accepted, rejected) => HookBuilder(
-        builder: (context) {
-          useListenable(
-            Listenable.merge([
-              ...accepted.nonNulls,
-              ...rejected.whereType<GraphDragPayload<ResourceDrag>>(),
-            ]),
-          );
-          final accepting = accepted.nonNulls.any(
-            (offered) => identical(_hovered, offered) && _eligible(offered),
-          );
-          return widget.builder(
-            context,
-            ResourceDropHover(
-              accepted: accepting && offers != null && offers.isNotEmpty,
-              rejected:
-                  rejected.whereType<GraphDragPayload<ResourceDrag>>().any(
-                    (offered) => offered.canHover,
-                  ) ||
-                  accepting && offers != null && offers.isEmpty,
-              hint: accepting ? ResourceDropHover.hintFor(offers) : null,
-            ),
-          );
         },
-      ),
-    );
-  }
+        onAcceptWithDetails: (details) {
+          final offered = details.data;
+          if (!_accept(offered, offered.pointer ?? details.offset) &&
+              identical(_hovered, offered)) {
+            setState(() => _observeHover(null));
+          }
+        },
+        builder: (context, accepted, rejected) => HookBuilder(
+          builder: (context) {
+            useListenable(
+              Listenable.merge([
+                ...accepted.nonNulls,
+                ...rejected.whereType<GraphDragPayload<ResourceDrag>>(),
+              ]),
+            );
+            final accepting = accepted.nonNulls.any(
+              (offered) => identical(_hovered, offered) && _eligible(offered),
+            );
+            return widget.builder(
+              context,
+              ResourceDropHover(
+                accepted: accepting && offers != null && offers.isNotEmpty,
+                rejected:
+                    rejected.whereType<GraphDragPayload<ResourceDrag>>().any(
+                      (offered) => offered.canHover,
+                    ) ||
+                    accepting && offers != null && offers.isEmpty,
+                hint: accepting ? ResourceDropHover.hintFor(offers) : null,
+              ),
+            );
+          },
+        ),
+      );
+}
+
+/// Lets a nested [ResourceDropTarget] hand drops it cannot use to the target
+/// around it.
+class _EnclosingResourceDropTarget extends InheritedWidget {
+  const _EnclosingResourceDropTarget({
+    required this.target,
+    required super.child,
+  });
+
+  final _ResourceDropTargetState target;
+
+  @override
+  bool updateShouldNotify(_EnclosingResourceDropTarget oldWidget) =>
+      target != oldWidget.target;
 }
 
 /// Outlines a drop target that is not a resource item, and shows the hint of
@@ -331,8 +399,16 @@ class DropChooser extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => Shortcuts(
+    // Web platform defaults map arrow keys to scrolling, so the chooser binds
+    // them to focus traversal itself.
     shortcuts: const {
       SingleActivator(LogicalKeyboardKey.escape): DismissIntent(),
+      SingleActivator(LogicalKeyboardKey.arrowDown): DirectionalFocusIntent(
+        TraversalDirection.down,
+      ),
+      SingleActivator(LogicalKeyboardKey.arrowUp): DirectionalFocusIntent(
+        TraversalDirection.up,
+      ),
     },
     child: Actions(
       actions: {

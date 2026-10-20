@@ -6,8 +6,8 @@ import "package:typewriter_testkit/typewriter_testkit.dart";
 
 /// A small catalog of ordinary value requirements, independent of ownership
 /// policy between its resources. A store type owns every resource type
-/// through its own field, which makes them creatable without adding owner
-/// questions.
+/// through its own field only, which makes them creatable; its documents hold
+/// the single store, so every creation joins it without an owner question.
 final class ResourceCreationFixture {
   /// Books owned by a Library that already exists, and pages owned by Books,
   /// each linking back to its owner, as Realm declares them. Creating a page
@@ -119,6 +119,9 @@ final class ResourceCreationFixture {
   final skir.CatalogGeneration generation;
   var _store = true;
   final library = skir.ResourceId(value: "library:existing");
+
+  /// The single store owning every created resource of the default catalog.
+  final store = skir.ResourceId(value: "store:existing");
   final book = skir.ResourceId(value: "book:existing");
   final page = skir.ResourceId(value: "page:existing");
   final _types = <skir.PublishedType>[];
@@ -484,6 +487,11 @@ final class ResourceCreationFixture {
       entries: const {},
       links: const [],
     );
+    if (_store) {
+      document = (AuthoringEdit.fromDocument(
+        document,
+      )..create(store, _prepared(document, "Store"))).toDocument();
+    }
     if (existing) {
       final edit = AuthoringEdit.fromDocument(document);
       for (final (id, name) in [(book, "Book"), (page, "Page")]) {
@@ -522,6 +530,18 @@ final class ResourceCreationFixture {
       document = edit.toDocument();
     }
     return document;
+  }
+
+  /// [document] with another empty store for each of [stores].
+  AuthoringDocument withStores(
+    AuthoringDocument document,
+    Iterable<skir.ResourceId> stores,
+  ) {
+    final edit = AuthoringEdit.fromDocument(document);
+    for (final id in stores) {
+      edit.create(id, _prepared(document, "Store"));
+    }
+    return edit.toDocument();
   }
 
   /// [document] with an unlinked Book for each of [books].

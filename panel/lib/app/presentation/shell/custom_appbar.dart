@@ -80,15 +80,22 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
 
 /// Opens the route supplied navigation surface with its provider scope intact.
 class SidebarMenuButton extends StatelessWidget {
-  const SidebarMenuButton({required this.sidebar, super.key});
+  const SidebarMenuButton({
+    required this.sidebar,
+    this.tooltip = "Open navigation",
+    this.icon = const Icon(Icons.menu),
+    super.key,
+  });
 
   final Widget sidebar;
+  final String tooltip;
+  final Widget icon;
 
   @override
   Widget build(BuildContext context) {
     return IconButton(
-      tooltip: "Open navigation",
-      icon: const Icon(Icons.menu),
+      tooltip: tooltip,
+      icon: icon,
       onPressed: () {
         showModalBottomSheet(
           context: context,

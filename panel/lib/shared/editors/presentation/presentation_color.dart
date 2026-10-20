@@ -5,7 +5,7 @@ import "package:typewriter_panel/typewriter_panel.dart";
 /// Resolves typed color policy against an environment's theme, surface and
 /// interaction state without changing any of them.
 extension PresentationColorResolution on PresentationValueEnvironment {
-  /// Throws [PresentationColorFailure] for invalid or unavailable input.
+  /// Throws [PresentationValueFailure] for invalid or unavailable input.
   Color resolve(
     skir.PresentationColor color,
     PortablePresentationScope scope,
@@ -23,7 +23,7 @@ final class _PresentationColorResolver {
 
   void _visit(int depth) {
     if (--remaining < 0 || depth > 64) {
-      throw const PresentationColorFailure(
+      throw const PresentationValueFailure(
         "Presentation color exceeds the evaluation budget",
       );
     }
@@ -39,13 +39,13 @@ final class _PresentationColorResolver {
               when result.authoredInteger != null:
             return Color(result.authoredInteger!.toUnsigned(32).toInt());
           case PortableExpressionFailed(:final message):
-            throw PresentationColorFailure(message);
+            throw PresentationValueFailure(message);
           case PortableExpressionUnavailable():
-            throw const PresentationColorFailure(
+            throw const PresentationValueFailure(
               "Presentation color is unavailable",
             );
           default:
-            throw const PresentationColorFailure(
+            throw const PresentationValueFailure(
               "Presentation color must evaluate to a color",
             );
         }
@@ -62,7 +62,7 @@ final class _PresentationColorResolver {
             environment.theme.brightness == Brightness.dark
                 ? Colors.white
                 : Colors.black,
-          _ => throw const PresentationColorFailure(
+          _ => throw const PresentationValueFailure(
             "Presentation theme color is unavailable",
           ),
         };
@@ -74,7 +74,7 @@ final class _PresentationColorResolver {
             appearance.foreground,
           skir.PresentationAmbientColor_kind.secondaryForegroundConst =>
             appearance.secondaryForeground,
-          _ => throw const PresentationColorFailure(
+          _ => throw const PresentationValueFailure(
             "Presentation ambient color is unavailable",
           ),
         };
@@ -90,13 +90,13 @@ final class _PresentationColorResolver {
             ThemeData.estimateBrightnessForColor(background) == Brightness.dark
                 ? Colors.white
                 : Colors.black,
-          _ => throw const PresentationColorFailure(
+          _ => throw const PresentationValueFailure(
             "Presentation contrast mode is unavailable",
           ),
         };
       case skir.PresentationColor_alphaWrapper(:final value):
         if (!value.alpha.isFinite || value.alpha < 0 || value.alpha > 1) {
-          throw const PresentationColorFailure(
+          throw const PresentationValueFailure(
             "Presentation alpha must be between zero and one",
           );
         }
@@ -119,7 +119,7 @@ final class _PresentationColorResolver {
               : value.light,
         );
       default:
-        throw const PresentationColorFailure(
+        throw const PresentationValueFailure(
           "Presentation color variant is unavailable",
         );
     }
@@ -134,7 +134,7 @@ Color _adjusted(Color source, double lightness, double chroma) {
       !chroma.isFinite ||
       lightness.abs() > 1 ||
       chroma.abs() > 1) {
-    throw const PresentationColorFailure(
+    throw const PresentationValueFailure(
       "Presentation color adjustments must be between minus one and one",
     );
   }

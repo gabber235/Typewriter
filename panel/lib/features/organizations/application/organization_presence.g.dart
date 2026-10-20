@@ -59,7 +59,7 @@ final class OrganizationPresenceProvider
 }
 
 String _$organizationPresenceHash() =>
-    r'0c33e1a712f0f6f50e1d923a5c361b703ce2fe65';
+    r'f2a98efce1a1ff51b9b4194587fb6507370e01af';
 
 /// Publishes and observes ephemeral collaboration presence for one organization.
 ///

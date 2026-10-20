@@ -68,7 +68,7 @@ class _PresentationSurface extends StatelessWidget {
         foregroundFor: hasForeground ? foregroundFor : null,
         child: child,
       );
-    } on PresentationColorFailure catch (failure) {
+    } on PresentationValueFailure catch (failure) {
       return diagnostic(failure.message);
     }
   }
@@ -84,7 +84,7 @@ BoxShadow _boxShadow(
       !shadow.spread.isFinite ||
       !shadow.offsetX.isFinite ||
       !shadow.offsetY.isFinite) {
-    throw const PresentationColorFailure(
+    throw const PresentationValueFailure(
       "Shadow blur must be finite and nonnegative, with finite spread and offsets",
     );
   }

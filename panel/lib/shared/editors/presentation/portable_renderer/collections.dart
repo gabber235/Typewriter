@@ -511,7 +511,7 @@ final class _ResourceReferenceAppearance extends HookWidget {
             reportStatus: operations.reportStatus,
             bindings: {
               ...scope.bindings,
-              _configuredValueBindingId: configured,
+              configuredValueBindingId: configured,
               presentationSubjectIdentifierBindingId: resource
                   .toExpressionBinding(),
               presentationSubjectAppearanceBindingId: appearance
@@ -519,8 +519,8 @@ final class _ResourceReferenceAppearance extends HookWidget {
             },
             authoredAliases: {
               ...scope.authoredAliases,
-              _configuredValueBindingId: AuthoredBindingAddress.binding(
-                _configuredValueBindingId,
+              configuredValueBindingId: AuthoredBindingAddress.binding(
+                configuredValueBindingId,
                 configured,
               ),
             },

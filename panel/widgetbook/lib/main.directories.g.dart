@@ -52,10 +52,14 @@ import 'package:widgetbook_workspace/stories/features/organizations/features/rea
     as _widgetbook_workspace_stories_features_organizations_features_realms_presentation_realm_inbox_stories;
 import 'package:widgetbook_workspace/stories/features/organizations/features/realms/presentation/realm_selector.stories.dart'
     as _widgetbook_workspace_stories_features_organizations_features_realms_presentation_realm_selector_stories;
+import 'package:widgetbook_workspace/stories/features/organizations/features/realms/presentation/resource_breadcrumbs.stories.dart'
+    as _widgetbook_workspace_stories_features_organizations_features_realms_presentation_resource_breadcrumbs_stories;
 import 'package:widgetbook_workspace/stories/features/organizations/features/realms/presentation/resource_drop_target.stories.dart'
     as _widgetbook_workspace_stories_features_organizations_features_realms_presentation_resource_drop_target_stories;
 import 'package:widgetbook_workspace/stories/features/organizations/features/realms/presentation/resource_issue_badge.stories.dart'
     as _widgetbook_workspace_stories_features_organizations_features_realms_presentation_resource_issue_badge_stories;
+import 'package:widgetbook_workspace/stories/features/organizations/features/realms/presentation/resource_navigator.stories.dart'
+    as _widgetbook_workspace_stories_features_organizations_features_realms_presentation_resource_navigator_stories;
 import 'package:widgetbook_workspace/stories/features/organizations/features/realms/presentation/resource_operation_button.stories.dart'
     as _widgetbook_workspace_stories_features_organizations_features_realms_presentation_resource_operation_button_stories;
 import 'package:widgetbook_workspace/stories/features/organizations/features/realms/presentation/resource_route.stories.dart'
@@ -691,7 +695,7 @@ final directories = <_widgetbook.WidgetbookNode>[
                           _widgetbook.WidgetbookUseCase(
                             name: 'Realm sections',
                             builder:
-                                _widgetbook_workspace_stories_features_organizations_features_realms_presentation_resource_route_stories
+                                _widgetbook_workspace_stories_features_organizations_features_realms_presentation_resource_navigator_stories
                                     .realmSectionsNavigatorUseCase,
                           ),
                         ],
@@ -713,7 +717,7 @@ final directories = <_widgetbook.WidgetbookNode>[
                           _widgetbook.WidgetbookUseCase(
                             name: 'Owner chain',
                             builder:
-                                _widgetbook_workspace_stories_features_organizations_features_realms_presentation_resource_route_stories
+                                _widgetbook_workspace_stories_features_organizations_features_realms_presentation_resource_breadcrumbs_stories
                                     .resourceBreadcrumbsUseCase,
                           ),
                         ],
@@ -770,6 +774,17 @@ final directories = <_widgetbook.WidgetbookNode>[
                             builder:
                                 _widgetbook_workspace_stories_features_organizations_features_realms_presentation_resource_operation_button_stories
                                     .resourceOperationButtonStory,
+                          ),
+                        ],
+                      ),
+                      _widgetbook.WidgetbookComponent(
+                        name: 'ResourceRailMenuButton',
+                        useCases: [
+                          _widgetbook.WidgetbookUseCase(
+                            name: 'Narrow surface rail',
+                            builder:
+                                _widgetbook_workspace_stories_features_organizations_features_realms_presentation_resource_route_stories
+                                    .resourceRailMenuButtonUseCase,
                           ),
                         ],
                       ),

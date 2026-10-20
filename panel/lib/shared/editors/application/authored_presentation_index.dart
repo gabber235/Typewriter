@@ -205,7 +205,7 @@ extension AuthoredPresentationBindings on skir.PresentationNode {
         yield AuthoredBindingUse(address: address);
       }
     }
-    final configured = skir.ExpressionBindingId(value: "configured_value");
+    final configured = configuredValueBindingId;
     for (final item in header?.items ?? const <skir.HeaderItem>[]) {
       if (item case skir.HeaderItem_reorderHandleWrapper(:final value)) {
         onEditableBinding?.call(value.source, aliases.resolve(value.source));

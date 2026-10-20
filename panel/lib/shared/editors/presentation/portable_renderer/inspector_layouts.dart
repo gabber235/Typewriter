@@ -54,7 +54,7 @@ abstract class ActivePartPresentation with _$ActivePartPresentation {
 extension PortableInspectorComposition on PortablePresentationScope {
   PortablePresentationScope startInspectorLayout() {
     final source = material;
-    final owner = authoredAliases[_configuredValueBindingId];
+    final owner = authoredAliases[configuredValueBindingId];
     final actual = configuredSelection;
     final descriptor = catalog?.snapshot.presentations
         .where((entry) => entry.id == source?.provider)
@@ -81,7 +81,7 @@ extension PortableInspectorComposition on PortablePresentationScope {
   }
 
   PortableInspectorFrame? get currentInspectorFrame {
-    final owner = authoredAliases[_configuredValueBindingId];
+    final owner = authoredAliases[configuredValueBindingId];
     return owner != null && inspectorFrame?.owner == owner
         ? inspectorFrame
         : null;
@@ -116,7 +116,7 @@ extension PortableInspectorComposition on PortablePresentationScope {
   /// Replaced parts retain their fallback field reservation, preventing a
   /// remaining fields continuation from reintroducing the displaced controls.
   PortableInspectorClaims inspectorClaims() {
-    final owner = authoredAliases[_configuredValueBindingId];
+    final owner = authoredAliases[configuredValueBindingId];
     if (owner == null) return const PortableInspectorClaims();
     final higher =
         currentInspectorFrame?.higher ?? const PortableInspectorClaims();
@@ -248,7 +248,7 @@ extension _PortableInspectorRendering on PortablePresentationNodeRenderer {
     skir.PresentationPartElement element,
     PortablePresentationScope childScope,
   ) {
-    final owner = childScope.authoredAliases[_configuredValueBindingId];
+    final owner = childScope.authoredAliases[configuredValueBindingId];
     if (owner == null) return _diagnostic("The part record is unavailable");
     final active = ActivePartPresentation(
       key: element.key,

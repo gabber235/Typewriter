@@ -348,12 +348,229 @@ final class RoutedSectionFamily extends $Family
   String toString() => r'routedSectionProvider';
 }
 
-/// The breadcrumbs of [scope]'s routed resource.
+/// The layout of [resource]'s surface in [scope], or null while the resource
+/// is unavailable. Selects only the layout, so edits that keep it do not
+/// rebuild the surface.
+
+@ProviderFor(resourceSurfaceLayout)
+final resourceSurfaceLayoutProvider = ResourceSurfaceLayoutFamily._();
+
+/// The layout of [resource]'s surface in [scope], or null while the resource
+/// is unavailable. Selects only the layout, so edits that keep it do not
+/// rebuild the surface.
+
+final class ResourceSurfaceLayoutProvider
+    extends
+        $FunctionalProvider<
+          ResourceSurfaceLayout?,
+          ResourceSurfaceLayout?,
+          ResourceSurfaceLayout?
+        >
+    with $Provider<ResourceSurfaceLayout?> {
+  /// The layout of [resource]'s surface in [scope], or null while the resource
+  /// is unavailable. Selects only the layout, so edits that keep it do not
+  /// rebuild the surface.
+  ResourceSurfaceLayoutProvider._({
+    required ResourceSurfaceLayoutFamily super.from,
+    required (AuthoringScope, skir.ResourceId) super.argument,
+  }) : super(
+         retry: null,
+         name: r'resourceSurfaceLayoutProvider',
+         isAutoDispose: true,
+         dependencies: null,
+         $allTransitiveDependencies: null,
+       );
+
+  @override
+  String debugGetCreateSourceHash() => _$resourceSurfaceLayoutHash();
+
+  @override
+  String toString() {
+    return r'resourceSurfaceLayoutProvider'
+        ''
+        '$argument';
+  }
+
+  @$internal
+  @override
+  $ProviderElement<ResourceSurfaceLayout?> $createElement(
+    $ProviderPointer pointer,
+  ) => $ProviderElement(pointer);
+
+  @override
+  ResourceSurfaceLayout? create(Ref ref) {
+    final argument = this.argument as (AuthoringScope, skir.ResourceId);
+    return resourceSurfaceLayout(ref, argument.$1, argument.$2);
+  }
+
+  /// {@macro riverpod.override_with_value}
+  Override overrideWithValue(ResourceSurfaceLayout? value) {
+    return $ProviderOverride(
+      origin: this,
+      providerOverride: $SyncValueProvider<ResourceSurfaceLayout?>(value),
+    );
+  }
+
+  @override
+  bool operator ==(Object other) {
+    return other is ResourceSurfaceLayoutProvider && other.argument == argument;
+  }
+
+  @override
+  int get hashCode {
+    return argument.hashCode;
+  }
+}
+
+String _$resourceSurfaceLayoutHash() =>
+    r'fd1e7684588ea76161056b77df79590e2e10bfbe';
+
+/// The layout of [resource]'s surface in [scope], or null while the resource
+/// is unavailable. Selects only the layout, so edits that keep it do not
+/// rebuild the surface.
+
+final class ResourceSurfaceLayoutFamily extends $Family
+    with
+        $FunctionalFamilyOverride<
+          ResourceSurfaceLayout?,
+          (AuthoringScope, skir.ResourceId)
+        > {
+  ResourceSurfaceLayoutFamily._()
+    : super(
+        retry: null,
+        name: r'resourceSurfaceLayoutProvider',
+        dependencies: null,
+        $allTransitiveDependencies: null,
+        isAutoDispose: true,
+      );
+
+  /// The layout of [resource]'s surface in [scope], or null while the resource
+  /// is unavailable. Selects only the layout, so edits that keep it do not
+  /// rebuild the surface.
+
+  ResourceSurfaceLayoutProvider call(
+    AuthoringScope scope,
+    skir.ResourceId resource,
+  ) => ResourceSurfaceLayoutProvider._(argument: (scope, resource), from: this);
+
+  @override
+  String toString() => r'resourceSurfaceLayoutProvider';
+}
+
+/// The owning link fields of [resource] whose members a person may create, in
+/// field order. Depends only on the resource's type and the catalog.
+
+@ProviderFor(resourceCreationFields)
+final resourceCreationFieldsProvider = ResourceCreationFieldsFamily._();
+
+/// The owning link fields of [resource] whose members a person may create, in
+/// field order. Depends only on the resource's type and the catalog.
+
+final class ResourceCreationFieldsProvider
+    extends
+        $FunctionalProvider<
+          List<ResourceCreationField>,
+          List<ResourceCreationField>,
+          List<ResourceCreationField>
+        >
+    with $Provider<List<ResourceCreationField>> {
+  /// The owning link fields of [resource] whose members a person may create, in
+  /// field order. Depends only on the resource's type and the catalog.
+  ResourceCreationFieldsProvider._({
+    required ResourceCreationFieldsFamily super.from,
+    required (AuthoringScope, skir.ResourceId) super.argument,
+  }) : super(
+         retry: null,
+         name: r'resourceCreationFieldsProvider',
+         isAutoDispose: true,
+         dependencies: null,
+         $allTransitiveDependencies: null,
+       );
+
+  @override
+  String debugGetCreateSourceHash() => _$resourceCreationFieldsHash();
+
+  @override
+  String toString() {
+    return r'resourceCreationFieldsProvider'
+        ''
+        '$argument';
+  }
+
+  @$internal
+  @override
+  $ProviderElement<List<ResourceCreationField>> $createElement(
+    $ProviderPointer pointer,
+  ) => $ProviderElement(pointer);
+
+  @override
+  List<ResourceCreationField> create(Ref ref) {
+    final argument = this.argument as (AuthoringScope, skir.ResourceId);
+    return resourceCreationFields(ref, argument.$1, argument.$2);
+  }
+
+  /// {@macro riverpod.override_with_value}
+  Override overrideWithValue(List<ResourceCreationField> value) {
+    return $ProviderOverride(
+      origin: this,
+      providerOverride: $SyncValueProvider<List<ResourceCreationField>>(value),
+    );
+  }
+
+  @override
+  bool operator ==(Object other) {
+    return other is ResourceCreationFieldsProvider &&
+        other.argument == argument;
+  }
+
+  @override
+  int get hashCode {
+    return argument.hashCode;
+  }
+}
+
+String _$resourceCreationFieldsHash() =>
+    r'0fb326bf0f09e2f68f4a879bd78d8b73a515e04d';
+
+/// The owning link fields of [resource] whose members a person may create, in
+/// field order. Depends only on the resource's type and the catalog.
+
+final class ResourceCreationFieldsFamily extends $Family
+    with
+        $FunctionalFamilyOverride<
+          List<ResourceCreationField>,
+          (AuthoringScope, skir.ResourceId)
+        > {
+  ResourceCreationFieldsFamily._()
+    : super(
+        retry: null,
+        name: r'resourceCreationFieldsProvider',
+        dependencies: null,
+        $allTransitiveDependencies: null,
+        isAutoDispose: true,
+      );
+
+  /// The owning link fields of [resource] whose members a person may create, in
+  /// field order. Depends only on the resource's type and the catalog.
+
+  ResourceCreationFieldsProvider call(
+    AuthoringScope scope,
+    skir.ResourceId resource,
+  ) =>
+      ResourceCreationFieldsProvider._(argument: (scope, resource), from: this);
+
+  @override
+  String toString() => r'resourceCreationFieldsProvider';
+}
+
+/// The breadcrumbs of [scope]'s routed resource. Selects only the owner
+/// chain, so edits that keep it do not rebuild the crumbs.
 
 @ProviderFor(resourceBreadcrumbs)
 final resourceBreadcrumbsProvider = ResourceBreadcrumbsFamily._();
 
-/// The breadcrumbs of [scope]'s routed resource.
+/// The breadcrumbs of [scope]'s routed resource. Selects only the owner
+/// chain, so edits that keep it do not rebuild the crumbs.
 
 final class ResourceBreadcrumbsProvider
     extends
@@ -363,7 +580,8 @@ final class ResourceBreadcrumbsProvider
           List<ResourceCrumb>
         >
     with $Provider<List<ResourceCrumb>> {
-  /// The breadcrumbs of [scope]'s routed resource.
+  /// The breadcrumbs of [scope]'s routed resource. Selects only the owner
+  /// chain, so edits that keep it do not rebuild the crumbs.
   ResourceBreadcrumbsProvider._({
     required ResourceBreadcrumbsFamily super.from,
     required AuthoringScope super.argument,
@@ -417,9 +635,10 @@ final class ResourceBreadcrumbsProvider
 }
 
 String _$resourceBreadcrumbsHash() =>
-    r'a120425b34d86af01aba89f0e21a7732db4a25d5';
+    r'17ece4528995509da8de21c5c5e2c9a4d934431f';
 
-/// The breadcrumbs of [scope]'s routed resource.
+/// The breadcrumbs of [scope]'s routed resource. Selects only the owner
+/// chain, so edits that keep it do not rebuild the crumbs.
 
 final class ResourceBreadcrumbsFamily extends $Family
     with $FunctionalFamilyOverride<List<ResourceCrumb>, AuthoringScope> {
@@ -432,13 +651,118 @@ final class ResourceBreadcrumbsFamily extends $Family
         isAutoDispose: true,
       );
 
-  /// The breadcrumbs of [scope]'s routed resource.
+  /// The breadcrumbs of [scope]'s routed resource. Selects only the owner
+  /// chain, so edits that keep it do not rebuild the crumbs.
 
   ResourceBreadcrumbsProvider call(AuthoringScope scope) =>
       ResourceBreadcrumbsProvider._(argument: scope, from: this);
 
   @override
   String toString() => r'resourceBreadcrumbsProvider';
+}
+
+/// The resources [crumb] can switch to, ordered by label. Each choice reads
+/// its own appearance, so an edit recomputes only the choices it renames.
+
+@ProviderFor(resourceCrumbChoices)
+final resourceCrumbChoicesProvider = ResourceCrumbChoicesFamily._();
+
+/// The resources [crumb] can switch to, ordered by label. Each choice reads
+/// its own appearance, so an edit recomputes only the choices it renames.
+
+final class ResourceCrumbChoicesProvider
+    extends
+        $FunctionalProvider<
+          List<ResourceCrumbChoice>,
+          List<ResourceCrumbChoice>,
+          List<ResourceCrumbChoice>
+        >
+    with $Provider<List<ResourceCrumbChoice>> {
+  /// The resources [crumb] can switch to, ordered by label. Each choice reads
+  /// its own appearance, so an edit recomputes only the choices it renames.
+  ResourceCrumbChoicesProvider._({
+    required ResourceCrumbChoicesFamily super.from,
+    required (AuthoringScope, ResourceCrumb) super.argument,
+  }) : super(
+         retry: null,
+         name: r'resourceCrumbChoicesProvider',
+         isAutoDispose: true,
+         dependencies: null,
+         $allTransitiveDependencies: null,
+       );
+
+  @override
+  String debugGetCreateSourceHash() => _$resourceCrumbChoicesHash();
+
+  @override
+  String toString() {
+    return r'resourceCrumbChoicesProvider'
+        ''
+        '$argument';
+  }
+
+  @$internal
+  @override
+  $ProviderElement<List<ResourceCrumbChoice>> $createElement(
+    $ProviderPointer pointer,
+  ) => $ProviderElement(pointer);
+
+  @override
+  List<ResourceCrumbChoice> create(Ref ref) {
+    final argument = this.argument as (AuthoringScope, ResourceCrumb);
+    return resourceCrumbChoices(ref, argument.$1, argument.$2);
+  }
+
+  /// {@macro riverpod.override_with_value}
+  Override overrideWithValue(List<ResourceCrumbChoice> value) {
+    return $ProviderOverride(
+      origin: this,
+      providerOverride: $SyncValueProvider<List<ResourceCrumbChoice>>(value),
+    );
+  }
+
+  @override
+  bool operator ==(Object other) {
+    return other is ResourceCrumbChoicesProvider && other.argument == argument;
+  }
+
+  @override
+  int get hashCode {
+    return argument.hashCode;
+  }
+}
+
+String _$resourceCrumbChoicesHash() =>
+    r'089b6e8ef48cc1d01be983aa845d2dc83b5f9bc2';
+
+/// The resources [crumb] can switch to, ordered by label. Each choice reads
+/// its own appearance, so an edit recomputes only the choices it renames.
+
+final class ResourceCrumbChoicesFamily extends $Family
+    with
+        $FunctionalFamilyOverride<
+          List<ResourceCrumbChoice>,
+          (AuthoringScope, ResourceCrumb)
+        > {
+  ResourceCrumbChoicesFamily._()
+    : super(
+        retry: null,
+        name: r'resourceCrumbChoicesProvider',
+        dependencies: null,
+        $allTransitiveDependencies: null,
+        isAutoDispose: true,
+      );
+
+  /// The resources [crumb] can switch to, ordered by label. Each choice reads
+  /// its own appearance, so an edit recomputes only the choices it renames.
+
+  ResourceCrumbChoicesProvider call(
+    AuthoringScope scope,
+    ResourceCrumb crumb,
+  ) => ResourceCrumbChoicesProvider._(argument: (scope, crumb), from: this);
+
+  @override
+  String toString() => r'resourceCrumbChoicesProvider';
 }
 
 /// Kept alive: navigation outlives the widget or provider that started it.

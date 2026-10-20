@@ -61,6 +61,119 @@ void main() {
   );
 
   testWidgets(
+    "an owner back reference the Realm leaves empty still joins the single "
+    "owner",
+    (tester) async {
+      final fixture = ResourceCreationFixture.library();
+      final document = fixture.libraryDocument();
+      // A nullable back reference prepares as null instead of asking.
+      skir.PreparationStep prepare(skir.PreparationOperation operation) =>
+          switch (fixturePreparationStep(document, operation)) {
+            skir.PreparationStep_needsInputWrapper(:final value) =>
+              skir.PreparationStep.wrapReady(
+                skir.PreparedValue(
+                  content: skir.PreparedContent.wrapRecord(
+                    switch ((value.content
+                            as skir.PreparedContent_recordWrapper)
+                        .value
+                        .replaceAt(
+                          editorRootPath.field("library"),
+                          skir.DataValue.null_,
+                        )) {
+                      PortablePathValue(:final value) => value,
+                      PortablePathUnavailable(:final message) =>
+                        throw StateError(message),
+                    },
+                  ),
+                  findings: const [],
+                ),
+              ),
+            final step => step,
+          };
+      final harness = _Harness(
+        document,
+        fixture.request("Book"),
+        const CreationContext(),
+        prepare: prepare,
+      );
+      await harness.mount(tester);
+      await tester.tap(find.text("Begin creation"));
+      await tester.pumpAndSettle();
+
+      expect(harness.error, isNull);
+      expect(find.byType(SearchModal), findsNothing);
+      final created = harness.workspace!.document;
+      expect(
+        created
+            .resource(harness.request.id)!
+            .authoredField("library")!
+            .authoredLink!
+            .target
+            .resource,
+        fixture.library,
+      );
+      expect(created.relations.parents[harness.request.id], [fixture.library]);
+    },
+  );
+
+  testWidgets(
+    "a type owned only from the owner side asks for its owner and joins it",
+    (tester) async {
+      final fixture = ResourceCreationFixture();
+      final other = skir.ResourceId(value: "store:other");
+      final harness = _Harness(
+        fixture.withStores(fixture.document(), [other]),
+        fixture.request("Book"),
+        const CreationContext(),
+      );
+      await harness.mount(tester);
+      await tester.tap(find.text("Begin creation"));
+      await tester.pumpAndSettle();
+
+      expect(harness.error, isNull);
+      expect(find.byType(AuthoredResourceSearchResult), findsNWidgets(2));
+      await tester.tap(find.byType(AuthoredResourceSearchResult).first);
+      await tester.pumpAndSettle();
+
+      expect(harness.error, isNull);
+      final owners =
+          harness.workspace!.document.relations.parents[harness.request.id];
+      expect(owners, hasLength(1));
+      expect([fixture.store, other], contains(owners!.single));
+    },
+  );
+
+  testWidgets(
+    "a type owned only from the owner side joins the owner its creation names",
+    (tester) async {
+      final fixture = ResourceCreationFixture();
+      final other = skir.ResourceId(value: "store:other");
+      final document = fixture.withStores(fixture.document(), [other]);
+      final harness = _Harness(
+        document,
+        fixture.request("Book"),
+        ownerCreationContext(
+          document,
+          skir.ValueLocation(
+            resource: other,
+            path: editorRootPath.field("ownedBook"),
+          ),
+        ),
+      );
+      await harness.mount(tester);
+      await tester.tap(find.text("Begin creation"));
+      await tester.pumpAndSettle();
+
+      expect(harness.error, isNull);
+      expect(find.byType(SearchModal), findsNothing);
+      expect(
+        harness.workspace!.document.relations.parents[harness.request.id],
+        [other],
+      );
+    },
+  );
+
+  testWidgets(
     "a compatible current page satisfies the required reference without a picker",
     (tester) async {
       final fixture = ResourceCreationFixture();
@@ -147,17 +260,19 @@ void main() {
     await harness.mount(tester);
     await tester.tap(find.text("Begin creation"));
     await tester.pumpAndSettle();
-    expect(harness.workspace!.document.entries, isEmpty);
+    expect(harness.workspace!.document.entries.keys, [fixture.store]);
     await tester.tap(find.text("Create Page"));
     await tester.pumpAndSettle();
-    expect(harness.workspace!.document.entries, isEmpty);
+    expect(harness.workspace!.document.entries.keys, [fixture.store]);
     await tester.tap(find.text("Create Book"));
     await tester.pumpAndSettle();
     expect(harness.error, isNull);
     expect(harness.created?.resourceId, harness.request.id);
     final document = harness.workspace!.document;
-    expect(document.entries, hasLength(3));
-    expect(document.links, hasLength(2));
+    // Every created resource also joins the single store.
+    expect(document.entries, hasLength(4));
+    expect(_authoredLinks(document), hasLength(2));
+    expect(document.relations.children[fixture.store], hasLength(3));
     expect(harness.transport.requests, hasLength(1));
     expect(
       harness.transport.requests.single.edit.intents
@@ -193,7 +308,7 @@ void main() {
       await tester.pumpAndSettle();
       expect(harness.error, isNull);
       expect(harness.created, isNull);
-      expect(harness.workspace!.document.entries, isEmpty);
+      expect(harness.workspace!.document.entries.keys, [fixture.store]);
       expect(harness.workspace!.hasPendingWork, isFalse);
       expect(harness.transport.requests, isEmpty);
     },
@@ -250,7 +365,7 @@ void main() {
       await tester.pumpAndSettle();
       expect(harness.error, isNull);
       expect(harness.created?.resourceId, harness.request.id);
-      expect(harness.workspace!.document.entries, hasLength(3));
+      expect(harness.workspace!.document.entries, hasLength(4));
       expect(
         harness.workspace!.document
             .resource(harness.request.id)!
@@ -295,8 +410,11 @@ void main() {
     await tester.tap(find.text("Create Book"));
     await tester.pumpAndSettle();
     expect(harness.error, isNull);
-    expect(harness.workspace!.document.entries, hasLength(2));
-    expect(harness.workspace!.document.links.single.contract.value, "review");
+    expect(harness.workspace!.document.entries, hasLength(3));
+    expect(
+      _authoredLinks(harness.workspace!.document).single.contract.value,
+      "review",
+    );
     expect(harness.transport.requests, hasLength(1));
   });
 
@@ -318,8 +436,8 @@ void main() {
     await tester.pumpAndSettle();
     expect(harness.error, isNull);
     final document = harness.workspace!.document;
-    expect(document.entries, hasLength(2));
-    expect(document.links, hasLength(1));
+    expect(document.entries, hasLength(3));
+    expect(_authoredLinks(document), hasLength(1));
     final a = document.resource(harness.request.id)!;
     final b = document.resource(
       a.authoredField("b")!.authoredLink!.target.resource,
@@ -331,7 +449,11 @@ void main() {
     expect(harness.transport.requests, hasLength(1));
     expect(
       harness.transport.requests.single.edit.intents
-          .whereType<skir.EditIntent_connectRelationWrapper>(),
+          .whereType<skir.EditIntent_connectRelationWrapper>()
+          .where(
+            (intent) =>
+                !intent.value.source.id.endpoint.value.startsWith("owns"),
+          ),
       hasLength(1),
     );
   });
@@ -360,16 +482,24 @@ void main() {
           .authoredField("payload")!;
       final recipient = payload.authoredField("recipient")!.authoredLink!;
       expect(document.resource(recipient.target.resource), isNotNull);
-      expect(document.entries, hasLength(2));
-      expect(document.links, hasLength(1));
+      expect(document.entries, hasLength(3));
+      expect(_authoredLinks(document), hasLength(1));
       expect(harness.transport.requests, hasLength(1));
     },
   );
 }
 
+/// The links of [document] besides the store ownership every creation adds.
+Iterable<skir.LinkProjection> _authoredLinks(AuthoringDocument document) =>
+    document.links.where((link) => !link.contract.value.startsWith("owns"));
+
 final class _Harness {
-  _Harness(this.document, this.request, this.context)
+  _Harness(this.document, this.request, this.context, {this.prepare})
     : transport = ScriptedAuthoringTransport(AsyncData(document));
+
+  /// Replaces the fixture preparation, as a Realm with other value rules
+  /// would answer.
+  final skir.PreparationStep Function(skir.PreparationOperation)? prepare;
   final AuthoringDocument document;
   final ResourceCreationRequest request;
   final CreationContext context;
@@ -396,7 +526,8 @@ final class _Harness {
             transport,
             prepareStep: (operation) async {
               preparations.add(operation);
-              return fixturePreparationStep(document, operation);
+              return prepare?.call(operation) ??
+                  fixturePreparationStep(document, operation);
             },
           ),
         ),

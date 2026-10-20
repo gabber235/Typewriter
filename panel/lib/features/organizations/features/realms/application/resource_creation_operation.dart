@@ -672,43 +672,26 @@ final class _ResourceCreationOperation {
     _references.add(reference);
   }
 
+  /// Resolves the references a prepared [record] at [at] already names, then,
+  /// for a resource root, its owner. Each resolution is a question checkpoint,
+  /// so stepping back returns to it.
   Future<void> _resolveDefaults(
     skir.AuthoringRecord record,
     skir.ValueLocation at,
     CreationContext creationContext, {
     _CreationQuestion? previous,
   }) async {
-    final locations = catalog.referenceLocations(record).toList();
+    final steps = <_DefaultReference>[
+      for (final reference in catalog.referenceLocations(record))
+        ?_namedReference(record, at, reference.path, creationContext),
+      if (at.path.segments.isEmpty)
+        ?_ownerReference(record, at.resource, creationContext),
+    ];
     final answered = <(int, _CreationQuestion)>[];
     _CreationQuestion? retry;
-    for (var index = 0; index < locations.length; index++) {
-      final reference = locations[index];
-      final path = reference.path;
-      final value = switch (record.readAt(path)) {
-        PortablePathValue(:final value) => value.authoredLink,
-        PortablePathUnavailable() => null,
-      };
-      if (value == null) continue;
-      final id = skir.LinkOccurrenceId(
-        endpoint: value.endpoint,
-        location: skir.ValueLocation(
-          resource: at.resource,
-          path: skir.ValuePath(
-            segments: [...at.path.segments, ...path.segments],
-          ),
-        ),
-      );
-      if (_references.any(
-        (reference) =>
-            reference.connection.source.id == id ||
-            switch (reference.connection.counterpart) {
-              skir.CounterpartChoice_existingWrapper(:final value) =>
-                value.id == id,
-              _ => false,
-            },
-      )) {
-        continue;
-      }
+    for (var index = 0; index < steps.length; index++) {
+      final step = steps[index];
+      if (step.resolved()) continue;
       final question =
           retry ??
           _checkpoint(
@@ -723,14 +706,7 @@ final class _ResourceCreationOperation {
       retry = null;
       _questions.add(question);
       try {
-        _remember(
-          await _chooseReference(
-            id.location,
-            creationContext,
-            chosenTarget: value.target.resource,
-            chosenOpposite: value.target.opposite,
-          ),
-        );
+        _remember(await step.resolve());
         if (question.presented) answered.add((index, question));
       } on _CreationBack catch (back) {
         final prior = answered.indexWhere(
@@ -748,6 +724,204 @@ final class _ResourceCreationOperation {
         _questions.removeLast();
       }
     }
+  }
+
+  /// The reference [record] already names at [path], resolved to its exact
+  /// connection, or null when the location holds no link.
+  _DefaultReference? _namedReference(
+    skir.AuthoringRecord record,
+    skir.ValueLocation at,
+    skir.ValuePath path,
+    CreationContext creationContext,
+  ) {
+    final value = switch (record.readAt(path)) {
+      PortablePathValue(:final value) => value.authoredLink,
+      PortablePathUnavailable() => null,
+    };
+    if (value == null) return null;
+    final id = skir.LinkOccurrenceId(
+      endpoint: value.endpoint,
+      location: skir.ValueLocation(
+        resource: at.resource,
+        path: skir.ValuePath(segments: [...at.path.segments, ...path.segments]),
+      ),
+    );
+    return _DefaultReference(
+      resolved: () => _references.any(
+        (reference) =>
+            reference.connection.source.id == id ||
+            switch (reference.connection.counterpart) {
+              skir.CounterpartChoice_existingWrapper(:final value) =>
+                value.id == id,
+              _ => false,
+            },
+      ),
+      resolve: () => _chooseReference(
+        id.location,
+        creationContext,
+        chosenTarget: value.target.resource,
+        chosenOpposite: value.target.opposite,
+      ),
+    );
+  }
+
+  /// The owner of the created resource [resource], when its type is owned.
+  ///
+  /// Every owned resource needs its owner, whether or not the back reference
+  /// field is nullable and whether or not the creation names a destination.
+  /// A type with a back reference links through it, choosing the single or
+  /// preferred owner or asking; a type owned only from the owner side asks for
+  /// an owner and links from the owner's owning field.
+  _DefaultReference? _ownerReference(
+    skir.AuthoringRecord record,
+    skir.ResourceId resource,
+    CreationContext creationContext,
+  ) {
+    final type = record.configuration.definition;
+    if (type == null) return null;
+    final ownerships = [
+      for (final ownership in catalog.ownershipRelations)
+        if (catalog.isNominalSubtype(
+          type,
+          ownership.member.resource.definition,
+        ))
+          ownership,
+    ];
+    if (ownerships.isEmpty) return null;
+    // A destination named by the creation decides which ownership applies.
+    final constrained = ownerships
+        .where(
+          (ownership) =>
+              creationContext.allowedTargets(ownership.member.id) != null,
+        )
+        .toList();
+    final applicable = constrained.isEmpty ? ownerships : constrained;
+    bool owned() => applicable.any(
+      (ownership) => _view().links.any(
+        (link) =>
+            link.contract == ownership.relation &&
+            switch (ownership.member.slot) {
+                  skir.EndpointSlot.first => link.first,
+                  _ => link.second,
+                } ==
+                resource,
+      ),
+    );
+    for (final ownership in applicable) {
+      final backReference = catalog
+          .referenceLocations(record)
+          .where((reference) => reference.endpoint == ownership.member.id)
+          .firstOrNull;
+      if (backReference == null) continue;
+      return _DefaultReference(
+        resolved: owned,
+        resolve: () => _chooseReference(
+          skir.ValueLocation(resource: resource, path: backReference.path),
+          creationContext,
+        ),
+      );
+    }
+    return _DefaultReference(
+      resolved: owned,
+      resolve: () => _chooseOwner(resource, applicable, creationContext),
+    );
+  }
+
+  /// Links [member] from the owning field of an owner it chooses among
+  /// [ownerships], for types owned only from the owner side.
+  Future<ResolvedReference> _chooseOwner(
+    skir.ResourceId member,
+    List<OwnershipRelation> ownerships,
+    CreationContext creationContext,
+  ) async {
+    _checkCurrent();
+    final view = _view();
+    final document = view.toDocument();
+    final candidates = <ReferencePickerCandidate<ReferenceChoice>>[];
+    final reasons = <String>[];
+    for (final ownership in ownerships) {
+      final allowed = creationContext.allowedTargets(ownership.member.id);
+      final ownerContext = creationContext.through(ownership.member.id);
+      for (final MapEntry(key: owner, value: record)
+          in view.resources.entries) {
+        if (owner == member) continue;
+        if (allowed != null && !allowed.contains(owner)) continue;
+        if (!ownerContext.accepts(owner, view, catalog)) continue;
+        final field = catalog
+            .owningFields(record.configuration)
+            .where((field) => field.ownership.relation == ownership.relation)
+            .firstOrNull;
+        if (field == null) continue;
+        final location = skir.ValueLocation(resource: owner, path: field.path);
+        final source = document.isLinkCollection(location)
+            ? skir.ValueLocation(
+                resource: owner,
+                path: skir.ValuePath(
+                  segments: [
+                    ...field.path.segments,
+                    skir.PathSegment.createItem(
+                      id: skir.ItemId(value: "panel:owner:${uuid.v4()}"),
+                    ),
+                  ],
+                ),
+              )
+            : location;
+        final title = catalog.appearanceOf(record).label;
+        final link = automaticLink(view, catalog, source, member);
+        if (link == null) {
+          reasons.add("$title cannot hold this resource");
+          continue;
+        }
+        candidates.add(
+          ReferencePickerCandidate(
+            id: "owner:${owner.value}:${candidates.length}",
+            value: ReferenceChoice.existing(
+              view.resolveReference(
+                catalog: catalog,
+                plan: link.plan,
+                target: link.target,
+              ),
+            ),
+            label: title,
+            description: catalog.typeSelectionName(record.configuration),
+            searchText:
+                "$title ${catalog.typeSelectionName(record.configuration)}",
+            display: catalog.selectionDisplay(record.configuration),
+          ),
+        );
+      }
+    }
+    ResolvedReference reference(
+      ReferencePickerCandidate<ReferenceChoice> candidate,
+    ) => (candidate.value as ExistingReference).reference;
+    final preferred = candidates
+        .where(
+          (candidate) => creationContext.preferredResources.contains(
+            reference(candidate).connection.source.source,
+          ),
+        )
+        .toList();
+    if (candidates.length == 1) return reference(candidates.single);
+    if (preferred.length == 1) return reference(preferred.single);
+    if (candidates.isEmpty) {
+      throw StateError(
+        "No owner can hold this resource${reasons.isEmpty ? '' : ': ${reasons.join('; ')}'}",
+      );
+    }
+    final presentationDocument = view.toDocument();
+    final choice = await _showReferenceQuestion(
+      candidates: candidates,
+      presentationDocument: presentationDocument,
+      presentationIssues: ResourceIssues.evaluate(
+        document: presentationDocument,
+      ),
+      searchHint: "Select the owner",
+    );
+    _checkCurrent();
+    return switch (choice) {
+      ExistingReference(:final reference) => reference,
+      _ => throw const _CreationCancelled(),
+    };
   }
 
   Iterable<ReferenceMaterialization> _materializations({
@@ -853,4 +1027,13 @@ extension on ReferenceMaterialization {
     PreparedReferenceInsertion(:final at) ||
     PreparedReferenceRecord(:final at) => at,
   };
+}
+
+/// One reference a prepared record still needs: whether it is already
+/// resolved, and how to resolve it.
+final class _DefaultReference {
+  const _DefaultReference({required this.resolved, required this.resolve});
+
+  final bool Function() resolved;
+  final Future<ResolvedReference> Function() resolve;
 }

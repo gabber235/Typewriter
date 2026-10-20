@@ -42,7 +42,6 @@ abstract class ActivePanelPresence with _$ActivePanelPresence {
 class OrganizationPresence extends _$OrganizationPresence {
   final _sessionId = uuid.v4();
   var _sequence = 0;
-  skir.PageActivity _activity = skir.PageActivity.overview;
   Timer? _heartbeat;
   Timer? _expiry;
   NatsSubscription? _subscription;
@@ -73,10 +72,7 @@ class OrganizationPresence extends _$OrganizationPresence {
     );
     _messages = _subscription!.messages.listen(_onMessage);
 
-    ref.listen(currentRouteProvider, (_, _) {
-      _activity = skir.PageActivity.overview;
-      unawaited(_publishActive());
-    });
+    ref.listen(currentRouteProvider, (_, _) => unawaited(_publishActive()));
     _heartbeat = Timer.periodic(
       _heartbeatInterval,
       (_) => unawaited(_publishActive()),
@@ -93,16 +89,6 @@ class OrganizationPresence extends _$OrganizationPresence {
 
     await _publishActive();
     return const {};
-  }
-
-  /// Updates the page mode included in subsequent page presence events.
-  ///
-  /// The current route remains the location authority. Repeating the same mode
-  /// does not publish a redundant heartbeat.
-  void setPageActivity(skir.PageActivity activity) {
-    if (_activity == activity) return;
-    _activity = activity;
-    unawaited(_publishActive());
   }
 
   Future<void> _publishActive() async {
@@ -184,31 +170,11 @@ class OrganizationPresence extends _$OrganizationPresence {
     }
 
     final realm = after("realm");
-    final book = after("book");
-    final page = after("page");
-    if (realm != null && book != null && page != null) {
-      return skir.PresenceLocation.createPage(
+    final resource = after("resource");
+    if (realm != null && resource != null) {
+      return skir.PresenceLocation.createResource(
         realmId: skir.recordId("service:$realm"),
-        bookId: skir.recordId("book:$book"),
-        pageId: skir.recordId("page:$page"),
-        activity: _activity,
-      );
-    }
-    if (realm != null && book != null) {
-      return skir.PresenceLocation.createBook(
-        realmId: skir.recordId("service:$realm"),
-        bookId: skir.recordId("book:$book"),
-      );
-    }
-    if (realm != null && segments.contains("tags")) {
-      return skir.PresenceLocation.createRealmTags(
-        realmId: skir.recordId("service:$realm"),
-      );
-    }
-
-    if (realm != null && segments.contains("library")) {
-      return skir.PresenceLocation.createRealmLibrary(
-        realmId: skir.recordId("service:$realm"),
+        resourceId: skir.ResourceId(value: Uri.decodeComponent(resource)),
       );
     }
     if (realm != null) {

@@ -26,20 +26,11 @@ final exemptions = <Exemption>[
     "editor mode identity color",
   ),
   Exemption(
-    "lib/features/organizations/features/realms/features/books/features/pages/features/editor/operations/entry_operations.dart",
-    RegExp(r"Colors\.(?:red|orange|blue|green)"),
-    "editor operation identity colors",
-  ),
-  Exemption(
     "lib/shared/selectables/operations/unbind_operation.dart",
     RegExp(r"Colors\."),
     "editor operation identity color",
   ),
   for (final path in [
-    "lib/shared/editors/presentation/protocol/renderers/content/badge_renderer.dart",
-    "lib/shared/editors/presentation/protocol/renderers/content/chip_renderer.dart",
-    "lib/shared/editors/presentation/protocol/renderers/content/text_renderer.dart",
-    "lib/shared/editors/presentation/components/search_input/search_input_row.dart",
     "lib/shared/editors/presentation/portable_renderer/expression_resolution.dart",
   ])
     Exemption(
@@ -103,31 +94,6 @@ final exemptions = <Exemption>[
     "custom graph painter geometry",
   ),
   Exemption(
-    "lib/features/organizations/features/realms/features/books/features/pages/features/editor/presentation/entry.dart",
-    RegExp(r"Colors\.white"),
-    "established entry-node focus treatment over arbitrary elementDefinition colors",
-  ),
-  Exemption(
-    "lib/features/organizations/features/realms/features/books/features/pages/features/editor/features/scene/presentation/entry_timeline_editor.dart",
-    RegExp(r"Colors\.white"),
-    "computed contrast and custom canvas geometry",
-  ),
-  Exemption(
-    "lib/features/organizations/features/realms/features/tags/presentation/tag_node.dart",
-    RegExp(r"Colors\.(black|white)"),
-    "computed contrast over persisted tag colors",
-  ),
-  Exemption(
-    "lib/features/organizations/features/realms/features/books/presentation/book.dart",
-    RegExp(r"Colors\.white"),
-    "contrast over data-colored book artwork",
-  ),
-  Exemption(
-    "lib/features/organizations/features/realms/features/books/presentation/book/route.dart",
-    RegExp(r"Colors\.white"),
-    "contrast over page-type data colors",
-  ),
-  Exemption(
     "lib/shared/ui/components/shimmer.dart",
     RegExp(r"BorderRadius\.circular\(8\)"),
     "constructor fallback without a build context",
@@ -136,17 +102,8 @@ final exemptions = <Exemption>[
     "lib/app/presentation/shell/custom_appbar.dart",
     "lib/app/presentation/shell/sidebar.dart",
     "lib/app/presentation/shell/sidebar_links.dart",
-    "lib/shared/editors/presentation/header.dart",
     "lib/shared/graph/presentation/resizable_element.dart",
-    "lib/features/organizations/features/realms/features/books/features/pages/features/editor/features/search/presentation/result_item/search_result_card.dart",
-    "lib/features/organizations/features/realms/features/books/features/pages/features/editor/features/scene/presentation/entry_timeline_editor.dart",
     "lib/shared/editors/presentation/timeline/presentation/timeline_plane.dart",
-    "lib/features/organizations/features/realms/features/books/features/pages/features/editor/presentation/selector_popup.dart",
-    "lib/features/organizations/features/realms/features/books/presentation/book/route.dart",
-    "lib/features/organizations/features/realms/features/books/presentation/book/page_actions.dart",
-    "lib/features/organizations/features/realms/features/books/presentation/book/page_tile.dart",
-    "lib/features/organizations/features/realms/features/books/presentation/book/page_tree.dart",
-    "lib/features/organizations/features/realms/features/tags/presentation/tag_node.dart",
     "lib/features/organizations/features/members/features/join_codes/presentation/join_code_table.dart",
     "lib/features/organizations/features/members/features/join_codes/presentation/preset_chip.dart",
     "lib/features/organizations/features/members/presentation/member_table.dart",
@@ -159,12 +116,8 @@ final exemptions = <Exemption>[
     "lib/shared/ui/components/depth_box.dart",
     "lib/shared/search/presentation/search_body.dart",
     "lib/features/organizations/features/realms/presentation/realm_suspension.dart",
-    "lib/shared/editors/presentation/protocol/renderers/input/list_input_renderer.dart",
-    "lib/shared/editors/presentation/protocol/header_renderer.dart",
     "lib/shared/editors/presentation/components/date_time_picker/date_time_calendar.dart",
     "lib/shared/editors/presentation/components/date_time_picker/date_time_calendar_selection_grid.dart",
-    "lib/shared/editors/presentation/components/search_input/search_input_row.dart",
-    "lib/features/organizations/features/realms/features/books/presentation/book.dart",
     "lib/shared/search/presentation/search_result_card.dart",
     "lib/features/organizations/features/realms/presentation/resource_drop_target.dart",
   ])
@@ -174,7 +127,6 @@ final exemptions = <Exemption>[
     "lib/app/presentation/shell/panes.dart",
     "lib/shared/editors/presentation/timeline/presentation/timeline_segment_surface.dart",
     "lib/shared/editors/presentation/timeline/presentation/timeline_plane.dart",
-    "lib/features/organizations/features/realms/features/tags/presentation/tag_node.dart",
     "lib/features/organizations/features/members/features/join_codes/presentation/preset_chip.dart",
     "lib/shared/ui/components/countdown_badge.dart",
     "lib/shared/search/presentation/search_body.dart",
@@ -201,21 +153,6 @@ final layoutSpacingExemptions = <Exemption>[
     "lib/app/presentation/shell/panes.dart",
     RegExp(r"EdgeInsets\.all\(8\)"),
     "public component fallback without a build context",
-  ),
-  Exemption(
-    "lib/features/organizations/features/realms/features/books/features/pages/features/editor/presentation/inner_element_node.dart",
-    RegExp(r"EdgeInsets\.(?:symmetric|all)"),
-    "public render node fallback without a build context",
-  ),
-  Exemption(
-    "lib/features/organizations/features/realms/features/books/presentation/book.dart",
-    RegExp(r"SizedBox\([\s\S]*?width: 16"),
-    "fixed book artwork geometry",
-  ),
-  Exemption(
-    "lib/shared/editors/domain/presentation/default_presentation.dart",
-    RegExp("spacing: 12"),
-    "protocol data cannot depend on theme context",
   ),
   Exemption(
     "lib/shared/inspector/presentation/inspector.dart",
@@ -323,6 +260,13 @@ Iterable<String> layoutSpacingViolations(
 }
 
 void main() {
+  test("every exemption names an existing source file", () {
+    expect([
+      for (final exemption in [...exemptions, ...layoutSpacingExemptions])
+        if (!File(exemption.path).existsSync()) exemption.path,
+    ], isEmpty);
+  });
+
   test(
     "handwritten UI uses design system typography, colors, shapes, and spacing",
     () {

@@ -86,16 +86,20 @@ class AuthoredResourcesInteractions extends StatelessWidget {
             ResourceDropHighlight(hover: hover, child: canvas),
       );
     },
-    linkFieldBuilder: (context, location, control) => ResourceDropTarget.at(
-      scope: authoringScope,
-      destination: DropDestination.linkField(location),
-      canMutate: () =>
-          binding != null &&
-          !binding!.blocked &&
-          binding!.workspace.state.available,
-      builder: (context, hover) =>
-          ResourceDropHighlight(hover: hover, child: control),
-    ),
+    linkFieldBuilder: (context, location, control) {
+      final bound = binding;
+      // Only the bound resource's own link fields take drops; a reference
+      // preview of another resource nested in this editor leaves them to the
+      // targets around it.
+      if (bound == null || location.resource != bound.resource) return control;
+      return ResourceDropTarget.at(
+        scope: authoringScope,
+        destination: DropDestination.linkField(location),
+        canMutate: () => !bound.blocked && bound.workspace.state.available,
+        builder: (context, hover) =>
+            ResourceDropHighlight(hover: hover, child: control),
+      );
+    },
     child: child,
   );
 }

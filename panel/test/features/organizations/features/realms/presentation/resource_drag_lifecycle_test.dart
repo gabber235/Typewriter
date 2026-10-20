@@ -98,6 +98,89 @@ void main() {
   );
 
   testWidgets(
+    "a drop accepted while candidates load reaches the enclosing target when "
+    "the inner target turns out to offer nothing",
+    (tester) async {
+      final fixture = AuthoredGraphFixture();
+      final release = Completer<void>();
+      final commands = _commands(
+        fixture,
+        resolve: (request) async {
+          await release.future;
+          return fixture.commands.resolveDropCandidates(request);
+        },
+      );
+      await _pumpOperation(
+        tester,
+        fixture,
+        commands: commands,
+        destination: fixture.page,
+        enclosing: fixture.destination,
+      );
+      final gesture = await _startResourceDrag(tester);
+      await gesture.moveTo(
+        tester.getCenter(find.byKey(const ValueKey("operation"))),
+      );
+      await tester.pump();
+      expect(find.text("neutral"), findsOneWidget);
+      await gesture.up();
+      await tester.pump();
+      release.complete();
+      await tester.pumpAndSettle();
+      expect(
+        fixture.workspace.document.relations.children[fixture.destination],
+        contains(fixture.source),
+      );
+      expect(tester.takeException(), isNull);
+      await tester.pumpWidget(const SizedBox.shrink());
+      fixture.workspace.dispose();
+    },
+  );
+
+  testWidgets(
+    "a target that can offer nothing refuses while candidates load, so the "
+    "enclosing target receives the drag",
+    (tester) async {
+      final fixture = AuthoredGraphFixture();
+      final release = Completer<void>();
+      final commands = _commands(
+        fixture,
+        resolve: (request) async {
+          await release.future;
+          return fixture.commands.resolveDropCandidates(request);
+        },
+      );
+      await _pumpOperation(
+        tester,
+        fixture,
+        commands: commands,
+        // A dragged resource is never its own destination.
+        destination: fixture.source,
+        enclosing: fixture.destination,
+      );
+      final gesture = await _startResourceDrag(tester);
+      await gesture.moveTo(
+        tester.getCenter(find.byKey(const ValueKey("operation"))),
+      );
+      await tester.pump();
+      expect(find.text("rejected"), findsOneWidget);
+      expect(find.text("enclosing neutral"), findsOneWidget);
+      release.complete();
+      await tester.pumpAndSettle();
+      expect(find.text("enclosing accepted: Move here"), findsOneWidget);
+      await gesture.up();
+      await tester.pumpAndSettle();
+      expect(
+        fixture.workspace.document.relations.children[fixture.destination],
+        contains(fixture.source),
+      );
+      expect(tester.takeException(), isNull);
+      await tester.pumpWidget(const SizedBox.shrink());
+      fixture.workspace.dispose();
+    },
+  );
+
+  testWidgets(
     "several offers open the drop chooser, and Escape cancels the drop",
     (tester) async {
       final fixture = AuthoredGraphFixture();
@@ -262,6 +345,7 @@ Future<void> _pumpOperation(
   ValueNotifier<bool>? visible,
   ValueNotifier<int>? generation,
   skir.ResourceId? destination,
+  skir.ResourceId? enclosing,
 }) async {
   final binding = fixture.workspace.attach(
     fixture.page,
@@ -375,21 +459,19 @@ Future<void> _pumpOperation(
         SizedBox(
           width: 180,
           height: 100,
-          child: ResourceDropTarget.at(
-            scope: fixture.scope,
-            destination: DropDestination.resource(
-              destination ?? fixture.destination,
-            ),
-            canMutate: () => fixture.mutable,
-            builder: (_, hover) => ColoredBox(
-              key: const ValueKey("operation"),
-              color: Colors.green,
-              child: Text(
-                hover.accepted
-                    ? "accepted: ${hover.hint}"
-                    : hover.rejected
-                    ? "rejected"
-                    : "neutral",
+          child: _enclosedBy(
+            fixture,
+            enclosing,
+            ResourceDropTarget.at(
+              scope: fixture.scope,
+              destination: DropDestination.resource(
+                destination ?? fixture.destination,
+              ),
+              canMutate: () => fixture.mutable,
+              builder: (_, hover) => ColoredBox(
+                key: const ValueKey("operation"),
+                color: Colors.green,
+                child: Text(_hoverText(hover)),
               ),
             ),
           ),
@@ -398,6 +480,31 @@ Future<void> _pumpOperation(
     ),
   );
 }
+
+String _hoverText(ResourceDropHover hover) => hover.accepted
+    ? "accepted: ${hover.hint}"
+    : hover.rejected
+    ? "rejected"
+    : "neutral";
+
+/// Places [target] inside a padded drop target for [enclosing], when given.
+Widget _enclosedBy(
+  AuthoredGraphFixture fixture,
+  skir.ResourceId? enclosing,
+  Widget target,
+) => enclosing == null
+    ? target
+    : ResourceDropTarget.at(
+        scope: fixture.scope,
+        destination: DropDestination.resource(enclosing),
+        canMutate: () => fixture.mutable,
+        builder: (_, hover) => Column(
+          children: [
+            Text("enclosing ${_hoverText(hover)}"),
+            Expanded(child: target),
+          ],
+        ),
+      );
 
 AuthoredResourceCommands _commands(
   AuthoredGraphFixture fixture, {

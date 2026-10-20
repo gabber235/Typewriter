@@ -54,7 +54,7 @@ extension ResourceCreationCatalog on CheckedEditorCatalog? {
     if (checked == null) return null;
     final configuration = checked.beginSelection(type);
     if (configuration == skir.TypeSelection.unknown) return null;
-    final creatable = checked.creatableTypes.toSet();
+    final creatable = checked.creatableTypes;
     if (!checked
         .concreteRecordSelections(configuration)
         .any(

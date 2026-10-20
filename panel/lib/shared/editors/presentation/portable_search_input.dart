@@ -599,6 +599,9 @@ final class _PortableSearchSurface extends ConsumerWidget {
                     PortableMappedSearchPayload(:final mapping) =>
                       PortableResultContent(
                         node: mapping.presentation,
+                        // A resource result shows its name, accent and icon
+                        // like every other resource result.
+                        appearance: _resourceAppearance(selectedValue, scope),
                         scope: picker.resultScope(row.result, scope),
                         row: row.copyWith(
                           selected: selected,
@@ -640,6 +643,21 @@ final class _PortableSearchSurface extends ConsumerWidget {
       ),
     );
   }
+}
+
+/// The appearance of the resource [value] links to, or null when it links to
+/// no resource the host can project.
+ResourceAppearance? _resourceAppearance(
+  skir.DataValue value,
+  PortablePresentationScope scope,
+) {
+  final resource = value.authoredLink?.target.resource;
+  final host = switch (scope.host) {
+    final PortableCollectionProjectionHost projection => projection,
+    _ => null,
+  };
+  if (resource == null || host == null) return null;
+  return host.projectResource(resource, context: scope.invocation)?.appearance;
 }
 
 /// Keeps keyboard navigation visible while the query retains focus.

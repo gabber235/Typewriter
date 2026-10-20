@@ -6,6 +6,9 @@ part "authoring_placement.freezed.dart";
 
 final elementValuePath = editorRootPath;
 
+// The placement type ids mirror the `@TypewriterType` ids declared in
+// services/sdk/typewriter-api/src/main/kotlin/com/typewritermc/authoring/Placement.kt.
+// The catalog names a resource type's placement field but not these types.
 final placementRootTypeRef = skir.TypeDefinitionId(
   typeId: skir.TypeId.createDeclared(value: "d134aec7caa54a288ab42275756cfe8d"),
   revision: 1,
@@ -24,6 +27,12 @@ final timelineSegmentPlacementTypeRef = skir.TypeDefinitionId(
 );
 final timelineKeyframePlacementTypeRef = skir.TypeDefinitionId(
   typeId: skir.TypeId.createDeclared(value: "e0369811aac94bf6a291f65d1c719e1b"),
+  revision: 1,
+);
+
+/// The PlacementAnchor type that operation inputs use for a drop point.
+final placementAnchorTypeRef = skir.TypeDefinitionId(
+  typeId: skir.TypeId.createDeclared(value: "0a18ceeaa4c94c2c87f705c327355af0"),
   revision: 1,
 );
 

@@ -359,6 +359,63 @@ void main() {
   }
 
   testWidgets(
+    "inspecting another resource from a surface without a side inspector "
+    "opens that resource's own surface",
+    (tester) async {
+      final fixture = _navigation(
+        document: _navigationDocument(),
+        routed: _book.bookId,
+      );
+      final element = skir.ResourceId(value: "element:inbox");
+      expect(
+        fixture.container.read(showsSideInspectorProvider(_scope)),
+        isFalse,
+      );
+
+      await fixture.container
+          .read(realmSurfaceNavigationProvider)
+          .navigate(
+            _scope,
+            element,
+            skir.ResourceNavigationMode.edit,
+            isCurrent: () => true,
+          );
+      await tester.pump(Duration.zero);
+
+      expect(_routed(fixture.router.destinations.single), element.value);
+      expect(fixture.container.read(selectionProvider), [
+        AuthoringResourceIdentifier.inScope(_scope, element),
+      ]);
+    },
+  );
+
+  testWidgets("inspecting a resource beside a workspace keeps the route", (
+    tester,
+  ) async {
+    final fixture = _navigation(
+      document: _navigationDocument(),
+      routed: skir.ResourceId(value: "page:inbox"),
+    );
+    final element = skir.ResourceId(value: "element:inbox");
+    expect(fixture.container.read(showsSideInspectorProvider(_scope)), isTrue);
+
+    await fixture.container
+        .read(realmSurfaceNavigationProvider)
+        .navigate(
+          _scope,
+          element,
+          skir.ResourceNavigationMode.edit,
+          isCurrent: () => true,
+        );
+    await tester.pump(Duration.zero);
+
+    expect(fixture.router.destinations, isEmpty);
+    expect(fixture.container.read(selectionProvider), [
+      AuthoringResourceIdentifier.inScope(_scope, element),
+    ]);
+  });
+
+  testWidgets(
     "an element without owners opens the realm home with it selected",
     (tester) async {
       final document = _navigationDocument().copyWith(links: []);
@@ -649,6 +706,7 @@ _navigation({
   bool loading = false,
   bool retainReveal = true,
   ScriptedAuthoringTransport? transport,
+  skir.ResourceId? routed,
 }) {
   document ??= fixtureAuthoringDocument(realm: true, books: [_book]);
   final access = RouteAccessCoordinator(
@@ -683,6 +741,10 @@ _navigation({
           (ref) => loading ? const AsyncLoading() : AsyncData(document!),
         ),
       appRouterProvider.overrideWithValue(router),
+      if (routed != null) ...[
+        realmIdProvider.overrideWith((_) => _scope.realmId),
+        routedResourceIdProvider.overrideWithValue(routed),
+      ],
     ],
   );
   final observation = container.listen(

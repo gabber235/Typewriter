@@ -34,6 +34,31 @@ void main() {
     },
   );
 
+  testWidgets("resource results show the resource's appearance", (
+    tester,
+  ) async {
+    final fixture = _SearchFixture(resources: true);
+    await fixture.pump(tester);
+    await fixture.open(tester);
+
+    for (final name in ["Book", "Map", "Star"]) {
+      expect(
+        find.descendant(
+          of: find.byType(SearchResultRow),
+          matching: find.text("Resource $name"),
+        ),
+        findsOneWidget,
+      );
+    }
+    expect(
+      find.descendant(
+        of: find.byType(SearchResultRow),
+        matching: find.byType(ResourceIcon),
+      ),
+      findsNWidgets(3),
+    );
+  });
+
   testWidgets("result navigation does not depend on platform focus shortcuts", (
     tester,
   ) async {
@@ -362,7 +387,11 @@ final class _SearchFixture {
     this.multiple = false,
     this.reject = false,
     this.rebuildDuringWrite = false,
+    this.resources = false,
   });
+
+  /// Offers links to resources the host projects, instead of text values.
+  final bool resources;
   final bool multiple;
   final bool reject;
   final bool rebuildDuringWrite;
@@ -409,7 +438,17 @@ final class _SearchFixture {
                     for (final name in ["Book", "Map", "Star"])
                       skir.ListItem(
                         id: skir.ItemId(value: name),
-                        value: skir.DataValue.wrapStringValue(name),
+                        value: resources
+                            ? skir.DataValue.createLink(
+                                endpoint: skir.EndpointId(value: "test.result"),
+                                target: skir.LinkTarget(
+                                  resource: skir.ResourceId(
+                                    value: "resource:$name",
+                                  ),
+                                  opposite: null,
+                                ),
+                              )
+                            : skir.DataValue.wrapStringValue(name),
                       ),
                   ],
                 ),
@@ -504,7 +543,11 @@ final class _SearchFixture {
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
                 PortablePresentationRenderer(
-                  host: multiple ? _CollectionSearchHost(host) : host,
+                  host: resources
+                      ? _ResourceSearchHost(host)
+                      : multiple
+                      ? _CollectionSearchHost(host)
+                      : host,
                 ),
                 TextButton(
                   onPressed: () {},
@@ -618,4 +661,32 @@ final class _CollectionSearchHost implements PortablePresentationHost {
         return delegate.execute(action, context: context);
     }
   }
+}
+
+/// Projects every linked resource with an appearance named after it.
+final class _ResourceSearchHost extends _CollectionSearchHost
+    implements PortableCollectionProjectionHost {
+  _ResourceSearchHost(super.delegate);
+
+  @override
+  PortableCollectionProjection projectCollection(
+    String sourceId, {
+    required skir.PresentationMaterial material,
+    required PortableInvocationContext context,
+  }) => throw UnimplementedError();
+
+  @override
+  PortableResourceProjection? projectResource(
+    skir.ResourceId resource, {
+    required PortableInvocationContext context,
+  }) => PortableResourceProjection(
+    resource: resource,
+    configuration: skir.TypeSelection.unknown,
+    appearance: ResourceAppearance(
+      label: "Resource ${resource.value.split(":").last}",
+      accent: const Color(0xff607d8b),
+      icon: skir.Icon.wrapIconify("material-symbols:category"),
+    ),
+    value: skir.DataValue.unfilled,
+  );
 }

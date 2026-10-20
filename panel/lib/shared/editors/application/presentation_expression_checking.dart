@@ -54,7 +54,7 @@ extension PresentationExpressionAdmission on CheckedEditorCatalog {
         alias(projection.resourceBindingId);
       }
     }
-    final configured = skir.ExpressionBindingId(value: "configured_value");
+    final configured = configuredValueBindingId;
     final text = skir.TypeUse.wrapScalar(skir.ScalarKind.text);
     final boolean = skir.TypeUse.wrapScalar(skir.ScalarKind.boolean);
     final integer = skir.TypeUse.wrapScalar(

@@ -91,14 +91,21 @@ final class AuthoringSelectableResource
   @override
   List<SelectionCapability> get capabilities => const [];
 
+  /// The side inspector knows the routed resource, so `active_resource` and
+  /// the routed member state reach it as they reach the main surface.
   @override
   InspectionContent buildInspection(InspectionBindingScope owners) =>
       InspectionContent(
-        body: AuthoredResourceInspection(
+        body: Consumer(
           key: ValueKey((id.resourceId, skir.PresentationRole.inspector)),
-          resource: id.resourceId,
-          workspace: workspace,
-          commands: commands,
+          builder: (context, ref, _) => AuthoredResourceInspection(
+            resource: id.resourceId,
+            workspace: workspace,
+            commands: commands,
+            routedResource: ref.watch(routedResourceProvider(id.scope)),
+            openResource: (target) =>
+                ref.read(realmSurfaceNavigationProvider).open(id.scope, target),
+          ),
         ),
       );
 }

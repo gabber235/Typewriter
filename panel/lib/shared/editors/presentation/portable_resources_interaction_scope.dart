@@ -2,40 +2,34 @@ import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
     as skir;
 import "package:typewriter_panel/typewriter_panel.dart";
 
+part "portable_resources_interaction_scope.freezed.dart";
+
 /// How a resources element arranges its members.
 enum PortableResourcesLayoutKind { graph, timeline, grid, list, tree }
 
 /// The members one resources element lays out, as an application sees them.
-final class PortableResourcesView {
-  const PortableResourcesView({
-    required this.members,
-    required this.scope,
-    required this.layout,
-    this.location,
-  });
+@freezed
+abstract class PortableResourcesView with _$PortableResourcesView {
+  const factory PortableResourcesView({
+    required List<PortableResourceMember> members,
+    required PortablePresentationScope scope,
+    required PortableResourcesLayoutKind layout,
 
-  final List<PortableResourceMember> members;
-  final PortablePresentationScope scope;
-  final PortableResourcesLayoutKind layout;
-
-  /// The link field the members are linked at, when the binding has one.
-  final skir.ValueLocation? location;
+    /// The link field the members are linked at, when the binding has one.
+    skir.ValueLocation? location,
+  }) = _PortableResourcesView;
 }
 
 /// One group of a tree layout: the hierarchy path [field] its members are
 /// grouped by, the group's [path], and every member at or below it.
-final class PortableResourcesGroup {
-  const PortableResourcesGroup({
-    required this.field,
-    required this.path,
-    required this.name,
-    required this.members,
-  });
-
-  final skir.ValuePath field;
-  final String path;
-  final String name;
-  final List<PortableResourceMember> members;
+@freezed
+abstract class PortableResourcesGroup with _$PortableResourcesGroup {
+  const factory PortableResourcesGroup({
+    required skir.ValuePath field,
+    required String path,
+    required String name,
+    required List<PortableResourceMember> members,
+  }) = _PortableResourcesGroup;
 }
 
 /// Lets an application supply member interaction, such as selection, opening,
@@ -104,14 +98,20 @@ class PortableResourcesInteractionScope extends InheritedWidget {
   ) => context
       .dependOnInheritedWidgetOfExactType<PortableResourcesInteractionScope>();
 
-  /// Wraps [control] through the nearest scope's [linkFieldBuilder].
+  /// Wraps [control] through the nearest scope's [linkFieldBuilder] when
+  /// [scope] lets people edit the links at [location]. A disabled or read only
+  /// control is returned as it is, so it never receives dropped resources.
   static Widget wrapLinkField(
     BuildContext context,
+    PortablePresentationScope scope,
     skir.ValueLocation location,
     Widget control,
-  ) =>
-      maybeOf(context)?.linkFieldBuilder?.call(context, location, control) ??
-      control;
+  ) {
+    if (!scope.enabled || scope.readOnly) return control;
+    return maybeOf(context)?.linkFieldBuilder
+            ?.call(context, location, control) ??
+        control;
+  }
 
   @override
   bool updateShouldNotify(PortableResourcesInteractionScope oldWidget) =>

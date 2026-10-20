@@ -59,7 +59,7 @@ void main() {
 
   test("publishes route presence on the authenticated user subject", () async {
     final harness = _Harness(
-      route: "/organization/org1/realm/realm1/book/book1/page/page1",
+      route: "/organization/org1/realm/realm1/resource/page1",
     );
     final subscription = harness.container.listen(
       organizationPresenceProvider,
@@ -80,14 +80,12 @@ void main() {
     };
     expect(active.sequence, 1);
 
-    final page = switch (active.location) {
-      skir.PresenceLocation_pageWrapper(:final value) => value,
-      _ => throw StateError("Expected page presence"),
+    final resource = switch (active.location) {
+      skir.PresenceLocation_resourceWrapper(:final value) => value,
+      _ => throw StateError("Expected resource presence"),
     };
-    expect(page.realmId, skir.recordId("service:realm1"));
-    expect(page.bookId, skir.recordId("book:book1"));
-    expect(page.pageId, skir.recordId("page:page1"));
-    expect(page.activity, skir.PageActivity.overview);
+    expect(resource.realmId, skir.recordId("service:realm1"));
+    expect(resource.resourceId, skir.ResourceId(value: "page1"));
 
     subscription.close();
     harness.container.dispose();

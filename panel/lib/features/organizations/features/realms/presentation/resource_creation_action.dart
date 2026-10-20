@@ -4,26 +4,14 @@ import "package:typewriter_panel/typewriter_panel.dart";
 
 /// Creates resources of one type in the selected Realm.
 ///
-/// Shortcuts, buttons, and empty states share [watchResourceCreation] so they
-/// follow one enablement rule. Each invocation rereads the current scope and
-/// template, so a catalog change between build and invocation is respected.
+/// Each invocation rereads the current scope and template, so a catalog change
+/// between build and invocation is respected.
 extension ResourceCreationActions on WidgetRef {
-  /// Watches creation availability for [type].
-  ///
-  /// Returns null while creation is unavailable.
-  Future<void> Function()? watchResourceCreation(
-    BuildContext context,
-    skir.TypeDefinitionId type, {
-    skir.ValueLocation? owner,
-  }) => watch(selectedResourceCreationTemplateProvider(type)) == null
-      ? null
-      : () =>
-            createSelectedResource(context: context, type: type, owner: owner);
-
   /// Creates [type] in the selected Realm and reveals the new resource.
   ///
   /// With an [owner], the new resource joins that owning link field, such as
-  /// the pages of the routed Book. [supplied] holds initial field values.
+  /// a link field of the routed resource. [supplied] holds initial field
+  /// values.
   Future<void> createSelectedResource({
     required BuildContext context,
     required skir.TypeDefinitionId type,

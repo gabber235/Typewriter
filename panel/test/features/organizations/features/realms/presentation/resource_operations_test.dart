@@ -163,25 +163,6 @@ void main() {
     },
   );
 
-  test("selection operation queries find the delete shortcut and drops", () {
-    final operations = [
-      for (final name in ["Duplicate", "MoveToOwner", "Delete"])
-        ResourceSelectionOperation.create(
-          scope: _scope,
-          invocation: skir.OperationInvocation.defaultInstance,
-          operation: skir.ResolvedResourceOperation(
-            definition: _definition(name),
-            availability: skir.OperationAvailability.enabled,
-          ),
-        ),
-    ];
-    expect(operations.deleteShortcut?.operation.definition.id, _id("Delete"));
-    expect(operations.deleteShortcut, isA<ShortcutableOperation>());
-    expect(operations.droppable.map((item) => item.operation.definition.id), [
-      _id("MoveToOwner"),
-    ]);
-  });
-
   testWidgets(
     "an open resource menu keeps its targets after global selection changes",
     (tester) async {

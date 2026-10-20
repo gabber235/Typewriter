@@ -352,12 +352,12 @@ void main() {
           ),
           scope,
         ),
-        throwsA(isA<PresentationColorFailure>()),
+        throwsA(isA<PresentationValueFailure>()),
       );
     }
     expect(
       () => colors.resolve(skir.PresentationColor.unknown, scope),
-      throwsA(isA<PresentationColorFailure>()),
+      throwsA(isA<PresentationValueFailure>()),
     );
     expect(
       () => colors.resolve(
@@ -373,7 +373,7 @@ void main() {
         ),
         scope,
       ),
-      throwsA(isA<PresentationColorFailure>()),
+      throwsA(isA<PresentationValueFailure>()),
     );
     var recursive = _color(Colors.red);
     for (var i = 0; i < 65; i++) {
@@ -384,7 +384,7 @@ void main() {
     }
     expect(
       () => colors.resolve(recursive, scope),
-      throwsA(isA<PresentationColorFailure>()),
+      throwsA(isA<PresentationValueFailure>()),
     );
     final limited = PortablePresentationScope(
       operations: testPortableOperations(),
@@ -399,7 +399,7 @@ void main() {
         ),
         limited,
       ),
-      throwsA(isA<PresentationColorFailure>()),
+      throwsA(isA<PresentationValueFailure>()),
     );
   });
 

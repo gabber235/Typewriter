@@ -226,34 +226,72 @@ extension DropOffers on DropCandidateIndex {
                         anchor: anchor,
                       ),
                 ],
-        LinkFieldDestination(:final location, :final anchor) => [
-          if (document.canLinkAll(location, subjects))
-            DropOffer.link(location: location, anchor: anchor),
-        ],
-        RegroupDestination(:final field, :final value) => [
-          if (document.regroupedValues(drag, field, value) case final values?
-              when values.entries.any(
-                (entry) => document.textAt(entry.key, field) != entry.value,
-              ))
-            DropOffer.regroup(field: field, value: value),
-        ],
+        LinkFieldDestination() ||
+        RegroupDestination() => drag.localOffers(destination, document),
       };
-      if (offers.isNotEmpty) {
-        return offers.sortedByCompare(
-          (offer) => offer.rank,
-          (left, right) => switch (left.$1.compareTo(right.$1)) {
-            0 => switch (left.$2.compareTo(right.$2)) {
-              0 => left.$3.compareTo(right.$3),
-              final order => order,
-            },
-            final group => group,
-          },
-        );
-      }
+      if (offers.isNotEmpty) return offers.sortedByCompare(_rank, _compareRank);
     }
     return const [];
   }
 }
+
+/// Offers a drag can decide without its candidates.
+extension LocalDropOffers on ResourceDrag {
+  /// Offers for [destinations] before the drag's candidates arrive: the
+  /// offers of the most specific destination that has any, or null when a
+  /// resource destination before it might still offer an operation. An empty
+  /// list means no destination can offer anything.
+  List<DropOffer>? pendingOffersFor(
+    List<DropDestination> destinations,
+    AuthoringDocument document,
+  ) {
+    final droppable = document.catalog.snapshot.resourceOperations.any(
+      (operation) => operation.drop != null,
+    );
+    for (final destination in destinations) {
+      switch (destination) {
+        case ResourceDestination(:final id):
+          if (droppable && !subjects.contains(id)) return null;
+        case LinkFieldDestination() || RegroupDestination():
+          final offers = localOffers(destination, document);
+          if (offers.isNotEmpty) {
+            return offers.sortedByCompare(_rank, _compareRank);
+          }
+      }
+    }
+    return const [];
+  }
+
+  /// The link or regroup offers at [destination], which need no round trip.
+  List<DropOffer> localOffers(
+    DropDestination destination,
+    AuthoringDocument document,
+  ) => switch (destination) {
+    ResourceDestination() => const [],
+    LinkFieldDestination(:final location, :final anchor) => [
+      if (document.canLinkAll(location, subjects))
+        DropOffer.link(location: location, anchor: anchor),
+    ],
+    RegroupDestination(:final field, :final value) => [
+      if (document.regroupedValues(this, field, value) case final values?
+          when values.entries.any(
+            (entry) => document.textAt(entry.key, field) != entry.value,
+          ))
+        DropOffer.regroup(field: field, value: value),
+    ],
+  };
+}
+
+(int, int, String) _rank(DropOffer offer) => offer.rank;
+
+int _compareRank((int, int, String) left, (int, int, String) right) =>
+    switch (left.$1.compareTo(right.$1)) {
+      0 => switch (left.$2.compareTo(right.$2)) {
+        0 => left.$3.compareTo(right.$3),
+        final order => order,
+      },
+      final group => group,
+    };
 
 /// Link field and group facts the panel can decide locally, without a round
 /// trip.
@@ -394,12 +432,6 @@ extension on skir.ValueLocation {
     ),
   );
 }
-
-/// The PlacementAnchor type that operation inputs use for a drop point.
-final placementAnchorTypeRef = skir.TypeDefinitionId(
-  typeId: skir.TypeId.createDeclared(value: "0a18ceeaa4c94c2c87f705c327355af0"),
-  revision: 1,
-);
 
 /// Runs drop offers for one drag. Operation offers go through the same path
 /// as menus; link and group writes are direct edits the planner validates.

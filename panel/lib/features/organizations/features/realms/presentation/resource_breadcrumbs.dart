@@ -1,8 +1,8 @@
 import "package:typewriter_panel/typewriter_panel.dart";
 
 /// The owner chain of the routed resource below the realm root, one crumb per
-/// resource. Each crumb lists its siblings, so another Book or page is one
-/// choice away.
+/// resource. Each crumb lists its siblings, so another resource with the same
+/// owner is one choice away.
 class ResourceBreadcrumbs extends ConsumerWidget {
   const ResourceBreadcrumbs({super.key});
 
@@ -41,7 +41,8 @@ class ResourceCrumbSelector extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final current = crumb.siblings.firstWhereOrNull(
+    final choices = ref.watch(resourceCrumbChoicesProvider(scope, crumb));
+    final current = choices.firstWhereOrNull(
       (choice) => choice.resource == crumb.resource,
     );
     // Dropping resources onto a crumb drops them onto its resource.
@@ -51,7 +52,7 @@ class ResourceCrumbSelector extends ConsumerWidget {
       builder: (context, hover) => ResourceDropHighlight(
         hover: hover,
         child: SelectorPopupWithSelection<ResourceCrumbChoice>(
-          itemsAsync: AsyncData(crumb.siblings),
+          itemsAsync: AsyncData(choices),
           selectedAsync: AsyncData(current),
           name: "resources",
           buttonBuilder: (selected) => Row(
