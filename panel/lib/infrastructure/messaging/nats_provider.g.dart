@@ -213,8 +213,7 @@ String _$sentinelCredentialsHash() =>
 /// Publishes the active client owned by the authenticated connection scope.
 ///
 /// Credential and organization changes dispose the entire previous connection.
-/// Permission refresh and retry retain the current client until a replacement
-/// has been admitted by the server.
+/// [retry] publishes a fresh session of the same scope.
 
 @ProviderFor(Nats)
 final natsProvider = NatsProvider._();
@@ -222,14 +221,12 @@ final natsProvider = NatsProvider._();
 /// Publishes the active client owned by the authenticated connection scope.
 ///
 /// Credential and organization changes dispose the entire previous connection.
-/// Permission refresh and retry retain the current client until a replacement
-/// has been admitted by the server.
+/// [retry] publishes a fresh session of the same scope.
 final class NatsProvider extends $NotifierProvider<Nats, NatsClient> {
   /// Publishes the active client owned by the authenticated connection scope.
   ///
   /// Credential and organization changes dispose the entire previous connection.
-  /// Permission refresh and retry retain the current client until a replacement
-  /// has been admitted by the server.
+  /// [retry] publishes a fresh session of the same scope.
   NatsProvider._()
     : super(
         from: null,
@@ -257,13 +254,12 @@ final class NatsProvider extends $NotifierProvider<Nats, NatsClient> {
   }
 }
 
-String _$natsHash() => r'e9d6f3ac768a4bbe52579c7be177e8e2c9605b7c';
+String _$natsHash() => r'57d1bc9109cd3a421376e7af2b9b297bd2d4c930';
 
 /// Publishes the active client owned by the authenticated connection scope.
 ///
 /// Credential and organization changes dispose the entire previous connection.
-/// Permission refresh and retry retain the current client until a replacement
-/// has been admitted by the server.
+/// [retry] publishes a fresh session of the same scope.
 
 abstract class _$Nats extends $Notifier<NatsClient> {
   NatsClient build();

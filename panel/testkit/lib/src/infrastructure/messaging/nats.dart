@@ -1,11 +1,9 @@
-import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
-    as skir;
 import "package:typewriter_panel/typewriter_panel.dart";
 
 /// Keeps the notifier contract when feature tests supply a transport directly.
 ///
-/// These fixtures bypass server admission. Permission ownership tests use the
-/// production notifier with a replaced client factory instead.
+/// Connection ownership tests use the production notifier with a replaced
+/// client factory instead.
 class FakeNats extends Nats {
   FakeNats(this._initialClient);
 
@@ -17,12 +15,6 @@ class FakeNats extends Nats {
   NatsClient get connection => client;
 
   set connection(NatsClient client) => state = client;
-
-  @override
-  Future<void> ensureRealmsAdmitted(Set<skir.RecordId> required) async {}
-
-  @override
-  Future<void> refreshAuthorization(Set<skir.RecordId> observedRealms) async {}
 
   @override
   Future<void> retry() async {}

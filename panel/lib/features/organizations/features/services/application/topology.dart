@@ -23,7 +23,6 @@ class OrganizationTopologyController extends _$OrganizationTopologyController {
       yield OrganizationTopology.empty;
       return;
     }
-    final connection = ref.watch(natsProvider.notifier);
     final projection = skir.WatchOrganizationTopologyRequest()
         .watch<OrganizationTopology>(
           ref,
@@ -42,16 +41,6 @@ class OrganizationTopologyController extends _$OrganizationTopologyController {
           reconciliation: const ProjectionReconciliation.latest(),
         );
     await for (final topology in projection) {
-      if (!ref.mounted) return;
-      final observed = topology.realmInstances
-          .map((realm) => realm.realmId)
-          .toSet();
-      try {
-        await connection.refreshAuthorization(observed);
-      } on Object {
-        // A failed grant refresh retains the current connection and does not
-        // invalidate this topology fact.
-      }
       if (!ref.mounted) return;
       yield topology;
     }

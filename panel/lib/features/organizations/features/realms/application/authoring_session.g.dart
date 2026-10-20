@@ -79,7 +79,7 @@ final class AuthoringSessionProvider
   }
 }
 
-String _$authoringSessionHash() => r'871a485c644204fe7f45f7b512ca6624d5661b96';
+String _$authoringSessionHash() => r'8ba3f46610c43373c782f91e9b3af53902454c3a';
 
 /// Owns confirmed authoring observations and the catalog that interprets them for one Realm.
 ///

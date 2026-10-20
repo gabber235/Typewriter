@@ -6,8 +6,9 @@ part "resource_repositories.g.dart";
 
 /// Provides one resource repository owner for the active local work scope.
 ///
-/// The owner retains its repositories across authenticated transport replacement
-/// and rebinds their active watches. Scope disposal cascades to every cached child.
+/// The owner retains its repositories when a retry replaces the authenticated
+/// transport and rebinds their active watches. Scope disposal cascades to every
+/// cached child.
 @Riverpod(keepAlive: true)
 ResourceRepositories resourceRepositories(Ref ref) {
   ref.watch(localWorkScopeProvider);
@@ -16,7 +17,6 @@ ResourceRepositories resourceRepositories(Ref ref) {
   final repositories = ResourceRepositories(
     SkirMutationClient(() => connection.client, () => telemetry),
     ref.watch(userIdProvider).value,
-    admitAuthoringRealms: connection.ensureRealmsAdmitted,
   );
   ref
     ..listen(natsProvider, (previous, next) {
@@ -48,14 +48,9 @@ ResourceRepositories resourceRepositories(Ref ref) {
 /// watches while their route session is active, so that session must release its
 /// child when it ends.
 final class ResourceRepositories {
-  ResourceRepositories(
-    this.transport,
-    this.userId, {
-    Future<void> Function(Set<skir.RecordId>)? admitAuthoringRealms,
-  }) : _admitAuthoringRealms = admitAuthoringRealms ?? ((_) async {});
+  ResourceRepositories(this.transport, this.userId);
   final SkirMutationClient transport;
   final String? userId;
-  final Future<void> Function(Set<skir.RecordId>) _admitAuthoringRealms;
   final _services = <skir.RecordId, ServiceResourceRepository>{};
   final _authoring =
       <(skir.RecordId, skir.RecordId), AuthoringResourceRepository>{};
@@ -70,11 +65,6 @@ final class ResourceRepositories {
   String requireUserId() {
     checkActive();
     return userId ?? (throw ApiException.notAuthenticated());
-  }
-
-  Future<void> ensureAuthoringRealmsAdmitted(Set<skir.RecordId> realms) {
-    checkActive();
-    return _admitAuthoringRealms(realms);
   }
 
   /// Returns the shared membership command owner for one organization.
@@ -119,14 +109,6 @@ final class ResourceRepositories {
       realm,
     ), () => AuthoringResourceRepository(this, organization, realm));
   }
-
-  /// Returns every Realm whose retained authoring repository needs transport.
-  Set<skir.RecordId> authoringRealms(skir.RecordId organization) =>
-      Set<skir.RecordId>.unmodifiable(
-        _authoring.keys
-            .where((scope) => scope.$1 == organization)
-            .map((scope) => scope.$2),
-      );
 
   /// Releases the exact authoring repository owned by a route session.
   ///

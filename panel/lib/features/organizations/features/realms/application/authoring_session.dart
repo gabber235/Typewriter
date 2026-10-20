@@ -95,10 +95,6 @@ class AuthoringSession extends _$AuthoringSession {
     skir.RecordId organizationId,
     skir.RecordId realmId,
   ) async {
-    await repositories.ensureAuthoringRealmsAdmitted(
-      repositories.authoringRealms(organizationId),
-    );
-    if (!_isActive(lifecycleRevision)) return;
     await repository.start();
     if (!_isActive(lifecycleRevision)) return;
     await _refresh(repository, lifecycleRevision, organizationId, realmId);
