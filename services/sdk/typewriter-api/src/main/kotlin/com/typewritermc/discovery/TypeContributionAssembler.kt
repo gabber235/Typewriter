@@ -2,11 +2,12 @@
 
 package com.typewritermc.discovery
 
-import com.typewritermc.authoring.AuthoringResourceDefinition
 import com.typewritermc.authoring.CompletenessResult
 import com.typewritermc.authoring.GeneratedSdkApi
 import com.typewritermc.authoring.PathSegment
 import com.typewritermc.authoring.PlacementDefinition
+import com.typewritermc.authoring.RealmRootDefinition
+import com.typewritermc.authoring.RealmSectionDefinition
 import com.typewritermc.authoring.ValuePath
 import com.typewritermc.authoring.complete
 import com.typewritermc.capability.RealmCapabilityDescriptor
@@ -89,7 +90,6 @@ data class CatalogAssemblyContext(
     val generation: CatalogGeneration,
     val relations: List<RelationContract> = emptyList(),
     val endpointBindings: List<EndpointBindingTemplate> = emptyList(),
-    val resources: List<AuthoringResourceDefinition> = emptyList(),
     val capabilities: List<RealmCapabilityDescriptor> = emptyList(),
     val roleFallbacks: List<RoleFallback> = DEFAULT_ROLE_FALLBACKS,
 )
@@ -172,23 +172,9 @@ fun CatalogContributions.assemble(context: CatalogAssemblyContext): CatalogAssem
         definitionIndex.values.flatMap { definition -> definition.templateFields(definitionIndex).diagnostics }
     val providerRegistry = ImmutableOwnedProviderRegistry(configurations, presentations, nativeBindings, checks)
     val structural = DefaultCheckedCatalog(context.generation, definitions, quarantine = reservedDiagnostics)
-    val resourceDefinitions = (resources + context.resources).distinctBy(AuthoringResourceDefinition::id)
-    val resourceFamilyDiagnostics =
-        definitions
-            .filter { (it.representation as? RepresentationTemplate.Record)?.abstract != true }
-            .flatMap { definition ->
-                val families =
-                    resourceDefinitions.filter { family ->
-                        structural.isNominalSubtype(definition.id, family.root)
-                    }
-                if (families.size <= 1) {
-                    emptyList()
-                } else {
-                    (listOf(definition.id) + families.map(AuthoringResourceDefinition::root)).map { affected ->
-                        DeclarationDiagnostic(affected, "overlapping_resource_family")
-                    }
-                }
-            }.distinct()
+    val resourceTypes = assembledDeclarations.filter { it.searchKey != null }.mapTo(linkedSetOf()) { it.definition.id }
+    val publishedRelations = (relations + context.relations).distinctBy(RelationContract::id)
+    val structureDiagnostics = realmStructureDiagnostics(assembledDeclarations, resourceTypes, publishedRelations, structural)
     val structuralBindings =
         com.typewritermc.types.FactoryNativeBindingRegistry(structural, nativeBindings.map(OwnedNativeBinding::factory))
     val constants = PortableConstantEncoder { expected, value -> encodeConstant(expected, value, structural, structuralBindings) }
@@ -203,12 +189,13 @@ fun CatalogContributions.assemble(context: CatalogAssemblyContext): CatalogAssem
             nativeBindings,
             definitionIndex,
             structural,
-            resourceDefinitions,
+            resourceTypes,
+            publishedRelations.ownershipEndpoints(),
         )
     val directFailures =
         configurationFailures.map { it.diagnostic } +
             duplicateDiagnostics + reservedDiagnostics + symbolicDiagnostics + ruleDiagnostics +
-            materialCollection.failures + resourceFamilyDiagnostics
+            materialCollection.failures + structureDiagnostics
     val checked = DefaultCheckedCatalog(context.generation, definitions, quarantine = directFailures)
     val bindingRegistry =
         com.typewritermc.types.FactoryNativeBindingRegistry(checked, nativeBindings.map(OwnedNativeBinding::factory))
@@ -219,7 +206,6 @@ fun CatalogContributions.assemble(context: CatalogAssemblyContext): CatalogAssem
             result.configuration.checks.map { OwnedCheckRecipe(result.owned.origin, it.bindNative(bindingRegistry)) }
         }
     val diagnostics = declarationGroups.keys.flatMap { checked.definition(it).diagnostics() }
-    val publishedRelations = (relations + context.relations).distinctBy(RelationContract::id)
     val searchKeys = declarationGroups.mapNotNull { (id, owned) -> owned.first().searchKey?.let { id to it } }.toMap()
     val searchKeyConflicts =
         publishedRelations.ownerTypes().filter { it in searchKeys }.groupBy(searchKeys::getValue).filterValues {
@@ -279,7 +265,7 @@ fun CatalogContributions.assemble(context: CatalogAssemblyContext): CatalogAssem
             generation = context.generation,
             types = published,
             relations = publishedRelations,
-            resourceDefinitions = resourceDefinitions.filter { checked.isReady(it.root) },
+            resourceDisplays = displayCollection.displays.map { it.formulas },
             presentations = publishedPresentations.map(OwnedPresentation::descriptor),
             presentationMaterials =
                 materialCollection.materials.filter { material ->
@@ -303,7 +289,7 @@ fun CatalogContributions.assemble(context: CatalogAssemblyContext): CatalogAssem
             resourceOperationContributions = boundOperations.contributions,
             recommendations = typeRecommendations(definitionIndex, checked),
             roleFallbacks = context.roleFallbacks,
-            resourceDisplays = displayCollection.displays.map { it.formulas },
+            realmRoot = RealmRootDefinition.id,
         ).immutableCopy()
     return CatalogAssembly(
         snapshot,
@@ -318,6 +304,52 @@ fun CatalogContributions.assemble(context: CatalogAssemblyContext): CatalogAssem
         displays = com.typewritermc.authoring.ResourceDisplayCatalog(displayCollection.displays, published),
     )
 }
+
+/**
+ * Structural rules that keep every resource reachable from the realm root. A realm section type must be concrete
+ * without type parameters (generic_realm_section), because the realm creates its single instance; every other
+ * concrete resource type except the root must be the member endpoint of an ownership relation
+ * (unowned_resource_type), so each of its resources has an owner.
+ */
+private fun realmStructureDiagnostics(
+    declarations: List<OwnedTypeDeclaration>,
+    resourceTypes: Set<TypeDefinitionId>,
+    relations: List<RelationContract>,
+    catalog: CheckedCatalog,
+): List<DeclarationDiagnostic> {
+    val members =
+        relations
+            .filter { relation -> relation.families.any { it.value == RESOURCE_OWNERSHIP_FAMILY_ID } }
+            .map { it.second.resource.definition }
+    return declarations
+        .filter { it.definition.id in resourceTypes && (it.definition.representation as? RepresentationTemplate.Record)?.abstract == false }
+        .mapNotNull { owned ->
+            val id = owned.definition.id
+            val origins = listOf(DeclarationOrigin(owned.origin.owner))
+            when {
+                id == RealmRootDefinition.id -> {
+                    null
+                }
+
+                catalog.isNominalSubtype(id, RealmSectionDefinition.id) && owned.definition.parameters.isNotEmpty() -> {
+                    DeclarationDiagnostic(id, "generic_realm_section", origins)
+                }
+
+                members.none { member -> catalog.isNominalSubtype(id, member) } -> {
+                    DeclarationDiagnostic(id, "unowned_resource_type", origins)
+                }
+
+                else -> {
+                    null
+                }
+            }
+        }
+}
+
+/** The owner side endpoints of ownership relations: the link fields that hold owned resources. */
+private fun List<RelationContract>.ownershipEndpoints(): Set<com.typewritermc.types.EndpointId> =
+    filter { relation -> relation.families.any { it.value == RESOURCE_OWNERSHIP_FAMILY_ID } }
+        .mapTo(linkedSetOf()) { it.first.id }
 
 /** The owner endpoint types of ownership relations: the first endpoint, which holds the owned resources. */
 private fun List<RelationContract>.ownerTypes(): Set<TypeDefinitionId> =
@@ -372,7 +404,8 @@ private fun collectPresentationMaterials(
     nativeBindings: List<OwnedNativeBinding>,
     definitions: Map<TypeDefinitionId, TypeDefinition>,
     catalog: CheckedCatalog,
-    resources: List<AuthoringResourceDefinition>,
+    resourceTypes: Set<TypeDefinitionId>,
+    ownershipEndpoints: Set<com.typewritermc.types.EndpointId>,
 ): PresentationMaterialCollection {
     val materials = mutableListOf<PresentationMaterial>()
     val failures = mutableListOf<DeclarationDiagnostic>()
@@ -415,7 +448,7 @@ private fun collectPresentationMaterials(
             val template = subject.presentationTemplate(definitions, catalog)
             owned.descriptor.roles.sortedBy { it.ordinal }.forEach { role ->
                 try {
-                    val result = owned.provider.build(PresentationBuildBinding(template, role, nativeTypes))
+                    val result = owned.provider.build(PresentationBuildBinding(template, role, nativeTypes, ownershipEndpoints))
                     require(
                         result.resultAppearance == null || role == com.typewritermc.types.PresentationRole.RESOURCE_SEARCH_RESULT ||
                             role == com.typewritermc.types.PresentationRole.REFERENCE_PICKER_RESULT,
@@ -436,7 +469,7 @@ private fun collectPresentationMaterials(
                         subject.field(field, definitions) !=
                             null
                     }
-                    if (result.dependencies.validCollections(subject, definitions, catalog, resources)) {
+                    if (result.dependencies.validCollections(subject, definitions, catalog, resourceTypes)) {
                         materials +=
                             PresentationMaterial(
                                 provider = owned.descriptor.id,
@@ -488,7 +521,7 @@ private fun skirout.editor.v1.presentation.PresentationDependencies.validCollect
     subject: TypeTemplate,
     definitions: Map<TypeDefinitionId, TypeDefinition>,
     catalog: CheckedCatalog,
-    resources: List<AuthoringResourceDefinition>,
+    resourceTypes: Set<TypeDefinitionId>,
 ): Boolean {
     if (contextInputs.map { it.bindingId }.distinct().size != contextInputs.size) return false
     if (!contextInputs.all { input ->
@@ -511,26 +544,7 @@ private fun skirout.editor.v1.presentation.PresentationDependencies.validCollect
         val wireRowType = collection.rowType
         val rowType = SkirTypeCodec.decode(wireRowType).valueOrNull() ?: return@all false
         if (!rowType.isValidMaterialTemplate(definitions, parameterBounds, catalog)) return@all false
-        val projection = collection.projection
-        val resourceCollection = collection.resources
-        if (projection != null && resourceCollection != null) return@all false
-        when {
-            projection != null -> {
-                projection.isValid(rowType, definitions, parameterBounds, catalog, resources)
-            }
-
-            resourceCollection != null -> {
-                val namedRow = rowType as? TypeTemplate.Named
-                namedRow != null &&
-                    wireRowType is skirout.editor.v1.type_catalog.TypeTemplate.NamedWrapper &&
-                    wireRowType.value.definition == resourceCollection.root &&
-                    resources.any { resource -> catalog.isNominalSubtype(namedRow.definition, resource.root) }
-            }
-
-            else -> {
-                true
-            }
-        }
+        collection.projection?.isValid(rowType, definitions, parameterBounds, catalog, resourceTypes) ?: true
     }
 }
 
@@ -539,7 +553,7 @@ private fun skirout.editor.v1.presentation.PresentationCollectionProjection.isVa
     definitions: Map<TypeDefinitionId, TypeDefinition>,
     parameterBounds: Map<ParameterKey, List<TypeTemplate>>,
     catalog: CheckedCatalog,
-    resources: List<AuthoringResourceDefinition>,
+    resourceTypes: Set<TypeDefinitionId>,
 ): Boolean {
     val root =
         SkirTypeCodec
@@ -548,7 +562,7 @@ private fun skirout.editor.v1.presentation.PresentationCollectionProjection.isVa
                     .NamedWrapper(this.root),
             ).valueOrNull() as? TypeTemplate.Named ?: return false
     if (!root.isValidMaterialTemplate(definitions, parameterBounds, catalog)) return false
-    if (resources.none { resource -> catalog.isNominalSubtype(root.definition, resource.root) }) return false
+    if (root.definition !in resourceTypes) return false
     return fields.all { field ->
         val targetPath = SkirAuthoringValueCodec.decode(field.target).valueOrNull() ?: return@all false
         val targetType = rowType.templateAt(targetPath, definitions) ?: return@all false
@@ -1075,13 +1089,21 @@ private fun TypeTemplate.presentationTemplate(
         type = this,
         fieldResolver = { parent, name -> parent.unwrapNullable().field(name, definitions) },
         nestedResolver = { parent, slot -> parent.presentationNested(slot, definitions) },
-        expressionChecker = { body, bindings, expected, present ->
-            com.typewritermc.presentation.checkPresentationExpression(body, bindings, expected, present, catalog::resolve)
+        expressionChecker = { body, bindings, expected, present, mayBeMissing ->
+            com.typewritermc.presentation.checkPresentationExpression(body, bindings, expected, present, catalog::resolve, mayBeMissing)
         },
         payloadResolver = { parent ->
             val scalar = (parent.unwrapNullable().representation(definitions)?.first as? RepresentationTemplate.Scalar)?.kind
             if (scalar == null) parent.unwrapNullable() else TypeTemplate.Scalar(scalar)
         },
+        linkResolver = { parent ->
+            parent.unwrapNullable().representation(definitions)?.let { (representation, arguments) ->
+                (representation as? RepresentationTemplate.Link)?.let { link ->
+                    com.typewritermc.presentation.PresentationLinkTemplate(link.endpoint, link.target.substitute(arguments))
+                }
+            }
+        },
+        subtypeChecker = catalog::isNominalSubtype,
         descriptorSelector = { actual, descriptors ->
             val bounds = definitions.parameterBounds()
             selectMostSpecificDescriptors(

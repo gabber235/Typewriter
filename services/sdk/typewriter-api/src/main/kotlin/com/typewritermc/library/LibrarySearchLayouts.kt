@@ -1,5 +1,6 @@
 package com.typewritermc.library
 
+import com.typewritermc.authoring.text
 import com.typewritermc.expression.Expr
 import com.typewritermc.expression.Handled
 import com.typewritermc.expression.MayBeMissing

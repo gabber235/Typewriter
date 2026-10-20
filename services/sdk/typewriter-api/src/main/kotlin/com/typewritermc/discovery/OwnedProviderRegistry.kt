@@ -1,6 +1,5 @@
 package com.typewritermc.discovery
 
-import com.typewritermc.authoring.AuthoringResourceDefinition
 import com.typewritermc.checking.CheckRecipe
 import com.typewritermc.checking.RealmCheckProvider
 import com.typewritermc.configuration.ConfigurationProvider
@@ -72,7 +71,6 @@ interface ProviderLease : AutoCloseable
 data class CatalogContributions(
     val declarations: List<OwnedTypeDeclaration>,
     val relations: List<RelationContract> = emptyList(),
-    val resources: List<AuthoringResourceDefinition> = emptyList(),
     val endpointBindings: List<EndpointBindingTemplate> = emptyList(),
     val configurations: List<OwnedConfiguration> = emptyList(),
     val presentations: List<OwnedPresentation> = emptyList(),

@@ -12,6 +12,8 @@ import com.typewritermc.authoring.LocatedPortableValue
 import com.typewritermc.authoring.PathSegment
 import com.typewritermc.authoring.PreparedContent
 import com.typewritermc.authoring.PreparedEdit
+import com.typewritermc.authoring.RealmRootDefinition
+import com.typewritermc.authoring.RealmSectionDefinition
 import com.typewritermc.authoring.RelationProjectionDelta
 import com.typewritermc.authoring.StructuralResult
 import com.typewritermc.authoring.TypeSelection
@@ -36,6 +38,7 @@ import com.typewritermc.types.ListItem
 import com.typewritermc.types.RelationContract
 import com.typewritermc.types.RelationDeletePolicy
 import com.typewritermc.types.ResourceId
+import com.typewritermc.types.TypeDefinitionId
 import com.typewritermc.types.TypeUse
 import com.typewritermc.types.catalog.CheckedCatalog
 import com.typewritermc.types.catalog.Resolution
@@ -87,7 +90,7 @@ internal class AuthoringMutationPlanner(
             }
         val proposedLinks = ResourceValueMapper.discover(resources)
         val projection = ResourceValueMapper.project(proposedLinks, resources, contracts, catalog)
-        problems += validateSnapshot(resources, affected, projection)
+        problems += validateSnapshot(latestResources, resources, affected, projection)
         if (problems.isNotEmpty()) return MutationPlanningResult.Rejected(problems)
 
         val beforeLinks =
@@ -182,8 +185,12 @@ internal class AuthoringMutationPlanner(
         return problems
     }
 
-    /** Validates the same affected graph boundary for replay and caller supplied working overlays. */
+    /**
+     * Validates the same affected graph boundary for replay and caller supplied working overlays. [before] holds the
+     * resources the change started from, so removing the realm root or a realm section is detected.
+     */
     fun validateSnapshot(
+        before: Map<ResourceId, AuthoringRecord>,
         resources: Map<ResourceId, AuthoringRecord>,
         affected: Set<ResourceId>,
         projection: ProjectionResult = ResourceValueMapper.project(ResourceValueMapper.discover(resources), resources, contracts, catalog),
@@ -202,6 +209,7 @@ internal class AuthoringMutationPlanner(
                 .mapTo(hashSetOf()) { it.id.location }
         problems += projection.problems.filter { it.location in affectedLocations }
         validateOwnership(projection.projections, contracts, affected, problems)
+        validateRealmStructure(before, resources, affected, projection.projections, contracts, catalog, problems)
         validateCardinality(projection.projections, contracts, affected, problems)
         validateAcyclic(projection.projections, contracts, affected, problems)
         return problems
@@ -847,6 +855,68 @@ private fun validateOwnership(
     owned
         .filterValues { links -> links.size > 1 && links.any { it.first in affected || it.second in affected } }
         .forEach { (resource, _) -> problems += problem(resource, "multiple_immediate_owners") }
+}
+
+/**
+ * Keeps every resource reachable from the single realm root. An affected resource whose type is the member of an
+ * ownership relation needs an owner (owner_required); catalog assembly makes every concrete resource type except the
+ * realm root such a member, so this is every resource but the root. The root and each concrete realm section type
+ * have exactly one instance, so a second one is rejected (singleton_exists) and so is removing or retyping the last
+ * one (singleton_required).
+ */
+private fun validateRealmStructure(
+    before: Map<ResourceId, AuthoringRecord>,
+    resources: Map<ResourceId, AuthoringRecord>,
+    affected: Set<ResourceId>,
+    projections: List<LinkProjection>,
+    contracts: List<RelationContract>,
+    catalog: CheckedCatalog,
+    problems: MutableList<ValueProblem>,
+) {
+    fun AuthoringRecord.isRealmRoot() =
+        configuration.definition.let {
+            it == RealmRootDefinition.id ||
+                catalog.isNominalSubtype(it, RealmRootDefinition.id)
+        }
+
+    fun AuthoringRecord.singletonKey(): TypeDefinitionId? =
+        when {
+            isRealmRoot() -> RealmRootDefinition.id
+            catalog.isNominalSubtype(configuration.definition, RealmSectionDefinition.id) -> configuration.definition
+            else -> null
+        }
+
+    val ownership = contracts.filter { it.ownsResources }
+    val members = ownership.map { it.second.resource.definition }
+    val owned = projections.filter { projection -> ownership.any { it.id == projection.contract } }.mapTo(hashSetOf()) { it.second }
+
+    fun AuthoringRecord.isOwnable() =
+        configuration.definition.let { type -> members.any { it == type || catalog.isNominalSubtype(type, it) } }
+
+    // A member without a back reference loses its owner when only the owner's record changes, so the resources an
+    // affected resource owned before the change are checked too.
+    val formerlyOwned =
+        ResourceValueMapper
+            .project(ResourceValueMapper.discover(before.filterKeys { it in affected }), before, contracts, catalog)
+            .projections
+            .filter { projection -> projection.first in affected && ownership.any { it.id == projection.contract } }
+            .map { it.second }
+    (affected + formerlyOwned)
+        .distinct()
+        .filter { id -> resources[id]?.isOwnable() == true && id !in owned }
+        .forEach { id -> problems += problem(id, "owner_required") }
+    val singletons = resources.entries.groupBy({ it.value.singletonKey() }, { it.key })
+    singletons
+        .filterKeys { it != null }
+        .filterValues { ids -> ids.size > 1 && ids.any { it in affected } }
+        .values
+        .forEach { ids -> ids.filter { it in affected }.forEach { id -> problems += problem(id, "singleton_exists") } }
+    before
+        .filterKeys { it in affected }
+        .forEach { (id, record) ->
+            val key = record.singletonKey() ?: return@forEach
+            if (resources[id]?.singletonKey() != key && singletons[key].isNullOrEmpty()) problems += problem(id, "singleton_required")
+        }
 }
 
 private fun validateCardinality(

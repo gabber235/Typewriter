@@ -31,7 +31,6 @@ import "../../kernel/v1/errors.dart" as _lib_kernel_v1_errors;
 
 sealed class AuthoringResource_orMutable {
   _lib_editor_v1_type_catalog.ResourceId_orMutable get id;
-  _lib_editor_v1_catalog.ResourceDefinitionId_orMutable get definition;
   _lib_editor_v1_type_catalog.AuthoringRecord_orMutable get content;
 
   AuthoringResource toFrozen();
@@ -42,27 +41,19 @@ final class AuthoringResource implements AuthoringResource_orMutable {
   @_core.override
   final _lib_editor_v1_type_catalog.ResourceId id;
   @_core.override
-  final _lib_editor_v1_catalog.ResourceDefinitionId definition;
-  @_core.override
   final _lib_editor_v1_type_catalog.AuthoringRecord content;
   _skir.internal__UnrecognizedFields? _u;
 
   factory AuthoringResource({
     required _lib_editor_v1_type_catalog.ResourceId_orMutable id,
-    required _lib_editor_v1_catalog.ResourceDefinitionId_orMutable definition,
     required _lib_editor_v1_type_catalog.AuthoringRecord_orMutable content,
-  }) => AuthoringResource._(
-    id.toFrozen(),
-    definition.toFrozen(),
-    content.toFrozen(),
-  );
+  }) => AuthoringResource._(id.toFrozen(), content.toFrozen());
 
-  AuthoringResource._(this.id, this.definition, this.content);
+  AuthoringResource._(this.id, this.content);
 
   /// Default instance with all fields set to their default values.
   static final defaultInstance = AuthoringResource._(
     _lib_editor_v1_type_catalog.ResourceId.defaultInstance,
-    _lib_editor_v1_catalog.ResourceDefinitionId.defaultInstance,
     _lib_editor_v1_type_catalog.AuthoringRecord.defaultInstance,
   );
 
@@ -70,7 +61,6 @@ final class AuthoringResource implements AuthoringResource_orMutable {
   /// Fields are initialized to their default values.
   static AuthoringResource_mutable mutable() => AuthoringResource_mutable._(
     _lib_editor_v1_type_catalog.ResourceId.defaultInstance,
-    _lib_editor_v1_catalog.ResourceDefinitionId.defaultInstance,
     _lib_editor_v1_type_catalog.AuthoringRecord.defaultInstance,
   );
 
@@ -81,7 +71,7 @@ final class AuthoringResource implements AuthoringResource_orMutable {
 
   /// Returns a mutable shallow copy of this instance.
   AuthoringResource_mutable toMutable() =>
-      AuthoringResource_mutable._(this.id, this.definition, this.content);
+      AuthoringResource_mutable._(this.id, this.content);
 
   @_core.override
   _core.bool operator ==(other) {
@@ -96,7 +86,7 @@ final class AuthoringResource implements AuthoringResource_orMutable {
   @_core.override
   _core.int get hashCode => _skir.internal__listEquality.hash(_equality_proxy);
 
-  _core.List get _equality_proxy => [this.id, this.definition, this.content];
+  _core.List get _equality_proxy => [this.id, this.content];
 
   @_core.override
   _core.String toString() => _skir.internal__stringify(this, serializer);
@@ -115,18 +105,9 @@ final class AuthoringResource implements AuthoringResource_orMutable {
         (it, v) => it.id = v,
       );
       _serializerBuilder.addField(
-        "definition",
-        "definition",
+        "content",
+        "content",
         1,
-        _lib_editor_v1_catalog.ResourceDefinitionId.serializer,
-        "",
-        (it) => it.definition,
-        (it, v) => it.definition = v,
-      );
-      _serializerBuilder.addField(
-        "content",
-        "content",
-        2,
         _lib_editor_v1_type_catalog.AuthoringRecord.serializer,
         "",
         (it) => it.content,
@@ -151,11 +132,10 @@ final class AuthoringResource implements AuthoringResource_orMutable {
 /// Mutable version of [AuthoringResource].
 final class AuthoringResource_mutable implements AuthoringResource_orMutable {
   _lib_editor_v1_type_catalog.ResourceId_orMutable id;
-  _lib_editor_v1_catalog.ResourceDefinitionId_orMutable definition;
   _lib_editor_v1_type_catalog.AuthoringRecord_orMutable content;
   _skir.internal__UnrecognizedFields? _u;
 
-  AuthoringResource_mutable._(this.id, this.definition, this.content);
+  AuthoringResource_mutable._(this.id, this.content);
 
   /// If the value of [id] is already mutable, returns it as-is.
   /// Otherwise, makes a mutable copy, assigns it back to [id] and returns it.
@@ -166,18 +146,6 @@ final class AuthoringResource_mutable implements AuthoringResource_orMutable {
     } else {
       return this.id = (value as _lib_editor_v1_type_catalog.ResourceId)
           .toMutable();
-    }
-  }
-
-  /// If the value of [definition] is already mutable, returns it as-is.
-  /// Otherwise, makes a mutable copy, assigns it back to [definition] and returns it.
-  _lib_editor_v1_catalog.ResourceDefinitionId_mutable get mutableDefinition {
-    final value = this.definition;
-    if (value is _lib_editor_v1_catalog.ResourceDefinitionId_mutable) {
-      return value;
-    } else {
-      return this.definition =
-          (value as _lib_editor_v1_catalog.ResourceDefinitionId).toMutable();
     }
   }
 
@@ -195,11 +163,8 @@ final class AuthoringResource_mutable implements AuthoringResource_orMutable {
 
   /// Returns a deeply immutable copy of this instance.
   @_core.override
-  AuthoringResource toFrozen() => AuthoringResource(
-    id: this.id,
-    definition: this.definition,
-    content: this.content,
-  ).._u = this._u;
+  AuthoringResource toFrozen() =>
+      AuthoringResource(id: this.id, content: this.content).._u = this._u;
 }
 
 // -----------------------------------------------------------------------------
@@ -1974,7 +1939,6 @@ final class UnresolvedLink_unavailableTargetWrapper
 
 sealed class PresentationSubject_orMutable {
   _lib_editor_v1_type_catalog.ResourceId_orMutable get resource;
-  _lib_editor_v1_catalog.ResourceDefinitionId_orMutable get definition;
   _lib_editor_v1_type_catalog.AuthoringRecord_orMutable get content;
 
   PresentationSubject toFrozen();
@@ -1988,27 +1952,19 @@ final class PresentationSubject implements PresentationSubject_orMutable {
   @_core.override
   final _lib_editor_v1_type_catalog.ResourceId resource;
   @_core.override
-  final _lib_editor_v1_catalog.ResourceDefinitionId definition;
-  @_core.override
   final _lib_editor_v1_type_catalog.AuthoringRecord content;
   _skir.internal__UnrecognizedFields? _u;
 
   factory PresentationSubject({
     required _lib_editor_v1_type_catalog.ResourceId_orMutable resource,
-    required _lib_editor_v1_catalog.ResourceDefinitionId_orMutable definition,
     required _lib_editor_v1_type_catalog.AuthoringRecord_orMutable content,
-  }) => PresentationSubject._(
-    resource.toFrozen(),
-    definition.toFrozen(),
-    content.toFrozen(),
-  );
+  }) => PresentationSubject._(resource.toFrozen(), content.toFrozen());
 
-  PresentationSubject._(this.resource, this.definition, this.content);
+  PresentationSubject._(this.resource, this.content);
 
   /// Default instance with all fields set to their default values.
   static final defaultInstance = PresentationSubject._(
     _lib_editor_v1_type_catalog.ResourceId.defaultInstance,
-    _lib_editor_v1_catalog.ResourceDefinitionId.defaultInstance,
     _lib_editor_v1_type_catalog.AuthoringRecord.defaultInstance,
   );
 
@@ -2016,7 +1972,6 @@ final class PresentationSubject implements PresentationSubject_orMutable {
   /// Fields are initialized to their default values.
   static PresentationSubject_mutable mutable() => PresentationSubject_mutable._(
     _lib_editor_v1_type_catalog.ResourceId.defaultInstance,
-    _lib_editor_v1_catalog.ResourceDefinitionId.defaultInstance,
     _lib_editor_v1_type_catalog.AuthoringRecord.defaultInstance,
   );
 
@@ -2026,11 +1981,8 @@ final class PresentationSubject implements PresentationSubject_orMutable {
   PresentationSubject toFrozen() => this;
 
   /// Returns a mutable shallow copy of this instance.
-  PresentationSubject_mutable toMutable() => PresentationSubject_mutable._(
-    this.resource,
-    this.definition,
-    this.content,
-  );
+  PresentationSubject_mutable toMutable() =>
+      PresentationSubject_mutable._(this.resource, this.content);
 
   @_core.override
   _core.bool operator ==(other) {
@@ -2045,11 +1997,7 @@ final class PresentationSubject implements PresentationSubject_orMutable {
   @_core.override
   _core.int get hashCode => _skir.internal__listEquality.hash(_equality_proxy);
 
-  _core.List get _equality_proxy => [
-    this.resource,
-    this.definition,
-    this.content,
-  ];
+  _core.List get _equality_proxy => [this.resource, this.content];
 
   @_core.override
   _core.String toString() => _skir.internal__stringify(this, serializer);
@@ -2071,18 +2019,9 @@ final class PresentationSubject implements PresentationSubject_orMutable {
         (it, v) => it.resource = v,
       );
       _serializerBuilder.addField(
-        "definition",
-        "definition",
+        "content",
+        "content",
         1,
-        _lib_editor_v1_catalog.ResourceDefinitionId.serializer,
-        "",
-        (it) => it.definition,
-        (it, v) => it.definition = v,
-      );
-      _serializerBuilder.addField(
-        "content",
-        "content",
-        2,
         _lib_editor_v1_type_catalog.AuthoringRecord.serializer,
         "",
         (it) => it.content,
@@ -2108,11 +2047,10 @@ final class PresentationSubject implements PresentationSubject_orMutable {
 final class PresentationSubject_mutable
     implements PresentationSubject_orMutable {
   _lib_editor_v1_type_catalog.ResourceId_orMutable resource;
-  _lib_editor_v1_catalog.ResourceDefinitionId_orMutable definition;
   _lib_editor_v1_type_catalog.AuthoringRecord_orMutable content;
   _skir.internal__UnrecognizedFields? _u;
 
-  PresentationSubject_mutable._(this.resource, this.definition, this.content);
+  PresentationSubject_mutable._(this.resource, this.content);
 
   /// If the value of [resource] is already mutable, returns it as-is.
   /// Otherwise, makes a mutable copy, assigns it back to [resource] and returns it.
@@ -2123,18 +2061,6 @@ final class PresentationSubject_mutable
     } else {
       return this.resource = (value as _lib_editor_v1_type_catalog.ResourceId)
           .toMutable();
-    }
-  }
-
-  /// If the value of [definition] is already mutable, returns it as-is.
-  /// Otherwise, makes a mutable copy, assigns it back to [definition] and returns it.
-  _lib_editor_v1_catalog.ResourceDefinitionId_mutable get mutableDefinition {
-    final value = this.definition;
-    if (value is _lib_editor_v1_catalog.ResourceDefinitionId_mutable) {
-      return value;
-    } else {
-      return this.definition =
-          (value as _lib_editor_v1_catalog.ResourceDefinitionId).toMutable();
     }
   }
 
@@ -2152,11 +2078,9 @@ final class PresentationSubject_mutable
 
   /// Returns a deeply immutable copy of this instance.
   @_core.override
-  PresentationSubject toFrozen() => PresentationSubject(
-    resource: this.resource,
-    definition: this.definition,
-    content: this.content,
-  ).._u = this._u;
+  PresentationSubject toFrozen() =>
+      PresentationSubject(resource: this.resource, content: this.content)
+        .._u = this._u;
 }
 
 // -----------------------------------------------------------------------------
@@ -6513,7 +6437,6 @@ final class TypePreviewResult_rejectedWrapper
 
 sealed class AuthoringSearchHit_orMutable {
   _lib_editor_v1_type_catalog.ResourceId_orMutable get resource;
-  _lib_editor_v1_catalog.ResourceDefinitionId_orMutable get definition;
   PresentationSubject_orMutable get subject;
   _lib_editor_v1_typed_value.PortableValue_orMutable get context;
 
@@ -6525,8 +6448,6 @@ final class AuthoringSearchHit implements AuthoringSearchHit_orMutable {
   @_core.override
   final _lib_editor_v1_type_catalog.ResourceId resource;
   @_core.override
-  final _lib_editor_v1_catalog.ResourceDefinitionId definition;
-  @_core.override
   final PresentationSubject subject;
   @_core.override
   final _lib_editor_v1_typed_value.PortableValue context;
@@ -6534,27 +6455,19 @@ final class AuthoringSearchHit implements AuthoringSearchHit_orMutable {
 
   factory AuthoringSearchHit({
     required _lib_editor_v1_type_catalog.ResourceId_orMutable resource,
-    required _lib_editor_v1_catalog.ResourceDefinitionId_orMutable definition,
     required PresentationSubject_orMutable subject,
     required _lib_editor_v1_typed_value.PortableValue_orMutable context,
   }) => AuthoringSearchHit._(
     resource.toFrozen(),
-    definition.toFrozen(),
     subject.toFrozen(),
     context.toFrozen(),
   );
 
-  AuthoringSearchHit._(
-    this.resource,
-    this.definition,
-    this.subject,
-    this.context,
-  );
+  AuthoringSearchHit._(this.resource, this.subject, this.context);
 
   /// Default instance with all fields set to their default values.
   static final defaultInstance = AuthoringSearchHit._(
     _lib_editor_v1_type_catalog.ResourceId.defaultInstance,
-    _lib_editor_v1_catalog.ResourceDefinitionId.defaultInstance,
     PresentationSubject.defaultInstance,
     _lib_editor_v1_typed_value.PortableValue.defaultInstance,
   );
@@ -6563,7 +6476,6 @@ final class AuthoringSearchHit implements AuthoringSearchHit_orMutable {
   /// Fields are initialized to their default values.
   static AuthoringSearchHit_mutable mutable() => AuthoringSearchHit_mutable._(
     _lib_editor_v1_type_catalog.ResourceId.defaultInstance,
-    _lib_editor_v1_catalog.ResourceDefinitionId.defaultInstance,
     PresentationSubject.defaultInstance,
     _lib_editor_v1_typed_value.PortableValue.defaultInstance,
   );
@@ -6574,12 +6486,8 @@ final class AuthoringSearchHit implements AuthoringSearchHit_orMutable {
   AuthoringSearchHit toFrozen() => this;
 
   /// Returns a mutable shallow copy of this instance.
-  AuthoringSearchHit_mutable toMutable() => AuthoringSearchHit_mutable._(
-    this.resource,
-    this.definition,
-    this.subject,
-    this.context,
-  );
+  AuthoringSearchHit_mutable toMutable() =>
+      AuthoringSearchHit_mutable._(this.resource, this.subject, this.context);
 
   @_core.override
   _core.bool operator ==(other) {
@@ -6594,12 +6502,7 @@ final class AuthoringSearchHit implements AuthoringSearchHit_orMutable {
   @_core.override
   _core.int get hashCode => _skir.internal__listEquality.hash(_equality_proxy);
 
-  _core.List get _equality_proxy => [
-    this.resource,
-    this.definition,
-    this.subject,
-    this.context,
-  ];
+  _core.List get _equality_proxy => [this.resource, this.subject, this.context];
 
   @_core.override
   _core.String toString() => _skir.internal__stringify(this, serializer);
@@ -6618,18 +6521,9 @@ final class AuthoringSearchHit implements AuthoringSearchHit_orMutable {
         (it, v) => it.resource = v,
       );
       _serializerBuilder.addField(
-        "definition",
-        "definition",
+        "subject",
+        "subject",
         1,
-        _lib_editor_v1_catalog.ResourceDefinitionId.serializer,
-        "",
-        (it) => it.definition,
-        (it, v) => it.definition = v,
-      );
-      _serializerBuilder.addField(
-        "subject",
-        "subject",
-        2,
         PresentationSubject.serializer,
         "",
         (it) => it.subject,
@@ -6638,7 +6532,7 @@ final class AuthoringSearchHit implements AuthoringSearchHit_orMutable {
       _serializerBuilder.addField(
         "context",
         "context",
-        3,
+        2,
         _lib_editor_v1_typed_value.PortableValue.serializer,
         "",
         (it) => it.context,
@@ -6663,17 +6557,11 @@ final class AuthoringSearchHit implements AuthoringSearchHit_orMutable {
 /// Mutable version of [AuthoringSearchHit].
 final class AuthoringSearchHit_mutable implements AuthoringSearchHit_orMutable {
   _lib_editor_v1_type_catalog.ResourceId_orMutable resource;
-  _lib_editor_v1_catalog.ResourceDefinitionId_orMutable definition;
   PresentationSubject_orMutable subject;
   _lib_editor_v1_typed_value.PortableValue_orMutable context;
   _skir.internal__UnrecognizedFields? _u;
 
-  AuthoringSearchHit_mutable._(
-    this.resource,
-    this.definition,
-    this.subject,
-    this.context,
-  );
+  AuthoringSearchHit_mutable._(this.resource, this.subject, this.context);
 
   /// If the value of [resource] is already mutable, returns it as-is.
   /// Otherwise, makes a mutable copy, assigns it back to [resource] and returns it.
@@ -6684,18 +6572,6 @@ final class AuthoringSearchHit_mutable implements AuthoringSearchHit_orMutable {
     } else {
       return this.resource = (value as _lib_editor_v1_type_catalog.ResourceId)
           .toMutable();
-    }
-  }
-
-  /// If the value of [definition] is already mutable, returns it as-is.
-  /// Otherwise, makes a mutable copy, assigns it back to [definition] and returns it.
-  _lib_editor_v1_catalog.ResourceDefinitionId_mutable get mutableDefinition {
-    final value = this.definition;
-    if (value is _lib_editor_v1_catalog.ResourceDefinitionId_mutable) {
-      return value;
-    } else {
-      return this.definition =
-          (value as _lib_editor_v1_catalog.ResourceDefinitionId).toMutable();
     }
   }
 
@@ -6726,7 +6602,6 @@ final class AuthoringSearchHit_mutable implements AuthoringSearchHit_orMutable {
   @_core.override
   AuthoringSearchHit toFrozen() => AuthoringSearchHit(
     resource: this.resource,
-    definition: this.definition,
     subject: this.subject,
     context: this.context,
   ).._u = this._u;

@@ -1,5 +1,7 @@
 package com.typewritermc.presentation
 
+import com.typewritermc.authoring.HierarchyPath
+import com.typewritermc.authoring.TypedPath
 import com.typewritermc.discovery.GraphDirection
 import com.typewritermc.dsl.TypewriterDsl
 import com.typewritermc.expression.Expr
@@ -157,7 +159,9 @@ interface LinkInputScope :
     fun unlinkLabel(value: Expr<String, Handled>)
 }
 
-interface GraphPageScope {
+/** Appearance of a graph of resources. */
+@TypewriterDsl
+interface GraphAppearanceScope {
     fun cellSize(value: Double)
 
     fun cellSize(value: Expr<Double, Handled>)
@@ -167,7 +171,9 @@ interface GraphPageScope {
     fun cardPadding(value: PresentationInsets)
 }
 
-interface TimelinePageScope {
+/** Appearance of a timeline of resources. */
+@TypewriterDsl
+interface TimelineAppearanceScope {
     fun rulerHeight(value: Double)
 
     fun trackPadding(value: Double)
@@ -201,14 +207,68 @@ interface ListControl<ItemScope> : Control {
     fun listInput(configure: ListInputScope<ItemScope>.() -> Unit = {})
 }
 
-interface ResourceLinksControl<R : Resource> : ListControl<LinkControl<R>> {
-    fun graphPage(
+/**
+ * Lays out the resources of a link field, such as Page.elements or Library.books. Every member renders through its
+ * item presentation, and adding or removing members edits the link. Call one layout function; [order] sorts the
+ * members of any layout except graph and timeline, which place members by their placement.
+ */
+interface ResourcesControl<R : Resource> : ListControl<LinkControl<R>> {
+    /** Sorts members by [key], evaluated for each member; without it members keep link order. */
+    fun order(key: ResourceItemScope<R>.() -> Expr<*, Handled>)
+
+    /** Places members on a graph by their graph placement, with edges from the relations among them. */
+    fun graph(
         direction: GraphDirection,
-        configure: GraphPageScope.() -> Unit = {},
+        configure: GraphAppearanceScope.() -> Unit = {},
     )
 
-    fun timelinePage(configure: TimelinePageScope.() -> Unit = {})
+    /** Places members on a timeline by their timeline placement. */
+    fun timeline(configure: TimelineAppearanceScope.() -> Unit = {})
+
+    /** Shows members as cards at most [itemExtent] wide with the given [aspectRatio], [spacing] apart. */
+    fun grid(
+        itemExtent: Double = 200.0,
+        aspectRatio: Double = 1.0,
+        spacing: Double = 12.0,
+    )
+
+    /** Shows members as rows. */
+    fun list()
+
+    /** Groups members by a hierarchy path field; dropping onto a group rewrites that field. */
+    fun tree(
+        path: TypedPath<R, HierarchyPath>,
+        configure: TreeScope.() -> Unit = {},
+    )
 }
+
+/** One member of a resources layout. */
+@TypewriterDsl
+interface ResourceItemScope<R : Resource> {
+    val resource: ResourceExpr<R>
+}
+
+/** Configures a tree of resources grouped by a hierarchy path. */
+@TypewriterDsl
+interface TreeScope {
+    /** Header of each group; [TreeGroupScope.group] exposes its path, name and members. */
+    fun group(body: TreeGroupScope.() -> Unit)
+
+    /** Whether groups start expanded. */
+    fun initiallyExpanded(value: Boolean)
+}
+
+/** The header of one tree group. */
+interface TreeGroupScope : Layout {
+    val group: HierarchyGroupExpressions
+}
+
+/** The group a tree header renders: its full [path], last path segment as [name], and member resources. */
+class HierarchyGroupExpressions internal constructor(
+    val path: Expr<HierarchyPath, Handled>,
+    val name: Expr<String, Handled>,
+    val members: Expr<List<com.typewritermc.types.ResourceId>, Handled>,
+)
 
 interface SetControl<ItemScope> : Control {
     fun collectionInput(configure: SetInputScope<ItemScope>.() -> Unit = {})

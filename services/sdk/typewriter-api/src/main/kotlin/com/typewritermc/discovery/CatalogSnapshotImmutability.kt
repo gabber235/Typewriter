@@ -38,7 +38,6 @@ internal fun EditorCatalogSnapshot.immutableCopy(): EditorCatalogSnapshot =
             },
         types = types.immutableListCopy(PublishedType::immutableCopy),
         relations = relations.immutableListCopy(RelationContract::immutableCopy),
-        resourceDefinitions = resourceDefinitions.immutableListCopy(),
         presentations = presentations.immutableListCopy(PresentationDescriptor::immutableCopy),
         presentationMaterials = presentationMaterials.immutableListCopy(PresentationMaterial::immutableCopy),
         configuration = configuration.immutableListCopy(ConfigurationRecipe::immutableCopy),

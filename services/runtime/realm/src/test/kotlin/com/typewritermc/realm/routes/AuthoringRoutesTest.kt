@@ -8,7 +8,6 @@ import com.typewritermc.authoring.EditExpectation
 import com.typewritermc.authoring.EditIntent
 import com.typewritermc.authoring.PreparedEdit
 import com.typewritermc.authoring.PreparedEditResult
-import com.typewritermc.authoring.ResourceDefinitionId
 import com.typewritermc.authoring.TypeSelection
 import com.typewritermc.authoring.ValueLocation
 import com.typewritermc.authoring.ValuePath
@@ -386,13 +385,7 @@ val AuthoringRoutesTest by testSuite {
             val views =
                 InMemoryAuthoringViewStore(
                     catalog,
-                    AuthoringSeed(
-                        resources,
-                        mapOf(
-                            unavailable to ResourceDefinitionId("removed_definition"),
-                            available to ResourceDefinitionId("test"),
-                        ),
-                    ),
+                    AuthoringSeed(resources),
                 )
             try {
                 RouteFixture { contracts, _, _ ->
@@ -413,8 +406,7 @@ val AuthoringRoutesTest by testSuite {
                                 QueryAuthoringStateResponse.serializer,
                             ).decodeSnapshot()
 
-                    response.resources.associate { it.id.value to it.definition.value } shouldBe
-                        mapOf("available" to "test", "unavailable" to "removed_definition")
+                    response.resources.map { it.id.value }.toSet() shouldBe setOf("available", "unavailable")
                     val unavailableWire = response.resources.single { it.id.value == unavailable.value }
                     SkirAuthoringValueCodec.decode(unavailableWire.content).getOrThrow() shouldBe unavailableRecord
                 }

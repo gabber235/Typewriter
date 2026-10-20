@@ -228,7 +228,6 @@ class GeneratedProviderLoader {
             when (kind) {
                 GeneratedProviderKind.Type -> GeneratedTypeProvider::class.java
                 GeneratedProviderKind.NativeBinding -> NativeBindingFactory::class.java
-                GeneratedProviderKind.Resource -> GeneratedResourceProvider::class.java
                 GeneratedProviderKind.Relation -> GeneratedRelationProvider::class.java
                 GeneratedProviderKind.EndpointBindings -> GeneratedEndpointBindingsProvider::class.java
                 GeneratedProviderKind.Configuration -> GeneratedConfigurationProvider::class.java
@@ -416,7 +415,6 @@ class GeneratedProviderLoader {
     ): LoadedGeneratedProviders {
         val declarations = mutableListOf<OwnedTypeDeclaration>()
         val relations = mutableListOf<com.typewritermc.types.RelationContract>()
-        val resources = mutableListOf<com.typewritermc.authoring.AuthoringResourceDefinition>()
         val endpointBindings = mutableListOf<com.typewritermc.types.EndpointBindingTemplate>()
         val configurations = mutableListOf<OwnedConfiguration>()
         val presentations = mutableListOf<OwnedPresentation>()
@@ -440,10 +438,6 @@ class GeneratedProviderLoader {
 
                 GeneratedProviderKind.NativeBinding -> {
                     nativeBindings += OwnedNativeBinding(origin, loadedProvider.require<NativeBindingFactory>())
-                }
-
-                GeneratedProviderKind.Resource -> {
-                    resources += loadedProvider.require<GeneratedResourceProvider>().definition
                 }
 
                 GeneratedProviderKind.Relation -> {
@@ -516,7 +510,6 @@ class GeneratedProviderLoader {
                 CatalogContributions(
                     declarations = declarations,
                     relations = relations,
-                    resources = resources,
                     endpointBindings = endpointBindings,
                     configurations = configurations,
                     presentations = presentations,

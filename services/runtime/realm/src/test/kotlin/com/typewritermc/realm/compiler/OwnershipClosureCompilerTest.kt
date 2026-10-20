@@ -1,9 +1,7 @@
 package com.typewritermc.realm.compiler
 
 import com.typewritermc.authoring.AuthoringRecord
-import com.typewritermc.authoring.AuthoringResourceDefinition
 import com.typewritermc.authoring.ItemId
-import com.typewritermc.authoring.ResourceDefinitionId
 import com.typewritermc.authoring.TypeSelection
 import com.typewritermc.checking.CatalogGeneration
 import com.typewritermc.configuration.FieldPatternSegment
@@ -102,22 +100,18 @@ val OwnershipClosureCompilerTest by testSuite {
         }
     }
 
-    test("capturedUnavailableResourceBlocksCompilationWhileRetainingItsDefinitionIdentity") {
+    test("capturedUnavailableResourceBlocksCompilation") {
         val unavailableType = TypeDefinitionId(TypeId.Qualified("removed", "page"), 1)
         val unavailable =
             AuthoringRecord(
                 TypeSelection.Complete(TypeUse.Named(unavailableType)),
                 mapOf("legacy" to DataValue.StringValue("preserved")),
             )
-        fixture(
-            resources = mapOf(pageId to unavailable),
-            resourceDefinitions = mapOf(pageId to ResourceDefinitionId("page")),
-        ).use { captured ->
+        fixture(resources = mapOf(pageId to unavailable)).use { captured ->
             val result = with(captured.root) { compiler(captured.root).compile(pageId) } as ResourceGraphCompileResult.Blocked
 
             result.diagnostics.map { it.code }.toSet() shouldBe
                 setOf("unresolved_type")
-            captured.root.resourceDefinitions[pageId] shouldBe ResourceDefinitionId("page")
         }
     }
     test("an invalid ownership edge does not block an independent page") {
@@ -163,13 +157,12 @@ private fun compiler(view: com.typewritermc.realm.authoring.AuthoringView) =
 private fun fixture(
     resources: Map<ResourceId, AuthoringRecord>,
     snapshot: String = "snapshot_1",
-    resourceDefinitions: Map<ResourceId, ResourceDefinitionId> = emptyMap(),
 ): com.typewritermc.realm.authoring.AuthoringLease {
     val catalog = CompilerCatalogLease()
     val store =
         InMemoryAuthoringViewStore(
             catalog,
-            AuthoringSeed(resources, resourceDefinitions),
+            AuthoringSeed(resources),
         )
     val captured = store.capture()
     store.close()
@@ -213,12 +206,6 @@ private class CompilerCatalogLease private constructor(
     override val checks = emptyList<com.typewritermc.discovery.OwnedCheckRecipe>()
     override val relations = listOf(OWNERSHIP_CONTRACT)
     override val endpointBindings = listOf(PAGE_BINDING)
-    override val resources =
-        listOf(
-            AuthoringResourceDefinition(ResourceDefinitionId("page"), PAGE),
-            AuthoringResourceDefinition(ResourceDefinitionId("child"), CHILD),
-        )
-
     override val configuration: List<com.typewritermc.configuration.ConfigurationRecipe> = emptyList()
     override val operations = com.typewritermc.operations.OperationCatalog()
     override val placementFields = emptyMap<com.typewritermc.types.TypeDefinitionId, com.typewritermc.authoring.ValuePath>()

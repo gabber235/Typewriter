@@ -2,11 +2,9 @@
 
 package com.typewritermc.presentation
 
-import com.typewritermc.authoring.AuthoringResourceDefinition
 import com.typewritermc.authoring.GeneratedSdkApi
 import com.typewritermc.authoring.ItemId
 import com.typewritermc.authoring.PathSegment
-import com.typewritermc.authoring.ResourceDefinitionId
 import com.typewritermc.authoring.ValuePath
 import com.typewritermc.checking.CatalogGeneration
 import com.typewritermc.configuration.RepresentationKind
@@ -252,7 +250,7 @@ val DefaultPresentationRuntimeTest by testSuite {
             val checked = catalog.ready(TypeUse.Scalar(ScalarKind.Text))
             val result =
                 DefaultPresentationRuntime().build(
-                    PresentationBuildBinding(checked.presentationTemplate(), PresentationRole.WORKSPACE_EDITOR),
+                    PresentationBuildBinding(checked.presentationTemplate(), PresentationRole.WORKSPACE),
                 ) { build ->
                     val field: PresentedField<String, TextControl> = build.value(TextControl::class)
                     field {
@@ -413,7 +411,7 @@ val DefaultPresentationRuntimeTest by testSuite {
         }
         val result =
             DefaultPresentationRuntime().build(
-                PresentationBuildBinding(checked.presentationTemplate(), PresentationRole.WORKSPACE_EDITOR),
+                PresentationBuildBinding(checked.presentationTemplate(), PresentationRole.WORKSPACE),
             ) { build ->
                 with(build) {
                     @Suppress("UNCHECKED_CAST")
@@ -485,7 +483,7 @@ val DefaultPresentationRuntimeTest by testSuite {
             }
         val result =
             DefaultPresentationRuntime().build(
-                PresentationBuildBinding(checked.presentationTemplate(), PresentationRole.WORKSPACE_EDITOR),
+                PresentationBuildBinding(checked.presentationTemplate(), PresentationRole.WORKSPACE),
             ) { build ->
                 with(build) {
                     val text: PresentedField<String, TextControl> = value(TextControl::class)
@@ -514,7 +512,7 @@ val DefaultPresentationRuntimeTest by testSuite {
         val checked = catalog.ready(TypeUse.Scalar(ScalarKind.Text))
         val result =
             DefaultPresentationRuntime().build(
-                PresentationBuildBinding(checked.presentationTemplate(), PresentationRole.WORKSPACE_EDITOR),
+                PresentationBuildBinding(checked.presentationTemplate(), PresentationRole.WORKSPACE),
             ) { build ->
                 val text: PresentedField<String, TextControl> = build.value(TextControl::class)
                 text {
@@ -809,12 +807,12 @@ val DefaultPresentationRuntimeTest by testSuite {
 
         val assembly =
             CatalogContributions(
-                declarations = listOf(OwnedTypeDeclaration(origin, subject), OwnedTypeDeclaration(origin, unrelated)),
+                declarations = listOf(ownedResource(origin, subject), OwnedTypeDeclaration(origin, unrelated)),
                 presentations = listOf(OwnedPresentation(origin, descriptor, provider)),
             ).assemble(
                 CatalogAssemblyContext(
                     CatalogGeneration("invalid presentation collection"),
-                    resources = listOf(AuthoringResourceDefinition(ResourceDefinitionId("test.invalid"), subjectId)),
+                    relations = rootOwnership(subjectId),
                 ),
             )
 
@@ -900,12 +898,12 @@ val DefaultPresentationRuntimeTest by testSuite {
         val assembly =
             CatalogContributions(
                 declarations =
-                    listOf(base, child, resource).map { definition -> OwnedTypeDeclaration(origin, definition) },
+                    listOf(OwnedTypeDeclaration(origin, base), OwnedTypeDeclaration(origin, child), ownedResource(origin, resource)),
                 presentations = listOf(OwnedPresentation(origin, descriptor, provider)),
             ).assemble(
                 CatalogAssemblyContext(
                     CatalogGeneration("valid presentation collection"),
-                    resources = listOf(AuthoringResourceDefinition(ResourceDefinitionId("test.projection"), resourceId)),
+                    relations = rootOwnership(resourceId),
                 ),
             )
 
@@ -1044,16 +1042,19 @@ val DefaultPresentationRuntimeTest by testSuite {
 
         val assembly =
             CatalogContributions(
-                declarations = definitions.map { definition -> OwnedTypeDeclaration(origin, definition) },
+                declarations =
+                    definitions.map { definition ->
+                        if (definition.id in setOf(literalId, boundedId)) {
+                            ownedResource(origin, definition)
+                        } else {
+                            OwnedTypeDeclaration(origin, definition)
+                        }
+                    },
                 presentations = ownedPresentations,
             ).assemble(
                 CatalogAssemblyContext(
                     CatalogGeneration("invalid collection admission"),
-                    resources =
-                        listOf(
-                            AuthoringResourceDefinition(ResourceDefinitionId("test.literal"), literalId),
-                            AuthoringResourceDefinition(ResourceDefinitionId("test.bound"), boundedId),
-                        ),
+                    relations = rootOwnership(literalId, boundedId),
                 ),
             )
 
@@ -1092,7 +1093,7 @@ val DefaultPresentationRuntimeTest by testSuite {
         ): String =
             runtime
                 .build(
-                    PresentationBuildBinding(catalog.ready(TypeUse.Scalar(kind)).presentationTemplate(), PresentationRole.WORKSPACE_EDITOR),
+                    PresentationBuildBinding(catalog.ready(TypeUse.Scalar(kind)).presentationTemplate(), PresentationRole.WORKSPACE),
                 ) {
                     it.invoke(reference) {}
                 }.dependencies.presentations
@@ -1124,7 +1125,7 @@ val DefaultPresentationRuntimeTest by testSuite {
         val checked = (catalog.resolve(TypeUse.Named(id)) as Resolution.Ready).value
         val runtime = DefaultPresentationRuntime()
         val root =
-            runtime.build(PresentationBuildBinding(checked.presentationTemplate(), PresentationRole.WORKSPACE_EDITOR)) { build ->
+            runtime.build(PresentationBuildBinding(checked.presentationTemplate(), PresentationRole.WORKSPACE)) { build ->
                 with(build) {
                     val title: PresentedField<String, TextControl> = field("title", TextControl::class)
                     title {
@@ -1236,7 +1237,7 @@ val DefaultPresentationRuntimeTest by testSuite {
         val checked = (catalog.resolve(TypeUse.Named(id)) as Resolution.Ready).value
         val root =
             DefaultPresentationRuntime().build(
-                PresentationBuildBinding(checked.presentationTemplate(), PresentationRole.WORKSPACE_EDITOR),
+                PresentationBuildBinding(checked.presentationTemplate(), PresentationRole.WORKSPACE),
             ) { build ->
                 with(build) {
                     val title: PresentedField<String, TextControl> = field("title", TextControl::class)
@@ -1370,7 +1371,7 @@ val DefaultPresentationRuntimeTest by testSuite {
         val checked = catalog.ready(TypeUse.Named(subjectId))
         val root =
             DefaultPresentationRuntime().build(
-                PresentationBuildBinding(checked.presentationTemplate(), PresentationRole.WORKSPACE_EDITOR),
+                PresentationBuildBinding(checked.presentationTemplate(), PresentationRole.WORKSPACE),
             ) { build ->
                 with(build) {
                     @Suppress("UNCHECKED_CAST")
@@ -1444,7 +1445,7 @@ val DefaultPresentationRuntimeTest by testSuite {
 
         val nestedRemainder =
             DefaultPresentationRuntime().build(
-                PresentationBuildBinding(checked.presentationTemplate(), PresentationRole.WORKSPACE_EDITOR),
+                PresentationBuildBinding(checked.presentationTemplate(), PresentationRole.WORKSPACE),
             ) { build ->
                 with(build) {
                     @Suppress("UNCHECKED_CAST")
@@ -1525,7 +1526,7 @@ val DefaultPresentationRuntimeTest by testSuite {
                         "nested remainder",
                         PresentationTarget.Named(TypeTemplate.Named(subjectId)),
                         0,
-                        PresentationRole.WORKSPACE_EDITOR,
+                        PresentationRole.WORKSPACE,
                     ).owner,
                     ArtifactId("test:nested-remainder"),
                     "main",
@@ -1729,7 +1730,7 @@ val DefaultPresentationRuntimeTest by testSuite {
                 relations("children", repeatedSource)
             }
         val root =
-            runtime.build(PresentationBuildBinding(checked.presentationTemplate(), PresentationRole.WORKSPACE_EDITOR)) { build ->
+            runtime.build(PresentationBuildBinding(checked.presentationTemplate(), PresentationRole.WORKSPACE)) { build ->
                 with(build) {
                     val title: PresentedField<String, TextControl> = field("title", TextControl::class)
                     repeated<String, String>(repeatedSource) {
@@ -1839,7 +1840,7 @@ val DefaultPresentationRuntimeTest by testSuite {
                 key(literal("same key type"))
             }
         val otherResult =
-            runtime.build(PresentationBuildBinding(checked.presentationTemplate(), PresentationRole.WORKSPACE_EDITOR)) { build ->
+            runtime.build(PresentationBuildBinding(checked.presentationTemplate(), PresentationRole.WORKSPACE)) { build ->
                 with(build) {
                     val title: PresentedField<String, TextControl> = field("title", TextControl::class)
                     collectionLookup(other, title.input) {
@@ -1855,7 +1856,7 @@ val DefaultPresentationRuntimeTest by testSuite {
         otherResult.dependencies.presentations shouldBe emptyList()
 
         runCatching {
-            runtime.build(PresentationBuildBinding(checked.presentationTemplate(), PresentationRole.WORKSPACE_EDITOR)) { build ->
+            runtime.build(PresentationBuildBinding(checked.presentationTemplate(), PresentationRole.WORKSPACE)) { build ->
                 with(build) {
                     val title: PresentedField<String, TextControl> = field("title", TextControl::class)
                     collectionLookup(source, title.input) {
@@ -1889,18 +1890,6 @@ val DefaultPresentationRuntimeTest by testSuite {
             )
         (byName.key.toNode() is ExpressionNode.OrElseWrapper) shouldBe true
         byName.relations shouldBe emptyList()
-
-        val resources: CollectionSource<com.typewritermc.library.Tag, ResourceId> =
-            resourceCollectionSource(
-                id = "tags",
-                root = TypeTemplate.Named(com.typewritermc.library.TagDefinition.id),
-                appearance = null,
-            ) {}
-        val resourceRows = resources.rows as CollectionRows.Resources
-        resources.key.toNode() shouldBe
-            com.typewritermc.expression
-                .input<Any?>(resourceRows.resourceBinding)
-                .toNode()
     }
 
     test("selects specific presentations before priority and preserves fallback order") {
@@ -1927,7 +1916,7 @@ val DefaultPresentationRuntimeTest by testSuite {
                 ),
             )
 
-        (registry.select(PresentationRole.WORKSPACE_EDITOR, checked) as PresentationSelection.Selected).descriptor.id shouldBe named.id
+        (registry.select(PresentationRole.WORKSPACE, checked) as PresentationSelection.Selected).descriptor.id shouldBe named.id
         (registry.select(PresentationRole.REFERENCE_PICKER_RESULT, checked) as PresentationSelection.Selected).descriptor.id shouldBe
             fallbackFirst.id
     }
@@ -1942,7 +1931,7 @@ val DefaultPresentationRuntimeTest by testSuite {
 
         (registry.select(PresentationRole.REFERENCE_PICKER_RESULT, checked) as PresentationSelection.Selected)
             .descriptor.id shouldBe preview.id
-        for (role in listOf(PresentationRole.WORKSPACE_EDITOR, PresentationRole.INSPECTOR, PresentationRole.RESOURCE_SEARCH_RESULT)) {
+        for (role in listOf(PresentationRole.WORKSPACE, PresentationRole.INSPECTOR, PresentationRole.RESOURCE_SEARCH_RESULT)) {
             registry.select(role, checked) shouldBe PresentationSelection.Missing(role)
         }
 
@@ -1952,7 +1941,7 @@ val DefaultPresentationRuntimeTest by testSuite {
             .descriptor.id shouldBe picker.id
     }
 
-    test("inspector presentations do not satisfy workspace editor selection") {
+    test("inspector presentations do not satisfy workspace selection") {
         val id = TypeDefinitionId(TypeId.Qualified("test", "RoleSubject"), 1)
         val definition = TypeDefinition(id, representation = RepresentationTemplate.Record(emptyList()))
         val catalog = DefaultCheckedCatalog(CatalogGeneration("role separation"), listOf(definition))
@@ -1961,8 +1950,8 @@ val DefaultPresentationRuntimeTest by testSuite {
         val registry = DefaultPresentationRegistry(catalog, listOf(inspector))
 
         (registry.select(PresentationRole.INSPECTOR, checked) as PresentationSelection.Selected).descriptor.id shouldBe inspector.id
-        registry.select(PresentationRole.WORKSPACE_EDITOR, checked) shouldBe
-            PresentationSelection.Missing(PresentationRole.WORKSPACE_EDITOR)
+        registry.select(PresentationRole.WORKSPACE, checked) shouldBe
+            PresentationSelection.Missing(PresentationRole.WORKSPACE)
     }
 
     test("reports incomparable generic presentation targets as a conflict before priority") {
@@ -2014,7 +2003,7 @@ val DefaultPresentationRuntimeTest by testSuite {
                 ),
                 100,
             )
-        val selection = DefaultPresentationRegistry(catalog, listOf(left, right)).select(PresentationRole.WORKSPACE_EDITOR, actual)
+        val selection = DefaultPresentationRegistry(catalog, listOf(left, right)).select(PresentationRole.WORKSPACE, actual)
 
         selection shouldBe PresentationSelection.Conflict(listOf(left.id, right.id))
     }
@@ -2060,7 +2049,7 @@ val DefaultPresentationRuntimeTest by testSuite {
                 100,
             )
 
-        val selection = DefaultPresentationRegistry(catalog, listOf(repeated, broad)).select(PresentationRole.WORKSPACE_EDITOR, actual)
+        val selection = DefaultPresentationRegistry(catalog, listOf(repeated, broad)).select(PresentationRole.WORKSPACE, actual)
 
         (selection as PresentationSelection.Selected).descriptor.id shouldBe repeated.id
     }
@@ -2097,7 +2086,7 @@ val DefaultPresentationRuntimeTest by testSuite {
                 10,
             )
 
-        val selection = DefaultPresentationRegistry(catalog, listOf(broad)).select(PresentationRole.WORKSPACE_EDITOR, actual)
+        val selection = DefaultPresentationRegistry(catalog, listOf(broad)).select(PresentationRole.WORKSPACE, actual)
 
         (selection as PresentationSelection.Selected).descriptor.id shouldBe broad.id
     }
@@ -2142,7 +2131,7 @@ val DefaultPresentationRuntimeTest by testSuite {
                 100,
             )
 
-        val selection = DefaultPresentationRegistry(catalog, listOf(concrete, broad)).select(PresentationRole.WORKSPACE_EDITOR, actual)
+        val selection = DefaultPresentationRegistry(catalog, listOf(concrete, broad)).select(PresentationRole.WORKSPACE, actual)
 
         (selection as PresentationSelection.Selected).descriptor.id shouldBe concrete.id
     }
@@ -2154,7 +2143,7 @@ private fun descriptor(
     name: String,
     target: PresentationTarget,
     priority: Int,
-    role: PresentationRole = PresentationRole.WORKSPACE_EDITOR,
+    role: PresentationRole = PresentationRole.WORKSPACE,
 ): PresentationDescriptor =
     PresentationDescriptor(
         com.typewritermc.types.PresentationId("test", name),
@@ -2209,4 +2198,44 @@ private fun PresentationNode.boundControl(): skirout.editor.v1.presentation.Boun
         is PresentationElement.TextInputWrapper -> value.value.control
         is PresentationElement.NumericInputWrapper -> value.value.control
         else -> error("Expected a scalar input, found $value.")
+    }
+
+/** Declares [definition] a resource type, which collection projections may read. */
+private fun ownedResource(
+    origin: ProviderOrigin,
+    definition: TypeDefinition,
+): OwnedTypeDeclaration =
+    OwnedTypeDeclaration(
+        origin,
+        definition,
+        searchKey =
+            definition.id
+                .toString()
+                .filter(Char::isLetter)
+                .lowercase(),
+    )
+
+/** Lets the realm root own [members], as every concrete resource type must be owned. */
+private fun rootOwnership(vararg members: TypeDefinitionId): List<com.typewritermc.types.RelationContract> =
+    members.mapIndexed { index, member ->
+        com.typewritermc.types.RelationContract(
+            id = com.typewritermc.types.RelationId("test.root.owns.$index"),
+            first =
+                com.typewritermc.types.EndpointDefinition(
+                    com.typewritermc.types.EndpointId("test.root.owns.$index:first"),
+                    com.typewritermc.types.EndpointSlot.First,
+                    TypeTemplate.Named(com.typewritermc.authoring.RealmRootDefinition.id),
+                    com.typewritermc.types.EndpointCardinality.One,
+                    com.typewritermc.types.RelationDeletePolicy.CASCADE,
+                ),
+            second =
+                com.typewritermc.types.EndpointDefinition(
+                    com.typewritermc.types.EndpointId("test.root.owns.$index:second"),
+                    com.typewritermc.types.EndpointSlot.Second,
+                    TypeTemplate.Named(member),
+                    com.typewritermc.types.EndpointCardinality.Many,
+                    com.typewritermc.types.RelationDeletePolicy.CLEAR,
+                ),
+            families = setOf(com.typewritermc.types.RelationFamilyId(com.typewritermc.types.RESOURCE_OWNERSHIP_FAMILY_ID)),
+        )
     }

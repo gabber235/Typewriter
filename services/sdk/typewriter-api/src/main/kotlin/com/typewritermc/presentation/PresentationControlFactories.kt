@@ -1,5 +1,7 @@
 package com.typewritermc.presentation
 
+import com.typewritermc.authoring.HierarchyPath
+import com.typewritermc.authoring.TypedPath
 import com.typewritermc.discovery.GraphDirection
 import com.typewritermc.discovery.checkedGeneratedScope
 import com.typewritermc.expression.Expr
@@ -26,7 +28,7 @@ internal class PresentationControlFactories {
         register(NamedControl::class) { RuntimeNamedControl<Any?, Any>(it) }
         register(RecordControl::class) { RuntimeRecordControl<Layout>(it) }
         register(ListControl::class) { RuntimeListControl<Any>(it) }
-        register(ResourceLinksControl::class) { RuntimeResourceLinksControl<Resource>(it) }
+        register(ResourcesControl::class) { RuntimeResourcesControl<Resource>(it) }
         register(SetControl::class) { RuntimeSetControl<Any>(it) }
         register(MapControl::class) { RuntimeMapControl<Any, Any>(it) }
         register(NullableControl::class) { RuntimeNullableControl<Any>(it) }
@@ -205,14 +207,30 @@ private class RuntimeLinkCollectionControl<R : Resource>(
     ) = binding.linkInput(true, source, policy, rejection, configure)
 }
 
-private class RuntimeResourceLinksControl<R : Resource>(
+private class RuntimeResourcesControl<R : Resource>(
     private val binding: RuntimeControlBinding,
-) : ResourceLinksControl<R>,
+) : ResourcesControl<R>,
     ListControl<LinkControl<R>> by RuntimeListControl(binding) {
-    override fun graphPage(
-        direction: GraphDirection,
-        configure: GraphPageScope.() -> Unit,
-    ) = binding.graphPage(direction, configure)
+    @Suppress("UNCHECKED_CAST")
+    override fun order(key: ResourceItemScope<R>.() -> Expr<*, Handled>) = binding.order(key as ResourceItemScope<*>.() -> Expr<*, Handled>)
 
-    override fun timelinePage(configure: TimelinePageScope.() -> Unit) = binding.timelinePage(configure)
+    override fun graph(
+        direction: GraphDirection,
+        configure: GraphAppearanceScope.() -> Unit,
+    ) = binding.graph(direction, configure)
+
+    override fun timeline(configure: TimelineAppearanceScope.() -> Unit) = binding.timeline(configure)
+
+    override fun grid(
+        itemExtent: Double,
+        aspectRatio: Double,
+        spacing: Double,
+    ) = binding.grid(itemExtent, aspectRatio, spacing)
+
+    override fun list() = binding.list()
+
+    override fun tree(
+        path: TypedPath<R, HierarchyPath>,
+        configure: TreeScope.() -> Unit,
+    ) = binding.tree(path, configure)
 }

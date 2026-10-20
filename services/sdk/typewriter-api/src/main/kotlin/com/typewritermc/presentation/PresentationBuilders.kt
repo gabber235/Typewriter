@@ -401,12 +401,6 @@ sealed interface CollectionRows {
         val projection: CollectionProjectionSpec,
         val resourceBinding: ExpressionBindingId,
     ) : CollectionRows
-
-    data class Resources(
-        val root: TypeDefinitionId,
-        val resourceBinding: ExpressionBindingId,
-        val appearance: PresentationReference?,
-    ) : CollectionRows
 }
 
 data class CollectionRelation<Key>(
@@ -452,24 +446,6 @@ interface ProjectedCollectionSourceScope<Row, Key, Expressions : Any> {
     )
 }
 
-interface ResourceCollectionSourceScope<Row : Resource> {
-    val row: Expr<Row, MayBeMissing>
-
-    val resource: Expr<ResourceId, Handled>
-
-    fun selectability(value: Expr<Boolean, Handled>)
-
-    fun relation(
-        id: String,
-        target: Expr<ResourceId, Handled>,
-    )
-
-    fun relations(
-        id: String,
-        targets: Expr<List<ResourceId>, Handled>,
-    )
-}
-
 fun <Row, Key> collectionSource(
     id: String,
     rowType: TypeTemplate,
@@ -496,20 +472,6 @@ fun <R : Resource, Row, Key, Expressions : Any> CollectionProjection<R, Row, Exp
     val scope = DefaultProjectedCollectionSourceScope<Row, Key, Expressions>(rowBinding, resourceBinding, expressions)
     scope.configure()
     return scope.build(projection, scope.key())
-}
-
-internal fun <Row : Resource> resourceCollectionSource(
-    id: String,
-    root: TypeTemplate.Named,
-    appearance: PresentationReference?,
-    configure: ResourceCollectionSourceScope<Row>.() -> Unit,
-): CollectionSource<Row, ResourceId> {
-    require(id.isNotBlank()) { "Collection source ids must not be blank." }
-    val rowBinding = ExpressionBindingId("collection.$id.row")
-    val resourceBinding = ExpressionBindingId("collection.$id.resource")
-    val scope = DefaultResourceCollectionSourceScope<Row>(rowBinding, resourceBinding)
-    scope.configure()
-    return scope.build(id, root, appearance)
 }
 
 private class DefaultCollectionSourceScope<Row, Key>(
@@ -618,58 +580,6 @@ private class DefaultProjectedCollectionSourceScope<Row, Key, Expressions : Any>
             selectability = selectability,
             relations = relations.toList(),
             rows = CollectionRows.Projected(projection, resourceBinding),
-        )
-}
-
-private class DefaultResourceCollectionSourceScope<Row : Resource>(
-    private val rowBinding: ExpressionBindingId,
-    private val resourceBinding: ExpressionBindingId,
-) : ResourceCollectionSourceScope<Row> {
-    override val row = com.typewritermc.expression.inputExpression<Row, MayBeMissing>(rowBinding)
-    override val resource = com.typewritermc.expression.inputExpression<ResourceId, Handled>(resourceBinding)
-    private var selectability: Expr<Boolean, Handled> = literal(true)
-    private val relations = mutableListOf<CollectionRelation<ResourceId>>()
-
-    override fun selectability(value: Expr<Boolean, Handled>) {
-        selectability = value
-    }
-
-    override fun relation(
-        id: String,
-        target: Expr<ResourceId, Handled>,
-    ) {
-        addRelation(id, target.toNode())
-    }
-
-    override fun relations(
-        id: String,
-        targets: Expr<List<ResourceId>, Handled>,
-    ) {
-        addRelation(id, targets.toNode())
-    }
-
-    private fun addRelation(
-        id: String,
-        targets: ExpressionNode,
-    ) {
-        require(id.isNotBlank()) { "Collection relation ids must not be blank." }
-        require(relations.none { it.id == id }) { "Collection relation ids must be unique within one source." }
-        relations += CollectionRelation(id, targets)
-    }
-
-    fun build(
-        id: String,
-        root: TypeTemplate.Named,
-        appearance: PresentationReference?,
-    ): CollectionSource<Row, ResourceId> =
-        DefaultCollectionSource(
-            id = id,
-            rowType = root,
-            rowBinding = rowBinding,
-            key = resource,
-            selectability = selectability,
-            relations = relations.toList(),
-            rows = CollectionRows.Resources(root.definition, resourceBinding, appearance),
         )
 }
 

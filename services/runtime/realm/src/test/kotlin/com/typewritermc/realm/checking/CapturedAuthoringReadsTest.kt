@@ -8,7 +8,6 @@ import com.typewritermc.authoring.Availability
 import com.typewritermc.authoring.DraftBinding
 import com.typewritermc.authoring.GeneratedSdkApi
 import com.typewritermc.authoring.PathSegment
-import com.typewritermc.authoring.ResourceDefinitionId
 import com.typewritermc.authoring.TypeSelection
 import com.typewritermc.authoring.ValueLocation
 import com.typewritermc.authoring.ValuePath
@@ -146,13 +145,7 @@ val CapturedAuthoringReadsTest by testSuite {
         val store =
             InMemoryAuthoringViewStore(
                 catalog,
-                AuthoringSeed(
-                    resources,
-                    mapOf(
-                        available to ResourceDefinitionId("test"),
-                        unavailable to ResourceDefinitionId("removed_definition"),
-                    ),
-                ),
+                AuthoringSeed(resources),
             )
         val lease = store.capture()
         val reads = CapturedAuthoringReads(lease.originalView())
@@ -243,7 +236,7 @@ val CapturedAuthoringReadsTest by testSuite {
                 parameters = listOf(TypeParameter(parameter, "T")),
                 representation = RepresentationTemplate.Record(emptyList()),
             )
-        val catalog = TestCatalogLease(definitions = listOf(TEST_DEFINITION, LIST_DEFINITION, definition), resourceRoot = generic)
+        val catalog = TestCatalogLease(definitions = listOf(TEST_DEFINITION, LIST_DEFINITION, definition))
         val text = ResourceId("text")
         val number = ResourceId("number")
         val textUse = TypeUse.Named(generic, listOf(TEXT_USE))
@@ -281,7 +274,7 @@ val CapturedAuthoringReadsTest by testSuite {
                 parameters = listOf(TypeParameter(parameter, "T")),
                 representation = RepresentationTemplate.Record(emptyList()),
             )
-        val catalog = TestCatalogLease(definitions = listOf(TEST_DEFINITION, LIST_DEFINITION, definition), resourceRoot = generic)
+        val catalog = TestCatalogLease(definitions = listOf(TEST_DEFINITION, LIST_DEFINITION, definition))
         val resource = ResourceId("pending")
         val unresolved = ResourceId("unresolved")
         val textUse = TypeUse.Named(generic, listOf(TEXT_USE))

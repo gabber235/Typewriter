@@ -19,7 +19,6 @@ import skirout.editor.v1.authoring.AuthoringSearchHit
 import skirout.editor.v1.authoring.PresentationSubject
 import skirout.editor.v1.authoring.SearchAuthoringRequest
 import skirout.editor.v1.authoring.SearchAuthoringResponse
-import skirout.editor.v1.catalog.ResourceDefinitionId as SkirResourceDefinitionId
 import skirout.editor.v1.type_catalog.CatalogGeneration as SkirCatalogGeneration
 import skirout.editor.v1.type_catalog.NamedTypeUse as SkirNamedTypeUse
 import skirout.editor.v1.type_catalog.ResourceId as SkirResourceId
@@ -60,8 +59,7 @@ internal class AuthoringSearchRoutes(
                         candidates
                             .mapNotNull { candidate ->
                                 val record = root.resources[candidate.resource] ?: return@mapNotNull null
-                                val definition = root.resourceDefinitions[candidate.resource] ?: return@mapNotNull null
-                                candidate.toWire(record, definition.value)
+                                candidate.toWire(record)
                             }.take(MAX_SEARCH_RESULTS),
                     diagnostics = emptyList(),
                 )
@@ -79,19 +77,13 @@ private fun invalidSearch(
         diagnostics = listOf(AuthoringDiagnostic(code = code, message = message, resource = null, path = null)),
     )
 
-private fun IndexedAuthoringSearchCandidate.toWire(
-    record: AuthoringRecord,
-    definition: String,
-): AuthoringSearchHit {
+private fun IndexedAuthoringSearchCandidate.toWire(record: AuthoringRecord): AuthoringSearchHit {
     val wireResource = SkirResourceId(value = resource.value)
-    val resourceDefinition = SkirResourceDefinitionId(value = definition)
     return AuthoringSearchHit(
         resource = wireResource,
-        definition = resourceDefinition,
         subject =
             PresentationSubject(
                 resource = wireResource,
-                definition = resourceDefinition,
                 content = SkirAuthoringValueCodec.encode(record).getOrThrow(),
             ),
         context =

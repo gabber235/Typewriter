@@ -5,20 +5,27 @@ import com.typewritermc.expression.Handled
 import com.typewritermc.expression.children
 import com.typewritermc.types.CollectionKind
 import com.typewritermc.types.PresentationRole
+import com.typewritermc.types.TypeDefinitionId
 import com.typewritermc.types.TypeTemplate
 import com.typewritermc.types.TypeUse
 import com.typewritermc.types.catalog.CheckedType
 import com.typewritermc.types.catalog.Resolution
 import com.typewritermc.types.catalog.ResolvedRepresentation
 import com.typewritermc.types.catalog.apply
+import com.typewritermc.types.catalog.isNominalSubtype
 import com.typewritermc.types.catalog.resolve
 import com.typewritermc.types.toTemplate
 import skirout.editor.v1.expression.ExpressionNode
 
+/**
+ * What one presentation build is for: the subject [type], the requested [role], the native classes of published
+ * types, and the owner side endpoints of ownership relations, which create actions may link new resources into.
+ */
 class PresentationBuildBinding(
     val type: CheckedPresentationTemplate,
     val role: PresentationRole,
     internal val nativeTypes: Map<kotlin.reflect.KClass<*>, TypeTemplate.Named> = emptyMap(),
+    internal val ownershipEndpoints: Set<com.typewritermc.types.EndpointId> = emptySet(),
 )
 
 class CheckedPresentationTemplate internal constructor(
@@ -31,8 +38,11 @@ class CheckedPresentationTemplate internal constructor(
         Map<com.typewritermc.expression.ExpressionBindingId, TypeTemplate>,
         TypeTemplate,
         Set<com.typewritermc.expression.ExpressionBindingId>,
+        Boolean,
     ) -> List<String>,
     private val payloadResolver: (TypeTemplate) -> TypeTemplate,
+    private val linkResolver: (TypeTemplate) -> PresentationLinkTemplate?,
+    private val subtypeChecker: (TypeDefinitionId, TypeDefinitionId) -> Boolean,
 ) {
     internal fun field(name: String): CheckedPresentationTemplate =
         CheckedPresentationTemplate(
@@ -42,6 +52,8 @@ class CheckedPresentationTemplate internal constructor(
             descriptorSelector = descriptorSelector,
             expressionChecker = expressionChecker,
             payloadResolver = payloadResolver,
+            linkResolver = linkResolver,
+            subtypeChecker = subtypeChecker,
         )
 
     internal fun nested(slot: NestedPresentationSlot): CheckedPresentationNested {
@@ -55,13 +67,38 @@ class CheckedPresentationTemplate internal constructor(
                     descriptorSelector = descriptorSelector,
                     expressionChecker = expressionChecker,
                     payloadResolver = payloadResolver,
+                    linkResolver = linkResolver,
+                    subtypeChecker = subtypeChecker,
                 ),
             collectionKind = nested.collectionKind,
         )
     }
 
     internal fun rebind(type: TypeTemplate): CheckedPresentationTemplate =
-        CheckedPresentationTemplate(type, fieldResolver, nestedResolver, descriptorSelector, expressionChecker, payloadResolver)
+        CheckedPresentationTemplate(
+            type,
+            fieldResolver,
+            nestedResolver,
+            descriptorSelector,
+            expressionChecker,
+            payloadResolver,
+            linkResolver,
+            subtypeChecker,
+        )
+
+    /** The field at [name], or null when this type has no such field. */
+    internal fun fieldOrNull(name: String): CheckedPresentationTemplate? = if (fieldResolver(type, name) == null) null else field(name)
+
+    /** The item type of this collection type, or null when it is not a collection. */
+    internal fun itemsOrNull(): CheckedPresentationTemplate? = nestedResolver(type, NestedPresentationSlot.Items)?.let { rebind(it.type) }
+
+    /** The endpoint and target of this type when it is a link, otherwise null. */
+    internal fun link(): PresentationLinkTemplate? = linkResolver(type)
+
+    internal fun isSubtype(
+        actual: TypeDefinitionId,
+        expected: TypeDefinitionId,
+    ): Boolean = actual == expected || subtypeChecker(actual, expected)
 
     internal fun select(descriptors: List<PresentationDescriptor>): PresentationDescriptor? = descriptorSelector(type, descriptors)
 
@@ -72,8 +109,15 @@ class CheckedPresentationTemplate internal constructor(
         bindings: Map<com.typewritermc.expression.ExpressionBindingId, TypeTemplate>,
         expected: TypeTemplate,
         present: Set<com.typewritermc.expression.ExpressionBindingId> = emptySet(),
-    ): List<String> = expressionChecker(body, bindings, expected, present)
+        mayBeMissing: Boolean = false,
+    ): List<String> = expressionChecker(body, bindings, expected, present, mayBeMissing)
 }
+
+/** A link type: the endpoint of its relation on the side of the resource holding it, and its target type. */
+internal data class PresentationLinkTemplate(
+    val endpoint: com.typewritermc.types.EndpointId,
+    val target: TypeTemplate,
+)
 
 internal data class PresentationNestedTemplate(
     val type: TypeTemplate,
@@ -137,13 +181,20 @@ fun CheckedType.presentationTemplate(): CheckedPresentationTemplate {
             bindings,
             expected,
             present,
+            mayBeMissing,
             ->
-            checkPresentationExpression(body, bindings, expected, present, this::resolve)
+            checkPresentationExpression(body, bindings, expected, present, this::resolve, mayBeMissing)
         },
         payloadResolver = { parent ->
             val checked = resolve(parent)
             (checked.schema.representation as? ResolvedRepresentation.Scalar)?.let { TypeTemplate.Scalar(it.kind) } ?: parent
         },
+        linkResolver = { parent ->
+            (resolve(parent).schema.representation as? ResolvedRepresentation.Link)?.let { link ->
+                PresentationLinkTemplate(link.endpoint, link.target.toTemplate())
+            }
+        },
+        subtypeChecker = { actual, expected -> isNominalSubtype(actual, expected) },
         descriptorSelector = { template, descriptors ->
             val actual = resolve(template)
             selectMostSpecificDescriptors(
@@ -493,6 +544,7 @@ internal fun checkPresentationExpression(
     expected: TypeTemplate,
     present: Set<com.typewritermc.expression.ExpressionBindingId>,
     resolve: (TypeUse) -> Resolution<CheckedType>,
+    mayBeMissing: Boolean = false,
 ): List<String> {
     val checker = com.typewritermc.configuration.PortableExpressionChecker(resolve)
     val structural = checker.checkExpressionStructure(body, bindings.keys)
@@ -508,7 +560,7 @@ internal fun checkPresentationExpression(
     return checker.checkExpressionCodes(
         body,
         applied.mapValues { (id, use) -> com.typewritermc.expression.nominalExpressionType(requireNotNull(use), id !in present) },
-        com.typewritermc.expression.nominalExpressionType(result.value, false),
+        com.typewritermc.expression.nominalExpressionType(result.value, mayBeMissing),
     )
 }
 

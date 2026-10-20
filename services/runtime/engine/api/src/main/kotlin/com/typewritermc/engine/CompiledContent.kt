@@ -1,7 +1,6 @@
 package com.typewritermc.engine
 
 import com.typewritermc.authoring.NativeBindingId
-import com.typewritermc.authoring.ResourceDefinitionId
 import com.typewritermc.authoring.ValuePath
 import com.typewritermc.types.DataValue
 import com.typewritermc.types.RelationId
@@ -49,7 +48,6 @@ data class CompiledResourceKey(
 @Serializable
 data class CompiledResource(
     val key: CompiledResourceKey,
-    val definition: ResourceDefinitionId,
     val actualType: TypeUse.Named,
     val bindingProvider: NativeBindingId,
     val bindingSignature: String,

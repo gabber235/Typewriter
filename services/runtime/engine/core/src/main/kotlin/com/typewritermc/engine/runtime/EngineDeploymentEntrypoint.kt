@@ -102,7 +102,6 @@ private val EXECUTION_PROVIDER_KINDS =
     setOf(
         GeneratedProviderKind.Type,
         GeneratedProviderKind.NativeBinding,
-        GeneratedProviderKind.Resource,
         GeneratedProviderKind.Relation,
         GeneratedProviderKind.EndpointBindings,
         GeneratedProviderKind.Registrar,

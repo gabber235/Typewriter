@@ -2,6 +2,7 @@ package com.typewritermc.engine.pages
 
 import com.typewritermc.authoring.CompletenessResult
 import com.typewritermc.authoring.DefaultInitializationRuntime
+import com.typewritermc.authoring.HierarchyPathDefinition
 import com.typewritermc.authoring.InitializationRequest
 import com.typewritermc.authoring.PathSegment
 import com.typewritermc.authoring.PreparationTarget
@@ -12,7 +13,6 @@ import com.typewritermc.checking.CatalogGeneration
 import com.typewritermc.discovery.GeneratedProviderIndex
 import com.typewritermc.discovery.GeneratedProviderKind
 import com.typewritermc.discovery.GeneratedTypeProvider
-import com.typewritermc.library.ChapterPathDefinition
 import com.typewritermc.types.DataValue
 import com.typewritermc.types.FactoryNativeBindingRegistry
 import com.typewritermc.types.LinkTarget
@@ -62,7 +62,7 @@ val PageCreationDiagnosticTest by testSuite {
                     supplied =
                         DataValue.Record(
                             mapOf(
-                                "chapter" to DataValue.Named(ChapterPathDefinition.use, DataValue.StringValue("")),
+                                "chapter" to DataValue.Named(HierarchyPathDefinition.use, DataValue.StringValue("")),
                                 "priority" to DataValue.Integer(BigInteger.ZERO),
                             ),
                         ),

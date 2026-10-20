@@ -3,11 +3,9 @@
 package com.typewritermc.realm.checking
 
 import com.typewritermc.authoring.AuthoringRecord
-import com.typewritermc.authoring.AuthoringResourceDefinition
 import com.typewritermc.authoring.GeneratedSdkApi
 import com.typewritermc.authoring.ItemId
 import com.typewritermc.authoring.PathSegment
-import com.typewritermc.authoring.ResourceDefinitionId
 import com.typewritermc.authoring.TypeSelection
 import com.typewritermc.authoring.ValueLocation
 import com.typewritermc.authoring.ValuePath
@@ -266,7 +264,6 @@ internal class TestCatalogLease private constructor(
     override val configuration: List<com.typewritermc.configuration.ConfigurationRecipe>,
     private val definitions: List<TypeDefinition>,
     private val nativeBindingFactories: List<NativeBindingFactory>,
-    private val resourceRoot: TypeDefinitionId,
     override val relations: List<RelationContract>,
     override val endpointBindings: List<EndpointBindingTemplate>,
 ) : AuthoringCatalogLease {
@@ -277,7 +274,6 @@ internal class TestCatalogLease private constructor(
         configuration: List<com.typewritermc.configuration.ConfigurationRecipe> = emptyList(),
         definitions: List<TypeDefinition> = listOf(TEST_DEFINITION, LIST_DEFINITION),
         nativeBindingFactories: List<NativeBindingFactory> = emptyList(),
-        resourceRoot: TypeDefinitionId = TEST_TYPE,
         relations: List<RelationContract> = emptyList(),
         endpointBindings: List<EndpointBindingTemplate> = emptyList(),
     ) : this(
@@ -288,15 +284,12 @@ internal class TestCatalogLease private constructor(
         configuration,
         definitions,
         nativeBindingFactories,
-        resourceRoot,
         relations,
         endpointBindings,
     )
 
     override val checked: CheckedCatalog = DefaultCheckedCatalog(generation, definitions)
     override val nativeBindings: NativeBindingRegistry = FactoryNativeBindingRegistry(checked, nativeBindingFactories)
-    override val resources: List<AuthoringResourceDefinition> =
-        listOf(AuthoringResourceDefinition(ResourceDefinitionId("test"), resourceRoot))
     override val operations = com.typewritermc.operations.OperationCatalog()
     override val placementFields = emptyMap<com.typewritermc.types.TypeDefinitionId, com.typewritermc.authoring.ValuePath>()
     internal val openCount: Int get() = state.open.get()
@@ -311,7 +304,6 @@ internal class TestCatalogLease private constructor(
             configuration,
             definitions,
             nativeBindingFactories,
-            resourceRoot,
             relations,
             endpointBindings,
         )

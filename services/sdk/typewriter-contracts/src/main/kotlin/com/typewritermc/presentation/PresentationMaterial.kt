@@ -334,6 +334,20 @@ private fun PresentationNode.writesWithinOwner(
                     child(value.summary, bindings + (value.summaryBindingId.value to FieldWriteScope.Foreign)) && provider(value.provider)
             }
 
+            is PresentationElement.ResourcesWrapper -> {
+                val layout = element.value.layout as? skirout.editor.v1.presentation.ResourcesLayout.TreeWrapper
+                child(
+                    layout?.value?.group,
+                    bindings + (
+                        layout
+                            ?.value
+                            ?.groupBindingId
+                            ?.value
+                            .orEmpty() to FieldWriteScope.Foreign
+                    ),
+                )
+            }
+
             is PresentationElement.PartWrapper -> {
                 val scope = bindings["configured_value"]
                 field == null && scope != null && scope != FieldWriteScope.Foreign &&
@@ -617,6 +631,10 @@ private fun PresentationNode.bodyChildren(): List<PresentationNode> =
                 element.value.itemPresentation?.let(::add)
             }
 
+            is PresentationElement.ResourcesWrapper -> {
+                (element.value.layout as? skirout.editor.v1.presentation.ResourcesLayout.TreeWrapper)?.value?.group?.let(::add)
+            }
+
             else -> {}
         }
     }
@@ -669,8 +687,7 @@ private fun PresentationElement.boundControl(): BoundControl? =
         is PresentationElement.SearchInputWrapper -> value.control
         is PresentationElement.NullableInputWrapper -> value.control
         is PresentationElement.LinkInputWrapper -> value.control
-        is PresentationElement.PageGraphWrapper -> value.control
-        is PresentationElement.PageTimelineWrapper -> value.control
+        is PresentationElement.ResourcesWrapper -> value.control
         else -> null
     }
 

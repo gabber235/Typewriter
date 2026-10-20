@@ -20,7 +20,6 @@
 #[derive(Clone, Debug, PartialEq, Default)]
 pub struct AuthoringResource {
     pub id: crate::skirout::base::editor::v1::type_catalog::ResourceId,
-    pub definition: crate::skirout::base::editor::v1::catalog::ResourceDefinitionId,
     pub content: crate::skirout::base::editor::v1::type_catalog::AuthoringRecord,
     /// Set this to None when you're creating a struct.
     pub _unrecognized: Option<crate::skir_client::UnrecognizedFields<AuthoringResource>>,
@@ -540,7 +539,6 @@ impl UnresolvedLink {
 #[derive(Clone, Debug, PartialEq, Default)]
 pub struct PresentationSubject {
     pub resource: crate::skirout::base::editor::v1::type_catalog::ResourceId,
-    pub definition: crate::skirout::base::editor::v1::catalog::ResourceDefinitionId,
     pub content: crate::skirout::base::editor::v1::type_catalog::AuthoringRecord,
     /// Set this to None when you're creating a struct.
     pub _unrecognized: Option<crate::skir_client::UnrecognizedFields<PresentationSubject>>,
@@ -1730,7 +1728,6 @@ impl TypePreviewResult {
 #[derive(Clone, Debug, PartialEq, Default)]
 pub struct AuthoringSearchHit {
     pub resource: crate::skirout::base::editor::v1::type_catalog::ResourceId,
-    pub definition: crate::skirout::base::editor::v1::catalog::ResourceDefinitionId,
     pub subject: PresentationSubject,
     pub context: crate::skirout::base::editor::v1::typed_value::PortableValue,
     /// Set this to None when you're creating a struct.
@@ -2398,16 +2395,8 @@ fn initialize_module_serializers() {
                 |x: &mut AuthoringResource, v| x.id = v,
             );
             (*a).add_field(
-                "definition",
-                1,
-                crate::skirout::base::editor::v1::catalog::ResourceDefinitionId::serializer(),
-                "",
-                |x: &AuthoringResource| &x.definition,
-                |x: &mut AuthoringResource, v| x.definition = v,
-            );
-            (*a).add_field(
                 "content",
-                2,
+                1,
                 crate::skirout::base::editor::v1::type_catalog::AuthoringRecord::serializer(),
                 "",
                 |x: &AuthoringResource| &x.content,
@@ -2752,16 +2741,8 @@ fn initialize_module_serializers() {
                 |x: &mut PresentationSubject, v| x.resource = v,
             );
             (*a).add_field(
-                "definition",
-                1,
-                crate::skirout::base::editor::v1::catalog::ResourceDefinitionId::serializer(),
-                "",
-                |x: &PresentationSubject| &x.definition,
-                |x: &mut PresentationSubject, v| x.definition = v,
-            );
-            (*a).add_field(
                 "content",
-                2,
+                1,
                 crate::skirout::base::editor::v1::type_catalog::AuthoringRecord::serializer(),
                 "",
                 |x: &PresentationSubject| &x.content,
@@ -3632,16 +3613,8 @@ fn initialize_module_serializers() {
                 |x: &mut AuthoringSearchHit, v| x.resource = v,
             );
             (*a).add_field(
-                "definition",
-                1,
-                crate::skirout::base::editor::v1::catalog::ResourceDefinitionId::serializer(),
-                "",
-                |x: &AuthoringSearchHit| &x.definition,
-                |x: &mut AuthoringSearchHit, v| x.definition = v,
-            );
-            (*a).add_field(
                 "subject",
-                2,
+                1,
                 crate::skir_client::internal::struct_serializer_from_static(
                     PresentationSubject::_adapter(),
                 ),
@@ -3651,7 +3624,7 @@ fn initialize_module_serializers() {
             );
             (*a).add_field(
                 "context",
-                3,
+                2,
                 crate::skirout::base::editor::v1::typed_value::PortableValue::serializer(),
                 "",
                 |x: &AuthoringSearchHit| &x.context,

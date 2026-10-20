@@ -16,7 +16,7 @@ import com.typewritermc.types.catalog.Resolution
 import com.typewritermc.types.catalog.ResolvedRepresentation
 import com.typewritermc.types.ownsResources
 
-/** Built in policy uses checked reference contracts, rather than resource family names. */
+/** Built in policy uses checked reference contracts, rather than resource type names. */
 internal class BuiltinOperationAvailability(
     private val baseline: AuthoringView,
     private val reads: CapturedAuthoringReads,

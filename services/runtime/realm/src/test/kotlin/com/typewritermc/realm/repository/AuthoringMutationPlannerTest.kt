@@ -94,12 +94,11 @@ class AuthoringMutationPlannerTest {
             com.typewritermc.realm.checking.TestCatalogLease(
                 generation = GENERATION,
                 definitions = definitions,
-                resourceRoot = NODE,
                 relations = listOf(manyContract()),
                 endpointBindings = BINDINGS,
             )
         val resources = mapOf(id to record().let { it.copy(fields = it.fields - "manyFirst") })
-        val baseline = AuthoringView(catalog, resources, mapOf(id to com.typewritermc.authoring.ResourceDefinitionId("test")), emptyMap())
+        val baseline = AuthoringView(catalog, resources, emptyMap())
         try {
             val reads =
                 com.typewritermc.realm.checking.CapturedAuthoringReads(
@@ -398,23 +397,36 @@ class AuthoringMutationPlannerTest {
 
     fun moveTransfersTheWholeSelectionThroughExactOwnershipInverses() =
         runBlocking {
+            val root = ResourceId("move_root")
             val from = ResourceId("move_from")
             val to = ResourceId("move_to")
             val first = ResourceId("move_first")
             val second = ResourceId("move_second")
             val firstItem = ItemId("first")
             val secondItem = ItemId("second")
+            val fromItem = ItemId("from")
+            val toItem = ItemId("to")
             val resources =
                 mapOf(
+                    // Both owners are owned themselves, as every ownable resource must be.
+                    root to
+                        record(
+                            children =
+                                listOf(
+                                    ListItem(fromItem, link(PARENT_FIRST_TYPE, PARENT_FIRST, from, fieldPath("parent"))),
+                                    ListItem(toItem, link(PARENT_FIRST_TYPE, PARENT_FIRST, to, fieldPath("parent"))),
+                                ),
+                        ),
                     from to
                         record(
+                            parent = link(PARENT_SECOND_TYPE, PARENT_SECOND, root, fieldPath("children").item(fromItem)),
                             children =
                                 listOf(
                                     ListItem(firstItem, link(PARENT_FIRST_TYPE, PARENT_FIRST, first, fieldPath("parent"))),
                                     ListItem(secondItem, link(PARENT_FIRST_TYPE, PARENT_FIRST, second, fieldPath("parent"))),
                                 ),
                         ),
-                    to to record(),
+                    to to record(parent = link(PARENT_SECOND_TYPE, PARENT_SECOND, root, fieldPath("children").item(toItem))),
                     first to
                         record(
                             parent = link(PARENT_SECOND_TYPE, PARENT_SECOND, from, fieldPath("children").item(firstItem)),
@@ -453,8 +465,9 @@ class AuthoringMutationPlannerTest {
                     it.intent.counterpart is CounterpartChoice.Existing
                 } shouldBe true
                 val final = ResourceValueMapper.discover(edit.session.resources)
-                final.filter { it.source == to }.map { it.target.resource }.toSet() shouldBe setOf(first, second)
-                final.none { it.source == from } shouldBe true
+                final.filter { it.source == to && it.target.resource != root }.map { it.target.resource }.toSet() shouldBe
+                    setOf(first, second)
+                final.filter { it.source == from }.map { it.target.resource } shouldBe listOf(root)
                 (
                     edit.session.resources
                         .getValue(first)
@@ -512,16 +525,33 @@ class AuthoringMutationPlannerTest {
 
     fun cloneCopiesOwnedClosureAndDeduplicatesSelectedDescendants() =
         runBlocking {
+            val root = ResourceId("clone_root")
             val book = ResourceId("clone_book")
             val page = ResourceId("clone_page")
             val element = ResourceId("clone_element")
             val outside = ResourceId("clone_shared")
+            val rootItem = ItemId("root")
+            val bookItem = ItemId("book")
+            val outsideItem = ItemId("outside")
             val pageItem = ItemId("page")
             val elementItem = ItemId("element")
             val resources =
                 mapOf(
+                    // Every node is ownable, so the top node owns itself; the cloned book and the outside resource
+                    // are owned by it, as every ownable resource must be.
+                    root to
+                        record(
+                            parent = link(PARENT_SECOND_TYPE, PARENT_SECOND, root, fieldPath("children").item(rootItem)),
+                            children =
+                                listOf(
+                                    ListItem(rootItem, link(PARENT_FIRST_TYPE, PARENT_FIRST, root, fieldPath("parent"))),
+                                    ListItem(bookItem, link(PARENT_FIRST_TYPE, PARENT_FIRST, book, fieldPath("parent"))),
+                                    ListItem(outsideItem, link(PARENT_FIRST_TYPE, PARENT_FIRST, outside, fieldPath("parent"))),
+                                ),
+                        ),
                     book to
                         record(
+                            parent = link(PARENT_SECOND_TYPE, PARENT_SECOND, root, fieldPath("children").item(bookItem)),
                             children = listOf(ListItem(pageItem, link(PARENT_FIRST_TYPE, PARENT_FIRST, page, fieldPath("parent")))),
                             manyFirst =
                                 listOf(
@@ -539,6 +569,7 @@ class AuthoringMutationPlannerTest {
                     element to record(parent = link(PARENT_SECOND_TYPE, PARENT_SECOND, page, fieldPath("children").item(elementItem))),
                     outside to
                         record(
+                            parent = link(PARENT_SECOND_TYPE, PARENT_SECOND, root, fieldPath("children").item(outsideItem)),
                             manySecond =
                                 listOf(
                                     ListItem(
@@ -572,7 +603,7 @@ class AuthoringMutationPlannerTest {
                 val final = edit.finish()
                 result.selectedCopies.size shouldBe 2
                 final.intents.filterIsInstance<EditIntent.CreateResource>().size shouldBe 3
-                edit.session.resources.size shouldBe 7
+                edit.session.resources.size shouldBe 8
                 val copy = edit.session.resources.getValue(result.selectedCopies[0])
                 val copiedChildItem =
                     (
@@ -722,7 +753,6 @@ class AuthoringMutationPlannerTest {
             com.typewritermc.realm.checking.TestCatalogLease(
                 generation = GENERATION,
                 definitions = definitions,
-                resourceRoot = NODE,
                 relations =
                     listOf(
                         nestedContract().let {
@@ -736,9 +766,6 @@ class AuthoringMutationPlannerTest {
             com.typewritermc.realm.authoring.AuthoringView(
                 catalog,
                 resources,
-                resources.mapValues {
-                    com.typewritermc.authoring.ResourceDefinitionId("test")
-                },
                 emptyMap(),
             )
         try {
@@ -781,7 +808,6 @@ class AuthoringMutationPlannerTest {
             com.typewritermc.realm.checking.TestCatalogLease(
                 generation = GENERATION,
                 definitions = DEFINITIONS,
-                resourceRoot = NODE,
                 relations = listOf(parentContract(RelationDeletePolicy.CLEAR, RelationDeletePolicy.CLEAR)),
                 endpointBindings = BINDINGS,
             )
@@ -789,7 +815,6 @@ class AuthoringMutationPlannerTest {
             com.typewritermc.realm.authoring.AuthoringView(
                 catalog,
                 resources,
-                resources.mapValues { com.typewritermc.authoring.ResourceDefinitionId("test") },
                 emptyMap(),
             )
         try {
@@ -2194,16 +2219,12 @@ private fun operationBaseline(
             generation = GENERATION,
             definitions =
                 DEFINITIONS + com.typewritermc.types.StandardTypes.definitions + com.typewritermc.types.ResourceIdDefinition.definition,
-            resourceRoot = NODE,
             relations = contracts,
             endpointBindings = BINDINGS,
         )
     return AuthoringView(
         catalog,
         resources,
-        resources.mapValues {
-            com.typewritermc.authoring.ResourceDefinitionId("test")
-        },
         ResourceValueMapper.discover(resources).associateBy { it.id },
     )
 }

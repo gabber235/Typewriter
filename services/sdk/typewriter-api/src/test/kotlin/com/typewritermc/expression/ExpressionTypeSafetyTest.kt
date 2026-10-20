@@ -52,6 +52,7 @@ val ExpressionTypeSafetyTest by testSuite {
     test("generated text fields require an explicit missing fallback for computed output") {
         val expressions =
             object : BookExpressions {
+                override val library get() = error("unused")
                 override val title: Expr<String, MayBeMissing> =
                     portableExpression(testInput(ExpressionBindingId("book"), ValuePath()))
                 override val icon get() = error("unused")

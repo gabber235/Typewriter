@@ -61,20 +61,7 @@ interface PresentationBuildScope : Layout {
         whenFalse: ((PresentationBuildScope) -> Unit)? = null,
         body: (PresentationBuildScope) -> Unit,
     )
-
-    fun <R : Resource> resourceCollection(
-        id: String,
-        resource: kotlin.reflect.KClass<R>,
-        appearance: PresentationReference? = null,
-        configure: ResourceCollectionSourceScope<R>.() -> Unit = {},
-    ): CollectionSource<R, com.typewritermc.types.ResourceId>
 }
-
-inline fun <reified R : Resource> PresentationBuildScope.resourceCollection(
-    id: String,
-    appearance: PresentationReference? = null,
-    noinline configure: ResourceCollectionSourceScope<R>.() -> Unit = {},
-): CollectionSource<R, com.typewritermc.types.ResourceId> = resourceCollection(id, R::class, appearance, configure)
 
 enum class NestedPresentationSlot { Payload, Fields, Items, Keys, Values }
 

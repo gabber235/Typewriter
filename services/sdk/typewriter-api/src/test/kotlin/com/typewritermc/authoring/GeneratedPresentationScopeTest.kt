@@ -57,7 +57,7 @@ val GeneratedPresentationScopeTest by testSuite {
             ).value
         val root =
             DefaultPresentationRuntime()
-                .build(PresentationBuildBinding(checked.presentationTemplate(), PresentationRole.WORKSPACE_EDITOR)) { build ->
+                .build(PresentationBuildBinding(checked.presentationTemplate(), PresentationRole.WORKSPACE)) { build ->
                     with(ConditionalPlacementPresentation) {
                         TimelineSegmentPlacementPresentationScopeImpl(build).present()
                     }

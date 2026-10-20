@@ -11,7 +11,6 @@ import com.google.devtools.ksp.symbol.ClassKind
 import com.google.devtools.ksp.symbol.KSAnnotated
 import com.google.devtools.ksp.symbol.KSClassDeclaration
 import com.google.devtools.ksp.symbol.KSDeclaration
-import com.google.devtools.ksp.symbol.KSPropertyDeclaration
 import com.google.devtools.ksp.symbol.KSType
 import com.google.devtools.ksp.symbol.KSTypeParameter
 import com.google.devtools.ksp.symbol.Modifier
@@ -24,8 +23,6 @@ import com.squareup.kotlinpoet.asClassName
 import com.squareup.kotlinpoet.ksp.TypeParameterResolver
 import com.squareup.kotlinpoet.ksp.toTypeName
 import com.squareup.kotlinpoet.ksp.toTypeParameterResolver
-import com.typewritermc.authoring.AuthoringNavigationHandler
-import com.typewritermc.authoring.TypewriterResourceDefinition
 import com.typewritermc.capability.codegen.CapabilityProviderProcessor
 import com.typewritermc.codegen.DefinitionReferences
 import com.typewritermc.codegen.GeneratedFile
@@ -88,7 +85,6 @@ import com.typewritermc.types.codegen.emit.SdkEndpoint
 import com.typewritermc.types.codegen.emit.SdkRelation
 import com.typewritermc.types.codegen.emit.endpointBindingsFile
 import com.typewritermc.types.codegen.emit.file
-import com.typewritermc.types.codegen.emit.resourceRegistrationFile
 import com.typewritermc.types.codegen.emit.supportsNativeBinding
 import com.typewritermc.types.ksp.EndpointUsageValidator
 import com.typewritermc.types.ksp.KspTypeConversionResult
@@ -138,7 +134,6 @@ private class TypewriterTypeProcessor(
     private val processedTypeRoots = mutableSetOf<String>()
     private val generatedRelations = mutableSetOf<String>()
     private val generatedEndpointBindingRoots = mutableSetOf<String>()
-    private val registeredResourceRoots = mutableSetOf<String>()
     private val explicitlyImportedTypes = mutableSetOf<String>()
     private val registrarProviders = RegistrarProviderProcessor(output, logger)
     private val collectionProjectionProviders = CollectionProjectionProviderProcessor(output, logger)
@@ -179,14 +174,6 @@ private class TypewriterTypeProcessor(
                         if (declaration.isTypeGraphReady()) generateType(declaration) else deferred += carrier
                     }
             }
-        val resourceProperties =
-            resolver
-                .getSymbolsWithAnnotation(TypewriterResourceDefinition::class)
-                .filterIsInstance<KSPropertyDeclaration>()
-                .toList()
-        resourceProperties.filterNot(KSAnnotated::validate).forEach(deferred::add)
-        val resourceRoots = resourceProperties.mapNotNull(KSPropertyDeclaration::resourceRoot)
-        registeredResourceRoots += resourceRoots.mapNotNull { it.qualifiedName?.asString() }
         resolver
             .getSymbolsWithAnnotation(ReferenceContract::class)
             .filterIsInstance<KSClassDeclaration>()
@@ -198,7 +185,7 @@ private class TypewriterTypeProcessor(
                 .flatMap { declaration -> classes(declaration.declarations) + declaration.getSealedSubclasses() }
                 .filter { declaration -> declaration.rawAnnotation(TypewriterType::class) != null }
         val declarations =
-            (directlyAnnotated.asSequence() + nestedAnnotated + resourceRoots.asSequence())
+            (directlyAnnotated.asSequence() + nestedAnnotated)
                 .distinctBy { it.qualifiedName?.asString() }
                 .toList()
         declarations.filterNot { it.isTypeGraphReady() }.forEach(deferred::add)
@@ -206,10 +193,6 @@ private class TypewriterTypeProcessor(
             .filter { it.isTypeGraphReady() }
             .sortedBy { it.qualifiedName?.asString() }
             .forEach { generateType(it) }
-        resourceProperties.filter(KSAnnotated::validate).forEach { property ->
-            val root = property.resourceRoot() ?: return@forEach
-            if (root.validate()) generateResourceRegistration(property, root) else deferred += property
-        }
         resolver.getAllFiles().forEach { file ->
             classes(file.declarations).filter { it.classKind == ClassKind.OBJECT }.forEach { declaration ->
                 val unresolved = declaration.superTypes.any { it.resolve().isError }
@@ -232,35 +215,6 @@ private class TypewriterTypeProcessor(
         declaration.origin.name == "KOTLIN" ||
             claimDependencyClosure ||
             declaration.qualifiedName?.asString() in explicitlyImportedTypes
-
-    private fun generateResourceRegistration(
-        property: KSPropertyDeclaration,
-        root: KSClassDeclaration,
-    ) {
-        val annotation = property.rawAnnotation(TypewriterResourceDefinition::class) ?: return
-        val id = annotation.argument("id") as? String
-        val navigation = annotation.enumArgumentOrNull<AuthoringNavigationHandler>("navigationHandler")
-        if (navigation == null) {
-            logger.error("Resource definitions require a supported navigation handler.", property)
-            return
-        }
-        if (id.isNullOrBlank()) {
-            logger.error("Resource definitions require a stable id.", property)
-            return
-        }
-        if (!root.implements(Resource::class)) {
-            logger.error("Resource definition roots must implement Resource.", property)
-            return
-        }
-        val owner = property.qualifiedName?.asString() ?: return
-        val name = ClassName(property.packageName.asString(), owner.replace('.', '_').replace('$', '_') + "ResourceRegistration")
-        output.provide(
-            resourceRegistrationFile(name, id, SdkNames.of(root).definition, navigation),
-            name,
-            GeneratedProviderKind.Resource,
-            property,
-        )
-    }
 
     context(resolver: Resolver)
     private fun generateRelation(declaration: KSClassDeclaration) {
@@ -314,14 +268,6 @@ private class TypewriterTypeProcessor(
             !(resourceDeclaration isType Resource::class.asClassName() || resourceDeclaration.implements(Resource::class))
         ) {
             logger.error("Relation endpoints must name a registered resource declaration.", this)
-            return null
-        }
-        val resourceNames =
-            (sequenceOf(resourceDeclaration) + resourceDeclaration.getAllSuperTypes().mapNotNull { it.declaration as? KSClassDeclaration })
-                .mapNotNull { it.qualifiedName?.asString() }
-                .toSet()
-        if (!resourceDeclaration.isAbstractDeclaration && resourceNames.none { it in registeredResourceRoots }) {
-            logger.error("Concrete relation endpoints must belong to a registered resource root.", this)
             return null
         }
         val resourceTemplate = resource.endpointTemplate(declarations)
@@ -820,9 +766,6 @@ private fun KSType.endpointTemplate(declarations: MutableMap<TypeDefinitionId, K
 }
 
 private fun TypeTemplate.withNullability(type: KSType): TypeTemplate = if (type.isMarkedNullable) TypeTemplate.Nullable(this) else this
-
-private fun KSPropertyDeclaration.resourceRoot(): KSClassDeclaration? =
-    (rawAnnotation(TypewriterResourceDefinition::class)?.argument("root") as? KSType)?.declaration as? KSClassDeclaration
 
 private fun KSClassDeclaration.isTypeGraphReady(): Boolean {
     val references =

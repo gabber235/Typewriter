@@ -1,7 +1,6 @@
 package com.typewritermc.engine.runtime
 
 import com.typewritermc.authoring.NativeBindingId
-import com.typewritermc.authoring.ResourceDefinitionId
 import com.typewritermc.checking.CatalogGeneration
 import com.typewritermc.engine.CompilationContext
 import com.typewritermc.engine.CompiledResource
@@ -54,7 +53,6 @@ val RuntimeCompilationEncodingTest by testSuite {
                     listOf(
                         CompiledResource(
                             key = key,
-                            definition = ResourceDefinitionId("page"),
                             actualType = TypeUse.Named(resourceId),
                             bindingProvider = NativeBindingId("test"),
                             bindingSignature = "test:v1",

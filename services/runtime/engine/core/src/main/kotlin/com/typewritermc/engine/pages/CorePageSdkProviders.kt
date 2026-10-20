@@ -44,33 +44,33 @@ object CoreEntryInspectors :
 }
 
 object SequencePageEditor : SequencePagePresentation {
-    override val roles = setOf(PresentationRole.WORKSPACE_EDITOR)
+    override val roles = setOf(PresentationRole.WORKSPACE)
 
     override fun SequencePagePresentationScope.present() {
-        elements { graphPage(GraphDirection.LEFT_TO_RIGHT) }
+        elements { graph(GraphDirection.LEFT_TO_RIGHT) }
     }
 }
 
 object ScenePageEditor : ScenePagePresentation {
-    override val roles = setOf(PresentationRole.WORKSPACE_EDITOR)
+    override val roles = setOf(PresentationRole.WORKSPACE)
 
     override fun ScenePagePresentationScope.present() {
-        elements { timelinePage() }
+        elements { timeline() }
     }
 }
 
 object StaticPageEditor : StaticPagePresentation {
-    override val roles = setOf(PresentationRole.WORKSPACE_EDITOR)
+    override val roles = setOf(PresentationRole.WORKSPACE)
 
     override fun StaticPagePresentationScope.present() {
-        elements { graphPage(GraphDirection.BOTTOM_TO_TOP) }
+        elements { graph(GraphDirection.BOTTOM_TO_TOP) }
     }
 }
 
 object ManifestPageEditor : ManifestPagePresentation {
-    override val roles = setOf(PresentationRole.WORKSPACE_EDITOR)
+    override val roles = setOf(PresentationRole.WORKSPACE)
 
     override fun ManifestPagePresentationScope.present() {
-        elements { graphPage(GraphDirection.TOP_TO_BOTTOM) }
+        elements { graph(GraphDirection.TOP_TO_BOTTOM) }
     }
 }

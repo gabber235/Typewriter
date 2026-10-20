@@ -1,8 +1,6 @@
 package fixture
 
 import com.typewritermc.authoring.EditContext
-import com.typewritermc.authoring.ResourceDefinitionId
-import com.typewritermc.authoring.TypewriterResourceDefinition
 import com.typewritermc.types.Resource
 import com.typewritermc.types.TypewriterRecordContract
 import com.typewritermc.types.TypewriterType
@@ -27,11 +25,6 @@ data class Variable<T : Reward>(
     val name: String,
     val value: T,
 ) : Resource
-
-object FixtureResources {
-    @TypewriterResourceDefinition("fixture.variable", Variable::class)
-    val VARIABLE = ResourceDefinitionId("fixture.variable")
-}
 
 context(edits: EditContext)
 suspend fun illegalBroadWrite(

@@ -1,6 +1,7 @@
 package com.typewritermc.extensions.conformance
 
 import com.typewritermc.authoring.GraphPlacement
+import com.typewritermc.authoring.HierarchyPath
 import com.typewritermc.authoring.PlacementSdkProvider
 import com.typewritermc.capability.NotificationSeverity
 import com.typewritermc.capability.PanelInstruction
@@ -22,7 +23,6 @@ import com.typewritermc.expression.literal
 import com.typewritermc.expression.orElse
 import com.typewritermc.library.Book
 import com.typewritermc.library.BookPages
-import com.typewritermc.library.ChapterPath
 import com.typewritermc.library.Page
 import com.typewritermc.library.PageElements
 import com.typewritermc.presentation.AppliedPresentation
@@ -97,16 +97,16 @@ data class SyntheticEntry(
 data class SyntheticPage(
     override val book: Ref<BookPages.Page, Book>,
     override val name: String = "",
-    override val chapter: ChapterPath = ChapterPath.Root,
+    override val chapter: HierarchyPath = HierarchyPath.Root,
     override val priority: Int = 0,
     override val elements: List<Ref<PageElements.Page, ConformanceEntry>> = emptyList(),
 ) : Page
 
 object SyntheticPageEditor : SyntheticPagePresentation {
-    override val roles = setOf(PresentationRole.WORKSPACE_EDITOR)
+    override val roles = setOf(PresentationRole.WORKSPACE)
 
     override fun SyntheticPagePresentationScope.present() {
-        elements { graphPage(GraphDirection.LEFT_TO_RIGHT) }
+        elements { graph(GraphDirection.LEFT_TO_RIGHT) }
     }
 }
 

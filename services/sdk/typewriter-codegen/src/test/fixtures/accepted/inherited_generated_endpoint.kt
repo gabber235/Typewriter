@@ -1,7 +1,5 @@
 package fixture
 
-import com.typewritermc.authoring.ResourceDefinitionId
-import com.typewritermc.authoring.TypewriterResourceDefinition
 import com.typewritermc.types.Many
 import com.typewritermc.types.One
 import com.typewritermc.types.Ref
@@ -20,11 +18,6 @@ interface Child : Parent
 
 @TypewriterType(id = "a0000000000000000000000000000088")
 data class Target(val name: String) : Resource
-
-object FixtureResources {
-    @TypewriterResourceDefinition("fixture.target", Target::class)
-    val TARGET = ResourceDefinitionId("fixture.target")
-}
 
 @ReferenceContract("fixture.inherited.targets")
 interface InheritedTargetsContract {

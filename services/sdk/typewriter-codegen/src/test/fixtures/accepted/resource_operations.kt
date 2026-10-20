@@ -1,7 +1,5 @@
 package fixture
 
-import com.typewritermc.authoring.ResourceDefinitionId
-import com.typewritermc.authoring.TypewriterResourceDefinition
 import com.typewritermc.checking.CatalogGeneration
 import com.typewritermc.discovery.*
 import com.typewritermc.imprint.ArtifactId
@@ -10,14 +8,39 @@ import com.typewritermc.library.TagOperationsScope
 import com.typewritermc.operations.*
 import com.typewritermc.presentation.DefaultPresentationRuntime
 import com.typewritermc.presentation.PresentationRuntime
+import com.typewritermc.authoring.RealmSection
+import com.typewritermc.types.DeletionPolicy
+import com.typewritermc.types.Many
+import com.typewritermc.types.One
+import com.typewritermc.types.Owning
+import com.typewritermc.types.Ref
+import com.typewritermc.types.ReferenceContract
+import com.typewritermc.types.RelationDeletePolicy
 import com.typewritermc.types.Resource
 import com.typewritermc.types.TypewriterRecordContract
 import com.typewritermc.types.TypewriterType
 import java.nio.file.Path
 import kotlin.io.path.readText
 
+/** Every fixture resource lives on the fixture shelf, a realm section. */
 @TypewriterRecordContract
-interface Reward : Resource {
+interface Shelved : Resource
+
+@TypewriterType(id = "a0000000000000000000000000000304")
+data class Shelf(
+    val items: List<Ref<ShelfItems.Shelf, Shelved>> = emptyList(),
+) : RealmSection
+
+@ReferenceContract("a0000000000000000000000000000305")
+interface ShelfItemsContract : Owning {
+    @DeletionPolicy(RelationDeletePolicy.CASCADE)
+    interface Shelf : One<fixture.Shelf>
+
+    interface Item : Many<Shelved>
+}
+
+@TypewriterRecordContract
+interface Reward : Shelved {
     val name: String
 }
 
@@ -29,20 +52,12 @@ data class CoinReward(
 @TypewriterType(id = "a0000000000000000000000000000302")
 data class Variable<T : Reward>(
     val value: T,
-) : Resource
+) : Shelved
 
 @TypewriterType(id = "a0000000000000000000000000000303")
 data class RenameInput(
     val name: String,
 )
-
-object FixtureResources {
-    @TypewriterResourceDefinition("fixture.variable", Variable::class)
-    val VARIABLE = ResourceDefinitionId("fixture.variable")
-
-    @TypewriterResourceDefinition("fixture.reward", Reward::class)
-    val REWARD = ResourceDefinitionId("fixture.reward")
-}
 
 object CoinVariableOperations : VariableOperations<CoinReward, CoinRewardDraft> {
     override fun VariableOperationsScope<CoinReward, CoinRewardDraft>.operations() {

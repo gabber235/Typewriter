@@ -123,14 +123,6 @@ internal class OwnershipClosureCompiler(
                 }
         val resources = owned.mapNotNull { id -> snapshot.resources[id]?.let { id to it } }.sortedBy { it.first.value }
         resources.forEach { (id, record) ->
-            if (id !in snapshot.resourceDefinitions) {
-                diagnostics +=
-                    compilationDiagnostic(
-                        "missing_resource_definition",
-                        "Resource ${id.value} has no captured resource definition identity.",
-                        source = id,
-                    )
-            }
             when (val state = readiness.getValue(id)) {
                 is ResourceReadiness.Blocked -> {
                     diagnostics += state.findings
@@ -207,11 +199,9 @@ private fun AuthoringRecord.compile(
     readiness: ResourceReadiness.Ready,
 ): CompiledResource {
     val actual = (configuration as TypeSelection.Complete).use
-    val definition = requireNotNull(snapshot.resourceDefinitions[id])
     val binding = readiness.binding
     return CompiledResource(
         key = CompiledResourceKey(id, CompilationContext.Root),
-        definition = definition,
         actualType = actual,
         bindingProvider = binding.provider,
         bindingSignature = binding.signature,

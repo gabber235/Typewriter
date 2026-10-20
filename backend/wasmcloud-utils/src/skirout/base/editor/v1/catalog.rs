@@ -61,93 +61,6 @@ impl ResourceDisplayFormulas {
 }
 
 // ==============================================================================
-// struct ResourceDefinitionId
-// ==============================================================================
-
-#[derive(Clone, Debug, PartialEq, Default)]
-pub struct ResourceDefinitionId {
-    pub value: String,
-    /// Set this to None when you're creating a struct.
-    pub _unrecognized: Option<crate::skir_client::UnrecognizedFields<ResourceDefinitionId>>,
-}
-
-impl ResourceDefinitionId {
-    pub fn default_ref() -> &'static ResourceDefinitionId {
-        static D: std::sync::LazyLock<ResourceDefinitionId> =
-            std::sync::LazyLock::new(ResourceDefinitionId::default);
-        &D
-    }
-}
-
-impl ResourceDefinitionId {
-    fn _adapter() -> &'static crate::skir_client::internal::StructAdapter<ResourceDefinitionId> {
-        static ADAPTER: std::sync::LazyLock<
-            crate::skir_client::internal::StructAdapter<ResourceDefinitionId>,
-        > = std::sync::LazyLock::new(|| {
-            crate::skir_client::internal::StructAdapter::new(
-                "editor/v1/catalog.skir",
-                "ResourceDefinitionId",
-                "",
-                |x: &ResourceDefinitionId| &x._unrecognized,
-                |x: &mut ResourceDefinitionId, u| x._unrecognized = u,
-            )
-        });
-        &*ADAPTER
-    }
-    pub fn serializer() -> crate::skir_client::Serializer<ResourceDefinitionId> {
-        initialize_module_serializers();
-        crate::skir_client::internal::struct_serializer_from_static(ResourceDefinitionId::_adapter())
-    }
-}
-
-// ==============================================================================
-// struct AuthoringResourceDefinition
-// ==============================================================================
-
-/// Gives an authored resource family its stable definition identity and navigation behavior,
-/// independently of the concrete type application currently selected by a resource.
-#[derive(Clone, Debug, PartialEq, Default)]
-pub struct AuthoringResourceDefinition {
-    pub id: ResourceDefinitionId,
-    pub root: crate::skirout::base::editor::v1::type_catalog::TypeDefinitionId,
-    pub navigation_handler: AuthoringNavigationHandler,
-    /// Set this to None when you're creating a struct.
-    pub _unrecognized: Option<crate::skir_client::UnrecognizedFields<AuthoringResourceDefinition>>,
-}
-
-impl AuthoringResourceDefinition {
-    pub fn default_ref() -> &'static AuthoringResourceDefinition {
-        static D: std::sync::LazyLock<AuthoringResourceDefinition> =
-            std::sync::LazyLock::new(AuthoringResourceDefinition::default);
-        &D
-    }
-}
-
-impl AuthoringResourceDefinition {
-    fn _adapter()
-    -> &'static crate::skir_client::internal::StructAdapter<AuthoringResourceDefinition> {
-        static ADAPTER: std::sync::LazyLock<
-            crate::skir_client::internal::StructAdapter<AuthoringResourceDefinition>,
-        > = std::sync::LazyLock::new(|| {
-            crate::skir_client::internal::StructAdapter::new(
-                "editor/v1/catalog.skir",
-                "AuthoringResourceDefinition",
-                "Gives an authored resource family its stable definition identity and navigation behavior,\nindependently of the concrete type application currently selected by a resource.",
-                |x: &AuthoringResourceDefinition| &x._unrecognized,
-                |x: &mut AuthoringResourceDefinition, u| x._unrecognized = u,
-            )
-        });
-        &*ADAPTER
-    }
-    pub fn serializer() -> crate::skir_client::Serializer<AuthoringResourceDefinition> {
-        initialize_module_serializers();
-        crate::skir_client::internal::struct_serializer_from_static(
-            AuthoringResourceDefinition::_adapter(),
-        )
-    }
-}
-
-// ==============================================================================
 // enum RelationDeletePolicy
 // ==============================================================================
 
@@ -778,23 +691,27 @@ impl ConfigurationRecipe {
 // enum PresentationRole
 // ==============================================================================
 
-/// The UI surface requesting a type's presentation. Registering a role does not create a surface.
-/// Missing presentations follow the catalog's explicit role fallbacks.
+/// Places in the editor shell. A role names where content appears, never what it is.
+/// Registering a role does not create a surface. Missing presentations follow the catalog's
+/// explicit role fallbacks.
 #[derive(Debug, Clone, PartialEq)]
 pub enum PresentationRole {
     Unknown(Option<crate::skir_client::UnrecognizedVariant<PresentationRole>>),
-    /// The main workspace for an opened resource, such as a page graph or timeline.
-    WorkspaceEditor,
+    /// Main area of a resource route.
+    Workspace,
+    /// Side navigation: the realm root's navigator fills the shell sidebar; the nearest other
+    /// owner declaring one fills the rail.
+    Navigator,
     /// Editable properties in inspectors, editing review, and delegated field controls.
     Inspector,
+    /// A resource laid out inside another place: grid card, graph node, list or tree row.
+    Item,
     /// A compact preview of the selected reference target, with writes and input disabled.
     ReferencePreview,
     /// A candidate target in a reference picker or a reference question during creation.
     ReferencePickerResult,
     /// An existing resource shown in authoring search, with navigation owned by the result row.
     ResourceSearchResult,
-    /// Resource content inside an editor node, independent of graph or timeline layout.
-    EditorNode,
 }
 
 impl Default for PresentationRole {
@@ -811,12 +728,13 @@ impl PresentationRole {
             crate::skir_client::internal::EnumAdapter::new(
                 |x: &PresentationRole| match x {
                     PresentationRole::Unknown(_) => 0,
-                    PresentationRole::WorkspaceEditor => 1,
-                    PresentationRole::Inspector => 2,
-                    PresentationRole::ReferencePreview => 3,
-                    PresentationRole::ReferencePickerResult => 4,
-                    PresentationRole::ResourceSearchResult => 5,
-                    PresentationRole::EditorNode => 6,
+                    PresentationRole::Workspace => 1,
+                    PresentationRole::Navigator => 2,
+                    PresentationRole::Inspector => 3,
+                    PresentationRole::Item => 4,
+                    PresentationRole::ReferencePreview => 5,
+                    PresentationRole::ReferencePickerResult => 6,
+                    PresentationRole::ResourceSearchResult => 7,
                 },
                 |u| PresentationRole::Unknown(Some(u)),
                 |x: &PresentationRole| match x {
@@ -825,7 +743,7 @@ impl PresentationRole {
                 },
                 "editor/v1/catalog.skir",
                 "PresentationRole",
-                "The UI surface requesting a type's presentation. Registering a role does not create a surface.\nMissing presentations follow the catalog's explicit role fallbacks.",
+                "Places in the editor shell. A role names where content appears, never what it is.\nRegistering a role does not create a surface. Missing presentations follow the catalog's\nexplicit role fallbacks.",
             )
         });
         &*ADAPTER
@@ -1031,7 +949,7 @@ pub struct EditorCatalogWireSnapshot {
     pub generation: crate::skirout::base::editor::v1::type_catalog::CatalogGeneration,
     pub types: Vec<PublishedType>,
     pub relations: Vec<RelationContract>,
-    pub resource_definitions: Vec<AuthoringResourceDefinition>,
+    pub resource_displays: Vec<ResourceDisplayFormulas>,
     pub presentations: Vec<PresentationDescriptor>,
     pub presentation_materials: Vec<PresentationMaterial>,
     pub configuration: Vec<ConfigurationRecipe>,
@@ -1044,7 +962,8 @@ pub struct EditorCatalogWireSnapshot {
         Vec<crate::skirout::base::editor::v1::operation::ResourceOperationDefinition>,
     pub resource_operation_contributions:
         Vec<crate::skirout::base::editor::v1::operation::ResourceOperationContribution>,
-    pub resource_displays: Vec<ResourceDisplayFormulas>,
+    /// The realm root type. The realm keeps exactly one instance, which owns every section.
+    pub realm_root: crate::skirout::base::editor::v1::type_catalog::TypeDefinitionId,
     /// Set this to None when you're creating a struct.
     pub _unrecognized: Option<crate::skir_client::UnrecognizedFields<EditorCatalogWireSnapshot>>,
 }
@@ -1930,61 +1849,6 @@ impl TypeRecommendation {
 }
 
 // ==============================================================================
-// enum AuthoringNavigationHandler
-// ==============================================================================
-
-#[derive(Debug, Clone, PartialEq)]
-pub enum AuthoringNavigationHandler {
-    Unknown(Option<crate::skir_client::UnrecognizedVariant<AuthoringNavigationHandler>>),
-    Generic,
-    Book,
-    Page,
-    PageElement,
-    Tags,
-}
-
-impl Default for AuthoringNavigationHandler {
-    fn default() -> Self {
-        AuthoringNavigationHandler::Unknown(None)
-    }
-}
-
-impl AuthoringNavigationHandler {
-    fn _adapter() -> &'static crate::skir_client::internal::EnumAdapter<AuthoringNavigationHandler>
-    {
-        static ADAPTER: std::sync::LazyLock<
-            crate::skir_client::internal::EnumAdapter<AuthoringNavigationHandler>,
-        > = std::sync::LazyLock::new(|| {
-            crate::skir_client::internal::EnumAdapter::new(
-                |x: &AuthoringNavigationHandler| match x {
-                    AuthoringNavigationHandler::Unknown(_) => 0,
-                    AuthoringNavigationHandler::Generic => 1,
-                    AuthoringNavigationHandler::Book => 2,
-                    AuthoringNavigationHandler::Page => 3,
-                    AuthoringNavigationHandler::PageElement => 4,
-                    AuthoringNavigationHandler::Tags => 5,
-                },
-                |u| AuthoringNavigationHandler::Unknown(Some(u)),
-                |x: &AuthoringNavigationHandler| match x {
-                    AuthoringNavigationHandler::Unknown(Some(u)) => Some(u.as_ref()),
-                    _ => None,
-                },
-                "editor/v1/catalog.skir",
-                "AuthoringNavigationHandler",
-                "",
-            )
-        });
-        &*ADAPTER
-    }
-    pub fn serializer() -> crate::skir_client::Serializer<AuthoringNavigationHandler> {
-        initialize_module_serializers();
-        crate::skir_client::internal::enum_serializer_from_static(
-            AuthoringNavigationHandler::_adapter(),
-        )
-    }
-}
-
-// ==============================================================================
 // struct WatchEditorCatalogRequest
 // ==============================================================================
 
@@ -2066,52 +1930,6 @@ fn initialize_module_serializers() {
                 "",
                 |x: &ResourceDisplayFormulas| &x.icon,
                 |x: &mut ResourceDisplayFormulas, v| x.icon = v,
-            );
-            (*a).finalize();
-        }
-        unsafe {
-            let a: *mut crate::skir_client::internal::StructAdapter<ResourceDefinitionId> =
-                ResourceDefinitionId::_adapter() as *const _ as *mut _;
-            (*a).add_field(
-                "value",
-                0,
-                crate::skir_client::Serializer::string(),
-                "",
-                |x: &ResourceDefinitionId| &x.value,
-                |x: &mut ResourceDefinitionId, v| x.value = v,
-            );
-            (*a).finalize();
-        }
-        unsafe {
-            let a: *mut crate::skir_client::internal::StructAdapter<AuthoringResourceDefinition> =
-                AuthoringResourceDefinition::_adapter() as *const _ as *mut _;
-            (*a).add_field(
-                "id",
-                0,
-                crate::skir_client::internal::struct_serializer_from_static(
-                    ResourceDefinitionId::_adapter(),
-                ),
-                "",
-                |x: &AuthoringResourceDefinition| &x.id,
-                |x: &mut AuthoringResourceDefinition, v| x.id = v,
-            );
-            (*a).add_field(
-                "root",
-                1,
-                crate::skirout::base::editor::v1::type_catalog::TypeDefinitionId::serializer(),
-                "",
-                |x: &AuthoringResourceDefinition| &x.root,
-                |x: &mut AuthoringResourceDefinition, v| x.root = v,
-            );
-            (*a).add_field(
-                "navigation_handler",
-                2,
-                crate::skir_client::internal::enum_serializer_from_static(
-                    AuthoringNavigationHandler::_adapter(),
-                ),
-                "",
-                |x: &AuthoringResourceDefinition| &x.navigation_handler,
-                |x: &mut AuthoringResourceDefinition, v| x.navigation_handler = v,
             );
             (*a).finalize();
         }
@@ -2489,35 +2307,30 @@ fn initialize_module_serializers() {
             let a: *mut crate::skir_client::internal::EnumAdapter<PresentationRole> =
                 PresentationRole::_adapter() as *const _ as *mut _;
             (*a).add_constant_variant(
-                "workspace_editor",
+                "workspace",
                 1,
                 1,
-                "The main workspace for an opened resource, such as a page graph or timeline.",
-                PresentationRole::WorkspaceEditor,
+                "Main area of a resource route.",
+                PresentationRole::Workspace,
             );
+            (*a).add_constant_variant("navigator", 2, 2, "Side navigation: the realm root's navigator fills the shell sidebar; the nearest other\nowner declaring one fills the rail.", PresentationRole::Navigator);
             (*a).add_constant_variant(
                 "inspector",
-                2,
-                2,
+                3,
+                3,
                 "Editable properties in inspectors, editing review, and delegated field controls.",
                 PresentationRole::Inspector,
             );
-            (*a).add_constant_variant("reference_preview", 3, 3, "A compact preview of the selected reference target, with writes and input disabled.", PresentationRole::ReferencePreview);
+            (*a).add_constant_variant("item", 4, 4, "A resource laid out inside another place: grid card, graph node, list or tree row.", PresentationRole::Item);
+            (*a).add_constant_variant("reference_preview", 5, 5, "A compact preview of the selected reference target, with writes and input disabled.", PresentationRole::ReferencePreview);
             (*a).add_constant_variant(
                 "reference_picker_result",
-                4,
-                4,
+                6,
+                6,
                 "A candidate target in a reference picker or a reference question during creation.",
                 PresentationRole::ReferencePickerResult,
             );
-            (*a).add_constant_variant("resource_search_result", 5, 5, "An existing resource shown in authoring search, with navigation owned by the result row.", PresentationRole::ResourceSearchResult);
-            (*a).add_constant_variant(
-                "editor_node",
-                6,
-                6,
-                "Resource content inside an editor node, independent of graph or timeline layout.",
-                PresentationRole::EditorNode,
-            );
+            (*a).add_constant_variant("resource_search_result", 7, 7, "An existing resource shown in authoring search, with navigation owned by the result row.", PresentationRole::ResourceSearchResult);
             (*a).finalize();
         }
         unsafe {
@@ -2733,16 +2546,16 @@ fn initialize_module_serializers() {
                 |x: &mut EditorCatalogWireSnapshot, v| x.relations = v,
             );
             (*a).add_field(
-                "resource_definitions",
+                "resource_displays",
                 3,
                 crate::skir_client::Serializer::array(
                     crate::skir_client::internal::struct_serializer_from_static(
-                        AuthoringResourceDefinition::_adapter(),
+                        ResourceDisplayFormulas::_adapter(),
                     ),
                 ),
                 "",
-                |x: &EditorCatalogWireSnapshot| &x.resource_definitions,
-                |x: &mut EditorCatalogWireSnapshot, v| x.resource_definitions = v,
+                |x: &EditorCatalogWireSnapshot| &x.resource_displays,
+                |x: &mut EditorCatalogWireSnapshot, v| x.resource_displays = v,
             );
             (*a).add_field(
                 "presentations",
@@ -2840,18 +2653,7 @@ fn initialize_module_serializers() {
             );
             (*a).add_field("resource_operations", 12, crate::skir_client::Serializer::array(crate::skirout::base::editor::v1::operation::ResourceOperationDefinition::serializer()), "", |x: &EditorCatalogWireSnapshot| &x.resource_operations, |x: &mut EditorCatalogWireSnapshot, v| x.resource_operations = v);
             (*a).add_field("resource_operation_contributions", 13, crate::skir_client::Serializer::array(crate::skirout::base::editor::v1::operation::ResourceOperationContribution::serializer()), "", |x: &EditorCatalogWireSnapshot| &x.resource_operation_contributions, |x: &mut EditorCatalogWireSnapshot, v| x.resource_operation_contributions = v);
-            (*a).add_field(
-                "resource_displays",
-                14,
-                crate::skir_client::Serializer::array(
-                    crate::skir_client::internal::struct_serializer_from_static(
-                        ResourceDisplayFormulas::_adapter(),
-                    ),
-                ),
-                "",
-                |x: &EditorCatalogWireSnapshot| &x.resource_displays,
-                |x: &mut EditorCatalogWireSnapshot, v| x.resource_displays = v,
-            );
+            (*a).add_field("realm_root", 14, crate::skirout::base::editor::v1::type_catalog::TypeDefinitionId::serializer(), "The realm root type. The realm keeps exactly one instance, which owns every section.", |x: &EditorCatalogWireSnapshot| &x.realm_root, |x: &mut EditorCatalogWireSnapshot, v| x.realm_root = v);
             (*a).finalize();
         }
         unsafe {
@@ -3439,22 +3241,6 @@ fn initialize_module_serializers() {
                 |x: &TypeRecommendation| &x.occurrences,
                 |x: &mut TypeRecommendation, v| x.occurrences = v,
             );
-            (*a).finalize();
-        }
-        unsafe {
-            let a: *mut crate::skir_client::internal::EnumAdapter<AuthoringNavigationHandler> =
-                AuthoringNavigationHandler::_adapter() as *const _ as *mut _;
-            (*a).add_constant_variant("generic", 1, 1, "", AuthoringNavigationHandler::Generic);
-            (*a).add_constant_variant("book", 2, 2, "", AuthoringNavigationHandler::Book);
-            (*a).add_constant_variant("page", 3, 3, "", AuthoringNavigationHandler::Page);
-            (*a).add_constant_variant(
-                "page_element",
-                4,
-                4,
-                "",
-                AuthoringNavigationHandler::PageElement,
-            );
-            (*a).add_constant_variant("tags", 5, 5, "", AuthoringNavigationHandler::Tags);
             (*a).finalize();
         }
         unsafe {

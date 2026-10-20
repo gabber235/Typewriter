@@ -44,6 +44,9 @@ class ResourceDisplayCatalog(
     private val typed = displays.filter { it.target is ResourceTarget.Type }
     private val types = types.associateBy { it.definition.id }
 
+    /** The published type of [definition], or null when this catalog publishes no such type. */
+    fun publishedType(definition: TypeDefinitionId): PublishedType? = types[definition]
+
     /** The display that names resources of [definition], or null when the catalog declares none at all. */
     fun displayFor(
         definition: TypeDefinitionId,

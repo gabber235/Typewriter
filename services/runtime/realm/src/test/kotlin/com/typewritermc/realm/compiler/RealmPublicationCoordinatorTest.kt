@@ -340,7 +340,7 @@ internal class PublicationFixture(
 ) {
     val views =
         InMemoryAuthoringViewStore(
-            TestCatalogLease(definitions = PUBLICATION_DEFINITIONS, resourceRoot = PUBLICATION_PAGE),
+            TestCatalogLease(definitions = PUBLICATION_DEFINITIONS),
             AuthoringSeed(initial),
         )
     val attempts = RecordingAttempts()
@@ -399,7 +399,7 @@ internal class PublicationFixture(
     fun compiled(value: String): CompiledArtifact {
         val store =
             InMemoryAuthoringViewStore(
-                TestCatalogLease(definitions = PUBLICATION_DEFINITIONS, resourceRoot = PUBLICATION_PAGE),
+                TestCatalogLease(definitions = PUBLICATION_DEFINITIONS),
                 AuthoringSeed(
                     mapOf(ResourceId("page") to publicationPageRecord(value)),
                 ),

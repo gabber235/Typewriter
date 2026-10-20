@@ -2,11 +2,11 @@ package com.typewritermc.engine.pages
 
 import com.typewritermc.authoring.GraphLayout
 import com.typewritermc.authoring.GraphPlacement
+import com.typewritermc.authoring.HierarchyPath
 import com.typewritermc.authoring.TimelineEntryPlacement
 import com.typewritermc.elements.Entry
 import com.typewritermc.library.Book
 import com.typewritermc.library.BookPages
-import com.typewritermc.library.ChapterPath
 import com.typewritermc.library.Page
 import com.typewritermc.library.PageElements
 import com.typewritermc.types.Ref
@@ -55,7 +55,7 @@ interface SceneEntry : Entry {
 data class SequencePage(
     override val book: Ref<BookPages.Page, Book>,
     override val name: String = "",
-    override val chapter: ChapterPath = ChapterPath.Root,
+    override val chapter: HierarchyPath = HierarchyPath.Root,
     override val priority: Int = 0,
     override val elements: List<Ref<PageElements.Page, SequenceEntry>> = emptyList(),
 ) : Page,
@@ -66,7 +66,7 @@ data class SequencePage(
 data class StaticPage(
     override val book: Ref<BookPages.Page, Book>,
     override val name: String = "",
-    override val chapter: ChapterPath = ChapterPath.Root,
+    override val chapter: HierarchyPath = HierarchyPath.Root,
     override val priority: Int = 0,
     override val elements: List<Ref<PageElements.Page, StaticEntry>> = emptyList(),
 ) : Page,
@@ -77,7 +77,7 @@ data class StaticPage(
 data class ScenePage(
     override val book: Ref<BookPages.Page, Book>,
     override val name: String = "",
-    override val chapter: ChapterPath = ChapterPath.Root,
+    override val chapter: HierarchyPath = HierarchyPath.Root,
     override val priority: Int = 0,
     override val elements: List<Ref<PageElements.Page, SceneEntry>> = emptyList(),
 ) : Page
@@ -87,7 +87,7 @@ data class ScenePage(
 data class ManifestPage(
     override val book: Ref<BookPages.Page, Book>,
     override val name: String = "",
-    override val chapter: ChapterPath = ChapterPath.Root,
+    override val chapter: HierarchyPath = HierarchyPath.Root,
     override val priority: Int = 0,
     override val elements: List<Ref<PageElements.Page, ManifestEntry>> = emptyList(),
 ) : Page,

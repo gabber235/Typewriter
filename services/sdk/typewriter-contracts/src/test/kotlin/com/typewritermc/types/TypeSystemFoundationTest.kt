@@ -680,14 +680,20 @@ val TypeSystemFoundationTest by testSuite {
                 generation = CatalogGeneration("catalog one"),
                 types = emptyList(),
                 relations = emptyList(),
-                resourceDefinitions = emptyList(),
+                resourceDisplays = emptyList(),
+                realmRoot =
+                    com.typewritermc.types.TypeDefinitionId(
+                        com.typewritermc.types.TypeId
+                            .Qualified("test", "realm.root"),
+                        1,
+                    ),
                 presentations =
                     listOf(
                         PresentationDescriptor(
                             id = PresentationId("example", "editor"),
                             owner = owner,
                             target = PresentationTarget.Representation(com.typewritermc.configuration.RepresentationKind.Text),
-                            roles = setOf(PresentationRole.WORKSPACE_EDITOR),
+                            roles = setOf(PresentationRole.WORKSPACE),
                             priority = 1,
                         ),
                     ),

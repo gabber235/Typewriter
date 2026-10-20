@@ -11,6 +11,7 @@ import com.typewritermc.presentation.AppliedPresentation
 import com.typewritermc.presentation.Layout
 import com.typewritermc.presentation.PresentationInput
 import com.typewritermc.presentation.asPresentationColor
+import com.typewritermc.presentation.createResource
 import com.typewritermc.presentation.resource
 import com.typewritermc.presentation.resourceHeading
 import com.typewritermc.presentation.resourceSearchResult
@@ -70,7 +71,39 @@ object BookInspectorPresentation : BookPresentation {
             }
             tagInheritanceSection("effective-tags", "Effective Tags", tagOptions, expressions.tags.map { target })
             remainingFields {
+                exclude(library)
                 exclude(pages)
+            }
+        }
+    }
+}
+
+/** The Library: every Book as a card. */
+object LibraryWorkspace : LibraryPresentation {
+    override val roles = setOf(PresentationRole.WORKSPACE)
+
+    override fun LibraryPresentationScope.present() {
+        books {
+            grid(itemExtent = 240.0, aspectRatio = 0.72, spacing = 16.0)
+        }
+    }
+}
+
+/** The chapter tree of a Book beside the Book and each of its pages. */
+object BookOutline : BookPresentation {
+    override val roles = setOf(PresentationRole.NAVIGATOR)
+
+    override fun BookPresentationScope.present() {
+        pages {
+            order { resource.fields.name.orElse(literal("")) }
+            tree(path = PageFields.chapter) {
+                group {
+                    text(group.name)
+                    button(
+                        label = literal("New page"),
+                        action = createResource(type = PageDefinition.id, owner = BookFields.pages) { PageFields.chapter(group.path) },
+                    )
+                }
             }
         }
     }

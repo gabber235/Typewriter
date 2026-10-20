@@ -139,20 +139,6 @@ fun bindOperations(
             }
             declaration.included.forEach(::include)
             declaration.operations.forEach { collected ->
-                val requiredFamily =
-                    when (collected.builtin) {
-                        BuiltinResourceOperation.MoveToPage -> com.typewritermc.elements.ElementDefinition.id
-                        BuiltinResourceOperation.MoveToBook -> com.typewritermc.library.PageDefinition.id
-                        else -> null
-                    }
-                if (requiredFamily != null) {
-                    require(
-                        declaration.target.definition == requiredFamily ||
-                            catalog.isNominalSubtype(declaration.target.definition, requiredFamily),
-                    ) {
-                        "${collected.builtin} cannot apply to ${declaration.target} from ${declaration.origin}."
-                    }
-                }
                 require(definitions[collected.id] == null || collected.builtin != null) {
                     "Duplicate operation ${collected.id} from ${declaration.origin}."
                 }

@@ -1,6 +1,5 @@
 package com.typewritermc.discovery
 
-import com.typewritermc.authoring.AuthoringResourceDefinition
 import com.typewritermc.authoring.DisplayFormulas
 import com.typewritermc.capability.RealmCapabilityDescriptor
 import com.typewritermc.capability.RealmCapabilityProvider
@@ -37,10 +36,6 @@ interface GeneratedRelationProvider {
 
 interface GeneratedEndpointBindingsProvider {
     val bindings: List<EndpointBindingTemplate>
-}
-
-interface GeneratedResourceProvider {
-    val definition: AuthoringResourceDefinition
 }
 
 interface GeneratedConfigurationProvider : ConfigurationProvider {

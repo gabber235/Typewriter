@@ -1,7 +1,5 @@
 package fixture
 
-import com.typewritermc.authoring.ResourceDefinitionId
-import com.typewritermc.authoring.TypewriterResourceDefinition
 import com.typewritermc.types.Ref
 import com.typewritermc.types.RelationshipEndpoint
 import com.typewritermc.types.Resource
@@ -11,11 +9,6 @@ typealias Name = String
 
 @TypewriterType(id = "a0000000000000000000000000000541")
 data class LinkTarget(val title: String = "") : Resource
-
-object Definitions {
-    @TypewriterResourceDefinition("fixture.link_target", LinkTarget::class)
-    val TARGET = ResourceDefinitionId("fixture.link_target")
-}
 
 interface HandWrittenEndpoint : RelationshipEndpoint<LinkTarget, LinkTarget>
 

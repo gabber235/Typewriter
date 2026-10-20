@@ -1,7 +1,5 @@
 package fixture
 
-import com.typewritermc.authoring.ResourceDefinitionId
-import com.typewritermc.authoring.TypewriterResourceDefinition
 import com.typewritermc.types.One
 import com.typewritermc.types.Ref
 import com.typewritermc.types.ReferenceContract
@@ -28,7 +26,3 @@ interface IntersectionBoundContract {
     interface Target : One<AcceptedTarget>
 }
 
-object FixtureResources {
-    @TypewriterResourceDefinition("fixture.generic_source", GenericSource::class)
-    val SOURCE = ResourceDefinitionId("fixture.generic_source")
-}

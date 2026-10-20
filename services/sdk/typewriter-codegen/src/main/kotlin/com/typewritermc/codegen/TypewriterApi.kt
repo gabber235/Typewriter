@@ -134,7 +134,6 @@ internal object TypewriterApi {
     val GeneratedRelationProvider = ClassName(DISCOVERY, "GeneratedRelationProvider")
     val GeneratedResourceDisplayProvider = ClassName(DISCOVERY, "GeneratedResourceDisplayProvider")
     val GeneratedResourceOperationProvider = ClassName(DISCOVERY, "GeneratedResourceOperationProvider")
-    val GeneratedResourceProvider = ClassName(DISCOVERY, "GeneratedResourceProvider")
     val GeneratedRuntimeRegistrarProvider = ClassName(DISCOVERY, "GeneratedRuntimeRegistrarProvider")
     val GeneratedTypeProvider = ClassName(DISCOVERY, "GeneratedTypeProvider")
     val ProviderOrigin = ClassName(DISCOVERY, "ProviderOrigin")
@@ -192,7 +191,7 @@ internal object TypewriterApi {
     val PresentedField = ClassName(PRESENTATION, "PresentedField")
     val RecordControl = ClassName(PRESENTATION, "RecordControl")
     val ResourceExpr = ClassName(PRESENTATION, "ResourceExpr")
-    val ResourceLinksControl = ClassName(PRESENTATION, "ResourceLinksControl")
+    val ResourcesControl = ClassName(PRESENTATION, "ResourcesControl")
     val SetControl = ClassName(PRESENTATION, "SetControl")
     val TextControl = ClassName(PRESENTATION, "TextControl")
 

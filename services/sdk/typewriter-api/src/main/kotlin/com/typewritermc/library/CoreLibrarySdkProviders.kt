@@ -1,6 +1,7 @@
 package com.typewritermc.library
 
 import com.typewritermc.authoring.PlacementSdkProvider
+import com.typewritermc.discovery.GraphDirection
 import com.typewritermc.expression.color
 import com.typewritermc.expression.display
 import com.typewritermc.expression.icon
@@ -61,13 +62,24 @@ object TagInspectorPresentation : TagPresentation {
             inspectorSection("placement", "Placement", input = placement.input) {
                 placement(using = PlacementSdkProvider)
             }
-            remainingFields {}
+            remainingFields {
+                exclude(taxonomy)
+            }
         }
     }
 }
 
+/** The tags section: every tag placed on a graph, with edges from the parents links among them. */
+object TaxonomyWorkspace : TaxonomyPresentation {
+    override val roles = setOf(PresentationRole.WORKSPACE)
+
+    override fun TaxonomyPresentationScope.present() {
+        tags { graph(GraphDirection.TOP_TO_BOTTOM) }
+    }
+}
+
 object TagGraphNodePresentation : TagPresentation {
-    override val roles = setOf(PresentationRole.EDITOR_NODE)
+    override val roles = setOf(PresentationRole.ITEM)
 
     override fun TagPresentationScope.present() {
         tagGraphSurface {

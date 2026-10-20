@@ -206,7 +206,7 @@ val SyntheticDiscoveryTest by testSuite {
         val catalog = presentationCatalog()
         val checked = (catalog.resolve(SyntheticEntryDefinition.use) as Resolution.Ready).value
 
-        val root = entry.build(PresentationBuildBinding(checked.presentationTemplate(), PresentationRole.WORKSPACE_EDITOR)).layout
+        val root = entry.build(PresentationBuildBinding(checked.presentationTemplate(), PresentationRole.WORKSPACE)).layout
         val children = (root.element as PresentationElement.ChildrenWrapper).value.axisNodes()
         val polymorphic =
             children
@@ -222,7 +222,7 @@ val SyntheticDiscoveryTest by testSuite {
                     .build(
                         PresentationBuildBinding(
                             repeatedChecked.presentationTemplate(),
-                            PresentationRole.WORKSPACE_EDITOR,
+                            PresentationRole.WORKSPACE,
                         ),
                     ).layout.element as
                     PresentationElement.ChildrenWrapper

@@ -6,7 +6,6 @@ import com.typewritermc.authoring.CommitResult
 import com.typewritermc.authoring.EditExpectation
 import com.typewritermc.authoring.EditIntent
 import com.typewritermc.authoring.PreparedEdit
-import com.typewritermc.authoring.ResourceDefinitionId
 import com.typewritermc.authoring.ValueLocation
 import com.typewritermc.authoring.ValuePath
 import com.typewritermc.checking.CatalogGeneration
@@ -210,7 +209,6 @@ val SurrealAuthoringRepositoryTestSuite by testSuite {
                     mapOf(id to initial),
                     emptySet(),
                     com.typewritermc.authoring.RelationProjectionDelta(emptyList(), emptyList(), emptyList()),
-                    mapOf(id to ResourceDefinitionId("test")),
                 ),
             )
             val catalog = TestCatalogLease()
@@ -255,10 +253,7 @@ private class MemoryAuthoringStorage(
         check(!failBeforeWrite) { "write unavailable" }
         writes++
         seed =
-            AuthoringSeed(
-                seed.resources + plan.resources - plan.removedResources,
-                seed.resourceDefinitions + plan.definitions - plan.removedResources,
-            )
+            AuthoringSeed(seed.resources + plan.resources - plan.removedResources)
         check(!failAfterWrite) { "commit result unavailable" }
     }
 }

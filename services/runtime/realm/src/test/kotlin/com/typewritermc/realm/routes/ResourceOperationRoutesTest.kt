@@ -6,6 +6,7 @@ import com.typewritermc.authoring.AuthoringRecord
 import com.typewritermc.authoring.GeneratedSdkApi
 import com.typewritermc.authoring.GraphLayoutDefinition
 import com.typewritermc.authoring.GraphPlacement
+import com.typewritermc.authoring.HierarchyPath
 import com.typewritermc.authoring.ItemId
 import com.typewritermc.authoring.PathSegment
 import com.typewritermc.authoring.TypeSelection
@@ -24,7 +25,6 @@ import com.typewritermc.imprint.ArtifactId
 import com.typewritermc.library.Book
 import com.typewritermc.library.BookDefinition
 import com.typewritermc.library.BookPages
-import com.typewritermc.library.ChapterPath
 import com.typewritermc.library.PageDefinition
 import com.typewritermc.library.PageElements
 import com.typewritermc.library.Tag
@@ -46,6 +46,9 @@ import com.typewritermc.realm.catalog.RealmCatalogStore
 import com.typewritermc.realm.repository.AuthoringMutationPlanner
 import com.typewritermc.realm.repository.MutationPlanningResult
 import com.typewritermc.realm.repository.ResourceValueMapper
+import com.typewritermc.realm.testBook
+import com.typewritermc.realm.testTag
+import com.typewritermc.realm.withRealmStructure
 import com.typewritermc.types.DataValue
 import com.typewritermc.types.FieldOwner
 import com.typewritermc.types.NativeBinding
@@ -249,7 +252,7 @@ val ResourceOperationRoutesTest by testSuite {
         CoreOperationsFixture().use { fixture ->
             val cyclic =
                 fixture.record(
-                    Tag(name = "Adventure", parents = setOf(Ref(ResourceId("tag"))), placement = GraphPlacement(5, 0)),
+                    testTag(name = "Adventure", parents = setOf(Ref(ResourceId("tag"))), placement = GraphPlacement(5, 0)),
                     TagDefinition.id,
                 )
             val generation = fixture.views.read { it.catalog.generation }
@@ -530,7 +533,7 @@ private class CoreOperationsFixture(
                             ValuePath(listOf(PathSegment.Field("pages"), PathSegment.Item(ItemId("native:$index")))),
                         ),
                     "name" to "Page",
-                    "chapter" to ChapterPath.parse(chapter),
+                    "chapter" to HierarchyPath.parse(chapter),
                     "priority" to priority,
                     "elements" to
                         elements.map {
@@ -562,15 +565,18 @@ private class CoreOperationsFixture(
         }
         val resources =
             mutableMapOf(
-                ResourceId("book") to record(Book(title = "Tutorial"), BookDefinition.id),
+                ResourceId("book") to record(testBook(title = "Tutorial"), BookDefinition.id),
                 ResourceId("tag") to
-                    record(Tag(name = "Quest", parents = setOf(Ref(ResourceId("parent"))), placement = GraphPlacement()), TagDefinition.id),
-                ResourceId("parent") to record(Tag(name = "Adventure", placement = GraphPlacement(5, 0)), TagDefinition.id),
+                    record(
+                        testTag(name = "Quest", parents = setOf(Ref(ResourceId("parent"))), placement = GraphPlacement()),
+                        TagDefinition.id,
+                    ),
+                ResourceId("parent") to record(testTag(name = "Adventure", placement = GraphPlacement(5, 0)), TagDefinition.id),
             )
         if (withPages) {
             resources[ResourceId("book")] =
                 record(
-                    Book(
+                    testBook(
                         title = "Source",
                         pages =
                             listOf("first", "second", "other").map {
@@ -581,7 +587,7 @@ private class CoreOperationsFixture(
                 )
             resources[ResourceId("destination")] =
                 record(
-                    Book(
+                    testBook(
                         title = "Destination",
                         pages =
                             listOf("resident", "peer").map {
@@ -600,7 +606,7 @@ private class CoreOperationsFixture(
         if (withElements) {
             resources[ResourceId("library")] =
                 record(
-                    Book(
+                    testBook(
                         title = "Library",
                         pages =
                             listOf("graph", "canvas", "timeline").map {
@@ -617,9 +623,9 @@ private class CoreOperationsFixture(
             resources[ResourceId("timeline-entry")] = entry("timeline", 0, GraphPlacement(4, 4, 1, 1))
         }
         if (withTagLink) {
-            resources[ResourceId("loose")] = record(Tag(name = "Loose", placement = GraphPlacement(9, 0)), TagDefinition.id)
+            resources[ResourceId("loose")] = record(testTag(name = "Loose", placement = GraphPlacement(9, 0)), TagDefinition.id)
         }
-        views = InMemoryAuthoringViewStore(lease, AuthoringSeed(resources))
+        views = InMemoryAuthoringViewStore(lease, AuthoringSeed(resources.withRealmStructure(lease)))
         routes = ResourceOperationRoutes(ResourceOperationRuntime(views), EditorContracts(RealmRouteScope("organization", "realm")))
     }
 

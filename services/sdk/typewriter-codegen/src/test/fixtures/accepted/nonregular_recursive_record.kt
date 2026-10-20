@@ -1,8 +1,6 @@
 package fixture
 
 import com.typewritermc.authoring.CompletenessResult
-import com.typewritermc.authoring.ResourceDefinitionId
-import com.typewritermc.authoring.TypewriterResourceDefinition
 import com.typewritermc.authoring.complete
 import com.typewritermc.checking.CatalogGeneration
 import com.typewritermc.types.FactoryNativeBindingRegistry
@@ -26,11 +24,6 @@ data class Nest<T>(
     val value: T? = null,
     val next: Nest<List<T>>? = null,
 )
-
-object FixtureResources {
-    @TypewriterResourceDefinition("fixture.recursive_source", RecursiveSource::class)
-    val SOURCE = ResourceDefinitionId("fixture.recursive_source")
-}
 
 fun main() {
     val catalog = DefaultCheckedCatalog(

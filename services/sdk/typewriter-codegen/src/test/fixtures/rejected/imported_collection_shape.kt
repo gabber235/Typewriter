@@ -1,11 +1,9 @@
 package fixture
 
-import com.typewritermc.authoring.ResourceDefinitionId
-import com.typewritermc.authoring.TypewriterResourceDefinition
 import com.typewritermc.elements.Element
 import com.typewritermc.library.Book
 import com.typewritermc.library.BookPages
-import com.typewritermc.library.ChapterPath
+import com.typewritermc.authoring.HierarchyPath
 import com.typewritermc.library.Page
 import com.typewritermc.library.PageElements
 import com.typewritermc.types.Ref
@@ -15,13 +13,9 @@ import com.typewritermc.types.TypewriterType
 data class ImportedCollectionPage(
     override val book: Ref<BookPages.Page, Book>,
     override val name: String,
-    override val chapter: ChapterPath,
+    override val chapter: HierarchyPath,
     override val priority: Int,
     override val elements: List<Ref<PageElements.Page, Element>>,
     val invalidElement: Ref<PageElements.Page, Element>, // error: Relation endpoint com.typewritermc.library.PageElements.Page requires a collection on its containing field path.
 ) : Page
 
-object FixtureResources {
-    @TypewriterResourceDefinition("fixture.imported_collection_page", ImportedCollectionPage::class)
-    val PAGE = ResourceDefinitionId("fixture.imported_collection_page")
-}

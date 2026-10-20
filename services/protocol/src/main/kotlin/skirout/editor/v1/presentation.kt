@@ -21594,8 +21594,7 @@ sealed class PresentationElement private constructor() {
         REMAINING_FIELDS_WRAPPER,
         NULLABLE_INPUT_WRAPPER,
         SET_INPUT_WRAPPER,
-        PAGE_GRAPH_WRAPPER,
-        PAGE_TIMELINE_WRAPPER,
+        RESOURCES_WRAPPER,
         ALIGN_WRAPPER,
         APPEARANCE_DEFAULTS_WRAPPER,
         PART_WRAPPER,
@@ -22620,39 +22619,21 @@ sealed class PresentationElement private constructor() {
         }
     }
 
-    class PageGraphWrapper private constructor (
-        val value: skirout.editor.v1.presentation.PageGraphElement,
+    class ResourcesWrapper private constructor (
+        val value: skirout.editor.v1.presentation.ResourcesElement,
     ) : skirout.editor.v1.presentation.PresentationElement() {
         constructor(
-            value: skirout.editor.v1.presentation.PageGraphElement_OrMutable,
+            value: skirout.editor.v1.presentation.ResourcesElement_OrMutable,
         ): this(value.toFrozen()) {}
 
-        override val kind get() = Kind.PAGE_GRAPH_WRAPPER;
+        override val kind get() = Kind.RESOURCES_WRAPPER;
 
         override fun equals(other: kotlin.Any?): kotlin.Boolean {
-            return other is skirout.editor.v1.presentation.PresentationElement.PageGraphWrapper && value == other.value;
+            return other is skirout.editor.v1.presentation.PresentationElement.ResourcesWrapper && value == other.value;
         }
 
         override fun hashCode(): kotlin.Int {
-            return this.value.hashCode() + 1618681758;
-        }
-    }
-
-    class PageTimelineWrapper private constructor (
-        val value: skirout.editor.v1.presentation.PageTimelineElement,
-    ) : skirout.editor.v1.presentation.PresentationElement() {
-        constructor(
-            value: skirout.editor.v1.presentation.PageTimelineElement_OrMutable,
-        ): this(value.toFrozen()) {}
-
-        override val kind get() = Kind.PAGE_TIMELINE_WRAPPER;
-
-        override fun equals(other: kotlin.Any?): kotlin.Boolean {
-            return other is skirout.editor.v1.presentation.PresentationElement.PageTimelineWrapper && value == other.value;
-        }
-
-        override fun hashCode(): kotlin.Int {
-            return this.value.hashCode() + 373167089;
+            return this.value.hashCode() + -1983070683;
         }
     }
 
@@ -23846,33 +23827,21 @@ sealed class PresentationElement private constructor() {
             )
         );
 
-        /** Shortcut for `PageGraphWrapper(skirout.editor.v1.presentation.PageGraphElement(...))`. */
+        /** Shortcut for `ResourcesWrapper(skirout.editor.v1.presentation.ResourcesElement(...))`. */
         @kotlin.Suppress("UNUSED_PARAMETER")
-        fun createPageGraph(
+        fun createResources(
             _mustNameArguments: _MustNameArguments =
                 _MustNameArguments,
             control: skirout.editor.v1.presentation.BoundControl_OrMutable,
-            direction: skirout.editor.v1.presentation.PageGraphDirection,
-            appearance: skirout.editor.v1.presentation.PageGraphAppearance_OrMutable?,
-        ) = PageGraphWrapper(
-            skirout.editor.v1.presentation.PageGraphElement(
+            layout: skirout.editor.v1.presentation.ResourcesLayout,
+            order: skirout.editor.v1.expression.ExpressionNode?,
+            itemBindingId: skirout.editor.v1.type_catalog.ExpressionBindingId_OrMutable,
+        ) = ResourcesWrapper(
+            skirout.editor.v1.presentation.ResourcesElement(
                 control = control,
-                direction = direction,
-                appearance = appearance,
-            )
-        );
-
-        /** Shortcut for `PageTimelineWrapper(skirout.editor.v1.presentation.PageTimelineElement(...))`. */
-        @kotlin.Suppress("UNUSED_PARAMETER")
-        fun createPageTimeline(
-            _mustNameArguments: _MustNameArguments =
-                _MustNameArguments,
-            control: skirout.editor.v1.presentation.BoundControl_OrMutable,
-            appearance: skirout.editor.v1.presentation.PageTimelineAppearance_OrMutable?,
-        ) = PageTimelineWrapper(
-            skirout.editor.v1.presentation.PageTimelineElement(
-                control = control,
-                appearance = appearance,
+                layout = layout,
+                order = order,
+                itemBindingId = itemBindingId,
             )
         );
 
@@ -24576,7 +24545,6 @@ sealed interface PresentationCollectionDefinition_OrMutable {
     val selectability: skirout.editor.v1.expression.ExpressionNode;
     val relations: kotlin.collections.List<skirout.editor.v1.presentation.PresentationCollectionRelationDefinition_OrMutable>;
     val projection: skirout.editor.v1.presentation.PresentationCollectionProjection_OrMutable?;
-    val resources: skirout.editor.v1.presentation.PresentationResourceCollection_OrMutable?;
 
     fun toFrozen(): skirout.editor.v1.presentation.PresentationCollectionDefinition;
 }
@@ -24596,7 +24564,6 @@ class PresentationCollectionDefinition private constructor(
     override val selectability: skirout.editor.v1.expression.ExpressionNode,
     override val relations: build.skir.KeyedList<skirout.editor.v1.presentation.PresentationCollectionRelationDefinition, kotlin.String>,
     override val projection: skirout.editor.v1.presentation.PresentationCollectionProjection?,
-    override val resources: skirout.editor.v1.presentation.PresentationResourceCollection?,
     internal val _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.presentation.PresentationCollectionDefinition>? =
         null,
 ): skirout.editor.v1.presentation.PresentationCollectionDefinition_OrMutable {
@@ -24610,7 +24577,6 @@ class PresentationCollectionDefinition private constructor(
         selectability: skirout.editor.v1.expression.ExpressionNode,
         relations: kotlin.collections.Iterable<skirout.editor.v1.presentation.PresentationCollectionRelationDefinition_OrMutable>,
         projection: skirout.editor.v1.presentation.PresentationCollectionProjection_OrMutable?,
-        resources: skirout.editor.v1.presentation.PresentationResourceCollection_OrMutable?,
         _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.presentation.PresentationCollectionDefinition>? =
             null,
     ): this(
@@ -24621,7 +24587,6 @@ class PresentationCollectionDefinition private constructor(
         selectability,
         build.skir.internal.toKeyedList(relations, "relationId", { it.relationId }, { it.toFrozen() }),
         if (projection != null) projection.toFrozen() else null,
-        if (resources != null) resources.toFrozen() else null,
         _unrecognizedFields,
     ) {}
 
@@ -24637,7 +24602,6 @@ class PresentationCollectionDefinition private constructor(
         selectability = this.selectability,
         relations = this.relations,
         projection = this.projection,
-        resources = this.resources,
     );
 
     /** Returns a shallow copy of this instance with the specified fields replaced. */
@@ -24658,8 +24622,6 @@ class PresentationCollectionDefinition private constructor(
             this.relations,
         projection: skirout.editor.v1.presentation.PresentationCollectionProjection_OrMutable? =
             this.projection,
-        resources: skirout.editor.v1.presentation.PresentationResourceCollection_OrMutable? =
-            this.resources,
     ) = skirout.editor.v1.presentation.PresentationCollectionDefinition(
         sourceId,
         rowType,
@@ -24668,7 +24630,6 @@ class PresentationCollectionDefinition private constructor(
         selectability,
         build.skir.internal.toKeyedList(relations, "relationId", { it.relationId }, { it.toFrozen() }),
         if (projection != null) projection.toFrozen() else null,
-        if (resources != null) resources.toFrozen() else null,
         this._unrecognizedFields,
     );
 
@@ -24676,11 +24637,11 @@ class PresentationCollectionDefinition private constructor(
     fun copy() = this;
 
     override fun equals(other: kotlin.Any?): kotlin.Boolean {
-        return this === other || (other is skirout.editor.v1.presentation.PresentationCollectionDefinition && this.sourceId == other.sourceId && this.rowType == other.rowType && this.rowBindingId == other.rowBindingId && this.key == other.key && this.selectability == other.selectability && this.relations == other.relations && this.projection == other.projection && this.resources == other.resources);
+        return this === other || (other is skirout.editor.v1.presentation.PresentationCollectionDefinition && this.sourceId == other.sourceId && this.rowType == other.rowType && this.rowBindingId == other.rowBindingId && this.key == other.key && this.selectability == other.selectability && this.relations == other.relations && this.projection == other.projection);
     }
 
     override fun hashCode(): kotlin.Int {
-        return kotlin.collections.listOf<kotlin.Any?>(this.sourceId, this.rowType, this.rowBindingId, this.key, this.selectability, this.relations, this.projection, this.resources).hashCode();
+        return kotlin.collections.listOf<kotlin.Any?>(this.sourceId, this.rowType, this.rowBindingId, this.key, this.selectability, this.relations, this.projection).hashCode();
     }
 
     override fun toString(): kotlin.String {
@@ -24708,8 +24669,6 @@ class PresentationCollectionDefinition private constructor(
             build.skir.internal.emptyKeyedList<skirout.editor.v1.presentation.PresentationCollectionRelationDefinition, kotlin.String>(),
         override var projection: skirout.editor.v1.presentation.PresentationCollectionProjection_OrMutable? =
             null,
-        override var resources: skirout.editor.v1.presentation.PresentationResourceCollection_OrMutable? =
-            null,
         internal var _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.presentation.PresentationCollectionDefinition>? =
             null,
     ): skirout.editor.v1.presentation.PresentationCollectionDefinition_OrMutable {
@@ -24722,7 +24681,6 @@ class PresentationCollectionDefinition private constructor(
             selectability = this.selectability,
             relations = this.relations,
             projection = this.projection,
-            resources = this.resources,
             _unrecognizedFields = this._unrecognizedFields,
         );
 
@@ -24769,7 +24727,6 @@ class PresentationCollectionDefinition private constructor(
                 skirout.editor.v1.expression.ExpressionNode.UNKNOWN,
                 build.skir.internal.emptyKeyedList<skirout.editor.v1.presentation.PresentationCollectionRelationDefinition, kotlin.String>(),
                 null,
-                null,
             );
 
         /** Returns an instance with all fields set to their default values. */
@@ -24797,8 +24754,6 @@ class PresentationCollectionDefinition private constructor(
                 build.skir.internal.emptyKeyedList<skirout.editor.v1.presentation.PresentationCollectionRelationDefinition, kotlin.String>(),
             projection: skirout.editor.v1.presentation.PresentationCollectionProjection_OrMutable? =
                 null,
-            resources: skirout.editor.v1.presentation.PresentationResourceCollection_OrMutable? =
-                null,
         ) = skirout.editor.v1.presentation.PresentationCollectionDefinition(
             sourceId = sourceId,
             rowType = rowType,
@@ -24807,7 +24762,6 @@ class PresentationCollectionDefinition private constructor(
             selectability = selectability,
             relations = relations,
             projection = projection,
-            resources = resources,
             _unrecognizedFields = null,
         );
 
@@ -25237,177 +25191,6 @@ class PresentationCollectionProjection private constructor(
 
         /** Describes the [PresentationCollectionProjection] type. Provides runtime introspection capabilities. */
         val typeDescriptor get() = _SerializerRegistry.PresentationCollectionProjectionSerializerImpl.typeDescriptor;
-    }
-}
-
-sealed interface PresentationResourceCollection_OrMutable {
-    val root: skirout.editor.v1.type_catalog.TypeDefinitionId_OrMutable;
-    val resourceBindingId: skirout.editor.v1.type_catalog.ExpressionBindingId_OrMutable;
-    val appearance: skirout.editor.v1.type_catalog.PresentationId_OrMutable?;
-
-    fun toFrozen(): skirout.editor.v1.presentation.PresentationResourceCollection;
-}
-
-/** Deeply immutable. */
-@kotlin.Suppress("UNUSED_PARAMETER")
-class PresentationResourceCollection private constructor(
-    override val root: skirout.editor.v1.type_catalog.TypeDefinitionId,
-    override val resourceBindingId: skirout.editor.v1.type_catalog.ExpressionBindingId,
-    override val appearance: skirout.editor.v1.type_catalog.PresentationId?,
-    internal val _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.presentation.PresentationResourceCollection>? =
-        null,
-): skirout.editor.v1.presentation.PresentationResourceCollection_OrMutable {
-    constructor(
-        _mustNameArguments: _MustNameArguments =
-            _MustNameArguments,
-        root: skirout.editor.v1.type_catalog.TypeDefinitionId_OrMutable,
-        resourceBindingId: skirout.editor.v1.type_catalog.ExpressionBindingId_OrMutable,
-        appearance: skirout.editor.v1.type_catalog.PresentationId_OrMutable?,
-        _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.presentation.PresentationResourceCollection>? =
-            null,
-    ): this(
-        root.toFrozen(),
-        resourceBindingId.toFrozen(),
-        if (appearance != null) appearance.toFrozen() else null,
-        _unrecognizedFields,
-    ) {}
-
-    @kotlin.Deprecated("Already frozen", kotlin.ReplaceWith("this"))
-    override fun toFrozen() = this;
-
-    /** Returns a mutable shallow copy of this instance */
-    fun toMutable() = Mutable(
-        root = this.root,
-        resourceBindingId = this.resourceBindingId,
-        appearance = this.appearance,
-    );
-
-    /** Returns a shallow copy of this instance with the specified fields replaced. */
-    fun copy(
-        _mustNameArguments: _MustNameArguments =
-            _MustNameArguments,
-        root: skirout.editor.v1.type_catalog.TypeDefinitionId_OrMutable =
-            this.root,
-        resourceBindingId: skirout.editor.v1.type_catalog.ExpressionBindingId_OrMutable =
-            this.resourceBindingId,
-        appearance: skirout.editor.v1.type_catalog.PresentationId_OrMutable? =
-            this.appearance,
-    ) = skirout.editor.v1.presentation.PresentationResourceCollection(
-        root.toFrozen(),
-        resourceBindingId.toFrozen(),
-        if (appearance != null) appearance.toFrozen() else null,
-        this._unrecognizedFields,
-    );
-
-    @kotlin.Deprecated("No point in creating an exact copy of an immutable object", kotlin.ReplaceWith("this"))
-    fun copy() = this;
-
-    override fun equals(other: kotlin.Any?): kotlin.Boolean {
-        return this === other || (other is skirout.editor.v1.presentation.PresentationResourceCollection && this.root == other.root && this.resourceBindingId == other.resourceBindingId && this.appearance == other.appearance);
-    }
-
-    override fun hashCode(): kotlin.Int {
-        return kotlin.collections.listOf<kotlin.Any?>(this.root, this.resourceBindingId, this.appearance).hashCode();
-    }
-
-    override fun toString(): kotlin.String {
-        return build.skir.internal.toStringImpl(
-            this,
-            _SerializerRegistry.PresentationResourceCollectionSerializerImpl,
-        )
-    }
-
-    /** Mutable version of [PresentationResourceCollection]. */
-    class Mutable internal constructor(
-        _mustNameArguments: _MustNameArguments =
-            _MustNameArguments,
-        override var root: skirout.editor.v1.type_catalog.TypeDefinitionId_OrMutable =
-            skirout.editor.v1.type_catalog.TypeDefinitionId.partial(),
-        override var resourceBindingId: skirout.editor.v1.type_catalog.ExpressionBindingId_OrMutable =
-            skirout.editor.v1.type_catalog.ExpressionBindingId.partial(),
-        override var appearance: skirout.editor.v1.type_catalog.PresentationId_OrMutable? =
-            null,
-        internal var _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.presentation.PresentationResourceCollection>? =
-            null,
-    ): skirout.editor.v1.presentation.PresentationResourceCollection_OrMutable {
-        /** Returns a deeply immutable copy of this instance */
-        override fun toFrozen() = skirout.editor.v1.presentation.PresentationResourceCollection(
-            root = this.root,
-            resourceBindingId = this.resourceBindingId,
-            appearance = this.appearance,
-            _unrecognizedFields = this._unrecognizedFields,
-        );
-
-        /**
-         * If the value of [root] is already mutable, returns it as-is.
-         * Otherwise, makes a mutable copy, assigns it back to [root] and returns it.
-         */
-        val mutableRoot: skirout.editor.v1.type_catalog.TypeDefinitionId.Mutable get() {
-            var value = this.root;
-            return when (value) {
-                is skirout.editor.v1.type_catalog.TypeDefinitionId -> {
-                    value = value.toMutable();
-                    this.root = value;
-                    return value;
-                }
-                is skirout.editor.v1.type_catalog.TypeDefinitionId.Mutable -> value;
-            }
-        }
-
-        /**
-         * If the value of [resourceBindingId] is already mutable, returns it as-is.
-         * Otherwise, makes a mutable copy, assigns it back to [resourceBindingId] and returns it.
-         */
-        val mutableResourceBindingId: skirout.editor.v1.type_catalog.ExpressionBindingId.Mutable get() {
-            var value = this.resourceBindingId;
-            return when (value) {
-                is skirout.editor.v1.type_catalog.ExpressionBindingId -> {
-                    value = value.toMutable();
-                    this.resourceBindingId = value;
-                    return value;
-                }
-                is skirout.editor.v1.type_catalog.ExpressionBindingId.Mutable -> value;
-            }
-        }
-    }
-
-    companion object {
-        private val default =
-            skirout.editor.v1.presentation.PresentationResourceCollection(
-                skirout.editor.v1.type_catalog.TypeDefinitionId.partial(),
-                skirout.editor.v1.type_catalog.ExpressionBindingId.partial(),
-                null,
-            );
-
-        /** Returns an instance with all fields set to their default values. */
-        fun partial() = default;
-
-        /**
-         * Creates a new instance of [PresentationResourceCollection].
-         * Unlike the constructor, does not require all fields to be specified.
-         * Missing fields will be set to their default values.
-         */
-        fun partial(
-            _mustNameArguments: _MustNameArguments =
-                _MustNameArguments,
-            root: skirout.editor.v1.type_catalog.TypeDefinitionId_OrMutable =
-                skirout.editor.v1.type_catalog.TypeDefinitionId.partial(),
-            resourceBindingId: skirout.editor.v1.type_catalog.ExpressionBindingId_OrMutable =
-                skirout.editor.v1.type_catalog.ExpressionBindingId.partial(),
-            appearance: skirout.editor.v1.type_catalog.PresentationId_OrMutable? =
-                null,
-        ) = skirout.editor.v1.presentation.PresentationResourceCollection(
-            root = root,
-            resourceBindingId = resourceBindingId,
-            appearance = appearance,
-            _unrecognizedFields = null,
-        );
-
-        /** Serializer for [PresentationResourceCollection] instances. */
-        val serializer get() = _SerializerRegistry.PresentationResourceCollectionSerializer;
-
-        /** Describes the [PresentationResourceCollection] type. Provides runtime introspection capabilities. */
-        val typeDescriptor get() = _SerializerRegistry.PresentationResourceCollectionSerializerImpl.typeDescriptor;
     }
 }
 
@@ -26924,9 +26707,13 @@ class SetControl private constructor(
     }
 }
 
-/** Deeply immutable. */
-sealed class PageGraphDirection private constructor() {
-    /** The kind of variant held by a `PageGraphDirection`. */
+/**
+ * The direction a graph layout flows in, from sources to targets.
+ *
+ * Deeply immutable.
+ */
+sealed class GraphDirection private constructor() {
+    /** The kind of variant held by a `GraphDirection`. */
     enum class Kind {
         UNKNOWN,
         LEFT_TO_RIGHT_CONST,
@@ -26935,14 +26722,14 @@ sealed class PageGraphDirection private constructor() {
         BOTTOM_TO_TOP_CONST,
     }
 
-    class Unknown @kotlin.Deprecated("For internal use", kotlin.ReplaceWith("skirout.editor.v1.presentation.PageGraphDirection.UNKNOWN")) internal constructor(
+    class Unknown @kotlin.Deprecated("For internal use", kotlin.ReplaceWith("skirout.editor.v1.presentation.GraphDirection.UNKNOWN")) internal constructor(
         internal val _kind: Kind,
-        internal override val _unrecognized: _UnrecognizedVariant<skirout.editor.v1.presentation.PageGraphDirection>?,
-    ) : skirout.editor.v1.presentation.PageGraphDirection() {
+        internal override val _unrecognized: _UnrecognizedVariant<skirout.editor.v1.presentation.GraphDirection>?,
+    ) : skirout.editor.v1.presentation.GraphDirection() {
         override val kind get() = _kind;
 
         override fun equals(other: kotlin.Any?): kotlin.Boolean {
-            return other is skirout.editor.v1.presentation.PageGraphDirection && other.kind == kind;
+            return other is skirout.editor.v1.presentation.GraphDirection && other.kind == kind;
         }
 
         override fun hashCode(): kotlin.Int {
@@ -26950,11 +26737,11 @@ sealed class PageGraphDirection private constructor() {
         }
     }
 
-    object LEFT_TO_RIGHT : skirout.editor.v1.presentation.PageGraphDirection() {
+    object LEFT_TO_RIGHT : skirout.editor.v1.presentation.GraphDirection() {
         override val kind get() = Kind.LEFT_TO_RIGHT_CONST;
 
         override fun equals(other: kotlin.Any?): kotlin.Boolean {
-            return other is skirout.editor.v1.presentation.PageGraphDirection && other.kind == Kind.LEFT_TO_RIGHT_CONST;
+            return other is skirout.editor.v1.presentation.GraphDirection && other.kind == Kind.LEFT_TO_RIGHT_CONST;
         }
 
         override fun hashCode(): kotlin.Int {
@@ -26962,11 +26749,11 @@ sealed class PageGraphDirection private constructor() {
         }
     }
 
-    object RIGHT_TO_LEFT : skirout.editor.v1.presentation.PageGraphDirection() {
+    object RIGHT_TO_LEFT : skirout.editor.v1.presentation.GraphDirection() {
         override val kind get() = Kind.RIGHT_TO_LEFT_CONST;
 
         override fun equals(other: kotlin.Any?): kotlin.Boolean {
-            return other is skirout.editor.v1.presentation.PageGraphDirection && other.kind == Kind.RIGHT_TO_LEFT_CONST;
+            return other is skirout.editor.v1.presentation.GraphDirection && other.kind == Kind.RIGHT_TO_LEFT_CONST;
         }
 
         override fun hashCode(): kotlin.Int {
@@ -26974,11 +26761,11 @@ sealed class PageGraphDirection private constructor() {
         }
     }
 
-    object TOP_TO_BOTTOM : skirout.editor.v1.presentation.PageGraphDirection() {
+    object TOP_TO_BOTTOM : skirout.editor.v1.presentation.GraphDirection() {
         override val kind get() = Kind.TOP_TO_BOTTOM_CONST;
 
         override fun equals(other: kotlin.Any?): kotlin.Boolean {
-            return other is skirout.editor.v1.presentation.PageGraphDirection && other.kind == Kind.TOP_TO_BOTTOM_CONST;
+            return other is skirout.editor.v1.presentation.GraphDirection && other.kind == Kind.TOP_TO_BOTTOM_CONST;
         }
 
         override fun hashCode(): kotlin.Int {
@@ -26986,11 +26773,11 @@ sealed class PageGraphDirection private constructor() {
         }
     }
 
-    object BOTTOM_TO_TOP : skirout.editor.v1.presentation.PageGraphDirection() {
+    object BOTTOM_TO_TOP : skirout.editor.v1.presentation.GraphDirection() {
         override val kind get() = Kind.BOTTOM_TO_TOP_CONST;
 
         override fun equals(other: kotlin.Any?): kotlin.Boolean {
-            return other is skirout.editor.v1.presentation.PageGraphDirection && other.kind == Kind.BOTTOM_TO_TOP_CONST;
+            return other is skirout.editor.v1.presentation.GraphDirection && other.kind == Kind.BOTTOM_TO_TOP_CONST;
         }
 
         override fun hashCode(): kotlin.Int {
@@ -26998,61 +26785,72 @@ sealed class PageGraphDirection private constructor() {
         }
     }
 
-    internal open val _unrecognized: _UnrecognizedVariant<skirout.editor.v1.presentation.PageGraphDirection>? get() = null;
+    internal open val _unrecognized: _UnrecognizedVariant<skirout.editor.v1.presentation.GraphDirection>? get() = null;
 
     abstract val kind: Kind;
 
     override fun toString(): kotlin.String {
         return build.skir.internal.toStringImpl(
             this,
-            _SerializerRegistry.PageGraphDirectionSerializerImpl,
+            _SerializerRegistry.GraphDirectionSerializerImpl,
         )
     }
 
     companion object {
         /**
-         * Constant indicating an unknown [PageGraphDirection].
-         * Default value for fields of type [PageGraphDirection].
+         * Constant indicating an unknown [GraphDirection].
+         * Default value for fields of type [GraphDirection].
          */
         val UNKNOWN = @kotlin.Suppress("DEPRECATION") Unknown(Kind.UNKNOWN, null);
 
-        /** Serializer for [PageGraphDirection] instances. */
-        val serializer get() = _SerializerRegistry.PageGraphDirectionSerializer;
+        /** Serializer for [GraphDirection] instances. */
+        val serializer get() = _SerializerRegistry.GraphDirectionSerializer;
 
-        /** Describes the [PageGraphDirection] type. Provides runtime introspection capabilities. */
-        val typeDescriptor get() = _SerializerRegistry.PageGraphDirectionSerializerImpl.typeDescriptor;
+        /** Describes the [GraphDirection] type. Provides runtime introspection capabilities. */
+        val typeDescriptor get() = _SerializerRegistry.GraphDirectionSerializerImpl.typeDescriptor;
     }
 }
 
-sealed interface PageGraphElement_OrMutable {
+sealed interface ResourcesElement_OrMutable {
     val control: skirout.editor.v1.presentation.BoundControl_OrMutable;
-    val direction: skirout.editor.v1.presentation.PageGraphDirection;
-    val appearance: skirout.editor.v1.presentation.PageGraphAppearance_OrMutable?;
+    val layout: skirout.editor.v1.presentation.ResourcesLayout;
+    val order: skirout.editor.v1.expression.ExpressionNode?;
+    val itemBindingId: skirout.editor.v1.type_catalog.ExpressionBindingId_OrMutable;
 
-    fun toFrozen(): skirout.editor.v1.presentation.PageGraphElement;
+    fun toFrozen(): skirout.editor.v1.presentation.ResourcesElement;
 }
 
-/** Deeply immutable. */
+/**
+ * Lays out the resources of a bound link field, such as the elements of a page or the books
+ * of the library. Every member renders through its item presentation. Adding and removing
+ * members edits the link. `order` is evaluated with `item_binding_id` bound to each member's
+ * link and sorts the members by its result; without it members keep link order.
+ *
+ * Deeply immutable.
+ */
 @kotlin.Suppress("UNUSED_PARAMETER")
-class PageGraphElement private constructor(
+class ResourcesElement private constructor(
     override val control: skirout.editor.v1.presentation.BoundControl,
-    override val direction: skirout.editor.v1.presentation.PageGraphDirection,
-    override val appearance: skirout.editor.v1.presentation.PageGraphAppearance?,
-    internal val _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.presentation.PageGraphElement>? =
+    override val layout: skirout.editor.v1.presentation.ResourcesLayout,
+    override val order: skirout.editor.v1.expression.ExpressionNode?,
+    override val itemBindingId: skirout.editor.v1.type_catalog.ExpressionBindingId,
+    internal val _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.presentation.ResourcesElement>? =
         null,
-): skirout.editor.v1.presentation.PageGraphElement_OrMutable {
+): skirout.editor.v1.presentation.ResourcesElement_OrMutable {
     constructor(
         _mustNameArguments: _MustNameArguments =
             _MustNameArguments,
         control: skirout.editor.v1.presentation.BoundControl_OrMutable,
-        direction: skirout.editor.v1.presentation.PageGraphDirection,
-        appearance: skirout.editor.v1.presentation.PageGraphAppearance_OrMutable?,
-        _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.presentation.PageGraphElement>? =
+        layout: skirout.editor.v1.presentation.ResourcesLayout,
+        order: skirout.editor.v1.expression.ExpressionNode?,
+        itemBindingId: skirout.editor.v1.type_catalog.ExpressionBindingId_OrMutable,
+        _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.presentation.ResourcesElement>? =
             null,
     ): this(
         control.toFrozen(),
-        direction,
-        if (appearance != null) appearance.toFrozen() else null,
+        layout,
+        order,
+        itemBindingId.toFrozen(),
         _unrecognizedFields,
     ) {}
 
@@ -27062,8 +26860,9 @@ class PageGraphElement private constructor(
     /** Returns a mutable shallow copy of this instance */
     fun toMutable() = Mutable(
         control = this.control,
-        direction = this.direction,
-        appearance = this.appearance,
+        layout = this.layout,
+        order = this.order,
+        itemBindingId = this.itemBindingId,
     );
 
     /** Returns a shallow copy of this instance with the specified fields replaced. */
@@ -27072,14 +26871,17 @@ class PageGraphElement private constructor(
             _MustNameArguments,
         control: skirout.editor.v1.presentation.BoundControl_OrMutable =
             this.control,
-        direction: skirout.editor.v1.presentation.PageGraphDirection =
-            this.direction,
-        appearance: skirout.editor.v1.presentation.PageGraphAppearance_OrMutable? =
-            this.appearance,
-    ) = skirout.editor.v1.presentation.PageGraphElement(
+        layout: skirout.editor.v1.presentation.ResourcesLayout =
+            this.layout,
+        order: skirout.editor.v1.expression.ExpressionNode? =
+            this.order,
+        itemBindingId: skirout.editor.v1.type_catalog.ExpressionBindingId_OrMutable =
+            this.itemBindingId,
+    ) = skirout.editor.v1.presentation.ResourcesElement(
         control.toFrozen(),
-        direction,
-        if (appearance != null) appearance.toFrozen() else null,
+        layout,
+        order,
+        itemBindingId.toFrozen(),
         this._unrecognizedFields,
     );
 
@@ -27087,55 +26889,75 @@ class PageGraphElement private constructor(
     fun copy() = this;
 
     override fun equals(other: kotlin.Any?): kotlin.Boolean {
-        return this === other || (other is skirout.editor.v1.presentation.PageGraphElement && this.control == other.control && this.direction == other.direction && this.appearance == other.appearance);
+        return this === other || (other is skirout.editor.v1.presentation.ResourcesElement && this.control == other.control && this.layout == other.layout && this.order == other.order && this.itemBindingId == other.itemBindingId);
     }
 
     override fun hashCode(): kotlin.Int {
-        return kotlin.collections.listOf<kotlin.Any?>(this.control, this.direction, this.appearance).hashCode();
+        return kotlin.collections.listOf<kotlin.Any?>(this.control, this.layout, this.order, this.itemBindingId).hashCode();
     }
 
     override fun toString(): kotlin.String {
         return build.skir.internal.toStringImpl(
             this,
-            _SerializerRegistry.PageGraphElementSerializerImpl,
+            _SerializerRegistry.ResourcesElementSerializerImpl,
         )
     }
 
-    /** Mutable version of [PageGraphElement]. */
+    /** Mutable version of [ResourcesElement]. */
     class Mutable internal constructor(
         _mustNameArguments: _MustNameArguments =
             _MustNameArguments,
         override var control: skirout.editor.v1.presentation.BoundControl =
             skirout.editor.v1.presentation.BoundControl.partial(),
-        override var direction: skirout.editor.v1.presentation.PageGraphDirection =
-            skirout.editor.v1.presentation.PageGraphDirection.UNKNOWN,
-        override var appearance: skirout.editor.v1.presentation.PageGraphAppearance_OrMutable? =
+        override var layout: skirout.editor.v1.presentation.ResourcesLayout =
+            skirout.editor.v1.presentation.ResourcesLayout.UNKNOWN,
+        override var order: skirout.editor.v1.expression.ExpressionNode? =
             null,
-        internal var _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.presentation.PageGraphElement>? =
+        override var itemBindingId: skirout.editor.v1.type_catalog.ExpressionBindingId_OrMutable =
+            skirout.editor.v1.type_catalog.ExpressionBindingId.partial(),
+        internal var _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.presentation.ResourcesElement>? =
             null,
-    ): skirout.editor.v1.presentation.PageGraphElement_OrMutable {
+    ): skirout.editor.v1.presentation.ResourcesElement_OrMutable {
         /** Returns a deeply immutable copy of this instance */
-        override fun toFrozen() = skirout.editor.v1.presentation.PageGraphElement(
+        override fun toFrozen() = skirout.editor.v1.presentation.ResourcesElement(
             control = this.control,
-            direction = this.direction,
-            appearance = this.appearance,
+            layout = this.layout,
+            order = this.order,
+            itemBindingId = this.itemBindingId,
             _unrecognizedFields = this._unrecognizedFields,
         );
+
+        /**
+         * If the value of [itemBindingId] is already mutable, returns it as-is.
+         * Otherwise, makes a mutable copy, assigns it back to [itemBindingId] and returns it.
+         */
+        val mutableItemBindingId: skirout.editor.v1.type_catalog.ExpressionBindingId.Mutable get() {
+            var value = this.itemBindingId;
+            return when (value) {
+                is skirout.editor.v1.type_catalog.ExpressionBindingId -> {
+                    value = value.toMutable();
+                    this.itemBindingId = value;
+                    return value;
+                }
+                is skirout.editor.v1.type_catalog.ExpressionBindingId.Mutable -> value;
+            }
+        }
     }
 
     companion object {
         private val default =
-            skirout.editor.v1.presentation.PageGraphElement(
+            skirout.editor.v1.presentation.ResourcesElement(
                 skirout.editor.v1.presentation.BoundControl.partial(),
-                skirout.editor.v1.presentation.PageGraphDirection.UNKNOWN,
+                skirout.editor.v1.presentation.ResourcesLayout.UNKNOWN,
                 null,
+                skirout.editor.v1.type_catalog.ExpressionBindingId.partial(),
             );
 
         /** Returns an instance with all fields set to their default values. */
         fun partial() = default;
 
         /**
-         * Creates a new instance of [PageGraphElement].
+         * Creates a new instance of [ResourcesElement].
          * Unlike the constructor, does not require all fields to be specified.
          * Missing fields will be set to their default values.
          */
@@ -27144,146 +26966,228 @@ class PageGraphElement private constructor(
                 _MustNameArguments,
             control: skirout.editor.v1.presentation.BoundControl_OrMutable =
                 skirout.editor.v1.presentation.BoundControl.partial(),
-            direction: skirout.editor.v1.presentation.PageGraphDirection =
-                skirout.editor.v1.presentation.PageGraphDirection.UNKNOWN,
-            appearance: skirout.editor.v1.presentation.PageGraphAppearance_OrMutable? =
+            layout: skirout.editor.v1.presentation.ResourcesLayout =
+                skirout.editor.v1.presentation.ResourcesLayout.UNKNOWN,
+            order: skirout.editor.v1.expression.ExpressionNode? =
                 null,
-        ) = skirout.editor.v1.presentation.PageGraphElement(
+            itemBindingId: skirout.editor.v1.type_catalog.ExpressionBindingId_OrMutable =
+                skirout.editor.v1.type_catalog.ExpressionBindingId.partial(),
+        ) = skirout.editor.v1.presentation.ResourcesElement(
             control = control,
-            direction = direction,
-            appearance = appearance,
+            layout = layout,
+            order = order,
+            itemBindingId = itemBindingId,
             _unrecognizedFields = null,
         );
 
-        /** Serializer for [PageGraphElement] instances. */
-        val serializer get() = _SerializerRegistry.PageGraphElementSerializer;
+        /** Serializer for [ResourcesElement] instances. */
+        val serializer get() = _SerializerRegistry.ResourcesElementSerializer;
 
-        /** Describes the [PageGraphElement] type. Provides runtime introspection capabilities. */
-        val typeDescriptor get() = _SerializerRegistry.PageGraphElementSerializerImpl.typeDescriptor;
+        /** Describes the [ResourcesElement] type. Provides runtime introspection capabilities. */
+        val typeDescriptor get() = _SerializerRegistry.ResourcesElementSerializerImpl.typeDescriptor;
     }
 }
 
-sealed interface PageTimelineElement_OrMutable {
-    val control: skirout.editor.v1.presentation.BoundControl_OrMutable;
-    val appearance: skirout.editor.v1.presentation.PageTimelineAppearance_OrMutable?;
-
-    fun toFrozen(): skirout.editor.v1.presentation.PageTimelineElement;
-}
-
-/** Deeply immutable. */
-@kotlin.Suppress("UNUSED_PARAMETER")
-class PageTimelineElement private constructor(
-    override val control: skirout.editor.v1.presentation.BoundControl,
-    override val appearance: skirout.editor.v1.presentation.PageTimelineAppearance?,
-    internal val _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.presentation.PageTimelineElement>? =
-        null,
-): skirout.editor.v1.presentation.PageTimelineElement_OrMutable {
-    constructor(
-        _mustNameArguments: _MustNameArguments =
-            _MustNameArguments,
-        control: skirout.editor.v1.presentation.BoundControl_OrMutable,
-        appearance: skirout.editor.v1.presentation.PageTimelineAppearance_OrMutable?,
-        _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.presentation.PageTimelineElement>? =
-            null,
-    ): this(
-        control.toFrozen(),
-        if (appearance != null) appearance.toFrozen() else null,
-        _unrecognizedFields,
-    ) {}
-
-    @kotlin.Deprecated("Already frozen", kotlin.ReplaceWith("this"))
-    override fun toFrozen() = this;
-
-    /** Returns a mutable shallow copy of this instance */
-    fun toMutable() = Mutable(
-        control = this.control,
-        appearance = this.appearance,
-    );
-
-    /** Returns a shallow copy of this instance with the specified fields replaced. */
-    fun copy(
-        _mustNameArguments: _MustNameArguments =
-            _MustNameArguments,
-        control: skirout.editor.v1.presentation.BoundControl_OrMutable =
-            this.control,
-        appearance: skirout.editor.v1.presentation.PageTimelineAppearance_OrMutable? =
-            this.appearance,
-    ) = skirout.editor.v1.presentation.PageTimelineElement(
-        control.toFrozen(),
-        if (appearance != null) appearance.toFrozen() else null,
-        this._unrecognizedFields,
-    );
-
-    @kotlin.Deprecated("No point in creating an exact copy of an immutable object", kotlin.ReplaceWith("this"))
-    fun copy() = this;
-
-    override fun equals(other: kotlin.Any?): kotlin.Boolean {
-        return this === other || (other is skirout.editor.v1.presentation.PageTimelineElement && this.control == other.control && this.appearance == other.appearance);
+/**
+ * How a resources element arranges its members.
+ *
+ * Deeply immutable.
+ */
+sealed class ResourcesLayout private constructor() {
+    /** The kind of variant held by a `ResourcesLayout`. */
+    enum class Kind {
+        UNKNOWN,
+        LIST_CONST,
+        GRAPH_WRAPPER,
+        TIMELINE_WRAPPER,
+        GRID_WRAPPER,
+        TREE_WRAPPER,
     }
 
-    override fun hashCode(): kotlin.Int {
-        return kotlin.collections.listOf<kotlin.Any?>(this.control, this.appearance).hashCode();
+    class Unknown @kotlin.Deprecated("For internal use", kotlin.ReplaceWith("skirout.editor.v1.presentation.ResourcesLayout.UNKNOWN")) internal constructor(
+        internal val _kind: Kind,
+        internal override val _unrecognized: _UnrecognizedVariant<skirout.editor.v1.presentation.ResourcesLayout>?,
+    ) : skirout.editor.v1.presentation.ResourcesLayout() {
+        override val kind get() = _kind;
+
+        override fun equals(other: kotlin.Any?): kotlin.Boolean {
+            return other is skirout.editor.v1.presentation.ResourcesLayout && other.kind == kind;
+        }
+
+        override fun hashCode(): kotlin.Int {
+            return kind.ordinal;
+        }
     }
+
+    object LIST : skirout.editor.v1.presentation.ResourcesLayout() {
+        override val kind get() = Kind.LIST_CONST;
+
+        override fun equals(other: kotlin.Any?): kotlin.Boolean {
+            return other is skirout.editor.v1.presentation.ResourcesLayout && other.kind == Kind.LIST_CONST;
+        }
+
+        override fun hashCode(): kotlin.Int {
+            return Kind.LIST_CONST.ordinal;
+        }
+    }
+
+    class GraphWrapper private constructor (
+        val value: skirout.editor.v1.presentation.GraphResourcesLayout,
+    ) : skirout.editor.v1.presentation.ResourcesLayout() {
+        constructor(
+            value: skirout.editor.v1.presentation.GraphResourcesLayout_OrMutable,
+        ): this(value.toFrozen()) {}
+
+        override val kind get() = Kind.GRAPH_WRAPPER;
+
+        override fun equals(other: kotlin.Any?): kotlin.Boolean {
+            return other is skirout.editor.v1.presentation.ResourcesLayout.GraphWrapper && value == other.value;
+        }
+
+        override fun hashCode(): kotlin.Int {
+            return this.value.hashCode() + 98615630;
+        }
+    }
+
+    class TimelineWrapper private constructor (
+        val value: skirout.editor.v1.presentation.TimelineResourcesLayout,
+    ) : skirout.editor.v1.presentation.ResourcesLayout() {
+        constructor(
+            value: skirout.editor.v1.presentation.TimelineResourcesLayout_OrMutable,
+        ): this(value.toFrozen()) {}
+
+        override val kind get() = Kind.TIMELINE_WRAPPER;
+
+        override fun equals(other: kotlin.Any?): kotlin.Boolean {
+            return other is skirout.editor.v1.presentation.ResourcesLayout.TimelineWrapper && value == other.value;
+        }
+
+        override fun hashCode(): kotlin.Int {
+            return this.value.hashCode() + -2076650431;
+        }
+    }
+
+    class GridWrapper private constructor (
+        val value: skirout.editor.v1.presentation.GridResourcesLayout,
+    ) : skirout.editor.v1.presentation.ResourcesLayout() {
+        constructor(
+            value: skirout.editor.v1.presentation.GridResourcesLayout_OrMutable,
+        ): this(value.toFrozen()) {}
+
+        override val kind get() = Kind.GRID_WRAPPER;
+
+        override fun equals(other: kotlin.Any?): kotlin.Boolean {
+            return other is skirout.editor.v1.presentation.ResourcesLayout.GridWrapper && value == other.value;
+        }
+
+        override fun hashCode(): kotlin.Int {
+            return this.value.hashCode() + 3181382;
+        }
+    }
+
+    class TreeWrapper private constructor (
+        val value: skirout.editor.v1.presentation.TreeResourcesLayout,
+    ) : skirout.editor.v1.presentation.ResourcesLayout() {
+        constructor(
+            value: skirout.editor.v1.presentation.TreeResourcesLayout_OrMutable,
+        ): this(value.toFrozen()) {}
+
+        override val kind get() = Kind.TREE_WRAPPER;
+
+        override fun equals(other: kotlin.Any?): kotlin.Boolean {
+            return other is skirout.editor.v1.presentation.ResourcesLayout.TreeWrapper && value == other.value;
+        }
+
+        override fun hashCode(): kotlin.Int {
+            return this.value.hashCode() + 3568542;
+        }
+    }
+
+    internal open val _unrecognized: _UnrecognizedVariant<skirout.editor.v1.presentation.ResourcesLayout>? get() = null;
+
+    abstract val kind: Kind;
 
     override fun toString(): kotlin.String {
         return build.skir.internal.toStringImpl(
             this,
-            _SerializerRegistry.PageTimelineElementSerializerImpl,
+            _SerializerRegistry.ResourcesLayoutSerializerImpl,
         )
     }
 
-    /** Mutable version of [PageTimelineElement]. */
-    class Mutable internal constructor(
-        _mustNameArguments: _MustNameArguments =
-            _MustNameArguments,
-        override var control: skirout.editor.v1.presentation.BoundControl =
-            skirout.editor.v1.presentation.BoundControl.partial(),
-        override var appearance: skirout.editor.v1.presentation.PageTimelineAppearance_OrMutable? =
-            null,
-        internal var _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.presentation.PageTimelineElement>? =
-            null,
-    ): skirout.editor.v1.presentation.PageTimelineElement_OrMutable {
-        /** Returns a deeply immutable copy of this instance */
-        override fun toFrozen() = skirout.editor.v1.presentation.PageTimelineElement(
-            control = this.control,
-            appearance = this.appearance,
-            _unrecognizedFields = this._unrecognizedFields,
-        );
-    }
-
     companion object {
-        private val default =
-            skirout.editor.v1.presentation.PageTimelineElement(
-                skirout.editor.v1.presentation.BoundControl.partial(),
-                null,
-            );
-
-        /** Returns an instance with all fields set to their default values. */
-        fun partial() = default;
-
         /**
-         * Creates a new instance of [PageTimelineElement].
-         * Unlike the constructor, does not require all fields to be specified.
-         * Missing fields will be set to their default values.
+         * Constant indicating an unknown [ResourcesLayout].
+         * Default value for fields of type [ResourcesLayout].
          */
-        fun partial(
+        val UNKNOWN = @kotlin.Suppress("DEPRECATION") Unknown(Kind.UNKNOWN, null);
+
+        /** Shortcut for `GraphWrapper(skirout.editor.v1.presentation.GraphResourcesLayout(...))`. */
+        @kotlin.Suppress("UNUSED_PARAMETER")
+        fun createGraph(
             _mustNameArguments: _MustNameArguments =
                 _MustNameArguments,
-            control: skirout.editor.v1.presentation.BoundControl_OrMutable =
-                skirout.editor.v1.presentation.BoundControl.partial(),
-            appearance: skirout.editor.v1.presentation.PageTimelineAppearance_OrMutable? =
-                null,
-        ) = skirout.editor.v1.presentation.PageTimelineElement(
-            control = control,
-            appearance = appearance,
-            _unrecognizedFields = null,
+            direction: skirout.editor.v1.presentation.GraphDirection,
+            appearance: skirout.editor.v1.presentation.ResourceGraphAppearance_OrMutable?,
+        ) = GraphWrapper(
+            skirout.editor.v1.presentation.GraphResourcesLayout(
+                direction = direction,
+                appearance = appearance,
+            )
         );
 
-        /** Serializer for [PageTimelineElement] instances. */
-        val serializer get() = _SerializerRegistry.PageTimelineElementSerializer;
+        /** Shortcut for `TimelineWrapper(skirout.editor.v1.presentation.TimelineResourcesLayout(...))`. */
+        @kotlin.Suppress("UNUSED_PARAMETER")
+        fun createTimeline(
+            _mustNameArguments: _MustNameArguments =
+                _MustNameArguments,
+            appearance: skirout.editor.v1.presentation.ResourceTimelineAppearance_OrMutable?,
+        ) = TimelineWrapper(
+            skirout.editor.v1.presentation.TimelineResourcesLayout(
+                appearance = appearance,
+            )
+        );
 
-        /** Describes the [PageTimelineElement] type. Provides runtime introspection capabilities. */
-        val typeDescriptor get() = _SerializerRegistry.PageTimelineElementSerializerImpl.typeDescriptor;
+        /** Shortcut for `GridWrapper(skirout.editor.v1.presentation.GridResourcesLayout(...))`. */
+        @kotlin.Suppress("UNUSED_PARAMETER")
+        fun createGrid(
+            _mustNameArguments: _MustNameArguments =
+                _MustNameArguments,
+            itemExtent: skirout.editor.v1.expression.ExpressionNode,
+            aspectRatio: skirout.editor.v1.expression.ExpressionNode,
+            spacing: skirout.editor.v1.expression.ExpressionNode,
+        ) = GridWrapper(
+            skirout.editor.v1.presentation.GridResourcesLayout(
+                itemExtent = itemExtent,
+                aspectRatio = aspectRatio,
+                spacing = spacing,
+            )
+        );
+
+        /** Shortcut for `TreeWrapper(skirout.editor.v1.presentation.TreeResourcesLayout(...))`. */
+        @kotlin.Suppress("UNUSED_PARAMETER")
+        fun createTree(
+            _mustNameArguments: _MustNameArguments =
+                _MustNameArguments,
+            path: skirout.editor.v1.type_catalog.ValuePath_OrMutable,
+            group: skirout.editor.v1.presentation.PresentationNode_OrMutable?,
+            groupBindingId: skirout.editor.v1.type_catalog.ExpressionBindingId_OrMutable,
+            connectors: skirout.editor.v1.presentation.HierarchySequenceLayout_OrMutable?,
+            initiallyExpanded: kotlin.Boolean,
+        ) = TreeWrapper(
+            skirout.editor.v1.presentation.TreeResourcesLayout(
+                path = path,
+                group = group,
+                groupBindingId = groupBindingId,
+                connectors = connectors,
+                initiallyExpanded = initiallyExpanded,
+            )
+        );
+
+        /** Serializer for [ResourcesLayout] instances. */
+        val serializer get() = _SerializerRegistry.ResourcesLayoutSerializer;
+
+        /** Describes the [ResourcesLayout] type. Provides runtime introspection capabilities. */
+        val typeDescriptor get() = _SerializerRegistry.ResourcesLayoutSerializerImpl.typeDescriptor;
     }
 }
 
@@ -27519,6 +27423,7 @@ sealed class PresentationInteractionState private constructor() {
         DISABLED_CONST,
         READ_ONLY_CONST,
         INVALID_CONST,
+        ROUTED_CONST,
     }
 
     class Unknown @kotlin.Deprecated("For internal use", kotlin.ReplaceWith("skirout.editor.v1.presentation.PresentationInteractionState.UNKNOWN")) internal constructor(
@@ -27617,6 +27522,19 @@ sealed class PresentationInteractionState private constructor() {
 
         override fun hashCode(): kotlin.Int {
             return Kind.INVALID_CONST.ordinal;
+        }
+    }
+
+    /** The resource is the one open in the workspace. */
+    object ROUTED : skirout.editor.v1.presentation.PresentationInteractionState() {
+        override val kind get() = Kind.ROUTED_CONST;
+
+        override fun equals(other: kotlin.Any?): kotlin.Boolean {
+            return other is skirout.editor.v1.presentation.PresentationInteractionState && other.kind == Kind.ROUTED_CONST;
+        }
+
+        override fun hashCode(): kotlin.Int {
+            return Kind.ROUTED_CONST.ordinal;
         }
     }
 
@@ -35699,30 +35617,30 @@ class CollectionContent private constructor(
     }
 }
 
-sealed interface PageGraphAppearance_OrMutable {
+sealed interface ResourceGraphAppearance_OrMutable {
     val cellSize: skirout.editor.v1.expression.ExpressionNode?;
     val edgeColor: skirout.editor.v1.presentation.PresentationColor?;
     val cardPadding: skirout.editor.v1.presentation.PresentationInsets?;
 
-    fun toFrozen(): skirout.editor.v1.presentation.PageGraphAppearance;
+    fun toFrozen(): skirout.editor.v1.presentation.ResourceGraphAppearance;
 }
 
 /** Deeply immutable. */
 @kotlin.Suppress("UNUSED_PARAMETER")
-class PageGraphAppearance private constructor(
+class ResourceGraphAppearance private constructor(
     override val cellSize: skirout.editor.v1.expression.ExpressionNode?,
     override val edgeColor: skirout.editor.v1.presentation.PresentationColor?,
     override val cardPadding: skirout.editor.v1.presentation.PresentationInsets?,
-    internal val _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.presentation.PageGraphAppearance>? =
+    internal val _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.presentation.ResourceGraphAppearance>? =
         null,
-): skirout.editor.v1.presentation.PageGraphAppearance_OrMutable {
+): skirout.editor.v1.presentation.ResourceGraphAppearance_OrMutable {
     constructor(
         _mustNameArguments: _MustNameArguments =
             _MustNameArguments,
         cellSize: skirout.editor.v1.expression.ExpressionNode?,
         edgeColor: skirout.editor.v1.presentation.PresentationColor?,
         cardPadding: skirout.editor.v1.presentation.PresentationInsets?,
-        _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.presentation.PageGraphAppearance>? =
+        _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.presentation.ResourceGraphAppearance>? =
             null,
     ): this(
         cellSize,
@@ -35751,7 +35669,7 @@ class PageGraphAppearance private constructor(
             this.edgeColor,
         cardPadding: skirout.editor.v1.presentation.PresentationInsets? =
             this.cardPadding,
-    ) = skirout.editor.v1.presentation.PageGraphAppearance(
+    ) = skirout.editor.v1.presentation.ResourceGraphAppearance(
         cellSize,
         edgeColor,
         cardPadding,
@@ -35762,7 +35680,7 @@ class PageGraphAppearance private constructor(
     fun copy() = this;
 
     override fun equals(other: kotlin.Any?): kotlin.Boolean {
-        return this === other || (other is skirout.editor.v1.presentation.PageGraphAppearance && this.cellSize == other.cellSize && this.edgeColor == other.edgeColor && this.cardPadding == other.cardPadding);
+        return this === other || (other is skirout.editor.v1.presentation.ResourceGraphAppearance && this.cellSize == other.cellSize && this.edgeColor == other.edgeColor && this.cardPadding == other.cardPadding);
     }
 
     override fun hashCode(): kotlin.Int {
@@ -35772,11 +35690,11 @@ class PageGraphAppearance private constructor(
     override fun toString(): kotlin.String {
         return build.skir.internal.toStringImpl(
             this,
-            _SerializerRegistry.PageGraphAppearanceSerializerImpl,
+            _SerializerRegistry.ResourceGraphAppearanceSerializerImpl,
         )
     }
 
-    /** Mutable version of [PageGraphAppearance]. */
+    /** Mutable version of [ResourceGraphAppearance]. */
     class Mutable internal constructor(
         _mustNameArguments: _MustNameArguments =
             _MustNameArguments,
@@ -35786,11 +35704,11 @@ class PageGraphAppearance private constructor(
             null,
         override var cardPadding: skirout.editor.v1.presentation.PresentationInsets? =
             null,
-        internal var _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.presentation.PageGraphAppearance>? =
+        internal var _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.presentation.ResourceGraphAppearance>? =
             null,
-    ): skirout.editor.v1.presentation.PageGraphAppearance_OrMutable {
+    ): skirout.editor.v1.presentation.ResourceGraphAppearance_OrMutable {
         /** Returns a deeply immutable copy of this instance */
-        override fun toFrozen() = skirout.editor.v1.presentation.PageGraphAppearance(
+        override fun toFrozen() = skirout.editor.v1.presentation.ResourceGraphAppearance(
             cellSize = this.cellSize,
             edgeColor = this.edgeColor,
             cardPadding = this.cardPadding,
@@ -35800,7 +35718,7 @@ class PageGraphAppearance private constructor(
 
     companion object {
         private val default =
-            skirout.editor.v1.presentation.PageGraphAppearance(
+            skirout.editor.v1.presentation.ResourceGraphAppearance(
                 null,
                 null,
                 null,
@@ -35810,7 +35728,7 @@ class PageGraphAppearance private constructor(
         fun partial() = default;
 
         /**
-         * Creates a new instance of [PageGraphAppearance].
+         * Creates a new instance of [ResourceGraphAppearance].
          * Unlike the constructor, does not require all fields to be specified.
          * Missing fields will be set to their default values.
          */
@@ -35823,22 +35741,22 @@ class PageGraphAppearance private constructor(
                 null,
             cardPadding: skirout.editor.v1.presentation.PresentationInsets? =
                 null,
-        ) = skirout.editor.v1.presentation.PageGraphAppearance(
+        ) = skirout.editor.v1.presentation.ResourceGraphAppearance(
             cellSize = cellSize,
             edgeColor = edgeColor,
             cardPadding = cardPadding,
             _unrecognizedFields = null,
         );
 
-        /** Serializer for [PageGraphAppearance] instances. */
-        val serializer get() = _SerializerRegistry.PageGraphAppearanceSerializer;
+        /** Serializer for [ResourceGraphAppearance] instances. */
+        val serializer get() = _SerializerRegistry.ResourceGraphAppearanceSerializer;
 
-        /** Describes the [PageGraphAppearance] type. Provides runtime introspection capabilities. */
-        val typeDescriptor get() = _SerializerRegistry.PageGraphAppearanceSerializerImpl.typeDescriptor;
+        /** Describes the [ResourceGraphAppearance] type. Provides runtime introspection capabilities. */
+        val typeDescriptor get() = _SerializerRegistry.ResourceGraphAppearanceSerializerImpl.typeDescriptor;
     }
 }
 
-sealed interface PageTimelineAppearance_OrMutable {
+sealed interface ResourceTimelineAppearance_OrMutable {
     val rulerHeight: kotlin.Double?;
     val trackPadding: kotlin.Double?;
     val laneHeight: kotlin.Double?;
@@ -35852,12 +35770,12 @@ sealed interface PageTimelineAppearance_OrMutable {
     val gridMajorColor: skirout.editor.v1.presentation.PresentationColor?;
     val textMutedColor: skirout.editor.v1.presentation.PresentationColor?;
 
-    fun toFrozen(): skirout.editor.v1.presentation.PageTimelineAppearance;
+    fun toFrozen(): skirout.editor.v1.presentation.ResourceTimelineAppearance;
 }
 
 /** Deeply immutable. */
 @kotlin.Suppress("UNUSED_PARAMETER")
-class PageTimelineAppearance private constructor(
+class ResourceTimelineAppearance private constructor(
     override val rulerHeight: kotlin.Double?,
     override val trackPadding: kotlin.Double?,
     override val laneHeight: kotlin.Double?,
@@ -35870,9 +35788,9 @@ class PageTimelineAppearance private constructor(
     override val gridMinorColor: skirout.editor.v1.presentation.PresentationColor?,
     override val gridMajorColor: skirout.editor.v1.presentation.PresentationColor?,
     override val textMutedColor: skirout.editor.v1.presentation.PresentationColor?,
-    internal val _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.presentation.PageTimelineAppearance>? =
+    internal val _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.presentation.ResourceTimelineAppearance>? =
         null,
-): skirout.editor.v1.presentation.PageTimelineAppearance_OrMutable {
+): skirout.editor.v1.presentation.ResourceTimelineAppearance_OrMutable {
     constructor(
         _mustNameArguments: _MustNameArguments =
             _MustNameArguments,
@@ -35888,7 +35806,7 @@ class PageTimelineAppearance private constructor(
         gridMinorColor: skirout.editor.v1.presentation.PresentationColor?,
         gridMajorColor: skirout.editor.v1.presentation.PresentationColor?,
         textMutedColor: skirout.editor.v1.presentation.PresentationColor?,
-        _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.presentation.PageTimelineAppearance>? =
+        _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.presentation.ResourceTimelineAppearance>? =
             null,
     ): this(
         rulerHeight,
@@ -35953,7 +35871,7 @@ class PageTimelineAppearance private constructor(
             this.gridMajorColor,
         textMutedColor: skirout.editor.v1.presentation.PresentationColor? =
             this.textMutedColor,
-    ) = skirout.editor.v1.presentation.PageTimelineAppearance(
+    ) = skirout.editor.v1.presentation.ResourceTimelineAppearance(
         rulerHeight,
         trackPadding,
         laneHeight,
@@ -35973,7 +35891,7 @@ class PageTimelineAppearance private constructor(
     fun copy() = this;
 
     override fun equals(other: kotlin.Any?): kotlin.Boolean {
-        return this === other || (other is skirout.editor.v1.presentation.PageTimelineAppearance && this.rulerHeight == other.rulerHeight && this.trackPadding == other.trackPadding && this.laneHeight == other.laneHeight && this.laneGap == other.laneGap && this.headerPadding == other.headerPadding && this.headerColor == other.headerColor && this.rulerColor == other.rulerColor && this.trackColor == other.trackColor && this.alternateTrackColor == other.alternateTrackColor && this.gridMinorColor == other.gridMinorColor && this.gridMajorColor == other.gridMajorColor && this.textMutedColor == other.textMutedColor);
+        return this === other || (other is skirout.editor.v1.presentation.ResourceTimelineAppearance && this.rulerHeight == other.rulerHeight && this.trackPadding == other.trackPadding && this.laneHeight == other.laneHeight && this.laneGap == other.laneGap && this.headerPadding == other.headerPadding && this.headerColor == other.headerColor && this.rulerColor == other.rulerColor && this.trackColor == other.trackColor && this.alternateTrackColor == other.alternateTrackColor && this.gridMinorColor == other.gridMinorColor && this.gridMajorColor == other.gridMajorColor && this.textMutedColor == other.textMutedColor);
     }
 
     override fun hashCode(): kotlin.Int {
@@ -35983,11 +35901,11 @@ class PageTimelineAppearance private constructor(
     override fun toString(): kotlin.String {
         return build.skir.internal.toStringImpl(
             this,
-            _SerializerRegistry.PageTimelineAppearanceSerializerImpl,
+            _SerializerRegistry.ResourceTimelineAppearanceSerializerImpl,
         )
     }
 
-    /** Mutable version of [PageTimelineAppearance]. */
+    /** Mutable version of [ResourceTimelineAppearance]. */
     class Mutable internal constructor(
         _mustNameArguments: _MustNameArguments =
             _MustNameArguments,
@@ -36015,11 +35933,11 @@ class PageTimelineAppearance private constructor(
             null,
         override var textMutedColor: skirout.editor.v1.presentation.PresentationColor? =
             null,
-        internal var _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.presentation.PageTimelineAppearance>? =
+        internal var _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.presentation.ResourceTimelineAppearance>? =
             null,
-    ): skirout.editor.v1.presentation.PageTimelineAppearance_OrMutable {
+    ): skirout.editor.v1.presentation.ResourceTimelineAppearance_OrMutable {
         /** Returns a deeply immutable copy of this instance */
-        override fun toFrozen() = skirout.editor.v1.presentation.PageTimelineAppearance(
+        override fun toFrozen() = skirout.editor.v1.presentation.ResourceTimelineAppearance(
             rulerHeight = this.rulerHeight,
             trackPadding = this.trackPadding,
             laneHeight = this.laneHeight,
@@ -36038,7 +35956,7 @@ class PageTimelineAppearance private constructor(
 
     companion object {
         private val default =
-            skirout.editor.v1.presentation.PageTimelineAppearance(
+            skirout.editor.v1.presentation.ResourceTimelineAppearance(
                 null,
                 null,
                 null,
@@ -36057,7 +35975,7 @@ class PageTimelineAppearance private constructor(
         fun partial() = default;
 
         /**
-         * Creates a new instance of [PageTimelineAppearance].
+         * Creates a new instance of [ResourceTimelineAppearance].
          * Unlike the constructor, does not require all fields to be specified.
          * Missing fields will be set to their default values.
          */
@@ -36088,7 +36006,7 @@ class PageTimelineAppearance private constructor(
                 null,
             textMutedColor: skirout.editor.v1.presentation.PresentationColor? =
                 null,
-        ) = skirout.editor.v1.presentation.PageTimelineAppearance(
+        ) = skirout.editor.v1.presentation.ResourceTimelineAppearance(
             rulerHeight = rulerHeight,
             trackPadding = trackPadding,
             laneHeight = laneHeight,
@@ -36104,11 +36022,11 @@ class PageTimelineAppearance private constructor(
             _unrecognizedFields = null,
         );
 
-        /** Serializer for [PageTimelineAppearance] instances. */
-        val serializer get() = _SerializerRegistry.PageTimelineAppearanceSerializer;
+        /** Serializer for [ResourceTimelineAppearance] instances. */
+        val serializer get() = _SerializerRegistry.ResourceTimelineAppearanceSerializer;
 
-        /** Describes the [PageTimelineAppearance] type. Provides runtime introspection capabilities. */
-        val typeDescriptor get() = _SerializerRegistry.PageTimelineAppearanceSerializerImpl.typeDescriptor;
+        /** Describes the [ResourceTimelineAppearance] type. Provides runtime introspection capabilities. */
+        val typeDescriptor get() = _SerializerRegistry.ResourceTimelineAppearanceSerializerImpl.typeDescriptor;
     }
 }
 
@@ -37836,6 +37754,597 @@ class PresentationPartElement private constructor(
     }
 }
 
+sealed interface GraphResourcesLayout_OrMutable {
+    val direction: skirout.editor.v1.presentation.GraphDirection;
+    val appearance: skirout.editor.v1.presentation.ResourceGraphAppearance_OrMutable?;
+
+    fun toFrozen(): skirout.editor.v1.presentation.GraphResourcesLayout;
+}
+
+/**
+ * Places members on a graph by their placement field, with edges from the relations among them.
+ *
+ * Deeply immutable.
+ */
+@kotlin.Suppress("UNUSED_PARAMETER")
+class GraphResourcesLayout private constructor(
+    override val direction: skirout.editor.v1.presentation.GraphDirection,
+    override val appearance: skirout.editor.v1.presentation.ResourceGraphAppearance?,
+    internal val _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.presentation.GraphResourcesLayout>? =
+        null,
+): skirout.editor.v1.presentation.GraphResourcesLayout_OrMutable {
+    constructor(
+        _mustNameArguments: _MustNameArguments =
+            _MustNameArguments,
+        direction: skirout.editor.v1.presentation.GraphDirection,
+        appearance: skirout.editor.v1.presentation.ResourceGraphAppearance_OrMutable?,
+        _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.presentation.GraphResourcesLayout>? =
+            null,
+    ): this(
+        direction,
+        if (appearance != null) appearance.toFrozen() else null,
+        _unrecognizedFields,
+    ) {}
+
+    @kotlin.Deprecated("Already frozen", kotlin.ReplaceWith("this"))
+    override fun toFrozen() = this;
+
+    /** Returns a mutable shallow copy of this instance */
+    fun toMutable() = Mutable(
+        direction = this.direction,
+        appearance = this.appearance,
+    );
+
+    /** Returns a shallow copy of this instance with the specified fields replaced. */
+    fun copy(
+        _mustNameArguments: _MustNameArguments =
+            _MustNameArguments,
+        direction: skirout.editor.v1.presentation.GraphDirection =
+            this.direction,
+        appearance: skirout.editor.v1.presentation.ResourceGraphAppearance_OrMutable? =
+            this.appearance,
+    ) = skirout.editor.v1.presentation.GraphResourcesLayout(
+        direction,
+        if (appearance != null) appearance.toFrozen() else null,
+        this._unrecognizedFields,
+    );
+
+    @kotlin.Deprecated("No point in creating an exact copy of an immutable object", kotlin.ReplaceWith("this"))
+    fun copy() = this;
+
+    override fun equals(other: kotlin.Any?): kotlin.Boolean {
+        return this === other || (other is skirout.editor.v1.presentation.GraphResourcesLayout && this.direction == other.direction && this.appearance == other.appearance);
+    }
+
+    override fun hashCode(): kotlin.Int {
+        return kotlin.collections.listOf<kotlin.Any?>(this.direction, this.appearance).hashCode();
+    }
+
+    override fun toString(): kotlin.String {
+        return build.skir.internal.toStringImpl(
+            this,
+            _SerializerRegistry.GraphResourcesLayoutSerializerImpl,
+        )
+    }
+
+    /** Mutable version of [GraphResourcesLayout]. */
+    class Mutable internal constructor(
+        _mustNameArguments: _MustNameArguments =
+            _MustNameArguments,
+        override var direction: skirout.editor.v1.presentation.GraphDirection =
+            skirout.editor.v1.presentation.GraphDirection.UNKNOWN,
+        override var appearance: skirout.editor.v1.presentation.ResourceGraphAppearance_OrMutable? =
+            null,
+        internal var _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.presentation.GraphResourcesLayout>? =
+            null,
+    ): skirout.editor.v1.presentation.GraphResourcesLayout_OrMutable {
+        /** Returns a deeply immutable copy of this instance */
+        override fun toFrozen() = skirout.editor.v1.presentation.GraphResourcesLayout(
+            direction = this.direction,
+            appearance = this.appearance,
+            _unrecognizedFields = this._unrecognizedFields,
+        );
+    }
+
+    companion object {
+        private val default =
+            skirout.editor.v1.presentation.GraphResourcesLayout(
+                skirout.editor.v1.presentation.GraphDirection.UNKNOWN,
+                null,
+            );
+
+        /** Returns an instance with all fields set to their default values. */
+        fun partial() = default;
+
+        /**
+         * Creates a new instance of [GraphResourcesLayout].
+         * Unlike the constructor, does not require all fields to be specified.
+         * Missing fields will be set to their default values.
+         */
+        fun partial(
+            _mustNameArguments: _MustNameArguments =
+                _MustNameArguments,
+            direction: skirout.editor.v1.presentation.GraphDirection =
+                skirout.editor.v1.presentation.GraphDirection.UNKNOWN,
+            appearance: skirout.editor.v1.presentation.ResourceGraphAppearance_OrMutable? =
+                null,
+        ) = skirout.editor.v1.presentation.GraphResourcesLayout(
+            direction = direction,
+            appearance = appearance,
+            _unrecognizedFields = null,
+        );
+
+        /** Serializer for [GraphResourcesLayout] instances. */
+        val serializer get() = _SerializerRegistry.GraphResourcesLayoutSerializer;
+
+        /** Describes the [GraphResourcesLayout] type. Provides runtime introspection capabilities. */
+        val typeDescriptor get() = _SerializerRegistry.GraphResourcesLayoutSerializerImpl.typeDescriptor;
+    }
+}
+
+sealed interface TimelineResourcesLayout_OrMutable {
+    val appearance: skirout.editor.v1.presentation.ResourceTimelineAppearance_OrMutable?;
+
+    fun toFrozen(): skirout.editor.v1.presentation.TimelineResourcesLayout;
+}
+
+/**
+ * Places members on a timeline by their timeline placement.
+ *
+ * Deeply immutable.
+ */
+@kotlin.Suppress("UNUSED_PARAMETER")
+class TimelineResourcesLayout private constructor(
+    override val appearance: skirout.editor.v1.presentation.ResourceTimelineAppearance?,
+    internal val _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.presentation.TimelineResourcesLayout>? =
+        null,
+): skirout.editor.v1.presentation.TimelineResourcesLayout_OrMutable {
+    constructor(
+        _mustNameArguments: _MustNameArguments =
+            _MustNameArguments,
+        appearance: skirout.editor.v1.presentation.ResourceTimelineAppearance_OrMutable?,
+        _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.presentation.TimelineResourcesLayout>? =
+            null,
+    ): this(
+        if (appearance != null) appearance.toFrozen() else null,
+        _unrecognizedFields,
+    ) {}
+
+    @kotlin.Deprecated("Already frozen", kotlin.ReplaceWith("this"))
+    override fun toFrozen() = this;
+
+    /** Returns a mutable shallow copy of this instance */
+    fun toMutable() = Mutable(
+        appearance = this.appearance,
+    );
+
+    /** Returns a shallow copy of this instance with the specified fields replaced. */
+    fun copy(
+        _mustNameArguments: _MustNameArguments =
+            _MustNameArguments,
+        appearance: skirout.editor.v1.presentation.ResourceTimelineAppearance_OrMutable? =
+            this.appearance,
+    ) = skirout.editor.v1.presentation.TimelineResourcesLayout(
+        if (appearance != null) appearance.toFrozen() else null,
+        this._unrecognizedFields,
+    );
+
+    @kotlin.Deprecated("No point in creating an exact copy of an immutable object", kotlin.ReplaceWith("this"))
+    fun copy() = this;
+
+    override fun equals(other: kotlin.Any?): kotlin.Boolean {
+        return this === other || (other is skirout.editor.v1.presentation.TimelineResourcesLayout && this.appearance == other.appearance);
+    }
+
+    override fun hashCode(): kotlin.Int {
+        return kotlin.collections.listOf<kotlin.Any?>(this.appearance).hashCode();
+    }
+
+    override fun toString(): kotlin.String {
+        return build.skir.internal.toStringImpl(
+            this,
+            _SerializerRegistry.TimelineResourcesLayoutSerializerImpl,
+        )
+    }
+
+    /** Mutable version of [TimelineResourcesLayout]. */
+    class Mutable internal constructor(
+        _mustNameArguments: _MustNameArguments =
+            _MustNameArguments,
+        override var appearance: skirout.editor.v1.presentation.ResourceTimelineAppearance_OrMutable? =
+            null,
+        internal var _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.presentation.TimelineResourcesLayout>? =
+            null,
+    ): skirout.editor.v1.presentation.TimelineResourcesLayout_OrMutable {
+        /** Returns a deeply immutable copy of this instance */
+        override fun toFrozen() = skirout.editor.v1.presentation.TimelineResourcesLayout(
+            appearance = this.appearance,
+            _unrecognizedFields = this._unrecognizedFields,
+        );
+    }
+
+    companion object {
+        private val default =
+            skirout.editor.v1.presentation.TimelineResourcesLayout(
+                null,
+            );
+
+        /** Returns an instance with all fields set to their default values. */
+        fun partial() = default;
+
+        /**
+         * Creates a new instance of [TimelineResourcesLayout].
+         * Unlike the constructor, does not require all fields to be specified.
+         * Missing fields will be set to their default values.
+         */
+        fun partial(
+            _mustNameArguments: _MustNameArguments =
+                _MustNameArguments,
+            appearance: skirout.editor.v1.presentation.ResourceTimelineAppearance_OrMutable? =
+                null,
+        ) = skirout.editor.v1.presentation.TimelineResourcesLayout(
+            appearance = appearance,
+            _unrecognizedFields = null,
+        );
+
+        /** Serializer for [TimelineResourcesLayout] instances. */
+        val serializer get() = _SerializerRegistry.TimelineResourcesLayoutSerializer;
+
+        /** Describes the [TimelineResourcesLayout] type. Provides runtime introspection capabilities. */
+        val typeDescriptor get() = _SerializerRegistry.TimelineResourcesLayoutSerializerImpl.typeDescriptor;
+    }
+}
+
+sealed interface GridResourcesLayout_OrMutable {
+    val itemExtent: skirout.editor.v1.expression.ExpressionNode;
+    val aspectRatio: skirout.editor.v1.expression.ExpressionNode;
+    val spacing: skirout.editor.v1.expression.ExpressionNode;
+
+    fun toFrozen(): skirout.editor.v1.presentation.GridResourcesLayout;
+}
+
+/**
+ * Shows members as cards of a fixed maximum extent and aspect ratio.
+ *
+ * Deeply immutable.
+ */
+@kotlin.Suppress("UNUSED_PARAMETER")
+class GridResourcesLayout private constructor(
+    override val itemExtent: skirout.editor.v1.expression.ExpressionNode,
+    override val aspectRatio: skirout.editor.v1.expression.ExpressionNode,
+    override val spacing: skirout.editor.v1.expression.ExpressionNode,
+    internal val _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.presentation.GridResourcesLayout>? =
+        null,
+): skirout.editor.v1.presentation.GridResourcesLayout_OrMutable {
+    constructor(
+        _mustNameArguments: _MustNameArguments =
+            _MustNameArguments,
+        itemExtent: skirout.editor.v1.expression.ExpressionNode,
+        aspectRatio: skirout.editor.v1.expression.ExpressionNode,
+        spacing: skirout.editor.v1.expression.ExpressionNode,
+        _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.presentation.GridResourcesLayout>? =
+            null,
+    ): this(
+        itemExtent,
+        aspectRatio,
+        spacing,
+        _unrecognizedFields,
+    ) {}
+
+    @kotlin.Deprecated("Already frozen", kotlin.ReplaceWith("this"))
+    override fun toFrozen() = this;
+
+    /** Returns a mutable shallow copy of this instance */
+    fun toMutable() = Mutable(
+        itemExtent = this.itemExtent,
+        aspectRatio = this.aspectRatio,
+        spacing = this.spacing,
+    );
+
+    /** Returns a shallow copy of this instance with the specified fields replaced. */
+    fun copy(
+        _mustNameArguments: _MustNameArguments =
+            _MustNameArguments,
+        itemExtent: skirout.editor.v1.expression.ExpressionNode =
+            this.itemExtent,
+        aspectRatio: skirout.editor.v1.expression.ExpressionNode =
+            this.aspectRatio,
+        spacing: skirout.editor.v1.expression.ExpressionNode =
+            this.spacing,
+    ) = skirout.editor.v1.presentation.GridResourcesLayout(
+        itemExtent,
+        aspectRatio,
+        spacing,
+        this._unrecognizedFields,
+    );
+
+    @kotlin.Deprecated("No point in creating an exact copy of an immutable object", kotlin.ReplaceWith("this"))
+    fun copy() = this;
+
+    override fun equals(other: kotlin.Any?): kotlin.Boolean {
+        return this === other || (other is skirout.editor.v1.presentation.GridResourcesLayout && this.itemExtent == other.itemExtent && this.aspectRatio == other.aspectRatio && this.spacing == other.spacing);
+    }
+
+    override fun hashCode(): kotlin.Int {
+        return kotlin.collections.listOf<kotlin.Any?>(this.itemExtent, this.aspectRatio, this.spacing).hashCode();
+    }
+
+    override fun toString(): kotlin.String {
+        return build.skir.internal.toStringImpl(
+            this,
+            _SerializerRegistry.GridResourcesLayoutSerializerImpl,
+        )
+    }
+
+    /** Mutable version of [GridResourcesLayout]. */
+    class Mutable internal constructor(
+        _mustNameArguments: _MustNameArguments =
+            _MustNameArguments,
+        override var itemExtent: skirout.editor.v1.expression.ExpressionNode =
+            skirout.editor.v1.expression.ExpressionNode.UNKNOWN,
+        override var aspectRatio: skirout.editor.v1.expression.ExpressionNode =
+            skirout.editor.v1.expression.ExpressionNode.UNKNOWN,
+        override var spacing: skirout.editor.v1.expression.ExpressionNode =
+            skirout.editor.v1.expression.ExpressionNode.UNKNOWN,
+        internal var _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.presentation.GridResourcesLayout>? =
+            null,
+    ): skirout.editor.v1.presentation.GridResourcesLayout_OrMutable {
+        /** Returns a deeply immutable copy of this instance */
+        override fun toFrozen() = skirout.editor.v1.presentation.GridResourcesLayout(
+            itemExtent = this.itemExtent,
+            aspectRatio = this.aspectRatio,
+            spacing = this.spacing,
+            _unrecognizedFields = this._unrecognizedFields,
+        );
+    }
+
+    companion object {
+        private val default =
+            skirout.editor.v1.presentation.GridResourcesLayout(
+                skirout.editor.v1.expression.ExpressionNode.UNKNOWN,
+                skirout.editor.v1.expression.ExpressionNode.UNKNOWN,
+                skirout.editor.v1.expression.ExpressionNode.UNKNOWN,
+            );
+
+        /** Returns an instance with all fields set to their default values. */
+        fun partial() = default;
+
+        /**
+         * Creates a new instance of [GridResourcesLayout].
+         * Unlike the constructor, does not require all fields to be specified.
+         * Missing fields will be set to their default values.
+         */
+        fun partial(
+            _mustNameArguments: _MustNameArguments =
+                _MustNameArguments,
+            itemExtent: skirout.editor.v1.expression.ExpressionNode =
+                skirout.editor.v1.expression.ExpressionNode.UNKNOWN,
+            aspectRatio: skirout.editor.v1.expression.ExpressionNode =
+                skirout.editor.v1.expression.ExpressionNode.UNKNOWN,
+            spacing: skirout.editor.v1.expression.ExpressionNode =
+                skirout.editor.v1.expression.ExpressionNode.UNKNOWN,
+        ) = skirout.editor.v1.presentation.GridResourcesLayout(
+            itemExtent = itemExtent,
+            aspectRatio = aspectRatio,
+            spacing = spacing,
+            _unrecognizedFields = null,
+        );
+
+        /** Serializer for [GridResourcesLayout] instances. */
+        val serializer get() = _SerializerRegistry.GridResourcesLayoutSerializer;
+
+        /** Describes the [GridResourcesLayout] type. Provides runtime introspection capabilities. */
+        val typeDescriptor get() = _SerializerRegistry.GridResourcesLayoutSerializerImpl.typeDescriptor;
+    }
+}
+
+sealed interface TreeResourcesLayout_OrMutable {
+    val path: skirout.editor.v1.type_catalog.ValuePath_OrMutable;
+    val group: skirout.editor.v1.presentation.PresentationNode_OrMutable?;
+    val groupBindingId: skirout.editor.v1.type_catalog.ExpressionBindingId_OrMutable;
+    val connectors: skirout.editor.v1.presentation.HierarchySequenceLayout_OrMutable?;
+    val initiallyExpanded: kotlin.Boolean;
+
+    fun toFrozen(): skirout.editor.v1.presentation.TreeResourcesLayout;
+}
+
+/**
+ * Groups members by the hierarchy path at `path`, relative to each member. `group` renders
+ * each group header with `group_binding_id` bound to a HierarchyGroup value. Dropping a member
+ * onto a group rewrites its path field.
+ *
+ * Deeply immutable.
+ */
+@kotlin.Suppress("UNUSED_PARAMETER")
+class TreeResourcesLayout private constructor(
+    override val path: skirout.editor.v1.type_catalog.ValuePath,
+    override val group: skirout.editor.v1.presentation.PresentationNode?,
+    override val groupBindingId: skirout.editor.v1.type_catalog.ExpressionBindingId,
+    override val connectors: skirout.editor.v1.presentation.HierarchySequenceLayout?,
+    override val initiallyExpanded: kotlin.Boolean,
+    internal val _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.presentation.TreeResourcesLayout>? =
+        null,
+): skirout.editor.v1.presentation.TreeResourcesLayout_OrMutable {
+    constructor(
+        _mustNameArguments: _MustNameArguments =
+            _MustNameArguments,
+        path: skirout.editor.v1.type_catalog.ValuePath_OrMutable,
+        group: skirout.editor.v1.presentation.PresentationNode_OrMutable?,
+        groupBindingId: skirout.editor.v1.type_catalog.ExpressionBindingId_OrMutable,
+        connectors: skirout.editor.v1.presentation.HierarchySequenceLayout_OrMutable?,
+        initiallyExpanded: kotlin.Boolean,
+        _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.presentation.TreeResourcesLayout>? =
+            null,
+    ): this(
+        path.toFrozen(),
+        if (group != null) group.toFrozen() else null,
+        groupBindingId.toFrozen(),
+        if (connectors != null) connectors.toFrozen() else null,
+        initiallyExpanded,
+        _unrecognizedFields,
+    ) {}
+
+    @kotlin.Deprecated("Already frozen", kotlin.ReplaceWith("this"))
+    override fun toFrozen() = this;
+
+    /** Returns a mutable shallow copy of this instance */
+    fun toMutable() = Mutable(
+        path = this.path,
+        group = this.group,
+        groupBindingId = this.groupBindingId,
+        connectors = this.connectors,
+        initiallyExpanded = this.initiallyExpanded,
+    );
+
+    /** Returns a shallow copy of this instance with the specified fields replaced. */
+    fun copy(
+        _mustNameArguments: _MustNameArguments =
+            _MustNameArguments,
+        path: skirout.editor.v1.type_catalog.ValuePath_OrMutable =
+            this.path,
+        group: skirout.editor.v1.presentation.PresentationNode_OrMutable? =
+            this.group,
+        groupBindingId: skirout.editor.v1.type_catalog.ExpressionBindingId_OrMutable =
+            this.groupBindingId,
+        connectors: skirout.editor.v1.presentation.HierarchySequenceLayout_OrMutable? =
+            this.connectors,
+        initiallyExpanded: kotlin.Boolean =
+            this.initiallyExpanded,
+    ) = skirout.editor.v1.presentation.TreeResourcesLayout(
+        path.toFrozen(),
+        if (group != null) group.toFrozen() else null,
+        groupBindingId.toFrozen(),
+        if (connectors != null) connectors.toFrozen() else null,
+        initiallyExpanded,
+        this._unrecognizedFields,
+    );
+
+    @kotlin.Deprecated("No point in creating an exact copy of an immutable object", kotlin.ReplaceWith("this"))
+    fun copy() = this;
+
+    override fun equals(other: kotlin.Any?): kotlin.Boolean {
+        return this === other || (other is skirout.editor.v1.presentation.TreeResourcesLayout && this.path == other.path && this.group == other.group && this.groupBindingId == other.groupBindingId && this.connectors == other.connectors && this.initiallyExpanded == other.initiallyExpanded);
+    }
+
+    override fun hashCode(): kotlin.Int {
+        return kotlin.collections.listOf<kotlin.Any?>(this.path, this.group, this.groupBindingId, this.connectors, this.initiallyExpanded).hashCode();
+    }
+
+    override fun toString(): kotlin.String {
+        return build.skir.internal.toStringImpl(
+            this,
+            _SerializerRegistry.TreeResourcesLayoutSerializerImpl,
+        )
+    }
+
+    /** Mutable version of [TreeResourcesLayout]. */
+    class Mutable internal constructor(
+        _mustNameArguments: _MustNameArguments =
+            _MustNameArguments,
+        override var path: skirout.editor.v1.type_catalog.ValuePath_OrMutable =
+            skirout.editor.v1.type_catalog.ValuePath.partial(),
+        override var group: skirout.editor.v1.presentation.PresentationNode? =
+            null,
+        override var groupBindingId: skirout.editor.v1.type_catalog.ExpressionBindingId_OrMutable =
+            skirout.editor.v1.type_catalog.ExpressionBindingId.partial(),
+        override var connectors: skirout.editor.v1.presentation.HierarchySequenceLayout_OrMutable? =
+            null,
+        override var initiallyExpanded: kotlin.Boolean =
+            false,
+        internal var _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.presentation.TreeResourcesLayout>? =
+            null,
+    ): skirout.editor.v1.presentation.TreeResourcesLayout_OrMutable {
+        /** Returns a deeply immutable copy of this instance */
+        override fun toFrozen() = skirout.editor.v1.presentation.TreeResourcesLayout(
+            path = this.path,
+            group = this.group,
+            groupBindingId = this.groupBindingId,
+            connectors = this.connectors,
+            initiallyExpanded = this.initiallyExpanded,
+            _unrecognizedFields = this._unrecognizedFields,
+        );
+
+        /**
+         * If the value of [path] is already mutable, returns it as-is.
+         * Otherwise, makes a mutable copy, assigns it back to [path] and returns it.
+         */
+        val mutablePath: skirout.editor.v1.type_catalog.ValuePath.Mutable get() {
+            var value = this.path;
+            return when (value) {
+                is skirout.editor.v1.type_catalog.ValuePath -> {
+                    value = value.toMutable();
+                    this.path = value;
+                    return value;
+                }
+                is skirout.editor.v1.type_catalog.ValuePath.Mutable -> value;
+            }
+        }
+
+        /**
+         * If the value of [groupBindingId] is already mutable, returns it as-is.
+         * Otherwise, makes a mutable copy, assigns it back to [groupBindingId] and returns it.
+         */
+        val mutableGroupBindingId: skirout.editor.v1.type_catalog.ExpressionBindingId.Mutable get() {
+            var value = this.groupBindingId;
+            return when (value) {
+                is skirout.editor.v1.type_catalog.ExpressionBindingId -> {
+                    value = value.toMutable();
+                    this.groupBindingId = value;
+                    return value;
+                }
+                is skirout.editor.v1.type_catalog.ExpressionBindingId.Mutable -> value;
+            }
+        }
+    }
+
+    companion object {
+        private val default =
+            skirout.editor.v1.presentation.TreeResourcesLayout(
+                skirout.editor.v1.type_catalog.ValuePath.partial(),
+                null,
+                skirout.editor.v1.type_catalog.ExpressionBindingId.partial(),
+                null,
+                false,
+            );
+
+        /** Returns an instance with all fields set to their default values. */
+        fun partial() = default;
+
+        /**
+         * Creates a new instance of [TreeResourcesLayout].
+         * Unlike the constructor, does not require all fields to be specified.
+         * Missing fields will be set to their default values.
+         */
+        fun partial(
+            _mustNameArguments: _MustNameArguments =
+                _MustNameArguments,
+            path: skirout.editor.v1.type_catalog.ValuePath_OrMutable =
+                skirout.editor.v1.type_catalog.ValuePath.partial(),
+            group: skirout.editor.v1.presentation.PresentationNode_OrMutable? =
+                null,
+            groupBindingId: skirout.editor.v1.type_catalog.ExpressionBindingId_OrMutable =
+                skirout.editor.v1.type_catalog.ExpressionBindingId.partial(),
+            connectors: skirout.editor.v1.presentation.HierarchySequenceLayout_OrMutable? =
+                null,
+            initiallyExpanded: kotlin.Boolean =
+                false,
+        ) = skirout.editor.v1.presentation.TreeResourcesLayout(
+            path = path,
+            group = group,
+            groupBindingId = groupBindingId,
+            connectors = connectors,
+            initiallyExpanded = initiallyExpanded,
+            _unrecognizedFields = null,
+        );
+
+        /** Serializer for [TreeResourcesLayout] instances. */
+        val serializer get() = _SerializerRegistry.TreeResourcesLayoutSerializer;
+
+        /** Describes the [TreeResourcesLayout] type. Provides runtime introspection capabilities. */
+        val typeDescriptor get() = _SerializerRegistry.TreeResourcesLayoutSerializerImpl.typeDescriptor;
+    }
+}
+
 private object _SerializerRegistry {
     val ActionAppearanceSerializerImpl = build.skir.internal.StructSerializer(
         recordId = "editor/v1/presentation.skir:ActionAppearance",
@@ -38711,6 +39220,31 @@ private object _SerializerRegistry {
 
     val GatedSearchProviderSerializer = build.skir.internal.makeSerializer(GatedSearchProviderSerializerImpl);
 
+    val GraphDirectionSerializerImpl =
+        build.skir.internal.EnumSerializer.create<skirout.editor.v1.presentation.GraphDirection, skirout.editor.v1.presentation.GraphDirection.Unknown>(
+            recordId = "editor/v1/presentation.skir:GraphDirection",
+            doc = "The direction a graph layout flows in, from sources to targets.",
+            getKindOrdinal = { it.kind.ordinal },
+            kindCount = skirout.editor.v1.presentation.GraphDirection.Kind.values().size,
+            unknownInstance = skirout.editor.v1.presentation.GraphDirection.UNKNOWN,
+            wrapUnrecognized = { @kotlin.Suppress("DEPRECATION") skirout.editor.v1.presentation.GraphDirection.Unknown(skirout.editor.v1.presentation.GraphDirection.Kind.UNKNOWN, it) },
+            getUnrecognized = { it._unrecognized },
+        );
+
+    val GraphDirectionSerializer = build.skir.internal.makeSerializer(GraphDirectionSerializerImpl);
+
+    val GraphResourcesLayoutSerializerImpl = build.skir.internal.StructSerializer(
+        recordId = "editor/v1/presentation.skir:GraphResourcesLayout",
+        doc = "Places members on a graph by their placement field, with edges from the relations among them.",
+        defaultInstance = skirout.editor.v1.presentation.GraphResourcesLayout.partial(),
+        newMutableFn = { it?.toMutable() ?: skirout.editor.v1.presentation.GraphResourcesLayout.Mutable() },
+        toFrozenFn = { it.toFrozen() },
+        getUnrecognizedFields = { it._unrecognizedFields },
+        setUnrecognizedFields = { m, u -> m._unrecognizedFields = u },
+    );
+
+    val GraphResourcesLayoutSerializer = build.skir.internal.makeSerializer(GraphResourcesLayoutSerializerImpl);
+
     val GridChildrenElementSerializerImpl = build.skir.internal.StructSerializer(
         recordId = "editor/v1/presentation.skir:GridChildrenElement",
         doc = "",
@@ -38734,6 +39268,18 @@ private object _SerializerRegistry {
     );
 
     val GridChildrenLayoutSerializer = build.skir.internal.makeSerializer(GridChildrenLayoutSerializerImpl);
+
+    val GridResourcesLayoutSerializerImpl = build.skir.internal.StructSerializer(
+        recordId = "editor/v1/presentation.skir:GridResourcesLayout",
+        doc = "Shows members as cards of a fixed maximum extent and aspect ratio.",
+        defaultInstance = skirout.editor.v1.presentation.GridResourcesLayout.partial(),
+        newMutableFn = { it?.toMutable() ?: skirout.editor.v1.presentation.GridResourcesLayout.Mutable() },
+        toFrozenFn = { it.toFrozen() },
+        getUnrecognizedFields = { it._unrecognizedFields },
+        setUnrecognizedFields = { m, u -> m._unrecognizedFields = u },
+    );
+
+    val GridResourcesLayoutSerializer = build.skir.internal.makeSerializer(GridResourcesLayoutSerializerImpl);
 
     val HeaderActionConfirmationSerializerImpl = build.skir.internal.StructSerializer(
         recordId = "editor/v1/presentation.skir:HeaderActionConfirmation",
@@ -39260,67 +39806,6 @@ private object _SerializerRegistry {
 
     val PaddingLayoutSerializer = build.skir.internal.makeSerializer(PaddingLayoutSerializerImpl);
 
-    val PageGraphAppearanceSerializerImpl = build.skir.internal.StructSerializer(
-        recordId = "editor/v1/presentation.skir:PageGraphAppearance",
-        doc = "",
-        defaultInstance = skirout.editor.v1.presentation.PageGraphAppearance.partial(),
-        newMutableFn = { it?.toMutable() ?: skirout.editor.v1.presentation.PageGraphAppearance.Mutable() },
-        toFrozenFn = { it.toFrozen() },
-        getUnrecognizedFields = { it._unrecognizedFields },
-        setUnrecognizedFields = { m, u -> m._unrecognizedFields = u },
-    );
-
-    val PageGraphAppearanceSerializer = build.skir.internal.makeSerializer(PageGraphAppearanceSerializerImpl);
-
-    val PageGraphDirectionSerializerImpl =
-        build.skir.internal.EnumSerializer.create<skirout.editor.v1.presentation.PageGraphDirection, skirout.editor.v1.presentation.PageGraphDirection.Unknown>(
-            recordId = "editor/v1/presentation.skir:PageGraphDirection",
-            doc = "",
-            getKindOrdinal = { it.kind.ordinal },
-            kindCount = skirout.editor.v1.presentation.PageGraphDirection.Kind.values().size,
-            unknownInstance = skirout.editor.v1.presentation.PageGraphDirection.UNKNOWN,
-            wrapUnrecognized = { @kotlin.Suppress("DEPRECATION") skirout.editor.v1.presentation.PageGraphDirection.Unknown(skirout.editor.v1.presentation.PageGraphDirection.Kind.UNKNOWN, it) },
-            getUnrecognized = { it._unrecognized },
-        );
-
-    val PageGraphDirectionSerializer = build.skir.internal.makeSerializer(PageGraphDirectionSerializerImpl);
-
-    val PageGraphElementSerializerImpl = build.skir.internal.StructSerializer(
-        recordId = "editor/v1/presentation.skir:PageGraphElement",
-        doc = "",
-        defaultInstance = skirout.editor.v1.presentation.PageGraphElement.partial(),
-        newMutableFn = { it?.toMutable() ?: skirout.editor.v1.presentation.PageGraphElement.Mutable() },
-        toFrozenFn = { it.toFrozen() },
-        getUnrecognizedFields = { it._unrecognizedFields },
-        setUnrecognizedFields = { m, u -> m._unrecognizedFields = u },
-    );
-
-    val PageGraphElementSerializer = build.skir.internal.makeSerializer(PageGraphElementSerializerImpl);
-
-    val PageTimelineAppearanceSerializerImpl = build.skir.internal.StructSerializer(
-        recordId = "editor/v1/presentation.skir:PageTimelineAppearance",
-        doc = "",
-        defaultInstance = skirout.editor.v1.presentation.PageTimelineAppearance.partial(),
-        newMutableFn = { it?.toMutable() ?: skirout.editor.v1.presentation.PageTimelineAppearance.Mutable() },
-        toFrozenFn = { it.toFrozen() },
-        getUnrecognizedFields = { it._unrecognizedFields },
-        setUnrecognizedFields = { m, u -> m._unrecognizedFields = u },
-    );
-
-    val PageTimelineAppearanceSerializer = build.skir.internal.makeSerializer(PageTimelineAppearanceSerializerImpl);
-
-    val PageTimelineElementSerializerImpl = build.skir.internal.StructSerializer(
-        recordId = "editor/v1/presentation.skir:PageTimelineElement",
-        doc = "",
-        defaultInstance = skirout.editor.v1.presentation.PageTimelineElement.partial(),
-        newMutableFn = { it?.toMutable() ?: skirout.editor.v1.presentation.PageTimelineElement.Mutable() },
-        toFrozenFn = { it.toFrozen() },
-        getUnrecognizedFields = { it._unrecognizedFields },
-        setUnrecognizedFields = { m, u -> m._unrecognizedFields = u },
-    );
-
-    val PageTimelineElementSerializer = build.skir.internal.makeSerializer(PageTimelineElementSerializerImpl);
-
     val PolymorphicControlSerializerImpl = build.skir.internal.StructSerializer(
         recordId = "editor/v1/presentation.skir:PolymorphicControl",
         doc = "",
@@ -39828,18 +40313,6 @@ private object _SerializerRegistry {
 
     val PresentationRadiusSerializer = build.skir.internal.makeSerializer(PresentationRadiusSerializerImpl);
 
-    val PresentationResourceCollectionSerializerImpl = build.skir.internal.StructSerializer(
-        recordId = "editor/v1/presentation.skir:PresentationResourceCollection",
-        doc = "",
-        defaultInstance = skirout.editor.v1.presentation.PresentationResourceCollection.partial(),
-        newMutableFn = { it?.toMutable() ?: skirout.editor.v1.presentation.PresentationResourceCollection.Mutable() },
-        toFrozenFn = { it.toFrozen() },
-        getUnrecognizedFields = { it._unrecognizedFields },
-        setUnrecognizedFields = { m, u -> m._unrecognizedFields = u },
-    );
-
-    val PresentationResourceCollectionSerializer = build.skir.internal.makeSerializer(PresentationResourceCollectionSerializerImpl);
-
     val PresentationSlotElementSerializerImpl = build.skir.internal.StructSerializer(
         recordId = "editor/v1/presentation.skir:PresentationSlotElement",
         doc = "",
@@ -40035,6 +40508,55 @@ private object _SerializerRegistry {
     );
 
     val RepeatedElementSerializer = build.skir.internal.makeSerializer(RepeatedElementSerializerImpl);
+
+    val ResourceGraphAppearanceSerializerImpl = build.skir.internal.StructSerializer(
+        recordId = "editor/v1/presentation.skir:ResourceGraphAppearance",
+        doc = "",
+        defaultInstance = skirout.editor.v1.presentation.ResourceGraphAppearance.partial(),
+        newMutableFn = { it?.toMutable() ?: skirout.editor.v1.presentation.ResourceGraphAppearance.Mutable() },
+        toFrozenFn = { it.toFrozen() },
+        getUnrecognizedFields = { it._unrecognizedFields },
+        setUnrecognizedFields = { m, u -> m._unrecognizedFields = u },
+    );
+
+    val ResourceGraphAppearanceSerializer = build.skir.internal.makeSerializer(ResourceGraphAppearanceSerializerImpl);
+
+    val ResourcesElementSerializerImpl = build.skir.internal.StructSerializer(
+        recordId = "editor/v1/presentation.skir:ResourcesElement",
+        doc = "Lays out the resources of a bound link field, such as the elements of a page or the books\nof the library. Every member renders through its item presentation. Adding and removing\nmembers edits the link. [order] is evaluated with [item_binding_id] bound to each member's\nlink and sorts the members by its result; without it members keep link order.",
+        defaultInstance = skirout.editor.v1.presentation.ResourcesElement.partial(),
+        newMutableFn = { it?.toMutable() ?: skirout.editor.v1.presentation.ResourcesElement.Mutable() },
+        toFrozenFn = { it.toFrozen() },
+        getUnrecognizedFields = { it._unrecognizedFields },
+        setUnrecognizedFields = { m, u -> m._unrecognizedFields = u },
+    );
+
+    val ResourcesElementSerializer = build.skir.internal.makeSerializer(ResourcesElementSerializerImpl);
+
+    val ResourcesLayoutSerializerImpl =
+        build.skir.internal.EnumSerializer.create<skirout.editor.v1.presentation.ResourcesLayout, skirout.editor.v1.presentation.ResourcesLayout.Unknown>(
+            recordId = "editor/v1/presentation.skir:ResourcesLayout",
+            doc = "How a resources element arranges its members.",
+            getKindOrdinal = { it.kind.ordinal },
+            kindCount = skirout.editor.v1.presentation.ResourcesLayout.Kind.values().size,
+            unknownInstance = skirout.editor.v1.presentation.ResourcesLayout.UNKNOWN,
+            wrapUnrecognized = { @kotlin.Suppress("DEPRECATION") skirout.editor.v1.presentation.ResourcesLayout.Unknown(skirout.editor.v1.presentation.ResourcesLayout.Kind.UNKNOWN, it) },
+            getUnrecognized = { it._unrecognized },
+        );
+
+    val ResourcesLayoutSerializer = build.skir.internal.makeSerializer(ResourcesLayoutSerializerImpl);
+
+    val ResourceTimelineAppearanceSerializerImpl = build.skir.internal.StructSerializer(
+        recordId = "editor/v1/presentation.skir:ResourceTimelineAppearance",
+        doc = "",
+        defaultInstance = skirout.editor.v1.presentation.ResourceTimelineAppearance.partial(),
+        newMutableFn = { it?.toMutable() ?: skirout.editor.v1.presentation.ResourceTimelineAppearance.Mutable() },
+        toFrozenFn = { it.toFrozen() },
+        getUnrecognizedFields = { it._unrecognizedFields },
+        setUnrecognizedFields = { m, u -> m._unrecognizedFields = u },
+    );
+
+    val ResourceTimelineAppearanceSerializer = build.skir.internal.makeSerializer(ResourceTimelineAppearanceSerializerImpl);
 
     val ResultAppearanceSerializerImpl = build.skir.internal.StructSerializer(
         recordId = "editor/v1/presentation.skir:ResultAppearance",
@@ -40638,6 +41160,18 @@ private object _SerializerRegistry {
 
     val TextStyleOverrideSerializer = build.skir.internal.makeSerializer(TextStyleOverrideSerializerImpl);
 
+    val TimelineResourcesLayoutSerializerImpl = build.skir.internal.StructSerializer(
+        recordId = "editor/v1/presentation.skir:TimelineResourcesLayout",
+        doc = "Places members on a timeline by their timeline placement.",
+        defaultInstance = skirout.editor.v1.presentation.TimelineResourcesLayout.partial(),
+        newMutableFn = { it?.toMutable() ?: skirout.editor.v1.presentation.TimelineResourcesLayout.Mutable() },
+        toFrozenFn = { it.toFrozen() },
+        getUnrecognizedFields = { it._unrecognizedFields },
+        setUnrecognizedFields = { m, u -> m._unrecognizedFields = u },
+    );
+
+    val TimelineResourcesLayoutSerializer = build.skir.internal.makeSerializer(TimelineResourcesLayoutSerializerImpl);
+
     val ToggleControlSerializerImpl = build.skir.internal.StructSerializer(
         recordId = "editor/v1/presentation.skir:ToggleControl",
         doc = "",
@@ -40711,6 +41245,18 @@ private object _SerializerRegistry {
     );
 
     val TooltipElementSerializer = build.skir.internal.makeSerializer(TooltipElementSerializerImpl);
+
+    val TreeResourcesLayoutSerializerImpl = build.skir.internal.StructSerializer(
+        recordId = "editor/v1/presentation.skir:TreeResourcesLayout",
+        doc = "Groups members by the hierarchy path at [path], relative to each member. [group] renders\neach group header with [group_binding_id] bound to a HierarchyGroup value. Dropping a member\nonto a group rewrites its path field.",
+        defaultInstance = skirout.editor.v1.presentation.TreeResourcesLayout.partial(),
+        newMutableFn = { it?.toMutable() ?: skirout.editor.v1.presentation.TreeResourcesLayout.Mutable() },
+        toFrozenFn = { it.toFrozen() },
+        getUnrecognizedFields = { it._unrecognizedFields },
+        setUnrecognizedFields = { m, u -> m._unrecognizedFields = u },
+    );
+
+    val TreeResourcesLayoutSerializer = build.skir.internal.makeSerializer(TreeResourcesLayoutSerializerImpl);
 
     val TypedFieldElementSerializerImpl = build.skir.internal.StructSerializer(
         recordId = "editor/v1/presentation.skir:TypedFieldElement",
@@ -43422,6 +43968,58 @@ private object _SerializerRegistry {
         );
         GatedSearchProviderSerializerImpl.finalizeStruct();
 
+        GraphDirectionSerializerImpl.addConstantVariant(
+            1,
+            "left_to_right",
+            skirout.editor.v1.presentation.GraphDirection.Kind.LEFT_TO_RIGHT_CONST.ordinal,
+            "",
+            skirout.editor.v1.presentation.GraphDirection.LEFT_TO_RIGHT,
+        );
+        GraphDirectionSerializerImpl.addConstantVariant(
+            2,
+            "right_to_left",
+            skirout.editor.v1.presentation.GraphDirection.Kind.RIGHT_TO_LEFT_CONST.ordinal,
+            "",
+            skirout.editor.v1.presentation.GraphDirection.RIGHT_TO_LEFT,
+        );
+        GraphDirectionSerializerImpl.addConstantVariant(
+            3,
+            "top_to_bottom",
+            skirout.editor.v1.presentation.GraphDirection.Kind.TOP_TO_BOTTOM_CONST.ordinal,
+            "",
+            skirout.editor.v1.presentation.GraphDirection.TOP_TO_BOTTOM,
+        );
+        GraphDirectionSerializerImpl.addConstantVariant(
+            4,
+            "bottom_to_top",
+            skirout.editor.v1.presentation.GraphDirection.Kind.BOTTOM_TO_TOP_CONST.ordinal,
+            "",
+            skirout.editor.v1.presentation.GraphDirection.BOTTOM_TO_TOP,
+        );
+        GraphDirectionSerializerImpl.finalizeEnum();
+
+        GraphResourcesLayoutSerializerImpl.addField(
+            "direction",
+            "direction",
+            0,
+            _SerializerRegistry.GraphDirectionSerializer,
+            "",
+            { it.direction },
+            { mut, v -> mut.direction = v },
+        );
+        GraphResourcesLayoutSerializerImpl.addField(
+            "appearance",
+            "appearance",
+            1,
+            build.skir.Serializers.optional(
+                _SerializerRegistry.ResourceGraphAppearanceSerializer,
+            ),
+            "",
+            { it.appearance },
+            { mut, v -> mut.appearance = v },
+        );
+        GraphResourcesLayoutSerializerImpl.finalizeStruct();
+
         GridChildrenElementSerializerImpl.addField(
             "children",
             "children",
@@ -43472,6 +44070,35 @@ private object _SerializerRegistry {
             { mut, v -> mut.verticalSpacing = v },
         );
         GridChildrenLayoutSerializerImpl.finalizeStruct();
+
+        GridResourcesLayoutSerializerImpl.addField(
+            "item_extent",
+            "itemExtent",
+            0,
+            skirout.editor.v1.expression.ExpressionNode.serializer,
+            "",
+            { it.itemExtent },
+            { mut, v -> mut.itemExtent = v },
+        );
+        GridResourcesLayoutSerializerImpl.addField(
+            "aspect_ratio",
+            "aspectRatio",
+            1,
+            skirout.editor.v1.expression.ExpressionNode.serializer,
+            "",
+            { it.aspectRatio },
+            { mut, v -> mut.aspectRatio = v },
+        );
+        GridResourcesLayoutSerializerImpl.addField(
+            "spacing",
+            "spacing",
+            2,
+            skirout.editor.v1.expression.ExpressionNode.serializer,
+            "",
+            { it.spacing },
+            { mut, v -> mut.spacing = v },
+        );
+        GridResourcesLayoutSerializerImpl.finalizeStruct();
 
         HeaderActionConfirmationSerializerImpl.addField(
             "title",
@@ -45490,258 +46117,6 @@ private object _SerializerRegistry {
         );
         PaddingLayoutSerializerImpl.finalizeStruct();
 
-        PageGraphAppearanceSerializerImpl.addField(
-            "cell_size",
-            "cellSize",
-            0,
-            build.skir.Serializers.optional(
-                skirout.editor.v1.expression.ExpressionNode.serializer,
-            ),
-            "",
-            { it.cellSize },
-            { mut, v -> mut.cellSize = v },
-        );
-        PageGraphAppearanceSerializerImpl.addField(
-            "edge_color",
-            "edgeColor",
-            1,
-            build.skir.Serializers.optional(
-                _SerializerRegistry.PresentationColorSerializer,
-            ),
-            "",
-            { it.edgeColor },
-            { mut, v -> mut.edgeColor = v },
-        );
-        PageGraphAppearanceSerializerImpl.addField(
-            "card_padding",
-            "cardPadding",
-            2,
-            build.skir.Serializers.optional(
-                _SerializerRegistry.PresentationInsetsSerializer,
-            ),
-            "",
-            { it.cardPadding },
-            { mut, v -> mut.cardPadding = v },
-        );
-        PageGraphAppearanceSerializerImpl.finalizeStruct();
-
-        PageGraphDirectionSerializerImpl.addConstantVariant(
-            1,
-            "left_to_right",
-            skirout.editor.v1.presentation.PageGraphDirection.Kind.LEFT_TO_RIGHT_CONST.ordinal,
-            "",
-            skirout.editor.v1.presentation.PageGraphDirection.LEFT_TO_RIGHT,
-        );
-        PageGraphDirectionSerializerImpl.addConstantVariant(
-            2,
-            "right_to_left",
-            skirout.editor.v1.presentation.PageGraphDirection.Kind.RIGHT_TO_LEFT_CONST.ordinal,
-            "",
-            skirout.editor.v1.presentation.PageGraphDirection.RIGHT_TO_LEFT,
-        );
-        PageGraphDirectionSerializerImpl.addConstantVariant(
-            3,
-            "top_to_bottom",
-            skirout.editor.v1.presentation.PageGraphDirection.Kind.TOP_TO_BOTTOM_CONST.ordinal,
-            "",
-            skirout.editor.v1.presentation.PageGraphDirection.TOP_TO_BOTTOM,
-        );
-        PageGraphDirectionSerializerImpl.addConstantVariant(
-            4,
-            "bottom_to_top",
-            skirout.editor.v1.presentation.PageGraphDirection.Kind.BOTTOM_TO_TOP_CONST.ordinal,
-            "",
-            skirout.editor.v1.presentation.PageGraphDirection.BOTTOM_TO_TOP,
-        );
-        PageGraphDirectionSerializerImpl.finalizeEnum();
-
-        PageGraphElementSerializerImpl.addField(
-            "control",
-            "control",
-            0,
-            _SerializerRegistry.BoundControlSerializer,
-            "",
-            { it.control },
-            { mut, v -> mut.control = v },
-        );
-        PageGraphElementSerializerImpl.addField(
-            "direction",
-            "direction",
-            1,
-            _SerializerRegistry.PageGraphDirectionSerializer,
-            "",
-            { it.direction },
-            { mut, v -> mut.direction = v },
-        );
-        PageGraphElementSerializerImpl.addField(
-            "appearance",
-            "appearance",
-            2,
-            build.skir.Serializers.optional(
-                _SerializerRegistry.PageGraphAppearanceSerializer,
-            ),
-            "",
-            { it.appearance },
-            { mut, v -> mut.appearance = v },
-        );
-        PageGraphElementSerializerImpl.finalizeStruct();
-
-        PageTimelineAppearanceSerializerImpl.addField(
-            "ruler_height",
-            "rulerHeight",
-            0,
-            build.skir.Serializers.optional(
-                build.skir.Serializers.float64,
-            ),
-            "",
-            { it.rulerHeight },
-            { mut, v -> mut.rulerHeight = v },
-        );
-        PageTimelineAppearanceSerializerImpl.addField(
-            "track_padding",
-            "trackPadding",
-            1,
-            build.skir.Serializers.optional(
-                build.skir.Serializers.float64,
-            ),
-            "",
-            { it.trackPadding },
-            { mut, v -> mut.trackPadding = v },
-        );
-        PageTimelineAppearanceSerializerImpl.addField(
-            "lane_height",
-            "laneHeight",
-            2,
-            build.skir.Serializers.optional(
-                build.skir.Serializers.float64,
-            ),
-            "",
-            { it.laneHeight },
-            { mut, v -> mut.laneHeight = v },
-        );
-        PageTimelineAppearanceSerializerImpl.addField(
-            "lane_gap",
-            "laneGap",
-            3,
-            build.skir.Serializers.optional(
-                build.skir.Serializers.float64,
-            ),
-            "",
-            { it.laneGap },
-            { mut, v -> mut.laneGap = v },
-        );
-        PageTimelineAppearanceSerializerImpl.addField(
-            "header_padding",
-            "headerPadding",
-            4,
-            build.skir.Serializers.optional(
-                build.skir.Serializers.float64,
-            ),
-            "",
-            { it.headerPadding },
-            { mut, v -> mut.headerPadding = v },
-        );
-        PageTimelineAppearanceSerializerImpl.addField(
-            "header_color",
-            "headerColor",
-            5,
-            build.skir.Serializers.optional(
-                _SerializerRegistry.PresentationColorSerializer,
-            ),
-            "",
-            { it.headerColor },
-            { mut, v -> mut.headerColor = v },
-        );
-        PageTimelineAppearanceSerializerImpl.addField(
-            "ruler_color",
-            "rulerColor",
-            6,
-            build.skir.Serializers.optional(
-                _SerializerRegistry.PresentationColorSerializer,
-            ),
-            "",
-            { it.rulerColor },
-            { mut, v -> mut.rulerColor = v },
-        );
-        PageTimelineAppearanceSerializerImpl.addField(
-            "track_color",
-            "trackColor",
-            7,
-            build.skir.Serializers.optional(
-                _SerializerRegistry.PresentationColorSerializer,
-            ),
-            "",
-            { it.trackColor },
-            { mut, v -> mut.trackColor = v },
-        );
-        PageTimelineAppearanceSerializerImpl.addField(
-            "alternate_track_color",
-            "alternateTrackColor",
-            8,
-            build.skir.Serializers.optional(
-                _SerializerRegistry.PresentationColorSerializer,
-            ),
-            "",
-            { it.alternateTrackColor },
-            { mut, v -> mut.alternateTrackColor = v },
-        );
-        PageTimelineAppearanceSerializerImpl.addField(
-            "grid_minor_color",
-            "gridMinorColor",
-            9,
-            build.skir.Serializers.optional(
-                _SerializerRegistry.PresentationColorSerializer,
-            ),
-            "",
-            { it.gridMinorColor },
-            { mut, v -> mut.gridMinorColor = v },
-        );
-        PageTimelineAppearanceSerializerImpl.addField(
-            "grid_major_color",
-            "gridMajorColor",
-            10,
-            build.skir.Serializers.optional(
-                _SerializerRegistry.PresentationColorSerializer,
-            ),
-            "",
-            { it.gridMajorColor },
-            { mut, v -> mut.gridMajorColor = v },
-        );
-        PageTimelineAppearanceSerializerImpl.addField(
-            "text_muted_color",
-            "textMutedColor",
-            11,
-            build.skir.Serializers.optional(
-                _SerializerRegistry.PresentationColorSerializer,
-            ),
-            "",
-            { it.textMutedColor },
-            { mut, v -> mut.textMutedColor = v },
-        );
-        PageTimelineAppearanceSerializerImpl.finalizeStruct();
-
-        PageTimelineElementSerializerImpl.addField(
-            "control",
-            "control",
-            0,
-            _SerializerRegistry.BoundControlSerializer,
-            "",
-            { it.control },
-            { mut, v -> mut.control = v },
-        );
-        PageTimelineElementSerializerImpl.addField(
-            "appearance",
-            "appearance",
-            1,
-            build.skir.Serializers.optional(
-                _SerializerRegistry.PageTimelineAppearanceSerializer,
-            ),
-            "",
-            { it.appearance },
-            { mut, v -> mut.appearance = v },
-        );
-        PageTimelineElementSerializerImpl.finalizeStruct();
-
         PolymorphicControlSerializerImpl.addField(
             "control",
             "control",
@@ -46347,17 +46722,6 @@ private object _SerializerRegistry {
             "",
             { it.projection },
             { mut, v -> mut.projection = v },
-        );
-        PresentationCollectionDefinitionSerializerImpl.addField(
-            "resources",
-            "resources",
-            7,
-            build.skir.Serializers.optional(
-                _SerializerRegistry.PresentationResourceCollectionSerializer,
-            ),
-            "",
-            { it.resources },
-            { mut, v -> mut.resources = v },
         );
         PresentationCollectionDefinitionSerializerImpl.finalizeStruct();
 
@@ -47220,24 +47584,15 @@ private object _SerializerRegistry {
         );
         PresentationElementSerializerImpl.addWrapperVariant(
             57,
-            "page_graph",
-            skirout.editor.v1.presentation.PresentationElement.Kind.PAGE_GRAPH_WRAPPER.ordinal,
-            _SerializerRegistry.PageGraphElementSerializer,
+            "resources",
+            skirout.editor.v1.presentation.PresentationElement.Kind.RESOURCES_WRAPPER.ordinal,
+            _SerializerRegistry.ResourcesElementSerializer,
             "",
-            { skirout.editor.v1.presentation.PresentationElement.PageGraphWrapper(it) },
+            { skirout.editor.v1.presentation.PresentationElement.ResourcesWrapper(it) },
             { it.value },
         );
         PresentationElementSerializerImpl.addWrapperVariant(
             58,
-            "page_timeline",
-            skirout.editor.v1.presentation.PresentationElement.Kind.PAGE_TIMELINE_WRAPPER.ordinal,
-            _SerializerRegistry.PageTimelineElementSerializer,
-            "",
-            { skirout.editor.v1.presentation.PresentationElement.PageTimelineWrapper(it) },
-            { it.value },
-        );
-        PresentationElementSerializerImpl.addWrapperVariant(
-            59,
             "align",
             skirout.editor.v1.presentation.PresentationElement.Kind.ALIGN_WRAPPER.ordinal,
             _SerializerRegistry.AlignmentLayoutSerializer,
@@ -47246,7 +47601,7 @@ private object _SerializerRegistry {
             { it.value },
         );
         PresentationElementSerializerImpl.addWrapperVariant(
-            60,
+            59,
             "appearance_defaults",
             skirout.editor.v1.presentation.PresentationElement.Kind.APPEARANCE_DEFAULTS_WRAPPER.ordinal,
             _SerializerRegistry.AppearanceDefaultsElementSerializer,
@@ -47255,7 +47610,7 @@ private object _SerializerRegistry {
             { it.value },
         );
         PresentationElementSerializerImpl.addWrapperVariant(
-            61,
+            60,
             "part",
             skirout.editor.v1.presentation.PresentationElement.Kind.PART_WRAPPER.ordinal,
             _SerializerRegistry.PresentationPartElementSerializer,
@@ -47496,6 +47851,13 @@ private object _SerializerRegistry {
             "",
             skirout.editor.v1.presentation.PresentationInteractionState.INVALID,
         );
+        PresentationInteractionStateSerializerImpl.addConstantVariant(
+            8,
+            "routed",
+            skirout.editor.v1.presentation.PresentationInteractionState.Kind.ROUTED_CONST.ordinal,
+            "The resource is the one open in the workspace.",
+            skirout.editor.v1.presentation.PresentationInteractionState.ROUTED,
+        );
         PresentationInteractionStateSerializerImpl.finalizeEnum();
 
         PresentationInvocationSerializerImpl.addField(
@@ -47684,37 +48046,6 @@ private object _SerializerRegistry {
             { it.value },
         );
         PresentationRadiusSerializerImpl.finalizeEnum();
-
-        PresentationResourceCollectionSerializerImpl.addField(
-            "root",
-            "root",
-            0,
-            skirout.editor.v1.type_catalog.TypeDefinitionId.serializer,
-            "",
-            { it.root },
-            { mut, v -> mut.root = v },
-        );
-        PresentationResourceCollectionSerializerImpl.addField(
-            "resource_binding_id",
-            "resourceBindingId",
-            1,
-            skirout.editor.v1.type_catalog.ExpressionBindingId.serializer,
-            "",
-            { it.resourceBindingId },
-            { mut, v -> mut.resourceBindingId = v },
-        );
-        PresentationResourceCollectionSerializerImpl.addField(
-            "appearance",
-            "appearance",
-            2,
-            build.skir.Serializers.optional(
-                skirout.editor.v1.type_catalog.PresentationId.serializer,
-            ),
-            "",
-            { it.appearance },
-            { mut, v -> mut.appearance = v },
-        );
-        PresentationResourceCollectionSerializerImpl.finalizeStruct();
 
         PresentationSlotElementSerializerImpl.addField(
             "slot_id",
@@ -48173,6 +48504,260 @@ private object _SerializerRegistry {
             { mut, v -> mut.presentation = v },
         );
         RepeatedElementSerializerImpl.finalizeStruct();
+
+        ResourceGraphAppearanceSerializerImpl.addField(
+            "cell_size",
+            "cellSize",
+            0,
+            build.skir.Serializers.optional(
+                skirout.editor.v1.expression.ExpressionNode.serializer,
+            ),
+            "",
+            { it.cellSize },
+            { mut, v -> mut.cellSize = v },
+        );
+        ResourceGraphAppearanceSerializerImpl.addField(
+            "edge_color",
+            "edgeColor",
+            1,
+            build.skir.Serializers.optional(
+                _SerializerRegistry.PresentationColorSerializer,
+            ),
+            "",
+            { it.edgeColor },
+            { mut, v -> mut.edgeColor = v },
+        );
+        ResourceGraphAppearanceSerializerImpl.addField(
+            "card_padding",
+            "cardPadding",
+            2,
+            build.skir.Serializers.optional(
+                _SerializerRegistry.PresentationInsetsSerializer,
+            ),
+            "",
+            { it.cardPadding },
+            { mut, v -> mut.cardPadding = v },
+        );
+        ResourceGraphAppearanceSerializerImpl.finalizeStruct();
+
+        ResourcesElementSerializerImpl.addField(
+            "control",
+            "control",
+            0,
+            _SerializerRegistry.BoundControlSerializer,
+            "",
+            { it.control },
+            { mut, v -> mut.control = v },
+        );
+        ResourcesElementSerializerImpl.addField(
+            "layout",
+            "layout",
+            1,
+            _SerializerRegistry.ResourcesLayoutSerializer,
+            "",
+            { it.layout },
+            { mut, v -> mut.layout = v },
+        );
+        ResourcesElementSerializerImpl.addField(
+            "order",
+            "order",
+            2,
+            build.skir.Serializers.optional(
+                skirout.editor.v1.expression.ExpressionNode.serializer,
+            ),
+            "",
+            { it.order },
+            { mut, v -> mut.order = v },
+        );
+        ResourcesElementSerializerImpl.addField(
+            "item_binding_id",
+            "itemBindingId",
+            3,
+            skirout.editor.v1.type_catalog.ExpressionBindingId.serializer,
+            "",
+            { it.itemBindingId },
+            { mut, v -> mut.itemBindingId = v },
+        );
+        ResourcesElementSerializerImpl.finalizeStruct();
+
+        ResourcesLayoutSerializerImpl.addWrapperVariant(
+            1,
+            "graph",
+            skirout.editor.v1.presentation.ResourcesLayout.Kind.GRAPH_WRAPPER.ordinal,
+            _SerializerRegistry.GraphResourcesLayoutSerializer,
+            "",
+            { skirout.editor.v1.presentation.ResourcesLayout.GraphWrapper(it) },
+            { it.value },
+        );
+        ResourcesLayoutSerializerImpl.addWrapperVariant(
+            2,
+            "timeline",
+            skirout.editor.v1.presentation.ResourcesLayout.Kind.TIMELINE_WRAPPER.ordinal,
+            _SerializerRegistry.TimelineResourcesLayoutSerializer,
+            "",
+            { skirout.editor.v1.presentation.ResourcesLayout.TimelineWrapper(it) },
+            { it.value },
+        );
+        ResourcesLayoutSerializerImpl.addWrapperVariant(
+            3,
+            "grid",
+            skirout.editor.v1.presentation.ResourcesLayout.Kind.GRID_WRAPPER.ordinal,
+            _SerializerRegistry.GridResourcesLayoutSerializer,
+            "",
+            { skirout.editor.v1.presentation.ResourcesLayout.GridWrapper(it) },
+            { it.value },
+        );
+        ResourcesLayoutSerializerImpl.addWrapperVariant(
+            4,
+            "tree",
+            skirout.editor.v1.presentation.ResourcesLayout.Kind.TREE_WRAPPER.ordinal,
+            _SerializerRegistry.TreeResourcesLayoutSerializer,
+            "",
+            { skirout.editor.v1.presentation.ResourcesLayout.TreeWrapper(it) },
+            { it.value },
+        );
+        ResourcesLayoutSerializerImpl.addConstantVariant(
+            5,
+            "list",
+            skirout.editor.v1.presentation.ResourcesLayout.Kind.LIST_CONST.ordinal,
+            "",
+            skirout.editor.v1.presentation.ResourcesLayout.LIST,
+        );
+        ResourcesLayoutSerializerImpl.finalizeEnum();
+
+        ResourceTimelineAppearanceSerializerImpl.addField(
+            "ruler_height",
+            "rulerHeight",
+            0,
+            build.skir.Serializers.optional(
+                build.skir.Serializers.float64,
+            ),
+            "",
+            { it.rulerHeight },
+            { mut, v -> mut.rulerHeight = v },
+        );
+        ResourceTimelineAppearanceSerializerImpl.addField(
+            "track_padding",
+            "trackPadding",
+            1,
+            build.skir.Serializers.optional(
+                build.skir.Serializers.float64,
+            ),
+            "",
+            { it.trackPadding },
+            { mut, v -> mut.trackPadding = v },
+        );
+        ResourceTimelineAppearanceSerializerImpl.addField(
+            "lane_height",
+            "laneHeight",
+            2,
+            build.skir.Serializers.optional(
+                build.skir.Serializers.float64,
+            ),
+            "",
+            { it.laneHeight },
+            { mut, v -> mut.laneHeight = v },
+        );
+        ResourceTimelineAppearanceSerializerImpl.addField(
+            "lane_gap",
+            "laneGap",
+            3,
+            build.skir.Serializers.optional(
+                build.skir.Serializers.float64,
+            ),
+            "",
+            { it.laneGap },
+            { mut, v -> mut.laneGap = v },
+        );
+        ResourceTimelineAppearanceSerializerImpl.addField(
+            "header_padding",
+            "headerPadding",
+            4,
+            build.skir.Serializers.optional(
+                build.skir.Serializers.float64,
+            ),
+            "",
+            { it.headerPadding },
+            { mut, v -> mut.headerPadding = v },
+        );
+        ResourceTimelineAppearanceSerializerImpl.addField(
+            "header_color",
+            "headerColor",
+            5,
+            build.skir.Serializers.optional(
+                _SerializerRegistry.PresentationColorSerializer,
+            ),
+            "",
+            { it.headerColor },
+            { mut, v -> mut.headerColor = v },
+        );
+        ResourceTimelineAppearanceSerializerImpl.addField(
+            "ruler_color",
+            "rulerColor",
+            6,
+            build.skir.Serializers.optional(
+                _SerializerRegistry.PresentationColorSerializer,
+            ),
+            "",
+            { it.rulerColor },
+            { mut, v -> mut.rulerColor = v },
+        );
+        ResourceTimelineAppearanceSerializerImpl.addField(
+            "track_color",
+            "trackColor",
+            7,
+            build.skir.Serializers.optional(
+                _SerializerRegistry.PresentationColorSerializer,
+            ),
+            "",
+            { it.trackColor },
+            { mut, v -> mut.trackColor = v },
+        );
+        ResourceTimelineAppearanceSerializerImpl.addField(
+            "alternate_track_color",
+            "alternateTrackColor",
+            8,
+            build.skir.Serializers.optional(
+                _SerializerRegistry.PresentationColorSerializer,
+            ),
+            "",
+            { it.alternateTrackColor },
+            { mut, v -> mut.alternateTrackColor = v },
+        );
+        ResourceTimelineAppearanceSerializerImpl.addField(
+            "grid_minor_color",
+            "gridMinorColor",
+            9,
+            build.skir.Serializers.optional(
+                _SerializerRegistry.PresentationColorSerializer,
+            ),
+            "",
+            { it.gridMinorColor },
+            { mut, v -> mut.gridMinorColor = v },
+        );
+        ResourceTimelineAppearanceSerializerImpl.addField(
+            "grid_major_color",
+            "gridMajorColor",
+            10,
+            build.skir.Serializers.optional(
+                _SerializerRegistry.PresentationColorSerializer,
+            ),
+            "",
+            { it.gridMajorColor },
+            { mut, v -> mut.gridMajorColor = v },
+        );
+        ResourceTimelineAppearanceSerializerImpl.addField(
+            "text_muted_color",
+            "textMutedColor",
+            11,
+            build.skir.Serializers.optional(
+                _SerializerRegistry.PresentationColorSerializer,
+            ),
+            "",
+            { it.textMutedColor },
+            { mut, v -> mut.textMutedColor = v },
+        );
+        ResourceTimelineAppearanceSerializerImpl.finalizeStruct();
 
         ResultAppearanceSerializerImpl.addField(
             "style",
@@ -50368,6 +50953,19 @@ private object _SerializerRegistry {
         );
         TextStyleOverrideSerializerImpl.finalizeStruct();
 
+        TimelineResourcesLayoutSerializerImpl.addField(
+            "appearance",
+            "appearance",
+            0,
+            build.skir.Serializers.optional(
+                _SerializerRegistry.ResourceTimelineAppearanceSerializer,
+            ),
+            "",
+            { it.appearance },
+            { mut, v -> mut.appearance = v },
+        );
+        TimelineResourcesLayoutSerializerImpl.finalizeStruct();
+
         ToggleControlSerializerImpl.addField(
             "control",
             "control",
@@ -50588,6 +51186,57 @@ private object _SerializerRegistry {
             { mut, v -> mut.appearance = v },
         );
         TooltipElementSerializerImpl.finalizeStruct();
+
+        TreeResourcesLayoutSerializerImpl.addField(
+            "path",
+            "path",
+            0,
+            skirout.editor.v1.type_catalog.ValuePath.serializer,
+            "",
+            { it.path },
+            { mut, v -> mut.path = v },
+        );
+        TreeResourcesLayoutSerializerImpl.addField(
+            "group",
+            "group",
+            1,
+            build.skir.Serializers.optional(
+                _SerializerRegistry.PresentationNodeSerializer,
+            ),
+            "",
+            { it.group },
+            { mut, v -> mut.group = v },
+        );
+        TreeResourcesLayoutSerializerImpl.addField(
+            "group_binding_id",
+            "groupBindingId",
+            2,
+            skirout.editor.v1.type_catalog.ExpressionBindingId.serializer,
+            "",
+            { it.groupBindingId },
+            { mut, v -> mut.groupBindingId = v },
+        );
+        TreeResourcesLayoutSerializerImpl.addField(
+            "connectors",
+            "connectors",
+            3,
+            build.skir.Serializers.optional(
+                _SerializerRegistry.HierarchySequenceLayoutSerializer,
+            ),
+            "",
+            { it.connectors },
+            { mut, v -> mut.connectors = v },
+        );
+        TreeResourcesLayoutSerializerImpl.addField(
+            "initially_expanded",
+            "initiallyExpanded",
+            4,
+            build.skir.Serializers.bool,
+            "",
+            { it.initiallyExpanded },
+            { mut, v -> mut.initiallyExpanded = v },
+        );
+        TreeResourcesLayoutSerializerImpl.finalizeStruct();
 
         TypedFieldElementSerializerImpl.addField(
             "binding",

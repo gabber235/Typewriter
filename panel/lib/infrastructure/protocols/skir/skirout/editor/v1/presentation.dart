@@ -24764,8 +24764,7 @@ final class TooltipElement_mutable implements TooltipElement_orMutable {
 ///     case PresentationElement_remainingFields(:var value): { ... }
 ///     case PresentationElement_nullableInput(:var value): { ... }
 ///     case PresentationElement_setInput(:var value): { ... }
-///     case PresentationElement_pageGraph(:var value): { ... }
-///     case PresentationElement_pageTimeline(:var value): { ... }
+///     case PresentationElement_resources(:var value): { ... }
 ///     case PresentationElement_align(:var value): { ... }
 ///     case PresentationElement_appearanceDefaults(:var value): { ... }
 ///     case PresentationElement_part(:var value): { ... }
@@ -25939,33 +25938,24 @@ sealed class PresentationElement {
     ),
   );
 
-  /// Create a 'page_graph' variant wrapping around the given value.
-  factory PresentationElement.wrapPageGraph(PageGraphElement value) =>
-      PresentationElement_pageGraphWrapper._(value);
+  /// Create a 'resources' variant wrapping around the given value.
+  factory PresentationElement.wrapResources(ResourcesElement value) =>
+      PresentationElement_resourcesWrapper._(value);
 
-  /// Same as `wrapPageGraph(PageGraphElement(...))`.
-  factory PresentationElement.createPageGraph({
+  /// Same as `wrapResources(ResourcesElement(...))`.
+  factory PresentationElement.createResources({
     required BoundControl_orMutable control,
-    required PageGraphDirection direction,
-    required PageGraphAppearance_orMutable? appearance,
-  }) => PresentationElement.wrapPageGraph(
-    PageGraphElement(
+    required ResourcesLayout layout,
+    required _lib_editor_v1_expression.ExpressionNode? order,
+    required _lib_editor_v1_type_catalog.ExpressionBindingId_orMutable
+    itemBindingId,
+  }) => PresentationElement.wrapResources(
+    ResourcesElement(
       control: control,
-      direction: direction,
-      appearance: appearance,
+      layout: layout,
+      order: order,
+      itemBindingId: itemBindingId,
     ),
-  );
-
-  /// Create a 'page_timeline' variant wrapping around the given value.
-  factory PresentationElement.wrapPageTimeline(PageTimelineElement value) =>
-      PresentationElement_pageTimelineWrapper._(value);
-
-  /// Same as `wrapPageTimeline(PageTimelineElement(...))`.
-  factory PresentationElement.createPageTimeline({
-    required BoundControl_orMutable control,
-    required PageTimelineAppearance_orMutable? appearance,
-  }) => PresentationElement.wrapPageTimeline(
-    PageTimelineElement(control: control, appearance: appearance),
   );
 
   /// Create a 'align' variant wrapping around the given value.
@@ -26573,26 +26563,16 @@ sealed class PresentationElement {
       );
       _serializerBuilder.addWrapperVariant(
         57,
-        "page_graph",
-        "wrapPageGraph",
-        PageGraphElement.serializer,
+        "resources",
+        "wrapResources",
+        ResourcesElement.serializer,
         "",
-        PresentationElement_pageGraphWrapper._,
+        PresentationElement_resourcesWrapper._,
         (it) => it.value,
-        ordinal: PresentationElement_kind.pageGraphWrapper._ordinal,
+        ordinal: PresentationElement_kind.resourcesWrapper._ordinal,
       );
       _serializerBuilder.addWrapperVariant(
         58,
-        "page_timeline",
-        "wrapPageTimeline",
-        PageTimelineElement.serializer,
-        "",
-        PresentationElement_pageTimelineWrapper._,
-        (it) => it.value,
-        ordinal: PresentationElement_kind.pageTimelineWrapper._ordinal,
-      );
-      _serializerBuilder.addWrapperVariant(
-        59,
         "align",
         "wrapAlign",
         AlignmentLayout.serializer,
@@ -26602,7 +26582,7 @@ sealed class PresentationElement {
         ordinal: PresentationElement_kind.alignWrapper._ordinal,
       );
       _serializerBuilder.addWrapperVariant(
-        60,
+        59,
         "appearance_defaults",
         "wrapAppearanceDefaults",
         AppearanceDefaultsElement.serializer,
@@ -26612,7 +26592,7 @@ sealed class PresentationElement {
         ordinal: PresentationElement_kind.appearanceDefaultsWrapper._ordinal,
       );
       _serializerBuilder.addWrapperVariant(
-        61,
+        60,
         "part",
         "wrapPart",
         PresentationPartElement.serializer,
@@ -26697,11 +26677,10 @@ enum PresentationElement_kind {
   remainingFieldsWrapper(54),
   nullableInputWrapper(55),
   setInputWrapper(56),
-  pageGraphWrapper(57),
-  pageTimelineWrapper(58),
-  alignWrapper(59),
-  appearanceDefaultsWrapper(60),
-  partWrapper(61);
+  resourcesWrapper(57),
+  alignWrapper(58),
+  appearanceDefaultsWrapper(59),
+  partWrapper(60);
 
   final _core.int _ordinal;
 
@@ -27336,26 +27315,15 @@ final class PresentationElement_setInputWrapper
   PresentationElement_kind get kind => PresentationElement_kind.setInputWrapper;
 }
 
-final class PresentationElement_pageGraphWrapper
+final class PresentationElement_resourcesWrapper
     extends _PresentationElement_wrapper {
-  final PageGraphElement value;
+  final ResourcesElement value;
 
-  PresentationElement_pageGraphWrapper._(this.value);
+  PresentationElement_resourcesWrapper._(this.value);
 
   @_core.override
   PresentationElement_kind get kind =>
-      PresentationElement_kind.pageGraphWrapper;
-}
-
-final class PresentationElement_pageTimelineWrapper
-    extends _PresentationElement_wrapper {
-  final PageTimelineElement value;
-
-  PresentationElement_pageTimelineWrapper._(this.value);
-
-  @_core.override
-  PresentationElement_kind get kind =>
-      PresentationElement_kind.pageTimelineWrapper;
+      PresentationElement_kind.resourcesWrapper;
 }
 
 final class PresentationElement_alignWrapper
@@ -28140,7 +28108,6 @@ sealed class PresentationCollectionDefinition_orMutable {
   _core.Iterable<PresentationCollectionRelationDefinition_orMutable>
   get relations;
   PresentationCollectionProjection_orMutable? get projection;
-  PresentationResourceCollection_orMutable? get resources;
 
   PresentationCollectionDefinition toFrozen();
 }
@@ -28169,8 +28136,6 @@ final class PresentationCollectionDefinition
   relations;
   @_core.override
   final PresentationCollectionProjection? projection;
-  @_core.override
-  final PresentationResourceCollection? resources;
   _skir.internal__UnrecognizedFields? _u;
 
   factory PresentationCollectionDefinition({
@@ -28183,7 +28148,6 @@ final class PresentationCollectionDefinition
     required _core.Iterable<PresentationCollectionRelationDefinition_orMutable>
     relations,
     required PresentationCollectionProjection_orMutable? projection,
-    required PresentationResourceCollection_orMutable? resources,
   }) => PresentationCollectionDefinition._(
     sourceId,
     rowType,
@@ -28197,7 +28161,6 @@ final class PresentationCollectionDefinition
       (it) => it.toFrozen(),
     ),
     (projection != null) ? projection.toFrozen() : null,
-    (resources != null) ? resources.toFrozen() : null,
   );
 
   PresentationCollectionDefinition._(
@@ -28208,7 +28171,6 @@ final class PresentationCollectionDefinition
     this.selectability,
     this.relations,
     this.projection,
-    this.resources,
   );
 
   /// Default instance with all fields set to their default values.
@@ -28219,7 +28181,6 @@ final class PresentationCollectionDefinition
     _lib_editor_v1_expression.ExpressionNode.unknown,
     _lib_editor_v1_expression.ExpressionNode.unknown,
     _skir.KeyedIterable.empty,
-    null,
     null,
   );
 
@@ -28233,7 +28194,6 @@ final class PresentationCollectionDefinition
         _lib_editor_v1_expression.ExpressionNode.unknown,
         _lib_editor_v1_expression.ExpressionNode.unknown,
         _skir.KeyedIterable.empty,
-        null,
         null,
       );
 
@@ -28252,7 +28212,6 @@ final class PresentationCollectionDefinition
         this.selectability,
         this.relations,
         this.projection,
-        this.resources,
       );
 
   @_core.override
@@ -28276,7 +28235,6 @@ final class PresentationCollectionDefinition
     this.selectability,
     this.relations,
     this.projection,
-    this.resources,
   ];
 
   @_core.override
@@ -28356,15 +28314,6 @@ final class PresentationCollectionDefinition
         (it) => it.projection,
         (it, v) => it.projection = v,
       );
-      _serializerBuilder.addField(
-        "resources",
-        "resources",
-        7,
-        _skir.Serializers.optional(PresentationResourceCollection.serializer),
-        "",
-        (it) => it.resources,
-        (it, v) => it.resources = v,
-      );
       _serializerBuilder.finalize();
     }
     return _serializerBuilder.serializer;
@@ -28391,7 +28340,6 @@ final class PresentationCollectionDefinition_mutable
   _lib_editor_v1_expression.ExpressionNode selectability;
   _core.Iterable<PresentationCollectionRelationDefinition_orMutable> relations;
   PresentationCollectionProjection_orMutable? projection;
-  PresentationResourceCollection_orMutable? resources;
   _skir.internal__UnrecognizedFields? _u;
 
   PresentationCollectionDefinition_mutable._(
@@ -28402,7 +28350,6 @@ final class PresentationCollectionDefinition_mutable
     this.selectability,
     this.relations,
     this.projection,
-    this.resources,
   );
 
   /// If the value of [rowBindingId] is already mutable, returns it as-is.
@@ -28445,7 +28392,6 @@ final class PresentationCollectionDefinition_mutable
         selectability: this.selectability,
         relations: this.relations,
         projection: this.projection,
-        resources: this.resources,
       ).._u = this._u;
 }
 
@@ -28961,199 +28907,6 @@ final class PresentationCollectionProjection_mutable
         resourceBindingId: this.resourceBindingId,
         fields: this.fields,
       ).._u = this._u;
-}
-
-// -----------------------------------------------------------------------------
-// struct PresentationResourceCollection
-// -----------------------------------------------------------------------------
-
-sealed class PresentationResourceCollection_orMutable {
-  _lib_editor_v1_type_catalog.TypeDefinitionId_orMutable get root;
-  _lib_editor_v1_type_catalog.ExpressionBindingId_orMutable
-  get resourceBindingId;
-  _lib_editor_v1_type_catalog.PresentationId_orMutable? get appearance;
-
-  PresentationResourceCollection toFrozen();
-}
-
-/// Deeply immutable.
-final class PresentationResourceCollection
-    implements PresentationResourceCollection_orMutable {
-  @_core.override
-  final _lib_editor_v1_type_catalog.TypeDefinitionId root;
-  @_core.override
-  final _lib_editor_v1_type_catalog.ExpressionBindingId resourceBindingId;
-  @_core.override
-  final _lib_editor_v1_type_catalog.PresentationId? appearance;
-  _skir.internal__UnrecognizedFields? _u;
-
-  factory PresentationResourceCollection({
-    required _lib_editor_v1_type_catalog.TypeDefinitionId_orMutable root,
-    required _lib_editor_v1_type_catalog.ExpressionBindingId_orMutable
-    resourceBindingId,
-    required _lib_editor_v1_type_catalog.PresentationId_orMutable? appearance,
-  }) => PresentationResourceCollection._(
-    root.toFrozen(),
-    resourceBindingId.toFrozen(),
-    (appearance != null) ? appearance.toFrozen() : null,
-  );
-
-  PresentationResourceCollection._(
-    this.root,
-    this.resourceBindingId,
-    this.appearance,
-  );
-
-  /// Default instance with all fields set to their default values.
-  static final defaultInstance = PresentationResourceCollection._(
-    _lib_editor_v1_type_catalog.TypeDefinitionId.defaultInstance,
-    _lib_editor_v1_type_catalog.ExpressionBindingId.defaultInstance,
-    null,
-  );
-
-  /// Returns a new mutable instance.
-  /// Fields are initialized to their default values.
-  static PresentationResourceCollection_mutable mutable() =>
-      PresentationResourceCollection_mutable._(
-        _lib_editor_v1_type_catalog.TypeDefinitionId.defaultInstance,
-        _lib_editor_v1_type_catalog.ExpressionBindingId.defaultInstance,
-        null,
-      );
-
-  /// Returns this instance (no-op).
-  @_core.Deprecated("This instance is already frozen.")
-  @_core.override
-  PresentationResourceCollection toFrozen() => this;
-
-  /// Returns a mutable shallow copy of this instance.
-  PresentationResourceCollection_mutable toMutable() =>
-      PresentationResourceCollection_mutable._(
-        this.root,
-        this.resourceBindingId,
-        this.appearance,
-      );
-
-  @_core.override
-  _core.bool operator ==(other) {
-    if (_core.identical(this, other)) return true;
-    if (other is! PresentationResourceCollection) return false;
-    return _skir.internal__listEquality.equals(
-      _equality_proxy,
-      other._equality_proxy,
-    );
-  }
-
-  @_core.override
-  _core.int get hashCode => _skir.internal__listEquality.hash(_equality_proxy);
-
-  _core.List get _equality_proxy => [
-    this.root,
-    this.resourceBindingId,
-    this.appearance,
-  ];
-
-  @_core.override
-  _core.String toString() => _skir.internal__stringify(this, serializer);
-
-  /// Serializer for `PresentationResourceCollection` instances.
-  static _skir.StructSerializer<
-    PresentationResourceCollection,
-    PresentationResourceCollection_mutable
-  >
-  get serializer {
-    if (_serializerBuilder.mustInitialize()) {
-      _serializerBuilder.addField(
-        "root",
-        "root",
-        0,
-        _lib_editor_v1_type_catalog.TypeDefinitionId.serializer,
-        "",
-        (it) => it.root,
-        (it, v) => it.root = v,
-      );
-      _serializerBuilder.addField(
-        "resource_binding_id",
-        "resourceBindingId",
-        1,
-        _lib_editor_v1_type_catalog.ExpressionBindingId.serializer,
-        "",
-        (it) => it.resourceBindingId,
-        (it, v) => it.resourceBindingId = v,
-      );
-      _serializerBuilder.addField(
-        "appearance",
-        "appearance",
-        2,
-        _skir.Serializers.optional(
-          _lib_editor_v1_type_catalog.PresentationId.serializer,
-        ),
-        "",
-        (it) => it.appearance,
-        (it, v) => it.appearance = v,
-      );
-      _serializerBuilder.finalize();
-    }
-    return _serializerBuilder.serializer;
-  }
-
-  static final _serializerBuilder = _skir.internal__StructSerializerBuilder(
-    recordId: "editor/v1/presentation.skir:PresentationResourceCollection",
-    doc: "",
-    defaultInstance: defaultInstance,
-    newMutable: (it) => (it != null) ? it.toMutable() : mutable(),
-    toFrozen: (PresentationResourceCollection_mutable it) => it.toFrozen(),
-    getUnrecognizedFields: (it) => it._u,
-    setUnrecognizedFields: (it, u) => it._u = u,
-  );
-}
-
-/// Mutable version of [PresentationResourceCollection].
-final class PresentationResourceCollection_mutable
-    implements PresentationResourceCollection_orMutable {
-  _lib_editor_v1_type_catalog.TypeDefinitionId_orMutable root;
-  _lib_editor_v1_type_catalog.ExpressionBindingId_orMutable resourceBindingId;
-  _lib_editor_v1_type_catalog.PresentationId_orMutable? appearance;
-  _skir.internal__UnrecognizedFields? _u;
-
-  PresentationResourceCollection_mutable._(
-    this.root,
-    this.resourceBindingId,
-    this.appearance,
-  );
-
-  /// If the value of [root] is already mutable, returns it as-is.
-  /// Otherwise, makes a mutable copy, assigns it back to [root] and returns it.
-  _lib_editor_v1_type_catalog.TypeDefinitionId_mutable get mutableRoot {
-    final value = this.root;
-    if (value is _lib_editor_v1_type_catalog.TypeDefinitionId_mutable) {
-      return value;
-    } else {
-      return this.root = (value as _lib_editor_v1_type_catalog.TypeDefinitionId)
-          .toMutable();
-    }
-  }
-
-  /// If the value of [resourceBindingId] is already mutable, returns it as-is.
-  /// Otherwise, makes a mutable copy, assigns it back to [resourceBindingId] and returns it.
-  _lib_editor_v1_type_catalog.ExpressionBindingId_mutable
-  get mutableResourceBindingId {
-    final value = this.resourceBindingId;
-    if (value is _lib_editor_v1_type_catalog.ExpressionBindingId_mutable) {
-      return value;
-    } else {
-      return this.resourceBindingId =
-          (value as _lib_editor_v1_type_catalog.ExpressionBindingId)
-              .toMutable();
-    }
-  }
-
-  /// Returns a deeply immutable copy of this instance.
-  @_core.override
-  PresentationResourceCollection toFrozen() => PresentationResourceCollection(
-    root: this.root,
-    resourceBindingId: this.resourceBindingId,
-    appearance: this.appearance,
-  ).._u = this._u;
 }
 
 // -----------------------------------------------------------------------------
@@ -30843,37 +30596,38 @@ final class SetControl_mutable implements SetControl_orMutable {
 }
 
 // -----------------------------------------------------------------------------
-// enum PageGraphDirection
+// enum GraphDirection
 // -----------------------------------------------------------------------------
 
+/// The direction a graph layout flows in, from sources to targets.
+///
 /// To switch on the variants:
 ///   ```
 ///   switch (e) {
-///     case PageGraphDirection_unknown(): { ... }
-///     case PageGraphDirection.leftToRight: { ... }
-///     case PageGraphDirection.rightToLeft: { ... }
-///     case PageGraphDirection.topToBottom: { ... }
-///     case PageGraphDirection.bottomToTop: { ... }
+///     case GraphDirection_unknown(): { ... }
+///     case GraphDirection.leftToRight: { ... }
+///     case GraphDirection.rightToLeft: { ... }
+///     case GraphDirection.topToBottom: { ... }
+///     case GraphDirection.bottomToTop: { ... }
 ///   }
 ///   ```
 ///
 /// Deeply immutable.
-sealed class PageGraphDirection {
-  /// Constant indicating an unknown `PageGraphDirection`.
-  /// Default value for fields of type `PageGraphDirection`.
-  static const PageGraphDirection unknown =
-      PageGraphDirection_unknown._instance;
+sealed class GraphDirection {
+  /// Constant indicating an unknown `GraphDirection`.
+  /// Default value for fields of type `GraphDirection`.
+  static const GraphDirection unknown = GraphDirection_unknown._instance;
 
-  static const leftToRight = _PageGraphDirection_consts.leftToRightConst;
-  static const rightToLeft = _PageGraphDirection_consts.rightToLeftConst;
-  static const topToBottom = _PageGraphDirection_consts.topToBottomConst;
-  static const bottomToTop = _PageGraphDirection_consts.bottomToTopConst;
+  static const leftToRight = _GraphDirection_consts.leftToRightConst;
+  static const rightToLeft = _GraphDirection_consts.rightToLeftConst;
+  static const topToBottom = _GraphDirection_consts.topToBottomConst;
+  static const bottomToTop = _GraphDirection_consts.bottomToTopConst;
 
-  /// Returns the kind of variant held by this PageGraphDirection.
-  PageGraphDirection_kind get kind;
+  /// Returns the kind of variant held by this GraphDirection.
+  GraphDirection_kind get kind;
 
-  /// Serializer for `PageGraphDirection` instances.
-  static _skir.EnumSerializer<PageGraphDirection> get serializer {
+  /// Serializer for `GraphDirection` instances.
+  static _skir.EnumSerializer<GraphDirection> get serializer {
     if (_serializerBuilder.mustInitialize()) {
       _serializerBuilder.addConstantVariant(
         1,
@@ -30910,18 +30664,18 @@ sealed class PageGraphDirection {
 
   static final _serializerBuilder = _skir.internal__EnumSerializerBuilder
       .create(
-        recordId: "editor/v1/presentation.skir:PageGraphDirection",
-        doc: "",
-        unknownInstance: PageGraphDirection_unknown._instance,
-        enumInstance: PageGraphDirection.unknown,
+        recordId: "editor/v1/presentation.skir:GraphDirection",
+        doc: "The direction a graph layout flows in, from sources to targets.",
+        unknownInstance: GraphDirection_unknown._instance,
+        enumInstance: GraphDirection.unknown,
         getOrdinal: (it) => it.kind._ordinal,
-        wrapUnrecognized: PageGraphDirection_unknown._unrecognized,
+        wrapUnrecognized: GraphDirection_unknown._unrecognized,
         getUnrecognized: (it) => it._u,
       );
 }
 
-/// The kind of variant held by a `PageGraphDirection`.
-enum PageGraphDirection_kind {
+/// The kind of variant held by a `GraphDirection`.
+enum GraphDirection_kind {
   unknown(0),
   leftToRightConst(1),
   rightToLeftConst(2),
@@ -30930,106 +30684,123 @@ enum PageGraphDirection_kind {
 
   final _core.int _ordinal;
 
-  const PageGraphDirection_kind(this._ordinal);
+  const GraphDirection_kind(this._ordinal);
 }
 
-final class PageGraphDirection_unknown implements PageGraphDirection {
-  static const _instance = PageGraphDirection_unknown._();
+final class GraphDirection_unknown implements GraphDirection {
+  static const _instance = GraphDirection_unknown._();
 
   final _skir.internal__UnrecognizedVariant? _u;
 
-  const PageGraphDirection_unknown._() : _u = null;
-  PageGraphDirection_unknown._unrecognized(this._u);
+  const GraphDirection_unknown._() : _u = null;
+  GraphDirection_unknown._unrecognized(this._u);
 
   @_core.override
-  PageGraphDirection_kind get kind => PageGraphDirection_kind.unknown;
+  GraphDirection_kind get kind => GraphDirection_kind.unknown;
   @_core.override
-  _core.bool operator ==(other) => other is PageGraphDirection_unknown;
+  _core.bool operator ==(other) => other is GraphDirection_unknown;
   @_core.override
   _core.int get hashCode => 8118964;
   @_core.override
   _core.String toString() =>
-      _skir.internal__stringify(this, PageGraphDirection.serializer);
+      _skir.internal__stringify(this, GraphDirection.serializer);
 }
 
-enum _PageGraphDirection_consts implements PageGraphDirection {
-  leftToRightConst(PageGraphDirection_kind.leftToRightConst),
-  rightToLeftConst(PageGraphDirection_kind.rightToLeftConst),
-  topToBottomConst(PageGraphDirection_kind.topToBottomConst),
-  bottomToTopConst(PageGraphDirection_kind.bottomToTopConst);
+enum _GraphDirection_consts implements GraphDirection {
+  leftToRightConst(GraphDirection_kind.leftToRightConst),
+  rightToLeftConst(GraphDirection_kind.rightToLeftConst),
+  topToBottomConst(GraphDirection_kind.topToBottomConst),
+  bottomToTopConst(GraphDirection_kind.bottomToTopConst);
 
   @_core.override
-  final PageGraphDirection_kind kind;
+  final GraphDirection_kind kind;
 
-  const _PageGraphDirection_consts(this.kind);
+  const _GraphDirection_consts(this.kind);
 
   @_core.override
   _core.String toString() =>
-      _skir.internal__stringify(this, PageGraphDirection.serializer);
+      _skir.internal__stringify(this, GraphDirection.serializer);
 }
 
 // -----------------------------------------------------------------------------
-// struct PageGraphElement
+// struct ResourcesElement
 // -----------------------------------------------------------------------------
 
-sealed class PageGraphElement_orMutable {
+sealed class ResourcesElement_orMutable {
   BoundControl_orMutable get control;
-  PageGraphDirection get direction;
-  PageGraphAppearance_orMutable? get appearance;
+  ResourcesLayout get layout;
+  _lib_editor_v1_expression.ExpressionNode? get order;
+  _lib_editor_v1_type_catalog.ExpressionBindingId_orMutable get itemBindingId;
 
-  PageGraphElement toFrozen();
+  ResourcesElement toFrozen();
 }
 
+/// Lays out the resources of a bound link field, such as the elements of a page or the books
+/// of the library. Every member renders through its item presentation. Adding and removing
+/// members edits the link. `order` is evaluated with `item_binding_id` bound to each member's
+/// link and sorts the members by its result; without it members keep link order.
+///
 /// Deeply immutable.
-final class PageGraphElement implements PageGraphElement_orMutable {
+final class ResourcesElement implements ResourcesElement_orMutable {
   @_core.override
   final BoundControl control;
   @_core.override
-  final PageGraphDirection direction;
+  final ResourcesLayout layout;
   @_core.override
-  final PageGraphAppearance? appearance;
+  final _lib_editor_v1_expression.ExpressionNode? order;
+  @_core.override
+  final _lib_editor_v1_type_catalog.ExpressionBindingId itemBindingId;
   _skir.internal__UnrecognizedFields? _u;
 
-  factory PageGraphElement({
+  factory ResourcesElement({
     required BoundControl_orMutable control,
-    required PageGraphDirection direction,
-    required PageGraphAppearance_orMutable? appearance,
-  }) => PageGraphElement._(
+    required ResourcesLayout layout,
+    required _lib_editor_v1_expression.ExpressionNode? order,
+    required _lib_editor_v1_type_catalog.ExpressionBindingId_orMutable
+    itemBindingId,
+  }) => ResourcesElement._(
     control.toFrozen(),
-    direction,
-    (appearance != null) ? appearance.toFrozen() : null,
+    layout,
+    order,
+    itemBindingId.toFrozen(),
   );
 
-  PageGraphElement._(this.control, this.direction, this.appearance);
+  ResourcesElement._(this.control, this.layout, this.order, this.itemBindingId);
 
   /// Default instance with all fields set to their default values.
-  static final defaultInstance = PageGraphElement._(
+  static final defaultInstance = ResourcesElement._(
     BoundControl.defaultInstance,
-    PageGraphDirection.unknown,
+    ResourcesLayout.unknown,
     null,
+    _lib_editor_v1_type_catalog.ExpressionBindingId.defaultInstance,
   );
 
   /// Returns a new mutable instance.
   /// Fields are initialized to their default values.
-  static PageGraphElement_mutable mutable() => PageGraphElement_mutable._(
+  static ResourcesElement_mutable mutable() => ResourcesElement_mutable._(
     BoundControl.defaultInstance,
-    PageGraphDirection.unknown,
+    ResourcesLayout.unknown,
     null,
+    _lib_editor_v1_type_catalog.ExpressionBindingId.defaultInstance,
   );
 
   /// Returns this instance (no-op).
   @_core.Deprecated("This instance is already frozen.")
   @_core.override
-  PageGraphElement toFrozen() => this;
+  ResourcesElement toFrozen() => this;
 
   /// Returns a mutable shallow copy of this instance.
-  PageGraphElement_mutable toMutable() =>
-      PageGraphElement_mutable._(this.control, this.direction, this.appearance);
+  ResourcesElement_mutable toMutable() => ResourcesElement_mutable._(
+    this.control,
+    this.layout,
+    this.order,
+    this.itemBindingId,
+  );
 
   @_core.override
   _core.bool operator ==(other) {
     if (_core.identical(this, other)) return true;
-    if (other is! PageGraphElement) return false;
+    if (other is! ResourcesElement) return false;
     return _skir.internal__listEquality.equals(
       _equality_proxy,
       other._equality_proxy,
@@ -31041,15 +30812,16 @@ final class PageGraphElement implements PageGraphElement_orMutable {
 
   _core.List get _equality_proxy => [
     this.control,
-    this.direction,
-    this.appearance,
+    this.layout,
+    this.order,
+    this.itemBindingId,
   ];
 
   @_core.override
   _core.String toString() => _skir.internal__stringify(this, serializer);
 
-  /// Serializer for `PageGraphElement` instances.
-  static _skir.StructSerializer<PageGraphElement, PageGraphElement_mutable>
+  /// Serializer for `ResourcesElement` instances.
+  static _skir.StructSerializer<ResourcesElement, ResourcesElement_mutable>
   get serializer {
     if (_serializerBuilder.mustInitialize()) {
       _serializerBuilder.addField(
@@ -31062,22 +30834,33 @@ final class PageGraphElement implements PageGraphElement_orMutable {
         (it, v) => it.control = v,
       );
       _serializerBuilder.addField(
-        "direction",
-        "direction",
+        "layout",
+        "layout",
         1,
-        PageGraphDirection.serializer,
+        ResourcesLayout.serializer,
         "",
-        (it) => it.direction,
-        (it, v) => it.direction = v,
+        (it) => it.layout,
+        (it, v) => it.layout = v,
       );
       _serializerBuilder.addField(
-        "appearance",
-        "appearance",
+        "order",
+        "order",
         2,
-        _skir.Serializers.optional(PageGraphAppearance.serializer),
+        _skir.Serializers.optional(
+          _lib_editor_v1_expression.ExpressionNode.serializer,
+        ),
         "",
-        (it) => it.appearance,
-        (it, v) => it.appearance = v,
+        (it) => it.order,
+        (it, v) => it.order = v,
+      );
+      _serializerBuilder.addField(
+        "item_binding_id",
+        "itemBindingId",
+        3,
+        _lib_editor_v1_type_catalog.ExpressionBindingId.serializer,
+        "",
+        (it) => it.itemBindingId,
+        (it, v) => it.itemBindingId = v,
       );
       _serializerBuilder.finalize();
     }
@@ -31085,156 +30868,304 @@ final class PageGraphElement implements PageGraphElement_orMutable {
   }
 
   static final _serializerBuilder = _skir.internal__StructSerializerBuilder(
-    recordId: "editor/v1/presentation.skir:PageGraphElement",
-    doc: "",
+    recordId: "editor/v1/presentation.skir:ResourcesElement",
+    doc: "Lays out the resources of a bound link field, such as the elements of a page or the books\nof the library. Every member renders through its item presentation. Adding and removing\nmembers edits the link. [order] is evaluated with [item_binding_id] bound to each member's\nlink and sorts the members by its result; without it members keep link order.",
     defaultInstance: defaultInstance,
     newMutable: (it) => (it != null) ? it.toMutable() : mutable(),
-    toFrozen: (PageGraphElement_mutable it) => it.toFrozen(),
+    toFrozen: (ResourcesElement_mutable it) => it.toFrozen(),
     getUnrecognizedFields: (it) => it._u,
     setUnrecognizedFields: (it, u) => it._u = u,
   );
 }
 
-/// Mutable version of [PageGraphElement].
-final class PageGraphElement_mutable implements PageGraphElement_orMutable {
+/// Mutable version of [ResourcesElement].
+final class ResourcesElement_mutable implements ResourcesElement_orMutable {
   BoundControl_orMutable control;
-  PageGraphDirection direction;
-  PageGraphAppearance_orMutable? appearance;
+  ResourcesLayout layout;
+  _lib_editor_v1_expression.ExpressionNode? order;
+  _lib_editor_v1_type_catalog.ExpressionBindingId_orMutable itemBindingId;
   _skir.internal__UnrecognizedFields? _u;
 
-  PageGraphElement_mutable._(this.control, this.direction, this.appearance);
+  ResourcesElement_mutable._(
+    this.control,
+    this.layout,
+    this.order,
+    this.itemBindingId,
+  );
+
+  /// If the value of [itemBindingId] is already mutable, returns it as-is.
+  /// Otherwise, makes a mutable copy, assigns it back to [itemBindingId] and returns it.
+  _lib_editor_v1_type_catalog.ExpressionBindingId_mutable
+  get mutableItemBindingId {
+    final value = this.itemBindingId;
+    if (value is _lib_editor_v1_type_catalog.ExpressionBindingId_mutable) {
+      return value;
+    } else {
+      return this.itemBindingId =
+          (value as _lib_editor_v1_type_catalog.ExpressionBindingId)
+              .toMutable();
+    }
+  }
 
   /// Returns a deeply immutable copy of this instance.
   @_core.override
-  PageGraphElement toFrozen() => PageGraphElement(
+  ResourcesElement toFrozen() => ResourcesElement(
     control: this.control,
-    direction: this.direction,
-    appearance: this.appearance,
+    layout: this.layout,
+    order: this.order,
+    itemBindingId: this.itemBindingId,
   ).._u = this._u;
 }
 
 // -----------------------------------------------------------------------------
-// struct PageTimelineElement
+// enum ResourcesLayout
 // -----------------------------------------------------------------------------
 
-sealed class PageTimelineElement_orMutable {
-  BoundControl_orMutable get control;
-  PageTimelineAppearance_orMutable? get appearance;
-
-  PageTimelineElement toFrozen();
-}
-
+/// How a resources element arranges its members.
+///
+/// To switch on the variants:
+///   ```
+///   switch (e) {
+///     case ResourcesLayout_unknown(): { ... }
+///     case ResourcesLayout.list: { ... }
+///     case ResourcesLayout_graph(:var value): { ... }
+///     case ResourcesLayout_timeline(:var value): { ... }
+///     case ResourcesLayout_grid(:var value): { ... }
+///     case ResourcesLayout_tree(:var value): { ... }
+///   }
+///   ```
+///
 /// Deeply immutable.
-final class PageTimelineElement implements PageTimelineElement_orMutable {
-  @_core.override
-  final BoundControl control;
-  @_core.override
-  final PageTimelineAppearance? appearance;
-  _skir.internal__UnrecognizedFields? _u;
+sealed class ResourcesLayout {
+  /// Constant indicating an unknown `ResourcesLayout`.
+  /// Default value for fields of type `ResourcesLayout`.
+  static const ResourcesLayout unknown = ResourcesLayout_unknown._instance;
 
-  factory PageTimelineElement({
-    required BoundControl_orMutable control,
-    required PageTimelineAppearance_orMutable? appearance,
-  }) => PageTimelineElement._(
-    control.toFrozen(),
-    (appearance != null) ? appearance.toFrozen() : null,
+  static const list = _ResourcesLayout_consts.listConst;
+
+  /// Create a 'graph' variant wrapping around the given value.
+  factory ResourcesLayout.wrapGraph(GraphResourcesLayout value) =>
+      ResourcesLayout_graphWrapper._(value);
+
+  /// Same as `wrapGraph(GraphResourcesLayout(...))`.
+  factory ResourcesLayout.createGraph({
+    required GraphDirection direction,
+    required ResourceGraphAppearance_orMutable? appearance,
+  }) => ResourcesLayout.wrapGraph(
+    GraphResourcesLayout(direction: direction, appearance: appearance),
   );
 
-  PageTimelineElement._(this.control, this.appearance);
+  /// Create a 'timeline' variant wrapping around the given value.
+  factory ResourcesLayout.wrapTimeline(TimelineResourcesLayout value) =>
+      ResourcesLayout_timelineWrapper._(value);
 
-  /// Default instance with all fields set to their default values.
-  static final defaultInstance = PageTimelineElement._(
-    BoundControl.defaultInstance,
-    null,
+  /// Same as `wrapTimeline(TimelineResourcesLayout(...))`.
+  factory ResourcesLayout.createTimeline({
+    required ResourceTimelineAppearance_orMutable? appearance,
+  }) => ResourcesLayout.wrapTimeline(
+    TimelineResourcesLayout(appearance: appearance),
   );
 
-  /// Returns a new mutable instance.
-  /// Fields are initialized to their default values.
-  static PageTimelineElement_mutable mutable() =>
-      PageTimelineElement_mutable._(BoundControl.defaultInstance, null);
+  /// Create a 'grid' variant wrapping around the given value.
+  factory ResourcesLayout.wrapGrid(GridResourcesLayout value) =>
+      ResourcesLayout_gridWrapper._(value);
 
-  /// Returns this instance (no-op).
-  @_core.Deprecated("This instance is already frozen.")
-  @_core.override
-  PageTimelineElement toFrozen() => this;
+  /// Same as `wrapGrid(GridResourcesLayout(...))`.
+  factory ResourcesLayout.createGrid({
+    required _lib_editor_v1_expression.ExpressionNode itemExtent,
+    required _lib_editor_v1_expression.ExpressionNode aspectRatio,
+    required _lib_editor_v1_expression.ExpressionNode spacing,
+  }) => ResourcesLayout.wrapGrid(
+    GridResourcesLayout(
+      itemExtent: itemExtent,
+      aspectRatio: aspectRatio,
+      spacing: spacing,
+    ),
+  );
 
-  /// Returns a mutable shallow copy of this instance.
-  PageTimelineElement_mutable toMutable() =>
-      PageTimelineElement_mutable._(this.control, this.appearance);
+  /// Create a 'tree' variant wrapping around the given value.
+  factory ResourcesLayout.wrapTree(TreeResourcesLayout value) =>
+      ResourcesLayout_treeWrapper._(value);
 
-  @_core.override
-  _core.bool operator ==(other) {
-    if (_core.identical(this, other)) return true;
-    if (other is! PageTimelineElement) return false;
-    return _skir.internal__listEquality.equals(
-      _equality_proxy,
-      other._equality_proxy,
-    );
-  }
+  /// Same as `wrapTree(TreeResourcesLayout(...))`.
+  factory ResourcesLayout.createTree({
+    required _lib_editor_v1_type_catalog.ValuePath_orMutable path,
+    required PresentationNode_orMutable? group,
+    required _lib_editor_v1_type_catalog.ExpressionBindingId_orMutable
+    groupBindingId,
+    required HierarchySequenceLayout_orMutable? connectors,
+    required _core.bool initiallyExpanded,
+  }) => ResourcesLayout.wrapTree(
+    TreeResourcesLayout(
+      path: path,
+      group: group,
+      groupBindingId: groupBindingId,
+      connectors: connectors,
+      initiallyExpanded: initiallyExpanded,
+    ),
+  );
 
-  @_core.override
-  _core.int get hashCode => _skir.internal__listEquality.hash(_equality_proxy);
+  /// Returns the kind of variant held by this ResourcesLayout.
+  ResourcesLayout_kind get kind;
 
-  _core.List get _equality_proxy => [this.control, this.appearance];
-
-  @_core.override
-  _core.String toString() => _skir.internal__stringify(this, serializer);
-
-  /// Serializer for `PageTimelineElement` instances.
-  static _skir.StructSerializer<
-    PageTimelineElement,
-    PageTimelineElement_mutable
-  >
-  get serializer {
+  /// Serializer for `ResourcesLayout` instances.
+  static _skir.EnumSerializer<ResourcesLayout> get serializer {
     if (_serializerBuilder.mustInitialize()) {
-      _serializerBuilder.addField(
-        "control",
-        "control",
-        0,
-        BoundControl.serializer,
-        "",
-        (it) => it.control,
-        (it, v) => it.control = v,
-      );
-      _serializerBuilder.addField(
-        "appearance",
-        "appearance",
+      _serializerBuilder.addConstantVariant(5, "list", "list", "", list);
+      _serializerBuilder.addWrapperVariant(
         1,
-        _skir.Serializers.optional(PageTimelineAppearance.serializer),
+        "graph",
+        "wrapGraph",
+        GraphResourcesLayout.serializer,
         "",
-        (it) => it.appearance,
-        (it, v) => it.appearance = v,
+        ResourcesLayout_graphWrapper._,
+        (it) => it.value,
+        ordinal: ResourcesLayout_kind.graphWrapper._ordinal,
+      );
+      _serializerBuilder.addWrapperVariant(
+        2,
+        "timeline",
+        "wrapTimeline",
+        TimelineResourcesLayout.serializer,
+        "",
+        ResourcesLayout_timelineWrapper._,
+        (it) => it.value,
+        ordinal: ResourcesLayout_kind.timelineWrapper._ordinal,
+      );
+      _serializerBuilder.addWrapperVariant(
+        3,
+        "grid",
+        "wrapGrid",
+        GridResourcesLayout.serializer,
+        "",
+        ResourcesLayout_gridWrapper._,
+        (it) => it.value,
+        ordinal: ResourcesLayout_kind.gridWrapper._ordinal,
+      );
+      _serializerBuilder.addWrapperVariant(
+        4,
+        "tree",
+        "wrapTree",
+        TreeResourcesLayout.serializer,
+        "",
+        ResourcesLayout_treeWrapper._,
+        (it) => it.value,
+        ordinal: ResourcesLayout_kind.treeWrapper._ordinal,
       );
       _serializerBuilder.finalize();
     }
     return _serializerBuilder.serializer;
   }
 
-  static final _serializerBuilder = _skir.internal__StructSerializerBuilder(
-    recordId: "editor/v1/presentation.skir:PageTimelineElement",
-    doc: "",
-    defaultInstance: defaultInstance,
-    newMutable: (it) => (it != null) ? it.toMutable() : mutable(),
-    toFrozen: (PageTimelineElement_mutable it) => it.toFrozen(),
-    getUnrecognizedFields: (it) => it._u,
-    setUnrecognizedFields: (it, u) => it._u = u,
-  );
+  static final _serializerBuilder = _skir.internal__EnumSerializerBuilder
+      .create(
+        recordId: "editor/v1/presentation.skir:ResourcesLayout",
+        doc: "How a resources element arranges its members.",
+        unknownInstance: ResourcesLayout_unknown._instance,
+        enumInstance: ResourcesLayout.unknown,
+        getOrdinal: (it) => it.kind._ordinal,
+        wrapUnrecognized: ResourcesLayout_unknown._unrecognized,
+        getUnrecognized: (it) => it._u,
+      );
 }
 
-/// Mutable version of [PageTimelineElement].
-final class PageTimelineElement_mutable
-    implements PageTimelineElement_orMutable {
-  BoundControl_orMutable control;
-  PageTimelineAppearance_orMutable? appearance;
-  _skir.internal__UnrecognizedFields? _u;
+/// The kind of variant held by a `ResourcesLayout`.
+enum ResourcesLayout_kind {
+  unknown(0),
+  listConst(1),
+  graphWrapper(2),
+  timelineWrapper(3),
+  gridWrapper(4),
+  treeWrapper(5);
 
-  PageTimelineElement_mutable._(this.control, this.appearance);
+  final _core.int _ordinal;
 
-  /// Returns a deeply immutable copy of this instance.
+  const ResourcesLayout_kind(this._ordinal);
+}
+
+final class ResourcesLayout_unknown implements ResourcesLayout {
+  static const _instance = ResourcesLayout_unknown._();
+
+  final _skir.internal__UnrecognizedVariant? _u;
+
+  const ResourcesLayout_unknown._() : _u = null;
+  ResourcesLayout_unknown._unrecognized(this._u);
+
   @_core.override
-  PageTimelineElement toFrozen() =>
-      PageTimelineElement(control: this.control, appearance: this.appearance)
-        .._u = this._u;
+  ResourcesLayout_kind get kind => ResourcesLayout_kind.unknown;
+  @_core.override
+  _core.bool operator ==(other) => other is ResourcesLayout_unknown;
+  @_core.override
+  _core.int get hashCode => 8118964;
+  @_core.override
+  _core.String toString() =>
+      _skir.internal__stringify(this, ResourcesLayout.serializer);
+}
+
+enum _ResourcesLayout_consts implements ResourcesLayout {
+  listConst(ResourcesLayout_kind.listConst);
+
+  @_core.override
+  final ResourcesLayout_kind kind;
+
+  const _ResourcesLayout_consts(this.kind);
+
+  @_core.override
+  _core.String toString() =>
+      _skir.internal__stringify(this, ResourcesLayout.serializer);
+}
+
+sealed class _ResourcesLayout_wrapper implements ResourcesLayout {
+  _core.dynamic get value;
+
+  @_core.override
+  _core.bool operator ==(other) {
+    if (other is! _ResourcesLayout_wrapper) return false;
+    return kind == other.kind && value == other.value;
+  }
+
+  @_core.override
+  _core.int get hashCode => (kind._ordinal * 31) ^ value.hashCode;
+
+  @_core.override
+  _core.String toString() =>
+      _skir.internal__stringify(this, ResourcesLayout.serializer);
+}
+
+final class ResourcesLayout_graphWrapper extends _ResourcesLayout_wrapper {
+  final GraphResourcesLayout value;
+
+  ResourcesLayout_graphWrapper._(this.value);
+
+  @_core.override
+  ResourcesLayout_kind get kind => ResourcesLayout_kind.graphWrapper;
+}
+
+final class ResourcesLayout_timelineWrapper extends _ResourcesLayout_wrapper {
+  final TimelineResourcesLayout value;
+
+  ResourcesLayout_timelineWrapper._(this.value);
+
+  @_core.override
+  ResourcesLayout_kind get kind => ResourcesLayout_kind.timelineWrapper;
+}
+
+final class ResourcesLayout_gridWrapper extends _ResourcesLayout_wrapper {
+  final GridResourcesLayout value;
+
+  ResourcesLayout_gridWrapper._(this.value);
+
+  @_core.override
+  ResourcesLayout_kind get kind => ResourcesLayout_kind.gridWrapper;
+}
+
+final class ResourcesLayout_treeWrapper extends _ResourcesLayout_wrapper {
+  final TreeResourcesLayout value;
+
+  ResourcesLayout_treeWrapper._(this.value);
+
+  @_core.override
+  ResourcesLayout_kind get kind => ResourcesLayout_kind.treeWrapper;
 }
 
 // -----------------------------------------------------------------------------
@@ -31509,6 +31440,7 @@ final class TextSizing_fitWrapper extends _TextSizing_wrapper {
 ///     case PresentationInteractionState.disabled: { ... }
 ///     case PresentationInteractionState.readOnly: { ... }
 ///     case PresentationInteractionState.invalid: { ... }
+///     case PresentationInteractionState.routed: { ... }
 ///   }
 ///   ```
 ///
@@ -31526,6 +31458,9 @@ sealed class PresentationInteractionState {
   static const disabled = _PresentationInteractionState_consts.disabledConst;
   static const readOnly = _PresentationInteractionState_consts.readOnlyConst;
   static const invalid = _PresentationInteractionState_consts.invalidConst;
+
+  /// The resource is the one open in the workspace.
+  static const routed = _PresentationInteractionState_consts.routedConst;
 
   /// Returns the kind of variant held by this PresentationInteractionState.
   PresentationInteractionState_kind get kind;
@@ -31582,6 +31517,13 @@ sealed class PresentationInteractionState {
         "",
         invalid,
       );
+      _serializerBuilder.addConstantVariant(
+        8,
+        "routed",
+        "routed",
+        "The resource is the one open in the workspace.",
+        routed,
+      );
       _serializerBuilder.finalize();
     }
     return _serializerBuilder.serializer;
@@ -31608,7 +31550,8 @@ enum PresentationInteractionState_kind {
   pressedConst(4),
   disabledConst(5),
   readOnlyConst(6),
-  invalidConst(7);
+  invalidConst(7),
+  routedConst(8);
 
   final _core.int _ordinal;
 
@@ -31645,7 +31588,8 @@ enum _PresentationInteractionState_consts
   pressedConst(PresentationInteractionState_kind.pressedConst),
   disabledConst(PresentationInteractionState_kind.disabledConst),
   readOnlyConst(PresentationInteractionState_kind.readOnlyConst),
-  invalidConst(PresentationInteractionState_kind.invalidConst);
+  invalidConst(PresentationInteractionState_kind.invalidConst),
+  routedConst(PresentationInteractionState_kind.routedConst);
 
   @_core.override
   final PresentationInteractionState_kind kind;
@@ -41139,19 +41083,20 @@ final class CollectionContent_mutable implements CollectionContent_orMutable {
 }
 
 // -----------------------------------------------------------------------------
-// struct PageGraphAppearance
+// struct ResourceGraphAppearance
 // -----------------------------------------------------------------------------
 
-sealed class PageGraphAppearance_orMutable {
+sealed class ResourceGraphAppearance_orMutable {
   _lib_editor_v1_expression.ExpressionNode? get cellSize;
   PresentationColor? get edgeColor;
   PresentationInsets? get cardPadding;
 
-  PageGraphAppearance toFrozen();
+  ResourceGraphAppearance toFrozen();
 }
 
 /// Deeply immutable.
-final class PageGraphAppearance implements PageGraphAppearance_orMutable {
+final class ResourceGraphAppearance
+    implements ResourceGraphAppearance_orMutable {
   @_core.override
   final _lib_editor_v1_expression.ExpressionNode? cellSize;
   @_core.override
@@ -41160,38 +41105,39 @@ final class PageGraphAppearance implements PageGraphAppearance_orMutable {
   final PresentationInsets? cardPadding;
   _skir.internal__UnrecognizedFields? _u;
 
-  factory PageGraphAppearance({
+  factory ResourceGraphAppearance({
     required _lib_editor_v1_expression.ExpressionNode? cellSize,
     required PresentationColor? edgeColor,
     required PresentationInsets? cardPadding,
-  }) => PageGraphAppearance._(cellSize, edgeColor, cardPadding);
+  }) => ResourceGraphAppearance._(cellSize, edgeColor, cardPadding);
 
-  PageGraphAppearance._(this.cellSize, this.edgeColor, this.cardPadding);
+  ResourceGraphAppearance._(this.cellSize, this.edgeColor, this.cardPadding);
 
   /// Default instance with all fields set to their default values.
-  static final defaultInstance = PageGraphAppearance._(null, null, null);
+  static final defaultInstance = ResourceGraphAppearance._(null, null, null);
 
   /// Returns a new mutable instance.
   /// Fields are initialized to their default values.
-  static PageGraphAppearance_mutable mutable() =>
-      PageGraphAppearance_mutable._(null, null, null);
+  static ResourceGraphAppearance_mutable mutable() =>
+      ResourceGraphAppearance_mutable._(null, null, null);
 
   /// Returns this instance (no-op).
   @_core.Deprecated("This instance is already frozen.")
   @_core.override
-  PageGraphAppearance toFrozen() => this;
+  ResourceGraphAppearance toFrozen() => this;
 
   /// Returns a mutable shallow copy of this instance.
-  PageGraphAppearance_mutable toMutable() => PageGraphAppearance_mutable._(
-    this.cellSize,
-    this.edgeColor,
-    this.cardPadding,
-  );
+  ResourceGraphAppearance_mutable toMutable() =>
+      ResourceGraphAppearance_mutable._(
+        this.cellSize,
+        this.edgeColor,
+        this.cardPadding,
+      );
 
   @_core.override
   _core.bool operator ==(other) {
     if (_core.identical(this, other)) return true;
-    if (other is! PageGraphAppearance) return false;
+    if (other is! ResourceGraphAppearance) return false;
     return _skir.internal__listEquality.equals(
       _equality_proxy,
       other._equality_proxy,
@@ -41210,10 +41156,10 @@ final class PageGraphAppearance implements PageGraphAppearance_orMutable {
   @_core.override
   _core.String toString() => _skir.internal__stringify(this, serializer);
 
-  /// Serializer for `PageGraphAppearance` instances.
+  /// Serializer for `ResourceGraphAppearance` instances.
   static _skir.StructSerializer<
-    PageGraphAppearance,
-    PageGraphAppearance_mutable
+    ResourceGraphAppearance,
+    ResourceGraphAppearance_mutable
   >
   get serializer {
     if (_serializerBuilder.mustInitialize()) {
@@ -41252,25 +41198,25 @@ final class PageGraphAppearance implements PageGraphAppearance_orMutable {
   }
 
   static final _serializerBuilder = _skir.internal__StructSerializerBuilder(
-    recordId: "editor/v1/presentation.skir:PageGraphAppearance",
+    recordId: "editor/v1/presentation.skir:ResourceGraphAppearance",
     doc: "",
     defaultInstance: defaultInstance,
     newMutable: (it) => (it != null) ? it.toMutable() : mutable(),
-    toFrozen: (PageGraphAppearance_mutable it) => it.toFrozen(),
+    toFrozen: (ResourceGraphAppearance_mutable it) => it.toFrozen(),
     getUnrecognizedFields: (it) => it._u,
     setUnrecognizedFields: (it, u) => it._u = u,
   );
 }
 
-/// Mutable version of [PageGraphAppearance].
-final class PageGraphAppearance_mutable
-    implements PageGraphAppearance_orMutable {
+/// Mutable version of [ResourceGraphAppearance].
+final class ResourceGraphAppearance_mutable
+    implements ResourceGraphAppearance_orMutable {
   _lib_editor_v1_expression.ExpressionNode? cellSize;
   PresentationColor? edgeColor;
   PresentationInsets? cardPadding;
   _skir.internal__UnrecognizedFields? _u;
 
-  PageGraphAppearance_mutable._(
+  ResourceGraphAppearance_mutable._(
     this.cellSize,
     this.edgeColor,
     this.cardPadding,
@@ -41278,7 +41224,7 @@ final class PageGraphAppearance_mutable
 
   /// Returns a deeply immutable copy of this instance.
   @_core.override
-  PageGraphAppearance toFrozen() => PageGraphAppearance(
+  ResourceGraphAppearance toFrozen() => ResourceGraphAppearance(
     cellSize: this.cellSize,
     edgeColor: this.edgeColor,
     cardPadding: this.cardPadding,
@@ -41286,10 +41232,10 @@ final class PageGraphAppearance_mutable
 }
 
 // -----------------------------------------------------------------------------
-// struct PageTimelineAppearance
+// struct ResourceTimelineAppearance
 // -----------------------------------------------------------------------------
 
-sealed class PageTimelineAppearance_orMutable {
+sealed class ResourceTimelineAppearance_orMutable {
   _core.double? get rulerHeight;
   _core.double? get trackPadding;
   _core.double? get laneHeight;
@@ -41303,11 +41249,12 @@ sealed class PageTimelineAppearance_orMutable {
   PresentationColor? get gridMajorColor;
   PresentationColor? get textMutedColor;
 
-  PageTimelineAppearance toFrozen();
+  ResourceTimelineAppearance toFrozen();
 }
 
 /// Deeply immutable.
-final class PageTimelineAppearance implements PageTimelineAppearance_orMutable {
+final class ResourceTimelineAppearance
+    implements ResourceTimelineAppearance_orMutable {
   @_core.override
   final _core.double? rulerHeight;
   @_core.override
@@ -41334,7 +41281,7 @@ final class PageTimelineAppearance implements PageTimelineAppearance_orMutable {
   final PresentationColor? textMutedColor;
   _skir.internal__UnrecognizedFields? _u;
 
-  factory PageTimelineAppearance({
+  factory ResourceTimelineAppearance({
     required _core.double? rulerHeight,
     required _core.double? trackPadding,
     required _core.double? laneHeight,
@@ -41347,7 +41294,7 @@ final class PageTimelineAppearance implements PageTimelineAppearance_orMutable {
     required PresentationColor? gridMinorColor,
     required PresentationColor? gridMajorColor,
     required PresentationColor? textMutedColor,
-  }) => PageTimelineAppearance._(
+  }) => ResourceTimelineAppearance._(
     rulerHeight,
     trackPadding,
     laneHeight,
@@ -41362,7 +41309,7 @@ final class PageTimelineAppearance implements PageTimelineAppearance_orMutable {
     textMutedColor,
   );
 
-  PageTimelineAppearance._(
+  ResourceTimelineAppearance._(
     this.rulerHeight,
     this.trackPadding,
     this.laneHeight,
@@ -41378,7 +41325,7 @@ final class PageTimelineAppearance implements PageTimelineAppearance_orMutable {
   );
 
   /// Default instance with all fields set to their default values.
-  static final defaultInstance = PageTimelineAppearance._(
+  static final defaultInstance = ResourceTimelineAppearance._(
     null,
     null,
     null,
@@ -41395,8 +41342,8 @@ final class PageTimelineAppearance implements PageTimelineAppearance_orMutable {
 
   /// Returns a new mutable instance.
   /// Fields are initialized to their default values.
-  static PageTimelineAppearance_mutable mutable() =>
-      PageTimelineAppearance_mutable._(
+  static ResourceTimelineAppearance_mutable mutable() =>
+      ResourceTimelineAppearance_mutable._(
         null,
         null,
         null,
@@ -41414,11 +41361,11 @@ final class PageTimelineAppearance implements PageTimelineAppearance_orMutable {
   /// Returns this instance (no-op).
   @_core.Deprecated("This instance is already frozen.")
   @_core.override
-  PageTimelineAppearance toFrozen() => this;
+  ResourceTimelineAppearance toFrozen() => this;
 
   /// Returns a mutable shallow copy of this instance.
-  PageTimelineAppearance_mutable toMutable() =>
-      PageTimelineAppearance_mutable._(
+  ResourceTimelineAppearance_mutable toMutable() =>
+      ResourceTimelineAppearance_mutable._(
         this.rulerHeight,
         this.trackPadding,
         this.laneHeight,
@@ -41436,7 +41383,7 @@ final class PageTimelineAppearance implements PageTimelineAppearance_orMutable {
   @_core.override
   _core.bool operator ==(other) {
     if (_core.identical(this, other)) return true;
-    if (other is! PageTimelineAppearance) return false;
+    if (other is! ResourceTimelineAppearance) return false;
     return _skir.internal__listEquality.equals(
       _equality_proxy,
       other._equality_proxy,
@@ -41464,10 +41411,10 @@ final class PageTimelineAppearance implements PageTimelineAppearance_orMutable {
   @_core.override
   _core.String toString() => _skir.internal__stringify(this, serializer);
 
-  /// Serializer for `PageTimelineAppearance` instances.
+  /// Serializer for `ResourceTimelineAppearance` instances.
   static _skir.StructSerializer<
-    PageTimelineAppearance,
-    PageTimelineAppearance_mutable
+    ResourceTimelineAppearance,
+    ResourceTimelineAppearance_mutable
   >
   get serializer {
     if (_serializerBuilder.mustInitialize()) {
@@ -41585,19 +41532,19 @@ final class PageTimelineAppearance implements PageTimelineAppearance_orMutable {
   }
 
   static final _serializerBuilder = _skir.internal__StructSerializerBuilder(
-    recordId: "editor/v1/presentation.skir:PageTimelineAppearance",
+    recordId: "editor/v1/presentation.skir:ResourceTimelineAppearance",
     doc: "",
     defaultInstance: defaultInstance,
     newMutable: (it) => (it != null) ? it.toMutable() : mutable(),
-    toFrozen: (PageTimelineAppearance_mutable it) => it.toFrozen(),
+    toFrozen: (ResourceTimelineAppearance_mutable it) => it.toFrozen(),
     getUnrecognizedFields: (it) => it._u,
     setUnrecognizedFields: (it, u) => it._u = u,
   );
 }
 
-/// Mutable version of [PageTimelineAppearance].
-final class PageTimelineAppearance_mutable
-    implements PageTimelineAppearance_orMutable {
+/// Mutable version of [ResourceTimelineAppearance].
+final class ResourceTimelineAppearance_mutable
+    implements ResourceTimelineAppearance_orMutable {
   _core.double? rulerHeight;
   _core.double? trackPadding;
   _core.double? laneHeight;
@@ -41612,7 +41559,7 @@ final class PageTimelineAppearance_mutable
   PresentationColor? textMutedColor;
   _skir.internal__UnrecognizedFields? _u;
 
-  PageTimelineAppearance_mutable._(
+  ResourceTimelineAppearance_mutable._(
     this.rulerHeight,
     this.trackPadding,
     this.laneHeight,
@@ -41629,7 +41576,7 @@ final class PageTimelineAppearance_mutable
 
   /// Returns a deeply immutable copy of this instance.
   @_core.override
-  PageTimelineAppearance toFrozen() => PageTimelineAppearance(
+  ResourceTimelineAppearance toFrozen() => ResourceTimelineAppearance(
     rulerHeight: this.rulerHeight,
     trackPadding: this.trackPadding,
     laneHeight: this.laneHeight,
@@ -43477,4 +43424,628 @@ final class PresentationPartElement_mutable
   @_core.override
   PresentationPartElement toFrozen() =>
       PresentationPartElement(key: this.key, body: this.body).._u = this._u;
+}
+
+// -----------------------------------------------------------------------------
+// struct GraphResourcesLayout
+// -----------------------------------------------------------------------------
+
+sealed class GraphResourcesLayout_orMutable {
+  GraphDirection get direction;
+  ResourceGraphAppearance_orMutable? get appearance;
+
+  GraphResourcesLayout toFrozen();
+}
+
+/// Places members on a graph by their placement field, with edges from the relations among them.
+///
+/// Deeply immutable.
+final class GraphResourcesLayout implements GraphResourcesLayout_orMutable {
+  @_core.override
+  final GraphDirection direction;
+  @_core.override
+  final ResourceGraphAppearance? appearance;
+  _skir.internal__UnrecognizedFields? _u;
+
+  factory GraphResourcesLayout({
+    required GraphDirection direction,
+    required ResourceGraphAppearance_orMutable? appearance,
+  }) => GraphResourcesLayout._(
+    direction,
+    (appearance != null) ? appearance.toFrozen() : null,
+  );
+
+  GraphResourcesLayout._(this.direction, this.appearance);
+
+  /// Default instance with all fields set to their default values.
+  static final defaultInstance = GraphResourcesLayout._(
+    GraphDirection.unknown,
+    null,
+  );
+
+  /// Returns a new mutable instance.
+  /// Fields are initialized to their default values.
+  static GraphResourcesLayout_mutable mutable() =>
+      GraphResourcesLayout_mutable._(GraphDirection.unknown, null);
+
+  /// Returns this instance (no-op).
+  @_core.Deprecated("This instance is already frozen.")
+  @_core.override
+  GraphResourcesLayout toFrozen() => this;
+
+  /// Returns a mutable shallow copy of this instance.
+  GraphResourcesLayout_mutable toMutable() =>
+      GraphResourcesLayout_mutable._(this.direction, this.appearance);
+
+  @_core.override
+  _core.bool operator ==(other) {
+    if (_core.identical(this, other)) return true;
+    if (other is! GraphResourcesLayout) return false;
+    return _skir.internal__listEquality.equals(
+      _equality_proxy,
+      other._equality_proxy,
+    );
+  }
+
+  @_core.override
+  _core.int get hashCode => _skir.internal__listEquality.hash(_equality_proxy);
+
+  _core.List get _equality_proxy => [this.direction, this.appearance];
+
+  @_core.override
+  _core.String toString() => _skir.internal__stringify(this, serializer);
+
+  /// Serializer for `GraphResourcesLayout` instances.
+  static _skir.StructSerializer<
+    GraphResourcesLayout,
+    GraphResourcesLayout_mutable
+  >
+  get serializer {
+    if (_serializerBuilder.mustInitialize()) {
+      _serializerBuilder.addField(
+        "direction",
+        "direction",
+        0,
+        GraphDirection.serializer,
+        "",
+        (it) => it.direction,
+        (it, v) => it.direction = v,
+      );
+      _serializerBuilder.addField(
+        "appearance",
+        "appearance",
+        1,
+        _skir.Serializers.optional(ResourceGraphAppearance.serializer),
+        "",
+        (it) => it.appearance,
+        (it, v) => it.appearance = v,
+      );
+      _serializerBuilder.finalize();
+    }
+    return _serializerBuilder.serializer;
+  }
+
+  static final _serializerBuilder = _skir.internal__StructSerializerBuilder(
+    recordId: "editor/v1/presentation.skir:GraphResourcesLayout",
+    doc: "Places members on a graph by their placement field, with edges from the relations among them.",
+    defaultInstance: defaultInstance,
+    newMutable: (it) => (it != null) ? it.toMutable() : mutable(),
+    toFrozen: (GraphResourcesLayout_mutable it) => it.toFrozen(),
+    getUnrecognizedFields: (it) => it._u,
+    setUnrecognizedFields: (it, u) => it._u = u,
+  );
+}
+
+/// Mutable version of [GraphResourcesLayout].
+final class GraphResourcesLayout_mutable
+    implements GraphResourcesLayout_orMutable {
+  GraphDirection direction;
+  ResourceGraphAppearance_orMutable? appearance;
+  _skir.internal__UnrecognizedFields? _u;
+
+  GraphResourcesLayout_mutable._(this.direction, this.appearance);
+
+  /// Returns a deeply immutable copy of this instance.
+  @_core.override
+  GraphResourcesLayout toFrozen() => GraphResourcesLayout(
+    direction: this.direction,
+    appearance: this.appearance,
+  ).._u = this._u;
+}
+
+// -----------------------------------------------------------------------------
+// struct TimelineResourcesLayout
+// -----------------------------------------------------------------------------
+
+sealed class TimelineResourcesLayout_orMutable {
+  ResourceTimelineAppearance_orMutable? get appearance;
+
+  TimelineResourcesLayout toFrozen();
+}
+
+/// Places members on a timeline by their timeline placement.
+///
+/// Deeply immutable.
+final class TimelineResourcesLayout
+    implements TimelineResourcesLayout_orMutable {
+  @_core.override
+  final ResourceTimelineAppearance? appearance;
+  _skir.internal__UnrecognizedFields? _u;
+
+  factory TimelineResourcesLayout({
+    required ResourceTimelineAppearance_orMutable? appearance,
+  }) => TimelineResourcesLayout._(
+    (appearance != null) ? appearance.toFrozen() : null,
+  );
+
+  TimelineResourcesLayout._(this.appearance);
+
+  /// Default instance with all fields set to their default values.
+  static final defaultInstance = TimelineResourcesLayout._(null);
+
+  /// Returns a new mutable instance.
+  /// Fields are initialized to their default values.
+  static TimelineResourcesLayout_mutable mutable() =>
+      TimelineResourcesLayout_mutable._(null);
+
+  /// Returns this instance (no-op).
+  @_core.Deprecated("This instance is already frozen.")
+  @_core.override
+  TimelineResourcesLayout toFrozen() => this;
+
+  /// Returns a mutable shallow copy of this instance.
+  TimelineResourcesLayout_mutable toMutable() =>
+      TimelineResourcesLayout_mutable._(this.appearance);
+
+  @_core.override
+  _core.bool operator ==(other) {
+    if (_core.identical(this, other)) return true;
+    if (other is! TimelineResourcesLayout) return false;
+    return _skir.internal__listEquality.equals(
+      _equality_proxy,
+      other._equality_proxy,
+    );
+  }
+
+  @_core.override
+  _core.int get hashCode => _skir.internal__listEquality.hash(_equality_proxy);
+
+  _core.List get _equality_proxy => [this.appearance];
+
+  @_core.override
+  _core.String toString() => _skir.internal__stringify(this, serializer);
+
+  /// Serializer for `TimelineResourcesLayout` instances.
+  static _skir.StructSerializer<
+    TimelineResourcesLayout,
+    TimelineResourcesLayout_mutable
+  >
+  get serializer {
+    if (_serializerBuilder.mustInitialize()) {
+      _serializerBuilder.addField(
+        "appearance",
+        "appearance",
+        0,
+        _skir.Serializers.optional(ResourceTimelineAppearance.serializer),
+        "",
+        (it) => it.appearance,
+        (it, v) => it.appearance = v,
+      );
+      _serializerBuilder.finalize();
+    }
+    return _serializerBuilder.serializer;
+  }
+
+  static final _serializerBuilder = _skir.internal__StructSerializerBuilder(
+    recordId: "editor/v1/presentation.skir:TimelineResourcesLayout",
+    doc: "Places members on a timeline by their timeline placement.",
+    defaultInstance: defaultInstance,
+    newMutable: (it) => (it != null) ? it.toMutable() : mutable(),
+    toFrozen: (TimelineResourcesLayout_mutable it) => it.toFrozen(),
+    getUnrecognizedFields: (it) => it._u,
+    setUnrecognizedFields: (it, u) => it._u = u,
+  );
+}
+
+/// Mutable version of [TimelineResourcesLayout].
+final class TimelineResourcesLayout_mutable
+    implements TimelineResourcesLayout_orMutable {
+  ResourceTimelineAppearance_orMutable? appearance;
+  _skir.internal__UnrecognizedFields? _u;
+
+  TimelineResourcesLayout_mutable._(this.appearance);
+
+  /// Returns a deeply immutable copy of this instance.
+  @_core.override
+  TimelineResourcesLayout toFrozen() =>
+      TimelineResourcesLayout(appearance: this.appearance).._u = this._u;
+}
+
+// -----------------------------------------------------------------------------
+// struct GridResourcesLayout
+// -----------------------------------------------------------------------------
+
+sealed class GridResourcesLayout_orMutable {
+  _lib_editor_v1_expression.ExpressionNode get itemExtent;
+  _lib_editor_v1_expression.ExpressionNode get aspectRatio;
+  _lib_editor_v1_expression.ExpressionNode get spacing;
+
+  GridResourcesLayout toFrozen();
+}
+
+/// Shows members as cards of a fixed maximum extent and aspect ratio.
+///
+/// Deeply immutable.
+final class GridResourcesLayout implements GridResourcesLayout_orMutable {
+  @_core.override
+  final _lib_editor_v1_expression.ExpressionNode itemExtent;
+  @_core.override
+  final _lib_editor_v1_expression.ExpressionNode aspectRatio;
+  @_core.override
+  final _lib_editor_v1_expression.ExpressionNode spacing;
+  _skir.internal__UnrecognizedFields? _u;
+
+  factory GridResourcesLayout({
+    required _lib_editor_v1_expression.ExpressionNode itemExtent,
+    required _lib_editor_v1_expression.ExpressionNode aspectRatio,
+    required _lib_editor_v1_expression.ExpressionNode spacing,
+  }) => GridResourcesLayout._(itemExtent, aspectRatio, spacing);
+
+  GridResourcesLayout._(this.itemExtent, this.aspectRatio, this.spacing);
+
+  /// Default instance with all fields set to their default values.
+  static final defaultInstance = GridResourcesLayout._(
+    _lib_editor_v1_expression.ExpressionNode.unknown,
+    _lib_editor_v1_expression.ExpressionNode.unknown,
+    _lib_editor_v1_expression.ExpressionNode.unknown,
+  );
+
+  /// Returns a new mutable instance.
+  /// Fields are initialized to their default values.
+  static GridResourcesLayout_mutable mutable() => GridResourcesLayout_mutable._(
+    _lib_editor_v1_expression.ExpressionNode.unknown,
+    _lib_editor_v1_expression.ExpressionNode.unknown,
+    _lib_editor_v1_expression.ExpressionNode.unknown,
+  );
+
+  /// Returns this instance (no-op).
+  @_core.Deprecated("This instance is already frozen.")
+  @_core.override
+  GridResourcesLayout toFrozen() => this;
+
+  /// Returns a mutable shallow copy of this instance.
+  GridResourcesLayout_mutable toMutable() => GridResourcesLayout_mutable._(
+    this.itemExtent,
+    this.aspectRatio,
+    this.spacing,
+  );
+
+  @_core.override
+  _core.bool operator ==(other) {
+    if (_core.identical(this, other)) return true;
+    if (other is! GridResourcesLayout) return false;
+    return _skir.internal__listEquality.equals(
+      _equality_proxy,
+      other._equality_proxy,
+    );
+  }
+
+  @_core.override
+  _core.int get hashCode => _skir.internal__listEquality.hash(_equality_proxy);
+
+  _core.List get _equality_proxy => [
+    this.itemExtent,
+    this.aspectRatio,
+    this.spacing,
+  ];
+
+  @_core.override
+  _core.String toString() => _skir.internal__stringify(this, serializer);
+
+  /// Serializer for `GridResourcesLayout` instances.
+  static _skir.StructSerializer<
+    GridResourcesLayout,
+    GridResourcesLayout_mutable
+  >
+  get serializer {
+    if (_serializerBuilder.mustInitialize()) {
+      _serializerBuilder.addField(
+        "item_extent",
+        "itemExtent",
+        0,
+        _lib_editor_v1_expression.ExpressionNode.serializer,
+        "",
+        (it) => it.itemExtent,
+        (it, v) => it.itemExtent = v,
+      );
+      _serializerBuilder.addField(
+        "aspect_ratio",
+        "aspectRatio",
+        1,
+        _lib_editor_v1_expression.ExpressionNode.serializer,
+        "",
+        (it) => it.aspectRatio,
+        (it, v) => it.aspectRatio = v,
+      );
+      _serializerBuilder.addField(
+        "spacing",
+        "spacing",
+        2,
+        _lib_editor_v1_expression.ExpressionNode.serializer,
+        "",
+        (it) => it.spacing,
+        (it, v) => it.spacing = v,
+      );
+      _serializerBuilder.finalize();
+    }
+    return _serializerBuilder.serializer;
+  }
+
+  static final _serializerBuilder = _skir.internal__StructSerializerBuilder(
+    recordId: "editor/v1/presentation.skir:GridResourcesLayout",
+    doc: "Shows members as cards of a fixed maximum extent and aspect ratio.",
+    defaultInstance: defaultInstance,
+    newMutable: (it) => (it != null) ? it.toMutable() : mutable(),
+    toFrozen: (GridResourcesLayout_mutable it) => it.toFrozen(),
+    getUnrecognizedFields: (it) => it._u,
+    setUnrecognizedFields: (it, u) => it._u = u,
+  );
+}
+
+/// Mutable version of [GridResourcesLayout].
+final class GridResourcesLayout_mutable
+    implements GridResourcesLayout_orMutable {
+  _lib_editor_v1_expression.ExpressionNode itemExtent;
+  _lib_editor_v1_expression.ExpressionNode aspectRatio;
+  _lib_editor_v1_expression.ExpressionNode spacing;
+  _skir.internal__UnrecognizedFields? _u;
+
+  GridResourcesLayout_mutable._(
+    this.itemExtent,
+    this.aspectRatio,
+    this.spacing,
+  );
+
+  /// Returns a deeply immutable copy of this instance.
+  @_core.override
+  GridResourcesLayout toFrozen() => GridResourcesLayout(
+    itemExtent: this.itemExtent,
+    aspectRatio: this.aspectRatio,
+    spacing: this.spacing,
+  ).._u = this._u;
+}
+
+// -----------------------------------------------------------------------------
+// struct TreeResourcesLayout
+// -----------------------------------------------------------------------------
+
+sealed class TreeResourcesLayout_orMutable {
+  _lib_editor_v1_type_catalog.ValuePath_orMutable get path;
+  PresentationNode_orMutable? get group;
+  _lib_editor_v1_type_catalog.ExpressionBindingId_orMutable get groupBindingId;
+  HierarchySequenceLayout_orMutable? get connectors;
+  _core.bool get initiallyExpanded;
+
+  TreeResourcesLayout toFrozen();
+}
+
+/// Groups members by the hierarchy path at `path`, relative to each member. `group` renders
+/// each group header with `group_binding_id` bound to a HierarchyGroup value. Dropping a member
+/// onto a group rewrites its path field.
+///
+/// Deeply immutable.
+final class TreeResourcesLayout implements TreeResourcesLayout_orMutable {
+  @_core.override
+  final _lib_editor_v1_type_catalog.ValuePath path;
+  @_core.override
+  final PresentationNode? group;
+  @_core.override
+  final _lib_editor_v1_type_catalog.ExpressionBindingId groupBindingId;
+  @_core.override
+  final HierarchySequenceLayout? connectors;
+  @_core.override
+  final _core.bool initiallyExpanded;
+  _skir.internal__UnrecognizedFields? _u;
+
+  factory TreeResourcesLayout({
+    required _lib_editor_v1_type_catalog.ValuePath_orMutable path,
+    required PresentationNode_orMutable? group,
+    required _lib_editor_v1_type_catalog.ExpressionBindingId_orMutable
+    groupBindingId,
+    required HierarchySequenceLayout_orMutable? connectors,
+    required _core.bool initiallyExpanded,
+  }) => TreeResourcesLayout._(
+    path.toFrozen(),
+    (group != null) ? group.toFrozen() : null,
+    groupBindingId.toFrozen(),
+    (connectors != null) ? connectors.toFrozen() : null,
+    initiallyExpanded,
+  );
+
+  TreeResourcesLayout._(
+    this.path,
+    this.group,
+    this.groupBindingId,
+    this.connectors,
+    this.initiallyExpanded,
+  );
+
+  /// Default instance with all fields set to their default values.
+  static final defaultInstance = TreeResourcesLayout._(
+    _lib_editor_v1_type_catalog.ValuePath.defaultInstance,
+    null,
+    _lib_editor_v1_type_catalog.ExpressionBindingId.defaultInstance,
+    null,
+    false,
+  );
+
+  /// Returns a new mutable instance.
+  /// Fields are initialized to their default values.
+  static TreeResourcesLayout_mutable mutable() => TreeResourcesLayout_mutable._(
+    _lib_editor_v1_type_catalog.ValuePath.defaultInstance,
+    null,
+    _lib_editor_v1_type_catalog.ExpressionBindingId.defaultInstance,
+    null,
+    false,
+  );
+
+  /// Returns this instance (no-op).
+  @_core.Deprecated("This instance is already frozen.")
+  @_core.override
+  TreeResourcesLayout toFrozen() => this;
+
+  /// Returns a mutable shallow copy of this instance.
+  TreeResourcesLayout_mutable toMutable() => TreeResourcesLayout_mutable._(
+    this.path,
+    this.group,
+    this.groupBindingId,
+    this.connectors,
+    this.initiallyExpanded,
+  );
+
+  @_core.override
+  _core.bool operator ==(other) {
+    if (_core.identical(this, other)) return true;
+    if (other is! TreeResourcesLayout) return false;
+    return _skir.internal__listEquality.equals(
+      _equality_proxy,
+      other._equality_proxy,
+    );
+  }
+
+  @_core.override
+  _core.int get hashCode => _skir.internal__listEquality.hash(_equality_proxy);
+
+  _core.List get _equality_proxy => [
+    this.path,
+    this.group,
+    this.groupBindingId,
+    this.connectors,
+    this.initiallyExpanded,
+  ];
+
+  @_core.override
+  _core.String toString() => _skir.internal__stringify(this, serializer);
+
+  /// Serializer for `TreeResourcesLayout` instances.
+  static _skir.StructSerializer<
+    TreeResourcesLayout,
+    TreeResourcesLayout_mutable
+  >
+  get serializer {
+    if (_serializerBuilder.mustInitialize()) {
+      _serializerBuilder.addField(
+        "path",
+        "path",
+        0,
+        _lib_editor_v1_type_catalog.ValuePath.serializer,
+        "",
+        (it) => it.path,
+        (it, v) => it.path = v,
+      );
+      _serializerBuilder.addField(
+        "group",
+        "group",
+        1,
+        _skir.Serializers.optional(PresentationNode.serializer),
+        "",
+        (it) => it.group,
+        (it, v) => it.group = v,
+      );
+      _serializerBuilder.addField(
+        "group_binding_id",
+        "groupBindingId",
+        2,
+        _lib_editor_v1_type_catalog.ExpressionBindingId.serializer,
+        "",
+        (it) => it.groupBindingId,
+        (it, v) => it.groupBindingId = v,
+      );
+      _serializerBuilder.addField(
+        "connectors",
+        "connectors",
+        3,
+        _skir.Serializers.optional(HierarchySequenceLayout.serializer),
+        "",
+        (it) => it.connectors,
+        (it, v) => it.connectors = v,
+      );
+      _serializerBuilder.addField(
+        "initially_expanded",
+        "initiallyExpanded",
+        4,
+        _skir.Serializers.bool,
+        "",
+        (it) => it.initiallyExpanded,
+        (it, v) => it.initiallyExpanded = v,
+      );
+      _serializerBuilder.finalize();
+    }
+    return _serializerBuilder.serializer;
+  }
+
+  static final _serializerBuilder = _skir.internal__StructSerializerBuilder(
+    recordId: "editor/v1/presentation.skir:TreeResourcesLayout",
+    doc: "Groups members by the hierarchy path at [path], relative to each member. [group] renders\neach group header with [group_binding_id] bound to a HierarchyGroup value. Dropping a member\nonto a group rewrites its path field.",
+    defaultInstance: defaultInstance,
+    newMutable: (it) => (it != null) ? it.toMutable() : mutable(),
+    toFrozen: (TreeResourcesLayout_mutable it) => it.toFrozen(),
+    getUnrecognizedFields: (it) => it._u,
+    setUnrecognizedFields: (it, u) => it._u = u,
+  );
+}
+
+/// Mutable version of [TreeResourcesLayout].
+final class TreeResourcesLayout_mutable
+    implements TreeResourcesLayout_orMutable {
+  _lib_editor_v1_type_catalog.ValuePath_orMutable path;
+  PresentationNode_orMutable? group;
+  _lib_editor_v1_type_catalog.ExpressionBindingId_orMutable groupBindingId;
+  HierarchySequenceLayout_orMutable? connectors;
+  _core.bool initiallyExpanded;
+  _skir.internal__UnrecognizedFields? _u;
+
+  TreeResourcesLayout_mutable._(
+    this.path,
+    this.group,
+    this.groupBindingId,
+    this.connectors,
+    this.initiallyExpanded,
+  );
+
+  /// If the value of [path] is already mutable, returns it as-is.
+  /// Otherwise, makes a mutable copy, assigns it back to [path] and returns it.
+  _lib_editor_v1_type_catalog.ValuePath_mutable get mutablePath {
+    final value = this.path;
+    if (value is _lib_editor_v1_type_catalog.ValuePath_mutable) {
+      return value;
+    } else {
+      return this.path = (value as _lib_editor_v1_type_catalog.ValuePath)
+          .toMutable();
+    }
+  }
+
+  /// If the value of [groupBindingId] is already mutable, returns it as-is.
+  /// Otherwise, makes a mutable copy, assigns it back to [groupBindingId] and returns it.
+  _lib_editor_v1_type_catalog.ExpressionBindingId_mutable
+  get mutableGroupBindingId {
+    final value = this.groupBindingId;
+    if (value is _lib_editor_v1_type_catalog.ExpressionBindingId_mutable) {
+      return value;
+    } else {
+      return this.groupBindingId =
+          (value as _lib_editor_v1_type_catalog.ExpressionBindingId)
+              .toMutable();
+    }
+  }
+
+  /// Returns a deeply immutable copy of this instance.
+  @_core.override
+  TreeResourcesLayout toFrozen() => TreeResourcesLayout(
+    path: this.path,
+    group: this.group,
+    groupBindingId: this.groupBindingId,
+    connectors: this.connectors,
+    initiallyExpanded: this.initiallyExpanded,
+  ).._u = this._u;
 }

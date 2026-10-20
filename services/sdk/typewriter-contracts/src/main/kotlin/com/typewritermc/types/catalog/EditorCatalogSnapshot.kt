@@ -1,6 +1,5 @@
 package com.typewritermc.types.catalog
 
-import com.typewritermc.authoring.AuthoringResourceDefinition
 import com.typewritermc.authoring.ValuePath
 import com.typewritermc.capability.RealmCapabilityDescriptor
 import com.typewritermc.checking.CatalogGeneration
@@ -14,6 +13,7 @@ import com.typewritermc.types.FieldOwner
 import com.typewritermc.types.RelationContract
 import com.typewritermc.types.ResourceTarget
 import com.typewritermc.types.TypeDefinition
+import com.typewritermc.types.TypeDefinitionId
 import com.typewritermc.types.TypeDisplay
 import com.typewritermc.types.TypeTemplate
 import com.typewritermc.types.TypeUse
@@ -71,7 +71,7 @@ data class EditorCatalogSnapshot(
     val generation: CatalogGeneration,
     val types: List<PublishedType>,
     val relations: List<RelationContract>,
-    val resourceDefinitions: List<AuthoringResourceDefinition>,
+    val resourceDisplays: List<ResourceDisplayFormulas>,
     val presentations: List<PresentationDescriptor>,
     val presentationMaterials: List<PresentationMaterial>,
     val configuration: List<ConfigurationRecipe>,
@@ -82,7 +82,8 @@ data class EditorCatalogSnapshot(
     val roleFallbacks: List<RoleFallback> = emptyList(),
     val resourceOperations: List<com.typewritermc.operations.ResourceOperationDefinition> = emptyList(),
     val resourceOperationContributions: List<com.typewritermc.operations.ResourceOperationContribution> = emptyList(),
-    val resourceDisplays: List<ResourceDisplayFormulas> = emptyList(),
+    /** The realm root type. The realm keeps exactly one instance of it, which owns every section. */
+    val realmRoot: TypeDefinitionId,
 )
 
 fun EditorCatalogSnapshot.toWire(): EditorCatalogWireSnapshot = SkirTypeCodec.encode(this).getOrThrow()

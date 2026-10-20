@@ -238,20 +238,23 @@ data class PresentationId(
 }
 
 /**
- * The UI context for which a presentation is selected. A type can provide different layouts for
- * its main workspace, inspector, references, search results, and editor nodes.
+ * A place in the editor shell for which a presentation is selected. A role names where content appears, never what
+ * it is.
  *
- * The host requests a role when selecting a presentation for a subject. Registering a role does
- * not create a UI surface. If no presentation matches, selection follows the catalog's explicit
- * role fallbacks; roles do not automatically inherit an editor or inspector layout.
+ * The host requests a role when selecting a presentation for a subject. Registering a role does not create a UI
+ * surface. If no presentation matches, selection follows the catalog's explicit role fallbacks; roles do not
+ * automatically inherit an editor or inspector layout.
  */
 @Serializable
 enum class PresentationRole {
+    /** The main area of a resource route, such as a page graph, a page timeline, or the library grid. */
+    WORKSPACE,
+
     /**
-     * The main workspace for an opened resource, such as a page graph or timeline.
-     * The workspace host requests this role separately from the resource's inspector.
+     * Side navigation. The realm root's navigator fills the shell sidebar; the nearest other owner of the routed
+     * resource that declares one fills the rail, such as the outline of a book beside its pages.
      */
-    WORKSPACE_EDITOR,
+    NAVIGATOR,
 
     /**
      * Editable properties for a resource or nested value. Used by resource inspectors,
@@ -259,6 +262,12 @@ enum class PresentationRole {
      * material from the subject's parent types.
      */
     INSPECTOR,
+
+    /**
+     * A resource laid out inside another place: a grid card, graph node, list row, or tree row. The containing
+     * layout supplies the item's bounds and surrounding interaction.
+     */
+    ITEM,
 
     /**
      * A compact preview of the selected reference target inside a link control.
@@ -279,11 +288,4 @@ enum class PresentationRole {
      * selection and disables writes. Supports result appearance metadata for the surrounding row.
      */
     RESOURCE_SEARCH_RESULT,
-
-    /**
-     * The content of a resource node within an editor, independent of graph or timeline layout.
-     * Currently requested by page graphs, tag graphs, and tag drag previews. The containing
-     * editor supplies the node's bounds and surrounding interaction.
-     */
-    EDITOR_NODE,
 }

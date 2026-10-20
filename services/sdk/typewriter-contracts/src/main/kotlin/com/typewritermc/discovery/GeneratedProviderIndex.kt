@@ -6,7 +6,6 @@ enum class GeneratedProviderKind(
 ) {
     Type("type"),
     NativeBinding("nativeBinding"),
-    Resource("resource"),
     Relation("relation"),
     EndpointBindings("endpointBindings"),
     Configuration("configuration"),

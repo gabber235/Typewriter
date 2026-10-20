@@ -85,7 +85,7 @@ internal interface TypeArgumentOperations {
 /**
  * Previews a resource type argument change together with repairs to values and incident links.
  *
- * The resource definition remains fixed. Incompatible values become unfilled, compatible nested records can
+ * The resource type definition remains fixed. Incompatible values become unfilled, compatible nested records can
  * be retagged, and invalid links become disconnect intents. Preparation checks current expectations and
  * regenerates the preview before returning an edit, so caller supplied repair metadata is never trusted as
  * authority. Persistence remains a separate authoring commit.

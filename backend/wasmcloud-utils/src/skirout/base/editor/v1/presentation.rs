@@ -6460,8 +6460,7 @@ pub enum PresentationElement {
     RemainingFields(Box<RemainingFieldsElement>),
     NullableInput(Box<NullableControl>),
     SetInput(Box<SetControl>),
-    PageGraph(Box<PageGraphElement>),
-    PageTimeline(Box<PageTimelineElement>),
+    Resources(Box<ResourcesElement>),
     Align(Box<AlignmentLayout>),
     AppearanceDefaults(Box<AppearanceDefaultsElement>),
     Part(Box<PresentationPartElement>),
@@ -6537,11 +6536,10 @@ impl PresentationElement {
                     PresentationElement::RemainingFields(_) => 54,
                     PresentationElement::NullableInput(_) => 55,
                     PresentationElement::SetInput(_) => 56,
-                    PresentationElement::PageGraph(_) => 57,
-                    PresentationElement::PageTimeline(_) => 58,
-                    PresentationElement::Align(_) => 59,
-                    PresentationElement::AppearanceDefaults(_) => 60,
-                    PresentationElement::Part(_) => 61,
+                    PresentationElement::Resources(_) => 57,
+                    PresentationElement::Align(_) => 58,
+                    PresentationElement::AppearanceDefaults(_) => 59,
+                    PresentationElement::Part(_) => 60,
                 },
                 |u| PresentationElement::Unknown(Some(u)),
                 |x: &PresentationElement| match x {
@@ -6737,7 +6735,6 @@ pub struct PresentationCollectionDefinition {
     pub relations:
         crate::skir_client::KeyedVec<PresentationCollectionRelationDefinition_byRelationId>,
     pub projection: Option<PresentationCollectionProjection>,
-    pub resources: Option<PresentationResourceCollection>,
     /// Set this to None when you're creating a struct.
     pub _unrecognized:
         Option<crate::skir_client::UnrecognizedFields<PresentationCollectionDefinition>>,
@@ -6930,52 +6927,6 @@ impl PresentationCollectionProjection {
         initialize_module_serializers();
         crate::skir_client::internal::struct_serializer_from_static(
             PresentationCollectionProjection::_adapter(),
-        )
-    }
-}
-
-// ==============================================================================
-// struct PresentationResourceCollection
-// ==============================================================================
-
-#[derive(Clone, Debug, PartialEq, Default)]
-pub struct PresentationResourceCollection {
-    pub root: crate::skirout::base::editor::v1::type_catalog::TypeDefinitionId,
-    pub resource_binding_id: crate::skirout::base::editor::v1::type_catalog::ExpressionBindingId,
-    pub appearance: Option<crate::skirout::base::editor::v1::type_catalog::PresentationId>,
-    /// Set this to None when you're creating a struct.
-    pub _unrecognized:
-        Option<crate::skir_client::UnrecognizedFields<PresentationResourceCollection>>,
-}
-
-impl PresentationResourceCollection {
-    pub fn default_ref() -> &'static PresentationResourceCollection {
-        static D: std::sync::LazyLock<PresentationResourceCollection> =
-            std::sync::LazyLock::new(PresentationResourceCollection::default);
-        &D
-    }
-}
-
-impl PresentationResourceCollection {
-    fn _adapter()
-    -> &'static crate::skir_client::internal::StructAdapter<PresentationResourceCollection> {
-        static ADAPTER: std::sync::LazyLock<
-            crate::skir_client::internal::StructAdapter<PresentationResourceCollection>,
-        > = std::sync::LazyLock::new(|| {
-            crate::skir_client::internal::StructAdapter::new(
-                "editor/v1/presentation.skir",
-                "PresentationResourceCollection",
-                "",
-                |x: &PresentationResourceCollection| &x._unrecognized,
-                |x: &mut PresentationResourceCollection, u| x._unrecognized = u,
-            )
-        });
-        &*ADAPTER
-    }
-    pub fn serializer() -> crate::skir_client::Serializer<PresentationResourceCollection> {
-        initialize_module_serializers();
-        crate::skir_client::internal::struct_serializer_from_static(
-            PresentationResourceCollection::_adapter(),
         )
     }
 }
@@ -7425,135 +7376,153 @@ impl SetControl {
 }
 
 // ==============================================================================
-// enum PageGraphDirection
+// enum GraphDirection
 // ==============================================================================
 
+/// The direction a graph layout flows in, from sources to targets.
 #[derive(Debug, Clone, PartialEq)]
-pub enum PageGraphDirection {
-    Unknown(Option<crate::skir_client::UnrecognizedVariant<PageGraphDirection>>),
+pub enum GraphDirection {
+    Unknown(Option<crate::skir_client::UnrecognizedVariant<GraphDirection>>),
     LeftToRight,
     RightToLeft,
     TopToBottom,
     BottomToTop,
 }
 
-impl Default for PageGraphDirection {
+impl Default for GraphDirection {
     fn default() -> Self {
-        PageGraphDirection::Unknown(None)
+        GraphDirection::Unknown(None)
     }
 }
 
-impl PageGraphDirection {
-    fn _adapter() -> &'static crate::skir_client::internal::EnumAdapter<PageGraphDirection> {
+impl GraphDirection {
+    fn _adapter() -> &'static crate::skir_client::internal::EnumAdapter<GraphDirection> {
         static ADAPTER: std::sync::LazyLock<
-            crate::skir_client::internal::EnumAdapter<PageGraphDirection>,
+            crate::skir_client::internal::EnumAdapter<GraphDirection>,
         > = std::sync::LazyLock::new(|| {
             crate::skir_client::internal::EnumAdapter::new(
-                |x: &PageGraphDirection| match x {
-                    PageGraphDirection::Unknown(_) => 0,
-                    PageGraphDirection::LeftToRight => 1,
-                    PageGraphDirection::RightToLeft => 2,
-                    PageGraphDirection::TopToBottom => 3,
-                    PageGraphDirection::BottomToTop => 4,
+                |x: &GraphDirection| match x {
+                    GraphDirection::Unknown(_) => 0,
+                    GraphDirection::LeftToRight => 1,
+                    GraphDirection::RightToLeft => 2,
+                    GraphDirection::TopToBottom => 3,
+                    GraphDirection::BottomToTop => 4,
                 },
-                |u| PageGraphDirection::Unknown(Some(u)),
-                |x: &PageGraphDirection| match x {
-                    PageGraphDirection::Unknown(Some(u)) => Some(u.as_ref()),
+                |u| GraphDirection::Unknown(Some(u)),
+                |x: &GraphDirection| match x {
+                    GraphDirection::Unknown(Some(u)) => Some(u.as_ref()),
                     _ => None,
                 },
                 "editor/v1/presentation.skir",
-                "PageGraphDirection",
-                "",
+                "GraphDirection",
+                "The direction a graph layout flows in, from sources to targets.",
             )
         });
         &*ADAPTER
     }
-    pub fn serializer() -> crate::skir_client::Serializer<PageGraphDirection> {
+    pub fn serializer() -> crate::skir_client::Serializer<GraphDirection> {
         initialize_module_serializers();
-        crate::skir_client::internal::enum_serializer_from_static(PageGraphDirection::_adapter())
+        crate::skir_client::internal::enum_serializer_from_static(GraphDirection::_adapter())
     }
 }
 
 // ==============================================================================
-// struct PageGraphElement
+// struct ResourcesElement
 // ==============================================================================
 
+/// Lays out the resources of a bound link field, such as the elements of a page or the books
+/// of the library. Every member renders through its item presentation. Adding and removing
+/// members edits the link. `order` is evaluated with `item_binding_id` bound to each member's
+/// link and sorts the members by its result; without it members keep link order.
 #[derive(Clone, Debug, PartialEq, Default)]
-pub struct PageGraphElement {
+pub struct ResourcesElement {
     pub control: BoundControl,
-    pub direction: PageGraphDirection,
-    pub appearance: Option<PageGraphAppearance>,
+    pub layout: ResourcesLayout,
+    pub order: Option<crate::skirout::base::editor::v1::expression::ExpressionNode>,
+    pub item_binding_id: crate::skirout::base::editor::v1::type_catalog::ExpressionBindingId,
     /// Set this to None when you're creating a struct.
-    pub _unrecognized: Option<crate::skir_client::UnrecognizedFields<PageGraphElement>>,
+    pub _unrecognized: Option<crate::skir_client::UnrecognizedFields<ResourcesElement>>,
 }
 
-impl PageGraphElement {
-    pub fn default_ref() -> &'static PageGraphElement {
-        static D: std::sync::LazyLock<PageGraphElement> =
-            std::sync::LazyLock::new(PageGraphElement::default);
+impl ResourcesElement {
+    pub fn default_ref() -> &'static ResourcesElement {
+        static D: std::sync::LazyLock<ResourcesElement> =
+            std::sync::LazyLock::new(ResourcesElement::default);
         &D
     }
 }
 
-impl PageGraphElement {
-    fn _adapter() -> &'static crate::skir_client::internal::StructAdapter<PageGraphElement> {
+impl ResourcesElement {
+    fn _adapter() -> &'static crate::skir_client::internal::StructAdapter<ResourcesElement> {
         static ADAPTER: std::sync::LazyLock<
-            crate::skir_client::internal::StructAdapter<PageGraphElement>,
+            crate::skir_client::internal::StructAdapter<ResourcesElement>,
         > = std::sync::LazyLock::new(|| {
             crate::skir_client::internal::StructAdapter::new(
                 "editor/v1/presentation.skir",
-                "PageGraphElement",
-                "",
-                |x: &PageGraphElement| &x._unrecognized,
-                |x: &mut PageGraphElement, u| x._unrecognized = u,
+                "ResourcesElement",
+                "Lays out the resources of a bound link field, such as the elements of a page or the books\nof the library. Every member renders through its item presentation. Adding and removing\nmembers edits the link. `order` is evaluated with `item_binding_id` bound to each member's\nlink and sorts the members by its result; without it members keep link order.",
+                |x: &ResourcesElement| &x._unrecognized,
+                |x: &mut ResourcesElement, u| x._unrecognized = u,
             )
         });
         &*ADAPTER
     }
-    pub fn serializer() -> crate::skir_client::Serializer<PageGraphElement> {
+    pub fn serializer() -> crate::skir_client::Serializer<ResourcesElement> {
         initialize_module_serializers();
-        crate::skir_client::internal::struct_serializer_from_static(PageGraphElement::_adapter())
+        crate::skir_client::internal::struct_serializer_from_static(ResourcesElement::_adapter())
     }
 }
 
 // ==============================================================================
-// struct PageTimelineElement
+// enum ResourcesLayout
 // ==============================================================================
 
-#[derive(Clone, Debug, PartialEq, Default)]
-pub struct PageTimelineElement {
-    pub control: BoundControl,
-    pub appearance: Option<PageTimelineAppearance>,
-    /// Set this to None when you're creating a struct.
-    pub _unrecognized: Option<crate::skir_client::UnrecognizedFields<PageTimelineElement>>,
+/// How a resources element arranges its members.
+#[derive(Debug, Clone, PartialEq)]
+pub enum ResourcesLayout {
+    Unknown(Option<crate::skir_client::UnrecognizedVariant<ResourcesLayout>>),
+    Graph(Box<GraphResourcesLayout>),
+    Timeline(Box<TimelineResourcesLayout>),
+    Grid(Box<GridResourcesLayout>),
+    Tree(Box<TreeResourcesLayout>),
+    List,
 }
 
-impl PageTimelineElement {
-    pub fn default_ref() -> &'static PageTimelineElement {
-        static D: std::sync::LazyLock<PageTimelineElement> =
-            std::sync::LazyLock::new(PageTimelineElement::default);
-        &D
+impl Default for ResourcesLayout {
+    fn default() -> Self {
+        ResourcesLayout::Unknown(None)
     }
 }
 
-impl PageTimelineElement {
-    fn _adapter() -> &'static crate::skir_client::internal::StructAdapter<PageTimelineElement> {
+impl ResourcesLayout {
+    fn _adapter() -> &'static crate::skir_client::internal::EnumAdapter<ResourcesLayout> {
         static ADAPTER: std::sync::LazyLock<
-            crate::skir_client::internal::StructAdapter<PageTimelineElement>,
+            crate::skir_client::internal::EnumAdapter<ResourcesLayout>,
         > = std::sync::LazyLock::new(|| {
-            crate::skir_client::internal::StructAdapter::new(
+            crate::skir_client::internal::EnumAdapter::new(
+                |x: &ResourcesLayout| match x {
+                    ResourcesLayout::Unknown(_) => 0,
+                    ResourcesLayout::Graph(_) => 1,
+                    ResourcesLayout::Timeline(_) => 2,
+                    ResourcesLayout::Grid(_) => 3,
+                    ResourcesLayout::Tree(_) => 4,
+                    ResourcesLayout::List => 5,
+                },
+                |u| ResourcesLayout::Unknown(Some(u)),
+                |x: &ResourcesLayout| match x {
+                    ResourcesLayout::Unknown(Some(u)) => Some(u.as_ref()),
+                    _ => None,
+                },
                 "editor/v1/presentation.skir",
-                "PageTimelineElement",
-                "",
-                |x: &PageTimelineElement| &x._unrecognized,
-                |x: &mut PageTimelineElement, u| x._unrecognized = u,
+                "ResourcesLayout",
+                "How a resources element arranges its members.",
             )
         });
         &*ADAPTER
     }
-    pub fn serializer() -> crate::skir_client::Serializer<PageTimelineElement> {
+    pub fn serializer() -> crate::skir_client::Serializer<ResourcesLayout> {
         initialize_module_serializers();
-        crate::skir_client::internal::struct_serializer_from_static(PageTimelineElement::_adapter())
+        crate::skir_client::internal::enum_serializer_from_static(ResourcesLayout::_adapter())
     }
 }
 
@@ -7655,6 +7624,8 @@ pub enum PresentationInteractionState {
     Disabled,
     ReadOnly,
     Invalid,
+    /// The resource is the one open in the workspace.
+    Routed,
 }
 
 impl Default for PresentationInteractionState {
@@ -7679,6 +7650,7 @@ impl PresentationInteractionState {
                     PresentationInteractionState::Disabled => 5,
                     PresentationInteractionState::ReadOnly => 6,
                     PresentationInteractionState::Invalid => 7,
+                    PresentationInteractionState::Routed => 8,
                 },
                 |u| PresentationInteractionState::Unknown(Some(u)),
                 |x: &PresentationInteractionState| match x {
@@ -10471,53 +10443,55 @@ impl CollectionContent {
 }
 
 // ==============================================================================
-// struct PageGraphAppearance
+// struct ResourceGraphAppearance
 // ==============================================================================
 
 #[derive(Clone, Debug, PartialEq, Default)]
-pub struct PageGraphAppearance {
+pub struct ResourceGraphAppearance {
     pub cell_size: Option<crate::skirout::base::editor::v1::expression::ExpressionNode>,
     pub edge_color: Option<PresentationColor>,
     pub card_padding: Option<PresentationInsets>,
     /// Set this to None when you're creating a struct.
-    pub _unrecognized: Option<crate::skir_client::UnrecognizedFields<PageGraphAppearance>>,
+    pub _unrecognized: Option<crate::skir_client::UnrecognizedFields<ResourceGraphAppearance>>,
 }
 
-impl PageGraphAppearance {
-    pub fn default_ref() -> &'static PageGraphAppearance {
-        static D: std::sync::LazyLock<PageGraphAppearance> =
-            std::sync::LazyLock::new(PageGraphAppearance::default);
+impl ResourceGraphAppearance {
+    pub fn default_ref() -> &'static ResourceGraphAppearance {
+        static D: std::sync::LazyLock<ResourceGraphAppearance> =
+            std::sync::LazyLock::new(ResourceGraphAppearance::default);
         &D
     }
 }
 
-impl PageGraphAppearance {
-    fn _adapter() -> &'static crate::skir_client::internal::StructAdapter<PageGraphAppearance> {
+impl ResourceGraphAppearance {
+    fn _adapter() -> &'static crate::skir_client::internal::StructAdapter<ResourceGraphAppearance> {
         static ADAPTER: std::sync::LazyLock<
-            crate::skir_client::internal::StructAdapter<PageGraphAppearance>,
+            crate::skir_client::internal::StructAdapter<ResourceGraphAppearance>,
         > = std::sync::LazyLock::new(|| {
             crate::skir_client::internal::StructAdapter::new(
                 "editor/v1/presentation.skir",
-                "PageGraphAppearance",
+                "ResourceGraphAppearance",
                 "",
-                |x: &PageGraphAppearance| &x._unrecognized,
-                |x: &mut PageGraphAppearance, u| x._unrecognized = u,
+                |x: &ResourceGraphAppearance| &x._unrecognized,
+                |x: &mut ResourceGraphAppearance, u| x._unrecognized = u,
             )
         });
         &*ADAPTER
     }
-    pub fn serializer() -> crate::skir_client::Serializer<PageGraphAppearance> {
+    pub fn serializer() -> crate::skir_client::Serializer<ResourceGraphAppearance> {
         initialize_module_serializers();
-        crate::skir_client::internal::struct_serializer_from_static(PageGraphAppearance::_adapter())
+        crate::skir_client::internal::struct_serializer_from_static(
+            ResourceGraphAppearance::_adapter(),
+        )
     }
 }
 
 // ==============================================================================
-// struct PageTimelineAppearance
+// struct ResourceTimelineAppearance
 // ==============================================================================
 
 #[derive(Clone, Debug, PartialEq, Default)]
-pub struct PageTimelineAppearance {
+pub struct ResourceTimelineAppearance {
     pub ruler_height: Option<f64>,
     pub track_padding: Option<f64>,
     pub lane_height: Option<f64>,
@@ -10531,36 +10505,37 @@ pub struct PageTimelineAppearance {
     pub grid_major_color: Option<PresentationColor>,
     pub text_muted_color: Option<PresentationColor>,
     /// Set this to None when you're creating a struct.
-    pub _unrecognized: Option<crate::skir_client::UnrecognizedFields<PageTimelineAppearance>>,
+    pub _unrecognized: Option<crate::skir_client::UnrecognizedFields<ResourceTimelineAppearance>>,
 }
 
-impl PageTimelineAppearance {
-    pub fn default_ref() -> &'static PageTimelineAppearance {
-        static D: std::sync::LazyLock<PageTimelineAppearance> =
-            std::sync::LazyLock::new(PageTimelineAppearance::default);
+impl ResourceTimelineAppearance {
+    pub fn default_ref() -> &'static ResourceTimelineAppearance {
+        static D: std::sync::LazyLock<ResourceTimelineAppearance> =
+            std::sync::LazyLock::new(ResourceTimelineAppearance::default);
         &D
     }
 }
 
-impl PageTimelineAppearance {
-    fn _adapter() -> &'static crate::skir_client::internal::StructAdapter<PageTimelineAppearance> {
+impl ResourceTimelineAppearance {
+    fn _adapter() -> &'static crate::skir_client::internal::StructAdapter<ResourceTimelineAppearance>
+    {
         static ADAPTER: std::sync::LazyLock<
-            crate::skir_client::internal::StructAdapter<PageTimelineAppearance>,
+            crate::skir_client::internal::StructAdapter<ResourceTimelineAppearance>,
         > = std::sync::LazyLock::new(|| {
             crate::skir_client::internal::StructAdapter::new(
                 "editor/v1/presentation.skir",
-                "PageTimelineAppearance",
+                "ResourceTimelineAppearance",
                 "",
-                |x: &PageTimelineAppearance| &x._unrecognized,
-                |x: &mut PageTimelineAppearance, u| x._unrecognized = u,
+                |x: &ResourceTimelineAppearance| &x._unrecognized,
+                |x: &mut ResourceTimelineAppearance, u| x._unrecognized = u,
             )
         });
         &*ADAPTER
     }
-    pub fn serializer() -> crate::skir_client::Serializer<PageTimelineAppearance> {
+    pub fn serializer() -> crate::skir_client::Serializer<ResourceTimelineAppearance> {
         initialize_module_serializers();
         crate::skir_client::internal::struct_serializer_from_static(
-            PageTimelineAppearance::_adapter(),
+            ResourceTimelineAppearance::_adapter(),
         )
     }
 }
@@ -11115,6 +11090,181 @@ impl PresentationPartElement {
         crate::skir_client::internal::struct_serializer_from_static(
             PresentationPartElement::_adapter(),
         )
+    }
+}
+
+// ==============================================================================
+// struct GraphResourcesLayout
+// ==============================================================================
+
+/// Places members on a graph by their placement field, with edges from the relations among them.
+#[derive(Clone, Debug, PartialEq, Default)]
+pub struct GraphResourcesLayout {
+    pub direction: GraphDirection,
+    pub appearance: Option<ResourceGraphAppearance>,
+    /// Set this to None when you're creating a struct.
+    pub _unrecognized: Option<crate::skir_client::UnrecognizedFields<GraphResourcesLayout>>,
+}
+
+impl GraphResourcesLayout {
+    pub fn default_ref() -> &'static GraphResourcesLayout {
+        static D: std::sync::LazyLock<GraphResourcesLayout> =
+            std::sync::LazyLock::new(GraphResourcesLayout::default);
+        &D
+    }
+}
+
+impl GraphResourcesLayout {
+    fn _adapter() -> &'static crate::skir_client::internal::StructAdapter<GraphResourcesLayout> {
+        static ADAPTER: std::sync::LazyLock<
+            crate::skir_client::internal::StructAdapter<GraphResourcesLayout>,
+        > = std::sync::LazyLock::new(|| {
+            crate::skir_client::internal::StructAdapter::new(
+                "editor/v1/presentation.skir",
+                "GraphResourcesLayout",
+                "Places members on a graph by their placement field, with edges from the relations among them.",
+                |x: &GraphResourcesLayout| &x._unrecognized,
+                |x: &mut GraphResourcesLayout, u| x._unrecognized = u,
+            )
+        });
+        &*ADAPTER
+    }
+    pub fn serializer() -> crate::skir_client::Serializer<GraphResourcesLayout> {
+        initialize_module_serializers();
+        crate::skir_client::internal::struct_serializer_from_static(GraphResourcesLayout::_adapter())
+    }
+}
+
+// ==============================================================================
+// struct TimelineResourcesLayout
+// ==============================================================================
+
+/// Places members on a timeline by their timeline placement.
+#[derive(Clone, Debug, PartialEq, Default)]
+pub struct TimelineResourcesLayout {
+    pub appearance: Option<ResourceTimelineAppearance>,
+    /// Set this to None when you're creating a struct.
+    pub _unrecognized: Option<crate::skir_client::UnrecognizedFields<TimelineResourcesLayout>>,
+}
+
+impl TimelineResourcesLayout {
+    pub fn default_ref() -> &'static TimelineResourcesLayout {
+        static D: std::sync::LazyLock<TimelineResourcesLayout> =
+            std::sync::LazyLock::new(TimelineResourcesLayout::default);
+        &D
+    }
+}
+
+impl TimelineResourcesLayout {
+    fn _adapter() -> &'static crate::skir_client::internal::StructAdapter<TimelineResourcesLayout> {
+        static ADAPTER: std::sync::LazyLock<
+            crate::skir_client::internal::StructAdapter<TimelineResourcesLayout>,
+        > = std::sync::LazyLock::new(|| {
+            crate::skir_client::internal::StructAdapter::new(
+                "editor/v1/presentation.skir",
+                "TimelineResourcesLayout",
+                "Places members on a timeline by their timeline placement.",
+                |x: &TimelineResourcesLayout| &x._unrecognized,
+                |x: &mut TimelineResourcesLayout, u| x._unrecognized = u,
+            )
+        });
+        &*ADAPTER
+    }
+    pub fn serializer() -> crate::skir_client::Serializer<TimelineResourcesLayout> {
+        initialize_module_serializers();
+        crate::skir_client::internal::struct_serializer_from_static(
+            TimelineResourcesLayout::_adapter(),
+        )
+    }
+}
+
+// ==============================================================================
+// struct GridResourcesLayout
+// ==============================================================================
+
+/// Shows members as cards of a fixed maximum extent and aspect ratio.
+#[derive(Clone, Debug, PartialEq, Default)]
+pub struct GridResourcesLayout {
+    pub item_extent: crate::skirout::base::editor::v1::expression::ExpressionNode,
+    pub aspect_ratio: crate::skirout::base::editor::v1::expression::ExpressionNode,
+    pub spacing: crate::skirout::base::editor::v1::expression::ExpressionNode,
+    /// Set this to None when you're creating a struct.
+    pub _unrecognized: Option<crate::skir_client::UnrecognizedFields<GridResourcesLayout>>,
+}
+
+impl GridResourcesLayout {
+    pub fn default_ref() -> &'static GridResourcesLayout {
+        static D: std::sync::LazyLock<GridResourcesLayout> =
+            std::sync::LazyLock::new(GridResourcesLayout::default);
+        &D
+    }
+}
+
+impl GridResourcesLayout {
+    fn _adapter() -> &'static crate::skir_client::internal::StructAdapter<GridResourcesLayout> {
+        static ADAPTER: std::sync::LazyLock<
+            crate::skir_client::internal::StructAdapter<GridResourcesLayout>,
+        > = std::sync::LazyLock::new(|| {
+            crate::skir_client::internal::StructAdapter::new(
+                "editor/v1/presentation.skir",
+                "GridResourcesLayout",
+                "Shows members as cards of a fixed maximum extent and aspect ratio.",
+                |x: &GridResourcesLayout| &x._unrecognized,
+                |x: &mut GridResourcesLayout, u| x._unrecognized = u,
+            )
+        });
+        &*ADAPTER
+    }
+    pub fn serializer() -> crate::skir_client::Serializer<GridResourcesLayout> {
+        initialize_module_serializers();
+        crate::skir_client::internal::struct_serializer_from_static(GridResourcesLayout::_adapter())
+    }
+}
+
+// ==============================================================================
+// struct TreeResourcesLayout
+// ==============================================================================
+
+/// Groups members by the hierarchy path at `path`, relative to each member. `group` renders
+/// each group header with `group_binding_id` bound to a HierarchyGroup value. Dropping a member
+/// onto a group rewrites its path field.
+#[derive(Clone, Debug, PartialEq, Default)]
+pub struct TreeResourcesLayout {
+    pub path: crate::skirout::base::editor::v1::type_catalog::ValuePath,
+    pub group: Option<PresentationNode>,
+    pub group_binding_id: crate::skirout::base::editor::v1::type_catalog::ExpressionBindingId,
+    pub connectors: Option<HierarchySequenceLayout>,
+    pub initially_expanded: bool,
+    /// Set this to None when you're creating a struct.
+    pub _unrecognized: Option<crate::skir_client::UnrecognizedFields<TreeResourcesLayout>>,
+}
+
+impl TreeResourcesLayout {
+    pub fn default_ref() -> &'static TreeResourcesLayout {
+        static D: std::sync::LazyLock<TreeResourcesLayout> =
+            std::sync::LazyLock::new(TreeResourcesLayout::default);
+        &D
+    }
+}
+
+impl TreeResourcesLayout {
+    fn _adapter() -> &'static crate::skir_client::internal::StructAdapter<TreeResourcesLayout> {
+        static ADAPTER: std::sync::LazyLock<
+            crate::skir_client::internal::StructAdapter<TreeResourcesLayout>,
+        > = std::sync::LazyLock::new(|| {
+            crate::skir_client::internal::StructAdapter::new(
+                "editor/v1/presentation.skir",
+                "TreeResourcesLayout",
+                "Groups members by the hierarchy path at `path`, relative to each member. `group` renders\neach group header with `group_binding_id` bound to a HierarchyGroup value. Dropping a member\nonto a group rewrites its path field.",
+                |x: &TreeResourcesLayout| &x._unrecognized,
+                |x: &mut TreeResourcesLayout, u| x._unrecognized = u,
+            )
+        });
+        &*ADAPTER
+    }
+    pub fn serializer() -> crate::skir_client::Serializer<TreeResourcesLayout> {
+        initialize_module_serializers();
+        crate::skir_client::internal::struct_serializer_from_static(TreeResourcesLayout::_adapter())
     }
 }
 
@@ -17530,37 +17680,23 @@ fn initialize_module_serializers() {
                 },
             );
             (*a).add_wrapper_variant(
-                "page_graph",
+                "resources",
                 57,
                 57,
                 crate::skir_client::internal::struct_serializer_from_static(
-                    PageGraphElement::_adapter(),
+                    ResourcesElement::_adapter(),
                 ),
                 "",
-                |v| PresentationElement::PageGraph(Box::new(v)),
+                |v| PresentationElement::Resources(Box::new(v)),
                 |x| match x {
-                    PresentationElement::PageGraph(b) => b.as_ref(),
-                    _ => unreachable!(),
-                },
-            );
-            (*a).add_wrapper_variant(
-                "page_timeline",
-                58,
-                58,
-                crate::skir_client::internal::struct_serializer_from_static(
-                    PageTimelineElement::_adapter(),
-                ),
-                "",
-                |v| PresentationElement::PageTimeline(Box::new(v)),
-                |x| match x {
-                    PresentationElement::PageTimeline(b) => b.as_ref(),
+                    PresentationElement::Resources(b) => b.as_ref(),
                     _ => unreachable!(),
                 },
             );
             (*a).add_wrapper_variant(
                 "align",
-                59,
-                59,
+                58,
+                58,
                 crate::skir_client::internal::struct_serializer_from_static(
                     AlignmentLayout::_adapter(),
                 ),
@@ -17573,8 +17709,8 @@ fn initialize_module_serializers() {
             );
             (*a).add_wrapper_variant(
                 "appearance_defaults",
-                60,
-                60,
+                59,
+                59,
                 crate::skir_client::internal::struct_serializer_from_static(
                     AppearanceDefaultsElement::_adapter(),
                 ),
@@ -17587,8 +17723,8 @@ fn initialize_module_serializers() {
             );
             (*a).add_wrapper_variant(
                 "part",
-                61,
-                61,
+                60,
+                60,
                 crate::skir_client::internal::struct_serializer_from_static(
                     PresentationPartElement::_adapter(),
                 ),
@@ -17822,18 +17958,6 @@ fn initialize_module_serializers() {
                 |x: &PresentationCollectionDefinition| &x.projection,
                 |x: &mut PresentationCollectionDefinition, v| x.projection = v,
             );
-            (*a).add_field(
-                "resources",
-                7,
-                crate::skir_client::Serializer::optional(
-                    crate::skir_client::internal::struct_serializer_from_static(
-                        PresentationResourceCollection::_adapter(),
-                    ),
-                ),
-                "",
-                |x: &PresentationCollectionDefinition| &x.resources,
-                |x: &mut PresentationCollectionDefinition, v| x.resources = v,
-            );
             (*a).finalize();
         }
         unsafe {
@@ -17921,38 +18045,6 @@ fn initialize_module_serializers() {
                 "",
                 |x: &PresentationCollectionProjection| &x.fields,
                 |x: &mut PresentationCollectionProjection, v| x.fields = v,
-            );
-            (*a).finalize();
-        }
-        unsafe {
-            let a: *mut crate::skir_client::internal::StructAdapter<
-                PresentationResourceCollection,
-            > = PresentationResourceCollection::_adapter() as *const _ as *mut _;
-            (*a).add_field(
-                "root",
-                0,
-                crate::skirout::base::editor::v1::type_catalog::TypeDefinitionId::serializer(),
-                "",
-                |x: &PresentationResourceCollection| &x.root,
-                |x: &mut PresentationResourceCollection, v| x.root = v,
-            );
-            (*a).add_field(
-                "resource_binding_id",
-                1,
-                crate::skirout::base::editor::v1::type_catalog::ExpressionBindingId::serializer(),
-                "",
-                |x: &PresentationResourceCollection| &x.resource_binding_id,
-                |x: &mut PresentationResourceCollection, v| x.resource_binding_id = v,
-            );
-            (*a).add_field(
-                "appearance",
-                2,
-                crate::skir_client::Serializer::optional(
-                    crate::skirout::base::editor::v1::type_catalog::PresentationId::serializer(),
-                ),
-                "",
-                |x: &PresentationResourceCollection| &x.appearance,
-                |x: &mut PresentationResourceCollection, v| x.appearance = v,
             );
             (*a).finalize();
         }
@@ -18322,17 +18414,17 @@ fn initialize_module_serializers() {
             (*a).finalize();
         }
         unsafe {
-            let a: *mut crate::skir_client::internal::EnumAdapter<PageGraphDirection> =
-                PageGraphDirection::_adapter() as *const _ as *mut _;
-            (*a).add_constant_variant("left_to_right", 1, 1, "", PageGraphDirection::LeftToRight);
-            (*a).add_constant_variant("right_to_left", 2, 2, "", PageGraphDirection::RightToLeft);
-            (*a).add_constant_variant("top_to_bottom", 3, 3, "", PageGraphDirection::TopToBottom);
-            (*a).add_constant_variant("bottom_to_top", 4, 4, "", PageGraphDirection::BottomToTop);
+            let a: *mut crate::skir_client::internal::EnumAdapter<GraphDirection> =
+                GraphDirection::_adapter() as *const _ as *mut _;
+            (*a).add_constant_variant("left_to_right", 1, 1, "", GraphDirection::LeftToRight);
+            (*a).add_constant_variant("right_to_left", 2, 2, "", GraphDirection::RightToLeft);
+            (*a).add_constant_variant("top_to_bottom", 3, 3, "", GraphDirection::TopToBottom);
+            (*a).add_constant_variant("bottom_to_top", 4, 4, "", GraphDirection::BottomToTop);
             (*a).finalize();
         }
         unsafe {
-            let a: *mut crate::skir_client::internal::StructAdapter<PageGraphElement> =
-                PageGraphElement::_adapter() as *const _ as *mut _;
+            let a: *mut crate::skir_client::internal::StructAdapter<ResourcesElement> =
+                ResourcesElement::_adapter() as *const _ as *mut _;
             (*a).add_field(
                 "control",
                 0,
@@ -18340,58 +18432,99 @@ fn initialize_module_serializers() {
                     BoundControl::_adapter(),
                 ),
                 "",
-                |x: &PageGraphElement| &x.control,
-                |x: &mut PageGraphElement, v| x.control = v,
+                |x: &ResourcesElement| &x.control,
+                |x: &mut ResourcesElement, v| x.control = v,
             );
             (*a).add_field(
-                "direction",
+                "layout",
                 1,
                 crate::skir_client::internal::enum_serializer_from_static(
-                    PageGraphDirection::_adapter(),
+                    ResourcesLayout::_adapter(),
                 ),
                 "",
-                |x: &PageGraphElement| &x.direction,
-                |x: &mut PageGraphElement, v| x.direction = v,
+                |x: &ResourcesElement| &x.layout,
+                |x: &mut ResourcesElement, v| x.layout = v,
             );
             (*a).add_field(
-                "appearance",
+                "order",
                 2,
                 crate::skir_client::Serializer::optional(
-                    crate::skir_client::internal::struct_serializer_from_static(
-                        PageGraphAppearance::_adapter(),
-                    ),
+                    crate::skirout::base::editor::v1::expression::ExpressionNode::serializer(),
                 ),
                 "",
-                |x: &PageGraphElement| &x.appearance,
-                |x: &mut PageGraphElement, v| x.appearance = v,
+                |x: &ResourcesElement| &x.order,
+                |x: &mut ResourcesElement, v| x.order = v,
+            );
+            (*a).add_field(
+                "item_binding_id",
+                3,
+                crate::skirout::base::editor::v1::type_catalog::ExpressionBindingId::serializer(),
+                "",
+                |x: &ResourcesElement| &x.item_binding_id,
+                |x: &mut ResourcesElement, v| x.item_binding_id = v,
             );
             (*a).finalize();
         }
         unsafe {
-            let a: *mut crate::skir_client::internal::StructAdapter<PageTimelineElement> =
-                PageTimelineElement::_adapter() as *const _ as *mut _;
-            (*a).add_field(
-                "control",
-                0,
-                crate::skir_client::internal::struct_serializer_from_static(
-                    BoundControl::_adapter(),
-                ),
-                "",
-                |x: &PageTimelineElement| &x.control,
-                |x: &mut PageTimelineElement, v| x.control = v,
-            );
-            (*a).add_field(
-                "appearance",
+            let a: *mut crate::skir_client::internal::EnumAdapter<ResourcesLayout> =
+                ResourcesLayout::_adapter() as *const _ as *mut _;
+            (*a).add_wrapper_variant(
+                "graph",
                 1,
-                crate::skir_client::Serializer::optional(
-                    crate::skir_client::internal::struct_serializer_from_static(
-                        PageTimelineAppearance::_adapter(),
-                    ),
+                1,
+                crate::skir_client::internal::struct_serializer_from_static(
+                    GraphResourcesLayout::_adapter(),
                 ),
                 "",
-                |x: &PageTimelineElement| &x.appearance,
-                |x: &mut PageTimelineElement, v| x.appearance = v,
+                |v| ResourcesLayout::Graph(Box::new(v)),
+                |x| match x {
+                    ResourcesLayout::Graph(b) => b.as_ref(),
+                    _ => unreachable!(),
+                },
             );
+            (*a).add_wrapper_variant(
+                "timeline",
+                2,
+                2,
+                crate::skir_client::internal::struct_serializer_from_static(
+                    TimelineResourcesLayout::_adapter(),
+                ),
+                "",
+                |v| ResourcesLayout::Timeline(Box::new(v)),
+                |x| match x {
+                    ResourcesLayout::Timeline(b) => b.as_ref(),
+                    _ => unreachable!(),
+                },
+            );
+            (*a).add_wrapper_variant(
+                "grid",
+                3,
+                3,
+                crate::skir_client::internal::struct_serializer_from_static(
+                    GridResourcesLayout::_adapter(),
+                ),
+                "",
+                |v| ResourcesLayout::Grid(Box::new(v)),
+                |x| match x {
+                    ResourcesLayout::Grid(b) => b.as_ref(),
+                    _ => unreachable!(),
+                },
+            );
+            (*a).add_wrapper_variant(
+                "tree",
+                4,
+                4,
+                crate::skir_client::internal::struct_serializer_from_static(
+                    TreeResourcesLayout::_adapter(),
+                ),
+                "",
+                |v| ResourcesLayout::Tree(Box::new(v)),
+                |x| match x {
+                    ResourcesLayout::Tree(b) => b.as_ref(),
+                    _ => unreachable!(),
+                },
+            );
+            (*a).add_constant_variant("list", 5, 5, "", ResourcesLayout::List);
             (*a).finalize();
         }
         unsafe {
@@ -18460,6 +18593,13 @@ fn initialize_module_serializers() {
                 PresentationInteractionState::ReadOnly,
             );
             (*a).add_constant_variant("invalid", 7, 7, "", PresentationInteractionState::Invalid);
+            (*a).add_constant_variant(
+                "routed",
+                8,
+                8,
+                "The resource is the one open in the workspace.",
+                PresentationInteractionState::Routed,
+            );
             (*a).finalize();
         }
         unsafe {
@@ -20694,8 +20834,8 @@ fn initialize_module_serializers() {
             (*a).finalize();
         }
         unsafe {
-            let a: *mut crate::skir_client::internal::StructAdapter<PageGraphAppearance> =
-                PageGraphAppearance::_adapter() as *const _ as *mut _;
+            let a: *mut crate::skir_client::internal::StructAdapter<ResourceGraphAppearance> =
+                ResourceGraphAppearance::_adapter() as *const _ as *mut _;
             (*a).add_field(
                 "cell_size",
                 0,
@@ -20703,8 +20843,8 @@ fn initialize_module_serializers() {
                     crate::skirout::base::editor::v1::expression::ExpressionNode::serializer(),
                 ),
                 "",
-                |x: &PageGraphAppearance| &x.cell_size,
-                |x: &mut PageGraphAppearance, v| x.cell_size = v,
+                |x: &ResourceGraphAppearance| &x.cell_size,
+                |x: &mut ResourceGraphAppearance, v| x.cell_size = v,
             );
             (*a).add_field(
                 "edge_color",
@@ -20715,8 +20855,8 @@ fn initialize_module_serializers() {
                     ),
                 ),
                 "",
-                |x: &PageGraphAppearance| &x.edge_color,
-                |x: &mut PageGraphAppearance, v| x.edge_color = v,
+                |x: &ResourceGraphAppearance| &x.edge_color,
+                |x: &mut ResourceGraphAppearance, v| x.edge_color = v,
             );
             (*a).add_field(
                 "card_padding",
@@ -20727,53 +20867,53 @@ fn initialize_module_serializers() {
                     ),
                 ),
                 "",
-                |x: &PageGraphAppearance| &x.card_padding,
-                |x: &mut PageGraphAppearance, v| x.card_padding = v,
+                |x: &ResourceGraphAppearance| &x.card_padding,
+                |x: &mut ResourceGraphAppearance, v| x.card_padding = v,
             );
             (*a).finalize();
         }
         unsafe {
-            let a: *mut crate::skir_client::internal::StructAdapter<PageTimelineAppearance> =
-                PageTimelineAppearance::_adapter() as *const _ as *mut _;
+            let a: *mut crate::skir_client::internal::StructAdapter<ResourceTimelineAppearance> =
+                ResourceTimelineAppearance::_adapter() as *const _ as *mut _;
             (*a).add_field(
                 "ruler_height",
                 0,
                 crate::skir_client::Serializer::optional(crate::skir_client::Serializer::float64()),
                 "",
-                |x: &PageTimelineAppearance| &x.ruler_height,
-                |x: &mut PageTimelineAppearance, v| x.ruler_height = v,
+                |x: &ResourceTimelineAppearance| &x.ruler_height,
+                |x: &mut ResourceTimelineAppearance, v| x.ruler_height = v,
             );
             (*a).add_field(
                 "track_padding",
                 1,
                 crate::skir_client::Serializer::optional(crate::skir_client::Serializer::float64()),
                 "",
-                |x: &PageTimelineAppearance| &x.track_padding,
-                |x: &mut PageTimelineAppearance, v| x.track_padding = v,
+                |x: &ResourceTimelineAppearance| &x.track_padding,
+                |x: &mut ResourceTimelineAppearance, v| x.track_padding = v,
             );
             (*a).add_field(
                 "lane_height",
                 2,
                 crate::skir_client::Serializer::optional(crate::skir_client::Serializer::float64()),
                 "",
-                |x: &PageTimelineAppearance| &x.lane_height,
-                |x: &mut PageTimelineAppearance, v| x.lane_height = v,
+                |x: &ResourceTimelineAppearance| &x.lane_height,
+                |x: &mut ResourceTimelineAppearance, v| x.lane_height = v,
             );
             (*a).add_field(
                 "lane_gap",
                 3,
                 crate::skir_client::Serializer::optional(crate::skir_client::Serializer::float64()),
                 "",
-                |x: &PageTimelineAppearance| &x.lane_gap,
-                |x: &mut PageTimelineAppearance, v| x.lane_gap = v,
+                |x: &ResourceTimelineAppearance| &x.lane_gap,
+                |x: &mut ResourceTimelineAppearance, v| x.lane_gap = v,
             );
             (*a).add_field(
                 "header_padding",
                 4,
                 crate::skir_client::Serializer::optional(crate::skir_client::Serializer::float64()),
                 "",
-                |x: &PageTimelineAppearance| &x.header_padding,
-                |x: &mut PageTimelineAppearance, v| x.header_padding = v,
+                |x: &ResourceTimelineAppearance| &x.header_padding,
+                |x: &mut ResourceTimelineAppearance, v| x.header_padding = v,
             );
             (*a).add_field(
                 "header_color",
@@ -20784,8 +20924,8 @@ fn initialize_module_serializers() {
                     ),
                 ),
                 "",
-                |x: &PageTimelineAppearance| &x.header_color,
-                |x: &mut PageTimelineAppearance, v| x.header_color = v,
+                |x: &ResourceTimelineAppearance| &x.header_color,
+                |x: &mut ResourceTimelineAppearance, v| x.header_color = v,
             );
             (*a).add_field(
                 "ruler_color",
@@ -20796,8 +20936,8 @@ fn initialize_module_serializers() {
                     ),
                 ),
                 "",
-                |x: &PageTimelineAppearance| &x.ruler_color,
-                |x: &mut PageTimelineAppearance, v| x.ruler_color = v,
+                |x: &ResourceTimelineAppearance| &x.ruler_color,
+                |x: &mut ResourceTimelineAppearance, v| x.ruler_color = v,
             );
             (*a).add_field(
                 "track_color",
@@ -20808,8 +20948,8 @@ fn initialize_module_serializers() {
                     ),
                 ),
                 "",
-                |x: &PageTimelineAppearance| &x.track_color,
-                |x: &mut PageTimelineAppearance, v| x.track_color = v,
+                |x: &ResourceTimelineAppearance| &x.track_color,
+                |x: &mut ResourceTimelineAppearance, v| x.track_color = v,
             );
             (*a).add_field(
                 "alternate_track_color",
@@ -20820,8 +20960,8 @@ fn initialize_module_serializers() {
                     ),
                 ),
                 "",
-                |x: &PageTimelineAppearance| &x.alternate_track_color,
-                |x: &mut PageTimelineAppearance, v| x.alternate_track_color = v,
+                |x: &ResourceTimelineAppearance| &x.alternate_track_color,
+                |x: &mut ResourceTimelineAppearance, v| x.alternate_track_color = v,
             );
             (*a).add_field(
                 "grid_minor_color",
@@ -20832,8 +20972,8 @@ fn initialize_module_serializers() {
                     ),
                 ),
                 "",
-                |x: &PageTimelineAppearance| &x.grid_minor_color,
-                |x: &mut PageTimelineAppearance, v| x.grid_minor_color = v,
+                |x: &ResourceTimelineAppearance| &x.grid_minor_color,
+                |x: &mut ResourceTimelineAppearance, v| x.grid_minor_color = v,
             );
             (*a).add_field(
                 "grid_major_color",
@@ -20844,8 +20984,8 @@ fn initialize_module_serializers() {
                     ),
                 ),
                 "",
-                |x: &PageTimelineAppearance| &x.grid_major_color,
-                |x: &mut PageTimelineAppearance, v| x.grid_major_color = v,
+                |x: &ResourceTimelineAppearance| &x.grid_major_color,
+                |x: &mut ResourceTimelineAppearance, v| x.grid_major_color = v,
             );
             (*a).add_field(
                 "text_muted_color",
@@ -20856,8 +20996,8 @@ fn initialize_module_serializers() {
                     ),
                 ),
                 "",
-                |x: &PageTimelineAppearance| &x.text_muted_color,
-                |x: &mut PageTimelineAppearance, v| x.text_muted_color = v,
+                |x: &ResourceTimelineAppearance| &x.text_muted_color,
+                |x: &mut ResourceTimelineAppearance, v| x.text_muted_color = v,
             );
             (*a).finalize();
         }
@@ -21277,6 +21417,132 @@ fn initialize_module_serializers() {
                 "",
                 |x: &PresentationPartElement| &x.body,
                 |x: &mut PresentationPartElement, v| x.body = v,
+            );
+            (*a).finalize();
+        }
+        unsafe {
+            let a: *mut crate::skir_client::internal::StructAdapter<GraphResourcesLayout> =
+                GraphResourcesLayout::_adapter() as *const _ as *mut _;
+            (*a).add_field(
+                "direction",
+                0,
+                crate::skir_client::internal::enum_serializer_from_static(
+                    GraphDirection::_adapter(),
+                ),
+                "",
+                |x: &GraphResourcesLayout| &x.direction,
+                |x: &mut GraphResourcesLayout, v| x.direction = v,
+            );
+            (*a).add_field(
+                "appearance",
+                1,
+                crate::skir_client::Serializer::optional(
+                    crate::skir_client::internal::struct_serializer_from_static(
+                        ResourceGraphAppearance::_adapter(),
+                    ),
+                ),
+                "",
+                |x: &GraphResourcesLayout| &x.appearance,
+                |x: &mut GraphResourcesLayout, v| x.appearance = v,
+            );
+            (*a).finalize();
+        }
+        unsafe {
+            let a: *mut crate::skir_client::internal::StructAdapter<TimelineResourcesLayout> =
+                TimelineResourcesLayout::_adapter() as *const _ as *mut _;
+            (*a).add_field(
+                "appearance",
+                0,
+                crate::skir_client::Serializer::optional(
+                    crate::skir_client::internal::struct_serializer_from_static(
+                        ResourceTimelineAppearance::_adapter(),
+                    ),
+                ),
+                "",
+                |x: &TimelineResourcesLayout| &x.appearance,
+                |x: &mut TimelineResourcesLayout, v| x.appearance = v,
+            );
+            (*a).finalize();
+        }
+        unsafe {
+            let a: *mut crate::skir_client::internal::StructAdapter<GridResourcesLayout> =
+                GridResourcesLayout::_adapter() as *const _ as *mut _;
+            (*a).add_field(
+                "item_extent",
+                0,
+                crate::skirout::base::editor::v1::expression::ExpressionNode::serializer(),
+                "",
+                |x: &GridResourcesLayout| &x.item_extent,
+                |x: &mut GridResourcesLayout, v| x.item_extent = v,
+            );
+            (*a).add_field(
+                "aspect_ratio",
+                1,
+                crate::skirout::base::editor::v1::expression::ExpressionNode::serializer(),
+                "",
+                |x: &GridResourcesLayout| &x.aspect_ratio,
+                |x: &mut GridResourcesLayout, v| x.aspect_ratio = v,
+            );
+            (*a).add_field(
+                "spacing",
+                2,
+                crate::skirout::base::editor::v1::expression::ExpressionNode::serializer(),
+                "",
+                |x: &GridResourcesLayout| &x.spacing,
+                |x: &mut GridResourcesLayout, v| x.spacing = v,
+            );
+            (*a).finalize();
+        }
+        unsafe {
+            let a: *mut crate::skir_client::internal::StructAdapter<TreeResourcesLayout> =
+                TreeResourcesLayout::_adapter() as *const _ as *mut _;
+            (*a).add_field(
+                "path",
+                0,
+                crate::skirout::base::editor::v1::type_catalog::ValuePath::serializer(),
+                "",
+                |x: &TreeResourcesLayout| &x.path,
+                |x: &mut TreeResourcesLayout, v| x.path = v,
+            );
+            (*a).add_field(
+                "group",
+                1,
+                crate::skir_client::Serializer::optional(
+                    crate::skir_client::internal::struct_serializer_from_static(
+                        PresentationNode::_adapter(),
+                    ),
+                ),
+                "",
+                |x: &TreeResourcesLayout| &x.group,
+                |x: &mut TreeResourcesLayout, v| x.group = v,
+            );
+            (*a).add_field(
+                "group_binding_id",
+                2,
+                crate::skirout::base::editor::v1::type_catalog::ExpressionBindingId::serializer(),
+                "",
+                |x: &TreeResourcesLayout| &x.group_binding_id,
+                |x: &mut TreeResourcesLayout, v| x.group_binding_id = v,
+            );
+            (*a).add_field(
+                "connectors",
+                3,
+                crate::skir_client::Serializer::optional(
+                    crate::skir_client::internal::struct_serializer_from_static(
+                        HierarchySequenceLayout::_adapter(),
+                    ),
+                ),
+                "",
+                |x: &TreeResourcesLayout| &x.connectors,
+                |x: &mut TreeResourcesLayout, v| x.connectors = v,
+            );
+            (*a).add_field(
+                "initially_expanded",
+                4,
+                crate::skir_client::Serializer::bool(),
+                "",
+                |x: &TreeResourcesLayout| &x.initially_expanded,
+                |x: &mut TreeResourcesLayout, v| x.initially_expanded = v,
             );
             (*a).finalize();
         }

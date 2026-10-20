@@ -15,6 +15,7 @@ import com.typewritermc.realm.authoring.AuthoringViewStore
 import com.typewritermc.realm.authoring.InMemoryAuthoringViewStore
 import com.typewritermc.realm.authoring.PreparationCoordinator
 import com.typewritermc.realm.authoring.PreparationEvaluator
+import com.typewritermc.realm.authoring.RealmStructureProvisioning
 import com.typewritermc.realm.catalog.RealmCatalogStore
 import com.typewritermc.realm.checking.RealmCheckRuntime
 import com.typewritermc.realm.compiler.AuthoringAcceptance
@@ -137,6 +138,7 @@ internal class Realm(
             this.editorUpdates = editorUpdates
             checkRuntime.reloadCatalog()
             val routedAuthoring = CheckingAuthoringRepository(authoring, checkRuntime, editorUpdates)
+            RealmStructureProvisioning(routedAuthoring).ensure(viewStore)
             publisher.recoverInterrupted()
             publisher.start(scope, viewStore.changes)
             val preparation =

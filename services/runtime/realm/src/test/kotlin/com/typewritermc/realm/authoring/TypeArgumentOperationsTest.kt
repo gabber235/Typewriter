@@ -2,13 +2,11 @@ package com.typewritermc.realm.authoring
 
 import com.typewritermc.authoring.ArgumentSelection
 import com.typewritermc.authoring.AuthoringRecord
-import com.typewritermc.authoring.AuthoringResourceDefinition
 import com.typewritermc.authoring.CommitResult
 import com.typewritermc.authoring.EditIntent
 import com.typewritermc.authoring.ItemId
 import com.typewritermc.authoring.PreparedEdit
 import com.typewritermc.authoring.PreparedEditResult
-import com.typewritermc.authoring.ResourceDefinitionId
 import com.typewritermc.authoring.TypeSelection
 import com.typewritermc.authoring.ValueLocation
 import com.typewritermc.authoring.ValuePath
@@ -367,13 +365,6 @@ private class RepairCatalogLease(
     override val checks: List<OwnedCheckRecipe> = emptyList()
     override val relations: List<RelationContract> = listOf(DUAL_RELATION)
     override val endpointBindings: List<EndpointBindingTemplate> = emptyList()
-    override val resources: List<AuthoringResourceDefinition> =
-        listOf(
-            AuthoringResourceDefinition(ResourceDefinitionId("container"), CONTAINER),
-            AuthoringResourceDefinition(ResourceDefinitionId("dual"), DUAL),
-            AuthoringResourceDefinition(ResourceDefinitionId("reward"), REWARD),
-        )
-
     override val configuration: List<com.typewritermc.configuration.ConfigurationRecipe> = emptyList()
     override val operations = com.typewritermc.operations.OperationCatalog()
     override val placementFields = emptyMap<com.typewritermc.types.TypeDefinitionId, com.typewritermc.authoring.ValuePath>()

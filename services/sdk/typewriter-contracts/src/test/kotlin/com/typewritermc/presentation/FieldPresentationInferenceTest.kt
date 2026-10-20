@@ -673,7 +673,13 @@ val FieldPresentationInferenceTest by testSuite {
                 generation = CatalogGeneration("field defaults"),
                 types = emptyList(),
                 relations = emptyList(),
-                resourceDefinitions = emptyList(),
+                resourceDisplays = emptyList(),
+                realmRoot =
+                    com.typewritermc.types.TypeDefinitionId(
+                        com.typewritermc.types.TypeId
+                            .Qualified("test", "realm.root"),
+                        1,
+                    ),
                 presentations = emptyList(),
                 presentationMaterials = listOf(material),
                 configuration = emptyList(),

@@ -15,8 +15,6 @@ import java.math.BigInteger
 import kotlinx.serialization.Transient
 import kotlinx.serialization.SerialName
 import com.typewritermc.authoring.CaptureResult
-import com.typewritermc.authoring.ResourceDefinitionId
-import com.typewritermc.authoring.TypewriterResourceDefinition
 import com.typewritermc.discovery.CatalogAssemblyContext
 import com.typewritermc.discovery.DeploymentFacts
 import com.typewritermc.discovery.DiscoveryDomains
@@ -41,6 +39,13 @@ import com.typewritermc.presentation.collectionProjection
 import com.typewritermc.presentation.projectedCollectionSource
 import com.typewritermc.types.PresentationRole
 import com.typewritermc.types.RepresentationTemplate
+import com.typewritermc.types.DeletionPolicy
+import com.typewritermc.types.Many
+import com.typewritermc.types.One
+import com.typewritermc.types.Owning
+import com.typewritermc.types.Ref
+import com.typewritermc.types.ReferenceContract
+import com.typewritermc.types.RelationDeletePolicy
 import com.typewritermc.types.Resource
 import com.typewritermc.types.ResourceTarget
 import com.typewritermc.types.TypeTemplate
@@ -79,6 +84,7 @@ data class Example(
     val details: ExampleRow? = null,
     val rows: List<ExampleRow> = emptyList(),
     val labels: Map<String, ExampleRow> = emptyMap(),
+    val children: List<Ref<ExampleChildren.Parent, Example>> = emptyList(),
 ) : Resource {
     companion object : ExampleConfiguration {
         override fun ExampleConfigurationScope.configure() {
@@ -97,6 +103,15 @@ data class Example(
 }
 
 private fun failingDefault(): String = error("fixture default failure")
+
+/** Examples own nested examples, so the Example type is the member of an ownership relation. */
+@ReferenceContract("a00000000000000000000000000000a1")
+interface ExampleChildrenContract : Owning {
+    @DeletionPolicy(RelationDeletePolicy.CASCADE)
+    interface Parent : One<Example>
+
+    interface Child : Many<Example>
+}
 
 @TypewriterType(id = "a0000000000000000000000000000097")
 data class ExampleRow(
@@ -148,11 +163,6 @@ data class CancelledDefaults(val value: String = throw kotlinx.coroutines.Cancel
 
 @TypewriterType(id = "a0000000000000000000000000000105")
 data class TransientDefaults(@Transient val hidden: Int = 5, val derived: Int = hidden * 2)
-
-object FixtureResources {
-    @TypewriterResourceDefinition("fixture.example", Example::class)
-    val EXAMPLE = ResourceDefinitionId("fixture.example")
-}
 
 @TypewriterCollectionProjection
 fun exampleCollectionProjection(): CollectionProjection<Example, ExampleRow, ExampleRowExpressions> =
@@ -261,7 +271,8 @@ fun main(args: Array<String>) {
                 setOf(
                     GeneratedProviderKind.Type,
                     GeneratedProviderKind.NativeBinding,
-                    GeneratedProviderKind.Resource,
+                    GeneratedProviderKind.Relation,
+                    GeneratedProviderKind.EndpointBindings,
                     GeneratedProviderKind.Configuration,
                     GeneratedProviderKind.Presentation,
                     GeneratedProviderKind.ResourceDisplay,
@@ -272,7 +283,6 @@ fun main(args: Array<String>) {
             val contributions = deployment.providers.contributions
             check(contributions.configurations.size == 1)
             check(contributions.presentations.size == 1)
-            check(contributions.resources.single().root == ExampleDefinition.id)
             check(contributions.displays.single().provider.target == ResourceTarget.Type(TypeTemplate.Named(ExampleDefinition.id)))
             val assembly = contributions.assemble(CatalogAssemblyContext(CatalogGeneration("fixture")))
             check(assembly.snapshot.resourceDisplays.single().target == ResourceTarget.Type(TypeTemplate.Named(ExampleDefinition.id)))

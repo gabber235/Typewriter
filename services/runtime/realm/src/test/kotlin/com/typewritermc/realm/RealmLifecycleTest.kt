@@ -3,9 +3,7 @@ package com.typewritermc.realm
 import build.skir.Serializer
 import com.surrealdb.Surreal
 import com.typewritermc.authoring.AuthoringRecord
-import com.typewritermc.authoring.AuthoringResourceDefinition
 import com.typewritermc.authoring.RelationProjectionDelta
-import com.typewritermc.authoring.ResourceDefinitionId
 import com.typewritermc.authoring.TypeSelection
 import com.typewritermc.checking.CatalogGeneration
 import com.typewritermc.checking.InputToken
@@ -330,14 +328,7 @@ val RealmLifecycleTest by testSuite {
                 RealmLifecycleFixture(
                     this,
                     catalog = incarnation,
-                    initialSeed =
-                        AuthoringSeed(
-                            resources,
-                            mapOf(
-                                availableResource to ResourceDefinitionId("valid"),
-                                unavailableResource to ResourceDefinitionId("removed"),
-                            ),
-                        ),
+                    initialSeed = AuthoringSeed(resources),
                 )
             try {
                 val session = fixture.session(1)
@@ -384,8 +375,6 @@ val RealmLifecycleTest by testSuite {
                         availableResource.value to availableRecord,
                         unavailableResource.value to unavailableRecord,
                     )
-                snapshot.resources.associate { it.id.value to it.definition.value } shouldBe
-                    mapOf(availableResource.value to "valid", unavailableResource.value to "removed")
             } finally {
                 fixture.close()
             }
@@ -425,11 +414,6 @@ private fun lifecycleIsolationCatalog(
                     OwnedTypeDeclaration(origin("valid"), validDefinition),
                     OwnedTypeDeclaration(origin("unavailable_first"), unavailableDefinition),
                     OwnedTypeDeclaration(origin("unavailable_second"), unavailableDefinition),
-                ),
-            resources =
-                listOf(
-                    AuthoringResourceDefinition(ResourceDefinitionId("valid"), valid),
-                    AuthoringResourceDefinition(ResourceDefinitionId("removed"), unavailable),
                 ),
         )
     val deployment = GeneratedProviderLoader().load(emptyList(), DeploymentFacts(), DiscoveryDomains.Realm)
@@ -477,7 +461,6 @@ private class RealmLifecycleFixture(
                                     initialSeed.resources,
                                     emptySet(),
                                     RelationProjectionDelta(emptyList(), emptyList(), emptyList()),
-                                    initialSeed.resourceDefinitions,
                                 ),
                             )
                         }

@@ -82,7 +82,7 @@ object ElementSearchPresentation : ElementPresentation {
 }
 
 object ElementGraphNodePresentation : ElementPresentation {
-    override val roles = setOf(PresentationRole.EDITOR_NODE)
+    override val roles = setOf(PresentationRole.ITEM)
 
     override fun ElementPresentationScope.present() {
         val element = subject.resource<Element>()

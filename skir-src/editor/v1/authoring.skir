@@ -9,10 +9,7 @@ import {
   LinkProjection,
   TraversalDirection,
 } from "editor/v1/authoring_facts.skir";
-import {
-  PreparedValue,
-  ResourceDefinitionId,
-} from "editor/v1/catalog.skir";
+import { PreparedValue } from "editor/v1/catalog.skir";
 import { FindingSet } from "editor/v1/checking.skir";
 import {
   DeclarationDiagnostic,
@@ -42,8 +39,7 @@ import { InternalError } from "kernel/v1/errors.skir";
 
 struct AuthoringResource(812200001) {
   id: ResourceId = 0;
-  definition: ResourceDefinitionId = 1;
-  content: AuthoringRecord = 2;
+  content: AuthoringRecord = 1;
 }
 
 /// Identifies an authored reference by endpoint and exact value location, including collection item identity.
@@ -113,8 +109,7 @@ enum UnresolvedLink(812200012) {
 /// Catalog choices use CatalogPresentationSubject instead because they have no resource instance.
 struct PresentationSubject(812200013) {
   resource: ResourceId = 0;
-  definition: ResourceDefinitionId = 1;
-  content: AuthoringRecord = 2;
+  content: AuthoringRecord = 1;
 }
 
 struct AuthoringDiagnostic(812200014) {
@@ -281,9 +276,8 @@ enum TypePreviewResult(812200039) {
 
 struct AuthoringSearchHit(812200040) {
   resource: ResourceId = 0;
-  definition: ResourceDefinitionId = 1;
-  subject: PresentationSubject = 2;
-  context: PortableValue = 3;
+  subject: PresentationSubject = 1;
+  context: PortableValue = 2;
 }
 
 struct AuthoringSearchResult(812200041) {

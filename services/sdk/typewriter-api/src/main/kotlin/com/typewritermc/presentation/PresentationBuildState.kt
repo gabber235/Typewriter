@@ -8,6 +8,7 @@ import com.typewritermc.expression.ExpressionFactories
 import com.typewritermc.types.PresentationRole
 import com.typewritermc.types.TypeTemplate
 import com.typewritermc.types.TypeUse
+import com.typewritermc.types.skir.SkirAuthoringValueCodec
 import com.typewritermc.types.skir.SkirTypeCodec
 import com.typewritermc.types.skir.getOrThrow
 import com.typewritermc.types.toTemplate
@@ -132,10 +133,57 @@ internal class PresentationBuildState(
                 require(errors.isEmpty()) { "Invalid authoring target expression: ${errors.joinToString()}." }
             }
 
+            is skirout.editor.v1.action.EditorAction.CreateWrapper -> {
+                checkCreate(action.value)
+            }
+
             else -> {
                 Unit
             }
         }
+    }
+
+    /**
+     * Checks that a create action links the new resource into an owning link field of the subject that accepts its
+     * type, and that every preset is a field of the created type receiving a value of that field's type.
+     */
+    private fun checkCreate(action: skirout.editor.v1.action.CreateResourceAction) {
+        val created = SkirTypeCodec.decode(action.type).getOrThrow()
+        action.owner?.let { owner ->
+            require(owner.bindingId == CONFIGURED_VALUE.wire()) { "A create action owner must be a field of the presentation subject." }
+            val field = type.at(SkirAuthoringValueCodec.decode(owner.path).getOrThrow())
+            val link =
+                requireNotNull(field?.let { it.link() ?: it.itemsOrNull()?.link() }) {
+                    "A create action owner must be a link field of the presentation subject."
+                }
+            require(
+                link.endpoint in binding.ownershipEndpoints,
+            ) { "A create action owner must be the owner side of an ownership relation." }
+            val target = requireNotNull(link.target as? TypeTemplate.Named) { "A create action owner must link a named resource type." }
+            require(type.isSubtype(created, target.definition)) { "A create action owner does not accept resources of $created." }
+        }
+        val subject = type.rebind(TypeTemplate.Named(created, emptyList()))
+        action.fields.forEach { preset ->
+            val path = SkirAuthoringValueCodec.decode(preset.path).getOrThrow()
+            val field = requireNotNull(subject.at(path)) { "A create action preset ${path.segments} is not a field of $created." }
+            // A preset that evaluates to missing leaves the field at its creation default.
+            val errors = type.checkExpression(preset.value, expressionTypes, field.type, expressionTypes.keys, mayBeMissing = true)
+            require(errors.isEmpty()) { "Invalid create action preset: ${errors.joinToString()}." }
+        }
+        type(TypeUse.Named(created))
+    }
+
+    /** The field at [path] below this type, or null when a segment is not a field of it. */
+    private fun CheckedPresentationTemplate.at(path: com.typewritermc.authoring.ValuePath): CheckedPresentationTemplate? =
+        path.segments.fold(this as CheckedPresentationTemplate?) { current, segment ->
+            (segment as? com.typewritermc.authoring.PathSegment.Field)?.let { current?.fieldOrNull(it.name) }
+        }
+
+    /** Declares the group binding of a tree layout, typed as the hierarchy group the host supplies. */
+    fun groupBinding(id: ExpressionBindingId) {
+        val use = TypeUse.Named(com.typewritermc.authoring.HierarchyGroupDefinition.id)
+        type(use)
+        expressionTypes[id] = use.toTemplate()
     }
 
     fun collection(source: CollectionSource<*, *>) {
