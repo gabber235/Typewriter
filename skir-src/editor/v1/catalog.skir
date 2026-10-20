@@ -110,6 +110,9 @@ struct PublishedType(810900010) {
   effective_fields: [EffectiveFieldTemplate|key] = 2;
   ancestor_templates: [NamedTypeTemplate] = 3;
   display: TypeDisplay? = 4;
+  /// The single effective field typed as a placement, which editors and Realm read and write
+  /// when they lay out resources of this type. Absent when the type declares no placement.
+  placement_field: ValuePath? = 5;
 }
 
 struct TypeDisplay(810900011) {

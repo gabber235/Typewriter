@@ -109,6 +109,9 @@ final class ResourceCreationFixture {
   }) {
     _types.add(
       skir.PublishedType(
+        placementField: fields.any((field) => field.key == "placement")
+            ? editorRootPath.field("placement")
+            : null,
         definition: skir.TypeDefinition(
           id: _id(name),
           parameters: const [],

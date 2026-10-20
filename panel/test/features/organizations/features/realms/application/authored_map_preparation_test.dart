@@ -216,6 +216,7 @@ _MapFixture _fixture() {
   ) {
     final owner = skir.FieldOwner(definition: id(name), name: fieldName);
     return skir.PublishedType(
+      placementField: null,
       definition: skir.TypeDefinition(
         id: id(name),
         parameters: const [],
@@ -256,6 +257,7 @@ _MapFixture _fixture() {
         skir.TypeTemplate.wrapScalar(skir.ScalarKind.text),
       ),
       skir.PublishedType(
+        placementField: null,
         definition: skir.TypeDefinition(
           id: id("Entries"),
           parameters: const [],

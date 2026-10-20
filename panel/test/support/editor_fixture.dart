@@ -26,6 +26,7 @@ EditorDocument recordEditorDocument(
     generation: skir.CatalogGeneration(value: "fixture"),
     types: [
       skir.PublishedType(
+        placementField: null,
         display: null,
         definition: skir.TypeDefinition(
           id: definition,

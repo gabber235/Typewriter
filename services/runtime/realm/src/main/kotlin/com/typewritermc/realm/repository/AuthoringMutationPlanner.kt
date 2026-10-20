@@ -39,6 +39,7 @@ import com.typewritermc.types.TypeUse
 import com.typewritermc.types.catalog.CheckedCatalog
 import com.typewritermc.types.catalog.Resolution
 import com.typewritermc.types.catalog.ResolvedRepresentation
+import com.typewritermc.types.isAcyclic
 import com.typewritermc.types.ownsResources
 
 internal sealed interface MutationPlanningResult {
@@ -201,6 +202,7 @@ internal class AuthoringMutationPlanner(
         problems += projection.problems.filter { it.location in affectedLocations }
         validateOwnership(projection.projections, contracts, affected, problems)
         validateCardinality(projection.projections, contracts, affected, problems)
+        validateAcyclic(projection.projections, contracts, affected, problems)
         return problems
     }
 
@@ -870,6 +872,44 @@ private fun validateCardinality(
                 .forEach { (resource, _) ->
                     problems += problem(resource, "second_endpoint_cardinality_exceeded")
                 }
+        }
+    }
+}
+
+/**
+ * Rejects a cycle through any acyclic relation reachable from an affected resource.
+ *
+ * Walks first to second endpoints iteratively so long chains cannot exhaust the stack, and finishes every resource
+ * once per contract.
+ */
+private fun validateAcyclic(
+    projections: List<LinkProjection>,
+    contracts: List<RelationContract>,
+    affected: Set<ResourceId>,
+    problems: MutableList<ValueProblem>,
+) {
+    val byContract = projections.groupBy { it.contract }
+    contracts.filter { it.isAcyclic }.forEach { contract ->
+        val next = byContract[contract.id].orEmpty().groupBy({ it.first }, { it.second })
+        val finished = hashSetOf<ResourceId>()
+        affected.forEach root@{ root ->
+            val active = hashSetOf<ResourceId>()
+            val stack = ArrayDeque(listOf(root to false))
+            while (stack.isNotEmpty()) {
+                val (id, leaving) = stack.removeLast()
+                if (leaving) {
+                    active -= id
+                    finished += id
+                    continue
+                }
+                if (id in finished) continue
+                if (!active.add(id)) {
+                    problems += problem(root, "relation_cycle")
+                    return@root
+                }
+                stack.addLast(id to true)
+                next[id].orEmpty().forEach { stack.addLast(it to false) }
+            }
         }
     }
 }

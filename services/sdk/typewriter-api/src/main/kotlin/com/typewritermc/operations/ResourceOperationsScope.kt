@@ -78,11 +78,6 @@ interface ResourceOperationsScope<D : ResourceDraft> {
     fun builtin(operation: BuiltinResourceOperation): OperationHandle
 
     fun primary(operation: OperationHandle)
-
-    fun placementFor(
-        collection: TypedPath<*, *>,
-        policy: DestinationPlacementPolicy,
-    )
 }
 
 @TypewriterDsl
@@ -174,26 +169,6 @@ fun <T> requireAuthored(value: Availability<T>): T =
         is Availability.Failed -> throw FailedAuthoredValue(value.diagnostic)
     }
 
-data class DestinationPlacementRequest(
-    val destination: ResourceId,
-    val collection: ValueLocation,
-    val subjects: List<ResourceDraft>,
-    val anchor: PlacementAnchor?,
-    val occupants: List<ResourceDraft>,
-)
-
-fun interface DestinationPlacementPolicy {
-    context(reads: AuthoredReads)
-    fun prepare(request: DestinationPlacementRequest): PlacementPreparation
-}
-
-data class DestinationPlacementDeclaration(
-    val origin: ProviderOrigin,
-    val target: TypeTemplate.Named,
-    val collection: TypedPath<*, *>,
-    val policy: DestinationPlacementPolicy,
-)
-
 class OperationDeclaration internal constructor(
     val origin: ProviderOrigin,
     val declaration: String,
@@ -201,7 +176,6 @@ class OperationDeclaration internal constructor(
     val operations: List<CollectedOperation>,
     val included: List<ResourceOperationDefinition>,
     val primary: ResourceOperationId?,
-    val placements: List<DestinationPlacementDeclaration>,
     val failure: Throwable? = null,
 )
 
@@ -234,7 +208,6 @@ class ResourceOperationsBuildScope<D : ResourceDraft> internal constructor(
 ) : ResourceOperationsScope<D> {
     internal val collected = mutableListOf<CollectedOperation>()
     internal val included = mutableListOf<ResourceOperationDefinition>()
-    internal val placements = mutableListOf<DestinationPlacementDeclaration>()
     internal var primary: ResourceOperationId? = null
 
     override fun <I> operation(
@@ -360,13 +333,6 @@ class ResourceOperationsBuildScope<D : ResourceDraft> internal constructor(
         require(primary == null || primary == operation.id) { "A contribution can nominate only one primary operation." }
         primary = operation.id
     }
-
-    override fun placementFor(
-        collection: TypedPath<*, *>,
-        policy: DestinationPlacementPolicy,
-    ) {
-        placements += DestinationPlacementDeclaration(origin, target, collection, policy)
-    }
 }
 
 private class OperationBuilder<D : ResourceDraft, I> : ResourceOperationBuilder<D, I> {
@@ -460,11 +426,10 @@ fun <D : ResourceDraft> collectOperations(
             scope.collected.toList(),
             scope.included.toList(),
             scope.primary,
-            scope.placements.toList(),
         )
     } catch (cancelled: CancellationException) {
         throw cancelled
     } catch (failure: Exception) {
-        OperationDeclaration(origin, declaration, target, emptyList(), emptyList(), null, emptyList(), failure)
+        OperationDeclaration(origin, declaration, target, emptyList(), emptyList(), null, failure)
     }
 }

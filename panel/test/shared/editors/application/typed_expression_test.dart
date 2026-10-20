@@ -674,6 +674,7 @@ skir.PublishedType _published(
   skir.RepresentationTemplate representation, {
   List<skir.ParameterKey> parameters = const [],
 }) => skir.PublishedType(
+  placementField: null,
   definition: skir.TypeDefinition(
     id: id,
     parameters: [

@@ -74,6 +74,7 @@ AuthoringDocument _operationDocument() {
   snapshot.types = [
     ...snapshot.types,
     skir.PublishedType(
+      placementField: null,
       display: null,
       status: skir.DeclarationStatus.ready,
       definition: skir.TypeDefinition(

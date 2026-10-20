@@ -1241,6 +1241,11 @@ sealed interface PublishedType_OrMutable {
     val effectiveFields: kotlin.collections.List<skirout.editor.v1.catalog.EffectiveFieldTemplate_OrMutable>;
     val ancestorTemplates: kotlin.collections.List<skirout.editor.v1.type_catalog.NamedTypeTemplate_OrMutable>;
     val display: skirout.editor.v1.catalog.TypeDisplay_OrMutable?;
+    /**
+     * The single effective field typed as a placement, which editors and Realm read and write
+     * when they lay out resources of this type. Absent when the type declares no placement.
+     */
+    val placementField: skirout.editor.v1.type_catalog.ValuePath_OrMutable?;
 
     fun toFrozen(): skirout.editor.v1.catalog.PublishedType;
 }
@@ -1253,6 +1258,7 @@ class PublishedType private constructor(
     override val effectiveFields: build.skir.KeyedList<skirout.editor.v1.catalog.EffectiveFieldTemplate, kotlin.String>,
     override val ancestorTemplates: kotlin.collections.List<skirout.editor.v1.type_catalog.NamedTypeTemplate>,
     override val display: skirout.editor.v1.catalog.TypeDisplay?,
+    override val placementField: skirout.editor.v1.type_catalog.ValuePath?,
     internal val _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.catalog.PublishedType>? =
         null,
 ): skirout.editor.v1.catalog.PublishedType_OrMutable {
@@ -1264,6 +1270,7 @@ class PublishedType private constructor(
         effectiveFields: kotlin.collections.Iterable<skirout.editor.v1.catalog.EffectiveFieldTemplate_OrMutable>,
         ancestorTemplates: kotlin.collections.Iterable<skirout.editor.v1.type_catalog.NamedTypeTemplate_OrMutable>,
         display: skirout.editor.v1.catalog.TypeDisplay_OrMutable?,
+        placementField: skirout.editor.v1.type_catalog.ValuePath_OrMutable?,
         _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.catalog.PublishedType>? =
             null,
     ): this(
@@ -1272,6 +1279,7 @@ class PublishedType private constructor(
         build.skir.internal.toKeyedList(effectiveFields, "key", { it.key }, { it.toFrozen() }),
         build.skir.internal.toFrozenList(ancestorTemplates, { it.toFrozen() }),
         if (display != null) display.toFrozen() else null,
+        if (placementField != null) placementField.toFrozen() else null,
         _unrecognizedFields,
     ) {}
 
@@ -1285,6 +1293,7 @@ class PublishedType private constructor(
         effectiveFields = this.effectiveFields,
         ancestorTemplates = this.ancestorTemplates,
         display = this.display,
+        placementField = this.placementField,
     );
 
     /** Returns a shallow copy of this instance with the specified fields replaced. */
@@ -1301,12 +1310,15 @@ class PublishedType private constructor(
             this.ancestorTemplates,
         display: skirout.editor.v1.catalog.TypeDisplay_OrMutable? =
             this.display,
+        placementField: skirout.editor.v1.type_catalog.ValuePath_OrMutable? =
+            this.placementField,
     ) = skirout.editor.v1.catalog.PublishedType(
         definition.toFrozen(),
         status,
         build.skir.internal.toKeyedList(effectiveFields, "key", { it.key }, { it.toFrozen() }),
         build.skir.internal.toFrozenList(ancestorTemplates, { it.toFrozen() }),
         if (display != null) display.toFrozen() else null,
+        if (placementField != null) placementField.toFrozen() else null,
         this._unrecognizedFields,
     );
 
@@ -1314,11 +1326,11 @@ class PublishedType private constructor(
     fun copy() = this;
 
     override fun equals(other: kotlin.Any?): kotlin.Boolean {
-        return this === other || (other is skirout.editor.v1.catalog.PublishedType && this.definition == other.definition && this.status == other.status && this.effectiveFields == other.effectiveFields && this.ancestorTemplates == other.ancestorTemplates && this.display == other.display);
+        return this === other || (other is skirout.editor.v1.catalog.PublishedType && this.definition == other.definition && this.status == other.status && this.effectiveFields == other.effectiveFields && this.ancestorTemplates == other.ancestorTemplates && this.display == other.display && this.placementField == other.placementField);
     }
 
     override fun hashCode(): kotlin.Int {
-        return kotlin.collections.listOf<kotlin.Any?>(this.definition, this.status, this.effectiveFields, this.ancestorTemplates, this.display).hashCode();
+        return kotlin.collections.listOf<kotlin.Any?>(this.definition, this.status, this.effectiveFields, this.ancestorTemplates, this.display, this.placementField).hashCode();
     }
 
     override fun toString(): kotlin.String {
@@ -1342,6 +1354,8 @@ class PublishedType private constructor(
             build.skir.internal.emptyFrozenList<skirout.editor.v1.type_catalog.NamedTypeTemplate>(),
         override var display: skirout.editor.v1.catalog.TypeDisplay_OrMutable? =
             null,
+        override var placementField: skirout.editor.v1.type_catalog.ValuePath_OrMutable? =
+            null,
         internal var _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.catalog.PublishedType>? =
             null,
     ): skirout.editor.v1.catalog.PublishedType_OrMutable {
@@ -1352,6 +1366,7 @@ class PublishedType private constructor(
             effectiveFields = this.effectiveFields,
             ancestorTemplates = this.ancestorTemplates,
             display = this.display,
+            placementField = this.placementField,
             _unrecognizedFields = this._unrecognizedFields,
         );
 
@@ -1412,6 +1427,7 @@ class PublishedType private constructor(
                 build.skir.internal.emptyKeyedList<skirout.editor.v1.catalog.EffectiveFieldTemplate, kotlin.String>(),
                 build.skir.internal.emptyFrozenList<skirout.editor.v1.type_catalog.NamedTypeTemplate>(),
                 null,
+                null,
             );
 
         /** Returns an instance with all fields set to their default values. */
@@ -1435,12 +1451,15 @@ class PublishedType private constructor(
                 build.skir.internal.emptyFrozenList<skirout.editor.v1.type_catalog.NamedTypeTemplate>(),
             display: skirout.editor.v1.catalog.TypeDisplay_OrMutable? =
                 null,
+            placementField: skirout.editor.v1.type_catalog.ValuePath_OrMutable? =
+                null,
         ) = skirout.editor.v1.catalog.PublishedType(
             definition = definition,
             status = status,
             effectiveFields = effectiveFields,
             ancestorTemplates = ancestorTemplates,
             display = display,
+            placementField = placementField,
             _unrecognizedFields = null,
         );
 
@@ -8411,6 +8430,17 @@ private object _SerializerRegistry {
             "",
             { it.display },
             { mut, v -> mut.display = v },
+        );
+        PublishedTypeSerializerImpl.addField(
+            "placement_field",
+            "placementField",
+            5,
+            build.skir.Serializers.optional(
+                skirout.editor.v1.type_catalog.ValuePath.serializer,
+            ),
+            "The single effective field typed as a placement, which editors and Realm read and write\nwhen they lay out resources of this type. Absent when the type declares no placement.",
+            { it.placementField },
+            { mut, v -> mut.placementField = v },
         );
         PublishedTypeSerializerImpl.finalizeStruct();
 

@@ -604,6 +604,7 @@ void main() {
           ...page.catalog.snapshot.types,
           ...child.catalog.snapshot.types,
           skir.PublishedType(
+            placementField: null,
             definition: skir.TypeDefinition(
               id: frameworkResourceIdUse.definition,
               parameters: const [],
@@ -1072,6 +1073,7 @@ _emptyPageGraphFixture() {
       generation: generation,
       types: [
         skir.PublishedType(
+          placementField: null,
           display: null,
           definition: skir.TypeDefinition(
             id: definition,
@@ -1101,6 +1103,7 @@ _emptyPageGraphFixture() {
           ancestorTemplates: const [],
         ),
         skir.PublishedType(
+          placementField: null,
           display: null,
           definition: skir.TypeDefinition(
             id: elementsDefinition,
@@ -1251,6 +1254,7 @@ _numericFixture({
       generation: catalogGeneration,
       types: [
         skir.PublishedType(
+          placementField: null,
           display: null,
           definition: skir.TypeDefinition(
             id: definition,
@@ -1578,6 +1582,7 @@ _fixture({
       types: [
         if (namedText != null)
           skir.PublishedType(
+            placementField: null,
             display: null,
             definition: skir.TypeDefinition(
               id: namedText.definition,
@@ -1592,6 +1597,7 @@ _fixture({
             ancestorTemplates: const [],
           ),
         skir.PublishedType(
+          placementField: null,
           display: null,
           definition: skir.TypeDefinition(
             id: definition,

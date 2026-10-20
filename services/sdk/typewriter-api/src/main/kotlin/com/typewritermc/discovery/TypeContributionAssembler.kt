@@ -6,6 +6,7 @@ import com.typewritermc.authoring.AuthoringResourceDefinition
 import com.typewritermc.authoring.CompletenessResult
 import com.typewritermc.authoring.GeneratedSdkApi
 import com.typewritermc.authoring.PathSegment
+import com.typewritermc.authoring.PlacementDefinition
 import com.typewritermc.authoring.ValuePath
 import com.typewritermc.authoring.complete
 import com.typewritermc.capability.RealmCapabilityDescriptor
@@ -207,24 +208,29 @@ fun CatalogContributions.assemble(context: CatalogAssemblyContext): CatalogAssem
             result.configuration.checks.map { OwnedCheckRecipe(result.owned.origin, it.bindNative(bindingRegistry)) }
         }
     val diagnostics = declarationGroups.keys.flatMap { checked.definition(it).diagnostics() }
+    val placementDiagnostics = mutableListOf<DeclarationDiagnostic>()
     val published =
         declarationGroups.entries.sortedBy { it.key.toString() }.map { (id, owned) ->
             val definition = owned.first().definition
             val status = checked.definition(id)
-            val ancestry = if (status == DeclarationStatus.Ready) definition.transitiveAncestors(definitionIndex) else emptyList()
+            val ready = status == DeclarationStatus.Ready
+            val ancestry = if (ready) definition.transitiveAncestors(definitionIndex) else emptyList()
+            val effectiveFields = if (ready) definition.effectiveFields(definitionIndex, recipes) else emptyList()
             PublishedType(
                 definition = definition,
                 status = status,
-                effectiveFields =
-                    if (status ==
-                        DeclarationStatus.Ready
-                    ) {
-                        definition.effectiveFields(definitionIndex, recipes)
-                    } else {
-                        emptyList()
-                    },
+                effectiveFields = effectiveFields,
                 ancestorTemplates = ancestry,
                 display = owned.first().display,
+                placementField =
+                    effectiveFields.placementField(checked) {
+                        placementDiagnostics +=
+                            DeclarationDiagnostic(
+                                id,
+                                "ambiguous_placement_field",
+                                owned.map { DeclarationOrigin(it.origin.owner) }.distinct(),
+                            )
+                    },
             )
         }
     val publishedPresentations =
@@ -259,7 +265,7 @@ fun CatalogContributions.assemble(context: CatalogAssemblyContext): CatalogAssem
                         }
                 },
             configuration = recipes,
-            diagnostics = diagnostics + boundOperations.diagnostics,
+            diagnostics = diagnostics + placementDiagnostics + boundOperations.diagnostics,
             endpointBindings = (endpointBindings + context.endpointBindings).distinct(),
             capabilities =
                 (
@@ -282,6 +288,24 @@ fun CatalogContributions.assemble(context: CatalogAssemblyContext): CatalogAssem
         callbackFailures = (configurationFailures.map { it.evidence } + materialCollection.callbackFailures).immutableListCopy(),
     )
 }
+
+/**
+ * The single effective field typed as a [com.typewritermc.authoring.Placement], or null when there is none.
+ *
+ * Fields typed as a placement subtype count, so a sealed placement base and a concrete placement are found alike.
+ * More than one candidate is ambiguous: [onAmbiguous] reports it and no field is published.
+ */
+private fun List<EffectiveFieldTemplate>.placementField(
+    checked: CheckedCatalog,
+    onAmbiguous: () -> Unit,
+): ValuePath? {
+    val fields = filter { field -> field.type.isPlacement(checked) }
+    if (fields.size > 1) onAmbiguous()
+    return fields.singleOrNull()?.let { field -> ValuePath(listOf(PathSegment.Field(field.key))) }
+}
+
+private fun TypeTemplate.isPlacement(checked: CheckedCatalog): Boolean =
+    this is TypeTemplate.Named && checked.isNominalSubtype(definition, PlacementDefinition.id)
 
 private data class CollectedOwnedConfiguration(
     val owned: OwnedConfiguration,

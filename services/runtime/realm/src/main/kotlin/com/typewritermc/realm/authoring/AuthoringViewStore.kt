@@ -62,6 +62,9 @@ interface AuthoringCatalogLease : AutoCloseable {
     val configuration: List<ConfigurationRecipe>
     val operations: OperationCatalog
 
+    /** The published placement field of each declared type that has one; other types are absent. */
+    val placementFields: Map<TypeDefinitionId, ValuePath>
+
     fun retain(): AuthoringCatalogLease
 }
 

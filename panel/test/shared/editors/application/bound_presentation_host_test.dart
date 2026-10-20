@@ -511,6 +511,7 @@ skir.PublishedType _publishedType(
   List<skir.NamedTypeTemplate> parents = const [],
   List<skir.EffectiveFieldTemplate> fields = const [],
 }) => skir.PublishedType(
+  placementField: null,
   display: null,
   definition: skir.TypeDefinition(
     id: definition,

@@ -389,6 +389,7 @@ CheckedEditorCatalog _catalog(CollectionEditorExample example) {
     skir.RepresentationTemplate representation, {
     Map<String, skir.TypeTemplate> fields = const {},
   }) => skir.PublishedType(
+    placementField: null,
     definition: skir.TypeDefinition(
       id: _id(name),
       parameters: const [],

@@ -75,6 +75,7 @@ AuthoringSearchResultPayload _payload({
       generation: skir.CatalogGeneration(value: "catalog:test"),
       types: [
         skir.PublishedType(
+          placementField: null,
           display: null,
           definition: skir.TypeDefinition(
             id: _book,

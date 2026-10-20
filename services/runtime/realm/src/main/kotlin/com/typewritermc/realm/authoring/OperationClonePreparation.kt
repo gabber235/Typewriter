@@ -3,7 +3,6 @@ package com.typewritermc.realm.authoring
 import com.typewritermc.authoring.AuthoringRecord
 import com.typewritermc.authoring.ConnectIntent
 import com.typewritermc.authoring.CounterpartChoice
-import com.typewritermc.authoring.GRAPH_PLACEMENT_TYPE_ID
 import com.typewritermc.authoring.LinkOccurrence
 import com.typewritermc.authoring.LinkOccurrenceId
 import com.typewritermc.authoring.PathSegment
@@ -15,17 +14,14 @@ import com.typewritermc.authoring.mapKey
 import com.typewritermc.authoring.mapValue
 import com.typewritermc.checking.InputIdentity
 import com.typewritermc.operations.CloneResult
-import com.typewritermc.operations.GraphGroupPlacement
 import com.typewritermc.operations.OperationPreparation
 import com.typewritermc.operations.ResourceClonePreparation
 import com.typewritermc.realm.repository.ResourceValueMapper
 import com.typewritermc.types.DataValue
-import com.typewritermc.types.DeclaredTypeId
 import com.typewritermc.types.LinkTarget
 import com.typewritermc.types.ListItem
 import com.typewritermc.types.MapRow
 import com.typewritermc.types.ResourceId
-import com.typewritermc.types.TypeId
 
 /** Copies the ownership closure before reconnecting any of its references. */
 internal class OperationClonePreparation(
@@ -215,32 +211,29 @@ internal class OperationClonePreparation(
                 operation.layouts.prepareMove(subjects, owner, null).apply()
             } else {
                 val graphSubjects =
-                    originals
-                        .zip(subjects)
-                        .filter { (original, _) ->
-                            resources.getValue(original).hasGraphPlacement()
-                        }.map { it.second }
+                    originals.mapNotNull { original ->
+                        resources.getValue(original).graphPlacement(original)?.let { ValueLocation(copies.getValue(original), it.path) }
+                    }
                 if (graphSubjects.isNotEmpty()) {
                     edit.capturedReads.observeInput(RESOURCE_SELECTION_INPUT)
                     val types = originals.map { resources.getValue(it).configuration }.toSet()
                     val obstacles =
                         resources
-                            .filter { (id, record) ->
-                                record.configuration in types && record.hasGraphPlacement() &&
-                                    ownership.none { it.second == id }
-                            }.keys
-                            .map(layouts::draft)
-                    with(edit.capturedReads) { GraphGroupPlacement.prepare(graphSubjects, obstacles) }.apply()
+                            .filter { (id, record) -> record.configuration in types && ownership.none { it.second == id } }
+                            .mapNotNull { (id, record) -> record.graphPlacement(id) }
+                    val placed = with(edit.capturedReads) { GraphGroupPlacement.place(graphSubjects, obstacles) }
+                    placed.forEach { (draft, placement) ->
+                        draft.setX(placement.x)
+                        draft.setY(placement.y)
+                    }
                 }
             }
         }
         return CloneResult(roots.map(copies::getValue))
     }
-}
 
-private fun AuthoringRecord.hasGraphPlacement(): Boolean =
-    (fields["placement"] as? DataValue.Named)?.actualType?.definition?.type ==
-        TypeId.Declared(DeclaredTypeId.parse(GRAPH_PLACEMENT_TYPE_ID))
+    private fun AuthoringRecord.graphPlacement(id: ResourceId): ValueLocation? = baseline.catalog.graphPlacementLocation(id, this)
+}
 
 private fun ValueLocation.identityKey(): String =
     "${resource.value.length}:${resource.value}" +

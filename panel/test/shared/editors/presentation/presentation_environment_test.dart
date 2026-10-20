@@ -8,6 +8,7 @@ void main() {
     (skir.EditorCatalogWireSnapshot.mutable()
           ..types = [
             skir.PublishedType(
+              placementField: null,
               definition: skir.TypeDefinition(
                 id: frameworkResourceIdUse.definition,
                 parameters: const [],

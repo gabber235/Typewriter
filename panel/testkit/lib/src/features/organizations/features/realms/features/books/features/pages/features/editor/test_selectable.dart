@@ -242,6 +242,7 @@ final _testSelectableCatalog = CheckedEditorCatalog(
     generation: skir.CatalogGeneration(value: "testkit:selectable"),
     types: [
       skir.PublishedType(
+        placementField: null,
         display: null,
         definition: skir.TypeDefinition(
           id: _testSelectableDefinition,

@@ -326,6 +326,7 @@ _concreteResourceFixture() {
     List<skir.NamedTypeTemplate> parents = const [],
     skir.TypeDisplay? display,
   }) => skir.PublishedType(
+    placementField: null,
     definition: skir.TypeDefinition(
       id: id,
       parameters: const [],
@@ -427,6 +428,7 @@ _fixture({
     List<skir.TypeParameter> parameters = const [],
     List<skir.NamedTypeTemplate> parents = const [],
   }) => skir.PublishedType(
+    placementField: null,
     definition: skir.TypeDefinition(
       id: id,
       parameters: parameters,

@@ -5,7 +5,6 @@ import "package:typewriter_panel/typewriter_panel.dart";
 part "authoring_placement.freezed.dart";
 
 final elementValuePath = editorRootPath;
-final elementPlacementPath = editorRootPath.field("placement");
 
 final placementRootTypeRef = skir.TypeDefinitionId(
   typeId: skir.TypeId.createDeclared(value: "d134aec7caa54a288ab42275756cfe8d"),
@@ -197,20 +196,24 @@ extension GraphPlacementGeometry on GraphPlacement {
 }
 
 extension AuthoredPlacementReading on skir.AuthoringRecord {
+  /// Reads the placement at the field the catalog publishes for this record's
+  /// type. Types without a published placement field have no placement.
   PlacementReading placement(CheckedEditorCatalog catalog) {
-    final expected = catalog
-        .fields(configuration)
-        .where((field) => field.template.key == "placement")
-        .firstOrNull
-        ?.type;
-    if (expected == null) {
+    final path = catalog.placementField(configuration);
+    final expected = path == null
+        ? null
+        : catalog.valueTypeAt(configuration, path);
+    if (path == null || expected == null) {
       return const PlacementReading.unavailable(
         "Placement type is unavailable",
       );
     }
-    final value = authoredField("placement");
+    final value = switch (readAt(path)) {
+      PortablePathValue(:final value) => value,
+      _ => null,
+    };
     if (value == null || value == skir.DataValue.unfilled) {
-      return PlacementReading.unfinished(elementPlacementPath);
+      return PlacementReading.unfinished(path);
     }
     final actual = value.authoredActualType;
     if (actual == null ||
@@ -220,10 +223,8 @@ extension AuthoredPlacementReading on skir.AuthoringRecord {
       );
     }
     return switch (value.readPlacement(catalog)) {
-      UnfinishedPlacement(:final path) => PlacementReading.unfinished(
-        skir.ValuePath(
-          segments: [...elementPlacementPath.segments, ...path.segments],
-        ),
+      UnfinishedPlacement(path: final relative) => PlacementReading.unfinished(
+        skir.ValuePath(segments: [...path.segments, ...relative.segments]),
       ),
       final reading => reading,
     };
@@ -244,6 +245,9 @@ extension PlacementEdits on AuthoringEdit {
     final checked =
         catalog ?? (throw StateError("The editor catalog is unavailable"));
     final record = resource(id) ?? (throw StateError("The resource is absent"));
+    final placementPath =
+        checked.placementField(record.configuration) ??
+        (throw StateError("This resource type declares no placement"));
     final reading = record.placement(checked);
     if (reading is! ReadyPlacement) {
       throw StateError(switch (reading) {
@@ -269,16 +273,13 @@ extension PlacementEdits on AuthoringEdit {
       }
       candidate = replaced.value;
     }
-    final candidateRecord =
-        (record.toMutable()
-              ..fields = [
-                for (final field in record.fields)
-                  if (field.name == "placement")
-                    skir.FieldValue(name: field.name, value: candidate)
-                  else
-                    field,
-              ])
-            .toFrozen();
+    final candidateRecord = switch (record.replaceAt(
+      placementPath,
+      candidate,
+    )) {
+      PortablePathValue(:final value) => value,
+      PortablePathUnavailable(:final message) => throw StateError(message),
+    };
     final checkedCandidate = candidateRecord.placement(checked);
     if (checkedCandidate is! ReadyPlacement) {
       throw StateError("The proposed placement is invalid");
@@ -288,7 +289,7 @@ extension PlacementEdits on AuthoringEdit {
     for (final update in updates.entries) {
       final location = skir.ValueLocation(
         resource: id,
-        path: elementPlacementPath.field(update.key),
+        path: placementPath.field(update.key),
       );
       final existing = read(location);
       if (existing is! PortablePathValue<skir.DataValue>) {
@@ -334,9 +335,15 @@ extension PlacementEdits on AuthoringEdit {
 
 extension CreatedResourcePlacement on AuthoringEdit {
   void placeCreatedResource(ResourceCreationRequest request) {
-    if (request.supplied.any((field) => field.name == "placement")) return;
     final checked =
         catalog ?? (throw StateError("The editor catalog is unavailable"));
+    final placementPath = checked.placementField(request.configuration);
+    if (placementPath == null) return;
+    final placementField = switch (placementPath.segments.firstOrNull) {
+      skir.PathSegment_fieldWrapper(:final value) => value.name,
+      _ => null,
+    };
+    if (request.supplied.any((field) => field.name == placementField)) return;
     final original = resource(request.id)?.graphRect(checked);
     if (original == null) return;
     final document = toDocument();

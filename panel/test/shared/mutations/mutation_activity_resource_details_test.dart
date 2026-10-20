@@ -52,6 +52,7 @@ EditorDocument _document(String field, String value) {
       generation: skir.CatalogGeneration(value: "test"),
       types: [
         skir.PublishedType(
+          placementField: null,
           display: null,
           definition: skir.TypeDefinition(
             id: definition,

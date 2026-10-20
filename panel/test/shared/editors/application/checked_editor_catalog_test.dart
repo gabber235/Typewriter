@@ -393,6 +393,7 @@ void main() {
           _published(wrapper, [parameter]),
           _published(reward, const []),
           skir.PublishedType(
+            placementField: null,
             definition: skir.TypeDefinition(
               id: coin,
               parameters: const [],
@@ -487,6 +488,7 @@ void main() {
           _published(wrapper, [parameter]),
           _published(reward, const []),
           skir.PublishedType(
+            placementField: null,
             definition: skir.TypeDefinition(
               id: coin,
               parameters: const [],
@@ -807,6 +809,7 @@ _patternCatalog({required bool repeated}) {
     generation: skir.CatalogGeneration(value: "catalog:patterns"),
     types: [
       skir.PublishedType(
+        placementField: null,
         definition: skir.TypeDefinition(
           id: pair,
           parameters: [
@@ -880,6 +883,7 @@ _dependentCatalog() {
   final first = skir.ParameterKey(owner: root, index: 0);
   final second = skir.ParameterKey(owner: root, index: 1);
   final definition = skir.PublishedType(
+    placementField: null,
     definition: skir.TypeDefinition(
       id: root,
       parameters: [
@@ -953,6 +957,7 @@ _catalog() {
     skir.RepresentationKind.record,
   );
   final rootType = skir.PublishedType(
+    placementField: null,
     definition: skir.TypeDefinition(
       id: root,
       parameters: [
@@ -1100,6 +1105,7 @@ skir.PublishedType _published(
   List<skir.ParameterKey> parameters, {
   skir.TypeDisplay? display,
 }) => skir.PublishedType(
+  placementField: null,
   definition: skir.TypeDefinition(
     id: id,
     parameters: [

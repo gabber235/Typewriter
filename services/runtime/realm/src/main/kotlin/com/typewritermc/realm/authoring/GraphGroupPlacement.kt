@@ -1,56 +1,48 @@
-package com.typewritermc.operations
+package com.typewritermc.realm.authoring
 
 import com.typewritermc.authoring.AuthoredReads
+import com.typewritermc.authoring.AuthoringRecord
 import com.typewritermc.authoring.GraphPlacement
+import com.typewritermc.authoring.GraphPlacementDefinition
+import com.typewritermc.authoring.GraphPlacementDraft
 import com.typewritermc.authoring.GraphPlacementDraftProjection
-import com.typewritermc.authoring.PathSegment
-import com.typewritermc.authoring.ResourceDraft
+import com.typewritermc.authoring.TypeSelection
 import com.typewritermc.authoring.ValueLocation
-import com.typewritermc.authoring.ValuePath
+import com.typewritermc.operations.PlacementAnchor
+import com.typewritermc.operations.requireAuthored
+import com.typewritermc.realm.repository.valueAt
+import com.typewritermc.types.DataValue
+import com.typewritermc.types.ResourceId
 import kotlin.math.abs
 import kotlin.math.roundToLong
 
-/** Places one group while preserving its geometry and every existing obstacle. */
-object GraphGroupPlacement : DestinationPlacementPolicy {
+/**
+ * Places one group of graph members while preserving its geometry and every existing obstacle.
+ *
+ * It computes placements only; callers write them through the returned drafts inside their edit.
+ */
+internal object GraphGroupPlacement {
+    /**
+     * Free placements for the graph placements at [subjects], avoiding the placements at [occupants].
+     *
+     * Occupants that are also subjects are ignored, so a group never collides with its own previous position.
+     */
     context(reads: AuthoredReads)
-    override fun prepare(request: DestinationPlacementRequest): PlacementPreparation =
-        prepare(request.subjects, request.occupants, request.anchor)
-
-    context(reads: AuthoredReads)
-    fun prepare(
-        subjects: List<ResourceDraft>,
-        occupants: List<ResourceDraft>,
+    fun place(
+        subjects: List<ValueLocation>,
+        occupants: List<ValueLocation>,
         anchor: PlacementAnchor? = null,
-    ): PlacementPreparation {
-        val drafts =
-            subjects.map { subject ->
-                requireAuthored(GraphPlacementDraftProjection.read(ValueLocation(subject.id, PLACEMENT_PATH)))
-            }
-        val group =
-            drafts.map {
-                GraphPlacement(requireAuthored(it.x), requireAuthored(it.y), requireAuthored(it.width), requireAuthored(it.height))
-            }
-        val subjectIds = subjects.mapTo(hashSetOf()) { it.id }
+    ): List<Pair<GraphPlacementDraft, GraphPlacement>> {
+        val drafts = subjects.map { requireAuthored(GraphPlacementDraftProjection.read(it)) }
+        val moving = subjects.mapTo(hashSetOf(), ValueLocation::resource)
         val obstacles =
-            occupants.filter { it.id !in subjectIds }.map { subject ->
-                val draft = requireAuthored(GraphPlacementDraftProjection.read(ValueLocation(subject.id, PLACEMENT_PATH)))
-                GraphPlacement(
-                    requireAuthored(draft.x),
-                    requireAuthored(draft.y),
-                    requireAuthored(draft.width),
-                    requireAuthored(draft.height),
-                )
-            }
-        val placed = place(group, obstacles, anchor)
-        return PlacementPreparation {
-            drafts.zip(placed).forEach { (draft, position) ->
-                draft.setX(position.x)
-                draft.setY(position.y)
-            }
-        }
+            occupants
+                .filter { it.resource !in moving }
+                .map { requireAuthored(GraphPlacementDraftProjection.read(it)).current() }
+        return drafts.zip(place(drafts.map { it.current() }, obstacles, anchor))
     }
 
-    internal fun place(
+    fun place(
         group: List<GraphPlacement>,
         obstacles: List<GraphPlacement>,
         anchor: PlacementAnchor?,
@@ -105,4 +97,24 @@ object GraphGroupPlacement : DestinationPlacementPolicy {
     }
 }
 
-private val PLACEMENT_PATH = ValuePath(listOf(PathSegment.Field("placement")))
+context(reads: AuthoredReads)
+private fun GraphPlacementDraft.current(): GraphPlacement =
+    GraphPlacement(requireAuthored(x), requireAuthored(y), requireAuthored(width), requireAuthored(height))
+
+/** Where this resource keeps its published placement, or null when its type declares no placement field. */
+internal fun AuthoringCatalogLease.placementLocation(
+    id: ResourceId,
+    record: AuthoringRecord,
+): ValueLocation? {
+    val type = (record.configuration as? TypeSelection.Complete)?.use?.definition ?: return null
+    return placementFields[type]?.let { ValueLocation(id, it) }
+}
+
+/** Where this resource keeps a graph placement, or null when it has no placement or holds another placement kind. */
+internal fun AuthoringCatalogLease.graphPlacementLocation(
+    id: ResourceId,
+    record: AuthoringRecord,
+): ValueLocation? =
+    placementLocation(id, record)?.takeIf { location ->
+        (record.valueAt(location.path) as? DataValue.Named)?.actualType?.definition == GraphPlacementDefinition.id
+    }

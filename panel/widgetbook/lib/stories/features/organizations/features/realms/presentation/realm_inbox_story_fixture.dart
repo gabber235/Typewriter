@@ -27,7 +27,7 @@ class RealmInboxStoryFixture extends ChangeNotifier {
   final work = ScopedWorkSession();
   int published = 0;
   final root = skir.CompilationRoot(
-    projection: skir.CompilationProjectionId(value: "typewriter.page"),
+    projection: skir.CompilationProjectionId(value: "typewriter.resource-graph"),
     resource: skir.ResourceId(value: "welcome"),
   );
   late final document = fixtureAuthoringDocument(

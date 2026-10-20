@@ -1439,6 +1439,7 @@ _parentFixture({
     generation: skir.CatalogGeneration(value: generation),
     types: [
       skir.PublishedType(
+        placementField: null,
         display: null,
         definition: skir.TypeDefinition(
           id: root,
@@ -1468,6 +1469,7 @@ _parentFixture({
         ancestorTemplates: const [],
       ),
       skir.PublishedType(
+        placementField: null,
         display: null,
         definition: skir.TypeDefinition(
           id: style,
@@ -1590,6 +1592,7 @@ _parentFixture({
       ),
       if (inheritedBold)
         skir.PublishedType(
+          placementField: null,
           display: null,
           definition: skir.TypeDefinition(
             id: baseStyle,
@@ -1620,6 +1623,7 @@ _parentFixture({
         ),
       if (includeItems)
         skir.PublishedType(
+          placementField: null,
           display: null,
           definition: skir.TypeDefinition(
             id: list,
@@ -1786,6 +1790,7 @@ _pageCreationFixture({bool ambiguous = false}) {
     List<skir.NamedTypeTemplate> parents = const [],
     List<skir.EffectiveFieldTemplate> fields = const [],
   }) => skir.PublishedType(
+    placementField: null,
     display: null,
     definition: skir.TypeDefinition(
       id: id,
@@ -2244,6 +2249,7 @@ _collectionRepairFixture() {
     skir.TypeDefinition definition,
     List<skir.EffectiveFieldTemplate> fields,
   ) => skir.PublishedType(
+    placementField: null,
     display: null,
     definition: definition,
     status: skir.DeclarationStatus.ready,

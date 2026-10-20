@@ -789,10 +789,16 @@ CheckedEditorCatalog authoringFixtureCatalog({
   );
 }
 
-skir.TypeDefinitionId _definition(String name) => skir.TypeDefinitionId(
-  typeId: skir.TypeId.createQualified(namespace: "fixture", name: name),
-  revision: 1,
-);
+/// Fixture types standing in for framework types keep the framework identity,
+/// so production readers such as graph placement recognize their values.
+final _frameworkDefinitions = {"placement": graphPlacementTypeRef};
+
+skir.TypeDefinitionId _definition(String name) =>
+    _frameworkDefinitions[name] ??
+    skir.TypeDefinitionId(
+      typeId: skir.TypeId.createQualified(namespace: "fixture", name: name),
+      revision: 1,
+    );
 skir.NamedTypeUse _use(String name) =>
     skir.NamedTypeUse(definition: _definition(name), arguments: const []);
 skir.TypeSelection _selection(String name) =>
@@ -812,6 +818,9 @@ skir.PublishedType _published(
   skir.RepresentationTemplate representation, {
   Map<String, skir.TypeTemplate> fields = const {},
 }) => skir.PublishedType(
+  placementField: fields.containsKey("placement")
+      ? editorRootPath.field("placement")
+      : null,
   definition: skir.TypeDefinition(
     id: _definition(name),
     parameters: const [],

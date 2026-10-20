@@ -61,4 +61,8 @@ data class EndpointBindingTemplate(
 val RelationContract.ownsResources: Boolean
     get() = RelationFamilyId(RESOURCE_OWNERSHIP_FAMILY_ID) in families
 
+/** Whether following first to second endpoints must never return to the start. */
+val RelationContract.isAcyclic: Boolean
+    get() = RelationFamilyId(ACYCLIC_RELATION_FAMILY_ID) in families
+
 fun RelationId.endpointId(slot: EndpointSlot): EndpointId = EndpointId("$value:${slot.name.lowercase()}")

@@ -87,6 +87,7 @@ final _recordCatalog = CheckedEditorCatalog(
     generation: skir.CatalogGeneration(value: "test"),
     types: [
       skir.PublishedType(
+        placementField: null,
         display: null,
         definition: skir.TypeDefinition(
           id: _recordType,

@@ -20,6 +20,9 @@ void main() {
       Map<String, skir.TypeTemplate> fields, {
       List<skir.NamedTypeTemplate> parents = const [],
     }) => skir.PublishedType(
+      placementField: fields.containsKey("placement")
+          ? editorRootPath.field("placement")
+          : null,
       display: null,
       definition: skir.TypeDefinition(
         id: id,

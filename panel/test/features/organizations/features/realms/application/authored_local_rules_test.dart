@@ -502,6 +502,7 @@ _nestedRuleFixture({
         ),
         if (collection)
           skir.PublishedType(
+            placementField: null,
             display: null,
             definition: skir.TypeDefinition(
               id: placementList,
@@ -631,6 +632,7 @@ skir.PublishedType _publishedRecord({
   required List<skir.FieldDeclaration> fields,
   required List<skir.EffectiveFieldTemplate> effectiveFields,
 }) => skir.PublishedType(
+  placementField: null,
   display: null,
   definition: skir.TypeDefinition(
     id: definition,

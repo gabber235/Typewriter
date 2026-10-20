@@ -24,6 +24,7 @@ void main() {
       ..types = [
         ...original.types,
         skir.PublishedType(
+          placementField: null,
           display: null,
           definition: skir.TypeDefinition(
             id: child,
@@ -746,6 +747,7 @@ _fixture({
     skir.TypeDefinition definition,
     List<skir.EffectiveFieldTemplate> fields,
   ) => skir.PublishedType(
+    placementField: null,
     display: null,
     definition: definition,
     status: skir.DeclarationStatus.ready,

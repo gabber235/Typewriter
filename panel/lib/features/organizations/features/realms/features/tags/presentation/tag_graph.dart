@@ -89,21 +89,7 @@ class TagGraph extends HookConsumerWidget {
                       if (resource == null) {
                         throw StateError("The moved tag is unavailable");
                       }
-                      edit
-                        ..setFieldPayload(
-                          resource: resource,
-                          fields: ["placement", "x"],
-                          payload: skir.DataValue.wrapInteger(
-                            change.x.toString(),
-                          ),
-                        )
-                        ..setFieldPayload(
-                          resource: resource,
-                          fields: ["placement", "y"],
-                          payload: skir.DataValue.wrapInteger(
-                            change.y.toString(),
-                          ),
-                        );
+                      edit.moveGraphPlacement(resource, change.x, change.y);
                     }
                   },
                 )
@@ -121,21 +107,11 @@ class TagGraph extends HookConsumerWidget {
                       if (resource == null) {
                         throw StateError("The resized tag is unavailable");
                       }
-                      edit
-                        ..setFieldPayload(
-                          resource: resource,
-                          fields: ["placement", "width"],
-                          payload: skir.DataValue.wrapInteger(
-                            change.width.toString(),
-                          ),
-                        )
-                        ..setFieldPayload(
-                          resource: resource,
-                          fields: ["placement", "height"],
-                          payload: skir.DataValue.wrapInteger(
-                            change.height.toString(),
-                          ),
-                        );
+                      edit.resizeGraphPlacement(
+                        resource,
+                        change.width,
+                        change.height,
+                      );
                     }
                   },
                 )

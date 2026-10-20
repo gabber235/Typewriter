@@ -13,7 +13,6 @@ import com.typewritermc.authoring.TypeSelection
 import com.typewritermc.authoring.ValueLocation
 import com.typewritermc.authoring.item
 import com.typewritermc.checking.InputIdentity
-import com.typewritermc.library.TAG_PARENTS_RELATION_ID
 import com.typewritermc.operations.OperationConfirmation
 import com.typewritermc.operations.OperationOrigin
 import com.typewritermc.operations.OperationPreparation
@@ -22,6 +21,7 @@ import com.typewritermc.operations.PreparationChoices
 import com.typewritermc.operations.RelationAssignment
 import com.typewritermc.operations.ResourceRelationPreparation
 import com.typewritermc.realm.repository.CounterpartBinding
+import com.typewritermc.realm.repository.DeclaredLinkEvidence
 import com.typewritermc.realm.repository.ResourceValueMapper
 import com.typewritermc.realm.repository.valueAt
 import com.typewritermc.types.DataValue
@@ -83,27 +83,27 @@ internal class OperationRelationPreparation(
         val removals = mutableListOf<LinkOccurrenceId>()
         targets.forEach { id ->
             val candidates = sources(id, target, operation)
-            require(candidates.isNotEmpty()) { "The resource has no compatible outgoing reference" }
+            require(candidates.isNotEmpty()) { "The resource has no compatible reference to the target" }
             val selected =
-                if (candidates.size ==
-                    1
-                ) {
+                if (candidates.size == 1) {
                     candidates.single()
                 } else {
                     choices.require(PreparationChoice.Source("link-source:$id:$target", "Choose source reference", candidates))
                 }
             observe(selected)
             val existing = ResourceValueMapper.discover(edit.session.resources).singleOrNull { it.id == selected.id }
-            if (existing?.target?.resource == target) {
+            if (existing?.target?.resource == selected.target.resource) {
                 removals += existing.id
             } else {
                 sourcesToAdd += selected
             }
         }
-        val additions = assignCounterparts(sourcesToAdd, target, choices)
-        if (additions.isNotEmpty() &&
-            removals.isNotEmpty()
-        ) {
+        // Each linked resource offers its own counterpart slots, so assignments are independent per linked resource.
+        val additions =
+            sourcesToAdd
+                .groupBy { it.target.resource }
+                .flatMap { (linked, sources) -> assignCounterparts(sources, linked, choices) }
+        if (additions.isNotEmpty() && removals.isNotEmpty()) {
             operation.confirm(
                 OperationConfirmation(
                     "Change these links?",
@@ -114,7 +114,6 @@ internal class OperationRelationPreparation(
         }
         removals.forEach { operation.disconnect(it) }
         additions.forEach { operation.connect(it) }
-        requireValidTagHierarchy(targets)
     }
 
     context(operation: OperationPreparation)
@@ -135,57 +134,74 @@ internal class OperationRelationPreparation(
                         .configuration as? TypeSelection.Complete
                 actual?.use == copied?.use && ResourceValueMapper.discover(edit.session.resources).none { it.id == source.id }
             }
-        require(candidates.isNotEmpty()) { "No compatible outgoing reference has capacity for a copy" }
+        require(candidates.isNotEmpty()) { "No compatible reference has capacity for a copy" }
         val source =
-            if (candidates.size ==
-                1
-            ) {
+            if (candidates.size == 1) {
                 candidates.single()
             } else {
                 choices.require(PreparationChoice.Source("clone-link:$original", "Choose reference to the copy", candidates))
             }
-        operation.connect(ConnectIntent(source, copy, counterpartFor(source, copy, choices)))
-        requireValidTagHierarchy(listOf(original, copy))
+        val linked = source.target.resource
+        operation.connect(ConnectIntent(source, linked, counterpartFor(source, linked, choices)))
     }
 
+    /**
+     * Link occurrences that would connect [subject] and [target] through each non owning relation.
+     *
+     * Bindings live at each relation's first endpoint. The dragged side (the subject) holds the link first; the target
+     * holds it only when the subject declares no binding for that relation, so a tag dropped onto a book is written to
+     * the book's tags while a tag dropped onto a tag gains the target as a parent.
+     */
     private fun sources(
-        id: ResourceId,
+        subject: ResourceId,
         target: ResourceId,
         operation: OperationPreparation,
     ): List<LinkOccurrence> {
-        val record = edit.session.resources[id] ?: error("The source resource is unavailable")
         val current = ResourceValueMapper.discover(edit.session.resources).associateBy { it.id }
-        val result = mutableListOf<LinkOccurrence>()
-        baseline.catalog.relations
+        return baseline.catalog.relations
             .filterNot { it.ownsResources }
-            .forEach { relation ->
-                listOf(relation.first.id).forEach { endpoint ->
-                    val evidence = ResourceValueMapper.declaredEvidence(endpoint, id, record, baseline.catalog.checked)
-                    evidence.memberships.forEach { edit.capturedReads.observeInput(InputIdentity.Membership(it)) }
-                    evidence.forms.forEach { edit.capturedReads.observeInput(InputIdentity.Form(it)) }
-                    val locations = evidence.values.toMutableList()
-                    val collection =
-                        ResourceValueMapper.counterpartBinding(
-                            endpoint,
-                            id,
-                            record,
-                            baseline.catalog.checked,
-                        ) as? CounterpartBinding.Collection
-                    if (collection != null && locations.none { current[LinkOccurrenceId(endpoint, it)]?.target?.resource == target }) {
-                        locations += collection.location.item(operation.identities.item("source:$id:$endpoint:$target"))
-                    }
-                    locations.forEach { at ->
-                        val present = current[LinkOccurrenceId(endpoint, at)]
-                        val value = record.valueAt(at.path)
-                        if (present != null && present.target.resource != target) return@forEach
-                        if (present == null && value != null && !value.unfilled()) return@forEach
-                        val occurrence = present ?: LinkOccurrence(LinkOccurrenceId(endpoint, at), id, LinkTarget(target, null))
-                        if (accepts(occurrence, target)) result += occurrence
-                    }
-                }
-            }
-        return result.distinctBy { it.id }
+            .flatMap { relation ->
+                val endpoint = relation.first.id
+                listOf(subject to target, target to subject).firstNotNullOfOrNull { (holder, linked) ->
+                    val evidence = holder.bindingEvidence(endpoint)
+                    if (evidence.isEmpty()) null else holder.occurrencesLinking(linked, endpoint, evidence, current, operation)
+                } ?: emptyList()
+            }.distinctBy { it.id }
     }
+
+    /** Bindings this resource declares for [endpoint]; the evidence is recorded as read before anyone inspects it. */
+    private fun ResourceId.bindingEvidence(endpoint: EndpointId): DeclaredLinkEvidence =
+        ResourceValueMapper.declaredEvidence(endpoint, this, recordOf(this), baseline.catalog.checked).also { evidence ->
+            evidence.memberships.forEach { edit.capturedReads.observeInput(InputIdentity.Membership(it)) }
+            evidence.forms.forEach { edit.capturedReads.observeInput(InputIdentity.Form(it)) }
+        }
+
+    /** Occurrences on this resource's [endpoint] bindings that already link [linked] or have room to link it. */
+    private fun ResourceId.occurrencesLinking(
+        linked: ResourceId,
+        endpoint: EndpointId,
+        evidence: DeclaredLinkEvidence,
+        current: Map<LinkOccurrenceId, LinkOccurrence>,
+        operation: OperationPreparation,
+    ): List<LinkOccurrence> {
+        val record = recordOf(this)
+        val locations = evidence.values.toMutableList()
+        val collection =
+            ResourceValueMapper.counterpartBinding(endpoint, this, record, baseline.catalog.checked) as? CounterpartBinding.Collection
+        if (collection != null && locations.none { current[LinkOccurrenceId(endpoint, it)]?.target?.resource == linked }) {
+            locations += collection.location.item(operation.identities.item("source:$this:$endpoint:$linked"))
+        }
+        return locations.mapNotNull { at ->
+            val present = current[LinkOccurrenceId(endpoint, at)]
+            val value = record.valueAt(at.path)
+            if (present != null && present.target.resource != linked) return@mapNotNull null
+            if (present == null && value != null && !value.unfilled()) return@mapNotNull null
+            val occurrence = present ?: LinkOccurrence(LinkOccurrenceId(endpoint, at), this, LinkTarget(linked, null))
+            occurrence.takeIf { accepts(it, linked) }
+        }
+    }
+
+    private fun recordOf(id: ResourceId) = edit.session.resources[id] ?: error("The linked resource is unavailable")
 
     private fun accepts(
         source: LinkOccurrence,
@@ -328,37 +344,14 @@ internal class OperationRelationPreparation(
 
     private fun contract(endpoint: EndpointId) = baseline.catalog.relations.single { it.first.id == endpoint || it.second.id == endpoint }
 
-    private fun requireValidTagHierarchy(roots: List<ResourceId>) {
-        val relation = baseline.catalog.relations.singleOrNull { it.id.value == TAG_PARENTS_RELATION_ID } ?: return
-        val links = ResourceValueMapper.discover(edit.session.resources).filter { it.id.endpoint == relation.first.id }
-        val parents = links.groupBy({ it.source }, { it.target.resource })
-        val finished = mutableSetOf<ResourceId>()
-        val active = mutableSetOf<ResourceId>()
-        roots.forEach { root ->
-            val stack = ArrayDeque<Pair<ResourceId, Boolean>>()
-            stack.add(root to false)
-            while (stack.isNotEmpty()) {
-                val (id, leaving) = stack.removeLast()
-                if (leaving) {
-                    active -= id
-                    finished += id
-                    continue
-                }
-                if (id in finished) continue
-                require(active.add(id)) { "The operation would create a tag hierarchy cycle" }
-                edit.capturedReads.observeInput(InputIdentity.Incoming(id, relation.id))
-                stack.add(id to true)
-                parents[id].orEmpty().asReversed().forEach { parent -> stack.add(parent to false) }
-            }
-        }
-    }
-
     private fun observe(source: LinkOccurrence) {
         edit.capturedReads.observeInput(InputIdentity.Value(source.id.location))
         edit.capturedReads.observeInput(InputIdentity.Incoming(source.source, null))
         edit.capturedReads.observeInput(InputIdentity.Incoming(source.target.resource, null))
     }
 }
+
+private fun DeclaredLinkEvidence.isEmpty(): Boolean = values.isEmpty() && memberships.isEmpty() && forms.isEmpty()
 
 private fun DataValue.unfilled(): Boolean =
     when (this) {

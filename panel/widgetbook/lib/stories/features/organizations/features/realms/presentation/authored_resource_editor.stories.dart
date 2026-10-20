@@ -177,6 +177,7 @@ _fixture({bool unfilled = false}) {
     required bool abstract,
     skir.TypeDisplay? display,
   }) => skir.PublishedType(
+    placementField: null,
     display: display,
     definition: skir.TypeDefinition(
       id: id,
@@ -217,6 +218,7 @@ _fixture({bool unfilled = false}) {
       generation: generation,
       types: [
         skir.PublishedType(
+          placementField: null,
           display: null,
           definition: skir.TypeDefinition(
             id: definition,

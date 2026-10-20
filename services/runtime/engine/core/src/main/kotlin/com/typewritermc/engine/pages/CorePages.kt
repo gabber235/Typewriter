@@ -1,5 +1,6 @@
 package com.typewritermc.engine.pages
 
+import com.typewritermc.authoring.GraphLayout
 import com.typewritermc.authoring.GraphPlacement
 import com.typewritermc.authoring.TimelineEntryPlacement
 import com.typewritermc.elements.Entry
@@ -16,7 +17,7 @@ import com.typewritermc.types.TypewriterType
  * Marks entries accepted by the core sequence graph page.
  *
  * The marker defines an editor role. Runtime registrars own execution setup, while
- * [com.typewritermc.engine.runtime.PageContentGateway] admits compiled artifacts into the engine resource graph.
+ * [com.typewritermc.engine.runtime.ResourceGraphContentGateway] admits compiled artifacts into the engine resource graph.
  */
 interface SequenceEntry : Entry {
     override val page: Ref<PageElements.Element, SequencePage>
@@ -57,7 +58,8 @@ data class SequencePage(
     override val chapter: ChapterPath = ChapterPath.Root,
     override val priority: Int = 0,
     override val elements: List<Ref<PageElements.Page, SequenceEntry>> = emptyList(),
-) : Page
+) : Page,
+    GraphLayout
 
 @TypewriterType(id = "01a0b185a1d5743ca86b82d4d61e1041")
 @TypewriterDisplay(name = "Static", icon = "material-symbols:push-pin", color = "#673AB7")
@@ -67,7 +69,8 @@ data class StaticPage(
     override val chapter: ChapterPath = ChapterPath.Root,
     override val priority: Int = 0,
     override val elements: List<Ref<PageElements.Page, StaticEntry>> = emptyList(),
-) : Page
+) : Page,
+    GraphLayout
 
 @TypewriterType(id = "01a0b185e711776992ee044c4f6a4f3c")
 @TypewriterDisplay(name = "Scene", icon = "material-symbols:movie", color = "#FF9800")
@@ -87,4 +90,5 @@ data class ManifestPage(
     override val chapter: ChapterPath = ChapterPath.Root,
     override val priority: Int = 0,
     override val elements: List<Ref<PageElements.Page, ManifestEntry>> = emptyList(),
-) : Page
+) : Page,
+    GraphLayout

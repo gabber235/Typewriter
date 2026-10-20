@@ -4,6 +4,7 @@ package com.typewritermc.realm.routes
 
 import com.typewritermc.authoring.AuthoringRecord
 import com.typewritermc.authoring.GeneratedSdkApi
+import com.typewritermc.authoring.GraphLayoutDefinition
 import com.typewritermc.authoring.GraphPlacement
 import com.typewritermc.authoring.ItemId
 import com.typewritermc.authoring.PathSegment
@@ -18,6 +19,7 @@ import com.typewritermc.discovery.GeneratedProviderArtifact
 import com.typewritermc.discovery.GeneratedProviderLoader
 import com.typewritermc.discovery.OwnedTypeDeclaration
 import com.typewritermc.discovery.assemble
+import com.typewritermc.elements.ElementDefinition
 import com.typewritermc.imprint.ArtifactId
 import com.typewritermc.library.Book
 import com.typewritermc.library.BookDefinition
@@ -28,6 +30,11 @@ import com.typewritermc.library.PageElements
 import com.typewritermc.library.Tag
 import com.typewritermc.library.TagDefinition
 import com.typewritermc.operations.BuiltinResourceOperation
+import com.typewritermc.operations.LinkWithInput
+import com.typewritermc.operations.LinkWithInputDefinition
+import com.typewritermc.operations.MoveToPageInput
+import com.typewritermc.operations.MoveToPageInputDefinition
+import com.typewritermc.operations.linkWith
 import com.typewritermc.presentation.DefaultPresentationRuntime
 import com.typewritermc.presentation.PresentationRuntime
 import com.typewritermc.protocol.transport.generated.RealmRouteScope
@@ -161,6 +168,107 @@ val ResourceOperationRoutesTest by testSuite {
         }
     }
 
+    test("moving an entry into a page that is not a graph layout keeps its placement") {
+        runTest {
+            CoreOperationsFixture(withElements = true).use { fixture ->
+                val before = fixture.views.read { it.resources }
+                val after =
+                    fixture.replay(
+                        fixture
+                            .prepare(BuiltinResourceOperation.MoveToPage, "graph-entry")
+                            .copy(input = fixture.input(MoveToPageInput(ResourceId("timeline")), MoveToPageInputDefinition.id)),
+                    )
+                val moved = after.getValue(ResourceId("graph-entry"))
+                moved.linkTarget("page") shouldBe ResourceId("timeline")
+                moved.fields["placement"] shouldBe before.getValue(ResourceId("graph-entry")).fields["placement"]
+            }
+        }
+    }
+
+    test("moving an entry into a graph layout places it clear of the members already there") {
+        runTest {
+            CoreOperationsFixture(withElements = true).use { fixture ->
+                val after =
+                    fixture.replay(
+                        fixture
+                            .prepare(BuiltinResourceOperation.MoveToPage, "graph-entry")
+                            .copy(input = fixture.input(MoveToPageInput(ResourceId("canvas")), MoveToPageInputDefinition.id)),
+                    )
+                val moved = after.getValue(ResourceId("graph-entry"))
+                moved.linkTarget("page") shouldBe ResourceId("canvas")
+                val placement = moved.graphPlacement()
+                placement.intersectsWithGap(after.getValue(ResourceId("resident-entry")).graphPlacement()) shouldBe false
+                (placement.width to placement.height) shouldBe (2 to 2)
+            }
+        }
+    }
+
+    test("duplicating an entry inside a page that is not a graph layout needs no placement") {
+        runTest {
+            CoreOperationsFixture(withElements = true).use { fixture ->
+                val before = fixture.views.read { it.resources }
+                val after = fixture.replay(fixture.prepare(BuiltinResourceOperation.Duplicate, "timeline-entry"))
+                val copy = (after.keys - before.keys).single()
+                after.getValue(copy).linkTarget("page") shouldBe ResourceId("timeline")
+                after.getValue(copy).fields["placement"] shouldBe before.getValue(ResourceId("timeline-entry")).fields["placement"]
+            }
+        }
+    }
+
+    test("a tag dropped onto a book is linked through the book's tags") {
+        runTest {
+            CoreOperationsFixture(withTagLink = true).use { fixture ->
+                val before = fixture.views.read { it.resources }
+                val after =
+                    fixture.replay(
+                        fixture
+                            .prepare(BuiltinResourceOperation.LinkWith, "tag")
+                            .copy(input = fixture.input(LinkWithInput(ResourceId("book")), LinkWithInputDefinition.id)),
+                    )
+                after.getValue(ResourceId("book")).linkTargets("tags") shouldBe listOf(ResourceId("tag"))
+                after.getValue(ResourceId("tag")).fields shouldBe before.getValue(ResourceId("tag")).fields
+            }
+        }
+    }
+
+    test("a tag dropped onto a tag becomes its child") {
+        runTest {
+            CoreOperationsFixture(withTagLink = true).use { fixture ->
+                val after =
+                    fixture.replay(
+                        fixture
+                            .prepare(BuiltinResourceOperation.LinkWith, "loose")
+                            .copy(input = fixture.input(LinkWithInput(ResourceId("tag")), LinkWithInputDefinition.id)),
+                    )
+                after.getValue(ResourceId("loose")).linkTargets("parents") shouldBe listOf(ResourceId("tag"))
+            }
+        }
+    }
+
+    test("a tag cycle written directly into the parents field is rejected") {
+        CoreOperationsFixture().use { fixture ->
+            val cyclic =
+                fixture.record(
+                    Tag(name = "Adventure", parents = setOf(Ref(ResourceId("tag"))), placement = GraphPlacement(5, 0)),
+                    TagDefinition.id,
+                )
+            val generation = fixture.views.read { it.catalog.generation }
+            val edit =
+                com.typewritermc.authoring.PreparedEdit(
+                    generation,
+                    emptyList(),
+                    listOf(
+                        com.typewritermc.authoring.EditIntent.SetValue(
+                            com.typewritermc.authoring.ValueLocation(ResourceId("parent"), ValuePath(listOf(PathSegment.Field("parents")))),
+                            cyclic.fields.getValue("parents"),
+                        ),
+                    ),
+                )
+            val rejected = fixture.plan(edit) as MutationPlanningResult.Rejected
+            rejected.problems.map { it.code }.toSet() shouldBe setOf("relation_cycle")
+        }
+    }
+
     test("an included alias invokes its retained authoring handler without contributing the canonical operation row") {
         runTest {
             CoreOperationsFixture(withDeleteAlias = true).use { fixture ->
@@ -234,6 +342,8 @@ private class CoreOperationsFixture(
     withPages: Boolean = false,
     withDeleteAlias: Boolean = false,
     withFailingAvailability: Boolean = false,
+    withElements: Boolean = false,
+    withTagLink: Boolean = false,
 ) : AutoCloseable {
     private val catalogs = RealmCatalogStore()
     val views: InMemoryAuthoringViewStore
@@ -273,6 +383,20 @@ private class CoreOperationsFixture(
             } else {
                 original
             }
+        val linkable =
+            if (withTagLink) {
+                // Core tags do not declare Link with yet; the fixture adds it to exercise link direction.
+                val tagLink =
+                    com.typewritermc.operations.collectOperations(
+                        loaded.declarations.first().origin,
+                        "fixture.TagLinkOperations",
+                        TypeTemplate.Named(TagDefinition.id),
+                        com.typewritermc.library.TagDraftProjection,
+                    ) { scope -> scope.linkWith() }
+                loaded.copy(operations = loaded.operations + tagLink)
+            } else {
+                loaded
+            }
         val contributions =
             if (withDeleteAlias) {
                 val alias =
@@ -303,40 +427,60 @@ private class CoreOperationsFixture(
                             ),
                         )
                     }
-                loaded.copy(operations = loaded.operations.filterNot { it.target.definition == TagDefinition.id } + alias)
+                linkable.copy(operations = linkable.operations.filterNot { it.target.definition == TagDefinition.id } + alias)
             } else {
-                loaded
+                linkable
             }
         val pageType = TypeDefinitionId(TypeId.Qualified("fixture", "Page"), 1)
-        val pageContractFields = (PageDefinition.declaration.representation as RepresentationTemplate.Record).fields
-        val fixtureContributions =
-            if (withPages) {
-                contributions.copy(
-                    declarations =
-                        contributions.declarations +
-                            OwnedTypeDeclaration(
-                                contributions.declarations.first().origin,
-                                TypeDefinition(
-                                    pageType,
-                                    representation =
-                                        RepresentationTemplate.Record(
-                                            pageContractFields.map { field ->
-                                                field.copy(owner = FieldOwner(pageType, field.owner.name), overrides = listOf(field.owner))
-                                            },
-                                        ),
-                                    parents = listOf(TypeTemplate.Named(PageDefinition.id)),
-                                ),
-                            ),
-                    endpointBindings =
-                        contributions.endpointBindings +
-                            contributions.endpointBindings
-                                .filter {
-                                    it.valueOwner == PageDefinition.id
-                                }.map { it.copy(containingResource = TypeTemplate.Named(pageType), valueOwner = pageType) },
-                )
-            } else {
-                contributions
+        val origin = contributions.declarations.first().origin
+
+        fun derived(
+            type: TypeDefinitionId,
+            contract: TypeDefinitionId,
+            declaration: TypeDefinition,
+            vararg extraParents: TypeDefinitionId,
+        ): OwnedTypeDeclaration {
+            val fields = (declaration.representation as RepresentationTemplate.Record).fields
+            return OwnedTypeDeclaration(
+                origin,
+                TypeDefinition(
+                    type,
+                    representation =
+                        RepresentationTemplate.Record(
+                            fields.map { field -> field.copy(owner = FieldOwner(type, field.owner.name), overrides = listOf(field.owner)) },
+                        ),
+                    parents = (listOf(contract) + extraParents).map { TypeTemplate.Named(it) },
+                ),
+            )
+        }
+
+        fun derivedBindings(
+            type: TypeDefinitionId,
+            contract: TypeDefinitionId,
+        ) = contributions.endpointBindings
+            .filter { it.valueOwner == contract }
+            .map { it.copy(containingResource = TypeTemplate.Named(type), valueOwner = type) }
+        val fixtureTypes =
+            buildList {
+                if (withPages || withElements) add(derived(pageType, PageDefinition.id, PageDefinition.declaration))
+                if (withElements) {
+                    add(derived(GRAPH_PAGE_TYPE, PageDefinition.id, PageDefinition.declaration, GraphLayoutDefinition.id))
+                    add(derived(ENTRY_TYPE, ElementDefinition.id, ElementDefinition.declaration))
+                }
             }
+        val fixtureBindings =
+            buildList {
+                if (withPages || withElements) addAll(derivedBindings(pageType, PageDefinition.id))
+                if (withElements) {
+                    addAll(derivedBindings(GRAPH_PAGE_TYPE, PageDefinition.id))
+                    addAll(derivedBindings(ENTRY_TYPE, ElementDefinition.id))
+                }
+            }
+        val fixtureContributions =
+            contributions.copy(
+                declarations = contributions.declarations + fixtureTypes,
+                endpointBindings = contributions.endpointBindings + fixtureBindings,
+            )
         val assembly = fixtureContributions.assemble(CatalogAssemblyContext(CatalogGeneration("core-operations")))
         brokenCapability =
             assembly.operations.definitions
@@ -358,6 +502,63 @@ private class CoreOperationsFixture(
             val binding = lease.nativeBindings.bind(checked) as NativeBinding<T>
             val encoded = binding.encode(value) as DataValue.Named
             return AuthoringRecord(TypeSelection.Complete(encoded.actualType), (encoded.payload as DataValue.Record).fields)
+        }
+
+        fun encodeFields(
+            declaration: TypeDefinition,
+            values: Map<String, Any?>,
+        ): Map<String, DataValue> =
+            (declaration.representation as RepresentationTemplate.Record).fields.associate { field ->
+                val use = (field.type.apply(emptyMap()) as Resolution.Ready).value
+                val checked = (lease.checked.resolve(use) as Resolution.Ready).value
+                field.owner.name to lease.nativeBindings.bind(checked).encodeGeneratedDefault(values.getValue(field.owner.name))
+            }
+
+        fun page(
+            book: String,
+            chapter: String,
+            priority: Int,
+            index: Int,
+            type: TypeDefinitionId = pageType,
+            elements: List<String> = emptyList(),
+        ): AuthoringRecord {
+            val values =
+                mapOf(
+                    "book" to
+                        Ref<BookPages.Page, Book>(
+                            ResourceId(book),
+                            ValuePath(listOf(PathSegment.Field("pages"), PathSegment.Item(ItemId("native:$index")))),
+                        ),
+                    "name" to "Page",
+                    "chapter" to ChapterPath.parse(chapter),
+                    "priority" to priority,
+                    "elements" to
+                        elements.map {
+                            Ref<PageElements.Page, com.typewritermc.elements.Element>(
+                                ResourceId(it),
+                                ValuePath(listOf(PathSegment.Field("page"))),
+                            )
+                        },
+                )
+            return AuthoringRecord(TypeSelection.Complete(TypeUse.Named(type)), encodeFields(PageDefinition.declaration, values))
+        }
+
+        fun entry(
+            page: String,
+            index: Int,
+            placement: GraphPlacement,
+        ): AuthoringRecord {
+            val values =
+                mapOf(
+                    "page" to
+                        Ref<PageElements.Element, com.typewritermc.library.Page>(
+                            ResourceId(page),
+                            ValuePath(listOf(PathSegment.Field("elements"), PathSegment.Item(ItemId("native:$index")))),
+                        ),
+                    "name" to "Entry",
+                    "placement" to placement,
+                )
+            return AuthoringRecord(TypeSelection.Complete(TypeUse.Named(ENTRY_TYPE)), encodeFields(ElementDefinition.declaration, values))
         }
         val resources =
             mutableMapOf(
@@ -390,37 +591,33 @@ private class CoreOperationsFixture(
                     BookDefinition.id,
                 )
 
-            fun page(
-                book: String,
-                chapter: String,
-                priority: Int,
-                index: Int,
-            ): AuthoringRecord {
-                val values =
-                    mapOf(
-                        "book" to
-                            Ref<BookPages.Page, Book>(
-                                ResourceId(book),
-                                ValuePath(listOf(PathSegment.Field("pages"), PathSegment.Item(ItemId("native:$index")))),
-                            ),
-                        "name" to "Page",
-                        "chapter" to ChapterPath.parse(chapter),
-                        "priority" to priority,
-                        "elements" to emptyList<Ref<PageElements.Page, com.typewritermc.elements.Element>>(),
-                    )
-                val fields =
-                    (PageDefinition.declaration.representation as RepresentationTemplate.Record).fields.associate { field ->
-                        val use = (field.type.apply(emptyMap()) as Resolution.Ready).value
-                        val checked = (lease.checked.resolve(use) as Resolution.Ready).value
-                        field.owner.name to lease.nativeBindings.bind(checked).encodeGeneratedDefault(values.getValue(field.owner.name))
-                    }
-                return AuthoringRecord(TypeSelection.Complete(TypeUse.Named(pageType)), fields)
-            }
             resources[ResourceId("first")] = page("book", "intro", 100, 0)
             resources[ResourceId("second")] = page("book", "intro", 1, 1)
             resources[ResourceId("other")] = page("book", "outro", 77, 2)
             resources[ResourceId("resident")] = page("destination", "intro", 9, 0)
             resources[ResourceId("peer")] = page("destination", "outro", 3, 1)
+        }
+        if (withElements) {
+            resources[ResourceId("library")] =
+                record(
+                    Book(
+                        title = "Library",
+                        pages =
+                            listOf("graph", "canvas", "timeline").map {
+                                Ref(ResourceId(it), ValuePath(listOf(PathSegment.Field("book"))))
+                            },
+                    ),
+                    BookDefinition.id,
+                )
+            resources[ResourceId("graph")] = page("library", "intro", 0, 0, GRAPH_PAGE_TYPE, listOf("graph-entry"))
+            resources[ResourceId("canvas")] = page("library", "intro", 1, 1, GRAPH_PAGE_TYPE, listOf("resident-entry"))
+            resources[ResourceId("timeline")] = page("library", "intro", 2, 2, elements = listOf("timeline-entry"))
+            resources[ResourceId("graph-entry")] = entry("graph", 0, GraphPlacement(0, 0, 2, 2))
+            resources[ResourceId("resident-entry")] = entry("canvas", 0, GraphPlacement(0, 0, 2, 2))
+            resources[ResourceId("timeline-entry")] = entry("timeline", 0, GraphPlacement(4, 4, 1, 1))
+        }
+        if (withTagLink) {
+            resources[ResourceId("loose")] = record(Tag(name = "Loose", placement = GraphPlacement(9, 0)), TagDefinition.id)
         }
         views = InMemoryAuthoringViewStore(lease, AuthoringSeed(resources))
         routes = ResourceOperationRoutes(ResourceOperationRuntime(views), EditorContracts(RealmRouteScope("organization", "realm")))
@@ -483,8 +680,66 @@ private class CoreOperationsFixture(
         )
     }
 
+    /** Encodes a native value as a saved record of [type] under the current catalog. */
+    fun <T : Any> record(
+        value: T,
+        type: TypeDefinitionId,
+    ): AuthoringRecord =
+        views.read { root ->
+            val checked = (root.catalog.checked.resolve(TypeUse.Named(type)) as Resolution.Ready).value
+
+            @Suppress("UNCHECKED_CAST")
+            val binding = root.catalog.nativeBindings.bind(checked) as NativeBinding<T>
+            val encoded = binding.encode(value) as DataValue.Named
+            AuthoringRecord(TypeSelection.Complete(encoded.actualType), (encoded.payload as DataValue.Record).fields)
+        }
+
+    /** Plans [edit] against the saved resources and returns the resulting resources, or the planner rejection. */
+    fun plan(edit: com.typewritermc.authoring.PreparedEdit): MutationPlanningResult =
+        views.capture().use { lease ->
+            val catalog = lease.root.catalog
+            AuthoringMutationPlanner(catalog.checked, catalog.relations, catalog.endpointBindings).plan(lease.root.resources, edit)
+        }
+
+    /** Prepares [request] through the wire route and replays its preview edit onto the saved resources. */
+    suspend fun replay(request: PrepareAuthoringActionRequest): Map<ResourceId, AuthoringRecord> {
+        val response = routes.prepare(request)
+        val preview = response as? AuthoringActionResult.PreviewWrapper ?: error(response.toString())
+        val before = views.read { it.resources }
+        val accepted = plan(SkirAuthoringOperationCodec.decode(preview.value.edit).getOrThrow()) as MutationPlanningResult.Accepted
+        return before + accepted.plan.resources - accepted.plan.removedResources
+    }
+
     override fun close() {
         views.close()
         catalogs.close()
     }
+}
+
+private val GRAPH_PAGE_TYPE = TypeDefinitionId(TypeId.Qualified("fixture", "GraphPage"), 1)
+private val ENTRY_TYPE = TypeDefinitionId(TypeId.Qualified("fixture", "Entry"), 1)
+
+private fun AuthoringRecord.graphPlacement(): GraphPlacement {
+    val fields = ((fields.getValue("placement") as DataValue.Named).payload as DataValue.Record).fields
+
+    fun int(name: String) = (fields.getValue(name) as DataValue.Integer).value.toInt()
+    return GraphPlacement(int("x"), int("y"), int("width"), int("height"))
+}
+
+private fun GraphPlacement.intersectsWithGap(other: GraphPlacement): Boolean =
+    x.toLong() < other.x.toLong() + other.width + 1 && x.toLong() + width + 1 > other.x &&
+        y.toLong() < other.y.toLong() + other.height + 1 && y.toLong() + height + 1 > other.y
+
+private fun AuthoringRecord.linkTarget(field: String): ResourceId =
+    ((fields.getValue(field) as DataValue.Named).payload as DataValue.Link).target.resource
+
+private fun AuthoringRecord.linkTargets(field: String): List<ResourceId> {
+    val payload = (fields.getValue(field) as DataValue.Named).payload
+    val items =
+        when (payload) {
+            is DataValue.ListValue -> payload.items
+            is DataValue.SetValue -> payload.items
+            else -> error("Expected a collection in $field.")
+        }
+    return items.map { ((it.value as DataValue.Named).payload as DataValue.Link).target.resource }
 }

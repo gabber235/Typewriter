@@ -1,6 +1,7 @@
 package com.typewritermc.realm.catalog
 
 import com.typewritermc.authoring.AuthoringResourceDefinition
+import com.typewritermc.authoring.ValuePath
 import com.typewritermc.capability.RealmCapabilityProvider
 import com.typewritermc.checking.CatalogGeneration
 import com.typewritermc.configuration.ConfigurationRecipe
@@ -16,6 +17,7 @@ import com.typewritermc.services.libs.utils.closeAll
 import com.typewritermc.types.EndpointBindingTemplate
 import com.typewritermc.types.NativeBindingRegistry
 import com.typewritermc.types.RelationContract
+import com.typewritermc.types.TypeDefinitionId
 import com.typewritermc.types.catalog.CheckedCatalog
 import com.typewritermc.types.catalog.EditorCatalogSnapshot
 import kotlinx.coroutines.channels.BufferOverflow
@@ -131,6 +133,7 @@ class RealmCatalogStore : AutoCloseable {
         override val resources: List<AuthoringResourceDefinition> get() = assembly.snapshot.resourceDefinitions
         override val configuration: List<ConfigurationRecipe> get() = assembly.snapshot.configuration
         override val operations: OperationCatalog get() = assembly.operations
+        override val placementFields: Map<TypeDefinitionId, ValuePath> get() = retention.placementFields
         override val editorSnapshot: EditorCatalogSnapshot get() = assembly.snapshot
         override val capabilities: List<RealmCapabilityProvider>
             get() =
@@ -157,6 +160,10 @@ class RealmCatalogStore : AutoCloseable {
         var current: Boolean,
     ) : AutoCloseable {
         val providers = RetainedOwnedProviderRegistry(incarnation.assembly.providers, incarnation.deployment)
+        val placementFields =
+            incarnation.assembly.snapshot.types
+                .mapNotNull { type -> type.placementField?.let { type.definition.id to it } }
+                .toMap()
         var leases = 0
 
         override fun close() {

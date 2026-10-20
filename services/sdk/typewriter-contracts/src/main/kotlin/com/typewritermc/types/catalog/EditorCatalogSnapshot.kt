@@ -1,6 +1,7 @@
 package com.typewritermc.types.catalog
 
 import com.typewritermc.authoring.AuthoringResourceDefinition
+import com.typewritermc.authoring.ValuePath
 import com.typewritermc.capability.RealmCapabilityDescriptor
 import com.typewritermc.checking.CatalogGeneration
 import com.typewritermc.configuration.ConfigurationRecipe
@@ -19,12 +20,19 @@ import com.typewritermc.types.skir.SkirTypeCodec
 import com.typewritermc.types.skir.getOrThrow
 import skirout.editor.v1.catalog.EditorCatalogWireSnapshot
 
+/**
+ * One declared type as published to editors.
+ *
+ * [placementField] is the single effective field typed as a placement; editors and Realm read and write layout
+ * through it instead of assuming a field name. It is null when the type has no placement field.
+ */
 data class PublishedType(
     val definition: TypeDefinition,
     val status: DeclarationStatus,
     val effectiveFields: List<EffectiveFieldTemplate>,
     val ancestorTemplates: List<TypeTemplate.Named>,
     val display: TypeDisplay? = null,
+    val placementField: ValuePath? = null,
 )
 
 data class EffectiveFieldTemplate(

@@ -91,7 +91,6 @@ data class OperationCatalog(
     val definitions: List<ResourceOperationDefinition> = emptyList(),
     val contributions: List<ResourceOperationContribution> = emptyList(),
     val authoringProviders: List<BoundResourceOperation> = emptyList(),
-    val placements: List<DestinationPlacementDeclaration> = emptyList(),
     val diagnostics: List<DeclarationDiagnostic> = emptyList(),
     val failures: List<OperationBindingFailure> = emptyList(),
 ) {
@@ -102,7 +101,7 @@ data class OperationCatalog(
 /**
  * Assembles published operation definitions together with executable callbacks after checked types and bindings exist.
  *
- * A declaration that fails binding contributes no partial definitions, providers, placements, or contributions;
+ * A declaration that fails binding contributes no partial definitions, providers, or contributions;
  * its origin and cause remain available as diagnostics and failures. Action validation then removes individual
  * invalid definitions and their references. Navigation stays a client action; authoring operations retain a provider
  * that decodes complete input before invoking preparation against the caller's working graph.
@@ -118,13 +117,11 @@ fun bindOperations(
     val definitions = linkedMapOf<ResourceOperationId, ResourceOperationDefinition>()
     val contributions = mutableListOf<ResourceOperationContribution>()
     val providers = mutableListOf<BoundResourceOperation>()
-    val placements = mutableListOf<DestinationPlacementDeclaration>()
     val diagnostics = mutableListOf<DeclarationDiagnostic>()
     val failures = mutableListOf<OperationBindingFailure>()
     declarations.forEach { declaration ->
         val previousDefinitions = definitions.toMap()
         val previousProviders = providers.size
-        val previousPlacements = placements.size
         val previousContributions = contributions.size
         try {
             declaration.failure?.let { throw it }
@@ -209,48 +206,12 @@ fun bindOperations(
                 }
             }
             contributions += ResourceOperationContribution(declaration.target, ids.distinct(), declaration.primary)
-            declaration.placements.forEach { placement ->
-                val target = placement.target.asClosedUse()
-                val checked =
-                    (catalog.resolve(target) as? Resolution.Ready)?.value
-                        ?: error("Invalid destination placement target $target from ${declaration.origin}.")
-                require(
-                    placement.collection.path.segments
-                        .isNotEmpty(),
-                ) { "Destination placement requires an exact collection field." }
-                require(
-                    placement.collection.owner == checked.use.let { (it as TypeUse.Named).definition } ||
-                        catalog.isNominalSubtype((checked.use as TypeUse.Named).definition, placement.collection.owner),
-                ) {
-                    "Destination collection belongs to another resource type."
-                }
-                var fieldType = checked
-                placement.collection.path.segments.forEach { segment ->
-                    val field = segment as? PathSegment.Field ?: error("A placement declaration requires a static collection field path.")
-                    val use =
-                        fieldType.schema.fields
-                            .singleOrNull { it.key == field.name }
-                            ?.type
-                            ?: error("Destination placement field is not declared: ${field.name}.")
-                    fieldType = (catalog.resolve(use) as? Resolution.Ready)?.value
-                        ?: error("Destination placement field type is unavailable.")
-                }
-                val collection =
-                    fieldType.schema.representation as? ResolvedRepresentation.Sequence
-                        ?: error("Destination placement requires a resource reference collection.")
-                val item = (catalog.resolve(collection.item) as? Resolution.Ready)?.value
-                require(
-                    item?.schema?.representation is ResolvedRepresentation.Link,
-                ) { "Destination placement collection must contain references." }
-                placements += placement
-            }
         } catch (cancelled: CancellationException) {
             throw cancelled
         } catch (failure: Exception) {
             definitions.clear()
             definitions.putAll(previousDefinitions)
             while (providers.size > previousProviders) providers.removeLast()
-            while (placements.size > previousPlacements) placements.removeLast()
             while (contributions.size > previousContributions) contributions.removeLast()
             diagnostics +=
                 DeclarationDiagnostic(
@@ -293,7 +254,6 @@ fun bindOperations(
             )
         },
         providers.filterNot { it.descriptor.id in invalid },
-        placements.toList(),
         diagnostics.distinct(),
         failures.toList(),
     )

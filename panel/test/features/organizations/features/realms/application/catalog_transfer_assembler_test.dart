@@ -274,6 +274,7 @@ skir.PublishedType _publishedType(int typeIndex) {
       ),
   ];
   return skir.PublishedType(
+    placementField: null,
     display: null,
     definition: skir.TypeDefinition(
       id: definition,

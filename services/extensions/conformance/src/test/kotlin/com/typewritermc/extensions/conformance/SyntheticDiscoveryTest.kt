@@ -34,6 +34,7 @@ import com.typewritermc.library.PageElements
 import com.typewritermc.presentation.DefaultPresentationRuntime
 import com.typewritermc.presentation.PresentationBuildBinding
 import com.typewritermc.presentation.presentationTemplate
+import com.typewritermc.types.ACYCLIC_RELATION_FAMILY_ID
 import com.typewritermc.types.DataValue
 import com.typewritermc.types.DeclarationOwner
 import com.typewritermc.types.DeclaredTypeId
@@ -86,7 +87,8 @@ val SyntheticDiscoveryTest by testSuite {
     }
 
     test("generates ownership relations and their concrete authored bindings") {
-        SyntheticEntryCues.contract.families shouldBe setOf(RelationFamilyId(RESOURCE_OWNERSHIP_FAMILY_ID))
+        SyntheticEntryCues.contract.families shouldBe
+            setOf(RelationFamilyId(ACYCLIC_RELATION_FAMILY_ID), RelationFamilyId(RESOURCE_OWNERSHIP_FAMILY_ID))
         SyntheticEntryCues.contract.first.cardinality shouldBe EndpointCardinality.One
         SyntheticEntryCues.contract.second.cardinality shouldBe EndpointCardinality.Many
         SyntheticEntryEndpointBindings.bindings
@@ -99,7 +101,8 @@ val SyntheticDiscoveryTest by testSuite {
                 binding.containsCollection shouldBe true
             }
 
-        SyntheticSegmentKeyframes.contract.families shouldBe setOf(RelationFamilyId(RESOURCE_OWNERSHIP_FAMILY_ID))
+        SyntheticSegmentKeyframes.contract.families shouldBe
+            setOf(RelationFamilyId(ACYCLIC_RELATION_FAMILY_ID), RelationFamilyId(RESOURCE_OWNERSHIP_FAMILY_ID))
     }
 
     test("native bindings preserve named identity and serialized field names") {

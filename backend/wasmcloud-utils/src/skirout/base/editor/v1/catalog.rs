@@ -450,6 +450,9 @@ pub struct PublishedType {
     pub effective_fields: crate::skir_client::KeyedVec<EffectiveFieldTemplate_byKey>,
     pub ancestor_templates: Vec<crate::skirout::base::editor::v1::type_catalog::NamedTypeTemplate>,
     pub display: Option<TypeDisplay>,
+    /// The single effective field typed as a placement, which editors and Realm read and write
+    /// when they lay out resources of this type. Absent when the type declares no placement.
+    pub placement_field: Option<crate::skirout::base::editor::v1::type_catalog::ValuePath>,
     /// Set this to None when you're creating a struct.
     pub _unrecognized: Option<crate::skir_client::UnrecognizedFields<PublishedType>>,
 }
@@ -2255,6 +2258,7 @@ fn initialize_module_serializers() {
                 |x: &PublishedType| &x.display,
                 |x: &mut PublishedType, v| x.display = v,
             );
+            (*a).add_field("placement_field", 5, crate::skir_client::Serializer::optional(crate::skirout::base::editor::v1::type_catalog::ValuePath::serializer()), "The single effective field typed as a placement, which editors and Realm read and write\nwhen they lay out resources of this type. Absent when the type declares no placement.", |x: &PublishedType| &x.placement_field, |x: &mut PublishedType, v| x.placement_field = v);
             (*a).finalize();
         }
         unsafe {

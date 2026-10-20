@@ -1089,6 +1089,7 @@ skir.PublishedType _published(
   skir.TypeDefinition definition, {
   skir.TypeDisplay? display,
 }) => skir.PublishedType(
+  placementField: null,
   definition: definition,
   status: skir.DeclarationStatus.ready,
   effectiveFields: [

@@ -30,6 +30,7 @@ final class CanonicalReadModels {
         _ => const <skir.FieldDeclaration>[],
       };
       _definitions[definition.id] = skir.PublishedType(
+        placementField: null,
         definition: definition,
         status: skir.DeclarationStatus.ready,
         effectiveFields: [

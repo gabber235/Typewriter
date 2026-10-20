@@ -2008,6 +2008,7 @@ _linkCollectionFixture({
       generation: skir.CatalogGeneration(value: "catalog:links"),
       types: [
         skir.PublishedType(
+          placementField: null,
           display: null,
           definition: skir.TypeDefinition(
             id: rootDefinition,
@@ -2037,6 +2038,7 @@ _linkCollectionFixture({
           ancestorTemplates: const [],
         ),
         skir.PublishedType(
+          placementField: null,
           display: null,
           definition: skir.TypeDefinition(
             id: setDefinition,
@@ -2052,6 +2054,7 @@ _linkCollectionFixture({
           ancestorTemplates: const [],
         ),
         skir.PublishedType(
+          placementField: null,
           display: null,
           definition: skir.TypeDefinition(
             id: linkDefinition,
@@ -2637,6 +2640,7 @@ CheckedEditorCatalog _collectionCatalog() {
     skir.RepresentationTemplate representation, {
     List<skir.EffectiveFieldTemplate> effective = const [],
   }) => skir.PublishedType(
+    placementField: null,
     definition: skir.TypeDefinition(
       id: id,
       parameters: const [],
@@ -2804,6 +2808,7 @@ final _polymorphicCatalog = CheckedEditorCatalog(
     generation: skir.CatalogGeneration(value: "test"),
     types: [
       skir.PublishedType(
+        placementField: null,
         display: null,
         definition: skir.TypeDefinition(
           id: _iconifyDefinition,
@@ -3610,6 +3615,7 @@ void registerRemainingFieldsTests() {
           ),
       ];
       final published = skir.PublishedType(
+        placementField: null,
         definition: skir.TypeDefinition(
           id: definition,
           parameters: const [],

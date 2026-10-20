@@ -376,6 +376,7 @@ private class RepairCatalogLease(
 
     override val configuration: List<com.typewritermc.configuration.ConfigurationRecipe> = emptyList()
     override val operations = com.typewritermc.operations.OperationCatalog()
+    override val placementFields = emptyMap<com.typewritermc.types.TypeDefinitionId, com.typewritermc.authoring.ValuePath>()
 
     override fun retain(): AuthoringCatalogLease = RepairCatalogLease(generation)
 

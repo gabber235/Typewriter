@@ -302,6 +302,7 @@ void main() {
           generation: generation,
           types: [
             skir.PublishedType(
+              placementField: null,
               display: null,
               definition: skir.TypeDefinition(
                 id: alias,
@@ -318,6 +319,7 @@ void main() {
               ancestorTemplates: const [],
             ),
             skir.PublishedType(
+              placementField: null,
               display: null,
               definition: skir.TypeDefinition(
                 id: root,

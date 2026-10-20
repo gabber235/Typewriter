@@ -690,6 +690,7 @@ _fixture({
   );
   final generation = skir.CatalogGeneration(value: "catalog:collections");
   final published = skir.PublishedType(
+    placementField: null,
     display: null,
     definition: skir.TypeDefinition(
       id: type,
@@ -726,6 +727,7 @@ _fixture({
       types: [
         published,
         skir.PublishedType(
+          placementField: null,
           display: null,
           definition: skir.TypeDefinition(
             id: list,

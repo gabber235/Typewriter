@@ -630,6 +630,7 @@ private fun ConversionScope.encode(type: PublishedType) =
         effectiveFields = type.effectiveFields.map(::encode),
         ancestorTemplates = type.ancestorTemplates.map(::encodeNamedTypeTemplate),
         display = type.display?.let(::encode),
+        placementField = type.placementField?.let { encodeValuePath(it) },
     )
 
 private fun ConversionScope.encode(display: TypeDisplay) =

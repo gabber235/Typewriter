@@ -186,6 +186,7 @@ _CreationFixture _fixture() {
     generation: generation,
     types: [
       skir.PublishedType(
+        placementField: null,
         definition: skir.TypeDefinition(
           id: definition,
           parameters: const [],

@@ -50,7 +50,7 @@ val TypeDisplayPublicationTest by testSuite {
     }
 }
 
-private fun generatedTypeProviders(): List<GeneratedTypeProvider> {
+internal fun generatedTypeProviders(): List<GeneratedTypeProvider> {
     val resources =
         Collections.list(
             requireNotNull(Thread.currentThread().contextClassLoader)
@@ -72,7 +72,7 @@ private fun instantiateGeneratedProvider(type: Class<*>): Any =
         }?.get(null)
         ?: type.getConstructor().newInstance()
 
-private fun providerOrigin(): ProviderOrigin =
+internal fun providerOrigin(): ProviderOrigin =
     ProviderOrigin(
         owner =
             DeclarationOwner(

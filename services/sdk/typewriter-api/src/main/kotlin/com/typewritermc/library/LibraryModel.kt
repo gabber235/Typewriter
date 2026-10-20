@@ -1,7 +1,9 @@
 package com.typewritermc.library
 
+import com.typewritermc.authoring.CompilationUnit
 import com.typewritermc.authoring.GraphPlacement
 import com.typewritermc.elements.Element
+import com.typewritermc.types.Acyclic
 import com.typewritermc.types.Color
 import com.typewritermc.types.DeletionPolicy
 import com.typewritermc.types.Icon
@@ -68,14 +70,14 @@ data class Tag(
 ) : Resource
 
 @ReferenceContract(TAG_PARENTS_RELATION_ID)
-interface TagParentsContract {
+interface TagParentsContract : Acyclic {
     interface Child : Many<Tag>
 
     interface Parent : Many<Tag>
 }
 
 @TypewriterRecordContract
-interface Page : Resource {
+interface Page : CompilationUnit {
     val book: Ref<BookPages.Page, Book>
     val name: String
     val chapter: ChapterPath

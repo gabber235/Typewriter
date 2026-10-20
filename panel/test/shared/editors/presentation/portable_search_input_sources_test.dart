@@ -333,6 +333,7 @@ void main() {
       generation: skir.CatalogGeneration(value: "catalog:http"),
       types: [
         skir.PublishedType(
+          placementField: null,
           display: null,
           definition: skir.TypeDefinition(
             id: resultType,

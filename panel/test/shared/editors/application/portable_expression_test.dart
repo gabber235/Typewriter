@@ -1384,6 +1384,7 @@ CheckedEditorCatalog _fixtureCatalog(Map<String, Object?> fixture) =>
 
 skir.PublishedType _fixturePublished(skir.TypeDefinition definition) =>
     skir.PublishedType(
+      placementField: null,
       definition: definition,
       status: skir.DeclarationStatus.ready,
       effectiveFields: [

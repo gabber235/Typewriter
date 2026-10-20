@@ -1405,6 +1405,10 @@ sealed class PublishedType_orMutable {
   get ancestorTemplates;
   TypeDisplay_orMutable? get display;
 
+  /// The single effective field typed as a placement, which editors and Realm read and write
+  /// when they lay out resources of this type. Absent when the type declares no placement.
+  _lib_editor_v1_type_catalog.ValuePath_orMutable? get placementField;
+
   PublishedType toFrozen();
 }
 
@@ -1422,6 +1426,11 @@ final class PublishedType implements PublishedType_orMutable {
   ancestorTemplates;
   @_core.override
   final TypeDisplay? display;
+
+  /// The single effective field typed as a placement, which editors and Realm read and write
+  /// when they lay out resources of this type. Absent when the type declares no placement.
+  @_core.override
+  final _lib_editor_v1_type_catalog.ValuePath? placementField;
   _skir.internal__UnrecognizedFields? _u;
 
   factory PublishedType({
@@ -1433,6 +1442,7 @@ final class PublishedType implements PublishedType_orMutable {
     >
     ancestorTemplates,
     required TypeDisplay_orMutable? display,
+    required _lib_editor_v1_type_catalog.ValuePath_orMutable? placementField,
   }) => PublishedType._(
     definition.toFrozen(),
     status,
@@ -1444,6 +1454,7 @@ final class PublishedType implements PublishedType_orMutable {
     ),
     _skir.internal__frozenMappedCopy(ancestorTemplates, (it) => it.toFrozen()),
     (display != null) ? display.toFrozen() : null,
+    (placementField != null) ? placementField.toFrozen() : null,
   );
 
   PublishedType._(
@@ -1452,6 +1463,7 @@ final class PublishedType implements PublishedType_orMutable {
     this.effectiveFields,
     this.ancestorTemplates,
     this.display,
+    this.placementField,
   );
 
   /// Default instance with all fields set to their default values.
@@ -1460,6 +1472,7 @@ final class PublishedType implements PublishedType_orMutable {
     DeclarationStatus.unknown,
     _skir.KeyedIterable.empty,
     _skir.KeyedIterable.empty,
+    null,
     null,
   );
 
@@ -1470,6 +1483,7 @@ final class PublishedType implements PublishedType_orMutable {
     DeclarationStatus.unknown,
     _skir.KeyedIterable.empty,
     _skir.KeyedIterable.empty,
+    null,
     null,
   );
 
@@ -1485,6 +1499,7 @@ final class PublishedType implements PublishedType_orMutable {
     this.effectiveFields,
     this.ancestorTemplates,
     this.display,
+    this.placementField,
   );
 
   @_core.override
@@ -1506,6 +1521,7 @@ final class PublishedType implements PublishedType_orMutable {
     this.effectiveFields,
     this.ancestorTemplates,
     this.display,
+    this.placementField,
   ];
 
   @_core.override
@@ -1566,6 +1582,17 @@ final class PublishedType implements PublishedType_orMutable {
         (it) => it.display,
         (it, v) => it.display = v,
       );
+      _serializerBuilder.addField(
+        "placement_field",
+        "placementField",
+        5,
+        _skir.Serializers.optional(
+          _lib_editor_v1_type_catalog.ValuePath.serializer,
+        ),
+        "The single effective field typed as a placement, which editors and Realm read and write\nwhen they lay out resources of this type. Absent when the type declares no placement.",
+        (it) => it.placementField,
+        (it, v) => it.placementField = v,
+      );
       _serializerBuilder.finalize();
     }
     return _serializerBuilder.serializer;
@@ -1590,6 +1617,10 @@ final class PublishedType_mutable implements PublishedType_orMutable {
   _core.Iterable<_lib_editor_v1_type_catalog.NamedTypeTemplate_orMutable>
   ancestorTemplates;
   TypeDisplay_orMutable? display;
+
+  /// The single effective field typed as a placement, which editors and Realm read and write
+  /// when they lay out resources of this type. Absent when the type declares no placement.
+  _lib_editor_v1_type_catalog.ValuePath_orMutable? placementField;
   _skir.internal__UnrecognizedFields? _u;
 
   PublishedType_mutable._(
@@ -1598,6 +1629,7 @@ final class PublishedType_mutable implements PublishedType_orMutable {
     this.effectiveFields,
     this.ancestorTemplates,
     this.display,
+    this.placementField,
   );
 
   /// If the value of [definition] is already mutable, returns it as-is.
@@ -1647,6 +1679,7 @@ final class PublishedType_mutable implements PublishedType_orMutable {
     effectiveFields: this.effectiveFields,
     ancestorTemplates: this.ancestorTemplates,
     display: this.display,
+    placementField: this.placementField,
   ).._u = this._u;
 }
 

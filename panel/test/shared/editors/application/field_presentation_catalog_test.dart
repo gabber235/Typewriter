@@ -1158,6 +1158,7 @@ skir.PublishedType _type(
   skir.TypeDefinitionId definition,
   List<skir.TypeDefinitionId> ancestors,
 ) => skir.PublishedType(
+  placementField: null,
   definition: skir.TypeDefinition(
     id: definition,
     parameters: const [],

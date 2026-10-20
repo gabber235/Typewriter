@@ -59,6 +59,7 @@ skir.PublishedType _draftPublished(
   List<skir.NamedTypeTemplate> parents = const [],
   List<skir.EffectiveFieldTemplate> fields = const [],
 }) => skir.PublishedType(
+  placementField: null,
   definition: skir.TypeDefinition(
     id: definition,
     parameters: const [],

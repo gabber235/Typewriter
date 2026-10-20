@@ -298,6 +298,7 @@ internal class TestCatalogLease private constructor(
     override val resources: List<AuthoringResourceDefinition> =
         listOf(AuthoringResourceDefinition(ResourceDefinitionId("test"), resourceRoot))
     override val operations = com.typewritermc.operations.OperationCatalog()
+    override val placementFields = emptyMap<com.typewritermc.types.TypeDefinitionId, com.typewritermc.authoring.ValuePath>()
     internal val openCount: Int get() = state.open.get()
 
     override fun retain(): AuthoringCatalogLease {

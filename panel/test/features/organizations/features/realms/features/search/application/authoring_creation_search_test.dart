@@ -279,6 +279,7 @@ skir.PublishedType _published(
   bool abstract = false,
   skir.TypeDefinitionId? parent,
 }) => skir.PublishedType(
+  placementField: null,
   definition: skir.TypeDefinition(
     id: id,
     parameters: const [],

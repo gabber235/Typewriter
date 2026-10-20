@@ -73,6 +73,7 @@ CheckedEditorCatalog authoringSearchStoryCatalog() {
       types: [
         for (final definition in definitions.values)
           skir.PublishedType(
+            placementField: null,
             display: null,
             definition: skir.TypeDefinition(
               id: definition,

@@ -661,6 +661,12 @@ final class CheckedEditorCatalog {
   skir.TypeUse? concreteType(skir.TypeTemplate template) =>
       _concreteTemplateType(template);
 
+  /// The published placement field of the selected type, or null when the
+  /// type declares none. Layout reads and writes go through this path instead
+  /// of assuming a field name.
+  skir.ValuePath? placementField(skir.TypeSelection selection) =>
+      selected(selection)?.placementField;
+
   skir.PublishedType? selected(skir.TypeSelection selection) {
     final definition = switch (selection) {
       skir.TypeSelection_completeWrapper(:final value) => value.definition,
