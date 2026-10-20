@@ -1,6 +1,9 @@
+@file:OptIn(GeneratedSdkApi::class)
+
 package com.typewritermc.library
 
 import com.typewritermc.authoring.DefaultInitializationRuntime
+import com.typewritermc.authoring.GeneratedSdkApi
 import com.typewritermc.authoring.GraphPlacement
 import com.typewritermc.authoring.GraphPlacementDefinition
 import com.typewritermc.authoring.InitializationRequest
@@ -107,7 +110,7 @@ val FrameworkCatalogCreationTest by testSuite {
             )
         val checked = (catalog.resolve(TypeUse.Named(concreteId)) as Resolution.Ready).value
         val runtime = DefaultPresentationRuntime()
-        val provider = com.typewritermc.elements.com_typewritermc_elements_ElementGraphNodePresentation_ElementPresentationProvider(runtime)
+        val provider = com.typewritermc.elements.ElementGraphNodePresentation_ElementPresentationProvider(runtime)
         val inherited = provider.descriptor(origin("element_graph"))
         inherited.roles shouldBe setOf(PresentationRole.EDITOR_NODE)
         entries.count { it.providerClass == provider.javaClass.name } shouldBe 1
@@ -225,20 +228,20 @@ val FrameworkCatalogCreationTest by testSuite {
         val runtime = DefaultPresentationRuntime()
         val iconifyProvider =
             com.typewritermc.types
-                .com_typewritermc_types_CoreIconSdkProvider_IconIconifyPresentationProvider(runtime)
+                .CoreIconSdkProvider_IconIconifyPresentationProvider(runtime)
         val svgProvider =
             com.typewritermc.types
-                .com_typewritermc_types_CoreIconSdkProvider_IconSvgPresentationProvider(runtime)
+                .CoreIconSdkProvider_IconSvgPresentationProvider(runtime)
         val placementProvider =
             com.typewritermc.authoring
-                .com_typewritermc_authoring_PlacementSdkProvider_GraphPlacementPresentationProvider(runtime)
-        val bookProvider = com_typewritermc_library_BookInspectorPresentation_BookPresentationProvider(runtime)
-        val tagProvider = com_typewritermc_library_TagInspectorPresentation_TagPresentationProvider(runtime)
-        val pageProvider = com_typewritermc_library_PageInspectorPresentation_PagePresentationProvider(runtime)
-        val bookReferenceProvider = com_typewritermc_library_BookReferencePresentation_BookPresentationProvider(runtime)
-        val tagReferenceProvider = com_typewritermc_library_TagReferencePresentation_TagPresentationProvider(runtime)
-        val tagGraphProvider = com_typewritermc_library_TagGraphNodePresentation_TagPresentationProvider(runtime)
-        val pageReferenceProvider = com_typewritermc_library_PageReferencePresentation_PagePresentationProvider(runtime)
+                .PlacementSdkProvider_GraphPlacementPresentationProvider(runtime)
+        val bookProvider = BookInspectorPresentation_BookPresentationProvider(runtime)
+        val tagProvider = TagInspectorPresentation_TagPresentationProvider(runtime)
+        val pageProvider = PageInspectorPresentation_PagePresentationProvider(runtime)
+        val bookReferenceProvider = BookReferencePresentation_BookPresentationProvider(runtime)
+        val tagReferenceProvider = TagReferencePresentation_TagPresentationProvider(runtime)
+        val tagGraphProvider = TagGraphNodePresentation_TagPresentationProvider(runtime)
+        val pageReferenceProvider = PageReferencePresentation_PagePresentationProvider(runtime)
         val iconifyDescriptor = iconifyProvider.descriptor(origin("iconify"))
         val svgDescriptor = svgProvider.descriptor(origin("svg"))
         val placementDescriptor = placementProvider.descriptor(origin("placement"))
@@ -783,7 +786,7 @@ private fun exportFrameworkControlFixture(
         providers.filterKeys { it.kind == GeneratedProviderKind.Type }.map { (entry, value) ->
             val provider = value as com.typewritermc.discovery.GeneratedTypeProvider
             com.typewritermc.discovery.OwnedTypeDeclaration(
-                origin(entry.providerClass.substringAfterLast('.')),
+                origin(entry.providerClass.substringAfterLast('.').replace('$', '_')),
                 provider.definition,
                 provider.display,
                 provider.nativeClass,
@@ -796,12 +799,17 @@ private fun exportFrameworkControlFixture(
                     representation = RepresentationTemplate.Record(emptyList()),
                     parents = listOf(TypeTemplate.Named(com.typewritermc.elements.ElementDefinition.id)),
                 ),
-                com.typewritermc.types.TypeDisplay("Message action", "Entry graph fixture", "fa6-solid:message", "#e74c3c"),
+                com.typewritermc.types.TypeDisplay(
+                    "Message action",
+                    "Entry graph fixture",
+                    "fa6-solid:message",
+                    com.typewritermc.types.Color(0xFFE74C3Cu),
+                ),
             ) + inheritedInspectorDeclarations()
     val presentations =
         providers.filterKeys { it.kind == GeneratedProviderKind.Presentation }.map { (entry, value) ->
             val provider = value as com.typewritermc.discovery.GeneratedPresentationProvider
-            val owner = origin(entry.providerClass.substringAfterLast('.'))
+            val owner = origin(entry.providerClass.substringAfterLast('.').replace('$', '_'))
             com.typewritermc.discovery.OwnedPresentation(owner, provider.descriptor(owner), provider)
         }
     val inspectorOrigin = origin("fixture_entry_inspector")
@@ -836,7 +844,7 @@ private fun exportFrameworkControlFixture(
                 providers.filterKeys { it.kind == GeneratedProviderKind.Configuration }.map { (entry, value) ->
                     val provider = value as com.typewritermc.discovery.GeneratedConfigurationProvider
                     com.typewritermc.discovery.OwnedConfiguration(
-                        origin(entry.providerClass.substringAfterLast('.')),
+                        origin(entry.providerClass.substringAfterLast('.').replace('$', '_')),
                         provider.target,
                         provider,
                     )
@@ -844,7 +852,7 @@ private fun exportFrameworkControlFixture(
             nativeBindings =
                 providers.filterKeys { it.kind == GeneratedProviderKind.NativeBinding }.map { (entry, value) ->
                     com.typewritermc.discovery.OwnedNativeBinding(
-                        origin(entry.providerClass.substringAfterLast('.')),
+                        origin(entry.providerClass.substringAfterLast('.').replace('$', '_')),
                         value as NativeBindingFactory,
                     )
                 },
