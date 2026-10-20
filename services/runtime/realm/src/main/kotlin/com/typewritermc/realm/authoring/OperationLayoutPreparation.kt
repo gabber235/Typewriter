@@ -2,9 +2,12 @@
 
 package com.typewritermc.realm.authoring
 
+import com.typewritermc.authoring.CheckedWriteResult
 import com.typewritermc.authoring.GeneratedSdkApi
 import com.typewritermc.authoring.GraphLayout
 import com.typewritermc.authoring.GraphLayoutDefinition
+import com.typewritermc.authoring.GraphPlacement
+import com.typewritermc.authoring.GraphPlacementDefinition
 import com.typewritermc.authoring.PathSegment
 import com.typewritermc.authoring.PlacementAnchor
 import com.typewritermc.authoring.ValueLocation
@@ -15,6 +18,8 @@ import com.typewritermc.checking.InputIdentity
 import com.typewritermc.operations.OperationPreparation
 import com.typewritermc.types.ResourceId
 import com.typewritermc.types.TypeDefinitionId
+import com.typewritermc.types.catalog.Resolution
+import com.typewritermc.types.encodeGeneratedDefault
 import com.typewritermc.types.ownsResources
 
 /** Lays out moved members when their destination is laid out as a graph, without inferring layout from presentation. */
@@ -24,8 +29,10 @@ internal class OperationLayoutPreparation(
     /**
      * Gives these members a collision free graph placement around [anchor] when [destination] is a [GraphLayout].
      *
-     * The members must already be owned by the destination. Other destinations, such as timeline pages, keep the
-     * members' placements untouched, and so do members whose type publishes no graph placement field.
+     * The members must already be owned by the destination. A member holding another placement kind, such as a
+     * timeline entry placement, first receives a fresh graph placement when its placement field accepts one. Other
+     * destinations, such as timeline pages, keep the members' placements untouched, and so do members whose type
+     * publishes no placement field that can hold a graph placement.
      */
     context(operation: OperationPreparation)
     suspend fun List<ResourceId>.placeIn(
@@ -34,7 +41,7 @@ internal class OperationLayoutPreparation(
     ) {
         if (isEmpty() || !destination.isA(GraphLayoutDefinition.id)) return
         val members = destination.ownedMembers(this)
-        val moving = mapNotNull { it.graphPlacement() }
+        val moving = mapNotNull { it.graphPlacement() ?: it.freshGraphPlacement() }
         val occupants = members.filterNot { it in this }.mapNotNull { it.graphPlacement() }
         val placed = with(relations.reads) { GraphGroupPlacement.place(moving, occupants, anchor) }
         placed.forEach { (draft, placement) ->
@@ -70,6 +77,25 @@ internal class OperationLayoutPreparation(
             .forEach { path -> relations.reads.members(boundCollectionPath(ValueLocation(this, path))) }
         memberships.forEach { relations.reads.observeInput(InputIdentity.Value(it.id.location)) }
         return memberships.map { it.target.resource }.distinct()
+    }
+
+    /** Writes a default graph placement into this resource's placement field, when that field accepts one. */
+    context(operation: OperationPreparation)
+    private suspend fun ResourceId.freshGraphPlacement(): ValueLocation? {
+        val catalog = relations.catalog
+        val record = relations.resources[this] ?: return null
+        val location = catalog.placementLocation(this, record) ?: return null
+        // The authored value carries its actual placement kind, so the declared type comes from the containing record.
+        val field = location.path.segments.lastOrNull() as? PathSegment.Field ?: return null
+        val container = record.authoredTypeAt(ValuePath(location.path.segments.dropLast(1)), catalog.checked) ?: return null
+        val schema = (catalog.checked.resolve(container) as? Resolution.Ready)?.value?.schema ?: return null
+        val declared = schema.fields.singleOrNull { it.key == field.name }?.type ?: return null
+        if (!catalog.checked.isReadableAs(GraphPlacementDefinition.use, declared)) return null
+        val checked = (catalog.checked.resolve(GraphPlacementDefinition.use) as Resolution.Ready).value
+        val value = catalog.nativeBindings.bind(checked).encodeGeneratedDefault(GraphPlacement())
+        val written = operation.checkedSet(location, value)
+        check(written == CheckedWriteResult.Applied) { "The graph placement of $this was rejected: $written" }
+        return location
     }
 
     private fun ResourceId.graphPlacement(): ValueLocation? =

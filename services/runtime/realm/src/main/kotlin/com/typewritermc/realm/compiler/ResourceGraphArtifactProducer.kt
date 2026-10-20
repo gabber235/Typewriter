@@ -1,7 +1,5 @@
 package com.typewritermc.realm.compiler
 
-import com.typewritermc.authoring.CompilationUnitDefinition
-import com.typewritermc.authoring.TypeSelection
 import com.typewritermc.engine.CompilationResult
 import com.typewritermc.engine.CompilationRoot
 import com.typewritermc.engine.CompiledArtifact
@@ -20,10 +18,8 @@ internal object ResourceGraphArtifactProducer : CompiledArtifactProducer {
     override fun roots(view: AuthoringView): Set<CompilationRoot> =
         view.resources.entries
             .asSequence()
-            .filter { (_, record) ->
-                val selection = record.configuration as? TypeSelection.Complete
-                selection != null && view.catalog.checked.isNominalSubtype(selection.use.definition, CompilationUnitDefinition.id)
-            }.map { (resource, _) -> CompilationRoot(projection, resource) }
+            .filter { (_, record) -> record.isCompilationUnit(view.catalog.checked) }
+            .map { (resource, _) -> CompilationRoot(projection, resource) }
             .sortedBy { root -> root.resource.value }
             .toCollection(linkedSetOf())
 

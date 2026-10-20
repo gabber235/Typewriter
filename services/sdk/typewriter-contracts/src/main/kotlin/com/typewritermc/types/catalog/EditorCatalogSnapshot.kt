@@ -25,7 +25,8 @@ import skirout.editor.v1.expression.ExpressionNode
 /**
  * One declared type as published to editors.
  *
- * [searchKey] is the search scope keyword of a resource type and null for every type that is not a resource.
+ * [searchKey] is the search scope keyword of a resource type. It is null for every type that is not a resource and for
+ * the realm root and its sections, which every resource sits inside.
  * [placementField] is the single effective field typed as a placement; editors and Realm read and write layout
  * through it instead of assuming a field name. It is null when the type has no placement field.
  */

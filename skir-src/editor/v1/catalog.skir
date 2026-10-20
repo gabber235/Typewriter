@@ -112,7 +112,8 @@ struct PublishedType(810900009) {
   ancestor_templates: [NamedTypeTemplate] = 3;
   display: TypeDisplay = 4;
   /// Search scope keyword for resources of this type, such as book in book:"Main story".
-  /// Present for every resource type and absent for every other type.
+  /// Present for every resource type except the realm root and its sections, which every
+  /// resource sits inside, and absent for every other type.
   search_key: string? = 5;
   /// The single effective field typed as a placement, which editors and Realm read and write
   /// when they lay out resources of this type. Absent when the type declares no placement.

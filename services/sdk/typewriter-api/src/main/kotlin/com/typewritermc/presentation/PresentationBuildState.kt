@@ -60,6 +60,19 @@ internal class PresentationBuildState(
             ExpressionBindingId("presentation.subject.identifier") to TypeTemplate.Named(com.typewritermc.types.ResourceIdDefinition.id),
         )
 
+    /**
+     * Checks the order key of a resources layout: [body] reads each member's link through [item], typed [link], and
+     * may produce a key of any type.
+     */
+    internal fun checkOrder(
+        body: ExpressionNode,
+        item: ExpressionBindingId,
+        link: TypeTemplate,
+    ) {
+        val errors = type.checkExpression(body, expressionTypes + (item to link), null, setOf(item))
+        require(errors.isEmpty()) { "Invalid resources order: ${errors.joinToString()}." }
+    }
+
     internal fun checkMapping(
         body: ExpressionNode,
         input: ExpressionBindingId,

@@ -6,6 +6,7 @@ import com.typewritermc.authoring.AuthoringRecord
 import com.typewritermc.authoring.EditIntent
 import com.typewritermc.authoring.GeneratedSdkApi
 import com.typewritermc.authoring.GraphPlacement
+import com.typewritermc.authoring.LinkOccurrenceId
 import com.typewritermc.authoring.PathSegment
 import com.typewritermc.authoring.PlacementAnchor
 import com.typewritermc.authoring.PreparedEdit
@@ -14,6 +15,7 @@ import com.typewritermc.authoring.ValueLocation
 import com.typewritermc.authoring.ValuePath
 import com.typewritermc.authoring.skir.SkirAuthoringOperationCodec
 import com.typewritermc.discovery.ProviderOrigin
+import com.typewritermc.library.TAXONOMY_TAGS_RELATION_ID
 import com.typewritermc.library.TagDefinition
 import com.typewritermc.operations.AnyResourceSubjects
 import com.typewritermc.operations.Delete
@@ -37,12 +39,16 @@ import com.typewritermc.realm.TestRealmStructure
 import com.typewritermc.realm.repository.MutationPlanningResult
 import com.typewritermc.realm.testTag
 import com.typewritermc.types.DataValue
+import com.typewritermc.types.EndpointSlot
 import com.typewritermc.types.Ref
+import com.typewritermc.types.RelationId
 import com.typewritermc.types.ResourceId
 import com.typewritermc.types.ResourceTarget
 import com.typewritermc.types.TypeTemplate
+import com.typewritermc.types.endpointId
 import com.typewritermc.types.skir.getOrThrow
 import de.infix.testBalloon.framework.core.testSuite
+import io.kotest.matchers.collections.shouldContain
 import io.kotest.matchers.collections.shouldContainAll
 import io.kotest.matchers.shouldBe
 import kotlinx.coroutines.test.runTest
@@ -180,6 +186,41 @@ val ResourceOperationRoutesTest by testSuite {
                             ),
                     )
                 after.getValue(ResourceId("graph-entry")).graphPlacement() shouldBe GraphPlacement(19, 19, 2, 2)
+            }
+        }
+    }
+
+    test("moving an entry with another placement kind into a graph layout gives it a fresh graph placement") {
+        runTest {
+            CoreOperationsFixture(withElements = true).use { fixture ->
+                val after =
+                    fixture.replay(
+                        fixture
+                            .prepare(MoveToOwner, "timeline-entry")
+                            .copy(input = fixture.input(MoveToOwnerInput(ResourceId("canvas")), MoveToOwnerInputDefinition.id)),
+                    )
+                val moved = after.getValue(ResourceId("timeline-entry"))
+                moved.linkTarget("page") shouldBe ResourceId("canvas")
+                val placement = moved.graphPlacement()
+                placement.intersectsWithGap(after.getValue(ResourceId("resident-entry")).graphPlacement()) shouldBe false
+            }
+        }
+    }
+
+    test("a preparation the planner rejects is invalid with the broken rule") {
+        runTest {
+            CoreOperationsFixture(extraOperations = { origin -> listOf(orphanTag(origin)) }).use { fixture ->
+                val request =
+                    fixture
+                        .prepare(Delete, "tag")
+                        .copy(
+                            capability =
+                                skirout.editor.v1.type_catalog.CapabilityId(
+                                    value = fixture.operationId("fixture.OrphanTag").capability.value,
+                                ),
+                        )
+                val result = fixture.routes.prepare(request) as AuthoringActionResult.InvalidWrapper
+                result.value.diagnostics.map { it.code } shouldContain "owner_required"
             }
         }
     }
@@ -404,6 +445,24 @@ private fun manyCandidates(origin: ProviderOrigin) =
                 }
             }
             prepare { }
+        }
+    }
+
+/** A Tag operation that releases its subject from the taxonomy, leaving it without an owner. */
+private fun orphanTag(origin: ProviderOrigin) =
+    collectOperation<ResourceDraft, Unit>(
+        origin,
+        "fixture.OrphanTag",
+        ResourceTarget.Type(TypeTemplate.Named(TagDefinition.id)),
+        AnyResourceSubjects,
+        OperationInput.None,
+        "Orphan tag",
+    ) { spec ->
+        with(ResourceOperationSpecImpl(spec)) {
+            prepare {
+                val owner = RelationId(TAXONOMY_TAGS_RELATION_ID).endpointId(EndpointSlot.Second)
+                disconnect(LinkOccurrenceId(owner, ValueLocation(subjects.single(), ValuePath(listOf(PathSegment.Field("taxonomy"))))))
+            }
         }
     }
 

@@ -27,6 +27,24 @@ internal class RealmGraphFacts(
 ) : AuthoringGraphFacts {
     private val catalog get() = relations.catalog
 
+    private var memoized: Memo? = null
+
+    /** Answers derived from the whole graph, kept until a staged write changes it. */
+    private val memo: Memo
+        get() = memoized?.takeIf { it.revision == relations.revision } ?: Memo(relations.revision).also { memoized = it }
+
+    private inner class Memo(
+        val revision: Long,
+    ) {
+        val ownerCandidates = hashMapOf<ResourceId, List<ResourceId>>()
+        val owned: Map<ResourceId, List<ResourceId>> by lazy(LazyThreadSafetyMode.NONE) {
+            val owning = catalog.ownershipRelationIds
+            relations.projections
+                .filter { it.contract in owning }
+                .groupBy({ it.first }, { it.second })
+        }
+    }
+
     override fun ownerOf(id: ResourceId): ResourceId? {
         relations.reads.observeInput(InputIdentity.Incoming(id, null))
         val ownership = catalog.ownershipRelationIds
@@ -37,20 +55,20 @@ internal class RealmGraphFacts(
             .singleOrNull()
     }
 
-    override fun ownerCandidatesOf(id: ResourceId): Sequence<ResourceId> {
-        val membership = relations.ownership(id) ?: return emptySequence()
-        val source = relations.memberSource(id, membership) ?: return emptySequence()
-        val closure = ownershipClosure(listOf(id))
-        relations.reads.observeInput(RESOURCE_SELECTION_INPUT)
-        return relations.resources.keys
-            .sortedBy { it.value }
-            .asSequence()
-            .filter { candidate -> candidate !in closure }
-            .filter { candidate ->
-                relations.observeForm(candidate)
-                relations.accepts(source, candidate)
-            }
-    }
+    override fun ownerCandidatesOf(id: ResourceId): Sequence<ResourceId> =
+        memo.ownerCandidates
+            .getOrPut(id) {
+                val membership = relations.ownership(id) ?: return@getOrPut emptyList()
+                val closure = ownershipClosure(listOf(id))
+                relations.reads.observeInput(RESOURCE_SELECTION_INPUT)
+                relations.resources.keys
+                    .sortedBy { it.value }
+                    .filter { candidate -> candidate !in closure }
+                    .filter { candidate ->
+                        relations.observeForm(candidate)
+                        relations.ownerSources(id, membership, candidate, ::candidateItem).isNotEmpty()
+                    }
+            }.asSequence()
 
     override fun canBeOwned(id: ResourceId): Boolean {
         val type = typeOf(id) ?: return false
@@ -116,11 +134,7 @@ internal class RealmGraphFacts(
 
     /** [roots] and everything they own, transitively. */
     private fun ownershipClosure(roots: List<ResourceId>): Set<ResourceId> {
-        val owning = catalog.ownershipRelationIds
-        val owned =
-            relations.projections
-                .filter { it.contract in owning }
-                .groupBy({ it.first }, { it.second })
+        val owned = memo.owned
         val closure = linkedSetOf<ResourceId>()
         val pending = ArrayDeque(roots)
         while (pending.isNotEmpty()) {

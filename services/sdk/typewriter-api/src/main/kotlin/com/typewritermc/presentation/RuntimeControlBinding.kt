@@ -325,6 +325,13 @@ internal class RuntimeControlBinding(
     }
 
     private fun resources(layout: ResourcesLayout) {
+        resourceOrder?.let { order ->
+            require(layout !is ResourcesLayout.GraphWrapper && layout !is ResourcesLayout.TimelineWrapper) {
+                "Graph and timeline layouts place members by their placements and cannot declare an order."
+            }
+            val link = requireNotNull(checked.itemsOrNull()) { "A resources layout presents a collection of links." }.type
+            state.checkOrder(order, RESOURCES_ITEM, link)
+        }
         select {
             PresentationElement.createResources(
                 control = it,

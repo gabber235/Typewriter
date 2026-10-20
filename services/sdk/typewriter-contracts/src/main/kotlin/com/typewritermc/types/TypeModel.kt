@@ -42,7 +42,8 @@ annotation class TypewriterTypeImports(
  *
  * [icon] uses Iconify `prefix:name` syntax, or inline SVG source. [color] uses `#RRGGBB` syntax. [searchKey] is the
  * search scope keyword of a resource type, such as `book` in `book:"Main story"`; resource types without one use the
- * class name in lower case. Codegen rejects a search key on a type that is not a resource.
+ * class name in lower case. Codegen rejects a search key on a type that is not a resource and the key `type`, which
+ * editors reserve for their type selector.
  */
 @Target(AnnotationTarget.CLASS)
 @Retention(AnnotationRetention.BINARY)
@@ -279,13 +280,15 @@ enum class PresentationRole {
     /**
      * A candidate target in a reference picker, including reference questions during creation.
      * The picker owns selection and disables writes. Missing presentations fall back to
-     * [REFERENCE_PREVIEW]. Supports result appearance metadata for the surrounding row.
+     * [REFERENCE_PREVIEW]. The surrounding row draws the candidate's display name, accent and icon; the presentation
+     * adds the content shown under the name.
      */
     REFERENCE_PICKER_RESULT,
 
     /**
      * An existing resource in authoring search. The surrounding result owns navigation and
-     * selection and disables writes. Supports result appearance metadata for the surrounding row.
+     * selection and disables writes. The surrounding row draws the resource's display name, accent and icon; the
+     * presentation adds the content shown under the name.
      */
     RESOURCE_SEARCH_RESULT,
 }

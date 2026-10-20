@@ -42,7 +42,6 @@ import com.typewritermc.types.FieldDeclaration
 import com.typewritermc.types.FieldOwner
 import com.typewritermc.types.ParameterKey
 import com.typewritermc.types.PresentationRole
-import com.typewritermc.types.RESOURCE_OWNERSHIP_FAMILY_ID
 import com.typewritermc.types.RelationContract
 import com.typewritermc.types.RepresentationTemplate
 import com.typewritermc.types.StandardTypes
@@ -66,6 +65,7 @@ import com.typewritermc.types.catalog.isReady
 import com.typewritermc.types.encodeGeneratedDefault
 import com.typewritermc.types.immutableCopy
 import com.typewritermc.types.immutableListCopy
+import com.typewritermc.types.ownsResources
 import com.typewritermc.types.parameterKeys
 import com.typewritermc.types.skir.SkirAuthoringValueCodec
 import com.typewritermc.types.skir.SkirConversionResult
@@ -207,11 +207,14 @@ fun CatalogContributions.assemble(context: CatalogAssemblyContext): CatalogAssem
         }
     val diagnostics = declarationGroups.keys.flatMap { checked.definition(it).diagnostics() }
     val searchKeys = declarationGroups.mapNotNull { (id, owned) -> owned.first().searchKey?.let { id to it } }.toMap()
+    // Every resource is inside the realm root and its sections, so they scope no search and publish no keyword.
+    val scopeKeys = searchKeys.filterKeys { id -> !checked.isRealmStructure(id) }
     val searchKeyConflicts =
-        publishedRelations.ownerTypes().filter { it in searchKeys }.groupBy(searchKeys::getValue).filterValues {
-            it.size >
-                1
-        }
+        publishedRelations
+            .ownerTypes()
+            .filter { it in scopeKeys }
+            .groupBy(scopeKeys::getValue)
+            .filterValues { it.size > 1 }
     val searchKeyDiagnostics =
         searchKeyConflicts.values.flatten().sortedBy { it.toString() }.map { id ->
             DeclarationDiagnostic(id, "duplicate_search_key", declarationGroups.getValue(id).map { DeclarationOrigin(it.origin.owner) })
@@ -232,7 +235,7 @@ fun CatalogContributions.assemble(context: CatalogAssemblyContext): CatalogAssem
                 effectiveFields = effectiveFields,
                 ancestorTemplates = ancestry,
                 display = owned.first().display ?: id.derivedDisplay(),
-                searchKey = searchKeys[id]?.takeUnless { id in conflictingKeys },
+                searchKey = scopeKeys[id]?.takeUnless { id in conflictingKeys },
                 placementField =
                     effectiveFields.placementField(checked) {
                         placementDiagnostics +=
@@ -309,10 +312,7 @@ private fun realmStructureDiagnostics(
     relations: List<RelationContract>,
     catalog: CheckedCatalog,
 ): List<DeclarationDiagnostic> {
-    val members =
-        relations
-            .filter { relation -> relation.families.any { it.value == RESOURCE_OWNERSHIP_FAMILY_ID } }
-            .map { it.second.resource.definition }
+    val members = relations.filter { it.ownsResources }.map { it.second.resource.definition }
     return declarations
         .filter { it.definition.id in resourceTypes && (it.definition.representation as? RepresentationTemplate.Record)?.abstract == false }
         .mapNotNull { owned ->
@@ -340,13 +340,15 @@ private fun realmStructureDiagnostics(
 
 /** The owner side endpoints of ownership relations: the link fields that hold owned resources. */
 private fun List<RelationContract>.ownershipEndpoints(): Set<com.typewritermc.types.EndpointId> =
-    filter { relation -> relation.families.any { it.value == RESOURCE_OWNERSHIP_FAMILY_ID } }
-        .mapTo(linkedSetOf()) { it.first.id }
+    filter { it.ownsResources }.mapTo(linkedSetOf()) { it.first.id }
 
 /** The owner endpoint types of ownership relations: the first endpoint, which holds the owned resources. */
 private fun List<RelationContract>.ownerTypes(): Set<TypeDefinitionId> =
-    filter { relation -> relation.families.any { it.value == RESOURCE_OWNERSHIP_FAMILY_ID } }
-        .mapTo(linkedSetOf()) { it.first.resource.definition }
+    filter { it.ownsResources }.mapTo(linkedSetOf()) { it.first.resource.definition }
+
+/** Whether [id] is the realm root or a realm section type, which the realm creates and every resource sits inside. */
+private fun CheckedCatalog.isRealmStructure(id: TypeDefinitionId): Boolean =
+    id == RealmRootDefinition.id || isNominalSubtype(id, RealmRootDefinition.id) || isNominalSubtype(id, RealmSectionDefinition.id)
 
 /** The display of a declaration codegen did not supply one for: its name from the type id, default icon and color. */
 private fun TypeDefinitionId.derivedDisplay(): TypeDisplay =

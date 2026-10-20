@@ -65,10 +65,7 @@ object BookInspectorPresentation : BookPresentation {
     override fun BookPresentationScope.present() {
         val tagOptions = libraryTagCollectionSource()
         inspectorLayout {
-            resourceHeading(
-                title = expressions.title.orIfBlank("Unnamed Book"),
-                color = expressions.color.orElse(literal(Color(0xff3f51b5u))),
-            )
+            resourceHeading(title = appearance.label, color = appearance.accent)
             inspectorSection("title", "Title", input = title.input) {
                 title { textInput { onComplete { value.trim() } } }
             }
@@ -136,28 +133,14 @@ object BookReferencePresentation : BookPresentation {
     override val roles = setOf(PresentationRole.REFERENCE_PREVIEW)
 
     override fun BookPresentationScope.present() {
-        val iconInput = icon.input
-        librarySubjectLayout(expressions.title.orIfBlank("Unnamed Book")) {
-            bookSubjectIcon(iconInput)
-        }
+        librarySubjectLayout(appearance.label) { icon(appearance.icon) }
     }
 }
 
-private fun Layout.bookSubjectIcon(input: PresentationInput<Icon, *>) {
-    polymorphicMatch(input) {
-        case(AppliedPresentation(IconIconifyDefinition.use, CoreIconSdkProvider)) {
-            val iconify = IconIconifyExpressionsFactory.create(value)
-            icon(iconify.value.orElse(literal("material-symbols:book")))
-        }
-        case(AppliedPresentation(IconSvgDefinition.use, CoreIconSdkProvider)) {
-            val svg = IconSvgExpressionsFactory.create(value)
-            icon(svg.source.orElse(literal("material-symbols:book")))
-        }
-        fallback { icon(literal("material-symbols:book")) }
-    }
-}
-
-/** Tag chips under the Book's name in search rows and pickers; the host draws the name, accent and icon. */
+/**
+ * Tag chips under the Book's name in search rows and pickers; the host draws the name, accent and icon. Each chip shows
+ * a tagged Tag, another resource, so it reads that Tag's own fields rather than the subject's appearance.
+ */
 object BookSearchPresentation : BookPresentation {
     override val roles = setOf(PresentationRole.REFERENCE_PICKER_RESULT, PresentationRole.RESOURCE_SEARCH_RESULT)
 

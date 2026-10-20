@@ -4,6 +4,7 @@ import com.typewritermc.expression.Expr
 import com.typewritermc.expression.Handled
 import com.typewritermc.expression.literal
 import com.typewritermc.types.DataValue
+import com.typewritermc.types.Icon
 import com.typewritermc.types.skir.SkirDataValueCodec
 import com.typewritermc.types.skir.getOrThrow
 import skirout.editor.v1.presentation.PresentationElement
@@ -133,6 +134,17 @@ internal class RuntimePresentationContent(
 
     override fun icon(
         value: Expr<String, Handled>,
+        options: IconOptions,
+    ) = iconElement(value, options)
+
+    override fun iconValue(
+        value: Expr<Icon, Handled>,
+        options: IconOptions,
+    ) = iconElement(value, options)
+
+    /** One icon element for an Iconify name or a typed [Icon]; the wire expression carries either. */
+    private fun iconElement(
+        value: Expr<*, Handled>,
         options: IconOptions,
     ) {
         target +=

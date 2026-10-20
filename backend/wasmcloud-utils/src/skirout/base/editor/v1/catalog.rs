@@ -411,7 +411,8 @@ pub struct PublishedType {
     pub ancestor_templates: Vec<crate::skirout::base::editor::v1::type_catalog::NamedTypeTemplate>,
     pub display: TypeDisplay,
     /// Search scope keyword for resources of this type, such as book in book:"Main story".
-    /// Present for every resource type and absent for every other type.
+    /// Present for every resource type except the realm root and its sections, which every
+    /// resource sits inside, and absent for every other type.
     pub search_key: Option<String>,
     /// The single effective field typed as a placement, which editors and Realm read and write
     /// when they lay out resources of this type. Absent when the type declares no placement.
@@ -2150,7 +2151,7 @@ fn initialize_module_serializers() {
                 |x: &mut PublishedType, v| x.ancestor_templates = v,
             );
             (*a).add_field("display", 4, crate::skir_client::internal::struct_serializer_from_static(TypeDisplay::_adapter()), "", |x: &PublishedType| &x.display, |x: &mut PublishedType, v| x.display = v);
-            (*a).add_field("search_key", 5, crate::skir_client::Serializer::optional(crate::skir_client::Serializer::string()), "Search scope keyword for resources of this type, such as book in book:\"Main story\".\nPresent for every resource type and absent for every other type.", |x: &PublishedType| &x.search_key, |x: &mut PublishedType, v| x.search_key = v);
+            (*a).add_field("search_key", 5, crate::skir_client::Serializer::optional(crate::skir_client::Serializer::string()), "Search scope keyword for resources of this type, such as book in book:\"Main story\".\nPresent for every resource type except the realm root and its sections, which every\nresource sits inside, and absent for every other type.", |x: &PublishedType| &x.search_key, |x: &mut PublishedType, v| x.search_key = v);
             (*a).add_field("placement_field", 6, crate::skir_client::Serializer::optional(crate::skirout::base::editor::v1::type_catalog::ValuePath::serializer()), "The single effective field typed as a placement, which editors and Realm read and write\nwhen they lay out resources of this type. Absent when the type declares no placement.", |x: &PublishedType| &x.placement_field, |x: &mut PublishedType, v| x.placement_field = v);
             (*a).finalize();
         }

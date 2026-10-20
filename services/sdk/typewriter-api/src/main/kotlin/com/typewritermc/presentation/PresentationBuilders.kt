@@ -31,8 +31,18 @@ interface PresentationContent {
         color: PresentationColor? = null,
     )
 
+    /** Draws the Iconify icon named by [value], such as `material-symbols:label`. */
     fun icon(
         value: Expr<String, Handled>,
+        options: IconOptions = IconOptions(),
+    )
+
+    /**
+     * Draws a typed [Icon], such as a resource's display icon. The icon element accepts an Iconify name or an [Icon]
+     * value and editors render the variant they receive. Call it as `icon(value)`; the typed overload forwards here.
+     */
+    fun iconValue(
+        value: Expr<Icon, Handled>,
         options: IconOptions = IconOptions(),
     )
 
@@ -274,16 +284,12 @@ data class IconOptions(
     val color: PresentationColor? = null,
 )
 
-/**
- * Draws a typed [Icon] such as a type display icon. The icon element accepts an Iconify name or an [Icon] value
- * and editors render the variant they receive, so this shares the element of the text overload.
- */
+/** Draws a typed [Icon] such as a resource's display icon, beside the Iconify name overload of the same element. */
 @JvmName("typedIcon")
-@Suppress("UNCHECKED_CAST")
 fun PresentationContent.icon(
     value: Expr<Icon, Handled>,
     options: IconOptions = IconOptions(),
-) = icon(value as Expr<String, Handled>, options)
+) = iconValue(value, options)
 
 data class StatusCase<V>(
     val value: V,

@@ -8,13 +8,19 @@ import com.typewritermc.checking.CatalogGeneration
 import com.typewritermc.discovery.CatalogAssembly
 import com.typewritermc.discovery.CatalogAssemblyContext
 import com.typewritermc.discovery.assemble
+import com.typewritermc.expression.ExpressionBindingId
+import com.typewritermc.expression.Handled
+import com.typewritermc.expression.inputExpression
 import com.typewritermc.expression.literal
+import com.typewritermc.expression.name
+import com.typewritermc.expression.orElse
 import com.typewritermc.presentation.DefaultPresentationRuntime
 import com.typewritermc.presentation.PresentationBuildBinding
 import com.typewritermc.presentation.PresentationMaterial
 import com.typewritermc.presentation.PresentationTarget
 import com.typewritermc.presentation.createResource
 import com.typewritermc.presentation.presentationTemplate
+import com.typewritermc.presentation.resource
 import com.typewritermc.types.PresentationRole
 import com.typewritermc.types.RESOURCE_OWNERSHIP_FAMILY_ID
 import com.typewritermc.types.TypeDefinitionId
@@ -142,6 +148,33 @@ val CorePlacesTest by testSuite {
             .path.segments shouldBe listOf(PathSegment.createField(name = "chapter"))
     }
 
+    test("a resources order reads each member's link and only layouts that list members accept one") {
+        val build = assembly.bookPresentation()
+
+        build {
+            pages {
+                order { resource.fields.name.orElse(literal("")) }
+                list()
+            }
+        }
+        shouldThrow<IllegalArgumentException> {
+            build {
+                pages {
+                    order { inputExpression<String, Handled>(ExpressionBindingId("unbound")) }
+                    list()
+                }
+            }
+        }.message shouldContain "Invalid resources order"
+        shouldThrow<IllegalArgumentException> {
+            build {
+                pages {
+                    order { resource.fields.name.orElse(literal("")) }
+                    graph(com.typewritermc.discovery.GraphDirection.TOP_TO_BOTTOM)
+                }
+            }
+        }.message shouldContain "cannot declare an order"
+    }
+
     test("a create action must join an owning link field of the subject that accepts the created type") {
         val build = assembly.bookBuild()
 
@@ -172,6 +205,13 @@ private fun CatalogAssembly.bookBuild(): (() -> EditorAction) -> Unit {
             .mapTo(hashSetOf()) { it.first.id }
     val binding = PresentationBuildBinding(checked.presentationTemplate(), PresentationRole.WORKSPACE, ownershipEndpoints = ownership)
     return { action -> DefaultPresentationRuntime().build(binding) { scope -> scope.button(literal("Create"), action()) } }
+}
+
+/** Builds a Book workspace whose content [content] declares through the generated Book presentation scope. */
+private fun CatalogAssembly.bookPresentation(): (BookPresentationScope.() -> Unit) -> Unit {
+    val checked = (checked.resolve(BookDefinition.use) as Resolution.Ready).value
+    val binding = PresentationBuildBinding(checked.presentationTemplate(), PresentationRole.WORKSPACE)
+    return { content -> DefaultPresentationRuntime().build(binding) { scope -> BookPresentationScopeImpl(scope).content() } }
 }
 
 private fun CatalogAssembly.material(

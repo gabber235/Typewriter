@@ -9,6 +9,7 @@ import com.typewritermc.authoring.DisplayFormulas
 import com.typewritermc.authoring.DraftBinding
 import com.typewritermc.authoring.ItemId
 import com.typewritermc.authoring.ReadContext
+import com.typewritermc.authoring.RealmRootDefinition
 import com.typewritermc.authoring.TypeSelection
 import com.typewritermc.checking.CatalogGeneration
 import com.typewritermc.checking.PartialSelection
@@ -24,7 +25,9 @@ import com.typewritermc.expression.literal
 import com.typewritermc.expression.orElse
 import com.typewritermc.library.Book
 import com.typewritermc.library.BookDefinition
+import com.typewritermc.library.LibraryDefinition
 import com.typewritermc.library.PageDefinition
+import com.typewritermc.library.TaxonomyDefinition
 import com.typewritermc.library.fields
 import com.typewritermc.presentation.RuntimePresentationQueries
 import com.typewritermc.types.Color
@@ -49,7 +52,9 @@ import com.typewritermc.types.TypeDisplay
 import com.typewritermc.types.TypeId
 import com.typewritermc.types.TypeTemplate
 import com.typewritermc.types.TypeUse
+import com.typewritermc.types.catalog.DeclarationOrigin
 import de.infix.testBalloon.framework.core.testSuite
+import io.kotest.matchers.collections.shouldNotContain
 import io.kotest.matchers.shouldBe
 
 val ResourceDisplayAssemblyTest by testSuite {
@@ -140,6 +145,44 @@ val ResourceDisplayAssemblyTest by testSuite {
         assembly.snapshot.resourceDisplays
             .map { it.target } shouldBe listOf(ResourceTarget.AnyResource)
         assembly.label(book(title = "")) shouldBe "Book"
+    }
+
+    test("an extension's any resource display is rejected while the framework default keeps naming every resource") {
+        val extension =
+            displayProvider(ResourceTarget.AnyResource) {
+                DisplayFormulas(literal("Extension"), literal(Color(0xFF000000u)), literal(Icon.Iconify("mdi:book")))
+            }
+        val assembly = assemble(displays = listOf(extension), includeGenerated = false)
+
+        val duplicate = assembly.snapshot.diagnostics.single { it.code == "duplicate_resource_display" }
+        duplicate.origins shouldBe listOf(DeclarationOrigin(extension.origin.owner))
+        assembly.snapshot.resourceDisplays
+            .map { it.target } shouldBe listOf(ResourceTarget.AnyResource)
+        assembly.label(book(title = "")) shouldBe "Book"
+    }
+
+    test("the realm root and its sections publish no search key and never conflict with a resource's") {
+        val owner = fixtureType(fixtureResource)
+        val ownership =
+            RelationContract(
+                id = RelationId("fixture.ownership"),
+                first = endpoint("fixture.owner", EndpointSlot.First, fixtureResource),
+                second = endpoint("fixture.owned", EndpointSlot.Second, BookDefinition.id),
+                families = setOf(RelationFamilyId(RESOURCE_OWNERSHIP_FAMILY_ID)),
+            )
+        val assembly =
+            assemble(
+                declarations = listOf(owner),
+                searchKeys = mapOf(fixtureResource to "library"),
+                relations = listOf(ownership),
+            )
+        val keys = assembly.snapshot.types.associate { it.definition.id to it.searchKey }
+
+        listOf(RealmRootDefinition.id, LibraryDefinition.id, TaxonomyDefinition.id).map(keys::getValue) shouldBe
+            listOf(null, null, null)
+        keys.getValue(fixtureResource) shouldBe "library"
+        keys.getValue(BookDefinition.id) shouldBe "book"
+        assembly.diagnosticCodes(fixtureResource) shouldNotContain "duplicate_search_key"
     }
 
     test("two owner types with one search key are rejected and publish no search key") {

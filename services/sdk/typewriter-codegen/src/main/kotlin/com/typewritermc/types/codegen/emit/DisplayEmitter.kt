@@ -20,6 +20,8 @@ import com.typewritermc.codegen.TypewriterApi as Api
 /**
  * `XDisplay` for resources: the name, accent and icon formulas of resource X. Every formula defaults to the subject's
  * type display, so an empty object is a complete declaration. `XDisplayScope` reads the subject's fields and type.
+ * Codegen rejects an object implementing the `XDisplay` of a generic resource; such resources take their display from
+ * a non generic contract they implement.
  */
 internal object DisplayEmitter : SdkEmitter {
     override fun FileSpec.Builder.emit(declaration: SdkDeclaration) {

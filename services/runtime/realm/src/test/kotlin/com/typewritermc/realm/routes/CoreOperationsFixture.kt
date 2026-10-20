@@ -9,7 +9,9 @@ import com.typewritermc.authoring.GraphPlacement
 import com.typewritermc.authoring.HierarchyPath
 import com.typewritermc.authoring.ItemId
 import com.typewritermc.authoring.PathSegment
+import com.typewritermc.authoring.Placement
 import com.typewritermc.authoring.PreparedEdit
+import com.typewritermc.authoring.TimelineEntryPlacement
 import com.typewritermc.authoring.TypeSelection
 import com.typewritermc.authoring.ValuePath
 import com.typewritermc.authoring.skir.SkirAuthoringOperationCodec
@@ -79,7 +81,7 @@ import java.nio.file.Path
  *
  * Every graph has a book and two tags (`tag` is a child of `parent`) plus the loose tag `loose`. [withPages] adds the
  * books `book` (pages first, second, other) and `destination` (pages resident, peer). [withElements] adds the book
- * `library` with the graph layout pages `graph` and `canvas` and the timeline page `timeline`, each with one entry.
+ * `library` with the graph layout pages `graph` and `canvas` and the timeline page `timeline`, each with one entry; the timeline entry holds a timeline entry placement.
  * [extraOperations] adds operation declarations, built with the artifact's origin, before assembly.
  */
 internal class CoreOperationsFixture(
@@ -216,7 +218,7 @@ internal class CoreOperationsFixture(
         fun entry(
             page: String,
             index: Int,
-            placement: GraphPlacement,
+            placement: Placement,
         ): AuthoringRecord {
             val values =
                 mapOf(
@@ -271,7 +273,7 @@ internal class CoreOperationsFixture(
             resources[ResourceId("timeline")] = page("library", "intro", 2, 2, elements = listOf("timeline-entry"))
             resources[ResourceId("graph-entry")] = entry("graph", 0, GraphPlacement(0, 0, 2, 2))
             resources[ResourceId("resident-entry")] = entry("canvas", 0, GraphPlacement(0, 0, 2, 2))
-            resources[ResourceId("timeline-entry")] = entry("timeline", 0, GraphPlacement(4, 4, 1, 1))
+            resources[ResourceId("timeline-entry")] = entry("timeline", 0, TimelineEntryPlacement(0))
         }
         views = InMemoryAuthoringViewStore(lease, AuthoringSeed(resources.withRealmStructure(lease)))
         runtime = ResourceOperationRuntime(views)

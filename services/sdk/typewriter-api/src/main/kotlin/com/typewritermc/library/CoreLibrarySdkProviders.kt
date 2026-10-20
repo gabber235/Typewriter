@@ -7,6 +7,7 @@ import com.typewritermc.expression.color
 import com.typewritermc.expression.display
 import com.typewritermc.expression.emptyListExpression
 import com.typewritermc.expression.icon
+import com.typewritermc.expression.label
 import com.typewritermc.expression.literal
 import com.typewritermc.expression.map
 import com.typewritermc.expression.name
@@ -50,10 +51,7 @@ object TagInspectorPresentation : TagPresentation {
     override fun TagPresentationScope.present() {
         val tagOptions = libraryTagCollectionSource()
         inspectorLayout {
-            resourceHeading(
-                title = expressions.name.orIfBlank("Unnamed tag"),
-                color = expressions.color.orElse(literal(Color(0xff9e9e9eu))),
-            )
+            resourceHeading(title = appearance.label, color = appearance.accent)
             inspectorSection("name", "Name", input = name.input) {
                 name { textInput { onComplete { value.trim() } } }
             }
@@ -88,9 +86,7 @@ object TagGraphNodePresentation : TagPresentation {
 
     override fun TagPresentationScope.present() {
         tagGraphSurface {
-            librarySubjectLayout(expressions.name.orIfBlank("Unnamed tag")) {
-                icon(literal("material-symbols:label"))
-            }
+            librarySubjectLayout(appearance.label) { icon(appearance.icon) }
         }
     }
 }
@@ -99,17 +95,12 @@ object TagReferencePresentation : TagPresentation {
     override val roles = setOf(PresentationRole.REFERENCE_PREVIEW)
 
     override fun TagPresentationScope.present() {
-        librarySubjectLayout(expressions.name.orIfBlank("Unnamed tag")) {
-            icon(literal("material-symbols:label"))
-        }
+        librarySubjectLayout(appearance.label) { icon(appearance.icon) }
     }
 }
 
 private fun TagPresentationScope.tagGraphSurface(body: Layout.() -> Unit) {
-    val accent =
-        expressions.color
-            .orElse(literal(Color(0xff9e9e9eu)))
-            .asPresentationColor()
+    val accent = appearance.accent.asPresentationColor()
     val background =
         stateColor(accent.withAlpha(0.2)) {
             whenAll(Selected, Hovered, color = accent.withAlpha(0.7))
@@ -144,10 +135,7 @@ object PageInspectorPresentation : PagePresentation {
 
     override fun PagePresentationScope.present() {
         inspectorLayout {
-            resourceHeading(
-                title = expressions.name.orIfBlank("Unnamed page"),
-                color = literal(Color(0xff607d8bu)),
-            )
+            resourceHeading(title = appearance.label, color = appearance.accent)
             inspectorSection("book", "Book", input = book.input) {
                 book { linkInput() }
             }
@@ -171,13 +159,14 @@ object PageReferencePresentation : PagePresentation {
     override val roles = setOf(PresentationRole.REFERENCE_PREVIEW)
 
     override fun PagePresentationScope.present() {
-        librarySubjectLayout(expressions.name.orIfBlank("Unnamed page")) {
-            icon(literal("material-symbols:description"))
-        }
+        librarySubjectLayout(appearance.label) { icon(appearance.icon) }
     }
 }
 
-/** Parent tag chips under the Tag's name in search rows and pickers; the host draws the name, accent and icon. */
+/**
+ * Parent tag chips under the Tag's name in search rows and pickers; the host draws the name, accent and icon. Each chip
+ * shows another resource, a parent Tag, so it reads that Tag's own fields rather than the subject's appearance.
+ */
 object TagSearchPresentation : TagPresentation {
     override val roles = setOf(PresentationRole.REFERENCE_PICKER_RESULT, PresentationRole.RESOURCE_SEARCH_RESULT)
 

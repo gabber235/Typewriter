@@ -1117,7 +1117,8 @@ sealed interface PublishedType_OrMutable {
     val display: skirout.editor.v1.catalog.TypeDisplay_OrMutable;
     /**
      * Search scope keyword for resources of this type, such as book in book:"Main story".
-     * Present for every resource type and absent for every other type.
+     * Present for every resource type except the realm root and its sections, which every
+     * resource sits inside, and absent for every other type.
      */
     val searchKey: kotlin.String?;
     /**
@@ -8147,7 +8148,7 @@ private object _SerializerRegistry {
             build.skir.Serializers.optional(
                 build.skir.Serializers.string,
             ),
-            "Search scope keyword for resources of this type, such as book in book:\"Main story\".\nPresent for every resource type and absent for every other type.",
+            "Search scope keyword for resources of this type, such as book in book:\"Main story\".\nPresent for every resource type except the realm root and its sections, which every\nresource sits inside, and absent for every other type.",
             { it.searchKey },
             { mut, v -> mut.searchKey = v },
         );

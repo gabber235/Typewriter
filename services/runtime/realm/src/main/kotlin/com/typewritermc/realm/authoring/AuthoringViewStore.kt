@@ -174,10 +174,18 @@ sealed interface AuthoredReadView {
         override val readContext = original.readContext
         internal val graphIndexes = ConcurrentHashMap<RelationSelection, CapturedGraphIndex>()
 
+        /**
+         * Counts the staged writes applied so far. A writer may replace the graph with the same map instance it
+         * mutated, so readers caching derived facts key them on this counter rather than on map identity.
+         */
+        var revision: Long = 0
+            private set
+
         fun replace(next: Map<ResourceId, AuthoringRecord>) {
             resources = next
             cachedLinks = null
             graphIndexes.clear()
+            revision++
         }
     }
 }

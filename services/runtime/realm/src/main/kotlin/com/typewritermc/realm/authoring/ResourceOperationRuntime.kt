@@ -39,6 +39,7 @@ import com.typewritermc.operations.UnfinishedOperationInput
 import com.typewritermc.operations.asClosedUse
 import com.typewritermc.operations.requireAuthored
 import com.typewritermc.realm.checking.CapturedAuthoringReads
+import com.typewritermc.realm.repository.AuthoringPlanRejected
 import com.typewritermc.services.libs.utils.rethrowExceptional
 import com.typewritermc.types.DataValue
 import com.typewritermc.types.ResourceId
@@ -212,6 +213,8 @@ internal class ResourceOperationRuntime(
                 OperationPreparationResult.NeedsInput(input, emptyList(), unfinished.paths)
             } catch (missing: UnavailableAuthoredValue) {
                 OperationPreparationResult.Invalid(missing.locations.map { ValueProblem(it, "required_authored_value_missing") })
+            } catch (rejected: AuthoringPlanRejected) {
+                OperationPreparationResult.Invalid(rejected.problems)
             } catch (failure: Exception) {
                 failure.rethrowExceptional()
                 OperationPreparationResult.Failed(failure)

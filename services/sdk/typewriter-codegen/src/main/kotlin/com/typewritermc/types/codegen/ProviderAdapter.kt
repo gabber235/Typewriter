@@ -220,10 +220,10 @@ internal class ProviderAdapter(
     }
 
     /**
-     * The display provider of an owner implementing `XDisplay` with [arguments], or the root `ResourceDisplay`
-     * when the target is the unpublished `Resource` marker, which applies to any resource.
+     * The display provider of an owner implementing `XDisplay` of a resource type without type parameters, or the
+     * root `ResourceDisplay` when the target is the unpublished `Resource` marker, which applies to any resource.
      */
-    fun display(arguments: List<TypeName>): FileSpec {
+    fun display(): FileSpec {
         val anyResource = targetNames.source == Resource::class.asClassName()
         val target =
             if (anyResource) {
@@ -235,7 +235,7 @@ internal class ProviderAdapter(
             if (anyResource) {
                 CodeBlock.of("%T", Api.ResourceDisplaySubject)
             } else {
-                CodeBlock.of("%T()", targetNames.displayScopeImpl.parameterizedOrSelf(arguments))
+                CodeBlock.of("%T()", targetNames.displayScopeImpl)
             }
         return file(
             TypeSpec

@@ -1,6 +1,7 @@
 package com.typewritermc.realm.compiler
 
 import com.typewritermc.authoring.AuthoringRecord
+import com.typewritermc.authoring.CompilationUnitDefinition
 import com.typewritermc.authoring.DiagnosticId
 import com.typewritermc.authoring.TypeSelection
 import com.typewritermc.authoring.ValueLocation
@@ -29,12 +30,14 @@ import com.typewritermc.types.DataValue
 import com.typewritermc.types.EndpointSlot
 import com.typewritermc.types.RelationId
 import com.typewritermc.types.ResourceId
+import com.typewritermc.types.catalog.CheckedCatalog
 import com.typewritermc.types.catalog.runtimeDefinitions
 import com.typewritermc.types.ownsResources
 
 /**
  * Compiles a compilation unit and its ownership closure from one assessed authoring view.
  *
+ * The closure stops at nested compilation units: each is its own shard, reached from this one through an edge.
  * The shard includes scalar resource records, native binding evidence, incident relation edges, and the
  * runtime declaration closure. Edges may refer outside the shard so the engine can assemble the complete
  * publication graph. The input fingerprint identifies captured authoring inputs; the shard semantic digest
@@ -77,9 +80,10 @@ internal class OwnershipClosureCompiler(
         val pending = ArrayDeque<ResourceId>()
         pending += root
         val diagnostics = mutableListOf<Diagnostic>()
+        // A nested compilation unit is compiled as its own shard, so the closure ends at its root.
         while (pending.isNotEmpty()) {
             childrenByOwner[pending.removeFirst()].orEmpty().forEach { child ->
-                if (child in snapshot.resources && owned.add(child)) pending += child
+                if (child in snapshot.resources && !child.isCompilationUnit() && owned.add(child)) pending += child
             }
         }
         diagnostics +=
@@ -191,6 +195,16 @@ internal class OwnershipClosureCompiler(
             inputFingerprint = fingerprint,
         )
     }
+}
+
+/** Whether this resource is a complete compilation unit, which the resource graph producer compiles as a root. */
+context(snapshot: AuthoringView)
+internal fun ResourceId.isCompilationUnit(): Boolean = snapshot.resources[this]?.isCompilationUnit(snapshot.catalog.checked) == true
+
+/** Whether this record is a complete compilation unit, which the resource graph producer compiles as a root. */
+internal fun AuthoringRecord.isCompilationUnit(catalog: CheckedCatalog): Boolean {
+    val selection = configuration as? TypeSelection.Complete ?: return false
+    return catalog.isNominalSubtype(selection.use.definition, CompilationUnitDefinition.id)
 }
 
 context(snapshot: AuthoringView)

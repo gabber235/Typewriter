@@ -10,6 +10,16 @@ import com.typewritermc.authoring.RealmRootDefinition
 import com.typewritermc.authoring.TypeSelection
 import com.typewritermc.authoring.ValuePath
 import com.typewritermc.authoring.definition
+import com.typewritermc.checking.CatalogGeneration
+import com.typewritermc.discovery.CatalogAssemblyContext
+import com.typewritermc.discovery.CatalogContributions
+import com.typewritermc.discovery.DeploymentFacts
+import com.typewritermc.discovery.DiscoveryDomains
+import com.typewritermc.discovery.GeneratedProviderArtifact
+import com.typewritermc.discovery.GeneratedProviderLoader
+import com.typewritermc.discovery.OwnedTypeDeclaration
+import com.typewritermc.discovery.assemble
+import com.typewritermc.imprint.ArtifactId
 import com.typewritermc.library.Book
 import com.typewritermc.library.BookDefinition
 import com.typewritermc.library.Library
@@ -18,7 +28,10 @@ import com.typewritermc.library.Tag
 import com.typewritermc.library.TagDefinition
 import com.typewritermc.library.Taxonomy
 import com.typewritermc.library.TaxonomyDefinition
+import com.typewritermc.presentation.DefaultPresentationRuntime
+import com.typewritermc.presentation.PresentationRuntime
 import com.typewritermc.realm.authoring.AuthoringCatalogLease
+import com.typewritermc.realm.catalog.RealmCatalogIncarnation
 import com.typewritermc.types.DataValue
 import com.typewritermc.types.LinkTarget
 import com.typewritermc.types.NativeBinding
@@ -28,6 +41,7 @@ import com.typewritermc.types.TypeDefinitionId
 import com.typewritermc.types.TypeUse
 import com.typewritermc.types.catalog.Resolution
 import com.typewritermc.types.encodeGeneratedDefault
+import java.nio.file.Path
 
 /** Resource ids of the realm root and the core sections in test resource graphs. */
 internal object TestRealmStructure {
@@ -116,3 +130,31 @@ internal fun testTag(
     parents: Set<Ref<com.typewritermc.library.TagParents.Child, Tag>> = emptySet(),
     placement: com.typewritermc.authoring.GraphPlacement = com.typewritermc.authoring.GraphPlacement(),
 ): Tag = Tag(taxonomy = TestRealmStructure.taxonomyLink, name = name, parents = parents, placement = placement)
+
+/**
+ * The core catalog as discovery assembles it from the typewriter artifact, with [extraDeclarations] added before
+ * assembly. Its realm root and sections are what Realm start provisions.
+ */
+internal fun coreRealmCatalog(
+    generation: String,
+    extraDeclarations: (CatalogContributions) -> List<OwnedTypeDeclaration> = { emptyList() },
+): RealmCatalogIncarnation {
+    val artifact =
+        Path.of(
+            Book::class.java.protectionDomain.codeSource.location
+                .toURI(),
+        )
+    val deployment =
+        GeneratedProviderLoader().load(
+            listOf(GeneratedProviderArtifact(ArtifactId("typewriter"), artifact)),
+            DeploymentFacts(),
+            DiscoveryDomains.Realm,
+            runtimeServices = mapOf(PresentationRuntime::class.java to DefaultPresentationRuntime()),
+        )
+    val core = deployment.providers.contributions
+    val assembly =
+        core
+            .copy(declarations = core.declarations + extraDeclarations(core))
+            .assemble(CatalogAssemblyContext(CatalogGeneration(generation)))
+    return RealmCatalogIncarnation(assembly, deployment)
+}

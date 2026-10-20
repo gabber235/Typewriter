@@ -1,9 +1,11 @@
 package com.typewritermc.elements
 
 import com.typewritermc.authoring.defaultLabel
+import com.typewritermc.expression.accent
 import com.typewritermc.expression.color
 import com.typewritermc.expression.display
 import com.typewritermc.expression.icon
+import com.typewritermc.expression.label
 import com.typewritermc.expression.literal
 import com.typewritermc.expression.name
 import com.typewritermc.expression.neq
@@ -70,12 +72,6 @@ object ElementGraphNodePresentation : ElementPresentation {
     override val roles = setOf(PresentationRole.ITEM)
 
     override fun ElementPresentationScope.present() {
-        val element = subject.resource<Element>()
-        val display = element.type.display
-        entryNode(
-            title = element.fields.name.orIfBlank("Unnamed element"),
-            icon = display.icon.orElse(literal(Icon.Iconify("fa6-solid:cube"))),
-            accent = display.color.orElse(literal(Color(0xff9c64bdu))),
-        )
+        entryNode(title = appearance.label, icon = appearance.icon, accent = appearance.accent)
     }
 }

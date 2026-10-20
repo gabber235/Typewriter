@@ -38,3 +38,11 @@ data class SearchKeyedValue(val title: String) // error: TypewriterDisplay searc
 @TypewriterType(id = "a0000000000000000000000000000527")
 @TypewriterDisplay(searchKey = "Main story")
 data class InvalidSearchKey(val title: String) : Resource // error: TypewriterDisplay searchKey must be a lower case letter followed by lower case letters or digits, found Main story.
+
+@TypewriterType(id = "a0000000000000000000000000000528")
+@TypewriterDisplay(searchKey = "type")
+data class TypeKeyed(val title: String) : Resource // error: TypewriterDisplay searchKey type is reserved for the editor's type selector; declare another searchKey.
+
+@TypewriterType(id = "a0000000000000000000000000000529")
+@TypewriterDisplay(icon = "Material Book")
+data class InvalidIcon(val title: String) // error: TypewriterDisplay icon must use Iconify prefix:name syntax or inline SVG markup, found Material Book.

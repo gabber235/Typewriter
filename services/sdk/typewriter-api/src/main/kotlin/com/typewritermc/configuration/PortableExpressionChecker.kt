@@ -109,6 +109,12 @@ class PortableExpressionChecker(
         onInferred: ((ExpressionType) -> Unit)? = null,
     ): List<String> = Invocation(bindings, partialBindings).check(body, expectedOutput, onInferred)
 
+    /** Checks [body] against [bindings] and infers its result, for a result of any type such as an order key. */
+    fun checkAnyResultCodes(
+        body: ExpressionNode,
+        bindings: Map<ExpressionBindingId, ExpressionType>,
+    ): List<String> = Invocation(bindings, emptyMap()).inferOnly(body)
+
     fun checkExpressionStructure(
         body: ExpressionNode,
         bindings: Set<ExpressionBindingId>,
@@ -250,6 +256,15 @@ class PortableExpressionChecker(
         private val bindings = bindings.toMap()
         private val literalTypes = Collections.newSetFromMap(IdentityHashMap<ExpressionType, Boolean>())
         val queries = linkedMapOf<ExpressionOccurrence, CheckedQueryCall>()
+
+        fun inferOnly(body: ExpressionNode): List<String> =
+            try {
+                validateStructure(body, bindings.keys + partialBindings.keys)
+                infer(body)
+                emptyList()
+            } catch (failure: ExpressionCheckFailure) {
+                listOf(failure.code)
+            }
 
         fun check(
             body: ExpressionNode,

@@ -3,6 +3,7 @@
 package com.typewritermc.discovery
 
 import com.typewritermc.authoring.CheckedResourceDisplay
+import com.typewritermc.authoring.DefaultDisplay_ResourceDisplayProvider
 import com.typewritermc.authoring.GeneratedSdkApi
 import com.typewritermc.authoring.ResourceDisplaySubject
 import com.typewritermc.configuration.PortableExpressionChecker
@@ -43,8 +44,10 @@ internal class ResourceDisplayCollection(
  * context value, or a read of another resource is rejected (`display_reads_context`), so editors can name a
  * resource from its own record. Formulas are checked against every subject the target covers: the target
  * type, or every resource type for the any resource display (`invalid_resource_display`). Two displays for one
- * target are ambiguous, so neither is published (`duplicate_resource_display`). Rejections are published as
- * diagnostics without quarantining the target, whose resources fall back to a less specific display.
+ * target are ambiguous, so neither is published (`duplicate_resource_display`), except that an extension's any
+ * resource display never displaces the framework [com.typewritermc.authoring.DefaultDisplay]: only the extension's is
+ * rejected. Rejections are published as diagnostics without quarantining the target, whose resources fall back to a
+ * less specific display.
  */
 internal fun collectResourceDisplays(
     displays: List<OwnedResourceDisplay>,
@@ -94,17 +97,18 @@ internal fun collectResourceDisplays(
         }
     val published =
         compiled.groupBy { (_, display) -> display.target }.flatMap { (target, declared) ->
-            if (declared.size == 1) {
-                listOf(declared.single().second)
-            } else {
+            // The framework default stays the fallback of every resource, so only competing any resource displays go.
+            val kept = declared.singleOrNull() ?: declared.singleOrNull { (owned, _) -> owned.isFrameworkDefault }
+            val rejected = declared.filterNot { it === kept }
+            if (rejected.isNotEmpty()) {
                 diagnostics +=
                     DeclarationDiagnostic(
                         target.affected,
                         "duplicate_resource_display",
-                        declared.map { (owned, _) -> DeclarationOrigin(owned.origin.owner) },
+                        rejected.map { (owned, _) -> DeclarationOrigin(owned.origin.owner) },
                     )
-                emptyList()
             }
+            listOfNotNull(kept?.second)
         }
     return ResourceDisplayCollection(published, diagnostics, callbackFailures)
 }
@@ -166,3 +170,10 @@ internal fun ResourceTarget.immutableCopy(): ResourceTarget =
         is ResourceTarget.Type -> ResourceTarget.Type(template.immutableCopy() as TypeTemplate.Named)
         ResourceTarget.AnyResource -> this
     }
+
+/**
+ * Whether this is the framework's [com.typewritermc.authoring.DefaultDisplay]. Providers load in their artifact's own
+ * class loader, so the generated provider is recognized by class name rather than class identity.
+ */
+private val OwnedResourceDisplay.isFrameworkDefault: Boolean
+    get() = provider::class.java.name == DefaultDisplay_ResourceDisplayProvider::class.java.name

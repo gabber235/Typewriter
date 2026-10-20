@@ -66,7 +66,9 @@ private data class AuthoredCollection(
  *
  * Relation values remain canonical: writes synchronize inverse occurrences before projecting declared edges.
  * Consecutive deletions form one deletion request so cascade, restrict, and clear policies see the complete
- * selection. Final validation checks affected structure, relation bindings, ownership, and cardinality.
+ * selection. Final validation checks the affected resources' structure, relation bindings, single ownership and
+ * endpoint cardinality, the realm structure rules (every resource but the realm root has an owner, and the root and
+ * each section exist exactly once), and that no acyclic relation forms a cycle (`relation_cycle`).
  * Expectation comparison and persistence belong to [RealmAuthoringOwner], outside this pure planner.
  */
 internal class AuthoringMutationPlanner(
@@ -903,7 +905,7 @@ private fun validateRealmStructure(
             .map { it.second }
     (affected + formerlyOwned)
         .distinct()
-        .filter { id -> resources[id]?.isOwnable() == true && id !in owned }
+        .filter { id -> resources[id]?.let { !it.isRealmRoot() && it.isOwnable() } == true && id !in owned }
         .forEach { id -> problems += problem(id, "owner_required") }
     val singletons = resources.entries.groupBy({ it.value.singletonKey() }, { it.key })
     singletons

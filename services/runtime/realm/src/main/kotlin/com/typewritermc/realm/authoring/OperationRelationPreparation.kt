@@ -28,25 +28,40 @@ internal class OperationRelationPreparation(
 ) {
     /**
      * Transfers ownership of [subjects] to [destination] through the ownership each holds today, and returns the
-     * subjects that changed owner. Subjects already owned by the destination are left as they are.
+     * subjects that changed owner. Subjects already owned by the destination are left as they are. A subject with an
+     * inverse field is relinked from that field; a subject without one is released by its old owner and taken into
+     * one of the destination's own owning slots.
      */
     context(operation: OperationPreparation)
     suspend fun move(
         subjects: List<ResourceId>,
         destination: ResourceId,
     ): List<ResourceId> {
-        val sources =
-            subjects.mapNotNull { subject ->
-                val membership =
-                    relations.ownership(subject, operation.invocation.origin)
-                        ?: error("The resource does not have one exact owner occurrence")
-                if (membership.source == destination) return@mapNotNull null
-                val source = relations.memberSource(subject, membership) ?: error("The source ownership has no exact inverse")
-                require(relations.accepts(source, destination)) { "The destination does not accept this resource" }
-                source
-            }
-        assignCounterparts(sources, destination, operation.choices).forEach { operation.connect(it) }
-        return sources.map { it.source }
+        val inverse = mutableListOf<LinkOccurrence>()
+        val ownerSide = mutableListOf<Pair<LinkOccurrence, LinkOccurrence>>()
+        val moved = mutableListOf<ResourceId>()
+        subjects.forEach { subject ->
+            val membership =
+                relations.ownership(subject, operation.invocation.origin)
+                    ?: error("The resource does not have one exact owner occurrence")
+            if (membership.source == destination) return@forEach
+            val sources = relations.ownerSources(subject, membership, destination, operation.identities::item)
+            require(sources.isNotEmpty()) { "The destination does not accept this resource" }
+            val source =
+                sources.singleOrNull() ?: operation.choices.require(
+                    PreparationChoice.Source("owner-source:$subject:$destination", "Choose owning reference", sources),
+                )
+            relations.observe(source)
+            moved += subject
+            if (source.source == subject) inverse += source else ownerSide += membership to source
+        }
+        assignCounterparts(inverse, destination, operation.choices).forEach { operation.connect(it) }
+        ownerSide.forEach { (membership, source) ->
+            val subject = membership.target.resource
+            operation.disconnect(membership.id)
+            operation.connect(ConnectIntent(source, subject, counterpartFor(source, subject, operation.choices)))
+        }
+        return moved
     }
 
     /** Links each of [subjects] with [target], the dragged side first. Already linked subjects are left unchanged. */

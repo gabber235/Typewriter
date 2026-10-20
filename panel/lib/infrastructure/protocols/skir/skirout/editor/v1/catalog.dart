@@ -24,8 +24,8 @@ import "./type_catalog.dart" as _lib_editor_v1_type_catalog;
 import "../../kernel/v1/bounded_transfer.dart"
     as _lib_kernel_v1_bounded_transfer;
 import "../../kernel/v1/color.dart" as _lib_kernel_v1_color;
-import "../../kernel/v1/icon.dart" as _lib_kernel_v1_icon;
 import "../../kernel/v1/errors.dart" as _lib_kernel_v1_errors;
+import "../../kernel/v1/icon.dart" as _lib_kernel_v1_icon;
 
 // -----------------------------------------------------------------------------
 // struct ResourceDisplayFormulas
@@ -1298,7 +1298,8 @@ sealed class PublishedType_orMutable {
   TypeDisplay_orMutable get display;
 
   /// Search scope keyword for resources of this type, such as book in book:"Main story".
-  /// Present for every resource type and absent for every other type.
+  /// Present for every resource type except the realm root and its sections, which every
+  /// resource sits inside, and absent for every other type.
   _core.String? get searchKey;
 
   /// The single effective field typed as a placement, which editors and Realm read and write
@@ -1324,7 +1325,8 @@ final class PublishedType implements PublishedType_orMutable {
   final TypeDisplay display;
 
   /// Search scope keyword for resources of this type, such as book in book:"Main story".
-  /// Present for every resource type and absent for every other type.
+  /// Present for every resource type except the realm root and its sections, which every
+  /// resource sits inside, and absent for every other type.
   @_core.override
   final _core.String? searchKey;
 
@@ -1495,7 +1497,7 @@ final class PublishedType implements PublishedType_orMutable {
         "searchKey",
         5,
         _skir.Serializers.optional(_skir.Serializers.string),
-        "Search scope keyword for resources of this type, such as book in book:\"Main story\".\nPresent for every resource type and absent for every other type.",
+        "Search scope keyword for resources of this type, such as book in book:\"Main story\".\nPresent for every resource type except the realm root and its sections, which every\nresource sits inside, and absent for every other type.",
         (it) => it.searchKey,
         (it, v) => it.searchKey = v,
       );
@@ -1536,7 +1538,8 @@ final class PublishedType_mutable implements PublishedType_orMutable {
   TypeDisplay_orMutable display;
 
   /// Search scope keyword for resources of this type, such as book in book:"Main story".
-  /// Present for every resource type and absent for every other type.
+  /// Present for every resource type except the realm root and its sections, which every
+  /// resource sits inside, and absent for every other type.
   _core.String? searchKey;
 
   /// The single effective field typed as a placement, which editors and Realm read and write

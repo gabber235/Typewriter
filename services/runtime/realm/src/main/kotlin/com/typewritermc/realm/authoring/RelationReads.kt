@@ -23,6 +23,7 @@ import com.typewritermc.types.RelationContract
 import com.typewritermc.types.ResourceId
 import com.typewritermc.types.catalog.Resolution
 import com.typewritermc.types.catalog.ResolvedRepresentation
+import com.typewritermc.types.isAcyclic
 import com.typewritermc.types.ownsResources
 
 /**
@@ -38,17 +39,25 @@ internal class RelationReads(
     val resources: Map<ResourceId, AuthoringRecord> get() = reads.view.resources
     val links: Map<LinkOccurrenceId, LinkOccurrence> get() = reads.view.links
 
-    private var projected: Pair<Map<ResourceId, AuthoringRecord>, List<LinkProjection>>? = null
+    /** Changes whenever a staged write replaces the graph; saved and staged views never change. */
+    val revision: Long get() = (reads.view as? AuthoredReadView.Working)?.revision ?: 0L
+
+    private var projected: Pair<Long, List<LinkProjection>>? = null
 
     /** Relation projections of the current graph, recomputed only after a staged write replaces it. */
     val projections: List<LinkProjection>
         get() {
-            val current = resources
-            projected?.let { (source, projections) -> if (source === current) return projections }
-            return ResourceValueMapper
-                .project(links.values, current, catalog.relations, catalog.checked)
-                .projections
-                .also { projected = current to it }
+            val revision = revision
+            projected?.let { (at, projections) -> if (at == revision) return projections }
+            val view = reads.view
+            val projections =
+                if (view.resources === view.original.resources) {
+                    view.original.projection.projections
+                } else {
+                    ResourceValueMapper.project(links.values, resources, catalog.relations, catalog.checked).projections
+                }
+            projected = revision to projections
+            return projections
         }
 
     fun contract(endpoint: EndpointId): RelationContract = catalog.relations.single { it.first.id == endpoint || it.second.id == endpoint }
@@ -76,7 +85,7 @@ internal class RelationReads(
 
     /**
      * The occurrence through which the current owner holds [subject], authored on the owner side. A captured origin
-     * occurrence wins, so a drag from one of several memberships moves that one.
+     * occurrence of an ownership relation wins, so a drag from one of several memberships moves that one.
      */
     fun ownership(
         subject: ResourceId,
@@ -84,15 +93,18 @@ internal class RelationReads(
     ): LinkOccurrence? {
         reads.observeInput(InputIdentity.Incoming(subject, null))
         val membership =
-            origin.occurrences.singleOrNull { it.target.resource == subject }
-                ?: links.values.singleOrNull { occurrence ->
-                    val relation = contract(occurrence.id.endpoint)
-                    occurrence.target.resource == subject && occurrence.id.endpoint == relation.first.id && relation.ownsResources
-                }
+            origin.occurrences.singleOrNull { it.target.resource == subject && it.holdsOwnership() }
+                ?: links.values.singleOrNull { it.target.resource == subject && it.holdsOwnership() }
                 ?: return null
         require(links[membership.id] == membership) { "The source ownership changed" }
         observe(membership)
         return membership
+    }
+
+    /** Whether this occurrence is the owner side of an ownership relation. */
+    private fun LinkOccurrence.holdsOwnership(): Boolean {
+        val relation = contract(id.endpoint)
+        return relation.ownsResources && id.endpoint == relation.first.id
     }
 
     /** The occurrence on [subject]'s inverse field that points at an owner of [membership]'s relation, if it has one. */
@@ -108,6 +120,24 @@ internal class RelationReads(
             subject,
             LinkTarget(membership.source, membership.id.location.path),
         )
+    }
+
+    /**
+     * Occurrences that would make [owner] hold [subject] through [membership]'s ownership relation. A subject with an
+     * inverse field links from that field; a subject without one, such as a keyframe in a segment, is held only by the
+     * owner's own binding, so the owner's slots that already hold it or have room for it are offered instead.
+     * [item] names a new collection item.
+     */
+    fun ownerSources(
+        subject: ResourceId,
+        membership: LinkOccurrence,
+        owner: ResourceId,
+        item: (String) -> ItemId,
+    ): List<LinkOccurrence> {
+        memberSource(subject, membership)?.let { source -> return listOfNotNull(source.takeIf { accepts(it, owner) }) }
+        val endpoint = membership.id.endpoint
+        val evidence = owner.bindingEvidence(endpoint)
+        return if (evidence.isEmpty()) emptyList() else owner.occurrencesLinking(subject, endpoint, evidence, item)
     }
 
     /** Whether [target] has a type the binding of [source] accepts. */
@@ -144,9 +174,35 @@ internal class RelationReads(
                 val endpoint = relation.first.id
                 listOf(subject to target, target to subject).firstNotNullOfOrNull { (holder, linked) ->
                     val evidence = holder.bindingEvidence(endpoint)
-                    if (evidence.isEmpty()) null else holder.occurrencesLinking(linked, endpoint, evidence, item)
+                    when {
+                        evidence.isEmpty() -> null
+                        relation.isAcyclic && linked.reaches(holder, relation) -> emptyList()
+                        else -> holder.occurrencesLinking(linked, endpoint, evidence, item)
+                    }
                 } ?: emptyList()
             }.distinctBy { it.id }
+
+    /**
+     * Whether following [relation] from this resource, first to second endpoint, arrives at [other]. A link from
+     * [other] to this resource would then close a cycle.
+     */
+    private fun ResourceId.reaches(
+        other: ResourceId,
+        relation: RelationContract,
+    ): Boolean {
+        val next = projections.filter { it.contract == relation.id }.groupBy({ it.first }, { it.second })
+        val visited = hashSetOf<ResourceId>()
+        val pending = ArrayDeque(listOf(this))
+        while (pending.isNotEmpty()) {
+            val id = pending.removeFirst()
+            if (!visited.add(id)) continue
+            reads.observeInput(InputIdentity.Value(ValueLocation(id, ValuePath())))
+            reads.observeInput(InputIdentity.Incoming(id, null))
+            if (id == other) return true
+            next[id].orEmpty().forEach(pending::add)
+        }
+        return false
+    }
 
     /** Occurrences on this resource's [endpoint] bindings that already link [linked] or have room to link it. */
     private fun ResourceId.occurrencesLinking(

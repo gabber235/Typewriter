@@ -448,42 +448,10 @@ val FrameworkCatalogCreationTest by testSuite {
                     resourceTypes,
                 ),
             )
-        val bookLeading =
-            bookSummary.layout
-                .adaptiveLeading()
-                .leading
-        (bookLeading.element is PresentationElement.PolymorphicMatchWrapper) shouldBe true
-        val summary = bookSummary.layout.adaptiveLeading()
-        val authoredBook =
-            DataValue.Named(
-                BookDefinition.use,
-                DataValue.Record(book.record.fields + ("title" to DataValue.StringValue("b"))),
-            )
-        val configured = WireExpressionBindingId(value = "configured_value")
-        val title = summary.center!!.element as PresentationElement.TextWrapper
-        title.value.value.evaluate(mapOf(configured to authoredBook)) shouldBe DataValue.StringValue("b")
-        title.value.value.evaluate(
-            mapOf(
-                configured to
-                    DataValue.Named(
-                        BookDefinition.use,
-                        DataValue.Record(book.record.fields),
-                    ),
-            ),
-        ) shouldBe DataValue.StringValue("Unnamed Book")
-
-        val match = bookLeading.element as PresentationElement.PolymorphicMatchWrapper
-        val iconValue = requireNotNull(authoredBook.at(match.value.binding.path))
-        val iconCase =
-            match.value.cases.single { candidate ->
-                candidate.concreteType ==
-                    com.typewritermc.types.skir.SkirTypeCodec
-                        .encode(IconIconifyDefinition.use)
-                        .getOrThrow()
-            }
-        val headerIcon = iconCase.child.singleFixed().element as PresentationElement.IconWrapper
-        headerIcon.value.name.evaluate(mapOf(match.value.scopeBindingId to iconValue)) shouldBe
-            DataValue.StringValue("material-symbols:book")
+        // A preview shows the resource as its display names and marks it, whatever its fields hold.
+        val bookPreview = bookSummary.layout.adaptiveLeading()
+        (bookPreview.leading.element as PresentationElement.IconWrapper).value.name.appearanceField() shouldBe "icon"
+        (bookPreview.center!!.element as PresentationElement.TextWrapper).value.value.appearanceField() shouldBe "label"
 
         val tagSummary =
             tagReferenceProvider.build(
@@ -497,8 +465,7 @@ val FrameworkCatalogCreationTest by testSuite {
             tagSummary.layout
                 .adaptiveLeading()
                 .leading
-        val tagIcon = tagLeading.element
-        (tagIcon is PresentationElement.IconWrapper) shouldBe true
+        (tagLeading.element as PresentationElement.IconWrapper).value.name.appearanceField() shouldBe "icon"
 
         val pageSummary =
             pageReferenceProvider.build(
@@ -513,7 +480,7 @@ val FrameworkCatalogCreationTest by testSuite {
                 .adaptiveLeading()
                 .leading
                 .element
-        (pageIcon is PresentationElement.IconWrapper) shouldBe true
+        (pageIcon as PresentationElement.IconWrapper).value.name.appearanceField() shouldBe "icon"
 
         val checkedPlacement = (catalog.resolve(GraphPlacementDefinition.use) as Resolution.Ready).value
         val placementMaterial =
@@ -659,6 +626,13 @@ private fun PresentationNode.fixedChildren(): List<PresentationNode> {
     val children = element as PresentationElement.ChildrenWrapper
     val column = children.value as ChildrenElement.ColumnWrapper
     return column.value.children.map(AxisChild::node)
+}
+
+/** The field of the presented resource's appearance this expression reads directly, or null for any other expression. */
+private fun WireExpressionNode.appearanceField(): String? {
+    val input = (this as? WireExpressionNode.InputWrapper)?.value ?: return null
+    if (input.binding.value != "presentation.subject.appearance") return null
+    return (input.path.segments.single() as WirePathSegment.FieldWrapper).value.name
 }
 
 private fun WireExpressionNode.evaluate(bindings: Map<WireExpressionBindingId, DataValue>): DataValue? =

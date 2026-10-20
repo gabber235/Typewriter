@@ -31,7 +31,8 @@ import com.typewritermc.types.catalog.PublishedType
  * ```
  *
  * Editors evaluate the most specific declared display of a resource's type; [DefaultDisplay] applies to every
- * resource that declares nothing more specific. Formulas read only the subject: catalog assembly rejects a formula
+ * resource that declares nothing more specific. Editors pick a display by type definition, never by type arguments, so
+ * codegen rejects a display of a generic resource type; declare it on a non generic contract the type implements. Formulas read only the subject: catalog assembly rejects a formula
  * that reads a host context input (`display_reads_context`) and two displays for one target
  * (`duplicate_resource_display`).
  */

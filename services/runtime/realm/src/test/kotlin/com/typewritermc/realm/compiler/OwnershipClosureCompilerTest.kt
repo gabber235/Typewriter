@@ -1,6 +1,7 @@
 package com.typewritermc.realm.compiler
 
 import com.typewritermc.authoring.AuthoringRecord
+import com.typewritermc.authoring.CompilationUnitDefinition
 import com.typewritermc.authoring.ItemId
 import com.typewritermc.authoring.TypeSelection
 import com.typewritermc.checking.CatalogGeneration
@@ -79,6 +80,25 @@ val OwnershipClosureCompilerTest by testSuite {
         }
     }
 
+    test("a nested compilation unit is its own shard, not part of its owner's") {
+        val nested = ResourceId("nested")
+        val records = mapOf(pageId to pageRecord(listOf(childId, nested)), childId to childRecord("first"), nested to nestedRecord())
+        fixture(records).use { captured ->
+            val compiler = compiler(captured.root)
+            val page = with(captured.root) { compiler.compile(pageId) } as ResourceGraphCompileResult.Success
+            val unit = with(captured.root) { compiler.compile(nested) } as ResourceGraphCompileResult.Success
+
+            page.shard.facts.resources
+                .map { it.key.source }
+                .toSet() shouldBe setOf(pageId, childId)
+            page.shard.facts.edges
+                .map { it.target.source }
+                .toSet() shouldBe setOf(childId, nested)
+            unit.shard.facts.resources
+                .map { it.key.source } shouldBe listOf(nested)
+        }
+    }
+
     test("missing owned resources block publication") {
         fixture(mapOf(pageId to pageRecord(listOf(missingId)))).use { captured ->
             val result = with(captured.root) { compiler(captured.root).compile(pageId) }
@@ -150,6 +170,7 @@ private fun compiler(view: com.typewritermc.realm.authoring.AuthoringView) =
             listOf(
                 NativeBindingRequirement(PAGE_USE, com.typewritermc.authoring.NativeBindingId("page"), "page_signature"),
                 NativeBindingRequirement(CHILD_USE, com.typewritermc.authoring.NativeBindingId("child"), "child_signature"),
+                NativeBindingRequirement(NESTED_USE, com.typewritermc.authoring.NativeBindingId("nested"), "nested_signature"),
             ),
         ).resources,
     )
@@ -194,6 +215,13 @@ private fun childRecord(value: String) =
         mapOf("value" to DataValue.StringValue(value)),
     )
 
+/** A child that is a compilation unit itself. */
+private fun nestedRecord() =
+    AuthoringRecord(
+        TypeSelection.Complete(NESTED_USE),
+        mapOf("value" to DataValue.StringValue("nested")),
+    )
+
 private class CompilerCatalogLease private constructor(
     private val references: AtomicInteger,
 ) : AuthoringCatalogLease {
@@ -222,6 +250,8 @@ private class CompilerCatalogLease private constructor(
 
 private val PAGE = TypeDefinitionId(TypeId.Qualified("compiler", "page"), 1)
 private val CHILD = TypeDefinitionId(TypeId.Qualified("compiler", "child"), 1)
+private val NESTED = TypeDefinitionId(TypeId.Qualified("compiler", "nested"), 1)
+private val NESTED_USE = TypeUse.Named(NESTED)
 private val CHILD_LINK = TypeDefinitionId(TypeId.Qualified("compiler", "child_link"), 1)
 private val CHILDREN = TypeDefinitionId(TypeId.Qualified("compiler", "children"), 1)
 private val PAGE_USE = TypeUse.Named(PAGE)
@@ -273,6 +303,24 @@ private val DEFINITIONS =
                 RepresentationTemplate.Record(
                     listOf(FieldDeclaration(FieldOwner(CHILD, "value"), TypeTemplate.Scalar(ScalarKind.Text))),
                 ),
+        ),
+        TypeDefinition(
+            CompilationUnitDefinition.id,
+            representation = RepresentationTemplate.Record(emptyList(), abstract = true),
+        ),
+        TypeDefinition(
+            NESTED,
+            representation =
+                RepresentationTemplate.Record(
+                    listOf(
+                        FieldDeclaration(
+                            FieldOwner(NESTED, "value"),
+                            TypeTemplate.Scalar(ScalarKind.Text),
+                            overrides = listOf(FieldOwner(CHILD, "value")),
+                        ),
+                    ),
+                ),
+            parents = listOf(TypeTemplate.Named(CHILD), TypeTemplate.Named(CompilationUnitDefinition.id)),
         ),
         TypeDefinition(
             CHILD_LINK,

@@ -1,6 +1,5 @@
 package com.typewritermc.realm.authoring
 
-import com.typewritermc.authoring.AuthoringRecord
 import com.typewritermc.authoring.ConnectIntent
 import com.typewritermc.authoring.CounterpartChoice
 import com.typewritermc.authoring.LinkOccurrence
@@ -205,34 +204,16 @@ internal class OperationClonePreparation(
             )
         }
 
+        // Copied roots join their originals' owners, whose layout places them. Only the realm root has no owner, and it
+        // is never duplicated, so a root without one has no layout to join.
         val outerRoots = closure.filter { resource -> ownership.none { it.second == resource && it.first in closure } }
-        outerRoots.groupBy { resource -> ownership.singleOrNull { it.second == resource }?.first }.forEach { (owner, originals) ->
-            if (owner != null) {
-                with(layouts) { originals.map(copies::getValue).placeIn(owner, null) }
-            } else {
-                val graphSubjects =
-                    originals.mapNotNull { original ->
-                        resources.getValue(original).graphPlacement(original)?.let { ValueLocation(copies.getValue(original), it.path) }
-                    }
-                if (graphSubjects.isNotEmpty()) {
-                    capturedReads.observeInput(RESOURCE_SELECTION_INPUT)
-                    val types = originals.map { resources.getValue(it).configuration }.toSet()
-                    val obstacles =
-                        resources
-                            .filter { (id, record) -> record.configuration in types && ownership.none { it.second == id } }
-                            .mapNotNull { (id, record) -> record.graphPlacement(id) }
-                    val placed = with(capturedReads) { GraphGroupPlacement.place(graphSubjects, obstacles) }
-                    placed.forEach { (draft, placement) ->
-                        draft.setX(placement.x)
-                        draft.setY(placement.y)
-                    }
-                }
+        outerRoots
+            .groupBy { resource -> ownership.singleOrNull { it.second == resource }?.first }
+            .forEach { (owner, originals) ->
+                if (owner != null) with(layouts) { originals.map(copies::getValue).placeIn(owner, null) }
             }
-        }
         return roots.map(copies::getValue)
     }
-
-    private fun AuthoringRecord.graphPlacement(id: ResourceId): ValueLocation? = catalog.graphPlacementLocation(id, this)
 }
 
 private fun ValueLocation.identityKey(): String =

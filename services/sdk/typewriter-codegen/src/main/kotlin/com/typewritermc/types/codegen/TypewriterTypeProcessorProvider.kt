@@ -401,10 +401,17 @@ private class TypewriterTypeProcessor(
 
     /**
      * The complete display of this declaration: `@TypewriterDisplay` parts where given, otherwise the class name in
-     * sentence case and the framework default icon and color. Null after reporting an invalid color.
+     * sentence case and the framework default icon and color. Null after reporting an invalid color or icon.
      */
     private fun KSClassDeclaration.validatedDisplay(): TypeDisplay? {
         val display = annotation<TypewriterDisplay>()
+        val icon =
+            display?.icon?.takeIf(String::isNotBlank)?.let { value ->
+                Icon.parse(value).takeIf { it is Icon.Iconify || value.isSvgMarkup() } ?: run {
+                    logger.error("TypewriterDisplay icon must use Iconify prefix:name syntax or inline SVG markup, found $value.", this)
+                    return null
+                }
+            }
         val color =
             display?.color?.takeIf(String::isNotEmpty)?.let { value ->
                 runCatching { Color.parseRgb(value) }.getOrNull() ?: run {
@@ -415,7 +422,7 @@ private class TypewriterTypeProcessor(
         return TypeDisplay(
             name = display?.name?.takeIf(String::isNotBlank) ?: simpleName.asString().sentenceCase(),
             description = display?.description.orEmpty(),
-            icon = display?.icon?.takeIf(String::isNotBlank)?.let(Icon::parse) ?: TypeDisplay.DEFAULT_ICON,
+            icon = icon ?: TypeDisplay.DEFAULT_ICON,
             color = color ?: TypeDisplay.DEFAULT_COLOR,
         )
     }
@@ -437,6 +444,10 @@ private class TypewriterTypeProcessor(
                 "TypewriterDisplay searchKey must be a lower case letter followed by lower case letters or digits, found $key.",
                 this,
             )
+            return null
+        }
+        if (key == RESERVED_SEARCH_KEY) {
+            logger.error("TypewriterDisplay searchKey $key is reserved for the editor's type selector; declare another searchKey.", this)
             return null
         }
         return Validated(key)
@@ -564,13 +575,33 @@ private class TypewriterTypeProcessor(
                     }
 
                     GeneratedContract.Kind.Display -> {
-                        adapter.display(
-                            contract.arguments.map { requireNotNull(it.type).resolve().toTypeName() },
-                        )
+                        displayAdapter(adapter, owner, target)
                     }
                 } ?: return@forEach
             output.provide(file, adapter.name, kind.providerKind, owner)
         }
+    }
+
+    /**
+     * The display provider of [owner], or null after reporting a display of a generic resource type. A display
+     * publishes one target for every application of its type and editors pick it by type definition, so formulas
+     * typed for one application would name the others; a display on a non generic contract the generic resource
+     * implements names every application alike.
+     */
+    private fun displayAdapter(
+        adapter: ProviderAdapter,
+        owner: KSClassDeclaration,
+        resource: KSClassDeclaration,
+    ): FileSpec? {
+        if (resource.typeParameters.isNotEmpty()) {
+            logger.error(
+                "Resource displays require a resource type without type parameters; declare the display on a non generic " +
+                    "contract that ${resource.simpleName.asString()} implements.",
+                owner,
+            )
+            return null
+        }
+        return adapter.display()
     }
 
     /** Validates an operation contract application and its input, and emits its provider, or reports why it cannot. */
@@ -843,6 +874,12 @@ private fun KSType.isResolvedTypeGraph(): Boolean =
         }
 
 private val SEARCH_KEY = Regex("[a-z][a-z0-9]*")
+
+/** The search keyword editors use for their type selector, such as `type:Book`; no resource type may claim it. */
+private const val RESERVED_SEARCH_KEY = "type"
+
+/** Whether this display icon is inline SVG markup rather than a malformed Iconify name. */
+private fun String.isSvgMarkup(): Boolean = trim().let { it.startsWith("<") && it.contains("<svg", ignoreCase = true) }
 
 private const val ARTIFACT_OPTION = "typewriter.artifactId"
 private const val SOURCE_PART_OPTION = "typewriter.sourcePart"

@@ -1,5 +1,6 @@
 package com.typewritermc.extensions.conformance
 
+import com.typewritermc.authoring.GraphLayout
 import com.typewritermc.authoring.GraphPlacement
 import com.typewritermc.authoring.HierarchyPath
 import com.typewritermc.authoring.PlacementSdkProvider
@@ -91,7 +92,7 @@ data class SyntheticEntry(
     val cues: List<Ref<SyntheticEntryCues.Entry, SyntheticSegment>> = emptyList(),
 ) : ConformanceEntry
 
-/** Concrete Page used by the reference and page catalog conformance checks. */
+/** Concrete Page used by the reference and page catalog conformance checks. It lays out its elements as a graph. */
 @TypewriterType(id = "019d3a87000170008000000000000001")
 @TypewriterDisplay(name = "Synthetic", icon = "material-symbols:account-tree", color = "#7C4DFF")
 data class SyntheticPage(
@@ -100,7 +101,8 @@ data class SyntheticPage(
     override val chapter: HierarchyPath = HierarchyPath.Root,
     override val priority: Int = 0,
     override val elements: List<Ref<PageElements.Page, ConformanceEntry>> = emptyList(),
-) : Page
+) : Page,
+    GraphLayout
 
 object SyntheticPageEditor : SyntheticPagePresentation {
     override val roles = setOf(PresentationRole.WORKSPACE)

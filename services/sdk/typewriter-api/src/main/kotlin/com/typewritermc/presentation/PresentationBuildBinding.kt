@@ -36,7 +36,7 @@ class CheckedPresentationTemplate internal constructor(
     private val expressionChecker: (
         ExpressionNode,
         Map<com.typewritermc.expression.ExpressionBindingId, TypeTemplate>,
-        TypeTemplate,
+        TypeTemplate?,
         Set<com.typewritermc.expression.ExpressionBindingId>,
         Boolean,
     ) -> List<String>,
@@ -104,10 +104,11 @@ class CheckedPresentationTemplate internal constructor(
 
     internal fun payloadType(): TypeTemplate = payloadResolver(type)
 
+    /** The codes of every problem of [body]; a null [expected] accepts a result of any type, such as an order key. */
     internal fun checkExpression(
         body: ExpressionNode,
         bindings: Map<com.typewritermc.expression.ExpressionBindingId, TypeTemplate>,
-        expected: TypeTemplate,
+        expected: TypeTemplate?,
         present: Set<com.typewritermc.expression.ExpressionBindingId> = emptySet(),
         mayBeMissing: Boolean = false,
     ): List<String> = expressionChecker(body, bindings, expected, present, mayBeMissing)
@@ -591,7 +592,7 @@ interface PresentationContextExpressions {
 internal fun checkPresentationExpression(
     body: ExpressionNode,
     bindings: Map<com.typewritermc.expression.ExpressionBindingId, TypeTemplate>,
-    expected: TypeTemplate,
+    expected: TypeTemplate?,
     present: Set<com.typewritermc.expression.ExpressionBindingId>,
     resolve: (TypeUse) -> Resolution<CheckedType>,
     mayBeMissing: Boolean = false,
@@ -600,18 +601,19 @@ internal fun checkPresentationExpression(
     val structural = checker.checkExpressionStructure(body, bindings.keys)
     if (structural.isNotEmpty()) return structural
     // Free type parameters receive exact checking when material is applied to concrete arguments.
-    val result = expected.apply(emptyMap()) as? Resolution.Ready ?: return structural
+    val result = expected?.let { it.apply(emptyMap()) as? Resolution.Ready ?: return structural }
     val referenced = body.referencedBindingIds()
     val applied =
         bindings.filterKeys { it in referenced }.mapValues { (_, template) ->
             (template.apply(emptyMap()) as? Resolution.Ready)?.value
         }
     if (applied.values.any { it == null }) return structural
-    return checker.checkExpressionCodes(
-        body,
-        applied.mapValues { (id, use) -> com.typewritermc.expression.nominalExpressionType(requireNotNull(use), id !in present) },
-        com.typewritermc.expression.nominalExpressionType(result.value, mayBeMissing),
-    )
+    val types = applied.mapValues { (id, use) -> com.typewritermc.expression.nominalExpressionType(requireNotNull(use), id !in present) }
+    return if (result == null) {
+        checker.checkAnyResultCodes(body, types)
+    } else {
+        checker.checkExpressionCodes(body, types, com.typewritermc.expression.nominalExpressionType(result.value, mayBeMissing))
+    }
 }
 
 private fun ExpressionNode.referencedBindingIds(): Set<com.typewritermc.expression.ExpressionBindingId> =

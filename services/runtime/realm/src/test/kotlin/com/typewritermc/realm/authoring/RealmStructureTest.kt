@@ -16,26 +16,16 @@ import com.typewritermc.authoring.ValueLocation
 import com.typewritermc.authoring.ValuePath
 import com.typewritermc.authoring.boundCollectionPath
 import com.typewritermc.authoring.definition
-import com.typewritermc.checking.CatalogGeneration
-import com.typewritermc.discovery.CatalogAssemblyContext
 import com.typewritermc.discovery.CatalogContributions
-import com.typewritermc.discovery.DeploymentFacts
-import com.typewritermc.discovery.DiscoveryDomains
-import com.typewritermc.discovery.GeneratedProviderArtifact
-import com.typewritermc.discovery.GeneratedProviderLoader
 import com.typewritermc.discovery.OwnedTypeDeclaration
-import com.typewritermc.discovery.assemble
-import com.typewritermc.imprint.ArtifactId
-import com.typewritermc.library.Book
 import com.typewritermc.library.LibraryDefinition
 import com.typewritermc.library.TagDefinition
 import com.typewritermc.library.TaxonomyDefinition
 import com.typewritermc.library.TaxonomyFields
 import com.typewritermc.library.TaxonomyTags
-import com.typewritermc.presentation.DefaultPresentationRuntime
-import com.typewritermc.presentation.PresentationRuntime
 import com.typewritermc.realm.catalog.RealmCatalogIncarnation
 import com.typewritermc.realm.catalog.RealmCatalogStore
+import com.typewritermc.realm.coreRealmCatalog
 import com.typewritermc.realm.record
 import com.typewritermc.realm.repository.AuthoringMutationPlanner
 import com.typewritermc.realm.repository.MutationPlanningResult
@@ -61,7 +51,6 @@ import de.infix.testBalloon.framework.core.testSuite
 import io.kotest.matchers.collections.shouldContain
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.types.shouldBeInstanceOf
-import java.nio.file.Path
 
 val RealmStructureTest by testSuite {
     test("a fresh realm gets its root and one instance of every section in display name order") {
@@ -244,25 +233,8 @@ private class RealmStructureFixture(
         database.close()
     }
 
-    private fun coreCatalog(withExtraSection: Boolean): RealmCatalogIncarnation {
-        val artifact =
-            Path.of(
-                Book::class.java.protectionDomain.codeSource.location
-                    .toURI(),
-            )
-        val deployment =
-            GeneratedProviderLoader().load(
-                listOf(GeneratedProviderArtifact(ArtifactId("typewriter"), artifact)),
-                DeploymentFacts(),
-                DiscoveryDomains.Realm,
-                runtimeServices = mapOf(PresentationRuntime::class.java to DefaultPresentationRuntime()),
-            )
-        val core = deployment.providers.contributions
-        val contributions =
-            if (withExtraSection) core.copy(declarations = core.declarations + extraSection(core)) else core
-        val assembly = contributions.assemble(CatalogAssemblyContext(CatalogGeneration("realm-structure-$withExtraSection")))
-        return RealmCatalogIncarnation(assembly, deployment)
-    }
+    private fun coreCatalog(withExtraSection: Boolean): RealmCatalogIncarnation =
+        coreRealmCatalog("realm-structure-$withExtraSection") { core -> if (withExtraSection) listOf(extraSection(core)) else emptyList() }
 
     private fun extraSection(core: CatalogContributions) =
         OwnedTypeDeclaration(
