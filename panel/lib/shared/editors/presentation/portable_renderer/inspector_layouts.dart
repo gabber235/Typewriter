@@ -419,9 +419,29 @@ skir.PresentationNode? _projectInspectorNode(
       layout: original.value.layout,
     );
   } else if (original is skir.ChildrenElement_stackWrapper) {
-    final retained = nodes(original.value.children);
+    final retained = <skir.StackChild>[
+      for (final child in original.value.children)
+        ?switch (child) {
+          skir.StackChild_flowWrapper(:final value) => switch (project(value)) {
+            final kept? => skir.StackChild.wrapFlow(kept),
+            null => null,
+          },
+          skir.StackChild_positionedWrapper(:final value) => switch (project(
+            value.child,
+          )) {
+            final kept? => skir.StackChild.wrapPositioned(
+              (value.toMutable()..child = kept).toFrozen(),
+            ),
+            null => null,
+          },
+          _ => null,
+        },
+    ];
     if (retained.isEmpty) return null;
-    children = skir.ChildrenElement.createStack(children: retained);
+    children = skir.ChildrenElement.createStack(
+      children: retained,
+      alignment: original.value.alignment,
+    );
   } else {
     return null;
   }

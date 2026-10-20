@@ -13,7 +13,7 @@ Widget buildAuthoringCreationSearchResultItem(SearchResultRowContext row) {
         ? const Icon(Icons.add)
         : ResourceIcon(icon: icon),
     kindLabel: "resource",
-    body: SearchResultTitle(title: option.label),
+    title: option.label,
     footer: description == null || description.isEmpty
         ? null
         : SearchResultDescription(description: description),

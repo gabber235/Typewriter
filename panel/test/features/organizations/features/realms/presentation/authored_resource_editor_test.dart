@@ -1137,7 +1137,6 @@ _emptyPageGraphFixture() {
       presentationMaterials: [
         skir.PresentationMaterial(
           inheritableNodes: const [],
-          resultAppearance: null,
 
           provider: presentationId,
           target: target,
@@ -1315,7 +1314,6 @@ _numericFixture({
       presentationMaterials: [
         skir.PresentationMaterial(
           inheritableNodes: const [],
-          resultAppearance: null,
 
           provider: presentationId,
           target: target,
@@ -1507,7 +1505,8 @@ _fixture({
         properties: skir.PresentationProperties.defaultInstance,
         element: skir.PresentationElement.createContainer(
           foregroundColor: null,
-          transitionMilliseconds: 0,
+          transition: null,
+          shadows: const [],
           child: skir.PresentationNode(
             nodeId: "message.graph.icon.padding",
             properties: skir.PresentationProperties.defaultInstance,
@@ -1651,7 +1650,6 @@ _fixture({
       presentationMaterials: [
         skir.PresentationMaterial(
           inheritableNodes: const [],
-          resultAppearance: null,
 
           provider: presentationId,
           target: target,
@@ -1665,7 +1663,6 @@ _fixture({
         ),
         skir.PresentationMaterial(
           inheritableNodes: const [],
-          resultAppearance: null,
 
           provider: presentationId,
           target: target,
@@ -1692,7 +1689,6 @@ _fixture({
         ),
         skir.PresentationMaterial(
           inheritableNodes: const [],
-          resultAppearance: null,
 
           provider: presentationId,
           target: target,

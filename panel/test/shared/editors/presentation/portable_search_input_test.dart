@@ -8,22 +8,23 @@ import "../../../support/test_utils.dart";
 
 void main() {
   testWidgets(
-    "rich mapped rows share activation and leave the compact summary unchanged",
+    "mapped rows take the compact chrome of the dropdown and share activation",
     (tester) async {
-      final fixture = _SearchFixture(richRows: true);
+      final fixture = _SearchFixture();
       await fixture.pump(tester, width: 300);
       await fixture.open(tester);
-      expect(find.byType(SearchResultCard), findsNWidgets(3));
+      expect(find.byType(SearchResultCard), findsNothing);
       expect(
-        tester
-            .widgetList<SearchResultSuffix>(find.byType(SearchResultSuffix))
-            .map((suffix) => suffix.label),
-        everyElement("reward"),
+        find.descendant(
+          of: find.byType(SearchResultRow),
+          matching: find.byType(ListTile),
+        ),
+        findsNWidgets(3),
       );
       await tester.tapAt(tester.getCenter(find.text("Map")));
       await tester.pumpAndSettle();
       expect(fixture.writes, [skir.DataValue.wrapStringValue("Map")]);
-      expect(find.byType(SearchResultCard), findsNothing);
+      expect(find.byType(SearchResultRow), findsNothing);
       expect(find.text("Map"), findsOneWidget);
       expect(
         find.byKey(const ValueKey("authored_search_summary")),
@@ -358,12 +359,10 @@ void main() {
 final class _SearchFixture {
   _SearchFixture({
     this.readOnly = false,
-    this.richRows = false,
     this.multiple = false,
     this.reject = false,
     this.rebuildDuringWrite = false,
   });
-  final bool richRows;
   final bool multiple;
   final bool reject;
   final bool rebuildDuringWrite;
@@ -420,15 +419,6 @@ final class _SearchFixture {
                 key: rowRead,
                 selectedValue: rowRead,
                 label: rowRead,
-                resultAppearance: richRows
-                    ? skir.ResultAppearance(
-                        accent: null,
-                        leading: null,
-
-                        style: skir.ResultStyle.card,
-                        kindLabel: textLiteral("reward"),
-                      )
-                    : null,
                 presentation:
                     (skir.PresentationNode.mutable()
                           ..nodeId = "result"

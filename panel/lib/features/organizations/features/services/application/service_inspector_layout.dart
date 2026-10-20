@@ -82,7 +82,8 @@ skir.PresentationNode _inspectorCard(
   id,
   skir.PresentationElement.createContainer(
     foregroundColor: null,
-    transitionMilliseconds: 0,
+    transition: null,
+    shadows: const [],
     backgroundColor: _inspectorColor(color.withAlpha(24)),
     radius: skir.PresentationRadius.medium,
     border: null,

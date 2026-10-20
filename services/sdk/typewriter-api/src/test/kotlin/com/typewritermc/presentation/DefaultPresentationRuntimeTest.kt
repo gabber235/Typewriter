@@ -173,28 +173,6 @@ val DefaultPresentationRuntimeTest by testSuite {
         result.layout.inferInheritableNodes() shouldBe emptyList()
     }
 
-    test("result appearance captures root decoration separately from body") {
-        val catalog = DefaultCheckedCatalog(CatalogGeneration("result appearance"), StandardTypes.definitions)
-        val checked = catalog.ready(TypeUse.Scalar(ScalarKind.Text))
-        val result =
-            DefaultPresentationRuntime().build(
-                PresentationBuildBinding(checked.presentationTemplate(), PresentationRole.RESOURCE_SEARCH_RESULT),
-            ) { build ->
-                build.searchResult {
-                    appearance(SearchResultAppearance.Card)
-                    kindLabel(literal("page"))
-                    leading { icon(literal("fa6-solid:file-lines")) }
-                    searchTitle(literal("A page"))
-                }
-            }
-        result.resultAppearance!!.style shouldBe skirout.editor.v1.presentation.ResultStyle.CARD
-        (result.resultAppearance!!.leading!!.element as PresentationElement.IconWrapper).value.name shouldBe
-            expression("fa6-solid:file-lines")
-        val title = result.layout.singleFixed().element as PresentationElement.TextWrapper
-        title.value.value shouldBe expression("A page")
-        title.value.lineHeight shouldBe expression(1.1)
-    }
-
     test("clipped fixed and repeated rows preserve one line layout") {
         val catalog = DefaultCheckedCatalog(CatalogGeneration("clipped rows"), StandardTypes.definitions)
         val checked = catalog.ready(TypeUse.Scalar(ScalarKind.Text))
@@ -546,7 +524,7 @@ val DefaultPresentationRuntimeTest by testSuite {
                         background = fill,
                         foreground = ambientBackground().on(),
                         radius = PresentationRadius.Large,
-                        transitionMilliseconds = 100,
+                        transition = stateTransition(PresentationTransition(milliseconds = 100)),
                     ),
                 ) {
                     align(PresentationAlignment.Center) { text(literal("Adventure")) }
@@ -565,7 +543,7 @@ val DefaultPresentationRuntimeTest by testSuite {
             skirout.editor.v1.presentation.PresentationColor.AmbientWrapper(
                 skirout.editor.v1.presentation.PresentationAmbientColor.BACKGROUND,
             )
-        container.transitionMilliseconds shouldBe 100
+        container.transition?.fallback?.milliseconds shouldBe 100
         val alignment = (container.child.singleFixed().element as PresentationElement.AlignWrapper).value
         alignment.alignment shouldBe skirout.editor.v1.presentation.PresentationAlignment.CENTER
     }

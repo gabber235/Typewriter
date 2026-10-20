@@ -3,9 +3,13 @@ import "package:typewriter_testkit/typewriter_testkit.dart";
 import "package:widgetbook/widgetbook.dart";
 import "package:widgetbook_annotation/widgetbook_annotation.dart" as widgetbook;
 
+/// The uniform host chrome: the surface picks the density, the resource's
+/// appearance supplies the title, accent and icon, and the presentation adds
+/// optional details below the title.
 @widgetbook.UseCase(name: "Appearance and state", type: SearchResultRow)
 Widget searchResultRowUseCase(BuildContext context) {
   final card = context.knobs.boolean(label: "Card", initialValue: true);
+  final details = context.knobs.boolean(label: "Details", initialValue: true);
   final enabled = context.knobs.boolean(label: "Enabled", initialValue: true);
   final selected = context.knobs.boolean(label: "Selected");
   final focused = context.knobs.boolean(label: "Focused", initialValue: true);
@@ -57,10 +61,12 @@ Widget searchResultRowUseCase(BuildContext context) {
               accent: Colors.purple,
               leading: const Icon(Icons.article_outlined),
               kindLabel: "page",
-              body: const SearchResultTitle(title: "Meet the Mayor"),
-              footer: const SearchResultDescription(
-                description: "Main Quest. Village",
-              ),
+              title: "Meet the Mayor",
+              body: details
+                  ? const SearchResultDescription(
+                      description: "Main Quest. Village",
+                    )
+                  : null,
             ),
           ),
         ),

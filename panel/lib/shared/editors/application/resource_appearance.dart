@@ -15,6 +15,31 @@ abstract class ResourceAppearance with _$ResourceAppearance {
   }) = _ResourceAppearance;
 }
 
+/// Binds an appearance as the canonical read model resource presentations
+/// read through [presentationSubjectAppearanceBindingId].
+extension ResourceAppearanceBinding on ResourceAppearance {
+  skir.DataValue toExpressionValue() => skir.DataValue.createNamed(
+    actualType: canonicalReadModels.resourceAppearanceUse,
+    payload: skir.DataValue.createRecord(
+      fields: [
+        skir.FieldValue(
+          name: "label",
+          value: skir.DataValue.wrapStringValue(label),
+        ),
+        skir.FieldValue(name: "accent", value: colorValue(accent.toARGB32())),
+        skir.FieldValue(name: "icon", value: iconValue(icon)),
+      ],
+    ),
+  );
+
+  PortableExpressionBinding toExpressionBinding() => PortableExpressionBinding(
+    value: toExpressionValue(),
+    schema: CompletePortablePresentationBinding(
+      skir.TypeUse.wrapNamed(canonicalReadModels.resourceAppearanceUse),
+    ),
+  );
+}
+
 /// The display Realm publishes for a type that declares none: [name] with the
 /// framework default icon and color.
 skir.TypeDisplay defaultTypeDisplay(String name) => skir.TypeDisplay(

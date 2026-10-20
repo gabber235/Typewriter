@@ -2,8 +2,10 @@ package com.typewritermc.library
 
 import com.typewritermc.authoring.PlacementSdkProvider
 import com.typewritermc.discovery.GraphDirection
+import com.typewritermc.expression.accent
 import com.typewritermc.expression.color
 import com.typewritermc.expression.display
+import com.typewritermc.expression.emptyListExpression
 import com.typewritermc.expression.icon
 import com.typewritermc.expression.literal
 import com.typewritermc.expression.map
@@ -21,6 +23,7 @@ import com.typewritermc.presentation.PresentationInteractionState.Hovered
 import com.typewritermc.presentation.PresentationInteractionState.Selected
 import com.typewritermc.presentation.PresentationRadius
 import com.typewritermc.presentation.PresentationThemeColor.FocusOutline
+import com.typewritermc.presentation.PresentationTransition
 import com.typewritermc.presentation.ambientBackground
 import com.typewritermc.presentation.asPresentationColor
 import com.typewritermc.presentation.icon
@@ -29,15 +32,16 @@ import com.typewritermc.presentation.monochromeOn
 import com.typewritermc.presentation.on
 import com.typewritermc.presentation.resource
 import com.typewritermc.presentation.resourceHeading
-import com.typewritermc.presentation.resourceSearchResult
 import com.typewritermc.presentation.searchChip
 import com.typewritermc.presentation.searchDescription
 import com.typewritermc.presentation.stateColor
+import com.typewritermc.presentation.stateTransition
 import com.typewritermc.presentation.themeColor
 import com.typewritermc.presentation.withAlpha
 import com.typewritermc.types.Color
 import com.typewritermc.types.Icon
 import com.typewritermc.types.PresentationRole
+import com.typewritermc.types.Ref
 
 object TagInspectorPresentation : TagPresentation {
     override val roles = setOf(PresentationRole.INSPECTOR)
@@ -127,7 +131,7 @@ private fun TagPresentationScope.tagGraphSurface(body: Layout.() -> Unit) {
             foreground = foreground,
             border = PresentationBorder.All(width = 2.0, color = outline),
             radius = PresentationRadius.Large,
-            transitionMilliseconds = 100,
+            transition = stateTransition(PresentationTransition(milliseconds = 100)),
         ),
     ) {
         align(PresentationAlignment.Center, body)
@@ -172,44 +176,40 @@ object PageReferencePresentation : PagePresentation {
     }
 }
 
+/** Parent tag chips under the Tag's name in search rows and pickers; the host draws the name, accent and icon. */
 object TagSearchPresentation : TagPresentation {
     override val roles = setOf(PresentationRole.REFERENCE_PICKER_RESULT, PresentationRole.RESOURCE_SEARCH_RESULT)
 
     override fun TagPresentationScope.present() {
-        resourceSearchResult(
-            title = expressions.name.orIfBlank("Unnamed tag"),
-            accent = expressions.color.orElse(literal(Color(0xff9e9e9eu))),
-            kind = literal("tag"),
-            icon = { icon(literal("fa6-solid:tag")) },
-        )
+        repeated<Ref<TagParents.Child, Tag>, Ref<TagParents.Child, Tag>>(expressions.parents.map { this }.orElse(emptyListExpression())) {
+            clippedRow(spacing = 4.0)
+            val parent = item.resource
+            showIf(parent.exists) {
+                searchChip(
+                    parent.fields.name.orIfBlank("Unnamed tag"),
+                    parent.fields.color
+                        .orElse(literal(Color(0xff9e9e9eu)))
+                        .asPresentationColor(),
+                )
+            }
+        }
     }
 }
 
+/** Where a Page sits, under its name in search rows and pickers; the host draws the name, accent and icon. */
 object PageSearchPresentation : PagePresentation {
     override val roles = setOf(PresentationRole.REFERENCE_PICKER_RESULT, PresentationRole.RESOURCE_SEARCH_RESULT)
 
     override fun PagePresentationScope.present() {
         val page = subject.resource<Page>()
-        val display = page.type.display
         val origin = context.read(LibraryContext.activeResource)
-        val color = display.color.orElse(literal(Color(0xff607d8bu)))
-        resourceSearchResult(
-            title = page.fields.name.orIfBlank("Unnamed page"),
-            accent = color,
-            kind = literal("page"),
-            icon = { icon(display.icon.orElse(literal(Icon.Iconify("fa6-solid:file-lines")))) },
-            details = {
-                clippedRow(spacing = 8.0) {
-                    searchDescription(display.name.orIfBlank("Page"))
-                    pageLocation(
-                        page = page,
-                        active = origin,
-                        includePage = literal(false),
-                        part = { searchChip(it, color.asPresentationColor()) },
-                        separator = { icon(literal("material-symbols:chevron-right-rounded")) },
-                    )
-                }
-            },
+        val accent = appearance.accent.asPresentationColor()
+        pageLocation(
+            page = page,
+            active = origin,
+            includePage = literal(false),
+            part = { searchChip(it, accent) },
+            separator = { icon(literal("material-symbols:chevron-right-rounded")) },
         )
     }
 }

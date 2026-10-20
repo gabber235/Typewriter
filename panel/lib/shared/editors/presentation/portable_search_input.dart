@@ -379,7 +379,7 @@ final class _PortableSearchSurface extends ConsumerWidget {
         context.colors.surface;
     final resultFill = popup?.fill == null
         ? fill
-        : PresentationColorEnvironment.of(context).resolve(popup!.fill!, scope);
+        : PresentationValueEnvironment.of(context).resolve(popup!.fill!, scope);
     final leading = _entryLeading(
       context,
       control.control,
@@ -599,7 +599,6 @@ final class _PortableSearchSurface extends ConsumerWidget {
                     PortableMappedSearchPayload(:final mapping) =>
                       PortableResultContent(
                         node: mapping.presentation,
-                        appearance: mapping.resultAppearance,
                         scope: picker.resultScope(row.result, scope),
                         row: row.copyWith(
                           selected: selected,
@@ -607,8 +606,8 @@ final class _PortableSearchSurface extends ConsumerWidget {
                               ? null
                               : () => controller.activate(row.result),
                         ),
-                        fallbackStyle: SearchResultDensity.compact,
-                        fallbackKindLabel: "",
+                        // A search input opens a dropdown, so its rows are compact.
+                        density: SearchResultDensity.compact,
                       ),
                     PortableCustomSearchPayload() => SearchResultRow(
                       row: row.copyWith(

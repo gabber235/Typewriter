@@ -30,8 +30,8 @@ internal class RuntimeCollectionAppearance(
         target.itemForeground = value.foreground?.wire()
         target.itemBorder = value.border?.wire()
         target.itemRadius = value.radius.wire()
-        require(value.transitionMilliseconds >= 0)
-        target.itemTransitionMilliseconds = value.transitionMilliseconds
+        target.itemTransition = value.transition?.wire()
+        target.itemShadows = value.shadows.map { it.wire() }
     }
 }
 

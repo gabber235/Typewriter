@@ -579,7 +579,6 @@ _nestedMaterialFixture() {
   );
   final nestedMaterial = skir.PresentationMaterial(
     inheritableNodes: const [],
-    resultAppearance: null,
 
     provider: nestedProvider,
     target: skir.PresentationTarget.createNamed(
@@ -844,7 +843,6 @@ _fixture({
   );
   final material = skir.PresentationMaterial(
     inheritableNodes: const [],
-    resultAppearance: null,
 
     provider: provider,
     target: target,

@@ -2,6 +2,7 @@ import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
     as skir;
 import "package:typewriter_panel/typewriter_panel.dart";
 
+/// A resource in the command palette: a card row, as the palette is a modal.
 Widget buildAuthoringResourceSearchResultItem(SearchResultRowContext row) {
   final payload = row.result.payload;
   if (payload is! AuthoringSearchResultPayload) {
@@ -15,10 +16,14 @@ Widget buildAuthoringResourceSearchResultItem(SearchResultRowContext row) {
     resource: payload.id,
     row: row,
     role: skir.PresentationRole.resourceSearchResult,
+    density: SearchResultDensity.card,
     fallbackLabel: payload.title,
   );
 }
 
+/// A resource result in the uniform host chrome: its display's name, accent
+/// and icon, its type name as the kind, and the details its [role]
+/// presentation declares. The surface picks [density].
 final class AuthoredResourceSearchResult extends HookWidget {
   const AuthoredResourceSearchResult({
     required this.document,
@@ -26,10 +31,11 @@ final class AuthoredResourceSearchResult extends HookWidget {
     required this.resource,
     required this.row,
     required this.role,
+    required this.density,
     required this.fallbackLabel,
     this.presentationContext = const {},
     this.footer,
-    this.kindLabelOverride,
+    this.kindLabel,
     super.key,
   });
 
@@ -40,9 +46,14 @@ final class AuthoredResourceSearchResult extends HookWidget {
   final skir.ResourceId resource;
   final SearchResultRowContext row;
   final skir.PresentationRole role;
+  final SearchResultDensity density;
+
+  /// The name shown while the resource is absent from [document].
   final String fallbackLabel;
   final Widget? footer;
-  final String? kindLabelOverride;
+
+  /// Replaces the type name, such as an action a picker row performs.
+  final String? kindLabel;
 
   @override
   Widget build(BuildContext context) {
@@ -82,62 +93,53 @@ final class AuthoredResourceSearchResult extends HookWidget {
       readOnly: true,
       issues: issues,
     );
-    final display = record == null
-        ? null
-        : source.catalog.selectionDisplay(record.configuration);
-    final icon = record == null
-        ? null
-        : source.catalog.appearanceOf(record).icon;
-    final leading = icon?.iconValue == null
-        ? const Icon(Icons.link)
-        : ResourceIcon(icon: icon);
-    final label = record == null
-        ? "resource"
-        : source.catalog.typeSelectionName(record.configuration);
-    if (host == null || selected == null) {
+    if (record == null) {
       return SearchResultRow(
         row: row,
-        density: SearchResultDensity.card,
-        accent: display?.searchResultAccent,
-        leading: leading,
-        kindLabel: kindLabelOverride ?? label,
+        density: density,
+        title: fallbackLabel,
+        leading: const Icon(Icons.link_off),
+        kindLabel: kindLabel ?? "unavailable",
         footer: footer,
-        body: Text(switch (selection) {
-          ConflictingEditorPresentation() =>
-            "The search result presentation is ambiguous",
-          UnavailableEditorPresentation() =>
-            "The search result presentation is unavailable",
-          _ => fallbackLabel,
-        }),
       );
     }
-    final body = PortablePresentationRenderer(
-      contextBindings: presentationContext,
-      key: ObjectKey(host),
-      host: host,
-      contentBuilder: (node, scope) => PortableResultContent(
-        node: node,
-        appearance: selected.material.resultAppearance,
-        scope: scope.copyWith(resource: resource),
-        row: row,
-        fallbackStyle: SearchResultDensity.card,
-        fallbackKindLabel: label,
-        fallbackAccent: display?.searchResultAccent,
-        kindLabelOverride: kindLabelOverride,
-        fallbackLeading: leading,
-        footer: footer,
-      ),
-      errorBuilder: (message) => SearchResultRow(
-        row: row,
-        density: SearchResultDensity.card,
-        accent: display?.searchResultAccent,
-        leading: leading,
-        kindLabel: kindLabelOverride ?? label,
-        footer: footer,
-        body: Text(message),
-      ),
+    final appearance = source.catalog.appearanceOf(record);
+    final kind =
+        kindLabel ?? source.catalog.typeSelectionName(record.configuration);
+    Widget chrome([Widget? body]) => SearchResultRow(
+      row: row,
+      density: density,
+      title: appearance.label,
+      accent: appearance.accent,
+      leading: ResourceIcon(icon: appearance.icon),
+      kindLabel: kind,
+      footer: footer,
+      body: body,
     );
-    return body;
+    return switch (selection) {
+      ConflictingEditorPresentation() => chrome(
+        const Text("The search result presentation is ambiguous"),
+      ),
+      UnavailableEditorPresentation() => chrome(
+        const Text("The search result presentation is unavailable"),
+      ),
+      _ when host == null || selected == null => chrome(),
+      _ => PortablePresentationRenderer(
+        contextBindings: presentationContext,
+        key: ObjectKey(host),
+        host: host,
+        contentBuilder: (node, scope) => PortableResultContent(
+          node: node,
+          appearance: appearance,
+          scope: scope.copyWith(resource: resource),
+          row: row,
+          density: density,
+          kindLabel: kind,
+          footer: footer,
+        ),
+        errorBuilder: (message) => chrome(Text(message)),
+      ),
+    };
   }
 }
 

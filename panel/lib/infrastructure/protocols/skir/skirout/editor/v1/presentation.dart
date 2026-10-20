@@ -4666,34 +4666,44 @@ final class GridChildrenElement_mutable
 // -----------------------------------------------------------------------------
 
 sealed class StackChildrenElement_orMutable {
-  _core.Iterable<PresentationNode_orMutable> get children;
+  _core.Iterable<StackChild> get children;
+
+  /// Where flow children sit; top start when absent.
+  PresentationAlignment? get alignment;
 
   StackChildrenElement toFrozen();
 }
 
+/// Children painted over each other. Flow children size the stack; positioned children are
+/// placed by insets and sizes relative to it, and paint in declaration order.
+///
 /// Deeply immutable.
 final class StackChildrenElement implements StackChildrenElement_orMutable {
   @_core.override
-  final _core.Iterable<PresentationNode> children;
+  final _core.Iterable<StackChild> children;
+
+  /// Where flow children sit; top start when absent.
+  @_core.override
+  final PresentationAlignment? alignment;
   _skir.internal__UnrecognizedFields? _u;
 
   factory StackChildrenElement({
-    required _core.Iterable<PresentationNode_orMutable> children,
-  }) => StackChildrenElement._(
-    _skir.internal__frozenMappedCopy(children, (it) => it.toFrozen()),
-  );
+    required _core.Iterable<StackChild> children,
+    required PresentationAlignment? alignment,
+  }) => StackChildrenElement._(_skir.internal__frozenCopy(children), alignment);
 
-  StackChildrenElement._(this.children);
+  StackChildrenElement._(this.children, this.alignment);
 
   /// Default instance with all fields set to their default values.
   static final defaultInstance = StackChildrenElement._(
     _skir.KeyedIterable.empty,
+    null,
   );
 
   /// Returns a new mutable instance.
   /// Fields are initialized to their default values.
   static StackChildrenElement_mutable mutable() =>
-      StackChildrenElement_mutable._(_skir.KeyedIterable.empty);
+      StackChildrenElement_mutable._(_skir.KeyedIterable.empty, null);
 
   /// Returns this instance (no-op).
   @_core.Deprecated("This instance is already frozen.")
@@ -4702,7 +4712,7 @@ final class StackChildrenElement implements StackChildrenElement_orMutable {
 
   /// Returns a mutable shallow copy of this instance.
   StackChildrenElement_mutable toMutable() =>
-      StackChildrenElement_mutable._(this.children);
+      StackChildrenElement_mutable._(this.children, this.alignment);
 
   @_core.override
   _core.bool operator ==(other) {
@@ -4717,7 +4727,7 @@ final class StackChildrenElement implements StackChildrenElement_orMutable {
   @_core.override
   _core.int get hashCode => _skir.internal__listEquality.hash(_equality_proxy);
 
-  _core.List get _equality_proxy => [this.children];
+  _core.List get _equality_proxy => [this.children, this.alignment];
 
   @_core.override
   _core.String toString() => _skir.internal__stringify(this, serializer);
@@ -4733,10 +4743,19 @@ final class StackChildrenElement implements StackChildrenElement_orMutable {
         "children",
         "children",
         0,
-        _skir.Serializers.iterable(PresentationNode.serializer),
+        _skir.Serializers.iterable(StackChild.serializer),
         "",
         (it) => it.children,
         (it, v) => it.children = v,
+      );
+      _serializerBuilder.addField(
+        "alignment",
+        "alignment",
+        1,
+        _skir.Serializers.optional(PresentationAlignment.serializer),
+        "Where flow children sit; top start when absent.",
+        (it) => it.alignment,
+        (it, v) => it.alignment = v,
       );
       _serializerBuilder.finalize();
     }
@@ -4745,7 +4764,7 @@ final class StackChildrenElement implements StackChildrenElement_orMutable {
 
   static final _serializerBuilder = _skir.internal__StructSerializerBuilder(
     recordId: "editor/v1/presentation.skir:StackChildrenElement",
-    doc: "",
+    doc: "Children painted over each other. Flow children size the stack; positioned children are\nplaced by insets and sizes relative to it, and paint in declaration order.",
     defaultInstance: defaultInstance,
     newMutable: (it) => (it != null) ? it.toMutable() : mutable(),
     toFrozen: (StackChildrenElement_mutable it) => it.toFrozen(),
@@ -4757,15 +4776,19 @@ final class StackChildrenElement implements StackChildrenElement_orMutable {
 /// Mutable version of [StackChildrenElement].
 final class StackChildrenElement_mutable
     implements StackChildrenElement_orMutable {
-  _core.Iterable<PresentationNode_orMutable> children;
+  _core.Iterable<StackChild> children;
+
+  /// Where flow children sit; top start when absent.
+  PresentationAlignment? alignment;
   _skir.internal__UnrecognizedFields? _u;
 
-  StackChildrenElement_mutable._(this.children);
+  StackChildrenElement_mutable._(this.children, this.alignment);
 
   /// Returns a deeply immutable copy of this instance.
   @_core.override
   StackChildrenElement toFrozen() =>
-      StackChildrenElement(children: this.children).._u = this._u;
+      StackChildrenElement(children: this.children, alignment: this.alignment)
+        .._u = this._u;
 }
 
 // -----------------------------------------------------------------------------
@@ -4844,8 +4867,11 @@ sealed class ChildrenElement {
 
   /// Same as `wrapStack(StackChildrenElement(...))`.
   factory ChildrenElement.createStack({
-    required _core.Iterable<PresentationNode_orMutable> children,
-  }) => ChildrenElement.wrapStack(StackChildrenElement(children: children));
+    required _core.Iterable<StackChild> children,
+    required PresentationAlignment? alignment,
+  }) => ChildrenElement.wrapStack(
+    StackChildrenElement(children: children, alignment: alignment),
+  );
 
   /// Returns the kind of variant held by this ChildrenElement.
   ChildrenElement_kind get kind;
@@ -11457,7 +11483,12 @@ sealed class ContainerLayout_orMutable {
   PresentationColor? get backgroundColor;
   PresentationRadius get radius;
   PresentationColor? get foregroundColor;
-  _core.int get transitionMilliseconds;
+
+  /// Animates paint changes; changes apply at once when absent.
+  PresentationTransitionPolicy_orMutable? get transition;
+
+  /// Painted below the container in declaration order.
+  _core.Iterable<PresentationShadow_orMutable> get shadows;
 
   ContainerLayout toFrozen();
 }
@@ -11474,8 +11505,14 @@ final class ContainerLayout implements ContainerLayout_orMutable {
   final PresentationRadius radius;
   @_core.override
   final PresentationColor? foregroundColor;
+
+  /// Animates paint changes; changes apply at once when absent.
   @_core.override
-  final _core.int transitionMilliseconds;
+  final PresentationTransitionPolicy? transition;
+
+  /// Painted below the container in declaration order.
+  @_core.override
+  final _core.Iterable<PresentationShadow> shadows;
   _skir.internal__UnrecognizedFields? _u;
 
   factory ContainerLayout({
@@ -11484,14 +11521,16 @@ final class ContainerLayout implements ContainerLayout_orMutable {
     required PresentationColor? backgroundColor,
     required PresentationRadius radius,
     required PresentationColor? foregroundColor,
-    required _core.int transitionMilliseconds,
+    required PresentationTransitionPolicy_orMutable? transition,
+    required _core.Iterable<PresentationShadow_orMutable> shadows,
   }) => ContainerLayout._(
     child.toFrozen(),
     border,
     backgroundColor,
     radius,
     foregroundColor,
-    transitionMilliseconds,
+    (transition != null) ? transition.toFrozen() : null,
+    _skir.internal__frozenMappedCopy(shadows, (it) => it.toFrozen()),
   );
 
   ContainerLayout._(
@@ -11500,7 +11539,8 @@ final class ContainerLayout implements ContainerLayout_orMutable {
     this.backgroundColor,
     this.radius,
     this.foregroundColor,
-    this.transitionMilliseconds,
+    this.transition,
+    this.shadows,
   );
 
   /// Default instance with all fields set to their default values.
@@ -11510,7 +11550,8 @@ final class ContainerLayout implements ContainerLayout_orMutable {
     null,
     PresentationRadius.unknown,
     null,
-    0,
+    null,
+    _skir.KeyedIterable.empty,
   );
 
   /// Returns a new mutable instance.
@@ -11521,7 +11562,8 @@ final class ContainerLayout implements ContainerLayout_orMutable {
     null,
     PresentationRadius.unknown,
     null,
-    0,
+    null,
+    _skir.KeyedIterable.empty,
   );
 
   /// Returns this instance (no-op).
@@ -11536,7 +11578,8 @@ final class ContainerLayout implements ContainerLayout_orMutable {
     this.backgroundColor,
     this.radius,
     this.foregroundColor,
-    this.transitionMilliseconds,
+    this.transition,
+    this.shadows,
   );
 
   @_core.override
@@ -11558,7 +11601,8 @@ final class ContainerLayout implements ContainerLayout_orMutable {
     this.backgroundColor,
     this.radius,
     this.foregroundColor,
-    this.transitionMilliseconds,
+    this.transition,
+    this.shadows,
   ];
 
   @_core.override
@@ -11614,13 +11658,22 @@ final class ContainerLayout implements ContainerLayout_orMutable {
         (it, v) => it.foregroundColor = v,
       );
       _serializerBuilder.addField(
-        "transition_milliseconds",
-        "transitionMilliseconds",
+        "transition",
+        "transition",
         5,
-        _skir.Serializers.int32,
-        "",
-        (it) => it.transitionMilliseconds,
-        (it, v) => it.transitionMilliseconds = v,
+        _skir.Serializers.optional(PresentationTransitionPolicy.serializer),
+        "Animates paint changes; changes apply at once when absent.",
+        (it) => it.transition,
+        (it, v) => it.transition = v,
+      );
+      _serializerBuilder.addField(
+        "shadows",
+        "shadows",
+        6,
+        _skir.Serializers.iterable(PresentationShadow.serializer),
+        "Painted below the container in declaration order.",
+        (it) => it.shadows,
+        (it, v) => it.shadows = v,
       );
       _serializerBuilder.finalize();
     }
@@ -11645,7 +11698,12 @@ final class ContainerLayout_mutable implements ContainerLayout_orMutable {
   PresentationColor? backgroundColor;
   PresentationRadius radius;
   PresentationColor? foregroundColor;
-  _core.int transitionMilliseconds;
+
+  /// Animates paint changes; changes apply at once when absent.
+  PresentationTransitionPolicy_orMutable? transition;
+
+  /// Painted below the container in declaration order.
+  _core.Iterable<PresentationShadow_orMutable> shadows;
   _skir.internal__UnrecognizedFields? _u;
 
   ContainerLayout_mutable._(
@@ -11654,8 +11712,20 @@ final class ContainerLayout_mutable implements ContainerLayout_orMutable {
     this.backgroundColor,
     this.radius,
     this.foregroundColor,
-    this.transitionMilliseconds,
+    this.transition,
+    this.shadows,
   );
+
+  /// If the value of [shadows] is already mutable, returns it as-is.
+  /// Otherwise, makes a mutable copy, assigns it back to [shadows] and returns it.
+  _core.List<PresentationShadow_orMutable> get mutableShadows {
+    final value = this.shadows;
+    if (value is _skir.internal__MutableList<PresentationShadow_orMutable>) {
+      return value;
+    } else {
+      return this.shadows = _skir.internal__MutableList([...value]);
+    }
+  }
 
   /// Returns a deeply immutable copy of this instance.
   @_core.override
@@ -11665,7 +11735,8 @@ final class ContainerLayout_mutable implements ContainerLayout_orMutable {
     backgroundColor: this.backgroundColor,
     radius: this.radius,
     foregroundColor: this.foregroundColor,
-    transitionMilliseconds: this.transitionMilliseconds,
+    transition: this.transition,
+    shadows: this.shadows,
   ).._u = this._u;
 }
 
@@ -19661,7 +19732,6 @@ sealed class SearchResultMapping_orMutable {
   _lib_editor_v1_expression.ExpressionNode get selectedValue;
   PresentationNode_orMutable get presentation;
   _lib_editor_v1_expression.ExpressionNode? get label;
-  ResultAppearance_orMutable? get resultAppearance;
 
   SearchResultMapping toFrozen();
 }
@@ -19678,8 +19748,6 @@ final class SearchResultMapping implements SearchResultMapping_orMutable {
   final PresentationNode presentation;
   @_core.override
   final _lib_editor_v1_expression.ExpressionNode? label;
-  @_core.override
-  final ResultAppearance? resultAppearance;
   _skir.internal__UnrecognizedFields? _u;
 
   factory SearchResultMapping({
@@ -19689,14 +19757,12 @@ final class SearchResultMapping implements SearchResultMapping_orMutable {
     required _lib_editor_v1_expression.ExpressionNode selectedValue,
     required PresentationNode_orMutable presentation,
     required _lib_editor_v1_expression.ExpressionNode? label,
-    required ResultAppearance_orMutable? resultAppearance,
   }) => SearchResultMapping._(
     bindingId.toFrozen(),
     key,
     selectedValue,
     presentation.toFrozen(),
     label,
-    (resultAppearance != null) ? resultAppearance.toFrozen() : null,
   );
 
   SearchResultMapping._(
@@ -19705,7 +19771,6 @@ final class SearchResultMapping implements SearchResultMapping_orMutable {
     this.selectedValue,
     this.presentation,
     this.label,
-    this.resultAppearance,
   );
 
   /// Default instance with all fields set to their default values.
@@ -19714,7 +19779,6 @@ final class SearchResultMapping implements SearchResultMapping_orMutable {
     _lib_editor_v1_expression.ExpressionNode.unknown,
     _lib_editor_v1_expression.ExpressionNode.unknown,
     PresentationNode.defaultInstance,
-    null,
     null,
   );
 
@@ -19725,7 +19789,6 @@ final class SearchResultMapping implements SearchResultMapping_orMutable {
     _lib_editor_v1_expression.ExpressionNode.unknown,
     _lib_editor_v1_expression.ExpressionNode.unknown,
     PresentationNode.defaultInstance,
-    null,
     null,
   );
 
@@ -19741,7 +19804,6 @@ final class SearchResultMapping implements SearchResultMapping_orMutable {
     this.selectedValue,
     this.presentation,
     this.label,
-    this.resultAppearance,
   );
 
   @_core.override
@@ -19763,7 +19825,6 @@ final class SearchResultMapping implements SearchResultMapping_orMutable {
     this.selectedValue,
     this.presentation,
     this.label,
-    this.resultAppearance,
   ];
 
   @_core.override
@@ -19823,15 +19884,6 @@ final class SearchResultMapping implements SearchResultMapping_orMutable {
         (it) => it.label,
         (it, v) => it.label = v,
       );
-      _serializerBuilder.addField(
-        "result_appearance",
-        "resultAppearance",
-        5,
-        _skir.Serializers.optional(ResultAppearance.serializer),
-        "",
-        (it) => it.resultAppearance,
-        (it, v) => it.resultAppearance = v,
-      );
       _serializerBuilder.finalize();
     }
     return _serializerBuilder.serializer;
@@ -19856,7 +19908,6 @@ final class SearchResultMapping_mutable
   _lib_editor_v1_expression.ExpressionNode selectedValue;
   PresentationNode_orMutable presentation;
   _lib_editor_v1_expression.ExpressionNode? label;
-  ResultAppearance_orMutable? resultAppearance;
   _skir.internal__UnrecognizedFields? _u;
 
   SearchResultMapping_mutable._(
@@ -19865,7 +19916,6 @@ final class SearchResultMapping_mutable
     this.selectedValue,
     this.presentation,
     this.label,
-    this.resultAppearance,
   );
 
   /// If the value of [bindingId] is already mutable, returns it as-is.
@@ -19889,7 +19939,6 @@ final class SearchResultMapping_mutable
     selectedValue: this.selectedValue,
     presentation: this.presentation,
     label: this.label,
-    resultAppearance: this.resultAppearance,
   ).._u = this._u;
 }
 
@@ -24768,6 +24817,8 @@ final class TooltipElement_mutable implements TooltipElement_orMutable {
 ///     case PresentationElement_align(:var value): { ... }
 ///     case PresentationElement_appearanceDefaults(:var value): { ... }
 ///     case PresentationElement_part(:var value): { ... }
+///     case PresentationElement_size(:var value): { ... }
+///     case PresentationElement_transform(:var value): { ... }
 ///   }
 ///   ```
 ///
@@ -25727,7 +25778,8 @@ sealed class PresentationElement {
     required PresentationColor? backgroundColor,
     required PresentationRadius radius,
     required PresentationColor? foregroundColor,
-    required _core.int transitionMilliseconds,
+    required PresentationTransitionPolicy_orMutable? transition,
+    required _core.Iterable<PresentationShadow_orMutable> shadows,
   }) => PresentationElement.wrapContainer(
     ContainerLayout(
       child: child,
@@ -25735,7 +25787,8 @@ sealed class PresentationElement {
       backgroundColor: backgroundColor,
       radius: radius,
       foregroundColor: foregroundColor,
-      transitionMilliseconds: transitionMilliseconds,
+      transition: transition,
+      shadows: shadows,
     ),
   );
 
@@ -25993,6 +26046,62 @@ sealed class PresentationElement {
     required PresentationNode_orMutable? body,
   }) => PresentationElement.wrapPart(
     PresentationPartElement(key: key, body: body),
+  );
+
+  /// Create a 'size' variant wrapping around the given value.
+  factory PresentationElement.wrapSize(SizeLayout value) =>
+      PresentationElement_sizeWrapper._(value);
+
+  /// Same as `wrapSize(SizeLayout(...))`.
+  factory PresentationElement.createSize({
+    required PresentationNode_orMutable child,
+    required _lib_editor_v1_expression.ExpressionNode? width,
+    required _lib_editor_v1_expression.ExpressionNode? height,
+    required _lib_editor_v1_expression.ExpressionNode? minimumWidth,
+    required _lib_editor_v1_expression.ExpressionNode? maximumWidth,
+    required _lib_editor_v1_expression.ExpressionNode? minimumHeight,
+    required _lib_editor_v1_expression.ExpressionNode? maximumHeight,
+  }) => PresentationElement.wrapSize(
+    SizeLayout(
+      child: child,
+      width: width,
+      height: height,
+      minimumWidth: minimumWidth,
+      maximumWidth: maximumWidth,
+      minimumHeight: minimumHeight,
+      maximumHeight: maximumHeight,
+    ),
+  );
+
+  /// Create a 'transform' variant wrapping around the given value.
+  factory PresentationElement.wrapTransform(TransformLayout value) =>
+      PresentationElement_transformWrapper._(value);
+
+  /// Same as `wrapTransform(TransformLayout(...))`.
+  factory PresentationElement.createTransform({
+    required PresentationNode_orMutable child,
+    required PresentationAlignment origin,
+    required _core.double perspective,
+    required PresentationNumber? scale,
+    required PresentationNumber? rotateX,
+    required PresentationNumber? rotateY,
+    required PresentationNumber? rotateZ,
+    required PresentationNumber? translateX,
+    required PresentationNumber? translateY,
+    required PresentationTransitionPolicy_orMutable? transition,
+  }) => PresentationElement.wrapTransform(
+    TransformLayout(
+      child: child,
+      origin: origin,
+      perspective: perspective,
+      scale: scale,
+      rotateX: rotateX,
+      rotateY: rotateY,
+      rotateZ: rotateZ,
+      translateX: translateX,
+      translateY: translateY,
+      transition: transition,
+    ),
   );
 
   /// Returns the kind of variant held by this PresentationElement.
@@ -26601,6 +26710,26 @@ sealed class PresentationElement {
         (it) => it.value,
         ordinal: PresentationElement_kind.partWrapper._ordinal,
       );
+      _serializerBuilder.addWrapperVariant(
+        61,
+        "size",
+        "wrapSize",
+        SizeLayout.serializer,
+        "",
+        PresentationElement_sizeWrapper._,
+        (it) => it.value,
+        ordinal: PresentationElement_kind.sizeWrapper._ordinal,
+      );
+      _serializerBuilder.addWrapperVariant(
+        62,
+        "transform",
+        "wrapTransform",
+        TransformLayout.serializer,
+        "",
+        PresentationElement_transformWrapper._,
+        (it) => it.value,
+        ordinal: PresentationElement_kind.transformWrapper._ordinal,
+      );
       _serializerBuilder.finalize();
     }
     return _serializerBuilder.serializer;
@@ -26680,7 +26809,9 @@ enum PresentationElement_kind {
   resourcesWrapper(57),
   alignWrapper(58),
   appearanceDefaultsWrapper(59),
-  partWrapper(60);
+  partWrapper(60),
+  sizeWrapper(61),
+  transformWrapper(62);
 
   final _core.int _ordinal;
 
@@ -27355,6 +27486,27 @@ final class PresentationElement_partWrapper
 
   @_core.override
   PresentationElement_kind get kind => PresentationElement_kind.partWrapper;
+}
+
+final class PresentationElement_sizeWrapper
+    extends _PresentationElement_wrapper {
+  final SizeLayout value;
+
+  PresentationElement_sizeWrapper._(this.value);
+
+  @_core.override
+  PresentationElement_kind get kind => PresentationElement_kind.sizeWrapper;
+}
+
+final class PresentationElement_transformWrapper
+    extends _PresentationElement_wrapper {
+  final TransformLayout value;
+
+  PresentationElement_transformWrapper._(this.value);
+
+  @_core.override
+  PresentationElement_kind get kind =>
+      PresentationElement_kind.transformWrapper;
 }
 
 // -----------------------------------------------------------------------------
@@ -32768,6 +32920,8 @@ final class PresentationStateColor_mutable
 ///     case PresentationColor_alpha(:var value): { ... }
 ///     case PresentationColor_blend(:var value): { ... }
 ///     case PresentationColor_states(:var value): { ... }
+///     case PresentationColor_adjusted(:var value): { ... }
+///     case PresentationColor_brightness(:var value): { ... }
 ///   }
 ///   ```
 ///
@@ -32836,6 +32990,35 @@ sealed class PresentationColor {
     required PresentationColor fallback,
   }) => PresentationColor.wrapStates(
     PresentationStateColor(rules: rules, fallback: fallback),
+  );
+
+  /// Create a 'adjusted' variant wrapping around the given value.
+  factory PresentationColor.wrapAdjusted(PresentationAdjustedColor value) =>
+      PresentationColor_adjustedWrapper._(value);
+
+  /// Same as `wrapAdjusted(PresentationAdjustedColor(...))`.
+  factory PresentationColor.createAdjusted({
+    required PresentationColor source,
+    required _core.double lightness,
+    required _core.double chroma,
+  }) => PresentationColor.wrapAdjusted(
+    PresentationAdjustedColor(
+      source: source,
+      lightness: lightness,
+      chroma: chroma,
+    ),
+  );
+
+  /// Create a 'brightness' variant wrapping around the given value.
+  factory PresentationColor.wrapBrightness(PresentationBrightnessColor value) =>
+      PresentationColor_brightnessWrapper._(value);
+
+  /// Same as `wrapBrightness(PresentationBrightnessColor(...))`.
+  factory PresentationColor.createBrightness({
+    required PresentationColor light,
+    required PresentationColor dark,
+  }) => PresentationColor.wrapBrightness(
+    PresentationBrightnessColor(light: light, dark: dark),
   );
 
   /// Returns the kind of variant held by this PresentationColor.
@@ -32914,6 +33097,26 @@ sealed class PresentationColor {
         (it) => it.value,
         ordinal: PresentationColor_kind.statesWrapper._ordinal,
       );
+      _serializerBuilder.addWrapperVariant(
+        8,
+        "adjusted",
+        "wrapAdjusted",
+        PresentationAdjustedColor.serializer,
+        "",
+        PresentationColor_adjustedWrapper._,
+        (it) => it.value,
+        ordinal: PresentationColor_kind.adjustedWrapper._ordinal,
+      );
+      _serializerBuilder.addWrapperVariant(
+        9,
+        "brightness",
+        "wrapBrightness",
+        PresentationBrightnessColor.serializer,
+        "",
+        PresentationColor_brightnessWrapper._,
+        (it) => it.value,
+        ordinal: PresentationColor_kind.brightnessWrapper._ordinal,
+      );
       _serializerBuilder.finalize();
     }
     return _serializerBuilder.serializer;
@@ -32940,7 +33143,9 @@ enum PresentationColor_kind {
   contrastWrapper(4),
   alphaWrapper(5),
   blendWrapper(6),
-  statesWrapper(7);
+  statesWrapper(7),
+  adjustedWrapper(8),
+  brightnessWrapper(9);
 
   final _core.int _ordinal;
 
@@ -33046,6 +33251,26 @@ final class PresentationColor_statesWrapper extends _PresentationColor_wrapper {
 
   @_core.override
   PresentationColor_kind get kind => PresentationColor_kind.statesWrapper;
+}
+
+final class PresentationColor_adjustedWrapper
+    extends _PresentationColor_wrapper {
+  final PresentationAdjustedColor value;
+
+  PresentationColor_adjustedWrapper._(this.value);
+
+  @_core.override
+  PresentationColor_kind get kind => PresentationColor_kind.adjustedWrapper;
+}
+
+final class PresentationColor_brightnessWrapper
+    extends _PresentationColor_wrapper {
+  final PresentationBrightnessColor value;
+
+  PresentationColor_brightnessWrapper._(this.value);
+
+  @_core.override
+  PresentationColor_kind get kind => PresentationColor_kind.brightnessWrapper;
 }
 
 // -----------------------------------------------------------------------------
@@ -40416,7 +40641,8 @@ sealed class CollectionAppearance_orMutable {
   PresentationColor? get itemForeground;
   PresentationBorder? get itemBorder;
   PresentationRadius? get itemRadius;
-  _core.int? get itemTransitionMilliseconds;
+  PresentationTransitionPolicy_orMutable? get itemTransition;
+  _core.Iterable<PresentationShadow_orMutable> get itemShadows;
 
   CollectionAppearance toFrozen();
 }
@@ -40436,7 +40662,9 @@ final class CollectionAppearance implements CollectionAppearance_orMutable {
   @_core.override
   final PresentationRadius? itemRadius;
   @_core.override
-  final _core.int? itemTransitionMilliseconds;
+  final PresentationTransitionPolicy? itemTransition;
+  @_core.override
+  final _core.Iterable<PresentationShadow> itemShadows;
   _skir.internal__UnrecognizedFields? _u;
 
   factory CollectionAppearance({
@@ -40446,7 +40674,8 @@ final class CollectionAppearance implements CollectionAppearance_orMutable {
     required PresentationColor? itemForeground,
     required PresentationBorder? itemBorder,
     required PresentationRadius? itemRadius,
-    required _core.int? itemTransitionMilliseconds,
+    required PresentationTransitionPolicy_orMutable? itemTransition,
+    required _core.Iterable<PresentationShadow_orMutable> itemShadows,
   }) => CollectionAppearance._(
     itemSpacing,
     itemPadding,
@@ -40454,7 +40683,8 @@ final class CollectionAppearance implements CollectionAppearance_orMutable {
     itemForeground,
     itemBorder,
     itemRadius,
-    itemTransitionMilliseconds,
+    (itemTransition != null) ? itemTransition.toFrozen() : null,
+    _skir.internal__frozenMappedCopy(itemShadows, (it) => it.toFrozen()),
   );
 
   CollectionAppearance._(
@@ -40464,7 +40694,8 @@ final class CollectionAppearance implements CollectionAppearance_orMutable {
     this.itemForeground,
     this.itemBorder,
     this.itemRadius,
-    this.itemTransitionMilliseconds,
+    this.itemTransition,
+    this.itemShadows,
   );
 
   /// Default instance with all fields set to their default values.
@@ -40476,12 +40707,22 @@ final class CollectionAppearance implements CollectionAppearance_orMutable {
     null,
     null,
     null,
+    _skir.KeyedIterable.empty,
   );
 
   /// Returns a new mutable instance.
   /// Fields are initialized to their default values.
   static CollectionAppearance_mutable mutable() =>
-      CollectionAppearance_mutable._(null, null, null, null, null, null, null);
+      CollectionAppearance_mutable._(
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        _skir.KeyedIterable.empty,
+      );
 
   /// Returns this instance (no-op).
   @_core.Deprecated("This instance is already frozen.")
@@ -40496,7 +40737,8 @@ final class CollectionAppearance implements CollectionAppearance_orMutable {
     this.itemForeground,
     this.itemBorder,
     this.itemRadius,
-    this.itemTransitionMilliseconds,
+    this.itemTransition,
+    this.itemShadows,
   );
 
   @_core.override
@@ -40519,7 +40761,8 @@ final class CollectionAppearance implements CollectionAppearance_orMutable {
     this.itemForeground,
     this.itemBorder,
     this.itemRadius,
-    this.itemTransitionMilliseconds,
+    this.itemTransition,
+    this.itemShadows,
   ];
 
   @_core.override
@@ -40587,13 +40830,22 @@ final class CollectionAppearance implements CollectionAppearance_orMutable {
         (it, v) => it.itemRadius = v,
       );
       _serializerBuilder.addField(
-        "item_transition_milliseconds",
-        "itemTransitionMilliseconds",
+        "item_transition",
+        "itemTransition",
         6,
-        _skir.Serializers.optional(_skir.Serializers.int32),
+        _skir.Serializers.optional(PresentationTransitionPolicy.serializer),
         "",
-        (it) => it.itemTransitionMilliseconds,
-        (it, v) => it.itemTransitionMilliseconds = v,
+        (it) => it.itemTransition,
+        (it, v) => it.itemTransition = v,
+      );
+      _serializerBuilder.addField(
+        "item_shadows",
+        "itemShadows",
+        7,
+        _skir.Serializers.iterable(PresentationShadow.serializer),
+        "",
+        (it) => it.itemShadows,
+        (it, v) => it.itemShadows = v,
       );
       _serializerBuilder.finalize();
     }
@@ -40620,7 +40872,8 @@ final class CollectionAppearance_mutable
   PresentationColor? itemForeground;
   PresentationBorder? itemBorder;
   PresentationRadius? itemRadius;
-  _core.int? itemTransitionMilliseconds;
+  PresentationTransitionPolicy_orMutable? itemTransition;
+  _core.Iterable<PresentationShadow_orMutable> itemShadows;
   _skir.internal__UnrecognizedFields? _u;
 
   CollectionAppearance_mutable._(
@@ -40630,8 +40883,20 @@ final class CollectionAppearance_mutable
     this.itemForeground,
     this.itemBorder,
     this.itemRadius,
-    this.itemTransitionMilliseconds,
+    this.itemTransition,
+    this.itemShadows,
   );
+
+  /// If the value of [itemShadows] is already mutable, returns it as-is.
+  /// Otherwise, makes a mutable copy, assigns it back to [itemShadows] and returns it.
+  _core.List<PresentationShadow_orMutable> get mutableItemShadows {
+    final value = this.itemShadows;
+    if (value is _skir.internal__MutableList<PresentationShadow_orMutable>) {
+      return value;
+    } else {
+      return this.itemShadows = _skir.internal__MutableList([...value]);
+    }
+  }
 
   /// Returns a deeply immutable copy of this instance.
   @_core.override
@@ -40642,7 +40907,8 @@ final class CollectionAppearance_mutable
     itemForeground: this.itemForeground,
     itemBorder: this.itemBorder,
     itemRadius: this.itemRadius,
-    itemTransitionMilliseconds: this.itemTransitionMilliseconds,
+    itemTransition: this.itemTransition,
+    itemShadows: this.itemShadows,
   ).._u = this._u;
 }
 
@@ -42747,274 +43013,6 @@ final class DividerAppearance_mutable implements DividerAppearance_orMutable {
 }
 
 // -----------------------------------------------------------------------------
-// enum ResultStyle
-// -----------------------------------------------------------------------------
-
-/// To switch on the variants:
-///   ```
-///   switch (e) {
-///     case ResultStyle_unknown(): { ... }
-///     case ResultStyle.compact: { ... }
-///     case ResultStyle.card: { ... }
-///   }
-///   ```
-///
-/// Deeply immutable.
-sealed class ResultStyle {
-  /// Constant indicating an unknown `ResultStyle`.
-  /// Default value for fields of type `ResultStyle`.
-  static const ResultStyle unknown = ResultStyle_unknown._instance;
-
-  static const compact = _ResultStyle_consts.compactConst;
-  static const card = _ResultStyle_consts.cardConst;
-
-  /// Returns the kind of variant held by this ResultStyle.
-  ResultStyle_kind get kind;
-
-  /// Serializer for `ResultStyle` instances.
-  static _skir.EnumSerializer<ResultStyle> get serializer {
-    if (_serializerBuilder.mustInitialize()) {
-      _serializerBuilder.addConstantVariant(
-        1,
-        "compact",
-        "compact",
-        "",
-        compact,
-      );
-      _serializerBuilder.addConstantVariant(2, "card", "card", "", card);
-      _serializerBuilder.finalize();
-    }
-    return _serializerBuilder.serializer;
-  }
-
-  static final _serializerBuilder = _skir.internal__EnumSerializerBuilder
-      .create(
-        recordId: "editor/v1/presentation.skir:ResultStyle",
-        doc: "",
-        unknownInstance: ResultStyle_unknown._instance,
-        enumInstance: ResultStyle.unknown,
-        getOrdinal: (it) => it.kind._ordinal,
-        wrapUnrecognized: ResultStyle_unknown._unrecognized,
-        getUnrecognized: (it) => it._u,
-      );
-}
-
-/// The kind of variant held by a `ResultStyle`.
-enum ResultStyle_kind {
-  unknown(0),
-  compactConst(1),
-  cardConst(2);
-
-  final _core.int _ordinal;
-
-  const ResultStyle_kind(this._ordinal);
-}
-
-final class ResultStyle_unknown implements ResultStyle {
-  static const _instance = ResultStyle_unknown._();
-
-  final _skir.internal__UnrecognizedVariant? _u;
-
-  const ResultStyle_unknown._() : _u = null;
-  ResultStyle_unknown._unrecognized(this._u);
-
-  @_core.override
-  ResultStyle_kind get kind => ResultStyle_kind.unknown;
-  @_core.override
-  _core.bool operator ==(other) => other is ResultStyle_unknown;
-  @_core.override
-  _core.int get hashCode => 8118964;
-  @_core.override
-  _core.String toString() =>
-      _skir.internal__stringify(this, ResultStyle.serializer);
-}
-
-enum _ResultStyle_consts implements ResultStyle {
-  compactConst(ResultStyle_kind.compactConst),
-  cardConst(ResultStyle_kind.cardConst);
-
-  @_core.override
-  final ResultStyle_kind kind;
-
-  const _ResultStyle_consts(this.kind);
-
-  @_core.override
-  _core.String toString() =>
-      _skir.internal__stringify(this, ResultStyle.serializer);
-}
-
-// -----------------------------------------------------------------------------
-// struct ResultAppearance
-// -----------------------------------------------------------------------------
-
-sealed class ResultAppearance_orMutable {
-  ResultStyle? get style;
-  _lib_editor_v1_expression.ExpressionNode? get accent;
-  PresentationNode_orMutable? get leading;
-  _lib_editor_v1_expression.ExpressionNode? get kindLabel;
-
-  ResultAppearance toFrozen();
-}
-
-/// Describes host supplied result chrome around the portable body, shared by search options,
-/// authoring result rows, page tiles, and graph nodes where the requested role supports it.
-///
-/// Deeply immutable.
-final class ResultAppearance implements ResultAppearance_orMutable {
-  @_core.override
-  final ResultStyle? style;
-  @_core.override
-  final _lib_editor_v1_expression.ExpressionNode? accent;
-  @_core.override
-  final PresentationNode? leading;
-  @_core.override
-  final _lib_editor_v1_expression.ExpressionNode? kindLabel;
-  _skir.internal__UnrecognizedFields? _u;
-
-  factory ResultAppearance({
-    required ResultStyle? style,
-    required _lib_editor_v1_expression.ExpressionNode? accent,
-    required PresentationNode_orMutable? leading,
-    required _lib_editor_v1_expression.ExpressionNode? kindLabel,
-  }) => ResultAppearance._(
-    style,
-    accent,
-    (leading != null) ? leading.toFrozen() : null,
-    kindLabel,
-  );
-
-  ResultAppearance._(this.style, this.accent, this.leading, this.kindLabel);
-
-  /// Default instance with all fields set to their default values.
-  static final defaultInstance = ResultAppearance._(null, null, null, null);
-
-  /// Returns a new mutable instance.
-  /// Fields are initialized to their default values.
-  static ResultAppearance_mutable mutable() =>
-      ResultAppearance_mutable._(null, null, null, null);
-
-  /// Returns this instance (no-op).
-  @_core.Deprecated("This instance is already frozen.")
-  @_core.override
-  ResultAppearance toFrozen() => this;
-
-  /// Returns a mutable shallow copy of this instance.
-  ResultAppearance_mutable toMutable() => ResultAppearance_mutable._(
-    this.style,
-    this.accent,
-    this.leading,
-    this.kindLabel,
-  );
-
-  @_core.override
-  _core.bool operator ==(other) {
-    if (_core.identical(this, other)) return true;
-    if (other is! ResultAppearance) return false;
-    return _skir.internal__listEquality.equals(
-      _equality_proxy,
-      other._equality_proxy,
-    );
-  }
-
-  @_core.override
-  _core.int get hashCode => _skir.internal__listEquality.hash(_equality_proxy);
-
-  _core.List get _equality_proxy => [
-    this.style,
-    this.accent,
-    this.leading,
-    this.kindLabel,
-  ];
-
-  @_core.override
-  _core.String toString() => _skir.internal__stringify(this, serializer);
-
-  /// Serializer for `ResultAppearance` instances.
-  static _skir.StructSerializer<ResultAppearance, ResultAppearance_mutable>
-  get serializer {
-    if (_serializerBuilder.mustInitialize()) {
-      _serializerBuilder.addField(
-        "style",
-        "style",
-        0,
-        _skir.Serializers.optional(ResultStyle.serializer),
-        "",
-        (it) => it.style,
-        (it, v) => it.style = v,
-      );
-      _serializerBuilder.addField(
-        "accent",
-        "accent",
-        1,
-        _skir.Serializers.optional(
-          _lib_editor_v1_expression.ExpressionNode.serializer,
-        ),
-        "",
-        (it) => it.accent,
-        (it, v) => it.accent = v,
-      );
-      _serializerBuilder.addField(
-        "leading",
-        "leading",
-        2,
-        _skir.Serializers.optional(PresentationNode.serializer),
-        "",
-        (it) => it.leading,
-        (it, v) => it.leading = v,
-      );
-      _serializerBuilder.addField(
-        "kind_label",
-        "kindLabel",
-        3,
-        _skir.Serializers.optional(
-          _lib_editor_v1_expression.ExpressionNode.serializer,
-        ),
-        "",
-        (it) => it.kindLabel,
-        (it, v) => it.kindLabel = v,
-      );
-      _serializerBuilder.finalize();
-    }
-    return _serializerBuilder.serializer;
-  }
-
-  static final _serializerBuilder = _skir.internal__StructSerializerBuilder(
-    recordId: "editor/v1/presentation.skir:ResultAppearance",
-    doc: "Describes host supplied result chrome around the portable body, shared by search options,\nauthoring result rows, page tiles, and graph nodes where the requested role supports it.",
-    defaultInstance: defaultInstance,
-    newMutable: (it) => (it != null) ? it.toMutable() : mutable(),
-    toFrozen: (ResultAppearance_mutable it) => it.toFrozen(),
-    getUnrecognizedFields: (it) => it._u,
-    setUnrecognizedFields: (it, u) => it._u = u,
-  );
-}
-
-/// Mutable version of [ResultAppearance].
-final class ResultAppearance_mutable implements ResultAppearance_orMutable {
-  ResultStyle? style;
-  _lib_editor_v1_expression.ExpressionNode? accent;
-  PresentationNode_orMutable? leading;
-  _lib_editor_v1_expression.ExpressionNode? kindLabel;
-  _skir.internal__UnrecognizedFields? _u;
-
-  ResultAppearance_mutable._(
-    this.style,
-    this.accent,
-    this.leading,
-    this.kindLabel,
-  );
-
-  /// Returns a deeply immutable copy of this instance.
-  @_core.override
-  ResultAppearance toFrozen() => ResultAppearance(
-    style: this.style,
-    accent: this.accent,
-    leading: this.leading,
-    kindLabel: this.kindLabel,
-  ).._u = this._u;
-}
-
-// -----------------------------------------------------------------------------
 // struct PresentationContextInput
 // -----------------------------------------------------------------------------
 
@@ -44047,5 +44045,2530 @@ final class TreeResourcesLayout_mutable
     groupBindingId: this.groupBindingId,
     connectors: this.connectors,
     initiallyExpanded: this.initiallyExpanded,
+  ).._u = this._u;
+}
+
+// -----------------------------------------------------------------------------
+// enum PresentationNumber
+// -----------------------------------------------------------------------------
+
+/// A number that may change with interaction state, in the unit of the field holding it.
+///
+/// To switch on the variants:
+///   ```
+///   switch (e) {
+///     case PresentationNumber_unknown(): { ... }
+///     case PresentationNumber_value(:var value): { ... }
+///     case PresentationNumber_states(:var value): { ... }
+///   }
+///   ```
+///
+/// Deeply immutable.
+sealed class PresentationNumber {
+  /// Constant indicating an unknown `PresentationNumber`.
+  /// Default value for fields of type `PresentationNumber`.
+  static const PresentationNumber unknown =
+      PresentationNumber_unknown._instance;
+
+  /// Create a 'value' variant wrapping around the given value.
+  factory PresentationNumber.wrapValue(
+    _lib_editor_v1_expression.ExpressionNode value,
+  ) => PresentationNumber_valueWrapper._(value);
+
+  /// Create a 'states' variant wrapping around the given value.
+  factory PresentationNumber.wrapStates(PresentationStateNumber value) =>
+      PresentationNumber_statesWrapper._(value);
+
+  /// Same as `wrapStates(PresentationStateNumber(...))`.
+  factory PresentationNumber.createStates({
+    required _core.Iterable<PresentationStateNumberRule_orMutable> rules,
+    required _lib_editor_v1_expression.ExpressionNode fallback,
+  }) => PresentationNumber.wrapStates(
+    PresentationStateNumber(rules: rules, fallback: fallback),
+  );
+
+  /// Returns the kind of variant held by this PresentationNumber.
+  PresentationNumber_kind get kind;
+
+  /// Serializer for `PresentationNumber` instances.
+  static _skir.EnumSerializer<PresentationNumber> get serializer {
+    if (_serializerBuilder.mustInitialize()) {
+      _serializerBuilder.addWrapperVariant(
+        1,
+        "value",
+        "wrapValue",
+        _lib_editor_v1_expression.ExpressionNode.serializer,
+        "",
+        PresentationNumber_valueWrapper._,
+        (it) => it.value,
+        ordinal: PresentationNumber_kind.valueWrapper._ordinal,
+      );
+      _serializerBuilder.addWrapperVariant(
+        2,
+        "states",
+        "wrapStates",
+        PresentationStateNumber.serializer,
+        "",
+        PresentationNumber_statesWrapper._,
+        (it) => it.value,
+        ordinal: PresentationNumber_kind.statesWrapper._ordinal,
+      );
+      _serializerBuilder.finalize();
+    }
+    return _serializerBuilder.serializer;
+  }
+
+  static final _serializerBuilder = _skir.internal__EnumSerializerBuilder
+      .create(
+        recordId: "editor/v1/presentation.skir:PresentationNumber",
+        doc: "A number that may change with interaction state, in the unit of the field holding it.",
+        unknownInstance: PresentationNumber_unknown._instance,
+        enumInstance: PresentationNumber.unknown,
+        getOrdinal: (it) => it.kind._ordinal,
+        wrapUnrecognized: PresentationNumber_unknown._unrecognized,
+        getUnrecognized: (it) => it._u,
+      );
+}
+
+/// The kind of variant held by a `PresentationNumber`.
+enum PresentationNumber_kind {
+  unknown(0),
+  valueWrapper(1),
+  statesWrapper(2);
+
+  final _core.int _ordinal;
+
+  const PresentationNumber_kind(this._ordinal);
+}
+
+final class PresentationNumber_unknown implements PresentationNumber {
+  static const _instance = PresentationNumber_unknown._();
+
+  final _skir.internal__UnrecognizedVariant? _u;
+
+  const PresentationNumber_unknown._() : _u = null;
+  PresentationNumber_unknown._unrecognized(this._u);
+
+  @_core.override
+  PresentationNumber_kind get kind => PresentationNumber_kind.unknown;
+  @_core.override
+  _core.bool operator ==(other) => other is PresentationNumber_unknown;
+  @_core.override
+  _core.int get hashCode => 8118964;
+  @_core.override
+  _core.String toString() =>
+      _skir.internal__stringify(this, PresentationNumber.serializer);
+}
+
+sealed class _PresentationNumber_wrapper implements PresentationNumber {
+  _core.dynamic get value;
+
+  @_core.override
+  _core.bool operator ==(other) {
+    if (other is! _PresentationNumber_wrapper) return false;
+    return kind == other.kind && value == other.value;
+  }
+
+  @_core.override
+  _core.int get hashCode => (kind._ordinal * 31) ^ value.hashCode;
+
+  @_core.override
+  _core.String toString() =>
+      _skir.internal__stringify(this, PresentationNumber.serializer);
+}
+
+final class PresentationNumber_valueWrapper
+    extends _PresentationNumber_wrapper {
+  final _lib_editor_v1_expression.ExpressionNode value;
+
+  PresentationNumber_valueWrapper._(this.value);
+
+  @_core.override
+  PresentationNumber_kind get kind => PresentationNumber_kind.valueWrapper;
+}
+
+final class PresentationNumber_statesWrapper
+    extends _PresentationNumber_wrapper {
+  final PresentationStateNumber value;
+
+  PresentationNumber_statesWrapper._(this.value);
+
+  @_core.override
+  PresentationNumber_kind get kind => PresentationNumber_kind.statesWrapper;
+}
+
+// -----------------------------------------------------------------------------
+// struct PresentationStateNumber
+// -----------------------------------------------------------------------------
+
+sealed class PresentationStateNumber_orMutable {
+  _core.Iterable<PresentationStateNumberRule_orMutable> get rules;
+  _lib_editor_v1_expression.ExpressionNode get fallback;
+
+  PresentationStateNumber toFrozen();
+}
+
+/// The first rule matching the current interaction state wins; otherwise `fallback` applies.
+///
+/// Deeply immutable.
+final class PresentationStateNumber
+    implements PresentationStateNumber_orMutable {
+  @_core.override
+  final _core.Iterable<PresentationStateNumberRule> rules;
+  @_core.override
+  final _lib_editor_v1_expression.ExpressionNode fallback;
+  _skir.internal__UnrecognizedFields? _u;
+
+  factory PresentationStateNumber({
+    required _core.Iterable<PresentationStateNumberRule_orMutable> rules,
+    required _lib_editor_v1_expression.ExpressionNode fallback,
+  }) => PresentationStateNumber._(
+    _skir.internal__frozenMappedCopy(rules, (it) => it.toFrozen()),
+    fallback,
+  );
+
+  PresentationStateNumber._(this.rules, this.fallback);
+
+  /// Default instance with all fields set to their default values.
+  static final defaultInstance = PresentationStateNumber._(
+    _skir.KeyedIterable.empty,
+    _lib_editor_v1_expression.ExpressionNode.unknown,
+  );
+
+  /// Returns a new mutable instance.
+  /// Fields are initialized to their default values.
+  static PresentationStateNumber_mutable mutable() =>
+      PresentationStateNumber_mutable._(
+        _skir.KeyedIterable.empty,
+        _lib_editor_v1_expression.ExpressionNode.unknown,
+      );
+
+  /// Returns this instance (no-op).
+  @_core.Deprecated("This instance is already frozen.")
+  @_core.override
+  PresentationStateNumber toFrozen() => this;
+
+  /// Returns a mutable shallow copy of this instance.
+  PresentationStateNumber_mutable toMutable() =>
+      PresentationStateNumber_mutable._(this.rules, this.fallback);
+
+  @_core.override
+  _core.bool operator ==(other) {
+    if (_core.identical(this, other)) return true;
+    if (other is! PresentationStateNumber) return false;
+    return _skir.internal__listEquality.equals(
+      _equality_proxy,
+      other._equality_proxy,
+    );
+  }
+
+  @_core.override
+  _core.int get hashCode => _skir.internal__listEquality.hash(_equality_proxy);
+
+  _core.List get _equality_proxy => [this.rules, this.fallback];
+
+  @_core.override
+  _core.String toString() => _skir.internal__stringify(this, serializer);
+
+  /// Serializer for `PresentationStateNumber` instances.
+  static _skir.StructSerializer<
+    PresentationStateNumber,
+    PresentationStateNumber_mutable
+  >
+  get serializer {
+    if (_serializerBuilder.mustInitialize()) {
+      _serializerBuilder.addField(
+        "rules",
+        "rules",
+        0,
+        _skir.Serializers.iterable(PresentationStateNumberRule.serializer),
+        "",
+        (it) => it.rules,
+        (it, v) => it.rules = v,
+      );
+      _serializerBuilder.addField(
+        "fallback",
+        "fallback",
+        1,
+        _lib_editor_v1_expression.ExpressionNode.serializer,
+        "",
+        (it) => it.fallback,
+        (it, v) => it.fallback = v,
+      );
+      _serializerBuilder.finalize();
+    }
+    return _serializerBuilder.serializer;
+  }
+
+  static final _serializerBuilder = _skir.internal__StructSerializerBuilder(
+    recordId: "editor/v1/presentation.skir:PresentationStateNumber",
+    doc: "The first rule matching the current interaction state wins; otherwise [fallback] applies.",
+    defaultInstance: defaultInstance,
+    newMutable: (it) => (it != null) ? it.toMutable() : mutable(),
+    toFrozen: (PresentationStateNumber_mutable it) => it.toFrozen(),
+    getUnrecognizedFields: (it) => it._u,
+    setUnrecognizedFields: (it, u) => it._u = u,
+  );
+}
+
+/// Mutable version of [PresentationStateNumber].
+final class PresentationStateNumber_mutable
+    implements PresentationStateNumber_orMutable {
+  _core.Iterable<PresentationStateNumberRule_orMutable> rules;
+  _lib_editor_v1_expression.ExpressionNode fallback;
+  _skir.internal__UnrecognizedFields? _u;
+
+  PresentationStateNumber_mutable._(this.rules, this.fallback);
+
+  /// If the value of [rules] is already mutable, returns it as-is.
+  /// Otherwise, makes a mutable copy, assigns it back to [rules] and returns it.
+  _core.List<PresentationStateNumberRule_orMutable> get mutableRules {
+    final value = this.rules;
+    if (value
+        is _skir.internal__MutableList<PresentationStateNumberRule_orMutable>) {
+      return value;
+    } else {
+      return this.rules = _skir.internal__MutableList([...value]);
+    }
+  }
+
+  /// Returns a deeply immutable copy of this instance.
+  @_core.override
+  PresentationStateNumber toFrozen() =>
+      PresentationStateNumber(rules: this.rules, fallback: this.fallback)
+        .._u = this._u;
+}
+
+// -----------------------------------------------------------------------------
+// struct PresentationStateNumberRule
+// -----------------------------------------------------------------------------
+
+sealed class PresentationStateNumberRule_orMutable {
+  PresentationStateMatch_orMutable get match;
+  _lib_editor_v1_expression.ExpressionNode get value;
+
+  PresentationStateNumberRule toFrozen();
+}
+
+/// Deeply immutable.
+final class PresentationStateNumberRule
+    implements PresentationStateNumberRule_orMutable {
+  @_core.override
+  final PresentationStateMatch match;
+  @_core.override
+  final _lib_editor_v1_expression.ExpressionNode value;
+  _skir.internal__UnrecognizedFields? _u;
+
+  factory PresentationStateNumberRule({
+    required PresentationStateMatch_orMutable match,
+    required _lib_editor_v1_expression.ExpressionNode value,
+  }) => PresentationStateNumberRule._(match.toFrozen(), value);
+
+  PresentationStateNumberRule._(this.match, this.value);
+
+  /// Default instance with all fields set to their default values.
+  static final defaultInstance = PresentationStateNumberRule._(
+    PresentationStateMatch.defaultInstance,
+    _lib_editor_v1_expression.ExpressionNode.unknown,
+  );
+
+  /// Returns a new mutable instance.
+  /// Fields are initialized to their default values.
+  static PresentationStateNumberRule_mutable mutable() =>
+      PresentationStateNumberRule_mutable._(
+        PresentationStateMatch.defaultInstance,
+        _lib_editor_v1_expression.ExpressionNode.unknown,
+      );
+
+  /// Returns this instance (no-op).
+  @_core.Deprecated("This instance is already frozen.")
+  @_core.override
+  PresentationStateNumberRule toFrozen() => this;
+
+  /// Returns a mutable shallow copy of this instance.
+  PresentationStateNumberRule_mutable toMutable() =>
+      PresentationStateNumberRule_mutable._(this.match, this.value);
+
+  @_core.override
+  _core.bool operator ==(other) {
+    if (_core.identical(this, other)) return true;
+    if (other is! PresentationStateNumberRule) return false;
+    return _skir.internal__listEquality.equals(
+      _equality_proxy,
+      other._equality_proxy,
+    );
+  }
+
+  @_core.override
+  _core.int get hashCode => _skir.internal__listEquality.hash(_equality_proxy);
+
+  _core.List get _equality_proxy => [this.match, this.value];
+
+  @_core.override
+  _core.String toString() => _skir.internal__stringify(this, serializer);
+
+  /// Serializer for `PresentationStateNumberRule` instances.
+  static _skir.StructSerializer<
+    PresentationStateNumberRule,
+    PresentationStateNumberRule_mutable
+  >
+  get serializer {
+    if (_serializerBuilder.mustInitialize()) {
+      _serializerBuilder.addField(
+        "match",
+        "match",
+        0,
+        PresentationStateMatch.serializer,
+        "",
+        (it) => it.match,
+        (it, v) => it.match = v,
+      );
+      _serializerBuilder.addField(
+        "value",
+        "value",
+        1,
+        _lib_editor_v1_expression.ExpressionNode.serializer,
+        "",
+        (it) => it.value,
+        (it, v) => it.value = v,
+      );
+      _serializerBuilder.finalize();
+    }
+    return _serializerBuilder.serializer;
+  }
+
+  static final _serializerBuilder = _skir.internal__StructSerializerBuilder(
+    recordId: "editor/v1/presentation.skir:PresentationStateNumberRule",
+    doc: "",
+    defaultInstance: defaultInstance,
+    newMutable: (it) => (it != null) ? it.toMutable() : mutable(),
+    toFrozen: (PresentationStateNumberRule_mutable it) => it.toFrozen(),
+    getUnrecognizedFields: (it) => it._u,
+    setUnrecognizedFields: (it, u) => it._u = u,
+  );
+}
+
+/// Mutable version of [PresentationStateNumberRule].
+final class PresentationStateNumberRule_mutable
+    implements PresentationStateNumberRule_orMutable {
+  PresentationStateMatch_orMutable match;
+  _lib_editor_v1_expression.ExpressionNode value;
+  _skir.internal__UnrecognizedFields? _u;
+
+  PresentationStateNumberRule_mutable._(this.match, this.value);
+
+  /// If the value of [match] is already mutable, returns it as-is.
+  /// Otherwise, makes a mutable copy, assigns it back to [match] and returns it.
+  PresentationStateMatch_mutable get mutableMatch {
+    final value = this.match;
+    if (value is PresentationStateMatch_mutable) {
+      return value;
+    } else {
+      return this.match = (value as PresentationStateMatch).toMutable();
+    }
+  }
+
+  /// Returns a deeply immutable copy of this instance.
+  @_core.override
+  PresentationStateNumberRule toFrozen() =>
+      PresentationStateNumberRule(match: this.match, value: this.value)
+        .._u = this._u;
+}
+
+// -----------------------------------------------------------------------------
+// enum PresentationCurve
+// -----------------------------------------------------------------------------
+
+/// How an animated change progresses over its duration.
+///
+/// To switch on the variants:
+///   ```
+///   switch (e) {
+///     case PresentationCurve_unknown(): { ... }
+///     case PresentationCurve.linear: { ... }
+///     case PresentationCurve.easeInOut: { ... }
+///     case PresentationCurve.easeOut: { ... }
+///     case PresentationCurve.emphasized: { ... }
+///     case PresentationCurve_elasticOut(:var value): { ... }
+///   }
+///   ```
+///
+/// Deeply immutable.
+sealed class PresentationCurve {
+  /// Constant indicating an unknown `PresentationCurve`.
+  /// Default value for fields of type `PresentationCurve`.
+  static const PresentationCurve unknown = PresentationCurve_unknown._instance;
+
+  static const linear = _PresentationCurve_consts.linearConst;
+  static const easeInOut = _PresentationCurve_consts.easeInOutConst;
+  static const easeOut = _PresentationCurve_consts.easeOutConst;
+
+  /// Quick start and long settle, for movement that should feel deliberate.
+  static const emphasized = _PresentationCurve_consts.emphasizedConst;
+
+  /// Create a 'elastic_out' variant wrapping around the given value.
+  ///
+  /// Springs past the target and settles. The value is the overshoot period, in curve
+  /// progress units (Flutter ElasticOutCurve.period).
+  factory PresentationCurve.wrapElasticOut(_core.double value) =>
+      PresentationCurve_elasticOutWrapper._(value);
+
+  /// Returns the kind of variant held by this PresentationCurve.
+  PresentationCurve_kind get kind;
+
+  /// Serializer for `PresentationCurve` instances.
+  static _skir.EnumSerializer<PresentationCurve> get serializer {
+    if (_serializerBuilder.mustInitialize()) {
+      _serializerBuilder.addConstantVariant(1, "linear", "linear", "", linear);
+      _serializerBuilder.addConstantVariant(
+        2,
+        "ease_in_out",
+        "easeInOut",
+        "",
+        easeInOut,
+      );
+      _serializerBuilder.addConstantVariant(
+        3,
+        "ease_out",
+        "easeOut",
+        "",
+        easeOut,
+      );
+      _serializerBuilder.addConstantVariant(
+        4,
+        "emphasized",
+        "emphasized",
+        "Quick start and long settle, for movement that should feel deliberate.",
+        emphasized,
+      );
+      _serializerBuilder.addWrapperVariant(
+        5,
+        "elastic_out",
+        "wrapElasticOut",
+        _skir.Serializers.float64,
+        "Springs past the target and settles. The value is the overshoot period, in curve\nprogress units (Flutter ElasticOutCurve.period).",
+        PresentationCurve_elasticOutWrapper._,
+        (it) => it.value,
+        ordinal: PresentationCurve_kind.elasticOutWrapper._ordinal,
+      );
+      _serializerBuilder.finalize();
+    }
+    return _serializerBuilder.serializer;
+  }
+
+  static final _serializerBuilder = _skir.internal__EnumSerializerBuilder
+      .create(
+        recordId: "editor/v1/presentation.skir:PresentationCurve",
+        doc: "How an animated change progresses over its duration.",
+        unknownInstance: PresentationCurve_unknown._instance,
+        enumInstance: PresentationCurve.unknown,
+        getOrdinal: (it) => it.kind._ordinal,
+        wrapUnrecognized: PresentationCurve_unknown._unrecognized,
+        getUnrecognized: (it) => it._u,
+      );
+}
+
+/// The kind of variant held by a `PresentationCurve`.
+enum PresentationCurve_kind {
+  unknown(0),
+  linearConst(1),
+  easeInOutConst(2),
+  easeOutConst(3),
+  emphasizedConst(4),
+  elasticOutWrapper(5);
+
+  final _core.int _ordinal;
+
+  const PresentationCurve_kind(this._ordinal);
+}
+
+final class PresentationCurve_unknown implements PresentationCurve {
+  static const _instance = PresentationCurve_unknown._();
+
+  final _skir.internal__UnrecognizedVariant? _u;
+
+  const PresentationCurve_unknown._() : _u = null;
+  PresentationCurve_unknown._unrecognized(this._u);
+
+  @_core.override
+  PresentationCurve_kind get kind => PresentationCurve_kind.unknown;
+  @_core.override
+  _core.bool operator ==(other) => other is PresentationCurve_unknown;
+  @_core.override
+  _core.int get hashCode => 8118964;
+  @_core.override
+  _core.String toString() =>
+      _skir.internal__stringify(this, PresentationCurve.serializer);
+}
+
+enum _PresentationCurve_consts implements PresentationCurve {
+  linearConst(PresentationCurve_kind.linearConst),
+  easeInOutConst(PresentationCurve_kind.easeInOutConst),
+  easeOutConst(PresentationCurve_kind.easeOutConst),
+  emphasizedConst(PresentationCurve_kind.emphasizedConst);
+
+  @_core.override
+  final PresentationCurve_kind kind;
+
+  const _PresentationCurve_consts(this.kind);
+
+  @_core.override
+  _core.String toString() =>
+      _skir.internal__stringify(this, PresentationCurve.serializer);
+}
+
+sealed class _PresentationCurve_wrapper implements PresentationCurve {
+  _core.dynamic get value;
+
+  @_core.override
+  _core.bool operator ==(other) {
+    if (other is! _PresentationCurve_wrapper) return false;
+    return kind == other.kind && value == other.value;
+  }
+
+  @_core.override
+  _core.int get hashCode => (kind._ordinal * 31) ^ value.hashCode;
+
+  @_core.override
+  _core.String toString() =>
+      _skir.internal__stringify(this, PresentationCurve.serializer);
+}
+
+final class PresentationCurve_elasticOutWrapper
+    extends _PresentationCurve_wrapper {
+  final _core.double value;
+
+  PresentationCurve_elasticOutWrapper._(this.value);
+
+  @_core.override
+  PresentationCurve_kind get kind => PresentationCurve_kind.elasticOutWrapper;
+}
+
+// -----------------------------------------------------------------------------
+// struct PresentationTransition
+// -----------------------------------------------------------------------------
+
+sealed class PresentationTransition_orMutable {
+  _core.int get milliseconds;
+  PresentationCurve get curve;
+
+  PresentationTransition toFrozen();
+}
+
+/// Deeply immutable.
+final class PresentationTransition implements PresentationTransition_orMutable {
+  @_core.override
+  final _core.int milliseconds;
+  @_core.override
+  final PresentationCurve curve;
+  _skir.internal__UnrecognizedFields? _u;
+
+  factory PresentationTransition({
+    required _core.int milliseconds,
+    required PresentationCurve curve,
+  }) => PresentationTransition._(milliseconds, curve);
+
+  PresentationTransition._(this.milliseconds, this.curve);
+
+  /// Default instance with all fields set to their default values.
+  static final defaultInstance = PresentationTransition._(
+    0,
+    PresentationCurve.unknown,
+  );
+
+  /// Returns a new mutable instance.
+  /// Fields are initialized to their default values.
+  static PresentationTransition_mutable mutable() =>
+      PresentationTransition_mutable._(0, PresentationCurve.unknown);
+
+  /// Returns this instance (no-op).
+  @_core.Deprecated("This instance is already frozen.")
+  @_core.override
+  PresentationTransition toFrozen() => this;
+
+  /// Returns a mutable shallow copy of this instance.
+  PresentationTransition_mutable toMutable() =>
+      PresentationTransition_mutable._(this.milliseconds, this.curve);
+
+  @_core.override
+  _core.bool operator ==(other) {
+    if (_core.identical(this, other)) return true;
+    if (other is! PresentationTransition) return false;
+    return _skir.internal__listEquality.equals(
+      _equality_proxy,
+      other._equality_proxy,
+    );
+  }
+
+  @_core.override
+  _core.int get hashCode => _skir.internal__listEquality.hash(_equality_proxy);
+
+  _core.List get _equality_proxy => [this.milliseconds, this.curve];
+
+  @_core.override
+  _core.String toString() => _skir.internal__stringify(this, serializer);
+
+  /// Serializer for `PresentationTransition` instances.
+  static _skir.StructSerializer<
+    PresentationTransition,
+    PresentationTransition_mutable
+  >
+  get serializer {
+    if (_serializerBuilder.mustInitialize()) {
+      _serializerBuilder.addField(
+        "milliseconds",
+        "milliseconds",
+        0,
+        _skir.Serializers.int32,
+        "",
+        (it) => it.milliseconds,
+        (it, v) => it.milliseconds = v,
+      );
+      _serializerBuilder.addField(
+        "curve",
+        "curve",
+        1,
+        PresentationCurve.serializer,
+        "",
+        (it) => it.curve,
+        (it, v) => it.curve = v,
+      );
+      _serializerBuilder.finalize();
+    }
+    return _serializerBuilder.serializer;
+  }
+
+  static final _serializerBuilder = _skir.internal__StructSerializerBuilder(
+    recordId: "editor/v1/presentation.skir:PresentationTransition",
+    doc: "",
+    defaultInstance: defaultInstance,
+    newMutable: (it) => (it != null) ? it.toMutable() : mutable(),
+    toFrozen: (PresentationTransition_mutable it) => it.toFrozen(),
+    getUnrecognizedFields: (it) => it._u,
+    setUnrecognizedFields: (it, u) => it._u = u,
+  );
+}
+
+/// Mutable version of [PresentationTransition].
+final class PresentationTransition_mutable
+    implements PresentationTransition_orMutable {
+  _core.int milliseconds;
+  PresentationCurve curve;
+  _skir.internal__UnrecognizedFields? _u;
+
+  PresentationTransition_mutable._(this.milliseconds, this.curve);
+
+  /// Returns a deeply immutable copy of this instance.
+  @_core.override
+  PresentationTransition toFrozen() =>
+      PresentationTransition(milliseconds: this.milliseconds, curve: this.curve)
+        .._u = this._u;
+}
+
+// -----------------------------------------------------------------------------
+// struct PresentationTransitionPolicy
+// -----------------------------------------------------------------------------
+
+sealed class PresentationTransitionPolicy_orMutable {
+  _core.Iterable<PresentationStateTransitionRule_orMutable> get rules;
+  PresentationTransition_orMutable get fallback;
+
+  PresentationTransitionPolicy toFrozen();
+}
+
+/// Chooses the transition for a change by the state being entered: the first rule matching
+/// the new interaction state animates the change; otherwise `fallback` does.
+///
+/// Deeply immutable.
+final class PresentationTransitionPolicy
+    implements PresentationTransitionPolicy_orMutable {
+  @_core.override
+  final _core.Iterable<PresentationStateTransitionRule> rules;
+  @_core.override
+  final PresentationTransition fallback;
+  _skir.internal__UnrecognizedFields? _u;
+
+  factory PresentationTransitionPolicy({
+    required _core.Iterable<PresentationStateTransitionRule_orMutable> rules,
+    required PresentationTransition_orMutable fallback,
+  }) => PresentationTransitionPolicy._(
+    _skir.internal__frozenMappedCopy(rules, (it) => it.toFrozen()),
+    fallback.toFrozen(),
+  );
+
+  PresentationTransitionPolicy._(this.rules, this.fallback);
+
+  /// Default instance with all fields set to their default values.
+  static final defaultInstance = PresentationTransitionPolicy._(
+    _skir.KeyedIterable.empty,
+    PresentationTransition.defaultInstance,
+  );
+
+  /// Returns a new mutable instance.
+  /// Fields are initialized to their default values.
+  static PresentationTransitionPolicy_mutable mutable() =>
+      PresentationTransitionPolicy_mutable._(
+        _skir.KeyedIterable.empty,
+        PresentationTransition.defaultInstance,
+      );
+
+  /// Returns this instance (no-op).
+  @_core.Deprecated("This instance is already frozen.")
+  @_core.override
+  PresentationTransitionPolicy toFrozen() => this;
+
+  /// Returns a mutable shallow copy of this instance.
+  PresentationTransitionPolicy_mutable toMutable() =>
+      PresentationTransitionPolicy_mutable._(this.rules, this.fallback);
+
+  @_core.override
+  _core.bool operator ==(other) {
+    if (_core.identical(this, other)) return true;
+    if (other is! PresentationTransitionPolicy) return false;
+    return _skir.internal__listEquality.equals(
+      _equality_proxy,
+      other._equality_proxy,
+    );
+  }
+
+  @_core.override
+  _core.int get hashCode => _skir.internal__listEquality.hash(_equality_proxy);
+
+  _core.List get _equality_proxy => [this.rules, this.fallback];
+
+  @_core.override
+  _core.String toString() => _skir.internal__stringify(this, serializer);
+
+  /// Serializer for `PresentationTransitionPolicy` instances.
+  static _skir.StructSerializer<
+    PresentationTransitionPolicy,
+    PresentationTransitionPolicy_mutable
+  >
+  get serializer {
+    if (_serializerBuilder.mustInitialize()) {
+      _serializerBuilder.addField(
+        "rules",
+        "rules",
+        0,
+        _skir.Serializers.iterable(PresentationStateTransitionRule.serializer),
+        "",
+        (it) => it.rules,
+        (it, v) => it.rules = v,
+      );
+      _serializerBuilder.addField(
+        "fallback",
+        "fallback",
+        1,
+        PresentationTransition.serializer,
+        "",
+        (it) => it.fallback,
+        (it, v) => it.fallback = v,
+      );
+      _serializerBuilder.finalize();
+    }
+    return _serializerBuilder.serializer;
+  }
+
+  static final _serializerBuilder = _skir.internal__StructSerializerBuilder(
+    recordId: "editor/v1/presentation.skir:PresentationTransitionPolicy",
+    doc: "Chooses the transition for a change by the state being entered: the first rule matching\nthe new interaction state animates the change; otherwise [fallback] does.",
+    defaultInstance: defaultInstance,
+    newMutable: (it) => (it != null) ? it.toMutable() : mutable(),
+    toFrozen: (PresentationTransitionPolicy_mutable it) => it.toFrozen(),
+    getUnrecognizedFields: (it) => it._u,
+    setUnrecognizedFields: (it, u) => it._u = u,
+  );
+}
+
+/// Mutable version of [PresentationTransitionPolicy].
+final class PresentationTransitionPolicy_mutable
+    implements PresentationTransitionPolicy_orMutable {
+  _core.Iterable<PresentationStateTransitionRule_orMutable> rules;
+  PresentationTransition_orMutable fallback;
+  _skir.internal__UnrecognizedFields? _u;
+
+  PresentationTransitionPolicy_mutable._(this.rules, this.fallback);
+
+  /// If the value of [rules] is already mutable, returns it as-is.
+  /// Otherwise, makes a mutable copy, assigns it back to [rules] and returns it.
+  _core.List<PresentationStateTransitionRule_orMutable> get mutableRules {
+    final value = this.rules;
+    if (value
+        is _skir.internal__MutableList<
+          PresentationStateTransitionRule_orMutable
+        >) {
+      return value;
+    } else {
+      return this.rules = _skir.internal__MutableList([...value]);
+    }
+  }
+
+  /// If the value of [fallback] is already mutable, returns it as-is.
+  /// Otherwise, makes a mutable copy, assigns it back to [fallback] and returns it.
+  PresentationTransition_mutable get mutableFallback {
+    final value = this.fallback;
+    if (value is PresentationTransition_mutable) {
+      return value;
+    } else {
+      return this.fallback = (value as PresentationTransition).toMutable();
+    }
+  }
+
+  /// Returns a deeply immutable copy of this instance.
+  @_core.override
+  PresentationTransitionPolicy toFrozen() =>
+      PresentationTransitionPolicy(rules: this.rules, fallback: this.fallback)
+        .._u = this._u;
+}
+
+// -----------------------------------------------------------------------------
+// struct PresentationStateTransitionRule
+// -----------------------------------------------------------------------------
+
+sealed class PresentationStateTransitionRule_orMutable {
+  PresentationStateMatch_orMutable get match;
+  PresentationTransition_orMutable get transition;
+
+  PresentationStateTransitionRule toFrozen();
+}
+
+/// Deeply immutable.
+final class PresentationStateTransitionRule
+    implements PresentationStateTransitionRule_orMutable {
+  @_core.override
+  final PresentationStateMatch match;
+  @_core.override
+  final PresentationTransition transition;
+  _skir.internal__UnrecognizedFields? _u;
+
+  factory PresentationStateTransitionRule({
+    required PresentationStateMatch_orMutable match,
+    required PresentationTransition_orMutable transition,
+  }) => PresentationStateTransitionRule._(
+    match.toFrozen(),
+    transition.toFrozen(),
+  );
+
+  PresentationStateTransitionRule._(this.match, this.transition);
+
+  /// Default instance with all fields set to their default values.
+  static final defaultInstance = PresentationStateTransitionRule._(
+    PresentationStateMatch.defaultInstance,
+    PresentationTransition.defaultInstance,
+  );
+
+  /// Returns a new mutable instance.
+  /// Fields are initialized to their default values.
+  static PresentationStateTransitionRule_mutable mutable() =>
+      PresentationStateTransitionRule_mutable._(
+        PresentationStateMatch.defaultInstance,
+        PresentationTransition.defaultInstance,
+      );
+
+  /// Returns this instance (no-op).
+  @_core.Deprecated("This instance is already frozen.")
+  @_core.override
+  PresentationStateTransitionRule toFrozen() => this;
+
+  /// Returns a mutable shallow copy of this instance.
+  PresentationStateTransitionRule_mutable toMutable() =>
+      PresentationStateTransitionRule_mutable._(this.match, this.transition);
+
+  @_core.override
+  _core.bool operator ==(other) {
+    if (_core.identical(this, other)) return true;
+    if (other is! PresentationStateTransitionRule) return false;
+    return _skir.internal__listEquality.equals(
+      _equality_proxy,
+      other._equality_proxy,
+    );
+  }
+
+  @_core.override
+  _core.int get hashCode => _skir.internal__listEquality.hash(_equality_proxy);
+
+  _core.List get _equality_proxy => [this.match, this.transition];
+
+  @_core.override
+  _core.String toString() => _skir.internal__stringify(this, serializer);
+
+  /// Serializer for `PresentationStateTransitionRule` instances.
+  static _skir.StructSerializer<
+    PresentationStateTransitionRule,
+    PresentationStateTransitionRule_mutable
+  >
+  get serializer {
+    if (_serializerBuilder.mustInitialize()) {
+      _serializerBuilder.addField(
+        "match",
+        "match",
+        0,
+        PresentationStateMatch.serializer,
+        "",
+        (it) => it.match,
+        (it, v) => it.match = v,
+      );
+      _serializerBuilder.addField(
+        "transition",
+        "transition",
+        1,
+        PresentationTransition.serializer,
+        "",
+        (it) => it.transition,
+        (it, v) => it.transition = v,
+      );
+      _serializerBuilder.finalize();
+    }
+    return _serializerBuilder.serializer;
+  }
+
+  static final _serializerBuilder = _skir.internal__StructSerializerBuilder(
+    recordId: "editor/v1/presentation.skir:PresentationStateTransitionRule",
+    doc: "",
+    defaultInstance: defaultInstance,
+    newMutable: (it) => (it != null) ? it.toMutable() : mutable(),
+    toFrozen: (PresentationStateTransitionRule_mutable it) => it.toFrozen(),
+    getUnrecognizedFields: (it) => it._u,
+    setUnrecognizedFields: (it, u) => it._u = u,
+  );
+}
+
+/// Mutable version of [PresentationStateTransitionRule].
+final class PresentationStateTransitionRule_mutable
+    implements PresentationStateTransitionRule_orMutable {
+  PresentationStateMatch_orMutable match;
+  PresentationTransition_orMutable transition;
+  _skir.internal__UnrecognizedFields? _u;
+
+  PresentationStateTransitionRule_mutable._(this.match, this.transition);
+
+  /// If the value of [match] is already mutable, returns it as-is.
+  /// Otherwise, makes a mutable copy, assigns it back to [match] and returns it.
+  PresentationStateMatch_mutable get mutableMatch {
+    final value = this.match;
+    if (value is PresentationStateMatch_mutable) {
+      return value;
+    } else {
+      return this.match = (value as PresentationStateMatch).toMutable();
+    }
+  }
+
+  /// If the value of [transition] is already mutable, returns it as-is.
+  /// Otherwise, makes a mutable copy, assigns it back to [transition] and returns it.
+  PresentationTransition_mutable get mutableTransition {
+    final value = this.transition;
+    if (value is PresentationTransition_mutable) {
+      return value;
+    } else {
+      return this.transition = (value as PresentationTransition).toMutable();
+    }
+  }
+
+  /// Returns a deeply immutable copy of this instance.
+  @_core.override
+  PresentationStateTransitionRule toFrozen() => PresentationStateTransitionRule(
+    match: this.match,
+    transition: this.transition,
+  ).._u = this._u;
+}
+
+// -----------------------------------------------------------------------------
+// struct PresentationShadow
+// -----------------------------------------------------------------------------
+
+sealed class PresentationShadow_orMutable {
+  PresentationColor get color;
+  _core.double get blur;
+  _core.double get spread;
+  _core.double get offsetX;
+  _core.double get offsetY;
+
+  PresentationShadow toFrozen();
+}
+
+/// Blur, spread and offsets in logical pixels.
+///
+/// Deeply immutable.
+final class PresentationShadow implements PresentationShadow_orMutable {
+  @_core.override
+  final PresentationColor color;
+  @_core.override
+  final _core.double blur;
+  @_core.override
+  final _core.double spread;
+  @_core.override
+  final _core.double offsetX;
+  @_core.override
+  final _core.double offsetY;
+  _skir.internal__UnrecognizedFields? _u;
+
+  factory PresentationShadow({
+    required PresentationColor color,
+    required _core.double blur,
+    required _core.double spread,
+    required _core.double offsetX,
+    required _core.double offsetY,
+  }) => PresentationShadow._(color, blur, spread, offsetX, offsetY);
+
+  PresentationShadow._(
+    this.color,
+    this.blur,
+    this.spread,
+    this.offsetX,
+    this.offsetY,
+  );
+
+  /// Default instance with all fields set to their default values.
+  static final defaultInstance = PresentationShadow._(
+    PresentationColor.unknown,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+  );
+
+  /// Returns a new mutable instance.
+  /// Fields are initialized to their default values.
+  static PresentationShadow_mutable mutable() => PresentationShadow_mutable._(
+    PresentationColor.unknown,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+  );
+
+  /// Returns this instance (no-op).
+  @_core.Deprecated("This instance is already frozen.")
+  @_core.override
+  PresentationShadow toFrozen() => this;
+
+  /// Returns a mutable shallow copy of this instance.
+  PresentationShadow_mutable toMutable() => PresentationShadow_mutable._(
+    this.color,
+    this.blur,
+    this.spread,
+    this.offsetX,
+    this.offsetY,
+  );
+
+  @_core.override
+  _core.bool operator ==(other) {
+    if (_core.identical(this, other)) return true;
+    if (other is! PresentationShadow) return false;
+    return _skir.internal__listEquality.equals(
+      _equality_proxy,
+      other._equality_proxy,
+    );
+  }
+
+  @_core.override
+  _core.int get hashCode => _skir.internal__listEquality.hash(_equality_proxy);
+
+  _core.List get _equality_proxy => [
+    this.color,
+    this.blur,
+    this.spread,
+    this.offsetX,
+    this.offsetY,
+  ];
+
+  @_core.override
+  _core.String toString() => _skir.internal__stringify(this, serializer);
+
+  /// Serializer for `PresentationShadow` instances.
+  static _skir.StructSerializer<PresentationShadow, PresentationShadow_mutable>
+  get serializer {
+    if (_serializerBuilder.mustInitialize()) {
+      _serializerBuilder.addField(
+        "color",
+        "color",
+        0,
+        PresentationColor.serializer,
+        "",
+        (it) => it.color,
+        (it, v) => it.color = v,
+      );
+      _serializerBuilder.addField(
+        "blur",
+        "blur",
+        1,
+        _skir.Serializers.float64,
+        "",
+        (it) => it.blur,
+        (it, v) => it.blur = v,
+      );
+      _serializerBuilder.addField(
+        "spread",
+        "spread",
+        2,
+        _skir.Serializers.float64,
+        "",
+        (it) => it.spread,
+        (it, v) => it.spread = v,
+      );
+      _serializerBuilder.addField(
+        "offset_x",
+        "offsetX",
+        3,
+        _skir.Serializers.float64,
+        "",
+        (it) => it.offsetX,
+        (it, v) => it.offsetX = v,
+      );
+      _serializerBuilder.addField(
+        "offset_y",
+        "offsetY",
+        4,
+        _skir.Serializers.float64,
+        "",
+        (it) => it.offsetY,
+        (it, v) => it.offsetY = v,
+      );
+      _serializerBuilder.finalize();
+    }
+    return _serializerBuilder.serializer;
+  }
+
+  static final _serializerBuilder = _skir.internal__StructSerializerBuilder(
+    recordId: "editor/v1/presentation.skir:PresentationShadow",
+    doc: "Blur, spread and offsets in logical pixels.",
+    defaultInstance: defaultInstance,
+    newMutable: (it) => (it != null) ? it.toMutable() : mutable(),
+    toFrozen: (PresentationShadow_mutable it) => it.toFrozen(),
+    getUnrecognizedFields: (it) => it._u,
+    setUnrecognizedFields: (it, u) => it._u = u,
+  );
+}
+
+/// Mutable version of [PresentationShadow].
+final class PresentationShadow_mutable implements PresentationShadow_orMutable {
+  PresentationColor color;
+  _core.double blur;
+  _core.double spread;
+  _core.double offsetX;
+  _core.double offsetY;
+  _skir.internal__UnrecognizedFields? _u;
+
+  PresentationShadow_mutable._(
+    this.color,
+    this.blur,
+    this.spread,
+    this.offsetX,
+    this.offsetY,
+  );
+
+  /// Returns a deeply immutable copy of this instance.
+  @_core.override
+  PresentationShadow toFrozen() => PresentationShadow(
+    color: this.color,
+    blur: this.blur,
+    spread: this.spread,
+    offsetX: this.offsetX,
+    offsetY: this.offsetY,
+  ).._u = this._u;
+}
+
+// -----------------------------------------------------------------------------
+// struct PresentationAdjustedColor
+// -----------------------------------------------------------------------------
+
+sealed class PresentationAdjustedColor_orMutable {
+  PresentationColor get source;
+  _core.double get lightness;
+  _core.double get chroma;
+
+  PresentationAdjustedColor toFrozen();
+}
+
+/// Moves `source` in OkLch. Both adjustments range from minus one to one: negative lightness moves toward
+/// black and positive toward white; negative chroma desaturates and positive saturates.
+///
+/// Deeply immutable.
+final class PresentationAdjustedColor
+    implements PresentationAdjustedColor_orMutable {
+  @_core.override
+  final PresentationColor source;
+  @_core.override
+  final _core.double lightness;
+  @_core.override
+  final _core.double chroma;
+  _skir.internal__UnrecognizedFields? _u;
+
+  factory PresentationAdjustedColor({
+    required PresentationColor source,
+    required _core.double lightness,
+    required _core.double chroma,
+  }) => PresentationAdjustedColor._(source, lightness, chroma);
+
+  PresentationAdjustedColor._(this.source, this.lightness, this.chroma);
+
+  /// Default instance with all fields set to their default values.
+  static final defaultInstance = PresentationAdjustedColor._(
+    PresentationColor.unknown,
+    0.0,
+    0.0,
+  );
+
+  /// Returns a new mutable instance.
+  /// Fields are initialized to their default values.
+  static PresentationAdjustedColor_mutable mutable() =>
+      PresentationAdjustedColor_mutable._(PresentationColor.unknown, 0.0, 0.0);
+
+  /// Returns this instance (no-op).
+  @_core.Deprecated("This instance is already frozen.")
+  @_core.override
+  PresentationAdjustedColor toFrozen() => this;
+
+  /// Returns a mutable shallow copy of this instance.
+  PresentationAdjustedColor_mutable toMutable() =>
+      PresentationAdjustedColor_mutable._(
+        this.source,
+        this.lightness,
+        this.chroma,
+      );
+
+  @_core.override
+  _core.bool operator ==(other) {
+    if (_core.identical(this, other)) return true;
+    if (other is! PresentationAdjustedColor) return false;
+    return _skir.internal__listEquality.equals(
+      _equality_proxy,
+      other._equality_proxy,
+    );
+  }
+
+  @_core.override
+  _core.int get hashCode => _skir.internal__listEquality.hash(_equality_proxy);
+
+  _core.List get _equality_proxy => [this.source, this.lightness, this.chroma];
+
+  @_core.override
+  _core.String toString() => _skir.internal__stringify(this, serializer);
+
+  /// Serializer for `PresentationAdjustedColor` instances.
+  static _skir.StructSerializer<
+    PresentationAdjustedColor,
+    PresentationAdjustedColor_mutable
+  >
+  get serializer {
+    if (_serializerBuilder.mustInitialize()) {
+      _serializerBuilder.addField(
+        "source",
+        "source",
+        0,
+        PresentationColor.serializer,
+        "",
+        (it) => it.source,
+        (it, v) => it.source = v,
+      );
+      _serializerBuilder.addField(
+        "lightness",
+        "lightness",
+        1,
+        _skir.Serializers.float64,
+        "",
+        (it) => it.lightness,
+        (it, v) => it.lightness = v,
+      );
+      _serializerBuilder.addField(
+        "chroma",
+        "chroma",
+        2,
+        _skir.Serializers.float64,
+        "",
+        (it) => it.chroma,
+        (it, v) => it.chroma = v,
+      );
+      _serializerBuilder.finalize();
+    }
+    return _serializerBuilder.serializer;
+  }
+
+  static final _serializerBuilder = _skir.internal__StructSerializerBuilder(
+    recordId: "editor/v1/presentation.skir:PresentationAdjustedColor",
+    doc: "Moves [source] in OkLch. Both adjustments range from minus one to one: negative lightness moves toward\nblack and positive toward white; negative chroma desaturates and positive saturates.",
+    defaultInstance: defaultInstance,
+    newMutable: (it) => (it != null) ? it.toMutable() : mutable(),
+    toFrozen: (PresentationAdjustedColor_mutable it) => it.toFrozen(),
+    getUnrecognizedFields: (it) => it._u,
+    setUnrecognizedFields: (it, u) => it._u = u,
+  );
+}
+
+/// Mutable version of [PresentationAdjustedColor].
+final class PresentationAdjustedColor_mutable
+    implements PresentationAdjustedColor_orMutable {
+  PresentationColor source;
+  _core.double lightness;
+  _core.double chroma;
+  _skir.internal__UnrecognizedFields? _u;
+
+  PresentationAdjustedColor_mutable._(this.source, this.lightness, this.chroma);
+
+  /// Returns a deeply immutable copy of this instance.
+  @_core.override
+  PresentationAdjustedColor toFrozen() => PresentationAdjustedColor(
+    source: this.source,
+    lightness: this.lightness,
+    chroma: this.chroma,
+  ).._u = this._u;
+}
+
+// -----------------------------------------------------------------------------
+// struct PresentationBrightnessColor
+// -----------------------------------------------------------------------------
+
+sealed class PresentationBrightnessColor_orMutable {
+  PresentationColor get light;
+  PresentationColor get dark;
+
+  PresentationBrightnessColor toFrozen();
+}
+
+/// Picks a color by the brightness of the editor theme.
+///
+/// Deeply immutable.
+final class PresentationBrightnessColor
+    implements PresentationBrightnessColor_orMutable {
+  @_core.override
+  final PresentationColor light;
+  @_core.override
+  final PresentationColor dark;
+  _skir.internal__UnrecognizedFields? _u;
+
+  factory PresentationBrightnessColor({
+    required PresentationColor light,
+    required PresentationColor dark,
+  }) => PresentationBrightnessColor._(light, dark);
+
+  PresentationBrightnessColor._(this.light, this.dark);
+
+  /// Default instance with all fields set to their default values.
+  static final defaultInstance = PresentationBrightnessColor._(
+    PresentationColor.unknown,
+    PresentationColor.unknown,
+  );
+
+  /// Returns a new mutable instance.
+  /// Fields are initialized to their default values.
+  static PresentationBrightnessColor_mutable mutable() =>
+      PresentationBrightnessColor_mutable._(
+        PresentationColor.unknown,
+        PresentationColor.unknown,
+      );
+
+  /// Returns this instance (no-op).
+  @_core.Deprecated("This instance is already frozen.")
+  @_core.override
+  PresentationBrightnessColor toFrozen() => this;
+
+  /// Returns a mutable shallow copy of this instance.
+  PresentationBrightnessColor_mutable toMutable() =>
+      PresentationBrightnessColor_mutable._(this.light, this.dark);
+
+  @_core.override
+  _core.bool operator ==(other) {
+    if (_core.identical(this, other)) return true;
+    if (other is! PresentationBrightnessColor) return false;
+    return _skir.internal__listEquality.equals(
+      _equality_proxy,
+      other._equality_proxy,
+    );
+  }
+
+  @_core.override
+  _core.int get hashCode => _skir.internal__listEquality.hash(_equality_proxy);
+
+  _core.List get _equality_proxy => [this.light, this.dark];
+
+  @_core.override
+  _core.String toString() => _skir.internal__stringify(this, serializer);
+
+  /// Serializer for `PresentationBrightnessColor` instances.
+  static _skir.StructSerializer<
+    PresentationBrightnessColor,
+    PresentationBrightnessColor_mutable
+  >
+  get serializer {
+    if (_serializerBuilder.mustInitialize()) {
+      _serializerBuilder.addField(
+        "light",
+        "light",
+        0,
+        PresentationColor.serializer,
+        "",
+        (it) => it.light,
+        (it, v) => it.light = v,
+      );
+      _serializerBuilder.addField(
+        "dark",
+        "dark",
+        1,
+        PresentationColor.serializer,
+        "",
+        (it) => it.dark,
+        (it, v) => it.dark = v,
+      );
+      _serializerBuilder.finalize();
+    }
+    return _serializerBuilder.serializer;
+  }
+
+  static final _serializerBuilder = _skir.internal__StructSerializerBuilder(
+    recordId: "editor/v1/presentation.skir:PresentationBrightnessColor",
+    doc: "Picks a color by the brightness of the editor theme.",
+    defaultInstance: defaultInstance,
+    newMutable: (it) => (it != null) ? it.toMutable() : mutable(),
+    toFrozen: (PresentationBrightnessColor_mutable it) => it.toFrozen(),
+    getUnrecognizedFields: (it) => it._u,
+    setUnrecognizedFields: (it, u) => it._u = u,
+  );
+}
+
+/// Mutable version of [PresentationBrightnessColor].
+final class PresentationBrightnessColor_mutable
+    implements PresentationBrightnessColor_orMutable {
+  PresentationColor light;
+  PresentationColor dark;
+  _skir.internal__UnrecognizedFields? _u;
+
+  PresentationBrightnessColor_mutable._(this.light, this.dark);
+
+  /// Returns a deeply immutable copy of this instance.
+  @_core.override
+  PresentationBrightnessColor toFrozen() =>
+      PresentationBrightnessColor(light: this.light, dark: this.dark)
+        .._u = this._u;
+}
+
+// -----------------------------------------------------------------------------
+// enum StackChild
+// -----------------------------------------------------------------------------
+
+/// To switch on the variants:
+///   ```
+///   switch (e) {
+///     case StackChild_unknown(): { ... }
+///     case StackChild_flow(:var value): { ... }
+///     case StackChild_positioned(:var value): { ... }
+///   }
+///   ```
+///
+/// Deeply immutable.
+sealed class StackChild {
+  /// Constant indicating an unknown `StackChild`.
+  /// Default value for fields of type `StackChild`.
+  static const StackChild unknown = StackChild_unknown._instance;
+
+  /// Create a 'flow' variant wrapping around the given value.
+  ///
+  /// Sized and aligned by the stack.
+  factory StackChild.wrapFlow(PresentationNode value) =>
+      StackChild_flowWrapper._(value);
+
+  /// Same as `wrapFlow(PresentationNode(...))`.
+  factory StackChild.createFlow({
+    required _core.String nodeId,
+    required PresentationProperties_orMutable properties,
+    required PresentationElement? element,
+    required PresentationHeader_orMutable? header,
+  }) => StackChild.wrapFlow(
+    PresentationNode(
+      nodeId: nodeId,
+      properties: properties,
+      element: element,
+      header: header,
+    ),
+  );
+
+  /// Create a 'positioned' variant wrapping around the given value.
+  factory StackChild.wrapPositioned(PositionedStackChild value) =>
+      StackChild_positionedWrapper._(value);
+
+  /// Same as `wrapPositioned(PositionedStackChild(...))`.
+  factory StackChild.createPositioned({
+    required PresentationNode_orMutable child,
+    required PresentationNumber? top,
+    required PresentationNumber? start,
+    required PresentationNumber? end,
+    required PresentationNumber? bottom,
+    required PresentationNumber? width,
+    required PresentationNumber? height,
+    required PresentationTransitionPolicy_orMutable? transition,
+  }) => StackChild.wrapPositioned(
+    PositionedStackChild(
+      child: child,
+      top: top,
+      start: start,
+      end: end,
+      bottom: bottom,
+      width: width,
+      height: height,
+      transition: transition,
+    ),
+  );
+
+  /// Returns the kind of variant held by this StackChild.
+  StackChild_kind get kind;
+
+  /// Serializer for `StackChild` instances.
+  static _skir.EnumSerializer<StackChild> get serializer {
+    if (_serializerBuilder.mustInitialize()) {
+      _serializerBuilder.addWrapperVariant(
+        1,
+        "flow",
+        "wrapFlow",
+        PresentationNode.serializer,
+        "Sized and aligned by the stack.",
+        StackChild_flowWrapper._,
+        (it) => it.value,
+        ordinal: StackChild_kind.flowWrapper._ordinal,
+      );
+      _serializerBuilder.addWrapperVariant(
+        2,
+        "positioned",
+        "wrapPositioned",
+        PositionedStackChild.serializer,
+        "",
+        StackChild_positionedWrapper._,
+        (it) => it.value,
+        ordinal: StackChild_kind.positionedWrapper._ordinal,
+      );
+      _serializerBuilder.finalize();
+    }
+    return _serializerBuilder.serializer;
+  }
+
+  static final _serializerBuilder = _skir.internal__EnumSerializerBuilder
+      .create(
+        recordId: "editor/v1/presentation.skir:StackChild",
+        doc: "",
+        unknownInstance: StackChild_unknown._instance,
+        enumInstance: StackChild.unknown,
+        getOrdinal: (it) => it.kind._ordinal,
+        wrapUnrecognized: StackChild_unknown._unrecognized,
+        getUnrecognized: (it) => it._u,
+      );
+}
+
+/// The kind of variant held by a `StackChild`.
+enum StackChild_kind {
+  unknown(0),
+  flowWrapper(1),
+  positionedWrapper(2);
+
+  final _core.int _ordinal;
+
+  const StackChild_kind(this._ordinal);
+}
+
+final class StackChild_unknown implements StackChild {
+  static const _instance = StackChild_unknown._();
+
+  final _skir.internal__UnrecognizedVariant? _u;
+
+  const StackChild_unknown._() : _u = null;
+  StackChild_unknown._unrecognized(this._u);
+
+  @_core.override
+  StackChild_kind get kind => StackChild_kind.unknown;
+  @_core.override
+  _core.bool operator ==(other) => other is StackChild_unknown;
+  @_core.override
+  _core.int get hashCode => 8118964;
+  @_core.override
+  _core.String toString() =>
+      _skir.internal__stringify(this, StackChild.serializer);
+}
+
+sealed class _StackChild_wrapper implements StackChild {
+  _core.dynamic get value;
+
+  @_core.override
+  _core.bool operator ==(other) {
+    if (other is! _StackChild_wrapper) return false;
+    return kind == other.kind && value == other.value;
+  }
+
+  @_core.override
+  _core.int get hashCode => (kind._ordinal * 31) ^ value.hashCode;
+
+  @_core.override
+  _core.String toString() =>
+      _skir.internal__stringify(this, StackChild.serializer);
+}
+
+final class StackChild_flowWrapper extends _StackChild_wrapper {
+  final PresentationNode value;
+
+  StackChild_flowWrapper._(this.value);
+
+  @_core.override
+  StackChild_kind get kind => StackChild_kind.flowWrapper;
+}
+
+final class StackChild_positionedWrapper extends _StackChild_wrapper {
+  final PositionedStackChild value;
+
+  StackChild_positionedWrapper._(this.value);
+
+  @_core.override
+  StackChild_kind get kind => StackChild_kind.positionedWrapper;
+}
+
+// -----------------------------------------------------------------------------
+// struct PositionedStackChild
+// -----------------------------------------------------------------------------
+
+sealed class PositionedStackChild_orMutable {
+  PresentationNode_orMutable get child;
+  PresentationNumber? get top;
+  PresentationNumber? get start;
+  PresentationNumber? get end;
+  PresentationNumber? get bottom;
+  PresentationNumber? get width;
+  PresentationNumber? get height;
+
+  /// Animates changes of the insets and sizes; they apply at once when absent.
+  PresentationTransitionPolicy_orMutable? get transition;
+
+  PositionedStackChild toFrozen();
+}
+
+/// Insets and sizes in logical pixels relative to the stack. At most two of `start`, `end`
+/// and `width` apply horizontally, and at most two of `top`, `bottom` and `height` vertically.
+///
+/// Deeply immutable.
+final class PositionedStackChild implements PositionedStackChild_orMutable {
+  @_core.override
+  final PresentationNode child;
+  @_core.override
+  final PresentationNumber? top;
+  @_core.override
+  final PresentationNumber? start;
+  @_core.override
+  final PresentationNumber? end;
+  @_core.override
+  final PresentationNumber? bottom;
+  @_core.override
+  final PresentationNumber? width;
+  @_core.override
+  final PresentationNumber? height;
+
+  /// Animates changes of the insets and sizes; they apply at once when absent.
+  @_core.override
+  final PresentationTransitionPolicy? transition;
+  _skir.internal__UnrecognizedFields? _u;
+
+  factory PositionedStackChild({
+    required PresentationNode_orMutable child,
+    required PresentationNumber? top,
+    required PresentationNumber? start,
+    required PresentationNumber? end,
+    required PresentationNumber? bottom,
+    required PresentationNumber? width,
+    required PresentationNumber? height,
+    required PresentationTransitionPolicy_orMutable? transition,
+  }) => PositionedStackChild._(
+    child.toFrozen(),
+    top,
+    start,
+    end,
+    bottom,
+    width,
+    height,
+    (transition != null) ? transition.toFrozen() : null,
+  );
+
+  PositionedStackChild._(
+    this.child,
+    this.top,
+    this.start,
+    this.end,
+    this.bottom,
+    this.width,
+    this.height,
+    this.transition,
+  );
+
+  /// Default instance with all fields set to their default values.
+  static final defaultInstance = PositionedStackChild._(
+    PresentationNode.defaultInstance,
+    null,
+    null,
+    null,
+    null,
+    null,
+    null,
+    null,
+  );
+
+  /// Returns a new mutable instance.
+  /// Fields are initialized to their default values.
+  static PositionedStackChild_mutable mutable() =>
+      PositionedStackChild_mutable._(
+        PresentationNode.defaultInstance,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+      );
+
+  /// Returns this instance (no-op).
+  @_core.Deprecated("This instance is already frozen.")
+  @_core.override
+  PositionedStackChild toFrozen() => this;
+
+  /// Returns a mutable shallow copy of this instance.
+  PositionedStackChild_mutable toMutable() => PositionedStackChild_mutable._(
+    this.child,
+    this.top,
+    this.start,
+    this.end,
+    this.bottom,
+    this.width,
+    this.height,
+    this.transition,
+  );
+
+  @_core.override
+  _core.bool operator ==(other) {
+    if (_core.identical(this, other)) return true;
+    if (other is! PositionedStackChild) return false;
+    return _skir.internal__listEquality.equals(
+      _equality_proxy,
+      other._equality_proxy,
+    );
+  }
+
+  @_core.override
+  _core.int get hashCode => _skir.internal__listEquality.hash(_equality_proxy);
+
+  _core.List get _equality_proxy => [
+    this.child,
+    this.top,
+    this.start,
+    this.end,
+    this.bottom,
+    this.width,
+    this.height,
+    this.transition,
+  ];
+
+  @_core.override
+  _core.String toString() => _skir.internal__stringify(this, serializer);
+
+  /// Serializer for `PositionedStackChild` instances.
+  static _skir.StructSerializer<
+    PositionedStackChild,
+    PositionedStackChild_mutable
+  >
+  get serializer {
+    if (_serializerBuilder.mustInitialize()) {
+      _serializerBuilder.addField(
+        "child",
+        "child",
+        0,
+        PresentationNode.serializer,
+        "",
+        (it) => it.child,
+        (it, v) => it.child = v,
+      );
+      _serializerBuilder.addField(
+        "top",
+        "top",
+        1,
+        _skir.Serializers.optional(PresentationNumber.serializer),
+        "",
+        (it) => it.top,
+        (it, v) => it.top = v,
+      );
+      _serializerBuilder.addField(
+        "start",
+        "start",
+        2,
+        _skir.Serializers.optional(PresentationNumber.serializer),
+        "",
+        (it) => it.start,
+        (it, v) => it.start = v,
+      );
+      _serializerBuilder.addField(
+        "end",
+        "end",
+        3,
+        _skir.Serializers.optional(PresentationNumber.serializer),
+        "",
+        (it) => it.end,
+        (it, v) => it.end = v,
+      );
+      _serializerBuilder.addField(
+        "bottom",
+        "bottom",
+        4,
+        _skir.Serializers.optional(PresentationNumber.serializer),
+        "",
+        (it) => it.bottom,
+        (it, v) => it.bottom = v,
+      );
+      _serializerBuilder.addField(
+        "width",
+        "width",
+        5,
+        _skir.Serializers.optional(PresentationNumber.serializer),
+        "",
+        (it) => it.width,
+        (it, v) => it.width = v,
+      );
+      _serializerBuilder.addField(
+        "height",
+        "height",
+        6,
+        _skir.Serializers.optional(PresentationNumber.serializer),
+        "",
+        (it) => it.height,
+        (it, v) => it.height = v,
+      );
+      _serializerBuilder.addField(
+        "transition",
+        "transition",
+        7,
+        _skir.Serializers.optional(PresentationTransitionPolicy.serializer),
+        "Animates changes of the insets and sizes; they apply at once when absent.",
+        (it) => it.transition,
+        (it, v) => it.transition = v,
+      );
+      _serializerBuilder.finalize();
+    }
+    return _serializerBuilder.serializer;
+  }
+
+  static final _serializerBuilder = _skir.internal__StructSerializerBuilder(
+    recordId: "editor/v1/presentation.skir:PositionedStackChild",
+    doc: "Insets and sizes in logical pixels relative to the stack. At most two of [start], [end]\nand [width] apply horizontally, and at most two of [top], [bottom] and [height] vertically.",
+    defaultInstance: defaultInstance,
+    newMutable: (it) => (it != null) ? it.toMutable() : mutable(),
+    toFrozen: (PositionedStackChild_mutable it) => it.toFrozen(),
+    getUnrecognizedFields: (it) => it._u,
+    setUnrecognizedFields: (it, u) => it._u = u,
+  );
+}
+
+/// Mutable version of [PositionedStackChild].
+final class PositionedStackChild_mutable
+    implements PositionedStackChild_orMutable {
+  PresentationNode_orMutable child;
+  PresentationNumber? top;
+  PresentationNumber? start;
+  PresentationNumber? end;
+  PresentationNumber? bottom;
+  PresentationNumber? width;
+  PresentationNumber? height;
+
+  /// Animates changes of the insets and sizes; they apply at once when absent.
+  PresentationTransitionPolicy_orMutable? transition;
+  _skir.internal__UnrecognizedFields? _u;
+
+  PositionedStackChild_mutable._(
+    this.child,
+    this.top,
+    this.start,
+    this.end,
+    this.bottom,
+    this.width,
+    this.height,
+    this.transition,
+  );
+
+  /// Returns a deeply immutable copy of this instance.
+  @_core.override
+  PositionedStackChild toFrozen() => PositionedStackChild(
+    child: this.child,
+    top: this.top,
+    start: this.start,
+    end: this.end,
+    bottom: this.bottom,
+    width: this.width,
+    height: this.height,
+    transition: this.transition,
+  ).._u = this._u;
+}
+
+// -----------------------------------------------------------------------------
+// struct SizeLayout
+// -----------------------------------------------------------------------------
+
+sealed class SizeLayout_orMutable {
+  PresentationNode_orMutable get child;
+  _lib_editor_v1_expression.ExpressionNode? get width;
+  _lib_editor_v1_expression.ExpressionNode? get height;
+  _lib_editor_v1_expression.ExpressionNode? get minimumWidth;
+  _lib_editor_v1_expression.ExpressionNode? get maximumWidth;
+  _lib_editor_v1_expression.ExpressionNode? get minimumHeight;
+  _lib_editor_v1_expression.ExpressionNode? get maximumHeight;
+
+  SizeLayout toFrozen();
+}
+
+/// Constrains `child` in logical pixels. An exact width or height overrides its bounds.
+///
+/// Deeply immutable.
+final class SizeLayout implements SizeLayout_orMutable {
+  @_core.override
+  final PresentationNode child;
+  @_core.override
+  final _lib_editor_v1_expression.ExpressionNode? width;
+  @_core.override
+  final _lib_editor_v1_expression.ExpressionNode? height;
+  @_core.override
+  final _lib_editor_v1_expression.ExpressionNode? minimumWidth;
+  @_core.override
+  final _lib_editor_v1_expression.ExpressionNode? maximumWidth;
+  @_core.override
+  final _lib_editor_v1_expression.ExpressionNode? minimumHeight;
+  @_core.override
+  final _lib_editor_v1_expression.ExpressionNode? maximumHeight;
+  _skir.internal__UnrecognizedFields? _u;
+
+  factory SizeLayout({
+    required PresentationNode_orMutable child,
+    required _lib_editor_v1_expression.ExpressionNode? width,
+    required _lib_editor_v1_expression.ExpressionNode? height,
+    required _lib_editor_v1_expression.ExpressionNode? minimumWidth,
+    required _lib_editor_v1_expression.ExpressionNode? maximumWidth,
+    required _lib_editor_v1_expression.ExpressionNode? minimumHeight,
+    required _lib_editor_v1_expression.ExpressionNode? maximumHeight,
+  }) => SizeLayout._(
+    child.toFrozen(),
+    width,
+    height,
+    minimumWidth,
+    maximumWidth,
+    minimumHeight,
+    maximumHeight,
+  );
+
+  SizeLayout._(
+    this.child,
+    this.width,
+    this.height,
+    this.minimumWidth,
+    this.maximumWidth,
+    this.minimumHeight,
+    this.maximumHeight,
+  );
+
+  /// Default instance with all fields set to their default values.
+  static final defaultInstance = SizeLayout._(
+    PresentationNode.defaultInstance,
+    null,
+    null,
+    null,
+    null,
+    null,
+    null,
+  );
+
+  /// Returns a new mutable instance.
+  /// Fields are initialized to their default values.
+  static SizeLayout_mutable mutable() => SizeLayout_mutable._(
+    PresentationNode.defaultInstance,
+    null,
+    null,
+    null,
+    null,
+    null,
+    null,
+  );
+
+  /// Returns this instance (no-op).
+  @_core.Deprecated("This instance is already frozen.")
+  @_core.override
+  SizeLayout toFrozen() => this;
+
+  /// Returns a mutable shallow copy of this instance.
+  SizeLayout_mutable toMutable() => SizeLayout_mutable._(
+    this.child,
+    this.width,
+    this.height,
+    this.minimumWidth,
+    this.maximumWidth,
+    this.minimumHeight,
+    this.maximumHeight,
+  );
+
+  @_core.override
+  _core.bool operator ==(other) {
+    if (_core.identical(this, other)) return true;
+    if (other is! SizeLayout) return false;
+    return _skir.internal__listEquality.equals(
+      _equality_proxy,
+      other._equality_proxy,
+    );
+  }
+
+  @_core.override
+  _core.int get hashCode => _skir.internal__listEquality.hash(_equality_proxy);
+
+  _core.List get _equality_proxy => [
+    this.child,
+    this.width,
+    this.height,
+    this.minimumWidth,
+    this.maximumWidth,
+    this.minimumHeight,
+    this.maximumHeight,
+  ];
+
+  @_core.override
+  _core.String toString() => _skir.internal__stringify(this, serializer);
+
+  /// Serializer for `SizeLayout` instances.
+  static _skir.StructSerializer<SizeLayout, SizeLayout_mutable> get serializer {
+    if (_serializerBuilder.mustInitialize()) {
+      _serializerBuilder.addField(
+        "child",
+        "child",
+        0,
+        PresentationNode.serializer,
+        "",
+        (it) => it.child,
+        (it, v) => it.child = v,
+      );
+      _serializerBuilder.addField(
+        "width",
+        "width",
+        1,
+        _skir.Serializers.optional(
+          _lib_editor_v1_expression.ExpressionNode.serializer,
+        ),
+        "",
+        (it) => it.width,
+        (it, v) => it.width = v,
+      );
+      _serializerBuilder.addField(
+        "height",
+        "height",
+        2,
+        _skir.Serializers.optional(
+          _lib_editor_v1_expression.ExpressionNode.serializer,
+        ),
+        "",
+        (it) => it.height,
+        (it, v) => it.height = v,
+      );
+      _serializerBuilder.addField(
+        "minimum_width",
+        "minimumWidth",
+        3,
+        _skir.Serializers.optional(
+          _lib_editor_v1_expression.ExpressionNode.serializer,
+        ),
+        "",
+        (it) => it.minimumWidth,
+        (it, v) => it.minimumWidth = v,
+      );
+      _serializerBuilder.addField(
+        "maximum_width",
+        "maximumWidth",
+        4,
+        _skir.Serializers.optional(
+          _lib_editor_v1_expression.ExpressionNode.serializer,
+        ),
+        "",
+        (it) => it.maximumWidth,
+        (it, v) => it.maximumWidth = v,
+      );
+      _serializerBuilder.addField(
+        "minimum_height",
+        "minimumHeight",
+        5,
+        _skir.Serializers.optional(
+          _lib_editor_v1_expression.ExpressionNode.serializer,
+        ),
+        "",
+        (it) => it.minimumHeight,
+        (it, v) => it.minimumHeight = v,
+      );
+      _serializerBuilder.addField(
+        "maximum_height",
+        "maximumHeight",
+        6,
+        _skir.Serializers.optional(
+          _lib_editor_v1_expression.ExpressionNode.serializer,
+        ),
+        "",
+        (it) => it.maximumHeight,
+        (it, v) => it.maximumHeight = v,
+      );
+      _serializerBuilder.finalize();
+    }
+    return _serializerBuilder.serializer;
+  }
+
+  static final _serializerBuilder = _skir.internal__StructSerializerBuilder(
+    recordId: "editor/v1/presentation.skir:SizeLayout",
+    doc: "Constrains [child] in logical pixels. An exact width or height overrides its bounds.",
+    defaultInstance: defaultInstance,
+    newMutable: (it) => (it != null) ? it.toMutable() : mutable(),
+    toFrozen: (SizeLayout_mutable it) => it.toFrozen(),
+    getUnrecognizedFields: (it) => it._u,
+    setUnrecognizedFields: (it, u) => it._u = u,
+  );
+}
+
+/// Mutable version of [SizeLayout].
+final class SizeLayout_mutable implements SizeLayout_orMutable {
+  PresentationNode_orMutable child;
+  _lib_editor_v1_expression.ExpressionNode? width;
+  _lib_editor_v1_expression.ExpressionNode? height;
+  _lib_editor_v1_expression.ExpressionNode? minimumWidth;
+  _lib_editor_v1_expression.ExpressionNode? maximumWidth;
+  _lib_editor_v1_expression.ExpressionNode? minimumHeight;
+  _lib_editor_v1_expression.ExpressionNode? maximumHeight;
+  _skir.internal__UnrecognizedFields? _u;
+
+  SizeLayout_mutable._(
+    this.child,
+    this.width,
+    this.height,
+    this.minimumWidth,
+    this.maximumWidth,
+    this.minimumHeight,
+    this.maximumHeight,
+  );
+
+  /// Returns a deeply immutable copy of this instance.
+  @_core.override
+  SizeLayout toFrozen() => SizeLayout(
+    child: this.child,
+    width: this.width,
+    height: this.height,
+    minimumWidth: this.minimumWidth,
+    maximumWidth: this.maximumWidth,
+    minimumHeight: this.minimumHeight,
+    maximumHeight: this.maximumHeight,
+  ).._u = this._u;
+}
+
+// -----------------------------------------------------------------------------
+// struct TransformLayout
+// -----------------------------------------------------------------------------
+
+sealed class TransformLayout_orMutable {
+  PresentationNode_orMutable get child;
+  PresentationAlignment get origin;
+  _core.double get perspective;
+  PresentationNumber? get scale;
+  PresentationNumber? get rotateX;
+  PresentationNumber? get rotateY;
+  PresentationNumber? get rotateZ;
+  PresentationNumber? get translateX;
+  PresentationNumber? get translateY;
+
+  /// Animates changes of the transform; they apply at once when absent.
+  PresentationTransitionPolicy_orMutable? get transition;
+
+  TransformLayout toFrozen();
+}
+
+/// Paints `child` transformed around `origin`. Paint only: layout and the host hit region keep
+/// the untransformed bounds. Rotations are in turns, translations in logical pixels, and
+/// `perspective` is the Matrix4 entry (3, 2); zero keeps the transform flat.
+///
+/// Deeply immutable.
+final class TransformLayout implements TransformLayout_orMutable {
+  @_core.override
+  final PresentationNode child;
+  @_core.override
+  final PresentationAlignment origin;
+  @_core.override
+  final _core.double perspective;
+  @_core.override
+  final PresentationNumber? scale;
+  @_core.override
+  final PresentationNumber? rotateX;
+  @_core.override
+  final PresentationNumber? rotateY;
+  @_core.override
+  final PresentationNumber? rotateZ;
+  @_core.override
+  final PresentationNumber? translateX;
+  @_core.override
+  final PresentationNumber? translateY;
+
+  /// Animates changes of the transform; they apply at once when absent.
+  @_core.override
+  final PresentationTransitionPolicy? transition;
+  _skir.internal__UnrecognizedFields? _u;
+
+  factory TransformLayout({
+    required PresentationNode_orMutable child,
+    required PresentationAlignment origin,
+    required _core.double perspective,
+    required PresentationNumber? scale,
+    required PresentationNumber? rotateX,
+    required PresentationNumber? rotateY,
+    required PresentationNumber? rotateZ,
+    required PresentationNumber? translateX,
+    required PresentationNumber? translateY,
+    required PresentationTransitionPolicy_orMutable? transition,
+  }) => TransformLayout._(
+    child.toFrozen(),
+    origin,
+    perspective,
+    scale,
+    rotateX,
+    rotateY,
+    rotateZ,
+    translateX,
+    translateY,
+    (transition != null) ? transition.toFrozen() : null,
+  );
+
+  TransformLayout._(
+    this.child,
+    this.origin,
+    this.perspective,
+    this.scale,
+    this.rotateX,
+    this.rotateY,
+    this.rotateZ,
+    this.translateX,
+    this.translateY,
+    this.transition,
+  );
+
+  /// Default instance with all fields set to their default values.
+  static final defaultInstance = TransformLayout._(
+    PresentationNode.defaultInstance,
+    PresentationAlignment.unknown,
+    0.0,
+    null,
+    null,
+    null,
+    null,
+    null,
+    null,
+    null,
+  );
+
+  /// Returns a new mutable instance.
+  /// Fields are initialized to their default values.
+  static TransformLayout_mutable mutable() => TransformLayout_mutable._(
+    PresentationNode.defaultInstance,
+    PresentationAlignment.unknown,
+    0.0,
+    null,
+    null,
+    null,
+    null,
+    null,
+    null,
+    null,
+  );
+
+  /// Returns this instance (no-op).
+  @_core.Deprecated("This instance is already frozen.")
+  @_core.override
+  TransformLayout toFrozen() => this;
+
+  /// Returns a mutable shallow copy of this instance.
+  TransformLayout_mutable toMutable() => TransformLayout_mutable._(
+    this.child,
+    this.origin,
+    this.perspective,
+    this.scale,
+    this.rotateX,
+    this.rotateY,
+    this.rotateZ,
+    this.translateX,
+    this.translateY,
+    this.transition,
+  );
+
+  @_core.override
+  _core.bool operator ==(other) {
+    if (_core.identical(this, other)) return true;
+    if (other is! TransformLayout) return false;
+    return _skir.internal__listEquality.equals(
+      _equality_proxy,
+      other._equality_proxy,
+    );
+  }
+
+  @_core.override
+  _core.int get hashCode => _skir.internal__listEquality.hash(_equality_proxy);
+
+  _core.List get _equality_proxy => [
+    this.child,
+    this.origin,
+    this.perspective,
+    this.scale,
+    this.rotateX,
+    this.rotateY,
+    this.rotateZ,
+    this.translateX,
+    this.translateY,
+    this.transition,
+  ];
+
+  @_core.override
+  _core.String toString() => _skir.internal__stringify(this, serializer);
+
+  /// Serializer for `TransformLayout` instances.
+  static _skir.StructSerializer<TransformLayout, TransformLayout_mutable>
+  get serializer {
+    if (_serializerBuilder.mustInitialize()) {
+      _serializerBuilder.addField(
+        "child",
+        "child",
+        0,
+        PresentationNode.serializer,
+        "",
+        (it) => it.child,
+        (it, v) => it.child = v,
+      );
+      _serializerBuilder.addField(
+        "origin",
+        "origin",
+        1,
+        PresentationAlignment.serializer,
+        "",
+        (it) => it.origin,
+        (it, v) => it.origin = v,
+      );
+      _serializerBuilder.addField(
+        "perspective",
+        "perspective",
+        2,
+        _skir.Serializers.float64,
+        "",
+        (it) => it.perspective,
+        (it, v) => it.perspective = v,
+      );
+      _serializerBuilder.addField(
+        "scale",
+        "scale",
+        3,
+        _skir.Serializers.optional(PresentationNumber.serializer),
+        "",
+        (it) => it.scale,
+        (it, v) => it.scale = v,
+      );
+      _serializerBuilder.addField(
+        "rotate_x",
+        "rotateX",
+        4,
+        _skir.Serializers.optional(PresentationNumber.serializer),
+        "",
+        (it) => it.rotateX,
+        (it, v) => it.rotateX = v,
+      );
+      _serializerBuilder.addField(
+        "rotate_y",
+        "rotateY",
+        5,
+        _skir.Serializers.optional(PresentationNumber.serializer),
+        "",
+        (it) => it.rotateY,
+        (it, v) => it.rotateY = v,
+      );
+      _serializerBuilder.addField(
+        "rotate_z",
+        "rotateZ",
+        6,
+        _skir.Serializers.optional(PresentationNumber.serializer),
+        "",
+        (it) => it.rotateZ,
+        (it, v) => it.rotateZ = v,
+      );
+      _serializerBuilder.addField(
+        "translate_x",
+        "translateX",
+        7,
+        _skir.Serializers.optional(PresentationNumber.serializer),
+        "",
+        (it) => it.translateX,
+        (it, v) => it.translateX = v,
+      );
+      _serializerBuilder.addField(
+        "translate_y",
+        "translateY",
+        8,
+        _skir.Serializers.optional(PresentationNumber.serializer),
+        "",
+        (it) => it.translateY,
+        (it, v) => it.translateY = v,
+      );
+      _serializerBuilder.addField(
+        "transition",
+        "transition",
+        9,
+        _skir.Serializers.optional(PresentationTransitionPolicy.serializer),
+        "Animates changes of the transform; they apply at once when absent.",
+        (it) => it.transition,
+        (it, v) => it.transition = v,
+      );
+      _serializerBuilder.finalize();
+    }
+    return _serializerBuilder.serializer;
+  }
+
+  static final _serializerBuilder = _skir.internal__StructSerializerBuilder(
+    recordId: "editor/v1/presentation.skir:TransformLayout",
+    doc: "Paints [child] transformed around [origin]. Paint only: layout and the host hit region keep\nthe untransformed bounds. Rotations are in turns, translations in logical pixels, and\n[perspective] is the Matrix4 entry (3, 2); zero keeps the transform flat.",
+    defaultInstance: defaultInstance,
+    newMutable: (it) => (it != null) ? it.toMutable() : mutable(),
+    toFrozen: (TransformLayout_mutable it) => it.toFrozen(),
+    getUnrecognizedFields: (it) => it._u,
+    setUnrecognizedFields: (it, u) => it._u = u,
+  );
+}
+
+/// Mutable version of [TransformLayout].
+final class TransformLayout_mutable implements TransformLayout_orMutable {
+  PresentationNode_orMutable child;
+  PresentationAlignment origin;
+  _core.double perspective;
+  PresentationNumber? scale;
+  PresentationNumber? rotateX;
+  PresentationNumber? rotateY;
+  PresentationNumber? rotateZ;
+  PresentationNumber? translateX;
+  PresentationNumber? translateY;
+
+  /// Animates changes of the transform; they apply at once when absent.
+  PresentationTransitionPolicy_orMutable? transition;
+  _skir.internal__UnrecognizedFields? _u;
+
+  TransformLayout_mutable._(
+    this.child,
+    this.origin,
+    this.perspective,
+    this.scale,
+    this.rotateX,
+    this.rotateY,
+    this.rotateZ,
+    this.translateX,
+    this.translateY,
+    this.transition,
+  );
+
+  /// Returns a deeply immutable copy of this instance.
+  @_core.override
+  TransformLayout toFrozen() => TransformLayout(
+    child: this.child,
+    origin: this.origin,
+    perspective: this.perspective,
+    scale: this.scale,
+    rotateX: this.rotateX,
+    rotateY: this.rotateY,
+    rotateZ: this.rotateZ,
+    translateX: this.translateX,
+    translateY: this.translateY,
+    transition: this.transition,
   ).._u = this._u;
 }

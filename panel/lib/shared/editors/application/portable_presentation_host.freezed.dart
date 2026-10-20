@@ -1788,7 +1788,7 @@ as String?,
 /// @nodoc
 mixin _$PortableResourceProjection {
 
- skir.ResourceId get resource; skir.TypeSelection get configuration; String get label; skir.DataValue get value; List<PortablePresentationDiagnostic> get diagnostics; PortableDiagnosticFallback get diagnosticFallback;
+ skir.ResourceId get resource; skir.TypeSelection get configuration; ResourceAppearance get appearance; skir.DataValue get value; List<PortablePresentationDiagnostic> get diagnostics; PortableDiagnosticFallback get diagnosticFallback;
 /// Create a copy of PortableResourceProjection
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -1800,20 +1800,20 @@ $PortableResourceProjectionCopyWith<PortableResourceProjection> get copyWith => 
 @override
 bool operator ==(Object other) {
   final _this = this as PortableResourceProjection;
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is PortableResourceProjection&&(identical(other.resource, _this.resource) || other.resource == _this.resource)&&(identical(other.configuration, _this.configuration) || other.configuration == _this.configuration)&&(identical(other.label, _this.label) || other.label == _this.label)&&(identical(other.value, _this.value) || other.value == _this.value)&&const DeepCollectionEquality().equals(other.diagnostics, _this.diagnostics)&&(identical(other.diagnosticFallback, _this.diagnosticFallback) || other.diagnosticFallback == _this.diagnosticFallback));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is PortableResourceProjection&&(identical(other.resource, _this.resource) || other.resource == _this.resource)&&(identical(other.configuration, _this.configuration) || other.configuration == _this.configuration)&&(identical(other.appearance, _this.appearance) || other.appearance == _this.appearance)&&(identical(other.value, _this.value) || other.value == _this.value)&&const DeepCollectionEquality().equals(other.diagnostics, _this.diagnostics)&&(identical(other.diagnosticFallback, _this.diagnosticFallback) || other.diagnosticFallback == _this.diagnosticFallback));
 }
 
 
 @override
 int get hashCode {
   final _this = this as PortableResourceProjection;
-  return Object.hash(runtimeType,_this.resource,_this.configuration,_this.label,_this.value,const DeepCollectionEquality().hash(_this.diagnostics),_this.diagnosticFallback);
+  return Object.hash(runtimeType,_this.resource,_this.configuration,_this.appearance,_this.value,const DeepCollectionEquality().hash(_this.diagnostics),_this.diagnosticFallback);
 }
 
 @override
 String toString() {
   final _this = this as PortableResourceProjection;
-  return 'PortableResourceProjection(resource: ${_this.resource}, configuration: ${_this.configuration}, label: ${_this.label}, value: ${_this.value}, diagnostics: ${_this.diagnostics}, diagnosticFallback: ${_this.diagnosticFallback})';
+  return 'PortableResourceProjection(resource: ${_this.resource}, configuration: ${_this.configuration}, appearance: ${_this.appearance}, value: ${_this.value}, diagnostics: ${_this.diagnostics}, diagnosticFallback: ${_this.diagnosticFallback})';
 }
 
 
@@ -1824,11 +1824,11 @@ abstract mixin class $PortableResourceProjectionCopyWith<$Res>  {
   factory $PortableResourceProjectionCopyWith(PortableResourceProjection value, $Res Function(PortableResourceProjection) _then) = _$PortableResourceProjectionCopyWithImpl;
 @useResult
 $Res call({
- skir.ResourceId resource, skir.TypeSelection configuration, String label, skir.DataValue value, List<PortablePresentationDiagnostic> diagnostics, PortableDiagnosticFallback diagnosticFallback
+ skir.ResourceId resource, skir.TypeSelection configuration, ResourceAppearance appearance, skir.DataValue value, List<PortablePresentationDiagnostic> diagnostics, PortableDiagnosticFallback diagnosticFallback
 });
 
 
-
+$ResourceAppearanceCopyWith<$Res> get appearance;
 
 }
 /// @nodoc
@@ -1841,18 +1841,27 @@ class _$PortableResourceProjectionCopyWithImpl<$Res>
 
 /// Create a copy of PortableResourceProjection
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? resource = null,Object? configuration = null,Object? label = null,Object? value = null,Object? diagnostics = null,Object? diagnosticFallback = null,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? resource = null,Object? configuration = null,Object? appearance = null,Object? value = null,Object? diagnostics = null,Object? diagnosticFallback = null,}) {
   return _then(PortableResourceProjection(
 resource: null == resource ? _self.resource : resource // ignore: cast_nullable_to_non_nullable
 as skir.ResourceId,configuration: null == configuration ? _self.configuration : configuration // ignore: cast_nullable_to_non_nullable
-as skir.TypeSelection,label: null == label ? _self.label : label // ignore: cast_nullable_to_non_nullable
-as String,value: null == value ? _self.value : value // ignore: cast_nullable_to_non_nullable
+as skir.TypeSelection,appearance: null == appearance ? _self.appearance : appearance // ignore: cast_nullable_to_non_nullable
+as ResourceAppearance,value: null == value ? _self.value : value // ignore: cast_nullable_to_non_nullable
 as skir.DataValue,diagnostics: null == diagnostics ? _self.diagnostics : diagnostics // ignore: cast_nullable_to_non_nullable
 as List<PortablePresentationDiagnostic>,diagnosticFallback: null == diagnosticFallback ? _self.diagnosticFallback : diagnosticFallback // ignore: cast_nullable_to_non_nullable
 as PortableDiagnosticFallback,
   ));
 }
-
+/// Create a copy of PortableResourceProjection
+/// with the given fields replaced by the non-null parameter values.
+@override
+@pragma('vm:prefer-inline')
+$ResourceAppearanceCopyWith<$Res> get appearance {
+  
+  return $ResourceAppearanceCopyWith<$Res>(_self.appearance, (value) {
+    return _then(_self.copyWith(appearance: value));
+  });
+}
 }
 
 
@@ -1934,10 +1943,10 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( skir.ResourceId resource,  skir.TypeSelection configuration,  String label,  skir.DataValue value,  List<PortablePresentationDiagnostic> diagnostics,  PortableDiagnosticFallback diagnosticFallback)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( skir.ResourceId resource,  skir.TypeSelection configuration,  ResourceAppearance appearance,  skir.DataValue value,  List<PortablePresentationDiagnostic> diagnostics,  PortableDiagnosticFallback diagnosticFallback)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _PortableResourceProjection() when $default != null:
-return $default(_that.resource,_that.configuration,_that.label,_that.value,_that.diagnostics,_that.diagnosticFallback);case _:
+return $default(_that.resource,_that.configuration,_that.appearance,_that.value,_that.diagnostics,_that.diagnosticFallback);case _:
   return orElse();
 
 }
@@ -1955,10 +1964,10 @@ return $default(_that.resource,_that.configuration,_that.label,_that.value,_that
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( skir.ResourceId resource,  skir.TypeSelection configuration,  String label,  skir.DataValue value,  List<PortablePresentationDiagnostic> diagnostics,  PortableDiagnosticFallback diagnosticFallback)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( skir.ResourceId resource,  skir.TypeSelection configuration,  ResourceAppearance appearance,  skir.DataValue value,  List<PortablePresentationDiagnostic> diagnostics,  PortableDiagnosticFallback diagnosticFallback)  $default,) {final _that = this;
 switch (_that) {
 case _PortableResourceProjection():
-return $default(_that.resource,_that.configuration,_that.label,_that.value,_that.diagnostics,_that.diagnosticFallback);case _:
+return $default(_that.resource,_that.configuration,_that.appearance,_that.value,_that.diagnostics,_that.diagnosticFallback);case _:
   throw StateError('Unexpected subclass');
 
 }
@@ -1975,10 +1984,10 @@ return $default(_that.resource,_that.configuration,_that.label,_that.value,_that
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( skir.ResourceId resource,  skir.TypeSelection configuration,  String label,  skir.DataValue value,  List<PortablePresentationDiagnostic> diagnostics,  PortableDiagnosticFallback diagnosticFallback)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( skir.ResourceId resource,  skir.TypeSelection configuration,  ResourceAppearance appearance,  skir.DataValue value,  List<PortablePresentationDiagnostic> diagnostics,  PortableDiagnosticFallback diagnosticFallback)?  $default,) {final _that = this;
 switch (_that) {
 case _PortableResourceProjection() when $default != null:
-return $default(_that.resource,_that.configuration,_that.label,_that.value,_that.diagnostics,_that.diagnosticFallback);case _:
+return $default(_that.resource,_that.configuration,_that.appearance,_that.value,_that.diagnostics,_that.diagnosticFallback);case _:
   return null;
 
 }
@@ -1990,12 +1999,12 @@ return $default(_that.resource,_that.configuration,_that.label,_that.value,_that
 
 
 class _PortableResourceProjection implements PortableResourceProjection {
-  const _PortableResourceProjection({required this.resource, required this.configuration, required this.label, required this.value,  List<PortablePresentationDiagnostic> diagnostics = const [], this.diagnosticFallback = PortableDiagnosticFallback.presentation}): _diagnostics = diagnostics;
+  const _PortableResourceProjection({required this.resource, required this.configuration, required this.appearance, required this.value,  List<PortablePresentationDiagnostic> diagnostics = const [], this.diagnosticFallback = PortableDiagnosticFallback.presentation}): _diagnostics = diagnostics;
   
 
 @override final  skir.ResourceId resource;
 @override final  skir.TypeSelection configuration;
-@override final  String label;
+@override final  ResourceAppearance appearance;
 @override final  skir.DataValue value;
  final  List<PortablePresentationDiagnostic> _diagnostics;
 @override@JsonKey() List<PortablePresentationDiagnostic> get diagnostics {
@@ -2016,18 +2025,18 @@ _$PortableResourceProjectionCopyWith<_PortableResourceProjection> get copyWith =
 
 @override
 bool operator ==(Object other) {
-    return identical(this, other) || (other.runtimeType == runtimeType&&other is _PortableResourceProjection&&(identical(other.resource, resource) || other.resource == resource)&&(identical(other.configuration, configuration) || other.configuration == configuration)&&(identical(other.label, label) || other.label == label)&&(identical(other.value, value) || other.value == value)&&const DeepCollectionEquality().equals(other.diagnostics, _diagnostics)&&(identical(other.diagnosticFallback, diagnosticFallback) || other.diagnosticFallback == diagnosticFallback));
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is _PortableResourceProjection&&(identical(other.resource, resource) || other.resource == resource)&&(identical(other.configuration, configuration) || other.configuration == configuration)&&(identical(other.appearance, appearance) || other.appearance == appearance)&&(identical(other.value, value) || other.value == value)&&const DeepCollectionEquality().equals(other.diagnostics, _diagnostics)&&(identical(other.diagnosticFallback, diagnosticFallback) || other.diagnosticFallback == diagnosticFallback));
 }
 
 
 @override
 int get hashCode {
-    return Object.hash(runtimeType,resource,configuration,label,value,const DeepCollectionEquality().hash(_diagnostics),diagnosticFallback);
+    return Object.hash(runtimeType,resource,configuration,appearance,value,const DeepCollectionEquality().hash(_diagnostics),diagnosticFallback);
 }
 
 @override
 String toString() {
-    return 'PortableResourceProjection(resource: $resource, configuration: $configuration, label: $label, value: $value, diagnostics: $diagnostics, diagnosticFallback: $diagnosticFallback)';
+    return 'PortableResourceProjection(resource: $resource, configuration: $configuration, appearance: $appearance, value: $value, diagnostics: $diagnostics, diagnosticFallback: $diagnosticFallback)';
 }
 
 
@@ -2038,11 +2047,11 @@ abstract mixin class _$PortableResourceProjectionCopyWith<$Res> implements $Port
   factory _$PortableResourceProjectionCopyWith(_PortableResourceProjection value, $Res Function(_PortableResourceProjection) _then) = __$PortableResourceProjectionCopyWithImpl;
 @override @useResult
 $Res call({
- skir.ResourceId resource, skir.TypeSelection configuration, String label, skir.DataValue value, List<PortablePresentationDiagnostic> diagnostics, PortableDiagnosticFallback diagnosticFallback
+ skir.ResourceId resource, skir.TypeSelection configuration, ResourceAppearance appearance, skir.DataValue value, List<PortablePresentationDiagnostic> diagnostics, PortableDiagnosticFallback diagnosticFallback
 });
 
 
-
+@override $ResourceAppearanceCopyWith<$Res> get appearance;
 
 }
 /// @nodoc
@@ -2055,19 +2064,28 @@ class __$PortableResourceProjectionCopyWithImpl<$Res>
 
 /// Create a copy of PortableResourceProjection
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? resource = null,Object? configuration = null,Object? label = null,Object? value = null,Object? diagnostics = null,Object? diagnosticFallback = null,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? resource = null,Object? configuration = null,Object? appearance = null,Object? value = null,Object? diagnostics = null,Object? diagnosticFallback = null,}) {
   return _then(_PortableResourceProjection(
 resource: null == resource ? _self.resource : resource // ignore: cast_nullable_to_non_nullable
 as skir.ResourceId,configuration: null == configuration ? _self.configuration : configuration // ignore: cast_nullable_to_non_nullable
-as skir.TypeSelection,label: null == label ? _self.label : label // ignore: cast_nullable_to_non_nullable
-as String,value: null == value ? _self.value : value // ignore: cast_nullable_to_non_nullable
+as skir.TypeSelection,appearance: null == appearance ? _self.appearance : appearance // ignore: cast_nullable_to_non_nullable
+as ResourceAppearance,value: null == value ? _self.value : value // ignore: cast_nullable_to_non_nullable
 as skir.DataValue,diagnostics: null == diagnostics ? _self._diagnostics : diagnostics // ignore: cast_nullable_to_non_nullable
 as List<PortablePresentationDiagnostic>,diagnosticFallback: null == diagnosticFallback ? _self.diagnosticFallback : diagnosticFallback // ignore: cast_nullable_to_non_nullable
 as PortableDiagnosticFallback,
   ));
 }
 
-
+/// Create a copy of PortableResourceProjection
+/// with the given fields replaced by the non-null parameter values.
+@override
+@pragma('vm:prefer-inline')
+$ResourceAppearanceCopyWith<$Res> get appearance {
+  
+  return $ResourceAppearanceCopyWith<$Res>(_self.appearance, (value) {
+    return _then(_self.copyWith(appearance: value));
+  });
+}
 }
 
 /// @nodoc
@@ -2763,7 +2781,7 @@ as int,
 /// @nodoc
 mixin _$PortableResourceMember {
 
- skir.ResourceId get resource; skir.LinkOccurrence get occurrence; skir.DataValue get link; PortableResourceProjection get resourceProjection; ResourceAppearance get appearance; PortableGraphPlacement? get graph;
+ skir.ResourceId get resource; skir.LinkOccurrence get occurrence; skir.DataValue get link; PortableResourceProjection get resourceProjection; PortableGraphPlacement? get graph;
 /// Create a copy of PortableResourceMember
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -2775,20 +2793,20 @@ $PortableResourceMemberCopyWith<PortableResourceMember> get copyWith => _$Portab
 @override
 bool operator ==(Object other) {
   final _this = this as PortableResourceMember;
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is PortableResourceMember&&(identical(other.resource, _this.resource) || other.resource == _this.resource)&&(identical(other.occurrence, _this.occurrence) || other.occurrence == _this.occurrence)&&(identical(other.link, _this.link) || other.link == _this.link)&&(identical(other.resourceProjection, _this.resourceProjection) || other.resourceProjection == _this.resourceProjection)&&(identical(other.appearance, _this.appearance) || other.appearance == _this.appearance)&&(identical(other.graph, _this.graph) || other.graph == _this.graph));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is PortableResourceMember&&(identical(other.resource, _this.resource) || other.resource == _this.resource)&&(identical(other.occurrence, _this.occurrence) || other.occurrence == _this.occurrence)&&(identical(other.link, _this.link) || other.link == _this.link)&&(identical(other.resourceProjection, _this.resourceProjection) || other.resourceProjection == _this.resourceProjection)&&(identical(other.graph, _this.graph) || other.graph == _this.graph));
 }
 
 
 @override
 int get hashCode {
   final _this = this as PortableResourceMember;
-  return Object.hash(runtimeType,_this.resource,_this.occurrence,_this.link,_this.resourceProjection,_this.appearance,_this.graph);
+  return Object.hash(runtimeType,_this.resource,_this.occurrence,_this.link,_this.resourceProjection,_this.graph);
 }
 
 @override
 String toString() {
   final _this = this as PortableResourceMember;
-  return 'PortableResourceMember(resource: ${_this.resource}, occurrence: ${_this.occurrence}, link: ${_this.link}, resourceProjection: ${_this.resourceProjection}, appearance: ${_this.appearance}, graph: ${_this.graph})';
+  return 'PortableResourceMember(resource: ${_this.resource}, occurrence: ${_this.occurrence}, link: ${_this.link}, resourceProjection: ${_this.resourceProjection}, graph: ${_this.graph})';
 }
 
 
@@ -2799,11 +2817,11 @@ abstract mixin class $PortableResourceMemberCopyWith<$Res>  {
   factory $PortableResourceMemberCopyWith(PortableResourceMember value, $Res Function(PortableResourceMember) _then) = _$PortableResourceMemberCopyWithImpl;
 @useResult
 $Res call({
- skir.ResourceId resource, skir.LinkOccurrence occurrence, skir.DataValue link, PortableResourceProjection resourceProjection, ResourceAppearance appearance, PortableGraphPlacement? graph
+ skir.ResourceId resource, skir.LinkOccurrence occurrence, skir.DataValue link, PortableResourceProjection resourceProjection, PortableGraphPlacement? graph
 });
 
 
-$PortableResourceProjectionCopyWith<$Res> get resourceProjection;$ResourceAppearanceCopyWith<$Res> get appearance;$PortableGraphPlacementCopyWith<$Res>? get graph;
+$PortableResourceProjectionCopyWith<$Res> get resourceProjection;$PortableGraphPlacementCopyWith<$Res>? get graph;
 
 }
 /// @nodoc
@@ -2816,14 +2834,13 @@ class _$PortableResourceMemberCopyWithImpl<$Res>
 
 /// Create a copy of PortableResourceMember
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? resource = null,Object? occurrence = null,Object? link = null,Object? resourceProjection = null,Object? appearance = null,Object? graph = freezed,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? resource = null,Object? occurrence = null,Object? link = null,Object? resourceProjection = null,Object? graph = freezed,}) {
   return _then(PortableResourceMember(
 resource: null == resource ? _self.resource : resource // ignore: cast_nullable_to_non_nullable
 as skir.ResourceId,occurrence: null == occurrence ? _self.occurrence : occurrence // ignore: cast_nullable_to_non_nullable
 as skir.LinkOccurrence,link: null == link ? _self.link : link // ignore: cast_nullable_to_non_nullable
 as skir.DataValue,resourceProjection: null == resourceProjection ? _self.resourceProjection : resourceProjection // ignore: cast_nullable_to_non_nullable
-as PortableResourceProjection,appearance: null == appearance ? _self.appearance : appearance // ignore: cast_nullable_to_non_nullable
-as ResourceAppearance,graph: freezed == graph ? _self.graph : graph // ignore: cast_nullable_to_non_nullable
+as PortableResourceProjection,graph: freezed == graph ? _self.graph : graph // ignore: cast_nullable_to_non_nullable
 as PortableGraphPlacement?,
   ));
 }
@@ -2835,15 +2852,6 @@ $PortableResourceProjectionCopyWith<$Res> get resourceProjection {
   
   return $PortableResourceProjectionCopyWith<$Res>(_self.resourceProjection, (value) {
     return _then(_self.copyWith(resourceProjection: value));
-  });
-}/// Create a copy of PortableResourceMember
-/// with the given fields replaced by the non-null parameter values.
-@override
-@pragma('vm:prefer-inline')
-$ResourceAppearanceCopyWith<$Res> get appearance {
-  
-  return $ResourceAppearanceCopyWith<$Res>(_self.appearance, (value) {
-    return _then(_self.copyWith(appearance: value));
   });
 }/// Create a copy of PortableResourceMember
 /// with the given fields replaced by the non-null parameter values.
@@ -2939,10 +2947,10 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( skir.ResourceId resource,  skir.LinkOccurrence occurrence,  skir.DataValue link,  PortableResourceProjection resourceProjection,  ResourceAppearance appearance,  PortableGraphPlacement? graph)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( skir.ResourceId resource,  skir.LinkOccurrence occurrence,  skir.DataValue link,  PortableResourceProjection resourceProjection,  PortableGraphPlacement? graph)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _PortableResourceMember() when $default != null:
-return $default(_that.resource,_that.occurrence,_that.link,_that.resourceProjection,_that.appearance,_that.graph);case _:
+return $default(_that.resource,_that.occurrence,_that.link,_that.resourceProjection,_that.graph);case _:
   return orElse();
 
 }
@@ -2960,10 +2968,10 @@ return $default(_that.resource,_that.occurrence,_that.link,_that.resourceProject
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( skir.ResourceId resource,  skir.LinkOccurrence occurrence,  skir.DataValue link,  PortableResourceProjection resourceProjection,  ResourceAppearance appearance,  PortableGraphPlacement? graph)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( skir.ResourceId resource,  skir.LinkOccurrence occurrence,  skir.DataValue link,  PortableResourceProjection resourceProjection,  PortableGraphPlacement? graph)  $default,) {final _that = this;
 switch (_that) {
 case _PortableResourceMember():
-return $default(_that.resource,_that.occurrence,_that.link,_that.resourceProjection,_that.appearance,_that.graph);case _:
+return $default(_that.resource,_that.occurrence,_that.link,_that.resourceProjection,_that.graph);case _:
   throw StateError('Unexpected subclass');
 
 }
@@ -2980,10 +2988,10 @@ return $default(_that.resource,_that.occurrence,_that.link,_that.resourceProject
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( skir.ResourceId resource,  skir.LinkOccurrence occurrence,  skir.DataValue link,  PortableResourceProjection resourceProjection,  ResourceAppearance appearance,  PortableGraphPlacement? graph)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( skir.ResourceId resource,  skir.LinkOccurrence occurrence,  skir.DataValue link,  PortableResourceProjection resourceProjection,  PortableGraphPlacement? graph)?  $default,) {final _that = this;
 switch (_that) {
 case _PortableResourceMember() when $default != null:
-return $default(_that.resource,_that.occurrence,_that.link,_that.resourceProjection,_that.appearance,_that.graph);case _:
+return $default(_that.resource,_that.occurrence,_that.link,_that.resourceProjection,_that.graph);case _:
   return null;
 
 }
@@ -2994,15 +3002,14 @@ return $default(_that.resource,_that.occurrence,_that.link,_that.resourceProject
 /// @nodoc
 
 
-class _PortableResourceMember implements PortableResourceMember {
-  const _PortableResourceMember({required this.resource, required this.occurrence, required this.link, required this.resourceProjection, required this.appearance, this.graph});
+class _PortableResourceMember extends PortableResourceMember {
+  const _PortableResourceMember({required this.resource, required this.occurrence, required this.link, required this.resourceProjection, this.graph}): super._();
   
 
 @override final  skir.ResourceId resource;
 @override final  skir.LinkOccurrence occurrence;
 @override final  skir.DataValue link;
 @override final  PortableResourceProjection resourceProjection;
-@override final  ResourceAppearance appearance;
 @override final  PortableGraphPlacement? graph;
 
 /// Create a copy of PortableResourceMember
@@ -3015,18 +3022,18 @@ _$PortableResourceMemberCopyWith<_PortableResourceMember> get copyWith => __$Por
 
 @override
 bool operator ==(Object other) {
-    return identical(this, other) || (other.runtimeType == runtimeType&&other is _PortableResourceMember&&(identical(other.resource, resource) || other.resource == resource)&&(identical(other.occurrence, occurrence) || other.occurrence == occurrence)&&(identical(other.link, link) || other.link == link)&&(identical(other.resourceProjection, resourceProjection) || other.resourceProjection == resourceProjection)&&(identical(other.appearance, appearance) || other.appearance == appearance)&&(identical(other.graph, graph) || other.graph == graph));
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is _PortableResourceMember&&(identical(other.resource, resource) || other.resource == resource)&&(identical(other.occurrence, occurrence) || other.occurrence == occurrence)&&(identical(other.link, link) || other.link == link)&&(identical(other.resourceProjection, resourceProjection) || other.resourceProjection == resourceProjection)&&(identical(other.graph, graph) || other.graph == graph));
 }
 
 
 @override
 int get hashCode {
-    return Object.hash(runtimeType,resource,occurrence,link,resourceProjection,appearance,graph);
+    return Object.hash(runtimeType,resource,occurrence,link,resourceProjection,graph);
 }
 
 @override
 String toString() {
-    return 'PortableResourceMember(resource: $resource, occurrence: $occurrence, link: $link, resourceProjection: $resourceProjection, appearance: $appearance, graph: $graph)';
+    return 'PortableResourceMember(resource: $resource, occurrence: $occurrence, link: $link, resourceProjection: $resourceProjection, graph: $graph)';
 }
 
 
@@ -3037,11 +3044,11 @@ abstract mixin class _$PortableResourceMemberCopyWith<$Res> implements $Portable
   factory _$PortableResourceMemberCopyWith(_PortableResourceMember value, $Res Function(_PortableResourceMember) _then) = __$PortableResourceMemberCopyWithImpl;
 @override @useResult
 $Res call({
- skir.ResourceId resource, skir.LinkOccurrence occurrence, skir.DataValue link, PortableResourceProjection resourceProjection, ResourceAppearance appearance, PortableGraphPlacement? graph
+ skir.ResourceId resource, skir.LinkOccurrence occurrence, skir.DataValue link, PortableResourceProjection resourceProjection, PortableGraphPlacement? graph
 });
 
 
-@override $PortableResourceProjectionCopyWith<$Res> get resourceProjection;@override $ResourceAppearanceCopyWith<$Res> get appearance;@override $PortableGraphPlacementCopyWith<$Res>? get graph;
+@override $PortableResourceProjectionCopyWith<$Res> get resourceProjection;@override $PortableGraphPlacementCopyWith<$Res>? get graph;
 
 }
 /// @nodoc
@@ -3054,14 +3061,13 @@ class __$PortableResourceMemberCopyWithImpl<$Res>
 
 /// Create a copy of PortableResourceMember
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? resource = null,Object? occurrence = null,Object? link = null,Object? resourceProjection = null,Object? appearance = null,Object? graph = freezed,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? resource = null,Object? occurrence = null,Object? link = null,Object? resourceProjection = null,Object? graph = freezed,}) {
   return _then(_PortableResourceMember(
 resource: null == resource ? _self.resource : resource // ignore: cast_nullable_to_non_nullable
 as skir.ResourceId,occurrence: null == occurrence ? _self.occurrence : occurrence // ignore: cast_nullable_to_non_nullable
 as skir.LinkOccurrence,link: null == link ? _self.link : link // ignore: cast_nullable_to_non_nullable
 as skir.DataValue,resourceProjection: null == resourceProjection ? _self.resourceProjection : resourceProjection // ignore: cast_nullable_to_non_nullable
-as PortableResourceProjection,appearance: null == appearance ? _self.appearance : appearance // ignore: cast_nullable_to_non_nullable
-as ResourceAppearance,graph: freezed == graph ? _self.graph : graph // ignore: cast_nullable_to_non_nullable
+as PortableResourceProjection,graph: freezed == graph ? _self.graph : graph // ignore: cast_nullable_to_non_nullable
 as PortableGraphPlacement?,
   ));
 }
@@ -3074,15 +3080,6 @@ $PortableResourceProjectionCopyWith<$Res> get resourceProjection {
   
   return $PortableResourceProjectionCopyWith<$Res>(_self.resourceProjection, (value) {
     return _then(_self.copyWith(resourceProjection: value));
-  });
-}/// Create a copy of PortableResourceMember
-/// with the given fields replaced by the non-null parameter values.
-@override
-@pragma('vm:prefer-inline')
-$ResourceAppearanceCopyWith<$Res> get appearance {
-  
-  return $ResourceAppearanceCopyWith<$Res>(_self.appearance, (value) {
-    return _then(_self.copyWith(appearance: value));
   });
 }/// Create a copy of PortableResourceMember
 /// with the given fields replaced by the non-null parameter values.

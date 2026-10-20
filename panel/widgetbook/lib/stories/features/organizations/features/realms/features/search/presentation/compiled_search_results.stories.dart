@@ -147,6 +147,7 @@ final class CompiledLiveResourceResults extends HookWidget {
                         authoringResourceSearchResultType,
                       ),
                       role: skir.PresentationRole.resourceSearchResult,
+                      density: SearchResultDensity.card,
                       fallbackLabel: "Resource unavailable",
                     ),
                   const Text(

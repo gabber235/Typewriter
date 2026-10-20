@@ -63,7 +63,7 @@ final class _PortableHierarchySequenceRendererState
   Widget build(BuildContext context) {
     assert(widget.children.length == widget.itemScopes.length);
     final layout = _resolvePortableHierarchyLayout(
-      PresentationColorEnvironment.of(context),
+      PresentationValueEnvironment.of(context),
       widget.layout,
       widget.scope,
       widget.itemScopes,
@@ -92,7 +92,7 @@ final class _PortableHierarchySequenceRendererState
 }
 
 _ResolvedHierarchyLayout _resolvePortableHierarchyLayout(
-  PresentationColorEnvironment colors,
+  PresentationValueEnvironment colors,
   skir.HierarchySequenceLayout layout,
   PortablePresentationScope scope,
   List<PortablePresentationScope> itemScopes,

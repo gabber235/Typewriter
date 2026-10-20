@@ -8,7 +8,7 @@ part of "portable_connections.dart";
 /// diagnostics. It does not mutate widgets or render objects, so the paint
 /// owner can publish one complete result for the current frame.
 _ConnectionResolution _resolveConnections({
-  required PresentationColorEnvironment colors,
+  required PresentationValueEnvironment colors,
   required List<skir.PresentationConnection> connections,
   required PortablePresentationScope scope,
   required TextDirection textDirection,
@@ -86,7 +86,7 @@ _ConnectionResolution _resolveConnections({
 }
 
 void _resolveSingle(
-  PresentationColorEnvironment colors,
+  PresentationValueEnvironment colors,
   skir.AnchoredConnection connection,
   Object connectionIdentity,
   PortablePresentationScope layerScope,
@@ -156,7 +156,7 @@ void _resolveSingle(
 }
 
 void _resolveBundle(
-  PresentationColorEnvironment colors,
+  PresentationValueEnvironment colors,
   skir.AnchoredConnectionBundle connection,
   Object connectionIdentity,
   PortablePresentationScope layerScope,

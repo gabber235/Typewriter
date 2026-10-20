@@ -117,7 +117,12 @@ class SearchResultCard extends HookWidget {
                             right: 10,
                             bottom: 10,
                           ),
-                          child: suffix,
+                          // A long kind, such as a type name, gives way to
+                          // the content instead of overflowing the row.
+                          child: ConstrainedBox(
+                            constraints: const BoxConstraints(maxWidth: 140),
+                            child: suffix,
+                          ),
                         ),
                     ],
                   ),

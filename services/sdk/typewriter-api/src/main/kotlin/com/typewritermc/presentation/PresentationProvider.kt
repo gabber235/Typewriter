@@ -22,7 +22,6 @@ interface PresentationProvider {
 data class PresentationBuildResult(
     val layout: PresentationNode,
     val dependencies: PresentationDependencies,
-    val resultAppearance: skirout.editor.v1.presentation.ResultAppearance? = null,
 )
 
 interface PresentationRuntime {
@@ -55,6 +54,12 @@ interface PresentationBuildScope : Layout {
     ): PresentedField<V, S>
 
     fun <S : Any> expressions(scope: kotlin.reflect.KClass<S>): S
+
+    /**
+     * The evaluated display of the presented resource, which editors bind whenever they present one. Generated
+     * resource presentation scopes expose it as `appearance`.
+     */
+    fun resourceAppearance(): Expr<com.typewritermc.authoring.ResourceAppearance, Handled>
 
     fun conditional(
         condition: Expr<Boolean, Handled>,

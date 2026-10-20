@@ -1136,7 +1136,6 @@ skir.PresentationMaterial _material(
   ),
   layout: presentationColumn("root", nodes),
   dependencies: skir.PresentationDependencies.defaultInstance,
-  resultAppearance: null,
   inheritableNodes: references ?? [for (final node in nodes) node.nodeId],
 );
 

@@ -157,7 +157,6 @@ abstract class AuthoredPresentationIndex with _$AuthoredPresentationIndex {
     skir.PresentationNode layout,
     Map<skir.ExpressionBindingId, AuthoredBindingAddress> aliases, {
     Map<String, skir.PresentationCollectionDefinition> sources = const {},
-    Iterable<skir.PresentationNode> additionalLayouts = const [],
     bool includeRootPrefix = true,
     void Function(skir.BindingRef, AuthoredBindingAddress?)? onEditableBinding,
     bool Function(
@@ -175,14 +174,6 @@ abstract class AuthoredPresentationIndex with _$AuthoredPresentationIndex {
         includeRootPrefix,
         onPart,
       ),
-      for (final additional in additionalLayouts)
-        ...additional.authoredBindingUses(
-          aliases,
-          sources,
-          onEditableBinding,
-          true,
-          onPart,
-        ),
     ],
   );
 
@@ -637,15 +628,6 @@ Iterable<AuthoredBindingUse> _searchAuthoredBindingUses(
       true,
       onPart,
     );
-    if (mapping.resultAppearance?.leading case final leading?) {
-      yield* leading.authoredBindingUses(
-        nested,
-        sources,
-        onEditableBinding,
-        true,
-        onPart,
-      );
-    }
   }
 
   switch (provider) {

@@ -217,7 +217,7 @@ Widget buildReferencePickerResult<T extends Object>(
         ? const Icon(Icons.link)
         : ResourceIcon(icon: icon),
     kindLabel: candidate.disabledReason == null ? "select" : "unavailable",
-    body: SearchResultTitle(title: candidate.label),
+    title: candidate.label,
     footer: referencePickerDescription(candidate),
   );
 }

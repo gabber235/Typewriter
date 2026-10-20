@@ -449,12 +449,6 @@ private fun collectPresentationMaterials(
             owned.descriptor.roles.sortedBy { it.ordinal }.forEach { role ->
                 try {
                     val result = owned.provider.build(PresentationBuildBinding(template, role, nativeTypes, ownershipEndpoints))
-                    require(
-                        result.resultAppearance == null || role == com.typewritermc.types.PresentationRole.RESOURCE_SEARCH_RESULT ||
-                            role == com.typewritermc.types.PresentationRole.REFERENCE_PICKER_RESULT,
-                    ) {
-                        "Result appearance requires a resource search result or reference picker result role."
-                    }
                     val inferred = result.layout.inferInheritableNodes(result.dependencies)
                     result.layout.validateInheritableNodes(
                         inferred,
@@ -478,7 +472,6 @@ private fun collectPresentationMaterials(
                                 role = role,
                                 layout = result.layout,
                                 dependencies = result.dependencies,
-                                resultAppearance = result.resultAppearance,
                                 inheritableNodes = inferred,
                             )
                     } else {

@@ -94,6 +94,8 @@ import 'package:widgetbook_workspace/stories/shared/editors/presentation/portabl
     as _widgetbook_workspace_stories_shared_editors_presentation_portable_location_reveal_stories;
 import 'package:widgetbook_workspace/stories/shared/editors/presentation/portable_named_control.stories.dart'
     as _widgetbook_workspace_stories_shared_editors_presentation_portable_named_control_stories;
+import 'package:widgetbook_workspace/stories/shared/editors/presentation/portable_paint.stories.dart'
+    as _widgetbook_workspace_stories_shared_editors_presentation_portable_paint_stories;
 import 'package:widgetbook_workspace/stories/shared/editors/presentation/portable_presentation_renderer.stories.dart'
     as _widgetbook_workspace_stories_shared_editors_presentation_portable_presentation_renderer_stories;
 import 'package:widgetbook_workspace/stories/shared/editors/presentation/portable_resources.stories.dart'
@@ -997,6 +999,12 @@ final directories = <_widgetbook.WidgetbookNode>[
                             .collectionPresentationUseCase,
                   ),
                   _widgetbook.WidgetbookUseCase(
+                    name: 'Compiled Book item grid',
+                    builder:
+                        _widgetbook_workspace_stories_shared_editors_presentation_portable_paint_stories
+                            .compiledBookItemGridUseCase,
+                  ),
+                  _widgetbook.WidgetbookUseCase(
                     name: 'Compiled SDK Placement',
                     builder:
                         _widgetbook_workspace_stories_shared_editors_presentation_compiled_sdk_controls_stories
@@ -1039,6 +1047,12 @@ final directories = <_widgetbook.WidgetbookNode>[
                             .inheritedInspectorLayoutUseCase,
                   ),
                   _widgetbook.WidgetbookUseCase(
+                    name: 'Paint primitives',
+                    builder:
+                        _widgetbook_workspace_stories_shared_editors_presentation_portable_paint_stories
+                            .portablePaintUseCase,
+                  ),
+                  _widgetbook.WidgetbookUseCase(
                     name: 'Portable document',
                     builder:
                         _widgetbook_workspace_stories_shared_editors_presentation_portable_presentation_renderer_stories
@@ -1054,12 +1068,6 @@ final directories = <_widgetbook.WidgetbookNode>[
                     builder:
                         _widgetbook_workspace_stories_shared_editors_presentation_portable_search_input_stories
                             .authoredSearchInputUseCase,
-                  ),
-                  _widgetbook.WidgetbookUseCase(
-                    name: 'Rich portable result',
-                    builder:
-                        _widgetbook_workspace_stories_shared_editors_presentation_portable_search_input_stories
-                            .richPortableSearchInputUseCase,
                   ),
                 ],
               ),

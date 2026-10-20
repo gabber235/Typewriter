@@ -102,7 +102,6 @@ void main() {
     );
     final material = skir.PresentationMaterial(
       inheritableNodes: const [],
-      resultAppearance: null,
 
       provider: original.provider,
       target: original.target,
@@ -144,7 +143,6 @@ void main() {
       final configured = skir.ExpressionBindingId(value: "configured_value");
       final material = skir.PresentationMaterial(
         inheritableNodes: const [],
-        resultAppearance: null,
 
         provider: original.provider,
         target: original.target,
@@ -517,7 +515,6 @@ void main() {
           for (final descriptor in descriptors)
             skir.PresentationMaterial(
               inheritableNodes: const [],
-              resultAppearance: null,
 
               provider: descriptor.id,
               target: descriptor.target,
@@ -672,7 +669,6 @@ void main() {
           ...original.presentationMaterials,
           skir.PresentationMaterial(
             inheritableNodes: const [],
-            resultAppearance: null,
 
             provider: tie,
             target: target,
@@ -850,7 +846,6 @@ _patternCatalog({required bool repeated}) {
       for (final descriptor in descriptors)
         skir.PresentationMaterial(
           inheritableNodes: const [],
-          resultAppearance: null,
 
           provider: descriptor.id,
           target: descriptor.target,
@@ -1050,7 +1045,6 @@ _catalog() {
       ])
         skir.PresentationMaterial(
           inheritableNodes: const [],
-          resultAppearance: null,
 
           provider: entry.$1,
           target: entry.$2,

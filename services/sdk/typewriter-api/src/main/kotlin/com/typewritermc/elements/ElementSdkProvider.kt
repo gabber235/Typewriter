@@ -16,7 +16,6 @@ import com.typewritermc.library.pageLocation
 import com.typewritermc.presentation.asPresentationColor
 import com.typewritermc.presentation.icon
 import com.typewritermc.presentation.resource
-import com.typewritermc.presentation.resourceSearchResult
 import com.typewritermc.presentation.searchDescription
 import com.typewritermc.types.Color
 import com.typewritermc.types.Icon
@@ -54,30 +53,16 @@ object ElementSearchPresentation : ElementPresentation {
     override fun ElementPresentationScope.present() {
         val element = subject.resource<Element>()
         val page = element.fields.page.resource
-        val display = element.type.display
         val origin = context.read(LibraryContext.activeResource)
-        val color = display.color.orElse(literal(Color(0xff9c64bdu)))
-        resourceSearchResult(
-            title = element.fields.name.orIfBlank("Unnamed element"),
-            accent = color,
-            kind = literal("element"),
-            icon = { icon(display.icon.orElse(literal(Icon.Iconify("fa6-solid:cube")))) },
-            details = {
-                clippedRow(spacing = 0.0) {
-                    searchDescription(display.name.orIfBlank("Element"))
-                    showIf(page.exists) {
-                        pageLocation(
-                            page = page,
-                            active = origin,
-                            includePage = (page.id neq origin).orElse(literal(true)),
-                            part = { searchDescription(it) },
-                            separator = { searchDescription(literal("•")) },
-                            prefixFirst = literal(true),
-                        )
-                    }
-                }
-            },
-        )
+        showIf(page.exists) {
+            pageLocation(
+                page = page,
+                active = origin,
+                includePage = (page.id neq origin).orElse(literal(true)),
+                part = { searchDescription(it) },
+                separator = { searchDescription(literal("•")) },
+            )
+        }
     }
 }
 

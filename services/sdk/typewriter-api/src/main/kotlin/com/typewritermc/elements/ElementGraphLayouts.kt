@@ -12,6 +12,7 @@ import com.typewritermc.presentation.PresentationInsets
 import com.typewritermc.presentation.PresentationInteractionState.Focused
 import com.typewritermc.presentation.PresentationInteractionState.Selected
 import com.typewritermc.presentation.PresentationRadius
+import com.typewritermc.presentation.PresentationTransition
 import com.typewritermc.presentation.TextOverflow
 import com.typewritermc.presentation.TextParagraph
 import com.typewritermc.presentation.TextSizing
@@ -22,6 +23,7 @@ import com.typewritermc.presentation.literalColor
 import com.typewritermc.presentation.monochromeOn
 import com.typewritermc.presentation.on
 import com.typewritermc.presentation.stateColor
+import com.typewritermc.presentation.stateTransition
 import com.typewritermc.types.Color
 import com.typewritermc.types.Icon
 
@@ -49,7 +51,7 @@ fun Layout.entryNode(
                 ContainerStyle(
                     border = PresentationBorder.All(width = 3.0, color = outline),
                     radius = PresentationRadius.Small,
-                    transitionMilliseconds = 400,
+                    transition = stateTransition(PresentationTransition(milliseconds = 400)),
                 ),
             ) {
                 adaptiveLeading {

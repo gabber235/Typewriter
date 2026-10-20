@@ -77,6 +77,7 @@ internal object PresentationEmitter : SdkEmitter {
                 .addSuperinterface(Api.Layout)
                 .addProperty(PropertySpec.builder("expressions", declaration.expressionsType).build())
                 .apply { root?.let { addProperty(PropertySpec.builder("value", it.fieldType).build()) } }
+                .apply { if (declaration.resource) addProperty(appearance()) }
                 .addProperties(
                     declaration.fields.map { field ->
                         PropertySpec.builder(field.property, field.shape.presentedField()).build()
@@ -127,6 +128,15 @@ internal object PresentationEmitter : SdkEmitter {
                                 ).build(),
                         )
                     }
+                }.apply {
+                    if (declaration.resource) {
+                        addProperty(
+                            PropertySpec
+                                .builder("appearance", appearanceType, KModifier.OVERRIDE)
+                                .getter(FunSpec.getterBuilder().addStatement("return build.resourceAppearance()").build())
+                                .build(),
+                        )
+                    }
                 }.addProperties(
                     declaration.fields.map { field ->
                         PropertySpec
@@ -169,6 +179,15 @@ internal object PresentationEmitter : SdkEmitter {
                 ).build(),
         )
     }
+
+    /** The evaluated display of the presented resource; only resource scopes have one. */
+    private val appearanceType = Api.Expr.parameterizedBy(Api.ResourceAppearance, Api.Handled)
+
+    private fun appearance(): PropertySpec =
+        PropertySpec
+            .builder("appearance", appearanceType)
+            .addKdoc("The label, accent and icon of the presented resource, as its most specific display declares them.")
+            .build()
 
     private fun FieldShape.presentedField(): TypeName = Api.PresentedField.parameterizedBy(native, presentationControl)
 }

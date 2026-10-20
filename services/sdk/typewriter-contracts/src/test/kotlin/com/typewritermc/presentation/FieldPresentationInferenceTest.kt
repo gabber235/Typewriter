@@ -86,7 +86,30 @@ val FieldPresentationInferenceTest by testSuite {
                 ),
                 ChildrenElement.StackWrapper(
                     skirout.editor.v1.presentation.StackChildrenElement
-                        .partial(children = listOf(first)),
+                        .partial(
+                            children =
+                                listOf(
+                                    skirout.editor.v1.presentation.StackChild
+                                        .FlowWrapper(first),
+                                ),
+                        ),
+                ),
+                ChildrenElement.StackWrapper(
+                    skirout.editor.v1.presentation.StackChildrenElement.partial(
+                        children =
+                            listOf(
+                                skirout.editor.v1.presentation.StackChild.createPositioned(
+                                    child = first,
+                                    top = null,
+                                    start = null,
+                                    end = null,
+                                    bottom = null,
+                                    width = null,
+                                    height = null,
+                                    transition = null,
+                                ),
+                            ),
+                    ),
                 ),
             )
         placements.forEach { placement ->

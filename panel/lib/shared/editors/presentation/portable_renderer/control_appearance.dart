@@ -31,7 +31,7 @@ _PortableControlStyle _controlStyle(
   BuildContext context,
   PortablePresentationScope scope,
   skir.InputAppearance? appearance, {
-  PresentationColorEnvironment? environment,
+  PresentationValueEnvironment? environment,
 }) {
   final layers = [
     ...scope.appearanceLayers,
@@ -62,7 +62,7 @@ _PortableControlStyle _controlStyle(
     final layer = origin(select);
     return layer == null
         ? null
-        : (environment ?? PresentationColorEnvironment.of(context)).resolve(
+        : (environment ?? PresentationValueEnvironment.of(context)).resolve(
             select(layer.appearance)!,
             evaluation(layer),
           );

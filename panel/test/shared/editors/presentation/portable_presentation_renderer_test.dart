@@ -138,7 +138,11 @@ void main() {
         PortableResourceProjection(
           resource: compiledInheritanceTagId,
           configuration: record.configuration,
-          label: "Inheritance subject",
+          appearance: ResourceAppearance(
+            label: "Inheritance subject",
+            accent: const Color(0xff607d8b),
+            icon: skir.Icon.wrapIconify("material-symbols:category"),
+          ),
           value: value,
         ),
         nested,
@@ -739,7 +743,8 @@ void main() {
         "tag.icon.color",
         skir.PresentationElement.createContainer(
           foregroundColor: null,
-          transitionMilliseconds: 0,
+          transition: null,
+          shadows: const [],
           child: presentationNode(
             "tag.icon.padding",
             skir.PresentationElement.createPadding(
@@ -1950,7 +1955,8 @@ _linkCollectionFixture({
     "node.reference.icon.color",
     skir.PresentationElement.createContainer(
       foregroundColor: null,
-      transitionMilliseconds: 0,
+      transition: null,
+      shadows: const [],
       child: presentationNode(
         "node.reference.icon.padding",
         skir.PresentationElement.createPadding(
@@ -2022,7 +2028,6 @@ _linkCollectionFixture({
   );
   final collectionMaterial = skir.PresentationMaterial(
     inheritableNodes: const [],
-    resultAppearance: null,
 
     provider: skir.PresentationId(namespace: "test", name: "link.collection"),
     target: appearanceTarget,
@@ -2166,7 +2171,6 @@ _linkCollectionFixture({
           ? [
               skir.PresentationMaterial(
                 inheritableNodes: const [],
-                resultAppearance: null,
 
                 provider: appearanceId,
                 target: appearanceTarget,
@@ -2907,7 +2911,6 @@ final _polymorphicCatalog = CheckedEditorCatalog(
     presentationMaterials: [
       skir.PresentationMaterial(
         inheritableNodes: const [],
-        resultAppearance: null,
 
         provider: _iconifyPresentation,
         target: skir.PresentationTarget.createNamed(
@@ -3303,7 +3306,8 @@ void registerConfiguredCollectionTests() {
           itemForeground: null,
           itemBorder: null,
           itemRadius: null,
-          itemTransitionMilliseconds: null,
+          itemTransition: null,
+          itemShadows: const [],
         ),
         content: skir.CollectionContent(
           removeLabel: text("Remove coordinate"),

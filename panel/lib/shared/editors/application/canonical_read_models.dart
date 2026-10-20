@@ -69,6 +69,10 @@ final class CanonicalReadModels {
     _use("com.typewritermc.types.catalog.PublishedType"),
   );
 
+  /// The evaluated display of a resource: its label, accent and icon.
+  skir.NamedTypeUse get resourceAppearanceUse =>
+      _use("com.typewritermc.authoring.ResourceAppearance");
+
   skir.NamedTypeUse _use(String name) => skir.NamedTypeUse(
     definition: skir.TypeDefinitionId(
       typeId: skir.TypeId.createQualified(

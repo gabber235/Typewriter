@@ -143,11 +143,6 @@ abstract class PortablePresentationScope with _$PortablePresentationScope {
                   AuthoredBindingAddress.binding(entry.key, entry.value)
             : AuthoredBindingAddress.binding(entry.key, entry.value),
     };
-    final additional = [
-      if (layout == material?.layout &&
-          material?.resultAppearance?.leading != null)
-        material!.resultAppearance!.leading!,
-    ];
     final sources = {
       for (final source
           in material?.dependencies.collections ??
@@ -158,7 +153,6 @@ abstract class PortablePresentationScope with _$PortablePresentationScope {
     final independent = AuthoredPresentationIndex.build(
       layout,
       aliases,
-      additionalLayouts: additional,
       sources: sources,
       onPart: (node, part, lexicalAliases) {
         parts.add(
@@ -178,7 +172,6 @@ abstract class PortablePresentationScope with _$PortablePresentationScope {
       authoredIndex: AuthoredPresentationIndex.build(
         layout,
         aliases,
-        additionalLayouts: additional,
         sources: sources,
       ),
     );
@@ -535,7 +528,7 @@ abstract class PortablePresentationScope with _$PortablePresentationScope {
 
     return copyWith(
       bindings: {
-        ...bindings.withSubjectAt(payload.location),
+        ...bindings.withSubjectAt(payload.location, _appearanceOf),
         configured: PortableExpressionBinding(
           value: skir.DataValue.createNamed(
             actualType: payload.actualType,
@@ -561,6 +554,15 @@ abstract class PortablePresentationScope with _$PortablePresentationScope {
             ),
       },
     );
+  }
+
+  /// The appearance of a resource in this scope's authoring observation.
+  ResourceAppearance? _appearanceOf(skir.ResourceId resource) {
+    final catalog = queries?.catalog ?? this.catalog;
+    final record = queries?.authored?.resource(resource);
+    return catalog == null || record == null
+        ? null
+        : catalog.appearanceOf(record);
   }
 
   PortablePresentationScope? withConfiguredValue(skir.BindingRef reference) =>
@@ -617,7 +619,7 @@ abstract class PortablePresentationScope with _$PortablePresentationScope {
     return copyWith(
       bindings: {
         ...(id == _configuredValueBindingId
-            ? bindings.withSubjectAt(location)
+            ? bindings.withSubjectAt(location, _appearanceOf)
             : bindings),
         id: PortableExpressionBinding(
           value: value,
@@ -712,6 +714,8 @@ abstract class PortablePresentationScope with _$PortablePresentationScope {
           input.bindingId: ?bindings[input.bindingId],
         presentationSubjectIdentifierBindingId: projected.resource
             .toExpressionBinding(),
+        presentationSubjectAppearanceBindingId: projected.appearance
+            .toExpressionBinding(),
         _configuredValueBindingId: PortableExpressionBinding(
           value: projected.value,
           schema: switch (projected.configuration) {
@@ -778,16 +782,34 @@ extension _PortableNullableTypeUse on skir.TypeUse? {
   }
 }
 
+/// The subject identifier and appearance bindings of a resource presentation.
+/// Both follow the configured value: they name the resource whose root it is,
+/// and are absent below a resource root.
 extension _PresentationSubjectBindings
     on Map<skir.ExpressionBindingId, PortableExpressionBinding> {
   Map<skir.ExpressionBindingId, PortableExpressionBinding> withSubjectAt(
     skir.ValueLocation? location,
-  ) => {
-    for (final entry in entries)
-      if (entry.key != presentationSubjectIdentifierBindingId)
-        entry.key: entry.value,
-    if (location case final subject? when subject.path.segments.isEmpty)
-      presentationSubjectIdentifierBindingId: subject.resource
-          .toExpressionBinding(),
-  };
+    ResourceAppearance? Function(skir.ResourceId) appearanceOf,
+  ) {
+    final subject = switch (location) {
+      final value? when value.path.segments.isEmpty => value.resource,
+      _ => null,
+    };
+    final previous = this[presentationSubjectIdentifierBindingId]?.value;
+    final kept = this[presentationSubjectAppearanceBindingId];
+    final appearance = subject == null
+        ? null
+        : previous == subject.toExpressionValue() && kept != null
+        ? kept
+        : appearanceOf(subject)?.toExpressionBinding();
+    return {
+      for (final entry in entries)
+        if (entry.key != presentationSubjectIdentifierBindingId &&
+            entry.key != presentationSubjectAppearanceBindingId)
+          entry.key: entry.value,
+      if (subject != null)
+        presentationSubjectIdentifierBindingId: subject.toExpressionBinding(),
+      presentationSubjectAppearanceBindingId: ?appearance,
+    };
+  }
 }

@@ -306,7 +306,6 @@ _fixture({bool unfilled = false}) {
       presentationMaterials: [
         skir.PresentationMaterial(
           inheritableNodes: const [],
-          resultAppearance: null,
 
           provider: presentationId,
           target: target,

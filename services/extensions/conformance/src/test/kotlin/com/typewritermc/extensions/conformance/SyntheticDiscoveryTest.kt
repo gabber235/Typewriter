@@ -380,19 +380,37 @@ private fun providerOrigin(local: String): ProviderOrigin {
 
 private fun ChildrenElement.axisNodes(): List<PresentationNode> =
     when (this) {
-        is ChildrenElement.ColumnWrapper -> value.children.map { it.node() }
+        is ChildrenElement.ColumnWrapper -> {
+            value.children.map { it.node() }
+        }
 
-        is ChildrenElement.RowWrapper -> value.children.map { it.node() }
+        is ChildrenElement.RowWrapper -> {
+            value.children.map { it.node() }
+        }
 
-        is ChildrenElement.WrapWrapper -> value.children
+        is ChildrenElement.WrapWrapper -> {
+            value.children
+        }
 
-        is ChildrenElement.GridWrapper -> value.children
+        is ChildrenElement.GridWrapper -> {
+            value.children
+        }
 
-        is ChildrenElement.StackWrapper -> value.children
+        is ChildrenElement.StackWrapper -> {
+            value.children.map {
+                when (it) {
+                    is skirout.editor.v1.presentation.StackChild.PositionedWrapper -> it.value.child
+                    is skirout.editor.v1.presentation.StackChild.FlowWrapper -> it.value
+                    else -> error("Unknown stack child")
+                }
+            }
+        }
 
         ChildrenElement.UNKNOWN,
         is ChildrenElement.Unknown,
-        -> emptyList()
+        -> {
+            emptyList()
+        }
     }
 
 private fun AxisChild.node(): PresentationNode =

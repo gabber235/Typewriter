@@ -25,11 +25,6 @@ extension PresentationExpressionAdmission on CheckedEditorCatalog {
       }
     }
 
-    if (material.resultAppearance != null &&
-        material.role != skir.PresentationRole.resourceSearchResult &&
-        material.role != skir.PresentationRole.referencePickerResult) {
-      errors.add("invalid_result_appearance_role");
-    }
     final callerInputs = <skir.ExpressionBindingId, skir.TypeUse>{};
     for (final input in material.dependencies.contextInputs) {
       if (!input.bindingId.value.startsWith("context:") ||
@@ -237,6 +232,13 @@ extension PresentationExpressionAdmission on CheckedEditorCatalog {
       }
     }
 
+    void stateMatch(skir.PresentationStateMatch match) {
+      if (match.required_.toSet().intersection(match.excluded.toSet())
+          case final overlap when overlap.isNotEmpty) {
+        errors.add("contradictory_presentation_state_match");
+      }
+    }
+
     late void Function(
       skir.PresentationColor?,
       Map<skir.ExpressionBindingId, skir.ExpressionType>,
@@ -255,13 +257,81 @@ extension PresentationExpressionAdmission on CheckedEditorCatalog {
           color(value.background, env);
         case skir.PresentationColor_statesWrapper(:final value):
           for (final rule in value.rules) {
+            stateMatch(rule.match);
             color(rule.color, env);
           }
           color(value.fallback, env);
+        case skir.PresentationColor_adjustedWrapper(:final value):
+          color(value.source, env);
+          if (!value.lightness.isFinite ||
+              !value.chroma.isFinite ||
+              value.lightness.abs() > 1 ||
+              value.chroma.abs() > 1) {
+            errors.add("invalid_presentation_color_adjustment");
+          }
+        case skir.PresentationColor_brightnessWrapper(:final value):
+          color(value.light, env);
+          color(value.dark, env);
         default:
           break;
       }
     };
+    void presentationNumber(
+      skir.PresentationNumber? value,
+      Map<skir.ExpressionBindingId, skir.ExpressionType> env,
+    ) {
+      switch (value) {
+        case skir.PresentationNumber_valueWrapper(:final value):
+          number(value, env);
+        case skir.PresentationNumber_statesWrapper(:final value):
+          for (final rule in value.rules) {
+            stateMatch(rule.match);
+            number(rule.value, env);
+          }
+          number(value.fallback, env);
+        case null:
+          break;
+        default:
+          errors.add("unknown_presentation_number");
+      }
+    }
+
+    void motion(skir.PresentationTransition value) {
+      if (value.milliseconds < 0) {
+        errors.add("invalid_presentation_transition");
+      }
+      if (value.curve
+          case skir.PresentationCurve_elasticOutWrapper(:final value)
+          when !value.isFinite || value <= 0) {
+        errors.add("invalid_presentation_curve");
+      }
+    }
+
+    void transition(skir.PresentationTransitionPolicy? policy) {
+      if (policy == null) return;
+      for (final rule in policy.rules) {
+        stateMatch(rule.match);
+        motion(rule.transition);
+      }
+      motion(policy.fallback);
+    }
+
+    void shadows(
+      Iterable<skir.PresentationShadow> values,
+      Map<skir.ExpressionBindingId, skir.ExpressionType> env,
+    ) {
+      for (final shadow in values) {
+        color(shadow.color, env);
+        if (!shadow.blur.isFinite ||
+            shadow.blur < 0 ||
+            !shadow.spread.isFinite ||
+            !shadow.offsetX.isFinite ||
+            !shadow.offsetY.isFinite) {
+          errors.add("invalid_presentation_shadow");
+        }
+      }
+    }
+
     void insets(skir.PresentationInsets? insets) {
       final values = switch (insets) {
         skir.PresentationInsets_allWrapper(:final value) => [value],
@@ -410,9 +480,8 @@ extension PresentationExpressionAdmission on CheckedEditorCatalog {
           (!style.itemSpacing!.isFinite || style.itemSpacing! < 0)) {
         errors.add("invalid_collection_spacing");
       }
-      if ((style.itemTransitionMilliseconds ?? 0) < 0) {
-        errors.add("invalid_collection_transition");
-      }
+      transition(style.itemTransition);
+      shadows(style.itemShadows, env);
     }
 
     void choices(
@@ -467,25 +536,6 @@ extension PresentationExpressionAdmission on CheckedEditorCatalog {
       Map<skir.ExpressionBindingId, skir.ExpressionType>,
     )
     visit;
-    void resultAppearance(
-      skir.ResultAppearance? appearance,
-      Map<skir.ExpressionBindingId, skir.ExpressionType> env,
-    ) {
-      if (appearance == null) return;
-      if (appearance.style != null &&
-          appearance.style != skir.ResultStyle.compact &&
-          appearance.style != skir.ResultStyle.card) {
-        errors.add("invalid_result_style");
-      }
-      check(
-        appearance.accent,
-        skir.TypeUse.wrapNamed(expressionColorUse),
-        env,
-        missing: false,
-      );
-      check(appearance.kindLabel, text, env, missing: false);
-    }
-
     void clippedColumn(skir.AxisChildrenLayout layout) {
       if (layout.clipOverflow) errors.add("clipped_column_not_supported");
     }
@@ -642,10 +692,6 @@ extension PresentationExpressionAdmission on CheckedEditorCatalog {
         alias(result.bindingId);
         final local = {...parent, result.bindingId: type(row)};
         nested[result.presentation] = local;
-        resultAppearance(result.resultAppearance, local);
-        if (result.resultAppearance?.leading case final leading?) {
-          nested[leading] = local;
-        }
         check(result.label, text, local);
         if (candidate != null) check(result.selectedValue, candidate, local);
       }
@@ -741,6 +787,61 @@ extension PresentationExpressionAdmission on CheckedEditorCatalog {
         }
       };
       switch (node.element) {
+        case skir.PresentationElement_containerWrapper(:final value):
+          color(value.backgroundColor, env);
+          color(value.foregroundColor, env);
+          border(value.border, env);
+          radius(value.radius, env);
+          transition(value.transition);
+          shadows(value.shadows, env);
+        case skir.PresentationElement_childrenWrapper(
+          value: skir.ChildrenElement_stackWrapper(:final value),
+        ):
+          for (final child in value.children) {
+            if (child case skir.StackChild_positionedWrapper(:final value)) {
+              if ([value.start, value.end, value.width].nonNulls.length > 2 ||
+                  [value.top, value.bottom, value.height].nonNulls.length > 2) {
+                errors.add("overconstrained_positioned_child");
+              }
+              for (final inset in [
+                value.top,
+                value.start,
+                value.end,
+                value.bottom,
+                value.width,
+                value.height,
+              ]) {
+                presentationNumber(inset, env);
+              }
+              transition(value.transition);
+            }
+          }
+        case skir.PresentationElement_sizeWrapper(:final value):
+          for (final bound in [
+            value.width,
+            value.height,
+            value.minimumWidth,
+            value.maximumWidth,
+            value.minimumHeight,
+            value.maximumHeight,
+          ]) {
+            number(bound, env);
+          }
+        case skir.PresentationElement_transformWrapper(:final value):
+          if (!value.perspective.isFinite) {
+            errors.add("invalid_transform_perspective");
+          }
+          for (final part in [
+            value.scale,
+            value.rotateX,
+            value.rotateY,
+            value.rotateZ,
+            value.translateX,
+            value.translateY,
+          ]) {
+            presentationNumber(part, env);
+          }
+          transition(value.transition);
         case skir.PresentationElement_textWrapper(:final value):
         case skir.PresentationElement_markdownWrapper(:final value):
           check(value.value, text, env);
@@ -1186,15 +1287,15 @@ extension PresentationExpressionAdmission on CheckedEditorCatalog {
         skir.TypeUse.wrapNamed(frameworkResourceIdUse),
         false,
       ),
+      presentationSubjectAppearanceBindingId: type(
+        skir.TypeUse.wrapNamed(canonicalReadModels.resourceAppearanceUse),
+        false,
+      ),
       skir.ExpressionBindingId(value: "presentation.context.selection_count"):
           type(integer, false),
       for (final input in callerInputs.entries) input.key: type(input.value),
     };
     visit(material.layout, rootEnvironment);
-    resultAppearance(material.resultAppearance, rootEnvironment);
-    if (material.resultAppearance?.leading case final leading?) {
-      visit(leading, rootEnvironment);
-    }
     return List.unmodifiable(errors.toSet());
   }
 }

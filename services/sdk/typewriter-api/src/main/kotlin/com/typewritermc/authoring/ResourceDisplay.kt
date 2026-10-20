@@ -63,6 +63,34 @@ fun ResourceDisplayScope.defaultAccent(): Expr<Color, Handled> = type.display.co
 /** The icon of the subject's type display, the default icon of every resource. */
 fun ResourceDisplayScope.defaultIcon(): Expr<Icon, Handled> = type.display.icon
 
+/**
+ * The evaluated display of one resource: what its most specific [ResourceDisplay] formulas produce. Generated resource
+ * presentation scopes expose it as `appearance`, so a presentation reuses the declared name, accent and icon instead
+ * of repeating the formulas:
+ *
+ * ```kotlin
+ * object BookItemPresentation : BookPresentation {
+ *     override fun BookPresentationScope.present() {
+ *         text(appearance.label)
+ *     }
+ * }
+ * ```
+ *
+ * It is a canonical read model, never stored: editors evaluate the display and bind the result under
+ * [PresentedResourceAppearance.binding] whenever they present a resource.
+ */
+data class ResourceAppearance(
+    val label: String,
+    val accent: Color,
+    val icon: Icon,
+)
+
+/** The binding through which a resource presentation reads its subject's [ResourceAppearance]. */
+@GeneratedSdkApi
+object PresentedResourceAppearance {
+    val binding: ExpressionBindingId = ExpressionBindingId("presentation.subject.appearance")
+}
+
 /** The formulas one display declaration produced, before catalog assembly checks and compiles them. */
 class DisplayFormulas(
     val label: Expr<String, Handled>,

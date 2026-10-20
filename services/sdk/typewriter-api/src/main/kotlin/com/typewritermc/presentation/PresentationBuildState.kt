@@ -3,6 +3,7 @@
 package com.typewritermc.presentation
 
 import com.typewritermc.authoring.GeneratedSdkApi
+import com.typewritermc.authoring.ResourceAppearance
 import com.typewritermc.expression.ExpressionBindingId
 import com.typewritermc.expression.ExpressionFactories
 import com.typewritermc.types.PresentationRole
@@ -18,10 +19,12 @@ import skirout.editor.v1.presentation.AxisChild
 import skirout.editor.v1.presentation.AxisChildrenElement
 import skirout.editor.v1.presentation.AxisChildrenLayout
 import skirout.editor.v1.presentation.ChildrenElement
+import skirout.editor.v1.presentation.PositionedStackChild
 import skirout.editor.v1.presentation.PresentationCollectionDefinition
 import skirout.editor.v1.presentation.PresentationDependencies
 import skirout.editor.v1.presentation.PresentationElement
 import skirout.editor.v1.presentation.PresentationNode
+import skirout.editor.v1.presentation.StackChild
 import kotlin.reflect.KClass
 import skirout.editor.v1.presentation.CrossAxisAlignment as WireCrossAxisAlignment
 import skirout.editor.v1.presentation.MainAxisAlignment as WireMainAxisAlignment
@@ -179,6 +182,15 @@ internal class PresentationBuildState(
             (segment as? com.typewritermc.authoring.PathSegment.Field)?.let { current?.fieldOrNull(it.name) }
         }
 
+    /** Types the binding of the presented resource's evaluated display, a canonical read model the editor supplies. */
+    fun resourceAppearance(): com.typewritermc.expression.Expr<ResourceAppearance, com.typewritermc.expression.Handled> {
+        val binding = com.typewritermc.authoring.PresentedResourceAppearance.binding
+        expressionTypes[binding] =
+            com.typewritermc.expression.CanonicalReadModels.resourceAppearance.type
+                .toTemplate()
+        return com.typewritermc.expression.inputExpression(binding)
+    }
+
     /** Declares the group binding of a tree layout, typed as the hierarchy group the host supplies. */
     fun groupBinding(id: ExpressionBindingId) {
         val use = TypeUse.Named(com.typewritermc.authoring.HierarchyGroupDefinition.id)
@@ -208,10 +220,7 @@ internal class PresentationBuildState(
         )
     }
 
-    fun result(
-        layout: PresentationNode,
-        appearance: skirout.editor.v1.presentation.ResultAppearance? = null,
-    ): PresentationBuildResult =
+    fun result(layout: PresentationNode): PresentationBuildResult =
         PresentationBuildResult(
             layout = layout,
             dependencies =
@@ -223,7 +232,6 @@ internal class PresentationBuildState(
                     collections = collections.values,
                     contextInputs = contextInputs.values,
                 ),
-            resultAppearance = appearance,
         )
 
     fun <Value : Any> readContext(
@@ -246,13 +254,6 @@ internal class PresentationBuildState(
         return com.typewritermc.expression.inputExpression(key.binding)
     }
 
-    fun captureResult(content: (PresentationBuildScope) -> Unit): CapturedResultPresentation {
-        val target = mutableListOf<PresentationNode>()
-        val result = ResultPresentationDraft(target)
-        withTarget(target) { content(scope(target = target, result = result)) }
-        return result.finish()
-    }
-
     fun bindingId(purpose: String): ExpressionBindingId = ExpressionBindingId("presentation.$purpose.${nextBinding++}")
 
     fun <T> withTarget(
@@ -273,10 +274,9 @@ internal class PresentationBuildState(
         axis: PresentationAxisNodeList? = null,
         checked: CheckedPresentationTemplate = type,
         base: BindingRef = BindingRef(path = WireValuePath(segments = emptyList()), bindingId = CONFIGURED_VALUE.wire()),
-        result: ResultPresentationDraft? = null,
     ): RuntimePresentationBuildScope {
         if (base.path.segments.isEmpty()) expressionTypes[ExpressionBindingId(base.bindingId.value)] = checked.type
-        return RuntimePresentationBuildScope(this, RuntimeLayout(this, target, axis, checked, base, result), target, checked, base)
+        return RuntimePresentationBuildScope(this, RuntimeLayout(this, target, axis, checked, base), target, checked, base)
     }
 
     fun node(
@@ -385,6 +385,47 @@ internal class PresentationAxisNodeList(
                         FlexFit.Loose -> skirout.editor.v1.presentation.FlexFit.LOOSE
                     },
             )
+    }
+}
+
+/** Records stack children in order: direct additions flow, [addPositioned] places a child by insets. */
+internal class PresentationStackNodeList : AbstractMutableList<PresentationNode>() {
+    private val nodes = mutableListOf<PresentationNode>()
+    val children = mutableListOf<StackChild>()
+
+    override val size: Int get() = nodes.size
+
+    override fun get(index: Int): PresentationNode = nodes[index]
+
+    override fun add(
+        index: Int,
+        element: PresentationNode,
+    ) {
+        nodes.add(index, element)
+        children.add(
+            index,
+            StackChild.FlowWrapper(element),
+        )
+    }
+
+    override fun removeAt(index: Int): PresentationNode {
+        children.removeAt(index)
+        return nodes.removeAt(index)
+    }
+
+    override fun set(
+        index: Int,
+        element: PresentationNode,
+    ): PresentationNode {
+        children[index] =
+            StackChild.FlowWrapper(element)
+        return nodes.set(index, element)
+    }
+
+    fun addPositioned(child: PositionedStackChild) {
+        nodes += child.child
+        children +=
+            StackChild.PositionedWrapper(child)
     }
 }
 

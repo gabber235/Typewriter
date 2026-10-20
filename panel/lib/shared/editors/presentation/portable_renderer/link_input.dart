@@ -195,13 +195,14 @@ extension _DirectLinkCollectionRow on PortablePresentationNodeRenderer {
                 resource: link.target.resource,
                 scope: selectedRow?.scope ?? scope,
                 role: skir.PresentationRole.referencePreview,
-                fallbackLabel: link.target.resource.value,
-                render: (node, targetScope, appearance, accent) =>
+                render: (node, targetScope, _) =>
                     PortablePresentationNodeRenderer(
                       node: node,
                       scope: targetScope,
                     ),
-                fallback: (body, accent) => body,
+                fallback: (appearance, problem) => Text(
+                  problem ?? appearance?.label ?? link.target.resource.value,
+                ),
               );
         final identityAndChoose = InputDecorator(
           decoration: style.decoration.copyWith(enabled: enabled),
@@ -423,13 +424,13 @@ final class _AuthoredLinkValueInput extends StatelessWidget {
             resource: link.target.resource,
             scope: selectedRow?.scope ?? scope,
             role: skir.PresentationRole.referencePreview,
-            fallbackLabel: link.target.resource.value,
-            render: (node, targetScope, appearance, accent) =>
-                PortablePresentationNodeRenderer(
-                  node: node,
-                  scope: targetScope,
-                ),
-            fallback: (body, accent) => body,
+            render: (node, targetScope, _) => PortablePresentationNodeRenderer(
+              node: node,
+              scope: targetScope,
+            ),
+            fallback: (appearance, problem) => Text(
+              problem ?? appearance?.label ?? link.target.resource.value,
+            ),
           );
     final content = InputDecorator(
       decoration: style.decoration.copyWith(enabled: enabled),

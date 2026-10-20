@@ -497,7 +497,7 @@ extension _PortableScalarInputRendering on PortablePresentationNodeRenderer {
         scope: scope,
         builder: (context, states, reportInvalid) {
           final style = _controlStyle(context, scope, input.appearance);
-          final colors = PresentationColorEnvironment.of(context);
+          final colors = PresentationValueEnvironment.of(context);
           Color? resolve(skir.PresentationColor? color) =>
               color == null ? null : colors.resolve(color, scope);
           final enabled = scope.enabled && !scope.readOnly;
@@ -746,7 +746,7 @@ extension _PortableScalarInputRendering on PortablePresentationNodeRenderer {
               ),
             );
           }
-          final colors = PresentationColorEnvironment.of(context);
+          final colors = PresentationValueEnvironment.of(context);
           final menuHeight = _number(scope, options?.maximumMenuHeight);
           if (options?.maximumMenuHeight != null &&
               (menuHeight == null || !menuHeight.isFinite || menuHeight <= 0)) {
@@ -1005,7 +1005,7 @@ extension _PortableScalarInputRendering on PortablePresentationNodeRenderer {
                   slider.appearance,
                 );
                 final options = slider.options;
-                final colors = PresentationColorEnvironment.of(context);
+                final colors = PresentationValueEnvironment.of(context);
                 Color? resolve(skir.PresentationColor? color) =>
                     color == null ? null : colors.resolve(color, childScope);
                 final input = SliderTheme(
@@ -1240,7 +1240,7 @@ extension _PortableScalarInputRendering on PortablePresentationNodeRenderer {
                       : _presentationInsets(popup!.padding),
                   popupColor: popup?.fill == null
                       ? null
-                      : PresentationColorEnvironment.of(context)
+                      : PresentationValueEnvironment.of(context)
                             .resolve(popup!.fill!, scope),
                   popupShape: _popupShape(context, scope, popup),
                   popupConstraints: constraints,
@@ -1740,7 +1740,7 @@ extension _PortableScalarInputRendering on PortablePresentationNodeRenderer {
                       : _presentationInsets(popup!.padding),
                   popupColor: popup?.fill == null
                       ? null
-                      : PresentationColorEnvironment.of(context)
+                      : PresentationValueEnvironment.of(context)
                             .resolve(popup!.fill!, scope),
                   popupShape: _popupShape(context, scope, popup),
                   popupConstraints: constraints,

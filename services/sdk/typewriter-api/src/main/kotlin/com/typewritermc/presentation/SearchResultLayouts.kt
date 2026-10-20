@@ -3,7 +3,6 @@ package com.typewritermc.presentation
 import com.typewritermc.expression.Expr
 import com.typewritermc.expression.Handled
 import com.typewritermc.expression.literal
-import com.typewritermc.types.Color
 
 fun Layout.searchTitle(value: Expr<String, Handled>) {
     text(
@@ -62,7 +61,7 @@ fun Layout.searchChip(
             background = background,
             foreground = foreground,
             radius = PresentationRadius.Custom(literal(1000.0)),
-            transitionMilliseconds = 300,
+            transition = stateTransition(PresentationTransition(milliseconds = 300)),
         ),
     ) {
         padding(PresentationInsets(7.0, 3.0, 7.0, 3.0)) {
@@ -71,27 +70,6 @@ fun Layout.searchChip(
                 style = TextStyle(sizing = TextSizing.Exact(literal(10.0)), weight = 400),
                 paragraph = TextParagraph(maximumLines = 1, overflow = TextOverflow.Ellipsis),
             )
-        }
-    }
-}
-
-fun Layout.resourceSearchResult(
-    title: Expr<String, Handled>,
-    accent: Expr<Color, Handled>,
-    kind: Expr<String, Handled>,
-    icon: Layout.() -> Unit,
-    details: Layout.() -> Unit = {},
-) {
-    val resultAccent = accent
-    val resultIcon = icon
-    searchResult {
-        appearance(SearchResultAppearance.Card)
-        accent(resultAccent)
-        kindLabel(kind)
-        leading(resultIcon)
-        column(spacing = 4.0, cross = CrossAxisAlignment.Start) {
-            searchTitle(title)
-            details()
         }
     }
 }

@@ -490,7 +490,6 @@ skir.PublishedType _published(skir.TypeDefinitionId id, List<_Field> fields) =>
     ),
     skir.PresentationMaterial(
       inheritableNodes: const [],
-      resultAppearance: null,
 
       provider: id,
       target: target,

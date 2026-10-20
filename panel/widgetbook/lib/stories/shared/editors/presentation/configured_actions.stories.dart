@@ -396,11 +396,6 @@ class _GalleryHost extends ChangeNotifier
             resource: indexed.$2,
             occurrence: skir.LinkOccurrence.defaultInstance,
             link: skir.DataValue.unfilled,
-            appearance: ResourceAppearance(
-              label: indexed.$2.value,
-              accent: const Color(0xff7354bf),
-              icon: skir.Icon.wrapIconify("material-symbols:flag"),
-            ),
             resourceProjection: PortableResourceProjection(
               resource: indexed.$2,
               configuration: skir.TypeSelection.createComplete(
@@ -413,7 +408,11 @@ class _GalleryHost extends ChangeNotifier
                 ),
                 arguments: [],
               ),
-              label: indexed.$2.value,
+              appearance: ResourceAppearance(
+                label: indexed.$2.value,
+                accent: const Color(0xff7354bf),
+                icon: skir.Icon.wrapIconify("material-symbols:flag"),
+              ),
               value: skir.DataValue.wrapStringValue(indexed.$2.value),
             ),
             graph: PortableGraphPlacement(

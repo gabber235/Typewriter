@@ -714,7 +714,6 @@ private fun ConversionScope.encode(material: PresentationMaterial) =
         layout = material.layout,
         dependencies = material.dependencies,
         subject = encodeTypeTemplate(material.subject),
-        resultAppearance = material.resultAppearance,
         inheritableNodes = material.inheritableNodes,
     )
 

@@ -3057,7 +3057,6 @@ sealed class PresentationMaterial_orMutable {
   _lib_editor_v1_presentation.PresentationDependencies_orMutable
   get dependencies;
   _lib_editor_v1_type_catalog.TypeTemplate get subject;
-  _lib_editor_v1_presentation.ResultAppearance_orMutable? get resultAppearance;
   _core.Iterable<_core.String> get inheritableNodes;
 
   PresentationMaterial toFrozen();
@@ -3082,8 +3081,6 @@ final class PresentationMaterial implements PresentationMaterial_orMutable {
   @_core.override
   final _lib_editor_v1_type_catalog.TypeTemplate subject;
   @_core.override
-  final _lib_editor_v1_presentation.ResultAppearance? resultAppearance;
-  @_core.override
   final _core.Iterable<_core.String> inheritableNodes;
   _skir.internal__UnrecognizedFields? _u;
 
@@ -3095,8 +3092,6 @@ final class PresentationMaterial implements PresentationMaterial_orMutable {
     required _lib_editor_v1_presentation.PresentationDependencies_orMutable
     dependencies,
     required _lib_editor_v1_type_catalog.TypeTemplate subject,
-    required _lib_editor_v1_presentation.ResultAppearance_orMutable?
-    resultAppearance,
     required _core.Iterable<_core.String> inheritableNodes,
   }) => PresentationMaterial._(
     provider.toFrozen(),
@@ -3105,7 +3100,6 @@ final class PresentationMaterial implements PresentationMaterial_orMutable {
     layout.toFrozen(),
     dependencies.toFrozen(),
     subject,
-    (resultAppearance != null) ? resultAppearance.toFrozen() : null,
     _skir.internal__frozenCopy(inheritableNodes),
   );
 
@@ -3116,7 +3110,6 @@ final class PresentationMaterial implements PresentationMaterial_orMutable {
     this.layout,
     this.dependencies,
     this.subject,
-    this.resultAppearance,
     this.inheritableNodes,
   );
 
@@ -3128,7 +3121,6 @@ final class PresentationMaterial implements PresentationMaterial_orMutable {
     _lib_editor_v1_presentation.PresentationNode.defaultInstance,
     _lib_editor_v1_presentation.PresentationDependencies.defaultInstance,
     _lib_editor_v1_type_catalog.TypeTemplate.unknown,
-    null,
     _skir.KeyedIterable.empty,
   );
 
@@ -3142,7 +3134,6 @@ final class PresentationMaterial implements PresentationMaterial_orMutable {
         _lib_editor_v1_presentation.PresentationNode.defaultInstance,
         _lib_editor_v1_presentation.PresentationDependencies.defaultInstance,
         _lib_editor_v1_type_catalog.TypeTemplate.unknown,
-        null,
         _skir.KeyedIterable.empty,
       );
 
@@ -3159,7 +3150,6 @@ final class PresentationMaterial implements PresentationMaterial_orMutable {
     this.layout,
     this.dependencies,
     this.subject,
-    this.resultAppearance,
     this.inheritableNodes,
   );
 
@@ -3183,7 +3173,6 @@ final class PresentationMaterial implements PresentationMaterial_orMutable {
     this.layout,
     this.dependencies,
     this.subject,
-    this.resultAppearance,
     this.inheritableNodes,
   ];
 
@@ -3252,20 +3241,9 @@ final class PresentationMaterial implements PresentationMaterial_orMutable {
         (it, v) => it.subject = v,
       );
       _serializerBuilder.addField(
-        "result_appearance",
-        "resultAppearance",
-        6,
-        _skir.Serializers.optional(
-          _lib_editor_v1_presentation.ResultAppearance.serializer,
-        ),
-        "",
-        (it) => it.resultAppearance,
-        (it, v) => it.resultAppearance = v,
-      );
-      _serializerBuilder.addField(
         "inheritable_nodes",
         "inheritableNodes",
-        7,
+        6,
         _skir.Serializers.iterable(_skir.Serializers.string),
         "",
         (it) => it.inheritableNodes,
@@ -3296,7 +3274,6 @@ final class PresentationMaterial_mutable
   _lib_editor_v1_presentation.PresentationNode_orMutable layout;
   _lib_editor_v1_presentation.PresentationDependencies_orMutable dependencies;
   _lib_editor_v1_type_catalog.TypeTemplate subject;
-  _lib_editor_v1_presentation.ResultAppearance_orMutable? resultAppearance;
   _core.Iterable<_core.String> inheritableNodes;
   _skir.internal__UnrecognizedFields? _u;
 
@@ -3307,7 +3284,6 @@ final class PresentationMaterial_mutable
     this.layout,
     this.dependencies,
     this.subject,
-    this.resultAppearance,
     this.inheritableNodes,
   );
 
@@ -3369,7 +3345,6 @@ final class PresentationMaterial_mutable
     layout: this.layout,
     dependencies: this.dependencies,
     subject: this.subject,
-    resultAppearance: this.resultAppearance,
     inheritableNodes: this.inheritableNodes,
   ).._u = this._u;
 }

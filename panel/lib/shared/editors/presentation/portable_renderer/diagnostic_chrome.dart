@@ -89,7 +89,7 @@ class PortableDiagnosticFrame extends HookWidget {
                   context,
                   scope!,
                   appearance,
-                  environment: PresentationColorEnvironment.of(context)
+                  environment: PresentationValueEnvironment.of(context)
                       .copyWith(
                         interaction: nativeInteraction.copyWith(
                           invalid: severity == skir.DiagnosticSeverity.error,

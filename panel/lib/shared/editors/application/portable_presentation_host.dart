@@ -358,12 +358,14 @@ abstract class PortableCollectionProjection
   }) = _PortableCollectionProjection;
 }
 
+/// One resource as presentations see it: its configured value, its evaluated
+/// display, and the diagnostics that belong to it.
 @freezed
 abstract class PortableResourceProjection with _$PortableResourceProjection {
   const factory PortableResourceProjection({
     required skir.ResourceId resource,
     required skir.TypeSelection configuration,
-    required String label,
+    required ResourceAppearance appearance,
     required skir.DataValue value,
     @Default([]) List<PortablePresentationDiagnostic> diagnostics,
     @Default(PortableDiagnosticFallback.presentation)
@@ -440,9 +442,12 @@ abstract class PortableResourceMember with _$PortableResourceMember {
     required skir.LinkOccurrence occurrence,
     required skir.DataValue link,
     required PortableResourceProjection resourceProjection,
-    required ResourceAppearance appearance,
     PortableGraphPlacement? graph,
   }) = _PortableResourceMember;
+
+  const PortableResourceMember._();
+
+  ResourceAppearance get appearance => resourceProjection.appearance;
 }
 
 @freezed

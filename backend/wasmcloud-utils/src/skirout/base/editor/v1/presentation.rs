@@ -1250,9 +1250,13 @@ impl GridChildrenElement {
 // struct StackChildrenElement
 // ==============================================================================
 
+/// Children painted over each other. Flow children size the stack; positioned children are
+/// placed by insets and sizes relative to it, and paint in declaration order.
 #[derive(Clone, Debug, PartialEq, Default)]
 pub struct StackChildrenElement {
-    pub children: Vec<PresentationNode>,
+    pub children: Vec<StackChild>,
+    /// Where flow children sit; top start when absent.
+    pub alignment: Option<PresentationAlignment>,
     /// Set this to None when you're creating a struct.
     pub _unrecognized: Option<crate::skir_client::UnrecognizedFields<StackChildrenElement>>,
 }
@@ -1273,7 +1277,7 @@ impl StackChildrenElement {
             crate::skir_client::internal::StructAdapter::new(
                 "editor/v1/presentation.skir",
                 "StackChildrenElement",
-                "",
+                "Children painted over each other. Flow children size the stack; positioned children are\nplaced by insets and sizes relative to it, and paint in declaration order.",
                 |x: &StackChildrenElement| &x._unrecognized,
                 |x: &mut StackChildrenElement, u| x._unrecognized = u,
             )
@@ -3103,7 +3107,10 @@ pub struct ContainerLayout {
     pub background_color: Option<PresentationColor>,
     pub radius: PresentationRadius,
     pub foreground_color: Option<PresentationColor>,
-    pub transition_milliseconds: i32,
+    /// Animates paint changes; changes apply at once when absent.
+    pub transition: Option<PresentationTransitionPolicy>,
+    /// Painted below the container in declaration order.
+    pub shadows: Vec<PresentationShadow>,
     /// Set this to None when you're creating a struct.
     pub _unrecognized: Option<crate::skir_client::UnrecognizedFields<ContainerLayout>>,
 }
@@ -5210,7 +5217,6 @@ pub struct SearchResultMapping {
     pub selected_value: crate::skirout::base::editor::v1::expression::ExpressionNode,
     pub presentation: PresentationNode,
     pub label: Option<crate::skirout::base::editor::v1::expression::ExpressionNode>,
-    pub result_appearance: Option<ResultAppearance>,
     /// Set this to None when you're creating a struct.
     pub _unrecognized: Option<crate::skir_client::UnrecognizedFields<SearchResultMapping>>,
 }
@@ -6464,6 +6470,8 @@ pub enum PresentationElement {
     Align(Box<AlignmentLayout>),
     AppearanceDefaults(Box<AppearanceDefaultsElement>),
     Part(Box<PresentationPartElement>),
+    Size(Box<SizeLayout>),
+    Transform(Box<TransformLayout>),
 }
 
 impl Default for PresentationElement {
@@ -6540,6 +6548,8 @@ impl PresentationElement {
                     PresentationElement::Align(_) => 58,
                     PresentationElement::AppearanceDefaults(_) => 59,
                     PresentationElement::Part(_) => 60,
+                    PresentationElement::Size(_) => 61,
+                    PresentationElement::Transform(_) => 62,
                 },
                 |u| PresentationElement::Unknown(Some(u)),
                 |x: &PresentationElement| match x {
@@ -8098,6 +8108,8 @@ pub enum PresentationColor {
     Alpha(Box<PresentationAlphaColor>),
     Blend(Box<PresentationBlendColor>),
     States(Box<PresentationStateColor>),
+    Adjusted(Box<PresentationAdjustedColor>),
+    Brightness(Box<PresentationBrightnessColor>),
 }
 
 impl Default for PresentationColor {
@@ -8121,6 +8133,8 @@ impl PresentationColor {
                     PresentationColor::Alpha(_) => 5,
                     PresentationColor::Blend(_) => 6,
                     PresentationColor::States(_) => 7,
+                    PresentationColor::Adjusted(_) => 8,
+                    PresentationColor::Brightness(_) => 9,
                 },
                 |u| PresentationColor::Unknown(Some(u)),
                 |x: &PresentationColor| match x {
@@ -10354,7 +10368,8 @@ pub struct CollectionAppearance {
     pub item_foreground: Option<PresentationColor>,
     pub item_border: Option<PresentationBorder>,
     pub item_radius: Option<PresentationRadius>,
-    pub item_transition_milliseconds: Option<i32>,
+    pub item_transition: Option<PresentationTransitionPolicy>,
+    pub item_shadows: Vec<PresentationShadow>,
     /// Set this to None when you're creating a struct.
     pub _unrecognized: Option<crate::skir_client::UnrecognizedFields<CollectionAppearance>>,
 }
@@ -10873,97 +10888,6 @@ impl DividerAppearance {
 }
 
 // ==============================================================================
-// enum ResultStyle
-// ==============================================================================
-
-#[derive(Debug, Clone, PartialEq)]
-pub enum ResultStyle {
-    Unknown(Option<crate::skir_client::UnrecognizedVariant<ResultStyle>>),
-    Compact,
-    Card,
-}
-
-impl Default for ResultStyle {
-    fn default() -> Self {
-        ResultStyle::Unknown(None)
-    }
-}
-
-impl ResultStyle {
-    fn _adapter() -> &'static crate::skir_client::internal::EnumAdapter<ResultStyle> {
-        static ADAPTER: std::sync::LazyLock<
-            crate::skir_client::internal::EnumAdapter<ResultStyle>,
-        > = std::sync::LazyLock::new(|| {
-            crate::skir_client::internal::EnumAdapter::new(
-                |x: &ResultStyle| match x {
-                    ResultStyle::Unknown(_) => 0,
-                    ResultStyle::Compact => 1,
-                    ResultStyle::Card => 2,
-                },
-                |u| ResultStyle::Unknown(Some(u)),
-                |x: &ResultStyle| match x {
-                    ResultStyle::Unknown(Some(u)) => Some(u.as_ref()),
-                    _ => None,
-                },
-                "editor/v1/presentation.skir",
-                "ResultStyle",
-                "",
-            )
-        });
-        &*ADAPTER
-    }
-    pub fn serializer() -> crate::skir_client::Serializer<ResultStyle> {
-        initialize_module_serializers();
-        crate::skir_client::internal::enum_serializer_from_static(ResultStyle::_adapter())
-    }
-}
-
-// ==============================================================================
-// struct ResultAppearance
-// ==============================================================================
-
-/// Describes host supplied result chrome around the portable body, shared by search options,
-/// authoring result rows, page tiles, and graph nodes where the requested role supports it.
-#[derive(Clone, Debug, PartialEq, Default)]
-pub struct ResultAppearance {
-    pub style: Option<ResultStyle>,
-    pub accent: Option<crate::skirout::base::editor::v1::expression::ExpressionNode>,
-    pub leading: Option<PresentationNode>,
-    pub kind_label: Option<crate::skirout::base::editor::v1::expression::ExpressionNode>,
-    /// Set this to None when you're creating a struct.
-    pub _unrecognized: Option<crate::skir_client::UnrecognizedFields<ResultAppearance>>,
-}
-
-impl ResultAppearance {
-    pub fn default_ref() -> &'static ResultAppearance {
-        static D: std::sync::LazyLock<ResultAppearance> =
-            std::sync::LazyLock::new(ResultAppearance::default);
-        &D
-    }
-}
-
-impl ResultAppearance {
-    fn _adapter() -> &'static crate::skir_client::internal::StructAdapter<ResultAppearance> {
-        static ADAPTER: std::sync::LazyLock<
-            crate::skir_client::internal::StructAdapter<ResultAppearance>,
-        > = std::sync::LazyLock::new(|| {
-            crate::skir_client::internal::StructAdapter::new(
-                "editor/v1/presentation.skir",
-                "ResultAppearance",
-                "Describes host supplied result chrome around the portable body, shared by search options,\nauthoring result rows, page tiles, and graph nodes where the requested role supports it.",
-                |x: &ResultAppearance| &x._unrecognized,
-                |x: &mut ResultAppearance, u| x._unrecognized = u,
-            )
-        });
-        &*ADAPTER
-    }
-    pub fn serializer() -> crate::skir_client::Serializer<ResultAppearance> {
-        initialize_module_serializers();
-        crate::skir_client::internal::struct_serializer_from_static(ResultAppearance::_adapter())
-    }
-}
-
-// ==============================================================================
 // struct PresentationContextInput
 // ==============================================================================
 
@@ -11265,6 +11189,663 @@ impl TreeResourcesLayout {
     pub fn serializer() -> crate::skir_client::Serializer<TreeResourcesLayout> {
         initialize_module_serializers();
         crate::skir_client::internal::struct_serializer_from_static(TreeResourcesLayout::_adapter())
+    }
+}
+
+// ==============================================================================
+// enum PresentationNumber
+// ==============================================================================
+
+/// A number that may change with interaction state, in the unit of the field holding it.
+#[derive(Debug, Clone, PartialEq)]
+pub enum PresentationNumber {
+    Unknown(Option<crate::skir_client::UnrecognizedVariant<PresentationNumber>>),
+    Value(Box<crate::skirout::base::editor::v1::expression::ExpressionNode>),
+    States(Box<PresentationStateNumber>),
+}
+
+impl Default for PresentationNumber {
+    fn default() -> Self {
+        PresentationNumber::Unknown(None)
+    }
+}
+
+impl PresentationNumber {
+    fn _adapter() -> &'static crate::skir_client::internal::EnumAdapter<PresentationNumber> {
+        static ADAPTER: std::sync::LazyLock<
+            crate::skir_client::internal::EnumAdapter<PresentationNumber>,
+        > = std::sync::LazyLock::new(|| {
+            crate::skir_client::internal::EnumAdapter::new(
+                |x: &PresentationNumber| match x {
+                    PresentationNumber::Unknown(_) => 0,
+                    PresentationNumber::Value(_) => 1,
+                    PresentationNumber::States(_) => 2,
+                },
+                |u| PresentationNumber::Unknown(Some(u)),
+                |x: &PresentationNumber| match x {
+                    PresentationNumber::Unknown(Some(u)) => Some(u.as_ref()),
+                    _ => None,
+                },
+                "editor/v1/presentation.skir",
+                "PresentationNumber",
+                "A number that may change with interaction state, in the unit of the field holding it.",
+            )
+        });
+        &*ADAPTER
+    }
+    pub fn serializer() -> crate::skir_client::Serializer<PresentationNumber> {
+        initialize_module_serializers();
+        crate::skir_client::internal::enum_serializer_from_static(PresentationNumber::_adapter())
+    }
+}
+
+// ==============================================================================
+// struct PresentationStateNumber
+// ==============================================================================
+
+/// The first rule matching the current interaction state wins; otherwise `fallback` applies.
+#[derive(Clone, Debug, PartialEq, Default)]
+pub struct PresentationStateNumber {
+    pub rules: Vec<PresentationStateNumberRule>,
+    pub fallback: crate::skirout::base::editor::v1::expression::ExpressionNode,
+    /// Set this to None when you're creating a struct.
+    pub _unrecognized: Option<crate::skir_client::UnrecognizedFields<PresentationStateNumber>>,
+}
+
+impl PresentationStateNumber {
+    pub fn default_ref() -> &'static PresentationStateNumber {
+        static D: std::sync::LazyLock<PresentationStateNumber> =
+            std::sync::LazyLock::new(PresentationStateNumber::default);
+        &D
+    }
+}
+
+impl PresentationStateNumber {
+    fn _adapter() -> &'static crate::skir_client::internal::StructAdapter<PresentationStateNumber> {
+        static ADAPTER: std::sync::LazyLock<
+            crate::skir_client::internal::StructAdapter<PresentationStateNumber>,
+        > = std::sync::LazyLock::new(|| {
+            crate::skir_client::internal::StructAdapter::new(
+                "editor/v1/presentation.skir",
+                "PresentationStateNumber",
+                "The first rule matching the current interaction state wins; otherwise `fallback` applies.",
+                |x: &PresentationStateNumber| &x._unrecognized,
+                |x: &mut PresentationStateNumber, u| x._unrecognized = u,
+            )
+        });
+        &*ADAPTER
+    }
+    pub fn serializer() -> crate::skir_client::Serializer<PresentationStateNumber> {
+        initialize_module_serializers();
+        crate::skir_client::internal::struct_serializer_from_static(
+            PresentationStateNumber::_adapter(),
+        )
+    }
+}
+
+// ==============================================================================
+// struct PresentationStateNumberRule
+// ==============================================================================
+
+#[derive(Clone, Debug, PartialEq, Default)]
+pub struct PresentationStateNumberRule {
+    pub match_: PresentationStateMatch,
+    pub value: crate::skirout::base::editor::v1::expression::ExpressionNode,
+    /// Set this to None when you're creating a struct.
+    pub _unrecognized: Option<crate::skir_client::UnrecognizedFields<PresentationStateNumberRule>>,
+}
+
+impl PresentationStateNumberRule {
+    pub fn default_ref() -> &'static PresentationStateNumberRule {
+        static D: std::sync::LazyLock<PresentationStateNumberRule> =
+            std::sync::LazyLock::new(PresentationStateNumberRule::default);
+        &D
+    }
+}
+
+impl PresentationStateNumberRule {
+    fn _adapter()
+    -> &'static crate::skir_client::internal::StructAdapter<PresentationStateNumberRule> {
+        static ADAPTER: std::sync::LazyLock<
+            crate::skir_client::internal::StructAdapter<PresentationStateNumberRule>,
+        > = std::sync::LazyLock::new(|| {
+            crate::skir_client::internal::StructAdapter::new(
+                "editor/v1/presentation.skir",
+                "PresentationStateNumberRule",
+                "",
+                |x: &PresentationStateNumberRule| &x._unrecognized,
+                |x: &mut PresentationStateNumberRule, u| x._unrecognized = u,
+            )
+        });
+        &*ADAPTER
+    }
+    pub fn serializer() -> crate::skir_client::Serializer<PresentationStateNumberRule> {
+        initialize_module_serializers();
+        crate::skir_client::internal::struct_serializer_from_static(
+            PresentationStateNumberRule::_adapter(),
+        )
+    }
+}
+
+// ==============================================================================
+// enum PresentationCurve
+// ==============================================================================
+
+/// How an animated change progresses over its duration.
+#[derive(Debug, Clone, PartialEq)]
+pub enum PresentationCurve {
+    Unknown(Option<crate::skir_client::UnrecognizedVariant<PresentationCurve>>),
+    Linear,
+    EaseInOut,
+    EaseOut,
+    /// Quick start and long settle, for movement that should feel deliberate.
+    Emphasized,
+    /// Springs past the target and settles. The value is the overshoot period, in curve
+    /// progress units (Flutter ElasticOutCurve.period).
+    ElasticOut(f64),
+}
+
+impl Default for PresentationCurve {
+    fn default() -> Self {
+        PresentationCurve::Unknown(None)
+    }
+}
+
+impl PresentationCurve {
+    fn _adapter() -> &'static crate::skir_client::internal::EnumAdapter<PresentationCurve> {
+        static ADAPTER: std::sync::LazyLock<
+            crate::skir_client::internal::EnumAdapter<PresentationCurve>,
+        > = std::sync::LazyLock::new(|| {
+            crate::skir_client::internal::EnumAdapter::new(
+                |x: &PresentationCurve| match x {
+                    PresentationCurve::Unknown(_) => 0,
+                    PresentationCurve::Linear => 1,
+                    PresentationCurve::EaseInOut => 2,
+                    PresentationCurve::EaseOut => 3,
+                    PresentationCurve::Emphasized => 4,
+                    PresentationCurve::ElasticOut(_) => 5,
+                },
+                |u| PresentationCurve::Unknown(Some(u)),
+                |x: &PresentationCurve| match x {
+                    PresentationCurve::Unknown(Some(u)) => Some(u.as_ref()),
+                    _ => None,
+                },
+                "editor/v1/presentation.skir",
+                "PresentationCurve",
+                "How an animated change progresses over its duration.",
+            )
+        });
+        &*ADAPTER
+    }
+    pub fn serializer() -> crate::skir_client::Serializer<PresentationCurve> {
+        initialize_module_serializers();
+        crate::skir_client::internal::enum_serializer_from_static(PresentationCurve::_adapter())
+    }
+}
+
+// ==============================================================================
+// struct PresentationTransition
+// ==============================================================================
+
+#[derive(Clone, Debug, PartialEq, Default)]
+pub struct PresentationTransition {
+    pub milliseconds: i32,
+    pub curve: PresentationCurve,
+    /// Set this to None when you're creating a struct.
+    pub _unrecognized: Option<crate::skir_client::UnrecognizedFields<PresentationTransition>>,
+}
+
+impl PresentationTransition {
+    pub fn default_ref() -> &'static PresentationTransition {
+        static D: std::sync::LazyLock<PresentationTransition> =
+            std::sync::LazyLock::new(PresentationTransition::default);
+        &D
+    }
+}
+
+impl PresentationTransition {
+    fn _adapter() -> &'static crate::skir_client::internal::StructAdapter<PresentationTransition> {
+        static ADAPTER: std::sync::LazyLock<
+            crate::skir_client::internal::StructAdapter<PresentationTransition>,
+        > = std::sync::LazyLock::new(|| {
+            crate::skir_client::internal::StructAdapter::new(
+                "editor/v1/presentation.skir",
+                "PresentationTransition",
+                "",
+                |x: &PresentationTransition| &x._unrecognized,
+                |x: &mut PresentationTransition, u| x._unrecognized = u,
+            )
+        });
+        &*ADAPTER
+    }
+    pub fn serializer() -> crate::skir_client::Serializer<PresentationTransition> {
+        initialize_module_serializers();
+        crate::skir_client::internal::struct_serializer_from_static(
+            PresentationTransition::_adapter(),
+        )
+    }
+}
+
+// ==============================================================================
+// struct PresentationTransitionPolicy
+// ==============================================================================
+
+/// Chooses the transition for a change by the state being entered: the first rule matching
+/// the new interaction state animates the change; otherwise `fallback` does.
+#[derive(Clone, Debug, PartialEq, Default)]
+pub struct PresentationTransitionPolicy {
+    pub rules: Vec<PresentationStateTransitionRule>,
+    pub fallback: PresentationTransition,
+    /// Set this to None when you're creating a struct.
+    pub _unrecognized: Option<crate::skir_client::UnrecognizedFields<PresentationTransitionPolicy>>,
+}
+
+impl PresentationTransitionPolicy {
+    pub fn default_ref() -> &'static PresentationTransitionPolicy {
+        static D: std::sync::LazyLock<PresentationTransitionPolicy> =
+            std::sync::LazyLock::new(PresentationTransitionPolicy::default);
+        &D
+    }
+}
+
+impl PresentationTransitionPolicy {
+    fn _adapter()
+    -> &'static crate::skir_client::internal::StructAdapter<PresentationTransitionPolicy> {
+        static ADAPTER: std::sync::LazyLock<
+            crate::skir_client::internal::StructAdapter<PresentationTransitionPolicy>,
+        > = std::sync::LazyLock::new(|| {
+            crate::skir_client::internal::StructAdapter::new(
+                "editor/v1/presentation.skir",
+                "PresentationTransitionPolicy",
+                "Chooses the transition for a change by the state being entered: the first rule matching\nthe new interaction state animates the change; otherwise `fallback` does.",
+                |x: &PresentationTransitionPolicy| &x._unrecognized,
+                |x: &mut PresentationTransitionPolicy, u| x._unrecognized = u,
+            )
+        });
+        &*ADAPTER
+    }
+    pub fn serializer() -> crate::skir_client::Serializer<PresentationTransitionPolicy> {
+        initialize_module_serializers();
+        crate::skir_client::internal::struct_serializer_from_static(
+            PresentationTransitionPolicy::_adapter(),
+        )
+    }
+}
+
+// ==============================================================================
+// struct PresentationStateTransitionRule
+// ==============================================================================
+
+#[derive(Clone, Debug, PartialEq, Default)]
+pub struct PresentationStateTransitionRule {
+    pub match_: PresentationStateMatch,
+    pub transition: PresentationTransition,
+    /// Set this to None when you're creating a struct.
+    pub _unrecognized:
+        Option<crate::skir_client::UnrecognizedFields<PresentationStateTransitionRule>>,
+}
+
+impl PresentationStateTransitionRule {
+    pub fn default_ref() -> &'static PresentationStateTransitionRule {
+        static D: std::sync::LazyLock<PresentationStateTransitionRule> =
+            std::sync::LazyLock::new(PresentationStateTransitionRule::default);
+        &D
+    }
+}
+
+impl PresentationStateTransitionRule {
+    fn _adapter()
+    -> &'static crate::skir_client::internal::StructAdapter<PresentationStateTransitionRule> {
+        static ADAPTER: std::sync::LazyLock<
+            crate::skir_client::internal::StructAdapter<PresentationStateTransitionRule>,
+        > = std::sync::LazyLock::new(|| {
+            crate::skir_client::internal::StructAdapter::new(
+                "editor/v1/presentation.skir",
+                "PresentationStateTransitionRule",
+                "",
+                |x: &PresentationStateTransitionRule| &x._unrecognized,
+                |x: &mut PresentationStateTransitionRule, u| x._unrecognized = u,
+            )
+        });
+        &*ADAPTER
+    }
+    pub fn serializer() -> crate::skir_client::Serializer<PresentationStateTransitionRule> {
+        initialize_module_serializers();
+        crate::skir_client::internal::struct_serializer_from_static(
+            PresentationStateTransitionRule::_adapter(),
+        )
+    }
+}
+
+// ==============================================================================
+// struct PresentationShadow
+// ==============================================================================
+
+/// Blur, spread and offsets in logical pixels.
+#[derive(Clone, Debug, PartialEq, Default)]
+pub struct PresentationShadow {
+    pub color: PresentationColor,
+    pub blur: f64,
+    pub spread: f64,
+    pub offset_x: f64,
+    pub offset_y: f64,
+    /// Set this to None when you're creating a struct.
+    pub _unrecognized: Option<crate::skir_client::UnrecognizedFields<PresentationShadow>>,
+}
+
+impl PresentationShadow {
+    pub fn default_ref() -> &'static PresentationShadow {
+        static D: std::sync::LazyLock<PresentationShadow> =
+            std::sync::LazyLock::new(PresentationShadow::default);
+        &D
+    }
+}
+
+impl PresentationShadow {
+    fn _adapter() -> &'static crate::skir_client::internal::StructAdapter<PresentationShadow> {
+        static ADAPTER: std::sync::LazyLock<
+            crate::skir_client::internal::StructAdapter<PresentationShadow>,
+        > = std::sync::LazyLock::new(|| {
+            crate::skir_client::internal::StructAdapter::new(
+                "editor/v1/presentation.skir",
+                "PresentationShadow",
+                "Blur, spread and offsets in logical pixels.",
+                |x: &PresentationShadow| &x._unrecognized,
+                |x: &mut PresentationShadow, u| x._unrecognized = u,
+            )
+        });
+        &*ADAPTER
+    }
+    pub fn serializer() -> crate::skir_client::Serializer<PresentationShadow> {
+        initialize_module_serializers();
+        crate::skir_client::internal::struct_serializer_from_static(PresentationShadow::_adapter())
+    }
+}
+
+// ==============================================================================
+// struct PresentationAdjustedColor
+// ==============================================================================
+
+/// Moves `source` in OkLch. Both adjustments range from minus one to one: negative lightness moves toward
+/// black and positive toward white; negative chroma desaturates and positive saturates.
+#[derive(Clone, Debug, PartialEq, Default)]
+pub struct PresentationAdjustedColor {
+    pub source: PresentationColor,
+    pub lightness: f64,
+    pub chroma: f64,
+    /// Set this to None when you're creating a struct.
+    pub _unrecognized: Option<crate::skir_client::UnrecognizedFields<PresentationAdjustedColor>>,
+}
+
+impl PresentationAdjustedColor {
+    pub fn default_ref() -> &'static PresentationAdjustedColor {
+        static D: std::sync::LazyLock<PresentationAdjustedColor> =
+            std::sync::LazyLock::new(PresentationAdjustedColor::default);
+        &D
+    }
+}
+
+impl PresentationAdjustedColor {
+    fn _adapter() -> &'static crate::skir_client::internal::StructAdapter<PresentationAdjustedColor>
+    {
+        static ADAPTER: std::sync::LazyLock<
+            crate::skir_client::internal::StructAdapter<PresentationAdjustedColor>,
+        > = std::sync::LazyLock::new(|| {
+            crate::skir_client::internal::StructAdapter::new(
+                "editor/v1/presentation.skir",
+                "PresentationAdjustedColor",
+                "Moves `source` in OkLch. Both adjustments range from minus one to one: negative lightness moves toward\nblack and positive toward white; negative chroma desaturates and positive saturates.",
+                |x: &PresentationAdjustedColor| &x._unrecognized,
+                |x: &mut PresentationAdjustedColor, u| x._unrecognized = u,
+            )
+        });
+        &*ADAPTER
+    }
+    pub fn serializer() -> crate::skir_client::Serializer<PresentationAdjustedColor> {
+        initialize_module_serializers();
+        crate::skir_client::internal::struct_serializer_from_static(
+            PresentationAdjustedColor::_adapter(),
+        )
+    }
+}
+
+// ==============================================================================
+// struct PresentationBrightnessColor
+// ==============================================================================
+
+/// Picks a color by the brightness of the editor theme.
+#[derive(Clone, Debug, PartialEq, Default)]
+pub struct PresentationBrightnessColor {
+    pub light: PresentationColor,
+    pub dark: PresentationColor,
+    /// Set this to None when you're creating a struct.
+    pub _unrecognized: Option<crate::skir_client::UnrecognizedFields<PresentationBrightnessColor>>,
+}
+
+impl PresentationBrightnessColor {
+    pub fn default_ref() -> &'static PresentationBrightnessColor {
+        static D: std::sync::LazyLock<PresentationBrightnessColor> =
+            std::sync::LazyLock::new(PresentationBrightnessColor::default);
+        &D
+    }
+}
+
+impl PresentationBrightnessColor {
+    fn _adapter()
+    -> &'static crate::skir_client::internal::StructAdapter<PresentationBrightnessColor> {
+        static ADAPTER: std::sync::LazyLock<
+            crate::skir_client::internal::StructAdapter<PresentationBrightnessColor>,
+        > = std::sync::LazyLock::new(|| {
+            crate::skir_client::internal::StructAdapter::new(
+                "editor/v1/presentation.skir",
+                "PresentationBrightnessColor",
+                "Picks a color by the brightness of the editor theme.",
+                |x: &PresentationBrightnessColor| &x._unrecognized,
+                |x: &mut PresentationBrightnessColor, u| x._unrecognized = u,
+            )
+        });
+        &*ADAPTER
+    }
+    pub fn serializer() -> crate::skir_client::Serializer<PresentationBrightnessColor> {
+        initialize_module_serializers();
+        crate::skir_client::internal::struct_serializer_from_static(
+            PresentationBrightnessColor::_adapter(),
+        )
+    }
+}
+
+// ==============================================================================
+// enum StackChild
+// ==============================================================================
+
+#[derive(Debug, Clone, PartialEq)]
+pub enum StackChild {
+    Unknown(Option<crate::skir_client::UnrecognizedVariant<StackChild>>),
+    /// Sized and aligned by the stack.
+    Flow(Box<PresentationNode>),
+    Positioned(Box<PositionedStackChild>),
+}
+
+impl Default for StackChild {
+    fn default() -> Self {
+        StackChild::Unknown(None)
+    }
+}
+
+impl StackChild {
+    fn _adapter() -> &'static crate::skir_client::internal::EnumAdapter<StackChild> {
+        static ADAPTER: std::sync::LazyLock<crate::skir_client::internal::EnumAdapter<StackChild>> =
+            std::sync::LazyLock::new(|| {
+                crate::skir_client::internal::EnumAdapter::new(
+                    |x: &StackChild| match x {
+                        StackChild::Unknown(_) => 0,
+                        StackChild::Flow(_) => 1,
+                        StackChild::Positioned(_) => 2,
+                    },
+                    |u| StackChild::Unknown(Some(u)),
+                    |x: &StackChild| match x {
+                        StackChild::Unknown(Some(u)) => Some(u.as_ref()),
+                        _ => None,
+                    },
+                    "editor/v1/presentation.skir",
+                    "StackChild",
+                    "",
+                )
+            });
+        &*ADAPTER
+    }
+    pub fn serializer() -> crate::skir_client::Serializer<StackChild> {
+        initialize_module_serializers();
+        crate::skir_client::internal::enum_serializer_from_static(StackChild::_adapter())
+    }
+}
+
+// ==============================================================================
+// struct PositionedStackChild
+// ==============================================================================
+
+/// Insets and sizes in logical pixels relative to the stack. At most two of `start`, `end`
+/// and `width` apply horizontally, and at most two of `top`, `bottom` and `height` vertically.
+#[derive(Clone, Debug, PartialEq, Default)]
+pub struct PositionedStackChild {
+    pub child: PresentationNode,
+    pub top: Option<PresentationNumber>,
+    pub start: Option<PresentationNumber>,
+    pub end: Option<PresentationNumber>,
+    pub bottom: Option<PresentationNumber>,
+    pub width: Option<PresentationNumber>,
+    pub height: Option<PresentationNumber>,
+    /// Animates changes of the insets and sizes; they apply at once when absent.
+    pub transition: Option<PresentationTransitionPolicy>,
+    /// Set this to None when you're creating a struct.
+    pub _unrecognized: Option<crate::skir_client::UnrecognizedFields<PositionedStackChild>>,
+}
+
+impl PositionedStackChild {
+    pub fn default_ref() -> &'static PositionedStackChild {
+        static D: std::sync::LazyLock<PositionedStackChild> =
+            std::sync::LazyLock::new(PositionedStackChild::default);
+        &D
+    }
+}
+
+impl PositionedStackChild {
+    fn _adapter() -> &'static crate::skir_client::internal::StructAdapter<PositionedStackChild> {
+        static ADAPTER: std::sync::LazyLock<
+            crate::skir_client::internal::StructAdapter<PositionedStackChild>,
+        > = std::sync::LazyLock::new(|| {
+            crate::skir_client::internal::StructAdapter::new(
+                "editor/v1/presentation.skir",
+                "PositionedStackChild",
+                "Insets and sizes in logical pixels relative to the stack. At most two of `start`, `end`\nand `width` apply horizontally, and at most two of `top`, `bottom` and `height` vertically.",
+                |x: &PositionedStackChild| &x._unrecognized,
+                |x: &mut PositionedStackChild, u| x._unrecognized = u,
+            )
+        });
+        &*ADAPTER
+    }
+    pub fn serializer() -> crate::skir_client::Serializer<PositionedStackChild> {
+        initialize_module_serializers();
+        crate::skir_client::internal::struct_serializer_from_static(PositionedStackChild::_adapter())
+    }
+}
+
+// ==============================================================================
+// struct SizeLayout
+// ==============================================================================
+
+/// Constrains `child` in logical pixels. An exact width or height overrides its bounds.
+#[derive(Clone, Debug, PartialEq, Default)]
+pub struct SizeLayout {
+    pub child: PresentationNode,
+    pub width: Option<crate::skirout::base::editor::v1::expression::ExpressionNode>,
+    pub height: Option<crate::skirout::base::editor::v1::expression::ExpressionNode>,
+    pub minimum_width: Option<crate::skirout::base::editor::v1::expression::ExpressionNode>,
+    pub maximum_width: Option<crate::skirout::base::editor::v1::expression::ExpressionNode>,
+    pub minimum_height: Option<crate::skirout::base::editor::v1::expression::ExpressionNode>,
+    pub maximum_height: Option<crate::skirout::base::editor::v1::expression::ExpressionNode>,
+    /// Set this to None when you're creating a struct.
+    pub _unrecognized: Option<crate::skir_client::UnrecognizedFields<SizeLayout>>,
+}
+
+impl SizeLayout {
+    pub fn default_ref() -> &'static SizeLayout {
+        static D: std::sync::LazyLock<SizeLayout> = std::sync::LazyLock::new(SizeLayout::default);
+        &D
+    }
+}
+
+impl SizeLayout {
+    fn _adapter() -> &'static crate::skir_client::internal::StructAdapter<SizeLayout> {
+        static ADAPTER: std::sync::LazyLock<
+            crate::skir_client::internal::StructAdapter<SizeLayout>,
+        > = std::sync::LazyLock::new(|| {
+            crate::skir_client::internal::StructAdapter::new(
+                "editor/v1/presentation.skir",
+                "SizeLayout",
+                "Constrains `child` in logical pixels. An exact width or height overrides its bounds.",
+                |x: &SizeLayout| &x._unrecognized,
+                |x: &mut SizeLayout, u| x._unrecognized = u,
+            )
+        });
+        &*ADAPTER
+    }
+    pub fn serializer() -> crate::skir_client::Serializer<SizeLayout> {
+        initialize_module_serializers();
+        crate::skir_client::internal::struct_serializer_from_static(SizeLayout::_adapter())
+    }
+}
+
+// ==============================================================================
+// struct TransformLayout
+// ==============================================================================
+
+/// Paints `child` transformed around `origin`. Paint only: layout and the host hit region keep
+/// the untransformed bounds. Rotations are in turns, translations in logical pixels, and
+/// `perspective` is the Matrix4 entry (3, 2); zero keeps the transform flat.
+#[derive(Clone, Debug, PartialEq, Default)]
+pub struct TransformLayout {
+    pub child: PresentationNode,
+    pub origin: PresentationAlignment,
+    pub perspective: f64,
+    pub scale: Option<PresentationNumber>,
+    pub rotate_x: Option<PresentationNumber>,
+    pub rotate_y: Option<PresentationNumber>,
+    pub rotate_z: Option<PresentationNumber>,
+    pub translate_x: Option<PresentationNumber>,
+    pub translate_y: Option<PresentationNumber>,
+    /// Animates changes of the transform; they apply at once when absent.
+    pub transition: Option<PresentationTransitionPolicy>,
+    /// Set this to None when you're creating a struct.
+    pub _unrecognized: Option<crate::skir_client::UnrecognizedFields<TransformLayout>>,
+}
+
+impl TransformLayout {
+    pub fn default_ref() -> &'static TransformLayout {
+        static D: std::sync::LazyLock<TransformLayout> =
+            std::sync::LazyLock::new(TransformLayout::default);
+        &D
+    }
+}
+
+impl TransformLayout {
+    fn _adapter() -> &'static crate::skir_client::internal::StructAdapter<TransformLayout> {
+        static ADAPTER: std::sync::LazyLock<
+            crate::skir_client::internal::StructAdapter<TransformLayout>,
+        > = std::sync::LazyLock::new(|| {
+            crate::skir_client::internal::StructAdapter::new(
+                "editor/v1/presentation.skir",
+                "TransformLayout",
+                "Paints `child` transformed around `origin`. Paint only: layout and the host hit region keep\nthe untransformed bounds. Rotations are in turns, translations in logical pixels, and\n`perspective` is the Matrix4 entry (3, 2); zero keeps the transform flat.",
+                |x: &TransformLayout| &x._unrecognized,
+                |x: &mut TransformLayout, u| x._unrecognized = u,
+            )
+        });
+        &*ADAPTER
+    }
+    pub fn serializer() -> crate::skir_client::Serializer<TransformLayout> {
+        initialize_module_serializers();
+        crate::skir_client::internal::struct_serializer_from_static(TransformLayout::_adapter())
     }
 }
 
@@ -12285,13 +12866,25 @@ fn initialize_module_serializers() {
                 "children",
                 0,
                 crate::skir_client::Serializer::array(
-                    crate::skir_client::internal::struct_serializer_from_static(
-                        PresentationNode::_adapter(),
+                    crate::skir_client::internal::enum_serializer_from_static(
+                        StackChild::_adapter(),
                     ),
                 ),
                 "",
                 |x: &StackChildrenElement| &x.children,
                 |x: &mut StackChildrenElement, v| x.children = v,
+            );
+            (*a).add_field(
+                "alignment",
+                1,
+                crate::skir_client::Serializer::optional(
+                    crate::skir_client::internal::enum_serializer_from_static(
+                        PresentationAlignment::_adapter(),
+                    ),
+                ),
+                "Where flow children sit; top start when absent.",
+                |x: &StackChildrenElement| &x.alignment,
+                |x: &mut StackChildrenElement, v| x.alignment = v,
             );
             (*a).finalize();
         }
@@ -13884,12 +14477,28 @@ fn initialize_module_serializers() {
                 |x: &mut ContainerLayout, v| x.foreground_color = v,
             );
             (*a).add_field(
-                "transition_milliseconds",
+                "transition",
                 5,
-                crate::skir_client::Serializer::int32(),
-                "",
-                |x: &ContainerLayout| &x.transition_milliseconds,
-                |x: &mut ContainerLayout, v| x.transition_milliseconds = v,
+                crate::skir_client::Serializer::optional(
+                    crate::skir_client::internal::struct_serializer_from_static(
+                        PresentationTransitionPolicy::_adapter(),
+                    ),
+                ),
+                "Animates paint changes; changes apply at once when absent.",
+                |x: &ContainerLayout| &x.transition,
+                |x: &mut ContainerLayout, v| x.transition = v,
+            );
+            (*a).add_field(
+                "shadows",
+                6,
+                crate::skir_client::Serializer::array(
+                    crate::skir_client::internal::struct_serializer_from_static(
+                        PresentationShadow::_adapter(),
+                    ),
+                ),
+                "Painted below the container in declaration order.",
+                |x: &ContainerLayout| &x.shadows,
+                |x: &mut ContainerLayout, v| x.shadows = v,
             );
             (*a).finalize();
         }
@@ -15818,18 +16427,6 @@ fn initialize_module_serializers() {
                 |x: &SearchResultMapping| &x.label,
                 |x: &mut SearchResultMapping, v| x.label = v,
             );
-            (*a).add_field(
-                "result_appearance",
-                5,
-                crate::skir_client::Serializer::optional(
-                    crate::skir_client::internal::struct_serializer_from_static(
-                        ResultAppearance::_adapter(),
-                    ),
-                ),
-                "",
-                |x: &SearchResultMapping| &x.result_appearance,
-                |x: &mut SearchResultMapping, v| x.result_appearance = v,
-            );
             (*a).finalize();
         }
         unsafe {
@@ -17735,6 +18332,32 @@ fn initialize_module_serializers() {
                     _ => unreachable!(),
                 },
             );
+            (*a).add_wrapper_variant(
+                "size",
+                61,
+                61,
+                crate::skir_client::internal::struct_serializer_from_static(SizeLayout::_adapter()),
+                "",
+                |v| PresentationElement::Size(Box::new(v)),
+                |x| match x {
+                    PresentationElement::Size(b) => b.as_ref(),
+                    _ => unreachable!(),
+                },
+            );
+            (*a).add_wrapper_variant(
+                "transform",
+                62,
+                62,
+                crate::skir_client::internal::struct_serializer_from_static(
+                    TransformLayout::_adapter(),
+                ),
+                "",
+                |v| PresentationElement::Transform(Box::new(v)),
+                |x| match x {
+                    PresentationElement::Transform(b) => b.as_ref(),
+                    _ => unreachable!(),
+                },
+            );
             (*a).finalize();
         }
         unsafe {
@@ -18896,6 +19519,34 @@ fn initialize_module_serializers() {
                 |v| PresentationColor::States(Box::new(v)),
                 |x| match x {
                     PresentationColor::States(b) => b.as_ref(),
+                    _ => unreachable!(),
+                },
+            );
+            (*a).add_wrapper_variant(
+                "adjusted",
+                8,
+                8,
+                crate::skir_client::internal::struct_serializer_from_static(
+                    PresentationAdjustedColor::_adapter(),
+                ),
+                "",
+                |v| PresentationColor::Adjusted(Box::new(v)),
+                |x| match x {
+                    PresentationColor::Adjusted(b) => b.as_ref(),
+                    _ => unreachable!(),
+                },
+            );
+            (*a).add_wrapper_variant(
+                "brightness",
+                9,
+                9,
+                crate::skir_client::internal::struct_serializer_from_static(
+                    PresentationBrightnessColor::_adapter(),
+                ),
+                "",
+                |v| PresentationColor::Brightness(Box::new(v)),
+                |x| match x {
+                    PresentationColor::Brightness(b) => b.as_ref(),
                     _ => unreachable!(),
                 },
             );
@@ -20655,12 +21306,28 @@ fn initialize_module_serializers() {
                 |x: &mut CollectionAppearance, v| x.item_radius = v,
             );
             (*a).add_field(
-                "item_transition_milliseconds",
+                "item_transition",
                 6,
-                crate::skir_client::Serializer::optional(crate::skir_client::Serializer::int32()),
+                crate::skir_client::Serializer::optional(
+                    crate::skir_client::internal::struct_serializer_from_static(
+                        PresentationTransitionPolicy::_adapter(),
+                    ),
+                ),
                 "",
-                |x: &CollectionAppearance| &x.item_transition_milliseconds,
-                |x: &mut CollectionAppearance, v| x.item_transition_milliseconds = v,
+                |x: &CollectionAppearance| &x.item_transition,
+                |x: &mut CollectionAppearance, v| x.item_transition = v,
+            );
+            (*a).add_field(
+                "item_shadows",
+                7,
+                crate::skir_client::Serializer::array(
+                    crate::skir_client::internal::struct_serializer_from_static(
+                        PresentationShadow::_adapter(),
+                    ),
+                ),
+                "",
+                |x: &CollectionAppearance| &x.item_shadows,
+                |x: &mut CollectionAppearance, v| x.item_shadows = v,
             );
             (*a).finalize();
         }
@@ -21296,62 +21963,6 @@ fn initialize_module_serializers() {
             (*a).finalize();
         }
         unsafe {
-            let a: *mut crate::skir_client::internal::EnumAdapter<ResultStyle> =
-                ResultStyle::_adapter() as *const _ as *mut _;
-            (*a).add_constant_variant("compact", 1, 1, "", ResultStyle::Compact);
-            (*a).add_constant_variant("card", 2, 2, "", ResultStyle::Card);
-            (*a).finalize();
-        }
-        unsafe {
-            let a: *mut crate::skir_client::internal::StructAdapter<ResultAppearance> =
-                ResultAppearance::_adapter() as *const _ as *mut _;
-            (*a).add_field(
-                "style",
-                0,
-                crate::skir_client::Serializer::optional(
-                    crate::skir_client::internal::enum_serializer_from_static(
-                        ResultStyle::_adapter(),
-                    ),
-                ),
-                "",
-                |x: &ResultAppearance| &x.style,
-                |x: &mut ResultAppearance, v| x.style = v,
-            );
-            (*a).add_field(
-                "accent",
-                1,
-                crate::skir_client::Serializer::optional(
-                    crate::skirout::base::editor::v1::expression::ExpressionNode::serializer(),
-                ),
-                "",
-                |x: &ResultAppearance| &x.accent,
-                |x: &mut ResultAppearance, v| x.accent = v,
-            );
-            (*a).add_field(
-                "leading",
-                2,
-                crate::skir_client::Serializer::optional(
-                    crate::skir_client::internal::struct_serializer_from_static(
-                        PresentationNode::_adapter(),
-                    ),
-                ),
-                "",
-                |x: &ResultAppearance| &x.leading,
-                |x: &mut ResultAppearance, v| x.leading = v,
-            );
-            (*a).add_field(
-                "kind_label",
-                3,
-                crate::skir_client::Serializer::optional(
-                    crate::skirout::base::editor::v1::expression::ExpressionNode::serializer(),
-                ),
-                "",
-                |x: &ResultAppearance| &x.kind_label,
-                |x: &mut ResultAppearance, v| x.kind_label = v,
-            );
-            (*a).finalize();
-        }
-        unsafe {
             let a: *mut crate::skir_client::internal::StructAdapter<PresentationContextInput> =
                 PresentationContextInput::_adapter() as *const _ as *mut _;
             (*a).add_field(
@@ -21543,6 +22154,604 @@ fn initialize_module_serializers() {
                 "",
                 |x: &TreeResourcesLayout| &x.initially_expanded,
                 |x: &mut TreeResourcesLayout, v| x.initially_expanded = v,
+            );
+            (*a).finalize();
+        }
+        unsafe {
+            let a: *mut crate::skir_client::internal::EnumAdapter<PresentationNumber> =
+                PresentationNumber::_adapter() as *const _ as *mut _;
+            (*a).add_wrapper_variant(
+                "value",
+                1,
+                1,
+                crate::skirout::base::editor::v1::expression::ExpressionNode::serializer(),
+                "",
+                |v| PresentationNumber::Value(Box::new(v)),
+                |x| match x {
+                    PresentationNumber::Value(b) => b.as_ref(),
+                    _ => unreachable!(),
+                },
+            );
+            (*a).add_wrapper_variant(
+                "states",
+                2,
+                2,
+                crate::skir_client::internal::struct_serializer_from_static(
+                    PresentationStateNumber::_adapter(),
+                ),
+                "",
+                |v| PresentationNumber::States(Box::new(v)),
+                |x| match x {
+                    PresentationNumber::States(b) => b.as_ref(),
+                    _ => unreachable!(),
+                },
+            );
+            (*a).finalize();
+        }
+        unsafe {
+            let a: *mut crate::skir_client::internal::StructAdapter<PresentationStateNumber> =
+                PresentationStateNumber::_adapter() as *const _ as *mut _;
+            (*a).add_field(
+                "rules",
+                0,
+                crate::skir_client::Serializer::array(
+                    crate::skir_client::internal::struct_serializer_from_static(
+                        PresentationStateNumberRule::_adapter(),
+                    ),
+                ),
+                "",
+                |x: &PresentationStateNumber| &x.rules,
+                |x: &mut PresentationStateNumber, v| x.rules = v,
+            );
+            (*a).add_field(
+                "fallback",
+                1,
+                crate::skirout::base::editor::v1::expression::ExpressionNode::serializer(),
+                "",
+                |x: &PresentationStateNumber| &x.fallback,
+                |x: &mut PresentationStateNumber, v| x.fallback = v,
+            );
+            (*a).finalize();
+        }
+        unsafe {
+            let a: *mut crate::skir_client::internal::StructAdapter<PresentationStateNumberRule> =
+                PresentationStateNumberRule::_adapter() as *const _ as *mut _;
+            (*a).add_field(
+                "match",
+                0,
+                crate::skir_client::internal::struct_serializer_from_static(
+                    PresentationStateMatch::_adapter(),
+                ),
+                "",
+                |x: &PresentationStateNumberRule| &x.match_,
+                |x: &mut PresentationStateNumberRule, v| x.match_ = v,
+            );
+            (*a).add_field(
+                "value",
+                1,
+                crate::skirout::base::editor::v1::expression::ExpressionNode::serializer(),
+                "",
+                |x: &PresentationStateNumberRule| &x.value,
+                |x: &mut PresentationStateNumberRule, v| x.value = v,
+            );
+            (*a).finalize();
+        }
+        unsafe {
+            let a: *mut crate::skir_client::internal::EnumAdapter<PresentationCurve> =
+                PresentationCurve::_adapter() as *const _ as *mut _;
+            (*a).add_constant_variant("linear", 1, 1, "", PresentationCurve::Linear);
+            (*a).add_constant_variant("ease_in_out", 2, 2, "", PresentationCurve::EaseInOut);
+            (*a).add_constant_variant("ease_out", 3, 3, "", PresentationCurve::EaseOut);
+            (*a).add_constant_variant(
+                "emphasized",
+                4,
+                4,
+                "Quick start and long settle, for movement that should feel deliberate.",
+                PresentationCurve::Emphasized,
+            );
+            (*a).add_wrapper_variant("elastic_out", 5, 5, crate::skir_client::Serializer::float64(), "Springs past the target and settles. The value is the overshoot period, in curve\nprogress units (Flutter ElasticOutCurve.period).", |v| PresentationCurve::ElasticOut(v), |x| match x { PresentationCurve::ElasticOut(v) => v, _ => unreachable!() });
+            (*a).finalize();
+        }
+        unsafe {
+            let a: *mut crate::skir_client::internal::StructAdapter<PresentationTransition> =
+                PresentationTransition::_adapter() as *const _ as *mut _;
+            (*a).add_field(
+                "milliseconds",
+                0,
+                crate::skir_client::Serializer::int32(),
+                "",
+                |x: &PresentationTransition| &x.milliseconds,
+                |x: &mut PresentationTransition, v| x.milliseconds = v,
+            );
+            (*a).add_field(
+                "curve",
+                1,
+                crate::skir_client::internal::enum_serializer_from_static(
+                    PresentationCurve::_adapter(),
+                ),
+                "",
+                |x: &PresentationTransition| &x.curve,
+                |x: &mut PresentationTransition, v| x.curve = v,
+            );
+            (*a).finalize();
+        }
+        unsafe {
+            let a: *mut crate::skir_client::internal::StructAdapter<PresentationTransitionPolicy> =
+                PresentationTransitionPolicy::_adapter() as *const _ as *mut _;
+            (*a).add_field(
+                "rules",
+                0,
+                crate::skir_client::Serializer::array(
+                    crate::skir_client::internal::struct_serializer_from_static(
+                        PresentationStateTransitionRule::_adapter(),
+                    ),
+                ),
+                "",
+                |x: &PresentationTransitionPolicy| &x.rules,
+                |x: &mut PresentationTransitionPolicy, v| x.rules = v,
+            );
+            (*a).add_field(
+                "fallback",
+                1,
+                crate::skir_client::internal::struct_serializer_from_static(
+                    PresentationTransition::_adapter(),
+                ),
+                "",
+                |x: &PresentationTransitionPolicy| &x.fallback,
+                |x: &mut PresentationTransitionPolicy, v| x.fallback = v,
+            );
+            (*a).finalize();
+        }
+        unsafe {
+            let a: *mut crate::skir_client::internal::StructAdapter<
+                PresentationStateTransitionRule,
+            > = PresentationStateTransitionRule::_adapter() as *const _ as *mut _;
+            (*a).add_field(
+                "match",
+                0,
+                crate::skir_client::internal::struct_serializer_from_static(
+                    PresentationStateMatch::_adapter(),
+                ),
+                "",
+                |x: &PresentationStateTransitionRule| &x.match_,
+                |x: &mut PresentationStateTransitionRule, v| x.match_ = v,
+            );
+            (*a).add_field(
+                "transition",
+                1,
+                crate::skir_client::internal::struct_serializer_from_static(
+                    PresentationTransition::_adapter(),
+                ),
+                "",
+                |x: &PresentationStateTransitionRule| &x.transition,
+                |x: &mut PresentationStateTransitionRule, v| x.transition = v,
+            );
+            (*a).finalize();
+        }
+        unsafe {
+            let a: *mut crate::skir_client::internal::StructAdapter<PresentationShadow> =
+                PresentationShadow::_adapter() as *const _ as *mut _;
+            (*a).add_field(
+                "color",
+                0,
+                crate::skir_client::internal::enum_serializer_from_static(
+                    PresentationColor::_adapter(),
+                ),
+                "",
+                |x: &PresentationShadow| &x.color,
+                |x: &mut PresentationShadow, v| x.color = v,
+            );
+            (*a).add_field(
+                "blur",
+                1,
+                crate::skir_client::Serializer::float64(),
+                "",
+                |x: &PresentationShadow| &x.blur,
+                |x: &mut PresentationShadow, v| x.blur = v,
+            );
+            (*a).add_field(
+                "spread",
+                2,
+                crate::skir_client::Serializer::float64(),
+                "",
+                |x: &PresentationShadow| &x.spread,
+                |x: &mut PresentationShadow, v| x.spread = v,
+            );
+            (*a).add_field(
+                "offset_x",
+                3,
+                crate::skir_client::Serializer::float64(),
+                "",
+                |x: &PresentationShadow| &x.offset_x,
+                |x: &mut PresentationShadow, v| x.offset_x = v,
+            );
+            (*a).add_field(
+                "offset_y",
+                4,
+                crate::skir_client::Serializer::float64(),
+                "",
+                |x: &PresentationShadow| &x.offset_y,
+                |x: &mut PresentationShadow, v| x.offset_y = v,
+            );
+            (*a).finalize();
+        }
+        unsafe {
+            let a: *mut crate::skir_client::internal::StructAdapter<PresentationAdjustedColor> =
+                PresentationAdjustedColor::_adapter() as *const _ as *mut _;
+            (*a).add_field(
+                "source",
+                0,
+                crate::skir_client::internal::enum_serializer_from_static(
+                    PresentationColor::_adapter(),
+                ),
+                "",
+                |x: &PresentationAdjustedColor| &x.source,
+                |x: &mut PresentationAdjustedColor, v| x.source = v,
+            );
+            (*a).add_field(
+                "lightness",
+                1,
+                crate::skir_client::Serializer::float64(),
+                "",
+                |x: &PresentationAdjustedColor| &x.lightness,
+                |x: &mut PresentationAdjustedColor, v| x.lightness = v,
+            );
+            (*a).add_field(
+                "chroma",
+                2,
+                crate::skir_client::Serializer::float64(),
+                "",
+                |x: &PresentationAdjustedColor| &x.chroma,
+                |x: &mut PresentationAdjustedColor, v| x.chroma = v,
+            );
+            (*a).finalize();
+        }
+        unsafe {
+            let a: *mut crate::skir_client::internal::StructAdapter<PresentationBrightnessColor> =
+                PresentationBrightnessColor::_adapter() as *const _ as *mut _;
+            (*a).add_field(
+                "light",
+                0,
+                crate::skir_client::internal::enum_serializer_from_static(
+                    PresentationColor::_adapter(),
+                ),
+                "",
+                |x: &PresentationBrightnessColor| &x.light,
+                |x: &mut PresentationBrightnessColor, v| x.light = v,
+            );
+            (*a).add_field(
+                "dark",
+                1,
+                crate::skir_client::internal::enum_serializer_from_static(
+                    PresentationColor::_adapter(),
+                ),
+                "",
+                |x: &PresentationBrightnessColor| &x.dark,
+                |x: &mut PresentationBrightnessColor, v| x.dark = v,
+            );
+            (*a).finalize();
+        }
+        unsafe {
+            let a: *mut crate::skir_client::internal::EnumAdapter<StackChild> =
+                StackChild::_adapter() as *const _ as *mut _;
+            (*a).add_wrapper_variant(
+                "flow",
+                1,
+                1,
+                crate::skir_client::internal::struct_serializer_from_static(
+                    PresentationNode::_adapter(),
+                ),
+                "Sized and aligned by the stack.",
+                |v| StackChild::Flow(Box::new(v)),
+                |x| match x {
+                    StackChild::Flow(b) => b.as_ref(),
+                    _ => unreachable!(),
+                },
+            );
+            (*a).add_wrapper_variant(
+                "positioned",
+                2,
+                2,
+                crate::skir_client::internal::struct_serializer_from_static(
+                    PositionedStackChild::_adapter(),
+                ),
+                "",
+                |v| StackChild::Positioned(Box::new(v)),
+                |x| match x {
+                    StackChild::Positioned(b) => b.as_ref(),
+                    _ => unreachable!(),
+                },
+            );
+            (*a).finalize();
+        }
+        unsafe {
+            let a: *mut crate::skir_client::internal::StructAdapter<PositionedStackChild> =
+                PositionedStackChild::_adapter() as *const _ as *mut _;
+            (*a).add_field(
+                "child",
+                0,
+                crate::skir_client::internal::struct_serializer_from_static(
+                    PresentationNode::_adapter(),
+                ),
+                "",
+                |x: &PositionedStackChild| &x.child,
+                |x: &mut PositionedStackChild, v| x.child = v,
+            );
+            (*a).add_field(
+                "top",
+                1,
+                crate::skir_client::Serializer::optional(
+                    crate::skir_client::internal::enum_serializer_from_static(
+                        PresentationNumber::_adapter(),
+                    ),
+                ),
+                "",
+                |x: &PositionedStackChild| &x.top,
+                |x: &mut PositionedStackChild, v| x.top = v,
+            );
+            (*a).add_field(
+                "start",
+                2,
+                crate::skir_client::Serializer::optional(
+                    crate::skir_client::internal::enum_serializer_from_static(
+                        PresentationNumber::_adapter(),
+                    ),
+                ),
+                "",
+                |x: &PositionedStackChild| &x.start,
+                |x: &mut PositionedStackChild, v| x.start = v,
+            );
+            (*a).add_field(
+                "end",
+                3,
+                crate::skir_client::Serializer::optional(
+                    crate::skir_client::internal::enum_serializer_from_static(
+                        PresentationNumber::_adapter(),
+                    ),
+                ),
+                "",
+                |x: &PositionedStackChild| &x.end,
+                |x: &mut PositionedStackChild, v| x.end = v,
+            );
+            (*a).add_field(
+                "bottom",
+                4,
+                crate::skir_client::Serializer::optional(
+                    crate::skir_client::internal::enum_serializer_from_static(
+                        PresentationNumber::_adapter(),
+                    ),
+                ),
+                "",
+                |x: &PositionedStackChild| &x.bottom,
+                |x: &mut PositionedStackChild, v| x.bottom = v,
+            );
+            (*a).add_field(
+                "width",
+                5,
+                crate::skir_client::Serializer::optional(
+                    crate::skir_client::internal::enum_serializer_from_static(
+                        PresentationNumber::_adapter(),
+                    ),
+                ),
+                "",
+                |x: &PositionedStackChild| &x.width,
+                |x: &mut PositionedStackChild, v| x.width = v,
+            );
+            (*a).add_field(
+                "height",
+                6,
+                crate::skir_client::Serializer::optional(
+                    crate::skir_client::internal::enum_serializer_from_static(
+                        PresentationNumber::_adapter(),
+                    ),
+                ),
+                "",
+                |x: &PositionedStackChild| &x.height,
+                |x: &mut PositionedStackChild, v| x.height = v,
+            );
+            (*a).add_field(
+                "transition",
+                7,
+                crate::skir_client::Serializer::optional(
+                    crate::skir_client::internal::struct_serializer_from_static(
+                        PresentationTransitionPolicy::_adapter(),
+                    ),
+                ),
+                "Animates changes of the insets and sizes; they apply at once when absent.",
+                |x: &PositionedStackChild| &x.transition,
+                |x: &mut PositionedStackChild, v| x.transition = v,
+            );
+            (*a).finalize();
+        }
+        unsafe {
+            let a: *mut crate::skir_client::internal::StructAdapter<SizeLayout> =
+                SizeLayout::_adapter() as *const _ as *mut _;
+            (*a).add_field(
+                "child",
+                0,
+                crate::skir_client::internal::struct_serializer_from_static(
+                    PresentationNode::_adapter(),
+                ),
+                "",
+                |x: &SizeLayout| &x.child,
+                |x: &mut SizeLayout, v| x.child = v,
+            );
+            (*a).add_field(
+                "width",
+                1,
+                crate::skir_client::Serializer::optional(
+                    crate::skirout::base::editor::v1::expression::ExpressionNode::serializer(),
+                ),
+                "",
+                |x: &SizeLayout| &x.width,
+                |x: &mut SizeLayout, v| x.width = v,
+            );
+            (*a).add_field(
+                "height",
+                2,
+                crate::skir_client::Serializer::optional(
+                    crate::skirout::base::editor::v1::expression::ExpressionNode::serializer(),
+                ),
+                "",
+                |x: &SizeLayout| &x.height,
+                |x: &mut SizeLayout, v| x.height = v,
+            );
+            (*a).add_field(
+                "minimum_width",
+                3,
+                crate::skir_client::Serializer::optional(
+                    crate::skirout::base::editor::v1::expression::ExpressionNode::serializer(),
+                ),
+                "",
+                |x: &SizeLayout| &x.minimum_width,
+                |x: &mut SizeLayout, v| x.minimum_width = v,
+            );
+            (*a).add_field(
+                "maximum_width",
+                4,
+                crate::skir_client::Serializer::optional(
+                    crate::skirout::base::editor::v1::expression::ExpressionNode::serializer(),
+                ),
+                "",
+                |x: &SizeLayout| &x.maximum_width,
+                |x: &mut SizeLayout, v| x.maximum_width = v,
+            );
+            (*a).add_field(
+                "minimum_height",
+                5,
+                crate::skir_client::Serializer::optional(
+                    crate::skirout::base::editor::v1::expression::ExpressionNode::serializer(),
+                ),
+                "",
+                |x: &SizeLayout| &x.minimum_height,
+                |x: &mut SizeLayout, v| x.minimum_height = v,
+            );
+            (*a).add_field(
+                "maximum_height",
+                6,
+                crate::skir_client::Serializer::optional(
+                    crate::skirout::base::editor::v1::expression::ExpressionNode::serializer(),
+                ),
+                "",
+                |x: &SizeLayout| &x.maximum_height,
+                |x: &mut SizeLayout, v| x.maximum_height = v,
+            );
+            (*a).finalize();
+        }
+        unsafe {
+            let a: *mut crate::skir_client::internal::StructAdapter<TransformLayout> =
+                TransformLayout::_adapter() as *const _ as *mut _;
+            (*a).add_field(
+                "child",
+                0,
+                crate::skir_client::internal::struct_serializer_from_static(
+                    PresentationNode::_adapter(),
+                ),
+                "",
+                |x: &TransformLayout| &x.child,
+                |x: &mut TransformLayout, v| x.child = v,
+            );
+            (*a).add_field(
+                "origin",
+                1,
+                crate::skir_client::internal::enum_serializer_from_static(
+                    PresentationAlignment::_adapter(),
+                ),
+                "",
+                |x: &TransformLayout| &x.origin,
+                |x: &mut TransformLayout, v| x.origin = v,
+            );
+            (*a).add_field(
+                "perspective",
+                2,
+                crate::skir_client::Serializer::float64(),
+                "",
+                |x: &TransformLayout| &x.perspective,
+                |x: &mut TransformLayout, v| x.perspective = v,
+            );
+            (*a).add_field(
+                "scale",
+                3,
+                crate::skir_client::Serializer::optional(
+                    crate::skir_client::internal::enum_serializer_from_static(
+                        PresentationNumber::_adapter(),
+                    ),
+                ),
+                "",
+                |x: &TransformLayout| &x.scale,
+                |x: &mut TransformLayout, v| x.scale = v,
+            );
+            (*a).add_field(
+                "rotate_x",
+                4,
+                crate::skir_client::Serializer::optional(
+                    crate::skir_client::internal::enum_serializer_from_static(
+                        PresentationNumber::_adapter(),
+                    ),
+                ),
+                "",
+                |x: &TransformLayout| &x.rotate_x,
+                |x: &mut TransformLayout, v| x.rotate_x = v,
+            );
+            (*a).add_field(
+                "rotate_y",
+                5,
+                crate::skir_client::Serializer::optional(
+                    crate::skir_client::internal::enum_serializer_from_static(
+                        PresentationNumber::_adapter(),
+                    ),
+                ),
+                "",
+                |x: &TransformLayout| &x.rotate_y,
+                |x: &mut TransformLayout, v| x.rotate_y = v,
+            );
+            (*a).add_field(
+                "rotate_z",
+                6,
+                crate::skir_client::Serializer::optional(
+                    crate::skir_client::internal::enum_serializer_from_static(
+                        PresentationNumber::_adapter(),
+                    ),
+                ),
+                "",
+                |x: &TransformLayout| &x.rotate_z,
+                |x: &mut TransformLayout, v| x.rotate_z = v,
+            );
+            (*a).add_field(
+                "translate_x",
+                7,
+                crate::skir_client::Serializer::optional(
+                    crate::skir_client::internal::enum_serializer_from_static(
+                        PresentationNumber::_adapter(),
+                    ),
+                ),
+                "",
+                |x: &TransformLayout| &x.translate_x,
+                |x: &mut TransformLayout, v| x.translate_x = v,
+            );
+            (*a).add_field(
+                "translate_y",
+                8,
+                crate::skir_client::Serializer::optional(
+                    crate::skir_client::internal::enum_serializer_from_static(
+                        PresentationNumber::_adapter(),
+                    ),
+                ),
+                "",
+                |x: &TransformLayout| &x.translate_y,
+                |x: &mut TransformLayout, v| x.translate_y = v,
+            );
+            (*a).add_field(
+                "transition",
+                9,
+                crate::skir_client::Serializer::optional(
+                    crate::skir_client::internal::struct_serializer_from_static(
+                        PresentationTransitionPolicy::_adapter(),
+                    ),
+                ),
+                "Animates changes of the transform; they apply at once when absent.",
+                |x: &TransformLayout| &x.transition,
+                |x: &mut TransformLayout, v| x.transition = v,
             );
             (*a).finalize();
         }

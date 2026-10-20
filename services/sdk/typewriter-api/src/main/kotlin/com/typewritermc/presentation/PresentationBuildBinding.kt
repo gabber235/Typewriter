@@ -217,8 +217,6 @@ interface Layout :
 
     val context: PresentationContextExpressions
 
-    fun searchResult(body: SearchResultLayout.() -> Unit)
-
     fun clippedRow(
         spacing: Double = 0.0,
         body: Layout.() -> Unit,
@@ -251,7 +249,14 @@ interface Layout :
         body: Layout.() -> Unit,
     )
 
-    fun stack(body: Layout.() -> Unit)
+    /**
+     * Paints children over each other. Children declared directly flow: they size the stack and sit at [alignment],
+     * top start by default. [StackLayout.positioned] children are placed by insets relative to the stack.
+     */
+    fun stack(
+        alignment: PresentationAlignment? = null,
+        body: StackLayout.() -> Unit,
+    )
 
     fun section(
         border: PresentationBorder? = null,
@@ -266,6 +271,26 @@ interface Layout :
 
     fun align(
         alignment: PresentationAlignment,
+        body: Layout.() -> Unit,
+    )
+
+    /**
+     * Constrains [body] in logical pixels. An exact [width] or [height] overrides the matching bounds; an absent
+     * bound leaves the incoming constraint.
+     */
+    fun size(
+        width: Double? = null,
+        height: Double? = null,
+        minimumWidth: Double? = null,
+        maximumWidth: Double? = null,
+        minimumHeight: Double? = null,
+        maximumHeight: Double? = null,
+        body: Layout.() -> Unit,
+    )
+
+    /** Paints [body] transformed by [style]; layout and hit testing keep its untransformed bounds. */
+    fun transform(
+        style: TransformStyle,
         body: Layout.() -> Unit,
     )
 
@@ -325,6 +350,29 @@ interface AxisLayout : Layout {
     )
 }
 
+/** The children of a [Layout.stack]. Children declared directly flow; these are placed by insets. */
+interface StackLayout : Layout {
+    /**
+     * Places [body] by insets and sizes in logical pixels relative to the stack. At most two of [start], [end] and
+     * [width] apply horizontally, and at most two of [top], [bottom] and [height] vertically. [transition] animates
+     * changes of the insets and sizes.
+     */
+    fun positioned(
+        top: PresentationNumber? = null,
+        start: PresentationNumber? = null,
+        end: PresentationNumber? = null,
+        bottom: PresentationNumber? = null,
+        width: PresentationNumber? = null,
+        height: PresentationNumber? = null,
+        transition: PresentationTransitionPolicy? = null,
+        body: Layout.() -> Unit,
+    )
+
+    /** Fills the whole stack with [body]. */
+    fun fill(body: Layout.() -> Unit) =
+        positioned(top = number(0.0), start = number(0.0), end = number(0.0), bottom = number(0.0), body = body)
+}
+
 interface RemainingFields {
     fun exclude(part: PresentationPartKey<*>)
 
@@ -376,7 +424,10 @@ data class ContainerStyle(
     val foreground: PresentationColor? = null,
     val border: PresentationBorder? = null,
     val radius: PresentationRadius = PresentationRadius.None,
-    val transitionMilliseconds: Int = 0,
+    /** Animates changes of the colors, border and shadows; they apply at once when null. */
+    val transition: PresentationTransitionPolicy? = null,
+    /** Painted below the container in declaration order. */
+    val shadows: List<PresentationShadow> = emptyList(),
 )
 
 sealed interface PresentationRadius {

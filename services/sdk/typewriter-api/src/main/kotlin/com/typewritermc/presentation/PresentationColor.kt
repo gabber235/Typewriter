@@ -56,18 +56,34 @@ sealed interface PresentationColor {
         val rules: List<PresentationStateColorRule>,
         val fallback: PresentationColor,
     ) : PresentationColor
+
+    /**
+     * Moves [source] in OkLch. Both adjustments range from minus one to one: negative [lightness] moves toward black and
+     * positive toward white; negative [chroma] desaturates and positive saturates.
+     */
+    data class Adjusted(
+        val source: PresentationColor,
+        val lightness: Double,
+        val chroma: Double,
+    ) : PresentationColor {
+        init {
+            require(lightness.isFinite() && lightness in -1.0..1.0) { "Presentation lightness must be between minus one and one." }
+            require(chroma.isFinite() && chroma in -1.0..1.0) { "Presentation chroma must be between minus one and one." }
+        }
+    }
+
+    /** Picks [light] or [dark] by the brightness of the editor theme. */
+    data class Brightness(
+        val light: PresentationColor,
+        val dark: PresentationColor,
+    ) : PresentationColor
 }
 
-/** A match requires every required state and excludes every excluded state. */
+/** Ordered rules use the first rule whose [match] holds for the current interaction state. */
 data class PresentationStateColorRule(
-    val required: Set<PresentationInteractionState>,
-    val excluded: Set<PresentationInteractionState>,
+    val match: PresentationStateMatch,
     val color: PresentationColor,
-) {
-    init {
-        require(required.intersect(excluded).isEmpty()) { "Presentation states cannot be both required and excluded." }
-    }
-}
+)
 
 class PresentationStateColorScope internal constructor() {
     internal val rules = mutableListOf<PresentationStateColorRule>()
@@ -77,7 +93,7 @@ class PresentationStateColorScope internal constructor() {
         excluded: Set<PresentationInteractionState> = emptySet(),
         color: PresentationColor,
     ) {
-        rules += PresentationStateColorRule(required.toSet(), excluded.toSet(), color)
+        rules += PresentationStateColorRule(PresentationStateMatch(required.toSet(), excluded), color)
     }
 }
 
@@ -98,6 +114,18 @@ fun PresentationColor.monochromeOn(): PresentationColor = PresentationColor.Cont
 fun PresentationColor.withAlpha(alpha: Double): PresentationColor = PresentationColor.Alpha(this, alpha)
 
 fun PresentationColor.over(background: PresentationColor): PresentationColor = PresentationColor.Blend(this, background)
+
+/** Moves this color in OkLch; see [PresentationColor.Adjusted]. */
+fun PresentationColor.adjusted(
+    lightness: Double = 0.0,
+    chroma: Double = 0.0,
+): PresentationColor = PresentationColor.Adjusted(this, lightness, chroma)
+
+/** Uses [light] in a light editor theme and [dark] in a dark one. */
+fun brightnessColor(
+    light: PresentationColor,
+    dark: PresentationColor,
+): PresentationColor = PresentationColor.Brightness(light, dark)
 
 /** Declares ordered rules; selection, focus, hover, and presses remain owned by the panel. */
 fun stateColor(

@@ -151,8 +151,6 @@ void main() {
       header: null,
     );
     final mapping = skir.SearchResultMapping(
-      resultAppearance: null,
-
       bindingId: row,
       key: rowRead,
       selectedValue: rowRead,
@@ -434,8 +432,6 @@ void main() {
           arguments: const [],
         ),
         result: skir.SearchResultMapping(
-          resultAppearance: null,
-
           bindingId: row,
           key: rowRead,
           selectedValue: rowRead,
@@ -631,8 +627,6 @@ skir.SearchControl _pendingControl() {
         ),
       ),
       result: skir.SearchResultMapping(
-        resultAppearance: null,
-
         bindingId: row,
         key: rowRead,
         selectedValue: rowRead,

@@ -28,6 +28,7 @@ part "portable_renderer/header_layout.dart";
 part "portable_renderer/layout.dart";
 part "portable_renderer/link_input.dart";
 part "portable_renderer/link_selection.dart";
+part "portable_renderer/paint.dart";
 part "portable_renderer/resources.dart";
 part "portable_renderer/reorder_handle.dart";
 part "portable_renderer/result_content.dart";
@@ -312,6 +313,14 @@ final class PortablePresentationNodeRenderer extends StatelessWidget {
     ),
     skir.PresentationElement_containerWrapper(:final value) => _renderContainer(
       context,
+      value,
+      childScope,
+    ),
+    skir.PresentationElement_sizeWrapper(:final value) => _renderSize(
+      value,
+      childScope,
+    ),
+    skir.PresentationElement_transformWrapper(:final value) => _renderTransform(
       value,
       childScope,
     ),

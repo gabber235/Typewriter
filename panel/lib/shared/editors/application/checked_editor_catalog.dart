@@ -2140,6 +2140,10 @@ Iterable<skir.PresentationNode> _presentationBodyNodes(
       yield value.child;
     case skir.PresentationElement_containerWrapper(:final value):
       yield value.child;
+    case skir.PresentationElement_sizeWrapper(:final value):
+      yield value.child;
+    case skir.PresentationElement_transformWrapper(:final value):
+      yield value.child;
     case skir.PresentationElement_anchorWrapper(:final value):
       yield value.child;
     case skir.PresentationElement_connectionLayerWrapper(:final value):
@@ -2184,7 +2188,16 @@ Iterable<skir.PresentationNode> _childrenNodes(
     case skir.ChildrenElement_gridWrapper(:final value):
       yield* value.children;
     case skir.ChildrenElement_stackWrapper(:final value):
-      yield* value.children;
+      for (final child in value.children) {
+        switch (child) {
+          case skir.StackChild_flowWrapper(:final value):
+            yield value;
+          case skir.StackChild_positionedWrapper(:final value):
+            yield value.child;
+          default:
+            break;
+        }
+      }
     default:
       break;
   }
@@ -2219,7 +2232,6 @@ Iterable<skir.PresentationNode> _searchResultNodes(
   skir.SearchResultMapping result,
 ) sync* {
   yield result.presentation;
-  if (result.resultAppearance?.leading case final leading?) yield leading;
 }
 
 Iterable<skir.PresentationNode> _searchProviderNodes(

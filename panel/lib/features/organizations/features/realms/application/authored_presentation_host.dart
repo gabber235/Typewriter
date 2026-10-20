@@ -133,6 +133,12 @@ final class AuthoredPresentationHost extends ChangeNotifier
           ),
           value: resource.toExpressionValue(),
         ),
+        presentationSubjectAppearanceBindingId: PortablePresentationBinding(
+          schema: CompletePortablePresentationBinding(
+            skir.TypeUse.wrapNamed(canonicalReadModels.resourceAppearanceUse),
+          ),
+          value: checked.appearanceOf(record).toExpressionValue(),
+        ),
         if (schema != null)
           configuredValueBindingId: PortablePresentationBinding(
             schema: schema,
@@ -504,7 +510,7 @@ final class AuthoredPresentationHost extends ChangeNotifier
     return PortableResourceProjection(
       resource: resource,
       configuration: record.configuration,
-      label: catalog.appearanceOf(record).label,
+      appearance: catalog.appearanceOf(record),
       value: _resourceRow(record),
       diagnosticFallback: PortableDiagnosticFallback.resource,
       diagnostics: context.resourceDiagnostics(resource),
@@ -665,7 +671,6 @@ final class AuthoredPresentationHost extends ChangeNotifier
           ),
           link: value,
           resourceProjection: resource,
-          appearance: authored.catalog.appearanceOf(record),
           graph: _graphPlacement(record),
         ),
       ));

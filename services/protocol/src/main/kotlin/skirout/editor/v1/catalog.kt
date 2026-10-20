@@ -2766,7 +2766,6 @@ sealed interface PresentationMaterial_OrMutable {
     val layout: skirout.editor.v1.presentation.PresentationNode_OrMutable;
     val dependencies: skirout.editor.v1.presentation.PresentationDependencies_OrMutable;
     val subject: skirout.editor.v1.type_catalog.TypeTemplate;
-    val resultAppearance: skirout.editor.v1.presentation.ResultAppearance_OrMutable?;
     val inheritableNodes: kotlin.collections.List<kotlin.String>;
 
     fun toFrozen(): skirout.editor.v1.catalog.PresentationMaterial;
@@ -2787,7 +2786,6 @@ class PresentationMaterial private constructor(
     override val layout: skirout.editor.v1.presentation.PresentationNode,
     override val dependencies: skirout.editor.v1.presentation.PresentationDependencies,
     override val subject: skirout.editor.v1.type_catalog.TypeTemplate,
-    override val resultAppearance: skirout.editor.v1.presentation.ResultAppearance?,
     override val inheritableNodes: kotlin.collections.List<kotlin.String>,
     internal val _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.catalog.PresentationMaterial>? =
         null,
@@ -2801,7 +2799,6 @@ class PresentationMaterial private constructor(
         layout: skirout.editor.v1.presentation.PresentationNode_OrMutable,
         dependencies: skirout.editor.v1.presentation.PresentationDependencies_OrMutable,
         subject: skirout.editor.v1.type_catalog.TypeTemplate,
-        resultAppearance: skirout.editor.v1.presentation.ResultAppearance_OrMutable?,
         inheritableNodes: kotlin.collections.Iterable<kotlin.String>,
         _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.catalog.PresentationMaterial>? =
             null,
@@ -2812,7 +2809,6 @@ class PresentationMaterial private constructor(
         layout.toFrozen(),
         dependencies.toFrozen(),
         subject,
-        if (resultAppearance != null) resultAppearance.toFrozen() else null,
         build.skir.internal.toFrozenList(inheritableNodes),
         _unrecognizedFields,
     ) {}
@@ -2828,7 +2824,6 @@ class PresentationMaterial private constructor(
         layout = this.layout,
         dependencies = this.dependencies,
         subject = this.subject,
-        resultAppearance = this.resultAppearance,
         inheritableNodes = this.inheritableNodes,
     );
 
@@ -2848,8 +2843,6 @@ class PresentationMaterial private constructor(
             this.dependencies,
         subject: skirout.editor.v1.type_catalog.TypeTemplate =
             this.subject,
-        resultAppearance: skirout.editor.v1.presentation.ResultAppearance_OrMutable? =
-            this.resultAppearance,
         inheritableNodes: kotlin.collections.Iterable<kotlin.String> =
             this.inheritableNodes,
     ) = skirout.editor.v1.catalog.PresentationMaterial(
@@ -2859,7 +2852,6 @@ class PresentationMaterial private constructor(
         layout.toFrozen(),
         dependencies.toFrozen(),
         subject,
-        if (resultAppearance != null) resultAppearance.toFrozen() else null,
         build.skir.internal.toFrozenList(inheritableNodes),
         this._unrecognizedFields,
     );
@@ -2868,11 +2860,11 @@ class PresentationMaterial private constructor(
     fun copy() = this;
 
     override fun equals(other: kotlin.Any?): kotlin.Boolean {
-        return this === other || (other is skirout.editor.v1.catalog.PresentationMaterial && this.provider == other.provider && this.target == other.target && this.role == other.role && this.layout == other.layout && this.dependencies == other.dependencies && this.subject == other.subject && this.resultAppearance == other.resultAppearance && this.inheritableNodes == other.inheritableNodes);
+        return this === other || (other is skirout.editor.v1.catalog.PresentationMaterial && this.provider == other.provider && this.target == other.target && this.role == other.role && this.layout == other.layout && this.dependencies == other.dependencies && this.subject == other.subject && this.inheritableNodes == other.inheritableNodes);
     }
 
     override fun hashCode(): kotlin.Int {
-        return kotlin.collections.listOf<kotlin.Any?>(this.provider, this.target, this.role, this.layout, this.dependencies, this.subject, this.resultAppearance, this.inheritableNodes).hashCode();
+        return kotlin.collections.listOf<kotlin.Any?>(this.provider, this.target, this.role, this.layout, this.dependencies, this.subject, this.inheritableNodes).hashCode();
     }
 
     override fun toString(): kotlin.String {
@@ -2898,8 +2890,6 @@ class PresentationMaterial private constructor(
             skirout.editor.v1.presentation.PresentationDependencies.partial(),
         override var subject: skirout.editor.v1.type_catalog.TypeTemplate =
             skirout.editor.v1.type_catalog.TypeTemplate.UNKNOWN,
-        override var resultAppearance: skirout.editor.v1.presentation.ResultAppearance_OrMutable? =
-            null,
         override var inheritableNodes: kotlin.collections.List<kotlin.String> =
             build.skir.internal.emptyFrozenList<kotlin.String>(),
         internal var _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.catalog.PresentationMaterial>? =
@@ -2913,7 +2903,6 @@ class PresentationMaterial private constructor(
             layout = this.layout,
             dependencies = this.dependencies,
             subject = this.subject,
-            resultAppearance = this.resultAppearance,
             inheritableNodes = this.inheritableNodes,
             _unrecognizedFields = this._unrecognizedFields,
         );
@@ -2992,7 +2981,6 @@ class PresentationMaterial private constructor(
                 skirout.editor.v1.presentation.PresentationNode.partial(),
                 skirout.editor.v1.presentation.PresentationDependencies.partial(),
                 skirout.editor.v1.type_catalog.TypeTemplate.UNKNOWN,
-                null,
                 build.skir.internal.emptyFrozenList<kotlin.String>(),
             );
 
@@ -3019,8 +3007,6 @@ class PresentationMaterial private constructor(
                 skirout.editor.v1.presentation.PresentationDependencies.partial(),
             subject: skirout.editor.v1.type_catalog.TypeTemplate =
                 skirout.editor.v1.type_catalog.TypeTemplate.UNKNOWN,
-            resultAppearance: skirout.editor.v1.presentation.ResultAppearance_OrMutable? =
-                null,
             inheritableNodes: kotlin.collections.Iterable<kotlin.String> =
                 build.skir.internal.emptyFrozenList<kotlin.String>(),
         ) = skirout.editor.v1.catalog.PresentationMaterial(
@@ -3030,7 +3016,6 @@ class PresentationMaterial private constructor(
             layout = layout,
             dependencies = dependencies,
             subject = subject,
-            resultAppearance = resultAppearance,
             inheritableNodes = inheritableNodes,
             _unrecognizedFields = null,
         );
@@ -8055,20 +8040,9 @@ private object _SerializerRegistry {
             { mut, v -> mut.subject = v },
         );
         PresentationMaterialSerializerImpl.addField(
-            "result_appearance",
-            "resultAppearance",
-            6,
-            build.skir.Serializers.optional(
-                skirout.editor.v1.presentation.ResultAppearance.serializer,
-            ),
-            "",
-            { it.resultAppearance },
-            { mut, v -> mut.resultAppearance = v },
-        );
-        PresentationMaterialSerializerImpl.addField(
             "inheritable_nodes",
             "inheritableNodes",
-            7,
+            6,
             build.skir.Serializers.list(
                 build.skir.Serializers.string,
             ),

@@ -31,13 +31,19 @@ import io.kotest.matchers.string.shouldContain
 import io.kotest.matchers.types.shouldBeInstanceOf
 import skirout.editor.v1.action.EditorAction
 import skirout.editor.v1.expression.ExpressionNode
+import skirout.editor.v1.presentation.ChildrenElement
 import skirout.editor.v1.presentation.GraphDirection
+import skirout.editor.v1.presentation.PresentationAlignment
 import skirout.editor.v1.presentation.PresentationElement
+import skirout.editor.v1.presentation.PresentationInteractionState
 import skirout.editor.v1.presentation.PresentationNode
+import skirout.editor.v1.presentation.PresentationNumber
 import skirout.editor.v1.presentation.ResourcesElement
 import skirout.editor.v1.presentation.ResourcesLayout
+import skirout.editor.v1.presentation.StackChild
 import skirout.editor.v1.type_catalog.DataValue
 import skirout.editor.v1.type_catalog.PathSegment
+import skirout.editor.v1.presentation.PresentationColor as WireColor
 
 val CorePlacesTest by testSuite {
     val assembly = frameworkContributions().assemble(CatalogAssemblyContext(CatalogGeneration("core places")))
@@ -78,6 +84,40 @@ val CorePlacesTest by testSuite {
                 .shouldBeInstanceOf<ResourcesLayout.GraphWrapper>()
         graph.value.direction shouldBe GraphDirection.TOP_TO_BOTTOM
         assembly.material(TagDefinition.id, PresentationRole.ITEM).provider.name shouldContain "TagGraphNodePresentation"
+    }
+
+    test("a book stands in the library as a stacked card built from its appearance") {
+        val material = assembly.material(BookDefinition.id, PresentationRole.ITEM)
+        material.provider.name shouldContain "BookItemPresentation"
+        val nodes = material.layout.paintNodes()
+
+        val sized = nodes.firstNotNullOf { (it.element as? PresentationElement.SizeWrapper)?.value }
+        listOf(sized.width?.literal(), sized.height?.literal()) shouldBe listOf(175.0, 230.0)
+        val transforms = nodes.mapNotNull { (it.element as? PresentationElement.TransformWrapper)?.value }
+        val hover = transforms.first()
+        hover.scale
+            .shouldBeInstanceOf<PresentationNumber.StatesWrapper>()
+            .value.rules
+            .single()
+            .match.required shouldBe
+            listOf(PresentationInteractionState.HOVERED)
+        val cover = transforms.single { it.rotateY != null }
+        cover.origin shouldBe PresentationAlignment.CENTER_START
+        cover.transition
+            ?.rules
+            ?.single()
+            ?.match
+            ?.required shouldBe listOf(PresentationInteractionState.SELECTED)
+        val stack =
+            nodes.firstNotNullOf {
+                ((it.element as? PresentationElement.ChildrenWrapper)?.value as? ChildrenElement.StackWrapper)
+                    ?.value
+            }
+        stack.children.count { it is StackChild.PositionedWrapper } shouldBe 5
+        val reads = nodes.flatMap { it.appearanceReads() }.toSet()
+        reads shouldBe setOf("label", "accent", "icon")
+        val bars = nodes.firstNotNullOf { (it.element as? PresentationElement.RepeatedWrapper)?.value }
+        (bars.source as ExpressionNode.OrElseWrapper).value.input.shouldBeInstanceOf<ExpressionNode.TakeWrapper>()
     }
 
     test("the book outline groups pages by chapter and creates a page into the book from each group") {
@@ -174,5 +214,72 @@ private fun skirout.editor.v1.presentation.AxisChild.node(): PresentationNode =
         is skirout.editor.v1.presentation.AxisChild.FlexibleWrapper -> value.child
         else -> error("Unknown axis child")
     }
+
+/** Every node of a paint layout, through stacks, sizes, transforms, containers and conditionals. */
+private fun PresentationNode.paintNodes(): List<PresentationNode> =
+    listOf(this) +
+        when (val element = element) {
+            is PresentationElement.ChildrenWrapper -> {
+                when (val children = element.value) {
+                    is skirout.editor.v1.presentation.ChildrenElement.StackWrapper -> {
+                        children.value.children.map {
+                            when (it) {
+                                is StackChild.FlowWrapper -> it.value
+                                is StackChild.PositionedWrapper -> it.value.child
+                                else -> error("Unknown stack child")
+                            }
+                        }
+                    }
+
+                    else -> {
+                        children.childNodes()
+                    }
+                }
+            }
+
+            is PresentationElement.SizeWrapper -> {
+                listOf(element.value.child)
+            }
+
+            is PresentationElement.TransformWrapper -> {
+                listOf(element.value.child)
+            }
+
+            is PresentationElement.ContainerWrapper -> {
+                listOf(element.value.child)
+            }
+
+            is PresentationElement.PaddingWrapper -> {
+                listOf(element.value.child)
+            }
+
+            is PresentationElement.AlignWrapper -> {
+                listOf(element.value.child)
+            }
+
+            is PresentationElement.ConditionalWrapper -> {
+                listOfNotNull(element.value.whenTrue, element.value.whenFalse)
+            }
+
+            else -> {
+                emptyList()
+            }
+        }.flatMap { it.paintNodes() }
+
+/** The fields of the presented resource's appearance this node's text, icon and colors read. */
+private fun PresentationNode.appearanceReads(): List<String> {
+    val expressions =
+        when (val element = element) {
+            is PresentationElement.TextWrapper -> listOf(element.value.value)
+            is PresentationElement.IconWrapper -> listOf(element.value.name)
+            is PresentationElement.ContainerWrapper -> listOfNotNull((element.value.backgroundColor as? WireColor.ValueWrapper)?.value)
+            else -> emptyList()
+        }
+    return expressions.mapNotNull { expression ->
+        val input = (expression as? ExpressionNode.InputWrapper)?.value ?: return@mapNotNull null
+        if (input.binding.value != "presentation.subject.appearance") return@mapNotNull null
+        (input.path.segments.single() as PathSegment.FieldWrapper).value.name
+    }
+}
 
 private fun ExpressionNode.literal(): Double = ((this as ExpressionNode.LiteralWrapper).value as DataValue.FloatWrapper).value

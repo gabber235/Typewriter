@@ -39,6 +39,7 @@ internal object TypewriterApi {
     val ReadContext = ClassName(AUTHORING, "ReadContext")
     val ReadProjection = ClassName(AUTHORING, "ReadProjection")
     val DisplayFormulas = ClassName(AUTHORING, "DisplayFormulas")
+    val ResourceAppearance = ClassName(AUTHORING, "ResourceAppearance")
     val ResourceDisplayScope = ClassName(AUTHORING, "ResourceDisplayScope")
     val ResourceDisplaySubject = ClassName(AUTHORING, "ResourceDisplaySubject")
     val ResourceDraft = ClassName(AUTHORING, "ResourceDraft")

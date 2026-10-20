@@ -17,15 +17,11 @@ class _PresentationSurface extends StatelessWidget {
   Widget build(BuildContext context) {
     final inherited = Surface.appearanceOf(context);
     try {
-      if (style.transitionMilliseconds < 0) {
-        throw const PresentationColorFailure(
-          "Presentation duration cannot be negative",
-        );
-      }
-      final resolver = PresentationColorEnvironment.of(
+      final resolver = PresentationValueEnvironment.of(
         context,
         appearance: inherited,
       );
+      final motion = resolver.motion(style.transition, scope);
       final source = style.backgroundColor;
       final fill = source == null ? null : resolver.resolve(source, scope);
       final background = Color.alphaBlend(
@@ -38,7 +34,7 @@ class _PresentationSurface extends StatelessWidget {
         final foregroundSource = style.foregroundColor;
         return foregroundSource == null
             ? displayed.on(context)
-            : PresentationColorEnvironment.of(
+            : PresentationValueEnvironment.of(
                 context,
                 appearance: inherited.copyWith(color: displayed),
               ).resolve(foregroundSource, scope);
@@ -58,11 +54,16 @@ class _PresentationSurface extends StatelessWidget {
             : inherited.secondaryForeground,
       );
       return SurfaceContainer(
-        duration: Duration(milliseconds: style.transitionMilliseconds),
+        duration: motion.duration,
+        curve: motion.curve,
         decoration: BoxDecoration(
           color: fill,
           border: _border(context, style.border, scope, appearance: local),
           borderRadius: _radius(context, style.radius, scope),
+          boxShadow: [
+            for (final shadow in style.shadows)
+              _boxShadow(resolver, shadow, scope),
+          ],
         ),
         foregroundFor: hasForeground ? foregroundFor : null,
         child: child,
@@ -71,4 +72,26 @@ class _PresentationSurface extends StatelessWidget {
       return diagnostic(failure.message);
     }
   }
+}
+
+BoxShadow _boxShadow(
+  PresentationValueEnvironment environment,
+  skir.PresentationShadow shadow,
+  PortablePresentationScope scope,
+) {
+  if (!shadow.blur.isFinite ||
+      shadow.blur < 0 ||
+      !shadow.spread.isFinite ||
+      !shadow.offsetX.isFinite ||
+      !shadow.offsetY.isFinite) {
+    throw const PresentationColorFailure(
+      "Shadow blur must be finite and nonnegative, with finite spread and offsets",
+    );
+  }
+  return BoxShadow(
+    color: environment.resolve(shadow.color, scope),
+    blurRadius: shadow.blur,
+    spreadRadius: shadow.spread,
+    offset: Offset(shadow.offsetX, shadow.offsetY),
+  );
 }

@@ -58,15 +58,14 @@ void main() {
         resource: resource,
         occurrence: skir.LinkOccurrence.defaultInstance,
         link: skir.DataValue.unfilled,
-        appearance: ResourceAppearance(
-          label: "Entry",
-          accent: const Color(0xff607d8b),
-          icon: skir.Icon.wrapIconify("material-symbols:category"),
-        ),
         resourceProjection: PortableResourceProjection(
           resource: resource,
           configuration: skir.TypeSelection.unknown,
-          label: "Entry",
+          appearance: ResourceAppearance(
+            label: "Entry",
+            accent: const Color(0xff607d8b),
+            icon: skir.Icon.wrapIconify("material-symbols:category"),
+          ),
           value: skir.DataValue.unfilled,
         ),
       ),

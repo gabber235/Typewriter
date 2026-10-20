@@ -126,7 +126,7 @@ Color? _color(
   SurfaceAppearance? appearance,
 }) => value == null
     ? null
-    : PresentationColorEnvironment.of(
+    : PresentationValueEnvironment.of(
         context,
         appearance: appearance,
       ).resolve(value, scope);

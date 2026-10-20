@@ -861,7 +861,6 @@ pub struct PresentationMaterial {
     pub layout: crate::skirout::base::editor::v1::presentation::PresentationNode,
     pub dependencies: crate::skirout::base::editor::v1::presentation::PresentationDependencies,
     pub subject: crate::skirout::base::editor::v1::type_catalog::TypeTemplate,
-    pub result_appearance: Option<crate::skirout::base::editor::v1::presentation::ResultAppearance>,
     pub inheritable_nodes: Vec<String>,
     /// Set this to None when you're creating a struct.
     pub _unrecognized: Option<crate::skir_client::UnrecognizedFields<PresentationMaterial>>,
@@ -2464,18 +2463,8 @@ fn initialize_module_serializers() {
                 |x: &mut PresentationMaterial, v| x.subject = v,
             );
             (*a).add_field(
-                "result_appearance",
-                6,
-                crate::skir_client::Serializer::optional(
-                    crate::skirout::base::editor::v1::presentation::ResultAppearance::serializer(),
-                ),
-                "",
-                |x: &PresentationMaterial| &x.result_appearance,
-                |x: &mut PresentationMaterial, v| x.result_appearance = v,
-            );
-            (*a).add_field(
                 "inheritable_nodes",
-                7,
+                6,
                 crate::skir_client::Serializer::array(crate::skir_client::Serializer::string()),
                 "",
                 |x: &PresentationMaterial| &x.inheritable_nodes,

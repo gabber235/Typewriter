@@ -142,7 +142,7 @@ val FrameworkCatalogCreationTest by testSuite {
         listOf(inset.start, inset.top, inset.end, inset.bottom) shouldBe listOf(4.0, 4.0, 4.0, 4.0)
         val frame = (inset.child.singleFixed().element as PresentationElement.ContainerWrapper).value
         frame.radius shouldBe skirout.editor.v1.presentation.PresentationRadius.SMALL
-        frame.transitionMilliseconds shouldBe 400
+        frame.transition?.fallback?.milliseconds shouldBe 400
         val border = (frame.border as skirout.editor.v1.presentation.PresentationBorder.AllWrapper).value
         border.width shouldBe 3.0
         val states = (border.color as skirout.editor.v1.presentation.PresentationColor.StatesWrapper).value
@@ -362,7 +362,7 @@ val FrameworkCatalogCreationTest by testSuite {
                 PresentationBuildBinding(checkedTag.presentationTemplate(), PresentationRole.ITEM, resourceTypes),
             )
         val graphSurface = (graphMaterial.layout.singleFixed().element as PresentationElement.ContainerWrapper).value
-        graphSurface.transitionMilliseconds shouldBe 100
+        graphSurface.transition?.fallback?.milliseconds shouldBe 100
         val graphColors = (graphSurface.backgroundColor as skirout.editor.v1.presentation.PresentationColor.StatesWrapper).value
         graphColors.rules.map { it.match.required } shouldBe
             listOf(

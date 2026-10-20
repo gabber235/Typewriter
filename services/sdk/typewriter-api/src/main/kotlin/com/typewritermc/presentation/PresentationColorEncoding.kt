@@ -1,11 +1,9 @@
 package com.typewritermc.presentation
 
 import skirout.editor.v1.presentation.PresentationStateColorRule
-import skirout.editor.v1.presentation.PresentationStateMatch
 import skirout.editor.v1.presentation.PresentationAmbientColor as WireAmbient
 import skirout.editor.v1.presentation.PresentationColor as WireColor
 import skirout.editor.v1.presentation.PresentationContrastMode as WireContrast
-import skirout.editor.v1.presentation.PresentationInteractionState as WireState
 import skirout.editor.v1.presentation.PresentationThemeColor as WireTheme
 
 internal fun PresentationColor.wire(): WireColor =
@@ -58,30 +56,16 @@ internal fun PresentationColor.wire(): WireColor =
 
         is PresentationColor.States -> {
             WireColor.createStates(
-                rules =
-                    rules.map { rule ->
-                        PresentationStateColorRule(
-                            match =
-                                PresentationStateMatch(
-                                    required = rule.required.map { it.wire() },
-                                    excluded = rule.excluded.map { it.wire() },
-                                ),
-                            color = rule.color.wire(),
-                        )
-                    },
+                rules = rules.map { rule -> PresentationStateColorRule(match = rule.match.wire(), color = rule.color.wire()) },
                 fallback = fallback.wire(),
             )
         }
-    }
 
-private fun PresentationInteractionState.wire(): WireState =
-    when (this) {
-        PresentationInteractionState.Hovered -> WireState.HOVERED
-        PresentationInteractionState.Selected -> WireState.SELECTED
-        PresentationInteractionState.Focused -> WireState.FOCUSED
-        PresentationInteractionState.Pressed -> WireState.PRESSED
-        PresentationInteractionState.Disabled -> WireState.DISABLED
-        PresentationInteractionState.ReadOnly -> WireState.READ_ONLY
-        PresentationInteractionState.Invalid -> WireState.INVALID
-        PresentationInteractionState.Routed -> WireState.ROUTED
+        is PresentationColor.Adjusted -> {
+            WireColor.createAdjusted(source = source.wire(), lightness = lightness, chroma = chroma)
+        }
+
+        is PresentationColor.Brightness -> {
+            WireColor.createBrightness(light = light.wire(), dark = dark.wire())
+        }
     }

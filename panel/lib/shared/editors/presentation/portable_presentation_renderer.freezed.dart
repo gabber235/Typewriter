@@ -11057,6 +11057,285 @@ $PortableNewCounterpartChoiceCopyWith<$Res>? get slot {
 }
 
 /// @nodoc
+mixin _$TransformValues {
+
+ double get scale; double get rotateX; double get rotateY; double get rotateZ; double get translateX; double get translateY;
+/// Create a copy of _TransformValues
+/// with the given fields replaced by the non-null parameter values.
+@JsonKey(includeFromJson: false, includeToJson: false)
+@pragma('vm:prefer-inline')
+_$TransformValuesCopyWith<_TransformValues> get copyWith => __$TransformValuesCopyWithImpl<_TransformValues>(this as _TransformValues, _$identity);
+
+
+
+@override
+bool operator ==(Object other) {
+  final _this = this as _TransformValues;
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is _TransformValues&&(identical(other.scale, _this.scale) || other.scale == _this.scale)&&(identical(other.rotateX, _this.rotateX) || other.rotateX == _this.rotateX)&&(identical(other.rotateY, _this.rotateY) || other.rotateY == _this.rotateY)&&(identical(other.rotateZ, _this.rotateZ) || other.rotateZ == _this.rotateZ)&&(identical(other.translateX, _this.translateX) || other.translateX == _this.translateX)&&(identical(other.translateY, _this.translateY) || other.translateY == _this.translateY));
+}
+
+
+@override
+int get hashCode {
+  final _this = this as _TransformValues;
+  return Object.hash(runtimeType,_this.scale,_this.rotateX,_this.rotateY,_this.rotateZ,_this.translateX,_this.translateY);
+}
+
+@override
+String toString() {
+  final _this = this as _TransformValues;
+  return '_TransformValues(scale: ${_this.scale}, rotateX: ${_this.rotateX}, rotateY: ${_this.rotateY}, rotateZ: ${_this.rotateZ}, translateX: ${_this.translateX}, translateY: ${_this.translateY})';
+}
+
+
+}
+
+/// @nodoc
+abstract mixin class _$TransformValuesCopyWith<$Res>  {
+  factory _$TransformValuesCopyWith(_TransformValues value, $Res Function(_TransformValues) _then) = __$TransformValuesCopyWithImpl;
+@useResult
+$Res call({
+ double scale, double rotateX, double rotateY, double rotateZ, double translateX, double translateY
+});
+
+
+
+
+}
+/// @nodoc
+class __$TransformValuesCopyWithImpl<$Res>
+    implements _$TransformValuesCopyWith<$Res> {
+  __$TransformValuesCopyWithImpl(this._self, this._then);
+
+  final _TransformValues _self;
+  final $Res Function(_TransformValues) _then;
+
+/// Create a copy of _TransformValues
+/// with the given fields replaced by the non-null parameter values.
+@pragma('vm:prefer-inline') @override $Res call({Object? scale = null,Object? rotateX = null,Object? rotateY = null,Object? rotateZ = null,Object? translateX = null,Object? translateY = null,}) {
+  return _then(_TransformValues(
+scale: null == scale ? _self.scale : scale // ignore: cast_nullable_to_non_nullable
+as double,rotateX: null == rotateX ? _self.rotateX : rotateX // ignore: cast_nullable_to_non_nullable
+as double,rotateY: null == rotateY ? _self.rotateY : rotateY // ignore: cast_nullable_to_non_nullable
+as double,rotateZ: null == rotateZ ? _self.rotateZ : rotateZ // ignore: cast_nullable_to_non_nullable
+as double,translateX: null == translateX ? _self.translateX : translateX // ignore: cast_nullable_to_non_nullable
+as double,translateY: null == translateY ? _self.translateY : translateY // ignore: cast_nullable_to_non_nullable
+as double,
+  ));
+}
+
+}
+
+
+/// Adds pattern-matching-related methods to [_TransformValues].
+extension _TransformValuesPatterns on _TransformValues {
+/// A variant of `map` that fallback to returning `orElse`.
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case final Subclass value:
+///     return ...;
+///   case _:
+///     return orElse();
+/// }
+/// ```
+
+@optionalTypeArgs TResult maybeMap<TResult extends Object?>(TResult Function( __TransformValues value)?  $default,{required TResult orElse(),}){
+final _that = this;
+switch (_that) {
+case __TransformValues() when $default != null:
+return $default(_that);case _:
+  return orElse();
+
+}
+}
+/// A `switch`-like method, using callbacks.
+///
+/// Callbacks receives the raw object, upcasted.
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case final Subclass value:
+///     return ...;
+///   case final Subclass2 value:
+///     return ...;
+/// }
+/// ```
+
+@optionalTypeArgs TResult map<TResult extends Object?>(TResult Function( __TransformValues value)  $default,){
+final _that = this;
+switch (_that) {
+case __TransformValues():
+return $default(_that);case _:
+  throw StateError('Unexpected subclass');
+
+}
+}
+/// A variant of `map` that fallback to returning `null`.
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case final Subclass value:
+///     return ...;
+///   case _:
+///     return null;
+/// }
+/// ```
+
+@optionalTypeArgs TResult? mapOrNull<TResult extends Object?>(TResult? Function( __TransformValues value)?  $default,){
+final _that = this;
+switch (_that) {
+case __TransformValues() when $default != null:
+return $default(_that);case _:
+  return null;
+
+}
+}
+/// A variant of `when` that fallback to an `orElse` callback.
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case Subclass(:final field):
+///     return ...;
+///   case _:
+///     return orElse();
+/// }
+/// ```
+
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( double scale,  double rotateX,  double rotateY,  double rotateZ,  double translateX,  double translateY)?  $default,{required TResult orElse(),}) {final _that = this;
+switch (_that) {
+case __TransformValues() when $default != null:
+return $default(_that.scale,_that.rotateX,_that.rotateY,_that.rotateZ,_that.translateX,_that.translateY);case _:
+  return orElse();
+
+}
+}
+/// A `switch`-like method, using callbacks.
+///
+/// As opposed to `map`, this offers destructuring.
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case Subclass(:final field):
+///     return ...;
+///   case Subclass2(:final field2):
+///     return ...;
+/// }
+/// ```
+
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( double scale,  double rotateX,  double rotateY,  double rotateZ,  double translateX,  double translateY)  $default,) {final _that = this;
+switch (_that) {
+case __TransformValues():
+return $default(_that.scale,_that.rotateX,_that.rotateY,_that.rotateZ,_that.translateX,_that.translateY);case _:
+  throw StateError('Unexpected subclass');
+
+}
+}
+/// A variant of `when` that fallback to returning `null`
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case Subclass(:final field):
+///     return ...;
+///   case _:
+///     return null;
+/// }
+/// ```
+
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( double scale,  double rotateX,  double rotateY,  double rotateZ,  double translateX,  double translateY)?  $default,) {final _that = this;
+switch (_that) {
+case __TransformValues() when $default != null:
+return $default(_that.scale,_that.rotateX,_that.rotateY,_that.rotateZ,_that.translateX,_that.translateY);case _:
+  return null;
+
+}
+}
+
+}
+
+/// @nodoc
+
+
+class __TransformValues extends _TransformValues {
+  const __TransformValues({required this.scale, required this.rotateX, required this.rotateY, required this.rotateZ, required this.translateX, required this.translateY}): super._();
+  
+
+@override final  double scale;
+@override final  double rotateX;
+@override final  double rotateY;
+@override final  double rotateZ;
+@override final  double translateX;
+@override final  double translateY;
+
+/// Create a copy of _TransformValues
+/// with the given fields replaced by the non-null parameter values.
+@override @JsonKey(includeFromJson: false, includeToJson: false)
+@pragma('vm:prefer-inline')
+_$_TransformValuesCopyWith<__TransformValues> get copyWith => __$_TransformValuesCopyWithImpl<__TransformValues>(this, _$identity);
+
+
+
+@override
+bool operator ==(Object other) {
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is __TransformValues&&(identical(other.scale, scale) || other.scale == scale)&&(identical(other.rotateX, rotateX) || other.rotateX == rotateX)&&(identical(other.rotateY, rotateY) || other.rotateY == rotateY)&&(identical(other.rotateZ, rotateZ) || other.rotateZ == rotateZ)&&(identical(other.translateX, translateX) || other.translateX == translateX)&&(identical(other.translateY, translateY) || other.translateY == translateY));
+}
+
+
+@override
+int get hashCode {
+    return Object.hash(runtimeType,scale,rotateX,rotateY,rotateZ,translateX,translateY);
+}
+
+@override
+String toString() {
+    return '_TransformValues(scale: $scale, rotateX: $rotateX, rotateY: $rotateY, rotateZ: $rotateZ, translateX: $translateX, translateY: $translateY)';
+}
+
+
+}
+
+/// @nodoc
+abstract mixin class _$_TransformValuesCopyWith<$Res> implements _$TransformValuesCopyWith<$Res> {
+  factory _$_TransformValuesCopyWith(__TransformValues value, $Res Function(__TransformValues) _then) = __$_TransformValuesCopyWithImpl;
+@override @useResult
+$Res call({
+ double scale, double rotateX, double rotateY, double rotateZ, double translateX, double translateY
+});
+
+
+
+
+}
+/// @nodoc
+class __$_TransformValuesCopyWithImpl<$Res>
+    implements _$_TransformValuesCopyWith<$Res> {
+  __$_TransformValuesCopyWithImpl(this._self, this._then);
+
+  final __TransformValues _self;
+  final $Res Function(__TransformValues) _then;
+
+/// Create a copy of _TransformValues
+/// with the given fields replaced by the non-null parameter values.
+@override @pragma('vm:prefer-inline') $Res call({Object? scale = null,Object? rotateX = null,Object? rotateY = null,Object? rotateZ = null,Object? translateX = null,Object? translateY = null,}) {
+  return _then(__TransformValues(
+scale: null == scale ? _self.scale : scale // ignore: cast_nullable_to_non_nullable
+as double,rotateX: null == rotateX ? _self.rotateX : rotateX // ignore: cast_nullable_to_non_nullable
+as double,rotateY: null == rotateY ? _self.rotateY : rotateY // ignore: cast_nullable_to_non_nullable
+as double,rotateZ: null == rotateZ ? _self.rotateZ : rotateZ // ignore: cast_nullable_to_non_nullable
+as double,translateX: null == translateX ? _self.translateX : translateX // ignore: cast_nullable_to_non_nullable
+as double,translateY: null == translateY ? _self.translateY : translateY // ignore: cast_nullable_to_non_nullable
+as double,
+  ));
+}
+
+
+}
+
+/// @nodoc
 mixin _$PortablePresentationScope {
 
  Map<skir.ExpressionBindingId, PortableExpressionBinding> get bindings; skir.EvaluationBudget get budget; PortableOperationResults get operations; List<PortableAppearanceLayer> get appearanceLayers; Map<skir.ExpressionBindingId, AuthoredBindingAddress> get authoredAliases; AuthoredPresentationIndex? get authoredIndex; AuthoredPresentationIndex? get independentAuthoredIndex; List<PortableAuthoredPart> get authoredParts; PortableInspectorFrame? get inspectorFrame; Set<ActiveInspectorLayout> get activeInspectorLayouts; Set<ActivePartPresentation> get activeParts; bool get readOnly; bool get enabled; Stream<skir.RealmPresentationSearchUpdate> Function(skir.RealmPresentationSearchRequest request)? get watchSearch; ValueChanged<String>? get reportStatus; CheckedEditorCatalog? get catalog; PortableExpressionQueries? get queries; ResourceDiagnosticReader get resourceDiagnostics; skir.ResourceId? get resource; String? get searchHistoryNamespace; ValueChanged<skir.ResourceId>? get openResource;/// The resource open in the workspace, which resources layouts mark as

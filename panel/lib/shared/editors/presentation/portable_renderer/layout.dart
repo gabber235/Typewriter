@@ -56,11 +56,9 @@ extension _PortableLayoutRendering on PortablePresentationNodeRenderer {
           PortablePresentationNodeRenderer(node: child, scope: childScope),
       ],
     ),
-    skir.ChildrenElement_stackWrapper(:final value) => Stack(
-      children: [
-        for (final child in value.children)
-          PortablePresentationNodeRenderer(node: child, scope: childScope),
-      ],
+    skir.ChildrenElement_stackWrapper(:final value) => _renderStack(
+      value,
+      childScope,
     ),
     _ => _diagnostic("Children layout ${element.kind.name} is not implemented"),
   };

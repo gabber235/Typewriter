@@ -99,8 +99,9 @@ extension on _ResourceCreationOperation {
             resource: resource,
             row: row,
             role: skir.PresentationRole.referencePickerResult,
+            density: SearchResultDensity.card,
             fallbackLabel: candidate.label,
-            kindLabelOverride: candidate.disabledReason == null
+            kindLabel: candidate.disabledReason == null
                 ? "select"
                 : "unavailable",
             footer: referencePickerDescription(candidate),

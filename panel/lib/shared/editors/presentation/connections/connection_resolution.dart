@@ -69,7 +69,7 @@ void _resolveMarkers({
 /// suppresses only the stroke that cannot be painted; accumulated diagnostics
 /// remain available to the layer overlay.
 _ResolvedConnectorStyle? _resolveConnectorStyle(
-  PresentationColorEnvironment colors,
+  PresentationValueEnvironment colors,
   skir.ConnectorStyle style,
   PortablePresentationScope scope,
   List<String> diagnostics,

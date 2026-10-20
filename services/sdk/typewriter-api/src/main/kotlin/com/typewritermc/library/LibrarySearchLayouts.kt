@@ -34,7 +34,6 @@ internal fun Layout.pageLocation(
     includePage: Expr<Boolean, Handled>,
     part: Layout.(Expr<String, Handled>) -> Unit,
     separator: Layout.() -> Unit,
-    prefixFirst: Expr<Boolean, Handled> = literal(false),
 ) {
     val book = page.fields.book.resource
     val chapter =
@@ -55,7 +54,7 @@ internal fun Layout.pageLocation(
         label: Expr<String, Handled>,
         previous: Expr<Boolean, Handled>,
     ) {
-        showIf(prefixFirst or previous, whenFalse = { part(label) }) {
+        showIf(previous, whenFalse = { part(label) }) {
             padding(PresentationInsets(4.0, 0.0, 0.0, 0.0)) {
                 row(spacing = 4.0) {
                     separator()

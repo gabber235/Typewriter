@@ -300,17 +300,16 @@ Future<void> _pumpOperation(
         resource: member.key.resourceId,
         occurrence: member.value,
         link: skir.DataValue.unfilled,
-        appearance: ResourceAppearance(
-          label: "Source",
-          accent: const Color(0xff607d8b),
-          icon: skir.Icon.wrapIconify("material-symbols:category"),
-        ),
         resourceProjection: PortableResourceProjection(
           resource: member.key.resourceId,
           configuration: fixture.workspace.document
               .resource(member.key.resourceId)!
               .configuration,
-          label: "Source",
+          appearance: ResourceAppearance(
+            label: "Source",
+            accent: const Color(0xff607d8b),
+            icon: skir.Icon.wrapIconify("material-symbols:category"),
+          ),
           value: skir.DataValue.wrapStringValue("fixture"),
         ),
         graph: const PortableGraphPlacement(x: 0, y: 0, width: 4, height: 1),

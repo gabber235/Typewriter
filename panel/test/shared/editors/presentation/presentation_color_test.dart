@@ -130,7 +130,14 @@ void main() {
           skir.PresentationElement.createContainer(
             backgroundColor: fill,
             foregroundColor: foreground,
-            transitionMilliseconds: 100,
+            transition: skir.PresentationTransitionPolicy(
+              rules: const [],
+              fallback: skir.PresentationTransition(
+                milliseconds: 100,
+                curve: skir.PresentationCurve.linear,
+              ),
+            ),
+            shadows: const [],
             border: null,
             radius: skir.PresentationRadius.large,
             child: _column(
@@ -232,7 +239,8 @@ void main() {
         ),
         backgroundColor: null,
         foregroundColor: _color(Colors.orange),
-        transitionMilliseconds: 0,
+        transition: null,
+        shadows: const [],
         border: null,
         radius: skir.PresentationRadius.none,
       ),
@@ -247,9 +255,9 @@ void main() {
     expect(Surface.colorOf(element), canvas);
     expect(Surface.foregroundOf(element).toARGB32(), Colors.orange.toARGB32());
   });
-  PresentationColorEnvironment environment({
+  PresentationValueEnvironment environment({
     PresentationInteraction interaction = const PresentationInteraction(),
-  }) => PresentationColorEnvironment(
+  }) => PresentationValueEnvironment(
     theme: ThemeData.dark(),
     appearance: appearance,
     interaction: interaction,
