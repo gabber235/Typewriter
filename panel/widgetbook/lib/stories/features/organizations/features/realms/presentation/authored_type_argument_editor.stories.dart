@@ -85,7 +85,6 @@ CheckedEditorCatalog _catalog({required bool twoArguments}) {
     skir.EditorCatalogWireSnapshot(
       resourceDisplays: const [],
       resourceOperations: const [],
-      resourceOperationContributions: const [],
       generation: skir.CatalogGeneration(value: "catalog:rewards"),
       types: [
         published(

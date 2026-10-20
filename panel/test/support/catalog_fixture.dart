@@ -15,7 +15,6 @@ skir.EditorCatalogWireSnapshot testCatalogSnapshot({
 }) => skir.EditorCatalogWireSnapshot(
   resourceDisplays: const [],
   resourceOperations: const [],
-  resourceOperationContributions: const [],
   generation:
       generation ?? skir.EditorCatalogWireSnapshot.defaultInstance.generation,
   types: types,

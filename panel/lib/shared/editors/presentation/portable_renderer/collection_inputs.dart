@@ -70,7 +70,7 @@ extension _PortableCollectionInputRendering
       skir.PresentationElement_linkInputWrapper(:final value) => value,
       _ => null,
     };
-    return collectionWithFocus(
+    final rendered = collectionWithFocus(
       sourceScope: childScope,
       mutationScope: childScope,
       reference: control.binding,
@@ -187,6 +187,25 @@ extension _PortableCollectionInputRendering
         );
       },
     );
+    return linkControl == null && !_linksItems(childScope, control.binding)
+        ? rendered
+        : PortableResourcesInteractionScope.wrapLinkField(
+            context,
+            collection,
+            rendered,
+          );
+  }
+
+  /// Whether the collection at [binding] holds links, so dropped resources
+  /// can be linked into it.
+  bool _linksItems(PortablePresentationScope scope, skir.BindingRef binding) {
+    final catalog = scope.catalog;
+    final item = catalog?.namedUse(
+      catalog.collectionItemType(scope.expectedType(binding)),
+    );
+    return item != null &&
+        catalog?.published(item.definition)?.definition.representation
+            is skir.RepresentationTemplate_linkWrapper;
   }
 
   Future<void> _addSequenceItem({

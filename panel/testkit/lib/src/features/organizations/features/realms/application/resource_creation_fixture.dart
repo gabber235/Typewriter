@@ -465,7 +465,6 @@ final class ResourceCreationFixture {
       skir.EditorCatalogWireSnapshot(
         resourceDisplays: const [],
         resourceOperations: const [],
-        resourceOperationContributions: const [],
         generation: generation,
         types: [..._types, ...realm.types],
         relations: [..._relations, ...realm.relations],

@@ -44,33 +44,44 @@ class ResourceCrumbSelector extends ConsumerWidget {
     final current = crumb.siblings.firstWhereOrNull(
       (choice) => choice.resource == crumb.resource,
     );
-    return SelectorPopupWithSelection<ResourceCrumbChoice>(
-      itemsAsync: AsyncData(crumb.siblings),
-      selectedAsync: AsyncData(current),
-      name: "resources",
-      buttonBuilder: (selected) => Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          ResourceIcon(
-            icon: selected?.appearance.icon,
-            size: 16,
-            color:
-                selected?.appearance.accent ?? context.colors.contentDisabled,
+    // Dropping resources onto a crumb drops them onto its resource.
+    return ResourceDropTarget.at(
+      scope: scope,
+      destination: DropDestination.resource(crumb.resource),
+      builder: (context, hover) => ResourceDropHighlight(
+        hover: hover,
+        child: SelectorPopupWithSelection<ResourceCrumbChoice>(
+          itemsAsync: AsyncData(crumb.siblings),
+          selectedAsync: AsyncData(current),
+          name: "resources",
+          buttonBuilder: (selected) => Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              ResourceIcon(
+                icon: selected?.appearance.icon,
+                size: 16,
+                color:
+                    selected?.appearance.accent ??
+                    context.colors.contentDisabled,
+              ),
+              SizedBox(width: context.spacing.space2),
+              Text(
+                selected?.appearance.label ?? "Resource",
+                style: Theme.of(context).textTheme.bodySmall,
+              ),
+            ],
           ),
-          SizedBox(width: context.spacing.space2),
-          Text(
-            selected?.appearance.label ?? "Resource",
-            style: Theme.of(context).textTheme.bodySmall,
+          contentBuilder: (choices, selected, onDismiss) => _CrumbMenu(
+            choices: choices,
+            selected: selected,
+            onChoose: (choice) {
+              onDismiss(choice);
+              ref
+                  .read(realmSurfaceNavigationProvider)
+                  .open(scope, choice.resource);
+            },
           ),
-        ],
-      ),
-      contentBuilder: (choices, selected, onDismiss) => _CrumbMenu(
-        choices: choices,
-        selected: selected,
-        onChoose: (choice) {
-          onDismiss(choice);
-          ref.read(realmSurfaceNavigationProvider).open(scope, choice.resource);
-        },
+        ),
       ),
     );
   }

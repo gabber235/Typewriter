@@ -79,14 +79,20 @@ class CompiledEntryGraphScene extends HookConsumerWidget {
               children: [
                 SizedBox(
                   width: 180,
-                  child: ResourcePageDropTarget(
-                    page: compiledEntryDestinationId,
-                    workspace: workspace,
-                    authoringScope: scope,
-                    enabled: dropEnabled && !readOnly,
-                    child: const ListTile(
-                      title: Text("Village evening"),
-                      leading: Icon(Icons.article_outlined),
+                  child: ResourceDropTarget.at(
+                    scope: scope,
+                    destination: DropDestination.resource(
+                      compiledEntryDestinationId,
+                    ),
+                    canMutate: () =>
+                        dropEnabled && !readOnly && workspace.state.available,
+                    builder: (context, hover) => ResourceDropHighlight(
+                      hover: hover,
+                      child: const ListTile(
+                        key: ValueKey("story.destination"),
+                        title: Text("Village evening"),
+                        leading: Icon(Icons.article_outlined),
+                      ),
                     ),
                   ),
                 ),

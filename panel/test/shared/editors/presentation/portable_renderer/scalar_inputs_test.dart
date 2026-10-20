@@ -299,7 +299,6 @@ void main() {
         skir.EditorCatalogWireSnapshot(
           resourceDisplays: const [],
           resourceOperations: const [],
-          resourceOperationContributions: const [],
           generation: generation,
           types: [
             skir.PublishedType(

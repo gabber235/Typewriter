@@ -215,52 +215,60 @@ class ResourceHeading extends ConsumerWidget {
             onInvoke: (_) => primary.create(),
           ),
       ],
-      child: Padding(
-        padding: EdgeInsets.fromLTRB(
-          context.spacing.space4,
-          context.spacing.space4,
-          context.spacing.space4,
-          context.spacing.space2,
-        ),
-        child: Row(
-          spacing: context.spacing.space3,
-          children: [
-            ResourceIcon(
-              icon: appearance.icon,
-              color: appearance.accent,
-              size: 32,
+      // Dropping resources onto the heading drops them onto the resource.
+      child: ResourceDropTarget.at(
+        scope: scope,
+        destination: DropDestination.resource(resource),
+        builder: (context, hover) => ResourceDropHighlight(
+          hover: hover,
+          child: Padding(
+            padding: EdgeInsets.fromLTRB(
+              context.spacing.space4,
+              context.spacing.space4,
+              context.spacing.space4,
+              context.spacing.space2,
             ),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Semantics(
-                    header: true,
-                    child: Text(
-                      appearance.label,
-                      overflow: TextOverflow.ellipsis,
-                      style: context.theme.textTheme.headlineSmall,
-                    ),
-                  ),
-                  if (description.isNotEmpty)
-                    Text(
-                      description,
-                      overflow: TextOverflow.ellipsis,
-                      style: context.theme.textTheme.bodySmall?.copyWith(
-                        color: context.colors.contentDisabled,
+            child: Row(
+              spacing: context.spacing.space3,
+              children: [
+                ResourceIcon(
+                  icon: appearance.icon,
+                  color: appearance.accent,
+                  size: 32,
+                ),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Semantics(
+                        header: true,
+                        child: Text(
+                          appearance.label,
+                          overflow: TextOverflow.ellipsis,
+                          style: context.theme.textTheme.headlineSmall,
+                        ),
                       ),
-                    ),
-                ],
-              ),
+                      if (description.isNotEmpty)
+                        Text(
+                          description,
+                          overflow: TextOverflow.ellipsis,
+                          style: context.theme.textTheme.bodySmall?.copyWith(
+                            color: context.colors.contentDisabled,
+                          ),
+                        ),
+                    ],
+                  ),
+                ),
+                for (final creation in creations)
+                  FilledButton.tonalIcon(
+                    onPressed: creation.create,
+                    icon: const Icon(Icons.add),
+                    label: Text(creation.label),
+                  ),
+              ],
             ),
-            for (final creation in creations)
-              FilledButton.tonalIcon(
-                onPressed: creation.create,
-                icon: const Icon(Icons.add),
-                label: Text(creation.label),
-              ),
-          ],
+          ),
         ),
       ),
     );

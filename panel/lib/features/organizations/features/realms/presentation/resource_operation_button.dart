@@ -2,7 +2,8 @@ import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
     as skir;
 import "package:typewriter_panel/typewriter_panel.dart";
 
-/// Renders an operation affordance with its authoritative disabled reason.
+/// Renders an operation's inspector button in its declared emphasis, with its
+/// authoritative disabled reason.
 class ResourceOperationButton extends StatelessWidget {
   const ResourceOperationButton({
     required this.presentation,
@@ -28,7 +29,11 @@ class ResourceOperationButton extends StatelessWidget {
       maxLines: 1,
       overflow: TextOverflow.ellipsis,
     );
-    final button = switch (presentation.variant) {
+    final variant = switch (presentation.inspector) {
+      skir.OperationInspector_buttonWrapper(:final value) => value,
+      _ => skir.ButtonVariant.outlined,
+    };
+    final button = switch (variant) {
       skir.ButtonVariant.filled => FilledButton.icon(
         style: destructive
             ? FilledButton.styleFrom(

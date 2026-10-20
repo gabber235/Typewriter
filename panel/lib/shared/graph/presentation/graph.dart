@@ -3,6 +3,15 @@ import "package:typewriter_panel/typewriter_panel.dart";
 /// Receives an element identifier and its preview dimensions during resizing.
 typedef GraphResizeCallback = void Function(GraphIdentifier, int, int);
 
+/// Wraps the graph viewport, for example in a drop target. [toGrid] converts
+/// a global position into grid units of the canvas, or null while the canvas
+/// is not laid out.
+typedef GraphCanvasBuilder = Widget Function(
+  BuildContext context,
+  Offset? Function(Offset globalPosition) toGrid,
+  Widget canvas,
+);
+
 /// Interactive graph surface backed by an immutable [GraphData] snapshot.
 ///
 /// Selection is read from the shared selection provider. A focused item outside
@@ -17,6 +26,7 @@ class Graph extends HookConsumerWidget {
     this.onViewportCenterChanged,
     this.onElementsMoved,
     this.onElementsResized,
+    this.canvasBuilder,
     super.key,
   });
 
@@ -35,6 +45,10 @@ class Graph extends HookConsumerWidget {
 
   /// Receives completed resize changes. Null disables resizing.
   final GraphResizeCommit? onElementsResized;
+
+  /// Wraps the viewport. Drags the graph does not own fall through its own
+  /// move target to drop targets installed here.
+  final GraphCanvasBuilder? canvasBuilder;
 
   static const double kGraphMinScale = 0.1;
   static const double kGraphMaxScale = 2.5;
@@ -242,6 +256,17 @@ class Graph extends HookConsumerWidget {
               return () => FocusManager.instance.removeListener(onFocusChange);
             }, [viewportController]);
 
+            Offset? toGrid(Offset globalPosition) {
+              final box = graphKey.currentContext?.findRenderObject();
+              if (box is! RenderBox || !box.attached || !box.hasSize) {
+                return null;
+              }
+              return box.globalToLocal(globalPosition) / data.cellSize;
+            }
+
+            Widget wrapCanvas(Widget canvas) =>
+                canvasBuilder?.call(context, toGrid, canvas) ?? canvas;
+
             Offset? viewportCenter() {
               final box =
                   viewerKey.currentContext?.findRenderObject() as RenderBox?;
@@ -283,220 +308,229 @@ class Graph extends HookConsumerWidget {
                 },
                 resetZoom: () => viewportController.reset(centerOffset),
               ),
-              child: InteractiveViewer.builder(
-                key: viewerKey,
-                boundaryMargin: const EdgeInsets.all(double.infinity),
-                alignment: Alignment.center,
-                minScale: kGraphMinScale,
-                maxScale: kGraphMaxScale,
-                transformationController: viewportController.transformation,
-                builder: (context, viewport) {
-                  final viewportRect = _quadToRect(viewport);
-                  reportViewportCenter(viewportRect);
-                  final focusedId = SelectableScope.primaryFocusedId()?.id;
-                  final visibleElements = layout
-                      .visibleElements(
-                        viewportRect,
-                        overscan: kGraphViewportOverscan,
-                        retainedIds: {?focusedId},
-                      )
-                      .toList(growable: false);
-                  bool updateGraphMove(
-                    DragTargetDetails<GraphDragPayload<GraphDragData>> details,
-                  ) {
-                    final offered = details.data;
-                    if (!interactionController.ownsDrag(offered)) return false;
-                    final placed = layout.placementsById[offered.value.graphId];
-                    final box = graphKey.currentContext?.findRenderObject();
-                    if (placed == null ||
-                        box is! RenderBox ||
-                        !box.attached ||
-                        !box.hasSize) {
-                      dragStart.value = null;
-                      interactionController.cancelMove();
-                      return false;
-                    }
-                    if (interactionController.movingIds.isEmpty) {
-                      dragStart.value = placed.position;
-                      interactionController.beginMove(
-                        data: data,
-                        origin: placed.id,
-                        selectedIds: ref
-                            .read(selectionProvider)
-                            .map((id) => GraphIdentifier(id.id))
-                            .toSet(),
-                      );
-                    }
-                    interactionController.updateMove(
-                      box.globalToLocal(details.offset) - dragStart.value!,
-                    );
-                    return true;
-                  }
-
-                  return GraphDragTargetSurface(
-                    viewport: viewportRect,
-                    enabled: onElementsMoved != null,
-                    dragState: interactionController.dragState,
-                    graph: GraphDrag(
-                      controller: interactionController,
-                      containsGlobalPosition: containsGlobalPosition,
-                      child: Actions(
-                        actions: {
-                          SelectedSelectorIntent:
-                              CallbackAction<SelectedSelectorIntent>(
-                                onInvoke: (intent) {
-                                  if (!intent.throughTap) return null;
-                                  ignoreCentering.value = [
-                                    ...ignoreCentering.value,
-                                    intent.focusNode,
-                                  ];
-                                  return null;
-                                },
-                              ),
-                          GraphMoveIntent: CallbackAction<GraphMoveIntent>(
-                            onInvoke: (intent) {
-                              assert(
-                                onElementsMoved != null,
-                                "onElementsMoved must be provided",
-                              );
-                              final (dx, dy) = directionToDelta(
-                                intent.direction,
-                              );
-                              final selectedIds = _selectedIds(ref, data);
-                              final changes = interactionController
-                                  .moveSelection(
-                                    data: data,
-                                    ids: selectedIds,
-                                    dx: dx,
-                                    dy: dy,
-                                  );
-
-                              if (changes.isEmpty) return null;
-
-                              onElementsMoved!(changes);
-                              _scheduleCenterFocused(
-                                controller: viewportController,
-                                viewerKey: viewerKey,
-                              );
-                              return null;
-                            },
-                          ),
-                          GraphResizeIntent: CallbackAction<GraphResizeIntent>(
-                            onInvoke: (intent) {
-                              assert(
-                                onElementsResized != null,
-                                "onElementsResized must be provided",
-                              );
-                              final (dw, dh) = directionToDelta(
-                                intent.direction,
-                              );
-                              final changes = interactionController
-                                  .resizeSelection(
-                                    data: data,
-                                    ids: _selectedIds(ref, data),
-                                    dw: dw,
-                                    dh: dh,
-                                  );
-                              if (changes.isEmpty) return null;
-
-                              onElementsResized!(changes);
-                              _scheduleCenterFocused(
-                                controller: viewportController,
-                                viewerKey: viewerKey,
-                              );
-                              return null;
-                            },
-                          ),
-                          GraphCenterFocusedIntent:
-                              CallbackAction<GraphCenterFocusedIntent>(
-                                onInvoke: (_) {
-                                  _centerFocusedChild(
-                                    controller: viewportController,
-                                    viewerKey: viewerKey,
-                                  );
-                                  return null;
-                                },
-                              ),
-                        },
-                        child: GraphSurface(
-                          key: graphKey,
-                          layout: layout,
-                          viewport: viewportRect,
-                          dotColor: Color.alphaBlend(
-                            Colors.grey.withValues(alpha: 0.5),
-                            Surface.colorOf(context),
-                          ),
-                          visibleElements: visibleElements,
-                          buildChild: (placed) {
-                            final element = placed.element;
-                            return Builder(
-                              builder: (context) {
-                                var child = element.builder(context);
-                                if (onElementsResized != null) {
-                                  child = ResizableElement(
-                                    element: element,
-                                    cellSize: data.cellSize,
-                                    onResizeStart:
-                                        interactionController.beginResize,
-                                    onResizeUpdate:
-                                        interactionController.updateResize,
-                                    onResizeEnd: (id, width, height) {
-                                      interactionController.updateResize(
-                                        id,
-                                        width,
-                                        height,
-                                      );
-                                      final change = interactionController
-                                          .finishResize();
-                                      if (change != null) {
-                                        onElementsResized!([change]);
-                                      }
-                                    },
-                                    onResizeCancel:
-                                        interactionController.cancelResize,
-                                    child: child,
-                                  );
-                                }
-                                return IgnorePointer(
-                                  ignoring: interactionController.movingIds
-                                      .contains(element.id),
-                                  child: child,
-                                );
-                              },
-                            );
-                          },
-                        ),
-                      ),
-                    ),
-                    dragTarget: DragTarget<GraphDragPayload<GraphDragData>>(
-                      // Flutter asks this before onDragStarted. Ready admission has no effects.
-                      onWillAcceptWithDetails: (details) =>
-                          details.data.canHover &&
-                          layout.placementsById.containsKey(
-                            details.data.value.graphId,
-                          ),
-                      onMove: updateGraphMove,
-                      onLeave: (offered) {
-                        if (offered == null ||
-                            !interactionController.ownsDrag(offered)) {
-                          return;
-                        }
+              child: wrapCanvas(
+                InteractiveViewer.builder(
+                  key: viewerKey,
+                  boundaryMargin: const EdgeInsets.all(double.infinity),
+                  alignment: Alignment.center,
+                  minScale: kGraphMinScale,
+                  maxScale: kGraphMaxScale,
+                  transformationController: viewportController.transformation,
+                  builder: (context, viewport) {
+                    final viewportRect = _quadToRect(viewport);
+                    reportViewportCenter(viewportRect);
+                    final focusedId = SelectableScope.primaryFocusedId()?.id;
+                    final visibleElements = layout
+                        .visibleElements(
+                          viewportRect,
+                          overscan: kGraphViewportOverscan,
+                          retainedIds: {?focusedId},
+                        )
+                        .toList(growable: false);
+                    bool updateGraphMove(
+                      DragTargetDetails<GraphDragPayload<GraphDragData>>
+                      details,
+                    ) {
+                      final offered = details.data;
+                      if (!interactionController.ownsDrag(offered)) {
+                        return false;
+                      }
+                      final placed =
+                          layout.placementsById[offered.value.graphId];
+                      final box = graphKey.currentContext?.findRenderObject();
+                      if (placed == null ||
+                          box is! RenderBox ||
+                          !box.attached ||
+                          !box.hasSize) {
                         dragStart.value = null;
                         interactionController.cancelMove();
-                      },
-                      onAcceptWithDetails: (details) {
-                        if (!updateGraphMove(details) ||
-                            !details.data.claim()) {
-                          return;
-                        }
-                        dragStart.value = null;
-                        final changes = interactionController.finishMove(data);
-                        if (changes.isNotEmpty) onElementsMoved!(changes);
-                      },
-                      builder: (_, _, _) => const SizedBox.expand(),
-                    ),
-                  );
-                },
+                        return false;
+                      }
+                      if (interactionController.movingIds.isEmpty) {
+                        dragStart.value = placed.position;
+                        interactionController.beginMove(
+                          data: data,
+                          origin: placed.id,
+                          selectedIds: ref
+                              .read(selectionProvider)
+                              .map((id) => GraphIdentifier(id.id))
+                              .toSet(),
+                        );
+                      }
+                      interactionController.updateMove(
+                        box.globalToLocal(details.offset) - dragStart.value!,
+                      );
+                      return true;
+                    }
+
+                    return GraphDragTargetSurface(
+                      viewport: viewportRect,
+                      enabled: onElementsMoved != null,
+                      dragState: interactionController.dragState,
+                      graph: GraphDrag(
+                        controller: interactionController,
+                        containsGlobalPosition: containsGlobalPosition,
+                        child: Actions(
+                          actions: {
+                            SelectedSelectorIntent:
+                                CallbackAction<SelectedSelectorIntent>(
+                                  onInvoke: (intent) {
+                                    if (!intent.throughTap) return null;
+                                    ignoreCentering.value = [
+                                      ...ignoreCentering.value,
+                                      intent.focusNode,
+                                    ];
+                                    return null;
+                                  },
+                                ),
+                            GraphMoveIntent: CallbackAction<GraphMoveIntent>(
+                              onInvoke: (intent) {
+                                assert(
+                                  onElementsMoved != null,
+                                  "onElementsMoved must be provided",
+                                );
+                                final (dx, dy) = directionToDelta(
+                                  intent.direction,
+                                );
+                                final selectedIds = _selectedIds(ref, data);
+                                final changes = interactionController
+                                    .moveSelection(
+                                      data: data,
+                                      ids: selectedIds,
+                                      dx: dx,
+                                      dy: dy,
+                                    );
+
+                                if (changes.isEmpty) return null;
+
+                                onElementsMoved!(changes);
+                                _scheduleCenterFocused(
+                                  controller: viewportController,
+                                  viewerKey: viewerKey,
+                                );
+                                return null;
+                              },
+                            ),
+                            GraphResizeIntent:
+                                CallbackAction<GraphResizeIntent>(
+                                  onInvoke: (intent) {
+                                    assert(
+                                      onElementsResized != null,
+                                      "onElementsResized must be provided",
+                                    );
+                                    final (dw, dh) = directionToDelta(
+                                      intent.direction,
+                                    );
+                                    final changes = interactionController
+                                        .resizeSelection(
+                                          data: data,
+                                          ids: _selectedIds(ref, data),
+                                          dw: dw,
+                                          dh: dh,
+                                        );
+                                    if (changes.isEmpty) return null;
+
+                                    onElementsResized!(changes);
+                                    _scheduleCenterFocused(
+                                      controller: viewportController,
+                                      viewerKey: viewerKey,
+                                    );
+                                    return null;
+                                  },
+                                ),
+                            GraphCenterFocusedIntent:
+                                CallbackAction<GraphCenterFocusedIntent>(
+                                  onInvoke: (_) {
+                                    _centerFocusedChild(
+                                      controller: viewportController,
+                                      viewerKey: viewerKey,
+                                    );
+                                    return null;
+                                  },
+                                ),
+                          },
+                          child: GraphSurface(
+                            key: graphKey,
+                            layout: layout,
+                            viewport: viewportRect,
+                            dotColor: Color.alphaBlend(
+                              Colors.grey.withValues(alpha: 0.5),
+                              Surface.colorOf(context),
+                            ),
+                            visibleElements: visibleElements,
+                            buildChild: (placed) {
+                              final element = placed.element;
+                              return Builder(
+                                builder: (context) {
+                                  var child = element.builder(context);
+                                  if (onElementsResized != null) {
+                                    child = ResizableElement(
+                                      element: element,
+                                      cellSize: data.cellSize,
+                                      onResizeStart:
+                                          interactionController.beginResize,
+                                      onResizeUpdate:
+                                          interactionController.updateResize,
+                                      onResizeEnd: (id, width, height) {
+                                        interactionController.updateResize(
+                                          id,
+                                          width,
+                                          height,
+                                        );
+                                        final change = interactionController
+                                            .finishResize();
+                                        if (change != null) {
+                                          onElementsResized!([change]);
+                                        }
+                                      },
+                                      onResizeCancel:
+                                          interactionController.cancelResize,
+                                      child: child,
+                                    );
+                                  }
+                                  return IgnorePointer(
+                                    ignoring: interactionController.movingIds
+                                        .contains(element.id),
+                                    child: child,
+                                  );
+                                },
+                              );
+                            },
+                          ),
+                        ),
+                      ),
+                      dragTarget: DragTarget<GraphDragPayload<GraphDragData>>(
+                        // Flutter asks this before onDragStarted. Ready admission has no effects.
+                        onWillAcceptWithDetails: (details) =>
+                            details.data.canHover &&
+                            layout.placementsById.containsKey(
+                              details.data.value.graphId,
+                            ),
+                        onMove: updateGraphMove,
+                        onLeave: (offered) {
+                          if (offered == null ||
+                              !interactionController.ownsDrag(offered)) {
+                            return;
+                          }
+                          dragStart.value = null;
+                          interactionController.cancelMove();
+                        },
+                        onAcceptWithDetails: (details) {
+                          if (!updateGraphMove(details) ||
+                              !details.data.claim()) {
+                            return;
+                          }
+                          dragStart.value = null;
+                          final changes = interactionController.finishMove(
+                            data,
+                          );
+                          if (changes.isNotEmpty) onElementsMoved!(changes);
+                        },
+                        builder: (_, _, _) => const SizedBox.expand(),
+                      ),
+                    );
+                  },
+                ),
               ),
             );
           },

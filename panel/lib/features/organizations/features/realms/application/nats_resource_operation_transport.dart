@@ -20,6 +20,12 @@ final class NatsResourceOperationTransport {
     request.operation(organizationId: organizationId, realmId: realmId),
   );
 
+  Future<skir.ResolveDropCandidatesResult> resolveDropCandidates(
+    skir.ResolveDropCandidatesRequest request,
+  ) => ref.requestSkir(
+    request.operation(organizationId: organizationId, realmId: realmId),
+  );
+
   Future<skir.AuthoringActionResult> prepare(
     skir.PrepareAuthoringActionRequest request,
   ) => ref.requestSkir(

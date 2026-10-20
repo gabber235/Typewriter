@@ -789,7 +789,6 @@ CheckedEditorCatalog _interactionCatalog() {
       ],
       realmRoot: skir.TypeDefinitionId.defaultInstance,
       resourceOperations: const [],
-      resourceOperationContributions: const [],
       relations: const [],
       presentations: const [],
       presentationMaterials: const [],

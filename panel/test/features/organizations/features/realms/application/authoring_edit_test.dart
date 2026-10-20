@@ -1427,7 +1427,6 @@ _parentFixture({
   final catalogSnapshot = skir.EditorCatalogWireSnapshot(
     resourceDisplays: const [],
     resourceOperations: const [],
-    resourceOperationContributions: const [],
     generation: skir.CatalogGeneration(value: generation),
     types: [
       skir.PublishedType(
@@ -1809,7 +1808,6 @@ _pageCreationFixture({bool ambiguous = false}) {
   final snapshot = skir.EditorCatalogWireSnapshot(
     resourceDisplays: const [],
     resourceOperations: const [],
-    resourceOperationContributions: const [],
     generation: generation,
     types: [
       published(
@@ -2112,7 +2110,6 @@ _relationFixture({
     skir.EditorCatalogWireSnapshot(
       resourceDisplays: const [],
       resourceOperations: const [],
-      resourceOperationContributions: const [],
       generation: fixture.snapshot.generation,
       types: const [],
       relations: [
@@ -2233,7 +2230,6 @@ _collectionRepairFixture() {
   final catalogSnapshot = skir.EditorCatalogWireSnapshot(
     resourceDisplays: const [],
     resourceOperations: const [],
-    resourceOperationContributions: const [],
     generation: skir.CatalogGeneration(value: "catalog:collection-repair"),
     types: [
       published(

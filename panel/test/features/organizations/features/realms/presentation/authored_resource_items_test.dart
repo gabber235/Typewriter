@@ -22,37 +22,37 @@ void main() {
       isA<SelectedEditorPresentation>(),
     );
   });
-  test("a drag joins selected owned members in the same scope", () {
-    final fixture = AuthoredGraphFixture(secondSource: true);
-    final entries = _entries(fixture);
-    final primary = fixture.group.primary;
-    final second = AuthoringResourceIdentifier.inScope(
-      fixture.scope,
-      fixture.second,
-    );
-    final foreign = second.copyWith(
-      realmId: skir.RecordId(
-        table: fixture.scope.realmId.table,
-        key: skir.RecordIdKey.wrapString("other"),
-      ),
-    );
-    expect(
-      AuthoringResourceDragGroup.forSelection(
-        primary: primary,
-        entries: entries,
-        selection: [second, foreign],
-      ).memberships.keys,
-      [primary],
-    );
-    expect(
-      AuthoringResourceDragGroup.forSelection(
-        primary: primary,
-        entries: entries,
-        selection: [primary, second, foreign],
-      ).memberships.keys.toSet(),
-      {primary, second},
-    );
-  });
+  test(
+    "a drag carries the selection only when it starts on a selected resource",
+    () {
+      final fixture = AuthoredGraphFixture(secondSource: true);
+      final primary = fixture.drag.primary;
+      final second = AuthoringResourceIdentifier.inScope(
+        fixture.scope,
+        fixture.second,
+      );
+      final foreign = second.copyWith(
+        realmId: skir.RecordId(
+          table: fixture.scope.realmId.table,
+          key: skir.RecordIdKey.wrapString("other"),
+        ),
+      );
+      expect(
+        ResourceDrag.forSelection(
+          primary: primary,
+          selection: [second, foreign],
+        ).subjects,
+        [fixture.source],
+      );
+      expect(
+        ResourceDrag.forSelection(
+          primary: primary,
+          selection: [second, primary, foreign],
+        ).subjects,
+        [fixture.source, fixture.second],
+      );
+    },
+  );
 
   testWidgets("selection and focus reach portable node state", (tester) async {
     final fixture = AuthoredGraphFixture(secondSource: true);
@@ -64,7 +64,7 @@ void main() {
         .widgetList<Selector>(find.byType(Selector))
         .singleWhere((value) => value.selectableId.id == fixture.source.value);
     expect(selector.focusNode.hasFocus, isTrue);
-    expect(tester.container().read(selectionProvider), [fixture.group.primary]);
+    expect(tester.container().read(selectionProvider), [fixture.drag.primary]);
     final probe = tester.element(source);
     expect(PresentationInteractionScope.of(probe).selected, isTrue);
     expect(PresentationInteractionScope.of(probe).focused, isTrue);
@@ -135,14 +135,14 @@ void main() {
     await tester.pumpAndSettle();
     expect(inheritedDeletes, 0);
     expect(
-      find.byType(Draggable<GraphDragPayload<AuthoringResourceDragGroup>>),
+      find.byType(Draggable<GraphDragPayload<ResourceDrag>>),
       findsNothing,
     );
     expect(find.byType(AlertDialog), findsNothing);
     expect(fixture.workspace.document.resource(fixture.source), isNotNull);
   });
 
-  testWidgets("a sidebar drop transfers ownership using the same payload", (
+  testWidgets("a sidebar drop moves the dragged resource to its new owner", (
     tester,
   ) async {
     final fixture = AuthoredGraphFixture();
@@ -188,7 +188,7 @@ void main() {
       tester.container().read(realmInteractionProvider).suspended,
       isFalse,
     );
-    expect(SelectableScope.primaryFocusedId(), fixture.group.primary);
+    expect(SelectableScope.primaryFocusedId(), fixture.drag.primary);
     await tester.sendKeyEvent(LogicalKeyboardKey.arrowRight);
     await tester.pumpAndSettle();
     expect(moves, hasLength(1));
@@ -252,14 +252,14 @@ void main() {
       final selector = tester.widget<Selector>(find.byType(Selector));
       await _shiftKey(tester, LogicalKeyboardKey.f10);
       await tester.pumpAndSettle();
-      expect(find.text("Move to page"), findsOneWidget);
+      expect(find.text("Move to"), findsOneWidget);
       final button = find.ancestor(
-        of: find.text("Move to page"),
+        of: find.text("Move to"),
         matching: find.byType(MenuItemButton),
       );
       tester.widget<MenuItemButton>(button).focusNode?.requestFocus();
       // Menus expose normal focus traversal; focus the action without a pointer.
-      Focus.of(tester.element(find.text("Move to page"))).requestFocus();
+      Focus.of(tester.element(find.text("Move to"))).requestFocus();
       await tester.pump();
       await tester.sendKeyEvent(LogicalKeyboardKey.enter);
       await tester.pumpAndSettle();
@@ -394,11 +394,10 @@ Future<void> _pump(
           if (sidebar)
             SizedBox(
               width: 150,
-              child: ResourcePageDropTarget(
-                page: fixture.destination,
-                workspace: fixture.workspace,
-                authoringScope: fixture.scope,
-                child: const SizedBox(
+              child: ResourceDropTarget.at(
+                scope: fixture.scope,
+                destination: DropDestination.resource(fixture.destination),
+                builder: (context, hover) => const SizedBox(
                   key: ValueKey("destination"),
                   height: 80,
                   child: Text("Destination"),
@@ -471,18 +470,18 @@ Future<void> _pump(
 }
 
 List<PortableResourceMember> _entries(AuthoredGraphFixture fixture) => [
-  for (final member in fixture.group.memberships.entries)
+  for (final member in fixture.memberships.entries)
     PortableResourceMember(
-      resource: member.key.resourceId,
+      resource: member.key,
       occurrence: member.value,
       link: skir.DataValue.unfilled,
       resourceProjection: PortableResourceProjection(
-        resource: member.key.resourceId,
+        resource: member.key,
         configuration: fixture.workspace.document
-            .resource(member.key.resourceId)!
+            .resource(member.key)!
             .configuration,
         appearance: ResourceAppearance(
-          label: member.key.resourceId.value,
+          label: member.key.value,
           accent: const Color(0xff607d8b),
           icon: skir.Icon.wrapIconify("material-symbols:category"),
         ),

@@ -49,6 +49,10 @@ abstract class PresentationValueEnvironment
       interaction.readOnly || scope.readOnly,
     skir.PresentationInteractionState_kind.invalidConst => interaction.invalid,
     skir.PresentationInteractionState_kind.routedConst => interaction.routed,
+    skir.PresentationInteractionState_kind.dropAcceptedConst =>
+      interaction.dropAccepted,
+    skir.PresentationInteractionState_kind.dropRejectedConst =>
+      interaction.dropRejected,
     _ => throw const PresentationColorFailure(
       "Presentation interaction state is unavailable",
     ),

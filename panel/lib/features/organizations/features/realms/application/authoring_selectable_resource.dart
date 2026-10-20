@@ -7,7 +7,7 @@ part "authoring_selectable_resource.freezed.dart";
 @freezed
 abstract class AuthoringResourceIdentifier extends SelectableIdentifier
     with _$AuthoringResourceIdentifier
-    implements GraphDragData, ReferenceResourceDragData {
+    implements GraphDragData {
   const factory AuthoringResourceIdentifier({
     required skir.RecordId organizationId,
     required skir.RecordId realmId,
@@ -40,12 +40,6 @@ abstract class AuthoringResourceIdentifier extends SelectableIdentifier
 
   @override
   GraphIdentifier get graphId => GraphIdentifier(resourceId.value);
-
-  @override
-  skir.ResourceId get referenceId => resourceId;
-
-  @override
-  List<skir.TypeDefinitionId> get referenceTypes => const [];
 
   @override
   AsyncValue<Selectable> create(Ref ref) {

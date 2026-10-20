@@ -458,7 +458,6 @@ _nestedRuleFixture({
     skir.EditorCatalogWireSnapshot(
       resourceDisplays: const [],
       resourceOperations: const [],
-      resourceOperationContributions: const [],
       generation: generation,
       types: [
         _publishedRecord(

@@ -475,6 +475,36 @@ void main() {
     expect(decodedConnect.source.target.resource, target.resource);
   });
 
+  testWidgets("link input hands its location to the link field builder", (
+    tester,
+  ) async {
+    final fixture = _fixture();
+    final editing = _LinkWorkspace(fixture.draft, fixture.source.resource);
+    final wrapped = <skir.ValueLocation>[];
+    await tester.pumpWidget(
+      _linkControl(
+        fixture,
+        editing: editing,
+        linkFieldBuilder: (context, location, control) {
+          wrapped.add(location);
+          return KeyedSubtree(
+            key: const ValueKey("link.field"),
+            child: control,
+          );
+        },
+      ),
+    );
+    expect(wrapped, everyElement(fixture.source));
+    expect(wrapped, isNotEmpty);
+    expect(
+      find.descendant(
+        of: find.byKey(const ValueKey("link.field")),
+        matching: find.byTooltip("Choose linked resource"),
+      ),
+      findsOneWidget,
+    );
+  });
+
   testWidgets("link input preserves cancellation and chooses an exact location", (
     tester,
   ) async {
@@ -632,6 +662,7 @@ Widget _linkControl(
   skir.ValueLocation? source,
   Future<skir.PreparedValue> Function(skir.ValuePreparationRequest)?
   prepareValue,
+  Widget Function(BuildContext, skir.ValueLocation, Widget)? linkFieldBuilder,
 }) {
   source ??= fixture.source;
   final root = skir.ExpressionBindingId(value: "configured_value");
@@ -650,46 +681,51 @@ Widget _linkControl(
   addTearDown(host.dispose);
   return testApp(
     child: Scaffold(
-      body: PortablePresentationNodeRenderer(
-        node: skir.PresentationNode(
-          nodeId: "link",
-          properties: skir.PresentationProperties.defaultInstance,
-          element: skir.PresentationElement.wrapLinkInput(
-            skir.LinkControl(
-              control: skir.BoundControl(
-                binding: skir.BindingRef(bindingId: root, path: source.path),
-                label: null,
-                description: null,
-                prefix: null,
-                semanticLabel: null,
+      body: PortableResourcesInteractionScope(
+        itemBuilder: (context, view, member, child) => child,
+        layoutBuilder: (context, view, child) => child,
+        linkFieldBuilder: linkFieldBuilder,
+        child: PortablePresentationNodeRenderer(
+          node: skir.PresentationNode(
+            nodeId: "link",
+            properties: skir.PresentationProperties.defaultInstance,
+            element: skir.PresentationElement.wrapLinkInput(
+              skir.LinkControl(
+                control: skir.BoundControl(
+                  binding: skir.BindingRef(bindingId: root, path: source.path),
+                  label: null,
+                  description: null,
+                  prefix: null,
+                  semanticLabel: null,
+                ),
+                allowReorder: false,
+                candidatePolicy: null,
+                rejectionDisplay: skir.LinkRejectionDisplay.disabled,
+                sourceId: null,
+                appearance: null,
+                content: null,
+                inputAppearance: null,
+                inputContent: null,
+                popup: null,
               ),
-              allowReorder: false,
-              candidatePolicy: null,
-              rejectionDisplay: skir.LinkRejectionDisplay.disabled,
-              sourceId: null,
-              appearance: null,
-              content: null,
-              inputAppearance: null,
-              inputContent: null,
-              popup: null,
             ),
+            header: null,
           ),
-          header: null,
-        ),
-        scope: PortablePresentationScope(
-          operations: testPortableOperations(),
-          bindings: {
-            root: PortableExpressionBinding(
-              value: skir.DataValue.createRecord(fields: record.fields),
-              location: skir.ValueLocation(
-                resource: source.resource,
-                path: skir.ValuePath(segments: const []),
+          scope: PortablePresentationScope(
+            operations: testPortableOperations(),
+            bindings: {
+              root: PortableExpressionBinding(
+                value: skir.DataValue.createRecord(fields: record.fields),
+                location: skir.ValueLocation(
+                  resource: source.resource,
+                  path: skir.ValuePath(segments: const []),
+                ),
               ),
-            ),
-          },
-          budget: budget,
-          catalog: fixture.catalog,
-          host: host,
+            },
+            budget: budget,
+            catalog: fixture.catalog,
+            host: host,
+          ),
         ),
       ),
     ),
@@ -776,7 +812,6 @@ _fixture({
   final snapshot = skir.EditorCatalogWireSnapshot(
     resourceDisplays: const [],
     resourceOperations: const [],
-    resourceOperationContributions: const [],
     generation: generation,
     types: [
       if (abstractWrapper)

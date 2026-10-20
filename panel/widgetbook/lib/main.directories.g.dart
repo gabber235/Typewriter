@@ -52,14 +52,12 @@ import 'package:widgetbook_workspace/stories/features/organizations/features/rea
     as _widgetbook_workspace_stories_features_organizations_features_realms_presentation_realm_inbox_stories;
 import 'package:widgetbook_workspace/stories/features/organizations/features/realms/presentation/realm_selector.stories.dart'
     as _widgetbook_workspace_stories_features_organizations_features_realms_presentation_realm_selector_stories;
+import 'package:widgetbook_workspace/stories/features/organizations/features/realms/presentation/resource_drop_target.stories.dart'
+    as _widgetbook_workspace_stories_features_organizations_features_realms_presentation_resource_drop_target_stories;
 import 'package:widgetbook_workspace/stories/features/organizations/features/realms/presentation/resource_issue_badge.stories.dart'
     as _widgetbook_workspace_stories_features_organizations_features_realms_presentation_resource_issue_badge_stories;
 import 'package:widgetbook_workspace/stories/features/organizations/features/realms/presentation/resource_operation_button.stories.dart'
     as _widgetbook_workspace_stories_features_organizations_features_realms_presentation_resource_operation_button_stories;
-import 'package:widgetbook_workspace/stories/features/organizations/features/realms/presentation/resource_operation_drop_target.stories.dart'
-    as _widgetbook_workspace_stories_features_organizations_features_realms_presentation_resource_operation_drop_target_stories;
-import 'package:widgetbook_workspace/stories/features/organizations/features/realms/presentation/resource_page_drop_target.stories.dart'
-    as _widgetbook_workspace_stories_features_organizations_features_realms_presentation_resource_page_drop_target_stories;
 import 'package:widgetbook_workspace/stories/features/organizations/features/realms/presentation/resource_route.stories.dart'
     as _widgetbook_workspace_stories_features_organizations_features_realms_presentation_resource_route_stories;
 import 'package:widgetbook_workspace/stories/features/organizations/features/realms/presentation/tag_inheritance_presentation.stories.dart'
@@ -611,6 +609,28 @@ final directories = <_widgetbook.WidgetbookNode>[
                         ],
                       ),
                       _widgetbook.WidgetbookComponent(
+                        name: 'DropChooser',
+                        useCases: [
+                          _widgetbook.WidgetbookUseCase(
+                            name: 'Several offers',
+                            builder:
+                                _widgetbook_workspace_stories_features_organizations_features_realms_presentation_resource_drop_target_stories
+                                    .dropChooserStory,
+                          ),
+                        ],
+                      ),
+                      _widgetbook.WidgetbookComponent(
+                        name: 'DropHintChip',
+                        useCases: [
+                          _widgetbook.WidgetbookUseCase(
+                            name: 'Hint',
+                            builder:
+                                _widgetbook_workspace_stories_features_organizations_features_realms_presentation_resource_drop_target_stories
+                                    .dropHintChipStory,
+                          ),
+                        ],
+                      ),
+                      _widgetbook.WidgetbookComponent(
                         name: 'RealmEditingReview',
                         useCases: [
                           _widgetbook.WidgetbookUseCase(
@@ -699,6 +719,39 @@ final directories = <_widgetbook.WidgetbookNode>[
                         ],
                       ),
                       _widgetbook.WidgetbookComponent(
+                        name: 'ResourceDragFeedback',
+                        useCases: [
+                          _widgetbook.WidgetbookUseCase(
+                            name: 'Dragged resources',
+                            builder:
+                                _widgetbook_workspace_stories_features_organizations_features_realms_presentation_resource_drop_target_stories
+                                    .resourceDragFeedbackStory,
+                          ),
+                        ],
+                      ),
+                      _widgetbook.WidgetbookComponent(
+                        name: 'ResourceDropHighlight',
+                        useCases: [
+                          _widgetbook.WidgetbookUseCase(
+                            name: 'Hover states',
+                            builder:
+                                _widgetbook_workspace_stories_features_organizations_features_realms_presentation_resource_drop_target_stories
+                                    .resourceDropHighlightStory,
+                          ),
+                        ],
+                      ),
+                      _widgetbook.WidgetbookComponent(
+                        name: 'ResourceDropTarget',
+                        useCases: [
+                          _widgetbook.WidgetbookUseCase(
+                            name: 'Drag entries onto a page',
+                            builder:
+                                _widgetbook_workspace_stories_features_organizations_features_realms_presentation_resource_drop_target_stories
+                                    .resourceDropTargetStory,
+                          ),
+                        ],
+                      ),
+                      _widgetbook.WidgetbookComponent(
                         name: 'ResourceIssueBadge',
                         useCases: [
                           _widgetbook.WidgetbookUseCase(
@@ -717,28 +770,6 @@ final directories = <_widgetbook.WidgetbookNode>[
                             builder:
                                 _widgetbook_workspace_stories_features_organizations_features_realms_presentation_resource_operation_button_stories
                                     .resourceOperationButtonStory,
-                          ),
-                        ],
-                      ),
-                      _widgetbook.WidgetbookComponent(
-                        name: 'ResourceOperationDropTarget',
-                        useCases: [
-                          _widgetbook.WidgetbookUseCase(
-                            name: 'Remote hover feedback',
-                            builder:
-                                _widgetbook_workspace_stories_features_organizations_features_realms_presentation_resource_operation_drop_target_stories
-                                    .resourceOperationDropTargetStory,
-                          ),
-                        ],
-                      ),
-                      _widgetbook.WidgetbookComponent(
-                        name: 'ResourcePageDropTarget',
-                        useCases: [
-                          _widgetbook.WidgetbookUseCase(
-                            name: 'Move entries to a page',
-                            builder:
-                                _widgetbook_workspace_stories_features_organizations_features_realms_presentation_resource_page_drop_target_stories
-                                    .resourcePageDropTargetUseCase,
                           ),
                         ],
                       ),

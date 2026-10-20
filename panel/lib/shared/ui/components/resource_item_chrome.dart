@@ -29,7 +29,8 @@ class ResourceItemChrome extends StatelessWidget {
   Widget build(BuildContext context) {
     final interaction = PresentationInteractionScope.of(context);
     final accent = appearance.accent;
-    final emphasized = interaction.selected || interaction.routed;
+    final emphasized =
+        interaction.selected || interaction.routed || interaction.dropAccepted;
     final background = emphasized
         ? accent.withValues(alpha: 0.18)
         : interaction.hovered || interaction.focused
@@ -64,6 +65,11 @@ class ResourceItemChrome extends StatelessWidget {
       ),
     };
     final border = switch (density) {
+      _ when interaction.dropRejected => Border.all(
+        color: context.theme.colorScheme.error,
+        width: 2,
+      ),
+      _ when interaction.dropAccepted => Border.all(color: accent, width: 2),
       ResourceItemDensity.row => null,
       _ => Border.all(
         color: emphasized ? accent : context.colors.borderSubtle,

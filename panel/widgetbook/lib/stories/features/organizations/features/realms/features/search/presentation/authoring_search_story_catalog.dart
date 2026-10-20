@@ -52,7 +52,6 @@ CheckedEditorCatalog authoringSearchStoryCatalog() {
           ),
       ],
       resourceOperations: const [],
-      resourceOperationContributions: const [],
       generation: skir.CatalogGeneration(value: "catalog:widgetbook.search"),
       types: [
         for (final definition in definitions.values)

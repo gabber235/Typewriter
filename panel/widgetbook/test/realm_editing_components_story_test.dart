@@ -3,7 +3,7 @@ import "package:typewriter_panel/typewriter_panel.dart";
 import "package:typewriter_testkit/typewriter_testkit.dart";
 import "package:widgetbook_workspace/stories/features/organizations/features/realms/presentation/authored_type_argument_editor.stories.dart";
 import "package:widgetbook_workspace/stories/features/organizations/features/realms/presentation/realm_editing_review.stories.dart";
-import "package:widgetbook_workspace/stories/features/organizations/features/realms/presentation/resource_operation_drop_target.stories.dart";
+import "package:widgetbook_workspace/stories/features/organizations/features/realms/presentation/resource_drop_target.stories.dart";
 
 void main() {
   Future<void> choose(WidgetTester tester, String label) async {
@@ -129,12 +129,13 @@ void main() {
   testWidgets("a disabled page drop target ignores dragged entries", (
     tester,
   ) async {
-    await tester.pumpWidget(
-      resourceOperationDropTargetExample(delayed: false, dropEnabled: false),
-    );
+    await tester.pumpWidget(resourceDropTargetExample(dropEnabled: false));
     await tester.pumpAndSettle();
     final source = tester.getCenter(find.byType(AuthoredGraphItem).first);
-    final pageTarget = find.byType(ResourcePageDropTarget);
+    final pageTarget = find.ancestor(
+      of: find.byKey(const ValueKey("story.destination")),
+      matching: find.byType(ResourceDropHighlight),
+    );
     final container = ProviderScope.containerOf(tester.element(pageTarget));
     final scope = container.read(selectedAuthoringScopeProvider)!;
     final workspace = container.read(realmEditingProvider(scope));

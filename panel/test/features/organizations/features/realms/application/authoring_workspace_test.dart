@@ -1604,7 +1604,6 @@ AuthoringDocument _document({
     skir.EditorCatalogWireSnapshot(
       resourceDisplays: const [],
       resourceOperations: const [],
-      resourceOperationContributions: const [],
       generation: skir.CatalogGeneration(value: "fixture"),
       types: const [],
       relations: const [],

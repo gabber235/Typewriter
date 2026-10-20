@@ -30,6 +30,7 @@ extension _PortableResourcesRendering on PortablePresentationNodeRenderer {
     final view = PortableResourcesView(
       members: members,
       scope: childScope,
+      location: childScope.location(element.control.binding),
       layout: switch (element.layout) {
         skir.ResourcesLayout_graphWrapper() =>
           PortableResourcesLayoutKind.graph,
@@ -152,7 +153,12 @@ extension _PortableResourcesRendering on PortablePresentationNodeRenderer {
         ? null
         : _presentationInsets(appearance!.cardPadding);
     final members = view.members;
+    final interactions = PortableResourcesInteractionScope.maybeOf(context);
     return Graph(
+      canvasBuilder: interactions?.canvasBuilder == null
+          ? null
+          : (context, toGrid, canvas) =>
+                interactions!.canvasBuilder!(context, view, toGrid, canvas),
       data: GraphData(
         cellSize: cellSize,
         elements: [
@@ -536,6 +542,14 @@ final class _ResourceTreeGroup {
   final String name;
   final children = <String, _ResourceTreeGroup>{};
   final members = <PortableResourceMember>[];
+
+  /// Members of this group and every nested group.
+  Iterable<PortableResourceMember> get allMembers sync* {
+    yield* members;
+    for (final child in children.values) {
+      yield* child.allMembers;
+    }
+  }
 }
 
 /// Members grouped by a hierarchy path field. Each group header renders the
@@ -668,7 +682,7 @@ class _ResourceTreeGroupHeader extends StatelessWidget {
               },
             ),
           );
-    return Padding(
+    final row = Padding(
       padding: EdgeInsetsDirectional.only(start: depth * _treeIndent),
       child: Row(
         children: [
@@ -684,6 +698,19 @@ class _ResourceTreeGroupHeader extends StatelessWidget {
         ],
       ),
     );
+    return PortableResourcesInteractionScope.maybeOf(context)?.groupBuilder
+            ?.call(
+              context,
+              view,
+              PortableResourcesGroup(
+                field: layout.path,
+                path: group.path,
+                name: group.name,
+                members: group.allMembers.toList(growable: false),
+              ),
+              row,
+            ) ??
+        row;
   }
 }
 

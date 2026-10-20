@@ -64,7 +64,6 @@ AuthoringSearchResultPayload _payload({
     skir.EditorCatalogWireSnapshot(
       resourceDisplays: const [],
       resourceOperations: const [],
-      resourceOperationContributions: const [],
       generation: skir.CatalogGeneration(value: "catalog:test"),
       types: [
         skir.PublishedType(

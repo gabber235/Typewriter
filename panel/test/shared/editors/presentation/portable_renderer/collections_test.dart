@@ -605,7 +605,6 @@ _nestedMaterialFixture() {
     skir.EditorCatalogWireSnapshot(
       resourceDisplays: const [],
       resourceOperations: const [],
-      resourceOperationContributions: const [],
       generation: original.generation,
       types: original.types,
       relations: original.relations,
@@ -723,7 +722,6 @@ _fixture({
     skir.EditorCatalogWireSnapshot(
       resourceDisplays: const [],
       resourceOperations: const [],
-      resourceOperationContributions: const [],
       generation: generation,
       types: [
         published,

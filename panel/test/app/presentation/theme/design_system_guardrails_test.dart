@@ -166,12 +166,12 @@ final exemptions = <Exemption>[
     "lib/shared/editors/presentation/components/search_input/search_input_row.dart",
     "lib/features/organizations/features/realms/features/books/presentation/book.dart",
     "lib/shared/search/presentation/search_result_card.dart",
+    "lib/features/organizations/features/realms/presentation/resource_drop_target.dart",
   ])
     Exemption(path, RegExp(r"Colors\.transparent"), "intentional transparency"),
   for (final path in [
     "lib/app/presentation/shell/custom_appbar.dart",
     "lib/app/presentation/shell/panes.dart",
-    "lib/shared/graph/presentation/graph_group.dart",
     "lib/shared/editors/presentation/timeline/presentation/timeline_segment_surface.dart",
     "lib/shared/editors/presentation/timeline/presentation/timeline_plane.dart",
     "lib/features/organizations/features/realms/features/tags/presentation/tag_node.dart",

@@ -84,7 +84,6 @@ final _recordCatalog = CheckedEditorCatalog(
   skir.EditorCatalogWireSnapshot(
     resourceDisplays: const [],
     resourceOperations: const [],
-    resourceOperationContributions: const [],
     generation: skir.CatalogGeneration(value: "test"),
     types: [
       skir.PublishedType(

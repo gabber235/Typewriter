@@ -49,7 +49,6 @@ EditorDocument _document(String field, String value) {
     skir.EditorCatalogWireSnapshot(
       resourceDisplays: const [],
       resourceOperations: const [],
-      resourceOperationContributions: const [],
       generation: skir.CatalogGeneration(value: "test"),
       types: [
         skir.PublishedType(

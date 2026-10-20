@@ -65,6 +65,27 @@ void main() {
     expect(_chrome("Scene"), findsOneWidget);
   });
 
+  testWidgets("a member dropped onto a group header moves into that group", (
+    tester,
+  ) async {
+    final container = await _pumpEditable(tester);
+    await _drag(tester, _chrome("Loose"), find.text("intro"));
+    expect(_chapter(container, _loose), "act1.intro");
+  });
+
+  testWidgets(
+    "a dragged group header carries its members below the target group",
+    (tester) async {
+      final container = await _pumpEditable(tester);
+      await _drag(tester, find.text("intro"), find.text("act2"));
+      expect(_chapter(container, _scene), "act2.intro");
+      expect(_chapter(container, _opening), "act1");
+
+      await _drag(tester, find.text("act2"), find.text("intro"));
+      expect(_chapter(container, _scene), "act2.intro");
+    },
+  );
+
   testWidgets("the routed member carries the routed interaction state", (
     tester,
   ) async {
@@ -82,9 +103,103 @@ final _book = skir.ResourceId(value: "book:a");
 final _opening = skir.ResourceId(value: "page:a");
 final _scene = skir.ResourceId(value: "page:b");
 final _loose = skir.ResourceId(value: "page:c");
+final _later = skir.ResourceId(value: "page:d");
 
 Finder _chrome(String label) => find.byWidgetPredicate(
   (widget) => widget is ResourceItemChrome && widget.appearance.label == label,
+);
+
+String? _chapter(ProviderContainer container, skir.ResourceId page) {
+  final scope = container.read(selectedAuthoringScopeProvider)!;
+  return container
+      .read(realmEditingProvider(scope))
+      .document
+      .textAt(page, editorRootPath.field("chapter"));
+}
+
+Future<void> _drag(WidgetTester tester, Finder source, Finder target) async {
+  final gesture = await tester.startGesture(tester.getCenter(source.first));
+  await gesture.moveBy(const Offset(30, 0));
+  await tester.pump();
+  await gesture.moveTo(tester.getCenter(target.first));
+  await tester.pumpAndSettle();
+  await gesture.up();
+  await tester.pumpAndSettle();
+}
+
+/// The Atlas chapter tree, editable through the realm workspace.
+Future<ProviderContainer> _pumpEditable(WidgetTester tester) async {
+  await tester.pumpTestApp(
+    overrides: [
+      realmInteractionProvider.overrideWithValue(
+        const RealmInteractionState(
+          connectionState: RealmConnectionState.online,
+        ),
+      ),
+      ...authoringFixtureOverrides(
+        document: _document(
+          extra: [
+            Page(pageId: _later, bookId: _book, name: "Later", chapter: "act2"),
+          ],
+        ),
+      ),
+    ],
+    child: Scaffold(
+      body: SizedBox(
+        width: 800,
+        height: 600,
+        child: HookConsumer(
+          builder: (context, ref, _) {
+            final scope = ref.watch(selectedAuthoringScopeProvider)!;
+            final workspace = ref.watch(realmEditingProvider(scope));
+            useListenable(workspace);
+            final binding = useMemoized(
+              () => workspace.attach(
+                _book,
+                policy: EditorCommitPolicy.applyResource,
+              ),
+              [workspace],
+            );
+            useEffect(() => binding.detach, [binding]);
+            return AuthoredResourceEditor(
+              resource: _book,
+              document: workspace.document,
+              edit: binding,
+              role: skir.PresentationRole.navigator,
+              budget: skir.EvaluationBudget(
+                maxSteps: 1000,
+                maxCollectionItems: 100,
+              ),
+              fillAvailableSpace: true,
+            );
+          },
+        ),
+      ),
+    ),
+  );
+  await tester.pumpAndSettle();
+  return tester.container();
+}
+
+AuthoringDocument _document({
+  List<Page> extra = const [],
+}) => fixtureAuthoringDocument(
+  realm: true,
+  books: [
+    Book(bookId: _book, title: "Atlas", icon: "mdi:book", color: Colors.blue),
+    Book(
+      bookId: skir.ResourceId(value: "book:z"),
+      title: "Zebra",
+      icon: "mdi:book",
+      color: Colors.blue,
+    ),
+  ],
+  pages: [
+    Page(pageId: _loose, bookId: _book, name: "Loose"),
+    Page(pageId: _scene, bookId: _book, name: "Scene", chapter: "act1.intro"),
+    Page(pageId: _opening, bookId: _book, name: "Opening", chapter: "act1"),
+    ...extra,
+  ],
 );
 
 Future<void> _pump(
@@ -93,23 +208,7 @@ Future<void> _pump(
   skir.PresentationRole role, {
   skir.ResourceId? routed,
 }) async {
-  final document = fixtureAuthoringDocument(
-    realm: true,
-    books: [
-      Book(bookId: _book, title: "Atlas", icon: "mdi:book", color: Colors.blue),
-      Book(
-        bookId: skir.ResourceId(value: "book:z"),
-        title: "Zebra",
-        icon: "mdi:book",
-        color: Colors.blue,
-      ),
-    ],
-    pages: [
-      Page(pageId: _loose, bookId: _book, name: "Loose"),
-      Page(pageId: _scene, bookId: _book, name: "Scene", chapter: "act1.intro"),
-      Page(pageId: _opening, bookId: _book, name: "Opening", chapter: "act1"),
-    ],
-  );
+  final document = _document();
   await tester.pumpTestApp(
     overrides: authoringFixtureOverrides(document: document),
     child: Scaffold(

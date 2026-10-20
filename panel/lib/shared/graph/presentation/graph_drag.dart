@@ -66,6 +66,7 @@ class GraphDragSource<T extends GraphDragData> {
       return;
     }
     _active = offered;
+    offered.pointer = position;
     final scope = _scope;
     if (scope != null &&
         !scope.controller.beginDrag(
@@ -80,6 +81,7 @@ class GraphDragSource<T extends GraphDragData> {
 
   void update(GraphDragPayload<T> offered, DragUpdateDetails details) {
     if (_closed || !identical(_active, offered)) return;
+    offered.pointer = details.globalPosition;
     final scope = _scope;
     if (scope == null) return;
     scope.controller.updateDrag(

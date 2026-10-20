@@ -25,6 +25,10 @@ abstract class SelectionOperation {
   /// Whether this operation is offered among the inspector controls.
   bool get showInInspector => true;
 
+  /// The menu section this operation belongs to. Menus separate neighboring
+  /// operations of different groups; null groups operations together.
+  Object? get menuGroup => null;
+
   /// Returns whether this operation is valid for [selection].
   ///
   /// Callers use this as a fast, side effect free availability check. An empty
@@ -133,6 +137,24 @@ List<SelectionOperation> availableSelectionOperations(
   return operations
       .where((operation) => operation.canExecuteOn(selected))
       .toList();
+}
+
+/// Menu items for [operations] in their order, with a divider at every change
+/// of [SelectionOperation.menuGroup].
+List<MenuItem> selectionOperationMenuItems(
+  Iterable<SelectionOperation> operations,
+  WidgetRef ref,
+) {
+  final items = <MenuItem>[];
+  Object? group;
+  for (final (index, operation) in operations.indexed) {
+    if (index > 0 && operation.menuGroup != group) {
+      items.add(const MenuItem.divider());
+    }
+    group = operation.menuGroup;
+    items.add(operation.menuItem(ref));
+  }
+  return items;
 }
 
 /// Shows per item failures collected during a batch operation.

@@ -328,7 +328,6 @@ void main() {
     final catalogSnapshot = skir.EditorCatalogWireSnapshot(
       resourceDisplays: const [],
       resourceOperations: const [],
-      resourceOperationContributions: const [],
       generation: skir.CatalogGeneration(value: "catalog:http"),
       types: [
         skir.PublishedType(

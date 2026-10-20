@@ -17,6 +17,8 @@ Widget resourceItemChromeUseCase(BuildContext context) {
     selected: context.knobs.boolean(label: "Selected"),
     hovered: context.knobs.boolean(label: "Hovered"),
     routed: context.knobs.boolean(label: "Routed"),
+    dropAccepted: context.knobs.boolean(label: "Drop accepted"),
+    dropRejected: context.knobs.boolean(label: "Drop rejected"),
   );
   return FakeApp(
     child: Center(

@@ -2048,7 +2048,6 @@ _linkCollectionFixture({
     skir.EditorCatalogWireSnapshot(
       resourceDisplays: [nameResourceDisplay(rootTemplate)],
       resourceOperations: const [],
-      resourceOperationContributions: const [],
       generation: skir.CatalogGeneration(value: "catalog:links"),
       types: [
         skir.PublishedType(
@@ -2714,7 +2713,6 @@ CheckedEditorCatalog _collectionCatalog() {
     skir.EditorCatalogWireSnapshot(
       resourceDisplays: const [],
       resourceOperations: const [],
-      resourceOperationContributions: const [],
       generation: skir.CatalogGeneration(value: "catalog:test"),
       types: [
         published(
@@ -2864,7 +2862,6 @@ final _polymorphicCatalog = CheckedEditorCatalog(
   skir.EditorCatalogWireSnapshot(
     resourceDisplays: const [],
     resourceOperations: const [],
-    resourceOperationContributions: const [],
     generation: skir.CatalogGeneration(value: "test"),
     types: [
       skir.PublishedType(

@@ -2,7 +2,7 @@ import "package:flutter_test/flutter_test.dart";
 import "package:typewriter_panel/typewriter_panel.dart";
 import "package:typewriter_testkit/typewriter_testkit.dart";
 import "package:widgetbook_workspace/stories/features/organizations/features/realms/presentation/authored_resource_items.stories.dart";
-import "package:widgetbook_workspace/stories/features/organizations/features/realms/presentation/resource_operation_drop_target.stories.dart";
+import "package:widgetbook_workspace/stories/features/organizations/features/realms/presentation/resource_drop_target.stories.dart";
 
 void main() {
   final screenshots = Platform.environment["SAVE_ENTRY_NODE_SCREENSHOTS"] ?? "";
@@ -26,15 +26,15 @@ void main() {
     (tester) async {
       const scene = ValueKey("drag.scene");
       await tester.pumpWidget(
-        RepaintBoundary(
-          key: scene,
-          child: resourceOperationDropTargetExample(delayed: false),
-        ),
+        RepaintBoundary(key: scene, child: resourceDropTargetExample()),
       );
       await tester.pumpAndSettle();
       final nodes = find.byType(AuthoredGraphItem);
       final source = tester.getCenter(nodes.first);
-      final pageTarget = find.byType(ResourcePageDropTarget);
+      final pageTarget = find.ancestor(
+        of: find.byKey(const ValueKey("story.destination")),
+        matching: find.byType(ResourceDropHighlight),
+      );
       final destination = tester.getCenter(pageTarget);
       // The nested route blocks sidebar semantics. The foreground border
       // exposes the target's checked availability without that projection.
@@ -84,7 +84,12 @@ void main() {
       final previewBounds = tester.getRect(
         find.byType(PortableDiagnosticPreview),
       );
-      final sidebarBounds = tester.getRect(find.byType(ResourcePageDropTarget));
+      final sidebarBounds = tester.getRect(
+        find.ancestor(
+          of: find.byKey(const ValueKey("story.destination")),
+          matching: find.byType(ResourceDropHighlight),
+        ),
+      );
       final sample = Offset(sidebarBounds.right - 20, previewBounds.top + 10);
       expect(previewBounds.contains(sample), isTrue);
       expect(sidebarBounds.contains(sample), isTrue);
@@ -146,7 +151,10 @@ void main() {
           );
           await tester.pumpAndSettle();
           expect(find.byType(AuthoredGraphItem), findsNWidgets(2));
-          expect(find.byType(ResourcePageDropTarget), findsOneWidget);
+          expect(
+            find.byKey(const ValueKey("story.destination")),
+            findsOneWidget,
+          );
           expect(find.byType(Card), findsNothing);
           final nodes = find.byType(AuthoredGraphItem);
           await tester.tap(nodes.first);

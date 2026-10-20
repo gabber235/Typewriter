@@ -1,3 +1,5 @@
+import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
+    as skir;
 import "package:typewriter_panel/typewriter_panel.dart";
 
 /// How a resources element arranges its members.
@@ -9,22 +11,46 @@ final class PortableResourcesView {
     required this.members,
     required this.scope,
     required this.layout,
+    this.location,
   });
 
   final List<PortableResourceMember> members;
   final PortablePresentationScope scope;
   final PortableResourcesLayoutKind layout;
+
+  /// The link field the members are linked at, when the binding has one.
+  final skir.ValueLocation? location;
 }
 
-/// Lets an application supply member interaction, such as selection, opening
-/// and dragging, without coupling portable UI to its resource identities or
-/// editing workspace. Without this scope members only report activation
-/// through the presentation's open callback.
+/// One group of a tree layout: the hierarchy path [field] its members are
+/// grouped by, the group's [path], and every member at or below it.
+final class PortableResourcesGroup {
+  const PortableResourcesGroup({
+    required this.field,
+    required this.path,
+    required this.name,
+    required this.members,
+  });
+
+  final skir.ValuePath field;
+  final String path;
+  final String name;
+  final List<PortableResourceMember> members;
+}
+
+/// Lets an application supply member interaction, such as selection, opening,
+/// dragging and dropping, without coupling portable UI to its resource
+/// identities or editing workspace. Without this scope members only report
+/// activation through the presentation's open callback, and groups, graph
+/// canvases and link fields render as they are.
 class PortableResourcesInteractionScope extends InheritedWidget {
   const PortableResourcesInteractionScope({
     required this.itemBuilder,
     required this.layoutBuilder,
     required super.child,
+    this.groupBuilder,
+    this.canvasBuilder,
+    this.linkFieldBuilder,
     super.key,
   });
 
@@ -46,13 +72,52 @@ class PortableResourcesInteractionScope extends InheritedWidget {
   )
   layoutBuilder;
 
+  /// Wraps a tree group header.
+  final Widget Function(
+    BuildContext context,
+    PortableResourcesView view,
+    PortableResourcesGroup group,
+    Widget header,
+  )?
+  groupBuilder;
+
+  /// Wraps the viewport of a graph layout. [toGrid] converts a global
+  /// position into grid units of the canvas.
+  final Widget Function(
+    BuildContext context,
+    PortableResourcesView view,
+    Offset? Function(Offset globalPosition) toGrid,
+    Widget canvas,
+  )?
+  canvasBuilder;
+
+  /// Wraps a control that edits the links at [location].
+  final Widget Function(
+    BuildContext context,
+    skir.ValueLocation location,
+    Widget control,
+  )?
+  linkFieldBuilder;
+
   static PortableResourcesInteractionScope? maybeOf(
     BuildContext context,
   ) => context
       .dependOnInheritedWidgetOfExactType<PortableResourcesInteractionScope>();
 
+  /// Wraps [control] through the nearest scope's [linkFieldBuilder].
+  static Widget wrapLinkField(
+    BuildContext context,
+    skir.ValueLocation location,
+    Widget control,
+  ) =>
+      maybeOf(context)?.linkFieldBuilder?.call(context, location, control) ??
+      control;
+
   @override
   bool updateShouldNotify(PortableResourcesInteractionScope oldWidget) =>
       itemBuilder != oldWidget.itemBuilder ||
-      layoutBuilder != oldWidget.layoutBuilder;
+      layoutBuilder != oldWidget.layoutBuilder ||
+      groupBuilder != oldWidget.groupBuilder ||
+      canvasBuilder != oldWidget.canvasBuilder ||
+      linkFieldBuilder != oldWidget.linkFieldBuilder;
 }

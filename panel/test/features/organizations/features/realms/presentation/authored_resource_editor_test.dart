@@ -1071,7 +1071,6 @@ _emptyPageGraphFixture() {
     skir.EditorCatalogWireSnapshot(
       resourceDisplays: const [],
       resourceOperations: const [],
-      resourceOperationContributions: const [],
       generation: generation,
       types: [
         skir.PublishedType(
@@ -1254,7 +1253,6 @@ _numericFixture({
     skir.EditorCatalogWireSnapshot(
       resourceDisplays: const [],
       resourceOperations: const [],
-      resourceOperationContributions: const [],
       generation: catalogGeneration,
       types: [
         skir.PublishedType(
@@ -1577,7 +1575,6 @@ _fixture({
     skir.EditorCatalogWireSnapshot(
       resourceDisplays: const [],
       resourceOperations: const [],
-      resourceOperationContributions: const [],
       generation: generation,
       types: [
         if (namedText != null)

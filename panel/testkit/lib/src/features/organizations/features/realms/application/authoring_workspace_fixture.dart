@@ -179,6 +179,10 @@ AuthoredResourceCommands fixtureAuthoringCommands(
     skir.ResolveResourceOperationsRequest,
   )?
   resolveResourceOperations,
+  Future<skir.ResolveDropCandidatesResult> Function(
+    skir.ResolveDropCandidatesRequest,
+  )?
+  resolveDropCandidates,
   Future<skir.AuthoringActionResult> Function(
     skir.PrepareAuthoringActionRequest,
   )?
@@ -202,11 +206,11 @@ AuthoredResourceCommands fixtureAuthoringCommands(
   resolveResourceOperations:
       resolveResourceOperations ??
       (_) async => skir.ResolveResourceOperationsResult.wrapResolved(
-        skir.ResolvedResourceOperations(
-          operations: const [],
-          primaryOperation: null,
-        ),
+        skir.ResolvedResourceOperations(operations: const []),
       ),
+  resolveDropCandidates:
+      resolveDropCandidates ??
+      (_) async => skir.ResolveDropCandidatesResult.wrapResolved(const []),
   prepareAuthoringAction:
       prepareAuthoringAction ??
       (_) async =>
@@ -1036,7 +1040,6 @@ CheckedEditorCatalog authoringFixtureCatalog({
     skir.EditorCatalogWireSnapshot(
       resourceDisplays: _fixtureDisplays,
       resourceOperations: const [],
-      resourceOperationContributions: const [],
       generation:
           generation ??
           skir.CatalogGeneration(value: realmFixtureGeneration.value),

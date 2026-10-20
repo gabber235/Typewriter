@@ -38,7 +38,8 @@ Widget resourceOperationButtonStory(BuildContext context) {
         width: 260,
         child: ResourceOperationButton(
           presentation: skir.OperationPresentation(
-            showInInspector: true,
+            inspector: skir.OperationInspector.wrapButton(variant),
+            shortcut: destructive ? skir.OperationShortcut.delete : null,
             label: longLabel
                 ? "Generate dialogue variations for this selection"
                 : destructive
@@ -49,7 +50,6 @@ Widget resourceOperationButtonStory(BuildContext context) {
             tone: destructive
                 ? skir.HeaderActionTone.destructive
                 : skir.HeaderActionTone.neutral,
-            variant: variant,
             group: destructive
                 ? skir.OperationGroup.destructive
                 : skir.OperationGroup.organize,

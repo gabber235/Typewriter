@@ -267,7 +267,6 @@ _PageFixture _pageFixture() {
         ),
     ],
     resourceOperations: const [],
-    resourceOperationContributions: const [],
     generation: generation,
     types: [
       _published(pageType, pageFields),

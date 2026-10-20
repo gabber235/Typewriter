@@ -19,7 +19,8 @@ void main() {
       "${variant.kind.name} retains icons and tone in both surfaces",
       (tester) async {
         final presentation = skir.OperationPresentation(
-          showInInspector: true,
+          inspector: skir.OperationInspector.wrapButton(variant),
+          shortcut: skir.OperationShortcut.delete,
           label: "Delete",
           description: "Delete the selected resources",
           icon: _icon,
@@ -27,7 +28,6 @@ void main() {
           order: 0,
           confirmation: null,
           tone: skir.HeaderActionTone.destructive,
-          variant: variant,
         );
         final operation = ResourceSelectionOperation(
           scope: AuthoringScope(
@@ -45,10 +45,18 @@ void main() {
           ),
           operation: skir.ResolvedResourceOperation(
             definition: skir.ResourceOperationDefinition(
-              id: resourceDeleteOperationId,
+              id: skir.ResourceOperationId(
+                artifact: "typewriter",
+                sourcePart: "main",
+                declaration: "com.typewritermc.operations.Delete",
+              ),
               presentation: presentation,
-              targets: skir.OperationTargets.contributedSelection,
-              action: skir.EditorAction.unknown,
+              targets: skir.OperationTargets(
+                subject: skir.ResourceTarget.anyResource,
+                cardinality: skir.OperationCardinality.selection,
+              ),
+              capability: skir.CapabilityId(value: "operations:Delete"),
+              drop: null,
             ),
             availability: skir.OperationAvailability.enabled,
           ),
@@ -104,14 +112,14 @@ void main() {
               width: 160,
               child: ResourceOperationButton(
                 presentation: skir.OperationPresentation(
-                  showInInspector: true,
+                  inspector: skir.OperationInspector.wrapButton(variant),
+                  shortcut: null,
                   label: "An operation with a long label",
                   description: "Run this operation",
                   icon: _icon,
                   group: skir.OperationGroup.destructive,
                   order: 0,
                   confirmation: null,
-                  variant: variant,
                   tone: skir.HeaderActionTone.destructive,
                 ),
                 disabledReason: disabledReason,

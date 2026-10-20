@@ -251,7 +251,6 @@ void main() {
         skir.EditorCatalogWireSnapshot(
           resourceDisplays: const [],
           resourceOperations: const [],
-          resourceOperationContributions: const [],
           generation: skir.CatalogGeneration(value: "catalog:display"),
           types: [
             _published(
@@ -387,7 +386,6 @@ void main() {
       skir.EditorCatalogWireSnapshot(
         resourceDisplays: const [],
         resourceOperations: const [],
-        resourceOperationContributions: const [],
         generation: skir.CatalogGeneration(value: "catalog:covariance"),
         types: [
           _published(wrapper, [parameter]),
@@ -484,7 +482,6 @@ void main() {
       skir.EditorCatalogWireSnapshot(
         resourceDisplays: const [],
         resourceOperations: const [],
-        resourceOperationContributions: const [],
         generation: skir.CatalogGeneration(value: "catalog:specificity"),
         types: [
           _published(wrapper, [parameter]),
@@ -650,7 +647,6 @@ void main() {
       skir.EditorCatalogWireSnapshot(
         resourceDisplays: const [],
         resourceOperations: const [],
-        resourceOperationContributions: const [],
         generation: original.generation,
         types: original.types,
         relations: original.relations,
@@ -807,7 +803,6 @@ _patternCatalog({required bool repeated}) {
   final snapshot = skir.EditorCatalogWireSnapshot(
     resourceDisplays: const [],
     resourceOperations: const [],
-    resourceOperationContributions: const [],
     generation: skir.CatalogGeneration(value: "catalog:patterns"),
     types: [
       skir.PublishedType(
@@ -910,7 +905,6 @@ _dependentCatalog() {
       skir.EditorCatalogWireSnapshot(
         resourceDisplays: const [],
         resourceOperations: const [],
-        resourceOperationContributions: const [],
         generation: skir.CatalogGeneration(value: "catalog:dependent"),
         types: [definition],
         relations: const [],
@@ -1009,7 +1003,6 @@ _catalog() {
   final snapshot = skir.EditorCatalogWireSnapshot(
     resourceDisplays: const [],
     resourceOperations: const [],
-    resourceOperationContributions: const [],
     generation: skir.CatalogGeneration(value: "catalog:1"),
     types: [rootType, baseType, markerType],
     relations: const [],

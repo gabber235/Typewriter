@@ -239,7 +239,6 @@ final _testSelectableCatalog = CheckedEditorCatalog(
   skir.EditorCatalogWireSnapshot(
     resourceDisplays: const [],
     resourceOperations: const [],
-    resourceOperationContributions: const [],
     generation: skir.CatalogGeneration(value: "testkit:selectable"),
     types: [
       skir.PublishedType(
