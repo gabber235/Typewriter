@@ -151,7 +151,6 @@ extension ExpressionStructure on skir.ExpressionNode {
       value.source,
       value.value,
     ],
-    skir.ExpressionNode_colorParseWrapper(:final value) => [value],
     skir.ExpressionNode_colorWithAlphaWrapper(:final value) => [
       value.source,
       value.alpha,

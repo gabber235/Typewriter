@@ -7,7 +7,6 @@ import com.typewritermc.expression.literal
 import com.typewritermc.expression.name
 import com.typewritermc.expression.neq
 import com.typewritermc.expression.orElse
-import com.typewritermc.expression.parseColor
 import com.typewritermc.expression.trim
 import com.typewritermc.library.LibraryContext
 import com.typewritermc.library.fields
@@ -49,7 +48,7 @@ object ElementSearchPresentation : ElementPresentation {
         val page = element.fields.page.resource
         val display = element.type.display
         val origin = context.read(LibraryContext.activeResource)
-        val color = display.color.parseColor().orElse(literal(Color(0xff9c64bdu)))
+        val color = display.color.orElse(literal(Color(0xff9c64bdu)))
         resourceSearchResult(
             title = element.fields.name.orIfBlank("Unnamed element"),
             accent = color,
@@ -83,7 +82,7 @@ object ElementGraphNodePresentation : ElementPresentation {
         entryNode(
             title = element.fields.name.orIfBlank("Unnamed element"),
             iconName = display.icon.orIfBlank("fa6-solid:cube"),
-            accent = display.color.parseColor().orElse(literal(Color(0xff9c64bdu))),
+            accent = display.color.orElse(literal(Color(0xff9c64bdu))),
         )
     }
 }

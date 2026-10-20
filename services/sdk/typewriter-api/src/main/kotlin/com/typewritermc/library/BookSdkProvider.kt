@@ -23,7 +23,6 @@ import com.typewritermc.types.IconSvgDefinition
 import com.typewritermc.types.IconSvgExpressionsFactory
 import com.typewritermc.types.PresentationRole
 import com.typewritermc.types.Ref
-import com.typewritermc.types.text
 
 object BookConfigurationProvider : BookConfiguration {
     override fun BookConfigurationScope.configure() {
@@ -44,7 +43,6 @@ object BookInspectorPresentation : BookPresentation {
             resourceHeading(
                 title = expressions.title.orIfBlank("Unnamed Book"),
                 color = expressions.color.orElse(literal(Color(0xff3f51b5u))),
-                identifier = subject.identifier.text,
             )
             inspectorSection("title", "Title", input = title.input) {
                 title { textInput { onComplete { value.trim() } } }

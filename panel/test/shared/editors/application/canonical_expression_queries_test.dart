@@ -32,7 +32,7 @@ void main() {
     },
   );
 
-  test("declaration color is read canonically and parsed without sibling projection", () {
+  test("declaration color is read canonically without sibling projection", () {
     final catalog = _catalog();
     final configuration = _query(
       skir.ExpressionQuery.wrapResourceConfiguration,
@@ -40,14 +40,12 @@ void main() {
     final declaration = skir.ExpressionNode.wrapQuery(
       skir.ExpressionQuery.wrapCatalogDeclaration(configuration),
     );
-    final color = skir.ExpressionNode.wrapColorParse(
-      fieldExpression(fieldExpression(declaration, "display"), "color"),
+    final color = fieldExpression(
+      fieldExpression(declaration, "display"),
+      "color",
     );
     final result = _evaluate(catalog, _document(catalog, "Page"), color);
-    expect(
-      result.value.authoredPayload,
-      skir.DataValue.wrapInteger(0xff336699.toString()),
-    );
+    expect(result.value, colorValue(0xff336699));
     expect(
       result.reads.where((read) => read.location?.resource == _resource),
       isNotEmpty,
@@ -170,11 +168,11 @@ void main() {
           fieldExpression(declaration, "display"),
           "color",
         ),
-        fallback: literalExpression(skir.DataValue.wrapStringValue("fallback")),
+        fallback: literalExpression(colorValue(0xff123456)),
       );
       expect(
-        _evaluate(catalog, document, expression).value.authoredString,
-        "fallback",
+        _evaluate(catalog, document, expression).value,
+        colorValue(0xff123456),
       );
       final invalid = catalog.evaluateExpression(
         fieldExpression(declaration, "unknown"),
@@ -214,7 +212,7 @@ void main() {
         document,
         fieldExpression(fieldExpression(declaration, "display"), "color"),
       );
-      expect(leaf.value.authoredString, "#336699");
+      expect(leaf.value, colorValue(0xff336699));
     },
   );
 
@@ -708,7 +706,7 @@ void main() {
     },
   );
 
-  test("malformed resource content and malformed colors do not become fallback text", () {
+  test("malformed resource content does not become fallback text", () {
     final catalog = _catalog();
     final original = _document(catalog, "Page");
     final record = original.entry(_resource)!;
@@ -743,20 +741,6 @@ void main() {
     );
     expect(result, isA<PortableExpressionFailed>());
     expect((result as PortableExpressionFailed).code, "invalid_resource_value");
-    final malformed = PortableExpressionEvaluator(const {}, budget: _budget)
-        .evaluate(
-          skir.ExpressionNode.wrapColorParse(
-            literalExpression(skir.DataValue.wrapStringValue("#notrgb")),
-          ),
-        );
-    expect(malformed, isA<PortableExpressionFailed>());
-    final blank = PortableExpressionEvaluator(const {}, budget: _budget)
-        .evaluate(
-          skir.ExpressionNode.wrapColorParse(
-            literalExpression(skir.DataValue.wrapStringValue(" ")),
-          ),
-        );
-    expect(blank, isA<PortableExpressionUnavailable>());
   });
   test(
     "native appearance validates leading scope and caller import boundaries",
@@ -1091,7 +1075,7 @@ CheckedEditorCatalog _catalog({bool generic = false, bool display = true}) {
                 name: "Page",
                 description: "Page type",
                 icon: "page",
-                color: "#336699",
+                color: skir.Color(argb: 0xff336699.toSigned(32)),
               )
             : null,
       ),

@@ -7085,7 +7085,6 @@ sealed class ExpressionNode private constructor() {
         COLLECTION_SIZE_WRAPPER,
         COLLECTION_ACCESS_WRAPPER,
         COLLECTION_CONTAINS_WRAPPER,
-        COLOR_PARSE_WRAPPER,
         COLOR_WITH_ALPHA_WRAPPER,
         RULE_UNARY_WRAPPER,
         RULE_ONE_OF_WRAPPER,
@@ -7729,20 +7728,6 @@ sealed class ExpressionNode private constructor() {
 
         override fun hashCode(): kotlin.Int {
             return this.value.hashCode() + 1731496608;
-        }
-    }
-
-    class ColorParseWrapper(
-        val value: skirout.editor.v1.expression.ExpressionNode,
-    ) : skirout.editor.v1.expression.ExpressionNode() {
-        override val kind get() = Kind.COLOR_PARSE_WRAPPER;
-
-        override fun equals(other: kotlin.Any?): kotlin.Boolean {
-            return other is skirout.editor.v1.expression.ExpressionNode.ColorParseWrapper && value == other.value;
-        }
-
-        override fun hashCode(): kotlin.Int {
-            return this.value.hashCode() + 1321555671;
         }
     }
 
@@ -11654,15 +11639,6 @@ private object _SerializerRegistry {
         );
         ExpressionNodeSerializerImpl.addWrapperVariant(
             36,
-            "color_parse",
-            skirout.editor.v1.expression.ExpressionNode.Kind.COLOR_PARSE_WRAPPER.ordinal,
-            _SerializerRegistry.ExpressionNodeSerializer,
-            "",
-            { skirout.editor.v1.expression.ExpressionNode.ColorParseWrapper(it) },
-            { it.value },
-        );
-        ExpressionNodeSerializerImpl.addWrapperVariant(
-            37,
             "color_with_alpha",
             skirout.editor.v1.expression.ExpressionNode.Kind.COLOR_WITH_ALPHA_WRAPPER.ordinal,
             _SerializerRegistry.ColorWithAlphaExpressionSerializer,
@@ -11671,7 +11647,7 @@ private object _SerializerRegistry {
             { it.value },
         );
         ExpressionNodeSerializerImpl.addWrapperVariant(
-            38,
+            37,
             "rule_unary",
             skirout.editor.v1.expression.ExpressionNode.Kind.RULE_UNARY_WRAPPER.ordinal,
             _SerializerRegistry.RuleUnaryExpressionSerializer,
@@ -11680,7 +11656,7 @@ private object _SerializerRegistry {
             { it.value },
         );
         ExpressionNodeSerializerImpl.addWrapperVariant(
-            39,
+            38,
             "rule_one_of",
             skirout.editor.v1.expression.ExpressionNode.Kind.RULE_ONE_OF_WRAPPER.ordinal,
             _SerializerRegistry.RuleOneOfExpressionSerializer,
@@ -11689,7 +11665,7 @@ private object _SerializerRegistry {
             { it.value },
         );
         ExpressionNodeSerializerImpl.addWrapperVariant(
-            40,
+            39,
             "rule_size_bound",
             skirout.editor.v1.expression.ExpressionNode.Kind.RULE_SIZE_BOUND_WRAPPER.ordinal,
             _SerializerRegistry.RuleSizeBoundExpressionSerializer,
@@ -11698,7 +11674,7 @@ private object _SerializerRegistry {
             { it.value },
         );
         ExpressionNodeSerializerImpl.addWrapperVariant(
-            41,
+            40,
             "rule_size_range",
             skirout.editor.v1.expression.ExpressionNode.Kind.RULE_SIZE_RANGE_WRAPPER.ordinal,
             _SerializerRegistry.RuleSizeRangeExpressionSerializer,
@@ -11707,7 +11683,7 @@ private object _SerializerRegistry {
             { it.value },
         );
         ExpressionNodeSerializerImpl.addWrapperVariant(
-            42,
+            41,
             "rule_numeric_bound",
             skirout.editor.v1.expression.ExpressionNode.Kind.RULE_NUMERIC_BOUND_WRAPPER.ordinal,
             _SerializerRegistry.RuleNumericBoundExpressionSerializer,
@@ -11716,7 +11692,7 @@ private object _SerializerRegistry {
             { it.value },
         );
         ExpressionNodeSerializerImpl.addWrapperVariant(
-            43,
+            42,
             "rule_numeric_range",
             skirout.editor.v1.expression.ExpressionNode.Kind.RULE_NUMERIC_RANGE_WRAPPER.ordinal,
             _SerializerRegistry.RuleNumericRangeExpressionSerializer,
@@ -11725,7 +11701,7 @@ private object _SerializerRegistry {
             { it.value },
         );
         ExpressionNodeSerializerImpl.addWrapperVariant(
-            44,
+            43,
             "rule_multiple_of",
             skirout.editor.v1.expression.ExpressionNode.Kind.RULE_MULTIPLE_OF_WRAPPER.ordinal,
             _SerializerRegistry.RuleMultipleOfExpressionSerializer,
@@ -11734,7 +11710,7 @@ private object _SerializerRegistry {
             { it.value },
         );
         ExpressionNodeSerializerImpl.addWrapperVariant(
-            45,
+            44,
             "rule_maximum_scale",
             skirout.editor.v1.expression.ExpressionNode.Kind.RULE_MAXIMUM_SCALE_WRAPPER.ordinal,
             _SerializerRegistry.RuleMaximumScaleExpressionSerializer,
@@ -11743,7 +11719,7 @@ private object _SerializerRegistry {
             { it.value },
         );
         ExpressionNodeSerializerImpl.addWrapperVariant(
-            46,
+            45,
             "rule_timestamp_bound",
             skirout.editor.v1.expression.ExpressionNode.Kind.RULE_TIMESTAMP_BOUND_WRAPPER.ordinal,
             _SerializerRegistry.RuleTimestampBoundExpressionSerializer,
@@ -11752,7 +11728,7 @@ private object _SerializerRegistry {
             { it.value },
         );
         ExpressionNodeSerializerImpl.addWrapperVariant(
-            47,
+            46,
             "any",
             skirout.editor.v1.expression.ExpressionNode.Kind.ANY_WRAPPER.ordinal,
             _SerializerRegistry.UnaryCollectionExpressionSerializer,
@@ -11761,7 +11737,7 @@ private object _SerializerRegistry {
             { it.value },
         );
         ExpressionNodeSerializerImpl.addWrapperVariant(
-            48,
+            47,
             "all",
             skirout.editor.v1.expression.ExpressionNode.Kind.ALL_WRAPPER.ordinal,
             _SerializerRegistry.UnaryCollectionExpressionSerializer,
@@ -11770,7 +11746,7 @@ private object _SerializerRegistry {
             { it.value },
         );
         ExpressionNodeSerializerImpl.addWrapperVariant(
-            49,
+            48,
             "none",
             skirout.editor.v1.expression.ExpressionNode.Kind.NONE_WRAPPER.ordinal,
             _SerializerRegistry.UnaryCollectionExpressionSerializer,
@@ -11779,7 +11755,7 @@ private object _SerializerRegistry {
             { it.value },
         );
         ExpressionNodeSerializerImpl.addWrapperVariant(
-            50,
+            49,
             "map",
             skirout.editor.v1.expression.ExpressionNode.Kind.MAP_WRAPPER.ordinal,
             _SerializerRegistry.UnaryCollectionExpressionSerializer,
@@ -11788,7 +11764,7 @@ private object _SerializerRegistry {
             { it.value },
         );
         ExpressionNodeSerializerImpl.addWrapperVariant(
-            51,
+            50,
             "filter",
             skirout.editor.v1.expression.ExpressionNode.Kind.FILTER_WRAPPER.ordinal,
             _SerializerRegistry.UnaryCollectionExpressionSerializer,
@@ -11797,7 +11773,7 @@ private object _SerializerRegistry {
             { it.value },
         );
         ExpressionNodeSerializerImpl.addWrapperVariant(
-            52,
+            51,
             "find",
             skirout.editor.v1.expression.ExpressionNode.Kind.FIND_WRAPPER.ordinal,
             _SerializerRegistry.UnaryCollectionExpressionSerializer,
@@ -11806,7 +11782,7 @@ private object _SerializerRegistry {
             { it.value },
         );
         ExpressionNodeSerializerImpl.addWrapperVariant(
-            53,
+            52,
             "find_last",
             skirout.editor.v1.expression.ExpressionNode.Kind.FIND_LAST_WRAPPER.ordinal,
             _SerializerRegistry.UnaryCollectionExpressionSerializer,
@@ -11815,7 +11791,7 @@ private object _SerializerRegistry {
             { it.value },
         );
         ExpressionNodeSerializerImpl.addWrapperVariant(
-            54,
+            53,
             "count",
             skirout.editor.v1.expression.ExpressionNode.Kind.COUNT_WRAPPER.ordinal,
             _SerializerRegistry.UnaryCollectionExpressionSerializer,
@@ -11824,7 +11800,7 @@ private object _SerializerRegistry {
             { it.value },
         );
         ExpressionNodeSerializerImpl.addWrapperVariant(
-            55,
+            54,
             "distinct_by",
             skirout.editor.v1.expression.ExpressionNode.Kind.DISTINCT_BY_WRAPPER.ordinal,
             _SerializerRegistry.UnaryCollectionExpressionSerializer,
@@ -11833,7 +11809,7 @@ private object _SerializerRegistry {
             { it.value },
         );
         ExpressionNodeSerializerImpl.addWrapperVariant(
-            56,
+            55,
             "group_by",
             skirout.editor.v1.expression.ExpressionNode.Kind.GROUP_BY_WRAPPER.ordinal,
             _SerializerRegistry.UnaryCollectionExpressionSerializer,
@@ -11842,7 +11818,7 @@ private object _SerializerRegistry {
             { it.value },
         );
         ExpressionNodeSerializerImpl.addWrapperVariant(
-            57,
+            56,
             "flat_map",
             skirout.editor.v1.expression.ExpressionNode.Kind.FLAT_MAP_WRAPPER.ordinal,
             _SerializerRegistry.UnaryCollectionExpressionSerializer,
@@ -11851,7 +11827,7 @@ private object _SerializerRegistry {
             { it.value },
         );
         ExpressionNodeSerializerImpl.addWrapperVariant(
-            58,
+            57,
             "unique_by",
             skirout.editor.v1.expression.ExpressionNode.Kind.UNIQUE_BY_WRAPPER.ordinal,
             _SerializerRegistry.UnaryCollectionExpressionSerializer,
@@ -11860,7 +11836,7 @@ private object _SerializerRegistry {
             { it.value },
         );
         ExpressionNodeSerializerImpl.addWrapperVariant(
-            59,
+            58,
             "reduce",
             skirout.editor.v1.expression.ExpressionNode.Kind.REDUCE_WRAPPER.ordinal,
             _SerializerRegistry.UnaryCollectionExpressionSerializer,
@@ -11869,7 +11845,7 @@ private object _SerializerRegistry {
             { it.value },
         );
         ExpressionNodeSerializerImpl.addWrapperVariant(
-            60,
+            59,
             "sort_by",
             skirout.editor.v1.expression.ExpressionNode.Kind.SORT_BY_WRAPPER.ordinal,
             _SerializerRegistry.SortByExpressionSerializer,
@@ -11878,7 +11854,7 @@ private object _SerializerRegistry {
             { it.value },
         );
         ExpressionNodeSerializerImpl.addWrapperVariant(
-            61,
+            60,
             "sort_with",
             skirout.editor.v1.expression.ExpressionNode.Kind.SORT_WITH_WRAPPER.ordinal,
             _SerializerRegistry.SortWithExpressionSerializer,
@@ -11887,7 +11863,7 @@ private object _SerializerRegistry {
             { it.value },
         );
         ExpressionNodeSerializerImpl.addWrapperVariant(
-            62,
+            61,
             "fold",
             skirout.editor.v1.expression.ExpressionNode.Kind.FOLD_WRAPPER.ordinal,
             _SerializerRegistry.FoldExpressionSerializer,
@@ -11896,7 +11872,7 @@ private object _SerializerRegistry {
             { it.value },
         );
         ExpressionNodeSerializerImpl.addWrapperVariant(
-            63,
+            62,
             "take",
             skirout.editor.v1.expression.ExpressionNode.Kind.TAKE_WRAPPER.ordinal,
             _SerializerRegistry.CollectionSliceExpressionSerializer,
@@ -11905,7 +11881,7 @@ private object _SerializerRegistry {
             { it.value },
         );
         ExpressionNodeSerializerImpl.addWrapperVariant(
-            64,
+            63,
             "skip",
             skirout.editor.v1.expression.ExpressionNode.Kind.SKIP_WRAPPER.ordinal,
             _SerializerRegistry.CollectionSliceExpressionSerializer,
@@ -11914,7 +11890,7 @@ private object _SerializerRegistry {
             { it.value },
         );
         ExpressionNodeSerializerImpl.addWrapperVariant(
-            65,
+            64,
             "reverse",
             skirout.editor.v1.expression.ExpressionNode.Kind.REVERSE_WRAPPER.ordinal,
             _SerializerRegistry.ExpressionNodeSerializer,
@@ -11923,7 +11899,7 @@ private object _SerializerRegistry {
             { it.value },
         );
         ExpressionNodeSerializerImpl.addWrapperVariant(
-            66,
+            65,
             "distinct",
             skirout.editor.v1.expression.ExpressionNode.Kind.DISTINCT_WRAPPER.ordinal,
             _SerializerRegistry.ExpressionNodeSerializer,
@@ -11932,7 +11908,7 @@ private object _SerializerRegistry {
             { it.value },
         );
         ExpressionNodeSerializerImpl.addWrapperVariant(
-            67,
+            66,
             "query",
             skirout.editor.v1.expression.ExpressionNode.Kind.QUERY_WRAPPER.ordinal,
             _SerializerRegistry.ExpressionQuerySerializer,

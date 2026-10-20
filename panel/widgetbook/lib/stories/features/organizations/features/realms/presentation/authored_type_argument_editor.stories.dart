@@ -76,7 +76,7 @@ CheckedEditorCatalog _catalog({required bool twoArguments}) {
       name: name,
       description: "$name for quest completion",
       icon: "mdi:gift",
-      color: "#FFB300",
+      color: skir.Color(argb: 0xffffb300.toSigned(32)),
     ),
   );
   return CheckedEditorCatalog(

@@ -1,5 +1,6 @@
 package com.typewritermc.engine.pages
 
+import com.typewritermc.types.Color
 import com.typewritermc.types.TypeDisplay
 import de.infix.testBalloon.framework.core.testSuite
 import io.kotest.matchers.shouldBe
@@ -11,28 +12,28 @@ val CorePageTypeDisplayTest by testSuite {
                 name = "Sequence",
                 description = "",
                 icon = "material-symbols:account-tree",
-                color = "#2196F3",
+                color = Color(0xFF2196F3u),
             )
         StaticPageDefinition.display shouldBe
             TypeDisplay(
                 name = "Static",
                 description = "",
                 icon = "material-symbols:push-pin",
-                color = "#673AB7",
+                color = Color(0xFF673AB7u),
             )
         ScenePageDefinition.display shouldBe
             TypeDisplay(
                 name = "Scene",
                 description = "",
                 icon = "material-symbols:movie",
-                color = "#FF9800",
+                color = Color(0xFFFF9800u),
             )
         ManifestPageDefinition.display shouldBe
             TypeDisplay(
                 name = "Manifest",
                 description = "",
                 icon = "material-symbols:schema",
-                color = "#4CAF50",
+                color = Color(0xFF4CAF50u),
             )
     }
 }

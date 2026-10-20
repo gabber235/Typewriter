@@ -33,7 +33,6 @@ import com.typewritermc.types.PresentationRole
 import com.typewritermc.types.Ref
 import com.typewritermc.types.TypewriterDisplay
 import com.typewritermc.types.TypewriterType
-import com.typewritermc.types.text
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
@@ -182,8 +181,7 @@ object SyntheticEntryEditorPresentation : SyntheticEntryPresentation {
     override fun SyntheticEntryPresentationScope.present() {
         resourceHeading(
             title = expressions.name.orElse(literal("Unnamed entry")),
-            color = literal(Color.parseRgb(requireNotNull(SyntheticEntryDefinition.display?.color))),
-            identifier = subject.identifier.text,
+            color = literal(SyntheticEntryDefinition.display.color),
         )
         message {
             label("Message")
@@ -208,8 +206,7 @@ object SyntheticEntryCompactPresentation : SyntheticEntryPresentation {
     override fun SyntheticEntryPresentationScope.present() {
         resourceHeading(
             title = expressions.name.orElse(literal("Unnamed entry")),
-            color = literal(Color.parseRgb(requireNotNull(SyntheticEntryDefinition.display?.color))),
-            identifier = subject.identifier.text,
+            color = literal(SyntheticEntryDefinition.display.color),
         )
         message {
             polymorphicInput {

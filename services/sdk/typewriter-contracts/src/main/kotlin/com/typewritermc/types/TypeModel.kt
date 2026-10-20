@@ -44,11 +44,12 @@ annotation class TypewriterDisplay(
     val color: String,
 )
 
+/** Display data of a type. Codegen validates the [TypewriterDisplay] color and emits it as a [Color]. */
 data class TypeDisplay(
     val name: String,
     val description: String,
     val icon: String,
-    val color: String,
+    val color: Color,
 )
 
 @Target(AnnotationTarget.CLASS)

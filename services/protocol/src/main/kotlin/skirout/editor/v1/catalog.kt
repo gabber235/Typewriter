@@ -1456,7 +1456,7 @@ sealed interface TypeDisplay_OrMutable {
     val name: kotlin.String;
     val description: kotlin.String;
     val icon: kotlin.String;
-    val color: kotlin.String;
+    val color: skirout.kernel.v1.color.Color_OrMutable;
 
     fun toFrozen(): skirout.editor.v1.catalog.TypeDisplay;
 }
@@ -1467,7 +1467,7 @@ class TypeDisplay private constructor(
     override val name: kotlin.String,
     override val description: kotlin.String,
     override val icon: kotlin.String,
-    override val color: kotlin.String,
+    override val color: skirout.kernel.v1.color.Color,
     internal val _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.catalog.TypeDisplay>? =
         null,
 ): skirout.editor.v1.catalog.TypeDisplay_OrMutable {
@@ -1477,14 +1477,14 @@ class TypeDisplay private constructor(
         name: kotlin.String,
         description: kotlin.String,
         icon: kotlin.String,
-        color: kotlin.String,
+        color: skirout.kernel.v1.color.Color_OrMutable,
         _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.catalog.TypeDisplay>? =
             null,
     ): this(
         name,
         description,
         icon,
-        color,
+        color.toFrozen(),
         _unrecognizedFields,
     ) {}
 
@@ -1509,13 +1509,13 @@ class TypeDisplay private constructor(
             this.description,
         icon: kotlin.String =
             this.icon,
-        color: kotlin.String =
+        color: skirout.kernel.v1.color.Color_OrMutable =
             this.color,
     ) = skirout.editor.v1.catalog.TypeDisplay(
         name,
         description,
         icon,
-        color,
+        color.toFrozen(),
         this._unrecognizedFields,
     );
 
@@ -1547,8 +1547,8 @@ class TypeDisplay private constructor(
             "",
         override var icon: kotlin.String =
             "",
-        override var color: kotlin.String =
-            "",
+        override var color: skirout.kernel.v1.color.Color_OrMutable =
+            skirout.kernel.v1.color.Color.partial(),
         internal var _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.catalog.TypeDisplay>? =
             null,
     ): skirout.editor.v1.catalog.TypeDisplay_OrMutable {
@@ -1560,6 +1560,22 @@ class TypeDisplay private constructor(
             color = this.color,
             _unrecognizedFields = this._unrecognizedFields,
         );
+
+        /**
+         * If the value of [color] is already mutable, returns it as-is.
+         * Otherwise, makes a mutable copy, assigns it back to [color] and returns it.
+         */
+        val mutableColor: skirout.kernel.v1.color.Color.Mutable get() {
+            var value = this.color;
+            return when (value) {
+                is skirout.kernel.v1.color.Color -> {
+                    value = value.toMutable();
+                    this.color = value;
+                    return value;
+                }
+                is skirout.kernel.v1.color.Color.Mutable -> value;
+            }
+        }
     }
 
     companion object {
@@ -1568,7 +1584,7 @@ class TypeDisplay private constructor(
                 "",
                 "",
                 "",
-                "",
+                skirout.kernel.v1.color.Color.partial(),
             );
 
         /** Returns an instance with all fields set to their default values. */
@@ -1588,8 +1604,8 @@ class TypeDisplay private constructor(
                 "",
             icon: kotlin.String =
                 "",
-            color: kotlin.String =
-                "",
+            color: skirout.kernel.v1.color.Color_OrMutable =
+                skirout.kernel.v1.color.Color.partial(),
         ) = skirout.editor.v1.catalog.TypeDisplay(
             name = name,
             description = description,
@@ -8663,7 +8679,7 @@ private object _SerializerRegistry {
             "color",
             "color",
             3,
-            build.skir.Serializers.string,
+            skirout.kernel.v1.color.Color.serializer,
             "",
             { it.color },
             { mut, v -> mut.color = v },

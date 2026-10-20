@@ -23,6 +23,7 @@ import "./presentation.dart" as _lib_editor_v1_presentation;
 import "./type_catalog.dart" as _lib_editor_v1_type_catalog;
 import "../../kernel/v1/bounded_transfer.dart"
     as _lib_kernel_v1_bounded_transfer;
+import "../../kernel/v1/color.dart" as _lib_kernel_v1_color;
 import "../../kernel/v1/errors.dart" as _lib_kernel_v1_errors;
 
 // -----------------------------------------------------------------------------
@@ -1657,7 +1658,7 @@ sealed class TypeDisplay_orMutable {
   _core.String get name;
   _core.String get description;
   _core.String get icon;
-  _core.String get color;
+  _lib_kernel_v1_color.Color_orMutable get color;
 
   TypeDisplay toFrozen();
 }
@@ -1671,24 +1672,34 @@ final class TypeDisplay implements TypeDisplay_orMutable {
   @_core.override
   final _core.String icon;
   @_core.override
-  final _core.String color;
+  final _lib_kernel_v1_color.Color color;
   _skir.internal__UnrecognizedFields? _u;
 
   factory TypeDisplay({
     required _core.String name,
     required _core.String description,
     required _core.String icon,
-    required _core.String color,
-  }) => TypeDisplay._(name, description, icon, color);
+    required _lib_kernel_v1_color.Color_orMutable color,
+  }) => TypeDisplay._(name, description, icon, color.toFrozen());
 
   TypeDisplay._(this.name, this.description, this.icon, this.color);
 
   /// Default instance with all fields set to their default values.
-  static final defaultInstance = TypeDisplay._("", "", "", "");
+  static final defaultInstance = TypeDisplay._(
+    "",
+    "",
+    "",
+    _lib_kernel_v1_color.Color.defaultInstance,
+  );
 
   /// Returns a new mutable instance.
   /// Fields are initialized to their default values.
-  static TypeDisplay_mutable mutable() => TypeDisplay_mutable._("", "", "", "");
+  static TypeDisplay_mutable mutable() => TypeDisplay_mutable._(
+    "",
+    "",
+    "",
+    _lib_kernel_v1_color.Color.defaultInstance,
+  );
 
   /// Returns this instance (no-op).
   @_core.Deprecated("This instance is already frozen.")
@@ -1757,7 +1768,7 @@ final class TypeDisplay implements TypeDisplay_orMutable {
         "color",
         "color",
         3,
-        _skir.Serializers.string,
+        _lib_kernel_v1_color.Color.serializer,
         "",
         (it) => it.color,
         (it, v) => it.color = v,
@@ -1783,10 +1794,21 @@ final class TypeDisplay_mutable implements TypeDisplay_orMutable {
   _core.String name;
   _core.String description;
   _core.String icon;
-  _core.String color;
+  _lib_kernel_v1_color.Color_orMutable color;
   _skir.internal__UnrecognizedFields? _u;
 
   TypeDisplay_mutable._(this.name, this.description, this.icon, this.color);
+
+  /// If the value of [color] is already mutable, returns it as-is.
+  /// Otherwise, makes a mutable copy, assigns it back to [color] and returns it.
+  _lib_kernel_v1_color.Color_mutable get mutableColor {
+    final value = this.color;
+    if (value is _lib_kernel_v1_color.Color_mutable) {
+      return value;
+    } else {
+      return this.color = (value as _lib_kernel_v1_color.Color).toMutable();
+    }
+  }
 
   /// Returns a deeply immutable copy of this instance.
   @_core.override

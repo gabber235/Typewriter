@@ -12,7 +12,6 @@ import com.typewritermc.types.Color
 import com.typewritermc.types.Ref
 import com.typewritermc.types.TypewriterDisplay
 import com.typewritermc.types.TypewriterType
-import com.typewritermc.types.text
 
 @TypewriterType(id = "01a0b1fc-d60f-743f-aef8-5dce1c4ad200", revision = 1)
 @TypewriterDisplay(
@@ -33,9 +32,8 @@ object SimpleMessageActionEntryInspector : SimpleMessageActionEntryPresentation 
     override fun SimpleMessageActionEntryPresentationScope.present() {
         resourceHeading(
             title = expressions.name.orElse(literal("Unnamed action")),
-            color = literal(Color.parseRgb(requireNotNull(SimpleMessageActionEntryDefinition.display?.color))),
-            identifier = subject.identifier.text,
+            color = literal(SimpleMessageActionEntryDefinition.display.color),
         )
-        remainingFields {}
+        remainingFields()
     }
 }

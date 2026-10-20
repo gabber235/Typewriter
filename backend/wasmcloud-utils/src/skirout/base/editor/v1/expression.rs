@@ -2578,7 +2578,6 @@ pub enum ExpressionNode {
     CollectionSize(Box<ExpressionNode>),
     CollectionAccess(Box<CollectionAccessExpression>),
     CollectionContains(Box<CollectionContainsExpression>),
-    ColorParse(Box<ExpressionNode>),
     ColorWithAlpha(Box<ColorWithAlphaExpression>),
     RuleUnary(Box<RuleUnaryExpression>),
     RuleOneOf(Box<RuleOneOfExpression>),
@@ -2661,38 +2660,37 @@ impl ExpressionNode {
                     ExpressionNode::CollectionSize(_) => 33,
                     ExpressionNode::CollectionAccess(_) => 34,
                     ExpressionNode::CollectionContains(_) => 35,
-                    ExpressionNode::ColorParse(_) => 36,
-                    ExpressionNode::ColorWithAlpha(_) => 37,
-                    ExpressionNode::RuleUnary(_) => 38,
-                    ExpressionNode::RuleOneOf(_) => 39,
-                    ExpressionNode::RuleSizeBound(_) => 40,
-                    ExpressionNode::RuleSizeRange(_) => 41,
-                    ExpressionNode::RuleNumericBound(_) => 42,
-                    ExpressionNode::RuleNumericRange(_) => 43,
-                    ExpressionNode::RuleMultipleOf(_) => 44,
-                    ExpressionNode::RuleMaximumScale(_) => 45,
-                    ExpressionNode::RuleTimestampBound(_) => 46,
-                    ExpressionNode::Any(_) => 47,
-                    ExpressionNode::All(_) => 48,
-                    ExpressionNode::None(_) => 49,
-                    ExpressionNode::Map(_) => 50,
-                    ExpressionNode::Filter(_) => 51,
-                    ExpressionNode::Find(_) => 52,
-                    ExpressionNode::FindLast(_) => 53,
-                    ExpressionNode::Count(_) => 54,
-                    ExpressionNode::DistinctBy(_) => 55,
-                    ExpressionNode::GroupBy(_) => 56,
-                    ExpressionNode::FlatMap(_) => 57,
-                    ExpressionNode::UniqueBy(_) => 58,
-                    ExpressionNode::Reduce(_) => 59,
-                    ExpressionNode::SortBy(_) => 60,
-                    ExpressionNode::SortWith(_) => 61,
-                    ExpressionNode::Fold(_) => 62,
-                    ExpressionNode::Take(_) => 63,
-                    ExpressionNode::Skip(_) => 64,
-                    ExpressionNode::Reverse(_) => 65,
-                    ExpressionNode::Distinct(_) => 66,
-                    ExpressionNode::Query(_) => 67,
+                    ExpressionNode::ColorWithAlpha(_) => 36,
+                    ExpressionNode::RuleUnary(_) => 37,
+                    ExpressionNode::RuleOneOf(_) => 38,
+                    ExpressionNode::RuleSizeBound(_) => 39,
+                    ExpressionNode::RuleSizeRange(_) => 40,
+                    ExpressionNode::RuleNumericBound(_) => 41,
+                    ExpressionNode::RuleNumericRange(_) => 42,
+                    ExpressionNode::RuleMultipleOf(_) => 43,
+                    ExpressionNode::RuleMaximumScale(_) => 44,
+                    ExpressionNode::RuleTimestampBound(_) => 45,
+                    ExpressionNode::Any(_) => 46,
+                    ExpressionNode::All(_) => 47,
+                    ExpressionNode::None(_) => 48,
+                    ExpressionNode::Map(_) => 49,
+                    ExpressionNode::Filter(_) => 50,
+                    ExpressionNode::Find(_) => 51,
+                    ExpressionNode::FindLast(_) => 52,
+                    ExpressionNode::Count(_) => 53,
+                    ExpressionNode::DistinctBy(_) => 54,
+                    ExpressionNode::GroupBy(_) => 55,
+                    ExpressionNode::FlatMap(_) => 56,
+                    ExpressionNode::UniqueBy(_) => 57,
+                    ExpressionNode::Reduce(_) => 58,
+                    ExpressionNode::SortBy(_) => 59,
+                    ExpressionNode::SortWith(_) => 60,
+                    ExpressionNode::Fold(_) => 61,
+                    ExpressionNode::Take(_) => 62,
+                    ExpressionNode::Skip(_) => 63,
+                    ExpressionNode::Reverse(_) => 64,
+                    ExpressionNode::Distinct(_) => 65,
+                    ExpressionNode::Query(_) => 66,
                 },
                 |u| ExpressionNode::Unknown(Some(u)),
                 |x: &ExpressionNode| match x {
@@ -5056,23 +5054,9 @@ fn initialize_module_serializers() {
                 },
             );
             (*a).add_wrapper_variant(
-                "color_parse",
-                36,
-                36,
-                crate::skir_client::internal::enum_serializer_from_static(
-                    ExpressionNode::_adapter(),
-                ),
-                "",
-                |v| ExpressionNode::ColorParse(Box::new(v)),
-                |x| match x {
-                    ExpressionNode::ColorParse(b) => b.as_ref(),
-                    _ => unreachable!(),
-                },
-            );
-            (*a).add_wrapper_variant(
                 "color_with_alpha",
-                37,
-                37,
+                36,
+                36,
                 crate::skir_client::internal::struct_serializer_from_static(
                     ColorWithAlphaExpression::_adapter(),
                 ),
@@ -5085,8 +5069,8 @@ fn initialize_module_serializers() {
             );
             (*a).add_wrapper_variant(
                 "rule_unary",
-                38,
-                38,
+                37,
+                37,
                 crate::skir_client::internal::struct_serializer_from_static(
                     RuleUnaryExpression::_adapter(),
                 ),
@@ -5099,8 +5083,8 @@ fn initialize_module_serializers() {
             );
             (*a).add_wrapper_variant(
                 "rule_one_of",
-                39,
-                39,
+                38,
+                38,
                 crate::skir_client::internal::struct_serializer_from_static(
                     RuleOneOfExpression::_adapter(),
                 ),
@@ -5113,8 +5097,8 @@ fn initialize_module_serializers() {
             );
             (*a).add_wrapper_variant(
                 "rule_size_bound",
-                40,
-                40,
+                39,
+                39,
                 crate::skir_client::internal::struct_serializer_from_static(
                     RuleSizeBoundExpression::_adapter(),
                 ),
@@ -5127,8 +5111,8 @@ fn initialize_module_serializers() {
             );
             (*a).add_wrapper_variant(
                 "rule_size_range",
-                41,
-                41,
+                40,
+                40,
                 crate::skir_client::internal::struct_serializer_from_static(
                     RuleSizeRangeExpression::_adapter(),
                 ),
@@ -5141,8 +5125,8 @@ fn initialize_module_serializers() {
             );
             (*a).add_wrapper_variant(
                 "rule_numeric_bound",
-                42,
-                42,
+                41,
+                41,
                 crate::skir_client::internal::struct_serializer_from_static(
                     RuleNumericBoundExpression::_adapter(),
                 ),
@@ -5155,8 +5139,8 @@ fn initialize_module_serializers() {
             );
             (*a).add_wrapper_variant(
                 "rule_numeric_range",
-                43,
-                43,
+                42,
+                42,
                 crate::skir_client::internal::struct_serializer_from_static(
                     RuleNumericRangeExpression::_adapter(),
                 ),
@@ -5169,8 +5153,8 @@ fn initialize_module_serializers() {
             );
             (*a).add_wrapper_variant(
                 "rule_multiple_of",
-                44,
-                44,
+                43,
+                43,
                 crate::skir_client::internal::struct_serializer_from_static(
                     RuleMultipleOfExpression::_adapter(),
                 ),
@@ -5183,8 +5167,8 @@ fn initialize_module_serializers() {
             );
             (*a).add_wrapper_variant(
                 "rule_maximum_scale",
-                45,
-                45,
+                44,
+                44,
                 crate::skir_client::internal::struct_serializer_from_static(
                     RuleMaximumScaleExpression::_adapter(),
                 ),
@@ -5197,8 +5181,8 @@ fn initialize_module_serializers() {
             );
             (*a).add_wrapper_variant(
                 "rule_timestamp_bound",
-                46,
-                46,
+                45,
+                45,
                 crate::skir_client::internal::struct_serializer_from_static(
                     RuleTimestampBoundExpression::_adapter(),
                 ),
@@ -5211,8 +5195,8 @@ fn initialize_module_serializers() {
             );
             (*a).add_wrapper_variant(
                 "any",
-                47,
-                47,
+                46,
+                46,
                 crate::skir_client::internal::struct_serializer_from_static(
                     UnaryCollectionExpression::_adapter(),
                 ),
@@ -5225,8 +5209,8 @@ fn initialize_module_serializers() {
             );
             (*a).add_wrapper_variant(
                 "all",
-                48,
-                48,
+                47,
+                47,
                 crate::skir_client::internal::struct_serializer_from_static(
                     UnaryCollectionExpression::_adapter(),
                 ),
@@ -5239,8 +5223,8 @@ fn initialize_module_serializers() {
             );
             (*a).add_wrapper_variant(
                 "none",
-                49,
-                49,
+                48,
+                48,
                 crate::skir_client::internal::struct_serializer_from_static(
                     UnaryCollectionExpression::_adapter(),
                 ),
@@ -5253,8 +5237,8 @@ fn initialize_module_serializers() {
             );
             (*a).add_wrapper_variant(
                 "map",
-                50,
-                50,
+                49,
+                49,
                 crate::skir_client::internal::struct_serializer_from_static(
                     UnaryCollectionExpression::_adapter(),
                 ),
@@ -5267,8 +5251,8 @@ fn initialize_module_serializers() {
             );
             (*a).add_wrapper_variant(
                 "filter",
-                51,
-                51,
+                50,
+                50,
                 crate::skir_client::internal::struct_serializer_from_static(
                     UnaryCollectionExpression::_adapter(),
                 ),
@@ -5281,8 +5265,8 @@ fn initialize_module_serializers() {
             );
             (*a).add_wrapper_variant(
                 "find",
-                52,
-                52,
+                51,
+                51,
                 crate::skir_client::internal::struct_serializer_from_static(
                     UnaryCollectionExpression::_adapter(),
                 ),
@@ -5295,8 +5279,8 @@ fn initialize_module_serializers() {
             );
             (*a).add_wrapper_variant(
                 "find_last",
-                53,
-                53,
+                52,
+                52,
                 crate::skir_client::internal::struct_serializer_from_static(
                     UnaryCollectionExpression::_adapter(),
                 ),
@@ -5309,8 +5293,8 @@ fn initialize_module_serializers() {
             );
             (*a).add_wrapper_variant(
                 "count",
-                54,
-                54,
+                53,
+                53,
                 crate::skir_client::internal::struct_serializer_from_static(
                     UnaryCollectionExpression::_adapter(),
                 ),
@@ -5323,8 +5307,8 @@ fn initialize_module_serializers() {
             );
             (*a).add_wrapper_variant(
                 "distinct_by",
-                55,
-                55,
+                54,
+                54,
                 crate::skir_client::internal::struct_serializer_from_static(
                     UnaryCollectionExpression::_adapter(),
                 ),
@@ -5337,8 +5321,8 @@ fn initialize_module_serializers() {
             );
             (*a).add_wrapper_variant(
                 "group_by",
-                56,
-                56,
+                55,
+                55,
                 crate::skir_client::internal::struct_serializer_from_static(
                     UnaryCollectionExpression::_adapter(),
                 ),
@@ -5351,8 +5335,8 @@ fn initialize_module_serializers() {
             );
             (*a).add_wrapper_variant(
                 "flat_map",
-                57,
-                57,
+                56,
+                56,
                 crate::skir_client::internal::struct_serializer_from_static(
                     UnaryCollectionExpression::_adapter(),
                 ),
@@ -5365,8 +5349,8 @@ fn initialize_module_serializers() {
             );
             (*a).add_wrapper_variant(
                 "unique_by",
-                58,
-                58,
+                57,
+                57,
                 crate::skir_client::internal::struct_serializer_from_static(
                     UnaryCollectionExpression::_adapter(),
                 ),
@@ -5379,8 +5363,8 @@ fn initialize_module_serializers() {
             );
             (*a).add_wrapper_variant(
                 "reduce",
-                59,
-                59,
+                58,
+                58,
                 crate::skir_client::internal::struct_serializer_from_static(
                     UnaryCollectionExpression::_adapter(),
                 ),
@@ -5393,8 +5377,8 @@ fn initialize_module_serializers() {
             );
             (*a).add_wrapper_variant(
                 "sort_by",
-                60,
-                60,
+                59,
+                59,
                 crate::skir_client::internal::struct_serializer_from_static(
                     SortByExpression::_adapter(),
                 ),
@@ -5407,8 +5391,8 @@ fn initialize_module_serializers() {
             );
             (*a).add_wrapper_variant(
                 "sort_with",
-                61,
-                61,
+                60,
+                60,
                 crate::skir_client::internal::struct_serializer_from_static(
                     SortWithExpression::_adapter(),
                 ),
@@ -5421,8 +5405,8 @@ fn initialize_module_serializers() {
             );
             (*a).add_wrapper_variant(
                 "fold",
-                62,
-                62,
+                61,
+                61,
                 crate::skir_client::internal::struct_serializer_from_static(
                     FoldExpression::_adapter(),
                 ),
@@ -5435,8 +5419,8 @@ fn initialize_module_serializers() {
             );
             (*a).add_wrapper_variant(
                 "take",
-                63,
-                63,
+                62,
+                62,
                 crate::skir_client::internal::struct_serializer_from_static(
                     CollectionSliceExpression::_adapter(),
                 ),
@@ -5449,8 +5433,8 @@ fn initialize_module_serializers() {
             );
             (*a).add_wrapper_variant(
                 "skip",
-                64,
-                64,
+                63,
+                63,
                 crate::skir_client::internal::struct_serializer_from_static(
                     CollectionSliceExpression::_adapter(),
                 ),
@@ -5463,8 +5447,8 @@ fn initialize_module_serializers() {
             );
             (*a).add_wrapper_variant(
                 "reverse",
-                65,
-                65,
+                64,
+                64,
                 crate::skir_client::internal::enum_serializer_from_static(
                     ExpressionNode::_adapter(),
                 ),
@@ -5477,8 +5461,8 @@ fn initialize_module_serializers() {
             );
             (*a).add_wrapper_variant(
                 "distinct",
-                66,
-                66,
+                65,
+                65,
                 crate::skir_client::internal::enum_serializer_from_static(
                     ExpressionNode::_adapter(),
                 ),
@@ -5491,8 +5475,8 @@ fn initialize_module_serializers() {
             );
             (*a).add_wrapper_variant(
                 "query",
-                67,
-                67,
+                66,
+                66,
                 crate::skir_client::internal::enum_serializer_from_static(
                     ExpressionQuery::_adapter(),
                 ),

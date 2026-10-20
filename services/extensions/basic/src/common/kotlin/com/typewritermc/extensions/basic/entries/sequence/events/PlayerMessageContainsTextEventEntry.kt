@@ -34,9 +34,8 @@ object PlayerMessageContainsTextEventEntryInspector : PlayerMessageContainsTextE
     override fun PlayerMessageContainsTextEventEntryPresentationScope.present() {
         resourceHeading(
             title = expressions.name.orElse(literal("Unnamed event")),
-            color = literal(Color.parseRgb(requireNotNull(PlayerMessageContainsTextEventEntryDefinition.display?.color))),
-            identifier = subject.identifier.text,
+            color = literal(PlayerMessageContainsTextEventEntryDefinition.display.color),
         )
-        remainingFields {}
+        remainingFields()
     }
 }

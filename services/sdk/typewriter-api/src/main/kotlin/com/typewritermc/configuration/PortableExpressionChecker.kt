@@ -19,7 +19,6 @@ import com.typewritermc.expression.nominalExpressionType
 import com.typewritermc.expression.nominalUseOrNull
 import com.typewritermc.expression.resourceSourceOrNull
 import com.typewritermc.expression.sourceExpression
-import com.typewritermc.types.ColorDefinition
 import com.typewritermc.types.DataValue
 import com.typewritermc.types.FloatWidth
 import com.typewritermc.types.IntegerWidth
@@ -1134,11 +1133,6 @@ class PortableExpressionChecker(
                         val expected = mappingTypes(args[0])?.key ?: collectionItem(args[0])
                         demand(compatible(args[1], expected), "invalid_expression_operand_type")
                         boolean()
-                    }
-
-                    is ExpressionNode.ColorParseWrapper -> {
-                        kinds(ScalarKind.Text)
-                        nominalExpressionType(ColorDefinition.use, true)
                     }
 
                     is ExpressionNode.ColorWithAlphaWrapper -> {

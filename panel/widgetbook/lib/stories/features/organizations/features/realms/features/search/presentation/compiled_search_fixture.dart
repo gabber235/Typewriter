@@ -13,13 +13,13 @@ final class CompiledSearchFixture {
       base.published(pageRoot)!,
       "DialoguePage",
       "Dialogue page",
-      "#607d8b",
+      0xff607d8b,
     );
     final elementType = _subtype(
       base.published(elementRoot)!,
       "Speaker",
       "Speaker",
-      "#9c64bd",
+      0xff9c64bd,
     );
     final catalog = CheckedEditorCatalog(
       (compiledSdkControlCatalog.toMutable()
@@ -191,7 +191,7 @@ skir.PublishedType _subtype(
   skir.PublishedType base,
   String name,
   String label,
-  String color,
+  int argb,
 ) =>
     (base.toMutable()
           ..definition = skir.TypeDefinition(
@@ -224,6 +224,6 @@ skir.PublishedType _subtype(
             name: label,
             description: "Compiled result fixture",
             icon: "material-symbols:book",
-            color: color,
+            color: skir.Color(argb: argb.toSigned(32)),
           ))
         .toFrozen();

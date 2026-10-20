@@ -7655,7 +7655,6 @@ final class ExpressionQuery_catalogDeclarationWrapper
 ///     case ExpressionNode_collectionSize(:var value): { ... }
 ///     case ExpressionNode_collectionAccess(:var value): { ... }
 ///     case ExpressionNode_collectionContains(:var value): { ... }
-///     case ExpressionNode_colorParse(:var value): { ... }
 ///     case ExpressionNode_colorWithAlpha(:var value): { ... }
 ///     case ExpressionNode_ruleUnary(:var value): { ... }
 ///     case ExpressionNode_ruleOneOf(:var value): { ... }
@@ -8093,10 +8092,6 @@ sealed class ExpressionNode {
   }) => ExpressionNode.wrapCollectionContains(
     CollectionContainsExpression(source: source, value: value),
   );
-
-  /// Create a 'color_parse' variant wrapping around the given value.
-  factory ExpressionNode.wrapColorParse(ExpressionNode value) =>
-      ExpressionNode_colorParseWrapper._(value);
 
   /// Create a 'color_with_alpha' variant wrapping around the given value.
   factory ExpressionNode.wrapColorWithAlpha(ColorWithAlphaExpression value) =>
@@ -8846,16 +8841,6 @@ sealed class ExpressionNode {
       );
       _serializerBuilder.addWrapperVariant(
         36,
-        "color_parse",
-        "wrapColorParse",
-        ExpressionNode.serializer,
-        "",
-        ExpressionNode_colorParseWrapper._,
-        (it) => it.value,
-        ordinal: ExpressionNode_kind.colorParseWrapper._ordinal,
-      );
-      _serializerBuilder.addWrapperVariant(
-        37,
         "color_with_alpha",
         "wrapColorWithAlpha",
         ColorWithAlphaExpression.serializer,
@@ -8865,7 +8850,7 @@ sealed class ExpressionNode {
         ordinal: ExpressionNode_kind.colorWithAlphaWrapper._ordinal,
       );
       _serializerBuilder.addWrapperVariant(
-        38,
+        37,
         "rule_unary",
         "wrapRuleUnary",
         RuleUnaryExpression.serializer,
@@ -8875,7 +8860,7 @@ sealed class ExpressionNode {
         ordinal: ExpressionNode_kind.ruleUnaryWrapper._ordinal,
       );
       _serializerBuilder.addWrapperVariant(
-        39,
+        38,
         "rule_one_of",
         "wrapRuleOneOf",
         RuleOneOfExpression.serializer,
@@ -8885,7 +8870,7 @@ sealed class ExpressionNode {
         ordinal: ExpressionNode_kind.ruleOneOfWrapper._ordinal,
       );
       _serializerBuilder.addWrapperVariant(
-        40,
+        39,
         "rule_size_bound",
         "wrapRuleSizeBound",
         RuleSizeBoundExpression.serializer,
@@ -8895,7 +8880,7 @@ sealed class ExpressionNode {
         ordinal: ExpressionNode_kind.ruleSizeBoundWrapper._ordinal,
       );
       _serializerBuilder.addWrapperVariant(
-        41,
+        40,
         "rule_size_range",
         "wrapRuleSizeRange",
         RuleSizeRangeExpression.serializer,
@@ -8905,7 +8890,7 @@ sealed class ExpressionNode {
         ordinal: ExpressionNode_kind.ruleSizeRangeWrapper._ordinal,
       );
       _serializerBuilder.addWrapperVariant(
-        42,
+        41,
         "rule_numeric_bound",
         "wrapRuleNumericBound",
         RuleNumericBoundExpression.serializer,
@@ -8915,7 +8900,7 @@ sealed class ExpressionNode {
         ordinal: ExpressionNode_kind.ruleNumericBoundWrapper._ordinal,
       );
       _serializerBuilder.addWrapperVariant(
-        43,
+        42,
         "rule_numeric_range",
         "wrapRuleNumericRange",
         RuleNumericRangeExpression.serializer,
@@ -8925,7 +8910,7 @@ sealed class ExpressionNode {
         ordinal: ExpressionNode_kind.ruleNumericRangeWrapper._ordinal,
       );
       _serializerBuilder.addWrapperVariant(
-        44,
+        43,
         "rule_multiple_of",
         "wrapRuleMultipleOf",
         RuleMultipleOfExpression.serializer,
@@ -8935,7 +8920,7 @@ sealed class ExpressionNode {
         ordinal: ExpressionNode_kind.ruleMultipleOfWrapper._ordinal,
       );
       _serializerBuilder.addWrapperVariant(
-        45,
+        44,
         "rule_maximum_scale",
         "wrapRuleMaximumScale",
         RuleMaximumScaleExpression.serializer,
@@ -8945,7 +8930,7 @@ sealed class ExpressionNode {
         ordinal: ExpressionNode_kind.ruleMaximumScaleWrapper._ordinal,
       );
       _serializerBuilder.addWrapperVariant(
-        46,
+        45,
         "rule_timestamp_bound",
         "wrapRuleTimestampBound",
         RuleTimestampBoundExpression.serializer,
@@ -8955,7 +8940,7 @@ sealed class ExpressionNode {
         ordinal: ExpressionNode_kind.ruleTimestampBoundWrapper._ordinal,
       );
       _serializerBuilder.addWrapperVariant(
-        47,
+        46,
         "any",
         "wrapAny",
         UnaryCollectionExpression.serializer,
@@ -8965,7 +8950,7 @@ sealed class ExpressionNode {
         ordinal: ExpressionNode_kind.anyWrapper._ordinal,
       );
       _serializerBuilder.addWrapperVariant(
-        48,
+        47,
         "all",
         "wrapAll",
         UnaryCollectionExpression.serializer,
@@ -8975,7 +8960,7 @@ sealed class ExpressionNode {
         ordinal: ExpressionNode_kind.allWrapper._ordinal,
       );
       _serializerBuilder.addWrapperVariant(
-        49,
+        48,
         "none",
         "wrapNone",
         UnaryCollectionExpression.serializer,
@@ -8985,7 +8970,7 @@ sealed class ExpressionNode {
         ordinal: ExpressionNode_kind.noneWrapper._ordinal,
       );
       _serializerBuilder.addWrapperVariant(
-        50,
+        49,
         "map",
         "wrapMap",
         UnaryCollectionExpression.serializer,
@@ -8995,7 +8980,7 @@ sealed class ExpressionNode {
         ordinal: ExpressionNode_kind.mapWrapper._ordinal,
       );
       _serializerBuilder.addWrapperVariant(
-        51,
+        50,
         "filter",
         "wrapFilter",
         UnaryCollectionExpression.serializer,
@@ -9005,7 +8990,7 @@ sealed class ExpressionNode {
         ordinal: ExpressionNode_kind.filterWrapper._ordinal,
       );
       _serializerBuilder.addWrapperVariant(
-        52,
+        51,
         "find",
         "wrapFind",
         UnaryCollectionExpression.serializer,
@@ -9015,7 +9000,7 @@ sealed class ExpressionNode {
         ordinal: ExpressionNode_kind.findWrapper._ordinal,
       );
       _serializerBuilder.addWrapperVariant(
-        53,
+        52,
         "find_last",
         "wrapFindLast",
         UnaryCollectionExpression.serializer,
@@ -9025,7 +9010,7 @@ sealed class ExpressionNode {
         ordinal: ExpressionNode_kind.findLastWrapper._ordinal,
       );
       _serializerBuilder.addWrapperVariant(
-        54,
+        53,
         "count",
         "wrapCount",
         UnaryCollectionExpression.serializer,
@@ -9035,7 +9020,7 @@ sealed class ExpressionNode {
         ordinal: ExpressionNode_kind.countWrapper._ordinal,
       );
       _serializerBuilder.addWrapperVariant(
-        55,
+        54,
         "distinct_by",
         "wrapDistinctBy",
         UnaryCollectionExpression.serializer,
@@ -9045,7 +9030,7 @@ sealed class ExpressionNode {
         ordinal: ExpressionNode_kind.distinctByWrapper._ordinal,
       );
       _serializerBuilder.addWrapperVariant(
-        56,
+        55,
         "group_by",
         "wrapGroupBy",
         UnaryCollectionExpression.serializer,
@@ -9055,7 +9040,7 @@ sealed class ExpressionNode {
         ordinal: ExpressionNode_kind.groupByWrapper._ordinal,
       );
       _serializerBuilder.addWrapperVariant(
-        57,
+        56,
         "flat_map",
         "wrapFlatMap",
         UnaryCollectionExpression.serializer,
@@ -9065,7 +9050,7 @@ sealed class ExpressionNode {
         ordinal: ExpressionNode_kind.flatMapWrapper._ordinal,
       );
       _serializerBuilder.addWrapperVariant(
-        58,
+        57,
         "unique_by",
         "wrapUniqueBy",
         UnaryCollectionExpression.serializer,
@@ -9075,7 +9060,7 @@ sealed class ExpressionNode {
         ordinal: ExpressionNode_kind.uniqueByWrapper._ordinal,
       );
       _serializerBuilder.addWrapperVariant(
-        59,
+        58,
         "reduce",
         "wrapReduce",
         UnaryCollectionExpression.serializer,
@@ -9085,7 +9070,7 @@ sealed class ExpressionNode {
         ordinal: ExpressionNode_kind.reduceWrapper._ordinal,
       );
       _serializerBuilder.addWrapperVariant(
-        60,
+        59,
         "sort_by",
         "wrapSortBy",
         SortByExpression.serializer,
@@ -9095,7 +9080,7 @@ sealed class ExpressionNode {
         ordinal: ExpressionNode_kind.sortByWrapper._ordinal,
       );
       _serializerBuilder.addWrapperVariant(
-        61,
+        60,
         "sort_with",
         "wrapSortWith",
         SortWithExpression.serializer,
@@ -9105,7 +9090,7 @@ sealed class ExpressionNode {
         ordinal: ExpressionNode_kind.sortWithWrapper._ordinal,
       );
       _serializerBuilder.addWrapperVariant(
-        62,
+        61,
         "fold",
         "wrapFold",
         FoldExpression.serializer,
@@ -9115,7 +9100,7 @@ sealed class ExpressionNode {
         ordinal: ExpressionNode_kind.foldWrapper._ordinal,
       );
       _serializerBuilder.addWrapperVariant(
-        63,
+        62,
         "take",
         "wrapTake",
         CollectionSliceExpression.serializer,
@@ -9125,7 +9110,7 @@ sealed class ExpressionNode {
         ordinal: ExpressionNode_kind.takeWrapper._ordinal,
       );
       _serializerBuilder.addWrapperVariant(
-        64,
+        63,
         "skip",
         "wrapSkip",
         CollectionSliceExpression.serializer,
@@ -9135,7 +9120,7 @@ sealed class ExpressionNode {
         ordinal: ExpressionNode_kind.skipWrapper._ordinal,
       );
       _serializerBuilder.addWrapperVariant(
-        65,
+        64,
         "reverse",
         "wrapReverse",
         ExpressionNode.serializer,
@@ -9145,7 +9130,7 @@ sealed class ExpressionNode {
         ordinal: ExpressionNode_kind.reverseWrapper._ordinal,
       );
       _serializerBuilder.addWrapperVariant(
-        66,
+        65,
         "distinct",
         "wrapDistinct",
         ExpressionNode.serializer,
@@ -9155,7 +9140,7 @@ sealed class ExpressionNode {
         ordinal: ExpressionNode_kind.distinctWrapper._ordinal,
       );
       _serializerBuilder.addWrapperVariant(
-        67,
+        66,
         "query",
         "wrapQuery",
         ExpressionQuery.serializer,
@@ -9219,38 +9204,37 @@ enum ExpressionNode_kind {
   collectionSizeWrapper(33),
   collectionAccessWrapper(34),
   collectionContainsWrapper(35),
-  colorParseWrapper(36),
-  colorWithAlphaWrapper(37),
-  ruleUnaryWrapper(38),
-  ruleOneOfWrapper(39),
-  ruleSizeBoundWrapper(40),
-  ruleSizeRangeWrapper(41),
-  ruleNumericBoundWrapper(42),
-  ruleNumericRangeWrapper(43),
-  ruleMultipleOfWrapper(44),
-  ruleMaximumScaleWrapper(45),
-  ruleTimestampBoundWrapper(46),
-  anyWrapper(47),
-  allWrapper(48),
-  noneWrapper(49),
-  mapWrapper(50),
-  filterWrapper(51),
-  findWrapper(52),
-  findLastWrapper(53),
-  countWrapper(54),
-  distinctByWrapper(55),
-  groupByWrapper(56),
-  flatMapWrapper(57),
-  uniqueByWrapper(58),
-  reduceWrapper(59),
-  sortByWrapper(60),
-  sortWithWrapper(61),
-  foldWrapper(62),
-  takeWrapper(63),
-  skipWrapper(64),
-  reverseWrapper(65),
-  distinctWrapper(66),
-  queryWrapper(67);
+  colorWithAlphaWrapper(36),
+  ruleUnaryWrapper(37),
+  ruleOneOfWrapper(38),
+  ruleSizeBoundWrapper(39),
+  ruleSizeRangeWrapper(40),
+  ruleNumericBoundWrapper(41),
+  ruleNumericRangeWrapper(42),
+  ruleMultipleOfWrapper(43),
+  ruleMaximumScaleWrapper(44),
+  ruleTimestampBoundWrapper(45),
+  anyWrapper(46),
+  allWrapper(47),
+  noneWrapper(48),
+  mapWrapper(49),
+  filterWrapper(50),
+  findWrapper(51),
+  findLastWrapper(52),
+  countWrapper(53),
+  distinctByWrapper(54),
+  groupByWrapper(55),
+  flatMapWrapper(56),
+  uniqueByWrapper(57),
+  reduceWrapper(58),
+  sortByWrapper(59),
+  sortWithWrapper(60),
+  foldWrapper(61),
+  takeWrapper(62),
+  skipWrapper(63),
+  reverseWrapper(64),
+  distinctWrapper(65),
+  queryWrapper(66);
 
   final _core.int _ordinal;
 
@@ -9617,15 +9601,6 @@ final class ExpressionNode_collectionContainsWrapper
 
   @_core.override
   ExpressionNode_kind get kind => ExpressionNode_kind.collectionContainsWrapper;
-}
-
-final class ExpressionNode_colorParseWrapper extends _ExpressionNode_wrapper {
-  final ExpressionNode value;
-
-  ExpressionNode_colorParseWrapper._(this.value);
-
-  @_core.override
-  ExpressionNode_kind get kind => ExpressionNode_kind.colorParseWrapper;
 }
 
 final class ExpressionNode_colorWithAlphaWrapper

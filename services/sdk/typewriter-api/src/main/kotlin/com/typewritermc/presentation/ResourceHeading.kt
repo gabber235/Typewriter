@@ -8,16 +8,18 @@ import com.typewritermc.expression.literal
 import com.typewritermc.expression.neq
 import com.typewritermc.expression.orElse
 import com.typewritermc.types.Color
+import com.typewritermc.types.text
 
 /**
  * Composes resource identity using ordinary presentation nodes.
  * The entire composition is hidden for multiple selection. Outside a selection
- * surface, missing selection context defaults to one. Color belongs to the caller.
+ * surface, missing selection context defaults to one. Color belongs to the caller; the identifier defaults to the
+ * presented resource's own id.
  */
 fun Layout.resourceHeading(
     title: Expr<String, Handled>,
     color: Expr<Color, Handled>,
-    identifier: Expr<String, MayBeMissing>? = null,
+    identifier: Expr<String, MayBeMissing>? = subject.identifier.text,
     selectionCount: Expr<Int, MayBeMissing> = context.selectionCount,
 ) {
     showIf(selectionCount.orElse(literal(1)) eq literal(1)) {

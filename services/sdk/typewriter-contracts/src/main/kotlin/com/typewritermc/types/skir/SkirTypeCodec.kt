@@ -119,6 +119,7 @@ import skirout.editor.v1.type_catalog.TypeParameter as SkirTypeParameter
 import skirout.editor.v1.type_catalog.TypeTemplate as SkirTypeTemplate
 import skirout.editor.v1.type_catalog.TypeUse as SkirTypeUse
 import skirout.editor.v1.type_catalog.ValuePath as SkirValuePath
+import skirout.kernel.v1.color.Color as SkirColor
 
 object SkirTypeCodec {
     fun encode(id: TypeDefinitionId): SkirConversionResult<SkirTypeDefinitionId> = captureSkirConversion { encodeDefinitionId(id) }
@@ -636,7 +637,7 @@ private fun ConversionScope.encode(display: TypeDisplay) =
         name = display.name,
         description = display.description,
         icon = display.icon,
-        color = display.color,
+        color = SkirColor(argb = display.color.argb.toInt()),
     )
 
 private fun ConversionScope.encode(field: EffectiveFieldTemplate) =

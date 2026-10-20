@@ -195,12 +195,12 @@ _fixture({bool unfilled = false}) {
     String name,
     String description,
     String icon,
-    String color,
+    int argb,
   ) => skir.TypeDisplay(
     name: name,
     description: description,
     icon: icon,
-    color: color,
+    color: skir.Color(argb: argb.toSigned(32)),
   );
   final presentationId = skir.PresentationId(
     namespace: "widgetbook",
@@ -253,7 +253,7 @@ _fixture({bool unfilled = false}) {
             "Sequence",
             "A linear sequence of entries",
             "material-symbols:account-tree",
-            "#2196F3",
+            0xff2196f3,
           ),
         ),
         pageType(
@@ -263,7 +263,7 @@ _fixture({bool unfilled = false}) {
             "Static",
             "A fixed collection of entries",
             "material-symbols:push-pin",
-            "#673AB7",
+            0xff673ab7,
           ),
         ),
         pageType(
@@ -273,7 +273,7 @@ _fixture({bool unfilled = false}) {
             "Scene",
             "A spatial scene of connected entries",
             "material-symbols:movie",
-            "#FF9800",
+            0xffff9800,
           ),
         ),
         pageType(
@@ -283,7 +283,7 @@ _fixture({bool unfilled = false}) {
             "Manifest",
             "A manifest of reusable entries",
             "material-symbols:schema",
-            "#4CAF50",
+            0xff4caf50,
           ),
         ),
       ],

@@ -122,7 +122,7 @@ final class ResourceCreationFixture {
           name: name,
           description: "",
           icon: "",
-          color: "",
+          color: skir.Color(argb: 0xff607d8b.toSigned(32)),
         ),
       ),
     );
