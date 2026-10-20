@@ -16,3 +16,4 @@ export "nats_provider.dart";
 export "projection_reconciliation.dart";
 export "skir_mutation.dart";
 export "skir_nats.dart";
+export "transport_segment.dart";

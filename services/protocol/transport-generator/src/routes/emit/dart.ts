@@ -28,9 +28,30 @@ const RECORD_ID_IMPORT =
 
 const HEADER =
   "// GENERATED CODE. DO NOT MODIFY BY HAND\n" +
-  "// ignore_for_file: cascade_invocations, constant_identifier_names, curly_braces_in_flow_control_structures, no_leading_underscores_for_library_prefixes, prefer_adjacent_string_concatenation, prefer_interpolation_to_compose_strings, unnecessary_this, use_raw_strings\n\n";
+  "// ignore_for_file: cascade_invocations, constant_identifier_names, curly_braces_in_flow_control_structures, no_leading_underscores_for_library_prefixes, unnecessary_this, use_raw_strings\n\n";
 
 const dartString = (value: string) => quoted(value, "escaped");
+
+/** One part of an interpolated Dart string: literal text or a validated identifier variable. */
+type StringPart = { readonly text: string } | { readonly variable: string } | { readonly expression: string };
+
+/** Renders parts as one interpolated Dart string literal, such as `"cloud.to.user.$user.create"`. */
+function interpolated(parts: readonly StringPart[]): string {
+  const body = parts
+    .map((part) => {
+      if ("text" in part) {
+        return dartString(part.text).slice(1, -1);
+      }
+      return "variable" in part ? `$${part.variable}` : `\${${part.expression}}`;
+    })
+    .join("");
+  return `"${body}"`;
+}
+
+/** Joins subject tokens with the `.` separator. */
+function dotted(tokens: readonly StringPart[]): StringPart[] {
+  return tokens.flatMap((token, index) => (index === 0 ? [token] : [{ text: "." }, token]));
+}
 
 /** A route scope identity as the generated Dart API takes it. */
 interface ScopeParameter {
@@ -83,8 +104,8 @@ function scopeValues(scope: ScopeKind, subject?: SubjectTemplate): Lines {
       .filter(({ parameter }) => !subject || subject.has(parameter))
       .map(({ parameter, name, type }) =>
         type === "_skir.RecordId"
-          ? `final ${variableName(parameter)} = ${name}.id._transportIdentity;`
-          : `final ${variableName(parameter)} = ${name}._transportIdentity;`,
+          ? `final ${variableName(parameter)} = ${name}.id.transportIdentity;`
+          : `final ${variableName(parameter)} = ${name}.transportIdentity;`,
       ),
   );
 }
@@ -94,38 +115,36 @@ function scopeArguments(scope: ScopeKind): Lines {
 }
 
 function subjectExpression(template: SubjectTemplate, transferField?: string): string {
-  return template.tokens
-    .map((token) => {
-      if (token.kind === "literal") {
-        return dartString(token.value);
+  const parts = template.tokens.map((token): StringPart => {
+    if (token.kind === "literal") {
+      return { text: token.value };
+    }
+    if (token.parameter === "transfer_id") {
+      if (!transferField) {
+        throw new Error("bounded Dart subject requires a transfer field");
       }
-      if (token.parameter === "transfer_id") {
-        if (!transferField) {
-          throw new Error("bounded Dart subject requires a transfer field");
-        }
-        return `${transferField}._transportTransfer`;
-      }
-      return variableName(token.parameter);
-    })
-    .join('+ "." +');
+      return { expression: `${transferField}.transportTransfer` };
+    }
+    return { variable: variableName(token.parameter) };
+  });
+  return interpolated(dotted(parts));
 }
 
 /** Renders granted tokens as a Dart expression; wildcards become `*`. */
 function grantExpression(tokens: readonly GrantToken[]): string {
-  return tokens
-    .map((token) => {
-      switch (token.kind) {
-        case "literal":
-          return dartString(token.value);
-        case "wildcard":
-          return '"*"';
-        case "parameter":
-          return variableName(token.parameter);
-        case "consumer":
-          throw new Error("panel subscriptions never name a consumer");
-      }
-    })
-    .join('+ "." +');
+  const parts = tokens.map((token): StringPart => {
+    switch (token.kind) {
+      case "literal":
+        return { text: token.value };
+      case "wildcard":
+        return { text: "*" };
+      case "parameter":
+        return { variable: variableName(token.parameter) };
+      case "consumer":
+        throw new Error("panel subscriptions never name a consumer");
+    }
+  });
+  return interpolated(dotted(parts));
 }
 
 /** Collects the import directives of the referenced Skir declarations. */
@@ -156,7 +175,7 @@ const CONSUMER_VALUES: Record<(typeof CONSUMER_NAME.tuple)[number], string> = {
 const CONSUMER_RULE = lines(`String _persistentConsumerName({required String actor, required String? organization, required String session, required String projection}) {
     final identity = jsonEncode([${CONSUMER_NAME.tuple.map((name) => CONSUMER_VALUES[name]).join(", ")}]);
     final encoded = base64Url.encode(utf8.encode(identity)).replaceAll("=", "");
-    return ${dartString(CONSUMER_NAME.prefix)} + encoded;
+    return ${interpolated([{ text: CONSUMER_NAME.prefix }, { variable: "encoded" }])};
 }`);
 
 const RUNTIME = lines(String.raw`final class PersistentProjectionRoute {
@@ -169,30 +188,11 @@ const RUNTIME = lines(String.raw`final class PersistentProjectionRoute {
             throw StateError("Persistent organization projection requires an admitted organization");
         }
         return _persistentConsumerName(
-            actor: client.actorId._transportIdentity,
-            organization: organizationScoped ? organization?._transportIdentity : null,
-            session: client.connectionSession._transportSession,
+            actor: client.actorId.transportIdentity,
+            organization: organizationScoped ? organization?.transportIdentity : null,
+            session: client.connectionSession.transportSession,
             projection: id,
         );
-    }
-}
-
-extension _TransportSegment on String {
-    static final _identity = RegExp("^[^\\s.*>{}]+\$");
-    static final _transfer = RegExp("^[A-Za-z0-9_\\-]{1,64}\$");
-    static final _session = RegExp("^[a-f0-9]{32}\$");
-    bool get _isTransportIdentity => _identity.hasMatch(this);
-    String get _transportIdentity {
-        if (!_isTransportIdentity) throw ArgumentError.value(this, "identity", "Invalid identity segment");
-        return this;
-    }
-    String get _transportTransfer {
-        if (!_transfer.hasMatch(this)) throw ArgumentError.value(this, "transferId", "Invalid transfer segment");
-        return this;
-    }
-    String get _transportSession {
-        if (!_session.hasMatch(this)) throw ArgumentError.value(this, "connectionSession", "Invalid connection session");
-        return this;
     }
 }`);
 
@@ -441,7 +441,7 @@ function emitEvent(
       lines(`static String subscriptionPattern({
     required _skir.RecordId organizationId,
 }) {
-    final organization = organizationId.id._transportIdentity;
+    final organization = organizationId.id.transportIdentity;
     return ${subscription};
 }
 
@@ -449,11 +449,11 @@ static String? userIdFromSubject(
     String subject, {
     required _skir.RecordId organizationId,
 }) {
-    final organization = organizationId.id._transportIdentity;
+    final organization = organizationId.id.transportIdentity;
     final parts = subject.split(".");
     if (parts.length != ${address.tokens.length} ${rejected.join("")}) return null;
     final userId = parts[${userIndex}];
-    return userId._isTransportIdentity ? userId : null;
+    return userId.isTransportIdentity ? userId : null;
 }`),
     );
   }

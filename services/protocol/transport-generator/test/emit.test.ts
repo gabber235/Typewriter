@@ -70,7 +70,7 @@ describe("route emission", () => {
     );
     expect(rust!.code).toContain('"TW_{}",');
     expect(dart!.code).toContain("final identity = jsonEncode([actor, organization, session, projection]);");
-    expect(dart!.code).toContain('return "TW_" + encoded;');
+    expect(dart!.code).toContain('return "TW_$encoded";');
     expect(dart!.code).toContain('id: "organization_members_changed",\n    organizationScoped: true,');
     expect(dart!.code).toContain('id: "user_organizations_changed",\n    organizationScoped: false,');
   });
@@ -89,6 +89,14 @@ describe("route emission", () => {
     expect(service!.code).not.toContain("data class ServiceRouteScope");
   });
 
+  test("Dart subjects interpolate tokens the hand written segment checks validated", async () => {
+    const { input, resolved } = await committedRoutes();
+    const [dart] = emitDart(resolved, symbolProviders(input).dart);
+    expect(dart!.code).not.toContain("extension _TransportSegment");
+    expect(dart!.code).not.toContain('+ "." +');
+    expect(dart!.code).toContain('subject: "cloud.to.user.$user.organization.create",');
+  });
+
   test("the panel derives no permissions of its own", async () => {
     const { input, resolved } = await committedRoutes();
     const [dart] = emitDart(resolved, symbolProviders(input).dart);
@@ -103,8 +111,8 @@ describe("route emission", () => {
     const extension = section(dart!.code, "extension OrganizationServicesWatchRouteNats", "\n}\n");
     const operation = section(extension, "operation({", "\n    }\n");
     const watch = section(extension, "Stream<TData> watch<TData>", "\n    }\n");
-    expect(operation).toContain("final user = userId._transportIdentity;");
-    expect(watch).toContain("final organization = organizationId.id._transportIdentity;");
+    expect(operation).toContain("final user = userId.transportIdentity;");
+    expect(watch).toContain("final organization = organizationId.id.transportIdentity;");
     expect(watch).not.toContain("final user");
   });
 
@@ -112,7 +120,7 @@ describe("route emission", () => {
     const { input, resolved } = await committedRoutes();
     const [dart] = emitDart(resolved, symbolProviders(input).dart);
     const presence = section(dart!.code, "final class OrganizationPresenceRouteEvent", "\n}\n");
-    expect(presence).toContain('return "typewriter"+ "." +"presence"+ "." +"organization"+ "." +organization+ "." +"user"+ "." +"*";');
+    expect(presence).toContain('return "typewriter.presence.organization.$organization.user.*";');
     expect(presence).toContain("static String? userIdFromSubject(");
   });
 
@@ -123,7 +131,7 @@ describe("route emission", () => {
       'import "package:typewriter_panel/infrastructure/protocols/skir/skirout/organization/v1/organization.dart" as _lib_organization_v1_organization;',
     );
     expect(dart!.code).toContain("final method = _lib_organization_v1_organization.createOrganizationMethod;");
-    expect(dart!.code).toContain("this.transferId._transportTransfer");
+    expect(dart!.code).toContain("${this.transferId.transportTransfer}");
   });
 });
 
