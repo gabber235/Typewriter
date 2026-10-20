@@ -1,41 +1,39 @@
 import { isNode, LineCounter, parseDocument, type Document } from "yaml";
 import { z } from "zod";
 
-import { PARAMETERS, SubjectTemplate, sortedParameters, type Parameter } from "./subject.js";
+import { SubjectTemplate, scopeParameters, type Parameter } from "./subject.js";
 
 /** Scope kinds in the order generated code groups them. */
 export const SCOPE_KINDS = [
   "realm",
   "service",
-  "bound_service",
   "organization_actor",
   "organization",
   "user",
-  "native",
   "internal_component",
 ] as const;
 export type ScopeKind = (typeof SCOPE_KINDS)[number];
-
-/** Endpoint sides in the order generated code visits them. */
-export const SIDES = ["panel", "service", "backend", "backend_internal"] as const;
-export type Side = (typeof SIDES)[number];
-
-/** Grant roles in the order generated role enums declare them. */
-export const ROLES = [
-  "authenticated_user",
-  "organization_member",
-  "realm_coordinator",
-  "realm_participant",
-  "registered_service",
-  "native_client",
-] as const;
-export type Role = (typeof ROLES)[number];
 
 export const CHANNELS = ["request", "updates", "event"] as const;
 export type Channel = (typeof CHANNELS)[number];
 
 export const DIRECTIONS = ["publish", "subscribe"] as const;
 export type Direction = (typeof DIRECTIONS)[number];
+
+/** Identity placeholders a role declaration may bind. */
+const IDENTITIES = [
+  "organization",
+  "realm",
+  "service",
+  "user",
+] as const satisfies readonly Parameter[];
+export type Identity = (typeof IDENTITIES)[number];
+
+/**
+ * Identities whose values live inside another identity, so a role bound to the outer one may
+ * address any inner value: every realm belongs to one organization.
+ */
+const NESTED_IN: Partial<Record<Identity, Identity>> = { realm: "organization" };
 
 /** A Skir declaration named as `module.skir:Declaration` or `module.skir:Outer.Inner`. */
 export interface SymbolRef {
@@ -48,9 +46,6 @@ export function symbolRefText(reference: SymbolRef): string {
   return `${reference.module}:${reference.path.join(".")}`;
 }
 
-/** Endpoint subjects per side, iterated in {@link SIDES} order. */
-export type Endpoints = ReadonlyMap<Side, SubjectTemplate>;
-
 function checked<T>(parse: (value: string) => T) {
   return (value: string, context: z.RefinementCtx): T => {
     try {
@@ -62,20 +57,17 @@ function checked<T>(parse: (value: string) => T) {
   };
 }
 
-function bySide<T>(value: Partial<Record<Side, T>>): ReadonlyMap<Side, T> {
-  return new Map(
-    SIDES.flatMap((side) => (value[side] === undefined ? [] : [[side, value[side]] as const])),
-  );
-}
-
 const RouteName = z.string().regex(/^[a-z_][a-z0-9_]*$/, {
   error: (issue) => `invalid route identifier ${JSON.stringify(issue.input)}`,
 });
 
-const ClosedIdentifier = (label: string) =>
-  z.string().regex(/^[a-z0-9_.-]+$/, {
-    error: (issue) => `invalid ${label} ${JSON.stringify(issue.input)}`,
-  });
+const RoleName = z.string().regex(/^[a-z][a-z0-9_]*$/, {
+  error: (issue) => `invalid role name ${JSON.stringify(issue.input)}`,
+});
+
+const ComponentName = z.string().regex(/^[a-z][a-z0-9-]*$/, {
+  error: (issue) => `invalid component name ${JSON.stringify(issue.input)}`,
+});
 
 const KotlinSymbol = z.string().regex(/^[A-Za-z_][A-Za-z0-9_]*(\.[A-Za-z_][A-Za-z0-9_]*)*$/, {
   error: (issue) => `invalid Kotlin symbol ${JSON.stringify(issue.input)}`,
@@ -87,7 +79,25 @@ const KotlinTarget = z.literal("loader_core", {
 
 const NativeKotlinFormat = z.literal("kotlin_serialization_cbor");
 
-const Subject = z.string().transform(checked(SubjectTemplate.parse));
+/** Leading tokens that only the subject rule writes; an address never spells a family itself. */
+const FAMILY_PREFIXES = ["cloud", "typewriter", "service.to", "service.from"];
+
+/**
+ * A logical address: the route path of one channel without its subject family prefix, such as
+ * `user.{user}.organization.create`.
+ */
+const Address = z.string().transform(
+  checked((value) => {
+    const address = SubjectTemplate.parse(value);
+    const prefix = FAMILY_PREFIXES.find(
+      (family) => value === family || value.startsWith(`${family}.`),
+    );
+    if (prefix) {
+      throw new Error(`address ${JSON.stringify(value)} spells the ${prefix} subject family`);
+    }
+    return address;
+  }),
+);
 
 const Reference = z.string().transform(
   checked((value): SymbolRef => {
@@ -111,18 +121,20 @@ const Reference = z.string().transform(
   }),
 );
 
-const Endpoints = z.partialRecord(z.enum(SIDES), Subject).transform(bySide);
+/**
+ * Where a role's code runs and which identifiers it is bound to. Tenant identifiers are fixed by
+ * admission; the personal identifier is the grantee's own identity.
+ */
+const RoleDeclaration = z.strictObject({
+  side: z.enum(["panel", "service"]),
+  tenant: z.array(z.enum(IDENTITIES)).default([]),
+  personal: z.enum(IDENTITIES).optional(),
+});
 
-const Wildcards = z
-  .array(z.enum(PARAMETERS))
-  .transform((parameters): readonly Parameter[] => sortedParameters(parameters));
-
-const EventEndpoint = z.union([
-  Subject.transform((subject) => ({ subject, subscription: undefined })),
-  z.strictObject({
-    subject: Subject,
-    subscription: z.strictObject({ wildcard: Wildcards }).optional(),
-  }),
+/** A route party: a declared role or a declared backend component. */
+const Party = z.union([
+  z.strictObject({ role: RoleName }),
+  z.strictObject({ component: ComponentName }),
 ]);
 
 const Delivery = z.discriminatedUnion("kind", [
@@ -135,7 +147,7 @@ const Delivery = z.discriminatedUnion("kind", [
   }),
 ]);
 
-const Event = z.strictObject({ payload: Reference, addresses: Endpoints, delivery: Delivery });
+const Updates = z.strictObject({ payload: Reference, address: Address, delivery: Delivery });
 
 const RequestResponseBinding = z.discriminatedUnion("kind", [
   z.strictObject({ kind: z.literal("skir"), method: Reference }),
@@ -161,74 +173,70 @@ const EventBinding = z.discriminatedUnion("kind", [
   }),
 ]);
 
-const Operation = { operation: z.string(), failure_slug: z.string() };
+const Operation = z.string().regex(/^[a-z][a-z0-9_]*(\.[a-z][a-z0-9_]*)*$/, {
+  error: (issue) => `invalid operation name ${JSON.stringify(issue.input)}`,
+});
 
 const Flow = z.discriminatedUnion("kind", [
   z.strictObject({
     kind: z.literal("unary"),
     method: Reference,
-    requests: Endpoints,
-    ...Operation,
+    operation: Operation,
+    request: Address,
   }),
   z.strictObject({
     kind: z.literal("watch"),
     method: Reference,
-    requests: Endpoints,
-    updates: Event,
-    ...Operation,
+    operation: Operation,
+    request: Address,
+    updates: Updates,
   }),
   z.strictObject({
     kind: z.literal("bounded_watch"),
     method: Reference,
-    requests: Endpoints,
-    updates: Endpoints,
     transfer_field: z.string(),
-    ...Operation,
+    operation: Operation,
+    request: Address,
+    updates: Address,
   }),
   z.strictObject({
     kind: z.literal("scatter"),
     binding: RequestResponseBinding,
-    requests: Endpoints,
-    ...Operation,
+    operation: Operation,
+    request: Address,
   }),
   z.strictObject({
     kind: z.literal("event"),
     binding: EventBinding,
-    addresses: z.partialRecord(z.enum(SIDES), EventEndpoint).transform(bySide),
+    operation: Operation,
+    address: Address,
     delivery: Delivery,
-    ...Operation,
   }),
 ]);
 
-const Grant = z.strictObject({
-  role: z.enum(ROLES),
-  side: z.enum(SIDES),
-  channel: z.enum(CHANNELS),
-  direction: z.enum(DIRECTIONS),
-});
+const Parties = z.array(Party).min(1);
 
-const Route = z.strictObject({
+const PARTY_FIELDS = ["callers", "server", "publishers", "subscribers"] as const;
+
+const RouteShape = z.strictObject({
   name: RouteName,
   scope: z.enum(SCOPE_KINDS),
-  grants: z.array(Grant),
-  subscription: z
-    .strictObject({
-      component: ClosedIdentifier("component name"),
-      group: ClosedIdentifier("consumer group"),
-    })
-    .optional(),
+  callers: Parties.optional(),
+  server: Party.optional(),
+  publishers: Parties.optional(),
+  subscribers: Parties.optional(),
   flow: Flow,
 });
 
-const Manifest = z.strictObject({ routes: z.array(Route) });
-
-export type Manifest = z.output<typeof Manifest>;
-export type Route = Manifest["routes"][number];
-export type Flow = Route["flow"];
-export type Grant = Route["grants"][number];
+type Flow = z.output<typeof Flow>;
+export type Party = z.output<typeof Party>;
 export type Delivery = z.output<typeof Delivery>;
-export type EventEndpoint = z.output<typeof EventEndpoint>;
-export type ComponentSubscription = NonNullable<Route["subscription"]>;
+export type RoleDeclaration = Readonly<z.output<typeof RoleDeclaration>> & {
+  readonly name: string;
+};
+export type RoleDeclarations = ReadonlyMap<string, RoleDeclaration>;
+export type RequestFlow = Exclude<Flow, { kind: "event" }>;
+export type EventFlow = Extract<Flow, { kind: "event" }>;
 export type NativeKotlinRequestResponseBinding = Extract<
   z.output<typeof RequestResponseBinding>,
   { kind: "native_kotlin" }
@@ -238,14 +246,169 @@ export type NativeKotlinEventBinding = Extract<
   { kind: "native_kotlin" }
 >;
 
+interface RouteCommon {
+  readonly name: string;
+  readonly scope: ScopeKind;
+}
+
+/** A request flow: callers publish requests the server answers, and receive its updates. */
+export interface RequestRoute extends RouteCommon {
+  readonly callers: readonly Party[];
+  readonly server: Party;
+  readonly flow: RequestFlow;
+}
+
+/** An event flow from its publishers to its subscribers. */
+export interface EventRoute extends RouteCommon {
+  readonly publishers: readonly Party[];
+  readonly subscribers: readonly Party[];
+  readonly flow: EventFlow;
+}
+
+export type Route = RequestRoute | EventRoute;
+
+/** Every party of a route, in declaration order. */
+export function routeParties(route: Route): readonly Party[] {
+  return "publishers" in route
+    ? [...route.publishers, ...route.subscribers]
+    : [...route.callers, route.server];
+}
+
+/** The admitted route manifest. */
+export interface Manifest {
+  readonly roles: RoleDeclarations;
+  /** Backend component name to its deploy/base directory, relative to the repository root. */
+  readonly components: ReadonlyMap<string, string>;
+  readonly routes: readonly Route[];
+}
+
+const RawManifest = z
+  .strictObject({
+    roles: z.record(RoleName, RoleDeclaration),
+    components: z.record(ComponentName, z.string().min(1)),
+    routes: z.array(RouteShape),
+  })
+  .superRefine((manifest, context) => {
+    const issue = (path: Array<string | number>, message: string) =>
+      context.addIssue({ code: "custom", path, message });
+    const used = new Set<string>();
+    manifest.routes.forEach((route, index) => {
+      const at = ["routes", index];
+      const event = route.flow.kind === "event";
+      for (const field of PARTY_FIELDS) {
+        const expected = event === (field === "publishers" || field === "subscribers");
+        if (expected && route[field] === undefined) {
+          issue(at, `${route.flow.kind} routes declare ${field}`);
+        } else if (!expected && route[field] !== undefined) {
+          issue([...at, field], `${route.flow.kind} routes do not declare ${field}`);
+        }
+      }
+      const parties = PARTY_FIELDS.flatMap((field): Array<[Array<string | number>, Party]> => {
+        const value = route[field];
+        if (value === undefined) {
+          return [];
+        }
+        return Array.isArray(value)
+          ? value.map((party, position) => [[field, position], party])
+          : [[[field], value]];
+      });
+      for (const [path, party] of parties) {
+        if ("component" in party) {
+          used.add(party.component);
+          if (!(party.component in manifest.components)) {
+            const message = `unknown component ${JSON.stringify(party.component)}`;
+            issue([...at, ...path, "component"], message);
+          }
+          continue;
+        }
+        const role = manifest.roles[party.role];
+        if (!role) {
+          issue([...at, ...path, "role"], `unknown role ${JSON.stringify(party.role)}`);
+          continue;
+        }
+        const bound = new Set<Identity>(role.tenant);
+        if (role.personal) {
+          bound.add(role.personal);
+        }
+        for (const parameter of scopeParameters(route.scope) as readonly Identity[]) {
+          const outer = NESTED_IN[parameter];
+          if (!bound.has(parameter) && !(outer && role.tenant.includes(outer))) {
+            issue(
+              [...at, ...path, "role"],
+              `role ${party.role} does not bind {${parameter}} of ${route.scope} scope`,
+            );
+          }
+        }
+      }
+      admitAddresses(route.scope, route.flow, (path, message) =>
+        issue([...at, "flow", ...path], message),
+      );
+    });
+    for (const component of Object.keys(manifest.components)) {
+      if (!used.has(component)) {
+        const message = `component ${JSON.stringify(component)} takes part in no route`;
+        issue(["components", component], message);
+      }
+    }
+  });
+
+/**
+ * Admits the placeholders of each flow address: every one is bound by the route scope, and a
+ * transfer capture appears only as the final token of bounded updates, which must end in one.
+ */
+function admitAddresses(
+  scope: ScopeKind,
+  flow: Flow,
+  issue: (path: string[], message: string) => void,
+): void {
+  const allowed = scopeParameters(scope);
+  const admit = (path: string[], address: SubjectTemplate, transfer: boolean) => {
+    address.tokens.forEach((token, index) => {
+      if (token.kind !== "parameter") {
+        return;
+      }
+      if (token.parameter === "transfer_id") {
+        if (!transfer || index + 1 !== address.tokens.length) {
+          issue(path, "{transfer_id} is valid only as the final token of bounded updates");
+        }
+      } else if (!allowed.includes(token.parameter)) {
+        issue(path, `placeholder {${token.parameter}} is not bound by ${scope} scope`);
+      }
+    });
+    const last = address.tokens.at(-1);
+    if (transfer && !(last?.kind === "parameter" && last.parameter === "transfer_id")) {
+      issue(path, "bounded updates must end in {transfer_id}");
+    }
+  };
+  switch (flow.kind) {
+    case "event":
+      admit(["address"], flow.address, false);
+      return;
+    case "watch":
+      admit(["request"], flow.request, false);
+      admit(["updates", "address"], flow.updates.address, false);
+      return;
+    case "bounded_watch":
+      admit(["request"], flow.request, false);
+      admit(["updates"], flow.updates, true);
+      return;
+    case "unary":
+    case "scatter":
+      admit(["request"], flow.request, false);
+  }
+}
+
 /** A manifest that failed YAML parsing or schema admission; the message names the YAML path. */
 export class ManifestError extends Error {
   override readonly name = "ManifestError";
 }
 
 /**
- * Parses and admits the transport route manifest. Duplicate YAML keys and unknown fields fail.
- * Errors carry the source file, the YAML path such as `routes[3].flow.requests.panel` and the line.
+ * Parses and admits the transport route manifest. Duplicate YAML keys and unknown fields fail, as
+ * do parties that name undeclared roles or components, components that take part in no route,
+ * roles whose bound identifiers do not cover the route scope, and address placeholders the route
+ * scope does not bind. Errors carry the source file, the YAML path such as
+ * `routes[3].flow.request` and the line.
  */
 export function parseManifest(source: string, file: string): Manifest {
   const lineCounter = new LineCounter();
@@ -254,7 +417,7 @@ export function parseManifest(source: string, file: string): Manifest {
   if (syntaxError) {
     throw new ManifestError(`${file}: ${syntaxError.message}`);
   }
-  const result = Manifest.safeParse(document.toJS());
+  const result = RawManifest.safeParse(document.toJS());
   if (!result.success) {
     throw new ManifestError(
       result.error.issues
@@ -266,7 +429,16 @@ export function parseManifest(source: string, file: string): Manifest {
         .join("\n"),
     );
   }
-  return result.data;
+  const { roles, components, routes } = result.data;
+  return {
+    roles: new Map(Object.entries(roles).map(([name, role]) => [name, { name, ...role }])),
+    components: new Map(Object.entries(components)),
+    routes: routes.map(({ name, scope, callers, server, publishers, subscribers, flow }): Route =>
+      flow.kind === "event"
+        ? { name, scope, publishers: publishers!, subscribers: subscribers!, flow }
+        : { name, scope, callers: callers!, server: server!, flow },
+    ),
+  };
 }
 
 /** Formats a document path as `routes[3].flow.kind`. */

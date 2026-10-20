@@ -1,16 +1,21 @@
 import { describe, expect, test } from "bun:test";
 
 import { parseManifest, symbolRefText } from "../src/routes/manifest.js";
-import { SubjectTemplate } from "../src/routes/subject.js";
-import { committedManifest } from "./support.js";
+import { committedManifest, manifestSource } from "./support.js";
 
-const route = (flow: string) => `
-routes:
-  - name: sample_route
-    scope: user
-    grants: []
+const unary = (name: string, party: string, request: string, scope = "user") => `  - name: ${name}
+    scope: ${scope}
+    callers: [${party}]
+    server: { component: user-organization }
     flow:
-${flow}`;
+      kind: unary
+      method: "organization/v1/user.skir:WatchUserOrganizations"
+      operation: sample.route
+      request: ${request}
+`;
+
+const parse = (routes: string, components = ["user-organization"]) =>
+  parseManifest(manifestSource(routes, components), "routes.yaml");
 
 describe("manifest admission", () => {
   test("parses the complete route inventory", () => {
@@ -33,115 +38,147 @@ describe("manifest admission", () => {
     expect(payloads.size).toBe(17);
   });
 
-  test("resource operation routes preserve subjects and role grants", () => {
-    const manifest = committedManifest();
-    for (const [name, method, subject, operation, failure] of [
-      [
-        "resource_operations_resolve",
-        "ResolveResourceOperations",
-        "service.to.{realm}.organization.{organization}.realm.editor.resources.operations.resolve",
-        "editor.resources.operations.resolve",
-        "resource-operations-resolve-failed",
-      ],
-      [
-        "resource_drop_candidates_resolve",
-        "ResolveDropCandidates",
-        "service.to.{realm}.organization.{organization}.realm.editor.resources.drops.resolve",
-        "editor.resources.drops.resolve",
-        "resource-drop-candidates-resolve-failed",
-      ],
-      [
-        "authoring_action_prepare",
-        "PrepareAuthoringAction",
-        "service.to.{realm}.organization.{organization}.realm.editor.resources.actions.prepare",
-        "editor.resources.actions.prepare",
-        "authoring-action-prepare-failed",
-      ],
-    ] as const) {
-      const route = manifest.routes.find((candidate) => candidate.name === name)!;
-      expect(route.scope).toBe("realm");
-      expect(route.subscription).toBeUndefined();
-      expect(route.flow.kind).toBe("unary");
-      if (route.flow.kind !== "unary") {
-        continue;
-      }
-      expect(route.flow.method).toEqual({ module: "editor/v1/resource_operations.skir", path: [method] });
-      expect(route.flow.operation).toBe(operation);
-      expect(route.flow.failure_slug).toBe(failure);
-      expect(new Map([...route.flow.requests].map(([side, value]) => [side, value.toString()]))).toEqual(
-        new Map([
-          ["panel", SubjectTemplate.parse(subject).toString()],
-          ["service", subject],
-        ]),
-      );
-      expect(route.grants).toEqual([
-        { role: "organization_member", side: "panel", channel: "request", direction: "publish" },
-        { role: "realm_coordinator", side: "service", channel: "request", direction: "subscribe" },
-      ]);
-    }
+  test("declares every backend component that serves or calls a route", () => {
+    const { components } = committedManifest();
+    expect(Object.fromEntries(components)).toEqual({
+      "auth-callout": "backend/access/auth-callout/deploy/base",
+      "auth-typewriter-permissions": "backend/access/auth-typewriter-permissions/deploy/base",
+      "organization-members": "backend/organization/organization-members/deploy/base",
+      "organization-roles": "backend/organization/organization-roles/deploy/base",
+      "service-registration": "backend/service/service-registration/deploy/base",
+      "user-organization": "backend/organization/user-organization/deploy/base",
+    });
   });
 
-  test("rejects duplicate endpoint keys", () => {
-    const source = route(`      kind: unary
-      method: "organization/v1/user.skir:WatchUserOrganizations"
-      operation: duplicate.endpoint
-      failure_slug: duplicate-endpoint-failed
-      requests:
-        panel: "cloud.to.user.{user}.one"
-        panel: "cloud.to.user.{user}.two"
-`);
-    expect(() => parseManifest(source, "routes.yaml")).toThrow("routes.yaml: Map keys must be unique");
+  test("names roles, components and one logical address per channel", () => {
+    const manifest = parse(unary("sample_route", "{ role: authenticated_user }", "user.{user}.sample"));
+    expect(manifest.roles.get("organization_member")).toEqual({
+      name: "organization_member",
+      side: "panel",
+      tenant: ["organization"],
+      personal: "user",
+    });
+    expect(manifest.roles.get("realm_coordinator")?.personal).toBeUndefined();
+    const [route] = manifest.routes;
+    expect(route).toMatchObject({
+      callers: [{ role: "authenticated_user" }],
+      server: { component: "user-organization" },
+    });
+    expect(route!.flow.kind === "unary" && route!.flow.request.toString()).toBe("user.{user}.sample");
   });
 
-  test("names the YAML path and line of an invalid value", () => {
-    const source = route(`      kind: unary
-      method: "organization/v1/user.skir:WatchUserOrganizations"
-      operation: invalid.subject
-      failure_slug: invalid-subject-failed
-      requests:
-        panel: "cloud.to.*"
-`);
-    expect(() => parseManifest(source, "routes.yaml")).toThrow(
-      'routes.yaml:12:16: routes[0].flow.requests.panel: invalid subject token "*"',
+  test("rejects a party naming an undeclared role", () => {
+    expect(() => parse(unary("unknown_role", "{ role: native_client }", "user.{user}.sample"))).toThrow(
+      'routes.yaml:12:23: routes[0].callers[0].role: unknown role "native_client"',
     );
   });
 
-  test("rejects unknown fields and unsupported native targets", () => {
+  test("rejects a party naming an undeclared component", () => {
     expect(() =>
-      parseManifest(
-        route(`      kind: unary
-      method: "organization/v1/user.skir:WatchUserOrganizations"
-      operation: unknown.field
-      failure_slug: unknown-field-failed
-      requests: { panel: "cloud.to.user.{user}" }
-      exposure: public
-`),
-        "routes.yaml",
-      ),
-    ).toThrow("routes[0].flow");
-    expect(() =>
-      parseManifest(
-        route(`      kind: scatter
-      binding: { kind: native_kotlin, format: kotlin_serialization_cbor, target: panel, request_type: a.B, response_type: a.C, request_codec: a.D.e, response_codec: a.D.f }
-      operation: native.target
-      failure_slug: native-target-failed
-      requests: { service: "cloud.to.user.{user}" }
-`),
-        "routes.yaml",
-      ),
-    ).toThrow('unsupported Kotlin generator target "panel"');
+      parse(unary("unknown_component", "{ component: auth-sentinel }", "user.{user}.sample")),
+    ).toThrow('routes[0].callers[0].component: unknown component "auth-sentinel"');
   });
 
-  test("rejects malformed Skir references", () => {
+  test("rejects an address placeholder the route scope does not bind", () => {
     expect(() =>
-      parseManifest(
-        route(`      kind: unary
-      method: "../user.skir:WatchUserOrganizations"
-      operation: invalid.reference
-      failure_slug: invalid-reference-failed
-      requests: { panel: "cloud.to.user.{user}" }
+      parse(unary("unbound_placeholder", "{ role: authenticated_user }", "user.{user}.organization.{organization}")),
+    ).toThrow("routes[0].flow.request: placeholder {organization} is not bound by user scope");
+  });
+
+  test("rejects a role that binds neither a scope identifier nor its tenant", () => {
+    expect(() =>
+      parse(
+        unary(
+          "cross_tenant",
+          "{ role: authenticated_user }",
+          "user.{user}.organization.{organization}.watch",
+          "organization_actor",
+        ),
+      ),
+    ).toThrow("routes[0].callers[0].role: role authenticated_user does not bind {organization} of organization_actor scope");
+  });
+
+  test("rejects a component that takes part in no route", () => {
+    expect(() =>
+      parse(unary("sample_route", "{ role: authenticated_user }", "user.{user}.sample"), [
+        "user-organization",
+        "organization-roles",
+      ]),
+    ).toThrow('components.organization-roles: component "organization-roles" takes part in no route');
+  });
+
+  test("rejects addresses that spell a subject family", () => {
+    for (const address of ["cloud.to.user.{user}.sample", "typewriter.presence", "service.to.sample"]) {
+      expect(() => parse(unary("family_prefix", "{ role: authenticated_user }", address))).toThrow(
+        "subject family",
+      );
+    }
+  });
+
+  test("requires the parties of the flow kind", () => {
+    expect(() =>
+      parse(`  - name: event_with_callers
+    scope: user
+    callers: [{ role: authenticated_user }]
+    server: { component: user-organization }
+    flow:
+      kind: event
+      binding: { kind: skir, payload: "organization/v1/presence.skir:PresenceEvent" }
+      operation: event.callers
+      address: user.{user}.event
+      delivery: { kind: transient }
 `),
-        "routes.yaml",
+    ).toThrow("event routes declare publishers");
+  });
+
+  test("rejects duplicate keys", () => {
+    expect(() =>
+      parse(`  - name: duplicate_key
+    scope: user
+    scope: user
+`),
+    ).toThrow("routes.yaml: Map keys must be unique");
+  });
+
+  test("names the YAML path and line of an invalid address", () => {
+    expect(() => parse(unary("invalid_address", "{ role: authenticated_user }", "user.*"))).toThrow(
+      'routes.yaml:18:16: routes[0].flow.request: invalid subject token "*"',
+    );
+  });
+
+  test("rejects the removed per route fields", () => {
+    for (const field of ["failure_slug: sample-failed", "requests: { panel: 'user.{user}' }"]) {
+      expect(() =>
+        parse(`${unary("removed_field", "{ role: authenticated_user }", "user.{user}.sample")}      ${field}\n`),
+      ).toThrow("routes[0].flow");
+    }
+    expect(() =>
+      parse(`  - name: removed_grants
+    scope: user
+    grants: []
+${unary("x", "{ role: authenticated_user }", "user.{user}.sample").split("\n").slice(2).join("\n")}`),
+    ).toThrow('Unrecognized key: "grants"');
+  });
+
+  test("rejects unsupported native targets and malformed Skir references", () => {
+    expect(() =>
+      parse(`  - name: native_target
+    scope: realm
+    callers: [{ role: realm_coordinator }]
+    server: { role: realm_participant }
+    flow:
+      kind: scatter
+      binding: { kind: native_kotlin, format: kotlin_serialization_cbor, target: panel, request_type: a.B, response_type: a.C, request_codec: a.D.e, response_codec: a.D.f }
+      operation: native.target
+      request: rollout.probe
+`, []),
+    ).toThrow('unsupported Kotlin generator target "panel"');
+    expect(() =>
+      parse(
+        unary("bad_reference", "{ role: authenticated_user }", "user.{user}.sample").replace(
+          "organization/v1/user.skir",
+          "../user.skir",
+        ),
       ),
     ).toThrow('invalid canonical module path "../user.skir"');
   });

@@ -8,13 +8,11 @@ use tokio::{
     process::{Child, Command},
     sync::mpsc,
 };
-use wasmcloud_utils::transport_routes::{
-    GrantScope, GrantSet, RealmRole, RealmScope, SubjectToken,
-};
+use wasmcloud_utils::transport_routes::{GrantSet, RealmRole, RealmScope, SubjectToken};
 
 use crate::services::service_response_permission;
 
-const REQUEST_SUBJECT: &str = "typewriter.organization.writers.realm.quests.hosts.probe";
+const REQUEST_SUBJECT: &str = "service.from.quests.organization.writers.realm.rollout.probe";
 const READINESS_SUBJECT: &str = "fixture.ready";
 const PASSWORD: &str = "fixture-secret";
 const FIRST_REPLY: &str = "_INBOX.requester.first";
@@ -53,7 +51,7 @@ async fn response_permissions_admit_one_reply_per_responder() -> Result<()> {
         realm: SubjectToken::try_from("quests")
             .map_err(|error| anyhow::anyhow!(error.to_string()))?,
     }
-    .grant(RealmRole::Participant, &mut grants);
+    .grant(RealmRole::RealmParticipant, &mut grants);
     assert!(grants.subscribe.contains(REQUEST_SUBJECT));
 
     let mut response = service_response_permission();

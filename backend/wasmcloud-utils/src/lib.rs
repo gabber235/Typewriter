@@ -24,6 +24,7 @@ macro_rules! export {
 pub mod database;
 pub mod http;
 pub mod publication;
+pub mod transport;
 pub mod wasmcloud;
 
 #[rustfmt::skip]

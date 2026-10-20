@@ -37,7 +37,6 @@ use wasmcloud_utils::{
 };
 
 mod common;
-mod membership_consumers;
 mod services;
 mod users;
 

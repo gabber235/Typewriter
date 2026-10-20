@@ -7,7 +7,7 @@ import { emitDart } from "./routes/emit/dart.js";
 import { emitKotlin, emitKotlinLoader } from "./routes/emit/kotlin.js";
 import { emitRust } from "./routes/emit/rust.js";
 import { parseManifest } from "./routes/manifest.js";
-import { resolveRoutes, type ResolvedRoute } from "./routes/resolve.js";
+import { resolveRoutes, type ResolvedRoutes } from "./routes/resolve.js";
 import { symbolProviders, type SymbolProviders } from "./symbols.js";
 
 export { Config } from "./config.js";
@@ -15,10 +15,7 @@ export { Config } from "./config.js";
 /** A language whose transport route bindings one Skir generator entry writes. */
 export type Target = "kotlin" | "kotlin-loader" | "dart" | "rust";
 
-type Emitter = (
-  routes: readonly ResolvedRoute[],
-  symbols: SymbolProviders,
-) => CodeGenerator.OutputFile[];
+type Emitter = (routes: ResolvedRoutes, symbols: SymbolProviders) => CodeGenerator.OutputFile[];
 
 const EMITTERS: Record<Target, Emitter> = {
   kotlin: (routes, symbols) => emitKotlin(routes, symbols.kotlin),

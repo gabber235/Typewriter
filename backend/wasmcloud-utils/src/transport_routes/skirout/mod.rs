@@ -31,10 +31,6 @@ pub struct GrantSet {
     pub publish: std::collections::BTreeSet<String>,
     pub subscribe: std::collections::BTreeSet<String>,
 }
-pub trait GrantScope {
-    type Role;
-    fn grant(&self, role: Self::Role, grants: &mut GrantSet);
-}
 #[derive(Clone, Debug)]
 pub struct RealmScope {
     pub organization: SubjectToken,
@@ -43,11 +39,6 @@ pub struct RealmScope {
 #[derive(Clone, Debug)]
 pub struct ServiceScope {
     pub service: SubjectToken,
-}
-#[derive(Clone, Debug)]
-pub struct BoundServiceScope {
-    pub service: SubjectToken,
-    pub organization: SubjectToken,
 }
 #[derive(Clone, Debug)]
 pub struct OrganizationActorScope {
@@ -62,8 +53,6 @@ pub struct OrganizationScope {
 pub struct UserScope {
     pub user: SubjectToken,
 }
-#[derive(Clone, Copy, Debug)]
-pub struct NativeScope;
 #[derive(Clone, Copy, Debug)]
 pub struct InternalComponentScope;
 impl TryFrom<&str> for ServiceScope {
@@ -92,221 +81,18 @@ impl TryFrom<&str> for UserScope {
 }
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum RealmRole {
-    OrganizationMember,
-    Coordinator,
-    Participant,
+    RealmCoordinator,
+    RealmParticipant,
 }
-impl GrantScope for RealmScope {
-    type Role = RealmRole;
-    fn grant(&self, role: Self::Role, grants: &mut GrantSet) {
+impl RealmScope {
+    /// Inserts every subject the role may publish to or subscribe to within this scope.
+    pub fn grant(&self, role: RealmRole, grants: &mut GrantSet) {
         let Self {
             organization,
             realm,
         } = self;
         match role {
-            RealmRole::OrganizationMember => {
-                grants.publish.insert(format!(
-                    "service.to.{realm}.organization.{organization}.realm.editor.catalog.fetch"
-                ));
-                grants.subscribe.insert(format!(
-                    "service.from.{realm}.organization.{organization}.realm.editor.catalog.fetch.*"
-                ));
-                grants.publish.insert(format!(
-                    "service.to.{realm}.organization.{organization}.realm.editor.catalog.invalidate"
-                ));
-                grants
-                    .subscribe
-                    .insert(
-                        format!(
-                            "service.from.{realm}.organization.{organization}.realm.editor.catalog.invalidate"
-                        ),
-                    );
-                grants.publish.insert(format!(
-                    "service.to.{realm}.organization.{organization}.realm.editor.creation.prepare"
-                ));
-                grants
-                    .publish
-                    .insert(
-                        format!(
-                            "service.to.{realm}.organization.{organization}.realm.editor.presentation.search"
-                        ),
-                    );
-                grants
-                    .subscribe
-                    .insert(
-                        format!(
-                            "service.from.{realm}.organization.{organization}.realm.editor.presentation.search"
-                        ),
-                    );
-                grants
-                    .publish
-                    .insert(
-                        format!(
-                            "service.to.{realm}.organization.{organization}.realm.editor.presentation.search.cancel"
-                        ),
-                    );
-                grants
-                    .publish
-                    .insert(
-                        format!(
-                            "service.to.{realm}.organization.{organization}.realm.editor.capability.computation.invoke"
-                        ),
-                    );
-                grants
-                    .publish
-                    .insert(
-                        format!(
-                            "service.to.{realm}.organization.{organization}.realm.editor.capability.command.invoke"
-                        ),
-                    );
-                grants
-                    .publish
-                    .insert(
-                        format!(
-                            "service.to.{realm}.organization.{organization}.realm.editor.resources.operations.resolve"
-                        ),
-                    );
-                grants
-                    .publish
-                    .insert(
-                        format!(
-                            "service.to.{realm}.organization.{organization}.realm.editor.resources.drops.resolve"
-                        ),
-                    );
-                grants
-                    .publish
-                    .insert(
-                        format!(
-                            "service.to.{realm}.organization.{organization}.realm.editor.resources.actions.prepare"
-                        ),
-                    );
-                grants
-                    .publish
-                    .insert(
-                        format!(
-                            "service.to.{realm}.organization.{organization}.realm.editor.authoring.state.query"
-                        ),
-                    );
-                grants
-                    .subscribe
-                    .insert(
-                        format!(
-                            "service.from.{realm}.organization.{organization}.realm.editor.authoring.state.query.*"
-                        ),
-                    );
-                grants
-                    .publish
-                    .insert(
-                        format!(
-                            "service.to.{realm}.organization.{organization}.realm.editor.authoring.edit.commit"
-                        ),
-                    );
-                grants
-                    .publish
-                    .insert(
-                        format!(
-                            "service.to.{realm}.organization.{organization}.realm.editor.authoring.type.preview"
-                        ),
-                    );
-                grants
-                    .publish
-                    .insert(
-                        format!(
-                            "service.to.{realm}.organization.{organization}.realm.editor.authoring.type.commit"
-                        ),
-                    );
-                grants.publish.insert(format!(
-                    "service.to.{realm}.organization.{organization}.realm.editor.authoring.search"
-                ));
-                grants
-                    .subscribe
-                    .insert(
-                        format!(
-                            "service.from.{realm}.organization.{organization}.realm.editor.authoring.changed"
-                        ),
-                    );
-                grants
-                    .publish
-                    .insert(
-                        format!(
-                            "service.to.{realm}.organization.{organization}.realm.editor.authoring.compiled.query"
-                        ),
-                    );
-                grants
-                    .subscribe
-                    .insert(
-                        format!(
-                            "service.from.{realm}.organization.{organization}.realm.editor.authoring.compiled.query.*"
-                        ),
-                    );
-                grants
-                    .subscribe
-                    .insert(
-                        format!(
-                            "service.from.{realm}.organization.{organization}.realm.editor.authoring.compiled.changed"
-                        ),
-                    );
-                grants
-                    .publish
-                    .insert(
-                        format!(
-                            "service.to.{realm}.organization.{organization}.realm.editor.authoring.compiled.status.query"
-                        ),
-                    );
-                grants.publish.insert(format!(
-                    "service.to.{realm}.organization.{organization}.realm.editor.authoring.publish"
-                ));
-                grants
-                    .publish
-                    .insert(
-                        format!(
-                            "service.to.{realm}.organization.{organization}.realm.editor.authoring.publication.query"
-                        ),
-                    );
-                grants
-                    .subscribe
-                    .insert(
-                        format!(
-                            "service.from.{realm}.organization.{organization}.realm.editor.authoring.publication.query.*"
-                        ),
-                    );
-                grants
-                    .publish
-                    .insert(
-                        format!(
-                            "service.to.{realm}.organization.{organization}.realm.editor.authoring.publication.watch"
-                        ),
-                    );
-                grants
-                    .subscribe
-                    .insert(
-                        format!(
-                            "service.from.{realm}.organization.{organization}.realm.editor.authoring.publication.watch"
-                        ),
-                    );
-                grants.publish.insert(format!(
-                    "service.to.{realm}.organization.{organization}.realm.shared.catalog.fetch"
-                ));
-                grants.publish.insert(format!(
-                    "service.to.{realm}.organization.{organization}.realm.shared.publish"
-                ));
-                grants.publish.insert(format!(
-                    "service.to.{realm}.organization.{organization}.realm.shared.blob.metadata"
-                ));
-                grants.publish.insert(format!(
-                    "service.to.{realm}.organization.{organization}.realm.shared.blob.read"
-                ));
-                grants.publish.insert(format!(
-                    "service.to.{realm}.organization.{organization}.realm.shared.blob.begin"
-                ));
-                grants.publish.insert(format!(
-                    "service.to.{realm}.organization.{organization}.realm.shared.blob.write"
-                ));
-                grants.publish.insert(format!(
-                    "service.to.{realm}.organization.{organization}.realm.shared.blob.complete"
-                ));
-            }
-            RealmRole::Coordinator => {
+            RealmRole::RealmCoordinator => {
                 grants.subscribe.insert(format!(
                     "service.to.{realm}.organization.{organization}.realm.editor.catalog.fetch"
                 ));
@@ -508,19 +294,19 @@ impl GrantScope for RealmScope {
                     "service.to.{realm}.organization.{organization}.realm.shared.blob.complete"
                 ));
                 grants.publish.insert(format!(
-                    "typewriter.organization.{organization}.realm.{realm}.hosts.probe"
+                    "service.from.{realm}.organization.{organization}.realm.rollout.probe"
                 ));
                 grants.publish.insert(format!(
-                    "typewriter.organization.{organization}.realm.{realm}.hosts.command"
+                    "service.from.{realm}.organization.{organization}.realm.rollout.command"
                 ));
                 grants.publish.insert(format!(
-                    "typewriter.organization.{organization}.realm.{realm}.hosts.status"
+                    "service.from.{realm}.organization.{organization}.realm.rollout.status"
                 ));
                 grants.subscribe.insert(format!(
-                    "typewriter.organization.{organization}.realm.{realm}.hosts.state"
+                    "service.to.{realm}.organization.{organization}.realm.rollout.state"
                 ));
             }
-            RealmRole::Participant => {
+            RealmRole::RealmParticipant => {
                 grants
                     .publish
                     .insert(
@@ -564,16 +350,16 @@ impl GrantScope for RealmScope {
                     "service.to.{realm}.organization.{organization}.realm.shared.blob.complete"
                 ));
                 grants.subscribe.insert(format!(
-                    "typewriter.organization.{organization}.realm.{realm}.hosts.probe"
+                    "service.from.{realm}.organization.{organization}.realm.rollout.probe"
                 ));
                 grants.subscribe.insert(format!(
-                    "typewriter.organization.{organization}.realm.{realm}.hosts.command"
+                    "service.from.{realm}.organization.{organization}.realm.rollout.command"
                 ));
                 grants.subscribe.insert(format!(
-                    "typewriter.organization.{organization}.realm.{realm}.hosts.status"
+                    "service.from.{realm}.organization.{organization}.realm.rollout.status"
                 ));
                 grants.publish.insert(format!(
-                    "typewriter.organization.{organization}.realm.{realm}.hosts.state"
+                    "service.to.{realm}.organization.{organization}.realm.rollout.state"
                 ));
             }
         }
@@ -583,9 +369,9 @@ impl GrantScope for RealmScope {
 pub enum ServiceRole {
     RegisteredService,
 }
-impl GrantScope for ServiceScope {
-    type Role = ServiceRole;
-    fn grant(&self, role: Self::Role, grants: &mut GrantSet) {
+impl ServiceScope {
+    /// Inserts every subject the role may publish to or subscribe to within this scope.
+    pub fn grant(&self, role: ServiceRole, grants: &mut GrantSet) {
         let Self { service } = self;
         match role {
             ServiceRole::RegisteredService => {
@@ -627,17 +413,56 @@ impl GrantScope for ServiceScope {
 pub enum OrganizationActorRole {
     OrganizationMember,
 }
-impl GrantScope for OrganizationActorScope {
-    type Role = OrganizationActorRole;
-    fn grant(&self, role: Self::Role, grants: &mut GrantSet) {
+impl OrganizationActorScope {
+    /// Inserts every subject the role may publish to or subscribe to within this scope.
+    pub fn grant(
+        &self,
+        role: OrganizationActorRole,
+        session: &crate::transport::ConnectionSession,
+        grants: &mut GrantSet,
+    ) {
         let Self { user, organization } = self;
         match role {
             OrganizationActorRole::OrganizationMember => {
+                let organization_members_changed = consumer_name(
+                    user,
+                    Some(organization),
+                    session,
+                    "organization_members_changed",
+                );
+                let organization_join_requests_changed = consumer_name(
+                    user,
+                    Some(organization),
+                    session,
+                    "organization_join_requests_changed",
+                );
+                let organization_join_codes_changed = consumer_name(
+                    user,
+                    Some(organization),
+                    session,
+                    "organization_join_codes_changed",
+                );
                 grants.publish.insert(format!(
                     "cloud.to.user.{user}.organization.{organization}.members.watch"
                 ));
-                grants.subscribe.insert(format!(
-                    "cloud.from.organization.{organization}.members.changed"
+                grants
+                    .publish
+                    .insert(String::from("$JS.API.STREAM.INFO.TYPEWRITER_MEMBERSHIP"));
+                grants
+                    .publish
+                    .insert(
+                        format!(
+                            "$JS.API.CONSUMER.CREATE.TYPEWRITER_MEMBERSHIP.{organization_members_changed}.cloud.from.organization.{organization}.members.changed"
+                        ),
+                    );
+                grants.publish.insert(format!(
+                    "$JS.API.CONSUMER.INFO.TYPEWRITER_MEMBERSHIP.{organization_members_changed}"
+                ));
+                grants.publish.insert(format!(
+                    "$JS.API.CONSUMER.MSG.NEXT.TYPEWRITER_MEMBERSHIP.{organization_members_changed}"
+                ));
+                grants.publish.insert(format!(
+                    "$JS.API.CONSUMER.DELETE.TYPEWRITER_MEMBERSHIP.{organization_members_changed}"
                 ));
                 grants.publish.insert(format!(
                     "cloud.to.user.{user}.organization.{organization}.members.update"
@@ -648,9 +473,34 @@ impl GrantScope for OrganizationActorScope {
                 grants.publish.insert(format!(
                     "cloud.to.user.{user}.organization.{organization}.members.join_requests.watch"
                 ));
-                grants.subscribe.insert(format!(
-                    "cloud.from.organization.{organization}.join_requests.changed"
-                ));
+                grants
+                    .publish
+                    .insert(
+                        format!(
+                            "$JS.API.CONSUMER.CREATE.TYPEWRITER_MEMBERSHIP.{organization_join_requests_changed}.cloud.from.organization.{organization}.join_requests.changed"
+                        ),
+                    );
+                grants
+                    .publish
+                    .insert(
+                        format!(
+                            "$JS.API.CONSUMER.INFO.TYPEWRITER_MEMBERSHIP.{organization_join_requests_changed}"
+                        ),
+                    );
+                grants
+                    .publish
+                    .insert(
+                        format!(
+                            "$JS.API.CONSUMER.MSG.NEXT.TYPEWRITER_MEMBERSHIP.{organization_join_requests_changed}"
+                        ),
+                    );
+                grants
+                    .publish
+                    .insert(
+                        format!(
+                            "$JS.API.CONSUMER.DELETE.TYPEWRITER_MEMBERSHIP.{organization_join_requests_changed}"
+                        ),
+                    );
                 grants.publish.insert(format!(
                     "cloud.to.user.{user}.organization.{organization}.members.join_requests.approve"
                 ));
@@ -660,9 +510,30 @@ impl GrantScope for OrganizationActorScope {
                 grants.publish.insert(format!(
                     "cloud.to.user.{user}.organization.{organization}.members.join_codes.watch"
                 ));
-                grants.subscribe.insert(format!(
-                    "cloud.from.organization.{organization}.join_codes.changed"
+                grants
+                    .publish
+                    .insert(
+                        format!(
+                            "$JS.API.CONSUMER.CREATE.TYPEWRITER_MEMBERSHIP.{organization_join_codes_changed}.cloud.from.organization.{organization}.join_codes.changed"
+                        ),
+                    );
+                grants.publish.insert(format!(
+                    "$JS.API.CONSUMER.INFO.TYPEWRITER_MEMBERSHIP.{organization_join_codes_changed}"
                 ));
+                grants
+                    .publish
+                    .insert(
+                        format!(
+                            "$JS.API.CONSUMER.MSG.NEXT.TYPEWRITER_MEMBERSHIP.{organization_join_codes_changed}"
+                        ),
+                    );
+                grants
+                    .publish
+                    .insert(
+                        format!(
+                            "$JS.API.CONSUMER.DELETE.TYPEWRITER_MEMBERSHIP.{organization_join_codes_changed}"
+                        ),
+                    );
                 grants.publish.insert(format!(
                     "cloud.to.user.{user}.organization.{organization}.members.join_codes.generate"
                 ));
@@ -697,6 +568,166 @@ impl GrantScope for OrganizationActorScope {
                     "cloud.from.organization.{organization}.topology.watch"
                 ));
                 grants.publish.insert(format!(
+                    "service.to.*.organization.{organization}.realm.editor.catalog.fetch"
+                ));
+                grants.subscribe.insert(format!(
+                    "service.from.*.organization.{organization}.realm.editor.catalog.fetch.*"
+                ));
+                grants.publish.insert(format!(
+                    "service.to.*.organization.{organization}.realm.editor.catalog.invalidate"
+                ));
+                grants.subscribe.insert(format!(
+                    "service.from.*.organization.{organization}.realm.editor.catalog.invalidate"
+                ));
+                grants.publish.insert(format!(
+                    "service.to.*.organization.{organization}.realm.editor.creation.prepare"
+                ));
+                grants.publish.insert(format!(
+                    "service.to.*.organization.{organization}.realm.editor.presentation.search"
+                ));
+                grants.subscribe.insert(format!(
+                    "service.from.*.organization.{organization}.realm.editor.presentation.search"
+                ));
+                grants
+                    .publish
+                    .insert(
+                        format!(
+                            "service.to.*.organization.{organization}.realm.editor.presentation.search.cancel"
+                        ),
+                    );
+                grants
+                    .publish
+                    .insert(
+                        format!(
+                            "service.to.*.organization.{organization}.realm.editor.capability.computation.invoke"
+                        ),
+                    );
+                grants
+                    .publish
+                    .insert(
+                        format!(
+                            "service.to.*.organization.{organization}.realm.editor.capability.command.invoke"
+                        ),
+                    );
+                grants
+                    .publish
+                    .insert(
+                        format!(
+                            "service.to.*.organization.{organization}.realm.editor.resources.operations.resolve"
+                        ),
+                    );
+                grants.publish.insert(format!(
+                    "service.to.*.organization.{organization}.realm.editor.resources.drops.resolve"
+                ));
+                grants
+                    .publish
+                    .insert(
+                        format!(
+                            "service.to.*.organization.{organization}.realm.editor.resources.actions.prepare"
+                        ),
+                    );
+                grants.publish.insert(format!(
+                    "service.to.*.organization.{organization}.realm.editor.authoring.state.query"
+                ));
+                grants
+                    .subscribe
+                    .insert(
+                        format!(
+                            "service.from.*.organization.{organization}.realm.editor.authoring.state.query.*"
+                        ),
+                    );
+                grants.publish.insert(format!(
+                    "service.to.*.organization.{organization}.realm.editor.authoring.edit.commit"
+                ));
+                grants.publish.insert(format!(
+                    "service.to.*.organization.{organization}.realm.editor.authoring.type.preview"
+                ));
+                grants.publish.insert(format!(
+                    "service.to.*.organization.{organization}.realm.editor.authoring.type.commit"
+                ));
+                grants.publish.insert(format!(
+                    "service.to.*.organization.{organization}.realm.editor.authoring.search"
+                ));
+                grants.subscribe.insert(format!(
+                    "service.from.*.organization.{organization}.realm.editor.authoring.changed"
+                ));
+                grants.publish.insert(format!(
+                    "service.to.*.organization.{organization}.realm.editor.authoring.compiled.query"
+                ));
+                grants
+                    .subscribe
+                    .insert(
+                        format!(
+                            "service.from.*.organization.{organization}.realm.editor.authoring.compiled.query.*"
+                        ),
+                    );
+                grants
+                    .subscribe
+                    .insert(
+                        format!(
+                            "service.from.*.organization.{organization}.realm.editor.authoring.compiled.changed"
+                        ),
+                    );
+                grants
+                    .publish
+                    .insert(
+                        format!(
+                            "service.to.*.organization.{organization}.realm.editor.authoring.compiled.status.query"
+                        ),
+                    );
+                grants.publish.insert(format!(
+                    "service.to.*.organization.{organization}.realm.editor.authoring.publish"
+                ));
+                grants
+                    .publish
+                    .insert(
+                        format!(
+                            "service.to.*.organization.{organization}.realm.editor.authoring.publication.query"
+                        ),
+                    );
+                grants
+                    .subscribe
+                    .insert(
+                        format!(
+                            "service.from.*.organization.{organization}.realm.editor.authoring.publication.query.*"
+                        ),
+                    );
+                grants
+                    .publish
+                    .insert(
+                        format!(
+                            "service.to.*.organization.{organization}.realm.editor.authoring.publication.watch"
+                        ),
+                    );
+                grants
+                    .subscribe
+                    .insert(
+                        format!(
+                            "service.from.*.organization.{organization}.realm.editor.authoring.publication.watch"
+                        ),
+                    );
+                grants.publish.insert(format!(
+                    "service.to.*.organization.{organization}.realm.shared.catalog.fetch"
+                ));
+                grants.publish.insert(format!(
+                    "service.to.*.organization.{organization}.realm.shared.publish"
+                ));
+                grants.publish.insert(format!(
+                    "service.to.*.organization.{organization}.realm.shared.blob.metadata"
+                ));
+                grants.publish.insert(format!(
+                    "service.to.*.organization.{organization}.realm.shared.blob.read"
+                ));
+                grants.publish.insert(format!(
+                    "service.to.*.organization.{organization}.realm.shared.blob.begin"
+                ));
+                grants.publish.insert(format!(
+                    "service.to.*.organization.{organization}.realm.shared.blob.write"
+                ));
+                grants.publish.insert(format!(
+                    "service.to.*.organization.{organization}.realm.shared.blob.complete"
+                ));
+                grants.publish.insert(format!(
                     "typewriter.presence.organization.{organization}.user.{user}"
                 ));
                 grants.subscribe.insert(format!(
@@ -710,12 +741,21 @@ impl GrantScope for OrganizationActorScope {
 pub enum UserRole {
     AuthenticatedUser,
 }
-impl GrantScope for UserScope {
-    type Role = UserRole;
-    fn grant(&self, role: Self::Role, grants: &mut GrantSet) {
+impl UserScope {
+    /// Inserts every subject the role may publish to or subscribe to within this scope.
+    pub fn grant(
+        &self,
+        role: UserRole,
+        session: &crate::transport::ConnectionSession,
+        grants: &mut GrantSet,
+    ) {
         let Self { user } = self;
         match role {
             UserRole::AuthenticatedUser => {
+                let user_organizations_changed =
+                    consumer_name(user, None, session, "user_organizations_changed");
+                let user_join_requests_changed =
+                    consumer_name(user, None, session, "user_join_requests_changed");
                 grants
                     .publish
                     .insert(format!("cloud.to.user.{user}.organization.create"));
@@ -723,14 +763,43 @@ impl GrantScope for UserScope {
                     .publish
                     .insert(format!("cloud.to.user.{user}.organization.watch"));
                 grants
-                    .subscribe
-                    .insert(format!("cloud.from.user.{user}.organizations.changed"));
+                    .publish
+                    .insert(String::from("$JS.API.STREAM.INFO.TYPEWRITER_MEMBERSHIP"));
+                grants
+                    .publish
+                    .insert(
+                        format!(
+                            "$JS.API.CONSUMER.CREATE.TYPEWRITER_MEMBERSHIP.{user_organizations_changed}.cloud.from.user.{user}.organizations.changed"
+                        ),
+                    );
+                grants.publish.insert(format!(
+                    "$JS.API.CONSUMER.INFO.TYPEWRITER_MEMBERSHIP.{user_organizations_changed}"
+                ));
+                grants.publish.insert(format!(
+                    "$JS.API.CONSUMER.MSG.NEXT.TYPEWRITER_MEMBERSHIP.{user_organizations_changed}"
+                ));
+                grants.publish.insert(format!(
+                    "$JS.API.CONSUMER.DELETE.TYPEWRITER_MEMBERSHIP.{user_organizations_changed}"
+                ));
                 grants.publish.insert(format!(
                     "cloud.to.user.{user}.organization.join_requests.watch"
                 ));
                 grants
-                    .subscribe
-                    .insert(format!("cloud.from.user.{user}.join_requests.changed"));
+                    .publish
+                    .insert(
+                        format!(
+                            "$JS.API.CONSUMER.CREATE.TYPEWRITER_MEMBERSHIP.{user_join_requests_changed}.cloud.from.user.{user}.join_requests.changed"
+                        ),
+                    );
+                grants.publish.insert(format!(
+                    "$JS.API.CONSUMER.INFO.TYPEWRITER_MEMBERSHIP.{user_join_requests_changed}"
+                ));
+                grants.publish.insert(format!(
+                    "$JS.API.CONSUMER.MSG.NEXT.TYPEWRITER_MEMBERSHIP.{user_join_requests_changed}"
+                ));
+                grants.publish.insert(format!(
+                    "$JS.API.CONSUMER.DELETE.TYPEWRITER_MEMBERSHIP.{user_join_requests_changed}"
+                ));
                 grants.publish.insert(format!(
                     "cloud.to.user.{user}.organization.join_requests.request"
                 ));
@@ -741,86 +810,26 @@ impl GrantScope for UserScope {
         }
     }
 }
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
-pub enum MembershipProjection {
-    UserOrganizationsChanged,
-    UserJoinRequestsChanged,
-    OrganizationMembersChanged,
-    OrganizationJoinRequestsChanged,
-    OrganizationJoinCodesChanged,
-}
-impl MembershipProjection {
-    pub fn id(self) -> &'static str {
-        match self {
-            Self::UserOrganizationsChanged => "user_organizations_changed",
-            Self::UserJoinRequestsChanged => "user_join_requests_changed",
-            Self::OrganizationMembersChanged => "organization_members_changed",
-            Self::OrganizationJoinRequestsChanged => "organization_join_requests_changed",
-            Self::OrganizationJoinCodesChanged => "organization_join_codes_changed",
-        }
-    }
-    pub fn stream(self) -> &'static str {
-        match self {
-            Self::UserOrganizationsChanged => "TYPEWRITER_MEMBERSHIP",
-            Self::UserJoinRequestsChanged => "TYPEWRITER_MEMBERSHIP",
-            Self::OrganizationMembersChanged => "TYPEWRITER_MEMBERSHIP",
-            Self::OrganizationJoinRequestsChanged => "TYPEWRITER_MEMBERSHIP",
-            Self::OrganizationJoinCodesChanged => "TYPEWRITER_MEMBERSHIP",
-        }
-    }
-    pub fn event_subject(
-        self,
-        actor: &SubjectToken,
-        organization: Option<&SubjectToken>,
-    ) -> Result<String, crate::otel_wasi::Error> {
-        match self {
-            Self::UserOrganizationsChanged if organization.is_none() => {
-                let user = actor;
-                Ok(format!("cloud.from.user.{user}.organizations.changed"))
-            }
-            Self::UserJoinRequestsChanged if organization.is_none() => {
-                let user = actor;
-                Ok(format!("cloud.from.user.{user}.join_requests.changed"))
-            }
-            Self::OrganizationMembersChanged => {
-                let organization = organization.ok_or_else(|| {
-                    crate::otel_wasi::Error::new(
-                        "permissions-consumer-organization-required",
-                        "organization scope is not admitted",
-                    )
-                })?;
-                Ok(format!(
-                    "cloud.from.organization.{organization}.members.changed"
-                ))
-            }
-            Self::OrganizationJoinRequestsChanged => {
-                let organization = organization.ok_or_else(|| {
-                    crate::otel_wasi::Error::new(
-                        "permissions-consumer-organization-required",
-                        "organization scope is not admitted",
-                    )
-                })?;
-                Ok(format!(
-                    "cloud.from.organization.{organization}.join_requests.changed"
-                ))
-            }
-            Self::OrganizationJoinCodesChanged => {
-                let organization = organization.ok_or_else(|| {
-                    crate::otel_wasi::Error::new(
-                        "permissions-consumer-organization-required",
-                        "organization scope is not admitted",
-                    )
-                })?;
-                Ok(format!(
-                    "cloud.from.organization.{organization}.join_codes.changed"
-                ))
-            }
-            _ => Err(crate::otel_wasi::Error::new(
-                "permissions-consumer-projection-scope-invalid",
-                "projection does not belong to the admitted scope",
-            )),
-        }
-    }
+/// Names a connection's persistent projection consumer: `TW_` followed by the unpadded
+/// URL safe Base64 of the compact JSON array `[actor, organization, session, projection]`.
+/// The panel derives the same name when it opens the consumer.
+pub fn consumer_name(
+    actor: &SubjectToken,
+    organization: Option<&SubjectToken>,
+    session: &crate::transport::ConnectionSession,
+    projection: &str,
+) -> String {
+    use base64::Engine as _;
+    let identity = serde_json::json!([
+        actor.as_str(),
+        organization.map(SubjectToken::as_str),
+        session.as_str(),
+        projection
+    ]);
+    format!(
+        "TW_{}",
+        base64::engine::general_purpose::URL_SAFE_NO_PAD.encode(identity.to_string())
+    )
 }
 pub trait RequestRoute {
     type Scope;
@@ -1042,12 +1051,6 @@ impl RequestRoute for UserOrganizationCreateRoute {
         }
     }
 }
-impl OutboundRequestRoute for UserOrganizationCreateRoute {
-    fn subject(scope: &Self::Scope) -> String {
-        let UserScope { user } = scope;
-        format!("typewriter.from.user.{user}.organization.create")
-    }
-}
 pub struct UserOrganizationsWatchRoute;
 impl RequestRoute for UserOrganizationsWatchRoute {
     type Scope = UserScope;
@@ -1065,12 +1068,6 @@ impl RequestRoute for UserOrganizationsWatchRoute {
             })),
             _ => Ok(None),
         }
-    }
-}
-impl OutboundRequestRoute for UserOrganizationsWatchRoute {
-    fn subject(scope: &Self::Scope) -> String {
-        let UserScope { user } = scope;
-        format!("typewriter.from.user.{user}.organization.watch")
     }
 }
 pub struct UserJoinRequestsWatchRoute;
@@ -1100,12 +1097,6 @@ impl RequestRoute for UserJoinRequestsWatchRoute {
         }
     }
 }
-impl OutboundRequestRoute for UserJoinRequestsWatchRoute {
-    fn subject(scope: &Self::Scope) -> String {
-        let UserScope { user } = scope;
-        format!("typewriter.from.user.{user}.organization.join_requests.watch")
-    }
-}
 pub struct UserJoinRequestSubmitRoute;
 impl RequestRoute for UserJoinRequestSubmitRoute {
     type Scope = UserScope;
@@ -1133,12 +1124,6 @@ impl RequestRoute for UserJoinRequestSubmitRoute {
         }
     }
 }
-impl OutboundRequestRoute for UserJoinRequestSubmitRoute {
-    fn subject(scope: &Self::Scope) -> String {
-        let UserScope { user } = scope;
-        format!("typewriter.from.user.{user}.organization.join_requests.request")
-    }
-}
 pub struct UserJoinRequestCancelRoute;
 impl RequestRoute for UserJoinRequestCancelRoute {
     type Scope = UserScope;
@@ -1164,12 +1149,6 @@ impl RequestRoute for UserJoinRequestCancelRoute {
             })),
             _ => Ok(None),
         }
-    }
-}
-impl OutboundRequestRoute for UserJoinRequestCancelRoute {
-    fn subject(scope: &Self::Scope) -> String {
-        let UserScope { user } = scope;
-        format!("typewriter.from.user.{user}.organization.join_requests.cancel")
     }
 }
 pub struct OrganizationMembersWatchRoute;
@@ -1200,12 +1179,6 @@ impl RequestRoute for OrganizationMembersWatchRoute {
             })),
             _ => Ok(None),
         }
-    }
-}
-impl OutboundRequestRoute for OrganizationMembersWatchRoute {
-    fn subject(scope: &Self::Scope) -> String {
-        let OrganizationActorScope { organization, user } = scope;
-        format!("typewriter.from.user.{user}.organization.{organization}.members.watch")
     }
 }
 pub struct OrganizationMembersUpdateRoute;
@@ -1239,12 +1212,6 @@ impl RequestRoute for OrganizationMembersUpdateRoute {
         }
     }
 }
-impl OutboundRequestRoute for OrganizationMembersUpdateRoute {
-    fn subject(scope: &Self::Scope) -> String {
-        let OrganizationActorScope { organization, user } = scope;
-        format!("typewriter.from.user.{user}.organization.{organization}.members.update")
-    }
-}
 pub struct OrganizationMemberRemoveRoute;
 impl RequestRoute for OrganizationMemberRemoveRoute {
     type Scope = OrganizationActorScope;
@@ -1273,12 +1240,6 @@ impl RequestRoute for OrganizationMemberRemoveRoute {
             })),
             _ => Ok(None),
         }
-    }
-}
-impl OutboundRequestRoute for OrganizationMemberRemoveRoute {
-    fn subject(scope: &Self::Scope) -> String {
-        let OrganizationActorScope { organization, user } = scope;
-        format!("typewriter.from.user.{user}.organization.{organization}.members.remove")
     }
 }
 pub struct OrganizationJoinRequestsWatchRoute;
@@ -1313,14 +1274,6 @@ impl RequestRoute for OrganizationJoinRequestsWatchRoute {
         }
     }
 }
-impl OutboundRequestRoute for OrganizationJoinRequestsWatchRoute {
-    fn subject(scope: &Self::Scope) -> String {
-        let OrganizationActorScope { organization, user } = scope;
-        format!(
-            "typewriter.from.user.{user}.organization.{organization}.members.join_requests.watch"
-        )
-    }
-}
 pub struct OrganizationJoinRequestsApproveRoute;
 impl RequestRoute for OrganizationJoinRequestsApproveRoute {
     type Scope = OrganizationActorScope;
@@ -1349,14 +1302,6 @@ impl RequestRoute for OrganizationJoinRequestsApproveRoute {
             })),
             _ => Ok(None),
         }
-    }
-}
-impl OutboundRequestRoute for OrganizationJoinRequestsApproveRoute {
-    fn subject(scope: &Self::Scope) -> String {
-        let OrganizationActorScope { organization, user } = scope;
-        format!(
-            "typewriter.from.user.{user}.organization.{organization}.members.join_requests.approve"
-        )
     }
 }
 pub struct OrganizationJoinRequestDeclineRoute;
@@ -1388,14 +1333,6 @@ impl RequestRoute for OrganizationJoinRequestDeclineRoute {
             })),
             _ => Ok(None),
         }
-    }
-}
-impl OutboundRequestRoute for OrganizationJoinRequestDeclineRoute {
-    fn subject(scope: &Self::Scope) -> String {
-        let OrganizationActorScope { organization, user } = scope;
-        format!(
-            "typewriter.from.user.{user}.organization.{organization}.members.join_requests.decline"
-        )
     }
 }
 pub struct OrganizationJoinCodesWatchRoute;
@@ -1430,12 +1367,6 @@ impl RequestRoute for OrganizationJoinCodesWatchRoute {
         }
     }
 }
-impl OutboundRequestRoute for OrganizationJoinCodesWatchRoute {
-    fn subject(scope: &Self::Scope) -> String {
-        let OrganizationActorScope { organization, user } = scope;
-        format!("typewriter.from.user.{user}.organization.{organization}.members.join_codes.watch")
-    }
-}
 pub struct OrganizationJoinCodeGenerateRoute;
 impl RequestRoute for OrganizationJoinCodeGenerateRoute {
     type Scope = OrganizationActorScope;
@@ -1466,14 +1397,6 @@ impl RequestRoute for OrganizationJoinCodeGenerateRoute {
             })),
             _ => Ok(None),
         }
-    }
-}
-impl OutboundRequestRoute for OrganizationJoinCodeGenerateRoute {
-    fn subject(scope: &Self::Scope) -> String {
-        let OrganizationActorScope { organization, user } = scope;
-        format!(
-            "typewriter.from.user.{user}.organization.{organization}.members.join_codes.generate"
-        )
     }
 }
 pub struct OrganizationJoinCodeRevokeRoute;
@@ -1508,12 +1431,6 @@ impl RequestRoute for OrganizationJoinCodeRevokeRoute {
         }
     }
 }
-impl OutboundRequestRoute for OrganizationJoinCodeRevokeRoute {
-    fn subject(scope: &Self::Scope) -> String {
-        let OrganizationActorScope { organization, user } = scope;
-        format!("typewriter.from.user.{user}.organization.{organization}.members.join_codes.revoke")
-    }
-}
 pub struct OrganizationRolesWatchRoute;
 impl RequestRoute for OrganizationRolesWatchRoute {
     type Scope = OrganizationActorScope;
@@ -1541,12 +1458,6 @@ impl RequestRoute for OrganizationRolesWatchRoute {
             })),
             _ => Ok(None),
         }
-    }
-}
-impl OutboundRequestRoute for OrganizationRolesWatchRoute {
-    fn subject(scope: &Self::Scope) -> String {
-        let OrganizationActorScope { organization, user } = scope;
-        format!("typewriter.from.user.{user}.organization.{organization}.roles.watch")
     }
 }
 pub struct ServiceBindingQueryRoute;
@@ -1601,17 +1512,8 @@ impl RequestRoute for RegistrationLeaseEnsureRoute {
             ] => Ok(Some(ServiceScope {
                 service: SubjectToken::try_from(*service)?,
             })),
-            ["service", service, "registration", "ensure"] => Ok(Some(ServiceScope {
-                service: SubjectToken::try_from(*service)?,
-            })),
             _ => Ok(None),
         }
-    }
-}
-impl OutboundRequestRoute for RegistrationLeaseEnsureRoute {
-    fn subject(scope: &Self::Scope) -> String {
-        let ServiceScope { service } = scope;
-        format!("service.{service}.registration.ensure")
     }
 }
 pub struct ServiceMessagingScopeRoute;
@@ -1678,12 +1580,6 @@ impl RequestRoute for ServiceBindRoute {
         }
     }
 }
-impl OutboundRequestRoute for ServiceBindRoute {
-    fn subject(scope: &Self::Scope) -> String {
-        let OrganizationActorScope { organization, user } = scope;
-        format!("typewriter.from.user.{user}.organization.{organization}.services.bind")
-    }
-}
 pub struct OrganizationServicesWatchRoute;
 impl RequestRoute for OrganizationServicesWatchRoute {
     type Scope = OrganizationActorScope;
@@ -1713,12 +1609,6 @@ impl RequestRoute for OrganizationServicesWatchRoute {
             })),
             _ => Ok(None),
         }
-    }
-}
-impl OutboundRequestRoute for OrganizationServicesWatchRoute {
-    fn subject(scope: &Self::Scope) -> String {
-        let OrganizationActorScope { organization, user } = scope;
-        format!("typewriter.from.user.{user}.organization.{organization}.services.watch")
     }
 }
 pub struct OrganizationServiceUpdateRoute;
@@ -1752,12 +1642,6 @@ impl RequestRoute for OrganizationServiceUpdateRoute {
         }
     }
 }
-impl OutboundRequestRoute for OrganizationServiceUpdateRoute {
-    fn subject(scope: &Self::Scope) -> String {
-        let OrganizationActorScope { organization, user } = scope;
-        format!("typewriter.from.user.{user}.organization.{organization}.services.update")
-    }
-}
 pub struct ServiceUnbindRoute;
 impl RequestRoute for ServiceUnbindRoute {
     type Scope = OrganizationActorScope;
@@ -1785,12 +1669,6 @@ impl RequestRoute for ServiceUnbindRoute {
             })),
             _ => Ok(None),
         }
-    }
-}
-impl OutboundRequestRoute for ServiceUnbindRoute {
-    fn subject(scope: &Self::Scope) -> String {
-        let OrganizationActorScope { organization, user } = scope;
-        format!("typewriter.from.user.{user}.organization.{organization}.services.unbind")
     }
 }
 pub struct ServiceTopologyConfigureRoute;
@@ -1822,12 +1700,6 @@ impl RequestRoute for ServiceTopologyConfigureRoute {
         }
     }
 }
-impl OutboundRequestRoute for ServiceTopologyConfigureRoute {
-    fn subject(scope: &Self::Scope) -> String {
-        let OrganizationActorScope { organization, user } = scope;
-        format!("typewriter.from.user.{user}.organization.{organization}.topology.configure")
-    }
-}
 pub struct OrganizationTopologyWatchRoute;
 impl RequestRoute for OrganizationTopologyWatchRoute {
     type Scope = OrganizationActorScope;
@@ -1857,12 +1729,6 @@ impl RequestRoute for OrganizationTopologyWatchRoute {
         }
     }
 }
-impl OutboundRequestRoute for OrganizationTopologyWatchRoute {
-    fn subject(scope: &Self::Scope) -> String {
-        let OrganizationActorScope { organization, user } = scope;
-        format!("typewriter.from.user.{user}.organization.{organization}.topology.watch")
-    }
-}
 pub struct ServiceHostRegisterRoute;
 impl RequestRoute for ServiceHostRegisterRoute {
     type Scope = ServiceScope;
@@ -1885,17 +1751,8 @@ impl RequestRoute for ServiceHostRegisterRoute {
             ] => Ok(Some(ServiceScope {
                 service: SubjectToken::try_from(*service)?,
             })),
-            ["service", service, "execution", "register"] => Ok(Some(ServiceScope {
-                service: SubjectToken::try_from(*service)?,
-            })),
             _ => Ok(None),
         }
-    }
-}
-impl OutboundRequestRoute for ServiceHostRegisterRoute {
-    fn subject(scope: &Self::Scope) -> String {
-        let ServiceScope { service } = scope;
-        format!("service.{service}.execution.register")
     }
 }
 pub struct HostExecutionWatchRoute;
@@ -1920,17 +1777,8 @@ impl RequestRoute for HostExecutionWatchRoute {
             ] => Ok(Some(ServiceScope {
                 service: SubjectToken::try_from(*service)?,
             })),
-            ["service", service, "execution", "watch"] => Ok(Some(ServiceScope {
-                service: SubjectToken::try_from(*service)?,
-            })),
             _ => Ok(None),
         }
-    }
-}
-impl OutboundRequestRoute for HostExecutionWatchRoute {
-    fn subject(scope: &Self::Scope) -> String {
-        let ServiceScope { service } = scope;
-        format!("service.{service}.execution.watch")
     }
 }
 pub struct HostExecutionReportRoute;
@@ -1955,17 +1803,8 @@ impl RequestRoute for HostExecutionReportRoute {
             ] => Ok(Some(ServiceScope {
                 service: SubjectToken::try_from(*service)?,
             })),
-            ["service", service, "execution", "report"] => Ok(Some(ServiceScope {
-                service: SubjectToken::try_from(*service)?,
-            })),
             _ => Ok(None),
         }
-    }
-}
-impl OutboundRequestRoute for HostExecutionReportRoute {
-    fn subject(scope: &Self::Scope) -> String {
-        let ServiceScope { service } = scope;
-        format!("service.{service}.execution.report")
     }
 }
 pub struct PanelPermissionResolveRoute;
@@ -2027,9 +1866,6 @@ impl EventRoute for ServiceHeartbeatRoute {
             ["typewriter", "from", "service", service, "heartbeat"] => Ok(Some(ServiceScope {
                 service: SubjectToken::try_from(*service)?,
             })),
-            ["service", service, "heartbeat"] => Ok(Some(ServiceScope {
-                service: SubjectToken::try_from(*service)?,
-            })),
             _ => Ok(None),
         }
     }
@@ -2045,9 +1881,6 @@ impl EventRoute for ServiceShutdownRoute {
         let parts: Vec<_> = subject.split('.').collect();
         match parts.as_slice() {
             ["typewriter", "from", "service", service, "shutdown"] => Ok(Some(ServiceScope {
-                service: SubjectToken::try_from(*service)?,
-            })),
-            ["service", service, "shutdown"] => Ok(Some(ServiceScope {
                 service: SubjectToken::try_from(*service)?,
             })),
             _ => Ok(None),

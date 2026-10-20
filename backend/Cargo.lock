@@ -183,7 +183,6 @@ version = "0.2.0"
 dependencies = [
  "anyhow",
  "async-nats",
- "base64 0.23.1",
  "futures-util",
  "jose",
  "otel-wasi",
@@ -3752,6 +3751,7 @@ dependencies = [
 name = "wasmcloud-utils"
 version = "0.0.1"
 dependencies = [
+ "base64 0.23.1",
  "opentelemetry",
  "otel-wasi",
  "serde",

@@ -10,7 +10,6 @@ export "bounded_transfer_assembler.dart";
 export "generated/generated.dart";
 export "generation_checked_transfer_assembler.dart";
 export "nats.dart";
-export "nats_authorization.dart";
 export "nats_client.dart";
 export "nats_core_client.dart";
 export "nats_provider.dart";

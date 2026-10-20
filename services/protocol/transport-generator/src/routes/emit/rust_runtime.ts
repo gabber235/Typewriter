@@ -38,10 +38,6 @@ pub struct GrantSet {
     pub publish: std::collections::BTreeSet<String>,
     pub subscribe: std::collections::BTreeSet<String>,
 }
-pub trait GrantScope {
-    type Role;
-    fn grant(&self, role: Self::Role, grants: &mut GrantSet);
-}
 #[derive(Clone, Debug)]
 pub struct RealmScope {
     pub organization: SubjectToken,
@@ -50,11 +46,6 @@ pub struct RealmScope {
 #[derive(Clone, Debug)]
 pub struct ServiceScope {
     pub service: SubjectToken,
-}
-#[derive(Clone, Debug)]
-pub struct BoundServiceScope {
-    pub service: SubjectToken,
-    pub organization: SubjectToken,
 }
 #[derive(Clone, Debug)]
 pub struct OrganizationActorScope {
@@ -69,8 +60,6 @@ pub struct OrganizationScope {
 pub struct UserScope {
     pub user: SubjectToken,
 }
-#[derive(Clone, Copy, Debug)]
-pub struct NativeScope;
 #[derive(Clone, Copy, Debug)]
 pub struct InternalComponentScope;
 impl TryFrom<&str> for ServiceScope {

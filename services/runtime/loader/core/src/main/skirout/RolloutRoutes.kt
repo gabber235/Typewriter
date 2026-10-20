@@ -14,17 +14,17 @@ private fun String.loaderRealmTemplate() = addressTemplate(
     parse = { RealmRouteScope(it.require("organization"), it.require("realm")) },
 )
 
-private val realmHostsProbeRequestAddress = "typewriter.organization.{organization}.realm.{realm}.hosts.probe".loaderRealmTemplate()
+private val realmHostsProbeRequestAddress = "service.from.{realm}.organization.{organization}.realm.rollout.probe".loaderRealmTemplate()
 fun RealmRouteScope.realmHostsProbe(policy: ResponsePolicy<PresenceReply>): ScatterContract<RealmRouteScope, ProbeRealmHosts, PresenceReply> = ScatterContract(
     name = OperationName.of("realm.hosts.probe"),
     requestAddress = realmHostsProbeRequestAddress.subscribedAt(this),
     requestCodec = com.typewritermc.loader.rollout.RolloutCodecs.probeRequest,
     responseCodec = com.typewritermc.loader.rollout.RolloutCodecs.presenceReply,
     responsePolicy = policy,
-    failureSlug = ErrorSlug.of("realm-host-probe-failed"),
+    failureSlug = ErrorSlug.of("realm-hosts-probe-failed"),
 )
 
-private val realmRolloutCommandRequestAddress = "typewriter.organization.{organization}.realm.{realm}.hosts.command".loaderRealmTemplate()
+private val realmRolloutCommandRequestAddress = "service.from.{realm}.organization.{organization}.realm.rollout.command".loaderRealmTemplate()
 fun RealmRouteScope.realmRolloutCommand(policy: ResponsePolicy<CommandAcceptance>): ScatterContract<RealmRouteScope, RolloutEnvelope, CommandAcceptance> = ScatterContract(
     name = OperationName.of("realm.rollout.command"),
     requestAddress = realmRolloutCommandRequestAddress.subscribedAt(this),
@@ -34,17 +34,17 @@ fun RealmRouteScope.realmRolloutCommand(policy: ResponsePolicy<CommandAcceptance
     failureSlug = ErrorSlug.of("realm-rollout-command-failed"),
 )
 
-private val realmHostsStatusRequestAddress = "typewriter.organization.{organization}.realm.{realm}.hosts.status".loaderRealmTemplate()
+private val realmHostsStatusRequestAddress = "service.from.{realm}.organization.{organization}.realm.rollout.status".loaderRealmTemplate()
 fun RealmRouteScope.realmHostsStatus(policy: ResponsePolicy<ParticipantStatusReply>): ScatterContract<RealmRouteScope, ProbeParticipantStatus, ParticipantStatusReply> = ScatterContract(
     name = OperationName.of("realm.hosts.status"),
     requestAddress = realmHostsStatusRequestAddress.subscribedAt(this),
     requestCodec = com.typewritermc.loader.rollout.RolloutCodecs.statusRequest,
     responseCodec = com.typewritermc.loader.rollout.RolloutCodecs.statusReply,
     responsePolicy = policy,
-    failureSlug = ErrorSlug.of("realm-host-status-failed"),
+    failureSlug = ErrorSlug.of("realm-hosts-status-failed"),
 )
 
-private val realmRolloutStateAddress = "typewriter.organization.{organization}.realm.{realm}.hosts.state".loaderRealmTemplate()
+private val realmRolloutStateAddress = "service.to.{realm}.organization.{organization}.realm.rollout.state".loaderRealmTemplate()
 val RealmRouteScope.realmRolloutState: EventContract<RealmRouteScope, ParticipantStateChanged>
     get() = EventContract(
         name = OperationName.of("realm.rollout.state"),

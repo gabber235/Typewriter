@@ -2,9 +2,11 @@
 //!
 //! The auth callout supplies authenticated claims and an optional organization qualifier. This
 //! route persists current profile data, grants baseline user subjects, and grants organization
-//! subjects only after checking the user's membership against the database. The qualifier selects
-//! which organization is evaluated, but it is never trusted as proof of membership. Database
-//! failures and missing user identity fail the request rather than producing partial policy.
+//! subjects only after checking the user's membership against the database. The organization
+//! grant covers every realm of the organization, so realms created after connect are reachable
+//! without a new connection. The qualifier selects which organization is evaluated, but it is
+//! never trusted as proof of membership. Database failures and missing user identity fail the
+//! request rather than producing partial policy.
 
 use otel_wasi::{ResultWithSlug, main_attribute, wasi_error};
 use wasmcloud_utils::database::{
@@ -15,20 +17,12 @@ use wasmcloud_utils::skir::base::{
     kernel::v1::record_id::RecordId,
 };
 use wasmcloud_utils::skir_utils::RecordIdKeyIdentity;
+use wasmcloud_utils::transport::ConnectionSession;
 use wasmcloud_utils::transport_routes::{
-    GrantScope, GrantSet, MembershipProjection, OrganizationActorRole, OrganizationActorScope,
-    RealmRole, RealmScope, SubjectToken, UserRole, UserScope,
+    GrantSet, OrganizationActorRole, OrganizationActorScope, SubjectToken, UserRole, UserScope,
 };
 
-use crate::{
-    common::{AuthentikClaims, TrustedUserProfile, User, build_permissions},
-    membership_consumers::{ConnectionSession, MembershipConsumerScope},
-};
-
-#[derive(serde::Deserialize)]
-struct AdmittedRealmRecords {
-    realms: Vec<DatabaseRecordId>,
-}
+use crate::common::{AuthentikClaims, TrustedUserProfile, User, build_permissions};
 
 /// Derive NATS policy and tags for one authenticated panel user.
 ///
@@ -85,18 +79,14 @@ pub async fn handle_panel_user(
     UserScope {
         user: actor.clone(),
     }
-    .grant(UserRole::AuthenticatedUser, &mut grants);
+    .grant(
+        UserRole::AuthenticatedUser,
+        &connection_session,
+        &mut grants,
+    );
     grants
         .subscribe
         .insert(format!("_INBOX.{actor}.{}.*", connection_session.as_str()));
-    grants.publish.insert("$SYS.REQ.USER.INFO".to_owned());
-    let user_consumers = MembershipConsumerScope::user(&actor, &connection_session);
-    for projection in [
-        MembershipProjection::UserOrganizationsChanged,
-        MembershipProjection::UserJoinRequestsChanged,
-    ] {
-        user_consumers.grant(projection, &mut grants)?;
-    }
     main_attribute!("auth.permissions.category.organizations" = true);
 
     if let Some(ref org_id) = organization_id {
@@ -111,24 +101,13 @@ pub async fn handle_panel_user(
             let organization = SubjectToken::try_from(organization_identity)?;
             OrganizationActorScope {
                 user: actor.clone(),
-                organization: organization.clone(),
+                organization,
             }
-            .grant(OrganizationActorRole::OrganizationMember, &mut grants);
-            let consumers = MembershipConsumerScope::organization_member(
-                &actor,
-                &organization,
+            .grant(
+                OrganizationActorRole::OrganizationMember,
                 &connection_session,
+                &mut grants,
             );
-            for projection in [
-                MembershipProjection::OrganizationMembersChanged,
-                MembershipProjection::OrganizationJoinRequestsChanged,
-                MembershipProjection::OrganizationJoinCodesChanged,
-            ] {
-                consumers.grant(projection, &mut grants)?;
-            }
-            for realm in admitted_panel_realms(&organization_record).await? {
-                realm.grant(RealmRole::OrganizationMember, &mut grants);
-            }
             main_attribute!(
                 "auth.permissions.category.roles" = true,
                 "auth.permissions.category.members" = true,
@@ -152,38 +131,6 @@ pub async fn handle_panel_user(
     );
 
     Ok((permissions, tags))
-}
-
-async fn admitted_panel_realms(
-    organization: &DatabaseRecordId,
-) -> Result<Vec<RealmScope>, otel_wasi::Error> {
-    let records = read_query!(
-        "RETURN { realms: (SELECT VALUE id FROM realm_instance WHERE owner_host_id.service_id.organization = $organization ORDER BY id) };"
-    )
-    .bind("organization", organization)
-    .execute()
-    .await
-    .error_with_slug("permissions-realm-scope-query-failed")?
-    .parse::<AdmittedRealmRecords>()
-    .error_with_slug("permissions-realm-scope-parse-failed")?;
-    let organization = SubjectToken::try_from(organization.key.raw_identity()?)?;
-    records
-        .realms
-        .into_iter()
-        .map(|record| {
-            if record.table != "realm_instance" {
-                return Err(wasi_error!(
-                    "permissions-realm-scope-invalid-table",
-                    "invalid Realm table"
-                ));
-            }
-            let realm = SubjectToken::try_from(record.key.raw_identity()?)?;
-            Ok(RealmScope {
-                organization: organization.clone(),
-                realm,
-            })
-        })
-        .collect()
 }
 
 /// Persist the latest trusted profile projection without making it an authorization decision.

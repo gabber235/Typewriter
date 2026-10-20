@@ -2,40 +2,36 @@ import { parse } from "yaml";
 import { z } from "zod";
 
 import type { Manifest } from "./manifest.js";
+import { routeChannels } from "./subject.js";
 
 /**
- * Lists the NATS core subscriptions (`subject:group`) each backend component owns, from the internal
- * component routes of the manifest. Such a route must be unary and request one exact
- * `backend_internal` subject.
+ * Lists the exact NATS core subjects each backend component serves only to other components: the
+ * requests of routes whose server is the component and whose callers are all components. Such a
+ * request has a bare address without placeholders.
  */
 export function componentSubscriptions(manifest: Manifest): Map<string, Set<string>> {
   const subscriptions = new Map<string, Set<string>>();
   for (const route of manifest.routes) {
-    if (!route.subscription) {
+    if ("publishers" in route || !("component" in route.server)) {
       continue;
     }
-    if (route.flow.kind !== "unary") {
-      throw new Error(`component subscription ${route.name} must be unary`);
+    if (!route.callers.every((party) => "component" in party)) {
+      continue;
     }
-    const subject = route.flow.requests.get("backend_internal");
-    if (!subject) {
-      throw new Error(`component subscription ${route.name} requires backend_internal`);
+    const [request] = routeChannels(route, manifest.roles);
+    const subject = request?.subjects.internal;
+    if (!subject || subject.tokens.some((token) => token.kind === "parameter")) {
+      throw new Error(`component route ${route.name} must request one exact subject`);
     }
-    if (subject.tokens.some((token) => token.kind === "parameter")) {
-      throw new Error(`component subscription ${route.name} must be exact`);
-    }
-    const values = subscriptions.get(route.subscription.component) ?? new Set<string>();
-    subscriptions.set(route.subscription.component, values);
-    const value = `${subject}:${route.subscription.group}`;
-    if (values.has(value)) {
-      throw new Error(`duplicate component subscription in ${route.name}`);
-    }
-    values.add(value);
+    const values = subscriptions.get(route.server.component) ?? new Set<string>();
+    subscriptions.set(route.server.component, values);
+    values.add(subject.toString());
   }
   return subscriptions;
 }
 
 const WorkloadDeployment = z.object({
+  metadata: z.object({ name: z.string().min(1) }),
   spec: z.object({
     template: z.object({
       spec: z.object({
@@ -51,8 +47,16 @@ const WorkloadDeployment = z.object({
   }),
 });
 
+/** The NATS core subscriptions of a component deployment and the queue group they must use. */
+export interface DeploymentSubscriptions {
+  /** `typewriter.` followed by the workload name. */
+  readonly group: string;
+  /** The comma separated `subject:group` entries of the NATS host interface. */
+  readonly subscriptions: string;
+}
+
 /** Reads the single `core-subscriptions` value of the NATS host interface of a deployment. */
-export function deploymentSubscriptions(source: string): string {
+export function deploymentSubscriptions(source: string): DeploymentSubscriptions {
   const parsed = WorkloadDeployment.safeParse(parse(source));
   if (!parsed.success) {
     throw new Error(`invalid deployment YAML: ${parsed.error.message}`);
@@ -70,32 +74,34 @@ export function deploymentSubscriptions(source: string): string {
         : "deployment has duplicate NATS core-subscriptions values",
     );
   }
-  return values[0]!;
+  return { group: `typewriter.${parsed.data.metadata.name}`, subscriptions: values[0]! };
 }
 
 /**
- * Fails unless a component's deployed NATS core subscriptions equal the ones the manifest assigns
- * it, without duplicates.
+ * Fails unless a component's deployed NATS core subscriptions are exactly the subjects the
+ * manifest has it serve to other components, each in the deployment's queue group, without
+ * duplicates.
  */
 export function validateComponentSubscriptions(
   manifest: Manifest,
   component: string,
-  actual: string,
+  deployed: DeploymentSubscriptions,
 ): void {
-  const expected = componentSubscriptions(manifest).get(component);
-  if (!expected) {
+  const subjects = componentSubscriptions(manifest).get(component);
+  if (!subjects) {
     throw new Error(`component ${JSON.stringify(component)} has no canonical subscriptions`);
   }
-  const values = actual.split(",").filter((value) => value.length > 0);
-  const deployed = new Set(values);
-  if (deployed.size !== values.length) {
+  const expected = new Set([...subjects].map((subject) => `${subject}:${deployed.group}`));
+  const values = deployed.subscriptions.split(",").filter((value) => value.length > 0);
+  const actual = new Set(values);
+  if (actual.size !== values.length) {
     throw new Error(`duplicate component subscription for ${component}`);
   }
   const sorted = (set: Set<string>) => JSON.stringify([...set].sort());
-  if (sorted(deployed) !== sorted(expected)) {
+  if (sorted(actual) !== sorted(expected)) {
     throw new Error(
       `component subscription drift for ${component}: ` +
-        `expected ${sorted(expected)}, received ${sorted(deployed)}`,
+        `expected ${sorted(expected)}, received ${sorted(actual)}`,
     );
   }
 }

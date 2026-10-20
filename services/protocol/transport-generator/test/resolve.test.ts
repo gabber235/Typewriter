@@ -1,174 +1,86 @@
 import { describe, expect, test } from "bun:test";
 
 import { parseManifest } from "../src/routes/manifest.js";
-import { resolveRoutes } from "../src/routes/resolve.js";
-import { committedRoutes, EMPTY_INPUT, loadSkirInput } from "./support.js";
+import { resolveRoutes, routeChannel } from "../src/routes/resolve.js";
+import { committedRoutes, EMPTY_INPUT, loadSkirInput, manifestSource } from "./support.js";
 
-const resolveSource = (source: string) => resolveRoutes(parseManifest(source, "routes.yaml"), EMPTY_INPUT);
+const parse = (routes: string, components: readonly string[] = []) =>
+  parseManifest(manifestSource(routes, components), "routes.yaml");
+
+const resolveSource = (routes: string, components: readonly string[] = []) =>
+  resolveRoutes(parse(routes, components), EMPTY_INPUT);
+
+const userRoute = (name: string, request: string) => `  - name: ${name}
+    scope: organization_actor
+    callers: [{ role: organization_member }]
+    server: { component: organization-members }
+    flow:
+      kind: unary
+      method: "organization/v1/user.skir:Missing"
+      operation: sample.route
+      request: ${request}
+`;
 
 describe("route resolution", () => {
   test("rejects duplicate routes before Skir resolution", () => {
-    expect(() =>
-      resolveSource(`
-routes:
-  - &route
-    name: duplicate_route
-    scope: user
-    grants: []
-    flow:
-      kind: unary
-      method: "organization/v1/user.skir:WatchUserOrganizations"
-      operation: duplicate.route
-      failure_slug: duplicate-route-failed
-      requests:
-        panel: "cloud.to.user.{user}.watch"
-  - *route
-`),
-    ).toThrow("route duplicate_route at routes[1]: duplicate logical route");
-  });
-
-  test("rejects duplicate and incompatible grants", () => {
-    expect(() =>
-      resolveSource(`
-routes:
-  - name: duplicate_grant
-    scope: user
-    grants:
-      - &grant { role: authenticated_user, side: panel, direction: publish, channel: request }
-      - *grant
-    flow:
-      kind: unary
-      method: "organization/v1/user.skir:WatchUserOrganizations"
-      operation: duplicate.grant
-      failure_slug: duplicate-grant-failed
-      requests:
-        panel: "cloud.to.user.{user}.watch"
-`),
-    ).toThrow("route duplicate_grant at routes[0].grants[1]: duplicate grant");
-    expect(() =>
-      resolveSource(`
-routes:
-  - name: incompatible_grant
-    scope: user
-    grants:
-      - { role: authenticated_user, side: panel, direction: subscribe, channel: updates }
-    flow:
-      kind: unary
-      method: "organization/v1/user.skir:WatchUserOrganizations"
-      operation: incompatible.grant
-      failure_slug: incompatible-grant-failed
-      requests:
-        panel: "cloud.to.user.{user}.watch"
-`),
-    ).toThrow("invalid grant channel updates");
-  });
-
-  test("reports a missing required capture with route context", () => {
-    expect(() =>
-      resolveSource(`
-routes:
-  - name: missing_actor
-    scope: organization_actor
-    grants: []
-    flow:
-      kind: unary
-      method: "organization/v1/member.skir:WatchOrganizationMembers"
-      operation: missing.actor
-      failure_slug: missing-actor-failed
-      requests:
-        panel: "cloud.to.organization.{organization}.members.watch"
-`),
-    ).toThrow(
-      "route missing_actor at routes[0].flow.requests.panel: request endpoint panel is invalid: request subject is missing required user parameter",
+    const route = userRoute("duplicate_route", "user.{user}.organization.{organization}.watch");
+    expect(() => resolveSource(route + route, ["organization-members"])).toThrow(
+      "route duplicate_route at routes[1]: duplicate logical route",
     );
+  });
+
+  test("reports a request subject missing a scope capture with route context", () => {
+    expect(() =>
+      resolveSource(userRoute("missing_actor", "organization.{organization}.members.watch"), [
+        "organization-members",
+      ]),
+    ).toThrow(
+      "route missing_actor at routes[0].flow.request: request subject cloud.to.organization.{organization}.members.watch does not capture {user} of organization_actor scope",
+    );
+  });
+
+  test("reports party combinations without a subject family", () => {
+    expect(() =>
+      resolveSource(`  - name: service_peers
+    scope: service
+    publishers: [{ role: registered_service }]
+    subscribers: [{ role: registered_service }]
+    flow:
+      kind: event
+      binding: { kind: skir, payload: "service/v1/lifecycle.skir:ServiceHeartbeatNotification" }
+      operation: service.peers
+      address: service.{service}.peers
+      delivery: { kind: transient }
+`),
+    ).toThrow("route service_peers at routes[0]: event channel between service roles outside realm scope");
   });
 
   test("reports an unresolved Skir method", () => {
     expect(() =>
-      resolveSource(`
-routes:
-  - name: unresolved_method
-    scope: user
-    grants: []
-    flow:
-      kind: unary
-      method: "organization/v1/user.skir:Missing"
-      operation: unresolved.method
-      failure_slug: unresolved-method-failed
-      requests:
-        panel: "cloud.to.user.{user}.watch"
-`),
+      resolveSource(userRoute("unresolved_method", "user.{user}.organization.{organization}.watch"), [
+        "organization-members",
+      ]),
     ).toThrow(
       "route unresolved_method at routes[0].flow.method: unknown Skir method organization/v1/user.skir:Missing",
     );
-  });
-
-  test("rejects presence projections of authoritative or absent identities", () => {
-    for (const [parameter, expected] of [
-      ["organization", "authoritative scope identity"],
-      ["realm", "absent parameter"],
-    ] as const) {
-      expect(() =>
-        resolveSource(`
-routes:
-  - name: invalid_presence
-    scope: organization_actor
-    grants: []
-    flow:
-      kind: event
-      binding: { kind: native_kotlin, format: kotlin_serialization_cbor, target: loader_core, event_type: com.example.Event, event_codec: com.example.Codecs.event }
-      operation: invalid.presence
-      failure_slug: invalid-presence-failed
-      addresses:
-        panel:
-          subject: "typewriter.presence.organization.{organization}.user.{user}"
-          subscription: { wildcard: [${parameter}] }
-      delivery: { kind: transient }
-`),
-      ).toThrow(expected);
-    }
-  });
-
-  test("rejects grants on internal component routes", () => {
-    expect(() =>
-      resolveSource(`
-routes:
-  - name: invalid_internal
-    scope: internal_component
-    grants:
-      - { role: native_client, side: backend_internal, direction: publish, channel: request }
-    subscription: { component: auth-typewriter-permissions, group: typewriter.auth-auth-typewriter-permissions }
-    flow:
-      kind: unary
-      method: "access/v1/permission.skir:GetEntityPermission"
-      operation: invalid.internal
-      failure_slug: invalid-internal-failed
-      requests: { backend_internal: "auth.permissions.typewriter-panel" }
-`),
-    ).toThrow("requires a subscription and no grants");
   });
 
   test("names the Skir source of a transfer field that is not a string", async () => {
     const input = await loadSkirInput();
     expect(() =>
       resolveRoutes(
-        parseManifest(
-          `
-routes:
-  - name: bounded_without_string
+        parse(`  - name: bounded_without_string
     scope: realm
-    grants: []
+    callers: [{ role: organization_member }]
+    server: { role: realm_coordinator }
     flow:
       kind: bounded_watch
       method: "editor/v1/catalog.skir:FetchEditorCatalog"
       transfer_field: missing_field
       operation: bounded.missing
-      failure_slug: bounded-missing-failed
-      requests: { service: "service.to.{realm}.organization.{organization}.fetch" }
-      updates: { service: "service.from.{realm}.organization.{organization}.fetch.{transfer_id}" }
-`,
-          "routes.yaml",
-        ),
+      request: fetch
+      updates: fetch.{transfer_id}
+`),
         input,
       ),
     ).toThrow(/expected string field missing_field on .* \(Skir editor\/v1\/catalog\.skir:\d+:\d+\)/u);
@@ -183,5 +95,20 @@ routes:
       expect(catalog.flow.method.method.name.text).toBe("FetchEditorCatalog");
       expect(catalog.flow.transferField.name.text).toBe("transfer_id");
     }
+    expect(routeChannel(catalog, "updates")?.subjects.client?.toString()).toBe(
+      "service.from.{realm}.organization.{organization}.realm.editor.catalog.fetch.{transfer_id}",
+    );
+  });
+
+  test("rollout routes use the realm mesh", async () => {
+    const { routes } = await committedRoutes();
+    const subject = (name: string, channel: "request" | "event") =>
+      routeChannel(routes.find((route) => route.name === name)!, channel)?.subjects.client?.toString();
+    expect(subject("realm_hosts_probe", "request")).toBe(
+      "service.from.{realm}.organization.{organization}.realm.rollout.probe",
+    );
+    expect(subject("realm_rollout_state", "event")).toBe(
+      "service.to.{realm}.organization.{organization}.realm.rollout.state",
+    );
   });
 });

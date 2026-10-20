@@ -1,10 +1,14 @@
 import type { CodeGenerator } from "skir-internal";
 
 import { upperCamel } from "../../text.js";
-import { isRuntimeSide } from "../grants.js";
-import type { Endpoints, ScopeKind } from "../manifest.js";
-import type { ResolvedMethod, ResolvedRoute } from "../resolve.js";
-import { scopeParameters, type Parameter, type SubjectTemplate } from "../subject.js";
+import type { ScopeKind } from "../manifest.js";
+import { routeChannel, type ResolvedMethod, type ResolvedRoute } from "../resolve.js";
+import {
+  scopeParameters,
+  type ChannelSubjects,
+  type Parameter,
+  type SubjectTemplate,
+} from "../subject.js";
 
 /** The generated Rust type of a route, e.g. `UserOrganizationCreateRoute`. */
 export function routeTypeName(route: ResolvedRoute): string {
@@ -20,13 +24,11 @@ export function scopeTypeName(scope: ScopeKind): string {
 function endpointScope(template: SubjectTemplate): ScopeKind {
   const captures = template.parameters().join(",");
   const scopes: Record<string, ScopeKind> = {
-    "": "native",
     user: "user",
     organization: "organization",
     service: "service",
     "organization,user": "organization_actor",
     "organization,realm": "realm",
-    "organization,service": "bound_service",
   };
   const scope = scopes[captures];
   if (!scope) {
@@ -56,7 +58,6 @@ export function renderSubject(template: SubjectTemplate): string {
 }
 
 function captureArm(template: SubjectTemplate, scope: ScopeKind): string {
-  template.validateScope(scope, false);
   const captured = new Set<Parameter>();
   const pattern = template.tokens.map((token) => {
     if (token.kind === "literal") {
@@ -88,16 +89,24 @@ function scopeMatch(arms: readonly string[]): string[] {
 
 function requestParts(
   route: ResolvedRoute,
-): { method: ResolvedMethod; requests: Endpoints } | undefined {
+): { method: ResolvedMethod; requests: ChannelSubjects } | undefined {
   const { flow } = route;
-  return flow.kind === "unary" || flow.kind === "watch" || flow.kind === "bounded_watch"
-    ? { method: flow.method, requests: flow.requests }
+  const request = routeChannel(route, "request");
+  return request && (flow.kind === "unary" || flow.kind === "watch" || flow.kind === "bounded_watch")
+    ? { method: flow.method, requests: request.subjects }
     : undefined;
 }
 
+/** The subjects a backend component receives a channel on: bridged first, then direct. */
+function backendSubjects(subjects: ChannelSubjects): SubjectTemplate[] {
+  return [subjects.backend, subjects.internal].filter(
+    (subject): subject is SubjectTemplate => subject !== undefined,
+  );
+}
+
 /**
- * Emits the dispatch route of a request route the backend serves, plus its outbound subject when
- * a backend side requests it. Routes without a backend endpoint emit nothing.
+ * Emits the dispatch route of a request route a component serves, plus its outbound subject when
+ * a component calls it. Routes without a backend subject emit nothing.
  */
 export function emitRequestRoute(
   route: ResolvedRoute,
@@ -108,9 +117,7 @@ export function emitRequestRoute(
     return [];
   }
   const { method, requests } = parts;
-  const arms = [...requests]
-    .filter(([side]) => isRuntimeSide(side))
-    .map(([, template]) => captureArm(template, route.scope));
+  const arms = backendSubjects(requests).map((template) => captureArm(template, route.scope));
   if (arms.length === 0) {
     return [];
   }
@@ -133,7 +140,7 @@ export function emitRequestRoute(
     ...scopeMatch(arms),
     "}",
   ];
-  const subject = requests.get("backend_internal") ?? requests.get("backend");
+  const subject = requests.internal;
   if (subject) {
     const fields = scopeParameters(route.scope).map(field);
     lines.push(
@@ -156,12 +163,13 @@ export function emitEventRoute(
   symbols: CodeGenerator.SymbolProvider,
 ): string[] {
   const { flow } = route;
-  if (flow.kind !== "event" || flow.binding.kind !== "skir") {
+  const event = routeChannel(route, "event");
+  if (flow.kind !== "event" || flow.binding.kind !== "skir" || !event) {
     return [];
   }
-  const arms = [...flow.addresses]
-    .filter(([side]) => isRuntimeSide(side))
-    .map(([, endpoint]) => captureArm(endpoint.subject, route.scope));
+  const arms = backendSubjects(event.subjects).map((template) =>
+    captureArm(template, route.scope),
+  );
   if (arms.length === 0) {
     return [];
   }
@@ -179,17 +187,14 @@ export function emitEventRoute(
   ];
 }
 
-/** Emits the outbound update delivery of a watch route whose backend side publishes updates. */
+/** Emits the outbound update delivery of a watch route whose component server publishes updates. */
 export function emitUpdateDelivery(
   route: ResolvedRoute,
   symbols: CodeGenerator.SymbolProvider,
 ): string[] {
   const { flow } = route;
-  if (flow.kind !== "watch") {
-    return [];
-  }
-  const address = flow.updates.addresses.get("backend");
-  if (!address) {
+  const address = routeChannel(route, "updates")?.subjects.backend;
+  if (flow.kind !== "watch" || !address) {
     return [];
   }
   const name = routeTypeName(route);

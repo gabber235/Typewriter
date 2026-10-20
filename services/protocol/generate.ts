@@ -3,19 +3,12 @@ import { readFileSync, writeFileSync } from "node:fs";
 
 import { parseManifest } from "./transport-generator/src/routes/manifest.ts";
 import {
+  componentSubscriptions,
   deploymentSubscriptions,
   validateComponentSubscriptions,
 } from "./transport-generator/src/routes/subscriptions.ts";
 
 const transportManifest = "services/protocol/transport-routes.yaml";
-
-/** Backend components whose NATS core subscriptions the transport manifest owns. */
-const subscribedComponents = [
-  {
-    component: "auth-typewriter-permissions",
-    deployment: "backend/access/auth-typewriter-permissions/deploy/base/workloaddeployment.yaml",
-  },
-];
 
 const dartOutputs = [
   "panel/lib/infrastructure/protocols/skir/skirout",
@@ -35,7 +28,9 @@ function run(command: string, args: string[], cwd?: string): void {
 
 run("bun", ["services/protocol/check-skir-ids.ts", "skir-src"]);
 const routes = parseManifest(readFileSync(transportManifest, "utf8"), transportManifest);
-for (const { component, deployment } of subscribedComponents) {
+// Components that serve other components own exact subscriptions the manifest derives.
+for (const component of componentSubscriptions(routes).keys()) {
+  const deployment = `${routes.components.get(component)}/workloaddeployment.yaml`;
   validateComponentSubscriptions(
     routes,
     component,

@@ -1,62 +1,123 @@
 import { describe, expect, test } from "bun:test";
 
-import { SubjectTemplate } from "../src/routes/subject.js";
+import { parseManifest, type Party, type RoleDeclarations } from "../src/routes/manifest.js";
+import { channelSubjects, failureSlug, SubjectTemplate, type ChannelSubjects } from "../src/routes/subject.js";
+import { manifestSource } from "./support.js";
+
+const { roles }: { roles: RoleDeclarations } = parseManifest(manifestSource(""), "roles.yaml");
+
+const role = (name: string): Party => ({ role: name });
+const component = (name: string): Party => ({ component: name });
+
+function rendered(subjects: ChannelSubjects): Record<string, string> {
+  return Object.fromEntries(Object.entries(subjects).map(([key, value]) => [key, value.toString()]));
+}
+
+const derive = (...args: Parameters<typeof channelSubjects>) => rendered(channelSubjects(...args));
 
 describe("subject templates", () => {
   test("rejects all broker wildcards", () => {
-    for (const subject of ["cloud.to.>", "cloud.to.*", "cloud.to.{unknown}"]) {
+    for (const subject of ["user.>", "user.*", "user.{unknown}"]) {
       expect(() => SubjectTemplate.parse(subject)).toThrow("invalid subject token");
     }
   });
 
   test("rejects empty and embedded parameter tokens", () => {
-    for (const subject of ["cloud..user.{user}", "cloud.to.user-{user}.watch", "cloud.to.{user}.watch."]) {
+    for (const subject of ["user..{user}", "user-{user}.watch", "{user}.watch."]) {
       expect(() => SubjectTemplate.parse(subject)).toThrow("invalid subject token");
     }
   });
 
   test("rejects repeated captures", () => {
-    expect(() => SubjectTemplate.parse("cloud.{user}.to.{user}")).toThrow(
-      "repeated subject parameter {user}",
-    );
-  });
-
-  test("admits only a final bounded transfer parameter", () => {
-    const subject = SubjectTemplate.parse(
-      "service.from.{realm}.organization.{organization}.updates.{transfer_id}",
-    );
-    subject.validateScope("realm", true);
-    expect(() => subject.validateScope("realm", false)).toThrow(
-      "transfer_id is valid only as the final bounded update token",
-    );
-    expect(() =>
-      SubjectTemplate.parse("service.from.{realm}.organization.{organization}.updates").validateScope(
-        "realm",
-        true,
-      ),
-    ).toThrow("bounded updates must end in transfer_id");
-  });
-
-  test("permits projection endpoints with a scope subset", () => {
-    SubjectTemplate.parse("service.to.{realm}.editor.authoring.state.query").validateScope("realm", false);
-  });
-
-  test("rejects captures outside the scope", () => {
-    expect(() => SubjectTemplate.parse("cloud.to.{service}").validateScope("user", false)).toThrow(
-      "subject parameter service is absent from user scope",
-    );
-  });
-
-  test("rejects a request missing a required capture", () => {
-    const subject = SubjectTemplate.parse("cloud.to.organization.{organization}.members.watch");
-    expect(() => subject.validateRequestScope("organization_actor")).toThrow(
-      "request subject is missing required user parameter for organization_actor scope",
-    );
+    expect(() => SubjectTemplate.parse("{user}.to.{user}")).toThrow("repeated subject parameter {user}");
   });
 
   test("round trips its manifest spelling", () => {
-    const text = "cloud.to.user.{user}.organization.{organization}.watch";
+    const text = "user.{user}.organization.{organization}.watch";
     expect(SubjectTemplate.parse(text).toString()).toBe(text);
     expect(SubjectTemplate.parse(text).parameters()).toEqual(["organization", "user"]);
+  });
+});
+
+describe("subject rule", () => {
+  const address = (value: string) => SubjectTemplate.parse(value);
+
+  test("realm scope flows toward the coordinator on service.to", () => {
+    expect(
+      derive("realm", "request", address("editor.catalog.fetch"), [role("organization_member")], [role("realm_coordinator")], roles),
+    ).toEqual({ client: "service.to.{realm}.organization.{organization}.realm.editor.catalog.fetch" });
+  });
+
+  test("realm scope flows from the coordinator on service.from", () => {
+    expect(
+      derive("realm", "updates", address("editor.catalog.invalidate"), [role("realm_coordinator")], [role("organization_member")], roles),
+    ).toEqual({ client: "service.from.{realm}.organization.{organization}.realm.editor.catalog.invalidate" });
+    expect(
+      derive("realm", "event", address("rollout.state"), [role("realm_participant")], [role("realm_coordinator")], roles),
+    ).toEqual({ client: "service.to.{realm}.organization.{organization}.realm.rollout.state" });
+  });
+
+  test("a role talking to a component crosses the bridge in both directions", () => {
+    const request = address("user.{user}.organization.create");
+    expect(derive("user", "request", request, [role("authenticated_user")], [component("user-organization")], roles)).toEqual({
+      client: "cloud.to.user.{user}.organization.create",
+      backend: "typewriter.from.user.{user}.organization.create",
+    });
+    const updates = address("organization.{organization}.members.changed");
+    expect(
+      derive("organization_actor", "updates", updates, [component("organization-members")], [role("organization_member")], roles),
+    ).toEqual({
+      client: "cloud.from.organization.{organization}.members.changed",
+      backend: "typewriter.to.organization.{organization}.members.changed",
+    });
+  });
+
+  test("component callers of a bridged request also get the bare address", () => {
+    const callers = [role("registered_service"), component("auth-typewriter-permissions")];
+    const server = [component("service-registration")];
+    expect(derive("service", "request", address("service.{service}.binding.query"), callers, server, roles)).toEqual({
+      client: "cloud.to.service.{service}.binding.query",
+      backend: "typewriter.from.service.{service}.binding.query",
+      internal: "service.{service}.binding.query",
+    });
+    expect(derive("service", "updates", address("service.{service}.registration.bound"), server, callers, roles)).toEqual({
+      client: "cloud.from.service.{service}.registration.bound",
+      backend: "typewriter.to.service.{service}.registration.bound",
+    });
+  });
+
+  test("component to component uses the bare address", () => {
+    expect(
+      derive(
+        "internal_component",
+        "request",
+        address("auth.permissions.typewriter-panel"),
+        [component("auth-callout")],
+        [component("auth-typewriter-permissions")],
+        roles,
+      ),
+    ).toEqual({ internal: "auth.permissions.typewriter-panel" });
+  });
+
+  test("events between panel roles use the typewriter prefix", () => {
+    const members = [role("organization_member")];
+    expect(
+      derive("organization_actor", "event", address("presence.organization.{organization}.user.{user}"), members, members, roles),
+    ).toEqual({ client: "typewriter.presence.organization.{organization}.user.{user}" });
+  });
+
+  test("rejects party combinations without a subject family", () => {
+    expect(() =>
+      channelSubjects("realm", "request", address("x"), [component("auth-callout")], [role("realm_coordinator")], roles),
+    ).toThrow("realm routes connect roles only");
+    expect(() =>
+      channelSubjects("service", "event", address("x"), [role("registered_service")], [role("registered_service")], roles),
+    ).toThrow("has no subject family");
+  });
+
+  test("derives failure slugs from the operation", () => {
+    expect(failureSlug("organization.members.join_requests.watch")).toBe(
+      "organization-members-join-requests-watch-failed",
+    );
   });
 });

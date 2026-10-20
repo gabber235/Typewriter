@@ -22,8 +22,8 @@ use wasmcloud_utils::{
     },
     skir_utils::RecordIdKeyIdentity,
     transport_routes::{
-        GrantScope, GrantSet, RealmRole, RealmScope, ServiceBindingQueryRoute,
-        ServiceMessagingScopeRoute, ServiceRole, ServiceScope, SubjectToken, request_route,
+        GrantSet, RealmRole, RealmScope, ServiceBindingQueryRoute, ServiceMessagingScopeRoute,
+        ServiceRole, ServiceScope, SubjectToken, request_route,
     },
 };
 
@@ -182,8 +182,8 @@ async fn handle_bound_binding(
         .map(|record| record.key.raw_identity())
         .transpose()?
     {
-        grant_realm(&org_id, realm, RealmRole::Coordinator, grants)?;
-        grant_realm(&org_id, realm, RealmRole::Participant, grants)?;
+        grant_realm(&org_id, realm, RealmRole::RealmCoordinator, grants)?;
+        grant_realm(&org_id, realm, RealmRole::RealmParticipant, grants)?;
     }
 
     if let Some(realm) = scope
@@ -192,7 +192,7 @@ async fn handle_bound_binding(
         .map(|record| record.key.raw_identity())
         .transpose()?
     {
-        grant_realm(&org_id, realm, RealmRole::Participant, grants)?;
+        grant_realm(&org_id, realm, RealmRole::RealmParticipant, grants)?;
     }
 
     Ok(())

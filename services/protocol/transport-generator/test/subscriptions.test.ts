@@ -8,15 +8,20 @@ import {
 import { committedManifest } from "./support.js";
 
 function deployment(hostInterfaces: string): string {
-  return `spec:\n  template:\n    spec:\n      hostInterfaces:\n${hostInterfaces}`;
+  return `metadata:\n  name: auth-sample\nspec:\n  template:\n    spec:\n      hostInterfaces:\n${hostInterfaces}`;
 }
 
 const NATS = (subscriptions: string) =>
   `        - namespace: wasmcloud\n          package: nats\n          config:\n            core-subscriptions: ${subscriptions}\n`;
 
+const GROUP = "typewriter.auth-auth-typewriter-permissions";
+
 describe("component subscriptions", () => {
-  test("reads one typed NATS subscription value", () => {
-    expect(deploymentSubscriptions(deployment(NATS("one:group,two:group")))).toBe("one:group,two:group");
+  test("reads one typed NATS subscription value and the workload group", () => {
+    expect(deploymentSubscriptions(deployment(NATS("one:group,two:group")))).toEqual({
+      group: "typewriter.auth-sample",
+      subscriptions: "one:group,two:group",
+    });
   });
 
   test("rejects malformed, missing and duplicate subscription values", () => {
@@ -29,33 +34,30 @@ describe("component subscriptions", () => {
     );
   });
 
-  test("the manifest owns the permission component subscriptions exactly", () => {
+  test("the manifest owns the subjects a component serves to other components", () => {
     const manifest = committedManifest();
     expect(componentSubscriptions(manifest)).toEqual(
       new Map([
         [
           "auth-typewriter-permissions",
-          new Set([
-            "auth.permissions.typewriter-panel:typewriter.auth-auth-typewriter-permissions",
-            "auth.permissions.typewriter-services:typewriter.auth-auth-typewriter-permissions",
-          ]),
+          new Set(["auth.permissions.typewriter-panel", "auth.permissions.typewriter-services"]),
         ],
       ]),
     );
-    validateComponentSubscriptions(
-      manifest,
-      "auth-typewriter-permissions",
-      "auth.permissions.typewriter-panel:typewriter.auth-auth-typewriter-permissions,auth.permissions.typewriter-services:typewriter.auth-auth-typewriter-permissions",
-    );
+    validateComponentSubscriptions(manifest, "auth-typewriter-permissions", {
+      group: GROUP,
+      subscriptions: `auth.permissions.typewriter-panel:${GROUP},auth.permissions.typewriter-services:${GROUP}`,
+    });
+    for (const subscriptions of [
+      `auth.permissions.*:${GROUP}`,
+      `auth.permissions.typewriter-panel:other,auth.permissions.typewriter-services:other`,
+    ]) {
+      expect(() =>
+        validateComponentSubscriptions(manifest, "auth-typewriter-permissions", { group: GROUP, subscriptions }),
+      ).toThrow("component subscription drift");
+    }
     expect(() =>
-      validateComponentSubscriptions(
-        manifest,
-        "auth-typewriter-permissions",
-        "auth.permissions.*:typewriter.auth-auth-typewriter-permissions",
-      ),
-    ).toThrow("component subscription drift");
-    expect(() => validateComponentSubscriptions(manifest, "unknown-component", "")).toThrow(
-      "has no canonical subscriptions",
-    );
+      validateComponentSubscriptions(manifest, "unknown-component", { group: GROUP, subscriptions: "" }),
+    ).toThrow("has no canonical subscriptions");
   });
 });

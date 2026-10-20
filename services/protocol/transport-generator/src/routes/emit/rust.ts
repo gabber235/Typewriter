@@ -1,10 +1,10 @@
 import type { CodeGenerator } from "skir-internal";
 
 import { upperCamel } from "../../text.js";
-import { routeGrants } from "../grants.js";
-import { ROLES, SCOPE_KINDS, type Direction, type Role, type ScopeKind } from "../manifest.js";
-import type { ResolvedRoute } from "../resolve.js";
-import type { Parameter, SubjectTemplate } from "../subject.js";
+import { CONSUMER_NAME, grantText, type Grant, type GrantToken } from "../grants.js";
+import { SCOPE_KINDS, type RoleDeclaration, type ScopeKind } from "../manifest.js";
+import type { ResolvedRoutes } from "../resolve.js";
+import { scopeParameters } from "../subject.js";
 import {
   emitEventRoute,
   emitRequestRoute,
@@ -13,126 +13,169 @@ import {
 } from "./rust_dispatch.js";
 import { RUST_DISPATCH, RUST_SCOPES } from "./rust_runtime.js";
 
-const ROLE_NAMES: Record<Role, string> = {
-  authenticated_user: "AuthenticatedUser",
-  organization_member: "OrganizationMember",
-  realm_coordinator: "Coordinator",
-  realm_participant: "Participant",
-  registered_service: "RegisteredService",
-  native_client: "NativeClient",
-};
-
-const ADMITTED_ROLES: Record<ScopeKind, readonly Role[]> = {
-  realm: ["organization_member", "realm_coordinator", "realm_participant"],
-  service: ["registered_service"],
-  bound_service: ["registered_service"],
-  organization_actor: ["organization_member"],
-  organization: ["organization_member"],
-  user: ["authenticated_user"],
-  native: ["native_client"],
-  internal_component: [],
-};
-
 /** Scope struct fields in the order the generated scope types declare them. */
 const SCOPE_FIELDS: Record<ScopeKind, readonly string[]> = {
   realm: ["organization", "realm"],
   service: ["service"],
-  bound_service: ["service", "organization"],
   organization_actor: ["user", "organization"],
   organization: ["organization"],
   user: ["user"],
-  native: [],
   internal_component: [],
 };
 
-/** Renders a grant subject; wildcard identities and bounded transfer captures become `*`. */
-function grantSubject(
-  template: SubjectTemplate,
-  transfer: boolean,
-  wildcards: readonly Parameter[],
-): string {
-  const value = template.tokens
-    .map((token) => {
-      if (token.kind === "literal") {
-        return token.value;
-      }
-      if (wildcards.includes(token.parameter) || (token.parameter === "transfer_id" && transfer)) {
-        return "*";
-      }
-      if (token.parameter === "transfer_id") {
-        throw new Error("transfer token requires a bounded update grant");
-      }
-      return `{${token.parameter}}`;
-    })
-    .join(".");
-  return `format!(${JSON.stringify(value)})`;
+/** The scope type whose fields are exactly the identifiers a role is bound to. */
+function grantScope(role: RoleDeclaration): ScopeKind {
+  const bound = new Set<string>([...role.tenant, ...(role.personal ? [role.personal] : [])]);
+  const scope = SCOPE_KINDS.find((candidate) => {
+    const fields = scopeParameters(candidate);
+    return fields.length === bound.size && fields.every((field) => bound.has(field));
+  });
+  if (!scope) {
+    throw new Error(`role ${role.name} binds [${[...bound].join(", ")}], which no scope type holds`);
+  }
+  return scope;
 }
 
 /**
- * Writes one grant insertion in the layout prettyplease gives an insertion that exceeds the line
- * width. rustfmt rewrites the insertions it can fit and keeps this layout for the ones it cannot.
+ * Renders one grant insertion in the layout rustfmt keeps for an insertion that exceeds the line
+ * width; rustfmt rewrites the insertions it can fit. The subject is a `String` expression over the
+ * scope fields and consumer names.
  */
-function grantInsert(direction: Direction, expression: string): string[] {
-  const subject = expression.slice("format!(".length, -1);
+function grantInsert(grant: Grant): string[] {
+  const [call, subject] = grantExpression(grant.tokens);
   return [
     "grants",
-    `    .${direction}`,
+    `    .${grant.direction}`,
     "    .insert(",
-    "        format!(",
+    `        ${call}`,
     `            ${subject}`,
-    "        ),",
+    `        ),`,
     "    );",
   ];
 }
 
-interface GrantInsert {
-  readonly direction: Direction;
-  readonly expression: string;
+function grantExpression(tokens: readonly GrantToken[]): [string, string] {
+  let captures = false;
+  const value = tokens
+    .map((token) => {
+      switch (token.kind) {
+        case "literal":
+          return token.value;
+        case "wildcard":
+          return "*";
+        case "parameter":
+          captures = true;
+          return `{${token.parameter}}`;
+        case "consumer":
+          captures = true;
+          return `{${token.projection}}`;
+      }
+    })
+    .join(".");
+  return [captures ? "format!(" : "String::from(", JSON.stringify(value)];
 }
 
-function emitGrants(routes: readonly ResolvedRoute[]): string[] {
-  const grouped = new Map<ScopeKind, Map<Role, GrantInsert[]>>();
-  for (const route of routes) {
-    for (const spec of routeGrants(route)) {
-      if (!ADMITTED_ROLES[route.scope].includes(spec.role)) {
-        throw new Error(`role ${spec.role} is invalid for scope ${route.scope}`);
-      }
-      const roles = grouped.get(route.scope) ?? new Map();
-      grouped.set(route.scope, roles);
-      const grants = roles.get(spec.role) ?? [];
-      roles.set(spec.role, grants);
-      grants.push({
-        direction: spec.direction,
-        expression: grantSubject(spec.endpoint, spec.transferToken, spec.wildcardParameters),
-      });
+/** Rust expressions of the consumer identity tuple values, by {@link CONSUMER_NAME} entry. */
+const CONSUMER_VALUES: Record<(typeof CONSUMER_NAME.tuple)[number], string> = {
+  actor: "actor.as_str()",
+  organization: "organization.map(SubjectToken::as_str)",
+  session: "session.as_str()",
+  projection: "projection",
+};
+
+const CONSUMER_PARAMETERS: Record<(typeof CONSUMER_NAME.tuple)[number], string> = {
+  actor: "actor: &SubjectToken",
+  organization: "organization: Option<&SubjectToken>",
+  session: "session: &crate::transport::ConnectionSession",
+  projection: "projection: &str",
+};
+
+/** The consumer naming rule of {@link CONSUMER_NAME}; the panel emitter writes the same rule. */
+function emitConsumerName(): string[] {
+  const { prefix, tuple } = CONSUMER_NAME;
+  return [
+    `/// Names a connection's persistent projection consumer: \`${prefix}\` followed by the unpadded`,
+    `/// URL safe Base64 of the compact JSON array \`[${tuple.join(", ")}]\`.`,
+    "/// The panel derives the same name when it opens the consumer.",
+    "pub fn consumer_name(",
+    ...tuple.map((name) => `    ${CONSUMER_PARAMETERS[name]},`),
+    ") -> String {",
+    "    use base64::Engine as _;",
+    `    let identity = serde_json::json!([${tuple.map((name) => CONSUMER_VALUES[name]).join(", ")}]);`,
+    "    format!(",
+    `        ${JSON.stringify(`${prefix}{}`)},`,
+    "        base64::engine::general_purpose::URL_SAFE_NO_PAD.encode(identity.to_string())",
+    "    )",
+    "}",
+  ];
+}
+
+/** The `consumer_name` call naming one projection consumer of a role's connection. */
+function consumerBinding(role: RoleDeclaration, projection: string): string {
+  const organization = role.tenant.includes("organization") ? "Some(organization)" : "None";
+  return `let ${projection} = consumer_name(${role.personal}, ${organization}, session, ${JSON.stringify(projection)});`;
+}
+
+/**
+ * Emits one role enum and grant function per scope type that grantee roles bind. A role's grant
+ * inserts every subject its routes derive for it; the function takes the connection session when
+ * one of its roles receives persistent projections, whose consumer names depend on it.
+ */
+function emitGrants({ roles, routes }: ResolvedRoutes): string[] {
+  const grouped = new Map<ScopeKind, Map<string, Grant[]>>();
+  for (const role of roles.values()) {
+    const grants = routes.flatMap((route) => route.grants.filter((grant) => grant.role === role.name));
+    if (grants.length === 0) {
+      continue;
     }
+    const scope = grantScope(role);
+    const byRole = grouped.get(scope) ?? new Map<string, Grant[]>();
+    grouped.set(scope, byRole);
+    byRole.set(role.name, grants);
   }
   return SCOPE_KINDS.flatMap((scope) => {
-    const roles = grouped.get(scope);
-    if (!roles) {
+    const byRole = grouped.get(scope);
+    if (!byRole) {
       return [];
     }
     const roleType = `${upperCamel(scope)}Role`;
-    const present = ROLES.filter((role) => roles.has(role));
+    const consumers = [...byRole.values()].some((grants) =>
+      grants.some((grant) => grant.tokens.some((token) => token.kind === "consumer")),
+    );
+    const arms = [...byRole].flatMap(([name, grants]) => {
+      const role = roles.get(name)!;
+      const projections = [
+        ...new Set(
+          grants.flatMap((grant) =>
+            grant.tokens.flatMap((token) => (token.kind === "consumer" ? [token.projection] : [])),
+          ),
+        ),
+      ];
+      const inserts = new Map(grants.map((grant) => [`${grant.direction} ${grantText(grant.tokens)}`, grant]));
+      return [
+        `            ${roleType}::${upperCamel(name)} => {`,
+        ...projections.map((projection) => `                ${consumerBinding(role, projection)}`),
+        ...[...inserts.values()].flatMap(grantInsert).map((line) => `                ${line}`),
+        "            }",
+      ];
+    });
     const fields = SCOPE_FIELDS[scope];
     return [
       "#[derive(Clone, Copy, Debug, PartialEq, Eq)]",
       `pub enum ${roleType} {`,
-      ...present.map((role) => `    ${ROLE_NAMES[role]},`),
+      ...[...byRole.keys()].map((name) => `    ${upperCamel(name)},`),
       "}",
-      `impl GrantScope for ${scopeTypeName(scope)} {`,
-      `    type Role = ${roleType};`,
-      "    fn grant(&self, role: Self::Role, grants: &mut GrantSet) {",
+      `impl ${scopeTypeName(scope)} {`,
+      "    /// Inserts every subject the role may publish to or subscribe to within this scope.",
+      "    pub fn grant(",
+      "        &self,",
+      `        role: ${roleType},`,
+      ...(consumers ? ["        session: &crate::transport::ConnectionSession,"] : []),
+      "        grants: &mut GrantSet,",
+      "    ) {",
       ...(fields.length === 0 ? [] : [`        let Self { ${fields.join(", ")} } = self;`]),
       "        match role {",
-      ...present.flatMap((role) => [
-        `            ${roleType}::${ROLE_NAMES[role]} => {`,
-        ...roles
-          .get(role)!
-          .flatMap(({ direction, expression }) => grantInsert(direction, expression))
-          .map((line) => `                ${line}`),
-        "            }",
-      ]),
+      ...arms,
       "        }",
       "    }",
       "}",
@@ -140,95 +183,20 @@ function emitGrants(routes: readonly ResolvedRoute[]): string[] {
   });
 }
 
-function emitMembershipProjections(routes: readonly ResolvedRoute[]): string[] {
-  const projections = routes.flatMap((route) => {
-    const { flow } = route;
-    if (flow.kind !== "watch" || flow.updates.delivery.kind !== "persistent") {
-      return [];
-    }
-    const address = flow.updates.addresses.get("panel");
-    if (!address) {
-      return [];
-    }
-    const { stream, projection } = flow.updates.delivery;
-    return [{ scope: route.scope, stream, projection, address, variant: upperCamel(projection) }];
-  });
-  const subjectArms = projections.flatMap(({ scope, address, variant }) => {
-    const expression = grantSubject(address, false, []);
-    switch (scope) {
-      case "user":
-        return [
-          `            Self::${variant} if organization.is_none() => {`,
-          "                let user = actor;",
-          `                Ok(${expression})`,
-          "            }",
-        ];
-      case "organization_actor":
-      case "organization":
-        return [
-          `            Self::${variant} => {`,
-          "                let organization = organization.ok_or_else(|| {",
-          "                    crate::otel_wasi::Error::new(",
-          '                        "permissions-consumer-organization-required",',
-          '                        "organization scope is not admitted",',
-          "                    )",
-          "                })?;",
-          `                Ok(${expression})`,
-          "            }",
-        ];
-      default:
-        throw new Error(`persistent projection has unsupported scope ${scope}`);
-    }
-  });
-  return [
-    "#[derive(Clone, Copy, Debug, PartialEq, Eq)]",
-    "pub enum MembershipProjection {",
-    ...projections.map(({ variant }) => `    ${variant},`),
-    "}",
-    "impl MembershipProjection {",
-    "    pub fn id(self) -> &'static str {",
-    "        match self {",
-    ...projections.map(
-      ({ variant, projection }) => `            Self::${variant} => ${JSON.stringify(projection)},`,
-    ),
-    "        }",
-    "    }",
-    "    pub fn stream(self) -> &'static str {",
-    "        match self {",
-    ...projections.map(
-      ({ variant, stream }) => `            Self::${variant} => ${JSON.stringify(stream)},`,
-    ),
-    "        }",
-    "    }",
-    "    pub fn event_subject(",
-    "        self,",
-    "        actor: &SubjectToken,",
-    "        organization: Option<&SubjectToken>,",
-    "    ) -> Result<String, crate::otel_wasi::Error> {",
-    "        match self {",
-    ...subjectArms,
-    "            _ => Err(crate::otel_wasi::Error::new(",
-    '                "permissions-consumer-projection-scope-invalid",',
-    '                "projection does not belong to the admitted scope",',
-    "            )),",
-    "        }",
-    "    }",
-    "}",
-  ];
-}
-
 /**
- * Emits the backend transport module: scope and grant types, membership projections, the dispatch
- * runtime and one route type per backend endpoint. generate.ts formats the module with rustfmt.
+ * Emits the backend transport module: scope types, role grants, the consumer naming rule, the
+ * dispatch runtime and one route type per backend subject. generate.ts formats the module with
+ * rustfmt.
  */
 export function emitRust(
-  routes: readonly ResolvedRoute[],
+  resolved: ResolvedRoutes,
   symbols: CodeGenerator.SymbolProvider,
 ): CodeGenerator.OutputFile[] {
+  const { routes } = resolved;
   const lines = [
     RUST_SCOPES,
-    ...emitGrants(routes),
-    ...emitMembershipProjections(routes),
+    ...emitGrants(resolved),
+    ...emitConsumerName(),
     RUST_DISPATCH,
     ...routes.flatMap((route) => emitRequestRoute(route, symbols)),
     ...routes.flatMap((route) => emitEventRoute(route, symbols)),

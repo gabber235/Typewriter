@@ -105,21 +105,21 @@ private val resourceOperationsResolveRequestAddress = "service.to.{realm}.organi
 fun RealmRouteScope.resourceOperationsResolve(policy: ResponsePolicy<skirout.editor.v1.resource_operations.ResolveResourceOperationsResult>) = skirUnaryContract(
     method = ResolveResourceOperations, name = OperationName.of("editor.resources.operations.resolve"),
     address = resourceOperationsResolveRequestAddress.subscribedAt(this), responsePolicy = policy,
-    failureSlug = ErrorSlug.of("resource-operations-resolve-failed"),
+    failureSlug = ErrorSlug.of("editor-resources-operations-resolve-failed"),
 )
 
 private val resourceDropCandidatesResolveRequestAddress = "service.to.{realm}.organization.{organization}.realm.editor.resources.drops.resolve".realmTemplate()
 fun RealmRouteScope.resourceDropCandidatesResolve(policy: ResponsePolicy<skirout.editor.v1.resource_operations.ResolveDropCandidatesResult>) = skirUnaryContract(
     method = ResolveDropCandidates, name = OperationName.of("editor.resources.drops.resolve"),
     address = resourceDropCandidatesResolveRequestAddress.subscribedAt(this), responsePolicy = policy,
-    failureSlug = ErrorSlug.of("resource-drop-candidates-resolve-failed"),
+    failureSlug = ErrorSlug.of("editor-resources-drops-resolve-failed"),
 )
 
 private val authoringActionPrepareRequestAddress = "service.to.{realm}.organization.{organization}.realm.editor.resources.actions.prepare".realmTemplate()
 fun RealmRouteScope.authoringActionPrepare(policy: ResponsePolicy<skirout.editor.v1.resource_operations.AuthoringActionResult>) = skirUnaryContract(
     method = PrepareAuthoringAction, name = OperationName.of("editor.resources.actions.prepare"),
     address = authoringActionPrepareRequestAddress.subscribedAt(this), responsePolicy = policy,
-    failureSlug = ErrorSlug.of("authoring-action-prepare-failed"),
+    failureSlug = ErrorSlug.of("editor-resources-actions-prepare-failed"),
 )
 
 private val authoringStateQueryRequestAddress = "service.to.{realm}.organization.{organization}.realm.editor.authoring.state.query".realmTemplate()

@@ -2,8 +2,8 @@ import type { CodeGenerator } from "skir-internal";
 
 import { importedKotlinSymbol, transferFieldName } from "../../symbols.js";
 import { lowerCamel, quoted } from "../../text.js";
-import type { Endpoints } from "../manifest.js";
-import type { ResolvedRoute } from "../resolve.js";
+import type { Channel } from "../manifest.js";
+import { clientSubject, hasSide, type ResolvedRoute, type ResolvedRoutes } from "../resolve.js";
 
 const COMMUNICATOR = "com.typewritermc.services.libs.communicator";
 
@@ -53,10 +53,11 @@ const LOADER_SCOPE = `private fun String.loaderRealmTemplate() = addressTemplate
 
 const kotlinString = (value: string) => quoted(value, "escaped");
 
-function serviceSubject(addresses: Endpoints, route: ResolvedRoute): string {
-  const subject = addresses.get("service");
+/** The subject service code uses for a channel of the route. */
+function serviceSubject(route: ResolvedRoute, channel: Channel): string {
+  const subject = clientSubject(route, channel);
   if (!subject) {
-    throw new Error(`Kotlin route ${route.name} has no service endpoint`);
+    throw new Error(`Kotlin route ${route.name} has no service ${channel} subject`);
   }
   return subject.toString();
 }
@@ -92,7 +93,7 @@ function routeFile(
         const method = importedKotlinSymbol(symbols.method(flow.method.module, flow.method.method));
         const response = symbols.record(flow.method.response).reference;
         imports.push(...method.imports);
-        blocks.push(`private val ${requestAddress} = ${kotlinString(serviceSubject(flow.requests, route))}.${template}
+        blocks.push(`private val ${requestAddress} = ${kotlinString(serviceSubject(route, "request"))}.${template}
 fun ${scope}.${name}(policy: ResponsePolicy<${response}>) = skirUnaryContract(
     method = ${method.name}, name = OperationName.of(${operation}),
     address = ${requestAddress}.subscribedAt(this), responsePolicy = policy,
@@ -105,8 +106,8 @@ fun ${scope}.${name}(policy: ResponsePolicy<${response}>) = skirUnaryContract(
         const response = symbols.record(flow.method.response).reference;
         const update = symbols.record(flow.updates.payload).reference;
         imports.push(...method.imports);
-        blocks.push(`private val ${requestAddress} = ${kotlinString(serviceSubject(flow.requests, route))}.${template}
-private val ${updateAddress} = ${kotlinString(serviceSubject(flow.updates.addresses, route))}.${template}
+        blocks.push(`private val ${requestAddress} = ${kotlinString(serviceSubject(route, "request"))}.${template}
+private val ${updateAddress} = ${kotlinString(serviceSubject(route, "updates"))}.${template}
 fun ${scope}.${name}(policy: ResponsePolicy<${response}>, updates: ResponseClassifier<${update}>) = skirWatchContract(
     method = ${method.name}, updateSerializer = ${update}.serializer,
     name = OperationName.of(${operation}), requestAddress = ${requestAddress}.subscribedAt(this),
@@ -119,10 +120,10 @@ fun ${scope}.${name}(policy: ResponsePolicy<${response}>, updates: ResponseClass
         const method = importedKotlinSymbol(symbols.method(flow.method.module, flow.method.method));
         const request = symbols.record(flow.method.request).reference;
         const response = symbols.record(flow.method.response).reference;
-        const update = serviceSubject(flow.updates, route).replace(/(\.\{transfer_id\})+$/u, "");
+        const update = serviceSubject(route, "updates").replace(/(\.\{transfer_id\})+$/u, "");
         const resolver = `MessageAddress.of("\${${updateAddress}.render(routeScope).value}.\${request.${transferFieldName(flow.transferField)}}")`;
         imports.push(...method.imports);
-        blocks.push(`private val ${requestAddress} = ${kotlinString(serviceSubject(flow.requests, route))}.${template}
+        blocks.push(`private val ${requestAddress} = ${kotlinString(serviceSubject(route, "request"))}.${template}
 private val ${updateAddress} = ${kotlinString(update)}.${template}
 fun ${scope}.${name}(policy: ResponsePolicy<${response}>, updates: ResponseClassifier<${response}>) = skirWatchContract(
     method = ${method.name}, updateSerializer = ${response}.serializer,
@@ -139,12 +140,8 @@ fun ${scope}.${name}(policy: ResponsePolicy<${response}>, updates: ResponseClass
         if (flow.binding.kind !== "skir") {
           break;
         }
-        const address = flow.addresses.get("service");
-        if (!address) {
-          throw new Error(`Kotlin route ${route.name} has no service endpoint`);
-        }
         const payload = symbols.record(flow.binding.payload).reference;
-        blocks.push(`private val ${name}Address = ${kotlinString(address.subject.toString())}.${template}
+        blocks.push(`private val ${name}Address = ${kotlinString(serviceSubject(route, "event"))}.${template}
 val ${scope}.${name} get() = EventContract(
     OperationName.of(${operation}), ${name}Address,
     ${payload}.serializer.asPayloadCodec(), ErrorSlug.of(${slug}),
@@ -156,20 +153,29 @@ val ${scope}.${name} get() = EventContract(
   return { path, code: kotlinFile("com.typewritermc.protocol.transport.generated", imports, blocks) };
 }
 
-/** Emits the Kotlin contracts of the realm and service scoped routes for the services runtime. */
+/**
+ * Emits the Kotlin contracts of the routes a service role takes part in for the services runtime:
+ * realm routes and the service routes of the registered service.
+ */
 export function emitKotlin(
-  routes: readonly ResolvedRoute[],
+  { roles, routes }: ResolvedRoutes,
   symbols: CodeGenerator.SymbolProvider,
 ): CodeGenerator.OutputFile[] {
+  const serviceRoutes = routes.filter((route) => hasSide(route, roles, "service"));
+  for (const route of serviceRoutes) {
+    if (route.scope !== "realm" && route.scope !== "service") {
+      throw new Error(`Kotlin route ${route.name} has unsupported scope ${route.scope}`);
+    }
+  }
   return [
     routeFile(
-      routes.filter((route) => route.scope === "realm"),
+      serviceRoutes.filter((route) => route.scope === "realm"),
       true,
       "RealmRoutes.kt",
       symbols,
     ),
     routeFile(
-      routes.filter((route) => route.scope === "service"),
+      serviceRoutes.filter((route) => route.scope === "service"),
       false,
       "ServiceRegistrationRoutes.kt",
       symbols,
@@ -185,7 +191,7 @@ function shortName(symbol: string): string {
  * Emits the loader core contracts of the native Kotlin routes, which use realm scope and the CBOR
  * codecs the manifest names instead of Skir serializers.
  */
-export function emitKotlinLoader(routes: readonly ResolvedRoute[]): CodeGenerator.OutputFile[] {
+export function emitKotlinLoader({ routes }: ResolvedRoutes): CodeGenerator.OutputFile[] {
   const imports = [...LOADER_IMPORTS];
   const blocks = [LOADER_SCOPE];
   for (const route of routes) {
@@ -204,7 +210,7 @@ export function emitKotlinLoader(routes: readonly ResolvedRoute[]): CodeGenerato
       const requestType = shortName(binding.request_type);
       const responseType = shortName(binding.response_type);
       imports.push(binding.request_type, binding.response_type);
-      blocks.push(`private val ${name}RequestAddress = ${kotlinString(serviceSubject(flow.requests, route))}.loaderRealmTemplate()
+      blocks.push(`private val ${name}RequestAddress = ${kotlinString(serviceSubject(route, "request"))}.loaderRealmTemplate()
 fun RealmRouteScope.${name}(policy: ResponsePolicy<${responseType}>): ScatterContract<RealmRouteScope, ${requestType}, ${responseType}> = ScatterContract(
     name = OperationName.of(${operation}),
     requestAddress = ${name}RequestAddress.subscribedAt(this),
@@ -215,12 +221,8 @@ fun RealmRouteScope.${name}(policy: ResponsePolicy<${responseType}>): ScatterCon
 )`);
     } else if (flow.binding.kind === "native_kotlin") {
       const { binding } = flow;
-      const address = flow.addresses.get("service");
-      if (!address) {
-        throw new Error(`Kotlin route ${route.name} has no service endpoint`);
-      }
       imports.push(binding.event_type);
-      blocks.push(`private val ${name}Address = ${kotlinString(address.subject.toString())}.loaderRealmTemplate()
+      blocks.push(`private val ${name}Address = ${kotlinString(serviceSubject(route, "event"))}.loaderRealmTemplate()
 val RealmRouteScope.${name}: EventContract<RealmRouteScope, ${shortName(binding.event_type)}>
     get() = EventContract(
         name = OperationName.of(${operation}),

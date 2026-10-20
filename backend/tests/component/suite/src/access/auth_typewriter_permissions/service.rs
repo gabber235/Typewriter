@@ -97,22 +97,34 @@ fn assert_published_content_access(permissions: &Permissions, organization: &str
     }
 }
 
+/// Rollout commands flow from the coordinator on the realm mesh; participant state flows back.
+fn rollout_subjects(organization: &str, realm: &str) -> (String, String) {
+    (
+        format!("service.from.{realm}.organization.{organization}.realm.rollout"),
+        format!("service.to.{realm}.organization.{organization}.realm.rollout"),
+    )
+}
+
 fn assert_rollout_participant_access(permissions: &Permissions, organization: &str, realm: &str) {
-    let prefix = format!("typewriter.organization.{organization}.realm.{realm}.hosts");
+    let (commands, state) = rollout_subjects(organization, realm);
     for suffix in ["probe", "command", "status"] {
         assert!(permits(
             &permissions.subscribe,
-            &format!("{prefix}.{suffix}")
+            &format!("{commands}.{suffix}")
         ));
     }
-    assert!(permits(&permissions.publish, &format!("{prefix}.state")));
+    assert!(permits(&permissions.publish, &format!("{state}.state")));
 
-    for foreign_prefix in [
-        format!("typewriter.organization.{organization}.realm.foreign_realm.hosts"),
-        format!("typewriter.organization.foreign_organization.realm.{realm}.hosts"),
+    for (other_organization, other_realm) in [
+        (organization, "foreign_realm"),
+        ("foreign_organization", realm),
     ] {
-        for suffix in ["probe", "command", "status", "state"] {
-            let subject = format!("{foreign_prefix}.{suffix}");
+        let (commands, state) = rollout_subjects(other_organization, other_realm);
+        for subject in ["probe", "command", "status"]
+            .map(|suffix| format!("{commands}.{suffix}"))
+            .into_iter()
+            .chain([format!("{state}.state")])
+        {
             assert!(!permits(&permissions.publish, &subject));
             assert!(!permits(&permissions.subscribe, &subject));
         }
@@ -124,22 +136,25 @@ fn assert_rollout_participant_only_denials(
     organization: &str,
     realm: &str,
 ) {
-    let prefix = format!("typewriter.organization.{organization}.realm.{realm}.hosts");
+    let (commands, state) = rollout_subjects(organization, realm);
     for suffix in ["probe", "command", "status"] {
         assert!(!permits(
             &permissions.publish,
-            &format!("{prefix}.{suffix}")
+            &format!("{commands}.{suffix}")
         ));
     }
-    assert!(!permits(&permissions.subscribe, &format!("{prefix}.state")));
+    assert!(!permits(&permissions.subscribe, &format!("{state}.state")));
 }
 
 fn assert_rollout_coordinator_access(permissions: &Permissions, organization: &str, realm: &str) {
-    let prefix = format!("typewriter.organization.{organization}.realm.{realm}.hosts");
+    let (commands, state) = rollout_subjects(organization, realm);
     for suffix in ["probe", "command", "status"] {
-        assert!(permits(&permissions.publish, &format!("{prefix}.{suffix}")));
+        assert!(permits(
+            &permissions.publish,
+            &format!("{commands}.{suffix}")
+        ));
     }
-    assert!(permits(&permissions.subscribe, &format!("{prefix}.state")));
+    assert!(permits(&permissions.subscribe, &format!("{state}.state")));
 }
 
 #[component_test(AuthTypewriterPermissions)]
@@ -419,12 +434,22 @@ async fn unassigned_bound_service_receives_no_realm_permissions(
     )
     .await?;
 
-    assert!(response.permissions.publish.allow.iter().all(|subject| {
-        !subject.starts_with("typewriter.organization.") && !subject.contains(".realm.")
-    }));
-    assert!(response.permissions.subscribe.allow.iter().all(|subject| {
-        !subject.starts_with("typewriter.organization.") && !subject.contains(".realm.")
-    }));
+    assert!(
+        response
+            .permissions
+            .publish
+            .allow
+            .iter()
+            .all(|subject| !subject.contains(".realm."))
+    );
+    assert!(
+        response
+            .permissions
+            .subscribe
+            .allow
+            .iter()
+            .all(|subject| !subject.contains(".realm."))
+    );
     Ok(())
 }
 
