@@ -3,3 +3,4 @@ kind: Kustomization
 resources:
   - workloaddeployment.yaml
   - surrealdb-credentials.yaml
+  - nats-subscriptions.generated.yaml

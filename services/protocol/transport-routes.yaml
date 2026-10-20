@@ -11,6 +11,9 @@ roles:
   realm_coordinator: { side: service, tenant: [organization, realm] }
   realm_participant: { side: service, tenant: [organization, realm] }
 
+# Backend components by deploy/base directory. For every component that serves or subscribes to
+# routes, the generator emits a typed dispatcher (transport_routes::<component>) and writes its
+# nats-subscriptions.generated.yaml ConfigMap into that directory.
 components:
   user-organization: backend/organization/user-organization/deploy/base
   organization-members: backend/organization/organization-members/deploy/base

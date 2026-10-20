@@ -2,11 +2,7 @@ import { spawnSync } from "node:child_process";
 import { readFileSync, writeFileSync } from "node:fs";
 
 import { parseManifest } from "./transport-generator/src/routes/manifest.ts";
-import {
-  componentSubscriptions,
-  deploymentSubscriptions,
-  validateComponentSubscriptions,
-} from "./transport-generator/src/routes/subscriptions.ts";
+import { subscriptionConfigMaps } from "./transport-generator/src/routes/subscriptions.ts";
 
 const transportManifest = "services/protocol/transport-routes.yaml";
 
@@ -27,15 +23,11 @@ function run(command: string, args: string[], cwd?: string): void {
 }
 
 run("bun", ["services/protocol/check-skir-ids.ts", "skir-src"]);
+// Skir writes only into each generator's output directory, so the NATS subscription ConfigMaps
+// that component deployments load are written here from the same manifest.
 const routes = parseManifest(readFileSync(transportManifest, "utf8"), transportManifest);
-// Components that serve other components own exact subscriptions the manifest derives.
-for (const component of componentSubscriptions(routes).keys()) {
-  const deployment = `${routes.components.get(component)}/workloaddeployment.yaml`;
-  validateComponentSubscriptions(
-    routes,
-    component,
-    deploymentSubscriptions(readFileSync(deployment, "utf8")),
-  );
+for (const file of subscriptionConfigMaps(routes, (path) => readFileSync(path, "utf8"))) {
+  writeFileSync(file.path, file.code);
 }
 run("bunx", ["--bun", "--no-install", "skir", "gen"]);
 run("rustfmt", [

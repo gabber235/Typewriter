@@ -25,8 +25,8 @@ spec:
             - core-handler
             - core
             - jetstream
-          config:
-            core-subscriptions: typewriter.from.user.*.organization.*.roles.watch:typewriter.organization-roles
+          configFrom:
+            - name: organization-roles-nats-subscriptions # generated, see nats-subscriptions.generated.yaml
         - namespace: seamlezz
           package: surrealdb
           version: "0.4.0"

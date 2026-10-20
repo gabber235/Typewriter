@@ -45,7 +45,7 @@ func (m *Typewriter) protocolGenerationContainer(source *dagger.Directory) *dagg
 func (m *Typewriter) ProtocolGenerationCheck(
 	// +optional
 	// +defaultPath="/"
-	// +ignore=["*", "!.gitignore", "!package.json", "!bun.lock", "!skir.yml", "!skir-src", "!services", "!backend/access/auth-typewriter-permissions/deploy/base/workloaddeployment.yaml", "!backend/wasmcloud-utils/src/skirout", "!backend/wasmcloud-utils/src/transport_routes", "!panel/lib/infrastructure/protocols/skir/skirout", "!panel/lib/infrastructure/messaging/generated", "!panel/lib/shared/editors/application/canonical_read_models.generated.dart", "**/target", "**/node_modules", "**/build", "**/.gradle", "**/.kotlin"]
+	// +ignore=["*", "!.gitignore", "!package.json", "!bun.lock", "!skir.yml", "!skir-src", "!services", "!backend/**/deploy/base/workloaddeployment.yaml", "!backend/**/deploy/base/kustomization.yaml", "!backend/**/deploy/base/nats-subscriptions.generated.yaml", "!backend/wasmcloud-utils/src/skirout", "!backend/wasmcloud-utils/src/transport_routes", "!panel/lib/infrastructure/protocols/skir/skirout", "!panel/lib/infrastructure/messaging/generated", "!panel/lib/shared/editors/application/canonical_read_models.generated.dart", "**/target", "**/node_modules", "**/build", "**/.gradle", "**/.kotlin"]
 	source *dagger.Directory,
 ) *dagger.Container {
 	return m.protocolGenerationContainer(source).
@@ -113,7 +113,7 @@ func (m *Typewriter) SkirSnapshot(
 func (m *Typewriter) SkirGenerate(
 	// +optional
 	// +defaultPath="/"
-	// +ignore=["*", "!.gitignore", "!package.json", "!bun.lock", "!skir.yml", "!skir-src", "!services", "!backend/access/auth-typewriter-permissions/deploy/base/workloaddeployment.yaml", "!backend/wasmcloud-utils/src/skirout", "!backend/wasmcloud-utils/src/transport_routes", "!panel/lib/infrastructure/protocols/skir/skirout", "!panel/lib/infrastructure/messaging/generated", "!panel/lib/shared/editors/application/canonical_read_models.generated.dart", "**/target", "**/node_modules", "**/build", "**/.gradle", "**/.kotlin"]
+	// +ignore=["*", "!.gitignore", "!package.json", "!bun.lock", "!skir.yml", "!skir-src", "!services", "!backend/**/deploy/base/workloaddeployment.yaml", "!backend/**/deploy/base/kustomization.yaml", "!backend/**/deploy/base/nats-subscriptions.generated.yaml", "!backend/wasmcloud-utils/src/skirout", "!backend/wasmcloud-utils/src/transport_routes", "!panel/lib/infrastructure/protocols/skir/skirout", "!panel/lib/infrastructure/messaging/generated", "!panel/lib/shared/editors/application/canonical_read_models.generated.dart", "**/target", "**/node_modules", "**/build", "**/.gradle", "**/.kotlin"]
 	source *dagger.Directory,
 ) (*dagger.Changeset, error) {
 	generated := m.protocolGenerationContainer(source).
