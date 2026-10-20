@@ -7397,3 +7397,10 @@ prepareValueMethod = _skir.Method(
   PrepareValueResult.serializer,
   "",
 );
+
+/// The family of relations whose one owner endpoint holds the resources on its many member endpoint,
+/// such as a Book holding its pages. Every owned resource has one owner, and ownership never loops.
+final _lib_editor_v1_type_catalog.RelationFamilyId resourceOwnershipFamily =
+    (_lib_editor_v1_type_catalog.RelationFamilyId.serializer.fromJsonCode(
+      "[\"resource.ownership\"]",
+    ));

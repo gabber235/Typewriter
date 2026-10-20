@@ -633,9 +633,8 @@ const _bookTags = _FixtureRelation(
   list: false,
 );
 
-/// The relation by which fixture Books own pages. It keeps the framework's
-/// Book pages identity, so destination selectors resolve fixture pages.
-const fixtureBookPagesRelation = "4fbbe0dcedd84ccb8b7ce8c6a6105551";
+/// The relation by which fixture Books own pages.
+const fixtureBookPagesRelation = "fixture.book.pages";
 
 const _bookPages = _FixtureRelation(
   kind: "bookPages",
@@ -722,6 +721,8 @@ CheckedEditorCatalog authoringFixtureCatalog({
     },
   };
   const sectionKinds = {"library", "taxonomy"};
+  // Resource types publish a search key, as the Kotlin catalog does.
+  const resourceKinds = {"realm", ...sectionKinds, "tag", "book", "page"};
   final types = <skir.PublishedType>[
     _published(
       "section",
@@ -747,6 +748,7 @@ CheckedEditorCatalog authoringFixtureCatalog({
         ),
         fields: type.value,
         ancestors: sectionKinds.contains(type.key) ? ["section"] : const [],
+        searchKey: resourceKinds.contains(type.key) ? type.key : null,
       ),
   ];
   final relations = <skir.RelationContract>[];
@@ -829,9 +831,7 @@ CheckedEditorCatalog authoringFixtureCatalog({
           cardinality: skir.EndpointCardinality.many,
           onDelete: skir.RelationDeletePolicy.clear,
         ),
-        families: spec.ownership
-            ? [skir.RelationFamilyId(value: "resource.ownership")]
-            : const [],
+        families: spec.ownership ? [skir.resourceOwnershipFamily] : const [],
       ),
     );
   }
@@ -1147,8 +1147,9 @@ skir.PublishedType _published(
   skir.RepresentationTemplate representation, {
   Map<String, skir.TypeTemplate> fields = const {},
   List<String> ancestors = const [],
+  String? searchKey,
 }) => skir.PublishedType(
-  searchKey: null,
+  searchKey: searchKey,
   placementField: fields.containsKey("placement")
       ? editorRootPath.field("placement")
       : null,

@@ -71,11 +71,7 @@ void main() {
     Future<void> pump(int count) => tester.pumpTestApp(
       child: Material(
         child: PresentationEnvironment(
-          bindings: {
-            presentationSelectionCountBindingId: PortableExpressionBinding(
-              value: skir.DataValue.wrapInteger(count.toString()),
-            ),
-          },
+          host: HostContext(selectionCount: count),
           child: Column(
             children: [
               PortablePresentationRenderer(host: first),
@@ -110,11 +106,7 @@ void main() {
     await tester.pumpTestApp(
       child: Material(
         child: PresentationEnvironment(
-          bindings: {
-            presentationSelectionCountBindingId: PortableExpressionBinding(
-              value: skir.DataValue.wrapInteger("2"),
-            ),
-          },
+          host: const HostContext(selectionCount: 2),
           child: PortablePresentationRenderer(
             host: host,
             scopeBuilder:
@@ -126,7 +118,7 @@ void main() {
                   required operations,
                 }) {
                   observed =
-                      bindings[presentationSelectionCountBindingId]?.value ==
+                      bindings[panelSelectionCountInput.bindingId]?.value ==
                       skir.DataValue.wrapInteger("2");
                   return PortablePresentationScope(
                     operations: operations,
@@ -144,20 +136,18 @@ void main() {
   });
 
   test("environment rejects collisions and writable observations", () {
+    final surface = skir.ExpressionBindingId(value: "surface");
     final value = PortableExpressionBinding(
       value: skir.DataValue.wrapInteger("1"),
     );
     expect(
-      () => {presentationSelectionCountBindingId: value}
-          .withPresentationEnvironment({
-            presentationSelectionCountBindingId: value,
-          }),
+      () => {surface: value}.withPresentationEnvironment({surface: value}),
       throwsStateError,
     );
     expect(
       () => <skir.ExpressionBindingId, PortableExpressionBinding>{}
           .withPresentationEnvironment({
-            presentationSelectionCountBindingId: PortableExpressionBinding(
+            surface: PortableExpressionBinding(
               value: value.value,
               location: skir.ValueLocation(
                 resource: skir.ResourceId(value: "book:1"),
@@ -456,6 +446,7 @@ BoundPresentationHost _host(
       .asTrustedLocalCatalog(),
   root: () => root,
   bindings: bindings,
+  contextInputs: [panelSelectionCountInput],
   budget: skir.EvaluationBudget(maxSteps: 1000, maxCollectionItems: 100),
 );
 PortablePresentationScope _scope() => PortablePresentationScope(

@@ -17,29 +17,14 @@ const authoringResourceSearchResultType = SearchResultType(
 )
 abstract class AuthoringSearchResultPayload
     with _$AuthoringSearchResultPayload {
-  factory AuthoringSearchResultPayload({
+  const factory AuthoringSearchResultPayload({
     required skir.AuthoringSearchHit hit,
     required AuthoringDocument document,
     required ResourceIssues issues,
-    Map<skir.ExpressionBindingId, PortableExpressionBinding>
-        presentationContext =
-        const {},
-  }) => AuthoringSearchResultPayload._value(
-    hit: hit,
-    document: document,
-    issues: issues,
-    presentationContext: Map.unmodifiable(presentationContext),
-  );
+    @Default(HostContext.empty) HostContext hostContext,
+  }) = _AuthoringSearchResultPayload;
 
   const AuthoringSearchResultPayload._();
-
-  const factory AuthoringSearchResultPayload._value({
-    required skir.AuthoringSearchHit hit,
-    required AuthoringDocument document,
-    required ResourceIssues issues,
-    required Map<skir.ExpressionBindingId, PortableExpressionBinding>
-    presentationContext,
-  }) = _AuthoringSearchResultPayload;
 
   CheckedEditorCatalog get catalog => document.catalog;
   skir.ResourceId get id => hit.resource;
@@ -64,10 +49,8 @@ final class RealmAuthoringSearchSource implements SearchSource {
     this.target,
     this.contexts = const [],
     this.typeFilter = const {},
-    Map<skir.ExpressionBindingId, PortableExpressionBinding>
-        presentationContext =
-        const {},
-  }) : presentationContext = Map.unmodifiable(presentationContext);
+    this.hostContext = HostContext.empty,
+  });
 
   final Ref ref;
   final skir.RecordId organizationId;
@@ -78,8 +61,9 @@ final class RealmAuthoringSearchSource implements SearchSource {
 
   /// Types whose resources the search returns; empty returns every type.
   final Set<skir.TypeDefinitionId> typeFilter;
-  final Map<skir.ExpressionBindingId, PortableExpressionBinding>
-  presentationContext;
+
+  /// Host values every hit's presentation may read.
+  final HostContext hostContext;
 
   final _snapshots = StreamController<SearchSourceSnapshot>.broadcast(
     sync: true,
@@ -185,7 +169,7 @@ final class RealmAuthoringSearchSource implements SearchSource {
                 ),
                 document: document,
                 issues: issues,
-                presentationContext: presentationContext,
+                hostContext: hostContext,
               ),
         ];
         _snapshots.add(

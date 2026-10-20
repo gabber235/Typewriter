@@ -87,8 +87,8 @@ SearchContribution<void> _builder(Ref ref, BuildContext context) {
           ref: ref,
           organizationId: organizationId,
           realmId: realmId,
-          presentationContext: libraryOriginBindings(
-            ref.read(routedResourceProvider(scope)),
+          hostContext: HostContext(
+            activeResource: ref.read(routedResourceProvider(scope)),
           ),
         ).debounced(100.ms).cached(),
       ]);

@@ -248,9 +248,7 @@ final class ResourceCreationFixture {
     _relations.add(
       skir.RelationContract(
         id: skir.RelationId(value: name),
-        families: [
-          if (ownership) skir.RelationFamilyId(value: "resource.ownership"),
-        ],
+        families: [if (ownership) skir.resourceOwnershipFamily],
         first: skir.EndpointDefinition(
           id: firstEndpoint,
           slot: skir.EndpointSlot.first,
@@ -358,7 +356,7 @@ final class ResourceCreationFixture {
       relations.add(
         skir.RelationContract(
           id: skir.RelationId(value: "owns$name"),
-          families: [skir.RelationFamilyId(value: "resource.ownership")],
+          families: [skir.resourceOwnershipFamily],
           first: skir.EndpointDefinition(
             id: owner,
             slot: skir.EndpointSlot.first,
@@ -524,5 +522,17 @@ final class ResourceCreationFixture {
       document = edit.toDocument();
     }
     return document;
+  }
+
+  /// [document] with an unlinked Book for each of [books].
+  AuthoringDocument withBooks(
+    AuthoringDocument document,
+    Iterable<skir.ResourceId> books,
+  ) {
+    final edit = AuthoringEdit.fromDocument(document);
+    for (final id in books) {
+      edit.create(id, _prepared(document, "Book"));
+    }
+    return edit.toDocument();
   }
 }

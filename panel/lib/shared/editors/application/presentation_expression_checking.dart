@@ -25,16 +25,24 @@ extension PresentationExpressionAdmission on CheckedEditorCatalog {
       }
     }
 
-    final callerInputs = <skir.ExpressionBindingId, skir.TypeUse>{};
+    final contextInputs = <skir.ExpressionBindingId, skir.TypeUse>{};
     for (final input in material.dependencies.contextInputs) {
       if (!input.bindingId.value.startsWith("context:") ||
           input.bindingId.value.substring(8).trim().isEmpty) {
         errors.add("invalid_context_input_binding");
       }
-      if (callerInputs.containsKey(input.bindingId)) {
+      if (contextInputs.containsKey(input.bindingId)) {
         errors.add("duplicate_context_input");
       }
-      callerInputs[input.bindingId] = input.valueType;
+      switch (input.source) {
+        case skir.PresentationContextSource_hostWrapper(:final value)
+            when HostContext.valueType(value) != input.valueType:
+          errors.add("invalid_host_context_input");
+        case skir.PresentationContextSource_unknown():
+          errors.add("invalid_context_input_source");
+        case _:
+      }
+      contextInputs[input.bindingId] = input.valueType;
       final named = namedUse(input.valueType);
       if (named != null && !isReadyApplication(named)) {
         errors.add("invalid_context_input_type");
@@ -1291,9 +1299,7 @@ extension PresentationExpressionAdmission on CheckedEditorCatalog {
         skir.TypeUse.wrapNamed(canonicalReadModels.resourceAppearanceUse),
         false,
       ),
-      skir.ExpressionBindingId(value: "presentation.context.selection_count"):
-          type(integer, false),
-      for (final input in callerInputs.entries) input.key: type(input.value),
+      for (final input in contextInputs.entries) input.key: type(input.value),
     };
     visit(material.layout, rootEnvironment);
     return List.unmodifiable(errors.toSet());

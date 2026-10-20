@@ -584,8 +584,7 @@ class PresentationSubjectExpressions(
 
 /** Read only observations from the surface hosting this presentation. */
 interface PresentationContextExpressions {
-    val selectionCount: Expr<Int, com.typewritermc.expression.MayBeMissing>
-
+    /** Reads [key], declaring it as a context input of the presentation being built. */
     fun <Value : Any> read(key: PresentationContextKey<Value>): Expr<Value, com.typewritermc.expression.MayBeMissing>
 }
 

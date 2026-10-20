@@ -10894,12 +10894,113 @@ impl DividerAppearance {
 }
 
 // ==============================================================================
+// enum HostContextInput
+// ==============================================================================
+
+/// Context values every editor host supplies, declared once so presentations and hosts share no keys.
+#[derive(Debug, Clone, PartialEq)]
+pub enum HostContextInput {
+    Unknown(Option<crate::skir_client::UnrecognizedVariant<HostContextInput>>),
+    /// The resource routed in the workspace, if any.
+    ActiveResource,
+    /// Number of resources in the current selection.
+    SelectionCount,
+}
+
+impl Default for HostContextInput {
+    fn default() -> Self {
+        HostContextInput::Unknown(None)
+    }
+}
+
+impl HostContextInput {
+    fn _adapter() -> &'static crate::skir_client::internal::EnumAdapter<HostContextInput> {
+        static ADAPTER: std::sync::LazyLock<
+            crate::skir_client::internal::EnumAdapter<HostContextInput>,
+        > = std::sync::LazyLock::new(|| {
+            crate::skir_client::internal::EnumAdapter::new(
+                |x: &HostContextInput| match x {
+                    HostContextInput::Unknown(_) => 0,
+                    HostContextInput::ActiveResource => 1,
+                    HostContextInput::SelectionCount => 2,
+                },
+                |u| HostContextInput::Unknown(Some(u)),
+                |x: &HostContextInput| match x {
+                    HostContextInput::Unknown(Some(u)) => Some(u.as_ref()),
+                    _ => None,
+                },
+                "editor/v1/presentation.skir",
+                "HostContextInput",
+                "Context values every editor host supplies, declared once so presentations and hosts share no keys.",
+            )
+        });
+        &*ADAPTER
+    }
+    pub fn serializer() -> crate::skir_client::Serializer<HostContextInput> {
+        initialize_module_serializers();
+        crate::skir_client::internal::enum_serializer_from_static(HostContextInput::_adapter())
+    }
+}
+
+// ==============================================================================
+// enum PresentationContextSource
+// ==============================================================================
+
+/// Who supplies a context value: the caller of a presentation by binding, or the editor host.
+#[derive(Debug, Clone, PartialEq)]
+pub enum PresentationContextSource {
+    Unknown(Option<crate::skir_client::UnrecognizedVariant<PresentationContextSource>>),
+    Caller,
+    Host(Box<HostContextInput>),
+}
+
+impl Default for PresentationContextSource {
+    fn default() -> Self {
+        PresentationContextSource::Unknown(None)
+    }
+}
+
+impl PresentationContextSource {
+    fn _adapter() -> &'static crate::skir_client::internal::EnumAdapter<PresentationContextSource> {
+        static ADAPTER: std::sync::LazyLock<
+            crate::skir_client::internal::EnumAdapter<PresentationContextSource>,
+        > = std::sync::LazyLock::new(|| {
+            crate::skir_client::internal::EnumAdapter::new(
+                |x: &PresentationContextSource| match x {
+                    PresentationContextSource::Unknown(_) => 0,
+                    PresentationContextSource::Caller => 1,
+                    PresentationContextSource::Host(_) => 2,
+                },
+                |u| PresentationContextSource::Unknown(Some(u)),
+                |x: &PresentationContextSource| match x {
+                    PresentationContextSource::Unknown(Some(u)) => Some(u.as_ref()),
+                    _ => None,
+                },
+                "editor/v1/presentation.skir",
+                "PresentationContextSource",
+                "Who supplies a context value: the caller of a presentation by binding, or the editor host.",
+            )
+        });
+        &*ADAPTER
+    }
+    pub fn serializer() -> crate::skir_client::Serializer<PresentationContextSource> {
+        initialize_module_serializers();
+        crate::skir_client::internal::enum_serializer_from_static(
+            PresentationContextSource::_adapter(),
+        )
+    }
+}
+
+// ==============================================================================
 // struct PresentationContextInput
 // ==============================================================================
 
+/// A value a presentation reads from its surroundings. Expressions read it through `binding_id`;
+/// `source` says who supplies it, so a host fills its declared inputs without sharing binding names.
 #[derive(Clone, Debug, PartialEq, Default)]
 pub struct PresentationContextInput {
     pub binding_id: crate::skirout::base::editor::v1::type_catalog::ExpressionBindingId,
+    pub source: PresentationContextSource,
     pub value_type: crate::skirout::base::editor::v1::type_catalog::TypeUse,
     /// Set this to None when you're creating a struct.
     pub _unrecognized: Option<crate::skir_client::UnrecognizedFields<PresentationContextInput>>,
@@ -10922,7 +11023,7 @@ impl PresentationContextInput {
             crate::skir_client::internal::StructAdapter::new(
                 "editor/v1/presentation.skir",
                 "PresentationContextInput",
-                "",
+                "A value a presentation reads from its surroundings. Expressions read it through `binding_id`;\n`source` says who supplies it, so a host fills its declared inputs without sharing binding names.",
                 |x: &PresentationContextInput| &x._unrecognized,
                 |x: &mut PresentationContextInput, u| x._unrecognized = u,
             )
@@ -21983,6 +22084,45 @@ fn initialize_module_serializers() {
             (*a).finalize();
         }
         unsafe {
+            let a: *mut crate::skir_client::internal::EnumAdapter<HostContextInput> =
+                HostContextInput::_adapter() as *const _ as *mut _;
+            (*a).add_constant_variant(
+                "active_resource",
+                1,
+                1,
+                "The resource routed in the workspace, if any.",
+                HostContextInput::ActiveResource,
+            );
+            (*a).add_constant_variant(
+                "selection_count",
+                2,
+                2,
+                "Number of resources in the current selection.",
+                HostContextInput::SelectionCount,
+            );
+            (*a).finalize();
+        }
+        unsafe {
+            let a: *mut crate::skir_client::internal::EnumAdapter<PresentationContextSource> =
+                PresentationContextSource::_adapter() as *const _ as *mut _;
+            (*a).add_constant_variant("caller", 1, 1, "", PresentationContextSource::Caller);
+            (*a).add_wrapper_variant(
+                "host",
+                2,
+                2,
+                crate::skir_client::internal::enum_serializer_from_static(
+                    HostContextInput::_adapter(),
+                ),
+                "",
+                |v| PresentationContextSource::Host(Box::new(v)),
+                |x| match x {
+                    PresentationContextSource::Host(b) => b.as_ref(),
+                    _ => unreachable!(),
+                },
+            );
+            (*a).finalize();
+        }
+        unsafe {
             let a: *mut crate::skir_client::internal::StructAdapter<PresentationContextInput> =
                 PresentationContextInput::_adapter() as *const _ as *mut _;
             (*a).add_field(
@@ -21994,8 +22134,18 @@ fn initialize_module_serializers() {
                 |x: &mut PresentationContextInput, v| x.binding_id = v,
             );
             (*a).add_field(
-                "value_type",
+                "source",
                 1,
+                crate::skir_client::internal::enum_serializer_from_static(
+                    PresentationContextSource::_adapter(),
+                ),
+                "",
+                |x: &PresentationContextInput| &x.source,
+                |x: &mut PresentationContextInput, v| x.source = v,
+            );
+            (*a).add_field(
+                "value_type",
+                2,
                 crate::skirout::base::editor::v1::type_catalog::TypeUse::serializer(),
                 "",
                 |x: &PresentationContextInput| &x.value_type,

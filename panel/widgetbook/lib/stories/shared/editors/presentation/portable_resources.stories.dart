@@ -320,7 +320,7 @@ _PageFixture _pageFixture() {
           cueType,
           skir.EndpointCardinality.many,
         ),
-        families: [skir.RelationFamilyId(value: "resource.ownership")],
+        families: [skir.resourceOwnershipFamily],
       ),
     ],
     realmRoot: skir.TypeDefinitionId.defaultInstance,

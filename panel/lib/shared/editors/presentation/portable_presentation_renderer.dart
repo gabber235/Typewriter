@@ -393,6 +393,7 @@ final class PortablePresentationRenderer extends HookWidget {
     required this.host,
     this.scopeBuilder,
     this.contextBindings = const {},
+    this.hostContext = HostContext.empty,
     this.contentBuilder,
     this.errorBuilder,
     this.onStatus,
@@ -401,8 +402,13 @@ final class PortablePresentationRenderer extends HookWidget {
   });
   final PortablePresentationHost host;
   final PortablePresentationScopeBuilder? scopeBuilder;
+
+  /// Inputs this renderer's caller supplies by binding.
   final Map<skir.ExpressionBindingId, PortableExpressionBinding>
   contextBindings;
+
+  /// Host values this renderer adds to its [PresentationEnvironment].
+  final HostContext hostContext;
   final Widget Function(
     skir.PresentationNode node,
     PortablePresentationScope scope,
@@ -424,15 +430,18 @@ final class PortablePresentationRenderer extends HookWidget {
       operations.retirePending();
       return null;
     }, [host, operations]);
+    final hostValues = hostContext.within(
+      PresentationEnvironment.hostOf(context),
+    );
     final Map<skir.ExpressionBindingId, PortableExpressionBinding> bindings;
     try {
       bindings = normalizePresentationBindings(
         catalog: document.catalog,
         document: document.bindings,
-        surface:
-            (PresentationEnvironment.maybeOf(context)?.bindings ?? const {})
-                .withCallerInputs(contextBindings),
-        imports: document.material?.dependencies.contextInputs ?? const [],
+        surface: const <skir.ExpressionBindingId, PortableExpressionBinding>{}
+            .withCallerInputs(contextBindings),
+        imports: document.contextInputs,
+        host: hostValues,
       );
     } on FormatException catch (error) {
       return errorBuilder?.call(error.message) ?? _diagnostic(error.message);
@@ -440,31 +449,32 @@ final class PortablePresentationRenderer extends HookWidget {
       return errorBuilder?.call(error.message) ?? _diagnostic(error.message);
     }
     final scope =
-        scopeBuilder?.call(
-          host: host,
-          document: document,
-          bindings: bindings,
-          operations: operations,
-          reportStatus: operations.reportStatus,
-        ) ??
-        PortablePresentationScope(
-          bindings: bindings,
-          budget: document.budget,
-          queries: document.queries,
-          resourceDiagnostics: document.resourceDiagnostics,
-          enabled: host.enabled,
-          readOnly: host.readOnly,
-          operations: operations,
-          watchSearch: host.capabilities.watchSearch,
-          openResource: host.capabilities.openResource,
-          reportStatus: operations.reportStatus,
-          catalog: document.catalog,
-          role: document.role,
-          material: document.material,
-          activePresentations: document.activePresentations,
-          slots: document.slots,
-          host: host,
-        );
+        (scopeBuilder?.call(
+                  host: host,
+                  document: document,
+                  bindings: bindings,
+                  operations: operations,
+                  reportStatus: operations.reportStatus,
+                ) ??
+                PortablePresentationScope(
+                  bindings: bindings,
+                  budget: document.budget,
+                  queries: document.queries,
+                  resourceDiagnostics: document.resourceDiagnostics,
+                  enabled: host.enabled,
+                  readOnly: host.readOnly,
+                  operations: operations,
+                  watchSearch: host.capabilities.watchSearch,
+                  openResource: host.capabilities.openResource,
+                  reportStatus: operations.reportStatus,
+                  catalog: document.catalog,
+                  role: document.role,
+                  material: document.material,
+                  activePresentations: document.activePresentations,
+                  slots: document.slots,
+                  host: host,
+                ))
+            .copyWith(hostContext: hostValues);
     final root =
         contentBuilder?.call(document.root, scope) ??
         PortablePresentationNodeRenderer(

@@ -559,6 +559,302 @@ as skir.TypeSelection,
 }
 
 /// @nodoc
+mixin _$OwnerRoute {
+
+/// The owner type this route reaches.
+ skir.TypeDefinitionId get ownerRoot;/// The member endpoints followed from the starting type, nearest owner
+/// first. A creation constraint follows them in this order.
+ List<skir.EndpointId> get endpoints;/// Owner types this route reached, so a type that owns its own type, such
+/// as a Folder holding Folders, ends the walk.
+ Set<skir.TypeDefinitionId> get visited;
+/// Create a copy of OwnerRoute
+/// with the given fields replaced by the non-null parameter values.
+@JsonKey(includeFromJson: false, includeToJson: false)
+@pragma('vm:prefer-inline')
+$OwnerRouteCopyWith<OwnerRoute> get copyWith => _$OwnerRouteCopyWithImpl<OwnerRoute>(this as OwnerRoute, _$identity);
+
+
+
+@override
+bool operator ==(Object other) {
+  final _this = this as OwnerRoute;
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is OwnerRoute&&(identical(other.ownerRoot, _this.ownerRoot) || other.ownerRoot == _this.ownerRoot)&&const DeepCollectionEquality().equals(other.endpoints, _this.endpoints)&&const DeepCollectionEquality().equals(other.visited, _this.visited));
+}
+
+
+@override
+int get hashCode {
+  final _this = this as OwnerRoute;
+  return Object.hash(runtimeType,_this.ownerRoot,const DeepCollectionEquality().hash(_this.endpoints),const DeepCollectionEquality().hash(_this.visited));
+}
+
+@override
+String toString() {
+  final _this = this as OwnerRoute;
+  return 'OwnerRoute(ownerRoot: ${_this.ownerRoot}, endpoints: ${_this.endpoints}, visited: ${_this.visited})';
+}
+
+
+}
+
+/// @nodoc
+abstract mixin class $OwnerRouteCopyWith<$Res>  {
+  factory $OwnerRouteCopyWith(OwnerRoute value, $Res Function(OwnerRoute) _then) = _$OwnerRouteCopyWithImpl;
+@useResult
+$Res call({
+ skir.TypeDefinitionId ownerRoot, List<skir.EndpointId> endpoints, Set<skir.TypeDefinitionId> visited
+});
+
+
+
+
+}
+/// @nodoc
+class _$OwnerRouteCopyWithImpl<$Res>
+    implements $OwnerRouteCopyWith<$Res> {
+  _$OwnerRouteCopyWithImpl(this._self, this._then);
+
+  final OwnerRoute _self;
+  final $Res Function(OwnerRoute) _then;
+
+/// Create a copy of OwnerRoute
+/// with the given fields replaced by the non-null parameter values.
+@pragma('vm:prefer-inline') @override $Res call({Object? ownerRoot = null,Object? endpoints = null,Object? visited = null,}) {
+  return _then(OwnerRoute(
+ownerRoot: null == ownerRoot ? _self.ownerRoot : ownerRoot // ignore: cast_nullable_to_non_nullable
+as skir.TypeDefinitionId,endpoints: null == endpoints ? _self.endpoints : endpoints // ignore: cast_nullable_to_non_nullable
+as List<skir.EndpointId>,visited: null == visited ? _self.visited : visited // ignore: cast_nullable_to_non_nullable
+as Set<skir.TypeDefinitionId>,
+  ));
+}
+
+}
+
+
+/// Adds pattern-matching-related methods to [OwnerRoute].
+extension OwnerRoutePatterns on OwnerRoute {
+/// A variant of `map` that fallback to returning `orElse`.
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case final Subclass value:
+///     return ...;
+///   case _:
+///     return orElse();
+/// }
+/// ```
+
+@optionalTypeArgs TResult maybeMap<TResult extends Object?>(TResult Function( _OwnerRoute value)?  $default,{required TResult orElse(),}){
+final _that = this;
+switch (_that) {
+case _OwnerRoute() when $default != null:
+return $default(_that);case _:
+  return orElse();
+
+}
+}
+/// A `switch`-like method, using callbacks.
+///
+/// Callbacks receives the raw object, upcasted.
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case final Subclass value:
+///     return ...;
+///   case final Subclass2 value:
+///     return ...;
+/// }
+/// ```
+
+@optionalTypeArgs TResult map<TResult extends Object?>(TResult Function( _OwnerRoute value)  $default,){
+final _that = this;
+switch (_that) {
+case _OwnerRoute():
+return $default(_that);case _:
+  throw StateError('Unexpected subclass');
+
+}
+}
+/// A variant of `map` that fallback to returning `null`.
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case final Subclass value:
+///     return ...;
+///   case _:
+///     return null;
+/// }
+/// ```
+
+@optionalTypeArgs TResult? mapOrNull<TResult extends Object?>(TResult? Function( _OwnerRoute value)?  $default,){
+final _that = this;
+switch (_that) {
+case _OwnerRoute() when $default != null:
+return $default(_that);case _:
+  return null;
+
+}
+}
+/// A variant of `when` that fallback to an `orElse` callback.
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case Subclass(:final field):
+///     return ...;
+///   case _:
+///     return orElse();
+/// }
+/// ```
+
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( skir.TypeDefinitionId ownerRoot,  List<skir.EndpointId> endpoints,  Set<skir.TypeDefinitionId> visited)?  $default,{required TResult orElse(),}) {final _that = this;
+switch (_that) {
+case _OwnerRoute() when $default != null:
+return $default(_that.ownerRoot,_that.endpoints,_that.visited);case _:
+  return orElse();
+
+}
+}
+/// A `switch`-like method, using callbacks.
+///
+/// As opposed to `map`, this offers destructuring.
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case Subclass(:final field):
+///     return ...;
+///   case Subclass2(:final field2):
+///     return ...;
+/// }
+/// ```
+
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( skir.TypeDefinitionId ownerRoot,  List<skir.EndpointId> endpoints,  Set<skir.TypeDefinitionId> visited)  $default,) {final _that = this;
+switch (_that) {
+case _OwnerRoute():
+return $default(_that.ownerRoot,_that.endpoints,_that.visited);case _:
+  throw StateError('Unexpected subclass');
+
+}
+}
+/// A variant of `when` that fallback to returning `null`
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case Subclass(:final field):
+///     return ...;
+///   case _:
+///     return null;
+/// }
+/// ```
+
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( skir.TypeDefinitionId ownerRoot,  List<skir.EndpointId> endpoints,  Set<skir.TypeDefinitionId> visited)?  $default,) {final _that = this;
+switch (_that) {
+case _OwnerRoute() when $default != null:
+return $default(_that.ownerRoot,_that.endpoints,_that.visited);case _:
+  return null;
+
+}
+}
+
+}
+
+/// @nodoc
+
+
+class _OwnerRoute extends OwnerRoute {
+  const _OwnerRoute({required this.ownerRoot, required  List<skir.EndpointId> endpoints, required  Set<skir.TypeDefinitionId> visited}): _endpoints = endpoints,_visited = visited,super._();
+  
+
+/// The owner type this route reaches.
+@override final  skir.TypeDefinitionId ownerRoot;
+/// The member endpoints followed from the starting type, nearest owner
+/// first. A creation constraint follows them in this order.
+ final  List<skir.EndpointId> _endpoints;
+/// The member endpoints followed from the starting type, nearest owner
+/// first. A creation constraint follows them in this order.
+@override List<skir.EndpointId> get endpoints {
+  if (_endpoints is EqualUnmodifiableListView) return _endpoints;
+  // ignore: implicit_dynamic_type
+  return EqualUnmodifiableListView(_endpoints);
+}
+
+/// Owner types this route reached, so a type that owns its own type, such
+/// as a Folder holding Folders, ends the walk.
+ final  Set<skir.TypeDefinitionId> _visited;
+/// Owner types this route reached, so a type that owns its own type, such
+/// as a Folder holding Folders, ends the walk.
+@override Set<skir.TypeDefinitionId> get visited {
+  if (_visited is EqualUnmodifiableSetView) return _visited;
+  // ignore: implicit_dynamic_type
+  return EqualUnmodifiableSetView(_visited);
+}
+
+
+/// Create a copy of OwnerRoute
+/// with the given fields replaced by the non-null parameter values.
+@override @JsonKey(includeFromJson: false, includeToJson: false)
+@pragma('vm:prefer-inline')
+_$OwnerRouteCopyWith<_OwnerRoute> get copyWith => __$OwnerRouteCopyWithImpl<_OwnerRoute>(this, _$identity);
+
+
+
+@override
+bool operator ==(Object other) {
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is _OwnerRoute&&(identical(other.ownerRoot, ownerRoot) || other.ownerRoot == ownerRoot)&&const DeepCollectionEquality().equals(other.endpoints, _endpoints)&&const DeepCollectionEquality().equals(other.visited, _visited));
+}
+
+
+@override
+int get hashCode {
+    return Object.hash(runtimeType,ownerRoot,const DeepCollectionEquality().hash(_endpoints),const DeepCollectionEquality().hash(_visited));
+}
+
+@override
+String toString() {
+    return 'OwnerRoute(ownerRoot: $ownerRoot, endpoints: $endpoints, visited: $visited)';
+}
+
+
+}
+
+/// @nodoc
+abstract mixin class _$OwnerRouteCopyWith<$Res> implements $OwnerRouteCopyWith<$Res> {
+  factory _$OwnerRouteCopyWith(_OwnerRoute value, $Res Function(_OwnerRoute) _then) = __$OwnerRouteCopyWithImpl;
+@override @useResult
+$Res call({
+ skir.TypeDefinitionId ownerRoot, List<skir.EndpointId> endpoints, Set<skir.TypeDefinitionId> visited
+});
+
+
+
+
+}
+/// @nodoc
+class __$OwnerRouteCopyWithImpl<$Res>
+    implements _$OwnerRouteCopyWith<$Res> {
+  __$OwnerRouteCopyWithImpl(this._self, this._then);
+
+  final _OwnerRoute _self;
+  final $Res Function(_OwnerRoute) _then;
+
+/// Create a copy of OwnerRoute
+/// with the given fields replaced by the non-null parameter values.
+@override @pragma('vm:prefer-inline') $Res call({Object? ownerRoot = null,Object? endpoints = null,Object? visited = null,}) {
+  return _then(_OwnerRoute(
+ownerRoot: null == ownerRoot ? _self.ownerRoot : ownerRoot // ignore: cast_nullable_to_non_nullable
+as skir.TypeDefinitionId,endpoints: null == endpoints ? _self._endpoints : endpoints // ignore: cast_nullable_to_non_nullable
+as List<skir.EndpointId>,visited: null == visited ? _self._visited : visited // ignore: cast_nullable_to_non_nullable
+as Set<skir.TypeDefinitionId>,
+  ));
+}
+
+
+}
+
+/// @nodoc
 mixin _$PendingCreation {
 
  ResourceCreationRequest get request; CreationContext get context; skir.PreparationStep get step;

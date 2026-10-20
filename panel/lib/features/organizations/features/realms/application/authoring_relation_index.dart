@@ -29,7 +29,11 @@ abstract class AuthoringRelationIndex with _$AuthoringRelationIndex {
   const AuthoringRelationIndex._();
 
   factory AuthoringRelationIndex.fromDocument(AuthoringDocument document) {
-    final childSlots = <skir.RelationId, skir.EndpointSlot>{};
+    final catalog = document.catalog;
+    final childSlots = <skir.RelationId, skir.EndpointSlot>{
+      for (final ownership in catalog.ownershipRelations)
+        ownership.relation: ownership.member.slot,
+    };
     final problems = <String>[];
     final malformed = <skir.RelationId>{};
     final resourceProblems = <skir.ResourceId, List<String>>{};
@@ -38,28 +42,14 @@ abstract class AuthoringRelationIndex with _$AuthoringRelationIndex {
       resourceProblems.putIfAbsent(resource, () => []).add(problem);
     }
 
-    for (final relation in document.catalog.snapshot.relations) {
-      if (!relation.families.any(
-        (family) => family.value == "resource.ownership",
-      )) {
+    for (final relation in catalog.snapshot.relations) {
+      if (!relation.ownsResources || childSlots.containsKey(relation.id)) {
         continue;
       }
-      final firstOwns =
-          relation.first.cardinality == skir.EndpointCardinality.one &&
-          relation.second.cardinality == skir.EndpointCardinality.many;
-      final secondOwns =
-          relation.second.cardinality == skir.EndpointCardinality.one &&
-          relation.first.cardinality == skir.EndpointCardinality.many;
-      if (!firstOwns && !secondOwns) {
-        malformed.add(relation.id);
-        problems.add(
-          "Ownership ${relation.id.value} has no unique owner endpoint",
-        );
-        continue;
-      }
-      childSlots[relation.id] = firstOwns
-          ? skir.EndpointSlot.second
-          : skir.EndpointSlot.first;
+      malformed.add(relation.id);
+      problems.add(
+        "Ownership ${relation.id.value} has no unique owner endpoint",
+      );
     }
 
     final parents = <skir.ResourceId, Set<skir.ResourceId>>{};

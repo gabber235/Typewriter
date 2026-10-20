@@ -21,7 +21,9 @@ extension PortableColorExpressions on Color {
 }
 
 extension PortableResourceHeading on skir.ExpressionNode {
-  /// Composes a fitted title and optional identity, hidden for multiple selection.
+  /// Composes a fitted title and optional identity, hidden for multiple
+  /// selection. Hosts must declare [panelSelectionCountInput] among their
+  /// context inputs.
   skir.PresentationNode resourceHeading({
     required String id,
     required skir.ExpressionNode color,
@@ -67,7 +69,7 @@ extension PortableResourceHeading on skir.ExpressionNode {
         condition: skir.ExpressionNode.createValueCompare(
           operation: skir.ValueCompareOperation.equal,
           left: skir.ExpressionNode.createOrElse(
-            input: presentationSelectionCountBindingId.readExpression(),
+            input: panelSelectionCountInput.bindingId.readExpression(),
             fallback: skir.ExpressionNode.wrapLiteral(
               skir.DataValue.wrapInteger("1"),
             ),

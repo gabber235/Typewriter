@@ -229,6 +229,7 @@ final class AuthoredResourceEditor extends HookConsumerWidget {
     final renderer = PortablePresentationRenderer(
       key: ValueKey(resource),
       host: host,
+      hostContext: HostContext(activeResource: routedResource),
       fillAvailableSpace: fillAvailableSpace,
       onStatus: onStatus,
       scopeBuilder:

@@ -36,6 +36,7 @@ extension ServicePortablePresentation on Service {
   }) => BoundPresentationHost(
     catalog: _servicePortableCatalog,
     root: () => _servicePortablePresentation(color, serviceId.id),
+    contextInputs: [panelSelectionCountInput],
     budget: skir.EvaluationBudget(maxSteps: 512, maxCollectionItems: 64),
     bindings: [
       _serviceNamePresentationBinding(identityOwner),

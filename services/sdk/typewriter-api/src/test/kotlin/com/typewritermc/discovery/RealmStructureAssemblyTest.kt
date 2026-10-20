@@ -27,8 +27,13 @@ import com.typewritermc.types.TypeTemplate
 import com.typewritermc.types.catalog.DeclarationStatus
 import de.infix.testBalloon.framework.core.testSuite
 import io.kotest.matchers.shouldBe
+import skirout.editor.v1.catalog.RESOURCE_OWNERSHIP_FAMILY
 
 val RealmStructureAssemblyTest by testSuite {
+    test("the ownership family annotation id is the editor contract's ownership family") {
+        RESOURCE_OWNERSHIP_FAMILY_ID shouldBe RESOURCE_OWNERSHIP_FAMILY.value
+    }
+
     test("reserved read identities cannot replace intrinsic schemas or isolate unrelated declarations") {
         val reserved = TypeDefinitionId(TypeId.Qualified("typewriter.read", "UnfamiliarModel"), 1)
         val healthy = id("Healthy")

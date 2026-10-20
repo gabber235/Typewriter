@@ -18,13 +18,8 @@ import com.typewritermc.expression.trim
 import com.typewritermc.presentation.Layout
 import com.typewritermc.presentation.PresentationInsets
 import com.typewritermc.presentation.ResourceExpr
-import com.typewritermc.presentation.presentationContextKey
 import com.typewritermc.presentation.resource
 import com.typewritermc.types.ResourceId
-
-object LibraryContext {
-    val activeResource = presentationContextKey<ResourceId>("typewriter.library.active_resource")
-}
 
 internal fun Expr<String, Handled>.hasText(): Expr<Boolean, Handled> = trim().length gt 0
 

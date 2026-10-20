@@ -87,6 +87,12 @@ struct RelationContract(810900006) {
   families: [RelationFamilyId] = 3;
 }
 
+/// The family of relations whose one owner endpoint holds the resources on its many member endpoint,
+/// such as a Book holding its pages. Every owned resource has one owner, and ownership never loops.
+const RESOURCE_OWNERSHIP_FAMILY: RelationFamilyId = {
+  value: "resource.ownership",
+};
+
 enum DeclarationStatus(810900007) {
   ready = 1;
   unavailable: [DeclarationDiagnostic] = 2;

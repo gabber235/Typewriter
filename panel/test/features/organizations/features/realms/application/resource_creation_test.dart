@@ -250,7 +250,7 @@ _CreationFixture _fixture() {
     relations: [
       skir.RelationContract(
         id: skir.RelationId(value: "test.store"),
-        families: [skir.RelationFamilyId(value: "resource.ownership")],
+        families: [skir.resourceOwnershipFamily],
         first: skir.EndpointDefinition(
           id: owner,
           slot: skir.EndpointSlot.first,

@@ -55,12 +55,7 @@ skir.OperationInvocation captureResourceOperationInvocation({
     final contract = document.catalog.snapshot.relations
         .where((contract) => contract.id == link.contract)
         .firstOrNull;
-    if (contract == null ||
-        !contract.families.any(
-          (family) => family.value == "resource.ownership",
-        )) {
-      continue;
-    }
+    if (contract == null || !contract.ownsResources) continue;
     final firstOwns =
         contract.first.cardinality == skir.EndpointCardinality.one;
     final owner = firstOwns ? link.first : link.second;

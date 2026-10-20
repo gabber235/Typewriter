@@ -146,7 +146,7 @@ Future<void> _pump(
             child: AuthoredResourceSearchResult(
               document: document,
               issues: ResourceIssues.evaluate(document: document),
-              presentationContext: libraryOriginBindings(origin),
+              hostContext: HostContext(activeResource: origin),
               resource: resource,
               role: skir.PresentationRole.resourceSearchResult,
               density: SearchResultDensity.card,

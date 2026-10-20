@@ -171,6 +171,7 @@ class TestSelectable extends InspectableSelectable<TestSelectableIdentifier> {
     return InspectionContent(
       host: BoundPresentationHost(
         catalog: _testSelectableCatalog,
+        contextInputs: [panelSelectionCountInput],
         root: () => title.readExpression().resourceHeading(
           id: "testSelectable",
           color: color.portableExpression,

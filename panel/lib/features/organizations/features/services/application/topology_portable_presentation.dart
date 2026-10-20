@@ -32,6 +32,7 @@ BoundPresentationHost _topologyRuntimePortableHost({
   ];
   return BoundPresentationHost(
     catalog: _servicePortableCatalog,
+    contextInputs: [panelSelectionCountInput],
     root: () => _portableColumn(rootId, [
       title.portableExpression.resourceHeading(
         id: "$rootId.heading",
@@ -222,6 +223,7 @@ BoundPresentationHost topologyHostPortableHost({
 
   return BoundPresentationHost(
     catalog: _servicePortableCatalog,
+    contextInputs: [panelSelectionCountInput],
     root: () => _portableColumn("serviceHost", [
       if (!configurationOnly)
         _serviceNameBinding.readExpression().resourceHeading(

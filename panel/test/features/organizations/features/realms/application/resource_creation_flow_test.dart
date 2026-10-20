@@ -92,6 +92,49 @@ void main() {
     },
   );
 
+  testWidgets(
+    "a scope naming two Books asks between exactly those, ignoring ambient preference",
+    (tester) async {
+      final fixture = ResourceCreationFixture.library();
+      final first = skir.ResourceId(value: "book:first");
+      final other = skir.ResourceId(value: "book:other");
+      final document = fixture.withBooks(fixture.libraryDocument(), [
+        first,
+        other,
+      ]);
+      final page = fixture.request("Page");
+      final pageBook = document.catalog.ownershipRelations
+          .singleWhere(
+            (ownership) => ownership.member.resource.definition == page.type,
+          )
+          .member
+          .id;
+      final harness = _Harness(
+        document,
+        page,
+        CreationContext(
+          constraints: [
+            CreationReferenceConstraint(
+              route: [pageBook],
+              targets: {first, other},
+            ),
+          ],
+          preferredResources: [first],
+        ),
+      );
+      await harness.mount(tester);
+      await tester.tap(find.text("Begin creation"));
+      await tester.pumpAndSettle();
+
+      expect(harness.error, isNull);
+      expect(find.byType(AuthoredResourceSearchResult), findsNWidgets(2));
+      expect(find.text("Create Book"), findsNothing);
+      await tester.sendKeyEvent(LogicalKeyboardKey.escape);
+      await tester.pumpAndSettle();
+      expect(harness.created, isNull);
+    },
+  );
+
   testWidgets("missing page and Book are created with the entry in one edit", (
     tester,
   ) async {

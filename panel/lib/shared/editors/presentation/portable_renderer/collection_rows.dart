@@ -502,9 +502,9 @@ Widget _collectionDragScopes(BuildContext source, Widget child) {
         wrappers.add(
           (child) => PresentationInteractionScope(value: value, child: child),
         );
-      case PresentationEnvironment(:final bindings):
+      case PresentationEnvironment(:final host):
         wrappers.add(
-          (child) => PresentationEnvironment(bindings: bindings, child: child),
+          (child) => PresentationEnvironment(host: host, child: child),
         );
       case PortableResourcesInteractionScope(
         :final itemBuilder,

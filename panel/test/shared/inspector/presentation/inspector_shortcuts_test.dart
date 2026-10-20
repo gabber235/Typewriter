@@ -73,15 +73,7 @@ void main() {
       final environments = tester.widgetList<PresentationEnvironment>(
         find.byType(PresentationEnvironment),
       );
-      expect(
-        environments
-            .single
-            .bindings[presentationSelectionCountBindingId]
-            ?.value
-            .authoredInteger
-            ?.toInt(),
-        2,
-      );
+      expect(environments.single.host.selectionCount, 2);
       container.read(selectionProvider.notifier).selectAll([first]);
       await tester.pumpAndSettle();
       expect(find.byType(AutoSizeText), findsOneWidget);
@@ -106,10 +98,8 @@ void main() {
             .widget<PresentationEnvironment>(
               find.byType(PresentationEnvironment),
             )
-            .bindings[presentationSelectionCountBindingId]
-            ?.value
-            .authoredInteger
-            ?.toInt(),
+            .host
+            .selectionCount,
         2,
       );
     },

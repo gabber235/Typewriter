@@ -1089,7 +1089,7 @@ final class CheckedEditorCatalog {
                     candidate.template.relativePath &&
                 other.template.containingResource.definition !=
                     candidate.template.containingResource.definition &&
-                _isNominalSubtype(
+                isNominalSubtype(
                   other.template.containingResource.definition,
                   candidate.template.containingResource.definition,
                 ),
@@ -1176,7 +1176,7 @@ final class CheckedEditorCatalog {
       if (published.status != skir.DeclarationStatus.ready ||
           representation is! skir.RepresentationTemplate_recordWrapper ||
           representation.value.abstract_ ||
-          !_isNominalSubtype(published.definition.id, root)) {
+          !isNominalSubtype(published.definition.id, root)) {
         continue;
       }
       selections.add(beginSelection(published.definition.id));
@@ -1582,8 +1582,8 @@ final class CheckedEditorCatalog {
     final leftDefinition = left.value.definition;
     final rightDefinition = right.value.definition;
     if (leftDefinition != rightDefinition) {
-      return _isNominalSubtype(leftDefinition, rightDefinition) &&
-          !_isNominalSubtype(rightDefinition, leftDefinition);
+      return isNominalSubtype(leftDefinition, rightDefinition) &&
+          !isNominalSubtype(rightDefinition, leftDefinition);
     }
     final rightSubsumesLeft = _namedTemplateSubsumes(right.value, left.value);
     final leftSubsumesRight = _namedTemplateSubsumes(left.value, right.value);
@@ -1608,7 +1608,9 @@ final class CheckedEditorCatalog {
     _ => false,
   };
 
-  bool _isNominalSubtype(
+  /// Whether [actual] is [expected] or declares it among its ancestors.
+  /// Unavailable declarations break the chain.
+  bool isNominalSubtype(
     skir.TypeDefinitionId actual,
     skir.TypeDefinitionId expected,
   ) {

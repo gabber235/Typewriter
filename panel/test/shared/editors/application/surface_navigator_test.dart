@@ -108,7 +108,7 @@ AuthoringDocument _deepDocument() {
       cardinality: skir.EndpointCardinality.many,
       onDelete: skir.RelationDeletePolicy.clear,
     ),
-    families: [skir.RelationFamilyId(value: "resource.ownership")],
+    families: [skir.resourceOwnershipFamily],
   );
   final elements = ownership("test.page.elements", page);
   final keyframes = ownership("test.element.keyframes", tag);

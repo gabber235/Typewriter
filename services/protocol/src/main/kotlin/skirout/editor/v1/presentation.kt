@@ -37355,17 +37355,184 @@ class DividerAppearance private constructor(
     }
 }
 
+/**
+ * Context values every editor host supplies, declared once so presentations and hosts share no keys.
+ *
+ * Deeply immutable.
+ */
+sealed class HostContextInput private constructor() {
+    /** The kind of variant held by a `HostContextInput`. */
+    enum class Kind {
+        UNKNOWN,
+        ACTIVE_RESOURCE_CONST,
+        SELECTION_COUNT_CONST,
+    }
+
+    class Unknown @kotlin.Deprecated("For internal use", kotlin.ReplaceWith("skirout.editor.v1.presentation.HostContextInput.UNKNOWN")) internal constructor(
+        internal val _kind: Kind,
+        internal override val _unrecognized: _UnrecognizedVariant<skirout.editor.v1.presentation.HostContextInput>?,
+    ) : skirout.editor.v1.presentation.HostContextInput() {
+        override val kind get() = _kind;
+
+        override fun equals(other: kotlin.Any?): kotlin.Boolean {
+            return other is skirout.editor.v1.presentation.HostContextInput && other.kind == kind;
+        }
+
+        override fun hashCode(): kotlin.Int {
+            return kind.ordinal;
+        }
+    }
+
+    /** The resource routed in the workspace, if any. */
+    object ACTIVE_RESOURCE : skirout.editor.v1.presentation.HostContextInput() {
+        override val kind get() = Kind.ACTIVE_RESOURCE_CONST;
+
+        override fun equals(other: kotlin.Any?): kotlin.Boolean {
+            return other is skirout.editor.v1.presentation.HostContextInput && other.kind == Kind.ACTIVE_RESOURCE_CONST;
+        }
+
+        override fun hashCode(): kotlin.Int {
+            return Kind.ACTIVE_RESOURCE_CONST.ordinal;
+        }
+    }
+
+    /** Number of resources in the current selection. */
+    object SELECTION_COUNT : skirout.editor.v1.presentation.HostContextInput() {
+        override val kind get() = Kind.SELECTION_COUNT_CONST;
+
+        override fun equals(other: kotlin.Any?): kotlin.Boolean {
+            return other is skirout.editor.v1.presentation.HostContextInput && other.kind == Kind.SELECTION_COUNT_CONST;
+        }
+
+        override fun hashCode(): kotlin.Int {
+            return Kind.SELECTION_COUNT_CONST.ordinal;
+        }
+    }
+
+    internal open val _unrecognized: _UnrecognizedVariant<skirout.editor.v1.presentation.HostContextInput>? get() = null;
+
+    abstract val kind: Kind;
+
+    override fun toString(): kotlin.String {
+        return build.skir.internal.toStringImpl(
+            this,
+            _SerializerRegistry.HostContextInputSerializerImpl,
+        )
+    }
+
+    companion object {
+        /**
+         * Constant indicating an unknown [HostContextInput].
+         * Default value for fields of type [HostContextInput].
+         */
+        val UNKNOWN = @kotlin.Suppress("DEPRECATION") Unknown(Kind.UNKNOWN, null);
+
+        /** Serializer for [HostContextInput] instances. */
+        val serializer get() = _SerializerRegistry.HostContextInputSerializer;
+
+        /** Describes the [HostContextInput] type. Provides runtime introspection capabilities. */
+        val typeDescriptor get() = _SerializerRegistry.HostContextInputSerializerImpl.typeDescriptor;
+    }
+}
+
+/**
+ * Who supplies a context value: the caller of a presentation by binding, or the editor host.
+ *
+ * Deeply immutable.
+ */
+sealed class PresentationContextSource private constructor() {
+    /** The kind of variant held by a `PresentationContextSource`. */
+    enum class Kind {
+        UNKNOWN,
+        CALLER_CONST,
+        HOST_WRAPPER,
+    }
+
+    class Unknown @kotlin.Deprecated("For internal use", kotlin.ReplaceWith("skirout.editor.v1.presentation.PresentationContextSource.UNKNOWN")) internal constructor(
+        internal val _kind: Kind,
+        internal override val _unrecognized: _UnrecognizedVariant<skirout.editor.v1.presentation.PresentationContextSource>?,
+    ) : skirout.editor.v1.presentation.PresentationContextSource() {
+        override val kind get() = _kind;
+
+        override fun equals(other: kotlin.Any?): kotlin.Boolean {
+            return other is skirout.editor.v1.presentation.PresentationContextSource && other.kind == kind;
+        }
+
+        override fun hashCode(): kotlin.Int {
+            return kind.ordinal;
+        }
+    }
+
+    object CALLER : skirout.editor.v1.presentation.PresentationContextSource() {
+        override val kind get() = Kind.CALLER_CONST;
+
+        override fun equals(other: kotlin.Any?): kotlin.Boolean {
+            return other is skirout.editor.v1.presentation.PresentationContextSource && other.kind == Kind.CALLER_CONST;
+        }
+
+        override fun hashCode(): kotlin.Int {
+            return Kind.CALLER_CONST.ordinal;
+        }
+    }
+
+    class HostWrapper(
+        val value: skirout.editor.v1.presentation.HostContextInput,
+    ) : skirout.editor.v1.presentation.PresentationContextSource() {
+        override val kind get() = Kind.HOST_WRAPPER;
+
+        override fun equals(other: kotlin.Any?): kotlin.Boolean {
+            return other is skirout.editor.v1.presentation.PresentationContextSource.HostWrapper && value == other.value;
+        }
+
+        override fun hashCode(): kotlin.Int {
+            return this.value.hashCode() + 3208616;
+        }
+    }
+
+    internal open val _unrecognized: _UnrecognizedVariant<skirout.editor.v1.presentation.PresentationContextSource>? get() = null;
+
+    abstract val kind: Kind;
+
+    override fun toString(): kotlin.String {
+        return build.skir.internal.toStringImpl(
+            this,
+            _SerializerRegistry.PresentationContextSourceSerializerImpl,
+        )
+    }
+
+    companion object {
+        /**
+         * Constant indicating an unknown [PresentationContextSource].
+         * Default value for fields of type [PresentationContextSource].
+         */
+        val UNKNOWN = @kotlin.Suppress("DEPRECATION") Unknown(Kind.UNKNOWN, null);
+
+        /** Serializer for [PresentationContextSource] instances. */
+        val serializer get() = _SerializerRegistry.PresentationContextSourceSerializer;
+
+        /** Describes the [PresentationContextSource] type. Provides runtime introspection capabilities. */
+        val typeDescriptor get() = _SerializerRegistry.PresentationContextSourceSerializerImpl.typeDescriptor;
+    }
+}
+
 sealed interface PresentationContextInput_OrMutable {
     val bindingId: skirout.editor.v1.type_catalog.ExpressionBindingId_OrMutable;
+    val source: skirout.editor.v1.presentation.PresentationContextSource;
     val valueType: skirout.editor.v1.type_catalog.TypeUse;
 
     fun toFrozen(): skirout.editor.v1.presentation.PresentationContextInput;
 }
 
-/** Deeply immutable. */
+/**
+ * A value a presentation reads from its surroundings. Expressions read it through `binding_id`;
+ * `source` says who supplies it, so a host fills its declared inputs without sharing binding names.
+ *
+ * Deeply immutable.
+ */
 @kotlin.Suppress("UNUSED_PARAMETER")
 class PresentationContextInput private constructor(
     override val bindingId: skirout.editor.v1.type_catalog.ExpressionBindingId,
+    override val source: skirout.editor.v1.presentation.PresentationContextSource,
     override val valueType: skirout.editor.v1.type_catalog.TypeUse,
     internal val _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.presentation.PresentationContextInput>? =
         null,
@@ -37374,11 +37541,13 @@ class PresentationContextInput private constructor(
         _mustNameArguments: _MustNameArguments =
             _MustNameArguments,
         bindingId: skirout.editor.v1.type_catalog.ExpressionBindingId_OrMutable,
+        source: skirout.editor.v1.presentation.PresentationContextSource,
         valueType: skirout.editor.v1.type_catalog.TypeUse,
         _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.presentation.PresentationContextInput>? =
             null,
     ): this(
         bindingId.toFrozen(),
+        source,
         valueType,
         _unrecognizedFields,
     ) {}
@@ -37389,6 +37558,7 @@ class PresentationContextInput private constructor(
     /** Returns a mutable shallow copy of this instance */
     fun toMutable() = Mutable(
         bindingId = this.bindingId,
+        source = this.source,
         valueType = this.valueType,
     );
 
@@ -37398,10 +37568,13 @@ class PresentationContextInput private constructor(
             _MustNameArguments,
         bindingId: skirout.editor.v1.type_catalog.ExpressionBindingId_OrMutable =
             this.bindingId,
+        source: skirout.editor.v1.presentation.PresentationContextSource =
+            this.source,
         valueType: skirout.editor.v1.type_catalog.TypeUse =
             this.valueType,
     ) = skirout.editor.v1.presentation.PresentationContextInput(
         bindingId.toFrozen(),
+        source,
         valueType,
         this._unrecognizedFields,
     );
@@ -37410,11 +37583,11 @@ class PresentationContextInput private constructor(
     fun copy() = this;
 
     override fun equals(other: kotlin.Any?): kotlin.Boolean {
-        return this === other || (other is skirout.editor.v1.presentation.PresentationContextInput && this.bindingId == other.bindingId && this.valueType == other.valueType);
+        return this === other || (other is skirout.editor.v1.presentation.PresentationContextInput && this.bindingId == other.bindingId && this.source == other.source && this.valueType == other.valueType);
     }
 
     override fun hashCode(): kotlin.Int {
-        return kotlin.collections.listOf<kotlin.Any?>(this.bindingId, this.valueType).hashCode();
+        return kotlin.collections.listOf<kotlin.Any?>(this.bindingId, this.source, this.valueType).hashCode();
     }
 
     override fun toString(): kotlin.String {
@@ -37430,6 +37603,8 @@ class PresentationContextInput private constructor(
             _MustNameArguments,
         override var bindingId: skirout.editor.v1.type_catalog.ExpressionBindingId_OrMutable =
             skirout.editor.v1.type_catalog.ExpressionBindingId.partial(),
+        override var source: skirout.editor.v1.presentation.PresentationContextSource =
+            skirout.editor.v1.presentation.PresentationContextSource.UNKNOWN,
         override var valueType: skirout.editor.v1.type_catalog.TypeUse =
             skirout.editor.v1.type_catalog.TypeUse.UNKNOWN,
         internal var _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.presentation.PresentationContextInput>? =
@@ -37438,6 +37613,7 @@ class PresentationContextInput private constructor(
         /** Returns a deeply immutable copy of this instance */
         override fun toFrozen() = skirout.editor.v1.presentation.PresentationContextInput(
             bindingId = this.bindingId,
+            source = this.source,
             valueType = this.valueType,
             _unrecognizedFields = this._unrecognizedFields,
         );
@@ -37463,6 +37639,7 @@ class PresentationContextInput private constructor(
         private val default =
             skirout.editor.v1.presentation.PresentationContextInput(
                 skirout.editor.v1.type_catalog.ExpressionBindingId.partial(),
+                skirout.editor.v1.presentation.PresentationContextSource.UNKNOWN,
                 skirout.editor.v1.type_catalog.TypeUse.UNKNOWN,
             );
 
@@ -37479,10 +37656,13 @@ class PresentationContextInput private constructor(
                 _MustNameArguments,
             bindingId: skirout.editor.v1.type_catalog.ExpressionBindingId_OrMutable =
                 skirout.editor.v1.type_catalog.ExpressionBindingId.partial(),
+            source: skirout.editor.v1.presentation.PresentationContextSource =
+                skirout.editor.v1.presentation.PresentationContextSource.UNKNOWN,
             valueType: skirout.editor.v1.type_catalog.TypeUse =
                 skirout.editor.v1.type_catalog.TypeUse.UNKNOWN,
         ) = skirout.editor.v1.presentation.PresentationContextInput(
             bindingId = bindingId,
+            source = source,
             valueType = valueType,
             _unrecognizedFields = null,
         );
@@ -41632,6 +41812,19 @@ private object _SerializerRegistry {
 
     val HistoricalSearchProviderSerializer = build.skir.internal.makeSerializer(HistoricalSearchProviderSerializerImpl);
 
+    val HostContextInputSerializerImpl =
+        build.skir.internal.EnumSerializer.create<skirout.editor.v1.presentation.HostContextInput, skirout.editor.v1.presentation.HostContextInput.Unknown>(
+            recordId = "editor/v1/presentation.skir:HostContextInput",
+            doc = "Context values every editor host supplies, declared once so presentations and hosts share no keys.",
+            getKindOrdinal = { it.kind.ordinal },
+            kindCount = skirout.editor.v1.presentation.HostContextInput.Kind.values().size,
+            unknownInstance = skirout.editor.v1.presentation.HostContextInput.UNKNOWN,
+            wrapUnrecognized = { @kotlin.Suppress("DEPRECATION") skirout.editor.v1.presentation.HostContextInput.Unknown(skirout.editor.v1.presentation.HostContextInput.Kind.UNKNOWN, it) },
+            getUnrecognized = { it._unrecognized },
+        );
+
+    val HostContextInputSerializer = build.skir.internal.makeSerializer(HostContextInputSerializerImpl);
+
     val HttpJsonContextBindingSerializerImpl = build.skir.internal.StructSerializer(
         recordId = "editor/v1/presentation.skir:HttpJsonContextBinding",
         doc = "",
@@ -42344,7 +42537,7 @@ private object _SerializerRegistry {
 
     val PresentationContextInputSerializerImpl = build.skir.internal.StructSerializer(
         recordId = "editor/v1/presentation.skir:PresentationContextInput",
-        doc = "",
+        doc = "A value a presentation reads from its surroundings. Expressions read it through [binding_id];\n[source] says who supplies it, so a host fills its declared inputs without sharing binding names.",
         defaultInstance = skirout.editor.v1.presentation.PresentationContextInput.partial(),
         newMutableFn = { it?.toMutable() ?: skirout.editor.v1.presentation.PresentationContextInput.Mutable() },
         toFrozenFn = { it.toFrozen() },
@@ -42353,6 +42546,19 @@ private object _SerializerRegistry {
     );
 
     val PresentationContextInputSerializer = build.skir.internal.makeSerializer(PresentationContextInputSerializerImpl);
+
+    val PresentationContextSourceSerializerImpl =
+        build.skir.internal.EnumSerializer.create<skirout.editor.v1.presentation.PresentationContextSource, skirout.editor.v1.presentation.PresentationContextSource.Unknown>(
+            recordId = "editor/v1/presentation.skir:PresentationContextSource",
+            doc = "Who supplies a context value: the caller of a presentation by binding, or the editor host.",
+            getKindOrdinal = { it.kind.ordinal },
+            kindCount = skirout.editor.v1.presentation.PresentationContextSource.Kind.values().size,
+            unknownInstance = skirout.editor.v1.presentation.PresentationContextSource.UNKNOWN,
+            wrapUnrecognized = { @kotlin.Suppress("DEPRECATION") skirout.editor.v1.presentation.PresentationContextSource.Unknown(skirout.editor.v1.presentation.PresentationContextSource.Kind.UNKNOWN, it) },
+            getUnrecognized = { it._unrecognized },
+        );
+
+    val PresentationContextSourceSerializer = build.skir.internal.makeSerializer(PresentationContextSourceSerializerImpl);
 
     val PresentationContrastColorSerializerImpl = build.skir.internal.StructSerializer(
         recordId = "editor/v1/presentation.skir:PresentationContrastColor",
@@ -47011,6 +47217,22 @@ private object _SerializerRegistry {
         );
         HistoricalSearchProviderSerializerImpl.finalizeStruct();
 
+        HostContextInputSerializerImpl.addConstantVariant(
+            1,
+            "active_resource",
+            skirout.editor.v1.presentation.HostContextInput.Kind.ACTIVE_RESOURCE_CONST.ordinal,
+            "The resource routed in the workspace, if any.",
+            skirout.editor.v1.presentation.HostContextInput.ACTIVE_RESOURCE,
+        );
+        HostContextInputSerializerImpl.addConstantVariant(
+            2,
+            "selection_count",
+            skirout.editor.v1.presentation.HostContextInput.Kind.SELECTION_COUNT_CONST.ordinal,
+            "Number of resources in the current selection.",
+            skirout.editor.v1.presentation.HostContextInput.SELECTION_COUNT,
+        );
+        HostContextInputSerializerImpl.finalizeEnum();
+
         HttpJsonContextBindingSerializerImpl.addField(
             "binding_id",
             "bindingId",
@@ -49464,15 +49686,42 @@ private object _SerializerRegistry {
             { mut, v -> mut.bindingId = v },
         );
         PresentationContextInputSerializerImpl.addField(
+            "source",
+            "source",
+            1,
+            _SerializerRegistry.PresentationContextSourceSerializer,
+            "",
+            { it.source },
+            { mut, v -> mut.source = v },
+        );
+        PresentationContextInputSerializerImpl.addField(
             "value_type",
             "valueType",
-            1,
+            2,
             skirout.editor.v1.type_catalog.TypeUse.serializer,
             "",
             { it.valueType },
             { mut, v -> mut.valueType = v },
         );
         PresentationContextInputSerializerImpl.finalizeStruct();
+
+        PresentationContextSourceSerializerImpl.addConstantVariant(
+            1,
+            "caller",
+            skirout.editor.v1.presentation.PresentationContextSource.Kind.CALLER_CONST.ordinal,
+            "",
+            skirout.editor.v1.presentation.PresentationContextSource.CALLER,
+        );
+        PresentationContextSourceSerializerImpl.addWrapperVariant(
+            2,
+            "host",
+            skirout.editor.v1.presentation.PresentationContextSource.Kind.HOST_WRAPPER.ordinal,
+            _SerializerRegistry.HostContextInputSerializer,
+            "",
+            { skirout.editor.v1.presentation.PresentationContextSource.HostWrapper(it) },
+            { it.value },
+        );
+        PresentationContextSourceSerializerImpl.finalizeEnum();
 
         PresentationContrastColorSerializerImpl.addField(
             "source",

@@ -511,6 +511,7 @@ private fun skirout.editor.v1.presentation.PresentationDependencies.validCollect
     if (contextInputs.map { it.bindingId }.distinct().size != contextInputs.size) return false
     if (!contextInputs.all { input ->
             input.bindingId.value.startsWith("context:") &&
+                input.source.kind != skirout.editor.v1.presentation.PresentationContextSource.Kind.UNKNOWN &&
                 (SkirTypeCodec.decode(input.valueType).valueOrNull()?.let { catalog.resolve(it) } is Resolution.Ready)
         }
     ) {

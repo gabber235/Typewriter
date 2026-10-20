@@ -69,6 +69,66 @@ extension ResourceCreationCatalog on CheckedEditorCatalog? {
   }
 }
 
+/// A path from a resource type up to one of its owner types, such as from a
+/// page element through its Page to the Book.
+@freezed
+abstract class OwnerRoute with _$OwnerRoute {
+  const factory OwnerRoute({
+    /// The owner type this route reaches.
+    required skir.TypeDefinitionId ownerRoot,
+
+    /// The member endpoints followed from the starting type, nearest owner
+    /// first. A creation constraint follows them in this order.
+    required List<skir.EndpointId> endpoints,
+
+    /// Owner types this route reached, so a type that owns its own type, such
+    /// as a Folder holding Folders, ends the walk.
+    required Set<skir.TypeDefinitionId> visited,
+  }) = _OwnerRoute;
+
+  const OwnerRoute._();
+
+  OwnerRoute extend(skir.TypeDefinitionId owner, skir.EndpointId endpoint) =>
+      OwnerRoute(
+        ownerRoot: owner,
+        endpoints: [...endpoints, endpoint],
+        visited: {...visited, owner},
+      );
+}
+
+extension OwnerRoutes on CheckedEditorCatalog {
+  /// Routes from [configuration] to each owner type above it, nearest first,
+  /// following ownership member endpoints upward without revisiting a type.
+  /// Acyclic ownership holds between resources, not types, so a type may own
+  /// its own type; the walk still reaches it once.
+  Iterable<OwnerRoute> ownerRoutes(skir.TypeSelection configuration) sync* {
+    final start = configuration.definition;
+    if (start == null) return;
+    var frontier = [
+      OwnerRoute(ownerRoot: start, endpoints: const [], visited: const {}),
+    ];
+    while (frontier.isNotEmpty) {
+      final next = <OwnerRoute>[];
+      for (final route in frontier) {
+        for (final ownership in ownershipRelations) {
+          if (!isNominalSubtype(
+            route.ownerRoot,
+            ownership.member.resource.definition,
+          )) {
+            continue;
+          }
+          final owner = ownership.owner.resource.definition;
+          if (route.visited.contains(owner)) continue;
+          final extended = route.extend(owner, ownership.member.id);
+          yield extended;
+          next.add(extended);
+        }
+      }
+      frontier = next;
+    }
+  }
+}
+
 /// Resolves the creation template for [type] in the selected Realm.
 ///
 /// Null means creation is unavailable: no Realm is selected, its working
@@ -237,7 +297,7 @@ CreationContext ownerCreationContext(
     constraints: [
       CreationReferenceConstraint(
         route: [field.ownership.member.id],
-        target: owner.resource,
+        targets: {owner.resource},
       ),
     ],
   );

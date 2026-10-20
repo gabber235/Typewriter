@@ -15,6 +15,16 @@ final presentationSubjectIdentifierBindingId = skir.ExpressionBindingId(
 final presentationSubjectAppearanceBindingId = skir.ExpressionBindingId(
   value: "presentation.subject.appearance",
 );
-final presentationSelectionCountBindingId = skir.ExpressionBindingId(
-  value: "presentation.context.selection_count",
+
+/// The host selection count, as presentations built in the panel declare it.
+/// The binding name is local to those presentations; hosts fill it through
+/// the declared source.
+final panelSelectionCountInput = skir.PresentationContextInput(
+  bindingId: skir.ExpressionBindingId(value: "context:panel.selection_count"),
+  source: skir.PresentationContextSource.wrapHost(
+    skir.HostContextInput.selectionCount,
+  ),
+  valueType: skir.TypeUse.wrapScalar(
+    skir.ScalarKind.createInteger(width: skir.IntegerWidth.signedThirtyTwo),
+  ),
 );

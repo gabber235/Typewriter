@@ -201,8 +201,6 @@ int operationGroupRank(skir.OperationGroup group) => switch (group) {
   _ => 3,
 };
 
-const _ownershipFamily = "resource.ownership";
-
 extension DropOffers on DropCandidateIndex {
   /// Offers for the most specific destination that has any, sorted by group
   /// then order.
@@ -356,9 +354,7 @@ extension ResourceDropFacts on AuthoringDocument {
 /// Whether linking through [plan] makes its source the owner of the target.
 bool _ownsTarget(PortableLinkPlan plan) {
   final relation = plan.relation;
-  if (!relation.families.any((family) => family.value == _ownershipFamily)) {
-    return false;
-  }
+  if (!relation.ownsResources) return false;
   final firstOwns = relation.first.cardinality == skir.EndpointCardinality.one;
   return (plan.source.id.endpoint == relation.first.id) == firstOwns;
 }

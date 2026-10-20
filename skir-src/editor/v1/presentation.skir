@@ -1753,36 +1753,53 @@ struct DividerAppearance(810800232) {
   end_indent: ExpressionNode? = 4;
 }
 
-struct PresentationContextInput(810800233) {
+/// Context values every editor host supplies, declared once so presentations and hosts share no keys.
+enum HostContextInput(810800233) {
+  /// The resource routed in the workspace, if any.
+  active_resource = 1;
+  /// Number of resources in the current selection.
+  selection_count = 2;
+}
+
+/// Who supplies a context value: the caller of a presentation by binding, or the editor host.
+enum PresentationContextSource(810800234) {
+  caller = 1;
+  host: HostContextInput = 2;
+}
+
+/// A value a presentation reads from its surroundings. Expressions read it through [binding_id];
+/// [source] says who supplies it, so a host fills its declared inputs without sharing binding names.
+struct PresentationContextInput(810800235) {
   binding_id: ExpressionBindingId = 0;
-  value_type: TypeUse = 1;
+  source: PresentationContextSource = 1;
+  value_type: TypeUse = 2;
 }
 
 /// An explicitly reusable inspector part, identified by its declaring contract.
-struct PresentationPartId(810800234) {
+struct PresentationPartId(810800236) {
   owner: TypeDefinitionId = 0;
   name: string = 1;
 }
 
 /// A body declares an atomic part. Without a body, this requests an inherited part.
-struct PresentationPartElement(810800235) {
+struct PresentationPartElement(810800237) {
   key: PresentationPartId = 0;
   body: PresentationNode? = 1;
 }
 
 /// Places members on a graph by their placement field, with edges from the relations among them.
-struct GraphResourcesLayout(810800236) {
+struct GraphResourcesLayout(810800238) {
   direction: GraphDirection = 0;
   appearance: ResourceGraphAppearance? = 1;
 }
 
 /// Places members on a timeline by their timeline placement.
-struct TimelineResourcesLayout(810800237) {
+struct TimelineResourcesLayout(810800239) {
   appearance: ResourceTimelineAppearance? = 0;
 }
 
 /// Shows members as cards of a fixed maximum extent and aspect ratio.
-struct GridResourcesLayout(810800238) {
+struct GridResourcesLayout(810800240) {
   item_extent: ExpressionNode = 0;
   aspect_ratio: ExpressionNode = 1;
   spacing: ExpressionNode = 2;
@@ -1791,7 +1808,7 @@ struct GridResourcesLayout(810800238) {
 /// Groups members by the hierarchy path at [path], relative to each member. [group] renders
 /// each group header with [group_binding_id] bound to a HierarchyGroup value. Dropping a member
 /// onto a group rewrites its path field.
-struct TreeResourcesLayout(810800239) {
+struct TreeResourcesLayout(810800241) {
   path: ValuePath = 0;
   group: PresentationNode? = 1;
   group_binding_id: ExpressionBindingId = 2;
@@ -1800,24 +1817,24 @@ struct TreeResourcesLayout(810800239) {
 }
 
 /// A number that may change with interaction state, in the unit of the field holding it.
-enum PresentationNumber(810800240) {
+enum PresentationNumber(810800242) {
   value: ExpressionNode = 1;
   states: PresentationStateNumber = 2;
 }
 
 /// The first rule matching the current interaction state wins; otherwise [fallback] applies.
-struct PresentationStateNumber(810800241) {
+struct PresentationStateNumber(810800243) {
   rules: [PresentationStateNumberRule] = 0;
   fallback: ExpressionNode = 1;
 }
 
-struct PresentationStateNumberRule(810800242) {
+struct PresentationStateNumberRule(810800244) {
   match: PresentationStateMatch = 0;
   value: ExpressionNode = 1;
 }
 
 /// How an animated change progresses over its duration.
-enum PresentationCurve(810800243) {
+enum PresentationCurve(810800245) {
   linear = 1;
   ease_in_out = 2;
   ease_out = 3;
@@ -1828,25 +1845,25 @@ enum PresentationCurve(810800243) {
   elastic_out: float64 = 5;
 }
 
-struct PresentationTransition(810800244) {
+struct PresentationTransition(810800246) {
   milliseconds: int32 = 0;
   curve: PresentationCurve = 1;
 }
 
 /// Chooses the transition for a change by the state being entered: the first rule matching
 /// the new interaction state animates the change; otherwise [fallback] does.
-struct PresentationTransitionPolicy(810800245) {
+struct PresentationTransitionPolicy(810800247) {
   rules: [PresentationStateTransitionRule] = 0;
   fallback: PresentationTransition = 1;
 }
 
-struct PresentationStateTransitionRule(810800246) {
+struct PresentationStateTransitionRule(810800248) {
   match: PresentationStateMatch = 0;
   transition: PresentationTransition = 1;
 }
 
 /// Blur, spread and offsets in logical pixels.
-struct PresentationShadow(810800247) {
+struct PresentationShadow(810800249) {
   color: PresentationColor = 0;
   blur: float64 = 1;
   spread: float64 = 2;
@@ -1856,19 +1873,19 @@ struct PresentationShadow(810800247) {
 
 /// Moves [source] in OkLch. Both adjustments range from minus one to one: negative lightness moves toward
 /// black and positive toward white; negative chroma desaturates and positive saturates.
-struct PresentationAdjustedColor(810800248) {
+struct PresentationAdjustedColor(810800250) {
   source: PresentationColor = 0;
   lightness: float64 = 1;
   chroma: float64 = 2;
 }
 
 /// Picks a color by the brightness of the editor theme.
-struct PresentationBrightnessColor(810800249) {
+struct PresentationBrightnessColor(810800251) {
   light: PresentationColor = 0;
   dark: PresentationColor = 1;
 }
 
-enum StackChild(810800250) {
+enum StackChild(810800252) {
   /// Sized and aligned by the stack.
   flow: PresentationNode = 1;
   positioned: PositionedStackChild = 2;
@@ -1876,7 +1893,7 @@ enum StackChild(810800250) {
 
 /// Insets and sizes in logical pixels relative to the stack. At most two of [start], [end]
 /// and [width] apply horizontally, and at most two of [top], [bottom] and [height] vertically.
-struct PositionedStackChild(810800251) {
+struct PositionedStackChild(810800253) {
   child: PresentationNode = 0;
   top: PresentationNumber? = 1;
   start: PresentationNumber? = 2;
@@ -1889,7 +1906,7 @@ struct PositionedStackChild(810800251) {
 }
 
 /// Constrains [child] in logical pixels. An exact width or height overrides its bounds.
-struct SizeLayout(810800252) {
+struct SizeLayout(810800254) {
   child: PresentationNode = 0;
   width: ExpressionNode? = 1;
   height: ExpressionNode? = 2;
@@ -1902,7 +1919,7 @@ struct SizeLayout(810800252) {
 /// Paints [child] transformed around [origin]. Paint only: layout and the host hit region keep
 /// the untransformed bounds. Rotations are in turns, translations in logical pixels, and
 /// [perspective] is the Matrix4 entry (3, 2); zero keeps the transform flat.
-struct TransformLayout(810800253) {
+struct TransformLayout(810800255) {
   child: PresentationNode = 0;
   origin: PresentationAlignment = 1;
   perspective: float64 = 2;

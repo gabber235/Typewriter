@@ -128,6 +128,38 @@ void main() {
     expect(fixture.controller.snapshot.nodes, isEmpty);
   });
 
+  test("scope keywords come from owner search keys and keep only types inside that scope", () async {
+    final fixture = _fixture();
+    addTearDown(fixture.container.dispose);
+    addTearDown(fixture.subscription.close);
+    addTearDown(fixture.controller.dispose);
+    await pumpEventQueue();
+    final source = AuthoringCreationSearchSource(
+      fixture.container.read(_refProvider),
+    );
+    final controller = SourceController(source: source, baseSelectors: const [])
+      ..triggerQuery();
+    addTearDown(controller.dispose);
+
+    expect(
+      source.selectors.whereType<KeyValueSelectorDefinition>().map(
+        (selector) => selector.key,
+      ),
+      unorderedEquals(["book:", "shelf:", "type:"]),
+    );
+    controller.updateQuery('book:"Lost tales"');
+    await pumpEventQueue();
+
+    final option =
+        ((controller.snapshot.nodes.single as SearchSectionNode).children.single
+                    as SearchResultNode)
+                .result
+                .payload
+            as AuthoringCreationOption;
+    expect(option.type, _definition("SimpleMessage"));
+    expect(option.disabledReason, 'No Quest Book named "Lost tales"');
+  });
+
   test(
     "type and text filters apply before the creation result limit",
     () async {
@@ -231,6 +263,7 @@ CheckedEditorCatalog _catalog({
     types: [
       _published(
         book,
+        searchKey: "book",
         display: skir.TypeDisplay(
           name: "Quest Book",
           description: "A reusable quest collection",
@@ -238,7 +271,7 @@ CheckedEditorCatalog _catalog({
           color: skir.Color(argb: 0xff3f51b5.toSigned(32)),
         ),
       ),
-      _published(_definition("Shelf")),
+      _published(_definition("Shelf"), searchKey: "shelf"),
       _published(entry, abstract: true),
       _published(_definition("SimpleMessage"), parent: entry),
       if (manyEntries) ...[
@@ -271,13 +304,13 @@ CheckedEditorCatalog _catalog({
           cardinality: skir.EndpointCardinality.many,
           onDelete: skir.RelationDeletePolicy.clear,
         ),
-        families: [skir.RelationFamilyId(value: "resource.ownership")],
+        families: [skir.resourceOwnershipFamily],
       ),
       skir.RelationContract(
         id: skir.RelationId(value: "book.entries"),
         first: reversedOwnership ? child : owner,
         second: reversedOwnership ? owner : child,
-        families: [skir.RelationFamilyId(value: "resource.ownership")],
+        families: [skir.resourceOwnershipFamily],
       ),
     ],
     realmRoot: skir.TypeDefinitionId.defaultInstance,
@@ -289,8 +322,9 @@ skir.PublishedType _published(
   skir.TypeDisplay? display,
   bool abstract = false,
   skir.TypeDefinitionId? parent,
+  String? searchKey,
 }) => skir.PublishedType(
-  searchKey: null,
+  searchKey: searchKey,
   placementField: null,
   definition: skir.TypeDefinition(
     id: id,

@@ -58,11 +58,6 @@ internal class PresentationBuildState(
         linkedMapOf(
             CONFIGURED_VALUE to type.type,
             ExpressionBindingId("presentation.subject.identifier") to TypeTemplate.Named(com.typewritermc.types.ResourceIdDefinition.id),
-            ExpressionBindingId("presentation.context.selection_count") to
-                TypeTemplate.Scalar(
-                    com.typewritermc.types.ScalarKind
-                        .Integer(com.typewritermc.types.IntegerWidth.SIGNED_32),
-                ),
         )
 
     internal fun checkMapping(
@@ -111,6 +106,7 @@ internal class PresentationBuildState(
             contextInputs[key] =
                 skirout.editor.v1.presentation.PresentationContextInput(
                     bindingId = key.wire(),
+                    source = skirout.editor.v1.presentation.PresentationContextSource.CALLER,
                     valueType = SkirTypeCodec.encode(use).getOrThrow(),
                 )
             expressionTypes[key] = use.toTemplate()
@@ -237,20 +233,31 @@ internal class PresentationBuildState(
     fun <Value : Any> readContext(
         key: PresentationContextKey<Value>,
     ): com.typewritermc.expression.Expr<Value, com.typewritermc.expression.MayBeMissing> {
-        val template = requireNotNull(binding.nativeTypes[key.valueClass]) { "Caller input type is not registered." }
-        require(template.arguments.isEmpty()) { "Caller inputs require a closed registered type." }
-        val use = TypeUse.Named(template.definition)
+        val use =
+            when (val valueType = key.valueType) {
+                is PresentationContextValueType.Fixed -> {
+                    valueType.use
+                }
+
+                is PresentationContextValueType.Registered -> {
+                    val template =
+                        requireNotNull(binding.nativeTypes[valueType.valueClass]) { "Caller input type is not registered." }
+                    require(template.arguments.isEmpty()) { "Caller inputs require a closed registered type." }
+                    TypeUse.Named(template.definition)
+                }
+            }
         val declaration =
             skirout.editor.v1.presentation.PresentationContextInput(
                 bindingId = key.binding.wire(),
+                source = key.source,
                 valueType = SkirTypeCodec.encode(use).getOrThrow(),
             )
         val previous = contextInputs[key.binding]
-        require(previous == null || previous == declaration) { "Caller input types conflict." }
-        require(previous != null || !expressionTypes.containsKey(key.binding)) { "Caller input shadows a binding." }
+        require(previous == null || previous == declaration) { "Context input types conflict." }
+        require(previous != null || !expressionTypes.containsKey(key.binding)) { "Context input shadows a binding." }
         type(use)
         contextInputs.putIfAbsent(key.binding, declaration)
-        expressionTypes[key.binding] = template
+        expressionTypes[key.binding] = use.toTemplate()
         return com.typewritermc.expression.inputExpression(key.binding)
     }
 

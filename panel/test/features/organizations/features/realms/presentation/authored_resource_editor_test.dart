@@ -584,6 +584,7 @@ void main() {
             final dependencies = material.dependencies.toMutable()
               ..contextInputs = [
                 skir.PresentationContextInput(
+                  source: skir.PresentationContextSource.caller,
                   bindingId: caller,
                   valueType: callerType,
                 ),

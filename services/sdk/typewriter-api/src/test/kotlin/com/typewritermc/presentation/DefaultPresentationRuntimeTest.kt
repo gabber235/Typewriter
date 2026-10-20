@@ -15,6 +15,7 @@ import com.typewritermc.discovery.OwnedPresentation
 import com.typewritermc.discovery.OwnedTypeDeclaration
 import com.typewritermc.discovery.ProviderOrigin
 import com.typewritermc.discovery.assemble
+import com.typewritermc.expression.eq
 import com.typewritermc.expression.literal
 import com.typewritermc.expression.orElse
 import com.typewritermc.imprint.ArtifactId
@@ -83,7 +84,44 @@ val DefaultPresentationRuntimeTest by testSuite {
             }
         val input = result.dependencies.contextInputs.single()
         input.bindingId.value shouldBe "context:test.active_resource"
+        input.source shouldBe skirout.editor.v1.presentation.PresentationContextSource.CALLER
         input.valueType shouldBe SkirTypeCodec.encode(com.typewritermc.types.ResourceIdDefinition.use).getOrThrow()
+    }
+
+    test("host inputs declare their host source and the host contract's value types") {
+        val catalog = DefaultCheckedCatalog(CatalogGeneration("host inputs"), StandardTypes.definitions)
+        val checked = catalog.ready(TypeUse.Scalar(ScalarKind.Text))
+        val result =
+            DefaultPresentationRuntime().build(
+                PresentationBuildBinding(checked.presentationTemplate(), PresentationRole.RESOURCE_SEARCH_RESULT),
+            ) { build ->
+                build.text(
+                    build.context
+                        .read(EditorContext.activeResource)
+                        .text
+                        .orElse(literal("No origin")),
+                )
+                build.showIf(build.context.read(EditorContext.selectionCount).orElse(literal(1)) eq literal(1)) {}
+            }
+        val inputs = result.dependencies.contextInputs.associateBy { it.source }
+        val active =
+            inputs.getValue(
+                skirout.editor.v1.presentation.PresentationContextSource.HostWrapper(
+                    skirout.editor.v1.presentation.HostContextInput.ACTIVE_RESOURCE,
+                ),
+            )
+        active.bindingId.value shouldBe EditorContext.activeResource.binding.value
+        active.valueType shouldBe SkirTypeCodec.encode(com.typewritermc.types.ResourceIdDefinition.use).getOrThrow()
+        val count =
+            inputs.getValue(
+                skirout.editor.v1.presentation.PresentationContextSource.HostWrapper(
+                    skirout.editor.v1.presentation.HostContextInput.SELECTION_COUNT,
+                ),
+            )
+        count.bindingId.value shouldBe EditorContext.selectionCount.binding.value
+        count.valueType shouldBe
+            SkirTypeCodec.encode(TypeUse.Scalar(ScalarKind.Integer(com.typewritermc.types.IntegerWidth.SIGNED_32))).getOrThrow()
+        inputs.size shouldBe 2
     }
 
     test("callable part keys compile declarations requests and typed exclusions with canonical owner identity") {
@@ -564,7 +602,13 @@ val DefaultPresentationRuntimeTest by testSuite {
         condition.value.operation shouldBe skirout.editor.v1.expression.ValueCompareOperation.EQUAL
         val count = condition.value.left as skirout.editor.v1.expression.ExpressionNode.OrElseWrapper
         (count.value.input as skirout.editor.v1.expression.ExpressionNode.InputWrapper).value.binding.value shouldBe
-            "presentation.context.selection_count"
+            EditorContext.selectionCount.binding.value
+        result.dependencies.contextInputs
+            .single()
+            .source shouldBe
+            skirout.editor.v1.presentation.PresentationContextSource.HostWrapper(
+                skirout.editor.v1.presentation.HostContextInput.SELECTION_COUNT,
+            )
         val paragraphs =
             conditional.value.whenTrue
                 .singleFixed()

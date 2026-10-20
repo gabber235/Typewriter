@@ -10,9 +10,9 @@ import com.typewritermc.expression.neq
 import com.typewritermc.expression.orElse
 import com.typewritermc.expression.orIfBlank
 import com.typewritermc.expression.trim
-import com.typewritermc.library.LibraryContext
 import com.typewritermc.library.fields
 import com.typewritermc.library.pageLocation
+import com.typewritermc.presentation.EditorContext
 import com.typewritermc.presentation.asPresentationColor
 import com.typewritermc.presentation.icon
 import com.typewritermc.presentation.resource
@@ -53,7 +53,7 @@ object ElementSearchPresentation : ElementPresentation {
     override fun ElementPresentationScope.present() {
         val element = subject.resource<Element>()
         val page = element.fields.page.resource
-        val origin = context.read(LibraryContext.activeResource)
+        val origin = context.read(EditorContext.activeResource)
         showIf(page.exists) {
             pageLocation(
                 page = page,

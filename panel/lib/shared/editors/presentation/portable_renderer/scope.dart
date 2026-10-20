@@ -51,6 +51,7 @@ abstract class PortablePresentationScope with _$PortablePresentationScope {
     Map<String, skir.PresentationNode> slots = const {},
     Map<String, PortableSlotBuilder> slotBuilders = const {},
     PortablePresentationHost? host,
+    HostContext hostContext = HostContext.empty,
     Map<skir.ExpressionBindingId, PortableBindingSetter> projectedWriters =
         const {},
   }) => PortablePresentationScope._value(
@@ -85,6 +86,7 @@ abstract class PortablePresentationScope with _$PortablePresentationScope {
     slots: Map.unmodifiable(slots),
     slotBuilders: Map.unmodifiable(slotBuilders),
     host: host,
+    hostContext: hostContext,
     projectedWriters: Map.unmodifiable(projectedWriters),
   );
 
@@ -127,6 +129,9 @@ abstract class PortablePresentationScope with _$PortablePresentationScope {
     required Map<String, skir.PresentationNode> slots,
     required Map<String, PortableSlotBuilder> slotBuilders,
     required PortablePresentationHost? host,
+
+    /// Host values for the host inputs each material in this scope declares.
+    required HostContext hostContext,
     required Map<skir.ExpressionBindingId, PortableBindingSetter>
     projectedWriters,
   }) = _PortablePresentationScope;
@@ -695,6 +700,7 @@ abstract class PortablePresentationScope with _$PortablePresentationScope {
     bindings: bindings.withContextImports(
       catalog: queries?.catalog ?? catalog!,
       imports: value.dependencies.contextInputs,
+      host: hostContext,
     ),
   );
 
@@ -747,6 +753,7 @@ abstract class PortablePresentationScope with _$PortablePresentationScope {
       openResource: openResource,
       routedResource: this.routedResource,
       host: host,
+      hostContext: hostContext,
     ).withMaterial(selected.material);
   }
 }

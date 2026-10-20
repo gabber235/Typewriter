@@ -1,5 +1,3 @@
-import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
-    as skir;
 import "package:typewriter_panel/typewriter_panel.dart";
 
 part "inspector.g.dart";
@@ -382,11 +380,8 @@ class _InspectorContent extends HookConsumerWidget {
 
     final selection = ref.watch(selectionProvider);
     return PresentationEnvironment(
-      bindings: {
-        presentationSelectionCountBindingId: PortableExpressionBinding(
-          value: skir.DataValue.wrapInteger(selection.length.toString()),
-        ),
-      },
+      host: HostContext(selectionCount: selection.length)
+          .within(PresentationEnvironment.hostOf(context)),
       child: ListenableBuilder(
         listenable: session,
         builder: (context, _) {

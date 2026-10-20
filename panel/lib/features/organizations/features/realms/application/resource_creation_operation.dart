@@ -283,13 +283,13 @@ final class _ResourceCreationOperation {
     }
     final plan = plans.single;
     final endpoint = plan.source.id.endpoint;
-    final constrained = creationContext.requiredTarget(endpoint);
-    final required = chosenTarget ?? constrained;
-    if (constrained != null &&
+    final allowed = creationContext.allowedTargets(endpoint);
+    if (allowed != null &&
         chosenTarget != null &&
-        constrained != chosenTarget) {
+        !allowed.contains(chosenTarget)) {
       throw StateError("The reference conflicts with the selected destination");
     }
+    final constrained = chosenTarget != null || allowed != null;
     for (final reference in _references) {
       final connection = reference.connection;
       if (connection.source.id == plan.source.id) {
@@ -311,7 +311,8 @@ final class _ResourceCreationOperation {
     final candidates = <ReferencePickerCandidate<ReferenceChoice>>[];
     final reasons = <String>[];
     for (final target in plan.targets) {
-      if (required != null && target.resource != required) continue;
+      if (chosenTarget != null && target.resource != chosenTarget) continue;
+      if (allowed != null && !allowed.contains(target.resource)) continue;
       if (!childContext.accepts(target.resource, view, catalog)) continue;
       final record = view.resource(target.resource)!;
       final type = catalog.typeSelectionName(record.configuration);
@@ -403,7 +404,10 @@ final class _ResourceCreationOperation {
     final existing = candidates
         .where((candidate) => candidate.value is ExistingReference)
         .toList();
-    if (required == null) {
+    // Ambient preferences and new destinations apply only where nothing
+    // explicit constrains this reference; a scope naming several resources
+    // asks among exactly those.
+    if (!constrained) {
       final preferred = existing
           .where(
             (candidate) => creationContext.preferredResources.contains(
@@ -426,7 +430,7 @@ final class _ResourceCreationOperation {
     }
     if (candidates.isEmpty) {
       throw StateError(
-        required != null
+        constrained
             ? "The selected destination cannot accept this reference${reasons.isEmpty ? '' : ': ${reasons.join('; ')}'}"
             : "No compatible reference destination is available${reasons.isEmpty ? '' : ': ${reasons.join('; ')}'}",
       );

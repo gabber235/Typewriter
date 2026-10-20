@@ -62,9 +62,16 @@ abstract class PortablePresentationDocument
         PortableDiagnosticFallback.presentation,
     skir.PresentationRole? role,
     skir.PresentationMaterial? material,
+    List<skir.PresentationContextInput>? contextInputs,
     Set<skir.PresentationId> activePresentations = const {},
     Map<String, skir.PresentationNode> slots = const {},
   }) {
+    if (material != null && contextInputs != null) {
+      throw ArgumentError(
+        "Material declares its own context inputs",
+        "contextInputs",
+      );
+    }
     if (queries != null && !identical(queries.catalog, catalog)) {
       throw ArgumentError(
         "Presentation and query catalogs must have the same owner",
@@ -91,6 +98,9 @@ abstract class PortablePresentationDocument
       diagnosticFallback: diagnosticFallback,
       role: role,
       material: material,
+      contextInputs: List.unmodifiable(
+        material?.dependencies.contextInputs ?? contextInputs ?? const [],
+      ),
       activePresentations: Set.unmodifiable(activePresentations),
       slots: Map.unmodifiable(slots),
     );
@@ -110,6 +120,10 @@ abstract class PortablePresentationDocument
     required PortableDiagnosticFallback diagnosticFallback,
     required skir.PresentationRole? role,
     required skir.PresentationMaterial? material,
+
+    /// Values the presentation reads from its surroundings: the material's
+    /// declarations, or those of a presentation built without material.
+    required List<skir.PresentationContextInput> contextInputs,
     required Set<skir.PresentationId> activePresentations,
     required Map<String, skir.PresentationNode> slots,
   }) = _PortablePresentationDocument;

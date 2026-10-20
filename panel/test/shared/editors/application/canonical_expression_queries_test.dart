@@ -747,6 +747,7 @@ void main() {
     );
     final id = skir.ExpressionBindingId(value: "context:test.origin");
     final dependency = skir.PresentationContextInput(
+      source: skir.PresentationContextSource.caller,
       bindingId: id,
       valueType: skir.TypeUse.wrapNamed(frameworkResourceIdUse),
     );
@@ -760,6 +761,45 @@ void main() {
     expect(
       catalog.presentationExpressionProblems(conflicting, _pageSelection),
       contains("duplicate_context_input"),
+    );
+  });
+
+  test("admission accepts host imports only with the host contract's type", () {
+    final catalog = _catalog();
+    final id = skir.ExpressionBindingId(value: "context:host.active");
+    skir.PresentationMaterial importing(skir.TypeUse type) {
+      final material = _resultMaterial(
+        presentationText("body", textLiteral("Title")),
+      );
+      return (material.toMutable()
+            ..dependencies =
+                (material.dependencies.toMutable()
+                      ..contextInputs = [
+                        skir.PresentationContextInput(
+                          bindingId: id,
+                          source: skir.PresentationContextSource.wrapHost(
+                            skir.HostContextInput.activeResource,
+                          ),
+                          valueType: type,
+                        ),
+                      ])
+                    .toFrozen())
+          .toFrozen();
+    }
+
+    expect(
+      catalog.presentationExpressionProblems(
+        importing(skir.TypeUse.wrapScalar(skir.ScalarKind.text)),
+        _pageSelection,
+      ),
+      contains("invalid_host_context_input"),
+    );
+    expect(
+      catalog.presentationExpressionProblems(
+        importing(skir.TypeUse.wrapNamed(frameworkResourceIdUse)),
+        _pageSelection,
+      ),
+      isNot(contains("invalid_host_context_input")),
     );
   });
 

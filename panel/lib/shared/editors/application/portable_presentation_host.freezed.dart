@@ -602,27 +602,29 @@ $PortablePresentationBindingSchemaCopyWith<$Res> get schema {
 /// @nodoc
 mixin _$PortablePresentationDocument {
 
- CheckedEditorCatalog get catalog; skir.PresentationNode get root; Map<skir.ExpressionBindingId, PortablePresentationBinding> get bindings; skir.EvaluationBudget get budget; PortableExpressionQueries? get queries; ResourceDiagnosticReader get resourceDiagnostics; List<PortablePresentationDiagnostic> get diagnostics; PortableDiagnosticFallback get diagnosticFallback; skir.PresentationRole? get role; skir.PresentationMaterial? get material; Set<skir.PresentationId> get activePresentations; Map<String, skir.PresentationNode> get slots;
+ CheckedEditorCatalog get catalog; skir.PresentationNode get root; Map<skir.ExpressionBindingId, PortablePresentationBinding> get bindings; skir.EvaluationBudget get budget; PortableExpressionQueries? get queries; ResourceDiagnosticReader get resourceDiagnostics; List<PortablePresentationDiagnostic> get diagnostics; PortableDiagnosticFallback get diagnosticFallback; skir.PresentationRole? get role; skir.PresentationMaterial? get material;/// Values the presentation reads from its surroundings: the material's
+/// declarations, or those of a presentation built without material.
+ List<skir.PresentationContextInput> get contextInputs; Set<skir.PresentationId> get activePresentations; Map<String, skir.PresentationNode> get slots;
 
 
 
 @override
 bool operator ==(Object other) {
   final _this = this as PortablePresentationDocument;
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is PortablePresentationDocument&&(identical(other.catalog, _this.catalog) || other.catalog == _this.catalog)&&(identical(other.root, _this.root) || other.root == _this.root)&&const DeepCollectionEquality().equals(other.bindings, _this.bindings)&&(identical(other.budget, _this.budget) || other.budget == _this.budget)&&(identical(other.queries, _this.queries) || other.queries == _this.queries)&&(identical(other.resourceDiagnostics, _this.resourceDiagnostics) || other.resourceDiagnostics == _this.resourceDiagnostics)&&const DeepCollectionEquality().equals(other.diagnostics, _this.diagnostics)&&(identical(other.diagnosticFallback, _this.diagnosticFallback) || other.diagnosticFallback == _this.diagnosticFallback)&&(identical(other.role, _this.role) || other.role == _this.role)&&(identical(other.material, _this.material) || other.material == _this.material)&&const DeepCollectionEquality().equals(other.activePresentations, _this.activePresentations)&&const DeepCollectionEquality().equals(other.slots, _this.slots));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is PortablePresentationDocument&&(identical(other.catalog, _this.catalog) || other.catalog == _this.catalog)&&(identical(other.root, _this.root) || other.root == _this.root)&&const DeepCollectionEquality().equals(other.bindings, _this.bindings)&&(identical(other.budget, _this.budget) || other.budget == _this.budget)&&(identical(other.queries, _this.queries) || other.queries == _this.queries)&&(identical(other.resourceDiagnostics, _this.resourceDiagnostics) || other.resourceDiagnostics == _this.resourceDiagnostics)&&const DeepCollectionEquality().equals(other.diagnostics, _this.diagnostics)&&(identical(other.diagnosticFallback, _this.diagnosticFallback) || other.diagnosticFallback == _this.diagnosticFallback)&&(identical(other.role, _this.role) || other.role == _this.role)&&(identical(other.material, _this.material) || other.material == _this.material)&&const DeepCollectionEquality().equals(other.contextInputs, _this.contextInputs)&&const DeepCollectionEquality().equals(other.activePresentations, _this.activePresentations)&&const DeepCollectionEquality().equals(other.slots, _this.slots));
 }
 
 
 @override
 int get hashCode {
   final _this = this as PortablePresentationDocument;
-  return Object.hash(runtimeType,_this.catalog,_this.root,const DeepCollectionEquality().hash(_this.bindings),_this.budget,_this.queries,_this.resourceDiagnostics,const DeepCollectionEquality().hash(_this.diagnostics),_this.diagnosticFallback,_this.role,_this.material,const DeepCollectionEquality().hash(_this.activePresentations),const DeepCollectionEquality().hash(_this.slots));
+  return Object.hash(runtimeType,_this.catalog,_this.root,const DeepCollectionEquality().hash(_this.bindings),_this.budget,_this.queries,_this.resourceDiagnostics,const DeepCollectionEquality().hash(_this.diagnostics),_this.diagnosticFallback,_this.role,_this.material,const DeepCollectionEquality().hash(_this.contextInputs),const DeepCollectionEquality().hash(_this.activePresentations),const DeepCollectionEquality().hash(_this.slots));
 }
 
 @override
 String toString() {
   final _this = this as PortablePresentationDocument;
-  return 'PortablePresentationDocument(catalog: ${_this.catalog}, root: ${_this.root}, bindings: ${_this.bindings}, budget: ${_this.budget}, queries: ${_this.queries}, resourceDiagnostics: ${_this.resourceDiagnostics}, diagnostics: ${_this.diagnostics}, diagnosticFallback: ${_this.diagnosticFallback}, role: ${_this.role}, material: ${_this.material}, activePresentations: ${_this.activePresentations}, slots: ${_this.slots})';
+  return 'PortablePresentationDocument(catalog: ${_this.catalog}, root: ${_this.root}, bindings: ${_this.bindings}, budget: ${_this.budget}, queries: ${_this.queries}, resourceDiagnostics: ${_this.resourceDiagnostics}, diagnostics: ${_this.diagnostics}, diagnosticFallback: ${_this.diagnosticFallback}, role: ${_this.role}, material: ${_this.material}, contextInputs: ${_this.contextInputs}, activePresentations: ${_this.activePresentations}, slots: ${_this.slots})';
 }
 
 
@@ -636,7 +638,7 @@ String toString() {
 
 
 class _PortablePresentationDocument extends PortablePresentationDocument {
-  const _PortablePresentationDocument({required this.catalog, required this.root, required  Map<skir.ExpressionBindingId, PortablePresentationBinding> bindings, required this.budget, required this.queries, required this.resourceDiagnostics, required  List<PortablePresentationDiagnostic> diagnostics, required this.diagnosticFallback, required this.role, required this.material, required  Set<skir.PresentationId> activePresentations, required  Map<String, skir.PresentationNode> slots}): _bindings = bindings,_diagnostics = diagnostics,_activePresentations = activePresentations,_slots = slots,super._();
+  const _PortablePresentationDocument({required this.catalog, required this.root, required  Map<skir.ExpressionBindingId, PortablePresentationBinding> bindings, required this.budget, required this.queries, required this.resourceDiagnostics, required  List<PortablePresentationDiagnostic> diagnostics, required this.diagnosticFallback, required this.role, required this.material, required  List<skir.PresentationContextInput> contextInputs, required  Set<skir.PresentationId> activePresentations, required  Map<String, skir.PresentationNode> slots}): _bindings = bindings,_diagnostics = diagnostics,_contextInputs = contextInputs,_activePresentations = activePresentations,_slots = slots,super._();
   
 
 @override final  CheckedEditorCatalog catalog;
@@ -661,6 +663,17 @@ class _PortablePresentationDocument extends PortablePresentationDocument {
 @override final  PortableDiagnosticFallback diagnosticFallback;
 @override final  skir.PresentationRole? role;
 @override final  skir.PresentationMaterial? material;
+/// Values the presentation reads from its surroundings: the material's
+/// declarations, or those of a presentation built without material.
+ final  List<skir.PresentationContextInput> _contextInputs;
+/// Values the presentation reads from its surroundings: the material's
+/// declarations, or those of a presentation built without material.
+@override List<skir.PresentationContextInput> get contextInputs {
+  if (_contextInputs is EqualUnmodifiableListView) return _contextInputs;
+  // ignore: implicit_dynamic_type
+  return EqualUnmodifiableListView(_contextInputs);
+}
+
  final  Set<skir.PresentationId> _activePresentations;
 @override Set<skir.PresentationId> get activePresentations {
   if (_activePresentations is EqualUnmodifiableSetView) return _activePresentations;
@@ -681,18 +694,18 @@ class _PortablePresentationDocument extends PortablePresentationDocument {
 
 @override
 bool operator ==(Object other) {
-    return identical(this, other) || (other.runtimeType == runtimeType&&other is _PortablePresentationDocument&&(identical(other.catalog, catalog) || other.catalog == catalog)&&(identical(other.root, root) || other.root == root)&&const DeepCollectionEquality().equals(other.bindings, _bindings)&&(identical(other.budget, budget) || other.budget == budget)&&(identical(other.queries, queries) || other.queries == queries)&&(identical(other.resourceDiagnostics, resourceDiagnostics) || other.resourceDiagnostics == resourceDiagnostics)&&const DeepCollectionEquality().equals(other.diagnostics, _diagnostics)&&(identical(other.diagnosticFallback, diagnosticFallback) || other.diagnosticFallback == diagnosticFallback)&&(identical(other.role, role) || other.role == role)&&(identical(other.material, material) || other.material == material)&&const DeepCollectionEquality().equals(other.activePresentations, _activePresentations)&&const DeepCollectionEquality().equals(other.slots, _slots));
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is _PortablePresentationDocument&&(identical(other.catalog, catalog) || other.catalog == catalog)&&(identical(other.root, root) || other.root == root)&&const DeepCollectionEquality().equals(other.bindings, _bindings)&&(identical(other.budget, budget) || other.budget == budget)&&(identical(other.queries, queries) || other.queries == queries)&&(identical(other.resourceDiagnostics, resourceDiagnostics) || other.resourceDiagnostics == resourceDiagnostics)&&const DeepCollectionEquality().equals(other.diagnostics, _diagnostics)&&(identical(other.diagnosticFallback, diagnosticFallback) || other.diagnosticFallback == diagnosticFallback)&&(identical(other.role, role) || other.role == role)&&(identical(other.material, material) || other.material == material)&&const DeepCollectionEquality().equals(other.contextInputs, _contextInputs)&&const DeepCollectionEquality().equals(other.activePresentations, _activePresentations)&&const DeepCollectionEquality().equals(other.slots, _slots));
 }
 
 
 @override
 int get hashCode {
-    return Object.hash(runtimeType,catalog,root,const DeepCollectionEquality().hash(_bindings),budget,queries,resourceDiagnostics,const DeepCollectionEquality().hash(_diagnostics),diagnosticFallback,role,material,const DeepCollectionEquality().hash(_activePresentations),const DeepCollectionEquality().hash(_slots));
+    return Object.hash(runtimeType,catalog,root,const DeepCollectionEquality().hash(_bindings),budget,queries,resourceDiagnostics,const DeepCollectionEquality().hash(_diagnostics),diagnosticFallback,role,material,const DeepCollectionEquality().hash(_contextInputs),const DeepCollectionEquality().hash(_activePresentations),const DeepCollectionEquality().hash(_slots));
 }
 
 @override
 String toString() {
-    return 'PortablePresentationDocument._value(catalog: $catalog, root: $root, bindings: $bindings, budget: $budget, queries: $queries, resourceDiagnostics: $resourceDiagnostics, diagnostics: $diagnostics, diagnosticFallback: $diagnosticFallback, role: $role, material: $material, activePresentations: $activePresentations, slots: $slots)';
+    return 'PortablePresentationDocument._value(catalog: $catalog, root: $root, bindings: $bindings, budget: $budget, queries: $queries, resourceDiagnostics: $resourceDiagnostics, diagnostics: $diagnostics, diagnosticFallback: $diagnosticFallback, role: $role, material: $material, contextInputs: $contextInputs, activePresentations: $activePresentations, slots: $slots)';
 }
 
 

@@ -7,6 +7,45 @@ import "package:typewriter_testkit/typewriter_testkit.dart";
 import "../../../../../support/test_utils.dart";
 
 void main() {
+  test("ambient preferences are the selection, then the routed resource and every owner above it", () {
+    final page = skir.ResourceId(value: "page:owned");
+    final tag = skir.ResourceId(value: "tag:selected");
+    final document = fixtureAuthoringDocument(
+      realm: true,
+      books: [
+        Book(
+          bookId: _book,
+          title: "Owned",
+          icon: "mdi:book",
+          color: Colors.blue,
+        ),
+      ],
+      pages: [Page(pageId: page, bookId: _book, name: "Intro")],
+      tags: [Tag(tagId: tag, name: "Selected", color: Colors.green)],
+    );
+    final ambient = Provider(
+      (ref) => ambientCreationResources(ref, _scope, document),
+    );
+    final container = ProviderContainer(
+      overrides: [
+        realmIdProvider.overrideWith((_) => _scope.realmId),
+        routedResourceIdProvider.overrideWith((_) => page),
+      ],
+    );
+    addTearDown(container.dispose);
+    container.read(selectionProvider.notifier).selectAll([
+      AuthoringResourceIdentifier.inScope(_scope, tag),
+    ]);
+
+    expect(container.read(ambient), [
+      tag,
+      page,
+      _book,
+      fixtureLibraryId,
+      fixtureRealmRootId,
+    ]);
+  });
+
   test(
     "a create action resolves its owner and evaluates its presets",
     () async {
@@ -269,7 +308,7 @@ void main() {
       [
         CreationReferenceConstraint(
           route: [skir.EndpointId(value: "$fixtureBookPagesRelation:second")],
-          target: _book,
+          targets: {_book},
         ),
       ],
     );

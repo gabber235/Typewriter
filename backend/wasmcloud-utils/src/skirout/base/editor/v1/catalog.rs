@@ -3283,3 +3283,24 @@ pub fn prepare_value_method()
     });
     &*METHOD
 }
+
+// ==============================================================================
+// Constants
+// ==============================================================================
+
+/// The family of relations whose one owner endpoint holds the resources on its many member endpoint,
+/// such as a Book holding its pages. Every owned resource has one owner, and ownership never loops.
+pub fn resource_ownership_family_const()
+-> &'static crate::skirout::base::editor::v1::type_catalog::RelationFamilyId {
+    static VALUE: std::sync::LazyLock<
+        crate::skirout::base::editor::v1::type_catalog::RelationFamilyId,
+    > = std::sync::LazyLock::new(|| {
+        crate::skirout::base::editor::v1::type_catalog::RelationFamilyId::serializer()
+            .from_json(
+                "[\"resource.ownership\"]",
+                crate::skir_client::UnrecognizedValues::Drop,
+            )
+            .unwrap()
+    });
+    &*VALUE
+}

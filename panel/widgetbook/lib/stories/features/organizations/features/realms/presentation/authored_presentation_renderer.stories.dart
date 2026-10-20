@@ -915,7 +915,7 @@ final class ResourceHeadingGallery extends HookWidget {
     final scope = PortablePresentationScope(
       operations: operations,
       bindings: {
-        presentationSelectionCountBindingId: PortableExpressionBinding(
+        panelSelectionCountInput.bindingId: PortableExpressionBinding(
           value: skir.DataValue.wrapInteger(multiple ? "2" : "1"),
         ),
       },

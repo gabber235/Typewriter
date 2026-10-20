@@ -6598,6 +6598,14 @@ val PrepareValue: build.skir.service.Method<
     )
 }
 
+/**
+ * The family of relations whose one owner endpoint holds the resources on its many member endpoint,
+ * such as a Book holding its pages. Every owned resource has one owner, and ownership never loops.
+ */
+val RESOURCE_OWNERSHIP_FAMILY: skirout.editor.v1.type_catalog.RelationFamilyId by kotlin.lazy {
+    skirout.editor.v1.type_catalog.RelationFamilyId.serializer.fromJsonCode("[\"resource.ownership\"]")
+}
+
 private object _SerializerRegistry {
     val CatalogFetchRequestSerializerImpl = build.skir.internal.StructSerializer(
         recordId = "editor/v1/catalog.skir:CatalogFetchRequest",

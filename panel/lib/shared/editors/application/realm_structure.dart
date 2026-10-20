@@ -1,7 +1,5 @@
 part of "checked_editor_catalog.dart";
 
-const _ownershipFamily = "resource.ownership";
-
 /// One ownership relation: the [owner] endpoint has one resource, which owns
 /// the many resources of the [member] endpoint.
 @freezed
@@ -33,6 +31,11 @@ abstract class OwningField with _$OwningField {
       skir.ValuePath(segments: [skir.PathSegment.createField(name: field)]);
 }
 
+extension ResourceOwnershipRelation on skir.RelationContract {
+  /// Whether this relation belongs to the contract's resource ownership family.
+  bool get ownsResources => families.contains(skir.resourceOwnershipFamily);
+}
+
 /// The realm's structure as the catalog declares it: one root type owning the
 /// section types, and ownership relations below them. Nothing here names a
 /// library type; every fact comes from relation families and the published
@@ -41,7 +44,7 @@ extension RealmStructureCatalog on CheckedEditorCatalog {
   /// Ownership relations with exactly one owner endpoint, in catalog order.
   List<OwnershipRelation> get ownershipRelations => [
     for (final relation in snapshot.relations)
-      if (relation.families.any((family) => family.value == _ownershipFamily))
+      if (relation.ownsResources)
         if (relation.first.cardinality == skir.EndpointCardinality.one &&
             relation.second.cardinality == skir.EndpointCardinality.many)
           OwnershipRelation(
@@ -71,7 +74,7 @@ extension RealmStructureCatalog on CheckedEditorCatalog {
 
   Set<skir.TypeDefinitionId> get _sectionBases => {
     for (final ownership in ownershipRelations)
-      if (_isNominalSubtype(
+      if (isNominalSubtype(
         snapshot.realmRoot,
         ownership.owner.resource.definition,
       ))
@@ -97,8 +100,7 @@ extension RealmStructureCatalog on CheckedEditorCatalog {
         if (concreteRecord(published) &&
             (published.definition.id == snapshot.realmRoot ||
                 members.any(
-                  (member) =>
-                      _isNominalSubtype(published.definition.id, member),
+                  (member) => isNominalSubtype(published.definition.id, member),
                 )))
           published.definition.id,
     ];

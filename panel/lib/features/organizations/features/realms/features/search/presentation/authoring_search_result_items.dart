@@ -12,7 +12,7 @@ Widget buildAuthoringResourceSearchResultItem(SearchResultRowContext row) {
     key: ValueKey(row.result.id),
     document: payload.document,
     issues: payload.issues,
-    presentationContext: payload.presentationContext,
+    hostContext: payload.hostContext,
     resource: payload.id,
     row: row,
     role: skir.PresentationRole.resourceSearchResult,
@@ -33,7 +33,7 @@ final class AuthoredResourceSearchResult extends HookWidget {
     required this.role,
     required this.density,
     required this.fallbackLabel,
-    this.presentationContext = const {},
+    this.hostContext = HostContext.empty,
     this.footer,
     this.kindLabel,
     super.key,
@@ -41,8 +41,10 @@ final class AuthoredResourceSearchResult extends HookWidget {
 
   final AuthoringDocument document;
   final ResourceIssues issues;
-  final Map<skir.ExpressionBindingId, PortableExpressionBinding>
-  presentationContext;
+
+  /// Host values the result's presentation may read, such as the resource
+  /// routed when the palette opened.
+  final HostContext hostContext;
   final skir.ResourceId resource;
   final SearchResultRowContext row;
   final skir.PresentationRole role;
@@ -125,7 +127,7 @@ final class AuthoredResourceSearchResult extends HookWidget {
       ),
       _ when host == null || selected == null => chrome(),
       _ => PortablePresentationRenderer(
-        contextBindings: presentationContext,
+        hostContext: hostContext,
         key: ObjectKey(host),
         host: host,
         contentBuilder: (node, scope) => PortableResultContent(
@@ -142,14 +144,3 @@ final class AuthoredResourceSearchResult extends HookWidget {
     };
   }
 }
-
-Map<skir.ExpressionBindingId, PortableExpressionBinding> libraryOriginBindings(
-  skir.ResourceId? origin,
-) => origin == null
-    ? const {}
-    : {
-        skir.ExpressionBindingId(
-          value: "context:typewriter.library.active_resource",
-        ): origin
-            .toExpressionBinding(),
-      };

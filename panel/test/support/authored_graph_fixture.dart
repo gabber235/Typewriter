@@ -169,7 +169,7 @@ final class AuthoredGraphFixture {
             skir.EndpointSlot.second,
             skir.EndpointCardinality.many,
           ),
-          families: [skir.RelationFamilyId(value: "resource.ownership")],
+          families: [skir.resourceOwnershipFamily],
         ),
         skir.RelationContract(
           id: triggerRelation,

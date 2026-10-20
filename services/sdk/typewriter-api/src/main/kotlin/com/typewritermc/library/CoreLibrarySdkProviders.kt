@@ -15,6 +15,7 @@ import com.typewritermc.expression.orIfBlank
 import com.typewritermc.expression.target
 import com.typewritermc.expression.trim
 import com.typewritermc.presentation.ContainerStyle
+import com.typewritermc.presentation.EditorContext
 import com.typewritermc.presentation.Layout
 import com.typewritermc.presentation.PresentationAlignment
 import com.typewritermc.presentation.PresentationBorder
@@ -202,7 +203,7 @@ object PageSearchPresentation : PagePresentation {
 
     override fun PagePresentationScope.present() {
         val page = subject.resource<Page>()
-        val origin = context.read(LibraryContext.activeResource)
+        val origin = context.read(EditorContext.activeResource)
         val accent = appearance.accent.asPresentationColor()
         pageLocation(
             page = page,

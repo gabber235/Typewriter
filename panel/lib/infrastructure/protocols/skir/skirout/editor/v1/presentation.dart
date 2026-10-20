@@ -43041,21 +43041,271 @@ final class DividerAppearance_mutable implements DividerAppearance_orMutable {
 }
 
 // -----------------------------------------------------------------------------
+// enum HostContextInput
+// -----------------------------------------------------------------------------
+
+/// Context values every editor host supplies, declared once so presentations and hosts share no keys.
+///
+/// To switch on the variants:
+///   ```
+///   switch (e) {
+///     case HostContextInput_unknown(): { ... }
+///     case HostContextInput.activeResource: { ... }
+///     case HostContextInput.selectionCount: { ... }
+///   }
+///   ```
+///
+/// Deeply immutable.
+sealed class HostContextInput {
+  /// Constant indicating an unknown `HostContextInput`.
+  /// Default value for fields of type `HostContextInput`.
+  static const HostContextInput unknown = HostContextInput_unknown._instance;
+
+  /// The resource routed in the workspace, if any.
+  static const activeResource = _HostContextInput_consts.activeResourceConst;
+
+  /// Number of resources in the current selection.
+  static const selectionCount = _HostContextInput_consts.selectionCountConst;
+
+  /// Returns the kind of variant held by this HostContextInput.
+  HostContextInput_kind get kind;
+
+  /// Serializer for `HostContextInput` instances.
+  static _skir.EnumSerializer<HostContextInput> get serializer {
+    if (_serializerBuilder.mustInitialize()) {
+      _serializerBuilder.addConstantVariant(
+        1,
+        "active_resource",
+        "activeResource",
+        "The resource routed in the workspace, if any.",
+        activeResource,
+      );
+      _serializerBuilder.addConstantVariant(
+        2,
+        "selection_count",
+        "selectionCount",
+        "Number of resources in the current selection.",
+        selectionCount,
+      );
+      _serializerBuilder.finalize();
+    }
+    return _serializerBuilder.serializer;
+  }
+
+  static final _serializerBuilder = _skir.internal__EnumSerializerBuilder
+      .create(
+        recordId: "editor/v1/presentation.skir:HostContextInput",
+        doc: "Context values every editor host supplies, declared once so presentations and hosts share no keys.",
+        unknownInstance: HostContextInput_unknown._instance,
+        enumInstance: HostContextInput.unknown,
+        getOrdinal: (it) => it.kind._ordinal,
+        wrapUnrecognized: HostContextInput_unknown._unrecognized,
+        getUnrecognized: (it) => it._u,
+      );
+}
+
+/// The kind of variant held by a `HostContextInput`.
+enum HostContextInput_kind {
+  unknown(0),
+  activeResourceConst(1),
+  selectionCountConst(2);
+
+  final _core.int _ordinal;
+
+  const HostContextInput_kind(this._ordinal);
+}
+
+final class HostContextInput_unknown implements HostContextInput {
+  static const _instance = HostContextInput_unknown._();
+
+  final _skir.internal__UnrecognizedVariant? _u;
+
+  const HostContextInput_unknown._() : _u = null;
+  HostContextInput_unknown._unrecognized(this._u);
+
+  @_core.override
+  HostContextInput_kind get kind => HostContextInput_kind.unknown;
+  @_core.override
+  _core.bool operator ==(other) => other is HostContextInput_unknown;
+  @_core.override
+  _core.int get hashCode => 8118964;
+  @_core.override
+  _core.String toString() =>
+      _skir.internal__stringify(this, HostContextInput.serializer);
+}
+
+enum _HostContextInput_consts implements HostContextInput {
+  activeResourceConst(HostContextInput_kind.activeResourceConst),
+  selectionCountConst(HostContextInput_kind.selectionCountConst);
+
+  @_core.override
+  final HostContextInput_kind kind;
+
+  const _HostContextInput_consts(this.kind);
+
+  @_core.override
+  _core.String toString() =>
+      _skir.internal__stringify(this, HostContextInput.serializer);
+}
+
+// -----------------------------------------------------------------------------
+// enum PresentationContextSource
+// -----------------------------------------------------------------------------
+
+/// Who supplies a context value: the caller of a presentation by binding, or the editor host.
+///
+/// To switch on the variants:
+///   ```
+///   switch (e) {
+///     case PresentationContextSource_unknown(): { ... }
+///     case PresentationContextSource.caller: { ... }
+///     case PresentationContextSource_host(:var value): { ... }
+///   }
+///   ```
+///
+/// Deeply immutable.
+sealed class PresentationContextSource {
+  /// Constant indicating an unknown `PresentationContextSource`.
+  /// Default value for fields of type `PresentationContextSource`.
+  static const PresentationContextSource unknown =
+      PresentationContextSource_unknown._instance;
+
+  static const caller = _PresentationContextSource_consts.callerConst;
+
+  /// Create a 'host' variant wrapping around the given value.
+  factory PresentationContextSource.wrapHost(HostContextInput value) =>
+      PresentationContextSource_hostWrapper._(value);
+
+  /// Returns the kind of variant held by this PresentationContextSource.
+  PresentationContextSource_kind get kind;
+
+  /// Serializer for `PresentationContextSource` instances.
+  static _skir.EnumSerializer<PresentationContextSource> get serializer {
+    if (_serializerBuilder.mustInitialize()) {
+      _serializerBuilder.addConstantVariant(1, "caller", "caller", "", caller);
+      _serializerBuilder.addWrapperVariant(
+        2,
+        "host",
+        "wrapHost",
+        HostContextInput.serializer,
+        "",
+        PresentationContextSource_hostWrapper._,
+        (it) => it.value,
+        ordinal: PresentationContextSource_kind.hostWrapper._ordinal,
+      );
+      _serializerBuilder.finalize();
+    }
+    return _serializerBuilder.serializer;
+  }
+
+  static final _serializerBuilder = _skir.internal__EnumSerializerBuilder
+      .create(
+        recordId: "editor/v1/presentation.skir:PresentationContextSource",
+        doc: "Who supplies a context value: the caller of a presentation by binding, or the editor host.",
+        unknownInstance: PresentationContextSource_unknown._instance,
+        enumInstance: PresentationContextSource.unknown,
+        getOrdinal: (it) => it.kind._ordinal,
+        wrapUnrecognized: PresentationContextSource_unknown._unrecognized,
+        getUnrecognized: (it) => it._u,
+      );
+}
+
+/// The kind of variant held by a `PresentationContextSource`.
+enum PresentationContextSource_kind {
+  unknown(0),
+  callerConst(1),
+  hostWrapper(2);
+
+  final _core.int _ordinal;
+
+  const PresentationContextSource_kind(this._ordinal);
+}
+
+final class PresentationContextSource_unknown
+    implements PresentationContextSource {
+  static const _instance = PresentationContextSource_unknown._();
+
+  final _skir.internal__UnrecognizedVariant? _u;
+
+  const PresentationContextSource_unknown._() : _u = null;
+  PresentationContextSource_unknown._unrecognized(this._u);
+
+  @_core.override
+  PresentationContextSource_kind get kind =>
+      PresentationContextSource_kind.unknown;
+  @_core.override
+  _core.bool operator ==(other) => other is PresentationContextSource_unknown;
+  @_core.override
+  _core.int get hashCode => 8118964;
+  @_core.override
+  _core.String toString() =>
+      _skir.internal__stringify(this, PresentationContextSource.serializer);
+}
+
+enum _PresentationContextSource_consts implements PresentationContextSource {
+  callerConst(PresentationContextSource_kind.callerConst);
+
+  @_core.override
+  final PresentationContextSource_kind kind;
+
+  const _PresentationContextSource_consts(this.kind);
+
+  @_core.override
+  _core.String toString() =>
+      _skir.internal__stringify(this, PresentationContextSource.serializer);
+}
+
+sealed class _PresentationContextSource_wrapper
+    implements PresentationContextSource {
+  _core.dynamic get value;
+
+  @_core.override
+  _core.bool operator ==(other) {
+    if (other is! _PresentationContextSource_wrapper) return false;
+    return kind == other.kind && value == other.value;
+  }
+
+  @_core.override
+  _core.int get hashCode => (kind._ordinal * 31) ^ value.hashCode;
+
+  @_core.override
+  _core.String toString() =>
+      _skir.internal__stringify(this, PresentationContextSource.serializer);
+}
+
+final class PresentationContextSource_hostWrapper
+    extends _PresentationContextSource_wrapper {
+  final HostContextInput value;
+
+  PresentationContextSource_hostWrapper._(this.value);
+
+  @_core.override
+  PresentationContextSource_kind get kind =>
+      PresentationContextSource_kind.hostWrapper;
+}
+
+// -----------------------------------------------------------------------------
 // struct PresentationContextInput
 // -----------------------------------------------------------------------------
 
 sealed class PresentationContextInput_orMutable {
   _lib_editor_v1_type_catalog.ExpressionBindingId_orMutable get bindingId;
+  PresentationContextSource get source;
   _lib_editor_v1_type_catalog.TypeUse get valueType;
 
   PresentationContextInput toFrozen();
 }
 
+/// A value a presentation reads from its surroundings. Expressions read it through `binding_id`;
+/// `source` says who supplies it, so a host fills its declared inputs without sharing binding names.
+///
 /// Deeply immutable.
 final class PresentationContextInput
     implements PresentationContextInput_orMutable {
   @_core.override
   final _lib_editor_v1_type_catalog.ExpressionBindingId bindingId;
+  @_core.override
+  final PresentationContextSource source;
   @_core.override
   final _lib_editor_v1_type_catalog.TypeUse valueType;
   _skir.internal__UnrecognizedFields? _u;
@@ -43063,14 +43313,16 @@ final class PresentationContextInput
   factory PresentationContextInput({
     required _lib_editor_v1_type_catalog.ExpressionBindingId_orMutable
     bindingId,
+    required PresentationContextSource source,
     required _lib_editor_v1_type_catalog.TypeUse valueType,
-  }) => PresentationContextInput._(bindingId.toFrozen(), valueType);
+  }) => PresentationContextInput._(bindingId.toFrozen(), source, valueType);
 
-  PresentationContextInput._(this.bindingId, this.valueType);
+  PresentationContextInput._(this.bindingId, this.source, this.valueType);
 
   /// Default instance with all fields set to their default values.
   static final defaultInstance = PresentationContextInput._(
     _lib_editor_v1_type_catalog.ExpressionBindingId.defaultInstance,
+    PresentationContextSource.unknown,
     _lib_editor_v1_type_catalog.TypeUse.unknown,
   );
 
@@ -43079,6 +43331,7 @@ final class PresentationContextInput
   static PresentationContextInput_mutable mutable() =>
       PresentationContextInput_mutable._(
         _lib_editor_v1_type_catalog.ExpressionBindingId.defaultInstance,
+        PresentationContextSource.unknown,
         _lib_editor_v1_type_catalog.TypeUse.unknown,
       );
 
@@ -43089,7 +43342,11 @@ final class PresentationContextInput
 
   /// Returns a mutable shallow copy of this instance.
   PresentationContextInput_mutable toMutable() =>
-      PresentationContextInput_mutable._(this.bindingId, this.valueType);
+      PresentationContextInput_mutable._(
+        this.bindingId,
+        this.source,
+        this.valueType,
+      );
 
   @_core.override
   _core.bool operator ==(other) {
@@ -43104,7 +43361,11 @@ final class PresentationContextInput
   @_core.override
   _core.int get hashCode => _skir.internal__listEquality.hash(_equality_proxy);
 
-  _core.List get _equality_proxy => [this.bindingId, this.valueType];
+  _core.List get _equality_proxy => [
+    this.bindingId,
+    this.source,
+    this.valueType,
+  ];
 
   @_core.override
   _core.String toString() => _skir.internal__stringify(this, serializer);
@@ -43126,9 +43387,18 @@ final class PresentationContextInput
         (it, v) => it.bindingId = v,
       );
       _serializerBuilder.addField(
+        "source",
+        "source",
+        1,
+        PresentationContextSource.serializer,
+        "",
+        (it) => it.source,
+        (it, v) => it.source = v,
+      );
+      _serializerBuilder.addField(
         "value_type",
         "valueType",
-        1,
+        2,
         _lib_editor_v1_type_catalog.TypeUse.serializer,
         "",
         (it) => it.valueType,
@@ -43141,7 +43411,7 @@ final class PresentationContextInput
 
   static final _serializerBuilder = _skir.internal__StructSerializerBuilder(
     recordId: "editor/v1/presentation.skir:PresentationContextInput",
-    doc: "",
+    doc: "A value a presentation reads from its surroundings. Expressions read it through [binding_id];\n[source] says who supplies it, so a host fills its declared inputs without sharing binding names.",
     defaultInstance: defaultInstance,
     newMutable: (it) => (it != null) ? it.toMutable() : mutable(),
     toFrozen: (PresentationContextInput_mutable it) => it.toFrozen(),
@@ -43154,10 +43424,15 @@ final class PresentationContextInput
 final class PresentationContextInput_mutable
     implements PresentationContextInput_orMutable {
   _lib_editor_v1_type_catalog.ExpressionBindingId_orMutable bindingId;
+  PresentationContextSource source;
   _lib_editor_v1_type_catalog.TypeUse valueType;
   _skir.internal__UnrecognizedFields? _u;
 
-  PresentationContextInput_mutable._(this.bindingId, this.valueType);
+  PresentationContextInput_mutable._(
+    this.bindingId,
+    this.source,
+    this.valueType,
+  );
 
   /// If the value of [bindingId] is already mutable, returns it as-is.
   /// Otherwise, makes a mutable copy, assigns it back to [bindingId] and returns it.
@@ -43176,6 +43451,7 @@ final class PresentationContextInput_mutable
   @_core.override
   PresentationContextInput toFrozen() => PresentationContextInput(
     bindingId: this.bindingId,
+    source: this.source,
     valueType: this.valueType,
   ).._u = this._u;
 }
