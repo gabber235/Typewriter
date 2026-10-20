@@ -27,93 +27,6 @@ class AuthRoute extends PageRouteInfo<void> {
 }
 
 /// generated route for
-/// [BookPage]
-class BookRoute extends PageRouteInfo<BookRouteArgs> {
-  BookRoute({
-    required String organizationId,
-    required String realmId,
-    required String bookId,
-    Key? key,
-    List<PageRouteInfo>? children,
-  }) : super(
-         BookRoute.name,
-         args: BookRouteArgs(
-           organizationId: organizationId,
-           realmId: realmId,
-           bookId: bookId,
-           key: key,
-         ),
-         rawPathParams: {
-           'organizationId': organizationId,
-           'realmId': realmId,
-           'bookId': bookId,
-         },
-         initialChildren: children,
-       );
-
-  static const String name = 'BookRoute';
-
-  static PageInfo page = PageInfo(
-    name,
-    builder: (data) {
-      final pathParams = data.inheritedPathParams;
-      final args = data.argsAs<BookRouteArgs>(
-        orElse: () => BookRouteArgs(
-          organizationId: pathParams.getString('organizationId'),
-          realmId: pathParams.getString('realmId'),
-          bookId: pathParams.getString('bookId'),
-        ),
-      );
-      return BookPage(
-        organizationId: args.organizationId,
-        realmId: args.realmId,
-        bookId: args.bookId,
-        key: args.key,
-      );
-    },
-  );
-}
-
-class BookRouteArgs {
-  const BookRouteArgs({
-    required this.organizationId,
-    required this.realmId,
-    required this.bookId,
-    this.key,
-  });
-
-  final String organizationId;
-
-  final String realmId;
-
-  final String bookId;
-
-  final Key? key;
-
-  @override
-  String toString() {
-    return 'BookRouteArgs{organizationId: $organizationId, realmId: $realmId, bookId: $bookId, key: $key}';
-  }
-
-  @override
-  bool operator ==(Object other) {
-    if (identical(this, other)) return true;
-    if (other is! BookRouteArgs) return false;
-    return organizationId == other.organizationId &&
-        realmId == other.realmId &&
-        bookId == other.bookId &&
-        key == other.key;
-  }
-
-  @override
-  int get hashCode =>
-      organizationId.hashCode ^
-      realmId.hashCode ^
-      bookId.hashCode ^
-      key.hashCode;
-}
-
-/// generated route for
 /// [IndexPage]
 class IndexRoute extends PageRouteInfo<void> {
   const IndexRoute({List<PageRouteInfo>? children})
@@ -157,22 +70,6 @@ class JoinRequestsRoute extends PageRouteInfo<void> {
     name,
     builder: (data) {
       return const JoinRequestsPage();
-    },
-  );
-}
-
-/// generated route for
-/// [LibraryPage]
-class LibraryRoute extends PageRouteInfo<void> {
-  const LibraryRoute({List<PageRouteInfo>? children})
-    : super(LibraryRoute.name, initialChildren: children);
-
-  static const String name = 'LibraryRoute';
-
-  static PageInfo page = PageInfo(
-    name,
-    builder: (data) {
-      return const LibraryPage();
     },
   );
 }
@@ -266,51 +163,19 @@ class OrganizationRouteArgs {
 }
 
 /// generated route for
-/// [PagePage]
-class RouteRoute extends PageRouteInfo<RouteRouteArgs> {
-  RouteRoute({required String pageId, Key? key, List<PageRouteInfo>? children})
-    : super(
-        RouteRoute.name,
-        args: RouteRouteArgs(pageId: pageId, key: key),
-        rawPathParams: {'pageId': pageId},
-        initialChildren: children,
-      );
+/// [RealmHomePage]
+class RealmHomeRoute extends PageRouteInfo<void> {
+  const RealmHomeRoute({List<PageRouteInfo>? children})
+    : super(RealmHomeRoute.name, initialChildren: children);
 
-  static const String name = 'RouteRoute';
+  static const String name = 'RealmHomeRoute';
 
   static PageInfo page = PageInfo(
     name,
     builder: (data) {
-      final pathParams = data.inheritedPathParams;
-      final args = data.argsAs<RouteRouteArgs>(
-        orElse: () => RouteRouteArgs(pageId: pathParams.getString('pageId')),
-      );
-      return PagePage(pageId: args.pageId, key: args.key);
+      return const RealmHomePage();
     },
   );
-}
-
-class RouteRouteArgs {
-  const RouteRouteArgs({required this.pageId, this.key});
-
-  final String pageId;
-
-  final Key? key;
-
-  @override
-  String toString() {
-    return 'RouteRouteArgs{pageId: $pageId, key: $key}';
-  }
-
-  @override
-  bool operator ==(Object other) {
-    if (identical(this, other)) return true;
-    if (other is! RouteRouteArgs) return false;
-    return pageId == other.pageId && key == other.key;
-  }
-
-  @override
-  int get hashCode => pageId.hashCode ^ key.hashCode;
 }
 
 /// generated route for
@@ -362,6 +227,58 @@ class RealmRouteArgs {
 }
 
 /// generated route for
+/// [ResourcePage]
+class ResourceRoute extends PageRouteInfo<ResourceRouteArgs> {
+  ResourceRoute({
+    required String resourceId,
+    Key? key,
+    List<PageRouteInfo>? children,
+  }) : super(
+         ResourceRoute.name,
+         args: ResourceRouteArgs(resourceId: resourceId, key: key),
+         rawPathParams: {'resourceId': resourceId},
+         initialChildren: children,
+       );
+
+  static const String name = 'ResourceRoute';
+
+  static PageInfo page = PageInfo(
+    name,
+    builder: (data) {
+      final pathParams = data.inheritedPathParams;
+      final args = data.argsAs<ResourceRouteArgs>(
+        orElse: () =>
+            ResourceRouteArgs(resourceId: pathParams.getString('resourceId')),
+      );
+      return ResourcePage(resourceId: args.resourceId, key: args.key);
+    },
+  );
+}
+
+class ResourceRouteArgs {
+  const ResourceRouteArgs({required this.resourceId, this.key});
+
+  final String resourceId;
+
+  final Key? key;
+
+  @override
+  String toString() {
+    return 'ResourceRouteArgs{resourceId: $resourceId, key: $key}';
+  }
+
+  @override
+  bool operator ==(Object other) {
+    if (identical(this, other)) return true;
+    if (other is! ResourceRouteArgs) return false;
+    return resourceId == other.resourceId && key == other.key;
+  }
+
+  @override
+  int get hashCode => resourceId.hashCode ^ key.hashCode;
+}
+
+/// generated route for
 /// [ServicesPage]
 class ServicesRoute extends PageRouteInfo<void> {
   const ServicesRoute({List<PageRouteInfo>? children})
@@ -373,22 +290,6 @@ class ServicesRoute extends PageRouteInfo<void> {
     name,
     builder: (data) {
       return const ServicesPage();
-    },
-  );
-}
-
-/// generated route for
-/// [TagsPage]
-class TagsRoute extends PageRouteInfo<void> {
-  const TagsRoute({List<PageRouteInfo>? children})
-    : super(TagsRoute.name, initialChildren: children);
-
-  static const String name = 'TagsRoute';
-
-  static PageInfo page = PageInfo(
-    name,
-    builder: (data) {
-      return const TagsPage();
     },
   );
 }

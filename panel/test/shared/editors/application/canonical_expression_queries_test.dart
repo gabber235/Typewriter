@@ -282,7 +282,6 @@ void main() {
         ...original.entries,
         other: skir.AuthoringResource(
           id: other,
-          definition: skir.ResourceDefinitionId(value: "other"),
           content: skir.AuthoringRecord(
             configuration: skir.TypeSelection.createComplete(
               definition: _other,
@@ -437,7 +436,6 @@ void main() {
           skir.AuthoringResource entry(skir.ResourceId id, String name) =>
               skir.AuthoringResource(
                 id: id,
-                definition: skir.ResourceDefinitionId(value: "page"),
                 content: skir.AuthoringRecord(
                   configuration: skir.TypeSelection.createComplete(
                     definition: _page,
@@ -1116,7 +1114,6 @@ AuthoringDocument _document(
   entries: {
     _resource: skir.AuthoringResource(
       id: _resource,
-      definition: skir.ResourceDefinitionId(value: "page"),
       content: skir.AuthoringRecord(
         configuration:
             configuration ??

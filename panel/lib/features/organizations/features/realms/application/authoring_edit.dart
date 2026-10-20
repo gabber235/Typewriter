@@ -16,15 +16,11 @@ final class AuthoringEdit implements PortableAuthoringEdit {
   }) {
     final entries = resources.toList(growable: false);
     final records = {for (final entry in entries) entry.id: entry.content};
-    final definitions = {
-      for (final entry in entries) entry.id: entry.definition,
-    };
     final projections = links.toList(growable: false);
     return AuthoringEdit._(
       generation: generation,
       catalog: catalog,
       records: records,
-      definitions: definitions,
       links: projections,
       baseline: AuthoringFacts.capture(resources: records, links: projections),
     );
@@ -34,11 +30,9 @@ final class AuthoringEdit implements PortableAuthoringEdit {
     required this.generation,
     required this.catalog,
     required Map<skir.ResourceId, skir.AuthoringRecord> records,
-    required Map<skir.ResourceId, skir.ResourceDefinitionId> definitions,
     required Iterable<skir.LinkProjection> links,
     required AuthoringFacts baseline,
   }) : _resources = Map.of(records),
-       _definitions = Map.of(definitions),
        _links = List.of(links),
        _baselineFacts = baseline;
   factory AuthoringEdit.fromDocument(AuthoringDocument document) =>
@@ -64,7 +58,6 @@ final class AuthoringEdit implements PortableAuthoringEdit {
   final skir.CatalogGeneration generation;
   final CheckedEditorCatalog? catalog;
   final Map<skir.ResourceId, skir.AuthoringRecord> _resources;
-  final Map<skir.ResourceId, skir.ResourceDefinitionId> _definitions;
   final List<skir.LinkProjection> _links;
   final AuthoringFacts _baselineFacts;
   final Map<Object, skir.EditExpectation> _observed = {};
@@ -114,7 +107,6 @@ final class AuthoringEdit implements PortableAuthoringEdit {
           generation: generation,
           catalog: catalog,
           records: _resources,
-          definitions: _definitions,
           links: _links,
           baseline: _baselineFacts,
         )
@@ -152,11 +144,7 @@ final class AuthoringEdit implements PortableAuthoringEdit {
     catalog: catalog ?? (throw StateError("The editor catalog is unavailable")),
     entries: {
       for (final entry in _resources.entries)
-        entry.key: skir.AuthoringResource(
-          id: entry.key,
-          definition: _definitions[entry.key]!,
-          content: entry.value,
-        ),
+        entry.key: skir.AuthoringResource(id: entry.key, content: entry.value),
     },
     links: List.unmodifiable(_links),
     revision: revision,
@@ -426,9 +414,6 @@ final class AuthoringEdit implements PortableAuthoringEdit {
 
   void _adopt(AuthoringEdit source) {
     _failure ??= source._failure;
-    _definitions
-      ..clear()
-      ..addAll(source._definitions);
     _resources
       ..clear()
       ..addAll(source._resources);
@@ -646,29 +631,17 @@ final class AuthoringEdit implements PortableAuthoringEdit {
     return result;
   }
 
-  void create(
-    skir.ResourceId id,
-    skir.AuthoringRecord record, {
-    skir.ResourceDefinitionId? definition,
-  }) {
+  void create(skir.ResourceId id, skir.AuthoringRecord record) {
     if (_resources.containsKey(id)) {
       throw StateError("The resource already exists");
     }
-    _definitions[id] =
-        definition ??
-        catalog?.resourceDefinition(record.configuration)?.id ??
-        skir.ResourceDefinitionId.defaultInstance;
     _observe(_exists(resource: id));
     _resources[id] = record;
     _intents.add(skir.EditIntent.createCreateResource(id: id, record: record));
   }
 
-  void createPrepared(
-    skir.ResourceId id,
-    skir.PreparedValue prepared, {
-    skir.ResourceDefinitionId? definition,
-  }) {
-    create(id, prepared.recordContent, definition: definition);
+  void createPrepared(skir.ResourceId id, skir.PreparedValue prepared) {
+    create(id, prepared.recordContent);
     _initializationFindings.addAll(
       _locatedInitializationFindings(_root(id), prepared, generation),
     );
@@ -720,7 +693,6 @@ final class AuthoringEdit implements PortableAuthoringEdit {
     }
     for (final resource in deleting) {
       _resources.remove(resource);
-      _definitions.remove(resource);
     }
     _links.removeWhere(
       (link) => deleting.contains(link.first) || deleting.contains(link.second),

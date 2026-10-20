@@ -1,7 +1,7 @@
 import "package:flutter_test/flutter_test.dart";
 import "package:typewriter_panel/typewriter_panel.dart";
 import "package:typewriter_testkit/typewriter_testkit.dart";
-import "package:widgetbook_workspace/stories/features/organizations/features/realms/presentation/authored_page_graph_node.stories.dart";
+import "package:widgetbook_workspace/stories/features/organizations/features/realms/presentation/authored_resource_items.stories.dart";
 import "package:widgetbook_workspace/stories/features/organizations/features/realms/presentation/resource_operation_drop_target.stories.dart";
 
 void main() {
@@ -32,7 +32,7 @@ void main() {
         ),
       );
       await tester.pumpAndSettle();
-      final nodes = find.byType(AuthoredPageGraphNode);
+      final nodes = find.byType(AuthoredGraphItem);
       final source = tester.getCenter(nodes.first);
       final pageTarget = find.byType(ResourcePageDropTarget);
       final destination = tester.getCenter(pageTarget);
@@ -145,10 +145,10 @@ void main() {
             ),
           );
           await tester.pumpAndSettle();
-          expect(find.byType(AuthoredPageGraphNode), findsNWidgets(2));
+          expect(find.byType(AuthoredGraphItem), findsNWidgets(2));
           expect(find.byType(ResourcePageDropTarget), findsOneWidget);
           expect(find.byType(Card), findsNothing);
-          final nodes = find.byType(AuthoredPageGraphNode);
+          final nodes = find.byType(AuthoredGraphItem);
           await tester.tap(nodes.first);
           await tester.pumpAndSettle();
           final container = ProviderScope.containerOf(

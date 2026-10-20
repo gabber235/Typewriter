@@ -422,32 +422,36 @@ abstract interface class PortableLinkHost {
 }
 
 @freezed
-abstract class PortablePageGraphPlacement with _$PortablePageGraphPlacement {
-  const factory PortablePageGraphPlacement({
+abstract class PortableGraphPlacement with _$PortableGraphPlacement {
+  const factory PortableGraphPlacement({
     required int x,
     required int y,
     required int width,
     required int height,
-  }) = _PortablePageGraphPlacement;
+  }) = _PortableGraphPlacement;
 }
 
+/// One resource laid out by a resources element: the target of one link of the
+/// bound field, with the link value the layout binds while ordering members.
 @freezed
-abstract class PortablePageEntryProjection with _$PortablePageEntryProjection {
-  const factory PortablePageEntryProjection({
+abstract class PortableResourceMember with _$PortableResourceMember {
+  const factory PortableResourceMember({
     required skir.ResourceId resource,
     required skir.LinkOccurrence occurrence,
+    required skir.DataValue link,
     required PortableResourceProjection resourceProjection,
-    PortablePageGraphPlacement? graph,
-  }) = _PortablePageEntryProjection;
+    required ResourceAppearance appearance,
+    PortableGraphPlacement? graph,
+  }) = _PortableResourceMember;
 }
 
 @freezed
-abstract class PortablePageEdgeProjection with _$PortablePageEdgeProjection {
-  const factory PortablePageEdgeProjection({
+abstract class PortableResourceEdge with _$PortableResourceEdge {
+  const factory PortableResourceEdge({
     required String id,
     required skir.ResourceId source,
     required skir.ResourceId target,
-  }) = _PortablePageEdgeProjection;
+  }) = _PortableResourceEdge;
 }
 
 @freezed
@@ -483,15 +487,17 @@ abstract class PortableTimelineCueProjection
   }) = _PortableTimelineCueProjection;
 }
 
+/// The members of a resources binding in link order, the edges among them,
+/// and for each member the owned resources it places on a timeline.
 @Freezed(map: FreezedMapOptions.none, when: FreezedWhenOptions.none)
-abstract class PortablePageProjection with _$PortablePageProjection {
-  factory PortablePageProjection({
-    required List<PortablePageEntryProjection> entries,
-    required List<PortablePageEdgeProjection> edges,
+abstract class PortableResourcesProjection with _$PortableResourcesProjection {
+  factory PortableResourcesProjection({
+    required List<PortableResourceMember> members,
+    required List<PortableResourceEdge> edges,
     required Map<skir.ResourceId, List<PortableTimelineCueProjection>> timeline,
     String? problem,
-  }) => PortablePageProjection._value(
-    entries: List.unmodifiable(entries),
+  }) => PortableResourcesProjection._value(
+    members: List.unmodifiable(members),
     edges: List.unmodifiable(edges),
     timeline: {
       for (final entry in timeline.entries)
@@ -500,12 +506,12 @@ abstract class PortablePageProjection with _$PortablePageProjection {
     problem: problem,
   );
 
-  const factory PortablePageProjection._value({
-    required List<PortablePageEntryProjection> entries,
-    required List<PortablePageEdgeProjection> edges,
+  const factory PortableResourcesProjection._value({
+    required List<PortableResourceMember> members,
+    required List<PortableResourceEdge> edges,
     required Map<skir.ResourceId, List<PortableTimelineCueProjection>> timeline,
     required String? problem,
-  }) = _PortablePageProjection;
+  }) = _PortableResourcesProjection;
 }
 
 final class PortableGraphPositionChange {
@@ -532,8 +538,11 @@ final class PortableTimelineChange {
   final int endFrame;
 }
 
-abstract interface class PortablePageHost {
-  PortablePageProjection projectPage(
+/// Lays out the resources of a bound link field for every resources layout.
+/// Members are the link targets of the bound field; geometry writes go to each
+/// member's published placement field.
+abstract interface class PortableResourcesHost {
+  PortableResourcesProjection projectResources(
     skir.BindingRef source, {
     required PortableInvocationContext context,
   });
@@ -553,8 +562,9 @@ abstract interface class PortablePageHost {
     required PortableInvocationContext context,
   });
 
-  PortablePresentationWriteResult removePageResource(
-    PortablePageEntryProjection entry, {
+  /// Unlinks [member] from the bound field, or deletes it when [delete].
+  PortablePresentationWriteResult removeMember(
+    PortableResourceMember member, {
     required bool delete,
     required PortableInvocationContext context,
   });

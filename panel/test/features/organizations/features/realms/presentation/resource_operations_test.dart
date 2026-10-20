@@ -176,7 +176,7 @@ Future<void> _pump(
   bool confirmation = false,
   bool showInspector = false,
 }) async {
-  var document = fixtureAuthoringDocument(
+  final document = fixtureAuthoringDocument(
     books: [
       for (final id in [_first, if (second) _second])
         Book(
@@ -187,23 +187,6 @@ Future<void> _pump(
           tagIds: const [],
         ),
     ],
-  );
-  document = document.copyWith(
-    catalog: CheckedEditorCatalog(
-      (document.catalog.snapshot.toMutable()
-            ..resourceDefinitions = [
-              skir.AuthoringResourceDefinition(
-                id: coreBookResourceDefinition,
-                root:
-                    (document.resource(_first)!.configuration
-                            as skir.TypeSelection_completeWrapper)
-                        .value
-                        .definition,
-                navigationHandler: skir.AuthoringNavigationHandler.book,
-              ),
-            ])
-          .toFrozen(),
-    ),
   );
   final transport = ScriptedAuthoringTransport(AsyncData(document));
   addTearDown(transport.dispose);
@@ -266,10 +249,8 @@ Future<void> _pump(
         transport: transport,
         commands: commands,
       ),
-      authoringResourceNavigationRegistryProvider.overrideWithValue(
-        AuthoringResourceNavigationRegistry({
-          skir.AuthoringNavigationHandler.book: adapter,
-        }),
+      realmSurfaceNavigationProvider.overrideWith(
+        (ref) => _RecordingNavigation(ref, adapter),
       ),
     ],
     child: Row(
@@ -301,33 +282,52 @@ Future<void> _pump(
             },
           ),
         for (final id in [_first, if (second) _second])
-          BookWidget(
+          SizedBox(
             key: ValueKey(id),
-            id: id,
-            title: id.value,
-            icon: const Icon(Icons.book),
-            color: Colors.blue,
+            width: 120,
+            height: 80,
+            child: AuthoredResourceItem(
+              identifier: AuthoringResourceIdentifier.inScope(_scope, id),
+              resources: AuthoredResourcesContext(
+                authoringScope: _scope,
+                entries: const [],
+                binding: null,
+                scope: PortablePresentationScope(
+                  bindings: const {},
+                  operations: testPortableOperations(),
+                  budget: skir.EvaluationBudget(
+                    maxSteps: 100,
+                    maxCollectionItems: 10,
+                  ),
+                ),
+                canMutate: () => true,
+              ),
+              child: Text(id.value),
+            ),
           ),
       ],
     ),
   );
 }
 
-final class _Navigation implements AuthoringResourceNavigationAdapter {
+/// The resources a test saw opened.
+final class _Navigation {
   final opened = <skir.ResourceId>[];
-  @override
-  Future<void> open(
-    Ref ref,
-    AuthoringResourceIdentifier resource, {
-    bool Function()? isCurrent,
-  }) async {
-    if (isCurrent?.call() ?? true) opened.add(resource.resourceId);
-  }
+}
+
+/// Records surface openings instead of navigating.
+final class _RecordingNavigation extends RealmSurfaceNavigation {
+  _RecordingNavigation(super.ref, this.recorded);
+
+  final _Navigation recorded;
 
   @override
-  Future<void> reveal(
-    Ref ref,
-    AuthoringResourceIdentifier resource, {
+  Future<bool> open(
+    AuthoringScope scope,
+    skir.ResourceId resource, {
     bool Function()? isCurrent,
-  }) async {}
+  }) async {
+    if (isCurrent?.call() ?? true) recorded.opened.add(resource);
+    return true;
+  }
 }

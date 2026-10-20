@@ -17,11 +17,11 @@ abstract class AuthoringResourceDragGroup
 
   const AuthoringResourceDragGroup._();
 
-  /// Includes the page selection only when the gesture starts on a selected
-  /// node. Resources outside this page or authoring scope cannot join it.
+  /// Includes the selection only when the gesture starts on a selected
+  /// member. Resources outside these members or authoring scope cannot join it.
   static AuthoringResourceDragGroup forSelection({
     required AuthoringResourceIdentifier primary,
-    required List<PortablePageEntryProjection> entries,
+    required List<PortableResourceMember> entries,
     required Iterable<SelectableIdentifier> selection,
     bool Function()? sourceCanMutate,
   }) {

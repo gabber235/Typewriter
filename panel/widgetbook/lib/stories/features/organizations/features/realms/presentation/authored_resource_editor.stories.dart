@@ -293,7 +293,7 @@ _fixture({bool unfilled = false}) {
         ),
       ],
       relations: const [],
-      resourceDefinitions: const [],
+      realmRoot: skir.TypeDefinitionId.defaultInstance,
       presentations: [
         skir.PresentationDescriptor(
           id: presentationId,
@@ -374,13 +374,7 @@ _fixture({bool unfilled = false}) {
     catalog: checked,
     draft: AuthoringEdit(
       generation: generation,
-      resources: [
-        skir.AuthoringResource(
-          id: resource,
-          definition: skir.ResourceDefinitionId(value: "widgetbook.message"),
-          content: record,
-        ),
-      ],
+      resources: [skir.AuthoringResource(id: resource, content: record)],
       links: const [],
       catalog: checked,
     ),

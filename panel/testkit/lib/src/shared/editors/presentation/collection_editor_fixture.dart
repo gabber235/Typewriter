@@ -36,9 +36,6 @@ final class CollectionEditorScenario extends ChangeNotifier {
             entries: {
               resource: skir.AuthoringResource(
                 id: resource,
-                definition: skir.ResourceDefinitionId(
-                  value: "fixture.collection",
-                ),
                 content: skir.AuthoringRecord(
                   configuration: skir.TypeSelection.wrapComplete(_use("Owner")),
                   fields: [
@@ -77,7 +74,7 @@ final class CollectionEditorScenario extends ChangeNotifier {
           (skir.PresentationMaterial.mutable()
                 ..layout = transformLayout?.call(_layout()) ?? _layout())
               .toFrozen(),
-      role: skir.PresentationRole.workspaceEditor,
+      role: skir.PresentationRole.workspace,
       budget: skir.EvaluationBudget(maxSteps: 2000, maxCollectionItems: 200),
       capabilities: capabilities,
       edit: binding,

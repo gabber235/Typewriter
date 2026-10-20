@@ -117,11 +117,24 @@ final class _MountedAppRouter extends AppRouter {
           children: [
             AutoRoute(
               page: PageInfo(
-                LibraryRoute.name,
+                RealmHomeRoute.name,
                 builder: (_) => const Scaffold(body: Text("Library")),
               ),
-              path: "library",
+              path: "",
               initial: true,
+            ),
+            AutoRoute(
+              page: PageInfo(
+                ResourceRoute.name,
+                builder: (data) => Scaffold(
+                  body: Text(
+                    data.params.getString("resourceId") == "book"
+                        ? "Book"
+                        : "Resource",
+                  ),
+                ),
+              ),
+              path: "resource/:resourceId",
             ),
           ],
         ),
@@ -134,78 +147,76 @@ final class _MountedAppRouter extends AppRouter {
         ),
       ],
     ),
-    AutoRoute(
-      page: PageInfo(
-        BookRoute.name,
-        builder: (_) => const Scaffold(body: Text("Book")),
-      ),
-      path: "/organization/:organizationId/realm/:realmId/book/:bookId",
-    ),
   ];
 }
 
+/// The route of the resource [id] in organization two's realm.
+OrganizationRoute _resourceRoute(String id) => OrganizationRoute(
+  organizationId: "two",
+  children: [
+    RealmRoute(
+      realmId: "realm",
+      children: [ResourceRoute(resourceId: id)],
+    ),
+  ],
+);
+
 void main() {
-  testWidgets(
-    "a Book issue returns from the Book route to the nested Library",
-    (tester) async {
-      final fixture = _Fixture();
-      final scope = AuthoringScope(
-        organizationId: skir.recordId("organization:two"),
-        realmId: skir.recordId("service:realm"),
-      );
-      final book = Book(
-        bookId: skir.ResourceId(value: "book"),
-        title: " ",
-        icon: "mdi:book",
-        color: Colors.blue,
-        tagIds: const [],
-      );
-      final container = ProviderContainer(
-        overrides: [
-          ...authoringFixtureOverrides(scope: scope, books: [book]),
-          appRouterProvider.overrideWithValue(fixture.router),
-        ],
-      );
-      final selection = container.listen(selectionProvider, (_, _) {});
-      final reveal = container.listen(
-        realmLocationRevealProvider(scope),
-        (_, _) {},
-      );
-      await fixture.mount(tester);
-      await fixture.router.navigate(
-        BookRoute(organizationId: "two", realmId: "realm", bookId: "book"),
-      );
-      await tester.pumpAndSettle();
-      expect(find.text("Book"), findsOneWidget);
-      expect(
-        await container.read(
-          openRealmInboxLocationProvider(
-            scope,
-            skir.ValueLocation(
-              resource: book.bookId,
-              path: editorRootPath.field("title"),
-            ),
-          ).future,
-        ),
-        isTrue,
-      );
-      await tester.pumpAndSettle();
-      expect(
-        fixture.router.currentPath,
-        "/organization/two/realm/realm/library",
-      );
-      expect(find.text("Library"), findsOneWidget);
-      expect(find.text("Book"), findsNothing);
-      expect(container.read(selectionProvider), [
-        AuthoringResourceIdentifier.inScope(scope, book.bookId),
-      ]);
-      selection.close();
-      reveal.close();
-      container.dispose();
-      await fixture.close(tester);
-      await tester.pump(Duration.zero);
-    },
-  );
+  testWidgets("a Book issue opens the Book's own surface", (tester) async {
+    final fixture = _Fixture();
+    final scope = AuthoringScope(
+      organizationId: skir.recordId("organization:two"),
+      realmId: skir.recordId("service:realm"),
+    );
+    final book = Book(
+      bookId: skir.ResourceId(value: "book"),
+      title: " ",
+      icon: "mdi:book",
+      color: Colors.blue,
+      tagIds: const [],
+    );
+    final container = ProviderContainer(
+      overrides: [
+        ...authoringFixtureOverrides(scope: scope, books: [book]),
+        appRouterProvider.overrideWithValue(fixture.router),
+      ],
+    );
+    final selection = container.listen(selectionProvider, (_, _) {});
+    final reveal = container.listen(
+      realmLocationRevealProvider(scope),
+      (_, _) {},
+    );
+    await fixture.mount(tester);
+    await fixture.router.navigate(_resourceRoute("book"));
+    await tester.pumpAndSettle();
+    expect(find.text("Book"), findsOneWidget);
+    expect(
+      await container.read(
+        openRealmInboxLocationProvider(
+          scope,
+          skir.ValueLocation(
+            resource: book.bookId,
+            path: editorRootPath.field("title"),
+          ),
+        ).future,
+      ),
+      isTrue,
+    );
+    await tester.pumpAndSettle();
+    expect(
+      fixture.router.currentPath,
+      "/organization/two/realm/realm/resource/book",
+    );
+    expect(find.text("Book"), findsOneWidget);
+    expect(container.read(selectionProvider), [
+      AuthoringResourceIdentifier.inScope(scope, book.bookId),
+    ]);
+    selection.close();
+    reveal.close();
+    container.dispose();
+    await fixture.close(tester);
+    await tester.pump(Duration.zero);
+  });
 
   testWidgets(
     "creation reveal permits its own route and selects the inspector",
@@ -235,9 +246,7 @@ void main() {
       );
       final intentProvider = Provider(ResourceCreationNavigationIntent.new);
       await fixture.mount(tester);
-      await fixture.router.navigate(
-        BookRoute(organizationId: "two", realmId: "realm", bookId: "book"),
-      );
+      await fixture.router.navigate(_resourceRoute("book"));
       await tester.pumpAndSettle();
       final intent = container.read(intentProvider);
       await intent.reveal(
@@ -246,7 +255,7 @@ void main() {
       await tester.pumpAndSettle();
       expect(
         fixture.router.currentPath,
-        "/organization/two/realm/realm/library",
+        "/organization/two/realm/realm/resource/book",
       );
       expect(container.read(selectionProvider), [
         AuthoringResourceIdentifier.inScope(scope, book.bookId),
@@ -345,11 +354,7 @@ void main() {
   ) async {
     final fixture = _Fixture();
     await fixture.mount(tester);
-    unawaited(
-      fixture.router.push(
-        BookRoute(organizationId: "two", realmId: "realm", bookId: "book"),
-      ),
-    );
+    unawaited(fixture.router.push(_resourceRoute("book")));
     await tester.pumpAndSettle();
     expect(await fixture.router.maybePop(), isTrue);
     await tester.pumpAndSettle();
@@ -382,7 +387,7 @@ void main() {
         OrganizationRoute(
           organizationId: "one",
           children: [
-            RealmRoute(realmId: "realm", children: [LibraryRoute()]),
+            RealmRoute(realmId: "realm", children: [const RealmHomeRoute()]),
           ],
         ),
       );
@@ -405,11 +410,7 @@ void main() {
         OrganizationRoute(organizationId: "one"),
       );
       await tester.pump();
-      unawaited(
-        fixture.router.push(
-          BookRoute(organizationId: "two", realmId: "realm", bookId: "book"),
-        ),
-      );
+      unawaited(fixture.router.push(_resourceRoute("book")));
       await tester.pumpAndSettle();
       final before = fixture.ids;
       fixture.pending!.complete(true);
@@ -622,11 +623,7 @@ void main() {
       fixture.pending = Completer<bool>();
       final popping = fixture.router.maybePop();
       await tester.pump();
-      unawaited(
-        fixture.router.push(
-          BookRoute(organizationId: "two", realmId: "realm", bookId: "book"),
-        ),
-      );
+      unawaited(fixture.router.push(_resourceRoute("book")));
       await tester.pumpAndSettle();
       final before = fixture.ids;
       fixture.pending!.complete(true);

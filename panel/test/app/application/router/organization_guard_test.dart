@@ -20,22 +20,26 @@ void main() {
     expect(authRoute.guards.single, isNot(same(organizationRoute.guards.last)));
   });
 
-  test("organization and book routes share one organization guard", () {
+  test("realm resource routes inherit the organization guards", () {
     final container = ProviderContainer.test();
     addTearDown(container.dispose);
     final router = container.read(appRouterProvider);
     final organizationRoute = router.routes.singleWhere(
       (route) => route.path == "/organization/:organizationId",
     );
-    final bookRoute = router.routes.singleWhere(
-      (route) =>
-          route.path ==
-          "/organization/:organizationId/realm/:realmId/book/:bookId",
+    final realmRoute = organizationRoute.children!.singleWhere(
+      (route) => route.path == "realm/:realmId",
     );
 
     expect(organizationRoute.guards, hasLength(2));
-    expect(bookRoute.guards, hasLength(2));
-    expect(organizationRoute.guards.last, same(bookRoute.guards.last));
+    expect(realmRoute.children!.map((route) => route.path), [
+      "",
+      "resource/:resourceId",
+    ]);
+    expect(
+      router.routes.where((route) => route.path.contains("/book/")),
+      isEmpty,
+    );
   });
 
   test("bare organization path key maps to the organization table ID", () {

@@ -28,7 +28,7 @@ part "portable_renderer/header_layout.dart";
 part "portable_renderer/layout.dart";
 part "portable_renderer/link_input.dart";
 part "portable_renderer/link_selection.dart";
-part "portable_renderer/pages.dart";
+part "portable_renderer/resources.dart";
 part "portable_renderer/reorder_handle.dart";
 part "portable_renderer/result_content.dart";
 part "portable_renderer/scalar_inputs.dart";
@@ -277,13 +277,11 @@ final class PortablePresentationNodeRenderer extends StatelessWidget {
       childScope,
       headerBuilder: ownedCollectionHeaderBuilder,
     ),
-    skir.PresentationElement_pageGraphWrapper(:final value) => _renderPageGraph(
+    skir.PresentationElement_resourcesWrapper(:final value) => _renderResources(
       context,
       value,
       childScope,
     ),
-    skir.PresentationElement_pageTimelineWrapper(:final value) =>
-      _renderPageTimeline(context, value, childScope),
     skir.PresentationElement_commitControlsWrapper(:final value) =>
       _renderCommitControls(value, childScope),
     skir.PresentationElement_buttonWrapper(:final value) => _renderButton(
@@ -465,7 +463,7 @@ final class PortablePresentationRenderer extends HookWidget {
           scope: scope,
           fillAvailableSpace:
               fillAvailableSpace ||
-              document.role == skir.PresentationRole.workspaceEditor,
+              document.role == skir.PresentationRole.workspace,
         );
     return _PortableDiagnosticBoundary(
       key: ValueKey(generation),

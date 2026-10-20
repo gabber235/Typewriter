@@ -127,7 +127,6 @@ void main() {
           content: skir.PreparedContent.wrapRecord(record),
           findings: const [],
         ),
-        definition: skir.ResourceDefinitionId(value: "test.resource"),
       );
 
     expect(staged.resource(created), record);
@@ -152,7 +151,6 @@ void main() {
             ),
           ],
         ),
-        definition: fixture.pageResource,
       );
     final before = staged.intents.toList();
     final plan = (staged.linkPlans(
@@ -244,7 +242,6 @@ void main() {
           content: skir.PreparedContent.wrapRecord(fixture.pageRecord),
           findings: const [],
         ),
-        definition: fixture.pageResource,
       );
     final source = skir.ValueLocation(
       resource: fixture.book,
@@ -290,7 +287,6 @@ void main() {
           content: skir.PreparedContent.wrapRecord(fixture.pageRecord),
           findings: const [],
         ),
-        definition: fixture.pageResource,
       );
     final plan = (staged.linkPlans(
       catalog: staged.catalog!,
@@ -609,12 +605,7 @@ void main() {
       "collection relation ${reverse ? 'counterparts' : 'sources'} capture parent order evidence",
       () {
         final fixture = _pageCreationFixture();
-        final edit = fixture.draft
-          ..create(
-            fixture.page,
-            fixture.pageRecord,
-            definition: fixture.pageResource,
-          );
+        final edit = fixture.draft..create(fixture.page, fixture.pageRecord);
         final parent = authoredFieldLocation(fixture.book, ["pages"]);
         final item = skir.ItemId(value: "slot:new");
         edit.insert(
@@ -1645,7 +1636,7 @@ _parentFixture({
         ),
     ],
     relations: const [],
-    resourceDefinitions: const [],
+    realmRoot: skir.TypeDefinitionId.defaultInstance,
     presentations: const [],
     presentationMaterials: const [],
     configuration: const [],
@@ -1662,7 +1653,6 @@ _parentFixture({
     resources: [
       skir.AuthoringResource(
         id: resource,
-        definition: skir.ResourceDefinitionId(value: "test.action"),
         content: skir.AuthoringRecord(
           configuration: skir.TypeSelection.wrapComplete(rootUse),
           fields: [
@@ -1745,7 +1735,6 @@ skir.TypeDefinitionId _definition(String name) => skir.TypeDefinitionId(
   AuthoringEdit draft,
   skir.ResourceId book,
   skir.ResourceId page,
-  skir.ResourceDefinitionId pageResource,
   skir.EndpointId bookEndpoint,
   skir.NamedTypeUse sequenceUse,
   skir.AuthoringRecord pageRecord,
@@ -1817,7 +1806,6 @@ _pageCreationFixture({bool ambiguous = false}) {
   );
   final pageParent = template(page);
   final generation = skir.CatalogGeneration(value: "catalog:page creation");
-  final pageResource = skir.ResourceDefinitionId(value: "typewriter.page");
   final snapshot = skir.EditorCatalogWireSnapshot(
     resourceDisplays: const [],
     resourceOperations: const [],
@@ -1908,18 +1896,7 @@ _pageCreationFixture({bool ambiguous = false}) {
         families: const [],
       ),
     ],
-    resourceDefinitions: [
-      skir.AuthoringResourceDefinition(
-        id: skir.ResourceDefinitionId(value: "typewriter.book"),
-        root: book,
-        navigationHandler: skir.AuthoringNavigationHandler.generic,
-      ),
-      skir.AuthoringResourceDefinition(
-        id: pageResource,
-        root: page,
-        navigationHandler: skir.AuthoringNavigationHandler.generic,
-      ),
-    ],
+    realmRoot: skir.TypeDefinitionId.defaultInstance,
     presentations: const [],
     presentationMaterials: const [],
     configuration: const [],
@@ -2001,13 +1978,7 @@ _pageCreationFixture({bool ambiguous = false}) {
   final authored = skir.AuthoringState(
     confirmedObservation: skir.AuthoringObservationId(value: "fixture:saved"),
     generation: generation,
-    resources: [
-      skir.AuthoringResource(
-        id: bookId,
-        definition: skir.ResourceDefinitionId(value: "typewriter.book"),
-        content: bookRecord,
-      ),
-    ],
+    resources: [skir.AuthoringResource(id: bookId, content: bookRecord)],
     links: const [],
     findings: const [],
   );
@@ -2018,7 +1989,6 @@ _pageCreationFixture({bool ambiguous = false}) {
     ),
     book: bookId,
     page: pageId,
-    pageResource: pageResource,
     bookEndpoint: bookEndpoint,
     sequenceUse: sequenceUse,
     pageRecord: pageRecord,
@@ -2096,15 +2066,10 @@ _relationFixture({
     confirmedObservation: skir.AuthoringObservationId(value: "fixture:saved"),
     generation: fixture.snapshot.generation,
     resources: [
-      skir.AuthoringResource(
-        id: originalResource.id,
-        definition: originalResource.definition,
-        content: linkedRecord,
-      ),
+      skir.AuthoringResource(id: originalResource.id, content: linkedRecord),
       for (final target in [originalTarget, newTarget])
         skir.AuthoringResource(
           id: target,
-          definition: originalResource.definition,
           content: skir.AuthoringRecord(
             configuration: originalResource.content.configuration,
             fields: [
@@ -2170,7 +2135,7 @@ _relationFixture({
           families: const [],
         ),
       ],
-      resourceDefinitions: const [],
+      realmRoot: skir.TypeDefinitionId.defaultInstance,
       presentations: const [],
       presentationMaterials: const [],
       configuration: const [],
@@ -2361,7 +2326,7 @@ _collectionRepairFixture() {
       ),
     ],
     relations: const [],
-    resourceDefinitions: const [],
+    realmRoot: skir.TypeDefinitionId.defaultInstance,
     presentations: const [],
     presentationMaterials: const [],
     configuration: const [],
@@ -2378,7 +2343,6 @@ _collectionRepairFixture() {
     resources: [
       skir.AuthoringResource(
         id: resource,
-        definition: skir.ResourceDefinitionId(value: "test.collection"),
         content: skir.AuthoringRecord(
           configuration: skir.TypeSelection.wrapComplete(rootUse),
           fields: [
@@ -2474,13 +2438,7 @@ _fixture() {
   final snapshot = skir.AuthoringState(
     confirmedObservation: skir.AuthoringObservationId(value: "fixture:saved"),
     generation: skir.CatalogGeneration(value: "catalog:1"),
-    resources: [
-      skir.AuthoringResource(
-        id: resource,
-        definition: skir.ResourceDefinitionId(value: "test.resource"),
-        content: record,
-      ),
-    ],
+    resources: [skir.AuthoringResource(id: resource, content: record)],
     links: const [],
     findings: const [],
   );

@@ -9,7 +9,7 @@ void main() {
   ) async {
     await tester.pumpWidget(resourceOperationDropTargetExample(delayed: false));
     await tester.pumpAndSettle();
-    final node = find.byType(AuthoredPageGraphNode).first;
+    final node = find.byType(AuthoredGraphItem).first;
     final container = ProviderScope.containerOf(tester.element(node));
     final scope = container.read(selectedAuthoringScopeProvider)!;
     final workspace = container.read(realmEditingProvider(scope));
@@ -27,7 +27,7 @@ void main() {
       workspace.document.relations.ownerPath(compiledEntryFirstId).owners.first,
       compiledEntryDestinationId,
     );
-    expect(find.byType(AuthoredPageGraphNode), findsOneWidget);
+    expect(find.byType(AuthoredGraphItem), findsOneWidget);
     expect(tester.takeException(), isNull);
   });
 
@@ -39,7 +39,7 @@ void main() {
       );
       await tester.pumpAndSettle();
       await tester.tap(
-        find.byType(AuthoredPageGraphNode).first,
+        find.byType(AuthoredGraphItem).first,
         buttons: kSecondaryMouseButton,
       );
       await tester.pumpAndSettle();
@@ -55,7 +55,7 @@ void main() {
       await tester.tap(find.text("Submit"));
       await tester.pumpAndSettle();
       expect(find.byType(AlertDialog), findsNothing);
-      expect(find.byType(AuthoredPageGraphNode), findsOneWidget);
+      expect(find.byType(AuthoredGraphItem), findsOneWidget);
       expect(tester.takeException(), isNull);
     },
   );

@@ -8,6 +8,59 @@ import "../../../../../support/test_utils.dart";
 
 void main() {
   testWidgets(
+    "a page with a new Book in the single Library is created in one edit",
+    (tester) async {
+      final fixture = ResourceCreationFixture.library();
+      final document = fixture.libraryDocument();
+      final harness = _Harness(
+        document,
+        fixture.request("Page"),
+        const CreationContext(),
+      );
+      await harness.mount(tester);
+      await tester.tap(find.text("Begin creation"));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text("Create Book"));
+      await tester.pumpAndSettle();
+
+      expect(harness.error, isNull);
+      // The Book joins the only Library without a question.
+      expect(find.byType(SearchModal), findsNothing);
+      final created = harness.workspace!.document;
+      expect(created.entries, hasLength(3));
+      expect(created.links, hasLength(2));
+      final page = created.resource(harness.request.id)!;
+      final book = page.authoredField("book")!.authoredLink!.target.resource;
+      expect(
+        created
+            .resource(book)!
+            .authoredField("library")!
+            .authoredLink!
+            .target
+            .resource,
+        fixture.library,
+      );
+      expect(
+        created
+            .resource(fixture.library)!
+            .authoredField("books")!
+            .authoredItems,
+        hasLength(1),
+      );
+      final edit = harness.transport.requests.single.edit;
+      expect(
+        edit.intents.whereType<skir.EditIntent_createResourceWrapper>(),
+        hasLength(2),
+      );
+      _capture(
+        catalog: document.catalog.snapshot,
+        seed: fixture.librarySeed().prepare(),
+        edit: edit,
+      );
+    },
+  );
+
+  testWidgets(
     "a compatible current page satisfies the required reference without a picker",
     (tester) async {
       final fixture = ResourceCreationFixture();
@@ -327,5 +380,27 @@ final class _Harness {
         ),
       ),
     );
+  }
+}
+
+/// Writes the captured creation for Realm's PanelCreationCommitTest when
+/// TYPEWRITER_CREATION_FIXTURE_DIR names a directory, such as
+/// services/runtime/realm/src/test/resources/creation.
+void _capture({
+  required skir.EditorCatalogWireSnapshot catalog,
+  required skir.PreparedEdit seed,
+  required skir.PreparedEdit edit,
+}) {
+  final directory = Platform.environment["TYPEWRITER_CREATION_FIXTURE_DIR"];
+  if (directory == null || directory.isEmpty) return;
+  for (final (name, bytes) in [
+    (
+      "catalog.skir",
+      skir.EditorCatalogWireSnapshot.serializer.toBytes(catalog),
+    ),
+    ("seed.skir", skir.PreparedEdit.serializer.toBytes(seed)),
+    ("edit.skir", skir.PreparedEdit.serializer.toBytes(edit)),
+  ]) {
+    File("$directory/$name").writeAsBytesSync(bytes);
   }
 }

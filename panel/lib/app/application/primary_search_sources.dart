@@ -88,7 +88,7 @@ SearchContribution<void> _builder(Ref ref, BuildContext context) {
           organizationId: organizationId,
           realmId: realmId,
           presentationContext: libraryOriginBindings(
-            ref.read(pageIdProvider) ?? ref.read(bookIdProvider),
+            ref.read(routedResourceProvider(scope)),
           ),
         ).debounced(100.ms).cached(),
       ]);
@@ -147,14 +147,9 @@ List<SearchHostEffectExecutor<SearchHostEffect>> _buildHostEffectExecutors(
     (effect) => effect.intent.reveal(effect.resource),
   ),
   SearchHostEffectExecutor<OpenAuthoringResourceEffect>((effect) async {
-    final registry = ref.read(authoringResourceNavigationRegistryProvider);
     final resource = effect.resource;
-    if (await registry.open(ref, resource)) return;
     await ref
-        .read(appRouterProvider)
-        .navigate(
-          realmNavigationRoute(resource.organizationId, resource.realmId),
-        );
-    ref.read(selectionProvider.notifier).select(resource);
+        .read(realmSurfaceNavigationProvider)
+        .open(resource.scope, resource.resourceId);
   }),
 ];

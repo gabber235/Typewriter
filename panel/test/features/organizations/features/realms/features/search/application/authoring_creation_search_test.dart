@@ -10,10 +10,9 @@ final _refProvider = Provider<Ref>((ref) => ref);
 
 void main() {
   test("creation option identity includes unfinished type arguments", () {
-    final definition = skir.ResourceDefinitionId(value: "test.book");
     final type = _definition("Book");
     final first = AuthoringCreationOption(
-      definition: definition,
+      type: type,
       configuration: skir.TypeSelection.createPending(
         definition: type,
         arguments: [
@@ -25,7 +24,7 @@ void main() {
       label: "Book",
     );
     final second = AuthoringCreationOption(
-      definition: definition,
+      type: type,
       configuration: skir.TypeSelection.createPending(
         definition: type,
         arguments: [
@@ -57,10 +56,8 @@ void main() {
                   .whereType<SearchResultNode>()
                   .singleWhere(
                     (node) =>
-                        (node.result.payload as AuthoringCreationOption)
-                            .definition
-                            .value ==
-                        "test.book",
+                        (node.result.payload as AuthoringCreationOption).type ==
+                        _definition("Book"),
                   )
                   .result
                   .payload
@@ -71,10 +68,8 @@ void main() {
                   .whereType<SearchResultNode>()
                   .singleWhere(
                     (node) =>
-                        (node.result.payload as AuthoringCreationOption)
-                            .definition
-                            .value ==
-                        "test.entry",
+                        (node.result.payload as AuthoringCreationOption).type ==
+                        _definition("SimpleMessage"),
                   )
                   .result
                   .payload
@@ -86,7 +81,6 @@ void main() {
           arguments: const [],
         ),
       );
-      expect(option.definition, skir.ResourceDefinitionId(value: "test.book"));
       expect(option.label, "Quest Book");
       expect(option.display?.description, "A reusable quest collection");
       expect(
@@ -115,10 +109,9 @@ void main() {
         fixture.controller.snapshot.nodes.single as SearchSectionNode;
     expect(
       section.children.whereType<SearchResultNode>().map(
-        (node) =>
-            (node.result.payload as AuthoringCreationOption).definition.value,
+        (node) => (node.result.payload as AuthoringCreationOption).type,
       ),
-      containsAll(["test.book", "test.entry"]),
+      containsAll([_definition("Book"), _definition("SimpleMessage")]),
     );
   });
 
@@ -156,7 +149,7 @@ void main() {
           (section.children.single as SearchResultNode).result.payload
               as AuthoringCreationOption;
       expect(option.label, "ZMessage");
-      expect(option.definition.value, "test.entry");
+      expect(option.type, _definition("ZMessage"));
       expect(
         option.configuration,
         skir.TypeSelection.createComplete(
@@ -245,6 +238,7 @@ CheckedEditorCatalog _catalog({
           color: skir.Color(argb: 0xff3f51b5.toSigned(32)),
         ),
       ),
+      _published(_definition("Shelf")),
       _published(entry, abstract: true),
       _published(_definition("SimpleMessage"), parent: entry),
       if (manyEntries) ...[
@@ -254,6 +248,31 @@ CheckedEditorCatalog _catalog({
       ],
     ],
     relations: [
+      // A shelf owns Books, which makes them creatable resources.
+      skir.RelationContract(
+        id: skir.RelationId(value: "shelf.books"),
+        first: skir.EndpointDefinition(
+          id: skir.EndpointId(value: "shelf.books.shelf"),
+          slot: skir.EndpointSlot.first,
+          resource: skir.NamedTypeTemplate(
+            definition: _definition("Shelf"),
+            arguments: const [],
+          ),
+          cardinality: skir.EndpointCardinality.one,
+          onDelete: skir.RelationDeletePolicy.cascade,
+        ),
+        second: skir.EndpointDefinition(
+          id: skir.EndpointId(value: "shelf.books.book"),
+          slot: skir.EndpointSlot.second,
+          resource: skir.NamedTypeTemplate(
+            definition: book,
+            arguments: const [],
+          ),
+          cardinality: skir.EndpointCardinality.many,
+          onDelete: skir.RelationDeletePolicy.clear,
+        ),
+        families: [skir.RelationFamilyId(value: "resource.ownership")],
+      ),
       skir.RelationContract(
         id: skir.RelationId(value: "book.entries"),
         first: reversedOwnership ? child : owner,
@@ -261,18 +280,7 @@ CheckedEditorCatalog _catalog({
         families: [skir.RelationFamilyId(value: "resource.ownership")],
       ),
     ],
-    resourceDefinitions: [
-      skir.AuthoringResourceDefinition(
-        id: skir.ResourceDefinitionId(value: "test.book"),
-        root: book,
-        navigationHandler: skir.AuthoringNavigationHandler.generic,
-      ),
-      skir.AuthoringResourceDefinition(
-        id: skir.ResourceDefinitionId(value: "test.entry"),
-        root: entry,
-        navigationHandler: skir.AuthoringNavigationHandler.generic,
-      ),
-    ],
+    realmRoot: skir.TypeDefinitionId.defaultInstance,
   );
 }
 

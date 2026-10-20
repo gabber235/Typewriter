@@ -117,7 +117,7 @@ CheckedEditorCatalog _catalog({required bool twoArguments}) {
           published(id, name: name, parents: [rewardParent]),
       ],
       relations: const [],
-      resourceDefinitions: const [],
+      realmRoot: skir.TypeDefinitionId.defaultInstance,
       presentations: const [],
       presentationMaterials: const [],
       configuration: const [],

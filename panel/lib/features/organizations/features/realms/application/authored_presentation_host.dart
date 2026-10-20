@@ -18,7 +18,7 @@ final class AuthoredPresentationHost extends ChangeNotifier
         PortableCollectionMutationHost,
         PortableCollectionProjectionHost,
         PortableLinkHost,
-        PortablePageHost {
+        PortableResourcesHost {
   AuthoredPresentationHost({
     required this.resource,
     required this._source,
@@ -255,10 +255,11 @@ final class AuthoredPresentationHost extends ChangeNotifier
     required PortableInvocationContext context,
   }) async {
     if (editorAction is skir.EditorAction_navigateWrapper ||
-        editorAction is skir.EditorAction_authoringWrapper) {
+        editorAction is skir.EditorAction_authoringWrapper ||
+        editorAction is skir.EditorAction_createWrapper) {
       if (!enabled ||
           context.catalogGeneration != authored.generation ||
-          editorAction is skir.EditorAction_authoringWrapper &&
+          editorAction is! skir.EditorAction_navigateWrapper &&
               (readOnly || edit == null)) {
         return _reject("This resource action is unavailable");
       }
@@ -284,7 +285,8 @@ final class AuthoredPresentationHost extends ChangeNotifier
           context,
         ),
         skir.EditorAction_navigateWrapper() ||
-        skir.EditorAction_authoringWrapper() => _reject(
+        skir.EditorAction_authoringWrapper() ||
+        skir.EditorAction_createWrapper() => _reject(
           "Resource actions are unavailable",
         ),
         skir.EditorAction_unknown() => _reject(
@@ -406,8 +408,7 @@ final class AuthoredPresentationHost extends ChangeNotifier
       );
     }
     final projected = definition.projection;
-    final resources = definition.resources;
-    if ((projected == null) == (resources == null)) {
+    if (projected == null) {
       return PortableCollectionProjection(
         definition: definition,
         rows: const [],
@@ -419,15 +420,10 @@ final class AuthoredPresentationHost extends ChangeNotifier
       ..sort((left, right) => left.key.value.compareTo(right.key.value));
     for (final entry in entries) {
       final record = entry.value;
-      final eligible = resources != null
-          ? checked
-                .nominalDefinitions(record.configuration)
-                .contains(resources.root)
-          : checked.matchesNamedTemplate(record.configuration, projected!.root);
-      if (!eligible) continue;
-      final row = resources != null
-          ? _resourceRow(record)
-          : _projectionRow(definition, projected!, record, checked);
+      if (!checked.matchesNamedTemplate(record.configuration, projected.root)) {
+        continue;
+      }
+      final row = _projectionRow(definition, projected, record, checked);
       if (row == null) {
         return PortableCollectionProjection(
           definition: definition,
@@ -435,32 +431,19 @@ final class AuthoredPresentationHost extends ChangeNotifier
           problem: "A presentation collection row could not be projected",
         );
       }
-      final projectedUse = resources == null
-          ? checked.applyTemplate(definition.rowType, record.configuration) ??
-                checked.concreteType(definition.rowType)
-          : null;
-      final rowSchema = resources != null
-          ? switch (record.configuration) {
-              skir.TypeSelection_completeWrapper(:final value) =>
-                CompletePortablePresentationBinding(
-                  skir.TypeUse.wrapNamed(value),
-                ),
-              skir.TypeSelection_pendingWrapper() =>
-                PartialPortablePresentationBinding(record.configuration),
-              _ => null,
-            }
-          : projectedUse == null
+      final projectedUse =
+          checked.applyTemplate(definition.rowType, record.configuration) ??
+          checked.concreteType(definition.rowType);
+      final rowSchema = projectedUse == null
           ? null
           : CompletePortablePresentationBinding(projectedUse);
-      final resourceBinding =
-          resources?.resourceBindingId ?? projected!.resourceBindingId;
       final bindings = {
         ...context.bindings,
         definition.rowBindingId: PortableExpressionBinding(
           value: row,
           schema: rowSchema,
         ),
-        resourceBinding: entry.key.toExpressionBinding(),
+        projected.resourceBindingId: entry.key.toExpressionBinding(),
       };
       final key = checked.evaluateExpression(
         definition.key,
@@ -602,25 +585,44 @@ final class AuthoredPresentationHost extends ChangeNotifier
     });
   }
 
+  /// Members of a resources binding: the link targets of the bound field, in
+  /// link order. Links come from the document's link projections at or below
+  /// the bound location, ordered by their item in the field's value.
   @override
-  PortablePageProjection projectPage(
+  PortableResourcesProjection projectResources(
     skir.BindingRef source, {
     required PortableInvocationContext context,
   }) {
     final location = this.location(source, context: context);
     if (location == null) {
-      return PortablePageProjection(
-        entries: [],
+      return PortableResourcesProjection(
+        members: [],
         edges: [],
         timeline: {},
-        problem: "The page elements binding is unavailable",
+        problem: "The resources binding is unavailable",
       );
     }
     final relations = {
       for (final relation in authored.catalog.snapshot.relations)
         relation.id: relation,
     };
-    final entries = <PortablePageEntryProjection>[];
+    final items = switch (authored
+        .resource(location.resource)
+        ?.readAt(location.path)) {
+      PortablePathValue(:final value) => value.authoredItems,
+      _ => null,
+    };
+    final positions = {
+      for (final (index, item) in (items ?? const <skir.ListItem>[]).indexed)
+        item.id: index,
+    };
+    int position(skir.ValuePath path) =>
+        switch (path.segments.elementAtOrNull(location.path.segments.length)) {
+          skir.PathSegment_itemWrapper(:final value) =>
+            positions[value.id] ?? positions.length,
+          _ => positions.length,
+        };
+    final members = <(int, PortableResourceMember)>[];
     for (final link in authored.links) {
       final first =
           link.first == location.resource &&
@@ -638,8 +640,17 @@ final class AuthoredPresentationHost extends ChangeNotifier
       final resource = projectResource(target, context: context);
       final record = authored.resource(target);
       if (resource == null || record == null) continue;
-      entries.add(
-        PortablePageEntryProjection(
+      final linkTarget = skir.LinkTarget(resource: target, opposite: opposite);
+      final value = switch (authored
+          .resource(location.resource)
+          ?.readAt(relative)) {
+        PortablePathValue(:final value) when value.authoredLink != null =>
+          value,
+        _ => skir.DataValue.createLink(endpoint: endpoint, target: linkTarget),
+      };
+      members.add((
+        position(relative),
+        PortableResourceMember(
           resource: target,
           occurrence: skir.LinkOccurrence(
             id: skir.LinkOccurrenceId(
@@ -650,41 +661,48 @@ final class AuthoredPresentationHost extends ChangeNotifier
               ),
             ),
             source: location.resource,
-            target: skir.LinkTarget(resource: target, opposite: opposite),
+            target: linkTarget,
           ),
+          link: value,
           resourceProjection: resource,
+          appearance: authored.catalog.appearanceOf(record),
           graph: _graphPlacement(record),
         ),
-      );
+      ));
     }
-    final ids = entries.map((entry) => entry.resource).toSet();
-    final edges = <PortablePageEdgeProjection>[];
+    final ordered = members.indexed.toList()
+      ..sort((left, right) {
+        final compared = left.$2.$1.compareTo(right.$2.$1);
+        return compared != 0 ? compared : left.$1.compareTo(right.$1);
+      });
+    final memberList = [for (final (_, (_, member)) in ordered) member];
+    final ids = memberList.map((member) => member.resource).toSet();
+    final edges = <PortableResourceEdge>[];
     for (final link in authored.links) {
       if (!ids.contains(link.first) || !ids.contains(link.second)) continue;
       edges.add(
-        PortablePageEdgeProjection(
+        PortableResourceEdge(
           id: _linkOccurrenceKey(link, relations[link.contract]),
           source: link.first,
           target: link.second,
         ),
       );
     }
-    final direct = {for (final entry in entries) entry.resource};
     final ownership = authored.relations;
     final timeline = <skir.ResourceId, List<PortableTimelineCueProjection>>{};
-    for (final entry in entries) {
-      final visited = <skir.ResourceId>{entry.resource};
-      timeline[entry.resource] = [
-        for (final target in _ownedTimelineTargets(entry.resource, ownership))
-          ?_timelineCue(target, direct, visited, ownership),
+    for (final member in memberList) {
+      final visited = <skir.ResourceId>{member.resource};
+      timeline[member.resource] = [
+        for (final target in _ownedTimelineTargets(member.resource, ownership))
+          ?_timelineCue(target, ids, visited, ownership),
       ];
     }
-    return PortablePageProjection(
-      entries: entries,
+    return PortableResourcesProjection(
+      members: memberList,
       edges: edges,
       timeline: timeline,
       problem: switch ({
-        for (final resource in {location.resource, ...direct})
+        for (final resource in {location.resource, ...ids})
           ...(ownership.resourceProblems[resource] ?? const <String>[]),
       }) {
         final problems when problems.isNotEmpty => problems.join("\n"),
@@ -732,15 +750,15 @@ final class AuthoredPresentationHost extends ChangeNotifier
   });
 
   @override
-  PortablePresentationWriteResult removePageResource(
-    PortablePageEntryProjection entry, {
+  PortablePresentationWriteResult removeMember(
+    PortableResourceMember member, {
     required bool delete,
     required PortableInvocationContext context,
-  }) => _pageEdit(context, "Change page resource", (operation) {
+  }) => _pageEdit(context, "Change resources", (operation) {
     if (delete) {
-      operation.delete(entry.resource);
+      operation.delete(member.resource);
     } else {
-      operation.disconnect(entry.occurrence);
+      operation.disconnect(member.occurrence);
     }
   });
 
@@ -755,10 +773,10 @@ final class AuthoredPresentationHost extends ChangeNotifier
     return _stage(label, apply, independent: true);
   }
 
-  PortablePageGraphPlacement? _graphPlacement(skir.AuthoringRecord record) =>
+  PortableGraphPlacement? _graphPlacement(skir.AuthoringRecord record) =>
       switch (record.placement(authored.catalog)) {
         ReadyPlacement(placement: final GraphPlacement value) =>
-          PortablePageGraphPlacement(
+          PortableGraphPlacement(
             x: value.x,
             y: value.y,
             width: value.width,
@@ -799,22 +817,18 @@ final class AuthoredPresentationHost extends ChangeNotifier
   String _framed(Iterable<String> values) =>
       values.map((value) => "${value.length}:$value").join();
 
+  /// Resources owned by [source] that the timeline places: any owned resource
+  /// with a timeline placement.
   Iterable<skir.ResourceId> _ownedTimelineTargets(
     skir.ResourceId source,
     AuthoringRelationIndex relations,
   ) sync* {
     if (authored.resource(source) == null) return;
     for (final target in relations.ownedBy(source)) {
-      final record = authored.resource(target);
-      if (record == null ||
-          !authored.catalog.isResourceDefinition(
-            record.configuration,
-            _timelineCueResource,
-          ) ||
-          _timelinePlacement(record) == null) {
-        continue;
+      if (authored.resource(target) case final record?
+          when _timelinePlacement(record) != null) {
+        yield target;
       }
-      yield target;
     }
   }
 
@@ -1502,8 +1516,6 @@ final class AuthoredPresentationHost extends ChangeNotifier
     super.dispose();
   }
 }
-
-final _timelineCueResource = skir.ResourceDefinitionId(value: "typewriter.cue");
 
 final class _AuthoredActionValue {
   const _AuthoredActionValue(this.value, this.reads);

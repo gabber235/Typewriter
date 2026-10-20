@@ -4,7 +4,7 @@ import "package:typewriter_panel/typewriter_panel.dart";
 import "package:typewriter_testkit/typewriter_testkit.dart";
 import "package:widgetbook/widgetbook.dart";
 import "package:widgetbook_annotation/widgetbook_annotation.dart" as widgetbook;
-import "package:widgetbook_workspace/stories/features/organizations/features/realms/presentation/authored_page_graph_node.stories.dart";
+import "package:widgetbook_workspace/stories/features/organizations/features/realms/presentation/authored_resource_items.stories.dart";
 
 @widgetbook.UseCase(
   name: "Remote hover feedback",
@@ -40,16 +40,7 @@ Widget resourceOperationDropTargetExample({
       return document.mapUnready<ResourceIssues>() ??
           AsyncData(ResourceIssues.evaluate(document: document.requireValue));
     }),
-    authoringResourceNavigationRegistryProvider.overrideWithValue(
-      AuthoringResourceNavigationRegistry({
-        for (final handler in [
-          skir.AuthoringNavigationHandler.book,
-          skir.AuthoringNavigationHandler.page,
-          skir.AuthoringNavigationHandler.pageElement,
-        ])
-          handler: const _StoryNavigation(),
-      }),
-    ),
+    realmSurfaceNavigationProvider.overrideWith(_StoryNavigation.new),
     realmInteractionProvider.overrideWithValue(
       const RealmInteractionState(connectionState: RealmConnectionState.online),
     ),
@@ -287,25 +278,22 @@ AuthoredResourceCommands _commands(
   );
 }
 
-final class _StoryNavigation implements AuthoringResourceNavigationAdapter {
-  const _StoryNavigation();
-  @override
-  Future<void> open(
-    Ref ref,
-    AuthoringResourceIdentifier resource, {
-    bool Function()? isCurrent,
-  }) async {
-    if (isCurrent?.call() ?? true) {
-      ref.read(selectionProvider.notifier).selectAll([resource]);
-    }
-  }
+/// Selects opened resources in place: the story has no routes to open.
+final class _StoryNavigation extends RealmSurfaceNavigation {
+  _StoryNavigation(super.ref);
 
   @override
-  Future<void> reveal(
-    Ref ref,
-    AuthoringResourceIdentifier resource, {
+  Future<bool> open(
+    AuthoringScope scope,
+    skir.ResourceId resource, {
     bool Function()? isCurrent,
-  }) => open(ref, resource, isCurrent: isCurrent);
+  }) async {
+    if (!(isCurrent?.call() ?? true)) return false;
+    ref.read(selectionProvider.notifier).selectAll([
+      AuthoringResourceIdentifier.inScope(scope, resource),
+    ]);
+    return true;
+  }
 }
 
 skir.AuthoringActionResult _unavailable(String message) =>

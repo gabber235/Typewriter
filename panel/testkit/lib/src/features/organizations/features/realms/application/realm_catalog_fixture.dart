@@ -13,7 +13,7 @@ skir.EditorCatalogWireSnapshot receivedEditorCatalogWireSnapshot({
   generation: generation ?? realmFixtureGeneration,
   types: const [],
   relations: const [],
-  resourceDefinitions: const [],
+  realmRoot: skir.TypeDefinitionId.defaultInstance,
   presentations: const [],
   presentationMaterials: const [],
   configuration: const [],

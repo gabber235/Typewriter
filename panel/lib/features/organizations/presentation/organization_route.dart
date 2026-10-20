@@ -40,6 +40,7 @@ class OrganizationScaffold extends ConsumerWidget {
     final realmId = ref.watch(realmIdProvider);
     final interaction = ref.watch(realmInteractionProvider);
     final selectedRealm = ref.watch(selectedRealmProvider).value;
+    final scope = ref.watch(selectedAuthoringScopeProvider);
     ref.watch(realmTopologyRecoveryProvider);
 
     void retryConnection() {
@@ -57,7 +58,10 @@ class OrganizationScaffold extends ConsumerWidget {
               children: [
                 if (organizationId != null) ...[
                   const OrganizationSelector(),
-                  if (realmId != null) ...[const RealmSelector()],
+                  if (realmId != null) ...[
+                    const RealmSelector(),
+                    const ResourceBreadcrumbs(),
+                  ],
                 ],
               ],
             ),
@@ -112,6 +116,9 @@ class OrganizationScaffold extends ConsumerWidget {
                             top: context.spacing.space2,
                             right: context.spacing.space2,
                           ),
+                          showInspector:
+                              scope == null ||
+                              ref.watch(showsSideInspectorProvider(scope)),
                           child: child,
                         ),
                       ),
@@ -190,35 +197,6 @@ class OrganizationSidebarContent extends HookConsumerWidget {
     ];
   }
 
-  static List<Widget> realmLinks(
-    skir.RecordId organizationId,
-    skir.RecordId realmId,
-  ) {
-    return [
-      const SidebarHeader(text: "Realm"),
-      SidebarLink(
-        icon: Icones(MaterialSymbols.library_books),
-        text: "Library",
-        route: OrganizationRoute(
-          organizationId: organizationId.id,
-          children: [
-            RealmRoute(realmId: realmId.id, children: [LibraryRoute()]),
-          ],
-        ),
-      ),
-      SidebarLink(
-        icon: Icones(MaterialSymbols.label),
-        text: "Tags",
-        route: OrganizationRoute(
-          organizationId: organizationId.id,
-          children: [
-            RealmRoute(realmId: realmId.id, children: [TagsRoute()]),
-          ],
-        ),
-      ),
-    ];
-  }
-
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final organizationId = ref.watch(organizationIdProvider);
@@ -233,7 +211,15 @@ class OrganizationSidebarContent extends HookConsumerWidget {
               suspended: suspended,
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: realmLinks(organizationId, realmId),
+                children: [
+                  const SidebarHeader(text: "Realm"),
+                  RealmSectionsNavigator(
+                    scope: AuthoringScope(
+                      organizationId: organizationId,
+                      realmId: realmId,
+                    ),
+                  ),
+                ],
               ),
             ),
             SizedBox(height: context.spacing.space4),

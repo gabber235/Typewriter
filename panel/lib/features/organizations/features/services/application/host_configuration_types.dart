@@ -134,7 +134,7 @@ final _hostConfigurationCatalog = skir.EditorCatalogWireSnapshot(
   capabilities: const [],
   relations: const [],
   endpointBindings: const [],
-  resourceDefinitions: const [],
+  realmRoot: skir.TypeDefinitionId.defaultInstance,
   recommendations: const [],
   roleFallbacks: const [],
 

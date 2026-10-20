@@ -106,14 +106,7 @@ CheckedEditorCatalog authoringSearchStoryCatalog() {
           ),
       ],
       relations: const [],
-      resourceDefinitions: [
-        for (final entry in definitions.entries)
-          skir.AuthoringResourceDefinition(
-            id: skir.ResourceDefinitionId(value: "widgetbook.${entry.key}"),
-            root: entry.value,
-            navigationHandler: skir.AuthoringNavigationHandler.generic,
-          ),
-      ],
+      realmRoot: skir.TypeDefinitionId.defaultInstance,
       presentations: descriptors,
       presentationMaterials: materials,
       configuration: const [],

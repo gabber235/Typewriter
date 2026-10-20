@@ -315,19 +315,14 @@ class AppRouter extends RootStackRouter {
           // TODO: Add guard that organizationId and realmId exist and user has access to it.
           guards: [_authGuard],
           children: [
-            AutoRoute(page: LibraryRoute.page, path: "library", initial: true),
-            AutoRoute(page: TagsRoute.page, path: "tags"),
+            // Shows the root's first section; provisioning appends sections
+            // in display name order.
+            AutoRoute(page: RealmHomeRoute.page, path: "", initial: true),
+            // Keyed by realm, so navigator state survives switching resources.
+            AutoRoute(page: ResourceRoute.page, path: "resource/:resourceId"),
           ],
         ),
       ],
-    ),
-    AutoRoute(
-      page: BookRoute.page,
-      path: "/organization/:organizationId/realm/:realmId/book/:bookId",
-      usesPathAsKey: true,
-      // TODO: Validate realm/book existence and finer-grained book access.
-      guards: [_authGuard, _organizationGuard],
-      children: [AutoRoute(page: RouteRoute.page, path: "page/:pageId")],
     ),
   ];
 }

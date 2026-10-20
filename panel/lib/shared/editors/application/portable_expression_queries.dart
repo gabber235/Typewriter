@@ -56,6 +56,18 @@ final frameworkResourceIdUse = skir.NamedTypeUse(
   arguments: const [],
 );
 
+/// The group a tree layout binds while rendering each group header: its path,
+/// last path segment as name, and direct members.
+final hierarchyGroupUse = skir.NamedTypeUse(
+  definition: skir.TypeDefinitionId(
+    typeId: skir.TypeId.createDeclared(
+      value: "c9ef8108a30f4e43805d8ee137e001dc",
+    ),
+    revision: 1,
+  ),
+  arguments: const [],
+);
+
 extension ResourceIdentityExpression on skir.ResourceId {
   skir.DataValue toExpressionValue() => skir.DataValue.createNamed(
     actualType: frameworkResourceIdUse,

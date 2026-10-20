@@ -71,7 +71,7 @@ void main() {
       final record = document.resource(compiledInheritanceTagId)!;
       final selected = document.catalog.selectPresentation(
         record.configuration,
-        skir.PresentationRole.editorNode,
+        skir.PresentationRole.item,
       ) as SelectedEditorPresentation;
       final imported = skir.ExpressionBindingId(value: "context:test.page");
       final pageField = skir.ExpressionBindingId(value: "page_field");
@@ -503,7 +503,7 @@ void main() {
     tester,
   ) async {
     for (final role in [
-      skir.PresentationRole.workspaceEditor,
+      skir.PresentationRole.workspace,
       skir.PresentationRole.inspector,
     ]) {
       final host = _TestPortableHost(
@@ -2011,11 +2011,13 @@ _linkCollectionFixture({
       skir.DataValue.wrapBoolean(true),
     ),
     relations: const [],
-    projection: null,
-    resources: skir.PresentationResourceCollection(
-      root: rootDefinition,
+    projection: skir.PresentationCollectionProjection(
+      root: skir.NamedTypeTemplate(
+        definition: rootDefinition,
+        arguments: const [],
+      ),
       resourceBindingId: collectionResourceBinding,
-      appearance: null,
+      fields: const [],
     ),
   );
   final collectionMaterial = skir.PresentationMaterial(
@@ -2148,7 +2150,7 @@ _linkCollectionFixture({
           families: const [],
         ),
       ],
-      resourceDefinitions: const [],
+      realmRoot: skir.TypeDefinitionId.defaultInstance,
       presentations: adaptiveAppearance
           ? [
               skir.PresentationDescriptor(
@@ -2395,7 +2397,7 @@ AuthoredPresentationHost _authoredHost(
     resource: _resource,
     source: document.workspace.document,
     material: material ?? skir.PresentationMaterial.defaultInstance,
-    role: skir.PresentationRole.workspaceEditor,
+    role: skir.PresentationRole.workspace,
     budget: skir.EvaluationBudget(maxSteps: 100, maxCollectionItems: 100),
     capabilities: const PortablePresentationCapabilities(),
     prepareValue: prepareValue,
@@ -2629,7 +2631,6 @@ final class _RendererWorkspace {
         for (final entry in resources.entries)
           entry.key: skir.AuthoringResource(
             id: entry.key,
-            definition: skir.ResourceDefinitionId(value: "test.resource"),
             content: entry.value,
           ),
       },
@@ -2749,7 +2750,7 @@ CheckedEditorCatalog _collectionCatalog() {
         ),
       ],
       relations: const [],
-      resourceDefinitions: const [],
+      realmRoot: skir.TypeDefinitionId.defaultInstance,
       presentations: const [],
       presentationMaterials: const [],
       configuration: const [],
@@ -2901,7 +2902,7 @@ final _polymorphicCatalog = CheckedEditorCatalog(
       ),
     ],
     relations: const [],
-    resourceDefinitions: const [],
+    realmRoot: skir.TypeDefinitionId.defaultInstance,
     presentations: const [],
     presentationMaterials: [
       skir.PresentationMaterial(

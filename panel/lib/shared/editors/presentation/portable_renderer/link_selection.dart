@@ -346,7 +346,6 @@ Widget _buildAuthoredLinkChoiceResult(
           scope: choice.row?.scope ?? scope,
           role: skir.PresentationRole.referencePickerResult,
           fallbackLabel: choice.label,
-          appearanceOverride: choice.definition?.resources?.appearance,
           render: render,
           fallback: fallback,
         ),

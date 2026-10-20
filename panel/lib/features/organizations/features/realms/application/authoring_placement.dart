@@ -354,7 +354,11 @@ extension CreatedResourcePlacement on AuthoringEdit {
     }
     final siblings = parents.isEmpty
         ? document.entries.values
-              .where((entry) => entry.definition == request.definition)
+              .where(
+                (entry) =>
+                    entry.content.configuration.definition ==
+                    request.configuration.definition,
+              )
               .map((entry) => entry.id)
         : relations.children[parents.single] ?? const <skir.ResourceId>[];
     final rect = const GraphIncrementalPlacer()

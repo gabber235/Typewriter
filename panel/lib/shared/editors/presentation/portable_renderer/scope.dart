@@ -41,6 +41,7 @@ abstract class PortablePresentationScope with _$PortablePresentationScope {
     skir.ResourceId? resource,
     String? searchHistoryNamespace,
     ValueChanged<skir.ResourceId>? openResource,
+    skir.ResourceId? routedResource,
     skir.PresentationRole? role,
     skir.PresentationMaterial? material,
     Set<skir.PresentationId> activePresentations = const {},
@@ -74,6 +75,7 @@ abstract class PortablePresentationScope with _$PortablePresentationScope {
     resource: resource,
     searchHistoryNamespace: searchHistoryNamespace,
     openResource: openResource,
+    routedResource: routedResource,
     role: role,
     material: material,
     activePresentations: Set.unmodifiable(activePresentations),
@@ -112,6 +114,10 @@ abstract class PortablePresentationScope with _$PortablePresentationScope {
     required skir.ResourceId? resource,
     required String? searchHistoryNamespace,
     required ValueChanged<skir.ResourceId>? openResource,
+
+    /// The resource open in the workspace, which resources layouts mark as
+    /// routed.
+    required skir.ResourceId? routedResource,
     required skir.PresentationRole? role,
     required skir.PresentationMaterial? material,
     required Set<skir.PresentationId> activePresentations,
@@ -735,6 +741,7 @@ abstract class PortablePresentationScope with _$PortablePresentationScope {
       role: selected.resolvedRole,
       activePresentations: {selected.material.provider},
       openResource: openResource,
+      routedResource: this.routedResource,
       host: host,
     ).withMaterial(selected.material);
   }

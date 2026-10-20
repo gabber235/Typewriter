@@ -185,7 +185,7 @@ final class _MapFixture {
       resource: resource,
       source: document,
       material: skir.PresentationMaterial.defaultInstance,
-      role: skir.PresentationRole.workspaceEditor,
+      role: skir.PresentationRole.workspace,
       budget: skir.EvaluationBudget(maxSteps: 100, maxCollectionItems: 100),
       capabilities: const PortablePresentationCapabilities(),
       edit: binding,
@@ -285,7 +285,6 @@ _MapFixture _fixture() {
     entries: {
       resource: skir.AuthoringResource(
         id: resource,
-        definition: skir.ResourceDefinitionId(value: "test.owner"),
         content: skir.AuthoringRecord(
           configuration: skir.TypeSelection.wrapComplete(use("Owner")),
           fields: [skir.FieldValue(name: "entries", value: map)],

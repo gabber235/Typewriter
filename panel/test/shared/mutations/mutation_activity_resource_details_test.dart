@@ -78,7 +78,7 @@ EditorDocument _document(String field, String value) {
         ),
       ],
       relations: const [],
-      resourceDefinitions: const [],
+      realmRoot: skir.TypeDefinitionId.defaultInstance,
       presentations: const [],
       presentationMaterials: const [],
       configuration: const [],

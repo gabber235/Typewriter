@@ -17,7 +17,7 @@ const createAuthoringResourceCommandId = SearchCommandId(
 @freezed
 abstract class AuthoringCreationOption with _$AuthoringCreationOption {
   const factory AuthoringCreationOption({
-    required skir.ResourceDefinitionId definition,
+    required skir.TypeDefinitionId type,
     required skir.TypeSelection configuration,
     required String label,
     skir.TypeDisplay? display,
@@ -27,7 +27,7 @@ abstract class AuthoringCreationOption with _$AuthoringCreationOption {
 
   const AuthoringCreationOption._();
 
-  String get id => "${definition.value}:$configuration";
+  String get id => "$configuration";
 }
 
 /// Lists catalog creation options without allocating resources. The command
@@ -75,25 +75,23 @@ final class AuthoringCreationSearchSource implements SearchSource {
     final catalog = document.catalog;
     final term = _query.normalizedQuery.trim().toLowerCase();
     final options = <AuthoringCreationOption>[];
-    for (final definition in catalog.snapshot.resourceDefinitions) {
-      final root = catalog.beginSelection(definition.root);
-      for (final configuration in catalog.concreteRecordSelections(root)) {
-        if (!_query.matchesCreationType(catalog, configuration)) continue;
-        final label = catalog.typeSelectionName(configuration);
-        if (term.isNotEmpty && !label.toLowerCase().contains(term)) continue;
-        options.add(
-          AuthoringCreationOption(
-            definition: definition.id,
-            configuration: configuration,
-            label: label,
-            display: catalog.selectionDisplay(configuration),
-            query: _query,
-            disabledReason: configuration is skir.TypeSelection_completeWrapper
-                ? null
-                : "This type requires concrete type arguments",
-          ),
-        );
-      }
+    for (final type in catalog.creatableTypes) {
+      final configuration = catalog.beginSelection(type);
+      if (!_query.matchesCreationType(catalog, configuration)) continue;
+      final label = catalog.typeSelectionName(configuration);
+      if (term.isNotEmpty && !label.toLowerCase().contains(term)) continue;
+      options.add(
+        AuthoringCreationOption(
+          type: type,
+          configuration: configuration,
+          label: label,
+          display: catalog.selectionDisplay(configuration),
+          query: _query,
+          disabledReason: configuration is skir.TypeSelection_completeWrapper
+              ? null
+              : "This type requires concrete type arguments",
+        ),
+      );
     }
     options.sort((left, right) => left.label.compareTo(right.label));
     _snapshots.add(
@@ -154,21 +152,17 @@ SearchCommand createAuthoringResourceCommand({
           .create(
             context: context,
             request: ResourceCreationRequest(
-              definition: option.definition,
+              type: option.type,
               configuration: option.configuration,
             ),
             creationContext: option.query.creationContext(
               document: ref.read(realmEditingProvider(scope)).document,
               configuration: option.configuration,
-              preferredResources: <skir.ResourceId>{
-                ...ref
-                    .read(selectionProvider)
-                    .whereType<AuthoringResourceIdentifier>()
-                    .where((resource) => resource.scope == scope)
-                    .map((resource) => resource.resourceId),
-                ?ref.read(pageIdProvider),
-                ?ref.read(bookIdProvider),
-              }.toList(),
+              preferredResources: ambientCreationResources(
+                ref,
+                scope,
+                ref.read(realmEditingProvider(scope)).document,
+              ),
             ),
           ),
     );

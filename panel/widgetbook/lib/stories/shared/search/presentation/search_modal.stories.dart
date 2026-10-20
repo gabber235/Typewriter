@@ -43,18 +43,16 @@ Widget searchModalRouteUseCase(BuildContext context) {
       books: [_storyBook],
       pages: List.generate(
         8,
-        (_) => generateRandomPage().copyWith(bookId: _storyBook.bookId),
+        (_) => generateRandomPage(bookId: _storyBook.bookId),
       ),
     ),
     overrides: [
-      ...pageIdProviderOverrides(pageId: "example-page-id"),
-      ...bookIdProviderOverrides(bookId: "example-book-id"),
       ...organizationProviderOverrides(),
       ...organizationsProviderOverrides(state: DisplayState.manyItems),
       ...authProviderOverrides(),
       ...appearanceProviderOverrides(),
     ],
-    child: BookScaffold(
+    child: OrganizationScaffold(
       child: Section(
         child: Center(
           child: Builder(

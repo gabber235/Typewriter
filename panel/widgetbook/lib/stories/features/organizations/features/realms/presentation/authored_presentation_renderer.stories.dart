@@ -149,7 +149,7 @@ final class _AuthoredInteractionGalleryState
     resource: _interactionResource,
     source: _workspace.document,
     material: skir.PresentationMaterial.defaultInstance,
-    role: skir.PresentationRole.workspaceEditor,
+    role: skir.PresentationRole.workspace,
     budget: skir.EvaluationBudget(maxSteps: 1000, maxCollectionItems: 1000),
     capabilities: const PortablePresentationCapabilities(),
     edit: _binding,
@@ -667,7 +667,6 @@ AuthoringEdit _interactionDraft() {
     resources: [
       skir.AuthoringResource(
         id: _interactionResource,
-        definition: skir.ResourceDefinitionId(value: "widgetbook.interaction"),
         content: skir.AuthoringRecord(
           configuration: skir.TypeSelection.wrapComplete(configuration),
           fields: [
@@ -788,13 +787,7 @@ CheckedEditorCatalog _interactionCatalog() {
           skir.RepresentationTemplate.createMapping(key: text, value: text),
         ),
       ],
-      resourceDefinitions: [
-        skir.AuthoringResourceDefinition(
-          id: skir.ResourceDefinitionId(value: "widgetbook.interaction"),
-          root: root,
-          navigationHandler: skir.AuthoringNavigationHandler.generic,
-        ),
-      ],
+      realmRoot: skir.TypeDefinitionId.defaultInstance,
       resourceOperations: const [],
       resourceOperationContributions: const [],
       relations: const [],

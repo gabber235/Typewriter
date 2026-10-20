@@ -353,9 +353,7 @@ extension _PortableCollectionRendering on PortablePresentationNodeRenderer {
         problem: projected.problem,
       );
     }
-    final resourceBinding =
-        definition.resources?.resourceBindingId ??
-        definition.projection!.resourceBindingId;
+    final resourceBinding = definition.projection!.resourceBindingId;
     return (
       definition: definition,
       rows: [
@@ -448,14 +446,12 @@ final class _ResourceReferenceAppearance extends HookWidget {
     required this.fallbackLabel,
     required this.render,
     required this.fallback,
-    this.appearanceOverride,
   });
 
   final skir.ResourceId resource;
   final PortablePresentationScope scope;
   final skir.PresentationRole role;
   final String fallbackLabel;
-  final skir.PresentationId? appearanceOverride;
   final Widget Function(
     skir.PresentationNode,
     PortablePresentationScope,
@@ -485,15 +481,13 @@ final class _ResourceReferenceAppearance extends HookWidget {
     if (projection == null) return fallback(Text(fallbackLabel), null);
     final display = catalog.selectionDisplay(projection.configuration);
     final fallbackAccent = display?.searchResultAccent;
-    final override = role == skir.PresentationRole.referencePickerResult
-        ? appearanceOverride
-        : null;
-    final material = override == null
-        ? switch (catalog.selectPresentation(projection.configuration, role)) {
-            SelectedEditorPresentation(:final material) => material,
-            _ => null,
-          }
-        : catalog.presentationMaterial(override, projection.configuration);
+    final material = switch (catalog.selectPresentation(
+      projection.configuration,
+      role,
+    )) {
+      SelectedEditorPresentation(:final material) => material,
+      _ => null,
+    };
     if (material == null) {
       return fallback(Text(projection.label), fallbackAccent);
     }

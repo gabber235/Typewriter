@@ -129,18 +129,9 @@ AuthoringDocument _compiledDocument(
   skir.AuthoringRecord record,
   skir.DataValue value,
 ) {
-  final root = value.authoredActualType!.definition;
-  final resourceDefinition = compiledSdkControlCatalog.resourceDefinitions
-      .singleWhere((definition) => definition.root == root);
   return AuthoringEdit(
     generation: compiledSdkControlCatalog.generation,
-    resources: [
-      skir.AuthoringResource(
-        id: resource,
-        definition: resourceDefinition.id,
-        content: record,
-      ),
-    ],
+    resources: [skir.AuthoringResource(id: resource, content: record)],
     links: const [],
     catalog: CheckedEditorCatalog(compiledSdkControlCatalog),
   ).toDocument();

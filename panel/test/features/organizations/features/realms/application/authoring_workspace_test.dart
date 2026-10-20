@@ -1157,8 +1157,8 @@ void main() {
     );
     expect(_read(old, _name), _text("Original"));
     expect(
-      workspace.document.entry(_resource)!.definition,
-      old.entry(_resource)!.definition,
+      workspace.document.entry(_resource)!.content.configuration,
+      old.entry(_resource)!.content.configuration,
     );
   });
 
@@ -1491,7 +1491,6 @@ void main() {
           entries: {
             _resource: skir.AuthoringResource(
               id: _resource,
-              definition: entry.definition,
               content: skir.AuthoringRecord(
                 configuration: entry.content.configuration,
                 fields: entry.content.fields.toList().reversed,
@@ -1609,7 +1608,7 @@ AuthoringDocument _document({
       generation: skir.CatalogGeneration(value: "fixture"),
       types: const [],
       relations: const [],
-      resourceDefinitions: const [],
+      realmRoot: skir.TypeDefinitionId.defaultInstance,
       presentations: const [],
       presentationMaterials: const [],
       configuration: const [],
@@ -1624,7 +1623,6 @@ AuthoringDocument _document({
   entries: {
     _resource: skir.AuthoringResource(
       id: _resource,
-      definition: skir.ResourceDefinitionId(value: "fixture.resource"),
       content: skir.AuthoringRecord(
         configuration: skir.TypeSelection.unknown,
         fields: [

@@ -2,7 +2,8 @@ import "package:flutter_test/flutter_test.dart";
 import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
     as skir;
 import "package:typewriter_panel/typewriter_panel.dart";
-import "package:widgetbook_workspace/stories/features/organizations/features/realms/features/tags/presentation/tag_inheritance_presentation.stories.dart";
+import "package:typewriter_testkit/typewriter_testkit.dart";
+import "package:widgetbook_workspace/stories/features/organizations/features/realms/presentation/tag_inheritance_presentation.stories.dart";
 
 void main() {
   for (final book in [true, false]) {
@@ -36,7 +37,6 @@ void main() {
         );
         await tester.pumpAndSettle();
         expect(find.byType(AuthoredResourceInspection), findsOneWidget);
-        expect(find.byType(TagGraph), findsNothing);
         final section = find.byKey(
           ValueKey(book ? "effective-tags" : "inheritance"),
         );

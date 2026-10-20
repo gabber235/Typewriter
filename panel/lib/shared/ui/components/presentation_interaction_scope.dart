@@ -14,6 +14,9 @@ abstract class PresentationInteraction with _$PresentationInteraction {
     @Default(false) bool disabled,
     @Default(false) bool readOnly,
     @Default(false) bool invalid,
+
+    /// The resource is the one open in the workspace.
+    @Default(false) bool routed,
   }) = _PresentationInteraction;
 
   const PresentationInteraction._();

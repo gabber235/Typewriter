@@ -57,7 +57,6 @@ void main() {
           pageId: _page,
           bookId: null,
           name: "Original",
-          configuration: skir.TypeSelection.unknown,
           chapter: "Introduction",
           priority: 0,
         ),

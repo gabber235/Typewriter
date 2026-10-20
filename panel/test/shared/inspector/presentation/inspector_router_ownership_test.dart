@@ -2,15 +2,9 @@ import "package:flutter_test/flutter_test.dart";
 import "package:typewriter_panel/typewriter_panel.dart";
 
 void main() {
-  test("reusable organization and book shells own the inspector", () {
+  test("the reusable organization shell owns the inspector", () {
     final organization = File(
       "lib/features/organizations/presentation/organization_route.dart",
-    ).readAsStringSync();
-    final bookRoute = File(
-      "lib/features/organizations/features/realms/features/books/presentation/book/route.dart",
-    ).readAsStringSync();
-    final bookShell = File(
-      "lib/features/organizations/features/realms/features/books/presentation/book/book_route_shell.dart",
     ).readAsStringSync();
 
     expect(organization, contains("InspectorScaffold("));
@@ -21,19 +15,12 @@ void main() {
       matches(RegExp(r"Expanded\(\s*child: InspectorScaffold\(")),
     );
     expect(organization, contains("child: child,"));
-    expect(bookShell, contains("InspectorScaffold("));
-
-    expect("InspectorScaffold(".allMatches(bookShell), hasLength(1));
-    expect(bookRoute, contains("child: AutoRouter("));
-    expect(bookShell, contains("child: child,"));
   });
 
   test("selectable route pages do not own inspectors", () {
     final paths = [
       "lib/features/organizations/features/services/presentation/route.dart",
-      "lib/features/organizations/features/realms/features/tags/presentation/route.dart",
-      "lib/features/organizations/features/realms/features/books/presentation/library/route.dart",
-      "lib/features/organizations/features/realms/features/books/features/pages/presentation/route.dart",
+      "lib/features/organizations/features/realms/presentation/resource_route.dart",
     ];
 
     for (final path in paths) {

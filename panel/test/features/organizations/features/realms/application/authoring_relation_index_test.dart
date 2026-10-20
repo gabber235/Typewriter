@@ -34,7 +34,7 @@ void main() {
       links: [
         ...document.links,
         skir.LinkProjection(
-          contract: skir.RelationId(value: "fixture.book.pages"),
+          contract: skir.RelationId(value: fixtureBookPagesRelation),
           first: _secondBookId,
           second: _pageId,
           firstLocation: skir.ValuePath(
@@ -60,7 +60,7 @@ void main() {
       links: [
         ...document.links,
         skir.LinkProjection(
-          contract: skir.RelationId(value: "fixture.book.pages"),
+          contract: skir.RelationId(value: fixtureBookPagesRelation),
           first: _secondBookId,
           second: missing,
           firstLocation: skir.ValuePath(
@@ -105,7 +105,6 @@ AuthoringDocument _document() => fixtureAuthoringDocument(
       pageId: _pageId,
       bookId: _firstBookId,
       name: "Owned",
-      configuration: skir.TypeSelection.unknown,
       chapter: "",
       priority: 0,
     ),

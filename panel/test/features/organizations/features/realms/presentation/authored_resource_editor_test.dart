@@ -391,7 +391,7 @@ void main() {
           resource: fixture.resource,
           workspace: authoring.workspace,
           commands: fixtureAuthoringCommands(authoring.transport),
-          role: skir.PresentationRole.workspaceEditor,
+          role: skir.PresentationRole.workspace,
         ),
       ),
     );
@@ -488,7 +488,7 @@ void main() {
             ),
           );
       await tester.pumpTestApp(
-        child: editor(page.resource, skir.PresentationRole.workspaceEditor),
+        child: editor(page.resource, skir.PresentationRole.workspace),
       );
       await tester.pumpAndSettle();
       expect(find.byType(Graph), findsOneWidget);
@@ -501,7 +501,7 @@ void main() {
       expect(tester.takeException(), isNull);
 
       await tester.pumpTestApp(
-        child: editor(child.resource, skir.PresentationRole.editorNode),
+        child: editor(child.resource, skir.PresentationRole.item),
       );
       await tester.pumpAndSettle();
       final marker = find.bySemanticsLabel("Presentation error");
@@ -576,7 +576,7 @@ void main() {
       );
       final embeddedMaterials = child.catalog.snapshot.presentationMaterials
           .map((material) {
-            if (material.role != skir.PresentationRole.editorNode) {
+            if (material.role != skir.PresentationRole.item) {
               return material;
             }
             final text = skir.TextContent.defaultInstance.toMutable()
@@ -669,7 +669,7 @@ void main() {
           body: AuthoredResourceEditor(
             resource: page.resource,
             document: document,
-            role: skir.PresentationRole.workspaceEditor,
+            role: skir.PresentationRole.workspace,
             budget: skir.EvaluationBudget(
               maxSteps: 1000,
               maxCollectionItems: 100,
@@ -784,7 +784,7 @@ void main() {
                 child: AuthoredResourceEditor(
                   resource: fixture.resource,
                   document: fixture.draft.toDocument(),
-                  role: skir.PresentationRole.editorNode,
+                  role: skir.PresentationRole.item,
                   budget: skir.EvaluationBudget(
                     maxSteps: 100,
                     maxCollectionItems: 100,
@@ -851,7 +851,7 @@ void main() {
         body: AuthoredResourceEditor(
           resource: fixture.resource,
           document: fixture.draft.toDocument(),
-          role: skir.PresentationRole.workspaceEditor,
+          role: skir.PresentationRole.workspace,
           budget: skir.EvaluationBudget(maxSteps: 100, maxCollectionItems: 100),
         ),
       ),
@@ -1124,13 +1124,13 @@ _emptyPageGraphFixture() {
         ),
       ],
       relations: const [],
-      resourceDefinitions: const [],
+      realmRoot: skir.TypeDefinitionId.defaultInstance,
       presentations: [
         skir.PresentationDescriptor(
           id: presentationId,
           owner: skir.DeclarationOwner.defaultInstance,
           target: target,
-          roles: [skir.PresentationRole.workspaceEditor],
+          roles: [skir.PresentationRole.workspace],
           priority: 0,
         ),
       ],
@@ -1141,7 +1141,7 @@ _emptyPageGraphFixture() {
 
           provider: presentationId,
           target: target,
-          role: skir.PresentationRole.workspaceEditor,
+          role: skir.PresentationRole.workspace,
           layout: skir.PresentationNode(
             nodeId: "generated.root",
             properties: skir.PresentationProperties.defaultInstance,
@@ -1152,7 +1152,7 @@ _emptyPageGraphFixture() {
                     skir.PresentationNode(
                       nodeId: "sequence.graph",
                       properties: skir.PresentationProperties.defaultInstance,
-                      element: skir.PresentationElement.createPageGraph(
+                      element: skir.PresentationElement.createResources(
                         control: skir.BoundControl(
                           binding: skir.BindingRef(
                             bindingId: configuredValueBindingId,
@@ -1167,8 +1167,14 @@ _emptyPageGraphFixture() {
                           prefix: null,
                           semanticLabel: null,
                         ),
-                        direction: skir.PageGraphDirection.leftToRight,
-                        appearance: null,
+                        layout: skir.ResourcesLayout.createGraph(
+                          direction: skir.GraphDirection.leftToRight,
+                          appearance: null,
+                        ),
+                        order: null,
+                        itemBindingId: skir.ExpressionBindingId(
+                          value: "resources.item",
+                        ),
                       ),
                       header: null,
                     ),
@@ -1211,13 +1217,7 @@ _emptyPageGraphFixture() {
   );
   final draft = AuthoringEdit(
     generation: generation,
-    resources: [
-      skir.AuthoringResource(
-        id: resource,
-        definition: skir.ResourceDefinitionId(value: "typewriter.page"),
-        content: record,
-      ),
-    ],
+    resources: [skir.AuthoringResource(id: resource, content: record)],
     links: const [],
     catalog: checked,
   );
@@ -1302,7 +1302,7 @@ _numericFixture({
         ),
       ],
       relations: const [],
-      resourceDefinitions: const [],
+      realmRoot: skir.TypeDefinitionId.defaultInstance,
       presentations: [
         skir.PresentationDescriptor(
           id: presentationId,
@@ -1407,13 +1407,7 @@ _numericFixture({
     catalog: checked,
     draft: AuthoringEdit(
       generation: catalogGeneration,
-      resources: [
-        skir.AuthoringResource(
-          id: resource,
-          definition: skir.ResourceDefinitionId(value: "test.repeating"),
-          content: record,
-        ),
-      ],
+      resources: [skir.AuthoringResource(id: resource, content: record)],
       links: const [],
       catalog: checked,
     ),
@@ -1640,16 +1634,16 @@ _fixture({
         ),
       ],
       relations: const [],
-      resourceDefinitions: const [],
+      realmRoot: skir.TypeDefinitionId.defaultInstance,
       presentations: [
         skir.PresentationDescriptor(
           id: presentationId,
           owner: skir.DeclarationOwner.defaultInstance,
           target: target,
           roles: [
-            skir.PresentationRole.workspaceEditor,
+            skir.PresentationRole.workspace,
             skir.PresentationRole.inspector,
-            skir.PresentationRole.editorNode,
+            skir.PresentationRole.item,
           ],
           priority: 0,
         ),
@@ -1661,7 +1655,7 @@ _fixture({
 
           provider: presentationId,
           target: target,
-          role: skir.PresentationRole.workspaceEditor,
+          role: skir.PresentationRole.workspace,
           layout: layout,
           dependencies: skir.PresentationDependencies.defaultInstance,
           subject: skir.TypeTemplate.createNamed(
@@ -1702,7 +1696,7 @@ _fixture({
 
           provider: presentationId,
           target: target,
-          role: skir.PresentationRole.editorNode,
+          role: skir.PresentationRole.item,
           layout: generatedGraphLayout,
           dependencies: skir.PresentationDependencies.defaultInstance,
           subject: skir.TypeTemplate.createNamed(
@@ -1775,13 +1769,7 @@ _fixture({
   );
   final draft = AuthoringEdit(
     generation: generation,
-    resources: [
-      skir.AuthoringResource(
-        id: resource,
-        definition: skir.ResourceDefinitionId(value: "test.message"),
-        content: record,
-      ),
-    ],
+    resources: [skir.AuthoringResource(id: resource, content: record)],
     links: const [],
     catalog: checked,
   );

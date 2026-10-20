@@ -125,8 +125,11 @@ void main() {
         if (cancellation == "none") {
           expect(created?.resourceId, fixture.request.id);
           expect(
-            workspace!.document.entry(fixture.request.id)?.definition,
-            fixture.request.definition,
+            workspace!.document
+                .entry(fixture.request.id)
+                ?.content
+                .configuration,
+            fixture.request.configuration,
           );
           expect(
             workspace!.document.initializationFindings.single.diagnostic.code,
@@ -177,8 +180,31 @@ _CreationFixture _fixture() {
     definition: definition,
     arguments: const [],
   );
-  final resourceDefinition = skir.ResourceDefinitionId(
-    value: "test.generic_resource",
+  final store = skir.TypeDefinitionId(
+    typeId: skir.TypeId.createQualified(namespace: "test", name: "Store"),
+    revision: 1,
+  );
+  final storeLink = skir.TypeDefinitionId(
+    typeId: skir.TypeId.createQualified(namespace: "test", name: "StoreLink"),
+    revision: 1,
+  );
+  final owner = skir.EndpointId(value: "test.store:first");
+  skir.PublishedType published(
+    skir.TypeDefinitionId id,
+    skir.RepresentationTemplate representation,
+  ) => skir.PublishedType(
+    searchKey: null,
+    placementField: null,
+    definition: skir.TypeDefinition(
+      id: id,
+      parameters: const [],
+      representation: representation,
+      parents: const [],
+    ),
+    status: skir.DeclarationStatus.ready,
+    effectiveFields: const [],
+    ancestorTemplates: const [],
+    display: defaultTypeDisplay(""),
   );
   final wire = skir.EditorCatalogWireSnapshot(
     resourceDisplays: const [],
@@ -203,15 +229,52 @@ _CreationFixture _fixture() {
         ancestorTemplates: const [],
         display: defaultTypeDisplay(""),
       ),
-    ],
-    relations: const [],
-    resourceDefinitions: [
-      skir.AuthoringResourceDefinition(
-        id: resourceDefinition,
-        root: definition,
-        navigationHandler: skir.AuthoringNavigationHandler.generic,
+      // A store owns the resource, which makes it a creatable resource type.
+      published(
+        store,
+        skir.RepresentationTemplate.createRecord(
+          fields: const [],
+          abstract_: false,
+        ),
+      ),
+      published(
+        storeLink,
+        skir.RepresentationTemplate.createLink(
+          endpoint: owner,
+          target: skir.TypeTemplate.createNamed(
+            definition: definition,
+            arguments: const [],
+          ),
+        ),
       ),
     ],
+    relations: [
+      skir.RelationContract(
+        id: skir.RelationId(value: "test.store"),
+        families: [skir.RelationFamilyId(value: "resource.ownership")],
+        first: skir.EndpointDefinition(
+          id: owner,
+          slot: skir.EndpointSlot.first,
+          resource: skir.NamedTypeTemplate(
+            definition: store,
+            arguments: const [],
+          ),
+          cardinality: skir.EndpointCardinality.one,
+          onDelete: skir.RelationDeletePolicy.cascade,
+        ),
+        second: skir.EndpointDefinition(
+          id: skir.EndpointId(value: "test.store:second"),
+          slot: skir.EndpointSlot.second,
+          resource: skir.NamedTypeTemplate(
+            definition: definition,
+            arguments: const [],
+          ),
+          cardinality: skir.EndpointCardinality.many,
+          onDelete: skir.RelationDeletePolicy.clear,
+        ),
+      ),
+    ],
+    realmRoot: skir.TypeDefinitionId.defaultInstance,
     presentations: const [],
     presentationMaterials: const [],
     configuration: const [],
@@ -249,8 +312,7 @@ _CreationFixture _fixture() {
     pending: pending,
     request: ResourceCreationRequest(
       id: skir.ResourceId(value: "resource:created"),
-
-      definition: resourceDefinition,
+      type: definition,
       configuration: pending,
     ),
     prepared: prepared,

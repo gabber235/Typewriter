@@ -43,7 +43,6 @@ abstract class AuthoringSearchResultPayload
 
   CheckedEditorCatalog get catalog => document.catalog;
   skir.ResourceId get id => hit.resource;
-  skir.ResourceDefinitionId get definition => hit.definition;
   skir.PresentationSubject get subject => hit.subject;
   skir.PortableValue get context => hit.context;
   skir.TypeSelection get configuration => hit.subject.content.configuration;
@@ -64,7 +63,7 @@ final class RealmAuthoringSearchSource implements SearchSource {
     this.contextResource,
     this.target,
     this.contexts = const [],
-    this.definitionFilter,
+    this.typeFilter = const {},
     Map<skir.ExpressionBindingId, PortableExpressionBinding>
         presentationContext =
         const {},
@@ -76,7 +75,9 @@ final class RealmAuthoringSearchSource implements SearchSource {
   final skir.ResourceId? contextResource;
   final skir.NamedTypeUse? target;
   final List<skir.ResourceId> contexts;
-  final Set<skir.ResourceDefinitionId>? definitionFilter;
+
+  /// Types whose resources the search returns; empty returns every type.
+  final Set<skir.TypeDefinitionId> typeFilter;
   final Map<skir.ExpressionBindingId, PortableExpressionBinding>
   presentationContext;
 
@@ -131,23 +132,13 @@ final class RealmAuthoringSearchSource implements SearchSource {
           .read(workingAuthoringDocumentProvider(scope))
           .requireValue;
       final catalog = document.catalog;
-      final requestedDefinitions = definitionFilter;
-      final roots = catalog.snapshot.resourceDefinitions
-          .where(
-            (definition) =>
-                requestedDefinitions == null ||
-                requestedDefinitions.isEmpty ||
-                requestedDefinitions.contains(definition.id),
-          )
-          .map((definition) => definition.root)
-          .toList(growable: false);
       final response = await ref
           .read(authoredResourceCommandsProvider(scope))
           .search(
             skir.SearchAuthoringRequest(
               generation: document.generation,
               query: encodeRealmSearchQuery(query).normalizedQuery,
-              roots: roots,
+              roots: typeFilter.toList(growable: false),
               contexts: contexts.isNotEmpty ? contexts : [?contextResource],
               target: target,
             ),
@@ -186,10 +177,8 @@ final class RealmAuthoringSearchSource implements SearchSource {
               AuthoringSearchResultPayload(
                 hit: skir.AuthoringSearchHit(
                   resource: hit.resource,
-                  definition: hit.definition,
                   subject: skir.PresentationSubject(
                     resource: hit.resource,
-                    definition: hit.definition,
                     content: document.resource(hit.resource)!,
                   ),
                   context: hit.context,
@@ -205,7 +194,7 @@ final class RealmAuthoringSearchSource implements SearchSource {
               for (final payload in payloads)
                 SearchNode.result(
                   result: SearchResult(
-                    id: "${payload.definition.value}:${payload.id.value}",
+                    id: payload.id.value,
                     type: authoringResourceSearchResultType,
                     payload: payload,
                     title: payload.title,

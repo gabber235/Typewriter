@@ -4,6 +4,7 @@ import "package:typewriter_panel/typewriter_panel.dart";
 
 part "checked_editor_catalog.freezed.dart";
 part "inherited_inspector_catalog.dart";
+part "realm_structure.dart";
 
 final class AppliedEditorField {
   const AppliedEditorField({required this.template, required this.type});
@@ -1045,26 +1046,6 @@ final class CheckedEditorCatalog {
   List<skir.TypeRecommendation> get recommendations =>
       snapshot.recommendations.toList(growable: false);
 
-  skir.AuthoringResourceDefinition? resourceDefinition(
-    skir.TypeSelection selection,
-  ) {
-    final definitions = nominalDefinitions(selection);
-    final candidates = snapshot.resourceDefinitions
-        .where((resource) => definitions.contains(resource.root))
-        .toList(growable: false);
-    return candidates.length == 1 ? candidates.single : null;
-  }
-
-  bool isResourceDefinition(
-    skir.TypeSelection selection,
-    skir.ResourceDefinitionId id,
-  ) {
-    final definitions = nominalDefinitions(selection);
-    return snapshot.resourceDefinitions.any(
-      (resource) => resource.id == id && definitions.contains(resource.root),
-    );
-  }
-
   Set<skir.TypeDefinitionId> nominalDefinitions(skir.TypeSelection selection) {
     final definition = selected(selection);
     if (definition == null) return const {};
@@ -1975,8 +1956,7 @@ extension PresentationNodeStructure on skir.PresentationNode {
     skir.PresentationElement_nullableInputWrapper(:final value) =>
       value.control,
     skir.PresentationElement_linkInputWrapper(:final value) => value.control,
-    skir.PresentationElement_pageGraphWrapper(:final value) => value.control,
-    skir.PresentationElement_pageTimelineWrapper(:final value) => value.control,
+    skir.PresentationElement_resourcesWrapper(:final value) => value.control,
     _ => null,
   };
 }
@@ -2128,6 +2108,12 @@ Iterable<skir.PresentationNode> _presentationBodyNodes(
       if (value.itemPresentation case final child?) yield child;
     case skir.PresentationElement_setInputWrapper(:final value):
       if (value.itemPresentation case final child?) yield child;
+    case skir.PresentationElement_resourcesWrapper(
+      value: skir.ResourcesElement(
+        layout: skir.ResourcesLayout_treeWrapper(:final value),
+      ),
+    ):
+      if (value.group case final child?) yield child;
     case skir.PresentationElement_mapInputWrapper(:final value):
       if (value.keyPresentation case final child?) yield child;
       if (value.valuePresentation case final child?) yield child;

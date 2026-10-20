@@ -1,7 +1,7 @@
 import "package:flutter_test/flutter_test.dart";
 import "package:typewriter_panel/typewriter_panel.dart";
 import "package:typewriter_testkit/typewriter_testkit.dart";
-import "package:widgetbook_workspace/stories/features/organizations/features/realms/features/books/features/pages/presentation/route.stories.dart";
+import "package:widgetbook_workspace/stories/shared/editors/presentation/portable_resources.stories.dart";
 
 import "support/network_images.dart";
 
@@ -19,7 +19,7 @@ void main() {
             child: SizedBox(
               width: 550,
               height: 720,
-              child: PageWorkspaceStory(timeline: false),
+              child: ResourcesWorkspaceStory(timeline: false),
             ),
           ),
         ),

@@ -47,6 +47,7 @@ export "popups.dart";
 export "presentation_interaction_scope.dart";
 export "query_bar.dart";
 export "resource_icon.dart";
+export "resource_item_chrome.dart";
 export "retry_indicator.dart";
 export "secret_field.dart";
 export "secret_field_state.dart";

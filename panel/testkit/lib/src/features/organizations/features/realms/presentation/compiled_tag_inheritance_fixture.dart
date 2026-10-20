@@ -20,15 +20,6 @@ AuthoringDocument compiledTagInheritanceDocument({
     Map<String, skir.DataValue> fields,
   ) => skir.AuthoringResource(
     id: id,
-    definition: catalog.snapshot.resourceDefinitions
-        .singleWhere(
-          (definition) =>
-              definition.root ==
-              (template.configuration as skir.TypeSelection_completeWrapper)
-                  .value
-                  .definition,
-        )
-        .id,
     content: skir.AuthoringRecord(
       configuration: template.configuration,
       fields: [

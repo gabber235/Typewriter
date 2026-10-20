@@ -641,7 +641,7 @@ Widget _linkControl(
     resource: source.resource,
     source: editing.workspace.document,
     material: skir.PresentationMaterial.defaultInstance,
-    role: skir.PresentationRole.workspaceEditor,
+    role: skir.PresentationRole.workspace,
     budget: budget,
     capabilities: const PortablePresentationCapabilities(),
     prepareValue: prepareValue,
@@ -922,7 +922,7 @@ _fixture({
         families: const [],
       ),
     ],
-    resourceDefinitions: const [],
+    realmRoot: skir.TypeDefinitionId.defaultInstance,
     presentations: const [],
     presentationMaterials: const [],
     configuration: const [],
@@ -995,12 +995,10 @@ _fixture({
     resources: [
       skir.AuthoringResource(
         id: source,
-        definition: skir.ResourceDefinitionId(value: "test.node"),
         content: record(skir.DataValue.unfilled),
       ),
       skir.AuthoringResource(
         id: existingTarget,
-        definition: skir.ResourceDefinitionId(value: "test.node"),
         content: record(
           skir.DataValue.createNamed(
             actualType: wrapperUse,
@@ -1031,7 +1029,6 @@ _fixture({
       ),
       skir.AuthoringResource(
         id: emptyTarget,
-        definition: skir.ResourceDefinitionId(value: "test.node"),
         content: record(skir.DataValue.unfilled),
       ),
     ],

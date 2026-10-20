@@ -27,7 +27,6 @@ void main() {
       resources: [
         skir.AuthoringResource(
           id: resource,
-          definition: skir.ResourceDefinitionId(value: "typewriter.book"),
           content: skir.AuthoringRecord(
             configuration: skir.TypeSelection.unknown,
             fields: const [],

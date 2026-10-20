@@ -32,34 +32,16 @@ import 'package:widgetbook_workspace/stories/features/organizations/features/mem
     as _widgetbook_workspace_stories_features_organizations_features_members_features_join_requests_presentation_route_stories;
 import 'package:widgetbook_workspace/stories/features/organizations/features/members/presentation/member_list_route.stories.dart'
     as _widgetbook_workspace_stories_features_organizations_features_members_presentation_member_list_route_stories;
-import 'package:widgetbook_workspace/stories/features/organizations/features/realms/features/books/features/pages/presentation/route.stories.dart'
-    as _widgetbook_workspace_stories_features_organizations_features_realms_features_books_features_pages_presentation_route_stories;
-import 'package:widgetbook_workspace/stories/features/organizations/features/realms/features/books/presentation/book.stories.dart'
-    as _widgetbook_workspace_stories_features_organizations_features_realms_features_books_presentation_book_stories;
-import 'package:widgetbook_workspace/stories/features/organizations/features/realms/features/books/presentation/book/page_navigation_label.stories.dart'
-    as _widgetbook_workspace_stories_features_organizations_features_realms_features_books_presentation_book_page_navigation_label_stories;
-import 'package:widgetbook_workspace/stories/features/organizations/features/realms/features/books/presentation/book/route.stories.dart'
-    as _widgetbook_workspace_stories_features_organizations_features_realms_features_books_presentation_book_route_stories;
-import 'package:widgetbook_workspace/stories/features/organizations/features/realms/features/books/presentation/library/route.stories.dart'
-    as _widgetbook_workspace_stories_features_organizations_features_realms_features_books_presentation_library_route_stories;
 import 'package:widgetbook_workspace/stories/features/organizations/features/realms/features/search/presentation/authoring_search_result_items.stories.dart'
     as _widgetbook_workspace_stories_features_organizations_features_realms_features_search_presentation_authoring_search_result_items_stories;
 import 'package:widgetbook_workspace/stories/features/organizations/features/realms/features/search/presentation/compiled_search_results.stories.dart'
     as _widgetbook_workspace_stories_features_organizations_features_realms_features_search_presentation_compiled_search_results_stories;
-import 'package:widgetbook_workspace/stories/features/organizations/features/realms/features/tags/presentation/route.stories.dart'
-    as _widgetbook_workspace_stories_features_organizations_features_realms_features_tags_presentation_route_stories;
-import 'package:widgetbook_workspace/stories/features/organizations/features/realms/features/tags/presentation/tag_graph.stories.dart'
-    as _widgetbook_workspace_stories_features_organizations_features_realms_features_tags_presentation_tag_graph_stories;
-import 'package:widgetbook_workspace/stories/features/organizations/features/realms/features/tags/presentation/tag_inheritance_presentation.stories.dart'
-    as _widgetbook_workspace_stories_features_organizations_features_realms_features_tags_presentation_tag_inheritance_presentation_stories;
-import 'package:widgetbook_workspace/stories/features/organizations/features/realms/features/tags/presentation/tag_node.stories.dart'
-    as _widgetbook_workspace_stories_features_organizations_features_realms_features_tags_presentation_tag_node_stories;
-import 'package:widgetbook_workspace/stories/features/organizations/features/realms/presentation/authored_page_graph_node.stories.dart'
-    as _widgetbook_workspace_stories_features_organizations_features_realms_presentation_authored_page_graph_node_stories;
 import 'package:widgetbook_workspace/stories/features/organizations/features/realms/presentation/authored_presentation_renderer.stories.dart'
     as _widgetbook_workspace_stories_features_organizations_features_realms_presentation_authored_presentation_renderer_stories;
 import 'package:widgetbook_workspace/stories/features/organizations/features/realms/presentation/authored_resource_editor.stories.dart'
     as _widgetbook_workspace_stories_features_organizations_features_realms_presentation_authored_resource_editor_stories;
+import 'package:widgetbook_workspace/stories/features/organizations/features/realms/presentation/authored_resource_items.stories.dart'
+    as _widgetbook_workspace_stories_features_organizations_features_realms_presentation_authored_resource_items_stories;
 import 'package:widgetbook_workspace/stories/features/organizations/features/realms/presentation/authored_type_argument_editor.stories.dart'
     as _widgetbook_workspace_stories_features_organizations_features_realms_presentation_authored_type_argument_editor_stories;
 import 'package:widgetbook_workspace/stories/features/organizations/features/realms/presentation/authoring_conflict.stories.dart'
@@ -78,6 +60,10 @@ import 'package:widgetbook_workspace/stories/features/organizations/features/rea
     as _widgetbook_workspace_stories_features_organizations_features_realms_presentation_resource_operation_drop_target_stories;
 import 'package:widgetbook_workspace/stories/features/organizations/features/realms/presentation/resource_page_drop_target.stories.dart'
     as _widgetbook_workspace_stories_features_organizations_features_realms_presentation_resource_page_drop_target_stories;
+import 'package:widgetbook_workspace/stories/features/organizations/features/realms/presentation/resource_route.stories.dart'
+    as _widgetbook_workspace_stories_features_organizations_features_realms_presentation_resource_route_stories;
+import 'package:widgetbook_workspace/stories/features/organizations/features/realms/presentation/tag_inheritance_presentation.stories.dart'
+    as _widgetbook_workspace_stories_features_organizations_features_realms_presentation_tag_inheritance_presentation_stories;
 import 'package:widgetbook_workspace/stories/features/organizations/features/services/presentation/route.stories.dart'
     as _widgetbook_workspace_stories_features_organizations_features_services_presentation_route_stories;
 import 'package:widgetbook_workspace/stories/features/organizations/presentation/organization_icon.stories.dart'
@@ -110,6 +96,10 @@ import 'package:widgetbook_workspace/stories/shared/editors/presentation/portabl
     as _widgetbook_workspace_stories_shared_editors_presentation_portable_named_control_stories;
 import 'package:widgetbook_workspace/stories/shared/editors/presentation/portable_presentation_renderer.stories.dart'
     as _widgetbook_workspace_stories_shared_editors_presentation_portable_presentation_renderer_stories;
+import 'package:widgetbook_workspace/stories/shared/editors/presentation/portable_resources.stories.dart'
+    as _widgetbook_workspace_stories_shared_editors_presentation_portable_resources_stories;
+import 'package:widgetbook_workspace/stories/shared/editors/presentation/portable_resources_layouts.stories.dart'
+    as _widgetbook_workspace_stories_shared_editors_presentation_portable_resources_layouts_stories;
 import 'package:widgetbook_workspace/stories/shared/editors/presentation/portable_search_input.stories.dart'
     as _widgetbook_workspace_stories_shared_editors_presentation_portable_search_input_stories;
 import 'package:widgetbook_workspace/stories/shared/editors/presentation/reference_picker.stories.dart'
@@ -182,6 +172,8 @@ import 'package:widgetbook_workspace/stories/shared/ui/components/query_bar.stor
     as _widgetbook_workspace_stories_shared_ui_components_query_bar_stories;
 import 'package:widgetbook_workspace/stories/shared/ui/components/resource_icon.stories.dart'
     as _widgetbook_workspace_stories_shared_ui_components_resource_icon_stories;
+import 'package:widgetbook_workspace/stories/shared/ui/components/resource_item_chrome.stories.dart'
+    as _widgetbook_workspace_stories_shared_ui_components_resource_item_chrome_stories;
 import 'package:widgetbook_workspace/stories/shared/ui/components/retry_indicator.stories.dart'
     as _widgetbook_workspace_stories_shared_ui_components_retry_indicator_stories;
 import 'package:widgetbook_workspace/stories/shared/ui/components/secret_field.stories.dart'
@@ -447,76 +439,6 @@ final directories = <_widgetbook.WidgetbookNode>[
                     name: 'features',
                     children: [
                       _widgetbook.WidgetbookFolder(
-                        name: 'books',
-                        children: [
-                          _widgetbook.WidgetbookFolder(
-                            name: 'presentation',
-                            children: [
-                              _widgetbook.WidgetbookComponent(
-                                name: 'BookWidget',
-                                useCases: [
-                                  _widgetbook.WidgetbookUseCase(
-                                    name: 'Default',
-                                    builder:
-                                        _widgetbook_workspace_stories_features_organizations_features_realms_features_books_presentation_book_stories
-                                            .bookUseCase,
-                                  ),
-                                  _widgetbook.WidgetbookUseCase(
-                                    name: 'Mixed selection',
-                                    builder:
-                                        _widgetbook_workspace_stories_features_organizations_features_realms_features_books_presentation_book_stories
-                                            .mixedBookSelectionUseCase,
-                                  ),
-                                ],
-                              ),
-                              _widgetbook.WidgetbookFolder(
-                                name: 'book',
-                                children: [
-                                  _widgetbook.WidgetbookComponent(
-                                    name: 'BookPage',
-                                    useCases: [
-                                      _widgetbook.WidgetbookUseCase(
-                                        name: 'Default',
-                                        builder:
-                                            _widgetbook_workspace_stories_features_organizations_features_realms_features_books_presentation_book_route_stories
-                                                .bookPageUseCase,
-                                      ),
-                                    ],
-                                  ),
-                                  _widgetbook.WidgetbookComponent(
-                                    name: 'PageNavigationLabel',
-                                    useCases: [
-                                      _widgetbook.WidgetbookUseCase(
-                                        name: 'Page navigation',
-                                        builder:
-                                            _widgetbook_workspace_stories_features_organizations_features_realms_features_books_presentation_book_page_navigation_label_stories
-                                                .pageNavigationLabelStory,
-                                      ),
-                                    ],
-                                  ),
-                                ],
-                              ),
-                              _widgetbook.WidgetbookFolder(
-                                name: 'library',
-                                children: [
-                                  _widgetbook.WidgetbookComponent(
-                                    name: 'LibraryPage',
-                                    useCases: [
-                                      _widgetbook.WidgetbookUseCase(
-                                        name: 'Default',
-                                        builder:
-                                            _widgetbook_workspace_stories_features_organizations_features_realms_features_books_presentation_library_route_stories
-                                                .libraryPageUseCase,
-                                      ),
-                                    ],
-                                  ),
-                                ],
-                              ),
-                            ],
-                          ),
-                        ],
-                      ),
-                      _widgetbook.WidgetbookFolder(
                         name: 'search',
                         children: [
                           _widgetbook.WidgetbookFolder(
@@ -561,74 +483,19 @@ final directories = <_widgetbook.WidgetbookNode>[
                           ),
                         ],
                       ),
-                      _widgetbook.WidgetbookFolder(
-                        name: 'tags',
-                        children: [
-                          _widgetbook.WidgetbookFolder(
-                            name: 'presentation',
-                            children: [
-                              _widgetbook.WidgetbookComponent(
-                                name: 'TagGraph',
-                                useCases: [
-                                  _widgetbook.WidgetbookUseCase(
-                                    name: 'Default',
-                                    builder:
-                                        _widgetbook_workspace_stories_features_organizations_features_realms_features_tags_presentation_tag_graph_stories
-                                            .tagGraphUseCase,
-                                  ),
-                                ],
-                              ),
-                              _widgetbook.WidgetbookComponent(
-                                name: 'TagNode',
-                                useCases: [
-                                  _widgetbook.WidgetbookUseCase(
-                                    name: 'Default',
-                                    builder:
-                                        _widgetbook_workspace_stories_features_organizations_features_realms_features_tags_presentation_tag_node_stories
-                                            .tagNodeUseCase,
-                                  ),
-                                  _widgetbook.WidgetbookUseCase(
-                                    name: 'Mixed selection',
-                                    builder:
-                                        _widgetbook_workspace_stories_features_organizations_features_realms_features_tags_presentation_tag_node_stories
-                                            .mixedTagSelectionUseCase,
-                                  ),
-                                  _widgetbook.WidgetbookUseCase(
-                                    name: 'Multiple Colors',
-                                    builder:
-                                        _widgetbook_workspace_stories_features_organizations_features_realms_features_tags_presentation_tag_node_stories
-                                            .tagNodeColorsUseCase,
-                                  ),
-                                ],
-                              ),
-                              _widgetbook.WidgetbookComponent(
-                                name: 'TagsPage',
-                                useCases: [
-                                  _widgetbook.WidgetbookUseCase(
-                                    name: 'Default',
-                                    builder:
-                                        _widgetbook_workspace_stories_features_organizations_features_realms_features_tags_presentation_route_stories
-                                            .tagsPageUseCase,
-                                  ),
-                                ],
-                              ),
-                            ],
-                          ),
-                        ],
-                      ),
                     ],
                   ),
                   _widgetbook.WidgetbookFolder(
                     name: 'presentation',
                     children: [
                       _widgetbook.WidgetbookComponent(
-                        name: 'AuthoredPageGraphNode',
+                        name: 'AuthoredGraphItem',
                         useCases: [
                           _widgetbook.WidgetbookUseCase(
                             name: 'Owned entry nodes',
                             builder:
-                                _widgetbook_workspace_stories_features_organizations_features_realms_presentation_authored_page_graph_node_stories
-                                    .authoredPageGraphNodeStory,
+                                _widgetbook_workspace_stories_features_organizations_features_realms_presentation_authored_resource_items_stories
+                                    .authoredGraphItemStory,
                           ),
                         ],
                       ),
@@ -648,12 +515,6 @@ final directories = <_widgetbook.WidgetbookNode>[
                                     .compiledTagUseCase,
                           ),
                           _widgetbook.WidgetbookUseCase(
-                            name: 'Graph workspace',
-                            builder:
-                                _widgetbook_workspace_stories_features_organizations_features_realms_features_books_features_pages_presentation_route_stories
-                                    .pageGraphWorkspaceUseCase,
-                          ),
-                          _widgetbook.WidgetbookUseCase(
                             name: 'Inspector',
                             builder:
                                 _widgetbook_workspace_stories_features_organizations_features_realms_presentation_authored_resource_editor_stories
@@ -665,12 +526,6 @@ final directories = <_widgetbook.WidgetbookNode>[
                                 _widgetbook_workspace_stories_features_organizations_features_realms_presentation_authored_resource_editor_stories
                                     .authoredNewDraftUseCase,
                           ),
-                          _widgetbook.WidgetbookUseCase(
-                            name: 'Timeline workspace',
-                            builder:
-                                _widgetbook_workspace_stories_features_organizations_features_realms_features_books_features_pages_presentation_route_stories
-                                    .pageTimelineWorkspaceUseCase,
-                          ),
                         ],
                       ),
                       _widgetbook.WidgetbookComponent(
@@ -679,43 +534,43 @@ final directories = <_widgetbook.WidgetbookNode>[
                           _widgetbook.WidgetbookUseCase(
                             name: 'Inheritance branching',
                             builder:
-                                _widgetbook_workspace_stories_features_organizations_features_realms_features_tags_presentation_tag_inheritance_presentation_stories
+                                _widgetbook_workspace_stories_features_organizations_features_realms_presentation_tag_inheritance_presentation_stories
                                     .tagInheritanceBranchingUseCase,
                           ),
                           _widgetbook.WidgetbookUseCase(
                             name: 'Inheritance keyboard interaction',
                             builder:
-                                _widgetbook_workspace_stories_features_organizations_features_realms_features_tags_presentation_tag_inheritance_presentation_stories
+                                _widgetbook_workspace_stories_features_organizations_features_realms_presentation_tag_inheritance_presentation_stories
                                     .tagInheritanceKeyboardUseCase,
                           ),
                           _widgetbook.WidgetbookUseCase(
                             name: 'Inheritance leaf',
                             builder:
-                                _widgetbook_workspace_stories_features_organizations_features_realms_features_tags_presentation_tag_inheritance_presentation_stories
+                                _widgetbook_workspace_stories_features_organizations_features_realms_presentation_tag_inheritance_presentation_stories
                                     .tagInheritanceLeafUseCase,
                           ),
                           _widgetbook.WidgetbookUseCase(
                             name: 'Inheritance narrow layout',
                             builder:
-                                _widgetbook_workspace_stories_features_organizations_features_realms_features_tags_presentation_tag_inheritance_presentation_stories
+                                _widgetbook_workspace_stories_features_organizations_features_realms_presentation_tag_inheritance_presentation_stories
                                     .tagInheritanceNarrowUseCase,
                           ),
                           _widgetbook.WidgetbookUseCase(
                             name: 'Inheritance right to left',
                             builder:
-                                _widgetbook_workspace_stories_features_organizations_features_realms_features_tags_presentation_tag_inheritance_presentation_stories
+                                _widgetbook_workspace_stories_features_organizations_features_realms_presentation_tag_inheritance_presentation_stories
                                     .tagInheritanceRightToLeftUseCase,
                           ),
                           _widgetbook.WidgetbookUseCase(
                             name: 'Inheritance shared ancestor',
                             builder:
-                                _widgetbook_workspace_stories_features_organizations_features_realms_features_tags_presentation_tag_inheritance_presentation_stories
+                                _widgetbook_workspace_stories_features_organizations_features_realms_presentation_tag_inheritance_presentation_stories
                                     .tagInheritanceSharedUseCase,
                           ),
                           _widgetbook.WidgetbookUseCase(
                             name: 'Inheritance unary chain',
                             builder:
-                                _widgetbook_workspace_stories_features_organizations_features_realms_features_tags_presentation_tag_inheritance_presentation_stories
+                                _widgetbook_workspace_stories_features_organizations_features_realms_presentation_tag_inheritance_presentation_stories
                                     .tagInheritanceUnaryUseCase,
                           ),
                         ],
@@ -809,6 +664,17 @@ final directories = <_widgetbook.WidgetbookNode>[
                         ],
                       ),
                       _widgetbook.WidgetbookComponent(
+                        name: 'RealmSectionsNavigator',
+                        useCases: [
+                          _widgetbook.WidgetbookUseCase(
+                            name: 'Realm sections',
+                            builder:
+                                _widgetbook_workspace_stories_features_organizations_features_realms_presentation_resource_route_stories
+                                    .realmSectionsNavigatorUseCase,
+                          ),
+                        ],
+                      ),
+                      _widgetbook.WidgetbookComponent(
                         name: 'RealmSelector',
                         useCases: [
                           _widgetbook.WidgetbookUseCase(
@@ -816,6 +682,17 @@ final directories = <_widgetbook.WidgetbookNode>[
                             builder:
                                 _widgetbook_workspace_stories_features_organizations_features_realms_presentation_realm_selector_stories
                                     .realmSelectorUseCase,
+                          ),
+                        ],
+                      ),
+                      _widgetbook.WidgetbookComponent(
+                        name: 'ResourceBreadcrumbs',
+                        useCases: [
+                          _widgetbook.WidgetbookUseCase(
+                            name: 'Owner chain',
+                            builder:
+                                _widgetbook_workspace_stories_features_organizations_features_realms_presentation_resource_route_stories
+                                    .resourceBreadcrumbsUseCase,
                           ),
                         ],
                       ),
@@ -860,6 +737,17 @@ final directories = <_widgetbook.WidgetbookNode>[
                             builder:
                                 _widgetbook_workspace_stories_features_organizations_features_realms_presentation_resource_page_drop_target_stories
                                     .resourcePageDropTargetUseCase,
+                          ),
+                        ],
+                      ),
+                      _widgetbook.WidgetbookComponent(
+                        name: 'ResourceSurface',
+                        useCases: [
+                          _widgetbook.WidgetbookUseCase(
+                            name: 'Routed resource',
+                            builder:
+                                _widgetbook_workspace_stories_features_organizations_features_realms_presentation_resource_route_stories
+                                    .resourceSurfaceUseCase,
                           ),
                         ],
                       ),
@@ -1000,6 +888,46 @@ final directories = <_widgetbook.WidgetbookNode>[
       _widgetbook.WidgetbookFolder(
         name: 'editors',
         children: [
+          _widgetbook.WidgetbookFolder(
+            name: 'application',
+            children: [
+              _widgetbook.WidgetbookComponent(
+                name: 'PortableResourcesHost',
+                useCases: [
+                  _widgetbook.WidgetbookUseCase(
+                    name: 'Graph layout',
+                    builder:
+                        _widgetbook_workspace_stories_shared_editors_presentation_portable_resources_stories
+                            .resourcesGraphUseCase,
+                  ),
+                  _widgetbook.WidgetbookUseCase(
+                    name: 'Grid layout',
+                    builder:
+                        _widgetbook_workspace_stories_shared_editors_presentation_portable_resources_layouts_stories
+                            .resourcesGridUseCase,
+                  ),
+                  _widgetbook.WidgetbookUseCase(
+                    name: 'List layout',
+                    builder:
+                        _widgetbook_workspace_stories_shared_editors_presentation_portable_resources_layouts_stories
+                            .resourcesListUseCase,
+                  ),
+                  _widgetbook.WidgetbookUseCase(
+                    name: 'Timeline layout',
+                    builder:
+                        _widgetbook_workspace_stories_shared_editors_presentation_portable_resources_stories
+                            .resourcesTimelineUseCase,
+                  ),
+                  _widgetbook.WidgetbookUseCase(
+                    name: 'Tree layout',
+                    builder:
+                        _widgetbook_workspace_stories_shared_editors_presentation_portable_resources_layouts_stories
+                            .resourcesTreeUseCase,
+                  ),
+                ],
+              ),
+            ],
+          ),
           _widgetbook.WidgetbookFolder(
             name: 'presentation',
             children: [
@@ -1835,6 +1763,17 @@ final directories = <_widgetbook.WidgetbookNode>[
                     builder:
                         _widgetbook_workspace_stories_shared_ui_components_resource_icon_stories
                             .resourceIconVariantsUseCase,
+                  ),
+                ],
+              ),
+              _widgetbook.WidgetbookComponent(
+                name: 'ResourceItemChrome',
+                useCases: [
+                  _widgetbook.WidgetbookUseCase(
+                    name: 'States',
+                    builder:
+                        _widgetbook_workspace_stories_shared_ui_components_resource_item_chrome_stories
+                            .resourceItemChromeUseCase,
                   ),
                 ],
               ),

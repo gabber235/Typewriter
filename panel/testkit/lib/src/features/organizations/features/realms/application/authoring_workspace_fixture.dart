@@ -374,21 +374,33 @@ skir.PreparationStep fixturePreparationStep(
   );
 }
 
+/// The realm root of a fixture document built with `realm: true`.
+final fixtureRealmRootId = skir.ResourceId(value: "fixture:realm");
+
+/// The Library section of a fixture document built with `realm: true`.
+final fixtureLibraryId = skir.ResourceId(value: "fixture:library");
+
+/// The tags section of a fixture document built with `realm: true`.
+final fixtureTaxonomyId = skir.ResourceId(value: "fixture:taxonomy");
+
+/// A working document holding [books], [tags] and [pages]. With [realm], the
+/// document also holds the realm root owning a Library and a tags section,
+/// which own every Book and Tag, as Realm provisions them.
 AuthoringDocument fixtureAuthoringDocument({
   Iterable<Book> books = const [],
   Iterable<Tag> tags = const [],
   Iterable<Page> pages = const [],
   CheckedEditorCatalog? catalog,
+  bool realm = false,
 }) {
   final entries = <skir.ResourceId, skir.AuthoringResource>{};
   final projections = <skir.LinkProjection>[];
-  skir.AuthoringResource record(
+  void record(
     skir.ResourceId id,
     String kind,
     Map<String, skir.DataValue> fields,
-  ) => skir.AuthoringResource(
+  ) => entries[id] = skir.AuthoringResource(
     id: id,
-    definition: skir.ResourceDefinitionId(value: "typewriter.$kind"),
     content: skir.AuthoringRecord(
       configuration: _selection(kind),
       fields: [
@@ -396,74 +408,101 @@ AuthoringDocument fixtureAuthoringDocument({
       ],
     ),
   );
+  skir.ValuePath fieldPath(String field) =>
+      skir.ValuePath(segments: [skir.PathSegment.createField(name: field)]);
+
+  /// The owner's list of links to [targets] for [spec], projecting each link
+  /// with the member's back reference when the relation declares one.
   skir.DataValue links(
     skir.ResourceId source,
-    String field,
     Iterable<skir.ResourceId> targets,
-    String kind,
-    String relation,
+    _FixtureRelation spec,
   ) {
     final items = <skir.ListItem>[];
     for (final (index, target) in targets.indexed) {
-      final item = skir.ItemId(value: "fixture:${source.value}:$field:$index");
+      final item = skir.ItemId(
+        value: "fixture:${source.value}:${spec.field}:$index",
+      );
       final path = skir.ValuePath(
         segments: [
-          skir.PathSegment.createField(name: field),
+          skir.PathSegment.createField(name: spec.field),
           skir.PathSegment.createItem(id: item),
         ],
       );
-      final endpoint = skir.EndpointId(value: "$relation.first");
+      final opposite = spec.backReference == null
+          ? null
+          : fieldPath(spec.backReference!);
       items.add(
         skir.ListItem(
           id: item,
           value: _named(
-            "${kind}Link",
+            "${spec.kind}Link",
             skir.DataValue.createLink(
-              endpoint: endpoint,
-              target: skir.LinkTarget(
-                resource: target,
-                opposite: kind == "bookPages"
-                    ? skir.ValuePath(
-                        segments: [skir.PathSegment.createField(name: "book")],
-                      )
-                    : null,
-              ),
+              endpoint: spec.first,
+              target: skir.LinkTarget(resource: target, opposite: opposite),
             ),
           ),
         ),
       );
       projections.add(
         skir.LinkProjection(
-          contract: skir.RelationId(value: relation),
+          contract: spec.id,
           first: source,
           second: target,
           firstLocation: path,
-          secondLocation: kind == "bookPages"
-              ? skir.ValuePath(
-                  segments: [skir.PathSegment.createField(name: "book")],
-                )
-              : null,
+          secondLocation: opposite,
         ),
       );
     }
     return _named(
-      "${kind}Collection",
-      skir.DataValue.createSetValue(items: items),
+      "${spec.kind}Collection",
+      spec.list
+          ? skir.DataValue.createListValue(items: items)
+          : skir.DataValue.createSetValue(items: items),
     );
   }
 
+  skir.DataValue backReference(skir.ResourceId? owner, _FixtureRelation spec) =>
+      owner == null
+      ? skir.DataValue.unfilled
+      : _named(
+          "${spec.kind}BackLink",
+          skir.DataValue.createLink(
+            endpoint: spec.second,
+            target: skir.LinkTarget(resource: owner, opposite: null),
+          ),
+        );
+
   final pageList = pages.toList();
-  for (final tag in tags) {
-    entries[tag.tagId] = record(tag.tagId, "tag", {
+  final bookList = books.toList();
+  final tagList = tags.toList();
+  if (realm) {
+    record(fixtureRealmRootId, "realm", {
+      "sections": links(fixtureRealmRootId, [
+        fixtureLibraryId,
+        fixtureTaxonomyId,
+      ], _realmSections),
+    });
+    record(fixtureLibraryId, "library", {
+      "books": links(
+        fixtureLibraryId,
+        bookList.map((book) => book.bookId),
+        _libraryBooks,
+      ),
+    });
+    record(fixtureTaxonomyId, "taxonomy", {
+      "tags": links(
+        fixtureTaxonomyId,
+        tagList.map((tag) => tag.tagId),
+        _taxonomyTags,
+      ),
+    });
+  }
+  for (final tag in tagList) {
+    record(tag.tagId, "tag", {
       "name": skir.DataValue.wrapStringValue(tag.name),
       "color": _integer(tag.color.toARGB32()),
-      "parents": links(
-        tag.tagId,
-        "parents",
-        tag.parentIds,
-        "tagParents",
-        "fixture.tag.parents",
-      ),
+      "parents": links(tag.tagId, tag.parentIds, _tagParents),
       "placement": _named(
         "placement",
         skir.DataValue.createRecord(
@@ -475,10 +514,14 @@ AuthoringDocument fixtureAuthoringDocument({
           ],
         ),
       ),
+      "taxonomy": backReference(
+        realm ? fixtureTaxonomyId : null,
+        _taxonomyTags,
+      ),
     });
   }
-  for (final book in books) {
-    entries[book.bookId] = record(book.bookId, "book", {
+  for (final book in bookList) {
+    record(book.bookId, "book", {
       "title": skir.DataValue.wrapStringValue(book.title),
       "color": _integer(book.color.toARGB32()),
       "icon": _named(
@@ -487,38 +530,23 @@ AuthoringDocument fixtureAuthoringDocument({
           fields: [_field("value", skir.DataValue.wrapStringValue(book.icon))],
         ),
       ),
-      "tags": links(
-        book.bookId,
-        "tags",
-        book.tagIds,
-        "bookTags",
-        "fixture.book.tags",
-      ),
+      "tags": links(book.bookId, book.tagIds, _bookTags),
       "pages": links(
         book.bookId,
-        "pages",
         pageList
             .where((page) => page.bookId == book.bookId)
             .map((page) => page.pageId),
-        "bookPages",
-        "fixture.book.pages",
+        _bookPages,
       ),
+      "library": backReference(realm ? fixtureLibraryId : null, _libraryBooks),
     });
   }
   for (final page in pageList) {
-    entries[page.pageId] = record(page.pageId, "page", {
+    record(page.pageId, "page", {
       "name": skir.DataValue.wrapStringValue(page.name),
       "chapter": skir.DataValue.wrapStringValue(page.chapter),
       "priority": _integer(page.priority),
-      "book": page.bookId == null
-          ? skir.DataValue.unfilled
-          : _named(
-              "pageBookLink",
-              skir.DataValue.createLink(
-                endpoint: skir.EndpointId(value: "fixture.book.pages.second"),
-                target: skir.LinkTarget(resource: page.bookId!, opposite: null),
-              ),
-            ),
+      "book": backReference(page.bookId, _bookPages),
     });
   }
   return AuthoringDocument(
@@ -529,6 +557,107 @@ AuthoringDocument fixtureAuthoringDocument({
   );
 }
 
+/// One relation of the fixture catalog: the [field] of the first endpoint's
+/// resource lists links to the second's, which optionally link back through
+/// [backReference].
+final class _FixtureRelation {
+  const _FixtureRelation({
+    required this.kind,
+    required this.relation,
+    required this.owner,
+    required this.field,
+    required this.member,
+    this.backReference,
+    this.ownership = false,
+    this.list = true,
+  });
+
+  final String kind;
+  final String relation;
+  final String owner;
+  final String field;
+  final String member;
+  final String? backReference;
+  final bool ownership;
+  final bool list;
+
+  skir.RelationId get id => skir.RelationId(value: relation);
+  skir.EndpointId get first => skir.EndpointId(value: "$relation:first");
+  skir.EndpointId get second => skir.EndpointId(value: "$relation:second");
+}
+
+const _realmSections = _FixtureRelation(
+  kind: "realmSections",
+  relation: "fixture.realm.sections",
+  owner: "realm",
+  field: "sections",
+  member: "section",
+  ownership: true,
+);
+const _libraryBooks = _FixtureRelation(
+  kind: "libraryBooks",
+  relation: "fixture.library.books",
+  owner: "library",
+  field: "books",
+  member: "book",
+  backReference: "library",
+  ownership: true,
+);
+const _taxonomyTags = _FixtureRelation(
+  kind: "taxonomyTags",
+  relation: "fixture.taxonomy.tags",
+  owner: "taxonomy",
+  field: "tags",
+  member: "tag",
+  backReference: "taxonomy",
+  ownership: true,
+);
+const _tagParents = _FixtureRelation(
+  kind: "tagParents",
+  relation: "fixture.tag.parents",
+  owner: "tag",
+  field: "parents",
+  member: "tag",
+  list: false,
+);
+const _bookTags = _FixtureRelation(
+  kind: "bookTags",
+  relation: "fixture.book.tags",
+  owner: "book",
+  field: "tags",
+  member: "tag",
+  list: false,
+);
+
+/// The relation by which fixture Books own pages. It keeps the framework's
+/// Book pages identity, so destination selectors resolve fixture pages.
+const fixtureBookPagesRelation = "4fbbe0dcedd84ccb8b7ce8c6a6105551";
+
+const _bookPages = _FixtureRelation(
+  kind: "bookPages",
+  relation: fixtureBookPagesRelation,
+  owner: "book",
+  field: "pages",
+  member: "page",
+  backReference: "book",
+  ownership: true,
+);
+const _fixtureRelations = [
+  _realmSections,
+  _libraryBooks,
+  _taxonomyTags,
+  _tagParents,
+  _bookTags,
+  _bookPages,
+];
+
+/// The type of resource [kind] in the fixture catalog.
+skir.TypeDefinitionId fixtureResourceType(String kind) => _definition(kind);
+
+/// A catalog standing in for Realm's library: a realm root owning a Library
+/// and a tags section, Books owning pages, and Tags with parents. Pages have a
+/// workspace and Books a chapter tree navigator, so surfaces resolve as they
+/// do against Realm.
 CheckedEditorCatalog authoringFixtureCatalog({
   skir.CatalogGeneration? generation,
 }) {
@@ -537,11 +666,15 @@ CheckedEditorCatalog authoringFixtureCatalog({
     skir.ScalarKind.createInteger(width: skir.IntegerWidth.signedSixtyFour),
   );
   final fields = <String, Map<String, skir.TypeTemplate>>{
+    "realm": {"sections": _template("realmSectionsCollection")},
+    "library": {"books": _template("libraryBooksCollection")},
+    "taxonomy": {"tags": _template("taxonomyTagsCollection")},
     "tag": {
       "name": text,
       "color": integer,
       "parents": _template("tagParentsCollection"),
       "placement": _template("placement"),
+      "taxonomy": _template("taxonomyTagsBackLink"),
     },
     "book": {
       "title": text,
@@ -549,12 +682,13 @@ CheckedEditorCatalog authoringFixtureCatalog({
       "icon": _template("icon"),
       "tags": _template("bookTagsCollection"),
       "pages": _template("bookPagesCollection"),
+      "library": _template("libraryBooksBackLink"),
     },
     "page": {
       "name": text,
       "chapter": text,
       "priority": integer,
-      "book": _template("pageBookLink"),
+      "book": _template("bookPagesBackLink"),
     },
     "placement": {
       "x": integer,
@@ -563,8 +697,32 @@ CheckedEditorCatalog authoringFixtureCatalog({
       "height": integer,
     },
     "icon": {"value": text},
+    "hierarchyGroup": {
+      "path": text,
+      "name": text,
+      "members": skir.TypeTemplate.createNamed(
+        definition: skir.TypeDefinitionId(
+          typeId: skir.TypeId.createQualified(
+            namespace: "typewriter",
+            name: "List",
+          ),
+          revision: 1,
+        ),
+        arguments: [
+          skir.TypeTemplate.createNamed(
+            definition: frameworkResourceIdUse.definition,
+            arguments: const [],
+          ),
+        ],
+      ),
+    },
   };
+  const sectionKinds = {"library", "taxonomy"};
   final types = <skir.PublishedType>[
+    _published(
+      "section",
+      skir.RepresentationTemplate.createRecord(abstract_: true, fields: []),
+    ),
     for (final type in fields.entries)
       _published(
         type.key,
@@ -584,177 +742,297 @@ CheckedEditorCatalog authoringFixtureCatalog({
           ],
         ),
         fields: type.value,
+        ancestors: sectionKinds.contains(type.key) ? ["section"] : const [],
       ),
   ];
   final relations = <skir.RelationContract>[];
   final bindings = <skir.EndpointBindingTemplate>[];
-  for (final spec in [
-    ("tagParents", "tag", "parents", "tag", "fixture.tag.parents"),
-    ("bookTags", "book", "tags", "tag", "fixture.book.tags"),
-    ("bookPages", "book", "pages", "page", "fixture.book.pages"),
-  ]) {
-    final (kind, source, field, target, relation) = spec;
-    final endpoint = skir.EndpointId(value: "$relation.first");
+  for (final spec in _fixtureRelations) {
     types.add(
       _published(
-        "${kind}Link",
+        "${spec.kind}Link",
         skir.RepresentationTemplate.createLink(
-          endpoint: endpoint,
-          target: _template(target),
+          endpoint: spec.first,
+          target: _template(spec.member),
         ),
       ),
     );
     types.add(
       _published(
-        "${kind}Collection",
+        "${spec.kind}Collection",
         skir.RepresentationTemplate.createSequence(
-          item: _template("${kind}Link"),
-          kind: skir.CollectionKind.set_,
+          item: _template("${spec.kind}Link"),
+          kind: spec.list ? skir.CollectionKind.list : skir.CollectionKind.set_,
         ),
       ),
     );
     bindings.add(
       skir.EndpointBindingTemplate(
-        endpoint: endpoint,
-        containingResource: _namedTemplate(source),
-        valueOwner: _definition(source),
+        endpoint: spec.first,
+        containingResource: _namedTemplate(spec.owner),
+        valueOwner: _definition(spec.owner),
         relativePath: skir.RelativeFieldPattern(
           segments: [
-            skir.FieldPatternSegment.createField(name: field),
+            skir.FieldPatternSegment.createField(name: spec.field),
             skir.FieldPatternSegment.items,
           ],
         ),
-        target: _template(target),
+        target: _template(spec.member),
         containsCollection: true,
       ),
     );
+    if (spec.backReference case final field?) {
+      types.add(
+        _published(
+          "${spec.kind}BackLink",
+          skir.RepresentationTemplate.createLink(
+            endpoint: spec.second,
+            target: _template(spec.owner),
+          ),
+        ),
+      );
+      bindings.add(
+        skir.EndpointBindingTemplate(
+          endpoint: spec.second,
+          containingResource: _namedTemplate(spec.member),
+          valueOwner: _definition(spec.member),
+          relativePath: skir.RelativeFieldPattern(
+            segments: [skir.FieldPatternSegment.createField(name: field)],
+          ),
+          target: _template(spec.owner),
+          containsCollection: false,
+        ),
+      );
+    }
     relations.add(
       skir.RelationContract(
-        id: skir.RelationId(value: relation),
+        id: spec.id,
         first: skir.EndpointDefinition(
-          id: endpoint,
+          id: spec.first,
           slot: skir.EndpointSlot.first,
-          resource: _namedTemplate(source),
-          cardinality: kind == "bookPages"
+          resource: _namedTemplate(spec.owner),
+          cardinality: spec.ownership
               ? skir.EndpointCardinality.one
               : skir.EndpointCardinality.many,
-          onDelete: kind == "bookPages"
+          onDelete: spec.ownership
               ? skir.RelationDeletePolicy.cascade
               : skir.RelationDeletePolicy.clear,
         ),
         second: skir.EndpointDefinition(
-          id: skir.EndpointId(value: "$relation.second"),
+          id: spec.second,
           slot: skir.EndpointSlot.second,
-          resource: _namedTemplate(target),
+          resource: _namedTemplate(spec.member),
           cardinality: skir.EndpointCardinality.many,
           onDelete: skir.RelationDeletePolicy.clear,
         ),
-        families: kind == "bookPages"
+        families: spec.ownership
             ? [skir.RelationFamilyId(value: "resource.ownership")]
             : const [],
       ),
     );
   }
-  types.add(
-    _published(
-      "pageBookLink",
-      skir.RepresentationTemplate.createLink(
-        endpoint: skir.EndpointId(value: "fixture.book.pages.second"),
-        target: _template("book"),
-      ),
-    ),
-  );
-  bindings.add(
-    skir.EndpointBindingTemplate(
-      endpoint: skir.EndpointId(value: "fixture.book.pages.second"),
-      containingResource: _namedTemplate("page"),
-      valueOwner: _definition("page"),
-      relativePath: skir.RelativeFieldPattern(
-        segments: [skir.FieldPatternSegment.createField(name: "book")],
-      ),
-      target: _template("book"),
-      containsCollection: false,
-    ),
-  );
   final descriptors = <skir.PresentationDescriptor>[];
   final materials = <skir.PresentationMaterial>[];
-  for (final kind in ["tag", "book", "page"]) {
-    final field = kind == "book" ? "title" : "name";
+  void present(
+    String kind,
+    skir.PresentationRole role,
+    skir.PresentationNode layout,
+  ) {
     final target = skir.PresentationTarget.createNamed(
       definition: _definition(kind),
       arguments: const [],
     );
-    for (final role in [
-      skir.PresentationRole.inspector,
-      skir.PresentationRole.workspaceEditor,
-      skir.PresentationRole.editorNode,
-      skir.PresentationRole.referencePreview,
-    ]) {
-      final id = skir.PresentationId(
-        namespace: "fixture",
-        name: "$kind.${role.kind.name}",
-      );
-      final reference = skir.BindingRef(
-        bindingId: configuredValueBindingId,
-        path: skir.ValuePath(
-          segments: [skir.PathSegment.createField(name: field)],
-        ),
-      );
-      descriptors.add(
-        skir.PresentationDescriptor(
-          id: id,
-          owner: skir.DeclarationOwner.defaultInstance,
-          target: target,
-          roles: [role],
-          priority: 0,
-        ),
-      );
-      materials.add(
-        skir.PresentationMaterial(
-          inheritableNodes: const [],
-          resultAppearance: null,
+    final id = skir.PresentationId(
+      namespace: "fixture",
+      name: "$kind.${role.kind.name}",
+    );
+    descriptors.add(
+      skir.PresentationDescriptor(
+        id: id,
+        owner: skir.DeclarationOwner.defaultInstance,
+        target: target,
+        roles: [role],
+        priority: 0,
+      ),
+    );
+    materials.add(
+      skir.PresentationMaterial(
+        inheritableNodes: const [],
+        resultAppearance: null,
+        provider: id,
+        target: target,
+        role: role,
+        subject: _template(kind),
+        dependencies: skir.PresentationDependencies.defaultInstance,
+        layout: layout,
+      ),
+    );
+  }
 
-          provider: id,
-          target: target,
-          role: role,
-          subject: _template(kind),
-          dependencies: skir.PresentationDependencies.defaultInstance,
-          layout: skir.PresentationNode(
-            nodeId: "fixture.$kind.$field",
-            properties: skir.PresentationProperties.defaultInstance,
-            header: null,
-            element:
-                role == skir.PresentationRole.inspector ||
-                    role == skir.PresentationRole.workspaceEditor
-                ? skir.PresentationElement.createTextInput(
-                    control: skir.BoundControl(
-                      binding: reference,
-                      label: skir.ExpressionNode.wrapLiteral(
-                        skir.DataValue.wrapStringValue(field),
-                      ),
-                      description: null,
-                      prefix: null,
-                      semanticLabel: null,
-                    ),
-                    appearance: null,
-                    content: null,
-                    entry: null,
-                    mappings: null,
-                    options: skir.TextEditingOptions.defaultInstance,
-                  )
-                : skir.PresentationElement.wrapText(
+  skir.BindingRef field(String name) => skir.BindingRef(
+    bindingId: configuredValueBindingId,
+    path: skir.ValuePath(segments: [skir.PathSegment.createField(name: name)]),
+  );
+  for (final kind in ["tag", "book", "page"]) {
+    final reference = field(kind == "book" ? "title" : "name");
+    final input = skir.PresentationNode(
+      nodeId: "fixture.$kind.${reference.path.segments.single}",
+      properties: skir.PresentationProperties.defaultInstance,
+      header: null,
+      element: skir.PresentationElement.createTextInput(
+        control: skir.BoundControl(
+          binding: reference,
+          label: _literal(kind == "book" ? "title" : "name"),
+          description: null,
+          prefix: null,
+          semanticLabel: null,
+        ),
+        appearance: null,
+        content: null,
+        entry: null,
+        mappings: null,
+        options: skir.TextEditingOptions.defaultInstance,
+      ),
+    );
+    final label = skir.PresentationNode(
+      nodeId: "fixture.$kind.label",
+      properties: skir.PresentationProperties.defaultInstance,
+      header: null,
+      element: skir.PresentationElement.wrapText(
+        (skir.TextContent.mutable()
+              ..value = skir.ExpressionNode.createInput(
+                binding: reference.bindingId,
+                path: reference.path,
+              ))
+            .toFrozen(),
+      ),
+    );
+    present(kind, skir.PresentationRole.inspector, input);
+    present(kind, skir.PresentationRole.referencePreview, label);
+    if (kind == "page") present(kind, skir.PresentationRole.workspace, input);
+    if (kind == "tag") present(kind, skir.PresentationRole.item, label);
+  }
+  skir.PresentationNode resources(
+    String id,
+    String linkField,
+    skir.ResourcesLayout layout, {
+    skir.ExpressionNode? order,
+  }) => skir.PresentationNode(
+    nodeId: id,
+    properties: skir.PresentationProperties.defaultInstance,
+    header: null,
+    element: skir.PresentationElement.createResources(
+      control: skir.BoundControl(
+        binding: field(linkField),
+        label: null,
+        description: null,
+        prefix: null,
+        semanticLabel: null,
+      ),
+      layout: layout,
+      order: order,
+      itemBindingId: fixtureResourcesItemBinding,
+    ),
+  );
+  present(
+    "realm",
+    skir.PresentationRole.navigator,
+    resources("fixture.realm.sections", "sections", skir.ResourcesLayout.list),
+  );
+  present(
+    "library",
+    skir.PresentationRole.workspace,
+    resources(
+      "fixture.library.books",
+      "books",
+      skir.ResourcesLayout.createGrid(
+        itemExtent: _number(240),
+        aspectRatio: _number(0.72),
+        spacing: _number(16),
+      ),
+    ),
+  );
+  present(
+    "taxonomy",
+    skir.PresentationRole.workspace,
+    resources(
+      "fixture.taxonomy.tags",
+      "tags",
+      skir.ResourcesLayout.createGraph(
+        direction: skir.GraphDirection.topToBottom,
+        appearance: null,
+      ),
+    ),
+  );
+  final group = skir.ExpressionBindingId(value: "fixture.book.chapter");
+  present(
+    "book",
+    skir.PresentationRole.navigator,
+    resources(
+      "fixture.book.pages",
+      "pages",
+      order: skir.ExpressionNode.wrapLinkTarget(
+        skir.ExpressionNode.createInput(
+          binding: fixtureResourcesItemBinding,
+          path: editorRootPath,
+        ),
+      ),
+      skir.ResourcesLayout.createTree(
+        path: editorRootPath.field("chapter"),
+        groupBindingId: group,
+        connectors: null,
+        initiallyExpanded: true,
+        group: skir.PresentationNode(
+          nodeId: "fixture.book.chapter",
+          properties: skir.PresentationProperties.defaultInstance,
+          header: null,
+          element: skir.PresentationElement.wrapChildren(
+            skir.ChildrenElement.createWrap(
+              children: [
+                skir.PresentationNode(
+                  nodeId: "fixture.book.chapter.name",
+                  properties: skir.PresentationProperties.defaultInstance,
+                  header: null,
+                  element: skir.PresentationElement.wrapText(
                     (skir.TextContent.mutable()
                           ..value = skir.ExpressionNode.createInput(
-                            binding: reference.bindingId,
-                            path: reference.path,
+                            binding: group,
+                            path: editorRootPath.field("name"),
                           ))
                         .toFrozen(),
                   ),
+                ),
+                skir.PresentationNode(
+                  nodeId: "fixture.book.chapter.create",
+                  properties: skir.PresentationProperties.defaultInstance,
+                  header: null,
+                  element: skir.PresentationElement.createButton(
+                    label: _literal("New page"),
+                    action: skir.EditorAction.createCreate(
+                      type: _definition("page"),
+                      owner: field("pages"),
+                      fields: [
+                        skir.CreateFieldValue(
+                          path: editorRootPath.field("chapter"),
+                          value: skir.ExpressionNode.createInput(
+                            binding: group,
+                            path: editorRootPath.field("path"),
+                          ),
+                        ),
+                      ],
+                    ),
+                    appearance: null,
+                    icon: null,
+                  ),
+                ),
+              ],
+              layout: skir.WrapChildrenLayout.defaultInstance,
+            ),
           ),
         ),
-      );
-    }
-  }
+      ),
+    ),
+  );
   return CheckedEditorCatalog(
     skir.EditorCatalogWireSnapshot(
       resourceDisplays: _fixtureDisplays,
@@ -765,23 +1043,11 @@ CheckedEditorCatalog authoringFixtureCatalog({
           skir.CatalogGeneration(value: realmFixtureGeneration.value),
       types: types,
       relations: relations,
-      resourceDefinitions: [
-        for (final (kind, handler) in [
-          ("tag", skir.AuthoringNavigationHandler.tags),
-          ("book", skir.AuthoringNavigationHandler.book),
-          ("page", skir.AuthoringNavigationHandler.page),
-        ])
-          skir.AuthoringResourceDefinition(
-            id: skir.ResourceDefinitionId(value: "typewriter.$kind"),
-            root: _definition(kind),
-            navigationHandler: handler,
-          ),
-      ],
+      realmRoot: _definition("realm"),
       presentations: descriptors,
       presentationMaterials: materials,
       configuration: const [],
       diagnostics: const [],
-
       endpointBindings: bindings,
       capabilities: const [],
       recommendations: const [],
@@ -789,6 +1055,16 @@ CheckedEditorCatalog authoringFixtureCatalog({
     ),
   );
 }
+
+/// The item binding of every fixture resources layout.
+final fixtureResourcesItemBinding = skir.ExpressionBindingId(
+  value: "fixture.resources.item",
+);
+
+skir.ExpressionNode _literal(String value) =>
+    skir.ExpressionNode.wrapLiteral(skir.DataValue.wrapStringValue(value));
+skir.ExpressionNode _number(double value) =>
+    skir.ExpressionNode.wrapLiteral(skir.DataValue.wrapFloat(value));
 
 /// The displays Realm publishes for the framework Book, Tag and Page and for
 /// any resource, retargeted to the fixture types standing in for them, so
@@ -839,7 +1115,10 @@ skir.TypeDefinitionId? _displayTarget(skir.ResourceDisplayFormulas display) =>
 
 /// Fixture types standing in for framework types keep the framework identity,
 /// so production readers such as graph placement recognize their values.
-final _frameworkDefinitions = {"placement": graphPlacementTypeRef};
+final _frameworkDefinitions = {
+  "placement": graphPlacementTypeRef,
+  "hierarchyGroup": hierarchyGroupUse.definition,
+};
 
 skir.TypeDefinitionId _definition(String name) =>
     _frameworkDefinitions[name] ??
@@ -865,6 +1144,7 @@ skir.PublishedType _published(
   String name,
   skir.RepresentationTemplate representation, {
   Map<String, skir.TypeTemplate> fields = const {},
+  List<String> ancestors = const [],
 }) => skir.PublishedType(
   searchKey: null,
   placementField: fields.containsKey("placement")
@@ -874,7 +1154,7 @@ skir.PublishedType _published(
     id: _definition(name),
     parameters: const [],
     representation: representation,
-    parents: const [],
+    parents: [for (final ancestor in ancestors) _namedTemplate(ancestor)],
   ),
   display: defaultTypeDisplay(""),
   status: skir.DeclarationStatus.ready,
@@ -887,7 +1167,9 @@ skir.PublishedType _published(
         rules: const [],
       ),
   ],
-  ancestorTemplates: const [],
+  ancestorTemplates: [
+    for (final ancestor in ancestors) _namedTemplate(ancestor),
+  ],
 );
 
 /// External reply control composed with the production editing owner.

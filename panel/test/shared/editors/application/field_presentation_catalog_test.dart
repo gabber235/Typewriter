@@ -797,7 +797,7 @@ void main() {
         catalog.fieldPresentation(
           _selection(_child),
           "name",
-          skir.PresentationRole.workspaceEditor,
+          skir.PresentationRole.workspace,
         ),
         isA<MissingEditorFieldPresentation>(),
       );

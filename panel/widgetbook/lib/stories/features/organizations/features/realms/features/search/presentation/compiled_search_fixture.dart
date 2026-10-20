@@ -22,7 +22,7 @@ final class CompiledSearchFixture {
       0xff9c64bd,
     );
     final catalog = CheckedEditorCatalog(
-      (compiledSdkControlCatalog.toMutable()
+      (withInheritedPageBindings(compiledSdkControlCatalog).toMutable()
             ..types = [
               ...compiledSdkControlCatalog.types,
               pageType,
@@ -98,32 +98,12 @@ final class CompiledSearchFixture {
         "placement": compiledSdkPlacementValue,
       }),
     };
-    final roots = {
-      "book":
-          (compiledSdkBookRecord.configuration
-                  as skir.TypeSelection_completeWrapper)
-              .value
-              .definition,
-      "tag":
-          (compiledSdkTagRecord.configuration
-                  as skir.TypeSelection_completeWrapper)
-              .value
-              .definition,
-      "page": pageRoot,
-      "element": elementRoot,
-    };
     final edit = AuthoringEdit(
       generation: catalog.snapshot.generation,
       catalog: catalog,
       resources: [
         for (final entry in records.entries)
-          skir.AuthoringResource(
-            id: ids[entry.key]!,
-            content: entry.value,
-            definition: catalog.snapshot.resourceDefinitions
-                .singleWhere((resource) => resource.root == roots[entry.key])
-                .id,
-          ),
+          skir.AuthoringResource(id: ids[entry.key]!, content: entry.value),
       ],
       links: const [],
     );

@@ -148,26 +148,8 @@ extension AuthoringQueryOperations on SearchQueryContext {
     required skir.TypeSelection configuration,
     required List<skir.ResourceId> preferredResources,
   }) {
-    final books = document.entries.values
-        .where((entry) => entry.definition == coreBookResourceDefinition)
-        .map(
-          (entry) => Book.fromAuthoring(
-            entry,
-            document.catalog.appearanceOf(entry.content),
-          ),
-        )
-        .toList();
-    final pages = document.entries.values
-        .where((entry) => entry.definition == corePageResourceDefinition)
-        .map(
-          (entry) => Page.fromAuthoring(
-            entry,
-            document.catalog.appearanceOf(entry.content),
-          ),
-        )
-        .toList();
-    final book = resolveBook(books);
-    final page = resolvePage(books, pages);
+    final book = resolveBook(document);
+    final page = resolvePage(document);
     if (hasSelector(authoringBookSelectorId) && book == null) {
       throw StateError("The Book selector must identify one existing Book");
     }
@@ -198,49 +180,48 @@ extension AuthoringQueryOperations on SearchQueryContext {
       preferredResources: preferredResources,
       constraints: [
         if (page != null)
-          CreationReferenceConstraint(route: pageRoute, target: page.pageId),
+          CreationReferenceConstraint(route: pageRoute, target: page),
         if (book != null)
-          CreationReferenceConstraint(route: bookRoute, target: book.bookId),
+          CreationReferenceConstraint(route: bookRoute, target: book),
       ],
     );
   }
 
-  Book? resolveBook(List<Book> books) {
+  /// The one Book whose label matches the Book selector.
+  skir.ResourceId? resolveBook(AuthoringDocument document) {
     final value = _singleSelectorValue(authoringBookSelectorId);
     if (value == null) return null;
-    return books
-        .where((book) => book.title.toLowerCase() == value.toLowerCase())
-        .singleOrNull;
-  }
-
-  Page? resolvePage(List<Book> books, List<Page> pages) {
-    final value = _singleSelectorValue(authoringPageSelectorId);
-    if (value == null) return null;
-    final book = resolveBook(books);
-    if (hasSelector(authoringBookSelectorId) && book == null) return null;
-    return pages
+    return _resourcesAt(document, libraryPageBookEndpoint, opposite: true)
         .where(
-          (page) =>
-              page.name.toLowerCase() == value.toLowerCase() &&
-              (book == null || page.bookId == book.bookId),
+          (book) =>
+              document.catalog
+                  .appearanceOf(document.resource(book)!)
+                  .label
+                  .toLowerCase() ==
+              value.toLowerCase(),
         )
         .singleOrNull;
   }
 
-  /// Prefers an explicit page selector over ambient route context.
-  Page? resolveElementCreationPage({
-    required List<Book> books,
-    required List<Page> pages,
-    required Page? currentPage,
-  }) {
-    if (hasSelector(authoringPageSelectorId)) {
-      return resolvePage(books, pages);
-    }
-    if (hasSelector(authoringBookSelectorId)) {
-      final selectedBook = resolveBook(books);
-      if (currentPage?.bookId != selectedBook?.bookId) return null;
-    }
-    return currentPage;
+  /// The one page whose label matches the Page selector, inside the selected
+  /// Book when the Book selector is present.
+  skir.ResourceId? resolvePage(AuthoringDocument document) {
+    final value = _singleSelectorValue(authoringPageSelectorId);
+    if (value == null) return null;
+    final book = resolveBook(document);
+    if (hasSelector(authoringBookSelectorId) && book == null) return null;
+    final ownership = document.relations;
+    return _resourcesAt(document, libraryPageBookEndpoint)
+        .where(
+          (page) =>
+              document.catalog
+                      .appearanceOf(document.resource(page)!)
+                      .label
+                      .toLowerCase() ==
+                  value.toLowerCase() &&
+              (book == null || ownership.parents[page]?.contains(book) == true),
+        )
+        .singleOrNull;
   }
 
   String? _singleSelectorValue(String selectorId) => selectors
@@ -251,18 +232,25 @@ extension AuthoringQueryOperations on SearchQueryContext {
       .singleOrNull;
 }
 
-String authoringBookInitialQuery(
-  Book? book,
-  Iterable<QuerySelectorDefinition> selectors,
-) {
-  if (book == null) return "";
-  final selector = selectors
-      .where((selector) => selector.id == authoringBookSelectorId)
-      .whereType<KeyValueSelectorDefinition>()
-      .singleOrNull;
-  if (selector == null) return "";
-  final value = book.title.contains(" ")
-      ? "\"${book.title.replaceAll("\"", "")}\""
-      : book.title;
-  return "${selector.key}$value";
+/// Resources of the type at [endpoint], or at its [opposite] end: pages and
+/// Books for the endpoint through which a page links to its Book.
+Iterable<skir.ResourceId> _resourcesAt(
+  AuthoringDocument document,
+  skir.EndpointId endpoint, {
+  bool opposite = false,
+}) {
+  final relation = document.catalog.snapshot.relations.firstWhereOrNull(
+    (relation) =>
+        relation.first.id == endpoint || relation.second.id == endpoint,
+  );
+  if (relation == null) return const [];
+  final first = (relation.first.id == endpoint) != opposite;
+  final resource = first ? relation.first.resource : relation.second.resource;
+  return document.entries.values
+      .where(
+        (entry) => document.catalog
+            .nominalDefinitions(entry.content.configuration)
+            .contains(resource.definition),
+      )
+      .map((entry) => entry.id);
 }

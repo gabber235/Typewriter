@@ -3,7 +3,8 @@ import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
 import "package:typewriter_panel/typewriter_panel.dart";
 
 /// Evaluates resource action expressions in the caller's immutable bindings.
-/// Native navigation and prepared edits retain their respective effect owners.
+/// Native navigation, creation and prepared edits retain their respective
+/// effect owners.
 final class ResourceActionDispatcher {
   const ResourceActionDispatcher({
     required this.catalog,
@@ -11,6 +12,7 @@ final class ResourceActionDispatcher {
     required this.isCurrent,
     required this.navigate,
     required this.prepare,
+    this.create,
     this.invokeCommand,
     this.reload,
   });
@@ -30,6 +32,15 @@ final class ResourceActionDispatcher {
   )
   prepare;
 
+  /// Creates a resource of the requested type that joins the link field at
+  /// the owner location, with evaluated preset fields.
+  final Future<void> Function(
+    skir.TypeDefinitionId type,
+    skir.ValueLocation? owner,
+    List<skir.FieldValue> supplied,
+  )?
+  create;
+
   final Future<void> Function(skir.CapabilityId, skir.DataValue)? invokeCommand;
   final Future<void> Function()? reload;
 
@@ -46,6 +57,21 @@ final class ResourceActionDispatcher {
       _ => "The resource action value is unavailable",
     });
   }
+
+  skir.DataValue? _evaluateOptional(skir.ExpressionNode expression) =>
+      switch (catalog.evaluateExpression(
+        expression,
+        bindings: context.bindings,
+        budget: skir.EvaluationBudget(
+          maxSteps: 10000,
+          maxCollectionItems: 10000,
+        ),
+        queries: context.queries,
+      )) {
+        PortableExpressionAvailable(:final value) => value,
+        PortableExpressionUnavailable() => null,
+        PortableExpressionFailed(:final message) => throw StateError(message),
+      };
 
   Future<void> dispatch(skir.EditorAction action) async {
     if (!isCurrent()) return;
@@ -76,6 +102,28 @@ final class ResourceActionDispatcher {
             : _evaluate(value.initialInput!);
         if (!isCurrent()) return;
         await prepare(value.capability, targets, initial);
+      case skir.EditorAction_createWrapper(:final value):
+        final create = this.create;
+        if (create == null) throw StateError("Creation is unavailable here");
+        final owner = switch (value.owner) {
+          final reference? => context.location(
+            reference,
+            catalog.snapshot.generation,
+          ),
+          null => null,
+        };
+        if (value.owner != null && owner == null) {
+          throw StateError("The creation owner is unavailable");
+        }
+        final presets = <(skir.ValuePath, skir.DataValue)>[];
+        for (final preset in value.fields) {
+          // A preset that evaluates to missing leaves the field at its default.
+          if (_evaluateOptional(preset.value) case final evaluated?) {
+            presets.add((preset.path, evaluated));
+          }
+        }
+        if (!isCurrent()) return;
+        await create(value.type, owner, presetFields(presets));
       case skir.EditorAction_realmWrapper(:final value):
         await executePortableRealmAction(
           value,
@@ -87,6 +135,48 @@ final class ResourceActionDispatcher {
         throw StateError("A resource operation requires a resource action");
     }
   }
+}
+
+/// Initial field values from presets addressed by field paths, nesting partial
+/// records for deeper paths. A later preset for the same path wins.
+List<skir.FieldValue> presetFields(
+  Iterable<(skir.ValuePath, skir.DataValue)> presets,
+) {
+  final values = <String, Object>{};
+  for (final (path, value) in presets) {
+    final names = [
+      for (final segment in path.segments)
+        switch (segment) {
+          skir.PathSegment_fieldWrapper(:final value) => value.name,
+          _ => throw StateError("A creation preset must address a field"),
+        },
+    ];
+    if (names.isEmpty) {
+      throw StateError("A creation preset must address a field");
+    }
+    var level = values;
+    for (final name in names.take(names.length - 1)) {
+      final nested = level[name];
+      level = nested is Map<String, Object>
+          ? nested
+          : level[name] = <String, Object>{};
+    }
+    level[names.last] = value;
+  }
+  List<skir.FieldValue> fields(Map<String, Object> level) => [
+    for (final entry in level.entries)
+      skir.FieldValue(
+        name: entry.key,
+        value: switch (entry.value) {
+          final skir.DataValue value => value,
+          final Map<String, Object> nested => skir.DataValue.createRecord(
+            fields: fields(nested),
+          ),
+          _ => throw StateError("Unexpected preset value"),
+        },
+      ),
+  ];
+  return fields(values);
 }
 
 /// Shares Realm effect dispatch between presentations and resource operations.

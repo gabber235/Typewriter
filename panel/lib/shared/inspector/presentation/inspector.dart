@@ -35,6 +35,7 @@ class InspectorScaffold extends HookConsumerWidget {
   const InspectorScaffold({
     required this.child,
     this.margin = const EdgeInsets.only(top: 8, bottom: 8, right: 8),
+    this.showInspector = true,
     super.key,
   });
 
@@ -42,13 +43,20 @@ class InspectorScaffold extends HookConsumerWidget {
 
   final Widget child;
 
+  /// Whether the inspector appears beside [child]. A surface that already
+  /// shows its inspector in the main area hides this one.
+  final bool showInspector;
+
   @override
-  Widget build(BuildContext context, WidgetRef ref) => LayoutBuilder(
-    builder: (context, constraints) =>
-        constraints.maxWidth < 3 * kInspectorMinSize
-        ? MobileInspector(child: child)
-        : DesktopInspector(margin: margin, child: child),
-  );
+  Widget build(BuildContext context, WidgetRef ref) {
+    if (!showInspector) return child;
+    return LayoutBuilder(
+      builder: (context, constraints) =>
+          constraints.maxWidth < 3 * kInspectorMinSize
+          ? MobileInspector(child: child)
+          : DesktopInspector(margin: margin, child: child),
+    );
+  }
 }
 
 /// Renders the inspector as a draggable bottom sheet on narrow layouts.

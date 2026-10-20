@@ -506,14 +506,14 @@ Widget _collectionDragScopes(BuildContext source, Widget child) {
         wrappers.add(
           (child) => PresentationEnvironment(bindings: bindings, child: child),
         );
-      case PortablePageInteractionScope(
-        :final nodeBuilder,
-        :final graphBuilder,
+      case PortableResourcesInteractionScope(
+        :final itemBuilder,
+        :final layoutBuilder,
       ):
         wrappers.add(
-          (child) => PortablePageInteractionScope(
-            nodeBuilder: nodeBuilder,
-            graphBuilder: graphBuilder,
+          (child) => PortableResourcesInteractionScope(
+            itemBuilder: itemBuilder,
+            layoutBuilder: layoutBuilder,
             child: child,
           ),
         );

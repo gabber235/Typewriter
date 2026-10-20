@@ -17,7 +17,6 @@ void main() {
             pageId: page,
             bookId: null,
             name: "Welcome",
-            configuration: skir.TypeSelection.unknown,
             chapter: "Town",
             priority: 0,
           ),

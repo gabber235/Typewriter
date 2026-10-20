@@ -3,14 +3,14 @@ import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
     as skir;
 import "package:typewriter_panel/typewriter_panel.dart";
 import "package:typewriter_testkit/typewriter_testkit.dart";
-import "package:widgetbook_workspace/stories/features/organizations/features/realms/features/books/features/pages/presentation/route.stories.dart";
+import "package:widgetbook_workspace/stories/shared/editors/presentation/portable_resources.stories.dart";
 
 void main() {
   testWidgets("graph workspace selects an entry and commits its placement", (
     tester,
   ) async {
     final transport = ScriptedAuthoringTransport(
-      AsyncData(pageWorkspaceStoryDocument()),
+      AsyncData(resourcesWorkspaceStoryDocument()),
     );
     final workspace = RealmEditing(
       persistence: transport.persistence,
@@ -24,7 +24,7 @@ void main() {
     addTearDown(() => tester.binding.setSurfaceSize(null));
     await tester.pumpWidget(
       FakeApp(
-        child: PageWorkspaceStory(
+        child: ResourcesWorkspaceStory(
           timeline: false,
           workspace: workspace,
           onResourceSelected: (resource) => selected = resource,
@@ -68,7 +68,7 @@ void main() {
     tester,
   ) async {
     final transport = ScriptedAuthoringTransport(
-      AsyncData(pageWorkspaceStoryDocument()),
+      AsyncData(resourcesWorkspaceStoryDocument()),
     );
     final workspace = RealmEditing(
       persistence: transport.persistence,
@@ -80,7 +80,9 @@ void main() {
     await tester.binding.setSurfaceSize(const Size(1280, 800));
     addTearDown(() => tester.binding.setSurfaceSize(null));
     await tester.pumpWidget(
-      FakeApp(child: PageWorkspaceStory(timeline: true, workspace: workspace)),
+      FakeApp(
+        child: ResourcesWorkspaceStory(timeline: true, workspace: workspace),
+      ),
     );
     await tester.pumpAndSettle();
 
@@ -98,7 +100,7 @@ void main() {
     );
     await tester.tap(menus.first);
     await tester.pumpAndSettle();
-    expect(find.text("Disconnect from page"), findsOneWidget);
+    expect(find.text("Disconnect"), findsOneWidget);
     expect(find.text("Delete resource"), findsOneWidget);
     await tester.sendKeyEvent(LogicalKeyboardKey.escape);
     await tester.pumpAndSettle();

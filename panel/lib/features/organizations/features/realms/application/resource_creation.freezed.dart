@@ -15,7 +15,7 @@ T _$identity<T>(T value) => value;
 /// @nodoc
 mixin _$ResourceCreationRequest {
 
- skir.ResourceId get id; skir.ResourceDefinitionId get definition; skir.TypeSelection get configuration; List<skir.FieldValue> get supplied;
+ skir.ResourceId get id; skir.TypeDefinitionId get type; skir.TypeSelection get configuration; List<skir.FieldValue> get supplied;
 /// Create a copy of ResourceCreationRequest
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -27,20 +27,20 @@ $ResourceCreationRequestCopyWith<ResourceCreationRequest> get copyWith => _$Reso
 @override
 bool operator ==(Object other) {
   final _this = this as ResourceCreationRequest;
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is ResourceCreationRequest&&(identical(other.id, _this.id) || other.id == _this.id)&&(identical(other.definition, _this.definition) || other.definition == _this.definition)&&(identical(other.configuration, _this.configuration) || other.configuration == _this.configuration)&&const DeepCollectionEquality().equals(other.supplied, _this.supplied));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is ResourceCreationRequest&&(identical(other.id, _this.id) || other.id == _this.id)&&(identical(other.type, _this.type) || other.type == _this.type)&&(identical(other.configuration, _this.configuration) || other.configuration == _this.configuration)&&const DeepCollectionEquality().equals(other.supplied, _this.supplied));
 }
 
 
 @override
 int get hashCode {
   final _this = this as ResourceCreationRequest;
-  return Object.hash(runtimeType,_this.id,_this.definition,_this.configuration,const DeepCollectionEquality().hash(_this.supplied));
+  return Object.hash(runtimeType,_this.id,_this.type,_this.configuration,const DeepCollectionEquality().hash(_this.supplied));
 }
 
 @override
 String toString() {
   final _this = this as ResourceCreationRequest;
-  return 'ResourceCreationRequest(id: ${_this.id}, definition: ${_this.definition}, configuration: ${_this.configuration}, supplied: ${_this.supplied})';
+  return 'ResourceCreationRequest(id: ${_this.id}, type: ${_this.type}, configuration: ${_this.configuration}, supplied: ${_this.supplied})';
 }
 
 
@@ -51,7 +51,7 @@ abstract mixin class $ResourceCreationRequestCopyWith<$Res>  {
   factory $ResourceCreationRequestCopyWith(ResourceCreationRequest value, $Res Function(ResourceCreationRequest) _then) = _$ResourceCreationRequestCopyWithImpl;
 @useResult
 $Res call({
- skir.ResourceId id, skir.ResourceDefinitionId definition, skir.TypeSelection configuration, List<skir.FieldValue> supplied
+ skir.ResourceId id, skir.TypeDefinitionId type, skir.TypeSelection configuration, List<skir.FieldValue> supplied
 });
 
 
@@ -68,10 +68,10 @@ class _$ResourceCreationRequestCopyWithImpl<$Res>
 
 /// Create a copy of ResourceCreationRequest
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? id = null,Object? definition = null,Object? configuration = null,Object? supplied = null,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? id = null,Object? type = null,Object? configuration = null,Object? supplied = null,}) {
   return _then(ResourceCreationRequest(
-definition: null == definition ? _self.definition : definition // ignore: cast_nullable_to_non_nullable
-as skir.ResourceDefinitionId,configuration: null == configuration ? _self.configuration : configuration // ignore: cast_nullable_to_non_nullable
+type: null == type ? _self.type : type // ignore: cast_nullable_to_non_nullable
+as skir.TypeDefinitionId,configuration: null == configuration ? _self.configuration : configuration // ignore: cast_nullable_to_non_nullable
 as skir.TypeSelection,id: freezed == id ? _self.id! : id // ignore: cast_nullable_to_non_nullable
 as skir.ResourceId?,supplied: null == supplied ? _self.supplied : supplied // ignore: cast_nullable_to_non_nullable
 as List<skir.FieldValue>,
@@ -159,10 +159,10 @@ return data(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>({TResult Function( skir.ResourceId id,  skir.ResourceDefinitionId definition,  skir.TypeSelection configuration,  List<skir.FieldValue> supplied)?  data,required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>({TResult Function( skir.ResourceId id,  skir.TypeDefinitionId type,  skir.TypeSelection configuration,  List<skir.FieldValue> supplied)?  data,required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _ResourceCreationRequest() when data != null:
-return data(_that.id,_that.definition,_that.configuration,_that.supplied);case _:
+return data(_that.id,_that.type,_that.configuration,_that.supplied);case _:
   return orElse();
 
 }
@@ -180,10 +180,10 @@ return data(_that.id,_that.definition,_that.configuration,_that.supplied);case _
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>({required TResult Function( skir.ResourceId id,  skir.ResourceDefinitionId definition,  skir.TypeSelection configuration,  List<skir.FieldValue> supplied)  data,}) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>({required TResult Function( skir.ResourceId id,  skir.TypeDefinitionId type,  skir.TypeSelection configuration,  List<skir.FieldValue> supplied)  data,}) {final _that = this;
 switch (_that) {
 case _ResourceCreationRequest():
-return data(_that.id,_that.definition,_that.configuration,_that.supplied);case _:
+return data(_that.id,_that.type,_that.configuration,_that.supplied);case _:
   throw StateError('Unexpected subclass');
 
 }
@@ -200,10 +200,10 @@ return data(_that.id,_that.definition,_that.configuration,_that.supplied);case _
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>({TResult? Function( skir.ResourceId id,  skir.ResourceDefinitionId definition,  skir.TypeSelection configuration,  List<skir.FieldValue> supplied)?  data,}) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>({TResult? Function( skir.ResourceId id,  skir.TypeDefinitionId type,  skir.TypeSelection configuration,  List<skir.FieldValue> supplied)?  data,}) {final _that = this;
 switch (_that) {
 case _ResourceCreationRequest() when data != null:
-return data(_that.id,_that.definition,_that.configuration,_that.supplied);case _:
+return data(_that.id,_that.type,_that.configuration,_that.supplied);case _:
   return null;
 
 }
@@ -215,11 +215,11 @@ return data(_that.id,_that.definition,_that.configuration,_that.supplied);case _
 
 
 class _ResourceCreationRequest implements ResourceCreationRequest {
-  const _ResourceCreationRequest({required this.id, required this.definition, required this.configuration,  List<skir.FieldValue> supplied = const []}): _supplied = supplied;
+  const _ResourceCreationRequest({required this.id, required this.type, required this.configuration,  List<skir.FieldValue> supplied = const []}): _supplied = supplied;
   
 
 @override final  skir.ResourceId id;
-@override final  skir.ResourceDefinitionId definition;
+@override final  skir.TypeDefinitionId type;
 @override final  skir.TypeSelection configuration;
  final  List<skir.FieldValue> _supplied;
 @override@JsonKey() List<skir.FieldValue> get supplied {
@@ -239,18 +239,18 @@ _$ResourceCreationRequestCopyWith<_ResourceCreationRequest> get copyWith => __$R
 
 @override
 bool operator ==(Object other) {
-    return identical(this, other) || (other.runtimeType == runtimeType&&other is _ResourceCreationRequest&&(identical(other.id, id) || other.id == id)&&(identical(other.definition, definition) || other.definition == definition)&&(identical(other.configuration, configuration) || other.configuration == configuration)&&const DeepCollectionEquality().equals(other.supplied, _supplied));
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is _ResourceCreationRequest&&(identical(other.id, id) || other.id == id)&&(identical(other.type, type) || other.type == type)&&(identical(other.configuration, configuration) || other.configuration == configuration)&&const DeepCollectionEquality().equals(other.supplied, _supplied));
 }
 
 
 @override
 int get hashCode {
-    return Object.hash(runtimeType,id,definition,configuration,const DeepCollectionEquality().hash(_supplied));
+    return Object.hash(runtimeType,id,type,configuration,const DeepCollectionEquality().hash(_supplied));
 }
 
 @override
 String toString() {
-    return 'ResourceCreationRequest.data(id: $id, definition: $definition, configuration: $configuration, supplied: $supplied)';
+    return 'ResourceCreationRequest.data(id: $id, type: $type, configuration: $configuration, supplied: $supplied)';
 }
 
 
@@ -261,7 +261,7 @@ abstract mixin class _$ResourceCreationRequestCopyWith<$Res> implements $Resourc
   factory _$ResourceCreationRequestCopyWith(_ResourceCreationRequest value, $Res Function(_ResourceCreationRequest) _then) = __$ResourceCreationRequestCopyWithImpl;
 @override @useResult
 $Res call({
- skir.ResourceId id, skir.ResourceDefinitionId definition, skir.TypeSelection configuration, List<skir.FieldValue> supplied
+ skir.ResourceId id, skir.TypeDefinitionId type, skir.TypeSelection configuration, List<skir.FieldValue> supplied
 });
 
 
@@ -278,11 +278,11 @@ class __$ResourceCreationRequestCopyWithImpl<$Res>
 
 /// Create a copy of ResourceCreationRequest
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? id = null,Object? definition = null,Object? configuration = null,Object? supplied = null,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? id = null,Object? type = null,Object? configuration = null,Object? supplied = null,}) {
   return _then(_ResourceCreationRequest(
 id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
-as skir.ResourceId,definition: null == definition ? _self.definition : definition // ignore: cast_nullable_to_non_nullable
-as skir.ResourceDefinitionId,configuration: null == configuration ? _self.configuration : configuration // ignore: cast_nullable_to_non_nullable
+as skir.ResourceId,type: null == type ? _self.type : type // ignore: cast_nullable_to_non_nullable
+as skir.TypeDefinitionId,configuration: null == configuration ? _self.configuration : configuration // ignore: cast_nullable_to_non_nullable
 as skir.TypeSelection,supplied: null == supplied ? _self._supplied : supplied // ignore: cast_nullable_to_non_nullable
 as List<skir.FieldValue>,
   ));
@@ -294,7 +294,7 @@ as List<skir.FieldValue>,
 /// @nodoc
 mixin _$ResourceCreationTemplate {
 
- skir.ResourceDefinitionId get definition; skir.TypeSelection get configuration;
+ skir.TypeDefinitionId get type; skir.TypeSelection get configuration;
 /// Create a copy of ResourceCreationTemplate
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -306,20 +306,20 @@ $ResourceCreationTemplateCopyWith<ResourceCreationTemplate> get copyWith => _$Re
 @override
 bool operator ==(Object other) {
   final _this = this as ResourceCreationTemplate;
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is ResourceCreationTemplate&&(identical(other.definition, _this.definition) || other.definition == _this.definition)&&(identical(other.configuration, _this.configuration) || other.configuration == _this.configuration));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is ResourceCreationTemplate&&(identical(other.type, _this.type) || other.type == _this.type)&&(identical(other.configuration, _this.configuration) || other.configuration == _this.configuration));
 }
 
 
 @override
 int get hashCode {
   final _this = this as ResourceCreationTemplate;
-  return Object.hash(runtimeType,_this.definition,_this.configuration);
+  return Object.hash(runtimeType,_this.type,_this.configuration);
 }
 
 @override
 String toString() {
   final _this = this as ResourceCreationTemplate;
-  return 'ResourceCreationTemplate(definition: ${_this.definition}, configuration: ${_this.configuration})';
+  return 'ResourceCreationTemplate(type: ${_this.type}, configuration: ${_this.configuration})';
 }
 
 
@@ -330,7 +330,7 @@ abstract mixin class $ResourceCreationTemplateCopyWith<$Res>  {
   factory $ResourceCreationTemplateCopyWith(ResourceCreationTemplate value, $Res Function(ResourceCreationTemplate) _then) = _$ResourceCreationTemplateCopyWithImpl;
 @useResult
 $Res call({
- skir.ResourceDefinitionId definition, skir.TypeSelection configuration
+ skir.TypeDefinitionId type, skir.TypeSelection configuration
 });
 
 
@@ -347,10 +347,10 @@ class _$ResourceCreationTemplateCopyWithImpl<$Res>
 
 /// Create a copy of ResourceCreationTemplate
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? definition = null,Object? configuration = null,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? type = null,Object? configuration = null,}) {
   return _then(ResourceCreationTemplate(
-definition: null == definition ? _self.definition : definition // ignore: cast_nullable_to_non_nullable
-as skir.ResourceDefinitionId,configuration: null == configuration ? _self.configuration : configuration // ignore: cast_nullable_to_non_nullable
+type: null == type ? _self.type : type // ignore: cast_nullable_to_non_nullable
+as skir.TypeDefinitionId,configuration: null == configuration ? _self.configuration : configuration // ignore: cast_nullable_to_non_nullable
 as skir.TypeSelection,
   ));
 }
@@ -436,10 +436,10 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( skir.ResourceDefinitionId definition,  skir.TypeSelection configuration)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( skir.TypeDefinitionId type,  skir.TypeSelection configuration)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _ResourceCreationTemplate() when $default != null:
-return $default(_that.definition,_that.configuration);case _:
+return $default(_that.type,_that.configuration);case _:
   return orElse();
 
 }
@@ -457,10 +457,10 @@ return $default(_that.definition,_that.configuration);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( skir.ResourceDefinitionId definition,  skir.TypeSelection configuration)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( skir.TypeDefinitionId type,  skir.TypeSelection configuration)  $default,) {final _that = this;
 switch (_that) {
 case _ResourceCreationTemplate():
-return $default(_that.definition,_that.configuration);case _:
+return $default(_that.type,_that.configuration);case _:
   throw StateError('Unexpected subclass');
 
 }
@@ -477,10 +477,10 @@ return $default(_that.definition,_that.configuration);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( skir.ResourceDefinitionId definition,  skir.TypeSelection configuration)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( skir.TypeDefinitionId type,  skir.TypeSelection configuration)?  $default,) {final _that = this;
 switch (_that) {
 case _ResourceCreationTemplate() when $default != null:
-return $default(_that.definition,_that.configuration);case _:
+return $default(_that.type,_that.configuration);case _:
   return null;
 
 }
@@ -492,10 +492,10 @@ return $default(_that.definition,_that.configuration);case _:
 
 
 class _ResourceCreationTemplate implements ResourceCreationTemplate {
-  const _ResourceCreationTemplate({required this.definition, required this.configuration});
+  const _ResourceCreationTemplate({required this.type, required this.configuration});
   
 
-@override final  skir.ResourceDefinitionId definition;
+@override final  skir.TypeDefinitionId type;
 @override final  skir.TypeSelection configuration;
 
 /// Create a copy of ResourceCreationTemplate
@@ -508,18 +508,18 @@ _$ResourceCreationTemplateCopyWith<_ResourceCreationTemplate> get copyWith => __
 
 @override
 bool operator ==(Object other) {
-    return identical(this, other) || (other.runtimeType == runtimeType&&other is _ResourceCreationTemplate&&(identical(other.definition, definition) || other.definition == definition)&&(identical(other.configuration, configuration) || other.configuration == configuration));
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is _ResourceCreationTemplate&&(identical(other.type, type) || other.type == type)&&(identical(other.configuration, configuration) || other.configuration == configuration));
 }
 
 
 @override
 int get hashCode {
-    return Object.hash(runtimeType,definition,configuration);
+    return Object.hash(runtimeType,type,configuration);
 }
 
 @override
 String toString() {
-    return 'ResourceCreationTemplate(definition: $definition, configuration: $configuration)';
+    return 'ResourceCreationTemplate(type: $type, configuration: $configuration)';
 }
 
 
@@ -530,7 +530,7 @@ abstract mixin class _$ResourceCreationTemplateCopyWith<$Res> implements $Resour
   factory _$ResourceCreationTemplateCopyWith(_ResourceCreationTemplate value, $Res Function(_ResourceCreationTemplate) _then) = __$ResourceCreationTemplateCopyWithImpl;
 @override @useResult
 $Res call({
- skir.ResourceDefinitionId definition, skir.TypeSelection configuration
+ skir.TypeDefinitionId type, skir.TypeSelection configuration
 });
 
 
@@ -547,10 +547,10 @@ class __$ResourceCreationTemplateCopyWithImpl<$Res>
 
 /// Create a copy of ResourceCreationTemplate
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? definition = null,Object? configuration = null,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? type = null,Object? configuration = null,}) {
   return _then(_ResourceCreationTemplate(
-definition: null == definition ? _self.definition : definition // ignore: cast_nullable_to_non_nullable
-as skir.ResourceDefinitionId,configuration: null == configuration ? _self.configuration : configuration // ignore: cast_nullable_to_non_nullable
+type: null == type ? _self.type : type // ignore: cast_nullable_to_non_nullable
+as skir.TypeDefinitionId,configuration: null == configuration ? _self.configuration : configuration // ignore: cast_nullable_to_non_nullable
 as skir.TypeSelection,
   ));
 }

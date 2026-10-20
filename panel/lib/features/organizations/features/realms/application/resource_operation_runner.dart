@@ -98,7 +98,7 @@ final class ResourceOperationRunner {
     if (!isCurrent) return;
     _navigating = true;
     await ref
-        .read(resourceOperationNavigationProvider)
+        .read(realmSurfaceNavigationProvider)
         .navigate(scope, resource, mode, isCurrent: () => _locationIsCurrent);
   }
 
@@ -247,7 +247,7 @@ final class ResourceOperationRunner {
               _applySelection(value.selection);
               _navigating = true;
               await ref
-                  .read(resourceOperationNavigationProvider)
+                  .read(realmSurfaceNavigationProvider)
                   .recoverRemovedRoute(
                     scope,
                     before,

@@ -48,7 +48,7 @@ final class CompiledLiveResourceResults extends HookWidget {
     );
     final page = document.value.entry(fixture.ids["page"]!)!;
     final creation = AuthoringCreationOption(
-      definition: page.definition,
+      type: page.content.configuration.definition!,
       configuration: page.content.configuration,
       label: document.value.catalog.typeSelectionName(
         page.content.configuration,

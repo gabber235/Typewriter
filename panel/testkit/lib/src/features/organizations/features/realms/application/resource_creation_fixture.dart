@@ -4,9 +4,51 @@ import "package:typewriter_panel/typewriter_panel.dart";
 
 import "package:typewriter_testkit/typewriter_testkit.dart";
 
-/// A small catalog of ordinary value requirements, independent of ownership policy.
+/// A small catalog of ordinary value requirements, independent of ownership
+/// policy between its resources. A store type owns every resource type
+/// through its own field, which makes them creatable without adding owner
+/// questions.
 final class ResourceCreationFixture {
-  ResourceCreationFixture({bool abstractReport = false}) {
+  /// Books owned by a Library that already exists, and pages owned by Books,
+  /// each linking back to its owner, as Realm declares them. Creating a page
+  /// with a new Book is the creation flow Realm's panel creation test commits.
+  ResourceCreationFixture.library() : generation = _libraryGeneration {
+    _store = false;
+    _record("Library", {"books": _named("Books")}, resource: false);
+    _record("Book", {
+      "title": _text,
+      "library": _named("BookLibrary"),
+      "pages": _named("Pages"),
+    });
+    _record("Page", {"name": _text, "book": _named("PageBook")});
+    _sequence("Books", "LibraryBook");
+    _sequence("Pages", "BookPage");
+    _relation(
+      "libraryBooks",
+      "Library",
+      "books",
+      "Book",
+      "library",
+      "LibraryBook",
+      "BookLibrary",
+      collection: true,
+      ownership: true,
+    );
+    _relation(
+      "bookPages",
+      "Book",
+      "pages",
+      "Page",
+      "book",
+      "BookPage",
+      "PageBook",
+      collection: true,
+      ownership: true,
+    );
+  }
+
+  ResourceCreationFixture({bool abstractReport = false})
+    : generation = skir.CatalogGeneration(value: "creation:flow") {
     _record("Book", {"title": _text, "pages": _named("Pages")});
     _record("Page", {
       "name": _text,
@@ -71,11 +113,16 @@ final class ResourceCreationFixture {
       sourceBinding: !abstractReport,
     );
   }
-  final generation = skir.CatalogGeneration(value: "creation:flow");
+  static final _libraryGeneration = skir.CatalogGeneration(
+    value: "creation:library",
+  );
+  final skir.CatalogGeneration generation;
+  var _store = true;
+  final library = skir.ResourceId(value: "library:existing");
   final book = skir.ResourceId(value: "book:existing");
   final page = skir.ResourceId(value: "page:existing");
   final _types = <skir.PublishedType>[];
-  final _definitions = <skir.AuthoringResourceDefinition>[];
+  final _resources = <String>[];
   final _bindings = <skir.EndpointBindingTemplate>[];
   final _relations = <skir.RelationContract>[];
   final _text = skir.TypeTemplate.wrapScalar(skir.ScalarKind.text);
@@ -93,13 +140,8 @@ final class ResourceCreationFixture {
         definition: _id(name),
         arguments: const [],
       );
-  skir.ResourceDefinitionId _family(String name) =>
-      skir.ResourceDefinitionId(value: "creation.$name");
-
-  ResourceCreationRequest request(String name) => ResourceCreationRequest(
-    definition: _family(name),
-    configuration: _selection(name),
-  );
+  ResourceCreationRequest request(String name) =>
+      ResourceCreationRequest(type: _id(name), configuration: _selection(name));
 
   void _publish(
     String name,
@@ -164,15 +206,7 @@ final class ResourceCreationFixture {
       ],
       parent: parent,
     );
-    if (resource) {
-      _definitions.add(
-        skir.AuthoringResourceDefinition(
-          id: _family(name),
-          root: _id(name),
-          navigationHandler: skir.AuthoringNavigationHandler.generic,
-        ),
-      );
-    }
+    if (resource) _resources.add(name);
   }
 
   void _sequence(String name, String item) => _publish(
@@ -193,6 +227,7 @@ final class ResourceCreationFixture {
     String secondLink, {
     bool collection = false,
     bool sourceBinding = true,
+    bool ownership = false,
   }) {
     final firstEndpoint = skir.EndpointId(value: "$name:first");
     final secondEndpoint = skir.EndpointId(value: "$name:second");
@@ -213,7 +248,9 @@ final class ResourceCreationFixture {
     _relations.add(
       skir.RelationContract(
         id: skir.RelationId(value: name),
-        families: const [],
+        families: [
+          if (ownership) skir.RelationFamilyId(value: "resource.ownership"),
+        ],
         first: skir.EndpointDefinition(
           id: firstEndpoint,
           slot: skir.EndpointSlot.first,
@@ -264,17 +301,178 @@ final class ResourceCreationFixture {
     );
   }
 
+  /// The store type and its ownership of every resource type.
+  ({
+    List<skir.PublishedType> types,
+    List<skir.RelationContract> relations,
+    List<skir.EndpointBindingTemplate> bindings,
+  })
+  _realm() {
+    final types = <skir.PublishedType>[];
+    if (!_store) return (types: types, relations: const [], bindings: const []);
+    final relations = <skir.RelationContract>[];
+    final bindings = <skir.EndpointBindingTemplate>[];
+    final fields = <String, skir.TypeTemplate>{};
+    for (final name in _resources) {
+      final owner = skir.EndpointId(value: "owns$name:first");
+      types
+        ..add(
+          skir.PublishedType(
+            searchKey: null,
+            placementField: null,
+            definition: skir.TypeDefinition(
+              id: _id("Owned$name"),
+              parameters: const [],
+              representation: skir.RepresentationTemplate.createLink(
+                endpoint: owner,
+                target: _named(name),
+              ),
+              parents: const [],
+            ),
+            status: skir.DeclarationStatus.ready,
+            effectiveFields: const [],
+            ancestorTemplates: const [],
+            display: defaultTypeDisplay("Owned $name"),
+          ),
+        )
+        ..add(
+          skir.PublishedType(
+            searchKey: null,
+            placementField: null,
+            definition: skir.TypeDefinition(
+              id: _id("Owned${name}List"),
+              parameters: const [],
+              representation: skir.RepresentationTemplate.createSequence(
+                item: _named("Owned$name"),
+                kind: skir.CollectionKind.list,
+              ),
+              parents: const [],
+            ),
+            status: skir.DeclarationStatus.ready,
+            effectiveFields: const [],
+            ancestorTemplates: const [],
+            display: defaultTypeDisplay("Owned $name list"),
+          ),
+        );
+      fields["owned$name"] = _named("Owned${name}List");
+      relations.add(
+        skir.RelationContract(
+          id: skir.RelationId(value: "owns$name"),
+          families: [skir.RelationFamilyId(value: "resource.ownership")],
+          first: skir.EndpointDefinition(
+            id: owner,
+            slot: skir.EndpointSlot.first,
+            resource: _template("Store"),
+            cardinality: skir.EndpointCardinality.one,
+            onDelete: skir.RelationDeletePolicy.cascade,
+          ),
+          second: skir.EndpointDefinition(
+            id: skir.EndpointId(value: "owns$name:second"),
+            slot: skir.EndpointSlot.second,
+            resource: _template(name),
+            cardinality: skir.EndpointCardinality.many,
+            onDelete: skir.RelationDeletePolicy.clear,
+          ),
+        ),
+      );
+      bindings.add(
+        skir.EndpointBindingTemplate(
+          endpoint: owner,
+          containingResource: _template("Store"),
+          valueOwner: _id("Store"),
+          target: _named(name),
+          containsCollection: true,
+          relativePath: skir.RelativeFieldPattern(
+            segments: [
+              skir.FieldPatternSegment.createField(name: "owned$name"),
+              skir.FieldPatternSegment.items,
+            ],
+          ),
+        ),
+      );
+    }
+    types.add(
+      skir.PublishedType(
+        searchKey: null,
+        placementField: null,
+        definition: skir.TypeDefinition(
+          id: _id("Store"),
+          parameters: const [],
+          representation: skir.RepresentationTemplate.createRecord(
+            abstract_: false,
+            fields: [
+              for (final field in fields.entries)
+                skir.FieldDeclaration(
+                  owner: skir.FieldOwner(
+                    definition: _id("Store"),
+                    name: field.key,
+                  ),
+                  type: field.value,
+                  overrides: const [],
+                  hasConstructorDefault: false,
+                ),
+            ],
+          ),
+          parents: const [],
+        ),
+        status: skir.DeclarationStatus.ready,
+        effectiveFields: [
+          for (final field in fields.entries)
+            skir.EffectiveFieldTemplate(
+              key: field.key,
+              owner: skir.FieldOwner(definition: _id("Store"), name: field.key),
+              type: field.value,
+              rules: const [],
+            ),
+        ],
+        ancestorTemplates: const [],
+        display: defaultTypeDisplay("Store"),
+      ),
+    );
+    return (types: types, relations: relations, bindings: bindings);
+  }
+
+  /// The record [name] starts with, prepared like any creation.
+  skir.AuthoringRecord _prepared(AuthoringDocument document, String name) {
+    final step = fixturePreparationStep(
+      document,
+      skir.PreparationOperation.createStart(
+        catalog: generation,
+        target: skir.PreparationTarget.wrapRecord(_selection(name)),
+        suppliedValue: null,
+      ),
+    );
+    final content = switch (step) {
+      skir.PreparationStep_readyWrapper(:final value) => value.content,
+      skir.PreparationStep_needsInputWrapper(:final value) => value.content,
+      _ => throw StateError("Fixture cannot initialize $name"),
+    };
+    return (content as skir.PreparedContent_recordWrapper).value;
+  }
+
+  /// The edit that creates the Library in an empty realm, as Realm provisions
+  /// it before any Book is created.
+  AuthoringEdit librarySeed() =>
+      AuthoringEdit.fromDocument(document())
+        ..create(library, _prepared(document(), "Library"));
+
+  /// A realm holding only the Library.
+  AuthoringDocument libraryDocument() => librarySeed().toDocument();
+
   AuthoringDocument document({bool existing = false}) {
+    final realm = _realm();
     final catalog = CheckedEditorCatalog(
       skir.EditorCatalogWireSnapshot(
         resourceDisplays: const [],
         resourceOperations: const [],
         resourceOperationContributions: const [],
         generation: generation,
-        types: _types,
-        relations: _relations,
-        resourceDefinitions: _definitions,
-        endpointBindings: _bindings,
+        types: [..._types, ...realm.types],
+        relations: [..._relations, ...realm.relations],
+        // The realm root stays unpublished: the store is an ordinary owner,
+        // so every resource it owns is creatable.
+        realmRoot: _id("Realm"),
+        endpointBindings: [..._bindings, ...realm.bindings],
         presentations: const [],
         presentationMaterials: const [],
         configuration: const [],
@@ -305,11 +503,7 @@ final class ResourceCreationFixture {
           skir.PreparationStep_needsInputWrapper(:final value) => value.content,
           _ => throw StateError("Fixture cannot initialize $name"),
         };
-        edit.create(
-          id,
-          (content as skir.PreparedContent_recordWrapper).value,
-          definition: _family(name),
-        );
+        edit.create(id, (content as skir.PreparedContent_recordWrapper).value);
       }
       final source = skir.ValueLocation(
         resource: page,

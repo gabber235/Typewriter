@@ -359,7 +359,7 @@ void main() {
             ),
           ],
           relations: const [],
-          resourceDefinitions: const [],
+          realmRoot: skir.TypeDefinitionId.defaultInstance,
           presentations: const [],
           presentationMaterials: const [],
           configuration: const [],
@@ -379,7 +379,6 @@ void main() {
         resources: [
           skir.AuthoringResource(
             id: location.resource,
-            definition: skir.ResourceDefinitionId(value: "test.root"),
             content: skir.AuthoringRecord(
               configuration: skir.TypeSelection.createComplete(
                 definition: root,

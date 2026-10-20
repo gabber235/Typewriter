@@ -3,8 +3,8 @@ import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
     as skir;
 import "package:typewriter_panel/typewriter_panel.dart";
 import "package:typewriter_testkit/typewriter_testkit.dart";
-import "package:widgetbook_workspace/stories/features/organizations/features/realms/features/books/features/pages/presentation/route.stories.dart";
 import "package:widgetbook_workspace/stories/features/organizations/features/realms/presentation/authored_resource_editor.stories.dart";
+import "package:widgetbook_workspace/stories/shared/editors/presentation/portable_resources.stories.dart";
 
 void main() {
   testWidgets("resource inspector edits the shared authored value", (
@@ -49,7 +49,7 @@ void main() {
     addTearDown(() => tester.binding.setSurfaceSize(null));
     await tester.pumpWidget(
       FakeApp(
-        child: PageWorkspaceStory(
+        child: ResourcesWorkspaceStory(
           timeline: false,
           onResourceSelected: (resource) => selected = resource,
         ),
@@ -74,7 +74,7 @@ void main() {
     addTearDown(() => tester.binding.setSurfaceSize(null));
     await tester.pumpWidget(
       FakeApp(
-        child: PageWorkspaceStory(
+        child: ResourcesWorkspaceStory(
           timeline: true,
           onResourceSelected: (resource) => selected = resource,
         ),

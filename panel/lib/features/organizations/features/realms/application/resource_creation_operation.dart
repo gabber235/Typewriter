@@ -51,10 +51,10 @@ final class _ResourceCreationOperation {
       request = request.copyWith(configuration: chosen);
     }
     if (request.configuration is! skir.TypeSelection_completeWrapper ||
-        !catalog.isResourceDefinition(
-          request.configuration,
-          request.definition,
-        ) ||
+        !catalog
+            .nominalDefinitions(request.configuration)
+            .contains(request.type) ||
+        !catalog.creatableTypes.contains(request.configuration.definition) ||
         catalog.isAbstractRecordSelection(request.configuration)) {
       throw StateError("The selected resource needs a concrete available type");
     }
@@ -228,11 +228,7 @@ final class _ResourceCreationOperation {
   AuthoringEdit _view() {
     final view = AuthoringEdit.fromDocument(base);
     for (final node in _nodes.values) {
-      view.create(
-        node.request.id,
-        node.step.materialized.recordContent,
-        definition: node.request.definition,
-      );
+      view.create(node.request.id, node.step.materialized.recordContent);
     }
     final overlays =
         [
@@ -407,9 +403,6 @@ final class _ResourceCreationOperation {
     final existing = candidates
         .where((candidate) => candidate.value is ExistingReference)
         .toList();
-    if (required != null && candidates.length == 1 && existing.length == 1) {
-      return (existing.single.value as ExistingReference).reference;
-    }
     if (required == null) {
       final preferred = existing
           .where(
@@ -425,6 +418,11 @@ final class _ResourceCreationOperation {
         return (preferred.single.value as ExistingReference).reference;
       }
       candidates.addAll(_newResourceCandidates(view, plan));
+    }
+    // A single existing destination with no alternative to create is chosen
+    // without asking, such as the one Library a new Book belongs to.
+    if (candidates.length == 1 && existing.length == 1) {
+      return (existing.single.value as ExistingReference).reference;
     }
     if (candidates.isEmpty) {
       throw StateError(
@@ -468,54 +466,44 @@ final class _ResourceCreationOperation {
   ) sync* {
     final source = view.resource(plan.source.source)!;
     final expected = catalog.namedUse(plan.targetType);
-    for (final definition in catalog.snapshot.resourceDefinitions) {
-      for (final configuration in catalog.concreteRecordSelections(
-        catalog.beginSelection(definition.root),
-      )) {
-        final complete = configuration is skir.TypeSelection_completeWrapper;
-        if (complete
-            ? !catalog.selectionMatches(configuration, plan.targetType)
-            : expected == null ||
-                  !catalog
-                      .nominalDefinitions(configuration)
-                      .contains(expected.definition)) {
-          continue;
-        }
-        final inverse = catalog
-            .endpointBindings(configuration)
-            .where((binding) => binding.template.endpoint == plan.opposite.id)
-            .toList();
-        final compatible =
-            inverse.isEmpty ||
-            inverse.any(
-              (binding) =>
-                  binding.isAvailable &&
-                  catalog.selectionMatches(
-                    source.configuration,
-                    binding.target,
-                  ),
-            );
-        final label = catalog.typeSelectionName(configuration);
-        yield ReferencePickerCandidate(
-          id: "create:${definition.id.value}:$configuration",
-          value: ReferenceChoice.createResource(
-            ResourceCreationTemplate(
-              definition: definition.id,
-              configuration: configuration,
-            ),
-          ),
-          label: "Create $label",
-          description:
-              catalog.selectionDisplay(configuration)?.description ?? "",
-          searchText: "create $label",
-          display: catalog.selectionDisplay(configuration),
-          disabledReason: !complete
-              ? "This type requires concrete type arguments"
-              : compatible
-              ? null
-              : "This type cannot refer back to the resource being created",
-        );
+    for (final type in catalog.creatableTypes) {
+      final configuration = catalog.beginSelection(type);
+      final complete = configuration is skir.TypeSelection_completeWrapper;
+      if (complete
+          ? !catalog.selectionMatches(configuration, plan.targetType)
+          : expected == null ||
+                !catalog
+                    .nominalDefinitions(configuration)
+                    .contains(expected.definition)) {
+        continue;
       }
+      final inverse = catalog
+          .endpointBindings(configuration)
+          .where((binding) => binding.template.endpoint == plan.opposite.id)
+          .toList();
+      final compatible =
+          inverse.isEmpty ||
+          inverse.any(
+            (binding) =>
+                binding.isAvailable &&
+                catalog.selectionMatches(source.configuration, binding.target),
+          );
+      final label = catalog.typeSelectionName(configuration);
+      yield ReferencePickerCandidate(
+        id: "create:$configuration",
+        value: ReferenceChoice.createResource(
+          ResourceCreationTemplate(type: type, configuration: configuration),
+        ),
+        label: "Create $label",
+        description: catalog.selectionDisplay(configuration)?.description ?? "",
+        searchText: "create $label",
+        display: catalog.selectionDisplay(configuration),
+        disabledReason: !complete
+            ? "This type requires concrete type arguments"
+            : compatible
+            ? null
+            : "This type cannot refer back to the resource being created",
+      );
     }
   }
 
@@ -527,7 +515,7 @@ final class _ResourceCreationOperation {
   ) async {
     final target = await resolve(
       ResourceCreationRequest(
-        definition: template.definition,
+        type: template.type,
         configuration: template.configuration,
       ),
       childContext,
@@ -818,11 +806,7 @@ final class _ResourceCreationOperation {
       }
     }
     for (final node in _nodes.values) {
-      edit.createPrepared(
-        node.request.id,
-        node.step.materialized,
-        definition: node.request.definition,
-      );
+      edit.createPrepared(node.request.id, node.step.materialized);
     }
     for (final materialization in _materializations()) {
       edit.applyReferenceMaterialization(materialization);

@@ -47,9 +47,6 @@ extension PresentationExpressionAdmission on CheckedEditorCatalog {
     }
     for (final collection in material.dependencies.collections) {
       alias(collection.rowBindingId);
-      if (collection.resources case final resource?) {
-        alias(resource.resourceBindingId);
-      }
       if (collection.projection case final projection?) {
         alias(projection.resourceBindingId);
       }
@@ -163,6 +160,23 @@ extension PresentationExpressionAdmission on CheckedEditorCatalog {
               errors.add("unexpected_authoring_input");
             } else {
               check(value.initialInput, capability.input!.type, env);
+            }
+          }
+        case skir.EditorAction_createWrapper(:final value):
+          if (value.owner case final owner? when binding(owner, env) == null) {
+            errors.add("unresolved_create_owner");
+          }
+          final created = beginSelection(value.type);
+          if (created == skir.TypeSelection.unknown) {
+            errors.add("unknown_create_type");
+            break;
+          }
+          for (final preset in value.fields) {
+            final field = valueTypeAt(created, preset.path);
+            if (field == null) {
+              errors.add("unresolved_create_preset");
+            } else {
+              check(preset.value, field, env);
             }
           }
         default:
@@ -543,6 +557,9 @@ extension PresentationExpressionAdmission on CheckedEditorCatalog {
         skir.PresentationElement_invocationWrapper(:final value) => [
           for (final argument in value.arguments) argument.input,
         ],
+        skir.PresentationElement_resourcesWrapper(:final value) => [
+          value.itemBindingId,
+        ],
         _ => const <skir.ExpressionBindingId>[],
       };
       for (final id in aliases) {
@@ -600,11 +617,6 @@ extension PresentationExpressionAdmission on CheckedEditorCatalog {
         return {
           ...env,
           if (row != null) source.rowBindingId: type(row),
-          if (source.resources != null)
-            source.resources!.resourceBindingId: type(
-              skir.TypeUse.wrapNamed(frameworkResourceIdUse),
-              false,
-            ),
           if (source.projection != null)
             source.projection!.resourceBindingId: type(
               skir.TypeUse.wrapNamed(frameworkResourceIdUse),
@@ -970,35 +982,76 @@ extension PresentationExpressionAdmission on CheckedEditorCatalog {
           appearance(value.inputAppearance, env);
           content(value.inputContent, env);
           popup(value.popup, env);
-        case skir.PresentationElement_pageGraphWrapper(:final value):
-          insets(value.appearance?.cardPadding);
-          number(value.appearance?.cellSize, env);
-          color(value.appearance?.edgeColor, env);
-        case skir.PresentationElement_pageTimelineWrapper(:final value):
-          final style = value.appearance;
-          if (style != null) {
-            for (final paint in [
-              style.headerColor,
-              style.rulerColor,
-              style.trackColor,
-              style.alternateTrackColor,
-              style.gridMinorColor,
-              style.gridMajorColor,
-              style.textMutedColor,
-            ]) {
-              color(paint, env);
-            }
-            for (final size in [
-              style.rulerHeight,
-              style.trackPadding,
-              style.laneHeight,
-              style.laneGap,
-              style.headerPadding,
-            ]) {
-              if (size != null && (!size.isFinite || size < 0)) {
-                errors.add("invalid_page_timeline_dimension");
+        case skir.PresentationElement_resourcesWrapper(:final value):
+          final member = collectionItemType(candidate);
+          if (member == null) {
+            errors.add("unresolved_resources_member_type");
+            break;
+          }
+          if (value.order case final order?) {
+            errors.addAll(
+              checkPortableExpression(
+                order,
+                catalog: this,
+                bindings: {...env, value.itemBindingId: type(member, false)},
+              ),
+            );
+          }
+          switch (value.layout) {
+            case skir.ResourcesLayout_graphWrapper(:final value):
+              insets(value.appearance?.cardPadding);
+              number(value.appearance?.cellSize, env);
+              color(value.appearance?.edgeColor, env);
+            case skir.ResourcesLayout_timelineWrapper(:final value):
+              final style = value.appearance;
+              if (style != null) {
+                for (final paint in [
+                  style.headerColor,
+                  style.rulerColor,
+                  style.trackColor,
+                  style.alternateTrackColor,
+                  style.gridMinorColor,
+                  style.gridMajorColor,
+                  style.textMutedColor,
+                ]) {
+                  color(paint, env);
+                }
+                for (final size in [
+                  style.rulerHeight,
+                  style.trackPadding,
+                  style.laneHeight,
+                  style.laneGap,
+                  style.headerPadding,
+                ]) {
+                  if (size != null && (!size.isFinite || size < 0)) {
+                    errors.add("invalid_resources_timeline_dimension");
+                  }
+                }
               }
-            }
+            case skir.ResourcesLayout_gridWrapper(:final value):
+              number(value.itemExtent, env);
+              number(value.aspectRatio, env);
+              number(value.spacing, env);
+            case skir.ResourcesLayout_treeWrapper(:final value):
+              final target = switch (namedUse(member)) {
+                final link? => _linkTargetSelection(link),
+                null => null,
+              };
+              if (target == null || valueTypeAt(target, value.path) == null) {
+                errors.add("unresolved_tree_path");
+              }
+              if (value.group case final group?) {
+                alias(value.groupBindingId);
+                nested[group] = {
+                  ...env,
+                  value.groupBindingId: type(
+                    skir.TypeUse.wrapNamed(hierarchyGroupUse),
+                    false,
+                  ),
+                };
+              }
+            default:
+              break;
           }
         case skir.PresentationElement_appearanceDefaultsWrapper(:final value):
           appearance(value.appearance, env);
@@ -1143,5 +1196,22 @@ extension PresentationExpressionAdmission on CheckedEditorCatalog {
       visit(leading, rootEnvironment);
     }
     return List.unmodifiable(errors.toSet());
+  }
+}
+
+extension on CheckedEditorCatalog {
+  /// The resource type a link use points at, such as Page for a link of
+  /// Book.pages.
+  skir.TypeSelection? _linkTargetSelection(skir.NamedTypeUse link) {
+    final representation = published(link.definition)
+        ?.definition
+        .representation;
+    if (representation is! skir.RepresentationTemplate_linkWrapper) return null;
+    final target = applyTemplate(
+      representation.value.target,
+      skir.TypeSelection.wrapComplete(link),
+    );
+    final named = namedUse(target);
+    return named == null ? null : skir.TypeSelection.wrapComplete(named);
   }
 }

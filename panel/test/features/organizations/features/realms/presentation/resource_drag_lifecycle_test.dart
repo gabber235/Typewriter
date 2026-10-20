@@ -85,9 +85,7 @@ void main() {
         generation: generation,
         commands: commands,
       );
-      final container = tester.container(
-        of: find.byType(AuthoredPageGraphNode),
-      );
+      final container = tester.container(of: find.byType(AuthoredGraphItem));
       container
           .read(selectionProvider.notifier)
           .selectAll(fixture.group.memberships.keys.toList());
@@ -131,198 +129,6 @@ void main() {
         isNot(contains(fixture.source)),
       );
       expect(fixture.preparations, isEmpty);
-      expect(tester.takeException(), isNull);
-    },
-  );
-
-  for (final bookTarget in [false, true]) {
-    testWidgets(
-      "retired tag avatar cannot mutate ${bookTarget ? 'Book' : 'tag'} target or clear replacement",
-      (tester) async {
-        final generation = ValueNotifier(0);
-        addTearDown(generation.dispose);
-        final parent = _tag("parent");
-        final child = _tag("child");
-        final book = Book(
-          bookId: skir.ResourceId(value: "book"),
-          title: "Book",
-          icon: "book",
-          color: Colors.blue,
-          tagIds: const [],
-        );
-        await tester.pumpTestApp(
-          overrides: authoringFixtureOverrides(
-            tags: [parent, child],
-            books: [book],
-          ),
-          child: Row(
-            children: [
-              Expanded(
-                child: SizedBox(
-                  height: 300,
-                  child: Graph(
-                    data: GraphData(
-                      cellSize: 50,
-                      edges: const [],
-                      elements: [
-                        GraphElement(
-                          id: GraphIdentifier(parent.tagId.value),
-                          x: 0,
-                          y: 0,
-                          width: 3,
-                          height: 1,
-                          builder: (_) => ValueListenableBuilder<int>(
-                            valueListenable: generation,
-                            builder: (_, value, _) => TagNode(
-                              key: ValueKey(value),
-                              tagId: parent.tagId,
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                    onElementsMoved: (_) {},
-                  ),
-                ),
-              ),
-              SizedBox(
-                key: const ValueKey("target"),
-                width: 200,
-                height: bookTarget ? bookHeight : 100,
-                child: bookTarget
-                    ? BookWidget(
-                        id: book.bookId,
-                        title: book.title,
-                        icon: const Icon(Icons.book),
-                        color: book.color,
-                      )
-                    : TagNode(tagId: child.tagId),
-              ),
-            ],
-          ),
-        );
-        Finder source() => find.descendant(
-          of: find.byType(Graph),
-          matching: find.byType(TagNode),
-        );
-        final oldGesture = await tester.startGesture(
-          tester.getCenter(source()),
-          pointer: 1,
-        );
-        await oldGesture.moveBy(const Offset(25, 0));
-        await tester.pump();
-        final controller = tester
-            .widget<GraphDrag>(find.byType(GraphDrag))
-            .controller;
-        final old = controller.value!.payload;
-        final target = tester.getCenter(find.byKey(const ValueKey("target")));
-        await oldGesture.moveTo(target);
-        await tester.pump();
-        generation.value++;
-        await tester.pump();
-        await tester.pump();
-        expect(old.canHover, isFalse);
-        final replacement = await tester.startGesture(
-          tester.getCenter(source()),
-          pointer: 2,
-        );
-        await replacement.moveBy(const Offset(25, 0));
-        await tester.pump();
-        await replacement.moveTo(target);
-        await tester.pump();
-        final current = controller.value!.payload;
-        await oldGesture.moveTo(const Offset(10, 10));
-        await tester.pump();
-        await oldGesture.moveTo(target);
-        await tester.pump();
-        await oldGesture.up();
-        await tester.pump();
-        final container = tester.container(
-          of: find.byKey(const ValueKey("target")),
-        );
-        List<skir.ResourceId> linked() => bookTarget
-            ? container
-                  .read(workingBookProvider(book.bookId))
-                  .requireValue!
-                  .tagIds
-            : container
-                  .read(workingTagProvider(child.tagId))
-                  .requireValue!
-                  .parentIds;
-        expect(linked(), isEmpty);
-        expect(controller.value?.payload, same(current));
-        expect(find.byType(RejectedTagDropTarget), findsNothing);
-        await replacement.up();
-        await tester.pumpAndSettle();
-        expect(linked(), [parent.tagId]);
-        expect(tester.takeException(), isNull);
-      },
-    );
-  }
-
-  testWidgets(
-    "Book source retires its envelope before a replacement can drop",
-    (tester) async {
-      final generation = ValueNotifier(0);
-      addTearDown(generation.dispose);
-      final bookId = skir.ResourceId(value: "book");
-      final accepted = <AuthoringResourceIdentifier>[];
-      await tester.pumpTestApp(
-        overrides: authoringFixtureOverrides(),
-        child: Row(
-          children: [
-            SizedBox(
-              width: 200,
-              height: bookHeight,
-              child: ValueListenableBuilder<int>(
-                valueListenable: generation,
-                builder: (_, value, _) => BookWidget(
-                  key: ValueKey(value),
-                  id: bookId,
-                  title: "Book",
-                  icon: const Icon(Icons.book),
-                  color: Colors.blue,
-                ),
-              ),
-            ),
-            const SizedBox(width: 100),
-            DragTarget<GraphDragPayload<AuthoringResourceIdentifier>>(
-              onWillAcceptWithDetails: (details) => details.data.canHover,
-              onAcceptWithDetails: (details) {
-                if (details.data.claim()) accepted.add(details.data.value);
-              },
-              builder: (_, _, _) => const SizedBox(
-                key: ValueKey("sink"),
-                width: 150,
-                height: 150,
-              ),
-            ),
-          ],
-        ),
-      );
-      final old = await tester.startGesture(
-        tester.getCenter(find.byType(BookWidget)),
-        pointer: 1,
-      );
-      await old.moveBy(const Offset(25, 0));
-      await tester.pump();
-      generation.value++;
-      await tester.pump();
-      final next = await tester.startGesture(
-        tester.getCenter(find.byType(BookWidget)),
-        pointer: 2,
-      );
-      await next.moveBy(const Offset(25, 0));
-      await tester.pump();
-      final target = tester.getCenter(find.byKey(const ValueKey("sink")));
-      await next.moveTo(target);
-      await old.moveTo(target);
-      await old.up();
-      await tester.pump();
-      expect(accepted, isEmpty);
-      await next.up();
-      await tester.pumpAndSettle();
-      expect(accepted.single.resourceId, bookId);
       expect(tester.takeException(), isNull);
     },
   );
@@ -453,14 +259,6 @@ void main() {
   );
 }
 
-Tag _tag(String id) => Tag(
-  tagId: skir.ResourceId(value: id),
-  name: id,
-  color: Colors.blue,
-  parentIds: const [],
-  placement: GraphPlacement(x: 0, y: 0, width: 3, height: 1),
-);
-
 Future<TestGesture> _startResourceDrag(
   WidgetTester tester, {
   int pointer = 1,
@@ -498,9 +296,15 @@ Future<void> _pumpOperation(
   );
   final entries = [
     for (final member in fixture.group.memberships.entries)
-      PortablePageEntryProjection(
+      PortableResourceMember(
         resource: member.key.resourceId,
         occurrence: member.value,
+        link: skir.DataValue.unfilled,
+        appearance: ResourceAppearance(
+          label: "Source",
+          accent: const Color(0xff607d8b),
+          icon: skir.Icon.wrapIconify("material-symbols:category"),
+        ),
         resourceProjection: PortableResourceProjection(
           resource: member.key.resourceId,
           configuration: fixture.workspace.document
@@ -509,12 +313,7 @@ Future<void> _pumpOperation(
           label: "Source",
           value: skir.DataValue.wrapStringValue("fixture"),
         ),
-        graph: const PortablePageGraphPlacement(
-          x: 0,
-          y: 0,
-          width: 4,
-          height: 1,
-        ),
+        graph: const PortableGraphPlacement(x: 0, y: 0, width: 4, height: 1),
       ),
   ];
   await tester.pumpTestApp(
@@ -541,18 +340,21 @@ Future<void> _pumpOperation(
               if (!(visible?.value ?? true)) return const SizedBox.shrink();
               return ProviderScope(
                 key: ValueKey(generation?.value ?? 0),
-                child: AuthoredPageInteractions(
+                child: AuthoredResourcesInteractions(
                   authoringScope: fixture.scope,
                   binding: binding,
                   child: Builder(
                     builder: (context) {
-                      final interactions = PortablePageInteractionScope.maybeOf(
+                      final interactions =
+                          PortableResourcesInteractionScope.maybeOf(context)!;
+                      final view = PortableResourcesView(
+                        members: entries,
+                        scope: pageScope,
+                        layout: PortableResourcesLayoutKind.graph,
+                      );
+                      return interactions.layoutBuilder(
                         context,
-                      )!;
-                      return interactions.graphBuilder(
-                        context,
-                        entries,
-                        pageScope,
+                        view,
                         SizedBox(
                           height: 300,
                           child: Graph(
@@ -567,10 +369,10 @@ Future<void> _pumpOperation(
                                   width: 4,
                                   height: 1,
                                   builder: (context) =>
-                                      interactions.nodeBuilder(
+                                      interactions.itemBuilder(
                                         context,
+                                        view,
                                         entries.first,
-                                        pageScope,
                                         const ColoredBox(
                                           key: ValueKey("resource"),
                                           color: Colors.blue,

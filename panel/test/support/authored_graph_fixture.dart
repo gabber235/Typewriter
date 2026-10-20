@@ -284,7 +284,6 @@ final class AuthoredGraphFixture {
       List<skir.FieldValue> fields,
     ) => skir.AuthoringResource(
       id: id,
-      definition: skir.ResourceDefinitionId(value: type),
       content: skir.AuthoringRecord(
         configuration: skir.TypeSelection.wrapComplete(use(type)),
         fields: fields,

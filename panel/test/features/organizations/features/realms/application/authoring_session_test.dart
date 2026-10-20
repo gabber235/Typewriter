@@ -237,7 +237,6 @@ final _organization = skir.recordId("organization:org1");
 final _realm = skir.recordId("service:realm1");
 final _generation = skir.CatalogGeneration(value: "catalog:1");
 final _resourceId = skir.ResourceId(value: "book:1");
-final _definition = skir.ResourceDefinitionId(value: "typewriter.book");
 
 skir.AuthoringState _snapshot(
   String title,
@@ -256,13 +255,7 @@ skir.AuthoringState _snapshot(
   return skir.AuthoringState(
     confirmedObservation: skir.AuthoringObservationId(value: "fixture:saved"),
     generation: generation ?? _generation,
-    resources: [
-      skir.AuthoringResource(
-        id: _resourceId,
-        definition: _definition,
-        content: content,
-      ),
-    ],
+    resources: [skir.AuthoringResource(id: _resourceId, content: content)],
     links: const [],
     findings: const [],
   );

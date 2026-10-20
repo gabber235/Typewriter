@@ -15,29 +15,29 @@ void main() {
   test("portable projection collections are read only", () {
     final collection = PortableCollectionProjection(definition: null, rows: []);
     final resource = skir.ResourceId(value: "resource:test");
-    final page = PortablePageProjection(
-      entries: const [],
+    final page = PortableResourcesProjection(
+      members: const [],
       edges: const [],
       timeline: {resource: []},
     );
 
     expect(collection.rows.clear, throwsUnsupportedError);
-    expect(page.entries.clear, throwsUnsupportedError);
+    expect(page.members.clear, throwsUnsupportedError);
     expect(page.timeline[resource]!.clear, throwsUnsupportedError);
   });
 
   test("portable projections detach from supplied collections", () {
     final resource = skir.ResourceId(value: "resource:test");
     final rows = <PortableCollectionRowProjection>[];
-    final entries = <PortablePageEntryProjection>[];
-    final edges = <PortablePageEdgeProjection>[];
+    final entries = <PortableResourceMember>[];
+    final edges = <PortableResourceEdge>[];
     final cues = <PortableTimelineCueProjection>[];
     final collection = PortableCollectionProjection(
       definition: null,
       rows: rows,
     );
-    final page = PortablePageProjection(
-      entries: entries,
+    final page = PortableResourcesProjection(
+      members: entries,
       edges: edges,
       timeline: {resource: cues},
     );
@@ -54,9 +54,15 @@ void main() {
       ),
     );
     entries.add(
-      PortablePageEntryProjection(
+      PortableResourceMember(
         resource: resource,
         occurrence: skir.LinkOccurrence.defaultInstance,
+        link: skir.DataValue.unfilled,
+        appearance: ResourceAppearance(
+          label: "Entry",
+          accent: const Color(0xff607d8b),
+          icon: skir.Icon.wrapIconify("material-symbols:category"),
+        ),
         resourceProjection: PortableResourceProjection(
           resource: resource,
           configuration: skir.TypeSelection.unknown,
@@ -66,11 +72,7 @@ void main() {
       ),
     );
     edges.add(
-      PortablePageEdgeProjection(
-        id: "edge:test",
-        source: resource,
-        target: resource,
-      ),
+      PortableResourceEdge(id: "edge:test", source: resource, target: resource),
     );
     cues.add(
       PortableTimelineCueProjection(
@@ -82,7 +84,7 @@ void main() {
     );
 
     expect(collection.rows, isEmpty);
-    expect(page.entries, isEmpty);
+    expect(page.members, isEmpty);
     expect(page.edges, isEmpty);
     expect(page.timeline[resource], isEmpty);
   });

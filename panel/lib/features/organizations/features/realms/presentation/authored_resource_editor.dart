@@ -14,6 +14,7 @@ final class AuthoredResourceEditor extends HookConsumerWidget {
     required this.budget,
     this.edit,
     this.openResource,
+    this.routedResource,
     this.prepareValue,
     this.invokeCommand,
     this.watchSearch,
@@ -31,6 +32,10 @@ final class AuthoredResourceEditor extends HookConsumerWidget {
   final skir.PresentationRole role;
   final skir.EvaluationBudget budget;
   final ValueChanged<skir.ResourceId>? openResource;
+
+  /// The resource open in the workspace, marked as routed by resources
+  /// layouts.
+  final skir.ResourceId? routedResource;
   final Future<skir.PreparedValue> Function(
     skir.ValuePreparationRequest request,
   )?
@@ -111,6 +116,14 @@ final class AuthoredResourceEditor extends HookConsumerWidget {
                   ),
                   isCurrent: () => runner.isCurrent,
                   navigate: runner.navigate,
+                  create: (type, owner, supplied) => ref
+                      .read(resourceCreationProvider(scope))
+                      .createOwnedResource(
+                        context: context,
+                        type: type,
+                        owner: owner,
+                        supplied: supplied,
+                      ),
                   invokeCommand: runner.invokeCommand,
                   reload: runner.reload,
                   prepare: runner.prepare,
@@ -234,6 +247,7 @@ final class AuthoredResourceEditor extends HookConsumerWidget {
             readOnly: host.readOnly,
             watchSearch: capabilities.watchSearch,
             openResource: capabilities.openResource,
+            routedResource: routedResource,
             reportStatus: reportStatus,
             operations: operations,
             catalog: document.catalog,
@@ -247,7 +261,7 @@ final class AuthoredResourceEditor extends HookConsumerWidget {
           ),
     );
     if (authoringScope == null) return renderer;
-    return AuthoredPageInteractions(
+    return AuthoredResourcesInteractions(
       authoringScope: authoringScope,
       binding: edit,
       prepareValue: prepareValue,

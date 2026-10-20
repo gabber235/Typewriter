@@ -133,7 +133,7 @@ void main() {
       resourceOperationDropTargetExample(delayed: false, dropEnabled: false),
     );
     await tester.pumpAndSettle();
-    final source = tester.getCenter(find.byType(AuthoredPageGraphNode).first);
+    final source = tester.getCenter(find.byType(AuthoredGraphItem).first);
     final pageTarget = find.byType(ResourcePageDropTarget);
     final container = ProviderScope.containerOf(tester.element(pageTarget));
     final scope = container.read(selectedAuthoringScopeProvider)!;

@@ -264,7 +264,7 @@ class PortablePresentationChrome extends HookWidget {
     final tooltip = useMemoized(GlobalKey<TooltipState>.new);
     final placement = PortableDiagnosticScope.of(context).placement;
     final expanded =
-        role == skir.PresentationRole.workspaceEditor ||
+        role == skir.PresentationRole.workspace ||
         role == skir.PresentationRole.inspector;
     final diagnostics = expanded
         ? placement.general

@@ -73,10 +73,8 @@ void main() {
           hits: [
             skir.AuthoringSearchHit(
               resource: id,
-              definition: document.entry(id)!.definition,
               subject: skir.PresentationSubject(
                 resource: id,
-                definition: document.entry(id)!.definition,
                 content: document.resource(id)!,
               ),
               context: context,
@@ -125,11 +123,7 @@ void main() {
       workspace.edit(
         label: "Create unrelated tag",
         policy: EditorCommitPolicy.applyResource,
-        apply: (edit) => edit.create(
-          created,
-          document.resource(id)!,
-          definition: document.entry(id)!.definition,
-        ),
+        apply: (edit) => edit.create(created, document.resource(id)!),
       );
       await pumpEventQueue();
       expect(controller.snapshot.nodes, hasLength(1));
