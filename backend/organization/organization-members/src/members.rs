@@ -21,7 +21,6 @@ use wasmcloud_utils::{
     skir_transaction_outcome,
     skir_utils::{IntoSkirRecordIds, IntoSurrealRecordIds, RecordIdKeyIdentity},
     skir_variant,
-    wasmcloud::messaging::types::NatsMessage,
 };
 
 #[derive(Debug, Deserialize)]
@@ -111,8 +110,7 @@ impl MemberUpdateOutcome {
 /// watch requests before the database read.
 #[tracing::instrument(skip_all)]
 pub async fn handle_watch(
-    _msg: NatsMessage,
-    scope: wasmcloud_utils::transport_routes::OrganizationActorScope,
+    scope: wasmcloud_utils::transport::OrganizationActorScope,
     _request: WatchOrganizationMembersRequest,
 ) -> Result<WatchOrganizationMembersResponse, otel_wasi::Error> {
     let actor_id = scope.user.as_str();
@@ -136,8 +134,7 @@ pub async fn handle_watch(
 /// The returned event describes the full updated member values and is published after commit.
 #[tracing::instrument(skip_all)]
 pub async fn handle_update(
-    _msg: NatsMessage,
-    scope: wasmcloud_utils::transport_routes::OrganizationActorScope,
+    scope: wasmcloud_utils::transport::OrganizationActorScope,
     request: UpdateOrganizationMemberRolesRequest,
 ) -> Result<UpdateOrganizationMemberRolesResponse, otel_wasi::Error> {
     let actor_id = scope.user.as_str();
@@ -244,8 +241,7 @@ pub async fn handle_update(
 /// organization member sequence and the user's organization sequence, then publishes both changes.
 #[tracing::instrument(skip_all)]
 pub async fn handle_remove(
-    _msg: NatsMessage,
-    scope: wasmcloud_utils::transport_routes::OrganizationActorScope,
+    scope: wasmcloud_utils::transport::OrganizationActorScope,
     request: RemoveOrganizationMemberRequest,
 ) -> Result<RemoveOrganizationMemberResponse, otel_wasi::Error> {
     let actor_id = scope.user.as_str();

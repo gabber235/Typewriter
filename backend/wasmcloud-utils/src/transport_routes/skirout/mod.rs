@@ -1,92 +1,12 @@
-#[derive(Clone, Debug, PartialEq, Eq, PartialOrd, Ord)]
-pub struct SubjectToken(String);
-impl SubjectToken {
-    pub fn as_str(&self) -> &str {
-        &self.0
-    }
-}
-impl TryFrom<&str> for SubjectToken {
-    type Error = crate::otel_wasi::Error;
-    fn try_from(value: &str) -> Result<Self, Self::Error> {
-        if value.is_empty()
-            || value
-                .chars()
-                .any(|character| character.is_whitespace() || ".*>{}".contains(character))
-        {
-            return Err(crate::otel_wasi::Error::new(
-                "transport-invalid-token",
-                "Invalid subject identity",
-            ));
-        }
-        Ok(Self(value.to_owned()))
-    }
-}
-impl std::fmt::Display for SubjectToken {
-    fn fmt(&self, output: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        output.write_str(self.as_str())
-    }
-}
-#[derive(Default)]
-pub struct GrantSet {
-    pub publish: std::collections::BTreeSet<String>,
-    pub subscribe: std::collections::BTreeSet<String>,
-}
-#[derive(Clone, Debug)]
-pub struct RealmScope {
-    pub organization: SubjectToken,
-    pub realm: SubjectToken,
-}
-#[derive(Clone, Debug)]
-pub struct ServiceScope {
-    pub service: SubjectToken,
-}
-#[derive(Clone, Debug)]
-pub struct OrganizationActorScope {
-    pub user: SubjectToken,
-    pub organization: SubjectToken,
-}
-#[derive(Clone, Debug)]
-pub struct OrganizationScope {
-    pub organization: SubjectToken,
-}
-#[derive(Clone, Debug)]
-pub struct UserScope {
-    pub user: SubjectToken,
-}
-#[derive(Clone, Copy, Debug)]
-pub struct InternalComponentScope;
-impl TryFrom<&str> for ServiceScope {
-    type Error = crate::otel_wasi::Error;
-    fn try_from(value: &str) -> Result<Self, Self::Error> {
-        Ok(Self {
-            service: SubjectToken::try_from(value)?,
-        })
-    }
-}
-impl TryFrom<&str> for OrganizationScope {
-    type Error = crate::otel_wasi::Error;
-    fn try_from(value: &str) -> Result<Self, Self::Error> {
-        Ok(Self {
-            organization: SubjectToken::try_from(value)?,
-        })
-    }
-}
-impl TryFrom<&str> for UserScope {
-    type Error = crate::otel_wasi::Error;
-    fn try_from(value: &str) -> Result<Self, Self::Error> {
-        Ok(Self {
-            user: SubjectToken::try_from(value)?,
-        })
-    }
-}
+//! Generated transport routes. Do not edit; regenerate with `bun run generate:protocol`.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum RealmRole {
     RealmCoordinator,
     RealmParticipant,
 }
-impl RealmScope {
+impl crate::transport::RealmScope {
     /// Inserts every subject the role may publish to or subscribe to within this scope.
-    pub fn grant(&self, role: RealmRole, grants: &mut GrantSet) {
+    pub fn grant(&self, role: RealmRole, grants: &mut crate::transport::GrantSet) {
         let Self {
             organization,
             realm,
@@ -369,9 +289,9 @@ impl RealmScope {
 pub enum ServiceRole {
     RegisteredService,
 }
-impl ServiceScope {
+impl crate::transport::ServiceScope {
     /// Inserts every subject the role may publish to or subscribe to within this scope.
-    pub fn grant(&self, role: ServiceRole, grants: &mut GrantSet) {
+    pub fn grant(&self, role: ServiceRole, grants: &mut crate::transport::GrantSet) {
         let Self { service } = self;
         match role {
             ServiceRole::RegisteredService => {
@@ -413,13 +333,13 @@ impl ServiceScope {
 pub enum OrganizationActorRole {
     OrganizationMember,
 }
-impl OrganizationActorScope {
+impl crate::transport::OrganizationActorScope {
     /// Inserts every subject the role may publish to or subscribe to within this scope.
     pub fn grant(
         &self,
         role: OrganizationActorRole,
         session: &crate::transport::ConnectionSession,
-        grants: &mut GrantSet,
+        grants: &mut crate::transport::GrantSet,
     ) {
         let Self { user, organization } = self;
         match role {
@@ -741,13 +661,13 @@ impl OrganizationActorScope {
 pub enum UserRole {
     AuthenticatedUser,
 }
-impl UserScope {
+impl crate::transport::UserScope {
     /// Inserts every subject the role may publish to or subscribe to within this scope.
     pub fn grant(
         &self,
         role: UserRole,
         session: &crate::transport::ConnectionSession,
-        grants: &mut GrantSet,
+        grants: &mut crate::transport::GrantSet,
     ) {
         let Self { user } = self;
         match role {
@@ -814,15 +734,15 @@ impl UserScope {
 /// URL safe Base64 of the compact JSON array `[actor, organization, session, projection]`.
 /// The panel derives the same name when it opens the consumer.
 pub fn consumer_name(
-    actor: &SubjectToken,
-    organization: Option<&SubjectToken>,
+    actor: &crate::transport::SubjectToken,
+    organization: Option<&crate::transport::SubjectToken>,
     session: &crate::transport::ConnectionSession,
     projection: &str,
 ) -> String {
     use base64::Engine as _;
     let identity = serde_json::json!([
         actor.as_str(),
-        organization.map(SubjectToken::as_str),
+        organization.map(crate::transport::SubjectToken::as_str),
         session.as_str(),
         projection
     ]);
@@ -831,257 +751,647 @@ pub fn consumer_name(
         base64::engine::general_purpose::URL_SAFE_NO_PAD.encode(identity.to_string())
     )
 }
-pub trait RequestRoute {
-    type Scope;
-    type Request: 'static;
-    type Response: 'static;
-    type Delivery: RequestResponseDelivery<Self::Response>;
-    fn method() -> &'static crate::skir_client::Method<Self::Request, Self::Response>;
-    fn scope(subject: &str) -> Result<Option<Self::Scope>, crate::otel_wasi::Error>;
-}
-pub trait OutboundRequestRoute: RequestRoute {
-    fn subject(scope: &Self::Scope) -> String;
-}
-pub trait RequestResponseDelivery<Response> {
-    fn reply_result(
-        msg: crate::wasmcloud::messaging::types::NatsMessage,
-        result: Result<Response, crate::otel_wasi::Error>,
-        serializer: crate::skir_client::Serializer<Response>,
-    ) -> impl std::future::Future<Output = Result<(), crate::otel_wasi::Error>>;
-}
-pub struct DomainResponseDelivery;
-impl<Response: crate::SkirResponse> RequestResponseDelivery<Response> for DomainResponseDelivery {
-    async fn reply_result(
-        msg: crate::wasmcloud::messaging::types::NatsMessage,
-        result: Result<Response, crate::otel_wasi::Error>,
-        _serializer: crate::skir_client::Serializer<Response>,
-    ) -> Result<(), crate::otel_wasi::Error> {
-        crate::wasmcloud::messaging::reply_handler_result(msg, result).await
-    }
-}
-pub struct PlainResponseDelivery;
-impl<Response: 'static> RequestResponseDelivery<Response> for PlainResponseDelivery {
-    async fn reply_result(
-        msg: crate::wasmcloud::messaging::types::NatsMessage,
-        result: Result<Response, crate::otel_wasi::Error>,
-        serializer: crate::skir_client::Serializer<Response>,
-    ) -> Result<(), crate::otel_wasi::Error> {
-        let response = result?;
-        let body = serializer.to_bytes(&response);
-        crate::wasmcloud::messaging::reply(msg, body).await
-    }
-}
-pub trait EventRoute {
-    type Scope;
-    type Event: 'static;
-    fn serializer() -> crate::skir_client::Serializer<Self::Event>;
-    fn scope(subject: &str) -> Result<Option<Self::Scope>, crate::otel_wasi::Error>;
-}
-pub trait OutboundEventRoute {
-    type Scope;
-    type Event: 'static;
-    fn serializer() -> crate::skir_client::Serializer<Self::Event>;
-    fn subject(scope: &Self::Scope) -> String;
-}
-pub trait PersistentEventRoute: OutboundEventRoute {
-    fn stream() -> &'static str;
-}
-pub trait TransientEventRoute: OutboundEventRoute {}
-pub struct EventDelivery<Route: OutboundEventRoute> {
-    subject: String,
-    route: std::marker::PhantomData<Route>,
-}
-impl<Route: OutboundEventRoute> EventDelivery<Route> {
-    fn new(scope: &Route::Scope) -> Self {
-        Self {
-            subject: Route::subject(scope),
-            route: std::marker::PhantomData,
-        }
-    }
-    pub fn subject(&self) -> &str {
-        &self.subject
-    }
-}
-impl<Route: TransientEventRoute> EventDelivery<Route> {
-    pub async fn publish(&self, event: Route::Event) -> Result<(), crate::otel_wasi::Error> {
-        crate::wasmcloud::messaging::publish(
-            self.subject.clone(),
-            Route::serializer().to_bytes(&event),
-        )
-        .await
-    }
-}
-impl<Route: PersistentEventRoute> EventDelivery<Route> {
-    pub async fn persist(&self, event: Route::Event) -> Result<(), crate::otel_wasi::Error> {
-        let acknowledgement = crate::wasmcloud::messaging::persist(
-            self.subject.clone(),
-            Route::serializer().to_bytes(&event),
-        )
-        .await?;
-        if acknowledgement.stream_name != Route::stream() {
-            return Err(crate::otel_wasi::Error::new(
-                "transport-event-wrong-stream",
-                format!(
-                    "expected {}, got {}",
-                    Route::stream(),
-                    acknowledgement.stream_name
-                ),
-            ));
-        }
-        Ok(())
-    }
-}
-pub async fn dispatch_request<Route, Handler, Work>(
-    msg: crate::wasmcloud::messaging::types::NatsMessage,
-    handler: Handler,
-) -> Option<Result<(), crate::otel_wasi::Error>>
-where
-    Route: RequestRoute,
-    Handler: FnOnce(
-        crate::wasmcloud::messaging::types::NatsMessage,
-        Route::Scope,
-        Route::Request,
-    ) -> Work,
-    Work: std::future::Future<Output = Result<Route::Response, crate::otel_wasi::Error>>,
-{
-    let scope = match Route::scope(&msg.subject) {
-        Ok(None) => return None,
-        Ok(Some(scope)) => Ok(scope),
-        Err(error) => Err(error),
-    };
-    let result = async {
-        let scope = scope?;
-        let request = Route::method()
-            .request_serializer
-            .from_bytes(&msg.body, crate::skir_client::UnrecognizedValues::Drop)
-            .map_err(|error| crate::otel_wasi::Error::new("transport-decode", error.to_string()))?;
-        handler(msg.clone(), scope, request).await
-    }
-    .await;
-    Some(
-        Route::Delivery::reply_result(msg, result, Route::method().response_serializer.clone())
-            .await,
-    )
-}
-pub async fn request_route<Route: OutboundRequestRoute>(
-    scope: &Route::Scope,
-    request: &Route::Request,
-) -> Result<Route::Response, crate::otel_wasi::Error> {
-    let response = crate::wasmcloud::messaging::request(
-        Route::subject(scope),
-        Route::method().request_serializer.to_bytes(request),
-    )
-    .await?;
-    Route::method()
-        .response_serializer
-        .from_bytes(&response.body, crate::skir_client::UnrecognizedValues::Drop)
-        .map_err(|error| crate::otel_wasi::Error::new("transport-decode", error.to_string()))
-}
-pub fn unmatched_route(
-    msg: &crate::wasmcloud::messaging::types::NatsMessage,
-    slug: &'static str,
-) -> crate::otel_wasi::Error {
-    crate::otel_wasi::Error::new(slug, format!("Unknown subject: {}", msg.subject))
-}
-pub async fn dispatch_event<Route, Handler, Work>(
-    msg: crate::wasmcloud::messaging::types::NatsMessage,
-    handler: Handler,
-) -> Option<Result<(), crate::otel_wasi::Error>>
-where
-    Route: EventRoute,
-    Handler:
-        FnOnce(crate::wasmcloud::messaging::types::NatsMessage, Route::Scope, Route::Event) -> Work,
-    Work: std::future::Future<Output = Result<(), crate::otel_wasi::Error>>,
-{
-    let scope = match Route::scope(&msg.subject) {
-        Ok(None) => return None,
-        Ok(Some(scope)) => Ok(scope),
-        Err(error) => Err(error),
-    };
-    Some(
-        async {
-            let scope = scope?;
-            let event = Route::serializer()
-                .from_bytes(&msg.body, crate::skir_client::UnrecognizedValues::Drop)
-                .map_err(|error| {
-                    crate::otel_wasi::Error::new("transport-decode", error.to_string())
-                })?;
-            handler(msg, scope, event).await
-        }
-        .await,
-    )
-}
-#[macro_export]
-macro_rules! dispatch_route {
-    ($msg:expr, $route:ty, $handler:path) => {
-        if let Some(result) =
-            $crate::transport_routes::dispatch_request::<$route, _, _>($msg.clone(), $handler).await
-        {
-            return result;
-        }
-    };
-}
-#[macro_export]
-macro_rules! dispatch_event_route {
-    ($msg:expr, $route:ty, $handler:path) => {
-        if let Some(result) =
-            $crate::transport_routes::dispatch_event::<$route, _, _>($msg.clone(), $handler).await
-        {
-            return result;
-        }
-    };
-}
 pub struct UserOrganizationCreateRoute;
-impl RequestRoute for UserOrganizationCreateRoute {
-    type Scope = UserScope;
+impl crate::transport::RequestRoute for UserOrganizationCreateRoute {
+    type Scope = crate::transport::UserScope;
     type Request = crate::skirout::base::organization::v1::organization::CreateOrganizationRequest;
     type Response =
         crate::skirout::base::organization::v1::organization::CreateOrganizationResponse;
-    type Delivery = DomainResponseDelivery;
+    type Delivery = crate::transport::DomainResponseDelivery;
     fn method() -> &'static crate::skir_client::Method<Self::Request, Self::Response> {
         crate::skirout::base::organization::v1::organization::create_organization_method()
     }
-    fn scope(subject: &str) -> Result<Option<Self::Scope>, crate::otel_wasi::Error> {
-        let parts: Vec<_> = subject.split('.').collect();
-        match parts.as_slice() {
-            ["typewriter", "from", "user", user, "organization", "create"] => Ok(Some(UserScope {
-                user: SubjectToken::try_from(*user)?,
-            })),
-            _ => Ok(None),
-        }
-    }
 }
 pub struct UserOrganizationsWatchRoute;
-impl RequestRoute for UserOrganizationsWatchRoute {
-    type Scope = UserScope;
+impl crate::transport::RequestRoute for UserOrganizationsWatchRoute {
+    type Scope = crate::transport::UserScope;
     type Request = crate::skirout::base::organization::v1::user::WatchUserOrganizationsRequest;
     type Response = crate::skirout::base::organization::v1::user::WatchUserOrganizationsResponse;
-    type Delivery = DomainResponseDelivery;
+    type Delivery = crate::transport::DomainResponseDelivery;
     fn method() -> &'static crate::skir_client::Method<Self::Request, Self::Response> {
         crate::skirout::base::organization::v1::user::watch_user_organizations_method()
     }
-    fn scope(subject: &str) -> Result<Option<Self::Scope>, crate::otel_wasi::Error> {
-        let parts: Vec<_> = subject.split('.').collect();
-        match parts.as_slice() {
-            ["typewriter", "from", "user", user, "organization", "watch"] => Ok(Some(UserScope {
-                user: SubjectToken::try_from(*user)?,
-            })),
-            _ => Ok(None),
-        }
-    }
 }
 pub struct UserJoinRequestsWatchRoute;
-impl RequestRoute for UserJoinRequestsWatchRoute {
-    type Scope = UserScope;
+impl crate::transport::RequestRoute for UserJoinRequestsWatchRoute {
+    type Scope = crate::transport::UserScope;
     type Request = crate::skirout::base::organization::v1::user::WatchUserJoinRequestsRequest;
     type Response = crate::skirout::base::organization::v1::user::WatchUserJoinRequestsResponse;
-    type Delivery = DomainResponseDelivery;
+    type Delivery = crate::transport::DomainResponseDelivery;
     fn method() -> &'static crate::skir_client::Method<Self::Request, Self::Response> {
         crate::skirout::base::organization::v1::user::watch_user_join_requests_method()
     }
-    fn scope(subject: &str) -> Result<Option<Self::Scope>, crate::otel_wasi::Error> {
-        let parts: Vec<_> = subject.split('.').collect();
-        match parts.as_slice() {
+}
+pub struct UserJoinRequestSubmitRoute;
+impl crate::transport::RequestRoute for UserJoinRequestSubmitRoute {
+    type Scope = crate::transport::UserScope;
+    type Request = crate::skirout::base::organization::v1::user::SubmitUserJoinRequestRequest;
+    type Response = crate::skirout::base::organization::v1::user::SubmitUserJoinRequestResponse;
+    type Delivery = crate::transport::DomainResponseDelivery;
+    fn method() -> &'static crate::skir_client::Method<Self::Request, Self::Response> {
+        crate::skirout::base::organization::v1::user::submit_user_join_request_method()
+    }
+}
+pub struct UserJoinRequestCancelRoute;
+impl crate::transport::RequestRoute for UserJoinRequestCancelRoute {
+    type Scope = crate::transport::UserScope;
+    type Request = crate::skirout::base::organization::v1::user::CancelUserJoinRequestRequest;
+    type Response = crate::skirout::base::organization::v1::user::CancelUserJoinRequestResponse;
+    type Delivery = crate::transport::DomainResponseDelivery;
+    fn method() -> &'static crate::skir_client::Method<Self::Request, Self::Response> {
+        crate::skirout::base::organization::v1::user::cancel_user_join_request_method()
+    }
+}
+pub struct OrganizationMembersWatchRoute;
+impl crate::transport::RequestRoute for OrganizationMembersWatchRoute {
+    type Scope = crate::transport::OrganizationActorScope;
+    type Request = crate::skirout::base::organization::v1::member::WatchOrganizationMembersRequest;
+    type Response =
+        crate::skirout::base::organization::v1::member::WatchOrganizationMembersResponse;
+    type Delivery = crate::transport::DomainResponseDelivery;
+    fn method() -> &'static crate::skir_client::Method<Self::Request, Self::Response> {
+        crate::skirout::base::organization::v1::member::watch_organization_members_method()
+    }
+}
+pub struct OrganizationMembersUpdateRoute;
+impl crate::transport::RequestRoute for OrganizationMembersUpdateRoute {
+    type Scope = crate::transport::OrganizationActorScope;
+    type Request =
+        crate::skirout::base::organization::v1::member::UpdateOrganizationMemberRolesRequest;
+    type Response =
+        crate::skirout::base::organization::v1::member::UpdateOrganizationMemberRolesResponse;
+    type Delivery = crate::transport::DomainResponseDelivery;
+    fn method() -> &'static crate::skir_client::Method<Self::Request, Self::Response> {
+        crate::skirout::base::organization::v1::member::update_organization_member_roles_method()
+    }
+}
+pub struct OrganizationMemberRemoveRoute;
+impl crate::transport::RequestRoute for OrganizationMemberRemoveRoute {
+    type Scope = crate::transport::OrganizationActorScope;
+    type Request = crate::skirout::base::organization::v1::member::RemoveOrganizationMemberRequest;
+    type Response =
+        crate::skirout::base::organization::v1::member::RemoveOrganizationMemberResponse;
+    type Delivery = crate::transport::DomainResponseDelivery;
+    fn method() -> &'static crate::skir_client::Method<Self::Request, Self::Response> {
+        crate::skirout::base::organization::v1::member::remove_organization_member_method()
+    }
+}
+pub struct OrganizationJoinRequestsWatchRoute;
+impl crate::transport::RequestRoute for OrganizationJoinRequestsWatchRoute {
+    type Scope = crate::transport::OrganizationActorScope;
+    type Request =
+        crate::skirout::base::organization::v1::join_request::WatchOrganizationJoinRequestsRequest;
+    type Response =
+        crate::skirout::base::organization::v1::join_request::WatchOrganizationJoinRequestsResponse;
+    type Delivery = crate::transport::DomainResponseDelivery;
+    fn method() -> &'static crate::skir_client::Method<Self::Request, Self::Response> {
+        crate::skirout::base::organization::v1::join_request::watch_organization_join_requests_method()
+    }
+}
+pub struct OrganizationJoinRequestsApproveRoute;
+impl crate::transport::RequestRoute for OrganizationJoinRequestsApproveRoute {
+    type Scope = crate::transport::OrganizationActorScope;
+    type Request = crate::skirout::base::organization::v1::join_request::ApproveOrganizationJoinRequestsRequest;
+    type Response = crate::skirout::base::organization::v1::join_request::ApproveOrganizationJoinRequestsResponse;
+    type Delivery = crate::transport::DomainResponseDelivery;
+    fn method() -> &'static crate::skir_client::Method<Self::Request, Self::Response> {
+        crate::skirout::base::organization::v1::join_request::approve_organization_join_requests_method()
+    }
+}
+pub struct OrganizationJoinRequestDeclineRoute;
+impl crate::transport::RequestRoute for OrganizationJoinRequestDeclineRoute {
+    type Scope = crate::transport::OrganizationActorScope;
+    type Request =
+        crate::skirout::base::organization::v1::join_request::DeclineOrganizationJoinRequestRequest;
+    type Response = crate::skirout::base::organization::v1::join_request::DeclineOrganizationJoinRequestResponse;
+    type Delivery = crate::transport::DomainResponseDelivery;
+    fn method() -> &'static crate::skir_client::Method<Self::Request, Self::Response> {
+        crate::skirout::base::organization::v1::join_request::decline_organization_join_request_method()
+    }
+}
+pub struct OrganizationJoinCodesWatchRoute;
+impl crate::transport::RequestRoute for OrganizationJoinCodesWatchRoute {
+    type Scope = crate::transport::OrganizationActorScope;
+    type Request =
+        crate::skirout::base::organization::v1::join_codes::WatchOrganizationJoinCodesRequest;
+    type Response =
+        crate::skirout::base::organization::v1::join_codes::WatchOrganizationJoinCodesResponse;
+    type Delivery = crate::transport::DomainResponseDelivery;
+    fn method() -> &'static crate::skir_client::Method<Self::Request, Self::Response> {
+        crate::skirout::base::organization::v1::join_codes::watch_organization_join_codes_method()
+    }
+}
+pub struct OrganizationJoinCodeGenerateRoute;
+impl crate::transport::RequestRoute for OrganizationJoinCodeGenerateRoute {
+    type Scope = crate::transport::OrganizationActorScope;
+    type Request =
+        crate::skirout::base::organization::v1::join_codes::GenerateOrganizationJoinCodeRequest;
+    type Response =
+        crate::skirout::base::organization::v1::join_codes::GenerateOrganizationJoinCodeResponse;
+    type Delivery = crate::transport::DomainResponseDelivery;
+    fn method() -> &'static crate::skir_client::Method<Self::Request, Self::Response> {
+        crate::skirout::base::organization::v1::join_codes::generate_organization_join_code_method()
+    }
+}
+pub struct OrganizationJoinCodeRevokeRoute;
+impl crate::transport::RequestRoute for OrganizationJoinCodeRevokeRoute {
+    type Scope = crate::transport::OrganizationActorScope;
+    type Request =
+        crate::skirout::base::organization::v1::join_codes::RevokeOrganizationJoinCodeRequest;
+    type Response =
+        crate::skirout::base::organization::v1::join_codes::RevokeOrganizationJoinCodeResponse;
+    type Delivery = crate::transport::DomainResponseDelivery;
+    fn method() -> &'static crate::skir_client::Method<Self::Request, Self::Response> {
+        crate::skirout::base::organization::v1::join_codes::revoke_organization_join_code_method()
+    }
+}
+pub struct OrganizationRolesWatchRoute;
+impl crate::transport::RequestRoute for OrganizationRolesWatchRoute {
+    type Scope = crate::transport::OrganizationActorScope;
+    type Request = crate::skirout::base::organization::v1::role::WatchOrganizationRolesRequest;
+    type Response = crate::skirout::base::organization::v1::role::WatchOrganizationRolesResponse;
+    type Delivery = crate::transport::DomainResponseDelivery;
+    fn method() -> &'static crate::skir_client::Method<Self::Request, Self::Response> {
+        crate::skirout::base::organization::v1::role::watch_organization_roles_method()
+    }
+}
+pub struct ServiceBindingQueryRoute;
+impl crate::transport::RequestRoute for ServiceBindingQueryRoute {
+    type Scope = crate::transport::ServiceScope;
+    type Request = crate::skirout::base::service::v1::status::QueryServiceBindingRequest;
+    type Response = crate::skirout::base::service::v1::status::QueryServiceBindingResponse;
+    type Delivery = crate::transport::DomainResponseDelivery;
+    fn method() -> &'static crate::skir_client::Method<Self::Request, Self::Response> {
+        crate::skirout::base::service::v1::status::query_service_binding_method()
+    }
+}
+impl crate::transport::OutboundRequestRoute for ServiceBindingQueryRoute {
+    fn subject(scope: &Self::Scope) -> String {
+        let crate::transport::ServiceScope { service } = scope;
+        format!("service.{service}.binding.query")
+    }
+}
+pub struct RegistrationLeaseEnsureRoute;
+impl crate::transport::RequestRoute for RegistrationLeaseEnsureRoute {
+    type Scope = crate::transport::ServiceScope;
+    type Request = crate::skirout::base::service::v1::status::EnsureRegistrationLeaseRequest;
+    type Response = crate::skirout::base::service::v1::status::EnsureRegistrationLeaseResponse;
+    type Delivery = crate::transport::DomainResponseDelivery;
+    fn method() -> &'static crate::skir_client::Method<Self::Request, Self::Response> {
+        crate::skirout::base::service::v1::status::ensure_registration_lease_method()
+    }
+}
+pub struct ServiceMessagingScopeRoute;
+impl crate::transport::RequestRoute for ServiceMessagingScopeRoute {
+    type Scope = crate::transport::ServiceScope;
+    type Request = crate::skirout::base::service::v1::topology::GetServiceMessagingScopeRequest;
+    type Response = crate::skirout::base::service::v1::topology::GetServiceMessagingScopeResponse;
+    type Delivery = crate::transport::DomainResponseDelivery;
+    fn method() -> &'static crate::skir_client::Method<Self::Request, Self::Response> {
+        crate::skirout::base::service::v1::topology::get_service_messaging_scope_method()
+    }
+}
+impl crate::transport::OutboundRequestRoute for ServiceMessagingScopeRoute {
+    fn subject(scope: &Self::Scope) -> String {
+        let crate::transport::ServiceScope { service } = scope;
+        format!("service.{service}.messaging.scope")
+    }
+}
+pub struct ServiceBindRoute;
+impl crate::transport::RequestRoute for ServiceBindRoute {
+    type Scope = crate::transport::OrganizationActorScope;
+    type Request = crate::skirout::base::service::v1::registration::BindServiceRequest;
+    type Response = crate::skirout::base::service::v1::registration::BindServiceResponse;
+    type Delivery = crate::transport::DomainResponseDelivery;
+    fn method() -> &'static crate::skir_client::Method<Self::Request, Self::Response> {
+        crate::skirout::base::service::v1::registration::bind_service_method()
+    }
+}
+pub struct OrganizationServicesWatchRoute;
+impl crate::transport::RequestRoute for OrganizationServicesWatchRoute {
+    type Scope = crate::transport::OrganizationActorScope;
+    type Request =
+        crate::skirout::base::service::v1::organization::WatchOrganizationServicesRequest;
+    type Response =
+        crate::skirout::base::service::v1::organization::WatchOrganizationServicesResponse;
+    type Delivery = crate::transport::DomainResponseDelivery;
+    fn method() -> &'static crate::skir_client::Method<Self::Request, Self::Response> {
+        crate::skirout::base::service::v1::organization::watch_organization_services_method()
+    }
+}
+pub struct OrganizationServiceUpdateRoute;
+impl crate::transport::RequestRoute for OrganizationServiceUpdateRoute {
+    type Scope = crate::transport::OrganizationActorScope;
+    type Request =
+        crate::skirout::base::service::v1::organization::UpdateOrganizationServiceRequest;
+    type Response =
+        crate::skirout::base::service::v1::organization::UpdateOrganizationServiceResponse;
+    type Delivery = crate::transport::DomainResponseDelivery;
+    fn method() -> &'static crate::skir_client::Method<Self::Request, Self::Response> {
+        crate::skirout::base::service::v1::organization::update_organization_service_method()
+    }
+}
+pub struct ServiceUnbindRoute;
+impl crate::transport::RequestRoute for ServiceUnbindRoute {
+    type Scope = crate::transport::OrganizationActorScope;
+    type Request = crate::skirout::base::service::v1::registration::UnbindServiceRequest;
+    type Response = crate::skirout::base::service::v1::registration::UnbindServiceResponse;
+    type Delivery = crate::transport::DomainResponseDelivery;
+    fn method() -> &'static crate::skir_client::Method<Self::Request, Self::Response> {
+        crate::skirout::base::service::v1::registration::unbind_service_method()
+    }
+}
+pub struct ServiceTopologyConfigureRoute;
+impl crate::transport::RequestRoute for ServiceTopologyConfigureRoute {
+    type Scope = crate::transport::OrganizationActorScope;
+    type Request = crate::skirout::base::service::v1::topology::ConfigureServiceHostRequest;
+    type Response = crate::skirout::base::service::v1::topology::ConfigureServiceHostResponse;
+    type Delivery = crate::transport::DomainResponseDelivery;
+    fn method() -> &'static crate::skir_client::Method<Self::Request, Self::Response> {
+        crate::skirout::base::service::v1::topology::configure_service_host_method()
+    }
+}
+pub struct OrganizationTopologyWatchRoute;
+impl crate::transport::RequestRoute for OrganizationTopologyWatchRoute {
+    type Scope = crate::transport::OrganizationActorScope;
+    type Request = crate::skirout::base::service::v1::topology::WatchOrganizationTopologyRequest;
+    type Response = crate::skirout::base::service::v1::topology::WatchOrganizationTopologyResponse;
+    type Delivery = crate::transport::DomainResponseDelivery;
+    fn method() -> &'static crate::skir_client::Method<Self::Request, Self::Response> {
+        crate::skirout::base::service::v1::topology::watch_organization_topology_method()
+    }
+}
+pub struct ServiceHostRegisterRoute;
+impl crate::transport::RequestRoute for ServiceHostRegisterRoute {
+    type Scope = crate::transport::ServiceScope;
+    type Request = crate::skirout::base::service::v1::topology::RegisterServiceHostRequest;
+    type Response = crate::skirout::base::service::v1::topology::RegisterServiceHostResponse;
+    type Delivery = crate::transport::DomainResponseDelivery;
+    fn method() -> &'static crate::skir_client::Method<Self::Request, Self::Response> {
+        crate::skirout::base::service::v1::topology::register_service_host_method()
+    }
+}
+pub struct HostExecutionWatchRoute;
+impl crate::transport::RequestRoute for HostExecutionWatchRoute {
+    type Scope = crate::transport::ServiceScope;
+    type Request = crate::skirout::base::service::v1::topology::WatchHostExecutionRequest;
+    type Response = crate::skirout::base::service::v1::topology::WatchHostExecutionResponse;
+    type Delivery = crate::transport::DomainResponseDelivery;
+    fn method() -> &'static crate::skir_client::Method<Self::Request, Self::Response> {
+        crate::skirout::base::service::v1::topology::watch_host_execution_method()
+    }
+}
+pub struct HostExecutionReportRoute;
+impl crate::transport::RequestRoute for HostExecutionReportRoute {
+    type Scope = crate::transport::ServiceScope;
+    type Request = crate::skirout::base::service::v1::topology::ReportHostExecutionRequest;
+    type Response = crate::skirout::base::service::v1::topology::ReportHostExecutionResponse;
+    type Delivery = crate::transport::DomainResponseDelivery;
+    fn method() -> &'static crate::skir_client::Method<Self::Request, Self::Response> {
+        crate::skirout::base::service::v1::topology::report_host_execution_method()
+    }
+}
+pub struct PanelPermissionResolveRoute;
+impl crate::transport::RequestRoute for PanelPermissionResolveRoute {
+    type Scope = crate::transport::InternalComponentScope;
+    type Request = crate::skirout::base::access::v1::permission::GetEntityPermissionRequest;
+    type Response = crate::skirout::base::access::v1::permission::GetEntityPermissionResponse;
+    type Delivery = crate::transport::PlainResponseDelivery;
+    fn method() -> &'static crate::skir_client::Method<Self::Request, Self::Response> {
+        crate::skirout::base::access::v1::permission::get_entity_permission_method()
+    }
+}
+impl crate::transport::OutboundRequestRoute for PanelPermissionResolveRoute {
+    fn subject(_scope: &Self::Scope) -> String {
+        String::from("auth.permissions.typewriter-panel")
+    }
+}
+pub struct ServicesPermissionResolveRoute;
+impl crate::transport::RequestRoute for ServicesPermissionResolveRoute {
+    type Scope = crate::transport::InternalComponentScope;
+    type Request = crate::skirout::base::access::v1::permission::GetEntityPermissionRequest;
+    type Response = crate::skirout::base::access::v1::permission::GetEntityPermissionResponse;
+    type Delivery = crate::transport::PlainResponseDelivery;
+    fn method() -> &'static crate::skir_client::Method<Self::Request, Self::Response> {
+        crate::skirout::base::access::v1::permission::get_entity_permission_method()
+    }
+}
+impl crate::transport::OutboundRequestRoute for ServicesPermissionResolveRoute {
+    fn subject(_scope: &Self::Scope) -> String {
+        String::from("auth.permissions.typewriter-services")
+    }
+}
+pub struct ServiceHeartbeatRoute;
+impl crate::transport::EventRoute for ServiceHeartbeatRoute {
+    type Scope = crate::transport::ServiceScope;
+    type Event = crate::skirout::base::service::v1::lifecycle::ServiceHeartbeatNotification;
+    fn serializer() -> crate::skir_client::Serializer<Self::Event> {
+        <Self::Event>::serializer()
+    }
+}
+pub struct ServiceShutdownRoute;
+impl crate::transport::EventRoute for ServiceShutdownRoute {
+    type Scope = crate::transport::ServiceScope;
+    type Event = crate::skirout::base::service::v1::lifecycle::ServiceShutdownNotification;
+    fn serializer() -> crate::skir_client::Serializer<Self::Event> {
+        <Self::Event>::serializer()
+    }
+}
+impl crate::transport::OutboundEventRoute for UserOrganizationsWatchRoute {
+    type Scope = crate::transport::UserScope;
+    type Event = crate::skirout::base::organization::v1::organization::UserOrganizationsChanged;
+    fn serializer() -> crate::skir_client::Serializer<Self::Event> {
+        <Self::Event>::serializer()
+    }
+    fn subject(scope: &Self::Scope) -> String {
+        let crate::transport::UserScope { user } = scope;
+        format!("typewriter.to.user.{user}.organizations.changed")
+    }
+}
+impl UserOrganizationsWatchRoute {
+    pub fn delivery(scope: &crate::transport::UserScope) -> crate::transport::EventDelivery<Self> {
+        crate::transport::EventDelivery::new(scope)
+    }
+}
+impl crate::transport::PersistentEventRoute for UserOrganizationsWatchRoute {
+    fn stream() -> &'static str {
+        "TYPEWRITER_MEMBERSHIP"
+    }
+}
+impl crate::transport::OutboundEventRoute for UserJoinRequestsWatchRoute {
+    type Scope = crate::transport::UserScope;
+    type Event = crate::skirout::base::organization::v1::join_request::UserJoinRequestsChanged;
+    fn serializer() -> crate::skir_client::Serializer<Self::Event> {
+        <Self::Event>::serializer()
+    }
+    fn subject(scope: &Self::Scope) -> String {
+        let crate::transport::UserScope { user } = scope;
+        format!("typewriter.to.user.{user}.join_requests.changed")
+    }
+}
+impl UserJoinRequestsWatchRoute {
+    pub fn delivery(scope: &crate::transport::UserScope) -> crate::transport::EventDelivery<Self> {
+        crate::transport::EventDelivery::new(scope)
+    }
+}
+impl crate::transport::PersistentEventRoute for UserJoinRequestsWatchRoute {
+    fn stream() -> &'static str {
+        "TYPEWRITER_MEMBERSHIP"
+    }
+}
+impl crate::transport::OutboundEventRoute for OrganizationMembersWatchRoute {
+    type Scope = crate::transport::OrganizationScope;
+    type Event = crate::skirout::base::organization::v1::member::OrganizationMembersChanged;
+    fn serializer() -> crate::skir_client::Serializer<Self::Event> {
+        <Self::Event>::serializer()
+    }
+    fn subject(scope: &Self::Scope) -> String {
+        let crate::transport::OrganizationScope { organization } = scope;
+        format!("typewriter.to.organization.{organization}.members.changed")
+    }
+}
+impl OrganizationMembersWatchRoute {
+    pub fn delivery(
+        scope: &crate::transport::OrganizationScope,
+    ) -> crate::transport::EventDelivery<Self> {
+        crate::transport::EventDelivery::new(scope)
+    }
+}
+impl crate::transport::PersistentEventRoute for OrganizationMembersWatchRoute {
+    fn stream() -> &'static str {
+        "TYPEWRITER_MEMBERSHIP"
+    }
+}
+impl crate::transport::OutboundEventRoute for OrganizationJoinRequestsWatchRoute {
+    type Scope = crate::transport::OrganizationScope;
+    type Event =
+        crate::skirout::base::organization::v1::join_request::OrganizationJoinRequestsChanged;
+    fn serializer() -> crate::skir_client::Serializer<Self::Event> {
+        <Self::Event>::serializer()
+    }
+    fn subject(scope: &Self::Scope) -> String {
+        let crate::transport::OrganizationScope { organization } = scope;
+        format!("typewriter.to.organization.{organization}.join_requests.changed")
+    }
+}
+impl OrganizationJoinRequestsWatchRoute {
+    pub fn delivery(
+        scope: &crate::transport::OrganizationScope,
+    ) -> crate::transport::EventDelivery<Self> {
+        crate::transport::EventDelivery::new(scope)
+    }
+}
+impl crate::transport::PersistentEventRoute for OrganizationJoinRequestsWatchRoute {
+    fn stream() -> &'static str {
+        "TYPEWRITER_MEMBERSHIP"
+    }
+}
+impl crate::transport::OutboundEventRoute for OrganizationJoinCodesWatchRoute {
+    type Scope = crate::transport::OrganizationScope;
+    type Event = crate::skirout::base::organization::v1::join_codes::OrganizationJoinCodesChanged;
+    fn serializer() -> crate::skir_client::Serializer<Self::Event> {
+        <Self::Event>::serializer()
+    }
+    fn subject(scope: &Self::Scope) -> String {
+        let crate::transport::OrganizationScope { organization } = scope;
+        format!("typewriter.to.organization.{organization}.join_codes.changed")
+    }
+}
+impl OrganizationJoinCodesWatchRoute {
+    pub fn delivery(
+        scope: &crate::transport::OrganizationScope,
+    ) -> crate::transport::EventDelivery<Self> {
+        crate::transport::EventDelivery::new(scope)
+    }
+}
+impl crate::transport::PersistentEventRoute for OrganizationJoinCodesWatchRoute {
+    fn stream() -> &'static str {
+        "TYPEWRITER_MEMBERSHIP"
+    }
+}
+impl crate::transport::OutboundEventRoute for ServiceBindingQueryRoute {
+    type Scope = crate::transport::ServiceScope;
+    type Event = crate::skirout::base::service::v1::registration::ServiceBoundNotification;
+    fn serializer() -> crate::skir_client::Serializer<Self::Event> {
+        <Self::Event>::serializer()
+    }
+    fn subject(scope: &Self::Scope) -> String {
+        let crate::transport::ServiceScope { service } = scope;
+        format!("typewriter.to.service.{service}.registration.bound")
+    }
+}
+impl ServiceBindingQueryRoute {
+    pub fn delivery(
+        scope: &crate::transport::ServiceScope,
+    ) -> crate::transport::EventDelivery<Self> {
+        crate::transport::EventDelivery::new(scope)
+    }
+}
+impl crate::transport::TransientEventRoute for ServiceBindingQueryRoute {}
+impl crate::transport::OutboundEventRoute for OrganizationServicesWatchRoute {
+    type Scope = crate::transport::OrganizationScope;
+    type Event = crate::skirout::base::service::v1::organization::OrganizationServicesChanged;
+    fn serializer() -> crate::skir_client::Serializer<Self::Event> {
+        <Self::Event>::serializer()
+    }
+    fn subject(scope: &Self::Scope) -> String {
+        let crate::transport::OrganizationScope { organization } = scope;
+        format!("typewriter.to.organization.{organization}.services.watch")
+    }
+}
+impl OrganizationServicesWatchRoute {
+    pub fn delivery(
+        scope: &crate::transport::OrganizationScope,
+    ) -> crate::transport::EventDelivery<Self> {
+        crate::transport::EventDelivery::new(scope)
+    }
+}
+impl crate::transport::TransientEventRoute for OrganizationServicesWatchRoute {}
+impl crate::transport::OutboundEventRoute for OrganizationTopologyWatchRoute {
+    type Scope = crate::transport::OrganizationScope;
+    type Event = crate::skirout::base::service::v1::topology::OrganizationTopologyChanged;
+    fn serializer() -> crate::skir_client::Serializer<Self::Event> {
+        <Self::Event>::serializer()
+    }
+    fn subject(scope: &Self::Scope) -> String {
+        let crate::transport::OrganizationScope { organization } = scope;
+        format!("typewriter.to.organization.{organization}.topology.watch")
+    }
+}
+impl OrganizationTopologyWatchRoute {
+    pub fn delivery(
+        scope: &crate::transport::OrganizationScope,
+    ) -> crate::transport::EventDelivery<Self> {
+        crate::transport::EventDelivery::new(scope)
+    }
+}
+impl crate::transport::TransientEventRoute for OrganizationTopologyWatchRoute {}
+impl crate::transport::OutboundEventRoute for HostExecutionWatchRoute {
+    type Scope = crate::transport::ServiceScope;
+    type Event = crate::skirout::base::service::v1::topology::WatchHostExecutionResponse;
+    fn serializer() -> crate::skir_client::Serializer<Self::Event> {
+        <Self::Event>::serializer()
+    }
+    fn subject(scope: &Self::Scope) -> String {
+        let crate::transport::ServiceScope { service } = scope;
+        format!("typewriter.to.service.{service}.execution.watch")
+    }
+}
+impl HostExecutionWatchRoute {
+    pub fn delivery(
+        scope: &crate::transport::ServiceScope,
+    ) -> crate::transport::EventDelivery<Self> {
+        crate::transport::EventDelivery::new(scope)
+    }
+}
+impl crate::transport::TransientEventRoute for HostExecutionWatchRoute {}
+/// Typed dispatch of every message the `user-organization` component receives.
+pub mod user_organization {
+    use crate::otel_wasi::Error;
+    use crate::skirout::base::organization::v1::organization::CreateOrganizationRequest;
+    use crate::skirout::base::organization::v1::organization::CreateOrganizationResponse;
+    use crate::skirout::base::organization::v1::user::CancelUserJoinRequestRequest;
+    use crate::skirout::base::organization::v1::user::CancelUserJoinRequestResponse;
+    use crate::skirout::base::organization::v1::user::SubmitUserJoinRequestRequest;
+    use crate::skirout::base::organization::v1::user::SubmitUserJoinRequestResponse;
+    use crate::skirout::base::organization::v1::user::WatchUserJoinRequestsRequest;
+    use crate::skirout::base::organization::v1::user::WatchUserJoinRequestsResponse;
+    use crate::skirout::base::organization::v1::user::WatchUserOrganizationsRequest;
+    use crate::skirout::base::organization::v1::user::WatchUserOrganizationsResponse;
+    use crate::transport::UserScope;
+    use crate::transport::serve_request;
+    use crate::transport::unmatched;
+    use crate::wasmcloud::messaging::types::NatsMessage;
+
+    /// The subjects the component subscribes to, one per subject the dispatcher matches.
+    pub const SUBSCRIPTIONS: &[&str] = &[
+        "typewriter.from.user.*.organization.create",
+        "typewriter.from.user.*.organization.watch",
+        "typewriter.from.user.*.organization.join_requests.watch",
+        "typewriter.from.user.*.organization.join_requests.request",
+        "typewriter.from.user.*.organization.join_requests.cancel",
+    ];
+
+    /// One handler per route the component serves, named after the route.
+    pub struct Handlers<
+        UserOrganizationCreate,
+        UserOrganizationsWatch,
+        UserJoinRequestsWatch,
+        UserJoinRequestSubmit,
+        UserJoinRequestCancel,
+    > {
+        pub user_organization_create: UserOrganizationCreate,
+        pub user_organizations_watch: UserOrganizationsWatch,
+        pub user_join_requests_watch: UserJoinRequestsWatch,
+        pub user_join_request_submit: UserJoinRequestSubmit,
+        pub user_join_request_cancel: UserJoinRequestCancel,
+    }
+
+    /// Serves one received message on the route its subject matches. Any other subject fails
+    /// with `transport-unmatched-subject`.
+    #[allow(
+        clippy::type_complexity,
+        reason = "one type parameter per served route"
+    )]
+    pub async fn dispatch<
+        UserOrganizationCreate,
+        UserOrganizationsWatch,
+        UserJoinRequestsWatch,
+        UserJoinRequestSubmit,
+        UserJoinRequestCancel,
+    >(
+        msg: NatsMessage,
+        handlers: Handlers<
+            UserOrganizationCreate,
+            UserOrganizationsWatch,
+            UserJoinRequestsWatch,
+            UserJoinRequestSubmit,
+            UserJoinRequestCancel,
+        >,
+    ) -> Result<(), Error>
+    where
+        UserOrganizationCreate: AsyncFnOnce(
+            UserScope,
+            CreateOrganizationRequest,
+        ) -> Result<CreateOrganizationResponse, Error>,
+        UserOrganizationsWatch: AsyncFnOnce(
+            UserScope,
+            WatchUserOrganizationsRequest,
+        )
+            -> Result<WatchUserOrganizationsResponse, Error>,
+        UserJoinRequestsWatch: AsyncFnOnce(
+            UserScope,
+            WatchUserJoinRequestsRequest,
+        ) -> Result<WatchUserJoinRequestsResponse, Error>,
+        UserJoinRequestSubmit: AsyncFnOnce(
+            UserScope,
+            SubmitUserJoinRequestRequest,
+        ) -> Result<SubmitUserJoinRequestResponse, Error>,
+        UserJoinRequestCancel: AsyncFnOnce(
+            UserScope,
+            CancelUserJoinRequestRequest,
+        ) -> Result<CancelUserJoinRequestResponse, Error>,
+    {
+        let subject = msg.subject.clone();
+        match subject.split('.').collect::<Vec<_>>().as_slice() {
+            ["typewriter", "from", "user", user, "organization", "create"] => {
+                let scope = UserScope::from_tokens(user);
+                serve_request::<super::UserOrganizationCreateRoute>(
+                    msg,
+                    scope,
+                    handlers.user_organization_create,
+                )
+                .await
+            }
+            ["typewriter", "from", "user", user, "organization", "watch"] => {
+                let scope = UserScope::from_tokens(user);
+                serve_request::<super::UserOrganizationsWatchRoute>(
+                    msg,
+                    scope,
+                    handlers.user_organizations_watch,
+                )
+                .await
+            }
             [
                 "typewriter",
                 "from",
@@ -1090,25 +1400,15 @@ impl RequestRoute for UserJoinRequestsWatchRoute {
                 "organization",
                 "join_requests",
                 "watch",
-            ] => Ok(Some(UserScope {
-                user: SubjectToken::try_from(*user)?,
-            })),
-            _ => Ok(None),
-        }
-    }
-}
-pub struct UserJoinRequestSubmitRoute;
-impl RequestRoute for UserJoinRequestSubmitRoute {
-    type Scope = UserScope;
-    type Request = crate::skirout::base::organization::v1::user::SubmitUserJoinRequestRequest;
-    type Response = crate::skirout::base::organization::v1::user::SubmitUserJoinRequestResponse;
-    type Delivery = DomainResponseDelivery;
-    fn method() -> &'static crate::skir_client::Method<Self::Request, Self::Response> {
-        crate::skirout::base::organization::v1::user::submit_user_join_request_method()
-    }
-    fn scope(subject: &str) -> Result<Option<Self::Scope>, crate::otel_wasi::Error> {
-        let parts: Vec<_> = subject.split('.').collect();
-        match parts.as_slice() {
+            ] => {
+                let scope = UserScope::from_tokens(user);
+                serve_request::<super::UserJoinRequestsWatchRoute>(
+                    msg,
+                    scope,
+                    handlers.user_join_requests_watch,
+                )
+                .await
+            }
             [
                 "typewriter",
                 "from",
@@ -1117,25 +1417,15 @@ impl RequestRoute for UserJoinRequestSubmitRoute {
                 "organization",
                 "join_requests",
                 "request",
-            ] => Ok(Some(UserScope {
-                user: SubjectToken::try_from(*user)?,
-            })),
-            _ => Ok(None),
-        }
-    }
-}
-pub struct UserJoinRequestCancelRoute;
-impl RequestRoute for UserJoinRequestCancelRoute {
-    type Scope = UserScope;
-    type Request = crate::skirout::base::organization::v1::user::CancelUserJoinRequestRequest;
-    type Response = crate::skirout::base::organization::v1::user::CancelUserJoinRequestResponse;
-    type Delivery = DomainResponseDelivery;
-    fn method() -> &'static crate::skir_client::Method<Self::Request, Self::Response> {
-        crate::skirout::base::organization::v1::user::cancel_user_join_request_method()
-    }
-    fn scope(subject: &str) -> Result<Option<Self::Scope>, crate::otel_wasi::Error> {
-        let parts: Vec<_> = subject.split('.').collect();
-        match parts.as_slice() {
+            ] => {
+                let scope = UserScope::from_tokens(user);
+                serve_request::<super::UserJoinRequestSubmitRoute>(
+                    msg,
+                    scope,
+                    handlers.user_join_request_submit,
+                )
+                .await
+            }
             [
                 "typewriter",
                 "from",
@@ -1144,26 +1434,160 @@ impl RequestRoute for UserJoinRequestCancelRoute {
                 "organization",
                 "join_requests",
                 "cancel",
-            ] => Ok(Some(UserScope {
-                user: SubjectToken::try_from(*user)?,
-            })),
-            _ => Ok(None),
+            ] => {
+                let scope = UserScope::from_tokens(user);
+                serve_request::<super::UserJoinRequestCancelRoute>(
+                    msg,
+                    scope,
+                    handlers.user_join_request_cancel,
+                )
+                .await
+            }
+            _ => Err(unmatched(&msg)),
         }
     }
 }
-pub struct OrganizationMembersWatchRoute;
-impl RequestRoute for OrganizationMembersWatchRoute {
-    type Scope = OrganizationActorScope;
-    type Request = crate::skirout::base::organization::v1::member::WatchOrganizationMembersRequest;
-    type Response =
-        crate::skirout::base::organization::v1::member::WatchOrganizationMembersResponse;
-    type Delivery = DomainResponseDelivery;
-    fn method() -> &'static crate::skir_client::Method<Self::Request, Self::Response> {
-        crate::skirout::base::organization::v1::member::watch_organization_members_method()
+/// Typed dispatch of every message the `organization-members` component receives.
+pub mod organization_members {
+    use crate::otel_wasi::Error;
+    use crate::skirout::base::organization::v1::join_codes::GenerateOrganizationJoinCodeRequest;
+    use crate::skirout::base::organization::v1::join_codes::GenerateOrganizationJoinCodeResponse;
+    use crate::skirout::base::organization::v1::join_codes::RevokeOrganizationJoinCodeRequest;
+    use crate::skirout::base::organization::v1::join_codes::RevokeOrganizationJoinCodeResponse;
+    use crate::skirout::base::organization::v1::join_codes::WatchOrganizationJoinCodesRequest;
+    use crate::skirout::base::organization::v1::join_codes::WatchOrganizationJoinCodesResponse;
+    use crate::skirout::base::organization::v1::join_request::ApproveOrganizationJoinRequestsRequest;
+    use crate::skirout::base::organization::v1::join_request::ApproveOrganizationJoinRequestsResponse;
+    use crate::skirout::base::organization::v1::join_request::DeclineOrganizationJoinRequestRequest;
+    use crate::skirout::base::organization::v1::join_request::DeclineOrganizationJoinRequestResponse;
+    use crate::skirout::base::organization::v1::join_request::WatchOrganizationJoinRequestsRequest;
+    use crate::skirout::base::organization::v1::join_request::WatchOrganizationJoinRequestsResponse;
+    use crate::skirout::base::organization::v1::member::RemoveOrganizationMemberRequest;
+    use crate::skirout::base::organization::v1::member::RemoveOrganizationMemberResponse;
+    use crate::skirout::base::organization::v1::member::UpdateOrganizationMemberRolesRequest;
+    use crate::skirout::base::organization::v1::member::UpdateOrganizationMemberRolesResponse;
+    use crate::skirout::base::organization::v1::member::WatchOrganizationMembersRequest;
+    use crate::skirout::base::organization::v1::member::WatchOrganizationMembersResponse;
+    use crate::transport::OrganizationActorScope;
+    use crate::transport::serve_request;
+    use crate::transport::unmatched;
+    use crate::wasmcloud::messaging::types::NatsMessage;
+
+    /// The subjects the component subscribes to, one per subject the dispatcher matches.
+    pub const SUBSCRIPTIONS: &[&str] = &[
+        "typewriter.from.user.*.organization.*.members.watch",
+        "typewriter.from.user.*.organization.*.members.update",
+        "typewriter.from.user.*.organization.*.members.remove",
+        "typewriter.from.user.*.organization.*.members.join_requests.watch",
+        "typewriter.from.user.*.organization.*.members.join_requests.approve",
+        "typewriter.from.user.*.organization.*.members.join_requests.decline",
+        "typewriter.from.user.*.organization.*.members.join_codes.watch",
+        "typewriter.from.user.*.organization.*.members.join_codes.generate",
+        "typewriter.from.user.*.organization.*.members.join_codes.revoke",
+    ];
+
+    /// One handler per route the component serves, named after the route.
+    pub struct Handlers<
+        OrganizationMembersWatch,
+        OrganizationMembersUpdate,
+        OrganizationMemberRemove,
+        OrganizationJoinRequestsWatch,
+        OrganizationJoinRequestsApprove,
+        OrganizationJoinRequestDecline,
+        OrganizationJoinCodesWatch,
+        OrganizationJoinCodeGenerate,
+        OrganizationJoinCodeRevoke,
+    > {
+        pub organization_members_watch: OrganizationMembersWatch,
+        pub organization_members_update: OrganizationMembersUpdate,
+        pub organization_member_remove: OrganizationMemberRemove,
+        pub organization_join_requests_watch: OrganizationJoinRequestsWatch,
+        pub organization_join_requests_approve: OrganizationJoinRequestsApprove,
+        pub organization_join_request_decline: OrganizationJoinRequestDecline,
+        pub organization_join_codes_watch: OrganizationJoinCodesWatch,
+        pub organization_join_code_generate: OrganizationJoinCodeGenerate,
+        pub organization_join_code_revoke: OrganizationJoinCodeRevoke,
     }
-    fn scope(subject: &str) -> Result<Option<Self::Scope>, crate::otel_wasi::Error> {
-        let parts: Vec<_> = subject.split('.').collect();
-        match parts.as_slice() {
+
+    /// Serves one received message on the route its subject matches. Any other subject fails
+    /// with `transport-unmatched-subject`.
+    #[allow(
+        clippy::type_complexity,
+        reason = "one type parameter per served route"
+    )]
+    pub async fn dispatch<
+        OrganizationMembersWatch,
+        OrganizationMembersUpdate,
+        OrganizationMemberRemove,
+        OrganizationJoinRequestsWatch,
+        OrganizationJoinRequestsApprove,
+        OrganizationJoinRequestDecline,
+        OrganizationJoinCodesWatch,
+        OrganizationJoinCodeGenerate,
+        OrganizationJoinCodeRevoke,
+    >(
+        msg: NatsMessage,
+        handlers: Handlers<
+            OrganizationMembersWatch,
+            OrganizationMembersUpdate,
+            OrganizationMemberRemove,
+            OrganizationJoinRequestsWatch,
+            OrganizationJoinRequestsApprove,
+            OrganizationJoinRequestDecline,
+            OrganizationJoinCodesWatch,
+            OrganizationJoinCodeGenerate,
+            OrganizationJoinCodeRevoke,
+        >,
+    ) -> Result<(), Error>
+    where
+        OrganizationMembersWatch: AsyncFnOnce(
+            OrganizationActorScope,
+            WatchOrganizationMembersRequest,
+        )
+            -> Result<WatchOrganizationMembersResponse, Error>,
+        OrganizationMembersUpdate:
+            AsyncFnOnce(
+                OrganizationActorScope,
+                UpdateOrganizationMemberRolesRequest,
+            ) -> Result<UpdateOrganizationMemberRolesResponse, Error>,
+        OrganizationMemberRemove: AsyncFnOnce(
+            OrganizationActorScope,
+            RemoveOrganizationMemberRequest,
+        )
+            -> Result<RemoveOrganizationMemberResponse, Error>,
+        OrganizationJoinRequestsWatch:
+            AsyncFnOnce(
+                OrganizationActorScope,
+                WatchOrganizationJoinRequestsRequest,
+            ) -> Result<WatchOrganizationJoinRequestsResponse, Error>,
+        OrganizationJoinRequestsApprove:
+            AsyncFnOnce(
+                OrganizationActorScope,
+                ApproveOrganizationJoinRequestsRequest,
+            ) -> Result<ApproveOrganizationJoinRequestsResponse, Error>,
+        OrganizationJoinRequestDecline:
+            AsyncFnOnce(
+                OrganizationActorScope,
+                DeclineOrganizationJoinRequestRequest,
+            ) -> Result<DeclineOrganizationJoinRequestResponse, Error>,
+        OrganizationJoinCodesWatch:
+            AsyncFnOnce(
+                OrganizationActorScope,
+                WatchOrganizationJoinCodesRequest,
+            ) -> Result<WatchOrganizationJoinCodesResponse, Error>,
+        OrganizationJoinCodeGenerate:
+            AsyncFnOnce(
+                OrganizationActorScope,
+                GenerateOrganizationJoinCodeRequest,
+            ) -> Result<GenerateOrganizationJoinCodeResponse, Error>,
+        OrganizationJoinCodeRevoke:
+            AsyncFnOnce(
+                OrganizationActorScope,
+                RevokeOrganizationJoinCodeRequest,
+            ) -> Result<RevokeOrganizationJoinCodeResponse, Error>,
+    {
+        let subject = msg.subject.clone();
+        match subject.split('.').collect::<Vec<_>>().as_slice() {
             [
                 "typewriter",
                 "from",
@@ -1173,28 +1597,15 @@ impl RequestRoute for OrganizationMembersWatchRoute {
                 organization,
                 "members",
                 "watch",
-            ] => Ok(Some(OrganizationActorScope {
-                organization: SubjectToken::try_from(*organization)?,
-                user: SubjectToken::try_from(*user)?,
-            })),
-            _ => Ok(None),
-        }
-    }
-}
-pub struct OrganizationMembersUpdateRoute;
-impl RequestRoute for OrganizationMembersUpdateRoute {
-    type Scope = OrganizationActorScope;
-    type Request =
-        crate::skirout::base::organization::v1::member::UpdateOrganizationMemberRolesRequest;
-    type Response =
-        crate::skirout::base::organization::v1::member::UpdateOrganizationMemberRolesResponse;
-    type Delivery = DomainResponseDelivery;
-    fn method() -> &'static crate::skir_client::Method<Self::Request, Self::Response> {
-        crate::skirout::base::organization::v1::member::update_organization_member_roles_method()
-    }
-    fn scope(subject: &str) -> Result<Option<Self::Scope>, crate::otel_wasi::Error> {
-        let parts: Vec<_> = subject.split('.').collect();
-        match parts.as_slice() {
+            ] => {
+                let scope = OrganizationActorScope::from_tokens(user, organization);
+                serve_request::<super::OrganizationMembersWatchRoute>(
+                    msg,
+                    scope,
+                    handlers.organization_members_watch,
+                )
+                .await
+            }
             [
                 "typewriter",
                 "from",
@@ -1204,27 +1615,15 @@ impl RequestRoute for OrganizationMembersUpdateRoute {
                 organization,
                 "members",
                 "update",
-            ] => Ok(Some(OrganizationActorScope {
-                organization: SubjectToken::try_from(*organization)?,
-                user: SubjectToken::try_from(*user)?,
-            })),
-            _ => Ok(None),
-        }
-    }
-}
-pub struct OrganizationMemberRemoveRoute;
-impl RequestRoute for OrganizationMemberRemoveRoute {
-    type Scope = OrganizationActorScope;
-    type Request = crate::skirout::base::organization::v1::member::RemoveOrganizationMemberRequest;
-    type Response =
-        crate::skirout::base::organization::v1::member::RemoveOrganizationMemberResponse;
-    type Delivery = DomainResponseDelivery;
-    fn method() -> &'static crate::skir_client::Method<Self::Request, Self::Response> {
-        crate::skirout::base::organization::v1::member::remove_organization_member_method()
-    }
-    fn scope(subject: &str) -> Result<Option<Self::Scope>, crate::otel_wasi::Error> {
-        let parts: Vec<_> = subject.split('.').collect();
-        match parts.as_slice() {
+            ] => {
+                let scope = OrganizationActorScope::from_tokens(user, organization);
+                serve_request::<super::OrganizationMembersUpdateRoute>(
+                    msg,
+                    scope,
+                    handlers.organization_members_update,
+                )
+                .await
+            }
             [
                 "typewriter",
                 "from",
@@ -1234,28 +1633,15 @@ impl RequestRoute for OrganizationMemberRemoveRoute {
                 organization,
                 "members",
                 "remove",
-            ] => Ok(Some(OrganizationActorScope {
-                organization: SubjectToken::try_from(*organization)?,
-                user: SubjectToken::try_from(*user)?,
-            })),
-            _ => Ok(None),
-        }
-    }
-}
-pub struct OrganizationJoinRequestsWatchRoute;
-impl RequestRoute for OrganizationJoinRequestsWatchRoute {
-    type Scope = OrganizationActorScope;
-    type Request =
-        crate::skirout::base::organization::v1::join_request::WatchOrganizationJoinRequestsRequest;
-    type Response =
-        crate::skirout::base::organization::v1::join_request::WatchOrganizationJoinRequestsResponse;
-    type Delivery = DomainResponseDelivery;
-    fn method() -> &'static crate::skir_client::Method<Self::Request, Self::Response> {
-        crate::skirout::base::organization::v1::join_request::watch_organization_join_requests_method()
-    }
-    fn scope(subject: &str) -> Result<Option<Self::Scope>, crate::otel_wasi::Error> {
-        let parts: Vec<_> = subject.split('.').collect();
-        match parts.as_slice() {
+            ] => {
+                let scope = OrganizationActorScope::from_tokens(user, organization);
+                serve_request::<super::OrganizationMemberRemoveRoute>(
+                    msg,
+                    scope,
+                    handlers.organization_member_remove,
+                )
+                .await
+            }
             [
                 "typewriter",
                 "from",
@@ -1266,26 +1652,15 @@ impl RequestRoute for OrganizationJoinRequestsWatchRoute {
                 "members",
                 "join_requests",
                 "watch",
-            ] => Ok(Some(OrganizationActorScope {
-                organization: SubjectToken::try_from(*organization)?,
-                user: SubjectToken::try_from(*user)?,
-            })),
-            _ => Ok(None),
-        }
-    }
-}
-pub struct OrganizationJoinRequestsApproveRoute;
-impl RequestRoute for OrganizationJoinRequestsApproveRoute {
-    type Scope = OrganizationActorScope;
-    type Request = crate::skirout::base::organization::v1::join_request::ApproveOrganizationJoinRequestsRequest;
-    type Response = crate::skirout::base::organization::v1::join_request::ApproveOrganizationJoinRequestsResponse;
-    type Delivery = DomainResponseDelivery;
-    fn method() -> &'static crate::skir_client::Method<Self::Request, Self::Response> {
-        crate::skirout::base::organization::v1::join_request::approve_organization_join_requests_method()
-    }
-    fn scope(subject: &str) -> Result<Option<Self::Scope>, crate::otel_wasi::Error> {
-        let parts: Vec<_> = subject.split('.').collect();
-        match parts.as_slice() {
+            ] => {
+                let scope = OrganizationActorScope::from_tokens(user, organization);
+                serve_request::<super::OrganizationJoinRequestsWatchRoute>(
+                    msg,
+                    scope,
+                    handlers.organization_join_requests_watch,
+                )
+                .await
+            }
             [
                 "typewriter",
                 "from",
@@ -1296,27 +1671,15 @@ impl RequestRoute for OrganizationJoinRequestsApproveRoute {
                 "members",
                 "join_requests",
                 "approve",
-            ] => Ok(Some(OrganizationActorScope {
-                organization: SubjectToken::try_from(*organization)?,
-                user: SubjectToken::try_from(*user)?,
-            })),
-            _ => Ok(None),
-        }
-    }
-}
-pub struct OrganizationJoinRequestDeclineRoute;
-impl RequestRoute for OrganizationJoinRequestDeclineRoute {
-    type Scope = OrganizationActorScope;
-    type Request =
-        crate::skirout::base::organization::v1::join_request::DeclineOrganizationJoinRequestRequest;
-    type Response = crate::skirout::base::organization::v1::join_request::DeclineOrganizationJoinRequestResponse;
-    type Delivery = DomainResponseDelivery;
-    fn method() -> &'static crate::skir_client::Method<Self::Request, Self::Response> {
-        crate::skirout::base::organization::v1::join_request::decline_organization_join_request_method()
-    }
-    fn scope(subject: &str) -> Result<Option<Self::Scope>, crate::otel_wasi::Error> {
-        let parts: Vec<_> = subject.split('.').collect();
-        match parts.as_slice() {
+            ] => {
+                let scope = OrganizationActorScope::from_tokens(user, organization);
+                serve_request::<super::OrganizationJoinRequestsApproveRoute>(
+                    msg,
+                    scope,
+                    handlers.organization_join_requests_approve,
+                )
+                .await
+            }
             [
                 "typewriter",
                 "from",
@@ -1327,28 +1690,15 @@ impl RequestRoute for OrganizationJoinRequestDeclineRoute {
                 "members",
                 "join_requests",
                 "decline",
-            ] => Ok(Some(OrganizationActorScope {
-                organization: SubjectToken::try_from(*organization)?,
-                user: SubjectToken::try_from(*user)?,
-            })),
-            _ => Ok(None),
-        }
-    }
-}
-pub struct OrganizationJoinCodesWatchRoute;
-impl RequestRoute for OrganizationJoinCodesWatchRoute {
-    type Scope = OrganizationActorScope;
-    type Request =
-        crate::skirout::base::organization::v1::join_codes::WatchOrganizationJoinCodesRequest;
-    type Response =
-        crate::skirout::base::organization::v1::join_codes::WatchOrganizationJoinCodesResponse;
-    type Delivery = DomainResponseDelivery;
-    fn method() -> &'static crate::skir_client::Method<Self::Request, Self::Response> {
-        crate::skirout::base::organization::v1::join_codes::watch_organization_join_codes_method()
-    }
-    fn scope(subject: &str) -> Result<Option<Self::Scope>, crate::otel_wasi::Error> {
-        let parts: Vec<_> = subject.split('.').collect();
-        match parts.as_slice() {
+            ] => {
+                let scope = OrganizationActorScope::from_tokens(user, organization);
+                serve_request::<super::OrganizationJoinRequestDeclineRoute>(
+                    msg,
+                    scope,
+                    handlers.organization_join_request_decline,
+                )
+                .await
+            }
             [
                 "typewriter",
                 "from",
@@ -1359,28 +1709,15 @@ impl RequestRoute for OrganizationJoinCodesWatchRoute {
                 "members",
                 "join_codes",
                 "watch",
-            ] => Ok(Some(OrganizationActorScope {
-                organization: SubjectToken::try_from(*organization)?,
-                user: SubjectToken::try_from(*user)?,
-            })),
-            _ => Ok(None),
-        }
-    }
-}
-pub struct OrganizationJoinCodeGenerateRoute;
-impl RequestRoute for OrganizationJoinCodeGenerateRoute {
-    type Scope = OrganizationActorScope;
-    type Request =
-        crate::skirout::base::organization::v1::join_codes::GenerateOrganizationJoinCodeRequest;
-    type Response =
-        crate::skirout::base::organization::v1::join_codes::GenerateOrganizationJoinCodeResponse;
-    type Delivery = DomainResponseDelivery;
-    fn method() -> &'static crate::skir_client::Method<Self::Request, Self::Response> {
-        crate::skirout::base::organization::v1::join_codes::generate_organization_join_code_method()
-    }
-    fn scope(subject: &str) -> Result<Option<Self::Scope>, crate::otel_wasi::Error> {
-        let parts: Vec<_> = subject.split('.').collect();
-        match parts.as_slice() {
+            ] => {
+                let scope = OrganizationActorScope::from_tokens(user, organization);
+                serve_request::<super::OrganizationJoinCodesWatchRoute>(
+                    msg,
+                    scope,
+                    handlers.organization_join_codes_watch,
+                )
+                .await
+            }
             [
                 "typewriter",
                 "from",
@@ -1391,28 +1728,15 @@ impl RequestRoute for OrganizationJoinCodeGenerateRoute {
                 "members",
                 "join_codes",
                 "generate",
-            ] => Ok(Some(OrganizationActorScope {
-                organization: SubjectToken::try_from(*organization)?,
-                user: SubjectToken::try_from(*user)?,
-            })),
-            _ => Ok(None),
-        }
-    }
-}
-pub struct OrganizationJoinCodeRevokeRoute;
-impl RequestRoute for OrganizationJoinCodeRevokeRoute {
-    type Scope = OrganizationActorScope;
-    type Request =
-        crate::skirout::base::organization::v1::join_codes::RevokeOrganizationJoinCodeRequest;
-    type Response =
-        crate::skirout::base::organization::v1::join_codes::RevokeOrganizationJoinCodeResponse;
-    type Delivery = DomainResponseDelivery;
-    fn method() -> &'static crate::skir_client::Method<Self::Request, Self::Response> {
-        crate::skirout::base::organization::v1::join_codes::revoke_organization_join_code_method()
-    }
-    fn scope(subject: &str) -> Result<Option<Self::Scope>, crate::otel_wasi::Error> {
-        let parts: Vec<_> = subject.split('.').collect();
-        match parts.as_slice() {
+            ] => {
+                let scope = OrganizationActorScope::from_tokens(user, organization);
+                serve_request::<super::OrganizationJoinCodeGenerateRoute>(
+                    msg,
+                    scope,
+                    handlers.organization_join_code_generate,
+                )
+                .await
+            }
             [
                 "typewriter",
                 "from",
@@ -1423,26 +1747,56 @@ impl RequestRoute for OrganizationJoinCodeRevokeRoute {
                 "members",
                 "join_codes",
                 "revoke",
-            ] => Ok(Some(OrganizationActorScope {
-                organization: SubjectToken::try_from(*organization)?,
-                user: SubjectToken::try_from(*user)?,
-            })),
-            _ => Ok(None),
+            ] => {
+                let scope = OrganizationActorScope::from_tokens(user, organization);
+                serve_request::<super::OrganizationJoinCodeRevokeRoute>(
+                    msg,
+                    scope,
+                    handlers.organization_join_code_revoke,
+                )
+                .await
+            }
+            _ => Err(unmatched(&msg)),
         }
     }
 }
-pub struct OrganizationRolesWatchRoute;
-impl RequestRoute for OrganizationRolesWatchRoute {
-    type Scope = OrganizationActorScope;
-    type Request = crate::skirout::base::organization::v1::role::WatchOrganizationRolesRequest;
-    type Response = crate::skirout::base::organization::v1::role::WatchOrganizationRolesResponse;
-    type Delivery = DomainResponseDelivery;
-    fn method() -> &'static crate::skir_client::Method<Self::Request, Self::Response> {
-        crate::skirout::base::organization::v1::role::watch_organization_roles_method()
+/// Typed dispatch of every message the `organization-roles` component receives.
+pub mod organization_roles {
+    use crate::otel_wasi::Error;
+    use crate::skirout::base::organization::v1::role::WatchOrganizationRolesRequest;
+    use crate::skirout::base::organization::v1::role::WatchOrganizationRolesResponse;
+    use crate::transport::OrganizationActorScope;
+    use crate::transport::serve_request;
+    use crate::transport::unmatched;
+    use crate::wasmcloud::messaging::types::NatsMessage;
+
+    /// The subjects the component subscribes to, one per subject the dispatcher matches.
+    pub const SUBSCRIPTIONS: &[&str] = &["typewriter.from.user.*.organization.*.roles.watch"];
+
+    /// One handler per route the component serves, named after the route.
+    pub struct Handlers<OrganizationRolesWatch> {
+        pub organization_roles_watch: OrganizationRolesWatch,
     }
-    fn scope(subject: &str) -> Result<Option<Self::Scope>, crate::otel_wasi::Error> {
-        let parts: Vec<_> = subject.split('.').collect();
-        match parts.as_slice() {
+
+    /// Serves one received message on the route its subject matches. Any other subject fails
+    /// with `transport-unmatched-subject`.
+    #[allow(
+        clippy::type_complexity,
+        reason = "one type parameter per served route"
+    )]
+    pub async fn dispatch<OrganizationRolesWatch>(
+        msg: NatsMessage,
+        handlers: Handlers<OrganizationRolesWatch>,
+    ) -> Result<(), Error>
+    where
+        OrganizationRolesWatch: AsyncFnOnce(
+            OrganizationActorScope,
+            WatchOrganizationRolesRequest,
+        )
+            -> Result<WatchOrganizationRolesResponse, Error>,
+    {
+        let subject = msg.subject.clone();
+        match subject.split('.').collect::<Vec<_>>().as_slice() {
             [
                 "typewriter",
                 "from",
@@ -1452,56 +1806,228 @@ impl RequestRoute for OrganizationRolesWatchRoute {
                 organization,
                 "roles",
                 "watch",
-            ] => Ok(Some(OrganizationActorScope {
-                organization: SubjectToken::try_from(*organization)?,
-                user: SubjectToken::try_from(*user)?,
-            })),
-            _ => Ok(None),
-        }
-    }
-}
-pub struct ServiceBindingQueryRoute;
-impl RequestRoute for ServiceBindingQueryRoute {
-    type Scope = ServiceScope;
-    type Request = crate::skirout::base::service::v1::status::QueryServiceBindingRequest;
-    type Response = crate::skirout::base::service::v1::status::QueryServiceBindingResponse;
-    type Delivery = DomainResponseDelivery;
-    fn method() -> &'static crate::skir_client::Method<Self::Request, Self::Response> {
-        crate::skirout::base::service::v1::status::query_service_binding_method()
-    }
-    fn scope(subject: &str) -> Result<Option<Self::Scope>, crate::otel_wasi::Error> {
-        let parts: Vec<_> = subject.split('.').collect();
-        match parts.as_slice() {
-            ["typewriter", "from", "service", service, "binding", "query"] => {
-                Ok(Some(ServiceScope {
-                    service: SubjectToken::try_from(*service)?,
-                }))
+            ] => {
+                let scope = OrganizationActorScope::from_tokens(user, organization);
+                serve_request::<super::OrganizationRolesWatchRoute>(
+                    msg,
+                    scope,
+                    handlers.organization_roles_watch,
+                )
+                .await
             }
-            ["service", service, "binding", "query"] => Ok(Some(ServiceScope {
-                service: SubjectToken::try_from(*service)?,
-            })),
-            _ => Ok(None),
+            _ => Err(unmatched(&msg)),
         }
     }
 }
-impl OutboundRequestRoute for ServiceBindingQueryRoute {
-    fn subject(scope: &Self::Scope) -> String {
-        let ServiceScope { service } = scope;
-        format!("service.{service}.binding.query")
+/// Typed dispatch of every message the `service-registration` component receives.
+pub mod service_registration {
+    use crate::otel_wasi::Error;
+    use crate::skirout::base::service::v1::lifecycle::ServiceHeartbeatNotification;
+    use crate::skirout::base::service::v1::lifecycle::ServiceShutdownNotification;
+    use crate::skirout::base::service::v1::organization::UpdateOrganizationServiceRequest;
+    use crate::skirout::base::service::v1::organization::UpdateOrganizationServiceResponse;
+    use crate::skirout::base::service::v1::organization::WatchOrganizationServicesRequest;
+    use crate::skirout::base::service::v1::organization::WatchOrganizationServicesResponse;
+    use crate::skirout::base::service::v1::registration::BindServiceRequest;
+    use crate::skirout::base::service::v1::registration::BindServiceResponse;
+    use crate::skirout::base::service::v1::registration::UnbindServiceRequest;
+    use crate::skirout::base::service::v1::registration::UnbindServiceResponse;
+    use crate::skirout::base::service::v1::status::EnsureRegistrationLeaseRequest;
+    use crate::skirout::base::service::v1::status::EnsureRegistrationLeaseResponse;
+    use crate::skirout::base::service::v1::status::QueryServiceBindingRequest;
+    use crate::skirout::base::service::v1::status::QueryServiceBindingResponse;
+    use crate::skirout::base::service::v1::topology::ConfigureServiceHostRequest;
+    use crate::skirout::base::service::v1::topology::ConfigureServiceHostResponse;
+    use crate::skirout::base::service::v1::topology::GetServiceMessagingScopeRequest;
+    use crate::skirout::base::service::v1::topology::GetServiceMessagingScopeResponse;
+    use crate::skirout::base::service::v1::topology::RegisterServiceHostRequest;
+    use crate::skirout::base::service::v1::topology::RegisterServiceHostResponse;
+    use crate::skirout::base::service::v1::topology::ReportHostExecutionRequest;
+    use crate::skirout::base::service::v1::topology::ReportHostExecutionResponse;
+    use crate::skirout::base::service::v1::topology::WatchHostExecutionRequest;
+    use crate::skirout::base::service::v1::topology::WatchHostExecutionResponse;
+    use crate::skirout::base::service::v1::topology::WatchOrganizationTopologyRequest;
+    use crate::skirout::base::service::v1::topology::WatchOrganizationTopologyResponse;
+    use crate::transport::OrganizationActorScope;
+    use crate::transport::ServiceScope;
+    use crate::transport::serve_event;
+    use crate::transport::serve_request;
+    use crate::transport::unmatched;
+    use crate::wasmcloud::messaging::types::NatsMessage;
+
+    /// The subjects the component subscribes to, one per subject the dispatcher matches.
+    pub const SUBSCRIPTIONS: &[&str] = &[
+        "typewriter.from.service.*.binding.query",
+        "service.*.binding.query",
+        "typewriter.from.service.*.registration.ensure",
+        "typewriter.from.service.*.messaging.scope",
+        "service.*.messaging.scope",
+        "typewriter.from.user.*.organization.*.services.bind",
+        "typewriter.from.user.*.organization.*.services.watch",
+        "typewriter.from.user.*.organization.*.services.update",
+        "typewriter.from.user.*.organization.*.services.unbind",
+        "typewriter.from.user.*.organization.*.topology.configure",
+        "typewriter.from.user.*.organization.*.topology.watch",
+        "typewriter.from.service.*.execution.register",
+        "typewriter.from.service.*.execution.watch",
+        "typewriter.from.service.*.execution.report",
+        "typewriter.from.service.*.heartbeat",
+        "typewriter.from.service.*.shutdown",
+    ];
+
+    /// One handler per route the component serves, named after the route.
+    pub struct Handlers<
+        ServiceBindingQuery,
+        RegistrationLeaseEnsure,
+        ServiceMessagingScope,
+        ServiceBind,
+        OrganizationServicesWatch,
+        OrganizationServiceUpdate,
+        ServiceUnbind,
+        ServiceTopologyConfigure,
+        OrganizationTopologyWatch,
+        ServiceHostRegister,
+        HostExecutionWatch,
+        HostExecutionReport,
+        ServiceHeartbeat,
+        ServiceShutdown,
+    > {
+        pub service_binding_query: ServiceBindingQuery,
+        pub registration_lease_ensure: RegistrationLeaseEnsure,
+        pub service_messaging_scope: ServiceMessagingScope,
+        pub service_bind: ServiceBind,
+        pub organization_services_watch: OrganizationServicesWatch,
+        pub organization_service_update: OrganizationServiceUpdate,
+        pub service_unbind: ServiceUnbind,
+        pub service_topology_configure: ServiceTopologyConfigure,
+        pub organization_topology_watch: OrganizationTopologyWatch,
+        pub service_host_register: ServiceHostRegister,
+        pub host_execution_watch: HostExecutionWatch,
+        pub host_execution_report: HostExecutionReport,
+        pub service_heartbeat: ServiceHeartbeat,
+        pub service_shutdown: ServiceShutdown,
     }
-}
-pub struct RegistrationLeaseEnsureRoute;
-impl RequestRoute for RegistrationLeaseEnsureRoute {
-    type Scope = ServiceScope;
-    type Request = crate::skirout::base::service::v1::status::EnsureRegistrationLeaseRequest;
-    type Response = crate::skirout::base::service::v1::status::EnsureRegistrationLeaseResponse;
-    type Delivery = DomainResponseDelivery;
-    fn method() -> &'static crate::skir_client::Method<Self::Request, Self::Response> {
-        crate::skirout::base::service::v1::status::ensure_registration_lease_method()
-    }
-    fn scope(subject: &str) -> Result<Option<Self::Scope>, crate::otel_wasi::Error> {
-        let parts: Vec<_> = subject.split('.').collect();
-        match parts.as_slice() {
+
+    /// Serves one received message on the route its subject matches. Any other subject fails
+    /// with `transport-unmatched-subject`.
+    #[allow(
+        clippy::type_complexity,
+        reason = "one type parameter per served route"
+    )]
+    pub async fn dispatch<
+        ServiceBindingQuery,
+        RegistrationLeaseEnsure,
+        ServiceMessagingScope,
+        ServiceBind,
+        OrganizationServicesWatch,
+        OrganizationServiceUpdate,
+        ServiceUnbind,
+        ServiceTopologyConfigure,
+        OrganizationTopologyWatch,
+        ServiceHostRegister,
+        HostExecutionWatch,
+        HostExecutionReport,
+        ServiceHeartbeat,
+        ServiceShutdown,
+    >(
+        msg: NatsMessage,
+        handlers: Handlers<
+            ServiceBindingQuery,
+            RegistrationLeaseEnsure,
+            ServiceMessagingScope,
+            ServiceBind,
+            OrganizationServicesWatch,
+            OrganizationServiceUpdate,
+            ServiceUnbind,
+            ServiceTopologyConfigure,
+            OrganizationTopologyWatch,
+            ServiceHostRegister,
+            HostExecutionWatch,
+            HostExecutionReport,
+            ServiceHeartbeat,
+            ServiceShutdown,
+        >,
+    ) -> Result<(), Error>
+    where
+        ServiceBindingQuery: AsyncFnOnce(
+            ServiceScope,
+            QueryServiceBindingRequest,
+        ) -> Result<QueryServiceBindingResponse, Error>,
+        RegistrationLeaseEnsure: AsyncFnOnce(
+            ServiceScope,
+            EnsureRegistrationLeaseRequest,
+        )
+            -> Result<EnsureRegistrationLeaseResponse, Error>,
+        ServiceMessagingScope: AsyncFnOnce(
+            ServiceScope,
+            GetServiceMessagingScopeRequest,
+        )
+            -> Result<GetServiceMessagingScopeResponse, Error>,
+        ServiceBind: AsyncFnOnce(
+            OrganizationActorScope,
+            BindServiceRequest,
+        ) -> Result<BindServiceResponse, Error>,
+        OrganizationServicesWatch: AsyncFnOnce(
+            OrganizationActorScope,
+            WatchOrganizationServicesRequest,
+        )
+            -> Result<WatchOrganizationServicesResponse, Error>,
+        OrganizationServiceUpdate: AsyncFnOnce(
+            OrganizationActorScope,
+            UpdateOrganizationServiceRequest,
+        )
+            -> Result<UpdateOrganizationServiceResponse, Error>,
+        ServiceUnbind: AsyncFnOnce(
+            OrganizationActorScope,
+            UnbindServiceRequest,
+        ) -> Result<UnbindServiceResponse, Error>,
+        ServiceTopologyConfigure: AsyncFnOnce(
+            OrganizationActorScope,
+            ConfigureServiceHostRequest,
+        )
+            -> Result<ConfigureServiceHostResponse, Error>,
+        OrganizationTopologyWatch: AsyncFnOnce(
+            OrganizationActorScope,
+            WatchOrganizationTopologyRequest,
+        )
+            -> Result<WatchOrganizationTopologyResponse, Error>,
+        ServiceHostRegister: AsyncFnOnce(
+            ServiceScope,
+            RegisterServiceHostRequest,
+        ) -> Result<RegisterServiceHostResponse, Error>,
+        HostExecutionWatch: AsyncFnOnce(
+            ServiceScope,
+            WatchHostExecutionRequest,
+        ) -> Result<WatchHostExecutionResponse, Error>,
+        HostExecutionReport: AsyncFnOnce(
+            ServiceScope,
+            ReportHostExecutionRequest,
+        ) -> Result<ReportHostExecutionResponse, Error>,
+        ServiceHeartbeat:
+            AsyncFnOnce(ServiceScope, ServiceHeartbeatNotification) -> Result<(), Error>,
+        ServiceShutdown:
+            AsyncFnOnce(ServiceScope, ServiceShutdownNotification) -> Result<(), Error>,
+    {
+        let subject = msg.subject.clone();
+        match subject.split('.').collect::<Vec<_>>().as_slice() {
+            ["typewriter", "from", "service", service, "binding", "query"] => {
+                let scope = ServiceScope::from_tokens(service);
+                serve_request::<super::ServiceBindingQueryRoute>(
+                    msg,
+                    scope,
+                    handlers.service_binding_query,
+                )
+                .await
+            }
+            ["service", service, "binding", "query"] => {
+                let scope = ServiceScope::from_tokens(service);
+                serve_request::<super::ServiceBindingQueryRoute>(
+                    msg,
+                    scope,
+                    handlers.service_binding_query,
+                )
+                .await
+            }
             [
                 "typewriter",
                 "from",
@@ -1509,25 +2035,15 @@ impl RequestRoute for RegistrationLeaseEnsureRoute {
                 service,
                 "registration",
                 "ensure",
-            ] => Ok(Some(ServiceScope {
-                service: SubjectToken::try_from(*service)?,
-            })),
-            _ => Ok(None),
-        }
-    }
-}
-pub struct ServiceMessagingScopeRoute;
-impl RequestRoute for ServiceMessagingScopeRoute {
-    type Scope = ServiceScope;
-    type Request = crate::skirout::base::service::v1::topology::GetServiceMessagingScopeRequest;
-    type Response = crate::skirout::base::service::v1::topology::GetServiceMessagingScopeResponse;
-    type Delivery = DomainResponseDelivery;
-    fn method() -> &'static crate::skir_client::Method<Self::Request, Self::Response> {
-        crate::skirout::base::service::v1::topology::get_service_messaging_scope_method()
-    }
-    fn scope(subject: &str) -> Result<Option<Self::Scope>, crate::otel_wasi::Error> {
-        let parts: Vec<_> = subject.split('.').collect();
-        match parts.as_slice() {
+            ] => {
+                let scope = ServiceScope::from_tokens(service);
+                serve_request::<super::RegistrationLeaseEnsureRoute>(
+                    msg,
+                    scope,
+                    handlers.registration_lease_ensure,
+                )
+                .await
+            }
             [
                 "typewriter",
                 "from",
@@ -1535,34 +2051,24 @@ impl RequestRoute for ServiceMessagingScopeRoute {
                 service,
                 "messaging",
                 "scope",
-            ] => Ok(Some(ServiceScope {
-                service: SubjectToken::try_from(*service)?,
-            })),
-            ["service", service, "messaging", "scope"] => Ok(Some(ServiceScope {
-                service: SubjectToken::try_from(*service)?,
-            })),
-            _ => Ok(None),
-        }
-    }
-}
-impl OutboundRequestRoute for ServiceMessagingScopeRoute {
-    fn subject(scope: &Self::Scope) -> String {
-        let ServiceScope { service } = scope;
-        format!("service.{service}.messaging.scope")
-    }
-}
-pub struct ServiceBindRoute;
-impl RequestRoute for ServiceBindRoute {
-    type Scope = OrganizationActorScope;
-    type Request = crate::skirout::base::service::v1::registration::BindServiceRequest;
-    type Response = crate::skirout::base::service::v1::registration::BindServiceResponse;
-    type Delivery = DomainResponseDelivery;
-    fn method() -> &'static crate::skir_client::Method<Self::Request, Self::Response> {
-        crate::skirout::base::service::v1::registration::bind_service_method()
-    }
-    fn scope(subject: &str) -> Result<Option<Self::Scope>, crate::otel_wasi::Error> {
-        let parts: Vec<_> = subject.split('.').collect();
-        match parts.as_slice() {
+            ] => {
+                let scope = ServiceScope::from_tokens(service);
+                serve_request::<super::ServiceMessagingScopeRoute>(
+                    msg,
+                    scope,
+                    handlers.service_messaging_scope,
+                )
+                .await
+            }
+            ["service", service, "messaging", "scope"] => {
+                let scope = ServiceScope::from_tokens(service);
+                serve_request::<super::ServiceMessagingScopeRoute>(
+                    msg,
+                    scope,
+                    handlers.service_messaging_scope,
+                )
+                .await
+            }
             [
                 "typewriter",
                 "from",
@@ -1572,28 +2078,10 @@ impl RequestRoute for ServiceBindRoute {
                 organization,
                 "services",
                 "bind",
-            ] => Ok(Some(OrganizationActorScope {
-                organization: SubjectToken::try_from(*organization)?,
-                user: SubjectToken::try_from(*user)?,
-            })),
-            _ => Ok(None),
-        }
-    }
-}
-pub struct OrganizationServicesWatchRoute;
-impl RequestRoute for OrganizationServicesWatchRoute {
-    type Scope = OrganizationActorScope;
-    type Request =
-        crate::skirout::base::service::v1::organization::WatchOrganizationServicesRequest;
-    type Response =
-        crate::skirout::base::service::v1::organization::WatchOrganizationServicesResponse;
-    type Delivery = DomainResponseDelivery;
-    fn method() -> &'static crate::skir_client::Method<Self::Request, Self::Response> {
-        crate::skirout::base::service::v1::organization::watch_organization_services_method()
-    }
-    fn scope(subject: &str) -> Result<Option<Self::Scope>, crate::otel_wasi::Error> {
-        let parts: Vec<_> = subject.split('.').collect();
-        match parts.as_slice() {
+            ] => {
+                let scope = OrganizationActorScope::from_tokens(user, organization);
+                serve_request::<super::ServiceBindRoute>(msg, scope, handlers.service_bind).await
+            }
             [
                 "typewriter",
                 "from",
@@ -1603,28 +2091,15 @@ impl RequestRoute for OrganizationServicesWatchRoute {
                 organization,
                 "services",
                 "watch",
-            ] => Ok(Some(OrganizationActorScope {
-                organization: SubjectToken::try_from(*organization)?,
-                user: SubjectToken::try_from(*user)?,
-            })),
-            _ => Ok(None),
-        }
-    }
-}
-pub struct OrganizationServiceUpdateRoute;
-impl RequestRoute for OrganizationServiceUpdateRoute {
-    type Scope = OrganizationActorScope;
-    type Request =
-        crate::skirout::base::service::v1::organization::UpdateOrganizationServiceRequest;
-    type Response =
-        crate::skirout::base::service::v1::organization::UpdateOrganizationServiceResponse;
-    type Delivery = DomainResponseDelivery;
-    fn method() -> &'static crate::skir_client::Method<Self::Request, Self::Response> {
-        crate::skirout::base::service::v1::organization::update_organization_service_method()
-    }
-    fn scope(subject: &str) -> Result<Option<Self::Scope>, crate::otel_wasi::Error> {
-        let parts: Vec<_> = subject.split('.').collect();
-        match parts.as_slice() {
+            ] => {
+                let scope = OrganizationActorScope::from_tokens(user, organization);
+                serve_request::<super::OrganizationServicesWatchRoute>(
+                    msg,
+                    scope,
+                    handlers.organization_services_watch,
+                )
+                .await
+            }
             [
                 "typewriter",
                 "from",
@@ -1634,26 +2109,15 @@ impl RequestRoute for OrganizationServiceUpdateRoute {
                 organization,
                 "services",
                 "update",
-            ] => Ok(Some(OrganizationActorScope {
-                organization: SubjectToken::try_from(*organization)?,
-                user: SubjectToken::try_from(*user)?,
-            })),
-            _ => Ok(None),
-        }
-    }
-}
-pub struct ServiceUnbindRoute;
-impl RequestRoute for ServiceUnbindRoute {
-    type Scope = OrganizationActorScope;
-    type Request = crate::skirout::base::service::v1::registration::UnbindServiceRequest;
-    type Response = crate::skirout::base::service::v1::registration::UnbindServiceResponse;
-    type Delivery = DomainResponseDelivery;
-    fn method() -> &'static crate::skir_client::Method<Self::Request, Self::Response> {
-        crate::skirout::base::service::v1::registration::unbind_service_method()
-    }
-    fn scope(subject: &str) -> Result<Option<Self::Scope>, crate::otel_wasi::Error> {
-        let parts: Vec<_> = subject.split('.').collect();
-        match parts.as_slice() {
+            ] => {
+                let scope = OrganizationActorScope::from_tokens(user, organization);
+                serve_request::<super::OrganizationServiceUpdateRoute>(
+                    msg,
+                    scope,
+                    handlers.organization_service_update,
+                )
+                .await
+            }
             [
                 "typewriter",
                 "from",
@@ -1663,26 +2127,11 @@ impl RequestRoute for ServiceUnbindRoute {
                 organization,
                 "services",
                 "unbind",
-            ] => Ok(Some(OrganizationActorScope {
-                organization: SubjectToken::try_from(*organization)?,
-                user: SubjectToken::try_from(*user)?,
-            })),
-            _ => Ok(None),
-        }
-    }
-}
-pub struct ServiceTopologyConfigureRoute;
-impl RequestRoute for ServiceTopologyConfigureRoute {
-    type Scope = OrganizationActorScope;
-    type Request = crate::skirout::base::service::v1::topology::ConfigureServiceHostRequest;
-    type Response = crate::skirout::base::service::v1::topology::ConfigureServiceHostResponse;
-    type Delivery = DomainResponseDelivery;
-    fn method() -> &'static crate::skir_client::Method<Self::Request, Self::Response> {
-        crate::skirout::base::service::v1::topology::configure_service_host_method()
-    }
-    fn scope(subject: &str) -> Result<Option<Self::Scope>, crate::otel_wasi::Error> {
-        let parts: Vec<_> = subject.split('.').collect();
-        match parts.as_slice() {
+            ] => {
+                let scope = OrganizationActorScope::from_tokens(user, organization);
+                serve_request::<super::ServiceUnbindRoute>(msg, scope, handlers.service_unbind)
+                    .await
+            }
             [
                 "typewriter",
                 "from",
@@ -1692,26 +2141,15 @@ impl RequestRoute for ServiceTopologyConfigureRoute {
                 organization,
                 "topology",
                 "configure",
-            ] => Ok(Some(OrganizationActorScope {
-                organization: SubjectToken::try_from(*organization)?,
-                user: SubjectToken::try_from(*user)?,
-            })),
-            _ => Ok(None),
-        }
-    }
-}
-pub struct OrganizationTopologyWatchRoute;
-impl RequestRoute for OrganizationTopologyWatchRoute {
-    type Scope = OrganizationActorScope;
-    type Request = crate::skirout::base::service::v1::topology::WatchOrganizationTopologyRequest;
-    type Response = crate::skirout::base::service::v1::topology::WatchOrganizationTopologyResponse;
-    type Delivery = DomainResponseDelivery;
-    fn method() -> &'static crate::skir_client::Method<Self::Request, Self::Response> {
-        crate::skirout::base::service::v1::topology::watch_organization_topology_method()
-    }
-    fn scope(subject: &str) -> Result<Option<Self::Scope>, crate::otel_wasi::Error> {
-        let parts: Vec<_> = subject.split('.').collect();
-        match parts.as_slice() {
+            ] => {
+                let scope = OrganizationActorScope::from_tokens(user, organization);
+                serve_request::<super::ServiceTopologyConfigureRoute>(
+                    msg,
+                    scope,
+                    handlers.service_topology_configure,
+                )
+                .await
+            }
             [
                 "typewriter",
                 "from",
@@ -1721,26 +2159,15 @@ impl RequestRoute for OrganizationTopologyWatchRoute {
                 organization,
                 "topology",
                 "watch",
-            ] => Ok(Some(OrganizationActorScope {
-                organization: SubjectToken::try_from(*organization)?,
-                user: SubjectToken::try_from(*user)?,
-            })),
-            _ => Ok(None),
-        }
-    }
-}
-pub struct ServiceHostRegisterRoute;
-impl RequestRoute for ServiceHostRegisterRoute {
-    type Scope = ServiceScope;
-    type Request = crate::skirout::base::service::v1::topology::RegisterServiceHostRequest;
-    type Response = crate::skirout::base::service::v1::topology::RegisterServiceHostResponse;
-    type Delivery = DomainResponseDelivery;
-    fn method() -> &'static crate::skir_client::Method<Self::Request, Self::Response> {
-        crate::skirout::base::service::v1::topology::register_service_host_method()
-    }
-    fn scope(subject: &str) -> Result<Option<Self::Scope>, crate::otel_wasi::Error> {
-        let parts: Vec<_> = subject.split('.').collect();
-        match parts.as_slice() {
+            ] => {
+                let scope = OrganizationActorScope::from_tokens(user, organization);
+                serve_request::<super::OrganizationTopologyWatchRoute>(
+                    msg,
+                    scope,
+                    handlers.organization_topology_watch,
+                )
+                .await
+            }
             [
                 "typewriter",
                 "from",
@@ -1748,25 +2175,15 @@ impl RequestRoute for ServiceHostRegisterRoute {
                 service,
                 "execution",
                 "register",
-            ] => Ok(Some(ServiceScope {
-                service: SubjectToken::try_from(*service)?,
-            })),
-            _ => Ok(None),
-        }
-    }
-}
-pub struct HostExecutionWatchRoute;
-impl RequestRoute for HostExecutionWatchRoute {
-    type Scope = ServiceScope;
-    type Request = crate::skirout::base::service::v1::topology::WatchHostExecutionRequest;
-    type Response = crate::skirout::base::service::v1::topology::WatchHostExecutionResponse;
-    type Delivery = DomainResponseDelivery;
-    fn method() -> &'static crate::skir_client::Method<Self::Request, Self::Response> {
-        crate::skirout::base::service::v1::topology::watch_host_execution_method()
-    }
-    fn scope(subject: &str) -> Result<Option<Self::Scope>, crate::otel_wasi::Error> {
-        let parts: Vec<_> = subject.split('.').collect();
-        match parts.as_slice() {
+            ] => {
+                let scope = ServiceScope::from_tokens(service);
+                serve_request::<super::ServiceHostRegisterRoute>(
+                    msg,
+                    scope,
+                    handlers.service_host_register,
+                )
+                .await
+            }
             [
                 "typewriter",
                 "from",
@@ -1774,25 +2191,15 @@ impl RequestRoute for HostExecutionWatchRoute {
                 service,
                 "execution",
                 "watch",
-            ] => Ok(Some(ServiceScope {
-                service: SubjectToken::try_from(*service)?,
-            })),
-            _ => Ok(None),
-        }
-    }
-}
-pub struct HostExecutionReportRoute;
-impl RequestRoute for HostExecutionReportRoute {
-    type Scope = ServiceScope;
-    type Request = crate::skirout::base::service::v1::topology::ReportHostExecutionRequest;
-    type Response = crate::skirout::base::service::v1::topology::ReportHostExecutionResponse;
-    type Delivery = DomainResponseDelivery;
-    fn method() -> &'static crate::skir_client::Method<Self::Request, Self::Response> {
-        crate::skirout::base::service::v1::topology::report_host_execution_method()
-    }
-    fn scope(subject: &str) -> Result<Option<Self::Scope>, crate::otel_wasi::Error> {
-        let parts: Vec<_> = subject.split('.').collect();
-        match parts.as_slice() {
+            ] => {
+                let scope = ServiceScope::from_tokens(service);
+                serve_request::<super::HostExecutionWatchRoute>(
+                    msg,
+                    scope,
+                    handlers.host_execution_watch,
+                )
+                .await
+            }
             [
                 "typewriter",
                 "from",
@@ -1800,264 +2207,93 @@ impl RequestRoute for HostExecutionReportRoute {
                 service,
                 "execution",
                 "report",
-            ] => Ok(Some(ServiceScope {
-                service: SubjectToken::try_from(*service)?,
-            })),
-            _ => Ok(None),
+            ] => {
+                let scope = ServiceScope::from_tokens(service);
+                serve_request::<super::HostExecutionReportRoute>(
+                    msg,
+                    scope,
+                    handlers.host_execution_report,
+                )
+                .await
+            }
+            ["typewriter", "from", "service", service, "heartbeat"] => {
+                let scope = ServiceScope::from_tokens(service);
+                serve_event::<super::ServiceHeartbeatRoute>(msg, scope, handlers.service_heartbeat)
+                    .await
+            }
+            ["typewriter", "from", "service", service, "shutdown"] => {
+                let scope = ServiceScope::from_tokens(service);
+                serve_event::<super::ServiceShutdownRoute>(msg, scope, handlers.service_shutdown)
+                    .await
+            }
+            _ => Err(unmatched(&msg)),
         }
     }
 }
-pub struct PanelPermissionResolveRoute;
-impl RequestRoute for PanelPermissionResolveRoute {
-    type Scope = InternalComponentScope;
-    type Request = crate::skirout::base::access::v1::permission::GetEntityPermissionRequest;
-    type Response = crate::skirout::base::access::v1::permission::GetEntityPermissionResponse;
-    type Delivery = PlainResponseDelivery;
-    fn method() -> &'static crate::skir_client::Method<Self::Request, Self::Response> {
-        crate::skirout::base::access::v1::permission::get_entity_permission_method()
+/// Typed dispatch of every message the `auth-typewriter-permissions` component receives.
+pub mod auth_typewriter_permissions {
+    use crate::otel_wasi::Error;
+    use crate::skirout::base::access::v1::permission::GetEntityPermissionRequest;
+    use crate::skirout::base::access::v1::permission::GetEntityPermissionResponse;
+    use crate::transport::InternalComponentScope;
+    use crate::transport::serve_request;
+    use crate::transport::unmatched;
+    use crate::wasmcloud::messaging::types::NatsMessage;
+
+    /// The subjects the component subscribes to, one per subject the dispatcher matches.
+    pub const SUBSCRIPTIONS: &[&str] = &[
+        "auth.permissions.typewriter-panel",
+        "auth.permissions.typewriter-services",
+    ];
+
+    /// One handler per route the component serves, named after the route.
+    pub struct Handlers<PanelPermissionResolve, ServicesPermissionResolve> {
+        pub panel_permission_resolve: PanelPermissionResolve,
+        pub services_permission_resolve: ServicesPermissionResolve,
     }
-    fn scope(subject: &str) -> Result<Option<Self::Scope>, crate::otel_wasi::Error> {
-        let parts: Vec<_> = subject.split('.').collect();
-        match parts.as_slice() {
-            ["auth", "permissions", "typewriter-panel"] => Ok(Some(InternalComponentScope {})),
-            _ => Ok(None),
+
+    /// Serves one received message on the route its subject matches. Any other subject fails
+    /// with `transport-unmatched-subject`.
+    #[allow(
+        clippy::type_complexity,
+        reason = "one type parameter per served route"
+    )]
+    pub async fn dispatch<PanelPermissionResolve, ServicesPermissionResolve>(
+        msg: NatsMessage,
+        handlers: Handlers<PanelPermissionResolve, ServicesPermissionResolve>,
+    ) -> Result<(), Error>
+    where
+        PanelPermissionResolve: AsyncFnOnce(
+            InternalComponentScope,
+            GetEntityPermissionRequest,
+        ) -> Result<GetEntityPermissionResponse, Error>,
+        ServicesPermissionResolve: AsyncFnOnce(
+            InternalComponentScope,
+            GetEntityPermissionRequest,
+        )
+            -> Result<GetEntityPermissionResponse, Error>,
+    {
+        let subject = msg.subject.clone();
+        match subject.split('.').collect::<Vec<_>>().as_slice() {
+            ["auth", "permissions", "typewriter-panel"] => {
+                let scope = InternalComponentScope::from_tokens();
+                serve_request::<super::PanelPermissionResolveRoute>(
+                    msg,
+                    scope,
+                    handlers.panel_permission_resolve,
+                )
+                .await
+            }
+            ["auth", "permissions", "typewriter-services"] => {
+                let scope = InternalComponentScope::from_tokens();
+                serve_request::<super::ServicesPermissionResolveRoute>(
+                    msg,
+                    scope,
+                    handlers.services_permission_resolve,
+                )
+                .await
+            }
+            _ => Err(unmatched(&msg)),
         }
     }
 }
-impl OutboundRequestRoute for PanelPermissionResolveRoute {
-    fn subject(scope: &Self::Scope) -> String {
-        let _ = scope;
-        format!("auth.permissions.typewriter-panel")
-    }
-}
-pub struct ServicesPermissionResolveRoute;
-impl RequestRoute for ServicesPermissionResolveRoute {
-    type Scope = InternalComponentScope;
-    type Request = crate::skirout::base::access::v1::permission::GetEntityPermissionRequest;
-    type Response = crate::skirout::base::access::v1::permission::GetEntityPermissionResponse;
-    type Delivery = PlainResponseDelivery;
-    fn method() -> &'static crate::skir_client::Method<Self::Request, Self::Response> {
-        crate::skirout::base::access::v1::permission::get_entity_permission_method()
-    }
-    fn scope(subject: &str) -> Result<Option<Self::Scope>, crate::otel_wasi::Error> {
-        let parts: Vec<_> = subject.split('.').collect();
-        match parts.as_slice() {
-            ["auth", "permissions", "typewriter-services"] => Ok(Some(InternalComponentScope {})),
-            _ => Ok(None),
-        }
-    }
-}
-impl OutboundRequestRoute for ServicesPermissionResolveRoute {
-    fn subject(scope: &Self::Scope) -> String {
-        let _ = scope;
-        format!("auth.permissions.typewriter-services")
-    }
-}
-pub struct ServiceHeartbeatRoute;
-impl EventRoute for ServiceHeartbeatRoute {
-    type Scope = ServiceScope;
-    type Event = crate::skirout::base::service::v1::lifecycle::ServiceHeartbeatNotification;
-    fn serializer() -> crate::skir_client::Serializer<Self::Event> {
-        <Self::Event>::serializer()
-    }
-    fn scope(subject: &str) -> Result<Option<Self::Scope>, crate::otel_wasi::Error> {
-        let parts: Vec<_> = subject.split('.').collect();
-        match parts.as_slice() {
-            ["typewriter", "from", "service", service, "heartbeat"] => Ok(Some(ServiceScope {
-                service: SubjectToken::try_from(*service)?,
-            })),
-            _ => Ok(None),
-        }
-    }
-}
-pub struct ServiceShutdownRoute;
-impl EventRoute for ServiceShutdownRoute {
-    type Scope = ServiceScope;
-    type Event = crate::skirout::base::service::v1::lifecycle::ServiceShutdownNotification;
-    fn serializer() -> crate::skir_client::Serializer<Self::Event> {
-        <Self::Event>::serializer()
-    }
-    fn scope(subject: &str) -> Result<Option<Self::Scope>, crate::otel_wasi::Error> {
-        let parts: Vec<_> = subject.split('.').collect();
-        match parts.as_slice() {
-            ["typewriter", "from", "service", service, "shutdown"] => Ok(Some(ServiceScope {
-                service: SubjectToken::try_from(*service)?,
-            })),
-            _ => Ok(None),
-        }
-    }
-}
-impl OutboundEventRoute for UserOrganizationsWatchRoute {
-    type Scope = UserScope;
-    type Event = crate::skirout::base::organization::v1::organization::UserOrganizationsChanged;
-    fn serializer() -> crate::skir_client::Serializer<Self::Event> {
-        <Self::Event>::serializer()
-    }
-    fn subject(scope: &Self::Scope) -> String {
-        let UserScope { user } = scope;
-        format!("typewriter.to.user.{user}.organizations.changed")
-    }
-}
-impl UserOrganizationsWatchRoute {
-    pub fn delivery(scope: &UserScope) -> EventDelivery<Self> {
-        EventDelivery::new(scope)
-    }
-}
-impl PersistentEventRoute for UserOrganizationsWatchRoute {
-    fn stream() -> &'static str {
-        "TYPEWRITER_MEMBERSHIP"
-    }
-}
-impl OutboundEventRoute for UserJoinRequestsWatchRoute {
-    type Scope = UserScope;
-    type Event = crate::skirout::base::organization::v1::join_request::UserJoinRequestsChanged;
-    fn serializer() -> crate::skir_client::Serializer<Self::Event> {
-        <Self::Event>::serializer()
-    }
-    fn subject(scope: &Self::Scope) -> String {
-        let UserScope { user } = scope;
-        format!("typewriter.to.user.{user}.join_requests.changed")
-    }
-}
-impl UserJoinRequestsWatchRoute {
-    pub fn delivery(scope: &UserScope) -> EventDelivery<Self> {
-        EventDelivery::new(scope)
-    }
-}
-impl PersistentEventRoute for UserJoinRequestsWatchRoute {
-    fn stream() -> &'static str {
-        "TYPEWRITER_MEMBERSHIP"
-    }
-}
-impl OutboundEventRoute for OrganizationMembersWatchRoute {
-    type Scope = OrganizationScope;
-    type Event = crate::skirout::base::organization::v1::member::OrganizationMembersChanged;
-    fn serializer() -> crate::skir_client::Serializer<Self::Event> {
-        <Self::Event>::serializer()
-    }
-    fn subject(scope: &Self::Scope) -> String {
-        let OrganizationScope { organization } = scope;
-        format!("typewriter.to.organization.{organization}.members.changed")
-    }
-}
-impl OrganizationMembersWatchRoute {
-    pub fn delivery(scope: &OrganizationScope) -> EventDelivery<Self> {
-        EventDelivery::new(scope)
-    }
-}
-impl PersistentEventRoute for OrganizationMembersWatchRoute {
-    fn stream() -> &'static str {
-        "TYPEWRITER_MEMBERSHIP"
-    }
-}
-impl OutboundEventRoute for OrganizationJoinRequestsWatchRoute {
-    type Scope = OrganizationScope;
-    type Event =
-        crate::skirout::base::organization::v1::join_request::OrganizationJoinRequestsChanged;
-    fn serializer() -> crate::skir_client::Serializer<Self::Event> {
-        <Self::Event>::serializer()
-    }
-    fn subject(scope: &Self::Scope) -> String {
-        let OrganizationScope { organization } = scope;
-        format!("typewriter.to.organization.{organization}.join_requests.changed")
-    }
-}
-impl OrganizationJoinRequestsWatchRoute {
-    pub fn delivery(scope: &OrganizationScope) -> EventDelivery<Self> {
-        EventDelivery::new(scope)
-    }
-}
-impl PersistentEventRoute for OrganizationJoinRequestsWatchRoute {
-    fn stream() -> &'static str {
-        "TYPEWRITER_MEMBERSHIP"
-    }
-}
-impl OutboundEventRoute for OrganizationJoinCodesWatchRoute {
-    type Scope = OrganizationScope;
-    type Event = crate::skirout::base::organization::v1::join_codes::OrganizationJoinCodesChanged;
-    fn serializer() -> crate::skir_client::Serializer<Self::Event> {
-        <Self::Event>::serializer()
-    }
-    fn subject(scope: &Self::Scope) -> String {
-        let OrganizationScope { organization } = scope;
-        format!("typewriter.to.organization.{organization}.join_codes.changed")
-    }
-}
-impl OrganizationJoinCodesWatchRoute {
-    pub fn delivery(scope: &OrganizationScope) -> EventDelivery<Self> {
-        EventDelivery::new(scope)
-    }
-}
-impl PersistentEventRoute for OrganizationJoinCodesWatchRoute {
-    fn stream() -> &'static str {
-        "TYPEWRITER_MEMBERSHIP"
-    }
-}
-impl OutboundEventRoute for ServiceBindingQueryRoute {
-    type Scope = ServiceScope;
-    type Event = crate::skirout::base::service::v1::registration::ServiceBoundNotification;
-    fn serializer() -> crate::skir_client::Serializer<Self::Event> {
-        <Self::Event>::serializer()
-    }
-    fn subject(scope: &Self::Scope) -> String {
-        let ServiceScope { service } = scope;
-        format!("typewriter.to.service.{service}.registration.bound")
-    }
-}
-impl ServiceBindingQueryRoute {
-    pub fn delivery(scope: &ServiceScope) -> EventDelivery<Self> {
-        EventDelivery::new(scope)
-    }
-}
-impl TransientEventRoute for ServiceBindingQueryRoute {}
-impl OutboundEventRoute for OrganizationServicesWatchRoute {
-    type Scope = OrganizationScope;
-    type Event = crate::skirout::base::service::v1::organization::OrganizationServicesChanged;
-    fn serializer() -> crate::skir_client::Serializer<Self::Event> {
-        <Self::Event>::serializer()
-    }
-    fn subject(scope: &Self::Scope) -> String {
-        let OrganizationScope { organization } = scope;
-        format!("typewriter.to.organization.{organization}.services.watch")
-    }
-}
-impl OrganizationServicesWatchRoute {
-    pub fn delivery(scope: &OrganizationScope) -> EventDelivery<Self> {
-        EventDelivery::new(scope)
-    }
-}
-impl TransientEventRoute for OrganizationServicesWatchRoute {}
-impl OutboundEventRoute for OrganizationTopologyWatchRoute {
-    type Scope = OrganizationScope;
-    type Event = crate::skirout::base::service::v1::topology::OrganizationTopologyChanged;
-    fn serializer() -> crate::skir_client::Serializer<Self::Event> {
-        <Self::Event>::serializer()
-    }
-    fn subject(scope: &Self::Scope) -> String {
-        let OrganizationScope { organization } = scope;
-        format!("typewriter.to.organization.{organization}.topology.watch")
-    }
-}
-impl OrganizationTopologyWatchRoute {
-    pub fn delivery(scope: &OrganizationScope) -> EventDelivery<Self> {
-        EventDelivery::new(scope)
-    }
-}
-impl TransientEventRoute for OrganizationTopologyWatchRoute {}
-impl OutboundEventRoute for HostExecutionWatchRoute {
-    type Scope = ServiceScope;
-    type Event = crate::skirout::base::service::v1::topology::WatchHostExecutionResponse;
-    fn serializer() -> crate::skir_client::Serializer<Self::Event> {
-        <Self::Event>::serializer()
-    }
-    fn subject(scope: &Self::Scope) -> String {
-        let ServiceScope { service } = scope;
-        format!("typewriter.to.service.{service}.execution.watch")
-    }
-}
-impl HostExecutionWatchRoute {
-    pub fn delivery(scope: &ServiceScope) -> EventDelivery<Self> {
-        EventDelivery::new(scope)
-    }
-}
-impl TransientEventRoute for HostExecutionWatchRoute {}

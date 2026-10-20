@@ -41,10 +41,8 @@ use wasmcloud_utils::{
         Permissions,
     },
     skir_client::UnrecognizedValues::Drop,
-    transport_routes::{
-        InternalComponentScope, PanelPermissionResolveRoute, ServicesPermissionResolveRoute,
-        request_route,
-    },
+    transport::{InternalComponentScope, request_route},
+    transport_routes::{PanelPermissionResolveRoute, ServicesPermissionResolveRoute},
     wasmcloud::messaging::{core_handler::Guest, reply, types},
 };
 

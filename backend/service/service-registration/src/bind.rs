@@ -21,7 +21,6 @@ use wasmcloud_utils::{
     skir_domain_result,
     skir_utils::RecordIdKeyIdentity,
     skir_variant,
-    wasmcloud::messaging::types::NatsMessage,
 };
 
 use wasmcloud_utils::database::service::ServiceRecord;
@@ -36,10 +35,9 @@ struct BindResult {
 /// Invalid or expired tokens and missing organizations leave the lease untouched. Success
 /// returns identity and role data from the committed service. Organization access is granted by
 /// messaging permissions before dispatch; the transaction does not check the actor's membership.
-#[tracing::instrument(skip(_msg, request))]
+#[tracing::instrument(skip(request))]
 pub async fn handle_bind(
-    _msg: NatsMessage,
-    scope: wasmcloud_utils::transport_routes::OrganizationActorScope,
+    scope: wasmcloud_utils::transport::OrganizationActorScope,
     request: BindServiceRequest,
 ) -> Result<BindServiceResponse, otel_wasi::Error> {
     let actor_id = scope.user.as_str();

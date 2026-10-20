@@ -16,7 +16,6 @@ use wasmcloud_utils::{
         OrganizationTopologySnapshot, WatchOrganizationTopologyRequest,
         WatchOrganizationTopologyResponse,
     },
-    wasmcloud::messaging::types::NatsMessage,
 };
 
 #[derive(Debug, Deserialize)]
@@ -29,8 +28,7 @@ struct TopologyListRecord {
 #[tracing::instrument(skip_all)]
 /// Returns the topology for the organization admitted by the generated dispatcher.
 pub async fn handle_watch(
-    _msg: NatsMessage,
-    scope: wasmcloud_utils::transport_routes::OrganizationActorScope,
+    scope: wasmcloud_utils::transport::OrganizationActorScope,
     _request: WatchOrganizationTopologyRequest,
 ) -> Result<WatchOrganizationTopologyResponse, otel_wasi::Error> {
     let actor_id = scope.user.as_str();

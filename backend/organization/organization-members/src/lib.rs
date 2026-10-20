@@ -20,14 +20,7 @@ mod join_requests;
 mod members;
 
 use wasmcloud_utils::{
-    dispatch_route,
-    transport_routes::{
-        OrganizationJoinCodeGenerateRoute, OrganizationJoinCodeRevokeRoute,
-        OrganizationJoinCodesWatchRoute, OrganizationJoinRequestDeclineRoute,
-        OrganizationJoinRequestsApproveRoute, OrganizationJoinRequestsWatchRoute,
-        OrganizationMemberRemoveRoute, OrganizationMembersUpdateRoute,
-        OrganizationMembersWatchRoute, unmatched_route,
-    },
+    transport_routes::organization_members::{Handlers, dispatch},
     wasmcloud::messaging::{core_handler::Guest, types},
 };
 
@@ -37,43 +30,20 @@ wasmcloud_utils::export!(Component);
 impl Guest for Component {
     #[otel_wasi::wasi_instrument(service = "organization-members", export)]
     async fn handle_message(msg: types::NatsMessage) -> Result<(), otel_wasi::Error> {
-        handle_message_async(msg).await
+        dispatch(
+            msg,
+            Handlers {
+                organization_members_watch: members::handle_watch,
+                organization_members_update: members::handle_update,
+                organization_member_remove: members::handle_remove,
+                organization_join_requests_watch: join_requests::handle_watch,
+                organization_join_requests_approve: join_requests::handle_approve,
+                organization_join_request_decline: join_requests::handle_decline,
+                organization_join_codes_watch: join_codes::handle_watch,
+                organization_join_code_generate: join_codes::handle_generate,
+                organization_join_code_revoke: join_codes::handle_revoke,
+            },
+        )
+        .await
     }
-}
-
-async fn handle_message_async(msg: types::NatsMessage) -> Result<(), otel_wasi::Error> {
-    dispatch_route!(msg, OrganizationMembersWatchRoute, members::handle_watch);
-    dispatch_route!(msg, OrganizationMembersUpdateRoute, members::handle_update);
-    dispatch_route!(msg, OrganizationMemberRemoveRoute, members::handle_remove);
-    dispatch_route!(
-        msg,
-        OrganizationJoinRequestsWatchRoute,
-        join_requests::handle_watch
-    );
-    dispatch_route!(
-        msg,
-        OrganizationJoinRequestsApproveRoute,
-        join_requests::handle_approve
-    );
-    dispatch_route!(
-        msg,
-        OrganizationJoinRequestDeclineRoute,
-        join_requests::handle_decline
-    );
-    dispatch_route!(
-        msg,
-        OrganizationJoinCodesWatchRoute,
-        join_codes::handle_watch
-    );
-    dispatch_route!(
-        msg,
-        OrganizationJoinCodeGenerateRoute,
-        join_codes::handle_generate
-    );
-    dispatch_route!(
-        msg,
-        OrganizationJoinCodeRevokeRoute,
-        join_codes::handle_revoke
-    );
-    Err(unmatched_route(&msg, "dispatch-action-unknown"))
 }

@@ -17,10 +17,10 @@ use wasmcloud_utils::skir::base::{
     kernel::v1::record_id::RecordId,
 };
 use wasmcloud_utils::skir_utils::RecordIdKeyIdentity;
-use wasmcloud_utils::transport::ConnectionSession;
-use wasmcloud_utils::transport_routes::{
-    GrantSet, OrganizationActorRole, OrganizationActorScope, SubjectToken, UserRole, UserScope,
+use wasmcloud_utils::transport::{
+    ConnectionSession, GrantSet, OrganizationActorScope, SubjectToken, UserScope,
 };
+use wasmcloud_utils::transport_routes::{OrganizationActorRole, UserRole};
 
 use crate::common::{AuthentikClaims, TrustedUserProfile, User, build_permissions};
 

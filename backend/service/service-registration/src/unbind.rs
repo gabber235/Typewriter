@@ -21,7 +21,6 @@ use wasmcloud_utils::{
         UnbindServiceResponse_Success,
     },
     skir_variant,
-    wasmcloud::messaging::types::NatsMessage,
 };
 
 /// Removes the addressed organization's binding from a service.
@@ -30,10 +29,9 @@ use wasmcloud_utils::{
 /// projections affected by that visibility and ownership change. The response is canonical for
 /// the committed command and carries no service payload because the binding has ended. Missing or
 /// differently owned services return `ServiceNotFoundError` without changing state.
-#[tracing::instrument(skip(_msg, request))]
+#[tracing::instrument(skip(request))]
 pub async fn handle_unbind(
-    _msg: NatsMessage,
-    scope: wasmcloud_utils::transport_routes::OrganizationActorScope,
+    scope: wasmcloud_utils::transport::OrganizationActorScope,
     request: UnbindServiceRequest,
 ) -> Result<UnbindServiceResponse, otel_wasi::Error> {
     let actor_id = scope.user.as_str();

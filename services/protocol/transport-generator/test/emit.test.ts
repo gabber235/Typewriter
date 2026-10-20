@@ -27,17 +27,18 @@ describe("route emission", () => {
     const [rust, ...otherRustFiles] = emitRust(resolved, symbolProviders(input).rust);
     expect(otherRustFiles).toEqual([]);
     const code = rust!.code;
-    expect(code).toContain("impl OutboundRequestRoute for ServiceBindingQueryRoute");
-    expect(code).toContain("impl OutboundRequestRoute for PanelPermissionResolveRoute");
-    expect(code).not.toContain("impl OutboundRequestRoute for UserOrganizationCreateRoute");
-    expect(code).not.toContain("impl OutboundRequestRoute for EditorCatalogFetchRoute");
-    expect(code).toContain("impl OutboundEventRoute for UserOrganizationsWatchRoute");
-    expect(code).toContain("impl PersistentEventRoute for UserOrganizationsWatchRoute");
-    expect(code).not.toContain("impl TransientEventRoute for UserOrganizationsWatchRoute");
-    expect(code).toContain("impl OutboundEventRoute for OrganizationTopologyWatchRoute");
-    expect(code).toContain("impl TransientEventRoute for OrganizationTopologyWatchRoute");
-    expect(code).not.toContain("impl PersistentEventRoute for OrganizationTopologyWatchRoute");
-    expect(code).toContain("type Scope = OrganizationScope;");
+    const impl = (contract: string, route: string) => `impl crate::transport::${contract} for ${route}`;
+    expect(code).toContain(impl("OutboundRequestRoute", "ServiceBindingQueryRoute"));
+    expect(code).toContain(impl("OutboundRequestRoute", "PanelPermissionResolveRoute"));
+    expect(code).not.toContain(impl("OutboundRequestRoute", "UserOrganizationCreateRoute"));
+    expect(code).not.toContain("EditorCatalogFetchRoute");
+    expect(code).toContain(impl("OutboundEventRoute", "UserOrganizationsWatchRoute"));
+    expect(code).toContain(impl("PersistentEventRoute", "UserOrganizationsWatchRoute"));
+    expect(code).not.toContain(impl("TransientEventRoute", "UserOrganizationsWatchRoute"));
+    expect(code).toContain(impl("OutboundEventRoute", "OrganizationTopologyWatchRoute"));
+    expect(code).toContain(impl("TransientEventRoute", "OrganizationTopologyWatchRoute"));
+    expect(code).not.toContain(impl("PersistentEventRoute", "OrganizationTopologyWatchRoute"));
+    expect(code).toContain("type Scope = crate::transport::OrganizationScope;");
     expect(code).toContain(
       "crate::skirout::base::organization::v1::organization::create_organization_method()",
     );
@@ -46,7 +47,7 @@ describe("route emission", () => {
   test("role grants bind the grantee's identifiers and wildcard the rest", async () => {
     const { input, resolved } = await committedRoutes();
     const [rust] = emitRust(resolved, symbolProviders(input).rust);
-    const member = section(rust!.code, "impl OrganizationActorScope {", "\n}\n");
+    const member = section(rust!.code, "impl crate::transport::OrganizationActorScope {", "\n}\n");
     expect(member).toContain("session: &crate::transport::ConnectionSession,");
     expect(member).toContain('"service.to.*.organization.{organization}.realm.editor.catalog.fetch"');
     expect(member).toContain('"typewriter.presence.organization.{organization}.user.*"');
@@ -56,7 +57,7 @@ describe("route emission", () => {
     expect(member).not.toContain('"cloud.from.organization.{organization}.members.changed"');
     const realm = section(rust!.code, "pub enum RealmRole {", "\n}\n");
     expect(realm).toBe("pub enum RealmRole {\n    RealmCoordinator,\n    RealmParticipant,");
-    const service = section(rust!.code, "impl ServiceScope {", "\n}\n");
+    const service = section(rust!.code, "impl crate::transport::ServiceScope {", "\n}\n");
     expect(service).not.toContain("session");
     expect(rust!.code).not.toContain("USER.INFO");
   });
@@ -66,7 +67,7 @@ describe("route emission", () => {
     const [rust] = emitRust(resolved, symbolProviders(input).rust);
     const [dart] = emitDart(resolved, symbolProviders(input).dart);
     expect(rust!.code).toContain(
-      "let identity = serde_json::json!([actor.as_str(), organization.map(SubjectToken::as_str), session.as_str(), projection]);",
+      "let identity = serde_json::json!([actor.as_str(), organization.map(crate::transport::SubjectToken::as_str), session.as_str(), projection]);",
     );
     expect(rust!.code).toContain('"TW_{}",');
     expect(dart!.code).toContain("final identity = jsonEncode([actor, organization, session, projection]);");

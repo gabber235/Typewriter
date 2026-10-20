@@ -25,8 +25,7 @@ use wasmcloud_utils::{
     },
     skir_utils::RecordIdKeyIdentity,
     skir_variant,
-    transport_routes::ServiceScope,
-    wasmcloud::messaging::types::NatsMessage,
+    transport::ServiceScope,
 };
 
 #[derive(Debug, Deserialize)]
@@ -56,7 +55,6 @@ enum ReportExecutionOutcome {
 /// same desired state. The query returns joined resource views, which preserves owner and Realm
 /// context for the runtime without exposing database records directly.
 pub async fn handle_watch(
-    _msg: NatsMessage,
     scope: ServiceScope,
     _request: WatchHostExecutionRequest,
 ) -> Result<WatchHostExecutionResponse, otel_wasi::Error> {
@@ -106,7 +104,6 @@ pub async fn handle_watch(
 /// only when this report includes an active observation for every assigned child. Failed, rolled back, or drifted child
 /// states determine the corresponding host status; otherwise it remains reconciling.
 pub async fn handle_report(
-    _msg: NatsMessage,
     scope: ServiceScope,
     request: ReportHostExecutionRequest,
 ) -> Result<ReportHostExecutionResponse, otel_wasi::Error> {
@@ -304,7 +301,7 @@ async fn publish_report(
     };
     let organization_id = organization_id.key.raw_identity()?;
     wasmcloud_utils::transport_routes::OrganizationTopologyWatchRoute::delivery(
-        &wasmcloud_utils::transport_routes::OrganizationScope::try_from(organization_id)?,
+        &wasmcloud_utils::transport::OrganizationScope::try_from(organization_id)?,
     )
     .publish(OrganizationTopologyChanged::ObservationsReported(Box::new(
         observation,

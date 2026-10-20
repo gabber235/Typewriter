@@ -5,23 +5,15 @@ import { CONSUMER_NAME, grantText, type Grant, type GrantToken } from "../grants
 import { SCOPE_KINDS, type RoleDeclaration, type ScopeKind } from "../manifest.js";
 import type { ResolvedRoutes } from "../resolve.js";
 import { scopeParameters } from "../subject.js";
+import { emitDispatchers } from "./rust_dispatch.js";
 import {
   emitEventRoute,
   emitRequestRoute,
   emitUpdateDelivery,
-  scopeTypeName,
-} from "./rust_dispatch.js";
-import { RUST_DISPATCH, RUST_SCOPES } from "./rust_runtime.js";
-
-/** Scope struct fields in the order the generated scope types declare them. */
-const SCOPE_FIELDS: Record<ScopeKind, readonly string[]> = {
-  realm: ["organization", "realm"],
-  service: ["service"],
-  organization_actor: ["user", "organization"],
-  organization: ["organization"],
-  user: ["user"],
-  internal_component: [],
-};
+  SCOPE_FIELDS,
+  scopeType,
+  TRANSPORT,
+} from "./rust_routes.js";
 
 /** The scope type whose fields are exactly the identifiers a role is bound to. */
 function grantScope(role: RoleDeclaration): ScopeKind {
@@ -78,15 +70,15 @@ function grantExpression(tokens: readonly GrantToken[]): [string, string] {
 /** Rust expressions of the consumer identity tuple values, by {@link CONSUMER_NAME} entry. */
 const CONSUMER_VALUES: Record<(typeof CONSUMER_NAME.tuple)[number], string> = {
   actor: "actor.as_str()",
-  organization: "organization.map(SubjectToken::as_str)",
+  organization: `organization.map(${TRANSPORT}::SubjectToken::as_str)`,
   session: "session.as_str()",
   projection: "projection",
 };
 
 const CONSUMER_PARAMETERS: Record<(typeof CONSUMER_NAME.tuple)[number], string> = {
-  actor: "actor: &SubjectToken",
-  organization: "organization: Option<&SubjectToken>",
-  session: "session: &crate::transport::ConnectionSession",
+  actor: `actor: &${TRANSPORT}::SubjectToken`,
+  organization: `organization: Option<&${TRANSPORT}::SubjectToken>`,
+  session: `session: &${TRANSPORT}::ConnectionSession`,
   projection: "projection: &str",
 };
 
@@ -165,13 +157,13 @@ function emitGrants({ roles, routes }: ResolvedRoutes): string[] {
       `pub enum ${roleType} {`,
       ...[...byRole.keys()].map((name) => `    ${upperCamel(name)},`),
       "}",
-      `impl ${scopeTypeName(scope)} {`,
+      `impl ${scopeType(scope)} {`,
       "    /// Inserts every subject the role may publish to or subscribe to within this scope.",
       "    pub fn grant(",
       "        &self,",
       `        role: ${roleType},`,
-      ...(consumers ? ["        session: &crate::transport::ConnectionSession,"] : []),
-      "        grants: &mut GrantSet,",
+      ...(consumers ? [`        session: &${TRANSPORT}::ConnectionSession,`] : []),
+      `        grants: &mut ${TRANSPORT}::GrantSet,`,
       "    ) {",
       ...(fields.length === 0 ? [] : [`        let Self { ${fields.join(", ")} } = self;`]),
       "        match role {",
@@ -184,9 +176,10 @@ function emitGrants({ roles, routes }: ResolvedRoutes): string[] {
 }
 
 /**
- * Emits the backend transport module: scope types, role grants, the consumer naming rule, the
- * dispatch runtime and one route type per backend subject. generate.ts formats the module with
- * rustfmt.
+ * Emits the backend transport module: the role grants of each scope, the consumer naming rule, one
+ * route type per route a component serves or publishes on, and one dispatcher per component that
+ * receives messages. The route independent runtime they build on is hand written in
+ * `crate::transport`. generate.ts formats the module with rustfmt.
  */
 export function emitRust(
   resolved: ResolvedRoutes,
@@ -194,13 +187,13 @@ export function emitRust(
 ): CodeGenerator.OutputFile[] {
   const { routes } = resolved;
   const lines = [
-    RUST_SCOPES,
+    "//! Generated transport routes. Do not edit; regenerate with `bun run generate:protocol`.",
     ...emitGrants(resolved),
     ...emitConsumerName(),
-    RUST_DISPATCH,
     ...routes.flatMap((route) => emitRequestRoute(route, symbols)),
     ...routes.flatMap((route) => emitEventRoute(route, symbols)),
     ...routes.flatMap((route) => emitUpdateDelivery(route, symbols)),
+    ...emitDispatchers(resolved, symbols),
   ];
   return [{ path: "mod.rs", code: `${lines.join("\n")}\n` }];
 }

@@ -19,6 +19,7 @@ use wasmcloud_utils::{
         },
     },
     skir_client::UnrecognizedValues,
+    transport_routes::{organization_members, user_organization},
 };
 
 mod service_onboarding;
@@ -39,9 +40,9 @@ impl FixtureSpec for ManualMembership {
     fn configure(builder: FixtureBuilder<Self>) -> FixtureBuilder<Self> {
         builder
             .messaging()
-            .primary(|component| component.subscription("typewriter.from.user.*.organization.>"))
+            .primary(|component| component.subscriptions(user_organization::SUBSCRIPTIONS))
             .dependency("organization-members", |component| {
-                component.subscription("typewriter.from.user.*.organization.*.members.>")
+                component.subscriptions(organization_members::SUBSCRIPTIONS)
             })
             .otel()
             .typewriter_database(SchemaPreset::Full)

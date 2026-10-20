@@ -8,7 +8,8 @@ use tokio::{
     process::{Child, Command},
     sync::mpsc,
 };
-use wasmcloud_utils::transport_routes::{GrantSet, RealmRole, RealmScope, SubjectToken};
+use wasmcloud_utils::transport::{GrantSet, RealmScope, SubjectToken};
+use wasmcloud_utils::transport_routes::RealmRole;
 
 use crate::services::service_response_permission;
 

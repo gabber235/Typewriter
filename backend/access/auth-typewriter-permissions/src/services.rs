@@ -21,9 +21,9 @@ use wasmcloud_utils::{
         },
     },
     skir_utils::RecordIdKeyIdentity,
+    transport::{GrantSet, RealmScope, ServiceScope, SubjectToken, request_route},
     transport_routes::{
-        GrantSet, RealmRole, RealmScope, ServiceBindingQueryRoute, ServiceMessagingScopeRoute,
-        ServiceRole, ServiceScope, SubjectToken, request_route,
+        RealmRole, ServiceBindingQueryRoute, ServiceMessagingScopeRoute, ServiceRole,
     },
 };
 

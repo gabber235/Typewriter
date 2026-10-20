@@ -13,7 +13,6 @@ use wasmcloud_utils::{
     skir_transaction_outcome,
     skir_utils::{IntoSkirRecordIds, IntoSurrealRecordIds},
     skir_variant,
-    wasmcloud::messaging::types::NatsMessage,
 };
 
 #[derive(Debug, Deserialize)]
@@ -40,8 +39,7 @@ impl JoinCodeGenerationOutcome {
 /// code change stream. Expired codes are excluded by the database snapshot query.
 #[tracing::instrument(skip_all)]
 pub async fn handle_watch(
-    _msg: NatsMessage,
-    scope: wasmcloud_utils::transport_routes::OrganizationActorScope,
+    scope: wasmcloud_utils::transport::OrganizationActorScope,
     _request: WatchOrganizationJoinCodesRequest,
 ) -> Result<WatchOrganizationJoinCodesResponse, otel_wasi::Error> {
     let actor_id = scope.user.as_str();
@@ -65,8 +63,7 @@ pub async fn handle_watch(
 /// creates the code and advances its sequence, then publishes the addition after commit.
 #[tracing::instrument(skip_all)]
 pub async fn handle_generate(
-    _msg: NatsMessage,
-    scope: wasmcloud_utils::transport_routes::OrganizationActorScope,
+    scope: wasmcloud_utils::transport::OrganizationActorScope,
     req: GenerateOrganizationJoinCodeRequest,
 ) -> Result<GenerateOrganizationJoinCodeResponse, otel_wasi::Error> {
     let actor_id = scope.user.as_str();
@@ -181,7 +178,7 @@ pub async fn handle_generate(
         ..Default::default()
     };
     wasmcloud_utils::transport_routes::OrganizationJoinCodesWatchRoute::delivery(
-        &wasmcloud_utils::transport_routes::OrganizationScope::try_from(org_id)?,
+        &wasmcloud_utils::transport::OrganizationScope::try_from(org_id)?,
     )
     .persist(event.clone())
     .await?;
@@ -202,8 +199,7 @@ pub async fn handle_generate(
 /// organization code sequence.
 #[tracing::instrument(skip_all)]
 pub async fn handle_revoke(
-    _msg: NatsMessage,
-    scope: wasmcloud_utils::transport_routes::OrganizationActorScope,
+    scope: wasmcloud_utils::transport::OrganizationActorScope,
     req: RevokeOrganizationJoinCodeRequest,
 ) -> Result<RevokeOrganizationJoinCodeResponse, otel_wasi::Error> {
     let actor_id = scope.user.as_str();
@@ -268,7 +264,7 @@ pub async fn handle_revoke(
         ..Default::default()
     };
     wasmcloud_utils::transport_routes::OrganizationJoinCodesWatchRoute::delivery(
-        &wasmcloud_utils::transport_routes::OrganizationScope::try_from(org_id)?,
+        &wasmcloud_utils::transport::OrganizationScope::try_from(org_id)?,
     )
     .persist(event.clone())
     .await?;

@@ -13,9 +13,9 @@ use wasmcloud_utils::{
         topology::OrganizationTopologyChanged,
     },
     skir_utils::RecordIdKeyIdentity,
+    transport::{OrganizationScope, ServiceScope},
     transport_routes::{
-        OrganizationScope, OrganizationServicesWatchRoute, OrganizationTopologyWatchRoute,
-        ServiceBindingQueryRoute, ServiceScope,
+        OrganizationServicesWatchRoute, OrganizationTopologyWatchRoute, ServiceBindingQueryRoute,
     },
 };
 

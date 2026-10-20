@@ -17,8 +17,7 @@ use wasmcloud_utils::{
     skir_domain_result,
     skir_utils::RecordIdKeyIdentity,
     skir_variant,
-    transport_routes::ServiceScope,
-    wasmcloud::messaging::types::NatsMessage,
+    transport::ServiceScope,
 };
 
 use crate::utils;
@@ -38,7 +37,6 @@ struct LeaseQueryResult {
 
 #[tracing::instrument(skip_all)]
 pub async fn handle_binding(
-    _msg: NatsMessage,
     scope: ServiceScope,
     _request: QueryServiceBindingRequest,
 ) -> Result<QueryServiceBindingResponse, otel_wasi::Error> {
@@ -72,7 +70,6 @@ pub async fn handle_binding(
 
 #[tracing::instrument(skip_all)]
 pub async fn handle_lease(
-    _msg: NatsMessage,
     scope: ServiceScope,
     _request: EnsureRegistrationLeaseRequest,
 ) -> Result<EnsureRegistrationLeaseResponse, otel_wasi::Error> {

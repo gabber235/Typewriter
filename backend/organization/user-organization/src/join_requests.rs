@@ -6,7 +6,6 @@ use wasmcloud_utils::{
     skir_domain_result,
     skir_utils::RecordIdKeyIdentity,
     skir_variant,
-    wasmcloud::messaging::types::NatsMessage,
 };
 
 use wasmcloud_utils::database::organization::{
@@ -63,8 +62,7 @@ struct CancelledJoinRequest {
 /// cancellation publish later changes on that same user stream.
 #[tracing::instrument(skip_all)]
 pub async fn handle_watch(
-    _msg: NatsMessage,
-    scope: wasmcloud_utils::transport_routes::UserScope,
+    scope: wasmcloud_utils::transport::UserScope,
     _request: WatchUserJoinRequestsRequest,
 ) -> Result<WatchUserJoinRequestsResponse, otel_wasi::Error> {
     let user_id = scope.user.as_str();
@@ -83,8 +81,7 @@ pub async fn handle_watch(
 /// resulting user and organization changes after commit and return the user scoped event.
 #[tracing::instrument(skip_all)]
 pub async fn handle_request(
-    _msg: NatsMessage,
-    scope: wasmcloud_utils::transport_routes::UserScope,
+    scope: wasmcloud_utils::transport::UserScope,
     request: SubmitUserJoinRequestRequest,
 ) -> Result<SubmitUserJoinRequestResponse, otel_wasi::Error> {
     let user_id = scope.user.as_str();
@@ -158,7 +155,7 @@ pub async fn handle_request(
                 ..Default::default()
             };
             wasmcloud_utils::transport_routes::UserJoinRequestsWatchRoute::delivery(
-                &wasmcloud_utils::transport_routes::UserScope::try_from(user_key)?,
+                &wasmcloud_utils::transport::UserScope::try_from(user_key)?,
             )
             .persist(user_event.clone())
             .await?;
@@ -170,7 +167,7 @@ pub async fn handle_request(
                 ..Default::default()
             };
             wasmcloud_utils::transport_routes::OrganizationJoinRequestsWatchRoute::delivery(
-                &wasmcloud_utils::transport_routes::OrganizationScope::try_from(organization_id)?,
+                &wasmcloud_utils::transport::OrganizationScope::try_from(organization_id)?,
             )
             .persist(organization_event)
             .await?;
@@ -207,7 +204,7 @@ pub async fn handle_request(
                 ..Default::default()
             };
             wasmcloud_utils::transport_routes::UserOrganizationsWatchRoute::delivery(
-                &wasmcloud_utils::transport_routes::UserScope::try_from(user_key)?,
+                &wasmcloud_utils::transport::UserScope::try_from(user_key)?,
             )
             .persist(user_event.clone())
             .await?;
@@ -219,7 +216,7 @@ pub async fn handle_request(
                 ..Default::default()
             };
             wasmcloud_utils::transport_routes::OrganizationMembersWatchRoute::delivery(
-                &wasmcloud_utils::transport_routes::OrganizationScope::try_from(organization_id)?,
+                &wasmcloud_utils::transport::OrganizationScope::try_from(organization_id)?,
             )
             .persist(member_event)
             .await?;
@@ -262,7 +259,7 @@ async fn publish_consumed_code(
             ..Default::default()
         };
         wasmcloud_utils::transport_routes::OrganizationJoinCodesWatchRoute::delivery(
-            &wasmcloud_utils::transport_routes::OrganizationScope::try_from(organization_id)?,
+            &wasmcloud_utils::transport::OrganizationScope::try_from(organization_id)?,
         )
         .persist(event)
         .await?;
@@ -277,8 +274,7 @@ async fn publish_consumed_code(
 /// returned as a domain result and produces no change event.
 #[tracing::instrument(skip_all)]
 pub async fn handle_cancel(
-    _msg: NatsMessage,
-    scope: wasmcloud_utils::transport_routes::UserScope,
+    scope: wasmcloud_utils::transport::UserScope,
     request: CancelUserJoinRequestRequest,
 ) -> Result<CancelUserJoinRequestResponse, otel_wasi::Error> {
     let user_id = scope.user.as_str();
@@ -342,7 +338,7 @@ pub async fn handle_cancel(
         ..Default::default()
     };
     wasmcloud_utils::transport_routes::UserJoinRequestsWatchRoute::delivery(
-        &wasmcloud_utils::transport_routes::UserScope::try_from(user_key)?,
+        &wasmcloud_utils::transport::UserScope::try_from(user_key)?,
     )
     .persist(event.clone())
     .await?;
@@ -354,7 +350,7 @@ pub async fn handle_cancel(
     };
     let organization_id = join_request.request.organization.id.key.raw_identity()?;
     wasmcloud_utils::transport_routes::OrganizationJoinRequestsWatchRoute::delivery(
-        &wasmcloud_utils::transport_routes::OrganizationScope::try_from(organization_id)?,
+        &wasmcloud_utils::transport::OrganizationScope::try_from(organization_id)?,
     )
     .persist(organization_event)
     .await?;

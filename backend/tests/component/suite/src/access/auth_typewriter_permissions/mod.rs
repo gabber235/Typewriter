@@ -30,8 +30,9 @@ pub struct AuthTypewriterPermissions;
 impl FixtureSpec for AuthTypewriterPermissions {
     fn configure(builder: FixtureBuilder<Self>) -> FixtureBuilder<Self> {
         builder
-            .messaging_subscription("auth.permissions.typewriter-panel")
-            .messaging_subscription("auth.permissions.typewriter-services")
+            .messaging_subscriptions(
+                wasmcloud_utils::transport_routes::auth_typewriter_permissions::SUBSCRIPTIONS,
+            )
             .otel()
             .typewriter_database(SchemaPreset::Full)
     }

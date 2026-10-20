@@ -31,7 +31,9 @@ pub struct OrganizationMembers;
 impl FixtureSpec for OrganizationMembers {
     fn configure(builder: FixtureBuilder<Self>) -> FixtureBuilder<Self> {
         builder
-            .messaging_subscription("typewriter.from.user.*.organization.*.members.>")
+            .messaging_subscriptions(
+                wasmcloud_utils::transport_routes::organization_members::SUBSCRIPTIONS,
+            )
             .otel()
             .typewriter_database(SchemaPreset::Organization)
     }

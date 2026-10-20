@@ -31,14 +31,7 @@ mod watch;
 mod watch_topology;
 
 use wasmcloud_utils::{
-    dispatch_event_route, dispatch_route,
-    transport_routes::{
-        HostExecutionReportRoute, HostExecutionWatchRoute, OrganizationServiceUpdateRoute,
-        OrganizationServicesWatchRoute, OrganizationTopologyWatchRoute,
-        RegistrationLeaseEnsureRoute, ServiceBindRoute, ServiceBindingQueryRoute,
-        ServiceHeartbeatRoute, ServiceHostRegisterRoute, ServiceMessagingScopeRoute,
-        ServiceShutdownRoute, ServiceTopologyConfigureRoute, ServiceUnbindRoute, unmatched_route,
-    },
+    transport_routes::service_registration::{Handlers, dispatch},
     wasmcloud::messaging::{core_handler::Guest, types},
 };
 
@@ -48,34 +41,25 @@ wasmcloud_utils::export!(Component);
 impl Guest for Component {
     #[otel_wasi::wasi_instrument(service = "service-registration", export)]
     async fn handle_message(msg: types::NatsMessage) -> Result<(), otel_wasi::Error> {
-        handle_message_async(msg).await
+        dispatch(
+            msg,
+            Handlers {
+                service_binding_query: status::handle_binding,
+                registration_lease_ensure: status::handle_lease,
+                service_messaging_scope: messaging_scope::handle,
+                service_bind: bind::handle_bind,
+                organization_services_watch: watch::handle_watch,
+                organization_service_update: update::handle_update,
+                service_unbind: unbind::handle_unbind,
+                service_topology_configure: configure_topology::handle_configure,
+                organization_topology_watch: watch_topology::handle_watch,
+                service_host_register: register_host::handle,
+                host_execution_watch: host_execution::handle_watch,
+                host_execution_report: host_execution::handle_report,
+                service_heartbeat: heartbeat::handle_heartbeat,
+                service_shutdown: shutdown::handle_shutdown,
+            },
+        )
+        .await
     }
-}
-
-async fn handle_message_async(msg: types::NatsMessage) -> Result<(), otel_wasi::Error> {
-    dispatch_event_route!(msg, ServiceHeartbeatRoute, heartbeat::handle_heartbeat);
-    dispatch_route!(msg, ServiceBindingQueryRoute, status::handle_binding);
-    dispatch_route!(msg, RegistrationLeaseEnsureRoute, status::handle_lease);
-    dispatch_route!(msg, ServiceMessagingScopeRoute, messaging_scope::handle);
-    dispatch_route!(msg, ServiceHostRegisterRoute, register_host::handle);
-    dispatch_route!(msg, HostExecutionWatchRoute, host_execution::handle_watch);
-    dispatch_route!(msg, HostExecutionReportRoute, host_execution::handle_report);
-    dispatch_route!(msg, ServiceBindRoute, bind::handle_bind);
-    dispatch_route!(msg, OrganizationServicesWatchRoute, watch::handle_watch);
-    dispatch_route!(msg, OrganizationServiceUpdateRoute, update::handle_update);
-    dispatch_route!(msg, ServiceUnbindRoute, unbind::handle_unbind);
-    dispatch_route!(
-        msg,
-        ServiceTopologyConfigureRoute,
-        configure_topology::handle_configure
-    );
-    dispatch_route!(
-        msg,
-        OrganizationTopologyWatchRoute,
-        watch_topology::handle_watch
-    );
-
-    dispatch_event_route!(msg, ServiceShutdownRoute, shutdown::handle_shutdown);
-
-    Err(unmatched_route(&msg, "dispatch-action-unknown"))
 }

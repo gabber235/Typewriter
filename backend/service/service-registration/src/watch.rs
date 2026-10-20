@@ -11,7 +11,6 @@ use wasmcloud_utils::{
         WatchOrganizationServicesRequest, WatchOrganizationServicesResponse,
     },
     skir::base::service::v1::service::Service,
-    wasmcloud::messaging::types::NatsMessage,
 };
 
 use wasmcloud_utils::database::service::ServiceRecord;
@@ -19,8 +18,7 @@ use wasmcloud_utils::database::service::ServiceRecord;
 #[tracing::instrument(skip_all)]
 /// Returns the current services for the organization admitted by the generated dispatcher.
 pub async fn handle_watch(
-    _msg: NatsMessage,
-    scope: wasmcloud_utils::transport_routes::OrganizationActorScope,
+    scope: wasmcloud_utils::transport::OrganizationActorScope,
     _request: WatchOrganizationServicesRequest,
 ) -> Result<WatchOrganizationServicesResponse, otel_wasi::Error> {
     let actor_id = scope.user.as_str();

@@ -1,4 +1,32 @@
-//! Hand written transport values shared by the generated routes and the components using them.
+//! Hand written transport runtime shared by the generated routes and the components using them.
+//!
+//! The generated `transport_routes` module declares one type per manifest route, the role grants
+//! of each scope and one dispatcher per backend component. Everything route independent lives
+//! here: subject tokens and scopes, grant sets, the route contracts, reply delivery and the
+//! serving of matched messages.
+
+mod delivery;
+mod grant;
+mod route;
+mod serve;
+mod subject;
+#[cfg(test)]
+pub(crate) mod test_support;
+
+#[cfg(test)]
+mod dispatch_test;
+
+pub use delivery::{DomainResponseDelivery, PlainResponseDelivery, ResponseDelivery};
+pub use grant::GrantSet;
+pub use route::{
+    EventDelivery, EventRoute, OutboundEventRoute, OutboundRequestRoute, PersistentEventRoute,
+    RequestRoute, TransientEventRoute, request_route,
+};
+pub use serve::{serve_event, serve_request, unmatched};
+pub use subject::{
+    InternalComponentScope, OrganizationActorScope, OrganizationScope, RealmScope, ServiceScope,
+    SubjectToken, UserScope,
+};
 
 /// Validated connection discriminator shared by inbox names and persistent consumer identities.
 ///
@@ -37,7 +65,7 @@ mod tests {
     use base64::{Engine as _, engine::general_purpose::URL_SAFE_NO_PAD};
 
     use super::*;
-    use crate::transport_routes::{SubjectToken, consumer_name};
+    use crate::transport_routes::consumer_name;
 
     #[test]
     fn validates_connection_session_shape() {

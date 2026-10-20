@@ -14,8 +14,7 @@ use wasmcloud_utils::{
     },
     skir_utils::RecordIdKeyIdentity,
     skir_variant,
-    transport_routes::ServiceScope,
-    wasmcloud::messaging::types::NatsMessage,
+    transport::ServiceScope,
 };
 
 #[derive(Debug, Deserialize)]
@@ -33,7 +32,6 @@ struct MessagingScopeRecord {
 /// has both Realm relationships absent. An unbound record cannot form the required organization
 /// scope and fails result decoding.
 pub async fn handle(
-    _msg: NatsMessage,
     scope: ServiceScope,
     _request: GetServiceMessagingScopeRequest,
 ) -> Result<GetServiceMessagingScopeResponse, otel_wasi::Error> {

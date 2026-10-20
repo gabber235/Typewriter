@@ -1,8 +1,8 @@
 //! Registry of the typed SKIR responses used by backend components.
 //!
 //! Each declaration binds a generated response enum to its successful variants and
-//! known domain errors. The dispatch macro uses this registry through the `SkirResponse`
-//! contract, so every handler can return a typed reply, including the generated
+//! known domain errors. The transport runtime replies through this registry and the
+//! `SkirResponse` contract, so every handler can return a typed reply, including the generated
 //! `InternalError` fallback.
 
 use crate::skir::base::access::v1::sentinel::*;

@@ -26,7 +26,6 @@ use wasmcloud_utils::{
         service::Service,
     },
     skir_variant,
-    wasmcloud::messaging::types::NatsMessage,
 };
 
 #[derive(Debug, Deserialize)]
@@ -57,10 +56,9 @@ impl ServiceUpdateOutcome {
 /// map to their contract responses without a metadata publication.
 /// After a successful commit, the organization service watch receives the updated projection. A
 /// publication failure occurs after durable mutation and is therefore not rolled back.
-#[tracing::instrument(skip(_msg, request))]
+#[tracing::instrument(skip(request))]
 pub async fn handle_update(
-    _msg: NatsMessage,
-    scope: wasmcloud_utils::transport_routes::OrganizationActorScope,
+    scope: wasmcloud_utils::transport::OrganizationActorScope,
     request: UpdateOrganizationServiceRequest,
 ) -> Result<UpdateOrganizationServiceResponse, otel_wasi::Error> {
     let actor_id = scope.user.as_str();

@@ -19,11 +19,7 @@ mod join_requests;
 mod watch;
 
 use wasmcloud_utils::{
-    dispatch_route,
-    transport_routes::{
-        UserJoinRequestCancelRoute, UserJoinRequestSubmitRoute, UserJoinRequestsWatchRoute,
-        UserOrganizationCreateRoute, UserOrganizationsWatchRoute, unmatched_route,
-    },
+    transport_routes::user_organization::{Handlers, dispatch},
     wasmcloud::messaging::{core_handler::Guest, types},
 };
 
@@ -33,23 +29,16 @@ wasmcloud_utils::export!(Component);
 impl Guest for Component {
     #[otel_wasi::wasi_instrument(service = "user-organization", export)]
     async fn handle_message(msg: types::NatsMessage) -> Result<(), otel_wasi::Error> {
-        handle_message_async(msg).await
+        dispatch(
+            msg,
+            Handlers {
+                user_organization_create: create::handle_create,
+                user_organizations_watch: watch::handle_watch,
+                user_join_requests_watch: join_requests::handle_watch,
+                user_join_request_submit: join_requests::handle_request,
+                user_join_request_cancel: join_requests::handle_cancel,
+            },
+        )
+        .await
     }
-}
-
-async fn handle_message_async(msg: types::NatsMessage) -> Result<(), otel_wasi::Error> {
-    dispatch_route!(msg, UserOrganizationCreateRoute, create::handle_create);
-    dispatch_route!(msg, UserOrganizationsWatchRoute, watch::handle_watch);
-    dispatch_route!(msg, UserJoinRequestsWatchRoute, join_requests::handle_watch);
-    dispatch_route!(
-        msg,
-        UserJoinRequestSubmitRoute,
-        join_requests::handle_request
-    );
-    dispatch_route!(
-        msg,
-        UserJoinRequestCancelRoute,
-        join_requests::handle_cancel
-    );
-    Err(unmatched_route(&msg, "dispatch-action-unknown"))
 }

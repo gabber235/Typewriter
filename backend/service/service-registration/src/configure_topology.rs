@@ -29,7 +29,6 @@ use wasmcloud_utils::{
     skir_transaction_outcome,
     skir_utils::RecordIdKeyIdentity,
     skir_variant,
-    wasmcloud::messaging::types::NatsMessage,
 };
 
 #[derive(Debug, Deserialize)]
@@ -65,8 +64,7 @@ enum ConfigureTopologyOutcome {
 /// resources, not runtime readiness. Invalid assignments and stale revisions return domain
 /// responses without publishing a topology change.
 pub async fn handle_configure(
-    _msg: NatsMessage,
-    scope: wasmcloud_utils::transport_routes::OrganizationActorScope,
+    scope: wasmcloud_utils::transport::OrganizationActorScope,
     request: ConfigureServiceHostRequest,
 ) -> Result<ConfigureServiceHostResponse, otel_wasi::Error> {
     let actor_id = scope.user.as_str();
@@ -176,7 +174,7 @@ async fn publish_configuration(
     change: &HostConfigurationChange,
 ) -> Result<(), otel_wasi::Error> {
     wasmcloud_utils::transport_routes::OrganizationTopologyWatchRoute::delivery(
-        &wasmcloud_utils::transport_routes::OrganizationScope::try_from(organization_id)?,
+        &wasmcloud_utils::transport::OrganizationScope::try_from(organization_id)?,
     )
     .publish(OrganizationTopologyChanged::ConfigurationChanged(Box::new(
         change.clone(),
@@ -184,7 +182,7 @@ async fn publish_configuration(
     .await?;
     let service_id = change.host.service_id.key.raw_identity()?;
     wasmcloud_utils::transport_routes::HostExecutionWatchRoute::delivery(
-        &wasmcloud_utils::transport_routes::ServiceScope::try_from(service_id)?,
+        &wasmcloud_utils::transport::ServiceScope::try_from(service_id)?,
     )
     .publish(skir_variant!(WatchHostExecutionResponse::Desired {
         topology_revision: change.host.topology_revision.desired,

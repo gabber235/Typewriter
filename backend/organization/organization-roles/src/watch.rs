@@ -11,8 +11,7 @@ use wasmcloud_utils::{
     skir::base::organization::v1::role::{
         WatchOrganizationRolesRequest, WatchOrganizationRolesResponse,
     },
-    transport_routes::OrganizationActorScope,
-    wasmcloud::messaging::types::NatsMessage,
+    transport::OrganizationActorScope,
 };
 
 use wasmcloud_utils::database::organization::OrganizationRoleRecord;
@@ -24,7 +23,6 @@ use wasmcloud_utils::database::organization::OrganizationRoleRecord;
 /// failures are returned through the dispatch layer as an internal error response.
 #[tracing::instrument(skip_all)]
 pub async fn handle_watch(
-    _msg: NatsMessage,
     scope: OrganizationActorScope,
     _request: WatchOrganizationRolesRequest,
 ) -> Result<WatchOrganizationRolesResponse, otel_wasi::Error> {
