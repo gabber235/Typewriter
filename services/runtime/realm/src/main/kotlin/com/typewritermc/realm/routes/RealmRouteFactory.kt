@@ -1,7 +1,7 @@
 package com.typewritermc.realm.routes
 
 import com.typewritermc.authoring.InitializationRuntime
-import com.typewritermc.protocol.transport.generated.RealmRouteScope
+import com.typewritermc.protocol.transport.RealmRouteScope
 import com.typewritermc.realm.authoring.AuthoringViewStore
 import com.typewritermc.realm.authoring.ResourceOperationRuntime
 import com.typewritermc.realm.checking.RealmCheckRuntime

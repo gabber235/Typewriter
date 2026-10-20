@@ -2,7 +2,7 @@ import { describe, expect, test } from "bun:test";
 
 import { generatorFor, type Target } from "../src/index.js";
 import { emitDart } from "../src/routes/emit/dart.js";
-import { emitKotlinLoader } from "../src/routes/emit/kotlin.js";
+import { emitKotlin, emitKotlinLoader } from "../src/routes/emit/kotlin.js";
 import { emitRust } from "../src/routes/emit/rust.js";
 import { symbolProviders } from "../src/symbols.js";
 import { committedRoutes, loadSkirInput, MANIFEST_PATH } from "./support.js";
@@ -73,6 +73,20 @@ describe("route emission", () => {
     expect(dart!.code).toContain('return "TW_" + encoded;');
     expect(dart!.code).toContain('id: "organization_members_changed",\n    organizationScoped: true,');
     expect(dart!.code).toContain('id: "user_organizations_changed",\n    organizationScoped: false,');
+  });
+
+  test("Kotlin route scopes are hand written once, not emitted", async () => {
+    const { input, resolved } = await committedRoutes();
+    const [realm, service] = emitKotlin(resolved, symbolProviders(input).kotlin);
+    const [loader] = emitKotlinLoader(resolved);
+    for (const file of [realm!, loader!]) {
+      expect(file.code).toContain("import com.typewritermc.protocol.transport.RealmRouteScope\n");
+      expect(file.code).toContain("import com.typewritermc.protocol.transport.realmTemplate\n");
+      expect(file.code).not.toContain("data class RealmRouteScope");
+      expect(file.code).not.toContain("addressTemplate(");
+    }
+    expect(service!.code).toContain("import com.typewritermc.protocol.transport.serviceTemplate\n");
+    expect(service!.code).not.toContain("data class ServiceRouteScope");
   });
 
   test("the panel derives no permissions of its own", async () => {

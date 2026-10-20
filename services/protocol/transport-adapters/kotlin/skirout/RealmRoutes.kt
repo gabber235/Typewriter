@@ -1,8 +1,8 @@
 package com.typewritermc.protocol.transport.generated
 
+import com.typewritermc.protocol.transport.RealmRouteScope
+import com.typewritermc.protocol.transport.realmTemplate
 import com.typewritermc.services.libs.communicator.address.MessageAddress
-import com.typewritermc.services.libs.communicator.address.addressTemplate
-import com.typewritermc.services.libs.communicator.address.addressValuesOf
 import com.typewritermc.services.libs.communicator.contract.EventContract
 import com.typewritermc.services.libs.communicator.contract.OperationName
 import com.typewritermc.services.libs.communicator.contract.ResponseClassifier
@@ -38,12 +38,6 @@ import skirout.service.v1.artifact.FetchSharedArtifactCatalog
 import skirout.service.v1.artifact.PublishSharedArtifact
 import skirout.service.v1.artifact.ReadArtifactBlob
 import skirout.service.v1.artifact.WriteArtifactBlobChunk
-
-data class RealmRouteScope(val organizationId: String, val realmId: String)
-private fun String.realmTemplate() = addressTemplate(
-    render = { it: RealmRouteScope -> addressValuesOf("organization" to it.organizationId, "realm" to it.realmId) },
-    parse = { RealmRouteScope(it.require("organization"), it.require("realm")) },
-)
 
 private val editorCatalogFetchRequestAddress = "service.to.{realm}.organization.{organization}.realm.editor.catalog.fetch".realmTemplate()
 private val editorCatalogFetchUpdateAddress = "service.from.{realm}.organization.{organization}.realm.editor.catalog.fetch".realmTemplate()

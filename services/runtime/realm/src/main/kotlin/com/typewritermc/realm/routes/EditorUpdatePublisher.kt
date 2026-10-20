@@ -1,7 +1,7 @@
 package com.typewritermc.realm.routes
 
 import com.typewritermc.checking.FindingStatus
-import com.typewritermc.protocol.transport.generated.RealmRouteScope
+import com.typewritermc.protocol.transport.RealmRouteScope
 import com.typewritermc.realm.authoring.AuthoringView
 import com.typewritermc.realm.authoring.AuthoringViewStore
 import com.typewritermc.realm.checking.FindingSet

@@ -7,10 +7,11 @@ import { clientSubject, hasSide, type ResolvedRoute, type ResolvedRoutes } from 
 
 const COMMUNICATOR = "com.typewritermc.services.libs.communicator";
 
+/** The hand written route scopes and their subject templates the generated contracts extend. */
+const SCOPES = "com.typewritermc.protocol.transport";
+
 const ROUTE_IMPORTS = [
   `${COMMUNICATOR}.address.MessageAddress`,
-  `${COMMUNICATOR}.address.addressTemplate`,
-  `${COMMUNICATOR}.address.addressValuesOf`,
   `${COMMUNICATOR}.contract.EventContract`,
   `${COMMUNICATOR}.contract.OperationName`,
   `${COMMUNICATOR}.contract.ResponseClassifier`,
@@ -22,9 +23,8 @@ const ROUTE_IMPORTS = [
 ];
 
 const LOADER_IMPORTS = [
-  "com.typewritermc.protocol.transport.generated.RealmRouteScope",
-  `${COMMUNICATOR}.address.addressTemplate`,
-  `${COMMUNICATOR}.address.addressValuesOf`,
+  `${SCOPES}.RealmRouteScope`,
+  `${SCOPES}.realmTemplate`,
   `${COMMUNICATOR}.contract.EventContract`,
   `${COMMUNICATOR}.contract.OperationName`,
   `${COMMUNICATOR}.contract.ResponsePolicy`,
@@ -33,23 +33,6 @@ const LOADER_IMPORTS = [
 ];
 
 const LOADER_PACKAGE = "com.typewritermc.loader.rollout";
-
-const REALM_SCOPE = `data class RealmRouteScope(val organizationId: String, val realmId: String)
-private fun String.realmTemplate() = addressTemplate(
-    render = { it: RealmRouteScope -> addressValuesOf("organization" to it.organizationId, "realm" to it.realmId) },
-    parse = { RealmRouteScope(it.require("organization"), it.require("realm")) },
-)`;
-
-const SERVICE_SCOPE = `data class ServiceRouteScope(val serviceId: String)
-private fun String.serviceTemplate() = addressTemplate(
-    render = { addressValuesOf("service" to it.serviceId) },
-    parse = { ServiceRouteScope(it.require("service")) },
-)`;
-
-const LOADER_SCOPE = `private fun String.loaderRealmTemplate() = addressTemplate(
-    render = { it: RealmRouteScope -> addressValuesOf("organization" to it.organizationId, "realm" to it.realmId) },
-    parse = { RealmRouteScope(it.require("organization"), it.require("realm")) },
-)`;
 
 const kotlinString = (value: string) => quoted(value, "escaped");
 
@@ -79,8 +62,12 @@ function routeFile(
 ): CodeGenerator.OutputFile {
   const scope = realm ? "RealmRouteScope" : "ServiceRouteScope";
   const template = realm ? "realmTemplate()" : "serviceTemplate()";
-  const imports = ROUTE_IMPORTS.map((name) => `import ${name}`);
-  const blocks = [realm ? REALM_SCOPE : SERVICE_SCOPE];
+  const imports = [
+    ...ROUTE_IMPORTS,
+    `${SCOPES}.${scope}`,
+    `${SCOPES}.${realm ? "realmTemplate" : "serviceTemplate"}`,
+  ].map((name) => `import ${name}`);
+  const blocks: string[] = [];
   for (const route of routes) {
     const name = lowerCamel(route.name);
     const requestAddress = `${name}RequestAddress`;
@@ -193,7 +180,7 @@ function shortName(symbol: string): string {
  */
 export function emitKotlinLoader({ routes }: ResolvedRoutes): CodeGenerator.OutputFile[] {
   const imports = [...LOADER_IMPORTS];
-  const blocks = [LOADER_SCOPE];
+  const blocks: string[] = [];
   for (const route of routes) {
     const { flow } = route;
     if (flow.kind !== "scatter" && !(flow.kind === "event" && flow.binding.kind === "native_kotlin")) {
@@ -210,7 +197,7 @@ export function emitKotlinLoader({ routes }: ResolvedRoutes): CodeGenerator.Outp
       const requestType = shortName(binding.request_type);
       const responseType = shortName(binding.response_type);
       imports.push(binding.request_type, binding.response_type);
-      blocks.push(`private val ${name}RequestAddress = ${kotlinString(serviceSubject(route, "request"))}.loaderRealmTemplate()
+      blocks.push(`private val ${name}RequestAddress = ${kotlinString(serviceSubject(route, "request"))}.realmTemplate()
 fun RealmRouteScope.${name}(policy: ResponsePolicy<${responseType}>): ScatterContract<RealmRouteScope, ${requestType}, ${responseType}> = ScatterContract(
     name = OperationName.of(${operation}),
     requestAddress = ${name}RequestAddress.subscribedAt(this),
@@ -222,7 +209,7 @@ fun RealmRouteScope.${name}(policy: ResponsePolicy<${responseType}>): ScatterCon
     } else if (flow.binding.kind === "native_kotlin") {
       const { binding } = flow;
       imports.push(binding.event_type);
-      blocks.push(`private val ${name}Address = ${kotlinString(serviceSubject(route, "event"))}.loaderRealmTemplate()
+      blocks.push(`private val ${name}Address = ${kotlinString(serviceSubject(route, "event"))}.realmTemplate()
 val RealmRouteScope.${name}: EventContract<RealmRouteScope, ${shortName(binding.event_type)}>
     get() = EventContract(
         name = OperationName.of(${operation}),

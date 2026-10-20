@@ -1,6 +1,6 @@
 package com.typewritermc.services.libs.registrar.runtime
 
-import com.typewritermc.protocol.transport.generated.ServiceRouteScope
+import com.typewritermc.protocol.transport.ServiceRouteScope
 import com.typewritermc.protocol.transport.generated.registrationLeaseEnsure
 import com.typewritermc.protocol.transport.generated.serviceBindingQuery
 import com.typewritermc.protocol.transport.generated.serviceHeartbeat

@@ -8,7 +8,7 @@ import com.typewritermc.loader.LoaderServiceConnection
 import com.typewritermc.loader.api.RuntimePlacement
 import com.typewritermc.loader.deployment.PrimaryEngineTarget
 import com.typewritermc.loader.deployment.RealmLoaderIntent
-import com.typewritermc.protocol.transport.generated.ServiceRouteScope
+import com.typewritermc.protocol.transport.ServiceRouteScope
 import com.typewritermc.protocol.transport.generated.hostExecutionReport
 import com.typewritermc.protocol.transport.generated.hostExecutionWatch
 import com.typewritermc.protocol.transport.generated.serviceHostRegister

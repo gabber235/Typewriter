@@ -1,6 +1,6 @@
 package com.typewritermc.realm
 
-import com.typewritermc.protocol.transport.generated.RealmRouteScope
+import com.typewritermc.protocol.transport.RealmRouteScope
 import com.typewritermc.realm.catalog.RealmCatalogStore
 import com.typewritermc.realm.catalog.installTestCatalog
 import com.typewritermc.services.libs.communicator.address.MessageAddress

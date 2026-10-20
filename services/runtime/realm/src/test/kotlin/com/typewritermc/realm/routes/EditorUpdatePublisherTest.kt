@@ -9,7 +9,7 @@ import com.typewritermc.checking.CheckOutcome
 import com.typewritermc.checking.FindingStatus
 import com.typewritermc.configuration.RuleId
 import com.typewritermc.configuration.RuleOrigin
-import com.typewritermc.protocol.transport.generated.RealmRouteScope
+import com.typewritermc.protocol.transport.RealmRouteScope
 import com.typewritermc.realm.authoring.AuthoringSeed
 import com.typewritermc.realm.authoring.AuthoringViewDelta
 import com.typewritermc.realm.authoring.InMemoryAuthoringViewStore

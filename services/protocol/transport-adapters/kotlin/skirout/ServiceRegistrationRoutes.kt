@@ -1,8 +1,8 @@
 package com.typewritermc.protocol.transport.generated
 
+import com.typewritermc.protocol.transport.ServiceRouteScope
+import com.typewritermc.protocol.transport.serviceTemplate
 import com.typewritermc.services.libs.communicator.address.MessageAddress
-import com.typewritermc.services.libs.communicator.address.addressTemplate
-import com.typewritermc.services.libs.communicator.address.addressValuesOf
 import com.typewritermc.services.libs.communicator.contract.EventContract
 import com.typewritermc.services.libs.communicator.contract.OperationName
 import com.typewritermc.services.libs.communicator.contract.ResponseClassifier
@@ -17,12 +17,6 @@ import skirout.service.v1.topology.GetServiceMessagingScope
 import skirout.service.v1.topology.RegisterServiceHost
 import skirout.service.v1.topology.ReportHostExecution
 import skirout.service.v1.topology.WatchHostExecution
-
-data class ServiceRouteScope(val serviceId: String)
-private fun String.serviceTemplate() = addressTemplate(
-    render = { addressValuesOf("service" to it.serviceId) },
-    parse = { ServiceRouteScope(it.require("service")) },
-)
 
 private val serviceBindingQueryRequestAddress = "cloud.to.service.{service}.binding.query".serviceTemplate()
 private val serviceBindingQueryUpdateAddress = "cloud.from.service.{service}.registration.bound".serviceTemplate()

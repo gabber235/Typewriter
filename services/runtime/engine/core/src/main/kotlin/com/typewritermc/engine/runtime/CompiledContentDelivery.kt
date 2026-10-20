@@ -6,7 +6,7 @@ import com.typewritermc.engine.PublishedContentCodec
 import com.typewritermc.loader.api.HostedMessagingSession
 import com.typewritermc.loader.api.HostedRuntimeHost
 import com.typewritermc.protocol.skir.fromBoundedBytes
-import com.typewritermc.protocol.transport.generated.RealmRouteScope
+import com.typewritermc.protocol.transport.RealmRouteScope
 import com.typewritermc.protocol.transport.generated.authoringCompiledChanged
 import com.typewritermc.protocol.transport.generated.authoringCompiledQuery
 import com.typewritermc.services.libs.communicator.client.Communicator

@@ -269,7 +269,7 @@ class AuthoringMutationPlannerTest {
                     com.typewritermc.realm.routes.ResourceOperationRoutes(
                         runtime,
                         com.typewritermc.realm.routes.EditorContracts(
-                            com.typewritermc.protocol.transport.generated
+                            com.typewritermc.protocol.transport
                                 .RealmRouteScope("organization", "realm"),
                         ),
                     )

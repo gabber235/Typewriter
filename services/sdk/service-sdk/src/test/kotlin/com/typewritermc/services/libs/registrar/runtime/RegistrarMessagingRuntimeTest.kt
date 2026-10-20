@@ -2,7 +2,7 @@
 
 package com.typewritermc.services.libs.registrar.runtime
 
-import com.typewritermc.protocol.transport.generated.ServiceRouteScope
+import com.typewritermc.protocol.transport.ServiceRouteScope
 import com.typewritermc.services.libs.communicator.client.Communicator
 import com.typewritermc.services.libs.communicator.nats.NatsConnectionState
 import com.typewritermc.services.libs.communicator.nats.NatsLifecycleError

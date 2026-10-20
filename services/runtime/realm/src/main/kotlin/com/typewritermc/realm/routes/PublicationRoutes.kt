@@ -4,7 +4,7 @@ import com.typewritermc.authoring.DiagnosticId
 import com.typewritermc.authoring.skir.SkirAuthoringOperationCodec
 import com.typewritermc.checking.Diagnostic
 import com.typewritermc.engine.CompilationRoot
-import com.typewritermc.protocol.transport.generated.RealmRouteScope
+import com.typewritermc.protocol.transport.RealmRouteScope
 import com.typewritermc.realm.checking.toWire
 import com.typewritermc.realm.compiler.DiagnosticEvidence
 import com.typewritermc.realm.compiler.PublicationActivationPhase

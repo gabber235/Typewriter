@@ -1,6 +1,6 @@
 package com.typewritermc.loader.rollout
 
-import com.typewritermc.protocol.transport.generated.RealmRouteScope
+import com.typewritermc.protocol.transport.RealmRouteScope
 import com.typewritermc.services.libs.communicator.client.Communicator
 import com.typewritermc.services.libs.communicator.client.ScatterPolicy
 import com.typewritermc.services.libs.communicator.contract.ResponseClassification

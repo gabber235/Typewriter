@@ -1,6 +1,6 @@
 package com.typewritermc.loader.artifact
 
-import com.typewritermc.protocol.transport.generated.RealmRouteScope
+import com.typewritermc.protocol.transport.RealmRouteScope
 import com.typewritermc.protocol.transport.generated.sharedBlobBegin
 import com.typewritermc.protocol.transport.generated.sharedBlobComplete
 import com.typewritermc.protocol.transport.generated.sharedBlobMetadata
