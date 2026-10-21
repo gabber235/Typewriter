@@ -6,7 +6,6 @@ import com.typewritermc.authoring.CompleteValue
 import com.typewritermc.authoring.DefaultInitializationRuntime
 import com.typewritermc.authoring.InitializationRequest
 import com.typewritermc.authoring.InputAnswer
-import com.typewritermc.authoring.NativeBindingId
 import com.typewritermc.authoring.NativeConstructionPlan
 import com.typewritermc.authoring.PreparationOperation
 import com.typewritermc.authoring.PreparationStep
@@ -15,7 +14,6 @@ import com.typewritermc.authoring.RequiredInput
 import com.typewritermc.authoring.fieldMap
 import com.typewritermc.authoring.materialize
 import com.typewritermc.authoring.skir.SkirAuthoringOperationCodec
-import com.typewritermc.checking.CatalogGeneration
 import com.typewritermc.types.FactoryNativeBindingRegistry
 import com.typewritermc.types.NativeBinding
 import com.typewritermc.types.NativeBindingFactory
@@ -42,6 +40,7 @@ import de.infix.testBalloon.framework.core.testSuite
 import io.kotest.matchers.shouldBe
 import skirout.editor.v1.catalog.PreparedContent
 import skirout.editor.v1.diagnostic.InitializationDiagnostic
+import skirout.editor.v1.type_catalog.CatalogGeneration
 import skirout.editor.v1.type_catalog.CollectionKind
 import skirout.editor.v1.type_catalog.DataValue
 import skirout.editor.v1.type_catalog.EndpointId
@@ -52,6 +51,7 @@ import skirout.editor.v1.type_catalog.LinkTarget
 import skirout.editor.v1.type_catalog.ListItem
 import skirout.editor.v1.type_catalog.MapRow
 import skirout.editor.v1.type_catalog.NamedTypeUse
+import skirout.editor.v1.type_catalog.NativeBindingId
 import skirout.editor.v1.type_catalog.PathSegment
 import skirout.editor.v1.type_catalog.RepresentationTemplate
 import skirout.editor.v1.type_catalog.ScalarKind
@@ -222,7 +222,7 @@ val ResumableInitializationTest by testSuite {
                 PreparationOperation.Resume(first.draft, listOf(InputAnswer(path("absent"), reference()))),
                 PreparationOperation.Resume(first.draft, listOf(InputAnswer(answer.path, DataValue.StringValueWrapper("wrong")))),
                 PreparationOperation.Resume(first.draft.copy(pendingDefaults = setOf(answer.path)), listOf(answer)),
-                PreparationOperation.Resume(first.draft.copy(catalog = CatalogGeneration("old")), listOf(answer)),
+                PreparationOperation.Resume(first.draft.copy(catalog = CatalogGeneration(value = "old")), listOf(answer)),
             )
         invalidOperations.forEach {
             (fixture.runtime.stepNow(it) is PreparationStep.Unavailable) shouldBe true
@@ -455,7 +455,7 @@ private class ResumePlanFactory(
     override val definition: TypeDefinitionId,
     override val constructionPlan: NativeConstructionPlan,
 ) : NativeBindingFactory {
-    override val provider = NativeBindingId("test.resume")
+    override val provider = NativeBindingId(value = "test.resume")
 
     override fun bind(
         actual: CheckedType,
@@ -463,7 +463,7 @@ private class ResumePlanFactory(
     ): NativeBinding<*> = error("Preparation does not decode complete records.")
 }
 
-private val GENERATION = CatalogGeneration("resume")
+private val GENERATION = CatalogGeneration(value = "resume")
 private val RESOURCE_ID = id("Resource")
 private val LINK_ID = id("Reference")
 private val LINK_USE = LINK_ID.namedUse(emptyList())

@@ -3,7 +3,6 @@
 package com.typewritermc.discovery
 
 import com.typewritermc.authoring.GeneratedSdkApi
-import com.typewritermc.checking.CatalogGeneration
 import com.typewritermc.expression.literal
 import com.typewritermc.expression.orElse
 import com.typewritermc.imprint.ArtifactId
@@ -25,6 +24,7 @@ import com.typewritermc.types.text
 import de.infix.testBalloon.framework.core.testSuite
 import io.kotest.matchers.shouldBe
 import skirout.editor.v1.catalog.PresentationRole
+import skirout.editor.v1.type_catalog.CatalogGeneration
 import skirout.editor.v1.type_catalog.DeclarationOwner
 import skirout.editor.v1.type_catalog.PresentationId
 import skirout.editor.v1.type_catalog.RepresentationTemplate
@@ -103,5 +103,5 @@ private fun nativeIdentityAssembly(ambiguous: Boolean): CatalogAssembly {
                     emptyList()
                 },
         presentations = listOf(OwnedPresentation(origin, descriptor, provider)),
-    ).assemble(CatalogAssemblyContext(CatalogGeneration("native identity")))
+    ).assemble(CatalogAssemblyContext(CatalogGeneration(value = "native identity")))
 }

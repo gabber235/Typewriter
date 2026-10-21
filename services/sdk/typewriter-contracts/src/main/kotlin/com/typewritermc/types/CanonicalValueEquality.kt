@@ -1,7 +1,7 @@
 package com.typewritermc.types
 
-import com.typewritermc.authoring.CanonicalValueHash
 import com.typewritermc.authoring.CompleteValue
+import skirout.editor.v1.type_catalog.CanonicalValueHash
 import skirout.editor.v1.type_catalog.DataValue
 import skirout.editor.v1.type_catalog.TypeUse
 import skirout.editor.v1.type_catalog.ValuePath
@@ -29,7 +29,7 @@ object DefaultCanonicalValueEquality : CanonicalValueEquality {
     override fun hash(value: CompleteValue): CanonicalValueHash {
         val input = listOf(value.schema.use.semanticForm(), value.value.canonicalValueKey()).framed("value").encodeToByteArray()
         val digest = MessageDigest.getInstance("SHA256").digest(input)
-        return CanonicalValueHash(digest.toHexString())
+        return CanonicalValueHash(value = digest.toHexString())
     }
 }
 

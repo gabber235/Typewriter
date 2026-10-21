@@ -4,7 +4,6 @@ import com.typewritermc.authoring.ArgumentLocation
 import com.typewritermc.authoring.PreparedEditResult
 import com.typewritermc.authoring.definition
 import com.typewritermc.authoring.skir.SkirAuthoringOperationCodec
-import com.typewritermc.checking.CatalogGeneration
 import com.typewritermc.protocol.transport.RealmRouteScope
 import com.typewritermc.protocol.transport.generated.authoringEditCommit
 import com.typewritermc.protocol.transport.generated.authoringStateQuery
@@ -30,13 +29,13 @@ import skirout.editor.v1.authoring.PreviewTypeArgumentChangeResponse
 import skirout.editor.v1.authoring.QueryAuthoringStateRequest
 import skirout.editor.v1.authoring.QueryAuthoringStateResponse
 import skirout.editor.v1.checking.FindingSet
+import skirout.editor.v1.type_catalog.CatalogGeneration
 import skirout.editor.v1.type_catalog.RelationId
 import skirout.editor.v1.authoring.ArgumentLocation as SkirArgumentLocation
 import skirout.editor.v1.authoring.AuthoringResource as SkirAuthoringResource
 import skirout.editor.v1.authoring.AuthoringState as SkirAuthoringState
 import skirout.editor.v1.authoring.CatalogChanged as SkirCatalogChanged
 import skirout.editor.v1.authoring_facts.LinkProjection as SkirLinkProjection
-import skirout.editor.v1.type_catalog.CatalogGeneration as SkirCatalogGeneration
 import skirout.editor.v1.type_catalog.ResourceId as SkirResourceId
 
 /**
@@ -74,7 +73,7 @@ internal class AuthoringRoutes(
             val root = snapshot.root
             if (root.catalog.generation.value != request.generation.value) {
                 return QueryAuthoringStateResponse.CatalogChangedErrorWrapper(
-                    SkirCatalogChanged(actualGeneration = SkirCatalogGeneration(value = root.catalog.generation.value)),
+                    SkirCatalogChanged(actualGeneration = root.catalog.generation),
                 )
             }
             val projection =
@@ -94,7 +93,7 @@ internal class AuthoringRoutes(
                 projection.projections.map { link ->
                     SkirLinkProjection(
                         contract =
-                            RelationId(value = link.contract.value),
+                            link.contract,
                         first = SkirResourceId(value = link.first.value),
                         second = SkirResourceId(value = link.second.value),
                         firstLocation = link.firstLocation,
@@ -104,7 +103,7 @@ internal class AuthoringRoutes(
             val capturedFindings = captureFindings(root, findings())
             val authored =
                 SkirAuthoringState(
-                    generation = SkirCatalogGeneration(value = root.catalog.generation.value),
+                    generation = root.catalog.generation,
                     resources = resources,
                     links = links,
                     findings = capturedFindings.findings,
@@ -117,7 +116,7 @@ internal class AuthoringRoutes(
 
     private fun preview(request: PreviewTypeArgumentChangeRequest): TypePreviewResult {
         val requested = request.requested.requireValid()
-        val requestedCatalog = CatalogGeneration(request.catalog.value)
+        val requestedCatalog = request.catalog
         val lease = views.capture()
         lease.use { snapshot ->
             if (snapshot.root.catalog.generation != requestedCatalog) {

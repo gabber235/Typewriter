@@ -22,14 +22,14 @@ import com.typewritermc.types.EndpointDefinition
 import com.typewritermc.types.EndpointSlot
 import com.typewritermc.types.RelationContract
 import com.typewritermc.types.RelationDeletePolicy
-import com.typewritermc.types.RelationFamilyId
-import com.typewritermc.types.RelationId
 import com.typewritermc.types.RelationshipEndpoint
 import com.typewritermc.types.TypewriterGeneratedEndpoint
 import com.typewritermc.types.ksp.relationLinkDefinition
 import com.typewritermc.types.ksp.relationLinkId
 import skirout.editor.v1.type_catalog.EndpointId
 import skirout.editor.v1.type_catalog.NamedTypeTemplate
+import skirout.editor.v1.type_catalog.RelationFamilyId
+import skirout.editor.v1.type_catalog.RelationId
 import skirout.editor.v1.type_catalog.TypeDefinition
 import skirout.editor.v1.type_catalog.TypeDefinitionId
 import com.typewritermc.codegen.TypewriterApi as Api
@@ -80,7 +80,7 @@ internal fun SdkRelation.file(): FileSpec {
         TypeSpec
             .objectBuilder(name)
             .addSuperinterface(Api.GeneratedRelationProvider)
-            .addProperty(PropertySpec.builder("id", RelationId::class).initializer("%T(%S)", RelationId::class, id).build())
+            .addProperty(PropertySpec.builder("id", RelationId::class).initializer("%T(value = %S)", RelationId::class, id).build())
             .addTypes(endpoints.map(::endpointType))
             .addProperty(
                 PropertySpec
@@ -92,7 +92,7 @@ internal fun SdkRelation.file(): FileSpec {
                             "id" to CodeBlock.of("id"),
                             "first" to endpointDefinition(first),
                             "second" to endpointDefinition(second),
-                            "families" to families.map { CodeBlock.of("%T(%S)", RelationFamilyId::class, it) }.setCode(),
+                            "families" to families.map { CodeBlock.of("%T(value = %S)", RelationFamilyId::class, it) }.setCode(),
                         ),
                     ).build(),
             ).build()
@@ -138,4 +138,4 @@ private fun SdkRelation.endpointDefinition(endpoint: SdkEndpoint): CodeBlock =
         ),
     )
 
-private val ENDPOINT_ID = MemberName(RelationId::class.asClassName().packageName, "endpointId", isExtension = true)
+private val ENDPOINT_ID = MemberName("com.typewritermc.types", "endpointId", isExtension = true)

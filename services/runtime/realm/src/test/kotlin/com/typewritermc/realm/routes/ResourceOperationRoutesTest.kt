@@ -40,7 +40,6 @@ import com.typewritermc.realm.repository.MutationPlanningResult
 import com.typewritermc.realm.testTag
 import com.typewritermc.types.EndpointSlot
 import com.typewritermc.types.Ref
-import com.typewritermc.types.RelationId
 import com.typewritermc.types.ResourceId
 import com.typewritermc.types.ResourceTarget
 import com.typewritermc.types.endpointId
@@ -65,6 +64,7 @@ import skirout.editor.v1.resource_operations.ResolveDropCandidatesResult
 import skirout.editor.v1.resource_operations.ResolveResourceOperationsResult
 import skirout.editor.v1.type_catalog.AuthoringRecord
 import skirout.editor.v1.type_catalog.DataValue
+import skirout.editor.v1.type_catalog.RelationId
 import skirout.editor.v1.type_catalog.ValueLocation
 import skirout.editor.v1.type_catalog.ValuePath
 
@@ -470,7 +470,7 @@ private fun orphanTag(origin: ProviderOrigin) =
     ) { spec ->
         with(ResourceOperationSpecImpl(spec)) {
             prepare {
-                val owner = RelationId(TAXONOMY_TAGS_RELATION_ID).endpointId(EndpointSlot.Second)
+                val owner = RelationId(value = TAXONOMY_TAGS_RELATION_ID).endpointId(EndpointSlot.Second)
                 disconnect(
                     LinkOccurrenceId(
                         endpoint = owner,

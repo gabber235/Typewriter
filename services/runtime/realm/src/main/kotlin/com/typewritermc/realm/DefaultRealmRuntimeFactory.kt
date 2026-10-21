@@ -4,7 +4,6 @@ package com.typewritermc.realm
 
 import ch.qos.logback.classic.Level
 import com.typewritermc.authoring.DefaultInitializationRuntime
-import com.typewritermc.checking.CatalogGeneration
 import com.typewritermc.discovery.CatalogAssembly
 import com.typewritermc.discovery.CatalogAssemblyContext
 import com.typewritermc.discovery.CatalogCallback
@@ -50,6 +49,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.cancel
 import skirout.editor.v1.publication.EngineImplementationInputs
+import skirout.editor.v1.type_catalog.CatalogGeneration
 import skirout.editor.v1.type_catalog.InputToken
 import java.nio.file.Path
 import java.util.UUID
@@ -87,7 +87,7 @@ class DefaultRealmRuntimeFactory : RealmRuntimeFactory {
             deployment = loaded
             // The loader can change catalog behavior without changing the deployment artifacts.
             // Identify this assembled catalog so clients cannot reuse a previous runtime's definitions.
-            val generation = CatalogGeneration(UUID.randomUUID().toString())
+            val generation = CatalogGeneration(value = UUID.randomUUID().toString())
             val telemetry = context.host.openTelemetry.serviceTelemetry("realm", REALM_VERSION)
             val assembly =
                 telemetry.mainSpan(

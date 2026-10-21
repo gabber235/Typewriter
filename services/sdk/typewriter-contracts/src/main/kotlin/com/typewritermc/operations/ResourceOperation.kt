@@ -1,7 +1,6 @@
 package com.typewritermc.operations
 
 import com.typewritermc.authoring.name
-import com.typewritermc.capability.CapabilityId
 import skirout.editor.v1.operation.OperationAvailability
 import skirout.editor.v1.operation.OperationConfirmation
 import skirout.editor.v1.operation.OperationDrop
@@ -12,6 +11,7 @@ import skirout.editor.v1.operation.OperationShortcut
 import skirout.editor.v1.operation.ResourceOperationId
 import skirout.editor.v1.presentation.ButtonVariant
 import skirout.editor.v1.presentation.HeaderActionTone
+import skirout.editor.v1.type_catalog.CapabilityId
 import skirout.editor.v1.type_catalog.PathSegment
 import skirout.editor.v1.type_catalog.ValuePath
 
@@ -20,7 +20,7 @@ import skirout.editor.v1.type_catalog.ValuePath
  * fully qualified name of the operation object.
  */
 val ResourceOperationId.capability: CapabilityId
-    get() = CapabilityId(listOf(artifact, sourcePart, declaration).joinToString(":") { "${it.length}:$it" })
+    get() = CapabilityId(value = listOf(artifact, sourcePart, declaration).joinToString(":") { "${it.length}:$it" })
 
 /**
  * The search capability that offers the declared candidates of the input field at [field]. Editors derive it the
@@ -28,11 +28,12 @@ val ResourceOperationId.capability: CapabilityId
  */
 fun ResourceOperationId.candidateSearch(field: ValuePath): CapabilityId =
     CapabilityId(
-        "${capability.value}/candidates/" +
-            field.segments.joinToString(".") { segment ->
-                require(segment is PathSegment.FieldWrapper) { "Candidate fields are addressed by field names only." }
-                segment.name
-            },
+        value =
+            "${capability.value}/candidates/" +
+                field.segments.joinToString(".") { segment ->
+                    require(segment is PathSegment.FieldWrapper) { "Candidate fields are addressed by field names only." }
+                    segment.name
+                },
     )
 
 /** Checks that every part of the identity is present; the capability derived from it relies on that. */

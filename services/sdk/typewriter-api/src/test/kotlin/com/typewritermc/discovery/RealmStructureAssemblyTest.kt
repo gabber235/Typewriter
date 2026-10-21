@@ -2,7 +2,6 @@ package com.typewritermc.discovery
 
 import com.typewritermc.authoring.RealmRootDefinition
 import com.typewritermc.authoring.RealmSectionDefinition
-import com.typewritermc.checking.CatalogGeneration
 import com.typewritermc.imprint.ArtifactId
 import com.typewritermc.imprint.ContributionName
 import com.typewritermc.imprint.ContributionSourceId
@@ -13,17 +12,18 @@ import com.typewritermc.types.EndpointSlot
 import com.typewritermc.types.RESOURCE_OWNERSHIP_FAMILY_ID
 import com.typewritermc.types.RelationContract
 import com.typewritermc.types.RelationDeletePolicy
-import com.typewritermc.types.RelationFamilyId
-import com.typewritermc.types.RelationId
 import com.typewritermc.types.catalog.DeclarationStatus
 import com.typewritermc.types.namedTemplate
 import com.typewritermc.types.qualified
 import de.infix.testBalloon.framework.core.testSuite
 import io.kotest.matchers.shouldBe
 import skirout.editor.v1.catalog.RESOURCE_OWNERSHIP_FAMILY
+import skirout.editor.v1.type_catalog.CatalogGeneration
 import skirout.editor.v1.type_catalog.DeclarationOwner
 import skirout.editor.v1.type_catalog.EndpointId
 import skirout.editor.v1.type_catalog.ParameterKey
+import skirout.editor.v1.type_catalog.RelationFamilyId
+import skirout.editor.v1.type_catalog.RelationId
 import skirout.editor.v1.type_catalog.RepresentationTemplate
 import skirout.editor.v1.type_catalog.TypeDefinition
 import skirout.editor.v1.type_catalog.TypeDefinitionId
@@ -117,7 +117,7 @@ private fun assemble(
     relations: List<RelationContract> = listOf(sectionsRelation),
 ): CatalogAssembly =
     CatalogContributions(declarations = declarations, relations = relations)
-        .assemble(CatalogAssemblyContext(CatalogGeneration("realm structure")))
+        .assemble(CatalogAssemblyContext(CatalogGeneration(value = "realm structure")))
 
 @JvmName("assembleDefinitions")
 private fun assemble(definitions: List<TypeDefinition>): CatalogAssembly = assemble(definitions.map { OwnedTypeDeclaration(origin, it) })
@@ -150,7 +150,7 @@ private fun ownership(
     owner: TypeDefinitionId,
     member: TypeDefinitionId,
 ) = RelationContract(
-    id = RelationId(relation),
+    id = RelationId(value = relation),
     first =
         EndpointDefinition(
             EndpointId(value = "$relation:first"),
@@ -167,7 +167,7 @@ private fun ownership(
             EndpointCardinality.Many,
             RelationDeletePolicy.CLEAR,
         ),
-    families = setOf(RelationFamilyId(RESOURCE_OWNERSHIP_FAMILY_ID)),
+    families = setOf(RelationFamilyId(value = RESOURCE_OWNERSHIP_FAMILY_ID)),
 )
 
 private fun DeclarationStatus.codes(): Set<String> =

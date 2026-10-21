@@ -2,8 +2,6 @@ package com.typewritermc.realm.routes
 
 import com.typewritermc.authoring.EditExpectation
 import com.typewritermc.authoring.of
-import com.typewritermc.checking.CatalogGeneration
-import com.typewritermc.checking.toSkir
 import com.typewritermc.protocol.transport.RealmRouteScope
 import com.typewritermc.realm.authoring.AuthoringSeed
 import com.typewritermc.realm.authoring.AuthoringViewDelta
@@ -38,6 +36,7 @@ import skirout.editor.v1.checking.CheckOutcome
 import skirout.editor.v1.checking.CheckTicket
 import skirout.editor.v1.checking.FindingSet
 import skirout.editor.v1.checking.FindingStatus
+import skirout.editor.v1.type_catalog.CatalogGeneration
 import skirout.editor.v1.type_catalog.CheckExecutionId
 import skirout.editor.v1.type_catalog.RuleId
 import skirout.editor.v1.type_catalog.RuleOrigin
@@ -127,7 +126,7 @@ val EditorUpdatePublisherTest by testSuite {
                         ),
                     incarnation = "catalog:1",
                     execution = CheckExecutionId(value = "execution"),
-                    catalog = CatalogGeneration("catalog").toSkir(),
+                    catalog = CatalogGeneration(value = "catalog"),
                 )
             val finding =
                 FindingSet(

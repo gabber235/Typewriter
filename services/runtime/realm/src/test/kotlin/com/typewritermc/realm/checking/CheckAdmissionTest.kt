@@ -3,7 +3,6 @@ package com.typewritermc.realm.checking
 import com.typewritermc.authoring.EditExpectation
 import com.typewritermc.authoring.of
 import com.typewritermc.authoring.root
-import com.typewritermc.checking.toSkir
 import com.typewritermc.realm.authoring.AuthoringSeed
 import com.typewritermc.realm.authoring.AuthoringViewDelta
 import com.typewritermc.realm.authoring.InMemoryAuthoringViewStore
@@ -34,7 +33,7 @@ val CheckAdmissionTest by testSuite {
                 instance = instance,
                 incarnation = "catalog",
                 execution = CheckExecutionId(value = "first"),
-                catalog = catalog.generation.toSkir(),
+                catalog = catalog.generation,
             )
         val result =
             CheckResult(
@@ -70,7 +69,7 @@ val CheckAdmissionTest by testSuite {
                     instance = instance,
                     incarnation = "catalog",
                     execution = CheckExecutionId(value = "first"),
-                    catalog = catalog.generation.toSkir(),
+                    catalog = catalog.generation,
                 )
             val result =
                 CheckResult(

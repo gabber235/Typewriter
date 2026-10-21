@@ -1,12 +1,12 @@
 package com.typewritermc.authoring
 
-import com.typewritermc.checking.CatalogGeneration
 import com.typewritermc.types.immutableListCopy
 import com.typewritermc.types.immutableSetCopy
 import skirout.editor.v1.catalog.PreparedContent
 import skirout.editor.v1.catalog.PreparedValue
 import skirout.editor.v1.diagnostic.InitializationDiagnostic
 import skirout.editor.v1.type_catalog.AuthoringRecord
+import skirout.editor.v1.type_catalog.CatalogGeneration
 import skirout.editor.v1.type_catalog.DataValue
 import skirout.editor.v1.type_catalog.TypeSelection
 import skirout.editor.v1.type_catalog.TypeUse

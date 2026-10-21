@@ -81,26 +81,6 @@ fun ResourceId.toSkir(): SkirResourceId = SkirResourceId(value = value)
 /** The author facing form of a generated resource id; rejects a blank id. */
 fun SkirResourceId.toResourceId(): ResourceId = ResourceId(value)
 
-@JvmInline
-@Serializable
-value class RelationFamilyId(
-    val value: String,
-) {
-    init {
-        require(value.isNotBlank()) { "Relation family ids must not be blank." }
-    }
-}
-
-@JvmInline
-@Serializable
-value class RelationId(
-    val value: String,
-) {
-    init {
-        require(value.isNotBlank()) { "Relation ids must not be blank." }
-    }
-}
-
 @Serializable
 enum class RelationDeletePolicy {
     RESTRICT,

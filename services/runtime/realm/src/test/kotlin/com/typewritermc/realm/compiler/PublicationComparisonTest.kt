@@ -1,8 +1,5 @@
 package com.typewritermc.realm.compiler
 
-import com.typewritermc.checking.CatalogGeneration
-import com.typewritermc.checking.InputToken
-import com.typewritermc.checking.toSkir
 import com.typewritermc.engine.CompiledArtifact
 import com.typewritermc.engine.ContentDigest
 import com.typewritermc.types.ResourceId
@@ -19,6 +16,8 @@ import skirout.editor.v1.compiled_content.PublishedContent
 import skirout.editor.v1.compiled_content.PublishedOutput
 import skirout.editor.v1.publication.EngineImplementationInputs
 import skirout.editor.v1.publication.PublicationChange
+import skirout.editor.v1.type_catalog.CatalogGeneration
+import skirout.editor.v1.type_catalog.InputToken
 import skirout.editor.v1.type_catalog.PublicationId
 
 val PublicationComparisonTest by testSuite {
@@ -27,7 +26,7 @@ val PublicationComparisonTest by testSuite {
         val selected = comparisonSelected(artifact)
         val candidate = artifact.copy(inputFingerprint = ContentDigest("c".repeat(64)))
         PublicationComparison.between(
-            selected.copy(publication = PublicationId(value = "other"), catalog = CatalogGeneration("other").toSkir()),
+            selected.copy(publication = PublicationId(value = "other"), catalog = CatalogGeneration(value = "other")),
             listOf(candidate),
             testEngineInputs(),
         ) shouldBe
@@ -119,7 +118,7 @@ private fun comparisonSelected(artifact: CompiledArtifact) =
     PublishedContent(
         publication = PublicationId(value = "selected"),
         formatRevision = com.typewritermc.engine.PUBLISHED_CONTENT_FORMAT_REVISION,
-        catalog = CatalogGeneration("catalog").toSkir(),
+        catalog = CatalogGeneration(value = "catalog"),
         implementationToken = "implementation",
         outputs =
             listOf(

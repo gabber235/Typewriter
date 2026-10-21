@@ -1,6 +1,5 @@
 package com.typewritermc.realm.routes
 
-import com.typewritermc.checking.toSkir
 import com.typewritermc.protocol.transport.RealmRouteScope
 import com.typewritermc.protocol.transport.generated.authoringCompiledChanged
 import com.typewritermc.protocol.transport.generated.authoringPublicationQuery
@@ -37,7 +36,7 @@ internal class PublicationRoutes(
                                 .publish(
                                     address.authoringCompiledChanged,
                                     address,
-                                    CompiledContentChanged(generation = attempt.catalog.toSkir()),
+                                    CompiledContentChanged(generation = attempt.catalog),
                                 ).requirePublished()
                         }
                     }

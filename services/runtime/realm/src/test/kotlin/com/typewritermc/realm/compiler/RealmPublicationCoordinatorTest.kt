@@ -1,11 +1,8 @@
 package com.typewritermc.realm.compiler
 
 import com.typewritermc.authoring.CompilationUnitDefinition
-import com.typewritermc.authoring.NativeBindingId
 import com.typewritermc.authoring.of
 import com.typewritermc.authoring.root
-import com.typewritermc.checking.CatalogGeneration
-import com.typewritermc.checking.toSkir
 import com.typewritermc.engine.CompilationResult
 import com.typewritermc.engine.CompiledArtifact
 import com.typewritermc.engine.ContentDigest
@@ -53,10 +50,12 @@ import skirout.editor.v1.publication.PublicationCandidateId
 import skirout.editor.v1.publication.PublicationChange
 import skirout.editor.v1.publication.PublicationStatus
 import skirout.editor.v1.type_catalog.AuthoringRecord
+import skirout.editor.v1.type_catalog.CatalogGeneration
 import skirout.editor.v1.type_catalog.CheckExecutionId
 import skirout.editor.v1.type_catalog.DataValue
 import skirout.editor.v1.type_catalog.FieldDeclaration
 import skirout.editor.v1.type_catalog.FieldOwner
+import skirout.editor.v1.type_catalog.NativeBindingId
 import skirout.editor.v1.type_catalog.PublicationId
 import skirout.editor.v1.type_catalog.RepresentationTemplate
 import skirout.editor.v1.type_catalog.ScalarKind
@@ -89,7 +88,7 @@ val RealmPublicationCoordinatorTest by testSuite {
                                     ),
                                 incarnation = "external_input",
                                 execution = CheckExecutionId(value = "execution"),
-                                catalog = view.catalog.generation.toSkir(),
+                                catalog = view.catalog.generation,
                             ),
                         expectations =
                             listOf<com.typewritermc.authoring.EditExpectation>(
@@ -226,7 +225,7 @@ val RealmPublicationCoordinatorTest by testSuite {
             PublishedContent(
                 publication = PublicationId(value = "other"),
                 formatRevision = com.typewritermc.engine.PUBLISHED_CONTENT_FORMAT_REVISION,
-                catalog = CatalogGeneration("other").toSkir(),
+                catalog = CatalogGeneration(value = "other"),
                 implementationToken = "implementation",
                 outputs = emptyList(),
             )
@@ -396,7 +395,7 @@ internal class PublicationFixture(
             AuthoringSeed(initial),
         )
     val attempts = RecordingAttempts()
-    val bindings = listOf(NativeBindingRequirement(PUBLICATION_PAGE_USE, NativeBindingId("publication_page"), "page:v1"))
+    val bindings = listOf(NativeBindingRequirement(PUBLICATION_PAGE_USE, NativeBindingId(value = "publication_page"), "page:v1"))
     val root =
         CompilationRoot(projection = CompilationProjectionId(value = "typewriter.resource-graph"), resource = ResourceId("page").toSkir())
     var engineInputs = testEngineInputs()

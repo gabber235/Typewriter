@@ -5,7 +5,6 @@ import com.typewritermc.authoring.CaptureResult
 import com.typewritermc.authoring.CompleteValue
 import com.typewritermc.authoring.DefaultInitializationRuntime
 import com.typewritermc.authoring.InitializationRequest
-import com.typewritermc.authoring.NativeBindingId
 import com.typewritermc.authoring.NativeConstructionPlan
 import com.typewritermc.authoring.PreparationTarget
 import com.typewritermc.authoring.StructuralResult
@@ -15,7 +14,6 @@ import com.typewritermc.authoring.fieldMap
 import com.typewritermc.authoring.of
 import com.typewritermc.authoring.root
 import com.typewritermc.authoring.validateStructure
-import com.typewritermc.checking.CatalogGeneration
 import com.typewritermc.types.FactoryNativeBindingRegistry
 import com.typewritermc.types.NativeBinding
 import com.typewritermc.types.NativeBindingFactory
@@ -40,10 +38,12 @@ import skirout.editor.v1.catalog.PreparedValue
 import skirout.editor.v1.diagnostic.InitializationDiagnostic
 import skirout.editor.v1.type_catalog.ArgumentSelection
 import skirout.editor.v1.type_catalog.AuthoringRecord
+import skirout.editor.v1.type_catalog.CatalogGeneration
 import skirout.editor.v1.type_catalog.DataValue
 import skirout.editor.v1.type_catalog.FieldDeclaration
 import skirout.editor.v1.type_catalog.FieldOwner
 import skirout.editor.v1.type_catalog.IntegerWidth
+import skirout.editor.v1.type_catalog.NativeBindingId
 import skirout.editor.v1.type_catalog.ParameterKey
 import skirout.editor.v1.type_catalog.PathSegment
 import skirout.editor.v1.type_catalog.RepresentationTemplate
@@ -64,7 +64,7 @@ val InitializationRuntimeConformanceTest by testSuite {
     }
 
     test("complete supplied values pass through without record synthesis") {
-        val generation = CatalogGeneration("complete supplied value")
+        val generation = CatalogGeneration(value = "complete supplied value")
         val catalog = DefaultCheckedCatalog(generation, emptyList())
         val supplied = DataValue.StringValueWrapper("authored")
         val prepared =
@@ -81,7 +81,7 @@ val InitializationRuntimeConformanceTest by testSuite {
     }
 
     test("partial supplied record fields merge with captured constructor defaults") {
-        val generation = CatalogGeneration("partial supplied record")
+        val generation = CatalogGeneration(value = "partial supplied record")
         val definition =
             TypeDefinition.partial(
                 id = INITIALIZED_ID,
@@ -126,7 +126,7 @@ val InitializationRuntimeConformanceTest by testSuite {
     }
 
     test("pending generic creation materializes every independently known field") {
-        val generation = CatalogGeneration("pending initialization catalog")
+        val generation = CatalogGeneration(value = "pending initialization catalog")
         val definitionId = TypeDefinitionId.qualified("test", "PendingConfiguration")
         val parameter = ParameterKey(owner = definitionId, index = 0)
         val independent = FieldOwner(definition = definitionId, name = "independent")
@@ -213,7 +213,7 @@ val InitializationRuntimeConformanceTest by testSuite {
     }
 
     test("ordinary defaults feed required sampling without becoming captured Kotlin defaults") {
-        val generation = CatalogGeneration("initialization catalog")
+        val generation = CatalogGeneration(value = "initialization catalog")
         val definition =
             TypeDefinition.partial(
                 id = INITIALIZED_ID,
@@ -268,7 +268,7 @@ val InitializationRuntimeConformanceTest by testSuite {
     }
 
     test("failed constructor sampling keeps declared defaults unfinished") {
-        val generation = CatalogGeneration("failed initialization catalog")
+        val generation = CatalogGeneration(value = "failed initialization catalog")
         val definition =
             TypeDefinition.partial(
                 id = INITIALIZED_ID,
@@ -316,7 +316,7 @@ val InitializationRuntimeConformanceTest by testSuite {
     }
 
     test("missing abstract constructor inputs stay unfinished and block dependent defaults") {
-        val generation = CatalogGeneration("abstract sample catalog")
+        val generation = CatalogGeneration(value = "abstract sample catalog")
         val abstractDefinition =
             TypeDefinition.partial(
                 id = ABSTRACT_ID,
@@ -378,7 +378,7 @@ val InitializationRuntimeConformanceTest by testSuite {
     }
 
     test("nested records include captured Kotlin defaults") {
-        val generation = CatalogGeneration("nested default catalog")
+        val generation = CatalogGeneration(value = "nested default catalog")
         val childDefinition =
             TypeDefinition.partial(
                 id = CHILD_ID,
@@ -437,7 +437,7 @@ val InitializationRuntimeConformanceTest by testSuite {
     }
 
     test("nested initialization findings retain each occurrence path") {
-        val generation = CatalogGeneration("nested finding paths")
+        val generation = CatalogGeneration(value = "nested finding paths")
         val styleId = TypeDefinitionId.qualified("test", "DiagnosticStyle")
         val themeId = TypeDefinitionId.qualified("test", "DiagnosticTheme")
         val seed = FieldOwner(definition = styleId, name = "seed")
@@ -506,7 +506,7 @@ val InitializationRuntimeConformanceTest by testSuite {
     }
 
     test("required recursive defaults terminate with located findings") {
-        val generation = CatalogGeneration("recursive initialization")
+        val generation = CatalogGeneration(value = "recursive initialization")
         val directId = TypeDefinitionId.qualified("test", "RequiredRecursive")
         val direct =
             TypeDefinition.partial(
@@ -543,7 +543,7 @@ val InitializationRuntimeConformanceTest by testSuite {
     }
 
     test("nonregular recursive defaults reject expanding applications") {
-        val generation = CatalogGeneration("nonregular recursive initialization")
+        val generation = CatalogGeneration(value = "nonregular recursive initialization")
         val growId = TypeDefinitionId.qualified("test", "Grow")
         val parameter = ParameterKey(owner = growId, index = 0)
         val grow =
@@ -587,7 +587,7 @@ val InitializationRuntimeConformanceTest by testSuite {
     }
 
     test("abstract recursive input remains unselected without evaluating concrete forms") {
-        val generation = CatalogGeneration("abstract recursive initialization")
+        val generation = CatalogGeneration(value = "abstract recursive initialization")
         val nodeId = TypeDefinitionId.qualified("test", "RecursiveNode")
         val branchId = TypeDefinitionId.qualified("test", "RecursiveBranch")
         val ownerId = TypeDefinitionId.qualified("test", "RecursiveOwner")
@@ -640,7 +640,7 @@ val InitializationRuntimeConformanceTest by testSuite {
     }
 
     test("finite nested applications and recursive collections keep ordinary defaults") {
-        val generation = CatalogGeneration("finite recursive initialization")
+        val generation = CatalogGeneration(value = "finite recursive initialization")
         val boxId = TypeDefinitionId.qualified("test", "DefaultBox")
         val boxParameter = ParameterKey(owner = boxId, index = 0)
         val box =
@@ -794,7 +794,7 @@ private class PlanFactory(
     override val constructionPlan: NativeConstructionPlan,
     override val definition: TypeDefinitionId = INITIALIZED_ID,
 ) : NativeBindingFactory {
-    override val provider = NativeBindingId("test.initialization")
+    override val provider = NativeBindingId(value = "test.initialization")
 
     override fun bind(
         actual: com.typewritermc.types.catalog.CheckedType,

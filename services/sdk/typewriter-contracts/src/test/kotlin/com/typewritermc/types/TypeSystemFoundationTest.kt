@@ -5,7 +5,6 @@ import com.typewritermc.authoring.StructuralResult
 import com.typewritermc.authoring.complete
 import com.typewritermc.authoring.of
 import com.typewritermc.authoring.validateStructure
-import com.typewritermc.checking.CatalogGeneration
 import com.typewritermc.discovery.contributionKey
 import com.typewritermc.imprint.ContributionName
 import com.typewritermc.imprint.ContributionSourceId
@@ -26,6 +25,7 @@ import io.kotest.matchers.types.shouldBeSameInstanceAs
 import skirout.editor.v1.catalog.PresentationRole
 import skirout.editor.v1.type_catalog.ArgumentSelection
 import skirout.editor.v1.type_catalog.AuthoringRecord
+import skirout.editor.v1.type_catalog.CatalogGeneration
 import skirout.editor.v1.type_catalog.CollectionKind
 import skirout.editor.v1.type_catalog.DataValue
 import skirout.editor.v1.type_catalog.DeclarationOwner
@@ -819,7 +819,7 @@ val TypeSystemFoundationTest by testSuite {
     }
 
     test("float32 admission requires the authored value to equal the native width") {
-        val catalog = DefaultCheckedCatalog(CatalogGeneration("float32 admission"), emptyList())
+        val catalog = DefaultCheckedCatalog(CatalogGeneration(value = "float32 admission"), emptyList())
         val checked =
             (
                 catalog.resolve(floatScalar(FloatWidth.THIRTY_TWO).use) as
@@ -837,7 +837,7 @@ val TypeSystemFoundationTest by testSuite {
 private val TEXT = ScalarKind.TEXT.use
 private val TEXT_TEMPLATE = ScalarKind.TEXT.template
 
-private fun catalog(vararg definitions: TypeDefinition) = DefaultCheckedCatalog(CatalogGeneration("test"), definitions.toList())
+private fun catalog(vararg definitions: TypeDefinition) = DefaultCheckedCatalog(CatalogGeneration(value = "test"), definitions.toList())
 
 private fun id(name: String) = TypeDefinitionId.qualified("test", name)
 

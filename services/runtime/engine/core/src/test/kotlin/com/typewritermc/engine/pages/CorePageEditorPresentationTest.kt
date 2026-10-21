@@ -2,7 +2,6 @@ package com.typewritermc.engine.pages
 
 import com.typewritermc.authoring.GraphPlacementDefinition
 import com.typewritermc.authoring.TimelineEntryPlacementDefinition
-import com.typewritermc.checking.CatalogGeneration
 import com.typewritermc.discovery.GENERATED_PROVIDER_INDEX_PATH
 import com.typewritermc.discovery.GeneratedPresentationProvider
 import com.typewritermc.discovery.GeneratedProviderIndex
@@ -33,6 +32,7 @@ import skirout.editor.v1.presentation.ChildrenElement
 import skirout.editor.v1.presentation.GraphDirection
 import skirout.editor.v1.presentation.PresentationElement
 import skirout.editor.v1.presentation.ResourcesLayout
+import skirout.editor.v1.type_catalog.CatalogGeneration
 import skirout.editor.v1.type_catalog.DeclarationOwner
 import skirout.editor.v1.type_catalog.PathSegment
 import skirout.editor.v1.type_catalog.TypeDefinition
@@ -49,7 +49,7 @@ val CorePageEditorPresentationTest by testSuite {
             .filter { it.kind == GeneratedProviderKind.Type }
             .map { (corePageProviderInstance(it.providerClass) as GeneratedTypeProvider).definition }
             .distinctBy(TypeDefinition::id)
-    val catalog = DefaultCheckedCatalog(CatalogGeneration("core page editor coverage"), StandardTypes.definitions + definitions)
+    val catalog = DefaultCheckedCatalog(CatalogGeneration(value = "core page editor coverage"), StandardTypes.definitions + definitions)
     val runtime = DefaultPresentationRuntime()
     val providers =
         entries

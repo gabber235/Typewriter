@@ -9,8 +9,6 @@ import com.typewritermc.authoring.field
 import com.typewritermc.authoring.of
 import com.typewritermc.authoring.root
 import com.typewritermc.authoring.typedPath
-import com.typewritermc.capability.CapabilityId
-import com.typewritermc.checking.CatalogGeneration
 import com.typewritermc.discovery.CatalogAssemblyContext
 import com.typewritermc.discovery.ProviderOrigin
 import com.typewritermc.discovery.assemble
@@ -48,6 +46,8 @@ import skirout.editor.v1.operation.ResourceOperationDefinition
 import skirout.editor.v1.presentation.ButtonVariant
 import skirout.editor.v1.presentation.HeaderActionTone
 import skirout.editor.v1.type_catalog.AuthoringRecord
+import skirout.editor.v1.type_catalog.CapabilityId
+import skirout.editor.v1.type_catalog.CatalogGeneration
 import skirout.editor.v1.type_catalog.DataValue
 import skirout.editor.v1.type_catalog.DeclarationOwner
 import skirout.editor.v1.type_catalog.EndpointId
@@ -88,7 +88,7 @@ val OperationDeclarationTest by testSuite {
     }
 
     test("the core catalog publishes every core operation for any resource with labels from object names") {
-        val assembly = frameworkContributions().assemble(CatalogAssemblyContext(CatalogGeneration("core operations")))
+        val assembly = frameworkContributions().assemble(CatalogAssemblyContext(CatalogGeneration(value = "core operations")))
         assembly.operations.diagnostics shouldBe emptyList()
         val definitions = assembly.editorCatalog.resourceOperations.associateBy { it.id.declaration.substringAfterLast('.') }
         definitions.mapValues { it.value.presentation.label } shouldBe
@@ -108,9 +108,7 @@ val OperationDeclarationTest by testSuite {
         definitions.getValue("Unlink").drop shouldBe drop(ValuePath.root.field("target"), "Unlink")
         val searches =
             assembly.editorCatalog.capabilities.mapNotNull { capability ->
-                (capability as? skirout.editor.v1.capability.CapabilityDefinition.SearchWrapper)?.value?.capabilityId?.value?.let(
-                    ::CapabilityId,
-                )
+                (capability as? skirout.editor.v1.capability.CapabilityDefinition.SearchWrapper)?.value?.capabilityId
             }
         searches shouldContainAll
             listOf("MoveToOwner" to "destination", "LinkWith" to "target", "Unlink" to "target").map { (operation, field) ->
@@ -155,7 +153,7 @@ val OperationDeclarationTest by testSuite {
                 appearance { label(" ") }
                 prepare { }
             }
-        val catalog = DefaultCheckedCatalog(CatalogGeneration("test"), emptyList())
+        val catalog = DefaultCheckedCatalog(CatalogGeneration(value = "test"), emptyList())
         val bound = bindOperations(listOf(declaration), catalog, FactoryNativeBindingRegistry(catalog, emptyList()), emptyList())
         bound.definitions shouldBe emptyList()
         bound.diagnostics
@@ -169,7 +167,7 @@ val OperationDeclarationTest by testSuite {
     }
 
     test("input fields must belong to the operation input type") {
-        val assembly = frameworkContributions().assemble(CatalogAssemblyContext(CatalogGeneration("foreign field")))
+        val assembly = frameworkContributions().assemble(CatalogAssemblyContext(CatalogGeneration(value = "foreign field")))
         val declaration =
             collect<MoveToOwnerInput>(OperationInput.Typed(MoveToOwnerInputDefinition.use)) {
                 input {
@@ -255,7 +253,7 @@ private fun <I> collect(
     ) { spec -> ResourceOperationSpecImpl(spec).declare() }
 
 private fun bind(declaration: OperationDeclaration): List<ResourceOperationDefinition> {
-    val catalog = DefaultCheckedCatalog(CatalogGeneration("test"), emptyList())
+    val catalog = DefaultCheckedCatalog(CatalogGeneration(value = "test"), emptyList())
     val bound = bindOperations(listOf(declaration), catalog, FactoryNativeBindingRegistry(catalog, emptyList()), emptyList())
     bound.failures shouldBe emptyList()
     return bound.definitions

@@ -8,7 +8,6 @@ import com.typewritermc.authoring.fieldMap
 import com.typewritermc.authoring.of
 import com.typewritermc.authoring.skir.SkirAuthoringOperationCodec
 import com.typewritermc.authoring.with
-import com.typewritermc.checking.CatalogGeneration
 import com.typewritermc.checking.InputIdentity
 import com.typewritermc.discovery.OwnedCheckRecipe
 import com.typewritermc.discovery.OwnedProviderRegistry
@@ -25,7 +24,6 @@ import com.typewritermc.types.FactoryNativeBindingRegistry
 import com.typewritermc.types.NativeBindingRegistry
 import com.typewritermc.types.RelationContract
 import com.typewritermc.types.RelationDeletePolicy
-import com.typewritermc.types.RelationId
 import com.typewritermc.types.ResourceId
 import com.typewritermc.types.catalog.CheckedCatalog
 import com.typewritermc.types.catalog.DefaultCheckedCatalog
@@ -49,6 +47,7 @@ import skirout.editor.v1.authoring.LinkRepairIntent
 import skirout.editor.v1.authoring.TypeArgumentChangePreview
 import skirout.editor.v1.type_catalog.ArgumentSelection
 import skirout.editor.v1.type_catalog.AuthoringRecord
+import skirout.editor.v1.type_catalog.CatalogGeneration
 import skirout.editor.v1.type_catalog.CollectionKind
 import skirout.editor.v1.type_catalog.DataValue
 import skirout.editor.v1.type_catalog.EndpointId
@@ -59,6 +58,7 @@ import skirout.editor.v1.type_catalog.LinkTarget
 import skirout.editor.v1.type_catalog.ListItem
 import skirout.editor.v1.type_catalog.ParameterKey
 import skirout.editor.v1.type_catalog.PathSegment
+import skirout.editor.v1.type_catalog.RelationId
 import skirout.editor.v1.type_catalog.RepresentationTemplate
 import skirout.editor.v1.type_catalog.ScalarKind
 import skirout.editor.v1.type_catalog.TypeDefinition
@@ -379,7 +379,7 @@ private class RecordingRepository : AuthoringRepository {
 }
 
 private class RepairCatalogLease(
-    override val generation: CatalogGeneration = CatalogGeneration("catalog"),
+    override val generation: CatalogGeneration = CatalogGeneration(value = "catalog"),
 ) : AuthoringCatalogLease {
     override val checked: CheckedCatalog = DefaultCheckedCatalog(generation, REPAIR_DEFINITIONS)
     override val nativeBindings: NativeBindingRegistry = FactoryNativeBindingRegistry(checked, emptyList())
@@ -478,7 +478,7 @@ private val DUAL_COIN_COIN = DUAL.namedUse(listOf(COIN_USE.use, COIN_USE.use))
 private val LINK_GEM = LINK.namedUse(listOf(GEM_USE.use))
 private val SOURCE_ENDPOINT = EndpointId(value = "dual:source")
 private val TARGET_ENDPOINT = EndpointId(value = "dual:target")
-private val RELATION = RelationId("dual:relation")
+private val RELATION = RelationId(value = "dual:relation")
 private val DUAL_RELATION =
     RelationContract(
         RELATION,

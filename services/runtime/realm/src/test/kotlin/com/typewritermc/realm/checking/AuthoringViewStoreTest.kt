@@ -10,9 +10,7 @@ import com.typewritermc.authoring.field
 import com.typewritermc.authoring.fieldMap
 import com.typewritermc.authoring.of
 import com.typewritermc.authoring.root
-import com.typewritermc.checking.CatalogGeneration
 import com.typewritermc.checking.InputIdentity
-import com.typewritermc.checking.InputToken
 import com.typewritermc.checking.ResourceTypeMatch
 import com.typewritermc.discovery.OwnedCheckRecipe
 import com.typewritermc.discovery.OwnedConfiguration
@@ -52,10 +50,12 @@ import de.infix.testBalloon.framework.core.testSuite
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.matchers.shouldBe
 import skirout.editor.v1.type_catalog.AuthoringRecord
+import skirout.editor.v1.type_catalog.CatalogGeneration
 import skirout.editor.v1.type_catalog.CollectionKind
 import skirout.editor.v1.type_catalog.DataValue
 import skirout.editor.v1.type_catalog.FieldDeclaration
 import skirout.editor.v1.type_catalog.FieldOwner
+import skirout.editor.v1.type_catalog.InputToken
 import skirout.editor.v1.type_catalog.IntegerWidth
 import skirout.editor.v1.type_catalog.ItemId
 import skirout.editor.v1.type_catalog.ListItem
@@ -281,7 +281,7 @@ internal class TestCatalogLease private constructor(
     override val endpointBindings: List<EndpointBindingTemplate>,
 ) : AuthoringCatalogLease {
     constructor(
-        generation: CatalogGeneration = CatalogGeneration("catalog"),
+        generation: CatalogGeneration = CatalogGeneration(value = "catalog"),
         providers: OwnedProviderRegistry = EmptyProviders,
         checks: List<OwnedCheckRecipe> = emptyList(),
         configuration: List<com.typewritermc.configuration.ConfigurationRecipe> = emptyList(),
@@ -379,7 +379,7 @@ internal fun tokensFor(
         identities += InputIdentity.Value(root)
         record.fields.forEach { field -> collectTokens(field.value, root.field(field.name), identities) }
     }
-    return identities.withIndex().associate { (index, identity) -> identity to InputToken("$prefix:$index") }
+    return identities.withIndex().associate { (index, identity) -> identity to InputToken(value = "$prefix:$index") }
 }
 
 internal fun collectTokens(

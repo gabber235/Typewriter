@@ -1,15 +1,9 @@
 package com.typewritermc.capability
 
-import kotlinx.serialization.Serializable
 import skirout.editor.v1.operation.OperationTargets
+import skirout.editor.v1.type_catalog.CapabilityId
 import skirout.editor.v1.type_catalog.PresentationId
 import skirout.editor.v1.type_catalog.TypeUse
-
-@JvmInline
-@Serializable
-value class CapabilityId(
-    val value: String,
-)
 
 sealed interface RealmCapabilityDescriptor {
     val id: CapabilityId

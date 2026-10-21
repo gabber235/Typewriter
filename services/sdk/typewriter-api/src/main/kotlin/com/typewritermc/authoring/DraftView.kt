@@ -1,6 +1,6 @@
 package com.typewritermc.authoring
 
-import com.typewritermc.checking.CatalogGeneration
+import skirout.editor.v1.type_catalog.CatalogGeneration
 import skirout.editor.v1.type_catalog.NamedTypeUse
 import skirout.editor.v1.type_catalog.TypeUse
 import skirout.editor.v1.type_catalog.ValueLocation

@@ -12,7 +12,6 @@ import com.typewritermc.authoring.PreparationTarget
 import com.typewritermc.authoring.fieldMap
 import com.typewritermc.authoring.name
 import com.typewritermc.authoring.payload
-import com.typewritermc.checking.CatalogGeneration
 import com.typewritermc.discovery.GeneratedProviderIndex
 import com.typewritermc.discovery.GeneratedProviderKind
 import com.typewritermc.discovery.GeneratedTypeProvider
@@ -78,6 +77,7 @@ import skirout.editor.v1.presentation.PresentationElement
 import skirout.editor.v1.presentation.PresentationHeaderTitle
 import skirout.editor.v1.presentation.PresentationNode
 import skirout.editor.v1.type_catalog.AuthoringRecord
+import skirout.editor.v1.type_catalog.CatalogGeneration
 import skirout.editor.v1.type_catalog.DataValue
 import skirout.editor.v1.type_catalog.DeclarationOwner
 import skirout.editor.v1.type_catalog.FieldDeclaration
@@ -111,7 +111,7 @@ val FrameworkCatalogCreationTest by testSuite {
             TypeDefinitionId.qualified("test", "ConcreteEntry")
         val catalog =
             DefaultCheckedCatalog(
-                CatalogGeneration("entry graph inheritance"),
+                CatalogGeneration(value = "entry graph inheritance"),
                 StandardTypes.definitions + definitions +
                     TypeDefinition.partial(
                         id = concreteId,
@@ -190,7 +190,7 @@ val FrameworkCatalogCreationTest by testSuite {
     }
 
     test("framework catalog exposes icon and placement forms with usable resource defaults") {
-        val generation = CatalogGeneration("framework creation")
+        val generation = CatalogGeneration(value = "framework creation")
         val entries = generatedProviderEntries()
         val definitions =
             entries
@@ -823,7 +823,10 @@ private fun exportFrameworkControlFixture(
                     ) + inheritedInspectorDeclarations(),
             presentations = framework.presentations + entryInspector + inheritedInspectorPresentations(runtime),
         )
-    val assembly = contributions.assemble(com.typewritermc.discovery.CatalogAssemblyContext(CatalogGeneration("compiled controls fixture")))
+    val assembly =
+        contributions.assemble(
+            com.typewritermc.discovery.CatalogAssemblyContext(CatalogGeneration(value = "compiled controls fixture")),
+        )
     assembly.callbackFailures.map { "${it.callback}: ${it.cause}" } shouldBe emptyList()
     assembly.editorCatalog.diagnostics.filter { it.code.contains("display") || it.code.contains("search_key") } shouldBe emptyList()
     assembly.editorCatalog.diagnostics.filter { it.code.contains("presentation") } shouldBe emptyList()

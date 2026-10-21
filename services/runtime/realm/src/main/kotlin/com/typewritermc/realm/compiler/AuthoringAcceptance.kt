@@ -3,18 +3,15 @@ package com.typewritermc.realm.compiler
 import com.typewritermc.authoring.CompleteValue
 import com.typewritermc.authoring.CompletenessResult
 import com.typewritermc.authoring.EditExpectation
-import com.typewritermc.authoring.NativeBindingId
 import com.typewritermc.authoring.append
 import com.typewritermc.authoring.complete
 import com.typewritermc.authoring.of
 import com.typewritermc.authoring.payload
 import com.typewritermc.authoring.root
 import com.typewritermc.authoring.use
-import com.typewritermc.checking.CatalogGeneration
 import com.typewritermc.checking.diagnostics
 import com.typewritermc.checking.locations
 import com.typewritermc.checking.reason
-import com.typewritermc.checking.toSkir
 import com.typewritermc.realm.authoring.AuthoringLease
 import com.typewritermc.realm.authoring.AuthoringView
 import com.typewritermc.realm.authoring.AuthoringViewStore
@@ -44,9 +41,11 @@ import skirout.editor.v1.checking.CheckOutcome
 import skirout.editor.v1.diagnostic.Diagnostic
 import skirout.editor.v1.diagnostic.DiagnosticSeverity
 import skirout.editor.v1.publication.EngineImplementationInputs
+import skirout.editor.v1.type_catalog.CatalogGeneration
 import skirout.editor.v1.type_catalog.DataValue
 import skirout.editor.v1.type_catalog.DiagnosticId
 import skirout.editor.v1.type_catalog.NamedTypeUse
+import skirout.editor.v1.type_catalog.NativeBindingId
 import skirout.editor.v1.type_catalog.PathSegment
 import skirout.editor.v1.type_catalog.RuleOrigin
 import skirout.editor.v1.type_catalog.TypeDefinitionId
@@ -119,7 +118,7 @@ data class DiagnosticEvidence(
 )
 
 internal fun DiagnosticEvidence.toSkir(): SkirDiagnosticEvidence =
-    SkirDiagnosticEvidence(catalog = catalog.toSkir(), expectations = expectations.encodedExpectations())
+    SkirDiagnosticEvidence(catalog = catalog, expectations = expectations.encodedExpectations())
 
 internal data class CapturedAssessment(
     val resources: Map<ResourceId, ResourceReadiness>,

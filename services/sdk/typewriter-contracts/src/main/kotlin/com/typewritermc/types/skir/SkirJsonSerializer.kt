@@ -17,6 +17,8 @@ import kotlinx.serialization.json.JsonElement
 import kotlinx.serialization.json.JsonEncoder
 import skirout.editor.v1.type_catalog.DataValue
 import skirout.editor.v1.type_catalog.NamedTypeUse
+import skirout.editor.v1.type_catalog.NativeBindingId
+import skirout.editor.v1.type_catalog.RelationId
 import skirout.editor.v1.type_catalog.TypeDefinition
 import skirout.editor.v1.type_catalog.ValuePath
 import build.skir.Serializer as SkirSerializer
@@ -59,6 +61,10 @@ object TypeDefinitionSerializer :
     SkirJsonSerializer<TypeDefinition>(TypeDefinition.serializer, "skir.TypeDefinition", { it.requireValid() })
 
 object DataValueSerializer : SkirJsonSerializer<DataValue>(DataValue.serializer, "skir.DataValue", { it.requirePortable() })
+
+object RelationIdSerializer : SkirJsonSerializer<RelationId>(RelationId.serializer, "skir.RelationId", { it.requireValid() })
+
+object NativeBindingIdSerializer : SkirJsonSerializer<NativeBindingId>(NativeBindingId.serializer, "skir.NativeBindingId", { it })
 
 object ValuePathSerializer : SkirJsonSerializer<ValuePath>(ValuePath.serializer, "skir.ValuePath", { it.requireValid() })
 

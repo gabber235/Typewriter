@@ -12,6 +12,8 @@ import skirout.editor.v1.type_catalog.IntegerWidth
 import skirout.editor.v1.type_catalog.NamedTypeTemplate
 import skirout.editor.v1.type_catalog.NamedTypeUse
 import skirout.editor.v1.type_catalog.ParameterKey
+import skirout.editor.v1.type_catalog.RelationFamilyId
+import skirout.editor.v1.type_catalog.RelationId
 import skirout.editor.v1.type_catalog.RepresentationTemplate
 import skirout.editor.v1.type_catalog.RuleId
 import skirout.editor.v1.type_catalog.RuleOrigin
@@ -114,6 +116,10 @@ fun FieldDeclaration.requireValid(): FieldDeclaration =
 fun EnumVariant.requireValid(): EnumVariant = apply { require(key.isNotBlank()) { "Enum variant key must not be blank." } }
 
 fun EndpointId.requireValid(): EndpointId = apply { require(value.isNotBlank()) { "Endpoint ids must not be blank." } }
+
+fun RelationId.requireValid(): RelationId = apply { require(value.isNotBlank()) { "Relation ids must not be blank." } }
+
+fun RelationFamilyId.requireValid(): RelationFamilyId = apply { require(value.isNotBlank()) { "Relation family ids must not be blank." } }
 
 fun RepresentationTemplate.requireValid(): RepresentationTemplate =
     apply {

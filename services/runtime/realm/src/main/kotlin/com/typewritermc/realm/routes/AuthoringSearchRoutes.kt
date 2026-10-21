@@ -15,9 +15,9 @@ import skirout.editor.v1.authoring.PresentationSubject
 import skirout.editor.v1.authoring.SearchAuthoringRequest
 import skirout.editor.v1.authoring.SearchAuthoringResponse
 import skirout.editor.v1.type_catalog.AuthoringRecord
+import skirout.editor.v1.type_catalog.CatalogGeneration
 import skirout.editor.v1.type_catalog.DataValue
 import skirout.editor.v1.type_catalog.ScalarKind
-import skirout.editor.v1.type_catalog.CatalogGeneration as SkirCatalogGeneration
 import skirout.editor.v1.type_catalog.ResourceId as SkirResourceId
 import skirout.editor.v1.typed_value.PortableValue as SkirPortableValue
 
@@ -35,7 +35,7 @@ internal class AuthoringSearchRoutes(
         views.read { root ->
             if (root.catalog.generation.value != request.generation.value) {
                 return@read SearchAuthoringResponse.createCatalogChangedError(
-                    actualGeneration = SkirCatalogGeneration(value = root.catalog.generation.value),
+                    actualGeneration = root.catalog.generation,
                 )
             }
             try {
@@ -49,7 +49,7 @@ internal class AuthoringSearchRoutes(
                         MAX_SEARCH_CANDIDATES,
                     )
                 SearchAuthoringResponse.createSuccess(
-                    generation = SkirCatalogGeneration(value = root.catalog.generation.value),
+                    generation = root.catalog.generation,
                     hits =
                         candidates
                             .mapNotNull { candidate ->

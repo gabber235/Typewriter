@@ -16,7 +16,6 @@ import com.typewritermc.authoring.item
 import com.typewritermc.authoring.of
 import com.typewritermc.authoring.root
 import com.typewritermc.authoring.with
-import com.typewritermc.checking.CatalogGeneration
 import com.typewritermc.configuration.FieldPatternSegment
 import com.typewritermc.configuration.RelativeFieldPattern
 import com.typewritermc.operations.OperationInvocation
@@ -34,8 +33,6 @@ import com.typewritermc.types.EndpointSlot
 import com.typewritermc.types.RESOURCE_OWNERSHIP_FAMILY_ID
 import com.typewritermc.types.RelationContract
 import com.typewritermc.types.RelationDeletePolicy
-import com.typewritermc.types.RelationFamilyId
-import com.typewritermc.types.RelationId
 import com.typewritermc.types.ResourceId
 import com.typewritermc.types.actualType
 import com.typewritermc.types.catalog.DefaultCheckedCatalog
@@ -66,6 +63,7 @@ import skirout.editor.v1.catalog.PreparedContent
 import skirout.editor.v1.catalog.PreparedValue
 import skirout.editor.v1.type_catalog.ArgumentSelection
 import skirout.editor.v1.type_catalog.AuthoringRecord
+import skirout.editor.v1.type_catalog.CatalogGeneration
 import skirout.editor.v1.type_catalog.CollectionKind
 import skirout.editor.v1.type_catalog.DataValue
 import skirout.editor.v1.type_catalog.DeclarationOwner
@@ -79,6 +77,8 @@ import skirout.editor.v1.type_catalog.ListItem
 import skirout.editor.v1.type_catalog.NamedTypeUse
 import skirout.editor.v1.type_catalog.ParameterKey
 import skirout.editor.v1.type_catalog.PathSegment
+import skirout.editor.v1.type_catalog.RelationFamilyId
+import skirout.editor.v1.type_catalog.RelationId
 import skirout.editor.v1.type_catalog.RepresentationTemplate
 import skirout.editor.v1.type_catalog.ScalarKind
 import skirout.editor.v1.type_catalog.TypeDefinition
@@ -305,8 +305,7 @@ class AuthoringMutationPlannerTest {
                                     skirout.editor.v1.capability
                                         .InvocationId(value = invocation.invocationId),
                                 catalog =
-                                    skirout.editor.v1.type_catalog
-                                        .CatalogGeneration(value = GENERATION.value),
+                                GENERATION,
                                 targets =
                                     invocation.targets.map {
                                         skirout.editor.v1.type_catalog
@@ -473,7 +472,7 @@ class AuthoringMutationPlannerTest {
                         parentContract(
                             RelationDeletePolicy.CASCADE,
                             RelationDeletePolicy.CLEAR,
-                        ).copy(families = setOf(RelationFamilyId(RESOURCE_OWNERSHIP_FAMILY_ID))),
+                        ).copy(families = setOf(RelationFamilyId(value = RESOURCE_OWNERSHIP_FAMILY_ID))),
                     ),
                 )
             try {
@@ -525,7 +524,7 @@ class AuthoringMutationPlannerTest {
                     childA to record(second = link(PAIR_SECOND_TYPE, PAIR_SECOND, ownerA, fieldPath("first"))),
                     childB to record(second = link(PAIR_SECOND_TYPE, PAIR_SECOND, ownerB, fieldPath("first"))),
                 )
-            val baseline = operationBaseline(resources, listOf(pairContract(setOf(RelationFamilyId(RESOURCE_OWNERSHIP_FAMILY_ID)))))
+            val baseline = operationBaseline(resources, listOf(pairContract(setOf(RelationFamilyId(value = RESOURCE_OWNERSHIP_FAMILY_ID)))))
             try {
                 val edit = WorkingViewEditContext(baseline, "impossible-move")
                 val session =
@@ -626,7 +625,7 @@ class AuthoringMutationPlannerTest {
                         parentContract(
                             RelationDeletePolicy.CASCADE,
                             RelationDeletePolicy.CLEAR,
-                        ).copy(families = setOf(RelationFamilyId(RESOURCE_OWNERSHIP_FAMILY_ID))),
+                        ).copy(families = setOf(RelationFamilyId(value = RESOURCE_OWNERSHIP_FAMILY_ID))),
                         manyContract(),
                     ),
                 )
@@ -1127,7 +1126,7 @@ class AuthoringMutationPlannerTest {
             )
         val contract =
             RelationContract(
-                RelationId("partial:relation"),
+                RelationId(value = "partial:relation"),
                 EndpointDefinition(
                     endpoint,
                     EndpointSlot.First,
@@ -1230,7 +1229,7 @@ class AuthoringMutationPlannerTest {
             )
         val contract =
             RelationContract(
-                RelationId("partial_ancestor:relation"),
+                RelationId(value = "partial_ancestor:relation"),
                 EndpointDefinition(
                     endpoint,
                     EndpointSlot.First,
@@ -2216,7 +2215,7 @@ class AuthoringMutationPlannerTest {
     }
 
     fun ownershipRejectsTwoImmediateOwners() {
-        val contract = pairContract(setOf(RelationFamilyId(RESOURCE_OWNERSHIP_FAMILY_ID)))
+        val contract = pairContract(setOf(RelationFamilyId(value = RESOURCE_OWNERSHIP_FAMILY_ID)))
         val planner = planner(contract)
         val target = ResourceId("target")
         val first = ResourceId("first_owner")
@@ -2262,7 +2261,7 @@ class AuthoringMutationPlannerTest {
     }
 
     fun acyclicRelationAcceptsALongChainAndRejectsClosingIt() {
-        val planner = planner(pairContract(setOf(RelationFamilyId(ACYCLIC_RELATION_FAMILY_ID))))
+        val planner = planner(pairContract(setOf(RelationFamilyId(value = ACYCLIC_RELATION_FAMILY_ID))))
         val chain = (0 until 100_000).map { ResourceId("chain_$it") }
         val resources =
             chain.withIndex().associate { (index, id) ->
@@ -2358,7 +2357,7 @@ private fun operationBaseline(
 
 private fun pairContract(families: Set<RelationFamilyId> = emptySet()) =
     RelationContract(
-        RelationId("pair"),
+        RelationId(value = "pair"),
         EndpointDefinition(
             PAIR_FIRST,
             EndpointSlot.First,
@@ -2380,7 +2379,7 @@ private fun parentContract(
     firstDelete: RelationDeletePolicy,
     secondDelete: RelationDeletePolicy,
 ) = RelationContract(
-    RelationId("parent_child"),
+    RelationId(value = "parent_child"),
     EndpointDefinition(
         PARENT_FIRST,
         EndpointSlot.First,
@@ -2399,7 +2398,7 @@ private fun parentContract(
 
 private fun manyContract() =
     RelationContract(
-        RelationId("many"),
+        RelationId(value = "many"),
         EndpointDefinition(
             MANY_FIRST,
             EndpointSlot.First,
@@ -2418,7 +2417,7 @@ private fun manyContract() =
 
 private fun nestedContract() =
     RelationContract(
-        RelationId("nested"),
+        RelationId(value = "nested"),
         EndpointDefinition(
             NESTED_FIRST,
             EndpointSlot.First,
@@ -2440,7 +2439,7 @@ private fun relation(
     second: EndpointId,
     resource: TypeDefinitionId,
 ) = RelationContract(
-    RelationId("${first.value}:relation"),
+    RelationId(value = "${first.value}:relation"),
     EndpointDefinition(
         first,
         EndpointSlot.First,
@@ -2553,9 +2552,10 @@ private fun binding(
     containsCollection,
 )
 
-private val GENERATION = CatalogGeneration("catalog")
+private val GENERATION = CatalogGeneration(value = "catalog")
 private val NODE = id("node")
-private val OWNING_FAMILIES = setOf(RelationFamilyId(RESOURCE_OWNERSHIP_FAMILY_ID), RelationFamilyId(ACYCLIC_RELATION_FAMILY_ID))
+private val OWNING_FAMILIES =
+    setOf(RelationFamilyId(value = RESOURCE_OWNERSHIP_FAMILY_ID), RelationFamilyId(value = ACYCLIC_RELATION_FAMILY_ID))
 private val PAIR_FIRST = EndpointId(value = "pair:first")
 private val PAIR_SECOND = EndpointId(value = "pair:second")
 private val PARENT_FIRST = EndpointId(value = "parent:first")

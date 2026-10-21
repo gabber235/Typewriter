@@ -1,6 +1,5 @@
 package com.typewritermc.realm.routes
 
-import com.typewritermc.checking.toSkir
 import com.typewritermc.protocol.transport.RealmRouteScope
 import com.typewritermc.protocol.transport.generated.authoringChanged
 import com.typewritermc.protocol.transport.generated.authoringPublicationWatch
@@ -137,7 +136,7 @@ internal fun captureFindings(
     CapturedFindings(
         findings.map { set ->
             val current =
-                set.ticket.catalog == root.catalog.generation.toSkir() &&
+                set.ticket.catalog == root.catalog.generation &&
                     root.values.conflicts(set.expectations.decodedExpectations()).isEmpty()
             set.copy(status = if (current) FindingStatus.CURRENT else FindingStatus.OUTDATED)
         },

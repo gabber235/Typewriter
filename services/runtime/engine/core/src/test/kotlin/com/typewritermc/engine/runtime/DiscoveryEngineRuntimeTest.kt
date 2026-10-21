@@ -1,7 +1,5 @@
 package com.typewritermc.engine.runtime
 
-import com.typewritermc.checking.CatalogGeneration
-import com.typewritermc.checking.toSkir
 import com.typewritermc.discovery.DeploymentFacts
 import com.typewritermc.discovery.DiscoveryDomains
 import com.typewritermc.discovery.GeneratedProviderDeployment
@@ -20,6 +18,7 @@ import io.kotest.matchers.types.shouldBeSameInstanceAs
 import kotlinx.coroutines.test.TestScope
 import kotlinx.coroutines.test.runTest
 import skirout.editor.v1.compiled_content.PublishedContent
+import skirout.editor.v1.type_catalog.CatalogGeneration
 import skirout.editor.v1.type_catalog.PublicationId
 
 val DiscoveryEngineRuntimeTest by testSuite {
@@ -175,7 +174,7 @@ private fun content(
         PublishedContent(
             publication = PublicationId(value = "publication:$revision"),
             formatRevision = com.typewritermc.engine.PUBLISHED_CONTENT_FORMAT_REVISION,
-            catalog = CatalogGeneration("catalog:1").toSkir(),
+            catalog = CatalogGeneration(value = "catalog:1"),
             implementationToken = implementationToken,
             outputs = emptyList(),
         ),
@@ -200,4 +199,4 @@ private class RecordingRegistrar(
     }
 }
 
-private val EMPTY_CATALOG = DefaultCheckedCatalog(CatalogGeneration("engine runtime test"), emptyList())
+private val EMPTY_CATALOG = DefaultCheckedCatalog(CatalogGeneration(value = "engine runtime test"), emptyList())

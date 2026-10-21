@@ -1,7 +1,6 @@
 package com.typewritermc.expression
 
 import com.typewritermc.authoring.root
-import com.typewritermc.checking.CatalogGeneration
 import com.typewritermc.configuration.PortableExpressionChecker
 import com.typewritermc.types.catalog.DefaultCheckedCatalog
 import com.typewritermc.types.catalog.resolve
@@ -14,6 +13,7 @@ import com.typewritermc.types.use
 import de.infix.testBalloon.framework.core.testSuite
 import io.kotest.matchers.shouldBe
 import skirout.editor.v1.expression.ExpressionNode
+import skirout.editor.v1.type_catalog.CatalogGeneration
 import skirout.editor.v1.type_catalog.DataValue
 import skirout.editor.v1.type_catalog.FloatWidth
 import skirout.editor.v1.type_catalog.IntegerWidth
@@ -23,7 +23,7 @@ import skirout.editor.v1.type_catalog.TypeDefinitionId
 import skirout.editor.v1.type_catalog.ValuePath
 
 val PortableExpressionCheckingTest by testSuite {
-    val catalog = DefaultCheckedCatalog(CatalogGeneration("expression mappings"), emptyList())
+    val catalog = DefaultCheckedCatalog(CatalogGeneration(value = "expression mappings"), emptyList())
     val checker = PortableExpressionChecker(catalog::resolve)
     val candidate = ExpressionBindingId("candidate")
     val parent = ExpressionBindingId("parent")

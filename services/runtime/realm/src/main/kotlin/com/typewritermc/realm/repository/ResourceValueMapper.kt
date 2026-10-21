@@ -16,7 +16,6 @@ import com.typewritermc.authoring.use
 import com.typewritermc.types.EndpointCardinality
 import com.typewritermc.types.EndpointSlot
 import com.typewritermc.types.RelationContract
-import com.typewritermc.types.RelationId
 import com.typewritermc.types.ResourceId
 import com.typewritermc.types.actualType
 import com.typewritermc.types.catalog.CheckedCatalog
@@ -41,6 +40,7 @@ import skirout.editor.v1.type_catalog.AuthoringRecord
 import skirout.editor.v1.type_catalog.DataValue
 import skirout.editor.v1.type_catalog.EndpointId
 import skirout.editor.v1.type_catalog.NamedTypeTemplate
+import skirout.editor.v1.type_catalog.RelationId
 import skirout.editor.v1.type_catalog.ResolvedRepresentation
 import skirout.editor.v1.type_catalog.TypeSelection
 import skirout.editor.v1.type_catalog.TypeTemplate

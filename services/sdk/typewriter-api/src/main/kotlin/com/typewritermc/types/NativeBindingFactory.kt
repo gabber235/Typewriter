@@ -2,11 +2,11 @@ package com.typewritermc.types
 
 import com.typewritermc.authoring.AppliedNativeArguments
 import com.typewritermc.authoring.GeneratedSdkApi
-import com.typewritermc.authoring.NativeBindingId
 import com.typewritermc.authoring.NativeConstructionPlan
 import com.typewritermc.authoring.complete
 import com.typewritermc.types.catalog.CheckedType
 import skirout.editor.v1.type_catalog.DataValue
+import skirout.editor.v1.type_catalog.NativeBindingId
 import skirout.editor.v1.type_catalog.TypeDefinitionId
 import skirout.editor.v1.type_catalog.TypeUse
 

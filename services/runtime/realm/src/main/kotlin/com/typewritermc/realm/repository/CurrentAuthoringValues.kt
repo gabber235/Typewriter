@@ -4,12 +4,12 @@ import com.typewritermc.authoring.EditExpectation
 import com.typewritermc.authoring.ExpectationConflict
 import com.typewritermc.authoring.LinkProjection
 import com.typewritermc.authoring.TraversalDirection
-import com.typewritermc.types.RelationId
 import com.typewritermc.types.ResourceId
 import com.typewritermc.types.actualType
 import com.typewritermc.types.toResourceId
 import skirout.editor.v1.type_catalog.AuthoringRecord
 import skirout.editor.v1.type_catalog.DataValue
+import skirout.editor.v1.type_catalog.RelationId
 import skirout.editor.v1.type_catalog.TypeSelection
 import skirout.editor.v1.type_catalog.ValueLocation
 

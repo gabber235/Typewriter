@@ -1,6 +1,5 @@
 package com.typewritermc.realm
 
-import com.typewritermc.checking.CatalogGeneration
 import com.typewritermc.discovery.CatalogAssemblyContext
 import com.typewritermc.discovery.CatalogCallback
 import com.typewritermc.discovery.CatalogCallbackFailure
@@ -22,6 +21,7 @@ import io.kotest.matchers.string.shouldContain
 import io.kotest.matchers.string.shouldNotContain
 import io.opentelemetry.api.common.AttributeKey
 import skirout.editor.v1.catalog.EditorCatalog
+import skirout.editor.v1.type_catalog.CatalogGeneration
 import skirout.editor.v1.type_catalog.DeclarationOwner
 import skirout.editor.v1.type_catalog.TypeDefinitionId
 
@@ -41,7 +41,7 @@ val RealmCatalogReportingTest by testSuite {
         val assembly =
             CatalogContributions(emptyList())
                 .assemble(
-                    CatalogAssemblyContext(CatalogGeneration("report")),
+                    CatalogAssemblyContext(CatalogGeneration(value = "report")),
                 ).copy(
                     callbackFailures =
                         listOf(

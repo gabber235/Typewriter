@@ -9,12 +9,10 @@ import com.typewritermc.authoring.BoundCollectionPath
 import com.typewritermc.authoring.BoundPath
 import com.typewritermc.authoring.CompletenessResult
 import com.typewritermc.authoring.GeneratedSdkApi
-import com.typewritermc.authoring.NativeBindingId
 import com.typewritermc.authoring.PortableValue
 import com.typewritermc.authoring.complete
 import com.typewritermc.authoring.of
 import com.typewritermc.authoring.root
-import com.typewritermc.checking.CatalogGeneration
 import com.typewritermc.checking.PartialSelection
 import com.typewritermc.checking.TypedSelection
 import com.typewritermc.configuration.ConfigurationCollectionScope
@@ -89,6 +87,7 @@ import io.kotest.matchers.shouldBe
 import skirout.editor.v1.catalog.PresentationMaterial
 import skirout.editor.v1.diagnostic.DiagnosticSeverity
 import skirout.editor.v1.expression.ExpressionNode
+import skirout.editor.v1.type_catalog.CatalogGeneration
 import skirout.editor.v1.type_catalog.DataValue
 import skirout.editor.v1.type_catalog.DeclarationOwner
 import skirout.editor.v1.type_catalog.EndpointId
@@ -96,6 +95,7 @@ import skirout.editor.v1.type_catalog.FieldDeclaration
 import skirout.editor.v1.type_catalog.FieldOwner
 import skirout.editor.v1.type_catalog.FloatWidth
 import skirout.editor.v1.type_catalog.IntegerWidth
+import skirout.editor.v1.type_catalog.NativeBindingId
 import skirout.editor.v1.type_catalog.ParameterKey
 import skirout.editor.v1.type_catalog.PathSegment
 import skirout.editor.v1.type_catalog.RepresentationTemplate
@@ -817,7 +817,7 @@ val SdkRuntimeConformanceTest by testSuite {
                         OwnedConfiguration(origin, TEST_CODE_ID, chapterProvider),
                     ),
                 nativeBindings = listOf(OwnedNativeBinding(origin, TestCodeNativeBindingFactory)),
-            ).assemble(CatalogAssemblyContext(CatalogGeneration("typed checks")))
+            ).assemble(CatalogAssemblyContext(CatalogGeneration(value = "typed checks")))
         val integer =
             assembly.checked
                 .resolve(INT_USE)
@@ -933,7 +933,7 @@ val SdkRuntimeConformanceTest by testSuite {
                         OwnedNativeBinding(origin, TestMessageActionNativeBindingFactory),
                         OwnedNativeBinding(origin, TestTreeNativeBindingFactory),
                     ),
-            ).assemble(CatalogAssemblyContext(CatalogGeneration("polymorphic native")))
+            ).assemble(CatalogAssemblyContext(CatalogGeneration(value = "polymorphic native")))
         val checked = assembly.checked.resolve(TEST_MESSAGE_ACTION_USE).ready()
         val binding = assembly.bindings.bind(checked)
         val original =
@@ -968,8 +968,8 @@ val SdkRuntimeConformanceTest by testSuite {
                     ),
                 nativeBindings = listOf(OwnedNativeBinding(origin, TestTextMessageNativeBindingFactory)),
             )
-        val first = contributions.assemble(CatalogAssemblyContext(CatalogGeneration("first generation")))
-        val second = contributions.assemble(CatalogAssemblyContext(CatalogGeneration("second generation")))
+        val first = contributions.assemble(CatalogAssemblyContext(CatalogGeneration(value = "first generation")))
+        val second = contributions.assemble(CatalogAssemblyContext(CatalogGeneration(value = "second generation")))
         val stale = first.checked.resolve(TEST_TEXT_MESSAGE_ID.use()).ready()
 
         shouldThrow<NativeBindingException> { second.bindings.bind(stale) }.code shouldBe "catalog_generation_mismatch"
@@ -980,7 +980,7 @@ val SdkRuntimeConformanceTest by testSuite {
         val assembly =
             CatalogContributions(
                 declarations = listOf(OwnedTypeDeclaration(origin, TEST_PORTABLE_RECORD_DEFINITION)),
-            ).assemble(CatalogAssemblyContext(CatalogGeneration("portable bindings")))
+            ).assemble(CatalogAssemblyContext(CatalogGeneration(value = "portable bindings")))
         val payload = DataValue.record(mapOf("label" to DataValue.StringValueWrapper("opaque")))
         val value = DataValue.named(TEST_PORTABLE_RECORD_USE, payload)
         val checked = assembly.checked.resolve(TEST_PORTABLE_RECORD_USE.use).ready()
@@ -1039,7 +1039,7 @@ val SdkRuntimeConformanceTest by testSuite {
             CatalogContributions(
                 declarations = listOf(OwnedTypeDeclaration(origin, TEST_IDENTITY_KEY_DEFINITION)),
                 nativeBindings = listOf(OwnedNativeBinding(origin, TestIdentityKeyNativeBindingFactory)),
-            ).assemble(CatalogAssemblyContext(CatalogGeneration("canonical native duplicates")))
+            ).assemble(CatalogAssemblyContext(CatalogGeneration(value = "canonical native duplicates")))
         val first =
             DataValue.named(
                 TEST_IDENTITY_KEY_USE,
@@ -1110,7 +1110,7 @@ val SdkRuntimeConformanceTest by testSuite {
     test("float32 native binding preserves exact width and rejects precision loss") {
         val assembly =
             CatalogContributions(declarations = emptyList()).assemble(
-                CatalogAssemblyContext(CatalogGeneration("float32 native width")),
+                CatalogAssemblyContext(CatalogGeneration(value = "float32 native width")),
             )
         val use = floatScalar(FloatWidth.THIRTY_TWO).use
         val checked = assembly.checked.resolve(use).ready()
@@ -1148,7 +1148,7 @@ val SdkRuntimeConformanceTest by testSuite {
                         OwnedTypeDeclaration(origin, duplicate),
                         OwnedTypeDeclaration(providerOrigin("duplicate_owner"), duplicate),
                     ),
-            ).assemble(CatalogAssemblyContext(CatalogGeneration("catalog conflicts")))
+            ).assemble(CatalogAssemblyContext(CatalogGeneration(value = "catalog conflicts")))
 
         assembly.editorCatalog.types
             .single { it.definition.id == childId }
@@ -1246,7 +1246,7 @@ val SdkRuntimeConformanceTest by testSuite {
                         OwnedTypeDeclaration(origin, definition)
                     },
                 presentations = descriptors,
-            ).assemble(CatalogAssemblyContext(CatalogGeneration("field presentation conflicts")))
+            ).assemble(CatalogAssemblyContext(CatalogGeneration(value = "field presentation conflicts")))
 
         assembly.editorCatalog.types
             .filter { it.definition.id in setOf(conflicted.id, resolved.id, unrelated.id) }
@@ -1275,7 +1275,7 @@ val SdkRuntimeConformanceTest by testSuite {
             CatalogContributions(
                 declarations = listOf(OwnedTypeDeclaration(origin, definition)),
                 presentations = listOf(ownedPresentation(origin, provider, target, material)),
-            ).assemble(CatalogAssemblyContext(CatalogGeneration("invalid field")))
+            ).assemble(CatalogAssemblyContext(CatalogGeneration(value = "invalid field")))
         val status =
             assembly.editorCatalog.types
                 .single { it.definition.id == definition.id }
@@ -1346,7 +1346,7 @@ val SdkRuntimeConformanceTest by testSuite {
                 CatalogContributions(
                     declarations = listOf(OwnedTypeDeclaration(origin, definition), OwnedTypeDeclaration(origin, foreign)),
                     presentations = listOf(ownedPresentation(origin, provider, target, base.copy(layout = layout))),
-                ).assemble(CatalogAssemblyContext(CatalogGeneration("atomic parts")))
+                ).assemble(CatalogAssemblyContext(CatalogGeneration(value = "atomic parts")))
             val status =
                 assembly.editorCatalog.types
                     .single { it.definition.id == definition.id }
@@ -1424,7 +1424,7 @@ val SdkRuntimeConformanceTest by testSuite {
                 configurations = listOf(OwnedConfiguration(origin, id, configuration)),
             ).assemble(
                 CatalogAssemblyContext(
-                    generation = CatalogGeneration("immutable snapshot"),
+                    generation = CatalogGeneration(value = "immutable snapshot"),
                     endpointBindings =
                         mutableListOf(
                             com.typewritermc.types.EndpointBindingTemplate(
@@ -1496,7 +1496,7 @@ val SdkRuntimeConformanceTest by testSuite {
                         OwnedConfiguration(origin, parent.id, minimum),
                         OwnedConfiguration(providerOrigin("child_rules"), child.id, maximum),
                     ),
-            ).assemble(CatalogAssemblyContext(CatalogGeneration("inherited rules")))
+            ).assemble(CatalogAssemblyContext(CatalogGeneration(value = "inherited rules")))
 
         assembly.editorCatalog.types
             .single { it.definition.id == parent.id }
@@ -1543,7 +1543,7 @@ val SdkRuntimeConformanceTest by testSuite {
             CatalogContributions(
                 declarations = listOf(OwnedTypeDeclaration(origin, generic)),
                 configurations = listOf(OwnedConfiguration(origin, generic.id, rules)),
-            ).assemble(CatalogAssemblyContext(CatalogGeneration("generic rules")))
+            ).assemble(CatalogAssemblyContext(CatalogGeneration(value = "generic rules")))
 
         val status =
             assembly.editorCatalog.types
@@ -1738,7 +1738,7 @@ private fun com.typewritermc.authoring.CompletenessResult.complete() = (this as 
 private fun DataValue.available(): Availability<DataValue> = Availability.Available(this)
 
 private object EmptyReads : AuthoredReads {
-    override val catalog: CatalogGeneration = CatalogGeneration("expression catalog")
+    override val catalog: CatalogGeneration = CatalogGeneration(value = "expression catalog")
     override val readContext = com.typewritermc.authoring.ReadContext(catalog)
 
     override fun <T> read(path: BoundPath<T>): Availability<T> = error("Portable reads use the expression reader in this fixture.")
@@ -1768,7 +1768,7 @@ private value class TestCode(
 
 private object TestCodeNativeBindingFactory : NativeBindingFactory {
     override val definition: TypeDefinitionId = TEST_CODE_ID
-    override val provider: NativeBindingId = NativeBindingId("test.code")
+    override val provider: NativeBindingId = NativeBindingId(value = "test.code")
 
     override fun bind(
         actual: com.typewritermc.types.catalog.CheckedType,
@@ -1811,7 +1811,7 @@ private class TestIdentityKey(
 
 private object TestTextMessageNativeBindingFactory : NativeBindingFactory {
     override val definition = TEST_TEXT_MESSAGE_ID
-    override val provider = NativeBindingId("test.text_message")
+    override val provider = NativeBindingId(value = "test.text_message")
 
     override fun bind(
         actual: com.typewritermc.types.catalog.CheckedType,
@@ -1829,7 +1829,7 @@ private object TestTextMessageNativeBindingFactory : NativeBindingFactory {
 
 private object TestTranslationMessageNativeBindingFactory : NativeBindingFactory {
     override val definition = TEST_TRANSLATION_MESSAGE_ID
-    override val provider = NativeBindingId("test.translation_message")
+    override val provider = NativeBindingId(value = "test.translation_message")
 
     override fun bind(
         actual: com.typewritermc.types.catalog.CheckedType,
@@ -1847,7 +1847,7 @@ private object TestTranslationMessageNativeBindingFactory : NativeBindingFactory
 
 private object TestMessageActionNativeBindingFactory : NativeBindingFactory {
     override val definition = TEST_MESSAGE_ACTION_ID
-    override val provider = NativeBindingId("test.message_action")
+    override val provider = NativeBindingId(value = "test.message_action")
 
     override fun bind(
         actual: com.typewritermc.types.catalog.CheckedType,
@@ -1878,7 +1878,7 @@ private object TestMessageActionNativeBindingFactory : NativeBindingFactory {
 
 private object TestTreeNativeBindingFactory : NativeBindingFactory {
     override val definition = TEST_TREE_ID
-    override val provider = NativeBindingId("test.tree")
+    override val provider = NativeBindingId(value = "test.tree")
 
     override fun bind(
         actual: com.typewritermc.types.catalog.CheckedType,
@@ -1910,7 +1910,7 @@ private object TestTreeNativeBindingFactory : NativeBindingFactory {
 
 private object TestIdentityKeyNativeBindingFactory : NativeBindingFactory {
     override val definition = TEST_IDENTITY_KEY_ID
-    override val provider = NativeBindingId("test.identity_key")
+    override val provider = NativeBindingId(value = "test.identity_key")
 
     override fun bind(
         actual: com.typewritermc.types.catalog.CheckedType,

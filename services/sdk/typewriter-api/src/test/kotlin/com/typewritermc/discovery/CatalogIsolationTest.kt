@@ -1,6 +1,5 @@
 package com.typewritermc.discovery
 
-import com.typewritermc.checking.CatalogGeneration
 import com.typewritermc.configuration.ConfigurationProvider
 import com.typewritermc.imprint.ArtifactId
 import com.typewritermc.imprint.ContributionName
@@ -19,6 +18,7 @@ import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.matchers.shouldBe
 import kotlinx.coroutines.CancellationException
 import skirout.editor.v1.catalog.PresentationRole
+import skirout.editor.v1.type_catalog.CatalogGeneration
 import skirout.editor.v1.type_catalog.DeclarationOwner
 import skirout.editor.v1.type_catalog.FieldDeclaration
 import skirout.editor.v1.type_catalog.FieldOwner
@@ -143,7 +143,7 @@ val CatalogIsolationTest by testSuite {
     }
 }
 
-private val generation = CatalogGeneration("catalog isolation")
+private val generation = CatalogGeneration(value = "catalog isolation")
 
 private fun id(name: String) = TypeDefinitionId.qualified("isolation", name)
 

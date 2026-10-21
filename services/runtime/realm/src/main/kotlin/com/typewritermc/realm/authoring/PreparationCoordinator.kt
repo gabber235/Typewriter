@@ -3,7 +3,7 @@ package com.typewritermc.realm.authoring
 import com.typewritermc.authoring.InitializationRuntime
 import com.typewritermc.authoring.PreparationOperation
 import com.typewritermc.authoring.PreparationStep
-import com.typewritermc.checking.CatalogGeneration
+import skirout.editor.v1.type_catalog.CatalogGeneration
 
 internal fun interface PreparationEvaluator {
     suspend fun evaluate(

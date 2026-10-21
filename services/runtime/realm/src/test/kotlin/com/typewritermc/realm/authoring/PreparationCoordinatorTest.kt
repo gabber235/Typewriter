@@ -5,7 +5,6 @@ import com.typewritermc.authoring.PreparationOperation
 import com.typewritermc.authoring.PreparationStep
 import com.typewritermc.authoring.PreparationTarget
 import com.typewritermc.authoring.of
-import com.typewritermc.checking.CatalogGeneration
 import com.typewritermc.realm.checking.TestCatalogLease
 import com.typewritermc.types.fieldMap
 import com.typewritermc.types.fields
@@ -22,6 +21,7 @@ import skirout.editor.v1.catalog.PreparedContent
 import skirout.editor.v1.catalog.PreparedValue
 import skirout.editor.v1.type_catalog.ArgumentSelection
 import skirout.editor.v1.type_catalog.AuthoringRecord
+import skirout.editor.v1.type_catalog.CatalogGeneration
 import skirout.editor.v1.type_catalog.DataValue
 import skirout.editor.v1.type_catalog.TypeDefinitionId
 import skirout.editor.v1.type_catalog.TypeSelection
@@ -79,7 +79,7 @@ val PreparationCoordinatorTestSuite by testSuite {
                 )
             val request = request()
             coordinator.prepare(request) shouldBe prepared("captured")
-            generation = CatalogGeneration("next")
+            generation = CatalogGeneration(value = "next")
             shouldThrow<PreparationCatalogChanged> { coordinator.prepare(request) }.actual shouldBe generation
         }
     }
@@ -107,5 +107,5 @@ private fun prepared(value: String) =
         findings = emptyList(),
     )
 
-private val CATALOG = CatalogGeneration("catalog")
+private val CATALOG = CatalogGeneration(value = "catalog")
 private val CREATION_TYPE = TypeDefinitionId.qualified("creation", "value")

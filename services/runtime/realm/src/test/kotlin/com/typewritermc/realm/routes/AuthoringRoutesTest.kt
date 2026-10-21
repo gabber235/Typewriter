@@ -8,9 +8,7 @@ import com.typewritermc.authoring.PreparedEditResult
 import com.typewritermc.authoring.of
 import com.typewritermc.authoring.root
 import com.typewritermc.authoring.skir.SkirAuthoringOperationCodec
-import com.typewritermc.checking.CatalogGeneration
 import com.typewritermc.checking.InputIdentity
-import com.typewritermc.checking.toSkir
 import com.typewritermc.realm.authoring.AuthoringLease
 import com.typewritermc.realm.authoring.AuthoringSeed
 import com.typewritermc.realm.authoring.AuthoringViewDelta
@@ -46,6 +44,7 @@ import skirout.editor.v1.checking.FindingSet
 import skirout.editor.v1.checking.FindingStatus
 import skirout.editor.v1.type_catalog.ArgumentSelection
 import skirout.editor.v1.type_catalog.AuthoringRecord
+import skirout.editor.v1.type_catalog.CatalogGeneration
 import skirout.editor.v1.type_catalog.CheckExecutionId
 import skirout.editor.v1.type_catalog.DataValue
 import skirout.editor.v1.type_catalog.TypeDefinitionId
@@ -56,7 +55,6 @@ import skirout.editor.v1.authoring.EditIntent as SkirEditIntent
 import skirout.editor.v1.authoring_facts.EditExpectation as SkirEditExpectation
 import skirout.editor.v1.checking.CheckOutcome as SkirCheckOutcome
 import skirout.editor.v1.type_catalog.AuthoringRecord as SkirAuthoringRecord
-import skirout.editor.v1.type_catalog.CatalogGeneration as SkirCatalogGeneration
 import skirout.editor.v1.type_catalog.FieldValue as SkirFieldValue
 import skirout.editor.v1.type_catalog.ResourceId as SkirResourceId
 
@@ -64,7 +62,7 @@ val AuthoringRoutesTest by testSuite {
     test("current state query returns current findings without revision tokens") {
         runTest {
             val catalogs = RealmCatalogStore().also { it.installTestCatalog("catalog") }
-            val catalogIdentity = InputIdentity.Catalog(CatalogGeneration("catalog"))
+            val catalogIdentity = InputIdentity.Catalog(CatalogGeneration(value = "catalog"))
             val tombstone = InputIdentity.Existence(ResourceId("removed"))
             val views =
                 InMemoryAuthoringViewStore(
@@ -91,7 +89,7 @@ val AuthoringRoutesTest by testSuite {
                                 ),
                             incarnation = "catalog:1",
                             execution = CheckExecutionId(value = "execution:1"),
-                            catalog = CatalogGeneration("catalog").toSkir(),
+                            catalog = CatalogGeneration(value = "catalog"),
                         ),
                     expectations = emptyList(),
                     outcome = CheckOutcome.NeedsInputWrapper(listOf(missing)),
@@ -110,7 +108,7 @@ val AuthoringRoutesTest by testSuite {
                             .request(
                                 "editor.authoring.state.query",
                                 QueryAuthoringStateRequest(
-                                    generation = SkirCatalogGeneration(value = "catalog"),
+                                    generation = CatalogGeneration(value = "catalog"),
                                 ),
                                 QueryAuthoringStateRequest.serializer,
                                 QueryAuthoringStateResponse.serializer,
@@ -144,7 +142,7 @@ val AuthoringRoutesTest by testSuite {
             val repository = RecordingAuthoringRepository()
             val prepared =
                 PreparedEdit(
-                    catalog = CatalogGeneration("catalog"),
+                    catalog = CatalogGeneration(value = "catalog"),
                     expectations = emptyList(),
                     intents = emptyList(),
                 )
@@ -173,7 +171,7 @@ val AuthoringRoutesTest by testSuite {
                 val repository = RecordingAuthoringRepository()
                 val prepared =
                     PreparedEdit(
-                        catalog = CatalogGeneration("catalog"),
+                        catalog = CatalogGeneration(value = "catalog"),
                         expectations = listOf(EditExpectation.ResourceExists(ResourceId("resource"), false)),
                         intents =
                             listOf(
@@ -351,7 +349,7 @@ val AuthoringRoutesTest by testSuite {
                             PreviewTypeArgumentChangeRequest(
                                 resource = SkirResourceId(value = resource.value),
                                 requested = requested,
-                                catalog = SkirCatalogGeneration(value = catalog.generation.value),
+                                catalog = catalog.generation,
                             ),
                             PreviewTypeArgumentChangeRequest.serializer,
                             PreviewTypeArgumentChangeResponse.serializer,
@@ -398,7 +396,7 @@ val AuthoringRoutesTest by testSuite {
                             .request(
                                 "editor.authoring.state.query",
                                 QueryAuthoringStateRequest(
-                                    generation = SkirCatalogGeneration(value = catalog.generation.value),
+                                    generation = catalog.generation,
                                 ),
                                 QueryAuthoringStateRequest.serializer,
                                 QueryAuthoringStateResponse.serializer,
@@ -421,7 +419,7 @@ private fun validPreparedEditWire() =
     SkirAuthoringOperationCodec
         .encode(
             PreparedEdit(
-                catalog = CatalogGeneration("catalog"),
+                catalog = CatalogGeneration(value = "catalog"),
                 expectations = emptyList(),
                 intents = emptyList(),
             ),

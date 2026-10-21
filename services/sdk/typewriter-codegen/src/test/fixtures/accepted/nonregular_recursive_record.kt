@@ -1,8 +1,8 @@
 package fixture
 
+import skirout.editor.v1.type_catalog.CatalogGeneration
 import com.typewritermc.authoring.CompletenessResult
 import com.typewritermc.authoring.complete
-import com.typewritermc.checking.CatalogGeneration
 import com.typewritermc.types.FactoryNativeBindingRegistry
 import com.typewritermc.types.NativeBinding
 import com.typewritermc.types.Resource
@@ -28,7 +28,7 @@ data class Nest<T>(
 
 fun main() {
     val catalog = DefaultCheckedCatalog(
-        CatalogGeneration("recursive fixture"),
+        CatalogGeneration(value = "recursive fixture"),
         StandardTypes.definitions + NestDefinition.definition + RecursiveSourceDefinition.definition,
     )
     val bindings = FactoryNativeBindingRegistry(catalog, listOf(NestNativeBindingFactory, RecursiveSourceNativeBindingFactory))

@@ -1,6 +1,5 @@
 package com.typewritermc.realm.routes
 
-import com.typewritermc.capability.CapabilityId
 import com.typewritermc.capability.RealmCapabilityDescriptor
 import com.typewritermc.capability.RealmCapabilityRegistry
 import com.typewritermc.capability.RealmCapabilityRuntime
@@ -30,6 +29,7 @@ import kotlinx.coroutines.launch
 import skirout.editor.v1.search.RealmPresentationSearchRequest
 import skirout.editor.v1.search.RealmPresentationSearchStatus
 import skirout.editor.v1.search.RealmPresentationSearchUpdate
+import skirout.editor.v1.type_catalog.CapabilityId
 import skirout.editor.v1.type_catalog.DataValue
 import java.util.concurrent.ConcurrentHashMap
 
@@ -76,7 +76,7 @@ class CapabilityRealmPresentationSearchSource(
         updates: RealmPresentationSearchUpdatePublisher,
     ): RealmPresentationSearchUpdate {
         cancel(request.subscriptionId)
-        val capability = CapabilityId(request.capabilityId.value)
+        val capability = request.capabilityId
         if (views.read { it.catalog.operations.candidateSearch(capability) != null }) {
             return operationSearch.watch(request, updates)
         }

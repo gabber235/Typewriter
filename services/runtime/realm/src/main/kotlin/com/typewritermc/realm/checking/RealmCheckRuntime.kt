@@ -7,14 +7,12 @@ import com.typewritermc.authoring.ReadContext
 import com.typewritermc.authoring.field
 import com.typewritermc.authoring.of
 import com.typewritermc.authoring.root
-import com.typewritermc.checking.CatalogGeneration
 import com.typewritermc.checking.CheckContext
 import com.typewritermc.checking.DiagnosticReporter
 import com.typewritermc.checking.DraftType
 import com.typewritermc.checking.InputIdentity
 import com.typewritermc.checking.RealmChecks
 import com.typewritermc.checking.reason
-import com.typewritermc.checking.toSkir
 import com.typewritermc.configuration.ConfigurationRecipe
 import com.typewritermc.configuration.OwnedRule
 import com.typewritermc.discovery.OwnedCheck
@@ -46,6 +44,7 @@ import skirout.editor.v1.checking.FindingSet
 import skirout.editor.v1.checking.FindingStatus
 import skirout.editor.v1.diagnostic.Diagnostic
 import skirout.editor.v1.diagnostic.DiagnosticSeverity
+import skirout.editor.v1.type_catalog.CatalogGeneration
 import skirout.editor.v1.type_catalog.CheckExecutionId
 import skirout.editor.v1.type_catalog.DiagnosticId
 import skirout.editor.v1.type_catalog.RuleId
@@ -404,8 +403,7 @@ class RealmCheckRuntime(
                 incarnation = catalog.incarnation,
                 execution = CheckExecutionId(value = "check:${nextExecution.getAndIncrement()}"),
                 catalog =
-                    lease.root.catalog.generation
-                        .toSkir(),
+                    lease.root.catalog.generation,
             )
         state.ticket = ticket
         val job =
@@ -485,8 +483,7 @@ class RealmCheckRuntime(
                 incarnation = catalog.incarnation,
                 execution = CheckExecutionId(value = "capture:${nextExecution.getAndIncrement()}"),
                 catalog =
-                    lease.root.catalog.generation
-                        .toSkir(),
+                    lease.root.catalog.generation,
             )
         val reads = CapturedAuthoringReads(lease.originalView(), predicates = selectionPredicates, limits = readLimits)
         val findings = mutableListOf<Diagnostic>()

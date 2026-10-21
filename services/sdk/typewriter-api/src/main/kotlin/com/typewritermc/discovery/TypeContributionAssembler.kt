@@ -12,7 +12,6 @@ import com.typewritermc.authoring.field
 import com.typewritermc.authoring.name
 import com.typewritermc.authoring.root
 import com.typewritermc.capability.RealmCapabilityDescriptor
-import com.typewritermc.checking.CatalogGeneration
 import com.typewritermc.configuration.ConfigurationRecipe
 import com.typewritermc.configuration.DefaultConfigurationCollectionScope
 import com.typewritermc.configuration.DefaultPortableRuleCompiler
@@ -76,6 +75,7 @@ import skirout.editor.v1.catalog.EffectiveFieldTemplate
 import skirout.editor.v1.catalog.PresentationMaterial
 import skirout.editor.v1.catalog.PresentationRole
 import skirout.editor.v1.catalog.PublishedType
+import skirout.editor.v1.type_catalog.CatalogGeneration
 import skirout.editor.v1.type_catalog.CollectionKind
 import skirout.editor.v1.type_catalog.DeclarationOwner
 import skirout.editor.v1.type_catalog.EndpointId
@@ -94,7 +94,6 @@ import skirout.editor.v1.type_catalog.TypeParameter
 import skirout.editor.v1.type_catalog.TypeTemplate
 import skirout.editor.v1.type_catalog.TypeUse
 import skirout.editor.v1.type_catalog.ValuePath
-import skirout.editor.v1.type_catalog.CatalogGeneration as SkirCatalogGeneration
 
 /**
  * One contributed type declaration. Codegen supplies the complete [display] of every declared type and the
@@ -302,7 +301,7 @@ fun CatalogContributions.assemble(context: CatalogAssemblyContext): CatalogAssem
     // still Kotlin catalog models; SkirTypeCodec encodes them into the published catalog.
     val editorCatalog =
         EditorCatalog(
-            generation = SkirCatalogGeneration(value = context.generation.value),
+            generation = context.generation,
             types = published,
             relations = publishedRelations.map { SkirTypeCodec.encode(it).getOrThrow() },
             resourceDisplays = displayCollection.displays.map { SkirTypeCodec.encode(it.formulas).getOrThrow() },

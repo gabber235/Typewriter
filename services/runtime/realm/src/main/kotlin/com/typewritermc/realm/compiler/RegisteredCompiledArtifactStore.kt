@@ -1,7 +1,5 @@
 package com.typewritermc.realm.compiler
 
-import com.typewritermc.checking.CatalogGeneration
-import com.typewritermc.checking.toSkir
 import com.typewritermc.engine.CompiledArtifact
 import com.typewritermc.engine.PUBLISHED_CONTENT_FORMAT_REVISION
 import com.typewritermc.engine.requireValid
@@ -18,6 +16,7 @@ import skirout.editor.v1.compiled_content.CompiledArtifactReference
 import skirout.editor.v1.compiled_content.CompiledBlobPointer
 import skirout.editor.v1.compiled_content.PublishedContent
 import skirout.editor.v1.compiled_content.PublishedOutput
+import skirout.editor.v1.type_catalog.CatalogGeneration
 import skirout.editor.v1.type_catalog.PublicationId
 
 /** Writes protected publication payloads and repairs missing selected bytes only when reproduced exactly. */
@@ -49,7 +48,7 @@ class RegisteredCompiledArtifactStore(
         return PublishedContent(
             publication = publication,
             formatRevision = PUBLISHED_CONTENT_FORMAT_REVISION,
-            catalog = catalog.toSkir(),
+            catalog = catalog,
             implementationToken = implementationToken,
             outputs = outputs,
         ).requireValid()

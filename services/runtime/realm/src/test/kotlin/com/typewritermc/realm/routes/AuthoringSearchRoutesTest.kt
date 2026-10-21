@@ -1,6 +1,5 @@
 package com.typewritermc.realm.routes
 
-import com.typewritermc.checking.CatalogGeneration
 import com.typewritermc.realm.authoring.AuthoringSeed
 import com.typewritermc.realm.authoring.InMemoryAuthoringViewStore
 import com.typewritermc.realm.checking.TEST_TYPE
@@ -21,11 +20,11 @@ import io.kotest.matchers.shouldBe
 import kotlinx.coroutines.test.runTest
 import skirout.editor.v1.authoring.SearchAuthoringRequest
 import skirout.editor.v1.authoring.SearchAuthoringResponse
+import skirout.editor.v1.type_catalog.CatalogGeneration
 import skirout.editor.v1.type_catalog.DataValue
 import skirout.editor.v1.type_catalog.NamedTypeUse
 import skirout.editor.v1.type_catalog.ScalarKind
 import skirout.editor.v1.type_catalog.TypeDefinitionId
-import skirout.editor.v1.type_catalog.CatalogGeneration as SkirCatalogGeneration
 import skirout.editor.v1.type_catalog.ResourceId as SkirResourceId
 
 val AuthoringSearchRoutesTest by testSuite {
@@ -91,7 +90,7 @@ val AuthoringSearchRoutesTest by testSuite {
                     val response =
                         fixture.request(
                             "editor.authoring.search",
-                            searchRequest(CatalogGeneration("old"), resource),
+                            searchRequest(CatalogGeneration(value = "old"), resource),
                             SearchAuthoringRequest.serializer,
                             SearchAuthoringResponse.serializer,
                         ) as SearchAuthoringResponse.CatalogChangedErrorWrapper
@@ -110,7 +109,7 @@ private fun searchRequest(
     context: ResourceId,
 ): SearchAuthoringRequest =
     SearchAuthoringRequest(
-        generation = SkirCatalogGeneration(value = generation.value),
+        generation = generation,
         query = "readable",
         roots = listOf(TEST_TYPE),
         contexts = listOf(SkirResourceId(value = context.value)),

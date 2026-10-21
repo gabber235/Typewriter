@@ -1,9 +1,6 @@
 package com.typewritermc.realm.compiler
 
 import com.surrealdb.Surreal
-import com.typewritermc.checking.CatalogGeneration
-import com.typewritermc.checking.InputToken
-import com.typewritermc.checking.toSkir
 import com.typewritermc.engine.ContentDigest
 import com.typewritermc.realm.checking.TEST_TYPE
 import com.typewritermc.realm.schema.MigrationResources
@@ -22,7 +19,9 @@ import skirout.editor.v1.compiled_content.PublishedOutput
 import skirout.editor.v1.diagnostic.Diagnostic
 import skirout.editor.v1.diagnostic.DiagnosticSeverity
 import skirout.editor.v1.publication.EngineImplementationInputs
+import skirout.editor.v1.type_catalog.CatalogGeneration
 import skirout.editor.v1.type_catalog.DiagnosticId
+import skirout.editor.v1.type_catalog.InputToken
 import skirout.editor.v1.type_catalog.PublicationId
 import skirout.editor.v1.type_catalog.RuleOrigin
 
@@ -32,17 +31,17 @@ val RegisteredCompiledContentRepositoryTest by testSuite {
             val attempts = SurrealPublicationAttemptStore(database)
             val results = SurrealRegisteredCompiledContentRepository(database)
             val first = testPublishedContent("first", "a")
-            attempts.start(first.publication, CatalogGeneration(first.catalog.value), testEngineInputs())
+            attempts.start(first.publication, first.catalog, testEngineInputs())
             attempts.phase(first.publication, PublicationState.Activating)
             attempts.install(first)
             results.selected() shouldBe first
             val second = testPublishedContent("second", "b")
-            attempts.start(second.publication, CatalogGeneration(second.catalog.value), testEngineInputs())
+            attempts.start(second.publication, second.catalog, testEngineInputs())
             attempts.phase(second.publication, PublicationState.Activating)
             attempts.install(second)
             results.selected() shouldBe second
             val empty = second.copy(publication = PublicationId(value = "empty"), outputs = emptyList())
-            attempts.start(empty.publication, CatalogGeneration(empty.catalog.value), testEngineInputs())
+            attempts.start(empty.publication, empty.catalog, testEngineInputs())
             attempts.phase(empty.publication, PublicationState.Activating)
             attempts.install(empty)
             results.selected() shouldBe empty
@@ -58,11 +57,11 @@ val RegisteredCompiledContentRepositoryTest by testSuite {
             val attempts = SurrealPublicationAttemptStore(database)
             val results = SurrealRegisteredCompiledContentRepository(database)
             val first = testPublishedContent("first", "a")
-            attempts.start(first.publication, CatalogGeneration(first.catalog.value), testEngineInputs())
+            attempts.start(first.publication, first.catalog, testEngineInputs())
             attempts.phase(first.publication, PublicationState.Activating)
             attempts.install(first)
             val next = testPublishedContent("next", "b")
-            attempts.start(next.publication, CatalogGeneration(next.catalog.value), testEngineInputs())
+            attempts.start(next.publication, next.catalog, testEngineInputs())
             shouldThrow<IllegalStateException> { attempts.install(next) }
             results.selected() shouldBe first
         }
@@ -73,11 +72,11 @@ val RegisteredCompiledContentRepositoryTest by testSuite {
             val recovery = SurrealPublicationAttemptStore(database)
             val results = SurrealRegisteredCompiledContentRepository(database)
             val selected = testPublishedContent("selected", "first")
-            original.start(selected.publication, CatalogGeneration(selected.catalog.value), testEngineInputs())
+            original.start(selected.publication, selected.catalog, testEngineInputs())
             original.phase(selected.publication, PublicationState.Activating)
             original.install(selected)
             val unfinished = testPublishedContent("unfinished", "second")
-            original.start(unfinished.publication, CatalogGeneration(unfinished.catalog.value), testEngineInputs())
+            original.start(unfinished.publication, unfinished.catalog, testEngineInputs())
             original.phase(unfinished.publication, PublicationState.Activating)
             recovery.interruptUnfinished()
             shouldThrow<IllegalStateException> { original.install(unfinished) }
@@ -99,7 +98,7 @@ val RegisteredCompiledContentRepositoryTest by testSuite {
                     related = emptyList(),
                 )
             val id = PublicationId(value = "blocked")
-            attempts.start(id, CatalogGeneration("catalog"), testEngineInputs())
+            attempts.start(id, CatalogGeneration(value = "catalog"), testEngineInputs())
             attempts.blocked(id, listOf(finding))
             results.latestReport()?.findings shouldBe listOf(finding)
             database
@@ -117,10 +116,10 @@ val RegisteredCompiledContentRepositoryTest by testSuite {
             val attempts = SurrealPublicationAttemptStore(database)
             val results = SurrealRegisteredCompiledContentRepository(database)
             val first = testPublishedContent("first", "a")
-            attempts.start(first.publication, CatalogGeneration(first.catalog.value), testEngineInputs())
+            attempts.start(first.publication, first.catalog, testEngineInputs())
             attempts.phase(first.publication, PublicationState.Activating)
             attempts.install(first)
-            attempts.start(PublicationId(value = "unfinished"), CatalogGeneration(first.catalog.value), testEngineInputs())
+            attempts.start(PublicationId(value = "unfinished"), first.catalog, testEngineInputs())
             SurrealPublicationAttemptStore(database).interruptUnfinished()
             results.selected() shouldBe first
             database.query("SELECT VALUE state FROM ONLY publication_attempt:unfinished;").take(0).getString() shouldBe "interrupted"
@@ -149,7 +148,7 @@ internal fun testPublishedContent(
     PublishedContent(
         publication = PublicationId(value = id),
         formatRevision = com.typewritermc.engine.PUBLISHED_CONTENT_FORMAT_REVISION,
-        catalog = CatalogGeneration("catalog").toSkir(),
+        catalog = CatalogGeneration(value = "catalog"),
         implementationToken = "implementation",
         outputs =
             listOf(

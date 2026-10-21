@@ -53,7 +53,7 @@ internal fun RuntimeCompilationFacts.requireAccepted(
     this.relations.forEach { fact ->
         val accepted =
             requireNotNull(acceptedRelations[fact.relation]) {
-                "Compiled relation is unavailable in the runtime catalog: ${fact.relation}."
+                "Compiled relation is unavailable in the runtime catalog: ${fact.relation.value}."
             }
         require(fact.ownsResources == accepted.ownsResources) {
             "Compiled relation ownership differs from the accepted runtime catalog."

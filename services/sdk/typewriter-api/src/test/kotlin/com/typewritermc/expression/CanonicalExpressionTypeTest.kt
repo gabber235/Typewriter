@@ -1,7 +1,6 @@
 package com.typewritermc.expression
 
 import com.typewritermc.authoring.root
-import com.typewritermc.checking.CatalogGeneration
 import com.typewritermc.configuration.PortableExpressionChecker
 import com.typewritermc.types.StandardTypes
 import com.typewritermc.types.catalog.DefaultCheckedCatalog
@@ -14,6 +13,7 @@ import de.infix.testBalloon.framework.core.testSuite
 import io.kotest.matchers.shouldBe
 import skirout.editor.v1.expression.ExpressionNode
 import skirout.editor.v1.expression.NumberArithmeticOperation
+import skirout.editor.v1.type_catalog.CatalogGeneration
 import skirout.editor.v1.type_catalog.IntegerWidth
 import skirout.editor.v1.type_catalog.PathSegment
 import skirout.editor.v1.type_catalog.RepresentationTemplate
@@ -23,7 +23,7 @@ import skirout.editor.v1.type_catalog.TypeDefinitionId
 import skirout.editor.v1.type_catalog.ValuePath
 
 val CanonicalExpressionTypeTest by testSuite {
-    val catalog = DefaultCheckedCatalog(CatalogGeneration("canonical expressions"), StandardTypes.definitions)
+    val catalog = DefaultCheckedCatalog(CatalogGeneration(value = "canonical expressions"), StandardTypes.definitions)
     val checker = PortableExpressionChecker(catalog::resolve)
     val text = ScalarKind.TEXT.use
     val wide = integerScalar(IntegerWidth.SIGNED_SIXTY_FOUR).use
@@ -61,7 +61,7 @@ val CanonicalExpressionTypeTest by testSuite {
                         value = integerScalar(IntegerWidth.SIGNED_SIXTY_FOUR).template,
                     ),
             )
-        val aliases = DefaultCheckedCatalog(CatalogGeneration("mapping alias"), StandardTypes.definitions + alias)
+        val aliases = DefaultCheckedCatalog(CatalogGeneration(value = "mapping alias"), StandardTypes.definitions + alias)
         val aliasChecker = PortableExpressionChecker(aliases::resolve)
         val source = input<Any?>(rows).toNode()
         val bindings = mapOf(rows to nominalExpressionType(aliasId.use()))

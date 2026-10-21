@@ -2,7 +2,6 @@
 
 package com.typewritermc.authoring
 
-import com.typewritermc.checking.CatalogGeneration
 import com.typewritermc.expression.Expr
 import com.typewritermc.expression.ExpressionBindingId
 import com.typewritermc.expression.ExpressionFactory
@@ -24,6 +23,7 @@ import skirout.editor.v1.catalog.PresentationRole
 import skirout.editor.v1.presentation.AxisChild
 import skirout.editor.v1.presentation.ChildrenElement
 import skirout.editor.v1.presentation.PresentationElement
+import skirout.editor.v1.type_catalog.CatalogGeneration
 import skirout.editor.v1.type_catalog.ValuePath
 
 val GeneratedPresentationScopeTest by testSuite {
@@ -43,7 +43,7 @@ val GeneratedPresentationScopeTest by testSuite {
     test("generated record expressions compile into symbolic presentation conditions") {
         val catalog =
             DefaultCheckedCatalog(
-                CatalogGeneration("generated presentation"),
+                CatalogGeneration(value = "generated presentation"),
                 listOf(
                     PlacementDefinition.definition,
                     TimelineCuePlacementDefinition.definition,

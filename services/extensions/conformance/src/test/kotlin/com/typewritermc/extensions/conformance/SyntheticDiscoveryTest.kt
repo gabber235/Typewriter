@@ -11,7 +11,6 @@ import com.typewritermc.capability.RealmCommandContext
 import com.typewritermc.capability.RealmComputationContext
 import com.typewritermc.capability.RealmSearchContext
 import com.typewritermc.capability.RealmSearchUpdate
-import com.typewritermc.checking.CatalogGeneration
 import com.typewritermc.discovery.CapabilityOwnerResolver
 import com.typewritermc.discovery.DeploymentFacts
 import com.typewritermc.discovery.DiscoveryDomains
@@ -40,7 +39,6 @@ import com.typewritermc.types.NativeBinding
 import com.typewritermc.types.NativeBindingFactory
 import com.typewritermc.types.RESOURCE_OWNERSHIP_FAMILY_ID
 import com.typewritermc.types.Ref
-import com.typewritermc.types.RelationFamilyId
 import com.typewritermc.types.ResourceId
 import com.typewritermc.types.StandardTypes
 import com.typewritermc.types.catalog.DefaultCheckedCatalog
@@ -71,9 +69,11 @@ import skirout.editor.v1.presentation.ChildrenElement
 import skirout.editor.v1.presentation.PresentationElement
 import skirout.editor.v1.presentation.PresentationNode
 import skirout.editor.v1.search.RealmSearchQuery
+import skirout.editor.v1.type_catalog.CatalogGeneration
 import skirout.editor.v1.type_catalog.DataValue
 import skirout.editor.v1.type_catalog.DeclarationOwner
 import skirout.editor.v1.type_catalog.PathSegment
+import skirout.editor.v1.type_catalog.RelationFamilyId
 import skirout.editor.v1.type_catalog.RepresentationTemplate
 import skirout.editor.v1.type_catalog.TypeDefinition
 import skirout.editor.v1.type_catalog.TypeDefinitionId
@@ -99,7 +99,7 @@ val SyntheticDiscoveryTest by testSuite {
 
     test("generates ownership relations and their concrete authored bindings") {
         SyntheticEntryCues.contract.families shouldBe
-            setOf(RelationFamilyId(ACYCLIC_RELATION_FAMILY_ID), RelationFamilyId(RESOURCE_OWNERSHIP_FAMILY_ID))
+            setOf(RelationFamilyId(value = ACYCLIC_RELATION_FAMILY_ID), RelationFamilyId(value = RESOURCE_OWNERSHIP_FAMILY_ID))
         SyntheticEntryCues.contract.first.cardinality shouldBe EndpointCardinality.One
         SyntheticEntryCues.contract.second.cardinality shouldBe EndpointCardinality.Many
         SyntheticEntryEndpointBindings.bindings
@@ -113,7 +113,7 @@ val SyntheticDiscoveryTest by testSuite {
             }
 
         SyntheticSegmentKeyframes.contract.families shouldBe
-            setOf(RelationFamilyId(ACYCLIC_RELATION_FAMILY_ID), RelationFamilyId(RESOURCE_OWNERSHIP_FAMILY_ID))
+            setOf(RelationFamilyId(value = ACYCLIC_RELATION_FAMILY_ID), RelationFamilyId(value = RESOURCE_OWNERSHIP_FAMILY_ID))
     }
 
     test("native bindings preserve named identity and serialized field names") {
@@ -333,7 +333,7 @@ val SyntheticDiscoveryTest by testSuite {
 
 private fun messageCatalog() =
     DefaultCheckedCatalog(
-        CatalogGeneration("conformance messages"),
+        CatalogGeneration(value = "conformance messages"),
         listOf(
             SyntheticMessageDefinition.definition,
             LiteralMessageDefinition.definition,
@@ -372,7 +372,7 @@ private fun presentationCatalog(): DefaultCheckedCatalog {
             .map { (generatedProviderInstance(it.providerClass) as GeneratedTypeProvider).definition }
             .distinctBy(TypeDefinition::id)
     return DefaultCheckedCatalog(
-        CatalogGeneration("conformance presentation"),
+        CatalogGeneration(value = "conformance presentation"),
         StandardTypes.definitions + definitions,
     )
 }

@@ -1,6 +1,5 @@
 package com.typewritermc.realm.compiler
 
-import com.typewritermc.checking.CatalogGeneration
 import com.typewritermc.engine.CompiledArtifact
 import com.typewritermc.engine.ContentDigest
 import com.typewritermc.services.libs.filetransfer.blob.ArtifactDigest
@@ -17,6 +16,7 @@ import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.matchers.shouldBe
 import skirout.editor.v1.compilation_root.CompilationProjectionId
 import skirout.editor.v1.compilation_root.CompilationRoot
+import skirout.editor.v1.type_catalog.CatalogGeneration
 import skirout.editor.v1.type_catalog.PublicationId
 
 val RegisteredCompiledArtifactStoreTest by testSuite {
@@ -24,15 +24,27 @@ val RegisteredCompiledArtifactStoreTest by testSuite {
         val blobs = InMemoryBlobEndpoint()
         val store = RegisteredCompiledArtifactStore(blobs, TestPublicationRetention())
         val firstArtifact = 'a'.compiledArtifact("first")
-        val first = store.store(PublicationId(value = "first"), CatalogGeneration("catalog"), "implementation", listOf(firstArtifact))
-        val second = store.store(PublicationId(value = "second"), CatalogGeneration("catalog"), "implementation", listOf(firstArtifact))
+        val first =
+            store.store(
+                PublicationId(value = "first"),
+                CatalogGeneration(value = "catalog"),
+                "implementation",
+                listOf(firstArtifact),
+            )
+        val second =
+            store.store(
+                PublicationId(value = "second"),
+                CatalogGeneration(value = "catalog"),
+                "implementation",
+                listOf(firstArtifact),
+            )
         first.outputs.single().blob shouldBe second.outputs.single().blob
         val replacement = 'b'.compiledArtifact("replacement")
-        val third = store.store(PublicationId(value = "third"), CatalogGeneration("catalog"), "implementation", listOf(replacement))
+        val third = store.store(PublicationId(value = "third"), CatalogGeneration(value = "catalog"), "implementation", listOf(replacement))
         third.outputs.map { it.reference.root } shouldBe listOf(replacement.root)
         third.publication shouldBe PublicationId(value = "third")
         third.formatRevision shouldBe com.typewritermc.engine.PUBLISHED_CONTENT_FORMAT_REVISION
-        val empty = store.store(PublicationId(value = "empty"), CatalogGeneration("catalog"), "implementation", emptyList())
+        val empty = store.store(PublicationId(value = "empty"), CatalogGeneration(value = "catalog"), "implementation", emptyList())
         empty.outputs shouldBe emptyList()
     }
     test("unchanged selected output restores missing exact bytes without a new publication") {
@@ -40,7 +52,13 @@ val RegisteredCompiledArtifactStoreTest by testSuite {
         val pins = TestPublicationRetention()
         val store = RegisteredCompiledArtifactStore(blobs, pins)
         val artifact = 'a'.compiledArtifact("root")
-        val selected = store.store(PublicationId(value = "selected"), CatalogGeneration("catalog"), "implementation", listOf(artifact))
+        val selected =
+            store.store(
+                PublicationId(value = "selected"),
+                CatalogGeneration(value = "catalog"),
+                "implementation",
+                listOf(artifact),
+            )
         store.selected(selected)
         val digest =
             selected.outputs
@@ -60,7 +78,13 @@ val RegisteredCompiledArtifactStoreTest by testSuite {
         val blobs = InMemoryBlobEndpoint()
         val store = RegisteredCompiledArtifactStore(blobs, TestPublicationRetention())
         val artifact = 'a'.compiledArtifact("root")
-        val selected = store.store(PublicationId(value = "selected"), CatalogGeneration("catalog"), "implementation", listOf(artifact))
+        val selected =
+            store.store(
+                PublicationId(value = "selected"),
+                CatalogGeneration(value = "catalog"),
+                "implementation",
+                listOf(artifact),
+            )
         val digest =
             ArtifactDigest(
                 com.typewritermc.services.libs.filetransfer.blob.DigestAlgorithm.SHA_256,

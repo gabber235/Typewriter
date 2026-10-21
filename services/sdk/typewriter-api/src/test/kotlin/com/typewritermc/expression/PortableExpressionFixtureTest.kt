@@ -7,7 +7,6 @@ import com.typewritermc.authoring.BoundPath
 import com.typewritermc.authoring.name
 import com.typewritermc.authoring.of
 import com.typewritermc.authoring.root
-import com.typewritermc.checking.CatalogGeneration
 import com.typewritermc.checking.PartialSelection
 import com.typewritermc.checking.TypedSelection
 import com.typewritermc.configuration.PortableExpressionChecker
@@ -39,6 +38,7 @@ import kotlinx.serialization.json.jsonArray
 import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
 import skirout.editor.v1.expression.ExpressionNode
+import skirout.editor.v1.type_catalog.CatalogGeneration
 import skirout.editor.v1.type_catalog.DataValue
 import skirout.editor.v1.type_catalog.ItemId
 import skirout.editor.v1.type_catalog.ListItem
@@ -344,7 +344,7 @@ private fun ValueLocation.fixtureKey(): String {
 }
 
 internal object FixtureReads : AuthoredReads {
-    override val catalog = CatalogGeneration("expression fixture")
+    override val catalog = CatalogGeneration(value = "expression fixture")
     override val readContext = com.typewritermc.authoring.ReadContext(catalog)
 
     override fun <T> read(path: BoundPath<T>): Availability<T> = error("Fixture expressions use ExpressionValueReader.")

@@ -2,7 +2,6 @@ package com.typewritermc.realm.compiler
 
 import com.typewritermc.authoring.CompilationUnitDefinition
 import com.typewritermc.authoring.of
-import com.typewritermc.checking.CatalogGeneration
 import com.typewritermc.configuration.FieldPatternSegment
 import com.typewritermc.configuration.RelativeFieldPattern
 import com.typewritermc.engine.CompiledEdgeOrigin
@@ -20,7 +19,6 @@ import com.typewritermc.types.FactoryNativeBindingRegistry
 import com.typewritermc.types.NativeBindingRegistry
 import com.typewritermc.types.RelationContract
 import com.typewritermc.types.RelationDeletePolicy
-import com.typewritermc.types.RelationId
 import com.typewritermc.types.ResourceId
 import com.typewritermc.types.catalog.CheckedCatalog
 import com.typewritermc.types.catalog.DefaultCheckedCatalog
@@ -36,6 +34,7 @@ import com.typewritermc.types.use
 import de.infix.testBalloon.framework.core.testSuite
 import io.kotest.matchers.shouldBe
 import skirout.editor.v1.type_catalog.AuthoringRecord
+import skirout.editor.v1.type_catalog.CatalogGeneration
 import skirout.editor.v1.type_catalog.CollectionKind
 import skirout.editor.v1.type_catalog.DataValue
 import skirout.editor.v1.type_catalog.EndpointId
@@ -44,6 +43,7 @@ import skirout.editor.v1.type_catalog.FieldOwner
 import skirout.editor.v1.type_catalog.ItemId
 import skirout.editor.v1.type_catalog.LinkTarget
 import skirout.editor.v1.type_catalog.ListItem
+import skirout.editor.v1.type_catalog.RelationId
 import skirout.editor.v1.type_catalog.RepresentationTemplate
 import skirout.editor.v1.type_catalog.ScalarKind
 import skirout.editor.v1.type_catalog.TypeDefinition
@@ -180,9 +180,24 @@ private fun compiler(view: com.typewritermc.realm.authoring.AuthoringView) =
         testAssessment(
             view,
             listOf(
-                NativeBindingRequirement(PAGE_USE, com.typewritermc.authoring.NativeBindingId("page"), "page_signature"),
-                NativeBindingRequirement(CHILD_USE, com.typewritermc.authoring.NativeBindingId("child"), "child_signature"),
-                NativeBindingRequirement(NESTED_USE, com.typewritermc.authoring.NativeBindingId("nested"), "nested_signature"),
+                NativeBindingRequirement(
+                    PAGE_USE,
+                    skirout.editor.v1.type_catalog
+                        .NativeBindingId(value = "page"),
+                    "page_signature",
+                ),
+                NativeBindingRequirement(
+                    CHILD_USE,
+                    skirout.editor.v1.type_catalog
+                        .NativeBindingId(value = "child"),
+                    "child_signature",
+                ),
+                NativeBindingRequirement(
+                    NESTED_USE,
+                    skirout.editor.v1.type_catalog
+                        .NativeBindingId(value = "nested"),
+                    "nested_signature",
+                ),
             ),
         ).resources,
     )
@@ -246,7 +261,7 @@ private class CompilerCatalogLease private constructor(
 ) : AuthoringCatalogLease {
     constructor() : this(AtomicInteger(1))
 
-    override val generation = CatalogGeneration("compiler_catalog")
+    override val generation = CatalogGeneration(value = "compiler_catalog")
     override val checked: CheckedCatalog = DefaultCheckedCatalog(generation, DEFINITIONS)
     override val nativeBindings: NativeBindingRegistry = FactoryNativeBindingRegistry(checked, emptyList())
     override val providers = EmptyProviders
@@ -277,7 +292,7 @@ private val PAGE_USE = PAGE.namedUse()
 private val CHILD_USE = CHILD.namedUse()
 private val CHILD_LINK_USE = CHILD_LINK.namedUse()
 private val CHILDREN_USE = CHILDREN.namedUse()
-private val OWNERSHIP = RelationId("page_children")
+private val OWNERSHIP = RelationId(value = "page_children")
 private val PAGE_ENDPOINT = EndpointId(value = "page_children:first")
 private val CHILD_ENDPOINT = EndpointId(value = "page_children:second")
 private val OWNERSHIP_CONTRACT =

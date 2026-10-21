@@ -12,12 +12,12 @@ import com.typewritermc.engine.relation
 import com.typewritermc.library.Page
 import com.typewritermc.types.NativeBindingRegistry
 import com.typewritermc.types.RelationContract
-import com.typewritermc.types.RelationId
 import com.typewritermc.types.actualType
 import com.typewritermc.types.catalog.CheckedCatalog
 import com.typewritermc.types.catalog.Resolution
 import com.typewritermc.types.ownsResources
 import com.typewritermc.types.use
+import skirout.editor.v1.type_catalog.RelationId
 
 /** Hydrated resource roles and the compiled links between them. */
 class CompiledResourceGraph private constructor(

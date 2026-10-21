@@ -4,8 +4,6 @@ import build.skir.Serializers
 import com.surrealdb.RecordId
 import com.surrealdb.Surreal
 import com.typewritermc.authoring.EditExpectation
-import com.typewritermc.checking.CatalogGeneration
-import com.typewritermc.checking.toSkir
 import com.typewritermc.engine.CompilationResult
 import com.typewritermc.engine.CompiledArtifact
 import com.typewritermc.realm.authoring.AuthoringLease
@@ -50,6 +48,7 @@ import skirout.editor.v1.publication.PublicationPendingReview
 import skirout.editor.v1.publication.PublicationStatus
 import skirout.editor.v1.publication.PublicationView
 import skirout.editor.v1.publication.PublicationViewId
+import skirout.editor.v1.type_catalog.CatalogGeneration
 import skirout.editor.v1.type_catalog.PublicationId
 import java.util.UUID
 
@@ -449,7 +448,7 @@ internal class RealmPublicationCoordinator(
         findings().map { set ->
             val current =
                 set.status == FindingStatus.CURRENT &&
-                    set.ticket.catalog == root.catalog.generation.toSkir() &&
+                    set.ticket.catalog == root.catalog.generation &&
                     root.values.conflicts(set.expectations.decodedExpectations()).isEmpty()
             set.copy(
                 status = if (current) FindingStatus.CURRENT else FindingStatus.OUTDATED,

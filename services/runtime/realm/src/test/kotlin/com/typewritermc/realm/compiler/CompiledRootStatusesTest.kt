@@ -1,7 +1,5 @@
 package com.typewritermc.realm.compiler
 
-import com.typewritermc.checking.CatalogGeneration
-import com.typewritermc.checking.toSkir
 import com.typewritermc.engine.ContentDigest
 import com.typewritermc.realm.authoring.AuthoringSeed
 import com.typewritermc.realm.authoring.AuthoringView
@@ -18,6 +16,7 @@ import skirout.editor.v1.compiled_content.CompiledBlobPointer
 import skirout.editor.v1.compiled_content.CompiledResourceState
 import skirout.editor.v1.compiled_content.PublishedContent
 import skirout.editor.v1.compiled_content.PublishedOutput
+import skirout.editor.v1.type_catalog.CatalogGeneration
 import skirout.editor.v1.type_catalog.PublicationId
 
 val CompiledRootStatusesTest by testSuite {
@@ -79,7 +78,7 @@ private fun published(root: CompilationRoot): PublishedContent =
     PublishedContent(
         publication = PublicationId(value = "selected"),
         formatRevision = com.typewritermc.engine.PUBLISHED_CONTENT_FORMAT_REVISION,
-        catalog = CatalogGeneration("catalog").toSkir(),
+        catalog = CatalogGeneration(value = "catalog"),
         implementationToken = "implementation",
         outputs =
             listOf(

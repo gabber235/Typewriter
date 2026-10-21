@@ -1,6 +1,5 @@
 package com.typewritermc.realm.routes
 
-import com.typewritermc.capability.CapabilityId
 import com.typewritermc.capability.NotificationSeverity
 import com.typewritermc.capability.PanelInstruction
 import com.typewritermc.capability.RealmCapabilityDescriptor
@@ -24,6 +23,7 @@ import skirout.editor.v1.capability.InvocationId
 import skirout.editor.v1.capability.ResourceAddress
 import skirout.editor.v1.diagnostic.Diagnostic
 import skirout.editor.v1.diagnostic.DiagnosticSeverity
+import skirout.editor.v1.type_catalog.CapabilityId
 import skirout.editor.v1.type_catalog.CatalogGeneration
 import skirout.editor.v1.type_catalog.DataValue
 import skirout.editor.v1.type_catalog.DiagnosticId
@@ -66,7 +66,7 @@ class RealmCapabilityInvocationSource(
             return try {
                 val payload = request.payload.requirePortable()
                 val value =
-                    registry.requireComputation(CapabilityId(request.capabilityId.value)).invoke(
+                    registry.requireComputation(request.capabilityId).invoke(
                         ComputationContext(request.invocationId.value),
                         RealmCapabilityRuntime(it.checked, it.nativeBindings),
                         payload,

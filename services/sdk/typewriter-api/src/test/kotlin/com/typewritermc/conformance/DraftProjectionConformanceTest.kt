@@ -24,7 +24,6 @@ import com.typewritermc.authoring.nativeReadProjection
 import com.typewritermc.authoring.of
 import com.typewritermc.authoring.root
 import com.typewritermc.authoring.use
-import com.typewritermc.checking.CatalogGeneration
 import com.typewritermc.checking.PartialSelection
 import com.typewritermc.checking.TypedSelection
 import com.typewritermc.expression.EvaluationDiagnostic
@@ -50,6 +49,7 @@ import com.typewritermc.types.unwrapNamed
 import com.typewritermc.types.use
 import de.infix.testBalloon.framework.core.testSuite
 import io.kotest.matchers.shouldBe
+import skirout.editor.v1.type_catalog.CatalogGeneration
 import skirout.editor.v1.type_catalog.DataValue
 import skirout.editor.v1.type_catalog.IntegerWidth
 import skirout.editor.v1.type_catalog.ItemId
@@ -68,7 +68,7 @@ val DraftProjectionConformanceTest by testSuite {
         val root = ValueLocation.of(resource)
         val placement = root.field("placement")
         val placementUse = com.typewritermc.authoring.GraphPlacementDefinition.use
-        val generation = CatalogGeneration("draft catalog")
+        val generation = CatalogGeneration(value = "draft catalog")
         val original =
             FixtureDraftReads(
                 generation,
@@ -116,7 +116,7 @@ val DraftProjectionConformanceTest by testSuite {
         val listUse = StandardTypes.list.namedUse(listOf(INT_USE))
         val reads =
             FixtureDraftReads(
-                CatalogGeneration("list catalog"),
+                CatalogGeneration(value = "list catalog"),
                 mapOf(
                     root to
                         DataValue.named(
@@ -153,7 +153,7 @@ val DraftProjectionConformanceTest by testSuite {
         val uniqueKey = DataValue.named(keyUse, DataValue.record(mapOf("code" to DataValue.StringValueWrapper("unique"))))
         val reads =
             FixtureDraftReads(
-                CatalogGeneration("map catalog"),
+                CatalogGeneration(value = "map catalog"),
                 mapOf(
                     root to
                         DataValue.named(

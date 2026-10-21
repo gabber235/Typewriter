@@ -1,9 +1,9 @@
 package com.typewritermc.authoring
 
-import com.typewritermc.types.RelationId
 import com.typewritermc.types.ResourceId
 import skirout.editor.v1.type_catalog.AuthoringRecord
 import skirout.editor.v1.type_catalog.DataValue
+import skirout.editor.v1.type_catalog.RelationId
 import skirout.editor.v1.type_catalog.TypeSelection
 import skirout.editor.v1.type_catalog.ValueLocation
 

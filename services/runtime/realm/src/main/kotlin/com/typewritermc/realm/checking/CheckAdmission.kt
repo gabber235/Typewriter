@@ -2,7 +2,6 @@ package com.typewritermc.realm.checking
 
 import com.typewritermc.authoring.EditExpectation
 import com.typewritermc.authoring.skir.SkirAuthoringOperationCodec
-import com.typewritermc.checking.toSkir
 import com.typewritermc.realm.authoring.AuthoringView
 import com.typewritermc.realm.authoring.AuthoringViewStore
 import com.typewritermc.realm.repository.conflicts
@@ -90,7 +89,7 @@ class DefaultCheckAdmission(
     ): AdmissionResult =
         views.read { current ->
             if (executions.ticket(result.ticket.instance) != result.ticket) return@read AdmissionResult.Discarded
-            if (current.catalog.generation.toSkir() != result.ticket.catalog ||
+            if (current.catalog.generation != result.ticket.catalog ||
                 current.values.conflicts(result.expectations).isNotEmpty()
             ) {
                 return@read AdmissionResult.RetryRequired
@@ -103,7 +102,7 @@ class DefaultCheckAdmission(
         result: CheckResult,
         target: CheckAdmissionTarget.CapturedAcceptance,
     ): AdmissionResult {
-        if (result.ticket.catalog != target.catalog.toSkir()) return AdmissionResult.Discarded
+        if (result.ticket.catalog != target.catalog) return AdmissionResult.Discarded
         if (result.outcome != CheckOutcome.FINISHED) return AdmissionResult.RetryRequired
         return if (target.view.values
                 .conflicts(result.expectations)

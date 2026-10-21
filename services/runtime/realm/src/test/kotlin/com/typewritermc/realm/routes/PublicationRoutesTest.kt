@@ -72,7 +72,8 @@ val PublicationRoutesTest by testSuite {
             )
         val captured =
             com.typewritermc.realm.compiler.DiagnosticEvidence(
-                com.typewritermc.checking.CatalogGeneration("catalog"),
+                skirout.editor.v1.type_catalog
+                    .CatalogGeneration(value = "catalog"),
                 listOf(
                     com.typewritermc.authoring.EditExpectation
                         .Value(location, skirout.editor.v1.type_catalog.DataValue.UNFILLED),

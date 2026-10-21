@@ -1,7 +1,5 @@
 package com.typewritermc.engine.runtime
 
-import com.typewritermc.authoring.NativeBindingId
-import com.typewritermc.checking.CatalogGeneration
 import com.typewritermc.engine.CompilationContext
 import com.typewritermc.engine.CompiledResource
 import com.typewritermc.engine.CompiledResourceKey
@@ -14,7 +12,9 @@ import com.typewritermc.types.namedUse
 import com.typewritermc.types.qualified
 import de.infix.testBalloon.framework.core.testSuite
 import io.kotest.assertions.throwables.shouldThrow
+import skirout.editor.v1.type_catalog.CatalogGeneration
 import skirout.editor.v1.type_catalog.DataValue
+import skirout.editor.v1.type_catalog.NativeBindingId
 import skirout.editor.v1.type_catalog.RepresentationTemplate
 import skirout.editor.v1.type_catalog.ScalarKind
 import skirout.editor.v1.type_catalog.TypeDefinition
@@ -57,7 +57,7 @@ val RuntimeCompilationEncodingTest by testSuite {
                         CompiledResource(
                             key = key,
                             actualType = resourceId.namedUse(),
-                            bindingProvider = NativeBindingId("test"),
+                            bindingProvider = NativeBindingId(value = "test"),
                             bindingSignature = "test:v1",
                             value = DataValue.named(payloadId.namedUse(), DataValue.StringValueWrapper("value")),
                         ),
@@ -66,7 +66,8 @@ val RuntimeCompilationEncodingTest by testSuite {
                 types = listOf(resourceDefinition, payloadDefinition),
                 relations = emptyList(),
             )
-        val catalog = DefaultCheckedCatalog(CatalogGeneration("runtime encoding test"), listOf(resourceDefinition, payloadDefinition))
+        val catalog =
+            DefaultCheckedCatalog(CatalogGeneration(value = "runtime encoding test"), listOf(resourceDefinition, payloadDefinition))
 
         facts.requireAccepted(catalog, emptyList())
     }

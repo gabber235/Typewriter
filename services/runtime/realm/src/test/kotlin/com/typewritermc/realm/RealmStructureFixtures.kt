@@ -10,7 +10,6 @@ import com.typewritermc.authoring.fieldMap
 import com.typewritermc.authoring.of
 import com.typewritermc.authoring.root
 import com.typewritermc.authoring.with
-import com.typewritermc.checking.CatalogGeneration
 import com.typewritermc.discovery.CatalogAssemblyContext
 import com.typewritermc.discovery.CatalogContributions
 import com.typewritermc.discovery.DeploymentFacts
@@ -45,6 +44,7 @@ import com.typewritermc.types.payload
 import com.typewritermc.types.toSkir
 import com.typewritermc.types.use
 import skirout.editor.v1.type_catalog.AuthoringRecord
+import skirout.editor.v1.type_catalog.CatalogGeneration
 import skirout.editor.v1.type_catalog.DataValue
 import skirout.editor.v1.type_catalog.ItemId
 import skirout.editor.v1.type_catalog.LinkTarget
@@ -179,6 +179,6 @@ internal fun coreRealmCatalog(
     val assembly =
         core
             .copy(declarations = core.declarations + extraDeclarations(core))
-            .assemble(CatalogAssemblyContext(CatalogGeneration(generation)))
+            .assemble(CatalogAssemblyContext(CatalogGeneration(value = generation)))
     return RealmCatalogIncarnation(assembly, deployment)
 }

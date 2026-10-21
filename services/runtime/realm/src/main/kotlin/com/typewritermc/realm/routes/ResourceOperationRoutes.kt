@@ -3,9 +3,7 @@ package com.typewritermc.realm.routes
 import com.typewritermc.authoring.CounterpartChoice
 import com.typewritermc.authoring.skir.SkirAuthoringOperationCodec
 import com.typewritermc.authoring.text
-import com.typewritermc.capability.CapabilityId
 import com.typewritermc.capability.RealmCapabilityPermissionDeniedException
-import com.typewritermc.checking.CatalogGeneration
 import com.typewritermc.operations.OperationInvocation
 import com.typewritermc.operations.OperationOrigin
 import com.typewritermc.operations.PreparationChoice
@@ -41,12 +39,13 @@ import skirout.editor.v1.resource_operations.ResolveDropCandidatesResult
 import skirout.editor.v1.resource_operations.ResolveResourceOperationsRequest
 import skirout.editor.v1.resource_operations.ResolveResourceOperationsResult
 import skirout.editor.v1.type_catalog.AuthoringRecord
+import skirout.editor.v1.type_catalog.CapabilityId
+import skirout.editor.v1.type_catalog.CatalogGeneration
 import skirout.editor.v1.type_catalog.ValueLocation
 import skirout.editor.v1.authoring.CounterpartChoice as WireCounterpart
 import skirout.editor.v1.resource_operations.OperationInvocation as SkirOperationInvocation
 import skirout.editor.v1.resource_operations.PreparationChoice as WireChoice
 import skirout.editor.v1.resource_operations.PreparationChoiceAnswer as WireAnswer
-import skirout.editor.v1.type_catalog.CatalogGeneration as SkirCatalogGeneration
 import skirout.editor.v1.type_catalog.ResourceId as SkirResourceId
 
 /**
@@ -73,7 +72,7 @@ internal class ResourceOperationRoutes(
             val resolved =
                 runtime.resolve(
                     request.invocation.decodeInvocation(),
-                    CatalogGeneration(request.invocation.catalog.value),
+                    request.invocation.catalog,
                     context.confirmed,
                     context.upserts,
                     context.removals,
@@ -84,7 +83,7 @@ internal class ResourceOperationRoutes(
         } catch (stale: OperationCatalogChanged) {
             ResolveResourceOperationsResult.createCatalogChangedError(
                 actualGeneration =
-                    SkirCatalogGeneration(value = stale.actual.value),
+                    stale.actual,
             )
         } catch (denied: RealmCapabilityPermissionDeniedException) {
             ResolveResourceOperationsResult.createPermissionDeniedError(
@@ -137,7 +136,7 @@ internal class ResourceOperationRoutes(
             val candidates =
                 runtime.resolveDropCandidates(
                     request.invocation.decodeInvocation(),
-                    CatalogGeneration(request.invocation.catalog.value),
+                    request.invocation.catalog,
                     context.confirmed,
                     context.upserts,
                     context.removals,
@@ -146,7 +145,7 @@ internal class ResourceOperationRoutes(
         } catch (stale: StaleOperationObservation) {
             ResolveDropCandidatesResult.createStaleObservationError(actual = AuthoringObservationId(value = stale.actual))
         } catch (stale: OperationCatalogChanged) {
-            ResolveDropCandidatesResult.createCatalogChangedError(actualGeneration = SkirCatalogGeneration(value = stale.actual.value))
+            ResolveDropCandidatesResult.createCatalogChangedError(actualGeneration = stale.actual)
         } catch (denied: RealmCapabilityPermissionDeniedException) {
             ResolveDropCandidatesResult.createPermissionDeniedError(
                 diagnostics = listOf(operationDiagnostic("permission_denied", denied.message ?: "Permission denied")),
@@ -203,8 +202,8 @@ internal class ResourceOperationRoutes(
                 val result =
                     runtime.prepare(
                         request.invocation.decodeInvocation(),
-                        CatalogGeneration(request.invocation.catalog.value),
-                        CapabilityId(request.capability.value),
+                        request.invocation.catalog,
+                        request.capability,
                         context.confirmed,
                         context.upserts,
                         context.removals,
@@ -293,7 +292,7 @@ internal class ResourceOperationRoutes(
         } catch (stale: OperationCatalogChanged) {
             AuthoringActionResult.createCatalogChangedError(
                 actualGeneration =
-                    SkirCatalogGeneration(value = stale.actual.value),
+                    stale.actual,
             )
         } catch (failed: OperationResolutionFailure) {
             if (failed.cause is RealmCapabilityPermissionDeniedException) {

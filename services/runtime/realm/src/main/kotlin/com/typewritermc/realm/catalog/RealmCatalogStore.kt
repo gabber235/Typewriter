@@ -2,7 +2,6 @@ package com.typewritermc.realm.catalog
 
 import com.typewritermc.authoring.ResourceDisplayCatalog
 import com.typewritermc.capability.RealmCapabilityProvider
-import com.typewritermc.checking.CatalogGeneration
 import com.typewritermc.configuration.ConfigurationRecipe
 import com.typewritermc.discovery.CatalogAssembly
 import com.typewritermc.discovery.GeneratedProviderDeployment
@@ -21,6 +20,7 @@ import kotlinx.coroutines.channels.BufferOverflow
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.SharedFlow
 import skirout.editor.v1.catalog.EditorCatalog
+import skirout.editor.v1.type_catalog.CatalogGeneration
 import skirout.editor.v1.type_catalog.TypeDefinitionId
 import skirout.editor.v1.type_catalog.ValuePath
 import java.util.concurrent.atomic.AtomicBoolean

@@ -6,8 +6,6 @@ import com.typewritermc.authoring.RealmRootDefinition
 import com.typewritermc.authoring.RelationProjectionDelta
 import com.typewritermc.authoring.definition
 import com.typewritermc.authoring.of
-import com.typewritermc.checking.CatalogGeneration
-import com.typewritermc.checking.InputToken
 import com.typewritermc.discovery.CatalogAssemblyContext
 import com.typewritermc.discovery.CatalogContributions
 import com.typewritermc.discovery.DeploymentFacts
@@ -86,10 +84,12 @@ import skirout.editor.v1.catalog.CatalogFetchRequest
 import skirout.editor.v1.catalog.CatalogFetchResult
 import skirout.editor.v1.publication.EngineImplementationInputs
 import skirout.editor.v1.type_catalog.AuthoringRecord
+import skirout.editor.v1.type_catalog.CatalogGeneration
 import skirout.editor.v1.type_catalog.DataValue
 import skirout.editor.v1.type_catalog.DeclarationOwner
 import skirout.editor.v1.type_catalog.FieldDeclaration
 import skirout.editor.v1.type_catalog.FieldOwner
+import skirout.editor.v1.type_catalog.InputToken
 import skirout.editor.v1.type_catalog.RepresentationTemplate
 import skirout.editor.v1.type_catalog.ScalarKind
 import skirout.editor.v1.type_catalog.TypeDefinition
@@ -97,7 +97,6 @@ import skirout.editor.v1.type_catalog.TypeDefinitionId
 import skirout.editor.v1.type_catalog.TypeSelection
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.seconds
-import skirout.editor.v1.type_catalog.CatalogGeneration as SkirCatalogGeneration
 
 @OptIn(ExperimentalCoroutinesApi::class)
 val RealmLifecycleTest by testSuite {
@@ -322,7 +321,7 @@ val RealmLifecycleTest by testSuite {
                         session,
                         "editor.authoring.state.query",
                         QueryAuthoringStateRequest(
-                            generation = SkirCatalogGeneration(value = incarnation.assembly.checked.generation.value),
+                            generation = incarnation.assembly.checked.generation,
                         ),
                         QueryAuthoringStateRequest.serializer,
                         QueryAuthoringStateResponse.serializer,
@@ -390,7 +389,7 @@ val RealmLifecycleTest by testSuite {
                         session,
                         "editor.authoring.state.query",
                         QueryAuthoringStateRequest(
-                            generation = SkirCatalogGeneration(value = incarnation.assembly.checked.generation.value),
+                            generation = incarnation.assembly.checked.generation,
                         ),
                         QueryAuthoringStateRequest.serializer,
                         QueryAuthoringStateResponse.serializer,
@@ -460,7 +459,7 @@ private fun lifecycleIsolationCatalog(
                 ),
         )
     val deployment = GeneratedProviderLoader().load(emptyList(), DeploymentFacts(), DiscoveryDomains.Realm)
-    val assembly = contributions.assemble(CatalogAssemblyContext(CatalogGeneration("lifecycle_isolation")))
+    val assembly = contributions.assemble(CatalogAssemblyContext(CatalogGeneration(value = "lifecycle_isolation")))
     return RealmCatalogIncarnation(assembly, deployment)
 }
 

@@ -8,7 +8,6 @@ import com.typewritermc.authoring.PreparationTarget
 import com.typewritermc.authoring.complete
 import com.typewritermc.authoring.fieldMap
 import com.typewritermc.authoring.record
-import com.typewritermc.checking.CatalogGeneration
 import com.typewritermc.discovery.GeneratedProviderIndex
 import com.typewritermc.discovery.GeneratedProviderKind
 import com.typewritermc.discovery.GeneratedTypeProvider
@@ -30,6 +29,7 @@ import com.typewritermc.types.use
 import de.infix.testBalloon.framework.core.testSuite
 import io.kotest.matchers.shouldBe
 import skirout.editor.v1.catalog.PreparedContent
+import skirout.editor.v1.type_catalog.CatalogGeneration
 import skirout.editor.v1.type_catalog.DataValue
 import skirout.editor.v1.type_catalog.LinkTarget
 import skirout.editor.v1.type_catalog.PathSegment
@@ -62,7 +62,7 @@ val PageCreationDiagnosticTest by testSuite {
                 .filter { it.kind == GeneratedProviderKind.NativeBinding }
                 .map { instance(it.providerClass) as NativeBindingFactory }
                 .distinctBy(NativeBindingFactory::provider)
-        val generation = CatalogGeneration("page creation diagnosis")
+        val generation = CatalogGeneration(value = "page creation diagnosis")
         val catalog = DefaultCheckedCatalog(generation, StandardTypes.definitions + definitions)
         val bindings = FactoryNativeBindingRegistry(catalog, factories)
         val prepared =

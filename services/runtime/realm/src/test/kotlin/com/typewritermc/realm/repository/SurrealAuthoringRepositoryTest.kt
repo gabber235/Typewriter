@@ -9,7 +9,6 @@ import com.typewritermc.authoring.field
 import com.typewritermc.authoring.of
 import com.typewritermc.authoring.root
 import com.typewritermc.authoring.with
-import com.typewritermc.checking.CatalogGeneration
 import com.typewritermc.realm.authoring.AuthoringSeed
 import com.typewritermc.realm.authoring.InMemoryAuthoringViewStore
 import com.typewritermc.realm.checking.RealmCheckRuntime
@@ -28,6 +27,7 @@ import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.matchers.collections.shouldHaveSize
 import io.kotest.matchers.shouldBe
 import skirout.editor.v1.type_catalog.AuthoringRecord
+import skirout.editor.v1.type_catalog.CatalogGeneration
 import skirout.editor.v1.type_catalog.DataValue
 import skirout.editor.v1.type_catalog.ValueLocation
 
@@ -159,7 +159,7 @@ val SurrealAuthoringRepositoryTestSuite by testSuite {
         val storage = MemoryAuthoringStorage(AuthoringSeed(mapOf(id to initial)))
         val views = InMemoryAuthoringViewStore(catalog, storage.seed)
         val owner = RealmAuthoringOwner(storage, views)
-        val replacement = TestCatalogLease(generation = CatalogGeneration("replacement"))
+        val replacement = TestCatalogLease(generation = CatalogGeneration(value = "replacement"))
         var installed = false
         var published = false
         owner.activateCatalog(replacement, { installed = true }, { published = true })

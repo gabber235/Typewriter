@@ -4,7 +4,6 @@ package com.typewritermc.library
 
 import com.typewritermc.authoring.HierarchyGroupDefinition
 import com.typewritermc.authoring.RealmRootDefinition
-import com.typewritermc.checking.CatalogGeneration
 import com.typewritermc.discovery.CatalogAssembly
 import com.typewritermc.discovery.CatalogAssemblyContext
 import com.typewritermc.discovery.assemble
@@ -44,6 +43,7 @@ import skirout.editor.v1.presentation.PresentationNumber
 import skirout.editor.v1.presentation.ResourcesElement
 import skirout.editor.v1.presentation.ResourcesLayout
 import skirout.editor.v1.presentation.StackChild
+import skirout.editor.v1.type_catalog.CatalogGeneration
 import skirout.editor.v1.type_catalog.DataValue
 import skirout.editor.v1.type_catalog.PathSegment
 import skirout.editor.v1.type_catalog.TypeDefinitionId
@@ -51,7 +51,7 @@ import skirout.editor.v1.catalog.PresentationTarget as WirePresentationTarget
 import skirout.editor.v1.presentation.PresentationColor as WireColor
 
 val CorePlacesTest by testSuite {
-    val assembly = frameworkContributions().assemble(CatalogAssemblyContext(CatalogGeneration("core places")))
+    val assembly = frameworkContributions().assemble(CatalogAssemblyContext(CatalogGeneration(value = "core places")))
 
     test("the core catalog publishes its realm root and keeps every core resource type owned") {
         assembly.editorCatalog.realmRoot shouldBe RealmRootDefinition.id

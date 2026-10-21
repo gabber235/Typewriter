@@ -19,7 +19,6 @@ import com.squareup.kotlinpoet.TypeSpec
 import com.squareup.kotlinpoet.asClassName
 import com.squareup.kotlinpoet.ksp.toClassName
 import com.squareup.kotlinpoet.ksp.toTypeName
-import com.typewritermc.capability.CapabilityId
 import com.typewritermc.capability.RealmCapabilities
 import com.typewritermc.capability.RealmCapability
 import com.typewritermc.capability.RealmCapabilityDescriptor
@@ -37,6 +36,7 @@ import com.typewritermc.types.codegen.referencedIds
 import com.typewritermc.types.ksp.KspTypeConversionResult
 import com.typewritermc.types.ksp.KspTypeGraphConverter
 import skirout.editor.v1.search.RealmSearchQuery
+import skirout.editor.v1.type_catalog.CapabilityId
 import skirout.editor.v1.type_catalog.DataValue
 import skirout.editor.v1.type_catalog.TypeUse
 import java.security.MessageDigest
@@ -210,7 +210,7 @@ private class CapabilityDeclaration(
 
     /** `val <function>Capability`: the typed reference clients invoke the capability through. */
     private fun reference(): PropertySpec {
-        val referenceId = CodeBlock.of("%T(%S)", CapabilityId::class, id)
+        val referenceId = CodeBlock.of("%T(value = %S)", CapabilityId::class, id)
         val (type, value) =
             when (kind) {
                 CapabilityKind.Search -> {
@@ -256,7 +256,7 @@ private class CapabilityDeclaration(
             .addProperty(
                 PropertySpec
                     .builder("id", CapabilityId::class, KModifier.PRIVATE)
-                    .initializer("%T(%S)", CapabilityId::class, id)
+                    .initializer("%T(value = %S)", CapabilityId::class, id)
                     .build(),
             ).addProperty(PropertySpec.builder("descriptor", descriptorType, KModifier.OVERRIDE).initializer(descriptor).build())
             .addFunction(

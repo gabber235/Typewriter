@@ -4,7 +4,6 @@ import com.surrealdb.Surreal
 import com.typewritermc.authoring.CommitResult
 import com.typewritermc.authoring.EditIntent
 import com.typewritermc.authoring.skir.SkirAuthoringOperationCodec
-import com.typewritermc.checking.CatalogGeneration
 import com.typewritermc.configuration.FieldPatternSegment
 import com.typewritermc.configuration.RelativeFieldPattern
 import com.typewritermc.realm.authoring.InMemoryAuthoringViewStore
@@ -17,8 +16,6 @@ import com.typewritermc.types.EndpointDefinition
 import com.typewritermc.types.EndpointSlot
 import com.typewritermc.types.RelationContract
 import com.typewritermc.types.RelationDeletePolicy
-import com.typewritermc.types.RelationFamilyId
-import com.typewritermc.types.RelationId
 import com.typewritermc.types.ResourceId
 import com.typewritermc.types.requireValid
 import com.typewritermc.types.skir.getOrThrow
@@ -26,8 +23,11 @@ import de.infix.testBalloon.framework.core.testSuite
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.types.shouldBeInstanceOf
 import skirout.editor.v1.catalog.EditorCatalog
+import skirout.editor.v1.type_catalog.CatalogGeneration
 import skirout.editor.v1.type_catalog.EndpointId
 import skirout.editor.v1.type_catalog.NamedTypeUse
+import skirout.editor.v1.type_catalog.RelationFamilyId
+import skirout.editor.v1.type_catalog.RelationId
 import skirout.editor.v1.type_catalog.TypeDefinitionId
 import skirout.editor.v1.type_catalog.TypeTemplate
 import skirout.editor.v1.type_catalog.TypeUse
@@ -96,15 +96,15 @@ private fun panelCreationFixture(name: String): ByteArray =
 /** The captured panel catalog: a Library owning Books that own pages, each linking back to its owner. */
 private fun panelCreationCatalog(snapshot: EditorCatalog): TestCatalogLease =
     TestCatalogLease(
-        generation = CatalogGeneration(snapshot.generation.value),
+        generation = snapshot.generation,
         definitions = snapshot.types.map { it.definition.requireValid() },
         relations =
             snapshot.relations.map { relation ->
                 RelationContract(
-                    RelationId(relation.id.value),
+                    relation.id,
                     endpoint(relation.first),
                     endpoint(relation.second),
-                    relation.families.mapTo(linkedSetOf()) { RelationFamilyId(it.value) },
+                    relation.families.toSet(),
                 )
             },
         endpointBindings =

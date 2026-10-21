@@ -1,7 +1,7 @@
 package com.typewritermc.authoring
 
-import com.typewritermc.types.RelationId
 import com.typewritermc.types.ResourceId
+import skirout.editor.v1.type_catalog.RelationId
 import skirout.editor.v1.type_catalog.ValuePath
 
 /*

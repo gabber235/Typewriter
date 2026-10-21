@@ -9,7 +9,6 @@ import com.typewritermc.authoring.definition
 import com.typewritermc.authoring.type
 import com.typewritermc.authoring.use
 import com.typewritermc.authoring.validateStructure
-import com.typewritermc.checking.CatalogGeneration
 import com.typewritermc.types.MAX_TYPE_DEPTH
 import com.typewritermc.types.immutableListCopy
 import com.typewritermc.types.named
@@ -26,6 +25,7 @@ import com.typewritermc.types.use
 import skirout.editor.v1.type_catalog.AppliedSchema
 import skirout.editor.v1.type_catalog.ArgumentSelection
 import skirout.editor.v1.type_catalog.AuthoringRecord
+import skirout.editor.v1.type_catalog.CatalogGeneration
 import skirout.editor.v1.type_catalog.FieldDeclaration
 import skirout.editor.v1.type_catalog.FieldOwner
 import skirout.editor.v1.type_catalog.NamedTypeTemplate

@@ -12,7 +12,6 @@ import com.typewritermc.authoring.TraversalDirection
 import com.typewritermc.authoring.UnresolvedLink
 import com.typewritermc.authoring.of
 import com.typewritermc.authoring.with
-import com.typewritermc.checking.CatalogGeneration
 import com.typewritermc.checking.InputIdentity
 import com.typewritermc.checking.InspectionCompletion
 import com.typewritermc.configuration.FieldPatternSegment
@@ -32,8 +31,6 @@ import com.typewritermc.types.FactoryNativeBindingRegistry
 import com.typewritermc.types.NativeBindingRegistry
 import com.typewritermc.types.RelationContract
 import com.typewritermc.types.RelationDeletePolicy
-import com.typewritermc.types.RelationFamilyId
-import com.typewritermc.types.RelationId
 import com.typewritermc.types.ResourceId
 import com.typewritermc.types.catalog.CheckedCatalog
 import com.typewritermc.types.catalog.DefaultCheckedCatalog
@@ -53,6 +50,7 @@ import de.infix.testBalloon.framework.core.testSuite
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.types.shouldBeInstanceOf
 import skirout.editor.v1.type_catalog.AuthoringRecord
+import skirout.editor.v1.type_catalog.CatalogGeneration
 import skirout.editor.v1.type_catalog.CollectionKind
 import skirout.editor.v1.type_catalog.DataValue
 import skirout.editor.v1.type_catalog.EndpointId
@@ -63,6 +61,8 @@ import skirout.editor.v1.type_catalog.LinkTarget
 import skirout.editor.v1.type_catalog.ListItem
 import skirout.editor.v1.type_catalog.ParameterKey
 import skirout.editor.v1.type_catalog.PathSegment
+import skirout.editor.v1.type_catalog.RelationFamilyId
+import skirout.editor.v1.type_catalog.RelationId
 import skirout.editor.v1.type_catalog.RepresentationTemplate
 import skirout.editor.v1.type_catalog.ScalarKind
 import skirout.editor.v1.type_catalog.TypeDefinition
@@ -334,7 +334,7 @@ class RealmGraphReadsTest {
 
         val selection =
             with(reads) {
-                RealmGraphReads.incomingResources(target, RelationFamilyId("selected"))
+                RealmGraphReads.incomingResources(target, RelationFamilyId(value = "selected"))
             }
 
         selection.knownMatches.isEmpty() shouldBe true
@@ -673,7 +673,7 @@ private fun graphRecord(
 
 private fun graphDefinition(name: String) = TypeDefinitionId.qualified("graph", name)
 
-private val GRAPH_GENERATION = CatalogGeneration("graph_catalog")
+private val GRAPH_GENERATION = CatalogGeneration(value = "graph_catalog")
 private val NODE = graphDefinition("node")
 private val EDGE_LINK = graphDefinition("edge_link")
 private val EDGE_LIST = graphDefinition("edge_list")
@@ -702,7 +702,7 @@ private val BAD_ENDPOINT = EndpointId(value = "bad:source")
 private val BAD_TARGET = EndpointId(value = "bad:target")
 private val EDGE =
     RelationContract(
-        RelationId("edge"),
+        RelationId(value = "edge"),
         EndpointDefinition(
             EDGE_SOURCE,
             EndpointSlot.First,
@@ -717,11 +717,11 @@ private val EDGE =
             EndpointCardinality.Many,
             RelationDeletePolicy.CLEAR,
         ),
-        families = setOf(RelationFamilyId("selected")),
+        families = setOf(RelationFamilyId(value = "selected")),
     )
 private val BAD =
     RelationContract(
-        RelationId("bad"),
+        RelationId(value = "bad"),
         EndpointDefinition(
             BAD_ENDPOINT,
             EndpointSlot.First,

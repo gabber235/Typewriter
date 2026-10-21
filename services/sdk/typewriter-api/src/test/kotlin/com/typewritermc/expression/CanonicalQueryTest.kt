@@ -9,7 +9,6 @@ import com.typewritermc.authoring.ReadContext
 import com.typewritermc.authoring.field
 import com.typewritermc.authoring.of
 import com.typewritermc.authoring.root
-import com.typewritermc.checking.CatalogGeneration
 import com.typewritermc.checking.PartialSelection
 import com.typewritermc.checking.TypedSelection
 import com.typewritermc.configuration.PortableExpressionChecker
@@ -49,6 +48,7 @@ import skirout.editor.v1.expression.ExpressionQuery
 import skirout.editor.v1.expression.ResourceQuerySource
 import skirout.editor.v1.type_catalog.ArgumentSelection
 import skirout.editor.v1.type_catalog.AuthoringRecord
+import skirout.editor.v1.type_catalog.CatalogGeneration
 import skirout.editor.v1.type_catalog.DataValue
 import skirout.editor.v1.type_catalog.EndpointId
 import skirout.editor.v1.type_catalog.FieldDeclaration
@@ -408,7 +408,7 @@ private class QueryObservation(
 }
 
 private object QueryReads : AuthoredReads {
-    override val catalog = CatalogGeneration("canonical.query.test")
+    override val catalog = CatalogGeneration(value = "canonical.query.test")
     override val readContext = ReadContext(catalog)
 
     override fun <T> read(path: BoundPath<T>): Availability<T> = error("Unexpected typed read")

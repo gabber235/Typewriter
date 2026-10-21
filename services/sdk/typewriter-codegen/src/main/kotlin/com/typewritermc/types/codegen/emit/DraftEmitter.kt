@@ -17,7 +17,6 @@ import com.squareup.kotlinpoet.TypeName
 import com.squareup.kotlinpoet.TypeSpec
 import com.squareup.kotlinpoet.asClassName
 import com.squareup.kotlinpoet.joinToCode
-import com.typewritermc.checking.CatalogGeneration
 import com.typewritermc.codegen.appliedUseCode
 import com.typewritermc.types.ResourceId
 import com.typewritermc.types.codegen.SdkDeclaration
@@ -28,6 +27,7 @@ import com.typewritermc.types.codegen.draftProjection
 import com.typewritermc.types.codegen.draftType
 import com.typewritermc.types.codegen.parameterizedOrSelf
 import com.typewritermc.types.template
+import skirout.editor.v1.type_catalog.CatalogGeneration
 import skirout.editor.v1.type_catalog.NamedTypeUse
 import skirout.editor.v1.type_catalog.TypeSelection
 import skirout.editor.v1.type_catalog.ValueLocation

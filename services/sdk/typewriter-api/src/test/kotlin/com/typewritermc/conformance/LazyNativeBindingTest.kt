@@ -5,11 +5,9 @@ package com.typewritermc.conformance
 import com.typewritermc.authoring.AppliedNativeArguments
 import com.typewritermc.authoring.CompletenessResult
 import com.typewritermc.authoring.GeneratedSdkApi
-import com.typewritermc.authoring.NativeBindingId
 import com.typewritermc.authoring.bind
 import com.typewritermc.authoring.complete
 import com.typewritermc.authoring.map
-import com.typewritermc.checking.CatalogGeneration
 import com.typewritermc.types.FactoryNativeBindingRegistry
 import com.typewritermc.types.GeneratedRecordNativeBinding
 import com.typewritermc.types.NativeBinding
@@ -24,6 +22,8 @@ import com.typewritermc.types.qualified
 import com.typewritermc.types.use
 import de.infix.testBalloon.framework.core.testSuite
 import io.kotest.matchers.shouldBe
+import skirout.editor.v1.type_catalog.CatalogGeneration
+import skirout.editor.v1.type_catalog.NativeBindingId
 import skirout.editor.v1.type_catalog.RepresentationTemplate
 import skirout.editor.v1.type_catalog.TypeDefinition
 import skirout.editor.v1.type_catalog.TypeDefinitionId
@@ -41,7 +41,7 @@ val LazyNativeBindingTest by testSuite {
         val factory =
             object : NativeBindingFactory {
                 override val definition = childId
-                override val provider = NativeBindingId("test.lazyChild")
+                override val provider = NativeBindingId(value = "test.lazyChild")
 
                 override fun bind(
                     actual: CheckedType,
@@ -57,7 +57,7 @@ val LazyNativeBindingTest by testSuite {
                     )
                 }
             }
-        val catalog = DefaultCheckedCatalog(CatalogGeneration("lazy"), StandardTypes.definitions + child)
+        val catalog = DefaultCheckedCatalog(CatalogGeneration(value = "lazy"), StandardTypes.definitions + child)
         val registry = FactoryNativeBindingRegistry(catalog, listOf(factory))
         val childUse = childId.use()
         val cases =

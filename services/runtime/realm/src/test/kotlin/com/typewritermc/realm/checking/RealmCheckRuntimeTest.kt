@@ -5,11 +5,9 @@ package com.typewritermc.realm.checking
 import com.typewritermc.authoring.AppliedNativeArguments
 import com.typewritermc.authoring.Availability
 import com.typewritermc.authoring.GeneratedSdkApi
-import com.typewritermc.authoring.NativeBindingId
 import com.typewritermc.authoring.boundPath
 import com.typewritermc.authoring.of
 import com.typewritermc.authoring.root
-import com.typewritermc.checking.CatalogGeneration
 import com.typewritermc.checking.DiagnosticTemplate
 import com.typewritermc.checking.RealmCheckProvider
 import com.typewritermc.checking.RealmChecks
@@ -70,6 +68,7 @@ import skirout.editor.v1.checking.CheckOutcome
 import skirout.editor.v1.diagnostic.DiagnosticSeverity
 import skirout.editor.v1.expression.ExpressionNode
 import skirout.editor.v1.type_catalog.AuthoringRecord
+import skirout.editor.v1.type_catalog.CatalogGeneration
 import skirout.editor.v1.type_catalog.CollectionKind
 import skirout.editor.v1.type_catalog.DataValue
 import skirout.editor.v1.type_catalog.DeclarationOwner
@@ -78,6 +77,7 @@ import skirout.editor.v1.type_catalog.FieldOwner
 import skirout.editor.v1.type_catalog.ItemId
 import skirout.editor.v1.type_catalog.ListItem
 import skirout.editor.v1.type_catalog.MapRow
+import skirout.editor.v1.type_catalog.NativeBindingId
 import skirout.editor.v1.type_catalog.ParameterKey
 import skirout.editor.v1.type_catalog.PathSegment
 import skirout.editor.v1.type_catalog.RepresentationTemplate
@@ -113,7 +113,7 @@ val RealmCheckRuntimeTest by testSuite {
                 runtime.evaluateCapture(
                     CheckAdmissionTarget.CapturedAcceptance(
                         store.capture().use {
-                            it.root.copy(catalog = TestCatalogLease(generation = CatalogGeneration("wrong")))
+                            it.root.copy(catalog = TestCatalogLease(generation = CatalogGeneration(value = "wrong")))
                         },
                     ),
                 )
@@ -953,7 +953,7 @@ private val DUPLICATE_DEFINITIONS =
 
 private object TestResourceNativeBindingFactory : NativeBindingFactory {
     override val definition = TEST_TYPE
-    override val provider = NativeBindingId("test.resource")
+    override val provider = NativeBindingId(value = "test.resource")
 
     override fun bind(
         actual: com.typewritermc.types.catalog.CheckedType,

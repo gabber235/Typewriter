@@ -1,12 +1,11 @@
 package com.typewritermc.realm.routes
 
-import com.typewritermc.checking.CatalogGeneration
 import com.typewritermc.realm.catalog.RealmCatalogStore
 import skirout.editor.v1.catalog.CatalogFetchRequest
 import skirout.editor.v1.catalog.CatalogFetchResult
 import skirout.editor.v1.catalog.CatalogInvalidated
 import skirout.editor.v1.catalog.WatchEditorCatalogRequest
-import skirout.editor.v1.type_catalog.CatalogGeneration as WireCatalogGeneration
+import skirout.editor.v1.type_catalog.CatalogGeneration
 
 interface RealmEditorCatalogSource {
     suspend fun fetch(request: CatalogFetchRequest): CatalogFetchResult
@@ -25,9 +24,9 @@ class RetainedRealmEditorCatalogSource(
 ) : RealmEditorCatalogSource {
     override suspend fun fetch(request: CatalogFetchRequest): CatalogFetchResult =
         catalogs.captureCurrent().use { catalog ->
-            val expected = request.expectedGeneration?.value?.let(::CatalogGeneration)
+            val expected = request.expectedGeneration
             if (expected != null && expected != catalog.generation) {
-                CatalogFetchResult.GenerationChangedErrorWrapper(WireCatalogGeneration(value = catalog.generation.value))
+                CatalogFetchResult.GenerationChangedErrorWrapper(catalog.generation)
             } else {
                 CatalogFetchResult.CatalogWrapper(catalog.editorCatalog)
             }
@@ -35,6 +34,6 @@ class RetainedRealmEditorCatalogSource(
 
     override suspend fun initialGeneration(request: WatchEditorCatalogRequest): CatalogInvalidated =
         catalogs.captureCurrent().use { catalog ->
-            CatalogInvalidated(generation = WireCatalogGeneration(value = catalog.generation.value))
+            CatalogInvalidated(generation = catalog.generation)
         }
 }

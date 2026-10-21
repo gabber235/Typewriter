@@ -4,7 +4,6 @@ import com.typewritermc.authoring.ReadContext
 import com.typewritermc.authoring.RealmRootDefinition
 import com.typewritermc.authoring.RelationSelection
 import com.typewritermc.authoring.ResourceDisplayCatalog
-import com.typewritermc.authoring.SelectionId
 import com.typewritermc.authoring.field
 import com.typewritermc.authoring.item
 import com.typewritermc.authoring.mapKey
@@ -12,7 +11,6 @@ import com.typewritermc.authoring.mapValue
 import com.typewritermc.authoring.of
 import com.typewritermc.authoring.payload
 import com.typewritermc.authoring.root
-import com.typewritermc.checking.CatalogGeneration
 import com.typewritermc.checking.InputIdentity
 import com.typewritermc.configuration.ConfigurationRecipe
 import com.typewritermc.discovery.OwnedCheckRecipe
@@ -23,7 +21,6 @@ import com.typewritermc.realm.repository.ResourceValueMapper
 import com.typewritermc.types.EndpointBindingTemplate
 import com.typewritermc.types.NativeBindingRegistry
 import com.typewritermc.types.RelationContract
-import com.typewritermc.types.RelationId
 import com.typewritermc.types.ResourceId
 import com.typewritermc.types.catalog.CheckedCatalog
 import com.typewritermc.types.field
@@ -40,7 +37,10 @@ import kotlinx.coroutines.flow.asStateFlow
 import skirout.editor.v1.authoring.LinkOccurrence
 import skirout.editor.v1.authoring.LinkOccurrenceId
 import skirout.editor.v1.type_catalog.AuthoringRecord
+import skirout.editor.v1.type_catalog.CatalogGeneration
 import skirout.editor.v1.type_catalog.DataValue
+import skirout.editor.v1.type_catalog.RelationId
+import skirout.editor.v1.type_catalog.SelectionId
 import skirout.editor.v1.type_catalog.TypeDefinitionId
 import skirout.editor.v1.type_catalog.ValueLocation
 import skirout.editor.v1.type_catalog.ValuePath
@@ -436,4 +436,4 @@ private fun discoverLinks(resources: Map<ResourceId, AuthoringRecord>): Map<Link
 
 private fun immutableResources(resources: Map<ResourceId, AuthoringRecord>): Map<ResourceId, AuthoringRecord> = resources.immutableMapCopy()
 
-internal val RESOURCE_SELECTION_INPUT: InputIdentity = InputIdentity.Selection(SelectionId("realm.resources"))
+internal val RESOURCE_SELECTION_INPUT: InputIdentity = InputIdentity.Selection(SelectionId(value = "realm.resources"))

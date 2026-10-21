@@ -15,8 +15,6 @@ import com.typewritermc.types.EndpointSlot
 import com.typewritermc.types.RESOURCE_OWNERSHIP_FAMILY_ID
 import com.typewritermc.types.RelationContract
 import com.typewritermc.types.RelationDeletePolicy
-import com.typewritermc.types.RelationFamilyId
-import com.typewritermc.types.RelationId
 import com.typewritermc.types.ResourceId
 import com.typewritermc.types.catalog.DefaultCheckedCatalog
 import com.typewritermc.types.endpointId
@@ -36,6 +34,8 @@ import skirout.editor.v1.type_catalog.FieldOwner
 import skirout.editor.v1.type_catalog.LinkTarget
 import skirout.editor.v1.type_catalog.NamedTypeUse
 import skirout.editor.v1.type_catalog.ParameterKey
+import skirout.editor.v1.type_catalog.RelationFamilyId
+import skirout.editor.v1.type_catalog.RelationId
 import skirout.editor.v1.type_catalog.RepresentationTemplate
 import skirout.editor.v1.type_catalog.TypeDefinition
 import skirout.editor.v1.type_catalog.TypeDefinitionId
@@ -49,7 +49,8 @@ class SurrealAuthoringSearchRepositoryTest {
         val incompatible = definition("incompatible")
         val catalog =
             DefaultCheckedCatalog(
-                com.typewritermc.checking.CatalogGeneration("catalog"),
+                skirout.editor.v1.type_catalog
+                    .CatalogGeneration(value = "catalog"),
                 listOf(
                     TypeDefinition.partial(
                         id = parent,
@@ -92,7 +93,8 @@ class SurrealAuthoringSearchRepositoryTest {
         val type = definition("resource")
         val catalog =
             DefaultCheckedCatalog(
-                com.typewritermc.checking.CatalogGeneration("catalog"),
+                skirout.editor.v1.type_catalog
+                    .CatalogGeneration(value = "catalog"),
                 listOf(
                     TypeDefinition.partial(
                         id = type,
@@ -124,7 +126,8 @@ class SurrealAuthoringSearchRepositoryTest {
         val parameter = ParameterKey(owner = box, index = 0)
         val catalog =
             DefaultCheckedCatalog(
-                com.typewritermc.checking.CatalogGeneration("catalog"),
+                skirout.editor.v1.type_catalog
+                    .CatalogGeneration(value = "catalog"),
                 listOf(
                     TypeDefinition.partial(
                         id = box,
@@ -179,7 +182,8 @@ class SurrealAuthoringSearchRepositoryTest {
         val section = definition("section")
         val catalog =
             DefaultCheckedCatalog(
-                com.typewritermc.checking.CatalogGeneration("catalog"),
+                skirout.editor.v1.type_catalog
+                    .CatalogGeneration(value = "catalog"),
                 listOf(
                     TypeDefinition.partial(
                         id = RealmRootDefinition.id,
@@ -208,7 +212,8 @@ class SurrealAuthoringSearchRepositoryTest {
         val type = definition("book")
         val catalog =
             DefaultCheckedCatalog(
-                com.typewritermc.checking.CatalogGeneration("catalog"),
+                skirout.editor.v1.type_catalog
+                    .CatalogGeneration(value = "catalog"),
                 listOf(
                     TypeDefinition.partial(
                         id = type,
@@ -291,8 +296,8 @@ val SurrealAuthoringSearchRepositoryTestSuite by testSuite {
         val type = definition("node")
         val ownedLink = definition("owned_link")
         val relatedLink = definition("related_link")
-        val ownership = RelationId("ownership")
-        val related = RelationId("related")
+        val ownership = RelationId(value = "ownership")
+        val related = RelationId(value = "related")
 
         fun contract(
             id: RelationId,
@@ -313,7 +318,7 @@ val SurrealAuthoringSearchRepositoryTestSuite by testSuite {
                 EndpointCardinality.One,
                 RelationDeletePolicy.CLEAR,
             ),
-            if (owns) setOf(RelationFamilyId(RESOURCE_OWNERSHIP_FAMILY_ID)) else emptySet(),
+            if (owns) setOf(RelationFamilyId(value = RESOURCE_OWNERSHIP_FAMILY_ID)) else emptySet(),
         )
         val lease =
             TestCatalogLease(

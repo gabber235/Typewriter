@@ -7,11 +7,11 @@ import com.typewritermc.authoring.PreparedEdit
 import com.typewritermc.authoring.RelationProjectionDelta
 import com.typewritermc.authoring.TraversalDirection
 import com.typewritermc.authoring.of
-import com.typewritermc.types.RelationId
 import com.typewritermc.types.ResourceId
 import com.typewritermc.types.toResourceId
 import skirout.editor.v1.type_catalog.AuthoringRecord
 import skirout.editor.v1.type_catalog.PathSegment
+import skirout.editor.v1.type_catalog.RelationId
 import skirout.editor.v1.type_catalog.ValueLocation
 import skirout.editor.v1.type_catalog.ValuePath
 

@@ -17,7 +17,6 @@ import com.squareup.kotlinpoet.TypeName
 import com.squareup.kotlinpoet.TypeSpec
 import com.squareup.kotlinpoet.asClassName
 import com.squareup.kotlinpoet.joinToCode
-import com.typewritermc.authoring.NativeBindingId
 import com.typewritermc.codegen.DefinitionReferences
 import com.typewritermc.codegen.TypeParameterBindings
 import com.typewritermc.codegen.annotation
@@ -38,6 +37,7 @@ import com.typewritermc.types.ksp.OwnedFieldDeclaration
 import com.typewritermc.types.parameterKeys
 import com.typewritermc.types.template
 import skirout.editor.v1.type_catalog.FieldOwner
+import skirout.editor.v1.type_catalog.NativeBindingId
 import skirout.editor.v1.type_catalog.ScalarKind
 import skirout.editor.v1.type_catalog.TypeDefinitionId
 import skirout.editor.v1.type_catalog.TypeTemplate
@@ -67,7 +67,7 @@ internal object NativeBindingEmitter : SdkEmitter {
             ).addProperty(
                 PropertySpec
                     .builder("provider", NativeBindingId::class, KModifier.OVERRIDE)
-                    .initializer("%T(%S)", NativeBindingId::class, signature)
+                    .initializer("%T(value = %S)", NativeBindingId::class, signature)
                     .build(),
             ).addProperty(
                 PropertySpec

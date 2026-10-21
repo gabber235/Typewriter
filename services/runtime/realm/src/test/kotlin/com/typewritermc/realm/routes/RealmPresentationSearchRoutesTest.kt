@@ -42,7 +42,7 @@ val RealmPresentationSearchRoutesTest by testSuite {
                     val operation = PendingSearchSource(backgroundScope)
                     val source = CapabilityRealmPresentationSearchSource(backgroundScope, catalogs, fixture.views, operation)
                     val candidates = fixture.candidateSearch(MoveToOwner, "destination")
-                    source.watch(validSearchRequest().copy(capabilityId = CapabilityId(value = candidates.value))) { }
+                    source.watch(validSearchRequest().copy(capabilityId = candidates)) { }
                     runCurrent()
                     operation.active.toSet() shouldBe setOf("search")
 

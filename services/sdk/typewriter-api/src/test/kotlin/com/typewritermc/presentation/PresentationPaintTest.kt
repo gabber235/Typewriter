@@ -3,7 +3,6 @@
 package com.typewritermc.presentation
 
 import com.typewritermc.authoring.GeneratedSdkApi
-import com.typewritermc.checking.CatalogGeneration
 import com.typewritermc.expression.literal
 import com.typewritermc.types.Color
 import com.typewritermc.types.StandardTypes
@@ -27,6 +26,7 @@ import skirout.editor.v1.presentation.PresentationInteractionState.HOVERED
 import skirout.editor.v1.presentation.PresentationInteractionState.SELECTED
 import skirout.editor.v1.presentation.PresentationNode
 import skirout.editor.v1.presentation.StackChild
+import skirout.editor.v1.type_catalog.CatalogGeneration
 import skirout.editor.v1.type_catalog.DataValue
 import skirout.editor.v1.type_catalog.ScalarKind
 import skirout.editor.v1.presentation.PresentationColor as WireColor
@@ -34,7 +34,7 @@ import skirout.editor.v1.presentation.PresentationNumber as WireNumber
 
 val PresentationPaintTest by testSuite {
     fun build(content: (PresentationBuildScope) -> Unit): PresentationNode {
-        val catalog = DefaultCheckedCatalog(CatalogGeneration("paint"), StandardTypes.definitions)
+        val catalog = DefaultCheckedCatalog(CatalogGeneration(value = "paint"), StandardTypes.definitions)
         val checked = (catalog.resolve(ScalarKind.TEXT.use) as Resolution.Ready).value
         return DefaultPresentationRuntime()
             .build(PresentationBuildBinding(checked.presentationTemplate(), PresentationRole.ITEM), content)

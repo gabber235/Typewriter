@@ -1,6 +1,5 @@
 package com.typewritermc.realm.routes
 
-import com.typewritermc.capability.CapabilityId
 import com.typewritermc.operations.CandidateSearch
 import com.typewritermc.operations.OperationInvocation
 import com.typewritermc.operations.OperationResourceOption
@@ -32,6 +31,7 @@ import skirout.editor.v1.resource_operations.StaleAuthoringObservation
 import skirout.editor.v1.search.RealmPresentationSearchRequest
 import skirout.editor.v1.search.RealmPresentationSearchStatus
 import skirout.editor.v1.search.RealmPresentationSearchUpdate
+import skirout.editor.v1.type_catalog.CapabilityId
 import skirout.editor.v1.type_catalog.DataValue
 import java.util.concurrent.ConcurrentHashMap
 
@@ -71,7 +71,7 @@ internal class OperationRealmPresentationSearchSource(
             invocation = context.invocation.decodeInvocation()
             baseline = lease.operationObservation(captured.confirmed, captured.upserts, captured.removals)
             search =
-                requireNotNull(baseline.catalog.operations.candidateSearch(CapabilityId(request.capabilityId.value))) {
+                requireNotNull(baseline.catalog.operations.candidateSearch(request.capabilityId)) {
                     "The operation search is unavailable."
                 }
             require(request.resultType.requireValid() == search.descriptor.resultType.toTemplate()) {

@@ -3,7 +3,6 @@ package com.typewritermc.discovery
 import com.typewritermc.authoring.GraphPlacementDefinition
 import com.typewritermc.authoring.field
 import com.typewritermc.authoring.root
-import com.typewritermc.checking.CatalogGeneration
 import com.typewritermc.elements.ElementDefinition
 import com.typewritermc.library.BookDefinition
 import com.typewritermc.library.TagDefinition
@@ -11,6 +10,7 @@ import com.typewritermc.types.qualified
 import com.typewritermc.types.template
 import de.infix.testBalloon.framework.core.testSuite
 import io.kotest.matchers.shouldBe
+import skirout.editor.v1.type_catalog.CatalogGeneration
 import skirout.editor.v1.type_catalog.FieldDeclaration
 import skirout.editor.v1.type_catalog.FieldOwner
 import skirout.editor.v1.type_catalog.RepresentationTemplate
@@ -67,7 +67,7 @@ private fun assemble(vararg extra: TypeDefinition): CatalogAssembly {
         declarations =
             generated.map { OwnedTypeDeclaration(origin, it.definition, it.display) } +
                 extra.map { OwnedTypeDeclaration(origin, it) },
-    ).assemble(CatalogAssemblyContext(CatalogGeneration("placement field publication")))
+    ).assemble(CatalogAssemblyContext(CatalogGeneration(value = "placement field publication")))
 }
 
 private fun CatalogAssembly.placementField(type: TypeDefinitionId): ValuePath? = placementFields[type]

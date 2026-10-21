@@ -63,9 +63,7 @@ private fun SearchProviderDescription<*>.wire(
         is SearchProviderDescription.RealmCallback<*> -> {
             state.capability(capability)
             skirout.editor.v1.presentation.SearchProvider.createRealmCallback(
-                capabilityId =
-                    skirout.editor.v1.type_catalog
-                        .CapabilityId(value = capability.value),
+                capabilityId = capability,
                 payload = payload,
                 result = result,
                 selectors = selectors,

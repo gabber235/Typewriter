@@ -11,7 +11,6 @@ import com.typewritermc.authoring.RealmRootDefinition
 import com.typewritermc.authoring.of
 import com.typewritermc.authoring.payload
 import com.typewritermc.authoring.use
-import com.typewritermc.checking.CatalogGeneration
 import com.typewritermc.checking.PartialSelection
 import com.typewritermc.checking.TypedSelection
 import com.typewritermc.elements.CueDefinition
@@ -39,8 +38,6 @@ import com.typewritermc.types.Icon
 import com.typewritermc.types.RESOURCE_OWNERSHIP_FAMILY_ID
 import com.typewritermc.types.RelationContract
 import com.typewritermc.types.RelationDeletePolicy
-import com.typewritermc.types.RelationFamilyId
-import com.typewritermc.types.RelationId
 import com.typewritermc.types.ResourceId
 import com.typewritermc.types.ResourceTarget
 import com.typewritermc.types.TypeDisplay
@@ -57,9 +54,12 @@ import de.infix.testBalloon.framework.core.testSuite
 import io.kotest.matchers.collections.shouldNotContain
 import io.kotest.matchers.shouldBe
 import skirout.editor.v1.type_catalog.AuthoringRecord
+import skirout.editor.v1.type_catalog.CatalogGeneration
 import skirout.editor.v1.type_catalog.DataValue
 import skirout.editor.v1.type_catalog.EndpointId
 import skirout.editor.v1.type_catalog.ItemId
+import skirout.editor.v1.type_catalog.RelationFamilyId
+import skirout.editor.v1.type_catalog.RelationId
 import skirout.editor.v1.type_catalog.RepresentationTemplate
 import skirout.editor.v1.type_catalog.TypeDefinition
 import skirout.editor.v1.type_catalog.TypeDefinitionId
@@ -181,10 +181,10 @@ val ResourceDisplayAssemblyTest by testSuite {
         val owner = fixtureType(fixtureResource)
         val ownership =
             RelationContract(
-                id = RelationId("fixture.ownership"),
+                id = RelationId(value = "fixture.ownership"),
                 first = endpoint("fixture.owner", EndpointSlot.First, fixtureResource),
                 second = endpoint("fixture.owned", EndpointSlot.Second, BookDefinition.id),
-                families = setOf(RelationFamilyId(RESOURCE_OWNERSHIP_FAMILY_ID)),
+                families = setOf(RelationFamilyId(value = RESOURCE_OWNERSHIP_FAMILY_ID)),
             )
         val assembly =
             assemble(
@@ -205,17 +205,17 @@ val ResourceDisplayAssemblyTest by testSuite {
         val owner = fixtureType(fixtureResource)
         val ownership =
             RelationContract(
-                id = RelationId("fixture.ownership"),
+                id = RelationId(value = "fixture.ownership"),
                 first = endpoint("fixture.owner", EndpointSlot.First, fixtureResource),
                 second = endpoint("fixture.owned", EndpointSlot.Second, BookDefinition.id),
-                families = setOf(RelationFamilyId(RESOURCE_OWNERSHIP_FAMILY_ID)),
+                families = setOf(RelationFamilyId(value = RESOURCE_OWNERSHIP_FAMILY_ID)),
             )
         val bookOwnership =
             RelationContract(
-                id = RelationId("fixture.book_ownership"),
+                id = RelationId(value = "fixture.book_ownership"),
                 first = endpoint("fixture.book", EndpointSlot.First, BookDefinition.id),
                 second = endpoint("fixture.book_owned", EndpointSlot.Second, fixtureResource),
-                families = setOf(RelationFamilyId(RESOURCE_OWNERSHIP_FAMILY_ID)),
+                families = setOf(RelationFamilyId(value = RESOURCE_OWNERSHIP_FAMILY_ID)),
             )
         val assembly =
             assemble(
@@ -307,7 +307,7 @@ private fun assemble(
                 },
         relations = generatedProviders<GeneratedRelationProvider>(GeneratedProviderKind.Relation).map { it.contract } + relations,
         displays = generatedDisplays + displays,
-    ).assemble(CatalogAssemblyContext(CatalogGeneration("resource displays")))
+    ).assemble(CatalogAssemblyContext(CatalogGeneration(value = "resource displays")))
 }
 
 private fun CatalogAssembly.diagnosticCodes(type: TypeDefinitionId): List<String> =
@@ -346,7 +346,7 @@ private fun CatalogAssembly.evaluate(
 }
 
 private object DisplayReads : AuthoredReads {
-    override val catalog = CatalogGeneration("resource displays")
+    override val catalog = CatalogGeneration(value = "resource displays")
     override val readContext = ReadContext(catalog)
 
     override fun <T> read(path: BoundPath<T>): Availability<T> = error("Display formulas read portable values")

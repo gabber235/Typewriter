@@ -1,7 +1,5 @@
 package com.typewritermc.engine.runtime
 
-import com.typewritermc.checking.CatalogGeneration
-import com.typewritermc.checking.toSkir
 import com.typewritermc.engine.CompilationContext
 import com.typewritermc.engine.CompiledResourceKey
 import com.typewritermc.engine.ContentDigest
@@ -29,6 +27,7 @@ import skirout.editor.v1.compiled_content.CompiledArtifactReference
 import skirout.editor.v1.compiled_content.CompiledBlobPointer
 import skirout.editor.v1.compiled_content.PublishedContent
 import skirout.editor.v1.compiled_content.PublishedOutput
+import skirout.editor.v1.type_catalog.CatalogGeneration
 import skirout.editor.v1.type_catalog.PublicationId
 
 val BlobCompiledArtifactSourceTest by testSuite {
@@ -172,7 +171,7 @@ private fun activation(
     return PublishedContent(
         publication = PublicationId(value = "publication:$revision"),
         formatRevision = com.typewritermc.engine.PUBLISHED_CONTENT_FORMAT_REVISION,
-        catalog = CatalogGeneration("catalog:1").toSkir(),
+        catalog = CatalogGeneration(value = "catalog:1"),
         implementationToken = "implementation",
         outputs = outputs,
     )

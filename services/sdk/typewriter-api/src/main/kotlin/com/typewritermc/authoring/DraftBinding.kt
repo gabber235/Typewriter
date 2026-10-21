@@ -2,11 +2,11 @@
 
 package com.typewritermc.authoring
 
-import com.typewritermc.checking.CatalogGeneration
 import com.typewritermc.expression.EvaluationDiagnostic
 import com.typewritermc.types.catalog.CheckedType
 import com.typewritermc.types.nullable
 import com.typewritermc.types.use
+import skirout.editor.v1.type_catalog.CatalogGeneration
 import skirout.editor.v1.type_catalog.ItemId
 import skirout.editor.v1.type_catalog.NamedTypeUse
 import skirout.editor.v1.type_catalog.TypeDefinitionId

@@ -7,7 +7,6 @@ import com.typewritermc.authoring.field
 import com.typewritermc.authoring.fieldMap
 import com.typewritermc.authoring.of
 import com.typewritermc.authoring.root
-import com.typewritermc.checking.CatalogGeneration
 import com.typewritermc.configuration.FieldPatternSegment
 import com.typewritermc.configuration.RelativeFieldPattern
 import com.typewritermc.operations.OperationInvocation
@@ -24,8 +23,6 @@ import com.typewritermc.types.NativeBindingRegistry
 import com.typewritermc.types.RESOURCE_OWNERSHIP_FAMILY_ID
 import com.typewritermc.types.RelationContract
 import com.typewritermc.types.RelationDeletePolicy
-import com.typewritermc.types.RelationFamilyId
-import com.typewritermc.types.RelationId
 import com.typewritermc.types.ResourceId
 import com.typewritermc.types.catalog.CheckedCatalog
 import com.typewritermc.types.catalog.DefaultCheckedCatalog
@@ -44,6 +41,7 @@ import de.infix.testBalloon.framework.core.testSuite
 import io.kotest.matchers.shouldBe
 import kotlinx.coroutines.test.runTest
 import skirout.editor.v1.type_catalog.AuthoringRecord
+import skirout.editor.v1.type_catalog.CatalogGeneration
 import skirout.editor.v1.type_catalog.CollectionKind
 import skirout.editor.v1.type_catalog.DataValue
 import skirout.editor.v1.type_catalog.EndpointId
@@ -52,6 +50,8 @@ import skirout.editor.v1.type_catalog.FieldOwner
 import skirout.editor.v1.type_catalog.ItemId
 import skirout.editor.v1.type_catalog.LinkTarget
 import skirout.editor.v1.type_catalog.ListItem
+import skirout.editor.v1.type_catalog.RelationFamilyId
+import skirout.editor.v1.type_catalog.RelationId
 import skirout.editor.v1.type_catalog.RepresentationTemplate
 import skirout.editor.v1.type_catalog.ScalarKind
 import skirout.editor.v1.type_catalog.TypeDefinition
@@ -185,7 +185,7 @@ private fun memberRecord() =
     )
 
 private class OwnerSideCatalogLease : AuthoringCatalogLease {
-    override val generation = CatalogGeneration("owner_side")
+    override val generation = CatalogGeneration(value = "owner_side")
     override val checked: CheckedCatalog = DefaultCheckedCatalog(generation, DEFINITIONS)
     override val nativeBindings: NativeBindingRegistry = FactoryNativeBindingRegistry(checked, emptyList())
     override val providers = EmptyProviders
@@ -210,7 +210,7 @@ private val MEMBER_USE = MEMBER.namedUse()
 private val ROOT_USE = RealmRootDefinition.id.namedUse()
 private val CHILD_LINK_USE = CHILD_LINK.namedUse()
 private val CHILDREN_USE = CHILDREN.namedUse()
-private val OWNERSHIP = RelationId("segment_keyframes")
+private val OWNERSHIP = RelationId(value = "segment_keyframes")
 private val OWNER_ENDPOINT = EndpointId(value = "segment_keyframes:first")
 private val MEMBER_ENDPOINT = EndpointId(value = "segment_keyframes:second")
 private val OWNERSHIP_CONTRACT =
@@ -230,7 +230,7 @@ private val OWNERSHIP_CONTRACT =
             EndpointCardinality.Many,
             RelationDeletePolicy.CLEAR,
         ),
-        setOf(RelationFamilyId(RESOURCE_OWNERSHIP_FAMILY_ID)),
+        setOf(RelationFamilyId(value = RESOURCE_OWNERSHIP_FAMILY_ID)),
     )
 private val OWNER_BINDING =
     EndpointBindingTemplate(

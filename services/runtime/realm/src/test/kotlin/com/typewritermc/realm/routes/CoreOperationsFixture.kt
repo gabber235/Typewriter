@@ -13,8 +13,6 @@ import com.typewritermc.authoring.field
 import com.typewritermc.authoring.of
 import com.typewritermc.authoring.root
 import com.typewritermc.authoring.skir.SkirAuthoringOperationCodec
-import com.typewritermc.capability.CapabilityId
-import com.typewritermc.checking.CatalogGeneration
 import com.typewritermc.discovery.CatalogAssemblyContext
 import com.typewritermc.discovery.DeploymentFacts
 import com.typewritermc.discovery.DiscoveryDomains
@@ -76,6 +74,8 @@ import skirout.editor.v1.resource_operations.PrepareAuthoringActionRequest
 import skirout.editor.v1.resource_operations.ResolveDropCandidatesRequest
 import skirout.editor.v1.resource_operations.ResolveResourceOperationsRequest
 import skirout.editor.v1.type_catalog.AuthoringRecord
+import skirout.editor.v1.type_catalog.CapabilityId
+import skirout.editor.v1.type_catalog.CatalogGeneration
 import skirout.editor.v1.type_catalog.DataValue
 import skirout.editor.v1.type_catalog.FieldOwner
 import skirout.editor.v1.type_catalog.ItemId
@@ -181,7 +181,7 @@ internal class CoreOperationsFixture(
                 .copy(
                     declarations = contributions.declarations + fixtureTypes,
                     endpointBindings = contributions.endpointBindings + fixtureBindings,
-                ).assemble(CatalogAssemblyContext(CatalogGeneration("core-operations")))
+                ).assemble(CatalogAssemblyContext(CatalogGeneration(value = "core-operations")))
         check(assembly.operations.failures.isEmpty()) { assembly.operations.failures.joinToString { it.cause.stackTraceToString() } }
         catalogs.replace(RealmCatalogIncarnation(assembly, deployment))
         val lease = catalogs.captureCurrent()

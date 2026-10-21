@@ -27,7 +27,6 @@ import com.typewritermc.authoring.payload
 import com.typewritermc.authoring.root
 import com.typewritermc.authoring.type
 import com.typewritermc.authoring.use
-import com.typewritermc.checking.CatalogGeneration
 import com.typewritermc.checking.DraftType
 import com.typewritermc.checking.InputIdentity
 import com.typewritermc.checking.InspectionCompletion
@@ -61,6 +60,7 @@ import com.typewritermc.types.unwrapNamed
 import com.typewritermc.types.use
 import skirout.editor.v1.expression.ExpressionNode
 import skirout.editor.v1.type_catalog.ArgumentSelection
+import skirout.editor.v1.type_catalog.CatalogGeneration
 import skirout.editor.v1.type_catalog.DataValue
 import skirout.editor.v1.type_catalog.ItemId
 import skirout.editor.v1.type_catalog.ListItem

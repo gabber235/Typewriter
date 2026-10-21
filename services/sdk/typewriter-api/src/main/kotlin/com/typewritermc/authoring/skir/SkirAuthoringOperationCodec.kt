@@ -16,8 +16,6 @@ import com.typewritermc.authoring.PreparedEdit
 import com.typewritermc.authoring.RequiredInput
 import com.typewritermc.authoring.TraversalDirection
 import com.typewritermc.authoring.record
-import com.typewritermc.checking.CatalogGeneration
-import com.typewritermc.types.RelationId
 import com.typewritermc.types.ResourceId
 import com.typewritermc.types.requirePortable
 import com.typewritermc.types.requireValid
@@ -26,8 +24,10 @@ import com.typewritermc.types.skir.SkirConversionResult
 import com.typewritermc.types.unknownVariant
 import skirout.editor.v1.catalog.PreparedContent
 import skirout.editor.v1.catalog.PreparedValue
+import skirout.editor.v1.type_catalog.CatalogGeneration
 import skirout.editor.v1.type_catalog.ItemId
 import skirout.editor.v1.type_catalog.ListItem
+import skirout.editor.v1.type_catalog.RelationId
 import skirout.editor.v1.authoring.CommitPreparedEditResponse as SkirCommitPreparedEditResponse
 import skirout.editor.v1.authoring.ConnectIntent as SkirConnectIntent
 import skirout.editor.v1.authoring.CounterpartChoice as SkirCounterpartChoice
@@ -48,8 +48,6 @@ import skirout.editor.v1.catalog.PreparedValue as SkirPreparedValue
 import skirout.editor.v1.catalog.RequiredInput as SkirRequiredInput
 import skirout.editor.v1.catalog.ValuePreparationRequest as SkirInitializationRequest
 import skirout.editor.v1.diagnostic.ValueProblem as SkirValueProblem
-import skirout.editor.v1.type_catalog.CatalogGeneration as SkirCatalogGeneration
-import skirout.editor.v1.type_catalog.RelationId as SkirRelationId
 import skirout.editor.v1.type_catalog.ResourceId as SkirResourceId
 
 /**
@@ -200,14 +198,14 @@ private fun OperationConversionScope.decodePreparationDraft(value: SkirPreparati
 
 private fun OperationConversionScope.encodePreparedEdit(value: PreparedEdit): SkirPreparedEdit =
     SkirPreparedEdit(
-        catalog = SkirCatalogGeneration(value = value.catalog.value),
+        catalog = value.catalog,
         expectations = value.expectations.map { encodeExpectation(it) },
         intents = value.intents.mapIndexed { index, intent -> at("intent $index") { encodeIntent(intent) } },
     )
 
 private fun OperationConversionScope.decodePreparedEdit(value: SkirPreparedEdit): PreparedEdit =
     PreparedEdit(
-        catalog = CatalogGeneration(requireText(value.catalog.value, "Catalog generation")),
+        catalog = CatalogGeneration(value = requireText(value.catalog.value, "Catalog generation")),
         expectations =
             value.expectations.map {
                 decodeExpectation(it)
@@ -254,7 +252,7 @@ private fun OperationConversionScope.encodeExpectation(value: EditExpectation): 
         is EditExpectation.Links -> {
             SkirEditExpectation.createLinks(
                 resource = SkirResourceId(value = value.resource.value),
-                contract = SkirRelationId(value = value.contract.value),
+                contract = value.contract,
                 direction =
                     when (value.direction) {
                         TraversalDirection.Forward -> SkirTraversalDirection.FORWARD
@@ -306,7 +304,7 @@ private fun OperationConversionScope.decodeExpectation(value: SkirEditExpectatio
         is SkirEditExpectation.LinksWrapper -> {
             EditExpectation.Links(
                 ResourceId(requireText(value.value.resource.value, "Resource identity")),
-                RelationId(requireText(value.value.contract.value, "Relation identity")),
+                RelationId(value = requireText(value.value.contract.value, "Relation identity")),
                 when (value.value.direction) {
                     SkirTraversalDirection.FORWARD -> TraversalDirection.Forward
                     SkirTraversalDirection.REVERSE -> TraversalDirection.Reverse
@@ -324,7 +322,7 @@ private fun OperationConversionScope.decodeExpectation(value: SkirEditExpectatio
 
 private fun OperationConversionScope.encodeProjection(value: LinkProjection): SkirLinkProjection =
     SkirLinkProjection(
-        contract = SkirRelationId(value = value.contract.value),
+        contract = value.contract,
         first = SkirResourceId(value = value.first.value),
         second = SkirResourceId(value = value.second.value),
         firstLocation =
@@ -334,7 +332,7 @@ private fun OperationConversionScope.encodeProjection(value: LinkProjection): Sk
 
 private fun OperationConversionScope.decodeProjection(value: SkirLinkProjection): LinkProjection =
     LinkProjection(
-        RelationId(requireText(value.contract.value, "Relation identity")),
+        RelationId(value = requireText(value.contract.value, "Relation identity")),
         ResourceId(requireText(value.first.value, "Resource identity")),
         ResourceId(requireText(value.second.value, "Resource identity")),
         value.firstLocation?.let {
@@ -557,13 +555,13 @@ private fun OperationConversionScope.encodeCommitResult(value: CommitResult): Sk
         }
 
         is CommitResult.CatalogChanged -> {
-            SkirCommitPreparedEditResponse.CatalogChangedErrorWrapper(SkirCatalogGeneration(value = value.actual.value))
+            SkirCommitPreparedEditResponse.CatalogChangedErrorWrapper(value.actual)
         }
     }
 
 private fun OperationConversionScope.encodeInitializationRequest(value: InitializationRequest): SkirInitializationRequest =
     SkirInitializationRequest(
-        catalog = SkirCatalogGeneration(value = value.catalog.value),
+        catalog = value.catalog,
         target =
             when (val target = value.target) {
                 is PreparationTarget.Value -> {
@@ -581,7 +579,7 @@ private fun OperationConversionScope.encodeInitializationRequest(value: Initiali
 
 private fun OperationConversionScope.decodeInitializationRequest(value: SkirInitializationRequest): InitializationRequest =
     InitializationRequest(
-        catalog = CatalogGeneration(requireText(value.catalog.value, "Catalog generation")),
+        catalog = CatalogGeneration(value = requireText(value.catalog.value, "Catalog generation")),
         target =
             when (val target = value.target) {
                 is SkirPreparationTarget.ValueWrapper -> {

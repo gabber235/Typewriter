@@ -1,6 +1,5 @@
 package com.typewritermc.engine.runtime
 
-import com.typewritermc.checking.CatalogGeneration
 import com.typewritermc.discovery.CatalogAssemblyContext
 import com.typewritermc.discovery.DeploymentFacts
 import com.typewritermc.discovery.DiscoveryDomains
@@ -18,6 +17,7 @@ import com.typewritermc.loader.api.StagedHostedRuntime
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.cancel
+import skirout.editor.v1.type_catalog.CatalogGeneration
 
 @ImprintRuntimeEntrypoint
 class EngineDeploymentEntrypoint : HostedRuntimeEntrypoint {
@@ -59,7 +59,7 @@ class EngineDeploymentEntrypoint : HostedRuntimeEntrypoint {
         return try {
             val assembly =
                 deployment.providers.contributions.assemble(
-                    CatalogAssemblyContext(CatalogGeneration(executionCatalogIdentity(artifacts))),
+                    CatalogAssemblyContext(CatalogGeneration(value = executionCatalogIdentity(artifacts))),
                 )
             val runtime =
                 ReloadableEngineRuntime(

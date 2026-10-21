@@ -8,7 +8,6 @@ import com.typewritermc.authoring.of
 import com.typewritermc.authoring.root
 import com.typewritermc.authoring.with
 import com.typewritermc.realm.checking.record
-import com.typewritermc.types.RelationId
 import com.typewritermc.types.ResourceId
 import com.typewritermc.types.actualType
 import com.typewritermc.types.fields
@@ -24,6 +23,7 @@ import io.kotest.matchers.shouldBe
 import skirout.editor.v1.type_catalog.AuthoringRecord
 import skirout.editor.v1.type_catalog.DataValue
 import skirout.editor.v1.type_catalog.PathSegment
+import skirout.editor.v1.type_catalog.RelationId
 import skirout.editor.v1.type_catalog.TypeDefinitionId
 import skirout.editor.v1.type_catalog.TypeSelection
 import skirout.editor.v1.type_catalog.ValueLocation
@@ -105,7 +105,7 @@ val ExpectedAuthoringValuesTestSuite by testSuite {
     }
 
     test("relation expectations compare semantic sets in the selected direction") {
-        val relation = RelationId("ownership")
+        val relation = RelationId(value = "ownership")
         val child = ResourceId("child")
         val edge = LinkProjection(relation, resource, child, null, null)
         val values = CapturedAuthoringValues(mapOf(resource to original), listOf(edge, edge))

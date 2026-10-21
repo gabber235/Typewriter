@@ -4,6 +4,8 @@ import com.typewritermc.configuration.RelativeFieldPattern
 import kotlinx.serialization.Serializable
 import skirout.editor.v1.type_catalog.EndpointId
 import skirout.editor.v1.type_catalog.NamedTypeTemplate
+import skirout.editor.v1.type_catalog.RelationFamilyId
+import skirout.editor.v1.type_catalog.RelationId
 import skirout.editor.v1.type_catalog.TypeDefinitionId
 import skirout.editor.v1.type_catalog.TypeTemplate
 
@@ -68,10 +70,10 @@ fun EndpointBindingTemplate.requireValid(): EndpointBindingTemplate =
 
 /** Reports whether this relation belongs to the resource ownership family. */
 val RelationContract.ownsResources: Boolean
-    get() = RelationFamilyId(RESOURCE_OWNERSHIP_FAMILY_ID) in families
+    get() = RelationFamilyId(value = RESOURCE_OWNERSHIP_FAMILY_ID) in families
 
 /** Whether following first to second endpoints must never return to the start. */
 val RelationContract.isAcyclic: Boolean
-    get() = RelationFamilyId(ACYCLIC_RELATION_FAMILY_ID) in families
+    get() = RelationFamilyId(value = ACYCLIC_RELATION_FAMILY_ID) in families
 
 fun RelationId.endpointId(slot: EndpointSlot): EndpointId = EndpointId(value = "$value:${slot.name.lowercase()}")

@@ -4,8 +4,6 @@ package com.typewritermc.realm
 
 import com.typewritermc.authoring.AppliedNativeArguments
 import com.typewritermc.authoring.GeneratedSdkApi
-import com.typewritermc.authoring.NativeBindingId
-import com.typewritermc.checking.CatalogGeneration
 import com.typewritermc.discovery.CatalogAssemblyContext
 import com.typewritermc.discovery.DeploymentFacts
 import com.typewritermc.discovery.DiscoveryDomains
@@ -55,7 +53,9 @@ import com.typewritermc.types.use
 import de.infix.testBalloon.framework.core.testSuite
 import io.kotest.matchers.shouldBe
 import skirout.editor.v1.catalog.PresentationRole
+import skirout.editor.v1.type_catalog.CatalogGeneration
 import skirout.editor.v1.type_catalog.DataValue
+import skirout.editor.v1.type_catalog.NativeBindingId
 import skirout.editor.v1.type_catalog.PresentationId
 import skirout.editor.v1.type_catalog.RepresentationTemplate
 import skirout.editor.v1.type_catalog.TypeDefinition
@@ -136,7 +136,10 @@ val RealmProviderArtifactsTest by testSuite {
             RealmProviderFixture.realmRegistrars = 0
             RealmProviderFixture.executionRegistrars = 0
             GeneratedProviderLoader().load(artifacts, DeploymentFacts(), DiscoveryDomains.Realm).use { deployment ->
-                val assembly = deployment.providers.contributions.assemble(CatalogAssemblyContext(CatalogGeneration("realm common")))
+                val assembly =
+                    deployment.providers.contributions.assemble(
+                        CatalogAssemblyContext(CatalogGeneration(value = "realm common")),
+                    )
                 val published = assembly.editorCatalog.types.single { it.definition.id == RealmProviderFixture.type }
                 published.status shouldBe skirout.editor.v1.catalog.DeclarationStatus.READY
                 val checked = (assembly.checked.resolve(RealmProviderFixture.type.use()) as Resolution.Ready).value
@@ -186,7 +189,7 @@ class RealmCommonTypeProvider : GeneratedTypeProvider {
 
 class RealmCommonBindingProvider : NativeBindingFactory {
     override val definition = RealmProviderFixture.type
-    override val provider = NativeBindingId("fixture.common")
+    override val provider = NativeBindingId(value = "fixture.common")
 
     override fun bind(
         actual: CheckedType,

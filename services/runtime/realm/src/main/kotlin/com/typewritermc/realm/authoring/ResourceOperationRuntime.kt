@@ -12,8 +12,6 @@ import com.typewritermc.authoring.definition
 import com.typewritermc.authoring.of
 import com.typewritermc.authoring.root
 import com.typewritermc.authoring.use
-import com.typewritermc.capability.CapabilityId
-import com.typewritermc.checking.CatalogGeneration
 import com.typewritermc.checking.InputIdentity
 import com.typewritermc.discovery.ProviderOrigin
 import com.typewritermc.operations.AuthoringGraphFacts
@@ -46,6 +44,8 @@ import skirout.editor.v1.operation.ResolvedResourceOperation
 import skirout.editor.v1.operation.ResolvedResourceOperations
 import skirout.editor.v1.resource_operations.DropCandidates
 import skirout.editor.v1.type_catalog.AuthoringRecord
+import skirout.editor.v1.type_catalog.CapabilityId
+import skirout.editor.v1.type_catalog.CatalogGeneration
 import skirout.editor.v1.type_catalog.DataValue
 import skirout.editor.v1.type_catalog.ItemId
 import skirout.editor.v1.type_catalog.NamedTypeTemplate

@@ -35,7 +35,6 @@ import com.typewritermc.realm.checking.CapturedAuthoringReads
 import com.typewritermc.realm.repository.LinkSchemaCapabilities
 import com.typewritermc.realm.repository.ResourceValueMapper
 import com.typewritermc.types.RelationContract
-import com.typewritermc.types.RelationFamilyId
 import com.typewritermc.types.ResourceId
 import com.typewritermc.types.catalog.Resolution
 import com.typewritermc.types.endpoint
@@ -48,6 +47,7 @@ import skirout.editor.v1.authoring.LinkOccurrenceId
 import skirout.editor.v1.diagnostic.ValueProblem
 import skirout.editor.v1.type_catalog.AuthoringRecord
 import skirout.editor.v1.type_catalog.DataValue
+import skirout.editor.v1.type_catalog.RelationFamilyId
 import skirout.editor.v1.type_catalog.TypeSelection
 import skirout.editor.v1.type_catalog.ValueLocation
 import skirout.editor.v1.type_catalog.ValuePath

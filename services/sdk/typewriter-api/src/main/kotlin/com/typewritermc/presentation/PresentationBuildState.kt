@@ -102,10 +102,8 @@ internal class PresentationBuildState(
         types += use
     }
 
-    fun capability(id: com.typewritermc.capability.CapabilityId) {
-        capabilities +=
-            skirout.editor.v1.type_catalog
-                .CapabilityId(value = id.value)
+    fun capability(id: skirout.editor.v1.type_catalog.CapabilityId) {
+        capabilities += id
     }
 
     fun action(action: skirout.editor.v1.action.EditorAction) {
@@ -143,7 +141,7 @@ internal class PresentationBuildState(
             is skirout.editor.v1.action.EditorAction.AuthoringWrapper -> {
                 declare("context:subject", resource)
                 declare("context:selection", selection)
-                capability(com.typewritermc.capability.CapabilityId(action.value.capability.value))
+                capability(action.value.capability)
                 val expression =
                     action.value.targets
                 val errors = type.checkExpression(expression, expressionTypes, selection.toTemplate(), expressionTypes.keys)

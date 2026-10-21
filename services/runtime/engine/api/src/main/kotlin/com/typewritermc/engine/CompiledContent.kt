@@ -1,10 +1,10 @@
 package com.typewritermc.engine
 
-import com.typewritermc.authoring.NativeBindingId
-import com.typewritermc.types.RelationId
 import com.typewritermc.types.ResourceId
 import com.typewritermc.types.skir.NamedDataValueSerializer
 import com.typewritermc.types.skir.NamedTypeUseSerializer
+import com.typewritermc.types.skir.NativeBindingIdSerializer
+import com.typewritermc.types.skir.RelationIdSerializer
 import com.typewritermc.types.skir.TypeDefinitionSerializer
 import com.typewritermc.types.skir.ValuePathSerializer
 import kotlinx.serialization.SerialName
@@ -13,6 +13,8 @@ import skirout.editor.v1.compilation_root.CompilationProjectionId
 import skirout.editor.v1.diagnostic.Diagnostic
 import skirout.editor.v1.type_catalog.DataValue
 import skirout.editor.v1.type_catalog.NamedTypeUse
+import skirout.editor.v1.type_catalog.NativeBindingId
+import skirout.editor.v1.type_catalog.RelationId
 import skirout.editor.v1.type_catalog.TypeDefinition
 import skirout.editor.v1.type_catalog.ValuePath
 
@@ -56,6 +58,7 @@ data class CompiledResource(
     val key: CompiledResourceKey,
     @Serializable(with = NamedTypeUseSerializer::class)
     val actualType: NamedTypeUse,
+    @Serializable(with = NativeBindingIdSerializer::class)
     val bindingProvider: NativeBindingId,
     val bindingSignature: String,
     @Serializable(with = NamedDataValueSerializer::class)
@@ -67,6 +70,7 @@ sealed interface CompiledEdgeOrigin {
     @Serializable
     @SerialName("relation")
     data class Relation(
+        @Serializable(with = RelationIdSerializer::class)
         val relation: RelationId,
         @Serializable(with = ValuePathSerializer::class)
         val firstLocation: ValuePath?,
@@ -115,6 +119,7 @@ private val CONTENT_DIGEST = Regex("[0-9a-f]{64}")
 
 @Serializable
 data class RuntimeRelationFact(
+    @Serializable(with = RelationIdSerializer::class)
     val relation: RelationId,
     val ownsResources: Boolean,
 )

@@ -1,7 +1,6 @@
 package com.typewritermc.discovery
 
 import com.typewritermc.authoring.PlacementDefinition
-import com.typewritermc.checking.CatalogGeneration
 import com.typewritermc.imprint.ArtifactId
 import com.typewritermc.imprint.ContributionName
 import com.typewritermc.imprint.ContributionSourceId
@@ -16,6 +15,7 @@ import com.typewritermc.types.TypeDisplay
 import com.typewritermc.types.toWire
 import de.infix.testBalloon.framework.core.testSuite
 import io.kotest.matchers.shouldBe
+import skirout.editor.v1.type_catalog.CatalogGeneration
 import skirout.editor.v1.type_catalog.DeclarationOwner
 import java.lang.reflect.Modifier
 import java.util.Collections
@@ -36,7 +36,7 @@ val TypeDisplayPublicationTest by testSuite {
         val assembly =
             CatalogContributions(
                 declarations = providers.map { provider -> OwnedTypeDeclaration(origin, provider.definition, provider.display) },
-            ).assemble(CatalogAssemblyContext(CatalogGeneration("type display publication")))
+            ).assemble(CatalogAssemblyContext(CatalogGeneration(value = "type display publication")))
 
         BookDefinition.display shouldBe expected
         val wireDisplay =
@@ -69,7 +69,7 @@ val TypeDisplayPublicationTest by testSuite {
                     providers.map { provider ->
                         OwnedTypeDeclaration(origin, provider.definition, provider.display, searchKey = provider.searchKey)
                     },
-            ).assemble(CatalogAssemblyContext(CatalogGeneration("search keys")))
+            ).assemble(CatalogAssemblyContext(CatalogGeneration(value = "search keys")))
                 .editorCatalog.types
                 .associate { it.definition.id to it.searchKey }
 

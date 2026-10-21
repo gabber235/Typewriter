@@ -2,13 +2,13 @@
 
 package fixture
 
+import skirout.editor.v1.type_catalog.CatalogGeneration
 import com.typewritermc.authoring.root
 import com.typewritermc.types.fields
 import com.typewritermc.types.items
 import com.typewritermc.types.integer
 import com.typewritermc.types.record
 import com.typewritermc.types.named
-import com.typewritermc.checking.CatalogGeneration
 import com.typewritermc.authoring.DefaultInitializationRuntime
 import com.typewritermc.authoring.field
 import com.typewritermc.authoring.fieldMap
@@ -292,7 +292,7 @@ fun main(args: Array<String>) {
             check(contributions.configurations.size == 1)
             check(contributions.presentations.size == 1)
             check(contributions.displays.single().provider.target == ResourceTarget.Type(ExampleDefinition.id.namedTemplate()))
-            val assembly = contributions.assemble(CatalogAssemblyContext(CatalogGeneration("fixture")))
+            val assembly = contributions.assemble(CatalogAssemblyContext(CatalogGeneration(value = "fixture")))
             check(
                 assembly.editorCatalog.resourceDisplays.single().target ==
                     skirout.editor.v1.type_catalog.ResourceTarget.TypeWrapper(ExampleDefinition.id.template()),
@@ -361,7 +361,7 @@ fun main(args: Array<String>) {
                     }
                 })
             })
-            val replacement = replacementContributions.assemble(CatalogAssemblyContext(CatalogGeneration("fixture replacement")))
+            val replacement = replacementContributions.assemble(CatalogAssemblyContext(CatalogGeneration(value = "fixture replacement")))
             replacementCountBindings = 0
             val replacementWrapped = DefaultInitializationRuntime(replacement.checked, replacement.bindings).prepareNow(
                 InitializationRequest(replacement.checked.generation, PreparationTarget.Record(TypeSelection.CompleteWrapper(WrappedDefaultsDefinition.use)),

@@ -3,7 +3,6 @@ package com.typewritermc.types
 import com.typewritermc.authoring.CaptureResult
 import com.typewritermc.authoring.CompleteValue
 import com.typewritermc.authoring.CompletenessResult
-import com.typewritermc.authoring.NativeBindingId
 import com.typewritermc.authoring.PortableValue
 import com.typewritermc.authoring.complete
 import com.typewritermc.types.catalog.CheckedCatalog
@@ -21,6 +20,7 @@ import skirout.editor.v1.type_catalog.LinkTarget
 import skirout.editor.v1.type_catalog.ListItem
 import skirout.editor.v1.type_catalog.MapRow
 import skirout.editor.v1.type_catalog.NamedTypeUse
+import skirout.editor.v1.type_catalog.NativeBindingId
 import skirout.editor.v1.type_catalog.ResolvedRepresentation
 import skirout.editor.v1.type_catalog.ScalarKind
 import skirout.editor.v1.type_catalog.TypeDefinitionId
@@ -337,7 +337,7 @@ private class DeferredNativeBinding(
             )
 }
 
-private val FRAMEWORK_NATIVE_BINDING = NativeBindingId("typewriter.framework")
+private val FRAMEWORK_NATIVE_BINDING = NativeBindingId(value = "typewriter.framework")
 
 private class PortableNativeBinding(
     override val checked: CheckedType,
@@ -345,7 +345,7 @@ private class PortableNativeBinding(
 ) : NativeBinding<PortableValue>,
     GeneratedCheckedNativeBinding {
     override val actualType: TypeUse = application.use
-    override val provider: NativeBindingId = NativeBindingId("typewriter.portable")
+    override val provider: NativeBindingId = NativeBindingId(value = "typewriter.portable")
     override val signature: String = "portable(${actualType.canonicalText})"
     override val opaque: Boolean = true
 
@@ -368,7 +368,7 @@ private class PolymorphicNativeBinding(
     GeneratedCheckedNativeBinding,
     AuthoredNativeBinding {
     override val actualType: TypeUse = application.use
-    override val provider: NativeBindingId = NativeBindingId("typewriter.polymorphic")
+    override val provider: NativeBindingId = NativeBindingId(value = "typewriter.polymorphic")
     override val signature: String = "polymorphic(${actualType.canonicalText})"
 
     override fun encode(value: Any): DataValue {

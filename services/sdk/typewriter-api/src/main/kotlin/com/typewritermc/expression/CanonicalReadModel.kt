@@ -13,7 +13,6 @@ import build.skir.reflection.RecordDescriptorBase
 import build.skir.reflection.StructDescriptor
 import build.skir.reflection.StructField
 import build.skir.reflection.TypeDescriptor
-import com.typewritermc.checking.CatalogGeneration
 import com.typewritermc.types.COLOR_TYPE_ID
 import com.typewritermc.types.ColorDefinition
 import com.typewritermc.types.ICONIFY_TYPE_ID
@@ -31,6 +30,7 @@ import com.typewritermc.types.items
 import com.typewritermc.types.payload
 import com.typewritermc.types.unknownVariant
 import okio.ByteString
+import skirout.editor.v1.type_catalog.CatalogGeneration
 import skirout.editor.v1.type_catalog.DeclaredTypeId
 import skirout.editor.v1.type_catalog.FieldDeclaration
 import skirout.editor.v1.type_catalog.FieldOwner
@@ -127,7 +127,7 @@ open class CanonicalReadModelRegistry(
         definitions.mapTo(mutableSetOf()) { it.id } + declaredDefinitions.map { it.id }
 
     /** The read and framework definitions as the checked catalog the checker resolves read types in. */
-    val catalog = DefaultCheckedCatalog(CatalogGeneration("canonical.read.v1"), definitions + frameworkDefinitions)
+    val catalog = DefaultCheckedCatalog(CatalogGeneration(value = "canonical.read.v1"), definitions + frameworkDefinitions)
 
     fun owns(id: TypeDefinitionId): Boolean = id in ownedIds
 

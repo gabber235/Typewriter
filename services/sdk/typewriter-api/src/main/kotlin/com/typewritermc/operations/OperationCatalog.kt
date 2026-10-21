@@ -3,7 +3,6 @@ package com.typewritermc.operations
 import com.typewritermc.authoring.CompletenessResult
 import com.typewritermc.authoring.complete
 import com.typewritermc.authoring.name
-import com.typewritermc.capability.CapabilityId
 import com.typewritermc.capability.RealmCapabilityDescriptor
 import com.typewritermc.discovery.OwnedPresentation
 import com.typewritermc.discovery.ProviderOrigin
@@ -34,6 +33,7 @@ import skirout.editor.v1.operation.OperationAvailability
 import skirout.editor.v1.operation.OperationDrop
 import skirout.editor.v1.operation.OperationTargets
 import skirout.editor.v1.operation.ResourceOperationDefinition
+import skirout.editor.v1.type_catalog.CapabilityId
 import skirout.editor.v1.type_catalog.DataValue
 import skirout.editor.v1.type_catalog.NamedTypeTemplate
 import skirout.editor.v1.type_catalog.NamedTypeUse
@@ -45,7 +45,6 @@ import skirout.editor.v1.type_catalog.TypeDefinitionId
 import skirout.editor.v1.type_catalog.TypeTemplate
 import skirout.editor.v1.type_catalog.TypeUse
 import skirout.editor.v1.type_catalog.ValuePath
-import skirout.editor.v1.type_catalog.CapabilityId as SkirCapabilityId
 
 class BoundOperationInput internal constructor(
     val schema: CheckedType?,
@@ -194,7 +193,7 @@ fun bindOperations(
                             subject = SkirTypeCodec.encode(declaration.target).getOrThrow(),
                             cardinality = collected.cardinality,
                         ),
-                    capability = SkirCapabilityId(value = declaration.id.capability.value),
+                    capability = declaration.id.capability,
                     drop =
                         collected.fields.singleOrNull { it.drop != null }?.let { field ->
                             OperationDrop(
