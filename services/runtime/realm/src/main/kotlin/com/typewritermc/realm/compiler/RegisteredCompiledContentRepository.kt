@@ -7,13 +7,9 @@ import com.typewritermc.realm.repository.utils.decodeSkir
 import com.typewritermc.types.requireValid
 import skirout.editor.v1.compiled_content.PublishedContent
 import skirout.editor.v1.diagnostic.Diagnostic
+import skirout.editor.v1.publication.PublicationReport
+import skirout.editor.v1.publication.PublicationState
 import skirout.editor.v1.type_catalog.PublicationId
-
-data class PublicationReport(
-    val id: PublicationId,
-    val state: PublicationState,
-    val findings: List<Diagnostic>,
-)
 
 /** Reads the Realm selected runtime descriptor separately from the latest durable publication attempt report. */
 interface PublicationResults {
@@ -55,25 +51,26 @@ class SurrealRegisteredCompiledContentRepository(
         val findings = decodeSkir(Serializers.list(Diagnostic.serializer), row.get("findings")).map { it.requireValid() }
         val state =
             when (row.get("state").getString()) {
-                "checking" -> PublicationState.Checking
-                "compiling" -> PublicationState.Compiling
-                "activating" -> PublicationState.Activating
-                "complete" -> PublicationState.Complete
-                "blocked" -> PublicationState.Blocked(findings)
-                "interrupted" -> PublicationState.Interrupted
+                "checking" -> PublicationState.CHECKING
+                "compiling" -> PublicationState.COMPILING
+                "activating" -> PublicationState.ACTIVATING
+                "complete" -> PublicationState.COMPLETE
+                "blocked" -> PublicationState.BlockedWrapper(findings)
+                "interrupted" -> PublicationState.INTERRUPTED
                 else -> error("Unknown publication state")
             }
         return PublicationReport(
-            PublicationId(
-                value =
-                    row
-                        .get("id")
-                        .getRecordId()
-                        .toString()
-                        .substringAfter(':'),
-            ),
-            state,
-            findings,
+            id =
+                PublicationId(
+                    value =
+                        row
+                            .get("id")
+                            .getRecordId()
+                            .toString()
+                            .substringAfter(':'),
+                ),
+            state = state,
+            findings = findings,
         )
     }
 }

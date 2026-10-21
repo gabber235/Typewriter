@@ -5,7 +5,6 @@ import com.typewritermc.checking.InspectionCompletion
 import com.typewritermc.checking.PartialSelection
 import com.typewritermc.checking.ResourceTypeMatch
 import com.typewritermc.checking.UndecidedCandidate
-import com.typewritermc.expression.EvaluationDiagnostic
 import com.typewritermc.types.ResourceId
 import com.typewritermc.types.toResourceId
 import com.typewritermc.types.unknownVariant
@@ -13,6 +12,7 @@ import com.typewritermc.types.use
 import skirout.editor.v1.authoring.LinkOccurrence
 import skirout.editor.v1.authoring.LinkOccurrenceId
 import skirout.editor.v1.authoring_facts.TraversalDirection
+import skirout.editor.v1.expression.EvaluationDiagnostic
 import skirout.editor.v1.type_catalog.EndpointId
 import skirout.editor.v1.type_catalog.NamedTypeUse
 import skirout.editor.v1.type_catalog.RelationFamilyId

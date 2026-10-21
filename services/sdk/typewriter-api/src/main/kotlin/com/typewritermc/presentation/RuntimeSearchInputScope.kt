@@ -4,7 +4,6 @@ package com.typewritermc.presentation
 
 import com.typewritermc.authoring.GeneratedSdkApi
 import com.typewritermc.expression.Expr
-import com.typewritermc.expression.ExpressionBindingId
 import com.typewritermc.expression.Handled
 import skirout.editor.v1.expression.ExpressionNode
 import skirout.editor.v1.presentation.BoundControl
@@ -14,6 +13,7 @@ import skirout.editor.v1.presentation.PresentationNode
 import skirout.editor.v1.presentation.SearchSelectionMode
 import skirout.editor.v1.presentation.SearchSelectorMultiplicity
 import skirout.editor.v1.presentation.SearchSelectorValues
+import skirout.editor.v1.type_catalog.ExpressionBindingId
 
 internal class RuntimeSearchInputScope<Value, Row>(
     private val state: PresentationBuildState,
@@ -51,12 +51,12 @@ internal class RuntimeSearchInputScope<Value, Row>(
                 ): Expr<Any?, Handled> {
                     require(id.isNotBlank()) { "Search selector id must not be blank." }
                     require(key.isNotBlank()) { "Search selector key must not be blank." }
-                    val binding = ExpressionBindingId("search_selector.$id")
+                    val binding = ExpressionBindingId(value = "search_selector.$id")
                     selectors +=
                         skirout.editor.v1.presentation.SearchSelectorDefinition(
                             selectorId = id,
                             key = key,
-                            valueBindingId = binding.wire(),
+                            valueBindingId = binding,
                             values = values,
                             caseSensitive = caseSensitive,
                             multiplicity = multiplicity,
@@ -133,8 +133,8 @@ internal class RuntimeSearchInputScope<Value, Row>(
         return PresentationElement.createSearchInput(
             control = control,
             selectionMode = selectionMode,
-            queryBindingId = SEARCH_QUERY.wire(),
-            summaryBindingId = ExpressionBindingId("search_summary").wire(),
+            queryBindingId = SEARCH_QUERY,
+            summaryBindingId = ExpressionBindingId(value = "search_summary"),
             maximumExtent = frozen.popup.maximumExtent ?: expression(400.0),
             provider = source.wire(state, mapping, selectors),
             summary = summary,
@@ -181,7 +181,7 @@ private class RuntimeSearchResultScope<Value, Row>(
 
     fun build(): skirout.editor.v1.presentation.SearchResultMapping =
         skirout.editor.v1.presentation.SearchResultMapping(
-            bindingId = SEARCH_RESULT_ROW.wire(),
+            bindingId = SEARCH_RESULT_ROW,
             key = requireNotNull(key) { "Search result mapping must declare a key." },
             selectedValue = requireNotNull(selectedValue) { "Search result mapping must declare a selected value." },
             presentation = requireNotNull(presentation) { "Search result mapping must declare a presentation." },

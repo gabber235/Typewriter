@@ -48,7 +48,7 @@ internal fun <V, ItemScope> RuntimePresentationData.renderRepeated(
         state.node(
             PresentationElement.createRepeated(
                 source = expression(source),
-                itemBindingId = binding.wire(),
+                itemBindingId = binding,
                 presentation =
                     skirout.editor.v1.presentation.SequencePresentation(
                         item = state.column(itemNodes),
@@ -231,8 +231,8 @@ internal fun <Row, Key> RuntimePresentationData.renderCollectionGraph(
                 direction = graphDirection,
                 maximumDepth = graphMaximumDepth,
                 node = requireNotNull(node) { "Collection graph node content is required." },
-                childrenBindingId = childrenBinding.wire(),
-                childBindingId = childBinding.wire(),
+                childrenBindingId = childrenBinding,
+                childBindingId = childBinding,
                 children = childSequence ?: sequence(childItem),
             ),
         )
@@ -340,7 +340,7 @@ internal fun CollectionSource<*, *>.wire(state: PresentationBuildState): Present
     PresentationCollectionDefinition(
         sourceId = id,
         rowType = rowType,
-        rowBindingId = rowBinding.wire(),
+        rowBindingId = rowBinding,
         key = expression(key),
         selectability = expression(selectability),
         relations =
@@ -354,7 +354,7 @@ internal fun CollectionSource<*, *>.wire(state: PresentationBuildState): Present
             (rows as? CollectionRows.Projected)?.let { projected ->
                 PresentationCollectionProjection(
                     root = projected.projection.root,
-                    resourceBindingId = projected.resourceBinding.wire(),
+                    resourceBindingId = projected.resourceBinding,
                     fields =
                         projected.projection.fields.map { field ->
                             PresentationCollectionProjectionField(

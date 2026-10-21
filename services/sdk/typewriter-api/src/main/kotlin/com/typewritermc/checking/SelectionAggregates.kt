@@ -67,4 +67,5 @@ private inline fun <T, R> Iterable<T>.foldAvailability(
 private fun selectionFailure(
     code: String,
     message: String,
-) = com.typewritermc.expression.EvaluationDiagnostic(code, message, emptyList())
+) = skirout.editor.v1.expression
+    .EvaluationDiagnostic(code = code, message = message, locations = emptyList())

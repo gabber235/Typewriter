@@ -6,7 +6,6 @@ import com.typewritermc.authoring.record
 import com.typewritermc.expression.CanonicalQueryReader
 import com.typewritermc.expression.CheckedExpressionProgram
 import com.typewritermc.expression.DefaultExpressionEvaluator
-import com.typewritermc.expression.EvaluationBudget
 import com.typewritermc.expression.ExpressionBindings
 import com.typewritermc.expression.ExpressionValueReader
 import com.typewritermc.types.ResourceId
@@ -19,6 +18,7 @@ import com.typewritermc.types.unwrapNamed
 import com.typewritermc.types.use
 import skirout.editor.v1.catalog.PublishedType
 import skirout.editor.v1.catalog.ResourceDisplayFormulas
+import skirout.editor.v1.expression.EvaluationBudget
 import skirout.editor.v1.type_catalog.AuthoringRecord
 import skirout.editor.v1.type_catalog.DataValue
 import skirout.editor.v1.type_catalog.ResourceTarget

@@ -1,8 +1,5 @@
 package com.typewritermc.types.catalog
 
-import com.typewritermc.authoring.DependentField
-import com.typewritermc.authoring.PartialSchema
-import com.typewritermc.authoring.StructuralResult
 import com.typewritermc.authoring.arguments
 import com.typewritermc.authoring.definition
 import com.typewritermc.authoring.type
@@ -23,18 +20,21 @@ import com.typewritermc.types.template
 import com.typewritermc.types.toTemplate
 import com.typewritermc.types.unknownVariant
 import com.typewritermc.types.use
-import skirout.editor.v1.authoring.ArgumentLocation
 import skirout.editor.v1.catalog.DeclarationStatus
 import skirout.editor.v1.diagnostic.DeclarationDiagnostic
+import skirout.editor.v1.diagnostic.StructuralResult
 import skirout.editor.v1.type_catalog.AppliedSchema
+import skirout.editor.v1.type_catalog.ArgumentLocation
 import skirout.editor.v1.type_catalog.ArgumentSelection
 import skirout.editor.v1.type_catalog.AuthoringRecord
 import skirout.editor.v1.type_catalog.CatalogGeneration
+import skirout.editor.v1.type_catalog.DependentField
 import skirout.editor.v1.type_catalog.FieldDeclaration
 import skirout.editor.v1.type_catalog.FieldOwner
 import skirout.editor.v1.type_catalog.NamedTypeTemplate
 import skirout.editor.v1.type_catalog.NamedTypeUse
 import skirout.editor.v1.type_catalog.ParameterKey
+import skirout.editor.v1.type_catalog.PartialSchema
 import skirout.editor.v1.type_catalog.RepresentationTemplate
 import skirout.editor.v1.type_catalog.ResolvedField
 import skirout.editor.v1.type_catalog.ResolvedRepresentation
@@ -553,10 +553,10 @@ class DefaultCheckedCatalog(
                 if (applied is Resolution.Invalid) return applied
                 known += resolvedField(field.owner, (applied as Resolution.Ready).value)
             } else {
-                dependent += DependentField(field.owner, field.type, missing)
+                dependent += DependentField(owner = field.owner, type = field.type, missing = missing)
             }
         }
-        return Resolution.Ready(PartialSchema(known, dependent, pending))
+        return Resolution.Ready(PartialSchema(knownFields = known, dependentFields = dependent, pendingArguments = pending))
     }
 
     private fun resolveRepresentation(

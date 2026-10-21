@@ -1,7 +1,6 @@
 package com.typewritermc.presentation
 
 import com.typewritermc.expression.Expr
-import com.typewritermc.expression.ExpressionBindingId
 import com.typewritermc.expression.ExpressionFactory
 import com.typewritermc.expression.Handled
 import com.typewritermc.expression.MayBeMissing
@@ -19,6 +18,7 @@ import skirout.editor.v1.presentation.HeaderActionTone
 import skirout.editor.v1.presentation.PresentationTextOverflow
 import skirout.editor.v1.presentation.PresentationTextTone
 import skirout.editor.v1.presentation.RelativeTimeStyle
+import skirout.editor.v1.type_catalog.ExpressionBindingId
 import skirout.editor.v1.type_catalog.TypeTemplate
 import kotlin.time.Instant
 
@@ -451,7 +451,7 @@ fun <Row, Key> collectionSource(
     configure: CollectionSourceScope<Row, Key>.() -> Unit,
 ): CollectionSource<Row, Key> {
     require(id.isNotBlank()) { "Collection source ids must not be blank." }
-    val rowBinding = ExpressionBindingId("collection.$id.row")
+    val rowBinding = ExpressionBindingId(value = "collection.$id.row")
     val scope = DefaultCollectionSourceScope<Row, Key>(rowBinding)
     scope.configure()
     return scope.build(id, rowType, CollectionRows.Supplied)
@@ -466,8 +466,8 @@ fun <R : Resource, Row, Key, Expressions : Any> CollectionProjection<R, Row, Exp
     configure: ProjectedCollectionSourceScope<Row, Key, Expressions>.() -> Unit = {},
 ): CollectionSource<Row, Key> {
     val projection = specification
-    val rowBinding = ExpressionBindingId("collection.${projection.sourceId}.row")
-    val resourceBinding = ExpressionBindingId("collection.${projection.sourceId}.resource")
+    val rowBinding = ExpressionBindingId(value = "collection.${projection.sourceId}.row")
+    val resourceBinding = ExpressionBindingId(value = "collection.${projection.sourceId}.resource")
     val scope = DefaultProjectedCollectionSourceScope<Row, Key, Expressions>(rowBinding, resourceBinding, expressions)
     scope.configure()
     return scope.build(projection, scope.key())

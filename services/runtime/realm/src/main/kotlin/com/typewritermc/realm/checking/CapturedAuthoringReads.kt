@@ -36,7 +36,6 @@ import com.typewritermc.checking.TypedSelection
 import com.typewritermc.checking.UndecidedCandidate
 import com.typewritermc.configuration.kind
 import com.typewritermc.configuration.name
-import com.typewritermc.expression.EvaluationDiagnostic
 import com.typewritermc.realm.authoring.AuthoredReadView
 import com.typewritermc.realm.authoring.RESOURCE_SELECTION_INPUT
 import com.typewritermc.services.libs.utils.rethrowExceptional
@@ -59,6 +58,7 @@ import com.typewritermc.types.use
 import skirout.editor.v1.authoring_facts.EditExpectation
 import skirout.editor.v1.authoring_facts.TraversalDirection
 import skirout.editor.v1.catalog.RepresentationKind
+import skirout.editor.v1.expression.EvaluationDiagnostic
 import skirout.editor.v1.expression.ExpressionNode
 import skirout.editor.v1.type_catalog.ArgumentSelection
 import skirout.editor.v1.type_catalog.CatalogGeneration
@@ -1054,7 +1054,7 @@ class CapturedAuthoringReads(
         message: String,
         locations: List<ValueLocation>,
     ): Availability.Failed {
-        val diagnostic = EvaluationDiagnostic(code, message, locations)
+        val diagnostic = EvaluationDiagnostic(code = code, message = message, locations = locations)
         failures += diagnostic
         return Availability.Failed(diagnostic)
     }

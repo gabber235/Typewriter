@@ -3,12 +3,12 @@ package com.typewritermc.checking
 import com.typewritermc.authoring.Availability
 import com.typewritermc.authoring.DraftBinding
 import com.typewritermc.authoring.GeneratedSdkApi
-import com.typewritermc.expression.EvaluationDiagnostic
 import com.typewritermc.expression.Expr
-import com.typewritermc.expression.ExpressionBindingId
 import com.typewritermc.expression.ExpressionFactory
 import com.typewritermc.expression.MissingPolicy
+import skirout.editor.v1.expression.EvaluationDiagnostic
 import skirout.editor.v1.expression.ExpressionNode
+import skirout.editor.v1.type_catalog.ExpressionBindingId
 import skirout.editor.v1.type_catalog.NamedTypeUse
 import skirout.editor.v1.type_catalog.TypeDefinitionId
 
@@ -45,7 +45,7 @@ fun <D, S : Any> compileSelection(
     predicate: S.() -> Expr<Boolean, out MissingPolicy>,
 ): TypedSelection<D> {
     val configured =
-        com.typewritermc.expression.input<Any?>(ExpressionBindingId("configured_value"))
+        com.typewritermc.expression.input<Any?>(ExpressionBindingId(value = "configured_value"))
     return TypedSelection(type, factory.create(configured).predicate().toNode())
 }
 

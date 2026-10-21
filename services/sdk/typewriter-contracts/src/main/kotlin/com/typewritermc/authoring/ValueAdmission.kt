@@ -18,6 +18,7 @@ import com.typewritermc.types.signed
 import com.typewritermc.types.unknownVariant
 import com.typewritermc.types.use
 import skirout.editor.v1.diagnostic.DeclarationDiagnostic
+import skirout.editor.v1.diagnostic.StructuralResult
 import skirout.editor.v1.diagnostic.ValueProblem
 import skirout.editor.v1.type_catalog.AuthoringRecord
 import skirout.editor.v1.type_catalog.CollectionKind
@@ -35,14 +36,6 @@ import skirout.editor.v1.type_catalog.TypeSelection
 import skirout.editor.v1.type_catalog.TypeUse
 import skirout.editor.v1.type_catalog.ValueLocation
 import java.math.BigInteger
-
-sealed interface StructuralResult {
-    data object Valid : StructuralResult
-
-    data class Invalid(
-        val problems: List<ValueProblem>,
-    ) : StructuralResult
-}
 
 /** A value admitted against [schema] with no structural problems or unfinished locations. */
 class CompleteValue internal constructor(
@@ -71,7 +64,7 @@ fun AuthoringRecord.validateStructure(catalog: CheckedCatalog): StructuralResult
         is TypeSelection.CompleteWrapper -> {
             when (val resolved = catalog.resolve(configuration.use.use)) {
                 is Resolution.Invalid -> {
-                    StructuralResult.Invalid(resolved.diagnostics.map { it.asValueProblem(root) })
+                    StructuralResult.InvalidWrapper(resolved.diagnostics.map { it.asValueProblem(root) })
                 }
 
                 is Resolution.Ready -> {
@@ -111,7 +104,7 @@ private fun AuthoringRecord.validatePending(
 ): StructuralResult {
     val partial = catalog.resolvePartial(selection)
     if (partial is Resolution.Invalid) {
-        return StructuralResult.Invalid(partial.diagnostics.map { it.asValueProblem(root) })
+        return StructuralResult.InvalidWrapper(partial.diagnostics.map { it.asValueProblem(root) })
     }
     partial as Resolution.Ready
     val known = partial.value.knownFields.associateBy { it.key }
@@ -131,7 +124,7 @@ private fun AuthoringRecord.validatePending(
         if (value != DataValue.UNFILLED) problems += ValueProblem(location = root.field(name), code = "dependent_field_requires_type")
     }
     problems += inspection.problems
-    return if (problems.isEmpty()) StructuralResult.Valid else StructuralResult.Invalid(problems)
+    return if (problems.isEmpty()) StructuralResult.VALID else StructuralResult.InvalidWrapper(problems)
 }
 
 private class ValueInspection(
@@ -140,7 +133,7 @@ private class ValueInspection(
     val problems = mutableListOf<ValueProblem>()
     val unfinished = mutableListOf<ValueLocation>()
 
-    fun structuralResult(): StructuralResult = if (problems.isEmpty()) StructuralResult.Valid else StructuralResult.Invalid(problems)
+    fun structuralResult(): StructuralResult = if (problems.isEmpty()) StructuralResult.VALID else StructuralResult.InvalidWrapper(problems)
 
     fun validateCheckedValue(
         value: DataValue,

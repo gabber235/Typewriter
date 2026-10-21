@@ -1,7 +1,6 @@
 package com.typewritermc.types
 
 import com.typewritermc.authoring.CompletenessResult
-import com.typewritermc.authoring.StructuralResult
 import com.typewritermc.authoring.complete
 import com.typewritermc.authoring.of
 import com.typewritermc.authoring.validateStructure
@@ -26,6 +25,7 @@ import skirout.editor.v1.catalog.EndpointBindingTemplate
 import skirout.editor.v1.catalog.PresentationDescriptor
 import skirout.editor.v1.catalog.PresentationRole
 import skirout.editor.v1.catalog.PresentationTarget
+import skirout.editor.v1.diagnostic.StructuralResult
 import skirout.editor.v1.type_catalog.ArgumentSelection
 import skirout.editor.v1.type_catalog.AuthoringRecord
 import skirout.editor.v1.type_catalog.CatalogGeneration
@@ -234,7 +234,7 @@ val TypeSystemFoundationTest by testSuite {
                     "value" to DataValue.named(resourceUse, DataValue.record(mapOf("name" to DataValue.StringValueWrapper("Broad")))),
                 ),
             )
-        (wrongWrite.validateStructure(catalog) as StructuralResult.Invalid).problems.map { it.code } shouldContainExactly
+        (wrongWrite.validateStructure(catalog) as StructuralResult.InvalidWrapper).value.map { it.code } shouldContainExactly
             listOf("unreadable_actual_type")
     }
 
@@ -645,7 +645,7 @@ val TypeSystemFoundationTest by testSuite {
                 mapOf("name" to DataValue.StringValueWrapper("ok"), "extra" to DataValue.StringValueWrapper("no")),
             )
 
-        (record.validateStructure(catalog) as StructuralResult.Invalid).problems.map { it.code } shouldContainExactly
+        (record.validateStructure(catalog) as StructuralResult.InvalidWrapper).value.map { it.code } shouldContainExactly
             listOf("unknown_field")
     }
 

@@ -9,9 +9,11 @@ import com.typewritermc.types.use
 import de.infix.testBalloon.framework.core.testSuite
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.types.shouldBeInstanceOf
+import skirout.editor.v1.expression.EvaluationBudget
 import skirout.editor.v1.expression.ExpressionNode
 import skirout.editor.v1.type_catalog.DataValue
 import skirout.editor.v1.type_catalog.EndpointId
+import skirout.editor.v1.type_catalog.ExpressionBindingId
 import skirout.editor.v1.type_catalog.LinkTarget
 import skirout.editor.v1.type_catalog.ValuePath
 
@@ -23,7 +25,7 @@ val ExpressionTypeSafetyTest by testSuite {
     }
 
     test("missing composite expressions accept an explicit fallback") {
-        val input: Expr<Boolean, MayBeMissing> = portableExpression(testInput(ExpressionBindingId("input"), ValuePath.root))
+        val input: Expr<Boolean, MayBeMissing> = portableExpression(testInput(ExpressionBindingId(value = "input"), ValuePath.root))
         val expression: Expr<Boolean, Handled> = (input and literal(true)).orElse(literal(false))
 
         expression.toNode().shouldBeInstanceOf<ExpressionNode.OrElseWrapper>()
@@ -31,7 +33,7 @@ val ExpressionTypeSafetyTest by testSuite {
 
     test("concrete list expressions expose collection size") {
         val input: Expr<List<String>, MayBeMissing> =
-            portableExpression(testInput(ExpressionBindingId("items"), ValuePath.root))
+            portableExpression(testInput(ExpressionBindingId(value = "items"), ValuePath.root))
         val expression: Expr<Int, MayBeMissing> = input.size
 
         expression.toNode().shouldBeInstanceOf<ExpressionNode.CollectionSizeWrapper>()
@@ -50,7 +52,7 @@ val ExpressionTypeSafetyTest by testSuite {
                 DefaultExpressionEvaluator(ExpressionValueReader { error("No authored read expected") }).evaluate(
                     ExpressionNode.LinkTargetWrapper(source),
                     ExpressionBindings(emptyMap()),
-                    EvaluationBudget(20, 20),
+                    EvaluationBudget(maxSteps = 20, maxCollectionItems = 20),
                 )
             }
         projected shouldBe
@@ -64,7 +66,7 @@ val ExpressionTypeSafetyTest by testSuite {
             object : BookExpressions {
                 override val library get() = error("unused")
                 override val title: Expr<String, MayBeMissing> =
-                    portableExpression(testInput(ExpressionBindingId("book"), ValuePath.root))
+                    portableExpression(testInput(ExpressionBindingId(value = "book"), ValuePath.root))
                 override val icon get() = error("unused")
                 override val color get() = error("unused")
                 override val tags get() = error("unused")

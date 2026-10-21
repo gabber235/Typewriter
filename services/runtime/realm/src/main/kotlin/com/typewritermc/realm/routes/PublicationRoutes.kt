@@ -6,10 +6,10 @@ import com.typewritermc.protocol.transport.generated.authoringPublicationQuery
 import com.typewritermc.protocol.transport.generated.authoringPublicationWatch
 import com.typewritermc.protocol.transport.generated.authoringPublish
 import com.typewritermc.realm.compiler.PublicationResult
-import com.typewritermc.realm.compiler.PublicationState
 import com.typewritermc.realm.compiler.RealmPublicationCoordinator
 import com.typewritermc.services.libs.communicator.router.CommunicatorRoutesBuilder
 import skirout.editor.v1.compiled_content.CompiledContentChanged
+import skirout.editor.v1.publication.PublicationState
 import skirout.editor.v1.publication.PublicationView
 import skirout.editor.v1.publication.PublicationViewChanged
 import skirout.editor.v1.publication.PublishAuthoringResponse
@@ -31,7 +31,7 @@ internal class PublicationRoutes(
                 }
                 val result =
                     publisher.publish(call.request.candidate) { attempt ->
-                        if (attempt.state == PublicationState.Complete) {
+                        if (attempt.state == PublicationState.COMPLETE) {
                             call.communicator
                                 .publish(
                                     address.authoringCompiledChanged,

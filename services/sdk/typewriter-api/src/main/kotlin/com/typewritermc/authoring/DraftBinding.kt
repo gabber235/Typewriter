@@ -2,13 +2,14 @@
 
 package com.typewritermc.authoring
 
-import com.typewritermc.expression.EvaluationDiagnostic
 import com.typewritermc.types.catalog.CheckedType
 import com.typewritermc.types.nullable
 import com.typewritermc.types.use
+import skirout.editor.v1.expression.EvaluationDiagnostic
 import skirout.editor.v1.type_catalog.CatalogGeneration
 import skirout.editor.v1.type_catalog.ItemId
 import skirout.editor.v1.type_catalog.NamedTypeUse
+import skirout.editor.v1.type_catalog.PartialSchema
 import skirout.editor.v1.type_catalog.TypeDefinitionId
 import skirout.editor.v1.type_catalog.TypeSelection
 import skirout.editor.v1.type_catalog.TypeTemplate
@@ -324,7 +325,7 @@ private fun <V> projectionFailure(
     code: String,
     message: String,
     location: ValueLocation,
-): Availability<V> = Availability.Failed(EvaluationDiagnostic(code, message, listOf(location)))
+): Availability<V> = Availability.Failed(EvaluationDiagnostic(code = code, message = message, locations = listOf(location)))
 
 class GenericField<Owner>(
     val owner: TypeDefinitionId,

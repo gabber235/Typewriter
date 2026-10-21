@@ -8,6 +8,7 @@ import com.typewritermc.types.listValue
 import de.infix.testBalloon.framework.core.testSuite
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.matchers.shouldBe
+import skirout.editor.v1.expression.EvaluationBudget
 
 val ExpressionFactoriesTest by testSuite {
     test("repeated generated declarations preserve the same expression output") {
@@ -55,7 +56,7 @@ val ExpressionFactoriesTest by testSuite {
                 DefaultExpressionEvaluator(ExpressionValueReader { error("Literal program has no authored inputs") }).evaluate(
                     first,
                     ExpressionBindings(emptyMap()),
-                    EvaluationBudget(100, 100),
+                    EvaluationBudget(maxSteps = 100, maxCollectionItems = 100),
                 )
             } as com.typewritermc.authoring.Availability.Available<skirout.editor.v1.type_catalog.DataValue>
         val rows =
@@ -99,7 +100,7 @@ val ExpressionFactoriesTest by testSuite {
                 DefaultExpressionEvaluator(ExpressionValueReader { error("Literal program has no authored inputs") }).evaluate(
                     expression.toNode(),
                     ExpressionBindings(emptyMap()),
-                    EvaluationBudget(100, 100),
+                    EvaluationBudget(maxSteps = 100, maxCollectionItems = 100),
                 )
             }
         result shouldBe

@@ -2,6 +2,7 @@
 
 package fixture
 
+import skirout.editor.v1.type_catalog.ExpressionBindingId
 import skirout.editor.v1.catalog.PreparationTarget
 import skirout.editor.v1.catalog.ValuePreparationRequest
 import com.typewritermc.types.type
@@ -35,7 +36,6 @@ import com.typewritermc.discovery.assemble
 import com.typewritermc.expression.literal
 import com.typewritermc.expression.eq
 import com.typewritermc.expression.orElse
-import com.typewritermc.expression.ExpressionBindingId
 import skirout.editor.v1.type_catalog.ValuePath
 import skirout.editor.v1.expression.ExpressionNode
 import com.typewritermc.imprint.ArtifactId
@@ -265,11 +265,11 @@ fun main(args: Array<String>) {
     check(contractRepresentation.value.fields.map { it.owner.name } == listOf("stored"))
     val valueRepresentation = StoredValueDefinition.declaration.representation as RepresentationTemplate.RecordWrapper
     check(valueRepresentation.value.fields.map { it.owner.name } == listOf("stored"))
-    val source = com.typewritermc.expression.input<Any?>(ExpressionBindingId("fixture"))
+    val source = com.typewritermc.expression.input<Any?>(ExpressionBindingId(value = "fixture"))
     val rowExpressions = ExampleRowExpressionsFactory.create(source)
-    check(rowExpressions.title.toNode() == com.typewritermc.expression.input<Any?>(ExpressionBindingId("fixture"), ValuePath.root.field("title")).toNode())
-    check(rowExpressions.value.toNode() == com.typewritermc.expression.input<Any?>(ExpressionBindingId("fixture"), ValuePath.root.field("value")).toNode())
-    check(rowExpressions.receiverExpression.toNode() == com.typewritermc.expression.input<Any?>(ExpressionBindingId("fixture"), ValuePath.root.field("receiverExpression")).toNode())
+    check(rowExpressions.title.toNode() == com.typewritermc.expression.input<Any?>(ExpressionBindingId(value = "fixture"), ValuePath.root.field("title")).toNode())
+    check(rowExpressions.value.toNode() == com.typewritermc.expression.input<Any?>(ExpressionBindingId(value = "fixture"), ValuePath.root.field("value")).toNode())
+    check(rowExpressions.receiverExpression.toNode() == com.typewritermc.expression.input<Any?>(ExpressionBindingId(value = "fixture"), ValuePath.root.field("receiverExpression")).toNode())
     val runtime = DefaultPresentationRuntime()
     val artifact = Path.of(args.single())
     GeneratedProviderLoader()

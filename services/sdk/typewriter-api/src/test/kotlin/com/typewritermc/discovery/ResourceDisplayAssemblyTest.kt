@@ -15,8 +15,6 @@ import com.typewritermc.checking.PartialSelection
 import com.typewritermc.checking.TypedSelection
 import com.typewritermc.elements.CueDefinition
 import com.typewritermc.expression.DefaultExpressionEvaluator
-import com.typewritermc.expression.EvaluationBudget
-import com.typewritermc.expression.ExpressionBindingId
 import com.typewritermc.expression.ExpressionBindings
 import com.typewritermc.expression.ExpressionValueReader
 import com.typewritermc.expression.input
@@ -54,10 +52,12 @@ import skirout.editor.v1.catalog.EndpointSlot
 import skirout.editor.v1.catalog.RelationContract
 import skirout.editor.v1.catalog.RelationDeletePolicy
 import skirout.editor.v1.diagnostic.DeclarationOrigin
+import skirout.editor.v1.expression.EvaluationBudget
 import skirout.editor.v1.type_catalog.AuthoringRecord
 import skirout.editor.v1.type_catalog.CatalogGeneration
 import skirout.editor.v1.type_catalog.DataValue
 import skirout.editor.v1.type_catalog.EndpointId
+import skirout.editor.v1.type_catalog.ExpressionBindingId
 import skirout.editor.v1.type_catalog.ItemId
 import skirout.editor.v1.type_catalog.RelationFamilyId
 import skirout.editor.v1.type_catalog.RelationId
@@ -116,7 +116,7 @@ val ResourceDisplayAssemblyTest by testSuite {
         val contextual =
             displayProvider(ResourceTarget.type(BookDefinition.id.namedTemplate())) {
                 DisplayFormulas(
-                    label = input<String>(ExpressionBindingId("context:active")).orElse(literal("Book")),
+                    label = input<String>(ExpressionBindingId(value = "context:active")).orElse(literal("Book")),
                     accent = literal(Color(0xFF000000u)),
                     icon = literal(Icon.Iconify("mdi:book")),
                 )
@@ -346,8 +346,8 @@ private fun CatalogAssembly.evaluate(
                 .evaluateChecked(
                     formula,
                     ExpressionBindings(emptyMap()),
-                    EvaluationBudget(1_000, 1_000),
-                    mapOf(ExpressionBindingId("configured_value") to subject),
+                    EvaluationBudget(maxSteps = 1_000, maxCollectionItems = 1_000),
+                    mapOf(ExpressionBindingId(value = "configured_value") to subject),
                 )
         }
     return (result as? Availability.Available)?.value

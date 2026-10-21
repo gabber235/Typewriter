@@ -48,9 +48,9 @@ class CheckedPresentationTemplate internal constructor(
     private val descriptorSelector: (TypeTemplate, List<PresentationDescriptor>) -> PresentationDescriptor?,
     private val expressionChecker: (
         ExpressionNode,
-        Map<com.typewritermc.expression.ExpressionBindingId, TypeTemplate>,
+        Map<skirout.editor.v1.type_catalog.ExpressionBindingId, TypeTemplate>,
         TypeTemplate?,
-        Set<com.typewritermc.expression.ExpressionBindingId>,
+        Set<skirout.editor.v1.type_catalog.ExpressionBindingId>,
         Boolean,
     ) -> List<String>,
     private val payloadResolver: (TypeTemplate) -> TypeTemplate,
@@ -120,9 +120,9 @@ class CheckedPresentationTemplate internal constructor(
     /** The codes of every problem of [body]; a null [expected] accepts a result of any type, such as an order key. */
     internal fun checkExpression(
         body: ExpressionNode,
-        bindings: Map<com.typewritermc.expression.ExpressionBindingId, TypeTemplate>,
+        bindings: Map<skirout.editor.v1.type_catalog.ExpressionBindingId, TypeTemplate>,
         expected: TypeTemplate?,
-        present: Set<com.typewritermc.expression.ExpressionBindingId> = emptySet(),
+        present: Set<skirout.editor.v1.type_catalog.ExpressionBindingId> = emptySet(),
         mayBeMissing: Boolean = false,
     ): List<String> = expressionChecker(body, bindings, expected, present, mayBeMissing)
 }
@@ -582,9 +582,9 @@ interface PresentationContextExpressions {
 
 internal fun checkPresentationExpression(
     body: ExpressionNode,
-    bindings: Map<com.typewritermc.expression.ExpressionBindingId, TypeTemplate>,
+    bindings: Map<skirout.editor.v1.type_catalog.ExpressionBindingId, TypeTemplate>,
     expected: TypeTemplate?,
-    present: Set<com.typewritermc.expression.ExpressionBindingId>,
+    present: Set<skirout.editor.v1.type_catalog.ExpressionBindingId>,
     resolve: (TypeUse) -> Resolution<CheckedType>,
     mayBeMissing: Boolean = false,
 ): List<String> {
@@ -607,10 +607,15 @@ internal fun checkPresentationExpression(
     }
 }
 
-private fun ExpressionNode.referencedBindingIds(): Set<com.typewritermc.expression.ExpressionBindingId> =
+private fun ExpressionNode.referencedBindingIds(): Set<skirout.editor.v1.type_catalog.ExpressionBindingId> =
     buildSet {
         fun visit(node: ExpressionNode) {
-            if (node is ExpressionNode.InputWrapper) add(com.typewritermc.expression.ExpressionBindingId(node.value.binding.value))
+            if (node is ExpressionNode.InputWrapper) {
+                add(
+                    skirout.editor.v1.type_catalog
+                        .ExpressionBindingId(value = node.value.binding.value),
+                )
+            }
             node.children().forEach { visit(it.node) }
         }
         visit(this@referencedBindingIds)

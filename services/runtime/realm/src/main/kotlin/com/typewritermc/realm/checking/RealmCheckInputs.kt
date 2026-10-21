@@ -6,13 +6,11 @@ import com.typewritermc.authoring.Availability
 import com.typewritermc.authoring.DraftBinding
 import com.typewritermc.authoring.DraftExpectation
 import com.typewritermc.authoring.GeneratedSdkApi
-import com.typewritermc.authoring.PartialSchema
 import com.typewritermc.authoring.boundPath
 import com.typewritermc.checking.CheckEvaluation
 import com.typewritermc.checking.CheckInput
 import com.typewritermc.checking.CheckRecipe
 import com.typewritermc.configuration.name
-import com.typewritermc.expression.EvaluationDiagnostic
 import com.typewritermc.services.libs.utils.rethrowExceptional
 import com.typewritermc.types.catalog.CheckedCatalog
 import com.typewritermc.types.catalog.CheckedType
@@ -24,9 +22,11 @@ import com.typewritermc.types.use
 import skirout.editor.v1.checking.CheckOutcome
 import skirout.editor.v1.diagnostic.Diagnostic
 import skirout.editor.v1.diagnostic.DiagnosticSeverity
+import skirout.editor.v1.expression.EvaluationDiagnostic
 import skirout.editor.v1.type_catalog.DataValue
 import skirout.editor.v1.type_catalog.DiagnosticId
 import skirout.editor.v1.type_catalog.FieldPatternSegment
+import skirout.editor.v1.type_catalog.PartialSchema
 import skirout.editor.v1.type_catalog.PathSegment
 import skirout.editor.v1.type_catalog.RelativeFieldPattern
 import skirout.editor.v1.type_catalog.ResolvedRepresentation

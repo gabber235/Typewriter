@@ -26,6 +26,7 @@ import skirout.editor.v1.expression.RuleUnaryOperation
 import skirout.editor.v1.expression.TextUnaryOperation
 import skirout.editor.v1.expression.ValueCompareOperation
 import skirout.editor.v1.type_catalog.DataValue
+import skirout.editor.v1.type_catalog.ExpressionBindingId
 import skirout.editor.v1.type_catalog.PathSegment
 import skirout.editor.v1.type_catalog.ValuePath
 import java.math.BigDecimal

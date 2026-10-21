@@ -3,7 +3,6 @@ package com.typewritermc.authoring
 import com.typewritermc.discovery.GeneratedContract
 import com.typewritermc.dsl.TypewriterDsl
 import com.typewritermc.expression.Expr
-import com.typewritermc.expression.ExpressionBindingId
 import com.typewritermc.expression.Handled
 import com.typewritermc.expression.MayBeMissing
 import com.typewritermc.expression.color
@@ -17,6 +16,7 @@ import com.typewritermc.types.Color
 import com.typewritermc.types.Icon
 import com.typewritermc.types.Resource
 import skirout.editor.v1.catalog.PublishedType
+import skirout.editor.v1.type_catalog.ExpressionBindingId
 
 /**
  * Name, accent and icon of every resource. Every formula defaults to the subject's type display, so an empty object
@@ -81,7 +81,7 @@ fun ResourceDisplayScope.defaultIcon(): Expr<Icon, Handled> = type.display.icon
  */
 @GeneratedSdkApi
 object PresentedResourceAppearance {
-    val binding: ExpressionBindingId = ExpressionBindingId("presentation.subject.appearance")
+    val binding: ExpressionBindingId = ExpressionBindingId(value = "presentation.subject.appearance")
 }
 
 /** The formulas one display declaration produced, before catalog assembly checks and compiles them. */
@@ -99,7 +99,7 @@ class DisplayFormulas(
 @GeneratedSdkApi
 object ResourceDisplaySubject : ResourceDisplayScope {
     /** The binding display formulas read the subject through; any other input binding is a context read. */
-    val binding: ExpressionBindingId = ExpressionBindingId("configured_value")
+    val binding: ExpressionBindingId = ExpressionBindingId(value = "configured_value")
 
     val value: Expr<Any?, MayBeMissing> = inputExpression(binding)
 

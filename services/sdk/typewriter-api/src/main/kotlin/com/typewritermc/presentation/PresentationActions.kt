@@ -3,13 +3,13 @@ package com.typewritermc.presentation
 import com.typewritermc.authoring.TypedPath
 import com.typewritermc.dsl.TypewriterDsl
 import com.typewritermc.expression.Expr
-import com.typewritermc.expression.ExpressionBindingId
 import com.typewritermc.expression.Handled
 import skirout.editor.v1.action.CreateFieldValue
 import skirout.editor.v1.action.EditorAction
 import skirout.editor.v1.binding.BindingRef
 import skirout.editor.v1.expression.ExpressionNode
 import skirout.editor.v1.presentation.PresentationNode
+import skirout.editor.v1.type_catalog.ExpressionBindingId
 import skirout.editor.v1.type_catalog.ItemId
 import skirout.editor.v1.type_catalog.NamedTypeUse
 import skirout.editor.v1.type_catalog.TypeDefinitionId
@@ -51,7 +51,7 @@ data class PresentationParameter<Value>(
 fun <Value> presentationParameter(name: String): PresentationParameter<Value> {
     require(name.isNotBlank()) { "Presentation parameter names must not be blank." }
     require(!name.startsWith("context:")) { "Presentation parameters cannot shadow caller inputs." }
-    return PresentationParameter(ExpressionBindingId(name))
+    return PresentationParameter(ExpressionBindingId(value = name))
 }
 
 interface PresentationActionFactory {
@@ -171,7 +171,7 @@ fun createResource(
             owner?.let {
                 BindingRef(
                     path = it.path,
-                    bindingId = CONFIGURED_VALUE.wire(),
+                    bindingId = CONFIGURED_VALUE,
                 )
             },
         fields = scope.fields.toList(),

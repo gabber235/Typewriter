@@ -4,12 +4,11 @@ import com.typewritermc.engine.requireValid
 import com.typewritermc.protocol.transport.RealmRouteScope
 import com.typewritermc.protocol.transport.generated.authoringCompiledStatusQuery
 import com.typewritermc.realm.authoring.AuthoringViewStore
-import com.typewritermc.realm.compiler.CompilationStatusSelection
 import com.typewritermc.realm.compiler.CompiledRootStatuses
 import com.typewritermc.services.libs.communicator.router.CommunicatorRoutesBuilder
+import skirout.editor.v1.compiled_content.CompilationStatusSelection
 import skirout.editor.v1.compiled_content.CompiledResourceStatus
 import skirout.editor.v1.compiled_content.QueryCompiledResourceStatusResponse
-import skirout.editor.v1.compiled_content.CompilationStatusSelection as SkirCompilationStatusSelection
 
 /** Reports roots present in the Realm selected publication; it does not inspect engine application state. */
 internal class EditorCompiledResourceStatusRoutes(
@@ -20,20 +19,12 @@ internal class EditorCompiledResourceStatusRoutes(
     fun register(builder: CommunicatorRoutesBuilder) =
         with(builder) {
             unary(address.authoringCompiledStatusQuery) { call ->
-                val selection =
-                    when (val requested = call.request.selection) {
-                        SkirCompilationStatusSelection.ALL_ROOTS -> {
-                            CompilationStatusSelection.All
-                        }
-
-                        is SkirCompilationStatusSelection.SuppliedRootsWrapper -> {
-                            CompilationStatusSelection.Supplied(requested.value.mapTo(linkedSetOf()) { root -> root.requireValid() })
-                        }
-
-                        is SkirCompilationStatusSelection.Unknown -> {
-                            error("Unknown compilation status selection.")
-                        }
-                    }
+                val selection = call.request.selection
+                when (selection) {
+                    CompilationStatusSelection.ALL_ROOTS -> Unit
+                    is CompilationStatusSelection.SuppliedRootsWrapper -> selection.value.forEach { root -> root.requireValid() }
+                    else -> error("Unknown compilation status selection.")
+                }
                 views.capture().use { capture ->
                     QueryCompiledResourceStatusResponse.createSuccess(
                         statuses =

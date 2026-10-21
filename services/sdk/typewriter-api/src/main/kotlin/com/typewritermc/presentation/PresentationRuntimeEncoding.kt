@@ -1,16 +1,15 @@
 package com.typewritermc.presentation
 
 import com.typewritermc.expression.Expr
-import com.typewritermc.expression.ExpressionBindingId
 import com.typewritermc.types.field
 import com.typewritermc.types.integer
 import com.typewritermc.types.requirePortable
 import skirout.editor.v1.binding.BindingRef
 import skirout.editor.v1.expression.ExpressionNode
 import skirout.editor.v1.type_catalog.DataValue
+import skirout.editor.v1.type_catalog.ExpressionBindingId
 import skirout.editor.v1.type_catalog.FieldPathSegment
 import java.math.BigInteger
-import skirout.editor.v1.type_catalog.ExpressionBindingId as WireExpressionBindingId
 import skirout.editor.v1.type_catalog.PathSegment as WirePathSegment
 import skirout.editor.v1.type_catalog.ValuePath as WireValuePath
 
@@ -26,8 +25,6 @@ internal fun BindingRef.field(name: String): BindingRef =
             ),
         bindingId = bindingId,
     )
-
-internal fun ExpressionBindingId.wire(): WireExpressionBindingId = WireExpressionBindingId(value = value)
 
 internal fun expression(value: Any?): skirout.editor.v1.expression.ExpressionNode =
     when (value) {
@@ -156,4 +153,4 @@ internal fun PresentationInsets.wire(): skirout.editor.v1.presentation.Presentat
         bottom = bottom,
     )
 
-internal val CONFIGURED_VALUE = ExpressionBindingId("configured_value")
+internal val CONFIGURED_VALUE = ExpressionBindingId(value = "configured_value")

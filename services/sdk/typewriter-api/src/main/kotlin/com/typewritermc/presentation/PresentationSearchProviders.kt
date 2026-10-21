@@ -50,7 +50,7 @@ private fun SearchProviderDescription<*>.wire(
                 contextBindings =
                     contexts.map { context ->
                         skirout.editor.v1.presentation.HttpJsonContextBinding(
-                            bindingId = context.binding.wire(),
+                            bindingId = context.binding,
                             path = context.path,
                             valueType = context.type,
                         )

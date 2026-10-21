@@ -4,7 +4,6 @@ package com.typewritermc.presentation
 
 import com.typewritermc.authoring.GeneratedSdkApi
 import com.typewritermc.authoring.name
-import com.typewritermc.expression.ExpressionBindingId
 import com.typewritermc.expression.ExpressionFactories
 import com.typewritermc.types.namedUse
 import com.typewritermc.types.requireValid
@@ -28,6 +27,7 @@ import skirout.editor.v1.presentation.PresentationDependencies
 import skirout.editor.v1.presentation.PresentationElement
 import skirout.editor.v1.presentation.PresentationNode
 import skirout.editor.v1.presentation.StackChild
+import skirout.editor.v1.type_catalog.ExpressionBindingId
 import skirout.editor.v1.type_catalog.NamedTypeTemplate
 import skirout.editor.v1.type_catalog.PathSegment
 import skirout.editor.v1.type_catalog.TypeTemplate
@@ -63,7 +63,7 @@ internal class PresentationBuildState(
     private val expressionTypes =
         linkedMapOf(
             CONFIGURED_VALUE to type.type,
-            ExpressionBindingId("presentation.subject.identifier") to
+            ExpressionBindingId(value = "presentation.subject.identifier") to
                 com.typewritermc.types.ResourceIdDefinition.id
                     .template(),
         )
@@ -118,10 +118,10 @@ internal class PresentationBuildState(
             id: String,
             use: TypeUse,
         ) {
-            val key = ExpressionBindingId(id)
+            val key = ExpressionBindingId(value = id)
             contextInputs[key] =
                 skirout.editor.v1.presentation.PresentationContextInput(
-                    bindingId = key.wire(),
+                    bindingId = key,
                     source = skirout.editor.v1.presentation.PresentationContextSource.CALLER,
                     valueType = use,
                 )
@@ -165,7 +165,7 @@ internal class PresentationBuildState(
     private fun checkCreate(action: skirout.editor.v1.action.CreateResourceAction) {
         val created = action.type.requireValid()
         action.owner?.let { owner ->
-            require(owner.bindingId == CONFIGURED_VALUE.wire()) { "A create action owner must be a field of the presentation subject." }
+            require(owner.bindingId == CONFIGURED_VALUE) { "A create action owner must be a field of the presentation subject." }
             val field = type.at(owner.path.requireValid())
             val link =
                 requireNotNull(field?.let { it.link() ?: it.itemsOrNull()?.link() }) {
@@ -268,7 +268,7 @@ internal class PresentationBuildState(
             }
         val declaration =
             skirout.editor.v1.presentation.PresentationContextInput(
-                bindingId = key.binding.wire(),
+                bindingId = key.binding,
                 source = key.source,
                 valueType = use,
             )
@@ -281,7 +281,7 @@ internal class PresentationBuildState(
         return com.typewritermc.expression.inputExpression(key.binding)
     }
 
-    fun bindingId(purpose: String): ExpressionBindingId = ExpressionBindingId("presentation.$purpose.${nextBinding++}")
+    fun bindingId(purpose: String): ExpressionBindingId = ExpressionBindingId(value = "presentation.$purpose.${nextBinding++}")
 
     fun <T> withTarget(
         target: MutableList<PresentationNode>,
@@ -300,9 +300,9 @@ internal class PresentationBuildState(
         target: MutableList<PresentationNode> = nodes,
         axis: PresentationAxisNodeList? = null,
         checked: CheckedPresentationTemplate = type,
-        base: BindingRef = BindingRef(path = WireValuePath(segments = emptyList()), bindingId = CONFIGURED_VALUE.wire()),
+        base: BindingRef = BindingRef(path = WireValuePath(segments = emptyList()), bindingId = CONFIGURED_VALUE),
     ): RuntimePresentationBuildScope {
-        if (base.path.segments.isEmpty()) expressionTypes[ExpressionBindingId(base.bindingId.value)] = checked.type
+        if (base.path.segments.isEmpty()) expressionTypes[ExpressionBindingId(value = base.bindingId.value)] = checked.type
         return RuntimePresentationBuildScope(this, RuntimeLayout(this, target, axis, checked, base), target, checked, base)
     }
 

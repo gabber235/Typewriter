@@ -15,6 +15,7 @@ import io.kotest.matchers.shouldBe
 import skirout.editor.v1.expression.ExpressionNode
 import skirout.editor.v1.type_catalog.CatalogGeneration
 import skirout.editor.v1.type_catalog.DataValue
+import skirout.editor.v1.type_catalog.ExpressionBindingId
 import skirout.editor.v1.type_catalog.FloatWidth
 import skirout.editor.v1.type_catalog.IntegerWidth
 import skirout.editor.v1.type_catalog.ParameterKey
@@ -25,8 +26,8 @@ import skirout.editor.v1.type_catalog.ValuePath
 val PortableExpressionCheckingTest by testSuite {
     val catalog = DefaultCheckedCatalog(CatalogGeneration(value = "expression mappings"), emptyList())
     val checker = PortableExpressionChecker(catalog::resolve)
-    val candidate = ExpressionBindingId("candidate")
-    val parent = ExpressionBindingId("parent")
+    val candidate = ExpressionBindingId(value = "candidate")
+    val parent = ExpressionBindingId(value = "parent")
     val text = ScalarKind.TEXT.use
     val decimal = ScalarKind.DECIMAL.use
     val floating = floatScalar(FloatWidth.THIRTY_TWO).use

@@ -1,13 +1,13 @@
 package com.typewritermc.presentation
 
 import com.typewritermc.expression.Expr
-import com.typewritermc.expression.ExpressionBindingId
 import com.typewritermc.expression.Handled
 import com.typewritermc.expression.inputExpression
 import com.typewritermc.types.requireValid
 import skirout.editor.v1.expression.ExpressionNode
 import skirout.editor.v1.presentation.ControlDensity
 import skirout.editor.v1.presentation.PresentationNode
+import skirout.editor.v1.type_catalog.ExpressionBindingId
 import skirout.editor.v1.type_catalog.PathSegment
 import skirout.editor.v1.type_catalog.ValuePath
 import skirout.editor.v1.presentation.CollectionAppearance as WireCollectionAppearance

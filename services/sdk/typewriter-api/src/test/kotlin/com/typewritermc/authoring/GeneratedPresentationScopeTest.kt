@@ -3,7 +3,6 @@
 package com.typewritermc.authoring
 
 import com.typewritermc.expression.Expr
-import com.typewritermc.expression.ExpressionBindingId
 import com.typewritermc.expression.ExpressionFactory
 import com.typewritermc.expression.MayBeMissing
 import com.typewritermc.expression.MissingPolicy
@@ -24,18 +23,19 @@ import skirout.editor.v1.presentation.AxisChild
 import skirout.editor.v1.presentation.ChildrenElement
 import skirout.editor.v1.presentation.PresentationElement
 import skirout.editor.v1.type_catalog.CatalogGeneration
+import skirout.editor.v1.type_catalog.ExpressionBindingId
 import skirout.editor.v1.type_catalog.ValuePath
 
 val GeneratedPresentationScopeTest by testSuite {
     test("generated record value field remains distinct from the configured value") {
         val configured =
-            com.typewritermc.expression.input<Any?>(ExpressionBindingId("configured_value"))
+            com.typewritermc.expression.input<Any?>(ExpressionBindingId(value = "configured_value"))
         val expressions = ValueFieldExpressionsFactory.create(configured)
 
         expressions.value.toNode() shouldBe
             com.typewritermc.expression
                 .input<Any?>(
-                    ExpressionBindingId("configured_value"),
+                    ExpressionBindingId(value = "configured_value"),
                     ValuePath.root.field("value"),
                 ).toNode()
     }

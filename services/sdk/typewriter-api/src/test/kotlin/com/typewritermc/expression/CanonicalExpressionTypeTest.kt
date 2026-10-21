@@ -14,6 +14,7 @@ import io.kotest.matchers.shouldBe
 import skirout.editor.v1.expression.ExpressionNode
 import skirout.editor.v1.expression.NumberArithmeticOperation
 import skirout.editor.v1.type_catalog.CatalogGeneration
+import skirout.editor.v1.type_catalog.ExpressionBindingId
 import skirout.editor.v1.type_catalog.IntegerWidth
 import skirout.editor.v1.type_catalog.PathSegment
 import skirout.editor.v1.type_catalog.RepresentationTemplate
@@ -28,7 +29,7 @@ val CanonicalExpressionTypeTest by testSuite {
     val text = ScalarKind.TEXT.use
     val wide = integerScalar(IntegerWidth.SIGNED_SIXTY_FOUR).use
     val narrow = integerScalar(IntegerWidth.SIGNED_EIGHT).use
-    val rows = ExpressionBindingId("rows")
+    val rows = ExpressionBindingId(value = "rows")
 
     test("grouped literal keys retain their numeric evidence inside structural map children") {
         val expression = input<List<String>>(rows).groupBy { literal(1) }.toNode()

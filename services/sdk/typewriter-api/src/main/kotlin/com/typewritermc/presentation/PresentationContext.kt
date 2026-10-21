@@ -1,7 +1,6 @@
 package com.typewritermc.presentation
 
 import com.typewritermc.expression.Expr
-import com.typewritermc.expression.ExpressionBindingId
 import com.typewritermc.expression.MayBeMissing
 import com.typewritermc.types.ResourceId
 import com.typewritermc.types.ResourceIdDefinition
@@ -9,6 +8,7 @@ import com.typewritermc.types.integerScalar
 import com.typewritermc.types.use
 import skirout.editor.v1.presentation.HostContextInput
 import skirout.editor.v1.presentation.PresentationContextSource
+import skirout.editor.v1.type_catalog.ExpressionBindingId
 import skirout.editor.v1.type_catalog.IntegerWidth
 import skirout.editor.v1.type_catalog.TypeUse
 import kotlin.reflect.KClass
@@ -44,7 +44,7 @@ sealed interface PresentationContextValueType<Value : Any> {
 inline fun <reified Value : Any> presentationContextKey(id: String): PresentationContextKey<Value> {
     require(id.isNotBlank()) { "Caller input identity must not be blank." }
     return PresentationContextKey(
-        ExpressionBindingId("context:$id"),
+        ExpressionBindingId(value = "context:$id"),
         PresentationContextSource.CALLER,
         PresentationContextValueType.Registered(Value::class),
     )
@@ -70,7 +70,7 @@ private fun <Value : Any> hostContext(
     type: TypeUse,
 ): PresentationContextKey<Value> =
     PresentationContextKey(
-        ExpressionBindingId("context:host.${input.kind.name.removeSuffix("_CONST").lowercase()}"),
+        ExpressionBindingId(value = "context:host.${input.kind.name.removeSuffix("_CONST").lowercase()}"),
         PresentationContextSource.HostWrapper(input),
         PresentationContextValueType.Fixed(type),
     )

@@ -36,7 +36,8 @@ internal class RuntimeLayout(
             state.type(com.typewritermc.types.ResourceIdDefinition.use.use)
             return PresentationSubjectExpressions(
                 com.typewritermc.expression.inputExpression(
-                    com.typewritermc.expression.ExpressionBindingId("presentation.subject.identifier"),
+                    skirout.editor.v1.type_catalog
+                        .ExpressionBindingId(value = "presentation.subject.identifier"),
                     ValuePath.root,
                 ),
             )
@@ -143,13 +144,13 @@ internal class RuntimeLayout(
     }
 
     private fun configuredScope(node: PresentationNode): PresentationNode =
-        if (base.bindingId == CONFIGURED_VALUE.wire() && base.path.segments.isEmpty()) {
+        if (base.bindingId == CONFIGURED_VALUE && base.path.segments.isEmpty()) {
             node
         } else {
             state.node(
                 PresentationElement.createScopedBinding(
                     binding = base,
-                    scopeBindingId = CONFIGURED_VALUE.wire(),
+                    scopeBindingId = CONFIGURED_VALUE,
                     child = node,
                 ),
             )

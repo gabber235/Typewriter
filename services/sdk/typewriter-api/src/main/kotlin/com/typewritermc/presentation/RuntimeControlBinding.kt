@@ -6,7 +6,6 @@ import com.typewritermc.authoring.GeneratedSdkApi
 import com.typewritermc.discovery.GraphDirection
 import com.typewritermc.discovery.checkedGeneratedScope
 import com.typewritermc.expression.Expr
-import com.typewritermc.expression.ExpressionBindingId
 import com.typewritermc.expression.Handled
 import com.typewritermc.types.template
 import com.typewritermc.types.toTemplate
@@ -20,10 +19,10 @@ import skirout.editor.v1.presentation.PresentationElement
 import skirout.editor.v1.presentation.PresentationNode
 import skirout.editor.v1.presentation.ResourcesLayout
 import skirout.editor.v1.type_catalog.CollectionKind
+import skirout.editor.v1.type_catalog.ExpressionBindingId
 import skirout.editor.v1.type_catalog.TypeTemplate
 import skirout.editor.v1.presentation.GraphDirection as WireGraphDirection
 import skirout.editor.v1.presentation.PresentationProperties as WirePresentationProperties
-import skirout.editor.v1.type_catalog.ExpressionBindingId as WireExpressionBindingId
 import skirout.editor.v1.type_catalog.ValuePath as WireValuePath
 
 /**
@@ -167,8 +166,8 @@ internal class RuntimeControlBinding(
                 allowAdd = add,
                 allowRemove = remove,
                 allowReorder = reorder,
-                itemBindingId = WireExpressionBindingId(value = "list_item"),
-                indexBindingId = WireExpressionBindingId(value = "list_index"),
+                itemBindingId = ExpressionBindingId(value = "list_item"),
+                indexBindingId = ExpressionBindingId(value = "list_index"),
                 appearance = appearance,
                 content = content,
             )
@@ -190,7 +189,7 @@ internal class RuntimeControlBinding(
                 itemPresentation = body,
                 allowAdd = add,
                 allowRemove = remove,
-                itemBindingId = WireExpressionBindingId(value = "set_item"),
+                itemBindingId = ExpressionBindingId(value = "set_item"),
                 appearance = appearance,
                 content = content,
             )
@@ -214,8 +213,8 @@ internal class RuntimeControlBinding(
                 valuePresentation = values,
                 allowAdd = add,
                 allowRemove = remove,
-                keyBindingId = WireExpressionBindingId(value = "map_key"),
-                valueBindingId = WireExpressionBindingId(value = "map_value"),
+                keyBindingId = ExpressionBindingId(value = "map_key"),
+                valueBindingId = ExpressionBindingId(value = "map_value"),
                 appearance = appearance,
                 content = content,
             )
@@ -318,7 +317,7 @@ internal class RuntimeControlBinding(
             ResourcesLayout.createTree(
                 path = path.path,
                 group = scope.group,
-                groupBindingId = groupBinding.wire(),
+                groupBindingId = groupBinding,
                 connectors = null,
                 initiallyExpanded = scope.initiallyExpanded,
             ),
@@ -338,7 +337,7 @@ internal class RuntimeControlBinding(
                 control = it,
                 layout = layout,
                 order = resourceOrder,
-                itemBindingId = RESOURCES_ITEM.wire(),
+                itemBindingId = RESOURCES_ITEM,
             )
         }
     }
@@ -492,7 +491,7 @@ internal class RuntimeControlBinding(
 }
 
 /** Binds each member's link while a resources layout evaluates its order. */
-private val RESOURCES_ITEM = ExpressionBindingId("resources_item")
+private val RESOURCES_ITEM = ExpressionBindingId(value = "resources_item")
 
 private fun BindingRef.nested(
     slot: NestedPresentationSlot,
@@ -513,14 +512,14 @@ private fun BindingRef.nested(
                 }
             BindingRef(
                 path = WireValuePath(segments = emptyList()),
-                bindingId = ExpressionBindingId(bindingId).wire(),
+                bindingId = ExpressionBindingId(value = bindingId),
             )
         }
 
         NestedPresentationSlot.Keys -> {
             BindingRef(
                 path = WireValuePath(segments = emptyList()),
-                bindingId = ExpressionBindingId("map_key").wire(),
+                bindingId = ExpressionBindingId(value = "map_key"),
             )
         }
 
@@ -530,7 +529,7 @@ private fun BindingRef.nested(
             } else {
                 BindingRef(
                     path = WireValuePath(segments = emptyList()),
-                    bindingId = ExpressionBindingId("map_value").wire(),
+                    bindingId = ExpressionBindingId(value = "map_value"),
                 )
             }
         }

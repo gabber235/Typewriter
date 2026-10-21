@@ -1,11 +1,11 @@
 package com.typewritermc.configuration
 
 import com.typewritermc.checking.CheckRecipe
-import com.typewritermc.expression.EvaluationDiagnostic
 import com.typewritermc.expression.ExpressionFactory
 import skirout.editor.v1.catalog.ConfigurationRecipe
 import skirout.editor.v1.catalog.RepresentationKind
 import skirout.editor.v1.diagnostic.Diagnostic
+import skirout.editor.v1.expression.EvaluationDiagnostic
 import skirout.editor.v1.type_catalog.FieldPatternSegment
 import skirout.editor.v1.type_catalog.RelativeFieldPattern
 import skirout.editor.v1.type_catalog.TypeTemplate

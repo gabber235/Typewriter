@@ -45,6 +45,8 @@ import skirout.editor.v1.publication.EngineImplementationInputs
 import skirout.editor.v1.publication.PublicationBaseline
 import skirout.editor.v1.publication.PublicationCandidateId
 import skirout.editor.v1.publication.PublicationChange
+import skirout.editor.v1.publication.PublicationReport
+import skirout.editor.v1.publication.PublicationState
 import skirout.editor.v1.publication.PublicationStatus
 import skirout.editor.v1.type_catalog.AuthoringRecord
 import skirout.editor.v1.type_catalog.CatalogGeneration

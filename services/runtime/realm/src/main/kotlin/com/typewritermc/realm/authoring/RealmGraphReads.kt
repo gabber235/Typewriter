@@ -28,7 +28,6 @@ import com.typewritermc.checking.InspectionCompletion
 import com.typewritermc.checking.PartialSelection
 import com.typewritermc.checking.ResourceTypeMatch
 import com.typewritermc.checking.UndecidedCandidate
-import com.typewritermc.expression.EvaluationDiagnostic
 import com.typewritermc.realm.checking.CapturedAuthoringReads
 import com.typewritermc.realm.repository.LinkSchemaCapabilities
 import com.typewritermc.realm.repository.ResourceValueMapper
@@ -45,6 +44,7 @@ import skirout.editor.v1.authoring_facts.LinkProjection
 import skirout.editor.v1.authoring_facts.TraversalDirection
 import skirout.editor.v1.catalog.RelationContract
 import skirout.editor.v1.diagnostic.ValueProblem
+import skirout.editor.v1.expression.EvaluationDiagnostic
 import skirout.editor.v1.type_catalog.AuthoringRecord
 import skirout.editor.v1.type_catalog.DataValue
 import skirout.editor.v1.type_catalog.RelationFamilyId
@@ -217,7 +217,11 @@ private class CapturedGraph(
         index.projectionProblems[resource].orEmpty().forEach { problem ->
             if (reportedProblems.add(problem)) {
                 reads.recordFailure(
-                    EvaluationDiagnostic(problem.code, "Declared graph projection is inconsistent.", listOf(problem.location)),
+                    EvaluationDiagnostic(
+                        code = problem.code,
+                        message = "Declared graph projection is inconsistent.",
+                        locations = listOf(problem.location),
+                    ),
                 )
             }
         }

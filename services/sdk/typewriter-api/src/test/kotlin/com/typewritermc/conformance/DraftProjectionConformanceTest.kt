@@ -11,7 +11,6 @@ import com.typewritermc.authoring.DraftExpectation
 import com.typewritermc.authoring.DraftView
 import com.typewritermc.authoring.GeneratedSdkApi
 import com.typewritermc.authoring.MapDraft
-import com.typewritermc.authoring.PartialSchema
 import com.typewritermc.authoring.ReadContext
 import com.typewritermc.authoring.draftViewProjection
 import com.typewritermc.authoring.field
@@ -26,7 +25,6 @@ import com.typewritermc.authoring.root
 import com.typewritermc.authoring.use
 import com.typewritermc.checking.PartialSelection
 import com.typewritermc.checking.TypedSelection
-import com.typewritermc.expression.EvaluationDiagnostic
 import com.typewritermc.library.TagDefinition
 import com.typewritermc.library.TagDraftType
 import com.typewritermc.types.ResourceId
@@ -49,12 +47,14 @@ import com.typewritermc.types.unwrapNamed
 import com.typewritermc.types.use
 import de.infix.testBalloon.framework.core.testSuite
 import io.kotest.matchers.shouldBe
+import skirout.editor.v1.expression.EvaluationDiagnostic
 import skirout.editor.v1.type_catalog.CatalogGeneration
 import skirout.editor.v1.type_catalog.DataValue
 import skirout.editor.v1.type_catalog.IntegerWidth
 import skirout.editor.v1.type_catalog.ItemId
 import skirout.editor.v1.type_catalog.ListItem
 import skirout.editor.v1.type_catalog.MapRow
+import skirout.editor.v1.type_catalog.PartialSchema
 import skirout.editor.v1.type_catalog.ScalarKind
 import skirout.editor.v1.type_catalog.TypeDefinitionId
 import skirout.editor.v1.type_catalog.TypeSelection
@@ -95,7 +95,9 @@ val DraftProjectionConformanceTest by testSuite {
                 generation,
                 original.readContext,
                 root,
-                DraftExpectation.PartialRoot(PartialSchema(emptyList(), emptyList(), emptyList())),
+                DraftExpectation.PartialRoot(
+                    PartialSchema(knownFields = emptyList(), dependentFields = emptyList(), pendingArguments = emptyList()),
+                ),
                 TypeSelection.CompleteWrapper(TagDefinition.use),
             )
         val tag = TagDraftType.bind(binding)
@@ -257,7 +259,9 @@ private class FixtureDraftReads(
                 catalog,
                 readContext,
                 path.location,
-                DraftExpectation.PartialRoot(PartialSchema(emptyList(), emptyList(), emptyList())),
+                DraftExpectation.PartialRoot(
+                    PartialSchema(knownFields = emptyList(), dependentFields = emptyList(), pendingArguments = emptyList()),
+                ),
                 TypeSelection.CompleteWrapper(named.actualType),
             ),
         )
@@ -277,7 +281,7 @@ private class FixtureDraftReads(
 private fun <T> failed(
     code: String,
     location: ValueLocation,
-): Availability<T> = Availability.Failed(EvaluationDiagnostic(code, code, listOf(location)))
+): Availability<T> = Availability.Failed(EvaluationDiagnostic(code = code, message = code, locations = listOf(location)))
 
 private val INT_USE = integerScalar(IntegerWidth.SIGNED_THIRTY_TWO).use
 private val TEXT_USE = ScalarKind.TEXT.use

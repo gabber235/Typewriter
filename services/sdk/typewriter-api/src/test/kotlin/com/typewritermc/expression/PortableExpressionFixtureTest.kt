@@ -37,9 +37,11 @@ import kotlinx.serialization.json.boolean
 import kotlinx.serialization.json.jsonArray
 import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
+import skirout.editor.v1.expression.EvaluationBudget
 import skirout.editor.v1.expression.ExpressionNode
 import skirout.editor.v1.type_catalog.CatalogGeneration
 import skirout.editor.v1.type_catalog.DataValue
+import skirout.editor.v1.type_catalog.ExpressionBindingId
 import skirout.editor.v1.type_catalog.ItemId
 import skirout.editor.v1.type_catalog.ListItem
 import skirout.editor.v1.type_catalog.MapRow
@@ -63,7 +65,7 @@ val PortableExpressionFixtureTest by testSuite {
                     Availability.Available(DataValue.StringValueWrapper("stored"))
                 },
             )
-        val candidate = ExpressionBindingId("candidate")
+        val candidate = ExpressionBindingId(value = "candidate")
         val expression =
             ExpressionNode.createTextUnary(
                 operation = skirout.editor.v1.expression.TextUnaryOperation.TRIM,
@@ -74,14 +76,14 @@ val PortableExpressionFixtureTest by testSuite {
                 expression,
                 ExpressionBindings(emptyMap()),
                 mapOf(candidate to DataValue.StringValueWrapper("  local  ")),
-                EvaluationBudget(20, 20),
+                EvaluationBudget(maxSteps = 20, maxCollectionItems = 20),
             )
         } shouldBe Availability.Available(DataValue.StringValueWrapper("local"))
         reads shouldBe 0
     }
     test("handled candidates retain runtime operation failures") {
         val evaluator = DefaultExpressionEvaluator(ExpressionValueReader { error("Local candidates must not read authored storage") })
-        val candidate = ExpressionBindingId("candidate")
+        val candidate = ExpressionBindingId(value = "candidate")
         val expression =
             ExpressionNode.createNumberArithmetic(
                 operation = skirout.editor.v1.expression.NumberArithmeticOperation.DIVIDE,
@@ -95,7 +97,7 @@ val PortableExpressionFixtureTest by testSuite {
                     expression,
                     ExpressionBindings(emptyMap()),
                     mapOf(candidate to DataValue.integer(java.math.BigInteger.ONE)),
-                    EvaluationBudget(20, 20),
+                    EvaluationBudget(maxSteps = 20, maxCollectionItems = 20),
                 )
             }
         (result is Availability.Failed) shouldBe true
@@ -140,7 +142,7 @@ val PortableExpressionFixtureTest by testSuite {
                             )
                         ) + case["partialBindings"]?.jsonObject.orEmpty().keys
                     ).associate { name ->
-                        ExpressionBindingId(name) to ValueLocation.of(ResourceId(name))
+                        ExpressionBindingId(value = name) to ValueLocation.of(ResourceId(name))
                     },
                 )
             val expression = case["expression"]!!.expression()
@@ -159,7 +161,7 @@ val PortableExpressionFixtureTest by testSuite {
                         ?.jsonObject
                         .orEmpty()
                         .map { (name, encoded) ->
-                            ExpressionBindingId(name) to
+                            ExpressionBindingId(value = name) to
                                 skirout.editor.v1.expression.ExpressionType.serializer
                                     .fromJsonCode(encoded.toString())
                         }.toMap()
@@ -171,7 +173,7 @@ val PortableExpressionFixtureTest by testSuite {
                         ?.jsonObject
                         .orEmpty()
                         .map { (name, encoded) ->
-                            ExpressionBindingId(name) to
+                            ExpressionBindingId(value = name) to
                                 TypeSelection.serializer
                                     .fromJsonCode(encoded.toString())
                                     .requireValid()
@@ -192,7 +194,8 @@ val PortableExpressionFixtureTest by testSuite {
             }
             val roundTrip = ExpressionNode.serializer.fromBytes(ExpressionNode.serializer.toBytes(expression))
             ExpressionNode.serializer.toJsonCode(roundTrip) shouldBe ExpressionNode.serializer.toJsonCode(expression)
-            val result = with(FixtureReads) { evaluator.evaluate(expression, bindings, EvaluationBudget(100, 100)) }
+            val result =
+                with(FixtureReads) { evaluator.evaluate(expression, bindings, EvaluationBudget(maxSteps = 100, maxCollectionItems = 100)) }
             val expected = case["expectedByHost"]?.jsonObject?.get("kotlin")?.jsonObject ?: case["expected"]!!.jsonObject
             observed shouldBe expected["evaluatedReads"]!!.jsonArray.map { it.jsonPrimitive.content }
             when {

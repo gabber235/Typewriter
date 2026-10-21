@@ -37,6 +37,8 @@ import kotlinx.coroutines.CancellationException
 import skirout.editor.v1.expression.BoundDirection
 import skirout.editor.v1.expression.ConditionalExpression
 import skirout.editor.v1.expression.EntryBranch
+import skirout.editor.v1.expression.EvaluationBudget
+import skirout.editor.v1.expression.EvaluationDiagnostic
 import skirout.editor.v1.expression.ExpressionNode
 import skirout.editor.v1.expression.ExpressionQuery
 import skirout.editor.v1.expression.NumberArithmeticOperation
@@ -51,6 +53,7 @@ import skirout.editor.v1.expression.TextUnaryOperation
 import skirout.editor.v1.expression.TimestampBoundDirection
 import skirout.editor.v1.expression.ValueCompareOperation
 import skirout.editor.v1.type_catalog.DataValue
+import skirout.editor.v1.type_catalog.ExpressionBindingId
 import skirout.editor.v1.type_catalog.ListItem
 import skirout.editor.v1.type_catalog.MapRow
 import skirout.editor.v1.type_catalog.PathSegment
@@ -298,20 +301,21 @@ private class EvaluatorState(
         } catch (failure: OperationFailure) {
             Availability.Failed(
                 EvaluationDiagnostic(
-                    failure.code,
-                    failure.message.orEmpty(),
-                    (
-                        observedLocations +
-                            frames.flatten().mapNotNull { it.location }
-                    ).distinct(),
+                    code = failure.code,
+                    message = failure.message.orEmpty(),
+                    locations =
+                        (
+                            observedLocations +
+                                frames.flatten().mapNotNull { it.location }
+                        ).distinct(),
                 ),
             )
         } catch (failure: Exception) {
             Availability.Failed(
                 EvaluationDiagnostic(
-                    "expression_evaluation_failed",
-                    failure.message ?: failure::class.simpleName.orEmpty(),
-                    (observedLocations + frames.flatten().mapNotNull { it.location }).distinct(),
+                    code = "expression_evaluation_failed",
+                    message = failure.message ?: failure::class.simpleName.orEmpty(),
+                    locations = (observedLocations + frames.flatten().mapNotNull { it.location }).distinct(),
                 ),
             )
         } finally {
@@ -395,7 +399,7 @@ private class EvaluatorState(
         repeat(projection.descents) { step() }
         return when (val root = projection.root) {
             is ExpressionNode.InputWrapper -> {
-                val binding = ExpressionBindingId(root.value.binding.value)
+                val binding = ExpressionBindingId(value = root.value.binding.value)
                 val path =
                     root.value.path
                         .requireValid()
@@ -1242,7 +1246,7 @@ private class EvaluatorState(
             is ExpressionNode.InputWrapper -> {
                 bindings.locations[
                     ExpressionBindingId(
-                        root.value.binding.value,
+                        value = root.value.binding.value,
                     ),
                 ]?.append(root.value.path.requireValid())?.append(projection.path)
             }

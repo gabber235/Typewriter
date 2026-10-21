@@ -17,6 +17,7 @@ import skirout.editor.v1.compiled_content.PublishedOutput
 import skirout.editor.v1.diagnostic.Diagnostic
 import skirout.editor.v1.diagnostic.DiagnosticSeverity
 import skirout.editor.v1.publication.EngineImplementationInputs
+import skirout.editor.v1.publication.PublicationState
 import skirout.editor.v1.type_catalog.CatalogGeneration
 import skirout.editor.v1.type_catalog.DiagnosticId
 import skirout.editor.v1.type_catalog.InputToken
@@ -31,17 +32,17 @@ val RegisteredCompiledContentRepositoryTest by testSuite {
             val results = SurrealRegisteredCompiledContentRepository(database)
             val first = testPublishedContent("first", "a")
             attempts.start(first.publication, first.catalog, testEngineInputs())
-            attempts.phase(first.publication, PublicationState.Activating)
+            attempts.phase(first.publication, PublicationState.ACTIVATING)
             attempts.install(first)
             results.selected() shouldBe first
             val second = testPublishedContent("second", "b")
             attempts.start(second.publication, second.catalog, testEngineInputs())
-            attempts.phase(second.publication, PublicationState.Activating)
+            attempts.phase(second.publication, PublicationState.ACTIVATING)
             attempts.install(second)
             results.selected() shouldBe second
             val empty = second.copy(publication = PublicationId(value = "empty"), outputs = emptyList())
             attempts.start(empty.publication, empty.catalog, testEngineInputs())
-            attempts.phase(empty.publication, PublicationState.Activating)
+            attempts.phase(empty.publication, PublicationState.ACTIVATING)
             attempts.install(empty)
             results.selected() shouldBe empty
             database
@@ -57,7 +58,7 @@ val RegisteredCompiledContentRepositoryTest by testSuite {
             val results = SurrealRegisteredCompiledContentRepository(database)
             val first = testPublishedContent("first", "a")
             attempts.start(first.publication, first.catalog, testEngineInputs())
-            attempts.phase(first.publication, PublicationState.Activating)
+            attempts.phase(first.publication, PublicationState.ACTIVATING)
             attempts.install(first)
             val next = testPublishedContent("next", "b")
             attempts.start(next.publication, next.catalog, testEngineInputs())
@@ -72,11 +73,11 @@ val RegisteredCompiledContentRepositoryTest by testSuite {
             val results = SurrealRegisteredCompiledContentRepository(database)
             val selected = testPublishedContent("selected", "first")
             original.start(selected.publication, selected.catalog, testEngineInputs())
-            original.phase(selected.publication, PublicationState.Activating)
+            original.phase(selected.publication, PublicationState.ACTIVATING)
             original.install(selected)
             val unfinished = testPublishedContent("unfinished", "second")
             original.start(unfinished.publication, unfinished.catalog, testEngineInputs())
-            original.phase(unfinished.publication, PublicationState.Activating)
+            original.phase(unfinished.publication, PublicationState.ACTIVATING)
             recovery.interruptUnfinished()
             shouldThrow<IllegalStateException> { original.install(unfinished) }
             results.selected() shouldBe selected
@@ -116,7 +117,7 @@ val RegisteredCompiledContentRepositoryTest by testSuite {
             val results = SurrealRegisteredCompiledContentRepository(database)
             val first = testPublishedContent("first", "a")
             attempts.start(first.publication, first.catalog, testEngineInputs())
-            attempts.phase(first.publication, PublicationState.Activating)
+            attempts.phase(first.publication, PublicationState.ACTIVATING)
             attempts.install(first)
             attempts.start(PublicationId(value = "unfinished"), first.catalog, testEngineInputs())
             SurrealPublicationAttemptStore(database).interruptUnfinished()

@@ -9,11 +9,13 @@ import de.infix.testBalloon.framework.core.testSuite
 import io.kotest.matchers.shouldBe
 import skirout.editor.v1.compilation_root.CompilationProjectionId
 import skirout.editor.v1.compilation_root.CompilationRoot
+import skirout.editor.v1.compiled_content.CompilationStatusSelection
 import skirout.editor.v1.compiled_content.CompiledArtifactReference
 import skirout.editor.v1.compiled_content.CompiledBlobPointer
 import skirout.editor.v1.compiled_content.CompiledResourceState
 import skirout.editor.v1.compiled_content.PublishedContent
 import skirout.editor.v1.compiled_content.PublishedOutput
+import skirout.editor.v1.publication.PublicationReport
 import skirout.editor.v1.type_catalog.CatalogGeneration
 import skirout.editor.v1.type_catalog.PublicationId
 import skirout.editor.v1.type_catalog.ResourceId
@@ -27,7 +29,7 @@ val CompiledRootStatusesTest by testSuite {
             val publication = published(active)
             val statuses = CompiledRootStatuses(registry(current), selected(publication))
 
-            val result = statuses.query(capture.root, CompilationStatusSelection.All)
+            val result = statuses.query(capture.root, CompilationStatusSelection.ALL_ROOTS)
 
             result.keys.toList() shouldBe listOf(active, current)
             result.getValue(active) shouldBe
@@ -45,7 +47,7 @@ val CompiledRootStatusesTest by testSuite {
         val views = InMemoryAuthoringViewStore(TestCatalogLease(), AuthoringSeed(emptyMap()))
         views.capture().use { capture ->
             CompiledRootStatuses(registry(active), selected(published(active)))
-                .query(capture.root, CompilationStatusSelection.Supplied(emptySet())) shouldBe emptyMap()
+                .query(capture.root, CompilationStatusSelection.SuppliedRootsWrapper(emptySet())) shouldBe emptyMap()
         }
         views.close()
     }

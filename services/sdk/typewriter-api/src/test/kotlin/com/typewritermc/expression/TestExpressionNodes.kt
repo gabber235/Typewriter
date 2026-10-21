@@ -4,6 +4,7 @@ import com.typewritermc.authoring.root
 import com.typewritermc.types.requirePortable
 import skirout.editor.v1.expression.ExpressionNode
 import skirout.editor.v1.type_catalog.DataValue
+import skirout.editor.v1.type_catalog.ExpressionBindingId
 import skirout.editor.v1.type_catalog.ValuePath
 
 internal fun testInput(

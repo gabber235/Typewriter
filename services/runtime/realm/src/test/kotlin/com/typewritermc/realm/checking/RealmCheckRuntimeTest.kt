@@ -22,7 +22,6 @@ import com.typewritermc.discovery.OwnedProviderRegistry
 import com.typewritermc.discovery.ProviderLease
 import com.typewritermc.discovery.ProviderOrigin
 import com.typewritermc.discovery.contributionKey
-import com.typewritermc.expression.ExpressionBindingId
 import com.typewritermc.imprint.ArtifactId
 import com.typewritermc.imprint.ContributionName
 import com.typewritermc.imprint.ContributionSourceId
@@ -68,6 +67,7 @@ import skirout.editor.v1.type_catalog.CatalogGeneration
 import skirout.editor.v1.type_catalog.CollectionKind
 import skirout.editor.v1.type_catalog.DataValue
 import skirout.editor.v1.type_catalog.DeclarationOwner
+import skirout.editor.v1.type_catalog.ExpressionBindingId
 import skirout.editor.v1.type_catalog.FieldDeclaration
 import skirout.editor.v1.type_catalog.FieldOwner
 import skirout.editor.v1.type_catalog.FieldPatternSegment
@@ -394,7 +394,7 @@ val RealmCheckRuntimeTest by testSuite {
                                     operation = skirout.editor.v1.expression.RuleUnaryOperation.NON_EMPTY,
                                     source =
                                         com.typewritermc.expression
-                                            .input<Any?>(ExpressionBindingId("configured_value"))
+                                            .input<Any?>(ExpressionBindingId(value = "configured_value"))
                                             .toNode(),
                                 ),
                         ),
@@ -640,7 +640,7 @@ val RealmCheckRuntimeTest by testSuite {
                                     operation = skirout.editor.v1.expression.RuleUnaryOperation.NON_EMPTY,
                                     source =
                                         com.typewritermc.expression
-                                            .input<Any?>(ExpressionBindingId("configured_value"))
+                                            .input<Any?>(ExpressionBindingId(value = "configured_value"))
                                             .toNode(),
                                 ),
                         ),

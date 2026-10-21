@@ -14,6 +14,7 @@ import com.typewritermc.services.libs.telemetry.ErrorSlug
 import com.typewritermc.services.libs.telemetry.mainSpanScope
 import com.typewritermc.services.libs.utils.rethrowExceptional
 import com.typewritermc.types.toResourceId
+import com.typewritermc.types.unknownVariant
 import io.opentelemetry.context.Context
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
@@ -40,40 +41,19 @@ import skirout.editor.v1.diagnostic.DiagnosticSeverity
 import skirout.editor.v1.publication.DiagnosticEvidence
 import skirout.editor.v1.publication.EngineImplementationInputs
 import skirout.editor.v1.publication.PublicationActivationPhase
+import skirout.editor.v1.publication.PublicationAttempt
 import skirout.editor.v1.publication.PublicationBaseline
 import skirout.editor.v1.publication.PublicationBlockers
 import skirout.editor.v1.publication.PublicationCandidateId
 import skirout.editor.v1.publication.PublicationFailure
 import skirout.editor.v1.publication.PublicationPendingReview
+import skirout.editor.v1.publication.PublicationState
 import skirout.editor.v1.publication.PublicationStatus
 import skirout.editor.v1.publication.PublicationView
 import skirout.editor.v1.publication.PublicationViewId
 import skirout.editor.v1.type_catalog.CatalogGeneration
 import skirout.editor.v1.type_catalog.PublicationId
 import java.util.UUID
-
-data class PublicationAttempt(
-    val id: PublicationId,
-    val catalog: CatalogGeneration,
-    val engineInputs: EngineImplementationInputs,
-    val state: PublicationState,
-)
-
-sealed interface PublicationState {
-    data object Checking : PublicationState
-
-    data object Compiling : PublicationState
-
-    data object Activating : PublicationState
-
-    data object Complete : PublicationState
-
-    data class Blocked(
-        val findings: List<Diagnostic>,
-    ) : PublicationState
-
-    data object Interrupted : PublicationState
-}
 
 sealed interface PublicationResult {
     data object Publishing : PublicationResult
@@ -381,18 +361,18 @@ internal class RealmPublicationCoordinator(
             attempts.start(id, catalog, inputs)
 
             suspend fun announce(state: PublicationState) {
-                val attempt = PublicationAttempt(id, catalog, inputs, state)
+                val attempt = PublicationAttempt(id = id, catalog = catalog, engineInputs = inputs, state = state)
                 latest = attempt
                 notifyTransition(attempt, onTransition)
             }
-            announce(PublicationState.Compiling)
+            announce(PublicationState.COMPILING)
             val content = artifacts.store(id, catalog, inputs.token.value, frozen.candidate.artifacts)
-            attempts.phase(id, PublicationState.Activating)
+            attempts.phase(id, PublicationState.ACTIVATING)
             synchronized(lock) {
                 releasing = frozen.copy(phase = PublicationActivationPhase.ACTIVATING)
                 prepared?.let(::updateForPrepared)
             }
-            announce(PublicationState.Activating)
+            announce(PublicationState.ACTIVATING)
             installed =
                 engine.activate(inputs) {
                     attempts.install(content)
@@ -402,15 +382,15 @@ internal class RealmPublicationCoordinator(
                 val findings =
                     listOf(publicationDiagnostic("engine_inputs_changed", "Engine requirements changed. Review saved content again."))
                 attempts.blocked(id, findings)
-                announce(PublicationState.Blocked(findings))
+                announce(PublicationState.BlockedWrapper(findings))
                 return PublicationResult.Blocked(findings.map { it.blocker(evidence = null) }.blockers())
             }
             artifacts.selected(content)
-            announce(PublicationState.Complete)
+            announce(PublicationState.COMPLETE)
             return PublicationResult.Activated(id, content)
         } catch (failure: Throwable) {
             release?.let { current ->
-                if (!installed) withContext(NonCancellable) { attempts.phase(current.id, PublicationState.Interrupted) }
+                if (!installed) withContext(NonCancellable) { attempts.phase(current.id, PublicationState.INTERRUPTED) }
                 synchronized(lock) {
                     update(
                         PublicationStatus.createUnavailable(
@@ -553,7 +533,7 @@ internal class SurrealPublicationAttemptStore(
         id: PublicationId,
         phase: PublicationState,
     ) {
-        require(phase == PublicationState.Compiling || phase == PublicationState.Activating || phase == PublicationState.Interrupted)
+        require(phase == PublicationState.COMPILING || phase == PublicationState.ACTIVATING || phase == PublicationState.INTERRUPTED)
         database
             .query(
                 "UPDATE ONLY \$attempt SET state = \$state, updated_at = time::now() WHERE state IN ['checking', 'compiling', 'activating'];",
@@ -602,12 +582,13 @@ internal class SurrealPublicationAttemptStore(
 
 internal fun PublicationState.storageName(): String =
     when (this) {
-        PublicationState.Checking -> "checking"
-        PublicationState.Compiling -> "compiling"
-        PublicationState.Activating -> "activating"
-        PublicationState.Complete -> "complete"
-        is PublicationState.Blocked -> "blocked"
-        PublicationState.Interrupted -> "interrupted"
+        PublicationState.CHECKING -> "checking"
+        PublicationState.COMPILING -> "compiling"
+        PublicationState.ACTIVATING -> "activating"
+        PublicationState.COMPLETE -> "complete"
+        is PublicationState.BlockedWrapper -> "blocked"
+        PublicationState.INTERRUPTED -> "interrupted"
+        else -> unknownVariant(this)
     }
 
 private val TRANSITION_NOTIFICATION_FAILURE = ErrorSlug.of("realm-publication-transition-notification-failed")

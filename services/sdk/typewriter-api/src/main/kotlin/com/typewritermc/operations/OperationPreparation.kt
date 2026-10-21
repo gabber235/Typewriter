@@ -180,7 +180,7 @@ class UnfinishedOperationInput(
 ) : IllegalStateException("Operation input is unfinished")
 
 class FailedAuthoredValue(
-    val diagnostic: com.typewritermc.expression.EvaluationDiagnostic,
+    val diagnostic: skirout.editor.v1.expression.EvaluationDiagnostic,
 ) : IllegalStateException(diagnostic.toString())
 
 /** Enabled when every value is authored, disabled with the missing locations otherwise. */

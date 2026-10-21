@@ -7,7 +7,6 @@ import com.typewritermc.authoring.RealmRootDefinition
 import com.typewritermc.discovery.CatalogAssembly
 import com.typewritermc.discovery.CatalogAssemblyContext
 import com.typewritermc.discovery.assemble
-import com.typewritermc.expression.ExpressionBindingId
 import com.typewritermc.expression.Handled
 import com.typewritermc.expression.inputExpression
 import com.typewritermc.expression.literal
@@ -45,6 +44,7 @@ import skirout.editor.v1.presentation.ResourcesLayout
 import skirout.editor.v1.presentation.StackChild
 import skirout.editor.v1.type_catalog.CatalogGeneration
 import skirout.editor.v1.type_catalog.DataValue
+import skirout.editor.v1.type_catalog.ExpressionBindingId
 import skirout.editor.v1.type_catalog.PathSegment
 import skirout.editor.v1.type_catalog.TypeDefinitionId
 import skirout.editor.v1.catalog.PresentationTarget as WirePresentationTarget
@@ -160,7 +160,7 @@ val CorePlacesTest by testSuite {
         shouldThrow<IllegalArgumentException> {
             build {
                 pages {
-                    order { inputExpression<String, Handled>(ExpressionBindingId("unbound")) }
+                    order { inputExpression<String, Handled>(ExpressionBindingId(value = "unbound")) }
                     list()
                 }
             }

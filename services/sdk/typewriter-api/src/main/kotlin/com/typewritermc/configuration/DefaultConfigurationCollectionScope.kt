@@ -7,7 +7,6 @@ import com.typewritermc.checking.RegisteredPredicate
 import com.typewritermc.configuration.root
 import com.typewritermc.discovery.checkedGeneratedScope
 import com.typewritermc.expression.Expr
-import com.typewritermc.expression.ExpressionBindingId
 import com.typewritermc.expression.ExpressionFactory
 import com.typewritermc.expression.LambdaFrame
 import com.typewritermc.expression.MissingPolicy
@@ -38,6 +37,7 @@ import skirout.editor.v1.expression.SizeRangeMetric
 import skirout.editor.v1.expression.TextCompareOperation
 import skirout.editor.v1.expression.TimestampBoundDirection
 import skirout.editor.v1.type_catalog.DataValue
+import skirout.editor.v1.type_catalog.ExpressionBindingId
 import skirout.editor.v1.type_catalog.FieldPatternSegment
 import skirout.editor.v1.type_catalog.RelativeFieldPattern
 import skirout.editor.v1.type_catalog.RuleId
@@ -403,7 +403,7 @@ internal fun helperMessage(name: ConfigurationRuleHelper): String =
         else -> "Value does not satisfy $name"
     }
 
-private val VALUE_EXPRESSION = inputExpression<Any?, MissingPolicy>(ExpressionBindingId("configured_value"))
+private val VALUE_EXPRESSION = inputExpression<Any?, MissingPolicy>(ExpressionBindingId(value = "configured_value"))
 
 internal enum class ConfigurationRuleHelper {
     BETWEEN,

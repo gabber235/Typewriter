@@ -1,6 +1,5 @@
 package com.typewritermc.configuration
 
-import com.typewritermc.authoring.PartialSchema
 import com.typewritermc.authoring.arguments
 import com.typewritermc.authoring.definition
 import com.typewritermc.authoring.name
@@ -10,7 +9,6 @@ import com.typewritermc.authoring.use
 import com.typewritermc.expression.CanonicalReadModels
 import com.typewritermc.expression.CheckedExpressionProgram
 import com.typewritermc.expression.CheckedQueryCall
-import com.typewritermc.expression.ExpressionBindingId
 import com.typewritermc.expression.ExpressionOccurrence
 import com.typewritermc.expression.PortableExpressionLimits
 import com.typewritermc.expression.children
@@ -60,8 +58,10 @@ import skirout.editor.v1.expression.TimestampBoundDirection
 import skirout.editor.v1.expression.ValueCompareOperation
 import skirout.editor.v1.type_catalog.ArgumentSelection
 import skirout.editor.v1.type_catalog.DataValue
+import skirout.editor.v1.type_catalog.ExpressionBindingId
 import skirout.editor.v1.type_catalog.FloatWidth
 import skirout.editor.v1.type_catalog.IntegerWidth
+import skirout.editor.v1.type_catalog.PartialSchema
 import skirout.editor.v1.type_catalog.PathSegment
 import skirout.editor.v1.type_catalog.ResolvedRepresentation
 import skirout.editor.v1.type_catalog.ScalarKind
@@ -147,14 +147,14 @@ class PortableExpressionChecker(
     ): List<DeclarationDiagnostic> =
         checkExpressionCodes(
             body,
-            mapOf(ExpressionBindingId("configured_value") to nominalExpressionType(subject.use)),
+            mapOf(ExpressionBindingId(value = "configured_value") to nominalExpressionType(subject.use)),
             nominalExpressionType(ScalarKind.BOOLEAN.use, true),
         ).map { DeclarationDiagnostic.of(requireNotNull(owner), it) }
 
     internal fun checkRuleStructure(body: ExpressionNode): List<DeclarationDiagnostic> =
         checkExpressionStructure(
             body,
-            setOf(ExpressionBindingId("configured_value")),
+            setOf(ExpressionBindingId(value = "configured_value")),
         ).map { DeclarationDiagnostic.of(requireNotNull(owner), it) }
 
     private fun validateStructure(
@@ -169,7 +169,7 @@ class PortableExpressionChecker(
             demand(depth <= PortableExpressionLimits.MAX_DEPTH, "expression_depth_limit")
             when (node) {
                 is ExpressionNode.InputWrapper -> {
-                    demand(ExpressionBindingId(node.value.binding.value) in bindings, "unknown_expression_binding")
+                    demand(ExpressionBindingId(value = node.value.binding.value) in bindings, "unknown_expression_binding")
                     decodePath(node.value.path)
                 }
 
@@ -870,7 +870,7 @@ class PortableExpressionChecker(
             id: String,
             path: ValuePath,
         ): ExpressionType {
-            val key = ExpressionBindingId(id)
+            val key = ExpressionBindingId(value = id)
             val selection = partialBindings[key]
             if (selection == null) {
                 val input = bindings[key] ?: fail("unknown_expression_binding")

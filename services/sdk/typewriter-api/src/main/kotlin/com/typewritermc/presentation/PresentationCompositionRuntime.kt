@@ -71,7 +71,7 @@ internal class RuntimePresentationData(
             } else {
                 BindingRef(
                     path = WireValuePath(segments = emptyList()),
-                    bindingId = requireNotNull(scopeBinding).wire(),
+                    bindingId = requireNotNull(scopeBinding),
                 )
             }
         val session = input.rebind?.invoke(localBinding, children) ?: input.session
@@ -94,7 +94,7 @@ internal class RuntimePresentationData(
                 state.node(
                     PresentationElement.createScopedBinding(
                         binding = input.binding,
-                        scopeBindingId = requireNotNull(scopeBinding).wire(),
+                        scopeBindingId = requireNotNull(scopeBinding),
                         child = child,
                     ),
                 )
@@ -144,7 +144,7 @@ internal class RuntimePresentationData(
             state.node(
                 PresentationElement.createPolymorphicMatch(
                     binding = binding.binding,
-                    scopeBindingId = scopeBinding.wire(),
+                    scopeBindingId = scopeBinding,
                     cases = wireCases,
                     fallback = fallback,
                 ),
@@ -172,7 +172,7 @@ internal class RuntimePresentationData(
                     }
                     wireArguments +=
                         skirout.editor.v1.presentation.PresentationArgument(
-                            input = parameter.binding.wire(),
+                            input = parameter.binding,
                             binding = value.binding,
                         )
                 }

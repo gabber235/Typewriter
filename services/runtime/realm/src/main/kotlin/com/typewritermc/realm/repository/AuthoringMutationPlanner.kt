@@ -3,7 +3,6 @@ package com.typewritermc.realm.repository
 import com.typewritermc.authoring.LocatedPortableValue
 import com.typewritermc.authoring.RealmRootDefinition
 import com.typewritermc.authoring.RealmSectionDefinition
-import com.typewritermc.authoring.StructuralResult
 import com.typewritermc.authoring.ValueReplacement
 import com.typewritermc.authoring.definition
 import com.typewritermc.authoring.id
@@ -48,6 +47,7 @@ import skirout.editor.v1.catalog.EndpointCardinality
 import skirout.editor.v1.catalog.PreparedContent
 import skirout.editor.v1.catalog.RelationContract
 import skirout.editor.v1.catalog.RelationDeletePolicy
+import skirout.editor.v1.diagnostic.StructuralResult
 import skirout.editor.v1.diagnostic.ValueProblem
 import skirout.editor.v1.type_catalog.AuthoringRecord
 import skirout.editor.v1.type_catalog.CollectionKind
@@ -225,8 +225,9 @@ internal class AuthoringMutationPlanner(
         val problems = mutableListOf<ValueProblem>()
         resources.filterKeys { it in affected }.forEach { (id, record) ->
             when (val structural = record.validateStructure(catalog)) {
-                StructuralResult.Valid -> Unit
-                is StructuralResult.Invalid -> problems += structural.problems.map { it.on(id) }
+                StructuralResult.VALID -> Unit
+                is StructuralResult.InvalidWrapper -> problems += structural.value.map { it.on(id) }
+                else -> unknownVariant(structural)
             }
         }
         val affectedLocations =

@@ -43,6 +43,7 @@ import io.kotest.matchers.shouldBe
 import io.kotest.matchers.types.shouldBeInstanceOf
 import skirout.editor.v1.catalog.DeclarationStatus
 import skirout.editor.v1.catalog.PublishedType
+import skirout.editor.v1.expression.EvaluationBudget
 import skirout.editor.v1.expression.ExpressionNode
 import skirout.editor.v1.expression.ExpressionQuery
 import skirout.editor.v1.expression.ResourceQuerySource
@@ -51,6 +52,7 @@ import skirout.editor.v1.type_catalog.AuthoringRecord
 import skirout.editor.v1.type_catalog.CatalogGeneration
 import skirout.editor.v1.type_catalog.DataValue
 import skirout.editor.v1.type_catalog.EndpointId
+import skirout.editor.v1.type_catalog.ExpressionBindingId
 import skirout.editor.v1.type_catalog.FieldDeclaration
 import skirout.editor.v1.type_catalog.FieldOwner
 import skirout.editor.v1.type_catalog.ItemId
@@ -91,7 +93,7 @@ val CanonicalQueryTest by testSuite {
         val evaluator =
             DefaultExpressionEvaluator(ExpressionValueReader { error("The query owns its resource read") }, queries = observation)
         with(QueryReads) {
-            evaluator.evaluateChecked(program, ExpressionBindings(emptyMap()), EvaluationBudget(100, 100))
+            evaluator.evaluateChecked(program, ExpressionBindings(emptyMap()), EvaluationBudget(maxSteps = 100, maxCollectionItems = 100))
         } shouldBe Availability.Available(DataValue.StringValueWrapper("Current name"))
         observation.seenReadContext shouldBe QueryReads.readContext
     }
@@ -118,7 +120,7 @@ val CanonicalQueryTest by testSuite {
         fun evaluate(observation: QueryObservation) =
             with(QueryReads) {
                 DefaultExpressionEvaluator(ExpressionValueReader { error("Unexpected authored value read") }, queries = observation)
-                    .evaluateChecked(program, ExpressionBindings(emptyMap()), EvaluationBudget(100, 100))
+                    .evaluateChecked(program, ExpressionBindings(emptyMap()), EvaluationBudget(maxSteps = 100, maxCollectionItems = 100))
             }
         evaluate(first) shouldBe
             Availability.Available(DataValue.named(ColorDefinition.use, DataValue.integer(0xFF123456u.toString().toBigInteger())))
@@ -147,7 +149,7 @@ val CanonicalQueryTest by testSuite {
                     QueryObservation(
                         mapOf(ResourceId("result") to record),
                     ),
-            ).evaluateChecked(program, ExpressionBindings(emptyMap()), EvaluationBudget(100, 100))
+            ).evaluateChecked(program, ExpressionBindings(emptyMap()), EvaluationBudget(maxSteps = 100, maxCollectionItems = 100))
         } shouldBe Availability.Available(DataValue.BooleanWrapper(true))
     }
 
@@ -157,19 +159,23 @@ val CanonicalQueryTest by testSuite {
                 .resource(literal(ResourceId("result")), QueryResource::class)
         val evaluator = DefaultExpressionEvaluator(ExpressionValueReader { error("Unexpected authored value read") })
         with(QueryReads) {
-            evaluator.evaluate(resource.id.toNode(), ExpressionBindings(emptyMap()), EvaluationBudget(100, 100))
+            evaluator.evaluate(
+                resource.id.toNode(),
+                ExpressionBindings(emptyMap()),
+                EvaluationBudget(maxSteps = 100, maxCollectionItems = 100),
+            )
         }.shouldBeInstanceOf<Availability.Failed>()
         with(QueryReads) {
             evaluator.evaluateChecked(
                 queryProgram(resource.id.toNode(), ResourceIdDefinition.use.use),
                 ExpressionBindings(emptyMap()),
-                EvaluationBudget(100, 100),
+                EvaluationBudget(maxSteps = 100, maxCollectionItems = 100),
             )
         }.shouldBeInstanceOf<Availability.Failed>()
     }
 
     test("typed reference reads root content rather than the reciprocal endpoint path") {
-        val binding = ExpressionBindingId("reference")
+        val binding = ExpressionBindingId(value = "reference")
         val reference =
             portableExpression<Ref<QueryEndpoint, QueryResource>>(
                 testInput(binding),
@@ -211,7 +217,12 @@ val CanonicalQueryTest by testSuite {
                     QueryObservation(
                         mapOf(ResourceId("result") to record),
                     ),
-            ).evaluateChecked(program, ExpressionBindings(emptyMap()), EvaluationBudget(100, 100), mapOf(binding to referenceValue))
+            ).evaluateChecked(
+                program,
+                ExpressionBindings(emptyMap()),
+                EvaluationBudget(maxSteps = 100, maxCollectionItems = 100),
+                mapOf(binding to referenceValue),
+            )
         } shouldBe Availability.Available(DataValue.StringValueWrapper("Root name"))
     }
 
@@ -237,13 +248,13 @@ val CanonicalQueryTest by testSuite {
             ).evaluateChecked(
                 queryProgram(resource.value.toNode(), queryTypeId.use()),
                 ExpressionBindings(emptyMap()),
-                EvaluationBudget(3, 100),
+                EvaluationBudget(maxSteps = 3, maxCollectionItems = 100),
             )
         }.shouldBeInstanceOf<Availability.Failed>()
     }
     test("identical query syntax retains each collection binder target contract") {
-        val first = ExpressionBindingId("first")
-        val second = ExpressionBindingId("second")
+        val first = ExpressionBindingId(value = "first")
+        val second = ExpressionBindingId(value = "second")
 
         fun read(binding: ExpressionBindingId) = testInput(binding)
         val query =
@@ -312,7 +323,7 @@ val CanonicalQueryTest by testSuite {
             ).evaluateChecked(
                 program,
                 ExpressionBindings(emptyMap()),
-                EvaluationBudget(200, 100),
+                EvaluationBudget(maxSteps = 200, maxCollectionItems = 100),
                 mapOf(
                     first to links("first"),
                     second to links("second"),

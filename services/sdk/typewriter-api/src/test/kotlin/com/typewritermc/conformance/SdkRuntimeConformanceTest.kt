@@ -35,9 +35,6 @@ import com.typewritermc.discovery.ProviderOrigin
 import com.typewritermc.discovery.assemble
 import com.typewritermc.discovery.contributionKey
 import com.typewritermc.expression.DefaultExpressionEvaluator
-import com.typewritermc.expression.EvaluationBudget
-import com.typewritermc.expression.EvaluationDiagnostic
-import com.typewritermc.expression.ExpressionBindingId
 import com.typewritermc.expression.ExpressionBindings
 import com.typewritermc.expression.ExpressionValueReader
 import com.typewritermc.expression.PortableExpressionLimits
@@ -87,11 +84,14 @@ import skirout.editor.v1.catalog.PresentationTarget
 import skirout.editor.v1.catalog.RelationDeletePolicy
 import skirout.editor.v1.catalog.RepresentationKind
 import skirout.editor.v1.diagnostic.DiagnosticSeverity
+import skirout.editor.v1.expression.EvaluationBudget
+import skirout.editor.v1.expression.EvaluationDiagnostic
 import skirout.editor.v1.expression.ExpressionNode
 import skirout.editor.v1.type_catalog.CatalogGeneration
 import skirout.editor.v1.type_catalog.DataValue
 import skirout.editor.v1.type_catalog.DeclarationOwner
 import skirout.editor.v1.type_catalog.EndpointId
+import skirout.editor.v1.type_catalog.ExpressionBindingId
 import skirout.editor.v1.type_catalog.FieldDeclaration
 import skirout.editor.v1.type_catalog.FieldOwner
 import skirout.editor.v1.type_catalog.FieldPatternSegment
@@ -138,8 +138,8 @@ val SdkRuntimeConformanceTest by testSuite {
         with(EmptyReads) {
             evaluator.evaluate(
                 predicate,
-                ExpressionBindings(mapOf(ExpressionBindingId("configured_value") to location)),
-                EvaluationBudget(100, 100),
+                ExpressionBindings(mapOf(ExpressionBindingId(value = "configured_value") to location)),
+                EvaluationBudget(maxSteps = 100, maxCollectionItems = 100),
             ) shouldBe Availability.Available(DataValue.BooleanWrapper(true))
         }
     }
@@ -154,7 +154,7 @@ val SdkRuntimeConformanceTest by testSuite {
 
     test("portable evaluation short circuits fallback and preserves named scalar semantics") {
         val location = ValueLocation.of(ResourceId("expression:test"))
-        val binding = ExpressionBindingId("value")
+        val binding = ExpressionBindingId(value = "value")
         var reads = 0
         var result: Availability<DataValue> = Availability.Unavailable(listOf(location))
         val evaluator =
@@ -165,7 +165,7 @@ val SdkRuntimeConformanceTest by testSuite {
                 },
             )
         val bindings = ExpressionBindings(mapOf(binding to location))
-        val budget = EvaluationBudget(100, 100)
+        val budget = EvaluationBudget(maxSteps = 100, maxCollectionItems = 100)
         val read = testInput(binding, ValuePath.root)
 
         with(EmptyReads) {
@@ -187,7 +187,7 @@ val SdkRuntimeConformanceTest by testSuite {
                 bindings,
                 budget,
             ) shouldBe Availability.Available(DataValue.BooleanWrapper(true))
-            result = Availability.Failed(EvaluationDiagnostic("read_failed", "broken", listOf(location)))
+            result = Availability.Failed(EvaluationDiagnostic(code = "read_failed", message = "broken", locations = listOf(location)))
             evaluator.evaluate(
                 ExpressionNode.createOrElse(input = read, fallback = testLiteral(DataValue.StringValueWrapper("hidden"))),
                 bindings,
@@ -203,12 +203,17 @@ val SdkRuntimeConformanceTest by testSuite {
         }
         val evaluator = DefaultExpressionEvaluator(ExpressionValueReader { error("No reads expected") })
         with(EmptyReads) {
-            val failed = evaluator.evaluate(nested, ExpressionBindings(emptyMap()), EvaluationBudget(100_000, 100))
+            val failed =
+                evaluator.evaluate(
+                    nested,
+                    ExpressionBindings(emptyMap()),
+                    EvaluationBudget(maxSteps = 100_000, maxCollectionItems = 100),
+                )
             (failed as Availability.Failed).diagnostic.code shouldBe "expression_depth_limit"
             evaluator.evaluate(
                 ExpressionNode.createAnd(left = testLiteral(DataValue.BooleanWrapper(false)), right = nested),
                 ExpressionBindings(emptyMap()),
-                EvaluationBudget(100_000, 100),
+                EvaluationBudget(maxSteps = 100_000, maxCollectionItems = 100),
             ) shouldBe Availability.Available(DataValue.BooleanWrapper(false))
         }
     }
@@ -233,18 +238,18 @@ val SdkRuntimeConformanceTest by testSuite {
                 evaluator.evaluate(
                     nonBlank(whitespace),
                     ExpressionBindings(emptyMap()),
-                    EvaluationBudget(10, 0),
+                    EvaluationBudget(maxSteps = 10, maxCollectionItems = 0),
                 ) shouldBe Availability.Available(DataValue.BooleanWrapper(false))
             }
             evaluator.evaluate(
                 nonBlank("\u001C"),
                 ExpressionBindings(emptyMap()),
-                EvaluationBudget(10, 0),
+                EvaluationBudget(maxSteps = 10, maxCollectionItems = 0),
             ) shouldBe Availability.Available(DataValue.BooleanWrapper(true))
             evaluator.evaluate(
                 trim("\uFEFF value \u0085"),
                 ExpressionBindings(emptyMap()),
-                EvaluationBudget(10, 0),
+                EvaluationBudget(maxSteps = 10, maxCollectionItems = 0),
             ) shouldBe Availability.Available(DataValue.StringValueWrapper("value"))
         }
     }
@@ -287,15 +292,35 @@ val SdkRuntimeConformanceTest by testSuite {
         )
 
         with(EmptyReads) {
-            evaluator.evaluate(fullMatch("\u00A0", "\\s"), ExpressionBindings(emptyMap()), EvaluationBudget(10, 0)) shouldBe
+            evaluator.evaluate(
+                fullMatch("\u00A0", "\\s"),
+                ExpressionBindings(emptyMap()),
+                EvaluationBudget(maxSteps = 10, maxCollectionItems = 0),
+            ) shouldBe
                 Availability.Available(DataValue.BooleanWrapper(true))
-            evaluator.evaluate(fullMatch("\u00A0", "[\\s]"), ExpressionBindings(emptyMap()), EvaluationBudget(10, 0)) shouldBe
+            evaluator.evaluate(
+                fullMatch("\u00A0", "[\\s]"),
+                ExpressionBindings(emptyMap()),
+                EvaluationBudget(maxSteps = 10, maxCollectionItems = 0),
+            ) shouldBe
                 Availability.Available(DataValue.BooleanWrapper(true))
-            evaluator.evaluate(fullMatch("😀", "."), ExpressionBindings(emptyMap()), EvaluationBudget(10, 0)) shouldBe
+            evaluator.evaluate(
+                fullMatch("😀", "."),
+                ExpressionBindings(emptyMap()),
+                EvaluationBudget(maxSteps = 10, maxCollectionItems = 0),
+            ) shouldBe
                 Availability.Available(DataValue.BooleanWrapper(true))
-            evaluator.evaluate(fullMatch("\u0085", "."), ExpressionBindings(emptyMap()), EvaluationBudget(10, 0)) shouldBe
+            evaluator.evaluate(
+                fullMatch("\u0085", "."),
+                ExpressionBindings(emptyMap()),
+                EvaluationBudget(maxSteps = 10, maxCollectionItems = 0),
+            ) shouldBe
                 Availability.Available(DataValue.BooleanWrapper(true))
-            evaluator.evaluate(fullMatch("\n", "."), ExpressionBindings(emptyMap()), EvaluationBudget(10, 0)) shouldBe
+            evaluator.evaluate(
+                fullMatch("\n", "."),
+                ExpressionBindings(emptyMap()),
+                EvaluationBudget(maxSteps = 10, maxCollectionItems = 0),
+            ) shouldBe
                 Availability.Available(DataValue.BooleanWrapper(false))
         }
     }
@@ -327,7 +352,7 @@ val SdkRuntimeConformanceTest by testSuite {
                 evaluator.evaluate(
                     search("x".repeat(200), "^$"),
                     ExpressionBindings(emptyMap()),
-                    EvaluationBudget(50, 0),
+                    EvaluationBudget(maxSteps = 50, maxCollectionItems = 0),
                 )
             (anchorSearch as Availability.Failed).diagnostic.code shouldBe "expression_step_limit"
 
@@ -335,7 +360,7 @@ val SdkRuntimeConformanceTest by testSuite {
                 evaluator.evaluate(
                     replace("", "", "replacement".repeat(20)),
                     ExpressionBindings(emptyMap()),
-                    EvaluationBudget(30, 0),
+                    EvaluationBudget(maxSteps = 30, maxCollectionItems = 0),
                 )
             (replacementOutput as Availability.Failed).diagnostic.code shouldBe "expression_step_limit"
         }
@@ -347,7 +372,7 @@ val SdkRuntimeConformanceTest by testSuite {
         context(reads: AuthoredReads)
         fun replace(
             values: List<DataValue>,
-            budget: EvaluationBudget = EvaluationBudget(100, 100),
+            budget: EvaluationBudget = EvaluationBudget(maxSteps = 100, maxCollectionItems = 100),
         ): Availability<DataValue> =
             evaluator.evaluate(
                 ExpressionNode.createTextReplace(
@@ -362,7 +387,7 @@ val SdkRuntimeConformanceTest by testSuite {
         context(reads: AuthoredReads)
         fun split(
             values: List<DataValue>,
-            budget: EvaluationBudget = EvaluationBudget(100, 100),
+            budget: EvaluationBudget = EvaluationBudget(maxSteps = 100, maxCollectionItems = 100),
         ): Availability<DataValue> =
             evaluator.evaluate(
                 ExpressionNode.createTextSplit(source = testLiteral(values[0]), separator = testLiteral(values[1])),
@@ -373,7 +398,7 @@ val SdkRuntimeConformanceTest by testSuite {
         context(reads: AuthoredReads)
         fun join(
             values: List<DataValue>,
-            budget: EvaluationBudget = EvaluationBudget(100, 100),
+            budget: EvaluationBudget = EvaluationBudget(maxSteps = 100, maxCollectionItems = 100),
         ): Availability<DataValue> =
             evaluator.evaluate(
                 ExpressionNode.createTextJoin(source = testLiteral(values[0]), separator = testLiteral(values[1])),
@@ -384,7 +409,7 @@ val SdkRuntimeConformanceTest by testSuite {
         context(reads: AuthoredReads)
         fun interpolate(
             values: List<DataValue>,
-            budget: EvaluationBudget = EvaluationBudget(100, 100),
+            budget: EvaluationBudget = EvaluationBudget(maxSteps = 100, maxCollectionItems = 100),
         ): Availability<DataValue> =
             evaluator.evaluate(
                 ExpressionNode.createTextInterpolate(parts = values.map(::testLiteral)),
@@ -426,7 +451,7 @@ val SdkRuntimeConformanceTest by testSuite {
             listOf(
                 replace(
                     listOf(DataValue.StringValueWrapper("a"), DataValue.StringValueWrapper(""), large),
-                    EvaluationBudget(30, 100),
+                    EvaluationBudget(maxSteps = 30, maxCollectionItems = 100),
                 ),
                 join(
                     listOf(
@@ -442,11 +467,11 @@ val SdkRuntimeConformanceTest by testSuite {
                         ),
                         DataValue.StringValueWrapper(""),
                     ),
-                    EvaluationBudget(30, 100),
+                    EvaluationBudget(maxSteps = 30, maxCollectionItems = 100),
                 ),
                 interpolate(
                     listOf(large),
-                    EvaluationBudget(30, 100),
+                    EvaluationBudget(maxSteps = 30, maxCollectionItems = 100),
                 ),
             ).forEach { result ->
                 (result as Availability.Failed).diagnostic.code shouldBe "expression_step_limit"
@@ -455,7 +480,7 @@ val SdkRuntimeConformanceTest by testSuite {
             val splitLimit =
                 split(
                     listOf(DataValue.StringValueWrapper("😀x"), DataValue.StringValueWrapper("")),
-                    EvaluationBudget(100, 1),
+                    EvaluationBudget(maxSteps = 100, maxCollectionItems = 1),
                 )
             (splitLimit as Availability.Failed).diagnostic.code shouldBe "expression_collection_limit"
         }
@@ -463,8 +488,8 @@ val SdkRuntimeConformanceTest by testSuite {
 
     test("collection evaluation uses semantic equality propagates unfinished members and counts visited items") {
         val location = ValueLocation.of(ResourceId("collection:test"))
-        val binding = ExpressionBindingId("items")
-        val item = ExpressionBindingId("item")
+        val binding = ExpressionBindingId(value = "items")
+        val item = ExpressionBindingId(value = "item")
         var value: DataValue =
             DataValue.listValue(
                 listOf(
@@ -489,7 +514,7 @@ val SdkRuntimeConformanceTest by testSuite {
             evaluator.evaluate(
                 ExpressionNode.createRuleUnary(operation = skirout.editor.v1.expression.RuleUnaryOperation.UNIQUE, source = input),
                 bindings,
-                EvaluationBudget(100, 10),
+                EvaluationBudget(maxSteps = 100, maxCollectionItems = 10),
             ) shouldBe Availability.Available(DataValue.BooleanWrapper(false))
             value =
                 DataValue.listValue(
@@ -505,7 +530,7 @@ val SdkRuntimeConformanceTest by testSuite {
             evaluator.evaluate(
                 ExpressionNode.createUniqueBy(source = input, body = localNode(ValuePath.root)),
                 bindings,
-                EvaluationBudget(100, 10),
+                EvaluationBudget(maxSteps = 100, maxCollectionItems = 10),
             ) shouldBe
                 Availability.Unavailable(
                     listOf(
@@ -551,12 +576,12 @@ val SdkRuntimeConformanceTest by testSuite {
             evaluator.evaluate(
                 ExpressionNode.CollectionSizeWrapper(input),
                 bindings,
-                EvaluationBudget(100, 10),
+                EvaluationBudget(maxSteps = 100, maxCollectionItems = 10),
             ) shouldBe Availability.Available(DataValue.integer(3.toBigInteger()))
             evaluator.evaluate(
                 ExpressionNode.createRuleUnary(operation = skirout.editor.v1.expression.RuleUnaryOperation.UNIQUE, source = input),
                 bindings,
-                EvaluationBudget(100, 10),
+                EvaluationBudget(maxSteps = 100, maxCollectionItems = 10),
             ) shouldBe Availability.Available(DataValue.BooleanWrapper(false))
             value =
                 DataValue.listValue(
@@ -583,7 +608,7 @@ val SdkRuntimeConformanceTest by testSuite {
                         ),
                 ),
                 bindings,
-                EvaluationBudget(100, 10),
+                EvaluationBudget(maxSteps = 100, maxCollectionItems = 10),
             ) shouldBe
                 Availability.Unavailable(
                     listOf(
@@ -624,14 +649,14 @@ val SdkRuntimeConformanceTest by testSuite {
             evaluator.evaluate(
                 ExpressionNode.createAny(source = input, body = localNode(ValuePath.root)),
                 bindings,
-                EvaluationBudget(100, 1),
+                EvaluationBudget(maxSteps = 100, maxCollectionItems = 1),
             ) shouldBe Availability.Available(DataValue.BooleanWrapper(true))
         }
     }
 
     test("map access preserves named key identity and retains unfinished key uncertainty") {
         val location = ValueLocation.of(ResourceId("map:test"))
-        val binding = ExpressionBindingId("map")
+        val binding = ExpressionBindingId(value = "map")
         var value: DataValue = DataValue.mapValue(emptyList())
         val evaluator = DefaultExpressionEvaluator(ExpressionValueReader { value.available() })
         val input = testInput(binding, ValuePath.root)
@@ -675,7 +700,7 @@ val SdkRuntimeConformanceTest by testSuite {
             evaluator.evaluate(
                 access(DataValue.StringValueWrapper("target")),
                 ExpressionBindings(mapOf(binding to location)),
-                EvaluationBudget(100, 100),
+                EvaluationBudget(maxSteps = 100, maxCollectionItems = 100),
             ) shouldBe
                 Availability.Unavailable(
                     listOf(
@@ -719,7 +744,7 @@ val SdkRuntimeConformanceTest by testSuite {
             evaluator.evaluate(
                 access(DataValue.StringValueWrapper("target")),
                 ExpressionBindings(mapOf(binding to location)),
-                EvaluationBudget(100, 100),
+                EvaluationBudget(maxSteps = 100, maxCollectionItems = 100),
             ) shouldBe Availability.Available(DataValue.StringValueWrapper("available"))
 
             val namedKey = DataValue.named(TEST_CODE_USE, DataValue.StringValueWrapper("wrapped"))
@@ -738,7 +763,7 @@ val SdkRuntimeConformanceTest by testSuite {
             evaluator.evaluate(
                 access(namedKey),
                 ExpressionBindings(mapOf(binding to location)),
-                EvaluationBudget(100, 100),
+                EvaluationBudget(maxSteps = 100, maxCollectionItems = 100),
             ) shouldBe Availability.Available(DataValue.StringValueWrapper("named value"))
 
             value =
@@ -763,7 +788,7 @@ val SdkRuntimeConformanceTest by testSuite {
             evaluator.evaluate(
                 access(DataValue.StringValueWrapper("same")),
                 ExpressionBindings(mapOf(binding to location)),
-                EvaluationBudget(100, 100),
+                EvaluationBudget(maxSteps = 100, maxCollectionItems = 100),
             ) shouldBe
                 Availability.Unavailable(
                     listOf("first", "second").map { id ->
@@ -853,11 +878,15 @@ val SdkRuntimeConformanceTest by testSuite {
                 .rules
                 .single()
                 .descriptor.predicate
-        val configured = ExpressionBindingId("configured_value")
+        val configured = ExpressionBindingId(value = "configured_value")
         val location = ValueLocation.of(ResourceId("counter:1"))
         val evaluator = DefaultExpressionEvaluator(ExpressionValueReader { DataValue.integer(5.toBigInteger()).available() })
         with(EmptyReads) {
-            evaluator.evaluate(rule, ExpressionBindings(mapOf(configured to location)), EvaluationBudget(100, 100)) shouldBe
+            evaluator.evaluate(
+                rule,
+                ExpressionBindings(mapOf(configured to location)),
+                EvaluationBudget(maxSteps = 100, maxCollectionItems = 100),
+            ) shouldBe
                 Availability.Available(DataValue.BooleanWrapper(true))
         }
 
@@ -880,7 +909,7 @@ val SdkRuntimeConformanceTest by testSuite {
             unsignedEvaluator.evaluate(
                 unsignedRule,
                 ExpressionBindings(mapOf(configured to location)),
-                EvaluationBudget(100, 100),
+                EvaluationBudget(maxSteps = 100, maxCollectionItems = 100),
             ) shouldBe Availability.Available(DataValue.BooleanWrapper(true))
         }
     }

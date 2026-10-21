@@ -5,7 +5,6 @@ import com.typewritermc.authoring.CaptureResult
 import com.typewritermc.authoring.CompleteValue
 import com.typewritermc.authoring.DefaultInitializationRuntime
 import com.typewritermc.authoring.NativeConstructionPlan
-import com.typewritermc.authoring.StructuralResult
 import com.typewritermc.authoring.authoredDefault
 import com.typewritermc.authoring.field
 import com.typewritermc.authoring.fieldMap
@@ -36,6 +35,7 @@ import skirout.editor.v1.catalog.PreparedContent
 import skirout.editor.v1.catalog.PreparedValue
 import skirout.editor.v1.catalog.ValuePreparationRequest
 import skirout.editor.v1.diagnostic.InitializationDiagnostic
+import skirout.editor.v1.diagnostic.StructuralResult
 import skirout.editor.v1.type_catalog.ArgumentSelection
 import skirout.editor.v1.type_catalog.AuthoringRecord
 import skirout.editor.v1.type_catalog.CatalogGeneration
@@ -186,7 +186,7 @@ val InitializationRuntimeConformanceTest by testSuite {
                     "dependent" to DataValue.UNFILLED,
                 ),
             )
-        prepared.record.validateStructure(catalog) shouldBe StructuralResult.Valid
+        prepared.record.validateStructure(catalog) shouldBe StructuralResult.VALID
         prepared.findings.map(InitializationDiagnostic::code) shouldBe listOf("incomplete_type_selection")
 
         val unknown =
