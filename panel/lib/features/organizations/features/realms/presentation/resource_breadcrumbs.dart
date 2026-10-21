@@ -62,7 +62,7 @@ class ResourceCrumbSelector extends ConsumerWidget {
                 icon: selected?.appearance.icon,
                 size: 16,
                 color:
-                    selected?.appearance.accent ??
+                    selected?.appearance.accentColor ??
                     context.colors.contentDisabled,
               ),
               SizedBox(width: context.spacing.space2),
@@ -124,7 +124,7 @@ class _CrumbMenu extends HookWidget {
                 selected: choice.resource == selected?.resource,
                 leading: ResourceIcon(
                   icon: choice.appearance.icon,
-                  color: choice.appearance.accent,
+                  color: choice.appearance.accentColor,
                   size: 20,
                 ),
                 title: Text(choice.appearance.label),

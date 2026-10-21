@@ -139,9 +139,9 @@ void main() {
         PortableResourceProjection(
           resource: compiledInheritanceTagId,
           configuration: record.configuration,
-          appearance: ResourceAppearance(
+          appearance: skir.ResourceAppearance(
             label: "Inheritance subject",
-            accent: const Color(0xff607d8b),
+            accent: const Color(0xff607d8b).toSkirColor(),
             icon: skir.Icon.wrapIconify("material-symbols:category"),
           ),
           value: value,

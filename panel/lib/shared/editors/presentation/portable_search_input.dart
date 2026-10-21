@@ -647,7 +647,7 @@ final class _PortableSearchSurface extends ConsumerWidget {
 
 /// The appearance of the resource [value] links to, or null when it links to
 /// no resource the host can project.
-ResourceAppearance? _resourceAppearance(
+skir.ResourceAppearance? _resourceAppearance(
   skir.DataValue value,
   PortablePresentationScope scope,
 ) {

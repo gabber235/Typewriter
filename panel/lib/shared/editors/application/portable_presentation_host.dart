@@ -379,7 +379,7 @@ abstract class PortableResourceProjection with _$PortableResourceProjection {
   const factory PortableResourceProjection({
     required skir.ResourceId resource,
     required skir.TypeSelection configuration,
-    required ResourceAppearance appearance,
+    required skir.ResourceAppearance appearance,
     required skir.DataValue value,
     @Default([]) List<PortablePresentationDiagnostic> diagnostics,
     @Default(PortableDiagnosticFallback.presentation)
@@ -461,7 +461,7 @@ abstract class PortableResourceMember with _$PortableResourceMember {
 
   const PortableResourceMember._();
 
-  ResourceAppearance get appearance => resourceProjection.appearance;
+  skir.ResourceAppearance get appearance => resourceProjection.appearance;
 }
 
 @freezed

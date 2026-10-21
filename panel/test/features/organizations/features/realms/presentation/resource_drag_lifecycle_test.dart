@@ -369,9 +369,9 @@ Future<void> _pumpOperation(
           configuration: fixture.workspace.document
               .resource(member.key)!
               .configuration,
-          appearance: ResourceAppearance(
+          appearance: skir.ResourceAppearance(
             label: "Source",
-            accent: const Color(0xff607d8b),
+            accent: const Color(0xff607d8b).toSkirColor(),
             icon: skir.Icon.wrapIconify("material-symbols:category"),
           ),
           value: skir.DataValue.wrapStringValue("fixture"),

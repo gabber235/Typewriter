@@ -455,13 +455,13 @@ final class _ResourceReferenceAppearance extends HookWidget {
   final Widget Function(
     skir.PresentationNode,
     PortablePresentationScope,
-    ResourceAppearance,
+    skir.ResourceAppearance,
   )
   render;
 
   /// Stands in for the presentation: with the appearance when the resource
   /// is known, and with a problem when its presentation cannot render.
-  final Widget Function(ResourceAppearance?, String? problem) fallback;
+  final Widget Function(skir.ResourceAppearance?, String? problem) fallback;
 
   @override
   Widget build(BuildContext context) {

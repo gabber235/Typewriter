@@ -28,11 +28,11 @@ final resourceAppearanceProvider = ResourceAppearanceFamily._();
 final class ResourceAppearanceProvider
     extends
         $FunctionalProvider<
-          ResourceAppearance?,
-          ResourceAppearance?,
-          ResourceAppearance?
+          skir.ResourceAppearance?,
+          skir.ResourceAppearance?,
+          skir.ResourceAppearance?
         >
-    with $Provider<ResourceAppearance?> {
+    with $Provider<skir.ResourceAppearance?> {
   /// Name, accent and icon of one resource from its most specific declared
   /// display, in the working observation of [scope].
   ///
@@ -62,21 +62,21 @@ final class ResourceAppearanceProvider
 
   @$internal
   @override
-  $ProviderElement<ResourceAppearance?> $createElement(
+  $ProviderElement<skir.ResourceAppearance?> $createElement(
     $ProviderPointer pointer,
   ) => $ProviderElement(pointer);
 
   @override
-  ResourceAppearance? create(Ref ref) {
+  skir.ResourceAppearance? create(Ref ref) {
     final argument = this.argument as (AuthoringScope, skir.ResourceId);
     return resourceAppearance(ref, argument.$1, argument.$2);
   }
 
   /// {@macro riverpod.override_with_value}
-  Override overrideWithValue(ResourceAppearance? value) {
+  Override overrideWithValue(skir.ResourceAppearance? value) {
     return $ProviderOverride(
       origin: this,
-      providerOverride: $SyncValueProvider<ResourceAppearance?>(value),
+      providerOverride: $SyncValueProvider<skir.ResourceAppearance?>(value),
     );
   }
 
@@ -92,7 +92,7 @@ final class ResourceAppearanceProvider
 }
 
 String _$resourceAppearanceHash() =>
-    r'dd30cf6b260f588cfb13fcf7f493da36282f9553';
+    r'eb483b0f2f9a8bcaf2eaca7d73e3e13899f2fc34';
 
 /// Name, accent and icon of one resource from its most specific declared
 /// display, in the working observation of [scope].
@@ -104,7 +104,7 @@ String _$resourceAppearanceHash() =>
 final class ResourceAppearanceFamily extends $Family
     with
         $FunctionalFamilyOverride<
-          ResourceAppearance?,
+          skir.ResourceAppearance?,
           (AuthoringScope, skir.ResourceId)
         > {
   ResourceAppearanceFamily._()

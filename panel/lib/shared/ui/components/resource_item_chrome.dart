@@ -1,3 +1,5 @@
+import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
+    as skir;
 import "package:typewriter_panel/typewriter_panel.dart";
 
 /// How much room a resource item has where it is laid out.
@@ -22,13 +24,13 @@ class ResourceItemChrome extends StatelessWidget {
     super.key,
   });
 
-  final ResourceAppearance appearance;
+  final skir.ResourceAppearance appearance;
   final ResourceItemDensity density;
 
   @override
   Widget build(BuildContext context) {
     final interaction = PresentationInteractionScope.of(context);
-    final accent = appearance.accent;
+    final accent = appearance.accentColor;
     final emphasized =
         interaction.selected || interaction.routed || interaction.dropAccepted;
     final background = emphasized

@@ -69,9 +69,9 @@ Widget bookAndTagSelectionStory({required bool sharedColor}) {
                 SizedBox(
                   width: 180,
                   child: ResourceItemChrome(
-                    appearance: ResourceAppearance(
+                    appearance: skir.ResourceAppearance(
                       label: label,
-                      accent: color,
+                      accent: color.toSkirColor(),
                       icon: skir.Icon.wrapIconify(icon),
                     ),
                   ),

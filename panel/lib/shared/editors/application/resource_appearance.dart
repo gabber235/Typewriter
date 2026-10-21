@@ -2,31 +2,16 @@ import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
     as skir;
 import "package:typewriter_panel/typewriter_panel.dart";
 
-part "resource_appearance.freezed.dart";
-
-/// How one resource names and marks itself on every surface: the evaluated
-/// label, accent and icon of the most specific display declared for its type.
-@freezed
-abstract class ResourceAppearance with _$ResourceAppearance {
-  const factory ResourceAppearance({
-    required String label,
-    required Color accent,
-    required skir.Icon icon,
-  }) = _ResourceAppearance;
-}
-
-/// Binds an appearance as the canonical read model resource presentations
-/// read through [presentationSubjectAppearanceBindingId].
-extension ResourceAppearanceBinding on ResourceAppearance {
-  /// The Skir read model of this appearance.
-  skir.ResourceAppearance toSkir() => skir.ResourceAppearance(
-    label: label,
-    accent: skir.Color(argb: accent.toARGB32().toSigned(32)),
-    icon: icon,
-  );
+/// How one resource names and marks itself on every surface, as the
+/// canonical read model `skir.ResourceAppearance`: the evaluated label, accent
+/// and icon of the most specific display declared for its type. Resource
+/// presentations read it through [presentationSubjectAppearanceBindingId].
+extension ResourceAppearanceBinding on skir.ResourceAppearance {
+  /// The accent as a Flutter color.
+  Color get accentColor => accent.toFlutterColor();
 
   skir.DataValue toExpressionValue() => canonicalReadModels.project(
-    toSkir(),
+    this,
     skir.ResourceAppearance.serializer.typeDescriptor,
     const [],
     () {},
@@ -93,7 +78,7 @@ extension ResourceAppearanceCatalog on CheckedEditorCatalog {
   /// Display formulas read only their subject, so the record alone names the
   /// resource. A formula that cannot be evaluated, or a catalog without
   /// displays, yields the matching part of the record's type display.
-  ResourceAppearance appearanceOf(skir.AuthoringRecord record) {
+  skir.ResourceAppearance appearanceOf(skir.AuthoringRecord record) {
     final display =
         selectionDisplay(record.configuration) ??
         defaultTypeDisplay(typeSelectionName(record.configuration));
@@ -129,13 +114,14 @@ extension ResourceAppearanceCatalog on CheckedEditorCatalog {
       null => null,
     };
     final name = label ?? display.name;
-    return ResourceAppearance(
+    return skir.ResourceAppearance(
       label: name.trim().isEmpty
           ? typeSelectionName(record.configuration)
           : name,
-      accent: Color(
-        (accent ?? BigInt.from(display.color.argb)).toUnsigned(32).toInt(),
-      ),
+      accent: switch (accent) {
+        final value? => skir.Color(argb: value.toSigned(32).toInt()),
+        null => display.color,
+      },
       icon: icon ?? display.icon,
     );
   }
@@ -153,7 +139,7 @@ extension ResourceAppearanceCatalog on CheckedEditorCatalog {
 
 /// The resource [view] holds at [id] with its appearance; null when the
 /// resource is absent, so callers render their own missing state.
-ResourceAppearance? resourceAppearanceIn(
+skir.ResourceAppearance? resourceAppearanceIn(
   CheckedEditorCatalog catalog,
   PortableAuthoringView view,
   skir.ResourceId id,

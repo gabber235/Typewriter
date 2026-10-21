@@ -51,9 +51,9 @@ void main() {
   });
 
   test("an appearance reads its accent as the declared color", () {
-    final value = ResourceAppearance(
+    final value = skir.ResourceAppearance(
       label: "Book",
-      accent: const Color(0xff336699),
+      accent: const Color(0xff336699).toSkirColor(),
       icon: skir.Icon.wrapIconify("lucide:book"),
     ).toExpressionValue();
     expect(value.authoredField("accent"), colorValue(0xff336699));

@@ -556,7 +556,7 @@ as String,
 /// @nodoc
 mixin _$ResourceCrumbChoice {
 
- skir.ResourceId get resource; ResourceAppearance get appearance;
+ skir.ResourceId get resource; skir.ResourceAppearance get appearance;
 /// Create a copy of ResourceCrumbChoice
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -592,11 +592,11 @@ abstract mixin class $ResourceCrumbChoiceCopyWith<$Res>  {
   factory $ResourceCrumbChoiceCopyWith(ResourceCrumbChoice value, $Res Function(ResourceCrumbChoice) _then) = _$ResourceCrumbChoiceCopyWithImpl;
 @useResult
 $Res call({
- skir.ResourceId resource, ResourceAppearance appearance
+ skir.ResourceId resource, skir.ResourceAppearance appearance
 });
 
 
-$ResourceAppearanceCopyWith<$Res> get appearance;
+
 
 }
 /// @nodoc
@@ -613,19 +613,10 @@ class _$ResourceCrumbChoiceCopyWithImpl<$Res>
   return _then(ResourceCrumbChoice(
 resource: null == resource ? _self.resource : resource // ignore: cast_nullable_to_non_nullable
 as skir.ResourceId,appearance: null == appearance ? _self.appearance : appearance // ignore: cast_nullable_to_non_nullable
-as ResourceAppearance,
+as skir.ResourceAppearance,
   ));
 }
-/// Create a copy of ResourceCrumbChoice
-/// with the given fields replaced by the non-null parameter values.
-@override
-@pragma('vm:prefer-inline')
-$ResourceAppearanceCopyWith<$Res> get appearance {
-  
-  return $ResourceAppearanceCopyWith<$Res>(_self.appearance, (value) {
-    return _then(_self.copyWith(appearance: value));
-  });
-}
+
 }
 
 
@@ -707,7 +698,7 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( skir.ResourceId resource,  ResourceAppearance appearance)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( skir.ResourceId resource,  skir.ResourceAppearance appearance)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _ResourceCrumbChoice() when $default != null:
 return $default(_that.resource,_that.appearance);case _:
@@ -728,7 +719,7 @@ return $default(_that.resource,_that.appearance);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( skir.ResourceId resource,  ResourceAppearance appearance)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( skir.ResourceId resource,  skir.ResourceAppearance appearance)  $default,) {final _that = this;
 switch (_that) {
 case _ResourceCrumbChoice():
 return $default(_that.resource,_that.appearance);case _:
@@ -748,7 +739,7 @@ return $default(_that.resource,_that.appearance);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( skir.ResourceId resource,  ResourceAppearance appearance)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( skir.ResourceId resource,  skir.ResourceAppearance appearance)?  $default,) {final _that = this;
 switch (_that) {
 case _ResourceCrumbChoice() when $default != null:
 return $default(_that.resource,_that.appearance);case _:
@@ -767,7 +758,7 @@ class _ResourceCrumbChoice implements ResourceCrumbChoice {
   
 
 @override final  skir.ResourceId resource;
-@override final  ResourceAppearance appearance;
+@override final  skir.ResourceAppearance appearance;
 
 /// Create a copy of ResourceCrumbChoice
 /// with the given fields replaced by the non-null parameter values.
@@ -801,11 +792,11 @@ abstract mixin class _$ResourceCrumbChoiceCopyWith<$Res> implements $ResourceCru
   factory _$ResourceCrumbChoiceCopyWith(_ResourceCrumbChoice value, $Res Function(_ResourceCrumbChoice) _then) = __$ResourceCrumbChoiceCopyWithImpl;
 @override @useResult
 $Res call({
- skir.ResourceId resource, ResourceAppearance appearance
+ skir.ResourceId resource, skir.ResourceAppearance appearance
 });
 
 
-@override $ResourceAppearanceCopyWith<$Res> get appearance;
+
 
 }
 /// @nodoc
@@ -822,20 +813,11 @@ class __$ResourceCrumbChoiceCopyWithImpl<$Res>
   return _then(_ResourceCrumbChoice(
 resource: null == resource ? _self.resource : resource // ignore: cast_nullable_to_non_nullable
 as skir.ResourceId,appearance: null == appearance ? _self.appearance : appearance // ignore: cast_nullable_to_non_nullable
-as ResourceAppearance,
+as skir.ResourceAppearance,
   ));
 }
 
-/// Create a copy of ResourceCrumbChoice
-/// with the given fields replaced by the non-null parameter values.
-@override
-@pragma('vm:prefer-inline')
-$ResourceAppearanceCopyWith<$Res> get appearance {
-  
-  return $ResourceAppearanceCopyWith<$Res>(_self.appearance, (value) {
-    return _then(_self.copyWith(appearance: value));
-  });
-}
+
 }
 
 /// @nodoc

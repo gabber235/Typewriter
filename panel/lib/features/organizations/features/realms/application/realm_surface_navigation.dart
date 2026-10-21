@@ -141,7 +141,7 @@ List<ResourceCreationField> resourceCreationFields(
 abstract class ResourceCrumbChoice with _$ResourceCrumbChoice {
   const factory ResourceCrumbChoice({
     required skir.ResourceId resource,
-    required ResourceAppearance appearance,
+    required skir.ResourceAppearance appearance,
   }) = _ResourceCrumbChoice;
 }
 

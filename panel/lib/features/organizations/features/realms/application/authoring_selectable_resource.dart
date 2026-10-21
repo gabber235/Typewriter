@@ -79,14 +79,14 @@ final class AuthoringSelectableResource
   final skir.AuthoringResource resource;
 
   /// How the resource names and marks itself, from its declared display.
-  final ResourceAppearance appearance;
+  final skir.ResourceAppearance appearance;
   final RealmEditing workspace;
   final AuthoredResourceCommands commands;
 
   @override
   String get name => appearance.label;
 
-  Color get color => appearance.accent;
+  Color get color => appearance.accentColor;
 
   @override
   List<SelectionCapability> get capabilities => const [];

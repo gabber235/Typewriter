@@ -112,7 +112,7 @@ final class AuthoredResourceSearchResult extends HookWidget {
       row: row,
       density: density,
       title: appearance.label,
-      accent: appearance.accent,
+      accent: appearance.accentColor,
       leading: ResourceIcon(icon: appearance.icon),
       kindLabel: kind,
       footer: footer,

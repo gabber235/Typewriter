@@ -558,7 +558,7 @@ abstract class PortablePresentationScope with _$PortablePresentationScope {
   }
 
   /// The appearance of a resource in this scope's authoring observation.
-  ResourceAppearance? _appearanceOf(skir.ResourceId resource) {
+  skir.ResourceAppearance? _appearanceOf(skir.ResourceId resource) {
     final catalog = queries?.catalog ?? this.catalog;
     final record = queries?.authored?.resource(resource);
     return catalog == null || record == null
@@ -792,7 +792,7 @@ extension _PresentationSubjectBindings
     on Map<skir.ExpressionBindingId, PortableExpressionBinding> {
   Map<skir.ExpressionBindingId, PortableExpressionBinding> withSubjectAt(
     skir.ValueLocation? location,
-    ResourceAppearance? Function(skir.ResourceId) appearanceOf,
+    skir.ResourceAppearance? Function(skir.ResourceId) appearanceOf,
   ) {
     final subject = switch (location) {
       final value? when value.path.segments.isEmpty => value.resource,
