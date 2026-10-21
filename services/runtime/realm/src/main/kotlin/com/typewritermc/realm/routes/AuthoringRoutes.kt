@@ -20,7 +20,6 @@ import com.typewritermc.services.libs.communicator.router.CommunicatorRoutesBuil
 import com.typewritermc.types.ResourceId
 import com.typewritermc.types.catalog.of
 import com.typewritermc.types.requireValid
-import com.typewritermc.types.skir.SkirTypeCodec
 import com.typewritermc.types.skir.getOrThrow
 import skirout.editor.v1.authoring.AuthoringObservationId
 import skirout.editor.v1.authoring.PrepareTypeArgumentChangeResponse

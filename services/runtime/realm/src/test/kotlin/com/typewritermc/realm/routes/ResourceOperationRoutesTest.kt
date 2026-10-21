@@ -40,7 +40,6 @@ import com.typewritermc.realm.repository.MutationPlanningResult
 import com.typewritermc.realm.testTag
 import com.typewritermc.types.Ref
 import com.typewritermc.types.ResourceId
-import com.typewritermc.types.ResourceTarget
 import com.typewritermc.types.endpointId
 import com.typewritermc.types.fieldMap
 import com.typewritermc.types.fields
@@ -49,6 +48,7 @@ import com.typewritermc.types.namedTemplate
 import com.typewritermc.types.payload
 import com.typewritermc.types.skir.getOrThrow
 import com.typewritermc.types.toResourceId
+import com.typewritermc.types.type
 import com.typewritermc.types.use
 import de.infix.testBalloon.framework.core.testSuite
 import io.kotest.matchers.collections.shouldContain
@@ -65,6 +65,7 @@ import skirout.editor.v1.resource_operations.ResolveResourceOperationsResult
 import skirout.editor.v1.type_catalog.AuthoringRecord
 import skirout.editor.v1.type_catalog.DataValue
 import skirout.editor.v1.type_catalog.RelationId
+import skirout.editor.v1.type_catalog.ResourceTarget
 import skirout.editor.v1.type_catalog.ValueLocation
 import skirout.editor.v1.type_catalog.ValuePath
 
@@ -442,7 +443,7 @@ private fun manyCandidates(origin: ProviderOrigin) =
     collectOperation<ResourceDraft, LinkWithInput>(
         origin,
         "fixture.ManyCandidates",
-        ResourceTarget.Type(TagDefinition.id.namedTemplate()),
+        ResourceTarget.type(TagDefinition.id.namedTemplate()),
         AnyResourceSubjects,
         OperationInput.Typed(LinkWithInputDefinition.use),
         "Many candidates",
@@ -463,7 +464,7 @@ private fun orphanTag(origin: ProviderOrigin) =
     collectOperation<ResourceDraft, Unit>(
         origin,
         "fixture.OrphanTag",
-        ResourceTarget.Type(TagDefinition.id.namedTemplate()),
+        ResourceTarget.type(TagDefinition.id.namedTemplate()),
         AnyResourceSubjects,
         OperationInput.None,
         "Orphan tag",
@@ -490,7 +491,7 @@ private fun brokenAvailability(origin: ProviderOrigin) =
     collectOperation<ResourceDraft, Unit>(
         origin,
         "fixture.BrokenAvailability",
-        ResourceTarget.Type(TagDefinition.id.namedTemplate()),
+        ResourceTarget.type(TagDefinition.id.namedTemplate()),
         AnyResourceSubjects,
         OperationInput.None,
         "Broken availability",

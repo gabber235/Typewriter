@@ -49,9 +49,8 @@ import com.typewritermc.imprint.ArtifactId
 import com.typewritermc.imprint.ContributionName
 import com.typewritermc.imprint.ContributionSourceId
 import com.typewritermc.imprint.ProducerId
-import com.typewritermc.presentation.PresentationDescriptor
 import com.typewritermc.presentation.PresentationProvider
-import com.typewritermc.presentation.PresentationTarget
+import com.typewritermc.presentation.of
 import com.typewritermc.types.GeneratedNativeField
 import com.typewritermc.types.GeneratedRecordNativeBinding
 import com.typewritermc.types.GeneratedScalarNativeBinding
@@ -76,7 +75,6 @@ import com.typewritermc.types.qualified
 import com.typewritermc.types.record
 import com.typewritermc.types.rows
 import com.typewritermc.types.setValue
-import com.typewritermc.types.skir.SkirTypeCodec
 import com.typewritermc.types.skir.getOrThrow
 import com.typewritermc.types.template
 import com.typewritermc.types.use
@@ -84,7 +82,9 @@ import de.infix.testBalloon.framework.core.testSuite
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.matchers.shouldBe
 import skirout.editor.v1.catalog.DeclarationStatus
+import skirout.editor.v1.catalog.PresentationDescriptor
 import skirout.editor.v1.catalog.PresentationMaterial
+import skirout.editor.v1.catalog.PresentationTarget
 import skirout.editor.v1.catalog.RelationDeletePolicy
 import skirout.editor.v1.catalog.RepresentationKind
 import skirout.editor.v1.diagnostic.DiagnosticSeverity
@@ -1225,9 +1225,9 @@ val SdkRuntimeConformanceTest by testSuite {
         val resolvedEditor =
             skirout.editor.v1.type_catalog
                 .PresentationId(namespace = "test", name = "resolved editor")
-        val textTarget = PresentationTarget.Named(textNamed.id.namedTemplate())
-        val choiceTarget = PresentationTarget.Named(choiceNamed.id.namedTemplate())
-        val resolvedTarget = PresentationTarget.Named(resolved.id.namedTemplate())
+        val textTarget = PresentationTarget.NamedWrapper(textNamed.id.namedTemplate())
+        val choiceTarget = PresentationTarget.NamedWrapper(choiceNamed.id.namedTemplate())
+        val resolvedTarget = PresentationTarget.NamedWrapper(resolved.id.namedTemplate())
         val materials =
             listOf(
                 fieldPresentationMaterial(textProvider, textTarget, textEditor),
@@ -1264,7 +1264,7 @@ val SdkRuntimeConformanceTest by testSuite {
         val provider =
             skirout.editor.v1.type_catalog
                 .PresentationId(namespace = "test", name = "invalid field")
-        val target = PresentationTarget.Named(definition.id.namedTemplate())
+        val target = PresentationTarget.NamedWrapper(definition.id.namedTemplate())
         val material =
             fieldPresentationMaterial(
                 provider,
@@ -1291,7 +1291,7 @@ val SdkRuntimeConformanceTest by testSuite {
         val provider =
             skirout.editor.v1.type_catalog
                 .PresentationId(namespace = "test", name = "atomic part")
-        val target = PresentationTarget.Named(definition.id.namedTemplate())
+        val target = PresentationTarget.NamedWrapper(definition.id.namedTemplate())
         val base =
             fieldPresentationMaterial(
                 provider,
@@ -1370,7 +1370,7 @@ val SdkRuntimeConformanceTest by testSuite {
             fieldPresentationMaterial(
                 skirout.editor.v1.type_catalog
                     .PresentationId(namespace = "test", name = "immutable fields"),
-                PresentationTarget.Named(definitionId("ImmutablePresentation").namedTemplate()),
+                PresentationTarget.NamedWrapper(definitionId("ImmutablePresentation").namedTemplate()),
                 skirout.editor.v1.type_catalog
                     .PresentationId(namespace = "test", name = "text"),
             ).copy(inheritableNodes = references)
@@ -1442,9 +1442,9 @@ val SdkRuntimeConformanceTest by testSuite {
                         ),
                     roleFallbacks =
                         mutableListOf(
-                            com.typewritermc.presentation.RoleFallback(
-                                skirout.editor.v1.catalog.PresentationRole.INSPECTOR,
-                                fallbackParents,
+                            skirout.editor.v1.catalog.RoleFallback(
+                                role = skirout.editor.v1.catalog.PresentationRole.INSPECTOR,
+                                parents = fallbackParents,
                             ),
                         ),
                 ),
@@ -1689,17 +1689,14 @@ private fun fieldPresentationMaterial(
         provider =
             skirout.editor.v1.type_catalog
                 .PresentationId(namespace = provider.namespace, name = provider.name),
-        target =
-            com.typewritermc.types.skir.SkirTypeCodec
-                .encode(target)
-                .getOrThrow(),
+        target = target,
         role = skirout.editor.v1.catalog.PresentationRole.INSPECTOR,
         layout = layout,
         dependencies =
             skirout.editor.v1.presentation.PresentationDependencies
                 .partial(),
         subject =
-            (target as PresentationTarget.Named).type.template,
+            (target as PresentationTarget.NamedWrapper).value.template,
         inheritableNodes = emptyList(),
     )
 }
@@ -1711,7 +1708,7 @@ private fun ownedPresentation(
     material: PresentationMaterial,
 ): OwnedPresentation {
     val descriptor =
-        PresentationDescriptor(
+        PresentationDescriptor.of(
             id = id,
             owner = origin.owner,
             target = target,

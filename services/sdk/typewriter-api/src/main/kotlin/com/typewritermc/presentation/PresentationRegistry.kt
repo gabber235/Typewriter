@@ -9,7 +9,10 @@ import com.typewritermc.types.catalog.resolve
 import com.typewritermc.types.template
 import com.typewritermc.types.unknownVariant
 import com.typewritermc.types.use
+import skirout.editor.v1.catalog.PresentationDescriptor
 import skirout.editor.v1.catalog.PresentationRole
+import skirout.editor.v1.catalog.PresentationTarget
+import skirout.editor.v1.catalog.RoleFallback
 import skirout.editor.v1.type_catalog.NamedTypeUse
 import skirout.editor.v1.type_catalog.ParameterKey
 import skirout.editor.v1.type_catalog.TypeTemplate
@@ -58,17 +61,17 @@ internal fun PresentationTarget.isMoreSpecificThan(
     actual: CheckedType,
 ): Boolean =
     when {
-        this is PresentationTarget.Named && other is PresentationTarget.Representation -> {
+        this is PresentationTarget.NamedWrapper && other is PresentationTarget.RepresentationWrapper -> {
             true
         }
 
-        this is PresentationTarget.Representation || other is PresentationTarget.Representation -> {
+        this is PresentationTarget.RepresentationWrapper || other is PresentationTarget.RepresentationWrapper -> {
             false
         }
 
-        this is PresentationTarget.Named && other is PresentationTarget.Named -> {
-            val definition = type.definition
-            val otherDefinition = other.type.definition
+        this is PresentationTarget.NamedWrapper && other is PresentationTarget.NamedWrapper -> {
+            val definition = value.definition
+            val otherDefinition = other.value.definition
             when {
                 definition != otherDefinition -> {
                     actual.isNominalSubtype(definition, otherDefinition) &&
@@ -76,7 +79,7 @@ internal fun PresentationTarget.isMoreSpecificThan(
                 }
 
                 else -> {
-                    other.type.template.subsumes(type.template, actual) && !type.template.subsumes(other.type.template, actual)
+                    other.value.template.subsumes(value.template, actual) && !value.template.subsumes(other.value.template, actual)
                 }
             }
         }
@@ -91,20 +94,20 @@ internal fun PresentationTarget.isMoreSpecificThan(
     catalog: CheckedCatalog,
 ): Boolean =
     when {
-        this is PresentationTarget.Named && other is PresentationTarget.Representation -> {
+        this is PresentationTarget.NamedWrapper && other is PresentationTarget.RepresentationWrapper -> {
             true
         }
 
-        this is PresentationTarget.Representation || other is PresentationTarget.Representation -> {
+        this is PresentationTarget.RepresentationWrapper || other is PresentationTarget.RepresentationWrapper -> {
             false
         }
 
-        this is PresentationTarget.Named && other is PresentationTarget.Named -> {
-            if (type.definition != other.type.definition) {
-                catalog.isNominalSubtype(type.definition, other.type.definition) &&
-                    !catalog.isNominalSubtype(other.type.definition, type.definition)
+        this is PresentationTarget.NamedWrapper && other is PresentationTarget.NamedWrapper -> {
+            if (value.definition != other.value.definition) {
+                catalog.isNominalSubtype(value.definition, other.value.definition) &&
+                    !catalog.isNominalSubtype(other.value.definition, value.definition)
             } else {
-                other.type.template.subsumes(type.template, catalog) && !type.template.subsumes(other.type.template, catalog)
+                other.value.template.subsumes(value.template, catalog) && !value.template.subsumes(other.value.template, catalog)
             }
         }
 
@@ -118,12 +121,12 @@ internal fun PresentationTarget.isEquivalentTo(
     actual: CheckedType,
 ): Boolean =
     when {
-        this is PresentationTarget.Representation && other is PresentationTarget.Representation -> {
-            kind == other.kind
+        this is PresentationTarget.RepresentationWrapper && other is PresentationTarget.RepresentationWrapper -> {
+            value == other.value
         }
 
-        this is PresentationTarget.Named && other is PresentationTarget.Named -> {
-            type.template.subsumes(other.type.template, actual) && other.type.template.subsumes(type.template, actual)
+        this is PresentationTarget.NamedWrapper && other is PresentationTarget.NamedWrapper -> {
+            value.template.subsumes(other.value.template, actual) && other.value.template.subsumes(value.template, actual)
         }
 
         else -> {
@@ -136,12 +139,12 @@ internal fun PresentationTarget.isEquivalentTo(
     catalog: CheckedCatalog,
 ): Boolean =
     when {
-        this is PresentationTarget.Representation && other is PresentationTarget.Representation -> {
-            kind == other.kind
+        this is PresentationTarget.RepresentationWrapper && other is PresentationTarget.RepresentationWrapper -> {
+            value == other.value
         }
 
-        this is PresentationTarget.Named && other is PresentationTarget.Named -> {
-            type.template.subsumes(other.type.template, catalog) && other.type.template.subsumes(type.template, catalog)
+        this is PresentationTarget.NamedWrapper && other is PresentationTarget.NamedWrapper -> {
+            value.template.subsumes(other.value.template, catalog) && other.value.template.subsumes(value.template, catalog)
         }
 
         else -> {
@@ -151,12 +154,16 @@ internal fun PresentationTarget.isEquivalentTo(
 
 internal fun PresentationTarget.matches(actual: CheckedType): Boolean =
     when (this) {
-        is PresentationTarget.Representation -> {
-            actual.schema.representation.kind() == kind
+        is PresentationTarget.RepresentationWrapper -> {
+            actual.schema.representation.kind() == value
         }
 
-        is PresentationTarget.Named -> {
-            actual.applications().any { application -> type.template.matches(application.use, linkedMapOf(), actual) }
+        is PresentationTarget.NamedWrapper -> {
+            actual.applications().any { application -> value.template.matches(application.use, linkedMapOf(), actual) }
+        }
+
+        else -> {
+            unknownVariant(this)
         }
     }
 

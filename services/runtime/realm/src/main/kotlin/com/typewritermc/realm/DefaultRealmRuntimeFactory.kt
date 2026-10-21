@@ -41,9 +41,9 @@ import com.typewritermc.services.libs.telemetry.serviceTelemetry
 import com.typewritermc.services.libs.utils.CoroutineDelayScheduler
 import com.typewritermc.services.libs.utils.RetryPolicy
 import com.typewritermc.services.libs.utils.closeAll
-import com.typewritermc.types.ResourceTarget
 import com.typewritermc.types.canonicalText
 import com.typewritermc.types.template
+import com.typewritermc.types.unknownVariant
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
@@ -51,6 +51,7 @@ import kotlinx.coroutines.cancel
 import skirout.editor.v1.publication.EngineImplementationInputs
 import skirout.editor.v1.type_catalog.CatalogGeneration
 import skirout.editor.v1.type_catalog.InputToken
+import skirout.editor.v1.type_catalog.ResourceTarget
 import java.nio.file.Path
 import java.util.UUID
 import java.util.concurrent.atomic.AtomicBoolean
@@ -99,7 +100,7 @@ class DefaultRealmRuntimeFactory : RealmRuntimeFactory {
                         loaded.providers.contributions.assemble(
                             CatalogAssemblyContext(
                                 generation = generation,
-                                capabilities = loaded.providers.capabilities.map { it.provider.descriptor },
+                                capabilities = loaded.providers.capabilities.map { it.provider.definition },
                             ),
                         )
                     main.annotate {
@@ -311,8 +312,9 @@ internal fun CatalogAssembly.reportCallbackFailures() {
                     attribute(
                         "catalog.subject",
                         when (val target = callback.target) {
-                            is ResourceTarget.Type -> target.template.template.canonicalText
-                            ResourceTarget.AnyResource -> "any_resource"
+                            is ResourceTarget.TypeWrapper -> target.template.template.canonicalText
+                            ResourceTarget.ANY_RESOURCE -> "any_resource"
+                            else -> unknownVariant(target)
                         },
                     )
                 }

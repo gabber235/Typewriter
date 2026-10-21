@@ -2,40 +2,42 @@ package com.typewritermc.presentation
 
 import com.typewritermc.types.catalog.CheckedCatalog
 import com.typewritermc.types.catalog.CheckedType
+import com.typewritermc.types.requireValid
+import skirout.editor.v1.catalog.PresentationDescriptor
 import skirout.editor.v1.catalog.PresentationRole
+import skirout.editor.v1.catalog.PresentationTarget
 import skirout.editor.v1.catalog.RepresentationKind
 import skirout.editor.v1.type_catalog.DeclarationOwner
-import skirout.editor.v1.type_catalog.NamedTypeTemplate
 import skirout.editor.v1.type_catalog.PresentationId
 
-sealed interface PresentationTarget {
-    data class Named(
-        val type: NamedTypeTemplate,
-    ) : PresentationTarget
-
-    data class Representation(
-        val kind: RepresentationKind,
-    ) : PresentationTarget
-}
-
-data class PresentationDescriptor(
-    val id: PresentationId,
-    val owner: DeclarationOwner,
-    val target: PresentationTarget,
-    val roles: Set<PresentationRole>,
-    val priority: Int,
-)
-
-data class RoleFallback(
-    val role: PresentationRole,
-    val parents: List<PresentationRole>,
-)
+/** A presentation descriptor with its [roles] in role order, the canonical form the catalog publishes. */
+fun PresentationDescriptor.Companion.of(
+    id: PresentationId,
+    owner: DeclarationOwner,
+    target: PresentationTarget,
+    roles: Set<PresentationRole>,
+    priority: Int,
+): PresentationDescriptor =
+    PresentationDescriptor(id = id, owner = owner, target = target, roles = roles.sortedBy { it.kind.ordinal }, priority = priority)
 
 /** Checks the identity and roles a generated provider declared; selection and fallbacks rely on them. */
 fun PresentationDescriptor.requireValid(): PresentationDescriptor =
     apply {
         id.requireValid()
+        owner.requireValid()
+        target.requireValid()
         require(PresentationRole.UNKNOWN !in roles) { "A presentation declares only known roles." }
+        require(roles == roles.distinct().sortedBy { it.kind.ordinal }) { "Presentation roles must be unique and in role order." }
+    }
+
+/** Checks the named template or the known representation kind a presentation targets. */
+fun PresentationTarget.requireValid(): PresentationTarget =
+    apply {
+        when (this) {
+            is PresentationTarget.NamedWrapper -> value.requireValid()
+            is PresentationTarget.RepresentationWrapper -> require(value != RepresentationKind.UNKNOWN) { "Unknown representation kind." }
+            else -> throw IllegalArgumentException("Unknown presentation target.")
+        }
     }
 
 /** Checks a presentation identity where it enters the catalog; both parts name the provider. */

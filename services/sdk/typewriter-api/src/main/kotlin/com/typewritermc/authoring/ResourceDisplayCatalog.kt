@@ -10,9 +10,7 @@ import com.typewritermc.expression.EvaluationBudget
 import com.typewritermc.expression.ExpressionBindings
 import com.typewritermc.expression.ExpressionValueReader
 import com.typewritermc.types.ResourceId
-import com.typewritermc.types.ResourceTarget
 import com.typewritermc.types.catalog.CheckedCatalog
-import com.typewritermc.types.catalog.ResourceDisplayFormulas
 import com.typewritermc.types.fields
 import com.typewritermc.types.named
 import com.typewritermc.types.record
@@ -20,8 +18,10 @@ import com.typewritermc.types.template
 import com.typewritermc.types.unwrapNamed
 import com.typewritermc.types.use
 import skirout.editor.v1.catalog.PublishedType
+import skirout.editor.v1.catalog.ResourceDisplayFormulas
 import skirout.editor.v1.type_catalog.AuthoringRecord
 import skirout.editor.v1.type_catalog.DataValue
+import skirout.editor.v1.type_catalog.ResourceTarget
 import skirout.editor.v1.type_catalog.TypeDefinitionId
 import skirout.editor.v1.type_catalog.TypeSelection
 import skirout.editor.v1.type_catalog.ValueLocation
@@ -35,7 +35,7 @@ class CheckedResourceDisplay(
 ) {
     /** The wire form editors receive. */
     val formulas: ResourceDisplayFormulas
-        get() = ResourceDisplayFormulas(target, label.body, accent.body, icon.body)
+        get() = ResourceDisplayFormulas(target = target, label = label.body, accent = accent.body, icon = icon.body)
 }
 
 /**
@@ -49,8 +49,8 @@ class ResourceDisplayCatalog(
     val displays: List<CheckedResourceDisplay> = emptyList(),
     types: List<PublishedType> = emptyList(),
 ) {
-    private val anyResource = displays.firstOrNull { it.target == ResourceTarget.AnyResource }
-    private val typed = displays.filter { it.target is ResourceTarget.Type }
+    private val anyResource = displays.firstOrNull { it.target == ResourceTarget.ANY_RESOURCE }
+    private val typed = displays.filter { it.target is ResourceTarget.TypeWrapper }
     private val types = types.associateBy { it.definition.id }
 
     /** The published type of [definition], or null when this catalog publishes no such type. */
@@ -111,7 +111,7 @@ class ResourceDisplayCatalog(
 }
 
 private val CheckedResourceDisplay.targetDefinition: TypeDefinitionId
-    get() = (target as ResourceTarget.Type).template.definition
+    get() = (target as ResourceTarget.TypeWrapper).template.definition
 
 /** Display formulas name a resource from a few fields; this bounds a pathological formula, not a real one. */
 private val DISPLAY_BUDGET = EvaluationBudget(maxSteps = 10_000, maxCollectionItems = 1_000)

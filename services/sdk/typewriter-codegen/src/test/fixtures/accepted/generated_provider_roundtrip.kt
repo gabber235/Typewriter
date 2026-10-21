@@ -2,6 +2,8 @@
 
 package fixture
 
+import com.typewritermc.types.type
+import skirout.editor.v1.type_catalog.ResourceTarget
 import com.typewritermc.configuration.name
 import skirout.editor.v1.type_catalog.CatalogGeneration
 import com.typewritermc.authoring.root
@@ -53,7 +55,6 @@ import com.typewritermc.types.Ref
 import com.typewritermc.types.ReferenceContract
 import com.typewritermc.types.RelationDeletePolicy
 import com.typewritermc.types.Resource
-import com.typewritermc.types.ResourceTarget
 import com.typewritermc.authoring.defaultLabel
 import com.typewritermc.expression.orIfBlank
 import com.typewritermc.types.ResourceId
@@ -292,7 +293,7 @@ fun main(args: Array<String>) {
             val contributions = deployment.providers.contributions
             check(contributions.configurations.size == 1)
             check(contributions.presentations.size == 1)
-            check(contributions.displays.single().provider.target == ResourceTarget.Type(ExampleDefinition.id.namedTemplate()))
+            check(contributions.displays.single().provider.target == ResourceTarget.type(ExampleDefinition.id.namedTemplate()))
             val assembly = contributions.assemble(CatalogAssemblyContext(CatalogGeneration(value = "fixture")))
             check(
                 assembly.editorCatalog.resourceDisplays.single().target ==

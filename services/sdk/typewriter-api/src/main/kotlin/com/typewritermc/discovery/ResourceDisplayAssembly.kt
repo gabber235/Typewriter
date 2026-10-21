@@ -12,19 +12,20 @@ import com.typewritermc.expression.children
 import com.typewritermc.expression.nominalExpressionType
 import com.typewritermc.types.ColorDefinition
 import com.typewritermc.types.IconDefinition
-import com.typewritermc.types.ResourceTarget
 import com.typewritermc.types.catalog.CheckedCatalog
 import com.typewritermc.types.catalog.Resolution
 import com.typewritermc.types.catalog.isReady
 import com.typewritermc.types.catalog.of
 import com.typewritermc.types.qualified
 import com.typewritermc.types.template
+import com.typewritermc.types.unknownVariant
 import com.typewritermc.types.use
 import kotlinx.coroutines.CancellationException
 import skirout.editor.v1.diagnostic.DeclarationDiagnostic
 import skirout.editor.v1.diagnostic.DeclarationOrigin
 import skirout.editor.v1.expression.ExpressionNode
 import skirout.editor.v1.expression.ExpressionQuery
+import skirout.editor.v1.type_catalog.ResourceTarget
 import skirout.editor.v1.type_catalog.ScalarKind
 import skirout.editor.v1.type_catalog.TypeDefinition
 import skirout.editor.v1.type_catalog.TypeDefinitionId
@@ -61,7 +62,7 @@ internal fun collectResourceDisplays(
         displays.mapNotNull { owned ->
             val target = owned.provider.target
             val affected = target.affected
-            if (target is ResourceTarget.Type && !checked.isReady(target.template.definition)) return@mapNotNull null
+            if (target is ResourceTarget.TypeWrapper && !checked.isReady(target.template.definition)) return@mapNotNull null
             val origins = listOf(DeclarationOrigin(owner = owned.origin.owner))
             val formulas =
                 try {
@@ -80,8 +81,9 @@ internal fun collectResourceDisplays(
             }
             val subjects =
                 when (target) {
-                    is ResourceTarget.Type -> listOf(target.template.definition)
-                    ResourceTarget.AnyResource -> resourceTypes
+                    is ResourceTarget.TypeWrapper -> listOf(target.template.definition)
+                    ResourceTarget.ANY_RESOURCE -> resourceTypes
+                    else -> unknownVariant(target)
                 }.mapNotNull { definitions[it] }
                     .filter { checked.isReady(it.id) }
             val checker = PortableExpressionChecker(checked::resolve)
@@ -157,8 +159,9 @@ private val ExpressionQuery.readsResource: Boolean
 internal val ResourceTarget.affected: TypeDefinitionId
     get() =
         when (this) {
-            is ResourceTarget.Type -> template.definition
-            ResourceTarget.AnyResource -> ANY_RESOURCE
+            is ResourceTarget.TypeWrapper -> template.definition
+            ResourceTarget.ANY_RESOURCE -> ANY_RESOURCE
+            else -> unknownVariant(this)
         }
 
 private val ANY_RESOURCE = TypeDefinitionId.qualified("kotlin", "com.typewritermc.types.Resource")

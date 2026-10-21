@@ -1,6 +1,5 @@
 package com.typewritermc.realm.routes
 
-import com.typewritermc.capability.RealmCapabilityDescriptor
 import com.typewritermc.capability.RealmCapabilityRegistry
 import com.typewritermc.capability.RealmCapabilityRuntime
 import com.typewritermc.capability.RealmSearchContext
@@ -26,6 +25,7 @@ import kotlinx.coroutines.CoroutineStart
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.launch
+import skirout.editor.v1.capability.CapabilityDefinition
 import skirout.editor.v1.search.RealmPresentationSearchRequest
 import skirout.editor.v1.search.RealmPresentationSearchStatus
 import skirout.editor.v1.search.RealmPresentationSearchUpdate
@@ -212,9 +212,10 @@ class CapabilityRealmPresentationSearchSource(
         }
         val descriptor =
             RealmCapabilityRegistry(catalog.capabilities)
-                .descriptors
-                .filterIsInstance<RealmCapabilityDescriptor.Search>()
-                .singleOrNull { it.id.value == request.capabilityId.value }
+                .definitions
+                .filterIsInstance<CapabilityDefinition.SearchWrapper>()
+                .map { it.value }
+                .singleOrNull { it.capabilityId == request.capabilityId }
                 ?: return searchError(request.subscriptionId, "Realm search capability is unavailable")
         val resultType =
             request.resultType.takeIf { it.isValid }

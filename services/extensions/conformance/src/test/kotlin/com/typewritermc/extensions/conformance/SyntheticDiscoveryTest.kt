@@ -11,6 +11,7 @@ import com.typewritermc.capability.RealmCommandContext
 import com.typewritermc.capability.RealmComputationContext
 import com.typewritermc.capability.RealmSearchContext
 import com.typewritermc.capability.RealmSearchUpdate
+import com.typewritermc.capability.id
 import com.typewritermc.discovery.CapabilityOwnerResolver
 import com.typewritermc.discovery.DeploymentFacts
 import com.typewritermc.discovery.DiscoveryDomains
@@ -275,7 +276,7 @@ val SyntheticDiscoveryTest by testSuite {
             val catalog = messageCatalog()
             val runtime = RealmCapabilityRuntime(catalog, messageBindings(catalog))
 
-            registry.descriptors.map { it.id } shouldBe
+            registry.definitions.map { it.id } shouldBe
                 listOf(publishMessageCapability.id, repeatMessageCapability.id, searchMessagesCapability.id)
                     .sortedBy { it.value }
             val literal =

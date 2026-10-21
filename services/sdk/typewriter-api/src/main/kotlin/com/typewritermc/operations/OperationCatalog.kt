@@ -3,16 +3,13 @@ package com.typewritermc.operations
 import com.typewritermc.authoring.CompletenessResult
 import com.typewritermc.authoring.complete
 import com.typewritermc.authoring.name
-import com.typewritermc.capability.RealmCapabilityDescriptor
 import com.typewritermc.discovery.OwnedPresentation
 import com.typewritermc.discovery.ProviderOrigin
 import com.typewritermc.discovery.affected
-import com.typewritermc.presentation.PresentationTarget
 import com.typewritermc.presentation.matches
 import com.typewritermc.types.NativeBinding
 import com.typewritermc.types.NativeBindingRegistry
 import com.typewritermc.types.ResourceIdDefinition
-import com.typewritermc.types.ResourceTarget
 import com.typewritermc.types.catalog.CheckedCatalog
 import com.typewritermc.types.catalog.CheckedType
 import com.typewritermc.types.catalog.Resolution
@@ -22,16 +19,20 @@ import com.typewritermc.types.fields
 import com.typewritermc.types.namedUse
 import com.typewritermc.types.nullable
 import com.typewritermc.types.requireValid
-import com.typewritermc.types.skir.SkirTypeCodec
 import com.typewritermc.types.skir.getOrThrow
 import com.typewritermc.types.template
 import com.typewritermc.types.unknownVariant
 import com.typewritermc.types.use
 import kotlinx.coroutines.CancellationException
+import skirout.editor.v1.capability.AuthoringCapabilityDefinition
+import skirout.editor.v1.capability.CapabilityDefinition
+import skirout.editor.v1.capability.SearchCapabilityDefinition
+import skirout.editor.v1.catalog.PresentationTarget
 import skirout.editor.v1.diagnostic.DeclarationDiagnostic
 import skirout.editor.v1.diagnostic.DeclarationOrigin
 import skirout.editor.v1.operation.OperationAvailability
 import skirout.editor.v1.operation.OperationDrop
+import skirout.editor.v1.operation.OperationInputDefinition
 import skirout.editor.v1.operation.OperationTargets
 import skirout.editor.v1.operation.ResourceOperationDefinition
 import skirout.editor.v1.type_catalog.CapabilityId
@@ -41,6 +42,7 @@ import skirout.editor.v1.type_catalog.NamedTypeUse
 import skirout.editor.v1.type_catalog.PathSegment
 import skirout.editor.v1.type_catalog.PresentationId
 import skirout.editor.v1.type_catalog.ResolvedRepresentation
+import skirout.editor.v1.type_catalog.ResourceTarget
 import skirout.editor.v1.type_catalog.ScalarKind
 import skirout.editor.v1.type_catalog.TypeDefinitionId
 import skirout.editor.v1.type_catalog.TypeTemplate
@@ -68,11 +70,11 @@ class CandidateSearch internal constructor(
     val operation: BoundResourceOperation,
     val field: OperationInputField,
 ) {
-    val descriptor: RealmCapabilityDescriptor.Search =
-        RealmCapabilityDescriptor.Search(
-            operation.definition.id.candidateSearch(field.path),
-            ScalarKind.TEXT.use,
-            OperationResourceOptionDefinition.use.use,
+    val descriptor: SearchCapabilityDefinition =
+        SearchCapabilityDefinition(
+            capabilityId = operation.definition.id.candidateSearch(field.path),
+            requestType = ScalarKind.TEXT.use,
+            resultType = OperationResourceOptionDefinition.use.use,
         )
 }
 
@@ -88,12 +90,11 @@ class BoundResourceOperation internal constructor(
     private val collected: CollectedOperation,
     resourceFields: Set<ValuePath>,
 ) {
-    val capability: RealmCapabilityDescriptor.Authoring =
-        RealmCapabilityDescriptor.Authoring(
-            definition.id.capability,
-            input.schema?.use,
-            definition.targets,
-            input.presentation,
+    val capability: AuthoringCapabilityDefinition =
+        AuthoringCapabilityDefinition(
+            capabilityId = definition.id.capability,
+            targets = definition.targets,
+            input = input.schema?.use?.let { type -> OperationInputDefinition(type = type, presentation = input.presentation) },
         )
 
     /** The field drops fill, when the operation declares one. */
@@ -128,15 +129,19 @@ data class OperationCatalog(
     val definitions: List<ResourceOperationDefinition> get() = operations.map { it.definition }
 
     /** The authoring capability of every operation and the candidate search of every searchable field. */
-    val capabilities: List<RealmCapabilityDescriptor>
-        get() = operations.flatMap { operation -> listOf(operation.capability) + operation.candidateSearches.map { it.descriptor } }
+    val capabilities: List<CapabilityDefinition>
+        get() =
+            operations.flatMap { operation ->
+                listOf(CapabilityDefinition.AuthoringWrapper(operation.capability)) +
+                    operation.candidateSearches.map { CapabilityDefinition.SearchWrapper(it.descriptor) }
+            }
 
     fun requireAuthoring(id: CapabilityId): BoundResourceOperation =
-        requireNotNull(operations.singleOrNull { it.capability.id == id }) { "Authoring operation is unavailable: ${id.value}" }
+        requireNotNull(operations.singleOrNull { it.capability.capabilityId == id }) { "Authoring operation is unavailable: ${id.value}" }
 
     /** The operation field whose candidates back the search capability [id], or null for any other capability. */
     fun candidateSearch(id: CapabilityId): CandidateSearch? =
-        operations.firstNotNullOfOrNull { operation -> operation.candidateSearches.singleOrNull { it.descriptor.id == id } }
+        operations.firstNotNullOfOrNull { operation -> operation.candidateSearches.singleOrNull { it.descriptor.capabilityId == id } }
 }
 
 /**
@@ -161,14 +166,18 @@ fun bindOperations(
             val collected = requireNotNull(declaration.collected)
             require(operations.none { it.definition.id == declaration.id }) { "Duplicate operation ${declaration.id}." }
             when (val target = declaration.target) {
-                is ResourceTarget.Type -> {
+                is ResourceTarget.TypeWrapper -> {
                     require(catalog.resolve(target.template.asClosedUse().use) is Resolution.Ready) {
                         "Operation target is unavailable: ${target.template}."
                     }
                 }
 
-                ResourceTarget.AnyResource -> {
+                ResourceTarget.ANY_RESOURCE -> {
                     Unit
+                }
+
+                else -> {
+                    unknownVariant(target)
                 }
             }
             val input = declaration.input.bind(collected, catalog, bindings, presentations)
@@ -191,7 +200,7 @@ fun bindOperations(
                     presentation = collected.presentation,
                     targets =
                         OperationTargets(
-                            subject = SkirTypeCodec.encode(declaration.target).getOrThrow(),
+                            subject = declaration.target,
                             cardinality = collected.cardinality,
                         ),
                     capability = declaration.id.capability,
@@ -238,7 +247,7 @@ private fun OperationInput.bind(
                     val matches =
                         presentations.filter {
                             it.reference === reference &&
-                                (it.descriptor.target as? PresentationTarget.Named)?.matches(checked) == true
+                                (it.descriptor.target as? PresentationTarget.NamedWrapper)?.matches(checked) == true
                         }
                     require(matches.size == 1) { "Operation input form must resolve uniquely for $use." }
                     matches.single().descriptor.id

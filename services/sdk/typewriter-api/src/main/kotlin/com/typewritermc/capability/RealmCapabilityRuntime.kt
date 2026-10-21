@@ -12,6 +12,10 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.FlowCollector
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.map
+import skirout.editor.v1.capability.CapabilityDefinition
+import skirout.editor.v1.capability.CommandCapabilityDefinition
+import skirout.editor.v1.capability.ComputationCapabilityDefinition
+import skirout.editor.v1.capability.SearchCapabilityDefinition
 import skirout.editor.v1.search.RealmSearchQuery
 import skirout.editor.v1.type_catalog.CapabilityId
 import skirout.editor.v1.type_catalog.DataValue
@@ -190,12 +194,15 @@ class RealmCapabilityRuntime(
         }
 }
 
+/** A Realm capability implementation; [definition] is the catalog form of its kind specific descriptor. */
 sealed interface RealmCapabilityProvider {
-    val descriptor: RealmCapabilityDescriptor
+    val definition: CapabilityDefinition
 }
 
 interface RealmSearchCapabilityProvider : RealmCapabilityProvider {
-    override val descriptor: RealmCapabilityDescriptor.Search
+    val descriptor: SearchCapabilityDefinition
+
+    override val definition: CapabilityDefinition get() = CapabilityDefinition.SearchWrapper(descriptor)
 
     fun invoke(
         context: RealmSearchContext,
@@ -206,7 +213,9 @@ interface RealmSearchCapabilityProvider : RealmCapabilityProvider {
 }
 
 interface RealmComputationCapabilityProvider : RealmCapabilityProvider {
-    override val descriptor: RealmCapabilityDescriptor.Computation
+    val descriptor: ComputationCapabilityDefinition
+
+    override val definition: CapabilityDefinition get() = CapabilityDefinition.ComputationWrapper(descriptor)
 
     suspend fun invoke(
         context: RealmComputationContext,
@@ -216,7 +225,9 @@ interface RealmComputationCapabilityProvider : RealmCapabilityProvider {
 }
 
 interface RealmCommandCapabilityProvider : RealmCapabilityProvider {
-    override val descriptor: RealmCapabilityDescriptor.Command
+    val descriptor: CommandCapabilityDefinition
+
+    override val definition: CapabilityDefinition get() = CapabilityDefinition.CommandWrapper(descriptor)
 
     suspend fun invoke(
         context: RealmCommandContext,
@@ -228,9 +239,9 @@ interface RealmCommandCapabilityProvider : RealmCapabilityProvider {
 class RealmCapabilityRegistry(
     providers: Collection<RealmCapabilityProvider>,
 ) {
-    private val providersById = providers.associateBy { it.descriptor.id }
+    private val providersById = providers.associateBy { it.definition.id }
 
-    val descriptors: List<RealmCapabilityDescriptor> = providers.map(RealmCapabilityProvider::descriptor).sortedBy { it.id.value }
+    val definitions: List<CapabilityDefinition> = providers.map(RealmCapabilityProvider::definition).sortedBy { it.id.value }
 
     init {
         require(providersById.size == providers.size) { "Realm capability ids must be unique." }

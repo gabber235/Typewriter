@@ -31,13 +31,12 @@ import com.typewritermc.presentation.DefaultPresentationRuntime
 import com.typewritermc.presentation.Layout
 import com.typewritermc.presentation.PresentationBuildBinding
 import com.typewritermc.presentation.PresentationBuildScope
-import com.typewritermc.presentation.PresentationDescriptor
 import com.typewritermc.presentation.PresentationProvider
 import com.typewritermc.presentation.PresentationRuntime
-import com.typewritermc.presentation.PresentationTarget
 import com.typewritermc.presentation.RecordControl
 import com.typewritermc.presentation.TextControl
 import com.typewritermc.presentation.invoke
+import com.typewritermc.presentation.of
 import com.typewritermc.presentation.presentationPart
 import com.typewritermc.presentation.presentationTemplate
 import com.typewritermc.types.FactoryNativeBindingRegistry
@@ -70,7 +69,9 @@ import io.kotest.matchers.collections.shouldHaveSize
 import io.kotest.matchers.shouldBe
 import skirout.editor.v1.catalog.PreparedContent
 import skirout.editor.v1.catalog.PreparedValue
+import skirout.editor.v1.catalog.PresentationDescriptor
 import skirout.editor.v1.catalog.PresentationRole
+import skirout.editor.v1.catalog.PresentationTarget
 import skirout.editor.v1.presentation.AxisChild
 import skirout.editor.v1.presentation.ChildrenElement
 import skirout.editor.v1.presentation.PresentationElement
@@ -138,8 +139,8 @@ val FrameworkCatalogCreationTest by testSuite {
                     skirout.editor.v1.type_catalog
                         .PresentationId(namespace = "test", name = "concrete entry graph"),
                 target =
-                    com.typewritermc.presentation.PresentationTarget
-                        .Named(concreteId.namedTemplate()),
+                    skirout.editor.v1.catalog.PresentationTarget
+                        .NamedWrapper(concreteId.namedTemplate()),
                 priority = inherited.priority - 1,
             )
         val customRegistry = com.typewritermc.presentation.DefaultPresentationRegistry(catalog, listOf(inherited, concrete))
@@ -775,14 +776,14 @@ private fun exportFrameworkControlFixture(
     val entryInspector =
         com.typewritermc.discovery.OwnedPresentation(
             inspectorOrigin,
-            com.typewritermc.presentation.PresentationDescriptor(
+            PresentationDescriptor.of(
                 id =
                     skirout.editor.v1.type_catalog
                         .PresentationId(namespace = "fixture", name = "entry inspector"),
                 owner = inspectorOrigin.owner,
                 target =
-                    com.typewritermc.presentation.PresentationTarget
-                        .Named(entryGraphFixtureType.namedTemplate()),
+                    skirout.editor.v1.catalog.PresentationTarget
+                        .NamedWrapper(entryGraphFixtureType.namedTemplate()),
                 roles = setOf(PresentationRole.INSPECTOR),
                 priority = 0,
             ),
@@ -1002,12 +1003,12 @@ private fun inheritedInspectorPresentations(runtime: PresentationRuntime): List<
         val owner = origin(name.replace(' ', '_'))
         return OwnedPresentation(
             owner,
-            PresentationDescriptor(
+            PresentationDescriptor.of(
                 id = PresentationId(namespace = "fixture", name = name),
                 owner = owner.owner,
                 target =
                     PresentationTarget
-                        .Named(target.namedTemplate()),
+                        .NamedWrapper(target.namedTemplate()),
                 roles = setOf(PresentationRole.INSPECTOR),
                 priority = 0,
             ),

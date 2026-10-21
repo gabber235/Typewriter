@@ -21,7 +21,6 @@ import com.squareup.kotlinpoet.ksp.toClassName
 import com.squareup.kotlinpoet.ksp.toTypeName
 import com.typewritermc.capability.RealmCapabilities
 import com.typewritermc.capability.RealmCapability
-import com.typewritermc.capability.RealmCapabilityDescriptor
 import com.typewritermc.codegen.DefinitionReferences
 import com.typewritermc.codegen.GeneratedFile
 import com.typewritermc.codegen.GeneratedOutput
@@ -35,6 +34,9 @@ import com.typewritermc.types.codegen.DefinitionOwners
 import com.typewritermc.types.codegen.referencedIds
 import com.typewritermc.types.ksp.KspTypeConversionResult
 import com.typewritermc.types.ksp.KspTypeGraphConverter
+import skirout.editor.v1.capability.CommandCapabilityDefinition
+import skirout.editor.v1.capability.ComputationCapabilityDefinition
+import skirout.editor.v1.capability.SearchCapabilityDefinition
 import skirout.editor.v1.search.RealmSearchQuery
 import skirout.editor.v1.type_catalog.CapabilityId
 import skirout.editor.v1.type_catalog.DataValue
@@ -242,11 +244,16 @@ private class CapabilityDeclaration(
             context(references) {
                 when (kind) {
                     CapabilityKind.Search, CapabilityKind.Computation -> {
-                        CodeBlock.of("%T(id,♢%L,♢%L)", descriptorType, requestUse.kotlinCode(), requireNotNull(resultUse).kotlinCode())
+                        CodeBlock.of(
+                            "%T(capabilityId = id,♢requestType = %L,♢resultType = %L)",
+                            descriptorType,
+                            requestUse.kotlinCode(),
+                            requireNotNull(resultUse).kotlinCode(),
+                        )
                     }
 
                     CapabilityKind.Command -> {
-                        CodeBlock.of("%T(id,♢%L)", descriptorType, requestUse.kotlinCode())
+                        CodeBlock.of("%T(capabilityId = id,♢requestType = %L)", descriptorType, requestUse.kotlinCode())
                     }
                 }
             }
@@ -258,7 +265,7 @@ private class CapabilityDeclaration(
                     .builder("id", CapabilityId::class, KModifier.PRIVATE)
                     .initializer("%T(value = %S)", CapabilityId::class, id)
                     .build(),
-            ).addProperty(PropertySpec.builder("descriptor", descriptorType, KModifier.OVERRIDE).initializer(descriptor).build())
+            ).addProperty(PropertySpec.builder("descriptor", descriptorType, KModifier.PRIVATE).initializer(descriptor).build())
             .addFunction(
                 FunSpec
                     .builder("bind")
@@ -335,12 +342,12 @@ private class CapabilityDeclaration(
 
 private enum class CapabilityKind(
     val annotation: KClass<out Annotation>,
-    val descriptor: KClass<out RealmCapabilityDescriptor>,
+    val descriptor: KClass<*>,
     val provider: ClassName,
 ) {
-    Search(RealmCapability.Search::class, RealmCapabilityDescriptor.Search::class, Api.RealmSearchCapabilityProvider),
-    Computation(RealmCapability.Computation::class, RealmCapabilityDescriptor.Computation::class, Api.RealmComputationCapabilityProvider),
-    Command(RealmCapability.Command::class, RealmCapabilityDescriptor.Command::class, Api.RealmCommandCapabilityProvider),
+    Search(RealmCapability.Search::class, SearchCapabilityDefinition::class, Api.RealmSearchCapabilityProvider),
+    Computation(RealmCapability.Computation::class, ComputationCapabilityDefinition::class, Api.RealmComputationCapabilityProvider),
+    Command(RealmCapability.Command::class, CommandCapabilityDefinition::class, Api.RealmCommandCapabilityProvider),
 }
 
 private fun String.sha256(): String = MessageDigest.getInstance("SHA-256").digest(encodeToByteArray()).toHexString()

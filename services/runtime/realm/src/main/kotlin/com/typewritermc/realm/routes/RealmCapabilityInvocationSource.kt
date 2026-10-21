@@ -2,7 +2,6 @@ package com.typewritermc.realm.routes
 
 import com.typewritermc.capability.NotificationSeverity
 import com.typewritermc.capability.PanelInstruction
-import com.typewritermc.capability.RealmCapabilityDescriptor
 import com.typewritermc.capability.RealmCapabilityPermissionDeniedException
 import com.typewritermc.capability.RealmCapabilityRegistry
 import com.typewritermc.capability.RealmCapabilityRuntime
@@ -16,6 +15,7 @@ import com.typewritermc.types.requirePortable
 import com.typewritermc.types.skir.getOrThrow
 import com.typewritermc.types.toTemplate
 import com.typewritermc.types.use
+import skirout.editor.v1.capability.CapabilityDefinition
 import skirout.editor.v1.capability.CapabilityInvocationRequest
 import skirout.editor.v1.capability.CommandResult
 import skirout.editor.v1.capability.ComputationResult
@@ -53,9 +53,10 @@ class RealmCapabilityInvocationSource(
             }
             val registry = RealmCapabilityRegistry(it.capabilities)
             val descriptor =
-                registry.descriptors
-                    .filterIsInstance<RealmCapabilityDescriptor.Computation>()
-                    .singleOrNull { descriptor -> descriptor.id.value == request.capabilityId.value }
+                registry.definitions
+                    .filterIsInstance<CapabilityDefinition.ComputationWrapper>()
+                    .map { it.value }
+                    .singleOrNull { descriptor -> descriptor.capabilityId == request.capabilityId }
                     ?: return invalidComputation(request, "Realm computation capability is unavailable")
             val expected =
                 request.expectedResultType?.takeIf { it.isValid }
@@ -96,9 +97,10 @@ class RealmCapabilityInvocationSource(
             }
             val registry = RealmCapabilityRegistry(it.capabilities)
             val descriptor =
-                registry.descriptors
-                    .filterIsInstance<RealmCapabilityDescriptor.Command>()
-                    .singleOrNull { descriptor -> descriptor.id.value == request.capabilityId.value }
+                registry.definitions
+                    .filterIsInstance<CapabilityDefinition.CommandWrapper>()
+                    .map { it.value }
+                    .singleOrNull { descriptor -> descriptor.capabilityId == request.capabilityId }
                     ?: return invalidCommand(request, "Realm command capability is unavailable")
             if (request.expectedResultType != null) {
                 return invalidCommand(request, "Realm command result type must be absent")
@@ -106,7 +108,7 @@ class RealmCapabilityInvocationSource(
             return try {
                 val payload = request.payload.requirePortable()
                 val outcome =
-                    registry.requireCommand(descriptor.id).invoke(
+                    registry.requireCommand(descriptor.capabilityId).invoke(
                         CommandContext(request.invocationId.value),
                         RealmCapabilityRuntime(it.checked, it.nativeBindings),
                         payload,

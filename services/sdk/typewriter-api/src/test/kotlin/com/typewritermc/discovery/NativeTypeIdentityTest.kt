@@ -11,9 +11,8 @@ import com.typewritermc.imprint.ContributionSourceId
 import com.typewritermc.imprint.ProducerId
 import com.typewritermc.presentation.DefaultPresentationRuntime
 import com.typewritermc.presentation.PresentationBuildBinding
-import com.typewritermc.presentation.PresentationDescriptor
 import com.typewritermc.presentation.PresentationProvider
-import com.typewritermc.presentation.PresentationTarget
+import com.typewritermc.presentation.of
 import com.typewritermc.presentation.resource
 import com.typewritermc.types.Resource
 import com.typewritermc.types.ResourceId
@@ -23,7 +22,9 @@ import com.typewritermc.types.qualified
 import com.typewritermc.types.text
 import de.infix.testBalloon.framework.core.testSuite
 import io.kotest.matchers.shouldBe
+import skirout.editor.v1.catalog.PresentationDescriptor
 import skirout.editor.v1.catalog.PresentationRole
+import skirout.editor.v1.catalog.PresentationTarget
 import skirout.editor.v1.type_catalog.CatalogGeneration
 import skirout.editor.v1.type_catalog.DeclarationOwner
 import skirout.editor.v1.type_catalog.PresentationId
@@ -68,10 +69,10 @@ private fun nativeIdentityAssembly(ambiguous: Boolean): CatalogAssembly {
     val definition =
         TypeDefinition.partial(id = id, representation = RepresentationTemplate.createRecord(fields = emptyList(), abstract_ = true))
     val descriptor =
-        PresentationDescriptor(
+        PresentationDescriptor.of(
             PresentationId(namespace = "test", name = "native_identity"),
             origin.owner,
-            PresentationTarget.Named(id.namedTemplate()),
+            PresentationTarget.NamedWrapper(id.namedTemplate()),
             setOf(PresentationRole.INSPECTOR),
             0,
         )

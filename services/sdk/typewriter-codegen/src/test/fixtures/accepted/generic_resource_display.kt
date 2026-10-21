@@ -2,10 +2,11 @@
 
 package fixture
 
+import com.typewritermc.types.type
+import skirout.editor.v1.type_catalog.ResourceTarget
 import com.typewritermc.authoring.defaultLabel
 import com.typewritermc.expression.orIfBlank
 import com.typewritermc.types.Resource
-import com.typewritermc.types.ResourceTarget
 import com.typewritermc.types.TypewriterRecordContract
 import com.typewritermc.types.TypewriterType
 import com.typewritermc.types.namedTemplate
@@ -28,5 +29,5 @@ object LabeledNaming : LabeledDisplay {
 }
 
 fun main(args: Array<String>) {
-    check(LabeledNaming_LabeledDisplayProvider().target == ResourceTarget.Type(LabeledDefinition.id.namedTemplate(emptyList())))
+    check(LabeledNaming_LabeledDisplayProvider().target == ResourceTarget.type(LabeledDefinition.id.namedTemplate(emptyList())))
 }

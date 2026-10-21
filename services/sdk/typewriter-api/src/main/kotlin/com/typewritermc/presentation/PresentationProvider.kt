@@ -6,6 +6,7 @@ import com.typewritermc.authoring.GeneratedSdkApi
 import com.typewritermc.expression.Expr
 import com.typewritermc.expression.ExpressionFactory
 import com.typewritermc.expression.Handled
+import skirout.editor.v1.catalog.PresentationDescriptor
 import skirout.editor.v1.presentation.PresentationDependencies
 import skirout.editor.v1.presentation.PresentationNode
 

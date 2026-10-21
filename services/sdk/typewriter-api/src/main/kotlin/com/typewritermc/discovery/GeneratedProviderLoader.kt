@@ -495,7 +495,11 @@ class GeneratedProviderLoader {
                 }
 
                 GeneratedProviderKind.ResourceDisplay -> {
-                    displays += OwnedResourceDisplay(origin, loadedProvider.require<GeneratedResourceDisplayProvider>())
+                    displays +=
+                        OwnedResourceDisplay(
+                            origin,
+                            loadedProvider.require<GeneratedResourceDisplayProvider>().also { it.target.requireValid() },
+                        )
                 }
 
                 GeneratedProviderKind.CollectionProjection -> {

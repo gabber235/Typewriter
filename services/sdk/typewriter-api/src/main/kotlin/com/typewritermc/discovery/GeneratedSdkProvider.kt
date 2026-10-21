@@ -1,17 +1,16 @@
 package com.typewritermc.discovery
 
 import com.typewritermc.authoring.DisplayFormulas
-import com.typewritermc.capability.RealmCapabilityDescriptor
 import com.typewritermc.capability.RealmCapabilityProvider
 import com.typewritermc.checking.RealmCheckProvider
 import com.typewritermc.configuration.ConfigurationProvider
 import com.typewritermc.presentation.CollectionProjectionSpec
-import com.typewritermc.presentation.PresentationDescriptor
 import com.typewritermc.presentation.PresentationProvider
-import com.typewritermc.types.ResourceTarget
 import com.typewritermc.types.TypeDisplay
 import skirout.editor.v1.catalog.EndpointBindingTemplate
+import skirout.editor.v1.catalog.PresentationDescriptor
 import skirout.editor.v1.catalog.RelationContract
+import skirout.editor.v1.type_catalog.ResourceTarget
 import skirout.editor.v1.type_catalog.TypeDefinition
 import skirout.editor.v1.type_catalog.TypeDefinitionId
 import kotlin.reflect.KClass
@@ -69,8 +68,6 @@ fun interface CapabilityOwnerResolver {
 }
 
 interface GeneratedCapabilityProvider {
-    val descriptor: RealmCapabilityDescriptor
-
     fun bind(resolver: CapabilityOwnerResolver): RealmCapabilityProvider
 }
 

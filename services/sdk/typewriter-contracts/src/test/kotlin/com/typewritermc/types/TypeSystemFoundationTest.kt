@@ -11,12 +11,10 @@ import com.typewritermc.discovery.contributionKey
 import com.typewritermc.imprint.ContributionName
 import com.typewritermc.imprint.ContributionSourceId
 import com.typewritermc.imprint.ProducerId
-import com.typewritermc.presentation.PresentationDescriptor
-import com.typewritermc.presentation.PresentationTarget
+import com.typewritermc.presentation.of
 import com.typewritermc.types.catalog.DefaultCheckedCatalog
 import com.typewritermc.types.catalog.Resolution
 import com.typewritermc.types.catalog.reasons
-import com.typewritermc.types.skir.SkirTypeCodec
 import com.typewritermc.types.skir.getOrThrow
 import de.infix.testBalloon.framework.core.testSuite
 import io.kotest.assertions.throwables.shouldThrow
@@ -26,7 +24,9 @@ import io.kotest.matchers.types.shouldBeInstanceOf
 import io.kotest.matchers.types.shouldBeSameInstanceAs
 import skirout.editor.v1.catalog.DeclarationStatus
 import skirout.editor.v1.catalog.EndpointBindingTemplate
+import skirout.editor.v1.catalog.PresentationDescriptor
 import skirout.editor.v1.catalog.PresentationRole
+import skirout.editor.v1.catalog.PresentationTarget
 import skirout.editor.v1.type_catalog.ArgumentSelection
 import skirout.editor.v1.type_catalog.AuthoringRecord
 import skirout.editor.v1.type_catalog.CatalogGeneration
@@ -724,10 +724,10 @@ val TypeSystemFoundationTest by testSuite {
                 localIdentity = "message.editor",
             )
         val presentation =
-            PresentationDescriptor(
+            PresentationDescriptor.of(
                 id = PresentationId(namespace = "example", name = "editor"),
                 owner = owner,
-                target = PresentationTarget.Representation(skirout.editor.v1.catalog.RepresentationKind.TEXT),
+                target = PresentationTarget.RepresentationWrapper(skirout.editor.v1.catalog.RepresentationKind.TEXT),
                 roles = setOf(PresentationRole.WORKSPACE),
                 priority = 1,
             )
@@ -746,7 +746,7 @@ val TypeSystemFoundationTest by testSuite {
                 containsCollection = true,
             )
 
-        val encoded = SkirTypeCodec.encode(presentation).getOrThrow().owner
+        val encoded = presentation.owner
         encoded.source.source.value shouldBe "extension.example"
         encoded.source.sourcePart shouldBe "realm"
         encoded.source.producer.value shouldBe "types"

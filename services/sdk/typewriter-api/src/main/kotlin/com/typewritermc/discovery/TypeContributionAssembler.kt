@@ -11,7 +11,7 @@ import com.typewritermc.authoring.complete
 import com.typewritermc.authoring.field
 import com.typewritermc.authoring.name
 import com.typewritermc.authoring.root
-import com.typewritermc.capability.RealmCapabilityDescriptor
+import com.typewritermc.capability.id
 import com.typewritermc.configuration.DefaultConfigurationCollectionScope
 import com.typewritermc.configuration.DefaultPortableRuleCompiler
 import com.typewritermc.configuration.DefaultPredicateReasoner
@@ -27,8 +27,6 @@ import com.typewritermc.presentation.CheckedPresentationTemplate
 import com.typewritermc.presentation.NestedPresentationSlot
 import com.typewritermc.presentation.PresentationBuildBinding
 import com.typewritermc.presentation.PresentationNestedTemplate
-import com.typewritermc.presentation.PresentationTarget
-import com.typewritermc.presentation.RoleFallback
 import com.typewritermc.presentation.inferInheritableNodes
 import com.typewritermc.presentation.selectMostSpecificDescriptors
 import com.typewritermc.presentation.validateInheritableNodes
@@ -56,7 +54,6 @@ import com.typewritermc.types.namedTemplate
 import com.typewritermc.types.ownsResources
 import com.typewritermc.types.parameterKeys
 import com.typewritermc.types.portableOrNull
-import com.typewritermc.types.skir.SkirTypeCodec
 import com.typewritermc.types.skir.getOrThrow
 import com.typewritermc.types.substitute
 import com.typewritermc.types.template
@@ -65,6 +62,7 @@ import com.typewritermc.types.unknownVariant
 import com.typewritermc.types.use
 import com.typewritermc.types.validOrNull
 import kotlinx.coroutines.CancellationException
+import skirout.editor.v1.capability.CapabilityDefinition
 import skirout.editor.v1.catalog.ConfigurationRecipe
 import skirout.editor.v1.catalog.DeclarationStatus
 import skirout.editor.v1.catalog.EditorCatalog
@@ -72,9 +70,11 @@ import skirout.editor.v1.catalog.EffectiveFieldTemplate
 import skirout.editor.v1.catalog.EndpointBindingTemplate
 import skirout.editor.v1.catalog.PresentationMaterial
 import skirout.editor.v1.catalog.PresentationRole
+import skirout.editor.v1.catalog.PresentationTarget
 import skirout.editor.v1.catalog.PublishedType
 import skirout.editor.v1.catalog.RelationContract
 import skirout.editor.v1.catalog.RepresentationKind
+import skirout.editor.v1.catalog.RoleFallback
 import skirout.editor.v1.diagnostic.DeclarationDiagnostic
 import skirout.editor.v1.diagnostic.DeclarationOrigin
 import skirout.editor.v1.type_catalog.CatalogGeneration
@@ -115,13 +115,13 @@ data class CatalogAssemblyContext(
     val generation: CatalogGeneration,
     val relations: List<RelationContract> = emptyList(),
     val endpointBindings: List<EndpointBindingTemplate> = emptyList(),
-    val capabilities: List<RealmCapabilityDescriptor> = emptyList(),
+    val capabilities: List<CapabilityDefinition> = emptyList(),
     val roleFallbacks: List<RoleFallback> = DEFAULT_ROLE_FALLBACKS,
 )
 
 val DEFAULT_ROLE_FALLBACKS: List<RoleFallback> =
     listOf(
-        RoleFallback(PresentationRole.REFERENCE_PICKER_RESULT, listOf(PresentationRole.REFERENCE_PREVIEW)),
+        RoleFallback(role = PresentationRole.REFERENCE_PICKER_RESULT, parents = listOf(PresentationRole.REFERENCE_PREVIEW)),
     )
 
 /**
@@ -162,7 +162,7 @@ sealed interface CatalogCallback {
     ) : CatalogCallback
 
     data class Display(
-        val target: com.typewritermc.types.ResourceTarget,
+        val target: skirout.editor.v1.type_catalog.ResourceTarget,
     ) : CatalogCallback
 }
 
@@ -298,8 +298,9 @@ fun CatalogContributions.assemble(context: CatalogAssemblyContext): CatalogAssem
     val publishedPresentations =
         presentations.filter { owned ->
             when (val target = owned.descriptor.target) {
-                is PresentationTarget.Named -> checked.isReady(target.type)
-                is PresentationTarget.Representation -> true
+                is PresentationTarget.NamedWrapper -> checked.isReady(target.value)
+                is PresentationTarget.RepresentationWrapper -> true
+                else -> unknownVariant(target)
             }
         }
     val boundOperations =
@@ -310,22 +311,21 @@ fun CatalogContributions.assemble(context: CatalogAssemblyContext): CatalogAssem
             publishedPresentations,
         )
     val publishedBindings = (endpointBindings + context.endpointBindings).distinct()
-    // The displays, presentations, capabilities and fallbacks are still Kotlin catalog models; SkirTypeCodec encodes
-    // them into the published catalog.
     val editorCatalog =
         EditorCatalog(
             generation = context.generation,
             types = published,
             relations = publishedRelations,
-            resourceDisplays = displayCollection.displays.map { SkirTypeCodec.encode(it.formulas).getOrThrow() },
-            presentations = publishedPresentations.map { SkirTypeCodec.encode(it.descriptor).getOrThrow() },
+            resourceDisplays = displayCollection.displays.map { it.formulas },
+            presentations = publishedPresentations.map { it.descriptor },
             presentationMaterials =
                 materialCollection.materials
                     .filter { collected ->
                         checked.isReady(collected.subject) &&
                             when (val target = collected.target) {
-                                is PresentationTarget.Named -> checked.isReady(target.type)
-                                is PresentationTarget.Representation -> true
+                                is PresentationTarget.NamedWrapper -> checked.isReady(target.value)
+                                is PresentationTarget.RepresentationWrapper -> true
+                                else -> unknownVariant(target)
                             }
                     }.map(CollectedPresentationMaterial::material),
             configuration = recipes,
@@ -334,10 +334,9 @@ fun CatalogContributions.assemble(context: CatalogAssemblyContext): CatalogAssem
             endpointBindings = publishedBindings,
             capabilities =
                 (context.capabilities + boundOperations.capabilities)
-                    .sortedBy { it.id.value }
-                    .map { SkirTypeCodec.encode(it).getOrThrow() },
+                    .sortedBy { it.id.value },
             recommendations = typeRecommendations(definitionIndex, checked),
-            roleFallbacks = context.roleFallbacks.map { SkirTypeCodec.encode(it).getOrThrow() },
+            roleFallbacks = context.roleFallbacks,
             resourceOperations = boundOperations.definitions,
             realmRoot = RealmRootDefinition.id,
         )
@@ -495,10 +494,10 @@ private fun collectPresentationMaterials(
     presentations.forEach { owned ->
         val target = owned.descriptor.target
         val subjects = target.presentationSubjects(definitions)
-        if (subjects.isEmpty() && target is PresentationTarget.Named) {
+        if (subjects.isEmpty() && target is PresentationTarget.NamedWrapper) {
             failures +=
                 DeclarationDiagnostic.of(
-                    affected = target.type.definition,
+                    affected = target.value.definition,
                     code = "invalid_presentation_target",
                     origins = listOf(DeclarationOrigin(owner = owned.descriptor.owner)),
                 )
@@ -530,7 +529,7 @@ private fun collectPresentationMaterials(
                                 material =
                                     PresentationMaterial(
                                         provider = owned.descriptor.id,
-                                        target = SkirTypeCodec.encode(owned.descriptor.target).getOrThrow(),
+                                        target = owned.descriptor.target,
                                         role = role,
                                         layout = result.layout,
                                         dependencies = result.dependencies,
@@ -733,19 +732,23 @@ private fun TypeTemplate.templateAt(
 
 private fun PresentationTarget.presentationSubjects(definitions: Map<TypeDefinitionId, TypeDefinition>): List<TypeTemplate> =
     when (this) {
-        is PresentationTarget.Named -> {
-            val definition = definitions[type.definition]
-            if (definition == null || definition.parameters.size != type.arguments.size) emptyList() else listOf(type.template)
+        is PresentationTarget.NamedWrapper -> {
+            val definition = definitions[value.definition]
+            if (definition == null || definition.parameters.size != value.arguments.size) emptyList() else listOf(value.template)
         }
 
-        is PresentationTarget.Representation -> {
+        is PresentationTarget.RepresentationWrapper -> {
             val named =
                 definitions.values
-                    .filter { it.representation.presentationKind() == kind }
+                    .filter { it.representation.presentationKind() == value }
                     .map { definition ->
                         definition.id.template(definition.parameters.map { it.key.template })
                     }
-            (named + kind.scalarSubjects()).distinct()
+            (named + value.scalarSubjects()).distinct()
+        }
+
+        else -> {
+            unknownVariant(this)
         }
     }
 
@@ -1186,14 +1189,18 @@ private fun PresentationTarget.appliesTo(
     bounds: Map<ParameterKey, List<TypeTemplate>>,
 ): Boolean =
     when (this) {
-        is PresentationTarget.Representation -> {
-            kind in actual.presentationKinds(definitions, bounds, linkedSetOf())
+        is PresentationTarget.RepresentationWrapper -> {
+            value in actual.presentationKinds(definitions, bounds, linkedSetOf())
         }
 
-        is PresentationTarget.Named -> {
+        is PresentationTarget.NamedWrapper -> {
             actual.presentationApplications(definitions, bounds, linkedSetOf()).any { application ->
-                type.template.matchesTemplate(application.template, linkedMapOf())
+                value.template.matchesTemplate(application.template, linkedMapOf())
             }
+        }
+
+        else -> {
+            unknownVariant(this)
         }
     }
 

@@ -37,8 +37,7 @@ import com.typewritermc.loader.api.RuntimePlacement
 import com.typewritermc.loader.api.SourcePartDisposition
 import com.typewritermc.presentation.DefaultPresentationRuntime
 import com.typewritermc.presentation.PresentationBuildBinding
-import com.typewritermc.presentation.PresentationDescriptor
-import com.typewritermc.presentation.PresentationTarget
+import com.typewritermc.presentation.of
 import com.typewritermc.types.GeneratedRecordNativeBinding
 import com.typewritermc.types.NativeBindingFactory
 import com.typewritermc.types.catalog.CheckedType
@@ -52,7 +51,9 @@ import com.typewritermc.types.use
 import de.infix.testBalloon.framework.core.testSuite
 import io.kotest.matchers.shouldBe
 import skirout.editor.v1.catalog.DeclarationStatus
+import skirout.editor.v1.catalog.PresentationDescriptor
 import skirout.editor.v1.catalog.PresentationRole
+import skirout.editor.v1.catalog.PresentationTarget
 import skirout.editor.v1.type_catalog.CatalogGeneration
 import skirout.editor.v1.type_catalog.DataValue
 import skirout.editor.v1.type_catalog.NativeBindingId
@@ -199,10 +200,10 @@ class RealmCommonBindingProvider : NativeBindingFactory {
 
 class RealmCommonPresentationProvider : GeneratedPresentationProvider {
     override fun descriptor(origin: ProviderOrigin) =
-        PresentationDescriptor(
+        PresentationDescriptor.of(
             PresentationId(namespace = "fixture", name = "common"),
             origin.owner,
-            PresentationTarget.Named(RealmProviderFixture.type.namedTemplate()),
+            PresentationTarget.NamedWrapper(RealmProviderFixture.type.namedTemplate()),
             setOf(PresentationRole.INSPECTOR),
             0,
         )

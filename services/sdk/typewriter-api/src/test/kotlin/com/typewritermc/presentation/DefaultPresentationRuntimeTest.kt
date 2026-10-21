@@ -20,6 +20,7 @@ import com.typewritermc.imprint.ContributionName
 import com.typewritermc.imprint.ContributionSourceId
 import com.typewritermc.imprint.ProducerId
 import com.typewritermc.library.coreTagCollectionProjection
+import com.typewritermc.presentation.of
 import com.typewritermc.types.Resource
 import com.typewritermc.types.ResourceId
 import com.typewritermc.types.StandardTypes
@@ -42,7 +43,6 @@ import com.typewritermc.types.requirePortable
 import com.typewritermc.types.requireValid
 import com.typewritermc.types.rows
 import com.typewritermc.types.setValue
-import com.typewritermc.types.skir.SkirTypeCodec
 import com.typewritermc.types.skir.getOrThrow
 import com.typewritermc.types.template
 import com.typewritermc.types.text
@@ -50,8 +50,11 @@ import com.typewritermc.types.use
 import de.infix.testBalloon.framework.core.testSuite
 import io.kotest.matchers.shouldBe
 import skirout.editor.v1.catalog.DeclarationStatus
+import skirout.editor.v1.catalog.PresentationDescriptor
 import skirout.editor.v1.catalog.PresentationRole
+import skirout.editor.v1.catalog.PresentationTarget
 import skirout.editor.v1.catalog.RepresentationKind
+import skirout.editor.v1.catalog.RoleFallback
 import skirout.editor.v1.expression.ExpressionNode
 import skirout.editor.v1.presentation.ChildrenElement
 import skirout.editor.v1.presentation.CollectionGraphDirection
@@ -741,7 +744,7 @@ val DefaultPresentationRuntimeTest by testSuite {
                         abstract_ = false,
                     ),
             )
-        val target = PresentationTarget.Named(id.namedTemplate(listOf(parameter.template)))
+        val target = PresentationTarget.NamedWrapper(id.namedTemplate(listOf(parameter.template)))
         val descriptor = descriptor("weighted", target, 0, PresentationRole.INSPECTOR)
         val origin = ProviderOrigin(descriptor.owner, ArtifactId("test:presentation"), "main")
         val runtime = DefaultPresentationRuntime()
@@ -785,7 +788,7 @@ val DefaultPresentationRuntimeTest by testSuite {
             ).assemble(CatalogAssemblyContext(CatalogGeneration(value = "symbolic presentation")))
 
         val material = assembly.editorCatalog.presentationMaterials.single()
-        material.target shouldBe SkirTypeCodec.encode(target).getOrThrow()
+        material.target shouldBe target
         val valueNode =
             material.layout
                 .fixedChildren()
@@ -804,8 +807,8 @@ val DefaultPresentationRuntimeTest by testSuite {
 
         val text = mapOf(parameter to ScalarKind.TEXT.use)
         val integer = mapOf(parameter to integerScalar(IntegerWidth.SIGNED_THIRTY_TWO).use)
-        (target.type.apply(text) as Resolution.Ready).value shouldBe id.namedUse(listOf(ScalarKind.TEXT.use))
-        (target.type.apply(integer) as Resolution.Ready).value shouldBe
+        (target.value.apply(text) as Resolution.Ready).value shouldBe id.namedUse(listOf(ScalarKind.TEXT.use))
+        (target.value.apply(integer) as Resolution.Ready).value shouldBe
             id.namedUse(listOf(integerScalar(IntegerWidth.SIGNED_THIRTY_TWO).use))
         (expected.apply(text) as Resolution.Ready).value shouldBe ScalarKind.TEXT.use
         (expected.apply(integer) as Resolution.Ready).value shouldBe
@@ -843,7 +846,7 @@ val DefaultPresentationRuntimeTest by testSuite {
                 id = unrelatedId,
                 representation = RepresentationTemplate.createRecord(fields = emptyList(), abstract_ = false),
             )
-        val target = PresentationTarget.Named(subjectId.namedTemplate())
+        val target = PresentationTarget.NamedWrapper(subjectId.namedTemplate())
         val descriptor = descriptor("invalid collection", target, 0, PresentationRole.INSPECTOR)
         val origin = ProviderOrigin(descriptor.owner, ArtifactId("test:invalid-collection"), "main")
         val projection =
@@ -948,7 +951,7 @@ val DefaultPresentationRuntimeTest by testSuite {
                         abstract_ = false,
                     ),
             )
-        val target = PresentationTarget.Named(resourceId.namedTemplate())
+        val target = PresentationTarget.NamedWrapper(resourceId.namedTemplate())
         val descriptor = descriptor("valid collection", target, 0, PresentationRole.INSPECTOR)
         val origin = ProviderOrigin(descriptor.owner, ArtifactId("test:valid-collection"), "main")
         val projection =
@@ -1120,7 +1123,7 @@ val DefaultPresentationRuntimeTest by testSuite {
         val runtime = DefaultPresentationRuntime()
         val ownedPresentations =
             projections.map { (id, specification) ->
-                val target = PresentationTarget.Named(id.namedTemplate())
+                val target = PresentationTarget.NamedWrapper(id.namedTemplate())
                 val descriptor = descriptor(specification.sourceId, target, 0, PresentationRole.INSPECTOR)
                 val projection =
                     CollectionProjection<ProjectionFixtureResource, Any, ProjectionFixtureExpressions>(
@@ -1180,8 +1183,8 @@ val DefaultPresentationRuntimeTest by testSuite {
     test("resolves one presentation reference by its checked binding without mutating rejected registrations") {
         val reference = object : PresentationReference {}
         val catalog = DefaultCheckedCatalog(CatalogGeneration(value = "reference targets"), StandardTypes.definitions)
-        val text = descriptor("text reference", PresentationTarget.Representation(RepresentationKind.TEXT), 0)
-        val boolean = descriptor("boolean reference", PresentationTarget.Representation(RepresentationKind.BOOLEAN), 0)
+        val text = descriptor("text reference", PresentationTarget.RepresentationWrapper(RepresentationKind.TEXT), 0)
+        val boolean = descriptor("boolean reference", PresentationTarget.RepresentationWrapper(RepresentationKind.BOOLEAN), 0)
         val first = DefaultPresentationRuntime()
         val second = DefaultPresentationRuntime()
 
@@ -1190,7 +1193,7 @@ val DefaultPresentationRuntimeTest by testSuite {
         first.register(reference, text)
 
         runCatching {
-            first.register(reference, text.copy(target = PresentationTarget.Representation(RepresentationKind.INTEGER)))
+            first.register(reference, text.copy(target = PresentationTarget.RepresentationWrapper(RepresentationKind.INTEGER)))
         }.isFailure shouldBe true
 
         fun selected(
@@ -1641,7 +1644,7 @@ val DefaultPresentationRuntimeTest by testSuite {
                 ProviderOrigin(
                     descriptor(
                         "nested remainder",
-                        PresentationTarget.Named(subjectId.namedTemplate()),
+                        PresentationTarget.NamedWrapper(subjectId.namedTemplate()),
                         0,
                         PresentationRole.WORKSPACE,
                     ).owner,
@@ -1767,7 +1770,10 @@ val DefaultPresentationRuntimeTest by testSuite {
         val reference = object : PresentationReference {}
         val runtime =
             DefaultPresentationRuntime().also {
-                it.register(reference, descriptor("special numeric", PresentationTarget.Representation(RepresentationKind.INTEGER), 0))
+                it.register(
+                    reference,
+                    descriptor("special numeric", PresentationTarget.RepresentationWrapper(RepresentationKind.INTEGER), 0),
+                )
             }
         val layout =
             runtime.build(PresentationBuildBinding(checked.presentationTemplate(), PresentationRole.INSPECTOR)) { build ->
@@ -1840,7 +1846,7 @@ val DefaultPresentationRuntimeTest by testSuite {
         val parameter = presentationParameter<String>("title")
         val runtime =
             DefaultPresentationRuntime().also {
-                it.register(reference, descriptor("invoked", PresentationTarget.Named(id.namedTemplate()), 0))
+                it.register(reference, descriptor("invoked", PresentationTarget.NamedWrapper(id.namedTemplate()), 0))
             }
         val repeatedSource =
             com.typewritermc.expression.portableLiteral<List<String>>(
@@ -2021,20 +2027,20 @@ val DefaultPresentationRuntimeTest by testSuite {
         val catalog = DefaultCheckedCatalog(CatalogGeneration(value = "presentation registry"), listOf(definition))
         val checked = (catalog.resolve(id.use()) as Resolution.Ready).value
         val representation =
-            descriptor("generic", PresentationTarget.Representation(skirout.editor.v1.catalog.RepresentationKind.RECORD), 100)
-        val named = descriptor("specific", PresentationTarget.Named(id.namedTemplate()), 10)
+            descriptor("generic", PresentationTarget.RepresentationWrapper(skirout.editor.v1.catalog.RepresentationKind.RECORD), 100)
+        val named = descriptor("specific", PresentationTarget.NamedWrapper(id.namedTemplate()), 10)
         val fallbackFirst =
-            descriptor("fallback first", PresentationTarget.Named(id.namedTemplate()), 10, PresentationRole.REFERENCE_PREVIEW)
+            descriptor("fallback first", PresentationTarget.NamedWrapper(id.namedTemplate()), 10, PresentationRole.REFERENCE_PREVIEW)
         val fallbackSecond =
-            descriptor("fallback second", PresentationTarget.Named(id.namedTemplate()), 100, PresentationRole.RESOURCE_SEARCH_RESULT)
+            descriptor("fallback second", PresentationTarget.NamedWrapper(id.namedTemplate()), 100, PresentationRole.RESOURCE_SEARCH_RESULT)
         val registry =
             DefaultPresentationRegistry(
                 catalog,
                 listOf(representation, named, fallbackFirst, fallbackSecond),
                 listOf(
                     RoleFallback(
-                        PresentationRole.REFERENCE_PICKER_RESULT,
-                        listOf(PresentationRole.REFERENCE_PREVIEW, PresentationRole.RESOURCE_SEARCH_RESULT),
+                        role = PresentationRole.REFERENCE_PICKER_RESULT,
+                        parents = listOf(PresentationRole.REFERENCE_PREVIEW, PresentationRole.RESOURCE_SEARCH_RESULT),
                     ),
                 ),
             )
@@ -2050,7 +2056,7 @@ val DefaultPresentationRuntimeTest by testSuite {
             TypeDefinition.partial(id = id, representation = RepresentationTemplate.createRecord(fields = emptyList(), abstract_ = false))
         val catalog = DefaultCheckedCatalog(CatalogGeneration(value = "reference fallback"), listOf(definition))
         val checked = (catalog.resolve(id.use()) as Resolution.Ready).value
-        val preview = descriptor("preview", PresentationTarget.Named(id.namedTemplate()), 0, PresentationRole.REFERENCE_PREVIEW)
+        val preview = descriptor("preview", PresentationTarget.NamedWrapper(id.namedTemplate()), 0, PresentationRole.REFERENCE_PREVIEW)
         val registry = DefaultPresentationRegistry(catalog, listOf(preview), com.typewritermc.discovery.DEFAULT_ROLE_FALLBACKS)
 
         (registry.select(PresentationRole.REFERENCE_PICKER_RESULT, checked) as PresentationSelection.Selected)
@@ -2071,7 +2077,7 @@ val DefaultPresentationRuntimeTest by testSuite {
             TypeDefinition.partial(id = id, representation = RepresentationTemplate.createRecord(fields = emptyList(), abstract_ = false))
         val catalog = DefaultCheckedCatalog(CatalogGeneration(value = "role separation"), listOf(definition))
         val checked = (catalog.resolve(id.use()) as Resolution.Ready).value
-        val inspector = descriptor("inspector", PresentationTarget.Named(id.namedTemplate()), 10, PresentationRole.INSPECTOR)
+        val inspector = descriptor("inspector", PresentationTarget.NamedWrapper(id.namedTemplate()), 10, PresentationRole.INSPECTOR)
         val registry = DefaultPresentationRegistry(catalog, listOf(inspector))
 
         (registry.select(PresentationRole.INSPECTOR, checked) as PresentationSelection.Selected).descriptor.id shouldBe inspector.id
@@ -2106,7 +2112,7 @@ val DefaultPresentationRuntimeTest by testSuite {
         val left =
             descriptor(
                 "left",
-                PresentationTarget.Named(
+                PresentationTarget.NamedWrapper(
                     pairId.namedTemplate(listOf(ScalarKind.TEXT.template, first.template)),
                 ),
                 10,
@@ -2114,7 +2120,7 @@ val DefaultPresentationRuntimeTest by testSuite {
         val right =
             descriptor(
                 "right",
-                PresentationTarget.Named(
+                PresentationTarget.NamedWrapper(
                     pairId.namedTemplate(
                         listOf(
                             first.template,
@@ -2151,7 +2157,7 @@ val DefaultPresentationRuntimeTest by testSuite {
         val repeated =
             descriptor(
                 "repeated",
-                PresentationTarget.Named(
+                PresentationTarget.NamedWrapper(
                     pairId.namedTemplate(listOf(first.template, first.template)),
                 ),
                 10,
@@ -2159,7 +2165,7 @@ val DefaultPresentationRuntimeTest by testSuite {
         val broad =
             descriptor(
                 "broad",
-                PresentationTarget.Named(
+                PresentationTarget.NamedWrapper(
                     pairId.namedTemplate(listOf(first.template, second.template)),
                 ),
                 100,
@@ -2199,7 +2205,7 @@ val DefaultPresentationRuntimeTest by testSuite {
         val broad =
             descriptor(
                 "reward variable",
-                PresentationTarget.Named(
+                PresentationTarget.NamedWrapper(
                     variableId.namedTemplate(listOf(rewardId.template())),
                 ),
                 10,
@@ -2239,7 +2245,7 @@ val DefaultPresentationRuntimeTest by testSuite {
         val concrete =
             descriptor(
                 "coin variable",
-                PresentationTarget.Named(
+                PresentationTarget.NamedWrapper(
                     variableId.namedTemplate(listOf(coinId.template())),
                 ),
                 10,
@@ -2247,7 +2253,7 @@ val DefaultPresentationRuntimeTest by testSuite {
         val broad =
             descriptor(
                 "reward variable",
-                PresentationTarget.Named(
+                PresentationTarget.NamedWrapper(
                     variableId.namedTemplate(listOf(rewardId.template())),
                 ),
                 100,
@@ -2267,7 +2273,7 @@ private fun descriptor(
     priority: Int,
     role: PresentationRole = PresentationRole.WORKSPACE,
 ): PresentationDescriptor =
-    PresentationDescriptor(
+    PresentationDescriptor.of(
         skirout.editor.v1.type_catalog
             .PresentationId(namespace = "test", name = name),
         DeclarationOwner(

@@ -34,7 +34,6 @@ import com.typewritermc.types.ColorDefinition
 import com.typewritermc.types.Icon
 import com.typewritermc.types.RESOURCE_OWNERSHIP_FAMILY_ID
 import com.typewritermc.types.ResourceId
-import com.typewritermc.types.ResourceTarget
 import com.typewritermc.types.TypeDisplay
 import com.typewritermc.types.fields
 import com.typewritermc.types.integer
@@ -44,6 +43,7 @@ import com.typewritermc.types.namedUse
 import com.typewritermc.types.of
 import com.typewritermc.types.qualified
 import com.typewritermc.types.record
+import com.typewritermc.types.type
 import com.typewritermc.types.use
 import de.infix.testBalloon.framework.core.testSuite
 import io.kotest.matchers.collections.shouldNotContain
@@ -62,6 +62,7 @@ import skirout.editor.v1.type_catalog.ItemId
 import skirout.editor.v1.type_catalog.RelationFamilyId
 import skirout.editor.v1.type_catalog.RelationId
 import skirout.editor.v1.type_catalog.RepresentationTemplate
+import skirout.editor.v1.type_catalog.ResourceTarget
 import skirout.editor.v1.type_catalog.TypeDefinition
 import skirout.editor.v1.type_catalog.TypeDefinitionId
 import skirout.editor.v1.type_catalog.TypeSelection
@@ -81,10 +82,10 @@ val ResourceDisplayAssemblyTest by testSuite {
         val displays = assembly.displays
 
         displays.displayFor(BookDefinition.id, assembly.checked)?.target shouldBe
-            ResourceTarget.Type(BookDefinition.id.namedTemplate())
+            ResourceTarget.type(BookDefinition.id.namedTemplate())
         displays.displayFor(fixturePage, assembly.checked)?.target shouldBe
-            ResourceTarget.Type(PageDefinition.id.namedTemplate())
-        displays.displayFor(CueDefinition.id, assembly.checked)?.target shouldBe ResourceTarget.AnyResource
+            ResourceTarget.type(PageDefinition.id.namedTemplate())
+        displays.displayFor(CueDefinition.id, assembly.checked)?.target shouldBe ResourceTarget.ANY_RESOURCE
         assembly.label(
             AuthoringRecord.of(
                 TypeSelection.CompleteWrapper(fixturePage.namedUse()),
@@ -105,7 +106,7 @@ val ResourceDisplayAssemblyTest by testSuite {
         val record = AuthoringRecord.of(TypeSelection.CompleteWrapper(fixtureResource.namedUse()), emptyMap())
         val formulas = assembly.displays.displayFor(fixtureResource, assembly.checked)!!
 
-        formulas.target shouldBe ResourceTarget.AnyResource
+        formulas.target shouldBe ResourceTarget.ANY_RESOURCE
         assembly.label(record) shouldBe "Fixture resource"
         assembly.evaluate(formulas.accent, record) shouldBe
             DataValue.named(ColorDefinition.use, DataValue.integer(0xFF123456u.toString().toBigInteger()))
@@ -113,7 +114,7 @@ val ResourceDisplayAssemblyTest by testSuite {
 
     test("a display formula that reads a host context input is rejected") {
         val contextual =
-            displayProvider(ResourceTarget.Type(BookDefinition.id.namedTemplate())) {
+            displayProvider(ResourceTarget.type(BookDefinition.id.namedTemplate())) {
                 DisplayFormulas(
                     label = input<String>(ExpressionBindingId("context:active")).orElse(literal("Book")),
                     accent = literal(Color(0xFF000000u)),
@@ -124,7 +125,7 @@ val ResourceDisplayAssemblyTest by testSuite {
 
         assembly.diagnosticCodes(BookDefinition.id) shouldBe listOf("display_reads_context")
         val otherResource =
-            displayProvider(ResourceTarget.Type(BookDefinition.id.namedTemplate())) {
+            displayProvider(ResourceTarget.type(BookDefinition.id.namedTemplate())) {
                 val other =
                     RuntimePresentationQueries(mapOf(Book::class to BookDefinition.id.namedTemplate()))
                         .resource(literal(ResourceId("other")), Book::class)
@@ -146,7 +147,7 @@ val ResourceDisplayAssemblyTest by testSuite {
     }
 
     test("two displays for one target are rejected and the resource falls back to a less specific display") {
-        val target = ResourceTarget.Type(BookDefinition.id.namedTemplate())
+        val target = ResourceTarget.type(BookDefinition.id.namedTemplate())
         val constant = { label: String ->
             displayProvider(target) {
                 DisplayFormulas(literal(label), literal(Color(0xFF000000u)), literal(Icon.Iconify("mdi:book")))
@@ -162,7 +163,7 @@ val ResourceDisplayAssemblyTest by testSuite {
 
     test("an extension's any resource display is rejected while the framework default keeps naming every resource") {
         val extension =
-            displayProvider(ResourceTarget.AnyResource) {
+            displayProvider(ResourceTarget.ANY_RESOURCE) {
                 DisplayFormulas(literal("Extension"), literal(Color(0xFF000000u)), literal(Icon.Iconify("mdi:book")))
             }
         val assembly = assemble(displays = listOf(extension), includeGenerated = false)
@@ -304,7 +305,7 @@ private fun assemble(
     val generated = generatedTypeProviders().distinctBy { it.definition.id }
     val generatedDisplays =
         generatedProviders<GeneratedResourceDisplayProvider>(GeneratedProviderKind.ResourceDisplay)
-            .filter { includeGenerated || it.target == ResourceTarget.AnyResource }
+            .filter { includeGenerated || it.target == ResourceTarget.ANY_RESOURCE }
             .map { OwnedResourceDisplay(origin, it) }
     return CatalogContributions(
         declarations =

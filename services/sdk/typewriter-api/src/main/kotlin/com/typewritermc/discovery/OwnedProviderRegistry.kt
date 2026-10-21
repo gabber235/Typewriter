@@ -4,10 +4,10 @@ import com.typewritermc.checking.CheckRecipe
 import com.typewritermc.checking.RealmCheckProvider
 import com.typewritermc.configuration.ConfigurationProvider
 import com.typewritermc.imprint.ArtifactId
-import com.typewritermc.presentation.PresentationDescriptor
 import com.typewritermc.presentation.PresentationProvider
 import com.typewritermc.types.NativeBindingFactory
 import skirout.editor.v1.catalog.EndpointBindingTemplate
+import skirout.editor.v1.catalog.PresentationDescriptor
 import skirout.editor.v1.catalog.RelationContract
 import skirout.editor.v1.type_catalog.DeclarationOwner
 import skirout.editor.v1.type_catalog.RuleOrigin

@@ -31,7 +31,6 @@ import com.typewritermc.realm.checking.CapturedAuthoringReads
 import com.typewritermc.realm.repository.AuthoringPlanRejected
 import com.typewritermc.services.libs.utils.rethrowExceptional
 import com.typewritermc.types.ResourceId
-import com.typewritermc.types.ResourceTarget
 import com.typewritermc.types.template
 import com.typewritermc.types.toResourceId
 import com.typewritermc.types.unknownVariant
@@ -49,6 +48,7 @@ import skirout.editor.v1.type_catalog.CatalogGeneration
 import skirout.editor.v1.type_catalog.DataValue
 import skirout.editor.v1.type_catalog.ItemId
 import skirout.editor.v1.type_catalog.NamedTypeTemplate
+import skirout.editor.v1.type_catalog.ResourceTarget
 import skirout.editor.v1.type_catalog.TypeSelection
 import skirout.editor.v1.type_catalog.ValueLocation
 import skirout.editor.v1.type_catalog.ValuePath
@@ -308,8 +308,9 @@ private fun BoundResourceOperation.covers(
         }
     return count &&
         when (val subject = target) {
-            ResourceTarget.AnyResource -> true
-            is ResourceTarget.Type -> records.all { it.matches(subject.template, view) }
+            ResourceTarget.ANY_RESOURCE -> true
+            is ResourceTarget.TypeWrapper -> records.all { it.matches(subject.template, view) }
+            else -> unknownVariant(subject)
         }
 }
 

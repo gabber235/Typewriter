@@ -11,7 +11,6 @@ import com.typewritermc.authoring.root
 import com.typewritermc.discovery.ProviderOrigin
 import com.typewritermc.presentation.PresentationReference
 import com.typewritermc.types.ResourceId
-import com.typewritermc.types.ResourceTarget
 import com.typewritermc.types.requireValid
 import kotlinx.coroutines.CancellationException
 import skirout.editor.v1.operation.OperationAvailability
@@ -24,6 +23,7 @@ import skirout.editor.v1.operation.OperationShortcut
 import skirout.editor.v1.operation.ResourceOperationId
 import skirout.editor.v1.presentation.ButtonVariant
 import skirout.editor.v1.type_catalog.NamedTypeUse
+import skirout.editor.v1.type_catalog.ResourceTarget
 import skirout.editor.v1.type_catalog.TypeDefinitionId
 import skirout.editor.v1.type_catalog.ValueLocation
 import skirout.editor.v1.type_catalog.ValuePath

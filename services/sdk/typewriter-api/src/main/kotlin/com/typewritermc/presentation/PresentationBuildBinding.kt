@@ -11,6 +11,7 @@ import com.typewritermc.types.catalog.resolve
 import com.typewritermc.types.template
 import com.typewritermc.types.toTemplate
 import com.typewritermc.types.use
+import skirout.editor.v1.catalog.PresentationDescriptor
 import skirout.editor.v1.catalog.PresentationRole
 import skirout.editor.v1.expression.ExpressionNode
 import skirout.editor.v1.presentation.ConnectionAxis

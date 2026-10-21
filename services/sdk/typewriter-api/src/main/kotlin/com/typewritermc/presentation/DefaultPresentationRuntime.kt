@@ -4,6 +4,7 @@ package com.typewritermc.presentation
 
 import com.typewritermc.authoring.GeneratedSdkApi
 import com.typewritermc.expression.ExpressionFactories
+import skirout.editor.v1.catalog.PresentationDescriptor
 import skirout.editor.v1.presentation.PresentationNode
 import java.util.IdentityHashMap
 

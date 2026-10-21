@@ -45,6 +45,7 @@ import com.typewritermc.types.record
 import com.typewritermc.types.template
 import com.typewritermc.types.toResourceId
 import com.typewritermc.types.toSkir
+import com.typewritermc.types.type
 import com.typewritermc.types.unknownVariant
 import com.typewritermc.types.use
 import de.infix.testBalloon.framework.core.testSuite
@@ -168,8 +169,8 @@ class AuthoringMutationPlannerTest {
                 com.typewritermc.operations.collectOperation<com.typewritermc.authoring.ResourceDraft, Unit>(
                     origin,
                     "fixture.InlineOperations",
-                    com.typewritermc.types.ResourceTarget
-                        .Type(NODE.namedTemplate()),
+                    skirout.editor.v1.type_catalog.ResourceTarget
+                        .type(NODE.namedTemplate()),
                     com.typewritermc.operations.projectedSubjects(
                         com.typewritermc.authoring.draftViewProjection(NODE_USE, com.typewritermc.authoring.ResourceDrafts::bind),
                     ),

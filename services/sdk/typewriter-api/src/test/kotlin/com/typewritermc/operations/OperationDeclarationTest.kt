@@ -21,7 +21,6 @@ import com.typewritermc.library.frameworkContributions
 import com.typewritermc.types.FactoryNativeBindingRegistry
 import com.typewritermc.types.ResourceId
 import com.typewritermc.types.ResourceIdDefinition
-import com.typewritermc.types.ResourceTarget
 import com.typewritermc.types.catalog.DefaultCheckedCatalog
 import com.typewritermc.types.field
 import com.typewritermc.types.namedUse
@@ -52,6 +51,7 @@ import skirout.editor.v1.type_catalog.DataValue
 import skirout.editor.v1.type_catalog.DeclarationOwner
 import skirout.editor.v1.type_catalog.EndpointId
 import skirout.editor.v1.type_catalog.LinkTarget
+import skirout.editor.v1.type_catalog.ResourceTarget
 import skirout.editor.v1.type_catalog.TypeDefinitionId
 import skirout.editor.v1.type_catalog.TypeSelection
 import skirout.editor.v1.type_catalog.ValueLocation
@@ -246,7 +246,7 @@ private fun <I> collect(
     collectOperation<ResourceDraft, I>(
         origin = origin(),
         declaration = "fixture.ExampleOperation",
-        target = ResourceTarget.AnyResource,
+        target = ResourceTarget.ANY_RESOURCE,
         subjects = AnyResourceSubjects,
         input = input,
         defaultLabel = "Example operation",

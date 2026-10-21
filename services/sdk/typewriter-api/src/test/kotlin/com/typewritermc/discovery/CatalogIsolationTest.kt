@@ -5,11 +5,11 @@ import com.typewritermc.imprint.ArtifactId
 import com.typewritermc.imprint.ContributionName
 import com.typewritermc.imprint.ContributionSourceId
 import com.typewritermc.imprint.ProducerId
+import com.typewritermc.presentation.of
 import com.typewritermc.types.catalog.DefaultCheckedCatalog
 import com.typewritermc.types.catalog.of
 import com.typewritermc.types.namedTemplate
 import com.typewritermc.types.qualified
-import com.typewritermc.types.skir.SkirTypeCodec
 import com.typewritermc.types.skir.getOrThrow
 import com.typewritermc.types.template
 import de.infix.testBalloon.framework.core.testSuite
@@ -17,6 +17,7 @@ import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.matchers.shouldBe
 import kotlinx.coroutines.CancellationException
 import skirout.editor.v1.catalog.DeclarationStatus
+import skirout.editor.v1.catalog.PresentationDescriptor
 import skirout.editor.v1.catalog.PresentationRole
 import skirout.editor.v1.diagnostic.DeclarationDiagnostic
 import skirout.editor.v1.type_catalog.CatalogGeneration
@@ -105,11 +106,11 @@ val CatalogIsolationTest by testSuite {
     test("representation presentation failure retains its scalar callback context") {
         val cause = IllegalStateException("fixture representation failure")
         val descriptor =
-            com.typewritermc.presentation.PresentationDescriptor(
+            PresentationDescriptor.of(
                 PresentationId(namespace = "isolation", name = "scalar"),
                 origin.owner,
-                com.typewritermc.presentation.PresentationTarget
-                    .Representation(skirout.editor.v1.catalog.RepresentationKind.TEXT),
+                skirout.editor.v1.catalog.PresentationTarget
+                    .RepresentationWrapper(skirout.editor.v1.catalog.RepresentationKind.TEXT),
                 setOf(PresentationRole.INSPECTOR),
                 0,
             )
