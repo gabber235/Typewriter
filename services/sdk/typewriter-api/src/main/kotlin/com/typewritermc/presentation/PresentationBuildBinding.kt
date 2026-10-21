@@ -16,6 +16,14 @@ import com.typewritermc.types.catalog.isNominalSubtype
 import com.typewritermc.types.catalog.resolve
 import com.typewritermc.types.toTemplate
 import skirout.editor.v1.expression.ExpressionNode
+import skirout.editor.v1.presentation.ConnectionAxis
+import skirout.editor.v1.presentation.ConnectionExpressionScope
+import skirout.editor.v1.presentation.CrossAxisAlignment
+import skirout.editor.v1.presentation.FlexFit
+import skirout.editor.v1.presentation.MainAxisAlignment
+import skirout.editor.v1.presentation.PresentationAlignment
+import skirout.editor.v1.presentation.PresentationAnchorSelector
+import skirout.editor.v1.presentation.PresentationTransitionPolicy
 
 /**
  * What one presentation build is for: the subject [type], the requested [role], the native classes of published
@@ -225,15 +233,15 @@ interface Layout :
 
     fun row(
         spacing: Double = 0.0,
-        main: MainAxisAlignment = MainAxisAlignment.Start,
-        cross: CrossAxisAlignment = CrossAxisAlignment.Center,
+        main: MainAxisAlignment = MainAxisAlignment.START,
+        cross: CrossAxisAlignment = CrossAxisAlignment.CENTER,
         body: AxisLayout.() -> Unit,
     )
 
     fun column(
         spacing: Double = 0.0,
-        main: MainAxisAlignment = MainAxisAlignment.Start,
-        cross: CrossAxisAlignment = CrossAxisAlignment.Center,
+        main: MainAxisAlignment = MainAxisAlignment.START,
+        cross: CrossAxisAlignment = CrossAxisAlignment.CENTER,
         body: AxisLayout.() -> Unit,
     )
 
@@ -346,7 +354,7 @@ interface AxisLayout : Layout {
 
     fun flexible(
         flex: Int = 1,
-        fit: FlexFit = FlexFit.Loose,
+        fit: FlexFit = FlexFit.LOOSE,
         body: Layout.() -> Unit,
     )
 }
@@ -379,12 +387,6 @@ interface RemainingFields {
 
     fun exclude(field: PresentedField<*, *>)
 }
-
-enum class MainAxisAlignment { Start, Center, End, SpaceBetween, SpaceAround, SpaceEvenly }
-
-enum class CrossAxisAlignment { Start, Center, End, Stretch }
-
-enum class FlexFit { Tight, Loose }
 
 data class PresentationInsets(
     val start: Double,
@@ -466,8 +468,6 @@ interface AdaptiveLeadingScope {
     fun minimumCenterWidth(value: Double)
 }
 
-enum class PresentationAlignment { TopStart, TopCenter, TopEnd, CenterStart, Center, CenterEnd, BottomStart, BottomCenter, BottomEnd }
-
 data class PresentationOffset(
     val x: Expr<Double, Handled>,
     val y: Expr<Double, Handled>,
@@ -485,16 +485,6 @@ interface AnchorPointScope {
     fun exportToParent(value: Boolean = true)
 }
 
-sealed interface AnchorSelector {
-    data class Local(
-        val id: String,
-    ) : AnchorSelector
-
-    data class ExportedGroup(
-        val id: String,
-    ) : AnchorSelector
-}
-
 sealed interface ConnectorPath {
     data object Straight : ConnectorPath
 
@@ -507,8 +497,6 @@ sealed interface ConnectorPath {
         val targetControlOffset: PresentationOffset,
     ) : ConnectorPath
 }
-
-enum class ConnectionAxis { Horizontal, Vertical }
 
 sealed interface ConnectorBundlePath {
     data class Orthogonal(
@@ -537,19 +525,17 @@ data class ConnectorStyle(
     val endMarker: ConnectorEndpointMarker? = null,
 )
 
-enum class ConnectionExpressionScope { Layer, Source, Target }
-
 data class ConnectorMarker(
     val node: Layout.() -> Unit,
     val position: Expr<Double, Handled>,
     val alignToPath: Expr<Boolean, Handled>,
-    val scope: ConnectionExpressionScope = ConnectionExpressionScope.Layer,
+    val scope: ConnectionExpressionScope = ConnectionExpressionScope.LAYER,
 )
 
 interface ConnectionScope {
-    fun source(value: AnchorSelector)
+    fun source(value: PresentationAnchorSelector)
 
-    fun target(value: AnchorSelector)
+    fun target(value: PresentationAnchorSelector)
 
     fun path(value: ConnectorPath)
 
@@ -561,9 +547,9 @@ interface ConnectionScope {
 }
 
 interface ConnectionBundleScope {
-    fun source(value: AnchorSelector)
+    fun source(value: PresentationAnchorSelector)
 
-    fun targets(value: AnchorSelector)
+    fun targets(value: PresentationAnchorSelector)
 
     fun path(value: ConnectorBundlePath)
 

@@ -7,8 +7,12 @@ import com.typewritermc.types.DataValue
 import com.typewritermc.types.Icon
 import com.typewritermc.types.skir.SkirDataValueCodec
 import com.typewritermc.types.skir.getOrThrow
+import skirout.editor.v1.presentation.DateTimeZone
 import skirout.editor.v1.presentation.PresentationElement
 import skirout.editor.v1.presentation.PresentationNode
+import skirout.editor.v1.presentation.PresentationTextOverflow
+import skirout.editor.v1.presentation.PresentationTextTone
+import skirout.editor.v1.presentation.RelativeTimeStyle
 import kotlin.time.Instant
 
 internal class RuntimePresentationContent(
@@ -170,11 +174,7 @@ internal class RuntimePresentationContent(
                     value = expression(value),
                     options = state.displayAppearance(configure),
                     format = expression(format),
-                    timeZone =
-                        when (zone) {
-                            DateTimeZone.Local -> skirout.editor.v1.presentation.DateTimeZone.LOCAL
-                            DateTimeZone.Utc -> skirout.editor.v1.presentation.DateTimeZone.UTC
-                        },
+                    timeZone = zone,
                 ),
             )
     }
@@ -257,16 +257,8 @@ internal class RuntimePresentationContent(
                 PresentationElement.createRelativeTime(
                     value = expression(value),
                     options = state.displayAppearance(configure),
-                    style =
-                        when (style) {
-                            RelativeTimeStyle.Compact -> skirout.editor.v1.presentation.RelativeTimeStyle.COMPACT
-                            RelativeTimeStyle.Full -> skirout.editor.v1.presentation.RelativeTimeStyle.NATURAL
-                        },
-                    timeZone =
-                        when (zone) {
-                            DateTimeZone.Local -> skirout.editor.v1.presentation.DateTimeZone.LOCAL
-                            DateTimeZone.Utc -> skirout.editor.v1.presentation.DateTimeZone.UTC
-                        },
+                    style = style,
+                    timeZone = zone,
                 ),
             )
     }
@@ -302,18 +294,10 @@ private fun TextStyleOverride.wire(): skirout.editor.v1.presentation.TextStyleOv
 private fun TextParagraph.wire(): skirout.editor.v1.presentation.TextParagraph =
     skirout.editor.v1.presentation.TextParagraph(
         maxLines = maximumLines,
-        overflow =
-            when (overflow) {
-                TextOverflow.Clip -> skirout.editor.v1.presentation.PresentationTextOverflow.CLIP
-                TextOverflow.Ellipsis -> skirout.editor.v1.presentation.PresentationTextOverflow.ELLIPSIS
-            },
+        overflow = overflow,
         softWrap = softWrap,
         selectable = selectable,
-        tone =
-            when (tone) {
-                TextTone.Primary -> skirout.editor.v1.presentation.PresentationTextTone.PRIMARY
-                TextTone.Secondary -> skirout.editor.v1.presentation.PresentationTextTone.SECONDARY
-            },
+        tone = tone,
     )
 
 internal fun TextSizing.wire(): skirout.editor.v1.presentation.TextSizing =

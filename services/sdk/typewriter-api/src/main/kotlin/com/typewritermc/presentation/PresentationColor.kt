@@ -4,29 +4,11 @@ import com.typewritermc.expression.Expr
 import com.typewritermc.expression.Handled
 import com.typewritermc.expression.literal
 import com.typewritermc.types.Color
-
-enum class PresentationInteractionState {
-    Hovered,
-    Selected,
-    Focused,
-    Pressed,
-    Disabled,
-    ReadOnly,
-    Invalid,
-    Routed,
-
-    /** A dragged resource hovers the item and at least one drop offer accepts it. */
-    DropAccepted,
-
-    /** A dragged resource hovers the item and no drop offer accepts it. */
-    DropRejected,
-}
-
-enum class PresentationThemeColor { Primary, OnPrimary, Surface, OnSurface, OnSurfaceVariant, FocusOutline }
-
-enum class PresentationAmbientColor { Background, Foreground, SecondaryForeground }
-
-enum class PresentationContrastMode { Tonal, Monochrome }
+import skirout.editor.v1.presentation.PresentationAmbientColor
+import skirout.editor.v1.presentation.PresentationContrastMode
+import skirout.editor.v1.presentation.PresentationInteractionState
+import skirout.editor.v1.presentation.PresentationStateMatch
+import skirout.editor.v1.presentation.PresentationThemeColor
 
 /**
  * A paint policy resolved by the panel against authored values, the displayed
@@ -108,7 +90,7 @@ class PresentationStateColorScope internal constructor() {
         excluded: Set<PresentationInteractionState> = emptySet(),
         color: PresentationColor,
     ) {
-        rules += PresentationStateColorRule(PresentationStateMatch(required.toSet(), excluded), color)
+        rules += PresentationStateColorRule(stateMatch(required.toSet(), excluded), color)
     }
 }
 
@@ -118,13 +100,13 @@ fun literalColor(value: Color): PresentationColor = literal(value).asPresentatio
 
 fun themeColor(role: PresentationThemeColor): PresentationColor = PresentationColor.Theme(role)
 
-fun ambientBackground(): PresentationColor = PresentationColor.Ambient(PresentationAmbientColor.Background)
+fun ambientBackground(): PresentationColor = PresentationColor.Ambient(PresentationAmbientColor.BACKGROUND)
 
 /** Derives the existing tonal foreground after compositing over the observed surface. */
-fun PresentationColor.on(): PresentationColor = PresentationColor.Contrast(this, PresentationContrastMode.Tonal)
+fun PresentationColor.on(): PresentationColor = PresentationColor.Contrast(this, PresentationContrastMode.TONAL)
 
 /** Chooses black or white using the displayed background brightness. */
-fun PresentationColor.monochromeOn(): PresentationColor = PresentationColor.Contrast(this, PresentationContrastMode.Monochrome)
+fun PresentationColor.monochromeOn(): PresentationColor = PresentationColor.Contrast(this, PresentationContrastMode.MONOCHROME)
 
 fun PresentationColor.withAlpha(alpha: Double): PresentationColor = PresentationColor.Alpha(this, alpha)
 

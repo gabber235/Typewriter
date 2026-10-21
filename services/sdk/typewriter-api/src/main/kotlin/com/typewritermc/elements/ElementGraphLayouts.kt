@@ -6,14 +6,9 @@ import com.typewritermc.expression.literal
 import com.typewritermc.presentation.ContainerStyle
 import com.typewritermc.presentation.IconOptions
 import com.typewritermc.presentation.Layout
-import com.typewritermc.presentation.PresentationAlignment
 import com.typewritermc.presentation.PresentationBorder
 import com.typewritermc.presentation.PresentationInsets
-import com.typewritermc.presentation.PresentationInteractionState.Focused
-import com.typewritermc.presentation.PresentationInteractionState.Selected
 import com.typewritermc.presentation.PresentationRadius
-import com.typewritermc.presentation.PresentationTransition
-import com.typewritermc.presentation.TextOverflow
 import com.typewritermc.presentation.TextParagraph
 import com.typewritermc.presentation.TextSizing
 import com.typewritermc.presentation.TextStyle
@@ -24,8 +19,13 @@ import com.typewritermc.presentation.monochromeOn
 import com.typewritermc.presentation.on
 import com.typewritermc.presentation.stateColor
 import com.typewritermc.presentation.stateTransition
+import com.typewritermc.presentation.transition
 import com.typewritermc.types.Color
 import com.typewritermc.types.Icon
+import skirout.editor.v1.presentation.PresentationAlignment
+import skirout.editor.v1.presentation.PresentationInteractionState.FOCUSED
+import skirout.editor.v1.presentation.PresentationInteractionState.SELECTED
+import skirout.editor.v1.presentation.PresentationTextOverflow
 
 /** Displays an entry identity with a fixed inset frame and an icon at compact widths. */
 fun Layout.entryNode(
@@ -36,8 +36,8 @@ fun Layout.entryNode(
     val fill = accent.asPresentationColor()
     val outline =
         stateColor(fill) {
-            whenAll(Focused, color = literalColor(Color(0xffffffffu)))
-            whenAll(Selected, color = fill.on())
+            whenAll(FOCUSED, color = literalColor(Color(0xffffffffu)))
+            whenAll(SELECTED, color = fill.on())
         }
     container(
         ContainerStyle(
@@ -51,7 +51,7 @@ fun Layout.entryNode(
                 ContainerStyle(
                     border = PresentationBorder.All(width = 3.0, color = outline),
                     radius = PresentationRadius.Small,
-                    transition = stateTransition(PresentationTransition(milliseconds = 400)),
+                    transition = stateTransition(transition(milliseconds = 400)),
                 ),
             ) {
                 adaptiveLeading {
@@ -59,11 +59,11 @@ fun Layout.entryNode(
                     compactPadding(PresentationInsets(4.0, 4.0, 4.0, 4.0))
                     leading { icon(icon, IconOptions(size = 18.0)) }
                     center {
-                        align(PresentationAlignment.Center) {
+                        align(PresentationAlignment.CENTER) {
                             text(
                                 title,
                                 TextStyle(sizing = TextSizing.Exact(literal(13.0))),
-                                TextParagraph(maximumLines = 1, overflow = TextOverflow.Ellipsis),
+                                TextParagraph(maximumLines = 1, overflow = PresentationTextOverflow.ELLIPSIS),
                             )
                         }
                     }

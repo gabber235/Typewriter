@@ -2,8 +2,8 @@ package com.typewritermc.presentation
 
 import com.typewritermc.expression.Expr
 import com.typewritermc.expression.Handled
-
-enum class ImageFit { Contain, Cover, Fill, FitWidth, FitHeight, None, ScaleDown }
+import skirout.editor.v1.presentation.ImageFit
+import skirout.editor.v1.presentation.PresentationAlignment
 
 interface ImageScope {
     fun width(value: Double)

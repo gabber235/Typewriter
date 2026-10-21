@@ -2,6 +2,10 @@ package com.typewritermc.presentation
 
 import com.typewritermc.expression.Expr
 import com.typewritermc.expression.Handled
+import skirout.editor.v1.presentation.ConnectionAxis
+import skirout.editor.v1.presentation.ConnectionExpressionScope
+import skirout.editor.v1.presentation.PresentationAlignment
+import skirout.editor.v1.presentation.PresentationAnchorSelector
 
 internal class RuntimeAnchorScope : AnchorScope {
     private val anchors = mutableListOf<skirout.editor.v1.presentation.PresentationAnchorPoint>()
@@ -22,7 +26,7 @@ private class RuntimeAnchorPointScope(
     private val id: String,
 ) : AnchorPointScope {
     private val groups = linkedSetOf<String>()
-    private var alignment = PresentationAlignment.Center
+    private var alignment: PresentationAlignment = PresentationAlignment.CENTER
     private var offset: PresentationOffset? = null
     private var visibleIf: Expr<Boolean, Handled>? = null
     private var exportToParent = false
@@ -52,7 +56,7 @@ private class RuntimeAnchorPointScope(
         skirout.editor.v1.presentation.PresentationAnchorPoint(
             anchorId = id,
             groupIds = groups,
-            alignment = alignment.wire(),
+            alignment = alignment,
             offset = offset?.wire(),
             visibleIf = visibleIf?.let(::expression),
             exportToParent = exportToParent,
@@ -84,18 +88,18 @@ internal class RuntimeConnectionsScope(
 private class RuntimeConnectionScope(
     private val state: PresentationBuildState,
 ) : ConnectionScope {
-    private var source: AnchorSelector? = null
-    private var target: AnchorSelector? = null
+    private var source: PresentationAnchorSelector? = null
+    private var target: PresentationAnchorSelector? = null
     private var path: ConnectorPath = ConnectorPath.Straight
     private var style: ConnectorStyle? = null
     private val markers = mutableListOf<ConnectorMarker>()
     private var visibleIf: Expr<Boolean, Handled>? = null
 
-    override fun source(value: AnchorSelector) {
+    override fun source(value: PresentationAnchorSelector) {
         source = value
     }
 
-    override fun target(value: AnchorSelector) {
+    override fun target(value: PresentationAnchorSelector) {
         target = value
     }
 
@@ -117,8 +121,8 @@ private class RuntimeConnectionScope(
 
     fun build(): skirout.editor.v1.presentation.AnchoredConnection =
         skirout.editor.v1.presentation.AnchoredConnection(
-            source = requireNotNull(source) { "Connection source anchor is required." }.wire(),
-            target = requireNotNull(target) { "Connection target anchor is required." }.wire(),
+            source = requireNotNull(source) { "Connection source anchor is required." },
+            target = requireNotNull(target) { "Connection target anchor is required." },
             path = path.wire(),
             style = requireNotNull(style) { "Connection style is required." }.wire(),
             markers = markers.map { it.wire(state) },
@@ -129,8 +133,8 @@ private class RuntimeConnectionScope(
 private class RuntimeConnectionBundleScope(
     private val state: PresentationBuildState,
 ) : ConnectionBundleScope {
-    private var source: AnchorSelector? = null
-    private var targets: AnchorSelector? = null
+    private var source: PresentationAnchorSelector? = null
+    private var targets: PresentationAnchorSelector? = null
     private var path: ConnectorBundlePath = ConnectorBundlePath.Fan
     private var trunkStyle: ConnectorStyle? = null
     private var branchStyle: ConnectorStyle? = null
@@ -138,11 +142,11 @@ private class RuntimeConnectionBundleScope(
     private val branchMarkers = mutableListOf<ConnectorMarker>()
     private var visibleIf: Expr<Boolean, Handled>? = null
 
-    override fun source(value: AnchorSelector) {
+    override fun source(value: PresentationAnchorSelector) {
         source = value
     }
 
-    override fun targets(value: AnchorSelector) {
+    override fun targets(value: PresentationAnchorSelector) {
         targets = value
     }
 
@@ -172,8 +176,8 @@ private class RuntimeConnectionBundleScope(
 
     fun build(): skirout.editor.v1.presentation.AnchoredConnectionBundle =
         skirout.editor.v1.presentation.AnchoredConnectionBundle(
-            source = requireNotNull(source) { "Connection bundle source anchor is required." }.wire(),
-            targets = requireNotNull(targets) { "Connection bundle target anchors are required." }.wire(),
+            source = requireNotNull(source) { "Connection bundle source anchor is required." },
+            targets = requireNotNull(targets) { "Connection bundle target anchors are required." },
             path = path.wire(),
             trunkStyle = requireNotNull(trunkStyle) { "Connection bundle trunk style is required." }.wire(),
             branchStyle = requireNotNull(branchStyle) { "Connection bundle branch style is required." }.wire(),
@@ -183,37 +187,11 @@ private class RuntimeConnectionBundleScope(
         )
 }
 
-internal fun PresentationAlignment.wire(): skirout.editor.v1.presentation.PresentationAlignment =
-    when (this) {
-        PresentationAlignment.TopStart -> skirout.editor.v1.presentation.PresentationAlignment.TOP_START
-        PresentationAlignment.TopCenter -> skirout.editor.v1.presentation.PresentationAlignment.TOP_CENTER
-        PresentationAlignment.TopEnd -> skirout.editor.v1.presentation.PresentationAlignment.TOP_END
-        PresentationAlignment.CenterStart -> skirout.editor.v1.presentation.PresentationAlignment.CENTER_START
-        PresentationAlignment.Center -> skirout.editor.v1.presentation.PresentationAlignment.CENTER
-        PresentationAlignment.CenterEnd -> skirout.editor.v1.presentation.PresentationAlignment.CENTER_END
-        PresentationAlignment.BottomStart -> skirout.editor.v1.presentation.PresentationAlignment.BOTTOM_START
-        PresentationAlignment.BottomCenter -> skirout.editor.v1.presentation.PresentationAlignment.BOTTOM_CENTER
-        PresentationAlignment.BottomEnd -> skirout.editor.v1.presentation.PresentationAlignment.BOTTOM_END
-    }
-
 private fun PresentationOffset.wire(): skirout.editor.v1.presentation.PresentationOffset =
     skirout.editor.v1.presentation.PresentationOffset(
         x = expression(x),
         y = expression(y),
     )
-
-private fun AnchorSelector.wire(): skirout.editor.v1.presentation.PresentationAnchorSelector =
-    when (this) {
-        is AnchorSelector.Local -> {
-            skirout.editor.v1.presentation.PresentationAnchorSelector
-                .LocalWrapper(id)
-        }
-
-        is AnchorSelector.ExportedGroup -> {
-            skirout.editor.v1.presentation.PresentationAnchorSelector
-                .ExportedGroupWrapper(id)
-        }
-    }
 
 private fun ConnectorPath.wire(): skirout.editor.v1.presentation.ConnectionPath =
     when (this) {
@@ -243,11 +221,7 @@ private fun ConnectorBundlePath.wire(): skirout.editor.v1.presentation.Connectio
 
         is ConnectorBundlePath.Orthogonal -> {
             skirout.editor.v1.presentation.ConnectionBundlePath.createOrthogonal(
-                axis =
-                    when (axis) {
-                        ConnectionAxis.Horizontal -> skirout.editor.v1.presentation.ConnectionAxis.HORIZONTAL
-                        ConnectionAxis.Vertical -> skirout.editor.v1.presentation.ConnectionAxis.VERTICAL
-                    },
+                axis = axis,
                 bendPosition = expression(bendPosition),
             )
         }
@@ -285,10 +259,5 @@ private fun ConnectorMarker.wire(state: PresentationBuildState): skirout.editor.
         node = state.presentation(node),
         position = expression(position),
         alignToPath = expression(alignToPath),
-        scope =
-            when (scope) {
-                ConnectionExpressionScope.Layer -> skirout.editor.v1.presentation.ConnectionExpressionScope.LAYER
-                ConnectionExpressionScope.Source -> skirout.editor.v1.presentation.ConnectionExpressionScope.SOURCE
-                ConnectionExpressionScope.Target -> skirout.editor.v1.presentation.ConnectionExpressionScope.TARGET
-            },
+        scope = scope,
     )

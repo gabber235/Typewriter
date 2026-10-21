@@ -18,14 +18,8 @@ import com.typewritermc.expression.trim
 import com.typewritermc.presentation.ContainerStyle
 import com.typewritermc.presentation.EditorContext
 import com.typewritermc.presentation.Layout
-import com.typewritermc.presentation.PresentationAlignment
 import com.typewritermc.presentation.PresentationBorder
-import com.typewritermc.presentation.PresentationInteractionState.Focused
-import com.typewritermc.presentation.PresentationInteractionState.Hovered
-import com.typewritermc.presentation.PresentationInteractionState.Selected
 import com.typewritermc.presentation.PresentationRadius
-import com.typewritermc.presentation.PresentationThemeColor.FocusOutline
-import com.typewritermc.presentation.PresentationTransition
 import com.typewritermc.presentation.ambientBackground
 import com.typewritermc.presentation.asPresentationColor
 import com.typewritermc.presentation.icon
@@ -39,11 +33,17 @@ import com.typewritermc.presentation.searchDescription
 import com.typewritermc.presentation.stateColor
 import com.typewritermc.presentation.stateTransition
 import com.typewritermc.presentation.themeColor
+import com.typewritermc.presentation.transition
 import com.typewritermc.presentation.withAlpha
 import com.typewritermc.types.Color
 import com.typewritermc.types.Icon
 import com.typewritermc.types.PresentationRole
 import com.typewritermc.types.Ref
+import skirout.editor.v1.presentation.PresentationAlignment
+import skirout.editor.v1.presentation.PresentationInteractionState.FOCUSED
+import skirout.editor.v1.presentation.PresentationInteractionState.HOVERED
+import skirout.editor.v1.presentation.PresentationInteractionState.SELECTED
+import skirout.editor.v1.presentation.PresentationThemeColor.FOCUS_OUTLINE
 
 object TagInspectorPresentation : TagPresentation {
     override val roles = setOf(PresentationRole.INSPECTOR)
@@ -103,19 +103,19 @@ private fun TagPresentationScope.tagGraphSurface(body: Layout.() -> Unit) {
     val accent = appearance.accent.asPresentationColor()
     val background =
         stateColor(accent.withAlpha(0.2)) {
-            whenAll(Selected, Hovered, color = accent.withAlpha(0.7))
-            whenAll(Selected, color = accent)
-            whenAll(Hovered, color = accent.withAlpha(0.5))
+            whenAll(SELECTED, HOVERED, color = accent.withAlpha(0.7))
+            whenAll(SELECTED, color = accent)
+            whenAll(HOVERED, color = accent.withAlpha(0.5))
         }
     val foreground =
         stateColor(accent) {
-            whenAll(Hovered, color = ambientBackground().monochromeOn())
-            whenAll(Selected, color = ambientBackground().on())
+            whenAll(HOVERED, color = ambientBackground().monochromeOn())
+            whenAll(SELECTED, color = ambientBackground().on())
         }
     val outline =
         stateColor(accent) {
-            whenAll(Focused, color = themeColor(FocusOutline))
-            whenAll(Selected, color = literalColor(Color(0u)))
+            whenAll(FOCUSED, color = themeColor(FOCUS_OUTLINE))
+            whenAll(SELECTED, color = literalColor(Color(0u)))
         }
     container(
         ContainerStyle(
@@ -123,10 +123,10 @@ private fun TagPresentationScope.tagGraphSurface(body: Layout.() -> Unit) {
             foreground = foreground,
             border = PresentationBorder.All(width = 2.0, color = outline),
             radius = PresentationRadius.Large,
-            transition = stateTransition(PresentationTransition(milliseconds = 100)),
+            transition = stateTransition(transition(milliseconds = 100)),
         ),
     ) {
-        align(PresentationAlignment.Center, body)
+        align(PresentationAlignment.CENTER, body)
     }
 }
 

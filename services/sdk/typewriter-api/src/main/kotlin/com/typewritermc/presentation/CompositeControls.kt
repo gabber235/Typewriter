@@ -7,6 +7,8 @@ import com.typewritermc.dsl.TypewriterDsl
 import com.typewritermc.expression.Expr
 import com.typewritermc.expression.Handled
 import com.typewritermc.types.Resource
+import skirout.editor.v1.presentation.ControlDensity
+import skirout.editor.v1.presentation.LinkRejectionDisplay
 
 /** Settings shared by collection editors without changing item identity or writes. */
 @TypewriterDsl
@@ -297,7 +299,7 @@ interface LinkControl<R : Resource> : Control {
     fun linkInput(
         source: CollectionSource<*, com.typewritermc.types.ResourceId>? = null,
         policy: LinkCandidatePolicyId? = null,
-        rejection: LinkRejectionDisplay = LinkRejectionDisplay.Hidden,
+        rejection: LinkRejectionDisplay = LinkRejectionDisplay.HIDDEN,
         configure: LinkInputScope.() -> Unit = {},
     )
 }
@@ -306,12 +308,10 @@ interface LinkCollectionControl<R : Resource> : Control {
     fun linkInput(
         source: CollectionSource<*, com.typewritermc.types.ResourceId>? = null,
         policy: LinkCandidatePolicyId? = null,
-        rejection: LinkRejectionDisplay = LinkRejectionDisplay.Hidden,
+        rejection: LinkRejectionDisplay = LinkRejectionDisplay.HIDDEN,
         configure: LinkInputScope.() -> Unit = {},
     )
 }
-
-enum class LinkRejectionDisplay { Hidden, DisabledWithReason }
 
 @JvmInline
 value class LinkCandidatePolicyId(

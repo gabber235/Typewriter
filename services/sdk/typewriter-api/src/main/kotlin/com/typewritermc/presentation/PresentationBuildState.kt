@@ -19,6 +19,9 @@ import skirout.editor.v1.presentation.AxisChild
 import skirout.editor.v1.presentation.AxisChildrenElement
 import skirout.editor.v1.presentation.AxisChildrenLayout
 import skirout.editor.v1.presentation.ChildrenElement
+import skirout.editor.v1.presentation.CrossAxisAlignment
+import skirout.editor.v1.presentation.FlexFit
+import skirout.editor.v1.presentation.MainAxisAlignment
 import skirout.editor.v1.presentation.PositionedStackChild
 import skirout.editor.v1.presentation.PresentationCollectionDefinition
 import skirout.editor.v1.presentation.PresentationDependencies
@@ -26,8 +29,6 @@ import skirout.editor.v1.presentation.PresentationElement
 import skirout.editor.v1.presentation.PresentationNode
 import skirout.editor.v1.presentation.StackChild
 import kotlin.reflect.KClass
-import skirout.editor.v1.presentation.CrossAxisAlignment as WireCrossAxisAlignment
-import skirout.editor.v1.presentation.MainAxisAlignment as WireMainAxisAlignment
 import skirout.editor.v1.presentation.PresentationProperties as WirePresentationProperties
 import skirout.editor.v1.type_catalog.ValuePath as WireValuePath
 
@@ -321,8 +322,8 @@ internal class PresentationBuildState(
                         layout =
                             AxisChildrenLayout(
                                 spacing = 0.0,
-                                mainAxisAlignment = WireMainAxisAlignment.START,
-                                crossAxisAlignment = WireCrossAxisAlignment.START,
+                                mainAxisAlignment = MainAxisAlignment.START,
+                                crossAxisAlignment = CrossAxisAlignment.START,
                                 clipOverflow = false,
                             ),
                     ),
@@ -340,8 +341,8 @@ internal class PresentationBuildState(
         val layout =
             AxisChildrenLayout(
                 spacing = spacing,
-                mainAxisAlignment = main.wire(),
-                crossAxisAlignment = cross.wire(),
+                mainAxisAlignment = main,
+                crossAxisAlignment = cross,
                 clipOverflow = false,
             )
         val element =
@@ -386,7 +387,7 @@ internal class PresentationAxisNodeList(
     }
 
     fun addField(node: PresentationNode) {
-        if (horizontal) addFlexible(node, 1, FlexFit.Tight) else add(node)
+        if (horizontal) addFlexible(node, 1, FlexFit.TIGHT) else add(node)
     }
 
     fun addFlexible(
@@ -399,11 +400,7 @@ internal class PresentationAxisNodeList(
             AxisChild.createFlexible(
                 child = node,
                 flex = flex,
-                fit =
-                    when (fit) {
-                        FlexFit.Tight -> skirout.editor.v1.presentation.FlexFit.TIGHT
-                        FlexFit.Loose -> skirout.editor.v1.presentation.FlexFit.LOOSE
-                    },
+                fit = fit,
             )
     }
 }

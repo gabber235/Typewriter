@@ -17,6 +17,7 @@ import com.typewritermc.types.toTemplate
 import skirout.editor.v1.binding.BindingRef
 import skirout.editor.v1.expression.ExpressionNode
 import skirout.editor.v1.presentation.BoundControl
+import skirout.editor.v1.presentation.LinkRejectionDisplay
 import skirout.editor.v1.presentation.PresentationElement
 import skirout.editor.v1.presentation.PresentationNode
 import skirout.editor.v1.presentation.ResourcesLayout
@@ -434,11 +435,7 @@ internal class RuntimeControlBinding(
                         skirout.editor.v1.presentation
                             .LinkCandidatePolicyId(value = p.value)
                     },
-                rejectionDisplay =
-                    when (rejection) {
-                        LinkRejectionDisplay.Hidden -> skirout.editor.v1.presentation.LinkRejectionDisplay.HIDDEN
-                        LinkRejectionDisplay.DisabledWithReason -> skirout.editor.v1.presentation.LinkRejectionDisplay.DISABLED
-                    },
+                rejectionDisplay = rejection,
                 sourceId = source?.id,
                 appearance = appearance,
                 content = content,

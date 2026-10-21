@@ -9,6 +9,9 @@ import com.typewritermc.expression.neq
 import com.typewritermc.expression.orElse
 import com.typewritermc.types.Color
 import com.typewritermc.types.text
+import skirout.editor.v1.presentation.CrossAxisAlignment
+import skirout.editor.v1.presentation.PresentationTextOverflow
+import skirout.editor.v1.presentation.PresentationTextTone
 
 /**
  * Composes resource identity using ordinary presentation nodes.
@@ -23,11 +26,11 @@ fun Layout.resourceHeading(
     selectionCount: Expr<Int, MayBeMissing> = context.read(EditorContext.selectionCount),
 ) {
     showIf(selectionCount.orElse(literal(1)) eq literal(1)) {
-        column(spacing = 8.0, cross = CrossAxisAlignment.Stretch) {
+        column(spacing = 8.0, cross = CrossAxisAlignment.STRETCH) {
             text(
                 title,
                 style = TextStyle(color = color.asPresentationColor(), weight = 700, sizing = TextSizing.Fit(literal(18.0), literal(40.0))),
-                paragraph = TextParagraph(maximumLines = 1, overflow = TextOverflow.Ellipsis, selectable = true),
+                paragraph = TextParagraph(maximumLines = 1, overflow = PresentationTextOverflow.ELLIPSIS, selectable = true),
             )
             if (identifier != null) {
                 val value = identifier.orElse(literal(""))
@@ -35,7 +38,7 @@ fun Layout.resourceHeading(
                     text(
                         value,
                         style = TextStyle(sizing = TextSizing.Exact(literal(12.0))),
-                        paragraph = TextParagraph(softWrap = true, selectable = true, tone = TextTone.Secondary),
+                        paragraph = TextParagraph(softWrap = true, selectable = true, tone = PresentationTextTone.SECONDARY),
                     )
                 }
             }

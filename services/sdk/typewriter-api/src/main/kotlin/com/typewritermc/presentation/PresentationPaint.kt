@@ -3,27 +3,27 @@ package com.typewritermc.presentation
 import com.typewritermc.expression.Expr
 import com.typewritermc.expression.Handled
 import com.typewritermc.expression.literal
-import skirout.editor.v1.presentation.PresentationCurve as WireCurve
-import skirout.editor.v1.presentation.PresentationInteractionState as WireState
+import skirout.editor.v1.presentation.PresentationAlignment
+import skirout.editor.v1.presentation.PresentationCurve
+import skirout.editor.v1.presentation.PresentationInteractionState
+import skirout.editor.v1.presentation.PresentationStateMatch
+import skirout.editor.v1.presentation.PresentationStateTransitionRule
+import skirout.editor.v1.presentation.PresentationTransition
+import skirout.editor.v1.presentation.PresentationTransitionPolicy
 import skirout.editor.v1.presentation.PresentationNumber as WireNumber
 import skirout.editor.v1.presentation.PresentationShadow as WireShadow
-import skirout.editor.v1.presentation.PresentationStateMatch as WireStateMatch
 import skirout.editor.v1.presentation.PresentationStateNumberRule as WireStateNumberRule
-import skirout.editor.v1.presentation.PresentationStateTransitionRule as WireStateTransitionRule
-import skirout.editor.v1.presentation.PresentationTransition as WireTransition
-import skirout.editor.v1.presentation.PresentationTransitionPolicy as WireTransitionPolicy
 
 /**
  * Holds when every [required] state is active and no [excluded] state is. The panel owns the states; presentations
  * only declare which values apply in which of them. Colors, numbers and transitions share this match.
  */
-data class PresentationStateMatch(
-    val required: Set<PresentationInteractionState>,
-    val excluded: Set<PresentationInteractionState> = emptySet(),
-) {
-    init {
-        require(required.intersect(excluded).isEmpty()) { "Presentation states cannot be both required and excluded." }
-    }
+internal fun stateMatch(
+    required: Set<PresentationInteractionState>,
+    excluded: Set<PresentationInteractionState>,
+): PresentationStateMatch {
+    require(required.intersect(excluded).isEmpty()) { "Presentation states cannot be both required and excluded." }
+    return PresentationStateMatch(required = required, excluded = excluded)
 }
 
 /** A number that may change with interaction state, in the unit of the property holding it. */
@@ -52,7 +52,7 @@ class PresentationStateNumberScope internal constructor() {
         excluded: Set<PresentationInteractionState> = emptySet(),
         value: Expr<Double, Handled>,
     ) {
-        rules += PresentationStateNumberRule(PresentationStateMatch(required.toSet(), excluded), value)
+        rules += PresentationStateNumberRule(stateMatch(required.toSet(), excluded), value)
     }
 
     fun whenAll(
@@ -80,46 +80,40 @@ fun stateNumber(
     configure: PresentationStateNumberScope.() -> Unit,
 ): PresentationNumber = stateNumber(literal(fallback), configure)
 
-/** How an animated change progresses over its duration. */
-sealed interface PresentationCurve {
-    data object Linear : PresentationCurve
+/**
+ * An animated change of [milliseconds] that progresses along [curve], such as
+ * `transition(750, PresentationCurve.ElasticOutWrapper(0.9))` for a spring whose overshoot period is 0.9.
+ */
+fun transition(
+    milliseconds: Int,
+    curve: PresentationCurve = PresentationCurve.LINEAR,
+): PresentationTransition = PresentationTransition(milliseconds = milliseconds, curve = curve).requireValid()
 
-    data object EaseInOut : PresentationCurve
+/** Rejects negative durations, elastic periods that are not finite and positive, and unknown curves. */
+internal fun PresentationTransition.requireValid(): PresentationTransition =
+    apply {
+        require(milliseconds >= 0) { "Presentation transitions cannot have a negative duration." }
+        when (val curve = curve) {
+            PresentationCurve.LINEAR, PresentationCurve.EASE_IN_OUT, PresentationCurve.EASE_OUT, PresentationCurve.EMPHASIZED -> {
+                Unit
+            }
 
-    data object EaseOut : PresentationCurve
+            is PresentationCurve.ElasticOutWrapper -> {
+                require(curve.value.isFinite() && curve.value > 0.0) { "Elastic curve periods must be finite and positive." }
+            }
 
-    /** Quick start and long settle, for movement that should feel deliberate. */
-    data object Emphasized : PresentationCurve
-
-    /** Springs past the target and settles; [period] is the overshoot period in curve progress units. */
-    data class ElasticOut(
-        val period: Double,
-    ) : PresentationCurve {
-        init {
-            require(period.isFinite() && period > 0.0) { "Elastic curve periods must be finite and positive." }
+            else -> {
+                throw IllegalArgumentException("Presentation transition curve is unknown.")
+            }
         }
     }
-}
 
-data class PresentationTransition(
-    val milliseconds: Int,
-    val curve: PresentationCurve = PresentationCurve.Linear,
-) {
-    init {
-        require(milliseconds >= 0) { "Presentation transitions cannot have a negative duration." }
+/** Validates every transition of the policy where it enters the presentation wire form. */
+internal fun PresentationTransitionPolicy.requireValid(): PresentationTransitionPolicy =
+    apply {
+        rules.forEach { rule -> rule.transition.requireValid() }
+        fallback.requireValid()
     }
-}
-
-/** Chooses how a change animates by the state being entered: the first matching rule, otherwise [fallback]. */
-data class PresentationTransitionPolicy(
-    val rules: List<PresentationStateTransitionRule>,
-    val fallback: PresentationTransition,
-)
-
-data class PresentationStateTransitionRule(
-    val match: PresentationStateMatch,
-    val transition: PresentationTransition,
-)
 
 class PresentationStateTransitionScope internal constructor() {
     internal val rules = mutableListOf<PresentationStateTransitionRule>()
@@ -129,7 +123,8 @@ class PresentationStateTransitionScope internal constructor() {
         excluded: Set<PresentationInteractionState> = emptySet(),
         transition: PresentationTransition,
     ) {
-        rules += PresentationStateTransitionRule(PresentationStateMatch(required.toSet(), excluded), transition)
+        rules +=
+            PresentationStateTransitionRule(match = stateMatch(required.toSet(), excluded), transition = transition.requireValid())
     }
 }
 
@@ -142,7 +137,7 @@ fun stateTransition(
     configure: PresentationStateTransitionScope.() -> Unit = {},
 ): PresentationTransitionPolicy {
     val scope = PresentationStateTransitionScope().apply(configure)
-    return PresentationTransitionPolicy(scope.rules.toList(), fallback)
+    return PresentationTransitionPolicy(rules = scope.rules, fallback = fallback.requireValid())
 }
 
 /** A shadow below a container. Blur, spread and offsets are in logical pixels. */
@@ -165,7 +160,7 @@ data class PresentationShadow(
  * (3, 2); zero keeps the transform flat.
  */
 data class TransformStyle(
-    val origin: PresentationAlignment = PresentationAlignment.Center,
+    val origin: PresentationAlignment = PresentationAlignment.CENTER,
     val perspective: Double = 0.0,
     val scale: PresentationNumber? = null,
     val rotateX: PresentationNumber? = null,
@@ -180,12 +175,6 @@ data class TransformStyle(
     }
 }
 
-internal fun PresentationStateMatch.wire(): WireStateMatch =
-    WireStateMatch(
-        required = required.map { it.wire() },
-        excluded = excluded.map { it.wire() },
-    )
-
 internal fun PresentationNumber.wire(): WireNumber =
     when (this) {
         is PresentationNumber.Value -> {
@@ -194,30 +183,11 @@ internal fun PresentationNumber.wire(): WireNumber =
 
         is PresentationNumber.States -> {
             WireNumber.createStates(
-                rules = rules.map { rule -> WireStateNumberRule(match = rule.match.wire(), value = expression(rule.value)) },
+                rules = rules.map { rule -> WireStateNumberRule(match = rule.match, value = expression(rule.value)) },
                 fallback = expression(fallback),
             )
         }
     }
-
-internal fun PresentationTransitionPolicy.wire(): WireTransitionPolicy =
-    WireTransitionPolicy(
-        rules = rules.map { rule -> WireStateTransitionRule(match = rule.match.wire(), transition = rule.transition.wire()) },
-        fallback = fallback.wire(),
-    )
-
-private fun PresentationTransition.wire(): WireTransition =
-    WireTransition(
-        milliseconds = milliseconds,
-        curve =
-            when (val curve = curve) {
-                PresentationCurve.Linear -> WireCurve.LINEAR
-                PresentationCurve.EaseInOut -> WireCurve.EASE_IN_OUT
-                PresentationCurve.EaseOut -> WireCurve.EASE_OUT
-                PresentationCurve.Emphasized -> WireCurve.EMPHASIZED
-                is PresentationCurve.ElasticOut -> WireCurve.ElasticOutWrapper(curve.period)
-            },
-    )
 
 internal fun PresentationShadow.wire(): WireShadow =
     WireShadow(
@@ -227,17 +197,3 @@ internal fun PresentationShadow.wire(): WireShadow =
         offsetX = offsetX,
         offsetY = offsetY,
     )
-
-internal fun PresentationInteractionState.wire(): WireState =
-    when (this) {
-        PresentationInteractionState.Hovered -> WireState.HOVERED
-        PresentationInteractionState.Selected -> WireState.SELECTED
-        PresentationInteractionState.Focused -> WireState.FOCUSED
-        PresentationInteractionState.Pressed -> WireState.PRESSED
-        PresentationInteractionState.Disabled -> WireState.DISABLED
-        PresentationInteractionState.ReadOnly -> WireState.READ_ONLY
-        PresentationInteractionState.Invalid -> WireState.INVALID
-        PresentationInteractionState.Routed -> WireState.ROUTED
-        PresentationInteractionState.DropAccepted -> WireState.DROP_ACCEPTED
-        PresentationInteractionState.DropRejected -> WireState.DROP_REJECTED
-    }

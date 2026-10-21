@@ -7,6 +7,7 @@ import com.typewritermc.expression.ExpressionBindingId
 import com.typewritermc.expression.Handled
 import com.typewritermc.expression.inputExpression
 import skirout.editor.v1.expression.ExpressionNode
+import skirout.editor.v1.presentation.ControlDensity
 import skirout.editor.v1.presentation.PresentationNode
 import skirout.editor.v1.presentation.CollectionAppearance as WireCollectionAppearance
 import skirout.editor.v1.presentation.CollectionContent as WireCollectionContent
@@ -30,7 +31,7 @@ internal class RuntimeCollectionAppearance(
         target.itemForeground = value.foreground?.wire()
         target.itemBorder = value.border?.wire()
         target.itemRadius = value.radius.wire()
-        target.itemTransition = value.transition?.wire()
+        target.itemTransition = value.transition?.requireValid()
         target.itemShadows = value.shadows.map { it.wire() }
     }
 }
@@ -361,7 +362,7 @@ internal class RuntimeCollectionOperationAppearance(
     }
 
     override fun operationDensity(value: ControlDensity) {
-        target.operationDensity = value.wire()
+        target.operationDensity = value
     }
 }
 

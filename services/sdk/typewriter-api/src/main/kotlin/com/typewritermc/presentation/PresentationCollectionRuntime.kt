@@ -11,6 +11,9 @@ import com.typewritermc.types.skir.SkirDataValueCodec
 import com.typewritermc.types.skir.SkirTypeCodec
 import com.typewritermc.types.skir.getOrThrow
 import skirout.editor.v1.expression.ExpressionNode
+import skirout.editor.v1.presentation.CollectionGraphDirection
+import skirout.editor.v1.presentation.CrossAxisAlignment
+import skirout.editor.v1.presentation.MainAxisAlignment
 import skirout.editor.v1.presentation.PresentationCollectionDefinition
 import skirout.editor.v1.presentation.PresentationCollectionProjection
 import skirout.editor.v1.presentation.PresentationCollectionProjectionField
@@ -18,8 +21,6 @@ import skirout.editor.v1.presentation.PresentationCollectionProjectionValue
 import skirout.editor.v1.presentation.PresentationCollectionRelationDefinition
 import skirout.editor.v1.presentation.PresentationElement
 import skirout.editor.v1.presentation.PresentationNode
-import skirout.editor.v1.presentation.CrossAxisAlignment as WireCrossAxisAlignment
-import skirout.editor.v1.presentation.MainAxisAlignment as WireMainAxisAlignment
 
 internal fun <V, ItemScope> RuntimePresentationData.renderRepeated(
     source: Expr<List<V>, Handled>,
@@ -116,7 +117,7 @@ internal fun <Row, Key> RuntimePresentationData.renderCollectionGraph(
     val childSlot = "graph.child.${childBinding.value}"
     var roots: ExpressionNode? = null
     var relation: String? = null
-    var graphDirection = CollectionDirection.Forward
+    var graphDirection: CollectionGraphDirection = CollectionGraphDirection.FORWARD
     var graphMaximumDepth: Int? = null
     var node: PresentationNode? = null
     var rootSequence: skirout.editor.v1.presentation.SequencePresentation? = null
@@ -193,7 +194,7 @@ internal fun <Row, Key> RuntimePresentationData.renderCollectionGraph(
 
             override fun relation(
                 id: String,
-                direction: CollectionDirection,
+                direction: CollectionGraphDirection,
                 maximumDepth: Int?,
             ) {
                 require(id.isNotBlank()) { "Collection graph relation ids must not be blank." }
@@ -231,11 +232,7 @@ internal fun <Row, Key> RuntimePresentationData.renderCollectionGraph(
                 roots = requireNotNull(roots) { "Collection graph roots are required." },
                 rootSequence = rootSequence ?: sequence(rootItem),
                 relationId = requireNotNull(relation) { "Collection graph relation is required." },
-                direction =
-                    when (graphDirection) {
-                        CollectionDirection.Forward -> skirout.editor.v1.presentation.CollectionGraphDirection.FORWARD
-                        CollectionDirection.Reverse -> skirout.editor.v1.presentation.CollectionGraphDirection.REVERSE
-                    },
+                direction = graphDirection,
                 maximumDepth = graphMaximumDepth,
                 node = requireNotNull(node) { "Collection graph node content is required." },
                 childrenBindingId = childrenBinding.wire(),
@@ -258,8 +255,8 @@ private fun RuntimePresentationData.sequence(
             skirout.editor.v1.presentation.SequenceLayout.ChildrenWrapper(
                 skirout.editor.v1.presentation.ChildrenLayout.createColumn(
                     spacing = 0.0,
-                    mainAxisAlignment = WireMainAxisAlignment.START,
-                    crossAxisAlignment = WireCrossAxisAlignment.START,
+                    mainAxisAlignment = MainAxisAlignment.START,
+                    crossAxisAlignment = CrossAxisAlignment.START,
                     clipOverflow = false,
                 ),
             ),
@@ -274,8 +271,8 @@ private class RuntimeSequenceLayoutScope : SequenceLayoutScope {
             skirout.editor.v1.presentation.SequenceLayout.ChildrenWrapper(
                 skirout.editor.v1.presentation.ChildrenLayout.createRow(
                     spacing = spacing,
-                    mainAxisAlignment = WireMainAxisAlignment.START,
-                    crossAxisAlignment = WireCrossAxisAlignment.CENTER,
+                    mainAxisAlignment = MainAxisAlignment.START,
+                    crossAxisAlignment = CrossAxisAlignment.CENTER,
                     clipOverflow = true,
                 ),
             ),
@@ -291,8 +288,8 @@ private class RuntimeSequenceLayoutScope : SequenceLayoutScope {
             skirout.editor.v1.presentation.SequenceLayout.ChildrenWrapper(
                 skirout.editor.v1.presentation.ChildrenLayout.createColumn(
                     spacing = spacing,
-                    mainAxisAlignment = WireMainAxisAlignment.START,
-                    crossAxisAlignment = cross.wire(),
+                    mainAxisAlignment = MainAxisAlignment.START,
+                    crossAxisAlignment = cross,
                     clipOverflow = false,
                 ),
             ),
@@ -327,7 +324,7 @@ private class RuntimeSequenceLayoutScope : SequenceLayoutScope {
                         ConnectorAnchor.Center -> skirout.editor.v1.presentation.ConnectorAnchor.CENTER
                     },
                 flattenSingleItem = expression(flattenSingleItem),
-                crossAxisAlignment = cross.wire(),
+                crossAxisAlignment = cross,
             ),
         )
     }

@@ -15,6 +15,14 @@ import com.typewritermc.types.TypeDefinitionId
 import com.typewritermc.types.TypeTemplate
 import skirout.editor.v1.action.EditorAction
 import skirout.editor.v1.expression.ExpressionNode
+import skirout.editor.v1.presentation.CollectionGraphDirection
+import skirout.editor.v1.presentation.CrossAxisAlignment
+import skirout.editor.v1.presentation.DateTimeZone
+import skirout.editor.v1.presentation.HeaderActionPlacement
+import skirout.editor.v1.presentation.HeaderActionTone
+import skirout.editor.v1.presentation.PresentationTextOverflow
+import skirout.editor.v1.presentation.PresentationTextTone
+import skirout.editor.v1.presentation.RelativeTimeStyle
 import kotlin.time.Instant
 
 interface PresentationContent {
@@ -79,14 +87,14 @@ interface PresentationContent {
     fun dateTime(
         value: Expr<Instant, Handled>,
         format: Expr<String, Handled>,
-        zone: DateTimeZone = DateTimeZone.Local,
+        zone: DateTimeZone = DateTimeZone.LOCAL,
         configure: DisplayAppearanceScope.() -> Unit = {},
     )
 
     fun relativeTime(
         value: Expr<Instant, Handled>,
-        style: RelativeTimeStyle = RelativeTimeStyle.Compact,
-        zone: DateTimeZone = DateTimeZone.Local,
+        style: RelativeTimeStyle = RelativeTimeStyle.COMPACT,
+        zone: DateTimeZone = DateTimeZone.LOCAL,
         configure: DisplayAppearanceScope.() -> Unit = {},
     )
 }
@@ -267,16 +275,12 @@ sealed interface TextSizing {
     ) : TextSizing
 }
 
-enum class TextOverflow { Clip, Ellipsis }
-
-enum class TextTone { Primary, Secondary }
-
 data class TextParagraph(
     val maximumLines: Int? = null,
-    val overflow: TextOverflow = TextOverflow.Clip,
+    val overflow: PresentationTextOverflow = PresentationTextOverflow.CLIP,
     val softWrap: Boolean = false,
     val selectable: Boolean = false,
-    val tone: TextTone = TextTone.Primary,
+    val tone: PresentationTextTone = PresentationTextTone.PRIMARY,
 )
 
 data class IconOptions(
@@ -302,17 +306,9 @@ data class StatusAppearance(
     val configure: DisplayAppearanceScope.() -> Unit = {},
 )
 
-enum class DateTimeZone { Local, Utc }
-
-enum class RelativeTimeStyle { Compact, Full }
-
 @JvmInline value class HeaderItemId(
     val value: String,
 )
-
-enum class HeaderActionTone { Neutral, Destructive }
-
-enum class HeaderActionPlacement { BeforeTitle, AfterTitle, End }
 
 data class HeaderActionConfirmation(
     val title: Expr<String, Handled>,
@@ -609,8 +605,6 @@ interface LookupScope<Row> {
     fun loading(body: Layout.() -> Unit)
 }
 
-enum class CollectionDirection { Forward, Reverse }
-
 enum class ConnectorAnchor { Start, Center }
 
 /** Arranges graph occurrences without changing their traversal or content. */
@@ -619,7 +613,7 @@ interface SequenceLayoutScope {
 
     fun column(
         spacing: Double = 0.0,
-        cross: CrossAxisAlignment = CrossAxisAlignment.Start,
+        cross: CrossAxisAlignment = CrossAxisAlignment.START,
     )
 
     fun hierarchy(
@@ -631,7 +625,7 @@ interface SequenceLayoutScope {
         leadingSpacing: Double = 16.0,
         itemAnchor: ConnectorAnchor = ConnectorAnchor.Center,
         flattenSingleItem: Boolean = true,
-        cross: CrossAxisAlignment = CrossAxisAlignment.Stretch,
+        cross: CrossAxisAlignment = CrossAxisAlignment.STRETCH,
     )
 }
 
@@ -675,7 +669,7 @@ interface GraphScope<Row, Key> {
 
     fun relation(
         id: String,
-        direction: CollectionDirection = CollectionDirection.Forward,
+        direction: CollectionGraphDirection = CollectionGraphDirection.FORWARD,
         maximumDepth: Int? = null,
     )
 

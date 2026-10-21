@@ -7,6 +7,10 @@ import com.typewritermc.expression.ExpressionBindingId
 import com.typewritermc.expression.Handled
 import com.typewritermc.types.TypeTemplate
 import skirout.editor.v1.expression.ExpressionNode
+import skirout.editor.v1.presentation.PopupSide
+import skirout.editor.v1.presentation.SearchSelectionMode
+import skirout.editor.v1.presentation.SearchSelectorMultiplicity
+import skirout.editor.v1.presentation.SearchSelectorValues
 import kotlin.time.Duration
 
 interface SearchInputScope<Value, Row> :
@@ -148,25 +152,13 @@ fun <Row> SearchProviderSpec<Row>.section(
     label: Expr<String, Handled>,
 ): SearchProviderSpec<Row> = decorate(SearchDecoration.Section(id, label.toNode()))
 
-enum class SearchSelectionMode { Single, Multiple }
-
-enum class SearchSelectorMultiplicity { Single, Multiple }
-
-sealed interface SearchSelectorValues {
-    data object FreeText : SearchSelectorValues
-
-    data class Enumeration(
-        val values: List<String>,
-    ) : SearchSelectorValues
-}
-
 interface SearchSelectorsScope {
     fun selector(
         id: String,
         key: String,
-        values: SearchSelectorValues = SearchSelectorValues.FreeText,
+        values: SearchSelectorValues = SearchSelectorValues.FREE_TEXT,
         caseSensitive: Boolean = false,
-        multiplicity: SearchSelectorMultiplicity = SearchSelectorMultiplicity.Single,
+        multiplicity: SearchSelectorMultiplicity = SearchSelectorMultiplicity.SINGLE,
         color: Long? = null,
     ): Expr<Any?, Handled>
 }

@@ -6,12 +6,15 @@ import com.typewritermc.expression.literal
 import skirout.editor.v1.binding.BindingRef
 import skirout.editor.v1.expression.ExpressionNode
 import skirout.editor.v1.presentation.ChildrenElement
+import skirout.editor.v1.presentation.CrossAxisAlignment
+import skirout.editor.v1.presentation.FlexFit
 import skirout.editor.v1.presentation.GridChildrenLayout
+import skirout.editor.v1.presentation.MainAxisAlignment
+import skirout.editor.v1.presentation.PresentationAlignment
 import skirout.editor.v1.presentation.PresentationElement
 import skirout.editor.v1.presentation.PresentationNode
+import skirout.editor.v1.presentation.PresentationTransitionPolicy
 import skirout.editor.v1.presentation.WrapChildrenLayout
-import skirout.editor.v1.presentation.CrossAxisAlignment as WireCrossAxisAlignment
-import skirout.editor.v1.presentation.MainAxisAlignment as WireMainAxisAlignment
 
 internal class RuntimeLayout(
     private val state: PresentationBuildState,
@@ -56,8 +59,8 @@ internal class RuntimeLayout(
                         layout =
                             skirout.editor.v1.presentation.AxisChildrenLayout(
                                 spacing = spacing,
-                                mainAxisAlignment = WireMainAxisAlignment.START,
-                                crossAxisAlignment = WireCrossAxisAlignment.CENTER,
+                                mainAxisAlignment = MainAxisAlignment.START,
+                                crossAxisAlignment = CrossAxisAlignment.CENTER,
                                 clipOverflow = true,
                             ),
                     ),
@@ -226,8 +229,8 @@ internal class RuntimeLayout(
                             WrapChildrenLayout(
                                 spacing = spacing,
                                 runSpacing = runSpacing,
-                                mainAxisAlignment = WireMainAxisAlignment.START,
-                                crossAxisAlignment = WireCrossAxisAlignment.START,
+                                mainAxisAlignment = MainAxisAlignment.START,
+                                crossAxisAlignment = CrossAxisAlignment.START,
                             ),
                     ),
                 ),
@@ -267,7 +270,7 @@ internal class RuntimeLayout(
         target +=
             state.node(
                 PresentationElement.ChildrenWrapper(
-                    ChildrenElement.createStack(children = children.children, alignment = alignment?.wire()),
+                    ChildrenElement.createStack(children = children.children, alignment = alignment),
                 ),
             )
     }
@@ -315,7 +318,7 @@ internal class RuntimeLayout(
                     backgroundColor = style.background?.wire(),
                     radius = style.radius.wire(),
                     foregroundColor = style.foreground?.wire(),
-                    transition = style.transition?.wire(),
+                    transition = style.transition?.requireValid(),
                     shadows = style.shadows.map { it.wire() },
                 ),
             )
@@ -360,7 +363,7 @@ internal class RuntimeLayout(
             state.node(
                 PresentationElement.createTransform(
                     child = child(body),
-                    origin = style.origin.wire(),
+                    origin = style.origin,
                     perspective = style.perspective,
                     scale = style.scale?.wire(),
                     rotateX = style.rotateX?.wire(),
@@ -368,7 +371,7 @@ internal class RuntimeLayout(
                     rotateZ = style.rotateZ?.wire(),
                     translateX = style.translateX?.wire(),
                     translateY = style.translateY?.wire(),
-                    transition = style.transition?.wire(),
+                    transition = style.transition?.requireValid(),
                 ),
             )
     }
@@ -394,7 +397,7 @@ internal class RuntimeLayout(
             state.node(
                 PresentationElement.createAlign(
                     child = child(body),
-                    alignment = alignment.wire(),
+                    alignment = alignment,
                 ),
             )
     }
@@ -500,7 +503,7 @@ private class RuntimeStackLayout(
                 bottom = bottom?.wire(),
                 width = width?.wire(),
                 height = height?.wire(),
-                transition = transition?.wire(),
+                transition = transition?.requireValid(),
             ),
         )
     }

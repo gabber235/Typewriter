@@ -7,10 +7,10 @@ import com.typewritermc.types.skir.SkirTypeCodec
 import com.typewritermc.types.skir.getOrThrow
 import skirout.editor.v1.binding.BindingRef
 import skirout.editor.v1.expression.ExpressionNode
+import skirout.editor.v1.presentation.CrossAxisAlignment
+import skirout.editor.v1.presentation.MainAxisAlignment
 import skirout.editor.v1.type_catalog.FieldPathSegment
 import java.math.BigInteger
-import skirout.editor.v1.presentation.CrossAxisAlignment as WireCrossAxisAlignment
-import skirout.editor.v1.presentation.MainAxisAlignment as WireMainAxisAlignment
 import skirout.editor.v1.type_catalog.ExpressionBindingId as WireExpressionBindingId
 import skirout.editor.v1.type_catalog.PathSegment as WirePathSegment
 import skirout.editor.v1.type_catalog.ValuePath as WireValuePath
@@ -115,24 +115,6 @@ internal fun integerExpression(value: Long): skirout.editor.v1.expression.Expres
             .encode(DataValue.Integer(BigInteger.valueOf(value)))
             .getOrThrow(),
     )
-
-internal fun MainAxisAlignment.wire(): WireMainAxisAlignment =
-    when (this) {
-        MainAxisAlignment.Start -> WireMainAxisAlignment.START
-        MainAxisAlignment.Center -> WireMainAxisAlignment.CENTER
-        MainAxisAlignment.End -> WireMainAxisAlignment.END
-        MainAxisAlignment.SpaceBetween -> WireMainAxisAlignment.SPACE_BETWEEN
-        MainAxisAlignment.SpaceAround -> WireMainAxisAlignment.SPACE_AROUND
-        MainAxisAlignment.SpaceEvenly -> WireMainAxisAlignment.SPACE_EVENLY
-    }
-
-internal fun CrossAxisAlignment.wire(): WireCrossAxisAlignment =
-    when (this) {
-        CrossAxisAlignment.Start -> WireCrossAxisAlignment.START
-        CrossAxisAlignment.Center -> WireCrossAxisAlignment.CENTER
-        CrossAxisAlignment.End -> WireCrossAxisAlignment.END
-        CrossAxisAlignment.Stretch -> WireCrossAxisAlignment.STRETCH
-    }
 
 internal fun PresentationBorder.wire(): skirout.editor.v1.presentation.PresentationBorder =
     when (this) {

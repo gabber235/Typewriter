@@ -4,6 +4,8 @@ import com.typewritermc.expression.Expr
 import com.typewritermc.expression.Handled
 import skirout.editor.v1.binding.BindingRef
 import skirout.editor.v1.expression.ExpressionNode
+import skirout.editor.v1.presentation.HeaderActionPlacement
+import skirout.editor.v1.presentation.HeaderActionTone
 
 internal class RuntimeHeaderScope(
     private val state: PresentationBuildState,
@@ -104,7 +106,7 @@ private abstract class RuntimeHeaderActionScope {
     var visibleIf: skirout.editor.v1.expression.ExpressionNode? = null
     var enabledIf: skirout.editor.v1.expression.ExpressionNode? = null
     var confirmation: skirout.editor.v1.presentation.HeaderActionConfirmation? = null
-    var placement = HeaderActionPlacement.End
+    var placement: HeaderActionPlacement = HeaderActionPlacement.END
 
     fun setTooltip(value: Expr<String, Handled>) {
         tooltip = expression(value)
@@ -135,7 +137,7 @@ private class RuntimeHeaderButtonScope(
     private var icon: skirout.editor.v1.expression.ExpressionNode? = null
     private var label: skirout.editor.v1.expression.ExpressionNode? = null
     private var action: skirout.editor.v1.action.EditorAction? = null
-    private var tone = HeaderActionTone.Neutral
+    private var tone: HeaderActionTone = HeaderActionTone.NEUTRAL
 
     override fun icon(value: Expr<String, Handled>) {
         icon = expression(value)
@@ -178,9 +180,9 @@ private class RuntimeHeaderButtonScope(
             priority = priority,
             visibleIf = visibleIf,
             enabledIf = enabledIf,
-            tone = tone.wire(),
+            tone = tone,
             confirmation = confirmation,
-            placement = placement.wire(),
+            placement = placement,
         )
 }
 
@@ -231,7 +233,7 @@ private class RuntimeHeaderToggleScope(
             visibleIf = visibleIf,
             enabledIf = enabledIf,
             confirmation = confirmation,
-            placement = placement.wire(),
+            placement = placement,
         )
 }
 
@@ -278,19 +280,6 @@ private class RuntimeHeaderReorderScope(
 private fun HeaderItemId.wire(): skirout.editor.v1.presentation.HeaderItemId =
     skirout.editor.v1.presentation
         .HeaderItemId(namespace = "generated", name = value)
-
-private fun HeaderActionTone.wire(): skirout.editor.v1.presentation.HeaderActionTone =
-    when (this) {
-        HeaderActionTone.Neutral -> skirout.editor.v1.presentation.HeaderActionTone.NEUTRAL
-        HeaderActionTone.Destructive -> skirout.editor.v1.presentation.HeaderActionTone.DESTRUCTIVE
-    }
-
-private fun HeaderActionPlacement.wire(): skirout.editor.v1.presentation.HeaderActionPlacement =
-    when (this) {
-        HeaderActionPlacement.BeforeTitle -> skirout.editor.v1.presentation.HeaderActionPlacement.BEFORE_TITLE
-        HeaderActionPlacement.AfterTitle -> skirout.editor.v1.presentation.HeaderActionPlacement.AFTER_TITLE
-        HeaderActionPlacement.End -> skirout.editor.v1.presentation.HeaderActionPlacement.END
-    }
 
 private fun HeaderActionConfirmation.wire(): skirout.editor.v1.presentation.HeaderActionConfirmation =
     skirout.editor.v1.presentation.HeaderActionConfirmation(

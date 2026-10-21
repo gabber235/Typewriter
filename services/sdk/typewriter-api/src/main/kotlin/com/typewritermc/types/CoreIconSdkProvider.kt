@@ -8,7 +8,6 @@ import com.typewritermc.expression.length
 import com.typewritermc.expression.literal
 import com.typewritermc.expression.orElse
 import com.typewritermc.presentation.TextLines
-import com.typewritermc.presentation.TextOverflow
 import com.typewritermc.presentation.TextParagraph
 import com.typewritermc.presentation.cache
 import com.typewritermc.presentation.debounce
@@ -18,6 +17,7 @@ import com.typewritermc.presentation.history
 import com.typewritermc.presentation.limit
 import com.typewritermc.presentation.section
 import skirout.editor.v1.expression.ExpressionNode
+import skirout.editor.v1.presentation.PresentationTextOverflow
 import kotlin.time.Duration.Companion.milliseconds
 import kotlin.time.Duration.Companion.seconds
 
@@ -42,7 +42,7 @@ object CoreIconSdkProvider : IconIconifyPresentation, IconSvgPresentation {
                         row(spacing = 10.0) {
                             icon(row)
                             flexible {
-                                text(row, paragraph = TextParagraph(maximumLines = 1, overflow = TextOverflow.Ellipsis))
+                                text(row, paragraph = TextParagraph(maximumLines = 1, overflow = PresentationTextOverflow.ELLIPSIS))
                             }
                         }
                     }
@@ -51,7 +51,7 @@ object CoreIconSdkProvider : IconIconifyPresentation, IconSvgPresentation {
                     row(spacing = 10.0) {
                         icon(current.orElse(literal("material-symbols:book")))
                         flexible {
-                            text(current, paragraph = TextParagraph(maximumLines = 1, overflow = TextOverflow.Ellipsis))
+                            text(current, paragraph = TextParagraph(maximumLines = 1, overflow = PresentationTextOverflow.ELLIPSIS))
                         }
                     }
                 }

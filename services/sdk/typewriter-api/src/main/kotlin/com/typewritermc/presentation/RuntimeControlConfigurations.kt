@@ -5,22 +5,31 @@ import com.typewritermc.expression.Expr
 import com.typewritermc.expression.Handled
 import com.typewritermc.expression.literal
 import skirout.editor.v1.expression.ExpressionNode
+import skirout.editor.v1.presentation.BytesEditingEncoding
+import skirout.editor.v1.presentation.ChoicePresentation
+import skirout.editor.v1.presentation.ColorEditingRepresentation
+import skirout.editor.v1.presentation.ColorPickerFormat
+import skirout.editor.v1.presentation.ControlDensity
+import skirout.editor.v1.presentation.DateTimePickerPresentation
+import skirout.editor.v1.presentation.InputTextAlignment
+import skirout.editor.v1.presentation.NumericSteppers
+import skirout.editor.v1.presentation.SliderInteraction
+import skirout.editor.v1.presentation.SliderOrientation
+import skirout.editor.v1.presentation.SliderValueDisplay
+import skirout.editor.v1.presentation.TextCapitalization
+import skirout.editor.v1.presentation.TextPurpose
+import skirout.editor.v1.presentation.TogglePosition
+import skirout.editor.v1.presentation.TogglePresentation
 import skirout.editor.v1.presentation.BorderOverride as WireBorderOverride
 import skirout.editor.v1.presentation.BoundControl as WireBoundControl
 import skirout.editor.v1.presentation.BytesControl as WireBytesControl
-import skirout.editor.v1.presentation.BytesEditingEncoding as WireBytesEditingEncoding
 import skirout.editor.v1.presentation.BytesInteractionOptions as WireBytesInteractionOptions
 import skirout.editor.v1.presentation.CharacterFilter as WireCharacterFilter
 import skirout.editor.v1.presentation.ChoiceOptionAppearance as WireChoiceOptionAppearance
-import skirout.editor.v1.presentation.ChoicePresentation as WireChoicePresentation
 import skirout.editor.v1.presentation.ColorControl as WireColorControl
-import skirout.editor.v1.presentation.ColorEditingRepresentation as WireColorEditingRepresentation
 import skirout.editor.v1.presentation.ColorInteractionOptions as WireColorInteractionOptions
-import skirout.editor.v1.presentation.ColorPickerFormat as WireColorPickerFormat
-import skirout.editor.v1.presentation.ControlDensity as WireControlDensity
 import skirout.editor.v1.presentation.DateTimeControl as WireDateTimeControl
 import skirout.editor.v1.presentation.DateTimeInteractionOptions as WireDateTimeInteractionOptions
-import skirout.editor.v1.presentation.DateTimePickerPresentation as WireDateTimePickerPresentation
 import skirout.editor.v1.presentation.DurationControl as WireDurationControl
 import skirout.editor.v1.presentation.DurationInteractionOptions as WireDurationInteractionOptions
 import skirout.editor.v1.presentation.EnumControl as WireEnumControl
@@ -28,11 +37,9 @@ import skirout.editor.v1.presentation.ExpressionMapping as WireExpressionMapping
 import skirout.editor.v1.presentation.InputAdornment as WireInputAdornment
 import skirout.editor.v1.presentation.InputAppearance as WireInputAppearance
 import skirout.editor.v1.presentation.InputContent as WireInputContent
-import skirout.editor.v1.presentation.InputTextAlignment as WireInputTextAlignment
 import skirout.editor.v1.presentation.InputTextStyle as WireInputTextStyle
 import skirout.editor.v1.presentation.NumericControl as WireNumericControl
 import skirout.editor.v1.presentation.NumericInteractionOptions as WireNumericInteractionOptions
-import skirout.editor.v1.presentation.NumericSteppers as WireNumericSteppers
 import skirout.editor.v1.presentation.PopupAppearance as WirePopupAppearance
 import skirout.editor.v1.presentation.PresentationElement as WirePresentationElement
 import skirout.editor.v1.presentation.PresentationNode as WirePresentationNode
@@ -40,21 +47,14 @@ import skirout.editor.v1.presentation.SelectControl as WireSelectControl
 import skirout.editor.v1.presentation.SelectInteractionOptions as WireSelectInteractionOptions
 import skirout.editor.v1.presentation.SelectOption as WireSelectOption
 import skirout.editor.v1.presentation.SliderControl as WireSliderControl
-import skirout.editor.v1.presentation.SliderInteraction as WireSliderInteraction
 import skirout.editor.v1.presentation.SliderInteractionOptions as WireSliderInteractionOptions
-import skirout.editor.v1.presentation.SliderOrientation as WireSliderOrientation
-import skirout.editor.v1.presentation.SliderValueDisplay as WireSliderValueDisplay
-import skirout.editor.v1.presentation.TextCapitalization as WireTextCapitalization
 import skirout.editor.v1.presentation.TextControl as WireTextControl
 import skirout.editor.v1.presentation.TextEditingOptions as WireTextEditingOptions
 import skirout.editor.v1.presentation.TextEntryInteractionOptions as WireTextEntryInteractionOptions
 import skirout.editor.v1.presentation.TextLengthPolicy as WireTextLengthPolicy
 import skirout.editor.v1.presentation.TextLines as WireTextLines
-import skirout.editor.v1.presentation.TextPurpose as WireTextPurpose
 import skirout.editor.v1.presentation.ToggleControl as WireToggleControl
 import skirout.editor.v1.presentation.ToggleInteractionOptions as WireToggleInteractionOptions
-import skirout.editor.v1.presentation.TogglePosition as WireTogglePosition
-import skirout.editor.v1.presentation.TogglePresentation as WireTogglePresentation
 import skirout.editor.v1.presentation.ValueMappings as WireValueMappings
 
 internal class RuntimeTextEntryAppearance(
@@ -90,7 +90,7 @@ internal class RuntimeTextEntryAppearance(
     }
 
     override fun density(value: ControlDensity) {
-        target.density = value.wire()
+        target.density = value
     }
 
     override fun padding(value: PresentationInsets) {
@@ -114,13 +114,8 @@ internal class RuntimeTextEntryAppearance(
         target.radius = value.wire()
     }
 
-    override fun alignment(value: TextAlignment) {
-        target.alignment =
-            when (value) {
-                TextAlignment.Start -> WireInputTextAlignment.START
-                TextAlignment.Center -> WireInputTextAlignment.CENTER
-                TextAlignment.End -> WireInputTextAlignment.END
-            }
+    override fun alignment(value: InputTextAlignment) {
+        target.alignment = value
     }
 }
 
@@ -133,12 +128,6 @@ internal fun TextStyle.inputWire(previous: skirout.editor.v1.presentation.InputT
         sizing = sizing?.wire() ?: previous?.sizing,
     )
 }
-
-internal fun ControlDensity.wire(): WireControlDensity =
-    when (this) {
-        ControlDensity.Comfortable -> WireControlDensity.COMFORTABLE
-        ControlDensity.Compact -> WireControlDensity.COMPACT
-    }
 
 internal fun positiveSize(value: Double) {
     require(value.isFinite() && value > 0) { "Size must be finite and positive." }
@@ -334,11 +323,7 @@ internal class RuntimeNumericInteraction<N>(
     }
 
     override fun steppers(value: NumericSteppers) {
-        target.steppers =
-            when (value) {
-                NumericSteppers.Hidden -> WireNumericSteppers.HIDDEN
-                NumericSteppers.Inline -> WireNumericSteppers.INLINE
-            }
+        target.steppers = value
     }
 
     override fun editingLocale(value: String) {
@@ -363,23 +348,11 @@ internal class RuntimeTextEditing(
     }
 
     override fun purpose(value: TextPurpose) {
-        target.purpose =
-            when (value) {
-                TextPurpose.Plain -> WireTextPurpose.PLAIN
-                TextPurpose.Email -> WireTextPurpose.EMAIL
-                TextPurpose.Url -> WireTextPurpose.URL
-                TextPurpose.Password -> WireTextPurpose.PASSWORD
-            }
+        target.purpose = value
     }
 
     override fun capitalization(value: TextCapitalization) {
-        target.capitalization =
-            when (value) {
-                TextCapitalization.None -> WireTextCapitalization.NONE
-                TextCapitalization.Words -> WireTextCapitalization.WORDS
-                TextCapitalization.Sentences -> WireTextCapitalization.SENTENCES
-                TextCapitalization.Characters -> WireTextCapitalization.CHARACTERS
-            }
+        target.capitalization = value
     }
 
     override fun suggestions(value: Boolean) {
@@ -794,11 +767,7 @@ internal class RuntimeDateTimeInteraction(
     }
 
     fun presentation(value: DateTimePickerPresentation) {
-        target.presentation =
-            when (value) {
-                DateTimePickerPresentation.Calendar -> WireDateTimePickerPresentation.CALENDAR
-                DateTimePickerPresentation.Text -> WireDateTimePickerPresentation.TEXT
-            }
+        target.presentation = value
     }
 }
 
@@ -893,21 +862,11 @@ private class RuntimeColorInputScope(
     }
 
     override fun editingRepresentation(value: ColorEditingRepresentation) {
-        options.editingRepresentation =
-            when (value) {
-                ColorEditingRepresentation.Hex -> WireColorEditingRepresentation.HEX
-                ColorEditingRepresentation.Rgb -> WireColorEditingRepresentation.RGB
-                ColorEditingRepresentation.Hsl -> WireColorEditingRepresentation.HSL
-            }
+        options.editingRepresentation = value
     }
 
     override fun pickerFormat(value: ColorPickerFormat) {
-        options.pickerFormat =
-            when (value) {
-                ColorPickerFormat.Hex -> WireColorPickerFormat.HEX
-                ColorPickerFormat.Rgb -> WireColorPickerFormat.RGB
-                ColorPickerFormat.Hsl -> WireColorPickerFormat.HSL
-            }
+        options.pickerFormat = value
     }
 
     override fun showSwatch(value: Boolean) {
@@ -953,11 +912,7 @@ private class RuntimeBytesInputScope(
     TextEntryInteractionScope by entry,
     ValueMappingScope<List<Byte>> by mappings {
     override fun editingEncoding(value: BytesEditingEncoding) {
-        options.editingEncoding =
-            when (value) {
-                BytesEditingEncoding.Hexadecimal -> WireBytesEditingEncoding.HEXADECIMAL
-                BytesEditingEncoding.Base64 -> WireBytesEditingEncoding.BASE64
-            }
+        options.editingEncoding = value
     }
 
     override fun groupSize(value: Int) {
@@ -976,19 +931,11 @@ private class RuntimeToggleInputScope(
 ) : ToggleInputScope,
     InputAppearanceScope by appearance {
     override fun presentation(value: TogglePresentation) {
-        options.presentation =
-            when (value) {
-                TogglePresentation.Switch -> WireTogglePresentation.SWITCH
-                TogglePresentation.Checkbox -> WireTogglePresentation.CHECKBOX
-            }
+        options.presentation = value
     }
 
     override fun position(value: TogglePosition) {
-        options.position =
-            when (value) {
-                TogglePosition.Leading -> WireTogglePosition.LEADING
-                TogglePosition.Trailing -> WireTogglePosition.TRAILING
-            }
+        options.position = value
     }
 
     override fun trueLabel(value: String) {
@@ -1040,12 +987,7 @@ private class RuntimeSliderInputScope<N>(
     override fun display(body: ValueExpressionScope<N>.() -> Expr<String, Handled>) = mappings.display(body)
 
     override fun showValue(value: SliderValueDisplay) {
-        options.showValue =
-            when (value) {
-                SliderValueDisplay.Hidden -> WireSliderValueDisplay.HIDDEN
-                SliderValueDisplay.WhileInteracting -> WireSliderValueDisplay.WHILE_INTERACTING
-                SliderValueDisplay.Always -> WireSliderValueDisplay.ALWAYS
-            }
+        options.showValue = value
     }
 
     override fun showTicks(value: Boolean) {
@@ -1053,19 +995,11 @@ private class RuntimeSliderInputScope<N>(
     }
 
     override fun orientation(value: SliderOrientation) {
-        options.orientation =
-            when (value) {
-                SliderOrientation.Horizontal -> WireSliderOrientation.HORIZONTAL
-                SliderOrientation.Vertical -> WireSliderOrientation.VERTICAL
-            }
+        options.orientation = value
     }
 
     override fun interaction(value: SliderInteraction) {
-        options.interaction =
-            when (value) {
-                SliderInteraction.TapAndDrag -> WireSliderInteraction.TAP_AND_DRAG
-                SliderInteraction.DragOnly -> WireSliderInteraction.DRAG_ONLY
-            }
+        options.interaction = value
     }
 
     override fun activeColor(value: PresentationColor) {
@@ -1111,13 +1045,7 @@ internal class RuntimeSelectInputScope<V>(
     }
 
     override fun presentation(value: ChoicePresentation) {
-        options.presentation =
-            when (value) {
-                ChoicePresentation.Automatic -> WireChoicePresentation.AUTOMATIC
-                ChoicePresentation.Dropdown -> WireChoicePresentation.DROPDOWN
-                ChoicePresentation.Segmented -> WireChoicePresentation.SEGMENTED
-                ChoicePresentation.Radio -> WireChoicePresentation.RADIO
-            }
+        options.presentation = value
     }
 
     override fun filtering(value: Boolean) {

@@ -53,8 +53,17 @@ import de.infix.testBalloon.framework.core.testSuite
 import io.kotest.matchers.shouldBe
 import skirout.editor.v1.expression.ExpressionNode
 import skirout.editor.v1.presentation.ChildrenElement
+import skirout.editor.v1.presentation.CollectionGraphDirection
+import skirout.editor.v1.presentation.ControlDensity
+import skirout.editor.v1.presentation.CrossAxisAlignment
+import skirout.editor.v1.presentation.FlexFit
+import skirout.editor.v1.presentation.ImageFit
+import skirout.editor.v1.presentation.MainAxisAlignment
+import skirout.editor.v1.presentation.PresentationAlignment
 import skirout.editor.v1.presentation.PresentationElement
+import skirout.editor.v1.presentation.PresentationInteractionState
 import skirout.editor.v1.presentation.PresentationNode
+import skirout.editor.v1.presentation.PresentationTextTone
 
 val DefaultPresentationRuntimeTest by testSuite {
     test("caller inputs register one typed dependency without copying canonical facts") {
@@ -309,7 +318,7 @@ val DefaultPresentationRuntimeTest by testSuite {
                     image(literal("https://example.test/image.png")) {
                         width(80.0)
                         height(literal(60.0))
-                        fit(ImageFit.Cover)
+                        fit(ImageFit.COVER)
                         radius(PresentationRadius.Small)
                     }
                     badge(literal("Ready")) {
@@ -320,7 +329,7 @@ val DefaultPresentationRuntimeTest by testSuite {
                     chip(literal("Label")) {
                         noIcon()
                         noBorder()
-                        density(ControlDensity.Compact)
+                        density(ControlDensity.COMPACT)
                     }
                     progress(literal(3), literal(10)) {
                         color(color)
@@ -342,7 +351,7 @@ val DefaultPresentationRuntimeTest by testSuite {
                         endIndent(6.0)
                     }
                     tabs {
-                        density(ControlDensity.Compact)
+                        density(ControlDensity.COMPACT)
                         spacing(4.0)
                         contentSpacing(10.0)
                         tab("first", literal("First"), icon = "book") { text(literal("Content")) }
@@ -365,7 +374,7 @@ val DefaultPresentationRuntimeTest by testSuite {
                     }
                     relativeTime(literal(kotlin.time.Instant.fromEpochMilliseconds(1000))) {
                         noIcon()
-                        density(ControlDensity.Compact)
+                        density(ControlDensity.COMPACT)
                     }
                 }
             }
@@ -421,7 +430,7 @@ val DefaultPresentationRuntimeTest by testSuite {
 
         fun NumericInputScope<Int>.coordinateInput() {
             step(2)
-            density(ControlDensity.Compact)
+            density(ControlDensity.COMPACT)
             selectAllOnFocus()
             textStyle(TextStyle(weight = 500))
         }
@@ -493,7 +502,7 @@ val DefaultPresentationRuntimeTest by testSuite {
         val checked = catalog.ready(TypeUse.Scalar(ScalarKind.Text))
         val shared =
             inputAppearance {
-                density(ControlDensity.Compact)
+                density(ControlDensity.COMPACT)
                 textStyle(TextStyle(weight = 600))
                 noBorder()
             }
@@ -550,8 +559,8 @@ val DefaultPresentationRuntimeTest by testSuite {
         val accent = literalColor(com.typewritermc.types.Color(0x803366ccu))
         val fill =
             stateColor(accent.withAlpha(0.2)) {
-                whenAll(PresentationInteractionState.Selected, color = accent)
-                whenAll(PresentationInteractionState.Hovered, color = accent.withAlpha(0.5))
+                whenAll(PresentationInteractionState.SELECTED, color = accent)
+                whenAll(PresentationInteractionState.HOVERED, color = accent.withAlpha(0.5))
             }
         val result =
             DefaultPresentationRuntime().build(
@@ -562,10 +571,10 @@ val DefaultPresentationRuntimeTest by testSuite {
                         background = fill,
                         foreground = ambientBackground().on(),
                         radius = PresentationRadius.Large,
-                        transition = stateTransition(PresentationTransition(milliseconds = 100)),
+                        transition = stateTransition(transition(milliseconds = 100)),
                     ),
                 ) {
-                    align(PresentationAlignment.Center) { text(literal("Adventure")) }
+                    align(PresentationAlignment.CENTER) { text(literal("Adventure")) }
                 }
             }
         val container = (result.layout.singleFixed().element as PresentationElement.ContainerWrapper).value
@@ -652,7 +661,7 @@ val DefaultPresentationRuntimeTest by testSuite {
             ) { build ->
                 build.richText {
                     sizing(TextSizing.Fit(literal(18.0), literal(40.0)))
-                    paragraph(TextParagraph(maximumLines = 2, softWrap = true, selectable = true, tone = TextTone.Secondary))
+                    paragraph(TextParagraph(maximumLines = 2, softWrap = true, selectable = true, tone = PresentationTextTone.SECONDARY))
                     style(TextStyleOverride(color = literal(com.typewritermc.types.Color(0xff123456u)).asPresentationColor(), weight = 500))
                     run(literal("First"))
                     run(literal("Second"), TextStyleOverride(weight = 700))
@@ -711,7 +720,7 @@ val DefaultPresentationRuntimeTest by testSuite {
                                     minimum(literal(0))
                                     step(1)
                                     placeholder("Weight")
-                                    density(ControlDensity.Compact)
+                                    density(ControlDensity.COMPACT)
                                     onComplete {
                                         @Suppress("UNCHECKED_CAST")
                                         if (invalidMapping) {
@@ -1267,7 +1276,7 @@ val DefaultPresentationRuntimeTest by testSuite {
                     @Suppress("UNCHECKED_CAST")
                     val amount: PresentedField<Int, NumberControl<Int>> =
                         field("amount", NumberControl::class as kotlin.reflect.KClass<NumberControl<Int>>)
-                    row(4.0, MainAxisAlignment.SpaceBetween, CrossAxisAlignment.Stretch) {
+                    row(4.0, MainAxisAlignment.SPACE_BETWEEN, CrossAxisAlignment.STRETCH) {
                         fixed {
                             title {
                                 icon("book")
@@ -1277,7 +1286,7 @@ val DefaultPresentationRuntimeTest by testSuite {
                                 }
                             }
                         }
-                        flexible(2, FlexFit.Tight) {
+                        flexible(2, FlexFit.TIGHT) {
                             amount { sliderInput(0, 10) { divisions(5) } }
                         }
                     }
@@ -1769,7 +1778,7 @@ val DefaultPresentationRuntimeTest by testSuite {
                     }
                     collectionGraph(source) {
                         root(title.input)
-                        relation("children", CollectionDirection.Reverse, maximumDepth = 4)
+                        relation("children", CollectionGraphDirection.REVERSE, maximumDepth = 4)
                         node {
                             text(row.orElse(literal("missing node")))
                             descendants()
