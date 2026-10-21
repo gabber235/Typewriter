@@ -1669,6 +1669,51 @@ impl TypeRecommendation {
 }
 
 // ==============================================================================
+// struct ResourceAppearance
+// ==============================================================================
+
+/// What the most specific `ResourceDisplayFormulas` of one resource evaluate to: its label, accent
+/// and icon. Editors evaluate it and bind it to resource presentations as a read model; it is never
+/// stored.
+#[derive(Clone, Debug, PartialEq, Default)]
+pub struct ResourceAppearance {
+    pub label: String,
+    pub accent: crate::skirout::base::kernel::v1::color::Color,
+    pub icon: crate::skirout::base::kernel::v1::icon::Icon,
+    /// Set this to None when you're creating a struct.
+    pub _unrecognized: Option<crate::skir_client::UnrecognizedFields<ResourceAppearance>>,
+}
+
+impl ResourceAppearance {
+    pub fn default_ref() -> &'static ResourceAppearance {
+        static D: std::sync::LazyLock<ResourceAppearance> =
+            std::sync::LazyLock::new(ResourceAppearance::default);
+        &D
+    }
+}
+
+impl ResourceAppearance {
+    fn _adapter() -> &'static crate::skir_client::internal::StructAdapter<ResourceAppearance> {
+        static ADAPTER: std::sync::LazyLock<
+            crate::skir_client::internal::StructAdapter<ResourceAppearance>,
+        > = std::sync::LazyLock::new(|| {
+            crate::skir_client::internal::StructAdapter::new(
+                "editor/v1/catalog.skir",
+                "ResourceAppearance",
+                "What the most specific `ResourceDisplayFormulas` of one resource evaluate to: its label, accent\nand icon. Editors evaluate it and bind it to resource presentations as a read model; it is never\nstored.",
+                |x: &ResourceAppearance| &x._unrecognized,
+                |x: &mut ResourceAppearance, u| x._unrecognized = u,
+            )
+        });
+        &*ADAPTER
+    }
+    pub fn serializer() -> crate::skir_client::Serializer<ResourceAppearance> {
+        initialize_module_serializers();
+        crate::skir_client::internal::struct_serializer_from_static(ResourceAppearance::_adapter())
+    }
+}
+
+// ==============================================================================
 // struct WatchEditorCatalogRequest
 // ==============================================================================
 
@@ -2992,6 +3037,35 @@ fn initialize_module_serializers() {
                 "",
                 |x: &TypeRecommendation| &x.occurrences,
                 |x: &mut TypeRecommendation, v| x.occurrences = v,
+            );
+            (*a).finalize();
+        }
+        unsafe {
+            let a: *mut crate::skir_client::internal::StructAdapter<ResourceAppearance> =
+                ResourceAppearance::_adapter() as *const _ as *mut _;
+            (*a).add_field(
+                "label",
+                0,
+                crate::skir_client::Serializer::string(),
+                "",
+                |x: &ResourceAppearance| &x.label,
+                |x: &mut ResourceAppearance, v| x.label = v,
+            );
+            (*a).add_field(
+                "accent",
+                1,
+                crate::skirout::base::kernel::v1::color::Color::serializer(),
+                "",
+                |x: &ResourceAppearance| &x.accent,
+                |x: &mut ResourceAppearance, v| x.accent = v,
+            );
+            (*a).add_field(
+                "icon",
+                2,
+                crate::skirout::base::kernel::v1::icon::Icon::serializer(),
+                "",
+                |x: &ResourceAppearance| &x.icon,
+                |x: &mut ResourceAppearance, v| x.icon = v,
             );
             (*a).finalize();
         }

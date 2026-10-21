@@ -1039,6 +1039,11 @@ impl crate::SkirType for crate::skirout::base::editor::v1::catalog::TypeRecommen
         Self::serializer()
     }
 }
+impl crate::SkirType for crate::skirout::base::editor::v1::catalog::ResourceAppearance {
+    fn serializer() -> crate::skir_client::Serializer<Self> {
+        Self::serializer()
+    }
+}
 impl crate::SkirType for crate::skirout::base::editor::v1::catalog::WatchEditorCatalogRequest {
     fn serializer() -> crate::skir_client::Serializer<Self> {
         Self::serializer()

@@ -6712,6 +6712,158 @@ final class TypeRecommendation_mutable implements TypeRecommendation_orMutable {
 }
 
 // -----------------------------------------------------------------------------
+// struct ResourceAppearance
+// -----------------------------------------------------------------------------
+
+sealed class ResourceAppearance_orMutable {
+  _core.String get label;
+  _lib_kernel_v1_color.Color_orMutable get accent;
+  _lib_kernel_v1_icon.Icon get icon;
+
+  ResourceAppearance toFrozen();
+}
+
+/// What the most specific `ResourceDisplayFormulas` of one resource evaluate to: its label, accent
+/// and icon. Editors evaluate it and bind it to resource presentations as a read model; it is never
+/// stored.
+///
+/// Deeply immutable.
+final class ResourceAppearance implements ResourceAppearance_orMutable {
+  @_core.override
+  final _core.String label;
+  @_core.override
+  final _lib_kernel_v1_color.Color accent;
+  @_core.override
+  final _lib_kernel_v1_icon.Icon icon;
+  _skir.internal__UnrecognizedFields? _u;
+
+  factory ResourceAppearance({
+    required _core.String label,
+    required _lib_kernel_v1_color.Color_orMutable accent,
+    required _lib_kernel_v1_icon.Icon icon,
+  }) => ResourceAppearance._(label, accent.toFrozen(), icon);
+
+  ResourceAppearance._(this.label, this.accent, this.icon);
+
+  /// Default instance with all fields set to their default values.
+  static final defaultInstance = ResourceAppearance._(
+    "",
+    _lib_kernel_v1_color.Color.defaultInstance,
+    _lib_kernel_v1_icon.Icon.unknown,
+  );
+
+  /// Returns a new mutable instance.
+  /// Fields are initialized to their default values.
+  static ResourceAppearance_mutable mutable() => ResourceAppearance_mutable._(
+    "",
+    _lib_kernel_v1_color.Color.defaultInstance,
+    _lib_kernel_v1_icon.Icon.unknown,
+  );
+
+  /// Returns this instance (no-op).
+  @_core.Deprecated("This instance is already frozen.")
+  @_core.override
+  ResourceAppearance toFrozen() => this;
+
+  /// Returns a mutable shallow copy of this instance.
+  ResourceAppearance_mutable toMutable() =>
+      ResourceAppearance_mutable._(this.label, this.accent, this.icon);
+
+  @_core.override
+  _core.bool operator ==(other) {
+    if (_core.identical(this, other)) return true;
+    if (other is! ResourceAppearance) return false;
+    return _skir.internal__listEquality.equals(
+      _equality_proxy,
+      other._equality_proxy,
+    );
+  }
+
+  @_core.override
+  _core.int get hashCode => _skir.internal__listEquality.hash(_equality_proxy);
+
+  _core.List get _equality_proxy => [this.label, this.accent, this.icon];
+
+  @_core.override
+  _core.String toString() => _skir.internal__stringify(this, serializer);
+
+  /// Serializer for `ResourceAppearance` instances.
+  static _skir.StructSerializer<ResourceAppearance, ResourceAppearance_mutable>
+  get serializer {
+    if (_serializerBuilder.mustInitialize()) {
+      _serializerBuilder.addField(
+        "label",
+        "label",
+        0,
+        _skir.Serializers.string,
+        "",
+        (it) => it.label,
+        (it, v) => it.label = v,
+      );
+      _serializerBuilder.addField(
+        "accent",
+        "accent",
+        1,
+        _lib_kernel_v1_color.Color.serializer,
+        "",
+        (it) => it.accent,
+        (it, v) => it.accent = v,
+      );
+      _serializerBuilder.addField(
+        "icon",
+        "icon",
+        2,
+        _lib_kernel_v1_icon.Icon.serializer,
+        "",
+        (it) => it.icon,
+        (it, v) => it.icon = v,
+      );
+      _serializerBuilder.finalize();
+    }
+    return _serializerBuilder.serializer;
+  }
+
+  static final _serializerBuilder = _skir.internal__StructSerializerBuilder(
+    recordId: "editor/v1/catalog.skir:ResourceAppearance",
+    doc: "What the most specific [ResourceDisplayFormulas] of one resource evaluate to: its label, accent\nand icon. Editors evaluate it and bind it to resource presentations as a read model; it is never\nstored.",
+    defaultInstance: defaultInstance,
+    newMutable: (it) => (it != null) ? it.toMutable() : mutable(),
+    toFrozen: (ResourceAppearance_mutable it) => it.toFrozen(),
+    getUnrecognizedFields: (it) => it._u,
+    setUnrecognizedFields: (it, u) => it._u = u,
+  );
+}
+
+/// Mutable version of [ResourceAppearance].
+final class ResourceAppearance_mutable implements ResourceAppearance_orMutable {
+  _core.String label;
+  _lib_kernel_v1_color.Color_orMutable accent;
+  _lib_kernel_v1_icon.Icon icon;
+  _skir.internal__UnrecognizedFields? _u;
+
+  ResourceAppearance_mutable._(this.label, this.accent, this.icon);
+
+  /// If the value of [accent] is already mutable, returns it as-is.
+  /// Otherwise, makes a mutable copy, assigns it back to [accent] and returns it.
+  _lib_kernel_v1_color.Color_mutable get mutableAccent {
+    final value = this.accent;
+    if (value is _lib_kernel_v1_color.Color_mutable) {
+      return value;
+    } else {
+      return this.accent = (value as _lib_kernel_v1_color.Color).toMutable();
+    }
+  }
+
+  /// Returns a deeply immutable copy of this instance.
+  @_core.override
+  ResourceAppearance toFrozen() => ResourceAppearance(
+    label: this.label,
+    accent: this.accent,
+    icon: this.icon,
+  ).._u = this._u;
+}
+
+// -----------------------------------------------------------------------------
 // struct WatchEditorCatalogRequest
 // -----------------------------------------------------------------------------
 

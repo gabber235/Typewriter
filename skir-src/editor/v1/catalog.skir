@@ -329,6 +329,15 @@ struct TypeRecommendation(810900034) {
   occurrences: int64 = 1;
 }
 
+/// What the most specific [ResourceDisplayFormulas] of one resource evaluate to: its label, accent
+/// and icon. Editors evaluate it and bind it to resource presentations as a read model; it is never
+/// stored.
+struct ResourceAppearance(810900035) {
+  label: string = 0;
+  accent: Color = 1;
+  icon: Icon = 2;
+}
+
 method FetchEditorCatalog(
   CatalogFetchRequest
 ): CatalogFetchResult = 920001;

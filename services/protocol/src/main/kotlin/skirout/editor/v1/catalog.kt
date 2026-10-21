@@ -6007,6 +6007,167 @@ class TypeRecommendation private constructor(
     }
 }
 
+sealed interface ResourceAppearance_OrMutable {
+    val label: kotlin.String;
+    val accent: skirout.kernel.v1.color.Color_OrMutable;
+    val icon: skirout.kernel.v1.icon.Icon;
+
+    fun toFrozen(): skirout.editor.v1.catalog.ResourceAppearance;
+}
+
+/**
+ * What the most specific `ResourceDisplayFormulas` of one resource evaluate to: its label, accent
+ * and icon. Editors evaluate it and bind it to resource presentations as a read model; it is never
+ * stored.
+ *
+ * Deeply immutable.
+ */
+@kotlin.Suppress("UNUSED_PARAMETER")
+class ResourceAppearance private constructor(
+    override val label: kotlin.String,
+    override val accent: skirout.kernel.v1.color.Color,
+    override val icon: skirout.kernel.v1.icon.Icon,
+    internal val _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.catalog.ResourceAppearance>? =
+        null,
+): skirout.editor.v1.catalog.ResourceAppearance_OrMutable {
+    constructor(
+        _mustNameArguments: _MustNameArguments =
+            _MustNameArguments,
+        label: kotlin.String,
+        accent: skirout.kernel.v1.color.Color_OrMutable,
+        icon: skirout.kernel.v1.icon.Icon,
+        _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.catalog.ResourceAppearance>? =
+            null,
+    ): this(
+        label,
+        accent.toFrozen(),
+        icon,
+        _unrecognizedFields,
+    ) {}
+
+    @kotlin.Deprecated("Already frozen", kotlin.ReplaceWith("this"))
+    override fun toFrozen() = this;
+
+    /** Returns a mutable shallow copy of this instance */
+    fun toMutable() = Mutable(
+        label = this.label,
+        accent = this.accent,
+        icon = this.icon,
+    );
+
+    /** Returns a shallow copy of this instance with the specified fields replaced. */
+    fun copy(
+        _mustNameArguments: _MustNameArguments =
+            _MustNameArguments,
+        label: kotlin.String =
+            this.label,
+        accent: skirout.kernel.v1.color.Color_OrMutable =
+            this.accent,
+        icon: skirout.kernel.v1.icon.Icon =
+            this.icon,
+    ) = skirout.editor.v1.catalog.ResourceAppearance(
+        label,
+        accent.toFrozen(),
+        icon,
+        this._unrecognizedFields,
+    );
+
+    @kotlin.Deprecated("No point in creating an exact copy of an immutable object", kotlin.ReplaceWith("this"))
+    fun copy() = this;
+
+    override fun equals(other: kotlin.Any?): kotlin.Boolean {
+        return this === other || (other is skirout.editor.v1.catalog.ResourceAppearance && this.label == other.label && this.accent == other.accent && this.icon == other.icon);
+    }
+
+    override fun hashCode(): kotlin.Int {
+        return kotlin.collections.listOf<kotlin.Any?>(this.label, this.accent, this.icon).hashCode();
+    }
+
+    override fun toString(): kotlin.String {
+        return build.skir.internal.toStringImpl(
+            this,
+            _SerializerRegistry.ResourceAppearanceSerializerImpl,
+        )
+    }
+
+    /** Mutable version of [ResourceAppearance]. */
+    class Mutable internal constructor(
+        _mustNameArguments: _MustNameArguments =
+            _MustNameArguments,
+        override var label: kotlin.String =
+            "",
+        override var accent: skirout.kernel.v1.color.Color_OrMutable =
+            skirout.kernel.v1.color.Color.partial(),
+        override var icon: skirout.kernel.v1.icon.Icon =
+            skirout.kernel.v1.icon.Icon.UNKNOWN,
+        internal var _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.catalog.ResourceAppearance>? =
+            null,
+    ): skirout.editor.v1.catalog.ResourceAppearance_OrMutable {
+        /** Returns a deeply immutable copy of this instance */
+        override fun toFrozen() = skirout.editor.v1.catalog.ResourceAppearance(
+            label = this.label,
+            accent = this.accent,
+            icon = this.icon,
+            _unrecognizedFields = this._unrecognizedFields,
+        );
+
+        /**
+         * If the value of [accent] is already mutable, returns it as-is.
+         * Otherwise, makes a mutable copy, assigns it back to [accent] and returns it.
+         */
+        val mutableAccent: skirout.kernel.v1.color.Color.Mutable get() {
+            var value = this.accent;
+            return when (value) {
+                is skirout.kernel.v1.color.Color -> {
+                    value = value.toMutable();
+                    this.accent = value;
+                    return value;
+                }
+                is skirout.kernel.v1.color.Color.Mutable -> value;
+            }
+        }
+    }
+
+    companion object {
+        private val default =
+            skirout.editor.v1.catalog.ResourceAppearance(
+                "",
+                skirout.kernel.v1.color.Color.partial(),
+                skirout.kernel.v1.icon.Icon.UNKNOWN,
+            );
+
+        /** Returns an instance with all fields set to their default values. */
+        fun partial() = default;
+
+        /**
+         * Creates a new instance of [ResourceAppearance].
+         * Unlike the constructor, does not require all fields to be specified.
+         * Missing fields will be set to their default values.
+         */
+        fun partial(
+            _mustNameArguments: _MustNameArguments =
+                _MustNameArguments,
+            label: kotlin.String =
+                "",
+            accent: skirout.kernel.v1.color.Color_OrMutable =
+                skirout.kernel.v1.color.Color.partial(),
+            icon: skirout.kernel.v1.icon.Icon =
+                skirout.kernel.v1.icon.Icon.UNKNOWN,
+        ) = skirout.editor.v1.catalog.ResourceAppearance(
+            label = label,
+            accent = accent,
+            icon = icon,
+            _unrecognizedFields = null,
+        );
+
+        /** Serializer for [ResourceAppearance] instances. */
+        val serializer get() = _SerializerRegistry.ResourceAppearanceSerializer;
+
+        /** Describes the [ResourceAppearance] type. Provides runtime introspection capabilities. */
+        val typeDescriptor get() = _SerializerRegistry.ResourceAppearanceSerializerImpl.typeDescriptor;
+    }
+}
+
 sealed interface WatchEditorCatalogRequest_OrMutable {
     fun toFrozen(): skirout.editor.v1.catalog.WatchEditorCatalogRequest;
 }
@@ -6601,6 +6762,18 @@ private object _SerializerRegistry {
     );
 
     val RequiredInputSerializer = build.skir.internal.makeSerializer(RequiredInputSerializerImpl);
+
+    val ResourceAppearanceSerializerImpl = build.skir.internal.StructSerializer(
+        recordId = "editor/v1/catalog.skir:ResourceAppearance",
+        doc = "What the most specific [ResourceDisplayFormulas] of one resource evaluate to: its label, accent\nand icon. Editors evaluate it and bind it to resource presentations as a read model; it is never\nstored.",
+        defaultInstance = skirout.editor.v1.catalog.ResourceAppearance.partial(),
+        newMutableFn = { it?.toMutable() ?: skirout.editor.v1.catalog.ResourceAppearance.Mutable() },
+        toFrozenFn = { it.toFrozen() },
+        getUnrecognizedFields = { it._unrecognizedFields },
+        setUnrecognizedFields = { m, u -> m._unrecognizedFields = u },
+    );
+
+    val ResourceAppearanceSerializer = build.skir.internal.makeSerializer(ResourceAppearanceSerializerImpl);
 
     val ResourceDisplayFormulasSerializerImpl = build.skir.internal.StructSerializer(
         recordId = "editor/v1/catalog.skir:ResourceDisplayFormulas",
@@ -7855,6 +8028,35 @@ private object _SerializerRegistry {
             { mut, v -> mut.expected = v },
         );
         RequiredInputSerializerImpl.finalizeStruct();
+
+        ResourceAppearanceSerializerImpl.addField(
+            "label",
+            "label",
+            0,
+            build.skir.Serializers.string,
+            "",
+            { it.label },
+            { mut, v -> mut.label = v },
+        );
+        ResourceAppearanceSerializerImpl.addField(
+            "accent",
+            "accent",
+            1,
+            skirout.kernel.v1.color.Color.serializer,
+            "",
+            { it.accent },
+            { mut, v -> mut.accent = v },
+        );
+        ResourceAppearanceSerializerImpl.addField(
+            "icon",
+            "icon",
+            2,
+            skirout.kernel.v1.icon.Icon.serializer,
+            "",
+            { it.icon },
+            { mut, v -> mut.icon = v },
+        );
+        ResourceAppearanceSerializerImpl.finalizeStruct();
 
         ResourceDisplayFormulasSerializerImpl.addField(
             "target",
