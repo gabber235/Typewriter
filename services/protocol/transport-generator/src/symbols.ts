@@ -15,6 +15,9 @@ import type { Config } from "./config.js";
 const KOTLIN = KOTLIN_GENERATOR as unknown as CodeGenerator<{ packagePrefix?: string }>;
 const DART = DART_GENERATOR as unknown as CodeGenerator<{ importUriPrefix?: string }>;
 
+/** The Skir language generators whose output the transport routes reference, by target. */
+export const LANGUAGE_GENERATORS = { kotlin: KOTLIN, dart: DART, rust: RUST } as const;
+
 /** The symbol provider of each language generator whose output the transport routes reference. */
 export interface SymbolProviders {
   readonly kotlin: CodeGenerator.SymbolProvider;
@@ -28,7 +31,9 @@ export interface SymbolProviders {
  * these providers and never spell a generated name themselves. Each provider is created on first
  * use, so a target only needs the config of the languages it references.
  */
-export function symbolProviders(input: CodeGenerator.Input<Config>): SymbolProviders {
+export function symbolProviders(
+  input: CodeGenerator.Input<Pick<Config, "dartImportUriPrefix">>,
+): SymbolProviders {
   const forGenerator = <C>(generator: CodeGenerator<C>, config: C) => {
     if (!generator.symbols) {
       throw new Error(`${generator.id} does not describe its symbols`);

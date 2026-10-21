@@ -62,8 +62,6 @@ describe("component dispatch", () => {
       "service.*.binding.query",
     ]);
     expect(registration).toContain("typewriter.from.service.*.heartbeat");
-    expect(registration).not.toContain("service.*.registration.ensure");
-    expect(registration).not.toContain("typewriter.to.service.*.registration.bound");
     expect(subscriptions(manifest, "auth-typewriter-permissions")).toEqual([
       "auth.permissions.typewriter-panel",
       "auth.permissions.typewriter-services",

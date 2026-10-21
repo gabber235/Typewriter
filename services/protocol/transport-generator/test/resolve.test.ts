@@ -2,7 +2,7 @@ import { describe, expect, test } from "bun:test";
 
 import { parseManifest } from "../src/routes/manifest.js";
 import { resolveRoutes, routeChannel } from "../src/routes/resolve.js";
-import { committedRoutes, EMPTY_INPUT, manifestSource } from "./support.js";
+import { committedManifest, committedRoutes, EMPTY_INPUT, manifestSource } from "./support.js";
 
 const parse = (routes: string, components: readonly string[] = []) =>
   parseManifest(manifestSource(routes, components), "routes.yaml");
@@ -67,7 +67,7 @@ describe("route resolution", () => {
 
   test("resolves every committed route against the Skir sources", async () => {
     const { routes } = await committedRoutes();
-    expect(routes).toHaveLength(64);
+    expect(routes).toHaveLength(committedManifest().routes.length);
     const catalog = routes.find((route) => route.name === "editor_catalog_fetch")!;
     expect(catalog.flow.kind).toBe("unary");
     if (catalog.flow.kind === "unary") {

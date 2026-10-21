@@ -1,20 +1,22 @@
 import { describe, expect, test } from "bun:test";
 
 import type { CodeGenerator, RecordLocation } from "skir-internal";
-import { GENERATOR as DART } from "skir-dart-gen";
-import { GENERATOR as KOTLIN } from "skir-kotlin-gen";
-import { GENERATOR as RUST } from "skir-rust-gen";
 
 import type { ResolvedRoute } from "../src/routes/resolve.js";
-import { kotlinWrapperClass, symbolProviders } from "../src/symbols.js";
-import { committedRoutes, DART_PREFIX } from "./support.js";
+import { kotlinWrapperClass, LANGUAGE_GENERATORS, symbolProviders } from "../src/symbols.js";
+import { Config } from "../src/config.js";
+import { committedRoutes, DART_PREFIX, generatorConfig, SKIR_GENERATORS } from "./support.js";
 
-/** Concatenates the files of one Skir language generator for the same parsed modules. */
-function generated(generator: CodeGenerator<object>, input: CodeGenerator.Input<unknown>): Map<string, string> {
-  return new Map(
-    generator.generateCode({ ...input, config: {} }).files.map((file) => [file.path, file.code]),
-  );
+/**
+ * The files of one Skir language generator for the same parsed modules, generated with the config
+ * skir.yml gives it, so the providers are checked against the output `skir gen` writes.
+ */
+function generated<C>(generator: CodeGenerator<C>, input: CodeGenerator.Input<unknown>): Map<string, string> {
+  const config = generator.configType.parse(generatorConfig(generator.id));
+  return new Map(generator.generateCode({ ...input, config }).files.map((file) => [file.path, file.code]));
 }
+
+const { kotlin: KOTLIN, dart: DART, rust: RUST } = LANGUAGE_GENERATORS;
 
 function methods(routes: readonly ResolvedRoute[]) {
   return routes.flatMap(({ flow }) =>
@@ -37,6 +39,25 @@ function records(routes: readonly ResolvedRoute[]): RecordLocation[] {
 }
 
 const last = (reference: string, separator: string) => reference.slice(reference.lastIndexOf(separator) + separator.length);
+
+describe("skir.yml configures the generators the providers assume", () => {
+  test("every transport target reads one manifest with a valid config", () => {
+    const targets = SKIR_GENERATORS.filter((generator) => generator.mod.startsWith("typewriter-transport/"));
+    expect(targets.map((generator) => generator.mod).sort()).toEqual([
+      "typewriter-transport/dart",
+      "typewriter-transport/kotlin",
+      "typewriter-transport/rust",
+    ]);
+    const configs = targets.map((generator) => Config.parse(generator.config));
+    expect(new Set(configs.map((config) => config.manifest)).size).toBe(1);
+  });
+
+  test("the language generators take the default config the providers are created with", () => {
+    for (const generator of [KOTLIN, DART, RUST]) {
+      expect(generatorConfig(generator.id)).toEqual({});
+    }
+  });
+});
 
 describe("naming agrees with generated Skir output", async () => {
   const { input, routes } = await committedRoutes();

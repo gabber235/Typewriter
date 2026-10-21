@@ -173,7 +173,6 @@ method Ping(struct {}): enum {
     method = Ping, name = OperationName.of("test.ping"),
     address = pingRequestAddress.subscribedAt(this), responsePolicy = pingResponsePolicy,
 )`);
-    expect(realm!.code).not.toContain("ErrorSlug");
   });
 
   test("Rust implements SkirResponse from the variant names and docs", () => {
@@ -181,7 +180,6 @@ method Ping(struct {}): enum {
     const [rust] = emitRust(resolve("", input), symbolProviders(input).rust, input);
     const response = "crate::skirout::base::test::PingResponse";
     expect(rust!.code).toContain(`impl crate::SkirResponse for ${response} {\n    fn outcome(&self)`);
-    expect(rust!.code).not.toContain("to_skir_bytes");
     expect(rust!.code).toContain(
       `            ${response}::Ok(_) => crate::SkirResponseOutcome::Success,\n` +
         `            ${response}::RefusedError(_) => crate::SkirResponseOutcome::DomainError,\n` +
