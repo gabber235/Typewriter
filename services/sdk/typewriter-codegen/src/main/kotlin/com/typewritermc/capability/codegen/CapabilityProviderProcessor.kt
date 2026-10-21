@@ -37,6 +37,7 @@ import com.typewritermc.types.codegen.DefinitionOwners
 import com.typewritermc.types.codegen.referencedIds
 import com.typewritermc.types.ksp.KspTypeConversionResult
 import com.typewritermc.types.ksp.KspTypeGraphConverter
+import skirout.editor.v1.search.RealmSearchQuery
 import java.security.MessageDigest
 import kotlin.reflect.KClass
 import com.typewritermc.codegen.TypewriterApi as Api
@@ -277,7 +278,7 @@ private class CapabilityDeclaration(
                         .addParameter("context", Api.RealmSearchContext)
                         .addParameter("runtime", Api.RealmCapabilityRuntime)
                         .addParameter("payload", dataValue)
-                        .addParameter("query", Api.RealmSearchQuery)
+                        .addParameter("query", RealmSearchQuery::class)
                         .returns(Api.RealmSearch.parameterizedBy(dataValue))
                         .addStatement("val decoded = runtime.decode<%T>(descriptor.requestType,♢payload)", requestType)
                         .addStatement(

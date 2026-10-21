@@ -72,7 +72,6 @@ internal object TypewriterApi {
     val RealmSearchCapabilityProvider = ClassName(CAPABILITY, "RealmSearchCapabilityProvider")
     val RealmSearchCapabilityRef = ClassName(CAPABILITY, "RealmSearchCapabilityRef")
     val RealmSearchContext = ClassName(CAPABILITY, "RealmSearchContext")
-    val RealmSearchQuery = ClassName(CAPABILITY, "RealmSearchQuery")
     val RealmSearchRequest = ClassName(CAPABILITY, "RealmSearchRequest")
     val mapValues = MemberName(CAPABILITY, "mapValues", isExtension = true)
 

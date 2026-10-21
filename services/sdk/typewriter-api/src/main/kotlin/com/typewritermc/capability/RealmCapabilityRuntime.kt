@@ -15,6 +15,7 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.FlowCollector
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.map
+import skirout.editor.v1.search.RealmSearchQuery
 import kotlin.reflect.KClass
 
 sealed interface RealmCapabilityRef<Request : Any> {
@@ -39,39 +40,12 @@ data class RealmCommandCapabilityRef<Request : Any>(
     override val requestType: KClass<Request>,
 ) : RealmCapabilityRef<Request>
 
-data class RealmSearchQuery(
-    val normalizedQuery: String,
-    val terms: List<String> = emptyList(),
-    val selectors: List<RealmSearchSelector> = emptyList(),
-    val selectorExpression: RealmSearchSelectorExpression? = null,
-)
-
-data class RealmSearchSelector(
-    val id: String,
-    val key: String,
-    val value: String?,
-)
-
-sealed interface RealmSearchSelectorExpression {
-    data class Selector(
-        val id: String,
-    ) : RealmSearchSelectorExpression
-
-    data class And(
-        val left: RealmSearchSelectorExpression,
-        val right: RealmSearchSelectorExpression,
-    ) : RealmSearchSelectorExpression
-
-    data class Or(
-        val left: RealmSearchSelectorExpression,
-        val right: RealmSearchSelectorExpression,
-    ) : RealmSearchSelectorExpression
-
-    data class Not(
-        val expression: RealmSearchSelectorExpression,
-    ) : RealmSearchSelectorExpression
-}
-
+/**
+ * One search invocation: the decoded [payload] and the editor [query] as it arrived on the wire.
+ *
+ * The Realm validates the query before invoking a provider, so selector identities and keys are non blank and the
+ * selector expression contains only known variants.
+ */
 data class RealmSearchRequest<Request : Any>(
     val payload: Request,
     val query: RealmSearchQuery,

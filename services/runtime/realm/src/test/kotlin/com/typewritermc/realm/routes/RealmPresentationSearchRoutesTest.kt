@@ -22,6 +22,9 @@ import skirout.editor.v1.search.RealmPresentationSearchRequest
 import skirout.editor.v1.search.RealmPresentationSearchStatus
 import skirout.editor.v1.search.RealmPresentationSearchUpdate
 import skirout.editor.v1.search.RealmSearchQuery
+import skirout.editor.v1.search.RealmSearchSelector
+import skirout.editor.v1.search.RealmSearchSelectorExpression
+import skirout.editor.v1.search.RealmSearchSelectorOperator
 import skirout.editor.v1.type_catalog.CapabilityId
 import skirout.editor.v1.type_catalog.CatalogGeneration
 import skirout.editor.v1.type_catalog.DataValue
@@ -130,6 +133,32 @@ val RealmPresentationSearchRoutesTest by testSuite {
 
         response.value.status shouldBe RealmPresentationSearchStatus.SEARCH_FAILED_ERROR
         response.value.diagnostics.size shouldBe 3
+    }
+
+    test("an unknown selector operator is rejected before a source can start") {
+        val selector =
+            RealmSearchSelectorExpression.createSelector(selectorId = "type", key = "type", value = "npc")
+        val invalid =
+            validSearchRequest().copy(
+                query =
+                    RealmSearchQuery.partial(
+                        normalizedQuery = "alex",
+                        selectors = listOf(RealmSearchSelector(selectorId = "type", key = "type", value = "npc")),
+                        selectorExpression =
+                            RealmSearchSelectorExpression.createBinary(
+                                operator_ = RealmSearchSelectorOperator.UNKNOWN,
+                                left = selector,
+                                right = selector,
+                            ),
+                    ),
+            )
+
+        val response = requireNotNull(invalidRealmPresentationSearchRequest(invalid)) as RealmPresentationSearchUpdate.SnapshotWrapper
+
+        response.value.status shouldBe RealmPresentationSearchStatus.SEARCH_FAILED_ERROR
+        response.value.diagnostics
+            .single()
+            .message shouldBe "Realm search selector expression contains an unknown operator"
     }
 
     test("mismatched source subscriptions become correlated error snapshots") {

@@ -10,7 +10,6 @@ import com.typewritermc.capability.RealmCapabilityRuntime
 import com.typewritermc.capability.RealmCommandContext
 import com.typewritermc.capability.RealmComputationContext
 import com.typewritermc.capability.RealmSearchContext
-import com.typewritermc.capability.RealmSearchQuery
 import com.typewritermc.capability.RealmSearchUpdate
 import com.typewritermc.checking.CatalogGeneration
 import com.typewritermc.discovery.CapabilityOwnerResolver
@@ -67,6 +66,7 @@ import skirout.editor.v1.presentation.AxisChild
 import skirout.editor.v1.presentation.ChildrenElement
 import skirout.editor.v1.presentation.PresentationElement
 import skirout.editor.v1.presentation.PresentationNode
+import skirout.editor.v1.search.RealmSearchQuery
 import java.math.BigInteger
 import java.util.Collections
 
@@ -276,7 +276,7 @@ val SyntheticDiscoveryTest by testSuite {
                 )
             registry
                 .requireSearch(searchMessagesCapability.id)
-                .invoke(SyntheticCapabilityContext, runtime, literal, RealmSearchQuery("hello"))
+                .invoke(SyntheticCapabilityContext, runtime, literal, RealmSearchQuery.partial(normalizedQuery = "hello"))
                 .updates
                 .toList() shouldBe
                 listOf(

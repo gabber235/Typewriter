@@ -113,7 +113,7 @@ class CapabilityRealmPresentationSearchSource(
                             SearchContext(request.subscriptionId, operation?.context),
                             RealmCapabilityRuntime(catalog.checked, catalog.nativeBindings),
                             payload,
-                            request.query.toDomain(),
+                            request.query,
                         ).updates
                         .collect { update ->
                             operation?.requireCurrent()
