@@ -114,8 +114,6 @@ class FileRolloutStateRepository(
     override suspend fun commit(deployment: CommittedDeployment) =
         update { current -> current.copy(previous = current.current, current = deployment) }
 
-    suspend fun current(): CommittedDeployment? = committed()
-
     /** Returns the single deployment retained as the rollback baseline, if one exists. */
     suspend fun previous(): CommittedDeployment? = mutex.withLock { stored.previous }
 

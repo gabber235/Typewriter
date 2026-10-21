@@ -7,7 +7,6 @@ import com.typewritermc.expression.length
 import com.typewritermc.expression.literal
 import com.typewritermc.expression.orElse
 import com.typewritermc.presentation.TextLines
-import com.typewritermc.presentation.TextParagraph
 import com.typewritermc.presentation.cache
 import com.typewritermc.presentation.debounce
 import com.typewritermc.presentation.distinct
@@ -15,6 +14,7 @@ import com.typewritermc.presentation.gate
 import com.typewritermc.presentation.history
 import com.typewritermc.presentation.limit
 import com.typewritermc.presentation.section
+import com.typewritermc.presentation.textParagraph
 import skirout.editor.v1.catalog.PresentationRole
 import skirout.editor.v1.presentation.PresentationTextOverflow
 import skirout.editor.v1.type_catalog.DataValue
@@ -45,7 +45,7 @@ object CoreIconSdkProvider : IconIconifyPresentation, IconSvgPresentation {
                         row(spacing = 10.0) {
                             icon(row)
                             flexible {
-                                text(row, paragraph = TextParagraph(maximumLines = 1, overflow = PresentationTextOverflow.ELLIPSIS))
+                                text(row, paragraph = textParagraph(maxLines = 1, overflow = PresentationTextOverflow.ELLIPSIS))
                             }
                         }
                     }
@@ -54,7 +54,7 @@ object CoreIconSdkProvider : IconIconifyPresentation, IconSvgPresentation {
                     row(spacing = 10.0) {
                         icon(current.orElse(literal("material-symbols:book")))
                         flexible {
-                            text(current, paragraph = TextParagraph(maximumLines = 1, overflow = PresentationTextOverflow.ELLIPSIS))
+                            text(current, paragraph = textParagraph(maxLines = 1, overflow = PresentationTextOverflow.ELLIPSIS))
                         }
                     }
                 }

@@ -701,7 +701,7 @@ val DefaultPresentationRuntimeTest by testSuite {
             ) { build ->
                 build.richText {
                     sizing(TextSizing.Fit(literal(18.0), literal(40.0)))
-                    paragraph(TextParagraph(maximumLines = 2, softWrap = true, selectable = true, tone = PresentationTextTone.SECONDARY))
+                    paragraph(textParagraph(maxLines = 2, softWrap = true, selectable = true, tone = PresentationTextTone.SECONDARY))
                     style(TextStyleOverride(color = literal(com.typewritermc.types.Color(0xff123456u)).asPresentationColor(), weight = 500))
                     run(literal("First"))
                     run(literal("Second"), TextStyleOverride(weight = 700))

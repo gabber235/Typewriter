@@ -24,9 +24,9 @@ import com.typewritermc.presentation.PresentationColor
 import com.typewritermc.presentation.PresentationInput
 import com.typewritermc.presentation.PresentationInsets
 import com.typewritermc.presentation.PresentationRadius
-import com.typewritermc.presentation.TextParagraph
 import com.typewritermc.presentation.asPresentationColor
 import com.typewritermc.presentation.projectedCollectionSource
+import com.typewritermc.presentation.textParagraph
 import com.typewritermc.presentation.withAlpha
 import com.typewritermc.types.Color
 import com.typewritermc.types.ResourceId
@@ -162,7 +162,7 @@ private fun Layout.tagInheritanceCard(
         ),
     ) {
         padding(PresentationInsets(start = 12.0, top = 8.0, end = 12.0, bottom = 8.0)) {
-            text(label, paragraph = TextParagraph(softWrap = true))
+            text(label, paragraph = textParagraph(softWrap = true))
         }
     }
 }

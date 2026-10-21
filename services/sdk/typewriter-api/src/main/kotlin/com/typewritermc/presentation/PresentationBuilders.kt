@@ -18,6 +18,7 @@ import skirout.editor.v1.presentation.HeaderActionTone
 import skirout.editor.v1.presentation.PresentationTextOverflow
 import skirout.editor.v1.presentation.PresentationTextTone
 import skirout.editor.v1.presentation.RelativeTimeStyle
+import skirout.editor.v1.presentation.TextParagraph
 import skirout.editor.v1.type_catalog.ExpressionBindingId
 import skirout.editor.v1.type_catalog.TypeTemplate
 import kotlin.time.Instant
@@ -26,7 +27,7 @@ interface PresentationContent {
     fun text(
         value: Expr<String, Handled>,
         style: TextStyle = TextStyle(),
-        paragraph: TextParagraph = TextParagraph(),
+        paragraph: TextParagraph = textParagraph(),
     )
 
     fun richText(configure: RichTextScope.() -> Unit)
@@ -272,13 +273,14 @@ sealed interface TextSizing {
     ) : TextSizing
 }
 
-data class TextParagraph(
-    val maximumLines: Int? = null,
-    val overflow: PresentationTextOverflow = PresentationTextOverflow.CLIP,
-    val softWrap: Boolean = false,
-    val selectable: Boolean = false,
-    val tone: PresentationTextTone = PresentationTextTone.PRIMARY,
-)
+/** The Skir [TextParagraph] policy of authored text, with the defaults text uses when a field is not given. */
+fun textParagraph(
+    maxLines: Int? = null,
+    overflow: PresentationTextOverflow = PresentationTextOverflow.CLIP,
+    softWrap: Boolean = false,
+    selectable: Boolean = false,
+    tone: PresentationTextTone = PresentationTextTone.PRIMARY,
+) = TextParagraph(maxLines = maxLines, overflow = overflow, softWrap = softWrap, selectable = selectable, tone = tone)
 
 data class IconOptions(
     val size: Double? = null,

@@ -10,5 +10,3 @@ inline fun <K, V, R> Map<K, V>.immutableMapCopy(transform: (V) -> R): Map<K, R> 
     Collections.unmodifiableMap(entries.associateTo(LinkedHashMap()) { (key, value) -> key to transform(value) })
 
 fun <K, V> Map<K, V>.immutableMapCopy(): Map<K, V> = immutableMapCopy { it }
-
-fun <T> Iterable<T>.immutableSetCopy(): Set<T> = Collections.unmodifiableSet(toCollection(LinkedHashSet()))

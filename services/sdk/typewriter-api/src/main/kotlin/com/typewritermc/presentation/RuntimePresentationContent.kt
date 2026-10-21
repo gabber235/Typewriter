@@ -10,6 +10,7 @@ import skirout.editor.v1.presentation.DateTimeZone
 import skirout.editor.v1.presentation.PresentationElement
 import skirout.editor.v1.presentation.PresentationNode
 import skirout.editor.v1.presentation.RelativeTimeStyle
+import skirout.editor.v1.presentation.TextParagraph
 import skirout.editor.v1.type_catalog.DataValue
 import kotlin.time.Instant
 
@@ -102,7 +103,7 @@ internal class RuntimePresentationContent(
                     letterSpacing = null,
                     decoration = null,
                     semanticLabel = null,
-                    paragraph = paragraph.wire(),
+                    paragraph = paragraph,
                 ),
             )
     }
@@ -180,7 +181,7 @@ internal class RuntimePresentationContent(
     override fun richText(configure: RichTextScope.() -> Unit) {
         val runs = mutableListOf<skirout.editor.v1.presentation.TextRun>()
         var overallStyle: TextStyleOverride? = null
-        var overallParagraph = TextParagraph()
+        var overallParagraph = textParagraph()
         var overallSizing: TextSizing? = null
         val scope =
             object : RichTextScope {
@@ -213,7 +214,7 @@ internal class RuntimePresentationContent(
                 PresentationElement.createRichText(
                     runs = runs,
                     style = overallStyle?.wire(),
-                    paragraph = overallParagraph.wire(),
+                    paragraph = overallParagraph,
                     sizing = overallSizing?.wire(),
                 ),
             )
@@ -285,15 +286,6 @@ private fun TextStyleOverride.wire(): skirout.editor.v1.presentation.TextStyleOv
         fontWeight = weight?.let(::expression),
         fontItalic = null,
         decoration = null,
-    )
-
-private fun TextParagraph.wire(): skirout.editor.v1.presentation.TextParagraph =
-    skirout.editor.v1.presentation.TextParagraph(
-        maxLines = maximumLines,
-        overflow = overflow,
-        softWrap = softWrap,
-        selectable = selectable,
-        tone = tone,
     )
 
 internal fun TextSizing.wire(): skirout.editor.v1.presentation.TextSizing =

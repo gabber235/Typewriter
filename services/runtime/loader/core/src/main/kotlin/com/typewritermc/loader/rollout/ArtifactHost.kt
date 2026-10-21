@@ -375,7 +375,7 @@ internal class AssignmentRuntime(
                 }
             if (resolution is ResolutionResult.Resolved) {
                 val digest = DeploymentContentCodec.digest(resolution.content)
-                val current = state.current()
+                val current = state.committed()
                 val rollout =
                     CoordinatedRollout(
                         assignment.realmId,
@@ -427,7 +427,7 @@ internal class AssignmentRuntime(
             "artifact.maintenance",
             "artifact-maintenance-failed",
         ) { span ->
-            val current = rolloutState?.current()
+            val current = rolloutState?.committed()
             val previous = rolloutState?.previous()
             val shared = requireNotNull(localShared).catalog()
             val accepted = candidates.candidates()

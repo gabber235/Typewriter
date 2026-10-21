@@ -499,7 +499,7 @@ val ArtifactDistributionTest by testSuite {
 
                 rollout.rollOut(snapshot)
 
-                val committed = requireNotNull(state.current())
+                val committed = requireNotNull(state.committed())
                 val reference = commands.first().projectionFor(host)
                 committed.projections shouldBe mapOf(host to reference.blob.toApi())
                 val projection = projectionRepository.fetch(reference)
@@ -512,7 +512,7 @@ val ArtifactDistributionTest by testSuite {
                 realmResponding = false
                 shouldThrow<IllegalArgumentException> { rollout.rollOut(snapshot) }
                 commands shouldBe emptyList()
-                state.current() shouldBe committed
+                state.committed() shouldBe committed
             }
         }
     }
@@ -626,7 +626,7 @@ val ArtifactDistributionTest by testSuite {
 
             rollout.rollOut(snapshot)
 
-            val committed = requireNotNull(state.current())
+            val committed = requireNotNull(state.committed())
             committed.snapshot shouldBe snapshot
             commands.map { it.command.commandKind } shouldContainExactly listOf(RolloutCommandKind.STAGE, RolloutCommandKind.COMMIT)
             commands.forEach { it.command.serviceIds shouldBe setOf(host.value) }
@@ -650,7 +650,7 @@ val ArtifactDistributionTest by testSuite {
                     .findByKey(host.value)
                     ?.target shouldBe RollbackTarget.EMPTY
                 currentStatus shouldBe status(commands.last().attempt, host, ParticipantPhase.IDLE)
-                state.current() shouldBe committed
+                state.committed() shouldBe committed
             }
         }
     }
@@ -782,7 +782,7 @@ val ArtifactDistributionTest by testSuite {
             rollout.rollOut(snapshot)
 
             activeStatusCalls shouldBe 5
-            state.current()?.snapshot shouldBe snapshot
+            state.committed()?.snapshot shouldBe snapshot
         }
     }
 

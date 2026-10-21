@@ -30,7 +30,7 @@ fun Layout.resourceHeading(
             text(
                 title,
                 style = TextStyle(color = color.asPresentationColor(), weight = 700, sizing = TextSizing.Fit(literal(18.0), literal(40.0))),
-                paragraph = TextParagraph(maximumLines = 1, overflow = PresentationTextOverflow.ELLIPSIS, selectable = true),
+                paragraph = textParagraph(maxLines = 1, overflow = PresentationTextOverflow.ELLIPSIS, selectable = true),
             )
             if (identifier != null) {
                 val value = identifier.orElse(literal(""))
@@ -38,7 +38,7 @@ fun Layout.resourceHeading(
                     text(
                         value,
                         style = TextStyle(sizing = TextSizing.Exact(literal(12.0))),
-                        paragraph = TextParagraph(softWrap = true, selectable = true, tone = PresentationTextTone.SECONDARY),
+                        paragraph = textParagraph(softWrap = true, selectable = true, tone = PresentationTextTone.SECONDARY),
                     )
                 }
             }

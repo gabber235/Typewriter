@@ -12,8 +12,8 @@ fun Layout.searchTitle(value: Expr<String, Handled>) {
         value = value,
         style = TextStyle(sizing = TextSizing.Exact(literal(14.0)), weight = 500, lineHeight = 1.1),
         paragraph =
-            TextParagraph(
-                maximumLines = 1,
+            textParagraph(
+                maxLines = 1,
                 overflow = PresentationTextOverflow.ELLIPSIS,
             ),
     )
@@ -24,8 +24,8 @@ fun Layout.searchDescription(value: Expr<String, Handled>) {
         value = value,
         style = TextStyle(sizing = TextSizing.Exact(literal(12.0)), weight = 400, lineHeight = 1.2),
         paragraph =
-            TextParagraph(
-                maximumLines = 1,
+            textParagraph(
+                maxLines = 1,
                 overflow = PresentationTextOverflow.ELLIPSIS,
                 tone = PresentationTextTone.SECONDARY,
             ),
@@ -71,7 +71,7 @@ fun Layout.searchChip(
             text(
                 value = label,
                 style = TextStyle(sizing = TextSizing.Exact(literal(10.0)), weight = 400),
-                paragraph = TextParagraph(maximumLines = 1, overflow = PresentationTextOverflow.ELLIPSIS),
+                paragraph = textParagraph(maxLines = 1, overflow = PresentationTextOverflow.ELLIPSIS),
             )
         }
     }
