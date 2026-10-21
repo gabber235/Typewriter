@@ -7,7 +7,6 @@ import {
   EditExpectation,
   ExpectationConflict,
   LinkProjection,
-  TraversalDirection,
 } from "editor/v1/authoring_facts.skir";
 import { PreparedValue } from "editor/v1/catalog.skir";
 import { FindingSet } from "editor/v1/checking.skir";
@@ -25,8 +24,6 @@ import {
   LinkTarget,
   ListItem,
   NamedTypeUse,
-  RelationFamilyId,
-  RelationId,
   ResourceId,
   TypeDefinitionId,
   TypeSelection,
@@ -60,76 +57,32 @@ struct RelationProjectionDelta(812200004) {
   metadata_changed: [LinkProjection] = 2;
 }
 
-struct FamilyRelationSelection(812200005) {
-  id: RelationFamilyId = 0;
-  direction: TraversalDirection = 1;
-}
-
-struct ContractRelationSelection(812200006) {
-  ids: [RelationId] = 0;
-  direction: TraversalDirection = 1;
-}
-
-struct AllRelationSelection(812200007) {
-  direction: TraversalDirection = 0;
-}
-
-enum RelationSelection(812200008) {
-  family: FamilyRelationSelection = 1;
-  contracts: ContractRelationSelection = 2;
-  all: AllRelationSelection = 3;
-}
-
-struct TraversalBudget(812200009) {
-  max_resources: int64 = 0;
-  max_links: int64 = 1;
-  max_routes: int64 = 2;
-  max_steps: int64 = 3;
-}
-
-struct GraphEndpoint(812200010) {
-  resource: ResourceId = 0;
-  endpoint: EndpointId = 1;
-  path: ValuePath? = 2;
-}
-
-struct GraphStep(812200011) {
-  relation: RelationId = 0;
-  from: GraphEndpoint = 1;
-  to: GraphEndpoint = 2;
-}
-
-enum UnresolvedLink(812200012) {
-  unfilled: LinkOccurrenceId = 1;
-  unavailable_target: LinkOccurrenceId = 2;
-}
-
 /// Supplies a resource identity and authored content to portable resource presentations.
 /// Catalog choices use CatalogPresentationSubject instead because they have no resource instance.
-struct PresentationSubject(812200013) {
+struct PresentationSubject(812200005) {
   resource: ResourceId = 0;
   content: AuthoringRecord = 1;
 }
 
-struct AuthoringDiagnostic(812200014) {
+struct AuthoringDiagnostic(812200006) {
   code: string = 0;
   message: string = 1;
   resource: ResourceId? = 2;
   path: ValuePath? = 3;
 }
 
-struct AuthoringInvalid(812200015) {
+struct AuthoringInvalid(812200007) {
   diagnostics: [AuthoringDiagnostic] = 0;
 }
 
-struct CatalogChanged(812200016) {
+struct CatalogChanged(812200008) {
   actual_generation: CatalogGeneration = 0;
 }
 
 /// Captures one saved resource graph and its catalog for editor synchronization.
 /// Findings retain their own execution evidence and freshness. The state describes one confirmed
 /// observation, which resource operations must echo before supplying a working overlay.
-struct AuthoringState(812200017) {
+struct AuthoringState(812200009) {
   generation: CatalogGeneration = 0;
   resources: [AuthoringResource] = 1;
   links: [LinkProjection] = 2;
@@ -137,66 +90,66 @@ struct AuthoringState(812200017) {
   confirmed_observation: AuthoringObservationId = 4;
 }
 
-struct SetValueIntent(812200018) {
+struct SetValueIntent(812200010) {
   at: ValueLocation = 0;
   value: DataValue = 1;
 }
 
-struct InsertIntent(812200019) {
+struct InsertIntent(812200011) {
   at: ValueLocation = 0;
   after: ItemId? = 1;
   item: ListItem = 2;
 }
 
-struct RemoveIntent(812200020) {
+struct RemoveIntent(812200012) {
   at: ValueLocation = 0;
   item: ItemId = 1;
 }
 
-struct MoveIntent(812200021) {
+struct MoveIntent(812200013) {
   at: ValueLocation = 0;
   item: ItemId = 1;
   after: ItemId? = 2;
 }
 
-struct CreateResourceIntent(812200022) {
+struct CreateResourceIntent(812200014) {
   id: ResourceId = 0;
   record: AuthoringRecord = 1;
 }
 
-struct DeleteResourceIntent(812200023) {
+struct DeleteResourceIntent(812200015) {
   id: ResourceId = 0;
 }
 
-struct NewCounterpartChoice(812200024) {
+struct NewCounterpartChoice(812200016) {
   containing: ValueLocation = 0;
   prepared: PreparedValue = 1;
 }
 
-enum CounterpartChoice(812200025) {
+enum CounterpartChoice(812200017) {
   existing: LinkOccurrence = 1;
   new: NewCounterpartChoice = 2;
 }
 
-struct ConnectIntent(812200026) {
+struct ConnectIntent(812200018) {
   source: LinkOccurrence = 0;
   target: ResourceId = 1;
   counterpart: CounterpartChoice? = 2;
 }
 
-struct RetagIntent(812200027) {
+struct RetagIntent(812200019) {
   at: ValueLocation = 0;
   type: NamedTypeUse = 1;
 }
 
-struct ResourceConfigurationIntent(812200028) {
+struct ResourceConfigurationIntent(812200020) {
   resource: ResourceId = 0;
   configuration: TypeSelection = 1;
 }
 
 /// Ordered proposed mutations. Relation intent names exact authored occurrences so admission can
 /// synchronize inverses and validate the resulting graph before persistence.
-enum EditIntent(812200029) {
+enum EditIntent(812200021) {
   create_resource: CreateResourceIntent = 1;
   delete_resource: DeleteResourceIntent = 2;
   set_value: SetValueIntent = 3;
@@ -212,33 +165,33 @@ enum EditIntent(812200029) {
 /// Carries a proposed edit and the original saved facts that justify replaying it.
 /// Matching supplied facts alone is insufficient: Realm admission independently requires guards for
 /// the affected values and relations. Preparation grants no persistence or publication authority.
-struct PreparedEdit(812200030) {
+struct PreparedEdit(812200022) {
   catalog: CatalogGeneration = 0;
   expectations: [EditExpectation] = 1;
   intents: [EditIntent] = 2;
 }
 
-struct PreparedEditReady(812200031) {
+struct PreparedEditReady(812200023) {
   edit: PreparedEdit = 0;
 }
 
-enum AuthoringOperation(812200032) {
+enum AuthoringOperation(812200024) {
   commit_prepared: PreparedEdit = 1;
 }
 
 /// Hints that clients should query saved authoring state or findings. This is not an edit log or revision counter.
-struct AuthoringChanged(812200033) {
+struct AuthoringChanged(812200025) {
   generation: CatalogGeneration = 0;
 }
 
-enum LinkRepairIntent(812200034) {
+enum LinkRepairIntent(812200026) {
   clear: LinkOccurrenceId = 1;
   remove: LinkOccurrenceId = 2;
 }
 
 /// Proposes a fixed definition type configuration change together with all value and link repairs.
 /// Preparation rechecks expectations and regenerates repairs before yielding a committable edit.
-struct TypeArgumentChangePreview(812200035) {
+struct TypeArgumentChangePreview(812200027) {
   resource: ResourceId = 0;
   next: TypeSelection = 1;
   edit: PreparedEdit = 2;
@@ -246,17 +199,17 @@ struct TypeArgumentChangePreview(812200035) {
   cleared_locations: [ValueLocation] = 4;
 }
 
-struct ArgumentLocation(812200036) {
+struct ArgumentLocation(812200028) {
   index: int32 = 0;
 }
 
-struct AuthoringSearchHit(812200037) {
+struct AuthoringSearchHit(812200029) {
   resource: ResourceId = 0;
   subject: PresentationSubject = 1;
   context: PortableValue = 2;
 }
 
-struct AuthoringSearchResult(812200038) {
+struct AuthoringSearchResult(812200030) {
   generation: CatalogGeneration = 0;
   hits: [AuthoringSearchHit] = 1;
   diagnostics: [Diagnostic] = 2;
@@ -265,7 +218,7 @@ struct AuthoringSearchResult(812200038) {
 /// Identifies one saved authoring observation without ordering resource changes.
 /// A local operation overlay echoes this identity while carrying separate proposed values; a
 /// changed saved view requires refreshing the baseline.
-struct AuthoringObservationId(812200039) {
+struct AuthoringObservationId(812200031) {
   value: string = 0;
 }
 

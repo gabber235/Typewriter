@@ -243,61 +243,6 @@ impl crate::SkirType for crate::skirout::base::editor::v1::authoring::RelationPr
         Self::serializer()
     }
 }
-impl crate::SkirType for crate::skirout::base::editor::v1::authoring::FamilyRelationSelection {
-    fn serializer() -> crate::skir_client::Serializer<Self> {
-        Self::serializer()
-    }
-}
-impl crate::SkirType for crate::skirout::base::editor::v1::authoring::ContractRelationSelection {
-    fn serializer() -> crate::skir_client::Serializer<Self> {
-        Self::serializer()
-    }
-}
-impl crate::SkirType for crate::skirout::base::editor::v1::authoring::AllRelationSelection {
-    fn serializer() -> crate::skir_client::Serializer<Self> {
-        Self::serializer()
-    }
-}
-impl crate::SkirType for crate::skirout::base::editor::v1::authoring::RelationSelection {
-    fn serializer() -> crate::skir_client::Serializer<Self> {
-        Self::serializer()
-    }
-    fn is_unknown(&self) -> bool {
-        !matches!(
-            self,
-            crate::skirout::base::editor::v1::authoring::RelationSelection::Family(_)
-                | crate::skirout::base::editor::v1::authoring::RelationSelection::Contracts(_)
-                | crate::skirout::base::editor::v1::authoring::RelationSelection::All(_)
-        )
-    }
-}
-impl crate::SkirType for crate::skirout::base::editor::v1::authoring::TraversalBudget {
-    fn serializer() -> crate::skir_client::Serializer<Self> {
-        Self::serializer()
-    }
-}
-impl crate::SkirType for crate::skirout::base::editor::v1::authoring::GraphEndpoint {
-    fn serializer() -> crate::skir_client::Serializer<Self> {
-        Self::serializer()
-    }
-}
-impl crate::SkirType for crate::skirout::base::editor::v1::authoring::GraphStep {
-    fn serializer() -> crate::skir_client::Serializer<Self> {
-        Self::serializer()
-    }
-}
-impl crate::SkirType for crate::skirout::base::editor::v1::authoring::UnresolvedLink {
-    fn serializer() -> crate::skir_client::Serializer<Self> {
-        Self::serializer()
-    }
-    fn is_unknown(&self) -> bool {
-        !matches!(
-            self,
-            crate::skirout::base::editor::v1::authoring::UnresolvedLink::Unfilled(_)
-                | crate::skirout::base::editor::v1::authoring::UnresolvedLink::UnavailableTarget(_)
-        )
-    }
-}
 impl crate::SkirType for crate::skirout::base::editor::v1::authoring::PresentationSubject {
     fn serializer() -> crate::skir_client::Serializer<Self> {
         Self::serializer()
