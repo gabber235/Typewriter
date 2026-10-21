@@ -1,6 +1,6 @@
 package fixture
 
-import com.typewritermc.types.PresentationRole
+import skirout.editor.v1.catalog.PresentationRole
 import com.typewritermc.types.TypewriterType
 
 @TypewriterType(id = "a00000000000000000000000000000b1")

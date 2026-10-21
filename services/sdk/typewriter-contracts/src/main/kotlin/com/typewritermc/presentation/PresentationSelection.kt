@@ -1,7 +1,7 @@
 package com.typewritermc.presentation
 
-import com.typewritermc.types.PresentationRole
 import com.typewritermc.types.catalog.CheckedType
+import skirout.editor.v1.catalog.PresentationRole
 
 /**
  * Selects the most specific target before using priority to distinguish equivalent targets within one role.

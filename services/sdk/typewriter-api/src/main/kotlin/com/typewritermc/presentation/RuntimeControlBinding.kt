@@ -364,9 +364,7 @@ internal class RuntimeControlBinding(
                             presentation =
                                 state.node(
                                     PresentationElement.createInvocation(
-                                        presentationId =
-                                            skirout.editor.v1.type_catalog
-                                                .PresentationId(namespace = id.namespace, name = id.name),
+                                        presentationId = id,
                                         arguments = emptyList(),
                                     ),
                                 ),

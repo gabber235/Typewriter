@@ -19,7 +19,6 @@ import com.typewritermc.presentation.PresentationBuildBinding
 import com.typewritermc.presentation.createResource
 import com.typewritermc.presentation.presentationTemplate
 import com.typewritermc.presentation.resource
-import com.typewritermc.types.PresentationRole
 import com.typewritermc.types.RESOURCE_OWNERSHIP_FAMILY_ID
 import com.typewritermc.types.TypeDefinitionId
 import com.typewritermc.types.TypeUse
@@ -35,6 +34,7 @@ import io.kotest.matchers.string.shouldContain
 import io.kotest.matchers.types.shouldBeInstanceOf
 import skirout.editor.v1.action.EditorAction
 import skirout.editor.v1.catalog.PresentationMaterial
+import skirout.editor.v1.catalog.PresentationRole
 import skirout.editor.v1.expression.ExpressionNode
 import skirout.editor.v1.presentation.ChildrenElement
 import skirout.editor.v1.presentation.GraphDirection
@@ -218,10 +218,9 @@ private fun CatalogAssembly.material(
     type: TypeDefinitionId,
     role: PresentationRole,
 ): PresentationMaterial {
-    val wireRole = SkirTypeCodec.encode(role).getOrThrow()
     val wireType = SkirTypeCodec.encode(type).getOrThrow()
     return snapshot.presentationMaterials.single {
-        it.role == wireRole && (it.target as? WirePresentationTarget.NamedWrapper)?.value?.definition == wireType
+        it.role == role && (it.target as? WirePresentationTarget.NamedWrapper)?.value?.definition == wireType
     }
 }
 

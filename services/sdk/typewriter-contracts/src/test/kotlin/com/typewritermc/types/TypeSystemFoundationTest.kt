@@ -28,6 +28,8 @@ import de.infix.testBalloon.framework.core.testSuite
 import io.kotest.matchers.collections.shouldContainExactly
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.types.shouldBeInstanceOf
+import skirout.editor.v1.catalog.PresentationRole
+import skirout.editor.v1.type_catalog.PresentationId
 import java.math.BigInteger
 
 val TypeSystemFoundationTest by testSuite {
@@ -690,7 +692,7 @@ val TypeSystemFoundationTest by testSuite {
                 presentations =
                     listOf(
                         PresentationDescriptor(
-                            id = PresentationId("example", "editor"),
+                            id = PresentationId(namespace = "example", name = "editor"),
                             owner = owner,
                             target = PresentationTarget.Representation(com.typewritermc.configuration.RepresentationKind.Text),
                             roles = setOf(PresentationRole.WORKSPACE),

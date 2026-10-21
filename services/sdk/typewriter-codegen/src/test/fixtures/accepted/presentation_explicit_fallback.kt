@@ -3,7 +3,7 @@ package fixture
 import com.typewritermc.expression.label
 import com.typewritermc.expression.literal
 import com.typewritermc.expression.orElse
-import com.typewritermc.types.PresentationRole
+import skirout.editor.v1.catalog.PresentationRole
 import com.typewritermc.types.Resource
 import com.typewritermc.types.TypewriterType
 

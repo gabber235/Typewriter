@@ -40,7 +40,6 @@ import com.typewritermc.types.EndpointBindingTemplate
 import com.typewritermc.types.FieldDeclaration
 import com.typewritermc.types.FieldOwner
 import com.typewritermc.types.ParameterKey
-import com.typewritermc.types.PresentationRole
 import com.typewritermc.types.RelationContract
 import com.typewritermc.types.RepresentationTemplate
 import com.typewritermc.types.StandardTypes
@@ -74,7 +73,7 @@ import com.typewritermc.types.skir.getOrThrow
 import com.typewritermc.types.substitute
 import kotlinx.coroutines.CancellationException
 import skirout.editor.v1.catalog.PresentationMaterial
-import skirout.editor.v1.type_catalog.PresentationId as SkirPresentationId
+import skirout.editor.v1.catalog.PresentationRole
 
 /**
  * One contributed type declaration. Codegen supplies the complete [display] of every declared type and the
@@ -450,7 +449,7 @@ private fun collectPresentationMaterials(
         }
         subjects.forEach { subject ->
             val template = subject.presentationTemplate(definitions, catalog)
-            owned.descriptor.roles.sortedBy { it.ordinal }.forEach { role ->
+            owned.descriptor.roles.sortedBy { it.kind.ordinal }.forEach { role ->
                 try {
                     val result = owned.provider.build(PresentationBuildBinding(template, role, nativeTypes, ownershipEndpoints))
                     val inferred = result.layout.inferInheritableNodes(result.dependencies)
@@ -474,13 +473,9 @@ private fun collectPresentationMaterials(
                                 target = owned.descriptor.target,
                                 material =
                                     PresentationMaterial(
-                                        provider =
-                                            SkirPresentationId(
-                                                namespace = owned.descriptor.id.namespace,
-                                                name = owned.descriptor.id.name,
-                                            ),
+                                        provider = owned.descriptor.id,
                                         target = SkirTypeCodec.encode(owned.descriptor.target).getOrThrow(),
-                                        role = SkirTypeCodec.encode(role).getOrThrow(),
+                                        role = role,
                                         layout = result.layout,
                                         dependencies = result.dependencies,
                                         subject = SkirTypeCodec.encode(subject).getOrThrow(),

@@ -43,8 +43,8 @@ import com.typewritermc.types.IconIconifyDefinition
 import com.typewritermc.types.IconIconifyExpressionsFactory
 import com.typewritermc.types.IconSvgDefinition
 import com.typewritermc.types.IconSvgExpressionsFactory
-import com.typewritermc.types.PresentationRole
 import com.typewritermc.types.Ref
+import skirout.editor.v1.catalog.PresentationRole
 import skirout.editor.v1.presentation.CrossAxisAlignment
 import skirout.editor.v1.presentation.MainAxisAlignment
 import skirout.editor.v1.presentation.PresentationAlignment

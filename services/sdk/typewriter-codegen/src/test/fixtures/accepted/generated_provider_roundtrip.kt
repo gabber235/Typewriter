@@ -37,7 +37,7 @@ import com.typewritermc.presentation.PresentationRuntime
 import com.typewritermc.presentation.TypewriterCollectionProjection
 import com.typewritermc.presentation.collectionProjection
 import com.typewritermc.presentation.projectedCollectionSource
-import com.typewritermc.types.PresentationRole
+import skirout.editor.v1.catalog.PresentationRole
 import com.typewritermc.types.RepresentationTemplate
 import com.typewritermc.types.DeletionPolicy
 import com.typewritermc.types.Many

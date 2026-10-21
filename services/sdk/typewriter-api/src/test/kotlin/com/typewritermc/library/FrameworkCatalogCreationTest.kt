@@ -51,8 +51,6 @@ import com.typewritermc.types.IconDefinition
 import com.typewritermc.types.IconIconifyDefinition
 import com.typewritermc.types.IconSvgDefinition
 import com.typewritermc.types.NativeBindingFactory
-import com.typewritermc.types.PresentationId
-import com.typewritermc.types.PresentationRole
 import com.typewritermc.types.RepresentationTemplate
 import com.typewritermc.types.ScalarKind
 import com.typewritermc.types.StandardTypes
@@ -70,11 +68,13 @@ import com.typewritermc.types.skir.getOrThrow
 import de.infix.testBalloon.framework.core.testSuite
 import io.kotest.matchers.collections.shouldHaveSize
 import io.kotest.matchers.shouldBe
+import skirout.editor.v1.catalog.PresentationRole
 import skirout.editor.v1.presentation.AxisChild
 import skirout.editor.v1.presentation.ChildrenElement
 import skirout.editor.v1.presentation.PresentationElement
 import skirout.editor.v1.presentation.PresentationHeaderTitle
 import skirout.editor.v1.presentation.PresentationNode
+import skirout.editor.v1.type_catalog.PresentationId
 import java.lang.reflect.Modifier
 import java.util.Collections
 import kotlin.reflect.KClass
@@ -119,7 +119,9 @@ val FrameworkCatalogCreationTest by testSuite {
             .descriptor.id shouldBe inherited.id
         val concrete =
             inherited.copy(
-                id = com.typewritermc.types.PresentationId("test", "concrete entry graph"),
+                id =
+                    skirout.editor.v1.type_catalog
+                        .PresentationId(namespace = "test", name = "concrete entry graph"),
                 target =
                     com.typewritermc.presentation.PresentationTarget
                         .Named(TypeTemplate.Named(concreteId)),
@@ -750,7 +752,9 @@ private fun exportFrameworkControlFixture(
         com.typewritermc.discovery.OwnedPresentation(
             inspectorOrigin,
             com.typewritermc.presentation.PresentationDescriptor(
-                id = com.typewritermc.types.PresentationId("fixture", "entry inspector"),
+                id =
+                    skirout.editor.v1.type_catalog
+                        .PresentationId(namespace = "fixture", name = "entry inspector"),
                 owner = inspectorOrigin.owner,
                 target =
                     com.typewritermc.presentation.PresentationTarget
@@ -986,7 +990,7 @@ private fun inheritedInspectorPresentations(runtime: PresentationRuntime): List<
         return OwnedPresentation(
             owner,
             PresentationDescriptor(
-                id = PresentationId("fixture", name),
+                id = PresentationId(namespace = "fixture", name = name),
                 owner = owner.owner,
                 target =
                     PresentationTarget

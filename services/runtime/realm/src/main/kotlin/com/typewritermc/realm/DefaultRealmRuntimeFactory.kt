@@ -296,7 +296,11 @@ internal fun CatalogAssembly.reportCallbackFailures() {
                 is CatalogCallback.Presentation -> {
                     attribute("catalog.callback.kind", "presentation")
                     attribute("catalog.subject", callback.subject.toString())
-                    attribute("presentation.role", callback.role.name)
+                    attribute(
+                        "presentation.role",
+                        callback.role.kind.name
+                            .removeSuffix("_CONST"),
+                    )
                 }
 
                 is CatalogCallback.Display -> {

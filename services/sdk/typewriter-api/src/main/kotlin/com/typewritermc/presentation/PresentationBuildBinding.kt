@@ -4,7 +4,6 @@ import com.typewritermc.expression.Expr
 import com.typewritermc.expression.Handled
 import com.typewritermc.expression.children
 import com.typewritermc.types.CollectionKind
-import com.typewritermc.types.PresentationRole
 import com.typewritermc.types.TypeDefinitionId
 import com.typewritermc.types.TypeTemplate
 import com.typewritermc.types.TypeUse
@@ -15,6 +14,7 @@ import com.typewritermc.types.catalog.apply
 import com.typewritermc.types.catalog.isNominalSubtype
 import com.typewritermc.types.catalog.resolve
 import com.typewritermc.types.toTemplate
+import skirout.editor.v1.catalog.PresentationRole
 import skirout.editor.v1.expression.ExpressionNode
 import skirout.editor.v1.presentation.ConnectionAxis
 import skirout.editor.v1.presentation.ConnectionExpressionScope

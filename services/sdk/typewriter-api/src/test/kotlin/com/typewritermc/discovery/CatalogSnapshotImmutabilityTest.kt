@@ -2,16 +2,16 @@ package com.typewritermc.discovery
 
 import com.typewritermc.checking.CatalogGeneration
 import com.typewritermc.presentation.RoleFallback
-import com.typewritermc.types.PresentationRole
 import com.typewritermc.types.catalog.EditorCatalogSnapshot
 import de.infix.testBalloon.framework.core.testSuite
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.matchers.shouldBe
+import skirout.editor.v1.catalog.PresentationRole
 
 val CatalogSnapshotImmutabilityTest by testSuite {
     test("catalog snapshots reject outer and nested collection mutation") {
         val types = mutableListOf<com.typewritermc.types.catalog.PublishedType>()
-        val parents = mutableListOf(PresentationRole.INSPECTOR)
+        val parents = mutableListOf<PresentationRole>(PresentationRole.INSPECTOR)
         val fallbacks = mutableListOf(RoleFallback(PresentationRole.WORKSPACE, parents))
         val source =
             EditorCatalogSnapshot(

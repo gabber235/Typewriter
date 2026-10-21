@@ -21,7 +21,7 @@ import com.typewritermc.presentation.resource
 import com.typewritermc.presentation.searchDescription
 import com.typewritermc.types.Color
 import com.typewritermc.types.Icon
-import com.typewritermc.types.PresentationRole
+import skirout.editor.v1.catalog.PresentationRole
 
 object ElementSdkProvider : ElementConfiguration {
     override fun ElementConfigurationScope.configure() {

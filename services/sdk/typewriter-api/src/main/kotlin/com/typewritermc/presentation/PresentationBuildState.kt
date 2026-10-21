@@ -6,7 +6,6 @@ import com.typewritermc.authoring.GeneratedSdkApi
 import com.typewritermc.authoring.ResourceAppearance
 import com.typewritermc.expression.ExpressionBindingId
 import com.typewritermc.expression.ExpressionFactories
-import com.typewritermc.types.PresentationRole
 import com.typewritermc.types.TypeTemplate
 import com.typewritermc.types.TypeUse
 import com.typewritermc.types.skir.SkirAuthoringValueCodec
@@ -14,6 +13,7 @@ import com.typewritermc.types.skir.SkirTypeCodec
 import com.typewritermc.types.skir.getOrThrow
 import com.typewritermc.types.toTemplate
 import skirout.editor.v1.binding.BindingRef
+import skirout.editor.v1.catalog.PresentationRole
 import skirout.editor.v1.expression.ExpressionNode
 import skirout.editor.v1.presentation.AxisChild
 import skirout.editor.v1.presentation.AxisChildrenElement
@@ -39,7 +39,7 @@ import skirout.editor.v1.type_catalog.ValuePath as WireValuePath
  */
 internal class PresentationBuildState(
     private val binding: PresentationBuildBinding,
-    private val resolvePresentation: (PresentationReference, CheckedPresentationTemplate) -> com.typewritermc.types.PresentationId?,
+    private val resolvePresentation: (PresentationReference, CheckedPresentationTemplate) -> skirout.editor.v1.type_catalog.PresentationId?,
     val expressions: ExpressionFactories,
 ) {
     val role: PresentationRole get() = binding.role
@@ -89,14 +89,7 @@ internal class PresentationBuildState(
     fun presentationId(
         reference: PresentationReference,
         checked: CheckedPresentationTemplate = type,
-    ): com.typewritermc.types.PresentationId? =
-        resolvePresentation(reference, checked)?.also { id ->
-            presentations +=
-                skirout.editor.v1.type_catalog.PresentationId(
-                    namespace = id.namespace,
-                    name = id.name,
-                )
-        }
+    ): skirout.editor.v1.type_catalog.PresentationId? = resolvePresentation(reference, checked)?.also { id -> presentations += id }
 
     fun type(use: TypeUse) {
         types += SkirTypeCodec.encode(use).getOrThrow()

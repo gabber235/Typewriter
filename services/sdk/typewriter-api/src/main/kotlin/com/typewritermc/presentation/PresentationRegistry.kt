@@ -1,7 +1,6 @@
 package com.typewritermc.presentation
 
 import com.typewritermc.configuration.kind
-import com.typewritermc.types.PresentationRole
 import com.typewritermc.types.TypeTemplate
 import com.typewritermc.types.TypeUse
 import com.typewritermc.types.catalog.CheckedCatalog
@@ -9,6 +8,7 @@ import com.typewritermc.types.catalog.CheckedType
 import com.typewritermc.types.catalog.Resolution
 import com.typewritermc.types.catalog.isNominalSubtype
 import com.typewritermc.types.catalog.resolve
+import skirout.editor.v1.catalog.PresentationRole
 
 /**
  * Selects role presentations using nominal target specificity and explicitly configured role fallback.

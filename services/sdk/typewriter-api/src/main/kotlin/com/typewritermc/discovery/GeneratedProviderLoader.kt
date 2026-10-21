@@ -6,6 +6,7 @@ import com.typewritermc.imprint.ArtifactId
 import com.typewritermc.imprint.ContributionName
 import com.typewritermc.imprint.ContributionSourceId
 import com.typewritermc.imprint.ProducerId
+import com.typewritermc.presentation.requireValid
 import com.typewritermc.types.DeclarationOwner
 import com.typewritermc.types.NativeBindingFactory
 import java.net.URL
@@ -456,7 +457,7 @@ class GeneratedProviderLoader {
 
                 GeneratedProviderKind.Presentation -> {
                     val provider = loadedProvider.require<GeneratedPresentationProvider>()
-                    presentations += OwnedPresentation(origin, provider.descriptor(origin), provider, provider.reference)
+                    presentations += OwnedPresentation(origin, provider.descriptor(origin).requireValid(), provider, provider.reference)
                 }
 
                 GeneratedProviderKind.Check -> {

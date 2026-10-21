@@ -23,13 +23,13 @@ import com.typewritermc.discovery.GeneratedContract
 import com.typewritermc.presentation.PresentationDescriptor
 import com.typewritermc.presentation.PresentationTarget
 import com.typewritermc.types.ParameterKey
-import com.typewritermc.types.PresentationId
 import com.typewritermc.types.Resource
 import com.typewritermc.types.ResourceTarget
 import com.typewritermc.types.TypeDefinitionId
 import com.typewritermc.types.TypeTemplate
 import com.typewritermc.types.TypeUse
 import com.typewritermc.types.toTemplate
+import skirout.editor.v1.type_catalog.PresentationId
 import com.typewritermc.codegen.TypewriterApi as Api
 
 /**
@@ -94,7 +94,7 @@ internal class ProviderAdapter(
                             """
                             |return with(%T) {
                             |    %T(
-                            |        id = %T(origin.artifact.value,♢%S),
+                            |        id = %T(namespace = origin.artifact.value,♢name = %S),
                             |        owner = origin.owner,
                             |        target = %T(%L),
                             |        roles = roles,

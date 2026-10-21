@@ -44,8 +44,6 @@ import com.typewritermc.presentation.PresentationTarget
 import com.typewritermc.types.DataValue
 import com.typewritermc.types.GeneratedRecordNativeBinding
 import com.typewritermc.types.NativeBindingFactory
-import com.typewritermc.types.PresentationId
-import com.typewritermc.types.PresentationRole
 import com.typewritermc.types.RepresentationTemplate
 import com.typewritermc.types.TypeDefinition
 import com.typewritermc.types.TypeDefinitionId
@@ -57,6 +55,8 @@ import com.typewritermc.types.catalog.DeclarationStatus
 import com.typewritermc.types.catalog.Resolution
 import de.infix.testBalloon.framework.core.testSuite
 import io.kotest.matchers.shouldBe
+import skirout.editor.v1.catalog.PresentationRole
+import skirout.editor.v1.type_catalog.PresentationId
 import java.nio.file.Files
 import java.nio.file.Path
 import java.util.jar.JarEntry
@@ -189,7 +189,7 @@ class RealmCommonBindingProvider : NativeBindingFactory {
 class RealmCommonPresentationProvider : GeneratedPresentationProvider {
     override fun descriptor(origin: ProviderOrigin) =
         PresentationDescriptor(
-            PresentationId("fixture", "common"),
+            PresentationId(namespace = "fixture", name = "common"),
             origin.owner,
             PresentationTarget.Named(TypeTemplate.Named(RealmProviderFixture.type)),
             setOf(PresentationRole.INSPECTOR),

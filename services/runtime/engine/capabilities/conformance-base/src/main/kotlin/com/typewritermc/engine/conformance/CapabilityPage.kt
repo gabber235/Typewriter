@@ -8,10 +8,10 @@ import com.typewritermc.library.Book
 import com.typewritermc.library.BookPages
 import com.typewritermc.library.Page
 import com.typewritermc.library.PageElements
-import com.typewritermc.types.PresentationRole
 import com.typewritermc.types.Ref
 import com.typewritermc.types.TypewriterDisplay
 import com.typewritermc.types.TypewriterType
+import skirout.editor.v1.catalog.PresentationRole
 
 /**
  * Defines the element role exported by the conformance capability.

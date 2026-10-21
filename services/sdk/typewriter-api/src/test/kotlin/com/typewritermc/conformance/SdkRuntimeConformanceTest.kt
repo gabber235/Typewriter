@@ -1085,12 +1085,24 @@ val SdkRuntimeConformanceTest by testSuite {
                 representation = RepresentationTemplate.Record(emptyList()),
                 parents = listOf(TypeTemplate.Named(root.id)),
             )
-        val textProvider = com.typewritermc.types.PresentationId("test", "text named")
-        val choiceProvider = com.typewritermc.types.PresentationId("test", "choice named")
-        val resolvedProvider = com.typewritermc.types.PresentationId("test", "resolved child")
-        val textEditor = com.typewritermc.types.PresentationId("test", "text editor")
-        val choiceEditor = com.typewritermc.types.PresentationId("test", "choice editor")
-        val resolvedEditor = com.typewritermc.types.PresentationId("test", "resolved editor")
+        val textProvider =
+            skirout.editor.v1.type_catalog
+                .PresentationId(namespace = "test", name = "text named")
+        val choiceProvider =
+            skirout.editor.v1.type_catalog
+                .PresentationId(namespace = "test", name = "choice named")
+        val resolvedProvider =
+            skirout.editor.v1.type_catalog
+                .PresentationId(namespace = "test", name = "resolved child")
+        val textEditor =
+            skirout.editor.v1.type_catalog
+                .PresentationId(namespace = "test", name = "text editor")
+        val choiceEditor =
+            skirout.editor.v1.type_catalog
+                .PresentationId(namespace = "test", name = "choice editor")
+        val resolvedEditor =
+            skirout.editor.v1.type_catalog
+                .PresentationId(namespace = "test", name = "resolved editor")
         val textTarget = PresentationTarget.Named(TypeTemplate.Named(textNamed.id))
         val choiceTarget = PresentationTarget.Named(TypeTemplate.Named(choiceNamed.id))
         val resolvedTarget = PresentationTarget.Named(TypeTemplate.Named(resolved.id))
@@ -1127,9 +1139,17 @@ val SdkRuntimeConformanceTest by testSuite {
     test("catalog assembly rejects an inferred control outside its owning record") {
         val origin = providerOrigin("invalid_field_presentation")
         val definition = recordDefinition("InvalidPresentationField", "actual", TypeTemplate.Scalar(ScalarKind.Text))
-        val provider = com.typewritermc.types.PresentationId("test", "invalid field")
+        val provider =
+            skirout.editor.v1.type_catalog
+                .PresentationId(namespace = "test", name = "invalid field")
         val target = PresentationTarget.Named(TypeTemplate.Named(definition.id))
-        val material = fieldPresentationMaterial(provider, target, com.typewritermc.types.PresentationId("test", "text"))
+        val material =
+            fieldPresentationMaterial(
+                provider,
+                target,
+                skirout.editor.v1.type_catalog
+                    .PresentationId(namespace = "test", name = "text"),
+            )
         val assembly =
             CatalogContributions(
                 declarations = listOf(OwnedTypeDeclaration(origin, definition)),
@@ -1146,9 +1166,17 @@ val SdkRuntimeConformanceTest by testSuite {
         val origin = providerOrigin("atomic_parts")
         val definition = recordDefinition("PartOwner", "value", TypeTemplate.Scalar(ScalarKind.Text))
         val foreign = recordDefinition("ForeignPartOwner", "value", TypeTemplate.Scalar(ScalarKind.Text))
-        val provider = com.typewritermc.types.PresentationId("test", "atomic part")
+        val provider =
+            skirout.editor.v1.type_catalog
+                .PresentationId(namespace = "test", name = "atomic part")
         val target = PresentationTarget.Named(TypeTemplate.Named(definition.id))
-        val base = fieldPresentationMaterial(provider, target, com.typewritermc.types.PresentationId("test", "text"))
+        val base =
+            fieldPresentationMaterial(
+                provider,
+                target,
+                skirout.editor.v1.type_catalog
+                    .PresentationId(namespace = "test", name = "text"),
+            )
         val ownKey =
             skirout.editor.v1.presentation.PresentationPartId(
                 owner =
@@ -1221,9 +1249,11 @@ val SdkRuntimeConformanceTest by testSuite {
         val references = mutableListOf("node")
         val material =
             fieldPresentationMaterial(
-                com.typewritermc.types.PresentationId("test", "immutable fields"),
+                skirout.editor.v1.type_catalog
+                    .PresentationId(namespace = "test", name = "immutable fields"),
                 PresentationTarget.Named(TypeTemplate.Named(definitionId("ImmutablePresentation"))),
-                com.typewritermc.types.PresentationId("test", "text"),
+                skirout.editor.v1.type_catalog
+                    .PresentationId(namespace = "test", name = "text"),
             ).copy(inheritableNodes = references)
         val snapshot =
             com.typewritermc.types.catalog.EditorCatalogSnapshot(
@@ -1254,7 +1284,8 @@ val SdkRuntimeConformanceTest by testSuite {
                 ),
             )
         val definition = TypeDefinition(id, representation = RepresentationTemplate.Record(fieldList))
-        val fallbackParents = mutableListOf(com.typewritermc.types.PresentationRole.WORKSPACE)
+        val fallbackParents =
+            mutableListOf<skirout.editor.v1.catalog.PresentationRole>(skirout.editor.v1.catalog.PresentationRole.WORKSPACE)
         val endpointPath = mutableListOf<com.typewritermc.configuration.FieldPatternSegment>(FieldPatternSegment.Field("items"))
         val rules =
             mutableListOf(
@@ -1303,7 +1334,7 @@ val SdkRuntimeConformanceTest by testSuite {
                     roleFallbacks =
                         mutableListOf(
                             com.typewritermc.presentation.RoleFallback(
-                                com.typewritermc.types.PresentationRole.INSPECTOR,
+                                skirout.editor.v1.catalog.PresentationRole.INSPECTOR,
                                 fallbackParents,
                             ),
                         ),
@@ -1312,7 +1343,7 @@ val SdkRuntimeConformanceTest by testSuite {
 
         fieldList += FieldDeclaration(FieldOwner(id, "late"), TypeTemplate.Scalar(ScalarKind.Text))
         argumentList[0] = INT
-        fallbackParents += com.typewritermc.types.PresentationRole.RESOURCE_SEARCH_RESULT
+        fallbackParents += skirout.editor.v1.catalog.PresentationRole.RESOURCE_SEARCH_RESULT
         endpointPath += FieldPatternSegment.Items
         rules.clear()
 
@@ -1329,7 +1360,7 @@ val SdkRuntimeConformanceTest by testSuite {
         assembly.snapshot.roleFallbacks
             .single()
             .parents shouldBe
-            listOf(com.typewritermc.types.PresentationRole.WORKSPACE)
+            listOf(skirout.editor.v1.catalog.PresentationRole.WORKSPACE)
         val checked = assembly.checked.resolve(TypeUse.Named(id)).ready()
         (checked.schema.representation as com.typewritermc.types.catalog.ResolvedRepresentation.Record).fields.size shouldBe 1
     }
@@ -1490,9 +1521,9 @@ private fun recordDefinition(
 }
 
 private fun fieldPresentationMaterial(
-    provider: com.typewritermc.types.PresentationId,
+    provider: skirout.editor.v1.type_catalog.PresentationId,
     target: PresentationTarget,
-    selected: com.typewritermc.types.PresentationId,
+    selected: skirout.editor.v1.type_catalog.PresentationId,
 ): PresentationMaterial {
     val binding =
         skirout.editor.v1.binding.BindingRef(
@@ -1557,7 +1588,7 @@ private fun fieldPresentationMaterial(
 
 private fun ownedPresentation(
     origin: ProviderOrigin,
-    id: com.typewritermc.types.PresentationId,
+    id: skirout.editor.v1.type_catalog.PresentationId,
     target: PresentationTarget,
     material: PresentationMaterial,
 ): OwnedPresentation {
@@ -1566,7 +1597,7 @@ private fun ownedPresentation(
             id = id,
             owner = origin.owner,
             target = target,
-            roles = setOf(com.typewritermc.types.PresentationRole.INSPECTOR),
+            roles = setOf(skirout.editor.v1.catalog.PresentationRole.INSPECTOR),
             priority = 0,
         )
     return OwnedPresentation(

@@ -14,7 +14,6 @@ import com.typewritermc.presentation.matches
 import com.typewritermc.types.DataValue
 import com.typewritermc.types.NativeBinding
 import com.typewritermc.types.NativeBindingRegistry
-import com.typewritermc.types.PresentationId
 import com.typewritermc.types.ResourceIdDefinition
 import com.typewritermc.types.ResourceTarget
 import com.typewritermc.types.ScalarKind
@@ -35,6 +34,7 @@ import skirout.editor.v1.operation.OperationAvailability
 import skirout.editor.v1.operation.OperationDrop
 import skirout.editor.v1.operation.OperationTargets
 import skirout.editor.v1.operation.ResourceOperationDefinition
+import skirout.editor.v1.type_catalog.PresentationId
 import skirout.editor.v1.type_catalog.CapabilityId as SkirCapabilityId
 
 class BoundOperationInput internal constructor(

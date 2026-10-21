@@ -2,7 +2,7 @@ package com.typewritermc.engine.pages
 
 import com.typewritermc.authoring.PlacementSdkProvider
 import com.typewritermc.discovery.GraphDirection
-import com.typewritermc.types.PresentationRole
+import skirout.editor.v1.catalog.PresentationRole
 
 /**
  * Supplies inherited inspector composition for core entry roles.

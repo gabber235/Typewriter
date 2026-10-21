@@ -34,7 +34,7 @@ class DefaultPresentationRuntime : PresentationRuntime {
     private fun resolve(
         reference: PresentationReference,
         binding: CheckedPresentationTemplate,
-    ): com.typewritermc.types.PresentationId? =
+    ): skirout.editor.v1.type_catalog.PresentationId? =
         synchronized(presentations) {
             binding.select(presentations[reference].orEmpty())?.id
         }

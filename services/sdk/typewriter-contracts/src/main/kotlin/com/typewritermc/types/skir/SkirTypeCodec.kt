@@ -28,8 +28,6 @@ import com.typewritermc.types.FieldOwner
 import com.typewritermc.types.FloatWidth
 import com.typewritermc.types.IntegerWidth
 import com.typewritermc.types.ParameterKey
-import com.typewritermc.types.PresentationId
-import com.typewritermc.types.PresentationRole
 import com.typewritermc.types.RelationContract
 import com.typewritermc.types.RelationDeletePolicy
 import com.typewritermc.types.RepresentationTemplate
@@ -63,7 +61,6 @@ import skirout.editor.v1.catalog.EndpointDefinition as SkirEndpointDefinition
 import skirout.editor.v1.catalog.EndpointSlot as SkirEndpointSlot
 import skirout.editor.v1.catalog.OwnedRule as SkirOwnedRule
 import skirout.editor.v1.catalog.PresentationDescriptor as SkirPresentationDescriptor
-import skirout.editor.v1.catalog.PresentationRole as SkirPresentationRole
 import skirout.editor.v1.catalog.PresentationTarget as SkirPresentationTarget
 import skirout.editor.v1.catalog.PublishedType as SkirPublishedType
 import skirout.editor.v1.catalog.RelationContract as SkirRelationContract
@@ -101,7 +98,6 @@ import skirout.editor.v1.type_catalog.NullableTypeTemplate as SkirNullableTypeTe
 import skirout.editor.v1.type_catalog.NullableTypeUse as SkirNullableTypeUse
 import skirout.editor.v1.type_catalog.ParameterKey as SkirParameterKey
 import skirout.editor.v1.type_catalog.PathSegment as SkirPathSegment
-import skirout.editor.v1.type_catalog.PresentationId as SkirPresentationId
 import skirout.editor.v1.type_catalog.ProducerId as SkirProducerId
 import skirout.editor.v1.type_catalog.QualifiedTypeId as SkirQualifiedTypeId
 import skirout.editor.v1.type_catalog.RelativeFieldPattern as SkirRelativeFieldPattern
@@ -150,8 +146,6 @@ object SkirTypeCodec {
     fun encode(target: ResourceTarget): SkirConversionResult<SkirResourceTarget> = captureSkirConversion { this.encode(target) }
 
     fun encode(target: PresentationTarget): SkirConversionResult<SkirPresentationTarget> = captureSkirConversion { this.encode(target) }
-
-    fun encode(role: PresentationRole): SkirConversionResult<SkirPresentationRole> = captureSkirConversion { encodePresentationRole(role) }
 }
 
 internal fun ConversionScope.encodeTypeId(id: TypeId): SkirTypeId =
@@ -535,11 +529,7 @@ internal fun ConversionScope.encode(target: ResourceTarget): SkirResourceTarget 
         ResourceTarget.AnyResource -> SkirResourceTarget.ANY_RESOURCE
     }
 
-private fun encode(fallback: RoleFallback): SkirRoleFallback =
-    SkirRoleFallback(
-        role = encodePresentationRole(fallback.role),
-        parents = fallback.parents.map(::encodePresentationRole),
-    )
+private fun encode(fallback: RoleFallback): SkirRoleFallback = SkirRoleFallback(role = fallback.role, parents = fallback.parents)
 
 private fun ConversionScope.encode(capability: RealmCapabilityDescriptor): SkirCapabilityDefinition =
     when (capability) {
@@ -589,13 +579,7 @@ private fun ConversionScope.encode(capability: RealmCapabilityDescriptor): SkirC
                         capability.requestType?.let { type ->
                             skirout.editor.v1.operation.OperationInputDefinition(
                                 type = encodeTypeUse(type),
-                                presentation =
-                                    capability.inputPresentation?.let {
-                                        SkirPresentationId(
-                                            namespace = it.namespace,
-                                            name = it.name,
-                                        )
-                                    },
+                                presentation = capability.inputPresentation,
                             )
                         },
                 ),
@@ -692,14 +676,12 @@ private fun ConversionScope.encode(endpoint: EndpointDefinition) =
 
 private fun ConversionScope.encode(presentation: PresentationDescriptor) =
     SkirPresentationDescriptor(
-        id = encode(presentation.id),
+        id = presentation.id,
         owner = encode(presentation.owner),
         target = encode(presentation.target),
-        roles = presentation.roles.sortedBy { it.ordinal }.map(::encodePresentationRole),
+        roles = presentation.roles.sortedBy { it.kind.ordinal },
         priority = presentation.priority,
     )
-
-private fun encode(id: PresentationId) = SkirPresentationId(namespace = id.namespace, name = id.name)
 
 private fun ConversionScope.encode(owner: DeclarationOwner) =
     SkirDeclarationOwner(source = encode(owner.source), localIdentity = owner.localIdentity)
@@ -716,17 +698,6 @@ private fun ConversionScope.encode(target: PresentationTarget): SkirPresentation
     when (target) {
         is PresentationTarget.Named -> SkirPresentationTarget.NamedWrapper(encodeNamedTypeTemplate(target.type))
         is PresentationTarget.Representation -> SkirPresentationTarget.RepresentationWrapper(encode(target.kind))
-    }
-
-private fun encodePresentationRole(role: PresentationRole): SkirPresentationRole =
-    when (role) {
-        PresentationRole.WORKSPACE -> SkirPresentationRole.WORKSPACE
-        PresentationRole.NAVIGATOR -> SkirPresentationRole.NAVIGATOR
-        PresentationRole.INSPECTOR -> SkirPresentationRole.INSPECTOR
-        PresentationRole.ITEM -> SkirPresentationRole.ITEM
-        PresentationRole.REFERENCE_PREVIEW -> SkirPresentationRole.REFERENCE_PREVIEW
-        PresentationRole.REFERENCE_PICKER_RESULT -> SkirPresentationRole.REFERENCE_PICKER_RESULT
-        PresentationRole.RESOURCE_SEARCH_RESULT -> SkirPresentationRole.RESOURCE_SEARCH_RESULT
     }
 
 private fun encode(kind: RepresentationKind): SkirRepresentationKind =

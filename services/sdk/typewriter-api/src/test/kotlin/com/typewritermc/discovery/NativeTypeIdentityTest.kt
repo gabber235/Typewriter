@@ -17,8 +17,6 @@ import com.typewritermc.presentation.PresentationProvider
 import com.typewritermc.presentation.PresentationTarget
 import com.typewritermc.presentation.resource
 import com.typewritermc.types.DeclarationOwner
-import com.typewritermc.types.PresentationId
-import com.typewritermc.types.PresentationRole
 import com.typewritermc.types.RepresentationTemplate
 import com.typewritermc.types.Resource
 import com.typewritermc.types.ResourceId
@@ -30,6 +28,8 @@ import com.typewritermc.types.TypeTemplate
 import com.typewritermc.types.text
 import de.infix.testBalloon.framework.core.testSuite
 import io.kotest.matchers.shouldBe
+import skirout.editor.v1.catalog.PresentationRole
+import skirout.editor.v1.type_catalog.PresentationId
 
 val NativeTypeIdentityTest by testSuite {
     test("abstract resource identity builds queries without a native codec") {
@@ -62,7 +62,7 @@ private fun nativeIdentityAssembly(ambiguous: Boolean): CatalogAssembly {
     val definition = TypeDefinition(id, representation = RepresentationTemplate.Record(emptyList(), abstract = true))
     val descriptor =
         PresentationDescriptor(
-            PresentationId("test", "native_identity"),
+            PresentationId(namespace = "test", name = "native_identity"),
             origin.owner,
             PresentationTarget.Named(TypeTemplate.Named(id)),
             setOf(PresentationRole.INSPECTOR),

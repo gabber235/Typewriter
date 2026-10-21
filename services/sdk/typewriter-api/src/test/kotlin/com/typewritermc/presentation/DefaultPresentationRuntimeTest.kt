@@ -30,7 +30,6 @@ import com.typewritermc.types.FieldOwner
 import com.typewritermc.types.IntegerWidth
 import com.typewritermc.types.ListItem
 import com.typewritermc.types.ParameterKey
-import com.typewritermc.types.PresentationRole
 import com.typewritermc.types.RepresentationTemplate
 import com.typewritermc.types.Resource
 import com.typewritermc.types.ResourceId
@@ -51,6 +50,7 @@ import com.typewritermc.types.skir.getOrThrow
 import com.typewritermc.types.text
 import de.infix.testBalloon.framework.core.testSuite
 import io.kotest.matchers.shouldBe
+import skirout.editor.v1.catalog.PresentationRole
 import skirout.editor.v1.expression.ExpressionNode
 import skirout.editor.v1.presentation.ChildrenElement
 import skirout.editor.v1.presentation.CollectionGraphDirection
@@ -1669,7 +1669,9 @@ val DefaultPresentationRuntimeTest by testSuite {
                 StandardTypes.definitions + position + subject,
             )
         val checked = catalog.ready(TypeUse.Named(subjectId))
-        val selected = com.typewritermc.types.PresentationId("test", "special numeric")
+        val selected =
+            skirout.editor.v1.type_catalog
+                .PresentationId(namespace = "test", name = "special numeric")
         val reference = object : PresentationReference {}
         val runtime =
             DefaultPresentationRuntime().also {
@@ -1733,7 +1735,9 @@ val DefaultPresentationRuntimeTest by testSuite {
         val catalog = DefaultCheckedCatalog(CatalogGeneration("presentation data"), listOf(definition))
         val checked = catalog.ready(TypeUse.Named(id))
         val reference = object : PresentationReference {}
-        val referenceId = com.typewritermc.types.PresentationId("test", "invoked")
+        val referenceId =
+            skirout.editor.v1.type_catalog
+                .PresentationId(namespace = "test", name = "invoked")
         val parameter = presentationParameter<String>("title")
         val runtime =
             DefaultPresentationRuntime().also {
@@ -2167,7 +2171,8 @@ private fun descriptor(
     role: PresentationRole = PresentationRole.WORKSPACE,
 ): PresentationDescriptor =
     PresentationDescriptor(
-        com.typewritermc.types.PresentationId("test", name),
+        skirout.editor.v1.type_catalog
+            .PresentationId(namespace = "test", name = name),
         DeclarationOwner(
             ContributionKey(
                 ContributionSourceId("test"),

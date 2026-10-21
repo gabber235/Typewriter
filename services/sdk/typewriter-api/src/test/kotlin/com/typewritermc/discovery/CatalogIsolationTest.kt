@@ -10,8 +10,6 @@ import com.typewritermc.types.DeclarationOwner
 import com.typewritermc.types.FieldDeclaration
 import com.typewritermc.types.FieldOwner
 import com.typewritermc.types.ParameterKey
-import com.typewritermc.types.PresentationId
-import com.typewritermc.types.PresentationRole
 import com.typewritermc.types.RepresentationTemplate
 import com.typewritermc.types.ScalarKind
 import com.typewritermc.types.TypeDefinition
@@ -26,6 +24,8 @@ import de.infix.testBalloon.framework.core.testSuite
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.matchers.shouldBe
 import kotlinx.coroutines.CancellationException
+import skirout.editor.v1.catalog.PresentationRole
+import skirout.editor.v1.type_catalog.PresentationId
 
 val CatalogIsolationTest by testSuite {
     test("unknown field dependency makes its declaration unavailable") {
@@ -97,7 +97,7 @@ val CatalogIsolationTest by testSuite {
         val cause = IllegalStateException("fixture representation failure")
         val descriptor =
             com.typewritermc.presentation.PresentationDescriptor(
-                PresentationId("isolation", "scalar"),
+                PresentationId(namespace = "isolation", name = "scalar"),
                 origin.owner,
                 com.typewritermc.presentation.PresentationTarget
                     .Representation(com.typewritermc.configuration.RepresentationKind.Text),

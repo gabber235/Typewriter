@@ -15,12 +15,12 @@ import com.typewritermc.expression.orElse
 import com.typewritermc.presentation.DefaultPresentationRuntime
 import com.typewritermc.presentation.PresentationBuildBinding
 import com.typewritermc.presentation.presentationTemplate
-import com.typewritermc.types.PresentationRole
 import com.typewritermc.types.TypeUse
 import com.typewritermc.types.catalog.DefaultCheckedCatalog
 import com.typewritermc.types.catalog.Resolution
 import de.infix.testBalloon.framework.core.testSuite
 import io.kotest.matchers.shouldBe
+import skirout.editor.v1.catalog.PresentationRole
 import skirout.editor.v1.expression.ExpressionNode
 import skirout.editor.v1.presentation.AxisChild
 import skirout.editor.v1.presentation.ChildrenElement

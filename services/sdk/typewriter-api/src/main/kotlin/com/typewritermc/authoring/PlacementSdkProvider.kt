@@ -10,7 +10,7 @@ import com.typewritermc.presentation.PresentationColor
 import com.typewritermc.presentation.TextStyle
 import com.typewritermc.presentation.literalColor
 import com.typewritermc.types.Color
-import com.typewritermc.types.PresentationRole
+import skirout.editor.v1.catalog.PresentationRole
 import skirout.editor.v1.presentation.ControlDensity
 
 private fun NumericInputScope<Int>.coordinateInput(

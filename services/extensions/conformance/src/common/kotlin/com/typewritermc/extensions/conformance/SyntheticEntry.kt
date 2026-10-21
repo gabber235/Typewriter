@@ -30,12 +30,12 @@ import com.typewritermc.presentation.AppliedPresentation
 import com.typewritermc.presentation.TextLines
 import com.typewritermc.presentation.resourceHeading
 import com.typewritermc.types.Color
-import com.typewritermc.types.PresentationRole
 import com.typewritermc.types.Ref
 import com.typewritermc.types.TypewriterDisplay
 import com.typewritermc.types.TypewriterType
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
+import skirout.editor.v1.catalog.PresentationRole
 
 /**
  * Polymorphic message family exercising generated schema discovery, serialized field aliases, and presentation

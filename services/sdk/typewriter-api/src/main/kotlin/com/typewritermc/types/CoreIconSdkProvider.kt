@@ -16,6 +16,7 @@ import com.typewritermc.presentation.gate
 import com.typewritermc.presentation.history
 import com.typewritermc.presentation.limit
 import com.typewritermc.presentation.section
+import skirout.editor.v1.catalog.PresentationRole
 import skirout.editor.v1.expression.ExpressionNode
 import skirout.editor.v1.presentation.PresentationTextOverflow
 import kotlin.time.Duration.Companion.milliseconds

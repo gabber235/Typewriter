@@ -2,13 +2,13 @@ package com.typewritermc.presentation
 
 import com.typewritermc.configuration.RepresentationKind
 import com.typewritermc.types.DeclarationOwner
-import com.typewritermc.types.PresentationId
-import com.typewritermc.types.PresentationRole
 import com.typewritermc.types.TypeTemplate
 import com.typewritermc.types.catalog.CheckedCatalog
 import com.typewritermc.types.catalog.CheckedType
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
+import skirout.editor.v1.catalog.PresentationRole
+import skirout.editor.v1.type_catalog.PresentationId
 
 @Serializable
 sealed interface PresentationTarget {
@@ -25,7 +25,6 @@ sealed interface PresentationTarget {
     ) : PresentationTarget
 }
 
-@Serializable
 data class PresentationDescriptor(
     val id: PresentationId,
     val owner: DeclarationOwner,
@@ -34,11 +33,24 @@ data class PresentationDescriptor(
     val priority: Int,
 )
 
-@Serializable
 data class RoleFallback(
     val role: PresentationRole,
     val parents: List<PresentationRole>,
 )
+
+/** Checks the identity and roles a generated provider declared; selection and fallbacks rely on them. */
+fun PresentationDescriptor.requireValid(): PresentationDescriptor =
+    apply {
+        id.requireValid()
+        require(PresentationRole.UNKNOWN !in roles) { "A presentation declares only known roles." }
+    }
+
+/** Checks a presentation identity where it enters the catalog; both parts name the provider. */
+fun PresentationId.requireValid(): PresentationId =
+    apply {
+        require(namespace.isNotBlank()) { "Presentation namespace must not be blank." }
+        require(name.isNotBlank()) { "Presentation name must not be blank." }
+    }
 
 sealed interface PresentationSelection {
     data class Selected(

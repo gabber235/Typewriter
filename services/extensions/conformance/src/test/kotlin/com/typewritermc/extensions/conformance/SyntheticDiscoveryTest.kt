@@ -41,7 +41,6 @@ import com.typewritermc.types.EndpointCardinality
 import com.typewritermc.types.FactoryNativeBindingRegistry
 import com.typewritermc.types.NativeBinding
 import com.typewritermc.types.NativeBindingFactory
-import com.typewritermc.types.PresentationRole
 import com.typewritermc.types.RESOURCE_OWNERSHIP_FAMILY_ID
 import com.typewritermc.types.Ref
 import com.typewritermc.types.RelationFamilyId
@@ -62,6 +61,7 @@ import io.kotest.matchers.shouldBe
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.toList
 import kotlinx.coroutines.test.runTest
+import skirout.editor.v1.catalog.PresentationRole
 import skirout.editor.v1.presentation.AxisChild
 import skirout.editor.v1.presentation.ChildrenElement
 import skirout.editor.v1.presentation.PresentationElement

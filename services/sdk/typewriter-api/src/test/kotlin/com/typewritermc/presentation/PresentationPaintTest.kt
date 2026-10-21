@@ -6,7 +6,6 @@ import com.typewritermc.authoring.GeneratedSdkApi
 import com.typewritermc.checking.CatalogGeneration
 import com.typewritermc.expression.literal
 import com.typewritermc.types.Color
-import com.typewritermc.types.PresentationRole
 import com.typewritermc.types.ScalarKind
 import com.typewritermc.types.StandardTypes
 import com.typewritermc.types.TypeUse
@@ -17,6 +16,7 @@ import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.string.shouldContain
 import io.kotest.matchers.types.shouldBeInstanceOf
+import skirout.editor.v1.catalog.PresentationRole
 import skirout.editor.v1.expression.ExpressionNode
 import skirout.editor.v1.presentation.ChildrenElement
 import skirout.editor.v1.presentation.PresentationAlignment

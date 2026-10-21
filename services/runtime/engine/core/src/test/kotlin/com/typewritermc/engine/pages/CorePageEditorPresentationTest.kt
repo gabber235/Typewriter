@@ -21,7 +21,6 @@ import com.typewritermc.presentation.PresentationRuntime
 import com.typewritermc.presentation.PresentationSelection
 import com.typewritermc.presentation.presentationTemplate
 import com.typewritermc.types.DeclarationOwner
-import com.typewritermc.types.PresentationRole
 import com.typewritermc.types.StandardTypes
 import com.typewritermc.types.TypeDefinition
 import com.typewritermc.types.catalog.DefaultCheckedCatalog
@@ -29,6 +28,7 @@ import com.typewritermc.types.catalog.Resolution
 import de.infix.testBalloon.framework.core.testSuite
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.types.shouldBeInstanceOf
+import skirout.editor.v1.catalog.PresentationRole
 import skirout.editor.v1.presentation.AxisChild
 import skirout.editor.v1.presentation.ChildrenElement
 import skirout.editor.v1.presentation.GraphDirection

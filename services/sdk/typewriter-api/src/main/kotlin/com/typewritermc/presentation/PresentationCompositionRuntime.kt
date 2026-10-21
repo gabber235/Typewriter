@@ -183,9 +183,7 @@ internal class RuntimePresentationData(
         target +=
             state.node(
                 PresentationElement.createInvocation(
-                    presentationId =
-                        skirout.editor.v1.type_catalog
-                            .PresentationId(namespace = id.namespace, name = id.name),
+                    presentationId = id,
                     arguments = wireArguments,
                 ),
             )
@@ -233,10 +231,7 @@ internal class RuntimePresentedField<V, S : Any>(
         configure: S.() -> Unit,
     ) {
         val presentationId =
-            using?.let { state.presentationId(it, checked) }?.let { id ->
-                skirout.editor.v1.type_catalog
-                    .PresentationId(namespace = id.namespace, name = id.name)
-            }
+            using?.let { state.presentationId(it, checked) }
         require(using == null || presentationId != null) {
             "The selected presentation reference was not registered by its generated provider."
         }
