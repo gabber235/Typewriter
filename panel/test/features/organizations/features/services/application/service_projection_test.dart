@@ -28,6 +28,16 @@ skir.Service _service(
 );
 
 void main() {
+  test("runtime status keys are the Skir variant names", () {
+    expect(skir.ChildRuntimeStatus.rolledBack.key, "rolled_back");
+    expect(skir.HostRuntimeStatus.reconciling.key, "reconciling");
+    expect(skir.ChildRuntimeStatus.unknown.key, "unknown");
+    expect(
+      ChildRuntimeStatusKey.all.map((status) => status.key).toSet(),
+      hasLength(ChildRuntimeStatusKey.all.length),
+    );
+  });
+
   test(
     "service projection overlays identity and preserves canonical state",
     () {

@@ -18,7 +18,8 @@ extension OrganizationTopologyProjection on skir.OrganizationTopologySnapshot {
       engines.firstWhereOrNull((engine) => engine.ownerHost.id == hostId);
 }
 
-/// Stable presentation keys for host reconciliation states.
+/// Stable presentation keys for host reconciliation states: the Skir variant
+/// name of each status.
 ///
 /// The keys select status appearances in portable inspector presentations.
 /// Unknown wire values keep their own key so forward compatibility does not
@@ -34,17 +35,11 @@ extension HostRuntimeStatusKey on skir.HostRuntimeStatus {
     skir.HostRuntimeStatus.unknown,
   ];
 
-  String get key => switch (this) {
-    skir.HostRuntimeStatus.offline => "offline",
-    skir.HostRuntimeStatus.reconciling => "reconciling",
-    skir.HostRuntimeStatus.active => "active",
-    skir.HostRuntimeStatus.failed => "failed",
-    skir.HostRuntimeStatus.drifted => "drifted",
-    skir.HostRuntimeStatus_unknown() => "unknown",
-  };
+  String get key => _variantKey(skir.HostRuntimeStatus.serializer, this);
 }
 
-/// Stable presentation keys for Realm and engine lifecycle states.
+/// Stable presentation keys for Realm and engine lifecycle states: the Skir
+/// variant name of each status.
 extension ChildRuntimeStatusKey on skir.ChildRuntimeStatus {
   /// Every status a presentation can distinguish, including unknown values.
   static const all = [
@@ -58,14 +53,12 @@ extension ChildRuntimeStatusKey on skir.ChildRuntimeStatus {
     skir.ChildRuntimeStatus.unknown,
   ];
 
-  String get key => switch (this) {
-    skir.ChildRuntimeStatus.absent => "absent",
-    skir.ChildRuntimeStatus.staging => "staging",
-    skir.ChildRuntimeStatus.active => "active",
-    skir.ChildRuntimeStatus.quiescing => "quiescing",
-    skir.ChildRuntimeStatus.failed => "failed",
-    skir.ChildRuntimeStatus.rolledBack => "rolledBack",
-    skir.ChildRuntimeStatus.drifted => "drifted",
-    skir.ChildRuntimeStatus_unknown() => "unknown",
-  };
+  String get key => _variantKey(skir.ChildRuntimeStatus.serializer, this);
+}
+
+/// The Skir name of the variant of [value], such as `rolled_back`, or
+/// `unknown` for a variant this panel does not know.
+String _variantKey<E>(skir.EnumSerializer<E> serializer, E value) {
+  final variant = serializer.typeDescriptor.getVariant(value);
+  return variant.number == 0 ? "unknown" : variant.name;
 }

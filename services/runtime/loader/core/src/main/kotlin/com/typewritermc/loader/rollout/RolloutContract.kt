@@ -64,16 +64,12 @@ internal val RolloutCommand.commandKind: RolloutCommandKind
             else -> RolloutCommandKind.UNKNOWN
         }
 
-/** The Skir variant name of a command kind, such as `roll_back`, for telemetry. */
+/** The Skir variant name of the command kind, such as `roll_back`, for telemetry; `unknown` for an unknown kind. */
 internal val RolloutCommandKind.label: String
-    get() =
-        when (this) {
-            RolloutCommandKind.STAGE -> "stage"
-            RolloutCommandKind.COMMIT -> "commit"
-            RolloutCommandKind.ABORT -> "abort"
-            RolloutCommandKind.ROLL_BACK -> "roll_back"
-            else -> "unknown"
-        }
+    get() {
+        val variant = RolloutCommandKind.typeDescriptor.getVariant(this)
+        return if (variant.number == 0) "unknown" else variant.name
+    }
 
 /** The host a command reply names; only the internal error fallback is unattributed. */
 internal val ApplyRolloutCommandResponse.serviceId: String?

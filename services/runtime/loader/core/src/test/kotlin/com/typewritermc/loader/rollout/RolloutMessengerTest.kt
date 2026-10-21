@@ -24,6 +24,7 @@ import skirout.service.v1.rollout.ParticipantProjection
 import skirout.service.v1.rollout.ProjectionReference
 import skirout.service.v1.rollout.RolloutAttempt
 import skirout.service.v1.rollout.RolloutCommand
+import skirout.service.v1.rollout.RolloutCommandKind
 import kotlin.time.Duration.Companion.minutes
 
 @OptIn(ExperimentalCoroutinesApi::class)
@@ -70,6 +71,12 @@ val RolloutMessengerTest by testSuite {
             replies.await() shouldContainExactly listOf(failed, accepted)
             transport.close()
         }
+    }
+
+    test("a command kind is labelled with its Skir variant name") {
+        RolloutCommandKind.ROLL_BACK.label shouldBe "roll_back"
+        RolloutCommandKind.STAGE.label shouldBe "stage"
+        RolloutCommandKind.UNKNOWN.label shouldBe "unknown"
     }
 }
 
