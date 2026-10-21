@@ -222,7 +222,7 @@ internal class RelationReads(
         if (collection != null &&
             locations.none { links[LinkOccurrenceId(endpoint = endpoint, location = it)]?.target?.resource == linked }
         ) {
-            locations += collection.location.item(item("source:$this:$endpoint:$linked"))
+            locations += collection.location.item(item("source:$value:${endpoint.value}:${linked.value}"))
         }
         return locations.mapNotNull { at ->
             reads.observeInput(InputIdentity.Value(at))

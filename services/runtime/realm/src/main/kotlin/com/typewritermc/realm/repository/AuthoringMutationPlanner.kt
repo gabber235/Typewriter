@@ -1099,7 +1099,8 @@ private fun problem(
 ): ValueProblem = ValueProblem(location = ValueLocation.of(resource), code = code)
 
 private fun projectionKey(value: LinkProjection): String =
-    "${value.contract.value}:${value.first.value}:${value.second.value}:${value.firstLocation}:${value.secondLocation}"
+    "${value.contract.value}:${value.first.value}:${value.second.value}:" +
+        "${value.firstLocation?.let(ValuePath.serializer::toJsonCode)}:${value.secondLocation?.let(ValuePath.serializer::toJsonCode)}"
 
 private fun projectionEndpoints(value: LinkProjection): String = "${value.contract.value}:${value.first.value}:${value.second.value}"
 
