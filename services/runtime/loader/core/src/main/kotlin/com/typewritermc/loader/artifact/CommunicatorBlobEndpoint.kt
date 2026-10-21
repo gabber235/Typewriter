@@ -192,16 +192,3 @@ class CommunicatorBlobEndpoint(
             }
         }
 }
-
-private fun ArtifactDigest.toSkir(): SkirArtifactDigest =
-    SkirArtifactDigest(
-        algorithm = SkirDigestAlgorithm.SHA256,
-        value = value,
-    )
-
-private fun BlobMetadata.toSkir(): SkirBlobMetadata = SkirBlobMetadata(digest = digest.toSkir(), size = size)
-
-private fun SkirBlobMetadata.toApi(): BlobMetadata {
-    require(digest.algorithm == SkirDigestAlgorithm.SHA256) { "Unsupported artifact digest algorithm." }
-    return BlobMetadata(ArtifactDigest(DigestAlgorithm.SHA_256, digest.value), size)
-}

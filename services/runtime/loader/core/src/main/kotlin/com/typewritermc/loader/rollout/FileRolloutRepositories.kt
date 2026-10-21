@@ -2,6 +2,8 @@
 
 package com.typewritermc.loader.rollout
 
+import com.typewritermc.loader.artifact.toApi
+import com.typewritermc.loader.artifact.toSkir
 import com.typewritermc.loader.deployment.DeploymentGeneration
 import com.typewritermc.loader.deployment.HostDeploymentProjection
 import com.typewritermc.loader.deployment.HostDeploymentProjectionCodec

@@ -2,6 +2,7 @@ package com.typewritermc.loader.rollout
 
 import com.typewritermc.imprint.ArtifactId
 import com.typewritermc.imprint.ImprintManifest
+import com.typewritermc.loader.artifact.toApi
 import com.typewritermc.loader.artifactSpan
 import com.typewritermc.loader.deployment.DeploymentGeneration
 import com.typewritermc.loader.deployment.DeploymentSnapshot

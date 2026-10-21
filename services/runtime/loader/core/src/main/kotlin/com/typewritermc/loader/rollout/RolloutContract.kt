@@ -2,8 +2,6 @@ package com.typewritermc.loader.rollout
 
 import com.typewritermc.loader.api.RuntimeHealth
 import com.typewritermc.loader.api.RuntimePlacement
-import com.typewritermc.services.libs.filetransfer.blob.ArtifactDigest
-import com.typewritermc.services.libs.filetransfer.blob.DigestAlgorithm
 import skirout.service.v1.rollout.ApplyRolloutCommandRequest
 import skirout.service.v1.rollout.ApplyRolloutCommandResponse
 import skirout.service.v1.rollout.ProjectionHealth
@@ -12,8 +10,6 @@ import skirout.service.v1.rollout.RollbackTarget
 import skirout.service.v1.rollout.RolloutAttempt
 import skirout.service.v1.rollout.RolloutCommand
 import skirout.service.v1.rollout.RolloutCommandKind
-import skirout.service.v1.artifact.ArtifactDigest as SkirArtifactDigest
-import skirout.service.v1.artifact.DigestAlgorithm as SkirDigestAlgorithm
 import skirout.service.v1.rollout.RuntimePlacement as RolloutPlacement
 
 /** Requires the positive ordinal that fences stale commands. */
@@ -110,13 +106,6 @@ internal fun RolloutPlacement.toApi(): RuntimePlacement? =
         RolloutPlacement.PRIMARY_ENGINE -> RuntimePlacement.PRIMARY_ENGINE
         else -> null
     }
-
-internal fun ArtifactDigest.toSkir() = SkirArtifactDigest(algorithm = SkirDigestAlgorithm.SHA256, value = value)
-
-internal fun SkirArtifactDigest.toApi(): ArtifactDigest {
-    require(algorithm == SkirDigestAlgorithm.SHA256) { "Unsupported artifact digest algorithm." }
-    return ArtifactDigest(DigestAlgorithm.SHA_256, value)
-}
 
 /** Combines runtime health: any unhealthy runtime makes the projection unhealthy, and only all healthy is healthy. */
 internal fun List<RuntimeHealth>.toProjectionHealth(): ProjectionHealth {

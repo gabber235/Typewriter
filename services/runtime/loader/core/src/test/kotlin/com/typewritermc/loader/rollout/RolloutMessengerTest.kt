@@ -1,5 +1,6 @@
 package com.typewritermc.loader.rollout
 
+import com.typewritermc.loader.artifact.toSkir
 import com.typewritermc.protocol.transport.RealmRouteScope
 import com.typewritermc.protocol.transport.generated.rolloutCommand
 import com.typewritermc.services.libs.communicator.client.Communicator

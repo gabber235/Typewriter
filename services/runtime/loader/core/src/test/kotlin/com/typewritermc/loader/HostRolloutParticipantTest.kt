@@ -25,6 +25,7 @@ import com.typewritermc.loader.api.StagedHostedRuntime
 import com.typewritermc.loader.artifact.ArtifactCoordinate
 import com.typewritermc.loader.artifact.DeploymentArtifact
 import com.typewritermc.loader.artifact.FileDigestBlobStore
+import com.typewritermc.loader.artifact.toSkir
 import com.typewritermc.loader.deployment.DeploymentGeneration
 import com.typewritermc.loader.deployment.HostDeploymentProjection
 import com.typewritermc.loader.deployment.ProjectedExtension
