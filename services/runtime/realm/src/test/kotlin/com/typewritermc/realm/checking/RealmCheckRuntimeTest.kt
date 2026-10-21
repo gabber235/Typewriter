@@ -8,18 +8,12 @@ import com.typewritermc.authoring.GeneratedSdkApi
 import com.typewritermc.authoring.boundPath
 import com.typewritermc.authoring.of
 import com.typewritermc.authoring.root
-import com.typewritermc.checking.DiagnosticTemplate
 import com.typewritermc.checking.RealmCheckProvider
 import com.typewritermc.checking.RealmChecks
 import com.typewritermc.checking.ResourceTypeMatch
 import com.typewritermc.checking.TypedSelection
 import com.typewritermc.checking.check
-import com.typewritermc.configuration.ConfigurationRecipe
-import com.typewritermc.configuration.FieldPatternSegment
-import com.typewritermc.configuration.OwnedRule
-import com.typewritermc.configuration.RelativeFieldPattern
-import com.typewritermc.configuration.RepresentationKind
-import com.typewritermc.configuration.RuleDescriptor
+import com.typewritermc.configuration.field
 import com.typewritermc.discovery.OwnedCheck
 import com.typewritermc.discovery.OwnedConfiguration
 import com.typewritermc.discovery.OwnedNativeBinding
@@ -63,9 +57,14 @@ import kotlinx.coroutines.asCoroutineDispatcher
 import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runTest
+import skirout.editor.v1.catalog.ConfigurationRecipe
+import skirout.editor.v1.catalog.OwnedRule
+import skirout.editor.v1.catalog.RepresentationKind
+import skirout.editor.v1.catalog.RuleDescriptor
 import skirout.editor.v1.checking.CheckInstanceId
 import skirout.editor.v1.checking.CheckOutcome
 import skirout.editor.v1.diagnostic.DiagnosticSeverity
+import skirout.editor.v1.diagnostic.DiagnosticTemplate
 import skirout.editor.v1.expression.ExpressionNode
 import skirout.editor.v1.type_catalog.AuthoringRecord
 import skirout.editor.v1.type_catalog.CatalogGeneration
@@ -74,12 +73,14 @@ import skirout.editor.v1.type_catalog.DataValue
 import skirout.editor.v1.type_catalog.DeclarationOwner
 import skirout.editor.v1.type_catalog.FieldDeclaration
 import skirout.editor.v1.type_catalog.FieldOwner
+import skirout.editor.v1.type_catalog.FieldPatternSegment
 import skirout.editor.v1.type_catalog.ItemId
 import skirout.editor.v1.type_catalog.ListItem
 import skirout.editor.v1.type_catalog.MapRow
 import skirout.editor.v1.type_catalog.NativeBindingId
 import skirout.editor.v1.type_catalog.ParameterKey
 import skirout.editor.v1.type_catalog.PathSegment
+import skirout.editor.v1.type_catalog.RelativeFieldPattern
 import skirout.editor.v1.type_catalog.RepresentationTemplate
 import skirout.editor.v1.type_catalog.RuleId
 import skirout.editor.v1.type_catalog.RuleOrigin
@@ -386,25 +387,40 @@ val RealmCheckRuntimeTest by testSuite {
     test("portableConfigurationRuleRunsForCurrentAndCapturedChecks") {
         runTest {
             val origin = RuleOrigin(owner = TEST_TYPE, ordinal = 20)
-            val path = RelativeFieldPattern(listOf(FieldPatternSegment.Field("name")))
+            val path = RelativeFieldPattern(segments = listOf(FieldPatternSegment.field("name")))
             val rule =
                 OwnedRule(
                     id = RuleId(origin = origin, localIndex = 0),
                     descriptor =
                         RuleDescriptor(
-                            ExpressionNode.createRuleUnary(
-                                operation = skirout.editor.v1.expression.RuleUnaryOperation.NON_EMPTY,
-                                source =
-                                    com.typewritermc.expression
-                                        .input<Any?>(ExpressionBindingId("configured_value"))
-                                        .toNode(),
-                            ),
+                            predicate =
+                                ExpressionNode.createRuleUnary(
+                                    operation = skirout.editor.v1.expression.RuleUnaryOperation.NON_EMPTY,
+                                    source =
+                                        com.typewritermc.expression
+                                            .input<Any?>(ExpressionBindingId("configured_value"))
+                                            .toNode(),
+                                ),
                         ),
-                    diagnostic = DiagnosticTemplate("name_empty", "Name must not be empty.", DiagnosticSeverity.ERROR, listOf(path)),
+                    diagnostic =
+                        DiagnosticTemplate(
+                            code = "name_empty",
+                            message = "Name must not be empty.",
+                            severity = DiagnosticSeverity.ERROR,
+                            targets = listOf(path),
+                        ),
                 )
             val catalog =
                 TestCatalogLease(
-                    configuration = listOf(ConfigurationRecipe(origin, path, RepresentationKind.Text, listOf(rule))),
+                    configuration =
+                        listOf(
+                            ConfigurationRecipe(
+                                origin = origin,
+                                relativePath = path,
+                                representationCondition = RepresentationKind.TEXT,
+                                rules = listOf(rule),
+                            ),
+                        ),
                 )
             val resource = ResourceId("element")
             val authored = record(name = "")
@@ -617,25 +633,40 @@ val RealmCheckRuntimeTest by testSuite {
     test("boundedSubjectDiscoveryPublishesFailureAndBlocksCapturedCoverageWithoutDroppingPartialSubjects") {
         runTest {
             val origin = RuleOrigin(owner = TEST_TYPE, ordinal = 22)
-            val path = RelativeFieldPattern(listOf(FieldPatternSegment.Field("name")))
+            val path = RelativeFieldPattern(segments = listOf(FieldPatternSegment.field("name")))
             val rule =
                 OwnedRule(
                     id = RuleId(origin = origin, localIndex = 0),
                     descriptor =
                         RuleDescriptor(
-                            ExpressionNode.createRuleUnary(
-                                operation = skirout.editor.v1.expression.RuleUnaryOperation.NON_EMPTY,
-                                source =
-                                    com.typewritermc.expression
-                                        .input<Any?>(ExpressionBindingId("configured_value"))
-                                        .toNode(),
-                            ),
+                            predicate =
+                                ExpressionNode.createRuleUnary(
+                                    operation = skirout.editor.v1.expression.RuleUnaryOperation.NON_EMPTY,
+                                    source =
+                                        com.typewritermc.expression
+                                            .input<Any?>(ExpressionBindingId("configured_value"))
+                                            .toNode(),
+                                ),
                         ),
-                    diagnostic = DiagnosticTemplate("name_empty", "Name must not be empty.", DiagnosticSeverity.ERROR, listOf(path)),
+                    diagnostic =
+                        DiagnosticTemplate(
+                            code = "name_empty",
+                            message = "Name must not be empty.",
+                            severity = DiagnosticSeverity.ERROR,
+                            targets = listOf(path),
+                        ),
                 )
             val catalog =
                 TestCatalogLease(
-                    configuration = listOf(ConfigurationRecipe(origin, path, RepresentationKind.Text, listOf(rule))),
+                    configuration =
+                        listOf(
+                            ConfigurationRecipe(
+                                origin = origin,
+                                relativePath = path,
+                                representationCondition = RepresentationKind.TEXT,
+                                rules = listOf(rule),
+                            ),
+                        ),
                 )
             val resource = ResourceId("element")
             val authored = record(name = "valid")

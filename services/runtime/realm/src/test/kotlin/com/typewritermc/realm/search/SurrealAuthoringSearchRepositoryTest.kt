@@ -9,23 +9,24 @@ import com.typewritermc.realm.checking.TestCatalogLease
 import com.typewritermc.realm.repository.ResourceValueMapper
 import com.typewritermc.realm.repository.utils.surrealRecordId
 import com.typewritermc.realm.schema.openTestDatabase
-import com.typewritermc.types.EndpointCardinality
-import com.typewritermc.types.EndpointDefinition
-import com.typewritermc.types.EndpointSlot
 import com.typewritermc.types.RESOURCE_OWNERSHIP_FAMILY_ID
-import com.typewritermc.types.RelationContract
-import com.typewritermc.types.RelationDeletePolicy
 import com.typewritermc.types.ResourceId
 import com.typewritermc.types.catalog.DefaultCheckedCatalog
 import com.typewritermc.types.endpointId
 import com.typewritermc.types.namedTemplate
 import com.typewritermc.types.namedUse
+import com.typewritermc.types.of
 import com.typewritermc.types.qualified
 import com.typewritermc.types.template
 import com.typewritermc.types.toSkir
 import com.typewritermc.types.use
 import de.infix.testBalloon.framework.core.testSuite
 import io.kotest.matchers.shouldBe
+import skirout.editor.v1.catalog.EndpointCardinality
+import skirout.editor.v1.catalog.EndpointDefinition
+import skirout.editor.v1.catalog.EndpointSlot
+import skirout.editor.v1.catalog.RelationContract
+import skirout.editor.v1.catalog.RelationDeletePolicy
 import skirout.editor.v1.type_catalog.ArgumentSelection
 import skirout.editor.v1.type_catalog.AuthoringRecord
 import skirout.editor.v1.type_catalog.DataValue
@@ -302,21 +303,21 @@ val SurrealAuthoringSearchRepositoryTestSuite by testSuite {
         fun contract(
             id: RelationId,
             owns: Boolean,
-        ) = RelationContract(
+        ) = RelationContract.of(
             id,
             EndpointDefinition(
-                id.endpointId(EndpointSlot.First),
-                EndpointSlot.First,
-                type.namedTemplate(),
-                EndpointCardinality.One,
-                RelationDeletePolicy.CLEAR,
+                id = id.endpointId(EndpointSlot.FIRST),
+                slot = EndpointSlot.FIRST,
+                resource = type.namedTemplate(),
+                cardinality = EndpointCardinality.ONE,
+                onDelete = RelationDeletePolicy.CLEAR,
             ),
             EndpointDefinition(
-                id.endpointId(EndpointSlot.Second),
-                EndpointSlot.Second,
-                type.namedTemplate(),
-                EndpointCardinality.One,
-                RelationDeletePolicy.CLEAR,
+                id = id.endpointId(EndpointSlot.SECOND),
+                slot = EndpointSlot.SECOND,
+                resource = type.namedTemplate(),
+                cardinality = EndpointCardinality.ONE,
+                onDelete = RelationDeletePolicy.CLEAR,
             ),
             if (owns) setOf(RelationFamilyId(value = RESOURCE_OWNERSHIP_FAMILY_ID)) else emptySet(),
         )
@@ -346,7 +347,7 @@ val SurrealAuthoringSearchRepositoryTestSuite by testSuite {
                             id = ownedLink,
                             representation =
                                 RepresentationTemplate.createLink(
-                                    endpoint = ownership.endpointId(EndpointSlot.First),
+                                    endpoint = ownership.endpointId(EndpointSlot.FIRST),
                                     target = type.template(),
                                 ),
                         ),
@@ -354,7 +355,7 @@ val SurrealAuthoringSearchRepositoryTestSuite by testSuite {
                             id = relatedLink,
                             representation =
                                 RepresentationTemplate.createLink(
-                                    endpoint = related.endpointId(EndpointSlot.First),
+                                    endpoint = related.endpointId(EndpointSlot.FIRST),
                                     target = type.template(),
                                 ),
                         ),
@@ -370,7 +371,7 @@ val SurrealAuthoringSearchRepositoryTestSuite by testSuite {
             id: RelationId,
             target: ResourceId,
         ) = DataValue.createLink(
-            endpoint = id.endpointId(EndpointSlot.First),
+            endpoint = id.endpointId(EndpointSlot.FIRST),
             target = LinkTarget(resource = target.toSkir(), opposite = null),
         )
         val selected = TypeSelection.CompleteWrapper(type.namedUse())

@@ -1,9 +1,9 @@
 package com.typewritermc.presentation
 
-import com.typewritermc.configuration.RepresentationKind
 import com.typewritermc.types.catalog.CheckedCatalog
 import com.typewritermc.types.catalog.CheckedType
 import skirout.editor.v1.catalog.PresentationRole
+import skirout.editor.v1.catalog.RepresentationKind
 import skirout.editor.v1.type_catalog.DeclarationOwner
 import skirout.editor.v1.type_catalog.NamedTypeTemplate
 import skirout.editor.v1.type_catalog.PresentationId

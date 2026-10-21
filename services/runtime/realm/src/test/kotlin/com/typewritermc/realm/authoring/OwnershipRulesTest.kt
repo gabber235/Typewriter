@@ -7,22 +7,15 @@ import com.typewritermc.authoring.field
 import com.typewritermc.authoring.fieldMap
 import com.typewritermc.authoring.of
 import com.typewritermc.authoring.root
-import com.typewritermc.configuration.FieldPatternSegment
-import com.typewritermc.configuration.RelativeFieldPattern
+import com.typewritermc.configuration.field
 import com.typewritermc.operations.OperationInvocation
 import com.typewritermc.operations.PreparationChoices
 import com.typewritermc.realm.checking.EmptyProviders
 import com.typewritermc.realm.repository.AuthoringMutationPlanner
 import com.typewritermc.realm.repository.MutationPlanningResult
-import com.typewritermc.types.EndpointBindingTemplate
-import com.typewritermc.types.EndpointCardinality
-import com.typewritermc.types.EndpointDefinition
-import com.typewritermc.types.EndpointSlot
 import com.typewritermc.types.FactoryNativeBindingRegistry
 import com.typewritermc.types.NativeBindingRegistry
 import com.typewritermc.types.RESOURCE_OWNERSHIP_FAMILY_ID
-import com.typewritermc.types.RelationContract
-import com.typewritermc.types.RelationDeletePolicy
 import com.typewritermc.types.ResourceId
 import com.typewritermc.types.catalog.CheckedCatalog
 import com.typewritermc.types.catalog.DefaultCheckedCatalog
@@ -31,6 +24,7 @@ import com.typewritermc.types.listValue
 import com.typewritermc.types.named
 import com.typewritermc.types.namedTemplate
 import com.typewritermc.types.namedUse
+import com.typewritermc.types.of
 import com.typewritermc.types.payload
 import com.typewritermc.types.qualified
 import com.typewritermc.types.template
@@ -40,6 +34,12 @@ import com.typewritermc.types.use
 import de.infix.testBalloon.framework.core.testSuite
 import io.kotest.matchers.shouldBe
 import kotlinx.coroutines.test.runTest
+import skirout.editor.v1.catalog.EndpointBindingTemplate
+import skirout.editor.v1.catalog.EndpointCardinality
+import skirout.editor.v1.catalog.EndpointDefinition
+import skirout.editor.v1.catalog.EndpointSlot
+import skirout.editor.v1.catalog.RelationContract
+import skirout.editor.v1.catalog.RelationDeletePolicy
 import skirout.editor.v1.type_catalog.AuthoringRecord
 import skirout.editor.v1.type_catalog.CatalogGeneration
 import skirout.editor.v1.type_catalog.CollectionKind
@@ -47,11 +47,13 @@ import skirout.editor.v1.type_catalog.DataValue
 import skirout.editor.v1.type_catalog.EndpointId
 import skirout.editor.v1.type_catalog.FieldDeclaration
 import skirout.editor.v1.type_catalog.FieldOwner
+import skirout.editor.v1.type_catalog.FieldPatternSegment
 import skirout.editor.v1.type_catalog.ItemId
 import skirout.editor.v1.type_catalog.LinkTarget
 import skirout.editor.v1.type_catalog.ListItem
 import skirout.editor.v1.type_catalog.RelationFamilyId
 import skirout.editor.v1.type_catalog.RelationId
+import skirout.editor.v1.type_catalog.RelativeFieldPattern
 import skirout.editor.v1.type_catalog.RepresentationTemplate
 import skirout.editor.v1.type_catalog.ScalarKind
 import skirout.editor.v1.type_catalog.TypeDefinition
@@ -192,7 +194,7 @@ private class OwnerSideCatalogLease : AuthoringCatalogLease {
     override val checks = emptyList<com.typewritermc.discovery.OwnedCheckRecipe>()
     override val relations = listOf(OWNERSHIP_CONTRACT)
     override val endpointBindings = listOf(OWNER_BINDING)
-    override val configuration: List<com.typewritermc.configuration.ConfigurationRecipe> = emptyList()
+    override val configuration: List<skirout.editor.v1.catalog.ConfigurationRecipe> = emptyList()
     override val operations = com.typewritermc.operations.OperationCatalog()
     override val placementFields = emptyMap<TypeDefinitionId, ValuePath>()
 
@@ -214,21 +216,21 @@ private val OWNERSHIP = RelationId(value = "segment_keyframes")
 private val OWNER_ENDPOINT = EndpointId(value = "segment_keyframes:first")
 private val MEMBER_ENDPOINT = EndpointId(value = "segment_keyframes:second")
 private val OWNERSHIP_CONTRACT =
-    RelationContract(
+    RelationContract.of(
         OWNERSHIP,
         EndpointDefinition(
-            OWNER_ENDPOINT,
-            EndpointSlot.First,
-            OWNER.namedTemplate(),
-            EndpointCardinality.One,
-            RelationDeletePolicy.CASCADE,
+            id = OWNER_ENDPOINT,
+            slot = EndpointSlot.FIRST,
+            resource = OWNER.namedTemplate(),
+            cardinality = EndpointCardinality.ONE,
+            onDelete = RelationDeletePolicy.CASCADE,
         ),
         EndpointDefinition(
-            MEMBER_ENDPOINT,
-            EndpointSlot.Second,
-            MEMBER.namedTemplate(),
-            EndpointCardinality.Many,
-            RelationDeletePolicy.CLEAR,
+            id = MEMBER_ENDPOINT,
+            slot = EndpointSlot.SECOND,
+            resource = MEMBER.namedTemplate(),
+            cardinality = EndpointCardinality.MANY,
+            onDelete = RelationDeletePolicy.CLEAR,
         ),
         setOf(RelationFamilyId(value = RESOURCE_OWNERSHIP_FAMILY_ID)),
     )
@@ -237,7 +239,7 @@ private val OWNER_BINDING =
         endpoint = OWNER_ENDPOINT,
         containingResource = OWNER.namedTemplate(),
         valueOwner = OWNER,
-        relativePath = RelativeFieldPattern(listOf(FieldPatternSegment.Field("children"), FieldPatternSegment.Items)),
+        relativePath = RelativeFieldPattern(segments = listOf(FieldPatternSegment.field("children"), FieldPatternSegment.ITEMS)),
         target = MEMBER.template(),
         containsCollection = true,
     )

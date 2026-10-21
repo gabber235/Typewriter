@@ -1,7 +1,6 @@
 package com.typewritermc.authoring
 
-import com.typewritermc.configuration.FieldPatternSegment
-import com.typewritermc.configuration.RelativeFieldPattern
+import com.typewritermc.configuration.field
 import com.typewritermc.expression.gte
 import com.typewritermc.expression.literal
 import com.typewritermc.presentation.AppliedPresentation
@@ -13,6 +12,8 @@ import com.typewritermc.types.Color
 import com.typewritermc.types.use
 import skirout.editor.v1.catalog.PresentationRole
 import skirout.editor.v1.presentation.ControlDensity
+import skirout.editor.v1.type_catalog.FieldPatternSegment
+import skirout.editor.v1.type_catalog.RelativeFieldPattern
 
 private fun NumericInputScope<Int>.coordinateInput(
     axis: String,
@@ -54,7 +55,7 @@ object PlacementSdkProvider :
         rule { endFrame gte startFrame }
             .error(
                 "Timeline segment end frame must not precede its start frame",
-                RelativeFieldPattern(listOf(FieldPatternSegment.Field("endFrame"))),
+                RelativeFieldPattern(segments = listOf(FieldPatternSegment.field("endFrame"))),
             )
     }
 

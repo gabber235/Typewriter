@@ -13,8 +13,6 @@ import com.typewritermc.checking.DraftType
 import com.typewritermc.checking.InputIdentity
 import com.typewritermc.checking.RealmChecks
 import com.typewritermc.checking.reason
-import com.typewritermc.configuration.ConfigurationRecipe
-import com.typewritermc.configuration.OwnedRule
 import com.typewritermc.discovery.OwnedCheck
 import com.typewritermc.discovery.OwnedCheckRecipe
 import com.typewritermc.discovery.ProviderLease
@@ -37,6 +35,8 @@ import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.joinAll
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
+import skirout.editor.v1.catalog.ConfigurationRecipe
+import skirout.editor.v1.catalog.OwnedRule
 import skirout.editor.v1.checking.CheckInstanceId
 import skirout.editor.v1.checking.CheckOutcome
 import skirout.editor.v1.checking.CheckTicket

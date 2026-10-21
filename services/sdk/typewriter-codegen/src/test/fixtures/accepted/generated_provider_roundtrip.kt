@@ -2,6 +2,7 @@
 
 package fixture
 
+import com.typewritermc.configuration.name
 import skirout.editor.v1.type_catalog.CatalogGeneration
 import com.typewritermc.authoring.root
 import com.typewritermc.types.fields
@@ -301,10 +302,11 @@ fun main(args: Array<String>) {
             val configuredPaths = assembly.configuration.filter { it.rules.isNotEmpty() }
                 .map { recipe -> recipe.relativePath.segments.joinToString(".") { segment ->
                     when (segment) {
-                        is com.typewritermc.configuration.FieldPatternSegment.Field -> segment.name
-                        com.typewritermc.configuration.FieldPatternSegment.Items -> "items"
-                        com.typewritermc.configuration.FieldPatternSegment.Keys -> "keys"
-                        com.typewritermc.configuration.FieldPatternSegment.Values -> "values"
+                        is skirout.editor.v1.type_catalog.FieldPatternSegment.FieldWrapper -> segment.name
+                        skirout.editor.v1.type_catalog.FieldPatternSegment.ITEMS -> "items"
+                        skirout.editor.v1.type_catalog.FieldPatternSegment.KEYS -> "keys"
+                        skirout.editor.v1.type_catalog.FieldPatternSegment.VALUES -> "values"
+                        else -> error("Unknown field pattern segment.")
                     }
                 } }.toSet()
             check(configuredPaths.containsAll(setOf("title", "details.title", "rows.items.title", "labels.keys", "labels.values.title")))

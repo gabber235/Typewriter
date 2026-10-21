@@ -5,7 +5,6 @@ package com.typewritermc.presentation
 import com.typewritermc.authoring.GeneratedSdkApi
 import com.typewritermc.authoring.field
 import com.typewritermc.authoring.root
-import com.typewritermc.configuration.RepresentationKind
 import com.typewritermc.discovery.CatalogAssemblyContext
 import com.typewritermc.discovery.CatalogContributions
 import com.typewritermc.discovery.OwnedPresentation
@@ -24,7 +23,6 @@ import com.typewritermc.library.coreTagCollectionProjection
 import com.typewritermc.types.Resource
 import com.typewritermc.types.ResourceId
 import com.typewritermc.types.StandardTypes
-import com.typewritermc.types.catalog.DeclarationStatus
 import com.typewritermc.types.catalog.DefaultCheckedCatalog
 import com.typewritermc.types.catalog.Resolution
 import com.typewritermc.types.catalog.apply
@@ -37,6 +35,7 @@ import com.typewritermc.types.named
 import com.typewritermc.types.namedTemplate
 import com.typewritermc.types.namedUse
 import com.typewritermc.types.nullable
+import com.typewritermc.types.of
 import com.typewritermc.types.qualified
 import com.typewritermc.types.record
 import com.typewritermc.types.requirePortable
@@ -50,7 +49,9 @@ import com.typewritermc.types.text
 import com.typewritermc.types.use
 import de.infix.testBalloon.framework.core.testSuite
 import io.kotest.matchers.shouldBe
+import skirout.editor.v1.catalog.DeclarationStatus
 import skirout.editor.v1.catalog.PresentationRole
+import skirout.editor.v1.catalog.RepresentationKind
 import skirout.editor.v1.expression.ExpressionNode
 import skirout.editor.v1.presentation.ChildrenElement
 import skirout.editor.v1.presentation.CollectionGraphDirection
@@ -1179,8 +1180,8 @@ val DefaultPresentationRuntimeTest by testSuite {
     test("resolves one presentation reference by its checked binding without mutating rejected registrations") {
         val reference = object : PresentationReference {}
         val catalog = DefaultCheckedCatalog(CatalogGeneration(value = "reference targets"), StandardTypes.definitions)
-        val text = descriptor("text reference", PresentationTarget.Representation(RepresentationKind.Text), 0)
-        val boolean = descriptor("boolean reference", PresentationTarget.Representation(RepresentationKind.Boolean), 0)
+        val text = descriptor("text reference", PresentationTarget.Representation(RepresentationKind.TEXT), 0)
+        val boolean = descriptor("boolean reference", PresentationTarget.Representation(RepresentationKind.BOOLEAN), 0)
         val first = DefaultPresentationRuntime()
         val second = DefaultPresentationRuntime()
 
@@ -1189,7 +1190,7 @@ val DefaultPresentationRuntimeTest by testSuite {
         first.register(reference, text)
 
         runCatching {
-            first.register(reference, text.copy(target = PresentationTarget.Representation(RepresentationKind.Integer)))
+            first.register(reference, text.copy(target = PresentationTarget.Representation(RepresentationKind.INTEGER)))
         }.isFailure shouldBe true
 
         fun selected(
@@ -1766,7 +1767,7 @@ val DefaultPresentationRuntimeTest by testSuite {
         val reference = object : PresentationReference {}
         val runtime =
             DefaultPresentationRuntime().also {
-                it.register(reference, descriptor("special numeric", PresentationTarget.Representation(RepresentationKind.Integer), 0))
+                it.register(reference, descriptor("special numeric", PresentationTarget.Representation(RepresentationKind.INTEGER), 0))
             }
         val layout =
             runtime.build(PresentationBuildBinding(checked.presentationTemplate(), PresentationRole.INSPECTOR)) { build ->
@@ -2020,7 +2021,7 @@ val DefaultPresentationRuntimeTest by testSuite {
         val catalog = DefaultCheckedCatalog(CatalogGeneration(value = "presentation registry"), listOf(definition))
         val checked = (catalog.resolve(id.use()) as Resolution.Ready).value
         val representation =
-            descriptor("generic", PresentationTarget.Representation(com.typewritermc.configuration.RepresentationKind.Record), 100)
+            descriptor("generic", PresentationTarget.Representation(skirout.editor.v1.catalog.RepresentationKind.RECORD), 100)
         val named = descriptor("specific", PresentationTarget.Named(id.namedTemplate()), 10)
         val fallbackFirst =
             descriptor("fallback first", PresentationTarget.Named(id.namedTemplate()), 10, PresentationRole.REFERENCE_PREVIEW)
@@ -2339,28 +2340,29 @@ private fun ownedResource(
     )
 
 /** Lets the realm root own [members], as every concrete resource type must be owned. */
-private fun rootOwnership(vararg members: TypeDefinitionId): List<com.typewritermc.types.RelationContract> =
+private fun rootOwnership(vararg members: TypeDefinitionId): List<skirout.editor.v1.catalog.RelationContract> =
     members.mapIndexed { index, member ->
-        com.typewritermc.types.RelationContract(
+        skirout.editor.v1.catalog.RelationContract.of(
             id =
                 skirout.editor.v1.type_catalog
                     .RelationId(value = "test.root.owns.$index"),
             first =
-                com.typewritermc.types.EndpointDefinition(
-                    EndpointId(value = "test.root.owns.$index:first"),
-                    com.typewritermc.types.EndpointSlot.First,
-                    com.typewritermc.authoring.RealmRootDefinition.id
-                        .namedTemplate(),
-                    com.typewritermc.types.EndpointCardinality.One,
-                    com.typewritermc.types.RelationDeletePolicy.CASCADE,
+                skirout.editor.v1.catalog.EndpointDefinition(
+                    id = EndpointId(value = "test.root.owns.$index:first"),
+                    slot = skirout.editor.v1.catalog.EndpointSlot.FIRST,
+                    resource =
+                        com.typewritermc.authoring.RealmRootDefinition.id
+                            .namedTemplate(),
+                    cardinality = skirout.editor.v1.catalog.EndpointCardinality.ONE,
+                    onDelete = skirout.editor.v1.catalog.RelationDeletePolicy.CASCADE,
                 ),
             second =
-                com.typewritermc.types.EndpointDefinition(
-                    EndpointId(value = "test.root.owns.$index:second"),
-                    com.typewritermc.types.EndpointSlot.Second,
-                    member.namedTemplate(),
-                    com.typewritermc.types.EndpointCardinality.Many,
-                    com.typewritermc.types.RelationDeletePolicy.CLEAR,
+                skirout.editor.v1.catalog.EndpointDefinition(
+                    id = EndpointId(value = "test.root.owns.$index:second"),
+                    slot = skirout.editor.v1.catalog.EndpointSlot.SECOND,
+                    resource = member.namedTemplate(),
+                    cardinality = skirout.editor.v1.catalog.EndpointCardinality.MANY,
+                    onDelete = skirout.editor.v1.catalog.RelationDeletePolicy.CLEAR,
                 ),
             families =
                 setOf(

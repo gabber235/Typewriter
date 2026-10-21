@@ -18,7 +18,6 @@ import com.typewritermc.engine.relation
 import com.typewritermc.engine.semanticDigest
 import com.typewritermc.realm.authoring.AuthoringView
 import com.typewritermc.services.libs.utils.sha256Hex
-import com.typewritermc.types.EndpointSlot
 import com.typewritermc.types.ResourceId
 import com.typewritermc.types.actualType
 import com.typewritermc.types.catalog.CheckedCatalog
@@ -29,7 +28,9 @@ import com.typewritermc.types.ownsResources
 import com.typewritermc.types.record
 import com.typewritermc.types.toResourceId
 import com.typewritermc.types.toSkir
+import com.typewritermc.types.unknownVariant
 import com.typewritermc.types.use
+import skirout.editor.v1.catalog.EndpointSlot
 import skirout.editor.v1.compiled_content.CompilationContext
 import skirout.editor.v1.compiled_content.CompiledEdge
 import skirout.editor.v1.compiled_content.CompiledEdgeOrigin
@@ -76,8 +77,8 @@ internal class OwnershipClosureCompiler(
                 .filter { it.id in ownershipRelations }
                 .flatMap { relation ->
                     listOf(
-                        relation.first.id to EndpointSlot.First,
-                        relation.second.id to EndpointSlot.Second,
+                        relation.first.id to EndpointSlot.FIRST,
+                        relation.second.id to EndpointSlot.SECOND,
                     )
                 }.groupBy({ it.first }, { it.second })
         val childrenByOwner =
@@ -85,8 +86,9 @@ internal class OwnershipClosureCompiler(
                 .flatMap { occurrence ->
                     ownershipEndpoints[occurrence.id.endpoint].orEmpty().map { slot ->
                         when (slot) {
-                            EndpointSlot.First -> occurrence.source.toResourceId() to occurrence.target.resource.toResourceId()
-                            EndpointSlot.Second -> occurrence.target.resource.toResourceId() to occurrence.source.toResourceId()
+                            EndpointSlot.FIRST -> occurrence.source.toResourceId() to occurrence.target.resource.toResourceId()
+                            EndpointSlot.SECOND -> occurrence.target.resource.toResourceId() to occurrence.source.toResourceId()
+                            else -> unknownVariant(slot)
                         }
                     }
                 }.groupBy({ it.first }, { it.second })

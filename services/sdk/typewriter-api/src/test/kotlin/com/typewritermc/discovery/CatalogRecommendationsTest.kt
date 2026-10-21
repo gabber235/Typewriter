@@ -1,8 +1,8 @@
 package com.typewritermc.discovery
 
 import com.typewritermc.types.StandardTypes
-import com.typewritermc.types.catalog.DeclarationDiagnostic
 import com.typewritermc.types.catalog.DefaultCheckedCatalog
+import com.typewritermc.types.catalog.of
 import com.typewritermc.types.namedTemplate
 import com.typewritermc.types.namedUse
 import com.typewritermc.types.qualified
@@ -10,6 +10,7 @@ import com.typewritermc.types.template
 import com.typewritermc.types.use
 import de.infix.testBalloon.framework.core.testSuite
 import io.kotest.matchers.shouldBe
+import skirout.editor.v1.diagnostic.DeclarationDiagnostic
 import skirout.editor.v1.type_catalog.CatalogGeneration
 import skirout.editor.v1.type_catalog.FieldDeclaration
 import skirout.editor.v1.type_catalog.FieldOwner
@@ -135,5 +136,5 @@ private fun catalog(
 ) = DefaultCheckedCatalog(
     CatalogGeneration(value = "recommendations"),
     StandardTypes.definitions + definitions.values,
-    quarantine = listOfNotNull(unavailable?.let { DeclarationDiagnostic(it, "fixture_unavailable") }),
+    quarantine = listOfNotNull(unavailable?.let { DeclarationDiagnostic.of(it, "fixture_unavailable") }),
 )

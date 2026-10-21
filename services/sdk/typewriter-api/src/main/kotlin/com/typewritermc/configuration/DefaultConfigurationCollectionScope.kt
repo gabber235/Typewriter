@@ -3,8 +3,8 @@ package com.typewritermc.configuration
 import com.typewritermc.authoring.CompleteValue
 import com.typewritermc.checking.CheckInput
 import com.typewritermc.checking.CheckRecipe
-import com.typewritermc.checking.DiagnosticTemplate
 import com.typewritermc.checking.RegisteredPredicate
+import com.typewritermc.configuration.root
 import com.typewritermc.discovery.checkedGeneratedScope
 import com.typewritermc.expression.Expr
 import com.typewritermc.expression.ExpressionBindingId
@@ -23,7 +23,12 @@ import com.typewritermc.types.integer
 import com.typewritermc.types.requirePortable
 import com.typewritermc.types.template
 import com.typewritermc.types.timestamp
+import skirout.editor.v1.catalog.ConfigurationRecipe
+import skirout.editor.v1.catalog.OwnedRule
+import skirout.editor.v1.catalog.RepresentationKind
+import skirout.editor.v1.catalog.RuleDescriptor
 import skirout.editor.v1.diagnostic.DiagnosticSeverity
+import skirout.editor.v1.diagnostic.DiagnosticTemplate
 import skirout.editor.v1.expression.BoundDirection
 import skirout.editor.v1.expression.ExpressionNode
 import skirout.editor.v1.expression.RegexMatchMode
@@ -33,6 +38,8 @@ import skirout.editor.v1.expression.SizeRangeMetric
 import skirout.editor.v1.expression.TextCompareOperation
 import skirout.editor.v1.expression.TimestampBoundDirection
 import skirout.editor.v1.type_catalog.DataValue
+import skirout.editor.v1.type_catalog.FieldPatternSegment
+import skirout.editor.v1.type_catalog.RelativeFieldPattern
 import skirout.editor.v1.type_catalog.RuleId
 import skirout.editor.v1.type_catalog.RuleOrigin
 import skirout.editor.v1.type_catalog.ScalarKind
@@ -53,7 +60,7 @@ class DefaultConfigurationCollectionScope internal constructor(
     private val skipNull: Boolean,
 ) : ConfigurationCollectionScope {
     constructor(target: TypeDefinitionId, constants: PortableConstantEncoder? = null) :
-        this(target, ConfigurationCollectionState(), RelativeFieldPattern(), constants, skipNull = false)
+        this(target, ConfigurationCollectionState(), RelativeFieldPattern.root, constants, skipNull = false)
 
     override fun <S : Any> field(
         path: RelativeFieldPattern,
@@ -63,7 +70,7 @@ class DefaultConfigurationCollectionScope internal constructor(
         nested: Map<FieldPatternSegment, NestedConfigurationScope>,
         expressions: ExpressionFactory<*>,
     ): S {
-        val absolute = RelativeFieldPattern(prefix.segments + path.segments)
+        val absolute = RelativeFieldPattern(segments = prefix.segments + path.segments)
         val binding =
             RuntimeConfigurationBinding(target, state, absolute, representation, expected, nested, expressions, constants, skipNull)
         return binding.createScope(scope)
@@ -73,7 +80,7 @@ class DefaultConfigurationCollectionScope internal constructor(
         DefaultConfigurationCollectionScope(
             target,
             state,
-            RelativeFieldPattern(prefix.segments + path.segments),
+            RelativeFieldPattern(segments = prefix.segments + path.segments),
             constants,
             skipNull,
         )
@@ -121,7 +128,7 @@ internal class RuntimeConfigurationBinding(
 
     fun <Expressions> uniqueBy(callback: Expressions.() -> Expr<*, MissingPolicy>) {
         val frame = LambdaFrame(1)
-        val factory = nested[FieldPatternSegment.Items]?.expressions ?: GenericValueExpressionsFactory
+        val factory = nested[FieldPatternSegment.ITEMS]?.expressions ?: GenericValueExpressionsFactory
         val receiver = checkedGeneratedScope<Expressions>(factory.scope, factory.create(local<Any?>(frame, 0)))
         val body = receiver.callback()
         val predicate =
@@ -136,7 +143,7 @@ internal class RuntimeConfigurationBinding(
         segment: FieldPatternSegment,
         samePath: Boolean = false,
     ) {
-        val nestedPath = if (samePath) path else RelativeFieldPattern(path.segments + segment)
+        val nestedPath = if (samePath) path else RelativeFieldPattern(segments = path.segments + segment)
         val descriptor = nested[segment]
         val collection =
             DefaultConfigurationCollectionScope(
@@ -150,7 +157,7 @@ internal class RuntimeConfigurationBinding(
         val receiver =
             descriptor?.create?.invoke(collection)
                 ?: collection.field(
-                    RelativeFieldPattern(),
+                    RelativeFieldPattern.root,
                     representation,
                     expected,
                     GenericValueConfigurationScope::class,
@@ -166,8 +173,8 @@ internal class RuntimeConfigurationBinding(
                 target,
                 state,
                 path,
-                RepresentationKind.Text,
-                RepresentationKind.Text.expectedTemplate(expected),
+                RepresentationKind.TEXT,
+                RepresentationKind.TEXT.expectedTemplate(expected),
                 emptyMap(),
                 TextExpressionsFactory,
                 constants,
@@ -199,7 +206,14 @@ internal class RuntimeConfigurationBinding(
                     origin = origin,
                     relativePath = path,
                     representationCondition = representation,
-                    rules = listOf(OwnedRule(RuleId(origin = origin, localIndex = 0), RuleDescriptor(effectivePredicate), diagnostic)),
+                    rules =
+                        listOf(
+                            OwnedRule(
+                                id = RuleId(origin = origin, localIndex = 0),
+                                descriptor = RuleDescriptor(predicate = effectivePredicate),
+                                diagnostic = diagnostic,
+                            ),
+                        ),
                 )
         }
     }
@@ -257,13 +271,13 @@ internal fun CheckRecipe.bindNative(registry: NativeBindingRegistry): CheckRecip
 
 private fun RepresentationKind.expectedTemplate(fallback: TypeTemplate): TypeTemplate =
     when (this) {
-        RepresentationKind.Unit -> ScalarKind.UNIT.template
-        RepresentationKind.Boolean -> ScalarKind.BOOLEAN.template
-        RepresentationKind.Text -> ScalarKind.TEXT.template
-        RepresentationKind.Bytes -> ScalarKind.BYTES.template
-        RepresentationKind.Decimal -> ScalarKind.DECIMAL.template
-        RepresentationKind.Timestamp -> ScalarKind.TIMESTAMP.template
-        RepresentationKind.Duration -> ScalarKind.DURATION.template
+        RepresentationKind.UNIT -> ScalarKind.UNIT.template
+        RepresentationKind.BOOLEAN -> ScalarKind.BOOLEAN.template
+        RepresentationKind.TEXT -> ScalarKind.TEXT.template
+        RepresentationKind.BYTES -> ScalarKind.BYTES.template
+        RepresentationKind.DECIMAL -> ScalarKind.DECIMAL.template
+        RepresentationKind.TIMESTAMP -> ScalarKind.TIMESTAMP.template
+        RepresentationKind.DURATION -> ScalarKind.DURATION.template
         else -> fallback
     }
 

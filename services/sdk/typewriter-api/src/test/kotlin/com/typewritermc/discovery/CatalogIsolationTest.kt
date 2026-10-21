@@ -5,9 +5,8 @@ import com.typewritermc.imprint.ArtifactId
 import com.typewritermc.imprint.ContributionName
 import com.typewritermc.imprint.ContributionSourceId
 import com.typewritermc.imprint.ProducerId
-import com.typewritermc.types.catalog.DeclarationDiagnostic
-import com.typewritermc.types.catalog.DeclarationStatus
 import com.typewritermc.types.catalog.DefaultCheckedCatalog
+import com.typewritermc.types.catalog.of
 import com.typewritermc.types.namedTemplate
 import com.typewritermc.types.qualified
 import com.typewritermc.types.skir.SkirTypeCodec
@@ -17,7 +16,9 @@ import de.infix.testBalloon.framework.core.testSuite
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.matchers.shouldBe
 import kotlinx.coroutines.CancellationException
+import skirout.editor.v1.catalog.DeclarationStatus
 import skirout.editor.v1.catalog.PresentationRole
+import skirout.editor.v1.diagnostic.DeclarationDiagnostic
 import skirout.editor.v1.type_catalog.CatalogGeneration
 import skirout.editor.v1.type_catalog.DeclarationOwner
 import skirout.editor.v1.type_catalog.FieldDeclaration
@@ -42,10 +43,10 @@ val CatalogIsolationTest by testSuite {
             CatalogContributions(
                 declarations = listOf(OwnedTypeDeclaration(origin, definition)),
             ).assemble(CatalogAssemblyContext(generation))
-        (assembly.checked.definition(broken) is DeclarationStatus.Unavailable) shouldBe true
+        (assembly.checked.definition(broken) is DeclarationStatus.UnavailableWrapper) shouldBe true
         assembly.editorCatalog.types
             .single { it.definition.id == broken }
-            .status shouldBe SkirTypeCodec.encode(assembly.checked.definition(broken)).getOrThrow()
+            .status shouldBe assembly.checked.definition(broken)
         assembly.editorCatalog.recommendations shouldBe emptyList()
     }
 
@@ -76,11 +77,11 @@ val CatalogIsolationTest by testSuite {
             DefaultCheckedCatalog(
                 generation,
                 listOf(bound, generic, parent, child, healthy),
-                quarantine = listOf(DeclarationDiagnostic(bound.id, "configuration_callback_failed")),
+                quarantine = listOf(DeclarationDiagnostic.of(bound.id, "configuration_callback_failed")),
             )
-        listOf(bound.id, generic.id, child.id).forEach { (catalog.definition(it) is DeclarationStatus.Unavailable) shouldBe true }
-        catalog.definition(parent.id) shouldBe DeclarationStatus.Ready
-        catalog.definition(healthy.id) shouldBe DeclarationStatus.Ready
+        listOf(bound.id, generic.id, child.id).forEach { (catalog.definition(it) is DeclarationStatus.UnavailableWrapper) shouldBe true }
+        catalog.definition(parent.id) shouldBe DeclarationStatus.READY
+        catalog.definition(healthy.id) shouldBe DeclarationStatus.READY
     }
 
     test("configuration quarantine retains its exact original callback cause") {
@@ -98,7 +99,7 @@ val CatalogIsolationTest by testSuite {
         assembly.editorCatalog.diagnostics
             .single { it.affected == broken.id }
             .code shouldBe "configuration_callback_failed"
-        assembly.checked.definition(healthy.id) shouldBe DeclarationStatus.Ready
+        assembly.checked.definition(healthy.id) shouldBe DeclarationStatus.READY
     }
 
     test("representation presentation failure retains its scalar callback context") {
@@ -108,7 +109,7 @@ val CatalogIsolationTest by testSuite {
                 PresentationId(namespace = "isolation", name = "scalar"),
                 origin.owner,
                 com.typewritermc.presentation.PresentationTarget
-                    .Representation(com.typewritermc.configuration.RepresentationKind.Text),
+                    .Representation(skirout.editor.v1.catalog.RepresentationKind.TEXT),
                 setOf(PresentationRole.INSPECTOR),
                 0,
             )

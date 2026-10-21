@@ -16,8 +16,7 @@ import com.typewritermc.authoring.item
 import com.typewritermc.authoring.of
 import com.typewritermc.authoring.root
 import com.typewritermc.authoring.with
-import com.typewritermc.configuration.FieldPatternSegment
-import com.typewritermc.configuration.RelativeFieldPattern
+import com.typewritermc.configuration.field
 import com.typewritermc.operations.OperationInvocation
 import com.typewritermc.operations.OperationOrigin
 import com.typewritermc.operations.PreparationChoices
@@ -26,13 +25,7 @@ import com.typewritermc.realm.authoring.AuthoringView
 import com.typewritermc.realm.authoring.RuntimeOperationPreparation
 import com.typewritermc.realm.authoring.WorkingViewEditContext
 import com.typewritermc.types.ACYCLIC_RELATION_FAMILY_ID
-import com.typewritermc.types.EndpointBindingTemplate
-import com.typewritermc.types.EndpointCardinality
-import com.typewritermc.types.EndpointDefinition
-import com.typewritermc.types.EndpointSlot
 import com.typewritermc.types.RESOURCE_OWNERSHIP_FAMILY_ID
-import com.typewritermc.types.RelationContract
-import com.typewritermc.types.RelationDeletePolicy
 import com.typewritermc.types.ResourceId
 import com.typewritermc.types.actualType
 import com.typewritermc.types.catalog.DefaultCheckedCatalog
@@ -45,6 +38,7 @@ import com.typewritermc.types.named
 import com.typewritermc.types.namedTemplate
 import com.typewritermc.types.namedUse
 import com.typewritermc.types.nullable
+import com.typewritermc.types.of
 import com.typewritermc.types.payload
 import com.typewritermc.types.qualified
 import com.typewritermc.types.record
@@ -59,8 +53,14 @@ import io.kotest.matchers.types.shouldBeInstanceOf
 import kotlinx.coroutines.runBlocking
 import skirout.editor.v1.authoring.LinkOccurrence
 import skirout.editor.v1.authoring.LinkOccurrenceId
+import skirout.editor.v1.catalog.EndpointBindingTemplate
+import skirout.editor.v1.catalog.EndpointCardinality
+import skirout.editor.v1.catalog.EndpointDefinition
+import skirout.editor.v1.catalog.EndpointSlot
 import skirout.editor.v1.catalog.PreparedContent
 import skirout.editor.v1.catalog.PreparedValue
+import skirout.editor.v1.catalog.RelationContract
+import skirout.editor.v1.catalog.RelationDeletePolicy
 import skirout.editor.v1.type_catalog.ArgumentSelection
 import skirout.editor.v1.type_catalog.AuthoringRecord
 import skirout.editor.v1.type_catalog.CatalogGeneration
@@ -70,6 +70,7 @@ import skirout.editor.v1.type_catalog.DeclarationOwner
 import skirout.editor.v1.type_catalog.EndpointId
 import skirout.editor.v1.type_catalog.FieldDeclaration
 import skirout.editor.v1.type_catalog.FieldOwner
+import skirout.editor.v1.type_catalog.FieldPatternSegment
 import skirout.editor.v1.type_catalog.IntegerWidth
 import skirout.editor.v1.type_catalog.ItemId
 import skirout.editor.v1.type_catalog.LinkTarget
@@ -79,6 +80,7 @@ import skirout.editor.v1.type_catalog.ParameterKey
 import skirout.editor.v1.type_catalog.PathSegment
 import skirout.editor.v1.type_catalog.RelationFamilyId
 import skirout.editor.v1.type_catalog.RelationId
+import skirout.editor.v1.type_catalog.RelativeFieldPattern
 import skirout.editor.v1.type_catalog.RepresentationTemplate
 import skirout.editor.v1.type_catalog.ScalarKind
 import skirout.editor.v1.type_catalog.TypeDefinition
@@ -791,7 +793,7 @@ class AuthoringMutationPlannerTest {
                 relations =
                     listOf(
                         nestedContract().let {
-                            it.copy(second = it.second.copy(cardinality = EndpointCardinality.Many))
+                            it.copy(second = it.second.copy(cardinality = EndpointCardinality.MANY))
                         },
                     ),
                 endpointBindings = BINDINGS,
@@ -1125,26 +1127,27 @@ class AuthoringMutationPlannerTest {
                 ),
             )
         val contract =
-            RelationContract(
+            RelationContract.of(
                 RelationId(value = "partial:relation"),
                 EndpointDefinition(
-                    endpoint,
-                    EndpointSlot.First,
-                    sourceType.namedTemplate(),
-                    EndpointCardinality.One,
-                    RelationDeletePolicy.CLEAR,
+                    id = endpoint,
+                    slot = EndpointSlot.FIRST,
+                    resource = sourceType.namedTemplate(),
+                    cardinality = EndpointCardinality.ONE,
+                    onDelete = RelationDeletePolicy.CLEAR,
                 ),
                 EndpointDefinition(
-                    opposite,
-                    EndpointSlot.Second,
-                    config.namedTemplate(
-                        listOf(
-                            ScalarKind.TEXT.template,
-                            integerScalar(IntegerWidth.SIGNED_THIRTY_TWO).template,
+                    id = opposite,
+                    slot = EndpointSlot.SECOND,
+                    resource =
+                        config.namedTemplate(
+                            listOf(
+                                ScalarKind.TEXT.template,
+                                integerScalar(IntegerWidth.SIGNED_THIRTY_TWO).template,
+                            ),
                         ),
-                    ),
-                    EndpointCardinality.One,
-                    RelationDeletePolicy.CLEAR,
+                    cardinality = EndpointCardinality.ONE,
+                    onDelete = RelationDeletePolicy.CLEAR,
                 ),
             )
         val source = ResourceId("partial_source")
@@ -1228,21 +1231,21 @@ class AuthoringMutationPlannerTest {
                 ),
             )
         val contract =
-            RelationContract(
+            RelationContract.of(
                 RelationId(value = "partial_ancestor:relation"),
                 EndpointDefinition(
-                    endpoint,
-                    EndpointSlot.First,
-                    sourceType.namedTemplate(),
-                    EndpointCardinality.One,
-                    RelationDeletePolicy.CLEAR,
+                    id = endpoint,
+                    slot = EndpointSlot.FIRST,
+                    resource = sourceType.namedTemplate(),
+                    cardinality = EndpointCardinality.ONE,
+                    onDelete = RelationDeletePolicy.CLEAR,
                 ),
                 EndpointDefinition(
-                    opposite,
-                    EndpointSlot.Second,
-                    view.namedTemplate(listOf(ScalarKind.TEXT.template)),
-                    EndpointCardinality.One,
-                    RelationDeletePolicy.CLEAR,
+                    id = opposite,
+                    slot = EndpointSlot.SECOND,
+                    resource = view.namedTemplate(listOf(ScalarKind.TEXT.template)),
+                    cardinality = EndpointCardinality.ONE,
+                    onDelete = RelationDeletePolicy.CLEAR,
                 ),
             )
         val source = ResourceId("partial_ancestor_source")
@@ -2356,21 +2359,21 @@ private fun operationBaseline(
 }
 
 private fun pairContract(families: Set<RelationFamilyId> = emptySet()) =
-    RelationContract(
+    RelationContract.of(
         RelationId(value = "pair"),
         EndpointDefinition(
-            PAIR_FIRST,
-            EndpointSlot.First,
-            NODE.namedTemplate(),
-            EndpointCardinality.One,
-            RelationDeletePolicy.CLEAR,
+            id = PAIR_FIRST,
+            slot = EndpointSlot.FIRST,
+            resource = NODE.namedTemplate(),
+            cardinality = EndpointCardinality.ONE,
+            onDelete = RelationDeletePolicy.CLEAR,
         ),
         EndpointDefinition(
-            PAIR_SECOND,
-            EndpointSlot.Second,
-            NODE.namedTemplate(),
-            EndpointCardinality.One,
-            RelationDeletePolicy.CLEAR,
+            id = PAIR_SECOND,
+            slot = EndpointSlot.SECOND,
+            resource = NODE.namedTemplate(),
+            cardinality = EndpointCardinality.ONE,
+            onDelete = RelationDeletePolicy.CLEAR,
         ),
         families,
     )
@@ -2378,59 +2381,59 @@ private fun pairContract(families: Set<RelationFamilyId> = emptySet()) =
 private fun parentContract(
     firstDelete: RelationDeletePolicy,
     secondDelete: RelationDeletePolicy,
-) = RelationContract(
+) = RelationContract.of(
     RelationId(value = "parent_child"),
     EndpointDefinition(
-        PARENT_FIRST,
-        EndpointSlot.First,
-        NODE.namedTemplate(),
-        EndpointCardinality.One,
-        firstDelete,
+        id = PARENT_FIRST,
+        slot = EndpointSlot.FIRST,
+        resource = NODE.namedTemplate(),
+        cardinality = EndpointCardinality.ONE,
+        onDelete = firstDelete,
     ),
     EndpointDefinition(
-        PARENT_SECOND,
-        EndpointSlot.Second,
-        NODE.namedTemplate(),
-        EndpointCardinality.Many,
-        secondDelete,
+        id = PARENT_SECOND,
+        slot = EndpointSlot.SECOND,
+        resource = NODE.namedTemplate(),
+        cardinality = EndpointCardinality.MANY,
+        onDelete = secondDelete,
     ),
 )
 
 private fun manyContract() =
-    RelationContract(
+    RelationContract.of(
         RelationId(value = "many"),
         EndpointDefinition(
-            MANY_FIRST,
-            EndpointSlot.First,
-            NODE.namedTemplate(),
-            EndpointCardinality.Many,
-            RelationDeletePolicy.CLEAR,
+            id = MANY_FIRST,
+            slot = EndpointSlot.FIRST,
+            resource = NODE.namedTemplate(),
+            cardinality = EndpointCardinality.MANY,
+            onDelete = RelationDeletePolicy.CLEAR,
         ),
         EndpointDefinition(
-            MANY_SECOND,
-            EndpointSlot.Second,
-            NODE.namedTemplate(),
-            EndpointCardinality.Many,
-            RelationDeletePolicy.CLEAR,
+            id = MANY_SECOND,
+            slot = EndpointSlot.SECOND,
+            resource = NODE.namedTemplate(),
+            cardinality = EndpointCardinality.MANY,
+            onDelete = RelationDeletePolicy.CLEAR,
         ),
     )
 
 private fun nestedContract() =
-    RelationContract(
+    RelationContract.of(
         RelationId(value = "nested"),
         EndpointDefinition(
-            NESTED_FIRST,
-            EndpointSlot.First,
-            NODE.namedTemplate(),
-            EndpointCardinality.One,
-            RelationDeletePolicy.CLEAR,
+            id = NESTED_FIRST,
+            slot = EndpointSlot.FIRST,
+            resource = NODE.namedTemplate(),
+            cardinality = EndpointCardinality.ONE,
+            onDelete = RelationDeletePolicy.CLEAR,
         ),
         EndpointDefinition(
-            NESTED_SECOND,
-            EndpointSlot.Second,
-            NODE.namedTemplate(),
-            EndpointCardinality.One,
-            RelationDeletePolicy.CLEAR,
+            id = NESTED_SECOND,
+            slot = EndpointSlot.SECOND,
+            resource = NODE.namedTemplate(),
+            cardinality = EndpointCardinality.ONE,
+            onDelete = RelationDeletePolicy.CLEAR,
         ),
     )
 
@@ -2438,21 +2441,21 @@ private fun relation(
     first: EndpointId,
     second: EndpointId,
     resource: TypeDefinitionId,
-) = RelationContract(
+) = RelationContract.of(
     RelationId(value = "${first.value}:relation"),
     EndpointDefinition(
-        first,
-        EndpointSlot.First,
-        resource.namedTemplate(),
-        EndpointCardinality.One,
-        RelationDeletePolicy.CLEAR,
+        id = first,
+        slot = EndpointSlot.FIRST,
+        resource = resource.namedTemplate(),
+        cardinality = EndpointCardinality.ONE,
+        onDelete = RelationDeletePolicy.CLEAR,
     ),
     EndpointDefinition(
-        second,
-        EndpointSlot.Second,
-        resource.namedTemplate(),
-        EndpointCardinality.One,
-        RelationDeletePolicy.CLEAR,
+        id = second,
+        slot = EndpointSlot.SECOND,
+        resource = resource.namedTemplate(),
+        cardinality = EndpointCardinality.ONE,
+        onDelete = RelationDeletePolicy.CLEAR,
     ),
 )
 
@@ -2539,17 +2542,19 @@ private fun binding(
     field: String,
     containsCollection: Boolean,
 ) = EndpointBindingTemplate(
-    endpoint,
-    NODE.namedTemplate(),
-    owner,
-    RelativeFieldPattern(
-        buildList {
-            add(FieldPatternSegment.Field(field))
-            if (containsCollection) add(FieldPatternSegment.Items)
-        },
-    ),
-    NODE.template(),
-    containsCollection,
+    endpoint = endpoint,
+    containingResource = NODE.namedTemplate(),
+    valueOwner = owner,
+    relativePath =
+        RelativeFieldPattern(
+            segments =
+                buildList {
+                    add(FieldPatternSegment.field(field))
+                    if (containsCollection) add(FieldPatternSegment.ITEMS)
+                },
+        ),
+    target = NODE.template(),
+    containsCollection = containsCollection,
 )
 
 private val GENERATION = CatalogGeneration(value = "catalog")
@@ -2640,17 +2645,19 @@ private val BINDINGS =
 private val NESTED_BINDINGS =
     listOf(
         EndpointBindingTemplate(
-            NESTED_FIRST,
-            NODE.namedTemplate(),
-            NESTED_FIRST_TYPE.definition,
-            RelativeFieldPattern(
-                listOf(
-                    FieldPatternSegment.Field("wrapper"),
-                    FieldPatternSegment.Field("inner"),
+            endpoint = NESTED_FIRST,
+            containingResource = NODE.namedTemplate(),
+            valueOwner = NESTED_FIRST_TYPE.definition,
+            relativePath =
+                RelativeFieldPattern(
+                    segments =
+                        listOf(
+                            FieldPatternSegment.field("wrapper"),
+                            FieldPatternSegment.field("inner"),
+                        ),
                 ),
-            ),
-            NODE.template(),
-            false,
+            target = NODE.template(),
+            containsCollection = false,
         ),
         binding(NESTED_SECOND, NESTED_SECOND_TYPE.definition, "nestedSecond", false),
     )

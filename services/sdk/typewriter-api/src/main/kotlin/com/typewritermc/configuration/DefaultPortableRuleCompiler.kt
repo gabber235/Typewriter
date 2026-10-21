@@ -2,13 +2,15 @@ package com.typewritermc.configuration
 
 import com.typewritermc.types.bigInteger
 import com.typewritermc.types.catalog.CheckedType
-import com.typewritermc.types.catalog.DeclarationDiagnostic
 import com.typewritermc.types.catalog.Resolution
+import com.typewritermc.types.catalog.of
 import com.typewritermc.types.catalog.resolve
 import com.typewritermc.types.payload
 import com.typewritermc.types.requirePortable
 import com.typewritermc.types.skir.getOrThrow
 import com.typewritermc.types.use
+import skirout.editor.v1.catalog.OwnedRule
+import skirout.editor.v1.diagnostic.DeclarationDiagnostic
 import skirout.editor.v1.expression.BoundDirection
 import skirout.editor.v1.expression.ExpressionNode
 import skirout.editor.v1.expression.SizeBoundMetric
@@ -59,7 +61,7 @@ class DefaultPredicateReasoner : PredicateReasoner {
                 )
         val sizeConflict = sizeLower != null && sizeUpper != null && sizeLower > sizeUpper
         if (!numericConflict && !sizeConflict) return null
-        return DeclarationDiagnostic(
+        return DeclarationDiagnostic.of(
             rules
                 .first()
                 .rule.id.origin.owner,

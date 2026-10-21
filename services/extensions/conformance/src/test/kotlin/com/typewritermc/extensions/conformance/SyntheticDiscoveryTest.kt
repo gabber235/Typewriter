@@ -33,7 +33,6 @@ import com.typewritermc.presentation.DefaultPresentationRuntime
 import com.typewritermc.presentation.PresentationBuildBinding
 import com.typewritermc.presentation.presentationTemplate
 import com.typewritermc.types.ACYCLIC_RELATION_FAMILY_ID
-import com.typewritermc.types.EndpointCardinality
 import com.typewritermc.types.FactoryNativeBindingRegistry
 import com.typewritermc.types.NativeBinding
 import com.typewritermc.types.NativeBindingFactory
@@ -63,6 +62,7 @@ import io.kotest.matchers.shouldBe
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.toList
 import kotlinx.coroutines.test.runTest
+import skirout.editor.v1.catalog.EndpointCardinality
 import skirout.editor.v1.catalog.PresentationRole
 import skirout.editor.v1.presentation.AxisChild
 import skirout.editor.v1.presentation.ChildrenElement
@@ -100,8 +100,8 @@ val SyntheticDiscoveryTest by testSuite {
     test("generates ownership relations and their concrete authored bindings") {
         SyntheticEntryCues.contract.families shouldBe
             setOf(RelationFamilyId(value = ACYCLIC_RELATION_FAMILY_ID), RelationFamilyId(value = RESOURCE_OWNERSHIP_FAMILY_ID))
-        SyntheticEntryCues.contract.first.cardinality shouldBe EndpointCardinality.One
-        SyntheticEntryCues.contract.second.cardinality shouldBe EndpointCardinality.Many
+        SyntheticEntryCues.contract.first.cardinality shouldBe EndpointCardinality.ONE
+        SyntheticEntryCues.contract.second.cardinality shouldBe EndpointCardinality.MANY
         SyntheticEntryEndpointBindings.bindings
             .single {
                 it.valueOwner == SyntheticEntryDefinition.id &&

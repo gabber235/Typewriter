@@ -1,13 +1,12 @@
 package com.typewritermc.configuration
 
+import skirout.editor.v1.catalog.ConfigurationRecipe
+import skirout.editor.v1.catalog.OwnedRule
 import skirout.editor.v1.type_catalog.AppliedSchema
-import skirout.editor.v1.type_catalog.RuleOrigin
+import skirout.editor.v1.type_catalog.RelativeFieldPattern
 
-data class ConfigurationRecipe(
-    val origin: RuleOrigin,
-    val relativePath: RelativeFieldPattern,
-    val representationCondition: RepresentationKind?,
-    val rules: List<OwnedRule>,
+data class EffectiveFieldConfiguration(
+    val guarantees: List<OwnedRule>,
 )
 
 data class EffectiveConfiguration(

@@ -15,9 +15,8 @@ import com.typewritermc.types.ResourceIdDefinition
 import com.typewritermc.types.ResourceTarget
 import com.typewritermc.types.catalog.CheckedCatalog
 import com.typewritermc.types.catalog.CheckedType
-import com.typewritermc.types.catalog.DeclarationDiagnostic
-import com.typewritermc.types.catalog.DeclarationOrigin
 import com.typewritermc.types.catalog.Resolution
+import com.typewritermc.types.catalog.of
 import com.typewritermc.types.catalog.resolve
 import com.typewritermc.types.fields
 import com.typewritermc.types.namedUse
@@ -29,6 +28,8 @@ import com.typewritermc.types.template
 import com.typewritermc.types.unknownVariant
 import com.typewritermc.types.use
 import kotlinx.coroutines.CancellationException
+import skirout.editor.v1.diagnostic.DeclarationDiagnostic
+import skirout.editor.v1.diagnostic.DeclarationOrigin
 import skirout.editor.v1.operation.OperationAvailability
 import skirout.editor.v1.operation.OperationDrop
 import skirout.editor.v1.operation.OperationTargets
@@ -207,10 +208,10 @@ fun bindOperations(
             throw cancelled
         } catch (failure: Exception) {
             diagnostics +=
-                DeclarationDiagnostic(
+                DeclarationDiagnostic.of(
                     declaration.target.affected,
                     "invalid_resource_operation",
-                    listOf(DeclarationOrigin(declaration.origin.owner)),
+                    listOf(DeclarationOrigin(owner = declaration.origin.owner)),
                 )
             failures += OperationBindingFailure(declaration.origin, failure)
         }

@@ -19,7 +19,6 @@ import com.typewritermc.presentation.createResource
 import com.typewritermc.presentation.presentationTemplate
 import com.typewritermc.presentation.resource
 import com.typewritermc.types.RESOURCE_OWNERSHIP_FAMILY_ID
-import com.typewritermc.types.catalog.DeclarationStatus
 import com.typewritermc.types.catalog.Resolution
 import com.typewritermc.types.fields
 import com.typewritermc.types.use
@@ -30,6 +29,7 @@ import io.kotest.matchers.shouldBe
 import io.kotest.matchers.string.shouldContain
 import io.kotest.matchers.types.shouldBeInstanceOf
 import skirout.editor.v1.action.EditorAction
+import skirout.editor.v1.catalog.DeclarationStatus
 import skirout.editor.v1.catalog.PresentationMaterial
 import skirout.editor.v1.catalog.PresentationRole
 import skirout.editor.v1.expression.ExpressionNode
@@ -58,7 +58,7 @@ val CorePlacesTest by testSuite {
         assembly.editorCatalog.diagnostics.filter { it.code in setOf("unowned_resource_type", "generic_realm_section") } shouldBe
             emptyList()
         listOf(RealmRootDefinition.id, LibraryDefinition.id, TaxonomyDefinition.id, BookDefinition.id, TagDefinition.id).forEach {
-            assembly.checked.definition(it) shouldBe DeclarationStatus.Ready
+            assembly.checked.definition(it) shouldBe DeclarationStatus.READY
         }
     }
 

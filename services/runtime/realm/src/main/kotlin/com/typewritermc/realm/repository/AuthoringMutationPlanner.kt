@@ -24,10 +24,6 @@ import com.typewritermc.authoring.validateStructure
 import com.typewritermc.authoring.writeField
 import com.typewritermc.realm.authoring.authoredTypeAt
 import com.typewritermc.services.libs.utils.sha256Hex
-import com.typewritermc.types.EndpointBindingTemplate
-import com.typewritermc.types.EndpointCardinality
-import com.typewritermc.types.RelationContract
-import com.typewritermc.types.RelationDeletePolicy
 import com.typewritermc.types.ResourceId
 import com.typewritermc.types.actualType
 import com.typewritermc.types.catalog.CheckedCatalog
@@ -48,7 +44,11 @@ import com.typewritermc.types.unknownVariant
 import com.typewritermc.types.use
 import skirout.editor.v1.authoring.LinkOccurrence
 import skirout.editor.v1.authoring.LinkOccurrenceId
+import skirout.editor.v1.catalog.EndpointBindingTemplate
+import skirout.editor.v1.catalog.EndpointCardinality
 import skirout.editor.v1.catalog.PreparedContent
+import skirout.editor.v1.catalog.RelationContract
+import skirout.editor.v1.catalog.RelationDeletePolicy
 import skirout.editor.v1.diagnostic.ValueProblem
 import skirout.editor.v1.type_catalog.AuthoringRecord
 import skirout.editor.v1.type_catalog.CollectionKind
@@ -300,6 +300,7 @@ internal class AuthoringMutationPlanner(
                     RelationDeletePolicy.RESTRICT -> problems += problem(current, "relation_restricts_deletion")
                     RelationDeletePolicy.CASCADE -> error("Cascade closure is incomplete.")
                     RelationDeletePolicy.CLEAR -> clearCounterpart(resources, current, link, problems)
+                    else -> unknownVariant(endpoint.onDelete)
                 }
             }
         if (problems.isNotEmpty()) return
@@ -961,7 +962,7 @@ private fun validateCardinality(
     val byContract = projections.groupBy { it.contract }
     contracts.forEach { contract ->
         val links = byContract[contract.id].orEmpty()
-        if (contract.first.cardinality == EndpointCardinality.One) {
+        if (contract.first.cardinality == EndpointCardinality.ONE) {
             links
                 .groupBy { it.second }
                 .filterValues { grouped -> grouped.size > 1 && grouped.any { it.first in affected || it.second in affected } }
@@ -969,7 +970,7 @@ private fun validateCardinality(
                     problems += problem(resource, "first_endpoint_cardinality_exceeded")
                 }
         }
-        if (contract.second.cardinality == EndpointCardinality.One) {
+        if (contract.second.cardinality == EndpointCardinality.ONE) {
             links
                 .groupBy { it.first }
                 .filterValues { grouped -> grouped.size > 1 && grouped.any { it.first in affected || it.second in affected } }

@@ -34,10 +34,8 @@ import com.typewritermc.checking.PartialSelection
 import com.typewritermc.checking.ResourceTypeMatch
 import com.typewritermc.checking.TypedSelection
 import com.typewritermc.checking.UndecidedCandidate
-import com.typewritermc.configuration.FieldPatternSegment
-import com.typewritermc.configuration.RelativeFieldPattern
-import com.typewritermc.configuration.RepresentationKind
 import com.typewritermc.configuration.kind
+import com.typewritermc.configuration.name
 import com.typewritermc.expression.EvaluationDiagnostic
 import com.typewritermc.realm.authoring.AuthoredReadView
 import com.typewritermc.realm.authoring.RESOURCE_SELECTION_INPUT
@@ -58,13 +56,16 @@ import com.typewritermc.types.toResourceId
 import com.typewritermc.types.unknownVariant
 import com.typewritermc.types.unwrapNamed
 import com.typewritermc.types.use
+import skirout.editor.v1.catalog.RepresentationKind
 import skirout.editor.v1.expression.ExpressionNode
 import skirout.editor.v1.type_catalog.ArgumentSelection
 import skirout.editor.v1.type_catalog.CatalogGeneration
 import skirout.editor.v1.type_catalog.DataValue
+import skirout.editor.v1.type_catalog.FieldPatternSegment
 import skirout.editor.v1.type_catalog.ItemId
 import skirout.editor.v1.type_catalog.ListItem
 import skirout.editor.v1.type_catalog.MapRow
+import skirout.editor.v1.type_catalog.RelativeFieldPattern
 import skirout.editor.v1.type_catalog.TypeDefinitionId
 import skirout.editor.v1.type_catalog.TypeSelection
 import skirout.editor.v1.type_catalog.TypeUse
@@ -712,21 +713,25 @@ class CapturedAuthoringReads(
             locations =
                 locations.flatMap { location ->
                     when (segment) {
-                        is FieldPatternSegment.Field -> {
+                        is FieldPatternSegment.FieldWrapper -> {
                             val value = (valueAt(location) as? LocatedValue.Available)?.value?.unwrapNamed()
                             if (value == DataValue.NULL) emptyList() else listOf(location.field(segment.name))
                         }
 
-                        FieldPatternSegment.Items -> {
+                        FieldPatternSegment.ITEMS -> {
                             collectionLocations(location, CollectionPart.Item)
                         }
 
-                        FieldPatternSegment.Keys -> {
+                        FieldPatternSegment.KEYS -> {
                             collectionLocations(location, CollectionPart.Key)
                         }
 
-                        FieldPatternSegment.Values -> {
+                        FieldPatternSegment.VALUES -> {
                             collectionLocations(location, CollectionPart.Value)
+                        }
+
+                        else -> {
+                            unknownVariant(segment)
                         }
                     }
                 }

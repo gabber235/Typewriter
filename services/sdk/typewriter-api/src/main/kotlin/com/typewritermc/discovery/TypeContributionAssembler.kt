@@ -12,15 +12,13 @@ import com.typewritermc.authoring.field
 import com.typewritermc.authoring.name
 import com.typewritermc.authoring.root
 import com.typewritermc.capability.RealmCapabilityDescriptor
-import com.typewritermc.configuration.ConfigurationRecipe
 import com.typewritermc.configuration.DefaultConfigurationCollectionScope
 import com.typewritermc.configuration.DefaultPortableRuleCompiler
 import com.typewritermc.configuration.DefaultPredicateReasoner
-import com.typewritermc.configuration.FieldPatternSegment
 import com.typewritermc.configuration.PortableConstantEncoder
-import com.typewritermc.configuration.RelativeFieldPattern
-import com.typewritermc.configuration.RepresentationKind
 import com.typewritermc.configuration.bindNative
+import com.typewritermc.configuration.field
+import com.typewritermc.configuration.name
 import com.typewritermc.imprint.ArtifactId
 import com.typewritermc.imprint.ContributionName
 import com.typewritermc.imprint.ContributionSourceId
@@ -34,19 +32,16 @@ import com.typewritermc.presentation.RoleFallback
 import com.typewritermc.presentation.inferInheritableNodes
 import com.typewritermc.presentation.selectMostSpecificDescriptors
 import com.typewritermc.presentation.validateInheritableNodes
-import com.typewritermc.types.EndpointBindingTemplate
-import com.typewritermc.types.RelationContract
 import com.typewritermc.types.StandardTypes
 import com.typewritermc.types.TypeDisplay
 import com.typewritermc.types.canonicalText
 import com.typewritermc.types.catalog.CheckedCatalog
-import com.typewritermc.types.catalog.DeclarationDiagnostic
-import com.typewritermc.types.catalog.DeclarationOrigin
-import com.typewritermc.types.catalog.DeclarationStatus
 import com.typewritermc.types.catalog.DefaultCheckedCatalog
 import com.typewritermc.types.catalog.Resolution
 import com.typewritermc.types.catalog.apply
 import com.typewritermc.types.catalog.isReady
+import com.typewritermc.types.catalog.of
+import com.typewritermc.types.catalog.reasons
 import com.typewritermc.types.encodeGeneratedDefault
 import com.typewritermc.types.endpoint
 import com.typewritermc.types.entries
@@ -70,21 +65,30 @@ import com.typewritermc.types.unknownVariant
 import com.typewritermc.types.use
 import com.typewritermc.types.validOrNull
 import kotlinx.coroutines.CancellationException
+import skirout.editor.v1.catalog.ConfigurationRecipe
+import skirout.editor.v1.catalog.DeclarationStatus
 import skirout.editor.v1.catalog.EditorCatalog
 import skirout.editor.v1.catalog.EffectiveFieldTemplate
+import skirout.editor.v1.catalog.EndpointBindingTemplate
 import skirout.editor.v1.catalog.PresentationMaterial
 import skirout.editor.v1.catalog.PresentationRole
 import skirout.editor.v1.catalog.PublishedType
+import skirout.editor.v1.catalog.RelationContract
+import skirout.editor.v1.catalog.RepresentationKind
+import skirout.editor.v1.diagnostic.DeclarationDiagnostic
+import skirout.editor.v1.diagnostic.DeclarationOrigin
 import skirout.editor.v1.type_catalog.CatalogGeneration
 import skirout.editor.v1.type_catalog.CollectionKind
 import skirout.editor.v1.type_catalog.DeclarationOwner
 import skirout.editor.v1.type_catalog.EndpointId
 import skirout.editor.v1.type_catalog.FieldDeclaration
+import skirout.editor.v1.type_catalog.FieldPatternSegment
 import skirout.editor.v1.type_catalog.FloatWidth
 import skirout.editor.v1.type_catalog.IntegerWidth
 import skirout.editor.v1.type_catalog.NamedTypeTemplate
 import skirout.editor.v1.type_catalog.ParameterKey
 import skirout.editor.v1.type_catalog.PathSegment
+import skirout.editor.v1.type_catalog.RelativeFieldPattern
 import skirout.editor.v1.type_catalog.RepresentationTemplate
 import skirout.editor.v1.type_catalog.ScalarKind
 import skirout.editor.v1.type_catalog.TypeDefinition
@@ -122,9 +126,8 @@ val DEFAULT_ROLE_FALLBACKS: List<RoleFallback> =
 
 /**
  * One assembled catalog generation: the [editorCatalog] published to editors, the [checked] catalog and native
- * bindings it was built from, and the runtime facts the Realm and engines read beside it. [relations],
- * [endpointBindings] and [configuration] are the published relations, endpoint bindings and configuration recipes;
- * [placementFields] maps each type with a placement field to its path.
+ * bindings it was built from, and the runtime facts the Realm and engines read beside it. [placementFields] maps each
+ * type with a placement field to its path.
  */
 data class CatalogAssembly(
     val editorCatalog: EditorCatalog,
@@ -132,14 +135,20 @@ data class CatalogAssembly(
     val bindings: com.typewritermc.types.NativeBindingRegistry,
     val providers: OwnedProviderRegistry,
     val checks: List<OwnedCheckRecipe>,
-    val relations: List<RelationContract> = emptyList(),
-    val endpointBindings: List<EndpointBindingTemplate> = emptyList(),
-    val configuration: List<ConfigurationRecipe> = emptyList(),
     val placementFields: Map<TypeDefinitionId, ValuePath> = emptyMap(),
     val operations: com.typewritermc.operations.OperationCatalog = com.typewritermc.operations.OperationCatalog(),
     val callbackFailures: List<CatalogCallbackFailure> = emptyList(),
     val displays: com.typewritermc.authoring.ResourceDisplayCatalog = com.typewritermc.authoring.ResourceDisplayCatalog(),
-)
+) {
+    /** The published relations. */
+    val relations: List<RelationContract> get() = editorCatalog.relations
+
+    /** The published endpoint bindings. */
+    val endpointBindings: List<EndpointBindingTemplate> get() = editorCatalog.endpointBindings
+
+    /** The published configuration recipes. */
+    val configuration: List<ConfigurationRecipe> get() = editorCatalog.configuration
+}
 
 /** Identifies the authored callback whose runtime cause is retained by an assembly. */
 sealed interface CatalogCallback {
@@ -181,10 +190,10 @@ fun CatalogContributions.assemble(context: CatalogAssemblyContext): CatalogAssem
     val definitionIndex = declarationGroups.mapNotNull { (id, owned) -> owned.singleOrNull()?.definition?.let { id to it } }.toMap()
     val duplicateDiagnostics =
         declarationGroups.filterValues { it.size > 1 }.map { (id, owned) ->
-            DeclarationDiagnostic(
+            DeclarationDiagnostic.of(
                 affected = id,
                 code = "duplicate_definition",
-                origins = owned.map { DeclarationOrigin(it.origin.owner) },
+                origins = owned.map { DeclarationOrigin(owner = it.origin.owner) },
             )
         }
     val reservedDeclarations =
@@ -194,10 +203,10 @@ fun CatalogContributions.assemble(context: CatalogAssemblyContext): CatalogAssem
         }
     val reservedDiagnostics =
         reservedDeclarations.map { owned ->
-            DeclarationDiagnostic(
+            DeclarationDiagnostic.of(
                 affected = owned.definition.id,
                 code = "reserved_intrinsic_type_identity",
-                origins = listOf(DeclarationOrigin(owned.origin.owner)),
+                origins = listOf(DeclarationOrigin(owner = owned.origin.owner)),
             )
         }
     val symbolicDiagnostics =
@@ -249,7 +258,11 @@ fun CatalogContributions.assemble(context: CatalogAssemblyContext): CatalogAssem
             .filterValues { it.size > 1 }
     val searchKeyDiagnostics =
         searchKeyConflicts.values.flatten().sortedBy { it.canonicalText }.map { id ->
-            DeclarationDiagnostic(id, "duplicate_search_key", declarationGroups.getValue(id).map { DeclarationOrigin(it.origin.owner) })
+            DeclarationDiagnostic.of(
+                id,
+                "duplicate_search_key",
+                declarationGroups.getValue(id).map { DeclarationOrigin(owner = it.origin.owner) },
+            )
         }
     val conflictingKeys = searchKeyConflicts.values.flatten().toSet()
     val displayCollection = collectResourceDisplays(displays, definitionIndex, searchKeys.keys.sortedBy { it.canonicalText }, checked)
@@ -259,22 +272,22 @@ fun CatalogContributions.assemble(context: CatalogAssemblyContext): CatalogAssem
         declarationGroups.entries.sortedBy { it.key.canonicalText }.map { (id, owned) ->
             val definition = owned.first().definition
             val status = checked.definition(id)
-            val ready = status == DeclarationStatus.Ready
+            val ready = status == DeclarationStatus.READY
             val ancestry = if (ready) definition.transitiveAncestors(definitionIndex) else emptyList()
             val effectiveFields = if (ready) definition.effectiveFields(definitionIndex, recipes) else emptyList()
             val placementField =
                 effectiveFields.placementField(checked) {
                     placementDiagnostics +=
-                        DeclarationDiagnostic(
+                        DeclarationDiagnostic.of(
                             id,
                             "ambiguous_placement_field",
-                            owned.map { DeclarationOrigin(it.origin.owner) }.distinct(),
+                            owned.map { DeclarationOrigin(owner = it.origin.owner) }.distinct(),
                         )
                 }
             placementField?.let { placementFields[id] = it }
             PublishedType(
                 definition = definition,
-                status = SkirTypeCodec.encode(status).getOrThrow(),
+                status = status,
                 effectiveFields = effectiveFields,
                 ancestorTemplates = ancestry,
                 display = (owned.first().display ?: id.derivedDisplay()).toWire(),
@@ -297,13 +310,13 @@ fun CatalogContributions.assemble(context: CatalogAssemblyContext): CatalogAssem
             publishedPresentations,
         )
     val publishedBindings = (endpointBindings + context.endpointBindings).distinct()
-    // The relations, displays, presentations, configuration, diagnostics, bindings, capabilities and fallbacks are
-    // still Kotlin catalog models; SkirTypeCodec encodes them into the published catalog.
+    // The displays, presentations, capabilities and fallbacks are still Kotlin catalog models; SkirTypeCodec encodes
+    // them into the published catalog.
     val editorCatalog =
         EditorCatalog(
             generation = context.generation,
             types = published,
-            relations = publishedRelations.map { SkirTypeCodec.encode(it).getOrThrow() },
+            relations = publishedRelations,
             resourceDisplays = displayCollection.displays.map { SkirTypeCodec.encode(it.formulas).getOrThrow() },
             presentations = publishedPresentations.map { SkirTypeCodec.encode(it.descriptor).getOrThrow() },
             presentationMaterials =
@@ -315,11 +328,10 @@ fun CatalogContributions.assemble(context: CatalogAssemblyContext): CatalogAssem
                                 is PresentationTarget.Representation -> true
                             }
                     }.map(CollectedPresentationMaterial::material),
-            configuration = recipes.map { SkirTypeCodec.encode(it).getOrThrow() },
+            configuration = recipes,
             diagnostics =
-                (diagnostics + placementDiagnostics + boundOperations.diagnostics + searchKeyDiagnostics + displayCollection.diagnostics)
-                    .map { SkirTypeCodec.encode(it).getOrThrow() },
-            endpointBindings = publishedBindings.map { SkirTypeCodec.encode(it).getOrThrow() },
+                diagnostics + placementDiagnostics + boundOperations.diagnostics + searchKeyDiagnostics + displayCollection.diagnostics,
+            endpointBindings = publishedBindings,
             capabilities =
                 (context.capabilities + boundOperations.capabilities)
                     .sortedBy { it.id.value }
@@ -335,9 +347,6 @@ fun CatalogContributions.assemble(context: CatalogAssemblyContext): CatalogAssem
         bindingRegistry,
         providerRegistry,
         simpleChecks,
-        relations = publishedRelations.immutableListCopy(RelationContract::immutableCopy),
-        endpointBindings = publishedBindings.immutableListCopy(EndpointBindingTemplate::immutableCopy),
-        configuration = recipes.immutableListCopy(ConfigurationRecipe::immutableCopy),
         placementFields = placementFields.immutableMapCopy(),
         operations = boundOperations,
         callbackFailures =
@@ -366,18 +375,18 @@ private fun realmStructureDiagnostics(
                 (it.definition.representation as? RepresentationTemplate.RecordWrapper)?.value?.abstract_ == false
         }.mapNotNull { owned ->
             val id = owned.definition.id
-            val origins = listOf(DeclarationOrigin(owned.origin.owner))
+            val origins = listOf(DeclarationOrigin(owner = owned.origin.owner))
             when {
                 id == RealmRootDefinition.id -> {
                     null
                 }
 
                 catalog.isNominalSubtype(id, RealmSectionDefinition.id) && owned.definition.parameters.isNotEmpty() -> {
-                    DeclarationDiagnostic(id, "generic_realm_section", origins)
+                    DeclarationDiagnostic.of(id, "generic_realm_section", origins)
                 }
 
                 members.none { member -> catalog.isNominalSubtype(id, member) } -> {
-                    DeclarationDiagnostic(id, "unowned_resource_type", origins)
+                    DeclarationDiagnostic.of(id, "unowned_resource_type", origins)
                 }
 
                 else -> {
@@ -488,10 +497,10 @@ private fun collectPresentationMaterials(
         val subjects = target.presentationSubjects(definitions)
         if (subjects.isEmpty() && target is PresentationTarget.Named) {
             failures +=
-                DeclarationDiagnostic(
+                DeclarationDiagnostic.of(
                     affected = target.type.definition,
                     code = "invalid_presentation_target",
-                    origins = listOf(DeclarationOrigin(owned.descriptor.owner)),
+                    origins = listOf(DeclarationOrigin(owner = owned.descriptor.owner)),
                 )
         }
         subjects.forEach { subject ->
@@ -533,10 +542,10 @@ private fun collectPresentationMaterials(
                         val affected = (subject as? TypeTemplate.NamedWrapper)?.value?.definition
                         if (affected != null) {
                             failures +=
-                                DeclarationDiagnostic(
+                                DeclarationDiagnostic.of(
                                     affected = affected,
                                     code = "invalid_presentation_collection_dependency",
-                                    origins = listOf(DeclarationOrigin(owned.descriptor.owner)),
+                                    origins = listOf(DeclarationOrigin(owner = owned.descriptor.owner)),
                                 )
                         }
                     }
@@ -552,10 +561,10 @@ private fun collectPresentationMaterials(
                     val affected = (subject as? TypeTemplate.NamedWrapper)?.value?.definition
                     if (affected != null) {
                         failures +=
-                            DeclarationDiagnostic(
+                            DeclarationDiagnostic.of(
                                 affected = affected,
                                 code = "presentation_material_build_failed",
-                                origins = listOf(DeclarationOrigin(owned.descriptor.owner)),
+                                origins = listOf(DeclarationOrigin(owner = owned.descriptor.owner)),
                             )
                     }
                 }
@@ -642,7 +651,7 @@ private fun TypeTemplate.isValidMaterialTemplate(
         is TypeTemplate.NamedWrapper -> {
             val definition = definitions[value.definition]
             definition != null &&
-                catalog.definition(this.value.definition) == DeclarationStatus.Ready &&
+                catalog.definition(this.value.definition) == DeclarationStatus.READY &&
                 value.arguments.size == definition.parameters.size &&
                 value.arguments.all { it.isValidMaterialTemplate(definitions, parameterBounds, catalog) } &&
                 definition.parameters.zip(value.arguments).all { (parameter, argument) ->
@@ -742,43 +751,43 @@ private fun PresentationTarget.presentationSubjects(definitions: Map<TypeDefinit
 
 private fun RepresentationKind.scalarSubjects(): List<TypeTemplate> =
     when (this) {
-        RepresentationKind.Unit -> {
+        RepresentationKind.UNIT -> {
             listOf(ScalarKind.UNIT.template)
         }
 
-        RepresentationKind.Boolean -> {
+        RepresentationKind.BOOLEAN -> {
             listOf(ScalarKind.BOOLEAN.template)
         }
 
-        RepresentationKind.Text -> {
+        RepresentationKind.TEXT -> {
             listOf(ScalarKind.TEXT.template)
         }
 
-        RepresentationKind.Bytes -> {
+        RepresentationKind.BYTES -> {
             listOf(ScalarKind.BYTES.template)
         }
 
-        RepresentationKind.Integer -> {
+        RepresentationKind.INTEGER -> {
             IntegerWidth.entries.map { width ->
                 integerScalar(width).template
             }
         }
 
-        RepresentationKind.Float -> {
+        RepresentationKind.FLOAT -> {
             FloatWidth.entries.map { width ->
                 floatScalar(width).template
             }
         }
 
-        RepresentationKind.Decimal -> {
+        RepresentationKind.DECIMAL -> {
             listOf(ScalarKind.DECIMAL.template)
         }
 
-        RepresentationKind.Timestamp -> {
+        RepresentationKind.TIMESTAMP -> {
             listOf(ScalarKind.TIMESTAMP.template)
         }
 
-        RepresentationKind.Duration -> {
+        RepresentationKind.DURATION -> {
             listOf(ScalarKind.DURATION.template)
         }
 
@@ -802,41 +811,41 @@ private fun RepresentationTemplate.presentationKind(): RepresentationKind =
     when (this) {
         is RepresentationTemplate.ScalarWrapper -> {
             when (val kind = value.kind) {
-                ScalarKind.UNIT -> RepresentationKind.Unit
-                ScalarKind.BOOLEAN -> RepresentationKind.Boolean
-                ScalarKind.TEXT -> RepresentationKind.Text
-                ScalarKind.BYTES -> RepresentationKind.Bytes
-                is ScalarKind.IntegerWrapper -> RepresentationKind.Integer
-                is ScalarKind.FloatWrapper -> RepresentationKind.Float
-                ScalarKind.DECIMAL -> RepresentationKind.Decimal
-                ScalarKind.TIMESTAMP -> RepresentationKind.Timestamp
-                ScalarKind.DURATION -> RepresentationKind.Duration
+                ScalarKind.UNIT -> RepresentationKind.UNIT
+                ScalarKind.BOOLEAN -> RepresentationKind.BOOLEAN
+                ScalarKind.TEXT -> RepresentationKind.TEXT
+                ScalarKind.BYTES -> RepresentationKind.BYTES
+                is ScalarKind.IntegerWrapper -> RepresentationKind.INTEGER
+                is ScalarKind.FloatWrapper -> RepresentationKind.FLOAT
+                ScalarKind.DECIMAL -> RepresentationKind.DECIMAL
+                ScalarKind.TIMESTAMP -> RepresentationKind.TIMESTAMP
+                ScalarKind.DURATION -> RepresentationKind.DURATION
                 else -> unknownVariant(kind)
             }
         }
 
         is RepresentationTemplate.RecordWrapper -> {
-            RepresentationKind.Record
+            RepresentationKind.RECORD
         }
 
         is RepresentationTemplate.SequenceWrapper -> {
             when (val kind = value.kind) {
-                CollectionKind.LIST -> RepresentationKind.List
-                CollectionKind.SET -> RepresentationKind.Set
+                CollectionKind.LIST -> RepresentationKind.LIST
+                CollectionKind.SET -> RepresentationKind.SET
                 else -> unknownVariant(kind)
             }
         }
 
         is RepresentationTemplate.MappingWrapper -> {
-            RepresentationKind.Map
+            RepresentationKind.MAP
         }
 
         is RepresentationTemplate.EnumerationWrapper -> {
-            RepresentationKind.Enum
+            RepresentationKind.ENUMERATION
         }
 
         is RepresentationTemplate.LinkWrapper -> {
-            RepresentationKind.Link
+            RepresentationKind.LINK
         }
 
         else -> {
@@ -903,7 +912,7 @@ private fun collectConfiguration(
         throw cancelled
     } catch (cause: Exception) {
         ConfigurationCollectionResult.Failed(
-            DeclarationDiagnostic(owned.target, "configuration_callback_failed", listOf(DeclarationOrigin(owned.origin.owner))),
+            DeclarationDiagnostic.of(owned.target, "configuration_callback_failed", listOf(DeclarationOrigin(owner = owned.origin.owner))),
             CatalogCallbackFailure(owned.origin, CatalogCallback.Configuration(owned.target), cause),
         )
     }
@@ -929,11 +938,11 @@ private fun configurationRuleDiagnostics(
             .groupBy { it.recipe.relativePath to it.recipe.representationCondition }
             .values
             .flatMap { matching ->
-                val origins = matching.map { DeclarationOrigin(it.origin.owner) }.distinct()
+                val origins = matching.map { DeclarationOrigin(owner = it.origin.owner) }.distinct()
                 val structural =
                     matching.flatMap { owned ->
                         owned.recipe.rules.flatMap(compiler::validateStructure).map { diagnostic ->
-                            diagnostic.copy(affected = definition.id, origins = listOf(DeclarationOrigin(owned.origin.owner)))
+                            diagnostic.copy(affected = definition.id, origins = listOf(DeclarationOrigin(owner = owned.origin.owner)))
                         }
                     }
                 val subject =
@@ -955,7 +964,7 @@ private fun configurationRuleDiagnostics(
                             (resolution as? Resolution.Invalid)?.diagnostics.orEmpty().map { diagnostic ->
                                 diagnostic.copy(
                                     affected = definition.id,
-                                    origins = listOf(DeclarationOrigin(owned.origin.owner)),
+                                    origins = listOf(DeclarationOrigin(owner = owned.origin.owner)),
                                 )
                             }
                         }
@@ -991,51 +1000,51 @@ private fun checkedRuleSubject(
 
 private fun RepresentationKind.representativeUse(): TypeUse? =
     when (this) {
-        RepresentationKind.Unit -> {
+        RepresentationKind.UNIT -> {
             ScalarKind.UNIT.use
         }
 
-        RepresentationKind.Boolean -> {
+        RepresentationKind.BOOLEAN -> {
             ScalarKind.BOOLEAN.use
         }
 
-        RepresentationKind.Text -> {
+        RepresentationKind.TEXT -> {
             ScalarKind.TEXT.use
         }
 
-        RepresentationKind.Bytes -> {
+        RepresentationKind.BYTES -> {
             ScalarKind.BYTES.use
         }
 
-        RepresentationKind.Integer -> {
+        RepresentationKind.INTEGER -> {
             integerScalar(IntegerWidth.SIGNED_SIXTY_FOUR).use
         }
 
-        RepresentationKind.Float -> {
+        RepresentationKind.FLOAT -> {
             floatScalar(FloatWidth.SIXTY_FOUR).use
         }
 
-        RepresentationKind.Decimal -> {
+        RepresentationKind.DECIMAL -> {
             ScalarKind.DECIMAL.use
         }
 
-        RepresentationKind.Timestamp -> {
+        RepresentationKind.TIMESTAMP -> {
             ScalarKind.TIMESTAMP.use
         }
 
-        RepresentationKind.Duration -> {
+        RepresentationKind.DURATION -> {
             ScalarKind.DURATION.use
         }
 
-        RepresentationKind.List -> {
+        RepresentationKind.LIST -> {
             StandardTypes.list.use(listOf(ScalarKind.TEXT.use))
         }
 
-        RepresentationKind.Set -> {
+        RepresentationKind.SET -> {
             StandardTypes.set.use(listOf(ScalarKind.TEXT.use))
         }
 
-        RepresentationKind.Map -> {
+        RepresentationKind.MAP -> {
             StandardTypes.map.use(
                 listOf(
                     ScalarKind.TEXT.use,
@@ -1044,11 +1053,15 @@ private fun RepresentationKind.representativeUse(): TypeUse? =
             )
         }
 
-        RepresentationKind.Record,
-        RepresentationKind.Enum,
-        RepresentationKind.Link,
+        RepresentationKind.RECORD,
+        RepresentationKind.ENUMERATION,
+        RepresentationKind.LINK,
         -> {
             null
+        }
+
+        else -> {
+            unknownVariant(this)
         }
     }
 
@@ -1067,26 +1080,30 @@ private fun TypeDefinition.templateAt(
         current = current.unwrapNullable()
         current =
             when (segment) {
-                is FieldPatternSegment.Field -> {
+                is FieldPatternSegment.FieldWrapper -> {
                     current.field(segment.name, definitions)
                 }
 
-                FieldPatternSegment.Items -> {
+                FieldPatternSegment.ITEMS -> {
                     current.representation(definitions)?.let { (representation, arguments) ->
                         (representation as? RepresentationTemplate.SequenceWrapper)?.value?.item?.substitute(arguments)
                     }
                 }
 
-                FieldPatternSegment.Keys -> {
+                FieldPatternSegment.KEYS -> {
                     current.representation(definitions)?.let { (representation, arguments) ->
                         (representation as? RepresentationTemplate.MappingWrapper)?.value?.key?.substitute(arguments)
                     }
                 }
 
-                FieldPatternSegment.Values -> {
+                FieldPatternSegment.VALUES -> {
                     current.representation(definitions)?.let { (representation, arguments) ->
                         (representation as? RepresentationTemplate.MappingWrapper)?.value?.value?.substitute(arguments)
                     }
+                }
+
+                else -> {
+                    unknownVariant(segment)
                 }
             } ?: return null
     }
@@ -1325,7 +1342,7 @@ private fun TypeDefinition.effectiveFields(
         val matching =
             recipes.filter { recipe ->
                 recipe.origin.owner in applicableOwners &&
-                    recipe.relativePath.segments == listOf(FieldPatternSegment.Field(field.owner.name))
+                    recipe.relativePath.segments == listOf(FieldPatternSegment.field(field.owner.name))
             }
         EffectiveFieldTemplate(
             key = field.owner.name,
@@ -1407,10 +1424,10 @@ private fun collectTemplateFields(
         val inheritedOwners = inheritedFields.map(FieldDeclaration::owner).toSet()
         if (inheritedOwners.isNotEmpty() && !field.overrides.containsAll(inheritedOwners)) {
             diagnostics +=
-                DeclarationDiagnostic(
+                DeclarationDiagnostic.of(
                     affected = affected,
                     code = "missing_field_override",
-                    field = RelativeFieldPattern(listOf(FieldPatternSegment.Field(field.owner.name))),
+                    field = RelativeFieldPattern(segments = listOf(FieldPatternSegment.field(field.owner.name))),
                 )
         }
         merged[field.owner.name] = field
@@ -1418,10 +1435,10 @@ private fun collectTemplateFields(
     inheritedByName.forEach { (name, fields) ->
         if (fields.map(FieldDeclaration::owner).distinct().size > 1 || fields.map(FieldDeclaration::type).distinct().size > 1) {
             diagnostics +=
-                DeclarationDiagnostic(
+                DeclarationDiagnostic.of(
                     affected = affected,
                     code = "ambiguous_inherited_field",
-                    field = RelativeFieldPattern(listOf(FieldPatternSegment.Field(name))),
+                    field = RelativeFieldPattern(segments = listOf(FieldPatternSegment.field(name))),
                 )
         } else {
             merged[name] = fields.first()
@@ -1432,8 +1449,9 @@ private fun collectTemplateFields(
 
 private fun DeclarationStatus.diagnostics(): List<DeclarationDiagnostic> =
     when (this) {
-        DeclarationStatus.Ready -> emptyList()
-        is DeclarationStatus.Unavailable -> reasons
+        DeclarationStatus.READY -> emptyList()
+        is DeclarationStatus.UnavailableWrapper -> reasons
+        else -> unknownVariant(this)
     }
 
 private class ImmutableOwnedProviderRegistry(

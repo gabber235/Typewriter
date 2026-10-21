@@ -16,13 +16,15 @@ import com.typewritermc.codegen.appliedNamedUseCode
 import com.typewritermc.codegen.appliedUseCode
 import com.typewritermc.codegen.kotlinCode
 import com.typewritermc.codegen.mapCode
-import com.typewritermc.configuration.FieldPatternSegment
-import com.typewritermc.configuration.RelativeFieldPattern
-import com.typewritermc.configuration.RepresentationKind
+import com.typewritermc.configuration.name
+import com.typewritermc.configuration.root
 import com.typewritermc.types.nullable
 import com.typewritermc.types.template
 import com.typewritermc.types.unknownVariant
+import skirout.editor.v1.catalog.RepresentationKind
 import skirout.editor.v1.type_catalog.CollectionKind
+import skirout.editor.v1.type_catalog.FieldPatternSegment
+import skirout.editor.v1.type_catalog.RelativeFieldPattern
 import skirout.editor.v1.type_catalog.ScalarKind
 import skirout.editor.v1.type_catalog.TypeTemplate
 import skirout.editor.v1.type_catalog.TypeUse
@@ -231,11 +233,11 @@ internal val FieldShape.representationKind: RepresentationKind
             is FieldShape.Scalar -> kind.representationKind
             is FieldShape.Wrapped -> kind.representationKind
             is FieldShape.Color -> kind.representationKind
-            is FieldShape.Link -> RepresentationKind.Link
-            is FieldShape.Sequence -> if (kind == CollectionKind.LIST) RepresentationKind.List else RepresentationKind.Set
-            is FieldShape.Mapping -> RepresentationKind.Map
-            is FieldShape.Enumeration -> RepresentationKind.Enum
-            is FieldShape.Record, is FieldShape.Parameter -> RepresentationKind.Record
+            is FieldShape.Link -> RepresentationKind.LINK
+            is FieldShape.Sequence -> if (kind == CollectionKind.LIST) RepresentationKind.LIST else RepresentationKind.SET
+            is FieldShape.Mapping -> RepresentationKind.MAP
+            is FieldShape.Enumeration -> RepresentationKind.ENUMERATION
+            is FieldShape.Record, is FieldShape.Parameter -> RepresentationKind.RECORD
         }
 
 /** The read side type exposed on drafts; type parameters map to the draft's `D<index>` variables. */
@@ -361,9 +363,9 @@ context(_: DefinitionReferences)
 internal fun FieldShape.nestedConfigurationScopes(): CodeBlock {
     val slots =
         when (this) {
-            is FieldShape.Nullable -> listOf(FieldPatternSegment.Values to value)
-            is FieldShape.Sequence -> listOf(FieldPatternSegment.Items to item)
-            is FieldShape.Mapping -> listOf(FieldPatternSegment.Keys to key, FieldPatternSegment.Values to value)
+            is FieldShape.Nullable -> listOf(FieldPatternSegment.VALUES to value)
+            is FieldShape.Sequence -> listOf(FieldPatternSegment.ITEMS to item)
+            is FieldShape.Mapping -> listOf(FieldPatternSegment.KEYS to key, FieldPatternSegment.VALUES to value)
             else -> emptyList()
         }
     return slots.map { (segment, shape) -> segment.kotlinCode() to shape.nestedConfigurationDescriptor() }.mapCode()
@@ -375,11 +377,11 @@ private fun FieldShape.nestedConfigurationDescriptor(): CodeBlock =
         "%T(%T.%L,♢%L,♢%T::class,♢%T) { nested ->\n⇥%L\n⇤}",
         Api.NestedConfigurationScope,
         RepresentationKind::class,
-        representationKind.name,
+        representationKind.constant,
         configurationExpected.kotlinCode(),
         configurationScope.rawClass,
         expressionFactory,
-        configurationScopeCreation("nested", RelativeFieldPattern()),
+        configurationScopeCreation("nested", RelativeFieldPattern.root),
     )
 
 /**
@@ -404,7 +406,7 @@ internal fun FieldShape.configurationScopeCreation(
             collection,
             pattern.kotlinCode(),
             RepresentationKind::class,
-            representationKind.name,
+            representationKind.constant,
             configurationExpected.kotlinCode(),
             configurationScope.rawClass,
             KClass::class.asClassName().parameterizedBy(configurationScope),
@@ -460,18 +462,26 @@ internal val TypeTemplate.containsParameter: Boolean
 
 internal fun RelativeFieldPattern.kotlinCode(): CodeBlock =
     if (segments.isEmpty()) {
-        CodeBlock.of("%T()", RelativeFieldPattern::class)
+        CodeBlock.of("%T.%M", RelativeFieldPattern::class, ROOT_PATTERN)
     } else {
-        CodeBlock.of("%T(listOf(%L))", RelativeFieldPattern::class, segments.map { it.kotlinCode() }.joinToCode(",♢"))
+        CodeBlock.of("%T(segments = listOf(%L))", RelativeFieldPattern::class, segments.map { it.kotlinCode() }.joinToCode(",♢"))
     }
 
 internal fun FieldPatternSegment.kotlinCode(): CodeBlock =
     when (this) {
-        is FieldPatternSegment.Field -> CodeBlock.of("%T(%S)", FieldPatternSegment.Field::class, name)
-        FieldPatternSegment.Items -> CodeBlock.of("%T", FieldPatternSegment.Items::class)
-        FieldPatternSegment.Keys -> CodeBlock.of("%T", FieldPatternSegment.Keys::class)
-        FieldPatternSegment.Values -> CodeBlock.of("%T", FieldPatternSegment.Values::class)
+        is FieldPatternSegment.FieldWrapper -> CodeBlock.of("%T.%M(%S)", FieldPatternSegment::class, FIELD_SEGMENT, name)
+        FieldPatternSegment.ITEMS -> CodeBlock.of("%T.ITEMS", FieldPatternSegment::class)
+        FieldPatternSegment.KEYS -> CodeBlock.of("%T.KEYS", FieldPatternSegment::class)
+        FieldPatternSegment.VALUES -> CodeBlock.of("%T.VALUES", FieldPatternSegment::class)
+        else -> unknownVariant(this)
     }
+
+/** The name of the generated constant of this representation kind, which emitted code refers to. */
+internal val RepresentationKind.constant: String get() = kind.name.removeSuffix("_CONST")
+
+private val ROOT_PATTERN = MemberName("com.typewritermc.configuration", "root", isExtension = true)
+
+private val FIELD_SEGMENT = MemberName("com.typewritermc.configuration", "field", isExtension = true)
 
 private fun ClassName.factory(): ClassName = peerClass(simpleName + "Factory")
 
@@ -542,15 +552,15 @@ private fun ScalarKind.presentationControl(native: TypeName): TypeName =
 internal val ScalarKind.representationKind: RepresentationKind
     get() =
         when (this) {
-            ScalarKind.UNIT -> RepresentationKind.Unit
-            ScalarKind.BOOLEAN -> RepresentationKind.Boolean
-            ScalarKind.TEXT -> RepresentationKind.Text
-            ScalarKind.BYTES -> RepresentationKind.Bytes
-            is ScalarKind.IntegerWrapper -> RepresentationKind.Integer
-            is ScalarKind.FloatWrapper -> RepresentationKind.Float
-            ScalarKind.DECIMAL -> RepresentationKind.Decimal
-            ScalarKind.TIMESTAMP -> RepresentationKind.Timestamp
-            ScalarKind.DURATION -> RepresentationKind.Duration
+            ScalarKind.UNIT -> RepresentationKind.UNIT
+            ScalarKind.BOOLEAN -> RepresentationKind.BOOLEAN
+            ScalarKind.TEXT -> RepresentationKind.TEXT
+            ScalarKind.BYTES -> RepresentationKind.BYTES
+            is ScalarKind.IntegerWrapper -> RepresentationKind.INTEGER
+            is ScalarKind.FloatWrapper -> RepresentationKind.FLOAT
+            ScalarKind.DECIMAL -> RepresentationKind.DECIMAL
+            ScalarKind.TIMESTAMP -> RepresentationKind.TIMESTAMP
+            ScalarKind.DURATION -> RepresentationKind.DURATION
             else -> unknownVariant(this)
         }
 

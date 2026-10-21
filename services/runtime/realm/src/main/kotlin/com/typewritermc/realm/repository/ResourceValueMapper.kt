@@ -13,9 +13,6 @@ import com.typewritermc.authoring.payload
 import com.typewritermc.authoring.record
 import com.typewritermc.authoring.root
 import com.typewritermc.authoring.use
-import com.typewritermc.types.EndpointCardinality
-import com.typewritermc.types.EndpointSlot
-import com.typewritermc.types.RelationContract
 import com.typewritermc.types.ResourceId
 import com.typewritermc.types.actualType
 import com.typewritermc.types.catalog.CheckedCatalog
@@ -35,6 +32,9 @@ import com.typewritermc.types.unknownVariant
 import com.typewritermc.types.use
 import skirout.editor.v1.authoring.LinkOccurrence
 import skirout.editor.v1.authoring.LinkOccurrenceId
+import skirout.editor.v1.catalog.EndpointCardinality
+import skirout.editor.v1.catalog.EndpointSlot
+import skirout.editor.v1.catalog.RelationContract
 import skirout.editor.v1.diagnostic.ValueProblem
 import skirout.editor.v1.type_catalog.AuthoringRecord
 import skirout.editor.v1.type_catalog.DataValue
@@ -186,8 +186,8 @@ internal object ResourceValueMapper {
             }
             val (contract, slot) = candidates.single()
             if (catalog != null) {
-                val sourceEndpoint = if (slot == EndpointSlot.First) contract.first else contract.second
-                val targetEndpoint = if (slot == EndpointSlot.First) contract.second else contract.first
+                val sourceEndpoint = if (slot == EndpointSlot.FIRST) contract.first else contract.second
+                val targetEndpoint = if (slot == EndpointSlot.FIRST) contract.second else contract.first
                 if (!resources.getValue(occurrence.source.toResourceId()).matches(sourceEndpoint.resource, catalog)) {
                     problems += ValueProblem(location = occurrence.id.location, code = "source_resource_type_mismatch")
                     return@forEach
@@ -202,7 +202,7 @@ internal object ResourceValueMapper {
                     problems += ValueProblem(location = occurrence.id.location, code = "endpoint_location_not_declared")
                     return@forEach
                 }
-                val expectsCollection = targetEndpoint.cardinality == EndpointCardinality.Many
+                val expectsCollection = targetEndpoint.cardinality == EndpointCardinality.MANY
                 if (declared.containsCollection != expectsCollection) {
                     problems += ValueProblem(location = occurrence.id.location, code = "endpoint_binding_cardinality_mismatch")
                     return@forEach
@@ -215,7 +215,7 @@ internal object ResourceValueMapper {
             val oppositeLocation = occurrence.target.opposite?.let { ValueLocation(resource = occurrence.target.resource, path = it) }
             val opposite = oppositeLocation?.let(byLocation::get)
             if (oppositeLocation != null) {
-                val expected = if (slot == EndpointSlot.First) contract.second.id else contract.first.id
+                val expected = if (slot == EndpointSlot.FIRST) contract.second.id else contract.first.id
                 if (
                     opposite == null ||
                     opposite.id.endpoint != expected ||
@@ -227,7 +227,7 @@ internal object ResourceValueMapper {
                 }
             }
             val projection =
-                if (slot == EndpointSlot.First) {
+                if (slot == EndpointSlot.FIRST) {
                     LinkProjection(
                         contract = contract.id,
                         first = occurrence.source.toResourceId(),

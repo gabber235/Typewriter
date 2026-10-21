@@ -25,11 +25,9 @@ import com.typewritermc.realm.authoring.AuthoringViewDelta
 import com.typewritermc.realm.authoring.InMemoryAuthoringViewStore
 import com.typewritermc.realm.authoring.RESOURCE_SELECTION_INPUT
 import com.typewritermc.realm.authoring.operationObservation
-import com.typewritermc.types.EndpointBindingTemplate
 import com.typewritermc.types.FactoryNativeBindingRegistry
 import com.typewritermc.types.NativeBindingFactory
 import com.typewritermc.types.NativeBindingRegistry
-import com.typewritermc.types.RelationContract
 import com.typewritermc.types.ResourceId
 import com.typewritermc.types.actualType
 import com.typewritermc.types.catalog.CheckedCatalog
@@ -49,6 +47,8 @@ import com.typewritermc.types.use
 import de.infix.testBalloon.framework.core.testSuite
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.matchers.shouldBe
+import skirout.editor.v1.catalog.EndpointBindingTemplate
+import skirout.editor.v1.catalog.RelationContract
 import skirout.editor.v1.type_catalog.AuthoringRecord
 import skirout.editor.v1.type_catalog.CatalogGeneration
 import skirout.editor.v1.type_catalog.CollectionKind
@@ -274,7 +274,7 @@ internal class TestCatalogLease private constructor(
     override val generation: CatalogGeneration,
     override val providers: OwnedProviderRegistry,
     override val checks: List<OwnedCheckRecipe>,
-    override val configuration: List<com.typewritermc.configuration.ConfigurationRecipe>,
+    override val configuration: List<skirout.editor.v1.catalog.ConfigurationRecipe>,
     private val definitions: List<TypeDefinition>,
     private val nativeBindingFactories: List<NativeBindingFactory>,
     override val relations: List<RelationContract>,
@@ -284,7 +284,7 @@ internal class TestCatalogLease private constructor(
         generation: CatalogGeneration = CatalogGeneration(value = "catalog"),
         providers: OwnedProviderRegistry = EmptyProviders,
         checks: List<OwnedCheckRecipe> = emptyList(),
-        configuration: List<com.typewritermc.configuration.ConfigurationRecipe> = emptyList(),
+        configuration: List<skirout.editor.v1.catalog.ConfigurationRecipe> = emptyList(),
         definitions: List<TypeDefinition> = listOf(TEST_DEFINITION, LIST_DEFINITION),
         nativeBindingFactories: List<NativeBindingFactory> = emptyList(),
         relations: List<RelationContract> = emptyList(),

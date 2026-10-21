@@ -25,8 +25,8 @@ import com.typewritermc.types.ResourceIdDefinition
 import com.typewritermc.types.StandardTypes
 import com.typewritermc.types.actualType
 import com.typewritermc.types.catalog.CheckedType
-import com.typewritermc.types.catalog.DeclarationDiagnostic
 import com.typewritermc.types.catalog.Resolution
+import com.typewritermc.types.catalog.of
 import com.typewritermc.types.catalog.resolve
 import com.typewritermc.types.fields
 import com.typewritermc.types.floatScalar
@@ -39,6 +39,7 @@ import com.typewritermc.types.rows
 import com.typewritermc.types.unknownVariant
 import com.typewritermc.types.use
 import com.typewritermc.types.validOrNull
+import skirout.editor.v1.diagnostic.DeclarationDiagnostic
 import skirout.editor.v1.expression.BoundDirection
 import skirout.editor.v1.expression.EntryBranch
 import skirout.editor.v1.expression.ExpressionMappingType
@@ -99,7 +100,7 @@ class PortableExpressionChecker(
         return if (codes.isEmpty()) {
             Resolution.Ready(CheckedExpressionProgram(body, expectedOutput, invocation.queries.toMap()))
         } else {
-            Resolution.Invalid(codes.map { DeclarationDiagnostic(affected, it) })
+            Resolution.Invalid(codes.map { DeclarationDiagnostic.of(affected, it) })
         }
     }
 
@@ -148,13 +149,13 @@ class PortableExpressionChecker(
             body,
             mapOf(ExpressionBindingId("configured_value") to nominalExpressionType(subject.use)),
             nominalExpressionType(ScalarKind.BOOLEAN.use, true),
-        ).map { DeclarationDiagnostic(requireNotNull(owner), it) }
+        ).map { DeclarationDiagnostic.of(requireNotNull(owner), it) }
 
     internal fun checkRuleStructure(body: ExpressionNode): List<DeclarationDiagnostic> =
         checkExpressionStructure(
             body,
             setOf(ExpressionBindingId("configured_value")),
-        ).map { DeclarationDiagnostic(requireNotNull(owner), it) }
+        ).map { DeclarationDiagnostic.of(requireNotNull(owner), it) }
 
     private fun validateStructure(
         root: ExpressionNode,

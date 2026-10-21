@@ -13,9 +13,9 @@ import com.typewritermc.codegen.GeneratedFile
 import com.typewritermc.codegen.kotlinCode
 import com.typewritermc.codegen.listCode
 import com.typewritermc.codegen.namedArguments
-import com.typewritermc.types.EndpointBindingTemplate
 import com.typewritermc.types.codegen.SdkNames
 import com.typewritermc.types.codegen.kotlinCode
+import skirout.editor.v1.catalog.EndpointBindingTemplate
 import skirout.editor.v1.type_catalog.EndpointId
 import com.typewritermc.codegen.TypewriterApi as Api
 

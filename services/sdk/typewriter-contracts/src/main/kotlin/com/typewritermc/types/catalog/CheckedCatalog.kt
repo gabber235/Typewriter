@@ -10,6 +10,8 @@ import com.typewritermc.authoring.type
 import com.typewritermc.authoring.use
 import com.typewritermc.authoring.validateStructure
 import com.typewritermc.types.MAX_TYPE_DEPTH
+import com.typewritermc.types.catalog.of
+import com.typewritermc.types.catalog.reasons
 import com.typewritermc.types.immutableListCopy
 import com.typewritermc.types.named
 import com.typewritermc.types.namedTemplate
@@ -22,6 +24,8 @@ import com.typewritermc.types.template
 import com.typewritermc.types.toTemplate
 import com.typewritermc.types.unknownVariant
 import com.typewritermc.types.use
+import skirout.editor.v1.catalog.DeclarationStatus
+import skirout.editor.v1.diagnostic.DeclarationDiagnostic
 import skirout.editor.v1.type_catalog.AppliedSchema
 import skirout.editor.v1.type_catalog.ArgumentSelection
 import skirout.editor.v1.type_catalog.AuthoringRecord
@@ -67,14 +71,6 @@ sealed interface Resolution<out T> {
     data class Invalid(
         val diagnostics: List<DeclarationDiagnostic>,
     ) : Resolution<Nothing>
-}
-
-sealed interface DeclarationStatus {
-    data object Ready : DeclarationStatus
-
-    data class Unavailable(
-        val reasons: List<DeclarationDiagnostic>,
-    ) : DeclarationStatus
 }
 
 /**
@@ -189,16 +185,17 @@ class DefaultCheckedCatalog(
     override fun definition(id: TypeDefinitionId): DeclarationStatus {
         val reasons = unavailable[id]
         return when {
-            reasons != null -> DeclarationStatus.Unavailable(reasons.distinct())
-            definitions[id] == null -> DeclarationStatus.Unavailable(listOf(diagnostic(id, "unknown_definition")))
-            else -> DeclarationStatus.Ready
+            reasons != null -> DeclarationStatus.UnavailableWrapper(reasons.distinct())
+            definitions[id] == null -> DeclarationStatus.UnavailableWrapper(listOf(diagnostic(id, "unknown_definition")))
+            else -> DeclarationStatus.READY
         }
     }
 
     override fun declaration(id: TypeDefinitionId): Resolution<TypeDefinition> =
         when (val status = definition(id)) {
-            DeclarationStatus.Ready -> Resolution.Ready(definitions.getValue(id).single())
-            is DeclarationStatus.Unavailable -> Resolution.Invalid(status.reasons)
+            DeclarationStatus.READY -> Resolution.Ready(definitions.getValue(id).single())
+            is DeclarationStatus.UnavailableWrapper -> Resolution.Invalid(status.reasons)
+            else -> unknownVariant(status)
         }
 
     override fun resolve(candidate: TypeUse): Resolution<CheckedType> {
@@ -299,7 +296,7 @@ class DefaultCheckedCatalog(
         actual: TypeDefinitionId,
         expected: TypeDefinitionId,
     ): Boolean {
-        if (definition(actual) !is DeclarationStatus.Ready || definition(expected) !is DeclarationStatus.Ready) return false
+        if (definition(actual) != DeclarationStatus.READY || definition(expected) != DeclarationStatus.READY) return false
         val visited = mutableSetOf<TypeDefinitionId>()
         val pending = ArrayDeque<TypeDefinitionId>()
         pending.add(actual)
@@ -332,7 +329,7 @@ class DefaultCheckedCatalog(
     override fun validateAuthoring(record: AuthoringRecord): StructuralResult = record.validateStructure(this)
 
     private fun knownPendingApplications(selection: TypeSelection.PendingWrapper): Set<NamedTypeUse> {
-        if (definition(selection.definition) !is DeclarationStatus.Ready) return emptySet()
+        if (definition(selection.definition) != DeclarationStatus.READY) return emptySet()
         val root = definitions.getValue(selection.definition).single()
         if (selection.arguments.size != root.parameters.size) return emptySet()
         val bindings =
@@ -357,7 +354,7 @@ class DefaultCheckedCatalog(
             }
             current.parents.forEach { parentTemplate ->
                 val parentDefinition = definitions[parentTemplate.definition]?.singleOrNull() ?: return@forEach
-                if (definition(parentDefinition.id) !is DeclarationStatus.Ready) return@forEach
+                if (definition(parentDefinition.id) != DeclarationStatus.READY) return@forEach
                 val parentBindings =
                     parentDefinition.parameters
                         .zip(parentTemplate.arguments)
@@ -398,7 +395,7 @@ class DefaultCheckedCatalog(
     ): Resolution<Map<ParameterKey, TypeUse>> {
         candidate.use.typeDepthFailure()?.let { return invalid(it, "type_depth_limit") }
         val status = definition(candidate.definition)
-        if (status is DeclarationStatus.Unavailable) return Resolution.Invalid(status.reasons)
+        if (status is DeclarationStatus.UnavailableWrapper) return Resolution.Invalid(status.reasons)
         val definition = definitions.getValue(candidate.definition).single()
         if (candidate.arguments.size != definition.parameters.size) return invalid(candidate.definition, "argument_arity")
         if (!visiting.add(candidate)) return invalid(candidate.definition, "recursive_type_resolution")
@@ -499,7 +496,7 @@ class DefaultCheckedCatalog(
 
     private fun resolvePending(selection: TypeSelection.PendingWrapper): Resolution<PartialSchema> {
         val status = definition(selection.definition)
-        if (status is DeclarationStatus.Unavailable) return Resolution.Invalid(status.reasons)
+        if (status is DeclarationStatus.UnavailableWrapper) return Resolution.Invalid(status.reasons)
         val definition = definitions.getValue(selection.definition).single()
         if (selection.arguments.size != definition.parameters.size) return invalid(selection.definition, "argument_arity")
         val bindings = mutableMapOf<ParameterKey, TypeUse>()
@@ -940,7 +937,7 @@ class DefaultCheckedCatalog(
     private fun markUnavailable(
         id: TypeDefinitionId,
         code: String,
-    ) = markUnavailable(DeclarationDiagnostic(id, code))
+    ) = markUnavailable(DeclarationDiagnostic.of(id, code))
 
     private fun markUnavailable(diagnostic: DeclarationDiagnostic) {
         val reasons = unavailable.getOrPut(diagnostic.affected, ::mutableListOf)
@@ -958,7 +955,7 @@ class DefaultCheckedCatalog(
 private fun diagnostic(
     affected: TypeDefinitionId,
     code: String,
-) = DeclarationDiagnostic(affected, code)
+) = DeclarationDiagnostic.of(affected, code)
 
 /**
  * Keys memoized resolutions by a structural hash computed without allocation; generated Skir hash codes build a list
@@ -1113,7 +1110,7 @@ private fun TypeTemplate.substituteKnown(bindings: Map<ParameterKey, TypeUse>): 
     }
 
 /** Reports declaration readiness from this catalog generation's canonical quarantine. */
-fun CheckedCatalog.isReady(id: TypeDefinitionId): Boolean = definition(id) == DeclarationStatus.Ready
+fun CheckedCatalog.isReady(id: TypeDefinitionId): Boolean = definition(id) == DeclarationStatus.READY
 
 /** Checks the declarations a named template references while preserving symbolic free parameters. */
 fun CheckedCatalog.isReady(template: NamedTypeTemplate): Boolean = isReady(template.definition) && template.arguments.all(::isReady)

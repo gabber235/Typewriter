@@ -5,15 +5,17 @@ import com.typewritermc.authoring.StructuralResult
 import com.typewritermc.authoring.complete
 import com.typewritermc.authoring.of
 import com.typewritermc.authoring.validateStructure
+import com.typewritermc.configuration.field
+import com.typewritermc.configuration.of
 import com.typewritermc.discovery.contributionKey
 import com.typewritermc.imprint.ContributionName
 import com.typewritermc.imprint.ContributionSourceId
 import com.typewritermc.imprint.ProducerId
 import com.typewritermc.presentation.PresentationDescriptor
 import com.typewritermc.presentation.PresentationTarget
-import com.typewritermc.types.catalog.DeclarationStatus
 import com.typewritermc.types.catalog.DefaultCheckedCatalog
 import com.typewritermc.types.catalog.Resolution
+import com.typewritermc.types.catalog.reasons
 import com.typewritermc.types.skir.SkirTypeCodec
 import com.typewritermc.types.skir.getOrThrow
 import de.infix.testBalloon.framework.core.testSuite
@@ -22,6 +24,8 @@ import io.kotest.matchers.collections.shouldContainExactly
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.types.shouldBeInstanceOf
 import io.kotest.matchers.types.shouldBeSameInstanceAs
+import skirout.editor.v1.catalog.DeclarationStatus
+import skirout.editor.v1.catalog.EndpointBindingTemplate
 import skirout.editor.v1.catalog.PresentationRole
 import skirout.editor.v1.type_catalog.ArgumentSelection
 import skirout.editor.v1.type_catalog.AuthoringRecord
@@ -32,6 +36,7 @@ import skirout.editor.v1.type_catalog.DeclarationOwner
 import skirout.editor.v1.type_catalog.EndpointId
 import skirout.editor.v1.type_catalog.FieldDeclaration
 import skirout.editor.v1.type_catalog.FieldOwner
+import skirout.editor.v1.type_catalog.FieldPatternSegment
 import skirout.editor.v1.type_catalog.FieldValue
 import skirout.editor.v1.type_catalog.FloatWidth
 import skirout.editor.v1.type_catalog.IntegerWidth
@@ -39,6 +44,7 @@ import skirout.editor.v1.type_catalog.ItemId
 import skirout.editor.v1.type_catalog.ListItem
 import skirout.editor.v1.type_catalog.ParameterKey
 import skirout.editor.v1.type_catalog.PresentationId
+import skirout.editor.v1.type_catalog.RelativeFieldPattern
 import skirout.editor.v1.type_catalog.RepresentationTemplate
 import skirout.editor.v1.type_catalog.ScalarKind
 import skirout.editor.v1.type_catalog.TypeDefinition
@@ -103,7 +109,7 @@ val TypeSystemFoundationTest by testSuite {
                     ),
             )
 
-        val status = catalog(definition).definition(definitionId) as DeclarationStatus.Unavailable
+        val status = catalog(definition).definition(definitionId) as DeclarationStatus.UnavailableWrapper
         status.reasons.map { it.code } shouldContainExactly listOf("type_depth_limit")
     }
 
@@ -700,8 +706,8 @@ val TypeSystemFoundationTest by testSuite {
             )
         val catalog = catalog(good, bad)
 
-        catalog.definition(good.id) shouldBe DeclarationStatus.Ready
-        (catalog.definition(bad.id) is DeclarationStatus.Unavailable) shouldBe true
+        catalog.definition(good.id) shouldBe DeclarationStatus.READY
+        (catalog.definition(bad.id) is DeclarationStatus.UnavailableWrapper) shouldBe true
         (catalog.resolve(good.id.use()) is Resolution.Ready) shouldBe true
     }
 
@@ -721,7 +727,7 @@ val TypeSystemFoundationTest by testSuite {
             PresentationDescriptor(
                 id = PresentationId(namespace = "example", name = "editor"),
                 owner = owner,
-                target = PresentationTarget.Representation(com.typewritermc.configuration.RepresentationKind.Text),
+                target = PresentationTarget.Representation(skirout.editor.v1.catalog.RepresentationKind.TEXT),
                 roles = setOf(PresentationRole.WORKSPACE),
                 priority = 1,
             )
@@ -731,14 +737,10 @@ val TypeSystemFoundationTest by testSuite {
                 containingResource = id("menu").namedTemplate(),
                 valueOwner = id("button"),
                 relativePath =
-                    com.typewritermc.configuration.RelativeFieldPattern(
-                        listOf(
-                            com.typewritermc.configuration.FieldPatternSegment
-                                .Field("buttons"),
-                            com.typewritermc.configuration.FieldPatternSegment.Items,
-                            com.typewritermc.configuration.FieldPatternSegment
-                                .Field("destination"),
-                        ),
+                    RelativeFieldPattern.of(
+                        FieldPatternSegment.field("buttons"),
+                        FieldPatternSegment.ITEMS,
+                        FieldPatternSegment.field("destination"),
                     ),
                 target = id("page").template(),
                 containsCollection = true,
@@ -750,11 +752,7 @@ val TypeSystemFoundationTest by testSuite {
         encoded.source.producer.value shouldBe "types"
         encoded.source.name.value shouldBe "presentations/editor"
         encoded.localIdentity shouldBe "message.editor"
-        val binding = SkirTypeCodec.encode(endpointBinding).getOrThrow()
-        binding.endpoint.value shouldBe "menu.destination"
-        binding.containsCollection shouldBe true
-        binding.relativePath.segments.size shouldBe 3
-        binding.valueOwner shouldBe recordDefinition("button").id
+        endpointBinding.requireValid() shouldBe endpointBinding
     }
 
     test("the portable check keeps canonical values and rejects nonfinite floats") {

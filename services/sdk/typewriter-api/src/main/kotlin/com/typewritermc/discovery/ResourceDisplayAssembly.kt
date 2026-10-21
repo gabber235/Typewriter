@@ -14,14 +14,15 @@ import com.typewritermc.types.ColorDefinition
 import com.typewritermc.types.IconDefinition
 import com.typewritermc.types.ResourceTarget
 import com.typewritermc.types.catalog.CheckedCatalog
-import com.typewritermc.types.catalog.DeclarationDiagnostic
-import com.typewritermc.types.catalog.DeclarationOrigin
 import com.typewritermc.types.catalog.Resolution
 import com.typewritermc.types.catalog.isReady
+import com.typewritermc.types.catalog.of
 import com.typewritermc.types.qualified
 import com.typewritermc.types.template
 import com.typewritermc.types.use
 import kotlinx.coroutines.CancellationException
+import skirout.editor.v1.diagnostic.DeclarationDiagnostic
+import skirout.editor.v1.diagnostic.DeclarationOrigin
 import skirout.editor.v1.expression.ExpressionNode
 import skirout.editor.v1.expression.ExpressionQuery
 import skirout.editor.v1.type_catalog.ScalarKind
@@ -61,7 +62,7 @@ internal fun collectResourceDisplays(
             val target = owned.provider.target
             val affected = target.affected
             if (target is ResourceTarget.Type && !checked.isReady(target.template.definition)) return@mapNotNull null
-            val origins = listOf(DeclarationOrigin(owned.origin.owner))
+            val origins = listOf(DeclarationOrigin(owner = owned.origin.owner))
             val formulas =
                 try {
                     owned.provider.formulas().let { Triple(it.label.toNode(), it.accent.toNode(), it.icon.toNode()) }
@@ -69,12 +70,12 @@ internal fun collectResourceDisplays(
                     throw cancellation
                 } catch (cause: Exception) {
                     callbackFailures += CatalogCallbackFailure(owned.origin, CatalogCallback.Display(target), cause)
-                    diagnostics += DeclarationDiagnostic(affected, "resource_display_build_failed", origins)
+                    diagnostics += DeclarationDiagnostic.of(affected, "resource_display_build_failed", origins)
                     return@mapNotNull null
                 }
             val (label, accent, icon) = formulas
             if (listOf(label, accent, icon).any { it.readsContext() }) {
-                diagnostics += DeclarationDiagnostic(affected, "display_reads_context", origins)
+                diagnostics += DeclarationDiagnostic.of(affected, "display_reads_context", origins)
                 return@mapNotNull null
             }
             val subjects =
@@ -89,7 +90,7 @@ internal fun collectResourceDisplays(
                     checker.checkAgainst(node, expected, subjects, affected)
                 }
             if (programs.any { it == null }) {
-                diagnostics += DeclarationDiagnostic(affected, "invalid_resource_display", origins)
+                diagnostics += DeclarationDiagnostic.of(affected, "invalid_resource_display", origins)
                 return@mapNotNull null
             }
             owned to CheckedResourceDisplay(target, programs[0]!!, programs[1]!!, programs[2]!!)
@@ -101,10 +102,10 @@ internal fun collectResourceDisplays(
             val rejected = declared.filterNot { it === kept }
             if (rejected.isNotEmpty()) {
                 diagnostics +=
-                    DeclarationDiagnostic(
+                    DeclarationDiagnostic.of(
                         target.affected,
                         "duplicate_resource_display",
-                        rejected.map { (owned, _) -> DeclarationOrigin(owned.origin.owner) },
+                        rejected.map { (owned, _) -> DeclarationOrigin(owner = owned.origin.owner) },
                     )
             }
             listOfNotNull(kept?.second)

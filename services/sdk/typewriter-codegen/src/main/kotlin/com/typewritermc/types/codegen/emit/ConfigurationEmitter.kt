@@ -12,9 +12,8 @@ import com.squareup.kotlinpoet.TypeName
 import com.squareup.kotlinpoet.TypeSpec
 import com.squareup.kotlinpoet.asClassName
 import com.typewritermc.codegen.kotlinCode
-import com.typewritermc.configuration.FieldPatternSegment
-import com.typewritermc.configuration.RelativeFieldPattern
-import com.typewritermc.configuration.RepresentationKind
+import com.typewritermc.configuration.field
+import com.typewritermc.configuration.root
 import com.typewritermc.discovery.GeneratedContract
 import com.typewritermc.types.codegen.FieldShape
 import com.typewritermc.types.codegen.SdkDeclaration
@@ -22,12 +21,16 @@ import com.typewritermc.types.codegen.SdkEmitter
 import com.typewritermc.types.codegen.SdkField
 import com.typewritermc.types.codegen.configurationScope
 import com.typewritermc.types.codegen.configurationScopeCreation
+import com.typewritermc.types.codegen.constant
 import com.typewritermc.types.codegen.expressionFactory
 import com.typewritermc.types.codegen.kotlinCode
 import com.typewritermc.types.codegen.parameterizedOrSelf
 import com.typewritermc.types.codegen.rawClass
 import com.typewritermc.types.codegen.representationKind
 import com.typewritermc.types.template
+import skirout.editor.v1.catalog.RepresentationKind
+import skirout.editor.v1.type_catalog.FieldPatternSegment
+import skirout.editor.v1.type_catalog.RelativeFieldPattern
 import skirout.editor.v1.type_catalog.RepresentationTemplate
 import skirout.editor.v1.type_catalog.TypeTemplate
 import kotlin.reflect.KClass
@@ -81,7 +84,7 @@ internal object ConfigurationEmitter : SdkEmitter {
                 .addSuperinterface(scope)
                 .addFunctions(
                     declaration.fields.map { field ->
-                        val pattern = RelativeFieldPattern(listOf(FieldPatternSegment.Field(field.name)))
+                        val pattern = RelativeFieldPattern(segments = listOf(FieldPatternSegment.field(field.name)))
                         field
                             .configureFunction(KModifier.OVERRIDE)
                             .toBuilder()
@@ -113,9 +116,9 @@ private class RootConfiguration(
     fun delegate(): CodeBlock =
         CodeBlock.of(
             "collection.field(\n⇥%L,\n%T.%L,\n%L,\n%T::class as %T,\nemptyMap(),\n%T,\n⇤)",
-            RelativeFieldPattern().kotlinCode(),
+            RelativeFieldPattern.root.kotlinCode(),
             RepresentationKind::class,
-            kind.name,
+            kind.constant,
             expected.kotlinCode(),
             scope.rawClass,
             KClass::class.asClassName().parameterizedBy(scope),
@@ -142,7 +145,7 @@ private fun SdkDeclaration.rootConfiguration(): RootConfiguration =
         is RepresentationTemplate.EnumerationWrapper -> {
             RootConfiguration(
                 scope = Api.EnumField.parameterizedBy(starType),
-                kind = RepresentationKind.Enum,
+                kind = RepresentationKind.ENUMERATION,
                 expected = template.template,
                 expressions = Api.EnumExpressions.factory(),
             )
@@ -151,7 +154,7 @@ private fun SdkDeclaration.rootConfiguration(): RootConfiguration =
         else -> {
             RootConfiguration(
                 scope = Api.RecordField.parameterizedBy(starType, names.expressions.parameterizedOrSelf(typeVariables.map { STAR })),
-                kind = RepresentationKind.Record,
+                kind = RepresentationKind.RECORD,
                 expected = template.template,
                 expressions = names.expressionsFactory,
             )

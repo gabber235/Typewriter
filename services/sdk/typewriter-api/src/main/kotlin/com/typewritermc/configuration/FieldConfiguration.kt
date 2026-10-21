@@ -3,6 +3,7 @@ package com.typewritermc.configuration
 import com.typewritermc.dsl.TypewriterDsl
 import com.typewritermc.expression.Expr
 import com.typewritermc.expression.MissingPolicy
+import skirout.editor.v1.type_catalog.RelativeFieldPattern
 
 typealias Configuration<Scope> = Scope.() -> Unit
 typealias TextConfiguration = Configuration<Text>

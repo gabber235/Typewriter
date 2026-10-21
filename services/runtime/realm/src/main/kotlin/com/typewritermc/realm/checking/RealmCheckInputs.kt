@@ -11,8 +11,7 @@ import com.typewritermc.authoring.boundPath
 import com.typewritermc.checking.CheckEvaluation
 import com.typewritermc.checking.CheckInput
 import com.typewritermc.checking.CheckRecipe
-import com.typewritermc.configuration.FieldPatternSegment
-import com.typewritermc.configuration.RelativeFieldPattern
+import com.typewritermc.configuration.name
 import com.typewritermc.expression.EvaluationDiagnostic
 import com.typewritermc.services.libs.utils.rethrowExceptional
 import com.typewritermc.types.catalog.CheckedCatalog
@@ -20,13 +19,16 @@ import com.typewritermc.types.catalog.CheckedType
 import com.typewritermc.types.catalog.Resolution
 import com.typewritermc.types.field
 import com.typewritermc.types.fields
+import com.typewritermc.types.unknownVariant
 import com.typewritermc.types.use
 import skirout.editor.v1.checking.CheckOutcome
 import skirout.editor.v1.diagnostic.Diagnostic
 import skirout.editor.v1.diagnostic.DiagnosticSeverity
 import skirout.editor.v1.type_catalog.DataValue
 import skirout.editor.v1.type_catalog.DiagnosticId
+import skirout.editor.v1.type_catalog.FieldPatternSegment
 import skirout.editor.v1.type_catalog.PathSegment
+import skirout.editor.v1.type_catalog.RelativeFieldPattern
 import skirout.editor.v1.type_catalog.ResolvedRepresentation
 import skirout.editor.v1.type_catalog.TypeUse
 import skirout.editor.v1.type_catalog.ValueLocation
@@ -180,19 +182,23 @@ private fun occurrenceBindings(
     val bindings = linkedMapOf<OccurrenceSlot, List<PathSegment>>()
     pattern.segments.forEach { segment ->
         when (segment) {
-            is FieldPatternSegment.Field -> {
+            is FieldPatternSegment.FieldWrapper -> {
                 index += 1
             }
 
-            FieldPatternSegment.Items,
-            FieldPatternSegment.Keys,
-            FieldPatternSegment.Values,
+            FieldPatternSegment.ITEMS,
+            FieldPatternSegment.KEYS,
+            FieldPatternSegment.VALUES,
             -> {
                 val item = concrete.getOrNull(index)
                 val start = index
                 if (item is PathSegment.ItemWrapper) index += 1
                 if (concrete.getOrNull(index) == PathSegment.MAP_KEY || concrete.getOrNull(index) == PathSegment.MAP_VALUE) index += 1
                 bindings[OccurrenceSlot(prefix.toList())] = concrete.subList(start, (start + 1).coerceAtMost(concrete.size))
+            }
+
+            else -> {
+                unknownVariant(segment)
             }
         }
         prefix += segment
@@ -213,10 +219,11 @@ internal fun expectedType(
     path.segments.forEach { segment ->
         cursor =
             when (segment) {
-                is FieldPatternSegment.Field -> cursor.field(segment.name, catalog) ?: return null
-                FieldPatternSegment.Items -> cursor.item(catalog) ?: return null
-                FieldPatternSegment.Keys -> cursor.key(catalog) ?: return null
-                FieldPatternSegment.Values -> cursor.value(catalog) ?: return null
+                is FieldPatternSegment.FieldWrapper -> cursor.field(segment.name, catalog) ?: return null
+                FieldPatternSegment.ITEMS -> cursor.item(catalog) ?: return null
+                FieldPatternSegment.KEYS -> cursor.key(catalog) ?: return null
+                FieldPatternSegment.VALUES -> cursor.value(catalog) ?: return null
+                else -> unknownVariant(segment)
             }
     }
     return cursor.use

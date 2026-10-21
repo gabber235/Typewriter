@@ -8,12 +8,12 @@ import com.typewritermc.engine.dataValue
 import com.typewritermc.engine.relation
 import com.typewritermc.library.Page
 import com.typewritermc.types.NativeBindingRegistry
-import com.typewritermc.types.RelationContract
 import com.typewritermc.types.actualType
 import com.typewritermc.types.catalog.CheckedCatalog
 import com.typewritermc.types.catalog.Resolution
 import com.typewritermc.types.ownsResources
 import com.typewritermc.types.use
+import skirout.editor.v1.catalog.RelationContract
 import skirout.editor.v1.compiled_content.CompiledEdge
 import skirout.editor.v1.compiled_content.CompiledResource
 import skirout.editor.v1.compiled_content.CompiledResourceKey

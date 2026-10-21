@@ -31,28 +31,29 @@ import com.typewritermc.library.fields
 import com.typewritermc.presentation.RuntimePresentationQueries
 import com.typewritermc.types.Color
 import com.typewritermc.types.ColorDefinition
-import com.typewritermc.types.EndpointCardinality
-import com.typewritermc.types.EndpointDefinition
-import com.typewritermc.types.EndpointSlot
 import com.typewritermc.types.Icon
 import com.typewritermc.types.RESOURCE_OWNERSHIP_FAMILY_ID
-import com.typewritermc.types.RelationContract
-import com.typewritermc.types.RelationDeletePolicy
 import com.typewritermc.types.ResourceId
 import com.typewritermc.types.ResourceTarget
 import com.typewritermc.types.TypeDisplay
-import com.typewritermc.types.catalog.DeclarationOrigin
 import com.typewritermc.types.fields
 import com.typewritermc.types.integer
 import com.typewritermc.types.named
 import com.typewritermc.types.namedTemplate
 import com.typewritermc.types.namedUse
+import com.typewritermc.types.of
 import com.typewritermc.types.qualified
 import com.typewritermc.types.record
 import com.typewritermc.types.use
 import de.infix.testBalloon.framework.core.testSuite
 import io.kotest.matchers.collections.shouldNotContain
 import io.kotest.matchers.shouldBe
+import skirout.editor.v1.catalog.EndpointCardinality
+import skirout.editor.v1.catalog.EndpointDefinition
+import skirout.editor.v1.catalog.EndpointSlot
+import skirout.editor.v1.catalog.RelationContract
+import skirout.editor.v1.catalog.RelationDeletePolicy
+import skirout.editor.v1.diagnostic.DeclarationOrigin
 import skirout.editor.v1.type_catalog.AuthoringRecord
 import skirout.editor.v1.type_catalog.CatalogGeneration
 import skirout.editor.v1.type_catalog.DataValue
@@ -180,10 +181,10 @@ val ResourceDisplayAssemblyTest by testSuite {
     test("the realm root and its sections publish no search key and never conflict with a resource's") {
         val owner = fixtureType(fixtureResource)
         val ownership =
-            RelationContract(
+            RelationContract.of(
                 id = RelationId(value = "fixture.ownership"),
-                first = endpoint("fixture.owner", EndpointSlot.First, fixtureResource),
-                second = endpoint("fixture.owned", EndpointSlot.Second, BookDefinition.id),
+                first = endpoint("fixture.owner", EndpointSlot.FIRST, fixtureResource),
+                second = endpoint("fixture.owned", EndpointSlot.SECOND, BookDefinition.id),
                 families = setOf(RelationFamilyId(value = RESOURCE_OWNERSHIP_FAMILY_ID)),
             )
         val assembly =
@@ -204,17 +205,17 @@ val ResourceDisplayAssemblyTest by testSuite {
     test("two owner types with one search key are rejected and publish no search key") {
         val owner = fixtureType(fixtureResource)
         val ownership =
-            RelationContract(
+            RelationContract.of(
                 id = RelationId(value = "fixture.ownership"),
-                first = endpoint("fixture.owner", EndpointSlot.First, fixtureResource),
-                second = endpoint("fixture.owned", EndpointSlot.Second, BookDefinition.id),
+                first = endpoint("fixture.owner", EndpointSlot.FIRST, fixtureResource),
+                second = endpoint("fixture.owned", EndpointSlot.SECOND, BookDefinition.id),
                 families = setOf(RelationFamilyId(value = RESOURCE_OWNERSHIP_FAMILY_ID)),
             )
         val bookOwnership =
-            RelationContract(
+            RelationContract.of(
                 id = RelationId(value = "fixture.book_ownership"),
-                first = endpoint("fixture.book", EndpointSlot.First, BookDefinition.id),
-                second = endpoint("fixture.book_owned", EndpointSlot.Second, fixtureResource),
+                first = endpoint("fixture.book", EndpointSlot.FIRST, BookDefinition.id),
+                second = endpoint("fixture.book_owned", EndpointSlot.SECOND, fixtureResource),
                 families = setOf(RelationFamilyId(value = RESOURCE_OWNERSHIP_FAMILY_ID)),
             )
         val assembly =
@@ -260,7 +261,13 @@ private fun endpoint(
     id: String,
     slot: EndpointSlot,
     resource: TypeDefinitionId,
-) = EndpointDefinition(EndpointId(value = id), slot, resource.namedTemplate(), EndpointCardinality.Many, RelationDeletePolicy.CLEAR)
+) = EndpointDefinition(
+    id = EndpointId(value = id),
+    slot = slot,
+    resource = resource.namedTemplate(),
+    cardinality = EndpointCardinality.MANY,
+    onDelete = RelationDeletePolicy.CLEAR,
+)
 
 private fun book(title: String) =
     AuthoringRecord.of(

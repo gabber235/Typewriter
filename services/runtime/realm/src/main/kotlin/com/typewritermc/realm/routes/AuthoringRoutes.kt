@@ -18,7 +18,7 @@ import com.typewritermc.realm.repository.AuthoringRepository
 import com.typewritermc.realm.repository.ResourceValueMapper
 import com.typewritermc.services.libs.communicator.router.CommunicatorRoutesBuilder
 import com.typewritermc.types.ResourceId
-import com.typewritermc.types.catalog.DeclarationDiagnostic
+import com.typewritermc.types.catalog.of
 import com.typewritermc.types.requireValid
 import com.typewritermc.types.skir.SkirTypeCodec
 import com.typewritermc.types.skir.getOrThrow
@@ -29,6 +29,7 @@ import skirout.editor.v1.authoring.PreviewTypeArgumentChangeResponse
 import skirout.editor.v1.authoring.QueryAuthoringStateRequest
 import skirout.editor.v1.authoring.QueryAuthoringStateResponse
 import skirout.editor.v1.checking.FindingSet
+import skirout.editor.v1.diagnostic.DeclarationDiagnostic
 import skirout.editor.v1.type_catalog.CatalogGeneration
 import skirout.editor.v1.type_catalog.RelationId
 import skirout.editor.v1.authoring.ArgumentLocation as SkirArgumentLocation
@@ -121,7 +122,7 @@ internal class AuthoringRoutes(
         lease.use { snapshot ->
             if (snapshot.root.catalog.generation != requestedCatalog) {
                 return TypePreviewResult.InvalidArguments(
-                    listOf(DeclarationDiagnostic(requested.definition, "catalog_changed")),
+                    listOf(DeclarationDiagnostic.of(requested.definition, "catalog_changed")),
                 )
             }
             return typeArguments.preview(ResourceId(request.resource.value), requested, snapshot)
@@ -136,9 +137,7 @@ private fun TypePreviewResult.toWire(): PreviewTypeArgumentChangeResponse =
         }
 
         is TypePreviewResult.InvalidArguments -> {
-            PreviewTypeArgumentChangeResponse.InvalidArgumentsErrorWrapper(
-                diagnostics.map { SkirTypeCodec.encode(it).getOrThrow() },
-            )
+            PreviewTypeArgumentChangeResponse.InvalidArgumentsErrorWrapper(diagnostics)
         }
 
         is TypePreviewResult.Incomplete -> {

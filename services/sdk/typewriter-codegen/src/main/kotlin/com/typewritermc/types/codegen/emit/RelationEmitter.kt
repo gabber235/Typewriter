@@ -17,15 +17,15 @@ import com.typewritermc.codegen.declarationCode
 import com.typewritermc.codegen.kotlinCode
 import com.typewritermc.codegen.namedArguments
 import com.typewritermc.codegen.setCode
-import com.typewritermc.types.EndpointCardinality
-import com.typewritermc.types.EndpointDefinition
 import com.typewritermc.types.EndpointSlot
-import com.typewritermc.types.RelationContract
 import com.typewritermc.types.RelationDeletePolicy
 import com.typewritermc.types.RelationshipEndpoint
 import com.typewritermc.types.TypewriterGeneratedEndpoint
 import com.typewritermc.types.ksp.relationLinkDefinition
 import com.typewritermc.types.ksp.relationLinkId
+import skirout.editor.v1.catalog.EndpointCardinality
+import skirout.editor.v1.catalog.EndpointDefinition
+import skirout.editor.v1.catalog.RelationContract
 import skirout.editor.v1.type_catalog.EndpointId
 import skirout.editor.v1.type_catalog.NamedTypeTemplate
 import skirout.editor.v1.type_catalog.RelationFamilyId
@@ -33,6 +33,8 @@ import skirout.editor.v1.type_catalog.RelationId
 import skirout.editor.v1.type_catalog.TypeDefinition
 import skirout.editor.v1.type_catalog.TypeDefinitionId
 import com.typewritermc.codegen.TypewriterApi as Api
+import skirout.editor.v1.catalog.EndpointSlot as CatalogEndpointSlot
+import skirout.editor.v1.catalog.RelationDeletePolicy as CatalogDeletePolicy
 
 /** One endpoint of a reference contract, resolved for emission. */
 internal class SdkEndpoint(
@@ -86,8 +88,9 @@ internal fun SdkRelation.file(): FileSpec {
                 PropertySpec
                     .builder("contract", RelationContract::class, KModifier.OVERRIDE)
                     .initializer(
-                        "%T%L",
+                        "%T.%M%L",
                         RelationContract::class,
+                        RELATION_CONTRACT_OF,
                         namedArguments(
                             "id" to CodeBlock.of("id"),
                             "first" to endpointDefinition(first),
@@ -108,7 +111,7 @@ private fun SdkRelation.endpointType(endpoint: SdkEndpoint): TypeSpec {
                 .builder(TypewriterGeneratedEndpoint::class)
                 .addMember("%S", id)
                 .addMember("%T.%L", EndpointSlot::class, endpoint.slot.name)
-                .addMember("%L", opposite(endpoint).cardinality == EndpointCardinality.Many)
+                .addMember("%L", opposite(endpoint).cardinality == EndpointCardinality.MANY)
                 .build(),
         ).addSuperinterface(RelationshipEndpoint::class.asClassName().parameterizedBy(endpoint.resource, opposite(endpoint).resource))
         .addType(
@@ -130,12 +133,15 @@ private fun SdkRelation.endpointDefinition(endpoint: SdkEndpoint): CodeBlock =
         "%T%L",
         EndpointDefinition::class,
         namedArguments(
-            "id" to CodeBlock.of("id.%M(%T.%L)", ENDPOINT_ID, EndpointSlot::class, endpoint.slot.name),
-            "slot" to CodeBlock.of("%T.%L", EndpointSlot::class, endpoint.slot.name),
+            "id" to CodeBlock.of("id.%M(%T.%L)", ENDPOINT_ID, CatalogEndpointSlot::class, endpoint.slot.name.uppercase()),
+            "slot" to CodeBlock.of("%T.%L", CatalogEndpointSlot::class, endpoint.slot.name.uppercase()),
             "resource" to context(references) { endpoint.resourceTemplate.kotlinCode() },
-            "cardinality" to CodeBlock.of("%T.%L", EndpointCardinality::class, endpoint.cardinality.name),
-            "onDelete" to CodeBlock.of("%T.%L", RelationDeletePolicy::class, endpoint.onDelete.name),
+            "cardinality" to
+                CodeBlock.of("%T.%L", EndpointCardinality::class, if (endpoint.cardinality == EndpointCardinality.MANY) "MANY" else "ONE"),
+            "onDelete" to CodeBlock.of("%T.%L", CatalogDeletePolicy::class, endpoint.onDelete.name),
         ),
     )
 
 private val ENDPOINT_ID = MemberName("com.typewritermc.types", "endpointId", isExtension = true)
+
+private val RELATION_CONTRACT_OF = MemberName("com.typewritermc.types", "of", isExtension = true)

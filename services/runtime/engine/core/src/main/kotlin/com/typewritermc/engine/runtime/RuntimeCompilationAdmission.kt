@@ -3,13 +3,13 @@ package com.typewritermc.engine.runtime
 import com.typewritermc.authoring.descendants
 import com.typewritermc.engine.dataValue
 import com.typewritermc.engine.relation
-import com.typewritermc.types.RelationContract
 import com.typewritermc.types.actualType
 import com.typewritermc.types.catalog.CheckedCatalog
 import com.typewritermc.types.catalog.Resolution
 import com.typewritermc.types.catalog.runtimeDefinitions
 import com.typewritermc.types.ownsResources
 import com.typewritermc.types.use
+import skirout.editor.v1.catalog.RelationContract
 import skirout.editor.v1.compiled_content.RuntimeCompilationFacts
 import skirout.editor.v1.type_catalog.DataValue
 

@@ -1,8 +1,9 @@
 package com.typewritermc.configuration
 
 import com.typewritermc.types.catalog.CheckedType
-import com.typewritermc.types.catalog.DeclarationDiagnostic
 import com.typewritermc.types.catalog.Resolution
+import skirout.editor.v1.catalog.OwnedRule
+import skirout.editor.v1.diagnostic.DeclarationDiagnostic
 import skirout.editor.v1.type_catalog.CatalogGeneration
 
 class CheckedRule internal constructor(

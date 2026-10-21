@@ -42,7 +42,6 @@ import com.typewritermc.presentation.PresentationTarget
 import com.typewritermc.types.GeneratedRecordNativeBinding
 import com.typewritermc.types.NativeBindingFactory
 import com.typewritermc.types.catalog.CheckedType
-import com.typewritermc.types.catalog.DeclarationStatus
 import com.typewritermc.types.catalog.Resolution
 import com.typewritermc.types.named
 import com.typewritermc.types.namedTemplate
@@ -52,6 +51,7 @@ import com.typewritermc.types.record
 import com.typewritermc.types.use
 import de.infix.testBalloon.framework.core.testSuite
 import io.kotest.matchers.shouldBe
+import skirout.editor.v1.catalog.DeclarationStatus
 import skirout.editor.v1.catalog.PresentationRole
 import skirout.editor.v1.type_catalog.CatalogGeneration
 import skirout.editor.v1.type_catalog.DataValue

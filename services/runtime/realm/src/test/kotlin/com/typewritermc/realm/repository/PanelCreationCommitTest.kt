@@ -4,30 +4,33 @@ import com.surrealdb.Surreal
 import com.typewritermc.authoring.CommitResult
 import com.typewritermc.authoring.EditIntent
 import com.typewritermc.authoring.skir.SkirAuthoringOperationCodec
-import com.typewritermc.configuration.FieldPatternSegment
-import com.typewritermc.configuration.RelativeFieldPattern
+import com.typewritermc.configuration.field
+import com.typewritermc.configuration.name
 import com.typewritermc.realm.authoring.InMemoryAuthoringViewStore
 import com.typewritermc.realm.checking.TestCatalogLease
 import com.typewritermc.realm.schema.MigrationResources
 import com.typewritermc.realm.schema.openTestDatabase
-import com.typewritermc.types.EndpointBindingTemplate
-import com.typewritermc.types.EndpointCardinality
-import com.typewritermc.types.EndpointDefinition
-import com.typewritermc.types.EndpointSlot
-import com.typewritermc.types.RelationContract
-import com.typewritermc.types.RelationDeletePolicy
 import com.typewritermc.types.ResourceId
+import com.typewritermc.types.of
 import com.typewritermc.types.requireValid
 import com.typewritermc.types.skir.getOrThrow
 import de.infix.testBalloon.framework.core.testSuite
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.types.shouldBeInstanceOf
 import skirout.editor.v1.catalog.EditorCatalog
+import skirout.editor.v1.catalog.EndpointBindingTemplate
+import skirout.editor.v1.catalog.EndpointCardinality
+import skirout.editor.v1.catalog.EndpointDefinition
+import skirout.editor.v1.catalog.EndpointSlot
+import skirout.editor.v1.catalog.RelationContract
+import skirout.editor.v1.catalog.RelationDeletePolicy
 import skirout.editor.v1.type_catalog.CatalogGeneration
 import skirout.editor.v1.type_catalog.EndpointId
+import skirout.editor.v1.type_catalog.FieldPatternSegment
 import skirout.editor.v1.type_catalog.NamedTypeUse
 import skirout.editor.v1.type_catalog.RelationFamilyId
 import skirout.editor.v1.type_catalog.RelationId
+import skirout.editor.v1.type_catalog.RelativeFieldPattern
 import skirout.editor.v1.type_catalog.TypeDefinitionId
 import skirout.editor.v1.type_catalog.TypeTemplate
 import skirout.editor.v1.type_catalog.TypeUse
@@ -100,7 +103,7 @@ private fun panelCreationCatalog(snapshot: EditorCatalog): TestCatalogLease =
         definitions = snapshot.types.map { it.definition.requireValid() },
         relations =
             snapshot.relations.map { relation ->
-                RelationContract(
+                RelationContract.of(
                     relation.id,
                     endpoint(relation.first),
                     endpoint(relation.second),
@@ -110,58 +113,63 @@ private fun panelCreationCatalog(snapshot: EditorCatalog): TestCatalogLease =
         endpointBindings =
             snapshot.endpointBindings.map { binding ->
                 EndpointBindingTemplate(
-                    binding.endpoint.requireValid(),
-                    binding.containingResource.requireValid(),
-                    binding.valueOwner.requireValid(),
-                    RelativeFieldPattern(
-                        binding.relativePath.segments.map { segment ->
-                            when (segment) {
-                                is skirout.editor.v1.type_catalog.FieldPatternSegment.FieldWrapper -> {
-                                    FieldPatternSegment.Field(segment.value.name)
-                                }
+                    endpoint = binding.endpoint.requireValid(),
+                    containingResource = binding.containingResource.requireValid(),
+                    valueOwner = binding.valueOwner.requireValid(),
+                    relativePath =
+                        RelativeFieldPattern(
+                            segments =
+                                binding.relativePath.segments.map { segment ->
+                                    when (segment) {
+                                        is skirout.editor.v1.type_catalog.FieldPatternSegment.FieldWrapper -> {
+                                            FieldPatternSegment.field(segment.value.name)
+                                        }
 
-                                skirout.editor.v1.type_catalog.FieldPatternSegment.ITEMS -> {
-                                    FieldPatternSegment.Items
-                                }
+                                        skirout.editor.v1.type_catalog.FieldPatternSegment.ITEMS -> {
+                                            FieldPatternSegment.ITEMS
+                                        }
 
-                                skirout.editor.v1.type_catalog.FieldPatternSegment.KEYS -> {
-                                    FieldPatternSegment.Keys
-                                }
+                                        skirout.editor.v1.type_catalog.FieldPatternSegment.KEYS -> {
+                                            FieldPatternSegment.KEYS
+                                        }
 
-                                skirout.editor.v1.type_catalog.FieldPatternSegment.VALUES -> {
-                                    FieldPatternSegment.Values
-                                }
+                                        skirout.editor.v1.type_catalog.FieldPatternSegment.VALUES -> {
+                                            FieldPatternSegment.VALUES
+                                        }
 
-                                else -> {
-                                    error("Unknown captured field pattern")
-                                }
-                            }
-                        },
-                    ),
-                    binding.target.requireValid(),
-                    binding.containsCollection,
+                                        else -> {
+                                            error("Unknown captured field pattern")
+                                        }
+                                    }
+                                },
+                        ),
+                    target = binding.target.requireValid(),
+                    containsCollection = binding.containsCollection,
                 )
             },
     )
 
 private fun endpoint(endpoint: WireEndpoint): EndpointDefinition =
     EndpointDefinition(
-        endpoint.id.requireValid(),
-        when (endpoint.slot) {
-            skirout.editor.v1.catalog.EndpointSlot.FIRST -> EndpointSlot.First
-            skirout.editor.v1.catalog.EndpointSlot.SECOND -> EndpointSlot.Second
-            else -> error("Unknown captured endpoint slot")
-        },
-        endpoint.resource.requireValid(),
-        when (endpoint.cardinality) {
-            skirout.editor.v1.catalog.EndpointCardinality.ONE -> EndpointCardinality.One
-            skirout.editor.v1.catalog.EndpointCardinality.MANY -> EndpointCardinality.Many
-            else -> error("Unknown captured endpoint cardinality")
-        },
-        when (endpoint.onDelete) {
-            skirout.editor.v1.catalog.RelationDeletePolicy.RESTRICT -> RelationDeletePolicy.RESTRICT
-            skirout.editor.v1.catalog.RelationDeletePolicy.CASCADE -> RelationDeletePolicy.CASCADE
-            skirout.editor.v1.catalog.RelationDeletePolicy.CLEAR -> RelationDeletePolicy.CLEAR
-            else -> error("Unknown captured deletion policy")
-        },
+        id = endpoint.id.requireValid(),
+        slot =
+            when (endpoint.slot) {
+                skirout.editor.v1.catalog.EndpointSlot.FIRST -> EndpointSlot.FIRST
+                skirout.editor.v1.catalog.EndpointSlot.SECOND -> EndpointSlot.SECOND
+                else -> error("Unknown captured endpoint slot")
+            },
+        resource = endpoint.resource.requireValid(),
+        cardinality =
+            when (endpoint.cardinality) {
+                skirout.editor.v1.catalog.EndpointCardinality.ONE -> EndpointCardinality.ONE
+                skirout.editor.v1.catalog.EndpointCardinality.MANY -> EndpointCardinality.MANY
+                else -> error("Unknown captured endpoint cardinality")
+            },
+        onDelete =
+            when (endpoint.onDelete) {
+                skirout.editor.v1.catalog.RelationDeletePolicy.RESTRICT -> RelationDeletePolicy.RESTRICT
+                skirout.editor.v1.catalog.RelationDeletePolicy.CASCADE -> RelationDeletePolicy.CASCADE
+                skirout.editor.v1.catalog.RelationDeletePolicy.CLEAR -> RelationDeletePolicy.CLEAR
+                else -> error("Unknown captured deletion policy")
+            },
     )

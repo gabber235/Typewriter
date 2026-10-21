@@ -10,10 +10,8 @@ import com.typewritermc.authoring.root
 import com.typewritermc.authoring.with
 import com.typewritermc.checking.CheckInput
 import com.typewritermc.checking.CheckRecipe
-import com.typewritermc.checking.DiagnosticTemplate
 import com.typewritermc.checking.RegisteredPredicate
-import com.typewritermc.configuration.FieldPatternSegment
-import com.typewritermc.configuration.RelativeFieldPattern
+import com.typewritermc.configuration.field
 import com.typewritermc.realm.authoring.AuthoringSeed
 import com.typewritermc.realm.authoring.InMemoryAuthoringViewStore
 import com.typewritermc.types.ResourceId
@@ -33,16 +31,19 @@ import io.kotest.matchers.shouldBe
 import io.kotest.matchers.types.shouldBeInstanceOf
 import skirout.editor.v1.checking.CheckOutcome
 import skirout.editor.v1.diagnostic.DiagnosticSeverity
+import skirout.editor.v1.diagnostic.DiagnosticTemplate
 import skirout.editor.v1.type_catalog.AuthoringRecord
 import skirout.editor.v1.type_catalog.DataValue
 import skirout.editor.v1.type_catalog.FieldDeclaration
 import skirout.editor.v1.type_catalog.FieldOwner
+import skirout.editor.v1.type_catalog.FieldPatternSegment
 import skirout.editor.v1.type_catalog.IntegerWidth
 import skirout.editor.v1.type_catalog.ItemId
 import skirout.editor.v1.type_catalog.ListItem
 import skirout.editor.v1.type_catalog.MapRow
 import skirout.editor.v1.type_catalog.ParameterKey
 import skirout.editor.v1.type_catalog.PathSegment
+import skirout.editor.v1.type_catalog.RelativeFieldPattern
 import skirout.editor.v1.type_catalog.RepresentationTemplate
 import skirout.editor.v1.type_catalog.RuleOrigin
 import skirout.editor.v1.type_catalog.TypeDefinition
@@ -115,8 +116,8 @@ val RealmCheckInputsTest by testSuite {
         val recipe =
             recipe(
                 listOf(
-                    CheckInput(TEST_TYPE, pattern("mapping", FieldPatternSegment.Keys), INT_KIND.template),
-                    CheckInput(TEST_TYPE, pattern("mapping", FieldPatternSegment.Values), INT_KIND.template),
+                    CheckInput(TEST_TYPE, pattern("mapping", FieldPatternSegment.KEYS), INT_KIND.template),
+                    CheckInput(TEST_TYPE, pattern("mapping", FieldPatternSegment.VALUES), INT_KIND.template),
                 ),
                 predicate,
             )
@@ -151,7 +152,7 @@ val RealmCheckInputsTest by testSuite {
             )
         val recipe =
             recipe(
-                listOf(CheckInput(TEST_TYPE, pattern("numbers", FieldPatternSegment.Items), INT_KIND.template)),
+                listOf(CheckInput(TEST_TYPE, pattern("numbers", FieldPatternSegment.ITEMS), INT_KIND.template)),
                 predicate(listOf(INT_KIND.template)) { false },
             )
         val store = store(catalog, resource, record)
@@ -180,7 +181,7 @@ val RealmCheckInputsTest by testSuite {
         val record = record(numbers = listOf("a" to 1, "b" to 2))
         val recipe =
             recipe(
-                listOf(CheckInput(TEST_TYPE, pattern("numbers", FieldPatternSegment.Items), INT_KIND.template)),
+                listOf(CheckInput(TEST_TYPE, pattern("numbers", FieldPatternSegment.ITEMS), INT_KIND.template)),
                 predicate(listOf(INT_KIND.template)) { true },
             )
         val store = store(catalog, resource, record)
@@ -223,7 +224,7 @@ private fun predicate(
 private fun pattern(
     field: String,
     descendant: FieldPatternSegment,
-) = RelativeFieldPattern(listOf(FieldPatternSegment.Field(field), descendant))
+) = RelativeFieldPattern(segments = listOf(FieldPatternSegment.field(field), descendant))
 
 private fun binding(
     catalog: TestCatalogLease,

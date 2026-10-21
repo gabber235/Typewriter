@@ -21,13 +21,11 @@ import com.typewritermc.realm.repository.ResourceValueMapper
 import com.typewritermc.realm.repository.conflicts
 import com.typewritermc.realm.repository.requiredExpectations
 import com.typewritermc.realm.repository.sameFact
-import com.typewritermc.types.EndpointSlot
-import com.typewritermc.types.RelationContract
 import com.typewritermc.types.ResourceId
 import com.typewritermc.types.actualType
 import com.typewritermc.types.catalog.CheckedCatalog
-import com.typewritermc.types.catalog.DeclarationDiagnostic
 import com.typewritermc.types.catalog.Resolution
+import com.typewritermc.types.catalog.of
 import com.typewritermc.types.endpoint
 import com.typewritermc.types.field
 import com.typewritermc.types.fields
@@ -46,6 +44,9 @@ import skirout.editor.v1.authoring.LinkOccurrence
 import skirout.editor.v1.authoring.LinkOccurrenceId
 import skirout.editor.v1.authoring.LinkRepairIntent
 import skirout.editor.v1.authoring.TypeArgumentChangePreview
+import skirout.editor.v1.catalog.EndpointSlot
+import skirout.editor.v1.catalog.RelationContract
+import skirout.editor.v1.diagnostic.DeclarationDiagnostic
 import skirout.editor.v1.diagnostic.ValueProblem
 import skirout.editor.v1.type_catalog.AuthoringRecord
 import skirout.editor.v1.type_catalog.DataValue
@@ -117,12 +118,12 @@ internal class DefaultTypeArgumentOperations(
         val record =
             root.resources[resource]
                 ?: return TypePreviewResult.InvalidArguments(
-                    listOf(DeclarationDiagnostic(requestedDefinition, "resource_missing")),
+                    listOf(DeclarationDiagnostic.of(requestedDefinition, "resource_missing")),
                 )
         val previous = record.configuration
         if (previous.definition != requestedDefinition) {
             return TypePreviewResult.InvalidArguments(
-                listOf(DeclarationDiagnostic(requestedDefinition, "type_argument_definition_changed")),
+                listOf(DeclarationDiagnostic.of(requestedDefinition, "type_argument_definition_changed")),
             )
         }
         val next = root.catalog.checked.resolvePartial(requested)
@@ -471,7 +472,7 @@ private fun incompatibleLinks(
             inspected += InputIdentity.Form(ValueLocation(resource = occurrence.target.resource, path = ValuePath.root))
             val contract = endpointContracts[occurrence.id.endpoint] ?: return@mapNotNull LinkRepairIntent.ClearWrapper(occurrence.id)
             val sourceEndpoint = if (contract.first.id == occurrence.id.endpoint) contract.first else contract.second
-            val targetEndpoint = if (sourceEndpoint.slot == EndpointSlot.First) contract.second else contract.first
+            val targetEndpoint = if (sourceEndpoint.slot == EndpointSlot.FIRST) contract.second else contract.first
             inspected += InputIdentity.Incoming(resource, contract.id)
             val proposedSource = sourceRecord?.proposedIf(occurrence.source.toResourceId() == resource, requested)
             val proposedTarget = targetRecord?.proposedIf(occurrence.target.resource.toResourceId() == resource, requested)

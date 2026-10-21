@@ -43,8 +43,7 @@ import com.typewritermc.codegen.portableScalarKind
 import com.typewritermc.codegen.rawAnnotation
 import com.typewritermc.codegen.referencedIds
 import com.typewritermc.codegen.sentenceCase
-import com.typewritermc.configuration.FieldPatternSegment
-import com.typewritermc.configuration.RelativeFieldPattern
+import com.typewritermc.configuration.field
 import com.typewritermc.discovery.GeneratedContract
 import com.typewritermc.discovery.GeneratedProviderIndex
 import com.typewritermc.discovery.GeneratedProviderKind
@@ -52,8 +51,6 @@ import com.typewritermc.discovery.codegen.RegistrarProviderProcessor
 import com.typewritermc.presentation.codegen.CollectionProjectionProviderProcessor
 import com.typewritermc.types.Color
 import com.typewritermc.types.DeletionPolicy
-import com.typewritermc.types.EndpointBindingTemplate
-import com.typewritermc.types.EndpointCardinality
 import com.typewritermc.types.EndpointSlot
 import com.typewritermc.types.Icon
 import com.typewritermc.types.Many
@@ -94,9 +91,13 @@ import com.typewritermc.types.template
 import com.typewritermc.types.toTemplate
 import com.typewritermc.types.unknownVariant
 import com.typewritermc.types.use
+import skirout.editor.v1.catalog.EndpointBindingTemplate
+import skirout.editor.v1.catalog.EndpointCardinality
+import skirout.editor.v1.type_catalog.FieldPatternSegment
 import skirout.editor.v1.type_catalog.NamedTypeTemplate
 import skirout.editor.v1.type_catalog.NamedTypeUse
 import skirout.editor.v1.type_catalog.ParameterKey
+import skirout.editor.v1.type_catalog.RelativeFieldPattern
 import skirout.editor.v1.type_catalog.RepresentationTemplate
 import skirout.editor.v1.type_catalog.TypeDefinition
 import skirout.editor.v1.type_catalog.TypeDefinitionId
@@ -288,7 +289,7 @@ private class TypewriterTypeProcessor(
             slot = EndpointSlot.First,
             resourceType = resource,
             resourceTemplate = (resourceTemplate as TypeTemplate.NamedWrapper).value,
-            cardinality = if (marker.declaration isType One::class.asClassName()) EndpointCardinality.One else EndpointCardinality.Many,
+            cardinality = if (marker.declaration isType One::class.asClassName()) EndpointCardinality.ONE else EndpointCardinality.MANY,
             onDelete =
                 rawAnnotation(DeletionPolicy::class)?.enumArgumentOrNull<RelationDeletePolicy>("onDelete") ?: RelationDeletePolicy.CLEAR,
         )
@@ -777,7 +778,7 @@ private fun discoverEndpointBindings(
                                 endpoint = representation.value.endpoint,
                                 containingResource = root,
                                 valueOwner = valueOwner,
-                                relativePath = RelativeFieldPattern(path),
+                                relativePath = RelativeFieldPattern(segments = path),
                                 target = representation.value.target.substitute(substitutions),
                                 containsCollection = containsCollection,
                             )
@@ -790,7 +791,7 @@ private fun discoverEndpointBindings(
                         representation.value.fields.forEach { field ->
                             visit(
                                 field.type.substitute(substitutions),
-                                path + FieldPatternSegment.Field(field.owner.name),
+                                path + FieldPatternSegment.field(field.owner.name),
                                 containsCollection,
                                 field.owner.definition,
                                 nestedStack,
@@ -801,7 +802,7 @@ private fun discoverEndpointBindings(
                     is RepresentationTemplate.SequenceWrapper -> {
                         visit(
                             representation.value.item.substitute(substitutions),
-                            path + FieldPatternSegment.Items,
+                            path + FieldPatternSegment.ITEMS,
                             true,
                             valueOwner,
                             stack,
@@ -809,10 +810,10 @@ private fun discoverEndpointBindings(
                     }
 
                     is RepresentationTemplate.MappingWrapper -> {
-                        visit(representation.value.key.substitute(substitutions), path + FieldPatternSegment.Keys, true, valueOwner, stack)
+                        visit(representation.value.key.substitute(substitutions), path + FieldPatternSegment.KEYS, true, valueOwner, stack)
                         visit(
                             representation.value.value.substitute(substitutions),
-                            path + FieldPatternSegment.Values,
+                            path + FieldPatternSegment.VALUES,
                             true,
                             valueOwner,
                             stack,

@@ -12,8 +12,7 @@ import com.typewritermc.authoring.root
 import com.typewritermc.checking.InputIdentity
 import com.typewritermc.checking.ResourceTypeMatch
 import com.typewritermc.checking.TypedSelection
-import com.typewritermc.configuration.FieldPatternSegment
-import com.typewritermc.configuration.RelativeFieldPattern
+import com.typewritermc.configuration.field
 import com.typewritermc.realm.authoring.AuthoringSeed
 import com.typewritermc.realm.authoring.AuthoringViewDelta
 import com.typewritermc.realm.authoring.InMemoryAuthoringViewStore
@@ -34,8 +33,10 @@ import skirout.editor.v1.checking.CheckOutcome
 import skirout.editor.v1.type_catalog.ArgumentSelection
 import skirout.editor.v1.type_catalog.AuthoringRecord
 import skirout.editor.v1.type_catalog.DataValue
+import skirout.editor.v1.type_catalog.FieldPatternSegment
 import skirout.editor.v1.type_catalog.ParameterKey
 import skirout.editor.v1.type_catalog.PathSegment
+import skirout.editor.v1.type_catalog.RelativeFieldPattern
 import skirout.editor.v1.type_catalog.RepresentationTemplate
 import skirout.editor.v1.type_catalog.RuleId
 import skirout.editor.v1.type_catalog.RuleOrigin
@@ -128,13 +129,13 @@ val CapturedAuthoringReadsTest by testSuite {
             .expand(
                 ValueLocation.of(resource),
                 RelativeFieldPattern(
-                    listOf(FieldPatternSegment.Field("nullParent"), FieldPatternSegment.Field("child")),
+                    segments = listOf(FieldPatternSegment.field("nullParent"), FieldPatternSegment.field("child")),
                 ),
             ).isEmpty() shouldBe true
         reads.expand(
             ValueLocation.of(resource),
             RelativeFieldPattern(
-                listOf(FieldPatternSegment.Field("missingParent"), FieldPatternSegment.Field("child")),
+                segments = listOf(FieldPatternSegment.field("missingParent"), FieldPatternSegment.field("child")),
             ),
         ) shouldBe listOf(unfilledChild)
         reads.health().failures.isEmpty() shouldBe true
@@ -350,7 +351,7 @@ val CapturedAuthoringReadsTest by testSuite {
         val expanded =
             reads.expand(
                 ValueLocation.of(resource),
-                RelativeFieldPattern(listOf(FieldPatternSegment.Field("numbers"), FieldPatternSegment.Items)),
+                RelativeFieldPattern(segments = listOf(FieldPatternSegment.field("numbers"), FieldPatternSegment.ITEMS)),
             )
 
         expanded shouldBe

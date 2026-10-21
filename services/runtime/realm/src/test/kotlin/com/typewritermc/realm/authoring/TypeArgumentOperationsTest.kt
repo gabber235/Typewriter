@@ -16,14 +16,8 @@ import com.typewritermc.realm.checking.dependencies
 import com.typewritermc.realm.repository.AuthoringMutationPlanner
 import com.typewritermc.realm.repository.AuthoringRepository
 import com.typewritermc.realm.repository.MutationPlanningResult
-import com.typewritermc.types.EndpointBindingTemplate
-import com.typewritermc.types.EndpointCardinality
-import com.typewritermc.types.EndpointDefinition
-import com.typewritermc.types.EndpointSlot
 import com.typewritermc.types.FactoryNativeBindingRegistry
 import com.typewritermc.types.NativeBindingRegistry
-import com.typewritermc.types.RelationContract
-import com.typewritermc.types.RelationDeletePolicy
 import com.typewritermc.types.ResourceId
 import com.typewritermc.types.catalog.CheckedCatalog
 import com.typewritermc.types.catalog.DefaultCheckedCatalog
@@ -32,6 +26,7 @@ import com.typewritermc.types.listValue
 import com.typewritermc.types.named
 import com.typewritermc.types.namedTemplate
 import com.typewritermc.types.namedUse
+import com.typewritermc.types.of
 import com.typewritermc.types.qualified
 import com.typewritermc.types.record
 import com.typewritermc.types.skir.getOrThrow
@@ -45,6 +40,12 @@ import kotlinx.coroutines.test.runTest
 import skirout.editor.v1.authoring.LinkOccurrenceId
 import skirout.editor.v1.authoring.LinkRepairIntent
 import skirout.editor.v1.authoring.TypeArgumentChangePreview
+import skirout.editor.v1.catalog.EndpointBindingTemplate
+import skirout.editor.v1.catalog.EndpointCardinality
+import skirout.editor.v1.catalog.EndpointDefinition
+import skirout.editor.v1.catalog.EndpointSlot
+import skirout.editor.v1.catalog.RelationContract
+import skirout.editor.v1.catalog.RelationDeletePolicy
 import skirout.editor.v1.type_catalog.ArgumentSelection
 import skirout.editor.v1.type_catalog.AuthoringRecord
 import skirout.editor.v1.type_catalog.CatalogGeneration
@@ -387,7 +388,7 @@ private class RepairCatalogLease(
     override val checks: List<OwnedCheckRecipe> = emptyList()
     override val relations: List<RelationContract> = listOf(DUAL_RELATION)
     override val endpointBindings: List<EndpointBindingTemplate> = emptyList()
-    override val configuration: List<com.typewritermc.configuration.ConfigurationRecipe> = emptyList()
+    override val configuration: List<skirout.editor.v1.catalog.ConfigurationRecipe> = emptyList()
     override val operations = com.typewritermc.operations.OperationCatalog()
     override val placementFields = emptyMap<TypeDefinitionId, ValuePath>()
 
@@ -480,21 +481,21 @@ private val SOURCE_ENDPOINT = EndpointId(value = "dual:source")
 private val TARGET_ENDPOINT = EndpointId(value = "dual:target")
 private val RELATION = RelationId(value = "dual:relation")
 private val DUAL_RELATION =
-    RelationContract(
+    RelationContract.of(
         RELATION,
         EndpointDefinition(
-            SOURCE_ENDPOINT,
-            EndpointSlot.First,
-            DUAL.namedTemplate(listOf(DUAL_FIRST_PARAMETER.template, DUAL_SECOND_PARAMETER.template)),
-            EndpointCardinality.One,
-            RelationDeletePolicy.CLEAR,
+            id = SOURCE_ENDPOINT,
+            slot = EndpointSlot.FIRST,
+            resource = DUAL.namedTemplate(listOf(DUAL_FIRST_PARAMETER.template, DUAL_SECOND_PARAMETER.template)),
+            cardinality = EndpointCardinality.ONE,
+            onDelete = RelationDeletePolicy.CLEAR,
         ),
         EndpointDefinition(
-            TARGET_ENDPOINT,
-            EndpointSlot.Second,
-            REWARD.namedTemplate(),
-            EndpointCardinality.One,
-            RelationDeletePolicy.CLEAR,
+            id = TARGET_ENDPOINT,
+            slot = EndpointSlot.SECOND,
+            resource = REWARD.namedTemplate(),
+            cardinality = EndpointCardinality.ONE,
+            onDelete = RelationDeletePolicy.CLEAR,
         ),
     )
 

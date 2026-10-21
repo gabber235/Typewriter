@@ -38,7 +38,6 @@ import com.typewritermc.operations.fillOnDrop
 import com.typewritermc.realm.TestRealmStructure
 import com.typewritermc.realm.repository.MutationPlanningResult
 import com.typewritermc.realm.testTag
-import com.typewritermc.types.EndpointSlot
 import com.typewritermc.types.Ref
 import com.typewritermc.types.ResourceId
 import com.typewritermc.types.ResourceTarget
@@ -58,6 +57,7 @@ import io.kotest.matchers.shouldBe
 import kotlinx.coroutines.test.runTest
 import skirout.editor.v1.authoring.AuthoringObservationId
 import skirout.editor.v1.authoring.LinkOccurrenceId
+import skirout.editor.v1.catalog.EndpointSlot
 import skirout.editor.v1.resource_operations.AuthoringActionResult
 import skirout.editor.v1.resource_operations.OperationSelectionEffect
 import skirout.editor.v1.resource_operations.ResolveDropCandidatesResult
@@ -470,7 +470,7 @@ private fun orphanTag(origin: ProviderOrigin) =
     ) { spec ->
         with(ResourceOperationSpecImpl(spec)) {
             prepare {
-                val owner = RelationId(value = TAXONOMY_TAGS_RELATION_ID).endpointId(EndpointSlot.Second)
+                val owner = RelationId(value = TAXONOMY_TAGS_RELATION_ID).endpointId(EndpointSlot.SECOND)
                 disconnect(
                     LinkOccurrenceId(
                         endpoint = owner,

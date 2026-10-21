@@ -416,8 +416,8 @@ class GeneratedProviderLoader {
         domain: DiscoveryDomainId,
     ): LoadedGeneratedProviders {
         val declarations = mutableListOf<OwnedTypeDeclaration>()
-        val relations = mutableListOf<com.typewritermc.types.RelationContract>()
-        val endpointBindings = mutableListOf<com.typewritermc.types.EndpointBindingTemplate>()
+        val relations = mutableListOf<skirout.editor.v1.catalog.RelationContract>()
+        val endpointBindings = mutableListOf<skirout.editor.v1.catalog.EndpointBindingTemplate>()
         val configurations = mutableListOf<OwnedConfiguration>()
         val presentations = mutableListOf<OwnedPresentation>()
         val nativeBindings = mutableListOf<OwnedNativeBinding>()

@@ -18,13 +18,13 @@ import com.typewritermc.checking.TypedSelection
 import com.typewritermc.configuration.ConfigurationCollectionScope
 import com.typewritermc.configuration.ConfigurationProvider
 import com.typewritermc.configuration.DefaultConfigurationCollectionScope
-import com.typewritermc.configuration.FieldPatternSegment
 import com.typewritermc.configuration.Integer
 import com.typewritermc.configuration.NestedConfigurationScope
 import com.typewritermc.configuration.NullableField
-import com.typewritermc.configuration.RelativeFieldPattern
-import com.typewritermc.configuration.RepresentationKind
 import com.typewritermc.configuration.Text
+import com.typewritermc.configuration.field
+import com.typewritermc.configuration.name
+import com.typewritermc.configuration.root
 import com.typewritermc.discovery.CatalogAssemblyContext
 import com.typewritermc.discovery.CatalogContributions
 import com.typewritermc.discovery.OwnedConfiguration
@@ -58,10 +58,9 @@ import com.typewritermc.types.GeneratedScalarNativeBinding
 import com.typewritermc.types.NativeBinding
 import com.typewritermc.types.NativeBindingException
 import com.typewritermc.types.NativeBindingFactory
-import com.typewritermc.types.RelationDeletePolicy
 import com.typewritermc.types.ResourceId
 import com.typewritermc.types.StandardTypes
-import com.typewritermc.types.catalog.DeclarationStatus
+import com.typewritermc.types.catalog.of
 import com.typewritermc.types.field
 import com.typewritermc.types.fields
 import com.typewritermc.types.floatScalar
@@ -84,7 +83,10 @@ import com.typewritermc.types.use
 import de.infix.testBalloon.framework.core.testSuite
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.matchers.shouldBe
+import skirout.editor.v1.catalog.DeclarationStatus
 import skirout.editor.v1.catalog.PresentationMaterial
+import skirout.editor.v1.catalog.RelationDeletePolicy
+import skirout.editor.v1.catalog.RepresentationKind
 import skirout.editor.v1.diagnostic.DiagnosticSeverity
 import skirout.editor.v1.expression.ExpressionNode
 import skirout.editor.v1.type_catalog.CatalogGeneration
@@ -93,11 +95,13 @@ import skirout.editor.v1.type_catalog.DeclarationOwner
 import skirout.editor.v1.type_catalog.EndpointId
 import skirout.editor.v1.type_catalog.FieldDeclaration
 import skirout.editor.v1.type_catalog.FieldOwner
+import skirout.editor.v1.type_catalog.FieldPatternSegment
 import skirout.editor.v1.type_catalog.FloatWidth
 import skirout.editor.v1.type_catalog.IntegerWidth
 import skirout.editor.v1.type_catalog.NativeBindingId
 import skirout.editor.v1.type_catalog.ParameterKey
 import skirout.editor.v1.type_catalog.PathSegment
+import skirout.editor.v1.type_catalog.RelativeFieldPattern
 import skirout.editor.v1.type_catalog.RepresentationTemplate
 import skirout.editor.v1.type_catalog.ResolvedRepresentation
 import skirout.editor.v1.type_catalog.RuleId
@@ -248,7 +252,7 @@ val SdkRuntimeConformanceTest by testSuite {
 
     test("portable regular expressions reject host specific and unsafe declaration syntax") {
         val scope = DefaultConfigurationCollectionScope(TEST_CODE_ID)
-        textField(scope, RelativeFieldPattern(), ScalarKind.TEXT.template).regex("[a-z]+:[a-z]+")
+        textField(scope, RelativeFieldPattern.root, ScalarKind.TEXT.template).regex("[a-z]+:[a-z]+")
 
         listOf(
             "\\Qliteral\\E",
@@ -265,7 +269,7 @@ val SdkRuntimeConformanceTest by testSuite {
             "a$*",
         ).forEach { pattern ->
             shouldThrow<IllegalArgumentException> {
-                textField(DefaultConfigurationCollectionScope(TEST_CODE_ID), RelativeFieldPattern(), ScalarKind.TEXT.template)
+                textField(DefaultConfigurationCollectionScope(TEST_CODE_ID), RelativeFieldPattern.root, ScalarKind.TEXT.template)
                     .regex(pattern)
             }
         }
@@ -789,7 +793,7 @@ val SdkRuntimeConformanceTest by testSuite {
         val counterProvider =
             object : ConfigurationProvider {
                 override fun collect(scope: ConfigurationCollectionScope): com.typewritermc.configuration.CollectedConfiguration {
-                    integerField(scope, RelativeFieldPattern(listOf(FieldPatternSegment.Field("count"))))
+                    integerField(scope, RelativeFieldPattern(segments = listOf(FieldPatternSegment.field("count"))))
                         .check { it > 0 }
                         .error("positive count")
                     return scope.collected()
@@ -798,7 +802,7 @@ val SdkRuntimeConformanceTest by testSuite {
         val chapterProvider =
             object : ConfigurationProvider {
                 override fun collect(scope: ConfigurationCollectionScope): com.typewritermc.configuration.CollectedConfiguration {
-                    textField(scope, RelativeFieldPattern(), ScalarKind.TEXT.template)
+                    textField(scope, RelativeFieldPattern.root, ScalarKind.TEXT.template)
                         .check { it.isNotBlank() }
                         .error("nonblank code")
                     return scope.collected()
@@ -841,7 +845,7 @@ val SdkRuntimeConformanceTest by testSuite {
         chapterCheck.predicate.invoke(listOf(chapter)) shouldBe true
 
         val helpers = DefaultConfigurationCollectionScope(counter.id)
-        integerField(helpers, RelativeFieldPattern(listOf(FieldPatternSegment.Field("count")))).minimum(3)
+        integerField(helpers, RelativeFieldPattern(segments = listOf(FieldPatternSegment.field("count")))).minimum(3)
         val rule =
             helpers
                 .collected()
@@ -859,7 +863,7 @@ val SdkRuntimeConformanceTest by testSuite {
         }
 
         val unsigned = DefaultConfigurationCollectionScope(counter.id)
-        unsignedIntegerField(unsigned, RelativeFieldPattern(listOf(FieldPatternSegment.Field("count"))))
+        unsignedIntegerField(unsigned, RelativeFieldPattern(segments = listOf(FieldPatternSegment.field("count"))))
             .minimum(ULong.MAX_VALUE - 1uL)
         val unsignedRule =
             unsigned
@@ -885,14 +889,14 @@ val SdkRuntimeConformanceTest by testSuite {
     test("nullable scalar and nested record configuration retain physical authored paths") {
         val owner = definitionId("Nullable")
         val scalar = DefaultConfigurationCollectionScope(owner)
-        nullableTextField(scalar, RelativeFieldPattern(listOf(FieldPatternSegment.Field("text")))).whenPresent {
+        nullableTextField(scalar, RelativeFieldPattern(segments = listOf(FieldPatternSegment.field("text")))).whenPresent {
             nonBlank()
             check { it.isNotBlank() }.error("present text is nonblank")
         }
         val scalarConfiguration = scalar.collected()
         scalarConfiguration.recipes
             .single()
-            .relativePath.segments shouldBe listOf(FieldPatternSegment.Field("text"))
+            .relativePath.segments shouldBe listOf(FieldPatternSegment.field("text"))
         scalarConfiguration.checks
             .single()
             .inputs
@@ -901,8 +905,8 @@ val SdkRuntimeConformanceTest by testSuite {
 
         val nested = DefaultConfigurationCollectionScope(owner)
         integerField(
-            nested.nested(RelativeFieldPattern(listOf(FieldPatternSegment.Field("style")))),
-            RelativeFieldPattern(listOf(FieldPatternSegment.Field("repetitions"))),
+            nested.nested(RelativeFieldPattern(segments = listOf(FieldPatternSegment.field("style")))),
+            RelativeFieldPattern(segments = listOf(FieldPatternSegment.field("repetitions"))),
         ).check { it > 0 }.error("present repetitions are positive")
         nested
             .collected()
@@ -911,7 +915,7 @@ val SdkRuntimeConformanceTest by testSuite {
             .inputs
             .single()
             .path.segments shouldBe
-            listOf(FieldPatternSegment.Field("style"), FieldPatternSegment.Field("repetitions"))
+            listOf(FieldPatternSegment.field("style"), FieldPatternSegment.field("repetitions"))
     }
 
     test("abstract native fields collections and nullable values dispatch by concrete type tag") {
@@ -1153,18 +1157,15 @@ val SdkRuntimeConformanceTest by testSuite {
         assembly.editorCatalog.types
             .single { it.definition.id == childId }
             .status shouldBe
-            SkirTypeCodec
-                .encode(
-                    DeclarationStatus.Unavailable(
-                        listOf(
-                            com.typewritermc.types.catalog.DeclarationDiagnostic(
-                                childId,
-                                "ambiguous_inherited_field",
-                                field = RelativeFieldPattern(listOf(FieldPatternSegment.Field("value"))),
-                            ),
-                        ),
+            DeclarationStatus.UnavailableWrapper(
+                listOf(
+                    skirout.editor.v1.diagnostic.DeclarationDiagnostic.of(
+                        childId,
+                        "ambiguous_inherited_field",
+                        field = RelativeFieldPattern(segments = listOf(FieldPatternSegment.field("value"))),
                     ),
-                ).getOrThrow()
+                ),
+            )
         assembly.editorCatalog.types.count { it.definition.id == duplicate.id } shouldBe 1
         (
             assembly.editorCatalog.types
@@ -1391,26 +1392,29 @@ val SdkRuntimeConformanceTest by testSuite {
             TypeDefinition.partial(id = id, representation = RepresentationTemplate.createRecord(fields = fieldList, abstract_ = false))
         val fallbackParents =
             mutableListOf<skirout.editor.v1.catalog.PresentationRole>(skirout.editor.v1.catalog.PresentationRole.WORKSPACE)
-        val endpointPath = mutableListOf<com.typewritermc.configuration.FieldPatternSegment>(FieldPatternSegment.Field("items"))
+        val endpointPath = mutableListOf<skirout.editor.v1.type_catalog.FieldPatternSegment>(FieldPatternSegment.field("items"))
         val rules =
             mutableListOf(
-                com.typewritermc.configuration.OwnedRule(
-                    RuleId(origin = RuleOrigin(owner = id, ordinal = 0), localIndex = 0),
-                    com.typewritermc.configuration.RuleDescriptor(testLiteral(DataValue.BooleanWrapper(true))),
-                    com.typewritermc.checking.DiagnosticTemplate(
-                        "valid",
-                        "valid",
-                        DiagnosticSeverity.ERROR,
-                        mutableListOf(RelativeFieldPattern()),
-                    ),
+                skirout.editor.v1.catalog.OwnedRule(
+                    id = RuleId(origin = RuleOrigin(owner = id, ordinal = 0), localIndex = 0),
+                    descriptor =
+                        skirout.editor.v1.catalog
+                            .RuleDescriptor(predicate = testLiteral(DataValue.BooleanWrapper(true))),
+                    diagnostic =
+                        skirout.editor.v1.diagnostic.DiagnosticTemplate(
+                            code = "valid",
+                            message = "valid",
+                            severity = DiagnosticSeverity.ERROR,
+                            targets = mutableListOf(RelativeFieldPattern.root),
+                        ),
                 ),
             )
         val recipe =
-            com.typewritermc.configuration.ConfigurationRecipe(
-                RuleOrigin(owner = id, ordinal = 0),
-                RelativeFieldPattern(),
-                RepresentationKind.Record,
-                rules,
+            skirout.editor.v1.catalog.ConfigurationRecipe(
+                origin = RuleOrigin(owner = id, ordinal = 0),
+                relativePath = RelativeFieldPattern.root,
+                representationCondition = RepresentationKind.RECORD,
+                rules = rules,
             )
         val origin = providerOrigin("immutable_snapshot")
         val configuration =
@@ -1427,13 +1431,13 @@ val SdkRuntimeConformanceTest by testSuite {
                     generation = CatalogGeneration(value = "immutable snapshot"),
                     endpointBindings =
                         mutableListOf(
-                            com.typewritermc.types.EndpointBindingTemplate(
-                                EndpointId(value = "immutable:endpoint"),
-                                id.namedTemplate(),
-                                id,
-                                RelativeFieldPattern(endpointPath),
-                                StandardTypes.list.template(argumentList),
-                                true,
+                            skirout.editor.v1.catalog.EndpointBindingTemplate(
+                                endpoint = EndpointId(value = "immutable:endpoint"),
+                                containingResource = id.namedTemplate(),
+                                valueOwner = id,
+                                relativePath = RelativeFieldPattern(segments = endpointPath),
+                                target = StandardTypes.list.template(argumentList),
+                                containsCollection = true,
                             ),
                         ),
                     roleFallbacks =
@@ -1450,7 +1454,7 @@ val SdkRuntimeConformanceTest by testSuite {
             FieldDeclaration.partial(owner = FieldOwner(definition = id, name = "late"), type = ScalarKind.TEXT.template)
         argumentList[0] = INT
         fallbackParents += skirout.editor.v1.catalog.PresentationRole.RESOURCE_SEARCH_RESULT
-        endpointPath += FieldPatternSegment.Items
+        endpointPath += FieldPatternSegment.ITEMS
         rules.clear()
 
         val published = assembly.editorCatalog.types.single { it.definition.id == id }
@@ -1462,7 +1466,7 @@ val SdkRuntimeConformanceTest by testSuite {
         assembly.endpointBindings
             .single()
             .relativePath.segments shouldBe
-            listOf(FieldPatternSegment.Field("items"))
+            listOf(FieldPatternSegment.field("items"))
         assembly.editorCatalog.roleFallbacks
             .single()
             .parents shouldBe
@@ -1482,11 +1486,11 @@ val SdkRuntimeConformanceTest by testSuite {
         val origin = providerOrigin("inherited_rules")
         val minimum =
             configurationProvider { scope ->
-                integerField(scope, RelativeFieldPattern(listOf(FieldPatternSegment.Field("value")))).minimum(10)
+                integerField(scope, RelativeFieldPattern(segments = listOf(FieldPatternSegment.field("value")))).minimum(10)
             }
         val maximum =
             configurationProvider { scope ->
-                integerField(scope, RelativeFieldPattern(listOf(FieldPatternSegment.Field("value")))).maximum(5)
+                integerField(scope, RelativeFieldPattern(segments = listOf(FieldPatternSegment.field("value")))).maximum(5)
             }
         val assembly =
             CatalogContributions(
@@ -1532,7 +1536,7 @@ val SdkRuntimeConformanceTest by testSuite {
             configurationProvider { scope ->
                 textField(
                     scope,
-                    RelativeFieldPattern(listOf(FieldPatternSegment.Field("value"))),
+                    RelativeFieldPattern(segments = listOf(FieldPatternSegment.field("value"))),
                     ScalarKind.TEXT.template,
                 ).apply {
                     minimumLength(10)
@@ -1568,7 +1572,7 @@ private fun integerField(
     @Suppress("UNCHECKED_CAST")
     return scope.field(
         path,
-        RepresentationKind.Integer,
+        RepresentationKind.INTEGER,
         INT,
         Integer::class as KClass<Integer<Int>>,
     )
@@ -1578,7 +1582,7 @@ private fun textField(
     scope: ConfigurationCollectionScope,
     path: RelativeFieldPattern,
     expected: TypeTemplate,
-): Text = scope.field(path, RepresentationKind.Text, expected, Text::class)
+): Text = scope.field(path, RepresentationKind.TEXT, expected, Text::class)
 
 private fun unsignedIntegerField(
     scope: ConfigurationCollectionScope,
@@ -1587,7 +1591,7 @@ private fun unsignedIntegerField(
     @Suppress("UNCHECKED_CAST")
     return scope.field(
         path,
-        RepresentationKind.Integer,
+        RepresentationKind.INTEGER,
         integerScalar(IntegerWidth.UNSIGNED_SIXTY_FOUR).template,
         Integer::class as KClass<Integer<ULong>>,
     )
@@ -1600,18 +1604,18 @@ private fun nullableTextField(
     @Suppress("UNCHECKED_CAST")
     return scope.field(
         path,
-        RepresentationKind.Text,
+        RepresentationKind.TEXT,
         ScalarKind.TEXT.template.nullable(),
         NullableField::class as KClass<NullableField<String, Text>>,
         mapOf(
-            FieldPatternSegment.Values to
+            FieldPatternSegment.VALUES to
                 NestedConfigurationScope(
-                    RepresentationKind.Text,
+                    RepresentationKind.TEXT,
                     ScalarKind.TEXT.template,
                     Text::class,
                     com.typewritermc.configuration.TextExpressionsFactory,
                 ) { nested ->
-                    textField(nested, RelativeFieldPattern(), ScalarKind.TEXT.template)
+                    textField(nested, RelativeFieldPattern.root, ScalarKind.TEXT.template)
                 },
         ),
     )

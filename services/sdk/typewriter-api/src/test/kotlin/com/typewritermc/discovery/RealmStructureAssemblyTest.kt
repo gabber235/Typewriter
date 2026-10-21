@@ -6,18 +6,20 @@ import com.typewritermc.imprint.ArtifactId
 import com.typewritermc.imprint.ContributionName
 import com.typewritermc.imprint.ContributionSourceId
 import com.typewritermc.imprint.ProducerId
-import com.typewritermc.types.EndpointCardinality
-import com.typewritermc.types.EndpointDefinition
-import com.typewritermc.types.EndpointSlot
 import com.typewritermc.types.RESOURCE_OWNERSHIP_FAMILY_ID
-import com.typewritermc.types.RelationContract
-import com.typewritermc.types.RelationDeletePolicy
-import com.typewritermc.types.catalog.DeclarationStatus
+import com.typewritermc.types.catalog.reasons
 import com.typewritermc.types.namedTemplate
+import com.typewritermc.types.of
 import com.typewritermc.types.qualified
 import de.infix.testBalloon.framework.core.testSuite
 import io.kotest.matchers.shouldBe
+import skirout.editor.v1.catalog.DeclarationStatus
+import skirout.editor.v1.catalog.EndpointCardinality
+import skirout.editor.v1.catalog.EndpointDefinition
+import skirout.editor.v1.catalog.EndpointSlot
 import skirout.editor.v1.catalog.RESOURCE_OWNERSHIP_FAMILY
+import skirout.editor.v1.catalog.RelationContract
+import skirout.editor.v1.catalog.RelationDeletePolicy
 import skirout.editor.v1.type_catalog.CatalogGeneration
 import skirout.editor.v1.type_catalog.DeclarationOwner
 import skirout.editor.v1.type_catalog.EndpointId
@@ -39,15 +41,15 @@ val RealmStructureAssemblyTest by testSuite {
         val healthy = id("Healthy")
         val assembly = assemble(listOf(record(reserved), record(healthy)))
         assembly.checked.definition(reserved).codes() shouldBe setOf("reserved_intrinsic_type_identity")
-        assembly.checked.definition(healthy) shouldBe DeclarationStatus.Ready
+        assembly.checked.definition(healthy) shouldBe DeclarationStatus.READY
     }
 
     test("publishes the realm root type and keeps the root available without an owner") {
         val assembly = assemble(structure())
 
         assembly.editorCatalog.realmRoot shouldBe RealmRootDefinition.id
-        assembly.checked.definition(RealmRootDefinition.id) shouldBe DeclarationStatus.Ready
-        assembly.checked.definition(section) shouldBe DeclarationStatus.Ready
+        assembly.checked.definition(RealmRootDefinition.id) shouldBe DeclarationStatus.READY
+        assembly.checked.definition(section) shouldBe DeclarationStatus.READY
     }
 
     test("rejects a concrete resource type that no ownership relation owns") {
@@ -61,7 +63,7 @@ val RealmStructureAssemblyTest by testSuite {
             )
 
         assembly.checked.definition(loose).codes() shouldBe setOf("unowned_resource_type")
-        assembly.checked.definition(owned) shouldBe DeclarationStatus.Ready
+        assembly.checked.definition(owned) shouldBe DeclarationStatus.READY
     }
 
     test("an owned abstract member owns its concrete descendants and plain values need no owner") {
@@ -80,8 +82,8 @@ val RealmStructureAssemblyTest by testSuite {
                 listOf(sectionsRelation, ownership("section.members", section, member)),
             )
 
-        assembly.checked.definition(concrete) shouldBe DeclarationStatus.Ready
-        assembly.checked.definition(value) shouldBe DeclarationStatus.Ready
+        assembly.checked.definition(concrete) shouldBe DeclarationStatus.READY
+        assembly.checked.definition(value) shouldBe DeclarationStatus.READY
     }
 
     test("rejects a generic realm section type") {
@@ -149,29 +151,29 @@ private fun ownership(
     relation: String,
     owner: TypeDefinitionId,
     member: TypeDefinitionId,
-) = RelationContract(
+) = RelationContract.of(
     id = RelationId(value = relation),
     first =
         EndpointDefinition(
-            EndpointId(value = "$relation:first"),
-            EndpointSlot.First,
-            owner.namedTemplate(),
-            EndpointCardinality.One,
-            RelationDeletePolicy.CASCADE,
+            id = EndpointId(value = "$relation:first"),
+            slot = EndpointSlot.FIRST,
+            resource = owner.namedTemplate(),
+            cardinality = EndpointCardinality.ONE,
+            onDelete = RelationDeletePolicy.CASCADE,
         ),
     second =
         EndpointDefinition(
-            EndpointId(value = "$relation:second"),
-            EndpointSlot.Second,
-            member.namedTemplate(),
-            EndpointCardinality.Many,
-            RelationDeletePolicy.CLEAR,
+            id = EndpointId(value = "$relation:second"),
+            slot = EndpointSlot.SECOND,
+            resource = member.namedTemplate(),
+            cardinality = EndpointCardinality.MANY,
+            onDelete = RelationDeletePolicy.CLEAR,
         ),
     families = setOf(RelationFamilyId(value = RESOURCE_OWNERSHIP_FAMILY_ID)),
 )
 
 private fun DeclarationStatus.codes(): Set<String> =
-    (this as? DeclarationStatus.Unavailable)?.reasons.orEmpty().mapTo(linkedSetOf()) {
+    (this as? DeclarationStatus.UnavailableWrapper)?.reasons.orEmpty().mapTo(linkedSetOf()) {
         it.code
     }
 
