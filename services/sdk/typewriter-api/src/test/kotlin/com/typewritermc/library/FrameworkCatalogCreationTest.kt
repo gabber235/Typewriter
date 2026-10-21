@@ -797,13 +797,15 @@ private fun exportFrameworkControlFixture(
     assembly.snapshot.diagnostics.filter { it.code.contains("presentation") } shouldBe emptyList()
     val elementMaterial =
         assembly.snapshot.presentationMaterials.single {
-            it.role == PresentationRole.INSPECTOR &&
-                (it.target as? com.typewritermc.presentation.PresentationTarget.Named)?.type?.definition ==
-                com.typewritermc.elements.ElementDefinition.id
+            it.role == skirout.editor.v1.catalog.PresentationRole.INSPECTOR &&
+                (it.target as? skirout.editor.v1.catalog.PresentationTarget.NamedWrapper)?.value?.definition ==
+                com.typewritermc.types.skir.SkirTypeCodec
+                    .encode(com.typewritermc.elements.ElementDefinition.id)
+                    .getOrThrow()
         }
     elementMaterial.inheritableNodes.size shouldBe 3
     assembly.snapshot.presentationMaterials
-        .single { it.provider == entryInspector.descriptor.id }
+        .single { it.provider.namespace == entryInspector.descriptor.id.namespace && it.provider.name == entryInspector.descriptor.id.name }
         .inheritableNodes.size shouldBe 3
     val wire =
         com.typewritermc.types.skir.SkirTypeCodec

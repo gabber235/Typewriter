@@ -7,7 +7,6 @@ import com.typewritermc.configuration.ConfigurationRecipe
 import com.typewritermc.configuration.OwnedRule
 import com.typewritermc.configuration.RelativeFieldPattern
 import com.typewritermc.presentation.PresentationDescriptor
-import com.typewritermc.presentation.PresentationMaterial
 import com.typewritermc.presentation.PresentationTarget
 import com.typewritermc.types.EndpointBindingTemplate
 import com.typewritermc.types.EndpointDefinition
@@ -30,7 +29,7 @@ internal fun EditorCatalogSnapshot.immutableCopy(): EditorCatalogSnapshot =
         types = types.immutableListCopy(PublishedType::immutableCopy),
         relations = relations.immutableListCopy(RelationContract::immutableCopy),
         presentations = presentations.immutableListCopy(PresentationDescriptor::immutableCopy),
-        presentationMaterials = presentationMaterials.immutableListCopy(PresentationMaterial::immutableCopy),
+        presentationMaterials = presentationMaterials.immutableListCopy(),
         configuration = configuration.immutableListCopy(ConfigurationRecipe::immutableCopy),
         diagnostics = diagnostics.immutableListCopy(DeclarationDiagnostic::immutableCopy),
         endpointBindings = endpointBindings.immutableListCopy(EndpointBindingTemplate::immutableCopy),
@@ -77,9 +76,6 @@ private fun PresentationDescriptor.immutableCopy(): PresentationDescriptor =
         target = target.immutableCopy(),
         roles = roles.immutableSetCopy(),
     )
-
-private fun PresentationMaterial.immutableCopy(): PresentationMaterial =
-    copy(target = target.immutableCopy(), inheritableNodes = inheritableNodes.immutableListCopy())
 
 private fun PresentationTarget.immutableCopy(): PresentationTarget =
     when (this) {

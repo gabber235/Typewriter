@@ -14,7 +14,6 @@ import com.typewritermc.configuration.RuleId
 import com.typewritermc.configuration.RuleOrigin
 import com.typewritermc.discovery.ContributionKey
 import com.typewritermc.presentation.PresentationDescriptor
-import com.typewritermc.presentation.PresentationMaterial
 import com.typewritermc.presentation.PresentationTarget
 import com.typewritermc.presentation.RoleFallback
 import com.typewritermc.types.CollectionKind
@@ -64,7 +63,6 @@ import skirout.editor.v1.catalog.EndpointDefinition as SkirEndpointDefinition
 import skirout.editor.v1.catalog.EndpointSlot as SkirEndpointSlot
 import skirout.editor.v1.catalog.OwnedRule as SkirOwnedRule
 import skirout.editor.v1.catalog.PresentationDescriptor as SkirPresentationDescriptor
-import skirout.editor.v1.catalog.PresentationMaterial as SkirPresentationMaterial
 import skirout.editor.v1.catalog.PresentationRole as SkirPresentationRole
 import skirout.editor.v1.catalog.PresentationTarget as SkirPresentationTarget
 import skirout.editor.v1.catalog.PublishedType as SkirPublishedType
@@ -150,6 +148,10 @@ object SkirTypeCodec {
     fun encode(rule: RuleId): SkirConversionResult<SkirRuleId> = captureSkirConversion { this.encode(rule) }
 
     fun encode(target: ResourceTarget): SkirConversionResult<SkirResourceTarget> = captureSkirConversion { this.encode(target) }
+
+    fun encode(target: PresentationTarget): SkirConversionResult<SkirPresentationTarget> = captureSkirConversion { this.encode(target) }
+
+    fun encode(role: PresentationRole): SkirConversionResult<SkirPresentationRole> = captureSkirConversion { encodePresentationRole(role) }
 }
 
 internal fun ConversionScope.encodeTypeId(id: TypeId): SkirTypeId =
@@ -508,13 +510,7 @@ private fun ConversionScope.encodeSnapshot(snapshot: EditorCatalogSnapshot) =
         relations = snapshot.relations.mapIndexed { index, value -> at("relation $index") { encode(value) } },
         resourceDisplays = snapshot.resourceDisplays.mapIndexed { index, value -> at("resource display $index") { encode(value) } },
         presentations = snapshot.presentations.mapIndexed { index, value -> at("presentation $index") { encode(value) } },
-        presentationMaterials =
-            snapshot.presentationMaterials.mapIndexed {
-                index,
-                value,
-                ->
-                at("presentation material $index") { encode(value) }
-            },
+        presentationMaterials = snapshot.presentationMaterials,
         configuration = snapshot.configuration.mapIndexed { index, value -> at("configuration $index") { encode(value) } },
         diagnostics = snapshot.diagnostics.mapIndexed { index, value -> at("diagnostic $index") { encode(value) } },
         endpointBindings = snapshot.endpointBindings.mapIndexed { index, value -> at("endpoint binding $index") { encode(value) } },
@@ -541,8 +537,8 @@ internal fun ConversionScope.encode(target: ResourceTarget): SkirResourceTarget 
 
 private fun encode(fallback: RoleFallback): SkirRoleFallback =
     SkirRoleFallback(
-        role = encode(fallback.role),
-        parents = fallback.parents.map(::encode),
+        role = encodePresentationRole(fallback.role),
+        parents = fallback.parents.map(::encodePresentationRole),
     )
 
 private fun ConversionScope.encode(capability: RealmCapabilityDescriptor): SkirCapabilityDefinition =
@@ -699,19 +695,8 @@ private fun ConversionScope.encode(presentation: PresentationDescriptor) =
         id = encode(presentation.id),
         owner = encode(presentation.owner),
         target = encode(presentation.target),
-        roles = presentation.roles.sortedBy { it.ordinal }.map(::encode),
+        roles = presentation.roles.sortedBy { it.ordinal }.map(::encodePresentationRole),
         priority = presentation.priority,
-    )
-
-private fun ConversionScope.encode(material: PresentationMaterial) =
-    SkirPresentationMaterial(
-        provider = encode(material.provider),
-        target = encode(material.target),
-        role = encode(material.role),
-        layout = material.layout,
-        dependencies = material.dependencies,
-        subject = encodeTypeTemplate(material.subject),
-        inheritableNodes = material.inheritableNodes,
     )
 
 private fun encode(id: PresentationId) = SkirPresentationId(namespace = id.namespace, name = id.name)
@@ -733,7 +718,7 @@ private fun ConversionScope.encode(target: PresentationTarget): SkirPresentation
         is PresentationTarget.Representation -> SkirPresentationTarget.RepresentationWrapper(encode(target.kind))
     }
 
-private fun encode(role: PresentationRole): SkirPresentationRole =
+private fun encodePresentationRole(role: PresentationRole): SkirPresentationRole =
     when (role) {
         PresentationRole.WORKSPACE -> SkirPresentationRole.WORKSPACE
         PresentationRole.NAVIGATOR -> SkirPresentationRole.NAVIGATOR

@@ -1,11 +1,6 @@
 package com.typewritermc.presentation
 
 import com.typewritermc.checking.CatalogGeneration
-import com.typewritermc.configuration.RepresentationKind
-import com.typewritermc.types.PresentationId
-import com.typewritermc.types.PresentationRole
-import com.typewritermc.types.ScalarKind
-import com.typewritermc.types.TypeTemplate
 import com.typewritermc.types.catalog.EditorCatalogSnapshot
 import com.typewritermc.types.catalog.toWire
 import com.typewritermc.types.skir.getOrThrow
@@ -13,6 +8,10 @@ import de.infix.testBalloon.framework.core.testSuite
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.matchers.shouldBe
 import skirout.editor.v1.binding.BindingRef
+import skirout.editor.v1.catalog.PresentationMaterial
+import skirout.editor.v1.catalog.PresentationRole
+import skirout.editor.v1.catalog.PresentationTarget
+import skirout.editor.v1.catalog.RepresentationKind
 import skirout.editor.v1.presentation.AxisChild
 import skirout.editor.v1.presentation.AxisChildrenElement
 import skirout.editor.v1.presentation.BoundControl
@@ -24,6 +23,9 @@ import skirout.editor.v1.presentation.PresentationProperties
 import skirout.editor.v1.presentation.TextControl
 import skirout.editor.v1.type_catalog.ExpressionBindingId
 import skirout.editor.v1.type_catalog.PathSegment
+import skirout.editor.v1.type_catalog.PresentationId
+import skirout.editor.v1.type_catalog.ScalarKind
+import skirout.editor.v1.type_catalog.TypeTemplate
 import skirout.editor.v1.type_catalog.ValuePath
 
 val FieldPresentationInferenceTest by testSuite {
@@ -683,12 +685,12 @@ val FieldPresentationInferenceTest by testSuite {
         val layout = column("root", fieldNode("name"), partNode("details", fieldNode("message")), remainder("rest"))
         val material =
             PresentationMaterial(
-                provider = PresentationId("test", "fields"),
-                target = PresentationTarget.Representation(RepresentationKind.Record),
-                subject = TypeTemplate.Scalar(ScalarKind.Text),
+                provider = PresentationId(namespace = "test", name = "fields"),
+                target = PresentationTarget.RepresentationWrapper(RepresentationKind.RECORD),
                 role = PresentationRole.INSPECTOR,
                 layout = layout,
                 dependencies = PresentationDependencies.partial(),
+                subject = TypeTemplate.ScalarWrapper(ScalarKind.TEXT),
                 inheritableNodes = layout.inferInheritableNodes(),
             )
         val wire =

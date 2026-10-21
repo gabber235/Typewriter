@@ -29,7 +29,6 @@ import com.typewritermc.presentation.CheckedPresentationTemplate
 import com.typewritermc.presentation.NestedPresentationSlot
 import com.typewritermc.presentation.PresentationBuildBinding
 import com.typewritermc.presentation.PresentationDescriptor
-import com.typewritermc.presentation.PresentationMaterial
 import com.typewritermc.presentation.PresentationNestedTemplate
 import com.typewritermc.presentation.PresentationTarget
 import com.typewritermc.presentation.RoleFallback
@@ -71,8 +70,11 @@ import com.typewritermc.types.skir.SkirAuthoringValueCodec
 import com.typewritermc.types.skir.SkirConversionResult
 import com.typewritermc.types.skir.SkirDataValueCodec
 import com.typewritermc.types.skir.SkirTypeCodec
+import com.typewritermc.types.skir.getOrThrow
 import com.typewritermc.types.substitute
 import kotlinx.coroutines.CancellationException
+import skirout.editor.v1.catalog.PresentationMaterial
+import skirout.editor.v1.type_catalog.PresentationId as SkirPresentationId
 
 /**
  * One contributed type declaration. Codegen supplies the complete [display] of every declared type and the
@@ -269,13 +271,14 @@ fun CatalogContributions.assemble(context: CatalogAssemblyContext): CatalogAssem
             resourceDisplays = displayCollection.displays.map { it.formulas },
             presentations = publishedPresentations.map(OwnedPresentation::descriptor),
             presentationMaterials =
-                materialCollection.materials.filter { material ->
-                    checked.isReady(material.subject) &&
-                        when (val target = material.target) {
-                            is PresentationTarget.Named -> checked.isReady(target.type)
-                            is PresentationTarget.Representation -> true
-                        }
-                },
+                materialCollection.materials
+                    .filter { collected ->
+                        checked.isReady(collected.subject) &&
+                            when (val target = collected.target) {
+                                is PresentationTarget.Named -> checked.isReady(target.type)
+                                is PresentationTarget.Representation -> true
+                            }
+                    }.map(CollectedPresentationMaterial::material),
             configuration = recipes,
             diagnostics =
                 diagnostics + placementDiagnostics + boundOperations.diagnostics + searchKeyDiagnostics + displayCollection.diagnostics,
@@ -386,8 +389,15 @@ private data class CollectedOwnedConfiguration(
     val configuration: com.typewritermc.configuration.CollectedConfiguration,
 )
 
+/** One published material with the subject and target whose readiness in the final catalog decides its publication. */
+private class CollectedPresentationMaterial(
+    val subject: TypeTemplate,
+    val target: PresentationTarget,
+    val material: PresentationMaterial,
+)
+
 private data class PresentationMaterialCollection(
-    val materials: List<PresentationMaterial>,
+    val materials: List<CollectedPresentationMaterial>,
     val failures: List<DeclarationDiagnostic>,
     val callbackFailures: List<CatalogCallbackFailure>,
 )
@@ -401,7 +411,7 @@ private fun collectPresentationMaterials(
     resourceTypes: Set<TypeDefinitionId>,
     ownershipEndpoints: Set<com.typewritermc.types.EndpointId>,
 ): PresentationMaterialCollection {
-    val materials = mutableListOf<PresentationMaterial>()
+    val materials = mutableListOf<CollectedPresentationMaterial>()
     val failures = mutableListOf<DeclarationDiagnostic>()
     val callbackFailures = mutableListOf<CatalogCallbackFailure>()
     val nativeTypes =
@@ -459,14 +469,23 @@ private fun collectPresentationMaterials(
                     }
                     if (result.dependencies.validCollections(subject, definitions, catalog, resourceTypes)) {
                         materials +=
-                            PresentationMaterial(
-                                provider = owned.descriptor.id,
-                                target = owned.descriptor.target,
+                            CollectedPresentationMaterial(
                                 subject = subject,
-                                role = role,
-                                layout = result.layout,
-                                dependencies = result.dependencies,
-                                inheritableNodes = inferred,
+                                target = owned.descriptor.target,
+                                material =
+                                    PresentationMaterial(
+                                        provider =
+                                            SkirPresentationId(
+                                                namespace = owned.descriptor.id.namespace,
+                                                name = owned.descriptor.id.name,
+                                            ),
+                                        target = SkirTypeCodec.encode(owned.descriptor.target).getOrThrow(),
+                                        role = SkirTypeCodec.encode(role).getOrThrow(),
+                                        layout = result.layout,
+                                        dependencies = result.dependencies,
+                                        subject = SkirTypeCodec.encode(subject).getOrThrow(),
+                                        inheritableNodes = inferred,
+                                    ),
                             )
                     } else {
                         val affected = (subject as? TypeTemplate.Named)?.definition

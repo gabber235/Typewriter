@@ -1,8 +1,5 @@
 package com.typewritermc.presentation
 
-import com.typewritermc.types.PresentationId
-import com.typewritermc.types.PresentationRole
-import com.typewritermc.types.TypeTemplate
 import skirout.editor.v1.binding.BindingRef
 import skirout.editor.v1.presentation.AxisChild
 import skirout.editor.v1.presentation.BoundControl
@@ -15,16 +12,6 @@ import skirout.editor.v1.presentation.PresentationNode
 import skirout.editor.v1.presentation.SearchProvider
 import skirout.editor.v1.presentation.SequencePresentation
 import skirout.editor.v1.presentation.StackChild
-
-data class PresentationMaterial(
-    val provider: PresentationId,
-    val target: PresentationTarget,
-    val subject: TypeTemplate,
-    val role: PresentationRole,
-    val layout: PresentationNode,
-    val dependencies: PresentationDependencies,
-    val inheritableNodes: List<String> = emptyList(),
-)
 
 /**
  * References the reusable view of this canonical layout, retaining neutral groups and their layout settings.

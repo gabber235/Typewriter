@@ -16,8 +16,6 @@ import com.typewritermc.expression.name
 import com.typewritermc.expression.orElse
 import com.typewritermc.presentation.DefaultPresentationRuntime
 import com.typewritermc.presentation.PresentationBuildBinding
-import com.typewritermc.presentation.PresentationMaterial
-import com.typewritermc.presentation.PresentationTarget
 import com.typewritermc.presentation.createResource
 import com.typewritermc.presentation.presentationTemplate
 import com.typewritermc.presentation.resource
@@ -36,6 +34,7 @@ import io.kotest.matchers.shouldBe
 import io.kotest.matchers.string.shouldContain
 import io.kotest.matchers.types.shouldBeInstanceOf
 import skirout.editor.v1.action.EditorAction
+import skirout.editor.v1.catalog.PresentationMaterial
 import skirout.editor.v1.expression.ExpressionNode
 import skirout.editor.v1.presentation.ChildrenElement
 import skirout.editor.v1.presentation.GraphDirection
@@ -49,6 +48,7 @@ import skirout.editor.v1.presentation.ResourcesLayout
 import skirout.editor.v1.presentation.StackChild
 import skirout.editor.v1.type_catalog.DataValue
 import skirout.editor.v1.type_catalog.PathSegment
+import skirout.editor.v1.catalog.PresentationTarget as WirePresentationTarget
 import skirout.editor.v1.presentation.PresentationColor as WireColor
 
 val CorePlacesTest by testSuite {
@@ -217,10 +217,13 @@ private fun CatalogAssembly.bookPresentation(): (BookPresentationScope.() -> Uni
 private fun CatalogAssembly.material(
     type: TypeDefinitionId,
     role: PresentationRole,
-): PresentationMaterial =
-    snapshot.presentationMaterials.single {
-        it.role == role && (it.target as? PresentationTarget.Named)?.type?.definition == type
+): PresentationMaterial {
+    val wireRole = SkirTypeCodec.encode(role).getOrThrow()
+    val wireType = SkirTypeCodec.encode(type).getOrThrow()
+    return snapshot.presentationMaterials.single {
+        it.role == wireRole && (it.target as? WirePresentationTarget.NamedWrapper)?.value?.definition == wireType
     }
+}
 
 private fun CatalogAssembly.resources(
     type: TypeDefinitionId,

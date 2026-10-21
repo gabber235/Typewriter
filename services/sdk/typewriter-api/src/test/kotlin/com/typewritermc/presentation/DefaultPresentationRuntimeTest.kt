@@ -745,7 +745,7 @@ val DefaultPresentationRuntimeTest by testSuite {
             ).assemble(CatalogAssemblyContext(CatalogGeneration("symbolic presentation")))
 
         val material = assembly.snapshot.presentationMaterials.single()
-        material.target shouldBe target
+        material.target shouldBe SkirTypeCodec.encode(target).getOrThrow()
         val valueNode =
             material.layout
                 .fixedChildren()
@@ -1717,17 +1717,7 @@ val DefaultPresentationRuntimeTest by testSuite {
                     buttons { listInput { items { recordInput { fields { x(using = reference) } } } } }
                 }
             }
-        val material =
-            PresentationMaterial(
-                provider = com.typewritermc.types.PresentationId("test", "nested choices"),
-                target = PresentationTarget.Named(TypeTemplate.Named(subjectId)),
-                subject = TypeTemplate.Named(subjectId),
-                role = PresentationRole.INSPECTOR,
-                layout = layout.layout,
-                dependencies = layout.dependencies,
-            )
-
-        material.layout.inferInheritableNodes().size shouldBe 3
+        layout.layout.inferInheritableNodes().size shouldBe 3
     }
 
     test("builds scoped collection match and invocation data nodes with lexical bindings") {

@@ -6,7 +6,6 @@ import com.typewritermc.checking.CatalogGeneration
 import com.typewritermc.configuration.ConfigurationRecipe
 import com.typewritermc.configuration.RuleId
 import com.typewritermc.presentation.PresentationDescriptor
-import com.typewritermc.presentation.PresentationMaterial
 import com.typewritermc.presentation.RoleFallback
 import com.typewritermc.types.EndpointBindingTemplate
 import com.typewritermc.types.FieldOwner
@@ -20,7 +19,9 @@ import com.typewritermc.types.TypeUse
 import com.typewritermc.types.skir.SkirTypeCodec
 import com.typewritermc.types.skir.getOrThrow
 import skirout.editor.v1.catalog.EditorCatalog
+import skirout.editor.v1.catalog.PresentationMaterial
 import skirout.editor.v1.expression.ExpressionNode
+import skirout.editor.v1.operation.ResourceOperationDefinition
 
 /**
  * One declared type as published to editors.
@@ -81,7 +82,7 @@ data class EditorCatalogSnapshot(
     val capabilities: List<RealmCapabilityDescriptor> = emptyList(),
     val recommendations: List<TypeRecommendation> = emptyList(),
     val roleFallbacks: List<RoleFallback> = emptyList(),
-    val resourceOperations: List<skirout.editor.v1.operation.ResourceOperationDefinition> = emptyList(),
+    val resourceOperations: List<ResourceOperationDefinition> = emptyList(),
     /** The realm root type. The realm keeps exactly one instance of it, which owns every section. */
     val realmRoot: TypeDefinitionId,
 )

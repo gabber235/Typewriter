@@ -51,7 +51,6 @@ import com.typewritermc.imprint.ContributionName
 import com.typewritermc.imprint.ContributionSourceId
 import com.typewritermc.imprint.ProducerId
 import com.typewritermc.presentation.PresentationDescriptor
-import com.typewritermc.presentation.PresentationMaterial
 import com.typewritermc.presentation.PresentationProvider
 import com.typewritermc.presentation.PresentationTarget
 import com.typewritermc.types.DataValue
@@ -81,6 +80,7 @@ import com.typewritermc.types.skir.getOrThrow
 import de.infix.testBalloon.framework.core.testSuite
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.matchers.shouldBe
+import skirout.editor.v1.catalog.PresentationMaterial
 import skirout.editor.v1.expression.ExpressionNode
 import kotlin.reflect.KClass
 
@@ -1535,14 +1535,23 @@ private fun fieldPresentationMaterial(
             header = null,
         )
     return PresentationMaterial(
-        provider = provider,
-        target = target,
-        subject = (target as PresentationTarget.Named).type,
-        role = com.typewritermc.types.PresentationRole.INSPECTOR,
+        provider =
+            skirout.editor.v1.type_catalog
+                .PresentationId(namespace = provider.namespace, name = provider.name),
+        target =
+            com.typewritermc.types.skir.SkirTypeCodec
+                .encode(target)
+                .getOrThrow(),
+        role = skirout.editor.v1.catalog.PresentationRole.INSPECTOR,
         layout = layout,
         dependencies =
             skirout.editor.v1.presentation.PresentationDependencies
                 .partial(),
+        subject =
+            com.typewritermc.types.skir.SkirTypeCodec
+                .encode((target as PresentationTarget.Named).type)
+                .getOrThrow(),
+        inheritableNodes = emptyList(),
     )
 }
 
