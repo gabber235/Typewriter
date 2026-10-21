@@ -1,4 +1,9 @@
 //! Generated transport routes. Do not edit; regenerate with `bun run generate:protocol`.
+/// The most bytes of an encoded reply that one reply frame carries.
+pub const RESPONSE_CHUNK_BYTES: usize = 524288;
+/// The most frames one reply may have, and so the most messages a responder may send to one
+/// requester inbox.
+pub const MAX_RESPONSE_CHUNKS: usize = 64;
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum RealmRole {
     RealmCoordinator,
@@ -15,9 +20,6 @@ impl crate::transport::RealmScope {
             RealmRole::RealmCoordinator => {
                 grants.subscribe.insert(format!(
                     "service.to.{realm}.organization.{organization}.realm.editor.catalog.fetch"
-                ));
-                grants.publish.insert(format!(
-                    "service.from.{realm}.organization.{organization}.realm.editor.catalog.fetch.*"
                 ));
                 grants.subscribe.insert(format!(
                     "service.to.{realm}.organization.{organization}.realm.editor.catalog.invalidate"
@@ -96,13 +98,6 @@ impl crate::transport::RealmScope {
                         ),
                     );
                 grants
-                    .publish
-                    .insert(
-                        format!(
-                            "service.from.{realm}.organization.{organization}.realm.editor.authoring.state.query.*"
-                        ),
-                    );
-                grants
                     .subscribe
                     .insert(
                         format!(
@@ -144,13 +139,6 @@ impl crate::transport::RealmScope {
                     .publish
                     .insert(
                         format!(
-                            "service.from.{realm}.organization.{organization}.realm.editor.authoring.compiled.query.*"
-                        ),
-                    );
-                grants
-                    .publish
-                    .insert(
-                        format!(
                             "service.from.{realm}.organization.{organization}.realm.editor.authoring.compiled.changed"
                         ),
                     );
@@ -169,13 +157,6 @@ impl crate::transport::RealmScope {
                     .insert(
                         format!(
                             "service.to.{realm}.organization.{organization}.realm.editor.authoring.publication.query"
-                        ),
-                    );
-                grants
-                    .publish
-                    .insert(
-                        format!(
-                            "service.from.{realm}.organization.{organization}.realm.editor.authoring.publication.query.*"
                         ),
                     );
                 grants
@@ -232,13 +213,6 @@ impl crate::transport::RealmScope {
                     .insert(
                         format!(
                             "service.to.{realm}.organization.{organization}.realm.editor.authoring.compiled.query"
-                        ),
-                    );
-                grants
-                    .subscribe
-                    .insert(
-                        format!(
-                            "service.from.{realm}.organization.{organization}.realm.editor.authoring.compiled.query.*"
                         ),
                     );
                 grants
@@ -490,9 +464,6 @@ impl crate::transport::OrganizationActorScope {
                 grants.publish.insert(format!(
                     "service.to.*.organization.{organization}.realm.editor.catalog.fetch"
                 ));
-                grants.subscribe.insert(format!(
-                    "service.from.*.organization.{organization}.realm.editor.catalog.fetch.*"
-                ));
                 grants.publish.insert(format!(
                     "service.to.*.organization.{organization}.realm.editor.catalog.invalidate"
                 ));
@@ -549,13 +520,6 @@ impl crate::transport::OrganizationActorScope {
                 grants.publish.insert(format!(
                     "service.to.*.organization.{organization}.realm.editor.authoring.state.query"
                 ));
-                grants
-                    .subscribe
-                    .insert(
-                        format!(
-                            "service.from.*.organization.{organization}.realm.editor.authoring.state.query.*"
-                        ),
-                    );
                 grants.publish.insert(format!(
                     "service.to.*.organization.{organization}.realm.editor.authoring.edit.commit"
                 ));
@@ -578,13 +542,6 @@ impl crate::transport::OrganizationActorScope {
                     .subscribe
                     .insert(
                         format!(
-                            "service.from.*.organization.{organization}.realm.editor.authoring.compiled.query.*"
-                        ),
-                    );
-                grants
-                    .subscribe
-                    .insert(
-                        format!(
                             "service.from.*.organization.{organization}.realm.editor.authoring.compiled.changed"
                         ),
                     );
@@ -603,13 +560,6 @@ impl crate::transport::OrganizationActorScope {
                     .insert(
                         format!(
                             "service.to.*.organization.{organization}.realm.editor.authoring.publication.query"
-                        ),
-                    );
-                grants
-                    .subscribe
-                    .insert(
-                        format!(
-                            "service.from.*.organization.{organization}.realm.editor.authoring.publication.query.*"
                         ),
                     );
                 grants

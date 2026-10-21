@@ -701,8 +701,8 @@ impl CatalogChanged {
 // ==============================================================================
 
 /// Captures one saved resource graph and its catalog for editor synchronization.
-/// Findings retain their own execution evidence and freshness. All transfer chunks describe this same
-/// confirmed observation, which resource operations must echo before supplying a working overlay.
+/// Findings retain their own execution evidence and freshness. The state describes one confirmed
+/// observation, which resource operations must echo before supplying a working overlay.
 #[derive(Clone, Debug, PartialEq, Default)]
 pub struct AuthoringState {
     pub generation: crate::skirout::base::editor::v1::type_catalog::CatalogGeneration,
@@ -730,7 +730,7 @@ impl AuthoringState {
             crate::skir_client::internal::StructAdapter::new(
                 "editor/v1/authoring.skir",
                 "AuthoringState",
-                "Captures one saved resource graph and its catalog for editor synchronization.\nFindings retain their own execution evidence and freshness. All transfer chunks describe this same\nconfirmed observation, which resource operations must echo before supplying a working overlay.",
+                "Captures one saved resource graph and its catalog for editor synchronization.\nFindings retain their own execution evidence and freshness. The state describes one confirmed\nobservation, which resource operations must echo before supplying a working overlay.",
                 |x: &AuthoringState| &x._unrecognized,
                 |x: &mut AuthoringState, u| x._unrecognized = u,
             )
@@ -1808,149 +1808,12 @@ impl AuthoringSearchResult {
 }
 
 // ==============================================================================
-// struct AuthoringStateTransferChunk
-// ==============================================================================
-
-#[derive(Clone, Debug, PartialEq, Default)]
-pub struct AuthoringStateTransferChunk {
-    pub generation: crate::skirout::base::editor::v1::type_catalog::CatalogGeneration,
-    pub transfer: crate::skirout::base::kernel::v1::bounded_transfer::BoundedTransferChunk,
-    /// Set this to None when you're creating a struct.
-    pub _unrecognized: Option<crate::skir_client::UnrecognizedFields<AuthoringStateTransferChunk>>,
-}
-
-impl AuthoringStateTransferChunk {
-    pub fn default_ref() -> &'static AuthoringStateTransferChunk {
-        static D: std::sync::LazyLock<AuthoringStateTransferChunk> =
-            std::sync::LazyLock::new(AuthoringStateTransferChunk::default);
-        &D
-    }
-}
-
-impl AuthoringStateTransferChunk {
-    fn _adapter()
-    -> &'static crate::skir_client::internal::StructAdapter<AuthoringStateTransferChunk> {
-        static ADAPTER: std::sync::LazyLock<
-            crate::skir_client::internal::StructAdapter<AuthoringStateTransferChunk>,
-        > = std::sync::LazyLock::new(|| {
-            crate::skir_client::internal::StructAdapter::new(
-                "editor/v1/authoring.skir",
-                "AuthoringStateTransferChunk",
-                "",
-                |x: &AuthoringStateTransferChunk| &x._unrecognized,
-                |x: &mut AuthoringStateTransferChunk, u| x._unrecognized = u,
-            )
-        });
-        &*ADAPTER
-    }
-    pub fn serializer() -> crate::skir_client::Serializer<AuthoringStateTransferChunk> {
-        initialize_module_serializers();
-        crate::skir_client::internal::struct_serializer_from_static(
-            AuthoringStateTransferChunk::_adapter(),
-        )
-    }
-}
-
-// ==============================================================================
-// enum AuthoringTransferUnavailableReason
-// ==============================================================================
-
-#[derive(Debug, Clone, PartialEq)]
-pub enum AuthoringTransferUnavailableReason {
-    Unknown(Option<crate::skir_client::UnrecognizedVariant<AuthoringTransferUnavailableReason>>),
-    EncodedSizeLimit,
-}
-
-impl Default for AuthoringTransferUnavailableReason {
-    fn default() -> Self {
-        AuthoringTransferUnavailableReason::Unknown(None)
-    }
-}
-
-impl AuthoringTransferUnavailableReason {
-    fn _adapter()
-    -> &'static crate::skir_client::internal::EnumAdapter<AuthoringTransferUnavailableReason> {
-        static ADAPTER: std::sync::LazyLock<
-            crate::skir_client::internal::EnumAdapter<AuthoringTransferUnavailableReason>,
-        > = std::sync::LazyLock::new(|| {
-            crate::skir_client::internal::EnumAdapter::new(
-                |x: &AuthoringTransferUnavailableReason| match x {
-                    AuthoringTransferUnavailableReason::Unknown(_) => 0,
-                    AuthoringTransferUnavailableReason::EncodedSizeLimit => 1,
-                },
-                |u| AuthoringTransferUnavailableReason::Unknown(Some(u)),
-                |x: &AuthoringTransferUnavailableReason| match x {
-                    AuthoringTransferUnavailableReason::Unknown(Some(u)) => Some(u.as_ref()),
-                    _ => None,
-                },
-                "editor/v1/authoring.skir",
-                "AuthoringTransferUnavailableReason",
-                "",
-            )
-        });
-        &*ADAPTER
-    }
-    pub fn serializer() -> crate::skir_client::Serializer<AuthoringTransferUnavailableReason> {
-        initialize_module_serializers();
-        crate::skir_client::internal::enum_serializer_from_static(
-            AuthoringTransferUnavailableReason::_adapter(),
-        )
-    }
-}
-
-// ==============================================================================
-// struct AuthoringTransferUnavailable
-// ==============================================================================
-
-#[derive(Clone, Debug, PartialEq, Default)]
-pub struct AuthoringTransferUnavailable {
-    pub generation: crate::skirout::base::editor::v1::type_catalog::CatalogGeneration,
-    pub reason: AuthoringTransferUnavailableReason,
-    pub encoded_size: i64,
-    pub max_encoded_size: i64,
-    /// Set this to None when you're creating a struct.
-    pub _unrecognized: Option<crate::skir_client::UnrecognizedFields<AuthoringTransferUnavailable>>,
-}
-
-impl AuthoringTransferUnavailable {
-    pub fn default_ref() -> &'static AuthoringTransferUnavailable {
-        static D: std::sync::LazyLock<AuthoringTransferUnavailable> =
-            std::sync::LazyLock::new(AuthoringTransferUnavailable::default);
-        &D
-    }
-}
-
-impl AuthoringTransferUnavailable {
-    fn _adapter()
-    -> &'static crate::skir_client::internal::StructAdapter<AuthoringTransferUnavailable> {
-        static ADAPTER: std::sync::LazyLock<
-            crate::skir_client::internal::StructAdapter<AuthoringTransferUnavailable>,
-        > = std::sync::LazyLock::new(|| {
-            crate::skir_client::internal::StructAdapter::new(
-                "editor/v1/authoring.skir",
-                "AuthoringTransferUnavailable",
-                "",
-                |x: &AuthoringTransferUnavailable| &x._unrecognized,
-                |x: &mut AuthoringTransferUnavailable, u| x._unrecognized = u,
-            )
-        });
-        &*ADAPTER
-    }
-    pub fn serializer() -> crate::skir_client::Serializer<AuthoringTransferUnavailable> {
-        initialize_module_serializers();
-        crate::skir_client::internal::struct_serializer_from_static(
-            AuthoringTransferUnavailable::_adapter(),
-        )
-    }
-}
-
-// ==============================================================================
 // struct AuthoringObservationId
 // ==============================================================================
 
 /// Identifies one saved authoring observation without ordering resource changes.
-/// It remains fixed across snapshot transfer chunks. A local operation overlay echoes this identity
-/// while carrying separate proposed values; a changed saved view requires refreshing the baseline.
+/// A local operation overlay echoes this identity while carrying separate proposed values; a
+/// changed saved view requires refreshing the baseline.
 #[derive(Clone, Debug, PartialEq, Default)]
 pub struct AuthoringObservationId {
     pub value: String,
@@ -1974,7 +1837,7 @@ impl AuthoringObservationId {
             crate::skir_client::internal::StructAdapter::new(
                 "editor/v1/authoring.skir",
                 "AuthoringObservationId",
-                "Identifies one saved authoring observation without ordering resource changes.\nIt remains fixed across snapshot transfer chunks. A local operation overlay echoes this identity\nwhile carrying separate proposed values; a changed saved view requires refreshing the baseline.",
+                "Identifies one saved authoring observation without ordering resource changes.\nA local operation overlay echoes this identity while carrying separate proposed values; a\nchanged saved view requires refreshing the baseline.",
                 |x: &AuthoringObservationId| &x._unrecognized,
                 |x: &mut AuthoringObservationId, u| x._unrecognized = u,
             )
@@ -1996,7 +1859,6 @@ impl AuthoringObservationId {
 #[derive(Clone, Debug, PartialEq, Default)]
 pub struct QueryAuthoringStateRequest {
     pub generation: crate::skirout::base::editor::v1::type_catalog::CatalogGeneration,
-    pub transfer_id: String,
     /// Set this to None when you're creating a struct.
     pub _unrecognized: Option<crate::skir_client::UnrecognizedFields<QueryAuthoringStateRequest>>,
 }
@@ -2040,9 +1902,8 @@ impl QueryAuthoringStateRequest {
 #[derive(Debug, Clone, PartialEq)]
 pub enum QueryAuthoringStateResponse {
     Unknown(Option<crate::skir_client::UnrecognizedVariant<QueryAuthoringStateResponse>>),
-    Chunk(Box<AuthoringStateTransferChunk>),
-    CatalogChanged(Box<CatalogChanged>),
-    Unavailable(Box<AuthoringTransferUnavailable>),
+    State(Box<AuthoringState>),
+    CatalogChangedError(Box<CatalogChanged>),
     InternalError(Box<crate::skirout::base::kernel::v1::errors::InternalError>),
 }
 
@@ -2061,10 +1922,9 @@ impl QueryAuthoringStateResponse {
             crate::skir_client::internal::EnumAdapter::new(
                 |x: &QueryAuthoringStateResponse| match x {
                     QueryAuthoringStateResponse::Unknown(_) => 0,
-                    QueryAuthoringStateResponse::Chunk(_) => 1,
-                    QueryAuthoringStateResponse::CatalogChanged(_) => 2,
-                    QueryAuthoringStateResponse::Unavailable(_) => 3,
-                    QueryAuthoringStateResponse::InternalError(_) => 4,
+                    QueryAuthoringStateResponse::State(_) => 1,
+                    QueryAuthoringStateResponse::CatalogChangedError(_) => 2,
+                    QueryAuthoringStateResponse::InternalError(_) => 3,
                 },
                 |u| QueryAuthoringStateResponse::Unknown(Some(u)),
                 |x: &QueryAuthoringStateResponse| match x {
@@ -3668,72 +3528,6 @@ fn initialize_module_serializers() {
             (*a).finalize();
         }
         unsafe {
-            let a: *mut crate::skir_client::internal::StructAdapter<AuthoringStateTransferChunk> =
-                AuthoringStateTransferChunk::_adapter() as *const _ as *mut _;
-            (*a).add_field(
-                "generation",
-                0,
-                crate::skirout::base::editor::v1::type_catalog::CatalogGeneration::serializer(),
-                "",
-                |x: &AuthoringStateTransferChunk| &x.generation,
-                |x: &mut AuthoringStateTransferChunk, v| x.generation = v,
-            );
-            (*a).add_field("transfer", 1, crate::skirout::base::kernel::v1::bounded_transfer::BoundedTransferChunk::serializer(), "", |x: &AuthoringStateTransferChunk| &x.transfer, |x: &mut AuthoringStateTransferChunk, v| x.transfer = v);
-            (*a).finalize();
-        }
-        unsafe {
-            let a: *mut crate::skir_client::internal::EnumAdapter<
-                AuthoringTransferUnavailableReason,
-            > = AuthoringTransferUnavailableReason::_adapter() as *const _ as *mut _;
-            (*a).add_constant_variant(
-                "encoded_size_limit",
-                1,
-                1,
-                "",
-                AuthoringTransferUnavailableReason::EncodedSizeLimit,
-            );
-            (*a).finalize();
-        }
-        unsafe {
-            let a: *mut crate::skir_client::internal::StructAdapter<AuthoringTransferUnavailable> =
-                AuthoringTransferUnavailable::_adapter() as *const _ as *mut _;
-            (*a).add_field(
-                "generation",
-                0,
-                crate::skirout::base::editor::v1::type_catalog::CatalogGeneration::serializer(),
-                "",
-                |x: &AuthoringTransferUnavailable| &x.generation,
-                |x: &mut AuthoringTransferUnavailable, v| x.generation = v,
-            );
-            (*a).add_field(
-                "reason",
-                1,
-                crate::skir_client::internal::enum_serializer_from_static(
-                    AuthoringTransferUnavailableReason::_adapter(),
-                ),
-                "",
-                |x: &AuthoringTransferUnavailable| &x.reason,
-                |x: &mut AuthoringTransferUnavailable, v| x.reason = v,
-            );
-            (*a).add_field(
-                "encoded_size",
-                2,
-                crate::skir_client::Serializer::int64(),
-                "",
-                |x: &AuthoringTransferUnavailable| &x.encoded_size,
-                |x: &mut AuthoringTransferUnavailable, v| x.encoded_size = v,
-            );
-            (*a).add_field(
-                "max_encoded_size",
-                3,
-                crate::skir_client::Serializer::int64(),
-                "",
-                |x: &AuthoringTransferUnavailable| &x.max_encoded_size,
-                |x: &mut AuthoringTransferUnavailable, v| x.max_encoded_size = v,
-            );
-            (*a).finalize();
-        }
-        unsafe {
             let a: *mut crate::skir_client::internal::StructAdapter<AuthoringObservationId> =
                 AuthoringObservationId::_adapter() as *const _ as *mut _;
             (*a).add_field(
@@ -3757,65 +3551,43 @@ fn initialize_module_serializers() {
                 |x: &QueryAuthoringStateRequest| &x.generation,
                 |x: &mut QueryAuthoringStateRequest, v| x.generation = v,
             );
-            (*a).add_field(
-                "transfer_id",
-                1,
-                crate::skir_client::Serializer::string(),
-                "",
-                |x: &QueryAuthoringStateRequest| &x.transfer_id,
-                |x: &mut QueryAuthoringStateRequest, v| x.transfer_id = v,
-            );
             (*a).finalize();
         }
         unsafe {
             let a: *mut crate::skir_client::internal::EnumAdapter<QueryAuthoringStateResponse> =
                 QueryAuthoringStateResponse::_adapter() as *const _ as *mut _;
             (*a).add_wrapper_variant(
-                "chunk",
+                "state",
                 1,
                 1,
                 crate::skir_client::internal::struct_serializer_from_static(
-                    AuthoringStateTransferChunk::_adapter(),
+                    AuthoringState::_adapter(),
                 ),
                 "",
-                |v| QueryAuthoringStateResponse::Chunk(Box::new(v)),
+                |v| QueryAuthoringStateResponse::State(Box::new(v)),
                 |x| match x {
-                    QueryAuthoringStateResponse::Chunk(b) => b.as_ref(),
+                    QueryAuthoringStateResponse::State(b) => b.as_ref(),
                     _ => unreachable!(),
                 },
             );
             (*a).add_wrapper_variant(
-                "catalog_changed",
+                "catalog_changed_error",
                 2,
                 2,
                 crate::skir_client::internal::struct_serializer_from_static(
                     CatalogChanged::_adapter(),
                 ),
                 "",
-                |v| QueryAuthoringStateResponse::CatalogChanged(Box::new(v)),
+                |v| QueryAuthoringStateResponse::CatalogChangedError(Box::new(v)),
                 |x| match x {
-                    QueryAuthoringStateResponse::CatalogChanged(b) => b.as_ref(),
-                    _ => unreachable!(),
-                },
-            );
-            (*a).add_wrapper_variant(
-                "unavailable",
-                3,
-                3,
-                crate::skir_client::internal::struct_serializer_from_static(
-                    AuthoringTransferUnavailable::_adapter(),
-                ),
-                "",
-                |v| QueryAuthoringStateResponse::Unavailable(Box::new(v)),
-                |x| match x {
-                    QueryAuthoringStateResponse::Unavailable(b) => b.as_ref(),
+                    QueryAuthoringStateResponse::CatalogChangedError(b) => b.as_ref(),
                     _ => unreachable!(),
                 },
             );
             (*a).add_wrapper_variant(
                 "internal_error",
-                4,
-                4,
+                3,
+                3,
                 crate::skirout::base::kernel::v1::errors::InternalError::serializer(),
                 "",
                 |v| QueryAuthoringStateResponse::InternalError(Box::new(v)),
@@ -4067,19 +3839,17 @@ fn initialize_module_serializers() {
 // Methods
 // ==============================================================================
 
-/// Transfers one retained saved snapshot using the caller transfer identity and bounded integrity metadata.
+/// Returns the retained saved snapshot for one catalog generation.
 pub fn query_authoring_state_method()
 -> &'static crate::skir_client::Method<QueryAuthoringStateRequest, QueryAuthoringStateResponse> {
     static METHOD: std::sync::LazyLock<
         crate::skir_client::Method<QueryAuthoringStateRequest, QueryAuthoringStateResponse>,
-    > = std::sync::LazyLock::new(|| {
-        crate::skir_client::Method {
-            name: "QueryAuthoringState".to_string(),
-            number: 920010_i64,
-            request_serializer: QueryAuthoringStateRequest::serializer(),
-            response_serializer: QueryAuthoringStateResponse::serializer(),
-            doc: "Transfers one retained saved snapshot using the caller transfer identity and bounded integrity metadata.".to_string(),
-        }
+    > = std::sync::LazyLock::new(|| crate::skir_client::Method {
+        name: "QueryAuthoringState".to_string(),
+        number: 920010_i64,
+        request_serializer: QueryAuthoringStateRequest::serializer(),
+        response_serializer: QueryAuthoringStateResponse::serializer(),
+        doc: "Returns the retained saved snapshot for one catalog generation.".to_string(),
     });
     &*METHOD
 }

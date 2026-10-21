@@ -33,7 +33,6 @@ export "skirout/editor/v1/resource_operations.dart";
 export "skirout/editor/v1/search.dart";
 export "skirout/editor/v1/type_catalog.dart";
 export "skirout/editor/v1/typed_value.dart";
-export "skirout/kernel/v1/bounded_transfer.dart";
 export "skirout/kernel/v1/color.dart";
 export "skirout/kernel/v1/duration.dart";
 export "skirout/kernel/v1/errors.dart";

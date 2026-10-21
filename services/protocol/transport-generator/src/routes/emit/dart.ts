@@ -1,6 +1,5 @@
 import type { CodeGenerator } from "skir-internal";
 
-import { transferFieldName } from "../../symbols.js";
 import {
   BLANK,
   indent,
@@ -12,7 +11,13 @@ import {
   type Lines,
 } from "../../text.js";
 import { CONSUMER_NAME, grantSubject, type GrantToken } from "../grants.js";
-import type { Delivery, RoleDeclaration, RoleDeclarations, ScopeKind } from "../manifest.js";
+import type {
+  Delivery,
+  RoleDeclaration,
+  RoleDeclarations,
+  ScopeKind,
+  TransportLimits,
+} from "../manifest.js";
 import {
   clientSubject,
   hasSide,
@@ -33,7 +38,7 @@ const HEADER =
 const dartString = (value: string) => quoted(value, "escaped");
 
 /** One part of an interpolated Dart string: literal text or a validated identifier variable. */
-type StringPart = { readonly text: string } | { readonly variable: string } | { readonly expression: string };
+type StringPart = { readonly text: string } | { readonly variable: string };
 
 /** Renders parts as one interpolated Dart string literal, such as `"cloud.to.user.$user.create"`. */
 function interpolated(parts: readonly StringPart[]): string {
@@ -42,7 +47,7 @@ function interpolated(parts: readonly StringPart[]): string {
       if ("text" in part) {
         return dartString(part.text).slice(1, -1);
       }
-      return "variable" in part ? `$${part.variable}` : `\${${part.expression}}`;
+      return `$${part.variable}`;
     })
     .join("");
   return `"${body}"`;
@@ -84,10 +89,6 @@ function scopeParameters(scope: ScopeKind): readonly ScopeParameter[] {
   }
 }
 
-function variableName(parameter: Parameter): string {
-  return parameter === "transfer_id" ? "transfer" : parameter;
-}
-
 /** Each item is followed by a requested empty line, as the original generator spaced them. */
 function spaced(items: readonly string[]): Lines {
   return items.flatMap((item) => [item, BLANK]);
@@ -104,8 +105,8 @@ function scopeValues(scope: ScopeKind, subject?: SubjectTemplate): Lines {
       .filter(({ parameter }) => !subject || subject.has(parameter))
       .map(({ parameter, name, type }) =>
         type === "_skir.RecordId"
-          ? `final ${variableName(parameter)} = ${name}.id.transportIdentity;`
-          : `final ${variableName(parameter)} = ${name}.transportIdentity;`,
+          ? `final ${parameter} = ${name}.id.transportIdentity;`
+          : `final ${parameter} = ${name}.transportIdentity;`,
       ),
   );
 }
@@ -114,19 +115,11 @@ function scopeArguments(scope: ScopeKind): Lines {
   return spaced(scopeParameters(scope).map(({ name }) => `${name}: ${name},`));
 }
 
-function subjectExpression(template: SubjectTemplate, transferField?: string): string {
-  const parts = template.tokens.map((token): StringPart => {
-    if (token.kind === "literal") {
-      return { text: token.value };
-    }
-    if (token.parameter === "transfer_id") {
-      if (!transferField) {
-        throw new Error("bounded Dart subject requires a transfer field");
-      }
-      return { expression: `${transferField}.transportTransfer` };
-    }
-    return { variable: variableName(token.parameter) };
-  });
+function subjectExpression(template: SubjectTemplate): string {
+  const parts = template.tokens.map(
+    (token): StringPart =>
+      token.kind === "literal" ? { text: token.value } : { variable: token.parameter },
+  );
   return interpolated(dotted(parts));
 }
 
@@ -139,7 +132,7 @@ function grantExpression(tokens: readonly GrantToken[]): string {
       case "wildcard":
         return { text: "*" };
       case "parameter":
-        return { variable: variableName(token.parameter) };
+        return { variable: token.parameter };
       case "consumer":
         throw new Error("panel subscriptions never name a consumer");
     }
@@ -359,43 +352,6 @@ function emitWatch(
   ];
 }
 
-function emitBoundedWatch(
-  route: ResolvedRoute,
-  roles: RoleDeclarations,
-  symbols: CodeGenerator.SymbolProvider,
-  imports: Imports,
-): Lines | undefined {
-  const { flow } = route;
-  if (flow.kind !== "bounded_watch" || !hasSide(route, roles, "panel")) {
-    return undefined;
-  }
-  const requestAddress = clientSubject(route, "request");
-  const updateAddress = clientSubject(route, "updates");
-  if (!requestAddress || !updateAddress) {
-    return undefined;
-  }
-  const method = imports.use(symbols.method(flow.method.module, flow.method.method));
-  const requestType = imports.use(symbols.record(flow.method.request));
-  const responseType = imports.use(symbols.record(flow.method.response));
-  const field = `this.${transferFieldName(flow.transferField)}`;
-  return [
-    `extension ${dartName(route)}Nats on ${requestType} {`,
-    `    Stream<${responseType}> watch(SkirMutationClient transport, {`,
-    ...indent(scopeSignature(route.scope), 2),
-    "    }) {",
-    ...indent(scopeValues(route.scope), 2),
-    ...lines(`        final method = ${method};
-        return transport.watchRequest(
-            ${subjectExpression(requestAddress)},
-            ${subjectExpression(updateAddress, field)},
-            method.requestSerializer.toBytes(this),
-            method.responseSerializer,
-        );
-    }
-}`),
-  ];
-}
-
 function emitEvent(
   route: ResolvedRoute,
   roles: RoleDeclarations,
@@ -475,13 +431,19 @@ static String? userIdFromSubject(
   ];
 }
 
+/** The manifest reply framing limits, which the panel NATS client assembles replies with. */
+function limits({ chunkBytes, maxChunks }: TransportLimits): Lines {
+  return lines(`/// Reply framing limits of the transport route manifest: frame size and frames per reply.
+const transportLimits = TransportLimits(chunkBytes: ${chunkBytes}, maxChunks: ${maxChunks});`);
+}
+
 function dartName(route: ResolvedRoute): string {
   return `${upperCamel(route.name)}Route`;
 }
 
 /**
  * Emits the panel transport routes: one extension per panel request route, an event class per panel
- * event, and the consumer naming rule of persistent projections. The backend owns the panel's
+ * event, the reply framing limits and the consumer naming rule of persistent projections. The backend owns the panel's
  * permissions; the panel never derives them.
  */
 export function emitDart(
@@ -494,11 +456,10 @@ export function emitDart(
     const declaration =
       emitUnary(route, resolved, symbols, imports) ??
       emitWatch(route, roles, symbols, imports) ??
-      emitBoundedWatch(route, roles, symbols, imports) ??
       emitEvent(route, roles, symbols, imports);
     return declaration ? [declaration] : [];
   });
-  const body = separated([...declarations, RUNTIME, CONSUMER_RULE]);
+  const body = separated([...declarations, limits(resolved.limits), RUNTIME, CONSUMER_RULE]);
   return [
     {
       path: "transport_routes.dart",

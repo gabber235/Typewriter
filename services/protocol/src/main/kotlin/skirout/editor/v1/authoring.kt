@@ -2451,8 +2451,8 @@ sealed interface AuthoringState_OrMutable {
 
 /**
  * Captures one saved resource graph and its catalog for editor synchronization.
- * Findings retain their own execution evidence and freshness. All transfer chunks describe this same
- * confirmed observation, which resource operations must echo before supplying a working overlay.
+ * Findings retain their own execution evidence and freshness. The state describes one confirmed
+ * observation, which resource operations must echo before supplying a working overlay.
  *
  * Deeply immutable.
  */
@@ -6501,393 +6501,6 @@ class AuthoringSearchResult private constructor(
     }
 }
 
-sealed interface AuthoringStateTransferChunk_OrMutable {
-    val generation: skirout.editor.v1.type_catalog.CatalogGeneration_OrMutable;
-    val transfer: skirout.kernel.v1.bounded_transfer.BoundedTransferChunk_OrMutable;
-
-    fun toFrozen(): skirout.editor.v1.authoring.AuthoringStateTransferChunk;
-}
-
-/** Deeply immutable. */
-@kotlin.Suppress("UNUSED_PARAMETER")
-class AuthoringStateTransferChunk private constructor(
-    override val generation: skirout.editor.v1.type_catalog.CatalogGeneration,
-    override val transfer: skirout.kernel.v1.bounded_transfer.BoundedTransferChunk,
-    internal val _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.authoring.AuthoringStateTransferChunk>? =
-        null,
-): skirout.editor.v1.authoring.AuthoringStateTransferChunk_OrMutable {
-    constructor(
-        _mustNameArguments: _MustNameArguments =
-            _MustNameArguments,
-        generation: skirout.editor.v1.type_catalog.CatalogGeneration_OrMutable,
-        transfer: skirout.kernel.v1.bounded_transfer.BoundedTransferChunk_OrMutable,
-        _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.authoring.AuthoringStateTransferChunk>? =
-            null,
-    ): this(
-        generation.toFrozen(),
-        transfer.toFrozen(),
-        _unrecognizedFields,
-    ) {}
-
-    @kotlin.Deprecated("Already frozen", kotlin.ReplaceWith("this"))
-    override fun toFrozen() = this;
-
-    /** Returns a mutable shallow copy of this instance */
-    fun toMutable() = Mutable(
-        generation = this.generation,
-        transfer = this.transfer,
-    );
-
-    /** Returns a shallow copy of this instance with the specified fields replaced. */
-    fun copy(
-        _mustNameArguments: _MustNameArguments =
-            _MustNameArguments,
-        generation: skirout.editor.v1.type_catalog.CatalogGeneration_OrMutable =
-            this.generation,
-        transfer: skirout.kernel.v1.bounded_transfer.BoundedTransferChunk_OrMutable =
-            this.transfer,
-    ) = skirout.editor.v1.authoring.AuthoringStateTransferChunk(
-        generation.toFrozen(),
-        transfer.toFrozen(),
-        this._unrecognizedFields,
-    );
-
-    @kotlin.Deprecated("No point in creating an exact copy of an immutable object", kotlin.ReplaceWith("this"))
-    fun copy() = this;
-
-    override fun equals(other: kotlin.Any?): kotlin.Boolean {
-        return this === other || (other is skirout.editor.v1.authoring.AuthoringStateTransferChunk && this.generation == other.generation && this.transfer == other.transfer);
-    }
-
-    override fun hashCode(): kotlin.Int {
-        return kotlin.collections.listOf<kotlin.Any?>(this.generation, this.transfer).hashCode();
-    }
-
-    override fun toString(): kotlin.String {
-        return build.skir.internal.toStringImpl(
-            this,
-            _SerializerRegistry.AuthoringStateTransferChunkSerializerImpl,
-        )
-    }
-
-    /** Mutable version of [AuthoringStateTransferChunk]. */
-    class Mutable internal constructor(
-        _mustNameArguments: _MustNameArguments =
-            _MustNameArguments,
-        override var generation: skirout.editor.v1.type_catalog.CatalogGeneration_OrMutable =
-            skirout.editor.v1.type_catalog.CatalogGeneration.partial(),
-        override var transfer: skirout.kernel.v1.bounded_transfer.BoundedTransferChunk_OrMutable =
-            skirout.kernel.v1.bounded_transfer.BoundedTransferChunk.partial(),
-        internal var _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.authoring.AuthoringStateTransferChunk>? =
-            null,
-    ): skirout.editor.v1.authoring.AuthoringStateTransferChunk_OrMutable {
-        /** Returns a deeply immutable copy of this instance */
-        override fun toFrozen() = skirout.editor.v1.authoring.AuthoringStateTransferChunk(
-            generation = this.generation,
-            transfer = this.transfer,
-            _unrecognizedFields = this._unrecognizedFields,
-        );
-
-        /**
-         * If the value of [generation] is already mutable, returns it as-is.
-         * Otherwise, makes a mutable copy, assigns it back to [generation] and returns it.
-         */
-        val mutableGeneration: skirout.editor.v1.type_catalog.CatalogGeneration.Mutable get() {
-            var value = this.generation;
-            return when (value) {
-                is skirout.editor.v1.type_catalog.CatalogGeneration -> {
-                    value = value.toMutable();
-                    this.generation = value;
-                    return value;
-                }
-                is skirout.editor.v1.type_catalog.CatalogGeneration.Mutable -> value;
-            }
-        }
-
-        /**
-         * If the value of [transfer] is already mutable, returns it as-is.
-         * Otherwise, makes a mutable copy, assigns it back to [transfer] and returns it.
-         */
-        val mutableTransfer: skirout.kernel.v1.bounded_transfer.BoundedTransferChunk.Mutable get() {
-            var value = this.transfer;
-            return when (value) {
-                is skirout.kernel.v1.bounded_transfer.BoundedTransferChunk -> {
-                    value = value.toMutable();
-                    this.transfer = value;
-                    return value;
-                }
-                is skirout.kernel.v1.bounded_transfer.BoundedTransferChunk.Mutable -> value;
-            }
-        }
-    }
-
-    companion object {
-        private val default =
-            skirout.editor.v1.authoring.AuthoringStateTransferChunk(
-                skirout.editor.v1.type_catalog.CatalogGeneration.partial(),
-                skirout.kernel.v1.bounded_transfer.BoundedTransferChunk.partial(),
-            );
-
-        /** Returns an instance with all fields set to their default values. */
-        fun partial() = default;
-
-        /**
-         * Creates a new instance of [AuthoringStateTransferChunk].
-         * Unlike the constructor, does not require all fields to be specified.
-         * Missing fields will be set to their default values.
-         */
-        fun partial(
-            _mustNameArguments: _MustNameArguments =
-                _MustNameArguments,
-            generation: skirout.editor.v1.type_catalog.CatalogGeneration_OrMutable =
-                skirout.editor.v1.type_catalog.CatalogGeneration.partial(),
-            transfer: skirout.kernel.v1.bounded_transfer.BoundedTransferChunk_OrMutable =
-                skirout.kernel.v1.bounded_transfer.BoundedTransferChunk.partial(),
-        ) = skirout.editor.v1.authoring.AuthoringStateTransferChunk(
-            generation = generation,
-            transfer = transfer,
-            _unrecognizedFields = null,
-        );
-
-        /** Serializer for [AuthoringStateTransferChunk] instances. */
-        val serializer get() = _SerializerRegistry.AuthoringStateTransferChunkSerializer;
-
-        /** Describes the [AuthoringStateTransferChunk] type. Provides runtime introspection capabilities. */
-        val typeDescriptor get() = _SerializerRegistry.AuthoringStateTransferChunkSerializerImpl.typeDescriptor;
-    }
-}
-
-/** Deeply immutable. */
-sealed class AuthoringTransferUnavailableReason private constructor() {
-    /** The kind of variant held by a `AuthoringTransferUnavailableReason`. */
-    enum class Kind {
-        UNKNOWN,
-        ENCODED_SIZE_LIMIT_CONST,
-    }
-
-    class Unknown @kotlin.Deprecated("For internal use", kotlin.ReplaceWith("skirout.editor.v1.authoring.AuthoringTransferUnavailableReason.UNKNOWN")) internal constructor(
-        internal val _kind: Kind,
-        internal override val _unrecognized: _UnrecognizedVariant<skirout.editor.v1.authoring.AuthoringTransferUnavailableReason>?,
-    ) : skirout.editor.v1.authoring.AuthoringTransferUnavailableReason() {
-        override val kind get() = _kind;
-
-        override fun equals(other: kotlin.Any?): kotlin.Boolean {
-            return other is skirout.editor.v1.authoring.AuthoringTransferUnavailableReason && other.kind == kind;
-        }
-
-        override fun hashCode(): kotlin.Int {
-            return kind.ordinal;
-        }
-    }
-
-    object ENCODED_SIZE_LIMIT : skirout.editor.v1.authoring.AuthoringTransferUnavailableReason() {
-        override val kind get() = Kind.ENCODED_SIZE_LIMIT_CONST;
-
-        override fun equals(other: kotlin.Any?): kotlin.Boolean {
-            return other is skirout.editor.v1.authoring.AuthoringTransferUnavailableReason && other.kind == Kind.ENCODED_SIZE_LIMIT_CONST;
-        }
-
-        override fun hashCode(): kotlin.Int {
-            return Kind.ENCODED_SIZE_LIMIT_CONST.ordinal;
-        }
-    }
-
-    internal open val _unrecognized: _UnrecognizedVariant<skirout.editor.v1.authoring.AuthoringTransferUnavailableReason>? get() = null;
-
-    abstract val kind: Kind;
-
-    override fun toString(): kotlin.String {
-        return build.skir.internal.toStringImpl(
-            this,
-            _SerializerRegistry.AuthoringTransferUnavailableReasonSerializerImpl,
-        )
-    }
-
-    companion object {
-        /**
-         * Constant indicating an unknown [AuthoringTransferUnavailableReason].
-         * Default value for fields of type [AuthoringTransferUnavailableReason].
-         */
-        val UNKNOWN = @kotlin.Suppress("DEPRECATION") Unknown(Kind.UNKNOWN, null);
-
-        /** Serializer for [AuthoringTransferUnavailableReason] instances. */
-        val serializer get() = _SerializerRegistry.AuthoringTransferUnavailableReasonSerializer;
-
-        /** Describes the [AuthoringTransferUnavailableReason] type. Provides runtime introspection capabilities. */
-        val typeDescriptor get() = _SerializerRegistry.AuthoringTransferUnavailableReasonSerializerImpl.typeDescriptor;
-    }
-}
-
-sealed interface AuthoringTransferUnavailable_OrMutable {
-    val generation: skirout.editor.v1.type_catalog.CatalogGeneration_OrMutable;
-    val reason: skirout.editor.v1.authoring.AuthoringTransferUnavailableReason;
-    val encodedSize: kotlin.Long;
-    val maxEncodedSize: kotlin.Long;
-
-    fun toFrozen(): skirout.editor.v1.authoring.AuthoringTransferUnavailable;
-}
-
-/** Deeply immutable. */
-@kotlin.Suppress("UNUSED_PARAMETER")
-class AuthoringTransferUnavailable private constructor(
-    override val generation: skirout.editor.v1.type_catalog.CatalogGeneration,
-    override val reason: skirout.editor.v1.authoring.AuthoringTransferUnavailableReason,
-    override val encodedSize: kotlin.Long,
-    override val maxEncodedSize: kotlin.Long,
-    internal val _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.authoring.AuthoringTransferUnavailable>? =
-        null,
-): skirout.editor.v1.authoring.AuthoringTransferUnavailable_OrMutable {
-    constructor(
-        _mustNameArguments: _MustNameArguments =
-            _MustNameArguments,
-        generation: skirout.editor.v1.type_catalog.CatalogGeneration_OrMutable,
-        reason: skirout.editor.v1.authoring.AuthoringTransferUnavailableReason,
-        encodedSize: kotlin.Long,
-        maxEncodedSize: kotlin.Long,
-        _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.authoring.AuthoringTransferUnavailable>? =
-            null,
-    ): this(
-        generation.toFrozen(),
-        reason,
-        encodedSize,
-        maxEncodedSize,
-        _unrecognizedFields,
-    ) {}
-
-    @kotlin.Deprecated("Already frozen", kotlin.ReplaceWith("this"))
-    override fun toFrozen() = this;
-
-    /** Returns a mutable shallow copy of this instance */
-    fun toMutable() = Mutable(
-        generation = this.generation,
-        reason = this.reason,
-        encodedSize = this.encodedSize,
-        maxEncodedSize = this.maxEncodedSize,
-    );
-
-    /** Returns a shallow copy of this instance with the specified fields replaced. */
-    fun copy(
-        _mustNameArguments: _MustNameArguments =
-            _MustNameArguments,
-        generation: skirout.editor.v1.type_catalog.CatalogGeneration_OrMutable =
-            this.generation,
-        reason: skirout.editor.v1.authoring.AuthoringTransferUnavailableReason =
-            this.reason,
-        encodedSize: kotlin.Long =
-            this.encodedSize,
-        maxEncodedSize: kotlin.Long =
-            this.maxEncodedSize,
-    ) = skirout.editor.v1.authoring.AuthoringTransferUnavailable(
-        generation.toFrozen(),
-        reason,
-        encodedSize,
-        maxEncodedSize,
-        this._unrecognizedFields,
-    );
-
-    @kotlin.Deprecated("No point in creating an exact copy of an immutable object", kotlin.ReplaceWith("this"))
-    fun copy() = this;
-
-    override fun equals(other: kotlin.Any?): kotlin.Boolean {
-        return this === other || (other is skirout.editor.v1.authoring.AuthoringTransferUnavailable && this.generation == other.generation && this.reason == other.reason && this.encodedSize == other.encodedSize && this.maxEncodedSize == other.maxEncodedSize);
-    }
-
-    override fun hashCode(): kotlin.Int {
-        return kotlin.collections.listOf<kotlin.Any?>(this.generation, this.reason, this.encodedSize, this.maxEncodedSize).hashCode();
-    }
-
-    override fun toString(): kotlin.String {
-        return build.skir.internal.toStringImpl(
-            this,
-            _SerializerRegistry.AuthoringTransferUnavailableSerializerImpl,
-        )
-    }
-
-    /** Mutable version of [AuthoringTransferUnavailable]. */
-    class Mutable internal constructor(
-        _mustNameArguments: _MustNameArguments =
-            _MustNameArguments,
-        override var generation: skirout.editor.v1.type_catalog.CatalogGeneration_OrMutable =
-            skirout.editor.v1.type_catalog.CatalogGeneration.partial(),
-        override var reason: skirout.editor.v1.authoring.AuthoringTransferUnavailableReason =
-            skirout.editor.v1.authoring.AuthoringTransferUnavailableReason.UNKNOWN,
-        override var encodedSize: kotlin.Long =
-            0L,
-        override var maxEncodedSize: kotlin.Long =
-            0L,
-        internal var _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.authoring.AuthoringTransferUnavailable>? =
-            null,
-    ): skirout.editor.v1.authoring.AuthoringTransferUnavailable_OrMutable {
-        /** Returns a deeply immutable copy of this instance */
-        override fun toFrozen() = skirout.editor.v1.authoring.AuthoringTransferUnavailable(
-            generation = this.generation,
-            reason = this.reason,
-            encodedSize = this.encodedSize,
-            maxEncodedSize = this.maxEncodedSize,
-            _unrecognizedFields = this._unrecognizedFields,
-        );
-
-        /**
-         * If the value of [generation] is already mutable, returns it as-is.
-         * Otherwise, makes a mutable copy, assigns it back to [generation] and returns it.
-         */
-        val mutableGeneration: skirout.editor.v1.type_catalog.CatalogGeneration.Mutable get() {
-            var value = this.generation;
-            return when (value) {
-                is skirout.editor.v1.type_catalog.CatalogGeneration -> {
-                    value = value.toMutable();
-                    this.generation = value;
-                    return value;
-                }
-                is skirout.editor.v1.type_catalog.CatalogGeneration.Mutable -> value;
-            }
-        }
-    }
-
-    companion object {
-        private val default =
-            skirout.editor.v1.authoring.AuthoringTransferUnavailable(
-                skirout.editor.v1.type_catalog.CatalogGeneration.partial(),
-                skirout.editor.v1.authoring.AuthoringTransferUnavailableReason.UNKNOWN,
-                0L,
-                0L,
-            );
-
-        /** Returns an instance with all fields set to their default values. */
-        fun partial() = default;
-
-        /**
-         * Creates a new instance of [AuthoringTransferUnavailable].
-         * Unlike the constructor, does not require all fields to be specified.
-         * Missing fields will be set to their default values.
-         */
-        fun partial(
-            _mustNameArguments: _MustNameArguments =
-                _MustNameArguments,
-            generation: skirout.editor.v1.type_catalog.CatalogGeneration_OrMutable =
-                skirout.editor.v1.type_catalog.CatalogGeneration.partial(),
-            reason: skirout.editor.v1.authoring.AuthoringTransferUnavailableReason =
-                skirout.editor.v1.authoring.AuthoringTransferUnavailableReason.UNKNOWN,
-            encodedSize: kotlin.Long =
-                0L,
-            maxEncodedSize: kotlin.Long =
-                0L,
-        ) = skirout.editor.v1.authoring.AuthoringTransferUnavailable(
-            generation = generation,
-            reason = reason,
-            encodedSize = encodedSize,
-            maxEncodedSize = maxEncodedSize,
-            _unrecognizedFields = null,
-        );
-
-        /** Serializer for [AuthoringTransferUnavailable] instances. */
-        val serializer get() = _SerializerRegistry.AuthoringTransferUnavailableSerializer;
-
-        /** Describes the [AuthoringTransferUnavailable] type. Provides runtime introspection capabilities. */
-        val typeDescriptor get() = _SerializerRegistry.AuthoringTransferUnavailableSerializerImpl.typeDescriptor;
-    }
-}
-
 sealed interface AuthoringObservationId_OrMutable {
     val value: kotlin.String;
 
@@ -6896,8 +6509,8 @@ sealed interface AuthoringObservationId_OrMutable {
 
 /**
  * Identifies one saved authoring observation without ordering resource changes.
- * It remains fixed across snapshot transfer chunks. A local operation overlay echoes this identity
- * while carrying separate proposed values; a changed saved view requires refreshing the baseline.
+ * A local operation overlay echoes this identity while carrying separate proposed values; a
+ * changed saved view requires refreshing the baseline.
  *
  * Deeply immutable.
  */
@@ -7005,7 +6618,6 @@ class AuthoringObservationId private constructor(
 
 sealed interface QueryAuthoringStateRequest_OrMutable {
     val generation: skirout.editor.v1.type_catalog.CatalogGeneration_OrMutable;
-    val transferId: kotlin.String;
 
     fun toFrozen(): skirout.editor.v1.authoring.QueryAuthoringStateRequest;
 }
@@ -7014,7 +6626,6 @@ sealed interface QueryAuthoringStateRequest_OrMutable {
 @kotlin.Suppress("UNUSED_PARAMETER")
 class QueryAuthoringStateRequest private constructor(
     override val generation: skirout.editor.v1.type_catalog.CatalogGeneration,
-    override val transferId: kotlin.String,
     internal val _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.authoring.QueryAuthoringStateRequest>? =
         null,
 ): skirout.editor.v1.authoring.QueryAuthoringStateRequest_OrMutable {
@@ -7022,12 +6633,10 @@ class QueryAuthoringStateRequest private constructor(
         _mustNameArguments: _MustNameArguments =
             _MustNameArguments,
         generation: skirout.editor.v1.type_catalog.CatalogGeneration_OrMutable,
-        transferId: kotlin.String,
         _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.authoring.QueryAuthoringStateRequest>? =
             null,
     ): this(
         generation.toFrozen(),
-        transferId,
         _unrecognizedFields,
     ) {}
 
@@ -7037,7 +6646,6 @@ class QueryAuthoringStateRequest private constructor(
     /** Returns a mutable shallow copy of this instance */
     fun toMutable() = Mutable(
         generation = this.generation,
-        transferId = this.transferId,
     );
 
     /** Returns a shallow copy of this instance with the specified fields replaced. */
@@ -7046,11 +6654,8 @@ class QueryAuthoringStateRequest private constructor(
             _MustNameArguments,
         generation: skirout.editor.v1.type_catalog.CatalogGeneration_OrMutable =
             this.generation,
-        transferId: kotlin.String =
-            this.transferId,
     ) = skirout.editor.v1.authoring.QueryAuthoringStateRequest(
         generation.toFrozen(),
-        transferId,
         this._unrecognizedFields,
     );
 
@@ -7058,11 +6663,11 @@ class QueryAuthoringStateRequest private constructor(
     fun copy() = this;
 
     override fun equals(other: kotlin.Any?): kotlin.Boolean {
-        return this === other || (other is skirout.editor.v1.authoring.QueryAuthoringStateRequest && this.generation == other.generation && this.transferId == other.transferId);
+        return this === other || (other is skirout.editor.v1.authoring.QueryAuthoringStateRequest && this.generation == other.generation);
     }
 
     override fun hashCode(): kotlin.Int {
-        return kotlin.collections.listOf<kotlin.Any?>(this.generation, this.transferId).hashCode();
+        return kotlin.collections.listOf<kotlin.Any?>(this.generation).hashCode();
     }
 
     override fun toString(): kotlin.String {
@@ -7078,15 +6683,12 @@ class QueryAuthoringStateRequest private constructor(
             _MustNameArguments,
         override var generation: skirout.editor.v1.type_catalog.CatalogGeneration_OrMutable =
             skirout.editor.v1.type_catalog.CatalogGeneration.partial(),
-        override var transferId: kotlin.String =
-            "",
         internal var _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.authoring.QueryAuthoringStateRequest>? =
             null,
     ): skirout.editor.v1.authoring.QueryAuthoringStateRequest_OrMutable {
         /** Returns a deeply immutable copy of this instance */
         override fun toFrozen() = skirout.editor.v1.authoring.QueryAuthoringStateRequest(
             generation = this.generation,
-            transferId = this.transferId,
             _unrecognizedFields = this._unrecognizedFields,
         );
 
@@ -7111,7 +6713,6 @@ class QueryAuthoringStateRequest private constructor(
         private val default =
             skirout.editor.v1.authoring.QueryAuthoringStateRequest(
                 skirout.editor.v1.type_catalog.CatalogGeneration.partial(),
-                "",
             );
 
         /** Returns an instance with all fields set to their default values. */
@@ -7127,11 +6728,8 @@ class QueryAuthoringStateRequest private constructor(
                 _MustNameArguments,
             generation: skirout.editor.v1.type_catalog.CatalogGeneration_OrMutable =
                 skirout.editor.v1.type_catalog.CatalogGeneration.partial(),
-            transferId: kotlin.String =
-                "",
         ) = skirout.editor.v1.authoring.QueryAuthoringStateRequest(
             generation = generation,
-            transferId = transferId,
             _unrecognizedFields = null,
         );
 
@@ -7148,9 +6746,8 @@ sealed class QueryAuthoringStateResponse private constructor() {
     /** The kind of variant held by a `QueryAuthoringStateResponse`. */
     enum class Kind {
         UNKNOWN,
-        CHUNK_WRAPPER,
-        CATALOG_CHANGED_WRAPPER,
-        UNAVAILABLE_WRAPPER,
+        STATE_WRAPPER,
+        CATALOG_CHANGED_ERROR_WRAPPER,
         INTERNAL_ERROR_WRAPPER,
     }
 
@@ -7169,57 +6766,39 @@ sealed class QueryAuthoringStateResponse private constructor() {
         }
     }
 
-    class ChunkWrapper private constructor (
-        val value: skirout.editor.v1.authoring.AuthoringStateTransferChunk,
+    class StateWrapper private constructor (
+        val value: skirout.editor.v1.authoring.AuthoringState,
     ) : skirout.editor.v1.authoring.QueryAuthoringStateResponse() {
         constructor(
-            value: skirout.editor.v1.authoring.AuthoringStateTransferChunk_OrMutable,
+            value: skirout.editor.v1.authoring.AuthoringState_OrMutable,
         ): this(value.toFrozen()) {}
 
-        override val kind get() = Kind.CHUNK_WRAPPER;
+        override val kind get() = Kind.STATE_WRAPPER;
 
         override fun equals(other: kotlin.Any?): kotlin.Boolean {
-            return other is skirout.editor.v1.authoring.QueryAuthoringStateResponse.ChunkWrapper && value == other.value;
+            return other is skirout.editor.v1.authoring.QueryAuthoringStateResponse.StateWrapper && value == other.value;
         }
 
         override fun hashCode(): kotlin.Int {
-            return this.value.hashCode() + 94642797;
+            return this.value.hashCode() + 109757585;
         }
     }
 
-    class CatalogChangedWrapper private constructor (
+    class CatalogChangedErrorWrapper private constructor (
         val value: skirout.editor.v1.authoring.CatalogChanged,
     ) : skirout.editor.v1.authoring.QueryAuthoringStateResponse() {
         constructor(
             value: skirout.editor.v1.authoring.CatalogChanged_OrMutable,
         ): this(value.toFrozen()) {}
 
-        override val kind get() = Kind.CATALOG_CHANGED_WRAPPER;
+        override val kind get() = Kind.CATALOG_CHANGED_ERROR_WRAPPER;
 
         override fun equals(other: kotlin.Any?): kotlin.Boolean {
-            return other is skirout.editor.v1.authoring.QueryAuthoringStateResponse.CatalogChangedWrapper && value == other.value;
+            return other is skirout.editor.v1.authoring.QueryAuthoringStateResponse.CatalogChangedErrorWrapper && value == other.value;
         }
 
         override fun hashCode(): kotlin.Int {
-            return this.value.hashCode() + 1862877326;
-        }
-    }
-
-    class UnavailableWrapper private constructor (
-        val value: skirout.editor.v1.authoring.AuthoringTransferUnavailable,
-    ) : skirout.editor.v1.authoring.QueryAuthoringStateResponse() {
-        constructor(
-            value: skirout.editor.v1.authoring.AuthoringTransferUnavailable_OrMutable,
-        ): this(value.toFrozen()) {}
-
-        override val kind get() = Kind.UNAVAILABLE_WRAPPER;
-
-        override fun equals(other: kotlin.Any?): kotlin.Boolean {
-            return other is skirout.editor.v1.authoring.QueryAuthoringStateResponse.UnavailableWrapper && value == other.value;
-        }
-
-        override fun hashCode(): kotlin.Int {
-            return this.value.hashCode() + -665462704;
+            return this.value.hashCode() + -760261865;
         }
     }
 
@@ -7259,47 +6838,35 @@ sealed class QueryAuthoringStateResponse private constructor() {
          */
         val UNKNOWN = @kotlin.Suppress("DEPRECATION") Unknown(Kind.UNKNOWN, null);
 
-        /** Shortcut for `ChunkWrapper(skirout.editor.v1.authoring.AuthoringStateTransferChunk(...))`. */
+        /** Shortcut for `StateWrapper(skirout.editor.v1.authoring.AuthoringState(...))`. */
         @kotlin.Suppress("UNUSED_PARAMETER")
-        fun createChunk(
+        fun createState(
             _mustNameArguments: _MustNameArguments =
                 _MustNameArguments,
             generation: skirout.editor.v1.type_catalog.CatalogGeneration_OrMutable,
-            transfer: skirout.kernel.v1.bounded_transfer.BoundedTransferChunk_OrMutable,
-        ) = ChunkWrapper(
-            skirout.editor.v1.authoring.AuthoringStateTransferChunk(
+            resources: kotlin.collections.Iterable<skirout.editor.v1.authoring.AuthoringResource_OrMutable>,
+            links: kotlin.collections.Iterable<skirout.editor.v1.authoring_facts.LinkProjection_OrMutable>,
+            findings: kotlin.collections.Iterable<skirout.editor.v1.checking.FindingSet_OrMutable>,
+            confirmedObservation: skirout.editor.v1.authoring.AuthoringObservationId_OrMutable,
+        ) = StateWrapper(
+            skirout.editor.v1.authoring.AuthoringState(
                 generation = generation,
-                transfer = transfer,
+                resources = resources,
+                links = links,
+                findings = findings,
+                confirmedObservation = confirmedObservation,
             )
         );
 
-        /** Shortcut for `CatalogChangedWrapper(skirout.editor.v1.authoring.CatalogChanged(...))`. */
+        /** Shortcut for `CatalogChangedErrorWrapper(skirout.editor.v1.authoring.CatalogChanged(...))`. */
         @kotlin.Suppress("UNUSED_PARAMETER")
-        fun createCatalogChanged(
+        fun createCatalogChangedError(
             _mustNameArguments: _MustNameArguments =
                 _MustNameArguments,
             actualGeneration: skirout.editor.v1.type_catalog.CatalogGeneration_OrMutable,
-        ) = CatalogChangedWrapper(
+        ) = CatalogChangedErrorWrapper(
             skirout.editor.v1.authoring.CatalogChanged(
                 actualGeneration = actualGeneration,
-            )
-        );
-
-        /** Shortcut for `UnavailableWrapper(skirout.editor.v1.authoring.AuthoringTransferUnavailable(...))`. */
-        @kotlin.Suppress("UNUSED_PARAMETER")
-        fun createUnavailable(
-            _mustNameArguments: _MustNameArguments =
-                _MustNameArguments,
-            generation: skirout.editor.v1.type_catalog.CatalogGeneration_OrMutable,
-            reason: skirout.editor.v1.authoring.AuthoringTransferUnavailableReason,
-            encodedSize: kotlin.Long,
-            maxEncodedSize: kotlin.Long,
-        ) = UnavailableWrapper(
-            skirout.editor.v1.authoring.AuthoringTransferUnavailable(
-                generation = generation,
-                reason = reason,
-                encodedSize = encodedSize,
-                maxEncodedSize = maxEncodedSize,
             )
         );
 
@@ -8154,7 +7721,7 @@ sealed class PrepareTypeArgumentChangeResponse private constructor() {
     }
 }
 
-/** Transfers one retained saved snapshot using the caller transfer identity and bounded integrity metadata. */
+/** Returns the retained saved snapshot for one catalog generation. */
 val QueryAuthoringState: build.skir.service.Method<
     skirout.editor.v1.authoring.QueryAuthoringStateRequest,
     skirout.editor.v1.authoring.QueryAuthoringStateResponse,
@@ -8164,7 +7731,7 @@ val QueryAuthoringState: build.skir.service.Method<
         920010,
         skirout.editor.v1.authoring.QueryAuthoringStateRequest.serializer,
         skirout.editor.v1.authoring.QueryAuthoringStateResponse.serializer,
-        "Transfers one retained saved snapshot using the caller transfer identity and bounded integrity metadata.",
+        "Returns the retained saved snapshot for one catalog generation.",
     )
 }
 
@@ -8284,7 +7851,7 @@ private object _SerializerRegistry {
 
     val AuthoringObservationIdSerializerImpl = build.skir.internal.StructSerializer(
         recordId = "editor/v1/authoring.skir:AuthoringObservationId",
-        doc = "Identifies one saved authoring observation without ordering resource changes.\nIt remains fixed across snapshot transfer chunks. A local operation overlay echoes this identity\nwhile carrying separate proposed values; a changed saved view requires refreshing the baseline.",
+        doc = "Identifies one saved authoring observation without ordering resource changes.\nA local operation overlay echoes this identity while carrying separate proposed values; a\nchanged saved view requires refreshing the baseline.",
         defaultInstance = skirout.editor.v1.authoring.AuthoringObservationId.partial(),
         newMutableFn = { it?.toMutable() ?: skirout.editor.v1.authoring.AuthoringObservationId.Mutable() },
         toFrozenFn = { it.toFrozen() },
@@ -8345,7 +7912,7 @@ private object _SerializerRegistry {
 
     val AuthoringStateSerializerImpl = build.skir.internal.StructSerializer(
         recordId = "editor/v1/authoring.skir:AuthoringState",
-        doc = "Captures one saved resource graph and its catalog for editor synchronization.\nFindings retain their own execution evidence and freshness. All transfer chunks describe this same\nconfirmed observation, which resource operations must echo before supplying a working overlay.",
+        doc = "Captures one saved resource graph and its catalog for editor synchronization.\nFindings retain their own execution evidence and freshness. The state describes one confirmed\nobservation, which resource operations must echo before supplying a working overlay.",
         defaultInstance = skirout.editor.v1.authoring.AuthoringState.partial(),
         newMutableFn = { it?.toMutable() ?: skirout.editor.v1.authoring.AuthoringState.Mutable() },
         toFrozenFn = { it.toFrozen() },
@@ -8354,43 +7921,6 @@ private object _SerializerRegistry {
     );
 
     val AuthoringStateSerializer = build.skir.internal.makeSerializer(AuthoringStateSerializerImpl);
-
-    val AuthoringStateTransferChunkSerializerImpl = build.skir.internal.StructSerializer(
-        recordId = "editor/v1/authoring.skir:AuthoringStateTransferChunk",
-        doc = "",
-        defaultInstance = skirout.editor.v1.authoring.AuthoringStateTransferChunk.partial(),
-        newMutableFn = { it?.toMutable() ?: skirout.editor.v1.authoring.AuthoringStateTransferChunk.Mutable() },
-        toFrozenFn = { it.toFrozen() },
-        getUnrecognizedFields = { it._unrecognizedFields },
-        setUnrecognizedFields = { m, u -> m._unrecognizedFields = u },
-    );
-
-    val AuthoringStateTransferChunkSerializer = build.skir.internal.makeSerializer(AuthoringStateTransferChunkSerializerImpl);
-
-    val AuthoringTransferUnavailableSerializerImpl = build.skir.internal.StructSerializer(
-        recordId = "editor/v1/authoring.skir:AuthoringTransferUnavailable",
-        doc = "",
-        defaultInstance = skirout.editor.v1.authoring.AuthoringTransferUnavailable.partial(),
-        newMutableFn = { it?.toMutable() ?: skirout.editor.v1.authoring.AuthoringTransferUnavailable.Mutable() },
-        toFrozenFn = { it.toFrozen() },
-        getUnrecognizedFields = { it._unrecognizedFields },
-        setUnrecognizedFields = { m, u -> m._unrecognizedFields = u },
-    );
-
-    val AuthoringTransferUnavailableSerializer = build.skir.internal.makeSerializer(AuthoringTransferUnavailableSerializerImpl);
-
-    val AuthoringTransferUnavailableReasonSerializerImpl =
-        build.skir.internal.EnumSerializer.create<skirout.editor.v1.authoring.AuthoringTransferUnavailableReason, skirout.editor.v1.authoring.AuthoringTransferUnavailableReason.Unknown>(
-            recordId = "editor/v1/authoring.skir:AuthoringTransferUnavailableReason",
-            doc = "",
-            getKindOrdinal = { it.kind.ordinal },
-            kindCount = skirout.editor.v1.authoring.AuthoringTransferUnavailableReason.Kind.values().size,
-            unknownInstance = skirout.editor.v1.authoring.AuthoringTransferUnavailableReason.UNKNOWN,
-            wrapUnrecognized = { @kotlin.Suppress("DEPRECATION") skirout.editor.v1.authoring.AuthoringTransferUnavailableReason.Unknown(skirout.editor.v1.authoring.AuthoringTransferUnavailableReason.Kind.UNKNOWN, it) },
-            getUnrecognized = { it._unrecognized },
-        );
-
-    val AuthoringTransferUnavailableReasonSerializer = build.skir.internal.makeSerializer(AuthoringTransferUnavailableReasonSerializerImpl);
 
     val CatalogChangedSerializerImpl = build.skir.internal.StructSerializer(
         recordId = "editor/v1/authoring.skir:CatalogChanged",
@@ -9119,73 +8649,6 @@ private object _SerializerRegistry {
         );
         AuthoringStateSerializerImpl.finalizeStruct();
 
-        AuthoringStateTransferChunkSerializerImpl.addField(
-            "generation",
-            "generation",
-            0,
-            skirout.editor.v1.type_catalog.CatalogGeneration.serializer,
-            "",
-            { it.generation },
-            { mut, v -> mut.generation = v },
-        );
-        AuthoringStateTransferChunkSerializerImpl.addField(
-            "transfer",
-            "transfer",
-            1,
-            skirout.kernel.v1.bounded_transfer.BoundedTransferChunk.serializer,
-            "",
-            { it.transfer },
-            { mut, v -> mut.transfer = v },
-        );
-        AuthoringStateTransferChunkSerializerImpl.finalizeStruct();
-
-        AuthoringTransferUnavailableSerializerImpl.addField(
-            "generation",
-            "generation",
-            0,
-            skirout.editor.v1.type_catalog.CatalogGeneration.serializer,
-            "",
-            { it.generation },
-            { mut, v -> mut.generation = v },
-        );
-        AuthoringTransferUnavailableSerializerImpl.addField(
-            "reason",
-            "reason",
-            1,
-            _SerializerRegistry.AuthoringTransferUnavailableReasonSerializer,
-            "",
-            { it.reason },
-            { mut, v -> mut.reason = v },
-        );
-        AuthoringTransferUnavailableSerializerImpl.addField(
-            "encoded_size",
-            "encodedSize",
-            2,
-            build.skir.Serializers.int64,
-            "",
-            { it.encodedSize },
-            { mut, v -> mut.encodedSize = v },
-        );
-        AuthoringTransferUnavailableSerializerImpl.addField(
-            "max_encoded_size",
-            "maxEncodedSize",
-            3,
-            build.skir.Serializers.int64,
-            "",
-            { it.maxEncodedSize },
-            { mut, v -> mut.maxEncodedSize = v },
-        );
-        AuthoringTransferUnavailableSerializerImpl.finalizeStruct();
-
-        AuthoringTransferUnavailableReasonSerializerImpl.addConstantVariant(
-            1,
-            "encoded_size_limit",
-            skirout.editor.v1.authoring.AuthoringTransferUnavailableReason.Kind.ENCODED_SIZE_LIMIT_CONST.ordinal,
-            "",
-            skirout.editor.v1.authoring.AuthoringTransferUnavailableReason.ENCODED_SIZE_LIMIT,
-        );
-        AuthoringTransferUnavailableReasonSerializerImpl.finalizeEnum();
-
         CatalogChangedSerializerImpl.addField(
             "actual_generation",
             "actualGeneration",
@@ -9859,46 +9322,28 @@ private object _SerializerRegistry {
             { it.generation },
             { mut, v -> mut.generation = v },
         );
-        QueryAuthoringStateRequestSerializerImpl.addField(
-            "transfer_id",
-            "transferId",
-            1,
-            build.skir.Serializers.string,
-            "",
-            { it.transferId },
-            { mut, v -> mut.transferId = v },
-        );
         QueryAuthoringStateRequestSerializerImpl.finalizeStruct();
 
         QueryAuthoringStateResponseSerializerImpl.addWrapperVariant(
             1,
-            "chunk",
-            skirout.editor.v1.authoring.QueryAuthoringStateResponse.Kind.CHUNK_WRAPPER.ordinal,
-            _SerializerRegistry.AuthoringStateTransferChunkSerializer,
+            "state",
+            skirout.editor.v1.authoring.QueryAuthoringStateResponse.Kind.STATE_WRAPPER.ordinal,
+            _SerializerRegistry.AuthoringStateSerializer,
             "",
-            { skirout.editor.v1.authoring.QueryAuthoringStateResponse.ChunkWrapper(it) },
+            { skirout.editor.v1.authoring.QueryAuthoringStateResponse.StateWrapper(it) },
             { it.value },
         );
         QueryAuthoringStateResponseSerializerImpl.addWrapperVariant(
             2,
-            "catalog_changed",
-            skirout.editor.v1.authoring.QueryAuthoringStateResponse.Kind.CATALOG_CHANGED_WRAPPER.ordinal,
+            "catalog_changed_error",
+            skirout.editor.v1.authoring.QueryAuthoringStateResponse.Kind.CATALOG_CHANGED_ERROR_WRAPPER.ordinal,
             _SerializerRegistry.CatalogChangedSerializer,
             "",
-            { skirout.editor.v1.authoring.QueryAuthoringStateResponse.CatalogChangedWrapper(it) },
+            { skirout.editor.v1.authoring.QueryAuthoringStateResponse.CatalogChangedErrorWrapper(it) },
             { it.value },
         );
         QueryAuthoringStateResponseSerializerImpl.addWrapperVariant(
             3,
-            "unavailable",
-            skirout.editor.v1.authoring.QueryAuthoringStateResponse.Kind.UNAVAILABLE_WRAPPER.ordinal,
-            _SerializerRegistry.AuthoringTransferUnavailableSerializer,
-            "",
-            { skirout.editor.v1.authoring.QueryAuthoringStateResponse.UnavailableWrapper(it) },
-            { it.value },
-        );
-        QueryAuthoringStateResponseSerializerImpl.addWrapperVariant(
-            4,
             "internal_error",
             skirout.editor.v1.authoring.QueryAuthoringStateResponse.Kind.INTERNAL_ERROR_WRAPPER.ordinal,
             skirout.kernel.v1.errors.InternalError.serializer,

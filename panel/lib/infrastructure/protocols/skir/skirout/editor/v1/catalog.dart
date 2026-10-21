@@ -21,8 +21,6 @@ import "./expression.dart" as _lib_editor_v1_expression;
 import "./operation.dart" as _lib_editor_v1_operation;
 import "./presentation.dart" as _lib_editor_v1_presentation;
 import "./type_catalog.dart" as _lib_editor_v1_type_catalog;
-import "../../kernel/v1/bounded_transfer.dart"
-    as _lib_kernel_v1_bounded_transfer;
 import "../../kernel/v1/color.dart" as _lib_kernel_v1_color;
 import "../../kernel/v1/errors.dart" as _lib_kernel_v1_errors;
 import "../../kernel/v1/icon.dart" as _lib_kernel_v1_icon;
@@ -3482,10 +3480,10 @@ final class RoleFallback_mutable implements RoleFallback_orMutable {
 }
 
 // -----------------------------------------------------------------------------
-// struct EditorCatalogWireSnapshot
+// struct EditorCatalog
 // -----------------------------------------------------------------------------
 
-sealed class EditorCatalogWireSnapshot_orMutable {
+sealed class EditorCatalog_orMutable {
   _lib_editor_v1_type_catalog.CatalogGeneration_orMutable get generation;
   _core.Iterable<PublishedType_orMutable> get types;
   _core.Iterable<RelationContract_orMutable> get relations;
@@ -3506,16 +3504,16 @@ sealed class EditorCatalogWireSnapshot_orMutable {
   /// The realm root type. The realm keeps exactly one instance, which owns every section.
   _lib_editor_v1_type_catalog.TypeDefinitionId_orMutable get realmRoot;
 
-  EditorCatalogWireSnapshot toFrozen();
+  EditorCatalog toFrozen();
 }
 
-/// One coherent generation of authoring types, relations, presentations, capabilities, and operations.
-/// Generation changes invalidate client assumptions across the whole snapshot; they are separate
-/// from saved resource observations and selected compiled publications.
+/// The complete editor catalog of one installed generation: one coherent set of authoring types,
+/// relations, presentations, capabilities, and operations. Generation changes invalidate client
+/// assumptions across the whole catalog; they are separate from saved resource observations and
+/// selected compiled publications.
 ///
 /// Deeply immutable.
-final class EditorCatalogWireSnapshot
-    implements EditorCatalogWireSnapshot_orMutable {
+final class EditorCatalog implements EditorCatalog_orMutable {
   @_core.override
   final _lib_editor_v1_type_catalog.CatalogGeneration generation;
   @_core.override
@@ -3551,7 +3549,7 @@ final class EditorCatalogWireSnapshot
   final _lib_editor_v1_type_catalog.TypeDefinitionId realmRoot;
   _skir.internal__UnrecognizedFields? _u;
 
-  factory EditorCatalogWireSnapshot({
+  factory EditorCatalog({
     required _lib_editor_v1_type_catalog.CatalogGeneration_orMutable generation,
     required _core.Iterable<PublishedType_orMutable> types,
     required _core.Iterable<RelationContract_orMutable> relations,
@@ -3574,7 +3572,7 @@ final class EditorCatalogWireSnapshot
     >
     resourceOperations,
     required _lib_editor_v1_type_catalog.TypeDefinitionId_orMutable realmRoot,
-  }) => EditorCatalogWireSnapshot._(
+  }) => EditorCatalog._(
     generation.toFrozen(),
     _skir.internal__frozenMappedCopy(types, (it) => it.toFrozen()),
     _skir.internal__frozenMappedCopy(relations, (it) => it.toFrozen()),
@@ -3594,7 +3592,7 @@ final class EditorCatalogWireSnapshot
     realmRoot.toFrozen(),
   );
 
-  EditorCatalogWireSnapshot._(
+  EditorCatalog._(
     this.generation,
     this.types,
     this.relations,
@@ -3612,7 +3610,7 @@ final class EditorCatalogWireSnapshot
   );
 
   /// Default instance with all fields set to their default values.
-  static final defaultInstance = EditorCatalogWireSnapshot._(
+  static final defaultInstance = EditorCatalog._(
     _lib_editor_v1_type_catalog.CatalogGeneration.defaultInstance,
     _skir.KeyedIterable.empty,
     _skir.KeyedIterable.empty,
@@ -3631,52 +3629,50 @@ final class EditorCatalogWireSnapshot
 
   /// Returns a new mutable instance.
   /// Fields are initialized to their default values.
-  static EditorCatalogWireSnapshot_mutable mutable() =>
-      EditorCatalogWireSnapshot_mutable._(
-        _lib_editor_v1_type_catalog.CatalogGeneration.defaultInstance,
-        _skir.KeyedIterable.empty,
-        _skir.KeyedIterable.empty,
-        _skir.KeyedIterable.empty,
-        _skir.KeyedIterable.empty,
-        _skir.KeyedIterable.empty,
-        _skir.KeyedIterable.empty,
-        _skir.KeyedIterable.empty,
-        _skir.KeyedIterable.empty,
-        _skir.KeyedIterable.empty,
-        _skir.KeyedIterable.empty,
-        _skir.KeyedIterable.empty,
-        _skir.KeyedIterable.empty,
-        _lib_editor_v1_type_catalog.TypeDefinitionId.defaultInstance,
-      );
+  static EditorCatalog_mutable mutable() => EditorCatalog_mutable._(
+    _lib_editor_v1_type_catalog.CatalogGeneration.defaultInstance,
+    _skir.KeyedIterable.empty,
+    _skir.KeyedIterable.empty,
+    _skir.KeyedIterable.empty,
+    _skir.KeyedIterable.empty,
+    _skir.KeyedIterable.empty,
+    _skir.KeyedIterable.empty,
+    _skir.KeyedIterable.empty,
+    _skir.KeyedIterable.empty,
+    _skir.KeyedIterable.empty,
+    _skir.KeyedIterable.empty,
+    _skir.KeyedIterable.empty,
+    _skir.KeyedIterable.empty,
+    _lib_editor_v1_type_catalog.TypeDefinitionId.defaultInstance,
+  );
 
   /// Returns this instance (no-op).
   @_core.Deprecated("This instance is already frozen.")
   @_core.override
-  EditorCatalogWireSnapshot toFrozen() => this;
+  EditorCatalog toFrozen() => this;
 
   /// Returns a mutable shallow copy of this instance.
-  EditorCatalogWireSnapshot_mutable toMutable() =>
-      EditorCatalogWireSnapshot_mutable._(
-        this.generation,
-        this.types,
-        this.relations,
-        this.resourceDisplays,
-        this.presentations,
-        this.presentationMaterials,
-        this.configuration,
-        this.diagnostics,
-        this.endpointBindings,
-        this.capabilities,
-        this.recommendations,
-        this.roleFallbacks,
-        this.resourceOperations,
-        this.realmRoot,
-      );
+  EditorCatalog_mutable toMutable() => EditorCatalog_mutable._(
+    this.generation,
+    this.types,
+    this.relations,
+    this.resourceDisplays,
+    this.presentations,
+    this.presentationMaterials,
+    this.configuration,
+    this.diagnostics,
+    this.endpointBindings,
+    this.capabilities,
+    this.recommendations,
+    this.roleFallbacks,
+    this.resourceOperations,
+    this.realmRoot,
+  );
 
   @_core.override
   _core.bool operator ==(other) {
     if (_core.identical(this, other)) return true;
-    if (other is! EditorCatalogWireSnapshot) return false;
+    if (other is! EditorCatalog) return false;
     return _skir.internal__listEquality.equals(
       _equality_proxy,
       other._equality_proxy,
@@ -3706,11 +3702,8 @@ final class EditorCatalogWireSnapshot
   @_core.override
   _core.String toString() => _skir.internal__stringify(this, serializer);
 
-  /// Serializer for `EditorCatalogWireSnapshot` instances.
-  static _skir.StructSerializer<
-    EditorCatalogWireSnapshot,
-    EditorCatalogWireSnapshot_mutable
-  >
+  /// Serializer for `EditorCatalog` instances.
+  static _skir.StructSerializer<EditorCatalog, EditorCatalog_mutable>
   get serializer {
     if (_serializerBuilder.mustInitialize()) {
       _serializerBuilder.addField(
@@ -3851,19 +3844,18 @@ final class EditorCatalogWireSnapshot
   }
 
   static final _serializerBuilder = _skir.internal__StructSerializerBuilder(
-    recordId: "editor/v1/catalog.skir:EditorCatalogWireSnapshot",
-    doc: "One coherent generation of authoring types, relations, presentations, capabilities, and operations.\nGeneration changes invalidate client assumptions across the whole snapshot; they are separate\nfrom saved resource observations and selected compiled publications.",
+    recordId: "editor/v1/catalog.skir:EditorCatalog",
+    doc: "The complete editor catalog of one installed generation: one coherent set of authoring types,\nrelations, presentations, capabilities, and operations. Generation changes invalidate client\nassumptions across the whole catalog; they are separate from saved resource observations and\nselected compiled publications.",
     defaultInstance: defaultInstance,
     newMutable: (it) => (it != null) ? it.toMutable() : mutable(),
-    toFrozen: (EditorCatalogWireSnapshot_mutable it) => it.toFrozen(),
+    toFrozen: (EditorCatalog_mutable it) => it.toFrozen(),
     getUnrecognizedFields: (it) => it._u,
     setUnrecognizedFields: (it, u) => it._u = u,
   );
 }
 
-/// Mutable version of [EditorCatalogWireSnapshot].
-final class EditorCatalogWireSnapshot_mutable
-    implements EditorCatalogWireSnapshot_orMutable {
+/// Mutable version of [EditorCatalog].
+final class EditorCatalog_mutable implements EditorCatalog_orMutable {
   _lib_editor_v1_type_catalog.CatalogGeneration_orMutable generation;
   _core.Iterable<PublishedType_orMutable> types;
   _core.Iterable<RelationContract_orMutable> relations;
@@ -3884,7 +3876,7 @@ final class EditorCatalogWireSnapshot_mutable
   _lib_editor_v1_type_catalog.TypeDefinitionId_orMutable realmRoot;
   _skir.internal__UnrecognizedFields? _u;
 
-  EditorCatalogWireSnapshot_mutable._(
+  EditorCatalog_mutable._(
     this.generation,
     this.types,
     this.relations,
@@ -4076,7 +4068,7 @@ final class EditorCatalogWireSnapshot_mutable
 
   /// Returns a deeply immutable copy of this instance.
   @_core.override
-  EditorCatalogWireSnapshot toFrozen() => EditorCatalogWireSnapshot(
+  EditorCatalog toFrozen() => EditorCatalog(
     generation: this.generation,
     types: this.types,
     relations: this.relations,
@@ -4095,450 +4087,12 @@ final class EditorCatalogWireSnapshot_mutable
 }
 
 // -----------------------------------------------------------------------------
-// struct CatalogTransferChunk
-// -----------------------------------------------------------------------------
-
-sealed class CatalogTransferChunk_orMutable {
-  _lib_editor_v1_type_catalog.CatalogGeneration_orMutable get generation;
-  _lib_kernel_v1_bounded_transfer.BoundedTransferChunk_orMutable get transfer;
-
-  CatalogTransferChunk toFrozen();
-}
-
-/// Deeply immutable.
-final class CatalogTransferChunk implements CatalogTransferChunk_orMutable {
-  @_core.override
-  final _lib_editor_v1_type_catalog.CatalogGeneration generation;
-  @_core.override
-  final _lib_kernel_v1_bounded_transfer.BoundedTransferChunk transfer;
-  _skir.internal__UnrecognizedFields? _u;
-
-  factory CatalogTransferChunk({
-    required _lib_editor_v1_type_catalog.CatalogGeneration_orMutable generation,
-    required _lib_kernel_v1_bounded_transfer.BoundedTransferChunk_orMutable
-    transfer,
-  }) => CatalogTransferChunk._(generation.toFrozen(), transfer.toFrozen());
-
-  CatalogTransferChunk._(this.generation, this.transfer);
-
-  /// Default instance with all fields set to their default values.
-  static final defaultInstance = CatalogTransferChunk._(
-    _lib_editor_v1_type_catalog.CatalogGeneration.defaultInstance,
-    _lib_kernel_v1_bounded_transfer.BoundedTransferChunk.defaultInstance,
-  );
-
-  /// Returns a new mutable instance.
-  /// Fields are initialized to their default values.
-  static CatalogTransferChunk_mutable mutable() =>
-      CatalogTransferChunk_mutable._(
-        _lib_editor_v1_type_catalog.CatalogGeneration.defaultInstance,
-        _lib_kernel_v1_bounded_transfer.BoundedTransferChunk.defaultInstance,
-      );
-
-  /// Returns this instance (no-op).
-  @_core.Deprecated("This instance is already frozen.")
-  @_core.override
-  CatalogTransferChunk toFrozen() => this;
-
-  /// Returns a mutable shallow copy of this instance.
-  CatalogTransferChunk_mutable toMutable() =>
-      CatalogTransferChunk_mutable._(this.generation, this.transfer);
-
-  @_core.override
-  _core.bool operator ==(other) {
-    if (_core.identical(this, other)) return true;
-    if (other is! CatalogTransferChunk) return false;
-    return _skir.internal__listEquality.equals(
-      _equality_proxy,
-      other._equality_proxy,
-    );
-  }
-
-  @_core.override
-  _core.int get hashCode => _skir.internal__listEquality.hash(_equality_proxy);
-
-  _core.List get _equality_proxy => [this.generation, this.transfer];
-
-  @_core.override
-  _core.String toString() => _skir.internal__stringify(this, serializer);
-
-  /// Serializer for `CatalogTransferChunk` instances.
-  static _skir.StructSerializer<
-    CatalogTransferChunk,
-    CatalogTransferChunk_mutable
-  >
-  get serializer {
-    if (_serializerBuilder.mustInitialize()) {
-      _serializerBuilder.addField(
-        "generation",
-        "generation",
-        0,
-        _lib_editor_v1_type_catalog.CatalogGeneration.serializer,
-        "",
-        (it) => it.generation,
-        (it, v) => it.generation = v,
-      );
-      _serializerBuilder.addField(
-        "transfer",
-        "transfer",
-        1,
-        _lib_kernel_v1_bounded_transfer.BoundedTransferChunk.serializer,
-        "",
-        (it) => it.transfer,
-        (it, v) => it.transfer = v,
-      );
-      _serializerBuilder.finalize();
-    }
-    return _serializerBuilder.serializer;
-  }
-
-  static final _serializerBuilder = _skir.internal__StructSerializerBuilder(
-    recordId: "editor/v1/catalog.skir:CatalogTransferChunk",
-    doc: "",
-    defaultInstance: defaultInstance,
-    newMutable: (it) => (it != null) ? it.toMutable() : mutable(),
-    toFrozen: (CatalogTransferChunk_mutable it) => it.toFrozen(),
-    getUnrecognizedFields: (it) => it._u,
-    setUnrecognizedFields: (it, u) => it._u = u,
-  );
-}
-
-/// Mutable version of [CatalogTransferChunk].
-final class CatalogTransferChunk_mutable
-    implements CatalogTransferChunk_orMutable {
-  _lib_editor_v1_type_catalog.CatalogGeneration_orMutable generation;
-  _lib_kernel_v1_bounded_transfer.BoundedTransferChunk_orMutable transfer;
-  _skir.internal__UnrecognizedFields? _u;
-
-  CatalogTransferChunk_mutable._(this.generation, this.transfer);
-
-  /// If the value of [generation] is already mutable, returns it as-is.
-  /// Otherwise, makes a mutable copy, assigns it back to [generation] and returns it.
-  _lib_editor_v1_type_catalog.CatalogGeneration_mutable get mutableGeneration {
-    final value = this.generation;
-    if (value is _lib_editor_v1_type_catalog.CatalogGeneration_mutable) {
-      return value;
-    } else {
-      return this.generation =
-          (value as _lib_editor_v1_type_catalog.CatalogGeneration).toMutable();
-    }
-  }
-
-  /// If the value of [transfer] is already mutable, returns it as-is.
-  /// Otherwise, makes a mutable copy, assigns it back to [transfer] and returns it.
-  _lib_kernel_v1_bounded_transfer.BoundedTransferChunk_mutable
-  get mutableTransfer {
-    final value = this.transfer;
-    if (value is _lib_kernel_v1_bounded_transfer.BoundedTransferChunk_mutable) {
-      return value;
-    } else {
-      return this.transfer =
-          (value as _lib_kernel_v1_bounded_transfer.BoundedTransferChunk)
-              .toMutable();
-    }
-  }
-
-  /// Returns a deeply immutable copy of this instance.
-  @_core.override
-  CatalogTransferChunk toFrozen() =>
-      CatalogTransferChunk(generation: this.generation, transfer: this.transfer)
-        .._u = this._u;
-}
-
-// -----------------------------------------------------------------------------
-// enum CatalogUnavailableReason
-// -----------------------------------------------------------------------------
-
-/// To switch on the variants:
-///   ```
-///   switch (e) {
-///     case CatalogUnavailableReason_unknown(): { ... }
-///     case CatalogUnavailableReason.encodedSizeLimit: { ... }
-///   }
-///   ```
-///
-/// Deeply immutable.
-sealed class CatalogUnavailableReason {
-  /// Constant indicating an unknown `CatalogUnavailableReason`.
-  /// Default value for fields of type `CatalogUnavailableReason`.
-  static const CatalogUnavailableReason unknown =
-      CatalogUnavailableReason_unknown._instance;
-
-  static const encodedSizeLimit =
-      _CatalogUnavailableReason_consts.encodedSizeLimitConst;
-
-  /// Returns the kind of variant held by this CatalogUnavailableReason.
-  CatalogUnavailableReason_kind get kind;
-
-  /// Serializer for `CatalogUnavailableReason` instances.
-  static _skir.EnumSerializer<CatalogUnavailableReason> get serializer {
-    if (_serializerBuilder.mustInitialize()) {
-      _serializerBuilder.addConstantVariant(
-        1,
-        "encoded_size_limit",
-        "encodedSizeLimit",
-        "",
-        encodedSizeLimit,
-      );
-      _serializerBuilder.finalize();
-    }
-    return _serializerBuilder.serializer;
-  }
-
-  static final _serializerBuilder = _skir.internal__EnumSerializerBuilder
-      .create(
-        recordId: "editor/v1/catalog.skir:CatalogUnavailableReason",
-        doc: "",
-        unknownInstance: CatalogUnavailableReason_unknown._instance,
-        enumInstance: CatalogUnavailableReason.unknown,
-        getOrdinal: (it) => it.kind._ordinal,
-        wrapUnrecognized: CatalogUnavailableReason_unknown._unrecognized,
-        getUnrecognized: (it) => it._u,
-      );
-}
-
-/// The kind of variant held by a `CatalogUnavailableReason`.
-enum CatalogUnavailableReason_kind {
-  unknown(0),
-  encodedSizeLimitConst(1);
-
-  final _core.int _ordinal;
-
-  const CatalogUnavailableReason_kind(this._ordinal);
-}
-
-final class CatalogUnavailableReason_unknown
-    implements CatalogUnavailableReason {
-  static const _instance = CatalogUnavailableReason_unknown._();
-
-  final _skir.internal__UnrecognizedVariant? _u;
-
-  const CatalogUnavailableReason_unknown._() : _u = null;
-  CatalogUnavailableReason_unknown._unrecognized(this._u);
-
-  @_core.override
-  CatalogUnavailableReason_kind get kind =>
-      CatalogUnavailableReason_kind.unknown;
-  @_core.override
-  _core.bool operator ==(other) => other is CatalogUnavailableReason_unknown;
-  @_core.override
-  _core.int get hashCode => 8118964;
-  @_core.override
-  _core.String toString() =>
-      _skir.internal__stringify(this, CatalogUnavailableReason.serializer);
-}
-
-enum _CatalogUnavailableReason_consts implements CatalogUnavailableReason {
-  encodedSizeLimitConst(CatalogUnavailableReason_kind.encodedSizeLimitConst);
-
-  @_core.override
-  final CatalogUnavailableReason_kind kind;
-
-  const _CatalogUnavailableReason_consts(this.kind);
-
-  @_core.override
-  _core.String toString() =>
-      _skir.internal__stringify(this, CatalogUnavailableReason.serializer);
-}
-
-// -----------------------------------------------------------------------------
-// struct CatalogUnavailable
-// -----------------------------------------------------------------------------
-
-sealed class CatalogUnavailable_orMutable {
-  _lib_editor_v1_type_catalog.CatalogGeneration_orMutable get generation;
-  CatalogUnavailableReason get reason;
-  _core.int get encodedSize;
-  _core.int get maxEncodedSize;
-
-  CatalogUnavailable toFrozen();
-}
-
-/// Deeply immutable.
-final class CatalogUnavailable implements CatalogUnavailable_orMutable {
-  @_core.override
-  final _lib_editor_v1_type_catalog.CatalogGeneration generation;
-  @_core.override
-  final CatalogUnavailableReason reason;
-  @_core.override
-  final _core.int encodedSize;
-  @_core.override
-  final _core.int maxEncodedSize;
-  _skir.internal__UnrecognizedFields? _u;
-
-  factory CatalogUnavailable({
-    required _lib_editor_v1_type_catalog.CatalogGeneration_orMutable generation,
-    required CatalogUnavailableReason reason,
-    required _core.int encodedSize,
-    required _core.int maxEncodedSize,
-  }) => CatalogUnavailable._(
-    generation.toFrozen(),
-    reason,
-    encodedSize,
-    maxEncodedSize,
-  );
-
-  CatalogUnavailable._(
-    this.generation,
-    this.reason,
-    this.encodedSize,
-    this.maxEncodedSize,
-  );
-
-  /// Default instance with all fields set to their default values.
-  static final defaultInstance = CatalogUnavailable._(
-    _lib_editor_v1_type_catalog.CatalogGeneration.defaultInstance,
-    CatalogUnavailableReason.unknown,
-    0,
-    0,
-  );
-
-  /// Returns a new mutable instance.
-  /// Fields are initialized to their default values.
-  static CatalogUnavailable_mutable mutable() => CatalogUnavailable_mutable._(
-    _lib_editor_v1_type_catalog.CatalogGeneration.defaultInstance,
-    CatalogUnavailableReason.unknown,
-    0,
-    0,
-  );
-
-  /// Returns this instance (no-op).
-  @_core.Deprecated("This instance is already frozen.")
-  @_core.override
-  CatalogUnavailable toFrozen() => this;
-
-  /// Returns a mutable shallow copy of this instance.
-  CatalogUnavailable_mutable toMutable() => CatalogUnavailable_mutable._(
-    this.generation,
-    this.reason,
-    this.encodedSize,
-    this.maxEncodedSize,
-  );
-
-  @_core.override
-  _core.bool operator ==(other) {
-    if (_core.identical(this, other)) return true;
-    if (other is! CatalogUnavailable) return false;
-    return _skir.internal__listEquality.equals(
-      _equality_proxy,
-      other._equality_proxy,
-    );
-  }
-
-  @_core.override
-  _core.int get hashCode => _skir.internal__listEquality.hash(_equality_proxy);
-
-  _core.List get _equality_proxy => [
-    this.generation,
-    this.reason,
-    this.encodedSize,
-    this.maxEncodedSize,
-  ];
-
-  @_core.override
-  _core.String toString() => _skir.internal__stringify(this, serializer);
-
-  /// Serializer for `CatalogUnavailable` instances.
-  static _skir.StructSerializer<CatalogUnavailable, CatalogUnavailable_mutable>
-  get serializer {
-    if (_serializerBuilder.mustInitialize()) {
-      _serializerBuilder.addField(
-        "generation",
-        "generation",
-        0,
-        _lib_editor_v1_type_catalog.CatalogGeneration.serializer,
-        "",
-        (it) => it.generation,
-        (it, v) => it.generation = v,
-      );
-      _serializerBuilder.addField(
-        "reason",
-        "reason",
-        1,
-        CatalogUnavailableReason.serializer,
-        "",
-        (it) => it.reason,
-        (it, v) => it.reason = v,
-      );
-      _serializerBuilder.addField(
-        "encoded_size",
-        "encodedSize",
-        2,
-        _skir.Serializers.int64,
-        "",
-        (it) => it.encodedSize,
-        (it, v) => it.encodedSize = v,
-      );
-      _serializerBuilder.addField(
-        "max_encoded_size",
-        "maxEncodedSize",
-        3,
-        _skir.Serializers.int64,
-        "",
-        (it) => it.maxEncodedSize,
-        (it, v) => it.maxEncodedSize = v,
-      );
-      _serializerBuilder.finalize();
-    }
-    return _serializerBuilder.serializer;
-  }
-
-  static final _serializerBuilder = _skir.internal__StructSerializerBuilder(
-    recordId: "editor/v1/catalog.skir:CatalogUnavailable",
-    doc: "",
-    defaultInstance: defaultInstance,
-    newMutable: (it) => (it != null) ? it.toMutable() : mutable(),
-    toFrozen: (CatalogUnavailable_mutable it) => it.toFrozen(),
-    getUnrecognizedFields: (it) => it._u,
-    setUnrecognizedFields: (it, u) => it._u = u,
-  );
-}
-
-/// Mutable version of [CatalogUnavailable].
-final class CatalogUnavailable_mutable implements CatalogUnavailable_orMutable {
-  _lib_editor_v1_type_catalog.CatalogGeneration_orMutable generation;
-  CatalogUnavailableReason reason;
-  _core.int encodedSize;
-  _core.int maxEncodedSize;
-  _skir.internal__UnrecognizedFields? _u;
-
-  CatalogUnavailable_mutable._(
-    this.generation,
-    this.reason,
-    this.encodedSize,
-    this.maxEncodedSize,
-  );
-
-  /// If the value of [generation] is already mutable, returns it as-is.
-  /// Otherwise, makes a mutable copy, assigns it back to [generation] and returns it.
-  _lib_editor_v1_type_catalog.CatalogGeneration_mutable get mutableGeneration {
-    final value = this.generation;
-    if (value is _lib_editor_v1_type_catalog.CatalogGeneration_mutable) {
-      return value;
-    } else {
-      return this.generation =
-          (value as _lib_editor_v1_type_catalog.CatalogGeneration).toMutable();
-    }
-  }
-
-  /// Returns a deeply immutable copy of this instance.
-  @_core.override
-  CatalogUnavailable toFrozen() => CatalogUnavailable(
-    generation: this.generation,
-    reason: this.reason,
-    encodedSize: this.encodedSize,
-    maxEncodedSize: this.maxEncodedSize,
-  ).._u = this._u;
-}
-
-// -----------------------------------------------------------------------------
 // struct CatalogFetchRequest
 // -----------------------------------------------------------------------------
 
 sealed class CatalogFetchRequest_orMutable {
   _lib_editor_v1_type_catalog.CatalogGeneration_orMutable?
   get expectedGeneration;
-  _core.String get transferId;
 
   CatalogFetchRequest toFrozen();
 }
@@ -4547,28 +4101,24 @@ sealed class CatalogFetchRequest_orMutable {
 final class CatalogFetchRequest implements CatalogFetchRequest_orMutable {
   @_core.override
   final _lib_editor_v1_type_catalog.CatalogGeneration? expectedGeneration;
-  @_core.override
-  final _core.String transferId;
   _skir.internal__UnrecognizedFields? _u;
 
   factory CatalogFetchRequest({
     required _lib_editor_v1_type_catalog.CatalogGeneration_orMutable?
     expectedGeneration,
-    required _core.String transferId,
   }) => CatalogFetchRequest._(
     (expectedGeneration != null) ? expectedGeneration.toFrozen() : null,
-    transferId,
   );
 
-  CatalogFetchRequest._(this.expectedGeneration, this.transferId);
+  CatalogFetchRequest._(this.expectedGeneration);
 
   /// Default instance with all fields set to their default values.
-  static final defaultInstance = CatalogFetchRequest._(null, "");
+  static final defaultInstance = CatalogFetchRequest._(null);
 
   /// Returns a new mutable instance.
   /// Fields are initialized to their default values.
   static CatalogFetchRequest_mutable mutable() =>
-      CatalogFetchRequest_mutable._(null, "");
+      CatalogFetchRequest_mutable._(null);
 
   /// Returns this instance (no-op).
   @_core.Deprecated("This instance is already frozen.")
@@ -4577,7 +4127,7 @@ final class CatalogFetchRequest implements CatalogFetchRequest_orMutable {
 
   /// Returns a mutable shallow copy of this instance.
   CatalogFetchRequest_mutable toMutable() =>
-      CatalogFetchRequest_mutable._(this.expectedGeneration, this.transferId);
+      CatalogFetchRequest_mutable._(this.expectedGeneration);
 
   @_core.override
   _core.bool operator ==(other) {
@@ -4592,7 +4142,7 @@ final class CatalogFetchRequest implements CatalogFetchRequest_orMutable {
   @_core.override
   _core.int get hashCode => _skir.internal__listEquality.hash(_equality_proxy);
 
-  _core.List get _equality_proxy => [this.expectedGeneration, this.transferId];
+  _core.List get _equality_proxy => [this.expectedGeneration];
 
   @_core.override
   _core.String toString() => _skir.internal__stringify(this, serializer);
@@ -4615,15 +4165,6 @@ final class CatalogFetchRequest implements CatalogFetchRequest_orMutable {
         (it) => it.expectedGeneration,
         (it, v) => it.expectedGeneration = v,
       );
-      _serializerBuilder.addField(
-        "transfer_id",
-        "transferId",
-        1,
-        _skir.Serializers.string,
-        "",
-        (it) => it.transferId,
-        (it, v) => it.transferId = v,
-      );
       _serializerBuilder.finalize();
     }
     return _serializerBuilder.serializer;
@@ -4644,30 +4185,29 @@ final class CatalogFetchRequest implements CatalogFetchRequest_orMutable {
 final class CatalogFetchRequest_mutable
     implements CatalogFetchRequest_orMutable {
   _lib_editor_v1_type_catalog.CatalogGeneration_orMutable? expectedGeneration;
-  _core.String transferId;
   _skir.internal__UnrecognizedFields? _u;
 
-  CatalogFetchRequest_mutable._(this.expectedGeneration, this.transferId);
+  CatalogFetchRequest_mutable._(this.expectedGeneration);
 
   /// Returns a deeply immutable copy of this instance.
   @_core.override
-  CatalogFetchRequest toFrozen() => CatalogFetchRequest(
-    expectedGeneration: this.expectedGeneration,
-    transferId: this.transferId,
-  ).._u = this._u;
+  CatalogFetchRequest toFrozen() =>
+      CatalogFetchRequest(expectedGeneration: this.expectedGeneration)
+        .._u = this._u;
 }
 
 // -----------------------------------------------------------------------------
 // enum CatalogFetchResult
 // -----------------------------------------------------------------------------
 
+/// The installed catalog, or its actual generation when it differs from the expected one.
+///
 /// To switch on the variants:
 ///   ```
 ///   switch (e) {
 ///     case CatalogFetchResult_unknown(): { ... }
-///     case CatalogFetchResult_chunk(:var value): { ... }
-///     case CatalogFetchResult_generationChanged(:var value): { ... }
-///     case CatalogFetchResult_unavailable(:var value): { ... }
+///     case CatalogFetchResult_catalog(:var value): { ... }
+///     case CatalogFetchResult_generationChangedError(:var value): { ... }
 ///     case CatalogFetchResult_internalError(:var value): { ... }
 ///   }
 ///   ```
@@ -4679,48 +4219,63 @@ sealed class CatalogFetchResult {
   static const CatalogFetchResult unknown =
       CatalogFetchResult_unknown._instance;
 
-  /// Create a 'chunk' variant wrapping around the given value.
-  factory CatalogFetchResult.wrapChunk(CatalogTransferChunk value) =>
-      CatalogFetchResult_chunkWrapper._(value);
+  /// Create a 'catalog' variant wrapping around the given value.
+  factory CatalogFetchResult.wrapCatalog(EditorCatalog value) =>
+      CatalogFetchResult_catalogWrapper._(value);
 
-  /// Same as `wrapChunk(CatalogTransferChunk(...))`.
-  factory CatalogFetchResult.createChunk({
+  /// Same as `wrapCatalog(EditorCatalog(...))`.
+  factory CatalogFetchResult.createCatalog({
     required _lib_editor_v1_type_catalog.CatalogGeneration_orMutable generation,
-    required _lib_kernel_v1_bounded_transfer.BoundedTransferChunk_orMutable
-    transfer,
-  }) => CatalogFetchResult.wrapChunk(
-    CatalogTransferChunk(generation: generation, transfer: transfer),
-  );
-
-  /// Create a 'generation_changed' variant wrapping around the given value.
-  factory CatalogFetchResult.wrapGenerationChanged(
-    _lib_editor_v1_type_catalog.CatalogGeneration value,
-  ) => CatalogFetchResult_generationChangedWrapper._(value);
-
-  /// Same as `wrapGenerationChanged(_lib_editor_v1_type_catalog.CatalogGeneration(...))`.
-  factory CatalogFetchResult.createGenerationChanged({
-    required _core.String value,
-  }) => CatalogFetchResult.wrapGenerationChanged(
-    _lib_editor_v1_type_catalog.CatalogGeneration(value: value),
-  );
-
-  /// Create a 'unavailable' variant wrapping around the given value.
-  factory CatalogFetchResult.wrapUnavailable(CatalogUnavailable value) =>
-      CatalogFetchResult_unavailableWrapper._(value);
-
-  /// Same as `wrapUnavailable(CatalogUnavailable(...))`.
-  factory CatalogFetchResult.createUnavailable({
-    required _lib_editor_v1_type_catalog.CatalogGeneration_orMutable generation,
-    required CatalogUnavailableReason reason,
-    required _core.int encodedSize,
-    required _core.int maxEncodedSize,
-  }) => CatalogFetchResult.wrapUnavailable(
-    CatalogUnavailable(
+    required _core.Iterable<PublishedType_orMutable> types,
+    required _core.Iterable<RelationContract_orMutable> relations,
+    required _core.Iterable<ResourceDisplayFormulas_orMutable> resourceDisplays,
+    required _core.Iterable<PresentationDescriptor_orMutable> presentations,
+    required _core.Iterable<PresentationMaterial_orMutable>
+    presentationMaterials,
+    required _core.Iterable<ConfigurationRecipe_orMutable> configuration,
+    required _core.Iterable<
+      _lib_editor_v1_diagnostic.DeclarationDiagnostic_orMutable
+    >
+    diagnostics,
+    required _core.Iterable<EndpointBindingTemplate_orMutable> endpointBindings,
+    required _core.Iterable<_lib_editor_v1_capability.CapabilityDefinition>
+    capabilities,
+    required _core.Iterable<TypeRecommendation_orMutable> recommendations,
+    required _core.Iterable<RoleFallback_orMutable> roleFallbacks,
+    required _core.Iterable<
+      _lib_editor_v1_operation.ResourceOperationDefinition_orMutable
+    >
+    resourceOperations,
+    required _lib_editor_v1_type_catalog.TypeDefinitionId_orMutable realmRoot,
+  }) => CatalogFetchResult.wrapCatalog(
+    EditorCatalog(
       generation: generation,
-      reason: reason,
-      encodedSize: encodedSize,
-      maxEncodedSize: maxEncodedSize,
+      types: types,
+      relations: relations,
+      resourceDisplays: resourceDisplays,
+      presentations: presentations,
+      presentationMaterials: presentationMaterials,
+      configuration: configuration,
+      diagnostics: diagnostics,
+      endpointBindings: endpointBindings,
+      capabilities: capabilities,
+      recommendations: recommendations,
+      roleFallbacks: roleFallbacks,
+      resourceOperations: resourceOperations,
+      realmRoot: realmRoot,
     ),
+  );
+
+  /// Create a 'generation_changed_error' variant wrapping around the given value.
+  factory CatalogFetchResult.wrapGenerationChangedError(
+    _lib_editor_v1_type_catalog.CatalogGeneration value,
+  ) => CatalogFetchResult_generationChangedErrorWrapper._(value);
+
+  /// Same as `wrapGenerationChangedError(_lib_editor_v1_type_catalog.CatalogGeneration(...))`.
+  factory CatalogFetchResult.createGenerationChangedError({
+    required _core.String value,
+  }) => CatalogFetchResult.wrapGenerationChangedError(
+    _lib_editor_v1_type_catalog.CatalogGeneration(value: value),
   );
 
   /// Create a 'internal_error' variant wrapping around the given value.
@@ -4742,36 +4297,26 @@ sealed class CatalogFetchResult {
     if (_serializerBuilder.mustInitialize()) {
       _serializerBuilder.addWrapperVariant(
         1,
-        "chunk",
-        "wrapChunk",
-        CatalogTransferChunk.serializer,
+        "catalog",
+        "wrapCatalog",
+        EditorCatalog.serializer,
         "",
-        CatalogFetchResult_chunkWrapper._,
+        CatalogFetchResult_catalogWrapper._,
         (it) => it.value,
-        ordinal: CatalogFetchResult_kind.chunkWrapper._ordinal,
+        ordinal: CatalogFetchResult_kind.catalogWrapper._ordinal,
       );
       _serializerBuilder.addWrapperVariant(
         2,
-        "generation_changed",
-        "wrapGenerationChanged",
+        "generation_changed_error",
+        "wrapGenerationChangedError",
         _lib_editor_v1_type_catalog.CatalogGeneration.serializer,
         "",
-        CatalogFetchResult_generationChangedWrapper._,
+        CatalogFetchResult_generationChangedErrorWrapper._,
         (it) => it.value,
-        ordinal: CatalogFetchResult_kind.generationChangedWrapper._ordinal,
+        ordinal: CatalogFetchResult_kind.generationChangedErrorWrapper._ordinal,
       );
       _serializerBuilder.addWrapperVariant(
         3,
-        "unavailable",
-        "wrapUnavailable",
-        CatalogUnavailable.serializer,
-        "",
-        CatalogFetchResult_unavailableWrapper._,
-        (it) => it.value,
-        ordinal: CatalogFetchResult_kind.unavailableWrapper._ordinal,
-      );
-      _serializerBuilder.addWrapperVariant(
-        4,
         "internal_error",
         "wrapInternalError",
         _lib_kernel_v1_errors.InternalError.serializer,
@@ -4788,7 +4333,7 @@ sealed class CatalogFetchResult {
   static final _serializerBuilder = _skir.internal__EnumSerializerBuilder
       .create(
         recordId: "editor/v1/catalog.skir:CatalogFetchResult",
-        doc: "",
+        doc: "The installed catalog, or its actual generation when it differs from the expected one.",
         unknownInstance: CatalogFetchResult_unknown._instance,
         enumInstance: CatalogFetchResult.unknown,
         getOrdinal: (it) => it.kind._ordinal,
@@ -4800,10 +4345,9 @@ sealed class CatalogFetchResult {
 /// The kind of variant held by a `CatalogFetchResult`.
 enum CatalogFetchResult_kind {
   unknown(0),
-  chunkWrapper(1),
-  generationChangedWrapper(2),
-  unavailableWrapper(3),
-  internalErrorWrapper(4);
+  catalogWrapper(1),
+  generationChangedErrorWrapper(2),
+  internalErrorWrapper(3);
 
   final _core.int _ordinal;
 
@@ -4846,36 +4390,25 @@ sealed class _CatalogFetchResult_wrapper implements CatalogFetchResult {
       _skir.internal__stringify(this, CatalogFetchResult.serializer);
 }
 
-final class CatalogFetchResult_chunkWrapper
+final class CatalogFetchResult_catalogWrapper
     extends _CatalogFetchResult_wrapper {
-  final CatalogTransferChunk value;
+  final EditorCatalog value;
 
-  CatalogFetchResult_chunkWrapper._(this.value);
+  CatalogFetchResult_catalogWrapper._(this.value);
 
   @_core.override
-  CatalogFetchResult_kind get kind => CatalogFetchResult_kind.chunkWrapper;
+  CatalogFetchResult_kind get kind => CatalogFetchResult_kind.catalogWrapper;
 }
 
-final class CatalogFetchResult_generationChangedWrapper
+final class CatalogFetchResult_generationChangedErrorWrapper
     extends _CatalogFetchResult_wrapper {
   final _lib_editor_v1_type_catalog.CatalogGeneration value;
 
-  CatalogFetchResult_generationChangedWrapper._(this.value);
+  CatalogFetchResult_generationChangedErrorWrapper._(this.value);
 
   @_core.override
   CatalogFetchResult_kind get kind =>
-      CatalogFetchResult_kind.generationChangedWrapper;
-}
-
-final class CatalogFetchResult_unavailableWrapper
-    extends _CatalogFetchResult_wrapper {
-  final CatalogUnavailable value;
-
-  CatalogFetchResult_unavailableWrapper._(this.value);
-
-  @_core.override
-  CatalogFetchResult_kind get kind =>
-      CatalogFetchResult_kind.unavailableWrapper;
+      CatalogFetchResult_kind.generationChangedErrorWrapper;
 }
 
 final class CatalogFetchResult_internalErrorWrapper

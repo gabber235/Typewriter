@@ -8,7 +8,6 @@ import {
   CatalogGeneration,
   PublicationId,
 } from "editor/v1/type_catalog.skir";
-import { BoundedTransferChunk } from "kernel/v1/bounded_transfer.skir";
 import { InternalError } from "kernel/v1/errors.skir";
 
 /// Addresses serialized bytes by lowercase SHA 256 digest and exact byte count.
@@ -36,37 +35,32 @@ struct PublishedContent(811500004) {
   implementation_token: string = 3;
   outputs: [PublishedOutput] = 4;
 }
-struct PublishedContentChunk(811500005) {
-  transfer: BoundedTransferChunk = 0;
-}
 /// Membership in the Realm selected publication. active does not confirm application by any engine,
 /// nor that the currently saved root still compiles to the selected artifact.
-enum CompiledResourceState(811500006) {
+enum CompiledResourceState(811500005) {
   not_compiled = 1;
   active: PublicationId = 2;
 }
-struct CompiledResourceStatus(811500007) {
+struct CompiledResourceStatus(811500006) {
   root: CompilationRoot = 0;
   state: CompiledResourceState = 1;
 }
 /// Hint to refetch current selection. The event carries no descriptor or ordered publication log.
-struct CompiledContentChanged(811500008) {
+struct CompiledContentChanged(811500007) {
   generation: CatalogGeneration = 0;
 }
-enum CompilationStatusSelection(811500009) {
+enum CompilationStatusSelection(811500008) {
   all_roots = 1;
   supplied_roots: [CompilationRoot] = 2;
 }
 
+/// Returns the descriptor of the selected publication, or absent before any publication is selected.
 method QueryPublishedContent(
-  struct {
-    transfer_id: string = 0;
-  }
+  struct {}
 ): enum {
-  chunk: PublishedContentChunk = 1;
+  content: PublishedContent = 1;
   absent: struct {} = 2;
-  unavailable: struct {} = 3;
-  internal_error: InternalError = 4;
+  internal_error: InternalError = 3;
 } = 920008;
 
 method QueryCompiledResourceStatus(

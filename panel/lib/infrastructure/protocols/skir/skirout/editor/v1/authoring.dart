@@ -21,8 +21,6 @@ import "./checking.dart" as _lib_editor_v1_checking;
 import "./diagnostic.dart" as _lib_editor_v1_diagnostic;
 import "./type_catalog.dart" as _lib_editor_v1_type_catalog;
 import "./typed_value.dart" as _lib_editor_v1_typed_value;
-import "../../kernel/v1/bounded_transfer.dart"
-    as _lib_kernel_v1_bounded_transfer;
 import "../../kernel/v1/errors.dart" as _lib_kernel_v1_errors;
 
 // -----------------------------------------------------------------------------
@@ -2499,8 +2497,8 @@ sealed class AuthoringState_orMutable {
 }
 
 /// Captures one saved resource graph and its catalog for editor synchronization.
-/// Findings retain their own execution evidence and freshness. All transfer chunks describe this same
-/// confirmed observation, which resource operations must echo before supplying a working overlay.
+/// Findings retain their own execution evidence and freshness. The state describes one confirmed
+/// observation, which resource operations must echo before supplying a working overlay.
 ///
 /// Deeply immutable.
 final class AuthoringState implements AuthoringState_orMutable {
@@ -2659,7 +2657,7 @@ final class AuthoringState implements AuthoringState_orMutable {
 
   static final _serializerBuilder = _skir.internal__StructSerializerBuilder(
     recordId: "editor/v1/authoring.skir:AuthoringState",
-    doc: "Captures one saved resource graph and its catalog for editor synchronization.\nFindings retain their own execution evidence and freshness. All transfer chunks describe this same\nconfirmed observation, which resource operations must echo before supplying a working overlay.",
+    doc: "Captures one saved resource graph and its catalog for editor synchronization.\nFindings retain their own execution evidence and freshness. The state describes one confirmed\nobservation, which resource operations must echo before supplying a working overlay.",
     defaultInstance: defaultInstance,
     newMutable: (it) => (it != null) ? it.toMutable() : mutable(),
     toFrozen: (AuthoringState_mutable it) => it.toFrozen(),
@@ -6803,463 +6801,6 @@ final class AuthoringSearchResult_mutable
 }
 
 // -----------------------------------------------------------------------------
-// struct AuthoringStateTransferChunk
-// -----------------------------------------------------------------------------
-
-sealed class AuthoringStateTransferChunk_orMutable {
-  _lib_editor_v1_type_catalog.CatalogGeneration_orMutable get generation;
-  _lib_kernel_v1_bounded_transfer.BoundedTransferChunk_orMutable get transfer;
-
-  AuthoringStateTransferChunk toFrozen();
-}
-
-/// Deeply immutable.
-final class AuthoringStateTransferChunk
-    implements AuthoringStateTransferChunk_orMutable {
-  @_core.override
-  final _lib_editor_v1_type_catalog.CatalogGeneration generation;
-  @_core.override
-  final _lib_kernel_v1_bounded_transfer.BoundedTransferChunk transfer;
-  _skir.internal__UnrecognizedFields? _u;
-
-  factory AuthoringStateTransferChunk({
-    required _lib_editor_v1_type_catalog.CatalogGeneration_orMutable generation,
-    required _lib_kernel_v1_bounded_transfer.BoundedTransferChunk_orMutable
-    transfer,
-  }) =>
-      AuthoringStateTransferChunk._(generation.toFrozen(), transfer.toFrozen());
-
-  AuthoringStateTransferChunk._(this.generation, this.transfer);
-
-  /// Default instance with all fields set to their default values.
-  static final defaultInstance = AuthoringStateTransferChunk._(
-    _lib_editor_v1_type_catalog.CatalogGeneration.defaultInstance,
-    _lib_kernel_v1_bounded_transfer.BoundedTransferChunk.defaultInstance,
-  );
-
-  /// Returns a new mutable instance.
-  /// Fields are initialized to their default values.
-  static AuthoringStateTransferChunk_mutable mutable() =>
-      AuthoringStateTransferChunk_mutable._(
-        _lib_editor_v1_type_catalog.CatalogGeneration.defaultInstance,
-        _lib_kernel_v1_bounded_transfer.BoundedTransferChunk.defaultInstance,
-      );
-
-  /// Returns this instance (no-op).
-  @_core.Deprecated("This instance is already frozen.")
-  @_core.override
-  AuthoringStateTransferChunk toFrozen() => this;
-
-  /// Returns a mutable shallow copy of this instance.
-  AuthoringStateTransferChunk_mutable toMutable() =>
-      AuthoringStateTransferChunk_mutable._(this.generation, this.transfer);
-
-  @_core.override
-  _core.bool operator ==(other) {
-    if (_core.identical(this, other)) return true;
-    if (other is! AuthoringStateTransferChunk) return false;
-    return _skir.internal__listEquality.equals(
-      _equality_proxy,
-      other._equality_proxy,
-    );
-  }
-
-  @_core.override
-  _core.int get hashCode => _skir.internal__listEquality.hash(_equality_proxy);
-
-  _core.List get _equality_proxy => [this.generation, this.transfer];
-
-  @_core.override
-  _core.String toString() => _skir.internal__stringify(this, serializer);
-
-  /// Serializer for `AuthoringStateTransferChunk` instances.
-  static _skir.StructSerializer<
-    AuthoringStateTransferChunk,
-    AuthoringStateTransferChunk_mutable
-  >
-  get serializer {
-    if (_serializerBuilder.mustInitialize()) {
-      _serializerBuilder.addField(
-        "generation",
-        "generation",
-        0,
-        _lib_editor_v1_type_catalog.CatalogGeneration.serializer,
-        "",
-        (it) => it.generation,
-        (it, v) => it.generation = v,
-      );
-      _serializerBuilder.addField(
-        "transfer",
-        "transfer",
-        1,
-        _lib_kernel_v1_bounded_transfer.BoundedTransferChunk.serializer,
-        "",
-        (it) => it.transfer,
-        (it, v) => it.transfer = v,
-      );
-      _serializerBuilder.finalize();
-    }
-    return _serializerBuilder.serializer;
-  }
-
-  static final _serializerBuilder = _skir.internal__StructSerializerBuilder(
-    recordId: "editor/v1/authoring.skir:AuthoringStateTransferChunk",
-    doc: "",
-    defaultInstance: defaultInstance,
-    newMutable: (it) => (it != null) ? it.toMutable() : mutable(),
-    toFrozen: (AuthoringStateTransferChunk_mutable it) => it.toFrozen(),
-    getUnrecognizedFields: (it) => it._u,
-    setUnrecognizedFields: (it, u) => it._u = u,
-  );
-}
-
-/// Mutable version of [AuthoringStateTransferChunk].
-final class AuthoringStateTransferChunk_mutable
-    implements AuthoringStateTransferChunk_orMutable {
-  _lib_editor_v1_type_catalog.CatalogGeneration_orMutable generation;
-  _lib_kernel_v1_bounded_transfer.BoundedTransferChunk_orMutable transfer;
-  _skir.internal__UnrecognizedFields? _u;
-
-  AuthoringStateTransferChunk_mutable._(this.generation, this.transfer);
-
-  /// If the value of [generation] is already mutable, returns it as-is.
-  /// Otherwise, makes a mutable copy, assigns it back to [generation] and returns it.
-  _lib_editor_v1_type_catalog.CatalogGeneration_mutable get mutableGeneration {
-    final value = this.generation;
-    if (value is _lib_editor_v1_type_catalog.CatalogGeneration_mutable) {
-      return value;
-    } else {
-      return this.generation =
-          (value as _lib_editor_v1_type_catalog.CatalogGeneration).toMutable();
-    }
-  }
-
-  /// If the value of [transfer] is already mutable, returns it as-is.
-  /// Otherwise, makes a mutable copy, assigns it back to [transfer] and returns it.
-  _lib_kernel_v1_bounded_transfer.BoundedTransferChunk_mutable
-  get mutableTransfer {
-    final value = this.transfer;
-    if (value is _lib_kernel_v1_bounded_transfer.BoundedTransferChunk_mutable) {
-      return value;
-    } else {
-      return this.transfer =
-          (value as _lib_kernel_v1_bounded_transfer.BoundedTransferChunk)
-              .toMutable();
-    }
-  }
-
-  /// Returns a deeply immutable copy of this instance.
-  @_core.override
-  AuthoringStateTransferChunk toFrozen() => AuthoringStateTransferChunk(
-    generation: this.generation,
-    transfer: this.transfer,
-  ).._u = this._u;
-}
-
-// -----------------------------------------------------------------------------
-// enum AuthoringTransferUnavailableReason
-// -----------------------------------------------------------------------------
-
-/// To switch on the variants:
-///   ```
-///   switch (e) {
-///     case AuthoringTransferUnavailableReason_unknown(): { ... }
-///     case AuthoringTransferUnavailableReason.encodedSizeLimit: { ... }
-///   }
-///   ```
-///
-/// Deeply immutable.
-sealed class AuthoringTransferUnavailableReason {
-  /// Constant indicating an unknown `AuthoringTransferUnavailableReason`.
-  /// Default value for fields of type `AuthoringTransferUnavailableReason`.
-  static const AuthoringTransferUnavailableReason unknown =
-      AuthoringTransferUnavailableReason_unknown._instance;
-
-  static const encodedSizeLimit =
-      _AuthoringTransferUnavailableReason_consts.encodedSizeLimitConst;
-
-  /// Returns the kind of variant held by this AuthoringTransferUnavailableReason.
-  AuthoringTransferUnavailableReason_kind get kind;
-
-  /// Serializer for `AuthoringTransferUnavailableReason` instances.
-  static _skir.EnumSerializer<AuthoringTransferUnavailableReason>
-  get serializer {
-    if (_serializerBuilder.mustInitialize()) {
-      _serializerBuilder.addConstantVariant(
-        1,
-        "encoded_size_limit",
-        "encodedSizeLimit",
-        "",
-        encodedSizeLimit,
-      );
-      _serializerBuilder.finalize();
-    }
-    return _serializerBuilder.serializer;
-  }
-
-  static final _serializerBuilder = _skir.internal__EnumSerializerBuilder
-      .create(
-        recordId: "editor/v1/authoring.skir:AuthoringTransferUnavailableReason",
-        doc: "",
-        unknownInstance: AuthoringTransferUnavailableReason_unknown._instance,
-        enumInstance: AuthoringTransferUnavailableReason.unknown,
-        getOrdinal: (it) => it.kind._ordinal,
-        wrapUnrecognized:
-            AuthoringTransferUnavailableReason_unknown._unrecognized,
-        getUnrecognized: (it) => it._u,
-      );
-}
-
-/// The kind of variant held by a `AuthoringTransferUnavailableReason`.
-enum AuthoringTransferUnavailableReason_kind {
-  unknown(0),
-  encodedSizeLimitConst(1);
-
-  final _core.int _ordinal;
-
-  const AuthoringTransferUnavailableReason_kind(this._ordinal);
-}
-
-final class AuthoringTransferUnavailableReason_unknown
-    implements AuthoringTransferUnavailableReason {
-  static const _instance = AuthoringTransferUnavailableReason_unknown._();
-
-  final _skir.internal__UnrecognizedVariant? _u;
-
-  const AuthoringTransferUnavailableReason_unknown._() : _u = null;
-  AuthoringTransferUnavailableReason_unknown._unrecognized(this._u);
-
-  @_core.override
-  AuthoringTransferUnavailableReason_kind get kind =>
-      AuthoringTransferUnavailableReason_kind.unknown;
-  @_core.override
-  _core.bool operator ==(other) =>
-      other is AuthoringTransferUnavailableReason_unknown;
-  @_core.override
-  _core.int get hashCode => 8118964;
-  @_core.override
-  _core.String toString() => _skir.internal__stringify(
-    this,
-    AuthoringTransferUnavailableReason.serializer,
-  );
-}
-
-enum _AuthoringTransferUnavailableReason_consts
-    implements AuthoringTransferUnavailableReason {
-  encodedSizeLimitConst(
-    AuthoringTransferUnavailableReason_kind.encodedSizeLimitConst,
-  );
-
-  @_core.override
-  final AuthoringTransferUnavailableReason_kind kind;
-
-  const _AuthoringTransferUnavailableReason_consts(this.kind);
-
-  @_core.override
-  _core.String toString() => _skir.internal__stringify(
-    this,
-    AuthoringTransferUnavailableReason.serializer,
-  );
-}
-
-// -----------------------------------------------------------------------------
-// struct AuthoringTransferUnavailable
-// -----------------------------------------------------------------------------
-
-sealed class AuthoringTransferUnavailable_orMutable {
-  _lib_editor_v1_type_catalog.CatalogGeneration_orMutable get generation;
-  AuthoringTransferUnavailableReason get reason;
-  _core.int get encodedSize;
-  _core.int get maxEncodedSize;
-
-  AuthoringTransferUnavailable toFrozen();
-}
-
-/// Deeply immutable.
-final class AuthoringTransferUnavailable
-    implements AuthoringTransferUnavailable_orMutable {
-  @_core.override
-  final _lib_editor_v1_type_catalog.CatalogGeneration generation;
-  @_core.override
-  final AuthoringTransferUnavailableReason reason;
-  @_core.override
-  final _core.int encodedSize;
-  @_core.override
-  final _core.int maxEncodedSize;
-  _skir.internal__UnrecognizedFields? _u;
-
-  factory AuthoringTransferUnavailable({
-    required _lib_editor_v1_type_catalog.CatalogGeneration_orMutable generation,
-    required AuthoringTransferUnavailableReason reason,
-    required _core.int encodedSize,
-    required _core.int maxEncodedSize,
-  }) => AuthoringTransferUnavailable._(
-    generation.toFrozen(),
-    reason,
-    encodedSize,
-    maxEncodedSize,
-  );
-
-  AuthoringTransferUnavailable._(
-    this.generation,
-    this.reason,
-    this.encodedSize,
-    this.maxEncodedSize,
-  );
-
-  /// Default instance with all fields set to their default values.
-  static final defaultInstance = AuthoringTransferUnavailable._(
-    _lib_editor_v1_type_catalog.CatalogGeneration.defaultInstance,
-    AuthoringTransferUnavailableReason.unknown,
-    0,
-    0,
-  );
-
-  /// Returns a new mutable instance.
-  /// Fields are initialized to their default values.
-  static AuthoringTransferUnavailable_mutable mutable() =>
-      AuthoringTransferUnavailable_mutable._(
-        _lib_editor_v1_type_catalog.CatalogGeneration.defaultInstance,
-        AuthoringTransferUnavailableReason.unknown,
-        0,
-        0,
-      );
-
-  /// Returns this instance (no-op).
-  @_core.Deprecated("This instance is already frozen.")
-  @_core.override
-  AuthoringTransferUnavailable toFrozen() => this;
-
-  /// Returns a mutable shallow copy of this instance.
-  AuthoringTransferUnavailable_mutable toMutable() =>
-      AuthoringTransferUnavailable_mutable._(
-        this.generation,
-        this.reason,
-        this.encodedSize,
-        this.maxEncodedSize,
-      );
-
-  @_core.override
-  _core.bool operator ==(other) {
-    if (_core.identical(this, other)) return true;
-    if (other is! AuthoringTransferUnavailable) return false;
-    return _skir.internal__listEquality.equals(
-      _equality_proxy,
-      other._equality_proxy,
-    );
-  }
-
-  @_core.override
-  _core.int get hashCode => _skir.internal__listEquality.hash(_equality_proxy);
-
-  _core.List get _equality_proxy => [
-    this.generation,
-    this.reason,
-    this.encodedSize,
-    this.maxEncodedSize,
-  ];
-
-  @_core.override
-  _core.String toString() => _skir.internal__stringify(this, serializer);
-
-  /// Serializer for `AuthoringTransferUnavailable` instances.
-  static _skir.StructSerializer<
-    AuthoringTransferUnavailable,
-    AuthoringTransferUnavailable_mutable
-  >
-  get serializer {
-    if (_serializerBuilder.mustInitialize()) {
-      _serializerBuilder.addField(
-        "generation",
-        "generation",
-        0,
-        _lib_editor_v1_type_catalog.CatalogGeneration.serializer,
-        "",
-        (it) => it.generation,
-        (it, v) => it.generation = v,
-      );
-      _serializerBuilder.addField(
-        "reason",
-        "reason",
-        1,
-        AuthoringTransferUnavailableReason.serializer,
-        "",
-        (it) => it.reason,
-        (it, v) => it.reason = v,
-      );
-      _serializerBuilder.addField(
-        "encoded_size",
-        "encodedSize",
-        2,
-        _skir.Serializers.int64,
-        "",
-        (it) => it.encodedSize,
-        (it, v) => it.encodedSize = v,
-      );
-      _serializerBuilder.addField(
-        "max_encoded_size",
-        "maxEncodedSize",
-        3,
-        _skir.Serializers.int64,
-        "",
-        (it) => it.maxEncodedSize,
-        (it, v) => it.maxEncodedSize = v,
-      );
-      _serializerBuilder.finalize();
-    }
-    return _serializerBuilder.serializer;
-  }
-
-  static final _serializerBuilder = _skir.internal__StructSerializerBuilder(
-    recordId: "editor/v1/authoring.skir:AuthoringTransferUnavailable",
-    doc: "",
-    defaultInstance: defaultInstance,
-    newMutable: (it) => (it != null) ? it.toMutable() : mutable(),
-    toFrozen: (AuthoringTransferUnavailable_mutable it) => it.toFrozen(),
-    getUnrecognizedFields: (it) => it._u,
-    setUnrecognizedFields: (it, u) => it._u = u,
-  );
-}
-
-/// Mutable version of [AuthoringTransferUnavailable].
-final class AuthoringTransferUnavailable_mutable
-    implements AuthoringTransferUnavailable_orMutable {
-  _lib_editor_v1_type_catalog.CatalogGeneration_orMutable generation;
-  AuthoringTransferUnavailableReason reason;
-  _core.int encodedSize;
-  _core.int maxEncodedSize;
-  _skir.internal__UnrecognizedFields? _u;
-
-  AuthoringTransferUnavailable_mutable._(
-    this.generation,
-    this.reason,
-    this.encodedSize,
-    this.maxEncodedSize,
-  );
-
-  /// If the value of [generation] is already mutable, returns it as-is.
-  /// Otherwise, makes a mutable copy, assigns it back to [generation] and returns it.
-  _lib_editor_v1_type_catalog.CatalogGeneration_mutable get mutableGeneration {
-    final value = this.generation;
-    if (value is _lib_editor_v1_type_catalog.CatalogGeneration_mutable) {
-      return value;
-    } else {
-      return this.generation =
-          (value as _lib_editor_v1_type_catalog.CatalogGeneration).toMutable();
-    }
-  }
-
-  /// Returns a deeply immutable copy of this instance.
-  @_core.override
-  AuthoringTransferUnavailable toFrozen() => AuthoringTransferUnavailable(
-    generation: this.generation,
-    reason: this.reason,
-    encodedSize: this.encodedSize,
-    maxEncodedSize: this.maxEncodedSize,
-  ).._u = this._u;
-}
-
-// -----------------------------------------------------------------------------
 // struct AuthoringObservationId
 // -----------------------------------------------------------------------------
 
@@ -7270,8 +6811,8 @@ sealed class AuthoringObservationId_orMutable {
 }
 
 /// Identifies one saved authoring observation without ordering resource changes.
-/// It remains fixed across snapshot transfer chunks. A local operation overlay echoes this identity
-/// while carrying separate proposed values; a changed saved view requires refreshing the baseline.
+/// A local operation overlay echoes this identity while carrying separate proposed values; a
+/// changed saved view requires refreshing the baseline.
 ///
 /// Deeply immutable.
 final class AuthoringObservationId implements AuthoringObservationId_orMutable {
@@ -7342,7 +6883,7 @@ final class AuthoringObservationId implements AuthoringObservationId_orMutable {
 
   static final _serializerBuilder = _skir.internal__StructSerializerBuilder(
     recordId: "editor/v1/authoring.skir:AuthoringObservationId",
-    doc: "Identifies one saved authoring observation without ordering resource changes.\nIt remains fixed across snapshot transfer chunks. A local operation overlay echoes this identity\nwhile carrying separate proposed values; a changed saved view requires refreshing the baseline.",
+    doc: "Identifies one saved authoring observation without ordering resource changes.\nA local operation overlay echoes this identity while carrying separate proposed values; a\nchanged saved view requires refreshing the baseline.",
     defaultInstance: defaultInstance,
     newMutable: (it) => (it != null) ? it.toMutable() : mutable(),
     toFrozen: (AuthoringObservationId_mutable it) => it.toFrozen(),
@@ -7371,7 +6912,6 @@ final class AuthoringObservationId_mutable
 
 sealed class QueryAuthoringStateRequest_orMutable {
   _lib_editor_v1_type_catalog.CatalogGeneration_orMutable get generation;
-  _core.String get transferId;
 
   QueryAuthoringStateRequest toFrozen();
 }
@@ -7381,21 +6921,17 @@ final class QueryAuthoringStateRequest
     implements QueryAuthoringStateRequest_orMutable {
   @_core.override
   final _lib_editor_v1_type_catalog.CatalogGeneration generation;
-  @_core.override
-  final _core.String transferId;
   _skir.internal__UnrecognizedFields? _u;
 
   factory QueryAuthoringStateRequest({
     required _lib_editor_v1_type_catalog.CatalogGeneration_orMutable generation,
-    required _core.String transferId,
-  }) => QueryAuthoringStateRequest._(generation.toFrozen(), transferId);
+  }) => QueryAuthoringStateRequest._(generation.toFrozen());
 
-  QueryAuthoringStateRequest._(this.generation, this.transferId);
+  QueryAuthoringStateRequest._(this.generation);
 
   /// Default instance with all fields set to their default values.
   static final defaultInstance = QueryAuthoringStateRequest._(
     _lib_editor_v1_type_catalog.CatalogGeneration.defaultInstance,
-    "",
   );
 
   /// Returns a new mutable instance.
@@ -7403,7 +6939,6 @@ final class QueryAuthoringStateRequest
   static QueryAuthoringStateRequest_mutable mutable() =>
       QueryAuthoringStateRequest_mutable._(
         _lib_editor_v1_type_catalog.CatalogGeneration.defaultInstance,
-        "",
       );
 
   /// Returns this instance (no-op).
@@ -7413,7 +6948,7 @@ final class QueryAuthoringStateRequest
 
   /// Returns a mutable shallow copy of this instance.
   QueryAuthoringStateRequest_mutable toMutable() =>
-      QueryAuthoringStateRequest_mutable._(this.generation, this.transferId);
+      QueryAuthoringStateRequest_mutable._(this.generation);
 
   @_core.override
   _core.bool operator ==(other) {
@@ -7428,7 +6963,7 @@ final class QueryAuthoringStateRequest
   @_core.override
   _core.int get hashCode => _skir.internal__listEquality.hash(_equality_proxy);
 
-  _core.List get _equality_proxy => [this.generation, this.transferId];
+  _core.List get _equality_proxy => [this.generation];
 
   @_core.override
   _core.String toString() => _skir.internal__stringify(this, serializer);
@@ -7448,15 +6983,6 @@ final class QueryAuthoringStateRequest
         "",
         (it) => it.generation,
         (it, v) => it.generation = v,
-      );
-      _serializerBuilder.addField(
-        "transfer_id",
-        "transferId",
-        1,
-        _skir.Serializers.string,
-        "",
-        (it) => it.transferId,
-        (it, v) => it.transferId = v,
       );
       _serializerBuilder.finalize();
     }
@@ -7478,10 +7004,9 @@ final class QueryAuthoringStateRequest
 final class QueryAuthoringStateRequest_mutable
     implements QueryAuthoringStateRequest_orMutable {
   _lib_editor_v1_type_catalog.CatalogGeneration_orMutable generation;
-  _core.String transferId;
   _skir.internal__UnrecognizedFields? _u;
 
-  QueryAuthoringStateRequest_mutable._(this.generation, this.transferId);
+  QueryAuthoringStateRequest_mutable._(this.generation);
 
   /// If the value of [generation] is already mutable, returns it as-is.
   /// Otherwise, makes a mutable copy, assigns it back to [generation] and returns it.
@@ -7497,10 +7022,8 @@ final class QueryAuthoringStateRequest_mutable
 
   /// Returns a deeply immutable copy of this instance.
   @_core.override
-  QueryAuthoringStateRequest toFrozen() => QueryAuthoringStateRequest(
-    generation: this.generation,
-    transferId: this.transferId,
-  ).._u = this._u;
+  QueryAuthoringStateRequest toFrozen() =>
+      QueryAuthoringStateRequest(generation: this.generation).._u = this._u;
 }
 
 // -----------------------------------------------------------------------------
@@ -7511,9 +7034,8 @@ final class QueryAuthoringStateRequest_mutable
 ///   ```
 ///   switch (e) {
 ///     case QueryAuthoringStateResponse_unknown(): { ... }
-///     case QueryAuthoringStateResponse_chunk(:var value): { ... }
-///     case QueryAuthoringStateResponse_catalogChanged(:var value): { ... }
-///     case QueryAuthoringStateResponse_unavailable(:var value): { ... }
+///     case QueryAuthoringStateResponse_state(:var value): { ... }
+///     case QueryAuthoringStateResponse_catalogChangedError(:var value): { ... }
 ///     case QueryAuthoringStateResponse_internalError(:var value): { ... }
 ///   }
 ///   ```
@@ -7525,51 +7047,42 @@ sealed class QueryAuthoringStateResponse {
   static const QueryAuthoringStateResponse unknown =
       QueryAuthoringStateResponse_unknown._instance;
 
-  /// Create a 'chunk' variant wrapping around the given value.
-  factory QueryAuthoringStateResponse.wrapChunk(
-    AuthoringStateTransferChunk value,
-  ) => QueryAuthoringStateResponse_chunkWrapper._(value);
+  /// Create a 'state' variant wrapping around the given value.
+  factory QueryAuthoringStateResponse.wrapState(AuthoringState value) =>
+      QueryAuthoringStateResponse_stateWrapper._(value);
 
-  /// Same as `wrapChunk(AuthoringStateTransferChunk(...))`.
-  factory QueryAuthoringStateResponse.createChunk({
+  /// Same as `wrapState(AuthoringState(...))`.
+  factory QueryAuthoringStateResponse.createState({
     required _lib_editor_v1_type_catalog.CatalogGeneration_orMutable generation,
-    required _lib_kernel_v1_bounded_transfer.BoundedTransferChunk_orMutable
-    transfer,
-  }) => QueryAuthoringStateResponse.wrapChunk(
-    AuthoringStateTransferChunk(generation: generation, transfer: transfer),
+    required _core.Iterable<AuthoringResource_orMutable> resources,
+    required _core.Iterable<
+      _lib_editor_v1_authoring_facts.LinkProjection_orMutable
+    >
+    links,
+    required _core.Iterable<_lib_editor_v1_checking.FindingSet_orMutable>
+    findings,
+    required AuthoringObservationId_orMutable confirmedObservation,
+  }) => QueryAuthoringStateResponse.wrapState(
+    AuthoringState(
+      generation: generation,
+      resources: resources,
+      links: links,
+      findings: findings,
+      confirmedObservation: confirmedObservation,
+    ),
   );
 
-  /// Create a 'catalog_changed' variant wrapping around the given value.
-  factory QueryAuthoringStateResponse.wrapCatalogChanged(
+  /// Create a 'catalog_changed_error' variant wrapping around the given value.
+  factory QueryAuthoringStateResponse.wrapCatalogChangedError(
     CatalogChanged value,
-  ) => QueryAuthoringStateResponse_catalogChangedWrapper._(value);
+  ) => QueryAuthoringStateResponse_catalogChangedErrorWrapper._(value);
 
-  /// Same as `wrapCatalogChanged(CatalogChanged(...))`.
-  factory QueryAuthoringStateResponse.createCatalogChanged({
+  /// Same as `wrapCatalogChangedError(CatalogChanged(...))`.
+  factory QueryAuthoringStateResponse.createCatalogChangedError({
     required _lib_editor_v1_type_catalog.CatalogGeneration_orMutable
     actualGeneration,
-  }) => QueryAuthoringStateResponse.wrapCatalogChanged(
+  }) => QueryAuthoringStateResponse.wrapCatalogChangedError(
     CatalogChanged(actualGeneration: actualGeneration),
-  );
-
-  /// Create a 'unavailable' variant wrapping around the given value.
-  factory QueryAuthoringStateResponse.wrapUnavailable(
-    AuthoringTransferUnavailable value,
-  ) => QueryAuthoringStateResponse_unavailableWrapper._(value);
-
-  /// Same as `wrapUnavailable(AuthoringTransferUnavailable(...))`.
-  factory QueryAuthoringStateResponse.createUnavailable({
-    required _lib_editor_v1_type_catalog.CatalogGeneration_orMutable generation,
-    required AuthoringTransferUnavailableReason reason,
-    required _core.int encodedSize,
-    required _core.int maxEncodedSize,
-  }) => QueryAuthoringStateResponse.wrapUnavailable(
-    AuthoringTransferUnavailable(
-      generation: generation,
-      reason: reason,
-      encodedSize: encodedSize,
-      maxEncodedSize: maxEncodedSize,
-    ),
   );
 
   /// Create a 'internal_error' variant wrapping around the given value.
@@ -7591,37 +7104,28 @@ sealed class QueryAuthoringStateResponse {
     if (_serializerBuilder.mustInitialize()) {
       _serializerBuilder.addWrapperVariant(
         1,
-        "chunk",
-        "wrapChunk",
-        AuthoringStateTransferChunk.serializer,
+        "state",
+        "wrapState",
+        AuthoringState.serializer,
         "",
-        QueryAuthoringStateResponse_chunkWrapper._,
+        QueryAuthoringStateResponse_stateWrapper._,
         (it) => it.value,
-        ordinal: QueryAuthoringStateResponse_kind.chunkWrapper._ordinal,
+        ordinal: QueryAuthoringStateResponse_kind.stateWrapper._ordinal,
       );
       _serializerBuilder.addWrapperVariant(
         2,
-        "catalog_changed",
-        "wrapCatalogChanged",
+        "catalog_changed_error",
+        "wrapCatalogChangedError",
         CatalogChanged.serializer,
         "",
-        QueryAuthoringStateResponse_catalogChangedWrapper._,
+        QueryAuthoringStateResponse_catalogChangedErrorWrapper._,
         (it) => it.value,
-        ordinal:
-            QueryAuthoringStateResponse_kind.catalogChangedWrapper._ordinal,
+        ordinal: QueryAuthoringStateResponse_kind
+            .catalogChangedErrorWrapper
+            ._ordinal,
       );
       _serializerBuilder.addWrapperVariant(
         3,
-        "unavailable",
-        "wrapUnavailable",
-        AuthoringTransferUnavailable.serializer,
-        "",
-        QueryAuthoringStateResponse_unavailableWrapper._,
-        (it) => it.value,
-        ordinal: QueryAuthoringStateResponse_kind.unavailableWrapper._ordinal,
-      );
-      _serializerBuilder.addWrapperVariant(
-        4,
         "internal_error",
         "wrapInternalError",
         _lib_kernel_v1_errors.InternalError.serializer,
@@ -7650,10 +7154,9 @@ sealed class QueryAuthoringStateResponse {
 /// The kind of variant held by a `QueryAuthoringStateResponse`.
 enum QueryAuthoringStateResponse_kind {
   unknown(0),
-  chunkWrapper(1),
-  catalogChangedWrapper(2),
-  unavailableWrapper(3),
-  internalErrorWrapper(4);
+  stateWrapper(1),
+  catalogChangedErrorWrapper(2),
+  internalErrorWrapper(3);
 
   final _core.int _ordinal;
 
@@ -7699,37 +7202,26 @@ sealed class _QueryAuthoringStateResponse_wrapper
       _skir.internal__stringify(this, QueryAuthoringStateResponse.serializer);
 }
 
-final class QueryAuthoringStateResponse_chunkWrapper
+final class QueryAuthoringStateResponse_stateWrapper
     extends _QueryAuthoringStateResponse_wrapper {
-  final AuthoringStateTransferChunk value;
+  final AuthoringState value;
 
-  QueryAuthoringStateResponse_chunkWrapper._(this.value);
+  QueryAuthoringStateResponse_stateWrapper._(this.value);
 
   @_core.override
   QueryAuthoringStateResponse_kind get kind =>
-      QueryAuthoringStateResponse_kind.chunkWrapper;
+      QueryAuthoringStateResponse_kind.stateWrapper;
 }
 
-final class QueryAuthoringStateResponse_catalogChangedWrapper
+final class QueryAuthoringStateResponse_catalogChangedErrorWrapper
     extends _QueryAuthoringStateResponse_wrapper {
   final CatalogChanged value;
 
-  QueryAuthoringStateResponse_catalogChangedWrapper._(this.value);
+  QueryAuthoringStateResponse_catalogChangedErrorWrapper._(this.value);
 
   @_core.override
   QueryAuthoringStateResponse_kind get kind =>
-      QueryAuthoringStateResponse_kind.catalogChangedWrapper;
-}
-
-final class QueryAuthoringStateResponse_unavailableWrapper
-    extends _QueryAuthoringStateResponse_wrapper {
-  final AuthoringTransferUnavailable value;
-
-  QueryAuthoringStateResponse_unavailableWrapper._(this.value);
-
-  @_core.override
-  QueryAuthoringStateResponse_kind get kind =>
-      QueryAuthoringStateResponse_kind.unavailableWrapper;
+      QueryAuthoringStateResponse_kind.catalogChangedErrorWrapper;
 }
 
 final class QueryAuthoringStateResponse_internalErrorWrapper
@@ -8891,14 +8383,14 @@ final class PrepareTypeArgumentChangeResponse_internalErrorWrapper
       PrepareTypeArgumentChangeResponse_kind.internalErrorWrapper;
 }
 
-/// Transfers one retained saved snapshot using the caller transfer identity and bounded integrity metadata.
+/// Returns the retained saved snapshot for one catalog generation.
 final _skir.Method<QueryAuthoringStateRequest, QueryAuthoringStateResponse>
 queryAuthoringStateMethod = _skir.Method(
   "QueryAuthoringState",
   920010,
   QueryAuthoringStateRequest.serializer,
   QueryAuthoringStateResponse.serializer,
-  "Transfers one retained saved snapshot using the caller transfer identity and bounded integrity metadata.",
+  "Returns the retained saved snapshot for one catalog generation.",
 );
 
 final _skir.Method<SearchAuthoringRequest, SearchAuthoringResponse>

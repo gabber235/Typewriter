@@ -34,7 +34,6 @@ import {
   ValuePath,
 } from "editor/v1/type_catalog.skir";
 import { PortableValue } from "editor/v1/typed_value.skir";
-import { BoundedTransferChunk } from "kernel/v1/bounded_transfer.skir";
 import { InternalError } from "kernel/v1/errors.skir";
 
 struct AuthoringResource(812200001) {
@@ -128,8 +127,8 @@ struct CatalogChanged(812200016) {
 }
 
 /// Captures one saved resource graph and its catalog for editor synchronization.
-/// Findings retain their own execution evidence and freshness. All transfer chunks describe this same
-/// confirmed observation, which resource operations must echo before supplying a working overlay.
+/// Findings retain their own execution evidence and freshness. The state describes one confirmed
+/// observation, which resource operations must echo before supplying a working overlay.
 struct AuthoringState(812200017) {
   generation: CatalogGeneration = 0;
   resources: [AuthoringResource] = 1;
@@ -286,40 +285,22 @@ struct AuthoringSearchResult(812200041) {
   diagnostics: [Diagnostic] = 2;
 }
 
-struct AuthoringStateTransferChunk(812200042) {
-  generation: CatalogGeneration = 0;
-  transfer: BoundedTransferChunk = 1;
-}
-
-enum AuthoringTransferUnavailableReason(812200043) {
-  encoded_size_limit = 1;
-}
-
-struct AuthoringTransferUnavailable(812200044) {
-  generation: CatalogGeneration = 0;
-  reason: AuthoringTransferUnavailableReason = 1;
-  encoded_size: int64 = 2;
-  max_encoded_size: int64 = 3;
-}
-
 /// Identifies one saved authoring observation without ordering resource changes.
-/// It remains fixed across snapshot transfer chunks. A local operation overlay echoes this identity
-/// while carrying separate proposed values; a changed saved view requires refreshing the baseline.
-struct AuthoringObservationId(812200045) {
+/// A local operation overlay echoes this identity while carrying separate proposed values; a
+/// changed saved view requires refreshing the baseline.
+struct AuthoringObservationId(812200042) {
   value: string = 0;
 }
 
-/// Transfers one retained saved snapshot using the caller transfer identity and bounded integrity metadata.
+/// Returns the retained saved snapshot for one catalog generation.
 method QueryAuthoringState(
   struct {
     generation: CatalogGeneration = 0;
-    transfer_id: string = 1;
   }
 ): enum {
-  chunk: AuthoringStateTransferChunk = 1;
-  catalog_changed: CatalogChanged = 2;
-  unavailable: AuthoringTransferUnavailable = 3;
-  internal_error: InternalError = 4;
+  state: AuthoringState = 1;
+  catalog_changed_error: CatalogChanged = 2;
+  internal_error: InternalError = 3;
 } = 920010;
 
 method SearchAuthoring(

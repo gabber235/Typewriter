@@ -192,14 +192,6 @@ const Flow = z.discriminatedUnion("kind", [
     updates: Updates,
   }),
   z.strictObject({
-    kind: z.literal("bounded_watch"),
-    method: Reference,
-    transfer_field: z.string(),
-    operation: Operation,
-    request: Address,
-    updates: Address,
-  }),
-  z.strictObject({
     kind: z.literal("scatter"),
     binding: RequestResponseBinding,
     operation: Operation,
@@ -274,16 +266,32 @@ export function routeParties(route: Route): readonly Party[] {
     : [...route.callers, route.server];
 }
 
+/**
+ * How the transports split a large reply: frames carry at most `chunkBytes` of the encoded reply
+ * and one reply has at most `maxChunks` frames.
+ */
+export interface TransportLimits {
+  readonly chunkBytes: number;
+  readonly maxChunks: number;
+}
+
 /** The admitted route manifest. */
 export interface Manifest {
+  readonly limits: TransportLimits;
   readonly roles: RoleDeclarations;
   /** Backend component name to its deploy/base directory, relative to the repository root. */
   readonly components: ReadonlyMap<string, string>;
   readonly routes: readonly Route[];
 }
 
+const Limits = z.strictObject({
+  chunk_bytes: z.int().positive(),
+  max_chunks: z.int().positive(),
+});
+
 const RawManifest = z
   .strictObject({
+    limits: Limits,
     roles: z.record(RoleName, RoleDeclaration),
     components: z.record(ComponentName, z.string().min(1)),
     routes: z.array(RouteShape),
@@ -352,49 +360,31 @@ const RawManifest = z
     }
   });
 
-/**
- * Admits the placeholders of each flow address: every one is bound by the route scope, and a
- * transfer capture appears only as the final token of bounded updates, which must end in one.
- */
+/** Admits the placeholders of each flow address: every one is bound by the route scope. */
 function admitAddresses(
   scope: ScopeKind,
   flow: Flow,
   issue: (path: string[], message: string) => void,
 ): void {
   const allowed = scopeParameters(scope);
-  const admit = (path: string[], address: SubjectTemplate, transfer: boolean) => {
-    address.tokens.forEach((token, index) => {
-      if (token.kind !== "parameter") {
-        return;
-      }
-      if (token.parameter === "transfer_id") {
-        if (!transfer || index + 1 !== address.tokens.length) {
-          issue(path, "{transfer_id} is valid only as the final token of bounded updates");
-        }
-      } else if (!allowed.includes(token.parameter)) {
+  const admit = (path: string[], address: SubjectTemplate) => {
+    for (const token of address.tokens) {
+      if (token.kind === "parameter" && !allowed.includes(token.parameter)) {
         issue(path, `placeholder {${token.parameter}} is not bound by ${scope} scope`);
       }
-    });
-    const last = address.tokens.at(-1);
-    if (transfer && !(last?.kind === "parameter" && last.parameter === "transfer_id")) {
-      issue(path, "bounded updates must end in {transfer_id}");
     }
   };
   switch (flow.kind) {
     case "event":
-      admit(["address"], flow.address, false);
+      admit(["address"], flow.address);
       return;
     case "watch":
-      admit(["request"], flow.request, false);
-      admit(["updates", "address"], flow.updates.address, false);
-      return;
-    case "bounded_watch":
-      admit(["request"], flow.request, false);
-      admit(["updates"], flow.updates, true);
+      admit(["request"], flow.request);
+      admit(["updates", "address"], flow.updates.address);
       return;
     case "unary":
     case "scatter":
-      admit(["request"], flow.request, false);
+      admit(["request"], flow.request);
   }
 }
 
@@ -429,8 +419,9 @@ export function parseManifest(source: string, file: string): Manifest {
         .join("\n"),
     );
   }
-  const { roles, components, routes } = result.data;
+  const { limits, roles, components, routes } = result.data;
   return {
+    limits: { chunkBytes: limits.chunk_bytes, maxChunks: limits.max_chunks },
     roles: new Map(Object.entries(roles).map(([name, role]) => [name, { name, ...role }])),
     components: new Map(Object.entries(components)),
     routes: routes.map(({ name, scope, callers, server, publishers, subscribers, flow }): Route =>

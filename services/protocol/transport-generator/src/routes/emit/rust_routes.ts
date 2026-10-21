@@ -56,15 +56,7 @@ export function literal(value: string): string {
  */
 function renderSubject(template: SubjectTemplate): string {
   const value = template.tokens
-    .map((token) => {
-      if (token.kind === "literal") {
-        return token.value;
-      }
-      if (token.parameter === "transfer_id") {
-        throw new Error("transfer capture is not a request scope");
-      }
-      return `{${token.parameter}}`;
-    })
+    .map((token) => (token.kind === "literal" ? token.value : `{${token.parameter}}`))
     .join(".");
   return template.parameters().length === 0
     ? `String::from(${literal(value)})`
@@ -93,9 +85,7 @@ function subjectFunction(scope: ScopeKind, template: SubjectTemplate): string[] 
 /** The Skir method of a request route, if the route is a request flow. */
 export function requestMethod(route: ResolvedRoute): ResolvedMethod | undefined {
   const { flow } = route;
-  return flow.kind === "unary" || flow.kind === "watch" || flow.kind === "bounded_watch"
-    ? flow.method
-    : undefined;
+  return flow.kind === "unary" || flow.kind === "watch" ? flow.method : undefined;
 }
 
 /** Whether a component receives the route's request or event subject. */

@@ -51,12 +51,6 @@ describe("grant rule", () => {
     );
   });
 
-  test("transfer captures become single token wildcards, never a tail", () => {
-    expect(granted("service.from.{realm}.organization.{organization}.realm.fetch.{transfer_id}", "realm_coordinator")).toBe(
-      "service.from.{realm}.organization.{organization}.realm.fetch.*",
-    );
-  });
-
   test("publishers publish, receivers subscribe and components get no grants", () => {
     expect(
       grants(

@@ -2,7 +2,7 @@ import { describe, expect, test } from "bun:test";
 
 import { parseManifest } from "../src/routes/manifest.js";
 import { resolveRoutes, routeChannel } from "../src/routes/resolve.js";
-import { committedRoutes, EMPTY_INPUT, loadSkirInput, manifestSource } from "./support.js";
+import { committedRoutes, EMPTY_INPUT, manifestSource } from "./support.js";
 
 const parse = (routes: string, components: readonly string[] = []) =>
   parseManifest(manifestSource(routes, components), "routes.yaml");
@@ -65,39 +65,18 @@ describe("route resolution", () => {
     );
   });
 
-  test("names the Skir source of a transfer field that is not a string", async () => {
-    const input = await loadSkirInput();
-    expect(() =>
-      resolveRoutes(
-        parse(`  - name: bounded_without_string
-    scope: realm
-    callers: [{ role: organization_member }]
-    server: { role: realm_coordinator }
-    flow:
-      kind: bounded_watch
-      method: "editor/v1/catalog.skir:FetchEditorCatalog"
-      transfer_field: missing_field
-      operation: bounded.missing
-      request: fetch
-      updates: fetch.{transfer_id}
-`),
-        input,
-      ),
-    ).toThrow(/expected string field missing_field on .* \(Skir editor\/v1\/catalog\.skir:\d+:\d+\)/u);
-  });
-
   test("resolves every committed route against the Skir sources", async () => {
     const { routes } = await committedRoutes();
     expect(routes).toHaveLength(65);
     const catalog = routes.find((route) => route.name === "editor_catalog_fetch")!;
-    expect(catalog.flow.kind).toBe("bounded_watch");
-    if (catalog.flow.kind === "bounded_watch") {
+    expect(catalog.flow.kind).toBe("unary");
+    if (catalog.flow.kind === "unary") {
       expect(catalog.flow.method.method.name.text).toBe("FetchEditorCatalog");
-      expect(catalog.flow.transferField.name.text).toBe("transfer_id");
     }
-    expect(routeChannel(catalog, "updates")?.subjects.client?.toString()).toBe(
-      "service.from.{realm}.organization.{organization}.realm.editor.catalog.fetch.{transfer_id}",
+    expect(routeChannel(catalog, "request")?.subjects.client?.toString()).toBe(
+      "service.to.{realm}.organization.{organization}.realm.editor.catalog.fetch",
     );
+    expect(routeChannel(catalog, "updates")).toBeUndefined();
   });
 
   test("rollout routes use the realm mesh", async () => {

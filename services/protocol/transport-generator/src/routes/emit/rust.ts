@@ -2,7 +2,12 @@ import type { CodeGenerator } from "skir-internal";
 
 import { upperCamel } from "../../text.js";
 import { CONSUMER_NAME, grantText, type Grant, type GrantToken } from "../grants.js";
-import { SCOPE_KINDS, type RoleDeclaration, type ScopeKind } from "../manifest.js";
+import {
+  SCOPE_KINDS,
+  type RoleDeclaration,
+  type ScopeKind,
+  type TransportLimits,
+} from "../manifest.js";
 import type { ResolvedRoutes } from "../resolve.js";
 import { scopeParameters } from "../subject.js";
 import { emitDispatchers } from "./rust_dispatch.js";
@@ -175,10 +180,21 @@ function emitGrants({ roles, routes }: ResolvedRoutes): string[] {
   });
 }
 
+/** The manifest reply framing limits, which bound replies and the service response permission. */
+function emitLimits({ chunkBytes, maxChunks }: TransportLimits): string[] {
+  return [
+    "/// The most bytes of an encoded reply that one reply frame carries.",
+    `pub const RESPONSE_CHUNK_BYTES: usize = ${chunkBytes};`,
+    "/// The most frames one reply may have, and so the most messages a responder may send to one",
+    "/// requester inbox.",
+    `pub const MAX_RESPONSE_CHUNKS: usize = ${maxChunks};`,
+  ];
+}
+
 /**
- * Emits the backend transport module: the role grants of each scope, the consumer naming rule, one
- * route type per route a component serves or publishes on, and one dispatcher per component that
- * receives messages. The route independent runtime they build on is hand written in
+ * Emits the backend transport module: the reply framing limits, the role grants of each scope, the
+ * consumer naming rule, one route type per route a component serves or publishes on, and one
+ * dispatcher per component that receives messages. The route independent runtime they build on is hand written in
  * `crate::transport`. generate.ts formats the module with rustfmt.
  */
 export function emitRust(
@@ -188,6 +204,7 @@ export function emitRust(
   const { routes } = resolved;
   const lines = [
     "//! Generated transport routes. Do not edit; regenerate with `bun run generate:protocol`.",
+    ...emitLimits(resolved.limits),
     ...emitGrants(resolved),
     ...emitConsumerName(),
     ...routes.flatMap((route) => emitRequestRoute(route, symbols)),

@@ -57,14 +57,18 @@ const ROLES = `roles:
   realm_participant: { side: service, tenant: [organization, realm] }
 `;
 
+/** The committed reply framing limits, appended so inline route lines keep their positions. */
+const LIMITS = "limits: { chunk_bytes: 524288, max_chunks: 64 }\n";
+
 /**
- * A manifest with the committed role declarations, the given components (each served or called by
- * the given routes) and the given route list items.
+ * A manifest with the committed role declarations and limits, the given components (each served or
+ * called by the given routes) and the given route list items.
  */
 export function manifestSource(routes: string, components: readonly string[] = []): string {
   const declared = components.map((component) => `  ${component}: backend/${component}/deploy/base\n`);
   const componentLines = declared.length === 0 ? " {}\n" : `\n${declared.join("")}`;
-  return `${ROLES}components:${componentLines}routes:${routes === "" ? " []" : `\n${routes}`}`;
+  const routeLines = routes === "" ? " []\n" : `\n${routes}`;
+  return `${ROLES}components:${componentLines}routes:${routeLines}${LIMITS}`;
 }
 
 /** A Skir input without modules, for admission checks that fail before any Skir lookup. */

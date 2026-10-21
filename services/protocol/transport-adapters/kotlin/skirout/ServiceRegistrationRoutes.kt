@@ -2,7 +2,6 @@ package com.typewritermc.protocol.transport.generated
 
 import com.typewritermc.protocol.transport.ServiceRouteScope
 import com.typewritermc.protocol.transport.serviceTemplate
-import com.typewritermc.services.libs.communicator.address.MessageAddress
 import com.typewritermc.services.libs.communicator.contract.EventContract
 import com.typewritermc.services.libs.communicator.contract.OperationName
 import com.typewritermc.services.libs.communicator.contract.ResponseClassifier

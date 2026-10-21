@@ -886,8 +886,7 @@ extension OrganizationTopologyWatchRouteNats
 
 extension EditorCatalogFetchRouteNats
     on _lib_editor_v1_catalog.CatalogFetchRequest {
-  Stream<_lib_editor_v1_catalog.CatalogFetchResult> watch(
-    SkirMutationClient transport, {
+  SkirRouteOperation<_lib_editor_v1_catalog.CatalogFetchResult> operation({
     required _skir.RecordId organizationId,
 
     required _skir.RecordId realmId,
@@ -897,11 +896,11 @@ extension EditorCatalogFetchRouteNats
     final realm = realmId.id.transportIdentity;
 
     final method = _lib_editor_v1_catalog.fetchEditorCatalogMethod;
-    return transport.watchRequest(
-      "service.to.$realm.organization.$organization.realm.editor.catalog.fetch",
-      "service.from.$realm.organization.$organization.realm.editor.catalog.fetch.${this.transferId.transportTransfer}",
-      method.requestSerializer.toBytes(this),
-      method.responseSerializer,
+    return SkirRouteOperation(
+      subject:
+          "service.to.$realm.organization.$organization.realm.editor.catalog.fetch",
+      requestBytes: method.requestSerializer.toBytes(this),
+      responseSerializer: method.responseSerializer,
     );
   }
 }
@@ -1220,8 +1219,8 @@ extension AuthoringActionPrepareRouteNats
 
 extension AuthoringStateQueryRouteNats
     on _lib_editor_v1_authoring.QueryAuthoringStateRequest {
-  Stream<_lib_editor_v1_authoring.QueryAuthoringStateResponse> watch(
-    SkirMutationClient transport, {
+  SkirRouteOperation<_lib_editor_v1_authoring.QueryAuthoringStateResponse>
+  operation({
     required _skir.RecordId organizationId,
 
     required _skir.RecordId realmId,
@@ -1231,11 +1230,11 @@ extension AuthoringStateQueryRouteNats
     final realm = realmId.id.transportIdentity;
 
     final method = _lib_editor_v1_authoring.queryAuthoringStateMethod;
-    return transport.watchRequest(
-      "service.to.$realm.organization.$organization.realm.editor.authoring.state.query",
-      "service.from.$realm.organization.$organization.realm.editor.authoring.state.query.${this.transferId.transportTransfer}",
-      method.requestSerializer.toBytes(this),
-      method.responseSerializer,
+    return SkirRouteOperation(
+      subject:
+          "service.to.$realm.organization.$organization.realm.editor.authoring.state.query",
+      requestBytes: method.requestSerializer.toBytes(this),
+      responseSerializer: method.responseSerializer,
     );
   }
 }
@@ -1349,8 +1348,10 @@ final class AuthoringChangedRouteEvent {
 
 extension AuthoringCompiledQueryRouteNats
     on _lib_editor_v1_compiled_content.QueryPublishedContentRequest {
-  Stream<_lib_editor_v1_compiled_content.QueryPublishedContentResponse> watch(
-    SkirMutationClient transport, {
+  SkirRouteOperation<
+    _lib_editor_v1_compiled_content.QueryPublishedContentResponse
+  >
+  operation({
     required _skir.RecordId organizationId,
 
     required _skir.RecordId realmId,
@@ -1360,11 +1361,11 @@ extension AuthoringCompiledQueryRouteNats
     final realm = realmId.id.transportIdentity;
 
     final method = _lib_editor_v1_compiled_content.queryPublishedContentMethod;
-    return transport.watchRequest(
-      "service.to.$realm.organization.$organization.realm.editor.authoring.compiled.query",
-      "service.from.$realm.organization.$organization.realm.editor.authoring.compiled.query.${this.transferId.transportTransfer}",
-      method.requestSerializer.toBytes(this),
-      method.responseSerializer,
+    return SkirRouteOperation(
+      subject:
+          "service.to.$realm.organization.$organization.realm.editor.authoring.compiled.query",
+      requestBytes: method.requestSerializer.toBytes(this),
+      responseSerializer: method.responseSerializer,
     );
   }
 }
@@ -1437,8 +1438,8 @@ extension AuthoringPublishRouteNats
 
 extension AuthoringPublicationQueryRouteNats
     on _lib_editor_v1_publication.QueryPublicationViewRequest {
-  Stream<_lib_editor_v1_publication.QueryPublicationViewResponse> watch(
-    SkirMutationClient transport, {
+  SkirRouteOperation<_lib_editor_v1_publication.QueryPublicationViewResponse>
+  operation({
     required _skir.RecordId organizationId,
 
     required _skir.RecordId realmId,
@@ -1448,11 +1449,11 @@ extension AuthoringPublicationQueryRouteNats
     final realm = realmId.id.transportIdentity;
 
     final method = _lib_editor_v1_publication.queryPublicationViewMethod;
-    return transport.watchRequest(
-      "service.to.$realm.organization.$organization.realm.editor.authoring.publication.query",
-      "service.from.$realm.organization.$organization.realm.editor.authoring.publication.query.${this.transferId.transportTransfer}",
-      method.requestSerializer.toBytes(this),
-      method.responseSerializer,
+    return SkirRouteOperation(
+      subject:
+          "service.to.$realm.organization.$organization.realm.editor.authoring.publication.query",
+      requestBytes: method.requestSerializer.toBytes(this),
+      responseSerializer: method.responseSerializer,
     );
   }
 }
@@ -1732,6 +1733,9 @@ final class OrganizationPresenceRouteEvent {
     return userId.isTransportIdentity ? userId : null;
   }
 }
+
+/// Reply framing limits of the transport route manifest: frame size and frames per reply.
+const transportLimits = TransportLimits(chunkBytes: 524288, maxChunks: 64);
 
 final class PersistentProjectionRoute {
   const PersistentProjectionRoute({

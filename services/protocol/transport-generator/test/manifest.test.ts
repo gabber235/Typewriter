@@ -24,7 +24,7 @@ describe("manifest admission", () => {
     const methods = new Set<string>();
     const payloads = new Set<string>();
     for (const { flow } of manifest.routes) {
-      if (flow.kind === "unary" || flow.kind === "watch" || flow.kind === "bounded_watch") {
+      if (flow.kind === "unary" || flow.kind === "watch") {
         methods.add(symbolRefText(flow.method));
       }
       if (flow.kind === "watch") {
@@ -36,6 +36,20 @@ describe("manifest admission", () => {
     }
     expect(methods.size).toBe(55);
     expect(payloads.size).toBe(17);
+  });
+
+  test("declares the reply framing limits once", () => {
+    expect(committedManifest().limits).toEqual({ chunkBytes: 524288, maxChunks: 64 });
+    expect(committedManifest().limits.chunkBytes * committedManifest().limits.maxChunks).toBe(33_554_432);
+    const source = manifestSource(unary("sample_route", "{ role: authenticated_user }", "user.{user}.sample"), [
+      "user-organization",
+    ]);
+    expect(() => parseManifest(source.replace("max_chunks: 64", "max_chunks: 0"), "routes.yaml")).toThrow(
+      "limits.max_chunks",
+    );
+    expect(() => parseManifest(source.replace("chunk_bytes: 524288", "chunk_bytes: 1.5"), "routes.yaml")).toThrow(
+      "limits.chunk_bytes",
+    );
   });
 
   test("declares every backend component that serves or calls a route", () => {
@@ -143,6 +157,24 @@ describe("manifest admission", () => {
   test("names the YAML path and line of an invalid address", () => {
     expect(() => parse(unary("invalid_address", "{ role: authenticated_user }", "user.*"))).toThrow(
       'routes.yaml:18:16: routes[0].flow.request: invalid subject token "*"',
+    );
+  });
+
+  test("rejects the removed bounded watch flow", () => {
+    expect(() =>
+      parse(`  - name: bounded_fetch
+    scope: user
+    callers: [{ role: authenticated_user }]
+    server: { component: user-organization }
+    flow:
+      kind: bounded_watch
+      method: "organization/v1/user.skir:WatchUserOrganizations"
+      operation: bounded.fetch
+      request: user.{user}.fetch
+`),
+    ).toThrow("routes[0].flow.kind");
+    expect(() => parse(unary("transfer_capture", "{ role: authenticated_user }", "user.{user}.fetch.{transfer_id}"))).toThrow(
+      'invalid subject token "{transfer_id}"',
     );
   });
 

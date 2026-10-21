@@ -17,8 +17,6 @@ import "package:skir_client/skir_client.dart" as _skir;
 
 import "./compilation_root.dart" as _lib_editor_v1_compilation_root;
 import "./type_catalog.dart" as _lib_editor_v1_type_catalog;
-import "../../kernel/v1/bounded_transfer.dart"
-    as _lib_kernel_v1_bounded_transfer;
 import "../../kernel/v1/errors.dart" as _lib_kernel_v1_errors;
 
 // -----------------------------------------------------------------------------
@@ -718,128 +716,6 @@ final class PublishedContent_mutable implements PublishedContent_orMutable {
 }
 
 // -----------------------------------------------------------------------------
-// struct PublishedContentChunk
-// -----------------------------------------------------------------------------
-
-sealed class PublishedContentChunk_orMutable {
-  _lib_kernel_v1_bounded_transfer.BoundedTransferChunk_orMutable get transfer;
-
-  PublishedContentChunk toFrozen();
-}
-
-/// Deeply immutable.
-final class PublishedContentChunk implements PublishedContentChunk_orMutable {
-  @_core.override
-  final _lib_kernel_v1_bounded_transfer.BoundedTransferChunk transfer;
-  _skir.internal__UnrecognizedFields? _u;
-
-  factory PublishedContentChunk({
-    required _lib_kernel_v1_bounded_transfer.BoundedTransferChunk_orMutable
-    transfer,
-  }) => PublishedContentChunk._(transfer.toFrozen());
-
-  PublishedContentChunk._(this.transfer);
-
-  /// Default instance with all fields set to their default values.
-  static final defaultInstance = PublishedContentChunk._(
-    _lib_kernel_v1_bounded_transfer.BoundedTransferChunk.defaultInstance,
-  );
-
-  /// Returns a new mutable instance.
-  /// Fields are initialized to their default values.
-  static PublishedContentChunk_mutable mutable() =>
-      PublishedContentChunk_mutable._(
-        _lib_kernel_v1_bounded_transfer.BoundedTransferChunk.defaultInstance,
-      );
-
-  /// Returns this instance (no-op).
-  @_core.Deprecated("This instance is already frozen.")
-  @_core.override
-  PublishedContentChunk toFrozen() => this;
-
-  /// Returns a mutable shallow copy of this instance.
-  PublishedContentChunk_mutable toMutable() =>
-      PublishedContentChunk_mutable._(this.transfer);
-
-  @_core.override
-  _core.bool operator ==(other) {
-    if (_core.identical(this, other)) return true;
-    if (other is! PublishedContentChunk) return false;
-    return _skir.internal__listEquality.equals(
-      _equality_proxy,
-      other._equality_proxy,
-    );
-  }
-
-  @_core.override
-  _core.int get hashCode => _skir.internal__listEquality.hash(_equality_proxy);
-
-  _core.List get _equality_proxy => [this.transfer];
-
-  @_core.override
-  _core.String toString() => _skir.internal__stringify(this, serializer);
-
-  /// Serializer for `PublishedContentChunk` instances.
-  static _skir.StructSerializer<
-    PublishedContentChunk,
-    PublishedContentChunk_mutable
-  >
-  get serializer {
-    if (_serializerBuilder.mustInitialize()) {
-      _serializerBuilder.addField(
-        "transfer",
-        "transfer",
-        0,
-        _lib_kernel_v1_bounded_transfer.BoundedTransferChunk.serializer,
-        "",
-        (it) => it.transfer,
-        (it, v) => it.transfer = v,
-      );
-      _serializerBuilder.finalize();
-    }
-    return _serializerBuilder.serializer;
-  }
-
-  static final _serializerBuilder = _skir.internal__StructSerializerBuilder(
-    recordId: "editor/v1/compiled_content.skir:PublishedContentChunk",
-    doc: "",
-    defaultInstance: defaultInstance,
-    newMutable: (it) => (it != null) ? it.toMutable() : mutable(),
-    toFrozen: (PublishedContentChunk_mutable it) => it.toFrozen(),
-    getUnrecognizedFields: (it) => it._u,
-    setUnrecognizedFields: (it, u) => it._u = u,
-  );
-}
-
-/// Mutable version of [PublishedContentChunk].
-final class PublishedContentChunk_mutable
-    implements PublishedContentChunk_orMutable {
-  _lib_kernel_v1_bounded_transfer.BoundedTransferChunk_orMutable transfer;
-  _skir.internal__UnrecognizedFields? _u;
-
-  PublishedContentChunk_mutable._(this.transfer);
-
-  /// If the value of [transfer] is already mutable, returns it as-is.
-  /// Otherwise, makes a mutable copy, assigns it back to [transfer] and returns it.
-  _lib_kernel_v1_bounded_transfer.BoundedTransferChunk_mutable
-  get mutableTransfer {
-    final value = this.transfer;
-    if (value is _lib_kernel_v1_bounded_transfer.BoundedTransferChunk_mutable) {
-      return value;
-    } else {
-      return this.transfer =
-          (value as _lib_kernel_v1_bounded_transfer.BoundedTransferChunk)
-              .toMutable();
-    }
-  }
-
-  /// Returns a deeply immutable copy of this instance.
-  @_core.override
-  PublishedContentChunk toFrozen() =>
-      PublishedContentChunk(transfer: this.transfer).._u = this._u;
-}
-
-// -----------------------------------------------------------------------------
 // enum CompiledResourceState
 // -----------------------------------------------------------------------------
 
@@ -1391,30 +1267,25 @@ final class CompilationStatusSelection_suppliedRootsWrapper
 // -----------------------------------------------------------------------------
 
 sealed class QueryPublishedContentRequest_orMutable {
-  _core.String get transferId;
-
   QueryPublishedContentRequest toFrozen();
 }
 
 /// Deeply immutable.
 final class QueryPublishedContentRequest
     implements QueryPublishedContentRequest_orMutable {
-  @_core.override
-  final _core.String transferId;
   _skir.internal__UnrecognizedFields? _u;
 
-  factory QueryPublishedContentRequest({required _core.String transferId}) =>
-      QueryPublishedContentRequest._(transferId);
+  factory QueryPublishedContentRequest() => QueryPublishedContentRequest._();
 
-  QueryPublishedContentRequest._(this.transferId);
+  QueryPublishedContentRequest._();
 
   /// Default instance with all fields set to their default values.
-  static final defaultInstance = QueryPublishedContentRequest._("");
+  static final defaultInstance = QueryPublishedContentRequest._();
 
   /// Returns a new mutable instance.
   /// Fields are initialized to their default values.
   static QueryPublishedContentRequest_mutable mutable() =>
-      QueryPublishedContentRequest_mutable._("");
+      QueryPublishedContentRequest_mutable._();
 
   /// Returns this instance (no-op).
   @_core.Deprecated("This instance is already frozen.")
@@ -1423,7 +1294,7 @@ final class QueryPublishedContentRequest
 
   /// Returns a mutable shallow copy of this instance.
   QueryPublishedContentRequest_mutable toMutable() =>
-      QueryPublishedContentRequest_mutable._(this.transferId);
+      QueryPublishedContentRequest_mutable._();
 
   @_core.override
   _core.bool operator ==(other) {
@@ -1438,7 +1309,7 @@ final class QueryPublishedContentRequest
   @_core.override
   _core.int get hashCode => _skir.internal__listEquality.hash(_equality_proxy);
 
-  _core.List get _equality_proxy => [this.transferId];
+  _core.List get _equality_proxy => [];
 
   @_core.override
   _core.String toString() => _skir.internal__stringify(this, serializer);
@@ -1450,15 +1321,6 @@ final class QueryPublishedContentRequest
   >
   get serializer {
     if (_serializerBuilder.mustInitialize()) {
-      _serializerBuilder.addField(
-        "transfer_id",
-        "transferId",
-        0,
-        _skir.Serializers.string,
-        "",
-        (it) => it.transferId,
-        (it, v) => it.transferId = v,
-      );
       _serializerBuilder.finalize();
     }
     return _serializerBuilder.serializer;
@@ -1478,15 +1340,14 @@ final class QueryPublishedContentRequest
 /// Mutable version of [QueryPublishedContentRequest].
 final class QueryPublishedContentRequest_mutable
     implements QueryPublishedContentRequest_orMutable {
-  _core.String transferId;
   _skir.internal__UnrecognizedFields? _u;
 
-  QueryPublishedContentRequest_mutable._(this.transferId);
+  QueryPublishedContentRequest_mutable._();
 
   /// Returns a deeply immutable copy of this instance.
   @_core.override
   QueryPublishedContentRequest toFrozen() =>
-      QueryPublishedContentRequest(transferId: this.transferId).._u = this._u;
+      QueryPublishedContentRequest().._u = this._u;
 }
 
 // -----------------------------------------------------------------------------
@@ -1581,96 +1442,6 @@ final class QueryPublishedContentResponse_Absent_mutable
 }
 
 // -----------------------------------------------------------------------------
-// struct QueryPublishedContentResponse.Unavailable
-// -----------------------------------------------------------------------------
-
-sealed class QueryPublishedContentResponse_Unavailable_orMutable {
-  QueryPublishedContentResponse_Unavailable toFrozen();
-}
-
-/// Deeply immutable.
-final class QueryPublishedContentResponse_Unavailable
-    implements QueryPublishedContentResponse_Unavailable_orMutable {
-  _skir.internal__UnrecognizedFields? _u;
-
-  factory QueryPublishedContentResponse_Unavailable() =>
-      QueryPublishedContentResponse_Unavailable._();
-
-  QueryPublishedContentResponse_Unavailable._();
-
-  /// Default instance with all fields set to their default values.
-  static final defaultInstance = QueryPublishedContentResponse_Unavailable._();
-
-  /// Returns a new mutable instance.
-  /// Fields are initialized to their default values.
-  static QueryPublishedContentResponse_Unavailable_mutable mutable() =>
-      QueryPublishedContentResponse_Unavailable_mutable._();
-
-  /// Returns this instance (no-op).
-  @_core.Deprecated("This instance is already frozen.")
-  @_core.override
-  QueryPublishedContentResponse_Unavailable toFrozen() => this;
-
-  /// Returns a mutable shallow copy of this instance.
-  QueryPublishedContentResponse_Unavailable_mutable toMutable() =>
-      QueryPublishedContentResponse_Unavailable_mutable._();
-
-  @_core.override
-  _core.bool operator ==(other) {
-    if (_core.identical(this, other)) return true;
-    if (other is! QueryPublishedContentResponse_Unavailable) return false;
-    return _skir.internal__listEquality.equals(
-      _equality_proxy,
-      other._equality_proxy,
-    );
-  }
-
-  @_core.override
-  _core.int get hashCode => _skir.internal__listEquality.hash(_equality_proxy);
-
-  _core.List get _equality_proxy => [];
-
-  @_core.override
-  _core.String toString() => _skir.internal__stringify(this, serializer);
-
-  /// Serializer for `QueryPublishedContentResponse_Unavailable` instances.
-  static _skir.StructSerializer<
-    QueryPublishedContentResponse_Unavailable,
-    QueryPublishedContentResponse_Unavailable_mutable
-  >
-  get serializer {
-    if (_serializerBuilder.mustInitialize()) {
-      _serializerBuilder.finalize();
-    }
-    return _serializerBuilder.serializer;
-  }
-
-  static final _serializerBuilder = _skir.internal__StructSerializerBuilder(
-    recordId: "editor/v1/compiled_content.skir:QueryPublishedContentResponse.Unavailable",
-    doc: "",
-    defaultInstance: defaultInstance,
-    newMutable: (it) => (it != null) ? it.toMutable() : mutable(),
-    toFrozen: (QueryPublishedContentResponse_Unavailable_mutable it) =>
-        it.toFrozen(),
-    getUnrecognizedFields: (it) => it._u,
-    setUnrecognizedFields: (it, u) => it._u = u,
-  );
-}
-
-/// Mutable version of [QueryPublishedContentResponse_Unavailable].
-final class QueryPublishedContentResponse_Unavailable_mutable
-    implements QueryPublishedContentResponse_Unavailable_orMutable {
-  _skir.internal__UnrecognizedFields? _u;
-
-  QueryPublishedContentResponse_Unavailable_mutable._();
-
-  /// Returns a deeply immutable copy of this instance.
-  @_core.override
-  QueryPublishedContentResponse_Unavailable toFrozen() =>
-      QueryPublishedContentResponse_Unavailable().._u = this._u;
-}
-
-// -----------------------------------------------------------------------------
 // enum QueryPublishedContentResponse
 // -----------------------------------------------------------------------------
 
@@ -1678,9 +1449,8 @@ final class QueryPublishedContentResponse_Unavailable_mutable
 ///   ```
 ///   switch (e) {
 ///     case QueryPublishedContentResponse_unknown(): { ... }
-///     case QueryPublishedContentResponse_chunk(:var value): { ... }
+///     case QueryPublishedContentResponse_content(:var value): { ... }
 ///     case QueryPublishedContentResponse_absent(:var value): { ... }
-///     case QueryPublishedContentResponse_unavailable(:var value): { ... }
 ///     case QueryPublishedContentResponse_internalError(:var value): { ... }
 ///   }
 ///   ```
@@ -1692,17 +1462,25 @@ sealed class QueryPublishedContentResponse {
   static const QueryPublishedContentResponse unknown =
       QueryPublishedContentResponse_unknown._instance;
 
-  /// Create a 'chunk' variant wrapping around the given value.
-  factory QueryPublishedContentResponse.wrapChunk(
-    PublishedContentChunk value,
-  ) => QueryPublishedContentResponse_chunkWrapper._(value);
+  /// Create a 'content' variant wrapping around the given value.
+  factory QueryPublishedContentResponse.wrapContent(PublishedContent value) =>
+      QueryPublishedContentResponse_contentWrapper._(value);
 
-  /// Same as `wrapChunk(PublishedContentChunk(...))`.
-  factory QueryPublishedContentResponse.createChunk({
-    required _lib_kernel_v1_bounded_transfer.BoundedTransferChunk_orMutable
-    transfer,
-  }) => QueryPublishedContentResponse.wrapChunk(
-    PublishedContentChunk(transfer: transfer),
+  /// Same as `wrapContent(PublishedContent(...))`.
+  factory QueryPublishedContentResponse.createContent({
+    required _lib_editor_v1_type_catalog.PublicationId_orMutable publication,
+    required _core.int formatRevision,
+    required _lib_editor_v1_type_catalog.CatalogGeneration_orMutable catalog,
+    required _core.String implementationToken,
+    required _core.Iterable<PublishedOutput_orMutable> outputs,
+  }) => QueryPublishedContentResponse.wrapContent(
+    PublishedContent(
+      publication: publication,
+      formatRevision: formatRevision,
+      catalog: catalog,
+      implementationToken: implementationToken,
+      outputs: outputs,
+    ),
   );
 
   /// Create a 'absent' variant wrapping around the given value.
@@ -1714,17 +1492,6 @@ sealed class QueryPublishedContentResponse {
   factory QueryPublishedContentResponse.createAbsent() =>
       QueryPublishedContentResponse.wrapAbsent(
         QueryPublishedContentResponse_Absent(),
-      );
-
-  /// Create a 'unavailable' variant wrapping around the given value.
-  factory QueryPublishedContentResponse.wrapUnavailable(
-    QueryPublishedContentResponse_Unavailable value,
-  ) => QueryPublishedContentResponse_unavailableWrapper._(value);
-
-  /// Same as `wrapUnavailable(QueryPublishedContentResponse_Unavailable(...))`.
-  factory QueryPublishedContentResponse.createUnavailable() =>
-      QueryPublishedContentResponse.wrapUnavailable(
-        QueryPublishedContentResponse_Unavailable(),
       );
 
   /// Create a 'internal_error' variant wrapping around the given value.
@@ -1746,13 +1513,13 @@ sealed class QueryPublishedContentResponse {
     if (_serializerBuilder.mustInitialize()) {
       _serializerBuilder.addWrapperVariant(
         1,
-        "chunk",
-        "wrapChunk",
-        PublishedContentChunk.serializer,
+        "content",
+        "wrapContent",
+        PublishedContent.serializer,
         "",
-        QueryPublishedContentResponse_chunkWrapper._,
+        QueryPublishedContentResponse_contentWrapper._,
         (it) => it.value,
-        ordinal: QueryPublishedContentResponse_kind.chunkWrapper._ordinal,
+        ordinal: QueryPublishedContentResponse_kind.contentWrapper._ordinal,
       );
       _serializerBuilder.addWrapperVariant(
         2,
@@ -1766,16 +1533,6 @@ sealed class QueryPublishedContentResponse {
       );
       _serializerBuilder.addWrapperVariant(
         3,
-        "unavailable",
-        "wrapUnavailable",
-        QueryPublishedContentResponse_Unavailable.serializer,
-        "",
-        QueryPublishedContentResponse_unavailableWrapper._,
-        (it) => it.value,
-        ordinal: QueryPublishedContentResponse_kind.unavailableWrapper._ordinal,
-      );
-      _serializerBuilder.addWrapperVariant(
-        4,
         "internal_error",
         "wrapInternalError",
         _lib_kernel_v1_errors.InternalError.serializer,
@@ -1806,10 +1563,9 @@ sealed class QueryPublishedContentResponse {
 /// The kind of variant held by a `QueryPublishedContentResponse`.
 enum QueryPublishedContentResponse_kind {
   unknown(0),
-  chunkWrapper(1),
+  contentWrapper(1),
   absentWrapper(2),
-  unavailableWrapper(3),
-  internalErrorWrapper(4);
+  internalErrorWrapper(3);
 
   final _core.int _ordinal;
 
@@ -1856,15 +1612,15 @@ sealed class _QueryPublishedContentResponse_wrapper
       _skir.internal__stringify(this, QueryPublishedContentResponse.serializer);
 }
 
-final class QueryPublishedContentResponse_chunkWrapper
+final class QueryPublishedContentResponse_contentWrapper
     extends _QueryPublishedContentResponse_wrapper {
-  final PublishedContentChunk value;
+  final PublishedContent value;
 
-  QueryPublishedContentResponse_chunkWrapper._(this.value);
+  QueryPublishedContentResponse_contentWrapper._(this.value);
 
   @_core.override
   QueryPublishedContentResponse_kind get kind =>
-      QueryPublishedContentResponse_kind.chunkWrapper;
+      QueryPublishedContentResponse_kind.contentWrapper;
 }
 
 final class QueryPublishedContentResponse_absentWrapper
@@ -1876,17 +1632,6 @@ final class QueryPublishedContentResponse_absentWrapper
   @_core.override
   QueryPublishedContentResponse_kind get kind =>
       QueryPublishedContentResponse_kind.absentWrapper;
-}
-
-final class QueryPublishedContentResponse_unavailableWrapper
-    extends _QueryPublishedContentResponse_wrapper {
-  final QueryPublishedContentResponse_Unavailable value;
-
-  QueryPublishedContentResponse_unavailableWrapper._(this.value);
-
-  @_core.override
-  QueryPublishedContentResponse_kind get kind =>
-      QueryPublishedContentResponse_kind.unavailableWrapper;
 }
 
 final class QueryPublishedContentResponse_internalErrorWrapper
@@ -2301,13 +2046,14 @@ final class QueryCompiledResourceStatusResponse_internalErrorWrapper
       QueryCompiledResourceStatusResponse_kind.internalErrorWrapper;
 }
 
+/// Returns the descriptor of the selected publication, or absent before any publication is selected.
 final _skir.Method<QueryPublishedContentRequest, QueryPublishedContentResponse>
 queryPublishedContentMethod = _skir.Method(
   "QueryPublishedContent",
   920008,
   QueryPublishedContentRequest.serializer,
   QueryPublishedContentResponse.serializer,
-  "",
+  "Returns the descriptor of the selected publication, or absent before any publication is selected.",
 );
 
 final _skir.Method<

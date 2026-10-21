@@ -15,7 +15,6 @@ import {
   RuleOrigin,
   ValueLocation,
 } from "editor/v1/type_catalog.skir";
-import { BoundedTransferChunk } from "kernel/v1/bounded_transfer.skir";
 import { InternalError } from "kernel/v1/errors.skir";
 
 /// Captured implementation requirements used to fence candidate assessment and publication selection.
@@ -185,18 +184,9 @@ struct PublicationView(811600020) {
   id: PublicationViewId = 0;
   status: PublicationStatus = 1;
 }
-/// Invalidation hint naming the current review view. Query that exact identity to transfer its content.
+/// Invalidation hint naming the current review view. Query that exact identity to read its content.
 struct PublicationViewChanged(811600021) {
   current: PublicationViewId = 0;
-}
-struct PublicationViewChunk(811600022) {
-  view: PublicationViewId = 0;
-  transfer: BoundedTransferChunk = 1;
-}
-struct PublicationTransferUnavailable(811600023) {
-  view: PublicationViewId = 0;
-  encoded_size: int64 = 1;
-  max_encoded_size: int64 = 2;
 }
 
 /// Releases only the issued candidate while its captured saved inputs and engine requirements still match.
@@ -212,16 +202,14 @@ method WatchPublication(
   struct {}
 ): PublicationViewChanged = 920019;
 
-/// Transfers one immutable review view or reports that expected is no longer current.
-/// All chunks share the view and transfer identities; later invalidations require a separate query.
+/// Returns one immutable review view, or the current view identity when expected is no longer
+/// current. Later invalidations require a separate query.
 method QueryPublicationView(
   struct {
     expected: PublicationViewId = 0;
-    transfer_id: string = 1;
   }
 ): enum {
-  chunk: PublicationViewChunk = 1;
-  changed: PublicationViewChanged = 2;
-  unavailable: PublicationTransferUnavailable = 3;
-  internal_error: InternalError = 4;
+  view: PublicationView = 1;
+  view_changed_error: PublicationViewChanged = 2;
+  internal_error: InternalError = 3;
 } = 920020;

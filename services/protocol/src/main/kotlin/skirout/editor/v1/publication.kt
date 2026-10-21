@@ -4533,7 +4533,7 @@ sealed interface PublicationViewChanged_OrMutable {
 }
 
 /**
- * Invalidation hint naming the current review view. Query that exact identity to transfer its content.
+ * Invalidation hint naming the current review view. Query that exact identity to read its content.
  *
  * Deeply immutable.
  */
@@ -4652,317 +4652,6 @@ class PublicationViewChanged private constructor(
 
         /** Describes the [PublicationViewChanged] type. Provides runtime introspection capabilities. */
         val typeDescriptor get() = _SerializerRegistry.PublicationViewChangedSerializerImpl.typeDescriptor;
-    }
-}
-
-sealed interface PublicationViewChunk_OrMutable {
-    val view: skirout.editor.v1.publication.PublicationViewId_OrMutable;
-    val transfer: skirout.kernel.v1.bounded_transfer.BoundedTransferChunk_OrMutable;
-
-    fun toFrozen(): skirout.editor.v1.publication.PublicationViewChunk;
-}
-
-/** Deeply immutable. */
-@kotlin.Suppress("UNUSED_PARAMETER")
-class PublicationViewChunk private constructor(
-    override val view: skirout.editor.v1.publication.PublicationViewId,
-    override val transfer: skirout.kernel.v1.bounded_transfer.BoundedTransferChunk,
-    internal val _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.publication.PublicationViewChunk>? =
-        null,
-): skirout.editor.v1.publication.PublicationViewChunk_OrMutable {
-    constructor(
-        _mustNameArguments: _MustNameArguments =
-            _MustNameArguments,
-        view: skirout.editor.v1.publication.PublicationViewId_OrMutable,
-        transfer: skirout.kernel.v1.bounded_transfer.BoundedTransferChunk_OrMutable,
-        _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.publication.PublicationViewChunk>? =
-            null,
-    ): this(
-        view.toFrozen(),
-        transfer.toFrozen(),
-        _unrecognizedFields,
-    ) {}
-
-    @kotlin.Deprecated("Already frozen", kotlin.ReplaceWith("this"))
-    override fun toFrozen() = this;
-
-    /** Returns a mutable shallow copy of this instance */
-    fun toMutable() = Mutable(
-        view = this.view,
-        transfer = this.transfer,
-    );
-
-    /** Returns a shallow copy of this instance with the specified fields replaced. */
-    fun copy(
-        _mustNameArguments: _MustNameArguments =
-            _MustNameArguments,
-        view: skirout.editor.v1.publication.PublicationViewId_OrMutable =
-            this.view,
-        transfer: skirout.kernel.v1.bounded_transfer.BoundedTransferChunk_OrMutable =
-            this.transfer,
-    ) = skirout.editor.v1.publication.PublicationViewChunk(
-        view.toFrozen(),
-        transfer.toFrozen(),
-        this._unrecognizedFields,
-    );
-
-    @kotlin.Deprecated("No point in creating an exact copy of an immutable object", kotlin.ReplaceWith("this"))
-    fun copy() = this;
-
-    override fun equals(other: kotlin.Any?): kotlin.Boolean {
-        return this === other || (other is skirout.editor.v1.publication.PublicationViewChunk && this.view == other.view && this.transfer == other.transfer);
-    }
-
-    override fun hashCode(): kotlin.Int {
-        return kotlin.collections.listOf<kotlin.Any?>(this.view, this.transfer).hashCode();
-    }
-
-    override fun toString(): kotlin.String {
-        return build.skir.internal.toStringImpl(
-            this,
-            _SerializerRegistry.PublicationViewChunkSerializerImpl,
-        )
-    }
-
-    /** Mutable version of [PublicationViewChunk]. */
-    class Mutable internal constructor(
-        _mustNameArguments: _MustNameArguments =
-            _MustNameArguments,
-        override var view: skirout.editor.v1.publication.PublicationViewId_OrMutable =
-            skirout.editor.v1.publication.PublicationViewId.partial(),
-        override var transfer: skirout.kernel.v1.bounded_transfer.BoundedTransferChunk_OrMutable =
-            skirout.kernel.v1.bounded_transfer.BoundedTransferChunk.partial(),
-        internal var _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.publication.PublicationViewChunk>? =
-            null,
-    ): skirout.editor.v1.publication.PublicationViewChunk_OrMutable {
-        /** Returns a deeply immutable copy of this instance */
-        override fun toFrozen() = skirout.editor.v1.publication.PublicationViewChunk(
-            view = this.view,
-            transfer = this.transfer,
-            _unrecognizedFields = this._unrecognizedFields,
-        );
-
-        /**
-         * If the value of [view] is already mutable, returns it as-is.
-         * Otherwise, makes a mutable copy, assigns it back to [view] and returns it.
-         */
-        val mutableView: skirout.editor.v1.publication.PublicationViewId.Mutable get() {
-            var value = this.view;
-            return when (value) {
-                is skirout.editor.v1.publication.PublicationViewId -> {
-                    value = value.toMutable();
-                    this.view = value;
-                    return value;
-                }
-                is skirout.editor.v1.publication.PublicationViewId.Mutable -> value;
-            }
-        }
-
-        /**
-         * If the value of [transfer] is already mutable, returns it as-is.
-         * Otherwise, makes a mutable copy, assigns it back to [transfer] and returns it.
-         */
-        val mutableTransfer: skirout.kernel.v1.bounded_transfer.BoundedTransferChunk.Mutable get() {
-            var value = this.transfer;
-            return when (value) {
-                is skirout.kernel.v1.bounded_transfer.BoundedTransferChunk -> {
-                    value = value.toMutable();
-                    this.transfer = value;
-                    return value;
-                }
-                is skirout.kernel.v1.bounded_transfer.BoundedTransferChunk.Mutable -> value;
-            }
-        }
-    }
-
-    companion object {
-        private val default =
-            skirout.editor.v1.publication.PublicationViewChunk(
-                skirout.editor.v1.publication.PublicationViewId.partial(),
-                skirout.kernel.v1.bounded_transfer.BoundedTransferChunk.partial(),
-            );
-
-        /** Returns an instance with all fields set to their default values. */
-        fun partial() = default;
-
-        /**
-         * Creates a new instance of [PublicationViewChunk].
-         * Unlike the constructor, does not require all fields to be specified.
-         * Missing fields will be set to their default values.
-         */
-        fun partial(
-            _mustNameArguments: _MustNameArguments =
-                _MustNameArguments,
-            view: skirout.editor.v1.publication.PublicationViewId_OrMutable =
-                skirout.editor.v1.publication.PublicationViewId.partial(),
-            transfer: skirout.kernel.v1.bounded_transfer.BoundedTransferChunk_OrMutable =
-                skirout.kernel.v1.bounded_transfer.BoundedTransferChunk.partial(),
-        ) = skirout.editor.v1.publication.PublicationViewChunk(
-            view = view,
-            transfer = transfer,
-            _unrecognizedFields = null,
-        );
-
-        /** Serializer for [PublicationViewChunk] instances. */
-        val serializer get() = _SerializerRegistry.PublicationViewChunkSerializer;
-
-        /** Describes the [PublicationViewChunk] type. Provides runtime introspection capabilities. */
-        val typeDescriptor get() = _SerializerRegistry.PublicationViewChunkSerializerImpl.typeDescriptor;
-    }
-}
-
-sealed interface PublicationTransferUnavailable_OrMutable {
-    val view: skirout.editor.v1.publication.PublicationViewId_OrMutable;
-    val encodedSize: kotlin.Long;
-    val maxEncodedSize: kotlin.Long;
-
-    fun toFrozen(): skirout.editor.v1.publication.PublicationTransferUnavailable;
-}
-
-/** Deeply immutable. */
-@kotlin.Suppress("UNUSED_PARAMETER")
-class PublicationTransferUnavailable private constructor(
-    override val view: skirout.editor.v1.publication.PublicationViewId,
-    override val encodedSize: kotlin.Long,
-    override val maxEncodedSize: kotlin.Long,
-    internal val _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.publication.PublicationTransferUnavailable>? =
-        null,
-): skirout.editor.v1.publication.PublicationTransferUnavailable_OrMutable {
-    constructor(
-        _mustNameArguments: _MustNameArguments =
-            _MustNameArguments,
-        view: skirout.editor.v1.publication.PublicationViewId_OrMutable,
-        encodedSize: kotlin.Long,
-        maxEncodedSize: kotlin.Long,
-        _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.publication.PublicationTransferUnavailable>? =
-            null,
-    ): this(
-        view.toFrozen(),
-        encodedSize,
-        maxEncodedSize,
-        _unrecognizedFields,
-    ) {}
-
-    @kotlin.Deprecated("Already frozen", kotlin.ReplaceWith("this"))
-    override fun toFrozen() = this;
-
-    /** Returns a mutable shallow copy of this instance */
-    fun toMutable() = Mutable(
-        view = this.view,
-        encodedSize = this.encodedSize,
-        maxEncodedSize = this.maxEncodedSize,
-    );
-
-    /** Returns a shallow copy of this instance with the specified fields replaced. */
-    fun copy(
-        _mustNameArguments: _MustNameArguments =
-            _MustNameArguments,
-        view: skirout.editor.v1.publication.PublicationViewId_OrMutable =
-            this.view,
-        encodedSize: kotlin.Long =
-            this.encodedSize,
-        maxEncodedSize: kotlin.Long =
-            this.maxEncodedSize,
-    ) = skirout.editor.v1.publication.PublicationTransferUnavailable(
-        view.toFrozen(),
-        encodedSize,
-        maxEncodedSize,
-        this._unrecognizedFields,
-    );
-
-    @kotlin.Deprecated("No point in creating an exact copy of an immutable object", kotlin.ReplaceWith("this"))
-    fun copy() = this;
-
-    override fun equals(other: kotlin.Any?): kotlin.Boolean {
-        return this === other || (other is skirout.editor.v1.publication.PublicationTransferUnavailable && this.view == other.view && this.encodedSize == other.encodedSize && this.maxEncodedSize == other.maxEncodedSize);
-    }
-
-    override fun hashCode(): kotlin.Int {
-        return kotlin.collections.listOf<kotlin.Any?>(this.view, this.encodedSize, this.maxEncodedSize).hashCode();
-    }
-
-    override fun toString(): kotlin.String {
-        return build.skir.internal.toStringImpl(
-            this,
-            _SerializerRegistry.PublicationTransferUnavailableSerializerImpl,
-        )
-    }
-
-    /** Mutable version of [PublicationTransferUnavailable]. */
-    class Mutable internal constructor(
-        _mustNameArguments: _MustNameArguments =
-            _MustNameArguments,
-        override var view: skirout.editor.v1.publication.PublicationViewId_OrMutable =
-            skirout.editor.v1.publication.PublicationViewId.partial(),
-        override var encodedSize: kotlin.Long =
-            0L,
-        override var maxEncodedSize: kotlin.Long =
-            0L,
-        internal var _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.publication.PublicationTransferUnavailable>? =
-            null,
-    ): skirout.editor.v1.publication.PublicationTransferUnavailable_OrMutable {
-        /** Returns a deeply immutable copy of this instance */
-        override fun toFrozen() = skirout.editor.v1.publication.PublicationTransferUnavailable(
-            view = this.view,
-            encodedSize = this.encodedSize,
-            maxEncodedSize = this.maxEncodedSize,
-            _unrecognizedFields = this._unrecognizedFields,
-        );
-
-        /**
-         * If the value of [view] is already mutable, returns it as-is.
-         * Otherwise, makes a mutable copy, assigns it back to [view] and returns it.
-         */
-        val mutableView: skirout.editor.v1.publication.PublicationViewId.Mutable get() {
-            var value = this.view;
-            return when (value) {
-                is skirout.editor.v1.publication.PublicationViewId -> {
-                    value = value.toMutable();
-                    this.view = value;
-                    return value;
-                }
-                is skirout.editor.v1.publication.PublicationViewId.Mutable -> value;
-            }
-        }
-    }
-
-    companion object {
-        private val default =
-            skirout.editor.v1.publication.PublicationTransferUnavailable(
-                skirout.editor.v1.publication.PublicationViewId.partial(),
-                0L,
-                0L,
-            );
-
-        /** Returns an instance with all fields set to their default values. */
-        fun partial() = default;
-
-        /**
-         * Creates a new instance of [PublicationTransferUnavailable].
-         * Unlike the constructor, does not require all fields to be specified.
-         * Missing fields will be set to their default values.
-         */
-        fun partial(
-            _mustNameArguments: _MustNameArguments =
-                _MustNameArguments,
-            view: skirout.editor.v1.publication.PublicationViewId_OrMutable =
-                skirout.editor.v1.publication.PublicationViewId.partial(),
-            encodedSize: kotlin.Long =
-                0L,
-            maxEncodedSize: kotlin.Long =
-                0L,
-        ) = skirout.editor.v1.publication.PublicationTransferUnavailable(
-            view = view,
-            encodedSize = encodedSize,
-            maxEncodedSize = maxEncodedSize,
-            _unrecognizedFields = null,
-        );
-
-        /** Serializer for [PublicationTransferUnavailable] instances. */
-        val serializer get() = _SerializerRegistry.PublicationTransferUnavailableSerializer;
-
-        /** Describes the [PublicationTransferUnavailable] type. Provides runtime introspection capabilities. */
-        val typeDescriptor get() = _SerializerRegistry.PublicationTransferUnavailableSerializerImpl.typeDescriptor;
     }
 }
 
@@ -5264,7 +4953,6 @@ class WatchPublicationRequest private constructor(
 
 sealed interface QueryPublicationViewRequest_OrMutable {
     val expected: skirout.editor.v1.publication.PublicationViewId_OrMutable;
-    val transferId: kotlin.String;
 
     fun toFrozen(): skirout.editor.v1.publication.QueryPublicationViewRequest;
 }
@@ -5273,7 +4961,6 @@ sealed interface QueryPublicationViewRequest_OrMutable {
 @kotlin.Suppress("UNUSED_PARAMETER")
 class QueryPublicationViewRequest private constructor(
     override val expected: skirout.editor.v1.publication.PublicationViewId,
-    override val transferId: kotlin.String,
     internal val _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.publication.QueryPublicationViewRequest>? =
         null,
 ): skirout.editor.v1.publication.QueryPublicationViewRequest_OrMutable {
@@ -5281,12 +4968,10 @@ class QueryPublicationViewRequest private constructor(
         _mustNameArguments: _MustNameArguments =
             _MustNameArguments,
         expected: skirout.editor.v1.publication.PublicationViewId_OrMutable,
-        transferId: kotlin.String,
         _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.publication.QueryPublicationViewRequest>? =
             null,
     ): this(
         expected.toFrozen(),
-        transferId,
         _unrecognizedFields,
     ) {}
 
@@ -5296,7 +4981,6 @@ class QueryPublicationViewRequest private constructor(
     /** Returns a mutable shallow copy of this instance */
     fun toMutable() = Mutable(
         expected = this.expected,
-        transferId = this.transferId,
     );
 
     /** Returns a shallow copy of this instance with the specified fields replaced. */
@@ -5305,11 +4989,8 @@ class QueryPublicationViewRequest private constructor(
             _MustNameArguments,
         expected: skirout.editor.v1.publication.PublicationViewId_OrMutable =
             this.expected,
-        transferId: kotlin.String =
-            this.transferId,
     ) = skirout.editor.v1.publication.QueryPublicationViewRequest(
         expected.toFrozen(),
-        transferId,
         this._unrecognizedFields,
     );
 
@@ -5317,11 +4998,11 @@ class QueryPublicationViewRequest private constructor(
     fun copy() = this;
 
     override fun equals(other: kotlin.Any?): kotlin.Boolean {
-        return this === other || (other is skirout.editor.v1.publication.QueryPublicationViewRequest && this.expected == other.expected && this.transferId == other.transferId);
+        return this === other || (other is skirout.editor.v1.publication.QueryPublicationViewRequest && this.expected == other.expected);
     }
 
     override fun hashCode(): kotlin.Int {
-        return kotlin.collections.listOf<kotlin.Any?>(this.expected, this.transferId).hashCode();
+        return kotlin.collections.listOf<kotlin.Any?>(this.expected).hashCode();
     }
 
     override fun toString(): kotlin.String {
@@ -5337,15 +5018,12 @@ class QueryPublicationViewRequest private constructor(
             _MustNameArguments,
         override var expected: skirout.editor.v1.publication.PublicationViewId_OrMutable =
             skirout.editor.v1.publication.PublicationViewId.partial(),
-        override var transferId: kotlin.String =
-            "",
         internal var _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.publication.QueryPublicationViewRequest>? =
             null,
     ): skirout.editor.v1.publication.QueryPublicationViewRequest_OrMutable {
         /** Returns a deeply immutable copy of this instance */
         override fun toFrozen() = skirout.editor.v1.publication.QueryPublicationViewRequest(
             expected = this.expected,
-            transferId = this.transferId,
             _unrecognizedFields = this._unrecognizedFields,
         );
 
@@ -5370,7 +5048,6 @@ class QueryPublicationViewRequest private constructor(
         private val default =
             skirout.editor.v1.publication.QueryPublicationViewRequest(
                 skirout.editor.v1.publication.PublicationViewId.partial(),
-                "",
             );
 
         /** Returns an instance with all fields set to their default values. */
@@ -5386,11 +5063,8 @@ class QueryPublicationViewRequest private constructor(
                 _MustNameArguments,
             expected: skirout.editor.v1.publication.PublicationViewId_OrMutable =
                 skirout.editor.v1.publication.PublicationViewId.partial(),
-            transferId: kotlin.String =
-                "",
         ) = skirout.editor.v1.publication.QueryPublicationViewRequest(
             expected = expected,
-            transferId = transferId,
             _unrecognizedFields = null,
         );
 
@@ -5407,9 +5081,8 @@ sealed class QueryPublicationViewResponse private constructor() {
     /** The kind of variant held by a `QueryPublicationViewResponse`. */
     enum class Kind {
         UNKNOWN,
-        CHUNK_WRAPPER,
-        CHANGED_WRAPPER,
-        UNAVAILABLE_WRAPPER,
+        VIEW_WRAPPER,
+        VIEW_CHANGED_ERROR_WRAPPER,
         INTERNAL_ERROR_WRAPPER,
     }
 
@@ -5428,57 +5101,39 @@ sealed class QueryPublicationViewResponse private constructor() {
         }
     }
 
-    class ChunkWrapper private constructor (
-        val value: skirout.editor.v1.publication.PublicationViewChunk,
+    class ViewWrapper private constructor (
+        val value: skirout.editor.v1.publication.PublicationView,
     ) : skirout.editor.v1.publication.QueryPublicationViewResponse() {
         constructor(
-            value: skirout.editor.v1.publication.PublicationViewChunk_OrMutable,
+            value: skirout.editor.v1.publication.PublicationView_OrMutable,
         ): this(value.toFrozen()) {}
 
-        override val kind get() = Kind.CHUNK_WRAPPER;
+        override val kind get() = Kind.VIEW_WRAPPER;
 
         override fun equals(other: kotlin.Any?): kotlin.Boolean {
-            return other is skirout.editor.v1.publication.QueryPublicationViewResponse.ChunkWrapper && value == other.value;
+            return other is skirout.editor.v1.publication.QueryPublicationViewResponse.ViewWrapper && value == other.value;
         }
 
         override fun hashCode(): kotlin.Int {
-            return this.value.hashCode() + 94642797;
+            return this.value.hashCode() + 3619493;
         }
     }
 
-    class ChangedWrapper private constructor (
+    class ViewChangedErrorWrapper private constructor (
         val value: skirout.editor.v1.publication.PublicationViewChanged,
     ) : skirout.editor.v1.publication.QueryPublicationViewResponse() {
         constructor(
             value: skirout.editor.v1.publication.PublicationViewChanged_OrMutable,
         ): this(value.toFrozen()) {}
 
-        override val kind get() = Kind.CHANGED_WRAPPER;
+        override val kind get() = Kind.VIEW_CHANGED_ERROR_WRAPPER;
 
         override fun equals(other: kotlin.Any?): kotlin.Boolean {
-            return other is skirout.editor.v1.publication.QueryPublicationViewResponse.ChangedWrapper && value == other.value;
+            return other is skirout.editor.v1.publication.QueryPublicationViewResponse.ViewChangedErrorWrapper && value == other.value;
         }
 
         override fun hashCode(): kotlin.Int {
-            return this.value.hashCode() + 738943668;
-        }
-    }
-
-    class UnavailableWrapper private constructor (
-        val value: skirout.editor.v1.publication.PublicationTransferUnavailable,
-    ) : skirout.editor.v1.publication.QueryPublicationViewResponse() {
-        constructor(
-            value: skirout.editor.v1.publication.PublicationTransferUnavailable_OrMutable,
-        ): this(value.toFrozen()) {}
-
-        override val kind get() = Kind.UNAVAILABLE_WRAPPER;
-
-        override fun equals(other: kotlin.Any?): kotlin.Boolean {
-            return other is skirout.editor.v1.publication.QueryPublicationViewResponse.UnavailableWrapper && value == other.value;
-        }
-
-        override fun hashCode(): kotlin.Int {
-            return this.value.hashCode() + -665462704;
+            return this.value.hashCode() + -100677469;
         }
     }
 
@@ -5518,45 +5173,29 @@ sealed class QueryPublicationViewResponse private constructor() {
          */
         val UNKNOWN = @kotlin.Suppress("DEPRECATION") Unknown(Kind.UNKNOWN, null);
 
-        /** Shortcut for `ChunkWrapper(skirout.editor.v1.publication.PublicationViewChunk(...))`. */
+        /** Shortcut for `ViewWrapper(skirout.editor.v1.publication.PublicationView(...))`. */
         @kotlin.Suppress("UNUSED_PARAMETER")
-        fun createChunk(
+        fun createView(
             _mustNameArguments: _MustNameArguments =
                 _MustNameArguments,
-            view: skirout.editor.v1.publication.PublicationViewId_OrMutable,
-            transfer: skirout.kernel.v1.bounded_transfer.BoundedTransferChunk_OrMutable,
-        ) = ChunkWrapper(
-            skirout.editor.v1.publication.PublicationViewChunk(
-                view = view,
-                transfer = transfer,
+            id: skirout.editor.v1.publication.PublicationViewId_OrMutable,
+            status: skirout.editor.v1.publication.PublicationStatus,
+        ) = ViewWrapper(
+            skirout.editor.v1.publication.PublicationView(
+                id = id,
+                status = status,
             )
         );
 
-        /** Shortcut for `ChangedWrapper(skirout.editor.v1.publication.PublicationViewChanged(...))`. */
+        /** Shortcut for `ViewChangedErrorWrapper(skirout.editor.v1.publication.PublicationViewChanged(...))`. */
         @kotlin.Suppress("UNUSED_PARAMETER")
-        fun createChanged(
+        fun createViewChangedError(
             _mustNameArguments: _MustNameArguments =
                 _MustNameArguments,
             current: skirout.editor.v1.publication.PublicationViewId_OrMutable,
-        ) = ChangedWrapper(
+        ) = ViewChangedErrorWrapper(
             skirout.editor.v1.publication.PublicationViewChanged(
                 current = current,
-            )
-        );
-
-        /** Shortcut for `UnavailableWrapper(skirout.editor.v1.publication.PublicationTransferUnavailable(...))`. */
-        @kotlin.Suppress("UNUSED_PARAMETER")
-        fun createUnavailable(
-            _mustNameArguments: _MustNameArguments =
-                _MustNameArguments,
-            view: skirout.editor.v1.publication.PublicationViewId_OrMutable,
-            encodedSize: kotlin.Long,
-            maxEncodedSize: kotlin.Long,
-        ) = UnavailableWrapper(
-            skirout.editor.v1.publication.PublicationTransferUnavailable(
-                view = view,
-                encodedSize = encodedSize,
-                maxEncodedSize = maxEncodedSize,
             )
         );
 
@@ -5605,8 +5244,8 @@ val WatchPublication: build.skir.service.Method<
 }
 
 /**
- * Transfers one immutable review view or reports that expected is no longer current.
- * All chunks share the view and transfer identities; later invalidations require a separate query.
+ * Returns one immutable review view, or the current view identity when expected is no longer
+ * current. Later invalidations require a separate query.
  */
 val QueryPublicationView: build.skir.service.Method<
     skirout.editor.v1.publication.QueryPublicationViewRequest,
@@ -5617,7 +5256,7 @@ val QueryPublicationView: build.skir.service.Method<
         920020,
         skirout.editor.v1.publication.QueryPublicationViewRequest.serializer,
         skirout.editor.v1.publication.QueryPublicationViewResponse.serializer,
-        "Transfers one immutable review view or reports that expected is no longer current.\nAll chunks share the view and transfer identities; later invalidations require a separate query.",
+        "Returns one immutable review view, or the current view identity when expected is no longer\ncurrent. Later invalidations require a separate query.",
     )
 }
 
@@ -5942,18 +5581,6 @@ private object _SerializerRegistry {
 
     val PublicationStatus_UnavailableSerializer = build.skir.internal.makeSerializer(PublicationStatus_UnavailableSerializerImpl);
 
-    val PublicationTransferUnavailableSerializerImpl = build.skir.internal.StructSerializer(
-        recordId = "editor/v1/publication.skir:PublicationTransferUnavailable",
-        doc = "",
-        defaultInstance = skirout.editor.v1.publication.PublicationTransferUnavailable.partial(),
-        newMutableFn = { it?.toMutable() ?: skirout.editor.v1.publication.PublicationTransferUnavailable.Mutable() },
-        toFrozenFn = { it.toFrozen() },
-        getUnrecognizedFields = { it._unrecognizedFields },
-        setUnrecognizedFields = { m, u -> m._unrecognizedFields = u },
-    );
-
-    val PublicationTransferUnavailableSerializer = build.skir.internal.makeSerializer(PublicationTransferUnavailableSerializerImpl);
-
     val PublicationViewSerializerImpl = build.skir.internal.StructSerializer(
         recordId = "editor/v1/publication.skir:PublicationView",
         doc = "",
@@ -5968,7 +5595,7 @@ private object _SerializerRegistry {
 
     val PublicationViewChangedSerializerImpl = build.skir.internal.StructSerializer(
         recordId = "editor/v1/publication.skir:PublicationViewChanged",
-        doc = "Invalidation hint naming the current review view. Query that exact identity to transfer its content.",
+        doc = "Invalidation hint naming the current review view. Query that exact identity to read its content.",
         defaultInstance = skirout.editor.v1.publication.PublicationViewChanged.partial(),
         newMutableFn = { it?.toMutable() ?: skirout.editor.v1.publication.PublicationViewChanged.Mutable() },
         toFrozenFn = { it.toFrozen() },
@@ -5977,18 +5604,6 @@ private object _SerializerRegistry {
     );
 
     val PublicationViewChangedSerializer = build.skir.internal.makeSerializer(PublicationViewChangedSerializerImpl);
-
-    val PublicationViewChunkSerializerImpl = build.skir.internal.StructSerializer(
-        recordId = "editor/v1/publication.skir:PublicationViewChunk",
-        doc = "",
-        defaultInstance = skirout.editor.v1.publication.PublicationViewChunk.partial(),
-        newMutableFn = { it?.toMutable() ?: skirout.editor.v1.publication.PublicationViewChunk.Mutable() },
-        toFrozenFn = { it.toFrozen() },
-        getUnrecognizedFields = { it._unrecognizedFields },
-        setUnrecognizedFields = { m, u -> m._unrecognizedFields = u },
-    );
-
-    val PublicationViewChunkSerializer = build.skir.internal.makeSerializer(PublicationViewChunkSerializerImpl);
 
     val PublicationViewIdSerializerImpl = build.skir.internal.StructSerializer(
         recordId = "editor/v1/publication.skir:PublicationViewId",
@@ -6875,35 +6490,6 @@ private object _SerializerRegistry {
         );
         PublicationStatus_UnavailableSerializerImpl.finalizeStruct();
 
-        PublicationTransferUnavailableSerializerImpl.addField(
-            "view",
-            "view",
-            0,
-            _SerializerRegistry.PublicationViewIdSerializer,
-            "",
-            { it.view },
-            { mut, v -> mut.view = v },
-        );
-        PublicationTransferUnavailableSerializerImpl.addField(
-            "encoded_size",
-            "encodedSize",
-            1,
-            build.skir.Serializers.int64,
-            "",
-            { it.encodedSize },
-            { mut, v -> mut.encodedSize = v },
-        );
-        PublicationTransferUnavailableSerializerImpl.addField(
-            "max_encoded_size",
-            "maxEncodedSize",
-            2,
-            build.skir.Serializers.int64,
-            "",
-            { it.maxEncodedSize },
-            { mut, v -> mut.maxEncodedSize = v },
-        );
-        PublicationTransferUnavailableSerializerImpl.finalizeStruct();
-
         PublicationViewSerializerImpl.addField(
             "id",
             "id",
@@ -6934,26 +6520,6 @@ private object _SerializerRegistry {
             { mut, v -> mut.current = v },
         );
         PublicationViewChangedSerializerImpl.finalizeStruct();
-
-        PublicationViewChunkSerializerImpl.addField(
-            "view",
-            "view",
-            0,
-            _SerializerRegistry.PublicationViewIdSerializer,
-            "",
-            { it.view },
-            { mut, v -> mut.view = v },
-        );
-        PublicationViewChunkSerializerImpl.addField(
-            "transfer",
-            "transfer",
-            1,
-            skirout.kernel.v1.bounded_transfer.BoundedTransferChunk.serializer,
-            "",
-            { it.transfer },
-            { mut, v -> mut.transfer = v },
-        );
-        PublicationViewChunkSerializerImpl.finalizeStruct();
 
         PublicationViewIdSerializerImpl.addField(
             "value",
@@ -7006,46 +6572,28 @@ private object _SerializerRegistry {
             { it.expected },
             { mut, v -> mut.expected = v },
         );
-        QueryPublicationViewRequestSerializerImpl.addField(
-            "transfer_id",
-            "transferId",
-            1,
-            build.skir.Serializers.string,
-            "",
-            { it.transferId },
-            { mut, v -> mut.transferId = v },
-        );
         QueryPublicationViewRequestSerializerImpl.finalizeStruct();
 
         QueryPublicationViewResponseSerializerImpl.addWrapperVariant(
             1,
-            "chunk",
-            skirout.editor.v1.publication.QueryPublicationViewResponse.Kind.CHUNK_WRAPPER.ordinal,
-            _SerializerRegistry.PublicationViewChunkSerializer,
+            "view",
+            skirout.editor.v1.publication.QueryPublicationViewResponse.Kind.VIEW_WRAPPER.ordinal,
+            _SerializerRegistry.PublicationViewSerializer,
             "",
-            { skirout.editor.v1.publication.QueryPublicationViewResponse.ChunkWrapper(it) },
+            { skirout.editor.v1.publication.QueryPublicationViewResponse.ViewWrapper(it) },
             { it.value },
         );
         QueryPublicationViewResponseSerializerImpl.addWrapperVariant(
             2,
-            "changed",
-            skirout.editor.v1.publication.QueryPublicationViewResponse.Kind.CHANGED_WRAPPER.ordinal,
+            "view_changed_error",
+            skirout.editor.v1.publication.QueryPublicationViewResponse.Kind.VIEW_CHANGED_ERROR_WRAPPER.ordinal,
             _SerializerRegistry.PublicationViewChangedSerializer,
             "",
-            { skirout.editor.v1.publication.QueryPublicationViewResponse.ChangedWrapper(it) },
+            { skirout.editor.v1.publication.QueryPublicationViewResponse.ViewChangedErrorWrapper(it) },
             { it.value },
         );
         QueryPublicationViewResponseSerializerImpl.addWrapperVariant(
             3,
-            "unavailable",
-            skirout.editor.v1.publication.QueryPublicationViewResponse.Kind.UNAVAILABLE_WRAPPER.ordinal,
-            _SerializerRegistry.PublicationTransferUnavailableSerializer,
-            "",
-            { skirout.editor.v1.publication.QueryPublicationViewResponse.UnavailableWrapper(it) },
-            { it.value },
-        );
-        QueryPublicationViewResponseSerializerImpl.addWrapperVariant(
-            4,
             "internal_error",
             skirout.editor.v1.publication.QueryPublicationViewResponse.Kind.INTERNAL_ERROR_WRAPPER.ordinal,
             skirout.kernel.v1.errors.InternalError.serializer,

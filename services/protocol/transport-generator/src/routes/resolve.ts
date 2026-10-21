@@ -1,6 +1,5 @@
 import type {
   CodeGenerator,
-  Field,
   Method,
   Module,
   RecordLocation,
@@ -22,6 +21,7 @@ import {
   type Route,
   type ScopeKind,
   type SymbolRef,
+  type TransportLimits,
 } from "./manifest.js";
 import {
   failureSlug,
@@ -50,11 +50,6 @@ export type ResolvedFlow =
       readonly method: ResolvedMethod;
       readonly updates: { readonly payload: RecordLocation; readonly delivery: Delivery };
     }
-  | {
-      readonly kind: "bounded_watch";
-      readonly method: ResolvedMethod;
-      readonly transferField: Field;
-    }
   | { readonly kind: "scatter"; readonly binding: NativeKotlinRequestResponseBinding }
   | {
       readonly kind: "event";
@@ -77,8 +72,9 @@ export interface ResolvedRoute {
   readonly grants: readonly Grant[];
 }
 
-/** The admitted manifest: role and component declarations with every resolved route. */
+/** The admitted manifest: transport limits, role and component declarations and every route. */
 export interface ResolvedRoutes {
+  readonly limits: TransportLimits;
   readonly roles: RoleDeclarations;
   readonly components: ReadonlyMap<string, string>;
   readonly routes: readonly ResolvedRoute[];
@@ -201,23 +197,6 @@ function resolveRecord(
   return matches[0]!;
 }
 
-function stringField(location: RecordLocation, name: string, at: RouteAt): Field {
-  const field = location.record.fields.find(
-    (candidate) =>
-      candidate.name.text === name &&
-      candidate.type?.kind === "primitive" &&
-      candidate.type.primitive === "string",
-  );
-  if (location.record.recordType !== "struct" || !field) {
-    throw routeError(
-      at,
-      `expected string field ${name} on ${location.record.key}`,
-      location.record.name,
-    );
-  }
-  return field;
-}
-
 function resolveFlow(
   input: CodeGenerator.Input<unknown>,
   route: Route,
@@ -237,18 +216,6 @@ function resolveFlow(
           delivery: flow.updates.delivery,
         },
       };
-    case "bounded_watch": {
-      const method = resolveMethod(input, flow.method, within(flowAt, "method"));
-      return {
-        kind: "bounded_watch",
-        method,
-        transferField: stringField(
-          method.request,
-          flow.transfer_field,
-          within(flowAt, "transfer_field"),
-        ),
-      };
-    }
     case "scatter":
       if (flow.binding.kind !== "native_kotlin") {
         throw routeError(
@@ -312,5 +279,5 @@ export function resolveRoutes(
       grants,
     }),
   );
-  return { roles, components: manifest.components, routes };
+  return { limits: manifest.limits, roles, components: manifest.components, routes };
 }

@@ -1,6 +1,6 @@
 import { GENERATOR as DART_GENERATOR } from "skir-dart-gen";
 import { GENERATOR as KOTLIN_GENERATOR } from "skir-kotlin-gen";
-import { convertCase, type CodeGenerator, type Field } from "skir-internal";
+import type { CodeGenerator } from "skir-internal";
 import { GENERATOR as RUST } from "skir-rust-gen";
 
 import type { Config } from "./config.js";
@@ -61,16 +61,4 @@ export function importedKotlinSymbol(symbol: CodeGenerator.Symbol): {
 } {
   const name = symbol.reference.slice(symbol.reference.lastIndexOf(".") + 1);
   return { name, imports: [...symbol.imports, `import ${symbol.reference}`] };
-}
-
-/**
- * Names the Kotlin and Dart accessor of a bounded watch transfer field. The Skir generators convert
- * struct fields to lowerCamel and then escape names that collide with keywords or generated
- * members. This applies the conversion only, which matches their output for the current transfer
- * fields.
- *
- * TODO: the chunked-routes decision removes transfer fields and this helper with them.
- */
-export function transferFieldName(field: Field): string {
-  return convertCase(field.name.text, "lowerCamel");
 }

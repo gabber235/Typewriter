@@ -20,8 +20,6 @@ import "./checking.dart" as _lib_editor_v1_checking;
 import "./compilation_root.dart" as _lib_editor_v1_compilation_root;
 import "./diagnostic.dart" as _lib_editor_v1_diagnostic;
 import "./type_catalog.dart" as _lib_editor_v1_type_catalog;
-import "../../kernel/v1/bounded_transfer.dart"
-    as _lib_kernel_v1_bounded_transfer;
 import "../../kernel/v1/errors.dart" as _lib_kernel_v1_errors;
 
 // -----------------------------------------------------------------------------
@@ -5042,7 +5040,7 @@ sealed class PublicationViewChanged_orMutable {
   PublicationViewChanged toFrozen();
 }
 
-/// Invalidation hint naming the current review view. Query that exact identity to transfer its content.
+/// Invalidation hint naming the current review view. Query that exact identity to read its content.
 ///
 /// Deeply immutable.
 final class PublicationViewChanged implements PublicationViewChanged_orMutable {
@@ -5116,7 +5114,7 @@ final class PublicationViewChanged implements PublicationViewChanged_orMutable {
 
   static final _serializerBuilder = _skir.internal__StructSerializerBuilder(
     recordId: "editor/v1/publication.skir:PublicationViewChanged",
-    doc: "Invalidation hint naming the current review view. Query that exact identity to transfer its content.",
+    doc: "Invalidation hint naming the current review view. Query that exact identity to read its content.",
     defaultInstance: defaultInstance,
     newMutable: (it) => (it != null) ? it.toMutable() : mutable(),
     toFrozen: (PublicationViewChanged_mutable it) => it.toFrozen(),
@@ -5148,330 +5146,6 @@ final class PublicationViewChanged_mutable
   @_core.override
   PublicationViewChanged toFrozen() =>
       PublicationViewChanged(current: this.current).._u = this._u;
-}
-
-// -----------------------------------------------------------------------------
-// struct PublicationViewChunk
-// -----------------------------------------------------------------------------
-
-sealed class PublicationViewChunk_orMutable {
-  PublicationViewId_orMutable get view;
-  _lib_kernel_v1_bounded_transfer.BoundedTransferChunk_orMutable get transfer;
-
-  PublicationViewChunk toFrozen();
-}
-
-/// Deeply immutable.
-final class PublicationViewChunk implements PublicationViewChunk_orMutable {
-  @_core.override
-  final PublicationViewId view;
-  @_core.override
-  final _lib_kernel_v1_bounded_transfer.BoundedTransferChunk transfer;
-  _skir.internal__UnrecognizedFields? _u;
-
-  factory PublicationViewChunk({
-    required PublicationViewId_orMutable view,
-    required _lib_kernel_v1_bounded_transfer.BoundedTransferChunk_orMutable
-    transfer,
-  }) => PublicationViewChunk._(view.toFrozen(), transfer.toFrozen());
-
-  PublicationViewChunk._(this.view, this.transfer);
-
-  /// Default instance with all fields set to their default values.
-  static final defaultInstance = PublicationViewChunk._(
-    PublicationViewId.defaultInstance,
-    _lib_kernel_v1_bounded_transfer.BoundedTransferChunk.defaultInstance,
-  );
-
-  /// Returns a new mutable instance.
-  /// Fields are initialized to their default values.
-  static PublicationViewChunk_mutable mutable() =>
-      PublicationViewChunk_mutable._(
-        PublicationViewId.defaultInstance,
-        _lib_kernel_v1_bounded_transfer.BoundedTransferChunk.defaultInstance,
-      );
-
-  /// Returns this instance (no-op).
-  @_core.Deprecated("This instance is already frozen.")
-  @_core.override
-  PublicationViewChunk toFrozen() => this;
-
-  /// Returns a mutable shallow copy of this instance.
-  PublicationViewChunk_mutable toMutable() =>
-      PublicationViewChunk_mutable._(this.view, this.transfer);
-
-  @_core.override
-  _core.bool operator ==(other) {
-    if (_core.identical(this, other)) return true;
-    if (other is! PublicationViewChunk) return false;
-    return _skir.internal__listEquality.equals(
-      _equality_proxy,
-      other._equality_proxy,
-    );
-  }
-
-  @_core.override
-  _core.int get hashCode => _skir.internal__listEquality.hash(_equality_proxy);
-
-  _core.List get _equality_proxy => [this.view, this.transfer];
-
-  @_core.override
-  _core.String toString() => _skir.internal__stringify(this, serializer);
-
-  /// Serializer for `PublicationViewChunk` instances.
-  static _skir.StructSerializer<
-    PublicationViewChunk,
-    PublicationViewChunk_mutable
-  >
-  get serializer {
-    if (_serializerBuilder.mustInitialize()) {
-      _serializerBuilder.addField(
-        "view",
-        "view",
-        0,
-        PublicationViewId.serializer,
-        "",
-        (it) => it.view,
-        (it, v) => it.view = v,
-      );
-      _serializerBuilder.addField(
-        "transfer",
-        "transfer",
-        1,
-        _lib_kernel_v1_bounded_transfer.BoundedTransferChunk.serializer,
-        "",
-        (it) => it.transfer,
-        (it, v) => it.transfer = v,
-      );
-      _serializerBuilder.finalize();
-    }
-    return _serializerBuilder.serializer;
-  }
-
-  static final _serializerBuilder = _skir.internal__StructSerializerBuilder(
-    recordId: "editor/v1/publication.skir:PublicationViewChunk",
-    doc: "",
-    defaultInstance: defaultInstance,
-    newMutable: (it) => (it != null) ? it.toMutable() : mutable(),
-    toFrozen: (PublicationViewChunk_mutable it) => it.toFrozen(),
-    getUnrecognizedFields: (it) => it._u,
-    setUnrecognizedFields: (it, u) => it._u = u,
-  );
-}
-
-/// Mutable version of [PublicationViewChunk].
-final class PublicationViewChunk_mutable
-    implements PublicationViewChunk_orMutable {
-  PublicationViewId_orMutable view;
-  _lib_kernel_v1_bounded_transfer.BoundedTransferChunk_orMutable transfer;
-  _skir.internal__UnrecognizedFields? _u;
-
-  PublicationViewChunk_mutable._(this.view, this.transfer);
-
-  /// If the value of [view] is already mutable, returns it as-is.
-  /// Otherwise, makes a mutable copy, assigns it back to [view] and returns it.
-  PublicationViewId_mutable get mutableView {
-    final value = this.view;
-    if (value is PublicationViewId_mutable) {
-      return value;
-    } else {
-      return this.view = (value as PublicationViewId).toMutable();
-    }
-  }
-
-  /// If the value of [transfer] is already mutable, returns it as-is.
-  /// Otherwise, makes a mutable copy, assigns it back to [transfer] and returns it.
-  _lib_kernel_v1_bounded_transfer.BoundedTransferChunk_mutable
-  get mutableTransfer {
-    final value = this.transfer;
-    if (value is _lib_kernel_v1_bounded_transfer.BoundedTransferChunk_mutable) {
-      return value;
-    } else {
-      return this.transfer =
-          (value as _lib_kernel_v1_bounded_transfer.BoundedTransferChunk)
-              .toMutable();
-    }
-  }
-
-  /// Returns a deeply immutable copy of this instance.
-  @_core.override
-  PublicationViewChunk toFrozen() =>
-      PublicationViewChunk(view: this.view, transfer: this.transfer)
-        .._u = this._u;
-}
-
-// -----------------------------------------------------------------------------
-// struct PublicationTransferUnavailable
-// -----------------------------------------------------------------------------
-
-sealed class PublicationTransferUnavailable_orMutable {
-  PublicationViewId_orMutable get view;
-  _core.int get encodedSize;
-  _core.int get maxEncodedSize;
-
-  PublicationTransferUnavailable toFrozen();
-}
-
-/// Deeply immutable.
-final class PublicationTransferUnavailable
-    implements PublicationTransferUnavailable_orMutable {
-  @_core.override
-  final PublicationViewId view;
-  @_core.override
-  final _core.int encodedSize;
-  @_core.override
-  final _core.int maxEncodedSize;
-  _skir.internal__UnrecognizedFields? _u;
-
-  factory PublicationTransferUnavailable({
-    required PublicationViewId_orMutable view,
-    required _core.int encodedSize,
-    required _core.int maxEncodedSize,
-  }) => PublicationTransferUnavailable._(
-    view.toFrozen(),
-    encodedSize,
-    maxEncodedSize,
-  );
-
-  PublicationTransferUnavailable._(
-    this.view,
-    this.encodedSize,
-    this.maxEncodedSize,
-  );
-
-  /// Default instance with all fields set to their default values.
-  static final defaultInstance = PublicationTransferUnavailable._(
-    PublicationViewId.defaultInstance,
-    0,
-    0,
-  );
-
-  /// Returns a new mutable instance.
-  /// Fields are initialized to their default values.
-  static PublicationTransferUnavailable_mutable mutable() =>
-      PublicationTransferUnavailable_mutable._(
-        PublicationViewId.defaultInstance,
-        0,
-        0,
-      );
-
-  /// Returns this instance (no-op).
-  @_core.Deprecated("This instance is already frozen.")
-  @_core.override
-  PublicationTransferUnavailable toFrozen() => this;
-
-  /// Returns a mutable shallow copy of this instance.
-  PublicationTransferUnavailable_mutable toMutable() =>
-      PublicationTransferUnavailable_mutable._(
-        this.view,
-        this.encodedSize,
-        this.maxEncodedSize,
-      );
-
-  @_core.override
-  _core.bool operator ==(other) {
-    if (_core.identical(this, other)) return true;
-    if (other is! PublicationTransferUnavailable) return false;
-    return _skir.internal__listEquality.equals(
-      _equality_proxy,
-      other._equality_proxy,
-    );
-  }
-
-  @_core.override
-  _core.int get hashCode => _skir.internal__listEquality.hash(_equality_proxy);
-
-  _core.List get _equality_proxy => [
-    this.view,
-    this.encodedSize,
-    this.maxEncodedSize,
-  ];
-
-  @_core.override
-  _core.String toString() => _skir.internal__stringify(this, serializer);
-
-  /// Serializer for `PublicationTransferUnavailable` instances.
-  static _skir.StructSerializer<
-    PublicationTransferUnavailable,
-    PublicationTransferUnavailable_mutable
-  >
-  get serializer {
-    if (_serializerBuilder.mustInitialize()) {
-      _serializerBuilder.addField(
-        "view",
-        "view",
-        0,
-        PublicationViewId.serializer,
-        "",
-        (it) => it.view,
-        (it, v) => it.view = v,
-      );
-      _serializerBuilder.addField(
-        "encoded_size",
-        "encodedSize",
-        1,
-        _skir.Serializers.int64,
-        "",
-        (it) => it.encodedSize,
-        (it, v) => it.encodedSize = v,
-      );
-      _serializerBuilder.addField(
-        "max_encoded_size",
-        "maxEncodedSize",
-        2,
-        _skir.Serializers.int64,
-        "",
-        (it) => it.maxEncodedSize,
-        (it, v) => it.maxEncodedSize = v,
-      );
-      _serializerBuilder.finalize();
-    }
-    return _serializerBuilder.serializer;
-  }
-
-  static final _serializerBuilder = _skir.internal__StructSerializerBuilder(
-    recordId: "editor/v1/publication.skir:PublicationTransferUnavailable",
-    doc: "",
-    defaultInstance: defaultInstance,
-    newMutable: (it) => (it != null) ? it.toMutable() : mutable(),
-    toFrozen: (PublicationTransferUnavailable_mutable it) => it.toFrozen(),
-    getUnrecognizedFields: (it) => it._u,
-    setUnrecognizedFields: (it, u) => it._u = u,
-  );
-}
-
-/// Mutable version of [PublicationTransferUnavailable].
-final class PublicationTransferUnavailable_mutable
-    implements PublicationTransferUnavailable_orMutable {
-  PublicationViewId_orMutable view;
-  _core.int encodedSize;
-  _core.int maxEncodedSize;
-  _skir.internal__UnrecognizedFields? _u;
-
-  PublicationTransferUnavailable_mutable._(
-    this.view,
-    this.encodedSize,
-    this.maxEncodedSize,
-  );
-
-  /// If the value of [view] is already mutable, returns it as-is.
-  /// Otherwise, makes a mutable copy, assigns it back to [view] and returns it.
-  PublicationViewId_mutable get mutableView {
-    final value = this.view;
-    if (value is PublicationViewId_mutable) {
-      return value;
-    } else {
-      return this.view = (value as PublicationViewId).toMutable();
-    }
-  }
-
-  /// Returns a deeply immutable copy of this instance.
-  @_core.override
-  PublicationTransferUnavailable toFrozen() => PublicationTransferUnavailable(
-    view: this.view,
-    encodedSize: this.encodedSize,
-    maxEncodedSize: this.maxEncodedSize,
-  ).._u = this._u;
 }
 
 // -----------------------------------------------------------------------------
@@ -5834,7 +5508,6 @@ final class WatchPublicationRequest_mutable
 
 sealed class QueryPublicationViewRequest_orMutable {
   PublicationViewId_orMutable get expected;
-  _core.String get transferId;
 
   QueryPublicationViewRequest toFrozen();
 }
@@ -5844,30 +5517,23 @@ final class QueryPublicationViewRequest
     implements QueryPublicationViewRequest_orMutable {
   @_core.override
   final PublicationViewId expected;
-  @_core.override
-  final _core.String transferId;
   _skir.internal__UnrecognizedFields? _u;
 
   factory QueryPublicationViewRequest({
     required PublicationViewId_orMutable expected,
-    required _core.String transferId,
-  }) => QueryPublicationViewRequest._(expected.toFrozen(), transferId);
+  }) => QueryPublicationViewRequest._(expected.toFrozen());
 
-  QueryPublicationViewRequest._(this.expected, this.transferId);
+  QueryPublicationViewRequest._(this.expected);
 
   /// Default instance with all fields set to their default values.
   static final defaultInstance = QueryPublicationViewRequest._(
     PublicationViewId.defaultInstance,
-    "",
   );
 
   /// Returns a new mutable instance.
   /// Fields are initialized to their default values.
   static QueryPublicationViewRequest_mutable mutable() =>
-      QueryPublicationViewRequest_mutable._(
-        PublicationViewId.defaultInstance,
-        "",
-      );
+      QueryPublicationViewRequest_mutable._(PublicationViewId.defaultInstance);
 
   /// Returns this instance (no-op).
   @_core.Deprecated("This instance is already frozen.")
@@ -5876,7 +5542,7 @@ final class QueryPublicationViewRequest
 
   /// Returns a mutable shallow copy of this instance.
   QueryPublicationViewRequest_mutable toMutable() =>
-      QueryPublicationViewRequest_mutable._(this.expected, this.transferId);
+      QueryPublicationViewRequest_mutable._(this.expected);
 
   @_core.override
   _core.bool operator ==(other) {
@@ -5891,7 +5557,7 @@ final class QueryPublicationViewRequest
   @_core.override
   _core.int get hashCode => _skir.internal__listEquality.hash(_equality_proxy);
 
-  _core.List get _equality_proxy => [this.expected, this.transferId];
+  _core.List get _equality_proxy => [this.expected];
 
   @_core.override
   _core.String toString() => _skir.internal__stringify(this, serializer);
@@ -5911,15 +5577,6 @@ final class QueryPublicationViewRequest
         "",
         (it) => it.expected,
         (it, v) => it.expected = v,
-      );
-      _serializerBuilder.addField(
-        "transfer_id",
-        "transferId",
-        1,
-        _skir.Serializers.string,
-        "",
-        (it) => it.transferId,
-        (it, v) => it.transferId = v,
       );
       _serializerBuilder.finalize();
     }
@@ -5941,10 +5598,9 @@ final class QueryPublicationViewRequest
 final class QueryPublicationViewRequest_mutable
     implements QueryPublicationViewRequest_orMutable {
   PublicationViewId_orMutable expected;
-  _core.String transferId;
   _skir.internal__UnrecognizedFields? _u;
 
-  QueryPublicationViewRequest_mutable._(this.expected, this.transferId);
+  QueryPublicationViewRequest_mutable._(this.expected);
 
   /// If the value of [expected] is already mutable, returns it as-is.
   /// Otherwise, makes a mutable copy, assigns it back to [expected] and returns it.
@@ -5959,10 +5615,8 @@ final class QueryPublicationViewRequest_mutable
 
   /// Returns a deeply immutable copy of this instance.
   @_core.override
-  QueryPublicationViewRequest toFrozen() => QueryPublicationViewRequest(
-    expected: this.expected,
-    transferId: this.transferId,
-  ).._u = this._u;
+  QueryPublicationViewRequest toFrozen() =>
+      QueryPublicationViewRequest(expected: this.expected).._u = this._u;
 }
 
 // -----------------------------------------------------------------------------
@@ -5973,9 +5627,8 @@ final class QueryPublicationViewRequest_mutable
 ///   ```
 ///   switch (e) {
 ///     case QueryPublicationViewResponse_unknown(): { ... }
-///     case QueryPublicationViewResponse_chunk(:var value): { ... }
-///     case QueryPublicationViewResponse_changed(:var value): { ... }
-///     case QueryPublicationViewResponse_unavailable(:var value): { ... }
+///     case QueryPublicationViewResponse_view(:var value): { ... }
+///     case QueryPublicationViewResponse_viewChangedError(:var value): { ... }
 ///     case QueryPublicationViewResponse_internalError(:var value): { ... }
 ///   }
 ///   ```
@@ -5987,47 +5640,28 @@ sealed class QueryPublicationViewResponse {
   static const QueryPublicationViewResponse unknown =
       QueryPublicationViewResponse_unknown._instance;
 
-  /// Create a 'chunk' variant wrapping around the given value.
-  factory QueryPublicationViewResponse.wrapChunk(PublicationViewChunk value) =>
-      QueryPublicationViewResponse_chunkWrapper._(value);
+  /// Create a 'view' variant wrapping around the given value.
+  factory QueryPublicationViewResponse.wrapView(PublicationView value) =>
+      QueryPublicationViewResponse_viewWrapper._(value);
 
-  /// Same as `wrapChunk(PublicationViewChunk(...))`.
-  factory QueryPublicationViewResponse.createChunk({
-    required PublicationViewId_orMutable view,
-    required _lib_kernel_v1_bounded_transfer.BoundedTransferChunk_orMutable
-    transfer,
-  }) => QueryPublicationViewResponse.wrapChunk(
-    PublicationViewChunk(view: view, transfer: transfer),
+  /// Same as `wrapView(PublicationView(...))`.
+  factory QueryPublicationViewResponse.createView({
+    required PublicationViewId_orMutable id,
+    required PublicationStatus status,
+  }) => QueryPublicationViewResponse.wrapView(
+    PublicationView(id: id, status: status),
   );
 
-  /// Create a 'changed' variant wrapping around the given value.
-  factory QueryPublicationViewResponse.wrapChanged(
+  /// Create a 'view_changed_error' variant wrapping around the given value.
+  factory QueryPublicationViewResponse.wrapViewChangedError(
     PublicationViewChanged value,
-  ) => QueryPublicationViewResponse_changedWrapper._(value);
+  ) => QueryPublicationViewResponse_viewChangedErrorWrapper._(value);
 
-  /// Same as `wrapChanged(PublicationViewChanged(...))`.
-  factory QueryPublicationViewResponse.createChanged({
+  /// Same as `wrapViewChangedError(PublicationViewChanged(...))`.
+  factory QueryPublicationViewResponse.createViewChangedError({
     required PublicationViewId_orMutable current,
-  }) => QueryPublicationViewResponse.wrapChanged(
+  }) => QueryPublicationViewResponse.wrapViewChangedError(
     PublicationViewChanged(current: current),
-  );
-
-  /// Create a 'unavailable' variant wrapping around the given value.
-  factory QueryPublicationViewResponse.wrapUnavailable(
-    PublicationTransferUnavailable value,
-  ) => QueryPublicationViewResponse_unavailableWrapper._(value);
-
-  /// Same as `wrapUnavailable(PublicationTransferUnavailable(...))`.
-  factory QueryPublicationViewResponse.createUnavailable({
-    required PublicationViewId_orMutable view,
-    required _core.int encodedSize,
-    required _core.int maxEncodedSize,
-  }) => QueryPublicationViewResponse.wrapUnavailable(
-    PublicationTransferUnavailable(
-      view: view,
-      encodedSize: encodedSize,
-      maxEncodedSize: maxEncodedSize,
-    ),
   );
 
   /// Create a 'internal_error' variant wrapping around the given value.
@@ -6049,36 +5683,27 @@ sealed class QueryPublicationViewResponse {
     if (_serializerBuilder.mustInitialize()) {
       _serializerBuilder.addWrapperVariant(
         1,
-        "chunk",
-        "wrapChunk",
-        PublicationViewChunk.serializer,
+        "view",
+        "wrapView",
+        PublicationView.serializer,
         "",
-        QueryPublicationViewResponse_chunkWrapper._,
+        QueryPublicationViewResponse_viewWrapper._,
         (it) => it.value,
-        ordinal: QueryPublicationViewResponse_kind.chunkWrapper._ordinal,
+        ordinal: QueryPublicationViewResponse_kind.viewWrapper._ordinal,
       );
       _serializerBuilder.addWrapperVariant(
         2,
-        "changed",
-        "wrapChanged",
+        "view_changed_error",
+        "wrapViewChangedError",
         PublicationViewChanged.serializer,
         "",
-        QueryPublicationViewResponse_changedWrapper._,
+        QueryPublicationViewResponse_viewChangedErrorWrapper._,
         (it) => it.value,
-        ordinal: QueryPublicationViewResponse_kind.changedWrapper._ordinal,
+        ordinal:
+            QueryPublicationViewResponse_kind.viewChangedErrorWrapper._ordinal,
       );
       _serializerBuilder.addWrapperVariant(
         3,
-        "unavailable",
-        "wrapUnavailable",
-        PublicationTransferUnavailable.serializer,
-        "",
-        QueryPublicationViewResponse_unavailableWrapper._,
-        (it) => it.value,
-        ordinal: QueryPublicationViewResponse_kind.unavailableWrapper._ordinal,
-      );
-      _serializerBuilder.addWrapperVariant(
-        4,
         "internal_error",
         "wrapInternalError",
         _lib_kernel_v1_errors.InternalError.serializer,
@@ -6108,10 +5733,9 @@ sealed class QueryPublicationViewResponse {
 /// The kind of variant held by a `QueryPublicationViewResponse`.
 enum QueryPublicationViewResponse_kind {
   unknown(0),
-  chunkWrapper(1),
-  changedWrapper(2),
-  unavailableWrapper(3),
-  internalErrorWrapper(4);
+  viewWrapper(1),
+  viewChangedErrorWrapper(2),
+  internalErrorWrapper(3);
 
   final _core.int _ordinal;
 
@@ -6158,37 +5782,26 @@ sealed class _QueryPublicationViewResponse_wrapper
       _skir.internal__stringify(this, QueryPublicationViewResponse.serializer);
 }
 
-final class QueryPublicationViewResponse_chunkWrapper
+final class QueryPublicationViewResponse_viewWrapper
     extends _QueryPublicationViewResponse_wrapper {
-  final PublicationViewChunk value;
+  final PublicationView value;
 
-  QueryPublicationViewResponse_chunkWrapper._(this.value);
+  QueryPublicationViewResponse_viewWrapper._(this.value);
 
   @_core.override
   QueryPublicationViewResponse_kind get kind =>
-      QueryPublicationViewResponse_kind.chunkWrapper;
+      QueryPublicationViewResponse_kind.viewWrapper;
 }
 
-final class QueryPublicationViewResponse_changedWrapper
+final class QueryPublicationViewResponse_viewChangedErrorWrapper
     extends _QueryPublicationViewResponse_wrapper {
   final PublicationViewChanged value;
 
-  QueryPublicationViewResponse_changedWrapper._(this.value);
+  QueryPublicationViewResponse_viewChangedErrorWrapper._(this.value);
 
   @_core.override
   QueryPublicationViewResponse_kind get kind =>
-      QueryPublicationViewResponse_kind.changedWrapper;
-}
-
-final class QueryPublicationViewResponse_unavailableWrapper
-    extends _QueryPublicationViewResponse_wrapper {
-  final PublicationTransferUnavailable value;
-
-  QueryPublicationViewResponse_unavailableWrapper._(this.value);
-
-  @_core.override
-  QueryPublicationViewResponse_kind get kind =>
-      QueryPublicationViewResponse_kind.unavailableWrapper;
+      QueryPublicationViewResponse_kind.viewChangedErrorWrapper;
 }
 
 final class QueryPublicationViewResponse_internalErrorWrapper
@@ -6221,13 +5834,13 @@ watchPublicationMethod = _skir.Method(
   "",
 );
 
-/// Transfers one immutable review view or reports that expected is no longer current.
-/// All chunks share the view and transfer identities; later invalidations require a separate query.
+/// Returns one immutable review view, or the current view identity when expected is no longer
+/// current. Later invalidations require a separate query.
 final _skir.Method<QueryPublicationViewRequest, QueryPublicationViewResponse>
 queryPublicationViewMethod = _skir.Method(
   "QueryPublicationView",
   920020,
   QueryPublicationViewRequest.serializer,
   QueryPublicationViewResponse.serializer,
-  "Transfers one immutable review view or reports that expected is no longer current.\nAll chunks share the view and transfer identities; later invalidations require a separate query.",
+  "Returns one immutable review view, or the current view identity when expected is no longer\ncurrent. Later invalidations require a separate query.",
 );

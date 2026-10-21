@@ -2,7 +2,6 @@ package com.typewritermc.protocol.transport.generated
 
 import com.typewritermc.protocol.transport.RealmRouteScope
 import com.typewritermc.protocol.transport.realmTemplate
-import com.typewritermc.services.libs.communicator.address.MessageAddress
 import com.typewritermc.services.libs.communicator.contract.EventContract
 import com.typewritermc.services.libs.communicator.contract.OperationName
 import com.typewritermc.services.libs.communicator.contract.ResponseClassifier
@@ -40,13 +39,10 @@ import skirout.service.v1.artifact.ReadArtifactBlob
 import skirout.service.v1.artifact.WriteArtifactBlobChunk
 
 private val editorCatalogFetchRequestAddress = "service.to.{realm}.organization.{organization}.realm.editor.catalog.fetch".realmTemplate()
-private val editorCatalogFetchUpdateAddress = "service.from.{realm}.organization.{organization}.realm.editor.catalog.fetch".realmTemplate()
-fun RealmRouteScope.editorCatalogFetch(policy: ResponsePolicy<skirout.editor.v1.catalog.CatalogFetchResult>, updates: ResponseClassifier<skirout.editor.v1.catalog.CatalogFetchResult>) = skirWatchContract(
-    method = FetchEditorCatalog, updateSerializer = skirout.editor.v1.catalog.CatalogFetchResult.serializer,
-    name = OperationName.of("editor.catalog.fetch"), requestAddress = editorCatalogFetchRequestAddress.subscribedAt(this),
-    updateAddress = editorCatalogFetchUpdateAddress, initialPolicy = policy, updateClassifier = updates,
+fun RealmRouteScope.editorCatalogFetch(policy: ResponsePolicy<skirout.editor.v1.catalog.CatalogFetchResult>) = skirUnaryContract(
+    method = FetchEditorCatalog, name = OperationName.of("editor.catalog.fetch"),
+    address = editorCatalogFetchRequestAddress.subscribedAt(this), responsePolicy = policy,
     failureSlug = ErrorSlug.of("editor-catalog-fetch-failed"),
-    updateAddressResolver = { routeScope, request: skirout.editor.v1.catalog.CatalogFetchRequest -> MessageAddress.of("${editorCatalogFetchUpdateAddress.render(routeScope).value}.${request.transferId}") },
 )
 
 private val editorCatalogWatchRequestAddress = "service.to.{realm}.organization.{organization}.realm.editor.catalog.invalidate".realmTemplate()
@@ -117,13 +113,10 @@ fun RealmRouteScope.authoringActionPrepare(policy: ResponsePolicy<skirout.editor
 )
 
 private val authoringStateQueryRequestAddress = "service.to.{realm}.organization.{organization}.realm.editor.authoring.state.query".realmTemplate()
-private val authoringStateQueryUpdateAddress = "service.from.{realm}.organization.{organization}.realm.editor.authoring.state.query".realmTemplate()
-fun RealmRouteScope.authoringStateQuery(policy: ResponsePolicy<skirout.editor.v1.authoring.QueryAuthoringStateResponse>, updates: ResponseClassifier<skirout.editor.v1.authoring.QueryAuthoringStateResponse>) = skirWatchContract(
-    method = QueryAuthoringState, updateSerializer = skirout.editor.v1.authoring.QueryAuthoringStateResponse.serializer,
-    name = OperationName.of("editor.authoring.state.query"), requestAddress = authoringStateQueryRequestAddress.subscribedAt(this),
-    updateAddress = authoringStateQueryUpdateAddress, initialPolicy = policy, updateClassifier = updates,
+fun RealmRouteScope.authoringStateQuery(policy: ResponsePolicy<skirout.editor.v1.authoring.QueryAuthoringStateResponse>) = skirUnaryContract(
+    method = QueryAuthoringState, name = OperationName.of("editor.authoring.state.query"),
+    address = authoringStateQueryRequestAddress.subscribedAt(this), responsePolicy = policy,
     failureSlug = ErrorSlug.of("editor-authoring-state-query-failed"),
-    updateAddressResolver = { routeScope, request: skirout.editor.v1.authoring.QueryAuthoringStateRequest -> MessageAddress.of("${authoringStateQueryUpdateAddress.render(routeScope).value}.${request.transferId}") },
 )
 
 private val authoringEditCommitRequestAddress = "service.to.{realm}.organization.{organization}.realm.editor.authoring.edit.commit".realmTemplate()
@@ -161,13 +154,10 @@ val RealmRouteScope.authoringChanged get() = EventContract(
 )
 
 private val authoringCompiledQueryRequestAddress = "service.to.{realm}.organization.{organization}.realm.editor.authoring.compiled.query".realmTemplate()
-private val authoringCompiledQueryUpdateAddress = "service.from.{realm}.organization.{organization}.realm.editor.authoring.compiled.query".realmTemplate()
-fun RealmRouteScope.authoringCompiledQuery(policy: ResponsePolicy<skirout.editor.v1.compiled_content.QueryPublishedContentResponse>, updates: ResponseClassifier<skirout.editor.v1.compiled_content.QueryPublishedContentResponse>) = skirWatchContract(
-    method = QueryPublishedContent, updateSerializer = skirout.editor.v1.compiled_content.QueryPublishedContentResponse.serializer,
-    name = OperationName.of("editor.authoring.compiled.query"), requestAddress = authoringCompiledQueryRequestAddress.subscribedAt(this),
-    updateAddress = authoringCompiledQueryUpdateAddress, initialPolicy = policy, updateClassifier = updates,
+fun RealmRouteScope.authoringCompiledQuery(policy: ResponsePolicy<skirout.editor.v1.compiled_content.QueryPublishedContentResponse>) = skirUnaryContract(
+    method = QueryPublishedContent, name = OperationName.of("editor.authoring.compiled.query"),
+    address = authoringCompiledQueryRequestAddress.subscribedAt(this), responsePolicy = policy,
     failureSlug = ErrorSlug.of("editor-authoring-compiled-query-failed"),
-    updateAddressResolver = { routeScope, request: skirout.editor.v1.compiled_content.QueryPublishedContentRequest -> MessageAddress.of("${authoringCompiledQueryUpdateAddress.render(routeScope).value}.${request.transferId}") },
 )
 
 private val authoringCompiledChangedAddress = "service.from.{realm}.organization.{organization}.realm.editor.authoring.compiled.changed".realmTemplate()
@@ -191,13 +181,10 @@ fun RealmRouteScope.authoringPublish(policy: ResponsePolicy<skirout.editor.v1.pu
 )
 
 private val authoringPublicationQueryRequestAddress = "service.to.{realm}.organization.{organization}.realm.editor.authoring.publication.query".realmTemplate()
-private val authoringPublicationQueryUpdateAddress = "service.from.{realm}.organization.{organization}.realm.editor.authoring.publication.query".realmTemplate()
-fun RealmRouteScope.authoringPublicationQuery(policy: ResponsePolicy<skirout.editor.v1.publication.QueryPublicationViewResponse>, updates: ResponseClassifier<skirout.editor.v1.publication.QueryPublicationViewResponse>) = skirWatchContract(
-    method = QueryPublicationView, updateSerializer = skirout.editor.v1.publication.QueryPublicationViewResponse.serializer,
-    name = OperationName.of("editor.authoring.publication.query"), requestAddress = authoringPublicationQueryRequestAddress.subscribedAt(this),
-    updateAddress = authoringPublicationQueryUpdateAddress, initialPolicy = policy, updateClassifier = updates,
+fun RealmRouteScope.authoringPublicationQuery(policy: ResponsePolicy<skirout.editor.v1.publication.QueryPublicationViewResponse>) = skirUnaryContract(
+    method = QueryPublicationView, name = OperationName.of("editor.authoring.publication.query"),
+    address = authoringPublicationQueryRequestAddress.subscribedAt(this), responsePolicy = policy,
     failureSlug = ErrorSlug.of("editor-authoring-publication-query-failed"),
-    updateAddressResolver = { routeScope, request: skirout.editor.v1.publication.QueryPublicationViewRequest -> MessageAddress.of("${authoringPublicationQueryUpdateAddress.render(routeScope).value}.${request.transferId}") },
 )
 
 private val authoringPublicationWatchRequestAddress = "service.to.{realm}.organization.{organization}.realm.editor.authoring.publication.watch".realmTemplate()

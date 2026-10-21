@@ -22,6 +22,7 @@ Each bounded context owns its own version folders, such as `editor/v1` or `servi
 - Define full models only when consumers genuinely need them. Prefer summaries, references, commands, and focused result payloads for narrower workflows.
 - Separate query, command, and event surfaces. Queries read state, commands change state, and events describe completed state changes.
 - Model failures as typed outcomes, not string errors. Use result variants such as success, validation_failed, not_found, permission_denied, and conflict.
+- Describe complete results. Never model transport framing such as chunks, transfer identities or size limits; the transport splits large responses.
 - Do not model database internals. Contracts should survive database rewrites and must not be shaped around record layouts, indexes, storage-specific IDs, or query details.
 
 ## Pre-release evolution

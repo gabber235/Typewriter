@@ -1,8 +1,8 @@
 import type { CodeGenerator } from "skir-internal";
 
-import { importedKotlinSymbol, transferFieldName } from "../../symbols.js";
+import { importedKotlinSymbol } from "../../symbols.js";
 import { lowerCamel, quoted } from "../../text.js";
-import type { Channel } from "../manifest.js";
+import type { Channel, TransportLimits } from "../manifest.js";
 import { clientSubject, hasSide, type ResolvedRoute, type ResolvedRoutes } from "../resolve.js";
 
 const COMMUNICATOR = "com.typewritermc.services.libs.communicator";
@@ -10,8 +10,9 @@ const COMMUNICATOR = "com.typewritermc.services.libs.communicator";
 /** The hand written route scopes and their subject templates the generated contracts extend. */
 const SCOPES = "com.typewritermc.protocol.transport";
 
+const GENERATED_PACKAGE = "com.typewritermc.protocol.transport.generated";
+
 const ROUTE_IMPORTS = [
-  `${COMMUNICATOR}.address.MessageAddress`,
   `${COMMUNICATOR}.contract.EventContract`,
   `${COMMUNICATOR}.contract.OperationName`,
   `${COMMUNICATOR}.contract.ResponseClassifier`,
@@ -103,24 +104,6 @@ fun ${scope}.${name}(policy: ResponsePolicy<${response}>, updates: ResponseClass
 )`);
         break;
       }
-      case "bounded_watch": {
-        const method = importedKotlinSymbol(symbols.method(flow.method.module, flow.method.method));
-        const request = symbols.record(flow.method.request).reference;
-        const response = symbols.record(flow.method.response).reference;
-        const update = serviceSubject(route, "updates").replace(/(\.\{transfer_id\})+$/u, "");
-        const resolver = `MessageAddress.of("\${${updateAddress}.render(routeScope).value}.\${request.${transferFieldName(flow.transferField)}}")`;
-        imports.push(...method.imports);
-        blocks.push(`private val ${requestAddress} = ${kotlinString(serviceSubject(route, "request"))}.${template}
-private val ${updateAddress} = ${kotlinString(update)}.${template}
-fun ${scope}.${name}(policy: ResponsePolicy<${response}>, updates: ResponseClassifier<${response}>) = skirWatchContract(
-    method = ${method.name}, updateSerializer = ${response}.serializer,
-    name = OperationName.of(${operation}), requestAddress = ${requestAddress}.subscribedAt(this),
-    updateAddress = ${updateAddress}, initialPolicy = policy, updateClassifier = updates,
-    failureSlug = ErrorSlug.of(${slug}),
-    updateAddressResolver = { routeScope, request: ${request} -> ${resolver} },
-)`);
-        break;
-      }
       case "scatter":
         break;
       case "event": {
@@ -137,15 +120,25 @@ val ${scope}.${name} get() = EventContract(
       }
     }
   }
-  return { path, code: kotlinFile("com.typewritermc.protocol.transport.generated", imports, blocks) };
+  return { path, code: kotlinFile(GENERATED_PACKAGE, imports, blocks) };
+}
+
+/** The manifest reply framing limits, which the services NATS transport is constructed with. */
+function limitsFile({ chunkBytes, maxChunks }: TransportLimits): CodeGenerator.OutputFile {
+  const block = `/** Reply framing limits of the transport route manifest: frame size and frames per reply. */
+val TRANSPORT_LIMITS = TransportLimits(chunkBytes = ${chunkBytes}, maxChunks = ${maxChunks})`;
+  return {
+    path: "TransportLimits.kt",
+    code: kotlinFile(GENERATED_PACKAGE, [`import ${COMMUNICATOR}.transfer.TransportLimits`], [block]),
+  };
 }
 
 /**
  * Emits the Kotlin contracts of the routes a service role takes part in for the services runtime:
- * realm routes and the service routes of the registered service.
+ * realm routes, the service routes of the registered service and the reply framing limits.
  */
 export function emitKotlin(
-  { roles, routes }: ResolvedRoutes,
+  { limits, roles, routes }: ResolvedRoutes,
   symbols: CodeGenerator.SymbolProvider,
 ): CodeGenerator.OutputFile[] {
   const serviceRoutes = routes.filter((route) => hasSide(route, roles, "service"));
@@ -167,6 +160,7 @@ export function emitKotlin(
       "ServiceRegistrationRoutes.kt",
       symbols,
     ),
+    limitsFile(limits),
   ];
 }
 

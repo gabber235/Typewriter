@@ -1,7 +1,7 @@
 import type { Channel, Delivery, Party, RoleDeclarations, Route, ScopeKind } from "./manifest.js";
 
 /** Identity captures a subject may name, in the order generated code lists them. */
-export const PARAMETERS = ["organization", "realm", "service", "user", "transfer_id"] as const;
+export const PARAMETERS = ["organization", "realm", "service", "user"] as const;
 export type Parameter = (typeof PARAMETERS)[number];
 
 export type SubjectToken =
@@ -200,8 +200,6 @@ export function routeChannels(route: Route, roles: RoleDeclarations): RouteChann
     channels.push(
       channel("updates", flow.updates.address, [server], callers, flow.updates.delivery),
     );
-  } else if (flow.kind === "bounded_watch") {
-    channels.push(channel("updates", flow.updates, [server], callers, { kind: "transient" }));
   }
   return channels;
 }

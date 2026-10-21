@@ -132,13 +132,38 @@ describe("route emission", () => {
       'import "package:typewriter_panel/infrastructure/protocols/skir/skirout/organization/v1/organization.dart" as _lib_organization_v1_organization;',
     );
     expect(dart!.code).toContain("final method = _lib_organization_v1_organization.createOrganizationMethod;");
-    expect(dart!.code).toContain("${this.transferId.transportTransfer}");
+  });
+});
+
+describe("reply framing limits", () => {
+  test("every language receives the manifest limits", async () => {
+    const { input, resolved } = await committedRoutes();
+    const providers = symbolProviders(input);
+    const kotlin = emitKotlin(resolved, providers.kotlin).find((file) => file.path === "TransportLimits.kt");
+    expect(kotlin!.code).toContain("import com.typewritermc.services.libs.communicator.transfer.TransportLimits");
+    expect(kotlin!.code).toContain("val TRANSPORT_LIMITS = TransportLimits(chunkBytes = 524288, maxChunks = 64)");
+    const [dart] = emitDart(resolved, providers.dart);
+    expect(dart!.code).toContain("const transportLimits = TransportLimits(chunkBytes: 524288, maxChunks: 64);");
+    const [rust] = emitRust(resolved, providers.rust);
+    expect(rust!.code).toContain("pub const RESPONSE_CHUNK_BYTES: usize = 524288;");
+    expect(rust!.code).toContain("pub const MAX_RESPONSE_CHUNKS: usize = 64;");
+  });
+
+  test("bulk reads are plain unary routes without an update channel", async () => {
+    const { input, resolved } = await committedRoutes();
+    const [realm] = emitKotlin(resolved, symbolProviders(input).kotlin);
+    const catalog = section(realm!.code, "fun RealmRouteScope.editorCatalogFetch(", "\n)\n");
+    expect(catalog).toContain("skirUnaryContract(");
+    expect(realm!.code).not.toContain("updateAddressResolver");
+    const [dart] = emitDart(resolved, symbolProviders(input).dart);
+    expect(dart!.code).not.toContain("watchRequest");
+    expect(dart!.code).toContain("extension EditorCatalogFetchRouteNats on");
   });
 });
 
 describe("generator entry points", () => {
   const targets: Array<[Target, string[]]> = [
-    ["kotlin", ["RealmRoutes.kt", "ServiceRegistrationRoutes.kt"]],
+    ["kotlin", ["RealmRoutes.kt", "ServiceRegistrationRoutes.kt", "TransportLimits.kt"]],
     ["kotlin-loader", ["RolloutRoutes.kt"]],
     ["dart", ["transport_routes.dart"]],
     ["rust", ["mod.rs"]],
@@ -161,6 +186,6 @@ describe("generator entry points", () => {
   test("the Dart target requires the import prefix", async () => {
     const input = await loadSkirInput({ dartImportUriPrefix: undefined });
     expect(() => generatorFor("dart").generateCode(input)).toThrow("importUriPrefix");
-    expect(generatorFor("kotlin").generateCode(input).files).toHaveLength(2);
+    expect(generatorFor("kotlin").generateCode(input).files).toHaveLength(3);
   });
 });

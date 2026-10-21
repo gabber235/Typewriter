@@ -4,6 +4,11 @@
 # derives every subject family prefix and every role grant from the parties and the role
 # declarations below; backend/AGENTS.md describes the subject families.
 
+# Reply framing shared by every transport. A reply above chunk_bytes travels as frames of at most
+# chunk_bytes on the requester's reply inbox; a reply needing more than max_chunks frames fails as
+# too large. max_chunks also bounds how many messages a service may send to one reply inbox.
+limits: { chunk_bytes: 524288, max_chunks: 64 }
+
 roles:
   authenticated_user: { side: panel, personal: user }
   organization_member: { side: panel, tenant: [organization], personal: user }
@@ -356,12 +361,10 @@ routes:
     callers: [{ role: organization_member }]
     server: { role: realm_coordinator }
     flow:
-      kind: bounded_watch
+      kind: unary
       method: "editor/v1/catalog.skir:FetchEditorCatalog"
-      transfer_field: transfer_id
       operation: editor.catalog.fetch
       request: editor.catalog.fetch
-      updates: editor.catalog.fetch.{transfer_id}
 
   - name: editor_catalog_watch
     scope: realm
@@ -466,12 +469,10 @@ routes:
     callers: [{ role: organization_member }]
     server: { role: realm_coordinator }
     flow:
-      kind: bounded_watch
+      kind: unary
       method: "editor/v1/authoring.skir:QueryAuthoringState"
-      transfer_field: transfer_id
       operation: editor.authoring.state.query
       request: editor.authoring.state.query
-      updates: editor.authoring.state.query.{transfer_id}
 
   - name: authoring_edit_commit
     scope: realm
@@ -529,12 +530,10 @@ routes:
     callers: [{ role: organization_member }, { role: realm_participant }]
     server: { role: realm_coordinator }
     flow:
-      kind: bounded_watch
+      kind: unary
       method: "editor/v1/compiled_content.skir:QueryPublishedContent"
-      transfer_field: transfer_id
       operation: editor.authoring.compiled.query
       request: editor.authoring.compiled.query
-      updates: editor.authoring.compiled.query.{transfer_id}
 
   - name: authoring_compiled_changed
     scope: realm
@@ -572,12 +571,10 @@ routes:
     callers: [{ role: organization_member }]
     server: { role: realm_coordinator }
     flow:
-      kind: bounded_watch
+      kind: unary
       method: "editor/v1/publication.skir:QueryPublicationView"
-      transfer_field: transfer_id
       operation: editor.authoring.publication.query
       request: editor.authoring.publication.query
-      updates: editor.authoring.publication.query.{transfer_id}
 
   - name: authoring_publication_watch
     scope: realm

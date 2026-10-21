@@ -3169,7 +3169,7 @@ class RoleFallback private constructor(
     }
 }
 
-sealed interface EditorCatalogWireSnapshot_OrMutable {
+sealed interface EditorCatalog_OrMutable {
     val generation: skirout.editor.v1.type_catalog.CatalogGeneration_OrMutable;
     val types: kotlin.collections.List<skirout.editor.v1.catalog.PublishedType_OrMutable>;
     val relations: kotlin.collections.List<skirout.editor.v1.catalog.RelationContract_OrMutable>;
@@ -3186,18 +3186,19 @@ sealed interface EditorCatalogWireSnapshot_OrMutable {
     /** The realm root type. The realm keeps exactly one instance, which owns every section. */
     val realmRoot: skirout.editor.v1.type_catalog.TypeDefinitionId_OrMutable;
 
-    fun toFrozen(): skirout.editor.v1.catalog.EditorCatalogWireSnapshot;
+    fun toFrozen(): skirout.editor.v1.catalog.EditorCatalog;
 }
 
 /**
- * One coherent generation of authoring types, relations, presentations, capabilities, and operations.
- * Generation changes invalidate client assumptions across the whole snapshot; they are separate
- * from saved resource observations and selected compiled publications.
+ * The complete editor catalog of one installed generation: one coherent set of authoring types,
+ * relations, presentations, capabilities, and operations. Generation changes invalidate client
+ * assumptions across the whole catalog; they are separate from saved resource observations and
+ * selected compiled publications.
  *
  * Deeply immutable.
  */
 @kotlin.Suppress("UNUSED_PARAMETER")
-class EditorCatalogWireSnapshot private constructor(
+class EditorCatalog private constructor(
     override val generation: skirout.editor.v1.type_catalog.CatalogGeneration,
     override val types: kotlin.collections.List<skirout.editor.v1.catalog.PublishedType>,
     override val relations: kotlin.collections.List<skirout.editor.v1.catalog.RelationContract>,
@@ -3212,9 +3213,9 @@ class EditorCatalogWireSnapshot private constructor(
     override val roleFallbacks: kotlin.collections.List<skirout.editor.v1.catalog.RoleFallback>,
     override val resourceOperations: kotlin.collections.List<skirout.editor.v1.operation.ResourceOperationDefinition>,
     override val realmRoot: skirout.editor.v1.type_catalog.TypeDefinitionId,
-    internal val _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.catalog.EditorCatalogWireSnapshot>? =
+    internal val _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.catalog.EditorCatalog>? =
         null,
-): skirout.editor.v1.catalog.EditorCatalogWireSnapshot_OrMutable {
+): skirout.editor.v1.catalog.EditorCatalog_OrMutable {
     constructor(
         _mustNameArguments: _MustNameArguments =
             _MustNameArguments,
@@ -3232,7 +3233,7 @@ class EditorCatalogWireSnapshot private constructor(
         roleFallbacks: kotlin.collections.Iterable<skirout.editor.v1.catalog.RoleFallback_OrMutable>,
         resourceOperations: kotlin.collections.Iterable<skirout.editor.v1.operation.ResourceOperationDefinition_OrMutable>,
         realmRoot: skirout.editor.v1.type_catalog.TypeDefinitionId_OrMutable,
-        _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.catalog.EditorCatalogWireSnapshot>? =
+        _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.catalog.EditorCatalog>? =
             null,
     ): this(
         generation.toFrozen(),
@@ -3305,7 +3306,7 @@ class EditorCatalogWireSnapshot private constructor(
             this.resourceOperations,
         realmRoot: skirout.editor.v1.type_catalog.TypeDefinitionId_OrMutable =
             this.realmRoot,
-    ) = skirout.editor.v1.catalog.EditorCatalogWireSnapshot(
+    ) = skirout.editor.v1.catalog.EditorCatalog(
         generation.toFrozen(),
         build.skir.internal.toFrozenList(types, { it.toFrozen() }),
         build.skir.internal.toFrozenList(relations, { it.toFrozen() }),
@@ -3327,7 +3328,7 @@ class EditorCatalogWireSnapshot private constructor(
     fun copy() = this;
 
     override fun equals(other: kotlin.Any?): kotlin.Boolean {
-        return this === other || (other is skirout.editor.v1.catalog.EditorCatalogWireSnapshot && this.generation == other.generation && this.types == other.types && this.relations == other.relations && this.resourceDisplays == other.resourceDisplays && this.presentations == other.presentations && this.presentationMaterials == other.presentationMaterials && this.configuration == other.configuration && this.diagnostics == other.diagnostics && this.endpointBindings == other.endpointBindings && this.capabilities == other.capabilities && this.recommendations == other.recommendations && this.roleFallbacks == other.roleFallbacks && this.resourceOperations == other.resourceOperations && this.realmRoot == other.realmRoot);
+        return this === other || (other is skirout.editor.v1.catalog.EditorCatalog && this.generation == other.generation && this.types == other.types && this.relations == other.relations && this.resourceDisplays == other.resourceDisplays && this.presentations == other.presentations && this.presentationMaterials == other.presentationMaterials && this.configuration == other.configuration && this.diagnostics == other.diagnostics && this.endpointBindings == other.endpointBindings && this.capabilities == other.capabilities && this.recommendations == other.recommendations && this.roleFallbacks == other.roleFallbacks && this.resourceOperations == other.resourceOperations && this.realmRoot == other.realmRoot);
     }
 
     override fun hashCode(): kotlin.Int {
@@ -3337,11 +3338,11 @@ class EditorCatalogWireSnapshot private constructor(
     override fun toString(): kotlin.String {
         return build.skir.internal.toStringImpl(
             this,
-            _SerializerRegistry.EditorCatalogWireSnapshotSerializerImpl,
+            _SerializerRegistry.EditorCatalogSerializerImpl,
         )
     }
 
-    /** Mutable version of [EditorCatalogWireSnapshot]. */
+    /** Mutable version of [EditorCatalog]. */
     class Mutable internal constructor(
         _mustNameArguments: _MustNameArguments =
             _MustNameArguments,
@@ -3373,11 +3374,11 @@ class EditorCatalogWireSnapshot private constructor(
             build.skir.internal.emptyFrozenList<skirout.editor.v1.operation.ResourceOperationDefinition>(),
         override var realmRoot: skirout.editor.v1.type_catalog.TypeDefinitionId_OrMutable =
             skirout.editor.v1.type_catalog.TypeDefinitionId.partial(),
-        internal var _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.catalog.EditorCatalogWireSnapshot>? =
+        internal var _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.catalog.EditorCatalog>? =
             null,
-    ): skirout.editor.v1.catalog.EditorCatalogWireSnapshot_OrMutable {
+    ): skirout.editor.v1.catalog.EditorCatalog_OrMutable {
         /** Returns a deeply immutable copy of this instance */
-        override fun toFrozen() = skirout.editor.v1.catalog.EditorCatalogWireSnapshot(
+        override fun toFrozen() = skirout.editor.v1.catalog.EditorCatalog(
             generation = this.generation,
             types = this.types,
             relations = this.relations,
@@ -3622,7 +3623,7 @@ class EditorCatalogWireSnapshot private constructor(
 
     companion object {
         private val default =
-            skirout.editor.v1.catalog.EditorCatalogWireSnapshot(
+            skirout.editor.v1.catalog.EditorCatalog(
                 skirout.editor.v1.type_catalog.CatalogGeneration.partial(),
                 build.skir.internal.emptyFrozenList<skirout.editor.v1.catalog.PublishedType>(),
                 build.skir.internal.emptyFrozenList<skirout.editor.v1.catalog.RelationContract>(),
@@ -3643,7 +3644,7 @@ class EditorCatalogWireSnapshot private constructor(
         fun partial() = default;
 
         /**
-         * Creates a new instance of [EditorCatalogWireSnapshot].
+         * Creates a new instance of [EditorCatalog].
          * Unlike the constructor, does not require all fields to be specified.
          * Missing fields will be set to their default values.
          */
@@ -3678,7 +3679,7 @@ class EditorCatalogWireSnapshot private constructor(
                 build.skir.internal.emptyFrozenList<skirout.editor.v1.operation.ResourceOperationDefinition>(),
             realmRoot: skirout.editor.v1.type_catalog.TypeDefinitionId_OrMutable =
                 skirout.editor.v1.type_catalog.TypeDefinitionId.partial(),
-        ) = skirout.editor.v1.catalog.EditorCatalogWireSnapshot(
+        ) = skirout.editor.v1.catalog.EditorCatalog(
             generation = generation,
             types = types,
             relations = relations,
@@ -3696,404 +3697,16 @@ class EditorCatalogWireSnapshot private constructor(
             _unrecognizedFields = null,
         );
 
-        /** Serializer for [EditorCatalogWireSnapshot] instances. */
-        val serializer get() = _SerializerRegistry.EditorCatalogWireSnapshotSerializer;
+        /** Serializer for [EditorCatalog] instances. */
+        val serializer get() = _SerializerRegistry.EditorCatalogSerializer;
 
-        /** Describes the [EditorCatalogWireSnapshot] type. Provides runtime introspection capabilities. */
-        val typeDescriptor get() = _SerializerRegistry.EditorCatalogWireSnapshotSerializerImpl.typeDescriptor;
-    }
-}
-
-sealed interface CatalogTransferChunk_OrMutable {
-    val generation: skirout.editor.v1.type_catalog.CatalogGeneration_OrMutable;
-    val transfer: skirout.kernel.v1.bounded_transfer.BoundedTransferChunk_OrMutable;
-
-    fun toFrozen(): skirout.editor.v1.catalog.CatalogTransferChunk;
-}
-
-/** Deeply immutable. */
-@kotlin.Suppress("UNUSED_PARAMETER")
-class CatalogTransferChunk private constructor(
-    override val generation: skirout.editor.v1.type_catalog.CatalogGeneration,
-    override val transfer: skirout.kernel.v1.bounded_transfer.BoundedTransferChunk,
-    internal val _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.catalog.CatalogTransferChunk>? =
-        null,
-): skirout.editor.v1.catalog.CatalogTransferChunk_OrMutable {
-    constructor(
-        _mustNameArguments: _MustNameArguments =
-            _MustNameArguments,
-        generation: skirout.editor.v1.type_catalog.CatalogGeneration_OrMutable,
-        transfer: skirout.kernel.v1.bounded_transfer.BoundedTransferChunk_OrMutable,
-        _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.catalog.CatalogTransferChunk>? =
-            null,
-    ): this(
-        generation.toFrozen(),
-        transfer.toFrozen(),
-        _unrecognizedFields,
-    ) {}
-
-    @kotlin.Deprecated("Already frozen", kotlin.ReplaceWith("this"))
-    override fun toFrozen() = this;
-
-    /** Returns a mutable shallow copy of this instance */
-    fun toMutable() = Mutable(
-        generation = this.generation,
-        transfer = this.transfer,
-    );
-
-    /** Returns a shallow copy of this instance with the specified fields replaced. */
-    fun copy(
-        _mustNameArguments: _MustNameArguments =
-            _MustNameArguments,
-        generation: skirout.editor.v1.type_catalog.CatalogGeneration_OrMutable =
-            this.generation,
-        transfer: skirout.kernel.v1.bounded_transfer.BoundedTransferChunk_OrMutable =
-            this.transfer,
-    ) = skirout.editor.v1.catalog.CatalogTransferChunk(
-        generation.toFrozen(),
-        transfer.toFrozen(),
-        this._unrecognizedFields,
-    );
-
-    @kotlin.Deprecated("No point in creating an exact copy of an immutable object", kotlin.ReplaceWith("this"))
-    fun copy() = this;
-
-    override fun equals(other: kotlin.Any?): kotlin.Boolean {
-        return this === other || (other is skirout.editor.v1.catalog.CatalogTransferChunk && this.generation == other.generation && this.transfer == other.transfer);
-    }
-
-    override fun hashCode(): kotlin.Int {
-        return kotlin.collections.listOf<kotlin.Any?>(this.generation, this.transfer).hashCode();
-    }
-
-    override fun toString(): kotlin.String {
-        return build.skir.internal.toStringImpl(
-            this,
-            _SerializerRegistry.CatalogTransferChunkSerializerImpl,
-        )
-    }
-
-    /** Mutable version of [CatalogTransferChunk]. */
-    class Mutable internal constructor(
-        _mustNameArguments: _MustNameArguments =
-            _MustNameArguments,
-        override var generation: skirout.editor.v1.type_catalog.CatalogGeneration_OrMutable =
-            skirout.editor.v1.type_catalog.CatalogGeneration.partial(),
-        override var transfer: skirout.kernel.v1.bounded_transfer.BoundedTransferChunk_OrMutable =
-            skirout.kernel.v1.bounded_transfer.BoundedTransferChunk.partial(),
-        internal var _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.catalog.CatalogTransferChunk>? =
-            null,
-    ): skirout.editor.v1.catalog.CatalogTransferChunk_OrMutable {
-        /** Returns a deeply immutable copy of this instance */
-        override fun toFrozen() = skirout.editor.v1.catalog.CatalogTransferChunk(
-            generation = this.generation,
-            transfer = this.transfer,
-            _unrecognizedFields = this._unrecognizedFields,
-        );
-
-        /**
-         * If the value of [generation] is already mutable, returns it as-is.
-         * Otherwise, makes a mutable copy, assigns it back to [generation] and returns it.
-         */
-        val mutableGeneration: skirout.editor.v1.type_catalog.CatalogGeneration.Mutable get() {
-            var value = this.generation;
-            return when (value) {
-                is skirout.editor.v1.type_catalog.CatalogGeneration -> {
-                    value = value.toMutable();
-                    this.generation = value;
-                    return value;
-                }
-                is skirout.editor.v1.type_catalog.CatalogGeneration.Mutable -> value;
-            }
-        }
-
-        /**
-         * If the value of [transfer] is already mutable, returns it as-is.
-         * Otherwise, makes a mutable copy, assigns it back to [transfer] and returns it.
-         */
-        val mutableTransfer: skirout.kernel.v1.bounded_transfer.BoundedTransferChunk.Mutable get() {
-            var value = this.transfer;
-            return when (value) {
-                is skirout.kernel.v1.bounded_transfer.BoundedTransferChunk -> {
-                    value = value.toMutable();
-                    this.transfer = value;
-                    return value;
-                }
-                is skirout.kernel.v1.bounded_transfer.BoundedTransferChunk.Mutable -> value;
-            }
-        }
-    }
-
-    companion object {
-        private val default =
-            skirout.editor.v1.catalog.CatalogTransferChunk(
-                skirout.editor.v1.type_catalog.CatalogGeneration.partial(),
-                skirout.kernel.v1.bounded_transfer.BoundedTransferChunk.partial(),
-            );
-
-        /** Returns an instance with all fields set to their default values. */
-        fun partial() = default;
-
-        /**
-         * Creates a new instance of [CatalogTransferChunk].
-         * Unlike the constructor, does not require all fields to be specified.
-         * Missing fields will be set to their default values.
-         */
-        fun partial(
-            _mustNameArguments: _MustNameArguments =
-                _MustNameArguments,
-            generation: skirout.editor.v1.type_catalog.CatalogGeneration_OrMutable =
-                skirout.editor.v1.type_catalog.CatalogGeneration.partial(),
-            transfer: skirout.kernel.v1.bounded_transfer.BoundedTransferChunk_OrMutable =
-                skirout.kernel.v1.bounded_transfer.BoundedTransferChunk.partial(),
-        ) = skirout.editor.v1.catalog.CatalogTransferChunk(
-            generation = generation,
-            transfer = transfer,
-            _unrecognizedFields = null,
-        );
-
-        /** Serializer for [CatalogTransferChunk] instances. */
-        val serializer get() = _SerializerRegistry.CatalogTransferChunkSerializer;
-
-        /** Describes the [CatalogTransferChunk] type. Provides runtime introspection capabilities. */
-        val typeDescriptor get() = _SerializerRegistry.CatalogTransferChunkSerializerImpl.typeDescriptor;
-    }
-}
-
-/** Deeply immutable. */
-sealed class CatalogUnavailableReason private constructor() {
-    /** The kind of variant held by a `CatalogUnavailableReason`. */
-    enum class Kind {
-        UNKNOWN,
-        ENCODED_SIZE_LIMIT_CONST,
-    }
-
-    class Unknown @kotlin.Deprecated("For internal use", kotlin.ReplaceWith("skirout.editor.v1.catalog.CatalogUnavailableReason.UNKNOWN")) internal constructor(
-        internal val _kind: Kind,
-        internal override val _unrecognized: _UnrecognizedVariant<skirout.editor.v1.catalog.CatalogUnavailableReason>?,
-    ) : skirout.editor.v1.catalog.CatalogUnavailableReason() {
-        override val kind get() = _kind;
-
-        override fun equals(other: kotlin.Any?): kotlin.Boolean {
-            return other is skirout.editor.v1.catalog.CatalogUnavailableReason && other.kind == kind;
-        }
-
-        override fun hashCode(): kotlin.Int {
-            return kind.ordinal;
-        }
-    }
-
-    object ENCODED_SIZE_LIMIT : skirout.editor.v1.catalog.CatalogUnavailableReason() {
-        override val kind get() = Kind.ENCODED_SIZE_LIMIT_CONST;
-
-        override fun equals(other: kotlin.Any?): kotlin.Boolean {
-            return other is skirout.editor.v1.catalog.CatalogUnavailableReason && other.kind == Kind.ENCODED_SIZE_LIMIT_CONST;
-        }
-
-        override fun hashCode(): kotlin.Int {
-            return Kind.ENCODED_SIZE_LIMIT_CONST.ordinal;
-        }
-    }
-
-    internal open val _unrecognized: _UnrecognizedVariant<skirout.editor.v1.catalog.CatalogUnavailableReason>? get() = null;
-
-    abstract val kind: Kind;
-
-    override fun toString(): kotlin.String {
-        return build.skir.internal.toStringImpl(
-            this,
-            _SerializerRegistry.CatalogUnavailableReasonSerializerImpl,
-        )
-    }
-
-    companion object {
-        /**
-         * Constant indicating an unknown [CatalogUnavailableReason].
-         * Default value for fields of type [CatalogUnavailableReason].
-         */
-        val UNKNOWN = @kotlin.Suppress("DEPRECATION") Unknown(Kind.UNKNOWN, null);
-
-        /** Serializer for [CatalogUnavailableReason] instances. */
-        val serializer get() = _SerializerRegistry.CatalogUnavailableReasonSerializer;
-
-        /** Describes the [CatalogUnavailableReason] type. Provides runtime introspection capabilities. */
-        val typeDescriptor get() = _SerializerRegistry.CatalogUnavailableReasonSerializerImpl.typeDescriptor;
-    }
-}
-
-sealed interface CatalogUnavailable_OrMutable {
-    val generation: skirout.editor.v1.type_catalog.CatalogGeneration_OrMutable;
-    val reason: skirout.editor.v1.catalog.CatalogUnavailableReason;
-    val encodedSize: kotlin.Long;
-    val maxEncodedSize: kotlin.Long;
-
-    fun toFrozen(): skirout.editor.v1.catalog.CatalogUnavailable;
-}
-
-/** Deeply immutable. */
-@kotlin.Suppress("UNUSED_PARAMETER")
-class CatalogUnavailable private constructor(
-    override val generation: skirout.editor.v1.type_catalog.CatalogGeneration,
-    override val reason: skirout.editor.v1.catalog.CatalogUnavailableReason,
-    override val encodedSize: kotlin.Long,
-    override val maxEncodedSize: kotlin.Long,
-    internal val _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.catalog.CatalogUnavailable>? =
-        null,
-): skirout.editor.v1.catalog.CatalogUnavailable_OrMutable {
-    constructor(
-        _mustNameArguments: _MustNameArguments =
-            _MustNameArguments,
-        generation: skirout.editor.v1.type_catalog.CatalogGeneration_OrMutable,
-        reason: skirout.editor.v1.catalog.CatalogUnavailableReason,
-        encodedSize: kotlin.Long,
-        maxEncodedSize: kotlin.Long,
-        _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.catalog.CatalogUnavailable>? =
-            null,
-    ): this(
-        generation.toFrozen(),
-        reason,
-        encodedSize,
-        maxEncodedSize,
-        _unrecognizedFields,
-    ) {}
-
-    @kotlin.Deprecated("Already frozen", kotlin.ReplaceWith("this"))
-    override fun toFrozen() = this;
-
-    /** Returns a mutable shallow copy of this instance */
-    fun toMutable() = Mutable(
-        generation = this.generation,
-        reason = this.reason,
-        encodedSize = this.encodedSize,
-        maxEncodedSize = this.maxEncodedSize,
-    );
-
-    /** Returns a shallow copy of this instance with the specified fields replaced. */
-    fun copy(
-        _mustNameArguments: _MustNameArguments =
-            _MustNameArguments,
-        generation: skirout.editor.v1.type_catalog.CatalogGeneration_OrMutable =
-            this.generation,
-        reason: skirout.editor.v1.catalog.CatalogUnavailableReason =
-            this.reason,
-        encodedSize: kotlin.Long =
-            this.encodedSize,
-        maxEncodedSize: kotlin.Long =
-            this.maxEncodedSize,
-    ) = skirout.editor.v1.catalog.CatalogUnavailable(
-        generation.toFrozen(),
-        reason,
-        encodedSize,
-        maxEncodedSize,
-        this._unrecognizedFields,
-    );
-
-    @kotlin.Deprecated("No point in creating an exact copy of an immutable object", kotlin.ReplaceWith("this"))
-    fun copy() = this;
-
-    override fun equals(other: kotlin.Any?): kotlin.Boolean {
-        return this === other || (other is skirout.editor.v1.catalog.CatalogUnavailable && this.generation == other.generation && this.reason == other.reason && this.encodedSize == other.encodedSize && this.maxEncodedSize == other.maxEncodedSize);
-    }
-
-    override fun hashCode(): kotlin.Int {
-        return kotlin.collections.listOf<kotlin.Any?>(this.generation, this.reason, this.encodedSize, this.maxEncodedSize).hashCode();
-    }
-
-    override fun toString(): kotlin.String {
-        return build.skir.internal.toStringImpl(
-            this,
-            _SerializerRegistry.CatalogUnavailableSerializerImpl,
-        )
-    }
-
-    /** Mutable version of [CatalogUnavailable]. */
-    class Mutable internal constructor(
-        _mustNameArguments: _MustNameArguments =
-            _MustNameArguments,
-        override var generation: skirout.editor.v1.type_catalog.CatalogGeneration_OrMutable =
-            skirout.editor.v1.type_catalog.CatalogGeneration.partial(),
-        override var reason: skirout.editor.v1.catalog.CatalogUnavailableReason =
-            skirout.editor.v1.catalog.CatalogUnavailableReason.UNKNOWN,
-        override var encodedSize: kotlin.Long =
-            0L,
-        override var maxEncodedSize: kotlin.Long =
-            0L,
-        internal var _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.catalog.CatalogUnavailable>? =
-            null,
-    ): skirout.editor.v1.catalog.CatalogUnavailable_OrMutable {
-        /** Returns a deeply immutable copy of this instance */
-        override fun toFrozen() = skirout.editor.v1.catalog.CatalogUnavailable(
-            generation = this.generation,
-            reason = this.reason,
-            encodedSize = this.encodedSize,
-            maxEncodedSize = this.maxEncodedSize,
-            _unrecognizedFields = this._unrecognizedFields,
-        );
-
-        /**
-         * If the value of [generation] is already mutable, returns it as-is.
-         * Otherwise, makes a mutable copy, assigns it back to [generation] and returns it.
-         */
-        val mutableGeneration: skirout.editor.v1.type_catalog.CatalogGeneration.Mutable get() {
-            var value = this.generation;
-            return when (value) {
-                is skirout.editor.v1.type_catalog.CatalogGeneration -> {
-                    value = value.toMutable();
-                    this.generation = value;
-                    return value;
-                }
-                is skirout.editor.v1.type_catalog.CatalogGeneration.Mutable -> value;
-            }
-        }
-    }
-
-    companion object {
-        private val default =
-            skirout.editor.v1.catalog.CatalogUnavailable(
-                skirout.editor.v1.type_catalog.CatalogGeneration.partial(),
-                skirout.editor.v1.catalog.CatalogUnavailableReason.UNKNOWN,
-                0L,
-                0L,
-            );
-
-        /** Returns an instance with all fields set to their default values. */
-        fun partial() = default;
-
-        /**
-         * Creates a new instance of [CatalogUnavailable].
-         * Unlike the constructor, does not require all fields to be specified.
-         * Missing fields will be set to their default values.
-         */
-        fun partial(
-            _mustNameArguments: _MustNameArguments =
-                _MustNameArguments,
-            generation: skirout.editor.v1.type_catalog.CatalogGeneration_OrMutable =
-                skirout.editor.v1.type_catalog.CatalogGeneration.partial(),
-            reason: skirout.editor.v1.catalog.CatalogUnavailableReason =
-                skirout.editor.v1.catalog.CatalogUnavailableReason.UNKNOWN,
-            encodedSize: kotlin.Long =
-                0L,
-            maxEncodedSize: kotlin.Long =
-                0L,
-        ) = skirout.editor.v1.catalog.CatalogUnavailable(
-            generation = generation,
-            reason = reason,
-            encodedSize = encodedSize,
-            maxEncodedSize = maxEncodedSize,
-            _unrecognizedFields = null,
-        );
-
-        /** Serializer for [CatalogUnavailable] instances. */
-        val serializer get() = _SerializerRegistry.CatalogUnavailableSerializer;
-
-        /** Describes the [CatalogUnavailable] type. Provides runtime introspection capabilities. */
-        val typeDescriptor get() = _SerializerRegistry.CatalogUnavailableSerializerImpl.typeDescriptor;
+        /** Describes the [EditorCatalog] type. Provides runtime introspection capabilities. */
+        val typeDescriptor get() = _SerializerRegistry.EditorCatalogSerializerImpl.typeDescriptor;
     }
 }
 
 sealed interface CatalogFetchRequest_OrMutable {
     val expectedGeneration: skirout.editor.v1.type_catalog.CatalogGeneration_OrMutable?;
-    val transferId: kotlin.String;
 
     fun toFrozen(): skirout.editor.v1.catalog.CatalogFetchRequest;
 }
@@ -4102,7 +3715,6 @@ sealed interface CatalogFetchRequest_OrMutable {
 @kotlin.Suppress("UNUSED_PARAMETER")
 class CatalogFetchRequest private constructor(
     override val expectedGeneration: skirout.editor.v1.type_catalog.CatalogGeneration?,
-    override val transferId: kotlin.String,
     internal val _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.catalog.CatalogFetchRequest>? =
         null,
 ): skirout.editor.v1.catalog.CatalogFetchRequest_OrMutable {
@@ -4110,12 +3722,10 @@ class CatalogFetchRequest private constructor(
         _mustNameArguments: _MustNameArguments =
             _MustNameArguments,
         expectedGeneration: skirout.editor.v1.type_catalog.CatalogGeneration_OrMutable?,
-        transferId: kotlin.String,
         _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.catalog.CatalogFetchRequest>? =
             null,
     ): this(
         if (expectedGeneration != null) expectedGeneration.toFrozen() else null,
-        transferId,
         _unrecognizedFields,
     ) {}
 
@@ -4125,7 +3735,6 @@ class CatalogFetchRequest private constructor(
     /** Returns a mutable shallow copy of this instance */
     fun toMutable() = Mutable(
         expectedGeneration = this.expectedGeneration,
-        transferId = this.transferId,
     );
 
     /** Returns a shallow copy of this instance with the specified fields replaced. */
@@ -4134,11 +3743,8 @@ class CatalogFetchRequest private constructor(
             _MustNameArguments,
         expectedGeneration: skirout.editor.v1.type_catalog.CatalogGeneration_OrMutable? =
             this.expectedGeneration,
-        transferId: kotlin.String =
-            this.transferId,
     ) = skirout.editor.v1.catalog.CatalogFetchRequest(
         if (expectedGeneration != null) expectedGeneration.toFrozen() else null,
-        transferId,
         this._unrecognizedFields,
     );
 
@@ -4146,11 +3752,11 @@ class CatalogFetchRequest private constructor(
     fun copy() = this;
 
     override fun equals(other: kotlin.Any?): kotlin.Boolean {
-        return this === other || (other is skirout.editor.v1.catalog.CatalogFetchRequest && this.expectedGeneration == other.expectedGeneration && this.transferId == other.transferId);
+        return this === other || (other is skirout.editor.v1.catalog.CatalogFetchRequest && this.expectedGeneration == other.expectedGeneration);
     }
 
     override fun hashCode(): kotlin.Int {
-        return kotlin.collections.listOf<kotlin.Any?>(this.expectedGeneration, this.transferId).hashCode();
+        return kotlin.collections.listOf<kotlin.Any?>(this.expectedGeneration).hashCode();
     }
 
     override fun toString(): kotlin.String {
@@ -4166,15 +3772,12 @@ class CatalogFetchRequest private constructor(
             _MustNameArguments,
         override var expectedGeneration: skirout.editor.v1.type_catalog.CatalogGeneration_OrMutable? =
             null,
-        override var transferId: kotlin.String =
-            "",
         internal var _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.catalog.CatalogFetchRequest>? =
             null,
     ): skirout.editor.v1.catalog.CatalogFetchRequest_OrMutable {
         /** Returns a deeply immutable copy of this instance */
         override fun toFrozen() = skirout.editor.v1.catalog.CatalogFetchRequest(
             expectedGeneration = this.expectedGeneration,
-            transferId = this.transferId,
             _unrecognizedFields = this._unrecognizedFields,
         );
     }
@@ -4183,7 +3786,6 @@ class CatalogFetchRequest private constructor(
         private val default =
             skirout.editor.v1.catalog.CatalogFetchRequest(
                 null,
-                "",
             );
 
         /** Returns an instance with all fields set to their default values. */
@@ -4199,11 +3801,8 @@ class CatalogFetchRequest private constructor(
                 _MustNameArguments,
             expectedGeneration: skirout.editor.v1.type_catalog.CatalogGeneration_OrMutable? =
                 null,
-            transferId: kotlin.String =
-                "",
         ) = skirout.editor.v1.catalog.CatalogFetchRequest(
             expectedGeneration = expectedGeneration,
-            transferId = transferId,
             _unrecognizedFields = null,
         );
 
@@ -4215,14 +3814,17 @@ class CatalogFetchRequest private constructor(
     }
 }
 
-/** Deeply immutable. */
+/**
+ * The installed catalog, or its actual generation when it differs from the expected one.
+ *
+ * Deeply immutable.
+ */
 sealed class CatalogFetchResult private constructor() {
     /** The kind of variant held by a `CatalogFetchResult`. */
     enum class Kind {
         UNKNOWN,
-        CHUNK_WRAPPER,
-        GENERATION_CHANGED_WRAPPER,
-        UNAVAILABLE_WRAPPER,
+        CATALOG_WRAPPER,
+        GENERATION_CHANGED_ERROR_WRAPPER,
         INTERNAL_ERROR_WRAPPER,
     }
 
@@ -4241,57 +3843,39 @@ sealed class CatalogFetchResult private constructor() {
         }
     }
 
-    class ChunkWrapper private constructor (
-        val value: skirout.editor.v1.catalog.CatalogTransferChunk,
+    class CatalogWrapper private constructor (
+        val value: skirout.editor.v1.catalog.EditorCatalog,
     ) : skirout.editor.v1.catalog.CatalogFetchResult() {
         constructor(
-            value: skirout.editor.v1.catalog.CatalogTransferChunk_OrMutable,
+            value: skirout.editor.v1.catalog.EditorCatalog_OrMutable,
         ): this(value.toFrozen()) {}
 
-        override val kind get() = Kind.CHUNK_WRAPPER;
+        override val kind get() = Kind.CATALOG_WRAPPER;
 
         override fun equals(other: kotlin.Any?): kotlin.Boolean {
-            return other is skirout.editor.v1.catalog.CatalogFetchResult.ChunkWrapper && value == other.value;
+            return other is skirout.editor.v1.catalog.CatalogFetchResult.CatalogWrapper && value == other.value;
         }
 
         override fun hashCode(): kotlin.Int {
-            return this.value.hashCode() + 94642797;
+            return this.value.hashCode() + 555704345;
         }
     }
 
-    class GenerationChangedWrapper private constructor (
+    class GenerationChangedErrorWrapper private constructor (
         val value: skirout.editor.v1.type_catalog.CatalogGeneration,
     ) : skirout.editor.v1.catalog.CatalogFetchResult() {
         constructor(
             value: skirout.editor.v1.type_catalog.CatalogGeneration_OrMutable,
         ): this(value.toFrozen()) {}
 
-        override val kind get() = Kind.GENERATION_CHANGED_WRAPPER;
+        override val kind get() = Kind.GENERATION_CHANGED_ERROR_WRAPPER;
 
         override fun equals(other: kotlin.Any?): kotlin.Boolean {
-            return other is skirout.editor.v1.catalog.CatalogFetchResult.GenerationChangedWrapper && value == other.value;
+            return other is skirout.editor.v1.catalog.CatalogFetchResult.GenerationChangedErrorWrapper && value == other.value;
         }
 
         override fun hashCode(): kotlin.Int {
-            return this.value.hashCode() + 646257293;
-        }
-    }
-
-    class UnavailableWrapper private constructor (
-        val value: skirout.editor.v1.catalog.CatalogUnavailable,
-    ) : skirout.editor.v1.catalog.CatalogFetchResult() {
-        constructor(
-            value: skirout.editor.v1.catalog.CatalogUnavailable_OrMutable,
-        ): this(value.toFrozen()) {}
-
-        override val kind get() = Kind.UNAVAILABLE_WRAPPER;
-
-        override fun equals(other: kotlin.Any?): kotlin.Boolean {
-            return other is skirout.editor.v1.catalog.CatalogFetchResult.UnavailableWrapper && value == other.value;
-        }
-
-        override fun hashCode(): kotlin.Int {
-            return this.value.hashCode() + -665462704;
+            return this.value.hashCode() + -1686539818;
         }
     }
 
@@ -4331,47 +3915,53 @@ sealed class CatalogFetchResult private constructor() {
          */
         val UNKNOWN = @kotlin.Suppress("DEPRECATION") Unknown(Kind.UNKNOWN, null);
 
-        /** Shortcut for `ChunkWrapper(skirout.editor.v1.catalog.CatalogTransferChunk(...))`. */
+        /** Shortcut for `CatalogWrapper(skirout.editor.v1.catalog.EditorCatalog(...))`. */
         @kotlin.Suppress("UNUSED_PARAMETER")
-        fun createChunk(
+        fun createCatalog(
             _mustNameArguments: _MustNameArguments =
                 _MustNameArguments,
             generation: skirout.editor.v1.type_catalog.CatalogGeneration_OrMutable,
-            transfer: skirout.kernel.v1.bounded_transfer.BoundedTransferChunk_OrMutable,
-        ) = ChunkWrapper(
-            skirout.editor.v1.catalog.CatalogTransferChunk(
+            types: kotlin.collections.Iterable<skirout.editor.v1.catalog.PublishedType_OrMutable>,
+            relations: kotlin.collections.Iterable<skirout.editor.v1.catalog.RelationContract_OrMutable>,
+            resourceDisplays: kotlin.collections.Iterable<skirout.editor.v1.catalog.ResourceDisplayFormulas_OrMutable>,
+            presentations: kotlin.collections.Iterable<skirout.editor.v1.catalog.PresentationDescriptor_OrMutable>,
+            presentationMaterials: kotlin.collections.Iterable<skirout.editor.v1.catalog.PresentationMaterial_OrMutable>,
+            configuration: kotlin.collections.Iterable<skirout.editor.v1.catalog.ConfigurationRecipe_OrMutable>,
+            diagnostics: kotlin.collections.Iterable<skirout.editor.v1.diagnostic.DeclarationDiagnostic_OrMutable>,
+            endpointBindings: kotlin.collections.Iterable<skirout.editor.v1.catalog.EndpointBindingTemplate_OrMutable>,
+            capabilities: kotlin.collections.Iterable<skirout.editor.v1.capability.CapabilityDefinition>,
+            recommendations: kotlin.collections.Iterable<skirout.editor.v1.catalog.TypeRecommendation_OrMutable>,
+            roleFallbacks: kotlin.collections.Iterable<skirout.editor.v1.catalog.RoleFallback_OrMutable>,
+            resourceOperations: kotlin.collections.Iterable<skirout.editor.v1.operation.ResourceOperationDefinition_OrMutable>,
+            realmRoot: skirout.editor.v1.type_catalog.TypeDefinitionId_OrMutable,
+        ) = CatalogWrapper(
+            skirout.editor.v1.catalog.EditorCatalog(
                 generation = generation,
-                transfer = transfer,
+                types = types,
+                relations = relations,
+                resourceDisplays = resourceDisplays,
+                presentations = presentations,
+                presentationMaterials = presentationMaterials,
+                configuration = configuration,
+                diagnostics = diagnostics,
+                endpointBindings = endpointBindings,
+                capabilities = capabilities,
+                recommendations = recommendations,
+                roleFallbacks = roleFallbacks,
+                resourceOperations = resourceOperations,
+                realmRoot = realmRoot,
             )
         );
 
-        /** Shortcut for `GenerationChangedWrapper(skirout.editor.v1.type_catalog.CatalogGeneration(...))`. */
+        /** Shortcut for `GenerationChangedErrorWrapper(skirout.editor.v1.type_catalog.CatalogGeneration(...))`. */
         @kotlin.Suppress("UNUSED_PARAMETER")
-        fun createGenerationChanged(
+        fun createGenerationChangedError(
             _mustNameArguments: _MustNameArguments =
                 _MustNameArguments,
             value: kotlin.String,
-        ) = GenerationChangedWrapper(
+        ) = GenerationChangedErrorWrapper(
             skirout.editor.v1.type_catalog.CatalogGeneration(
                 value = value,
-            )
-        );
-
-        /** Shortcut for `UnavailableWrapper(skirout.editor.v1.catalog.CatalogUnavailable(...))`. */
-        @kotlin.Suppress("UNUSED_PARAMETER")
-        fun createUnavailable(
-            _mustNameArguments: _MustNameArguments =
-                _MustNameArguments,
-            generation: skirout.editor.v1.type_catalog.CatalogGeneration_OrMutable,
-            reason: skirout.editor.v1.catalog.CatalogUnavailableReason,
-            encodedSize: kotlin.Long,
-            maxEncodedSize: kotlin.Long,
-        ) = UnavailableWrapper(
-            skirout.editor.v1.catalog.CatalogUnavailable(
-                generation = generation,
-                reason = reason,
-                encodedSize = encodedSize,
-                maxEncodedSize = maxEncodedSize,
             )
         );
 
@@ -6623,7 +6213,7 @@ private object _SerializerRegistry {
     val CatalogFetchResultSerializerImpl =
         build.skir.internal.EnumSerializer.create<skirout.editor.v1.catalog.CatalogFetchResult, skirout.editor.v1.catalog.CatalogFetchResult.Unknown>(
             recordId = "editor/v1/catalog.skir:CatalogFetchResult",
-            doc = "",
+            doc = "The installed catalog, or its actual generation when it differs from the expected one.",
             getKindOrdinal = { it.kind.ordinal },
             kindCount = skirout.editor.v1.catalog.CatalogFetchResult.Kind.values().size,
             unknownInstance = skirout.editor.v1.catalog.CatalogFetchResult.UNKNOWN,
@@ -6644,43 +6234,6 @@ private object _SerializerRegistry {
     );
 
     val CatalogInvalidatedSerializer = build.skir.internal.makeSerializer(CatalogInvalidatedSerializerImpl);
-
-    val CatalogTransferChunkSerializerImpl = build.skir.internal.StructSerializer(
-        recordId = "editor/v1/catalog.skir:CatalogTransferChunk",
-        doc = "",
-        defaultInstance = skirout.editor.v1.catalog.CatalogTransferChunk.partial(),
-        newMutableFn = { it?.toMutable() ?: skirout.editor.v1.catalog.CatalogTransferChunk.Mutable() },
-        toFrozenFn = { it.toFrozen() },
-        getUnrecognizedFields = { it._unrecognizedFields },
-        setUnrecognizedFields = { m, u -> m._unrecognizedFields = u },
-    );
-
-    val CatalogTransferChunkSerializer = build.skir.internal.makeSerializer(CatalogTransferChunkSerializerImpl);
-
-    val CatalogUnavailableSerializerImpl = build.skir.internal.StructSerializer(
-        recordId = "editor/v1/catalog.skir:CatalogUnavailable",
-        doc = "",
-        defaultInstance = skirout.editor.v1.catalog.CatalogUnavailable.partial(),
-        newMutableFn = { it?.toMutable() ?: skirout.editor.v1.catalog.CatalogUnavailable.Mutable() },
-        toFrozenFn = { it.toFrozen() },
-        getUnrecognizedFields = { it._unrecognizedFields },
-        setUnrecognizedFields = { m, u -> m._unrecognizedFields = u },
-    );
-
-    val CatalogUnavailableSerializer = build.skir.internal.makeSerializer(CatalogUnavailableSerializerImpl);
-
-    val CatalogUnavailableReasonSerializerImpl =
-        build.skir.internal.EnumSerializer.create<skirout.editor.v1.catalog.CatalogUnavailableReason, skirout.editor.v1.catalog.CatalogUnavailableReason.Unknown>(
-            recordId = "editor/v1/catalog.skir:CatalogUnavailableReason",
-            doc = "",
-            getKindOrdinal = { it.kind.ordinal },
-            kindCount = skirout.editor.v1.catalog.CatalogUnavailableReason.Kind.values().size,
-            unknownInstance = skirout.editor.v1.catalog.CatalogUnavailableReason.UNKNOWN,
-            wrapUnrecognized = { @kotlin.Suppress("DEPRECATION") skirout.editor.v1.catalog.CatalogUnavailableReason.Unknown(skirout.editor.v1.catalog.CatalogUnavailableReason.Kind.UNKNOWN, it) },
-            getUnrecognized = { it._unrecognized },
-        );
-
-    val CatalogUnavailableReasonSerializer = build.skir.internal.makeSerializer(CatalogUnavailableReasonSerializerImpl);
 
     val ConfigurationRecipeSerializerImpl = build.skir.internal.StructSerializer(
         recordId = "editor/v1/catalog.skir:ConfigurationRecipe",
@@ -6707,17 +6260,17 @@ private object _SerializerRegistry {
 
     val DeclarationStatusSerializer = build.skir.internal.makeSerializer(DeclarationStatusSerializerImpl);
 
-    val EditorCatalogWireSnapshotSerializerImpl = build.skir.internal.StructSerializer(
-        recordId = "editor/v1/catalog.skir:EditorCatalogWireSnapshot",
-        doc = "One coherent generation of authoring types, relations, presentations, capabilities, and operations.\nGeneration changes invalidate client assumptions across the whole snapshot; they are separate\nfrom saved resource observations and selected compiled publications.",
-        defaultInstance = skirout.editor.v1.catalog.EditorCatalogWireSnapshot.partial(),
-        newMutableFn = { it?.toMutable() ?: skirout.editor.v1.catalog.EditorCatalogWireSnapshot.Mutable() },
+    val EditorCatalogSerializerImpl = build.skir.internal.StructSerializer(
+        recordId = "editor/v1/catalog.skir:EditorCatalog",
+        doc = "The complete editor catalog of one installed generation: one coherent set of authoring types,\nrelations, presentations, capabilities, and operations. Generation changes invalidate client\nassumptions across the whole catalog; they are separate from saved resource observations and\nselected compiled publications.",
+        defaultInstance = skirout.editor.v1.catalog.EditorCatalog.partial(),
+        newMutableFn = { it?.toMutable() ?: skirout.editor.v1.catalog.EditorCatalog.Mutable() },
         toFrozenFn = { it.toFrozen() },
         getUnrecognizedFields = { it._unrecognizedFields },
         setUnrecognizedFields = { m, u -> m._unrecognizedFields = u },
     );
 
-    val EditorCatalogWireSnapshotSerializer = build.skir.internal.makeSerializer(EditorCatalogWireSnapshotSerializerImpl);
+    val EditorCatalogSerializer = build.skir.internal.makeSerializer(EditorCatalogSerializerImpl);
 
     val EffectiveFieldTemplateSerializerImpl = build.skir.internal.StructSerializer(
         recordId = "editor/v1/catalog.skir:EffectiveFieldTemplate",
@@ -7114,46 +6667,28 @@ private object _SerializerRegistry {
             { it.expectedGeneration },
             { mut, v -> mut.expectedGeneration = v },
         );
-        CatalogFetchRequestSerializerImpl.addField(
-            "transfer_id",
-            "transferId",
-            1,
-            build.skir.Serializers.string,
-            "",
-            { it.transferId },
-            { mut, v -> mut.transferId = v },
-        );
         CatalogFetchRequestSerializerImpl.finalizeStruct();
 
         CatalogFetchResultSerializerImpl.addWrapperVariant(
             1,
-            "chunk",
-            skirout.editor.v1.catalog.CatalogFetchResult.Kind.CHUNK_WRAPPER.ordinal,
-            _SerializerRegistry.CatalogTransferChunkSerializer,
+            "catalog",
+            skirout.editor.v1.catalog.CatalogFetchResult.Kind.CATALOG_WRAPPER.ordinal,
+            _SerializerRegistry.EditorCatalogSerializer,
             "",
-            { skirout.editor.v1.catalog.CatalogFetchResult.ChunkWrapper(it) },
+            { skirout.editor.v1.catalog.CatalogFetchResult.CatalogWrapper(it) },
             { it.value },
         );
         CatalogFetchResultSerializerImpl.addWrapperVariant(
             2,
-            "generation_changed",
-            skirout.editor.v1.catalog.CatalogFetchResult.Kind.GENERATION_CHANGED_WRAPPER.ordinal,
+            "generation_changed_error",
+            skirout.editor.v1.catalog.CatalogFetchResult.Kind.GENERATION_CHANGED_ERROR_WRAPPER.ordinal,
             skirout.editor.v1.type_catalog.CatalogGeneration.serializer,
             "",
-            { skirout.editor.v1.catalog.CatalogFetchResult.GenerationChangedWrapper(it) },
+            { skirout.editor.v1.catalog.CatalogFetchResult.GenerationChangedErrorWrapper(it) },
             { it.value },
         );
         CatalogFetchResultSerializerImpl.addWrapperVariant(
             3,
-            "unavailable",
-            skirout.editor.v1.catalog.CatalogFetchResult.Kind.UNAVAILABLE_WRAPPER.ordinal,
-            _SerializerRegistry.CatalogUnavailableSerializer,
-            "",
-            { skirout.editor.v1.catalog.CatalogFetchResult.UnavailableWrapper(it) },
-            { it.value },
-        );
-        CatalogFetchResultSerializerImpl.addWrapperVariant(
-            4,
             "internal_error",
             skirout.editor.v1.catalog.CatalogFetchResult.Kind.INTERNAL_ERROR_WRAPPER.ordinal,
             skirout.kernel.v1.errors.InternalError.serializer,
@@ -7173,73 +6708,6 @@ private object _SerializerRegistry {
             { mut, v -> mut.generation = v },
         );
         CatalogInvalidatedSerializerImpl.finalizeStruct();
-
-        CatalogTransferChunkSerializerImpl.addField(
-            "generation",
-            "generation",
-            0,
-            skirout.editor.v1.type_catalog.CatalogGeneration.serializer,
-            "",
-            { it.generation },
-            { mut, v -> mut.generation = v },
-        );
-        CatalogTransferChunkSerializerImpl.addField(
-            "transfer",
-            "transfer",
-            1,
-            skirout.kernel.v1.bounded_transfer.BoundedTransferChunk.serializer,
-            "",
-            { it.transfer },
-            { mut, v -> mut.transfer = v },
-        );
-        CatalogTransferChunkSerializerImpl.finalizeStruct();
-
-        CatalogUnavailableSerializerImpl.addField(
-            "generation",
-            "generation",
-            0,
-            skirout.editor.v1.type_catalog.CatalogGeneration.serializer,
-            "",
-            { it.generation },
-            { mut, v -> mut.generation = v },
-        );
-        CatalogUnavailableSerializerImpl.addField(
-            "reason",
-            "reason",
-            1,
-            _SerializerRegistry.CatalogUnavailableReasonSerializer,
-            "",
-            { it.reason },
-            { mut, v -> mut.reason = v },
-        );
-        CatalogUnavailableSerializerImpl.addField(
-            "encoded_size",
-            "encodedSize",
-            2,
-            build.skir.Serializers.int64,
-            "",
-            { it.encodedSize },
-            { mut, v -> mut.encodedSize = v },
-        );
-        CatalogUnavailableSerializerImpl.addField(
-            "max_encoded_size",
-            "maxEncodedSize",
-            3,
-            build.skir.Serializers.int64,
-            "",
-            { it.maxEncodedSize },
-            { mut, v -> mut.maxEncodedSize = v },
-        );
-        CatalogUnavailableSerializerImpl.finalizeStruct();
-
-        CatalogUnavailableReasonSerializerImpl.addConstantVariant(
-            1,
-            "encoded_size_limit",
-            skirout.editor.v1.catalog.CatalogUnavailableReason.Kind.ENCODED_SIZE_LIMIT_CONST.ordinal,
-            "",
-            skirout.editor.v1.catalog.CatalogUnavailableReason.ENCODED_SIZE_LIMIT,
-        );
-        CatalogUnavailableReasonSerializerImpl.finalizeEnum();
 
         ConfigurationRecipeSerializerImpl.addField(
             "origin",
@@ -7303,7 +6771,7 @@ private object _SerializerRegistry {
         );
         DeclarationStatusSerializerImpl.finalizeEnum();
 
-        EditorCatalogWireSnapshotSerializerImpl.addField(
+        EditorCatalogSerializerImpl.addField(
             "generation",
             "generation",
             0,
@@ -7312,7 +6780,7 @@ private object _SerializerRegistry {
             { it.generation },
             { mut, v -> mut.generation = v },
         );
-        EditorCatalogWireSnapshotSerializerImpl.addField(
+        EditorCatalogSerializerImpl.addField(
             "types",
             "types",
             1,
@@ -7323,7 +6791,7 @@ private object _SerializerRegistry {
             { it.types },
             { mut, v -> mut.types = v },
         );
-        EditorCatalogWireSnapshotSerializerImpl.addField(
+        EditorCatalogSerializerImpl.addField(
             "relations",
             "relations",
             2,
@@ -7334,7 +6802,7 @@ private object _SerializerRegistry {
             { it.relations },
             { mut, v -> mut.relations = v },
         );
-        EditorCatalogWireSnapshotSerializerImpl.addField(
+        EditorCatalogSerializerImpl.addField(
             "resource_displays",
             "resourceDisplays",
             3,
@@ -7345,7 +6813,7 @@ private object _SerializerRegistry {
             { it.resourceDisplays },
             { mut, v -> mut.resourceDisplays = v },
         );
-        EditorCatalogWireSnapshotSerializerImpl.addField(
+        EditorCatalogSerializerImpl.addField(
             "presentations",
             "presentations",
             4,
@@ -7356,7 +6824,7 @@ private object _SerializerRegistry {
             { it.presentations },
             { mut, v -> mut.presentations = v },
         );
-        EditorCatalogWireSnapshotSerializerImpl.addField(
+        EditorCatalogSerializerImpl.addField(
             "presentation_materials",
             "presentationMaterials",
             5,
@@ -7367,7 +6835,7 @@ private object _SerializerRegistry {
             { it.presentationMaterials },
             { mut, v -> mut.presentationMaterials = v },
         );
-        EditorCatalogWireSnapshotSerializerImpl.addField(
+        EditorCatalogSerializerImpl.addField(
             "configuration",
             "configuration",
             6,
@@ -7378,7 +6846,7 @@ private object _SerializerRegistry {
             { it.configuration },
             { mut, v -> mut.configuration = v },
         );
-        EditorCatalogWireSnapshotSerializerImpl.addField(
+        EditorCatalogSerializerImpl.addField(
             "diagnostics",
             "diagnostics",
             7,
@@ -7389,7 +6857,7 @@ private object _SerializerRegistry {
             { it.diagnostics },
             { mut, v -> mut.diagnostics = v },
         );
-        EditorCatalogWireSnapshotSerializerImpl.addField(
+        EditorCatalogSerializerImpl.addField(
             "endpoint_bindings",
             "endpointBindings",
             8,
@@ -7400,7 +6868,7 @@ private object _SerializerRegistry {
             { it.endpointBindings },
             { mut, v -> mut.endpointBindings = v },
         );
-        EditorCatalogWireSnapshotSerializerImpl.addField(
+        EditorCatalogSerializerImpl.addField(
             "capabilities",
             "capabilities",
             9,
@@ -7411,7 +6879,7 @@ private object _SerializerRegistry {
             { it.capabilities },
             { mut, v -> mut.capabilities = v },
         );
-        EditorCatalogWireSnapshotSerializerImpl.addField(
+        EditorCatalogSerializerImpl.addField(
             "recommendations",
             "recommendations",
             10,
@@ -7422,7 +6890,7 @@ private object _SerializerRegistry {
             { it.recommendations },
             { mut, v -> mut.recommendations = v },
         );
-        EditorCatalogWireSnapshotSerializerImpl.addField(
+        EditorCatalogSerializerImpl.addField(
             "role_fallbacks",
             "roleFallbacks",
             11,
@@ -7433,7 +6901,7 @@ private object _SerializerRegistry {
             { it.roleFallbacks },
             { mut, v -> mut.roleFallbacks = v },
         );
-        EditorCatalogWireSnapshotSerializerImpl.addField(
+        EditorCatalogSerializerImpl.addField(
             "resource_operations",
             "resourceOperations",
             12,
@@ -7444,7 +6912,7 @@ private object _SerializerRegistry {
             { it.resourceOperations },
             { mut, v -> mut.resourceOperations = v },
         );
-        EditorCatalogWireSnapshotSerializerImpl.addField(
+        EditorCatalogSerializerImpl.addField(
             "realm_root",
             "realmRoot",
             13,
@@ -7453,7 +6921,7 @@ private object _SerializerRegistry {
             { it.realmRoot },
             { mut, v -> mut.realmRoot = v },
         );
-        EditorCatalogWireSnapshotSerializerImpl.finalizeStruct();
+        EditorCatalogSerializerImpl.finalizeStruct();
 
         EffectiveFieldTemplateSerializerImpl.addField(
             "key",

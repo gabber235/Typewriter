@@ -18,7 +18,7 @@ function generated(generator: CodeGenerator<object>, input: CodeGenerator.Input<
 
 function methods(routes: readonly ResolvedRoute[]) {
   return routes.flatMap(({ flow }) =>
-    flow.kind === "unary" || flow.kind === "watch" || flow.kind === "bounded_watch" ? [flow.method] : [],
+    flow.kind === "unary" || flow.kind === "watch" ? [flow.method] : [],
   );
 }
 
@@ -26,7 +26,6 @@ function records(routes: readonly ResolvedRoute[]): RecordLocation[] {
   return routes.flatMap(({ flow }) => {
     switch (flow.kind) {
       case "unary":
-      case "bounded_watch":
         return [flow.method.request, flow.method.response];
       case "watch":
         return [flow.method.request, flow.method.response, flow.updates.payload];

@@ -697,131 +697,6 @@ class PublishedContent private constructor(
     }
 }
 
-sealed interface PublishedContentChunk_OrMutable {
-    val transfer: skirout.kernel.v1.bounded_transfer.BoundedTransferChunk_OrMutable;
-
-    fun toFrozen(): skirout.editor.v1.compiled_content.PublishedContentChunk;
-}
-
-/** Deeply immutable. */
-@kotlin.Suppress("UNUSED_PARAMETER")
-class PublishedContentChunk private constructor(
-    override val transfer: skirout.kernel.v1.bounded_transfer.BoundedTransferChunk,
-    internal val _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.compiled_content.PublishedContentChunk>? =
-        null,
-): skirout.editor.v1.compiled_content.PublishedContentChunk_OrMutable {
-    constructor(
-        _mustNameArguments: _MustNameArguments =
-            _MustNameArguments,
-        transfer: skirout.kernel.v1.bounded_transfer.BoundedTransferChunk_OrMutable,
-        _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.compiled_content.PublishedContentChunk>? =
-            null,
-    ): this(
-        transfer.toFrozen(),
-        _unrecognizedFields,
-    ) {}
-
-    @kotlin.Deprecated("Already frozen", kotlin.ReplaceWith("this"))
-    override fun toFrozen() = this;
-
-    /** Returns a mutable shallow copy of this instance */
-    fun toMutable() = Mutable(
-        transfer = this.transfer,
-    );
-
-    /** Returns a shallow copy of this instance with the specified fields replaced. */
-    fun copy(
-        _mustNameArguments: _MustNameArguments =
-            _MustNameArguments,
-        transfer: skirout.kernel.v1.bounded_transfer.BoundedTransferChunk_OrMutable =
-            this.transfer,
-    ) = skirout.editor.v1.compiled_content.PublishedContentChunk(
-        transfer.toFrozen(),
-        this._unrecognizedFields,
-    );
-
-    @kotlin.Deprecated("No point in creating an exact copy of an immutable object", kotlin.ReplaceWith("this"))
-    fun copy() = this;
-
-    override fun equals(other: kotlin.Any?): kotlin.Boolean {
-        return this === other || (other is skirout.editor.v1.compiled_content.PublishedContentChunk && this.transfer == other.transfer);
-    }
-
-    override fun hashCode(): kotlin.Int {
-        return kotlin.collections.listOf<kotlin.Any?>(this.transfer).hashCode();
-    }
-
-    override fun toString(): kotlin.String {
-        return build.skir.internal.toStringImpl(
-            this,
-            _SerializerRegistry.PublishedContentChunkSerializerImpl,
-        )
-    }
-
-    /** Mutable version of [PublishedContentChunk]. */
-    class Mutable internal constructor(
-        _mustNameArguments: _MustNameArguments =
-            _MustNameArguments,
-        override var transfer: skirout.kernel.v1.bounded_transfer.BoundedTransferChunk_OrMutable =
-            skirout.kernel.v1.bounded_transfer.BoundedTransferChunk.partial(),
-        internal var _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.compiled_content.PublishedContentChunk>? =
-            null,
-    ): skirout.editor.v1.compiled_content.PublishedContentChunk_OrMutable {
-        /** Returns a deeply immutable copy of this instance */
-        override fun toFrozen() = skirout.editor.v1.compiled_content.PublishedContentChunk(
-            transfer = this.transfer,
-            _unrecognizedFields = this._unrecognizedFields,
-        );
-
-        /**
-         * If the value of [transfer] is already mutable, returns it as-is.
-         * Otherwise, makes a mutable copy, assigns it back to [transfer] and returns it.
-         */
-        val mutableTransfer: skirout.kernel.v1.bounded_transfer.BoundedTransferChunk.Mutable get() {
-            var value = this.transfer;
-            return when (value) {
-                is skirout.kernel.v1.bounded_transfer.BoundedTransferChunk -> {
-                    value = value.toMutable();
-                    this.transfer = value;
-                    return value;
-                }
-                is skirout.kernel.v1.bounded_transfer.BoundedTransferChunk.Mutable -> value;
-            }
-        }
-    }
-
-    companion object {
-        private val default =
-            skirout.editor.v1.compiled_content.PublishedContentChunk(
-                skirout.kernel.v1.bounded_transfer.BoundedTransferChunk.partial(),
-            );
-
-        /** Returns an instance with all fields set to their default values. */
-        fun partial() = default;
-
-        /**
-         * Creates a new instance of [PublishedContentChunk].
-         * Unlike the constructor, does not require all fields to be specified.
-         * Missing fields will be set to their default values.
-         */
-        fun partial(
-            _mustNameArguments: _MustNameArguments =
-                _MustNameArguments,
-            transfer: skirout.kernel.v1.bounded_transfer.BoundedTransferChunk_OrMutable =
-                skirout.kernel.v1.bounded_transfer.BoundedTransferChunk.partial(),
-        ) = skirout.editor.v1.compiled_content.PublishedContentChunk(
-            transfer = transfer,
-            _unrecognizedFields = null,
-        );
-
-        /** Serializer for [PublishedContentChunk] instances. */
-        val serializer get() = _SerializerRegistry.PublishedContentChunkSerializer;
-
-        /** Describes the [PublishedContentChunk] type. Provides runtime introspection capabilities. */
-        val typeDescriptor get() = _SerializerRegistry.PublishedContentChunkSerializerImpl.typeDescriptor;
-    }
-}
-
 /**
  * Membership in the Realm selected publication. active does not confirm application by any engine,
  * nor that the currently saved root still compiles to the selected artifact.
@@ -1269,26 +1144,21 @@ sealed class CompilationStatusSelection private constructor() {
 }
 
 sealed interface QueryPublishedContentRequest_OrMutable {
-    val transferId: kotlin.String;
-
     fun toFrozen(): skirout.editor.v1.compiled_content.QueryPublishedContentRequest;
 }
 
 /** Deeply immutable. */
 @kotlin.Suppress("UNUSED_PARAMETER")
 class QueryPublishedContentRequest private constructor(
-    override val transferId: kotlin.String,
     internal val _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.compiled_content.QueryPublishedContentRequest>? =
         null,
 ): skirout.editor.v1.compiled_content.QueryPublishedContentRequest_OrMutable {
     constructor(
         _mustNameArguments: _MustNameArguments =
             _MustNameArguments,
-        transferId: kotlin.String,
         _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.compiled_content.QueryPublishedContentRequest>? =
             null,
     ): this(
-        transferId,
         _unrecognizedFields,
     ) {}
 
@@ -1296,30 +1166,14 @@ class QueryPublishedContentRequest private constructor(
     override fun toFrozen() = this;
 
     /** Returns a mutable shallow copy of this instance */
-    fun toMutable() = Mutable(
-        transferId = this.transferId,
-    );
-
-    /** Returns a shallow copy of this instance with the specified fields replaced. */
-    fun copy(
-        _mustNameArguments: _MustNameArguments =
-            _MustNameArguments,
-        transferId: kotlin.String =
-            this.transferId,
-    ) = skirout.editor.v1.compiled_content.QueryPublishedContentRequest(
-        transferId,
-        this._unrecognizedFields,
-    );
-
-    @kotlin.Deprecated("No point in creating an exact copy of an immutable object", kotlin.ReplaceWith("this"))
-    fun copy() = this;
+    fun toMutable() = Mutable();
 
     override fun equals(other: kotlin.Any?): kotlin.Boolean {
-        return this === other || (other is skirout.editor.v1.compiled_content.QueryPublishedContentRequest && this.transferId == other.transferId);
+        return this === other || (other is skirout.editor.v1.compiled_content.QueryPublishedContentRequest);
     }
 
     override fun hashCode(): kotlin.Int {
-        return kotlin.collections.listOf<kotlin.Any?>(this.transferId).hashCode();
+        return kotlin.collections.listOf<kotlin.Any?>().hashCode();
     }
 
     override fun toString(): kotlin.String {
@@ -1333,23 +1187,18 @@ class QueryPublishedContentRequest private constructor(
     class Mutable internal constructor(
         _mustNameArguments: _MustNameArguments =
             _MustNameArguments,
-        override var transferId: kotlin.String =
-            "",
         internal var _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.compiled_content.QueryPublishedContentRequest>? =
             null,
     ): skirout.editor.v1.compiled_content.QueryPublishedContentRequest_OrMutable {
         /** Returns a deeply immutable copy of this instance */
         override fun toFrozen() = skirout.editor.v1.compiled_content.QueryPublishedContentRequest(
-            transferId = this.transferId,
             _unrecognizedFields = this._unrecognizedFields,
         );
     }
 
     companion object {
         private val default =
-            skirout.editor.v1.compiled_content.QueryPublishedContentRequest(
-                "",
-            );
+            skirout.editor.v1.compiled_content.QueryPublishedContentRequest();
 
         /** Returns an instance with all fields set to their default values. */
         fun partial() = default;
@@ -1362,10 +1211,7 @@ class QueryPublishedContentRequest private constructor(
         fun partial(
             _mustNameArguments: _MustNameArguments =
                 _MustNameArguments,
-            transferId: kotlin.String =
-                "",
         ) = skirout.editor.v1.compiled_content.QueryPublishedContentRequest(
-            transferId = transferId,
             _unrecognizedFields = null,
         );
 
@@ -1382,9 +1228,8 @@ sealed class QueryPublishedContentResponse private constructor() {
     /** The kind of variant held by a `QueryPublishedContentResponse`. */
     enum class Kind {
         UNKNOWN,
-        CHUNK_WRAPPER,
+        CONTENT_WRAPPER,
         ABSENT_WRAPPER,
-        UNAVAILABLE_WRAPPER,
         INTERNAL_ERROR_WRAPPER,
     }
 
@@ -1403,21 +1248,21 @@ sealed class QueryPublishedContentResponse private constructor() {
         }
     }
 
-    class ChunkWrapper private constructor (
-        val value: skirout.editor.v1.compiled_content.PublishedContentChunk,
+    class ContentWrapper private constructor (
+        val value: skirout.editor.v1.compiled_content.PublishedContent,
     ) : skirout.editor.v1.compiled_content.QueryPublishedContentResponse() {
         constructor(
-            value: skirout.editor.v1.compiled_content.PublishedContentChunk_OrMutable,
+            value: skirout.editor.v1.compiled_content.PublishedContent_OrMutable,
         ): this(value.toFrozen()) {}
 
-        override val kind get() = Kind.CHUNK_WRAPPER;
+        override val kind get() = Kind.CONTENT_WRAPPER;
 
         override fun equals(other: kotlin.Any?): kotlin.Boolean {
-            return other is skirout.editor.v1.compiled_content.QueryPublishedContentResponse.ChunkWrapper && value == other.value;
+            return other is skirout.editor.v1.compiled_content.QueryPublishedContentResponse.ContentWrapper && value == other.value;
         }
 
         override fun hashCode(): kotlin.Int {
-            return this.value.hashCode() + 94642797;
+            return this.value.hashCode() + 951530617;
         }
     }
 
@@ -1436,24 +1281,6 @@ sealed class QueryPublishedContentResponse private constructor() {
 
         override fun hashCode(): kotlin.Int {
             return this.value.hashCode() + -1423908039;
-        }
-    }
-
-    class UnavailableWrapper private constructor (
-        val value: skirout.editor.v1.compiled_content.QueryPublishedContentResponse.Unavailable,
-    ) : skirout.editor.v1.compiled_content.QueryPublishedContentResponse() {
-        constructor(
-            value: skirout.editor.v1.compiled_content.QueryPublishedContentResponse.Unavailable_OrMutable,
-        ): this(value.toFrozen()) {}
-
-        override val kind get() = Kind.UNAVAILABLE_WRAPPER;
-
-        override fun equals(other: kotlin.Any?): kotlin.Boolean {
-            return other is skirout.editor.v1.compiled_content.QueryPublishedContentResponse.UnavailableWrapper && value == other.value;
-        }
-
-        override fun hashCode(): kotlin.Int {
-            return this.value.hashCode() + -665462704;
         }
     }
 
@@ -1493,15 +1320,23 @@ sealed class QueryPublishedContentResponse private constructor() {
          */
         val UNKNOWN = @kotlin.Suppress("DEPRECATION") Unknown(Kind.UNKNOWN, null);
 
-        /** Shortcut for `ChunkWrapper(skirout.editor.v1.compiled_content.PublishedContentChunk(...))`. */
+        /** Shortcut for `ContentWrapper(skirout.editor.v1.compiled_content.PublishedContent(...))`. */
         @kotlin.Suppress("UNUSED_PARAMETER")
-        fun createChunk(
+        fun createContent(
             _mustNameArguments: _MustNameArguments =
                 _MustNameArguments,
-            transfer: skirout.kernel.v1.bounded_transfer.BoundedTransferChunk_OrMutable,
-        ) = ChunkWrapper(
-            skirout.editor.v1.compiled_content.PublishedContentChunk(
-                transfer = transfer,
+            publication: skirout.editor.v1.type_catalog.PublicationId_OrMutable,
+            formatRevision: kotlin.Int,
+            catalog: skirout.editor.v1.type_catalog.CatalogGeneration_OrMutable,
+            implementationToken: kotlin.String,
+            outputs: kotlin.collections.Iterable<skirout.editor.v1.compiled_content.PublishedOutput_OrMutable>,
+        ) = ContentWrapper(
+            skirout.editor.v1.compiled_content.PublishedContent(
+                publication = publication,
+                formatRevision = formatRevision,
+                catalog = catalog,
+                implementationToken = implementationToken,
+                outputs = outputs,
             )
         );
 
@@ -1512,15 +1347,6 @@ sealed class QueryPublishedContentResponse private constructor() {
                 _MustNameArguments,
         ) = AbsentWrapper(
             skirout.editor.v1.compiled_content.QueryPublishedContentResponse.Absent()
-        );
-
-        /** Shortcut for `UnavailableWrapper(skirout.editor.v1.compiled_content.QueryPublishedContentResponse.Unavailable(...))`. */
-        @kotlin.Suppress("UNUSED_PARAMETER")
-        fun createUnavailable(
-            _mustNameArguments: _MustNameArguments =
-                _MustNameArguments,
-        ) = UnavailableWrapper(
-            skirout.editor.v1.compiled_content.QueryPublishedContentResponse.Unavailable()
         );
 
         /** Shortcut for `InternalErrorWrapper(skirout.kernel.v1.errors.InternalError(...))`. */
@@ -1616,86 +1442,6 @@ sealed class QueryPublishedContentResponse private constructor() {
 
             /** Describes the [Absent] type. Provides runtime introspection capabilities. */
             val typeDescriptor get() = _SerializerRegistry.QueryPublishedContentResponse_AbsentSerializerImpl.typeDescriptor;
-        }
-    }
-
-    sealed interface Unavailable_OrMutable {
-        fun toFrozen(): skirout.editor.v1.compiled_content.QueryPublishedContentResponse.Unavailable;
-    }
-
-    /** Deeply immutable. */
-    @kotlin.Suppress("UNUSED_PARAMETER")
-    class Unavailable private constructor(
-        internal val _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.compiled_content.QueryPublishedContentResponse.Unavailable>? =
-            null,
-    ): skirout.editor.v1.compiled_content.QueryPublishedContentResponse.Unavailable_OrMutable {
-        constructor(
-            _mustNameArguments: _MustNameArguments =
-                _MustNameArguments,
-            _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.compiled_content.QueryPublishedContentResponse.Unavailable>? =
-                null,
-        ): this(
-            _unrecognizedFields,
-        ) {}
-
-        @kotlin.Deprecated("Already frozen", kotlin.ReplaceWith("this"))
-        override fun toFrozen() = this;
-
-        /** Returns a mutable shallow copy of this instance */
-        fun toMutable() = Mutable();
-
-        override fun equals(other: kotlin.Any?): kotlin.Boolean {
-            return this === other || (other is skirout.editor.v1.compiled_content.QueryPublishedContentResponse.Unavailable);
-        }
-
-        override fun hashCode(): kotlin.Int {
-            return kotlin.collections.listOf<kotlin.Any?>().hashCode();
-        }
-
-        override fun toString(): kotlin.String {
-            return build.skir.internal.toStringImpl(
-                this,
-                _SerializerRegistry.QueryPublishedContentResponse_UnavailableSerializerImpl,
-            )
-        }
-
-        /** Mutable version of [Unavailable]. */
-        class Mutable internal constructor(
-            _mustNameArguments: _MustNameArguments =
-                _MustNameArguments,
-            internal var _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.compiled_content.QueryPublishedContentResponse.Unavailable>? =
-                null,
-        ): skirout.editor.v1.compiled_content.QueryPublishedContentResponse.Unavailable_OrMutable {
-            /** Returns a deeply immutable copy of this instance */
-            override fun toFrozen() = skirout.editor.v1.compiled_content.QueryPublishedContentResponse.Unavailable(
-                _unrecognizedFields = this._unrecognizedFields,
-            );
-        }
-
-        companion object {
-            private val default =
-                skirout.editor.v1.compiled_content.QueryPublishedContentResponse.Unavailable();
-
-            /** Returns an instance with all fields set to their default values. */
-            fun partial() = default;
-
-            /**
-             * Creates a new instance of [Unavailable].
-             * Unlike the constructor, does not require all fields to be specified.
-             * Missing fields will be set to their default values.
-             */
-            fun partial(
-                _mustNameArguments: _MustNameArguments =
-                    _MustNameArguments,
-            ) = skirout.editor.v1.compiled_content.QueryPublishedContentResponse.Unavailable(
-                _unrecognizedFields = null,
-            );
-
-            /** Serializer for [Unavailable] instances. */
-            val serializer get() = _SerializerRegistry.QueryPublishedContentResponse_UnavailableSerializer;
-
-            /** Describes the [Unavailable] type. Provides runtime introspection capabilities. */
-            val typeDescriptor get() = _SerializerRegistry.QueryPublishedContentResponse_UnavailableSerializerImpl.typeDescriptor;
         }
     }
 }
@@ -2041,6 +1787,7 @@ sealed class QueryCompiledResourceStatusResponse private constructor() {
     }
 }
 
+/** Returns the descriptor of the selected publication, or absent before any publication is selected. */
 val QueryPublishedContent: build.skir.service.Method<
     skirout.editor.v1.compiled_content.QueryPublishedContentRequest,
     skirout.editor.v1.compiled_content.QueryPublishedContentResponse,
@@ -2050,7 +1797,7 @@ val QueryPublishedContent: build.skir.service.Method<
         920008,
         skirout.editor.v1.compiled_content.QueryPublishedContentRequest.serializer,
         skirout.editor.v1.compiled_content.QueryPublishedContentResponse.serializer,
-        "",
+        "Returns the descriptor of the selected publication, or absent before any publication is selected.",
     )
 }
 
@@ -2154,18 +1901,6 @@ private object _SerializerRegistry {
 
     val PublishedContentSerializer = build.skir.internal.makeSerializer(PublishedContentSerializerImpl);
 
-    val PublishedContentChunkSerializerImpl = build.skir.internal.StructSerializer(
-        recordId = "editor/v1/compiled_content.skir:PublishedContentChunk",
-        doc = "",
-        defaultInstance = skirout.editor.v1.compiled_content.PublishedContentChunk.partial(),
-        newMutableFn = { it?.toMutable() ?: skirout.editor.v1.compiled_content.PublishedContentChunk.Mutable() },
-        toFrozenFn = { it.toFrozen() },
-        getUnrecognizedFields = { it._unrecognizedFields },
-        setUnrecognizedFields = { m, u -> m._unrecognizedFields = u },
-    );
-
-    val PublishedContentChunkSerializer = build.skir.internal.makeSerializer(PublishedContentChunkSerializerImpl);
-
     val PublishedOutputSerializerImpl = build.skir.internal.StructSerializer(
         recordId = "editor/v1/compiled_content.skir:PublishedOutput",
         doc = "",
@@ -2251,18 +1986,6 @@ private object _SerializerRegistry {
     );
 
     val QueryPublishedContentResponse_AbsentSerializer = build.skir.internal.makeSerializer(QueryPublishedContentResponse_AbsentSerializerImpl);
-
-    val QueryPublishedContentResponse_UnavailableSerializerImpl = build.skir.internal.StructSerializer(
-        recordId = "editor/v1/compiled_content.skir:QueryPublishedContentResponse.Unavailable",
-        doc = "",
-        defaultInstance = skirout.editor.v1.compiled_content.QueryPublishedContentResponse.Unavailable.partial(),
-        newMutableFn = { it?.toMutable() ?: skirout.editor.v1.compiled_content.QueryPublishedContentResponse.Unavailable.Mutable() },
-        toFrozenFn = { it.toFrozen() },
-        getUnrecognizedFields = { it._unrecognizedFields },
-        setUnrecognizedFields = { m, u -> m._unrecognizedFields = u },
-    );
-
-    val QueryPublishedContentResponse_UnavailableSerializer = build.skir.internal.makeSerializer(QueryPublishedContentResponse_UnavailableSerializerImpl);
 
     init {
         CompilationStatusSelectionSerializerImpl.addConstantVariant(
@@ -2441,17 +2164,6 @@ private object _SerializerRegistry {
         );
         PublishedContentSerializerImpl.finalizeStruct();
 
-        PublishedContentChunkSerializerImpl.addField(
-            "transfer",
-            "transfer",
-            0,
-            skirout.kernel.v1.bounded_transfer.BoundedTransferChunk.serializer,
-            "",
-            { it.transfer },
-            { mut, v -> mut.transfer = v },
-        );
-        PublishedContentChunkSerializerImpl.finalizeStruct();
-
         PublishedOutputSerializerImpl.addField(
             "reference",
             "reference",
@@ -2516,24 +2228,15 @@ private object _SerializerRegistry {
         );
         QueryCompiledResourceStatusResponse_SuccessSerializerImpl.finalizeStruct();
 
-        QueryPublishedContentRequestSerializerImpl.addField(
-            "transfer_id",
-            "transferId",
-            0,
-            build.skir.Serializers.string,
-            "",
-            { it.transferId },
-            { mut, v -> mut.transferId = v },
-        );
         QueryPublishedContentRequestSerializerImpl.finalizeStruct();
 
         QueryPublishedContentResponseSerializerImpl.addWrapperVariant(
             1,
-            "chunk",
-            skirout.editor.v1.compiled_content.QueryPublishedContentResponse.Kind.CHUNK_WRAPPER.ordinal,
-            _SerializerRegistry.PublishedContentChunkSerializer,
+            "content",
+            skirout.editor.v1.compiled_content.QueryPublishedContentResponse.Kind.CONTENT_WRAPPER.ordinal,
+            _SerializerRegistry.PublishedContentSerializer,
             "",
-            { skirout.editor.v1.compiled_content.QueryPublishedContentResponse.ChunkWrapper(it) },
+            { skirout.editor.v1.compiled_content.QueryPublishedContentResponse.ContentWrapper(it) },
             { it.value },
         );
         QueryPublishedContentResponseSerializerImpl.addWrapperVariant(
@@ -2547,15 +2250,6 @@ private object _SerializerRegistry {
         );
         QueryPublishedContentResponseSerializerImpl.addWrapperVariant(
             3,
-            "unavailable",
-            skirout.editor.v1.compiled_content.QueryPublishedContentResponse.Kind.UNAVAILABLE_WRAPPER.ordinal,
-            _SerializerRegistry.QueryPublishedContentResponse_UnavailableSerializer,
-            "",
-            { skirout.editor.v1.compiled_content.QueryPublishedContentResponse.UnavailableWrapper(it) },
-            { it.value },
-        );
-        QueryPublishedContentResponseSerializerImpl.addWrapperVariant(
-            4,
             "internal_error",
             skirout.editor.v1.compiled_content.QueryPublishedContentResponse.Kind.INTERNAL_ERROR_WRAPPER.ordinal,
             skirout.kernel.v1.errors.InternalError.serializer,
@@ -2566,7 +2260,5 @@ private object _SerializerRegistry {
         QueryPublishedContentResponseSerializerImpl.finalizeEnum();
 
         QueryPublishedContentResponse_AbsentSerializerImpl.finalizeStruct();
-
-        QueryPublishedContentResponse_UnavailableSerializerImpl.finalizeStruct();
     }
 }
