@@ -3,7 +3,7 @@ use wasmcloud_utils::skir::base::service::v1::identity::*;
 use wasmcloud_utils::{
     SkirResponse,
     database::service::{ServiceRoleRecord, ServiceRoleTypeRecord},
-    skir_variant,
+    database_domain_slug, skir_variant,
 };
 
 pub use crate::repository::ValidatedServiceRole;
@@ -30,71 +30,29 @@ pub struct NewIdentity {
     pub role: ValidatedServiceRole,
 }
 
-/// Domain rejections returned by repository policy and schema admission.
-pub enum IdentityRejection {
-    RoleUnknownProperty,
-    RoleTypeInvalid,
-    RoleVersionInvalid,
-    CustomRoleNameRequired,
-    CustomRoleNameInvalid,
-    BuiltinRoleNameForbidden,
-}
-
-impl IdentityRejection {
-    fn from_slug(slug: &str) -> Option<Self> {
-        match slug.trim_start_matches("An error occurred: ") {
-            "role-unknown-property-error" => Some(Self::RoleUnknownProperty),
-            "role-type-invalid-error" => Some(Self::RoleTypeInvalid),
-            "role-version-invalid-error" => Some(Self::RoleVersionInvalid),
-            "custom-role-name-required-error" => Some(Self::CustomRoleNameRequired),
-            "custom-role-name-invalid-error" => Some(Self::CustomRoleNameInvalid),
-            "builtin-role-name-forbidden-error" => Some(Self::BuiltinRoleNameForbidden),
-            _ => None,
-        }
-    }
-
-    fn into_response(self) -> IssueServiceIdentityResponse {
-        match self {
-            Self::RoleUnknownProperty => {
-                skir_variant!(IssueServiceIdentityResponse::RoleUnknownPropertyError {})
-            }
-            Self::RoleTypeInvalid => {
-                skir_variant!(IssueServiceIdentityResponse::RoleTypeInvalidError {})
-            }
-            Self::RoleVersionInvalid => {
-                skir_variant!(IssueServiceIdentityResponse::RoleVersionInvalidError {})
-            }
-            Self::CustomRoleNameRequired => {
-                skir_variant!(IssueServiceIdentityResponse::CustomRoleNameRequiredError {})
-            }
-            Self::CustomRoleNameInvalid => {
-                skir_variant!(IssueServiceIdentityResponse::CustomRoleNameInvalidError {})
-            }
-            Self::BuiltinRoleNameForbidden => {
-                skir_variant!(IssueServiceIdentityResponse::BuiltinRoleNameForbiddenError {})
-            }
-        }
-    }
-}
-
 /// Repository failures preserve domain rejection identity through compensation.
+///
+/// A domain rejection holds the response variant its database slug names, so the workflow
+/// returns it unchanged after compensation.
 pub enum IdentityRepositoryError {
-    Domain(IdentityRejection),
+    Domain(IssueServiceIdentityResponse),
     Infrastructure(RepositoryError),
     UnrecognizedDomain(String),
 }
 
 impl IdentityRepositoryError {
+    /// Maps a database rejection message to the domain error variant its slug names.
     pub(crate) fn rejected(message: &str) -> Self {
-        match IdentityRejection::from_slug(message) {
-            Some(rejection) => Self::Domain(rejection),
-            None => Self::UnrecognizedDomain(message.to_owned()),
+        let slug = database_domain_slug(message);
+        match IssueServiceIdentityResponse::domain_error_from_slug(slug) {
+            Some(response) => Self::Domain(response),
+            None => Self::UnrecognizedDomain(slug.to_owned()),
         }
     }
 
     fn into_response(self) -> Result<IssueServiceIdentityResponse, otel_wasi::Error> {
         match self {
-            Self::Domain(rejection) => Ok(rejection.into_response()),
+            Self::Domain(response) => Ok(response),
             Self::Infrastructure(error) => {
                 otel_wasi::main_attribute!(
                     "error" = true,
@@ -341,8 +299,9 @@ mod tests {
         ) -> Result<RecordId, IdentityRepositoryError> {
             *self.create_calls.borrow_mut() += 1;
             match self.mode {
+                // SurrealDB prefixes a THROW that crosses a query block.
                 RepoMode::CreateDomain => Err(IdentityRepositoryError::rejected(
-                    "role-version-invalid-error",
+                    "An error occurred: role-version-invalid-error",
                 )),
                 RepoMode::CreateUnknownDomain => {
                     Err(IdentityRepositoryError::rejected("future-error"))
