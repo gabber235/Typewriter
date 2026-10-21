@@ -1,5 +1,6 @@
 import { describe, expect, test } from "bun:test";
 
+import { methodResponses } from "../src/outcomes.js";
 import { servedSubjects, subscriptionSubject } from "../src/routes/dispatch.js";
 import { emitRust } from "../src/routes/emit/rust.js";
 import { parseManifest, type Manifest } from "../src/routes/manifest.js";
@@ -101,7 +102,7 @@ describe("component dispatch", () => {
 
   test("the Rust target emits one typed dispatcher per receiving component", async () => {
     const { input, resolved } = await committedRoutes();
-    const [rust] = emitRust(resolved, symbolProviders(input).rust);
+    const [rust] = emitRust(resolved, symbolProviders(input).rust, methodResponses(input));
     const code = rust!.code;
     expect(code).not.toContain("pub mod auth_callout");
     expect(code).not.toContain("fn scope(");
@@ -138,13 +139,16 @@ describe("component dispatch", () => {
     expect(permissions).toContain("let scope = InternalComponentScope::from_tokens();");
   });
 
-  test("route types carry their delivery and leave scope parsing to the dispatcher", async () => {
+  test("route types name their Skir types and leave scope parsing to the dispatcher", async () => {
     const { input, resolved } = await committedRoutes();
-    const [rust] = emitRust(resolved, symbolProviders(input).rust);
+    const [rust] = emitRust(resolved, symbolProviders(input).rust, methodResponses(input));
     const create = section(rust!.code, "impl crate::transport::RequestRoute for UserOrganizationCreateRoute {", "\n}\n");
-    expect(create).toContain("type Delivery = crate::transport::DomainResponseDelivery;");
+    expect(create).toContain(
+      "type Response = crate::skirout::base::organization::v1::organization::CreateOrganizationResponse;",
+    );
+    expect(create).not.toContain("type Delivery");
     const panel = section(rust!.code, "impl crate::transport::RequestRoute for PanelPermissionResolveRoute {", "\n}\n");
-    expect(panel).toContain("type Delivery = crate::transport::PlainResponseDelivery;");
+    expect(panel).toContain("type Response = crate::skirout::base::access::v1::permission::GetEntityPermissionResponse;");
     const outbound = section(
       rust!.code,
       "impl crate::transport::OutboundRequestRoute for PanelPermissionResolveRoute {",

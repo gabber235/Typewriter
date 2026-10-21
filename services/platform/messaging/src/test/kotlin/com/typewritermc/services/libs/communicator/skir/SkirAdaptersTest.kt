@@ -73,6 +73,13 @@ val SkirAdaptersTest by testSuite {
         }
     }
 
+    test("operation names derive the failure slug the generator writes") {
+        OperationName.of("editor.authoring.state.query").failureSlug shouldBe
+            ErrorSlug.of("editor-authoring-state-query-failed")
+        OperationName.of("organization.members.join_codes.watch").failureSlug shouldBe
+            ErrorSlug.of("organization-members-join-codes-watch-failed")
+    }
+
     test("method helper preserves explicit operation and serializers") {
         val contract =
             skirUnaryContract(
@@ -80,10 +87,10 @@ val SkirAdaptersTest by testSuite {
                 name = OperationName.of("service-status"),
                 address = statusAddress,
                 responsePolicy = statusPolicy,
-                failureSlug = ErrorSlug.of("service-status-failed"),
             )
         val request = QueryServiceBindingRequest()
         contract.name shouldBe OperationName.of("service-status")
+        contract.failureSlug shouldBe ErrorSlug.of("service-status-failed")
         contract.requestCodec.decode(contract.requestCodec.encode(request)) shouldBe request
         contract.responsePolicy shouldBe statusPolicy
     }

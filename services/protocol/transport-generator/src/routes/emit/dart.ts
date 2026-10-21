@@ -10,6 +10,7 @@ import {
   upperCamel,
   type Lines,
 } from "../../text.js";
+import type { Outcome } from "../../outcomes.js";
 import { CONSUMER_NAME, grantSubject, type GrantToken } from "../grants.js";
 import type {
   Delivery,
@@ -22,6 +23,7 @@ import {
   clientSubject,
   hasSide,
   routeChannel,
+  type ResolvedMethod,
   type ResolvedRoute,
   type ResolvedRoutes,
 } from "../resolve.js";
@@ -157,6 +159,56 @@ class Imports {
   }
 }
 
+const RESPONSE_OUTCOME: Record<Outcome, string> = {
+  success: "ResponseOutcome.success",
+  domain_error: "ResponseOutcome.domainError",
+  internal_error: "ResponseOutcome.internalError",
+};
+
+/**
+ * Collects one outcome function per route method, such as `_createOrganizationOutcome`. Operations
+ * pass it as `SkirRouteOperation.outcome`, because extension getters cannot be called on the
+ * generic response type inside the mutation helpers.
+ */
+class Outcomes {
+  private readonly functions = new Map<string, Lines>();
+
+  constructor(
+    private readonly symbols: CodeGenerator.SymbolProvider,
+    private readonly imports: Imports,
+  ) {}
+
+  /** Returns the outcome function name of a route method after recording its declaration. */
+  use({ module, method, response, outcomes }: ResolvedMethod): string {
+    const name = method.name.text;
+    const functionName = `_${name.charAt(0).toLowerCase()}${name.slice(1)}Outcome`;
+    const key = `${module.path}:${name}`;
+    if (!this.functions.has(key)) {
+      const responseType = this.imports.use(this.symbols.record(response));
+      const arms = (["success", "domain_error"] as const).flatMap((outcome) => {
+        const kinds = outcomes.variants
+          .filter((variant) => variant.outcome === outcome)
+          .map((variant) => this.imports.use(this.symbols.variant(response, variant.field)));
+        return kinds.map((kind, index) =>
+          index === kinds.length - 1 ? `    ${kind} => ${RESPONSE_OUTCOME[outcome]},` : `    ${kind} ||`,
+        );
+      });
+      this.functions.set(key, [
+        `ResponseOutcome ${functionName}(${responseType} response) => switch (response.kind) {`,
+        ...arms,
+        "    // internal_error and the generated unknown variant",
+        `    _ => ${RESPONSE_OUTCOME.internal_error},`,
+        "};",
+      ]);
+    }
+    return functionName;
+  }
+
+  declarations(): Lines[] {
+    return [...this.functions.values()];
+  }
+}
+
 /** Dart expressions of the consumer identity tuple values, by {@link CONSUMER_NAME} entry. */
 const CONSUMER_VALUES: Record<(typeof CONSUMER_NAME.tuple)[number], string> = {
   actor: "actor",
@@ -223,6 +275,7 @@ function emitUnary(
   resolved: ResolvedRoutes,
   symbols: CodeGenerator.SymbolProvider,
   imports: Imports,
+  outcomes: Outcomes,
 ): Lines | undefined {
   const { flow } = route;
   if (flow.kind !== "unary" || !hasSide(route, resolved.roles, "panel")) {
@@ -236,6 +289,7 @@ function emitUnary(
   const requestType = imports.use(symbols.record(flow.method.request));
   const responseType = imports.use(symbols.record(flow.method.response));
   const operationName = unaryOperationName(route, resolved, flow.method.request.record.key);
+  const outcome = outcomes.use(flow.method);
   return [
     `extension ${dartName(route)}Nats on ${requestType} {`,
     `    SkirRouteOperation<${responseType}> ${operationName}({`,
@@ -247,6 +301,7 @@ function emitUnary(
             subject: ${subjectExpression(requestAddress)},
             requestBytes: method.requestSerializer.toBytes(this),
             responseSerializer: method.responseSerializer,
+            outcome: ${outcome},
         );
     }
 }`),
@@ -279,6 +334,7 @@ function emitWatch(
   roles: RoleDeclarations,
   symbols: CodeGenerator.SymbolProvider,
   imports: Imports,
+  outcomes: Outcomes,
 ): Lines | undefined {
   const { flow } = route;
   if (flow.kind !== "watch" || !hasSide(route, roles, "panel")) {
@@ -318,6 +374,7 @@ function emitWatch(
             subject: ${subjectExpression(requestAddress)},
             requestBytes: method.requestSerializer.toBytes(this),
             responseSerializer: method.responseSerializer,
+            outcome: ${outcomes.use(flow.method)},
         );
     }
 
@@ -443,7 +500,8 @@ function dartName(route: ResolvedRoute): string {
 
 /**
  * Emits the panel transport routes: one extension per panel request route, an event class per panel
- * event, the reply framing limits and the consumer naming rule of persistent projections. The backend owns the panel's
+ * event, one outcome function per request method, the reply framing limits and the consumer naming
+ * rule of persistent projections. The backend owns the panel's
  * permissions; the panel never derives them.
  */
 export function emitDart(
@@ -452,14 +510,21 @@ export function emitDart(
 ): CodeGenerator.OutputFile[] {
   const { roles } = resolved;
   const imports = new Imports();
+  const outcomes = new Outcomes(symbols, imports);
   const declarations = resolved.routes.flatMap((route) => {
     const declaration =
-      emitUnary(route, resolved, symbols, imports) ??
-      emitWatch(route, roles, symbols, imports) ??
+      emitUnary(route, resolved, symbols, imports, outcomes) ??
+      emitWatch(route, roles, symbols, imports, outcomes) ??
       emitEvent(route, roles, symbols, imports);
     return declaration ? [declaration] : [];
   });
-  const body = separated([...declarations, limits(resolved.limits), RUNTIME, CONSUMER_RULE]);
+  const body = separated([
+    ...declarations,
+    ...outcomes.declarations(),
+    limits(resolved.limits),
+    RUNTIME,
+    CONSUMER_RULE,
+  ]);
   return [
     {
       path: "transport_routes.dart",

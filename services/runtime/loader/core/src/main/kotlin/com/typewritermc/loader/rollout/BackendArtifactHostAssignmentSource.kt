@@ -12,11 +12,6 @@ import com.typewritermc.protocol.transport.ServiceRouteScope
 import com.typewritermc.protocol.transport.generated.hostExecutionReport
 import com.typewritermc.protocol.transport.generated.hostExecutionWatch
 import com.typewritermc.protocol.transport.generated.serviceHostRegister
-import com.typewritermc.services.libs.communicator.contract.ResponseClassification
-import com.typewritermc.services.libs.communicator.contract.ResponseClassifier
-import com.typewritermc.services.libs.communicator.contract.ResponseOutcome
-import com.typewritermc.services.libs.communicator.contract.ResponsePolicy
-import com.typewritermc.services.libs.communicator.contract.ResponseVariant
 import com.typewritermc.services.libs.communicator.contract.WatchMessage
 import com.typewritermc.services.libs.communicator.result.CommunicationResult
 import com.typewritermc.services.libs.registrar.RegistrarResult
@@ -44,38 +39,6 @@ import java.time.Clock
 import java.time.Instant
 import kotlin.time.Duration.Companion.seconds
 
-private val hostRegistrationClassifier =
-    ResponseClassifier<RegisterServiceHostResponse> { response ->
-        when (response) {
-            is RegisterServiceHostResponse.SuccessWrapper -> classification(ResponseOutcome.SUCCESS, "success")
-            is RegisterServiceHostResponse.InternalErrorWrapper -> classification(ResponseOutcome.INTERNAL_ERROR, "internal-error")
-            else -> classification(ResponseOutcome.DOMAIN_ERROR, "unknown")
-        }
-    }
-internal val hostRegistrationResponsePolicy =
-    ResponsePolicy(RegisterServiceHostResponse.createInternalError(), hostRegistrationClassifier)
-internal val hostExecutionResponseClassifier =
-    ResponseClassifier<WatchHostExecutionResponse> { response ->
-        when (response) {
-            is WatchHostExecutionResponse.DesiredWrapper -> classification(ResponseOutcome.SUCCESS, "desired")
-            is WatchHostExecutionResponse.InternalErrorWrapper -> classification(ResponseOutcome.INTERNAL_ERROR, "internal-error")
-            else -> classification(ResponseOutcome.DOMAIN_ERROR, "unknown")
-        }
-    }
-internal val hostExecutionResponsePolicy =
-    ResponsePolicy(WatchHostExecutionResponse.createInternalError(), hostExecutionResponseClassifier)
-private val hostExecutionReportClassifier =
-    ResponseClassifier<ReportHostExecutionResponse> { response ->
-        when (response) {
-            is ReportHostExecutionResponse.SuccessWrapper -> classification(ResponseOutcome.SUCCESS, "success")
-            is ReportHostExecutionResponse.StaleRevisionErrorWrapper -> classification(ResponseOutcome.DOMAIN_ERROR, "stale-revision")
-            is ReportHostExecutionResponse.InternalErrorWrapper -> classification(ResponseOutcome.INTERNAL_ERROR, "internal-error")
-            else -> classification(ResponseOutcome.DOMAIN_ERROR, "unknown")
-        }
-    }
-internal val hostExecutionReportResponsePolicy =
-    ResponsePolicy(ReportHostExecutionResponse.createInternalError(), hostExecutionReportClassifier)
-
 /**
  * Registers host capabilities and watches backend execution assignments through ready messaging generations.
  *
@@ -99,9 +62,8 @@ class BackendArtifactHostAssignmentSource(
                     }
                 flow {
                     val address = ServiceRouteScope(ready.session.identity.serviceId.value)
-                    val registrationContract = address.serviceHostRegister(hostRegistrationResponsePolicy)
-                    val executionContract =
-                        address.hostExecutionWatch(hostExecutionResponsePolicy, hostExecutionResponseClassifier)
+                    val registrationContract = address.serviceHostRegister
+                    val executionContract = address.hostExecutionWatch
                     while (true) {
                         val registration = communicator.request(registrationContract, address, registrationRequest())
                         val registered =
@@ -203,7 +165,7 @@ internal class BackendHostExecutionReporter(
         when (
             val result =
                 session.communicator.request(
-                    scope.hostExecutionReport(hostExecutionReportResponsePolicy),
+                    scope.hostExecutionReport,
                     scope,
                     request,
                 )
@@ -320,8 +282,3 @@ private fun RecordId.stringKey(): String =
         is RecordIdKey.StringWrapper -> value.value
         else -> error("Topology record ids must use string keys.")
     }
-
-private fun classification(
-    outcome: ResponseOutcome,
-    variant: String,
-) = ResponseClassification(outcome, ResponseVariant.of(variant))

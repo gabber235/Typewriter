@@ -7,11 +7,6 @@ import com.typewritermc.protocol.transport.generated.sharedBlobMetadata
 import com.typewritermc.protocol.transport.generated.sharedBlobRead
 import com.typewritermc.protocol.transport.generated.sharedBlobWrite
 import com.typewritermc.services.libs.communicator.client.Communicator
-import com.typewritermc.services.libs.communicator.contract.ResponseClassification
-import com.typewritermc.services.libs.communicator.contract.ResponseClassifier
-import com.typewritermc.services.libs.communicator.contract.ResponseOutcome
-import com.typewritermc.services.libs.communicator.contract.ResponsePolicy
-import com.typewritermc.services.libs.communicator.contract.ResponseVariant
 import com.typewritermc.services.libs.communicator.contract.UnaryContract
 import com.typewritermc.services.libs.communicator.result.CommunicationResult
 import com.typewritermc.services.libs.filetransfer.blob.ArtifactDigest
@@ -62,7 +57,7 @@ class CommunicatorBlobEndpoint(
         when (
             val response =
                 request(
-                    blobContracts.metadata(address),
+                    address.sharedBlobMetadata,
                     FetchArtifactBlobMetadataRequest(digest = digest.toSkir()),
                 )
         ) {
@@ -80,7 +75,7 @@ class CommunicatorBlobEndpoint(
         when (
             val response =
                 request(
-                    blobContracts.read(address),
+                    address.sharedBlobRead,
                     ReadArtifactBlobRequest(
                         digest = digest.toSkir(),
                         offset = offset,
@@ -118,7 +113,7 @@ class CommunicatorBlobEndpoint(
         when (
             val response =
                 request(
-                    blobContracts.begin(address),
+                    address.sharedBlobBegin,
                     BeginArtifactBlobWriteRequest(
                         transferId = transfer.value,
                         expected = expected.toSkir(),
@@ -150,7 +145,7 @@ class CommunicatorBlobEndpoint(
         when (
             val response =
                 request(
-                    blobContracts.write(address),
+                    address.sharedBlobWrite,
                     WriteArtifactBlobChunkRequest(
                         transferId = transfer.value,
                         offset = offset,
@@ -169,7 +164,7 @@ class CommunicatorBlobEndpoint(
         when (
             val response =
                 request(
-                    blobContracts.complete(address),
+                    address.sharedBlobComplete,
                     CompleteArtifactBlobWriteRequest(transferId = transfer.value),
                 )
         ) {
@@ -197,34 +192,6 @@ class CommunicatorBlobEndpoint(
             }
         }
 }
-
-internal class BlobContracts {
-    fun metadata(scope: RealmRouteScope) =
-        scope.sharedBlobMetadata(ResponsePolicy(FetchArtifactBlobMetadataResponse.createInternalError(), unavailableClassifier()))
-
-    fun read(scope: RealmRouteScope) =
-        scope.sharedBlobRead(ResponsePolicy(ReadArtifactBlobResponse.createInternalError(), unavailableClassifier()))
-
-    fun begin(scope: RealmRouteScope) =
-        scope.sharedBlobBegin(ResponsePolicy(BeginArtifactBlobWriteResponse.createInternalError(), unavailableClassifier()))
-
-    fun write(scope: RealmRouteScope) =
-        scope.sharedBlobWrite(ResponsePolicy(WriteArtifactBlobChunkResponse.createInternalError(), unavailableClassifier()))
-
-    fun complete(scope: RealmRouteScope) =
-        scope.sharedBlobComplete(ResponsePolicy(CompleteArtifactBlobWriteResponse.createInternalError(), unavailableClassifier()))
-}
-
-internal val blobContracts = BlobContracts()
-
-private fun <Response : Any> unavailableClassifier(): ResponseClassifier<Response> =
-    ResponseClassifier { response ->
-        val unavailable = response::class.simpleName == "InternalErrorWrapper"
-        ResponseClassification(
-            if (unavailable) ResponseOutcome.INTERNAL_ERROR else ResponseOutcome.SUCCESS,
-            ResponseVariant.of(if (unavailable) "internal-error" else "success"),
-        )
-    }
 
 private fun ArtifactDigest.toSkir(): SkirArtifactDigest =
     SkirArtifactDigest(

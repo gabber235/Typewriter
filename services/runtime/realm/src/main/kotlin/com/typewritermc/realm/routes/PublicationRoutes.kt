@@ -5,6 +5,10 @@ import com.typewritermc.authoring.skir.SkirAuthoringOperationCodec
 import com.typewritermc.checking.Diagnostic
 import com.typewritermc.engine.CompilationRoot
 import com.typewritermc.protocol.transport.RealmRouteScope
+import com.typewritermc.protocol.transport.generated.authoringCompiledChanged
+import com.typewritermc.protocol.transport.generated.authoringPublicationQuery
+import com.typewritermc.protocol.transport.generated.authoringPublicationWatch
+import com.typewritermc.protocol.transport.generated.authoringPublish
 import com.typewritermc.realm.checking.toWire
 import com.typewritermc.realm.compiler.DiagnosticEvidence
 import com.typewritermc.realm.compiler.PublicationActivationPhase
@@ -53,12 +57,11 @@ import skirout.editor.v1.publication.PublicationView as WirePublicationView
 /** Queries one immutable review view and accepts only its issued candidate. */
 internal class PublicationRoutes(
     private val publisher: RealmPublicationCoordinator,
-    private val contracts: EditorContracts,
     private val address: RealmRouteScope,
 ) {
     fun register(builder: CommunicatorRoutesBuilder) =
         with(builder) {
-            unary(contracts.publishAuthoring) { call ->
+            unary(address.authoringPublish) { call ->
                 if (call.request.candidate.value
                         .isBlank()
                 ) {
@@ -71,7 +74,7 @@ internal class PublicationRoutes(
                         if (attempt.state == PublicationState.Complete) {
                             call.communicator
                                 .publish(
-                                    contracts.compiledContentChanged,
+                                    address.authoringCompiledChanged,
                                     address,
                                     CompiledContentChanged(
                                         generation =
@@ -82,8 +85,8 @@ internal class PublicationRoutes(
                     }
                 result.toWire()
             }
-            watch(contracts.watchPublication) { WatchPublicationResponse.ViewChangedWrapper(publisher.views.value.changed()) }
-            unary(contracts.queryPublicationView) { call ->
+            watch(address.authoringPublicationWatch) { WatchPublicationResponse.ViewChangedWrapper(publisher.views.value.changed()) }
+            unary(address.authoringPublicationQuery) { call ->
                 val view = publisher.views.value
                 if (view.id.value != call.request.expected.value) {
                     QueryPublicationViewResponse.ViewChangedErrorWrapper(view.changed())

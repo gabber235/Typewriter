@@ -98,8 +98,8 @@ function servedByComponent(route: ResolvedRoute): boolean {
 
 /**
  * Emits the route type of a request route a component serves, plus its outbound subject when a
- * component calls it. Struct responses have no internal error variant, so their handler errors
- * send no reply. Routes no component serves emit nothing.
+ * component calls it. Its response implements the generated `SkirResponse`, so a handler error
+ * replies with the response's internal_error variant. Routes no component serves emit nothing.
  */
 export function emitRequestRoute(
   route: ResolvedRoute,
@@ -110,17 +110,12 @@ export function emitRequestRoute(
     return [];
   }
   const name = routeTypeName(route);
-  const delivery =
-    method.response.record.recordType === "enum"
-      ? "DomainResponseDelivery"
-      : "PlainResponseDelivery";
   const lines = [
     `pub struct ${name};`,
     `impl ${TRANSPORT}::RequestRoute for ${name} {`,
     `    type Scope = ${scopeType(route.scope)};`,
     `    type Request = ${symbols.record(method.request).reference};`,
     `    type Response = ${symbols.record(method.response).reference};`,
-    `    type Delivery = ${TRANSPORT}::${delivery};`,
     "    fn method() -> &'static crate::skir_client::Method<Self::Request, Self::Response> {",
     `        ${symbols.method(method.module, method.method).reference}`,
     "    }",

@@ -8,18 +8,18 @@ use std::marker::PhantomData;
 
 use otel_wasi::Error;
 
-use super::delivery::ResponseDelivery;
 use crate::skir_client::{Method, Serializer, UnrecognizedValues};
 use crate::wasmcloud::messaging;
 
-/// A Skir request route that a backend component serves.
+/// A Skir request route between backend components or from a role to a component.
+///
+/// Every response implements the generated [`crate::SkirResponse`], so a served route replies
+/// with its typed outcome and falls back to the response's internal_error variant.
 pub trait RequestRoute {
     /// The identities the request subject captures.
     type Scope;
     type Request: 'static;
     type Response: 'static;
-    /// How the handler result is replied to the caller.
-    type Delivery: ResponseDelivery<Self::Response>;
 
     fn method() -> &'static Method<Self::Request, Self::Response>;
 }

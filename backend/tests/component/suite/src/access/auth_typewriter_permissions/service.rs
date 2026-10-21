@@ -3,7 +3,8 @@ use typewriter_component_test::prelude::{SkirMessagingExpectationExt, skir_recor
 use wasmcloud_utils::{
     skir::base::{
         access::v1::permission::{
-            EntityPermissionQualifier, GetEntityPermissionRequest, Permission, Permissions,
+            EntityPermissionQualifier, GetEntityPermissionRequest, GetEntityPermissionResponse,
+            Permission, Permissions,
         },
         service::v1::status::{
             QueryServiceBindingRequest, QueryServiceBindingResponse,
@@ -17,7 +18,7 @@ use wasmcloud_utils::{
     skir_variant,
 };
 
-use super::{AuthTypewriterPermissions, request_permissions};
+use super::{AuthTypewriterPermissions, request_permission_response, request_permissions};
 
 fn request(service_id: &str) -> GetEntityPermissionRequest {
     GetEntityPermissionRequest {
@@ -381,6 +382,55 @@ async fn realm_service_executes_realm_routes_and_coordinates_hosts(
             .iter()
             .all(|subject| !subject.ends_with(".realm.>"))
     );
+    Ok(())
+}
+
+#[component_test(AuthTypewriterPermissions)]
+async fn failed_scope_lookup_replies_internal_error_instead_of_a_grant(
+    context: &mut TestContext<AuthTypewriterPermissions>,
+) -> TestResult {
+    let status = skir_variant!(QueryServiceBindingResponse::Binding {
+        binding: ServiceBinding::Bound(Box::new(ServiceBinding_Bound {
+            organization_id: "writers".into(),
+            organization_name: Some("Writers".into()),
+            _unrecognized: None,
+        })),
+    });
+    context
+        .messaging_mock()?
+        .expect_request("service.failing_host.binding.query")
+        .body_skir(
+            &QueryServiceBindingRequest::default(),
+            QueryServiceBindingRequest::serializer(),
+        )
+        .reply_skir(&status, QueryServiceBindingResponse::serializer());
+    context
+        .messaging_mock()?
+        .expect_request("service.failing_host.messaging.scope")
+        .body_skir(
+            &GetServiceMessagingScopeRequest {
+                service_id: skir_record_id("service", "failing_host"),
+                _unrecognized: None,
+            },
+            GetServiceMessagingScopeRequest::serializer(),
+        )
+        .reply_skir(
+            &GetServiceMessagingScopeResponse::InternalError(Box::default()),
+            GetServiceMessagingScopeResponse::serializer(),
+        );
+
+    // The callout receives a typed failure at once instead of waiting for a reply.
+    let response = request_permission_response(
+        context,
+        "auth.permissions.typewriter-services",
+        &request("failing_host"),
+    )
+    .await?;
+
+    assert!(matches!(
+        response,
+        GetEntityPermissionResponse::InternalError(_)
+    ));
     Ok(())
 }
 

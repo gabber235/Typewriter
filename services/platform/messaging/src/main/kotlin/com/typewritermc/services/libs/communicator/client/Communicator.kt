@@ -326,12 +326,11 @@ class Communicator(
             SpanKind.PRODUCER,
             contract.updateAddress.template,
         ) { annotate ->
-            val classification = contract.updateClassifier.classify(update)
             publishResponse(
                 destination,
                 update,
                 contract.updateCodec,
-                classification,
+                UPDATE_CLASSIFICATION,
                 contract.failureSlug,
                 headers,
                 annotate,
@@ -540,12 +539,11 @@ class Communicator(
                         classify(block = { contract.updateCodec.decode(message.payload) }, error = {
                             CommunicationError.Decode(contract.failureSlug, it)
                         })
-                    val classification = contract.updateClassifier.classify(update)
                     main.annotate {
-                        domainOutcome(classification.variant.value)
-                        operationOutcome(classification.outcome.name.lowercase())
+                        domainOutcome(UPDATE_CLASSIFICATION.variant.value)
+                        operationOutcome(UPDATE_CLASSIFICATION.outcome.name.lowercase())
                     }
-                    classification.operationOutcome(update)
+                    UPDATE_CLASSIFICATION.operationOutcome(update)
                 }
             CommunicationResult.Success(WatchMessage.Update(outcome.value()))
         } catch (failure: Throwable) {
@@ -731,3 +729,6 @@ private fun Throwable.causes(): Sequence<Throwable> =
             current = current.cause
         }
     }
+
+/** Watch updates carry no outcome of their own, so every delivered update records as a success. */
+private val UPDATE_CLASSIFICATION = ResponseClassification.success("update")

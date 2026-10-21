@@ -11,6 +11,13 @@ import kotlin.time.Duration.Companion.seconds
 value class OperationName private constructor(
     val value: String,
 ) {
+    /**
+     * The telemetry slug of this operation's failures: `editor.authoring.state.query` becomes
+     * `editor-authoring-state-query-failed`. The transport generator derives route slugs by the same rule.
+     */
+    val failureSlug: ErrorSlug
+        get() = ErrorSlug.of(value.replace('.', '-').replace('_', '-') + "-failed")
+
     /** Creates a validated operation name. */
     companion object {
         fun of(value: String): OperationName {
@@ -45,7 +52,16 @@ enum class ResponseOutcome {
 data class ResponseClassification(
     val outcome: ResponseOutcome,
     val variant: ResponseVariant,
-)
+) {
+    /** Classifications by outcome, as generated response policies build them from Skir variant slugs. */
+    companion object {
+        fun success(variant: String) = ResponseClassification(ResponseOutcome.SUCCESS, ResponseVariant.of(variant))
+
+        fun domainError(variant: String) = ResponseClassification(ResponseOutcome.DOMAIN_ERROR, ResponseVariant.of(variant))
+
+        fun internalError(variant: String) = ResponseClassification(ResponseOutcome.INTERNAL_ERROR, ResponseVariant.of(variant))
+    }
+}
 
 /** Typed result of classifying a normal response. */
 internal sealed interface OperationOutcome<out Value> {
@@ -155,7 +171,8 @@ class EventContract<Address : Any, Event : Any>(
  *
  * The client subscribes before requesting initial state to reduce lost updates. Snapshot and update consistency
  * still belongs to the application protocol; this metadata provides no transactional snapshot boundary. Consumers
- * must define reconnect, duplicate, and revision handling.
+ * must define reconnect, duplicate, and revision handling. Updates carry no outcome of their own: every delivered
+ * update is a success.
  */
 class WatchContract<Address : Any, Request : Any, Initial : Any, Update : Any>(
     val name: OperationName,
@@ -165,7 +182,6 @@ class WatchContract<Address : Any, Request : Any, Initial : Any, Update : Any>(
     val initialCodec: PayloadCodec<Initial>,
     val updateCodec: PayloadCodec<Update>,
     val initialPolicy: ResponsePolicy<Initial>,
-    val updateClassifier: ResponseClassifier<Update>,
     val timeout: Duration = 10.seconds,
     val failureSlug: ErrorSlug,
     val updateFilter: (Request, Update) -> Boolean = { _, _ -> true },

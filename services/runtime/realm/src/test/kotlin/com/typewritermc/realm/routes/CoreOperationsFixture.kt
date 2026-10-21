@@ -277,7 +277,7 @@ internal class CoreOperationsFixture(
         }
         views = InMemoryAuthoringViewStore(lease, AuthoringSeed(resources.withRealmStructure(lease)))
         runtime = ResourceOperationRuntime(views)
-        routes = ResourceOperationRoutes(runtime, EditorContracts(RealmRouteScope("organization", "realm")))
+        routes = ResourceOperationRoutes(runtime, RealmRouteScope("organization", "realm"))
     }
 
     /** The published identity of the operation object [declaration]. */

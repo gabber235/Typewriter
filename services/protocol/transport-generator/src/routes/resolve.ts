@@ -7,6 +7,7 @@ import type {
   Token,
 } from "skir-internal";
 
+import { OutcomeAdmissionError, outcomeResponse, skirPosition, type OutcomeResponse } from "../outcomes.js";
 import { routeGrants, type Grant } from "./grants.js";
 import {
   routeParties,
@@ -37,6 +38,8 @@ export interface ResolvedMethod {
   readonly method: Method;
   readonly request: RecordLocation;
   readonly response: RecordLocation;
+  /** The classified variants of the response, which every request route requires. */
+  readonly outcomes: OutcomeResponse;
 }
 
 export type ResolvedEventBinding =
@@ -111,9 +114,7 @@ interface RouteAt {
 }
 
 function routeError(at: RouteAt, message: string, source?: Token): RouteError {
-  const position = source
-    ? ` (Skir ${source.line.modulePath}:${source.line.lineNumber + 1}:${source.colNumber + 1})`
-    : "";
+  const position = source ? ` (Skir ${skirPosition(source)})` : "";
   return new RouteError(`route ${at.name} at ${at.path}: ${message}${position}`);
 }
 
@@ -173,12 +174,17 @@ function resolveMethod(
     }
     return location;
   };
-  return {
-    module,
-    method,
-    request: recordOf(method.requestType),
-    response: recordOf(method.responseType),
-  };
+  const response = recordOf(method.responseType);
+  let outcomes;
+  try {
+    outcomes = outcomeResponse(response, input.recordMap);
+  } catch (error) {
+    if (error instanceof OutcomeAdmissionError) {
+      throw routeError(at, error.message, error.token);
+    }
+    throw error;
+  }
+  return { module, method, request: recordOf(method.requestType), response, outcomes };
 }
 
 function resolveRecord(

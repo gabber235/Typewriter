@@ -8,9 +8,11 @@ import {
   type ScopeKind,
   type TransportLimits,
 } from "../manifest.js";
+import type { MethodResponse } from "../../outcomes.js";
 import type { ResolvedRoutes } from "../resolve.js";
 import { scopeParameters } from "../subject.js";
 import { emitDispatchers } from "./rust_dispatch.js";
+import { emitResponses } from "./rust_responses.js";
 import {
   emitEventRoute,
   emitRequestRoute,
@@ -193,13 +195,15 @@ function emitLimits({ chunkBytes, maxChunks }: TransportLimits): string[] {
 
 /**
  * Emits the backend transport module: the reply framing limits, the role grants of each scope, the
- * consumer naming rule, one route type per route a component serves or publishes on, and one
- * dispatcher per component that receives messages. The route independent runtime they build on is hand written in
+ * consumer naming rule, one route type per route a component serves or publishes on, one
+ * dispatcher per component that receives messages and the `SkirResponse` implementation of every
+ * method response. The route independent runtime they build on is hand written in
  * `crate::transport`. generate.ts formats the module with rustfmt.
  */
 export function emitRust(
   resolved: ResolvedRoutes,
   symbols: CodeGenerator.SymbolProvider,
+  responses: readonly MethodResponse[],
 ): CodeGenerator.OutputFile[] {
   const { routes } = resolved;
   const lines = [
@@ -211,6 +215,7 @@ export function emitRust(
     ...routes.flatMap((route) => emitEventRoute(route, symbols)),
     ...routes.flatMap((route) => emitUpdateDelivery(route, symbols)),
     ...emitDispatchers(resolved, symbols),
+    ...emitResponses(responses, symbols),
   ];
   return [{ path: "mod.rs", code: `${lines.join("\n")}\n` }];
 }

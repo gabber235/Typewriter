@@ -119,7 +119,6 @@ private val watch =
         strings,
         strings,
         successPolicy,
-        successPolicy,
         2.seconds,
         ErrorSlug.of("book-watch-failed"),
     )
@@ -421,38 +420,6 @@ val CommunicatorTest by testSuite {
         }
     }
 
-    test("publish update classifier failures are recorded by producer telemetry") {
-        runTest {
-            fixture().use { (client, _, harness) ->
-                val programmerError = IllegalStateException("classifier")
-                val policy =
-                    ResponsePolicy<String>("internal") { value ->
-                        if (value == "update") throw programmerError
-                        ResponseClassification(ResponseOutcome.INTERNAL_ERROR, ResponseVariant.of("internal"))
-                    }
-                val contract =
-                    WatchContract(
-                        watch.name,
-                        requestAddress,
-                        updateAddress,
-                        strings,
-                        strings,
-                        strings,
-                        successPolicy,
-                        policy,
-                        watch.timeout,
-                        watch.failureSlug,
-                    )
-                val thrown = shouldThrow<Throwable> { client.publishUpdate(contract, Target("a"), "update") }
-                generateSequence(thrown) { it.cause }.contains(programmerError) shouldBe true
-                val span = harness.finishedSpans().single()
-                span.name shouldBe "book.watch publish"
-                span.status.statusCode shouldBe StatusCode.ERROR
-                span.attributes[AttributeKey.stringKey("messaging.destination.template")] shouldBe "service.{id}.updates"
-            }
-        }
-    }
-
     test("typed internal response is success without exception based span failure") {
         runTest {
             fixture().use { (client, fake, harness) ->
@@ -542,7 +509,6 @@ val CommunicatorTest by testSuite {
                         watch.initialCodec,
                         watch.updateCodec,
                         watch.initialPolicy,
-                        watch.updateClassifier,
                         watch.timeout,
                         watch.failureSlug,
                         updateFilter = { request, update -> request == update },

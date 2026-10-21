@@ -432,6 +432,30 @@ async fn permission_exchange_failure_does_not_issue_credentials(
 }
 
 #[component_test(AuthCallout)]
+async fn internal_permission_reply_does_not_issue_credentials(
+    context: &mut TestContext<AuthCallout>,
+) -> TestResult {
+    expect_jwks(context)?;
+    context
+        .messaging_mock()?
+        .expect_request("auth.permissions.typewriter-panel")
+        .reply_skir(
+            &GetEntityPermissionResponse::InternalError(Box::default()),
+            GetEntityPermissionResponse::serializer(),
+        );
+
+    // A resolver failure is an authorization failure, never an empty grant.
+    let result = authorize(
+        context,
+        auth_request(Some(external_jwt(Some("Panel User"))?))?,
+    )
+    .await;
+
+    assert!(result.is_err());
+    Ok(())
+}
+
+#[component_test(AuthCallout)]
 async fn malformed_authorization_request_does_not_receive_response(
     context: &mut TestContext<AuthCallout>,
 ) -> TestResult {

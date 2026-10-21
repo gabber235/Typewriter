@@ -23,14 +23,14 @@ import kotlinx.coroutines.yield
 import kotlin.time.Duration.Companion.seconds
 
 internal class RouteFixture(
-    routes: (EditorContracts, RealmRouteScope, Communicator) -> CommunicatorRoutes,
+    routes: (RealmRouteScope, Communicator) -> CommunicatorRoutes,
 ) : AutoCloseable {
     val transport = FakeMessageTransport()
     private val telemetry = TelemetryTestHarness.create()
     private val communicator = Communicator(transport, telemetry.telemetry, ContextPropagators.noop())
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
     private val address = RealmRouteScope(organizationId = "organization", realmId = "realm")
-    private val router: CommunicatorRouter = communicator.createRouter(routes(EditorContracts(address), address, communicator), scope)
+    private val router: CommunicatorRouter = communicator.createRouter(routes(address, communicator), scope)
     private var replySequence = 0
 
     init {

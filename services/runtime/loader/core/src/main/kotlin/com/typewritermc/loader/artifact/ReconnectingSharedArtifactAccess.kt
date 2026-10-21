@@ -15,10 +15,6 @@ import com.typewritermc.protocol.transport.RealmRouteScope
 import com.typewritermc.protocol.transport.generated.sharedCatalogFetch
 import com.typewritermc.protocol.transport.generated.sharedPublish
 import com.typewritermc.services.libs.communicator.client.Communicator
-import com.typewritermc.services.libs.communicator.contract.ResponseClassification
-import com.typewritermc.services.libs.communicator.contract.ResponseOutcome
-import com.typewritermc.services.libs.communicator.contract.ResponsePolicy
-import com.typewritermc.services.libs.communicator.contract.ResponseVariant
 import com.typewritermc.services.libs.communicator.contract.UnaryContract
 import com.typewritermc.services.libs.communicator.result.CommunicationResult
 import com.typewritermc.services.libs.filetransfer.blob.ArtifactDigest
@@ -168,7 +164,7 @@ private class CommunicatorSharedMetadataClient(
     private val address: RealmRouteScope,
 ) {
     suspend fun catalog(): SharedArtifactCatalog =
-        when (val response = request(sharedContracts.catalog(address), FetchSharedArtifactCatalogRequest(afterRevision = null))) {
+        when (val response = request(address.sharedCatalogFetch, FetchSharedArtifactCatalogRequest(afterRevision = null))) {
             is FetchSharedArtifactCatalogResponse.SuccessWrapper -> {
                 SharedArtifactCatalog(
                     SharedCatalogRevision(response.value.revision),
@@ -216,7 +212,7 @@ private class CommunicatorSharedMetadataClient(
         )
 
     private suspend fun publish(request: PublishSharedArtifactRequest): PublishResult =
-        when (val response = request(sharedContracts.publish(address), request)) {
+        when (val response = request(address.sharedPublish, request)) {
             is PublishSharedArtifactResponse.PublishedWrapper -> {
                 PublishResult.Published(response.value.toApi(), catalog().revision)
             }
@@ -251,25 +247,6 @@ private class CommunicatorSharedMetadataClient(
             }
         }
 }
-
-internal class SharedContracts {
-    fun catalog(scope: RealmRouteScope) =
-        scope.sharedCatalogFetch(ResponsePolicy(FetchSharedArtifactCatalogResponse.createInternalError(), unavailableClassifier()))
-
-    fun publish(scope: RealmRouteScope) =
-        scope.sharedPublish(ResponsePolicy(PublishSharedArtifactResponse.createInternalError(), unavailableClassifier()))
-}
-
-internal val sharedContracts = SharedContracts()
-
-private fun <Response : Any> unavailableClassifier() =
-    com.typewritermc.services.libs.communicator.contract.ResponseClassifier<Response> { response ->
-        val failed = response::class.simpleName == "InternalErrorWrapper"
-        ResponseClassification(
-            if (failed) ResponseOutcome.INTERNAL_ERROR else ResponseOutcome.SUCCESS,
-            ResponseVariant.of(if (failed) "internal-error" else "success"),
-        )
-    }
 
 private fun ArtifactDigest.toSkir() = SkirArtifactDigest(algorithm = SkirDigestAlgorithm.SHA256, value = value)
 

@@ -107,13 +107,6 @@ class Organizations extends _$Organizations {
     final response = await ref.mutateSkir(
       request.operation(userId: userId),
       label: "Create organization",
-      classify: (response) => switch (response) {
-        skir.CreateOrganizationResponse_successWrapper() =>
-          MutationResponseDisposition.confirmed,
-        skir.CreateOrganizationResponse_unknown() ||
-        skir.CreateOrganizationResponse_internalErrorWrapper() =>
-          MutationResponseDisposition.uncertain,
-      },
     );
 
     switch (response) {

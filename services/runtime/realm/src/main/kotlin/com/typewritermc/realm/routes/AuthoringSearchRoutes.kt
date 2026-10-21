@@ -1,6 +1,8 @@
 package com.typewritermc.realm.routes
 
 import com.typewritermc.authoring.AuthoringRecord
+import com.typewritermc.protocol.transport.RealmRouteScope
+import com.typewritermc.protocol.transport.generated.authoringSearch
 import com.typewritermc.realm.authoring.AuthoringViewStore
 import com.typewritermc.realm.search.AuthoringSearchRepository
 import com.typewritermc.realm.search.IndexedAuthoringSearchCandidate
@@ -29,11 +31,11 @@ import skirout.editor.v1.typed_value.PortableValue as SkirPortableValue
 internal class AuthoringSearchRoutes(
     private val repository: AuthoringSearchRepository,
     private val views: AuthoringViewStore,
-    private val contracts: EditorContracts,
+    private val address: RealmRouteScope,
 ) {
     fun register(builder: CommunicatorRoutesBuilder) =
         with(builder) {
-            unary(contracts.searchAuthoring) { call -> search(call.request) }
+            unary(address.authoringSearch) { call -> search(call.request) }
         }
 
     internal fun search(request: SearchAuthoringRequest): SearchAuthoringResponse =

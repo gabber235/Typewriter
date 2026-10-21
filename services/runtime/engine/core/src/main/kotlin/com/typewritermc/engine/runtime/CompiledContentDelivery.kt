@@ -9,11 +9,6 @@ import com.typewritermc.protocol.transport.RealmRouteScope
 import com.typewritermc.protocol.transport.generated.authoringCompiledChanged
 import com.typewritermc.protocol.transport.generated.authoringCompiledQuery
 import com.typewritermc.services.libs.communicator.client.Communicator
-import com.typewritermc.services.libs.communicator.contract.ResponseClassification
-import com.typewritermc.services.libs.communicator.contract.ResponseClassifier
-import com.typewritermc.services.libs.communicator.contract.ResponseOutcome
-import com.typewritermc.services.libs.communicator.contract.ResponsePolicy
-import com.typewritermc.services.libs.communicator.contract.ResponseVariant
 import com.typewritermc.services.libs.communicator.result.CommunicationResult
 import com.typewritermc.services.libs.communicator.router.RouterResult
 import com.typewritermc.services.libs.communicator.router.communicatorRoutes
@@ -183,7 +178,7 @@ internal suspend fun fetchPublishedContent(
     communicator: Communicator,
     address: RealmRouteScope,
 ): com.typewritermc.engine.PublishedContent? =
-    when (val result = communicator.request(publishedContentQuery(address), address, QueryPublishedContentRequest())) {
+    when (val result = communicator.request(address.authoringCompiledQuery, address, QueryPublishedContentRequest())) {
         is CommunicationResult.Failure -> {
             throw result.error.cause ?: IllegalStateException("Published content query failed")
         }
@@ -195,28 +190,4 @@ internal suspend fun fetchPublishedContent(
                 else -> error("Published content is unavailable")
             }
         }
-    }
-
-private fun publishedContentQuery(address: RealmRouteScope) =
-    address.authoringCompiledQuery(
-        policy = ResponsePolicy(QueryPublishedContentResponse.createInternalError(), compiledContentResponseClassifier),
-    )
-
-private val compiledContentResponseClassifier =
-    ResponseClassifier<QueryPublishedContentResponse> { response ->
-        ResponseClassification(
-            when (response) {
-                is QueryPublishedContentResponse.ContentWrapper, is QueryPublishedContentResponse.AbsentWrapper -> ResponseOutcome.SUCCESS
-                is QueryPublishedContentResponse.InternalErrorWrapper -> ResponseOutcome.INTERNAL_ERROR
-                else -> ResponseOutcome.DOMAIN_ERROR
-            },
-            ResponseVariant.of(
-                when (response) {
-                    is QueryPublishedContentResponse.ContentWrapper -> "content"
-                    is QueryPublishedContentResponse.AbsentWrapper -> "absent"
-                    is QueryPublishedContentResponse.InternalErrorWrapper -> "internal-error"
-                    else -> "unknown"
-                },
-            ),
-        )
     }

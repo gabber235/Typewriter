@@ -24,11 +24,9 @@ import com.typewritermc.loader.api.artifact.SharedArtifactId
 import com.typewritermc.loader.api.artifact.SharedArtifactProvenance
 import com.typewritermc.loader.artifact.ArtifactCoordinate
 import com.typewritermc.loader.artifact.ArtifactInboxReconciler
-import com.typewritermc.loader.artifact.BlobContracts
 import com.typewritermc.loader.artifact.DeploymentArtifact
 import com.typewritermc.loader.artifact.FileCandidateRepository
 import com.typewritermc.loader.artifact.FileDigestBlobStore
-import com.typewritermc.loader.artifact.SharedContracts
 import com.typewritermc.loader.deployment.DeploymentContent
 import com.typewritermc.loader.deployment.DeploymentContentCodec
 import com.typewritermc.loader.deployment.DeploymentGeneration
@@ -55,10 +53,6 @@ import com.typewritermc.loader.rollout.RolloutEnvelope
 import com.typewritermc.loader.rollout.RolloutMessenger
 import com.typewritermc.loader.rollout.RuntimeHealthSnapshot
 import com.typewritermc.loader.rollout.deploymentSelectionOrNull
-import com.typewritermc.loader.rollout.hostExecutionReportResponsePolicy
-import com.typewritermc.loader.rollout.hostExecutionResponseClassifier
-import com.typewritermc.loader.rollout.hostExecutionResponsePolicy
-import com.typewritermc.loader.rollout.hostRegistrationResponsePolicy
 import com.typewritermc.loader.rollout.toChildRuntimeState
 import com.typewritermc.loader.rollout.toDesiredHostExecution
 import com.typewritermc.loader.shared.FileSharedArtifactRepository
@@ -69,6 +63,13 @@ import com.typewritermc.protocol.transport.generated.authoringCompiledChanged
 import com.typewritermc.protocol.transport.generated.hostExecutionReport
 import com.typewritermc.protocol.transport.generated.hostExecutionWatch
 import com.typewritermc.protocol.transport.generated.serviceHostRegister
+import com.typewritermc.protocol.transport.generated.sharedBlobBegin
+import com.typewritermc.protocol.transport.generated.sharedBlobComplete
+import com.typewritermc.protocol.transport.generated.sharedBlobMetadata
+import com.typewritermc.protocol.transport.generated.sharedBlobRead
+import com.typewritermc.protocol.transport.generated.sharedBlobWrite
+import com.typewritermc.protocol.transport.generated.sharedCatalogFetch
+import com.typewritermc.protocol.transport.generated.sharedPublish
 import com.typewritermc.services.libs.filetransfer.blob.ArtifactDigest
 import com.typewritermc.services.libs.filetransfer.blob.BlobMetadata
 import com.typewritermc.services.libs.filetransfer.blob.BlobResult
@@ -160,25 +161,23 @@ val ArtifactDistributionTest by testSuite {
     }
 
     test("shared artifact contracts use valid telemetry slugs") {
-        val contracts = SharedContracts()
         val scope = RealmRouteScope(organizationId = "writers", realmId = "quests")
-        contracts.catalog(scope).failureSlug.value shouldBe "shared-catalog-fetch-failed"
-        contracts.publish(scope).failureSlug.value shouldBe "shared-publish-failed"
+        scope.sharedCatalogFetch.failureSlug.value shouldBe "shared-catalog-fetch-failed"
+        scope.sharedPublish.failureSlug.value shouldBe "shared-publish-failed"
     }
 
     test("blob contracts use valid telemetry slugs") {
-        val contracts = BlobContracts()
         val scope = RealmRouteScope(organizationId = "writers", realmId = "quests")
-        contracts.metadata(scope).failureSlug.value shouldBe "shared-blob-metadata-failed"
-        contracts.read(scope).failureSlug.value shouldBe "shared-blob-read-failed"
-        contracts.begin(scope).failureSlug.value shouldBe "shared-blob-begin-failed"
-        contracts.write(scope).failureSlug.value shouldBe "shared-blob-write-failed"
-        contracts.complete(scope).failureSlug.value shouldBe "shared-blob-complete-failed"
+        scope.sharedBlobMetadata.failureSlug.value shouldBe "shared-blob-metadata-failed"
+        scope.sharedBlobRead.failureSlug.value shouldBe "shared-blob-read-failed"
+        scope.sharedBlobBegin.failureSlug.value shouldBe "shared-blob-begin-failed"
+        scope.sharedBlobWrite.failureSlug.value shouldBe "shared-blob-write-failed"
+        scope.sharedBlobComplete.failureSlug.value shouldBe "shared-blob-complete-failed"
     }
 
     test("generated Realm routes preserve the established authority family") {
         val address = RealmRouteScope(realmId = "quests", organizationId = "writers")
-        val shared = SharedContracts().publish(address)
+        val shared = address.sharedPublish
 
         shared.requestAddress.render(address).value shouldBe
             "service.to.quests.organization.writers.realm.shared.publish"
@@ -190,9 +189,9 @@ val ArtifactDistributionTest by testSuite {
 
     test("generated host execution routes preserve the service authority family") {
         val scope = ServiceRouteScope("host")
-        val registration = scope.serviceHostRegister(hostRegistrationResponsePolicy)
-        val watch = scope.hostExecutionWatch(hostExecutionResponsePolicy, hostExecutionResponseClassifier)
-        val report = scope.hostExecutionReport(hostExecutionReportResponsePolicy)
+        val registration = scope.serviceHostRegister
+        val watch = scope.hostExecutionWatch
+        val report = scope.hostExecutionReport
 
         registration.requestAddress.render(scope).value shouldBe "cloud.to.service.host.execution.register"
         watch.requestAddress.render(scope).value shouldBe "cloud.to.service.host.execution.watch"

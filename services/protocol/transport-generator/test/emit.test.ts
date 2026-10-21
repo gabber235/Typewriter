@@ -1,6 +1,7 @@
 import { describe, expect, test } from "bun:test";
 
 import { generatorFor, type Target } from "../src/index.js";
+import { methodResponses } from "../src/outcomes.js";
 import { emitDart } from "../src/routes/emit/dart.js";
 import { emitKotlin, emitKotlinLoader } from "../src/routes/emit/kotlin.js";
 import { emitRust } from "../src/routes/emit/rust.js";
@@ -24,7 +25,7 @@ describe("route emission", () => {
     expect(loader!.code).toContain("val RealmRouteScope.realmRolloutState");
     expect(loader!.code).toContain("RolloutCodecs.participantState");
 
-    const [rust, ...otherRustFiles] = emitRust(resolved, symbolProviders(input).rust);
+    const [rust, ...otherRustFiles] = emitRust(resolved, symbolProviders(input).rust, methodResponses(input));
     expect(otherRustFiles).toEqual([]);
     const code = rust!.code;
     const impl = (contract: string, route: string) => `impl crate::transport::${contract} for ${route}`;
@@ -46,7 +47,7 @@ describe("route emission", () => {
 
   test("role grants bind the grantee's identifiers and wildcard the rest", async () => {
     const { input, resolved } = await committedRoutes();
-    const [rust] = emitRust(resolved, symbolProviders(input).rust);
+    const [rust] = emitRust(resolved, symbolProviders(input).rust, methodResponses(input));
     const member = section(rust!.code, "impl crate::transport::OrganizationActorScope {", "\n}\n");
     expect(member).toContain("session: &crate::transport::ConnectionSession,");
     expect(member).toContain('"service.to.*.organization.{organization}.realm.editor.catalog.fetch"');
@@ -64,7 +65,7 @@ describe("route emission", () => {
 
   test("both languages name persistent consumers from one template", async () => {
     const { input, resolved } = await committedRoutes();
-    const [rust] = emitRust(resolved, symbolProviders(input).rust);
+    const [rust] = emitRust(resolved, symbolProviders(input).rust, methodResponses(input));
     const [dart] = emitDart(resolved, symbolProviders(input).dart);
     expect(rust!.code).toContain(
       "let identity = serde_json::json!([actor.as_str(), organization.map(crate::transport::SubjectToken::as_str), session.as_str(), projection]);",
@@ -144,7 +145,7 @@ describe("reply framing limits", () => {
     expect(kotlin!.code).toContain("val TRANSPORT_LIMITS = TransportLimits(chunkBytes = 524288, maxChunks = 64)");
     const [dart] = emitDart(resolved, providers.dart);
     expect(dart!.code).toContain("const transportLimits = TransportLimits(chunkBytes: 524288, maxChunks: 64);");
-    const [rust] = emitRust(resolved, providers.rust);
+    const [rust] = emitRust(resolved, providers.rust, methodResponses(input));
     expect(rust!.code).toContain("pub const RESPONSE_CHUNK_BYTES: usize = 524288;");
     expect(rust!.code).toContain("pub const MAX_RESPONSE_CHUNKS: usize = 64;");
   });
@@ -152,7 +153,7 @@ describe("reply framing limits", () => {
   test("bulk reads are plain unary routes without an update channel", async () => {
     const { input, resolved } = await committedRoutes();
     const [realm] = emitKotlin(resolved, symbolProviders(input).kotlin);
-    const catalog = section(realm!.code, "fun RealmRouteScope.editorCatalogFetch(", "\n)\n");
+    const catalog = section(realm!.code, "val RealmRouteScope.editorCatalogFetch get() =", "\n)\n");
     expect(catalog).toContain("skirUnaryContract(");
     expect(realm!.code).not.toContain("updateAddressResolver");
     const [dart] = emitDart(resolved, symbolProviders(input).dart);

@@ -12,6 +12,10 @@ import com.typewritermc.operations.OperationOrigin
 import com.typewritermc.operations.PreparationChoice
 import com.typewritermc.operations.PreparationChoiceAnswer
 import com.typewritermc.operations.PreparationChoices
+import com.typewritermc.protocol.transport.RealmRouteScope
+import com.typewritermc.protocol.transport.generated.authoringActionPrepare
+import com.typewritermc.protocol.transport.generated.resourceDropCandidatesResolve
+import com.typewritermc.protocol.transport.generated.resourceOperationsResolve
 import com.typewritermc.realm.authoring.OperationCatalogChanged
 import com.typewritermc.realm.authoring.OperationPreparationResult
 import com.typewritermc.realm.authoring.OperationResolutionFailure
@@ -54,13 +58,13 @@ import skirout.editor.v1.type_catalog.ResourceId as SkirResourceId
  */
 internal class ResourceOperationRoutes(
     private val runtime: ResourceOperationRuntime,
-    private val contracts: EditorContracts,
+    private val address: RealmRouteScope,
 ) {
     fun register(builder: CommunicatorRoutesBuilder) =
         with(builder) {
-            unary(contracts.resolveResourceOperations) { call -> resolve(call.request) }
-            unary(contracts.resolveDropCandidates) { call -> resolveDropCandidates(call.request) }
-            unary(contracts.prepareAuthoringAction) { call -> prepare(call.request) }
+            unary(address.resourceOperationsResolve) { call -> resolve(call.request) }
+            unary(address.resourceDropCandidatesResolve) { call -> resolveDropCandidates(call.request) }
+            unary(address.authoringActionPrepare) { call -> prepare(call.request) }
         }
 
     internal fun resolve(request: ResolveResourceOperationsRequest): ResolveResourceOperationsResult =

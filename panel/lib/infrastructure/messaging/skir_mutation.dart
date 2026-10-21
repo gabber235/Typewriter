@@ -2,13 +2,6 @@ import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
     as skir;
 import "package:typewriter_panel/typewriter_panel.dart";
 
-/// Classification returned by a feature after decoding a mutation response.
-///
-/// The distinction controls whether the shared submission owner can mark the
-/// attempt complete, surface a normal rejection, or protect against replaying
-/// an operation whose outcome is not known.
-enum MutationResponseDisposition { confirmed, rejected, uncertain }
-
 /// Adapts a Riverpod scope to the shared mutation submission boundary.
 ///
 /// These helpers keep Skir bytes and serializers at the messaging edge while
@@ -21,7 +14,6 @@ extension RefSkirMutation on Ref {
   PreparedCommit<TResponse> prepareSkir<TResponse>(
     SkirRouteOperation<TResponse> operation, {
     required String label,
-    required MutationResponseDisposition Function(TResponse) classify,
     String Function(TResponse)? rejectionMessage,
     Future<void> Function(TResponse)? onResponse,
     String? submissionId,
@@ -36,7 +28,6 @@ extension RefSkirMutation on Ref {
         .prepare(
           operation,
           label: label,
-          classify: classify,
           rejectionMessage: rejectionMessage,
           onResponse: onResponse,
           submissionId: submissionId,
@@ -53,7 +44,6 @@ extension RefSkirMutation on Ref {
   Future<TResponse> mutateSkir<TResponse>(
     SkirRouteOperation<TResponse> operation, {
     required String label,
-    required MutationResponseDisposition Function(TResponse) classify,
     String Function(TResponse)? rejectionMessage,
     Future<void> Function(TResponse)? onResponse,
     String? submissionId,
@@ -63,7 +53,6 @@ extension RefSkirMutation on Ref {
     prepareSkir(
       operation,
       label: label,
-      classify: classify,
       rejectionMessage: rejectionMessage,
       onResponse: onResponse,
       submissionId: submissionId,
@@ -132,7 +121,6 @@ final class SkirMutationClient {
   PreparedCommit<TResponse> prepare<TResponse>(
     SkirRouteOperation<TResponse> operation, {
     required String label,
-    required MutationResponseDisposition Function(TResponse) classify,
     String Function(TResponse)? rejectionMessage,
     Future<void> Function(TResponse)? onResponse,
     String? submissionId,
@@ -186,18 +174,18 @@ final class SkirMutationClient {
         );
 
         final value = operation.responseSerializer.fromBytes(response.payload);
-        final disposition = classify(value);
 
-        return switch (disposition) {
-          MutationResponseDisposition.confirmed => SubmissionResult.confirmed(
-            value,
-          ),
-          MutationResponseDisposition.rejected => SubmissionResult.rejected(
+        // The generated outcome follows the Skir variant name: a success
+        // confirms, a domain error rejects, and an internal error leaves the
+        // result uncertain.
+        return switch (operation.outcome(value)) {
+          ResponseOutcome.success => SubmissionResult.confirmed(value),
+          ResponseOutcome.domainError => SubmissionResult.rejected(
             message:
                 rejectionMessage?.call(value) ?? "The operation was rejected",
             response: value,
           ),
-          MutationResponseDisposition.uncertain => SubmissionResult.uncertain(
+          ResponseOutcome.internalError => SubmissionResult.uncertain(
             message: "The server could not confirm the operation",
             cause: StateError("Unconfirmed mutation response"),
             stackTrace: StackTrace.current,

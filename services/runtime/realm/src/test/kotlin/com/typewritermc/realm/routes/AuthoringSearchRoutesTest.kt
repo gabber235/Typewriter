@@ -40,9 +40,9 @@ val AuthoringSearchRoutesTest by testSuite {
                 )
             val repository = RecordingSearchRepository()
             try {
-                RouteFixture { contracts, _, _ ->
+                RouteFixture { address, _ ->
                     communicatorRoutes {
-                        AuthoringSearchRoutes(repository, views, contracts).register(this)
+                        AuthoringSearchRoutes(repository, views, address).register(this)
                     }
                 }.use { fixture ->
                     val response =
@@ -82,9 +82,9 @@ val AuthoringSearchRoutesTest by testSuite {
                     AuthoringSeed(resources = mapOf(resource to authored)),
                 )
             try {
-                RouteFixture { contracts, _, _ ->
+                RouteFixture { address, _ ->
                     communicatorRoutes {
-                        AuthoringSearchRoutes(RecordingSearchRepository(), views, contracts).register(this)
+                        AuthoringSearchRoutes(RecordingSearchRepository(), views, address).register(this)
                     }
                 }.use { fixture ->
                     val response =

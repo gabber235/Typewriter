@@ -6,6 +6,11 @@ import com.typewritermc.authoring.TypeSelection
 import com.typewritermc.authoring.definition
 import com.typewritermc.authoring.skir.SkirAuthoringOperationCodec
 import com.typewritermc.checking.CatalogGeneration
+import com.typewritermc.protocol.transport.RealmRouteScope
+import com.typewritermc.protocol.transport.generated.authoringEditCommit
+import com.typewritermc.protocol.transport.generated.authoringStateQuery
+import com.typewritermc.protocol.transport.generated.authoringTypeCommit
+import com.typewritermc.protocol.transport.generated.authoringTypePreview
 import com.typewritermc.realm.authoring.AuthoringViewStore
 import com.typewritermc.realm.authoring.DefaultTypeArgumentOperations
 import com.typewritermc.realm.authoring.LinkRepairIntent
@@ -54,19 +59,19 @@ internal class AuthoringRoutes(
     private val views: AuthoringViewStore,
     private val findings: () -> List<FindingSet>,
     private val typeArguments: TypeArgumentOperations = DefaultTypeArgumentOperations(views),
-    private val contracts: EditorContracts,
+    private val address: RealmRouteScope,
 ) {
     fun register(builder: CommunicatorRoutesBuilder) =
         with(builder) {
-            unary(contracts.queryAuthoringState) { call -> query(call.request) }
-            unary(contracts.commitPreparedEdit) { call ->
+            unary(address.authoringStateQuery) { call -> query(call.request) }
+            unary(address.authoringEditCommit) { call ->
                 val edit = SkirAuthoringOperationCodec.decode(call.request).getOrThrow()
                 SkirAuthoringOperationCodec.encode(repository.commit(edit)).getOrThrow()
             }
-            unary(contracts.previewTypeArgumentChange) { call ->
+            unary(address.authoringTypePreview) { call ->
                 preview(call.request).toWire()
             }
-            unary(contracts.prepareTypeArgumentChange) { call ->
+            unary(address.authoringTypeCommit) { call ->
                 val preview = call.request.toDomain()
                 typeArguments.prepare(preview).toWire()
             }

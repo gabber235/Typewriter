@@ -6,28 +6,36 @@
 
 use otel_wasi::Error;
 
-use super::delivery::ResponseDelivery;
 use super::route::{EventRoute, RequestRoute, decode};
-use crate::wasmcloud::messaging::types::NatsMessage;
+use crate::SkirResponse;
+use crate::wasmcloud::messaging::{self, types::NatsMessage};
 
-/// Decodes one matched request, runs its handler and replies with the handler result.
+/// Decodes one matched request, runs its handler and replies with the typed response.
 ///
-/// An invalid scope or an undecodable request skips the handler and is delivered like a handler
-/// error, so the route's [`ResponseDelivery`] decides what the caller receives. Undecodable
-/// requests fail with `transport-decode`.
+/// An invalid scope or an undecodable request skips the handler and is handled like a handler
+/// error: the caller receives the response's internal_error variant and the error is returned.
+/// Undecodable requests fail with `transport-decode`.
 pub async fn serve_request<Route: RequestRoute>(
     msg: NatsMessage,
     scope: Result<Route::Scope, Error>,
     handler: impl AsyncFnOnce(Route::Scope, Route::Request) -> Result<Route::Response, Error>,
-) -> Result<(), Error> {
-    let method = Route::method();
-    let result = async {
-        let scope = scope?;
-        let request = decode(&method.request_serializer, &msg.body)?;
-        handler(scope, request).await
-    }
-    .await;
-    Route::Delivery::reply(msg, result, &method.response_serializer).await
+) -> Result<(), Error>
+where
+    Route::Response: SkirResponse,
+{
+    let result = handle::<Route>(&msg.body, scope, handler).await;
+    messaging::reply_handler_result(msg, result).await
+}
+
+/// Decodes a matched request and runs its handler, skipping it on an invalid scope or request.
+async fn handle<Route: RequestRoute>(
+    body: &[u8],
+    scope: Result<Route::Scope, Error>,
+    handler: impl AsyncFnOnce(Route::Scope, Route::Request) -> Result<Route::Response, Error>,
+) -> Result<Route::Response, Error> {
+    let scope = scope?;
+    let request = decode(&Route::method().request_serializer, body)?;
+    handler(scope, request).await
 }
 
 /// Decodes one matched event and runs its handler; events have no reply.
@@ -57,8 +65,6 @@ pub fn unmatched(msg: &NatsMessage) -> Error {
 
 #[cfg(test)]
 mod tests {
-    use std::cell::RefCell;
-
     use otel_wasi::WasiError as _;
 
     use super::*;
@@ -71,36 +77,12 @@ mod tests {
     use crate::transport::test_support::{block_on, nats_message};
     use crate::transport::{ServiceScope, SubjectToken};
 
-    thread_local! {
-        /// The serialized response or error slug of every reply the recording delivery saw.
-        static REPLIES: RefCell<Vec<Result<Vec<u8>, &'static str>>> = const { RefCell::new(Vec::new()) };
-    }
-
-    /// Records replies instead of publishing them.
-    struct RecordingDelivery;
-
-    impl<Response> ResponseDelivery<Response> for RecordingDelivery {
-        async fn reply(
-            _msg: NatsMessage,
-            result: Result<Response, Error>,
-            serializer: &Serializer<Response>,
-        ) -> Result<(), Error> {
-            let reply = match &result {
-                Ok(response) => Ok(serializer.to_bytes(response)),
-                Err(error) => Err(error.slug()),
-            };
-            REPLIES.with_borrow_mut(|replies| replies.push(reply));
-            result.map(|_| ())
-        }
-    }
-
     struct PermissionRoute;
 
     impl RequestRoute for PermissionRoute {
         type Scope = ServiceScope;
         type Request = GetEntityPermissionRequest;
         type Response = GetEntityPermissionResponse;
-        type Delivery = RecordingDelivery;
 
         fn method() -> &'static Method<Self::Request, Self::Response> {
             get_entity_permission_method()
@@ -118,10 +100,6 @@ mod tests {
         }
     }
 
-    fn take_replies() -> Vec<Result<Vec<u8>, &'static str>> {
-        REPLIES.with_borrow_mut(std::mem::take)
-    }
-
     fn request_body() -> Vec<u8> {
         GetEntityPermissionRequest::serializer().to_bytes(&GetEntityPermissionRequest {
             jwt_claims: b"claims".to_vec(),
@@ -130,30 +108,28 @@ mod tests {
     }
 
     #[test]
-    fn serve_request_hands_scope_and_request_to_the_handler_and_replies() {
-        let msg = nats_message("auth.permissions.test", &request_body());
+    fn handle_passes_scope_and_request_to_the_handler() {
         let response = GetEntityPermissionResponse::Granted(Box::new(EntityPermissionGrant {
             tags: vec!["seen".to_owned()],
             ..Default::default()
         }));
-        let expected = GetEntityPermissionResponse::serializer().to_bytes(&response);
-        block_on(serve_request::<PermissionRoute>(
-            msg,
+        let handled = block_on(handle::<PermissionRoute>(
+            &request_body(),
             ServiceScope::from_tokens("s1"),
             async |scope: ServiceScope, request: GetEntityPermissionRequest| {
                 assert_eq!(scope.service, SubjectToken::try_from("s1").unwrap());
                 assert_eq!(request.jwt_claims, b"claims");
-                Ok(response)
+                Ok(response.clone())
             },
         ))
         .unwrap();
-        assert_eq!(take_replies(), vec![Ok(expected)]);
+        assert_eq!(handled, response);
     }
 
     #[test]
-    fn serve_request_delivers_scope_and_decode_failures_without_running_the_handler() {
-        let invalid_scope = block_on(serve_request::<PermissionRoute>(
-            nats_message("auth.permissions.test", &request_body()),
+    fn handle_skips_the_handler_on_scope_and_decode_failures() {
+        let invalid_scope = block_on(handle::<PermissionRoute>(
+            &request_body(),
             ServiceScope::from_tokens("*"),
             async |_, _| -> Result<GetEntityPermissionResponse, Error> {
                 unreachable!("an invalid scope never reaches the handler")
@@ -162,8 +138,8 @@ mod tests {
         .unwrap_err();
         assert_eq!(invalid_scope.slug(), "transport-invalid-token");
 
-        let undecodable = block_on(serve_request::<PermissionRoute>(
-            nats_message("auth.permissions.test", b"not skir"),
+        let undecodable = block_on(handle::<PermissionRoute>(
+            b"not skir",
             ServiceScope::from_tokens("s1"),
             async |_, _| -> Result<GetEntityPermissionResponse, Error> {
                 unreachable!("an undecodable request never reaches the handler")
@@ -171,10 +147,16 @@ mod tests {
         ))
         .unwrap_err();
         assert_eq!(undecodable.slug(), "transport-decode");
-        assert_eq!(
-            take_replies(),
-            vec![Err("transport-invalid-token"), Err("transport-decode")]
-        );
+    }
+
+    #[test]
+    fn a_failed_request_falls_back_to_the_internal_error_variant() {
+        let fallback = GetEntityPermissionResponse::internal_error();
+        assert!(matches!(
+            fallback,
+            GetEntityPermissionResponse::InternalError(_)
+        ));
+        assert_eq!(fallback.variant_slug(), "internal-error");
     }
 
     #[test]

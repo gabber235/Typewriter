@@ -1,9 +1,16 @@
 import type { CodeGenerator } from "skir-internal";
 
-import { importedKotlinSymbol } from "../../symbols.js";
+import { UNKNOWN_SLUG, type Outcome, type OutcomeResponse } from "../../outcomes.js";
+import { importedKotlinSymbol, kotlinWrapperClass } from "../../symbols.js";
 import { lowerCamel, quoted } from "../../text.js";
 import type { Channel, TransportLimits } from "../manifest.js";
-import { clientSubject, hasSide, type ResolvedRoute, type ResolvedRoutes } from "../resolve.js";
+import {
+  clientSubject,
+  hasSide,
+  type ResolvedMethod,
+  type ResolvedRoute,
+  type ResolvedRoutes,
+} from "../resolve.js";
 
 const COMMUNICATOR = "com.typewritermc.services.libs.communicator";
 
@@ -13,14 +20,12 @@ const SCOPES = "com.typewritermc.protocol.transport";
 const GENERATED_PACKAGE = "com.typewritermc.protocol.transport.generated";
 
 const ROUTE_IMPORTS = [
-  `${COMMUNICATOR}.contract.EventContract`,
   `${COMMUNICATOR}.contract.OperationName`,
-  `${COMMUNICATOR}.contract.ResponseClassifier`,
+  `${COMMUNICATOR}.contract.ResponseClassification`,
   `${COMMUNICATOR}.contract.ResponsePolicy`,
-  `${COMMUNICATOR}.skir.asPayloadCodec`,
+  `${COMMUNICATOR}.skir.skirEventContract`,
   `${COMMUNICATOR}.skir.skirUnaryContract`,
   `${COMMUNICATOR}.skir.skirWatchContract`,
-  "com.typewritermc.services.libs.telemetry.ErrorSlug",
 ];
 
 const LOADER_IMPORTS = [
@@ -55,6 +60,41 @@ function kotlinFile(
   return `package ${packageName}\n\n${directives.join("")}\n${blocks.join("\n\n")}\n`;
 }
 
+const CLASSIFICATION: Record<Outcome, string> = {
+  success: "success",
+  domain_error: "domainError",
+  internal_error: "internalError",
+};
+
+/** The name of the generated policy of a response record, such as `queryAuthoringStateResponsePolicy`. */
+function policyName(response: OutcomeResponse): string {
+  const name = response.location.recordAncestors.map((record) => record.name.text).join("");
+  return `${name.charAt(0).toLowerCase()}${name.slice(1)}Policy`;
+}
+
+/**
+ * Emits the response policy of one response enum: the internal_error wrapper is the reply when a
+ * handler fails, and each variant classifies by its Skir name. The generated unknown variant falls
+ * to the internal error arm.
+ */
+function emitPolicy(response: OutcomeResponse, symbols: CodeGenerator.SymbolProvider): string {
+  const { location, internalError, internalErrorPayload } = response;
+  const type = symbols.record(location).reference;
+  const internalErrorRecord = symbols.record(internalErrorPayload).reference;
+  const arms = response.variants.map(
+    ({ field, outcome, slug }) =>
+      `        ${symbols.variant(location, field).reference} -> ResponseClassification.${CLASSIFICATION[outcome]}(${kotlinString(slug)})`,
+  );
+  return `private val ${policyName(response)} = ResponsePolicy<${type}>(
+    ${kotlinWrapperClass(symbols, location, internalError)}(${internalErrorRecord}.partial()),
+) { response ->
+    when (response.kind) {
+${arms.join("\n")}
+        else -> ResponseClassification.internalError(${kotlinString(UNKNOWN_SLUG)})
+    }
+}`;
+}
+
 function routeFile(
   routes: readonly ResolvedRoute[],
   realm: boolean,
@@ -68,39 +108,42 @@ function routeFile(
     `${SCOPES}.${scope}`,
     `${SCOPES}.${realm ? "realmTemplate" : "serviceTemplate"}`,
   ].map((name) => `import ${name}`);
+  const policies = new Map<string, string>();
+  const policyOf = (method: ResolvedMethod): string => {
+    const key = method.response.record.key;
+    if (!policies.has(key)) {
+      policies.set(key, emitPolicy(method.outcomes, symbols));
+    }
+    return policyName(method.outcomes);
+  };
   const blocks: string[] = [];
   for (const route of routes) {
     const name = lowerCamel(route.name);
     const requestAddress = `${name}RequestAddress`;
     const updateAddress = `${name}UpdateAddress`;
     const operation = kotlinString(route.operation);
-    const slug = kotlinString(route.failureSlug);
     const { flow } = route;
     switch (flow.kind) {
       case "unary": {
         const method = importedKotlinSymbol(symbols.method(flow.method.module, flow.method.method));
-        const response = symbols.record(flow.method.response).reference;
         imports.push(...method.imports);
         blocks.push(`private val ${requestAddress} = ${kotlinString(serviceSubject(route, "request"))}.${template}
-fun ${scope}.${name}(policy: ResponsePolicy<${response}>) = skirUnaryContract(
+val ${scope}.${name} get() = skirUnaryContract(
     method = ${method.name}, name = OperationName.of(${operation}),
-    address = ${requestAddress}.subscribedAt(this), responsePolicy = policy,
-    failureSlug = ErrorSlug.of(${slug}),
+    address = ${requestAddress}.subscribedAt(this), responsePolicy = ${policyOf(flow.method)},
 )`);
         break;
       }
       case "watch": {
         const method = importedKotlinSymbol(symbols.method(flow.method.module, flow.method.method));
-        const response = symbols.record(flow.method.response).reference;
         const update = symbols.record(flow.updates.payload).reference;
         imports.push(...method.imports);
         blocks.push(`private val ${requestAddress} = ${kotlinString(serviceSubject(route, "request"))}.${template}
 private val ${updateAddress} = ${kotlinString(serviceSubject(route, "updates"))}.${template}
-fun ${scope}.${name}(policy: ResponsePolicy<${response}>, updates: ResponseClassifier<${update}>) = skirWatchContract(
+val ${scope}.${name} get() = skirWatchContract(
     method = ${method.name}, updateSerializer = ${update}.serializer,
     name = OperationName.of(${operation}), requestAddress = ${requestAddress}.subscribedAt(this),
-    updateAddress = ${updateAddress}, initialPolicy = policy, updateClassifier = updates,
-    failureSlug = ErrorSlug.of(${slug}),
+    updateAddress = ${updateAddress}, initialPolicy = ${policyOf(flow.method)},
 )`);
         break;
       }
@@ -112,15 +155,14 @@ fun ${scope}.${name}(policy: ResponsePolicy<${response}>, updates: ResponseClass
         }
         const payload = symbols.record(flow.binding.payload).reference;
         blocks.push(`private val ${name}Address = ${kotlinString(serviceSubject(route, "event"))}.${template}
-val ${scope}.${name} get() = EventContract(
-    OperationName.of(${operation}), ${name}Address,
-    ${payload}.serializer.asPayloadCodec(), ErrorSlug.of(${slug}),
+val ${scope}.${name} get() = skirEventContract(
+    serializer = ${payload}.serializer, name = OperationName.of(${operation}), address = ${name}Address,
 )`);
         break;
       }
     }
   }
-  return { path, code: kotlinFile(GENERATED_PACKAGE, imports, blocks) };
+  return { path, code: kotlinFile(GENERATED_PACKAGE, imports, [...policies.values(), ...blocks]) };
 }
 
 /** The manifest reply framing limits, which the services NATS transport is constructed with. */

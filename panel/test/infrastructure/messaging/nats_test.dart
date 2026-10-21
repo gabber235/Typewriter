@@ -470,6 +470,7 @@ void main() {
                   .toBytes(skir.GetSentinelCredentialsRequest()),
               responseSerializer:
                   skir.GetSentinelCredentialsResponse.serializer,
+              outcome: (_) => ResponseOutcome.success,
             ),
           );
 
@@ -509,6 +510,7 @@ void main() {
                   .toBytes(request),
               responseSerializer:
                   skir.GetSentinelCredentialsResponse.serializer,
+              outcome: (_) => ResponseOutcome.success,
             ),
           );
 
@@ -530,6 +532,7 @@ void main() {
                     .toBytes(skir.GetSentinelCredentialsRequest()),
                 responseSerializer:
                     skir.GetSentinelCredentialsResponse.serializer,
+                outcome: (_) => ResponseOutcome.success,
               ),
             ),
         throwsA(isA<TimeoutException>()),
@@ -556,6 +559,7 @@ void main() {
                     .toBytes(skir.GetSentinelCredentialsRequest()),
                 responseSerializer:
                     skir.GetSentinelCredentialsResponse.serializer,
+                outcome: (_) => ResponseOutcome.success,
               ),
             ),
         throwsA(isA<NatsClientException>()),

@@ -172,14 +172,6 @@ final class AuthoringResourceRepository {
       for (final resource in edit.editedResources)
         (organization, realm, resource),
     },
-    classify: (response) => switch (response) {
-      skir.CommitPreparedEditResponse.committed =>
-        MutationResponseDisposition.confirmed,
-      skir.CommitPreparedEditResponse_internalErrorWrapper() ||
-      skir.CommitPreparedEditResponse_unknown() =>
-        MutationResponseDisposition.uncertain,
-      _ => MutationResponseDisposition.rejected,
-    },
     rejectionMessage: (response) => response.rejectionMessage,
   );
 

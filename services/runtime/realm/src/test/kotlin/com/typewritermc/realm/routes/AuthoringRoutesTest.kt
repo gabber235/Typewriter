@@ -96,9 +96,9 @@ val AuthoringRoutesTest by testSuite {
                     status = FindingStatus.Outdated,
                 )
             try {
-                RouteFixture { contracts, _, _ ->
+                RouteFixture { address, _ ->
                     communicatorRoutes {
-                        AuthoringRoutes(RecordingAuthoringRepository(), views, { listOf(finding) }, contracts = contracts)
+                        AuthoringRoutes(RecordingAuthoringRepository(), views, { listOf(finding) }, address = address)
                             .register(this)
                     }
                 }.use { fixture ->
@@ -145,9 +145,9 @@ val AuthoringRoutesTest by testSuite {
                     expectations = emptyList(),
                     intents = emptyList(),
                 )
-            RouteFixture { contracts, _, _ ->
+            RouteFixture { address, _ ->
                 communicatorRoutes {
-                    AuthoringRoutes(repository, MissingViewStore, { emptyList() }, contracts = contracts).register(this)
+                    AuthoringRoutes(repository, MissingViewStore, { emptyList() }, address = address).register(this)
                 }
             }.use { fixture ->
                 val response =
@@ -212,9 +212,9 @@ val AuthoringRoutesTest by testSuite {
                         }
                     }
 
-                RouteFixture { contracts, _, _ ->
+                RouteFixture { address, _ ->
                     communicatorRoutes {
-                        AuthoringRoutes(repository, MissingViewStore, { emptyList() }, contracts = contracts).register(this)
+                        AuthoringRoutes(repository, MissingViewStore, { emptyList() }, address = address).register(this)
                     }
                 }.use { fixture ->
                     val invalidResponse =
@@ -261,9 +261,9 @@ val AuthoringRoutesTest by testSuite {
                         ),
                 )
 
-            RouteFixture { contracts, _, _ ->
+            RouteFixture { address, _ ->
                 communicatorRoutes {
-                    AuthoringRoutes(repository, MissingViewStore, { emptyList() }, contracts = contracts).register(this)
+                    AuthoringRoutes(repository, MissingViewStore, { emptyList() }, address = address).register(this)
                 }
             }.use { fixture ->
                 val response =
@@ -295,9 +295,9 @@ val AuthoringRoutesTest by testSuite {
                         ),
                 )
 
-            RouteFixture { contracts, _, _ ->
+            RouteFixture { address, _ ->
                 communicatorRoutes {
-                    AuthoringRoutes(repository, MissingViewStore, { emptyList() }, contracts = contracts).register(this)
+                    AuthoringRoutes(repository, MissingViewStore, { emptyList() }, address = address).register(this)
                 }
             }.use { fixture ->
                 val response =
@@ -331,14 +331,14 @@ val AuthoringRoutesTest by testSuite {
                 )
             val typeArguments = RecordingTypeArgumentOperations()
             try {
-                RouteFixture { contracts, _, _ ->
+                RouteFixture { address, _ ->
                     communicatorRoutes {
                         AuthoringRoutes(
                             RecordingAuthoringRepository(),
                             views,
                             { emptyList() },
                             typeArguments,
-                            contracts,
+                            address,
                         ).register(this)
                     }
                 }.use { fixture ->
@@ -384,9 +384,9 @@ val AuthoringRoutesTest by testSuite {
                     AuthoringSeed(resources),
                 )
             try {
-                RouteFixture { contracts, _, _ ->
+                RouteFixture { address, _ ->
                     communicatorRoutes {
-                        AuthoringRoutes(RecordingAuthoringRepository(), views, { emptyList() }, contracts = contracts)
+                        AuthoringRoutes(RecordingAuthoringRepository(), views, { emptyList() }, address = address)
                             .register(this)
                     }
                 }.use { fixture ->

@@ -1,6 +1,6 @@
 import { GENERATOR as DART_GENERATOR } from "skir-dart-gen";
 import { GENERATOR as KOTLIN_GENERATOR } from "skir-kotlin-gen";
-import type { CodeGenerator } from "skir-internal";
+import { convertCase, type CodeGenerator, type Field, type RecordLocation } from "skir-internal";
 import { GENERATOR as RUST } from "skir-rust-gen";
 
 import type { Config } from "./config.js";
@@ -61,4 +61,35 @@ export function importedKotlinSymbol(symbol: CodeGenerator.Symbol): {
 } {
   const name = symbol.reference.slice(symbol.reference.lastIndexOf(".") + 1);
   return { name, imports: [...symbol.imports, `import ${symbol.reference}`] };
+}
+
+/**
+ * The Kotlin class that wraps a payload into one wrapper variant, such as
+ * `skirout.service.v1.status.QueryServiceBindingResponse.InternalErrorWrapper`. The providers
+ * describe how to match a variant, not how to build one, so this follows the wrapper class naming of
+ * skir-kotlin-gen; naming.test.ts checks it against the generated output.
+ *
+ * TODO: use a constructor member once the upstream symbol provider describes one.
+ */
+export function kotlinWrapperClass(
+  symbols: CodeGenerator.SymbolProvider,
+  location: RecordLocation,
+  variant: Field,
+): string {
+  return `${symbols.record(location).reference}.${convertCase(variant.name.text, "UpperCamel")}Wrapper`;
+}
+
+/**
+ * The Rust expression that builds one variant with a default payload, derived from the provider's
+ * match pattern: a wrapper variant pattern ends in `(_)`, a constant variant pattern is the value.
+ */
+export function rustDefaultVariant(
+  symbols: CodeGenerator.SymbolProvider,
+  location: RecordLocation,
+  variant: Field,
+): string {
+  const pattern = symbols.variant(location, variant).reference;
+  return pattern.endsWith("(_)")
+    ? `${pattern.slice(0, -"(_)".length)}(::std::default::Default::default())`
+    : pattern;
 }

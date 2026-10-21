@@ -4,22 +4,34 @@ import "package:typewriter_panel/typewriter_panel.dart";
 
 const _requestTimeout = Duration(seconds: 10);
 
+/// Outcome of a typed Skir response, derived from its variant name.
+///
+/// `internal_error` and unknown variants are internal errors, a variant whose
+/// Skir name ends in `_error` is a domain error, and any other variant is a
+/// success. The transport generator emits the classification per response.
+enum ResponseOutcome { success, domainError, internalError }
+
 /// One fully resolved Skir request at the messaging boundary.
 ///
-/// Generated route adapters own subject construction and serialization. This
-/// value snapshots their result so deferred submissions cannot observe later
-/// request mutation while application owners retain classification, replay,
-/// reservation, and integration policy.
+/// Generated route adapters own subject construction, serialization and
+/// outcome classification. This value snapshots their result so deferred
+/// submissions cannot observe later request mutation while application owners
+/// retain replay, reservation, and integration policy.
 final class SkirRouteOperation<TResponse> {
   SkirRouteOperation({
     required this.subject,
     required Uint8List requestBytes,
     required this.responseSerializer,
+    required this.outcome,
   }) : requestBytes = Uint8List.fromList(requestBytes).asUnmodifiableView();
 
   final String subject;
   final Uint8List requestBytes;
   final skir.Serializer<TResponse> responseSerializer;
+
+  /// Classifies a decoded response; generated per response type, because
+  /// generic code cannot reach extension members of [TResponse].
+  final ResponseOutcome Function(TResponse) outcome;
 }
 
 /// A value paired with the server sequence that produced it.

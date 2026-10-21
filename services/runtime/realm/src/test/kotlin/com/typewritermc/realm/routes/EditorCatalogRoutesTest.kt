@@ -9,8 +9,8 @@ import io.kotest.matchers.shouldBe
 import kotlinx.coroutines.test.runTest
 import skirout.editor.v1.catalog.CatalogFetchRequest
 import skirout.editor.v1.catalog.CatalogFetchResult
-import skirout.editor.v1.catalog.CatalogInvalidated
 import skirout.editor.v1.catalog.WatchEditorCatalogRequest
+import skirout.editor.v1.catalog.WatchEditorCatalogResponse
 
 val EditorCatalogRoutesTest by testSuite {
     test("routes use one injected captured catalog source") {
@@ -19,8 +19,8 @@ val EditorCatalogRoutesTest by testSuite {
             catalogs.installTestCatalog("route_catalog")
             try {
                 val source = RetainedRealmEditorCatalogSource(catalogs)
-                RouteFixture { contracts, _, _ ->
-                    communicatorRoutes { EditorCatalogRoutes(source, UnusedInitialization, contracts).register(this) }
+                RouteFixture { address, _ ->
+                    communicatorRoutes { EditorCatalogRoutes(source, UnusedInitialization, address).register(this) }
                 }.use { fixture ->
                     val fetch =
                         fixture.request(
@@ -34,12 +34,12 @@ val EditorCatalogRoutesTest by testSuite {
                             "editor.catalog.invalidate",
                             WatchEditorCatalogRequest(),
                             WatchEditorCatalogRequest.serializer,
-                            CatalogInvalidated.serializer,
+                            WatchEditorCatalogResponse.serializer,
                         )
 
                     val snapshot = (fetch as CatalogFetchResult.CatalogWrapper).value
                     snapshot.generation.value shouldBe "route_catalog"
-                    watch.generation.value shouldBe "route_catalog"
+                    (watch as WatchEditorCatalogResponse.InvalidatedWrapper).value.generation.value shouldBe "route_catalog"
                 }
             } finally {
                 catalogs.close()

@@ -8,11 +8,6 @@ import com.typewritermc.protocol.transport.generated.serviceHeartbeat
 import com.typewritermc.protocol.transport.generated.serviceShutdown
 import com.typewritermc.services.libs.communicator.client.Communicator
 import com.typewritermc.services.libs.communicator.contract.EventContract
-import com.typewritermc.services.libs.communicator.contract.ResponseClassification
-import com.typewritermc.services.libs.communicator.contract.ResponseClassifier
-import com.typewritermc.services.libs.communicator.contract.ResponseOutcome
-import com.typewritermc.services.libs.communicator.contract.ResponsePolicy
-import com.typewritermc.services.libs.communicator.contract.ResponseVariant
 import com.typewritermc.services.libs.communicator.contract.WatchMessage
 import com.typewritermc.services.libs.communicator.contract.initialRequest
 import com.typewritermc.services.libs.communicator.nats.NatsConnection
@@ -41,7 +36,6 @@ import com.typewritermc.services.libs.registrar.RuntimeResult
 import com.typewritermc.services.libs.registrar.RuntimeSetupProgress
 import com.typewritermc.services.libs.registrar.RuntimeSetupProgressSink
 import com.typewritermc.services.libs.registrar.RuntimeStopOperation
-import com.typewritermc.services.libs.telemetry.ErrorSlug
 import com.typewritermc.services.libs.telemetry.ServiceTelemetry
 import io.opentelemetry.context.propagation.ContextPropagators
 import kotlinx.coroutines.flow.Flow
@@ -57,66 +51,6 @@ import skirout.service.v1.status.QueryServiceBindingRequest
 import skirout.service.v1.status.QueryServiceBindingResponse
 import skirout.service.v1.status.ServiceBinding
 import kotlin.time.TimeSource
-
-private val queryPolicy =
-    ResponsePolicy<QueryServiceBindingResponse>(
-        QueryServiceBindingResponse.createInternalError(),
-        ResponseClassifier { response ->
-            when (response.kind) {
-                QueryServiceBindingResponse.Kind.BINDING_WRAPPER -> {
-                    classification(ResponseOutcome.SUCCESS, "binding")
-                }
-
-                QueryServiceBindingResponse.Kind.SERVICE_NOT_FOUND_ERROR_WRAPPER -> {
-                    classification(
-                        ResponseOutcome.DOMAIN_ERROR,
-                        "service-not-found",
-                    )
-                }
-
-                QueryServiceBindingResponse.Kind.INTERNAL_ERROR_WRAPPER -> {
-                    classification(ResponseOutcome.INTERNAL_ERROR, "internal-error")
-                }
-
-                QueryServiceBindingResponse.Kind.UNKNOWN -> {
-                    classification(ResponseOutcome.DOMAIN_ERROR, "unknown")
-                }
-            }
-        },
-    )
-private val leasePolicy =
-    ResponsePolicy<EnsureRegistrationLeaseResponse>(
-        EnsureRegistrationLeaseResponse.createInternalError(),
-        ResponseClassifier { response ->
-            when (response.kind) {
-                EnsureRegistrationLeaseResponse.Kind.ISSUED_WRAPPER -> {
-                    classification(ResponseOutcome.SUCCESS, "issued")
-                }
-
-                EnsureRegistrationLeaseResponse.Kind.ALREADY_BOUND_WRAPPER -> {
-                    classification(ResponseOutcome.SUCCESS, "already-bound")
-                }
-
-                EnsureRegistrationLeaseResponse.Kind.SERVICE_NOT_FOUND_ERROR_WRAPPER -> {
-                    classification(ResponseOutcome.DOMAIN_ERROR, "service-not-found")
-                }
-
-                EnsureRegistrationLeaseResponse.Kind.INTERNAL_ERROR_WRAPPER -> {
-                    classification(ResponseOutcome.INTERNAL_ERROR, "internal-error")
-                }
-
-                EnsureRegistrationLeaseResponse.Kind.UNKNOWN -> {
-                    classification(ResponseOutcome.DOMAIN_ERROR, "unknown")
-                }
-            }
-        },
-    )
-private val boundClassifier = ResponseClassifier<ServiceBoundNotification> { classification(ResponseOutcome.SUCCESS, "bound") }
-
-private fun classification(
-    outcome: ResponseOutcome,
-    variant: String,
-) = ResponseClassification(outcome, ResponseVariant.of(variant))
 
 internal interface NatsLifecycle {
     val state: StateFlow<NatsConnectionState>
@@ -160,8 +94,8 @@ internal class TypewriterRegistrarRuntime(
     private val accessTokens: AccessTokenCache,
     private val sentinel: SentinelCache,
 ) : RegistrarRuntime {
-    private val queryBindingContract = service.serviceBindingQuery(queryPolicy, boundClassifier)
-    private val ensureLeaseContract = service.registrationLeaseEnsure(leasePolicy)
+    private val queryBindingContract = service.serviceBindingQuery
+    private val ensureLeaseContract = service.registrationLeaseEnsure
     private val heartbeatContract = service.serviceHeartbeat
     private val shutdownContract = service.serviceShutdown
 

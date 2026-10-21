@@ -50,7 +50,7 @@ val EditorUpdatePublisherTest by testSuite {
             HintConnection().use { connection ->
                 val events = connection.editorUpdates(publication, backgroundScope)
                 try {
-                    events.configure(connection.contracts, connection.address, connection.communicator)
+                    events.configure(connection.address, connection.communicator)
                     connection.transport.awaitCount(1)
                     events.committed()
                     connection.transport.awaitCount(2)
@@ -69,7 +69,7 @@ val EditorUpdatePublisherTest by testSuite {
                 val events = connection.editorUpdates(publication, backgroundScope)
                 try {
                     connection.transport.failNextPublish(TransportError.Unavailable())
-                    events.configure(connection.contracts, connection.address, connection.communicator)
+                    events.configure(connection.address, connection.communicator)
                     connection.transport.awaitCount(1)
                     runCurrent()
                     connection.transport.hints().size shouldBe 1
@@ -91,12 +91,11 @@ val EditorUpdatePublisherTest by testSuite {
                 val events = replacement.editorUpdates(publication, backgroundScope)
                 try {
                     events.configure(
-                        replacement.contracts,
                         replacement.address,
                         Communicator(blocked, telemetry.telemetry, ContextPropagators.noop()),
                     )
                     withTimeout(2.seconds) { blocked.started.await() }
-                    events.configure(replacement.contracts, replacement.address, replacement.communicator)
+                    events.configure(replacement.address, replacement.communicator)
                     withTimeout(2.seconds) { blocked.cancelled.await() }
                     replacement.transport.awaitCount(1)
                 } finally {
@@ -147,7 +146,6 @@ val EditorUpdatePublisherTest by testSuite {
 
 private class HintConnection : AutoCloseable {
     val address = RealmRouteScope(organizationId = "organization", realmId = "realm")
-    val contracts = EditorContracts(address)
     val transport = FakeMessageTransport()
     private val telemetry = TelemetryTestHarness.create()
     val communicator = Communicator(transport, telemetry.telemetry, ContextPropagators.noop())

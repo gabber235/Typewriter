@@ -268,10 +268,8 @@ class AuthoringMutationPlannerTest {
                 val routes =
                     com.typewritermc.realm.routes.ResourceOperationRoutes(
                         runtime,
-                        com.typewritermc.realm.routes.EditorContracts(
-                            com.typewritermc.protocol.transport
-                                .RealmRouteScope("organization", "realm"),
-                        ),
+                        com.typewritermc.protocol.transport
+                            .RealmRouteScope("organization", "realm"),
                     )
                 val wire =
                     skirout.editor.v1.resource_operations.ResolveResourceOperationsRequest(

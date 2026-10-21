@@ -2,6 +2,8 @@ package com.typewritermc.realm.routes
 
 import com.typewritermc.engine.CompilationProjectionId
 import com.typewritermc.engine.CompilationRoot
+import com.typewritermc.protocol.transport.RealmRouteScope
+import com.typewritermc.protocol.transport.generated.authoringCompiledStatusQuery
 import com.typewritermc.realm.authoring.AuthoringViewStore
 import com.typewritermc.realm.compiler.CompilationStatusSelection
 import com.typewritermc.realm.compiler.CompiledRootStatuses
@@ -21,11 +23,11 @@ import skirout.editor.v1.type_catalog.ResourceId as SkirResourceId
 internal class EditorCompiledResourceStatusRoutes(
     private val views: AuthoringViewStore,
     private val statuses: CompiledRootStatuses,
-    private val contracts: EditorContracts,
+    private val address: RealmRouteScope,
 ) {
     fun register(builder: CommunicatorRoutesBuilder) =
         with(builder) {
-            unary(contracts.queryCompiledResourceStatus) { call ->
+            unary(address.authoringCompiledStatusQuery) { call ->
                 val selection =
                     when (val requested = call.request.selection) {
                         SkirCompilationStatusSelection.ALL_ROOTS -> {

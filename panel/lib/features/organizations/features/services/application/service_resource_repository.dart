@@ -108,14 +108,6 @@ final class ServiceResourceRepository {
         organizationId: organization,
       ),
       label: "Bind service",
-      classify: (response) => switch (response) {
-        skir.BindServiceResponse_successWrapper() =>
-          MutationResponseDisposition.confirmed,
-        skir.BindServiceResponse_unknown() ||
-        skir.BindServiceResponse_internalErrorWrapper() =>
-          MutationResponseDisposition.uncertain,
-        _ => MutationResponseDisposition.rejected,
-      },
       onResponse: _integrateBinding,
     );
   }
@@ -148,14 +140,6 @@ final class ServiceResourceRepository {
       ),
       resources: {(organization, service)},
       label: "Unbind service: ${service.id}",
-      classify: (response) => switch (response) {
-        skir.UnbindServiceResponse_successWrapper() =>
-          MutationResponseDisposition.confirmed,
-        skir.UnbindServiceResponse_unknown() ||
-        skir.UnbindServiceResponse_internalErrorWrapper() =>
-          MutationResponseDisposition.uncertain,
-        _ => MutationResponseDisposition.rejected,
-      },
       onResponse: (response) => _integrateUnbinding(response, service),
     );
   }
@@ -196,14 +180,6 @@ final class ServiceResourceRepository {
       ),
       resources: {(organization, host)},
       label: "Apply Host configuration: ${host.id}",
-      classify: (response) => switch (response) {
-        skir.ConfigureServiceHostResponse_successWrapper() =>
-          MutationResponseDisposition.confirmed,
-        skir.ConfigureServiceHostResponse_unknown() ||
-        skir.ConfigureServiceHostResponse_internalErrorWrapper() =>
-          MutationResponseDisposition.uncertain,
-        _ => MutationResponseDisposition.rejected,
-      },
       onResponse: _integrateConfiguration,
     );
   }
@@ -247,14 +223,6 @@ final class ServiceResourceRepository {
       ),
       resources: {(organization, service)},
       label: "Update service: ${service.id}",
-      classify: (response) => switch (response) {
-        skir.UpdateOrganizationServiceResponse_successWrapper() =>
-          MutationResponseDisposition.confirmed,
-        skir.UpdateOrganizationServiceResponse_unknown() ||
-        skir.UpdateOrganizationServiceResponse_internalErrorWrapper() =>
-          MutationResponseDisposition.uncertain,
-        _ => MutationResponseDisposition.rejected,
-      },
       onResponse: _integrateRename,
     );
   }

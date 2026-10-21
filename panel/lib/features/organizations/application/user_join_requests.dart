@@ -115,15 +115,6 @@ class UserJoinRequests extends _$UserJoinRequests {
     final response = await ref.mutateSkir(
       request.operation(userId: userId),
       label: "Request membership",
-      classify: (response) => switch (response) {
-        skir.SubmitUserJoinRequestResponse_requestMadeWrapper() ||
-        skir.SubmitUserJoinRequestResponse_autoAcceptedWrapper() =>
-          MutationResponseDisposition.confirmed,
-        skir.SubmitUserJoinRequestResponse_unknown() ||
-        skir.SubmitUserJoinRequestResponse_internalErrorWrapper() =>
-          MutationResponseDisposition.uncertain,
-        _ => MutationResponseDisposition.rejected,
-      },
     );
 
     switch (response) {
@@ -181,14 +172,6 @@ class UserJoinRequests extends _$UserJoinRequests {
       final response = await ref.mutateSkir(
         request.operation(userId: userId),
         label: "Cancel membership request",
-        classify: (response) => switch (response) {
-          skir.CancelUserJoinRequestResponse_successWrapper() =>
-            MutationResponseDisposition.confirmed,
-          skir.CancelUserJoinRequestResponse_unknown() ||
-          skir.CancelUserJoinRequestResponse_internalErrorWrapper() =>
-            MutationResponseDisposition.uncertain,
-          _ => MutationResponseDisposition.rejected,
-        },
       );
 
       switch (response) {

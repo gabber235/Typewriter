@@ -5,6 +5,7 @@ import type { CodeGenerator } from "skir-internal";
 import { Config } from "./config.js";
 import { emitDart } from "./routes/emit/dart.js";
 import { emitKotlin, emitKotlinLoader } from "./routes/emit/kotlin.js";
+import { methodResponses } from "./outcomes.js";
 import { emitRust } from "./routes/emit/rust.js";
 import { parseManifest } from "./routes/manifest.js";
 import { resolveRoutes, type ResolvedRoutes } from "./routes/resolve.js";
@@ -15,13 +16,17 @@ export { Config } from "./config.js";
 /** A language whose transport route bindings one Skir generator entry writes. */
 export type Target = "kotlin" | "kotlin-loader" | "dart" | "rust";
 
-type Emitter = (routes: ResolvedRoutes, symbols: SymbolProviders) => CodeGenerator.OutputFile[];
+type Emitter = (
+  routes: ResolvedRoutes,
+  symbols: SymbolProviders,
+  input: CodeGenerator.Input<Config>,
+) => CodeGenerator.OutputFile[];
 
 const EMITTERS: Record<Target, Emitter> = {
   kotlin: (routes, symbols) => emitKotlin(routes, symbols.kotlin),
   "kotlin-loader": (routes) => emitKotlinLoader(routes),
   dart: (routes, symbols) => emitDart(routes, symbols.dart),
-  rust: (routes, symbols) => emitRust(routes, symbols.rust),
+  rust: (routes, symbols, input) => emitRust(routes, symbols.rust, methodResponses(input)),
 };
 
 function assertRelative(file: CodeGenerator.OutputFile): void {
@@ -43,7 +48,7 @@ export function generatorFor(target: Target): CodeGenerator<Config> {
       const { manifest: path } = input.config;
       const manifest = parseManifest(readFileSync(path, "utf8"), path);
       const routes = resolveRoutes(manifest, input);
-      const files = EMITTERS[target](routes, symbolProviders(input));
+      const files = EMITTERS[target](routes, symbolProviders(input), input);
       files.forEach(assertRelative);
       return { files };
     },

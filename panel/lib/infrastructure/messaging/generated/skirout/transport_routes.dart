@@ -54,6 +54,7 @@ extension UserOrganizationCreateRouteNats
       subject: "cloud.to.user.$user.organization.create",
       requestBytes: method.requestSerializer.toBytes(this),
       responseSerializer: method.responseSerializer,
+      outcome: _createOrganizationOutcome,
     );
   }
 }
@@ -74,6 +75,7 @@ extension UserOrganizationsWatchRouteNats
       subject: "cloud.to.user.$user.organization.watch",
       requestBytes: method.requestSerializer.toBytes(this),
       responseSerializer: method.responseSerializer,
+      outcome: _watchUserOrganizationsOutcome,
     );
   }
 
@@ -153,6 +155,7 @@ extension UserJoinRequestsWatchRouteNats
       subject: "cloud.to.user.$user.organization.join_requests.watch",
       requestBytes: method.requestSerializer.toBytes(this),
       responseSerializer: method.responseSerializer,
+      outcome: _watchUserJoinRequestsOutcome,
     );
   }
 
@@ -227,6 +230,7 @@ extension UserJoinRequestSubmitRouteNats
       subject: "cloud.to.user.$user.organization.join_requests.request",
       requestBytes: method.requestSerializer.toBytes(this),
       responseSerializer: method.responseSerializer,
+      outcome: _submitUserJoinRequestOutcome,
     );
   }
 }
@@ -242,6 +246,7 @@ extension UserJoinRequestCancelRouteNats
       subject: "cloud.to.user.$user.organization.join_requests.cancel",
       requestBytes: method.requestSerializer.toBytes(this),
       responseSerializer: method.responseSerializer,
+      outcome: _cancelUserJoinRequestOutcome,
     );
   }
 }
@@ -266,6 +271,7 @@ extension OrganizationMembersWatchRouteNats
       subject: "cloud.to.user.$user.organization.$organization.members.watch",
       requestBytes: method.requestSerializer.toBytes(this),
       responseSerializer: method.responseSerializer,
+      outcome: _watchOrganizationMembersOutcome,
     );
   }
 
@@ -351,6 +357,7 @@ extension OrganizationMembersUpdateRouteNats
       subject: "cloud.to.user.$user.organization.$organization.members.update",
       requestBytes: method.requestSerializer.toBytes(this),
       responseSerializer: method.responseSerializer,
+      outcome: _updateOrganizationMemberRolesOutcome,
     );
   }
 }
@@ -370,6 +377,7 @@ extension OrganizationMemberRemoveRouteNats
       subject: "cloud.to.user.$user.organization.$organization.members.remove",
       requestBytes: method.requestSerializer.toBytes(this),
       responseSerializer: method.responseSerializer,
+      outcome: _removeOrganizationMemberOutcome,
     );
   }
 }
@@ -396,6 +404,7 @@ extension OrganizationJoinRequestsWatchRouteNats
           "cloud.to.user.$user.organization.$organization.members.join_requests.watch",
       requestBytes: method.requestSerializer.toBytes(this),
       responseSerializer: method.responseSerializer,
+      outcome: _watchOrganizationJoinRequestsOutcome,
     );
   }
 
@@ -484,6 +493,7 @@ extension OrganizationJoinRequestsApproveRouteNats
           "cloud.to.user.$user.organization.$organization.members.join_requests.approve",
       requestBytes: method.requestSerializer.toBytes(this),
       responseSerializer: method.responseSerializer,
+      outcome: _approveOrganizationJoinRequestsOutcome,
     );
   }
 }
@@ -505,6 +515,7 @@ extension OrganizationJoinRequestDeclineRouteNats
           "cloud.to.user.$user.organization.$organization.members.join_requests.decline",
       requestBytes: method.requestSerializer.toBytes(this),
       responseSerializer: method.responseSerializer,
+      outcome: _declineOrganizationJoinRequestOutcome,
     );
   }
 }
@@ -531,6 +542,7 @@ extension OrganizationJoinCodesWatchRouteNats
           "cloud.to.user.$user.organization.$organization.members.join_codes.watch",
       requestBytes: method.requestSerializer.toBytes(this),
       responseSerializer: method.responseSerializer,
+      outcome: _watchOrganizationJoinCodesOutcome,
     );
   }
 
@@ -618,6 +630,7 @@ extension OrganizationJoinCodeGenerateRouteNats
           "cloud.to.user.$user.organization.$organization.members.join_codes.generate",
       requestBytes: method.requestSerializer.toBytes(this),
       responseSerializer: method.responseSerializer,
+      outcome: _generateOrganizationJoinCodeOutcome,
     );
   }
 }
@@ -639,6 +652,7 @@ extension OrganizationJoinCodeRevokeRouteNats
           "cloud.to.user.$user.organization.$organization.members.join_codes.revoke",
       requestBytes: method.requestSerializer.toBytes(this),
       responseSerializer: method.responseSerializer,
+      outcome: _revokeOrganizationJoinCodeOutcome,
     );
   }
 }
@@ -656,6 +670,7 @@ extension OrganizationRolesWatchRouteNats
       subject: "cloud.to.user.$user.organization.$organization.roles.watch",
       requestBytes: method.requestSerializer.toBytes(this),
       responseSerializer: method.responseSerializer,
+      outcome: _watchOrganizationRolesOutcome,
     );
   }
 }
@@ -673,6 +688,7 @@ extension ServiceBindRouteNats
       subject: "cloud.to.user.$user.organization.$organization.services.bind",
       requestBytes: method.requestSerializer.toBytes(this),
       responseSerializer: method.responseSerializer,
+      outcome: _bindServiceOutcome,
     );
   }
 }
@@ -692,6 +708,7 @@ extension OrganizationServicesWatchRouteNats
       subject: "cloud.to.user.$user.organization.$organization.services.watch",
       requestBytes: method.requestSerializer.toBytes(this),
       responseSerializer: method.responseSerializer,
+      outcome: _watchOrganizationServicesOutcome,
     );
   }
 
@@ -771,6 +788,7 @@ extension OrganizationServiceUpdateRouteNats
       subject: "cloud.to.user.$user.organization.$organization.services.update",
       requestBytes: method.requestSerializer.toBytes(this),
       responseSerializer: method.responseSerializer,
+      outcome: _updateOrganizationServiceOutcome,
     );
   }
 }
@@ -788,6 +806,7 @@ extension ServiceUnbindRouteNats
       subject: "cloud.to.user.$user.organization.$organization.services.unbind",
       requestBytes: method.requestSerializer.toBytes(this),
       responseSerializer: method.responseSerializer,
+      outcome: _unbindServiceOutcome,
     );
   }
 }
@@ -806,6 +825,7 @@ extension ServiceTopologyConfigureRouteNats
           "cloud.to.user.$user.organization.$organization.topology.configure",
       requestBytes: method.requestSerializer.toBytes(this),
       responseSerializer: method.responseSerializer,
+      outcome: _configureServiceHostOutcome,
     );
   }
 }
@@ -823,6 +843,7 @@ extension OrganizationTopologyWatchRouteNats
       subject: "cloud.to.user.$user.organization.$organization.topology.watch",
       requestBytes: method.requestSerializer.toBytes(this),
       responseSerializer: method.responseSerializer,
+      outcome: _watchOrganizationTopologyOutcome,
     );
   }
 
@@ -901,6 +922,7 @@ extension EditorCatalogFetchRouteNats
           "service.to.$realm.organization.$organization.realm.editor.catalog.fetch",
       requestBytes: method.requestSerializer.toBytes(this),
       responseSerializer: method.responseSerializer,
+      outcome: _fetchEditorCatalogOutcome,
     );
   }
 }
@@ -923,6 +945,7 @@ extension EditorCatalogWatchRouteNats
           "service.to.$realm.organization.$organization.realm.editor.catalog.invalidate",
       requestBytes: method.requestSerializer.toBytes(this),
       responseSerializer: method.responseSerializer,
+      outcome: _watchEditorCatalogOutcome,
     );
   }
 
@@ -997,6 +1020,7 @@ extension EditorValuePrepareRouteNats
           "service.to.$realm.organization.$organization.realm.editor.creation.prepare",
       requestBytes: method.requestSerializer.toBytes(this),
       responseSerializer: method.responseSerializer,
+      outcome: _prepareValueOutcome,
     );
   }
 }
@@ -1019,6 +1043,7 @@ extension EditorPresentationSearchRouteNats
           "service.to.$realm.organization.$organization.realm.editor.presentation.search",
       requestBytes: method.requestSerializer.toBytes(this),
       responseSerializer: method.responseSerializer,
+      outcome: _watchRealmPresentationSearchOutcome,
     );
   }
 
@@ -1099,6 +1124,7 @@ extension EditorPresentationSearchCancelRouteNats
           "service.to.$realm.organization.$organization.realm.editor.presentation.search.cancel",
       requestBytes: method.requestSerializer.toBytes(this),
       responseSerializer: method.responseSerializer,
+      outcome: _cancelRealmPresentationSearchOutcome,
     );
   }
 }
@@ -1121,6 +1147,7 @@ extension EditorCapabilityComputationInvokeRouteNats
           "service.to.$realm.organization.$organization.realm.editor.capability.computation.invoke",
       requestBytes: method.requestSerializer.toBytes(this),
       responseSerializer: method.responseSerializer,
+      outcome: _invokeRealmComputationOutcome,
     );
   }
 }
@@ -1142,6 +1169,7 @@ extension EditorCapabilityCommandInvokeRouteNats
           "service.to.$realm.organization.$organization.realm.editor.capability.command.invoke",
       requestBytes: method.requestSerializer.toBytes(this),
       responseSerializer: method.responseSerializer,
+      outcome: _invokeRealmCommandOutcome,
     );
   }
 }
@@ -1167,6 +1195,7 @@ extension ResourceOperationsResolveRouteNats
           "service.to.$realm.organization.$organization.realm.editor.resources.operations.resolve",
       requestBytes: method.requestSerializer.toBytes(this),
       responseSerializer: method.responseSerializer,
+      outcome: _resolveResourceOperationsOutcome,
     );
   }
 }
@@ -1192,6 +1221,7 @@ extension ResourceDropCandidatesResolveRouteNats
           "service.to.$realm.organization.$organization.realm.editor.resources.drops.resolve",
       requestBytes: method.requestSerializer.toBytes(this),
       responseSerializer: method.responseSerializer,
+      outcome: _resolveDropCandidatesOutcome,
     );
   }
 }
@@ -1215,6 +1245,7 @@ extension AuthoringActionPrepareRouteNats
           "service.to.$realm.organization.$organization.realm.editor.resources.actions.prepare",
       requestBytes: method.requestSerializer.toBytes(this),
       responseSerializer: method.responseSerializer,
+      outcome: _prepareAuthoringActionOutcome,
     );
   }
 }
@@ -1237,6 +1268,7 @@ extension AuthoringStateQueryRouteNats
           "service.to.$realm.organization.$organization.realm.editor.authoring.state.query",
       requestBytes: method.requestSerializer.toBytes(this),
       responseSerializer: method.responseSerializer,
+      outcome: _queryAuthoringStateOutcome,
     );
   }
 }
@@ -1259,6 +1291,7 @@ extension AuthoringEditCommitRouteNats
           "service.to.$realm.organization.$organization.realm.editor.authoring.edit.commit",
       requestBytes: method.requestSerializer.toBytes(this),
       responseSerializer: method.responseSerializer,
+      outcome: _commitPreparedEditOutcome,
     );
   }
 }
@@ -1281,6 +1314,7 @@ extension AuthoringTypePreviewRouteNats
           "service.to.$realm.organization.$organization.realm.editor.authoring.type.preview",
       requestBytes: method.requestSerializer.toBytes(this),
       responseSerializer: method.responseSerializer,
+      outcome: _previewTypeArgumentChangeOutcome,
     );
   }
 }
@@ -1303,6 +1337,7 @@ extension AuthoringTypeCommitRouteNats
           "service.to.$realm.organization.$organization.realm.editor.authoring.type.commit",
       requestBytes: method.requestSerializer.toBytes(this),
       responseSerializer: method.responseSerializer,
+      outcome: _prepareTypeArgumentChangeOutcome,
     );
   }
 }
@@ -1325,6 +1360,7 @@ extension AuthoringSearchRouteNats
           "service.to.$realm.organization.$organization.realm.editor.authoring.search",
       requestBytes: method.requestSerializer.toBytes(this),
       responseSerializer: method.responseSerializer,
+      outcome: _searchAuthoringOutcome,
     );
   }
 }
@@ -1368,6 +1404,7 @@ extension AuthoringCompiledQueryRouteNats
           "service.to.$realm.organization.$organization.realm.editor.authoring.compiled.query",
       requestBytes: method.requestSerializer.toBytes(this),
       responseSerializer: method.responseSerializer,
+      outcome: _queryPublishedContentOutcome,
     );
   }
 }
@@ -1412,6 +1449,7 @@ extension AuthoringCompiledStatusQueryRouteNats
           "service.to.$realm.organization.$organization.realm.editor.authoring.compiled.status.query",
       requestBytes: method.requestSerializer.toBytes(this),
       responseSerializer: method.responseSerializer,
+      outcome: _queryCompiledResourceStatusOutcome,
     );
   }
 }
@@ -1434,6 +1472,7 @@ extension AuthoringPublishRouteNats
           "service.to.$realm.organization.$organization.realm.editor.authoring.publish",
       requestBytes: method.requestSerializer.toBytes(this),
       responseSerializer: method.responseSerializer,
+      outcome: _publishAuthoringOutcome,
     );
   }
 }
@@ -1456,6 +1495,7 @@ extension AuthoringPublicationQueryRouteNats
           "service.to.$realm.organization.$organization.realm.editor.authoring.publication.query",
       requestBytes: method.requestSerializer.toBytes(this),
       responseSerializer: method.responseSerializer,
+      outcome: _queryPublicationViewOutcome,
     );
   }
 }
@@ -1478,6 +1518,7 @@ extension AuthoringPublicationWatchRouteNats
           "service.to.$realm.organization.$organization.realm.editor.authoring.publication.watch",
       requestBytes: method.requestSerializer.toBytes(this),
       responseSerializer: method.responseSerializer,
+      outcome: _watchPublicationOutcome,
     );
   }
 
@@ -1559,6 +1600,7 @@ extension SharedCatalogFetchRouteNats
           "service.to.$realm.organization.$organization.realm.shared.catalog.fetch",
       requestBytes: method.requestSerializer.toBytes(this),
       responseSerializer: method.responseSerializer,
+      outcome: _fetchSharedArtifactCatalogOutcome,
     );
   }
 }
@@ -1581,6 +1623,7 @@ extension SharedPublishRouteNats
           "service.to.$realm.organization.$organization.realm.shared.publish",
       requestBytes: method.requestSerializer.toBytes(this),
       responseSerializer: method.responseSerializer,
+      outcome: _publishSharedArtifactOutcome,
     );
   }
 }
@@ -1603,6 +1646,7 @@ extension SharedBlobMetadataRouteNats
           "service.to.$realm.organization.$organization.realm.shared.blob.metadata",
       requestBytes: method.requestSerializer.toBytes(this),
       responseSerializer: method.responseSerializer,
+      outcome: _fetchArtifactBlobMetadataOutcome,
     );
   }
 }
@@ -1625,6 +1669,7 @@ extension SharedBlobReadRouteNats
           "service.to.$realm.organization.$organization.realm.shared.blob.read",
       requestBytes: method.requestSerializer.toBytes(this),
       responseSerializer: method.responseSerializer,
+      outcome: _readArtifactBlobOutcome,
     );
   }
 }
@@ -1647,6 +1692,7 @@ extension SharedBlobBeginRouteNats
           "service.to.$realm.organization.$organization.realm.shared.blob.begin",
       requestBytes: method.requestSerializer.toBytes(this),
       responseSerializer: method.responseSerializer,
+      outcome: _beginArtifactBlobWriteOutcome,
     );
   }
 }
@@ -1669,6 +1715,7 @@ extension SharedBlobWriteRouteNats
           "service.to.$realm.organization.$organization.realm.shared.blob.write",
       requestBytes: method.requestSerializer.toBytes(this),
       responseSerializer: method.responseSerializer,
+      outcome: _writeArtifactBlobChunkOutcome,
     );
   }
 }
@@ -1691,6 +1738,7 @@ extension SharedBlobCompleteRouteNats
           "service.to.$realm.organization.$organization.realm.shared.blob.complete",
       requestBytes: method.requestSerializer.toBytes(this),
       responseSerializer: method.responseSerializer,
+      outcome: _completeArtifactBlobWriteOutcome,
     );
   }
 }
@@ -1735,6 +1783,815 @@ final class OrganizationPresenceRouteEvent {
     return userId.isTransportIdentity ? userId : null;
   }
 }
+
+ResponseOutcome _createOrganizationOutcome(
+  _lib_organization_v1_organization.CreateOrganizationResponse response,
+) => switch (response.kind) {
+  _lib_organization_v1_organization
+      .CreateOrganizationResponse_kind
+      .successWrapper =>
+    ResponseOutcome.success,
+  // internal_error and the generated unknown variant
+  _ => ResponseOutcome.internalError,
+};
+
+ResponseOutcome _watchUserOrganizationsOutcome(
+  _lib_organization_v1_user.WatchUserOrganizationsResponse response,
+) => switch (response.kind) {
+  _lib_organization_v1_user
+      .WatchUserOrganizationsResponse_kind
+      .snapshotWrapper ||
+  _lib_organization_v1_user
+      .WatchUserOrganizationsResponse_kind
+      .changedWrapper => ResponseOutcome.success,
+  // internal_error and the generated unknown variant
+  _ => ResponseOutcome.internalError,
+};
+
+ResponseOutcome _watchUserJoinRequestsOutcome(
+  _lib_organization_v1_user.WatchUserJoinRequestsResponse response,
+) => switch (response.kind) {
+  _lib_organization_v1_user
+      .WatchUserJoinRequestsResponse_kind
+      .snapshotWrapper ||
+  _lib_organization_v1_user.WatchUserJoinRequestsResponse_kind.changedWrapper =>
+    ResponseOutcome.success,
+  // internal_error and the generated unknown variant
+  _ => ResponseOutcome.internalError,
+};
+
+ResponseOutcome _submitUserJoinRequestOutcome(
+  _lib_organization_v1_user.SubmitUserJoinRequestResponse response,
+) => switch (response.kind) {
+  _lib_organization_v1_user
+      .SubmitUserJoinRequestResponse_kind
+      .requestMadeWrapper ||
+  _lib_organization_v1_user
+      .SubmitUserJoinRequestResponse_kind
+      .autoAcceptedWrapper => ResponseOutcome.success,
+  _lib_organization_v1_user
+      .SubmitUserJoinRequestResponse_kind
+      .codeNotFoundErrorWrapper ||
+  _lib_organization_v1_user
+      .SubmitUserJoinRequestResponse_kind
+      .alreadyMemberErrorWrapper ||
+  _lib_organization_v1_user
+      .SubmitUserJoinRequestResponse_kind
+      .noAssignableRolesErrorWrapper ||
+  _lib_organization_v1_user
+      .SubmitUserJoinRequestResponse_kind
+      .maxPendingRequestsErrorWrapper ||
+  _lib_organization_v1_user
+      .SubmitUserJoinRequestResponse_kind
+      .pendingRequestExistsErrorWrapper ||
+  _lib_organization_v1_user
+      .SubmitUserJoinRequestResponse_kind
+      .invalidRecordIdErrorWrapper => ResponseOutcome.domainError,
+  // internal_error and the generated unknown variant
+  _ => ResponseOutcome.internalError,
+};
+
+ResponseOutcome _cancelUserJoinRequestOutcome(
+  _lib_organization_v1_user.CancelUserJoinRequestResponse response,
+) => switch (response.kind) {
+  _lib_organization_v1_user.CancelUserJoinRequestResponse_kind.successWrapper =>
+    ResponseOutcome.success,
+  _lib_organization_v1_user
+      .CancelUserJoinRequestResponse_kind
+      .requestNotFoundErrorWrapper ||
+  _lib_organization_v1_user
+      .CancelUserJoinRequestResponse_kind
+      .invalidRecordIdErrorWrapper => ResponseOutcome.domainError,
+  // internal_error and the generated unknown variant
+  _ => ResponseOutcome.internalError,
+};
+
+ResponseOutcome _watchOrganizationMembersOutcome(
+  _lib_organization_v1_member.WatchOrganizationMembersResponse response,
+) => switch (response.kind) {
+  _lib_organization_v1_member
+      .WatchOrganizationMembersResponse_kind
+      .snapshotWrapper =>
+    ResponseOutcome.success,
+  // internal_error and the generated unknown variant
+  _ => ResponseOutcome.internalError,
+};
+
+ResponseOutcome _updateOrganizationMemberRolesOutcome(
+  _lib_organization_v1_member.UpdateOrganizationMemberRolesResponse response,
+) => switch (response.kind) {
+  _lib_organization_v1_member
+      .UpdateOrganizationMemberRolesResponse_kind
+      .successWrapper =>
+    ResponseOutcome.success,
+  _lib_organization_v1_member
+      .UpdateOrganizationMemberRolesResponse_kind
+      .userNotFoundErrorWrapper ||
+  _lib_organization_v1_member
+      .UpdateOrganizationMemberRolesResponse_kind
+      .rolesNotFoundErrorWrapper ||
+  _lib_organization_v1_member
+      .UpdateOrganizationMemberRolesResponse_kind
+      .rolesNotAssignableErrorWrapper ||
+  _lib_organization_v1_member
+      .UpdateOrganizationMemberRolesResponse_kind
+      .rolesRequiredErrorWrapper ||
+  _lib_organization_v1_member
+      .UpdateOrganizationMemberRolesResponse_kind
+      .founderRoleRequiredErrorWrapper ||
+  _lib_organization_v1_member
+      .UpdateOrganizationMemberRolesResponse_kind
+      .invalidSelectionErrorWrapper ||
+  _lib_organization_v1_member
+      .UpdateOrganizationMemberRolesResponse_kind
+      .invalidRecordIdErrorWrapper => ResponseOutcome.domainError,
+  // internal_error and the generated unknown variant
+  _ => ResponseOutcome.internalError,
+};
+
+ResponseOutcome _removeOrganizationMemberOutcome(
+  _lib_organization_v1_member.RemoveOrganizationMemberResponse response,
+) => switch (response.kind) {
+  _lib_organization_v1_member
+      .RemoveOrganizationMemberResponse_kind
+      .successWrapper =>
+    ResponseOutcome.success,
+  _lib_organization_v1_member
+      .RemoveOrganizationMemberResponse_kind
+      .userNotMemberErrorWrapper ||
+  _lib_organization_v1_member
+      .RemoveOrganizationMemberResponse_kind
+      .founderCannotBeRemovedErrorWrapper ||
+  _lib_organization_v1_member
+      .RemoveOrganizationMemberResponse_kind
+      .invalidRecordIdErrorWrapper => ResponseOutcome.domainError,
+  // internal_error and the generated unknown variant
+  _ => ResponseOutcome.internalError,
+};
+
+ResponseOutcome _watchOrganizationJoinRequestsOutcome(
+  _lib_organization_v1_join_request.WatchOrganizationJoinRequestsResponse
+  response,
+) => switch (response.kind) {
+  _lib_organization_v1_join_request
+      .WatchOrganizationJoinRequestsResponse_kind
+      .snapshotWrapper ||
+  _lib_organization_v1_join_request
+      .WatchOrganizationJoinRequestsResponse_kind
+      .changedWrapper => ResponseOutcome.success,
+  // internal_error and the generated unknown variant
+  _ => ResponseOutcome.internalError,
+};
+
+ResponseOutcome _approveOrganizationJoinRequestsOutcome(
+  _lib_organization_v1_join_request.ApproveOrganizationJoinRequestsResponse
+  response,
+) => switch (response.kind) {
+  _lib_organization_v1_join_request
+      .ApproveOrganizationJoinRequestsResponse_kind
+      .successWrapper =>
+    ResponseOutcome.success,
+  _lib_organization_v1_join_request
+      .ApproveOrganizationJoinRequestsResponse_kind
+      .requestNotFoundErrorWrapper ||
+  _lib_organization_v1_join_request
+      .ApproveOrganizationJoinRequestsResponse_kind
+      .rolesNotFoundErrorWrapper ||
+  _lib_organization_v1_join_request
+      .ApproveOrganizationJoinRequestsResponse_kind
+      .rolesNotAssignableErrorWrapper ||
+  _lib_organization_v1_join_request
+      .ApproveOrganizationJoinRequestsResponse_kind
+      .rolesRequiredErrorWrapper ||
+  _lib_organization_v1_join_request
+      .ApproveOrganizationJoinRequestsResponse_kind
+      .userAlreadyMemberErrorWrapper ||
+  _lib_organization_v1_join_request
+      .ApproveOrganizationJoinRequestsResponse_kind
+      .invalidSelectionErrorWrapper ||
+  _lib_organization_v1_join_request
+      .ApproveOrganizationJoinRequestsResponse_kind
+      .invalidRecordIdErrorWrapper => ResponseOutcome.domainError,
+  // internal_error and the generated unknown variant
+  _ => ResponseOutcome.internalError,
+};
+
+ResponseOutcome _declineOrganizationJoinRequestOutcome(
+  _lib_organization_v1_join_request.DeclineOrganizationJoinRequestResponse
+  response,
+) => switch (response.kind) {
+  _lib_organization_v1_join_request
+      .DeclineOrganizationJoinRequestResponse_kind
+      .successWrapper =>
+    ResponseOutcome.success,
+  _lib_organization_v1_join_request
+      .DeclineOrganizationJoinRequestResponse_kind
+      .requestNotFoundErrorWrapper ||
+  _lib_organization_v1_join_request
+      .DeclineOrganizationJoinRequestResponse_kind
+      .invalidRecordIdErrorWrapper => ResponseOutcome.domainError,
+  // internal_error and the generated unknown variant
+  _ => ResponseOutcome.internalError,
+};
+
+ResponseOutcome _watchOrganizationJoinCodesOutcome(
+  _lib_organization_v1_join_codes.WatchOrganizationJoinCodesResponse response,
+) => switch (response.kind) {
+  _lib_organization_v1_join_codes
+      .WatchOrganizationJoinCodesResponse_kind
+      .snapshotWrapper ||
+  _lib_organization_v1_join_codes
+      .WatchOrganizationJoinCodesResponse_kind
+      .changedWrapper => ResponseOutcome.success,
+  // internal_error and the generated unknown variant
+  _ => ResponseOutcome.internalError,
+};
+
+ResponseOutcome _generateOrganizationJoinCodeOutcome(
+  _lib_organization_v1_join_codes.GenerateOrganizationJoinCodeResponse response,
+) => switch (response.kind) {
+  _lib_organization_v1_join_codes
+      .GenerateOrganizationJoinCodeResponse_kind
+      .successWrapper =>
+    ResponseOutcome.success,
+  _lib_organization_v1_join_codes
+      .GenerateOrganizationJoinCodeResponse_kind
+      .rolesNotFoundErrorWrapper ||
+  _lib_organization_v1_join_codes
+      .GenerateOrganizationJoinCodeResponse_kind
+      .rolesNotAssignableErrorWrapper ||
+  _lib_organization_v1_join_codes
+      .GenerateOrganizationJoinCodeResponse_kind
+      .invalidExpirationErrorWrapper ||
+  _lib_organization_v1_join_codes
+      .GenerateOrganizationJoinCodeResponse_kind
+      .invalidRecordIdErrorWrapper => ResponseOutcome.domainError,
+  // internal_error and the generated unknown variant
+  _ => ResponseOutcome.internalError,
+};
+
+ResponseOutcome _revokeOrganizationJoinCodeOutcome(
+  _lib_organization_v1_join_codes.RevokeOrganizationJoinCodeResponse response,
+) => switch (response.kind) {
+  _lib_organization_v1_join_codes
+      .RevokeOrganizationJoinCodeResponse_kind
+      .successWrapper =>
+    ResponseOutcome.success,
+  _lib_organization_v1_join_codes
+      .RevokeOrganizationJoinCodeResponse_kind
+      .codeNotFoundErrorWrapper ||
+  _lib_organization_v1_join_codes
+      .RevokeOrganizationJoinCodeResponse_kind
+      .invalidRecordIdErrorWrapper => ResponseOutcome.domainError,
+  // internal_error and the generated unknown variant
+  _ => ResponseOutcome.internalError,
+};
+
+ResponseOutcome _watchOrganizationRolesOutcome(
+  _lib_organization_v1_role.WatchOrganizationRolesResponse response,
+) => switch (response.kind) {
+  _lib_organization_v1_role.WatchOrganizationRolesResponse_kind.listWrapper ||
+  _lib_organization_v1_role.WatchOrganizationRolesResponse_kind.addWrapper ||
+  _lib_organization_v1_role.WatchOrganizationRolesResponse_kind.updateWrapper ||
+  _lib_organization_v1_role.WatchOrganizationRolesResponse_kind.removeWrapper =>
+    ResponseOutcome.success,
+  // internal_error and the generated unknown variant
+  _ => ResponseOutcome.internalError,
+};
+
+ResponseOutcome _bindServiceOutcome(
+  _lib_service_v1_registration.BindServiceResponse response,
+) => switch (response.kind) {
+  _lib_service_v1_registration.BindServiceResponse_kind.successWrapper =>
+    ResponseOutcome.success,
+  _lib_service_v1_registration
+      .BindServiceResponse_kind
+      .invalidRegistrationTokenErrorWrapper ||
+  _lib_service_v1_registration
+      .BindServiceResponse_kind
+      .organizationNotFoundErrorWrapper => ResponseOutcome.domainError,
+  // internal_error and the generated unknown variant
+  _ => ResponseOutcome.internalError,
+};
+
+ResponseOutcome _watchOrganizationServicesOutcome(
+  _lib_service_v1_organization.WatchOrganizationServicesResponse response,
+) => switch (response.kind) {
+  _lib_service_v1_organization
+      .WatchOrganizationServicesResponse_kind
+      .listWrapper =>
+    ResponseOutcome.success,
+  // internal_error and the generated unknown variant
+  _ => ResponseOutcome.internalError,
+};
+
+ResponseOutcome _updateOrganizationServiceOutcome(
+  _lib_service_v1_organization.UpdateOrganizationServiceResponse response,
+) => switch (response.kind) {
+  _lib_service_v1_organization
+      .UpdateOrganizationServiceResponse_kind
+      .successWrapper =>
+    ResponseOutcome.success,
+  _lib_service_v1_organization
+      .UpdateOrganizationServiceResponse_kind
+      .conflictErrorWrapper ||
+  _lib_service_v1_organization
+      .UpdateOrganizationServiceResponse_kind
+      .serviceNotFoundErrorWrapper ||
+  _lib_service_v1_organization
+      .UpdateOrganizationServiceResponse_kind
+      .validationErrorWrapper ||
+  _lib_service_v1_organization
+      .UpdateOrganizationServiceResponse_kind
+      .invalidRecordIdErrorWrapper => ResponseOutcome.domainError,
+  // internal_error and the generated unknown variant
+  _ => ResponseOutcome.internalError,
+};
+
+ResponseOutcome _unbindServiceOutcome(
+  _lib_service_v1_registration.UnbindServiceResponse response,
+) => switch (response.kind) {
+  _lib_service_v1_registration.UnbindServiceResponse_kind.successWrapper =>
+    ResponseOutcome.success,
+  _lib_service_v1_registration
+      .UnbindServiceResponse_kind
+      .serviceNotFoundErrorWrapper =>
+    ResponseOutcome.domainError,
+  // internal_error and the generated unknown variant
+  _ => ResponseOutcome.internalError,
+};
+
+ResponseOutcome _configureServiceHostOutcome(
+  _lib_service_v1_topology.ConfigureServiceHostResponse response,
+) => switch (response.kind) {
+  _lib_service_v1_topology.ConfigureServiceHostResponse_kind.successWrapper =>
+    ResponseOutcome.success,
+  _lib_service_v1_topology
+      .ConfigureServiceHostResponse_kind
+      .conflictErrorWrapper ||
+  _lib_service_v1_topology
+      .ConfigureServiceHostResponse_kind
+      .invalidConfigurationErrorWrapper ||
+  _lib_service_v1_topology
+      .ConfigureServiceHostResponse_kind
+      .incompatibleEngineErrorWrapper ||
+  _lib_service_v1_topology
+      .ConfigureServiceHostResponse_kind
+      .realmNotFoundErrorWrapper ||
+  _lib_service_v1_topology
+      .ConfigureServiceHostResponse_kind
+      .invalidRecordIdErrorWrapper => ResponseOutcome.domainError,
+  // internal_error and the generated unknown variant
+  _ => ResponseOutcome.internalError,
+};
+
+ResponseOutcome _watchOrganizationTopologyOutcome(
+  _lib_service_v1_topology.WatchOrganizationTopologyResponse response,
+) => switch (response.kind) {
+  _lib_service_v1_topology.WatchOrganizationTopologyResponse_kind.listWrapper =>
+    ResponseOutcome.success,
+  // internal_error and the generated unknown variant
+  _ => ResponseOutcome.internalError,
+};
+
+ResponseOutcome _fetchEditorCatalogOutcome(
+  _lib_editor_v1_catalog.CatalogFetchResult response,
+) => switch (response.kind) {
+  _lib_editor_v1_catalog.CatalogFetchResult_kind.catalogWrapper =>
+    ResponseOutcome.success,
+  _lib_editor_v1_catalog
+      .CatalogFetchResult_kind
+      .generationChangedErrorWrapper =>
+    ResponseOutcome.domainError,
+  // internal_error and the generated unknown variant
+  _ => ResponseOutcome.internalError,
+};
+
+ResponseOutcome _watchEditorCatalogOutcome(
+  _lib_editor_v1_catalog.WatchEditorCatalogResponse response,
+) => switch (response.kind) {
+  _lib_editor_v1_catalog.WatchEditorCatalogResponse_kind.invalidatedWrapper =>
+    ResponseOutcome.success,
+  // internal_error and the generated unknown variant
+  _ => ResponseOutcome.internalError,
+};
+
+ResponseOutcome _prepareValueOutcome(
+  _lib_editor_v1_catalog.PrepareValueResult response,
+) => switch (response.kind) {
+  _lib_editor_v1_catalog.PrepareValueResult_kind.readyWrapper ||
+  _lib_editor_v1_catalog.PrepareValueResult_kind.needsInputWrapper =>
+    ResponseOutcome.success,
+  _lib_editor_v1_catalog.PrepareValueResult_kind.unavailableErrorWrapper ||
+  _lib_editor_v1_catalog.PrepareValueResult_kind.catalogChangedErrorWrapper =>
+    ResponseOutcome.domainError,
+  // internal_error and the generated unknown variant
+  _ => ResponseOutcome.internalError,
+};
+
+ResponseOutcome _watchRealmPresentationSearchOutcome(
+  _lib_editor_v1_search.RealmPresentationSearchUpdate response,
+) => switch (response.kind) {
+  _lib_editor_v1_search.RealmPresentationSearchUpdate_kind.snapshotWrapper =>
+    ResponseOutcome.success,
+  _lib_editor_v1_search
+      .RealmPresentationSearchUpdate_kind
+      .unavailableErrorWrapper ||
+  _lib_editor_v1_search
+      .RealmPresentationSearchUpdate_kind
+      .staleObservationErrorWrapper => ResponseOutcome.domainError,
+  // internal_error and the generated unknown variant
+  _ => ResponseOutcome.internalError,
+};
+
+ResponseOutcome _cancelRealmPresentationSearchOutcome(
+  _lib_editor_v1_search.CancelRealmPresentationSearchResult response,
+) => switch (response.kind) {
+  _lib_editor_v1_search
+      .CancelRealmPresentationSearchResult_kind
+      .canceledConst =>
+    ResponseOutcome.success,
+  _lib_editor_v1_search
+      .CancelRealmPresentationSearchResult_kind
+      .notFoundErrorConst =>
+    ResponseOutcome.domainError,
+  // internal_error and the generated unknown variant
+  _ => ResponseOutcome.internalError,
+};
+
+ResponseOutcome _invokeRealmComputationOutcome(
+  _lib_editor_v1_capability.ComputationResult response,
+) => switch (response.kind) {
+  _lib_editor_v1_capability.ComputationResult_kind.successWrapper =>
+    ResponseOutcome.success,
+  _lib_editor_v1_capability.ComputationResult_kind.invalidErrorWrapper ||
+  _lib_editor_v1_capability.ComputationResult_kind.unavailableErrorWrapper ||
+  _lib_editor_v1_capability
+      .ComputationResult_kind
+      .permissionDeniedErrorWrapper ||
+  _lib_editor_v1_capability
+      .ComputationResult_kind
+      .staleGenerationErrorWrapper => ResponseOutcome.domainError,
+  // internal_error and the generated unknown variant
+  _ => ResponseOutcome.internalError,
+};
+
+ResponseOutcome _invokeRealmCommandOutcome(
+  _lib_editor_v1_capability.CommandResult response,
+) => switch (response.kind) {
+  _lib_editor_v1_capability.CommandResult_kind.successWrapper =>
+    ResponseOutcome.success,
+  _lib_editor_v1_capability.CommandResult_kind.invalidErrorWrapper ||
+  _lib_editor_v1_capability.CommandResult_kind.unavailableErrorWrapper ||
+  _lib_editor_v1_capability.CommandResult_kind.permissionDeniedErrorWrapper ||
+  _lib_editor_v1_capability.CommandResult_kind.staleGenerationErrorWrapper =>
+    ResponseOutcome.domainError,
+  // internal_error and the generated unknown variant
+  _ => ResponseOutcome.internalError,
+};
+
+ResponseOutcome _resolveResourceOperationsOutcome(
+  _lib_editor_v1_resource_operations.ResolveResourceOperationsResult response,
+) => switch (response.kind) {
+  _lib_editor_v1_resource_operations
+      .ResolveResourceOperationsResult_kind
+      .resolvedWrapper =>
+    ResponseOutcome.success,
+  _lib_editor_v1_resource_operations
+      .ResolveResourceOperationsResult_kind
+      .staleObservationErrorWrapper ||
+  _lib_editor_v1_resource_operations
+      .ResolveResourceOperationsResult_kind
+      .invalidErrorWrapper ||
+  _lib_editor_v1_resource_operations
+      .ResolveResourceOperationsResult_kind
+      .catalogChangedErrorWrapper ||
+  _lib_editor_v1_resource_operations
+      .ResolveResourceOperationsResult_kind
+      .permissionDeniedErrorWrapper ||
+  _lib_editor_v1_resource_operations
+      .ResolveResourceOperationsResult_kind
+      .failedErrorWrapper => ResponseOutcome.domainError,
+  // internal_error and the generated unknown variant
+  _ => ResponseOutcome.internalError,
+};
+
+ResponseOutcome _resolveDropCandidatesOutcome(
+  _lib_editor_v1_resource_operations.ResolveDropCandidatesResult response,
+) => switch (response.kind) {
+  _lib_editor_v1_resource_operations
+      .ResolveDropCandidatesResult_kind
+      .resolvedWrapper =>
+    ResponseOutcome.success,
+  _lib_editor_v1_resource_operations
+      .ResolveDropCandidatesResult_kind
+      .staleObservationErrorWrapper ||
+  _lib_editor_v1_resource_operations
+      .ResolveDropCandidatesResult_kind
+      .invalidErrorWrapper ||
+  _lib_editor_v1_resource_operations
+      .ResolveDropCandidatesResult_kind
+      .catalogChangedErrorWrapper ||
+  _lib_editor_v1_resource_operations
+      .ResolveDropCandidatesResult_kind
+      .permissionDeniedErrorWrapper ||
+  _lib_editor_v1_resource_operations
+      .ResolveDropCandidatesResult_kind
+      .failedErrorWrapper => ResponseOutcome.domainError,
+  // internal_error and the generated unknown variant
+  _ => ResponseOutcome.internalError,
+};
+
+ResponseOutcome _prepareAuthoringActionOutcome(
+  _lib_editor_v1_resource_operations.AuthoringActionResult response,
+) => switch (response.kind) {
+  _lib_editor_v1_resource_operations
+      .AuthoringActionResult_kind
+      .needsInputWrapper ||
+  _lib_editor_v1_resource_operations
+      .AuthoringActionResult_kind
+      .previewWrapper => ResponseOutcome.success,
+  _lib_editor_v1_resource_operations
+      .AuthoringActionResult_kind
+      .staleObservationErrorWrapper ||
+  _lib_editor_v1_resource_operations
+      .AuthoringActionResult_kind
+      .invalidErrorWrapper ||
+  _lib_editor_v1_resource_operations
+      .AuthoringActionResult_kind
+      .unavailableErrorWrapper ||
+  _lib_editor_v1_resource_operations
+      .AuthoringActionResult_kind
+      .catalogChangedErrorWrapper ||
+  _lib_editor_v1_resource_operations
+      .AuthoringActionResult_kind
+      .permissionDeniedErrorWrapper ||
+  _lib_editor_v1_resource_operations
+      .AuthoringActionResult_kind
+      .failedErrorWrapper => ResponseOutcome.domainError,
+  // internal_error and the generated unknown variant
+  _ => ResponseOutcome.internalError,
+};
+
+ResponseOutcome _queryAuthoringStateOutcome(
+  _lib_editor_v1_authoring.QueryAuthoringStateResponse response,
+) => switch (response.kind) {
+  _lib_editor_v1_authoring.QueryAuthoringStateResponse_kind.stateWrapper =>
+    ResponseOutcome.success,
+  _lib_editor_v1_authoring
+      .QueryAuthoringStateResponse_kind
+      .catalogChangedErrorWrapper =>
+    ResponseOutcome.domainError,
+  // internal_error and the generated unknown variant
+  _ => ResponseOutcome.internalError,
+};
+
+ResponseOutcome _commitPreparedEditOutcome(
+  _lib_editor_v1_authoring.CommitPreparedEditResponse response,
+) => switch (response.kind) {
+  _lib_editor_v1_authoring.CommitPreparedEditResponse_kind.committedConst =>
+    ResponseOutcome.success,
+  _lib_editor_v1_authoring
+      .CommitPreparedEditResponse_kind
+      .conflictErrorWrapper ||
+  _lib_editor_v1_authoring
+      .CommitPreparedEditResponse_kind
+      .rejectedErrorWrapper ||
+  _lib_editor_v1_authoring
+      .CommitPreparedEditResponse_kind
+      .catalogChangedErrorWrapper => ResponseOutcome.domainError,
+  // internal_error and the generated unknown variant
+  _ => ResponseOutcome.internalError,
+};
+
+ResponseOutcome _previewTypeArgumentChangeOutcome(
+  _lib_editor_v1_authoring.PreviewTypeArgumentChangeResponse response,
+) => switch (response.kind) {
+  _lib_editor_v1_authoring
+      .PreviewTypeArgumentChangeResponse_kind
+      .readyWrapper ||
+  _lib_editor_v1_authoring
+      .PreviewTypeArgumentChangeResponse_kind
+      .incompleteWrapper => ResponseOutcome.success,
+  _lib_editor_v1_authoring
+      .PreviewTypeArgumentChangeResponse_kind
+      .invalidArgumentsErrorWrapper ||
+  _lib_editor_v1_authoring
+      .PreviewTypeArgumentChangeResponse_kind
+      .rejectedErrorWrapper => ResponseOutcome.domainError,
+  // internal_error and the generated unknown variant
+  _ => ResponseOutcome.internalError,
+};
+
+ResponseOutcome _prepareTypeArgumentChangeOutcome(
+  _lib_editor_v1_authoring.PrepareTypeArgumentChangeResponse response,
+) => switch (response.kind) {
+  _lib_editor_v1_authoring
+      .PrepareTypeArgumentChangeResponse_kind
+      .preparedWrapper ||
+  _lib_editor_v1_authoring
+      .PrepareTypeArgumentChangeResponse_kind
+      .needsInputWrapper => ResponseOutcome.success,
+  _lib_editor_v1_authoring
+      .PrepareTypeArgumentChangeResponse_kind
+      .rejectedErrorWrapper =>
+    ResponseOutcome.domainError,
+  // internal_error and the generated unknown variant
+  _ => ResponseOutcome.internalError,
+};
+
+ResponseOutcome _searchAuthoringOutcome(
+  _lib_editor_v1_authoring.SearchAuthoringResponse response,
+) => switch (response.kind) {
+  _lib_editor_v1_authoring.SearchAuthoringResponse_kind.successWrapper =>
+    ResponseOutcome.success,
+  _lib_editor_v1_authoring.SearchAuthoringResponse_kind.invalidErrorWrapper ||
+  _lib_editor_v1_authoring
+      .SearchAuthoringResponse_kind
+      .catalogChangedErrorWrapper => ResponseOutcome.domainError,
+  // internal_error and the generated unknown variant
+  _ => ResponseOutcome.internalError,
+};
+
+ResponseOutcome _queryPublishedContentOutcome(
+  _lib_editor_v1_compiled_content.QueryPublishedContentResponse response,
+) => switch (response.kind) {
+  _lib_editor_v1_compiled_content
+      .QueryPublishedContentResponse_kind
+      .contentWrapper ||
+  _lib_editor_v1_compiled_content
+      .QueryPublishedContentResponse_kind
+      .absentWrapper => ResponseOutcome.success,
+  // internal_error and the generated unknown variant
+  _ => ResponseOutcome.internalError,
+};
+
+ResponseOutcome _queryCompiledResourceStatusOutcome(
+  _lib_editor_v1_compiled_content.QueryCompiledResourceStatusResponse response,
+) => switch (response.kind) {
+  _lib_editor_v1_compiled_content
+      .QueryCompiledResourceStatusResponse_kind
+      .successWrapper =>
+    ResponseOutcome.success,
+  // internal_error and the generated unknown variant
+  _ => ResponseOutcome.internalError,
+};
+
+ResponseOutcome _publishAuthoringOutcome(
+  _lib_editor_v1_publication.PublishAuthoringResponse response,
+) => switch (response.kind) {
+  _lib_editor_v1_publication.PublishAuthoringResponse_kind.publishingConst ||
+  _lib_editor_v1_publication.PublishAuthoringResponse_kind.activatedWrapper ||
+  _lib_editor_v1_publication.PublishAuthoringResponse_kind.noChangesConst =>
+    ResponseOutcome.success,
+  _lib_editor_v1_publication
+      .PublishAuthoringResponse_kind
+      .blockedErrorWrapper ||
+  _lib_editor_v1_publication
+      .PublishAuthoringResponse_kind
+      .interruptedErrorWrapper ||
+  _lib_editor_v1_publication
+      .PublishAuthoringResponse_kind
+      .candidateChangedErrorWrapper => ResponseOutcome.domainError,
+  // internal_error and the generated unknown variant
+  _ => ResponseOutcome.internalError,
+};
+
+ResponseOutcome _queryPublicationViewOutcome(
+  _lib_editor_v1_publication.QueryPublicationViewResponse response,
+) => switch (response.kind) {
+  _lib_editor_v1_publication.QueryPublicationViewResponse_kind.viewWrapper =>
+    ResponseOutcome.success,
+  _lib_editor_v1_publication
+      .QueryPublicationViewResponse_kind
+      .viewChangedErrorWrapper =>
+    ResponseOutcome.domainError,
+  // internal_error and the generated unknown variant
+  _ => ResponseOutcome.internalError,
+};
+
+ResponseOutcome _watchPublicationOutcome(
+  _lib_editor_v1_publication.WatchPublicationResponse response,
+) => switch (response.kind) {
+  _lib_editor_v1_publication.WatchPublicationResponse_kind.viewChangedWrapper =>
+    ResponseOutcome.success,
+  // internal_error and the generated unknown variant
+  _ => ResponseOutcome.internalError,
+};
+
+ResponseOutcome _fetchSharedArtifactCatalogOutcome(
+  _lib_service_v1_artifact.FetchSharedArtifactCatalogResponse response,
+) => switch (response.kind) {
+  _lib_service_v1_artifact
+      .FetchSharedArtifactCatalogResponse_kind
+      .successWrapper =>
+    ResponseOutcome.success,
+  // internal_error and the generated unknown variant
+  _ => ResponseOutcome.internalError,
+};
+
+ResponseOutcome _publishSharedArtifactOutcome(
+  _lib_service_v1_artifact.PublishSharedArtifactResponse response,
+) => switch (response.kind) {
+  _lib_service_v1_artifact
+      .PublishSharedArtifactResponse_kind
+      .publishedWrapper ||
+  _lib_service_v1_artifact
+      .PublishSharedArtifactResponse_kind
+      .unchangedWrapper => ResponseOutcome.success,
+  _lib_service_v1_artifact
+      .PublishSharedArtifactResponse_kind
+      .conflictErrorWrapper =>
+    ResponseOutcome.domainError,
+  // internal_error and the generated unknown variant
+  _ => ResponseOutcome.internalError,
+};
+
+ResponseOutcome _fetchArtifactBlobMetadataOutcome(
+  _lib_service_v1_artifact.FetchArtifactBlobMetadataResponse response,
+) => switch (response.kind) {
+  _lib_service_v1_artifact
+      .FetchArtifactBlobMetadataResponse_kind
+      .successWrapper =>
+    ResponseOutcome.success,
+  _lib_service_v1_artifact
+      .FetchArtifactBlobMetadataResponse_kind
+      .notFoundErrorWrapper ||
+  _lib_service_v1_artifact
+      .FetchArtifactBlobMetadataResponse_kind
+      .invalidErrorWrapper => ResponseOutcome.domainError,
+  // internal_error and the generated unknown variant
+  _ => ResponseOutcome.internalError,
+};
+
+ResponseOutcome _readArtifactBlobOutcome(
+  _lib_service_v1_artifact.ReadArtifactBlobResponse response,
+) => switch (response.kind) {
+  _lib_service_v1_artifact.ReadArtifactBlobResponse_kind.successWrapper =>
+    ResponseOutcome.success,
+  _lib_service_v1_artifact.ReadArtifactBlobResponse_kind.notFoundErrorWrapper ||
+  _lib_service_v1_artifact.ReadArtifactBlobResponse_kind.invalidErrorWrapper =>
+    ResponseOutcome.domainError,
+  // internal_error and the generated unknown variant
+  _ => ResponseOutcome.internalError,
+};
+
+ResponseOutcome _beginArtifactBlobWriteOutcome(
+  _lib_service_v1_artifact.BeginArtifactBlobWriteResponse response,
+) => switch (response.kind) {
+  _lib_service_v1_artifact
+      .BeginArtifactBlobWriteResponse_kind
+      .acceptedWrapper =>
+    ResponseOutcome.success,
+  _lib_service_v1_artifact
+      .BeginArtifactBlobWriteResponse_kind
+      .invalidErrorWrapper ||
+  _lib_service_v1_artifact
+      .BeginArtifactBlobWriteResponse_kind
+      .conflictErrorWrapper => ResponseOutcome.domainError,
+  // internal_error and the generated unknown variant
+  _ => ResponseOutcome.internalError,
+};
+
+ResponseOutcome _writeArtifactBlobChunkOutcome(
+  _lib_service_v1_artifact.WriteArtifactBlobChunkResponse response,
+) => switch (response.kind) {
+  _lib_service_v1_artifact
+      .WriteArtifactBlobChunkResponse_kind
+      .acceptedWrapper =>
+    ResponseOutcome.success,
+  _lib_service_v1_artifact
+      .WriteArtifactBlobChunkResponse_kind
+      .notFoundErrorWrapper ||
+  _lib_service_v1_artifact
+      .WriteArtifactBlobChunkResponse_kind
+      .invalidErrorWrapper ||
+  _lib_service_v1_artifact
+      .WriteArtifactBlobChunkResponse_kind
+      .conflictErrorWrapper => ResponseOutcome.domainError,
+  // internal_error and the generated unknown variant
+  _ => ResponseOutcome.internalError,
+};
+
+ResponseOutcome _completeArtifactBlobWriteOutcome(
+  _lib_service_v1_artifact.CompleteArtifactBlobWriteResponse response,
+) => switch (response.kind) {
+  _lib_service_v1_artifact
+      .CompleteArtifactBlobWriteResponse_kind
+      .successWrapper =>
+    ResponseOutcome.success,
+  _lib_service_v1_artifact
+      .CompleteArtifactBlobWriteResponse_kind
+      .notFoundErrorWrapper ||
+  _lib_service_v1_artifact
+      .CompleteArtifactBlobWriteResponse_kind
+      .invalidErrorWrapper ||
+  _lib_service_v1_artifact
+      .CompleteArtifactBlobWriteResponse_kind
+      .conflictErrorWrapper => ResponseOutcome.domainError,
+  // internal_error and the generated unknown variant
+  _ => ResponseOutcome.internalError,
+};
 
 /// Reply framing limits of the transport route manifest: frame size and frames per reply.
 const transportLimits = TransportLimits(chunkBytes: 524288, maxChunks: 64);

@@ -6,7 +6,7 @@ import { GENERATOR as KOTLIN } from "skir-kotlin-gen";
 import { GENERATOR as RUST } from "skir-rust-gen";
 
 import type { ResolvedRoute } from "../src/routes/resolve.js";
-import { symbolProviders } from "../src/symbols.js";
+import { kotlinWrapperClass, symbolProviders } from "../src/symbols.js";
 import { committedRoutes, DART_PREFIX } from "./support.js";
 
 /** Concatenates the files of one Skir language generator for the same parsed modules. */
@@ -95,6 +95,11 @@ describe("naming agrees with generated Skir output", async () => {
         const rustPattern = last(providers.rust.variant(location, variant).reference, "::");
         expect(rustPattern.endsWith("(_)")).toBe(variant.type !== undefined);
         expect(rust).toContain(rustPattern.replace("(_)", ""));
+
+        if (variant.type !== undefined) {
+          const wrapper = last(kotlinWrapperClass(providers.kotlin, location, variant), ".");
+          expect(kotlinFile(location.modulePath)).toContain(`class ${wrapper}`);
+        }
       }
     }
   });

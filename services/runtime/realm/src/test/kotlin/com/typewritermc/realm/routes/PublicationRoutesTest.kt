@@ -18,8 +18,8 @@ val PublicationRoutesTest by testSuite {
                 val reviewed =
                     publication.publisher.views.value
                         .toWire()
-                RouteFixture { contracts, address, _ ->
-                    communicatorRoutes { PublicationRoutes(publication.publisher, contracts, address).register(this) }
+                RouteFixture { address, _ ->
+                    communicatorRoutes { PublicationRoutes(publication.publisher, address).register(this) }
                 }.use { routes ->
                     routes
                         .request(

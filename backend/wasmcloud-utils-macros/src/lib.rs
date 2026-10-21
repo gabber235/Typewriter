@@ -10,20 +10,8 @@ use syn::parse_macro_input;
 mod database_query;
 mod paths;
 mod skir_domain_result;
-mod skir_response;
 mod skir_transaction_outcome;
 mod skir_variant;
-
-/// Implement the `wasmcloud_utils::SkirResponse` contract for a generated response enum.
-///
-/// The declaration names successful variants and domain error variants. It generates wire
-/// serialization, outcome classification, stable kebab case slugs, caller facing messages, the
-/// generic internal error, and default construction for payloadless domain errors.
-#[proc_macro]
-pub fn skir_response(input: TokenStream) -> TokenStream {
-    let input = parse_macro_input!(input as skir_response::SkirResponseInput);
-    skir_response::expand(input).into()
-}
 
 /// Create a read query from a compile time string literal.
 ///
@@ -94,9 +82,9 @@ pub fn transaction_outcome_index_file(input: TokenStream) -> TokenStream {
 
 /// Convert a domain slug result into either a value or an early typed SKIR response.
 ///
-/// Known payloadless variants use the response registry. The optional mapping entries construct
-/// payloadful variants from values already available at the call site. A successful value keeps
-/// the surrounding function running; a response is returned with `Ok`.
+/// The optional mapping entries construct variants with payloads from values already available at
+/// the call site; other known slugs use the generated `SkirResponse::domain_error_from_slug`. A
+/// successful value keeps the surrounding function running; a response is returned with `Ok`.
 #[proc_macro]
 pub fn skir_domain_result(input: TokenStream) -> TokenStream {
     let input = parse_macro_input!(input as skir_domain_result::SkirDomainResultInput);

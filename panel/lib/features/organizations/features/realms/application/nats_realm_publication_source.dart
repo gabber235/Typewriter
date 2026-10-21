@@ -46,7 +46,6 @@ final class NatsRealmPublicationRepository
       ),
     },
     replay: SubmissionReplay.unsupported,
-    classify: classifyPublicationResponse,
   );
 
   @override
@@ -152,22 +151,6 @@ final class NatsRealmPublicationRepository
     };
   });
 }
-
-MutationResponseDisposition classifyPublicationResponse(
-  skir.PublishAuthoringResponse response,
-) => switch (response) {
-  skir.PublishAuthoringResponse_blockedErrorWrapper() ||
-  skir.PublishAuthoringResponse_interruptedErrorWrapper() ||
-  skir.PublishAuthoringResponse_candidateChangedErrorWrapper() =>
-    MutationResponseDisposition.rejected,
-  skir.PublishAuthoringResponse.publishing ||
-  skir.PublishAuthoringResponse_activatedWrapper() ||
-  skir.PublishAuthoringResponse.noChanges =>
-    MutationResponseDisposition.confirmed,
-  skir.PublishAuthoringResponse_internalErrorWrapper() ||
-  skir.PublishAuthoringResponse_unknown() =>
-    MutationResponseDisposition.uncertain,
-};
 
 final class PublicationViewChanged implements Exception {
   const PublicationViewChanged(this.current);
