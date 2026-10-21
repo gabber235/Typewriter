@@ -5,6 +5,9 @@ import com.typewritermc.engine.CompiledArtifact
 import com.typewritermc.engine.CompiledArtifactReference
 import com.typewritermc.engine.PUBLISHED_CONTENT_FORMAT_REVISION
 import com.typewritermc.engine.PublishedContent
+import com.typewritermc.engine.toSkir
+import skirout.editor.v1.publication.PublicationChange
+import skirout.editor.v1.publication.PublicationDelta
 
 /** Semantic release contents independent of storage pointers or publication IDs. */
 data class PublicationRuntimeContent(
@@ -31,34 +34,14 @@ data class PublicationRuntimeContent(
     }
 }
 
-sealed interface PublicationChange {
-    data class RootAdded(
-        val root: CompilationRoot,
-    ) : PublicationChange
-
-    data class RootUpdated(
-        val root: CompilationRoot,
-    ) : PublicationChange
-
-    data class RootRemoved(
-        val root: CompilationRoot,
-    ) : PublicationChange
-
-    data object RequirementsChanged : PublicationChange
+/** A releasable change set: nonempty with distinct changes, the first one first. */
+internal fun publicationDelta(changes: List<PublicationChange>): PublicationDelta {
+    require(changes.isNotEmpty()) { "A publication delta needs at least one change." }
+    require(changes.distinct().size == changes.size) { "Publication delta changes must be distinct." }
+    return PublicationDelta(first = changes.first(), additional = changes.drop(1))
 }
 
-/** A release requires at least one change in what the runtime receives. */
-@ConsistentCopyVisibility
-data class PublicationDelta internal constructor(
-    val first: PublicationChange,
-    val additional: List<PublicationChange> = emptyList(),
-) {
-    val allChanges: List<PublicationChange> get() = listOf(first) + additional
-
-    init {
-        require(allChanges.distinct().size == allChanges.size)
-    }
-}
+val PublicationDelta.allChanges: List<PublicationChange> get() = listOf(first) + additional
 
 sealed interface PublicationComparison {
     data object Unchanged : PublicationComparison
@@ -74,7 +57,7 @@ sealed interface PublicationComparison {
             engine: EngineImplementationInputs,
         ): PublicationComparison {
             val changes = confirmedChanges(selected, artifacts, artifacts.mapTo(linkedSetOf()) { it.root }, engine)
-            return if (changes.isEmpty()) Unchanged else Changed(PublicationDelta(changes.first(), changes.drop(1)))
+            return if (changes.isEmpty()) Unchanged else Changed(publicationDelta(changes))
         }
 
         /** Failed roots remain pending. Successful roots and definite removals can still be compared. */
@@ -112,10 +95,10 @@ sealed interface PublicationComparison {
             return buildList {
                 (old.keys + candidateRoots).sortedWith(ordering).forEach { root ->
                     when {
-                        root !in candidateRoots -> add(PublicationChange.RootRemoved(root))
+                        root !in candidateRoots -> add(PublicationChange.RootRemovedWrapper(root.toSkir()))
                         root !in next -> Unit
-                        root !in old -> add(PublicationChange.RootAdded(root))
-                        old[root] != next[root] -> add(PublicationChange.RootUpdated(root))
+                        root !in old -> add(PublicationChange.RootAddedWrapper(root.toSkir()))
+                        old[root] != next[root] -> add(PublicationChange.RootUpdatedWrapper(root.toSkir()))
                     }
                 }
                 if (selected != null &&
@@ -124,7 +107,7 @@ sealed interface PublicationComparison {
                             selected.implementationToken != engine.token.value
                     )
                 ) {
-                    add(PublicationChange.RequirementsChanged)
+                    add(PublicationChange.REQUIREMENTS_CHANGED)
                 }
             }
         }

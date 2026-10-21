@@ -78,7 +78,7 @@ val PublicationRoutesTest by testSuite {
             )
         val status =
             com.typewritermc.realm.compiler.PublicationStatus.Blocked(
-                com.typewritermc.realm.compiler.PublicationBaseline.Initial,
+                skirout.editor.v1.publication.PublicationBaseline.INITIAL,
                 com.typewritermc.realm.compiler.PublicationBlockers
                     .from(listOf(finding)),
                 emptyList(),
@@ -87,8 +87,8 @@ val PublicationRoutesTest by testSuite {
             )
         val review =
             com.typewritermc.realm.compiler.PublicationView(
-                com.typewritermc.realm.compiler
-                    .PublicationViewId("review"),
+                skirout.editor.v1.publication
+                    .PublicationViewId(value = "review"),
                 status,
                 mapOf(finding.id to captured),
             )

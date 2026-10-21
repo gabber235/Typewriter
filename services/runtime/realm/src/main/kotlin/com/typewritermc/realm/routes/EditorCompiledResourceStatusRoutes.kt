@@ -1,20 +1,16 @@
 package com.typewritermc.realm.routes
 
-import com.typewritermc.engine.CompilationProjectionId
-import com.typewritermc.engine.CompilationRoot
+import com.typewritermc.engine.toDomain
+import com.typewritermc.engine.toSkir
 import com.typewritermc.protocol.transport.RealmRouteScope
 import com.typewritermc.protocol.transport.generated.authoringCompiledStatusQuery
 import com.typewritermc.realm.authoring.AuthoringViewStore
 import com.typewritermc.realm.compiler.CompilationStatusSelection
 import com.typewritermc.realm.compiler.CompiledRootStatuses
 import com.typewritermc.services.libs.communicator.router.CommunicatorRoutesBuilder
-import com.typewritermc.types.ResourceId
 import skirout.editor.v1.compiled_content.CompiledResourceStatus
 import skirout.editor.v1.compiled_content.QueryCompiledResourceStatusResponse
-import skirout.editor.v1.compilation_root.CompilationProjectionId as SkirCompilationProjectionId
-import skirout.editor.v1.compilation_root.CompilationRoot as SkirCompilationRoot
 import skirout.editor.v1.compiled_content.CompilationStatusSelection as SkirCompilationStatusSelection
-import skirout.editor.v1.type_catalog.ResourceId as SkirResourceId
 
 /** Reports roots present in the Realm selected publication; it does not inspect engine application state. */
 internal class EditorCompiledResourceStatusRoutes(
@@ -44,21 +40,9 @@ internal class EditorCompiledResourceStatusRoutes(
                         statuses =
                             statuses
                                 .query(capture.root, selection)
-                                .map { (root, state) -> CompiledResourceStatus(root = root.toWire(), state = state) },
+                                .map { (root, state) -> CompiledResourceStatus(root = root.toSkir(), state = state) },
                     )
                 }
             }
         }
 }
-
-private fun SkirCompilationRoot.toDomain() =
-    CompilationRoot(
-        projection = CompilationProjectionId(projection.value),
-        resource = ResourceId(resource.value),
-    )
-
-private fun CompilationRoot.toWire() =
-    SkirCompilationRoot(
-        projection = SkirCompilationProjectionId(value = projection.value),
-        resource = SkirResourceId(value = resource.value),
-    )

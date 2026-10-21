@@ -11,10 +11,13 @@ import com.typewritermc.engine.CompiledBlobPointer
 import com.typewritermc.engine.ContentDigest
 import com.typewritermc.engine.PublishedContent
 import com.typewritermc.engine.PublishedOutput
+import com.typewritermc.engine.toSkir
 import com.typewritermc.types.ResourceId
 import de.infix.testBalloon.framework.core.testSuite
+import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.types.shouldBeInstanceOf
+import skirout.editor.v1.publication.PublicationChange
 
 val PublicationComparisonTest by testSuite {
     test("publication identity catalog provenance input fingerprints and blob pointers are not runtime changes") {
@@ -43,7 +46,7 @@ val PublicationComparisonTest by testSuite {
                     testEngineInputs(),
                 ).shouldBeInstanceOf<PublicationComparison.Changed>()
                 .delta.allChanges shouldBe
-                listOf(PublicationChange.RootUpdated(original.root))
+                listOf(PublicationChange.RootUpdatedWrapper(original.root.toSkir()))
         }
     }
     test("token changes are meaningful even with no roots") {
@@ -55,7 +58,7 @@ val PublicationComparisonTest by testSuite {
                 EngineImplementationInputs(InputToken("new")),
             ).shouldBeInstanceOf<PublicationComparison.Changed>()
             .delta.allChanges shouldBe
-            listOf(PublicationChange.RequirementsChanged)
+            listOf(PublicationChange.REQUIREMENTS_CHANGED)
         PublicationComparison.between(null, emptyList(), testEngineInputs()) shouldBe PublicationComparison.Unchanged
     }
     test("old envelope format requires explicit publication even without changed output") {
@@ -69,7 +72,7 @@ val PublicationComparisonTest by testSuite {
                     testEngineInputs(),
                 ).shouldBeInstanceOf<PublicationComparison.Changed>()
                 .delta.allChanges shouldBe
-                listOf(PublicationChange.RequirementsChanged)
+                listOf(PublicationChange.REQUIREMENTS_CHANGED)
             PublicationComparison.between(outputs, candidate, testEngineInputs()) shouldBe PublicationComparison.Unchanged
         }
     }
@@ -83,7 +86,16 @@ val PublicationComparisonTest by testSuite {
             setOf(fresh.root, pending),
             testEngineInputs(),
         ) shouldBe
-            listOf(PublicationChange.RootAdded(fresh.root), PublicationChange.RootRemoved(old.root))
+            listOf(PublicationChange.RootAddedWrapper(fresh.root.toSkir()), PublicationChange.RootRemovedWrapper(old.root.toSkir()))
+    }
+    test("a release delta is nonempty and lists each change once") {
+        shouldThrow<IllegalArgumentException> { publicationDelta(emptyList()) }
+        shouldThrow<IllegalArgumentException> {
+            publicationDelta(listOf(PublicationChange.REQUIREMENTS_CHANGED, PublicationChange.REQUIREMENTS_CHANGED))
+        }
+        val root = comparisonArtifact().root.toSkir()
+        publicationDelta(listOf(PublicationChange.RootAddedWrapper(root), PublicationChange.REQUIREMENTS_CHANGED))
+            .allChanges shouldBe listOf(PublicationChange.RootAddedWrapper(root), PublicationChange.REQUIREMENTS_CHANGED)
     }
 }
 

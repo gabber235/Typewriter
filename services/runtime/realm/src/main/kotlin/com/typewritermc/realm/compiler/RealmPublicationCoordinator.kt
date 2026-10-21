@@ -40,7 +40,13 @@ import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.builtins.ListSerializer
 import skirout.editor.v1.checking.FindingStatus
+import skirout.editor.v1.publication.PublicationActivationPhase
+import skirout.editor.v1.publication.PublicationBaseline
+import skirout.editor.v1.publication.PublicationCandidateId
+import skirout.editor.v1.publication.PublicationFailure
+import skirout.editor.v1.publication.PublicationViewId
 import java.util.UUID
+import skirout.editor.v1.type_catalog.PublicationId as SkirPublicationId
 
 data class PublicationAttempt(
     val id: PublicationId,
@@ -141,7 +147,7 @@ internal class RealmPublicationCoordinator(
     private var invalidationRevision = 0L
     private val mutableView =
         MutableStateFlow(
-            PublicationView(nextViewId(), PublicationStatus.Checking(PublicationBaseline.Initial, emptyList())),
+            PublicationView(nextViewId(), PublicationStatus.Checking(PublicationBaseline.INITIAL, emptyList())),
         )
     val views: StateFlow<PublicationView> = mutableView
 
@@ -202,7 +208,7 @@ internal class RealmPublicationCoordinator(
             val revision = synchronized(lock) { invalidationRevision }
             var capture: AuthoringLease? = null
             var retained = false
-            var baseline: PublicationBaseline = PublicationBaseline.Initial
+            var baseline: PublicationBaseline = PublicationBaseline.INITIAL
             try {
                 val captured = acceptance.capture()
                 capture = captured
@@ -283,11 +289,7 @@ internal class RealmPublicationCoordinator(
 
                             is PublicationComparison.Changed -> {
                                 PublicationStatus.Ready(
-                                    PublicationCandidateId(
-                                        UUID
-                                            .randomUUID()
-                                            .toString(),
-                                    ),
+                                    PublicationCandidateId(value = UUID.randomUUID().toString()),
                                     baseline,
                                     comparison.delta,
                                     notices,
@@ -314,7 +316,7 @@ internal class RealmPublicationCoordinator(
                         update(
                             PublicationStatus.Unavailable(
                                 baseline,
-                                PublicationFailure.EvaluationInterrupted(failure.message ?: "Saved content could not be checked"),
+                                PublicationFailure.EvaluationInterruptedWrapper(failure.message ?: "Saved content could not be checked"),
                                 capture?.let { capturedFindings(it.root) }.orEmpty(),
                             ),
                         )
@@ -352,7 +354,7 @@ internal class RealmPublicationCoordinator(
                                         .randomUUID()
                                         .toString(),
                                 ),
-                                PublicationActivationPhase.Storing,
+                                PublicationActivationPhase.STORING,
                             ).also {
                                 releasing = it
                                 updateForPrepared(prepared)
@@ -380,7 +382,7 @@ internal class RealmPublicationCoordinator(
             val content = artifacts.store(id, catalog, inputs.token.value, frozen.candidate.artifacts)
             attempts.phase(id, PublicationState.Activating)
             synchronized(lock) {
-                releasing = frozen.copy(phase = PublicationActivationPhase.Activating)
+                releasing = frozen.copy(phase = PublicationActivationPhase.ACTIVATING)
                 prepared?.let(::updateForPrepared)
             }
             announce(PublicationState.Activating)
@@ -408,7 +410,7 @@ internal class RealmPublicationCoordinator(
                     update(
                         PublicationStatus.Unavailable(
                             current.candidate.baseline,
-                            PublicationFailure.PublicationInterrupted(current.id),
+                            PublicationFailure.PublicationInterruptedWrapper(current.id.toSkir()),
                             emptyList(),
                         ),
                     )
@@ -422,7 +424,11 @@ internal class RealmPublicationCoordinator(
                     if (prepared === frozen) prepared = null
                     frozen.lease.close()
                 }
-                if (release != null && installed) update(PublicationStatus.Checking(PublicationBaseline.Selected(release.id), emptyList()))
+                if (release != null &&
+                    installed
+                ) {
+                    update(PublicationStatus.Checking(PublicationBaseline.SelectedWrapper(release.id.toSkir()), emptyList()))
+                }
             }
             gate.unlock()
             invalidate()
@@ -513,14 +519,11 @@ internal class RealmPublicationCoordinator(
 }
 
 private fun PublishedContent?.baseline(): PublicationBaseline =
-    this?.let { PublicationBaseline.Selected(it.publication) } ?: PublicationBaseline.Initial
+    this?.let { PublicationBaseline.SelectedWrapper(it.publication.toSkir()) } ?: PublicationBaseline.INITIAL
 
-private fun nextViewId() =
-    PublicationViewId(
-        UUID
-            .randomUUID()
-            .toString(),
-    )
+private fun PublicationId.toSkir() = SkirPublicationId(value = value)
+
+private fun nextViewId() = PublicationViewId(value = UUID.randomUUID().toString())
 
 internal class SurrealPublicationAttemptStore(
     private val database: Surreal,

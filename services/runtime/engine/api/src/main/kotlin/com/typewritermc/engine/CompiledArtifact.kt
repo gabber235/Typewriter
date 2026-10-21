@@ -4,6 +4,9 @@ import com.typewritermc.authoring.PublicationId
 import com.typewritermc.checking.CatalogGeneration
 import com.typewritermc.types.ResourceId
 import kotlinx.serialization.Serializable
+import skirout.editor.v1.compilation_root.CompilationProjectionId as SkirCompilationProjectionId
+import skirout.editor.v1.compilation_root.CompilationRoot as SkirCompilationRoot
+import skirout.editor.v1.type_catalog.ResourceId as SkirResourceId
 
 const val PUBLISHED_CONTENT_FORMAT_REVISION = 1
 
@@ -24,6 +27,20 @@ data class CompilationRoot(
     val projection: CompilationProjectionId,
     val resource: ResourceId,
 )
+
+/** The editor contract form of this root. */
+fun CompilationRoot.toSkir(): SkirCompilationRoot =
+    SkirCompilationRoot(
+        projection = SkirCompilationProjectionId(value = projection.value),
+        resource = SkirResourceId(value = resource.value),
+    )
+
+/** Reads a contract root; the projection id must not be blank. */
+fun SkirCompilationRoot.toDomain(): CompilationRoot =
+    CompilationRoot(
+        projection = CompilationProjectionId(projection.value),
+        resource = ResourceId(resource.value),
+    )
 
 /** Describes an immutable compiled payload before it is written to blob storage. */
 @Serializable

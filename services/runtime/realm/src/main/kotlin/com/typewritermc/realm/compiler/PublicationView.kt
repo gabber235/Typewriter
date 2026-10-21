@@ -4,50 +4,13 @@ import com.typewritermc.authoring.DiagnosticId
 import com.typewritermc.authoring.PublicationId
 import com.typewritermc.engine.CompilationRoot
 import com.typewritermc.realm.checking.FindingSet
-
-/** Identifies one Ready assessment that the user can release while its captured inputs remain current. */
-@JvmInline
-value class PublicationCandidateId(
-    val value: String,
-) {
-    init {
-        require(value.isNotBlank())
-    }
-}
-
-/** Identifies one emitted review view, including changes that do not create a releasable candidate. */
-@JvmInline
-value class PublicationViewId(
-    val value: String,
-) {
-    init {
-        require(value.isNotBlank())
-    }
-}
-
-sealed interface PublicationBaseline {
-    data object Initial : PublicationBaseline
-
-    data class Selected(
-        val publication: PublicationId,
-    ) : PublicationBaseline
-}
-
-enum class PublicationActivationPhase { Storing, Activating }
-
-sealed interface PublicationFailure {
-    data class EvaluationInterrupted(
-        val message: String,
-    ) : PublicationFailure
-
-    data class ImplementationUnavailable(
-        val message: String,
-    ) : PublicationFailure
-
-    data class PublicationInterrupted(
-        val publication: PublicationId,
-    ) : PublicationFailure
-}
+import skirout.editor.v1.publication.PublicationActivationPhase
+import skirout.editor.v1.publication.PublicationBaseline
+import skirout.editor.v1.publication.PublicationCandidateId
+import skirout.editor.v1.publication.PublicationChange
+import skirout.editor.v1.publication.PublicationDelta
+import skirout.editor.v1.publication.PublicationFailure
+import skirout.editor.v1.publication.PublicationViewId
 
 data class PublicationPendingReview(
     val findings: List<FindingSet> = emptyList(),
@@ -75,6 +38,7 @@ sealed interface PublicationStatus {
     ) : PublicationStatus
 
     data class Ready(
+        /** Issued once per Ready assessment; the user can release it while its captured inputs remain current. */
         val candidate: PublicationCandidateId,
         val baseline: PublicationBaseline,
         val changes: PublicationDelta,
@@ -108,6 +72,7 @@ sealed interface PublicationStatus {
     ) : PublicationStatus
 }
 
+/** One emitted review view; [id] identifies it, including changes that do not create a releasable candidate. */
 data class PublicationView(
     val id: PublicationViewId,
     val status: PublicationStatus,

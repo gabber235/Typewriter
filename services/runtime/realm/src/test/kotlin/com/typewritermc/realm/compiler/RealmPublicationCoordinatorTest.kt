@@ -12,6 +12,7 @@ import com.typewritermc.engine.ContentDigest
 import com.typewritermc.engine.PublishedContent
 import com.typewritermc.engine.ResourceGraphCompileResult
 import com.typewritermc.engine.encodeShard
+import com.typewritermc.engine.toSkir
 import com.typewritermc.realm.authoring.AuthoringLease
 import com.typewritermc.realm.authoring.AuthoringSeed
 import com.typewritermc.realm.authoring.AuthoringView
@@ -40,6 +41,10 @@ import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.async
 import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
+import skirout.editor.v1.publication.PublicationBaseline
+import skirout.editor.v1.publication.PublicationCandidateId
+import skirout.editor.v1.publication.PublicationChange
+import skirout.editor.v1.type_catalog.PublicationId as SkirPublicationId
 
 val RealmPublicationCoordinatorTest by testSuite {
     test("checking preserves runtime invalidation even when authoring witnesses still match") {
@@ -104,7 +109,7 @@ val RealmPublicationCoordinatorTest by testSuite {
         fixture.publisher.refresh()
         fixture.publisher.views.value.status
             .shouldBeInstanceOf<PublicationStatus.Current>()
-        fixture.publisher.publish(PublicationCandidateId("obsolete")) shouldBe PublicationResult.NoChanges
+        fixture.publisher.publish(PublicationCandidateId(value = "obsolete")) shouldBe PublicationResult.NoChanges
         fixture.attempts.started shouldBe 1
         fixture.close()
     }
@@ -143,7 +148,8 @@ val RealmPublicationCoordinatorTest by testSuite {
 
                 fixture.onEvaluate = null
                 fixture.publisher.refresh()
-                fixture.ready().baseline shouldBe PublicationBaseline.Selected(replacement.publication)
+                fixture.ready().baseline shouldBe
+                    PublicationBaseline.SelectedWrapper(SkirPublicationId(value = replacement.publication.value))
             } finally {
                 fixture.close()
             }
@@ -162,7 +168,7 @@ val RealmPublicationCoordinatorTest by testSuite {
         val ready =
             fixture.publisher.views.value.status
                 .shouldBeInstanceOf<PublicationStatus.Ready>()
-        ready.changes.allChanges shouldBe listOf(PublicationChange.RootRemoved(fixture.root))
+        ready.changes.allChanges shouldBe listOf(PublicationChange.RootRemovedWrapper(fixture.root.toSkir()))
         fixture.publisher
             .publish(ready.candidate)
             .shouldBeInstanceOf<PublicationResult.Activated>()
@@ -247,7 +253,7 @@ val RealmPublicationCoordinatorTest by testSuite {
             val active =
                 fixture.publisher.views.value.status
                     .shouldBeInstanceOf<PublicationStatus.Publishing>()
-            active.next.confirmedChanges shouldBe listOf(PublicationChange.RootUpdated(fixture.root))
+            active.next.confirmedChanges shouldBe listOf(PublicationChange.RootUpdatedWrapper(fixture.root.toSkir()))
             proceed.complete(Unit)
             val published = first.await().shouldBeInstanceOf<PublicationResult.Activated>()
             val expected = fixture.compiled("Quest")
@@ -255,7 +261,7 @@ val RealmPublicationCoordinatorTest by testSuite {
                 .single()
                 .reference.semanticDigest shouldBe expected.semanticDigest
             fixture.publisher.refresh()
-            fixture.ready().changes.allChanges shouldBe listOf(PublicationChange.RootUpdated(fixture.root))
+            fixture.ready().changes.allChanges shouldBe listOf(PublicationChange.RootUpdatedWrapper(fixture.root.toSkir()))
             fixture.attempts.started shouldBe 1
             fixture.close()
         }
@@ -266,7 +272,7 @@ val RealmPublicationCoordinatorTest by testSuite {
         val blocked =
             fixture.publisher.views.value.status
                 .shouldBeInstanceOf<PublicationStatus.Blocked>()
-        blocked.confirmedChanges shouldBe listOf(PublicationChange.RootAdded(fixture.root))
+        blocked.confirmedChanges shouldBe listOf(PublicationChange.RootAddedWrapper(fixture.root.toSkir()))
         blocked.pendingRoots.single().resource shouldBe ResourceId("broken")
         blocked.blockers.first.diagnostic.primary
             ?.resource shouldBe ResourceId("broken")
@@ -275,7 +281,7 @@ val RealmPublicationCoordinatorTest by testSuite {
             .resource shouldBe ResourceId("target")
         fixture.attempts.started shouldBe 0
         fixture.blobRequests shouldBe 0
-        fixture.publisher.publish(PublicationCandidateId("forged")).shouldBeInstanceOf<PublicationResult.CandidateChanged>()
+        fixture.publisher.publish(PublicationCandidateId(value = "forged")).shouldBeInstanceOf<PublicationResult.CandidateChanged>()
         fixture.close()
     }
     test("engine requirements revoke a candidate before effects") {

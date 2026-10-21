@@ -3,7 +3,7 @@ package com.typewritermc.realm.routes
 import com.typewritermc.authoring.DiagnosticId
 import com.typewritermc.authoring.skir.SkirAuthoringOperationCodec
 import com.typewritermc.checking.Diagnostic
-import com.typewritermc.engine.CompilationRoot
+import com.typewritermc.engine.toSkir
 import com.typewritermc.protocol.transport.RealmRouteScope
 import com.typewritermc.protocol.transport.generated.authoringCompiledChanged
 import com.typewritermc.protocol.transport.generated.authoringPublicationQuery
@@ -11,14 +11,8 @@ import com.typewritermc.protocol.transport.generated.authoringPublicationWatch
 import com.typewritermc.protocol.transport.generated.authoringPublish
 import com.typewritermc.realm.checking.toWire
 import com.typewritermc.realm.compiler.DiagnosticEvidence
-import com.typewritermc.realm.compiler.PublicationActivationPhase
-import com.typewritermc.realm.compiler.PublicationBaseline
 import com.typewritermc.realm.compiler.PublicationBlocker
 import com.typewritermc.realm.compiler.PublicationBlockers
-import com.typewritermc.realm.compiler.PublicationCandidateId
-import com.typewritermc.realm.compiler.PublicationChange
-import com.typewritermc.realm.compiler.PublicationDelta
-import com.typewritermc.realm.compiler.PublicationFailure
 import com.typewritermc.realm.compiler.PublicationNotice
 import com.typewritermc.realm.compiler.PublicationResult
 import com.typewritermc.realm.compiler.PublicationState
@@ -28,28 +22,18 @@ import com.typewritermc.realm.compiler.RealmPublicationCoordinator
 import com.typewritermc.services.libs.communicator.router.CommunicatorRoutesBuilder
 import com.typewritermc.types.skir.SkirTypeCodec
 import com.typewritermc.types.skir.getOrThrow
-import skirout.editor.v1.compilation_root.CompilationProjectionId
 import skirout.editor.v1.compiled_content.CompiledContentChanged
 import skirout.editor.v1.publication.PublicationDiagnosticDetails
 import skirout.editor.v1.publication.PublicationPendingReview
 import skirout.editor.v1.publication.PublicationViewChanged
-import skirout.editor.v1.publication.PublicationViewId
 import skirout.editor.v1.publication.PublishAuthoringResponse
 import skirout.editor.v1.publication.QueryPublicationViewResponse
 import skirout.editor.v1.publication.WatchPublicationResponse
 import skirout.editor.v1.type_catalog.CatalogGeneration
 import skirout.editor.v1.type_catalog.PublicationId
-import skirout.editor.v1.type_catalog.ResourceId
-import skirout.editor.v1.compilation_root.CompilationRoot as SkirCompilationRoot
 import skirout.editor.v1.publication.DiagnosticEvidence as SkirDiagnosticEvidence
-import skirout.editor.v1.publication.PublicationActivationPhase as SkirPublicationActivationPhase
-import skirout.editor.v1.publication.PublicationBaseline as WirePublicationBaseline
 import skirout.editor.v1.publication.PublicationBlocker as WirePublicationBlocker
 import skirout.editor.v1.publication.PublicationBlockers as WirePublicationBlockers
-import skirout.editor.v1.publication.PublicationCandidateId as SkirPublicationCandidateId
-import skirout.editor.v1.publication.PublicationChange as WirePublicationChange
-import skirout.editor.v1.publication.PublicationDelta as SkirPublicationDelta
-import skirout.editor.v1.publication.PublicationFailure as WirePublicationFailure
 import skirout.editor.v1.publication.PublicationNotice as WirePublicationNotice
 import skirout.editor.v1.publication.PublicationStatus as WirePublicationStatus
 import skirout.editor.v1.publication.PublicationView as WirePublicationView
@@ -68,9 +52,7 @@ internal class PublicationRoutes(
                     return@unary PublishAuthoringResponse.CandidateChangedErrorWrapper(publisher.views.value.changed())
                 }
                 val result =
-                    publisher.publish(
-                        PublicationCandidateId(call.request.candidate.value),
-                    ) { attempt ->
+                    publisher.publish(call.request.candidate) { attempt ->
                         if (attempt.state == PublicationState.Complete) {
                             call.communicator
                                 .publish(
@@ -97,11 +79,9 @@ internal class PublicationRoutes(
         }
 }
 
-internal fun PublicationView.changed() = PublicationViewChanged(current = wireId())
+internal fun PublicationView.changed() = PublicationViewChanged(current = id)
 
-private fun PublicationView.wireId() = PublicationViewId(value = id.value)
-
-internal fun PublicationView.toWire() = WirePublicationView(id = wireId(), status = status.toWire(evidence))
+internal fun PublicationView.toWire() = WirePublicationView(id = id, status = status.toWire(evidence))
 
 private fun PublicationStatus.toWire(evidence: Map<DiagnosticId, DiagnosticEvidence>): WirePublicationStatus =
     when (this) {
@@ -119,10 +99,9 @@ private fun PublicationStatus.toWire(evidence: Map<DiagnosticId, DiagnosticEvide
 
         is PublicationStatus.Ready -> {
             WirePublicationStatus.createReady(
-                candidate =
-                    SkirPublicationCandidateId(value = candidate.value),
-                baseline = baseline.toWire(),
-                changes = changes.toWire(),
+                candidate = candidate,
+                baseline = baseline,
+                changes = changes,
                 notices =
                     notices.map {
                         it.toWire(evidence)
@@ -132,44 +111,35 @@ private fun PublicationStatus.toWire(evidence: Map<DiagnosticId, DiagnosticEvide
 
         is PublicationStatus.Blocked -> {
             WirePublicationStatus.createBlocked(
-                baseline = baseline.toWire(),
+                baseline = baseline,
                 blockers = blockers.toWire(evidence),
                 notices =
                     notices.map {
                         it.toWire(evidence)
                     },
-                confirmedChanges = confirmedChanges.map { it.toWire() },
-                pendingRoots = pendingRoots.map { it.toWire() },
+                confirmedChanges = confirmedChanges,
+                pendingRoots = pendingRoots.map { it.toSkir() },
             )
         }
 
         is PublicationStatus.Checking -> {
-            WirePublicationStatus.createChecking(baseline = baseline.toWire(), findings = findings.map { it.toWire() })
+            WirePublicationStatus.createChecking(baseline = baseline, findings = findings.map { it.toWire() })
         }
 
         is PublicationStatus.Publishing -> {
             WirePublicationStatus.createPublishing(
                 publication =
                     PublicationId(value = publication.value),
-                phase =
-                    when (phase) {
-                        PublicationActivationPhase.Storing -> {
-                            SkirPublicationActivationPhase.STORING
-                        }
-
-                        PublicationActivationPhase.Activating -> {
-                            SkirPublicationActivationPhase.ACTIVATING
-                        }
-                    },
-                releasing = releasing.toWire(),
+                phase = phase,
+                releasing = releasing,
                 next =
                     PublicationPendingReview(
                         findings =
                             next.findings.map {
                                 it.toWire()
                             },
-                        confirmedChanges = next.confirmedChanges.map { it.toWire() },
-                        pendingRoots = next.pendingRoots.map { it.toWire() },
+                        confirmedChanges = next.confirmedChanges,
+                        pendingRoots = next.pendingRoots.map { it.toSkir() },
                         blockers = next.blockers.map { it.toWire(evidence) },
                         notices = next.notices.map { it.toWire(evidence) },
                     ),
@@ -178,69 +148,12 @@ private fun PublicationStatus.toWire(evidence: Map<DiagnosticId, DiagnosticEvide
 
         is PublicationStatus.Unavailable -> {
             WirePublicationStatus.createUnavailable(
-                baseline = baseline.toWire(),
-                failure = failure.toWire(),
+                baseline = baseline,
+                failure = failure,
                 findings = findings.map { it.toWire() },
             )
         }
     }
-
-private fun PublicationBaseline.toWire(): WirePublicationBaseline =
-    when (this) {
-        PublicationBaseline.Initial -> {
-            WirePublicationBaseline.INITIAL
-        }
-
-        is PublicationBaseline.Selected -> {
-            WirePublicationBaseline.SelectedWrapper(
-                PublicationId(value = publication.value),
-            )
-        }
-    }
-
-private fun PublicationFailure.toWire(): WirePublicationFailure =
-    when (this) {
-        is PublicationFailure.EvaluationInterrupted -> {
-            WirePublicationFailure.EvaluationInterruptedWrapper(
-                message,
-            )
-        }
-
-        is PublicationFailure.ImplementationUnavailable -> {
-            WirePublicationFailure
-                .ImplementationUnavailableWrapper(
-                    message,
-                )
-        }
-
-        is PublicationFailure.PublicationInterrupted -> {
-            WirePublicationFailure.PublicationInterruptedWrapper(
-                PublicationId(value = publication.value),
-            )
-        }
-    }
-
-private fun PublicationChange.toWire(): WirePublicationChange =
-    when (this) {
-        is PublicationChange.RootAdded -> WirePublicationChange.RootAddedWrapper(root.toWire())
-        is PublicationChange.RootUpdated -> WirePublicationChange.RootUpdatedWrapper(root.toWire())
-        is PublicationChange.RootRemoved -> WirePublicationChange.RootRemovedWrapper(root.toWire())
-        PublicationChange.RequirementsChanged -> WirePublicationChange.REQUIREMENTS_CHANGED
-    }
-
-private fun CompilationRoot.toWire() =
-    SkirCompilationRoot(
-        projection =
-            CompilationProjectionId(value = projection.value),
-        resource =
-            ResourceId(value = resource.value),
-    )
-
-private fun PublicationDelta.toWire() =
-    SkirPublicationDelta(
-        first = first.toWire(),
-        additional = additional.map { it.toWire() },
-    )
 
 private fun PublicationBlockers.toWire(evidence: Map<DiagnosticId, DiagnosticEvidence> = emptyMap()) =
     WirePublicationBlockers(
@@ -315,10 +228,7 @@ private fun PublicationResult.toWire(): PublishAuthoringResponse =
 
         is PublicationResult.CandidateChanged -> {
             PublishAuthoringResponse.CandidateChangedErrorWrapper(
-                PublicationViewChanged(
-                    current =
-                        PublicationViewId(value = view.value),
-                ),
+                PublicationViewChanged(current = view),
             )
         }
     }
