@@ -95,10 +95,8 @@ import skirout.editor.v1.authoring.QueryAuthoringStateRequest
 import skirout.editor.v1.authoring.QueryAuthoringStateResponse
 import skirout.editor.v1.catalog.CatalogFetchRequest
 import skirout.editor.v1.catalog.CatalogFetchResult
-import skirout.editor.v1.catalog.EditorCatalogWireSnapshot
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.seconds
-import skirout.editor.v1.authoring.AuthoringState as SkirAuthoringState
 import skirout.editor.v1.type_catalog.CatalogGeneration as SkirCatalogGeneration
 
 @OptIn(ExperimentalCoroutinesApi::class)
@@ -325,16 +323,12 @@ val RealmLifecycleTest by testSuite {
                         "editor.authoring.state.query",
                         QueryAuthoringStateRequest(
                             generation = SkirCatalogGeneration(value = incarnation.assembly.snapshot.generation.value),
-                            transferId = "lifecycle_structure",
                         ),
                         QueryAuthoringStateRequest.serializer,
                         QueryAuthoringStateResponse.serializer,
-                    ) as QueryAuthoringStateResponse.ChunkWrapper
+                    ) as QueryAuthoringStateResponse.StateWrapper
                 val state =
-                    SkirAuthoringState.serializer.fromBytes(
-                        response.value.transfer.payload
-                            .toByteArray(),
-                    )
+                    response.value
                 state.resources
                     .map {
                         SkirAuthoringValueCodec
@@ -382,15 +376,12 @@ val RealmLifecycleTest by testSuite {
                     fixture.request(
                         session,
                         "editor.catalog.fetch",
-                        CatalogFetchRequest(expectedGeneration = null, transferId = "lifecycle_catalog"),
+                        CatalogFetchRequest(expectedGeneration = null),
                         CatalogFetchRequest.serializer,
                         CatalogFetchResult.serializer,
-                    ) as CatalogFetchResult.ChunkWrapper
+                    ) as CatalogFetchResult.CatalogWrapper
                 val catalog =
-                    EditorCatalogWireSnapshot.serializer.fromBytes(
-                        catalogResult.value.transfer.payload
-                            .toByteArray(),
-                    )
+                    catalogResult.value
                 catalog.generation.value shouldBe incarnation.assembly.snapshot.generation.value
                 catalog.types.map { SkirTypeCodec.decode(it.definition).getOrThrow().id }.containsAll(listOf(valid, unavailable)) shouldBe
                     true
@@ -401,16 +392,12 @@ val RealmLifecycleTest by testSuite {
                         "editor.authoring.state.query",
                         QueryAuthoringStateRequest(
                             generation = SkirCatalogGeneration(value = incarnation.assembly.snapshot.generation.value),
-                            transferId = "lifecycle_snapshot",
                         ),
                         QueryAuthoringStateRequest.serializer,
                         QueryAuthoringStateResponse.serializer,
-                    ) as QueryAuthoringStateResponse.ChunkWrapper
+                    ) as QueryAuthoringStateResponse.StateWrapper
                 val snapshot =
-                    SkirAuthoringState.serializer.fromBytes(
-                        snapshotResult.value.transfer.payload
-                            .toByteArray(),
-                    )
+                    snapshotResult.value
                 snapshot.resources.associate { resource ->
                     resource.id.value to SkirAuthoringValueCodec.decode(resource.content).getOrThrow()
                 } shouldBe

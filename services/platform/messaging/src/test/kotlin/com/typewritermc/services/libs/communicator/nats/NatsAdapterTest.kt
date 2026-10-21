@@ -2,6 +2,7 @@ package com.typewritermc.services.libs.communicator.nats
 
 import com.typewritermc.services.libs.communicator.address.AddressPattern
 import com.typewritermc.services.libs.communicator.address.MessageAddress
+import com.typewritermc.services.libs.communicator.transfer.TransportLimits
 import com.typewritermc.services.libs.communicator.transport.ConsumerGroup
 import com.typewritermc.services.libs.communicator.transport.MessageHeaders
 import com.typewritermc.services.libs.communicator.transport.OutboundMessage
@@ -109,7 +110,7 @@ val NatsAdapterTest by testSuite {
         val client = FakeClient()
         val connection = connection(client)
         connection.connect()
-        val transport = NatsMessageTransport(connection)
+        val transport = NatsMessageTransport(connection, TEST_LIMITS)
 
         client.connectivity.value = NatsClientConnectivity.Connecting
         testScope.advanceTimeBy(25.milliseconds)
@@ -282,22 +283,13 @@ val NatsAdapterTest by testSuite {
         connection.state.value shouldBe NatsConnectionState.Disconnected
     }
 
-    test("publish and request preserve headers reply and timeout without retry") {
-        val client =
-            FakeClient(
-                requestResponse =
-                    NatsClientMessage(
-                        "reply",
-                        null,
-                        mapOf("X" to listOf("a", "b")),
-                        "return",
-                        null,
-                        null,
-                    ),
-            )
+    test("publish and request preserve headers and reply through an owned inbox") {
+        val reply = NatsClientMessage("reply", null, mapOf("X" to listOf("a", "b")), "return", null, null)
+        val subscription = FakeSubscription(flowOf(reply))
+        val client = FakeClient(subscription = subscription)
         val connection = connection(client)
         connection.connect()
-        val transport = NatsMessageTransport(connection)
+        val transport = NatsMessageTransport(connection, TEST_LIMITS)
         val outbound =
             OutboundMessage(
                 MessageAddress.of("work"),
@@ -310,39 +302,31 @@ val NatsAdapterTest by testSuite {
         result.value.payload shouldBe Payload.Empty
         result.value.headers["x"] shouldBe listOf("a", "b")
         result.value.replyTo shouldBe MessageAddress.of("return")
-        client.requestTimeouts shouldContainExactly listOf(1250L)
-        client.publishCalls shouldBe 1
-        client.requestCalls shouldBe 1
-        client.publishedMessages
-            .single()
-            .payload
-            ?.toByteArray() shouldBe byteArrayOf(1)
-        client.requestedMessages
-            .single()
-            .payload
-            ?.toByteArray() shouldBe byteArrayOf(1)
+        client.publishCalls shouldBe 2
+        val request = client.publishedMessages.last()
+        request.payload?.toByteArray() shouldBe byteArrayOf(1)
+        request.headers shouldBe mapOf("X" to listOf("a", "b"))
+        val inbox = requireNotNull(request.replyTo)
+        inbox.startsWith("_INBOX.") shouldBe true
+        client.events.takeLast(2) shouldBe listOf("subscribe:$inbox:null", "flush")
+        subscription.unsubscribeCalls shouldBe 1
     }
 
-    test("request maps statuses and generic failures") {
-        suspend fun result(message: NatsClientMessage): TransportError {
-            val client = FakeClient(requestResponse = message)
+    test("request maps statuses timeouts and generic failures") {
+        suspend fun result(
+            replies: Flow<NatsClientMessage>,
+            publishFailure: Throwable? = null,
+        ): TransportError {
+            val client = FakeClient(subscription = FakeSubscription(replies), publishFailure = publishFailure)
             val connection = connection(client)
             connection.connect()
-            return (NatsMessageTransport(connection).request(outbound(), 1.seconds) as TransportResult.Failure).error
+            return (NatsMessageTransport(connection, TEST_LIMITS).request(outbound(), 1.seconds) as TransportResult.Failure).error
         }
-        result(status(503))::class shouldBe TransportError.NoResponders::class
-        result(status(404))::class shouldBe TransportError.Failure::class
-
-        val client = FakeClient(requestFailure = IllegalStateException("broken"))
-        val connection = connection(client)
-        connection.connect()
-        (
-            NatsMessageTransport(connection).request(
-                outbound(),
-                1.seconds,
-            ) as TransportResult.Failure
-        ).error::class shouldBe TransportError.Failure::class
-        client.requestCalls shouldBe 1
+        result(flowOf(status(503)))::class shouldBe TransportError.NoResponders::class
+        result(flowOf(status(404)))::class shouldBe TransportError.Failure::class
+        result(flow { awaitCancellation() })::class shouldBe TransportError.Timeout::class
+        result(flowOf())::class shouldBe TransportError.Unavailable::class
+        result(flowOf(), IllegalStateException("broken"))::class shouldBe TransportError.Failure::class
     }
 
     test("subscribe maps options flushes and closes once") {
@@ -363,7 +347,7 @@ val NatsAdapterTest by testSuite {
         val connection = connection(client)
         connection.connect()
         val result =
-            NatsMessageTransport(connection).subscribe(
+            NatsMessageTransport(connection, TEST_LIMITS).subscribe(
                 AddressPattern.of("jobs.*"),
                 SubscriptionOptions(ConsumerGroup.of("workers")),
             ) as TransportResult.Success
@@ -388,7 +372,7 @@ val NatsAdapterTest by testSuite {
             )
         connection.connect()
 
-        val result = NatsMessageTransport(connection).openReplyChannel() as TransportResult.Success
+        val result = NatsMessageTransport(connection, TEST_LIMITS).openReplyChannel() as TransportResult.Success
 
         result.value.address.value
             .startsWith("_TYPEWRITER_REPLY.") shouldBe true
@@ -413,7 +397,7 @@ val NatsAdapterTest by testSuite {
             val connection = connection(client)
             connection.connect()
             val result =
-                NatsMessageTransport(connection).subscribe(
+                NatsMessageTransport(connection, TEST_LIMITS).subscribe(
                     AddressPattern.of("jobs.*"),
                 ) as TransportResult.Success
             val deliveries = async { result.value.deliveries.toList() }
@@ -431,12 +415,12 @@ val NatsAdapterTest by testSuite {
         val client = FakeClient(subscription = subscription, flushFailure = IllegalStateException("flush"))
         val connection = connection(client)
         connection.connect()
-        NatsMessageTransport(connection).subscribe(AddressPattern.of("jobs.*"))::class shouldBe TransportResult.Failure::class
+        NatsMessageTransport(connection, TEST_LIMITS).subscribe(AddressPattern.of("jobs.*"))::class shouldBe TransportResult.Failure::class
         subscription.unsubscribeCalls shouldBe 1
     }
 
     test("disconnected and invalid request timeout fail explicitly") {
-        val transport = NatsMessageTransport(connection(FakeClient()))
+        val transport = NatsMessageTransport(connection(FakeClient()), TEST_LIMITS)
         (transport.publish(outbound()) as TransportResult.Failure).error::class shouldBe TransportError.Unavailable::class
         shouldThrow<IllegalArgumentException> { transport.request(outbound(), 0.milliseconds) }
     }
@@ -459,8 +443,7 @@ private class FakeFactory(
 
 private class FakeClient(
     private val connectResult: Result<Unit> = Result.success(Unit),
-    private val requestResponse: NatsClientMessage = NatsClientMessage("reply", Payload.Empty, null, null, null, null),
-    private val requestFailure: Throwable? = null,
+    private val publishFailure: Throwable? = null,
     private val subscription: FakeSubscription = FakeSubscription(flowOf()),
     private val flushFailure: Throwable? = null,
     var drainFailure: Throwable? = null,
@@ -468,11 +451,8 @@ private class FakeClient(
 ) : NatsClientAdapter {
     override val connectivity = MutableStateFlow(NatsClientConnectivity.Connected)
     val events = mutableListOf<String>()
-    val requestTimeouts = mutableListOf<Long>()
     var publishCalls = 0
-    var requestCalls = 0
     val publishedMessages = mutableListOf<NatsClientMessage>()
-    val requestedMessages = mutableListOf<NatsClientMessage>()
     var onConnect: suspend () -> Unit = {}
 
     override suspend fun connect(): Result<Unit> {
@@ -499,17 +479,7 @@ private class FakeClient(
     override suspend fun publish(message: NatsClientMessage) {
         publishCalls++
         publishedMessages += message
-    }
-
-    override suspend fun request(
-        message: NatsClientMessage,
-        timeoutMs: Long,
-    ): NatsClientMessage {
-        requestCalls++
-        requestedMessages += message
-        requestTimeouts += timeoutMs
-        requestFailure?.let { throw it }
-        return requestResponse
+        publishFailure?.let { throw it }
     }
 
     override suspend fun subscribe(
@@ -544,3 +514,5 @@ private fun connection(client: FakeClient) =
 private fun outbound() = OutboundMessage(MessageAddress.of("work"), byteArrayOf())
 
 private fun status(code: Int) = NatsClientMessage("reply", null, null, null, code, "status")
+
+private val TEST_LIMITS = TransportLimits(chunkBytes = 512 * 1024, maxChunks = 64)

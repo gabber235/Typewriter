@@ -4,7 +4,6 @@ import com.typewritermc.authoring.InitializationRuntime
 import com.typewritermc.realm.catalog.RealmCatalogStore
 import com.typewritermc.realm.catalog.installTestCatalog
 import com.typewritermc.services.libs.communicator.router.communicatorRoutes
-import com.typewritermc.services.libs.communicator.testing.FakeMessageTransport
 import de.infix.testBalloon.framework.core.testSuite
 import io.kotest.matchers.shouldBe
 import kotlinx.coroutines.test.runTest
@@ -19,14 +18,14 @@ val EditorCatalogRoutesTest by testSuite {
             val catalogs = RealmCatalogStore()
             catalogs.installTestCatalog("route_catalog")
             try {
-                val source = RetainedRealmEditorCatalogSource(catalogs, chunkSize = 32)
+                val source = RetainedRealmEditorCatalogSource(catalogs)
                 RouteFixture { contracts, _, _ ->
                     communicatorRoutes { EditorCatalogRoutes(source, UnusedInitialization, contracts).register(this) }
                 }.use { fixture ->
                     val fetch =
                         fixture.request(
                             "editor.catalog.fetch",
-                            CatalogFetchRequest(expectedGeneration = null, transferId = "route_catalog"),
+                            CatalogFetchRequest(expectedGeneration = null),
                             CatalogFetchRequest.serializer,
                             CatalogFetchResult.serializer,
                         )
@@ -38,29 +37,7 @@ val EditorCatalogRoutesTest by testSuite {
                             CatalogInvalidated.serializer,
                         )
 
-                    val initial = (fetch as CatalogFetchResult.ChunkWrapper).value
-                    val updates =
-                        fixture.transport.actions
-                            .filterIsInstance<FakeMessageTransport.Action.Publish>()
-                            .filter {
-                                it.message.address.value ==
-                                    "service.from.realm.organization.organization.realm.editor.catalog.fetch.route_catalog"
-                            }.map {
-                                (
-                                    CatalogFetchResult.serializer.fromBytes(
-                                        it.message.payload.toByteArray(),
-                                    ) as CatalogFetchResult.ChunkWrapper
-                                ).value.transfer
-                            }
-                    val chunks = listOf(initial.transfer) + updates
-                    chunks.map { it.index } shouldBe chunks.indices.toList()
-                    chunks.size shouldBe initial.transfer.chunkCount
-                    val snapshot =
-                        skirout.editor.v1.catalog.EditorCatalogWireSnapshot.serializer.fromBytes(
-                            chunks
-                                .map { it.payload.toByteArray() }
-                                .fold(byteArrayOf()) { combined, bytes -> combined + bytes },
-                        )
+                    val snapshot = (fetch as CatalogFetchResult.CatalogWrapper).value
                     snapshot.generation.value shouldBe "route_catalog"
                     watch.generation.value shouldBe "route_catalog"
                 }

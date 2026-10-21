@@ -24,7 +24,7 @@ import io.kotest.matchers.shouldBe
 import io.kotest.matchers.string.shouldContain
 import io.kotest.matchers.string.shouldNotContain
 import io.opentelemetry.api.common.AttributeKey
-import skirout.editor.v1.catalog.EditorCatalogWireSnapshot
+import skirout.editor.v1.catalog.EditorCatalog
 
 val RealmCatalogReportingTest by testSuite {
     test("a callback cause has one correlated operator report") {
@@ -70,7 +70,7 @@ val RealmCatalogReportingTest by testSuite {
                 .shouldContain("fixture explanation")
             event.attributes.get(AttributeKey.stringKey("catalog.provider")) shouldBe "ArticleConfiguration"
             assembly.snapshot.toWire().let { wire ->
-                EditorCatalogWireSnapshot.serializer.toJsonCode(wire).shouldNotContain("fixture explanation")
+                EditorCatalog.serializer.toJsonCode(wire).shouldNotContain("fixture explanation")
             }
             harness.assertNoActiveSpans()
         }

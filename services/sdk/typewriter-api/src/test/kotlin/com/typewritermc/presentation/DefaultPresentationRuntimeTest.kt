@@ -1566,7 +1566,7 @@ val DefaultPresentationRuntimeTest by testSuite {
                     directory,
                     "nested-remainder-catalog.bin",
                 ).writeBytes(
-                    skirout.editor.v1.catalog.EditorCatalogWireSnapshot.serializer
+                    skirout.editor.v1.catalog.EditorCatalog.serializer
                         .toBytes(wire)
                         .toByteArray(),
                 )

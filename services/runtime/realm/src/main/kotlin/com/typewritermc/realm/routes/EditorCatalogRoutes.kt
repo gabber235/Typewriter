@@ -10,8 +10,8 @@ import skirout.editor.v1.catalog.PrepareValueResult
 /**
  * Owns the transport adapters for editor catalog fetches and generation watches.
  *
- * [RealmEditorCatalogSource] supplies retained catalog transfers from the catalog owner. This class binds
- * those operations to the Realm router, so replacing the router does not replace its snapshot owner.
+ * [RealmEditorCatalogSource] supplies the retained catalog from the catalog owner. This class binds those
+ * operations to the Realm router, so replacing the router does not replace its snapshot owner.
  */
 internal class EditorCatalogRoutes(
     private val source: RealmEditorCatalogSource,
@@ -21,13 +21,7 @@ internal class EditorCatalogRoutes(
     /** Registers catalog fetch and initial generation operations on the current Realm router. */
     fun register(builder: CommunicatorRoutesBuilder) =
         with(builder) {
-            watch(contracts.fetchEditorCatalog) { call ->
-                val transfer = source.fetch(call.request)
-                transfer.updates.forEach { update ->
-                    call.publishUpdate(update).requirePublished()
-                }
-                transfer.initial
-            }
+            unary(contracts.fetchEditorCatalog) { call -> source.fetch(call.request) }
             unary(contracts.prepareValue) { call ->
                 try {
                     val request = SkirAuthoringOperationCodec.decode(call.request).getOrThrow()

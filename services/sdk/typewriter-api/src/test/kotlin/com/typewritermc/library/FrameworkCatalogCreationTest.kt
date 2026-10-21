@@ -857,7 +857,7 @@ private fun exportFrameworkControlFixture(
             directory,
             "catalog.bin",
         ).writeBytes(
-            skirout.editor.v1.catalog.EditorCatalogWireSnapshot.serializer
+            skirout.editor.v1.catalog.EditorCatalog.serializer
                 .toBytes(wire)
                 .toByteArray(),
         )

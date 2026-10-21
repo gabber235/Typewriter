@@ -1,6 +1,7 @@
 package com.typewritermc.services.libs.registrar.runtime
 
 import com.typewritermc.protocol.transport.ServiceRouteScope
+import com.typewritermc.protocol.transport.generated.TRANSPORT_LIMITS
 import com.typewritermc.protocol.transport.generated.registrationLeaseEnsure
 import com.typewritermc.protocol.transport.generated.serviceBindingQuery
 import com.typewritermc.protocol.transport.generated.serviceHeartbeat
@@ -390,7 +391,7 @@ class TypewriterRegistrarRuntimeFactory(
                 { serviceNatsConfiguration(configuration, credentials) },
                 serviceNatsAuthenticationProvider(access, sentinel, credentials),
             )
-        val communicator = Communicator(NatsMessageTransport(connection), telemetry, propagators)
+        val communicator = Communicator(NatsMessageTransport(connection, TRANSPORT_LIMITS), telemetry, propagators)
         progress.report(RuntimeSetupProgress.CONNECTING)
         return RuntimeCreateResult.Success(
             TypewriterRegistrarRuntime(

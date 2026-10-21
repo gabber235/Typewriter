@@ -109,7 +109,6 @@ val AuthoringRoutesTest by testSuite {
                                 "editor.authoring.state.query",
                                 QueryAuthoringStateRequest(
                                     generation = SkirCatalogGeneration(value = "catalog"),
-                                    transferId = "snapshot_tokens",
                                 ),
                                 QueryAuthoringStateRequest.serializer,
                                 QueryAuthoringStateResponse.serializer,
@@ -400,7 +399,6 @@ val AuthoringRoutesTest by testSuite {
                                 "editor.authoring.state.query",
                                 QueryAuthoringStateRequest(
                                     generation = SkirCatalogGeneration(value = catalog.generation.value),
-                                    transferId = "snapshot_unavailable_resource",
                                 ),
                                 QueryAuthoringStateRequest.serializer,
                                 QueryAuthoringStateResponse.serializer,
@@ -417,10 +415,7 @@ val AuthoringRoutesTest by testSuite {
     }
 }
 
-private fun QueryAuthoringStateResponse.decodeSnapshot(): SkirAuthoringState {
-    val chunk = (this as QueryAuthoringStateResponse.ChunkWrapper).value.transfer
-    return SkirAuthoringState.serializer.fromBytes(chunk.payload)
-}
+private fun QueryAuthoringStateResponse.decodeSnapshot(): SkirAuthoringState = (this as QueryAuthoringStateResponse.StateWrapper).value
 
 private fun validPreparedEditWire() =
     SkirAuthoringOperationCodec

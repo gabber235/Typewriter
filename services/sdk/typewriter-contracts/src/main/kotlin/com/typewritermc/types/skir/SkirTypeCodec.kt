@@ -51,7 +51,7 @@ import com.typewritermc.types.catalog.PublishedType
 import com.typewritermc.types.catalog.ResourceDisplayFormulas
 import com.typewritermc.types.catalog.TypeRecommendation
 import com.typewritermc.types.toWire
-import skirout.editor.v1.catalog.EditorCatalogWireSnapshot
+import skirout.editor.v1.catalog.EditorCatalog
 import skirout.editor.v1.capability.CapabilityDefinition as SkirCapabilityDefinition
 import skirout.editor.v1.capability.CommandCapabilityDefinition as SkirCommandCapabilityDefinition
 import skirout.editor.v1.capability.ComputationCapabilityDefinition as SkirComputationCapabilityDefinition
@@ -140,8 +140,7 @@ object SkirTypeCodec {
 
     fun decode(use: SkirTypeUse): SkirConversionResult<TypeUse> = captureSkirConversion { decodeTypeUse(use) }
 
-    fun encode(snapshot: EditorCatalogSnapshot): SkirConversionResult<EditorCatalogWireSnapshot> =
-        captureSkirConversion { encodeSnapshot(snapshot) }
+    fun encode(snapshot: EditorCatalogSnapshot): SkirConversionResult<EditorCatalog> = captureSkirConversion { encodeSnapshot(snapshot) }
 
     fun encode(diagnostic: DeclarationDiagnostic): SkirConversionResult<SkirDeclarationDiagnostic> =
         captureSkirConversion { this.encode(diagnostic) }
@@ -499,7 +498,7 @@ internal fun ConversionScope.decodeValuePath(path: SkirValuePath) =
     )
 
 private fun ConversionScope.encodeSnapshot(snapshot: EditorCatalogSnapshot) =
-    EditorCatalogWireSnapshot(
+    EditorCatalog(
         generation =
             skirout.editor.v1.type_catalog
                 .CatalogGeneration(value = snapshot.generation.value),

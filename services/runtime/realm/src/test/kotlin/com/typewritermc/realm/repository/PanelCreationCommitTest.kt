@@ -29,7 +29,7 @@ import com.typewritermc.types.skir.getOrThrow
 import de.infix.testBalloon.framework.core.testSuite
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.types.shouldBeInstanceOf
-import skirout.editor.v1.catalog.EditorCatalogWireSnapshot
+import skirout.editor.v1.catalog.EditorCatalog
 import skirout.editor.v1.authoring.PreparedEdit as WireEdit
 import skirout.editor.v1.catalog.EndpointDefinition as WireEndpoint
 import skirout.editor.v1.type_catalog.NamedTypeUse as WireNamedTypeUse
@@ -39,7 +39,7 @@ import skirout.editor.v1.type_catalog.TypeUse as WireTypeUse
 
 val PanelCreationCommitTest by testSuite {
     test("the panel page and Book creation commits into the Library through Realm and survives reload") {
-        val snapshot = EditorCatalogWireSnapshot.serializer.fromBytes(panelCreationFixture("catalog.skir"))
+        val snapshot = EditorCatalog.serializer.fromBytes(panelCreationFixture("catalog.skir"))
         val seed = SkirAuthoringOperationCodec.decode(WireEdit.serializer.fromBytes(panelCreationFixture("seed.skir"))).getOrThrow()
         val edit = SkirAuthoringOperationCodec.decode(WireEdit.serializer.fromBytes(panelCreationFixture("edit.skir"))).getOrThrow()
         val catalog = panelCreationCatalog(snapshot)
@@ -97,7 +97,7 @@ private fun panelCreationFixture(name: String): ByteArray =
     }.use { it.readBytes() }
 
 /** The captured panel catalog: a Library owning Books that own pages, each linking back to its owner. */
-private fun panelCreationCatalog(snapshot: EditorCatalogWireSnapshot): TestCatalogLease =
+private fun panelCreationCatalog(snapshot: EditorCatalog): TestCatalogLease =
     TestCatalogLease(
         generation = CatalogGeneration(snapshot.generation.value),
         definitions = snapshot.types.map { SkirTypeCodec.decode(it.definition).getOrThrow() },

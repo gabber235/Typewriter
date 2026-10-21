@@ -22,25 +22,19 @@ import com.typewritermc.realm.compiler.PublicationStatus
 import com.typewritermc.realm.compiler.PublicationView
 import com.typewritermc.realm.compiler.RealmPublicationCoordinator
 import com.typewritermc.services.libs.communicator.router.CommunicatorRoutesBuilder
-import com.typewritermc.services.libs.communicator.transfer.BoundedByteTransferEncoder
-import com.typewritermc.services.libs.communicator.transfer.BoundedTransferPlan
 import com.typewritermc.types.skir.SkirTypeCodec
 import com.typewritermc.types.skir.getOrThrow
-import okio.ByteString.Companion.toByteString
 import skirout.editor.v1.compilation_root.CompilationProjectionId
 import skirout.editor.v1.compiled_content.CompiledContentChanged
 import skirout.editor.v1.publication.PublicationDiagnosticDetails
 import skirout.editor.v1.publication.PublicationPendingReview
-import skirout.editor.v1.publication.PublicationTransferUnavailable
 import skirout.editor.v1.publication.PublicationViewChanged
-import skirout.editor.v1.publication.PublicationViewChunk
 import skirout.editor.v1.publication.PublicationViewId
 import skirout.editor.v1.publication.PublishAuthoringResponse
 import skirout.editor.v1.publication.QueryPublicationViewResponse
 import skirout.editor.v1.type_catalog.CatalogGeneration
 import skirout.editor.v1.type_catalog.PublicationId
 import skirout.editor.v1.type_catalog.ResourceId
-import skirout.kernel.v1.bounded_transfer.BoundedTransferChunk
 import skirout.editor.v1.compilation_root.CompilationRoot as SkirCompilationRoot
 import skirout.editor.v1.publication.DiagnosticEvidence as SkirDiagnosticEvidence
 import skirout.editor.v1.publication.PublicationActivationPhase as SkirPublicationActivationPhase
@@ -91,42 +85,12 @@ internal class PublicationRoutes(
                 PublishAuthoringResponse.ResultWrapper(result.toWire())
             }
             watch(contracts.watchPublication) { publisher.views.value.changed() }
-            watch(contracts.queryPublicationView) { call ->
+            unary(contracts.queryPublicationView) { call ->
                 val view = publisher.views.value
-                if (view.id.value != call.request.expected.value) return@watch QueryPublicationViewResponse.ChangedWrapper(view.changed())
-                val bytes = WirePublicationView.serializer.toBytes(view.toWire()).toByteArray()
-                when (val plan = BoundedByteTransferEncoder(nextTransferId = { call.request.transferId }).encode(bytes)) {
-                    is BoundedTransferPlan.Unavailable -> {
-                        QueryPublicationViewResponse.UnavailableWrapper(
-                            PublicationTransferUnavailable(
-                                view = view.wireId(),
-                                encodedSize = plan.encodedSize,
-                                maxEncodedSize = plan.maxEncodedSize,
-                            ),
-                        )
-                    }
-
-                    is BoundedTransferPlan.Ready -> {
-                        val chunks =
-                            plan.chunks.map { chunk ->
-                                QueryPublicationViewResponse.ChunkWrapper(
-                                    PublicationViewChunk(
-                                        view = view.wireId(),
-                                        transfer =
-                                            BoundedTransferChunk(
-                                                transferId = chunk.transferId,
-                                                index = chunk.index,
-                                                chunkCount = chunk.chunkCount,
-                                                encodedSize = chunk.encodedSize,
-                                                sha256 = chunk.sha256,
-                                                payload = chunk.payload.toByteArray().toByteString(),
-                                            ),
-                                    ),
-                                )
-                            }
-                        chunks.drop(1).forEach { call.publishUpdate(it).requirePublished() }
-                        chunks.first()
-                    }
+                if (view.id.value != call.request.expected.value) {
+                    QueryPublicationViewResponse.ViewChangedErrorWrapper(view.changed())
+                } else {
+                    QueryPublicationViewResponse.ViewWrapper(view.toWire())
                 }
             }
         }

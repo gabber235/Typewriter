@@ -56,10 +56,7 @@ internal class EditorContracts(
     private val address: RealmRouteScope,
 ) {
     val fetchEditorCatalog =
-        address.editorCatalogFetch(
-            policy(CatalogFetchResult.createInternalError(), catalogFetchResponseClassifier()),
-            catalogFetchResponseClassifier(),
-        )
+        address.editorCatalogFetch(policy(CatalogFetchResult.createInternalError(), catalogFetchResponseClassifier()))
     val watchEditorCatalog =
         address.editorCatalogWatch(
             policy(CatalogInvalidated.partial(), responseClassifier(ResponseOutcome.INTERNAL_ERROR)),
@@ -117,24 +114,18 @@ internal class EditorContracts(
                 ),
             ),
         )
-    val queryAuthoringState =
-        address.authoringStateQuery(policy(QueryAuthoringStateResponse.createInternalError()), responseClassifier())
+    val queryAuthoringState = address.authoringStateQuery(policy(QueryAuthoringStateResponse.createInternalError()))
     val commitPreparedEdit = address.authoringEditCommit(policy(CommitPreparedEditResponse.createInternalError()))
     val previewTypeArgumentChange = address.authoringTypePreview(policy(PreviewTypeArgumentChangeResponse.createInternalError()))
     val prepareTypeArgumentChange = address.authoringTypeCommit(policy(PrepareTypeArgumentChangeResponse.createInternalError()))
     val searchAuthoring = address.authoringSearch(policy(SearchAuthoringResponse.createInternalError()))
     val authoringChanged = address.authoringChanged
-    val queryPublishedContent =
-        address.authoringCompiledQuery(policy(QueryPublishedContentResponse.createInternalError()), responseClassifier())
+    val queryPublishedContent = address.authoringCompiledQuery(policy(QueryPublishedContentResponse.createInternalError()))
     val compiledContentChanged = address.authoringCompiledChanged
     val queryCompiledResourceStatus =
         address.authoringCompiledStatusQuery(policy(QueryCompiledResourceStatusResponse.createInternalError()))
     val publishAuthoring = address.authoringPublish(policy(PublishAuthoringResponse.createInternalError()))
-    val queryPublicationView =
-        address.authoringPublicationQuery(
-            policy(QueryPublicationViewResponse.createInternalError()),
-            responseClassifier(),
-        )
+    val queryPublicationView = address.authoringPublicationQuery(policy(QueryPublicationViewResponse.createInternalError()))
     val watchPublication =
         address.authoringPublicationWatch(
             policy(PublicationViewChanged.partial(), responseClassifier(ResponseOutcome.INTERNAL_ERROR)),
@@ -146,7 +137,7 @@ private fun catalogFetchResponseClassifier(): ResponseClassifier<CatalogFetchRes
     ResponseClassifier { response ->
         val outcome =
             when (response) {
-                is CatalogFetchResult.ChunkWrapper -> ResponseOutcome.SUCCESS
+                is CatalogFetchResult.CatalogWrapper -> ResponseOutcome.SUCCESS
                 is CatalogFetchResult.InternalErrorWrapper -> ResponseOutcome.INTERNAL_ERROR
                 else -> ResponseOutcome.DOMAIN_ERROR
             }
@@ -193,7 +184,7 @@ private fun <Response : Any> responseClassifier(): ResponseClassifier<Response> 
                 }
 
                 "success", "prepared", "committed", "result", "applied", "initial", "activated", "canceled",
-                "resolved", "preview", "needs-input",
+                "resolved", "preview", "needs-input", "state", "content", "view",
                 -> {
                     ResponseOutcome.SUCCESS
                 }

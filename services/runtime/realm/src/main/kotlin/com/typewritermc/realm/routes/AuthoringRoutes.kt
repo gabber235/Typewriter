@@ -16,20 +16,13 @@ import com.typewritermc.realm.checking.FindingSet
 import com.typewritermc.realm.repository.AuthoringRepository
 import com.typewritermc.realm.repository.ResourceValueMapper
 import com.typewritermc.services.libs.communicator.router.CommunicatorRoutesBuilder
-import com.typewritermc.services.libs.communicator.transfer.BoundedByteTransferEncoder
-import com.typewritermc.services.libs.communicator.transfer.BoundedTransferChunk
-import com.typewritermc.services.libs.communicator.transfer.BoundedTransferPlan
 import com.typewritermc.types.ResourceId
 import com.typewritermc.types.TypeUse
 import com.typewritermc.types.catalog.DeclarationDiagnostic
 import com.typewritermc.types.skir.SkirAuthoringValueCodec
 import com.typewritermc.types.skir.SkirTypeCodec
 import com.typewritermc.types.skir.getOrThrow
-import okio.ByteString.Companion.toByteString
 import skirout.editor.v1.authoring.AuthoringObservationId
-import skirout.editor.v1.authoring.AuthoringStateTransferChunk
-import skirout.editor.v1.authoring.AuthoringTransferUnavailable
-import skirout.editor.v1.authoring.AuthoringTransferUnavailableReason
 import skirout.editor.v1.authoring.CommitPreparedEditResponse
 import skirout.editor.v1.authoring.PrepareTypeArgumentChangeResponse
 import skirout.editor.v1.authoring.PreviewTypeArgumentChangeRequest
@@ -50,14 +43,13 @@ import skirout.editor.v1.type_catalog.CatalogGeneration as SkirCatalogGeneration
 import skirout.editor.v1.type_catalog.NamedTypeUse as SkirNamedTypeUse
 import skirout.editor.v1.type_catalog.ResourceId as SkirResourceId
 import skirout.editor.v1.type_catalog.TypeUse as SkirTypeUse
-import skirout.kernel.v1.bounded_transfer.BoundedTransferChunk as SkirBoundedTransferChunk
 
 /**
- * Exposes saved snapshot transfer, prepared edit commit, and type argument previews to the editor.
+ * Exposes saved snapshot queries, prepared edit commit, and type argument previews to the editor.
  *
- * A state transfer is encoded from one retained view and carries its confirmed observation identity across
- * all chunks. Commit delegates admission to the repository; preview and preparation return proposed edits
- * without changing saved resources. Finding freshness is evaluated against the transferred baseline.
+ * A state query answers with one retained view and its confirmed observation identity. Commit delegates admission
+ * to the repository; preview and preparation return proposed edits without changing saved resources. Finding
+ * freshness is evaluated against the returned baseline.
  */
 internal class AuthoringRoutes(
     private val repository: AuthoringRepository,
@@ -68,11 +60,7 @@ internal class AuthoringRoutes(
 ) {
     fun register(builder: CommunicatorRoutesBuilder) =
         with(builder) {
-            watch(contracts.queryAuthoringState) { call ->
-                val transfer = query(call.request)
-                transfer.updates.forEach { update -> call.publishUpdate(update).requirePublished() }
-                transfer.initial
-            }
+            unary(contracts.queryAuthoringState) { call -> query(call.request) }
             unary(contracts.commitPreparedEdit) { call ->
                 val edit = SkirAuthoringOperationCodec.decode(call.request).getOrThrow()
                 CommitPreparedEditResponse.ResultWrapper(
@@ -90,16 +78,13 @@ internal class AuthoringRoutes(
             }
         }
 
-    private suspend fun query(request: QueryAuthoringStateRequest): AuthoringStateTransfer {
+    private suspend fun query(request: QueryAuthoringStateRequest): QueryAuthoringStateResponse {
         val lease = views.capture()
         lease.use { snapshot ->
             val root = snapshot.root
             if (root.catalog.generation.value != request.generation.value) {
-                return AuthoringStateTransfer(
-                    QueryAuthoringStateResponse.CatalogChangedWrapper(
-                        SkirCatalogChanged(actualGeneration = SkirCatalogGeneration(value = root.catalog.generation.value)),
-                    ),
-                    emptyList(),
+                return QueryAuthoringStateResponse.CatalogChangedErrorWrapper(
+                    SkirCatalogChanged(actualGeneration = SkirCatalogGeneration(value = root.catalog.generation.value)),
                 )
             }
             val projection =
@@ -136,39 +121,7 @@ internal class AuthoringRoutes(
                     confirmedObservation =
                         AuthoringObservationId(value = root.observationId),
                 )
-            return authored.toTransfer(request.transferId)
-        }
-    }
-
-    private fun SkirAuthoringState.toTransfer(transferId: String): AuthoringStateTransfer {
-        val encoded = SkirAuthoringState.serializer.toBytes(this).toByteArray()
-        return when (val plan = BoundedByteTransferEncoder(nextTransferId = { transferId }).encode(encoded)) {
-            is BoundedTransferPlan.Unavailable -> {
-                AuthoringStateTransfer(
-                    QueryAuthoringStateResponse.UnavailableWrapper(
-                        AuthoringTransferUnavailable(
-                            generation = generation,
-                            reason = AuthoringTransferUnavailableReason.ENCODED_SIZE_LIMIT,
-                            encodedSize = plan.encodedSize,
-                            maxEncodedSize = plan.maxEncodedSize,
-                        ),
-                    ),
-                    emptyList(),
-                )
-            }
-
-            is BoundedTransferPlan.Ready -> {
-                val responses =
-                    plan.chunks.map { chunk ->
-                        QueryAuthoringStateResponse.ChunkWrapper(
-                            AuthoringStateTransferChunk(
-                                generation = generation,
-                                transfer = chunk.toWire(),
-                            ),
-                        )
-                    }
-                AuthoringStateTransfer(responses.first(), responses.drop(1))
-            }
+            return QueryAuthoringStateResponse.StateWrapper(authored)
         }
     }
 
@@ -186,21 +139,6 @@ internal class AuthoringRoutes(
         }
     }
 }
-
-private data class AuthoringStateTransfer(
-    val initial: QueryAuthoringStateResponse,
-    val updates: List<QueryAuthoringStateResponse>,
-)
-
-private fun BoundedTransferChunk.toWire(): SkirBoundedTransferChunk =
-    SkirBoundedTransferChunk(
-        transferId = transferId,
-        index = index,
-        chunkCount = chunkCount,
-        encodedSize = encodedSize,
-        sha256 = sha256,
-        payload = payload.toByteArray().toByteString(),
-    )
 
 private fun TypePreviewResult.toWire(): SkirTypePreviewResult =
     when (this) {

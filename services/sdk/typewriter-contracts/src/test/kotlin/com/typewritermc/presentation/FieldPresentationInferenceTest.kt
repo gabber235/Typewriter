@@ -709,9 +709,9 @@ val FieldPresentationInferenceTest by testSuite {
                 diagnostics = emptyList(),
             ).toWire()
         val decoded =
-            skirout.editor.v1.catalog.EditorCatalogWireSnapshot.serializer
+            skirout.editor.v1.catalog.EditorCatalog.serializer
                 .fromBytes(
-                    skirout.editor.v1.catalog.EditorCatalogWireSnapshot.serializer
+                    skirout.editor.v1.catalog.EditorCatalog.serializer
                         .toBytes(wire),
                 ).presentationMaterials
                 .single()

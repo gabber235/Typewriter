@@ -339,35 +339,6 @@ class Communicator(
         }.responseResult()
     }
 
-    /** Publishes an update to the concrete subject resolved for one watch request. */
-    suspend fun <Address : Any, Request : Any, Initial : Any, Update : Any> publishUpdate(
-        contract: WatchContract<Address, Request, Initial, Update>,
-        address: Address,
-        request: Request,
-        update: Update,
-        headers: MessageHeaders = MessageHeaders.Empty,
-    ): CommunicationResult<Unit> {
-        val destination = contract.updateDestination(address, request)
-        return operation(
-            contract.name.value,
-            "publish",
-            contract.failureSlug,
-            SpanKind.PRODUCER,
-            contract.updateAddress.template,
-        ) { annotate ->
-            val classification = contract.updateClassifier.classify(update)
-            publishResponse(
-                destination,
-                update,
-                contract.updateCodec,
-                classification,
-                contract.failureSlug,
-                headers,
-                annotate,
-            )
-        }.responseResult()
-    }
-
     internal suspend fun <Response : Any> sendResponse(
         name: String,
         template: String?,
@@ -379,7 +350,7 @@ class Communicator(
         headers: MessageHeaders = MessageHeaders.Empty,
     ): CommunicationResult<Unit> =
         operation(name, "publish", failureSlug, SpanKind.PRODUCER, template) { annotate ->
-            publishResponse(destination, response, codec, classification, failureSlug, headers, annotate)
+            publishResponse(destination, response, codec, classification, failureSlug, headers, annotate, transport::reply)
         }.responseResult()
 
     private suspend fun <Response : Any> publishResponse(
@@ -390,6 +361,7 @@ class Communicator(
         failureSlug: ErrorSlug,
         headers: MessageHeaders,
         annotate: (TypedAttributes.() -> Unit) -> Unit,
+        send: suspend (OutboundMessage) -> TransportResult<Unit> = transport::publish,
     ): OperationOutcome<Unit> {
         annotate {
             attribute("messaging.destination.name", destination.value)
@@ -397,7 +369,7 @@ class Communicator(
             attribute("operation.outcome", classification.outcome.name.lowercase())
         }
         val payload = classify({ codec.encode(response) }) { CommunicationError.Encode(failureSlug, it) }
-        classifyTransport(failureSlug, transport.publish(outbound(destination, payload, headers)))
+        classifyTransport(failureSlug, send(outbound(destination, payload, headers)))
         return classification.operationOutcome(Unit)
     }
 
@@ -415,7 +387,7 @@ class Communicator(
         headers: MessageHeaders = MessageHeaders.Empty,
     ): Flow<CommunicationResult<WatchMessage<Initial, Update>>> =
         flow {
-            val updateAddress = contract.updateDestination(address, request)
+            val updateAddress = contract.updateAddress.render(address)
             val subscriptionResult =
                 operation(
                     contract.name.value,

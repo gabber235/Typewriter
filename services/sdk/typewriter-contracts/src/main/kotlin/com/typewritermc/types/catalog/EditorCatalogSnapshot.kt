@@ -19,7 +19,7 @@ import com.typewritermc.types.TypeTemplate
 import com.typewritermc.types.TypeUse
 import com.typewritermc.types.skir.SkirTypeCodec
 import com.typewritermc.types.skir.getOrThrow
-import skirout.editor.v1.catalog.EditorCatalogWireSnapshot
+import skirout.editor.v1.catalog.EditorCatalog
 import skirout.editor.v1.expression.ExpressionNode
 
 /**
@@ -86,4 +86,4 @@ data class EditorCatalogSnapshot(
     val realmRoot: TypeDefinitionId,
 )
 
-fun EditorCatalogSnapshot.toWire(): EditorCatalogWireSnapshot = SkirTypeCodec.encode(this).getOrThrow()
+fun EditorCatalogSnapshot.toWire(): EditorCatalog = SkirTypeCodec.encode(this).getOrThrow()

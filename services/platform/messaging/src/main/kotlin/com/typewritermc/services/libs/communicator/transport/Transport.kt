@@ -235,8 +235,9 @@ interface TransportSubscription {
 /**
  * Owns a temporary subscription at a transport selected reply address.
  *
- * Use for scatter replies rather than inventing an inbox incompatible with transport permissions. The acquiring
- * caller must close it.
+ * Use for scatter replies rather than inventing an inbox incompatible with transport permissions. Deliveries are
+ * complete replies: a transport that frames large replies assembles them per responder before delivering. The
+ * acquiring caller must close it.
  */
 interface ReplyChannel {
     val address: MessageAddress
@@ -246,7 +247,7 @@ interface ReplyChannel {
 }
 
 /**
- * Defines the transport boundary for publication, unary requests, subscriptions, and reply channels.
+ * Defines the transport boundary for publication, replies, unary requests, subscriptions, and reply channels.
  *
  * Operational failures are result values while cancellation remains exceptional. Successful publication does not
  * prove consumer execution. Callers own returned subscriptions; connection lifetime belongs to the adapter owner.
@@ -257,6 +258,16 @@ interface MessageTransport {
     suspend fun openReplyChannel(): TransportResult<ReplyChannel>
 
     suspend fun publish(message: OutboundMessage): TransportResult<Unit>
+
+    /**
+     * Publishes a reply to the reply address of a received request.
+     *
+     * A transport whose messages have a size limit splits a large reply into frames that its [request] and
+     * [openReplyChannel] side reassembles, and fails with a
+     * [TransferFailure][com.typewritermc.services.libs.communicator.transfer.TransferFailure] cause when a reply
+     * cannot be delivered complete. The default publishes the reply as one message.
+     */
+    suspend fun reply(message: OutboundMessage): TransportResult<Unit> = publish(message)
 
     suspend fun request(
         message: OutboundMessage,
