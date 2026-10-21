@@ -2,11 +2,19 @@ package com.typewritermc.authoring
 
 import com.typewritermc.checking.CatalogGeneration
 import com.typewritermc.types.ResourceId
+import skirout.editor.v1.authoring.LinkOccurrence
+import skirout.editor.v1.authoring.LinkOccurrenceId
+import skirout.editor.v1.catalog.PreparedValue
+import skirout.editor.v1.diagnostic.ValueProblem
+import skirout.editor.v1.type_catalog.AuthoringRecord
 import skirout.editor.v1.type_catalog.DataValue
 import skirout.editor.v1.type_catalog.ItemId
 import skirout.editor.v1.type_catalog.ListItem
 import skirout.editor.v1.type_catalog.NamedTypeUse
+import skirout.editor.v1.type_catalog.TypeSelection
 import skirout.editor.v1.type_catalog.TypeUse
+import skirout.editor.v1.type_catalog.ValueLocation
+import skirout.editor.v1.type_catalog.ValuePath
 
 /** An edit proposal carrying its catalog generation, observed preconditions, and ordered intents for later acceptance. */
 data class PreparedEdit(

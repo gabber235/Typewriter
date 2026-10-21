@@ -2,13 +2,14 @@
 
 package com.typewritermc.realm
 
-import com.typewritermc.authoring.AuthoringRecord
-import com.typewritermc.authoring.PathSegment
 import com.typewritermc.authoring.RealmRoot
 import com.typewritermc.authoring.RealmRootDefinition
-import com.typewritermc.authoring.TypeSelection
-import com.typewritermc.authoring.ValuePath
 import com.typewritermc.authoring.definition
+import com.typewritermc.authoring.field
+import com.typewritermc.authoring.fieldMap
+import com.typewritermc.authoring.of
+import com.typewritermc.authoring.root
+import com.typewritermc.authoring.with
 import com.typewritermc.checking.CatalogGeneration
 import com.typewritermc.discovery.CatalogAssemblyContext
 import com.typewritermc.discovery.CatalogContributions
@@ -31,7 +32,6 @@ import com.typewritermc.presentation.DefaultPresentationRuntime
 import com.typewritermc.presentation.PresentationRuntime
 import com.typewritermc.realm.authoring.AuthoringCatalogLease
 import com.typewritermc.realm.catalog.RealmCatalogIncarnation
-import com.typewritermc.types.LinkTarget
 import com.typewritermc.types.NativeBinding
 import com.typewritermc.types.Ref
 import com.typewritermc.types.ResourceId
@@ -40,14 +40,18 @@ import com.typewritermc.types.catalog.Resolution
 import com.typewritermc.types.encodeGeneratedDefault
 import com.typewritermc.types.endpoint
 import com.typewritermc.types.fieldMap
-import com.typewritermc.types.fields
-import com.typewritermc.types.link
 import com.typewritermc.types.named
 import com.typewritermc.types.payload
+import com.typewritermc.types.toSkir
 import com.typewritermc.types.use
+import skirout.editor.v1.type_catalog.AuthoringRecord
 import skirout.editor.v1.type_catalog.DataValue
 import skirout.editor.v1.type_catalog.ItemId
+import skirout.editor.v1.type_catalog.LinkTarget
+import skirout.editor.v1.type_catalog.PathSegment
 import skirout.editor.v1.type_catalog.TypeDefinitionId
+import skirout.editor.v1.type_catalog.TypeSelection
+import skirout.editor.v1.type_catalog.ValuePath
 import java.nio.file.Path
 
 /** Resource ids of the realm root and the core sections in test resource graphs. */
@@ -84,14 +88,24 @@ internal fun Map<ResourceId, AuthoringRecord>.withRealmStructure(catalog: Author
                 else -> return record
             }
         val opposite =
-            ValuePath(listOf(PathSegment.Field(owner.collection), PathSegment.Item(ItemId(value = "native:${owner.members.indexOf(id)}"))))
-        val link = record.fields.getValue(owner.field) as DataValue.NamedWrapper
+            ValuePath(
+                segments =
+                    listOf(
+                        PathSegment.createField(name = owner.collection),
+                        PathSegment.createItem(id = ItemId(value = "native:${owner.members.indexOf(id)}")),
+                    ),
+            )
+        val link = record.fieldMap.getValue(owner.field) as DataValue.NamedWrapper
         val endpoint = (link.payload as DataValue.LinkWrapper).endpoint
-        val rewritten = DataValue.named(link.actualType, DataValue.link(endpoint, LinkTarget(owner.section, opposite)))
-        return record.copy(fields = record.fields + (owner.field to rewritten))
+        val rewritten =
+            DataValue.named(
+                link.actualType,
+                DataValue.createLink(endpoint = endpoint, target = LinkTarget(resource = owner.section.toSkir(), opposite = opposite)),
+            )
+        return record.with(owner.field, rewritten)
     }
 
-    fun back(field: String) = ValuePath(listOf(PathSegment.Field(field)))
+    fun back(field: String) = ValuePath.root.field(field)
     val structure =
         mapOf(
             TestRealmStructure.root to
@@ -115,7 +129,10 @@ internal fun <T : Any> AuthoringCatalogLease.record(
     @Suppress("UNCHECKED_CAST")
     val binding = nativeBindings.bind(checked) as NativeBinding<T>
     val encoded = binding.encodeGeneratedDefault(value) as DataValue.NamedWrapper
-    return AuthoringRecord(TypeSelection.Complete(encoded.actualType), (encoded.payload as DataValue.RecordWrapper).value.fieldMap)
+    return AuthoringRecord.of(
+        TypeSelection.CompleteWrapper(encoded.actualType),
+        (encoded.payload as DataValue.RecordWrapper).value.fieldMap,
+    )
 }
 
 private data class SectionMembership(

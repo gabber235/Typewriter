@@ -1,14 +1,13 @@
 package com.typewritermc.realm.authoring
 
-import com.typewritermc.authoring.ArgumentSelection
-import com.typewritermc.authoring.AuthoringRecord
 import com.typewritermc.authoring.CommitResult
 import com.typewritermc.authoring.EditIntent
 import com.typewritermc.authoring.PreparedEdit
 import com.typewritermc.authoring.PreparedEditResult
-import com.typewritermc.authoring.TypeSelection
-import com.typewritermc.authoring.ValueLocation
-import com.typewritermc.authoring.ValuePath
+import com.typewritermc.authoring.fieldMap
+import com.typewritermc.authoring.of
+import com.typewritermc.authoring.skir.SkirAuthoringOperationCodec
+import com.typewritermc.authoring.with
 import com.typewritermc.checking.CatalogGeneration
 import com.typewritermc.checking.InputIdentity
 import com.typewritermc.discovery.OwnedCheckRecipe
@@ -23,7 +22,6 @@ import com.typewritermc.types.EndpointCardinality
 import com.typewritermc.types.EndpointDefinition
 import com.typewritermc.types.EndpointSlot
 import com.typewritermc.types.FactoryNativeBindingRegistry
-import com.typewritermc.types.LinkTarget
 import com.typewritermc.types.NativeBindingRegistry
 import com.typewritermc.types.RelationContract
 import com.typewritermc.types.RelationDeletePolicy
@@ -32,32 +30,44 @@ import com.typewritermc.types.ResourceId
 import com.typewritermc.types.catalog.CheckedCatalog
 import com.typewritermc.types.catalog.DefaultCheckedCatalog
 import com.typewritermc.types.fields
-import com.typewritermc.types.link
 import com.typewritermc.types.listValue
 import com.typewritermc.types.named
 import com.typewritermc.types.namedTemplate
 import com.typewritermc.types.namedUse
 import com.typewritermc.types.qualified
 import com.typewritermc.types.record
+import com.typewritermc.types.skir.getOrThrow
 import com.typewritermc.types.template
+import com.typewritermc.types.toSkir
 import com.typewritermc.types.use
 import de.infix.testBalloon.framework.core.testSuite
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.types.shouldBeInstanceOf
 import kotlinx.coroutines.test.runTest
+import skirout.editor.v1.authoring.LinkOccurrenceId
+import skirout.editor.v1.authoring.LinkRepairIntent
+import skirout.editor.v1.authoring.TypeArgumentChangePreview
+import skirout.editor.v1.type_catalog.ArgumentSelection
+import skirout.editor.v1.type_catalog.AuthoringRecord
 import skirout.editor.v1.type_catalog.CollectionKind
 import skirout.editor.v1.type_catalog.DataValue
 import skirout.editor.v1.type_catalog.EndpointId
 import skirout.editor.v1.type_catalog.FieldDeclaration
 import skirout.editor.v1.type_catalog.FieldOwner
 import skirout.editor.v1.type_catalog.ItemId
+import skirout.editor.v1.type_catalog.LinkTarget
 import skirout.editor.v1.type_catalog.ListItem
 import skirout.editor.v1.type_catalog.ParameterKey
+import skirout.editor.v1.type_catalog.PathSegment
 import skirout.editor.v1.type_catalog.RepresentationTemplate
 import skirout.editor.v1.type_catalog.ScalarKind
 import skirout.editor.v1.type_catalog.TypeDefinition
 import skirout.editor.v1.type_catalog.TypeDefinitionId
 import skirout.editor.v1.type_catalog.TypeParameter
+import skirout.editor.v1.type_catalog.TypeSelection
+import skirout.editor.v1.type_catalog.ValueLocation
+import skirout.editor.v1.type_catalog.ValuePath
+import skirout.editor.v1.authoring.PreparedEdit as SkirPreparedEdit
 
 class TypeArgumentOperationsTest {
     fun previewRejectsDefinitionReplacementAndStructurallyInvalidRepairBatch() {
@@ -75,13 +85,13 @@ class TypeArgumentOperationsTest {
             operations
                 .preview(
                     resource,
-                    TypeSelection.Complete(BUNDLE_COIN),
+                    TypeSelection.CompleteWrapper(BUNDLE_COIN),
                     snapshot,
                 ).shouldBeInstanceOf<TypePreviewResult.InvalidArguments>()
         }
         store.close()
 
-        val invalid = record.copy(fields = record.fields + ("unknown" to DataValue.StringValueWrapper("retained")))
+        val invalid = record.with("unknown", DataValue.StringValueWrapper("retained"))
         val invalidCatalog = RepairCatalogLease()
         val invalidStore =
             InMemoryAuthoringViewStore(
@@ -90,7 +100,7 @@ class TypeArgumentOperationsTest {
             )
         invalidStore.capture().use { snapshot ->
             DefaultTypeArgumentOperations(invalidStore)
-                .preview(resource, TypeSelection.Complete(CONTAINER_COIN), snapshot)
+                .preview(resource, TypeSelection.CompleteWrapper(CONTAINER_COIN), snapshot)
                 .shouldBeInstanceOf<TypePreviewResult.Rejected>()
         }
         invalidStore.close()
@@ -114,7 +124,7 @@ class TypeArgumentOperationsTest {
                 operations
                     .preview(
                         resource,
-                        TypeSelection.Complete(CONTAINER_COIN),
+                        TypeSelection.CompleteWrapper(CONTAINER_COIN),
                         snapshot,
                     ).shouldBeInstanceOf<TypePreviewResult.Ready>()
                     .preview
@@ -122,48 +132,48 @@ class TypeArgumentOperationsTest {
 
         val bundles = location(resource, "bundles")
         val bundle =
-            ValueLocation(
+            ValueLocation.of(
                 resource,
                 ValuePath(
-                    bundles.path.segments +
-                        com.typewritermc.authoring.PathSegment
-                            .Item(item),
+                    segments =
+                        bundles.path.segments +
+                            PathSegment.createItem(id = item),
                 ),
             )
         val title =
-            ValueLocation(
+            ValueLocation.of(
                 resource,
                 ValuePath(
-                    bundle.path.segments +
-                        com.typewritermc.authoring.PathSegment
-                            .Field("title"),
+                    segments =
+                        bundle.path.segments +
+                            PathSegment.createField(name = "title"),
                 ),
             )
         val incompatible =
-            ValueLocation(
+            ValueLocation.of(
                 resource,
                 ValuePath(
-                    bundle.path.segments +
-                        com.typewritermc.authoring.PathSegment
-                            .Field("value"),
+                    segments =
+                        bundle.path.segments +
+                            PathSegment.createField(name = "value"),
                 ),
             )
         val compatible = location(resource, "reward")
-        preview.edit.intents shouldBe
+        preview.decodedEdit.intents shouldBe
             listOf(
-                EditIntent.ConfigureResource(resource, TypeSelection.Complete(CONTAINER_COIN)),
+                EditIntent.ConfigureResource(resource, TypeSelection.CompleteWrapper(CONTAINER_COIN)),
                 EditIntent.Retag(bundles, LIST_BUNDLE_COIN),
                 EditIntent.Retag(bundle, BUNDLE_COIN),
                 EditIntent.SetValue(incompatible, DataValue.UNFILLED),
             )
         preview.clearedLocations shouldBe listOf(incompatible)
-        val observed = preview.edit.expectations.flatMapTo(linkedSetOf()) { it.dependencies() }
+        val observed = preview.decodedEdit.expectations.flatMapTo(linkedSetOf()) { it.dependencies() }
         (InputIdentity.Value(title) in observed) shouldBe true
         (InputIdentity.Value(compatible) in observed) shouldBe true
         (InputIdentity.Value(incompatible) in observed) shouldBe true
         (InputIdentity.Value(bundles) in observed) shouldBe true
         (InputIdentity.Value(bundles) in observed) shouldBe true
-        preview.edit.intents.any { it == EditIntent.SetValue(compatible, DataValue.UNFILLED) } shouldBe false
+        preview.decodedEdit.intents.any { it == EditIntent.SetValue(compatible, DataValue.UNFILLED) } shouldBe false
 
         store.close()
     }
@@ -185,7 +195,7 @@ class TypeArgumentOperationsTest {
                     operations
                         .preview(
                             resource,
-                            TypeSelection.Complete(CONTAINER_COIN),
+                            TypeSelection.CompleteWrapper(CONTAINER_COIN),
                             snapshot,
                         ).shouldBeInstanceOf<TypePreviewResult.Ready>()
                         .preview
@@ -202,7 +212,7 @@ class TypeArgumentOperationsTest {
         runTest {
             val catalog = RepairCatalogLease()
             val resource = ResourceId("dual")
-            val original = dualRecord(TypeSelection.Complete(DUAL_COIN_GEM))
+            val original = dualRecord(TypeSelection.CompleteWrapper(DUAL_COIN_GEM))
             val store =
                 InMemoryAuthoringViewStore(
                     catalog,
@@ -211,9 +221,9 @@ class TypeArgumentOperationsTest {
             val repository = RecordingRepository()
             val operations = DefaultTypeArgumentOperations(store)
             val pending =
-                TypeSelection.Pending(
-                    DUAL,
-                    listOf(ArgumentSelection.Chosen(COIN_USE.use), ArgumentSelection.Unfilled),
+                TypeSelection.createPending(
+                    definition = DUAL,
+                    arguments = listOf(ArgumentSelection.ChosenWrapper(COIN_USE.use), ArgumentSelection.UNFILLED),
                 )
 
             val pendingPreview =
@@ -222,10 +232,10 @@ class TypeArgumentOperationsTest {
                 }
 
             pendingPreview.next shouldBe pending
-            pendingPreview.edit.intents.contains(EditIntent.ConfigureResource(resource, pending)) shouldBe true
-            pendingPreview.edit.intents.contains(EditIntent.SetValue(location(resource, "second"), DataValue.UNFILLED)) shouldBe true
-            pendingPreview.edit.intents.contains(EditIntent.SetValue(location(resource, "name"), DataValue.UNFILLED)) shouldBe false
-            pendingPreview.edit.intents.contains(EditIntent.SetValue(location(resource, "first"), DataValue.UNFILLED)) shouldBe false
+            pendingPreview.decodedEdit.intents.contains(EditIntent.ConfigureResource(resource, pending)) shouldBe true
+            pendingPreview.decodedEdit.intents.contains(EditIntent.SetValue(location(resource, "second"), DataValue.UNFILLED)) shouldBe true
+            pendingPreview.decodedEdit.intents.contains(EditIntent.SetValue(location(resource, "name"), DataValue.UNFILLED)) shouldBe false
+            pendingPreview.decodedEdit.intents.contains(EditIntent.SetValue(location(resource, "first"), DataValue.UNFILLED)) shouldBe false
 
             val pendingEdit = operations.prepare(pendingPreview).shouldBeInstanceOf<PreparedEditResult.Prepared>().edit
             val pendingPlan =
@@ -235,23 +245,24 @@ class TypeArgumentOperationsTest {
                 ).plan(mapOf(resource to original), pendingEdit).shouldBeInstanceOf<MutationPlanningResult.Accepted>().plan
             val pendingRecord = pendingPlan.resources.getValue(resource)
             pendingRecord.configuration shouldBe pending
-            pendingRecord.fields.getValue("name") shouldBe DataValue.StringValueWrapper("kept")
-            pendingRecord.fields.getValue("first") shouldBe original.fields.getValue("first")
-            pendingRecord.fields.getValue("second") shouldBe DataValue.UNFILLED
+            pendingRecord.fieldMap.getValue("name") shouldBe DataValue.StringValueWrapper("kept")
+            pendingRecord.fieldMap.getValue("first") shouldBe original.fieldMap.getValue("first")
+            pendingRecord.fieldMap.getValue("second") shouldBe DataValue.UNFILLED
 
             val pendingStore =
                 InMemoryAuthoringViewStore(
                     catalog.retain(),
                     AuthoringSeed(mapOf(resource to pendingRecord)),
                 )
-            val complete = TypeSelection.Complete(DUAL_COIN_COIN)
+            val complete = TypeSelection.CompleteWrapper(DUAL_COIN_COIN)
             val completePreview =
                 pendingStore.capture().use { snapshot ->
                     operations.preview(resource, complete, snapshot).shouldBeInstanceOf<TypePreviewResult.Ready>().preview
                 }
             completePreview.next shouldBe complete
-            completePreview.edit.intents.contains(EditIntent.ConfigureResource(resource, complete)) shouldBe true
-            completePreview.edit.intents.contains(EditIntent.SetValue(location(resource, "first"), DataValue.UNFILLED)) shouldBe false
+            completePreview.decodedEdit.intents.contains(EditIntent.ConfigureResource(resource, complete)) shouldBe true
+            completePreview.decodedEdit.intents.contains(EditIntent.SetValue(location(resource, "first"), DataValue.UNFILLED)) shouldBe
+                false
 
             pendingStore.close()
             store.close()
@@ -261,7 +272,7 @@ class TypeArgumentOperationsTest {
         runTest {
             val catalog = RepairCatalogLease()
             val resource = ResourceId("dual")
-            val original = dualRecord(TypeSelection.Complete(DUAL_COIN_GEM))
+            val original = dualRecord(TypeSelection.CompleteWrapper(DUAL_COIN_GEM))
             val store =
                 InMemoryAuthoringViewStore(
                     catalog,
@@ -270,9 +281,9 @@ class TypeArgumentOperationsTest {
             val repository = RecordingRepository()
             val operations = DefaultTypeArgumentOperations(store)
             val pending =
-                TypeSelection.Pending(
-                    DUAL,
-                    listOf(ArgumentSelection.Chosen(COIN_USE.use), ArgumentSelection.Unfilled),
+                TypeSelection.createPending(
+                    definition = DUAL,
+                    arguments = listOf(ArgumentSelection.ChosenWrapper(COIN_USE.use), ArgumentSelection.UNFILLED),
                 )
             val preview =
                 store.capture().use { snapshot ->
@@ -283,15 +294,16 @@ class TypeArgumentOperationsTest {
                 .prepare(
                     preview.copy(
                         edit =
-                            preview.edit.copy(
-                                intents = listOf(EditIntent.ConfigureResource(resource, TypeSelection.Complete(DUAL_COIN_COIN))),
-                            ),
+                            preview.decodedEdit
+                                .copy(
+                                    intents = listOf(EditIntent.ConfigureResource(resource, TypeSelection.CompleteWrapper(DUAL_COIN_COIN))),
+                                ).encoded(),
                     ),
                 ).shouldBeInstanceOf<PreparedEditResult.Rejected>()
             repository.edit shouldBe null
             operations
                 .prepare(
-                    preview.copy(edit = preview.edit.copy(expectations = preview.edit.expectations.dropLast(1))),
+                    preview.copy(edit = preview.decodedEdit.copy(expectations = preview.decodedEdit.expectations.dropLast(1)).encoded()),
                 ).shouldBeInstanceOf<PreparedEditResult.Rejected>()
             repository.edit shouldBe null
 
@@ -308,21 +320,20 @@ class TypeArgumentOperationsTest {
         val target = ResourceId("target")
         val linkLocation = location(resource, "target")
         val linked =
-            dualRecord(TypeSelection.Complete(DUAL_COIN_GEM)).copy(
-                fields =
-                    dualRecord(TypeSelection.Complete(DUAL_COIN_GEM)).fields +
-                        (
-                            "target" to
-                                DataValue.named(
-                                    LINK_GEM,
-                                    DataValue.link(SOURCE_ENDPOINT, LinkTarget(target, null)),
-                                )
-                        ),
+            dualRecord(TypeSelection.CompleteWrapper(DUAL_COIN_GEM)).with(
+                "target",
+                DataValue.named(
+                    LINK_GEM,
+                    DataValue.createLink(
+                        endpoint = SOURCE_ENDPOINT,
+                        target = LinkTarget(resource = target.toSkir(), opposite = null),
+                    ),
+                ),
             )
         val resources =
             mapOf(
                 resource to linked,
-                target to AuthoringRecord(TypeSelection.Complete(GEM_USE), emptyMap()),
+                target to AuthoringRecord.of(TypeSelection.CompleteWrapper(GEM_USE), emptyMap()),
             )
         val store =
             InMemoryAuthoringViewStore(
@@ -330,9 +341,9 @@ class TypeArgumentOperationsTest {
                 AuthoringSeed(resources),
             )
         val pending =
-            TypeSelection.Pending(
-                DUAL,
-                listOf(ArgumentSelection.Chosen(COIN_USE.use), ArgumentSelection.Unfilled),
+            TypeSelection.createPending(
+                definition = DUAL,
+                arguments = listOf(ArgumentSelection.ChosenWrapper(COIN_USE.use), ArgumentSelection.UNFILLED),
             )
         val preview =
             store.capture().use { snapshot ->
@@ -342,17 +353,21 @@ class TypeArgumentOperationsTest {
             }
 
         preview.clearedLocations.contains(linkLocation) shouldBe true
-        preview.edit.intents.none { it == EditIntent.SetValue(linkLocation, DataValue.UNFILLED) } shouldBe true
+        preview.decodedEdit.intents.none { it == EditIntent.SetValue(linkLocation, DataValue.UNFILLED) } shouldBe true
         preview.linkRepairs shouldBe
             listOf(
-                LinkRepairIntent.Clear(
-                    com.typewritermc.authoring.LinkOccurrenceId(SOURCE_ENDPOINT, linkLocation),
+                LinkRepairIntent.ClearWrapper(
+                    LinkOccurrenceId(endpoint = SOURCE_ENDPOINT, location = linkLocation),
                 ),
             )
-        preview.edit.expectations.any { InputIdentity.Incoming(resource, RELATION) in it.dependencies() } shouldBe true
+        preview.decodedEdit.expectations.any { InputIdentity.Incoming(resource, RELATION) in it.dependencies() } shouldBe true
         store.close()
     }
 }
+
+private val TypeArgumentChangePreview.decodedEdit: PreparedEdit get() = SkirAuthoringOperationCodec.decode(edit).getOrThrow()
+
+private fun PreparedEdit.encoded(): SkirPreparedEdit = SkirAuthoringOperationCodec.encode(this).getOrThrow()
 
 private class RecordingRepository : AuthoringRepository {
     var edit: PreparedEdit? = null
@@ -374,7 +389,7 @@ private class RepairCatalogLease(
     override val endpointBindings: List<EndpointBindingTemplate> = emptyList()
     override val configuration: List<com.typewritermc.configuration.ConfigurationRecipe> = emptyList()
     override val operations = com.typewritermc.operations.OperationCatalog()
-    override val placementFields = emptyMap<TypeDefinitionId, com.typewritermc.authoring.ValuePath>()
+    override val placementFields = emptyMap<TypeDefinitionId, ValuePath>()
 
     override fun retain(): AuthoringCatalogLease = RepairCatalogLease(generation)
 
@@ -382,8 +397,8 @@ private class RepairCatalogLease(
 }
 
 private fun repairRecord(item: ItemId): AuthoringRecord =
-    AuthoringRecord(
-        configuration = TypeSelection.Complete(CONTAINER_REWARD),
+    AuthoringRecord.of(
+        configuration = TypeSelection.CompleteWrapper(CONTAINER_REWARD),
         fields =
             mapOf(
                 "bundles" to
@@ -412,7 +427,7 @@ private fun repairRecord(item: ItemId): AuthoringRecord =
     )
 
 private fun dualRecord(selection: TypeSelection): AuthoringRecord =
-    AuthoringRecord(
+    AuthoringRecord.of(
         configuration = selection,
         fields =
             mapOf(
@@ -425,13 +440,13 @@ private fun dualRecord(selection: TypeSelection): AuthoringRecord =
 private fun location(
     resource: ResourceId,
     field: String,
-) = ValueLocation(
+) = ValueLocation.of(
     resource,
     ValuePath(
-        listOf(
-            com.typewritermc.authoring.PathSegment
-                .Field(field),
-        ),
+        segments =
+            listOf(
+                PathSegment.createField(name = field),
+            ),
     ),
 )
 

@@ -2,6 +2,7 @@
 
 package com.typewritermc.authoring
 
+import com.typewritermc.authoring.record
 import com.typewritermc.expression.CanonicalQueryReader
 import com.typewritermc.expression.CheckedExpressionProgram
 import com.typewritermc.expression.DefaultExpressionEvaluator
@@ -19,8 +20,11 @@ import com.typewritermc.types.template
 import com.typewritermc.types.unwrapNamed
 import com.typewritermc.types.use
 import skirout.editor.v1.catalog.PublishedType
+import skirout.editor.v1.type_catalog.AuthoringRecord
 import skirout.editor.v1.type_catalog.DataValue
 import skirout.editor.v1.type_catalog.TypeDefinitionId
+import skirout.editor.v1.type_catalog.TypeSelection
+import skirout.editor.v1.type_catalog.ValueLocation
 
 /** One published resource display with its formulas checked against the catalog that published them. */
 class CheckedResourceDisplay(
@@ -75,9 +79,9 @@ class ResourceDisplayCatalog(
         record: AuthoringRecord,
         catalog: CheckedCatalog,
     ): String? {
-        val configuration = record.configuration as? TypeSelection.Complete ?: return null
+        val configuration = record.configuration as? TypeSelection.CompleteWrapper ?: return null
         val display = displayFor(configuration.use.definition, catalog) ?: return null
-        val subject = DataValue.named(configuration.use, DataValue.record(record.fields))
+        val subject = DataValue.named(configuration.use, DataValue.RecordWrapper(record.payload))
         val evaluator =
             DefaultExpressionEvaluator(
                 ExpressionValueReader { error("Display formulas read their subject as a local value.") },
@@ -98,8 +102,7 @@ class ResourceDisplayCatalog(
         override val catalog: CheckedCatalog,
     ) : CanonicalQueryReader {
         context(reads: AuthoredReads)
-        override fun resource(id: ResourceId): Availability<AuthoringRecord> =
-            Availability.Unavailable(listOf(ValueLocation(id, ValuePath())))
+        override fun resource(id: ResourceId): Availability<AuthoringRecord> = Availability.Unavailable(listOf(ValueLocation.of(id)))
 
         context(reads: AuthoredReads)
         override fun declaration(id: TypeDefinitionId): Availability<PublishedType> =

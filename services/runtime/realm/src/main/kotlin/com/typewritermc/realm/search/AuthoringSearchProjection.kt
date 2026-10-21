@@ -1,11 +1,11 @@
 package com.typewritermc.realm.search
 
-import com.typewritermc.authoring.AuthoringRecord
 import com.typewritermc.types.ResourceId
 import com.typewritermc.types.fields
 import com.typewritermc.types.items
 import com.typewritermc.types.payload
 import com.typewritermc.types.rows
+import skirout.editor.v1.type_catalog.AuthoringRecord
 import skirout.editor.v1.type_catalog.DataValue
 
 /** Derived search terms are stored beside the canonical resource in its write transaction. */
@@ -14,7 +14,7 @@ internal fun authoredSearchText(
     record: AuthoringRecord,
 ): String {
     val terms = mutableListOf(resource.value)
-    record.fields.values.forEach { it.collectText(terms) }
+    record.fields.forEach { it.value.collectText(terms) }
     return terms.distinct().joinToString(" ")
 }
 

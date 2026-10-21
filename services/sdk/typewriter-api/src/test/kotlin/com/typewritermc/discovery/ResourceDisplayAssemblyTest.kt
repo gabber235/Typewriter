@@ -1,7 +1,6 @@
 package com.typewritermc.discovery
 
 import com.typewritermc.authoring.AuthoredReads
-import com.typewritermc.authoring.AuthoringRecord
 import com.typewritermc.authoring.Availability
 import com.typewritermc.authoring.BoundCollectionPath
 import com.typewritermc.authoring.BoundPath
@@ -9,7 +8,9 @@ import com.typewritermc.authoring.DisplayFormulas
 import com.typewritermc.authoring.DraftBinding
 import com.typewritermc.authoring.ReadContext
 import com.typewritermc.authoring.RealmRootDefinition
-import com.typewritermc.authoring.TypeSelection
+import com.typewritermc.authoring.of
+import com.typewritermc.authoring.payload
+import com.typewritermc.authoring.use
 import com.typewritermc.checking.CatalogGeneration
 import com.typewritermc.checking.PartialSelection
 import com.typewritermc.checking.TypedSelection
@@ -55,12 +56,14 @@ import com.typewritermc.types.use
 import de.infix.testBalloon.framework.core.testSuite
 import io.kotest.matchers.collections.shouldNotContain
 import io.kotest.matchers.shouldBe
+import skirout.editor.v1.type_catalog.AuthoringRecord
 import skirout.editor.v1.type_catalog.DataValue
 import skirout.editor.v1.type_catalog.EndpointId
 import skirout.editor.v1.type_catalog.ItemId
 import skirout.editor.v1.type_catalog.RepresentationTemplate
 import skirout.editor.v1.type_catalog.TypeDefinition
 import skirout.editor.v1.type_catalog.TypeDefinitionId
+import skirout.editor.v1.type_catalog.TypeSelection
 import skirout.editor.v1.type_catalog.TypeUse
 
 val ResourceDisplayAssemblyTest by testSuite {
@@ -82,7 +85,10 @@ val ResourceDisplayAssemblyTest by testSuite {
             ResourceTarget.Type(PageDefinition.id.namedTemplate())
         displays.displayFor(CueDefinition.id, assembly.checked)?.target shouldBe ResourceTarget.AnyResource
         assembly.label(
-            AuthoringRecord(TypeSelection.Complete(fixturePage.namedUse()), mapOf("name" to DataValue.StringValueWrapper("Intro"))),
+            AuthoringRecord.of(
+                TypeSelection.CompleteWrapper(fixturePage.namedUse()),
+                mapOf("name" to DataValue.StringValueWrapper("Intro")),
+            ),
         ) shouldBe
             "Intro"
     }
@@ -95,7 +101,7 @@ val ResourceDisplayAssemblyTest by testSuite {
                 searchKeys =
                     mapOf(fixtureResource to "fixture"),
             )
-        val record = AuthoringRecord(TypeSelection.Complete(fixtureResource.namedUse()), emptyMap())
+        val record = AuthoringRecord.of(TypeSelection.CompleteWrapper(fixtureResource.namedUse()), emptyMap())
         val formulas = assembly.displays.displayFor(fixtureResource, assembly.checked)!!
 
         formulas.target shouldBe ResourceTarget.AnyResource
@@ -257,8 +263,8 @@ private fun endpoint(
 ) = EndpointDefinition(EndpointId(value = id), slot, resource.namedTemplate(), EndpointCardinality.Many, RelationDeletePolicy.CLEAR)
 
 private fun book(title: String) =
-    AuthoringRecord(
-        TypeSelection.Complete(BookDefinition.use),
+    AuthoringRecord.of(
+        TypeSelection.CompleteWrapper(BookDefinition.use),
         mapOf(
             "title" to DataValue.StringValueWrapper(title),
             "icon" to DataValue.UNFILLED,
@@ -314,7 +320,7 @@ private fun CatalogAssembly.evaluate(
     formula: com.typewritermc.expression.CheckedExpressionProgram,
     record: AuthoringRecord,
 ): DataValue? {
-    val subject = DataValue.named((record.configuration as TypeSelection.Complete).use, DataValue.record(record.fields))
+    val subject = DataValue.named((record.configuration as TypeSelection.CompleteWrapper).use, DataValue.RecordWrapper(record.payload))
     val types = editorCatalog.types.associateBy { it.definition.id }
     val queries =
         object : com.typewritermc.expression.CanonicalQueryReader {

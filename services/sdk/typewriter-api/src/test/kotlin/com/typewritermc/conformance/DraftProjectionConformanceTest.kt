@@ -13,9 +13,6 @@ import com.typewritermc.authoring.GeneratedSdkApi
 import com.typewritermc.authoring.MapDraft
 import com.typewritermc.authoring.PartialSchema
 import com.typewritermc.authoring.ReadContext
-import com.typewritermc.authoring.TypeSelection
-import com.typewritermc.authoring.ValueLocation
-import com.typewritermc.authoring.ValuePath
 import com.typewritermc.authoring.draftViewProjection
 import com.typewritermc.authoring.field
 import com.typewritermc.authoring.item
@@ -24,6 +21,9 @@ import com.typewritermc.authoring.mapDraftProjection
 import com.typewritermc.authoring.mapKey
 import com.typewritermc.authoring.mapValue
 import com.typewritermc.authoring.nativeReadProjection
+import com.typewritermc.authoring.of
+import com.typewritermc.authoring.root
+import com.typewritermc.authoring.use
 import com.typewritermc.checking.CatalogGeneration
 import com.typewritermc.checking.PartialSelection
 import com.typewritermc.checking.TypedSelection
@@ -57,13 +57,15 @@ import skirout.editor.v1.type_catalog.ListItem
 import skirout.editor.v1.type_catalog.MapRow
 import skirout.editor.v1.type_catalog.ScalarKind
 import skirout.editor.v1.type_catalog.TypeDefinitionId
+import skirout.editor.v1.type_catalog.TypeSelection
 import skirout.editor.v1.type_catalog.TypeUse
+import skirout.editor.v1.type_catalog.ValueLocation
 import java.math.BigInteger
 
 val DraftProjectionConformanceTest by testSuite {
     test("generated nested drafts preserve partial fields and reject another immutable read view") {
         val resource = ResourceId("draft:tag")
-        val root = ValueLocation(resource, ValuePath())
+        val root = ValueLocation.of(resource)
         val placement = root.field("placement")
         val placementUse = com.typewritermc.authoring.GraphPlacementDefinition.use
         val generation = CatalogGeneration("draft catalog")
@@ -94,7 +96,7 @@ val DraftProjectionConformanceTest by testSuite {
                 original.readContext,
                 root,
                 DraftExpectation.PartialRoot(PartialSchema(emptyList(), emptyList(), emptyList())),
-                TypeSelection.Complete(TagDefinition.use),
+                TypeSelection.CompleteWrapper(TagDefinition.use),
             )
         val tag = TagDraftType.bind(binding)
 
@@ -109,7 +111,7 @@ val DraftProjectionConformanceTest by testSuite {
     }
 
     test("collection projections retain item identity and their captured read view") {
-        val root = ValueLocation(ResourceId("draft:list"), ValuePath())
+        val root = ValueLocation.of(ResourceId("draft:list"))
         val first = ItemId(value = "first")
         val listUse = StandardTypes.list.namedUse(listOf(INT_USE))
         val reads =
@@ -140,7 +142,7 @@ val DraftProjectionConformanceTest by testSuite {
     }
 
     test("map draft lookup compares authored record meaning and reports duplicate ambiguity as unavailable") {
-        val root = ValueLocation(ResourceId("draft:map"), ValuePath())
+        val root = ValueLocation.of(ResourceId("draft:map"))
         val first = ItemId(value = "first")
         val duplicate = ItemId(value = "duplicate")
         val unique = ItemId(value = "unique")
@@ -207,7 +209,7 @@ private class FixtureKeyDraft(
     override val catalog = binding.catalog
     override val readContext = binding.readContext
     override val location = binding.location
-    override val actualType = Availability.Available((binding.actual as TypeSelection.Complete).use)
+    override val actualType = Availability.Available((binding.actual as TypeSelection.CompleteWrapper).use)
 }
 
 private class FixtureDraftReads(
@@ -256,7 +258,7 @@ private class FixtureDraftReads(
                 readContext,
                 path.location,
                 DraftExpectation.PartialRoot(PartialSchema(emptyList(), emptyList(), emptyList())),
-                TypeSelection.Complete(named.actualType),
+                TypeSelection.CompleteWrapper(named.actualType),
             ),
         )
     }

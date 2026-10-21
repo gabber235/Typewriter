@@ -1,27 +1,15 @@
 package com.typewritermc.authoring
 
-import com.typewritermc.types.LinkTarget
 import com.typewritermc.types.RelationId
 import com.typewritermc.types.ResourceId
-import com.typewritermc.types.skir.EndpointIdSerializer
-import kotlinx.serialization.Serializable
-import skirout.editor.v1.type_catalog.EndpointId
+import skirout.editor.v1.type_catalog.ValuePath
 
-@Serializable
-data class LinkOccurrenceId(
-    @Serializable(with = EndpointIdSerializer::class)
-    val endpoint: EndpointId,
-    val location: ValueLocation,
-)
+/*
+ * Authored references are the generated Skir LinkOccurrence, identified by a LinkOccurrenceId: an endpoint and the exact
+ * value location, including collection item identity, that holds the link. The projections below describe the graph
+ * edges derived from those occurrences; they stay Kotlin values while the edit expectations that hold them are.
+ */
 
-@Serializable
-data class LinkOccurrence(
-    val id: LinkOccurrenceId,
-    val source: ResourceId,
-    val target: LinkTarget,
-)
-
-@Serializable
 data class LinkProjection(
     val contract: RelationId,
     val first: ResourceId,
@@ -30,7 +18,6 @@ data class LinkProjection(
     val secondLocation: ValuePath?,
 )
 
-@Serializable
 data class RelationProjectionDelta(
     val removed: List<LinkProjection>,
     val created: List<LinkProjection>,

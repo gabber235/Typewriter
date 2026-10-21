@@ -5,8 +5,6 @@ import com.typewritermc.dsl.TypewriterDsl
 import com.typewritermc.expression.Expr
 import com.typewritermc.expression.ExpressionBindingId
 import com.typewritermc.expression.Handled
-import com.typewritermc.types.skir.SkirAuthoringValueCodec
-import com.typewritermc.types.skir.getOrThrow
 import skirout.editor.v1.action.CreateFieldValue
 import skirout.editor.v1.action.EditorAction
 import skirout.editor.v1.binding.BindingRef
@@ -149,7 +147,7 @@ class CreateResourceScope internal constructor() {
 
     /** Presets the field at this path of the created resource to [value]. */
     operator fun <V> TypedPath<*, V>.invoke(value: Expr<V, Handled>) {
-        val wirePath = SkirAuthoringValueCodec.encode(path).getOrThrow()
+        val wirePath = path
         require(fields.none { it.path == wirePath }) { "A create action presets each field once." }
         fields += CreateFieldValue(path = wirePath, value = value.toNode())
     }
@@ -172,7 +170,7 @@ fun createResource(
         owner =
             owner?.let {
                 BindingRef(
-                    path = SkirAuthoringValueCodec.encode(it.path).getOrThrow(),
+                    path = it.path,
                     bindingId = CONFIGURED_VALUE.wire(),
                 )
             },

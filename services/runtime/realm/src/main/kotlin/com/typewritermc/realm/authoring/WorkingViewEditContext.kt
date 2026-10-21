@@ -1,17 +1,13 @@
 package com.typewritermc.realm.authoring
 
 import com.typewritermc.authoring.AuthoredReads
-import com.typewritermc.authoring.AuthoringRecord
 import com.typewritermc.authoring.BoundCollectionPath
 import com.typewritermc.authoring.CheckedWriteResult
 import com.typewritermc.authoring.ConnectIntent
 import com.typewritermc.authoring.EditContext
 import com.typewritermc.authoring.EditIntent
 import com.typewritermc.authoring.EditablePath
-import com.typewritermc.authoring.LinkOccurrenceId
 import com.typewritermc.authoring.PreparedEdit
-import com.typewritermc.authoring.ValueLocation
-import com.typewritermc.authoring.ValueProblem
 import com.typewritermc.realm.checking.CapturedAuthoringReads
 import com.typewritermc.realm.repository.AuthoringPlanningSession
 import com.typewritermc.realm.repository.requiredExpectations
@@ -19,10 +15,14 @@ import com.typewritermc.types.NativeBinding
 import com.typewritermc.types.ResourceId
 import com.typewritermc.types.catalog.Resolution
 import com.typewritermc.types.immutableListCopy
+import skirout.editor.v1.authoring.LinkOccurrenceId
+import skirout.editor.v1.diagnostic.ValueProblem
+import skirout.editor.v1.type_catalog.AuthoringRecord
 import skirout.editor.v1.type_catalog.DataValue
 import skirout.editor.v1.type_catalog.ItemId
 import skirout.editor.v1.type_catalog.ListItem
 import skirout.editor.v1.type_catalog.NamedTypeUse
+import skirout.editor.v1.type_catalog.ValueLocation
 import java.util.UUID
 
 /** A request owned edit context. Reads see prior writes and expectations witness its working baseline. */
@@ -93,7 +93,14 @@ internal class WorkingViewEditContext(
         after: ItemId?,
         value: DataValue,
     ): ItemId {
-        val id = ItemId(value = UUID.nameUUIDFromBytes("$invocationId:insert:${path.location}:${allocated++}".toByteArray()).toString())
+        val id =
+            ItemId(
+                value =
+                    UUID
+                        .nameUUIDFromBytes(
+                            "$invocationId:insert:${ValueLocation.serializer.toJsonCode(path.location)}:${allocated++}".toByteArray(),
+                        ).toString(),
+            )
         append(EditIntent.Insert(path.location, after, ListItem(id = id, value = value)))
         return id
     }
@@ -126,7 +133,7 @@ internal class WorkingViewEditContext(
             append(EditIntent.SetValue(path, value))
             CheckedWriteResult.Applied
         } catch (failure: IllegalArgumentException) {
-            CheckedWriteResult.Rejected(listOf(ValueProblem(path, "operation_write_rejected")))
+            CheckedWriteResult.Rejected(listOf(ValueProblem(location = path, code = "operation_write_rejected")))
         }
 
     fun finish(): PreparedEdit {

@@ -2,13 +2,11 @@
 
 package com.typewritermc.realm.authoring
 
-import com.typewritermc.authoring.AuthoringRecord
 import com.typewritermc.authoring.CommitResult
 import com.typewritermc.authoring.DefaultInitializationRuntime
 import com.typewritermc.authoring.GeneratedSdkApi
 import com.typewritermc.authoring.InitializationRequest
 import com.typewritermc.authoring.PreparationTarget
-import com.typewritermc.authoring.PreparedContent
 import com.typewritermc.authoring.PreparedEdit
 import com.typewritermc.authoring.RealmRoot
 import com.typewritermc.authoring.RealmRootDefinition
@@ -16,10 +14,10 @@ import com.typewritermc.authoring.RealmRootFields
 import com.typewritermc.authoring.RealmSection
 import com.typewritermc.authoring.RealmSectionDefinition
 import com.typewritermc.authoring.RealmSections
-import com.typewritermc.authoring.TypeSelection
-import com.typewritermc.authoring.ValueLocation
 import com.typewritermc.authoring.boundCollectionPath
 import com.typewritermc.authoring.definition
+import com.typewritermc.authoring.of
+import com.typewritermc.authoring.record
 import com.typewritermc.realm.repository.AuthoringRepository
 import com.typewritermc.realm.repository.valueAt
 import com.typewritermc.types.NativeBinding
@@ -30,15 +28,17 @@ import com.typewritermc.types.canonicalText
 import com.typewritermc.types.catalog.CheckedCatalog
 import com.typewritermc.types.catalog.CheckedType
 import com.typewritermc.types.catalog.Resolution
-import com.typewritermc.types.fieldMap
-import com.typewritermc.types.fields
 import com.typewritermc.types.items
 import com.typewritermc.types.payload
 import com.typewritermc.types.unwrapNamed
 import com.typewritermc.types.use
+import skirout.editor.v1.catalog.PreparedContent
+import skirout.editor.v1.type_catalog.AuthoringRecord
 import skirout.editor.v1.type_catalog.DataValue
 import skirout.editor.v1.type_catalog.NamedTypeUse
+import skirout.editor.v1.type_catalog.TypeSelection
 import skirout.editor.v1.type_catalog.TypeUse
+import skirout.editor.v1.type_catalog.ValueLocation
 import java.util.UUID
 
 /**
@@ -88,7 +88,7 @@ internal class RealmStructureProvisioning(
         if (existingRoot != null && missing.isEmpty()) return null
         val edit = WorkingViewEditContext(view, "realm-structure:${view.observationId}")
         val root = existingRoot ?: newResource().also { edit.create(it, rootRecord(view)) }
-        val links = boundCollectionPath(ValueLocation(root, RealmRootFields.sections.path))
+        val links = boundCollectionPath(ValueLocation.of(root, RealmRootFields.sections.path))
         val linkBinding = catalog.binding<Ref<RealmSections.Root, RealmSection>>(sectionLink)
         missing.forEach { type ->
             val section = newResource()
@@ -105,7 +105,10 @@ internal class RealmStructureProvisioning(
 
     private fun rootRecord(view: AuthoringView): AuthoringRecord {
         val encoded = view.catalog.binding<RealmRoot>(RealmRootDefinition.id.use()).encode(RealmRoot()) as DataValue.NamedWrapper
-        return AuthoringRecord(TypeSelection.Complete(encoded.actualType), (encoded.payload as DataValue.RecordWrapper).value.fieldMap)
+        return AuthoringRecord.of(
+            TypeSelection.CompleteWrapper(encoded.actualType),
+            (encoded.payload as DataValue.RecordWrapper).value,
+        )
     }
 
     private suspend fun sectionRecord(
@@ -115,10 +118,10 @@ internal class RealmStructureProvisioning(
         val catalog = view.catalog
         val prepared =
             DefaultInitializationRuntime(catalog.checked, catalog.nativeBindings).prepare(
-                InitializationRequest(catalog.generation, PreparationTarget.Record(TypeSelection.Complete(type)), null),
+                InitializationRequest(catalog.generation, PreparationTarget.Record(TypeSelection.CompleteWrapper(type)), null),
             )
         val content = prepared.content
-        check(content is PreparedContent.Record) { "Realm section $type must be creatable as a record without input." }
+        check(content is PreparedContent.RecordWrapper) { "Realm section $type must be creatable as a record without input." }
         return content.record
     }
 

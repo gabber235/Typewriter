@@ -5,10 +5,11 @@ import com.surrealdb.Transaction
 import com.surrealdb.Value
 import com.typewritermc.authoring.LinkProjection
 import com.typewritermc.authoring.RelationProjectionDelta
-import com.typewritermc.authoring.ValuePath
-import com.typewritermc.realm.repository.utils.StructuredDatabaseCodec
+import com.typewritermc.realm.repository.utils.decodeSkir
+import com.typewritermc.realm.repository.utils.encodeSkir
 import com.typewritermc.realm.repository.utils.surrealRecordId
-import kotlinx.serialization.json.Json
+import com.typewritermc.types.requireValid
+import skirout.editor.v1.type_catalog.ValuePath
 import java.util.UUID
 
 internal data class StoredRelationDelta(
@@ -115,17 +116,8 @@ private fun StoredDeclaredEdge.bindings(): Map<String, Any?> =
         "first" to source.surrealRecordId(),
         "second" to target.surrealRecordId(),
         "contract" to relation.value,
-        "first_location" to sourceLocation?.let { relationDatabaseValues.encode(ValuePath.serializer(), it) },
-        "second_location" to targetLocation?.let { relationDatabaseValues.encode(ValuePath.serializer(), it) },
+        "first_location" to sourceLocation?.let { encodeSkir(ValuePath.serializer, it) },
+        "second_location" to targetLocation?.let { encodeSkir(ValuePath.serializer, it) },
     )
 
-private fun Value.decodePath(): ValuePath? = if (isNull || isNone) null else relationDatabaseValues.decode(ValuePath.serializer(), this)
-
-private val relationJson =
-    Json {
-        encodeDefaults = true
-        explicitNulls = true
-        classDiscriminator = "kind"
-    }
-
-private val relationDatabaseValues = StructuredDatabaseCodec(relationJson)
+private fun Value.decodePath(): ValuePath? = if (isNull || isNone) null else decodeSkir(ValuePath.serializer, this).requireValid()

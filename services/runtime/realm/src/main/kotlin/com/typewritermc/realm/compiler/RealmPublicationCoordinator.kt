@@ -1,26 +1,23 @@
 package com.typewritermc.realm.compiler
 
+import build.skir.Serializers
 import com.surrealdb.RecordId
 import com.surrealdb.Surreal
-import com.typewritermc.authoring.DiagnosticId
 import com.typewritermc.authoring.EditExpectation
-import com.typewritermc.authoring.PublicationId
 import com.typewritermc.checking.CatalogGeneration
-import com.typewritermc.checking.Diagnostic
-import com.typewritermc.checking.DiagnosticSeverity
+import com.typewritermc.checking.toSkir
 import com.typewritermc.engine.CompilationResult
 import com.typewritermc.engine.CompiledArtifact
-import com.typewritermc.engine.PublishedContent
 import com.typewritermc.realm.authoring.AuthoringLease
 import com.typewritermc.realm.authoring.AuthoringView
-import com.typewritermc.realm.authoring.authoringStorageJson
-import com.typewritermc.realm.checking.FindingSet
+import com.typewritermc.realm.checking.decodedExpectations
 import com.typewritermc.realm.repository.conflicts
-import com.typewritermc.realm.repository.utils.StructuredDatabaseCodec
+import com.typewritermc.realm.repository.utils.encodeSkir
 import com.typewritermc.realm.repository.utils.inTransaction
 import com.typewritermc.services.libs.telemetry.ErrorSlug
 import com.typewritermc.services.libs.telemetry.mainSpanScope
 import com.typewritermc.services.libs.utils.rethrowExceptional
+import com.typewritermc.types.toResourceId
 import io.opentelemetry.context.Context
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
@@ -38,15 +35,23 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
-import kotlinx.serialization.builtins.ListSerializer
+import skirout.editor.v1.checking.FindingSet
 import skirout.editor.v1.checking.FindingStatus
+import skirout.editor.v1.compiled_content.PublishedContent
+import skirout.editor.v1.diagnostic.Diagnostic
+import skirout.editor.v1.diagnostic.DiagnosticSeverity
+import skirout.editor.v1.publication.EngineImplementationInputs
 import skirout.editor.v1.publication.PublicationActivationPhase
 import skirout.editor.v1.publication.PublicationBaseline
+import skirout.editor.v1.publication.PublicationBlockers
 import skirout.editor.v1.publication.PublicationCandidateId
 import skirout.editor.v1.publication.PublicationFailure
+import skirout.editor.v1.publication.PublicationPendingReview
+import skirout.editor.v1.publication.PublicationStatus
+import skirout.editor.v1.publication.PublicationView
 import skirout.editor.v1.publication.PublicationViewId
+import skirout.editor.v1.type_catalog.PublicationId
 import java.util.UUID
-import skirout.editor.v1.type_catalog.PublicationId as SkirPublicationId
 
 data class PublicationAttempt(
     val id: PublicationId,
@@ -147,7 +152,10 @@ internal class RealmPublicationCoordinator(
     private var invalidationRevision = 0L
     private val mutableView =
         MutableStateFlow(
-            PublicationView(nextViewId(), PublicationStatus.Checking(PublicationBaseline.INITIAL, emptyList())),
+            PublicationView(
+                id = nextViewId(),
+                status = PublicationStatus.createChecking(baseline = PublicationBaseline.INITIAL, findings = emptyList()),
+            ),
         )
     val views: StateFlow<PublicationView> = mutableView
 
@@ -225,7 +233,11 @@ internal class RealmPublicationCoordinator(
                 if (alreadyPrepared) return@withLock
                 synchronized(lock) {
                     if (closed) return@withLock
-                    if (releasing == null) update(PublicationStatus.Checking(baseline, capturedFindings(captured.root)))
+                    if (releasing ==
+                        null
+                    ) {
+                        update(PublicationStatus.createChecking(baseline = baseline, findings = capturedFindings(captured.root)))
+                    }
                 }
                 val assessment = acceptance.evaluate(captured)
                 val compilationInputs = CompilationInputs(captured.root, assessment.resources)
@@ -238,7 +250,7 @@ internal class RealmPublicationCoordinator(
                         .mapTo(linkedSetOf()) { it.location }
                 failed.flatMap { it.diagnostics }.forEach { finding ->
                     if (finding.id !in evidence && finding.primary in projectionLocations) {
-                        val dependencies = (listOfNotNull(finding.primary) + finding.related).map { it.resource }.distinct()
+                        val dependencies = (listOfNotNull(finding.primary) + finding.related).map { it.resource.toResourceId() }.distinct()
                         evidence[finding.id] =
                             DiagnosticEvidence(
                                 captured.root.catalog.generation,
@@ -249,32 +261,28 @@ internal class RealmPublicationCoordinator(
                     }
                 }
                 val blockers =
-                    buildList {
-                        addAll(assessment.findings.filter { it.severity == DiagnosticSeverity.Error }.map(::PublicationBlocker))
-                        failed.flatMap { it.diagnostics }.forEach { finding ->
-                            if (finding.severity == DiagnosticSeverity.Error) {
-                                add(PublicationBlocker(finding))
-                            }
-                        }
-                    }.distinctBy { it.diagnostic.id }
+                    (assessment.findings + failed.flatMap { it.diagnostics })
+                        .filter { it.severity == DiagnosticSeverity.ERROR }
+                        .distinctBy { it.id }
+                        .map { finding -> finding.blocker(evidence[finding.id]) }
                 val notices =
                     (assessment.findings + failed.flatMap { it.diagnostics })
                         .distinctBy { it.id }
-                        .mapNotNull { finding ->
-                            when (finding.severity) {
-                                DiagnosticSeverity.Info -> PublicationNotice.Information(finding)
-                                DiagnosticSeverity.Warning -> PublicationNotice.Warning(finding)
-                                DiagnosticSeverity.Error -> null
-                            }
-                        }
+                        .mapNotNull { finding -> finding.notice(evidence[finding.id]) }
                 val status =
                     if (blockers.isNotEmpty()) {
-                        PublicationStatus.Blocked(
-                            baseline,
-                            PublicationBlockers(blockers.first(), blockers.drop(1)),
-                            notices,
-                            PublicationComparison.confirmedChanges(selected, successful, compiled.mapTo(linkedSetOf()) { it.root }, inputs),
-                            failed.map { it.root },
+                        PublicationStatus.createBlocked(
+                            baseline = baseline,
+                            blockers = blockers.blockers(),
+                            notices = notices,
+                            confirmedChanges =
+                                PublicationComparison.confirmedChanges(
+                                    selected,
+                                    successful,
+                                    compiled.mapTo(linkedSetOf()) { it.root },
+                                    inputs,
+                                ),
+                            pendingRoots = failed.map { it.root },
                         )
                     } else {
                         when (val comparison = PublicationComparison.between(selected, successful, inputs)) {
@@ -283,21 +291,21 @@ internal class RealmPublicationCoordinator(
                                     invalidate()
                                     return@withLock
                                 }
-                                selected?.let { PublicationStatus.Current(it.publication, notices) }
-                                    ?: PublicationStatus.Empty(notices)
+                                selected?.let { PublicationStatus.createCurrent(selected = it.publication, notices = notices) }
+                                    ?: PublicationStatus.createEmpty(notices = notices)
                             }
 
                             is PublicationComparison.Changed -> {
-                                PublicationStatus.Ready(
-                                    PublicationCandidateId(value = UUID.randomUUID().toString()),
-                                    baseline,
-                                    comparison.delta,
-                                    notices,
+                                PublicationStatus.createReady(
+                                    candidate = PublicationCandidateId(value = UUID.randomUUID().toString()),
+                                    baseline = baseline,
+                                    changes = comparison.delta,
+                                    notices = notices,
                                 )
                             }
                         }
                     }
-                val next = Prepared(captured, inputs, baseline, successful, status, revision, evidence)
+                val next = Prepared(captured, inputs, baseline, successful, status, revision)
                 acceptance.withCurrent { current ->
                     synchronized(lock) {
                         if (!closed && current === captured.root && engine.compatible(inputs) && invalidationRevision == revision) {
@@ -314,10 +322,13 @@ internal class RealmPublicationCoordinator(
                 synchronized(lock) {
                     if (!closed && releasing == null) {
                         update(
-                            PublicationStatus.Unavailable(
-                                baseline,
-                                PublicationFailure.EvaluationInterruptedWrapper(failure.message ?: "Saved content could not be checked"),
-                                capture?.let { capturedFindings(it.root) }.orEmpty(),
+                            PublicationStatus.createUnavailable(
+                                baseline = baseline,
+                                failure =
+                                    PublicationFailure.EvaluationInterruptedWrapper(
+                                        failure.message ?: "Saved content could not be checked",
+                                    ),
+                                findings = capture?.let { capturedFindings(it.root) }.orEmpty(),
                             ),
                         )
                     }
@@ -341,19 +352,15 @@ internal class RealmPublicationCoordinator(
                     synchronized(lock) {
                         val prepared = prepared
                         val status = prepared?.status
-                        if (!closed && mutableView.value.status is PublicationStatus.Ready &&
-                            prepared != null && status is PublicationStatus.Ready && status.candidate == candidate &&
+                        if (!closed && mutableView.value.status is PublicationStatus.ReadyWrapper &&
+                            prepared != null && status is PublicationStatus.ReadyWrapper && status.value.candidate == candidate &&
                             prepared.revision == invalidationRevision &&
                             prepared.lease.root === current && prepared.baseline == selected.baseline() &&
                             engine.compatible(prepared.engine)
                         ) {
                             Release(
                                 prepared,
-                                PublicationId(
-                                    UUID
-                                        .randomUUID()
-                                        .toString(),
-                                ),
+                                PublicationId(value = UUID.randomUUID().toString()),
                                 PublicationActivationPhase.STORING,
                             ).also {
                                 releasing = it
@@ -364,7 +371,7 @@ internal class RealmPublicationCoordinator(
                         }
                     }
                 } ?: return when (mutableView.value.status) {
-                    is PublicationStatus.Empty, is PublicationStatus.Current -> PublicationResult.NoChanges
+                    is PublicationStatus.EmptyWrapper, is PublicationStatus.CurrentWrapper -> PublicationResult.NoChanges
                     else -> PublicationResult.CandidateChanged(mutableView.value.id)
                 }
             release = frozen
@@ -392,13 +399,11 @@ internal class RealmPublicationCoordinator(
                     true
                 }
             if (!installed) {
-                val blockers =
-                    PublicationBlockers.from(
-                        listOf(publicationDiagnostic("engine_inputs_changed", "Engine requirements changed. Review saved content again.")),
-                    )
-                attempts.blocked(id, blockers.all.map { it.diagnostic })
-                announce(PublicationState.Blocked(blockers.all.map { it.diagnostic }))
-                return PublicationResult.Blocked(blockers)
+                val findings =
+                    listOf(publicationDiagnostic("engine_inputs_changed", "Engine requirements changed. Review saved content again."))
+                attempts.blocked(id, findings)
+                announce(PublicationState.Blocked(findings))
+                return PublicationResult.Blocked(findings.map { it.blocker(evidence = null) }.blockers())
             }
             artifacts.selected(content)
             announce(PublicationState.Complete)
@@ -408,10 +413,10 @@ internal class RealmPublicationCoordinator(
                 if (!installed) withContext(NonCancellable) { attempts.phase(current.id, PublicationState.Interrupted) }
                 synchronized(lock) {
                     update(
-                        PublicationStatus.Unavailable(
-                            current.candidate.baseline,
-                            PublicationFailure.PublicationInterruptedWrapper(current.id.toSkir()),
-                            emptyList(),
+                        PublicationStatus.createUnavailable(
+                            baseline = current.candidate.baseline,
+                            failure = PublicationFailure.PublicationInterruptedWrapper(current.id),
+                            findings = emptyList(),
                         ),
                     )
                 }
@@ -427,7 +432,12 @@ internal class RealmPublicationCoordinator(
                 if (release != null &&
                     installed
                 ) {
-                    update(PublicationStatus.Checking(PublicationBaseline.SelectedWrapper(release.id.toSkir()), emptyList()))
+                    update(
+                        PublicationStatus.createChecking(
+                            baseline = PublicationBaseline.SelectedWrapper(release.id),
+                            findings = emptyList(),
+                        ),
+                    )
                 }
             }
             gate.unlock()
@@ -439,7 +449,8 @@ internal class RealmPublicationCoordinator(
         findings().map { set ->
             val current =
                 set.status == FindingStatus.CURRENT &&
-                    set.ticket.catalog == root.catalog.generation && root.values.conflicts(set.expectations).isEmpty()
+                    set.ticket.catalog == root.catalog.generation.toSkir() &&
+                    root.values.conflicts(set.expectations.decodedExpectations()).isEmpty()
             set.copy(
                 status = if (current) FindingStatus.CURRENT else FindingStatus.OUTDATED,
             )
@@ -448,15 +459,15 @@ internal class RealmPublicationCoordinator(
     private fun updateForPrepared(next: Prepared) {
         val active = releasing
         if (active == null) {
-            update(next.status, next.evidence)
+            update(next.status)
             return
         }
-        val status = active.candidate.status as PublicationStatus.Ready
-        val pending = next.status
-        val pendingRoots = (pending as? PublicationStatus.Blocked)?.pendingRoots.orEmpty()
+        val status = active.candidate.status as PublicationStatus.ReadyWrapper
+        val pending = (next.status as? PublicationStatus.BlockedWrapper)?.value
+        val pendingRoots = pending?.pendingRoots.orEmpty()
         val later =
             if (next === active.candidate) {
-                PublicationPendingReview()
+                PublicationPendingReview.partial()
             } else {
                 PublicationPendingReview(
                     findings = capturedFindings(next.lease.root),
@@ -468,25 +479,22 @@ internal class RealmPublicationCoordinator(
                             next.engine,
                         ),
                     pendingRoots = pendingRoots,
-                    blockers = (pending as? PublicationStatus.Blocked)?.blockers?.all.orEmpty(),
-                    notices =
-                        when (pending) {
-                            is PublicationStatus.Ready -> pending.notices
-                            is PublicationStatus.Blocked -> pending.notices
-                            is PublicationStatus.Empty -> pending.notices
-                            is PublicationStatus.Current -> pending.notices
-                            else -> emptyList()
-                        },
+                    blockers = pending?.blockers?.all.orEmpty(),
+                    notices = next.status.notices,
                 )
             }
-        update(PublicationStatus.Publishing(active.id, active.phase, status.changes, later), next.evidence)
+        update(
+            PublicationStatus.createPublishing(
+                publication = active.id,
+                phase = active.phase,
+                releasing = status.value.changes,
+                next = later,
+            ),
+        )
     }
 
-    private fun update(
-        status: PublicationStatus,
-        evidence: Map<DiagnosticId, DiagnosticEvidence> = emptyMap(),
-    ) {
-        mutableView.value = PublicationView(nextViewId(), status, evidence)
+    private fun update(status: PublicationStatus) {
+        mutableView.value = PublicationView(id = nextViewId(), status = status)
     }
 
     private suspend fun notifyTransition(
@@ -508,7 +516,6 @@ internal class RealmPublicationCoordinator(
         val artifacts: List<CompiledArtifact>,
         val status: PublicationStatus,
         val revision: Long,
-        val evidence: Map<DiagnosticId, DiagnosticEvidence>,
     )
 
     private data class Release(
@@ -519,9 +526,7 @@ internal class RealmPublicationCoordinator(
 }
 
 private fun PublishedContent?.baseline(): PublicationBaseline =
-    this?.let { PublicationBaseline.SelectedWrapper(it.publication.toSkir()) } ?: PublicationBaseline.INITIAL
-
-private fun PublicationId.toSkir() = SkirPublicationId(value = value)
+    this?.let { PublicationBaseline.SelectedWrapper(it.publication) } ?: PublicationBaseline.INITIAL
 
 private fun nextViewId() = PublicationViewId(value = UUID.randomUUID().toString())
 
@@ -539,7 +544,7 @@ internal class SurrealPublicationAttemptStore(
                 mapOf(
                     "attempt" to RecordId("publication_attempt", id.value),
                     "catalog" to catalog.value,
-                    "inputs" to publicationsCodec.encode(EngineImplementationInputs.serializer(), engineInputs),
+                    "inputs" to encodeSkir(EngineImplementationInputs.serializer, engineInputs),
                 ),
             ).take(0)
     }
@@ -565,7 +570,7 @@ internal class SurrealPublicationAttemptStore(
                 "UPDATE ONLY \$attempt SET state = 'blocked', findings = \$findings, updated_at = time::now() WHERE state IN ['checking', 'compiling', 'activating'];",
                 mapOf(
                     "attempt" to RecordId("publication_attempt", id.value),
-                    "findings" to publicationsCodec.encode(ListSerializer(Diagnostic.serializer()), findings),
+                    "findings" to encodeSkir(Serializers.list(Diagnostic.serializer), findings),
                 ),
             ).take(0)
     }
@@ -580,7 +585,7 @@ internal class SurrealPublicationAttemptStore(
                             "WHERE state = 'activating' RETURN VALUE id;",
                         mapOf(
                             "attempt" to RecordId("publication_attempt", result.publication.value),
-                            "result" to publicationsCodec.encode(PublishedContent.serializer(), result),
+                            "result" to encodeSkir(PublishedContent.serializer, result),
                         ),
                     ).take(0)
             check(!installed.isNone && !installed.isNull) { "Publication was not ready for installation" }
@@ -604,7 +609,5 @@ internal fun PublicationState.storageName(): String =
         is PublicationState.Blocked -> "blocked"
         PublicationState.Interrupted -> "interrupted"
     }
-
-internal val publicationsCodec = StructuredDatabaseCodec(authoringStorageJson)
 
 private val TRANSITION_NOTIFICATION_FAILURE = ErrorSlug.of("realm-publication-transition-notification-failed")

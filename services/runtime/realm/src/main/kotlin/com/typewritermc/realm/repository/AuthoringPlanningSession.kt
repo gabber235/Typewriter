@@ -1,37 +1,30 @@
 package com.typewritermc.realm.repository
 
-import com.typewritermc.authoring.AuthoringRecord
 import com.typewritermc.authoring.ConnectIntent
 import com.typewritermc.authoring.CounterpartChoice
 import com.typewritermc.authoring.EditIntent
-import com.typewritermc.authoring.LinkOccurrence
-import com.typewritermc.authoring.LinkOccurrenceId
-import com.typewritermc.authoring.PathSegment
-import com.typewritermc.authoring.PreparedContent
 import com.typewritermc.authoring.PreparedEdit
-import com.typewritermc.authoring.TypeSelection
-import com.typewritermc.authoring.ValueLocation
-import com.typewritermc.authoring.ValuePath
-import com.typewritermc.authoring.ValueProblem
 import com.typewritermc.authoring.field
-import com.typewritermc.authoring.immutableCopy
+import com.typewritermc.authoring.id
 import com.typewritermc.authoring.item
 import com.typewritermc.authoring.mapKey
 import com.typewritermc.authoring.mapValue
+import com.typewritermc.authoring.of
+import com.typewritermc.authoring.payload
+import com.typewritermc.authoring.record
+import com.typewritermc.authoring.text
+import com.typewritermc.authoring.use
 import com.typewritermc.realm.authoring.AuthoringView
 import com.typewritermc.realm.authoring.authoredTypeAt
 import com.typewritermc.services.libs.utils.sha256Hex
-import com.typewritermc.types.LinkTarget
 import com.typewritermc.types.ResourceId
 import com.typewritermc.types.actualType
 import com.typewritermc.types.catalog.Resolution
 import com.typewritermc.types.endpoint
 import com.typewritermc.types.field
-import com.typewritermc.types.fieldMap
 import com.typewritermc.types.fields
 import com.typewritermc.types.immutableListCopy
 import com.typewritermc.types.items
-import com.typewritermc.types.linkTarget
 import com.typewritermc.types.listValue
 import com.typewritermc.types.mapValue
 import com.typewritermc.types.named
@@ -39,11 +32,23 @@ import com.typewritermc.types.payload
 import com.typewritermc.types.record
 import com.typewritermc.types.rows
 import com.typewritermc.types.setValue
+import com.typewritermc.types.toResourceId
+import com.typewritermc.types.toSkir
 import com.typewritermc.types.use
+import skirout.editor.v1.authoring.LinkOccurrence
+import skirout.editor.v1.authoring.LinkOccurrenceId
+import skirout.editor.v1.catalog.PreparedContent
+import skirout.editor.v1.diagnostic.ValueProblem
+import skirout.editor.v1.type_catalog.AuthoringRecord
 import skirout.editor.v1.type_catalog.DataValue
 import skirout.editor.v1.type_catalog.ItemId
+import skirout.editor.v1.type_catalog.LinkTarget
 import skirout.editor.v1.type_catalog.ListItem
+import skirout.editor.v1.type_catalog.PathSegment
 import skirout.editor.v1.type_catalog.ResolvedRepresentation
+import skirout.editor.v1.type_catalog.TypeSelection
+import skirout.editor.v1.type_catalog.ValueLocation
+import skirout.editor.v1.type_catalog.ValuePath
 import java.util.Collections
 
 /**
@@ -52,7 +57,7 @@ import java.util.Collections
  */
 internal class AuthoringPlanRejected(
     val problems: List<ValueProblem>,
-) : IllegalArgumentException(problems.joinToString { "${it.location}: ${it.code}" })
+) : IllegalArgumentException(problems.joinToString { "${it.location.resource.value} ${it.location.path.text}: ${it.code}" })
 
 /**
  * Owns the request local graph and normalized intent sequence used during operation preparation.
@@ -90,12 +95,12 @@ internal class AuthoringPlanningSession(
                 val references = mutableListOf<LinkOccurrence>()
                 val fields =
                     strip(
-                        DataValue.record(intent.record.fields),
-                        ValueLocation(intent.id, ValuePath()),
+                        DataValue.RecordWrapper(intent.record.payload),
+                        ValueLocation.of(intent.id),
                         references,
                     ) as DataValue.RecordWrapper
-                emit(intent.copy(record = intent.record.copy(fields = fields.value.fieldMap)))
-                references.forEach { connection(ConnectIntent(it, it.target.resource, explicitOpposite(it))) }
+                emit(intent.copy(record = intent.record.copy(fields = fields.value.fields)))
+                references.forEach { connection(ConnectIntent(it, it.target.resource.toResourceId(), explicitOpposite(it))) }
             }
 
             is EditIntent.SetValue -> {
@@ -103,11 +108,11 @@ internal class AuthoringPlanningSession(
                 val value = strip(intent.value, intent.at, references)
                 if (references.size == 1 && references.single().id.location == intent.at) {
                     val ref = references.single()
-                    connection(ConnectIntent(ref, ref.target.resource, explicitOpposite(ref)))
+                    connection(ConnectIntent(ref, ref.target.resource.toResourceId(), explicitOpposite(ref)))
                 } else {
                     clearReferences(intent.at)
                     writeAt(intent.at, value)
-                    references.forEach { connection(ConnectIntent(it, it.target.resource, explicitOpposite(it))) }
+                    references.forEach { connection(ConnectIntent(it, it.target.resource.toResourceId(), explicitOpposite(it))) }
                 }
             }
 
@@ -115,12 +120,12 @@ internal class AuthoringPlanningSession(
                 val references = mutableListOf<LinkOccurrence>()
                 val value = strip(intent.item.value, intent.at.item(intent.item.id), references)
                 emit(intent.copy(item = intent.item.copy(value = value)))
-                references.forEach { connection(ConnectIntent(it, it.target.resource, explicitOpposite(it))) }
+                references.forEach { connection(ConnectIntent(it, it.target.resource.toResourceId(), explicitOpposite(it))) }
             }
 
             is EditIntent.Remove -> {
                 clearReferences(intent.at.item(intent.item))
-                if (resources[intent.at.resource]?.valueAt(intent.at.path.item(intent.item)) != null) emit(intent)
+                if (resources[intent.at.resource.toResourceId()]?.valueAt(intent.at.path.item(intent.item)) != null) emit(intent)
             }
 
             else -> {
@@ -165,15 +170,22 @@ internal class AuthoringPlanningSession(
 
                 is CounterpartChoice.New -> {
                     val record =
-                        (requested.prepared.content as? PreparedContent.Record)?.record ?: error("A counterpart must be a prepared record")
-                    val configured = (record.configuration as? TypeSelection.Complete)?.use ?: error("The counterpart type is incomplete")
-                    val value = DataValue.named(configured, DataValue.record(record.fields))
+                        (requested.prepared.content as? PreparedContent.RecordWrapper)?.record
+                            ?: error("A counterpart must be a prepared record")
+                    val configured =
+                        (record.configuration as? TypeSelection.CompleteWrapper)?.use ?: error("The counterpart type is incomplete")
+                    val value = DataValue.named(configured, DataValue.RecordWrapper(record.payload))
                     val existing = target.valueAt(requested.containing.path)
                     val declared = target.authoredTypeAt(requested.containing.path, baseline.catalog.checked)
                     val schema = declared?.let { baseline.catalog.checked.resolve(it) } as? Resolution.Ready
                     val embedded =
                         if (schema?.value?.schema?.representation is ResolvedRepresentation.SequenceWrapper) {
-                            val id = item("counterpart:${source.id}:${requested.containing}")
+                            val id =
+                                item(
+                                    "counterpart:${LinkOccurrenceId.serializer.toJsonCode(
+                                        source.id,
+                                    )}:${ValueLocation.serializer.toJsonCode(requested.containing)}",
+                                )
                             val items =
                                 when (val payload = if (existing is DataValue.NamedWrapper) existing.payload else existing) {
                                     is DataValue.ListValueWrapper -> payload.items
@@ -197,9 +209,9 @@ internal class AuthoringPlanningSession(
                     require(locations.size == 1) { "The prepared counterpart has ambiguous endpoints" }
                     CounterpartChoice.Existing(
                         LinkOccurrence(
-                            LinkOccurrenceId(endpoint, locations.single()),
-                            intent.target,
-                            LinkTarget(source.source, source.id.location.path),
+                            id = LinkOccurrenceId(endpoint = endpoint, location = locations.single()),
+                            source = intent.target.toSkir(),
+                            target = LinkTarget(resource = source.source, opposite = source.id.location.path),
                         ),
                     )
                 }
@@ -209,9 +221,9 @@ internal class AuthoringPlanningSession(
                         is CounterpartBinding.Scalar -> {
                             CounterpartChoice.Existing(
                                 LinkOccurrence(
-                                    LinkOccurrenceId(endpoint, binding.location),
-                                    intent.target,
-                                    LinkTarget(source.source, source.id.location.path),
+                                    id = LinkOccurrenceId(endpoint = endpoint, location = binding.location),
+                                    source = intent.target.toSkir(),
+                                    target = LinkTarget(resource = source.source, opposite = source.id.location.path),
                                 ),
                             )
                         }
@@ -219,9 +231,20 @@ internal class AuthoringPlanningSession(
                         is CounterpartBinding.Collection -> {
                             CounterpartChoice.Existing(
                                 LinkOccurrence(
-                                    LinkOccurrenceId(endpoint, binding.location.item(item("inverse:${source.id}:${binding.location}"))),
-                                    intent.target,
-                                    LinkTarget(source.source, source.id.location.path),
+                                    id =
+                                        LinkOccurrenceId(
+                                            endpoint = endpoint,
+                                            location =
+                                                binding.location.item(
+                                                    item(
+                                                        "inverse:${LinkOccurrenceId.serializer.toJsonCode(
+                                                            source.id,
+                                                        )}:${ValueLocation.serializer.toJsonCode(binding.location)}",
+                                                    ),
+                                                ),
+                                        ),
+                                    source = intent.target.toSkir(),
+                                    target = LinkTarget(resource = source.source, opposite = source.id.location.path),
                                 ),
                             )
                         }
@@ -245,9 +268,9 @@ internal class AuthoringPlanningSession(
         val endpoint = if (contract.first.id == source.id.endpoint) contract.second.id else contract.first.id
         return CounterpartChoice.Existing(
             LinkOccurrence(
-                LinkOccurrenceId(endpoint, ValueLocation(source.target.resource, path)),
-                source.target.resource,
-                LinkTarget(source.source, source.id.location.path),
+                id = LinkOccurrenceId(endpoint = endpoint, location = ValueLocation(resource = source.target.resource, path = path)),
+                source = source.target.resource,
+                target = LinkTarget(resource = source.source, opposite = source.id.location.path),
             ),
         )
     }
@@ -255,7 +278,7 @@ internal class AuthoringPlanningSession(
     private fun clearReferences(at: ValueLocation) {
         ResourceValueMapper
             .discover(
-                mapOf(at.resource to resources.getValue(at.resource)),
+                mapOf(at.resource.toResourceId() to resources.getValue(at.resource.toResourceId())),
             ).filter {
                 it.id.location.path
                     .atOrBelow(at.path)
@@ -266,9 +289,15 @@ internal class AuthoringPlanningSession(
         at: ValueLocation,
         value: DataValue,
     ) {
-        if (resources[at.resource]?.valueAt(at.path) == null && at.path.segments.lastOrNull() is PathSegment.Item) {
-            val id = (at.path.segments.last() as PathSegment.Item).id
-            emit(EditIntent.Insert(at.copy(path = ValuePath(at.path.segments.dropLast(1))), null, ListItem(id = id, value = value)))
+        if (resources[at.resource.toResourceId()]?.valueAt(at.path) == null && at.path.segments.lastOrNull() is PathSegment.ItemWrapper) {
+            val id = (at.path.segments.last() as PathSegment.ItemWrapper).id
+            emit(
+                EditIntent.Insert(
+                    at.copy(path = ValuePath(segments = at.path.segments.dropLast(1))),
+                    null,
+                    ListItem(id = id, value = value),
+                ),
+            )
         } else {
             emit(EditIntent.SetValue(at, value))
         }
@@ -281,7 +310,12 @@ internal class AuthoringPlanningSession(
     ): DataValue =
         when (value) {
             is DataValue.LinkWrapper -> {
-                links += LinkOccurrence(LinkOccurrenceId(value.endpoint, at), at.resource, value.linkTarget)
+                links +=
+                    LinkOccurrence(
+                        id = LinkOccurrenceId(endpoint = value.endpoint, location = at),
+                        source = at.resource,
+                        target = value.value.target,
+                    )
                 DataValue.UNFILLED
             }
 
@@ -326,12 +360,12 @@ internal class AuthoringPlanningSession(
         }
 }
 
-private fun ValueLocation.freeze() = copy(path = path.immutableCopy())
+private fun ValueLocation.freeze() = copy(path = path)
 
 private fun EditIntent.freeze(): EditIntent =
     when (this) {
         is EditIntent.CreateResource -> {
-            copy(record = record.immutableCopy())
+            copy(record = record)
         }
 
         is EditIntent.DeleteResource -> {
@@ -358,7 +392,7 @@ private fun EditIntent.freeze(): EditIntent =
             copy(
                 intent =
                     intent.copy(
-                        source = intent.source.immutableCopy(),
+                        source = intent.source,
                         counterpart =
                             when (val choice = intent.counterpart) {
                                 null -> {
@@ -366,7 +400,7 @@ private fun EditIntent.freeze(): EditIntent =
                                 }
 
                                 is CounterpartChoice.Existing -> {
-                                    choice.copy(occurrence = choice.occurrence.immutableCopy())
+                                    choice.copy(occurrence = choice.occurrence)
                                 }
 
                                 is CounterpartChoice.New -> {
@@ -376,10 +410,10 @@ private fun EditIntent.freeze(): EditIntent =
                                             prepared =
                                                 choice.prepared
                                                     .copy(
-                                                        content = choice.prepared.content.immutableCopy(),
+                                                        content = choice.prepared.content,
                                                         findings =
                                                             choice.prepared.findings.immutableListCopy {
-                                                                it.copy(relativePath = it.relativePath?.immutableCopy())
+                                                                it.copy(relativePath = it.relativePath)
                                                             },
                                                     ),
                                         )
@@ -398,7 +432,7 @@ private fun EditIntent.freeze(): EditIntent =
         }
 
         is EditIntent.ConfigureResource -> {
-            copy(configuration = configuration.immutableCopy())
+            copy(configuration = configuration)
         }
     }
 

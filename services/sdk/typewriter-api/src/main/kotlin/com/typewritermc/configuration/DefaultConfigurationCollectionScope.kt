@@ -3,7 +3,6 @@ package com.typewritermc.configuration
 import com.typewritermc.authoring.CompleteValue
 import com.typewritermc.checking.CheckInput
 import com.typewritermc.checking.CheckRecipe
-import com.typewritermc.checking.DiagnosticSeverity
 import com.typewritermc.checking.DiagnosticTemplate
 import com.typewritermc.checking.RegisteredPredicate
 import com.typewritermc.discovery.checkedGeneratedScope
@@ -22,9 +21,9 @@ import com.typewritermc.types.duration
 import com.typewritermc.types.field
 import com.typewritermc.types.integer
 import com.typewritermc.types.requirePortable
-import com.typewritermc.types.skir.getOrThrow
 import com.typewritermc.types.template
 import com.typewritermc.types.timestamp
+import skirout.editor.v1.diagnostic.DiagnosticSeverity
 import skirout.editor.v1.expression.BoundDirection
 import skirout.editor.v1.expression.ExpressionNode
 import skirout.editor.v1.expression.RegexMatchMode
@@ -275,7 +274,7 @@ private fun diagnostic(
     DiagnosticTemplate(
         code = "configuration.rule",
         message = message,
-        severity = DiagnosticSeverity.Error,
+        severity = DiagnosticSeverity.ERROR,
         targets = listOf(path),
     )
 

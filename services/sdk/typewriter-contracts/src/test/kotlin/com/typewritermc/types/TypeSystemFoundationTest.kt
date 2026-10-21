@@ -1,11 +1,9 @@
 package com.typewritermc.types
 
-import com.typewritermc.authoring.ArgumentSelection
-import com.typewritermc.authoring.AuthoringRecord
 import com.typewritermc.authoring.CompletenessResult
 import com.typewritermc.authoring.StructuralResult
-import com.typewritermc.authoring.TypeSelection
 import com.typewritermc.authoring.complete
+import com.typewritermc.authoring.of
 import com.typewritermc.authoring.validateStructure
 import com.typewritermc.checking.CatalogGeneration
 import com.typewritermc.discovery.contributionKey
@@ -17,8 +15,6 @@ import com.typewritermc.presentation.PresentationTarget
 import com.typewritermc.types.catalog.DeclarationStatus
 import com.typewritermc.types.catalog.DefaultCheckedCatalog
 import com.typewritermc.types.catalog.Resolution
-import com.typewritermc.types.skir.SkirAuthoringValueCodec
-import com.typewritermc.types.skir.SkirConversionResult
 import com.typewritermc.types.skir.SkirTypeCodec
 import com.typewritermc.types.skir.getOrThrow
 import de.infix.testBalloon.framework.core.testSuite
@@ -28,6 +24,8 @@ import io.kotest.matchers.shouldBe
 import io.kotest.matchers.types.shouldBeInstanceOf
 import io.kotest.matchers.types.shouldBeSameInstanceAs
 import skirout.editor.v1.catalog.PresentationRole
+import skirout.editor.v1.type_catalog.ArgumentSelection
+import skirout.editor.v1.type_catalog.AuthoringRecord
 import skirout.editor.v1.type_catalog.CollectionKind
 import skirout.editor.v1.type_catalog.DataValue
 import skirout.editor.v1.type_catalog.DeclarationOwner
@@ -46,6 +44,7 @@ import skirout.editor.v1.type_catalog.ScalarKind
 import skirout.editor.v1.type_catalog.TypeDefinition
 import skirout.editor.v1.type_catalog.TypeDefinitionId
 import skirout.editor.v1.type_catalog.TypeParameter
+import skirout.editor.v1.type_catalog.TypeSelection
 import skirout.editor.v1.type_catalog.TypeTemplate
 import skirout.editor.v1.type_catalog.TypeUse
 
@@ -223,8 +222,8 @@ val TypeSystemFoundationTest by testSuite {
         catalog.isReadableAs(broad, actual.use) shouldBe false
 
         val wrongWrite =
-            AuthoringRecord(
-                TypeSelection.Complete(actual),
+            AuthoringRecord.of(
+                TypeSelection.CompleteWrapper(actual),
                 mapOf(
                     "name" to DataValue.StringValueWrapper("Variable"),
                     "value" to DataValue.named(resourceUse, DataValue.record(mapOf("name" to DataValue.StringValueWrapper("Broad")))),
@@ -540,7 +539,7 @@ val TypeSystemFoundationTest by testSuite {
 
         val partial =
             catalog.resolvePartial(
-                TypeSelection.Pending(variable.id, listOf(ArgumentSelection.Unfilled)),
+                TypeSelection.createPending(definition = variable.id, arguments = listOf(ArgumentSelection.UNFILLED)),
             ) as Resolution.Ready
 
         partial.value.knownFields.map { it.key } shouldContainExactly listOf("name")
@@ -574,9 +573,9 @@ val TypeSystemFoundationTest by testSuite {
         val catalog = catalog(base, marker, derived)
 
         catalog.knownApplications(
-            TypeSelection.Pending(
-                derivedId,
-                listOf(ArgumentSelection.Chosen(TEXT), ArgumentSelection.Unfilled),
+            TypeSelection.createPending(
+                definition = derivedId,
+                arguments = listOf(ArgumentSelection.ChosenWrapper(TEXT), ArgumentSelection.UNFILLED),
             ),
         ) shouldBe
             setOf(
@@ -584,9 +583,9 @@ val TypeSystemFoundationTest by testSuite {
                 marker.id.namedUse(),
             )
         catalog.knownApplications(
-            TypeSelection.Pending(
-                derivedId,
-                listOf(ArgumentSelection.Chosen(TEXT), ArgumentSelection.Chosen(ScalarKind.BOOLEAN.use)),
+            TypeSelection.createPending(
+                definition = derivedId,
+                arguments = listOf(ArgumentSelection.ChosenWrapper(TEXT), ArgumentSelection.ChosenWrapper(ScalarKind.BOOLEAN.use)),
             ),
         ) shouldBe
             setOf(
@@ -636,8 +635,8 @@ val TypeSystemFoundationTest by testSuite {
         val simple = recordDefinition("simple", field("simple", "name", TEXT_TEMPLATE))
         val catalog = catalog(simple)
         val record =
-            AuthoringRecord(
-                TypeSelection.Complete(simple.id.namedUse()),
+            AuthoringRecord.of(
+                TypeSelection.CompleteWrapper(simple.id.namedUse()),
                 mapOf("name" to DataValue.StringValueWrapper("ok"), "extra" to DataValue.StringValueWrapper("no")),
             )
 
@@ -807,18 +806,16 @@ val TypeSystemFoundationTest by testSuite {
                     .createRecord(fields = fields)
                     .requirePortable()
             }
-        val encodedRoot =
-            SkirAuthoringValueCodec
-                .encode(
-                    AuthoringRecord(
-                        configuration = TypeSelection.Complete(id("duplicate_record").namedUse()),
-                        fields = emptyMap(),
-                    ),
-                ).getOrThrow()
-        val root = SkirAuthoringValueCodec.decode(encodedRoot.copy(fields = fields))
+        val root =
+            shouldThrow<IllegalArgumentException> {
+                AuthoringRecord(
+                    configuration = TypeSelection.CompleteWrapper(id("duplicate_record").namedUse()),
+                    fields = fields,
+                ).requireValid()
+            }
 
         nested.message shouldBe "Record field value is duplicated."
-        (root as SkirConversionResult.Failure).diagnostics.single().message shouldBe "Record field value is duplicated."
+        root.message shouldBe "Record field value is duplicated."
     }
 
     test("float32 admission requires the authored value to equal the native width") {

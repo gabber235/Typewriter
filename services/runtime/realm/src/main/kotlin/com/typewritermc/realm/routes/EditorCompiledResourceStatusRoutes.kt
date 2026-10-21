@@ -1,7 +1,6 @@
 package com.typewritermc.realm.routes
 
-import com.typewritermc.engine.toDomain
-import com.typewritermc.engine.toSkir
+import com.typewritermc.engine.requireValid
 import com.typewritermc.protocol.transport.RealmRouteScope
 import com.typewritermc.protocol.transport.generated.authoringCompiledStatusQuery
 import com.typewritermc.realm.authoring.AuthoringViewStore
@@ -28,7 +27,7 @@ internal class EditorCompiledResourceStatusRoutes(
                         }
 
                         is SkirCompilationStatusSelection.SuppliedRootsWrapper -> {
-                            CompilationStatusSelection.Supplied(requested.value.mapTo(linkedSetOf()) { root -> root.toDomain() })
+                            CompilationStatusSelection.Supplied(requested.value.mapTo(linkedSetOf()) { root -> root.requireValid() })
                         }
 
                         is SkirCompilationStatusSelection.Unknown -> {
@@ -40,7 +39,7 @@ internal class EditorCompiledResourceStatusRoutes(
                         statuses =
                             statuses
                                 .query(capture.root, selection)
-                                .map { (root, state) -> CompiledResourceStatus(root = root.toSkir(), state = state) },
+                                .map { (root, state) -> CompiledResourceStatus(root = root, state = state) },
                     )
                 }
             }

@@ -1,6 +1,7 @@
 package com.typewritermc.authoring
 
 import com.typewritermc.types.NativeBinding
+import skirout.editor.v1.catalog.PreparedValue
 import skirout.editor.v1.type_catalog.TypeUse
 
 data class AppliedNativeArguments(

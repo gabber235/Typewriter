@@ -1,7 +1,6 @@
 package com.typewritermc.operations
 
-import com.typewritermc.authoring.PathSegment
-import com.typewritermc.authoring.ValuePath
+import com.typewritermc.authoring.name
 import com.typewritermc.capability.CapabilityId
 import skirout.editor.v1.operation.OperationAvailability
 import skirout.editor.v1.operation.OperationConfirmation
@@ -13,6 +12,8 @@ import skirout.editor.v1.operation.OperationShortcut
 import skirout.editor.v1.operation.ResourceOperationId
 import skirout.editor.v1.presentation.ButtonVariant
 import skirout.editor.v1.presentation.HeaderActionTone
+import skirout.editor.v1.type_catalog.PathSegment
+import skirout.editor.v1.type_catalog.ValuePath
 
 /**
  * The authoring capability that prepares the operation this id identifies. [ResourceOperationId.declaration] is the
@@ -29,7 +30,7 @@ fun ResourceOperationId.candidateSearch(field: ValuePath): CapabilityId =
     CapabilityId(
         "${capability.value}/candidates/" +
             field.segments.joinToString(".") { segment ->
-                require(segment is PathSegment.Field) { "Candidate fields are addressed by field names only." }
+                require(segment is PathSegment.FieldWrapper) { "Candidate fields are addressed by field names only." }
                 segment.name
             },
     )

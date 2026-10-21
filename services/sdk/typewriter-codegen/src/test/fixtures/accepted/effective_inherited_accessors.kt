@@ -14,6 +14,7 @@ import kotlinx.serialization.SerialName
 import skirout.editor.v1.type_catalog.RepresentationTemplate
 import com.typewritermc.types.template
 import com.typewritermc.types.nullable
+import skirout.editor.v1.type_catalog.PathSegment
 
 interface ImportedEntry : Element {
     override val placement: GraphPlacement
@@ -109,14 +110,12 @@ fun verifyCanonicalOwnership() {
     check(
         GenericChildFields.payload.path.segments
             .single() ==
-            com.typewritermc.authoring.PathSegment
-                .Field("wire_payload"),
+            PathSegment.createField(name = "wire_payload"),
     )
     check(
         ImportedEntryFields.name.path.segments
             .single() ==
-            com.typewritermc.authoring.PathSegment
-                .Field("name"),
+            PathSegment.createField(name = "name"),
     )
 }
 

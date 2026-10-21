@@ -4,13 +4,13 @@ package com.typewritermc.discovery
 
 import com.typewritermc.authoring.CompletenessResult
 import com.typewritermc.authoring.GeneratedSdkApi
-import com.typewritermc.authoring.PathSegment
 import com.typewritermc.authoring.PlacementDefinition
 import com.typewritermc.authoring.RealmRootDefinition
 import com.typewritermc.authoring.RealmSectionDefinition
-import com.typewritermc.authoring.ValuePath
 import com.typewritermc.authoring.complete
-import com.typewritermc.authoring.immutableCopy
+import com.typewritermc.authoring.field
+import com.typewritermc.authoring.name
+import com.typewritermc.authoring.root
 import com.typewritermc.capability.RealmCapabilityDescriptor
 import com.typewritermc.checking.CatalogGeneration
 import com.typewritermc.configuration.ConfigurationRecipe
@@ -62,8 +62,6 @@ import com.typewritermc.types.namedTemplate
 import com.typewritermc.types.ownsResources
 import com.typewritermc.types.parameterKeys
 import com.typewritermc.types.portableOrNull
-import com.typewritermc.types.skir.SkirAuthoringValueCodec
-import com.typewritermc.types.skir.SkirConversionResult
 import com.typewritermc.types.skir.SkirTypeCodec
 import com.typewritermc.types.skir.getOrThrow
 import com.typewritermc.types.substitute
@@ -71,6 +69,7 @@ import com.typewritermc.types.template
 import com.typewritermc.types.toWire
 import com.typewritermc.types.unknownVariant
 import com.typewritermc.types.use
+import com.typewritermc.types.validOrNull
 import kotlinx.coroutines.CancellationException
 import skirout.editor.v1.catalog.EditorCatalog
 import skirout.editor.v1.catalog.EffectiveFieldTemplate
@@ -81,11 +80,11 @@ import skirout.editor.v1.type_catalog.CollectionKind
 import skirout.editor.v1.type_catalog.DeclarationOwner
 import skirout.editor.v1.type_catalog.EndpointId
 import skirout.editor.v1.type_catalog.FieldDeclaration
-import skirout.editor.v1.type_catalog.FieldOwner
 import skirout.editor.v1.type_catalog.FloatWidth
 import skirout.editor.v1.type_catalog.IntegerWidth
 import skirout.editor.v1.type_catalog.NamedTypeTemplate
 import skirout.editor.v1.type_catalog.ParameterKey
+import skirout.editor.v1.type_catalog.PathSegment
 import skirout.editor.v1.type_catalog.RepresentationTemplate
 import skirout.editor.v1.type_catalog.ScalarKind
 import skirout.editor.v1.type_catalog.TypeDefinition
@@ -94,6 +93,7 @@ import skirout.editor.v1.type_catalog.TypeId
 import skirout.editor.v1.type_catalog.TypeParameter
 import skirout.editor.v1.type_catalog.TypeTemplate
 import skirout.editor.v1.type_catalog.TypeUse
+import skirout.editor.v1.type_catalog.ValuePath
 import skirout.editor.v1.type_catalog.CatalogGeneration as SkirCatalogGeneration
 
 /**
@@ -280,7 +280,7 @@ fun CatalogContributions.assemble(context: CatalogAssemblyContext): CatalogAssem
                 ancestorTemplates = ancestry,
                 display = (owned.first().display ?: id.derivedDisplay()).toWire(),
                 searchKey = scopeKeys[id]?.takeUnless { id in conflictingKeys },
-                placementField = placementField?.let { SkirAuthoringValueCodec.encode(it).getOrThrow() },
+                placementField = placementField,
             )
         }
     val publishedPresentations =
@@ -339,7 +339,7 @@ fun CatalogContributions.assemble(context: CatalogAssemblyContext): CatalogAssem
         relations = publishedRelations.immutableListCopy(RelationContract::immutableCopy),
         endpointBindings = publishedBindings.immutableListCopy(EndpointBindingTemplate::immutableCopy),
         configuration = recipes.immutableListCopy(ConfigurationRecipe::immutableCopy),
-        placementFields = placementFields.immutableMapCopy(ValuePath::immutableCopy),
+        placementFields = placementFields.immutableMapCopy(),
         operations = boundOperations,
         callbackFailures =
             (configurationFailures.map { it.evidence } + materialCollection.callbackFailures + displayCollection.callbackFailures)
@@ -425,7 +425,7 @@ private fun List<EffectiveFieldTemplate>.placementField(
 ): ValuePath? {
     val fields = filter { field -> field.type.isPlacement(checked) }
     if (fields.size > 1) onAmbiguous()
-    return fields.singleOrNull()?.let { field -> ValuePath(listOf(PathSegment.Field(field.key))) }
+    return fields.singleOrNull()?.let { field -> ValuePath.root.field(field.key) }
 }
 
 private fun TypeTemplate.isPlacement(checked: CheckedCatalog): Boolean =
@@ -609,11 +609,11 @@ private fun skirout.editor.v1.presentation.PresentationCollectionProjection.isVa
     if (!root.template.isValidMaterialTemplate(definitions, parameterBounds, catalog)) return false
     if (root.definition !in resourceTypes) return false
     return fields.all { field ->
-        val targetPath = SkirAuthoringValueCodec.decode(field.target).valueOrNull() ?: return@all false
+        val targetPath = field.target.validOrNull() ?: return@all false
         val targetType = rowType.templateAt(targetPath, definitions) ?: return@all false
         when (val source = field.source) {
             is skirout.editor.v1.presentation.PresentationCollectionProjectionValue.ContentWrapper -> {
-                val sourcePath = SkirAuthoringValueCodec.decode(source.value).valueOrNull() ?: return@all false
+                val sourcePath = source.value.validOrNull() ?: return@all false
                 val sourceType = root.template.templateAt(sourcePath, definitions) ?: return@all false
                 catalog.isTemplateReadableAs(sourceType, targetType, parameterBounds)
             }
@@ -693,37 +693,35 @@ private fun TypeTemplate.templateAt(
         current = current.unwrapNullable()
         current =
             when (segment) {
-                is PathSegment.Field -> {
+                is PathSegment.FieldWrapper -> {
                     current.field(segment.name, definitions)
                 }
 
-                is PathSegment.Item -> {
+                is PathSegment.ItemWrapper -> {
                     current.representation(definitions)?.let { (representation, arguments) ->
                         (representation as? RepresentationTemplate.SequenceWrapper)?.value?.item?.substitute(arguments)
                     }
                 }
 
-                PathSegment.MapKey -> {
+                PathSegment.MAP_KEY -> {
                     current.representation(definitions)?.let { (representation, arguments) ->
                         (representation as? RepresentationTemplate.MappingWrapper)?.value?.key?.substitute(arguments)
                     }
                 }
 
-                PathSegment.MapValue -> {
+                PathSegment.MAP_VALUE -> {
                     current.representation(definitions)?.let { (representation, arguments) ->
                         (representation as? RepresentationTemplate.MappingWrapper)?.value?.value?.substitute(arguments)
                     }
+                }
+
+                else -> {
+                    unknownVariant(segment)
                 }
             } ?: return null
     }
     return current
 }
-
-private fun <Value> SkirConversionResult<Value>.valueOrNull(): Value? =
-    when (this) {
-        is SkirConversionResult.Success -> value
-        is SkirConversionResult.Failure -> null
-    }
 
 private fun PresentationTarget.presentationSubjects(definitions: Map<TypeDefinitionId, TypeDefinition>): List<TypeTemplate> =
     when (this) {

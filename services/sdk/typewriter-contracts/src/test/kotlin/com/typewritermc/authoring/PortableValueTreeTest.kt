@@ -14,19 +14,22 @@ import skirout.editor.v1.type_catalog.DataValue
 import skirout.editor.v1.type_catalog.ItemId
 import skirout.editor.v1.type_catalog.ListItem
 import skirout.editor.v1.type_catalog.MapRow
+import skirout.editor.v1.type_catalog.PathSegment
 import skirout.editor.v1.type_catalog.ScalarKind
 import skirout.editor.v1.type_catalog.TypeDefinitionId
+import skirout.editor.v1.type_catalog.ValuePath
 
 val PortableValueTreeTest by testSuite {
     test("map rows remain distinct locations and expose structural observations") {
         val row = ItemId(value = "row")
         val path =
             ValuePath(
-                listOf(
-                    PathSegment.Field("mapping"),
-                    PathSegment.Item(row),
-                    PathSegment.MapValue,
-                ),
+                segments =
+                    listOf(
+                        PathSegment.createField(name = "mapping"),
+                        PathSegment.createItem(id = row),
+                        PathSegment.MAP_VALUE,
+                    ),
             )
         val value =
             DataValue.record(
@@ -51,15 +54,16 @@ val PortableValueTreeTest by testSuite {
         value.locate(path, steps::add) shouldBe LocatedPortableValue.Value(DataValue.StringValueWrapper("value"))
         steps shouldContainExactly
             listOf(
-                StructuralStep.Form(ValuePath()),
-                StructuralStep.Form(ValuePath(listOf(PathSegment.Field("mapping")))),
-                StructuralStep.Membership(ValuePath(listOf(PathSegment.Field("mapping")))),
+                StructuralStep.Form(ValuePath.root),
+                StructuralStep.Form(ValuePath.root.field("mapping")),
+                StructuralStep.Membership(ValuePath.root.field("mapping")),
                 StructuralStep.Form(
                     ValuePath(
-                        listOf(
-                            PathSegment.Field("mapping"),
-                            PathSegment.Item(row),
-                        ),
+                        segments =
+                            listOf(
+                                PathSegment.createField(name = "mapping"),
+                                PathSegment.createItem(id = row),
+                            ),
                     ),
                 ),
             )
@@ -67,8 +71,8 @@ val PortableValueTreeTest by testSuite {
 
     test("field writing distinguishes terminal insertion from a missing parent") {
         val root = DataValue.record(emptyMap())
-        val terminal = ValuePath(listOf(PathSegment.Field("created")))
-        val nested = ValuePath(listOf(PathSegment.Field("missing"), PathSegment.Field("child")))
+        val terminal = ValuePath.root.field("created")
+        val nested = ValuePath(segments = listOf(PathSegment.createField(name = "missing"), PathSegment.createField(name = "child")))
 
         root.replace(terminal, DataValue.StringValueWrapper("value")) shouldBe ValueReplacement.Unavailable(terminal)
         root.writeField(terminal, DataValue.StringValueWrapper("value")) shouldBe
@@ -80,7 +84,7 @@ val PortableValueTreeTest by testSuite {
 
     test("descendants preserve named wrappers and map branch paths") {
         val row = ItemId(value = "row")
-        val field = ValuePath(listOf(PathSegment.Field("wrapped")))
+        val field = ValuePath.root.field("wrapped")
         val value =
             DataValue.record(
                 mapOf(
@@ -107,18 +111,23 @@ val PortableValueTreeTest by testSuite {
 
         value.descendants().map(LocatedValueNode::path).toList() shouldContainExactly
             listOf(
-                ValuePath(),
+                ValuePath.root,
                 field,
                 field,
-                ValuePath(listOf(PathSegment.Field("wrapped"), PathSegment.Item(row), PathSegment.MapKey)),
-                ValuePath(listOf(PathSegment.Field("wrapped"), PathSegment.Item(row), PathSegment.MapValue)),
                 ValuePath(
-                    listOf(
-                        PathSegment.Field("wrapped"),
-                        PathSegment.Item(row),
-                        PathSegment.MapValue,
-                        PathSegment.Item(ItemId(value = "value")),
-                    ),
+                    segments = listOf(PathSegment.createField(name = "wrapped"), PathSegment.createItem(id = row), PathSegment.MAP_KEY),
+                ),
+                ValuePath(
+                    segments = listOf(PathSegment.createField(name = "wrapped"), PathSegment.createItem(id = row), PathSegment.MAP_VALUE),
+                ),
+                ValuePath(
+                    segments =
+                        listOf(
+                            PathSegment.createField(name = "wrapped"),
+                            PathSegment.createItem(id = row),
+                            PathSegment.MAP_VALUE,
+                            PathSegment.createItem(id = ItemId(value = "value")),
+                        ),
                 ),
             )
     }

@@ -1,17 +1,14 @@
 package com.typewritermc.expression
 
-import com.typewritermc.authoring.ArgumentSelection
 import com.typewritermc.authoring.AuthoredReads
-import com.typewritermc.authoring.AuthoringRecord
 import com.typewritermc.authoring.Availability
 import com.typewritermc.authoring.BoundCollectionPath
 import com.typewritermc.authoring.BoundPath
 import com.typewritermc.authoring.DraftBinding
-import com.typewritermc.authoring.PathSegment
 import com.typewritermc.authoring.ReadContext
-import com.typewritermc.authoring.TypeSelection
-import com.typewritermc.authoring.ValueLocation
-import com.typewritermc.authoring.ValuePath
+import com.typewritermc.authoring.field
+import com.typewritermc.authoring.of
+import com.typewritermc.authoring.root
 import com.typewritermc.checking.CatalogGeneration
 import com.typewritermc.checking.PartialSelection
 import com.typewritermc.checking.TypedSelection
@@ -21,7 +18,6 @@ import com.typewritermc.presentation.resource
 import com.typewritermc.types.Color
 import com.typewritermc.types.ColorDefinition
 import com.typewritermc.types.Icon
-import com.typewritermc.types.LinkTarget
 import com.typewritermc.types.Ref
 import com.typewritermc.types.RelationshipEndpoint
 import com.typewritermc.types.Resource
@@ -34,15 +30,13 @@ import com.typewritermc.types.catalog.DefaultCheckedCatalog
 import com.typewritermc.types.catalog.Resolution
 import com.typewritermc.types.endpoint
 import com.typewritermc.types.integer
-import com.typewritermc.types.link
 import com.typewritermc.types.listValue
 import com.typewritermc.types.named
 import com.typewritermc.types.namedTemplate
 import com.typewritermc.types.namedUse
 import com.typewritermc.types.qualified
-import com.typewritermc.types.skir.SkirAuthoringValueCodec
-import com.typewritermc.types.skir.getOrThrow
 import com.typewritermc.types.template
+import com.typewritermc.types.toSkir
 import com.typewritermc.types.toWire
 import com.typewritermc.types.use
 import de.infix.testBalloon.framework.core.testSuite
@@ -53,28 +47,31 @@ import skirout.editor.v1.catalog.PublishedType
 import skirout.editor.v1.expression.ExpressionNode
 import skirout.editor.v1.expression.ExpressionQuery
 import skirout.editor.v1.expression.ResourceQuerySource
+import skirout.editor.v1.type_catalog.ArgumentSelection
+import skirout.editor.v1.type_catalog.AuthoringRecord
 import skirout.editor.v1.type_catalog.DataValue
 import skirout.editor.v1.type_catalog.EndpointId
 import skirout.editor.v1.type_catalog.FieldDeclaration
 import skirout.editor.v1.type_catalog.FieldOwner
 import skirout.editor.v1.type_catalog.ItemId
+import skirout.editor.v1.type_catalog.LinkTarget
 import skirout.editor.v1.type_catalog.ListItem
 import skirout.editor.v1.type_catalog.RepresentationTemplate
 import skirout.editor.v1.type_catalog.ScalarKind
 import skirout.editor.v1.type_catalog.TypeDefinition
 import skirout.editor.v1.type_catalog.TypeDefinitionId
+import skirout.editor.v1.type_catalog.TypeSelection
 import skirout.editor.v1.type_catalog.TypeUse
+import skirout.editor.v1.type_catalog.ValueLocation
+import skirout.editor.v1.type_catalog.ValuePath
 
 val CanonicalQueryTest by testSuite {
     test("read models preserve pending arguments and stay out of authored declarations") {
         val selection =
-            SkirAuthoringValueCodec
-                .encode(
-                    TypeSelection.Pending(
-                        queryTypeId,
-                        listOf(ArgumentSelection.Unfilled, ArgumentSelection.Chosen(ScalarKind.TEXT.use)),
-                    ),
-                ).getOrThrow()
+            TypeSelection.createPending(
+                definition = queryTypeId,
+                arguments = listOf(ArgumentSelection.UNFILLED, ArgumentSelection.ChosenWrapper(ScalarKind.TEXT.use)),
+            )
         CanonicalReadModels.typeSelection.decode(CanonicalReadModels.typeSelection.encode(selection)) shouldBe selection
         queryCatalog.declaration(CanonicalReadModels.typeSelection.use.definition).shouldBeInstanceOf<Resolution.Invalid>()
     }
@@ -86,8 +83,8 @@ val CanonicalQueryTest by testSuite {
         val body = resource.value.field<String>("name").toNode()
         val program = queryProgram(body, ScalarKind.TEXT.use)
         val record =
-            AuthoringRecord(
-                TypeSelection.Complete(queryTypeId.namedUse()),
+            AuthoringRecord.of(
+                TypeSelection.CompleteWrapper(queryTypeId.namedUse()),
                 mapOf("name" to DataValue.StringValueWrapper("Current name"), "extra" to DataValue.UNFILLED),
             )
         val observation = QueryObservation(mapOf(ResourceId("result") to record))
@@ -108,8 +105,8 @@ val CanonicalQueryTest by testSuite {
                 .toNode()
         val program = queryProgram(body, ColorDefinition.id.use())
         val record =
-            AuthoringRecord(
-                TypeSelection.Complete(queryTypeId.namedUse()),
+            AuthoringRecord.of(
+                TypeSelection.CompleteWrapper(queryTypeId.namedUse()),
                 mapOf(
                     "name" to DataValue.StringValueWrapper("Name"),
                     "extra" to DataValue.UNFILLED,
@@ -136,8 +133,8 @@ val CanonicalQueryTest by testSuite {
         val body = (resource.id eq literal(ResourceId("result"))).toNode()
         val program = queryProgram(body, ScalarKind.BOOLEAN.use)
         val record =
-            AuthoringRecord(
-                TypeSelection.Complete(queryTypeId.namedUse()),
+            AuthoringRecord.of(
+                TypeSelection.CompleteWrapper(queryTypeId.namedUse()),
                 mapOf(
                     "name" to DataValue.UNFILLED,
                     "extra" to DataValue.UNFILLED,
@@ -191,17 +188,21 @@ val CanonicalQueryTest by testSuite {
                 ) as Resolution.Ready
             ).value
         val record =
-            AuthoringRecord(
-                TypeSelection.Complete(queryTypeId.namedUse()),
+            AuthoringRecord.of(
+                TypeSelection.CompleteWrapper(queryTypeId.namedUse()),
                 mapOf(
                     "name" to DataValue.StringValueWrapper("Root name"),
                     "extra" to DataValue.UNFILLED,
                 ),
             )
         val referenceValue =
-            DataValue.link(
-                EndpointId(value = "query.endpoint"),
-                LinkTarget(ResourceId("result"), ValuePath(listOf(PathSegment.Field("reverse")))),
+            DataValue.createLink(
+                endpoint = EndpointId(value = "query.endpoint"),
+                target =
+                    LinkTarget(
+                        resource = ResourceId("result").toSkir(),
+                        opposite = ValuePath.root.field("reverse"),
+                    ),
             )
         with(QueryReads) {
             DefaultExpressionEvaluator(
@@ -219,8 +220,8 @@ val CanonicalQueryTest by testSuite {
             RuntimePresentationQueries(mapOf(QueryResource::class to queryTypeId.namedTemplate()))
                 .resource(literal(ResourceId("result")), QueryResource::class)
         val record =
-            AuthoringRecord(
-                TypeSelection.Complete(queryTypeId.namedUse()),
+            AuthoringRecord.of(
+                TypeSelection.CompleteWrapper(queryTypeId.namedUse()),
                 mapOf(
                     "name" to DataValue.StringValueWrapper("Name"),
                     "extra" to DataValue.UNFILLED,
@@ -284,21 +285,25 @@ val CanonicalQueryTest by testSuite {
                 listOf(
                     ListItem(
                         id = ItemId(value = target),
-                        value = DataValue.link(EndpointId(value = "query.endpoint"), LinkTarget(ResourceId(target), null)),
+                        value =
+                            DataValue.createLink(
+                                endpoint = EndpointId(value = "query.endpoint"),
+                                target = LinkTarget(resource = ResourceId(target).toSkir(), opposite = null),
+                            ),
                     ),
                 ),
             )
         val records =
             mapOf(
                 ResourceId("first") to
-                    AuthoringRecord(
-                        TypeSelection.Complete(queryTypeId.namedUse()),
+                    AuthoringRecord.of(
+                        TypeSelection.CompleteWrapper(queryTypeId.namedUse()),
                         mapOf(
                             "name" to DataValue.UNFILLED,
                             "extra" to DataValue.UNFILLED,
                         ),
                     ),
-                ResourceId("second") to AuthoringRecord(TypeSelection.Complete(otherQueryTypeId.namedUse()), emptyMap()),
+                ResourceId("second") to AuthoringRecord.of(TypeSelection.CompleteWrapper(otherQueryTypeId.namedUse()), emptyMap()),
             )
         with(QueryReads) {
             DefaultExpressionEvaluator(
@@ -388,7 +393,7 @@ private class QueryObservation(
     context(reads: AuthoredReads)
     override fun resource(id: ResourceId): Availability<AuthoringRecord> {
         seenReadContext = reads.readContext
-        return records[id]?.let { Availability.Available(it) } ?: Availability.Unavailable(listOf(ValueLocation(id, ValuePath())))
+        return records[id]?.let { Availability.Available(it) } ?: Availability.Unavailable(listOf(ValueLocation.of(id)))
     }
 
     context(reads: AuthoredReads)

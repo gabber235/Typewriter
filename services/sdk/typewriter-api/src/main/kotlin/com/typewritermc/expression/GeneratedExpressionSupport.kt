@@ -1,8 +1,7 @@
 package com.typewritermc.expression
 
 import com.typewritermc.authoring.GeneratedSdkApi
-import com.typewritermc.authoring.PathSegment
-import com.typewritermc.authoring.ValuePath
+import com.typewritermc.authoring.root
 import com.typewritermc.types.Color
 import com.typewritermc.types.Icon
 import com.typewritermc.types.IconIconifyDefinition
@@ -19,8 +18,6 @@ import com.typewritermc.types.listValue
 import com.typewritermc.types.named
 import com.typewritermc.types.record
 import com.typewritermc.types.requirePortable
-import com.typewritermc.types.skir.SkirAuthoringValueCodec
-import com.typewritermc.types.skir.getOrThrow
 import com.typewritermc.types.timestamp
 import com.typewritermc.types.use
 import skirout.editor.v1.expression.ExpressionNode
@@ -29,6 +26,8 @@ import skirout.editor.v1.expression.RuleUnaryOperation
 import skirout.editor.v1.expression.TextUnaryOperation
 import skirout.editor.v1.expression.ValueCompareOperation
 import skirout.editor.v1.type_catalog.DataValue
+import skirout.editor.v1.type_catalog.PathSegment
+import skirout.editor.v1.type_catalog.ValuePath
 import java.math.BigDecimal
 import java.math.BigInteger
 import kotlin.time.Duration
@@ -91,20 +90,19 @@ internal fun <T> local(
 
 internal fun <T, M : MissingPolicy> inputExpression(
     binding: ExpressionBindingId,
-    path: ValuePath = ValuePath(),
+    path: ValuePath = ValuePath.root,
 ): Expr<T, M> {
     val source =
         skirout.editor.v1.type_catalog
             .ExpressionBindingId(value = binding.value)
-    val frozenPath = SkirAuthoringValueCodec.encode(path).getOrThrow()
+    val frozenPath = path
     return Expr { ExpressionNode.createInput(binding = source, path = frozenPath) }
 }
 
 fun <V> Expr<*, out MissingPolicy>.field(name: String): Expr<V, MayBeMissing> {
     val source = this
     val segment =
-        skirout.editor.v1.type_catalog.PathSegment
-            .createField(name = name)
+        PathSegment.createField(name = name)
     return Expr { environment ->
         when (val expression = source.lower(environment)) {
             is ExpressionNode.InputWrapper -> {
@@ -622,5 +620,5 @@ private fun ExpressionNode.requireClosedExpression() {
 
 fun <T> input(
     binding: ExpressionBindingId,
-    path: ValuePath = ValuePath(),
+    path: ValuePath = ValuePath.root,
 ): Expr<T, MayBeMissing> = inputExpression(binding, path)

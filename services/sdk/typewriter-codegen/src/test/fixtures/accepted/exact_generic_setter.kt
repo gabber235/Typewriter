@@ -1,8 +1,9 @@
 package fixture
 
+import com.typewritermc.authoring.field
+import com.typewritermc.authoring.root
 import com.typewritermc.authoring.EditContext
-import com.typewritermc.authoring.PathSegment
-import com.typewritermc.authoring.ValuePath
+import skirout.editor.v1.type_catalog.ValuePath
 import com.typewritermc.authoring.append
 import skirout.editor.v1.type_catalog.DataValue
 import com.typewritermc.types.Resource
@@ -45,6 +46,6 @@ suspend fun dynamicCheckedWrite(
     draft: VariableDraft<RewardDraft>,
     replacement: DataValue,
 ) = edits.checkedSet(
-    draft.location.append(ValuePath(listOf(PathSegment.Field("value")))),
+    draft.location.append(ValuePath.root.field("value")),
     replacement,
 )

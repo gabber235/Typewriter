@@ -5,6 +5,7 @@ package com.typewritermc.authoring
 import com.typewritermc.types.NativeBindingException
 import com.typewritermc.types.encodeGeneratedDefault
 import kotlinx.coroutines.CancellationException
+import skirout.editor.v1.diagnostic.InitializationDiagnostic
 import skirout.editor.v1.type_catalog.FieldOwner
 import skirout.editor.v1.type_catalog.TypeUse
 import java.lang.reflect.InvocationTargetException
@@ -81,9 +82,21 @@ private class GeneratedNativeConstructionPlan<T : Any>(
         val missing = fields.filter { !it.hasDefault && it.owner !in supplied }
         if (unknown.isNotEmpty() || missing.isNotEmpty()) {
             return CaptureResult.Unavailable(
-                unknown.map { InitializationDiagnostic(it, "unknown_constructor_input", "The constructor has no matching field.") } +
+                unknown.map {
+                    InitializationDiagnostic(
+                        field = it,
+                        code = "unknown_constructor_input",
+                        message = "The constructor has no matching field.",
+                        relativePath = null,
+                    )
+                } +
                     missing.map {
-                        InitializationDiagnostic(it.owner, "missing_constructor_input", "A required constructor input is unavailable.")
+                        InitializationDiagnostic(
+                            field = it.owner,
+                            code = "missing_constructor_input",
+                            message = "A required constructor input is unavailable.",
+                            relativePath = null,
+                        )
                     },
             )
         }
@@ -120,9 +133,10 @@ private class GeneratedNativeConstructionPlan<T : Any>(
             CaptureResult.Unavailable(
                 listOf(
                     InitializationDiagnostic(
-                        activeField,
-                        (cause as? NativeBindingException)?.code ?: "native_default_capture_failed",
-                        cause.message ?: "Native constructor preparation failed with ${cause::class.qualifiedName}.",
+                        field = activeField,
+                        code = (cause as? NativeBindingException)?.code ?: "native_default_capture_failed",
+                        message = cause.message ?: "Native constructor preparation failed with ${cause::class.qualifiedName}.",
+                        relativePath = null,
                     ),
                 ),
             )

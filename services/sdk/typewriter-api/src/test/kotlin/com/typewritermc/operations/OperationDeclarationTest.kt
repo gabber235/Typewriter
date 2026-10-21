@@ -2,18 +2,12 @@
 
 package com.typewritermc.operations
 
-import com.typewritermc.authoring.AuthoringRecord
 import com.typewritermc.authoring.CounterpartChoice
 import com.typewritermc.authoring.GeneratedSdkApi
-import com.typewritermc.authoring.LinkOccurrence
-import com.typewritermc.authoring.LinkOccurrenceId
-import com.typewritermc.authoring.PreparedContent
-import com.typewritermc.authoring.PreparedValue
 import com.typewritermc.authoring.ResourceDraft
-import com.typewritermc.authoring.TypeSelection
-import com.typewritermc.authoring.ValueLocation
-import com.typewritermc.authoring.ValuePath
 import com.typewritermc.authoring.field
+import com.typewritermc.authoring.of
+import com.typewritermc.authoring.root
 import com.typewritermc.authoring.typedPath
 import com.typewritermc.capability.CapabilityId
 import com.typewritermc.checking.CatalogGeneration
@@ -27,7 +21,6 @@ import com.typewritermc.imprint.ContributionSourceId
 import com.typewritermc.imprint.ProducerId
 import com.typewritermc.library.frameworkContributions
 import com.typewritermc.types.FactoryNativeBindingRegistry
-import com.typewritermc.types.LinkTarget
 import com.typewritermc.types.ResourceId
 import com.typewritermc.types.ResourceIdDefinition
 import com.typewritermc.types.ResourceTarget
@@ -35,13 +28,16 @@ import com.typewritermc.types.catalog.DefaultCheckedCatalog
 import com.typewritermc.types.field
 import com.typewritermc.types.namedUse
 import com.typewritermc.types.qualified
-import com.typewritermc.types.skir.SkirAuthoringValueCodec
-import com.typewritermc.types.skir.getOrThrow
+import com.typewritermc.types.toSkir
 import com.typewritermc.types.use
 import de.infix.testBalloon.framework.core.testSuite
 import io.kotest.matchers.collections.shouldContainAll
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.string.shouldContain
+import skirout.editor.v1.authoring.LinkOccurrence
+import skirout.editor.v1.authoring.LinkOccurrenceId
+import skirout.editor.v1.catalog.PreparedContent
+import skirout.editor.v1.catalog.PreparedValue
 import skirout.editor.v1.operation.OperationAvailability
 import skirout.editor.v1.operation.OperationCardinality
 import skirout.editor.v1.operation.OperationDrop
@@ -51,10 +47,15 @@ import skirout.editor.v1.operation.OperationShortcut
 import skirout.editor.v1.operation.ResourceOperationDefinition
 import skirout.editor.v1.presentation.ButtonVariant
 import skirout.editor.v1.presentation.HeaderActionTone
+import skirout.editor.v1.type_catalog.AuthoringRecord
 import skirout.editor.v1.type_catalog.DataValue
 import skirout.editor.v1.type_catalog.DeclarationOwner
 import skirout.editor.v1.type_catalog.EndpointId
+import skirout.editor.v1.type_catalog.LinkTarget
 import skirout.editor.v1.type_catalog.TypeDefinitionId
+import skirout.editor.v1.type_catalog.TypeSelection
+import skirout.editor.v1.type_catalog.ValueLocation
+import skirout.editor.v1.type_catalog.ValuePath
 
 val OperationDeclarationTest by testSuite {
     test("declared appearance publishes with the tone following the group") {
@@ -102,9 +103,9 @@ val OperationDeclarationTest by testSuite {
         definitions.values.all { it.targets.subject == skirout.editor.v1.type_catalog.ResourceTarget.ANY_RESOURCE } shouldBe true
         definitions.getValue("LinkWithDuplicate").targets.cardinality shouldBe OperationCardinality.SINGLE
         definitions.getValue("Delete").presentation.shortcut shouldBe OperationShortcut.DELETE
-        definitions.getValue("MoveToOwner").drop shouldBe drop(ValuePath().field("destination"), "Move here")
-        definitions.getValue("LinkWith").drop shouldBe drop(ValuePath().field("target"), "Link")
-        definitions.getValue("Unlink").drop shouldBe drop(ValuePath().field("target"), "Unlink")
+        definitions.getValue("MoveToOwner").drop shouldBe drop(ValuePath.root.field("destination"), "Move here")
+        definitions.getValue("LinkWith").drop shouldBe drop(ValuePath.root.field("target"), "Link")
+        definitions.getValue("Unlink").drop shouldBe drop(ValuePath.root.field("target"), "Unlink")
         val searches =
             assembly.editorCatalog.capabilities.mapNotNull { capability ->
                 (capability as? skirout.editor.v1.capability.CapabilityDefinition.SearchWrapper)?.value?.capabilityId?.value?.let(
@@ -113,7 +114,7 @@ val OperationDeclarationTest by testSuite {
             }
         searches shouldContainAll
             listOf("MoveToOwner" to "destination", "LinkWith" to "target", "Unlink" to "target").map { (operation, field) ->
-                definitions.getValue(operation).id.candidateSearch(ValuePath().field(field))
+                definitions.getValue(operation).id.candidateSearch(ValuePath.root.field(field))
             }
     }
 
@@ -128,7 +129,7 @@ val OperationDeclarationTest by testSuite {
         val second =
             typedPath<MoveToOwnerInput, ResourceId>(
                 MoveToOwnerInputDefinition.id,
-                ValuePath().field("second"),
+                ValuePath.root.field("second"),
                 ResourceIdDefinition.use.use,
             )
         val twice =
@@ -175,7 +176,7 @@ val OperationDeclarationTest by testSuite {
                     val foreign =
                         typedPath<MoveToOwnerInput, ResourceId>(
                             LinkWithInputDefinition.id,
-                            ValuePath().field("destination"),
+                            ValuePath.root.field("destination"),
                             ResourceIdDefinition.use.use,
                         )
                     foreign { candidates { emptySequence() } }
@@ -206,26 +207,27 @@ val OperationDeclarationTest by testSuite {
     }
 
     test("new counterpart choices retain initialized values and validate their configured type") {
-        val location = ValueLocation(ResourceId("owner"), ValuePath())
+        val location = ValueLocation.of(ResourceId("owner"))
 
         fun choice(name: String) =
             CounterpartChoice.New(
                 location,
                 PreparedValue(
-                    PreparedContent.Record(
-                        AuthoringRecord(
-                            TypeSelection.Complete(target.namedUse()),
-                            mapOf("name" to DataValue.StringValueWrapper(name)),
+                    content =
+                        PreparedContent.RecordWrapper(
+                            AuthoringRecord.of(
+                                TypeSelection.CompleteWrapper(target.namedUse()),
+                                mapOf("name" to DataValue.StringValueWrapper(name)),
+                            ),
                         ),
-                    ),
-                    emptyList(),
+                    findings = emptyList(),
                 ),
             )
         val source =
             LinkOccurrence(
-                LinkOccurrenceId(EndpointId(value = "source"), location),
-                ResourceId("owner"),
-                LinkTarget(ResourceId("target"), null),
+                id = LinkOccurrenceId(endpoint = EndpointId(value = "source"), location = location),
+                source = ResourceId("owner").toSkir(),
+                target = LinkTarget(resource = ResourceId("target").toSkir(), opposite = null),
             )
         val proposed = choice("retained default")
         val choices = PreparationChoices(mapOf("inverse" to PreparationChoiceAnswer.Counterpart(proposed)))
@@ -262,7 +264,7 @@ private fun bind(declaration: OperationDeclaration): List<ResourceOperationDefin
 private fun drop(
     input: ValuePath,
     hint: String,
-) = OperationDrop(input = SkirAuthoringValueCodec.encode(input).getOrThrow(), hint = hint)
+) = OperationDrop(input = input, hint = hint)
 
 private fun origin(): ProviderOrigin =
     ProviderOrigin(

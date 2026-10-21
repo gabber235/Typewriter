@@ -1,7 +1,9 @@
 package com.typewritermc.types
 
-import com.typewritermc.authoring.ValuePath
+import com.typewritermc.types.skir.ValuePathSerializer
 import kotlinx.serialization.Serializable
+import skirout.editor.v1.type_catalog.ValuePath
+import skirout.editor.v1.type_catalog.ResourceId as SkirResourceId
 
 interface Resource
 
@@ -52,13 +54,8 @@ annotation class TypewriterGeneratedEndpoint(
 @Serializable
 data class Ref<E : RelationshipEndpoint<*, *>, out T : Resource>(
     val target: ResourceId,
+    @Serializable(with = ValuePathSerializer::class)
     val opposite: ValuePath? = null,
-)
-
-@Serializable
-data class LinkTarget(
-    val resource: ResourceId,
-    val opposite: ValuePath?,
 )
 
 @Serializable
@@ -77,6 +74,12 @@ value class ResourceId(
         require(value.isNotBlank()) { "Resource ids must not be blank." }
     }
 }
+
+/** The generated form of this author facing id, which generated values such as locations and links hold. */
+fun ResourceId.toSkir(): SkirResourceId = SkirResourceId(value = value)
+
+/** The author facing form of a generated resource id; rejects a blank id. */
+fun SkirResourceId.toResourceId(): ResourceId = ResourceId(value)
 
 @JvmInline
 @Serializable

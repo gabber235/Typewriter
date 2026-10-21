@@ -1,7 +1,7 @@
 package com.typewritermc.realm.compiler
 
-import com.typewritermc.engine.CompilationRoot
 import com.typewritermc.realm.authoring.AuthoringView
+import skirout.editor.v1.compilation_root.CompilationRoot
 import skirout.editor.v1.compiled_content.CompiledResourceState
 import skirout.editor.v1.type_catalog.PublicationId
 

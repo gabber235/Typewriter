@@ -2,6 +2,7 @@
 
 package fixture
 
+import com.typewritermc.authoring.root
 import com.typewritermc.types.fields
 import com.typewritermc.types.items
 import com.typewritermc.types.integer
@@ -9,10 +10,12 @@ import com.typewritermc.types.record
 import com.typewritermc.types.named
 import com.typewritermc.checking.CatalogGeneration
 import com.typewritermc.authoring.DefaultInitializationRuntime
+import com.typewritermc.authoring.field
+import com.typewritermc.authoring.fieldMap
 import com.typewritermc.authoring.InitializationRequest
-import com.typewritermc.authoring.PreparedContent
+import skirout.editor.v1.catalog.PreparedContent
 import com.typewritermc.authoring.PreparationTarget
-import com.typewritermc.authoring.TypeSelection
+import skirout.editor.v1.type_catalog.TypeSelection
 import skirout.editor.v1.type_catalog.DataValue
 import skirout.editor.v1.type_catalog.IntegerWidth
 import java.math.BigInteger
@@ -30,7 +33,7 @@ import com.typewritermc.expression.literal
 import com.typewritermc.expression.eq
 import com.typewritermc.expression.orElse
 import com.typewritermc.expression.ExpressionBindingId
-import com.typewritermc.authoring.ValuePath
+import skirout.editor.v1.type_catalog.ValuePath
 import skirout.editor.v1.expression.ExpressionNode
 import com.typewritermc.imprint.ArtifactId
 import com.typewritermc.presentation.CollectionProjection
@@ -262,9 +265,9 @@ fun main(args: Array<String>) {
     check(valueRepresentation.value.fields.map { it.owner.name } == listOf("stored"))
     val source = com.typewritermc.expression.input<Any?>(ExpressionBindingId("fixture"))
     val rowExpressions = ExampleRowExpressionsFactory.create(source)
-    check(rowExpressions.title.toNode() == com.typewritermc.expression.input<Any?>(ExpressionBindingId("fixture"), ValuePath(listOf(com.typewritermc.authoring.PathSegment.Field("title")))).toNode())
-    check(rowExpressions.value.toNode() == com.typewritermc.expression.input<Any?>(ExpressionBindingId("fixture"), ValuePath(listOf(com.typewritermc.authoring.PathSegment.Field("value")))).toNode())
-    check(rowExpressions.receiverExpression.toNode() == com.typewritermc.expression.input<Any?>(ExpressionBindingId("fixture"), ValuePath(listOf(com.typewritermc.authoring.PathSegment.Field("receiverExpression")))).toNode())
+    check(rowExpressions.title.toNode() == com.typewritermc.expression.input<Any?>(ExpressionBindingId("fixture"), ValuePath.root.field("title")).toNode())
+    check(rowExpressions.value.toNode() == com.typewritermc.expression.input<Any?>(ExpressionBindingId("fixture"), ValuePath.root.field("value")).toNode())
+    check(rowExpressions.receiverExpression.toNode() == com.typewritermc.expression.input<Any?>(ExpressionBindingId("fixture"), ValuePath.root.field("receiverExpression")).toNode())
     val runtime = DefaultPresentationRuntime()
     val artifact = Path.of(args.single())
     GeneratedProviderLoader()
@@ -317,36 +320,36 @@ fun main(args: Array<String>) {
             fun counts(): Pair<*, *> = probeLoader.loadClass("fixture.GeneratedProviderRoundtrip").getMethod("evaluationCounts").invoke(null) as Pair<*, *>
             val initializer = DefaultInitializationRuntime(assembly.checked, assembly.bindings)
             fun prepare(type: NamedTypeUse, fields: Map<String, DataValue>) = initializer.prepareNow(
-                InitializationRequest(assembly.checked.generation, PreparationTarget.Record(TypeSelection.Complete(type)), DataValue.record(fields)),
+                InitializationRequest(assembly.checked.generation, PreparationTarget.Record(TypeSelection.CompleteWrapper(type)), DataValue.record(fields)),
             )
             fun integer(value: Int) = DataValue.integer(BigInteger.valueOf(value.toLong()))
             val supplied = mapOf("seed" to integer(7), "nullable" to DataValue.NULL, "guarded" to integer(20))
             val preparedDefaults = prepare(DependentDefaultsDefinition.use, supplied)
-            val defaults = (preparedDefaults.content as PreparedContent.Record).record.fields
+            val defaults = (preparedDefaults.content as PreparedContent.RecordWrapper).value.fieldMap
             check(preparedDefaults.findings.isEmpty())
             check(defaults["derived"] == integer(21) && defaults["nullable"] == DataValue.NULL)
             check(counts() == (1 to 1))
             val completeInputs = defaults + ("derived" to DataValue.UNFILLED)
             val explicitUnfinished = prepare(DependentDefaultsDefinition.use, completeInputs)
             check(explicitUnfinished.findings.isEmpty())
-            check((explicitUnfinished.content as PreparedContent.Record).record.fields == completeInputs)
+            check((explicitUnfinished.content as PreparedContent.RecordWrapper).value.fieldMap == completeInputs)
             check(counts() == (1 to 1))
             val blocked = prepare(DependentDefaultsDefinition.use, supplied + ("seed" to DataValue.UNFILLED))
-            check(blocked.findings.single().relativePath?.segments == listOf(com.typewritermc.authoring.PathSegment.Field("seed")))
+            check(blocked.findings.single().relativePath?.segments == listOf(PathSegment.createField(name = "seed")))
             check(counts() == (1 to 1))
             val throwing = prepare(DependentDefaultsDefinition.use, mapOf("derived" to integer(99)))
             check(throwing.findings.single().message == "guarded must be supplied")
             check(counts() == (1 to 1))
             val transient = prepare(TransientDefaultsDefinition.use, emptyMap())
             check(transient.findings.isEmpty())
-            check((transient.content as PreparedContent.Record).record.fields == mapOf("derived" to integer(10)))
+            check((transient.content as PreparedContent.RecordWrapper).value.fieldMap == mapOf("derived" to integer(10)))
             val intType = integerScalar(IntegerWidth.SIGNED_THIRTY_TWO).use
             val generic = prepare(GenericDefaultsDefinition.applied(listOf(intType)), mapOf("value" to integer(9)))
             check(generic.findings.isEmpty())
-            check((generic.content as PreparedContent.Record).record.fields["duplicate"] == integer(9))
+            check((generic.content as PreparedContent.RecordWrapper).value.field("duplicate") == integer(9))
             val wrapped = prepare(WrappedDefaultsDefinition.use, mapOf("count" to DataValue.named(DefaultCountDefinition.use, integer(8))))
             check(wrapped.findings.isEmpty())
-            check((wrapped.content as PreparedContent.Record).record.fields["doubled"] == integer(16))
+            check((wrapped.content as PreparedContent.RecordWrapper).value.field("doubled") == integer(16))
             check(runCatching { prepare(CancelledDefaultsDefinition.use, emptyMap()) }.exceptionOrNull() is kotlinx.coroutines.CancellationException)
             // One generated provider also operates under a freshly assembled catalog and resolver.
             var replacementCountBindings = 0
@@ -361,17 +364,17 @@ fun main(args: Array<String>) {
             val replacement = replacementContributions.assemble(CatalogAssemblyContext(CatalogGeneration("fixture replacement")))
             replacementCountBindings = 0
             val replacementWrapped = DefaultInitializationRuntime(replacement.checked, replacement.bindings).prepareNow(
-                InitializationRequest(replacement.checked.generation, PreparationTarget.Record(TypeSelection.Complete(WrappedDefaultsDefinition.use)),
+                InitializationRequest(replacement.checked.generation, PreparationTarget.Record(TypeSelection.CompleteWrapper(WrappedDefaultsDefinition.use)),
                     DataValue.record(mapOf("count" to DataValue.named(DefaultCountDefinition.use, integer(8))))),
             )
             check(replacementWrapped.findings.isEmpty())
-            check((replacementWrapped.content as PreparedContent.Record).record.fields["doubled"] == integer(16))
+            check((replacementWrapped.content as PreparedContent.RecordWrapper).value.field("doubled") == integer(16))
             check(replacementCountBindings == 1)
             val replacementDefaults = DefaultInitializationRuntime(replacement.checked, replacement.bindings).prepareNow(
-                InitializationRequest(replacement.checked.generation, PreparationTarget.Record(TypeSelection.Complete(DependentDefaultsDefinition.use)), DataValue.record(supplied)),
+                InitializationRequest(replacement.checked.generation, PreparationTarget.Record(TypeSelection.CompleteWrapper(DependentDefaultsDefinition.use)), DataValue.record(supplied)),
             )
             check(replacementDefaults.findings.isEmpty())
-            check((replacementDefaults.content as PreparedContent.Record).record.fields["derived"] == integer(21))
+            check((replacementDefaults.content as PreparedContent.RecordWrapper).value.field("derived") == integer(21))
             check(counts() == (2 to 2))
             val material = assembly.editorCatalog.presentationMaterials.single()
             check(material.layout.nodeId.isNotEmpty())

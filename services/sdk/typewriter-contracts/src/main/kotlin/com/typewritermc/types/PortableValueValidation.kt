@@ -8,6 +8,8 @@ import skirout.editor.v1.type_catalog.ListItem
 import skirout.editor.v1.type_catalog.MapRow
 import skirout.editor.v1.type_catalog.PathSegment
 import skirout.editor.v1.type_catalog.RecordPayload
+import skirout.editor.v1.type_catalog.ResourceId
+import skirout.editor.v1.type_catalog.ValueLocation
 import skirout.editor.v1.type_catalog.ValuePath
 
 /** The deepest nesting of authored values, counting each nominal wrapper, record field and collection entry. */
@@ -33,6 +35,14 @@ fun DataValue.requirePortable(): DataValue = portable(depth = 0)
 fun DataValue.portableOrNull(): DataValue? =
     try {
         requirePortable()
+    } catch (_: IllegalArgumentException) {
+        null
+    }
+
+/** This path when it is valid, or null. */
+fun ValuePath.validOrNull(): ValuePath? =
+    try {
+        requireValid()
     } catch (_: IllegalArgumentException) {
         null
     }
@@ -173,7 +183,16 @@ private fun List<MapRow>.portableRows(depth: Int): List<MapRow> {
     return if (changed) checked else this
 }
 
-private fun LinkTarget.requireValid() {
-    require(resource.value.isNotBlank()) { "Resource ids must not be blank." }
-    opposite?.requireValid()
-}
+fun ResourceId.requireValid(): ResourceId = apply { require(value.isNotBlank()) { "Resource ids must not be blank." } }
+
+fun ValueLocation.requireValid(): ValueLocation =
+    apply {
+        resource.requireValid()
+        path.requireValid()
+    }
+
+fun LinkTarget.requireValid(): LinkTarget =
+    apply {
+        resource.requireValid()
+        opposite?.requireValid()
+    }

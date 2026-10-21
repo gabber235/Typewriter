@@ -1,17 +1,19 @@
 package com.typewritermc.realm.repository
 
-import com.typewritermc.authoring.AuthoringRecord
 import com.typewritermc.authoring.CounterpartChoice
 import com.typewritermc.authoring.EditExpectation
 import com.typewritermc.authoring.EditIntent
-import com.typewritermc.authoring.PathSegment
 import com.typewritermc.authoring.PreparedEdit
 import com.typewritermc.authoring.RelationProjectionDelta
 import com.typewritermc.authoring.TraversalDirection
-import com.typewritermc.authoring.ValueLocation
-import com.typewritermc.authoring.ValuePath
+import com.typewritermc.authoring.of
 import com.typewritermc.types.RelationId
 import com.typewritermc.types.ResourceId
+import com.typewritermc.types.toResourceId
+import skirout.editor.v1.type_catalog.AuthoringRecord
+import skirout.editor.v1.type_catalog.PathSegment
+import skirout.editor.v1.type_catalog.ValueLocation
+import skirout.editor.v1.type_catalog.ValuePath
 
 /** Derives mandatory guards independently of client supplied expectations. */
 internal fun CurrentAuthoringValues.requiredExpectations(
@@ -31,9 +33,9 @@ internal fun CurrentAuthoringValues.requiredExpectations(
     }
 
     fun path(at: ValueLocation) {
-        required += EditExpectation.ResourceExists(at.resource, resource(at.resource) != null)
+        required += EditExpectation.ResourceExists(at.resource.toResourceId(), resource(at.resource.toResourceId()) != null)
         for (length in 0..at.path.segments.size) {
-            val parent = at.copy(path = ValuePath(at.path.segments.take(length)))
+            val parent = at.copy(path = ValuePath(segments = at.path.segments.take(length)))
             required += EditExpectation.Configuration(parent, configuration(parent))
         }
     }
@@ -79,8 +81,11 @@ internal fun CurrentAuthoringValues.requiredExpectations(
             is EditIntent.ConnectRelation -> {
                 path(intent.intent.source.id.location)
                 expectValue(intent.intent.source.id.location)
-                path(ValueLocation(intent.intent.target, ValuePath()))
-                links(intent.intent.source.source)
+                path(ValueLocation.of(intent.intent.target))
+                links(
+                    intent.intent.source.source
+                        .toResourceId(),
+                )
                 links(intent.intent.target)
                 when (val counterpart = intent.intent.counterpart) {
                     null -> {
@@ -102,14 +107,21 @@ internal fun CurrentAuthoringValues.requiredExpectations(
             is EditIntent.DisconnectRelation -> {
                 path(intent.occurrence.location)
                 expectValue(intent.occurrence.location)
-                links(intent.occurrence.location.resource)
-                occurrences[intent.occurrence]?.target?.resource?.let(::links)
+                links(
+                    intent.occurrence.location.resource
+                        .toResourceId(),
+                )
+                occurrences[intent.occurrence]
+                    ?.target
+                    ?.resource
+                    ?.toResourceId()
+                    ?.let(::links)
             }
 
             is EditIntent.Retag -> {
                 path(intent.at)
                 expectValue(intent.at)
-                links(intent.at.resource)
+                links(intent.at.resource.toResourceId())
             }
 
             is EditIntent.ConfigureResource -> {
@@ -127,13 +139,13 @@ internal fun CurrentAuthoringValues.requiredExpectations(
         links(edge.first)
         links(edge.second)
         listOfNotNull(
-            edge.firstLocation?.let { ValueLocation(edge.first, it) },
-            edge.secondLocation?.let { ValueLocation(edge.second, it) },
+            edge.firstLocation?.let { ValueLocation.of(edge.first, it) },
+            edge.secondLocation?.let { ValueLocation.of(edge.second, it) },
         ).forEach { at ->
             path(at)
             expectValue(at)
-            val item = at.path.segments.indexOfLast { it is PathSegment.Item }
-            if (item >= 0) expectValue(at.copy(path = ValuePath(at.path.segments.take(item))))
+            val item = at.path.segments.indexOfLast { it is PathSegment.ItemWrapper }
+            if (item >= 0) expectValue(at.copy(path = ValuePath(segments = at.path.segments.take(item))))
         }
     }
     return required.toList()

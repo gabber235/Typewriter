@@ -1,7 +1,7 @@
 package com.typewritermc.expression
 
-import com.typewritermc.authoring.ValueLocation
 import kotlinx.serialization.Serializable
+import skirout.editor.v1.type_catalog.ValueLocation
 
 @JvmInline @Serializable
 value class ExpressionBindingId(
@@ -14,12 +14,10 @@ data class EvaluationBudget(
     val maxCollectionItems: Long,
 )
 
-@Serializable
 data class ExpressionBindings(
     val locations: Map<ExpressionBindingId, ValueLocation>,
 )
 
-@Serializable
 data class EvaluationDiagnostic(
     val code: String,
     val message: String,

@@ -1,16 +1,14 @@
 package com.typewritermc.engine.runtime
 
-import com.typewritermc.authoring.PublicationId
 import com.typewritermc.checking.CatalogGeneration
+import com.typewritermc.checking.toSkir
 import com.typewritermc.discovery.DeploymentFacts
 import com.typewritermc.discovery.DiscoveryDomains
 import com.typewritermc.discovery.GeneratedProviderDeployment
 import com.typewritermc.discovery.GeneratedProviderLoader
 import com.typewritermc.discovery.RuntimeRegistrar
 import com.typewritermc.discovery.RuntimeScope
-import com.typewritermc.engine.ContentDigest
 import com.typewritermc.engine.LoadedPublishedContent
-import com.typewritermc.engine.PublishedContent
 import com.typewritermc.types.FactoryNativeBindingRegistry
 import com.typewritermc.types.catalog.DefaultCheckedCatalog
 import de.infix.testBalloon.framework.core.testSuite
@@ -21,6 +19,8 @@ import io.kotest.matchers.shouldBe
 import io.kotest.matchers.types.shouldBeSameInstanceAs
 import kotlinx.coroutines.test.TestScope
 import kotlinx.coroutines.test.runTest
+import skirout.editor.v1.compiled_content.PublishedContent
+import skirout.editor.v1.type_catalog.PublicationId
 
 val DiscoveryEngineRuntimeTest by testSuite {
     test("registers discovered behavior and closes owned resources in reverse order") {
@@ -60,11 +60,11 @@ val DiscoveryEngineRuntimeTest by testSuite {
             fixture.runtime.activate()
 
             fixture.runtime.applyContent(content(1, '1')) shouldBe
-                ContentApplicationResult.Applied(PublicationId("publication:1"))
+                ContentApplicationResult.Applied(PublicationId(value = "publication:1"))
             fixture.runtime.applyContent(content(1, '2')) shouldBe
-                ContentApplicationResult.Unchanged(PublicationId("publication:1"))
+                ContentApplicationResult.Unchanged(PublicationId(value = "publication:1"))
             fixture.runtime.applyContent(content(2, '3')) shouldBe
-                ContentApplicationResult.Applied(PublicationId("publication:2"))
+                ContentApplicationResult.Applied(PublicationId(value = "publication:2"))
             revisions shouldContainExactly listOf(1L, 2L)
             fixture.runtime.stop()
         }
@@ -107,7 +107,7 @@ val DiscoveryEngineRuntimeTest by testSuite {
 
             revisions shouldContainExactly listOf(1L)
             fixture.runtime.applyContent(content(2, '8')) shouldBe
-                ContentApplicationResult.Applied(PublicationId("publication:2"))
+                ContentApplicationResult.Applied(PublicationId(value = "publication:2"))
             revisions shouldContainExactly listOf(1L, 2L)
             fixture.runtime.stop()
         }
@@ -120,7 +120,7 @@ val DiscoveryEngineRuntimeTest by testSuite {
             fixture.runtime.activate()
 
             fixture.runtime.applyContent(content(1, '9', implementationToken = "primary implementation")) shouldBe
-                ContentApplicationResult.Applied(PublicationId("publication:1"))
+                ContentApplicationResult.Applied(PublicationId(value = "publication:1"))
             revisions shouldContainExactly listOf(1L)
             fixture.runtime.stop()
         }
@@ -173,11 +173,11 @@ private fun content(
 ): LoadedPublishedContent =
     LoadedPublishedContent(
         PublishedContent(
-            PublicationId("publication:$revision"),
-            com.typewritermc.engine.PUBLISHED_CONTENT_FORMAT_REVISION,
-            CatalogGeneration("catalog:1"),
-            implementationToken,
-            emptyList(),
+            publication = PublicationId(value = "publication:$revision"),
+            formatRevision = com.typewritermc.engine.PUBLISHED_CONTENT_FORMAT_REVISION,
+            catalog = CatalogGeneration("catalog:1").toSkir(),
+            implementationToken = implementationToken,
+            outputs = emptyList(),
         ),
         emptyList(),
     )

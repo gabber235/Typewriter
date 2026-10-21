@@ -1,8 +1,8 @@
 package com.typewritermc.discovery
 
 import com.typewritermc.authoring.GraphPlacementDefinition
-import com.typewritermc.authoring.PathSegment
-import com.typewritermc.authoring.ValuePath
+import com.typewritermc.authoring.field
+import com.typewritermc.authoring.root
 import com.typewritermc.checking.CatalogGeneration
 import com.typewritermc.elements.ElementDefinition
 import com.typewritermc.library.BookDefinition
@@ -16,11 +16,12 @@ import skirout.editor.v1.type_catalog.FieldOwner
 import skirout.editor.v1.type_catalog.RepresentationTemplate
 import skirout.editor.v1.type_catalog.TypeDefinition
 import skirout.editor.v1.type_catalog.TypeDefinitionId
+import skirout.editor.v1.type_catalog.ValuePath
 
 val PlacementFieldPublicationTest by testSuite {
     test("the single field typed as a placement is published with its path") {
         val assembly = assemble()
-        val placement = ValuePath(listOf(PathSegment.Field("placement")))
+        val placement = ValuePath.root.field("placement")
 
         assembly.placementField(TagDefinition.id) shouldBe placement
         // Fields typed as the sealed placement base count as placements too.

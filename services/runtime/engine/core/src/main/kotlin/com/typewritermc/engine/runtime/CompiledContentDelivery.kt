@@ -1,8 +1,7 @@
 package com.typewritermc.engine.runtime
 
-import com.typewritermc.authoring.PublicationId
 import com.typewritermc.engine.LoadedPublishedContent
-import com.typewritermc.engine.PublishedContentCodec
+import com.typewritermc.engine.requireValid
 import com.typewritermc.loader.api.HostedMessagingSession
 import com.typewritermc.loader.api.HostedRuntimeHost
 import com.typewritermc.protocol.transport.RealmRouteScope
@@ -28,8 +27,10 @@ import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import kotlinx.coroutines.withTimeoutOrNull
+import skirout.editor.v1.compiled_content.PublishedContent
 import skirout.editor.v1.compiled_content.QueryPublishedContentRequest
 import skirout.editor.v1.compiled_content.QueryPublishedContentResponse
+import skirout.editor.v1.type_catalog.PublicationId
 import kotlin.time.Duration.Companion.seconds
 
 /**
@@ -177,7 +178,7 @@ private fun RouterResult.requireDeliverySuccess(operation: String) {
 internal suspend fun fetchPublishedContent(
     communicator: Communicator,
     address: RealmRouteScope,
-): com.typewritermc.engine.PublishedContent? =
+): PublishedContent? =
     when (val result = communicator.request(address.authoringCompiledQuery, address, QueryPublishedContentRequest())) {
         is CommunicationResult.Failure -> {
             throw result.error.cause ?: IllegalStateException("Published content query failed")
@@ -185,7 +186,7 @@ internal suspend fun fetchPublishedContent(
 
         is CommunicationResult.Success -> {
             when (val response = result.value) {
-                is QueryPublishedContentResponse.ContentWrapper -> PublishedContentCodec.decode(response.value)
+                is QueryPublishedContentResponse.ContentWrapper -> response.value.requireValid()
                 is QueryPublishedContentResponse.AbsentWrapper -> null
                 else -> error("Published content is unavailable")
             }

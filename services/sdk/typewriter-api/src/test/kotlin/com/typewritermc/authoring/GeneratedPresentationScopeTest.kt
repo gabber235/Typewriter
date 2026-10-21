@@ -24,6 +24,7 @@ import skirout.editor.v1.catalog.PresentationRole
 import skirout.editor.v1.presentation.AxisChild
 import skirout.editor.v1.presentation.ChildrenElement
 import skirout.editor.v1.presentation.PresentationElement
+import skirout.editor.v1.type_catalog.ValuePath
 
 val GeneratedPresentationScopeTest by testSuite {
     test("generated record value field remains distinct from the configured value") {
@@ -35,7 +36,7 @@ val GeneratedPresentationScopeTest by testSuite {
             com.typewritermc.expression
                 .input<Any?>(
                     ExpressionBindingId("configured_value"),
-                    ValuePath(listOf(PathSegment.Field("value"))),
+                    ValuePath.root.field("value"),
                 ).toNode()
     }
 

@@ -1,13 +1,12 @@
 package com.typewritermc.realm.authoring
 
-import com.typewritermc.authoring.AuthoringRecord
 import com.typewritermc.authoring.EditIntent
-import com.typewritermc.authoring.PathSegment
 import com.typewritermc.authoring.PreparedEdit
 import com.typewritermc.authoring.RealmRootDefinition
-import com.typewritermc.authoring.TypeSelection
-import com.typewritermc.authoring.ValueLocation
-import com.typewritermc.authoring.ValuePath
+import com.typewritermc.authoring.field
+import com.typewritermc.authoring.fieldMap
+import com.typewritermc.authoring.of
+import com.typewritermc.authoring.root
 import com.typewritermc.checking.CatalogGeneration
 import com.typewritermc.configuration.FieldPatternSegment
 import com.typewritermc.configuration.RelativeFieldPattern
@@ -21,7 +20,6 @@ import com.typewritermc.types.EndpointCardinality
 import com.typewritermc.types.EndpointDefinition
 import com.typewritermc.types.EndpointSlot
 import com.typewritermc.types.FactoryNativeBindingRegistry
-import com.typewritermc.types.LinkTarget
 import com.typewritermc.types.NativeBindingRegistry
 import com.typewritermc.types.RESOURCE_OWNERSHIP_FAMILY_ID
 import com.typewritermc.types.RelationContract
@@ -32,8 +30,6 @@ import com.typewritermc.types.ResourceId
 import com.typewritermc.types.catalog.CheckedCatalog
 import com.typewritermc.types.catalog.DefaultCheckedCatalog
 import com.typewritermc.types.items
-import com.typewritermc.types.link
-import com.typewritermc.types.linkTarget
 import com.typewritermc.types.listValue
 import com.typewritermc.types.named
 import com.typewritermc.types.namedTemplate
@@ -41,21 +37,28 @@ import com.typewritermc.types.namedUse
 import com.typewritermc.types.payload
 import com.typewritermc.types.qualified
 import com.typewritermc.types.template
+import com.typewritermc.types.toResourceId
+import com.typewritermc.types.toSkir
 import com.typewritermc.types.use
 import de.infix.testBalloon.framework.core.testSuite
 import io.kotest.matchers.shouldBe
 import kotlinx.coroutines.test.runTest
+import skirout.editor.v1.type_catalog.AuthoringRecord
 import skirout.editor.v1.type_catalog.CollectionKind
 import skirout.editor.v1.type_catalog.DataValue
 import skirout.editor.v1.type_catalog.EndpointId
 import skirout.editor.v1.type_catalog.FieldDeclaration
 import skirout.editor.v1.type_catalog.FieldOwner
 import skirout.editor.v1.type_catalog.ItemId
+import skirout.editor.v1.type_catalog.LinkTarget
 import skirout.editor.v1.type_catalog.ListItem
 import skirout.editor.v1.type_catalog.RepresentationTemplate
 import skirout.editor.v1.type_catalog.ScalarKind
 import skirout.editor.v1.type_catalog.TypeDefinition
 import skirout.editor.v1.type_catalog.TypeDefinitionId
+import skirout.editor.v1.type_catalog.TypeSelection
+import skirout.editor.v1.type_catalog.ValueLocation
+import skirout.editor.v1.type_catalog.ValuePath
 
 private val first = ResourceId("first")
 private val second = ResourceId("second")
@@ -91,7 +94,8 @@ val OwnershipRulesTest by testSuite {
     test("the realm root needs no owner even when its type could be owned") {
         val root = ResourceId("root")
         val resources =
-            seed() + (root to AuthoringRecord(TypeSelection.Complete(ROOT_USE), mapOf("frame" to DataValue.StringValueWrapper("0"))))
+            seed() +
+                (root to AuthoringRecord.of(TypeSelection.CompleteWrapper(ROOT_USE), mapOf("frame" to DataValue.StringValueWrapper("0"))))
         val catalog = OwnerSideCatalogLease()
         val planner = AuthoringMutationPlanner(catalog.checked, listOf(OWNERSHIP_CONTRACT), listOf(OWNER_BINDING))
         val edit =
@@ -100,7 +104,7 @@ val OwnershipRulesTest by testSuite {
                 emptyList(),
                 listOf(
                     EditIntent.SetValue(
-                        ValueLocation(root, ValuePath(listOf(PathSegment.Field("frame")))),
+                        ValueLocation.of(root, ValuePath.root.field("frame")),
                         DataValue.StringValueWrapper("1"),
                     ),
                 ),
@@ -132,8 +136,12 @@ private fun WorkingViewEditContext.planned(): Map<ResourceId, AuthoringRecord> {
 }
 
 private fun AuthoringRecord.children(): List<ResourceId> {
-    val items = ((fields.getValue("children") as DataValue.NamedWrapper).payload as DataValue.ListValueWrapper).items
-    return items.map { ((it.value as DataValue.NamedWrapper).payload as DataValue.LinkWrapper).linkTarget.resource }
+    val items = ((fieldMap.getValue("children") as DataValue.NamedWrapper).payload as DataValue.ListValueWrapper).items
+    return items.map {
+        ((it.value as DataValue.NamedWrapper).payload as DataValue.LinkWrapper)
+            .value.target.resource
+            .toResourceId()
+    }
 }
 
 private fun seed() =
@@ -145,8 +153,8 @@ private fun seed() =
     )
 
 private fun ownerRecord(members: List<ResourceId>) =
-    AuthoringRecord(
-        TypeSelection.Complete(OWNER_USE),
+    AuthoringRecord.of(
+        TypeSelection.CompleteWrapper(OWNER_USE),
         mapOf(
             "children" to
                 DataValue.named(
@@ -155,7 +163,14 @@ private fun ownerRecord(members: List<ResourceId>) =
                         members.mapIndexed { index, member ->
                             ListItem(
                                 id = ItemId(value = "child_$index"),
-                                value = DataValue.named(CHILD_LINK_USE, DataValue.link(OWNER_ENDPOINT, LinkTarget(member, null))),
+                                value =
+                                    DataValue.named(
+                                        CHILD_LINK_USE,
+                                        DataValue.createLink(
+                                            endpoint = OWNER_ENDPOINT,
+                                            target = LinkTarget(resource = member.toSkir(), opposite = null),
+                                        ),
+                                    ),
                             )
                         },
                     ),
@@ -163,7 +178,11 @@ private fun ownerRecord(members: List<ResourceId>) =
         ),
     )
 
-private fun memberRecord() = AuthoringRecord(TypeSelection.Complete(MEMBER_USE), mapOf("frame" to DataValue.StringValueWrapper("0")))
+private fun memberRecord() =
+    AuthoringRecord.of(
+        TypeSelection.CompleteWrapper(MEMBER_USE),
+        mapOf("frame" to DataValue.StringValueWrapper("0")),
+    )
 
 private class OwnerSideCatalogLease : AuthoringCatalogLease {
     override val generation = CatalogGeneration("owner_side")

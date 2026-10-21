@@ -1,6 +1,5 @@
 package com.typewritermc.realm.authoring
 
-import com.typewritermc.authoring.AuthoringRecord
 import com.typewritermc.authoring.Availability
 import com.typewritermc.authoring.DraftBinding
 import com.typewritermc.authoring.LinkInspectionQuery
@@ -10,10 +9,9 @@ import com.typewritermc.authoring.ResourceDrafts
 import com.typewritermc.authoring.RouteQuery
 import com.typewritermc.authoring.TraversalBudget
 import com.typewritermc.authoring.TraversalDirection
-import com.typewritermc.authoring.TypeSelection
 import com.typewritermc.authoring.UnresolvedLink
-import com.typewritermc.authoring.ValueLocation
-import com.typewritermc.authoring.ValuePath
+import com.typewritermc.authoring.of
+import com.typewritermc.authoring.with
 import com.typewritermc.checking.CatalogGeneration
 import com.typewritermc.checking.InputIdentity
 import com.typewritermc.checking.InspectionCompletion
@@ -31,7 +29,6 @@ import com.typewritermc.types.EndpointCardinality
 import com.typewritermc.types.EndpointDefinition
 import com.typewritermc.types.EndpointSlot
 import com.typewritermc.types.FactoryNativeBindingRegistry
-import com.typewritermc.types.LinkTarget
 import com.typewritermc.types.NativeBindingRegistry
 import com.typewritermc.types.RelationContract
 import com.typewritermc.types.RelationDeletePolicy
@@ -42,7 +39,6 @@ import com.typewritermc.types.catalog.CheckedCatalog
 import com.typewritermc.types.catalog.DefaultCheckedCatalog
 import com.typewritermc.types.endpoint
 import com.typewritermc.types.fields
-import com.typewritermc.types.link
 import com.typewritermc.types.listValue
 import com.typewritermc.types.named
 import com.typewritermc.types.namedTemplate
@@ -51,22 +47,30 @@ import com.typewritermc.types.nullable
 import com.typewritermc.types.qualified
 import com.typewritermc.types.record
 import com.typewritermc.types.template
+import com.typewritermc.types.toResourceId
+import com.typewritermc.types.toSkir
 import de.infix.testBalloon.framework.core.testSuite
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.types.shouldBeInstanceOf
+import skirout.editor.v1.type_catalog.AuthoringRecord
 import skirout.editor.v1.type_catalog.CollectionKind
 import skirout.editor.v1.type_catalog.DataValue
 import skirout.editor.v1.type_catalog.EndpointId
 import skirout.editor.v1.type_catalog.FieldDeclaration
 import skirout.editor.v1.type_catalog.FieldOwner
 import skirout.editor.v1.type_catalog.ItemId
+import skirout.editor.v1.type_catalog.LinkTarget
 import skirout.editor.v1.type_catalog.ListItem
 import skirout.editor.v1.type_catalog.ParameterKey
+import skirout.editor.v1.type_catalog.PathSegment
 import skirout.editor.v1.type_catalog.RepresentationTemplate
 import skirout.editor.v1.type_catalog.ScalarKind
 import skirout.editor.v1.type_catalog.TypeDefinition
 import skirout.editor.v1.type_catalog.TypeDefinitionId
 import skirout.editor.v1.type_catalog.TypeParameter
+import skirout.editor.v1.type_catalog.TypeSelection
+import skirout.editor.v1.type_catalog.ValueLocation
+import skirout.editor.v1.type_catalog.ValuePath
 
 class RealmGraphReadsTest {
     fun traversalUsesTheSelectedStagedGraphWithBoundedBreadthFirstSearch() {
@@ -85,16 +89,15 @@ class RealmGraphReadsTest {
                 d to graphRecord(d, listOf(a, e)),
                 e to graphRecord(e, emptyList()),
                 unrelated to
-                    graphRecord(unrelated, emptyList()).copy(
-                        fields =
-                            graphRecord(unrelated, emptyList()).fields +
-                                (
-                                    "bad" to
-                                        DataValue.named(
-                                            BAD_LINK_USE,
-                                            DataValue.link(EDGE_SOURCE, LinkTarget(e, null)),
-                                        )
-                                ),
+                    graphRecord(unrelated, emptyList()).with(
+                        "bad",
+                        DataValue.named(
+                            BAD_LINK_USE,
+                            DataValue.createLink(
+                                endpoint = EDGE_SOURCE,
+                                target = LinkTarget(resource = e.toSkir(), opposite = null),
+                            ),
+                        ),
                     ),
             )
         val store =
@@ -125,13 +128,13 @@ class RealmGraphReadsTest {
         (InputIdentity.Incoming(a, EDGE.id) in dependencies) shouldBe true
         (
             InputIdentity.Value(
-                ValueLocation(
+                ValueLocation.of(
                     a,
                     ValuePath(
-                        listOf(
-                            com.typewritermc.authoring.PathSegment
-                                .Field("outgoing"),
-                        ),
+                        segments =
+                            listOf(
+                                PathSegment.createField(name = "outgoing"),
+                            ),
                     ),
                 ),
             ) in dependencies
@@ -291,16 +294,17 @@ class RealmGraphReadsTest {
             stagedReachable.resources.mapTo(linkedSetOf()) { it.id } shouldBe setOf(source, stagedTarget)
             val occurrence = RealmGraphReads.occurrences(LinkInspectionQuery(setOf(source), selection)).occurrences.single()
             val followed = RealmGraphReads.follow(occurrence).shouldBeInstanceOf<Availability.Available<DraftBinding>>()
-            followed.value.location.resource shouldBe stagedTarget
+            followed.value.location.resource
+                .toResourceId() shouldBe stagedTarget
         }
         val outgoing =
-            ValueLocation(
+            ValueLocation.of(
                 source,
                 ValuePath(
-                    listOf(
-                        com.typewritermc.authoring.PathSegment
-                            .Field("outgoing"),
-                    ),
+                    segments =
+                        listOf(
+                            PathSegment.createField(name = "outgoing"),
+                        ),
                 ),
             )
         val dependencies = stagedReads.observations().flatMapTo(linkedSetOf()) { it.dependencies() }
@@ -314,7 +318,11 @@ class RealmGraphReadsTest {
         val catalog = GraphCatalogLease()
         val source = ResourceId("source")
         val target = ResourceId("pending_target")
-        val pending = graphRecord(target, emptyList()).copy(configuration = TypeSelection.Pending(graphDefinition("missing"), emptyList()))
+        val pending =
+            graphRecord(
+                target,
+                emptyList(),
+            ).copy(configuration = TypeSelection.createPending(definition = graphDefinition("missing"), arguments = emptyList()))
         val resources = mapOf(source to graphRecord(source, listOf(target)), target to pending)
         val store =
             InMemoryAuthoringViewStore(
@@ -333,7 +341,7 @@ class RealmGraphReadsTest {
         selection.undecided.map { it.resource } shouldBe listOf(source)
         selection.completion.shouldBeInstanceOf<InspectionCompletion.Complete>()
         val identities = reads.observations().flatMapTo(linkedSetOf()) { it.dependencies() }
-        (InputIdentity.Form(ValueLocation(target, ValuePath())) in identities) shouldBe true
+        (InputIdentity.Form(ValueLocation.of(target)) in identities) shouldBe true
         lease.close()
         store.close()
     }
@@ -369,58 +377,60 @@ class RealmGraphReadsTest {
         reachable.resources.mapTo(linkedSetOf()) { it.id } shouldBe setOf(source, target)
         reachable.unresolved
             .filterIsInstance<UnresolvedLink.Unfilled>()
-            .single { it.occurrence.location.resource == source }
-            .occurrence.endpoint shouldBe BAD_ENDPOINT
+            .single {
+                it.occurrence.location.resource
+                    .toResourceId() == source
+            }.occurrence.endpoint shouldBe BAD_ENDPOINT
         reachable.completion.shouldBeInstanceOf<InspectionCompletion.Complete>()
         val dependencies = reachableReads.observations().flatMapTo(linkedSetOf()) { it.dependencies() }
         (
             InputIdentity.Value(
-                ValueLocation(
+                ValueLocation.of(
                     source,
                     ValuePath(
-                        listOf(
-                            com.typewritermc.authoring.PathSegment
-                                .Field("bad"),
-                        ),
+                        segments =
+                            listOf(
+                                PathSegment.createField(name = "bad"),
+                            ),
                     ),
                 ),
             ) in dependencies
         ) shouldBe true
         (
             InputIdentity.Value(
-                ValueLocation(
+                ValueLocation.of(
                     source,
                     ValuePath(
-                        listOf(
-                            com.typewritermc.authoring.PathSegment
-                                .Field("outgoing"),
-                        ),
+                        segments =
+                            listOf(
+                                PathSegment.createField(name = "outgoing"),
+                            ),
                     ),
                 ),
             ) in dependencies
         ) shouldBe true
         (
             InputIdentity.Value(
-                ValueLocation(
+                ValueLocation.of(
                     source,
                     ValuePath(
-                        listOf(
-                            com.typewritermc.authoring.PathSegment
-                                .Field("buttons"),
-                        ),
+                        segments =
+                            listOf(
+                                PathSegment.createField(name = "buttons"),
+                            ),
                     ),
                 ),
             ) in dependencies
         ) shouldBe true
         (
             InputIdentity.Form(
-                ValueLocation(
+                ValueLocation.of(
                     source,
                     ValuePath(
-                        listOf(
-                            com.typewritermc.authoring.PathSegment
-                                .Field("optional"),
-                        ),
+                        segments =
+                            listOf(
+                                PathSegment.createField(name = "optional"),
+                            ),
                     ),
                 ),
             ) in dependencies
@@ -428,13 +438,13 @@ class RealmGraphReadsTest {
         listOf("message", "nested", "expanding").forEach { field ->
             (
                 InputIdentity.Form(
-                    ValueLocation(
+                    ValueLocation.of(
                         source,
                         ValuePath(
-                            listOf(
-                                com.typewritermc.authoring.PathSegment
-                                    .Field(field),
-                            ),
+                            segments =
+                                listOf(
+                                    PathSegment.createField(name = field),
+                                ),
                         ),
                     ),
                 ) in dependencies
@@ -448,8 +458,10 @@ class RealmGraphReadsTest {
         routes.paths.size shouldBe 1
         routes.unresolved
             .filterIsInstance<UnresolvedLink.Unfilled>()
-            .single { it.occurrence.location.resource == source }
-            .occurrence.endpoint shouldBe BAD_ENDPOINT
+            .single {
+                it.occurrence.location.resource
+                    .toResourceId() == source
+            }.occurrence.endpoint shouldBe BAD_ENDPOINT
         routes.completion.shouldBeInstanceOf<InspectionCompletion.Complete>()
 
         val occurrences =
@@ -464,83 +476,79 @@ class RealmGraphReadsTest {
         occurrences.completion.shouldBeInstanceOf<InspectionCompletion.Complete>()
 
         val changedSource =
-            resources.getValue(source).copy(
-                fields =
-                    resources.getValue(source).fields +
-                        (
-                            "buttons" to
-                                DataValue.named(
-                                    BUTTON_LIST_USE,
-                                    DataValue.listValue(
-                                        listOf(
-                                            ListItem(
-                                                id = ItemId(value = "button"),
-                                                value =
-                                                    DataValue.named(
-                                                        BUTTON_USE,
-                                                        DataValue.record(mapOf("target" to DataValue.UNFILLED)),
-                                                    ),
-                                            ),
+            resources
+                .getValue(source)
+                .with(
+                    "buttons",
+                    DataValue.named(
+                        BUTTON_LIST_USE,
+                        DataValue.listValue(
+                            listOf(
+                                ListItem(
+                                    id = ItemId(value = "button"),
+                                    value =
+                                        DataValue.named(
+                                            BUTTON_USE,
+                                            DataValue.record(mapOf("target" to DataValue.UNFILLED)),
                                         ),
-                                    ),
-                                )
-                        ) +
-                        (
-                            "optional" to
-                                DataValue.named(
-                                    OPTIONAL_LINK_HOLDER_USE,
-                                    DataValue.record(mapOf("target" to DataValue.UNFILLED)),
-                                )
+                                ),
+                            ),
                         ),
-            )
+                    ),
+                ).with(
+                    "optional",
+                    DataValue.named(
+                        OPTIONAL_LINK_HOLDER_USE,
+                        DataValue.record(mapOf("target" to DataValue.UNFILLED)),
+                    ),
+                )
         val buttons =
-            ValueLocation(
+            ValueLocation.of(
                 source,
                 ValuePath(
-                    listOf(
-                        com.typewritermc.authoring.PathSegment
-                            .Field("buttons"),
-                    ),
+                    segments =
+                        listOf(
+                            PathSegment.createField(name = "buttons"),
+                        ),
                 ),
             )
         val optional =
-            ValueLocation(
+            ValueLocation.of(
                 source,
                 ValuePath(
-                    listOf(
-                        com.typewritermc.authoring.PathSegment
-                            .Field("optional"),
-                    ),
+                    segments =
+                        listOf(
+                            PathSegment.createField(name = "optional"),
+                        ),
                 ),
             )
         val button =
-            ValueLocation(
+            ValueLocation.of(
                 source,
                 ValuePath(
-                    listOf(
-                        com.typewritermc.authoring.PathSegment
-                            .Field("buttons"),
-                        com.typewritermc.authoring.PathSegment
-                            .Item(ItemId(value = "button")),
-                    ),
+                    segments =
+                        listOf(
+                            PathSegment.createField(name = "buttons"),
+                            PathSegment.createItem(id = ItemId(value = "button")),
+                        ),
                 ),
             )
         val buttonTarget =
-            ValueLocation(
+            ValueLocation.of(
                 source,
                 ValuePath(
-                    button.path.segments +
-                        com.typewritermc.authoring.PathSegment
-                            .Field("target"),
+                    segments =
+                        button.path.segments +
+                            PathSegment.createField(name = "target"),
                 ),
             )
         val optionalTarget =
-            ValueLocation(
+            ValueLocation.of(
                 source,
                 ValuePath(
-                    optional.path.segments +
-                        com.typewritermc.authoring.PathSegment
-                            .Field("target"),
+                    segments =
+                        optional.path.segments +
+                            PathSegment.createField(name = "target"),
                 ),
             )
         val expected =
@@ -572,28 +580,25 @@ class RealmGraphReadsTest {
         changedUnresolved.mapTo(linkedSetOf()) { it.occurrence.location.path } shouldBe
             setOf(
                 ValuePath(
-                    listOf(
-                        com.typewritermc.authoring.PathSegment
-                            .Field("bad"),
-                    ),
+                    segments =
+                        listOf(
+                            PathSegment.createField(name = "bad"),
+                        ),
                 ),
                 ValuePath(
-                    listOf(
-                        com.typewritermc.authoring.PathSegment
-                            .Field("buttons"),
-                        com.typewritermc.authoring.PathSegment
-                            .Item(ItemId(value = "button")),
-                        com.typewritermc.authoring.PathSegment
-                            .Field("target"),
-                    ),
+                    segments =
+                        listOf(
+                            PathSegment.createField(name = "buttons"),
+                            PathSegment.createItem(id = ItemId(value = "button")),
+                            PathSegment.createField(name = "target"),
+                        ),
                 ),
                 ValuePath(
-                    listOf(
-                        com.typewritermc.authoring.PathSegment
-                            .Field("optional"),
-                        com.typewritermc.authoring.PathSegment
-                            .Field("target"),
-                    ),
+                    segments =
+                        listOf(
+                            PathSegment.createField(name = "optional"),
+                            PathSegment.createField(name = "target"),
+                        ),
                 ),
             )
         changedLease.close()
@@ -615,7 +620,7 @@ private class GraphCatalogLease(
 
     override val configuration: List<com.typewritermc.configuration.ConfigurationRecipe> = emptyList()
     override val operations = com.typewritermc.operations.OperationCatalog()
-    override val placementFields = emptyMap<TypeDefinitionId, com.typewritermc.authoring.ValuePath>()
+    override val placementFields = emptyMap<TypeDefinitionId, ValuePath>()
 
     override fun retain(): AuthoringCatalogLease = GraphCatalogLease(generation)
 
@@ -627,8 +632,8 @@ private fun graphRecord(
     targets: List<ResourceId>,
     badTarget: ResourceId? = null,
 ): AuthoringRecord =
-    AuthoringRecord(
-        TypeSelection.Complete(NODE_USE),
+    AuthoringRecord.of(
+        TypeSelection.CompleteWrapper(NODE_USE),
         mapOf(
             "outgoing" to
                 DataValue.named(
@@ -637,7 +642,14 @@ private fun graphRecord(
                         targets.mapIndexed { index, target ->
                             ListItem(
                                 id = ItemId(value = "${source.value}_$index"),
-                                value = DataValue.named(EDGE_LINK_USE, DataValue.link(EDGE_SOURCE, LinkTarget(target, null))),
+                                value =
+                                    DataValue.named(
+                                        EDGE_LINK_USE,
+                                        DataValue.createLink(
+                                            endpoint = EDGE_SOURCE,
+                                            target = LinkTarget(resource = target.toSkir(), opposite = null),
+                                        ),
+                                    ),
                             )
                         },
                     ),
@@ -646,7 +658,10 @@ private fun graphRecord(
                 if (badTarget == null) {
                     DataValue.UNFILLED
                 } else {
-                    DataValue.named(BAD_LINK_USE, DataValue.link(BAD_ENDPOINT, LinkTarget(badTarget, null)))
+                    DataValue.named(
+                        BAD_LINK_USE,
+                        DataValue.createLink(endpoint = BAD_ENDPOINT, target = LinkTarget(resource = badTarget.toSkir(), opposite = null)),
+                    )
                 },
             "buttons" to DataValue.named(BUTTON_LIST_USE, DataValue.listValue(emptyList())),
             "optional" to DataValue.NULL,

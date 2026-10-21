@@ -1,6 +1,5 @@
 package com.typewritermc.discovery
 
-import com.typewritermc.authoring.immutableCopy
 import com.typewritermc.checking.DiagnosticTemplate
 import com.typewritermc.configuration.ConfigurationRecipe
 import com.typewritermc.configuration.OwnedRule

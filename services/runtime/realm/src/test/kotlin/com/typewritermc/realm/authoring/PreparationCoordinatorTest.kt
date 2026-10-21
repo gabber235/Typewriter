@@ -1,14 +1,10 @@
 package com.typewritermc.realm.authoring
 
-import com.typewritermc.authoring.ArgumentSelection
-import com.typewritermc.authoring.AuthoringRecord
 import com.typewritermc.authoring.InitializationRequest
 import com.typewritermc.authoring.PreparationOperation
 import com.typewritermc.authoring.PreparationStep
 import com.typewritermc.authoring.PreparationTarget
-import com.typewritermc.authoring.PreparedContent
-import com.typewritermc.authoring.PreparedValue
-import com.typewritermc.authoring.TypeSelection
+import com.typewritermc.authoring.of
 import com.typewritermc.checking.CatalogGeneration
 import com.typewritermc.realm.checking.TestCatalogLease
 import com.typewritermc.types.fieldMap
@@ -22,8 +18,13 @@ import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.test.runTest
+import skirout.editor.v1.catalog.PreparedContent
+import skirout.editor.v1.catalog.PreparedValue
+import skirout.editor.v1.type_catalog.ArgumentSelection
+import skirout.editor.v1.type_catalog.AuthoringRecord
 import skirout.editor.v1.type_catalog.DataValue
 import skirout.editor.v1.type_catalog.TypeDefinitionId
+import skirout.editor.v1.type_catalog.TypeSelection
 import java.util.concurrent.atomic.AtomicInteger
 
 val PreparationCoordinatorTestSuite by testSuite {
@@ -89,20 +90,21 @@ private fun request(supplied: String = "seed") =
         catalog = CATALOG,
         target =
             PreparationTarget.Record(
-                TypeSelection.Pending(CREATION_TYPE, listOf(ArgumentSelection.Unfilled)),
+                TypeSelection.createPending(definition = CREATION_TYPE, arguments = listOf(ArgumentSelection.UNFILLED)),
             ),
         supplied = DataValue.record(mapOf("seed" to DataValue.StringValueWrapper(supplied))),
     )
 
 private fun prepared(value: String) =
     PreparedValue(
-        PreparedContent.Record(
-            AuthoringRecord(
-                configuration = TypeSelection.Pending(CREATION_TYPE, listOf(ArgumentSelection.Unfilled)),
-                fields = mapOf("value" to DataValue.StringValueWrapper(value)),
+        content =
+            PreparedContent.RecordWrapper(
+                AuthoringRecord.of(
+                    configuration = TypeSelection.createPending(definition = CREATION_TYPE, arguments = listOf(ArgumentSelection.UNFILLED)),
+                    fields = mapOf("value" to DataValue.StringValueWrapper(value)),
+                ),
             ),
-        ),
-        emptyList(),
+        findings = emptyList(),
     )
 
 private val CATALOG = CatalogGeneration("catalog")

@@ -4,9 +4,9 @@ import com.typewritermc.authoring.AuthoredReads
 import com.typewritermc.authoring.Availability
 import com.typewritermc.authoring.BoundCollectionPath
 import com.typewritermc.authoring.BoundPath
-import com.typewritermc.authoring.PathSegment
-import com.typewritermc.authoring.ValueLocation
-import com.typewritermc.authoring.ValuePath
+import com.typewritermc.authoring.name
+import com.typewritermc.authoring.of
+import com.typewritermc.authoring.root
 import com.typewritermc.checking.CatalogGeneration
 import com.typewritermc.checking.PartialSelection
 import com.typewritermc.checking.TypedSelection
@@ -26,8 +26,6 @@ import com.typewritermc.types.qualified
 import com.typewritermc.types.record
 import com.typewritermc.types.requireValid
 import com.typewritermc.types.setValue
-import com.typewritermc.types.skir.SkirAuthoringValueCodec
-import com.typewritermc.types.skir.getOrThrow
 import com.typewritermc.types.timestamp
 import com.typewritermc.types.unwrapNamed
 import de.infix.testBalloon.framework.core.testSuite
@@ -45,8 +43,11 @@ import skirout.editor.v1.type_catalog.DataValue
 import skirout.editor.v1.type_catalog.ItemId
 import skirout.editor.v1.type_catalog.ListItem
 import skirout.editor.v1.type_catalog.MapRow
+import skirout.editor.v1.type_catalog.PathSegment
 import skirout.editor.v1.type_catalog.TypeDefinitionId
+import skirout.editor.v1.type_catalog.TypeSelection
 import skirout.editor.v1.type_catalog.TypeUse
+import skirout.editor.v1.type_catalog.ValueLocation
 import java.nio.file.Files
 import java.nio.file.Path
 import kotlin.time.Duration.Companion.milliseconds
@@ -122,7 +123,7 @@ val PortableExpressionFixtureTest by testSuite {
                                 } else {
                                     location.path.segments.fold(configured.value()) { current, segment ->
                                         val field =
-                                            segment as? PathSegment.Field ?: error("Fixture root projections require field segments")
+                                            segment as? PathSegment.FieldWrapper ?: error("Fixture root projections require field segments")
                                         requireNotNull((current.unwrapNamed() as DataValue.RecordWrapper).field(field.name))
                                     }
                                 }
@@ -139,7 +140,7 @@ val PortableExpressionFixtureTest by testSuite {
                             )
                         ) + case["partialBindings"]?.jsonObject.orEmpty().keys
                     ).associate { name ->
-                        ExpressionBindingId(name) to ValueLocation(ResourceId(name), ValuePath())
+                        ExpressionBindingId(name) to ValueLocation.of(ResourceId(name))
                     },
                 )
             val expression = case["expression"]!!.expression()
@@ -171,11 +172,9 @@ val PortableExpressionFixtureTest by testSuite {
                         .orEmpty()
                         .map { (name, encoded) ->
                             ExpressionBindingId(name) to
-                                SkirAuthoringValueCodec
-                                    .decode(
-                                        skirout.editor.v1.type_catalog.TypeSelection.serializer
-                                            .fromJsonCode(encoded.toString()),
-                                    ).getOrThrow()
+                                TypeSelection.serializer
+                                    .fromJsonCode(encoded.toString())
+                                    .requireValid()
                         }.toMap()
                 var inferred: skirout.editor.v1.expression.ExpressionType? = null
                 PortableExpressionChecker(catalog::resolve, resolvePartial = catalog::resolvePartial)
@@ -340,7 +339,7 @@ private fun JsonObject.value(): DataValue =
 private fun JsonElement.expression(): ExpressionNode = ExpressionNode.serializer.fromJsonCode(toString())
 
 private fun ValueLocation.fixtureKey(): String {
-    val fields = path.segments.map { (it as PathSegment.Field).name }
+    val fields = path.segments.map { (it as PathSegment.FieldWrapper).name }
     return if (fields.isEmpty()) resource.value else "${resource.value}:${fields.joinToString(".")}"
 }
 

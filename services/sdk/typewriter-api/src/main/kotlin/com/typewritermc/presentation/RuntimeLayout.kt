@@ -1,5 +1,6 @@
 package com.typewritermc.presentation
 
+import com.typewritermc.authoring.root
 import com.typewritermc.expression.Expr
 import com.typewritermc.expression.Handled
 import com.typewritermc.expression.literal
@@ -16,6 +17,7 @@ import skirout.editor.v1.presentation.PresentationElement
 import skirout.editor.v1.presentation.PresentationNode
 import skirout.editor.v1.presentation.PresentationTransitionPolicy
 import skirout.editor.v1.presentation.WrapChildrenLayout
+import skirout.editor.v1.type_catalog.ValuePath
 
 internal class RuntimeLayout(
     private val state: PresentationBuildState,
@@ -35,7 +37,7 @@ internal class RuntimeLayout(
             return PresentationSubjectExpressions(
                 com.typewritermc.expression.inputExpression(
                     com.typewritermc.expression.ExpressionBindingId("presentation.subject.identifier"),
-                    com.typewritermc.authoring.ValuePath(),
+                    ValuePath.root,
                 ),
             )
         }

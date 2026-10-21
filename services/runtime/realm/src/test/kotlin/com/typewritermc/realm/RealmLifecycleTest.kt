@@ -2,11 +2,10 @@ package com.typewritermc.realm
 
 import build.skir.Serializer
 import com.surrealdb.Surreal
-import com.typewritermc.authoring.AuthoringRecord
 import com.typewritermc.authoring.RealmRootDefinition
 import com.typewritermc.authoring.RelationProjectionDelta
-import com.typewritermc.authoring.TypeSelection
 import com.typewritermc.authoring.definition
+import com.typewritermc.authoring.of
 import com.typewritermc.checking.CatalogGeneration
 import com.typewritermc.checking.InputToken
 import com.typewritermc.discovery.CatalogAssemblyContext
@@ -39,7 +38,6 @@ import com.typewritermc.realm.authoring.PreparationEvaluator
 import com.typewritermc.realm.catalog.RealmCatalogIncarnation
 import com.typewritermc.realm.catalog.RealmCatalogStore
 import com.typewritermc.realm.catalog.installTestCatalog
-import com.typewritermc.realm.compiler.EngineImplementationInputs
 import com.typewritermc.realm.compiler.StagedEngineImplementationSource
 import com.typewritermc.realm.repository.AuthoringMutationPlan
 import com.typewritermc.realm.repository.SurrealAuthoringStorage
@@ -68,8 +66,6 @@ import com.typewritermc.types.namedUse
 import com.typewritermc.types.payload
 import com.typewritermc.types.qualified
 import com.typewritermc.types.requireValid
-import com.typewritermc.types.skir.SkirAuthoringValueCodec
-import com.typewritermc.types.skir.getOrThrow
 import com.typewritermc.types.template
 import de.infix.testBalloon.framework.core.testSuite
 import io.kotest.matchers.ints.shouldBeGreaterThan
@@ -88,6 +84,8 @@ import skirout.editor.v1.authoring.QueryAuthoringStateRequest
 import skirout.editor.v1.authoring.QueryAuthoringStateResponse
 import skirout.editor.v1.catalog.CatalogFetchRequest
 import skirout.editor.v1.catalog.CatalogFetchResult
+import skirout.editor.v1.publication.EngineImplementationInputs
+import skirout.editor.v1.type_catalog.AuthoringRecord
 import skirout.editor.v1.type_catalog.DataValue
 import skirout.editor.v1.type_catalog.DeclarationOwner
 import skirout.editor.v1.type_catalog.FieldDeclaration
@@ -96,6 +94,7 @@ import skirout.editor.v1.type_catalog.RepresentationTemplate
 import skirout.editor.v1.type_catalog.ScalarKind
 import skirout.editor.v1.type_catalog.TypeDefinition
 import skirout.editor.v1.type_catalog.TypeDefinitionId
+import skirout.editor.v1.type_catalog.TypeSelection
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.seconds
 import skirout.editor.v1.type_catalog.CatalogGeneration as SkirCatalogGeneration
@@ -332,9 +331,8 @@ val RealmLifecycleTest by testSuite {
                     response.value
                 state.resources
                     .map {
-                        SkirAuthoringValueCodec
-                            .decode(it.content)
-                            .getOrThrow()
+                        it.content
+                            .requireValid()
                             .configuration.definition
                     }.sortedBy { it.toString() } shouldBe
                     listOf(RealmRootDefinition.id, LibraryDefinition.id, TaxonomyDefinition.id).sortedBy { it.toString() }
@@ -351,13 +349,13 @@ val RealmLifecycleTest by testSuite {
             val availableResource = ResourceId("available")
             val unavailableResource = ResourceId("unavailable")
             val availableRecord =
-                AuthoringRecord(
-                    TypeSelection.Complete(valid.namedUse()),
+                AuthoringRecord.of(
+                    TypeSelection.CompleteWrapper(valid.namedUse()),
                     mapOf("name" to DataValue.StringValueWrapper("Book")),
                 )
             val unavailableRecord =
-                AuthoringRecord(
-                    TypeSelection.Complete(unavailable.namedUse()),
+                AuthoringRecord.of(
+                    TypeSelection.CompleteWrapper(unavailable.namedUse()),
                     mapOf("legacy" to DataValue.StringValueWrapper("preserved")),
                 )
             val resources = mapOf(availableResource to availableRecord, unavailableResource to unavailableRecord)
@@ -400,7 +398,7 @@ val RealmLifecycleTest by testSuite {
                 val snapshot =
                     snapshotResult.value
                 snapshot.resources.associate { resource ->
-                    resource.id.value to SkirAuthoringValueCodec.decode(resource.content).getOrThrow()
+                    resource.id.value to resource.content.requireValid()
                 } shouldBe
                     mapOf(
                         availableResource.value to availableRecord,
@@ -520,7 +518,14 @@ private class RealmLifecycleFixture(
             registrars = emptyList(),
             facts = DeploymentFacts(),
             preparationEvaluator = PreparationEvaluator { _, _ -> error("Preparation is not used by lifecycle tests.") },
-            engine = StagedEngineImplementationSource(EngineImplementationInputs(InputToken("engine"))),
+            engine =
+                StagedEngineImplementationSource(
+                    EngineImplementationInputs(
+                        token =
+                            skirout.editor.v1.type_catalog
+                                .InputToken(value = "engine"),
+                    ),
+                ),
             catalogActivator =
                 catalogActivator ?: RealmCatalogActivator { repository, catalog ->
                     repository.activateCatalog(catalog, install = {}, publish = {})

@@ -8,8 +8,6 @@ import com.typewritermc.discovery.checkedGeneratedScope
 import com.typewritermc.expression.Expr
 import com.typewritermc.expression.ExpressionBindingId
 import com.typewritermc.expression.Handled
-import com.typewritermc.types.skir.SkirAuthoringValueCodec
-import com.typewritermc.types.skir.getOrThrow
 import com.typewritermc.types.template
 import com.typewritermc.types.toTemplate
 import com.typewritermc.types.unknownVariant
@@ -318,7 +316,7 @@ internal class RuntimeControlBinding(
         scope.configure()
         resources(
             ResourcesLayout.createTree(
-                path = SkirAuthoringValueCodec.encode(path.path).getOrThrow(),
+                path = path.path,
                 group = scope.group,
                 groupBindingId = groupBinding.wire(),
                 connectors = null,

@@ -1,18 +1,17 @@
 package com.typewritermc.realm.authoring
 
 import com.typewritermc.authoring.AuthoredReads
-import com.typewritermc.authoring.AuthoringRecord
 import com.typewritermc.authoring.CompletenessResult
 import com.typewritermc.authoring.EditContext
 import com.typewritermc.authoring.PlacementAnchor
 import com.typewritermc.authoring.PreparedEdit
 import com.typewritermc.authoring.ResourceDraft
 import com.typewritermc.authoring.ResourceDrafts
-import com.typewritermc.authoring.TypeSelection
-import com.typewritermc.authoring.ValueLocation
-import com.typewritermc.authoring.ValuePath
-import com.typewritermc.authoring.ValueProblem
 import com.typewritermc.authoring.complete
+import com.typewritermc.authoring.definition
+import com.typewritermc.authoring.of
+import com.typewritermc.authoring.root
+import com.typewritermc.authoring.use
 import com.typewritermc.capability.CapabilityId
 import com.typewritermc.checking.CatalogGeneration
 import com.typewritermc.checking.InputIdentity
@@ -36,16 +35,23 @@ import com.typewritermc.services.libs.utils.rethrowExceptional
 import com.typewritermc.types.ResourceId
 import com.typewritermc.types.ResourceTarget
 import com.typewritermc.types.template
+import com.typewritermc.types.toResourceId
+import com.typewritermc.types.unknownVariant
 import com.typewritermc.types.use
+import skirout.editor.v1.diagnostic.ValueProblem
 import skirout.editor.v1.operation.OperationAvailability
 import skirout.editor.v1.operation.OperationCardinality
 import skirout.editor.v1.operation.OperationConfirmation
 import skirout.editor.v1.operation.ResolvedResourceOperation
 import skirout.editor.v1.operation.ResolvedResourceOperations
 import skirout.editor.v1.resource_operations.DropCandidates
+import skirout.editor.v1.type_catalog.AuthoringRecord
 import skirout.editor.v1.type_catalog.DataValue
 import skirout.editor.v1.type_catalog.ItemId
 import skirout.editor.v1.type_catalog.NamedTypeTemplate
+import skirout.editor.v1.type_catalog.TypeSelection
+import skirout.editor.v1.type_catalog.ValueLocation
+import skirout.editor.v1.type_catalog.ValuePath
 import java.util.UUID
 import skirout.editor.v1.type_catalog.ResourceId as SkirResourceId
 
@@ -214,7 +220,9 @@ internal class ResourceOperationRuntime(
             } catch (unfinished: UnfinishedOperationInput) {
                 OperationPreparationResult.NeedsInput(input, emptyList(), unfinished.paths)
             } catch (missing: UnavailableAuthoredValue) {
-                OperationPreparationResult.Invalid(missing.locations.map { ValueProblem(it, "required_authored_value_missing") })
+                OperationPreparationResult.Invalid(
+                    missing.locations.map { ValueProblem(location = it, code = "required_authored_value_missing") },
+                )
             } catch (rejected: AuthoringPlanRejected) {
                 OperationPreparationResult.Invalid(rejected.problems)
             } catch (failure: Exception) {
@@ -251,8 +259,8 @@ internal class ResourceOperationRuntime(
         invocation.origin.occurrences.forEach { occurrence ->
             require(baseline.links[occurrence.id] == occurrence) { "The captured resource occurrence changed" }
             reads.observeInput(InputIdentity.Value(occurrence.id.location))
-            reads.observeInput(InputIdentity.Incoming(occurrence.source, null))
-            reads.observeInput(InputIdentity.Incoming(occurrence.target.resource, null))
+            reads.observeInput(InputIdentity.Incoming(occurrence.source.toResourceId(), null))
+            reads.observeInput(InputIdentity.Incoming(occurrence.target.resource.toResourceId(), null))
         }
     }
 }
@@ -265,7 +273,7 @@ internal fun OperationInvocation.applicableIn(
     val records = targets.map { id -> requireNotNull(view.resources[id]) { "The operation target is unavailable" } }
     targets.forEach { id ->
         reads.observeInput(InputIdentity.Existence(id))
-        reads.observeInput(InputIdentity.Form(ValueLocation(id, ValuePath())))
+        reads.observeInput(InputIdentity.Form(ValueLocation.of(id)))
     }
     return view.catalog.operations.operations
         .filter { it.covers(records, view) }
@@ -310,13 +318,17 @@ private fun AuthoringRecord.matches(
     view: AuthoringView,
 ): Boolean =
     when (val actual = configuration) {
-        is TypeSelection.Complete -> {
+        is TypeSelection.CompleteWrapper -> {
             view.catalog.checked.isReadableAs(actual.use.use, target.asClosedUse().use)
         }
 
-        is TypeSelection.Pending -> {
+        is TypeSelection.PendingWrapper -> {
             target.arguments.isEmpty() &&
                 view.catalog.checked.isNominalSubtype(actual.definition, target.definition)
+        }
+
+        else -> {
+            unknownVariant(actual)
         }
     }
 

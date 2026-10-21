@@ -1,22 +1,22 @@
 package com.typewritermc.realm.repository
 
 import com.surrealdb.Surreal
-import com.typewritermc.authoring.AuthoringRecord
 import com.typewritermc.authoring.CommitResult
 import com.typewritermc.authoring.EditExpectation
 import com.typewritermc.authoring.PreparedEdit
-import com.typewritermc.authoring.ValueLocation
-import com.typewritermc.authoring.ValuePath
-import com.typewritermc.authoring.ValueProblem
+import com.typewritermc.authoring.of
 import com.typewritermc.realm.authoring.AuthoringCatalogLease
 import com.typewritermc.realm.authoring.AuthoringViewDelta
 import com.typewritermc.realm.authoring.AuthoringViewStore
-import com.typewritermc.realm.authoring.authoredDatabaseValues
+import com.typewritermc.realm.repository.utils.encodeSkir
 import com.typewritermc.realm.repository.utils.inTransaction
 import com.typewritermc.realm.repository.utils.surrealRecordId
 import com.typewritermc.realm.search.authoredSearchText
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
+import skirout.editor.v1.diagnostic.ValueProblem
+import skirout.editor.v1.type_catalog.AuthoringRecord
+import skirout.editor.v1.type_catalog.ValueLocation
 
 /**
  * Owns admission of prepared edits into the saved authoring state for one Realm.
@@ -82,7 +82,7 @@ internal class RealmAuthoringOwner(
                 val missing = required.filter { fact -> edit.expectations.none { it.sameFact(fact) } }
                 if (missing.isNotEmpty()) {
                     return@read CommitResult.Rejected(
-                        missing.map { ValueProblem(it.location(), "missing_expectation") },
+                        missing.map { ValueProblem(location = it.location(), code = "missing_expectation") },
                     )
                 }
                 val next = views.prepare(AuthoringViewDelta(plan.resources, plan.removedResources))
@@ -115,7 +115,7 @@ internal class SurrealAuthoringStorage(
                         "UPSERT ONLY \$resource SET content = \$content, search = \$search;",
                         mapOf(
                             "resource" to id.surrealRecordId(),
-                            "content" to authoredDatabaseValues.encode(AuthoringRecord.serializer(), record),
+                            "content" to encodeSkir(AuthoringRecord.serializer, record),
                             "search" to mapOf("text" to authoredSearchText(id, record)),
                         ),
                     ).take(0)
@@ -136,8 +136,8 @@ internal fun EditExpectation.location(): ValueLocation =
     when (this) {
         is EditExpectation.Value -> at
         is EditExpectation.Configuration -> at
-        is EditExpectation.Resource -> ValueLocation(id, ValuePath())
-        is EditExpectation.ResourceExists -> ValueLocation(id, ValuePath())
-        is EditExpectation.Links -> ValueLocation(resource, ValuePath())
+        is EditExpectation.Resource -> ValueLocation.of(id)
+        is EditExpectation.ResourceExists -> ValueLocation.of(id)
+        is EditExpectation.Links -> ValueLocation.of(resource)
         is EditExpectation.ResourceIds -> error("Resource id set expectations are never required for commit admission.")
     }

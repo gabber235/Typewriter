@@ -1,22 +1,25 @@
 package com.typewritermc.engine
 
 import com.typewritermc.authoring.NativeBindingId
-import com.typewritermc.authoring.ValuePath
 import com.typewritermc.types.RelationId
 import com.typewritermc.types.ResourceId
 import com.typewritermc.types.skir.NamedDataValueSerializer
 import com.typewritermc.types.skir.NamedTypeUseSerializer
 import com.typewritermc.types.skir.TypeDefinitionSerializer
+import com.typewritermc.types.skir.ValuePathSerializer
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
+import skirout.editor.v1.compilation_root.CompilationProjectionId
+import skirout.editor.v1.diagnostic.Diagnostic
 import skirout.editor.v1.type_catalog.DataValue
 import skirout.editor.v1.type_catalog.NamedTypeUse
 import skirout.editor.v1.type_catalog.TypeDefinition
+import skirout.editor.v1.type_catalog.ValuePath
 
 const val RESOURCE_GRAPH_FORMAT_REVISION = 1
 
 /** The single compiled format for authored resource graphs, shared by the Realm producer and engine consumers. */
-val RESOURCE_GRAPH_PROJECTION = CompilationProjectionId("typewriter.resource-graph")
+val RESOURCE_GRAPH_PROJECTION = CompilationProjectionId(value = "typewriter.resource-graph")
 
 /** Names the serialized resource graph shard format. */
 const val RESOURCE_GRAPH_MEDIA_TYPE = "application/vnd.typewriter.resource-graph+json"
@@ -65,7 +68,9 @@ sealed interface CompiledEdgeOrigin {
     @SerialName("relation")
     data class Relation(
         val relation: RelationId,
+        @Serializable(with = ValuePathSerializer::class)
         val firstLocation: ValuePath?,
+        @Serializable(with = ValuePathSerializer::class)
         val secondLocation: ValuePath?,
     ) : CompiledEdgeOrigin
 }
@@ -97,9 +102,16 @@ value class ContentDigest(
     val value: String,
 ) {
     init {
-        require(value.matches(Regex("[0-9a-f]{64}"))) { "Content digests must be lowercase SHA256 values." }
+        requireContentDigest(value)
     }
 }
+
+/** Requires the 64 lowercase SHA256 hexadecimal characters of a content digest. */
+internal fun requireContentDigest(value: String) {
+    require(CONTENT_DIGEST.matches(value)) { "Content digests must be lowercase SHA256 values." }
+}
+
+private val CONTENT_DIGEST = Regex("[0-9a-f]{64}")
 
 @Serializable
 data class RuntimeRelationFact(
@@ -128,40 +140,20 @@ data class ResourceGraphShard(
 )
 
 /**
- * Addresses serialized compiled bytes by digest and exact size in bytes.
- *
- * Size must be nonnegative. Readers verify both size and digest before decoding the payload.
- */
-@Serializable
-data class CompiledBlobPointer(
-    val digest: ContentDigest,
-    val size: Long,
-) {
-    init {
-        require(size >= 0) { "Compiled blob size must not be negative." }
-    }
-}
-
-/**
  * Returns a reusable shard or diagnostics that block publication of that compilation unit.
  *
  * Blocked output retains its input fingerprint so the coordinator can track which authoring state failed.
  */
-@Serializable
 sealed interface ResourceGraphCompileResult {
     /** A complete shard that may be reused or included in a publication. */
-    @Serializable
-    @SerialName("success")
     data class Success(
         val shard: ResourceGraphShard,
         val inputFingerprint: ContentDigest,
     ) : ResourceGraphCompileResult
 
     /** A compilation unit that produced no publishable shard and retains the input state behind its diagnostics. */
-    @Serializable
-    @SerialName("blocked")
     data class Blocked(
         val inputFingerprint: ContentDigest,
-        val diagnostics: List<com.typewritermc.checking.Diagnostic>,
+        val diagnostics: List<Diagnostic>,
     ) : ResourceGraphCompileResult
 }

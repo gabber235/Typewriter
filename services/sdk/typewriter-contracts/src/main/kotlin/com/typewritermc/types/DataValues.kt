@@ -3,13 +3,10 @@
 package com.typewritermc.types
 
 import build.skir.KeyedList
-import com.typewritermc.authoring.toSkir
-import com.typewritermc.authoring.toTypewriter
 import okio.ByteString.Companion.toByteString
 import skirout.editor.v1.type_catalog.DataValue
 import skirout.editor.v1.type_catalog.EndpointId
 import skirout.editor.v1.type_catalog.FieldValue
-import skirout.editor.v1.type_catalog.LinkValue
 import skirout.editor.v1.type_catalog.ListItem
 import skirout.editor.v1.type_catalog.MapRow
 import skirout.editor.v1.type_catalog.NamedTypeUse
@@ -20,8 +17,6 @@ import kotlin.time.Duration.Companion.milliseconds
 import kotlin.time.Instant
 import kotlin.time.toJavaInstant
 import kotlin.time.toKotlinInstant
-import skirout.editor.v1.type_catalog.LinkTarget as SkirLinkTarget
-import skirout.editor.v1.type_catalog.ResourceId as SkirResourceId
 import skirout.kernel.v1.duration.Duration as SkirDuration
 
 /*
@@ -64,11 +59,6 @@ fun DataValue.Companion.setValue(items: List<ListItem>): DataValue.SetValueWrapp
 
 fun DataValue.Companion.mapValue(rows: List<MapRow>): DataValue.MapValueWrapper = DataValue.createMapValue(rows = rows)
 
-fun DataValue.Companion.link(
-    endpoint: EndpointId,
-    target: LinkTarget,
-): DataValue.LinkWrapper = DataValue.createLink(endpoint = endpoint, target = target.toSkir())
-
 /** Builds a record payload with its fields in name order. */
 private fun recordPayload(fields: Map<String, DataValue>): RecordPayload =
     RecordPayload(fields = fields.entries.sortedBy { it.key }.map { (name, value) -> FieldValue(name = name, value = value) })
@@ -106,14 +96,6 @@ val DataValue.MapValueWrapper.rows: List<MapRow> get() = value.rows
 
 val DataValue.LinkWrapper.endpoint: EndpointId get() = value.endpoint
 
-/**
- * The linked resource and optional inverse location in the Kotlin authoring model, which link occurrences and native
- * references still use while value paths are Kotlin values.
- */
-val LinkValue.linkTarget: LinkTarget get() = target.toTypewriter()
-
-val DataValue.LinkWrapper.linkTarget: LinkTarget get() = value.linkTarget
-
 val DataValue.IntegerWrapper.bigInteger: BigInteger get() = value.toBigInteger()
 
 val DataValue.DurationWrapper.duration: Duration get() = value.value.milliseconds.milliseconds
@@ -122,11 +104,6 @@ val DataValue.TimestampWrapper.instant: Instant get() = value.toKotlinInstant()
 
 /** Returns the structural value beneath every nominal wrapper. */
 tailrec fun DataValue.unwrapNamed(): DataValue = if (this is DataValue.NamedWrapper) value.payload.unwrapNamed() else this
-
-/** Converts between the Kotlin link target of link occurrences and native references and the Skir one inside values. */
-fun LinkTarget.toSkir(): SkirLinkTarget = SkirLinkTarget(resource = SkirResourceId(value = resource.value), opposite = opposite?.toSkir())
-
-fun SkirLinkTarget.toTypewriter(): LinkTarget = LinkTarget(resource = ResourceId(resource.value), opposite = opposite?.toTypewriter())
 
 internal fun String.requireCanonicalDecimal(label: String) {
     require(CANONICAL_DECIMAL.matches(this)) { "$label must use canonical decimal syntax." }

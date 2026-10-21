@@ -3,8 +3,8 @@
 package com.typewritermc.presentation
 
 import com.typewritermc.authoring.GeneratedSdkApi
-import com.typewritermc.authoring.PathSegment
-import com.typewritermc.authoring.ValuePath
+import com.typewritermc.authoring.field
+import com.typewritermc.authoring.root
 import com.typewritermc.checking.CatalogGeneration
 import com.typewritermc.configuration.RepresentationKind
 import com.typewritermc.discovery.CatalogAssemblyContext
@@ -74,12 +74,14 @@ import skirout.editor.v1.type_catalog.IntegerWidth
 import skirout.editor.v1.type_catalog.ItemId
 import skirout.editor.v1.type_catalog.ListItem
 import skirout.editor.v1.type_catalog.ParameterKey
+import skirout.editor.v1.type_catalog.PathSegment
 import skirout.editor.v1.type_catalog.RepresentationTemplate
 import skirout.editor.v1.type_catalog.ScalarKind
 import skirout.editor.v1.type_catalog.TypeDefinition
 import skirout.editor.v1.type_catalog.TypeDefinitionId
 import skirout.editor.v1.type_catalog.TypeParameter
 import skirout.editor.v1.type_catalog.TypeUse
+import skirout.editor.v1.type_catalog.ValuePath
 
 val DefaultPresentationRuntimeTest by testSuite {
     test("caller inputs register one typed dependency without copying canonical facts") {
@@ -243,8 +245,7 @@ val DefaultPresentationRuntimeTest by testSuite {
                 .element as PresentationElement.ScopedBindingWrapper
         scope.value.binding.path.segments shouldBe
             listOf(
-                skirout.editor.v1.type_catalog.PathSegment
-                    .createField(name = "details"),
+                PathSegment.createField(name = "details"),
             )
         scope.value.scopeBindingId.value shouldBe "configured_value"
         val part = scope.value.child.element as PresentationElement.PartWrapper
@@ -850,10 +851,10 @@ val DefaultPresentationRuntimeTest by testSuite {
                         fields =
                             listOf(
                                 CollectionProjectionFieldSpec(
-                                    target = ValuePath(),
+                                    target = ValuePath.root,
                                     source =
                                         CollectionProjectionValueSpec.Content(
-                                            ValuePath(listOf(PathSegment.Field("title"))),
+                                            ValuePath.root.field("title"),
                                         ),
                                 ),
                             ),
@@ -955,10 +956,10 @@ val DefaultPresentationRuntimeTest by testSuite {
                         fields =
                             listOf(
                                 CollectionProjectionFieldSpec(
-                                    target = ValuePath(),
+                                    target = ValuePath.root,
                                     source =
                                         CollectionProjectionValueSpec.Content(
-                                            ValuePath(listOf(PathSegment.Field("child"))),
+                                            ValuePath.root.field("child"),
                                         ),
                                 ),
                             ),
@@ -1061,9 +1062,9 @@ val DefaultPresentationRuntimeTest by testSuite {
                         fields =
                             listOf(
                                 CollectionProjectionFieldSpec(
-                                    ValuePath(),
+                                    ValuePath.root,
                                     CollectionProjectionValueSpec.Content(
-                                        ValuePath(listOf(PathSegment.Field("title"))),
+                                        ValuePath.root.field("title"),
                                     ),
                                 ),
                             ),
@@ -1076,7 +1077,7 @@ val DefaultPresentationRuntimeTest by testSuite {
                         fields =
                             listOf(
                                 CollectionProjectionFieldSpec(
-                                    ValuePath(),
+                                    ValuePath.root,
                                     CollectionProjectionValueSpec.Literal(DataValue.StringValueWrapper("wrong")),
                                 ),
                             ),
@@ -1090,7 +1091,7 @@ val DefaultPresentationRuntimeTest by testSuite {
                         fields =
                             listOf(
                                 CollectionProjectionFieldSpec(
-                                    ValuePath(listOf(PathSegment.Field("value"))),
+                                    ValuePath.root.field("value"),
                                     CollectionProjectionValueSpec.Literal(DataValue.StringValueWrapper("value")),
                                 ),
                             ),

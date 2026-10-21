@@ -1,5 +1,6 @@
 package com.typewritermc.expression
 
+import com.typewritermc.authoring.root
 import com.typewritermc.checking.CatalogGeneration
 import com.typewritermc.configuration.PortableExpressionChecker
 import com.typewritermc.types.StandardTypes
@@ -14,6 +15,7 @@ import io.kotest.matchers.shouldBe
 import skirout.editor.v1.expression.ExpressionNode
 import skirout.editor.v1.expression.NumberArithmeticOperation
 import skirout.editor.v1.type_catalog.IntegerWidth
+import skirout.editor.v1.type_catalog.PathSegment
 import skirout.editor.v1.type_catalog.RepresentationTemplate
 import skirout.editor.v1.type_catalog.ScalarKind
 import skirout.editor.v1.type_catalog.TypeDefinition
@@ -84,7 +86,7 @@ val CanonicalExpressionTypeTest by testSuite {
         val source = input<List<String>>(rows).toNode()
         val bindings = mapOf(rows to nominalExpressionType(StandardTypes.list.use(listOf(text))))
         val find = ExpressionNode.createFind(source = source, body = literal(true).toNode())
-        val local = ExpressionNode.createLocal(depth = 0, slot = 0, path = ValuePath(segments = emptyList()))
+        val local = ExpressionNode.createLocal(depth = 0, slot = 0, path = ValuePath.root)
         val reduce = ExpressionNode.createReduce(source = source, body = local)
         listOf(find, reduce).forEach { node ->
             checker.checkExpressionCodes(node, bindings, nominalExpressionType(text.nullable())) shouldBe emptyList()
@@ -97,12 +99,11 @@ val CanonicalExpressionTypeTest by testSuite {
             ValuePath(
                 segments =
                     listOf(
-                        skirout.editor.v1.type_catalog.PathSegment
-                            .createItem(
-                                id =
-                                    skirout.editor.v1.type_catalog
-                                        .ItemId(value = "missing"),
-                            ),
+                        PathSegment.createItem(
+                            id =
+                                skirout.editor.v1.type_catalog
+                                    .ItemId(value = "missing"),
+                        ),
                     ),
             )
         val read =
@@ -134,7 +135,7 @@ val CanonicalExpressionTypeTest by testSuite {
                 binding =
                     skirout.editor.v1.type_catalog
                         .ExpressionBindingId(value = rows.value),
-                path = ValuePath(segments = listOf(skirout.editor.v1.type_catalog.PathSegment.UNKNOWN)),
+                path = ValuePath(segments = listOf(PathSegment.UNKNOWN)),
             )
         checker.checkExpressionCodes(
             read,
@@ -154,7 +155,7 @@ val CanonicalExpressionTypeTest by testSuite {
             )
         checker.checkExpressionStructure(unknown, emptySet()) shouldBe listOf("unknown_expression_operation")
         checker.checkExpressionStructure(ExpressionNode.UNKNOWN, emptySet()) shouldBe listOf("unknown_expression")
-        val outside = ExpressionNode.createLocal(depth = -1, slot = 0, path = ValuePath(segments = emptyList()))
+        val outside = ExpressionNode.createLocal(depth = -1, slot = 0, path = ValuePath.root)
         checker.checkExpressionStructure(outside, emptySet()) shouldBe listOf("invalid_expression_local")
     }
 }

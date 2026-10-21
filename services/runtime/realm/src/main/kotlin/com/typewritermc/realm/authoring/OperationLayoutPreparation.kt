@@ -7,20 +7,23 @@ import com.typewritermc.authoring.GeneratedSdkApi
 import com.typewritermc.authoring.GraphLayoutDefinition
 import com.typewritermc.authoring.GraphPlacement
 import com.typewritermc.authoring.GraphPlacementDefinition
-import com.typewritermc.authoring.PathSegment
 import com.typewritermc.authoring.PlacementAnchor
-import com.typewritermc.authoring.ValueLocation
-import com.typewritermc.authoring.ValuePath
 import com.typewritermc.authoring.boundCollectionPath
 import com.typewritermc.authoring.definition
+import com.typewritermc.authoring.name
+import com.typewritermc.authoring.of
 import com.typewritermc.checking.InputIdentity
 import com.typewritermc.operations.OperationPreparation
 import com.typewritermc.types.ResourceId
 import com.typewritermc.types.catalog.Resolution
 import com.typewritermc.types.encodeGeneratedDefault
 import com.typewritermc.types.ownsResources
+import com.typewritermc.types.toResourceId
 import com.typewritermc.types.use
+import skirout.editor.v1.type_catalog.PathSegment
 import skirout.editor.v1.type_catalog.TypeDefinitionId
+import skirout.editor.v1.type_catalog.ValueLocation
+import skirout.editor.v1.type_catalog.ValuePath
 
 /** Lays out moved members when their destination is laid out as a graph, without inferring layout from presentation. */
 internal class OperationLayoutPreparation(
@@ -62,10 +65,10 @@ internal class OperationLayoutPreparation(
             relations.catalog.relations
                 .filter { it.ownsResources }
                 .mapTo(hashSetOf()) { it.first.id }
-        val memberships = relations.links.values.filter { it.source == this && it.id.endpoint in owningEndpoints }
+        val memberships = relations.links.values.filter { it.source.toResourceId() == this && it.id.endpoint in owningEndpoints }
         subjects.forEach { subject ->
             relations.reads.observeInput(InputIdentity.Incoming(subject, null))
-            requireNotNull(memberships.singleOrNull { it.target.resource == subject }) {
+            requireNotNull(memberships.singleOrNull { it.target.resource.toResourceId() == subject }) {
                 "Place resources in one exact destination ownership occurrence before preparing layout."
             }
         }
@@ -74,9 +77,9 @@ internal class OperationLayoutPreparation(
                 it.id.location.path
                     .collection()
             }.distinct()
-            .forEach { path -> relations.reads.members(boundCollectionPath(ValueLocation(this, path))) }
+            .forEach { path -> relations.reads.members(boundCollectionPath(ValueLocation.of(this, path))) }
         memberships.forEach { relations.reads.observeInput(InputIdentity.Value(it.id.location)) }
-        return memberships.map { it.target.resource }.distinct()
+        return memberships.map { it.target.resource.toResourceId() }.distinct()
     }
 
     /** Writes a default graph placement into this resource's placement field, when that field accepts one. */
@@ -86,8 +89,8 @@ internal class OperationLayoutPreparation(
         val record = relations.resources[this] ?: return null
         val location = catalog.placementLocation(this, record) ?: return null
         // The authored value carries its actual placement kind, so the declared type comes from the containing record.
-        val field = location.path.segments.lastOrNull() as? PathSegment.Field ?: return null
-        val container = record.authoredTypeAt(ValuePath(location.path.segments.dropLast(1)), catalog.checked) ?: return null
+        val field = location.path.segments.lastOrNull() as? PathSegment.FieldWrapper ?: return null
+        val container = record.authoredTypeAt(ValuePath(segments = location.path.segments.dropLast(1)), catalog.checked) ?: return null
         val schema = (catalog.checked.resolve(container) as? Resolution.Ready)?.value?.schema ?: return null
         val declared = schema.fields.singleOrNull { it.key == field.name }?.type ?: return null
         if (!catalog.checked.isReadableAs(GraphPlacementDefinition.use.use, declared)) return null
@@ -102,4 +105,5 @@ internal class OperationLayoutPreparation(
         relations.resources[this]?.let { record -> relations.catalog.graphPlacementLocation(this, record) }
 }
 
-private fun ValuePath.collection(): ValuePath = if (segments.lastOrNull() is PathSegment.Item) ValuePath(segments.dropLast(1)) else this
+private fun ValuePath.collection(): ValuePath =
+    if (segments.lastOrNull() is PathSegment.ItemWrapper) ValuePath(segments = segments.dropLast(1)) else this

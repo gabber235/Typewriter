@@ -1,22 +1,20 @@
 package com.typewritermc.realm.repository
 
-import com.typewritermc.authoring.AuthoringRecord
-import com.typewritermc.authoring.LinkOccurrence
-import com.typewritermc.authoring.LinkOccurrenceId
 import com.typewritermc.authoring.LinkProjection
-import com.typewritermc.authoring.PathSegment
-import com.typewritermc.authoring.TypeSelection
-import com.typewritermc.authoring.ValueLocation
-import com.typewritermc.authoring.ValuePath
-import com.typewritermc.authoring.ValueProblem
+import com.typewritermc.authoring.definition
 import com.typewritermc.authoring.descendants
 import com.typewritermc.authoring.field
+import com.typewritermc.authoring.id
 import com.typewritermc.authoring.item
 import com.typewritermc.authoring.mapKey
 import com.typewritermc.authoring.mapValue
+import com.typewritermc.authoring.of
+import com.typewritermc.authoring.payload
+import com.typewritermc.authoring.record
+import com.typewritermc.authoring.root
+import com.typewritermc.authoring.use
 import com.typewritermc.types.EndpointCardinality
 import com.typewritermc.types.EndpointSlot
-import com.typewritermc.types.LinkTarget
 import com.typewritermc.types.RelationContract
 import com.typewritermc.types.RelationId
 import com.typewritermc.types.ResourceId
@@ -27,20 +25,28 @@ import com.typewritermc.types.endpoint
 import com.typewritermc.types.field
 import com.typewritermc.types.fields
 import com.typewritermc.types.items
-import com.typewritermc.types.linkTarget
 import com.typewritermc.types.nullable
 import com.typewritermc.types.payload
 import com.typewritermc.types.record
 import com.typewritermc.types.rows
 import com.typewritermc.types.template
+import com.typewritermc.types.toResourceId
+import com.typewritermc.types.toSkir
 import com.typewritermc.types.unknownVariant
 import com.typewritermc.types.use
+import skirout.editor.v1.authoring.LinkOccurrence
+import skirout.editor.v1.authoring.LinkOccurrenceId
+import skirout.editor.v1.diagnostic.ValueProblem
+import skirout.editor.v1.type_catalog.AuthoringRecord
 import skirout.editor.v1.type_catalog.DataValue
 import skirout.editor.v1.type_catalog.EndpointId
 import skirout.editor.v1.type_catalog.NamedTypeTemplate
 import skirout.editor.v1.type_catalog.ResolvedRepresentation
+import skirout.editor.v1.type_catalog.TypeSelection
 import skirout.editor.v1.type_catalog.TypeTemplate
 import skirout.editor.v1.type_catalog.TypeUse
+import skirout.editor.v1.type_catalog.ValueLocation
+import skirout.editor.v1.type_catalog.ValuePath
 import java.util.concurrent.ConcurrentHashMap
 
 internal data class StoredDeclaredEdge(
@@ -136,15 +142,15 @@ internal object ResourceValueMapper {
     fun discover(resources: Map<ResourceId, AuthoringRecord>): List<LinkOccurrence> =
         resources.flatMap { (source, record) ->
             DataValue
-                .record(record.fields)
+                .RecordWrapper(record.payload)
                 .descendants()
                 .mapNotNull { node ->
                     val link = node.value as? DataValue.LinkWrapper ?: return@mapNotNull null
-                    val location = ValueLocation(source, node.path)
+                    val location = ValueLocation.of(source, node.path)
                     LinkOccurrence(
-                        LinkOccurrenceId(link.endpoint, location),
-                        source,
-                        link.linkTarget,
+                        id = LinkOccurrenceId(endpoint = link.endpoint, location = location),
+                        source = source.toSkir(),
+                        target = link.value.target,
                     )
                 }.toList()
         }
@@ -167,42 +173,46 @@ internal object ResourceValueMapper {
         occurrences.sortedBy { occurrenceKey(it) }.forEach { occurrence ->
             val candidates = byEndpoint[occurrence.id.endpoint].orEmpty()
             if (candidates.size != 1) {
-                problems += ValueProblem(occurrence.id.location, if (candidates.isEmpty()) "unknown_endpoint" else "ambiguous_endpoint")
+                problems +=
+                    ValueProblem(
+                        location = occurrence.id.location,
+                        code = if (candidates.isEmpty()) "unknown_endpoint" else "ambiguous_endpoint",
+                    )
                 return@forEach
             }
-            if (occurrence.target.resource !in resources) {
-                problems += ValueProblem(occurrence.id.location, "target_resource_missing")
+            if (occurrence.target.resource.toResourceId() !in resources) {
+                problems += ValueProblem(location = occurrence.id.location, code = "target_resource_missing")
                 return@forEach
             }
             val (contract, slot) = candidates.single()
             if (catalog != null) {
                 val sourceEndpoint = if (slot == EndpointSlot.First) contract.first else contract.second
                 val targetEndpoint = if (slot == EndpointSlot.First) contract.second else contract.first
-                if (!resources.getValue(occurrence.source).matches(sourceEndpoint.resource, catalog)) {
-                    problems += ValueProblem(occurrence.id.location, "source_resource_type_mismatch")
+                if (!resources.getValue(occurrence.source.toResourceId()).matches(sourceEndpoint.resource, catalog)) {
+                    problems += ValueProblem(location = occurrence.id.location, code = "source_resource_type_mismatch")
                     return@forEach
                 }
-                if (!resources.getValue(occurrence.target.resource).matches(targetEndpoint.resource, catalog)) {
-                    problems += ValueProblem(occurrence.id.location, "target_resource_type_mismatch")
+                if (!resources.getValue(occurrence.target.resource.toResourceId()).matches(targetEndpoint.resource, catalog)) {
+                    problems += ValueProblem(location = occurrence.id.location, code = "target_resource_type_mismatch")
                     return@forEach
                 }
-                val sourceRecord = resources.getValue(occurrence.source)
+                val sourceRecord = resources.getValue(occurrence.source.toResourceId())
                 val declared = sourceRecord.linkSlots(catalog).singleOrNull { it.location == occurrence.id.location.path }
                 if (declared == null || declared.endpoint != occurrence.id.endpoint) {
-                    problems += ValueProblem(occurrence.id.location, "endpoint_location_not_declared")
+                    problems += ValueProblem(location = occurrence.id.location, code = "endpoint_location_not_declared")
                     return@forEach
                 }
                 val expectsCollection = targetEndpoint.cardinality == EndpointCardinality.Many
                 if (declared.containsCollection != expectsCollection) {
-                    problems += ValueProblem(occurrence.id.location, "endpoint_binding_cardinality_mismatch")
+                    problems += ValueProblem(location = occurrence.id.location, code = "endpoint_binding_cardinality_mismatch")
                     return@forEach
                 }
-                if (!resources.getValue(occurrence.target.resource).matches(declared.target, catalog)) {
-                    problems += ValueProblem(occurrence.id.location, "binding_target_type_mismatch")
+                if (!resources.getValue(occurrence.target.resource.toResourceId()).matches(declared.target, catalog)) {
+                    problems += ValueProblem(location = occurrence.id.location, code = "binding_target_type_mismatch")
                     return@forEach
                 }
             }
-            val oppositeLocation = occurrence.target.opposite?.let { ValueLocation(occurrence.target.resource, it) }
+            val oppositeLocation = occurrence.target.opposite?.let { ValueLocation(resource = occurrence.target.resource, path = it) }
             val opposite = oppositeLocation?.let(byLocation::get)
             if (oppositeLocation != null) {
                 val expected = if (slot == EndpointSlot.First) contract.second.id else contract.first.id
@@ -212,7 +222,7 @@ internal object ResourceValueMapper {
                     opposite.target.resource != occurrence.source ||
                     opposite.target.opposite != occurrence.id.location.path
                 ) {
-                    problems += ValueProblem(occurrence.id.location, "opposite_occurrence_mismatch")
+                    problems += ValueProblem(location = occurrence.id.location, code = "opposite_occurrence_mismatch")
                     return@forEach
                 }
             }
@@ -220,16 +230,16 @@ internal object ResourceValueMapper {
                 if (slot == EndpointSlot.First) {
                     LinkProjection(
                         contract = contract.id,
-                        first = occurrence.source,
-                        second = occurrence.target.resource,
+                        first = occurrence.source.toResourceId(),
+                        second = occurrence.target.resource.toResourceId(),
                         firstLocation = occurrence.id.location.path,
                         secondLocation = opposite?.id?.location?.path,
                     )
                 } else {
                     LinkProjection(
                         contract = contract.id,
-                        first = occurrence.target.resource,
-                        second = occurrence.source,
+                        first = occurrence.target.resource.toResourceId(),
+                        second = occurrence.source.toResourceId(),
                         firstLocation = opposite?.id?.location?.path,
                         secondLocation = occurrence.id.location.path,
                     )
@@ -260,8 +270,8 @@ internal object ResourceValueMapper {
         fields.forEach { field ->
             collectLinkEvidence(
                 declared = field.type,
-                value = record.fields[field.key] ?: DataValue.UNFILLED,
-                path = ValuePath(listOf(PathSegment.Field(field.key))),
+                value = record.field(field.key) ?: DataValue.UNFILLED,
+                path = ValuePath.root.field(field.key),
                 endpoint = endpoint,
                 catalog = catalog,
                 capabilities = capabilities,
@@ -271,9 +281,9 @@ internal object ResourceValueMapper {
             )
         }
         return DeclaredLinkEvidence(
-            values = values.sortedBy { it.toString() }.map { ValueLocation(resource, it) },
-            memberships = memberships.sortedBy { it.toString() }.map { ValueLocation(resource, it) },
-            forms = forms.sortedBy { it.toString() }.map { ValueLocation(resource, it) },
+            values = values.sortedBy(ValuePath.serializer::toJsonCode).map { ValueLocation.of(resource, it) },
+            memberships = memberships.sortedBy(ValuePath.serializer::toJsonCode).map { ValueLocation.of(resource, it) },
+            forms = forms.sortedBy(ValuePath.serializer::toJsonCode).map { ValueLocation.of(resource, it) },
         )
     }
 
@@ -288,8 +298,8 @@ internal object ResourceValueMapper {
         val scalarLocations = slots.filterNot(LinkSchemaSlot::containsCollection).mapNotNull(LinkSchemaSlot::location).distinct()
         val choices =
             buildList {
-                directCollections.forEach { add(CounterpartBinding.Collection(ValueLocation(resource, it))) }
-                scalarLocations.forEach { add(CounterpartBinding.Scalar(ValueLocation(resource, it))) }
+                directCollections.forEach { add(CounterpartBinding.Collection(ValueLocation.of(resource, it))) }
+                scalarLocations.forEach { add(CounterpartBinding.Scalar(ValueLocation.of(resource, it))) }
             }.distinct()
         return when (choices.size) {
             0 -> if (slots.isEmpty()) CounterpartBinding.Missing else CounterpartBinding.ExplicitChoice
@@ -322,8 +332,8 @@ private fun AuthoringRecord.linkSlots(catalog: CheckedCatalog): List<LinkSchemaS
     resolvedFields(catalog).forEach { field ->
         collectLinkSlots(
             declared = field.type,
-            value = fields[field.key] ?: DataValue.UNFILLED,
-            path = ValuePath(listOf(PathSegment.Field(field.key))),
+            value = this.field(field.key) ?: DataValue.UNFILLED,
+            path = ValuePath.root.field(field.key),
             catalog = catalog,
             containsCollection = false,
             directCollection = null,
@@ -335,16 +345,20 @@ private fun AuthoringRecord.linkSlots(catalog: CheckedCatalog): List<LinkSchemaS
 
 private fun AuthoringRecord.resolvedFields(catalog: CheckedCatalog) =
     when (val selected = configuration) {
-        is TypeSelection.Complete -> {
+        is TypeSelection.CompleteWrapper -> {
             val resolved = catalog.resolve(selected.use.use) as? Resolution.Ready
             val record =
                 resolved?.value?.schema?.representation as? ResolvedRepresentation.RecordWrapper
             record?.value?.fields.orEmpty()
         }
 
-        is TypeSelection.Pending -> {
+        is TypeSelection.PendingWrapper -> {
             val partial = catalog.resolvePartial(selected) as? Resolution.Ready
             partial?.value?.knownFields.orEmpty()
+        }
+
+        else -> {
+            unknownVariant(selected)
         }
     }
 
@@ -575,12 +589,16 @@ private fun AuthoringRecord.matches(
     catalog: CheckedCatalog,
 ): Boolean =
     when (val selected = configuration) {
-        is TypeSelection.Complete -> {
+        is TypeSelection.CompleteWrapper -> {
             catalog.isReadableAs(selected.use.use, expected)
         }
 
-        is TypeSelection.Pending -> {
+        is TypeSelection.PendingWrapper -> {
             catalog.knownApplications(selected).any { application -> catalog.isReadableAs(application.use, expected) }
+        }
+
+        else -> {
+            unknownVariant(selected)
         }
     }
 
@@ -590,15 +608,19 @@ private fun AuthoringRecord.matches(
 ): Boolean {
     val expectedUse = expected.template.toUseOrNull()
     return when (val selected = configuration) {
-        is TypeSelection.Complete -> {
+        is TypeSelection.CompleteWrapper -> {
             expectedUse?.let { catalog.isReadableAs(selected.use.use, it) }
                 ?: catalog.isNominalSubtype(selected.use.definition, expected.definition)
         }
 
-        is TypeSelection.Pending -> {
+        is TypeSelection.PendingWrapper -> {
             expectedUse?.let { concrete ->
                 catalog.knownApplications(selected).any { application -> catalog.isReadableAs(application.use, concrete) }
             } ?: catalog.isNominalSubtype(selected.definition, expected.definition)
+        }
+
+        else -> {
+            unknownVariant(selected)
         }
     }
 }
@@ -628,7 +650,10 @@ private fun TypeTemplate.toUseOrNull(): TypeUse? =
     }
 
 private fun occurrenceKey(value: LinkOccurrence): String =
-    "${value.id.endpoint.value}:${value.source.value}:${value.id.location.path}:${value.target.resource.value}"
+    "${value.id.endpoint.value}:${value.source.value}:${ValuePath.serializer.toJsonCode(
+        value.id.location.path,
+    )}:${value.target.resource.value}"
 
 private fun projectionKey(value: LinkProjection): String =
-    "${value.contract.value}:${value.first.value}:${value.second.value}:${value.firstLocation}:${value.secondLocation}"
+    "${value.contract.value}:${value.first.value}:${value.second.value}:" +
+        "${value.firstLocation?.let(ValuePath.serializer::toJsonCode)}:${value.secondLocation?.let(ValuePath.serializer::toJsonCode)}"

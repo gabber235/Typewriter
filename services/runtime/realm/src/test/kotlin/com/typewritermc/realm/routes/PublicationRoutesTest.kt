@@ -1,6 +1,9 @@
 package com.typewritermc.realm.routes
 
+import com.typewritermc.authoring.id
+import com.typewritermc.authoring.of
 import com.typewritermc.realm.compiler.PublicationFixture
+import com.typewritermc.realm.compiler.blocker
 import com.typewritermc.services.libs.communicator.router.communicatorRoutes
 import de.infix.testBalloon.framework.core.testSuite
 import io.kotest.matchers.shouldBe
@@ -8,6 +11,9 @@ import io.kotest.matchers.types.shouldBeInstanceOf
 import kotlinx.coroutines.test.runTest
 import skirout.editor.v1.publication.QueryPublicationViewRequest
 import skirout.editor.v1.publication.QueryPublicationViewResponse
+import skirout.editor.v1.type_catalog.PathSegment
+import skirout.editor.v1.type_catalog.ValueLocation
+import skirout.editor.v1.type_catalog.ValuePath
 
 val PublicationRoutesTest by testSuite {
     test("review returns one identified view and obsolete queries return its current identity") {
@@ -15,9 +21,7 @@ val PublicationRoutesTest by testSuite {
             val publication = PublicationFixture()
             try {
                 publication.publisher.refresh()
-                val reviewed =
-                    publication.publisher.views.value
-                        .toWire()
+                val reviewed = publication.publisher.views.value
                 RouteFixture { address, _ ->
                     communicatorRoutes { PublicationRoutes(publication.publisher, address).register(this) }
                 }.use { routes ->
@@ -31,9 +35,7 @@ val PublicationRoutesTest by testSuite {
                         .value shouldBe reviewed
                     publication.update("Later saved content")
                     publication.publisher.refresh()
-                    val current =
-                        publication.publisher.views.value
-                            .toWire()
+                    val current = publication.publisher.views.value
                     routes
                         .request(
                             "editor.authoring.publication.query",
@@ -50,16 +52,16 @@ val PublicationRoutesTest by testSuite {
             }
         }
     }
-    test("publication findings retain exact locations and captured evidence on the wire") {
+    test("publication blockers retain exact locations and captured evidence") {
         val resource = com.typewritermc.types.ResourceId("page")
         val location =
-            com.typewritermc.authoring.ValueLocation(
+            ValueLocation.of(
                 resource,
-                com.typewritermc.authoring.ValuePath(
-                    listOf(
-                        com.typewritermc.authoring.PathSegment
-                            .Field("name"),
-                    ),
+                ValuePath(
+                    segments =
+                        listOf(
+                            PathSegment.createField(name = "name"),
+                        ),
                 ),
             )
         val finding =
@@ -76,40 +78,11 @@ val PublicationRoutesTest by testSuite {
                         .Value(location, skirout.editor.v1.type_catalog.DataValue.UNFILLED),
                 ),
             )
-        val status =
-            com.typewritermc.realm.compiler.PublicationStatus.Blocked(
-                skirout.editor.v1.publication.PublicationBaseline.INITIAL,
-                com.typewritermc.realm.compiler.PublicationBlockers
-                    .from(listOf(finding)),
-                emptyList(),
-                emptyList(),
-                emptyList(),
-            )
-        val review =
-            com.typewritermc.realm.compiler.PublicationView(
-                skirout.editor.v1.publication
-                    .PublicationViewId(value = "review"),
-                status,
-                mapOf(finding.id to captured),
-            )
-        val details =
-            review
-                .toWire()
-                .status
-                .shouldBeInstanceOf<skirout.editor.v1.publication.PublicationStatus.BlockedWrapper>()
-                .value.blockers.first.details
+        val details = finding.blocker(captured).details
         details.primary!!
             .path.segments.size shouldBe 1
         details.evidence!!.catalog.value shouldBe "catalog"
         details.evidence!!.expectations.size shouldBe 1
-        val noEvidence =
-            review
-                .copy(
-                    evidence = emptyMap(),
-                ).toWire()
-                .status
-                .shouldBeInstanceOf<skirout.editor.v1.publication.PublicationStatus.BlockedWrapper>()
-                .value.blockers.first.details
-        noEvidence.evidence shouldBe null
+        finding.blocker(evidence = null).details.evidence shouldBe null
     }
 }

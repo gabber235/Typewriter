@@ -1,12 +1,6 @@
 package com.typewritermc.types.skir
 
-import com.typewritermc.authoring.PathSegment
-import com.typewritermc.authoring.ValuePath
-import com.typewritermc.authoring.toSkir
-import com.typewritermc.authoring.toTypewriter
 import com.typewritermc.capability.RealmCapabilityDescriptor
-import com.typewritermc.checking.Diagnostic
-import com.typewritermc.checking.DiagnosticSeverity
 import com.typewritermc.configuration.ConfigurationRecipe
 import com.typewritermc.configuration.FieldPatternSegment
 import com.typewritermc.configuration.OwnedRule
@@ -25,7 +19,6 @@ import com.typewritermc.types.ResourceTarget
 import com.typewritermc.types.catalog.DeclarationDiagnostic
 import com.typewritermc.types.catalog.DeclarationStatus
 import com.typewritermc.types.catalog.ResourceDisplayFormulas
-import com.typewritermc.types.requireValid
 import skirout.editor.v1.type_catalog.TypeTemplate
 import skirout.editor.v1.capability.CapabilityDefinition as SkirCapabilityDefinition
 import skirout.editor.v1.capability.CommandCapabilityDefinition as SkirCommandCapabilityDefinition
@@ -48,17 +41,11 @@ import skirout.editor.v1.catalog.RoleFallback as SkirRoleFallback
 import skirout.editor.v1.catalog.RuleDescriptor as SkirRuleDescriptor
 import skirout.editor.v1.diagnostic.DeclarationDiagnostic as SkirDeclarationDiagnostic
 import skirout.editor.v1.diagnostic.DeclarationOrigin as SkirDeclarationOrigin
-import skirout.editor.v1.diagnostic.Diagnostic as SkirDiagnostic
-import skirout.editor.v1.diagnostic.DiagnosticSeverity as SkirDiagnosticSeverity
 import skirout.editor.v1.diagnostic.DiagnosticTemplate as SkirDiagnosticTemplate
-import skirout.editor.v1.type_catalog.FieldPathSegment as SkirFieldPathSegment
 import skirout.editor.v1.type_catalog.FieldPatternSegment as SkirFieldPatternSegment
-import skirout.editor.v1.type_catalog.ItemPathSegment as SkirItemPathSegment
 import skirout.editor.v1.type_catalog.NamedFieldPatternSegment as SkirNamedFieldPatternSegment
-import skirout.editor.v1.type_catalog.PathSegment as SkirPathSegment
 import skirout.editor.v1.type_catalog.RelativeFieldPattern as SkirRelativeFieldPattern
 import skirout.editor.v1.type_catalog.ResourceTarget as SkirResourceTarget
-import skirout.editor.v1.type_catalog.ValuePath as SkirValuePath
 
 /**
  * Encodes the catalog models that are still Kotlin classes (relations, displays, presentation descriptors,
@@ -89,16 +76,10 @@ object SkirTypeCodec {
     fun encode(diagnostic: DeclarationDiagnostic): SkirConversionResult<SkirDeclarationDiagnostic> =
         captureSkirConversion { this.encode(diagnostic) }
 
-    fun encode(diagnostic: Diagnostic): SkirConversionResult<SkirDiagnostic> = captureSkirConversion { this.encode(diagnostic) }
-
     fun encode(target: ResourceTarget): SkirConversionResult<SkirResourceTarget> = captureSkirConversion { this.encode(target) }
 
     fun encode(target: PresentationTarget): SkirConversionResult<SkirPresentationTarget> = captureSkirConversion { this.encode(target) }
 }
-
-internal fun encodeValuePath(path: ValuePath): SkirValuePath = path.toSkir()
-
-internal fun ConversionScope.decodeValuePath(path: SkirValuePath): ValuePath = valid { path.toTypewriter() }
 
 private fun ConversionScope.encode(display: ResourceDisplayFormulas) =
     SkirResourceDisplayFormulas(
@@ -274,7 +255,7 @@ private fun ConversionScope.encode(rule: OwnedRule) =
             SkirDiagnosticTemplate(
                 code = rule.diagnostic.code,
                 message = rule.diagnostic.message,
-                severity = encode(rule.diagnostic.severity),
+                severity = rule.diagnostic.severity,
                 targets = rule.diagnostic.targets.map(::encode),
             ),
     )
@@ -285,19 +266,6 @@ private fun ConversionScope.encode(diagnostic: DeclarationDiagnostic) =
         code = diagnostic.code,
         origins = diagnostic.origins.map { SkirDeclarationOrigin(owner = it.owner) },
         field = diagnostic.field?.let(::encode),
-    )
-
-private fun ConversionScope.encode(diagnostic: Diagnostic) =
-    SkirDiagnostic(
-        id =
-            skirout.editor.v1.type_catalog
-                .DiagnosticId(value = diagnostic.id.value),
-        origin = diagnostic.origin,
-        code = diagnostic.code,
-        message = diagnostic.message,
-        severity = encode(diagnostic.severity),
-        primary = diagnostic.primary?.let(::encodeValueLocation),
-        related = diagnostic.related.map(::encodeValueLocation),
     )
 
 private fun ConversionScope.encode(pattern: RelativeFieldPattern) =
@@ -312,10 +280,3 @@ private fun ConversionScope.encode(pattern: RelativeFieldPattern) =
                 }
             },
     )
-
-private fun encode(severity: DiagnosticSeverity): SkirDiagnosticSeverity =
-    when (severity) {
-        DiagnosticSeverity.Info -> SkirDiagnosticSeverity.INFORMATION
-        DiagnosticSeverity.Warning -> SkirDiagnosticSeverity.WARNING
-        DiagnosticSeverity.Error -> SkirDiagnosticSeverity.ERROR
-    }

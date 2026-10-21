@@ -4,24 +4,19 @@ import com.typewritermc.authoring.AppliedNativeArguments
 import com.typewritermc.authoring.CaptureResult
 import com.typewritermc.authoring.CompleteValue
 import com.typewritermc.authoring.DefaultInitializationRuntime
-import com.typewritermc.authoring.InitializationDiagnostic
 import com.typewritermc.authoring.InitializationRequest
 import com.typewritermc.authoring.InputAnswer
 import com.typewritermc.authoring.NativeBindingId
 import com.typewritermc.authoring.NativeConstructionPlan
-import com.typewritermc.authoring.PathSegment
 import com.typewritermc.authoring.PreparationOperation
 import com.typewritermc.authoring.PreparationStep
 import com.typewritermc.authoring.PreparationTarget
-import com.typewritermc.authoring.PreparedContent
 import com.typewritermc.authoring.RequiredInput
-import com.typewritermc.authoring.TypeSelection
-import com.typewritermc.authoring.ValuePath
+import com.typewritermc.authoring.fieldMap
 import com.typewritermc.authoring.materialize
 import com.typewritermc.authoring.skir.SkirAuthoringOperationCodec
 import com.typewritermc.checking.CatalogGeneration
 import com.typewritermc.types.FactoryNativeBindingRegistry
-import com.typewritermc.types.LinkTarget
 import com.typewritermc.types.NativeBinding
 import com.typewritermc.types.NativeBindingFactory
 import com.typewritermc.types.ResourceId
@@ -30,7 +25,6 @@ import com.typewritermc.types.catalog.DefaultCheckedCatalog
 import com.typewritermc.types.field
 import com.typewritermc.types.fields
 import com.typewritermc.types.items
-import com.typewritermc.types.link
 import com.typewritermc.types.listValue
 import com.typewritermc.types.mapValue
 import com.typewritermc.types.named
@@ -42,22 +36,29 @@ import com.typewritermc.types.record
 import com.typewritermc.types.rows
 import com.typewritermc.types.skir.getOrThrow
 import com.typewritermc.types.template
+import com.typewritermc.types.toSkir
 import com.typewritermc.types.use
 import de.infix.testBalloon.framework.core.testSuite
 import io.kotest.matchers.shouldBe
+import skirout.editor.v1.catalog.PreparedContent
+import skirout.editor.v1.diagnostic.InitializationDiagnostic
 import skirout.editor.v1.type_catalog.CollectionKind
 import skirout.editor.v1.type_catalog.DataValue
 import skirout.editor.v1.type_catalog.EndpointId
 import skirout.editor.v1.type_catalog.FieldDeclaration
 import skirout.editor.v1.type_catalog.FieldOwner
 import skirout.editor.v1.type_catalog.ItemId
+import skirout.editor.v1.type_catalog.LinkTarget
 import skirout.editor.v1.type_catalog.ListItem
 import skirout.editor.v1.type_catalog.MapRow
 import skirout.editor.v1.type_catalog.NamedTypeUse
+import skirout.editor.v1.type_catalog.PathSegment
 import skirout.editor.v1.type_catalog.RepresentationTemplate
 import skirout.editor.v1.type_catalog.ScalarKind
 import skirout.editor.v1.type_catalog.TypeDefinition
 import skirout.editor.v1.type_catalog.TypeDefinitionId
+import skirout.editor.v1.type_catalog.TypeSelection
+import skirout.editor.v1.type_catalog.ValuePath
 
 val ResumableInitializationTest by testSuite {
     test("required references are reported in a record without constructor defaults") {
@@ -86,7 +87,7 @@ val ResumableInitializationTest by testSuite {
             ) as PreparationStep.Ready
         fixture.marker.calls shouldBe 1
         fixture.settings.calls shouldBe 1
-        val fields = (resumed.value.content as PreparedContent.Record).record.fields
+        val fields = (resumed.value.content as PreparedContent.RecordWrapper).value.fieldMap
         val marker = (fields.getValue("marker") as DataValue.NamedWrapper).payload as DataValue.RecordWrapper
         marker.field("id") shouldBe DataValue.StringValueWrapper("capture:1")
         val settings = (fields.getValue("settings") as DataValue.NamedWrapper).payload as DataValue.RecordWrapper
@@ -173,8 +174,17 @@ val ResumableInitializationTest by testSuite {
             )
         val runtime = DefaultInitializationRuntime(catalog, FactoryNativeBindingRegistry(catalog, emptyList()))
         val first = runtime.stepNow(PreparationOperation.Start(request(root).copy(supplied = supplied))) as PreparationStep.NeedsInput
-        val listPath = ValuePath(path("items").segments + PathSegment.Item(listItem) + PathSegment.Field("target"))
-        val mapPath = ValuePath(path("mapping").segments + PathSegment.Item(mapItem) + PathSegment.MapValue + PathSegment.Field("target"))
+        val listPath =
+            ValuePath(
+                segments =
+                    path("items").segments + PathSegment.createItem(id = listItem) + PathSegment.createField(name = "target"),
+            )
+        val mapPath =
+            ValuePath(
+                segments =
+                    path("mapping").segments + PathSegment.createItem(id = mapItem) + PathSegment.MAP_VALUE +
+                        PathSegment.createField(name = "target"),
+            )
         first.draft.requiredInputs
             .map { it.path }
             .toSet() shouldBe setOf(listPath, mapPath)
@@ -188,10 +198,10 @@ val ResumableInitializationTest by testSuite {
                     ),
                 ),
             ) as PreparationStep.Ready
-        val record = (ready.value.content as PreparedContent.Record).record
-        val items = ((record.fields.getValue("items") as DataValue.NamedWrapper).payload as DataValue.ListValueWrapper).items
+        val record = (ready.value.content as PreparedContent.RecordWrapper).value
+        val items = ((record.fieldMap.getValue("items") as DataValue.NamedWrapper).payload as DataValue.ListValueWrapper).items
         items.single().id shouldBe listItem
-        val rows = ((record.fields.getValue("mapping") as DataValue.NamedWrapper).payload as DataValue.MapValueWrapper).rows
+        val rows = ((record.fieldMap.getValue("mapping") as DataValue.NamedWrapper).payload as DataValue.MapValueWrapper).rows
         rows.single().id shouldBe mapItem
     }
     test("continuations and answers round trip through the current wire") {
@@ -292,7 +302,7 @@ val ResumableInitializationTest by testSuite {
         ordinary.findings.any { it.code == "unfinished_constructor_input" } shouldBe true
         val failing = resumeFixture(failMarker = true)
         val unavailable = failing.runtime.stepNow(PreparationOperation.Start(failing.request)) as PreparationStep.Unavailable
-        val content = (unavailable.materialize().content as PreparedContent.Record).record.fields
+        val content = (unavailable.materialize().content as PreparedContent.RecordWrapper).value.fieldMap
         content.keys shouldBe setOf("settings", "marker")
         unavailable.draft.findings.any { it.code == "test_capture_failed" } shouldBe true
     }
@@ -322,7 +332,7 @@ val ResumableInitializationTest by testSuite {
         val runtime =
             DefaultInitializationRuntime(catalog, FactoryNativeBindingRegistry(catalog, listOf(ResumePlanFactory(referenceId, plan))))
         val ready = runtime.stepNow(PreparationOperation.Start(request(referenceId))) as PreparationStep.Ready
-        ((ready.value.content as PreparedContent.Record).record.fields.getValue("target")) shouldBe reference()
+        ((ready.value.content as PreparedContent.RecordWrapper).value.fieldMap.getValue("target")) shouldBe reference()
         plan.calls shouldBe 1
     }
 }
@@ -430,7 +440,11 @@ private class CountingPlan(
     ): CaptureResult {
         calls++
         return if (fail) {
-            CaptureResult.Unavailable(listOf(InitializationDiagnostic(field, "test_capture_failed", "Capture failed.")))
+            CaptureResult.Unavailable(
+                listOf(
+                    InitializationDiagnostic(field = field, code = "test_capture_failed", message = "Capture failed.", relativePath = null),
+                ),
+            )
         } else {
             CaptureResult.Captured(mapOf(field to (value ?: DataValue.StringValueWrapper("capture:$calls"))))
         }
@@ -471,10 +485,14 @@ private fun linkDefinition() =
 private fun request(id: TypeDefinitionId) =
     InitializationRequest(
         GENERATION,
-        PreparationTarget.Record(TypeSelection.Complete(id.namedUse(emptyList()))),
+        PreparationTarget.Record(TypeSelection.CompleteWrapper(id.namedUse(emptyList()))),
         DataValue.record(emptyMap()),
     )
 
-private fun path(vararg fields: String) = ValuePath(fields.map(PathSegment::Field))
+private fun path(vararg fields: String) = ValuePath(segments = fields.map { PathSegment.createField(name = it) })
 
-private fun reference() = DataValue.named(LINK_USE, DataValue.link(ENDPOINT, LinkTarget(ResourceId("reserved-target"), null)))
+private fun reference() =
+    DataValue.named(
+        LINK_USE,
+        DataValue.createLink(endpoint = ENDPOINT, target = LinkTarget(resource = ResourceId("reserved-target").toSkir(), opposite = null)),
+    )

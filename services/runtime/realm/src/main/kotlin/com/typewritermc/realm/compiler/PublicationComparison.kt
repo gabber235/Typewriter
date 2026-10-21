@@ -1,11 +1,11 @@
 package com.typewritermc.realm.compiler
 
-import com.typewritermc.engine.CompilationRoot
 import com.typewritermc.engine.CompiledArtifact
-import com.typewritermc.engine.CompiledArtifactReference
 import com.typewritermc.engine.PUBLISHED_CONTENT_FORMAT_REVISION
-import com.typewritermc.engine.PublishedContent
-import com.typewritermc.engine.toSkir
+import skirout.editor.v1.compilation_root.CompilationRoot
+import skirout.editor.v1.compiled_content.CompiledArtifactReference
+import skirout.editor.v1.compiled_content.PublishedContent
+import skirout.editor.v1.publication.EngineImplementationInputs
 import skirout.editor.v1.publication.PublicationChange
 import skirout.editor.v1.publication.PublicationDelta
 
@@ -28,7 +28,15 @@ data class PublicationRuntimeContent(
             engine: EngineImplementationInputs,
         ) = PublicationRuntimeContent(
             PUBLISHED_CONTENT_FORMAT_REVISION,
-            artifacts.associate { it.root to CompiledArtifactReference(it.root, it.formatRevision, it.mediaType, it.semanticDigest) },
+            artifacts.associate {
+                it.root to
+                    CompiledArtifactReference(
+                        root = it.root,
+                        formatRevision = it.formatRevision,
+                        mediaType = it.mediaType,
+                        semanticDigest = it.semanticDigest.value,
+                    )
+            },
             engine.token.value,
         )
     }
@@ -85,20 +93,20 @@ sealed interface PublicationComparison {
                 artifacts.associate { artifact ->
                     artifact.root to
                         CompiledArtifactReference(
-                            artifact.root,
-                            artifact.formatRevision,
-                            artifact.mediaType,
-                            artifact.semanticDigest,
+                            root = artifact.root,
+                            formatRevision = artifact.formatRevision,
+                            mediaType = artifact.mediaType,
+                            semanticDigest = artifact.semanticDigest.value,
                         )
                 }
             val ordering = compareBy<CompilationRoot>({ it.projection.value }, { it.resource.value })
             return buildList {
                 (old.keys + candidateRoots).sortedWith(ordering).forEach { root ->
                     when {
-                        root !in candidateRoots -> add(PublicationChange.RootRemovedWrapper(root.toSkir()))
+                        root !in candidateRoots -> add(PublicationChange.RootRemovedWrapper(root))
                         root !in next -> Unit
-                        root !in old -> add(PublicationChange.RootAddedWrapper(root.toSkir()))
-                        old[root] != next[root] -> add(PublicationChange.RootUpdatedWrapper(root.toSkir()))
+                        root !in old -> add(PublicationChange.RootAddedWrapper(root))
+                        old[root] != next[root] -> add(PublicationChange.RootUpdatedWrapper(root))
                     }
                 }
                 if (selected != null &&

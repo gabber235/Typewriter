@@ -3,17 +3,13 @@
 package com.typewritermc.realm.checking
 
 import com.typewritermc.authoring.AppliedNativeArguments
-import com.typewritermc.authoring.AuthoringRecord
 import com.typewritermc.authoring.Availability
 import com.typewritermc.authoring.GeneratedSdkApi
 import com.typewritermc.authoring.NativeBindingId
-import com.typewritermc.authoring.PathSegment
-import com.typewritermc.authoring.TypeSelection
-import com.typewritermc.authoring.ValueLocation
-import com.typewritermc.authoring.ValuePath
 import com.typewritermc.authoring.boundPath
+import com.typewritermc.authoring.of
+import com.typewritermc.authoring.root
 import com.typewritermc.checking.CatalogGeneration
-import com.typewritermc.checking.DiagnosticSeverity
 import com.typewritermc.checking.DiagnosticTemplate
 import com.typewritermc.checking.RealmCheckProvider
 import com.typewritermc.checking.RealmChecks
@@ -42,6 +38,7 @@ import com.typewritermc.imprint.ProducerId
 import com.typewritermc.realm.authoring.AuthoringSeed
 import com.typewritermc.realm.authoring.AuthoringViewDelta
 import com.typewritermc.realm.authoring.InMemoryAuthoringViewStore
+import com.typewritermc.realm.checking.decodedExpectations
 import com.typewritermc.realm.compiler.AuthoringAcceptance
 import com.typewritermc.realm.compiler.CapturedAssessment
 import com.typewritermc.realm.repository.conflicts
@@ -57,6 +54,7 @@ import com.typewritermc.types.qualified
 import com.typewritermc.types.record
 import com.typewritermc.types.setValue
 import com.typewritermc.types.template
+import com.typewritermc.types.toResourceId
 import com.typewritermc.types.use
 import de.infix.testBalloon.framework.core.testSuite
 import io.kotest.assertions.throwables.shouldThrow
@@ -67,7 +65,11 @@ import kotlinx.coroutines.asCoroutineDispatcher
 import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runTest
+import skirout.editor.v1.checking.CheckInstanceId
+import skirout.editor.v1.checking.CheckOutcome
+import skirout.editor.v1.diagnostic.DiagnosticSeverity
 import skirout.editor.v1.expression.ExpressionNode
+import skirout.editor.v1.type_catalog.AuthoringRecord
 import skirout.editor.v1.type_catalog.CollectionKind
 import skirout.editor.v1.type_catalog.DataValue
 import skirout.editor.v1.type_catalog.DeclarationOwner
@@ -77,6 +79,7 @@ import skirout.editor.v1.type_catalog.ItemId
 import skirout.editor.v1.type_catalog.ListItem
 import skirout.editor.v1.type_catalog.MapRow
 import skirout.editor.v1.type_catalog.ParameterKey
+import skirout.editor.v1.type_catalog.PathSegment
 import skirout.editor.v1.type_catalog.RepresentationTemplate
 import skirout.editor.v1.type_catalog.RuleId
 import skirout.editor.v1.type_catalog.RuleOrigin
@@ -84,6 +87,9 @@ import skirout.editor.v1.type_catalog.ScalarKind
 import skirout.editor.v1.type_catalog.TypeDefinition
 import skirout.editor.v1.type_catalog.TypeDefinitionId
 import skirout.editor.v1.type_catalog.TypeParameter
+import skirout.editor.v1.type_catalog.TypeSelection
+import skirout.editor.v1.type_catalog.ValueLocation
+import skirout.editor.v1.type_catalog.ValuePath
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.Executors
@@ -191,13 +197,31 @@ val RealmCheckRuntimeTest by testSuite {
                 object : RealmCheckProvider {
                     override fun RealmChecks.register() {
                         each(TestDraftType(ResourceTypeMatch.Definition(TEST_TYPE))) { draft ->
-                            executions.computeIfAbsent(draft.binding.location.resource) { AtomicInteger() }.incrementAndGet()
-                            check(read(boundPath<String>(location(draft.binding.location.resource, "name"), TEXT_USE))) { it == "valid" }
-                                .error("Name is invalid.", draft.binding.location)
+                            executions
+                                .computeIfAbsent(
+                                    draft.binding.location.resource
+                                        .toResourceId(),
+                                ) { AtomicInteger() }
+                                .incrementAndGet()
+                            check(
+                                read(
+                                    boundPath<String>(
+                                        location(
+                                            draft.binding.location.resource
+                                                .toResourceId(),
+                                            "name",
+                                        ),
+                                        TEXT_USE,
+                                    ),
+                                ),
+                            ) {
+                                it ==
+                                    "valid"
+                            }.error("Name is invalid.", draft.binding.location)
                         }
                         realm {
                             check(Availability.Available(false)) { it }
-                                .error("Realm is invalid.", ValueLocation(ResourceId("realm"), ValuePath()))
+                                .error("Realm is invalid.", ValueLocation.of(ResourceId("realm")))
                         }
                     }
                 }
@@ -251,7 +275,7 @@ val RealmCheckRuntimeTest by testSuite {
             executions.getValue(first).get() shouldBe 1
             executions.getValue(second).get() shouldBe 2
 
-            val secondRoot = ValueLocation(second, ValuePath())
+            val secondRoot = ValueLocation.of(second)
             val removal =
                 store.install(
                     store.prepare(
@@ -325,7 +349,7 @@ val RealmCheckRuntimeTest by testSuite {
                                 ),
                             )
                             check(Availability.Available(false)) { it }
-                                .error("Partial finding.", ValueLocation(resource, ValuePath()))
+                                .error("Partial finding.", ValueLocation.of(resource))
                         }
                     }
                 }
@@ -350,8 +374,7 @@ val RealmCheckRuntimeTest by testSuite {
 
             val finding = runtime.findings().single()
             finding.outcome shouldBe
-                com.typewritermc.checking.CheckOutcome
-                    .Incomplete("graph traversal limit exceeded")
+                CheckOutcome.IncompleteWrapper("graph traversal limit exceeded")
             finding.status shouldBe skirout.editor.v1.checking.FindingStatus.CURRENT
             finding.findings.map { it.message } shouldBe listOf("Partial finding.")
 
@@ -377,7 +400,7 @@ val RealmCheckRuntimeTest by testSuite {
                                         .toNode(),
                             ),
                         ),
-                    diagnostic = DiagnosticTemplate("name_empty", "Name must not be empty.", DiagnosticSeverity.Error, listOf(path)),
+                    diagnostic = DiagnosticTemplate("name_empty", "Name must not be empty.", DiagnosticSeverity.ERROR, listOf(path)),
                 )
             val catalog =
                 TestCatalogLease(
@@ -477,8 +500,8 @@ val RealmCheckRuntimeTest by testSuite {
                     ),
                 )
             val authored =
-                AuthoringRecord(
-                    TypeSelection.Complete(TEST_TYPE.namedUse()),
+                AuthoringRecord.of(
+                    TypeSelection.CompleteWrapper(TEST_TYPE.namedUse()),
                     mapOf(
                         "values" to
                             DataValue.named(
@@ -531,19 +554,26 @@ val RealmCheckRuntimeTest by testSuite {
             intrinsic.map { it.code } shouldBe listOf("duplicate_map_key", "duplicate_set_value")
             intrinsic.map { it.primary } shouldBe
                 listOf(
-                    ValueLocation(
+                    ValueLocation.of(
                         resource,
                         ValuePath(
-                            listOf(
-                                PathSegment.Field("mapping"),
-                                PathSegment.Item(ItemId(value = "map_duplicate")),
-                                PathSegment.MapKey,
-                            ),
+                            segments =
+                                listOf(
+                                    PathSegment.createField(name = "mapping"),
+                                    PathSegment.createItem(id = ItemId(value = "map_duplicate")),
+                                    PathSegment.MAP_KEY,
+                                ),
                         ),
                     ),
-                    ValueLocation(
+                    ValueLocation.of(
                         resource,
-                        ValuePath(listOf(PathSegment.Field("values"), PathSegment.Item(ItemId(value = "set_duplicate")))),
+                        ValuePath(
+                            segments =
+                                listOf(
+                                    PathSegment.createField(name = "values"),
+                                    PathSegment.createItem(id = ItemId(value = "set_duplicate")),
+                                ),
+                        ),
                     ),
                 )
 
@@ -558,7 +588,7 @@ val RealmCheckRuntimeTest by testSuite {
             val catalog = TestCatalogLease(nativeBindingFactories = listOf(TestResourceNativeBindingFactory))
             val authored =
                 record(name = "ready").copy(
-                    configuration = TypeSelection.Pending(TEST_TYPE, emptyList()),
+                    configuration = TypeSelection.createPending(definition = TEST_TYPE, arguments = emptyList()),
                 )
             val store =
                 InMemoryAuthoringViewStore(
@@ -577,7 +607,7 @@ val RealmCheckRuntimeTest by testSuite {
             blocked.findings
                 .map { it.code } shouldBe listOf("pending_type")
             blocked.findings
-                .map { it.primary } shouldBe listOf(ValueLocation(resource, ValuePath()))
+                .map { it.primary } shouldBe listOf(ValueLocation.of(resource))
 
             runtime.close()
             store.close()
@@ -601,7 +631,7 @@ val RealmCheckRuntimeTest by testSuite {
                                         .toNode(),
                             ),
                         ),
-                    diagnostic = DiagnosticTemplate("name_empty", "Name must not be empty.", DiagnosticSeverity.Error, listOf(path)),
+                    diagnostic = DiagnosticTemplate("name_empty", "Name must not be empty.", DiagnosticSeverity.ERROR, listOf(path)),
                 )
             val catalog =
                 TestCatalogLease(
@@ -628,7 +658,7 @@ val RealmCheckRuntimeTest by testSuite {
             val current = runtime.findings()
             current.any { it.ticket.instance.location == location(resource, "name") } shouldBe true
             val discovery = current.single { it.ticket.instance.location == DISCOVERY_LOCATION_FOR_TEST }
-            discovery.outcome.shouldBeInstanceOf<com.typewritermc.checking.CheckOutcome.Incomplete>()
+            discovery.outcome.shouldBeInstanceOf<CheckOutcome.IncompleteWrapper>()
             discovery.findings.map { it.code } shouldBe listOf("check_discovery_incomplete")
 
             val captured = runtime.evaluateCapture(CheckAdmissionTarget.CapturedAcceptance(store.capture().use { it.root }))
@@ -636,7 +666,7 @@ val RealmCheckRuntimeTest by testSuite {
             captured.results.any { it.ticket.instance.location == location(resource, "name") } shouldBe true
             captured.results.any {
                 it.ticket.instance.location == DISCOVERY_LOCATION_FOR_TEST &&
-                    it.outcome is com.typewritermc.checking.CheckOutcome.Incomplete
+                    it.outcome is CheckOutcome.IncompleteWrapper
             } shouldBe true
 
             runtime.close()
@@ -710,7 +740,16 @@ val RealmCheckRuntimeTest by testSuite {
                 override fun RealmChecks.register() {
                     each(TestDraftType(ResourceTypeMatch.Definition(TEST_TYPE))) { draft ->
                         val execution = executions.incrementAndGet()
-                        read(boundPath<String>(location(draft.binding.location.resource, "name"), TEXT_USE))
+                        read(
+                            boundPath<String>(
+                                location(
+                                    draft.binding.location.resource
+                                        .toResourceId(),
+                                    "name",
+                                ),
+                                TEXT_USE,
+                            ),
+                        )
                         if (execution == 2) {
                             blocked.countDown()
                             while (release.count > 0) {
@@ -783,7 +822,16 @@ val RealmCheckRuntimeTest by testSuite {
                 override fun RealmChecks.register() {
                     each(TestDraftType(ResourceTypeMatch.Definition(TEST_TYPE))) { draft ->
                         executions.incrementAndGet()
-                        read(boundPath<String>(location(draft.binding.location.resource, "name"), TEXT_USE))
+                        read(
+                            boundPath<String>(
+                                location(
+                                    draft.binding.location.resource
+                                        .toResourceId(),
+                                    "name",
+                                ),
+                                TEXT_USE,
+                            ),
+                        )
                     }
                 }
             }
@@ -818,7 +866,7 @@ val RealmCheckRuntimeTest by testSuite {
         runtime.findings().all { finding ->
             store.capture().use {
                 it.root.values
-                    .conflicts(finding.expectations)
+                    .conflicts(finding.expectations.decodedExpectations())
                     .isEmpty()
             }
         } shouldBe true
@@ -1034,12 +1082,12 @@ private val PROVIDER_ORIGIN =
     )
 
 private val DISCOVERY_LOCATION_FOR_TEST =
-    ValueLocation(
+    ValueLocation.of(
         ResourceId("typewriter.discovery"),
         ValuePath(
-            listOf(
-                com.typewritermc.authoring.PathSegment
-                    .Field("subjects"),
-            ),
+            segments =
+                listOf(
+                    PathSegment.createField(name = "subjects"),
+                ),
         ),
     )

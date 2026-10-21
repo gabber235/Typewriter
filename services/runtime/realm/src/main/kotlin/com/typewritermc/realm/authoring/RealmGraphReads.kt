@@ -1,14 +1,11 @@
 package com.typewritermc.realm.authoring
 
-import com.typewritermc.authoring.AuthoringRecord
 import com.typewritermc.authoring.Availability
 import com.typewritermc.authoring.DraftBinding
 import com.typewritermc.authoring.GraphEndpoint
 import com.typewritermc.authoring.GraphStep
 import com.typewritermc.authoring.LinkInspectionQuery
 import com.typewritermc.authoring.LinkInspectionResult
-import com.typewritermc.authoring.LinkOccurrence
-import com.typewritermc.authoring.LinkOccurrenceId
 import com.typewritermc.authoring.LinkProjection
 import com.typewritermc.authoring.LocatedPortableValue
 import com.typewritermc.authoring.ReachabilityQuery
@@ -19,12 +16,14 @@ import com.typewritermc.authoring.ResourceDrafts
 import com.typewritermc.authoring.RouteQuery
 import com.typewritermc.authoring.RouteResult
 import com.typewritermc.authoring.TraversalDirection
-import com.typewritermc.authoring.TypeSelection
 import com.typewritermc.authoring.UnresolvedLink
-import com.typewritermc.authoring.ValueLocation
-import com.typewritermc.authoring.ValuePath
-import com.typewritermc.authoring.ValueProblem
+import com.typewritermc.authoring.definition
 import com.typewritermc.authoring.locate
+import com.typewritermc.authoring.of
+import com.typewritermc.authoring.payload
+import com.typewritermc.authoring.record
+import com.typewritermc.authoring.root
+import com.typewritermc.authoring.use
 import com.typewritermc.checking.DraftType
 import com.typewritermc.checking.InputIdentity
 import com.typewritermc.checking.InspectionCompletion
@@ -40,10 +39,18 @@ import com.typewritermc.types.RelationFamilyId
 import com.typewritermc.types.ResourceId
 import com.typewritermc.types.catalog.Resolution
 import com.typewritermc.types.endpoint
-import com.typewritermc.types.fields
 import com.typewritermc.types.record
+import com.typewritermc.types.toResourceId
+import com.typewritermc.types.unknownVariant
 import com.typewritermc.types.use
+import skirout.editor.v1.authoring.LinkOccurrence
+import skirout.editor.v1.authoring.LinkOccurrenceId
+import skirout.editor.v1.diagnostic.ValueProblem
+import skirout.editor.v1.type_catalog.AuthoringRecord
 import skirout.editor.v1.type_catalog.DataValue
+import skirout.editor.v1.type_catalog.TypeSelection
+import skirout.editor.v1.type_catalog.ValueLocation
+import skirout.editor.v1.type_catalog.ValuePath
 
 /** Traverses only the graph derived from the retained authored reads. */
 internal object RealmGraphReads {
@@ -179,8 +186,8 @@ internal object RealmGraphReads {
     context(reads: CapturedAuthoringReads)
     fun follow(occurrence: LinkOccurrence): Availability<DraftBinding> {
         reads.observeInput(InputIdentity.Value(occurrence.id.location))
-        reads.observeInput(InputIdentity.Existence(occurrence.target.resource))
-        return reads.resourceBinding(occurrence.target.resource)
+        reads.observeInput(InputIdentity.Existence(occurrence.target.resource.toResourceId()))
+        return reads.resourceBinding(occurrence.target.resource.toResourceId())
     }
 }
 
@@ -216,16 +223,13 @@ private class CapturedGraph(
     fun edgesInto(resource: ResourceId): List<DirectedEdge> = index.incoming[resource].orEmpty()
 
     fun occurrencesAt(resource: ResourceId): List<LinkOccurrence> =
-        index.occurrencesBySource[resource].orEmpty().sortedBy {
-            it.id.location.path
-                .toString()
-        }
+        index.occurrencesBySource[resource].orEmpty().sortedBy { ValuePath.serializer.toJsonCode(it.id.location.path) }
 
     fun unresolvedAt(resource: ResourceId): List<UnresolvedLink> {
         return buildList {
             index.unavailableBySource[resource].orEmpty().forEach { occurrence ->
                 observeUnavailableTarget(occurrence)
-                add(UnresolvedLink.UnavailableTarget(occurrence.id, occurrence.target.resource))
+                add(UnresolvedLink.UnavailableTarget(occurrence.id, occurrence.target.resource.toResourceId()))
             }
             index.selectedEndpoints.forEach endpointLoop@{ endpoint ->
                 val record = view.resources[resource] ?: return@endpointLoop
@@ -234,7 +238,7 @@ private class CapturedGraph(
                 evidence.forms.forEach { reads.observeInput(InputIdentity.Form(it)) }
                 evidence.values.forEach locationLoop@{ location ->
                     reads.observeInput(InputIdentity.Value(location))
-                    val occurrence = LinkOccurrenceId(endpoint, location)
+                    val occurrence = LinkOccurrenceId(endpoint = endpoint, location = location)
                     if (occurrence in index.occurrenceIds || occurrence in index.unavailableOccurrenceIds) {
                         return@locationLoop
                     }
@@ -253,14 +257,14 @@ private class CapturedGraph(
             .groupBy(LinkOccurrence::source)
             .map { (source, occurrences) ->
                 UndecidedCandidate(
-                    source,
-                    occurrences.map { it.id.location } + ValueLocation(target, ValuePath()),
+                    source.toResourceId(),
+                    occurrences.map { it.id.location } + ValueLocation.of(target),
                 )
             }.sortedBy { it.resource.value }
 
     private fun observeUnavailableTarget(occurrence: LinkOccurrence) {
-        reads.observeInput(InputIdentity.Existence(occurrence.target.resource))
-        reads.observeInput(InputIdentity.Form(ValueLocation(occurrence.target.resource, ValuePath())))
+        reads.observeInput(InputIdentity.Existence(occurrence.target.resource.toResourceId()))
+        reads.observeInput(InputIdentity.Form(ValueLocation(resource = occurrence.target.resource, path = ValuePath.root)))
     }
 
     fun <D : ResourceDraft> bind(
@@ -268,7 +272,7 @@ private class CapturedGraph(
         type: DraftType<D>,
     ): BoundMatch<D> {
         val record = view.resources[resource] ?: return BoundMatch.No
-        val location = ValueLocation(resource, ValuePath())
+        val location = ValueLocation.of(resource)
         val matches =
             when (val requested = type.match) {
                 ResourceTypeMatch.AnyResource -> {
@@ -277,28 +281,36 @@ private class CapturedGraph(
 
                 is ResourceTypeMatch.Definition -> {
                     when (val actual = record.configuration) {
-                        is TypeSelection.Complete -> {
+                        is TypeSelection.CompleteWrapper -> {
                             root.catalog.checked.isNominalSubtype(actual.use.definition, requested.id)
                         }
 
-                        is TypeSelection.Pending -> {
+                        is TypeSelection.PendingWrapper -> {
                             root.catalog.checked.isNominalSubtype(actual.definition, requested.id)
+                        }
+
+                        else -> {
+                            unknownVariant(actual)
                         }
                     }
                 }
 
                 is ResourceTypeMatch.Application -> {
                     when (val actual = record.configuration) {
-                        is TypeSelection.Complete -> {
+                        is TypeSelection.CompleteWrapper -> {
                             actual.use == requested.use
                         }
 
-                        is TypeSelection.Pending -> {
+                        is TypeSelection.PendingWrapper -> {
                             return if (actual.definition == requested.use.definition) {
                                 BoundMatch.Undecided(UndecidedCandidate(resource, listOf(location)))
                             } else {
                                 BoundMatch.No
                             }
+                        }
+
+                        else -> {
+                            unknownVariant(actual)
                         }
                     }
                 }
@@ -323,10 +335,10 @@ internal class CapturedGraphIndex(
     val selectedEndpoints = contracts.flatMapTo(linkedSetOf()) { listOf(it.first.id, it.second.id) }
     private val occurrences = view.links.values.filter { it.id.endpoint in selectedEndpoints }
     val occurrenceIds = occurrences.mapTo(hashSetOf(), LinkOccurrence::id)
-    val occurrencesBySource = occurrences.groupBy(LinkOccurrence::source)
+    val occurrencesBySource = occurrences.groupBy { it.source.toResourceId() }
     val unavailableOccurrences = occurrences.filterTo(linkedSetOf(), ::hasUnavailableTarget)
-    val unavailableBySource = unavailableOccurrences.groupBy(LinkOccurrence::source)
-    val unavailableByTarget = unavailableOccurrences.groupBy { it.target.resource }
+    val unavailableBySource = unavailableOccurrences.groupBy { it.source.toResourceId() }
+    val unavailableByTarget = unavailableOccurrences.groupBy { it.target.resource.toResourceId() }
     val unavailableOccurrenceIds = unavailableOccurrences.mapTo(hashSetOf(), LinkOccurrence::id)
     val declaredEvidence =
         view.resources.mapValues { (resource, record) ->
@@ -350,7 +362,7 @@ internal class CapturedGraphIndex(
             result.problems
                 .filterNot { problem ->
                     unavailableOccurrences.any { it.id.location == problem.location }
-                }.groupBy { it.location.resource }
+                }.groupBy { it.location.resource.toResourceId() }
         val directed =
             result.projections.flatMap { projection ->
                 projection.directed(contractById.getValue(projection.contract), direction(selection))
@@ -360,14 +372,18 @@ internal class CapturedGraphIndex(
     }
 
     private fun hasUnavailableTarget(occurrence: LinkOccurrence): Boolean {
-        val target = view.resources[occurrence.target.resource] ?: return true
+        val target = view.resources[occurrence.target.resource.toResourceId()] ?: return true
         return when (val selected = target.configuration) {
-            is TypeSelection.Pending -> {
+            is TypeSelection.PendingWrapper -> {
                 true
             }
 
-            is TypeSelection.Complete -> {
+            is TypeSelection.CompleteWrapper -> {
                 root.catalog.checked.resolve(selected.use.use) !is Resolution.Ready
+            }
+
+            else -> {
+                unknownVariant(selected)
             }
         }
     }
@@ -449,8 +465,8 @@ private fun rawValue(
     record: AuthoringRecord?,
     path: ValuePath,
 ): DataValue? {
-    val fields = record?.fields ?: return null
-    return (DataValue.record(fields).locate(path) as? LocatedPortableValue.Value)?.value
+    val payload = record?.payload ?: return null
+    return (DataValue.RecordWrapper(payload).locate(path) as? LocatedPortableValue.Value)?.value
 }
 
 private fun interrupted(

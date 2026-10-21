@@ -1,9 +1,8 @@
 package com.typewritermc.operations
 
 import com.typewritermc.authoring.CompletenessResult
-import com.typewritermc.authoring.PathSegment
-import com.typewritermc.authoring.ValuePath
 import com.typewritermc.authoring.complete
+import com.typewritermc.authoring.name
 import com.typewritermc.capability.CapabilityId
 import com.typewritermc.capability.RealmCapabilityDescriptor
 import com.typewritermc.discovery.OwnedPresentation
@@ -25,7 +24,6 @@ import com.typewritermc.types.fields
 import com.typewritermc.types.namedUse
 import com.typewritermc.types.nullable
 import com.typewritermc.types.requireValid
-import com.typewritermc.types.skir.SkirAuthoringValueCodec
 import com.typewritermc.types.skir.SkirTypeCodec
 import com.typewritermc.types.skir.getOrThrow
 import com.typewritermc.types.template
@@ -39,12 +37,14 @@ import skirout.editor.v1.operation.ResourceOperationDefinition
 import skirout.editor.v1.type_catalog.DataValue
 import skirout.editor.v1.type_catalog.NamedTypeTemplate
 import skirout.editor.v1.type_catalog.NamedTypeUse
+import skirout.editor.v1.type_catalog.PathSegment
 import skirout.editor.v1.type_catalog.PresentationId
 import skirout.editor.v1.type_catalog.ResolvedRepresentation
 import skirout.editor.v1.type_catalog.ScalarKind
 import skirout.editor.v1.type_catalog.TypeDefinitionId
 import skirout.editor.v1.type_catalog.TypeTemplate
 import skirout.editor.v1.type_catalog.TypeUse
+import skirout.editor.v1.type_catalog.ValuePath
 import skirout.editor.v1.type_catalog.CapabilityId as SkirCapabilityId
 
 class BoundOperationInput internal constructor(
@@ -198,7 +198,7 @@ fun bindOperations(
                     drop =
                         collected.fields.singleOrNull { it.drop != null }?.let { field ->
                             OperationDrop(
-                                input = SkirAuthoringValueCodec.encode(field.path).getOrThrow(),
+                                input = field.path,
                                 hint = requireNotNull(field.drop),
                             ).requireValid()
                         },
@@ -252,7 +252,7 @@ private fun CheckedType.typeAt(path: ValuePath): TypeUse? {
     var current: CheckedType = this
     var type: TypeUse? = null
     path.segments.forEachIndexed { index, segment ->
-        val name = (segment as? PathSegment.Field)?.name ?: return null
+        val name = (segment as? PathSegment.FieldWrapper)?.name ?: return null
         val record = current.schema.representation as? ResolvedRepresentation.RecordWrapper ?: return null
         type = record.value.fields
             .singleOrNull { it.key == name }

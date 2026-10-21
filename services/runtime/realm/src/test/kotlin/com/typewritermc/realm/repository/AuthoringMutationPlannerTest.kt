@@ -2,25 +2,20 @@
 
 package com.typewritermc.realm.repository
 
-import com.typewritermc.authoring.ArgumentSelection
-import com.typewritermc.authoring.AuthoringRecord
 import com.typewritermc.authoring.ConnectIntent
 import com.typewritermc.authoring.CounterpartChoice
 import com.typewritermc.authoring.EditIntent
 import com.typewritermc.authoring.GeneratedSdkApi
-import com.typewritermc.authoring.LinkOccurrence
-import com.typewritermc.authoring.LinkOccurrenceId
 import com.typewritermc.authoring.LinkProjection
-import com.typewritermc.authoring.PathSegment
-import com.typewritermc.authoring.PreparedContent
 import com.typewritermc.authoring.PreparedEdit
-import com.typewritermc.authoring.PreparedValue
 import com.typewritermc.authoring.RelationProjectionDelta
-import com.typewritermc.authoring.TypeSelection
-import com.typewritermc.authoring.ValueLocation
-import com.typewritermc.authoring.ValuePath
 import com.typewritermc.authoring.append
+import com.typewritermc.authoring.field
+import com.typewritermc.authoring.fieldMap
 import com.typewritermc.authoring.item
+import com.typewritermc.authoring.of
+import com.typewritermc.authoring.root
+import com.typewritermc.authoring.with
 import com.typewritermc.checking.CatalogGeneration
 import com.typewritermc.configuration.FieldPatternSegment
 import com.typewritermc.configuration.RelativeFieldPattern
@@ -36,7 +31,6 @@ import com.typewritermc.types.EndpointBindingTemplate
 import com.typewritermc.types.EndpointCardinality
 import com.typewritermc.types.EndpointDefinition
 import com.typewritermc.types.EndpointSlot
-import com.typewritermc.types.LinkTarget
 import com.typewritermc.types.RESOURCE_OWNERSHIP_FAMILY_ID
 import com.typewritermc.types.RelationContract
 import com.typewritermc.types.RelationDeletePolicy
@@ -49,8 +43,6 @@ import com.typewritermc.types.field
 import com.typewritermc.types.fields
 import com.typewritermc.types.integerScalar
 import com.typewritermc.types.items
-import com.typewritermc.types.link
-import com.typewritermc.types.linkTarget
 import com.typewritermc.types.listValue
 import com.typewritermc.types.named
 import com.typewritermc.types.namedTemplate
@@ -59,14 +51,21 @@ import com.typewritermc.types.nullable
 import com.typewritermc.types.payload
 import com.typewritermc.types.qualified
 import com.typewritermc.types.record
-import com.typewritermc.types.skir.getOrThrow
 import com.typewritermc.types.template
+import com.typewritermc.types.toResourceId
+import com.typewritermc.types.toSkir
 import com.typewritermc.types.unknownVariant
 import com.typewritermc.types.use
 import de.infix.testBalloon.framework.core.testSuite
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.types.shouldBeInstanceOf
 import kotlinx.coroutines.runBlocking
+import skirout.editor.v1.authoring.LinkOccurrence
+import skirout.editor.v1.authoring.LinkOccurrenceId
+import skirout.editor.v1.catalog.PreparedContent
+import skirout.editor.v1.catalog.PreparedValue
+import skirout.editor.v1.type_catalog.ArgumentSelection
+import skirout.editor.v1.type_catalog.AuthoringRecord
 import skirout.editor.v1.type_catalog.CollectionKind
 import skirout.editor.v1.type_catalog.DataValue
 import skirout.editor.v1.type_catalog.DeclarationOwner
@@ -75,14 +74,19 @@ import skirout.editor.v1.type_catalog.FieldDeclaration
 import skirout.editor.v1.type_catalog.FieldOwner
 import skirout.editor.v1.type_catalog.IntegerWidth
 import skirout.editor.v1.type_catalog.ItemId
+import skirout.editor.v1.type_catalog.LinkTarget
 import skirout.editor.v1.type_catalog.ListItem
 import skirout.editor.v1.type_catalog.NamedTypeUse
 import skirout.editor.v1.type_catalog.ParameterKey
+import skirout.editor.v1.type_catalog.PathSegment
 import skirout.editor.v1.type_catalog.RepresentationTemplate
 import skirout.editor.v1.type_catalog.ScalarKind
 import skirout.editor.v1.type_catalog.TypeDefinition
 import skirout.editor.v1.type_catalog.TypeDefinitionId
 import skirout.editor.v1.type_catalog.TypeParameter
+import skirout.editor.v1.type_catalog.TypeSelection
+import skirout.editor.v1.type_catalog.ValueLocation
+import skirout.editor.v1.type_catalog.ValuePath
 
 class AuthoringMutationPlannerTest {
     fun inverseOnlyReferencesDoNotOfferLinkedDuplication() {
@@ -117,7 +121,7 @@ class AuthoringMutationPlannerTest {
                 relations = listOf(manyContract()),
                 endpointBindings = BINDINGS,
             )
-        val resources = mapOf(id to record().let { it.copy(fields = it.fields - "manyFirst") })
+        val resources = mapOf(id to record().let { it.copy(fields = it.fields.filterNot { it.name == "manyFirst" }) })
         val baseline = AuthoringView(catalog, resources, emptyMap())
         try {
             val reads =
@@ -236,7 +240,7 @@ class AuthoringMutationPlannerTest {
                 val overlay = mapOf(first to record(label = "Draft"))
                 val resolved = runtime.resolve(invocation, GENERATION, token, overlay, emptySet())
                 resolved.operations.map { it.definition.presentation.label } shouldBe listOf("Add suffix")
-                val partial = record().let { it.copy(fields = it.fields + ("label" to DataValue.UNFILLED)) }
+                val partial = record().let { it.with("label", DataValue.UNFILLED) }
                 val partialResolution = runtime.resolve(invocation, GENERATION, token, mapOf(first to partial), emptySet())
                 partialResolution.operations
                     .single()
@@ -325,11 +329,7 @@ class AuthoringMutationPlannerTest {
                                                     resource =
                                                         skirout.editor.v1.type_catalog
                                                             .ResourceId(value = second.value),
-                                                    content =
-                                                        com.typewritermc.types.skir.SkirAuthoringValueCodec
-                                                            .encode(
-                                                                record(label = "availability-failure"),
-                                                            ).getOrThrow(),
+                                                    content = record(label = "availability-failure"),
                                                 ),
                                             ),
                                         removals = emptyList(),
@@ -478,7 +478,7 @@ class AuthoringMutationPlannerTest {
                 )
             try {
                 val edit = WorkingViewEditContext(baseline, "move-selection")
-                val origin = OperationOrigin(from, baseline.links.values.filter { it.source == from })
+                val origin = OperationOrigin(from, baseline.links.values.filter { it.source.toResourceId() == from })
                 val session =
                     RuntimeOperationPreparation(
                         OperationInvocation("move-selection", listOf(first, second), origin),
@@ -491,13 +491,17 @@ class AuthoringMutationPlannerTest {
                     it.intent.counterpart is CounterpartChoice.Existing
                 } shouldBe true
                 val final = ResourceValueMapper.discover(edit.session.resources)
-                final.filter { it.source == to && it.target.resource != root }.map { it.target.resource }.toSet() shouldBe
+                final
+                    .filter {
+                        it.source.toResourceId() == to && it.target.resource.toResourceId() != root
+                    }.map { it.target.resource.toResourceId() }
+                    .toSet() shouldBe
                     setOf(first, second)
-                final.filter { it.source == from }.map { it.target.resource } shouldBe listOf(root)
+                final.filter { it.source.toResourceId() == from }.map { it.target.resource.toResourceId() } shouldBe listOf(root)
                 (
                     edit.session.resources
                         .getValue(first)
-                        .fields
+                        .fieldMap
                         .getValue("label") as DataValue.StringValueWrapper
                 ).value shouldBe "first"
                 baseline.resources shouldBe resources
@@ -643,7 +647,7 @@ class AuthoringMutationPlannerTest {
                 val copiedChildItem =
                     (
                         (
-                            copy.fields.getValue(
+                            copy.fieldMap.getValue(
                                 "children",
                             ) as DataValue.NamedWrapper
                         ).payload as DataValue.ListValueWrapper
@@ -651,7 +655,7 @@ class AuthoringMutationPlannerTest {
                 val copiedOrdinaryItem =
                     (
                         (
-                            copy.fields.getValue(
+                            copy.fieldMap.getValue(
                                 "manyFirst",
                             ) as DataValue.NamedWrapper
                         ).payload as DataValue.ListValueWrapper
@@ -729,10 +733,10 @@ class AuthoringMutationPlannerTest {
                 val copy = session.duplicate(listOf(source)).single()
                 edit.finish()
                 val links = ResourceValueMapper.discover(edit.session.resources)
-                links.any { it.source == copy && it.target.resource == outside } shouldBe true
-                links.none { it.source == incoming && it.target.resource == copy } shouldBe true
+                links.any { it.source.toResourceId() == copy && it.target.resource.toResourceId() == outside } shouldBe true
+                links.none { it.source.toResourceId() == incoming && it.target.resource.toResourceId() == copy } shouldBe true
                 edit.session.resources.getValue(incoming) shouldBe resources.getValue(incoming)
-                links.none { it.source == copy && it.target.resource == incoming } shouldBe true
+                links.none { it.source.toResourceId() == copy && it.target.resource.toResourceId() == incoming } shouldBe true
             } finally {
                 baseline.catalog.close()
             }
@@ -807,13 +811,14 @@ class AuthoringMutationPlannerTest {
                 CounterpartChoice.New(
                     location(target, "children"),
                     PreparedValue(
-                        PreparedContent.Record(
-                            AuthoringRecord(
-                                TypeSelection.Complete(WRAPPER_USE),
-                                mapOf("inner" to DataValue.UNFILLED),
+                        content =
+                            PreparedContent.RecordWrapper(
+                                AuthoringRecord.of(
+                                    TypeSelection.CompleteWrapper(WRAPPER_USE),
+                                    mapOf("inner" to DataValue.UNFILLED),
+                                ),
                             ),
-                        ),
-                        emptyList(),
+                        findings = emptyList(),
                     ),
                 )
             session.append(EditIntent.ConnectRelation(ConnectIntent(occurrence, target, choice)))
@@ -854,7 +859,7 @@ class AuthoringMutationPlannerTest {
             session.append(
                 EditIntent.ConnectRelation(ConnectIntent(occurrence(PARENT_SECOND, location(child, "parent"), parent, null), parent, null)),
             )
-            val inverse = ResourceValueMapper.discover(session.resources).single { it.source == parent }
+            val inverse = ResourceValueMapper.discover(session.resources).single { it.source.toResourceId() == parent }
             ((session.intents.single() as EditIntent.ConnectRelation).intent.counterpart is CounterpartChoice.Existing) shouldBe true
             session.append(EditIntent.SetValue(location(child, "label"), DataValue.StringValueWrapper("later write")))
             val (prepared, plan) = session.finish()
@@ -883,7 +888,12 @@ class AuthoringMutationPlannerTest {
         ResourceValueMapper.counterpartBinding(PARENT_FIRST, resource, record(), CATALOG) shouldBe
             CounterpartBinding.Collection(location(resource, "children"))
         ResourceValueMapper.counterpartBinding(NESTED_FIRST, resource, record(), CATALOG) shouldBe
-            CounterpartBinding.Scalar(ValueLocation(resource, ValuePath(listOf(PathSegment.Field("wrapper"), PathSegment.Field("inner")))))
+            CounterpartBinding.Scalar(
+                ValueLocation.of(
+                    resource,
+                    ValuePath(segments = listOf(PathSegment.createField(name = "wrapper"), PathSegment.createField(name = "inner"))),
+                ),
+            )
         ResourceValueMapper.counterpartBinding(EndpointId(value = "absent"), resource, record(), CATALOG) shouldBe
             CounterpartBinding.Missing
 
@@ -900,7 +910,7 @@ class AuthoringMutationPlannerTest {
                     ),
             )
         val catalog = DefaultCheckedCatalog(GENERATION, DEFINITIONS.map { if (it.id == NODE) ambiguous else it })
-        val target = record().copy(fields = record().fields + ("secondAlternative" to DataValue.UNFILLED))
+        val target = record().with("secondAlternative", DataValue.UNFILLED)
         ResourceValueMapper.counterpartBinding(PAIR_SECOND, resource, target, catalog) shouldBe CounterpartBinding.ExplicitChoice
     }
 
@@ -956,8 +966,8 @@ class AuthoringMutationPlannerTest {
             val before =
                 mapOf(
                     resource to
-                        AuthoringRecord(
-                            TypeSelection.Complete(rootUse),
+                        AuthoringRecord.of(
+                            TypeSelection.CompleteWrapper(rootUse),
                             mapOf("values" to DataValue.UNFILLED),
                         ),
                 )
@@ -973,7 +983,7 @@ class AuthoringMutationPlannerTest {
                 before
                     .apply(accepted)
                     .getValue(resource)
-                    .fields
+                    .fieldMap
                     .getValue("values")
                     .shouldBeInstanceOf<DataValue.NamedWrapper>()
 
@@ -1045,8 +1055,8 @@ class AuthoringMutationPlannerTest {
         val resource = ResourceId("source")
         val targetUse = target.use()
         val record =
-            AuthoringRecord(
-                TypeSelection.Pending(derived, listOf(ArgumentSelection.Chosen(targetUse))),
+            AuthoringRecord.of(
+                TypeSelection.createPending(definition = derived, arguments = listOf(ArgumentSelection.ChosenWrapper(targetUse))),
                 mapOf("link" to DataValue.UNFILLED),
             )
         val occurrence =
@@ -1141,16 +1151,22 @@ class AuthoringMutationPlannerTest {
         val source = ResourceId("partial_source")
         val target = ResourceId("partial_target")
         val sourceRecord =
-            AuthoringRecord(
-                TypeSelection.Complete(sourceType.namedUse()),
+            AuthoringRecord.of(
+                TypeSelection.CompleteWrapper(sourceType.namedUse()),
                 mapOf("target" to link(linkType.namedUse(listOf(expected)), endpoint, target, null)),
             )
 
         listOf(
-            TypeSelection.Pending(config, listOf(ArgumentSelection.Chosen(integer), ArgumentSelection.Unfilled)),
-            TypeSelection.Pending(config, listOf(ArgumentSelection.Chosen(text), ArgumentSelection.Unfilled)),
+            TypeSelection.createPending(
+                definition = config,
+                arguments = listOf(ArgumentSelection.ChosenWrapper(integer), ArgumentSelection.UNFILLED),
+            ),
+            TypeSelection.createPending(
+                definition = config,
+                arguments = listOf(ArgumentSelection.ChosenWrapper(text), ArgumentSelection.UNFILLED),
+            ),
         ).forEach { selection ->
-            val resources = mapOf(source to sourceRecord, target to AuthoringRecord(selection, emptyMap()))
+            val resources = mapOf(source to sourceRecord, target to AuthoringRecord.of(selection, emptyMap()))
             val projection = ResourceValueMapper.project(ResourceValueMapper.discover(resources), resources, listOf(contract), catalog)
 
             projection.projections.isEmpty() shouldBe true
@@ -1235,13 +1251,16 @@ class AuthoringMutationPlannerTest {
         val resources =
             mapOf(
                 source to
-                    AuthoringRecord(
-                        TypeSelection.Complete(sourceType.namedUse()),
+                    AuthoringRecord.of(
+                        TypeSelection.CompleteWrapper(sourceType.namedUse()),
                         mapOf("target" to link(linkType.namedUse(listOf(expected)), endpoint, target, null)),
                     ),
                 target to
-                    AuthoringRecord(
-                        TypeSelection.Pending(derived, listOf(ArgumentSelection.Chosen(text), ArgumentSelection.Unfilled)),
+                    AuthoringRecord.of(
+                        TypeSelection.createPending(
+                            definition = derived,
+                            arguments = listOf(ArgumentSelection.ChosenWrapper(text), ArgumentSelection.UNFILLED),
+                        ),
                         emptyMap(),
                     ),
             )
@@ -1275,8 +1294,9 @@ class AuthoringMutationPlannerTest {
                 .plan
         val connectedResources = before.apply(connected)
 
-        connectedResources.getValue(source).fields.getValue("first") shouldBe link(PAIR_FIRST_TYPE, PAIR_FIRST, target, targetLocation.path)
-        connectedResources.getValue(target).fields.getValue("second") shouldBe
+        connectedResources.getValue(source).fieldMap.getValue("first") shouldBe
+            link(PAIR_FIRST_TYPE, PAIR_FIRST, target, targetLocation.path)
+        connectedResources.getValue(target).fieldMap.getValue("second") shouldBe
             link(PAIR_SECOND_TYPE, PAIR_SECOND, source, sourceLocation.path)
         connected.relations.created.size shouldBe 1
 
@@ -1289,8 +1309,8 @@ class AuthoringMutationPlannerTest {
                 .plan
         val disconnectedResources = connectedResources.apply(disconnected)
 
-        disconnectedResources.getValue(source).fields.getValue("first") shouldBe DataValue.UNFILLED
-        disconnectedResources.getValue(target).fields.getValue("second") shouldBe DataValue.UNFILLED
+        disconnectedResources.getValue(source).fieldMap.getValue("first") shouldBe DataValue.UNFILLED
+        disconnectedResources.getValue(target).fieldMap.getValue("second") shouldBe DataValue.UNFILLED
         disconnected.relations.removed.size shouldBe 1
     }
 
@@ -1314,7 +1334,7 @@ class AuthoringMutationPlannerTest {
             resources
                 .getValue(
                     parent,
-                ).fields
+                ).fieldMap
                 .getValue("children")
                 .shouldBeInstanceOf<DataValue.NamedWrapper>()
                 .payload
@@ -1322,8 +1342,9 @@ class AuthoringMutationPlannerTest {
                 .items
 
         children.size shouldBe 1
-        val counterpartPath = ValuePath(listOf(PathSegment.Field("children"), PathSegment.Item(children.single().id)))
-        resources.getValue(child).fields.getValue("parent") shouldBe link(PARENT_SECOND_TYPE, PARENT_SECOND, parent, counterpartPath)
+        val counterpartPath =
+            ValuePath(segments = listOf(PathSegment.createField(name = "children"), PathSegment.createItem(id = children.single().id)))
+        resources.getValue(child).fieldMap.getValue("parent") shouldBe link(PARENT_SECOND_TYPE, PARENT_SECOND, parent, counterpartPath)
         children.single().value shouldBe link(PARENT_FIRST_TYPE, PARENT_FIRST, child, sourceLocation.path)
     }
 
@@ -1333,7 +1354,7 @@ class AuthoringMutationPlannerTest {
         val child = ResourceId("element")
         val sourceLocation = location(child, "parent")
         val source = occurrence(PARENT_SECOND, sourceLocation, parent, null)
-        val parentRecord = record().copy(fields = record().fields + ("children" to DataValue.UNFILLED))
+        val parentRecord = record().with("children", DataValue.UNFILLED)
         val before = mapOf(parent to parentRecord, child to record())
 
         val plan =
@@ -1348,7 +1369,7 @@ class AuthoringMutationPlannerTest {
             resources
                 .getValue(
                     parent,
-                ).fields
+                ).fieldMap
                 .getValue("children")
                 .shouldBeInstanceOf<DataValue.NamedWrapper>()
                 .payload
@@ -1362,8 +1383,8 @@ class AuthoringMutationPlannerTest {
             .shouldBeInstanceOf<DataValue.NamedWrapper>()
             .payload
             .shouldBeInstanceOf<DataValue.LinkWrapper>()
-            .linkTarget.resource shouldBe
-            child
+            .value.target.resource
+            .toResourceId() shouldBe child
     }
 
     fun newCounterpartEvidenceProtectsPriorStateWithoutRequiringThePlannedLocation() {
@@ -1373,14 +1394,15 @@ class AuthoringMutationPlannerTest {
         val containing = location(target, "children")
         val generatedItem = ItemId(value = "relation:server_generated")
         val generatedLink =
-            ValueLocation(
+            ValueLocation.of(
                 target,
                 ValuePath(
-                    listOf(
-                        PathSegment.Field("children"),
-                        PathSegment.Item(generatedItem),
-                        PathSegment.Field("inner"),
-                    ),
+                    segments =
+                        listOf(
+                            PathSegment.createField(name = "children"),
+                            PathSegment.createItem(id = generatedItem),
+                            PathSegment.createField(name = "inner"),
+                        ),
                 ),
             )
         val before = mapOf(source to record(), target to record())
@@ -1393,13 +1415,14 @@ class AuthoringMutationPlannerTest {
                         CounterpartChoice.New(
                             containing,
                             PreparedValue(
-                                PreparedContent.Record(
-                                    AuthoringRecord(
-                                        TypeSelection.Complete(WRAPPER_USE),
-                                        mapOf("inner" to DataValue.UNFILLED),
+                                content =
+                                    PreparedContent.RecordWrapper(
+                                        AuthoringRecord.of(
+                                            TypeSelection.CompleteWrapper(WRAPPER_USE),
+                                            mapOf("inner" to DataValue.UNFILLED),
+                                        ),
                                     ),
-                                ),
-                                emptyList(),
+                                findings = emptyList(),
                             ),
                         ),
                     ),
@@ -1440,7 +1463,10 @@ class AuthoringMutationPlannerTest {
         val child = ResourceId("page")
         val item = ItemId(value = "page_occurrence")
         val sourceLocation =
-            ValueLocation(parent, ValuePath(listOf(PathSegment.Field("children"), PathSegment.Item(item))))
+            ValueLocation.of(
+                parent,
+                ValuePath(segments = listOf(PathSegment.createField(name = "children"), PathSegment.createItem(id = item))),
+            )
         val source = occurrence(PARENT_FIRST, sourceLocation, child, null)
         val before = mapOf(parent to record(), child to record())
 
@@ -1456,7 +1482,7 @@ class AuthoringMutationPlannerTest {
             resources
                 .getValue(
                     parent,
-                ).fields
+                ).fieldMap
                 .getValue("children")
                 .shouldBeInstanceOf<DataValue.NamedWrapper>()
                 .payload
@@ -1465,7 +1491,7 @@ class AuthoringMutationPlannerTest {
 
         children.map(ListItem::id) shouldBe listOf(item)
         children.single().value shouldBe link(PARENT_FIRST_TYPE, PARENT_FIRST, child, fieldPath("parent"))
-        resources.getValue(child).fields.getValue("parent") shouldBe link(PARENT_SECOND_TYPE, PARENT_SECOND, parent, sourceLocation.path)
+        resources.getValue(child).fieldMap.getValue("parent") shouldBe link(PARENT_SECOND_TYPE, PARENT_SECOND, parent, sourceLocation.path)
     }
 
     fun proposedCollectionOccurrenceMaterializesItsUnfilledCollection() {
@@ -1474,9 +1500,12 @@ class AuthoringMutationPlannerTest {
         val child = ResourceId("page")
         val item = ItemId(value = "page_occurrence")
         val sourceLocation =
-            ValueLocation(parent, ValuePath(listOf(PathSegment.Field("children"), PathSegment.Item(item))))
+            ValueLocation.of(
+                parent,
+                ValuePath(segments = listOf(PathSegment.createField(name = "children"), PathSegment.createItem(id = item))),
+            )
         val source = occurrence(PARENT_FIRST, sourceLocation, child, null)
-        val parentRecord = record().copy(fields = record().fields + ("children" to DataValue.UNFILLED))
+        val parentRecord = record().with("children", DataValue.UNFILLED)
         val before = mapOf(parent to parentRecord, child to record())
 
         val plan =
@@ -1491,7 +1520,7 @@ class AuthoringMutationPlannerTest {
             resources
                 .getValue(
                     parent,
-                ).fields
+                ).fieldMap
                 .getValue("children")
                 .shouldBeInstanceOf<DataValue.NamedWrapper>()
                 .payload
@@ -1499,7 +1528,7 @@ class AuthoringMutationPlannerTest {
                 .items
 
         children.map(ListItem::id) shouldBe listOf(item)
-        resources.getValue(child).fields.getValue("parent") shouldBe link(PARENT_SECOND_TYPE, PARENT_SECOND, parent, sourceLocation.path)
+        resources.getValue(child).fieldMap.getValue("parent") shouldBe link(PARENT_SECOND_TYPE, PARENT_SECOND, parent, sourceLocation.path)
     }
 
     fun ordinaryLinkSetAndClearSynchronizeTheDirectCounterpart() {
@@ -1526,7 +1555,7 @@ class AuthoringMutationPlannerTest {
             connectedResources
                 .getValue(
                     parent,
-                ).fields
+                ).fieldMap
                 .getValue("children")
                 .shouldBeInstanceOf<DataValue.NamedWrapper>()
                 .payload
@@ -1546,7 +1575,7 @@ class AuthoringMutationPlannerTest {
             clearedResources
                 .getValue(
                     parent,
-                ).fields
+                ).fieldMap
                 .getValue("children")
                 .shouldBeInstanceOf<DataValue.NamedWrapper>()
                 .payload
@@ -1554,7 +1583,7 @@ class AuthoringMutationPlannerTest {
                 .items
 
         remaining.isEmpty() shouldBe true
-        clearedResources.getValue(child).fields.getValue("parent") shouldBe DataValue.UNFILLED
+        clearedResources.getValue(child).fieldMap.getValue("parent") shouldBe DataValue.UNFILLED
     }
 
     fun ordinaryCollectionRemoveClearsTheDirectScalarCounterpart() {
@@ -1562,7 +1591,7 @@ class AuthoringMutationPlannerTest {
         val parent = ResourceId("book")
         val child = ResourceId("page")
         val item = ItemId(value = "page_occurrence")
-        val itemPath = ValuePath(listOf(PathSegment.Field("children"), PathSegment.Item(item)))
+        val itemPath = ValuePath(segments = listOf(PathSegment.createField(name = "children"), PathSegment.createItem(id = item)))
         val resources =
             mapOf(
                 parent to
@@ -1587,12 +1616,12 @@ class AuthoringMutationPlannerTest {
                 .plan
         val next = resources.apply(plan)
 
-        next.getValue(child).fields.getValue("parent") shouldBe DataValue.UNFILLED
+        next.getValue(child).fieldMap.getValue("parent") shouldBe DataValue.UNFILLED
         val items =
             next
                 .getValue(
                     parent,
-                ).fields
+                ).fieldMap
                 .getValue("children")
                 .shouldBeInstanceOf<DataValue.NamedWrapper>()
                 .payload
@@ -1606,7 +1635,7 @@ class AuthoringMutationPlannerTest {
         val planner = AuthoringMutationPlanner(CATALOG, listOf(contract), NESTED_BINDINGS)
         val source = ResourceId("source")
         val target = ResourceId("target")
-        val nestedPath = ValuePath(listOf(PathSegment.Field("wrapper"), PathSegment.Field("inner")))
+        val nestedPath = ValuePath(segments = listOf(PathSegment.createField(name = "wrapper"), PathSegment.createField(name = "inner")))
         val oppositePath = fieldPath("nestedSecond")
         val before = mapOf(source to record(), target to record())
 
@@ -1627,7 +1656,7 @@ class AuthoringMutationPlannerTest {
         connectedResources
             .getValue(
                 source,
-            ).fields
+            ).fieldMap
             .getValue(
                 "wrapper",
             ).shouldBeInstanceOf<DataValue.NamedWrapper>()
@@ -1635,7 +1664,7 @@ class AuthoringMutationPlannerTest {
             .shouldBeInstanceOf<DataValue.RecordWrapper>()
             .field("inner") shouldBe
             link(NESTED_FIRST_TYPE, NESTED_FIRST, target, oppositePath)
-        connectedResources.getValue(target).fields.getValue("nestedSecond") shouldBe
+        connectedResources.getValue(target).fieldMap.getValue("nestedSecond") shouldBe
             link(NESTED_SECOND_TYPE, NESTED_SECOND, source, nestedPath)
 
         val cleared =
@@ -1647,7 +1676,7 @@ class AuthoringMutationPlannerTest {
                 .plan
         val clearedResources = connectedResources.apply(cleared)
 
-        clearedResources.getValue(target).fields.getValue("nestedSecond") shouldBe DataValue.UNFILLED
+        clearedResources.getValue(target).fieldMap.getValue("nestedSecond") shouldBe DataValue.UNFILLED
     }
 
     fun clearRemovesCollectionOccurrenceWithoutRetainingItsItemIdentity() {
@@ -1655,7 +1684,7 @@ class AuthoringMutationPlannerTest {
         val parent = ResourceId("parent")
         val child = ResourceId("child")
         val item = ItemId(value = "child_occurrence")
-        val itemPath = ValuePath(listOf(PathSegment.Field("children"), PathSegment.Item(item)))
+        val itemPath = ValuePath(segments = listOf(PathSegment.createField(name = "children"), PathSegment.createItem(id = item)))
         val parentPath = fieldPath("parent")
         val before =
             mapOf(
@@ -1676,7 +1705,7 @@ class AuthoringMutationPlannerTest {
             planner.plan(before, edit(EditIntent.DeleteResource(child))).shouldBeInstanceOf<MutationPlanningResult.Accepted>().plan
         val retainedParent = before.apply(deletedChild).getValue(parent)
         val children =
-            retainedParent.fields
+            retainedParent.fieldMap
                 .getValue("children")
                 .shouldBeInstanceOf<DataValue.NamedWrapper>()
                 .payload
@@ -1688,7 +1717,7 @@ class AuthoringMutationPlannerTest {
             planner.plan(before, edit(EditIntent.DeleteResource(parent))).shouldBeInstanceOf<MutationPlanningResult.Accepted>().plan
         val retainedChild = before.apply(deletedParent).getValue(child)
 
-        retainedChild.fields.getValue("parent") shouldBe DataValue.UNFILLED
+        retainedChild.fieldMap.getValue("parent") shouldBe DataValue.UNFILLED
         deletedParent.removedResources shouldBe setOf(parent)
     }
 
@@ -1697,7 +1726,7 @@ class AuthoringMutationPlannerTest {
         val parent = ResourceId("parent")
         val child = ResourceId("child")
         val item = ItemId(value = "owned_child")
-        val itemPath = ValuePath(listOf(PathSegment.Field("children"), PathSegment.Item(item)))
+        val itemPath = ValuePath(segments = listOf(PathSegment.createField(name = "children"), PathSegment.createItem(id = item)))
         val before =
             mapOf(
                 parent to
@@ -1749,8 +1778,8 @@ class AuthoringMutationPlannerTest {
         projection.problems.isEmpty() shouldBe true
         projection.projections.mapNotNullTo(linkedSetOf()) { it.firstLocation } shouldBe
             setOf(
-                ValuePath(listOf(PathSegment.Field("manyFirst"), PathSegment.Item(first))),
-                ValuePath(listOf(PathSegment.Field("manyFirst"), PathSegment.Item(second))),
+                ValuePath(segments = listOf(PathSegment.createField(name = "manyFirst"), PathSegment.createItem(id = first))),
+                ValuePath(segments = listOf(PathSegment.createField(name = "manyFirst"), PathSegment.createItem(id = second))),
             )
     }
 
@@ -1784,7 +1813,8 @@ class AuthoringMutationPlannerTest {
         plan.relations.removed.size shouldBe 1
         plan.relations.removed
             .single()
-            .firstLocation shouldBe ValuePath(listOf(PathSegment.Field("manyFirst"), PathSegment.Item(removed)))
+            .firstLocation shouldBe
+            ValuePath(segments = listOf(PathSegment.createField(name = "manyFirst"), PathSegment.createItem(id = removed)))
         plan.relations.created.isEmpty() shouldBe true
         plan.relations.metadataChanged.isEmpty() shouldBe true
     }
@@ -1795,10 +1825,10 @@ class AuthoringMutationPlannerTest {
         val target = ResourceId("target")
         val sourceItem = ItemId(value = "source_occurrence")
         val targetItem = ItemId(value = "target_occurrence")
-        val sourcePath = ValuePath(listOf(PathSegment.Field("manyFirst"), PathSegment.Item(sourceItem)))
-        val targetPath = ValuePath(listOf(PathSegment.Field("manySecond"), PathSegment.Item(targetItem)))
-        val sourceOccurrence = occurrence(MANY_FIRST, ValueLocation(source, sourcePath), target, null)
-        val targetOccurrence = occurrence(MANY_SECOND, ValueLocation(target, targetPath), source, null)
+        val sourcePath = ValuePath(segments = listOf(PathSegment.createField(name = "manyFirst"), PathSegment.createItem(id = sourceItem)))
+        val targetPath = ValuePath(segments = listOf(PathSegment.createField(name = "manySecond"), PathSegment.createItem(id = targetItem)))
+        val sourceOccurrence = occurrence(MANY_FIRST, ValueLocation.of(source, sourcePath), target, null)
+        val targetOccurrence = occurrence(MANY_SECOND, ValueLocation.of(target, targetPath), source, null)
         val before =
             mapOf(
                 source to
@@ -1843,10 +1873,14 @@ class AuthoringMutationPlannerTest {
         val sourceSecond = ItemId(value = "source_second")
         val targetFirst = ItemId(value = "target_first")
         val targetSecond = ItemId(value = "target_second")
-        val sourceFirstPath = ValuePath(listOf(PathSegment.Field("manyFirst"), PathSegment.Item(sourceFirst)))
-        val sourceSecondPath = ValuePath(listOf(PathSegment.Field("manyFirst"), PathSegment.Item(sourceSecond)))
-        val targetFirstPath = ValuePath(listOf(PathSegment.Field("manySecond"), PathSegment.Item(targetFirst)))
-        val targetSecondPath = ValuePath(listOf(PathSegment.Field("manySecond"), PathSegment.Item(targetSecond)))
+        val sourceFirstPath =
+            ValuePath(segments = listOf(PathSegment.createField(name = "manyFirst"), PathSegment.createItem(id = sourceFirst)))
+        val sourceSecondPath =
+            ValuePath(segments = listOf(PathSegment.createField(name = "manyFirst"), PathSegment.createItem(id = sourceSecond)))
+        val targetFirstPath =
+            ValuePath(segments = listOf(PathSegment.createField(name = "manySecond"), PathSegment.createItem(id = targetFirst)))
+        val targetSecondPath =
+            ValuePath(segments = listOf(PathSegment.createField(name = "manySecond"), PathSegment.createItem(id = targetSecond)))
         val resources =
             mapOf(
                 source to
@@ -1878,10 +1912,10 @@ class AuthoringMutationPlannerTest {
         projection.projections.isEmpty() shouldBe true
         projection.problems.mapTo(linkedSetOf()) { it.location } shouldBe
             setOf(
-                ValueLocation(source, sourceFirstPath),
-                ValueLocation(source, sourceSecondPath),
-                ValueLocation(target, targetFirstPath),
-                ValueLocation(target, targetSecondPath),
+                ValueLocation.of(source, sourceFirstPath),
+                ValueLocation.of(source, sourceSecondPath),
+                ValueLocation.of(target, targetFirstPath),
+                ValueLocation.of(target, targetSecondPath),
             )
         projection.problems.mapTo(linkedSetOf()) { it.code } shouldBe setOf("opposite_occurrence_mismatch")
     }
@@ -1942,8 +1976,8 @@ class AuthoringMutationPlannerTest {
         val resources =
             mapOf(
                 source to
-                    AuthoringRecord(
-                        TypeSelection.Complete(host.namedUse()),
+                    AuthoringRecord.of(
+                        TypeSelection.CompleteWrapper(host.namedUse()),
                         mapOf(
                             "message" to
                                 DataValue.named(
@@ -1956,13 +1990,14 @@ class AuthoringMutationPlannerTest {
                                 ),
                         ),
                     ),
-                target to AuthoringRecord(TypeSelection.Complete(host.namedUse()), mapOf("message" to DataValue.UNFILLED)),
+                target to AuthoringRecord.of(TypeSelection.CompleteWrapper(host.namedUse()), mapOf("message" to DataValue.UNFILLED)),
             )
 
         val projection = ResourceValueMapper.project(ResourceValueMapper.discover(resources), resources, listOf(contract), catalog)
 
         projection.problems.isEmpty() shouldBe true
-        projection.projections.single().firstLocation shouldBe ValuePath(listOf(PathSegment.Field("message"), PathSegment.Field("target")))
+        projection.projections.single().firstLocation shouldBe
+            ValuePath(segments = listOf(PathSegment.createField(name = "message"), PathSegment.createField(name = "target")))
     }
 
     fun recursiveLinkIsAuthorizedAtItsExactAuthoredDepth() {
@@ -2029,8 +2064,8 @@ class AuthoringMutationPlannerTest {
         val resources =
             mapOf(
                 source to
-                    AuthoringRecord(
-                        TypeSelection.Complete(host.namedUse()),
+                    AuthoringRecord.of(
+                        TypeSelection.CompleteWrapper(host.namedUse()),
                         mapOf(
                             "tree" to
                                 DataValue.named(
@@ -2044,7 +2079,7 @@ class AuthoringMutationPlannerTest {
                                 ),
                         ),
                     ),
-                target to AuthoringRecord(TypeSelection.Complete(host.namedUse()), mapOf("tree" to DataValue.UNFILLED)),
+                target to AuthoringRecord.of(TypeSelection.CompleteWrapper(host.namedUse()), mapOf("tree" to DataValue.UNFILLED)),
             )
 
         val projection = ResourceValueMapper.project(ResourceValueMapper.discover(resources), resources, listOf(contract), catalog)
@@ -2052,11 +2087,12 @@ class AuthoringMutationPlannerTest {
         projection.problems.isEmpty() shouldBe true
         projection.projections.single().firstLocation shouldBe
             ValuePath(
-                listOf(
-                    PathSegment.Field("tree"),
-                    PathSegment.Field("next"),
-                    PathSegment.Field("target"),
-                ),
+                segments =
+                    listOf(
+                        PathSegment.createField(name = "tree"),
+                        PathSegment.createField(name = "next"),
+                        PathSegment.createField(name = "target"),
+                    ),
             )
     }
 
@@ -2115,8 +2151,8 @@ class AuthoringMutationPlannerTest {
         val resources =
             mapOf(
                 source to
-                    AuthoringRecord(
-                        TypeSelection.Complete(sourceType.namedUse()),
+                    AuthoringRecord.of(
+                        TypeSelection.CompleteWrapper(sourceType.namedUse()),
                         mapOf(
                             "target" to
                                 link(
@@ -2127,7 +2163,7 @@ class AuthoringMutationPlannerTest {
                                 ),
                         ),
                     ),
-                target to AuthoringRecord(TypeSelection.Complete(disallowed.namedUse()), emptyMap()),
+                target to AuthoringRecord.of(TypeSelection.CompleteWrapper(disallowed.namedUse()), emptyMap()),
             )
 
         val projection = ResourceValueMapper.project(ResourceValueMapper.discover(resources), resources, listOf(contract), catalog)
@@ -2163,11 +2199,14 @@ class AuthoringMutationPlannerTest {
         val resources =
             mapOf(
                 source to
-                    AuthoringRecord(
-                        TypeSelection.Complete(unavailable.namedUse()),
-                        mapOf("target" to DataValue.link(endpoint, LinkTarget(target, null))),
+                    AuthoringRecord.of(
+                        TypeSelection.CompleteWrapper(unavailable.namedUse()),
+                        mapOf(
+                            "target" to
+                                DataValue.createLink(endpoint = endpoint, target = LinkTarget(resource = target.toSkir(), opposite = null)),
+                        ),
                     ),
-                target to AuthoringRecord(TypeSelection.Complete(resource.namedUse()), emptyMap()),
+                target to AuthoringRecord.of(TypeSelection.CompleteWrapper(resource.namedUse()), emptyMap()),
             )
 
         val projection = ResourceValueMapper.project(ResourceValueMapper.discover(resources), resources, listOf(contract), catalog)
@@ -2218,7 +2257,7 @@ class AuthoringMutationPlannerTest {
         // Every affected resource on the cycle reports it.
         rejected.problems
             .filter { it.code == "relation_cycle" }
-            .map { it.location.resource }
+            .map { it.location.resource.toResourceId() }
             .toSet() shouldBe setOf(first, second)
     }
 
@@ -2283,7 +2322,7 @@ class AuthoringMutationPlannerTest {
         val planner = planner(pairContract())
         val invalid = ResourceId("invalid")
         val valid = ResourceId("valid")
-        val invalidRecord = record().copy(fields = record().fields - "label")
+        val invalidRecord = record().copy(fields = record().fields.filterNot { it.name == "label" })
         val resources = mapOf(invalid to invalidRecord, valid to record())
 
         val result =
@@ -2425,14 +2464,18 @@ private fun occurrence(
     location: ValueLocation,
     target: ResourceId,
     opposite: ValuePath?,
-) = LinkOccurrence(LinkOccurrenceId(endpoint, location), location.resource, LinkTarget(target, opposite))
+) = LinkOccurrence(
+    id = LinkOccurrenceId(endpoint = endpoint, location = location),
+    source = location.resource,
+    target = LinkTarget(resource = target.toSkir(), opposite = opposite),
+)
 
 private fun link(
     type: NamedTypeUse,
     endpoint: EndpointId,
     target: ResourceId,
     opposite: ValuePath?,
-) = DataValue.named(type, DataValue.link(endpoint, LinkTarget(target, opposite)))
+) = DataValue.named(type, DataValue.createLink(endpoint = endpoint, target = LinkTarget(resource = target.toSkir(), opposite = opposite)))
 
 private fun record(
     first: DataValue = DataValue.UNFILLED,
@@ -2444,8 +2487,8 @@ private fun record(
     wrapper: DataValue = wrapper(DataValue.UNFILLED),
     nestedSecond: DataValue = DataValue.UNFILLED,
     label: String = "",
-) = AuthoringRecord(
-    TypeSelection.Complete(NODE_USE),
+) = AuthoringRecord.of(
+    TypeSelection.CompleteWrapper(NODE_USE),
     mapOf(
         "first" to first,
         "second" to second,
@@ -2465,9 +2508,9 @@ private fun Map<ResourceId, AuthoringRecord>.apply(plan: AuthoringMutationPlan):
 private fun location(
     resource: ResourceId,
     field: String,
-) = ValueLocation(resource, fieldPath(field))
+) = ValueLocation.of(resource, fieldPath(field))
 
-private fun fieldPath(field: String) = ValuePath(listOf(PathSegment.Field(field)))
+private fun fieldPath(field: String) = ValuePath.root.field(field)
 
 private fun id(name: String) = TypeDefinitionId.qualified("test", name)
 

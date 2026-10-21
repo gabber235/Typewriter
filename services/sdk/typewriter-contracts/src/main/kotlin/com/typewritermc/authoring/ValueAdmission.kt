@@ -18,6 +18,8 @@ import com.typewritermc.types.rows
 import com.typewritermc.types.signed
 import com.typewritermc.types.unknownVariant
 import com.typewritermc.types.use
+import skirout.editor.v1.diagnostic.ValueProblem
+import skirout.editor.v1.type_catalog.AuthoringRecord
 import skirout.editor.v1.type_catalog.CollectionKind
 import skirout.editor.v1.type_catalog.DataValue
 import skirout.editor.v1.type_catalog.EnumerationResolvedRepresentation
@@ -29,13 +31,10 @@ import skirout.editor.v1.type_catalog.RecordResolvedRepresentation
 import skirout.editor.v1.type_catalog.ResolvedRepresentation
 import skirout.editor.v1.type_catalog.ScalarKind
 import skirout.editor.v1.type_catalog.SequenceResolvedRepresentation
+import skirout.editor.v1.type_catalog.TypeSelection
 import skirout.editor.v1.type_catalog.TypeUse
+import skirout.editor.v1.type_catalog.ValueLocation
 import java.math.BigInteger
-
-data class ValueProblem(
-    val location: ValueLocation,
-    val code: String,
-)
 
 sealed interface StructuralResult {
     data object Valid : StructuralResult
@@ -67,9 +66,9 @@ sealed interface CompletenessResult {
 
 /** Checks record shape and type compatibility while allowing [DataValue.UNFILLED] at otherwise valid locations. */
 fun AuthoringRecord.validateStructure(catalog: CheckedCatalog): StructuralResult {
-    val root = ValueLocation(AUTHORING_ROOT, ValuePath())
+    val root = ValueLocation.of(AUTHORING_ROOT)
     return when (val configuration = configuration) {
-        is TypeSelection.Complete -> {
+        is TypeSelection.CompleteWrapper -> {
             when (val resolved = catalog.resolve(configuration.use.use)) {
                 is Resolution.Invalid -> {
                     StructuralResult.Invalid(resolved.diagnostics.map { it.asValueProblem(root) })
@@ -77,14 +76,18 @@ fun AuthoringRecord.validateStructure(catalog: CheckedCatalog): StructuralResult
 
                 is Resolution.Ready -> {
                     val inspection = ValueInspection(catalog)
-                    inspection.validatePayload(DataValue.record(fields), resolved.value, root)
+                    inspection.validatePayload(DataValue.RecordWrapper(payload), resolved.value, root)
                     inspection.structuralResult()
                 }
             }
         }
 
-        is TypeSelection.Pending -> {
+        is TypeSelection.PendingWrapper -> {
             validatePending(configuration, catalog, root)
+        }
+
+        else -> {
+            unknownVariant(configuration)
         }
     }
 }
@@ -92,7 +95,7 @@ fun AuthoringRecord.validateStructure(catalog: CheckedCatalog): StructuralResult
 /** Admits a complete value for native use, distinguishing unfinished locations from structurally invalid content. */
 fun CheckedType.complete(value: DataValue): CompletenessResult {
     val inspection = ValueInspection(resolver)
-    val root = ValueLocation(AUTHORING_ROOT, ValuePath())
+    val root = ValueLocation.of(AUTHORING_ROOT)
     inspection.validateCheckedValue(value, this, root)
     return when {
         inspection.problems.isNotEmpty() -> CompletenessResult.Invalid(inspection.problems)
@@ -102,7 +105,7 @@ fun CheckedType.complete(value: DataValue): CompletenessResult {
 }
 
 private fun AuthoringRecord.validatePending(
-    selection: TypeSelection.Pending,
+    selection: TypeSelection.PendingWrapper,
     catalog: CheckedCatalog,
     root: ValueLocation,
 ): StructuralResult {
@@ -115,16 +118,17 @@ private fun AuthoringRecord.validatePending(
     val dependent = partial.value.dependentFields.associateBy { it.owner.name }
     val expectedKeys = known.keys + dependent.keys
     val problems = mutableListOf<ValueProblem>()
-    (fields.keys - expectedKeys).forEach { key -> problems += ValueProblem(root.field(key), "unknown_field") }
-    (expectedKeys - fields.keys).forEach { key -> problems += ValueProblem(root.field(key), "missing_field") }
+    val present = fields.mapView.keys
+    (present - expectedKeys).forEach { key -> problems += ValueProblem(location = root.field(key), code = "unknown_field") }
+    (expectedKeys - present).forEach { key -> problems += ValueProblem(location = root.field(key), code = "missing_field") }
     val inspection = ValueInspection(catalog)
     known.forEach { (name, field) ->
-        val value = fields[name] ?: return@forEach
+        val value = field(name) ?: return@forEach
         inspection.validateUse(value, field.type, root.field(name))
     }
     dependent.forEach { (name, _) ->
-        val value = fields[name] ?: return@forEach
-        if (value != DataValue.UNFILLED) problems += ValueProblem(root.field(name), "dependent_field_requires_type")
+        val value = field(name) ?: return@forEach
+        if (value != DataValue.UNFILLED) problems += ValueProblem(location = root.field(name), code = "dependent_field_requires_type")
     }
     problems += inspection.problems
     return if (problems.isEmpty()) StructuralResult.Valid else StructuralResult.Invalid(problems)
@@ -418,7 +422,7 @@ private class ValueInspection(
         at: ValueLocation,
         code: String,
     ) {
-        problems += ValueProblem(at, code)
+        problems += ValueProblem(location = at, code = code)
     }
 
     private fun withinDepth(
@@ -454,7 +458,7 @@ private fun Double.fits(width: FloatWidth): Boolean =
         else -> unknownVariant(width)
     }
 
-private fun DeclarationDiagnostic.asValueProblem(at: ValueLocation) = ValueProblem(at, code)
+private fun DeclarationDiagnostic.asValueProblem(at: ValueLocation) = ValueProblem(location = at, code = code)
 
 private val AUTHORING_ROOT = ResourceId("authoring")
 

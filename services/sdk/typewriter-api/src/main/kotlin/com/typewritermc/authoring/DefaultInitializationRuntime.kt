@@ -1,5 +1,6 @@
 package com.typewritermc.authoring
 
+import com.typewritermc.authoring.record
 import com.typewritermc.types.NativeBindingRegistry
 import com.typewritermc.types.actualType
 import com.typewritermc.types.bytes
@@ -22,15 +23,23 @@ import com.typewritermc.types.rows
 import com.typewritermc.types.setValue
 import com.typewritermc.types.unknownVariant
 import com.typewritermc.types.use
+import skirout.editor.v1.catalog.PreparedContent
+import skirout.editor.v1.catalog.PreparedValue
+import skirout.editor.v1.diagnostic.InitializationDiagnostic
+import skirout.editor.v1.type_catalog.ArgumentSelection
+import skirout.editor.v1.type_catalog.AuthoringRecord
 import skirout.editor.v1.type_catalog.CollectionKind
 import skirout.editor.v1.type_catalog.DataValue
 import skirout.editor.v1.type_catalog.FieldOwner
 import skirout.editor.v1.type_catalog.NamedTypeUse
+import skirout.editor.v1.type_catalog.PathSegment
 import skirout.editor.v1.type_catalog.ResolvedField
 import skirout.editor.v1.type_catalog.ResolvedRepresentation
 import skirout.editor.v1.type_catalog.ScalarKind
 import skirout.editor.v1.type_catalog.TypeDefinitionId
+import skirout.editor.v1.type_catalog.TypeSelection
 import skirout.editor.v1.type_catalog.TypeUse
+import skirout.editor.v1.type_catalog.ValuePath
 import java.math.BigInteger
 
 /**
@@ -94,7 +103,7 @@ class DefaultInitializationRuntime(
             failed -> PreparationStep.Unavailable(draft)
             requirements.isNotEmpty() -> PreparationStep.NeedsInput(draft)
             context.deferred.isNotEmpty() -> PreparationStep.Unavailable(draft)
-            else -> PreparationStep.Ready(PreparedValue(draft.content, draft.findings))
+            else -> PreparationStep.Ready(PreparedValue(content = draft.content, findings = draft.findings))
         }
     }
 
@@ -102,17 +111,18 @@ class DefaultInitializationRuntime(
         draft: PreparationDraft,
         answers: List<InputAnswer>,
     ): InitializationDiagnostic? {
-        fun invalid(message: String) = InitializationDiagnostic(null, "invalid_preparation_continuation", message)
+        fun invalid(message: String) =
+            InitializationDiagnostic(field = null, code = "invalid_preparation_continuation", message = message, relativePath = null)
         if (draft.catalog != catalog.generation) return invalid("The preparation catalog changed.")
         when (val target = draft.target) {
             is PreparationTarget.Record -> {
-                if ((draft.content as? PreparedContent.Record)?.record?.configuration != target.selection) {
+                if ((draft.content as? PreparedContent.RecordWrapper)?.record?.configuration != target.selection) {
                     return invalid("The prepared record does not match its requested selection.")
                 }
             }
 
             is PreparationTarget.Value -> {
-                if (draft.content !is PreparedContent.Value) {
+                if (draft.content !is PreparedContent.ValueWrapper) {
                     return invalid("Value preparation requires value content.")
                 }
             }
@@ -261,8 +271,8 @@ class DefaultInitializationRuntime(
 
                 is ResolvedRepresentation.MappingWrapper -> {
                     (payload as? DataValue.MapValueWrapper)?.rows?.forEach {
-                        walk(representation.value.key, it.key, path.item(it.id).append(PathSegment.MapKey))
-                        walk(representation.value.value, it.value, path.item(it.id).append(PathSegment.MapValue))
+                        walk(representation.value.key, it.key, path.item(it.id).append(PathSegment.MAP_KEY))
+                        walk(representation.value.value, it.value, path.item(it.id).append(PathSegment.MAP_VALUE))
                     }
                 }
 
@@ -281,7 +291,7 @@ class DefaultInitializationRuntime(
                 is PreparationTarget.Value -> target.type
                 is PreparationTarget.Record -> target.selection.completeUse()?.use
             } ?: return
-        walk(type, content.portableValue(), ValuePath())
+        walk(type, content.portableValue(), ValuePath.root)
     }
 
     private fun resumeValue(
@@ -300,7 +310,13 @@ class DefaultInitializationRuntime(
                 is ResolvedRepresentation.RecordWrapper -> {
                     val record = payload as? DataValue.RecordWrapper ?: return value
                     if (record.fields.any { supplied -> checked.schema.fields.none { it.key == supplied.name } }) {
-                        findings += InitializationDiagnostic(null, "unknown_field", "The continuation contains an undeclared field.", path)
+                        findings +=
+                            InitializationDiagnostic(
+                                field = null,
+                                code = "unknown_field",
+                                message = "The continuation contains an undeclared field.",
+                                relativePath = path,
+                            )
                         return value
                     }
                     val prepared = prepareRecordFields(checked, record.value.fieldMap, context, path)
@@ -348,7 +364,7 @@ class DefaultInitializationRuntime(
                                                 row.key,
                                                 context,
                                                 findings,
-                                                path.item(row.id).append(PathSegment.MapKey),
+                                                path.item(row.id).append(PathSegment.MAP_KEY),
                                             ),
                                         value =
                                             resumeValue(
@@ -356,7 +372,7 @@ class DefaultInitializationRuntime(
                                                 row.value,
                                                 context,
                                                 findings,
-                                                path.item(row.id).append(PathSegment.MapValue),
+                                                path.item(row.id).append(PathSegment.MAP_VALUE),
                                             ),
                                     )
                                 },
@@ -407,9 +423,9 @@ class DefaultInitializationRuntime(
         val findings = mutableListOf<InitializationDiagnostic>()
         val value =
             request.supplied?.let {
-                if (context.resuming) resumeValue(type, it, context, findings, ValuePath()) else it
-            } ?: ordinaryDefault(type, context, findings, ValuePath())
-        return PreparedValue(PreparedContent.Value(value), findings)
+                if (context.resuming) resumeValue(type, it, context, findings, ValuePath.root) else it
+            } ?: ordinaryDefault(type, context, findings, ValuePath.root)
+        return PreparedValue(content = PreparedContent.ValueWrapper(value), findings = findings)
     }
 
     private fun prepareRecord(
@@ -420,7 +436,7 @@ class DefaultInitializationRuntime(
         context.unavailable = true
         val suppliedFields =
             suppliedRecord(request) ?: return unavailable(request, "invalid_supplied_value", "Record preparation requires a record value.")
-        if (selection is TypeSelection.Pending) return preparePending(request, selection)
+        if (selection is TypeSelection.PendingWrapper) return preparePending(request, selection)
         val use =
             selection.completeUse()
                 ?: return unavailable(request, "incomplete_type_selection", "Initialization requires every type argument to be selected.")
@@ -440,10 +456,10 @@ class DefaultInitializationRuntime(
             checked.schema.fields.mapTo(linkedSetOf(), ResolvedField::key),
         )?.let { return it }
         context.unavailable = false
-        val prepared = prepareRecordFields(checked, suppliedFields, context, ValuePath())
+        val prepared = prepareRecordFields(checked, suppliedFields, context, ValuePath.root)
         return PreparedValue(
-            PreparedContent.Record(AuthoringRecord(TypeSelection.Complete(use), prepared.fields)),
-            prepared.findings,
+            content = PreparedContent.RecordWrapper(AuthoringRecord.of(TypeSelection.CompleteWrapper(use), prepared.fields)),
+            findings = prepared.findings,
         )
     }
 
@@ -475,7 +491,7 @@ class DefaultInitializationRuntime(
                 ).also {
                     fields[field.key] = it
                 }
-            findings += fieldFindings.map { it.prepend(PathSegment.Field(field.key)) }
+            findings += fieldFindings.map { it.prepend(PathSegment.createField(name = field.key)) }
             if (omitted.isEmpty()) return@forEach
             val admittedValue = value
             when (val result = completeSample(field.type, admittedValue)) {
@@ -487,10 +503,14 @@ class DefaultInitializationRuntime(
                     blockers +=
                         result.locations.map { location ->
                             InitializationDiagnostic(
-                                owner,
-                                "unfinished_constructor_input",
-                                "A constructor input is unfinished, so omitted defaults cannot be evaluated.",
-                                ValuePath(listOf(PathSegment.Field(field.key)) + location.path.segments),
+                                field = owner,
+                                code = "unfinished_constructor_input",
+                                message = "A constructor input is unfinished, so omitted defaults cannot be evaluated.",
+                                relativePath =
+                                    ValuePath(
+                                        segments =
+                                            listOf(PathSegment.createField(name = field.key)) + location.path.segments,
+                                    ),
                             )
                         }
                 }
@@ -500,10 +520,14 @@ class DefaultInitializationRuntime(
                     blockers +=
                         result.problems.map { problem ->
                             InitializationDiagnostic(
-                                owner,
-                                problem.code,
-                                "A constructor input is invalid, so omitted defaults cannot be evaluated.",
-                                ValuePath(listOf(PathSegment.Field(field.key)) + problem.location.path.segments),
+                                field = owner,
+                                code = problem.code,
+                                message = "A constructor input is invalid, so omitted defaults cannot be evaluated.",
+                                relativePath =
+                                    ValuePath(
+                                        segments =
+                                            listOf(PathSegment.createField(name = field.key)) + problem.location.path.segments,
+                                    ),
                             )
                         }
                 }
@@ -512,10 +536,10 @@ class DefaultInitializationRuntime(
                     context.unavailable = true
                     blockers +=
                         InitializationDiagnostic(
-                            owner,
-                            "constructor_input_type_mismatch",
-                            "A constructor input does not match its declared type.",
-                            ValuePath(listOf(PathSegment.Field(field.key))),
+                            field = owner,
+                            code = "constructor_input_type_mismatch",
+                            message = "A constructor input does not match its declared type.",
+                            relativePath = ValuePath.root.field(field.key),
                         )
                 }
             }
@@ -548,7 +572,7 @@ class DefaultInitializationRuntime(
 
     private fun preparePending(
         request: InitializationRequest,
-        selection: TypeSelection.Pending,
+        selection: TypeSelection.PendingWrapper,
     ): PreparedValue {
         val supplied =
             suppliedRecord(request) ?: return unavailable(request, "invalid_supplied_value", "Record preparation requires a record value.")
@@ -573,6 +597,7 @@ class DefaultInitializationRuntime(
                     field = field,
                     code = "dependent_field_type_unavailable",
                     message = "Field $dependent cannot be supplied until every type argument it uses is selected.",
+                    relativePath = null,
                 ),
             )
         }
@@ -587,9 +612,9 @@ class DefaultInitializationRuntime(
                     ?: if (owner in defaulted) {
                         DataValue.UNFILLED
                     } else {
-                        ordinaryDefault(field.type, DefaultInitializationContext(), fieldFindings, ValuePath().field(field.key))
+                        ordinaryDefault(field.type, DefaultInitializationContext(), fieldFindings, ValuePath.root.field(field.key))
                     }
-            findings += fieldFindings.map { it.prepend(PathSegment.Field(field.key)) }
+            findings += fieldFindings.map { it.prepend(PathSegment.createField(name = field.key)) }
         }
         partial.dependentFields.forEach { field -> fields[field.owner.name] = DataValue.UNFILLED }
         findings +=
@@ -597,31 +622,33 @@ class DefaultInitializationRuntime(
                 field = null,
                 code = "incomplete_type_selection",
                 message = "Initialization left fields that depend on unfinished type arguments unfilled.",
+                relativePath = null,
             )
-        return PreparedValue(PreparedContent.Record(AuthoringRecord(selection, fields)), findings)
+        return PreparedValue(content = PreparedContent.RecordWrapper(AuthoringRecord.of(selection, fields)), findings = findings)
     }
 
     private fun unavailable(
         request: InitializationRequest,
         code: String,
         message: String,
-    ): PreparedValue = unavailable(request, InitializationDiagnostic(null, code, message))
+    ): PreparedValue = unavailable(request, InitializationDiagnostic(field = null, code = code, message = message, relativePath = null))
 
     private fun unavailable(
         request: InitializationRequest,
         diagnostic: InitializationDiagnostic,
     ): PreparedValue =
         PreparedValue(
-            when (val target = request.target) {
-                is PreparationTarget.Value -> {
-                    PreparedContent.Value(request.supplied ?: DataValue.UNFILLED)
-                }
+            content =
+                when (val target = request.target) {
+                    is PreparationTarget.Value -> {
+                        PreparedContent.ValueWrapper(request.supplied ?: DataValue.UNFILLED)
+                    }
 
-                is PreparationTarget.Record -> {
-                    PreparedContent.Record(AuthoringRecord(target.selection, suppliedRecord(request).orEmpty()))
-                }
-            },
-            listOf(diagnostic),
+                    is PreparationTarget.Record -> {
+                        PreparedContent.RecordWrapper(AuthoringRecord.of(target.selection, suppliedRecord(request).orEmpty()))
+                    }
+                },
+            findings = listOf(diagnostic),
         )
 
     private fun rejectUnknownFields(
@@ -662,6 +689,7 @@ class DefaultInitializationRuntime(
                         field = null,
                         code = "recursive_default_unavailable",
                         message = "A required recursive value of type $use has no finite ordinary default.",
+                        relativePath = null,
                     )
                 return DataValue.UNFILLED
             }
@@ -673,6 +701,7 @@ class DefaultInitializationRuntime(
                         field = null,
                         code = "default_depth_limit",
                         message = "The ordinary default exceeds the supported nesting depth.",
+                        relativePath = null,
                     )
                 return DataValue.UNFILLED
             }
@@ -754,11 +783,11 @@ class DefaultInitializationRuntime(
         if (relativePath != null || field == null) {
             this
         } else {
-            copy(relativePath = ValuePath(listOf(PathSegment.Field(requireNotNull(field).name))))
+            copy(relativePath = ValuePath(segments = listOf(PathSegment.createField(name = requireNotNull(field).name))))
         }
 
     private fun InitializationDiagnostic.prepend(segment: PathSegment): InitializationDiagnostic =
-        copy(relativePath = ValuePath(listOf(segment) + relativePath?.segments.orEmpty()))
+        copy(relativePath = ValuePath(segments = listOf(segment) + relativePath?.segments.orEmpty()))
 
     private fun completeSample(
         expected: TypeUse,
@@ -866,18 +895,23 @@ fun ScalarKind.authoredDefault(): DataValue =
 
 private fun TypeSelection.completeUse(): NamedTypeUse? =
     when (this) {
-        is TypeSelection.Complete -> {
+        is TypeSelection.CompleteWrapper -> {
             use
         }
 
-        is TypeSelection.Pending -> {
-            val chosen = arguments.map { (it as? ArgumentSelection.Chosen)?.type ?: return null }
+        is TypeSelection.PendingWrapper -> {
+            val chosen = arguments.map { (it as? ArgumentSelection.ChosenWrapper)?.type ?: return null }
             definition.namedUse(chosen)
+        }
+
+        else -> {
+            unknownVariant(this)
         }
     }
 
 private fun PreparedContent.portableValue(): DataValue =
     when (this) {
-        is PreparedContent.Value -> value
-        is PreparedContent.Record -> DataValue.record(record.fields)
+        is PreparedContent.ValueWrapper -> value
+        is PreparedContent.RecordWrapper -> DataValue.RecordWrapper(record.payload)
+        else -> unknownVariant(this)
     }

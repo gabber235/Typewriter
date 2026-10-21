@@ -50,13 +50,13 @@ import com.typewritermc.types.endpoint
 import com.typewritermc.types.fieldMap
 import com.typewritermc.types.fields
 import com.typewritermc.types.integer
-import com.typewritermc.types.linkTarget
 import com.typewritermc.types.named
 import com.typewritermc.types.namedTemplate
 import com.typewritermc.types.payload
 import com.typewritermc.types.qualified
 import com.typewritermc.types.record
 import com.typewritermc.types.template
+import com.typewritermc.types.toSkir
 import com.typewritermc.types.use
 import de.infix.testBalloon.framework.core.testSuite
 import io.kotest.matchers.collections.shouldContainExactly
@@ -73,6 +73,7 @@ import skirout.editor.v1.presentation.PresentationNode
 import skirout.editor.v1.search.RealmSearchQuery
 import skirout.editor.v1.type_catalog.DataValue
 import skirout.editor.v1.type_catalog.DeclarationOwner
+import skirout.editor.v1.type_catalog.PathSegment
 import skirout.editor.v1.type_catalog.RepresentationTemplate
 import skirout.editor.v1.type_catalog.TypeDefinition
 import skirout.editor.v1.type_catalog.TypeDefinitionId
@@ -187,8 +188,8 @@ val SyntheticDiscoveryTest by testSuite {
         val referenced = (fields.getValue("referencedPage") as DataValue.NamedWrapper).payload as DataValue.LinkWrapper
         containing.endpoint shouldBe PageElements.contract.second.id
         referenced.endpoint shouldBe SyntheticPageReferences.contract.first.id
-        containing.linkTarget.resource shouldBe ResourceId("containing")
-        referenced.linkTarget.resource shouldBe ResourceId("referenced")
+        containing.value.target.resource shouldBe ResourceId("containing").toSkir()
+        referenced.value.target.resource shouldBe ResourceId("referenced").toSkir()
         binding.decode((checked.complete(encoded) as CompletenessResult.Complete).value) shouldBe source
         checked.schema.fields
             .single { it.key == "page" }
@@ -238,7 +239,7 @@ val SyntheticDiscoveryTest by testSuite {
                 .axisNodes()
         val repetitions = repeatedFields[1].element as PresentationElement.NumericInputWrapper
         repetitions.value.control.binding.path.segments.single().let { segment ->
-            (segment as skirout.editor.v1.type_catalog.PathSegment.FieldWrapper).value.name shouldBe "repeat_count"
+            (segment as PathSegment.FieldWrapper).value.name shouldBe "repeat_count"
         }
     }
 

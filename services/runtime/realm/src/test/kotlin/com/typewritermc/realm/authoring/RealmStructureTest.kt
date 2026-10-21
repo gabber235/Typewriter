@@ -3,19 +3,19 @@
 package com.typewritermc.realm.authoring
 
 import com.surrealdb.Surreal
-import com.typewritermc.authoring.AuthoringRecord
 import com.typewritermc.authoring.CommitResult
 import com.typewritermc.authoring.EditIntent
 import com.typewritermc.authoring.GeneratedSdkApi
-import com.typewritermc.authoring.PathSegment
 import com.typewritermc.authoring.PreparedEdit
 import com.typewritermc.authoring.RealmRootDefinition
 import com.typewritermc.authoring.RealmRootFields
 import com.typewritermc.authoring.RealmSectionDefinition
-import com.typewritermc.authoring.ValueLocation
-import com.typewritermc.authoring.ValuePath
 import com.typewritermc.authoring.boundCollectionPath
 import com.typewritermc.authoring.definition
+import com.typewritermc.authoring.field
+import com.typewritermc.authoring.of
+import com.typewritermc.authoring.root
+import com.typewritermc.authoring.with
 import com.typewritermc.discovery.CatalogContributions
 import com.typewritermc.discovery.OwnedTypeDeclaration
 import com.typewritermc.library.LibraryDefinition
@@ -41,20 +41,23 @@ import com.typewritermc.types.catalog.Resolution
 import com.typewritermc.types.encodeGeneratedDefault
 import com.typewritermc.types.fields
 import com.typewritermc.types.items
-import com.typewritermc.types.linkTarget
 import com.typewritermc.types.namedTemplate
 import com.typewritermc.types.namedUse
 import com.typewritermc.types.qualified
+import com.typewritermc.types.toResourceId
 import com.typewritermc.types.unwrapNamed
 import com.typewritermc.types.use
 import de.infix.testBalloon.framework.core.testSuite
 import io.kotest.matchers.collections.shouldContain
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.types.shouldBeInstanceOf
+import skirout.editor.v1.type_catalog.AuthoringRecord
 import skirout.editor.v1.type_catalog.DataValue
 import skirout.editor.v1.type_catalog.RepresentationTemplate
 import skirout.editor.v1.type_catalog.TypeDefinition
 import skirout.editor.v1.type_catalog.TypeDefinitionId
+import skirout.editor.v1.type_catalog.ValueLocation
+import skirout.editor.v1.type_catalog.ValuePath
 
 val RealmStructureTest by testSuite {
     test("a fresh realm gets its root and one instance of every section in display name order") {
@@ -107,7 +110,7 @@ val RealmStructureTest by testSuite {
                     val context = WorkingViewEditContext(lease.root, "owned-tag")
                     context.create(tag, fixture.unownedTag())
                     context.insert(
-                        boundCollectionPath(ValueLocation(taxonomy, TaxonomyFields.tags.path)),
+                        boundCollectionPath(ValueLocation.of(taxonomy, TaxonomyFields.tags.path)),
                         null,
                         fixture.taxonomyLink(tag),
                     )
@@ -121,10 +124,10 @@ val RealmStructureTest by testSuite {
             (
                 saved
                     .valueAt(
-                        ValuePath(listOf(PathSegment.Field("taxonomy"))),
+                        ValuePath.root.field("taxonomy"),
                     )?.unwrapNamed() as DataValue.LinkWrapper
-            ).linkTarget.resource shouldBe
-                taxonomy
+            ).value.target.resource
+                .toResourceId() shouldBe taxonomy
         }
     }
 
@@ -145,9 +148,16 @@ val RealmStructureTest by testSuite {
             val root = resources.typesOf(RealmRootDefinition.id).single()
             val library = resources.typesOf(LibraryDefinition.id).single()
             val sections = resources.getValue(root).valueAt(RealmRootFields.sections.path)?.unwrapNamed() as DataValue.ListValueWrapper
-            val item = sections.items.single { (it.value.unwrapNamed() as DataValue.LinkWrapper).linkTarget.resource == library }.id
+            val item =
+                sections.items
+                    .single {
+                        (it.value.unwrapNamed() as DataValue.LinkWrapper)
+                            .value.target.resource
+                            .toResourceId() ==
+                            library
+                    }.id
 
-            val problems = fixture.reject(EditIntent.Remove(ValueLocation(root, RealmRootFields.sections.path), item))
+            val problems = fixture.reject(EditIntent.Remove(ValueLocation.of(root, RealmRootFields.sections.path), item))
 
             problems shouldContain (library.value to "owner_required")
         }
@@ -216,7 +226,7 @@ private class RealmStructureFixture(
     fun unownedTag(): AuthoringRecord =
         views.read { view ->
             val record = view.catalog.record(testTag(name = "Quest"), TagDefinition.id)
-            record.copy(fields = record.fields + ("taxonomy" to DataValue.UNFILLED))
+            record.with("taxonomy", DataValue.UNFILLED)
         }
 
     /** The taxonomy's link item for [tag], pointing back at the tag's owner field. */
@@ -228,7 +238,9 @@ private class RealmStructureFixture(
             val checked = (view.catalog.checked.resolve(use.use) as Resolution.Ready).value
             view.catalog.nativeBindings
                 .bind(checked)
-                .encodeGeneratedDefault(Ref<Nothing, Nothing>(tag, ValuePath(listOf(PathSegment.Field("taxonomy")))))
+                .encodeGeneratedDefault(
+                    Ref<Nothing, Nothing>(tag, ValuePath.root.field("taxonomy")),
+                )
         }
 
     /** The planner's problems for [intent] on the saved resources, as resource and code pairs. */
@@ -265,5 +277,9 @@ private fun Map<ResourceId, AuthoringRecord>.typesOf(type: TypeDefinitionId): Li
 private fun Map<ResourceId, AuthoringRecord>.sectionsOfRoot(): List<ResourceId> {
     val root = getValue(typesOf(RealmRootDefinition.id).single())
     val sections = root.valueAt(RealmRootFields.sections.path)?.unwrapNamed() as DataValue.ListValueWrapper
-    return sections.items.map { (it.value.unwrapNamed() as DataValue.LinkWrapper).linkTarget.resource }
+    return sections.items.map {
+        (it.value.unwrapNamed() as DataValue.LinkWrapper)
+            .value.target.resource
+            .toResourceId()
+    }
 }

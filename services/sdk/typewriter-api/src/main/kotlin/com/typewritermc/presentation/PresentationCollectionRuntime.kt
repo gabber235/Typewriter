@@ -6,8 +6,6 @@ import com.typewritermc.expression.MayBeMissing
 import com.typewritermc.types.fields
 import com.typewritermc.types.items
 import com.typewritermc.types.requirePortable
-import com.typewritermc.types.skir.SkirAuthoringValueCodec
-import com.typewritermc.types.skir.getOrThrow
 import skirout.editor.v1.expression.ExpressionNode
 import skirout.editor.v1.presentation.CollectionGraphDirection
 import skirout.editor.v1.presentation.CrossAxisAlignment
@@ -19,7 +17,6 @@ import skirout.editor.v1.presentation.PresentationCollectionProjectionValue
 import skirout.editor.v1.presentation.PresentationCollectionRelationDefinition
 import skirout.editor.v1.presentation.PresentationElement
 import skirout.editor.v1.presentation.PresentationNode
-import skirout.editor.v1.type_catalog.TypeTemplate
 
 internal fun <V, ItemScope> RuntimePresentationData.renderRepeated(
     source: Expr<List<V>, Handled>,
@@ -361,12 +358,12 @@ internal fun CollectionSource<*, *>.wire(state: PresentationBuildState): Present
                     fields =
                         projected.projection.fields.map { field ->
                             PresentationCollectionProjectionField(
-                                target = SkirAuthoringValueCodec.encode(field.target).getOrThrow(),
+                                target = field.target,
                                 source =
                                     when (val source = field.source) {
                                         is CollectionProjectionValueSpec.Content -> {
                                             PresentationCollectionProjectionValue.ContentWrapper(
-                                                SkirAuthoringValueCodec.encode(source.path).getOrThrow(),
+                                                source.path,
                                             )
                                         }
 

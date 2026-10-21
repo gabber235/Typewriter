@@ -1,5 +1,6 @@
 package com.typewritermc.authoring
 
+import skirout.editor.v1.diagnostic.InitializationDiagnostic
 import skirout.editor.v1.type_catalog.DataValue
 import skirout.editor.v1.type_catalog.FieldOwner
 

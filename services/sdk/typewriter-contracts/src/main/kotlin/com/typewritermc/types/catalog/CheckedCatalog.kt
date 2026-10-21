@@ -1,12 +1,13 @@
 package com.typewritermc.types.catalog
 
 import com.typewritermc.authoring.ArgumentLocation
-import com.typewritermc.authoring.ArgumentSelection
-import com.typewritermc.authoring.AuthoringRecord
 import com.typewritermc.authoring.DependentField
 import com.typewritermc.authoring.PartialSchema
 import com.typewritermc.authoring.StructuralResult
-import com.typewritermc.authoring.TypeSelection
+import com.typewritermc.authoring.arguments
+import com.typewritermc.authoring.definition
+import com.typewritermc.authoring.type
+import com.typewritermc.authoring.use
 import com.typewritermc.authoring.validateStructure
 import com.typewritermc.checking.CatalogGeneration
 import com.typewritermc.types.MAX_TYPE_DEPTH
@@ -23,6 +24,8 @@ import com.typewritermc.types.toTemplate
 import com.typewritermc.types.unknownVariant
 import com.typewritermc.types.use
 import skirout.editor.v1.type_catalog.AppliedSchema
+import skirout.editor.v1.type_catalog.ArgumentSelection
+import skirout.editor.v1.type_catalog.AuthoringRecord
 import skirout.editor.v1.type_catalog.FieldDeclaration
 import skirout.editor.v1.type_catalog.FieldOwner
 import skirout.editor.v1.type_catalog.NamedTypeTemplate
@@ -36,6 +39,7 @@ import skirout.editor.v1.type_catalog.TypeDefinition
 import skirout.editor.v1.type_catalog.TypeDefinitionId
 import skirout.editor.v1.type_catalog.TypeId
 import skirout.editor.v1.type_catalog.TypeParameter
+import skirout.editor.v1.type_catalog.TypeSelection
 import skirout.editor.v1.type_catalog.TypeTemplate
 import skirout.editor.v1.type_catalog.TypeUse
 import java.util.concurrent.ConcurrentHashMap
@@ -233,7 +237,7 @@ class DefaultCheckedCatalog(
 
     override fun resolvePartial(selection: TypeSelection): Resolution<PartialSchema> =
         when (selection) {
-            is TypeSelection.Complete -> {
+            is TypeSelection.CompleteWrapper -> {
                 when (val resolved = resolve(selection.use.use)) {
                     is Resolution.Invalid -> {
                         resolved
@@ -251,20 +255,28 @@ class DefaultCheckedCatalog(
                 }
             }
 
-            is TypeSelection.Pending -> {
+            is TypeSelection.PendingWrapper -> {
                 resolvePending(selection)
+            }
+
+            else -> {
+                unknownVariant(selection)
             }
         }
 
     override fun knownApplications(selection: TypeSelection): Set<NamedTypeUse> =
         when (selection) {
-            is TypeSelection.Complete -> {
+            is TypeSelection.CompleteWrapper -> {
                 val resolved = resolve(selection.use.use) as? Resolution.Ready
                 if (resolved == null) emptySet() else linkedSetOf(selection.use).apply { addAll(resolved.value.schema.ancestors) }
             }
 
-            is TypeSelection.Pending -> {
+            is TypeSelection.PendingWrapper -> {
                 knownPendingApplications(selection)
+            }
+
+            else -> {
+                unknownVariant(selection)
             }
         }
 
@@ -319,7 +331,7 @@ class DefaultCheckedCatalog(
 
     override fun validateAuthoring(record: AuthoringRecord): StructuralResult = record.validateStructure(this)
 
-    private fun knownPendingApplications(selection: TypeSelection.Pending): Set<NamedTypeUse> {
+    private fun knownPendingApplications(selection: TypeSelection.PendingWrapper): Set<NamedTypeUse> {
         if (definition(selection.definition) !is DeclarationStatus.Ready) return emptySet()
         val root = definitions.getValue(selection.definition).single()
         if (selection.arguments.size != root.parameters.size) return emptySet()
@@ -327,7 +339,7 @@ class DefaultCheckedCatalog(
             root.parameters
                 .zip(selection.arguments)
                 .mapNotNull { (parameter, argument) ->
-                    val chosen = argument as? ArgumentSelection.Chosen ?: return@mapNotNull null
+                    val chosen = argument as? ArgumentSelection.ChosenWrapper ?: return@mapNotNull null
                     if (resolve(chosen.type) !is Resolution.Ready) return@mapNotNull null
                     parameter.key to chosen.type
                 }.toMap()
@@ -485,7 +497,7 @@ class DefaultCheckedCatalog(
         return Resolution.Ready(CheckedType(generation, use, schema, this))
     }
 
-    private fun resolvePending(selection: TypeSelection.Pending): Resolution<PartialSchema> {
+    private fun resolvePending(selection: TypeSelection.PendingWrapper): Resolution<PartialSchema> {
         val status = definition(selection.definition)
         if (status is DeclarationStatus.Unavailable) return Resolution.Invalid(status.reasons)
         val definition = definitions.getValue(selection.definition).single()
@@ -494,20 +506,24 @@ class DefaultCheckedCatalog(
         val pending = mutableListOf<ArgumentLocation>()
         selection.arguments.forEachIndexed { index, argument ->
             when (argument) {
-                is ArgumentSelection.Chosen -> {
+                is ArgumentSelection.ChosenWrapper -> {
                     val resolution = resolve(argument.type)
                     if (resolution is Resolution.Invalid) return resolution
                     bindings[definition.parameters[index].key] = argument.type
                 }
 
-                ArgumentSelection.Unfilled -> {
+                ArgumentSelection.UNFILLED -> {
                     pending += ArgumentLocation(index)
+                }
+
+                else -> {
+                    unknownVariant(argument)
                 }
             }
         }
         if (pending.isEmpty()) {
             val complete = selection.definition.namedUse(definition.parameters.map { bindings.getValue(it.key) })
-            return resolvePartial(TypeSelection.Complete(complete))
+            return resolvePartial(TypeSelection.CompleteWrapper(complete))
         }
         for (parameter in definition.parameters) {
             val actual = bindings[parameter.key] ?: continue

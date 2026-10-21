@@ -1,10 +1,10 @@
 package com.typewritermc.realm.authoring
 
 import com.typewritermc.authoring.RealmSectionDefinition
-import com.typewritermc.authoring.TypeSelection
-import com.typewritermc.authoring.ValueLocation
 import com.typewritermc.authoring.definition
 import com.typewritermc.authoring.item
+import com.typewritermc.authoring.text
+import com.typewritermc.authoring.use
 import com.typewritermc.checking.InputIdentity
 import com.typewritermc.operations.AuthoringGraphFacts
 import com.typewritermc.operations.Cloneability
@@ -14,10 +14,13 @@ import com.typewritermc.realm.repository.ResourceValueMapper
 import com.typewritermc.types.ResourceId
 import com.typewritermc.types.catalog.Resolution
 import com.typewritermc.types.ownsResources
+import com.typewritermc.types.toResourceId
 import com.typewritermc.types.use
 import skirout.editor.v1.type_catalog.ItemId
 import skirout.editor.v1.type_catalog.ResolvedRepresentation
+import skirout.editor.v1.type_catalog.TypeSelection
 import skirout.editor.v1.type_catalog.TypeUse
+import skirout.editor.v1.type_catalog.ValueLocation
 
 /**
  * Graph facts of one captured working graph, read through [relations] so every fact is recorded as an observation.
@@ -93,7 +96,7 @@ internal class RealmGraphFacts(
     override fun linksOf(id: ResourceId): Sequence<ResourceId> =
         relations
             .linksOf(id)
-            .map { if (it.source == id) it.target.resource else it.source }
+            .map { if (it.source.toResourceId() == id) it.target.resource.toResourceId() else it.source.toResourceId() }
             .distinct()
             .asSequence()
 
@@ -104,7 +107,7 @@ internal class RealmGraphFacts(
 
     override fun linkCapacityOf(id: ResourceId): LinkCapacity {
         relations.observeForm(id)
-        val actual = (relations.recordOf(id).configuration as? TypeSelection.Complete)?.use ?: return LinkCapacity.None
+        val actual = (relations.recordOf(id).configuration as? TypeSelection.CompleteWrapper)?.use ?: return LinkCapacity.None
         val slots = referenceSlots(id).filter { slot -> catalog.checked.isReadableAs(actual.use, slot.target) }
         if (slots.isEmpty()) return LinkCapacity.None
         val current = relations.links.values.associateBy { it.id.location }
@@ -115,17 +118,18 @@ internal class RealmGraphFacts(
         val owning = catalog.ownershipRelationIds
         val closure = ownershipClosure(roots)
         val contracts = catalog.relations.flatMap { listOf(it.first.id to it, it.second.id to it) }.toMap()
-        relations.links.values.filter { it.source in closure && it.target.resource !in closure }.forEach { source ->
+        val leaving = relations.links.values.filter { it.source.toResourceId() in closure && it.target.resource.toResourceId() !in closure }
+        leaving.forEach { source ->
             val relation = contracts.getValue(source.id.endpoint)
             if (relation.id !in owning && source.id.endpoint != relation.first.id) return@forEach
             val opposite = if (source.id.endpoint == relation.first.id) relation.second.id else relation.first.id
-            val record = relations.resources[source.target.resource] ?: return@forEach
-            val binding = ResourceValueMapper.counterpartBinding(opposite, source.target.resource, record, catalog.checked)
+            val record = relations.resources[source.target.resource.toResourceId()] ?: return@forEach
+            val binding = ResourceValueMapper.counterpartBinding(opposite, source.target.resource.toResourceId(), record, catalog.checked)
             if (binding is CounterpartBinding.Scalar) {
                 relations.reads.observeInput(InputIdentity.Value(binding.location))
                 if (relations.links.values.any { it.id.location == binding.location }) {
                     return Cloneability.Blocked(
-                        "An outside scalar inverse cannot retain both the original and its copy: ${binding.location}",
+                        "An outside scalar inverse cannot retain both the original and its copy: ${binding.location.resource.value} ${binding.location.path.text}",
                     )
                 }
             }

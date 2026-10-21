@@ -1,10 +1,8 @@
 package com.typewritermc.realm.search
 
 import com.surrealdb.Surreal
-import com.typewritermc.authoring.ArgumentSelection
-import com.typewritermc.authoring.AuthoringRecord
 import com.typewritermc.authoring.RealmRootDefinition
-import com.typewritermc.authoring.TypeSelection
+import com.typewritermc.authoring.of
 import com.typewritermc.realm.authoring.AuthoringCatalogLease
 import com.typewritermc.realm.authoring.AuthoringView
 import com.typewritermc.realm.checking.TestCatalogLease
@@ -14,7 +12,6 @@ import com.typewritermc.realm.schema.openTestDatabase
 import com.typewritermc.types.EndpointCardinality
 import com.typewritermc.types.EndpointDefinition
 import com.typewritermc.types.EndpointSlot
-import com.typewritermc.types.LinkTarget
 import com.typewritermc.types.RESOURCE_OWNERSHIP_FAMILY_ID
 import com.typewritermc.types.RelationContract
 import com.typewritermc.types.RelationDeletePolicy
@@ -23,23 +20,27 @@ import com.typewritermc.types.RelationId
 import com.typewritermc.types.ResourceId
 import com.typewritermc.types.catalog.DefaultCheckedCatalog
 import com.typewritermc.types.endpointId
-import com.typewritermc.types.link
 import com.typewritermc.types.namedTemplate
 import com.typewritermc.types.namedUse
 import com.typewritermc.types.qualified
 import com.typewritermc.types.template
+import com.typewritermc.types.toSkir
 import com.typewritermc.types.use
 import de.infix.testBalloon.framework.core.testSuite
 import io.kotest.matchers.shouldBe
+import skirout.editor.v1.type_catalog.ArgumentSelection
+import skirout.editor.v1.type_catalog.AuthoringRecord
 import skirout.editor.v1.type_catalog.DataValue
 import skirout.editor.v1.type_catalog.FieldDeclaration
 import skirout.editor.v1.type_catalog.FieldOwner
+import skirout.editor.v1.type_catalog.LinkTarget
 import skirout.editor.v1.type_catalog.NamedTypeUse
 import skirout.editor.v1.type_catalog.ParameterKey
 import skirout.editor.v1.type_catalog.RepresentationTemplate
 import skirout.editor.v1.type_catalog.TypeDefinition
 import skirout.editor.v1.type_catalog.TypeDefinitionId
 import skirout.editor.v1.type_catalog.TypeParameter
+import skirout.editor.v1.type_catalog.TypeSelection
 
 class SurrealAuthoringSearchRepositoryTest {
     fun indexedSearchPagesPastIncompatibleCandidates() {
@@ -144,7 +145,7 @@ class SurrealAuthoringSearchRepositoryTest {
             openSearchDatabase(database)
             database.insertSearchRow(
                 "pending",
-                TypeSelection.Pending(box, listOf(ArgumentSelection.Chosen(first.use()))),
+                TypeSelection.createPending(definition = box, arguments = listOf(ArgumentSelection.ChosenWrapper(first.use()))),
             )
             val repository = SurrealAuthoringSearchRepository(database)
 
@@ -252,7 +253,7 @@ private fun Surreal.insertSearchRow(
     id: String,
     type: NamedTypeUse,
     text: String = "",
-) = insertSearchRow(id, TypeSelection.Complete(type), text)
+) = insertSearchRow(id, TypeSelection.CompleteWrapper(type), text)
 
 private fun Surreal.insertSearchRow(
     id: String,
@@ -260,14 +261,14 @@ private fun Surreal.insertSearchRow(
     text: String = "",
 ) {
     val resource = ResourceId(id)
-    val record = AuthoringRecord(selection, emptyMap())
+    val record = AuthoringRecord.of(selection, emptyMap())
     query(
         "CREATE ONLY \$resource CONTENT { content: \$content, search: { text: \$text } };",
         mapOf(
             "resource" to resource.surrealRecordId(),
             "content" to
-                com.typewritermc.realm.authoring.authoredDatabaseValues
-                    .encode(AuthoringRecord.serializer(), record),
+                com.typewritermc.realm.repository.utils
+                    .encodeSkir(AuthoringRecord.serializer, record),
             "text" to text,
         ),
     ).take(0)
@@ -363,17 +364,17 @@ val SurrealAuthoringSearchRepositoryTestSuite by testSuite {
         fun link(
             id: RelationId,
             target: ResourceId,
-        ) = DataValue.link(
-            id.endpointId(EndpointSlot.First),
-            LinkTarget(target, null),
+        ) = DataValue.createLink(
+            endpoint = id.endpointId(EndpointSlot.First),
+            target = LinkTarget(resource = target.toSkir(), opposite = null),
         )
-        val selected = TypeSelection.Complete(type.namedUse())
+        val selected = TypeSelection.CompleteWrapper(type.namedUse())
         val resources =
             mapOf(
-                root to AuthoringRecord(selected, mapOf("owned" to link(ownership, child), "related" to link(related, outside))),
-                child to AuthoringRecord(selected, mapOf("owned" to link(ownership, grandchild))),
-                grandchild to AuthoringRecord(selected, mapOf("owned" to link(ownership, root))),
-                outside to AuthoringRecord(selected, emptyMap()),
+                root to AuthoringRecord.of(selected, mapOf("owned" to link(ownership, child), "related" to link(related, outside))),
+                child to AuthoringRecord.of(selected, mapOf("owned" to link(ownership, grandchild))),
+                grandchild to AuthoringRecord.of(selected, mapOf("owned" to link(ownership, root))),
+                outside to AuthoringRecord.of(selected, emptyMap()),
             )
         val occurrences = ResourceValueMapper.discover(resources).associateBy { it.id }
         val view = AuthoringView(lease, resources, occurrences)

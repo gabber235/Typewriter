@@ -3,20 +3,14 @@
 package com.typewritermc.realm.checking
 
 import com.typewritermc.authoring.Availability
-import com.typewritermc.authoring.DiagnosticId
 import com.typewritermc.authoring.DraftBinding
 import com.typewritermc.authoring.DraftExpectation
 import com.typewritermc.authoring.GeneratedSdkApi
 import com.typewritermc.authoring.PartialSchema
-import com.typewritermc.authoring.PathSegment
-import com.typewritermc.authoring.ValueLocation
 import com.typewritermc.authoring.boundPath
 import com.typewritermc.checking.CheckEvaluation
 import com.typewritermc.checking.CheckInput
-import com.typewritermc.checking.CheckOutcome
 import com.typewritermc.checking.CheckRecipe
-import com.typewritermc.checking.Diagnostic
-import com.typewritermc.checking.DiagnosticSeverity
 import com.typewritermc.configuration.FieldPatternSegment
 import com.typewritermc.configuration.RelativeFieldPattern
 import com.typewritermc.expression.EvaluationDiagnostic
@@ -27,9 +21,15 @@ import com.typewritermc.types.catalog.Resolution
 import com.typewritermc.types.field
 import com.typewritermc.types.fields
 import com.typewritermc.types.use
+import skirout.editor.v1.checking.CheckOutcome
+import skirout.editor.v1.diagnostic.Diagnostic
+import skirout.editor.v1.diagnostic.DiagnosticSeverity
 import skirout.editor.v1.type_catalog.DataValue
+import skirout.editor.v1.type_catalog.DiagnosticId
+import skirout.editor.v1.type_catalog.PathSegment
 import skirout.editor.v1.type_catalog.ResolvedRepresentation
 import skirout.editor.v1.type_catalog.TypeUse
+import skirout.editor.v1.type_catalog.ValueLocation
 import java.util.concurrent.atomic.AtomicLong
 
 /**
@@ -51,12 +51,12 @@ class RealmCheckInputs(
             recipe.inputs.map { input ->
                 val expected =
                     expectedType(subject, input.path, reads.view.original.catalog.checked)
-                        ?: return CheckEvaluation(CheckOutcome.NeedsInput(listOf(subject.location)), emptyList())
+                        ?: return CheckEvaluation(CheckOutcome.NeedsInputWrapper(listOf(subject.location)), emptyList())
                 reads.expand(subject.location, input.path).map { location ->
                     InputCandidate(input, location, occurrenceBindings(subject.location, input.path, location), expected)
                 }
             }
-        if (candidates.any { it.isEmpty() }) return CheckEvaluation(CheckOutcome.Finished, emptyList())
+        if (candidates.any { it.isEmpty() }) return CheckEvaluation(CheckOutcome.FINISHED, emptyList())
         val tuples =
             candidates.fold(listOf(InputTuple())) { tuples, inputCandidates ->
                 tuples.flatMap { tuple ->
@@ -96,8 +96,8 @@ class RealmCheckInputs(
                 )
             }
         }
-        if (missing.isNotEmpty()) return CheckEvaluation(CheckOutcome.NeedsInput(missing.toList()), findings)
-        return CheckEvaluation(CheckOutcome.Finished, findings)
+        if (missing.isNotEmpty()) return CheckEvaluation(CheckOutcome.NeedsInputWrapper(missing.toList()), findings)
+        return CheckEvaluation(CheckOutcome.FINISHED, findings)
     }
 
     private fun finding(
@@ -135,11 +135,11 @@ class RealmCheckInputs(
                 origin = recipe.owner,
                 code = failure.code,
                 message = failure.message,
-                severity = DiagnosticSeverity.Error,
+                severity = DiagnosticSeverity.ERROR,
                 primary = failure.locations.firstOrNull(),
                 related = failure.locations.drop(1),
             )
-        return CheckEvaluation(CheckOutcome.Failed(listOf(diagnostic)), emptyList())
+        return CheckEvaluation(CheckOutcome.FailedWrapper(listOf(diagnostic)), emptyList())
     }
 }
 
@@ -190,8 +190,8 @@ private fun occurrenceBindings(
             -> {
                 val item = concrete.getOrNull(index)
                 val start = index
-                if (item is PathSegment.Item) index += 1
-                if (concrete.getOrNull(index) == PathSegment.MapKey || concrete.getOrNull(index) == PathSegment.MapValue) index += 1
+                if (item is PathSegment.ItemWrapper) index += 1
+                if (concrete.getOrNull(index) == PathSegment.MAP_KEY || concrete.getOrNull(index) == PathSegment.MAP_VALUE) index += 1
                 bindings[OccurrenceSlot(prefix.toList())] = concrete.subList(start, (start + 1).coerceAtMost(concrete.size))
             }
         }
@@ -285,5 +285,5 @@ private fun TypeCursor.resolve(catalog: CheckedCatalog): CheckedType? =
 
 private fun defaultDiagnosticIdFactory(): () -> DiagnosticId {
     val next = AtomicLong()
-    return { DiagnosticId("realm:${next.getAndIncrement()}") }
+    return { DiagnosticId(value = "realm:${next.getAndIncrement()}") }
 }

@@ -12,17 +12,15 @@ import com.typewritermc.protocol.transport.generated.authoringTypeCommit
 import com.typewritermc.protocol.transport.generated.authoringTypePreview
 import com.typewritermc.realm.authoring.AuthoringViewStore
 import com.typewritermc.realm.authoring.DefaultTypeArgumentOperations
-import com.typewritermc.realm.authoring.LinkRepairIntent
-import com.typewritermc.realm.authoring.TypeArgumentChangePreview
 import com.typewritermc.realm.authoring.TypeArgumentOperations
 import com.typewritermc.realm.authoring.TypePreviewResult
-import com.typewritermc.realm.checking.FindingSet
+import com.typewritermc.realm.authoring.requireValid
 import com.typewritermc.realm.repository.AuthoringRepository
 import com.typewritermc.realm.repository.ResourceValueMapper
 import com.typewritermc.services.libs.communicator.router.CommunicatorRoutesBuilder
 import com.typewritermc.types.ResourceId
 import com.typewritermc.types.catalog.DeclarationDiagnostic
-import com.typewritermc.types.skir.SkirAuthoringValueCodec
+import com.typewritermc.types.requireValid
 import com.typewritermc.types.skir.SkirTypeCodec
 import com.typewritermc.types.skir.getOrThrow
 import skirout.editor.v1.authoring.AuthoringObservationId
@@ -31,13 +29,12 @@ import skirout.editor.v1.authoring.PreviewTypeArgumentChangeRequest
 import skirout.editor.v1.authoring.PreviewTypeArgumentChangeResponse
 import skirout.editor.v1.authoring.QueryAuthoringStateRequest
 import skirout.editor.v1.authoring.QueryAuthoringStateResponse
+import skirout.editor.v1.checking.FindingSet
 import skirout.editor.v1.type_catalog.RelationId
 import skirout.editor.v1.authoring.ArgumentLocation as SkirArgumentLocation
 import skirout.editor.v1.authoring.AuthoringResource as SkirAuthoringResource
 import skirout.editor.v1.authoring.AuthoringState as SkirAuthoringState
 import skirout.editor.v1.authoring.CatalogChanged as SkirCatalogChanged
-import skirout.editor.v1.authoring.LinkRepairIntent as SkirLinkRepairIntent
-import skirout.editor.v1.authoring.TypeArgumentChangePreview as SkirTypeArgumentChangePreview
 import skirout.editor.v1.authoring_facts.LinkProjection as SkirLinkProjection
 import skirout.editor.v1.type_catalog.CatalogGeneration as SkirCatalogGeneration
 import skirout.editor.v1.type_catalog.ResourceId as SkirResourceId
@@ -67,8 +64,7 @@ internal class AuthoringRoutes(
                 preview(call.request).toWire()
             }
             unary(address.authoringTypeCommit) { call ->
-                val preview = call.request.toDomain()
-                typeArguments.prepare(preview).toWire()
+                typeArguments.prepare(call.request.requireValid()).toWire()
             }
         }
 
@@ -91,7 +87,7 @@ internal class AuthoringRoutes(
                 root.resources.entries.sortedBy { it.key.value }.map { (id, record) ->
                     SkirAuthoringResource(
                         id = SkirResourceId(value = id.value),
-                        content = SkirAuthoringValueCodec.encode(record).getOrThrow(),
+                        content = record,
                     )
                 }
             val links =
@@ -101,8 +97,8 @@ internal class AuthoringRoutes(
                             RelationId(value = link.contract.value),
                         first = SkirResourceId(value = link.first.value),
                         second = SkirResourceId(value = link.second.value),
-                        firstLocation = link.firstLocation?.let { SkirAuthoringValueCodec.encode(it).getOrThrow() },
-                        secondLocation = link.secondLocation?.let { SkirAuthoringValueCodec.encode(it).getOrThrow() },
+                        firstLocation = link.firstLocation,
+                        secondLocation = link.secondLocation,
                     )
                 }
             val capturedFindings = captureFindings(root, findings())
@@ -120,7 +116,7 @@ internal class AuthoringRoutes(
     }
 
     private fun preview(request: PreviewTypeArgumentChangeRequest): TypePreviewResult {
-        val requested = SkirAuthoringValueCodec.decode(request.requested).getOrThrow()
+        val requested = request.requested.requireValid()
         val requestedCatalog = CatalogGeneration(request.catalog.value)
         val lease = views.capture()
         lease.use { snapshot ->
@@ -137,7 +133,7 @@ internal class AuthoringRoutes(
 private fun TypePreviewResult.toWire(): PreviewTypeArgumentChangeResponse =
     when (this) {
         is TypePreviewResult.Ready -> {
-            PreviewTypeArgumentChangeResponse.ReadyWrapper(preview.toWire())
+            PreviewTypeArgumentChangeResponse.ReadyWrapper(preview)
         }
 
         is TypePreviewResult.InvalidArguments -> {
@@ -152,28 +148,10 @@ private fun TypePreviewResult.toWire(): PreviewTypeArgumentChangeResponse =
 
         is TypePreviewResult.Rejected -> {
             PreviewTypeArgumentChangeResponse.RejectedErrorWrapper(
-                problems.map { SkirAuthoringValueCodec.encode(it).getOrThrow() },
+                problems,
             )
         }
     }
-
-private fun TypeArgumentChangePreview.toWire(): SkirTypeArgumentChangePreview =
-    SkirTypeArgumentChangePreview(
-        resource = SkirResourceId(value = resource.value),
-        next = SkirAuthoringValueCodec.encode(next).getOrThrow(),
-        edit = SkirAuthoringOperationCodec.encode(edit).getOrThrow(),
-        linkRepairs = linkRepairs.map(LinkRepairIntent::toWire),
-        clearedLocations = clearedLocations.map { SkirAuthoringValueCodec.encode(it).getOrThrow() },
-    )
-
-private fun SkirTypeArgumentChangePreview.toDomain(): TypeArgumentChangePreview =
-    TypeArgumentChangePreview(
-        resource = ResourceId(resource.value),
-        next = SkirAuthoringValueCodec.decode(next).getOrThrow(),
-        edit = SkirAuthoringOperationCodec.decode(edit).getOrThrow(),
-        linkRepairs = linkRepairs.map(SkirLinkRepairIntent::toDomain),
-        clearedLocations = clearedLocations.map { SkirAuthoringValueCodec.decode(it).getOrThrow() },
-    )
 
 private fun PreparedEditResult.toWire(): PrepareTypeArgumentChangeResponse =
     when (this) {
@@ -182,37 +160,11 @@ private fun PreparedEditResult.toWire(): PrepareTypeArgumentChangeResponse =
         }
 
         is PreparedEditResult.NeedsInput -> {
-            PrepareTypeArgumentChangeResponse.NeedsInputWrapper(locations.map { SkirAuthoringValueCodec.encode(it).getOrThrow() })
+            PrepareTypeArgumentChangeResponse.NeedsInputWrapper(locations)
         }
 
         is PreparedEditResult.Rejected -> {
-            PrepareTypeArgumentChangeResponse.RejectedErrorWrapper(problems.map { SkirAuthoringValueCodec.encode(it).getOrThrow() })
-        }
-    }
-
-private fun LinkRepairIntent.toWire(): SkirLinkRepairIntent =
-    when (this) {
-        is LinkRepairIntent.Clear -> {
-            SkirLinkRepairIntent.ClearWrapper(SkirAuthoringValueCodec.encode(occurrence).getOrThrow())
-        }
-
-        is LinkRepairIntent.Remove -> {
-            SkirLinkRepairIntent.RemoveWrapper(SkirAuthoringValueCodec.encode(occurrence).getOrThrow())
-        }
-    }
-
-private fun SkirLinkRepairIntent.toDomain(): LinkRepairIntent =
-    when (this) {
-        is SkirLinkRepairIntent.ClearWrapper -> {
-            LinkRepairIntent.Clear(SkirAuthoringValueCodec.decode(value).getOrThrow())
-        }
-
-        is SkirLinkRepairIntent.RemoveWrapper -> {
-            LinkRepairIntent.Remove(SkirAuthoringValueCodec.decode(value).getOrThrow())
-        }
-
-        else -> {
-            error("Unknown Skir link repair intent variant.")
+            PrepareTypeArgumentChangeResponse.RejectedErrorWrapper(problems)
         }
     }
 

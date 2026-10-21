@@ -10,8 +10,11 @@ import com.typewritermc.types.use
 import skirout.editor.v1.type_catalog.ItemId
 import skirout.editor.v1.type_catalog.NamedTypeUse
 import skirout.editor.v1.type_catalog.TypeDefinitionId
+import skirout.editor.v1.type_catalog.TypeSelection
 import skirout.editor.v1.type_catalog.TypeTemplate
 import skirout.editor.v1.type_catalog.TypeUse
+import skirout.editor.v1.type_catalog.ValueLocation
+import skirout.editor.v1.type_catalog.ValuePath
 
 /** Identity token for one authored observation; equal catalog generations do not make two observations interchangeable. */
 class ReadContext(

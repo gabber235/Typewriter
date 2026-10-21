@@ -1,12 +1,12 @@
 package com.typewritermc.realm.routes
 
+import com.typewritermc.checking.toSkir
 import com.typewritermc.protocol.transport.RealmRouteScope
 import com.typewritermc.protocol.transport.generated.authoringChanged
 import com.typewritermc.protocol.transport.generated.authoringPublicationWatch
 import com.typewritermc.realm.authoring.AuthoringView
 import com.typewritermc.realm.authoring.AuthoringViewStore
-import com.typewritermc.realm.checking.FindingSet
-import com.typewritermc.realm.checking.toWire
+import com.typewritermc.realm.checking.decodedExpectations
 import com.typewritermc.realm.compiler.RealmPublicationCoordinator
 import com.typewritermc.realm.repository.conflicts
 import com.typewritermc.services.libs.communicator.client.Communicator
@@ -23,9 +23,9 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 import skirout.editor.v1.authoring.AuthoringChanged
+import skirout.editor.v1.checking.FindingSet
 import skirout.editor.v1.checking.FindingStatus
 import skirout.editor.v1.type_catalog.CatalogGeneration
-import skirout.editor.v1.checking.FindingSet as SkirFindingSet
 
 /**
  * Publishes editor updates for the current messaging connection: authoring change hints after commits and
@@ -127,7 +127,7 @@ private val PUBLICATION_FAILURE = ErrorSlug.of("realm-editor-publication-update-
 private val AUTHORING_CHANGED_FAILURE = ErrorSlug.of("realm-editor-authoring-changed-failed")
 
 internal data class CapturedFindings(
-    val findings: List<SkirFindingSet>,
+    val findings: List<FindingSet>,
 )
 
 internal fun captureFindings(
@@ -136,7 +136,9 @@ internal fun captureFindings(
 ): CapturedFindings =
     CapturedFindings(
         findings.map { set ->
-            val current = set.ticket.catalog == root.catalog.generation && root.values.conflicts(set.expectations).isEmpty()
-            set.copy(status = if (current) FindingStatus.CURRENT else FindingStatus.OUTDATED).toWire()
+            val current =
+                set.ticket.catalog == root.catalog.generation.toSkir() &&
+                    root.values.conflicts(set.expectations.decodedExpectations()).isEmpty()
+            set.copy(status = if (current) FindingStatus.CURRENT else FindingStatus.OUTDATED)
         },
     )

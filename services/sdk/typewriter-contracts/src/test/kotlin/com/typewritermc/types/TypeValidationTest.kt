@@ -1,15 +1,12 @@
 package com.typewritermc.types
 
 import build.skir.JsonFlavor
-import com.typewritermc.authoring.AuthoringRecord
-import com.typewritermc.authoring.TypeSelection
+import com.typewritermc.authoring.of
 import de.infix.testBalloon.framework.core.testSuite
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.matchers.shouldBe
-import kotlinx.serialization.SerializationException
-import kotlinx.serialization.json.Json
-import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.jsonObject
+import skirout.editor.v1.type_catalog.AuthoringRecord
 import skirout.editor.v1.type_catalog.DeclarationOwner
 import skirout.editor.v1.type_catalog.DeclaredTypeId
 import skirout.editor.v1.type_catalog.EndpointId
@@ -24,6 +21,7 @@ import skirout.editor.v1.type_catalog.TypeDefinition
 import skirout.editor.v1.type_catalog.TypeDefinitionId
 import skirout.editor.v1.type_catalog.TypeId
 import skirout.editor.v1.type_catalog.TypeParameter
+import skirout.editor.v1.type_catalog.TypeSelection
 import skirout.editor.v1.type_catalog.TypeTemplate
 import skirout.editor.v1.type_catalog.TypeUse
 
@@ -75,29 +73,28 @@ val TypeValidationTest by testSuite {
             .requireValid()
     }
 
-    test("stored type values embed their readable Skir JSON and are checked when read back") {
+    test("authored records read back from their readable Skir JSON are checked") {
         val use = OWNER.namedUse(listOf(ScalarKind.TEXT.use))
-        val record = AuthoringRecord(TypeSelection.Complete(use), emptyMap())
-        val encoded = Json.encodeToJsonElement(AuthoringRecord.serializer(), record)
+        val record = AuthoringRecord.of(TypeSelection.CompleteWrapper(use))
+        val encoded = AuthoringRecord.serializer.toJson(record, JsonFlavor.READABLE)
         encoded.jsonObject
             .getValue("configuration")
             .jsonObject
-            .getValue("use") shouldBe
+            .getValue("value") shouldBe
             NamedTypeUse.serializer.toJson(use, JsonFlavor.READABLE)
-        Json.decodeFromJsonElement(AuthoringRecord.serializer(), encoded) shouldBe record
+        AuthoringRecord.serializer
+            .fromJson(encoded)
+            .requireValid() shouldBe record
 
         val blankRevision =
-            JsonObject(
-                encoded.jsonObject +
-                    (
-                        "configuration" to
-                            Json.encodeToJsonElement(
-                                TypeSelection.serializer(),
-                                TypeSelection.Pending(TypeDefinitionId.qualified("test", "type", revision = 0), emptyList()),
-                            )
+            record.copy(
+                configuration =
+                    TypeSelection.createPending(
+                        definition = TypeDefinitionId.qualified("test", "type", revision = 0),
+                        arguments = emptyList(),
                     ),
             )
-        shouldThrow<SerializationException> { Json.decodeFromJsonElement(AuthoringRecord.serializer(), blankRevision) }
+        shouldThrow<IllegalArgumentException> { blankRevision.requireValid() }
     }
 }
 

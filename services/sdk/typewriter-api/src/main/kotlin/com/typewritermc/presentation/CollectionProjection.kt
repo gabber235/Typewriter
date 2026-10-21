@@ -1,13 +1,14 @@
 package com.typewritermc.presentation
 
 import com.typewritermc.authoring.TypedPath
-import com.typewritermc.authoring.ValuePath
+import com.typewritermc.authoring.root
 import com.typewritermc.expression.ExpressionFactory
 import com.typewritermc.types.Resource
 import skirout.editor.v1.type_catalog.DataValue
 import skirout.editor.v1.type_catalog.NamedTypeTemplate
 import skirout.editor.v1.type_catalog.TypeDefinitionId
 import skirout.editor.v1.type_catalog.TypeTemplate
+import skirout.editor.v1.type_catalog.ValuePath
 
 /**
  * Declares a portable row view over authored resources using source paths and literal field values.
@@ -78,7 +79,7 @@ class CollectionProjectionBuilder<Resource : com.typewritermc.types.Resource, Ro
 
     fun content(source: TypedPath<Resource, *>) {
         source.requireOwner(root.definition)
-        fields += CollectionProjectionFieldSpec(ValuePath(), CollectionProjectionValueSpec.Content(source.path))
+        fields += CollectionProjectionFieldSpec(ValuePath.root, CollectionProjectionValueSpec.Content(source.path))
     }
 
     fun literal(
@@ -90,7 +91,7 @@ class CollectionProjectionBuilder<Resource : com.typewritermc.types.Resource, Ro
     }
 
     fun literal(value: DataValue) {
-        fields += CollectionProjectionFieldSpec(ValuePath(), CollectionProjectionValueSpec.Literal(value))
+        fields += CollectionProjectionFieldSpec(ValuePath.root, CollectionProjectionValueSpec.Literal(value))
     }
 
     fun build(sourceId: String): CollectionProjectionSpec = CollectionProjectionSpec(sourceId, root, rowType, fields.toList())

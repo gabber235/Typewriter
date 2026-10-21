@@ -8,22 +8,7 @@ value class NativeBindingId(
 )
 
 @JvmInline @Serializable
-value class CheckExecutionId(
-    val value: String,
-)
-
-@JvmInline @Serializable
-value class DiagnosticId(
-    val value: String,
-)
-
-@JvmInline @Serializable
 value class SelectionId(
-    val value: String,
-)
-
-@JvmInline @Serializable
-value class PublicationId(
     val value: String,
 )
 

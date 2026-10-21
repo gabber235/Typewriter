@@ -12,19 +12,20 @@ import com.typewritermc.authoring.PreparationDraft
 import com.typewritermc.authoring.PreparationOperation
 import com.typewritermc.authoring.PreparationStep
 import com.typewritermc.authoring.PreparationTarget
-import com.typewritermc.authoring.PreparedContent
 import com.typewritermc.authoring.PreparedEdit
-import com.typewritermc.authoring.PreparedValue
 import com.typewritermc.authoring.RequiredInput
 import com.typewritermc.authoring.TraversalDirection
+import com.typewritermc.authoring.record
 import com.typewritermc.checking.CatalogGeneration
 import com.typewritermc.types.RelationId
 import com.typewritermc.types.ResourceId
 import com.typewritermc.types.requirePortable
 import com.typewritermc.types.requireValid
-import com.typewritermc.types.skir.SkirAuthoringValueCodec
 import com.typewritermc.types.skir.SkirConversionDiagnostic
 import com.typewritermc.types.skir.SkirConversionResult
+import com.typewritermc.types.unknownVariant
+import skirout.editor.v1.catalog.PreparedContent
+import skirout.editor.v1.catalog.PreparedValue
 import skirout.editor.v1.type_catalog.ItemId
 import skirout.editor.v1.type_catalog.ListItem
 import skirout.editor.v1.authoring.CommitPreparedEditResponse as SkirCommitPreparedEditResponse
@@ -111,7 +112,7 @@ private fun OperationConversionScope.encodePreparationOperation(value: Preparati
                 answers =
                     value.answers.map {
                         SkirInputAnswer(
-                            path = convert(SkirAuthoringValueCodec.encode(it.path)),
+                            path = it.path,
                             value = valid { it.value.requirePortable() },
                         )
                     },
@@ -130,7 +131,7 @@ private fun OperationConversionScope.decodePreparationOperation(value: SkirPrepa
                 decodePreparationDraft(value.value.draft),
                 value.value.answers.map {
                     InputAnswer(
-                        convert(SkirAuthoringValueCodec.decode(it.path)),
+                        valid { it.path.requireValid() },
                         valid { it.value.requirePortable() },
                     )
                 },
@@ -159,16 +160,16 @@ private fun OperationConversionScope.decodePreparationStep(value: SkirPrepareVal
 
 private fun OperationConversionScope.encodePreparationDraft(value: PreparationDraft): SkirPreparationDraft {
     val request = encodeInitializationRequest(InitializationRequest(value.catalog, value.target, null))
-    val prepared = encodePreparedValue(PreparedValue(value.content, value.findings))
+    val prepared = encodePreparedValue(PreparedValue(content = value.content, findings = value.findings))
     return SkirPreparationDraft(
         catalog = request.catalog,
         target = request.target,
         content = prepared.content,
-        pendingDefaults = value.pendingDefaults.map { convert(SkirAuthoringValueCodec.encode(it)) },
+        pendingDefaults = value.pendingDefaults.toList(),
         requiredInputs =
             value.requiredInputs.map {
                 SkirRequiredInput(
-                    path = convert(SkirAuthoringValueCodec.encode(it.path)),
+                    path = it.path,
                     expected = it.expected,
                 )
             },
@@ -180,7 +181,7 @@ private fun OperationConversionScope.decodePreparationDraft(value: SkirPreparati
     val request =
         decodeInitializationRequest(SkirInitializationRequest(catalog = value.catalog, target = value.target, suppliedValue = null))
     val prepared = decodePreparedValue(SkirPreparedValue(content = value.content, findings = value.findings))
-    val pending = value.pendingDefaults.map { convert(SkirAuthoringValueCodec.decode(it)) }
+    val pending = value.pendingDefaults.map { valid { it.requireValid() } }
     if (pending.toSet().size != pending.size) fail("A pending default path is duplicated.")
     return PreparationDraft(
         request.catalog,
@@ -189,7 +190,7 @@ private fun OperationConversionScope.decodePreparationDraft(value: SkirPreparati
         pending.toSet(),
         value.requiredInputs.map {
             RequiredInput(
-                convert(SkirAuthoringValueCodec.decode(it.path)),
+                valid { it.path.requireValid() },
                 valid { it.expected.requireValid() },
             )
         },
@@ -218,7 +219,7 @@ private fun OperationConversionScope.encodeExpectation(value: EditExpectation): 
     when (value) {
         is EditExpectation.Value -> {
             SkirEditExpectation.createValue(
-                at = convert(SkirAuthoringValueCodec.encode(value.at)),
+                at = value.at,
                 expected =
                     value.expected?.let {
                         valid { it.requirePortable() }
@@ -230,9 +231,7 @@ private fun OperationConversionScope.encodeExpectation(value: EditExpectation): 
             SkirEditExpectation.createResource(
                 id = SkirResourceId(value = value.id.value),
                 expected =
-                    value.expected?.let {
-                        convert(SkirAuthoringValueCodec.encode(it))
-                    },
+                    value.expected,
             )
         }
 
@@ -242,11 +241,9 @@ private fun OperationConversionScope.encodeExpectation(value: EditExpectation): 
 
         is EditExpectation.Configuration -> {
             SkirEditExpectation.createConfiguration(
-                at = convert(SkirAuthoringValueCodec.encode(value.at)),
+                at = value.at,
                 expected =
-                    value.expected?.let {
-                        convert(SkirAuthoringValueCodec.encode(it))
-                    },
+                    value.expected,
             )
         }
 
@@ -264,7 +261,7 @@ private fun OperationConversionScope.encodeExpectation(value: EditExpectation): 
                         TraversalDirection.Reverse -> SkirTraversalDirection.REVERSE
                         TraversalDirection.Both -> SkirTraversalDirection.BOTH
                     },
-                expected = value.expected.sortedBy { it.toString() }.map { encodeProjection(it) },
+                expected = value.expected.map { encodeProjection(it) }.sortedBy(SkirLinkProjection.serializer::toJsonCode),
             )
         }
     }
@@ -273,7 +270,7 @@ private fun OperationConversionScope.decodeExpectation(value: SkirEditExpectatio
     when (value) {
         is SkirEditExpectation.ValueWrapper -> {
             EditExpectation.Value(
-                convert(SkirAuthoringValueCodec.decode(value.value.at)),
+                valid { value.value.at.requireValid() },
                 value.value.expected?.let {
                     valid { it.requirePortable() }
                 },
@@ -284,7 +281,7 @@ private fun OperationConversionScope.decodeExpectation(value: SkirEditExpectatio
             EditExpectation.Resource(
                 ResourceId(requireText(value.value.id.value, "Resource identity")),
                 value.value.expected?.let {
-                    convert(SkirAuthoringValueCodec.decode(it))
+                    valid { it.requireValid() }
                 },
             )
         }
@@ -295,9 +292,9 @@ private fun OperationConversionScope.decodeExpectation(value: SkirEditExpectatio
 
         is SkirEditExpectation.ConfigurationWrapper -> {
             EditExpectation.Configuration(
-                convert(SkirAuthoringValueCodec.decode(value.value.at)),
+                valid { value.value.at.requireValid() },
                 value.value.expected?.let {
-                    convert(SkirAuthoringValueCodec.decode(it))
+                    valid { it.requireValid() }
                 },
             )
         }
@@ -331,10 +328,8 @@ private fun OperationConversionScope.encodeProjection(value: LinkProjection): Sk
         first = SkirResourceId(value = value.first.value),
         second = SkirResourceId(value = value.second.value),
         firstLocation =
-            value.firstLocation?.let {
-                convert(SkirAuthoringValueCodec.encode(it))
-            },
-        secondLocation = value.secondLocation?.let { convert(SkirAuthoringValueCodec.encode(it)) },
+            value.firstLocation,
+        secondLocation = value.secondLocation,
     )
 
 private fun OperationConversionScope.decodeProjection(value: SkirLinkProjection): LinkProjection =
@@ -343,9 +338,9 @@ private fun OperationConversionScope.decodeProjection(value: SkirLinkProjection)
         ResourceId(requireText(value.first.value, "Resource identity")),
         ResourceId(requireText(value.second.value, "Resource identity")),
         value.firstLocation?.let {
-            convert(SkirAuthoringValueCodec.decode(it))
+            valid { it.requireValid() }
         },
-        value.secondLocation?.let { convert(SkirAuthoringValueCodec.decode(it)) },
+        value.secondLocation?.let { valid { it.requireValid() } },
     )
 
 private fun OperationConversionScope.encodeIntent(value: EditIntent): SkirEditIntent =
@@ -353,7 +348,7 @@ private fun OperationConversionScope.encodeIntent(value: EditIntent): SkirEditIn
         is EditIntent.CreateResource -> {
             SkirEditIntent.createCreateResource(
                 id = SkirResourceId(value = value.id.value),
-                record = convert(SkirAuthoringValueCodec.encode(value.record)),
+                record = value.record,
             )
         }
 
@@ -363,14 +358,14 @@ private fun OperationConversionScope.encodeIntent(value: EditIntent): SkirEditIn
 
         is EditIntent.SetValue -> {
             SkirEditIntent.createSetValue(
-                at = convert(SkirAuthoringValueCodec.encode(value.at)),
+                at = value.at,
                 value = valid { value.value.requirePortable() },
             )
         }
 
         is EditIntent.Insert -> {
             SkirEditIntent.createInsert(
-                at = convert(SkirAuthoringValueCodec.encode(value.at)),
+                at = value.at,
                 after = value.after,
                 item = encodeListItem(value.item),
             )
@@ -378,14 +373,14 @@ private fun OperationConversionScope.encodeIntent(value: EditIntent): SkirEditIn
 
         is EditIntent.Remove -> {
             SkirEditIntent.createRemove(
-                at = convert(SkirAuthoringValueCodec.encode(value.at)),
+                at = value.at,
                 item = value.item,
             )
         }
 
         is EditIntent.Move -> {
             SkirEditIntent.createMove(
-                at = convert(SkirAuthoringValueCodec.encode(value.at)),
+                at = value.at,
                 item = value.item,
                 after = value.after,
             )
@@ -396,12 +391,12 @@ private fun OperationConversionScope.encodeIntent(value: EditIntent): SkirEditIn
         }
 
         is EditIntent.DisconnectRelation -> {
-            SkirEditIntent.DisconnectRelationWrapper(convert(SkirAuthoringValueCodec.encode(value.occurrence)))
+            SkirEditIntent.DisconnectRelationWrapper(value.occurrence)
         }
 
         is EditIntent.Retag -> {
             SkirEditIntent.createRetag(
-                at = convert(SkirAuthoringValueCodec.encode(value.at)),
+                at = value.at,
                 type = value.type,
             )
         }
@@ -409,7 +404,7 @@ private fun OperationConversionScope.encodeIntent(value: EditIntent): SkirEditIn
         is EditIntent.ConfigureResource -> {
             SkirEditIntent.createConfigureResource(
                 resource = SkirResourceId(value = value.resource.value),
-                configuration = convert(SkirAuthoringValueCodec.encode(value.configuration)),
+                configuration = value.configuration,
             )
         }
     }
@@ -419,7 +414,7 @@ private fun OperationConversionScope.decodeIntent(value: SkirEditIntent): EditIn
         is SkirEditIntent.CreateResourceWrapper -> {
             EditIntent.CreateResource(
                 id = ResourceId(requireText(value.value.id.value, "Resource identity")),
-                record = convert(SkirAuthoringValueCodec.decode(value.value.record)),
+                record = valid { value.value.record.requireValid() },
             )
         }
 
@@ -429,14 +424,14 @@ private fun OperationConversionScope.decodeIntent(value: SkirEditIntent): EditIn
 
         is SkirEditIntent.SetValueWrapper -> {
             EditIntent.SetValue(
-                at = convert(SkirAuthoringValueCodec.decode(value.value.at)),
+                at = valid { value.value.at.requireValid() },
                 value = valid { value.value.value.requirePortable() },
             )
         }
 
         is SkirEditIntent.InsertWrapper -> {
             EditIntent.Insert(
-                at = convert(SkirAuthoringValueCodec.decode(value.value.at)),
+                at = valid { value.value.at.requireValid() },
                 after = value.value.after?.let { ItemId(value = requireText(it.value, "Previous item identity")) },
                 item = decodeListItem(value.value.item),
             )
@@ -444,14 +439,14 @@ private fun OperationConversionScope.decodeIntent(value: SkirEditIntent): EditIn
 
         is SkirEditIntent.RemoveWrapper -> {
             EditIntent.Remove(
-                at = convert(SkirAuthoringValueCodec.decode(value.value.at)),
+                at = valid { value.value.at.requireValid() },
                 item = ItemId(value = requireText(value.value.item.value, "Item identity")),
             )
         }
 
         is SkirEditIntent.MoveWrapper -> {
             EditIntent.Move(
-                at = convert(SkirAuthoringValueCodec.decode(value.value.at)),
+                at = valid { value.value.at.requireValid() },
                 item = ItemId(value = requireText(value.value.item.value, "Item identity")),
                 after = value.value.after?.let { ItemId(value = requireText(it.value, "Previous item identity")) },
             )
@@ -462,12 +457,12 @@ private fun OperationConversionScope.decodeIntent(value: SkirEditIntent): EditIn
         }
 
         is SkirEditIntent.DisconnectRelationWrapper -> {
-            EditIntent.DisconnectRelation(convert(SkirAuthoringValueCodec.decode(value.value)))
+            EditIntent.DisconnectRelation(valid { value.value.requireValid() })
         }
 
         is SkirEditIntent.RetagWrapper -> {
             EditIntent.Retag(
-                at = convert(SkirAuthoringValueCodec.decode(value.value.at)),
+                at = valid { value.value.at.requireValid() },
                 type = valid { value.value.type.requireValid() },
             )
         }
@@ -475,7 +470,7 @@ private fun OperationConversionScope.decodeIntent(value: SkirEditIntent): EditIn
         is SkirEditIntent.ConfigureResourceWrapper -> {
             EditIntent.ConfigureResource(
                 resource = ResourceId(requireText(value.value.resource.value, "Resource identity")),
-                configuration = convert(SkirAuthoringValueCodec.decode(value.value.configuration)),
+                configuration = valid { value.value.configuration.requireValid() },
             )
         }
 
@@ -486,18 +481,18 @@ private fun OperationConversionScope.decodeIntent(value: SkirEditIntent): EditIn
 
 private fun OperationConversionScope.encodeConnect(value: ConnectIntent): SkirConnectIntent =
     SkirConnectIntent(
-        source = convert(SkirAuthoringValueCodec.encode(value.source)),
+        source = value.source,
         target = SkirResourceId(value = value.target.value),
         counterpart =
             when (val counterpart = value.counterpart) {
                 is CounterpartChoice.Existing -> {
-                    SkirCounterpartChoice.ExistingWrapper(convert(SkirAuthoringValueCodec.encode(counterpart.occurrence)))
+                    SkirCounterpartChoice.ExistingWrapper(counterpart.occurrence)
                 }
 
                 is CounterpartChoice.New -> {
                     SkirCounterpartChoice.NewWrapper(
                         SkirNewCounterpartChoice(
-                            containing = convert(SkirAuthoringValueCodec.encode(counterpart.containing)),
+                            containing = counterpart.containing,
                             prepared = encodePreparedValue(counterpart.prepared),
                         ),
                     )
@@ -511,17 +506,17 @@ private fun OperationConversionScope.encodeConnect(value: ConnectIntent): SkirCo
 
 private fun OperationConversionScope.decodeConnect(value: SkirConnectIntent): ConnectIntent =
     ConnectIntent(
-        source = convert(SkirAuthoringValueCodec.decode(value.source)),
+        source = valid { value.source.requireValid() },
         target = ResourceId(requireText(value.target.value, "Target resource identity")),
         counterpart =
             when (val counterpart = value.counterpart) {
                 is SkirCounterpartChoice.ExistingWrapper -> {
-                    CounterpartChoice.Existing(convert(SkirAuthoringValueCodec.decode(counterpart.value)))
+                    CounterpartChoice.Existing(valid { counterpart.value.requireValid() })
                 }
 
                 is SkirCounterpartChoice.NewWrapper -> {
                     CounterpartChoice.New(
-                        containing = convert(SkirAuthoringValueCodec.decode(counterpart.value.containing)),
+                        containing = valid { counterpart.value.containing.requireValid() },
                         prepared = decodePreparedValue(counterpart.value.prepared),
                     )
                 }
@@ -554,7 +549,7 @@ private fun OperationConversionScope.encodeCommitResult(value: CommitResult): Sk
             SkirCommitPreparedEditResponse.RejectedErrorWrapper(
                 value.problems.map { problem ->
                     SkirValueProblem(
-                        location = convert(SkirAuthoringValueCodec.encode(problem.location)),
+                        location = problem.location,
                         code = problem.code,
                     )
                 },
@@ -577,7 +572,7 @@ private fun OperationConversionScope.encodeInitializationRequest(value: Initiali
 
                 is PreparationTarget.Record -> {
                     SkirPreparationTarget.RecordWrapper(
-                        convert(SkirAuthoringValueCodec.encode(target.selection)),
+                        target.selection,
                     )
                 }
             },
@@ -594,7 +589,7 @@ private fun OperationConversionScope.decodeInitializationRequest(value: SkirInit
                 }
 
                 is SkirPreparationTarget.RecordWrapper -> {
-                    PreparationTarget.Record(convert(SkirAuthoringValueCodec.decode(target.value)))
+                    PreparationTarget.Record(valid { target.value.requireValid() })
                 }
 
                 else -> {
@@ -608,12 +603,16 @@ private fun OperationConversionScope.encodePreparedValue(value: PreparedValue): 
     SkirPreparedValue(
         content =
             when (val content = value.content) {
-                is PreparedContent.Value -> {
+                is PreparedContent.ValueWrapper -> {
                     SkirPreparedContent.ValueWrapper(valid { content.value.requirePortable() })
                 }
 
-                is PreparedContent.Record -> {
-                    SkirPreparedContent.RecordWrapper(convert(SkirAuthoringValueCodec.encode(content.record)))
+                is PreparedContent.RecordWrapper -> {
+                    SkirPreparedContent.RecordWrapper(content.record)
+                }
+
+                else -> {
+                    unknownVariant(content)
                 }
             },
         findings =
@@ -621,7 +620,7 @@ private fun OperationConversionScope.encodePreparedValue(value: PreparedValue): 
                 index,
                 finding,
                 ->
-                at("finding $index") { convert(SkirAuthoringValueCodec.encode(finding)) }
+                at("finding $index") { finding }
             },
     )
 
@@ -630,11 +629,11 @@ private fun OperationConversionScope.decodePreparedValue(value: SkirPreparedValu
         content =
             when (val content = value.content) {
                 is SkirPreparedContent.ValueWrapper -> {
-                    PreparedContent.Value(valid { content.value.requirePortable() })
+                    PreparedContent.ValueWrapper(valid { content.value.requirePortable() })
                 }
 
                 is SkirPreparedContent.RecordWrapper -> {
-                    PreparedContent.Record(convert(SkirAuthoringValueCodec.decode(content.value)))
+                    PreparedContent.RecordWrapper(valid { content.value.requireValid() })
                 }
 
                 else -> {
@@ -646,7 +645,7 @@ private fun OperationConversionScope.decodePreparedValue(value: SkirPreparedValu
                 index,
                 finding,
                 ->
-                at("finding $index") { convert(SkirAuthoringValueCodec.decode(finding)) }
+                at("finding $index") { valid { finding.requireValid() } }
             },
     )
 

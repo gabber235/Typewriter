@@ -6,8 +6,8 @@ import com.typewritermc.authoring.GeneratedSdkApi
 import com.typewritermc.authoring.ReadProjection
 import com.typewritermc.authoring.ResourceDraft
 import com.typewritermc.authoring.TypedPath
-import com.typewritermc.authoring.ValueLocation
-import com.typewritermc.authoring.ValuePath
+import com.typewritermc.authoring.of
+import com.typewritermc.authoring.root
 import com.typewritermc.discovery.ProviderOrigin
 import com.typewritermc.presentation.PresentationReference
 import com.typewritermc.types.ResourceId
@@ -25,6 +25,8 @@ import skirout.editor.v1.operation.ResourceOperationId
 import skirout.editor.v1.presentation.ButtonVariant
 import skirout.editor.v1.type_catalog.NamedTypeUse
 import skirout.editor.v1.type_catalog.TypeDefinitionId
+import skirout.editor.v1.type_catalog.ValueLocation
+import skirout.editor.v1.type_catalog.ValuePath
 
 /** The input an operation receives, computed by codegen from its input type argument. */
 sealed interface OperationInput {
@@ -58,7 +60,7 @@ object AnyResourceSubjects : OperationSubjects<ResourceDraft> {
 /** Subjects of an operation on one resource type, bound through that type's draft projection. */
 @GeneratedSdkApi
 fun <D : ResourceDraft> projectedSubjects(projection: ReadProjection<D>): OperationSubjects<D> =
-    OperationSubjects { id, reads -> with(reads) { requireAuthored(projection.read(ValueLocation(id, ValuePath()))) } }
+    OperationSubjects { id, reads -> with(reads) { requireAuthored(projection.read(ValueLocation.of(id))) } }
 
 /**
  * One declared input field: the values pickers offer, the check for one value, and whether drops fill it.

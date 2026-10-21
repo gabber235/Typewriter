@@ -1,11 +1,11 @@
 package com.typewritermc.configuration
 
-import com.typewritermc.authoring.ValueLocation
 import com.typewritermc.checking.CheckRecipe
-import com.typewritermc.checking.Diagnostic
 import com.typewritermc.expression.EvaluationDiagnostic
 import com.typewritermc.expression.ExpressionFactory
+import skirout.editor.v1.diagnostic.Diagnostic
 import skirout.editor.v1.type_catalog.TypeTemplate
+import skirout.editor.v1.type_catalog.ValueLocation
 
 data class CollectedConfiguration(
     val recipes: List<ConfigurationRecipe>,

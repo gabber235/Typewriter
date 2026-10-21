@@ -1,16 +1,17 @@
 package com.typewritermc.realm.repository
 
-import com.typewritermc.authoring.AuthoringRecord
 import com.typewritermc.authoring.EditExpectation
 import com.typewritermc.authoring.ExpectationConflict
 import com.typewritermc.authoring.LinkProjection
 import com.typewritermc.authoring.TraversalDirection
-import com.typewritermc.authoring.TypeSelection
-import com.typewritermc.authoring.ValueLocation
 import com.typewritermc.types.RelationId
 import com.typewritermc.types.ResourceId
 import com.typewritermc.types.actualType
+import com.typewritermc.types.toResourceId
+import skirout.editor.v1.type_catalog.AuthoringRecord
 import skirout.editor.v1.type_catalog.DataValue
+import skirout.editor.v1.type_catalog.TypeSelection
+import skirout.editor.v1.type_catalog.ValueLocation
 
 internal interface CurrentAuthoringValues {
     fun value(at: ValueLocation): DataValue?
@@ -19,9 +20,9 @@ internal interface CurrentAuthoringValues {
 
     fun configuration(at: ValueLocation): TypeSelection? =
         if (at.path.segments.isEmpty()) {
-            resource(at.resource)?.configuration
+            resource(at.resource.toResourceId())?.configuration
         } else {
-            (value(at) as? DataValue.NamedWrapper)?.actualType?.let(TypeSelection::Complete)
+            (value(at) as? DataValue.NamedWrapper)?.actualType?.let(TypeSelection::CompleteWrapper)
         }
 
     fun resourceIds(): Set<ResourceId>
@@ -37,7 +38,7 @@ internal class CapturedAuthoringValues(
     private val resources: Map<ResourceId, AuthoringRecord>,
     private val projections: Collection<LinkProjection>,
 ) : CurrentAuthoringValues {
-    override fun value(at: ValueLocation): DataValue? = resources[at.resource]?.valueAt(at.path)
+    override fun value(at: ValueLocation): DataValue? = resources[at.resource.toResourceId()]?.valueAt(at.path)
 
     override fun resource(id: ResourceId): AuthoringRecord? = resources[id]
 

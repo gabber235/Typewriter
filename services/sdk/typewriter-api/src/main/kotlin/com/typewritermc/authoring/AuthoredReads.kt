@@ -6,6 +6,7 @@ import com.typewritermc.checking.TypedSelection
 import com.typewritermc.expression.EvaluationDiagnostic
 import skirout.editor.v1.type_catalog.ItemId
 import skirout.editor.v1.type_catalog.TypeUse
+import skirout.editor.v1.type_catalog.ValueLocation
 
 sealed interface Availability<out T> {
     data class Available<T>(

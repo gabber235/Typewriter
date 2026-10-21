@@ -4,13 +4,15 @@ import com.typewritermc.authoring.AuthoredReads
 import com.typewritermc.authoring.Availability
 import com.typewritermc.authoring.CounterpartChoice
 import com.typewritermc.authoring.EditContext
-import com.typewritermc.authoring.LinkOccurrence
 import com.typewritermc.authoring.ResourceDraft
-import com.typewritermc.authoring.ValueLocation
-import com.typewritermc.authoring.ValuePath
+import com.typewritermc.authoring.record
 import com.typewritermc.dsl.TypewriterDsl
 import com.typewritermc.types.ResourceId
+import skirout.editor.v1.authoring.LinkOccurrence
+import skirout.editor.v1.catalog.PreparedContent
 import skirout.editor.v1.operation.OperationAvailability
+import skirout.editor.v1.type_catalog.ValueLocation
+import skirout.editor.v1.type_catalog.ValuePath
 
 data class OperationOrigin(
     val container: ResourceId? = null,
@@ -73,9 +75,9 @@ data class PreparationChoices(
 
                     candidate is CounterpartChoice.New && answer is CounterpartChoice.New -> {
                         candidate.containing == answer.containing &&
-                            (candidate.prepared.content as? com.typewritermc.authoring.PreparedContent.Record)?.record?.configuration ==
-                            (answer.prepared.content as? com.typewritermc.authoring.PreparedContent.Record)?.record?.configuration &&
-                            answer.prepared.content is com.typewritermc.authoring.PreparedContent.Record
+                            (candidate.prepared.content as? PreparedContent.RecordWrapper)?.record?.configuration ==
+                            (answer.prepared.content as? PreparedContent.RecordWrapper)?.record?.configuration &&
+                            answer.prepared.content is PreparedContent.RecordWrapper
                     }
 
                     else -> {

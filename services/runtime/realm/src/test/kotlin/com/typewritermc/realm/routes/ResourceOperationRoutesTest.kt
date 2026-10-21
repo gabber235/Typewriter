@@ -2,17 +2,16 @@
 
 package com.typewritermc.realm.routes
 
-import com.typewritermc.authoring.AuthoringRecord
 import com.typewritermc.authoring.EditIntent
 import com.typewritermc.authoring.GeneratedSdkApi
 import com.typewritermc.authoring.GraphPlacement
-import com.typewritermc.authoring.LinkOccurrenceId
-import com.typewritermc.authoring.PathSegment
 import com.typewritermc.authoring.PlacementAnchor
 import com.typewritermc.authoring.PreparedEdit
 import com.typewritermc.authoring.ResourceDraft
-import com.typewritermc.authoring.ValueLocation
-import com.typewritermc.authoring.ValuePath
+import com.typewritermc.authoring.field
+import com.typewritermc.authoring.fieldMap
+import com.typewritermc.authoring.of
+import com.typewritermc.authoring.root
 import com.typewritermc.authoring.skir.SkirAuthoringOperationCodec
 import com.typewritermc.discovery.ProviderOrigin
 import com.typewritermc.library.TAXONOMY_TAGS_RELATION_ID
@@ -48,10 +47,10 @@ import com.typewritermc.types.endpointId
 import com.typewritermc.types.fieldMap
 import com.typewritermc.types.fields
 import com.typewritermc.types.items
-import com.typewritermc.types.linkTarget
 import com.typewritermc.types.namedTemplate
 import com.typewritermc.types.payload
 import com.typewritermc.types.skir.getOrThrow
+import com.typewritermc.types.toResourceId
 import com.typewritermc.types.use
 import de.infix.testBalloon.framework.core.testSuite
 import io.kotest.matchers.collections.shouldContain
@@ -59,11 +58,15 @@ import io.kotest.matchers.collections.shouldContainAll
 import io.kotest.matchers.shouldBe
 import kotlinx.coroutines.test.runTest
 import skirout.editor.v1.authoring.AuthoringObservationId
+import skirout.editor.v1.authoring.LinkOccurrenceId
 import skirout.editor.v1.resource_operations.AuthoringActionResult
 import skirout.editor.v1.resource_operations.OperationSelectionEffect
 import skirout.editor.v1.resource_operations.ResolveDropCandidatesResult
 import skirout.editor.v1.resource_operations.ResolveResourceOperationsResult
+import skirout.editor.v1.type_catalog.AuthoringRecord
 import skirout.editor.v1.type_catalog.DataValue
+import skirout.editor.v1.type_catalog.ValueLocation
+import skirout.editor.v1.type_catalog.ValuePath
 
 val ResourceOperationRoutesTest by testSuite {
     test("every resource gets the core operations its graph facts allow") {
@@ -126,8 +129,8 @@ val ResourceOperationRoutesTest by testSuite {
                 listOf("first", "second", "other").forEach { id ->
                     val moved = after.getValue(ResourceId(id))
                     moved.linkTarget("book") shouldBe ResourceId("destination")
-                    moved.fields["chapter"] shouldBe before.getValue(ResourceId(id)).fields["chapter"]
-                    moved.fields["priority"] shouldBe before.getValue(ResourceId(id)).fields["priority"]
+                    moved.field("chapter") shouldBe before.getValue(ResourceId(id)).field("chapter")
+                    moved.field("priority") shouldBe before.getValue(ResourceId(id)).field("priority")
                 }
                 after.getValue(ResourceId("destination")).linkTargets("pages") shouldContainAll
                     listOf("resident", "peer", "first", "second", "other").map(::ResourceId)
@@ -154,7 +157,7 @@ val ResourceOperationRoutesTest by testSuite {
                     )
                 val moved = after.getValue(ResourceId("graph-entry"))
                 moved.linkTarget("page") shouldBe ResourceId("timeline")
-                moved.fields["placement"] shouldBe before.getValue(ResourceId("graph-entry")).fields["placement"]
+                moved.field("placement") shouldBe before.getValue(ResourceId("graph-entry")).field("placement")
             }
         }
     }
@@ -239,7 +242,7 @@ val ResourceOperationRoutesTest by testSuite {
                 val after = fixture.replay(fixture.prepare(Duplicate, "timeline-entry"))
                 val copy = (after.keys - before.keys).single()
                 after.getValue(copy).linkTarget("page") shouldBe ResourceId("timeline")
-                after.getValue(copy).fields["placement"] shouldBe before.getValue(ResourceId("timeline-entry")).fields["placement"]
+                after.getValue(copy).field("placement") shouldBe before.getValue(ResourceId("timeline-entry")).field("placement")
             }
         }
     }
@@ -322,8 +325,8 @@ val ResourceOperationRoutesTest by testSuite {
                     emptyList(),
                     listOf(
                         EditIntent.SetValue(
-                            ValueLocation(ResourceId("parent"), ValuePath(listOf(PathSegment.Field("parents")))),
-                            cyclic.fields.getValue("parents"),
+                            ValueLocation.of(ResourceId("parent"), ValuePath.root.field("parents")),
+                            cyclic.fieldMap.getValue("parents"),
                         ),
                     ),
                 )
@@ -468,7 +471,16 @@ private fun orphanTag(origin: ProviderOrigin) =
         with(ResourceOperationSpecImpl(spec)) {
             prepare {
                 val owner = RelationId(TAXONOMY_TAGS_RELATION_ID).endpointId(EndpointSlot.Second)
-                disconnect(LinkOccurrenceId(owner, ValueLocation(subjects.single(), ValuePath(listOf(PathSegment.Field("taxonomy"))))))
+                disconnect(
+                    LinkOccurrenceId(
+                        endpoint = owner,
+                        location =
+                            ValueLocation.of(
+                                subjects.single(),
+                                ValuePath.root.field("taxonomy"),
+                            ),
+                    ),
+                )
             }
         }
     }
@@ -490,7 +502,7 @@ private fun brokenAvailability(origin: ProviderOrigin) =
     }
 
 private fun AuthoringRecord.graphPlacement(): GraphPlacement {
-    val fields = ((fields.getValue("placement") as DataValue.NamedWrapper).payload as DataValue.RecordWrapper).value.fieldMap
+    val fields = ((fieldMap.getValue("placement") as DataValue.NamedWrapper).payload as DataValue.RecordWrapper).value.fieldMap
 
     fun int(name: String) = (fields.getValue(name) as DataValue.IntegerWrapper).value.toInt()
     return GraphPlacement(int("x"), int("y"), int("width"), int("height"))
@@ -501,15 +513,21 @@ private fun GraphPlacement.intersectsWithGap(other: GraphPlacement): Boolean =
         y.toLong() < other.y.toLong() + other.height + 1 && y.toLong() + height + 1 > other.y
 
 private fun AuthoringRecord.linkTarget(field: String): ResourceId =
-    ((fields.getValue(field) as DataValue.NamedWrapper).payload as DataValue.LinkWrapper).linkTarget.resource
+    ((fieldMap.getValue(field) as DataValue.NamedWrapper).payload as DataValue.LinkWrapper)
+        .value.target.resource
+        .toResourceId()
 
 private fun AuthoringRecord.linkTargets(field: String): List<ResourceId> {
-    val payload = (fields.getValue(field) as DataValue.NamedWrapper).payload
+    val payload = (fieldMap.getValue(field) as DataValue.NamedWrapper).payload
     val items =
         when (payload) {
             is DataValue.ListValueWrapper -> payload.items
             is DataValue.SetValueWrapper -> payload.items
             else -> error("Expected a collection in $field.")
         }
-    return items.map { ((it.value as DataValue.NamedWrapper).payload as DataValue.LinkWrapper).linkTarget.resource }
+    return items.map {
+        ((it.value as DataValue.NamedWrapper).payload as DataValue.LinkWrapper)
+            .value.target.resource
+            .toResourceId()
+    }
 }

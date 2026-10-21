@@ -1,10 +1,12 @@
 package com.typewritermc.configuration
 
-import com.typewritermc.authoring.ArgumentSelection
 import com.typewritermc.authoring.PartialSchema
-import com.typewritermc.authoring.PathSegment
-import com.typewritermc.authoring.TypeSelection
-import com.typewritermc.authoring.ValuePath
+import com.typewritermc.authoring.arguments
+import com.typewritermc.authoring.definition
+import com.typewritermc.authoring.name
+import com.typewritermc.authoring.root
+import com.typewritermc.authoring.type
+import com.typewritermc.authoring.use
 import com.typewritermc.expression.CanonicalReadModels
 import com.typewritermc.expression.CheckedExpressionProgram
 import com.typewritermc.expression.CheckedQueryCall
@@ -34,9 +36,9 @@ import com.typewritermc.types.items
 import com.typewritermc.types.namedUse
 import com.typewritermc.types.portableOrNull
 import com.typewritermc.types.rows
-import com.typewritermc.types.skir.SkirAuthoringValueCodec
-import com.typewritermc.types.skir.SkirConversionResult
+import com.typewritermc.types.unknownVariant
 import com.typewritermc.types.use
+import com.typewritermc.types.validOrNull
 import skirout.editor.v1.expression.BoundDirection
 import skirout.editor.v1.expression.EntryBranch
 import skirout.editor.v1.expression.ExpressionMappingType
@@ -55,13 +57,17 @@ import skirout.editor.v1.expression.TextCompareOperation
 import skirout.editor.v1.expression.TextUnaryOperation
 import skirout.editor.v1.expression.TimestampBoundDirection
 import skirout.editor.v1.expression.ValueCompareOperation
+import skirout.editor.v1.type_catalog.ArgumentSelection
 import skirout.editor.v1.type_catalog.DataValue
 import skirout.editor.v1.type_catalog.FloatWidth
 import skirout.editor.v1.type_catalog.IntegerWidth
+import skirout.editor.v1.type_catalog.PathSegment
 import skirout.editor.v1.type_catalog.ResolvedRepresentation
 import skirout.editor.v1.type_catalog.ScalarKind
 import skirout.editor.v1.type_catalog.TypeDefinitionId
+import skirout.editor.v1.type_catalog.TypeSelection
 import skirout.editor.v1.type_catalog.TypeUse
+import skirout.editor.v1.type_catalog.ValuePath
 import java.util.Collections
 import java.util.IdentityHashMap
 
@@ -250,11 +256,7 @@ class PortableExpressionChecker(
         demand(known, "unknown_expression_operation")
     }
 
-    private fun decodePath(path: skirout.editor.v1.type_catalog.ValuePath): ValuePath =
-        when (val decoded = SkirAuthoringValueCodec.decode(path)) {
-            is SkirConversionResult.Success -> decoded.value
-            is SkirConversionResult.Failure -> fail("invalid_expression_path")
-        }
+    private fun decodePath(path: ValuePath): ValuePath = path.validOrNull() ?: fail("invalid_expression_path")
 
     private inner class Invocation(
         bindings: Map<ExpressionBindingId, ExpressionType>,
@@ -571,25 +573,29 @@ class PortableExpressionChecker(
                 missing = missing || current.mayBeMissing
                 current =
                     when (segment) {
-                        is PathSegment.Item -> {
+                        is PathSegment.ItemWrapper -> {
                             missing = true
                             collectionItem(current)
                         }
 
-                        PathSegment.MapKey -> {
+                        PathSegment.MAP_KEY -> {
                             (canonical(current).value as? ExpressionValueType.EntryWrapper)?.value?.key
                                 ?: fail("invalid_expression_path")
                         }
 
-                        PathSegment.MapValue -> {
+                        PathSegment.MAP_VALUE -> {
                             (canonical(current).value as? ExpressionValueType.EntryWrapper)?.value?.value
                                 ?: fail("invalid_expression_path")
                         }
 
-                        is PathSegment.Field -> {
+                        is PathSegment.FieldWrapper -> {
                             val checked = ready(current.nominalUseOrNull() ?: fail("invalid_expression_path"))
                             val field = checked.schema.fields.singleOrNull { it.key == segment.name } ?: fail("invalid_expression_path")
                             nominalExpressionType(field.type, true)
+                        }
+
+                        else -> {
+                            unknownVariant(segment)
                         }
                     }
             }
@@ -708,7 +714,7 @@ class PortableExpressionChecker(
                 }
 
                 is ExpressionNode.FieldWrapper, is ExpressionNode.EntryProjectionWrapper -> {
-                    inferProjection(node, ValuePath(), frames, occurrence)
+                    inferProjection(node, ValuePath.root, frames, occurrence)
                 }
 
                 is ExpressionNode.AndWrapper -> {
@@ -871,25 +877,25 @@ class PortableExpressionChecker(
                 return project(input, path)
             }
             val missing = bindings[key]?.mayBeMissing ?: true
-            if (selection is TypeSelection.Complete) {
+            if (selection is TypeSelection.CompleteWrapper) {
                 ready(selection.use.use)
                 return project(nominalExpressionType(selection.use.use, missing), path)
             }
-            selection as TypeSelection.Pending
-            val complete = selection.arguments.map { (it as? ArgumentSelection.Chosen)?.type }
+            selection as TypeSelection.PendingWrapper
+            val complete = selection.arguments.map { (it as? ArgumentSelection.ChosenWrapper)?.type }
             if (complete.all { it != null }) {
                 val use = selection.definition.namedUse(complete.filterNotNull())
                 ready(use.use)
                 return project(nominalExpressionType(use.use, missing), path)
             }
-            val field = path.segments.firstOrNull() as? PathSegment.Field ?: fail("invalid_expression_path")
+            val field = path.segments.firstOrNull() as? PathSegment.FieldWrapper ?: fail("invalid_expression_path")
             val schema =
                 when (val resolved = resolvePartial?.invoke(selection)) {
                     is Resolution.Ready -> resolved.value
                     else -> fail("invalid_expression_path")
                 }
             val known = schema.knownFields.singleOrNull { it.key == field.name } ?: fail("invalid_expression_path")
-            return project(nominalExpressionType(known.type, missing), ValuePath(path.segments.drop(1)))
+            return project(nominalExpressionType(known.type, missing), ValuePath(segments = path.segments.drop(1)))
         }
 
         private fun inferProjection(
@@ -902,7 +908,7 @@ class PortableExpressionChecker(
                 is ExpressionNode.FieldWrapper -> {
                     inferProjection(
                         node.value.source,
-                        ValuePath(listOf(PathSegment.Field(node.value.name)) + suffix.segments),
+                        ValuePath(segments = listOf(PathSegment.createField(name = node.value.name)) + suffix.segments),
                         frames,
                         occurrence.child(0),
                     )
@@ -911,24 +917,24 @@ class PortableExpressionChecker(
                 is ExpressionNode.EntryProjectionWrapper -> {
                     val segment =
                         when (node.value.branch) {
-                            EntryBranch.KEY -> PathSegment.MapKey
-                            EntryBranch.VALUE -> PathSegment.MapValue
+                            EntryBranch.KEY -> PathSegment.MAP_KEY
+                            EntryBranch.VALUE -> PathSegment.MAP_VALUE
                             else -> fail("unknown_expression_operation")
                         }
-                    inferProjection(node.value.source, ValuePath(listOf(segment) + suffix.segments), frames, occurrence.child(0))
+                    inferProjection(node.value.source, ValuePath(segments = listOf(segment) + suffix.segments), frames, occurrence.child(0))
                 }
 
                 is ExpressionNode.InputWrapper -> {
                     inputType(
                         node.value.binding.value,
-                        ValuePath(decodePath(node.value.path).segments + suffix.segments),
+                        ValuePath(segments = decodePath(node.value.path).segments + suffix.segments),
                     )
                 }
 
                 is ExpressionNode.LocalWrapper -> {
                     project(
                         frameValue(frames, node.value.depth, node.value.slot),
-                        ValuePath(decodePath(node.value.path).segments + suffix.segments),
+                        ValuePath(segments = decodePath(node.value.path).segments + suffix.segments),
                     )
                 }
 

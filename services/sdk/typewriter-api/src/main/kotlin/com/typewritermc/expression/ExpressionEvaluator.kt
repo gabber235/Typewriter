@@ -2,10 +2,15 @@ package com.typewritermc.expression
 
 import com.typewritermc.authoring.AuthoredReads
 import com.typewritermc.authoring.Availability
-import com.typewritermc.authoring.PathSegment
-import com.typewritermc.authoring.ValueLocation
-import com.typewritermc.authoring.ValuePath
 import com.typewritermc.authoring.append
+import com.typewritermc.authoring.field
+import com.typewritermc.authoring.id
+import com.typewritermc.authoring.name
+import com.typewritermc.authoring.of
+import com.typewritermc.authoring.payload
+import com.typewritermc.authoring.record
+import com.typewritermc.authoring.root
+import com.typewritermc.authoring.use
 import com.typewritermc.types.actualType
 import com.typewritermc.types.bigInteger
 import com.typewritermc.types.canonicalValueKey
@@ -15,7 +20,6 @@ import com.typewritermc.types.fields
 import com.typewritermc.types.instant
 import com.typewritermc.types.integer
 import com.typewritermc.types.items
-import com.typewritermc.types.linkTarget
 import com.typewritermc.types.listValue
 import com.typewritermc.types.mapValue
 import com.typewritermc.types.named
@@ -25,10 +29,7 @@ import com.typewritermc.types.requirePortable
 import com.typewritermc.types.requireValid
 import com.typewritermc.types.rows
 import com.typewritermc.types.setValue
-import com.typewritermc.types.skir.SkirAuthoringValueCodec
-import com.typewritermc.types.skir.SkirConversionResult
-import com.typewritermc.types.skir.SkirTypeCodec
-import com.typewritermc.types.skir.getOrThrow
+import com.typewritermc.types.toResourceId
 import com.typewritermc.types.unknownVariant
 import com.typewritermc.types.unwrapNamed
 import com.typewritermc.types.use
@@ -52,6 +53,10 @@ import skirout.editor.v1.expression.ValueCompareOperation
 import skirout.editor.v1.type_catalog.DataValue
 import skirout.editor.v1.type_catalog.ListItem
 import skirout.editor.v1.type_catalog.MapRow
+import skirout.editor.v1.type_catalog.PathSegment
+import skirout.editor.v1.type_catalog.TypeSelection
+import skirout.editor.v1.type_catalog.ValueLocation
+import skirout.editor.v1.type_catalog.ValuePath
 import java.math.BigDecimal
 import java.math.MathContext
 
@@ -273,14 +278,14 @@ private class EvaluatorState(
                 is ExpressionNode.FieldWrapper -> {
                     field(
                         expression.value.source,
-                        ValuePath(listOf(PathSegment.Field(expression.value.name))),
+                        ValuePath.root.field(expression.value.name),
                     )
                 }
 
                 is ExpressionNode.EntryProjectionWrapper -> {
                     field(
                         expression.value.source,
-                        ValuePath(listOf(expression.value.branch.pathSegment())),
+                        ValuePath(segments = listOf(expression.value.branch.pathSegment())),
                     )
                 }
 
@@ -353,7 +358,7 @@ private class EvaluatorState(
             }
             when (val node = root) {
                 is ExpressionNode.FieldWrapper -> {
-                    reversed += PathSegment.Field(node.value.name)
+                    reversed += PathSegment.createField(name = node.value.name)
                     root = node.value.source
                 }
 
@@ -373,7 +378,7 @@ private class EvaluatorState(
         ) {
             return null
         }
-        return Projection(root, ValuePath(reversed.asReversed()), occurrence, reversed.size)
+        return Projection(root, ValuePath(segments = reversed.asReversed()), occurrence, reversed.size)
     }
 
     private fun local(
@@ -391,7 +396,10 @@ private class EvaluatorState(
         return when (val root = projection.root) {
             is ExpressionNode.InputWrapper -> {
                 val binding = ExpressionBindingId(root.value.binding.value)
-                val path = SkirAuthoringValueCodec.decode(root.value.path).getOrThrow().append(projection.path)
+                val path =
+                    root.value.path
+                        .requireValid()
+                        .append(projection.path)
                 val value = inputValues[binding]
                 if (value != null) {
                     projected(value.at(path))
@@ -405,7 +413,10 @@ private class EvaluatorState(
 
             is ExpressionNode.LocalWrapper -> {
                 val value = local(root.value.depth, root.value.slot)
-                val path = SkirAuthoringValueCodec.decode(root.value.path).getOrThrow().append(projection.path)
+                val path =
+                    root.value.path
+                        .requireValid()
+                        .append(projection.path)
                 value.location?.append(path)?.let { observedLocations += it }
                 val selected = value.value.at(path)
                 if (selected ==
@@ -518,7 +529,7 @@ private class EvaluatorState(
         val operation = expression.kind
         val fields =
             suffix.segments.map { segment ->
-                (segment as? PathSegment.Field)?.name
+                (segment as? PathSegment.FieldWrapper)?.name
                     ?: throw OperationFailure("invalid_model_projection", "Canonical model projection requires fields.")
             }
         val contract =
@@ -529,8 +540,7 @@ private class EvaluatorState(
             val named = source.value as? DataValue.NamedWrapper ?: return Availability.Unavailable(emptyList())
             return projected(
                 readModel(
-                    com.typewritermc.authoring.TypeSelection
-                        .Complete(named.actualType),
+                    TypeSelection.CompleteWrapper(named.actualType),
                     fields,
                 ),
             )
@@ -547,8 +557,8 @@ private class EvaluatorState(
                 CanonicalReadModels.typeSelection.decode(source.value.requirePortable())
             val definition =
                 when (selection) {
-                    is skirout.editor.v1.type_catalog.TypeSelection.CompleteWrapper -> selection.value.definition
-                    is skirout.editor.v1.type_catalog.TypeSelection.PendingWrapper -> selection.value.definition
+                    is TypeSelection.CompleteWrapper -> selection.value.definition
+                    is TypeSelection.PendingWrapper -> selection.value.definition
                     else -> throw OperationFailure("invalid_type_selection", "The type selection variant is unknown.")
                 }
             return when (val declaration = query.declaration(definition.requireValid())) {
@@ -570,7 +580,8 @@ private class EvaluatorState(
                 val link =
                     source.value.unwrapNamed() as? DataValue.LinkWrapper
                         ?: throw OperationFailure("expected_link", "The query receiver is not a relationship.")
-                link.linkTarget.resource
+                link.value.target.resource
+                    .toResourceId()
             } else {
                 val named =
                     source.value as? DataValue.NamedWrapper
@@ -584,14 +595,14 @@ private class EvaluatorState(
             }
         val path = suffix
         val location =
-            ValueLocation(
+            ValueLocation.of(
                 id,
                 if (operation ==
                     ExpressionQuery.Kind.RESOURCE_VALUE_WRAPPER
                 ) {
                     path
                 } else {
-                    com.typewritermc.authoring.ValuePath()
+                    ValuePath.root
                 },
             )
         observedLocations += location
@@ -605,7 +616,7 @@ private class EvaluatorState(
         val readable = query.catalog.knownApplications(record.configuration).any { query.catalog.isReadableAs(it.use, expected) }
         if (!readable) {
             if (!contract.sourceIsReference ||
-                record.configuration is com.typewritermc.authoring.TypeSelection.Pending
+                record.configuration is TypeSelection.PendingWrapper
             ) {
                 return Availability.Unavailable(listOf(location))
             }
@@ -621,7 +632,7 @@ private class EvaluatorState(
             }
 
             ExpressionQuery.Kind.RESOURCE_VALUE_WRAPPER -> {
-                var payload: DataValue = DataValue.record(record.fields)
+                var payload: DataValue = DataValue.RecordWrapper(record.payload)
                 for (field in fields) {
                     step()
                     val current = payload.unwrapNamed()
@@ -630,7 +641,7 @@ private class EvaluatorState(
                         current as? DataValue.RecordWrapper
                             ?: throw OperationFailure("expected_record", "The expression value is not a record.")
                     payload =
-                        currentRecord.field(field) ?: if (record.configuration is com.typewritermc.authoring.TypeSelection.Complete) {
+                        currentRecord.field(field) ?: if (record.configuration is TypeSelection.CompleteWrapper) {
                             throw OperationFailure("record_field_absent", "A complete record is missing a declared field.")
                         } else {
                             return Availability.Unavailable(listOf(location))
@@ -638,7 +649,7 @@ private class EvaluatorState(
                 }
                 val configuration = record.configuration
                 if (fields.isEmpty() &&
-                    configuration is com.typewritermc.authoring.TypeSelection.Complete
+                    configuration is TypeSelection.CompleteWrapper
                 ) {
                     payload =
                         DataValue.named(configuration.use, payload)
@@ -701,9 +712,9 @@ private class EvaluatorState(
 
     /** Projects a type selection through its Skir read model. Temporary bridge until type selections are Skir values. */
     private fun readModel(
-        selection: com.typewritermc.authoring.TypeSelection,
+        selection: TypeSelection,
         fields: List<String>,
-    ): DataValue = project(CanonicalReadModels.typeSelection.encode(SkirAuthoringValueCodec.encode(selection).getOrThrow(), fields))
+    ): DataValue = project(CanonicalReadModels.typeSelection.encode(selection, fields))
 
     private fun project(value: skirout.editor.v1.type_catalog.DataValue): DataValue = value.requirePortable()
 
@@ -751,7 +762,7 @@ private class EvaluatorState(
                     val item =
                         collection.items.getOrNull(index)
                             ?: throw OperationFailure("collection_key_absent", "The collection key or index is absent.")
-                    item.value to location?.append(ValuePath(listOf(PathSegment.Item(item.id))))
+                    item.value to location?.append(ValuePath(segments = listOf(PathSegment.createItem(id = item.id))))
                 }
 
                 collection is DataValue.MapValueWrapper -> {
@@ -763,10 +774,10 @@ private class EvaluatorState(
                     if (matches.size > 1 || unfinished.isNotEmpty()) {
                         return Availability.Unavailable(
                             matches.mapNotNull { row ->
-                                location?.append(ValuePath(listOf(PathSegment.Item(row.id), PathSegment.MapValue)))
+                                location?.append(ValuePath(segments = listOf(PathSegment.createItem(id = row.id), PathSegment.MAP_VALUE)))
                             } +
                                 unfinished.mapNotNull { row ->
-                                    location?.append(ValuePath(listOf(PathSegment.Item(row.id), PathSegment.MapKey)))
+                                    location?.append(ValuePath(segments = listOf(PathSegment.createItem(id = row.id), PathSegment.MAP_KEY)))
                                 },
                         )
                     }
@@ -774,7 +785,7 @@ private class EvaluatorState(
                         throw OperationFailure("collection_key_absent", "The collection key or index is absent.")
                     }
                     val row = matches.single()
-                    row.value to location?.append(ValuePath(listOf(PathSegment.Item(row.id), PathSegment.MapValue)))
+                    row.value to location?.append(ValuePath(segments = listOf(PathSegment.createItem(id = row.id), PathSegment.MAP_VALUE)))
                 }
 
                 collection is DataValue.RecordWrapper && key.unwrapNamed() is DataValue.StringValueWrapper -> {
@@ -782,7 +793,7 @@ private class EvaluatorState(
                     val value =
                         collection.field(field)
                             ?: throw OperationFailure("collection_key_absent", "The collection key or index is absent.")
-                    value to location?.append(ValuePath(listOf(PathSegment.Field(field))))
+                    value to location?.append(ValuePath.root.field(field))
                 }
 
                 collection is DataValue.StringValueWrapper && key.unwrapNamed() is DataValue.IntegerWrapper -> {
@@ -845,7 +856,7 @@ private class EvaluatorState(
         val unfinished = candidates.filter { (_, value) -> value.containsUnfilled() }
         if (unfinished.isNotEmpty()) {
             return Availability.Unavailable(
-                unfinished.mapNotNull { (id, _) -> location?.append(ValuePath(listOf(PathSegment.Item(id)))) },
+                unfinished.mapNotNull { (id, _) -> location?.append(ValuePath(segments = listOf(PathSegment.createItem(id = id)))) },
             )
         }
         return available(DataValue.BooleanWrapper(false))
@@ -1233,14 +1244,14 @@ private class EvaluatorState(
                     ExpressionBindingId(
                         root.value.binding.value,
                     ),
-                ]?.append(SkirAuthoringValueCodec.decode(root.value.path).getOrThrow())?.append(projection.path)
+                ]?.append(root.value.path.requireValid())?.append(projection.path)
             }
 
             is ExpressionNode.LocalWrapper -> {
                 local(
                     root.value.depth,
                     root.value.slot,
-                ).location?.append(SkirAuthoringValueCodec.decode(root.value.path).getOrThrow())?.append(projection.path)
+                ).location?.append(root.value.path.requireValid())?.append(projection.path)
             }
 
             else -> {
@@ -1266,7 +1277,7 @@ private data class CollectionEntry(
     val id: skirout.editor.v1.type_catalog.ItemId,
     val value: DataValue,
 ) {
-    fun location(base: ValueLocation): ValueLocation = base.append(ValuePath(listOf(PathSegment.Item(id))))
+    fun location(base: ValueLocation): ValueLocation = base.append(ValuePath(segments = listOf(PathSegment.createItem(id = id))))
 }
 
 private data class LocalBinding(
@@ -1404,11 +1415,11 @@ private fun DataValue.at(path: ValuePath): DataValue {
         current = current.unwrapNamed()
         current =
             when (segment) {
-                is PathSegment.Field -> {
+                is PathSegment.FieldWrapper -> {
                     (current as? DataValue.RecordWrapper)?.field(segment.name)
                 }
 
-                is PathSegment.Item -> {
+                is PathSegment.ItemWrapper -> {
                     when (current) {
                         is DataValue.ListValueWrapper -> {
                             current.items.firstOrNull { it.id == segment.id }?.value
@@ -1430,12 +1441,16 @@ private fun DataValue.at(path: ValuePath): DataValue {
                     }
                 }
 
-                PathSegment.MapKey -> {
+                PathSegment.MAP_KEY -> {
                     (current as? DataValue.RecordWrapper)?.field("key")
                 }
 
-                PathSegment.MapValue -> {
+                PathSegment.MAP_VALUE -> {
                     (current as? DataValue.RecordWrapper)?.field("value")
+                }
+
+                else -> {
+                    unknownVariant(segment)
                 }
             } ?: throw OperationFailure("missing_expression_path", "The expression path does not exist.")
     }
@@ -2151,7 +2166,7 @@ private fun DataValue.displayText(): String =
         is DataValue.SetValueWrapper -> "${value.items.size} items"
         is DataValue.MapValueWrapper -> "${value.rows.size} entries"
         is DataValue.RecordWrapper -> "record"
-        is DataValue.LinkWrapper -> value.linkTarget.toString()
+        is DataValue.LinkWrapper -> value.value.target.resource.value
         is DataValue.NamedWrapper -> error("Named values are unwrapped recursively.")
         else -> unknownVariant(value)
     }
@@ -2264,8 +2279,8 @@ private val PORTABLE_WHITESPACE =
 
 private fun EntryBranch.pathSegment(): PathSegment =
     when (this) {
-        EntryBranch.KEY -> PathSegment.MapKey
-        EntryBranch.VALUE -> PathSegment.MapValue
+        EntryBranch.KEY -> PathSegment.MAP_KEY
+        EntryBranch.VALUE -> PathSegment.MAP_VALUE
         else -> throw OperationFailure("unknown_expression_variant", "Unknown entry branch.")
     }
 

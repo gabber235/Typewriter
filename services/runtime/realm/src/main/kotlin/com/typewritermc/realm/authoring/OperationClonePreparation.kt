@@ -2,28 +2,24 @@ package com.typewritermc.realm.authoring
 
 import com.typewritermc.authoring.ConnectIntent
 import com.typewritermc.authoring.CounterpartChoice
-import com.typewritermc.authoring.LinkOccurrence
-import com.typewritermc.authoring.LinkOccurrenceId
-import com.typewritermc.authoring.PathSegment
-import com.typewritermc.authoring.ValueLocation
-import com.typewritermc.authoring.ValuePath
 import com.typewritermc.authoring.field
+import com.typewritermc.authoring.id
 import com.typewritermc.authoring.item
 import com.typewritermc.authoring.mapKey
 import com.typewritermc.authoring.mapValue
+import com.typewritermc.authoring.name
+import com.typewritermc.authoring.of
+import com.typewritermc.authoring.payload
+import com.typewritermc.authoring.root
 import com.typewritermc.checking.InputIdentity
 import com.typewritermc.operations.OperationPreparation
 import com.typewritermc.realm.repository.ResourceValueMapper
-import com.typewritermc.types.LinkTarget
 import com.typewritermc.types.ResourceId
 import com.typewritermc.types.actualType
 import com.typewritermc.types.endpoint
 import com.typewritermc.types.field
-import com.typewritermc.types.fieldMap
 import com.typewritermc.types.fields
 import com.typewritermc.types.items
-import com.typewritermc.types.link
-import com.typewritermc.types.linkTarget
 import com.typewritermc.types.listValue
 import com.typewritermc.types.mapValue
 import com.typewritermc.types.named
@@ -31,9 +27,18 @@ import com.typewritermc.types.payload
 import com.typewritermc.types.record
 import com.typewritermc.types.rows
 import com.typewritermc.types.setValue
+import com.typewritermc.types.toResourceId
+import com.typewritermc.types.toSkir
+import com.typewritermc.types.unknownVariant
+import skirout.editor.v1.authoring.LinkOccurrence
+import skirout.editor.v1.authoring.LinkOccurrenceId
 import skirout.editor.v1.type_catalog.DataValue
+import skirout.editor.v1.type_catalog.LinkTarget
 import skirout.editor.v1.type_catalog.ListItem
 import skirout.editor.v1.type_catalog.MapRow
+import skirout.editor.v1.type_catalog.PathSegment
+import skirout.editor.v1.type_catalog.ValueLocation
+import skirout.editor.v1.type_catalog.ValuePath
 
 /** Copies the ownership closure before reconnecting any of its references. */
 internal class OperationClonePreparation(
@@ -61,8 +66,8 @@ internal class OperationClonePreparation(
             if (!closure.add(resource)) continue
             require(resource in resources) { "A selected resource no longer exists." }
             capturedReads.observeInput(InputIdentity.Existence(resource))
-            capturedReads.observeInput(InputIdentity.Form(ValueLocation(resource, ValuePath())))
-            capturedReads.observeInput(InputIdentity.Value(ValueLocation(resource, ValuePath())))
+            capturedReads.observeInput(InputIdentity.Form(ValueLocation.of(resource)))
+            capturedReads.observeInput(InputIdentity.Value(ValueLocation.of(resource)))
             capturedReads.observeInput(InputIdentity.Incoming(resource, null))
             ownership.filter { it.first == resource }.forEach { pending += it.second }
         }
@@ -76,7 +81,8 @@ internal class OperationClonePreparation(
 
         fun retained(link: DataValue.LinkWrapper): Boolean {
             val contract = requireNotNull(contracts[link.endpoint])
-            return link.linkTarget.resource in closure || contract.id in owning || link.endpoint == contract.first.id
+            return link.value.target.resource
+                .toResourceId() in closure || contract.id in owning || link.endpoint == contract.first.id
         }
 
         fun directLink(value: DataValue): DataValue.LinkWrapper? =
@@ -161,38 +167,38 @@ internal class OperationClonePreparation(
                 val record = resources.getValue(original)
                 val fields =
                     copyValue(
-                        DataValue.record(record.fields),
-                        ValueLocation(original, ValuePath()),
-                        ValueLocation(copies.getValue(original), ValuePath()),
+                        DataValue.RecordWrapper(record.payload),
+                        ValueLocation.of(original),
+                        ValueLocation.of(copies.getValue(original)),
                     ) as DataValue.RecordWrapper
-                copies.getValue(original) to record.copy(fields = fields.value.fieldMap)
+                copies.getValue(original) to record.copy(fields = fields.value.fields)
             }
         records.forEach { (id, record) -> operation.create(id, record) }
 
         val connected = hashSetOf<LinkOccurrenceId>()
-        for (old in occurrences.filter { it.source in closure }) {
+        for (old in occurrences.filter { it.source.toResourceId() in closure }) {
             if (old.id in connected) continue
-            if (!retained(DataValue.link(old.id.endpoint, old.target))) continue
+            if (!retained(DataValue.createLink(endpoint = old.id.endpoint, target = old.target))) continue
             val sourceLocation = locations.getValue(old.id.location)
-            val target = copies[old.target.resource] ?: old.target.resource
-            val oldOpposite = old.target.opposite?.let { ValueLocation(old.target.resource, it) }
-            val oppositeLocation = oldOpposite?.takeIf { it.resource in closure }?.let(locations::getValue)
+            val target = copies[old.target.resource.toResourceId()] ?: old.target.resource.toResourceId()
+            val oldOpposite = old.target.opposite?.let { ValueLocation(resource = old.target.resource, path = it) }
+            val oppositeLocation = oldOpposite?.takeIf { it.resource.toResourceId() in closure }?.let(locations::getValue)
             val source =
                 LinkOccurrence(
-                    LinkOccurrenceId(old.id.endpoint, sourceLocation),
-                    sourceLocation.resource,
-                    LinkTarget(target, oppositeLocation?.path),
+                    id = LinkOccurrenceId(endpoint = old.id.endpoint, location = sourceLocation),
+                    source = sourceLocation.resource,
+                    target = LinkTarget(resource = target.toSkir(), opposite = oppositeLocation?.path),
                 )
             val counterpart =
                 if (oppositeLocation != null) {
                     val contract = contracts.getValue(old.id.endpoint)
                     val endpoint = if (contract.first.id == old.id.endpoint) contract.second.id else contract.first.id
-                    connected += LinkOccurrenceId(endpoint, requireNotNull(oldOpposite))
+                    connected += LinkOccurrenceId(endpoint = endpoint, location = requireNotNull(oldOpposite))
                     CounterpartChoice.Existing(
                         LinkOccurrence(
-                            LinkOccurrenceId(endpoint, oppositeLocation),
-                            target,
-                            LinkTarget(source.source, sourceLocation.path),
+                            id = LinkOccurrenceId(endpoint = endpoint, location = oppositeLocation),
+                            source = target.toSkir(),
+                            target = LinkTarget(resource = source.source, opposite = sourceLocation.path),
                         ),
                     )
                 } else {
@@ -205,19 +211,27 @@ internal class OperationClonePreparation(
         // Ownership can be authored only on the external owner, with no inverse field on a copied root.
         ownership.filter { it.second in closure && it.first !in closure && it.secondLocation == null }.forEach { edge ->
             val oldPath = requireNotNull(edge.firstLocation)
-            require(oldPath.segments.lastOrNull() is PathSegment.Item) {
+            require(oldPath.segments.lastOrNull() is PathSegment.ItemWrapper) {
                 "The external owner cannot hold an additional copy in its scalar ownership field."
             }
-            val parent = ValuePath(oldPath.segments.dropLast(1))
-            val fresh = operation.identities.item("clone-owner:${ValueLocation(edge.first, oldPath).identityKey()}")
-            val at = ValueLocation(edge.first, parent.item(fresh))
+            val parent = ValuePath(segments = oldPath.segments.dropLast(1))
+            val fresh = operation.identities.item("clone-owner:${ValueLocation.of(edge.first, oldPath).identityKey()}")
+            val at = ValueLocation.of(edge.first, parent.item(fresh))
             val endpoint =
                 catalog.relations
                     .single { it.id == edge.contract }
                     .first.id
             val target = copies.getValue(edge.second)
             operation.connect(
-                ConnectIntent(LinkOccurrence(LinkOccurrenceId(endpoint, at), edge.first, LinkTarget(target, null)), target, null),
+                ConnectIntent(
+                    LinkOccurrence(
+                        id = LinkOccurrenceId(endpoint = endpoint, location = at),
+                        source = edge.first.toSkir(),
+                        target = LinkTarget(resource = target.toSkir(), opposite = null),
+                    ),
+                    target,
+                    null,
+                ),
             )
         }
 
@@ -237,9 +251,10 @@ private fun ValueLocation.identityKey(): String =
     "${resource.value.length}:${resource.value}" +
         path.segments.joinToString("") { segment ->
             when (segment) {
-                is PathSegment.Field -> "f${segment.name.length}:${segment.name}"
-                is PathSegment.Item -> "i${segment.id.value.length}:${segment.id.value}"
-                PathSegment.MapKey -> "k"
-                PathSegment.MapValue -> "v"
+                is PathSegment.FieldWrapper -> "f${segment.name.length}:${segment.name}"
+                is PathSegment.ItemWrapper -> "i${segment.id.value.length}:${segment.id.value}"
+                PathSegment.MAP_KEY -> "k"
+                PathSegment.MAP_VALUE -> "v"
+                else -> unknownVariant(segment)
             }
         }

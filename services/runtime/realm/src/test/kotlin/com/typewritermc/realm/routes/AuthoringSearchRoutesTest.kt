@@ -15,8 +15,6 @@ import com.typewritermc.types.namedUse
 import com.typewritermc.types.payload
 import com.typewritermc.types.requirePortable
 import com.typewritermc.types.requireValid
-import com.typewritermc.types.skir.SkirAuthoringValueCodec
-import com.typewritermc.types.skir.getOrThrow
 import com.typewritermc.types.use
 import de.infix.testBalloon.framework.core.testSuite
 import io.kotest.matchers.shouldBe
@@ -27,7 +25,6 @@ import skirout.editor.v1.type_catalog.DataValue
 import skirout.editor.v1.type_catalog.NamedTypeUse
 import skirout.editor.v1.type_catalog.ScalarKind
 import skirout.editor.v1.type_catalog.TypeDefinitionId
-import skirout.editor.v1.type_catalog.TypeUse
 import skirout.editor.v1.type_catalog.CatalogGeneration as SkirCatalogGeneration
 import skirout.editor.v1.type_catalog.ResourceId as SkirResourceId
 
@@ -64,7 +61,7 @@ val AuthoringSearchRoutesTest by testSuite {
                     repository.receivedTarget shouldBe TEST_TYPE.namedUse()
                     val hit = response.value.hits.single()
                     hit.resource.value shouldBe resource.value
-                    SkirAuthoringValueCodec.decode(hit.subject.content).getOrThrow() shouldBe authored
+                    hit.subject.content.requireValid() shouldBe authored
                     hit.context.actualType.requireValid() shouldBe ScalarKind.TEXT.use
                     hit.context.payload.requirePortable() shouldBe
                         DataValue.StringValueWrapper("book Readable Book")

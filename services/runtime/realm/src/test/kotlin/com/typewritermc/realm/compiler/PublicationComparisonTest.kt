@@ -1,23 +1,25 @@
 package com.typewritermc.realm.compiler
 
-import com.typewritermc.authoring.PublicationId
 import com.typewritermc.checking.CatalogGeneration
 import com.typewritermc.checking.InputToken
-import com.typewritermc.engine.CompilationProjectionId
-import com.typewritermc.engine.CompilationRoot
+import com.typewritermc.checking.toSkir
 import com.typewritermc.engine.CompiledArtifact
-import com.typewritermc.engine.CompiledArtifactReference
-import com.typewritermc.engine.CompiledBlobPointer
 import com.typewritermc.engine.ContentDigest
-import com.typewritermc.engine.PublishedContent
-import com.typewritermc.engine.PublishedOutput
-import com.typewritermc.engine.toSkir
 import com.typewritermc.types.ResourceId
+import com.typewritermc.types.toSkir
 import de.infix.testBalloon.framework.core.testSuite
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.types.shouldBeInstanceOf
+import skirout.editor.v1.compilation_root.CompilationProjectionId
+import skirout.editor.v1.compilation_root.CompilationRoot
+import skirout.editor.v1.compiled_content.CompiledArtifactReference
+import skirout.editor.v1.compiled_content.CompiledBlobPointer
+import skirout.editor.v1.compiled_content.PublishedContent
+import skirout.editor.v1.compiled_content.PublishedOutput
+import skirout.editor.v1.publication.EngineImplementationInputs
 import skirout.editor.v1.publication.PublicationChange
+import skirout.editor.v1.type_catalog.PublicationId
 
 val PublicationComparisonTest by testSuite {
     test("publication identity catalog provenance input fingerprints and blob pointers are not runtime changes") {
@@ -25,7 +27,7 @@ val PublicationComparisonTest by testSuite {
         val selected = comparisonSelected(artifact)
         val candidate = artifact.copy(inputFingerprint = ContentDigest("c".repeat(64)))
         PublicationComparison.between(
-            selected.copy(publication = PublicationId("other"), catalog = CatalogGeneration("other")),
+            selected.copy(publication = PublicationId(value = "other"), catalog = CatalogGeneration("other").toSkir()),
             listOf(candidate),
             testEngineInputs(),
         ) shouldBe
@@ -46,7 +48,7 @@ val PublicationComparisonTest by testSuite {
                     testEngineInputs(),
                 ).shouldBeInstanceOf<PublicationComparison.Changed>()
                 .delta.allChanges shouldBe
-                listOf(PublicationChange.RootUpdatedWrapper(original.root.toSkir()))
+                listOf(PublicationChange.RootUpdatedWrapper(original.root))
         }
     }
     test("token changes are meaningful even with no roots") {
@@ -55,7 +57,11 @@ val PublicationComparisonTest by testSuite {
             .between(
                 selected,
                 emptyList(),
-                EngineImplementationInputs(InputToken("new")),
+                EngineImplementationInputs(
+                    token =
+                        skirout.editor.v1.type_catalog
+                            .InputToken(value = "new"),
+                ),
             ).shouldBeInstanceOf<PublicationComparison.Changed>()
             .delta.allChanges shouldBe
             listOf(PublicationChange.REQUIREMENTS_CHANGED)
@@ -86,14 +92,14 @@ val PublicationComparisonTest by testSuite {
             setOf(fresh.root, pending),
             testEngineInputs(),
         ) shouldBe
-            listOf(PublicationChange.RootAddedWrapper(fresh.root.toSkir()), PublicationChange.RootRemovedWrapper(old.root.toSkir()))
+            listOf(PublicationChange.RootAddedWrapper(fresh.root), PublicationChange.RootRemovedWrapper(old.root))
     }
     test("a release delta is nonempty and lists each change once") {
         shouldThrow<IllegalArgumentException> { publicationDelta(emptyList()) }
         shouldThrow<IllegalArgumentException> {
             publicationDelta(listOf(PublicationChange.REQUIREMENTS_CHANGED, PublicationChange.REQUIREMENTS_CHANGED))
         }
-        val root = comparisonArtifact().root.toSkir()
+        val root = comparisonArtifact().root
         publicationDelta(listOf(PublicationChange.RootAddedWrapper(root), PublicationChange.REQUIREMENTS_CHANGED))
             .allChanges shouldBe listOf(PublicationChange.RootAddedWrapper(root), PublicationChange.REQUIREMENTS_CHANGED)
     }
@@ -101,7 +107,7 @@ val PublicationComparisonTest by testSuite {
 
 private fun comparisonArtifact(id: String = "root") =
     CompiledArtifact(
-        CompilationRoot(CompilationProjectionId("fixture"), ResourceId(id)),
+        CompilationRoot(projection = CompilationProjectionId(value = "fixture"), resource = ResourceId(id).toSkir()),
         2,
         "application/fixture",
         ContentDigest("1".repeat(64)),
@@ -111,14 +117,21 @@ private fun comparisonArtifact(id: String = "root") =
 
 private fun comparisonSelected(artifact: CompiledArtifact) =
     PublishedContent(
-        PublicationId("selected"),
-        com.typewritermc.engine.PUBLISHED_CONTENT_FORMAT_REVISION,
-        CatalogGeneration("catalog"),
-        "implementation",
-        listOf(
-            PublishedOutput(
-                CompiledArtifactReference(artifact.root, artifact.formatRevision, artifact.mediaType, artifact.semanticDigest),
-                CompiledBlobPointer(ContentDigest("2".repeat(64)), 1),
+        publication = PublicationId(value = "selected"),
+        formatRevision = com.typewritermc.engine.PUBLISHED_CONTENT_FORMAT_REVISION,
+        catalog = CatalogGeneration("catalog").toSkir(),
+        implementationToken = "implementation",
+        outputs =
+            listOf(
+                PublishedOutput(
+                    reference =
+                        CompiledArtifactReference(
+                            root = artifact.root,
+                            formatRevision = artifact.formatRevision,
+                            mediaType = artifact.mediaType,
+                            semanticDigest = artifact.semanticDigest.value,
+                        ),
+                    blob = CompiledBlobPointer(digest = ContentDigest("2".repeat(64)).value, size = 1),
+                ),
             ),
-        ),
     )

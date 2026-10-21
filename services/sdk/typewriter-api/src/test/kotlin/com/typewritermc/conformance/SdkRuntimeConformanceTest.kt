@@ -12,6 +12,8 @@ import com.typewritermc.authoring.GeneratedSdkApi
 import com.typewritermc.authoring.NativeBindingId
 import com.typewritermc.authoring.PortableValue
 import com.typewritermc.authoring.complete
+import com.typewritermc.authoring.of
+import com.typewritermc.authoring.root
 import com.typewritermc.checking.CatalogGeneration
 import com.typewritermc.checking.PartialSelection
 import com.typewritermc.checking.TypedSelection
@@ -34,7 +36,6 @@ import com.typewritermc.discovery.OwnedTypeDeclaration
 import com.typewritermc.discovery.ProviderOrigin
 import com.typewritermc.discovery.assemble
 import com.typewritermc.discovery.contributionKey
-import com.typewritermc.discovery.immutableCopy
 import com.typewritermc.expression.DefaultExpressionEvaluator
 import com.typewritermc.expression.EvaluationBudget
 import com.typewritermc.expression.EvaluationDiagnostic
@@ -86,6 +87,7 @@ import de.infix.testBalloon.framework.core.testSuite
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.matchers.shouldBe
 import skirout.editor.v1.catalog.PresentationMaterial
+import skirout.editor.v1.diagnostic.DiagnosticSeverity
 import skirout.editor.v1.expression.ExpressionNode
 import skirout.editor.v1.type_catalog.DataValue
 import skirout.editor.v1.type_catalog.DeclarationOwner
@@ -95,6 +97,7 @@ import skirout.editor.v1.type_catalog.FieldOwner
 import skirout.editor.v1.type_catalog.FloatWidth
 import skirout.editor.v1.type_catalog.IntegerWidth
 import skirout.editor.v1.type_catalog.ParameterKey
+import skirout.editor.v1.type_catalog.PathSegment
 import skirout.editor.v1.type_catalog.RepresentationTemplate
 import skirout.editor.v1.type_catalog.ResolvedRepresentation
 import skirout.editor.v1.type_catalog.RuleId
@@ -105,6 +108,8 @@ import skirout.editor.v1.type_catalog.TypeDefinitionId
 import skirout.editor.v1.type_catalog.TypeParameter
 import skirout.editor.v1.type_catalog.TypeTemplate
 import skirout.editor.v1.type_catalog.TypeUse
+import skirout.editor.v1.type_catalog.ValueLocation
+import skirout.editor.v1.type_catalog.ValuePath
 import kotlin.reflect.KClass
 
 val SdkRuntimeConformanceTest by testSuite {
@@ -121,9 +126,9 @@ val SdkRuntimeConformanceTest by testSuite {
                 .where { title eq literal("Requested") }
         val predicate = requireNotNull(selection.predicate)
         val location =
-            com.typewritermc.authoring.ValueLocation(
+            ValueLocation.of(
                 ResourceId("book:requested"),
-                com.typewritermc.authoring.ValuePath(),
+                ValuePath.root,
             )
         val evaluator = DefaultExpressionEvaluator(ExpressionValueReader { DataValue.StringValueWrapper("Requested").available() })
 
@@ -136,18 +141,16 @@ val SdkRuntimeConformanceTest by testSuite {
         }
     }
 
-    fun localNode(path: com.typewritermc.authoring.ValuePath) =
+    fun localNode(path: ValuePath) =
         ExpressionNode.createLocal(
             depth = 0,
             slot = 0,
             path =
-                com.typewritermc.types.skir.SkirAuthoringValueCodec
-                    .encode(path)
-                    .getOrThrow(),
+            path,
         )
 
     test("portable evaluation short circuits fallback and preserves named scalar semantics") {
-        val location = com.typewritermc.authoring.ValueLocation(ResourceId("expression:test"), com.typewritermc.authoring.ValuePath())
+        val location = ValueLocation.of(ResourceId("expression:test"))
         val binding = ExpressionBindingId("value")
         var reads = 0
         var result: Availability<DataValue> = Availability.Unavailable(listOf(location))
@@ -160,7 +163,7 @@ val SdkRuntimeConformanceTest by testSuite {
             )
         val bindings = ExpressionBindings(mapOf(binding to location))
         val budget = EvaluationBudget(100, 100)
-        val read = testInput(binding, com.typewritermc.authoring.ValuePath())
+        val read = testInput(binding, ValuePath.root)
 
         with(EmptyReads) {
             evaluator.evaluate(
@@ -456,7 +459,7 @@ val SdkRuntimeConformanceTest by testSuite {
     }
 
     test("collection evaluation uses semantic equality propagates unfinished members and counts visited items") {
-        val location = com.typewritermc.authoring.ValueLocation(ResourceId("collection:test"), com.typewritermc.authoring.ValuePath())
+        val location = ValueLocation.of(ResourceId("collection:test"))
         val binding = ExpressionBindingId("items")
         val item = ExpressionBindingId("item")
         var value: DataValue =
@@ -478,7 +481,7 @@ val SdkRuntimeConformanceTest by testSuite {
             )
         val evaluator = DefaultExpressionEvaluator(ExpressionValueReader { value.available() })
         val bindings = ExpressionBindings(mapOf(binding to location))
-        val input = testInput(binding, com.typewritermc.authoring.ValuePath())
+        val input = testInput(binding, ValuePath.root)
         with(EmptyReads) {
             evaluator.evaluate(
                 ExpressionNode.createRuleUnary(operation = skirout.editor.v1.expression.RuleUnaryOperation.UNIQUE, source = input),
@@ -497,7 +500,7 @@ val SdkRuntimeConformanceTest by testSuite {
                     ),
                 )
             evaluator.evaluate(
-                ExpressionNode.createUniqueBy(source = input, body = localNode(com.typewritermc.authoring.ValuePath())),
+                ExpressionNode.createUniqueBy(source = input, body = localNode(ValuePath.root)),
                 bindings,
                 EvaluationBudget(100, 10),
             ) shouldBe
@@ -505,14 +508,15 @@ val SdkRuntimeConformanceTest by testSuite {
                     listOf(
                         location.copy(
                             path =
-                                com.typewritermc.authoring.ValuePath(
-                                    listOf(
-                                        com.typewritermc.authoring.PathSegment
-                                            .Item(
-                                                skirout.editor.v1.type_catalog
-                                                    .ItemId(value = "unfinished"),
+                                ValuePath(
+                                    segments =
+                                        listOf(
+                                            PathSegment.createItem(
+                                                id =
+                                                    skirout.editor.v1.type_catalog
+                                                        .ItemId(value = "unfinished"),
                                             ),
-                                    ),
+                                        ),
                                 ),
                         ),
                     ),
@@ -567,11 +571,11 @@ val SdkRuntimeConformanceTest by testSuite {
                     source = input,
                     body =
                         localNode(
-                            com.typewritermc.authoring.ValuePath(
-                                listOf(
-                                    com.typewritermc.authoring.PathSegment
-                                        .Field("valid"),
-                                ),
+                            ValuePath(
+                                segments =
+                                    listOf(
+                                        PathSegment.createField(name = "valid"),
+                                    ),
                             ),
                         ),
                 ),
@@ -582,16 +586,16 @@ val SdkRuntimeConformanceTest by testSuite {
                     listOf(
                         location.copy(
                             path =
-                                com.typewritermc.authoring.ValuePath(
-                                    listOf(
-                                        com.typewritermc.authoring.PathSegment
-                                            .Item(
-                                                skirout.editor.v1.type_catalog
-                                                    .ItemId(value = "unfinished"),
+                                ValuePath(
+                                    segments =
+                                        listOf(
+                                            PathSegment.createItem(
+                                                id =
+                                                    skirout.editor.v1.type_catalog
+                                                        .ItemId(value = "unfinished"),
                                             ),
-                                        com.typewritermc.authoring.PathSegment
-                                            .Field("valid"),
-                                    ),
+                                            PathSegment.createField(name = "valid"),
+                                        ),
                                 ),
                         ),
                     ),
@@ -615,7 +619,7 @@ val SdkRuntimeConformanceTest by testSuite {
                     ),
                 )
             evaluator.evaluate(
-                ExpressionNode.createAny(source = input, body = localNode(com.typewritermc.authoring.ValuePath())),
+                ExpressionNode.createAny(source = input, body = localNode(ValuePath.root)),
                 bindings,
                 EvaluationBudget(100, 1),
             ) shouldBe Availability.Available(DataValue.BooleanWrapper(true))
@@ -623,11 +627,11 @@ val SdkRuntimeConformanceTest by testSuite {
     }
 
     test("map access preserves named key identity and retains unfinished key uncertainty") {
-        val location = com.typewritermc.authoring.ValueLocation(ResourceId("map:test"), com.typewritermc.authoring.ValuePath())
+        val location = ValueLocation.of(ResourceId("map:test"))
         val binding = ExpressionBindingId("map")
         var value: DataValue = DataValue.mapValue(emptyList())
         val evaluator = DefaultExpressionEvaluator(ExpressionValueReader { value.available() })
-        val input = testInput(binding, com.typewritermc.authoring.ValuePath())
+        val input = testInput(binding, ValuePath.root)
 
         fun access(key: DataValue) = ExpressionNode.createCollectionAccess(source = input, index = testLiteral(key))
 
@@ -674,28 +678,30 @@ val SdkRuntimeConformanceTest by testSuite {
                     listOf(
                         location.copy(
                             path =
-                                com.typewritermc.authoring.ValuePath(
-                                    listOf(
-                                        com.typewritermc.authoring.PathSegment
-                                            .Item(
-                                                skirout.editor.v1.type_catalog
-                                                    .ItemId(value = "target"),
+                                ValuePath(
+                                    segments =
+                                        listOf(
+                                            PathSegment.createItem(
+                                                id =
+                                                    skirout.editor.v1.type_catalog
+                                                        .ItemId(value = "target"),
                                             ),
-                                        com.typewritermc.authoring.PathSegment.MapValue,
-                                    ),
+                                            PathSegment.MAP_VALUE,
+                                        ),
                                 ),
                         ),
                         location.copy(
                             path =
-                                com.typewritermc.authoring.ValuePath(
-                                    listOf(
-                                        com.typewritermc.authoring.PathSegment
-                                            .Item(
-                                                skirout.editor.v1.type_catalog
-                                                    .ItemId(value = "unfinished"),
+                                ValuePath(
+                                    segments =
+                                        listOf(
+                                            PathSegment.createItem(
+                                                id =
+                                                    skirout.editor.v1.type_catalog
+                                                        .ItemId(value = "unfinished"),
                                             ),
-                                        com.typewritermc.authoring.PathSegment.MapKey,
-                                    ),
+                                            PathSegment.MAP_KEY,
+                                        ),
                                 ),
                         ),
                     ),
@@ -760,15 +766,16 @@ val SdkRuntimeConformanceTest by testSuite {
                     listOf("first", "second").map { id ->
                         location.copy(
                             path =
-                                com.typewritermc.authoring.ValuePath(
-                                    listOf(
-                                        com.typewritermc.authoring.PathSegment
-                                            .Item(
-                                                skirout.editor.v1.type_catalog
-                                                    .ItemId(value = id),
+                                ValuePath(
+                                    segments =
+                                        listOf(
+                                            PathSegment.createItem(
+                                                id =
+                                                    skirout.editor.v1.type_catalog
+                                                        .ItemId(value = id),
                                             ),
-                                        com.typewritermc.authoring.PathSegment.MapValue,
-                                    ),
+                                            PathSegment.MAP_VALUE,
+                                        ),
                                 ),
                         )
                     },
@@ -844,7 +851,7 @@ val SdkRuntimeConformanceTest by testSuite {
                 .single()
                 .descriptor.predicate
         val configured = ExpressionBindingId("configured_value")
-        val location = com.typewritermc.authoring.ValueLocation(ResourceId("counter:1"), com.typewritermc.authoring.ValuePath())
+        val location = ValueLocation.of(ResourceId("counter:1"))
         val evaluator = DefaultExpressionEvaluator(ExpressionValueReader { DataValue.integer(5.toBigInteger()).available() })
         with(EmptyReads) {
             evaluator.evaluate(rule, ExpressionBindings(mapOf(configured to location)), EvaluationBudget(100, 100)) shouldBe
@@ -1393,7 +1400,7 @@ val SdkRuntimeConformanceTest by testSuite {
                     com.typewritermc.checking.DiagnosticTemplate(
                         "valid",
                         "valid",
-                        com.typewritermc.checking.DiagnosticSeverity.Error,
+                        DiagnosticSeverity.ERROR,
                         mutableListOf(RelativeFieldPattern()),
                     ),
                 ),
@@ -1637,10 +1644,10 @@ private fun fieldPresentationMaterial(
     val binding =
         skirout.editor.v1.binding.BindingRef(
             path =
-                skirout.editor.v1.type_catalog.ValuePath(
+                ValuePath(
                     segments =
                         listOf(
-                            skirout.editor.v1.type_catalog.PathSegment.FieldWrapper(
+                            PathSegment.FieldWrapper(
                                 skirout.editor.v1.type_catalog
                                     .FieldPathSegment(name = "value"),
                             ),

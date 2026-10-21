@@ -1,5 +1,7 @@
 package com.typewritermc.presentation
 
+import com.typewritermc.authoring.field
+import com.typewritermc.authoring.root
 import com.typewritermc.checking.CatalogGeneration
 import com.typewritermc.types.qualified
 import de.infix.testBalloon.framework.core.testSuite
@@ -226,7 +228,7 @@ val FieldPresentationInferenceTest by testSuite {
                                     binding =
                                         BindingRef(
                                             bindingId = ExpressionBindingId(value = "alias"),
-                                            path = ValuePath(segments = emptyList()),
+                                            path = ValuePath.root,
                                         ),
                                 ),
                         ),
@@ -270,7 +272,7 @@ val FieldPresentationInferenceTest by testSuite {
     }
 
     test("an alias to the owner record can still select the owned field") {
-        val rootBinding = BindingRef(bindingId = ExpressionBindingId(value = "configured_value"), path = ValuePath(segments = emptyList()))
+        val rootBinding = BindingRef(bindingId = ExpressionBindingId(value = "configured_value"), path = ValuePath.root)
         val aliased =
             fieldNode("name").copy(
                 element =
@@ -451,7 +453,7 @@ val FieldPresentationInferenceTest by testSuite {
                                     binding =
                                         BindingRef(
                                             bindingId = ExpressionBindingId(value = "owned"),
-                                            path = ValuePath(segments = emptyList()),
+                                            path = ValuePath.root,
                                         ),
                                 ),
                         ),
@@ -532,7 +534,7 @@ val FieldPresentationInferenceTest by testSuite {
         val control = fieldControl("name")
         listOf(
             control.binding.copy(bindingId = ExpressionBindingId(value = "list_item")),
-            control.binding.copy(path = ValuePath(segments = emptyList())),
+            control.binding.copy(path = ValuePath.root),
             control.binding.copy(
                 path = ValuePath(segments = listOf(PathSegment.createField(name = "nested"), PathSegment.createField(name = "name"))),
             ),
@@ -717,7 +719,7 @@ private fun fieldControl(field: String): BoundControl =
         binding =
             BindingRef(
                 bindingId = ExpressionBindingId(value = "configured_value"),
-                path = ValuePath(segments = listOf(PathSegment.createField(name = field))),
+                path = ValuePath.root.field(field),
             ),
     )
 

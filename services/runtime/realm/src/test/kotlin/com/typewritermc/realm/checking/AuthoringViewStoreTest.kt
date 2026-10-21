@@ -2,15 +2,14 @@
 
 package com.typewritermc.realm.checking
 
-import com.typewritermc.authoring.AuthoringRecord
 import com.typewritermc.authoring.GeneratedSdkApi
-import com.typewritermc.authoring.PathSegment
-import com.typewritermc.authoring.TypeSelection
-import com.typewritermc.authoring.ValueLocation
-import com.typewritermc.authoring.ValuePath
 import com.typewritermc.authoring.append
 import com.typewritermc.authoring.boundCollectionPath
 import com.typewritermc.authoring.boundPath
+import com.typewritermc.authoring.field
+import com.typewritermc.authoring.fieldMap
+import com.typewritermc.authoring.of
+import com.typewritermc.authoring.root
 import com.typewritermc.checking.CatalogGeneration
 import com.typewritermc.checking.InputIdentity
 import com.typewritermc.checking.InputToken
@@ -52,6 +51,7 @@ import com.typewritermc.types.use
 import de.infix.testBalloon.framework.core.testSuite
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.matchers.shouldBe
+import skirout.editor.v1.type_catalog.AuthoringRecord
 import skirout.editor.v1.type_catalog.CollectionKind
 import skirout.editor.v1.type_catalog.DataValue
 import skirout.editor.v1.type_catalog.FieldDeclaration
@@ -60,12 +60,16 @@ import skirout.editor.v1.type_catalog.IntegerWidth
 import skirout.editor.v1.type_catalog.ItemId
 import skirout.editor.v1.type_catalog.ListItem
 import skirout.editor.v1.type_catalog.ParameterKey
+import skirout.editor.v1.type_catalog.PathSegment
 import skirout.editor.v1.type_catalog.RepresentationTemplate
 import skirout.editor.v1.type_catalog.ScalarKind
 import skirout.editor.v1.type_catalog.TypeDefinition
 import skirout.editor.v1.type_catalog.TypeDefinitionId
 import skirout.editor.v1.type_catalog.TypeParameter
+import skirout.editor.v1.type_catalog.TypeSelection
 import skirout.editor.v1.type_catalog.TypeUse
+import skirout.editor.v1.type_catalog.ValueLocation
+import skirout.editor.v1.type_catalog.ValuePath
 import java.math.BigInteger
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.Executors
@@ -83,13 +87,13 @@ val AuthoringViewStoreTest by testSuite {
                     (
                         working.resources
                             .getValue(id)
-                            .fields
+                            .fieldMap
                             .getValue("name") as DataValue.StringValueWrapper
                     ).value shouldBe "Draft"
                     (
                         saved.root.resources
                             .getValue(id)
-                            .fields
+                            .fieldMap
                             .getValue("name") as DataValue.StringValueWrapper
                     ).value shouldBe "Saved"
                     saved.root.observationId
@@ -182,7 +186,7 @@ val AuthoringViewStoreTest by testSuite {
                 "count" to DataValue.integer(BigInteger.ONE),
                 "numbers" to DataValue.named(LIST_TYPE.namedUse(rootArguments), DataValue.listValue(rootItems)),
             )
-        val seed = mutableMapOf(id to AuthoringRecord(TypeSelection.Complete(TEST_TYPE.namedUse()), rootFields))
+        val seed = mutableMapOf(id to AuthoringRecord.of(TypeSelection.CompleteWrapper(TEST_TYPE.namedUse()), rootFields))
         val store = InMemoryAuthoringViewStore(TestCatalogLease(), AuthoringSeed(seed))
 
         seed.clear()
@@ -192,8 +196,8 @@ val AuthoringViewStoreTest by testSuite {
 
         store.capture().use { lease ->
             val retained = lease.root.resources.getValue(id)
-            retained.fields.getValue("name") shouldBe DataValue.StringValueWrapper("Quest")
-            val retainedNumbers = retained.fields.getValue("numbers") as DataValue.NamedWrapper
+            retained.fieldMap.getValue("name") shouldBe DataValue.StringValueWrapper("Quest")
+            val retainedNumbers = retained.fieldMap.getValue("numbers") as DataValue.NamedWrapper
             retainedNumbers.actualType.arguments shouldBe listOf(INT_USE)
             (retainedNumbers.payload as DataValue.ListValueWrapper).items.map(ListItem::id) shouldBe listOf(ItemId(value = "root"))
             shouldThrow<UnsupportedOperationException> {
@@ -210,15 +214,15 @@ val AuthoringViewStoreTest by testSuite {
                     "count" to DataValue.integer(BigInteger.TWO),
                     "numbers" to DataValue.named(LIST_USE, DataValue.listValue(stagedItems)),
                 )
-            val upserts = mutableMapOf(id to AuthoringRecord(TypeSelection.Complete(TEST_TYPE.namedUse()), stagedFields))
+            val upserts = mutableMapOf(id to AuthoringRecord.of(TypeSelection.CompleteWrapper(TEST_TYPE.namedUse()), stagedFields))
             val staged = lease.stagedView(upserts)
             upserts.clear()
             stagedFields["name"] = DataValue.StringValueWrapper("Changed")
             stagedItems.clear()
 
             val retainedStaged = staged.resources.getValue(id)
-            retainedStaged.fields.getValue("name") shouldBe DataValue.StringValueWrapper("Story")
-            val stagedNumbers = retainedStaged.fields.getValue("numbers") as DataValue.NamedWrapper
+            retainedStaged.fieldMap.getValue("name") shouldBe DataValue.StringValueWrapper("Story")
+            val stagedNumbers = retainedStaged.fieldMap.getValue("numbers") as DataValue.NamedWrapper
             (stagedNumbers.payload as DataValue.ListValueWrapper).items.map(ListItem::id) shouldBe listOf(ItemId(value = "staged"))
             // Skir data values are deeply immutable as well.
             ((stagedNumbers.payload as DataValue.ListValueWrapper).items is MutableList<*>) shouldBe false
@@ -300,7 +304,7 @@ internal class TestCatalogLease private constructor(
     override val checked: CheckedCatalog = DefaultCheckedCatalog(generation, definitions)
     override val nativeBindings: NativeBindingRegistry = FactoryNativeBindingRegistry(checked, nativeBindingFactories)
     override val operations = com.typewritermc.operations.OperationCatalog()
-    override val placementFields = emptyMap<TypeDefinitionId, com.typewritermc.authoring.ValuePath>()
+    override val placementFields = emptyMap<TypeDefinitionId, ValuePath>()
     internal val openCount: Int get() = state.open.get()
 
     override fun retain(): AuthoringCatalogLease {
@@ -344,8 +348,8 @@ internal fun record(
     count: Int = 1,
     numbers: List<Pair<String, Int>> = emptyList(),
 ): AuthoringRecord =
-    AuthoringRecord(
-        configuration = TypeSelection.Complete(TEST_TYPE.namedUse()),
+    AuthoringRecord.of(
+        configuration = TypeSelection.CompleteWrapper(TEST_TYPE.namedUse()),
         fields =
             mapOf(
                 "name" to DataValue.StringValueWrapper(name),
@@ -369,11 +373,11 @@ internal fun tokensFor(
 ): Map<InputIdentity, InputToken> {
     val identities = linkedSetOf<InputIdentity>(RESOURCE_SELECTION_INPUT, InputIdentity.Catalog(generation))
     resources.forEach { (resource, record) ->
-        val root = ValueLocation(resource, ValuePath())
+        val root = ValueLocation.of(resource)
         identities += InputIdentity.Existence(resource)
         identities += InputIdentity.Form(root)
         identities += InputIdentity.Value(root)
-        record.fields.forEach { (name, value) -> collectTokens(value, root.append(PathSegment.Field(name)), identities) }
+        record.fields.forEach { field -> collectTokens(field.value, root.field(field.name), identities) }
     }
     return identities.withIndex().associate { (index, identity) -> identity to InputToken("$prefix:$index") }
 }
@@ -388,17 +392,17 @@ internal fun collectTokens(
         is DataValue.ListValueWrapper -> {
             identities += InputIdentity.Membership(at)
             identities += InputIdentity.Order(at)
-            value.items.forEach { collectTokens(it.value, at.append(PathSegment.Item(it.id)), identities) }
+            value.items.forEach { collectTokens(it.value, at.append(PathSegment.createItem(id = it.id)), identities) }
         }
 
         is DataValue.SetValueWrapper -> {
             identities += InputIdentity.Membership(at)
             identities += InputIdentity.Order(at)
-            value.items.forEach { collectTokens(it.value, at.append(PathSegment.Item(it.id)), identities) }
+            value.items.forEach { collectTokens(it.value, at.append(PathSegment.createItem(id = it.id)), identities) }
         }
 
         is DataValue.RecordWrapper -> {
-            value.fields.forEach { field -> collectTokens(field.value, at.append(PathSegment.Field(field.name)), identities) }
+            value.fields.forEach { field -> collectTokens(field.value, at.append(PathSegment.createField(name = field.name)), identities) }
         }
 
         is DataValue.NamedWrapper -> {
@@ -410,8 +414,8 @@ internal fun collectTokens(
             identities += InputIdentity.Membership(at)
             identities += InputIdentity.Order(at)
             value.rows.forEach { row ->
-                collectTokens(row.key, at.append(PathSegment.Item(row.id), PathSegment.MapKey), identities)
-                collectTokens(row.value, at.append(PathSegment.Item(row.id), PathSegment.MapValue), identities)
+                collectTokens(row.key, at.append(PathSegment.createItem(id = row.id), PathSegment.MAP_KEY), identities)
+                collectTokens(row.value, at.append(PathSegment.createItem(id = row.id), PathSegment.MAP_VALUE), identities)
             }
         }
 
@@ -424,7 +428,7 @@ internal fun collectTokens(
 internal fun location(
     resource: ResourceId,
     field: String,
-): ValueLocation = ValueLocation(resource, ValuePath(listOf(PathSegment.Field(field))))
+): ValueLocation = ValueLocation.of(resource, ValuePath.root.field(field))
 
 internal fun <T> com.typewritermc.authoring.Availability<T>.available(): T =
     (this as com.typewritermc.authoring.Availability.Available).value

@@ -1,33 +1,25 @@
 package com.typewritermc.realm.routes
 
-import com.typewritermc.authoring.ArgumentSelection
-import com.typewritermc.authoring.AuthoringRecord
-import com.typewritermc.authoring.CheckExecutionId
 import com.typewritermc.authoring.CommitResult
 import com.typewritermc.authoring.EditExpectation
 import com.typewritermc.authoring.EditIntent
 import com.typewritermc.authoring.PreparedEdit
 import com.typewritermc.authoring.PreparedEditResult
-import com.typewritermc.authoring.TypeSelection
-import com.typewritermc.authoring.ValueLocation
-import com.typewritermc.authoring.ValuePath
+import com.typewritermc.authoring.of
+import com.typewritermc.authoring.root
 import com.typewritermc.authoring.skir.SkirAuthoringOperationCodec
 import com.typewritermc.checking.CatalogGeneration
-import com.typewritermc.checking.CheckOutcome
 import com.typewritermc.checking.InputIdentity
+import com.typewritermc.checking.toSkir
 import com.typewritermc.realm.authoring.AuthoringLease
 import com.typewritermc.realm.authoring.AuthoringSeed
 import com.typewritermc.realm.authoring.AuthoringViewDelta
 import com.typewritermc.realm.authoring.AuthoringViewStore
 import com.typewritermc.realm.authoring.InMemoryAuthoringViewStore
-import com.typewritermc.realm.authoring.TypeArgumentChangePreview
 import com.typewritermc.realm.authoring.TypeArgumentOperations
 import com.typewritermc.realm.authoring.TypePreviewResult
 import com.typewritermc.realm.catalog.RealmCatalogStore
 import com.typewritermc.realm.catalog.installTestCatalog
-import com.typewritermc.realm.checking.CheckInstanceId
-import com.typewritermc.realm.checking.CheckTicket
-import com.typewritermc.realm.checking.FindingSet
 import com.typewritermc.realm.checking.TestCatalogLease
 import com.typewritermc.realm.checking.record
 import com.typewritermc.realm.repository.AuthoringRepository
@@ -35,8 +27,9 @@ import com.typewritermc.services.libs.communicator.router.communicatorRoutes
 import com.typewritermc.types.ResourceId
 import com.typewritermc.types.namedUse
 import com.typewritermc.types.qualified
-import com.typewritermc.types.skir.SkirAuthoringValueCodec
+import com.typewritermc.types.requireValid
 import com.typewritermc.types.skir.getOrThrow
+import com.typewritermc.types.toSkir
 import de.infix.testBalloon.framework.core.testSuite
 import io.kotest.matchers.shouldBe
 import kotlinx.coroutines.test.runTest
@@ -45,9 +38,19 @@ import skirout.editor.v1.authoring.PreviewTypeArgumentChangeRequest
 import skirout.editor.v1.authoring.PreviewTypeArgumentChangeResponse
 import skirout.editor.v1.authoring.QueryAuthoringStateRequest
 import skirout.editor.v1.authoring.QueryAuthoringStateResponse
+import skirout.editor.v1.authoring.TypeArgumentChangePreview
+import skirout.editor.v1.checking.CheckInstanceId
+import skirout.editor.v1.checking.CheckOutcome
+import skirout.editor.v1.checking.CheckTicket
+import skirout.editor.v1.checking.FindingSet
 import skirout.editor.v1.checking.FindingStatus
+import skirout.editor.v1.type_catalog.ArgumentSelection
+import skirout.editor.v1.type_catalog.AuthoringRecord
+import skirout.editor.v1.type_catalog.CheckExecutionId
 import skirout.editor.v1.type_catalog.DataValue
 import skirout.editor.v1.type_catalog.TypeDefinitionId
+import skirout.editor.v1.type_catalog.TypeSelection
+import skirout.editor.v1.type_catalog.ValueLocation
 import skirout.editor.v1.authoring.AuthoringState as SkirAuthoringState
 import skirout.editor.v1.authoring.EditIntent as SkirEditIntent
 import skirout.editor.v1.authoring_facts.EditExpectation as SkirEditExpectation
@@ -68,29 +71,30 @@ val AuthoringRoutesTest by testSuite {
                     catalogs.captureCurrent(),
                     AuthoringSeed(emptyMap()),
                 )
-            val missing = com.typewritermc.authoring.ValueLocation(ResourceId("resource"), com.typewritermc.authoring.ValuePath())
+            val missing = ValueLocation.of(ResourceId("resource"))
             val finding =
                 FindingSet(
                     ticket =
                         CheckTicket(
                             instance =
                                 CheckInstanceId(
-                                    skirout.editor.v1.type_catalog.RuleId(
-                                        origin =
-                                            skirout.editor.v1.type_catalog.RuleOrigin(
-                                                owner = TypeDefinitionId.qualified("test", "rule"),
-                                                ordinal = 3,
-                                            ),
-                                        localIndex = 7,
-                                    ),
-                                    missing,
+                                    rule =
+                                        skirout.editor.v1.type_catalog.RuleId(
+                                            origin =
+                                                skirout.editor.v1.type_catalog.RuleOrigin(
+                                                    owner = TypeDefinitionId.qualified("test", "rule"),
+                                                    ordinal = 3,
+                                                ),
+                                            localIndex = 7,
+                                        ),
+                                    location = missing,
                                 ),
                             incarnation = "catalog:1",
-                            execution = CheckExecutionId("execution:1"),
-                            catalog = CatalogGeneration("catalog"),
+                            execution = CheckExecutionId(value = "execution:1"),
+                            catalog = CatalogGeneration("catalog").toSkir(),
                         ),
                     expectations = emptyList(),
-                    outcome = CheckOutcome.NeedsInput(listOf(missing)),
+                    outcome = CheckOutcome.NeedsInputWrapper(listOf(missing)),
                     findings = emptyList(),
                     status = FindingStatus.OUTDATED,
                 )
@@ -125,7 +129,7 @@ val AuthoringRoutesTest by testSuite {
                         .single()
                         .outcome shouldBe
                         SkirCheckOutcome.NeedsInputWrapper(
-                            listOf(SkirAuthoringValueCodec.encode(missing).getOrThrow()),
+                            listOf(missing),
                         )
                 }
             } finally {
@@ -243,7 +247,7 @@ val AuthoringRoutesTest by testSuite {
         runTest {
             val repository = RecordingAuthoringRepository()
             val encoded = validPreparedEditWire()
-            val configuration = SkirAuthoringValueCodec.encode(record()).getOrThrow().configuration
+            val configuration = record().configuration
             val duplicate =
                 SkirAuthoringRecord(
                     configuration = configuration,
@@ -288,7 +292,7 @@ val AuthoringRoutesTest by testSuite {
                     intents =
                         listOf(
                             SkirEditIntent.createSetValue(
-                                at = SkirAuthoringValueCodec.encode(ValueLocation(ResourceId("resource"), ValuePath())).getOrThrow(),
+                                at = ValueLocation.of(ResourceId("resource")),
                                 value = DataValue.createRecord(fields = duplicateWireFields()),
                             ),
                         ),
@@ -324,9 +328,9 @@ val AuthoringRoutesTest by testSuite {
                     AuthoringSeed(mapOf(resource to authored)),
                 )
             val requested =
-                TypeSelection.Pending(
-                    com.typewritermc.realm.checking.TEST_TYPE,
-                    listOf(ArgumentSelection.Unfilled),
+                TypeSelection.createPending(
+                    definition = com.typewritermc.realm.checking.TEST_TYPE,
+                    arguments = listOf(ArgumentSelection.UNFILLED),
                 )
             val typeArguments = RecordingTypeArgumentOperations()
             try {
@@ -346,7 +350,7 @@ val AuthoringRoutesTest by testSuite {
                             "editor.authoring.type.preview",
                             PreviewTypeArgumentChangeRequest(
                                 resource = SkirResourceId(value = resource.value),
-                                requested = SkirAuthoringValueCodec.encode(requested).getOrThrow(),
+                                requested = requested,
                                 catalog = SkirCatalogGeneration(value = catalog.generation.value),
                             ),
                             PreviewTypeArgumentChangeRequest.serializer,
@@ -355,7 +359,7 @@ val AuthoringRoutesTest by testSuite {
 
                     typeArguments.requested shouldBe requested
                     val ready = response
-                    SkirAuthoringValueCodec.decode(ready.value.next).getOrThrow() shouldBe requested
+                    ready.value.next.requireValid() shouldBe requested
                     val edit = SkirAuthoringOperationCodec.decode(ready.value.edit).getOrThrow()
                     edit.intents shouldBe listOf(EditIntent.ConfigureResource(resource, requested))
                 }
@@ -372,8 +376,8 @@ val AuthoringRoutesTest by testSuite {
             val available = ResourceId("available")
             val unavailableType = TypeDefinitionId.qualified("removed", "resource")
             val unavailableRecord =
-                AuthoringRecord(
-                    configuration = TypeSelection.Complete(unavailableType.namedUse()),
+                AuthoringRecord.of(
+                    configuration = TypeSelection.CompleteWrapper(unavailableType.namedUse()),
                     fields = mapOf("legacy" to DataValue.StringValueWrapper("preserved")),
                 )
             val resources = mapOf(unavailable to unavailableRecord, available to record(name = "book"))
@@ -402,7 +406,7 @@ val AuthoringRoutesTest by testSuite {
 
                     response.resources.map { it.id.value }.toSet() shouldBe setOf("available", "unavailable")
                     val unavailableWire = response.resources.single { it.id.value == unavailable.value }
-                    SkirAuthoringValueCodec.decode(unavailableWire.content).getOrThrow() shouldBe unavailableRecord
+                    unavailableWire.content.requireValid() shouldBe unavailableRecord
                 }
             } finally {
                 views.close()
@@ -450,21 +454,25 @@ private class RecordingTypeArgumentOperations : TypeArgumentOperations {
         this.requested = requested
         return TypePreviewResult.Ready(
             TypeArgumentChangePreview(
-                resource = resource,
+                resource = resource.toSkir(),
                 next = requested,
                 edit =
-                    PreparedEdit(
-                        catalog = snapshot.root.catalog.generation,
-                        expectations = emptyList(),
-                        intents = listOf(EditIntent.ConfigureResource(resource, requested)),
-                    ),
+                    SkirAuthoringOperationCodec
+                        .encode(
+                            PreparedEdit(
+                                catalog = snapshot.root.catalog.generation,
+                                expectations = emptyList(),
+                                intents = listOf(EditIntent.ConfigureResource(resource, requested)),
+                            ),
+                        ).getOrThrow(),
                 linkRepairs = emptyList(),
                 clearedLocations = emptyList(),
             ),
         )
     }
 
-    override suspend fun prepare(preview: TypeArgumentChangePreview): PreparedEditResult = PreparedEditResult.Prepared(preview.edit)
+    override suspend fun prepare(preview: TypeArgumentChangePreview): PreparedEditResult =
+        PreparedEditResult.Prepared(SkirAuthoringOperationCodec.decode(preview.edit).getOrThrow())
 }
 
 private data object MissingViewStore : AuthoringViewStore {

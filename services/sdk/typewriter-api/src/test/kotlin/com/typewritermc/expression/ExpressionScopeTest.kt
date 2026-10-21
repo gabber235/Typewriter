@@ -1,5 +1,6 @@
 package com.typewritermc.expression
 
+import com.typewritermc.authoring.root
 import com.typewritermc.types.listValue
 import de.infix.testBalloon.framework.core.testSuite
 import io.kotest.assertions.throwables.shouldThrow
@@ -57,7 +58,7 @@ val ExpressionScopeTest by testSuite {
             this
         }
         shouldThrow<IllegalArgumentException> { escaped.toNode() }
-        val local = ExpressionNode.createLocal(depth = 0, slot = 0, path = ValuePath(segments = emptyList()))
+        val local = ExpressionNode.createLocal(depth = 0, slot = 0, path = ValuePath.root)
         shouldThrow<IllegalArgumentException> { portableExpression<Int>(local) }
     }
 

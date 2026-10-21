@@ -3,7 +3,6 @@ package com.typewritermc.realm.checking
 import com.typewritermc.authoring.AuthoredReads
 import com.typewritermc.authoring.Availability
 import com.typewritermc.authoring.DraftBinding
-import com.typewritermc.authoring.ValueLocation
 import com.typewritermc.expression.DefaultExpressionEvaluator
 import com.typewritermc.expression.EvaluationBudget
 import com.typewritermc.expression.EvaluationDiagnostic
@@ -13,6 +12,7 @@ import com.typewritermc.expression.ExpressionValueReader
 import com.typewritermc.types.unwrapNamed
 import skirout.editor.v1.expression.ExpressionNode
 import skirout.editor.v1.type_catalog.DataValue
+import skirout.editor.v1.type_catalog.ValueLocation
 
 internal class RealmExpressionRuntime(
     private val budget: EvaluationBudget = EvaluationBudget(maxSteps = 100_000, maxCollectionItems = 100_000),

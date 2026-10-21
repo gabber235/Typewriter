@@ -1,6 +1,5 @@
 package com.typewritermc.discovery
 
-import com.typewritermc.checking.DiagnosticSeverity
 import com.typewritermc.checking.DiagnosticTemplate
 import com.typewritermc.configuration.ConfigurationRecipe
 import com.typewritermc.configuration.FieldPatternSegment
@@ -11,6 +10,7 @@ import com.typewritermc.types.qualified
 import de.infix.testBalloon.framework.core.testSuite
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.matchers.shouldBe
+import skirout.editor.v1.diagnostic.DiagnosticSeverity
 import skirout.editor.v1.expression.ExpressionNode
 import skirout.editor.v1.type_catalog.RuleId
 import skirout.editor.v1.type_catalog.RuleOrigin
@@ -26,7 +26,7 @@ val CatalogImmutabilityTest by testSuite {
                 OwnedRule(
                     RuleId(origin = origin, localIndex = 0),
                     RuleDescriptor(ExpressionNode.UNKNOWN),
-                    DiagnosticTemplate("code", "message", DiagnosticSeverity.Error, targets),
+                    DiagnosticTemplate("code", "message", DiagnosticSeverity.ERROR, targets),
                 ),
             )
         val source = ConfigurationRecipe(origin, RelativeFieldPattern(segments), null, rules)

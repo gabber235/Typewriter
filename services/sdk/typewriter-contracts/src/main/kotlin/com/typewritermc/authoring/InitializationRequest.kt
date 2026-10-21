@@ -1,12 +1,17 @@
 package com.typewritermc.authoring
 
 import com.typewritermc.checking.CatalogGeneration
-import com.typewritermc.types.skir.DataValueSerializer
-import com.typewritermc.types.skir.FieldOwnerSerializer
-import kotlinx.serialization.Serializable
+import com.typewritermc.types.immutableListCopy
+import com.typewritermc.types.immutableSetCopy
+import skirout.editor.v1.catalog.PreparedContent
+import skirout.editor.v1.catalog.PreparedValue
+import skirout.editor.v1.diagnostic.InitializationDiagnostic
+import skirout.editor.v1.type_catalog.AuthoringRecord
 import skirout.editor.v1.type_catalog.DataValue
-import skirout.editor.v1.type_catalog.FieldOwner
+import skirout.editor.v1.type_catalog.TypeSelection
 import skirout.editor.v1.type_catalog.TypeUse
+import skirout.editor.v1.type_catalog.ValueLocation
+import skirout.editor.v1.type_catalog.ValuePath
 
 data class InitializationRequest(
     val catalog: CatalogGeneration,
@@ -25,34 +30,7 @@ sealed interface PreparationTarget {
     ) : PreparationTarget
 }
 
-@Serializable
-sealed interface PreparedContent {
-    @Serializable
-    data class Value(
-        @Serializable(with = DataValueSerializer::class)
-        val value: DataValue,
-    ) : PreparedContent
-
-    @Serializable
-    data class Record(
-        val record: AuthoringRecord,
-    ) : PreparedContent
-}
-
-@Serializable
-data class PreparedValue(
-    val content: PreparedContent,
-    val findings: List<InitializationDiagnostic>,
-)
-
-@Serializable
-data class InitializationDiagnostic(
-    @Serializable(with = FieldOwnerSerializer::class)
-    val field: FieldOwner?,
-    val code: String,
-    val message: String,
-    val relativePath: ValuePath? = null,
-)
+val PreparedContent.RecordWrapper.record: AuthoringRecord get() = value
 
 /** A caller owned continuation of initialization, retaining evaluated values and deferred defaults. */
 data class PreparationDraft(
@@ -63,6 +41,14 @@ data class PreparationDraft(
     val requiredInputs: List<RequiredInput>,
     val findings: List<InitializationDiagnostic>,
 )
+
+/** Copies the Kotlin collections of this draft, so a continuation retains no caller supplied collection. */
+fun PreparationDraft.immutableCopy(): PreparationDraft =
+    copy(
+        pendingDefaults = pendingDefaults.immutableSetCopy(),
+        requiredInputs = requiredInputs.immutableListCopy(),
+        findings = findings.immutableListCopy(),
+    )
 
 data class RequiredInput(
     val path: ValuePath,
@@ -103,8 +89,8 @@ sealed interface PreparationStep {
 fun PreparationStep.materialize(): PreparedValue =
     when (this) {
         is PreparationStep.Ready -> value
-        is PreparationStep.NeedsInput -> PreparedValue(draft.content, draft.findings)
-        is PreparationStep.Unavailable -> PreparedValue(draft.content, draft.findings)
+        is PreparationStep.NeedsInput -> PreparedValue(content = draft.content, findings = draft.findings)
+        is PreparationStep.Unavailable -> PreparedValue(content = draft.content, findings = draft.findings)
     }
 
 data class LocatedInitializationDiagnostic(

@@ -1,10 +1,11 @@
 package com.typewritermc.realm.checking
 
 import com.typewritermc.authoring.EditExpectation
-import com.typewritermc.authoring.ValueLocation
-import com.typewritermc.authoring.ValuePath
+import com.typewritermc.authoring.of
 import com.typewritermc.checking.InputIdentity
 import com.typewritermc.realm.authoring.RESOURCE_SELECTION_INPUT
+import skirout.editor.v1.checking.CheckInstanceId
+import skirout.editor.v1.type_catalog.ValueLocation
 
 interface ObservationRecorder {
     fun observe(expectation: EditExpectation)
@@ -39,8 +40,8 @@ internal fun EditExpectation.dependencies(): Set<InputIdentity> =
         is EditExpectation.Resource -> {
             setOf(
                 InputIdentity.Existence(id),
-                InputIdentity.Form(ValueLocation(id, ValuePath())),
-                InputIdentity.Value(ValueLocation(id, ValuePath())),
+                InputIdentity.Form(ValueLocation.of(id)),
+                InputIdentity.Value(ValueLocation.of(id)),
             )
         }
 

@@ -9,9 +9,9 @@ import com.typewritermc.authoring.GraphPlacementDefinition
 import com.typewritermc.authoring.InitializationRequest
 import com.typewritermc.authoring.PlacementSdkProvider
 import com.typewritermc.authoring.PreparationTarget
-import com.typewritermc.authoring.PreparedContent
-import com.typewritermc.authoring.PreparedValue
-import com.typewritermc.authoring.TypeSelection
+import com.typewritermc.authoring.fieldMap
+import com.typewritermc.authoring.name
+import com.typewritermc.authoring.payload
 import com.typewritermc.checking.CatalogGeneration
 import com.typewritermc.discovery.GeneratedProviderIndex
 import com.typewritermc.discovery.GeneratedProviderKind
@@ -62,30 +62,34 @@ import com.typewritermc.types.payload
 import com.typewritermc.types.qualified
 import com.typewritermc.types.record
 import com.typewritermc.types.requirePortable
+import com.typewritermc.types.requireValid
 import com.typewritermc.types.setValue
-import com.typewritermc.types.skir.SkirAuthoringValueCodec
-import com.typewritermc.types.skir.getOrThrow
 import com.typewritermc.types.template
 import com.typewritermc.types.use
 import de.infix.testBalloon.framework.core.testSuite
 import io.kotest.matchers.collections.shouldHaveSize
 import io.kotest.matchers.shouldBe
+import skirout.editor.v1.catalog.PreparedContent
+import skirout.editor.v1.catalog.PreparedValue
 import skirout.editor.v1.catalog.PresentationRole
 import skirout.editor.v1.presentation.AxisChild
 import skirout.editor.v1.presentation.ChildrenElement
 import skirout.editor.v1.presentation.PresentationElement
 import skirout.editor.v1.presentation.PresentationHeaderTitle
 import skirout.editor.v1.presentation.PresentationNode
+import skirout.editor.v1.type_catalog.AuthoringRecord
 import skirout.editor.v1.type_catalog.DataValue
 import skirout.editor.v1.type_catalog.DeclarationOwner
 import skirout.editor.v1.type_catalog.FieldDeclaration
 import skirout.editor.v1.type_catalog.FieldOwner
 import skirout.editor.v1.type_catalog.NamedTypeUse
+import skirout.editor.v1.type_catalog.PathSegment
 import skirout.editor.v1.type_catalog.PresentationId
 import skirout.editor.v1.type_catalog.RepresentationTemplate
 import skirout.editor.v1.type_catalog.ScalarKind
 import skirout.editor.v1.type_catalog.TypeDefinition
 import skirout.editor.v1.type_catalog.TypeDefinitionId
+import skirout.editor.v1.type_catalog.TypeSelection
 import java.lang.reflect.Modifier
 import java.util.Collections
 import kotlin.reflect.KClass
@@ -241,17 +245,17 @@ val FrameworkCatalogCreationTest by testSuite {
                 "taxonomy",
             )
         val book = initializer.prepareNow(request(generation, BookDefinition.use, mapOf("library" to library)))
-        val icon = book.record.fields.getValue("icon") as DataValue.NamedWrapper
+        val icon = book.record.fieldMap.getValue("icon") as DataValue.NamedWrapper
         icon.actualType shouldBe IconIconifyDefinition.use
         book.findings shouldBe emptyList()
 
         val tag = initializer.prepareNow(request(generation, TagDefinition.use, mapOf("taxonomy" to taxonomy)))
         tag.findings shouldBe emptyList()
-        tag.record.fields.getValue("name") shouldBe DataValue.StringValueWrapper("")
-        (tag.record.fields.getValue("color") is DataValue.NamedWrapper) shouldBe true
-        val parents = tag.record.fields.getValue("parents") as DataValue.NamedWrapper
+        tag.record.fieldMap.getValue("name") shouldBe DataValue.StringValueWrapper("")
+        (tag.record.fieldMap.getValue("color") is DataValue.NamedWrapper) shouldBe true
+        val parents = tag.record.fieldMap.getValue("parents") as DataValue.NamedWrapper
         parents.payload shouldBe DataValue.setValue(emptyList())
-        val placement = tag.record.fields.getValue("placement") as DataValue.NamedWrapper
+        val placement = tag.record.fieldMap.getValue("placement") as DataValue.NamedWrapper
         placement.actualType shouldBe GraphPlacementDefinition.use
         placement.payload shouldBe
             DataValue.record(
@@ -545,7 +549,7 @@ val FrameworkCatalogCreationTest by testSuite {
                     (label.value as skirout.editor.v1.type_catalog.DataValue.StringValueWrapper).value
                 }
         placementPrefixes shouldBe listOf("X", "Y", "W", "H")
-        exportFrameworkControlFixture(tag.record, book.record, tag.record.fields.getValue("placement"))
+        exportFrameworkControlFixture(tag.record, book.record, tag.record.fieldMap.getValue("placement"))
     }
 }
 
@@ -701,14 +705,13 @@ private fun DataValue.at(path: WireValuePath): DataValue? {
     for (wireSegment in path.segments) {
         while (current is DataValue.NamedWrapper) current = current.payload
         val segment =
-            SkirAuthoringValueCodec
-                .decode(WireValuePath(segments = listOf(wireSegment)))
-                .getOrThrow()
+            (WireValuePath(segments = listOf(wireSegment)))
+                .requireValid()
                 .segments
                 .single()
         current =
             when (segment) {
-                is com.typewritermc.authoring.PathSegment.Field -> {
+                is PathSegment.FieldWrapper -> {
                     (current as? DataValue.RecordWrapper)?.field(segment.name)
                 }
 
@@ -737,12 +740,12 @@ private fun request(
     supplied: Map<String, DataValue> = emptyMap(),
 ) = InitializationRequest(
     catalog = generation,
-    target = PreparationTarget.Record(TypeSelection.Complete(use)),
+    target = PreparationTarget.Record(TypeSelection.CompleteWrapper(use)),
     supplied = DataValue.record(supplied),
 )
 
 private val PreparedValue.record
-    get() = (content as PreparedContent.Record).record
+    get() = (content as PreparedContent.RecordWrapper).value
 
 private fun origin(name: String): ProviderOrigin =
     ProviderOrigin(
@@ -762,8 +765,8 @@ private fun origin(name: String): ProviderOrigin =
     )
 
 private fun exportFrameworkControlFixture(
-    tag: com.typewritermc.authoring.AuthoringRecord,
-    book: com.typewritermc.authoring.AuthoringRecord,
+    tag: AuthoringRecord,
+    book: AuthoringRecord,
     placement: DataValue,
 ) {
     val directory = System.getenv("TYPEWRITER_CONTROL_FIXTURE_DIR")?.let { java.io.File(it) } ?: return
@@ -865,13 +868,13 @@ private fun exportFrameworkControlFixture(
             ).toByteArray(),
     )
     java.io.File(directory, "book.bin").writeBytes(
-        skirout.editor.v1.type_catalog.AuthoringRecord.serializer
-            .toBytes(SkirAuthoringValueCodec.encode(book).getOrThrow())
+        AuthoringRecord.serializer
+            .toBytes(book)
             .toByteArray(),
     )
     java.io.File(directory, "book-value.bin").writeBytes(
         skirout.editor.v1.type_catalog.DataValue.serializer
-            .toBytes(DataValue.named(BookDefinition.use, DataValue.record(book.fields)).requirePortable())
+            .toBytes(DataValue.named(BookDefinition.use, DataValue.RecordWrapper(book.payload)).requirePortable())
             .toByteArray(),
     )
     java.io
@@ -888,8 +891,8 @@ private fun exportFrameworkControlFixture(
             directory,
             "tag.bin",
         ).writeBytes(
-            skirout.editor.v1.type_catalog.AuthoringRecord.serializer
-                .toBytes(SkirAuthoringValueCodec.encode(tag).getOrThrow())
+            AuthoringRecord.serializer
+                .toBytes(tag)
                 .toByteArray(),
         )
     java.io
@@ -899,7 +902,7 @@ private fun exportFrameworkControlFixture(
         ).writeBytes(
             skirout.editor.v1.type_catalog.DataValue.serializer
                 .toBytes(
-                    DataValue.named(TagDefinition.use, DataValue.record(tag.fields)).requirePortable(),
+                    DataValue.named(TagDefinition.use, DataValue.RecordWrapper(tag.payload)).requirePortable(),
                 ).toByteArray(),
         )
     java.io

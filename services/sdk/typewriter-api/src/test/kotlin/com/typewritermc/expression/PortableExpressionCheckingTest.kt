@@ -1,6 +1,6 @@
 package com.typewritermc.expression
 
-import com.typewritermc.authoring.ValuePath
+import com.typewritermc.authoring.root
 import com.typewritermc.checking.CatalogGeneration
 import com.typewritermc.configuration.PortableExpressionChecker
 import com.typewritermc.types.catalog.DefaultCheckedCatalog
@@ -20,6 +20,7 @@ import skirout.editor.v1.type_catalog.IntegerWidth
 import skirout.editor.v1.type_catalog.ParameterKey
 import skirout.editor.v1.type_catalog.ScalarKind
 import skirout.editor.v1.type_catalog.TypeDefinitionId
+import skirout.editor.v1.type_catalog.ValuePath
 
 val PortableExpressionCheckingTest by testSuite {
     val catalog = DefaultCheckedCatalog(CatalogGeneration("expression mappings"), emptyList())
@@ -30,7 +31,7 @@ val PortableExpressionCheckingTest by testSuite {
     val decimal = ScalarKind.DECIMAL.use
     val floating = floatScalar(FloatWidth.THIRTY_TWO).use
 
-    fun read(id: ExpressionBindingId) = testInput(id, ValuePath())
+    fun read(id: ExpressionBindingId) = testInput(id, ValuePath.root)
 
     fun round(vararg nodes: ExpressionNode) = ExpressionNode.createNumberRound(source = nodes[0], increment = nodes[1], rounding = nodes[2])
 

@@ -1,9 +1,8 @@
 package com.typewritermc.realm.routes
 
-import com.typewritermc.authoring.AuthoringRecord
 import com.typewritermc.authoring.CounterpartChoice
-import com.typewritermc.authoring.ValueLocation
 import com.typewritermc.authoring.skir.SkirAuthoringOperationCodec
+import com.typewritermc.authoring.text
 import com.typewritermc.capability.CapabilityId
 import com.typewritermc.capability.RealmCapabilityPermissionDeniedException
 import com.typewritermc.checking.CatalogGeneration
@@ -25,7 +24,7 @@ import com.typewritermc.services.libs.communicator.router.CommunicatorRoutesBuil
 import com.typewritermc.services.libs.utils.rethrowExceptional
 import com.typewritermc.types.ResourceId
 import com.typewritermc.types.requirePortable
-import com.typewritermc.types.skir.SkirAuthoringValueCodec
+import com.typewritermc.types.requireValid
 import com.typewritermc.types.skir.getOrThrow
 import skirout.editor.v1.authoring.AuthoringDiagnostic
 import skirout.editor.v1.authoring.AuthoringObservationId
@@ -41,6 +40,8 @@ import skirout.editor.v1.resource_operations.ResolveDropCandidatesRequest
 import skirout.editor.v1.resource_operations.ResolveDropCandidatesResult
 import skirout.editor.v1.resource_operations.ResolveResourceOperationsRequest
 import skirout.editor.v1.resource_operations.ResolveResourceOperationsResult
+import skirout.editor.v1.type_catalog.AuthoringRecord
+import skirout.editor.v1.type_catalog.ValueLocation
 import skirout.editor.v1.authoring.CounterpartChoice as WireCounterpart
 import skirout.editor.v1.resource_operations.OperationInvocation as SkirOperationInvocation
 import skirout.editor.v1.resource_operations.PreparationChoice as WireChoice
@@ -178,7 +179,7 @@ internal class ResourceOperationRoutes(
                     when (answer) {
                         is WireAnswer.SourceWrapper -> {
                             answer.value.choiceId.value to
-                                PreparationChoiceAnswer.Source(SkirAuthoringValueCodec.decode(answer.value.occurrence).getOrThrow())
+                                PreparationChoiceAnswer.Source(answer.value.occurrence.requireValid())
                         }
 
                         is WireAnswer.CounterpartWrapper -> {
@@ -239,7 +240,7 @@ internal class ResourceOperationRoutes(
                         problems =
                             result.missing.map {
                                 OperationInputProblem(
-                                    path = SkirAuthoringValueCodec.encode(it).getOrThrow(),
+                                    path = it,
                                     code = "required",
                                     message = "Complete this input",
                                 )
@@ -338,7 +339,7 @@ internal data class DecodedOperationContext(
 
 internal fun OperationWorkingContext.decodeWorkingContext(): DecodedOperationContext {
     require(confirmedObservation.value.isNotBlank()) { "The saved authoring observation is required." }
-    val upserts = overlay.upserts.map { ResourceId(it.resource.value) to SkirAuthoringValueCodec.decode(it.content).getOrThrow() }
+    val upserts = overlay.upserts.map { ResourceId(it.resource.value) to it.content.requireValid() }
     val removals = overlay.removals.map { ResourceId(it.value) }
     require(
         upserts
@@ -361,7 +362,7 @@ internal fun SkirOperationInvocation.decodeInvocation(): OperationInvocation {
             origin.container?.let {
                 ResourceId(it.value)
             },
-            origin.occurrences.map { SkirAuthoringValueCodec.decode(it).getOrThrow() },
+            origin.occurrences.map { it.requireValid() },
         ),
     )
 }
@@ -375,10 +376,8 @@ private fun PreparationChoice.toWire(): WireChoice =
                 candidates =
                     candidates.map {
                         PreparationSourceOption(
-                            label =
-                                it.id.location.path
-                                    .toString(),
-                            occurrence = SkirAuthoringValueCodec.encode(it).getOrThrow(),
+                            label = it.id.location.path.text,
+                            occurrence = it,
                         )
                     },
             )
@@ -388,19 +387,18 @@ private fun PreparationChoice.toWire(): WireChoice =
             WireChoice.createCounterpart(
                 choiceId = PreparationChoiceId(value = id),
                 label = label,
-                source = SkirAuthoringValueCodec.encode(source).getOrThrow(),
+                source = source,
                 candidates =
                     candidates.map {
                         PreparationCounterpartOption(
                             label =
                                 when (it) {
                                     is CounterpartChoice.Existing -> {
-                                        it.occurrence.id.location.path
-                                            .toString()
+                                        it.occurrence.id.location.path.text
                                     }
 
                                     is CounterpartChoice.New -> {
-                                        "Create in ${it.containing.path}"
+                                        "Create in ${it.containing.path.text}"
                                     }
                                 },
                             counterpart = it.toWire(),
@@ -413,12 +411,12 @@ private fun PreparationChoice.toWire(): WireChoice =
 private fun CounterpartChoice.toWire(): WireCounterpart =
     when (this) {
         is CounterpartChoice.Existing -> {
-            WireCounterpart.ExistingWrapper(SkirAuthoringValueCodec.encode(occurrence).getOrThrow())
+            WireCounterpart.ExistingWrapper(occurrence)
         }
 
         is CounterpartChoice.New -> {
             WireCounterpart.createNew(
-                containing = SkirAuthoringValueCodec.encode(containing).getOrThrow(),
+                containing = containing,
                 prepared = SkirAuthoringOperationCodec.encode(prepared).getOrThrow(),
             )
         }
@@ -427,12 +425,12 @@ private fun CounterpartChoice.toWire(): WireCounterpart =
 private fun WireCounterpart.decodeCounterpart(): CounterpartChoice =
     when (this) {
         is WireCounterpart.ExistingWrapper -> {
-            CounterpartChoice.Existing(SkirAuthoringValueCodec.decode(value).getOrThrow())
+            CounterpartChoice.Existing(value.requireValid())
         }
 
         is WireCounterpart.NewWrapper -> {
             CounterpartChoice.New(
-                SkirAuthoringValueCodec.decode(value.containing).getOrThrow(),
+                value.containing.requireValid(),
                 SkirAuthoringOperationCodec.decode(value.prepared).getOrThrow(),
             )
         }
@@ -453,5 +451,5 @@ private fun operationDiagnostic(
         location?.let {
             SkirResourceId(value = it.resource.value)
         },
-    path = location?.let { SkirAuthoringValueCodec.encode(it.path).getOrThrow() },
+    path = location?.let { it.path },
 )

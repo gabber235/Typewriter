@@ -1,6 +1,5 @@
 package com.typewritermc.realm.routes
 
-import com.typewritermc.engine.PublishedContentCodec
 import com.typewritermc.protocol.transport.RealmRouteScope
 import com.typewritermc.protocol.transport.generated.authoringCompiledQuery
 import com.typewritermc.realm.compiler.PublicationResults
@@ -19,7 +18,7 @@ internal class EditorCompiledContentRoutes(
                 if (selected == null) {
                     QueryPublishedContentResponse.createAbsent()
                 } else {
-                    QueryPublishedContentResponse.ContentWrapper(PublishedContentCodec.encode(selected))
+                    QueryPublishedContentResponse.ContentWrapper(selected)
                 }
             }
         }

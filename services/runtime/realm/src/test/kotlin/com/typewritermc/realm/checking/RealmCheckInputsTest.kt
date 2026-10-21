@@ -1,18 +1,15 @@
 package com.typewritermc.realm.checking
 
-import com.typewritermc.authoring.AuthoringRecord
 import com.typewritermc.authoring.CompleteValue
 import com.typewritermc.authoring.DraftBinding
 import com.typewritermc.authoring.DraftExpectation
-import com.typewritermc.authoring.PathSegment
 import com.typewritermc.authoring.ReadContext
-import com.typewritermc.authoring.TypeSelection
-import com.typewritermc.authoring.ValueLocation
-import com.typewritermc.authoring.ValuePath
+import com.typewritermc.authoring.id
+import com.typewritermc.authoring.of
+import com.typewritermc.authoring.root
+import com.typewritermc.authoring.with
 import com.typewritermc.checking.CheckInput
-import com.typewritermc.checking.CheckOutcome
 import com.typewritermc.checking.CheckRecipe
-import com.typewritermc.checking.DiagnosticSeverity
 import com.typewritermc.checking.DiagnosticTemplate
 import com.typewritermc.checking.RegisteredPredicate
 import com.typewritermc.configuration.FieldPatternSegment
@@ -34,6 +31,9 @@ import com.typewritermc.types.use
 import de.infix.testBalloon.framework.core.testSuite
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.types.shouldBeInstanceOf
+import skirout.editor.v1.checking.CheckOutcome
+import skirout.editor.v1.diagnostic.DiagnosticSeverity
+import skirout.editor.v1.type_catalog.AuthoringRecord
 import skirout.editor.v1.type_catalog.DataValue
 import skirout.editor.v1.type_catalog.FieldDeclaration
 import skirout.editor.v1.type_catalog.FieldOwner
@@ -42,12 +42,15 @@ import skirout.editor.v1.type_catalog.ItemId
 import skirout.editor.v1.type_catalog.ListItem
 import skirout.editor.v1.type_catalog.MapRow
 import skirout.editor.v1.type_catalog.ParameterKey
+import skirout.editor.v1.type_catalog.PathSegment
 import skirout.editor.v1.type_catalog.RepresentationTemplate
 import skirout.editor.v1.type_catalog.RuleOrigin
 import skirout.editor.v1.type_catalog.TypeDefinition
 import skirout.editor.v1.type_catalog.TypeDefinitionId
 import skirout.editor.v1.type_catalog.TypeParameter
+import skirout.editor.v1.type_catalog.TypeSelection
 import skirout.editor.v1.type_catalog.TypeTemplate
+import skirout.editor.v1.type_catalog.ValueLocation
 import java.math.BigInteger
 import java.util.concurrent.atomic.AtomicInteger
 
@@ -88,8 +91,8 @@ val RealmCheckInputsTest by testSuite {
         val catalog = TestCatalogLease(definitions = listOf(root, map))
         val resource = ResourceId("map")
         val record =
-            AuthoringRecord(
-                TypeSelection.Complete(TEST_TYPE.namedUse()),
+            AuthoringRecord.of(
+                TypeSelection.CompleteWrapper(TEST_TYPE.namedUse()),
                 mapOf(
                     "mapping" to
                         DataValue.named(
@@ -123,7 +126,7 @@ val RealmCheckInputsTest by testSuite {
 
         val result = with(reads) { RealmCheckInputs().evaluate(recipe, binding(catalog, resource)) }
 
-        result.outcome shouldBe CheckOutcome.Finished
+        result.outcome shouldBe CheckOutcome.FINISHED
         result.findings.isEmpty() shouldBe true
         calls.get() shouldBe 2
         lease.close()
@@ -134,21 +137,17 @@ val RealmCheckInputsTest by testSuite {
         val catalog = TestCatalogLease()
         val resource = ResourceId("list")
         val record =
-            record(numbers = emptyList()).copy(
-                fields =
-                    record(numbers = emptyList()).fields +
-                        (
-                            "numbers" to
-                                DataValue.named(
-                                    LIST_USE,
-                                    DataValue.listValue(
-                                        listOf(
-                                            ListItem(id = ItemId(value = "missing"), value = DataValue.UNFILLED),
-                                            ListItem(id = ItemId(value = "known"), value = integer(2)),
-                                        ),
-                                    ),
-                                )
+            record(numbers = emptyList()).with(
+                "numbers",
+                DataValue.named(
+                    LIST_USE,
+                    DataValue.listValue(
+                        listOf(
+                            ListItem(id = ItemId(value = "missing"), value = DataValue.UNFILLED),
+                            ListItem(id = ItemId(value = "known"), value = integer(2)),
                         ),
+                    ),
+                ),
             )
         val recipe =
             recipe(
@@ -161,7 +160,7 @@ val RealmCheckInputsTest by testSuite {
 
         val result = with(reads) { RealmCheckInputs().evaluate(recipe, binding(catalog, resource)) }
 
-        result.outcome.shouldBeInstanceOf<CheckOutcome.NeedsInput>()
+        result.outcome.shouldBeInstanceOf<CheckOutcome.NeedsInputWrapper>()
         result.findings.size shouldBe 1
         (
             result.findings
@@ -169,7 +168,7 @@ val RealmCheckInputsTest by testSuite {
                 .primary
                 ?.path
                 ?.segments
-                ?.last() as PathSegment.Item
+                ?.last() as PathSegment.ItemWrapper
         ).id shouldBe ItemId(value = "known")
         lease.close()
         store.close()
@@ -207,7 +206,7 @@ private fun recipe(
         DiagnosticTemplate(
             code = "test",
             message = "invalid",
-            severity = DiagnosticSeverity.Error,
+            severity = DiagnosticSeverity.ERROR,
             targets = listOf(inputs.first().path),
         ),
 )
@@ -234,9 +233,9 @@ private fun binding(
     return DraftBinding(
         catalog.generation,
         ReadContext(catalog.generation),
-        ValueLocation(resource, ValuePath()),
+        ValueLocation.of(resource),
         DraftExpectation.Complete(checked),
-        TypeSelection.Complete(TEST_TYPE.namedUse()),
+        TypeSelection.CompleteWrapper(TEST_TYPE.namedUse()),
     )
 }
 

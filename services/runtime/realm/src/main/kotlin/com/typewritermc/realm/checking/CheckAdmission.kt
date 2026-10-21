@@ -1,29 +1,23 @@
 package com.typewritermc.realm.checking
 
-import com.typewritermc.authoring.CheckExecutionId
 import com.typewritermc.authoring.EditExpectation
-import com.typewritermc.authoring.ValueLocation
-import com.typewritermc.checking.CatalogGeneration
-import com.typewritermc.checking.CheckOutcome
-import com.typewritermc.checking.Diagnostic
+import com.typewritermc.authoring.skir.SkirAuthoringOperationCodec
+import com.typewritermc.checking.toSkir
 import com.typewritermc.realm.authoring.AuthoringView
 import com.typewritermc.realm.authoring.AuthoringViewStore
 import com.typewritermc.realm.repository.conflicts
-import skirout.editor.v1.checking.FindingStatus
-import skirout.editor.v1.type_catalog.RuleId
+import com.typewritermc.types.skir.getOrThrow
+import skirout.editor.v1.checking.CheckInstanceId
+import skirout.editor.v1.checking.CheckOutcome
+import skirout.editor.v1.checking.CheckTicket
+import skirout.editor.v1.checking.FindingSet
+import skirout.editor.v1.diagnostic.Diagnostic
+import skirout.editor.v1.authoring_facts.EditExpectation as SkirEditExpectation
 
-data class CheckInstanceId(
-    val rule: RuleId,
-    val location: ValueLocation,
-)
-
-data class CheckTicket(
-    val instance: CheckInstanceId,
-    val incarnation: String,
-    val execution: CheckExecutionId,
-    val catalog: CatalogGeneration,
-)
-
+/**
+ * The outcome of one scheduled check execution. Its expectations stay Kotlin edit expectations until those are Skir
+ * values; [FindingSet] stores their Skir form.
+ */
 data class CheckResult(
     val ticket: CheckTicket,
     val outcome: CheckOutcome,
@@ -31,13 +25,17 @@ data class CheckResult(
     val findings: List<Diagnostic>,
 )
 
-data class FindingSet(
-    val ticket: CheckTicket,
-    val expectations: List<EditExpectation>,
-    val outcome: CheckOutcome,
-    val findings: List<Diagnostic>,
-    val status: FindingStatus,
-)
+/** The Skir form of check expectations, which finding sets store, until edit expectations are Skir values. */
+internal fun List<EditExpectation>.encodedExpectations(): List<SkirEditExpectation> =
+    map {
+        SkirAuthoringOperationCodec.encode(it).getOrThrow()
+    }
+
+/** The Kotlin form of stored finding expectations, which conflict checks read, until edit expectations are Skir values. */
+internal fun List<SkirEditExpectation>.decodedExpectations(): List<EditExpectation> =
+    map {
+        SkirAuthoringOperationCodec.decode(it).getOrThrow()
+    }
 
 sealed interface CheckAdmissionTarget {
     data object CurrentFindings : CheckAdmissionTarget
@@ -92,7 +90,9 @@ class DefaultCheckAdmission(
     ): AdmissionResult =
         views.read { current ->
             if (executions.ticket(result.ticket.instance) != result.ticket) return@read AdmissionResult.Discarded
-            if (current.catalog.generation != result.ticket.catalog || current.values.conflicts(result.expectations).isNotEmpty()) {
+            if (current.catalog.generation.toSkir() != result.ticket.catalog ||
+                current.values.conflicts(result.expectations).isNotEmpty()
+            ) {
                 return@read AdmissionResult.RetryRequired
             }
             install()
@@ -103,8 +103,8 @@ class DefaultCheckAdmission(
         result: CheckResult,
         target: CheckAdmissionTarget.CapturedAcceptance,
     ): AdmissionResult {
-        if (result.ticket.catalog != target.catalog) return AdmissionResult.Discarded
-        if (result.outcome != CheckOutcome.Finished) return AdmissionResult.RetryRequired
+        if (result.ticket.catalog != target.catalog.toSkir()) return AdmissionResult.Discarded
+        if (result.outcome != CheckOutcome.FINISHED) return AdmissionResult.RetryRequired
         return if (target.view.values
                 .conflicts(result.expectations)
                 .isEmpty()

@@ -1,22 +1,25 @@
 package com.typewritermc.realm.search
 
 import com.surrealdb.Surreal
-import com.typewritermc.authoring.AuthoringRecord
-import com.typewritermc.authoring.TypeSelection
 import com.typewritermc.authoring.definition
+import com.typewritermc.authoring.use
 import com.typewritermc.realm.authoring.AuthoringView
-import com.typewritermc.realm.authoring.authoredDatabaseValues
 import com.typewritermc.realm.authoring.ownershipRelationIds
 import com.typewritermc.realm.repository.ResourceValueMapper
+import com.typewritermc.realm.repository.utils.decodeSkir
 import com.typewritermc.realm.repository.utils.inPreviewTransaction
 import com.typewritermc.realm.repository.utils.surrealRecordId
 import com.typewritermc.realm.repository.utils.toResourceId
 import com.typewritermc.types.RelationId
 import com.typewritermc.types.ResourceId
 import com.typewritermc.types.catalog.CheckedCatalog
+import com.typewritermc.types.requireValid
+import com.typewritermc.types.unknownVariant
 import com.typewritermc.types.use
+import skirout.editor.v1.type_catalog.AuthoringRecord
 import skirout.editor.v1.type_catalog.NamedTypeUse
 import skirout.editor.v1.type_catalog.TypeDefinitionId
+import skirout.editor.v1.type_catalog.TypeSelection
 
 internal data class IndexedAuthoringSearchCandidate(
     val resource: ResourceId,
@@ -87,7 +90,7 @@ internal class SurrealAuthoringSearchRepository(
                         .getArray()
                 rows.forEach { value ->
                     val row = value.getObject()
-                    val record = authoredDatabaseValues.decode(AuthoringRecord.serializer(), row.get("content"))
+                    val record = decodeSkir(AuthoringRecord.serializer, row.get("content")).requireValid()
                     if (record.matches(roots, target, view.catalog.realmRoot, view.catalog.checked)) {
                         candidates +=
                             IndexedAuthoringSearchCandidate(
@@ -134,7 +137,8 @@ private fun AuthoringRecord.matches(
     if (roots.isNotEmpty() && roots.none { catalog.isNominalSubtype(actualDefinition, it) }) return false
     if (target == null) return true
     return when (val selected = configuration) {
-        is TypeSelection.Complete -> catalog.isReadableAs(selected.use.use, target.use)
-        is TypeSelection.Pending -> catalog.knownApplications(selected).any { catalog.isReadableAs(it.use, target.use) }
+        is TypeSelection.CompleteWrapper -> catalog.isReadableAs(selected.use.use, target.use)
+        is TypeSelection.PendingWrapper -> catalog.knownApplications(selected).any { catalog.isReadableAs(it.use, target.use) }
+        else -> unknownVariant(selected)
     }
 }

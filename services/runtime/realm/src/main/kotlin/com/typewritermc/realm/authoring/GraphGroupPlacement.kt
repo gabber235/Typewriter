@@ -1,20 +1,23 @@
 package com.typewritermc.realm.authoring
 
 import com.typewritermc.authoring.AuthoredReads
-import com.typewritermc.authoring.AuthoringRecord
 import com.typewritermc.authoring.GraphPlacement
 import com.typewritermc.authoring.GraphPlacementDefinition
 import com.typewritermc.authoring.GraphPlacementDraft
 import com.typewritermc.authoring.GraphPlacementDraftProjection
 import com.typewritermc.authoring.PlacementAnchor
-import com.typewritermc.authoring.TypeSelection
-import com.typewritermc.authoring.ValueLocation
+import com.typewritermc.authoring.definition
+import com.typewritermc.authoring.of
+import com.typewritermc.authoring.use
 import com.typewritermc.operations.requireAuthored
 import com.typewritermc.realm.repository.valueAt
 import com.typewritermc.types.ResourceId
 import com.typewritermc.types.actualType
 import com.typewritermc.types.use
+import skirout.editor.v1.type_catalog.AuthoringRecord
 import skirout.editor.v1.type_catalog.DataValue
+import skirout.editor.v1.type_catalog.TypeSelection
+import skirout.editor.v1.type_catalog.ValueLocation
 import kotlin.math.abs
 import kotlin.math.roundToLong
 
@@ -108,8 +111,8 @@ internal fun AuthoringCatalogLease.placementLocation(
     id: ResourceId,
     record: AuthoringRecord,
 ): ValueLocation? {
-    val type = (record.configuration as? TypeSelection.Complete)?.use?.definition ?: return null
-    return placementFields[type]?.let { ValueLocation(id, it) }
+    val type = (record.configuration as? TypeSelection.CompleteWrapper)?.use?.definition ?: return null
+    return placementFields[type]?.let { ValueLocation.of(id, it) }
 }
 
 /** Where this resource keeps a graph placement, or null when it has no placement or holds another placement kind. */

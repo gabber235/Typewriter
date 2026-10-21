@@ -1,10 +1,10 @@
 package com.typewritermc.realm.repository
 
 import com.surrealdb.Surreal
-import com.typewritermc.authoring.AuthoringRecord
-import com.typewritermc.authoring.TypeSelection
-import com.typewritermc.realm.authoring.authoredDatabaseValues
+import com.typewritermc.authoring.of
 import com.typewritermc.realm.checking.TEST_TYPE
+import com.typewritermc.realm.repository.utils.decodeSkir
+import com.typewritermc.realm.repository.utils.encodeSkir
 import com.typewritermc.realm.schema.openTestDatabase
 import com.typewritermc.types.bytes
 import com.typewritermc.types.fields
@@ -16,17 +16,19 @@ import com.typewritermc.types.namedUse
 import com.typewritermc.types.record
 import de.infix.testBalloon.framework.core.testSuite
 import io.kotest.matchers.shouldBe
+import skirout.editor.v1.type_catalog.AuthoringRecord
 import skirout.editor.v1.type_catalog.DataValue
 import skirout.editor.v1.type_catalog.ItemId
 import skirout.editor.v1.type_catalog.ListItem
 import skirout.editor.v1.type_catalog.MapRow
+import skirout.editor.v1.type_catalog.TypeSelection
 import java.math.BigInteger
 
 val NativeAuthoringStorageTestSuite by testSuite {
     test("native nested values preserve authored distinctions and stable identities") {
         val record =
-            AuthoringRecord(
-                TypeSelection.Complete(TEST_TYPE.namedUse()),
+            AuthoringRecord.of(
+                TypeSelection.CompleteWrapper(TEST_TYPE.namedUse()),
                 mapOf(
                     "empty" to DataValue.UNFILLED,
                     "nullable" to DataValue.NULL,
@@ -56,13 +58,17 @@ val NativeAuthoringStorageTestSuite by testSuite {
             database
                 .query(
                     "CREATE resource:quest SET content = \$content;",
-                    mapOf("content" to authoredDatabaseValues.encode(AuthoringRecord.serializer(), record)),
+                    mapOf("content" to encodeSkir(AuthoringRecord.serializer, record)),
                 ).take(0)
             val content = database.query("SELECT VALUE content FROM ONLY resource:quest;").take(0)
             content.isObject shouldBe true
-            content.getObject().get("fields").isObject shouldBe true
-            authoredDatabaseValues.decode(AuthoringRecord.serializer(), content) shouldBe record
-            val title = database.query("SELECT VALUE content.fields.list.value.items[0].value.value FROM ONLY resource:quest;").take(0)
+            content.getObject().get("fields").isArray shouldBe true
+            decodeSkir(AuthoringRecord.serializer, content) shouldBe record
+            val title =
+                database
+                    .query(
+                        "SELECT VALUE content.fields[WHERE name = 'list'][0].value.value.items[0].value.value FROM ONLY resource:quest;",
+                    ).take(0)
             title.getString() shouldBe "Quest"
         }
     }

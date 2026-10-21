@@ -3,12 +3,11 @@
 package com.typewritermc.presentation
 
 import com.typewritermc.authoring.GeneratedSdkApi
+import com.typewritermc.authoring.name
 import com.typewritermc.expression.ExpressionBindingId
 import com.typewritermc.expression.ExpressionFactories
 import com.typewritermc.types.namedUse
 import com.typewritermc.types.requireValid
-import com.typewritermc.types.skir.SkirAuthoringValueCodec
-import com.typewritermc.types.skir.getOrThrow
 import com.typewritermc.types.template
 import com.typewritermc.types.toTemplate
 import com.typewritermc.types.use
@@ -30,8 +29,10 @@ import skirout.editor.v1.presentation.PresentationElement
 import skirout.editor.v1.presentation.PresentationNode
 import skirout.editor.v1.presentation.StackChild
 import skirout.editor.v1.type_catalog.NamedTypeTemplate
+import skirout.editor.v1.type_catalog.PathSegment
 import skirout.editor.v1.type_catalog.TypeTemplate
 import skirout.editor.v1.type_catalog.TypeUse
+import skirout.editor.v1.type_catalog.ValuePath
 import kotlin.reflect.KClass
 import skirout.editor.v1.presentation.PresentationProperties as WirePresentationProperties
 import skirout.editor.v1.type_catalog.ValuePath as WireValuePath
@@ -167,7 +168,7 @@ internal class PresentationBuildState(
         val created = action.type.requireValid()
         action.owner?.let { owner ->
             require(owner.bindingId == CONFIGURED_VALUE.wire()) { "A create action owner must be a field of the presentation subject." }
-            val field = type.at(SkirAuthoringValueCodec.decode(owner.path).getOrThrow())
+            val field = type.at(owner.path.requireValid())
             val link =
                 requireNotNull(field?.let { it.link() ?: it.itemsOrNull()?.link() }) {
                     "A create action owner must be a link field of the presentation subject."
@@ -181,7 +182,7 @@ internal class PresentationBuildState(
         }
         val subject = type.rebind(created.template(emptyList()))
         action.fields.forEach { preset ->
-            val path = SkirAuthoringValueCodec.decode(preset.path).getOrThrow()
+            val path = preset.path.requireValid()
             val field = requireNotNull(subject.at(path)) { "A create action preset ${path.segments} is not a field of $created." }
             // A preset that evaluates to missing leaves the field at its creation default.
             val errors = type.checkExpression(preset.value, expressionTypes, field.type, expressionTypes.keys, mayBeMissing = true)
@@ -191,9 +192,9 @@ internal class PresentationBuildState(
     }
 
     /** The field at [path] below this type, or null when a segment is not a field of it. */
-    private fun CheckedPresentationTemplate.at(path: com.typewritermc.authoring.ValuePath): CheckedPresentationTemplate? =
+    private fun CheckedPresentationTemplate.at(path: ValuePath): CheckedPresentationTemplate? =
         path.segments.fold(this as CheckedPresentationTemplate?) { current, segment ->
-            (segment as? com.typewritermc.authoring.PathSegment.Field)?.let { current?.fieldOrNull(it.name) }
+            (segment as? PathSegment.FieldWrapper)?.let { current?.fieldOrNull(it.name) }
         }
 
     /** Types the binding of the presented resource's evaluated display, a canonical read model the editor supplies. */

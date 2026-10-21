@@ -2,23 +2,22 @@ package com.typewritermc.realm.compiler
 
 import com.typewritermc.authoring.CompilationUnitDefinition
 import com.typewritermc.authoring.NativeBindingId
-import com.typewritermc.authoring.PublicationId
+import com.typewritermc.authoring.of
+import com.typewritermc.authoring.root
 import com.typewritermc.checking.CatalogGeneration
-import com.typewritermc.engine.CompilationProjectionId
+import com.typewritermc.checking.toSkir
 import com.typewritermc.engine.CompilationResult
-import com.typewritermc.engine.CompilationRoot
 import com.typewritermc.engine.CompiledArtifact
 import com.typewritermc.engine.ContentDigest
-import com.typewritermc.engine.PublishedContent
 import com.typewritermc.engine.ResourceGraphCompileResult
 import com.typewritermc.engine.encodeShard
-import com.typewritermc.engine.toSkir
 import com.typewritermc.realm.authoring.AuthoringLease
 import com.typewritermc.realm.authoring.AuthoringSeed
 import com.typewritermc.realm.authoring.AuthoringView
 import com.typewritermc.realm.authoring.AuthoringViewDelta
 import com.typewritermc.realm.authoring.InMemoryAuthoringViewStore
 import com.typewritermc.realm.checking.TestCatalogLease
+import com.typewritermc.realm.checking.encodedExpectations
 import com.typewritermc.services.libs.filetransfer.blob.ArtifactDigest
 import com.typewritermc.services.libs.filetransfer.blob.BlobEndpoint
 import com.typewritermc.services.libs.filetransfer.blob.BlobMetadata
@@ -29,6 +28,8 @@ import com.typewritermc.types.namedUse
 import com.typewritermc.types.payload
 import com.typewritermc.types.qualified
 import com.typewritermc.types.template
+import com.typewritermc.types.toResourceId
+import com.typewritermc.types.toSkir
 import com.typewritermc.types.use
 import de.infix.testBalloon.framework.core.testSuite
 import io.kotest.matchers.shouldBe
@@ -37,47 +38,70 @@ import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.async
 import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
+import skirout.editor.v1.checking.CheckInstanceId
+import skirout.editor.v1.checking.CheckOutcome
+import skirout.editor.v1.checking.CheckTicket
+import skirout.editor.v1.checking.FindingSet
+import skirout.editor.v1.compilation_root.CompilationProjectionId
+import skirout.editor.v1.compilation_root.CompilationRoot
+import skirout.editor.v1.compiled_content.PublishedContent
+import skirout.editor.v1.diagnostic.Diagnostic
+import skirout.editor.v1.diagnostic.DiagnosticSeverity
+import skirout.editor.v1.publication.EngineImplementationInputs
 import skirout.editor.v1.publication.PublicationBaseline
 import skirout.editor.v1.publication.PublicationCandidateId
 import skirout.editor.v1.publication.PublicationChange
+import skirout.editor.v1.publication.PublicationStatus
+import skirout.editor.v1.type_catalog.AuthoringRecord
+import skirout.editor.v1.type_catalog.CheckExecutionId
 import skirout.editor.v1.type_catalog.DataValue
 import skirout.editor.v1.type_catalog.FieldDeclaration
 import skirout.editor.v1.type_catalog.FieldOwner
+import skirout.editor.v1.type_catalog.PublicationId
 import skirout.editor.v1.type_catalog.RepresentationTemplate
 import skirout.editor.v1.type_catalog.ScalarKind
 import skirout.editor.v1.type_catalog.TypeDefinition
 import skirout.editor.v1.type_catalog.TypeDefinitionId
+import skirout.editor.v1.type_catalog.TypeSelection
+import skirout.editor.v1.type_catalog.ValueLocation
 import skirout.editor.v1.type_catalog.PublicationId as SkirPublicationId
 
 val RealmPublicationCoordinatorTest by testSuite {
     test("checking preserves runtime invalidation even when authoring witnesses still match") {
         val fixture = PublicationFixture()
         try {
-            val location = com.typewritermc.authoring.ValueLocation(ResourceId("page"), com.typewritermc.authoring.ValuePath())
+            val location = ValueLocation.of(ResourceId("page"))
             val current =
                 fixture.views.read { view ->
-                    com.typewritermc.realm.checking.FindingSet(
-                        com.typewritermc.realm.checking.CheckTicket(
-                            com.typewritermc.realm.checking.CheckInstanceId(
-                                skirout.editor.v1.type_catalog.RuleId(
-                                    origin =
-                                        skirout.editor.v1.type_catalog
-                                            .RuleOrigin(owner = PUBLICATION_PAGE, ordinal = 0),
-                                    localIndex = 0,
-                                ),
-                                location,
+                    FindingSet(
+                        ticket =
+                            CheckTicket(
+                                instance =
+                                    CheckInstanceId(
+                                        rule =
+                                            skirout.editor.v1.type_catalog.RuleId(
+                                                origin =
+                                                    skirout.editor.v1.type_catalog
+                                                        .RuleOrigin(owner = PUBLICATION_PAGE, ordinal = 0),
+                                                localIndex = 0,
+                                            ),
+                                        location = location,
+                                    ),
+                                incarnation = "external_input",
+                                execution = CheckExecutionId(value = "execution"),
+                                catalog = view.catalog.generation.toSkir(),
                             ),
-                            "external_input",
-                            com.typewritermc.authoring.CheckExecutionId("execution"),
-                            view.catalog.generation,
-                        ),
-                        listOf(
-                            com.typewritermc.authoring.EditExpectation
-                                .Resource(location.resource, view.resources.getValue(location.resource)),
-                        ),
-                        com.typewritermc.checking.CheckOutcome.Finished,
-                        listOf(compilationDiagnostic("external_check", "An external input requires attention.", location = location)),
-                        skirout.editor.v1.checking.FindingStatus.CURRENT,
+                        expectations =
+                            listOf<com.typewritermc.authoring.EditExpectation>(
+                                com.typewritermc.authoring.EditExpectation
+                                    .Resource(location.resource.toResourceId(), view.resources.getValue(location.resource.toResourceId())),
+                            ).encodedExpectations(),
+                        outcome = CheckOutcome.FINISHED,
+                        findings =
+                            listOf(
+                                compilationDiagnostic("external_check", "An external input requires attention.", location = location),
+                            ),
+                        status = skirout.editor.v1.checking.FindingStatus.CURRENT,
                     )
                 }
             val invalidated =
@@ -95,7 +119,7 @@ val RealmPublicationCoordinatorTest by testSuite {
                 )
             fixture.findings = listOf(current, invalidated)
             var observed: PublicationStatus.Checking? = null
-            fixture.onEvaluate = { observed = fixture.publisher.views.value.status as PublicationStatus.Checking }
+            fixture.onEvaluate = { observed = (fixture.publisher.views.value.status as PublicationStatus.CheckingWrapper).value }
             fixture.publisher.refresh()
             observed!!.findings.map { it.status } shouldBe
                 listOf(
@@ -110,13 +134,15 @@ val RealmPublicationCoordinatorTest by testSuite {
         val fixture = PublicationFixture()
         fixture.publisher.refresh()
         fixture.publisher.views.value.status
-            .shouldBeInstanceOf<PublicationStatus.Ready>()
+            .shouldBeInstanceOf<PublicationStatus.ReadyWrapper>()
+            .value
         fixture.attempts.started shouldBe 0
         fixture.blobRequests shouldBe 0
         fixture.release()
         fixture.publisher.refresh()
         fixture.publisher.views.value.status
-            .shouldBeInstanceOf<PublicationStatus.Current>()
+            .shouldBeInstanceOf<PublicationStatus.CurrentWrapper>()
+            .value
         fixture.publisher.publish(PublicationCandidateId(value = "obsolete")) shouldBe PublicationResult.NoChanges
         fixture.attempts.started shouldBe 1
         fixture.close()
@@ -131,7 +157,7 @@ val RealmPublicationCoordinatorTest by testSuite {
                         com.typewritermc.services.libs.filetransfer.blob.DigestAlgorithm.SHA_256,
                         first.outputs
                             .single()
-                            .blob.digest.value,
+                            .blob.digest,
                     )
                 fixture.blobs.remove(digest)
                 val assessing = CompletableDeferred<Unit>()
@@ -142,7 +168,7 @@ val RealmPublicationCoordinatorTest by testSuite {
                 }
                 val refresh = async { fixture.publisher.refresh() }
                 assessing.await()
-                val replacement = first.copy(publication = PublicationId("replacement"), outputs = emptyList())
+                val replacement = first.copy(publication = PublicationId(value = "replacement"), outputs = emptyList())
                 fixture.attempts.install(replacement)
                 val requests = fixture.blobRequests
                 resume.complete(Unit)
@@ -152,7 +178,8 @@ val RealmPublicationCoordinatorTest by testSuite {
                 fixture.blobs.metadata(digest) shouldBe BlobResult.NotFound
                 fixture.attempts.selected() shouldBe replacement
                 fixture.publisher.views.value.status
-                    .shouldBeInstanceOf<PublicationStatus.Checking>()
+                    .shouldBeInstanceOf<PublicationStatus.CheckingWrapper>()
+                    .value
 
                 fixture.onEvaluate = null
                 fixture.publisher.refresh()
@@ -167,7 +194,8 @@ val RealmPublicationCoordinatorTest by testSuite {
         val fixture = PublicationFixture(initial = emptyMap())
         fixture.publisher.refresh()
         fixture.publisher.views.value.status
-            .shouldBeInstanceOf<PublicationStatus.Empty>()
+            .shouldBeInstanceOf<PublicationStatus.EmptyWrapper>()
+            .value
         fixture.attempts.started shouldBe 0
         fixture.update("Quest")
         fixture.release()
@@ -175,8 +203,9 @@ val RealmPublicationCoordinatorTest by testSuite {
         fixture.publisher.refresh()
         val ready =
             fixture.publisher.views.value.status
-                .shouldBeInstanceOf<PublicationStatus.Ready>()
-        ready.changes.allChanges shouldBe listOf(PublicationChange.RootRemovedWrapper(fixture.root.toSkir()))
+                .shouldBeInstanceOf<PublicationStatus.ReadyWrapper>()
+                .value
+        ready.changes.allChanges shouldBe listOf(PublicationChange.RootRemovedWrapper(fixture.root))
         fixture.publisher
             .publish(ready.candidate)
             .shouldBeInstanceOf<PublicationResult.Activated>()
@@ -195,11 +224,11 @@ val RealmPublicationCoordinatorTest by testSuite {
         (fixture.ready().candidate == old.candidate) shouldBe false
         fixture.attempts.installed =
             PublishedContent(
-                PublicationId("other"),
-                com.typewritermc.engine.PUBLISHED_CONTENT_FORMAT_REVISION,
-                CatalogGeneration("other"),
-                "implementation",
-                emptyList(),
+                publication = PublicationId(value = "other"),
+                formatRevision = com.typewritermc.engine.PUBLISHED_CONTENT_FORMAT_REVISION,
+                catalog = CatalogGeneration("other").toSkir(),
+                implementationToken = "implementation",
+                outputs = emptyList(),
             )
         fixture.publisher.publish(fixture.ready().candidate).shouldBeInstanceOf<PublicationResult.CandidateChanged>()
         fixture.attempts.started shouldBe 0
@@ -214,7 +243,8 @@ val RealmPublicationCoordinatorTest by testSuite {
         fixture.update("Quest")
         fixture.publisher.refresh()
         fixture.publisher.views.value.status
-            .shouldBeInstanceOf<PublicationStatus.Current>()
+            .shouldBeInstanceOf<PublicationStatus.CurrentWrapper>()
+            .value
         fixture.attempts.started shouldBe 1
         fixture.close()
     }
@@ -235,7 +265,8 @@ val RealmPublicationCoordinatorTest by testSuite {
         fixture.captureFailure = true
         fixture.publisher.refresh()
         fixture.publisher.views.value.status
-            .shouldBeInstanceOf<PublicationStatus.Unavailable>()
+            .shouldBeInstanceOf<PublicationStatus.UnavailableWrapper>()
+            .value
         fixture.attempts.started shouldBe 0
         fixture.captureFailure = false
         fixture.publisher.refresh()
@@ -260,16 +291,17 @@ val RealmPublicationCoordinatorTest by testSuite {
             fixture.publisher.refresh()
             val active =
                 fixture.publisher.views.value.status
-                    .shouldBeInstanceOf<PublicationStatus.Publishing>()
-            active.next.confirmedChanges shouldBe listOf(PublicationChange.RootUpdatedWrapper(fixture.root.toSkir()))
+                    .shouldBeInstanceOf<PublicationStatus.PublishingWrapper>()
+                    .value
+            active.next.confirmedChanges shouldBe listOf(PublicationChange.RootUpdatedWrapper(fixture.root))
             proceed.complete(Unit)
             val published = first.await().shouldBeInstanceOf<PublicationResult.Activated>()
             val expected = fixture.compiled("Quest")
             published.content.outputs
                 .single()
-                .reference.semanticDigest shouldBe expected.semanticDigest
+                .reference.semanticDigest shouldBe expected.semanticDigest.value
             fixture.publisher.refresh()
-            fixture.ready().changes.allChanges shouldBe listOf(PublicationChange.RootUpdatedWrapper(fixture.root.toSkir()))
+            fixture.ready().changes.allChanges shouldBe listOf(PublicationChange.RootUpdatedWrapper(fixture.root))
             fixture.attempts.started shouldBe 1
             fixture.close()
         }
@@ -279,14 +311,15 @@ val RealmPublicationCoordinatorTest by testSuite {
         fixture.publisher.refresh()
         val blocked =
             fixture.publisher.views.value.status
-                .shouldBeInstanceOf<PublicationStatus.Blocked>()
-        blocked.confirmedChanges shouldBe listOf(PublicationChange.RootAddedWrapper(fixture.root.toSkir()))
-        blocked.pendingRoots.single().resource shouldBe ResourceId("broken")
-        blocked.blockers.first.diagnostic.primary
-            ?.resource shouldBe ResourceId("broken")
-        blocked.blockers.first.diagnostic.related
+                .shouldBeInstanceOf<PublicationStatus.BlockedWrapper>()
+                .value
+        blocked.confirmedChanges shouldBe listOf(PublicationChange.RootAddedWrapper(fixture.root))
+        blocked.pendingRoots.single().resource shouldBe ResourceId("broken").toSkir()
+        blocked.blockers.first.details.primary
+            ?.resource shouldBe ResourceId("broken").toSkir()
+        blocked.blockers.first.details.related
             .single()
-            .resource shouldBe ResourceId("target")
+            .resource shouldBe ResourceId("target").toSkir()
         fixture.attempts.started shouldBe 0
         fixture.blobRequests shouldBe 0
         fixture.publisher.publish(PublicationCandidateId(value = "forged")).shouldBeInstanceOf<PublicationResult.CandidateChanged>()
@@ -296,7 +329,12 @@ val RealmPublicationCoordinatorTest by testSuite {
         val fixture = PublicationFixture()
         fixture.publisher.refresh()
         val candidate = fixture.ready()
-        fixture.engineInputs = EngineImplementationInputs(com.typewritermc.checking.InputToken("new"))
+        fixture.engineInputs =
+            EngineImplementationInputs(
+                token =
+                    skirout.editor.v1.type_catalog
+                        .InputToken(value = "new"),
+            )
         fixture.publisher.publish(candidate.candidate).shouldBeInstanceOf<PublicationResult.CandidateChanged>()
         fixture.attempts.started shouldBe 0
         fixture.blobRequests shouldBe 0
@@ -349,7 +387,7 @@ val RealmPublicationCoordinatorTest by testSuite {
 }
 
 internal class PublicationFixture(
-    initial: Map<ResourceId, com.typewritermc.authoring.AuthoringRecord> = mapOf(ResourceId("page") to publicationPageRecord("Quest")),
+    initial: Map<ResourceId, AuthoringRecord> = mapOf(ResourceId("page") to publicationPageRecord("Quest")),
     producers: List<CompiledArtifactProducer> = listOf(ResourceGraphArtifactProducer),
 ) {
     val views =
@@ -359,11 +397,12 @@ internal class PublicationFixture(
         )
     val attempts = RecordingAttempts()
     val bindings = listOf(NativeBindingRequirement(PUBLICATION_PAGE_USE, NativeBindingId("publication_page"), "page:v1"))
-    val root = CompilationRoot(CompilationProjectionId("typewriter.resource-graph"), ResourceId("page"))
+    val root =
+        CompilationRoot(projection = CompilationProjectionId(value = "typewriter.resource-graph"), resource = ResourceId("page").toSkir())
     var engineInputs = testEngineInputs()
     var blobRequests = 0
     var captureFailure = false
-    var findings = emptyList<com.typewritermc.realm.checking.FindingSet>()
+    var findings = emptyList<FindingSet>()
     var onEvaluate: (suspend () -> Unit)? = null
     val blobs = InMemoryBlobEndpoint()
     val publisher =
@@ -401,7 +440,8 @@ internal class PublicationFixture(
 
     fun ready() =
         publisher.views.value.status
-            .shouldBeInstanceOf<PublicationStatus.Ready>()
+            .shouldBeInstanceOf<PublicationStatus.ReadyWrapper>()
+            .value
 
     fun update(value: String) = views.install(views.prepare(AuthoringViewDelta(mapOf(ResourceId("page") to publicationPageRecord(value)))))
 
@@ -461,7 +501,7 @@ internal class RecordingAttempts :
 
     override suspend fun blocked(
         id: PublicationId,
-        findings: List<com.typewritermc.checking.Diagnostic>,
+        findings: List<Diagnostic>,
     ) {}
 
     override suspend fun install(result: PublishedContent) {
@@ -477,10 +517,10 @@ internal class RecordingAttempts :
 
 private fun blockedProducer() =
     object : CompiledArtifactProducer {
-        override val projection = CompilationProjectionId("fixture.blocked")
+        override val projection = CompilationProjectionId(value = "fixture.blocked")
         override val mediaType = "application/blocked"
 
-        override fun roots(view: AuthoringView) = setOf(CompilationRoot(projection, ResourceId("broken")))
+        override fun roots(view: AuthoringView) = setOf(CompilationRoot(projection = projection, resource = ResourceId("broken").toSkir()))
 
         context(inputs: CompilationInputs)
         override fun compile(roots: Set<CompilationRoot>): List<CompilationResult> =
@@ -492,7 +532,7 @@ private fun blockedProducer() =
                         compilationDiagnostic(
                             "broken_link",
                             "The target is missing",
-                            com.typewritermc.checking.DiagnosticSeverity.Error,
+                            DiagnosticSeverity.ERROR,
                             ResourceId("broken"),
                             ResourceId("target"),
                         ),
@@ -502,9 +542,8 @@ private fun blockedProducer() =
     }
 
 private fun publicationPageRecord(value: String) =
-    com.typewritermc.authoring.AuthoringRecord(
-        com.typewritermc.authoring.TypeSelection
-            .Complete(PUBLICATION_PAGE_USE),
+    AuthoringRecord.of(
+        TypeSelection.CompleteWrapper(PUBLICATION_PAGE_USE),
         mapOf("value" to DataValue.StringValueWrapper(value)),
     )
 

@@ -1,22 +1,20 @@
 package com.typewritermc.realm.checking
 
 import com.typewritermc.authoring.Availability
-import com.typewritermc.authoring.CheckExecutionId
-import com.typewritermc.authoring.DiagnosticId
 import com.typewritermc.authoring.DraftBinding
+import com.typewritermc.authoring.EditExpectation
 import com.typewritermc.authoring.ReadContext
-import com.typewritermc.authoring.ValueLocation
-import com.typewritermc.authoring.ValuePath
 import com.typewritermc.authoring.field
+import com.typewritermc.authoring.of
+import com.typewritermc.authoring.root
 import com.typewritermc.checking.CatalogGeneration
 import com.typewritermc.checking.CheckContext
-import com.typewritermc.checking.CheckOutcome
-import com.typewritermc.checking.Diagnostic
 import com.typewritermc.checking.DiagnosticReporter
-import com.typewritermc.checking.DiagnosticSeverity
 import com.typewritermc.checking.DraftType
 import com.typewritermc.checking.InputIdentity
 import com.typewritermc.checking.RealmChecks
+import com.typewritermc.checking.reason
+import com.typewritermc.checking.toSkir
 import com.typewritermc.configuration.ConfigurationRecipe
 import com.typewritermc.configuration.OwnedRule
 import com.typewritermc.discovery.OwnedCheck
@@ -41,9 +39,19 @@ import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.joinAll
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
+import skirout.editor.v1.checking.CheckInstanceId
+import skirout.editor.v1.checking.CheckOutcome
+import skirout.editor.v1.checking.CheckTicket
+import skirout.editor.v1.checking.FindingSet
 import skirout.editor.v1.checking.FindingStatus
+import skirout.editor.v1.diagnostic.Diagnostic
+import skirout.editor.v1.diagnostic.DiagnosticSeverity
+import skirout.editor.v1.type_catalog.CheckExecutionId
+import skirout.editor.v1.type_catalog.DiagnosticId
 import skirout.editor.v1.type_catalog.RuleId
 import skirout.editor.v1.type_catalog.RuleOrigin
+import skirout.editor.v1.type_catalog.ValueLocation
+import skirout.editor.v1.type_catalog.ValuePath
 import java.util.concurrent.atomic.AtomicLong
 
 interface CheckScheduler : AutoCloseable {
@@ -61,7 +69,7 @@ data class CapturedCheckReport(
     val complete: Boolean
         get() =
             results.mapTo(linkedSetOf()) { result -> result.ticket.instance } == required &&
-                results.all { result -> result.outcome !is CheckOutcome.Incomplete }
+                results.all { result -> result.outcome !is CheckOutcome.IncompleteWrapper }
 }
 
 /**
@@ -140,8 +148,8 @@ class RealmCheckRuntime(
             synchronized(lock) {
                 if (closed) return
                 instances.values.forEach { state ->
-                    val evidence = state.findings?.expectations ?: return@forEach
-                    if (values.conflicts(evidence).isNotEmpty()) {
+                    if (state.findings == null) return@forEach
+                    if (values.conflicts(state.evidence).isNotEmpty()) {
                         state.findings = state.findings?.copy(status = FindingStatus.OUTDATED)
                         retireJobLocked(state.job)
                         state.job = null
@@ -216,18 +224,18 @@ class RealmCheckRuntime(
                         }
 
                         AdmissionResult.Discarded -> {
-                            result.copy(outcome = CheckOutcome.Incomplete("captured evidence was discarded"))
+                            result.copy(outcome = CheckOutcome.IncompleteWrapper("captured evidence was discarded"))
                         }
 
                         AdmissionResult.RetryRequired -> {
                             if (target.view.values
                                     .conflicts(result.expectations)
                                     .isEmpty() &&
-                                result.outcome != CheckOutcome.Finished
+                                result.outcome != CheckOutcome.FINISHED
                             ) {
                                 result
                             } else {
-                                result.copy(outcome = CheckOutcome.Incomplete("captured evidence requires retry"))
+                                result.copy(outcome = CheckOutcome.IncompleteWrapper("captured evidence requires retry"))
                             }
                         }
 
@@ -352,10 +360,10 @@ class RealmCheckRuntime(
                         }
                     }
                 val outcome = reads.health().outcome(plan.rule.origin)
-                if (outcome != CheckOutcome.Finished) {
+                if (outcome != CheckOutcome.FINISHED) {
                     incompleteRules += plan.rule
                     val findings =
-                        if (outcome is CheckOutcome.Incomplete) {
+                        if (outcome is CheckOutcome.IncompleteWrapper) {
                             listOf(
                                 diagnostic(
                                     plan.rule.origin,
@@ -394,8 +402,10 @@ class RealmCheckRuntime(
             CheckTicket(
                 instance = state.id,
                 incarnation = catalog.incarnation,
-                execution = CheckExecutionId("check:${nextExecution.getAndIncrement()}"),
-                catalog = lease.root.catalog.generation,
+                execution = CheckExecutionId(value = "check:${nextExecution.getAndIncrement()}"),
+                catalog =
+                    lease.root.catalog.generation
+                        .toSkir(),
             )
         state.ticket = ticket
         val job =
@@ -429,7 +439,14 @@ class RealmCheckRuntime(
                 val admission =
                     DefaultCheckAdmission(views, this).requireCurrentExecutionAndInputs(result) {
                         state.findings =
-                            FindingSet(result.ticket, result.expectations, result.outcome, result.findings, FindingStatus.CURRENT)
+                            FindingSet(
+                                ticket = result.ticket,
+                                expectations = result.expectations.encodedExpectations(),
+                                outcome = result.outcome,
+                                findings = result.findings,
+                                status = FindingStatus.CURRENT,
+                            )
+                        state.evidence = result.expectations
                     }
                 state.job = null
                 when (admission) {
@@ -466,8 +483,10 @@ class RealmCheckRuntime(
             ticket ?: CheckTicket(
                 instance = subject.id,
                 incarnation = catalog.incarnation,
-                execution = CheckExecutionId("capture:${nextExecution.getAndIncrement()}"),
-                catalog = lease.root.catalog.generation,
+                execution = CheckExecutionId(value = "capture:${nextExecution.getAndIncrement()}"),
+                catalog =
+                    lease.root.catalog.generation
+                        .toSkir(),
             )
         val reads = CapturedAuthoringReads(lease.originalView(), predicates = selectionPredicates, limits = readLimits)
         val findings = mutableListOf<Diagnostic>()
@@ -478,7 +497,7 @@ class RealmCheckRuntime(
                     is CheckPlan.Simple -> {
                         val binding = reads.bindOccurrence(subject.location, plan.owned.recipe.owner.owner)
                         if (binding == null) {
-                            explicitOutcome = CheckOutcome.Incomplete("check occurrence is no longer present")
+                            explicitOutcome = CheckOutcome.IncompleteWrapper("check occurrence is no longer present")
                         } else {
                             val evaluation = with(reads) { checkInputs.evaluate(plan.owned.recipe, binding) }
                             explicitOutcome = evaluation.outcome
@@ -493,7 +512,7 @@ class RealmCheckRuntime(
                                 reads.matchesRepresentation(binding, plan.recipe.relativePath, plan.recipe.representationCondition) &&
                                 subject.location in reads.expand(binding.location, plan.recipe.relativePath)
                         if (!stillPresent) {
-                            explicitOutcome = CheckOutcome.Incomplete("portable rule occurrence is no longer present")
+                            explicitOutcome = CheckOutcome.IncompleteWrapper("portable rule occurrence is no longer present")
                         } else {
                             when (
                                 val evaluation =
@@ -508,19 +527,19 @@ class RealmCheckRuntime(
                                 }
 
                                 is Availability.Unavailable -> {
-                                    explicitOutcome = CheckOutcome.NeedsInput(evaluation.locations)
+                                    explicitOutcome = CheckOutcome.NeedsInputWrapper(evaluation.locations)
                                 }
 
                                 is Availability.Failed -> {
                                     explicitOutcome =
-                                        CheckOutcome.Failed(
+                                        CheckOutcome.FailedWrapper(
                                             listOf(
                                                 Diagnostic(
-                                                    id = DiagnosticId("check:${nextDiagnostic.getAndIncrement()}"),
+                                                    id = DiagnosticId(value = "check:${nextDiagnostic.getAndIncrement()}"),
                                                     origin = plan.ownedRule.id.origin,
                                                     code = evaluation.diagnostic.code,
                                                     message = evaluation.diagnostic.message,
-                                                    severity = DiagnosticSeverity.Error,
+                                                    severity = DiagnosticSeverity.ERROR,
                                                     primary = evaluation.diagnostic.locations.firstOrNull(),
                                                     related = evaluation.diagnostic.locations.drop(1),
                                                 ),
@@ -534,7 +553,7 @@ class RealmCheckRuntime(
                     is CheckPlan.Each<*> -> {
                         val binding = reads.bindResource(subject.location, plan.type.match)
                         if (binding == null) {
-                            explicitOutcome = CheckOutcome.Incomplete("check subject is no longer present")
+                            explicitOutcome = CheckOutcome.IncompleteWrapper("check subject is no longer present")
                         } else {
                             val reporter =
                                 object : DiagnosticReporter {
@@ -559,7 +578,7 @@ class RealmCheckRuntime(
                     }
 
                     is CheckPlan.RegistrationFailure -> {
-                        explicitOutcome = CheckOutcome.Failed(listOf(plan.diagnostic))
+                        explicitOutcome = CheckOutcome.FailedWrapper(listOf(plan.diagnostic))
                     }
 
                     is CheckPlan.DiscoveryFailure -> {
@@ -571,7 +590,7 @@ class RealmCheckRuntime(
             } catch (failure: Exception) {
                 failure.rethrowExceptional()
                 explicitOutcome =
-                    CheckOutcome.Failed(
+                    CheckOutcome.FailedWrapper(
                         listOf(
                             diagnostic(
                                 subject.plan.rule.origin,
@@ -641,11 +660,11 @@ class RealmCheckRuntime(
         related: List<ValueLocation> = emptyList(),
     ): Diagnostic =
         Diagnostic(
-            id = DiagnosticId("check:${nextDiagnostic.getAndIncrement()}"),
+            id = DiagnosticId(value = "check:${nextDiagnostic.getAndIncrement()}"),
             origin = origin,
             code = code,
             message = message,
-            severity = DiagnosticSeverity.Error,
+            severity = DiagnosticSeverity.ERROR,
             primary = at,
             related = related,
         )
@@ -661,7 +680,7 @@ class RealmCheckRuntime(
                     if (target == plan.recipe.relativePath) listOf(subject.location) else reads.expand(subject.ownerLocation, target)
                 }.distinct()
         return Diagnostic(
-            id = DiagnosticId("check:${nextDiagnostic.getAndIncrement()}"),
+            id = DiagnosticId(value = "check:${nextDiagnostic.getAndIncrement()}"),
             origin = plan.ownedRule.id.origin,
             code = plan.ownedRule.diagnostic.code,
             message = plan.ownedRule.diagnostic.message,
@@ -701,6 +720,8 @@ class RealmCheckRuntime(
         var ticket: CheckTicket? = null,
         var job: Job? = null,
         var findings: FindingSet? = null,
+        /** The expectations of [findings] in the Kotlin form conflict checks read, until edit expectations are Skir values. */
+        var evidence: List<EditExpectation> = emptyList(),
     )
 }
 
@@ -820,7 +841,7 @@ private data class CheckSubject(
     val location: ValueLocation,
     val ownerLocation: ValueLocation = location,
 ) {
-    val id: CheckInstanceId = CheckInstanceId(plan.rule, location)
+    val id: CheckInstanceId = CheckInstanceId(rule = plan.rule, location = location)
 
     /** Location findings for this subject anchor to; realm-wide subjects have none. */
     val findingLocation: ValueLocation?
@@ -841,18 +862,18 @@ private fun CheckPlan.subject(
 internal fun ViewReadHealth.outcome(origin: RuleOrigin): CheckOutcome =
     when {
         incomplete.isNotEmpty() -> {
-            CheckOutcome.Incomplete(incomplete.joinToString())
+            CheckOutcome.IncompleteWrapper(incomplete.joinToString())
         }
 
         failures.isNotEmpty() -> {
-            CheckOutcome.Failed(
+            CheckOutcome.FailedWrapper(
                 failures.mapIndexed { index, failure ->
                     Diagnostic(
-                        id = DiagnosticId("evaluation:$index:${failure.hashCode()}"),
+                        id = DiagnosticId(value = "evaluation:$index:${failure.hashCode()}"),
                         origin = origin,
                         code = failure.code,
                         message = failure.message,
-                        severity = DiagnosticSeverity.Error,
+                        severity = DiagnosticSeverity.ERROR,
                         primary = failure.locations.firstOrNull(),
                         related = failure.locations.drop(1),
                     )
@@ -861,11 +882,11 @@ internal fun ViewReadHealth.outcome(origin: RuleOrigin): CheckOutcome =
         }
 
         missing.isNotEmpty() -> {
-            CheckOutcome.NeedsInput(missing)
+            CheckOutcome.NeedsInputWrapper(missing)
         }
 
         else -> {
-            CheckOutcome.Finished
+            CheckOutcome.FINISHED
         }
     }
 
@@ -874,15 +895,15 @@ private fun mergeOutcome(
     tracked: CheckOutcome,
 ): CheckOutcome =
     when {
-        explicit is CheckOutcome.Incomplete -> explicit
-        tracked is CheckOutcome.Incomplete -> tracked
-        explicit is CheckOutcome.Failed -> explicit
-        tracked is CheckOutcome.Failed -> tracked
-        explicit is CheckOutcome.NeedsInput -> explicit
-        tracked is CheckOutcome.NeedsInput -> tracked
+        explicit is CheckOutcome.IncompleteWrapper -> explicit
+        tracked is CheckOutcome.IncompleteWrapper -> tracked
+        explicit is CheckOutcome.FailedWrapper -> explicit
+        tracked is CheckOutcome.FailedWrapper -> tracked
+        explicit is CheckOutcome.NeedsInputWrapper -> explicit
+        tracked is CheckOutcome.NeedsInputWrapper -> tracked
         explicit != null -> explicit
         else -> tracked
     }
 
-private val REALM_SUBJECT_KEY = ValueLocation(ResourceId("typewriter.realm"), ValuePath())
-private val DISCOVERY_SUBJECT_KEY = ValueLocation(ResourceId("typewriter.discovery"), ValuePath().field("subjects"))
+private val REALM_SUBJECT_KEY = ValueLocation.of(ResourceId("typewriter.realm"))
+private val DISCOVERY_SUBJECT_KEY = ValueLocation.of(ResourceId("typewriter.discovery"), ValuePath.root.field("subjects"))

@@ -1,8 +1,7 @@
 package com.typewritermc.realm.repository.utils
 
+import build.skir.JsonFlavor
 import com.surrealdb.Value
-import kotlinx.serialization.KSerializer
-import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonArray
 import kotlinx.serialization.json.JsonElement
 import kotlinx.serialization.json.JsonNull
@@ -11,21 +10,25 @@ import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.booleanOrNull
 import kotlinx.serialization.json.doubleOrNull
 import kotlinx.serialization.json.longOrNull
+import build.skir.Serializer as SkirSerializer
 
-/** Encodes typed metadata as structured Surreal objects without string serialization. */
-internal class StructuredDatabaseCodec(
-    private val json: Json,
-) {
-    fun <T> encode(
-        serializer: KSerializer<T>,
-        value: T,
-    ): Any? = json.encodeToJsonElement(serializer, value).databaseValue()
+/*
+ * SurrealDB stores generated Skir values as their readable Skir JSON: records and unions stay objects, matching the
+ * object columns of the schema, and field names are the stored keys. A field rename therefore changes stored data.
+ * Readable timestamps are objects as well, so these functions never write a value into a datetime column.
+ */
 
-    fun <T> decode(
-        serializer: KSerializer<T>,
-        value: Value,
-    ): T = json.decodeFromJsonElement(serializer, value.jsonElement())
-}
+/** The readable Skir JSON of [value] as a structured Surreal value. */
+internal fun <T> encodeSkir(
+    serializer: SkirSerializer<T>,
+    value: T,
+): Any? = serializer.toJson(value, JsonFlavor.READABLE).databaseValue()
+
+/** Reads a value stored by [encodeSkir]. Callers check the invariants of the result where it enters the runtime. */
+internal fun <T> decodeSkir(
+    serializer: SkirSerializer<T>,
+    value: Value,
+): T = serializer.fromJson(value.jsonElement())
 
 internal fun JsonElement.databaseValue(): Any? =
     when (this) {

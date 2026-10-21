@@ -1,14 +1,10 @@
 package com.typewritermc.realm.compiler
 
-import com.typewritermc.authoring.PublicationId
 import com.typewritermc.checking.CatalogGeneration
+import com.typewritermc.checking.toSkir
 import com.typewritermc.engine.CompiledArtifact
-import com.typewritermc.engine.CompiledArtifactReference
-import com.typewritermc.engine.CompiledBlobPointer
-import com.typewritermc.engine.ContentDigest
 import com.typewritermc.engine.PUBLISHED_CONTENT_FORMAT_REVISION
-import com.typewritermc.engine.PublishedContent
-import com.typewritermc.engine.PublishedOutput
+import com.typewritermc.engine.requireValid
 import com.typewritermc.loader.api.artifact.PublicationBlobRetention
 import com.typewritermc.loader.api.artifact.PublicationBlobRoots
 import com.typewritermc.services.libs.filetransfer.blob.ArtifactDigest
@@ -18,6 +14,11 @@ import com.typewritermc.services.libs.filetransfer.blob.BlobResult
 import com.typewritermc.services.libs.filetransfer.blob.BlobTransfer
 import com.typewritermc.services.libs.filetransfer.blob.ByteArrayBlobSource
 import com.typewritermc.services.libs.filetransfer.blob.DigestAlgorithm
+import skirout.editor.v1.compiled_content.CompiledArtifactReference
+import skirout.editor.v1.compiled_content.CompiledBlobPointer
+import skirout.editor.v1.compiled_content.PublishedContent
+import skirout.editor.v1.compiled_content.PublishedOutput
+import skirout.editor.v1.type_catalog.PublicationId
 
 /** Writes protected publication payloads and repairs missing selected bytes only when reproduced exactly. */
 class RegisteredCompiledArtifactStore(
@@ -35,22 +36,23 @@ class RegisteredCompiledArtifactStore(
         val outputs =
             sources.map { (artifact, source) ->
                 PublishedOutput(
-                    CompiledArtifactReference(
-                        artifact.root,
-                        artifact.formatRevision,
-                        artifact.mediaType,
-                        artifact.semanticDigest,
-                    ),
-                    BlobTransfer().copyVerified(source, blobs, source.digest).pointer(),
+                    reference =
+                        CompiledArtifactReference(
+                            root = artifact.root,
+                            formatRevision = artifact.formatRevision,
+                            mediaType = artifact.mediaType,
+                            semanticDigest = artifact.semanticDigest.value,
+                        ),
+                    blob = BlobTransfer().copyVerified(source, blobs, source.digest).pointer(),
                 )
             }
         return PublishedContent(
-            publication,
-            PUBLISHED_CONTENT_FORMAT_REVISION,
-            catalog,
-            implementationToken,
-            outputs,
-        )
+            publication = publication,
+            formatRevision = PUBLISHED_CONTENT_FORMAT_REVISION,
+            catalog = catalog.toSkir(),
+            implementationToken = implementationToken,
+            outputs = outputs,
+        ).requireValid()
     }
 
     suspend fun selected(content: PublishedContent) = retention.selected(content.publication.value)
@@ -79,10 +81,10 @@ class RegisteredCompiledArtifactStore(
                 val output = expected.getValue(artifact.root)
                 val reference =
                     CompiledArtifactReference(
-                        artifact.root,
-                        artifact.formatRevision,
-                        artifact.mediaType,
-                        artifact.semanticDigest,
+                        root = artifact.root,
+                        formatRevision = artifact.formatRevision,
+                        mediaType = artifact.mediaType,
+                        semanticDigest = artifact.semanticDigest.value,
                     )
                 check(output.reference == reference)
                 val digest = output.blob.digest.artifactDigest()
@@ -120,6 +122,6 @@ class RegisteredCompiledArtifactStore(
     }
 }
 
-private fun ContentDigest.artifactDigest() = ArtifactDigest(DigestAlgorithm.SHA_256, value)
+private fun String.artifactDigest() = ArtifactDigest(DigestAlgorithm.SHA_256, this)
 
-private fun BlobMetadata.pointer() = CompiledBlobPointer(ContentDigest(digest.value), size)
+private fun BlobMetadata.pointer() = CompiledBlobPointer(digest = digest.value, size = size)

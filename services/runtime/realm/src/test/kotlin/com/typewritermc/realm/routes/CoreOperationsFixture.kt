@@ -2,17 +2,16 @@
 
 package com.typewritermc.realm.routes
 
-import com.typewritermc.authoring.AuthoringRecord
 import com.typewritermc.authoring.GeneratedSdkApi
 import com.typewritermc.authoring.GraphLayoutDefinition
 import com.typewritermc.authoring.GraphPlacement
 import com.typewritermc.authoring.HierarchyPath
-import com.typewritermc.authoring.PathSegment
 import com.typewritermc.authoring.Placement
 import com.typewritermc.authoring.PreparedEdit
 import com.typewritermc.authoring.TimelineEntryPlacement
-import com.typewritermc.authoring.TypeSelection
-import com.typewritermc.authoring.ValuePath
+import com.typewritermc.authoring.field
+import com.typewritermc.authoring.of
+import com.typewritermc.authoring.root
 import com.typewritermc.authoring.skir.SkirAuthoringOperationCodec
 import com.typewritermc.capability.CapabilityId
 import com.typewritermc.checking.CatalogGeneration
@@ -63,7 +62,6 @@ import com.typewritermc.types.payload
 import com.typewritermc.types.qualified
 import com.typewritermc.types.requirePortable
 import com.typewritermc.types.skir.getOrThrow
-import com.typewritermc.types.template
 import com.typewritermc.types.use
 import skirout.editor.v1.authoring.AuthoringObservationId
 import skirout.editor.v1.capability.InvocationId
@@ -77,12 +75,16 @@ import skirout.editor.v1.resource_operations.OperationWorkingOverlay
 import skirout.editor.v1.resource_operations.PrepareAuthoringActionRequest
 import skirout.editor.v1.resource_operations.ResolveDropCandidatesRequest
 import skirout.editor.v1.resource_operations.ResolveResourceOperationsRequest
+import skirout.editor.v1.type_catalog.AuthoringRecord
 import skirout.editor.v1.type_catalog.DataValue
 import skirout.editor.v1.type_catalog.FieldOwner
 import skirout.editor.v1.type_catalog.ItemId
+import skirout.editor.v1.type_catalog.PathSegment
 import skirout.editor.v1.type_catalog.RepresentationTemplate
 import skirout.editor.v1.type_catalog.TypeDefinition
 import skirout.editor.v1.type_catalog.TypeDefinitionId
+import skirout.editor.v1.type_catalog.TypeSelection
+import skirout.editor.v1.type_catalog.ValuePath
 import java.nio.file.Path
 
 /**
@@ -193,7 +195,10 @@ internal class CoreOperationsFixture(
             @Suppress("UNCHECKED_CAST")
             val binding = lease.nativeBindings.bind(checked) as NativeBinding<T>
             val encoded = binding.encode(value) as DataValue.NamedWrapper
-            return AuthoringRecord(TypeSelection.Complete(encoded.actualType), (encoded.payload as DataValue.RecordWrapper).value.fieldMap)
+            return AuthoringRecord.of(
+                TypeSelection.CompleteWrapper(encoded.actualType),
+                (encoded.payload as DataValue.RecordWrapper).value.fieldMap,
+            )
         }
 
         fun encodeFields(
@@ -219,7 +224,13 @@ internal class CoreOperationsFixture(
                     "book" to
                         Ref<BookPages.Page, Book>(
                             ResourceId(book),
-                            ValuePath(listOf(PathSegment.Field("pages"), PathSegment.Item(ItemId(value = "native:$index")))),
+                            ValuePath(
+                                segments =
+                                    listOf(
+                                        PathSegment.createField(name = "pages"),
+                                        PathSegment.createItem(id = ItemId(value = "native:$index")),
+                                    ),
+                            ),
                         ),
                     "name" to "Page $index",
                     "chapter" to HierarchyPath.parse(chapter),
@@ -228,11 +239,11 @@ internal class CoreOperationsFixture(
                         elements.map {
                             Ref<PageElements.Page, com.typewritermc.elements.Element>(
                                 ResourceId(it),
-                                ValuePath(listOf(PathSegment.Field("page"))),
+                                ValuePath.root.field("page"),
                             )
                         },
                 )
-            return AuthoringRecord(TypeSelection.Complete(type.namedUse()), encodeFields(PageDefinition.declaration, values))
+            return AuthoringRecord.of(TypeSelection.CompleteWrapper(type.namedUse()), encodeFields(PageDefinition.declaration, values))
         }
 
         fun entry(
@@ -245,12 +256,21 @@ internal class CoreOperationsFixture(
                     "page" to
                         Ref<PageElements.Element, com.typewritermc.library.Page>(
                             ResourceId(page),
-                            ValuePath(listOf(PathSegment.Field("elements"), PathSegment.Item(ItemId(value = "native:$index")))),
+                            ValuePath(
+                                segments =
+                                    listOf(
+                                        PathSegment.createField(name = "elements"),
+                                        PathSegment.createItem(id = ItemId(value = "native:$index")),
+                                    ),
+                            ),
                         ),
                     "name" to "Entry",
                     "placement" to placement,
                 )
-            return AuthoringRecord(TypeSelection.Complete(ENTRY_TYPE.namedUse()), encodeFields(ElementDefinition.declaration, values))
+            return AuthoringRecord.of(
+                TypeSelection.CompleteWrapper(ENTRY_TYPE.namedUse()),
+                encodeFields(ElementDefinition.declaration, values),
+            )
         }
 
         fun bookOf(
@@ -261,7 +281,7 @@ internal class CoreOperationsFixture(
                 title = title,
                 pages =
                     pages.map {
-                        Ref(ResourceId(it), ValuePath(listOf(PathSegment.Field("book"))))
+                        Ref(ResourceId(it), ValuePath.root.field("book"))
                     },
             ),
             BookDefinition.id,
@@ -312,7 +332,7 @@ internal class CoreOperationsFixture(
     fun candidateSearch(
         declaration: Any,
         field: String,
-    ): CapabilityId = operation(declaration).candidateSearch(ValuePath(listOf(PathSegment.Field(field))))
+    ): CapabilityId = operation(declaration).candidateSearch(ValuePath.root.field(field))
 
     fun input(
         value: Any,
@@ -389,7 +409,10 @@ internal class CoreOperationsFixture(
             @Suppress("UNCHECKED_CAST")
             val binding = root.catalog.nativeBindings.bind(checked) as NativeBinding<T>
             val encoded = binding.encode(value) as DataValue.NamedWrapper
-            AuthoringRecord(TypeSelection.Complete(encoded.actualType), (encoded.payload as DataValue.RecordWrapper).value.fieldMap)
+            AuthoringRecord.of(
+                TypeSelection.CompleteWrapper(encoded.actualType),
+                (encoded.payload as DataValue.RecordWrapper).value.fieldMap,
+            )
         }
 
     /** Plans [edit] against the saved resources and returns the resulting resources, or the planner rejection. */

@@ -4,11 +4,8 @@ import com.typewritermc.authoring.ConnectIntent
 import com.typewritermc.authoring.CounterpartChoice
 import com.typewritermc.authoring.DefaultInitializationRuntime
 import com.typewritermc.authoring.InitializationRequest
-import com.typewritermc.authoring.LinkOccurrence
-import com.typewritermc.authoring.LinkOccurrenceId
 import com.typewritermc.authoring.PreparationTarget
-import com.typewritermc.authoring.PreparedContent
-import com.typewritermc.authoring.TypeSelection
+import com.typewritermc.authoring.record
 import com.typewritermc.checking.InputIdentity
 import com.typewritermc.operations.OperationPreparation
 import com.typewritermc.operations.PreparationChoice
@@ -16,10 +13,16 @@ import com.typewritermc.operations.PreparationChoices
 import com.typewritermc.realm.repository.CounterpartBinding
 import com.typewritermc.realm.repository.ResourceValueMapper
 import com.typewritermc.realm.repository.valueAt
-import com.typewritermc.types.LinkTarget
 import com.typewritermc.types.ResourceId
 import com.typewritermc.types.catalog.Resolution
+import com.typewritermc.types.toResourceId
+import com.typewritermc.types.toSkir
+import skirout.editor.v1.authoring.LinkOccurrence
+import skirout.editor.v1.authoring.LinkOccurrenceId
+import skirout.editor.v1.catalog.PreparedContent
+import skirout.editor.v1.type_catalog.LinkTarget
 import skirout.editor.v1.type_catalog.ResolvedRepresentation
+import skirout.editor.v1.type_catalog.TypeSelection
 import skirout.editor.v1.type_catalog.TypeUse
 
 /** Prepares ownership transfers and links through the same session used by menus and drops. */
@@ -44,7 +47,7 @@ internal class OperationRelationPreparation(
             val membership =
                 relations.ownership(subject, operation.invocation.origin)
                     ?: error("The resource does not have one exact owner occurrence")
-            if (membership.source == destination) return@forEach
+            if (membership.source.toResourceId() == destination) return@forEach
             val sources = relations.ownerSources(subject, membership, destination, operation.identities::item)
             require(sources.isNotEmpty()) { "The destination does not accept this resource" }
             val source =
@@ -53,13 +56,15 @@ internal class OperationRelationPreparation(
                 )
             relations.observe(source)
             moved += subject
-            if (source.source == subject) inverse += source else ownerSide += membership to source
+            if (source.source.toResourceId() == subject) inverse += source else ownerSide += membership to source
         }
         assignCounterparts(inverse, destination, operation.choices).forEach { operation.connect(it) }
         ownerSide.forEach { (membership, source) ->
             val subject = membership.target.resource
             operation.disconnect(membership.id)
-            operation.connect(ConnectIntent(source, subject, counterpartFor(source, subject, operation.choices)))
+            operation.connect(
+                ConnectIntent(source, subject.toResourceId(), counterpartFor(source, subject.toResourceId(), operation.choices)),
+            )
         }
         return moved
     }
@@ -89,7 +94,7 @@ internal class OperationRelationPreparation(
         // Each linked resource offers its own counterpart slots, so assignments are independent per linked resource.
         additions
             .groupBy { it.target.resource }
-            .flatMap { (linked, sources) -> assignCounterparts(sources, linked, operation.choices) }
+            .flatMap { (linked, sources) -> assignCounterparts(sources, linked.toResourceId(), operation.choices) }
             .forEach { operation.connect(it) }
     }
 
@@ -118,7 +123,7 @@ internal class OperationRelationPreparation(
         if (candidates.size == 1) return candidates.single()
         return answers.require(
             PreparationChoice.Counterpart(
-                "counterpart:${source.id}:$target",
+                "counterpart:${LinkOccurrenceId.serializer.toJsonCode(source.id)}:$target",
                 "Choose inverse counterpart",
                 source,
                 candidates.filterNotNull(),
@@ -161,7 +166,7 @@ internal class OperationRelationPreparation(
                 } else {
                     answers.require(
                         PreparationChoice.Counterpart(
-                            "counterpart:${source.id}:$target",
+                            "counterpart:${LinkOccurrenceId.serializer.toJsonCode(source.id)}:$target",
                             "Choose inverse counterpart",
                             source,
                             valid.filterNotNull(),
@@ -193,12 +198,16 @@ internal class OperationRelationPreparation(
         val candidates: MutableList<CounterpartChoice> =
             locations
                 .filter { at ->
-                    val old = current[LinkOccurrenceId(opposite, at)]
+                    val old = current[LinkOccurrenceId(endpoint = opposite, location = at)]
                     (old?.target?.resource == source.source && old.target.opposite == source.id.location.path) ||
                         record.valueAt(at.path)?.unfilled() != false
                 }.mapTo(mutableListOf()) { at ->
                     CounterpartChoice.Existing(
-                        LinkOccurrence(LinkOccurrenceId(opposite, at), target, LinkTarget(source.source, source.id.location.path)),
+                        LinkOccurrence(
+                            id = LinkOccurrenceId(endpoint = opposite, location = at),
+                            source = target.toSkir(),
+                            target = LinkTarget(resource = source.source, opposite = source.id.location.path),
+                        ),
                     )
                 }
         if (binding is CounterpartBinding.ExplicitChoice) {
@@ -215,11 +224,11 @@ internal class OperationRelationPreparation(
                     DefaultInitializationRuntime(catalog.checked, catalog.nativeBindings).prepareNow(
                         InitializationRequest(
                             catalog.generation,
-                            PreparationTarget.Record(TypeSelection.Complete(itemType.value)),
+                            PreparationTarget.Record(TypeSelection.CompleteWrapper(itemType.value)),
                             null,
                         ),
                     )
-                val materialized = (prepared.content as? PreparedContent.Record)?.record ?: return@forEach
+                val materialized = (prepared.content as? PreparedContent.RecordWrapper)?.record ?: return@forEach
                 if (ResourceValueMapper.declaredLocations(opposite, target, materialized, catalog.checked).size == 1) {
                     candidates += CounterpartChoice.New(containing, prepared)
                 }

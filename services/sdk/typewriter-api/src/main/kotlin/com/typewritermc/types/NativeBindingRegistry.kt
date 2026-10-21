@@ -6,10 +6,10 @@ import com.typewritermc.authoring.CompletenessResult
 import com.typewritermc.authoring.NativeBindingId
 import com.typewritermc.authoring.PortableValue
 import com.typewritermc.authoring.complete
-import com.typewritermc.checking.Diagnostic
 import com.typewritermc.types.catalog.CheckedCatalog
 import com.typewritermc.types.catalog.CheckedType
 import com.typewritermc.types.catalog.Resolution
+import skirout.editor.v1.diagnostic.Diagnostic
 import skirout.editor.v1.type_catalog.CollectionKind
 import skirout.editor.v1.type_catalog.DataValue
 import skirout.editor.v1.type_catalog.EndpointId
@@ -17,6 +17,7 @@ import skirout.editor.v1.type_catalog.FieldOwner
 import skirout.editor.v1.type_catalog.FloatWidth
 import skirout.editor.v1.type_catalog.IntegerWidth
 import skirout.editor.v1.type_catalog.ItemId
+import skirout.editor.v1.type_catalog.LinkTarget
 import skirout.editor.v1.type_catalog.ListItem
 import skirout.editor.v1.type_catalog.MapRow
 import skirout.editor.v1.type_catalog.NamedTypeUse
@@ -701,7 +702,7 @@ private class LinkNativeBinding(
     override fun encode(value: Ref<*, *>): DataValue =
         DataValue.named(
             application,
-            DataValue.link(endpoint, LinkTarget(value.target, value.opposite)),
+            DataValue.createLink(endpoint = endpoint, target = LinkTarget(resource = value.target.toSkir(), opposite = value.opposite)),
         )
 
     override fun decode(value: CompleteValue): Ref<*, *> {
@@ -709,8 +710,8 @@ private class LinkNativeBinding(
         if (link.endpoint != endpoint) {
             throw NativeBindingException("wrong_link_endpoint", "The authored link endpoint does not match its native binding.")
         }
-        val target = link.linkTarget
-        return Ref<RelationshipEndpoint<Resource, Resource>, Resource>(target.resource, target.opposite)
+        val target = link.value.target
+        return Ref<RelationshipEndpoint<Resource, Resource>, Resource>(target.resource.toResourceId(), target.opposite)
     }
 }
 

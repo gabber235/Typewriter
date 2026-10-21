@@ -9,10 +9,17 @@ import com.typewritermc.expression.EvaluationDiagnostic
 import com.typewritermc.types.RelationFamilyId
 import com.typewritermc.types.RelationId
 import com.typewritermc.types.ResourceId
+import com.typewritermc.types.toResourceId
+import com.typewritermc.types.unknownVariant
 import com.typewritermc.types.use
 import kotlinx.serialization.Serializable
+import skirout.editor.v1.authoring.LinkOccurrence
+import skirout.editor.v1.authoring.LinkOccurrenceId
 import skirout.editor.v1.type_catalog.EndpointId
 import skirout.editor.v1.type_catalog.NamedTypeUse
+import skirout.editor.v1.type_catalog.TypeSelection
+import skirout.editor.v1.type_catalog.ValueLocation
+import skirout.editor.v1.type_catalog.ValuePath
 
 interface GraphReads {
     context(reads: AuthoredReads)
@@ -151,14 +158,15 @@ private class BoundResourceDraft(
         ) { "A resource draft must bind at the resource root." }
     }
 
-    override val id: ResourceId = binding.location.resource
+    override val id: ResourceId = binding.location.resource.toResourceId()
     override val catalog = binding.catalog
     override val readContext: ReadContext = binding.readContext
     override val location: ValueLocation = binding.location
     override val actualType: Availability<NamedTypeUse> =
         when (val actual = binding.actual) {
-            is TypeSelection.Complete -> Availability.Available(actual.use)
-            is TypeSelection.Pending -> Availability.Unavailable(listOf(location))
+            is TypeSelection.CompleteWrapper -> Availability.Available(actual.use)
+            is TypeSelection.PendingWrapper -> Availability.Unavailable(listOf(location))
+            else -> unknownVariant(actual)
         }
 }
 

@@ -4,17 +4,16 @@ import com.typewritermc.authoring.AppliedNativeArguments
 import com.typewritermc.authoring.CaptureResult
 import com.typewritermc.authoring.CompleteValue
 import com.typewritermc.authoring.DefaultInitializationRuntime
-import com.typewritermc.authoring.InitializationDiagnostic
 import com.typewritermc.authoring.InitializationRequest
 import com.typewritermc.authoring.NativeBindingId
 import com.typewritermc.authoring.NativeConstructionPlan
-import com.typewritermc.authoring.PathSegment
 import com.typewritermc.authoring.PreparationTarget
-import com.typewritermc.authoring.PreparedContent
-import com.typewritermc.authoring.PreparedValue
 import com.typewritermc.authoring.StructuralResult
-import com.typewritermc.authoring.TypeSelection
 import com.typewritermc.authoring.authoredDefault
+import com.typewritermc.authoring.field
+import com.typewritermc.authoring.fieldMap
+import com.typewritermc.authoring.of
+import com.typewritermc.authoring.root
 import com.typewritermc.authoring.validateStructure
 import com.typewritermc.checking.CatalogGeneration
 import com.typewritermc.types.FactoryNativeBindingRegistry
@@ -36,16 +35,24 @@ import com.typewritermc.types.template
 import com.typewritermc.types.use
 import de.infix.testBalloon.framework.core.testSuite
 import io.kotest.matchers.shouldBe
+import skirout.editor.v1.catalog.PreparedContent
+import skirout.editor.v1.catalog.PreparedValue
+import skirout.editor.v1.diagnostic.InitializationDiagnostic
+import skirout.editor.v1.type_catalog.ArgumentSelection
+import skirout.editor.v1.type_catalog.AuthoringRecord
 import skirout.editor.v1.type_catalog.DataValue
 import skirout.editor.v1.type_catalog.FieldDeclaration
 import skirout.editor.v1.type_catalog.FieldOwner
 import skirout.editor.v1.type_catalog.IntegerWidth
 import skirout.editor.v1.type_catalog.ParameterKey
+import skirout.editor.v1.type_catalog.PathSegment
 import skirout.editor.v1.type_catalog.RepresentationTemplate
 import skirout.editor.v1.type_catalog.ScalarKind
 import skirout.editor.v1.type_catalog.TypeDefinition
 import skirout.editor.v1.type_catalog.TypeDefinitionId
 import skirout.editor.v1.type_catalog.TypeParameter
+import skirout.editor.v1.type_catalog.TypeSelection
+import skirout.editor.v1.type_catalog.ValuePath
 import kotlin.coroutines.Continuation
 import kotlin.coroutines.EmptyCoroutineContext
 import kotlin.coroutines.startCoroutine
@@ -69,7 +76,7 @@ val InitializationRuntimeConformanceTest by testSuite {
                 ),
             )
 
-        prepared.content shouldBe PreparedContent.Value(supplied)
+        prepared.content shouldBe PreparedContent.ValueWrapper(supplied)
         prepared.findings shouldBe emptyList()
     }
 
@@ -104,13 +111,13 @@ val InitializationRuntimeConformanceTest by testSuite {
             runtime.prepareNow(
                 recordRequest(
                     generation,
-                    TypeSelection.Complete(INITIALIZED_USE),
+                    TypeSelection.CompleteWrapper(INITIALIZED_USE),
                     mapOf("required" to DataValue.StringValueWrapper("authored")),
                 ),
             )
 
         plan.sampled.getValue(REQUIRED_OWNER).value shouldBe DataValue.StringValueWrapper("authored")
-        prepared.record.fields shouldBe
+        prepared.record.fieldMap shouldBe
             mapOf(
                 "required" to DataValue.StringValueWrapper("authored"),
                 "defaulted" to DataValue.integer(java.math.BigInteger.valueOf(3)),
@@ -156,9 +163,9 @@ val InitializationRuntimeConformanceTest by testSuite {
             }
         val bindings = FactoryNativeBindingRegistry(catalog, listOf(PlanFactory(construction, definitionId)))
         val selection =
-            TypeSelection.Pending(
-                definitionId,
-                listOf(com.typewritermc.authoring.ArgumentSelection.Unfilled),
+            TypeSelection.createPending(
+                definition = definitionId,
+                arguments = listOf(ArgumentSelection.UNFILLED),
             )
 
         val prepared =
@@ -171,7 +178,7 @@ val InitializationRuntimeConformanceTest by testSuite {
             )
 
         prepared.record shouldBe
-            com.typewritermc.authoring.AuthoringRecord(
+            AuthoringRecord.of(
                 selection,
                 mapOf(
                     "independent" to DataValue.StringValueWrapper(""),
@@ -190,7 +197,7 @@ val InitializationRuntimeConformanceTest by testSuite {
                     mapOf("unknown" to DataValue.BooleanWrapper(true)),
                 ),
             )
-        unknown.record.fields shouldBe mapOf("unknown" to DataValue.BooleanWrapper(true))
+        unknown.record.fieldMap shouldBe mapOf("unknown" to DataValue.BooleanWrapper(true))
         unknown.findings.map(InitializationDiagnostic::code) shouldBe listOf("unknown_field")
 
         val dependentSupplied =
@@ -201,7 +208,7 @@ val InitializationRuntimeConformanceTest by testSuite {
                     mapOf("dependent" to DataValue.StringValueWrapper("unchecked")),
                 ),
             )
-        dependentSupplied.record.fields shouldBe mapOf("dependent" to DataValue.StringValueWrapper("unchecked"))
+        dependentSupplied.record.fieldMap shouldBe mapOf("dependent" to DataValue.StringValueWrapper("unchecked"))
         dependentSupplied.findings.map(InitializationDiagnostic::code) shouldBe listOf("dependent_field_type_unavailable")
     }
 
@@ -234,14 +241,14 @@ val InitializationRuntimeConformanceTest by testSuite {
                 runtime.prepare(
                     recordRequest(
                         generation,
-                        TypeSelection.Complete(INITIALIZED_USE),
+                        TypeSelection.CompleteWrapper(INITIALIZED_USE),
                         emptyMap(),
                     ),
                 )
             }
 
         plan.sampled.getValue(REQUIRED_OWNER).value shouldBe DataValue.StringValueWrapper("")
-        prepared.record.fields shouldBe
+        prepared.record.fieldMap shouldBe
             mapOf(
                 "required" to DataValue.StringValueWrapper(""),
                 "defaulted" to DataValue.integer(java.math.BigInteger.valueOf(3)),
@@ -252,11 +259,11 @@ val InitializationRuntimeConformanceTest by testSuite {
             runtime.prepareNow(
                 recordRequest(
                     generation,
-                    TypeSelection.Complete(INITIALIZED_USE),
+                    TypeSelection.CompleteWrapper(INITIALIZED_USE),
                     mapOf("unknown" to DataValue.BooleanWrapper(true)),
                 ),
             )
-        unknown.record.fields shouldBe mapOf("unknown" to DataValue.BooleanWrapper(true))
+        unknown.record.fieldMap shouldBe mapOf("unknown" to DataValue.BooleanWrapper(true))
         unknown.findings.map(InitializationDiagnostic::code) shouldBe listOf("unknown_field")
     }
 
@@ -280,7 +287,13 @@ val InitializationRuntimeConformanceTest by testSuite {
                     ),
             )
         val catalog = DefaultCheckedCatalog(generation, listOf(definition))
-        val diagnostic = InitializationDiagnostic(DEFAULTED_OWNER, "constructor_failed", "The constructor failed.")
+        val diagnostic =
+            InitializationDiagnostic(
+                field = DEFAULTED_OWNER,
+                code = "constructor_failed",
+                message = "The constructor failed.",
+                relativePath = null,
+            )
         val bindings = FactoryNativeBindingRegistry(catalog, listOf(PlanFactory(FailingPlan(diagnostic))))
 
         val prepared =
@@ -288,17 +301,17 @@ val InitializationRuntimeConformanceTest by testSuite {
                 DefaultInitializationRuntime(catalog, bindings).prepare(
                     recordRequest(
                         generation,
-                        TypeSelection.Complete(INITIALIZED_USE),
+                        TypeSelection.CompleteWrapper(INITIALIZED_USE),
                         emptyMap(),
                     ),
                 )
             }
 
-        prepared.record.fields.getValue("required") shouldBe DataValue.StringValueWrapper("")
-        prepared.record.fields.getValue("defaulted") shouldBe DataValue.UNFILLED
+        prepared.record.fieldMap.getValue("required") shouldBe DataValue.StringValueWrapper("")
+        prepared.record.fieldMap.getValue("defaulted") shouldBe DataValue.UNFILLED
         prepared.findings shouldBe
             listOf(
-                diagnostic.copy(relativePath = com.typewritermc.authoring.ValuePath(listOf(PathSegment.Field("defaulted")))),
+                diagnostic.copy(relativePath = ValuePath.root.field("defaulted")),
             )
     }
 
@@ -348,20 +361,20 @@ val InitializationRuntimeConformanceTest by testSuite {
                 DefaultInitializationRuntime(catalog, bindings).prepare(
                     recordRequest(
                         generation,
-                        TypeSelection.Complete(ABSTRACT_OWNER_ID.namedUse()),
+                        TypeSelection.CompleteWrapper(ABSTRACT_OWNER_ID.namedUse()),
                         emptyMap(),
                     ),
                 )
             }
 
         plan.sampled shouldBe emptyMap()
-        prepared.record.fields.getValue("input") shouldBe DataValue.UNFILLED
-        prepared.record.fields.getValue("defaulted") shouldBe DataValue.UNFILLED
+        prepared.record.fieldMap.getValue("input") shouldBe DataValue.UNFILLED
+        prepared.record.fieldMap.getValue("defaulted") shouldBe DataValue.UNFILLED
         prepared.findings.map(InitializationDiagnostic::code) shouldBe listOf("unfinished_constructor_input")
         prepared.findings
             .single()
             .relativePath
-            ?.segments shouldBe listOf(PathSegment.Field("input"))
+            ?.segments shouldBe listOf(PathSegment.createField(name = "input"))
     }
 
     test("nested records include captured Kotlin defaults") {
@@ -404,13 +417,13 @@ val InitializationRuntimeConformanceTest by testSuite {
                 DefaultInitializationRuntime(catalog, bindings).prepare(
                     recordRequest(
                         generation,
-                        TypeSelection.Complete(PARENT_ID.namedUse()),
+                        TypeSelection.CompleteWrapper(PARENT_ID.namedUse()),
                         emptyMap(),
                     ),
                 )
             }
 
-        prepared.record.fields.getValue("child") shouldBe
+        prepared.record.fieldMap.getValue("child") shouldBe
             DataValue.named(
                 CHILD_ID.namedUse(),
                 DataValue.record(
@@ -464,7 +477,13 @@ val InitializationRuntimeConformanceTest by testSuite {
                     ),
             )
         val catalog = DefaultCheckedCatalog(generation, listOf(style, theme))
-        val diagnostic = InitializationDiagnostic(seed, "native_default_capture_failed", "Seed capture failed.")
+        val diagnostic =
+            InitializationDiagnostic(
+                field = seed,
+                code = "native_default_capture_failed",
+                message = "Seed capture failed.",
+                relativePath = null,
+            )
         val plan = FieldFailingPlan(seed, diagnostic)
         val bindings = FactoryNativeBindingRegistry(catalog, listOf(PlanFactory(plan, styleId)))
 
@@ -472,16 +491,16 @@ val InitializationRuntimeConformanceTest by testSuite {
             DefaultInitializationRuntime(catalog, bindings).prepareNow(
                 recordRequest(
                     generation,
-                    TypeSelection.Complete(themeId.namedUse()),
+                    TypeSelection.CompleteWrapper(themeId.namedUse()),
                     mapOf("label" to DataValue.StringValueWrapper("supplied")),
                 ),
             )
 
-        prepared.record.fields.getValue("label") shouldBe DataValue.StringValueWrapper("supplied")
+        prepared.record.fieldMap.getValue("label") shouldBe DataValue.StringValueWrapper("supplied")
         prepared.findings.map { finding -> finding.relativePath?.segments } shouldBe
             listOf(
-                listOf(PathSegment.Field("styleA"), PathSegment.Field("seed")),
-                listOf(PathSegment.Field("styleB"), PathSegment.Field("seed")),
+                listOf(PathSegment.createField(name = "styleA"), PathSegment.createField(name = "seed")),
+                listOf(PathSegment.createField(name = "styleB"), PathSegment.createField(name = "seed")),
             )
         plan.samples shouldBe 2
     }
@@ -510,7 +529,7 @@ val InitializationRuntimeConformanceTest by testSuite {
             DefaultInitializationRuntime(catalog, FactoryNativeBindingRegistry(catalog, emptyList())).prepareNow(
                 recordRequest(
                     generation,
-                    TypeSelection.Complete(directId.namedUse()),
+                    TypeSelection.CompleteWrapper(directId.namedUse()),
                     emptyMap(),
                 ),
             )
@@ -520,7 +539,7 @@ val InitializationRuntimeConformanceTest by testSuite {
             .single()
             .relativePath
             ?.segments shouldBe
-            listOf(PathSegment.Field("next"), PathSegment.Field("next"))
+            listOf(PathSegment.createField(name = "next"), PathSegment.createField(name = "next"))
     }
 
     test("nonregular recursive defaults reject expanding applications") {
@@ -554,7 +573,7 @@ val InitializationRuntimeConformanceTest by testSuite {
             DefaultInitializationRuntime(catalog, FactoryNativeBindingRegistry(catalog, emptyList())).prepareNow(
                 recordRequest(
                     generation,
-                    TypeSelection.Complete(growId.namedUse(listOf(ScalarKind.TEXT.use))),
+                    TypeSelection.CompleteWrapper(growId.namedUse(listOf(ScalarKind.TEXT.use))),
                     emptyMap(),
                 ),
             )
@@ -564,7 +583,7 @@ val InitializationRuntimeConformanceTest by testSuite {
             .single()
             .relativePath
             ?.segments shouldBe
-            listOf(PathSegment.Field("next"), PathSegment.Field("next"))
+            listOf(PathSegment.createField(name = "next"), PathSegment.createField(name = "next"))
     }
 
     test("abstract recursive input remains unselected without evaluating concrete forms") {
@@ -611,12 +630,12 @@ val InitializationRuntimeConformanceTest by testSuite {
             DefaultInitializationRuntime(catalog, FactoryNativeBindingRegistry(catalog, emptyList())).prepareNow(
                 recordRequest(
                     generation,
-                    TypeSelection.Complete(ownerId.namedUse()),
+                    TypeSelection.CompleteWrapper(ownerId.namedUse()),
                     emptyMap(),
                 ),
             )
 
-        prepared.record.fields.getValue("node") shouldBe DataValue.UNFILLED
+        prepared.record.fieldMap.getValue("node") shouldBe DataValue.UNFILLED
         prepared.findings shouldBe emptyList()
     }
 
@@ -671,12 +690,12 @@ val InitializationRuntimeConformanceTest by testSuite {
             runtime.prepareNow(
                 recordRequest(
                     generation,
-                    TypeSelection.Complete(boxId.namedUse(listOf(innerBox.use))),
+                    TypeSelection.CompleteWrapper(boxId.namedUse(listOf(innerBox.use))),
                     emptyMap(),
                 ),
             )
         boxed.findings shouldBe emptyList()
-        boxed.record.fields.getValue("value") shouldBe
+        boxed.record.fieldMap.getValue("value") shouldBe
             DataValue.named(innerBox, DataValue.record(mapOf("value" to DataValue.StringValueWrapper(""))))
 
         val treeUse = treeId.namedUse(listOf(text))
@@ -684,12 +703,12 @@ val InitializationRuntimeConformanceTest by testSuite {
             runtime.prepareNow(
                 recordRequest(
                     generation,
-                    TypeSelection.Complete(treeUse),
+                    TypeSelection.CompleteWrapper(treeUse),
                     emptyMap(),
                 ),
             )
         preparedTree.findings shouldBe emptyList()
-        preparedTree.record.fields shouldBe
+        preparedTree.record.fieldMap shouldBe
             mapOf(
                 "value" to DataValue.StringValueWrapper(""),
                 "children" to
@@ -814,7 +833,7 @@ private val PARENT_ID = TypeDefinitionId.qualified("test", "Parent")
 private val PARENT_CHILD_OWNER = FieldOwner(definition = PARENT_ID, name = "child")
 
 private val PreparedValue.record
-    get() = (content as PreparedContent.Record).record
+    get() = (content as PreparedContent.RecordWrapper).value
 
 private fun recordRequest(
     generation: CatalogGeneration,

@@ -5,7 +5,6 @@ package com.typewritermc.realm
 import ch.qos.logback.classic.Level
 import com.typewritermc.authoring.DefaultInitializationRuntime
 import com.typewritermc.checking.CatalogGeneration
-import com.typewritermc.checking.InputToken
 import com.typewritermc.discovery.CatalogAssembly
 import com.typewritermc.discovery.CatalogAssemblyContext
 import com.typewritermc.discovery.CatalogCallback
@@ -25,7 +24,6 @@ import com.typewritermc.presentation.PresentationRuntime
 import com.typewritermc.realm.authoring.PreparationEvaluator
 import com.typewritermc.realm.catalog.RealmCatalogIncarnation
 import com.typewritermc.realm.catalog.RealmCatalogStore
-import com.typewritermc.realm.compiler.EngineImplementationInputs
 import com.typewritermc.realm.compiler.StagedEngineImplementationSource
 import com.typewritermc.realm.deployment.ManagedRealmRuntime
 import com.typewritermc.realm.deployment.RealmRuntimeFactory
@@ -51,6 +49,8 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.cancel
+import skirout.editor.v1.publication.EngineImplementationInputs
+import skirout.editor.v1.type_catalog.InputToken
 import java.nio.file.Path
 import java.util.UUID
 import java.util.concurrent.atomic.AtomicBoolean
@@ -134,7 +134,7 @@ class DefaultRealmRuntimeFactory : RealmRuntimeFactory {
                         },
                     engine =
                         StagedEngineImplementationSource(
-                            EngineImplementationInputs(InputToken(context.publicationTarget.fingerprint())),
+                            EngineImplementationInputs(token = InputToken(value = context.publicationTarget.fingerprint())),
                         ),
                 )
             return DefaultManagedRealmRuntime(

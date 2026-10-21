@@ -16,21 +16,16 @@ import kotlinx.serialization.json.JsonDecoder
 import kotlinx.serialization.json.JsonElement
 import kotlinx.serialization.json.JsonEncoder
 import skirout.editor.v1.type_catalog.DataValue
-import skirout.editor.v1.type_catalog.EndpointId
-import skirout.editor.v1.type_catalog.FieldOwner
-import skirout.editor.v1.type_catalog.ItemId
 import skirout.editor.v1.type_catalog.NamedTypeUse
-import skirout.editor.v1.type_catalog.RuleOrigin
 import skirout.editor.v1.type_catalog.TypeDefinition
-import skirout.editor.v1.type_catalog.TypeDefinitionId
-import skirout.editor.v1.type_catalog.TypeUse
+import skirout.editor.v1.type_catalog.ValuePath
 import build.skir.Serializer as SkirSerializer
 
 /**
- * Embeds the readable Skir JSON of a generated value inside a kotlinx serialized structure, so storage models that
- * are still kotlinx classes (authored records, compiled content, prepared values and stored findings) hold Skir type
- * and data values in the format they keep once those models are Skir values themselves. Decoding checks the value with
- * the same rules as every other entry point and keeps the checked form it returns.
+ * Embeds the readable Skir JSON of a generated value inside a kotlinx serialized structure, so the kotlinx models that
+ * remain (the facts of compiled resource graph shards and author facing references) hold Skir type, data and path
+ * values in their readable Skir form. Decoding checks the value with the same rules as every other entry point and
+ * keeps the checked form it returns.
  *
  * JSON formats receive the readable JSON object; any other format receives its text.
  */
@@ -58,25 +53,14 @@ abstract class SkirJsonSerializer<T : Any>(
     }
 }
 
-object TypeUseSerializer : SkirJsonSerializer<TypeUse>(TypeUse.serializer, "skir.TypeUse", { it.requireValid() })
-
 object NamedTypeUseSerializer : SkirJsonSerializer<NamedTypeUse>(NamedTypeUse.serializer, "skir.NamedTypeUse", { it.requireValid() })
-
-object TypeDefinitionIdSerializer :
-    SkirJsonSerializer<TypeDefinitionId>(TypeDefinitionId.serializer, "skir.TypeDefinitionId", { it.requireValid() })
 
 object TypeDefinitionSerializer :
     SkirJsonSerializer<TypeDefinition>(TypeDefinition.serializer, "skir.TypeDefinition", { it.requireValid() })
 
-object FieldOwnerSerializer : SkirJsonSerializer<FieldOwner>(FieldOwner.serializer, "skir.FieldOwner", { it.requireValid() })
-
-object EndpointIdSerializer : SkirJsonSerializer<EndpointId>(EndpointId.serializer, "skir.EndpointId", { it.requireValid() })
-
-object RuleOriginSerializer : SkirJsonSerializer<RuleOrigin>(RuleOrigin.serializer, "skir.RuleOrigin", { it.requireValid() })
-
 object DataValueSerializer : SkirJsonSerializer<DataValue>(DataValue.serializer, "skir.DataValue", { it.requirePortable() })
 
-object ItemIdSerializer : SkirJsonSerializer<ItemId>(ItemId.serializer, "skir.ItemId", { it.requireValid() })
+object ValuePathSerializer : SkirJsonSerializer<ValuePath>(ValuePath.serializer, "skir.ValuePath", { it.requireValid() })
 
 /** Stores a named data value, the form compiled resources keep, as the readable Skir JSON of its data value. */
 object NamedDataValueSerializer : KSerializer<DataValue.NamedWrapper> {

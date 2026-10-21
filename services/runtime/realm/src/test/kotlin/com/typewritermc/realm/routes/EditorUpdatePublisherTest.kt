@@ -1,19 +1,15 @@
 package com.typewritermc.realm.routes
 
-import com.typewritermc.authoring.CheckExecutionId
 import com.typewritermc.authoring.EditExpectation
-import com.typewritermc.authoring.ValueLocation
-import com.typewritermc.authoring.ValuePath
+import com.typewritermc.authoring.of
 import com.typewritermc.checking.CatalogGeneration
-import com.typewritermc.checking.CheckOutcome
+import com.typewritermc.checking.toSkir
 import com.typewritermc.protocol.transport.RealmRouteScope
 import com.typewritermc.realm.authoring.AuthoringSeed
 import com.typewritermc.realm.authoring.AuthoringViewDelta
 import com.typewritermc.realm.authoring.InMemoryAuthoringViewStore
-import com.typewritermc.realm.checking.CheckInstanceId
-import com.typewritermc.realm.checking.CheckTicket
-import com.typewritermc.realm.checking.FindingSet
 import com.typewritermc.realm.checking.TestCatalogLease
+import com.typewritermc.realm.checking.encodedExpectations
 import com.typewritermc.realm.checking.record
 import com.typewritermc.realm.compiler.PublicationFixture
 import com.typewritermc.services.libs.communicator.client.Communicator
@@ -37,10 +33,16 @@ import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.withTimeout
 import kotlinx.coroutines.yield
 import skirout.editor.v1.authoring.AuthoringChanged
+import skirout.editor.v1.checking.CheckInstanceId
+import skirout.editor.v1.checking.CheckOutcome
+import skirout.editor.v1.checking.CheckTicket
+import skirout.editor.v1.checking.FindingSet
 import skirout.editor.v1.checking.FindingStatus
+import skirout.editor.v1.type_catalog.CheckExecutionId
 import skirout.editor.v1.type_catalog.RuleId
 import skirout.editor.v1.type_catalog.RuleOrigin
 import skirout.editor.v1.type_catalog.TypeDefinitionId
+import skirout.editor.v1.type_catalog.ValueLocation
 import kotlin.time.Duration.Companion.seconds
 
 val EditorUpdatePublisherTest by testSuite {
@@ -114,21 +116,26 @@ val EditorUpdatePublisherTest by testSuite {
             val views = InMemoryAuthoringViewStore(TestCatalogLease(), AuthoringSeed(mapOf(resource to original)))
             val ticket =
                 CheckTicket(
-                    CheckInstanceId(
-                        RuleId(origin = RuleOrigin(owner = TypeDefinitionId.qualified("test", "rule"), ordinal = 0), localIndex = 0),
-                        ValueLocation(resource, ValuePath()),
-                    ),
-                    "catalog:1",
-                    CheckExecutionId("execution"),
-                    CatalogGeneration("catalog"),
+                    instance =
+                        CheckInstanceId(
+                            rule =
+                                RuleId(
+                                    origin = RuleOrigin(owner = TypeDefinitionId.qualified("test", "rule"), ordinal = 0),
+                                    localIndex = 0,
+                                ),
+                            location = ValueLocation.of(resource),
+                        ),
+                    incarnation = "catalog:1",
+                    execution = CheckExecutionId(value = "execution"),
+                    catalog = CatalogGeneration("catalog").toSkir(),
                 )
             val finding =
                 FindingSet(
-                    ticket,
-                    listOf(EditExpectation.Resource(resource, original)),
-                    CheckOutcome.Finished,
-                    emptyList(),
-                    FindingStatus.CURRENT,
+                    ticket = ticket,
+                    expectations = listOf<EditExpectation>(EditExpectation.Resource(resource, original)).encodedExpectations(),
+                    outcome = CheckOutcome.FINISHED,
+                    findings = emptyList(),
+                    status = FindingStatus.CURRENT,
                 )
             try {
                 views.install(views.prepare(AuthoringViewDelta(upsertedResources = mapOf(resource to record(name = "Story")))))

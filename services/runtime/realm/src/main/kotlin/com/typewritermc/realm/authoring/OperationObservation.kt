@@ -1,13 +1,12 @@
 package com.typewritermc.realm.authoring
 
-import com.typewritermc.authoring.AuthoringRecord
 import com.typewritermc.authoring.StructuralResult
-import com.typewritermc.authoring.immutableAuthoringCopy
 import com.typewritermc.authoring.validateStructure
 import com.typewritermc.realm.repository.AuthoringMutationPlanner
 import com.typewritermc.realm.repository.ResourceValueMapper
 import com.typewritermc.types.ResourceId
 import com.typewritermc.types.immutableMapCopy
+import skirout.editor.v1.type_catalog.AuthoringRecord
 
 /** Signals that a caller must refresh saved state before inspecting its proposed overlay. */
 internal class StaleOperationObservation(
@@ -29,7 +28,7 @@ internal fun AuthoringLease.operationObservation(
         val structural = record.validateStructure(root.catalog.checked)
         require(structural is StructuralResult.Valid) { "An overlay resource has invalid authored structure: $structural" }
     }
-    val resources = (root.resources + upserts - removals).immutableAuthoringCopy()
+    val resources = (root.resources + upserts - removals).immutableMapCopy()
     val links = ResourceValueMapper.discover(resources)
     val projected = ResourceValueMapper.project(links, resources, root.catalog.relations, root.catalog.checked)
     val problems =
