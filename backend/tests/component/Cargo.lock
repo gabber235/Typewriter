@@ -6927,6 +6927,7 @@ dependencies = [
  "otel-wasi",
  "serde",
  "serde_json",
+ "sha2 0.10.9",
  "skir-client",
  "surrealdb-component-sdk",
  "surrealdb-types",

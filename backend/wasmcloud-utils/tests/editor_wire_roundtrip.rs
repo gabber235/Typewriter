@@ -384,7 +384,7 @@ fn collection_expressions_preserve_typed_fold_operands_and_lexical_slots() {
 
 #[test]
 fn current_state_lifecycle_contracts_round_trip_with_expected_values() {
-    let catalog_snapshot = catalog::EditorCatalogWireSnapshot {
+    let catalog_snapshot = catalog::EditorCatalog {
         role_fallbacks: vec![catalog::RoleFallback {
             role: catalog::PresentationRole::ReferencePickerResult,
             parents: vec![
@@ -395,9 +395,8 @@ fn current_state_lifecycle_contracts_round_trip_with_expected_values() {
         }],
         ..Default::default()
     };
-    let catalog_bytes =
-        catalog::EditorCatalogWireSnapshot::serializer().to_bytes(&catalog_snapshot);
-    let decoded_catalog = catalog::EditorCatalogWireSnapshot::serializer()
+    let catalog_bytes = catalog::EditorCatalog::serializer().to_bytes(&catalog_snapshot);
+    let decoded_catalog = catalog::EditorCatalog::serializer()
         .from_bytes(&catalog_bytes, UnrecognizedValues::Drop)
         .expect("ordered role fallbacks must decode");
     assert_eq!(decoded_catalog, catalog_snapshot);

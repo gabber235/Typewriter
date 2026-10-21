@@ -23,7 +23,8 @@ use wasmcloud_utils::{
     skir_utils::RecordIdKeyIdentity,
     transport::{GrantSet, RealmScope, ServiceScope, SubjectToken, request_route},
     transport_routes::{
-        RealmRole, ServiceBindingQueryRoute, ServiceMessagingScopeRoute, ServiceRole,
+        MAX_RESPONSE_CHUNKS, RealmRole, ServiceBindingQueryRoute, ServiceMessagingScopeRoute,
+        ServiceRole,
     },
 };
 
@@ -92,9 +93,11 @@ pub async fn handle_service(
     Ok((permissions, tags))
 }
 
+/// Lets a service answer each request it receives within five minutes. A framed reply sends up to
+/// [`MAX_RESPONSE_CHUNKS`] frames to the requester's inbox, so that is the reply message limit.
 pub(crate) fn service_response_permission() -> ResponsePermission {
     ResponsePermission {
-        max_messages: Some(1),
+        max_messages: Some(MAX_RESPONSE_CHUNKS as i32),
         ttl: Some(Duration {
             milliseconds: 300_000,
             _unrecognized: None,

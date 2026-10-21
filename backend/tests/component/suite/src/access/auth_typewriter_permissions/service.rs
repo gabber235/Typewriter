@@ -206,7 +206,7 @@ async fn attached_service_receives_only_its_realm_permissions(
         .response
         .as_ref()
         .ok_or_else(|| anyhow::anyhow!("service response permission missing"))?;
-    assert_eq!(response_permission.max_messages, Some(1));
+    assert_eq!(response_permission.max_messages, Some(64));
     assert_eq!(
         response_permission
             .ttl
