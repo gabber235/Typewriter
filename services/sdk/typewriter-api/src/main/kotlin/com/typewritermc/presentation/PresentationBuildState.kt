@@ -3,7 +3,6 @@
 package com.typewritermc.presentation
 
 import com.typewritermc.authoring.GeneratedSdkApi
-import com.typewritermc.authoring.ResourceAppearance
 import com.typewritermc.expression.ExpressionBindingId
 import com.typewritermc.expression.ExpressionFactories
 import com.typewritermc.types.TypeTemplate
@@ -14,6 +13,7 @@ import com.typewritermc.types.skir.getOrThrow
 import com.typewritermc.types.toTemplate
 import skirout.editor.v1.binding.BindingRef
 import skirout.editor.v1.catalog.PresentationRole
+import skirout.editor.v1.catalog.ResourceAppearance
 import skirout.editor.v1.expression.ExpressionNode
 import skirout.editor.v1.presentation.AxisChild
 import skirout.editor.v1.presentation.AxisChildrenElement

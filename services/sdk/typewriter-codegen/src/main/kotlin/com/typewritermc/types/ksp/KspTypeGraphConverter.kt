@@ -40,11 +40,6 @@ import com.typewritermc.types.TypewriterGeneratedEndpoint
 import com.typewritermc.types.TypewriterString
 import com.typewritermc.types.TypewriterType
 
-/** Assigns each declaration its definition id; null marks a declaration whose declared id is malformed. */
-fun interface KspTypeIdentityPolicy {
-    fun identity(declaration: KSClassDeclaration): TypeDefinitionId?
-}
-
 fun interface KspLinkPolicy {
     fun endpoint(endpoint: KSClassDeclaration): EndpointId?
 }
@@ -88,7 +83,6 @@ sealed interface KspTypeConversionResult {
  * bounds, inheritance, or representation compatibility.
  */
 class KspTypeGraphConverter(
-    private val identityPolicy: KspTypeIdentityPolicy = KspTypeIdentityPolicy { it.typeDefinitionIdentity() },
     private val linkPolicy: KspLinkPolicy = KspLinkPolicy(::generatedEndpoint),
 ) {
     private val definitions = linkedMapOf<TypeDefinitionId, TypeDefinition>()
@@ -339,7 +333,7 @@ class KspTypeGraphConverter(
     private fun identity(
         declaration: KSClassDeclaration,
         path: List<String>,
-    ): TypeDefinitionId? = identityPolicy.identity(declaration) ?: failure(path, "Typewriter type ids must be UUIDs.")
+    ): TypeDefinitionId? = declaration.typeDefinitionIdentity() ?: failure(path, "Typewriter type ids must be UUIDs.")
 
     private fun ownedFields(
         declaration: KSClassDeclaration,
@@ -394,9 +388,6 @@ fun KSClassDeclaration.typeDefinitionIdentity(): TypeDefinitionId? {
             ?: return TypeDefinitionId(TypeId.Qualified("kotlin", qualifiedName?.asString() ?: simpleName.asString()), 1)
     return type.identity()
 }
-
-/** The declared `@TypewriterType` identity of this declaration, or null when it declares none or a malformed one. */
-fun KSClassDeclaration.declaredTypeIdentity(): TypeDefinitionId? = annotation<TypewriterType>()?.identity()
 
 private fun TypewriterType.identity(): TypeDefinitionId? {
     val declared = runCatching { DeclaredTypeId.parse(id) }.getOrNull() ?: return null

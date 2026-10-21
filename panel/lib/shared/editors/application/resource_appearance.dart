@@ -18,18 +18,19 @@ abstract class ResourceAppearance with _$ResourceAppearance {
 /// Binds an appearance as the canonical read model resource presentations
 /// read through [presentationSubjectAppearanceBindingId].
 extension ResourceAppearanceBinding on ResourceAppearance {
-  skir.DataValue toExpressionValue() => skir.DataValue.createNamed(
-    actualType: canonicalReadModels.resourceAppearanceUse,
-    payload: skir.DataValue.createRecord(
-      fields: [
-        skir.FieldValue(
-          name: "label",
-          value: skir.DataValue.wrapStringValue(label),
-        ),
-        skir.FieldValue(name: "accent", value: colorValue(accent.toARGB32())),
-        skir.FieldValue(name: "icon", value: iconValue(icon)),
-      ],
-    ),
+  /// The Skir read model of this appearance.
+  skir.ResourceAppearance toSkir() => skir.ResourceAppearance(
+    label: label,
+    accent: skir.Color(argb: accent.toARGB32().toSigned(32)),
+    icon: icon,
+  );
+
+  skir.DataValue toExpressionValue() => canonicalReadModels.project(
+    toSkir(),
+    skir.ResourceAppearance.serializer.typeDescriptor,
+    const [],
+    () {},
+    (_) {},
   );
 
   PortableExpressionBinding toExpressionBinding() => PortableExpressionBinding(

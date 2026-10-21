@@ -13,8 +13,8 @@ func (m *Typewriter) skirContainer(source *dagger.Directory) *dagger.Container {
 }
 
 // protocolGenerationContainer runs the single protocol generation entry point, `bun run generate:protocol`, with
-// the panel's Dart SDK plus rustfmt, Bun and the JDK the services build needs. The source is staged in a scratch Git
-// index first, so ignored build artifacts can be cleaned afterwards and generated drift stays visible.
+// the panel's Dart SDK plus rustfmt and Bun. The source is staged in a scratch Git index first, so ignored build
+// artifacts can be cleaned afterwards and generated drift stays visible.
 func (m *Typewriter) protocolGenerationContainer(source *dagger.Directory) *dagger.Container {
 	rust := dag.Container().
 		From("rust:1.95-bookworm").
@@ -28,9 +28,6 @@ func (m *Typewriter) protocolGenerationContainer(source *dagger.Directory) *dagg
 		WithEnvVariable("PATH", "/usr/local/cargo/bin:${PATH}", dagger.ContainerWithEnvVariableOpts{Expand: true}).
 		WithFile("/usr/local/bin/bun", dag.Container().From("oven/bun").File("/usr/local/bin/bun")).
 		WithExec([]string{"ln", "-s", "bun", "/usr/local/bin/bunx"}).
-		WithEnvVariable("GRADLE_OPTS", "-Dorg.gradle.daemon=false -Dorg.gradle.workers.max=2").
-		WithMountedCache("/root/.gradle/caches", dag.CacheVolume("services-gradle-caches")).
-		WithMountedCache("/root/.gradle/wrapper", dag.CacheVolume("services-gradle-wrapper")).
 		WithDirectory("/workspace", source).
 		WithWorkdir("/workspace").
 		WithExec([]string{"git", "init", "--quiet"}).
@@ -45,7 +42,7 @@ func (m *Typewriter) protocolGenerationContainer(source *dagger.Directory) *dagg
 func (m *Typewriter) ProtocolGenerationCheck(
 	// +optional
 	// +defaultPath="/"
-	// +ignore=["*", "!.gitignore", "!package.json", "!bun.lock", "!skir.yml", "!skir-src", "!services", "!backend/**/deploy/base/workloaddeployment.yaml", "!backend/**/deploy/base/kustomization.yaml", "!backend/**/deploy/base/nats-subscriptions.generated.yaml", "!backend/wasmcloud-utils/src/skirout", "!backend/wasmcloud-utils/src/transport_routes", "!panel/lib/infrastructure/protocols/skir/skirout", "!panel/lib/infrastructure/messaging/generated", "!panel/lib/shared/editors/application/canonical_read_models.generated.dart", "**/target", "**/node_modules", "**/build", "**/.gradle", "**/.kotlin"]
+	// +ignore=["*", "!.gitignore", "!package.json", "!bun.lock", "!skir.yml", "!skir-src", "!services", "!backend/**/deploy/base/workloaddeployment.yaml", "!backend/**/deploy/base/kustomization.yaml", "!backend/**/deploy/base/nats-subscriptions.generated.yaml", "!backend/wasmcloud-utils/src/skirout", "!backend/wasmcloud-utils/src/transport_routes", "!panel/lib/infrastructure/protocols/skir/skirout", "!panel/lib/infrastructure/messaging/generated", "**/target", "**/node_modules", "**/build", "**/.gradle", "**/.kotlin"]
 	source *dagger.Directory,
 ) *dagger.Container {
 	return m.protocolGenerationContainer(source).
@@ -113,7 +110,7 @@ func (m *Typewriter) SkirSnapshot(
 func (m *Typewriter) SkirGenerate(
 	// +optional
 	// +defaultPath="/"
-	// +ignore=["*", "!.gitignore", "!package.json", "!bun.lock", "!skir.yml", "!skir-src", "!services", "!backend/**/deploy/base/workloaddeployment.yaml", "!backend/**/deploy/base/kustomization.yaml", "!backend/**/deploy/base/nats-subscriptions.generated.yaml", "!backend/wasmcloud-utils/src/skirout", "!backend/wasmcloud-utils/src/transport_routes", "!panel/lib/infrastructure/protocols/skir/skirout", "!panel/lib/infrastructure/messaging/generated", "!panel/lib/shared/editors/application/canonical_read_models.generated.dart", "**/target", "**/node_modules", "**/build", "**/.gradle", "**/.kotlin"]
+	// +ignore=["*", "!.gitignore", "!package.json", "!bun.lock", "!skir.yml", "!skir-src", "!services", "!backend/**/deploy/base/workloaddeployment.yaml", "!backend/**/deploy/base/kustomization.yaml", "!backend/**/deploy/base/nats-subscriptions.generated.yaml", "!backend/wasmcloud-utils/src/skirout", "!backend/wasmcloud-utils/src/transport_routes", "!panel/lib/infrastructure/protocols/skir/skirout", "!panel/lib/infrastructure/messaging/generated", "**/target", "**/node_modules", "**/build", "**/.gradle", "**/.kotlin"]
 	source *dagger.Directory,
 ) (*dagger.Changeset, error) {
 	generated := m.protocolGenerationContainer(source).

@@ -35,7 +35,7 @@ val RealmStructureAssemblyTest by testSuite {
     }
 
     test("reserved read identities cannot replace intrinsic schemas or isolate unrelated declarations") {
-        val reserved = TypeDefinitionId(TypeId.Qualified("typewriter.read", "UnfamiliarModel"), 1)
+        val reserved = TypeDefinitionId(TypeId.Qualified(com.typewritermc.expression.CANONICAL_READ_NAMESPACE, "UnfamiliarModel"), 1)
         val healthy = id("Healthy")
         val assembly = assemble(listOf(record(reserved), record(healthy)))
         assembly.snapshot.types

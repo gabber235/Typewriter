@@ -97,18 +97,16 @@ internal fun namedArguments(vararg arguments: Pair<String, CodeBlock>): CodeBloc
 internal class DefinitionReferences(
     private val owners: Map<TypeDefinitionId, ClassName>,
     private val self: TypeDefinitionId? = null,
-    /** Code for ids without an owner object; only closed registries such as the canonical read models state ids inline. */
-    private val unowned: (TypeDefinitionId) -> CodeBlock = { error("No generated definition owns $it.") },
 ) {
     fun code(id: TypeDefinitionId): CodeBlock =
         when (id) {
             self -> CodeBlock.of("id")
             in owners -> CodeBlock.of("%T.id", owners.getValue(id))
-            else -> unowned(id)
+            else -> error("No generated definition owns $id.")
         }
 
     /** References as seen from inside the owner of [definition]. */
-    fun inside(definition: TypeDefinitionId): DefinitionReferences = DefinitionReferences(owners, definition, unowned)
+    fun inside(definition: TypeDefinitionId): DefinitionReferences = DefinitionReferences(owners, definition)
 }
 
 /** The single literal statement of an id, used only for an owner's own `id` property. */

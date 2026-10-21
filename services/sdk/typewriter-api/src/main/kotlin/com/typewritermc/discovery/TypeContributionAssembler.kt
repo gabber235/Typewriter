@@ -159,7 +159,8 @@ fun CatalogContributions.assemble(context: CatalogAssemblyContext): CatalogAssem
         }
     val reservedDeclarations =
         assembledDeclarations.filter {
-            (it.definition.id.type as? com.typewritermc.types.TypeId.Qualified)?.namespace == "typewriter.read"
+            (it.definition.id.type as? com.typewritermc.types.TypeId.Qualified)?.namespace ==
+                com.typewritermc.expression.CANONICAL_READ_NAMESPACE
         }
     val reservedDiagnostics =
         reservedDeclarations.map { owned ->

@@ -1,35 +1,64 @@
 part of "portable_expression.dart";
 
-/// Generated intrinsic schemas are read only and never appear in type choices.
-final canonicalReadModels = CanonicalReadModels();
+/// The framework read model roots. Every expression read schema derives from
+/// these Skir types and the types they reach; Kotlin lists the same roots in
+/// `CanonicalReadModels.kt`. Read schemas are read only and never appear in
+/// type choices.
+final canonicalReadModels = CanonicalReadModels([
+  skir.TypeUse.serializer.typeDescriptor,
+  skir.TypeSelection.serializer.typeDescriptor,
+  skir.PublishedType.serializer.typeDescriptor,
+  skir.ResourceAppearance.serializer.typeDescriptor,
+]);
 
-/// Bridges native Skir metadata to the intrinsic authored read schema.
+/// The namespace of every read model identity. Authored declarations cannot
+/// use it.
+const canonicalReadNamespace = "skir";
+
+const _valueField = "value";
+const _maxReadDepth = 512;
+
+/// The finite expression read schema reachable from its roots, derived from
+/// Skir reflection by the rule Kotlin's `CanonicalReadModel.kt` applies, and
+/// pinned for both by `skir-src/editor/v1/fixtures/canonical_read_models.json`:
 ///
-/// The generated manifest defines allowed model fields in the reserved
-/// `typewriter.read` namespace; declared catalog types such as Color keep their
-/// declared identity. Reflection supplies their current wire values,
-/// while projection charges the invoking expression's budgets. Decoders accept
-/// this intrinsic schema when a query needs a type selection or type witness.
+/// - A Skir struct is a record. Its fields are the Skir fields in field number
+///   order, keyed by their Skir names.
+/// - A Skir enum whose variants are all constants is an enumeration whose cases
+///   are the variant names.
+/// - Any other Skir enum is an abstract record without fields. Each variant is
+///   a concrete record with the enum as its parent; a wrapper variant has one
+///   field, `value`, holding the wrapped value, and a constant variant has
+///   none.
+/// - A record is identified by the qualified type id
+///   ([canonicalReadNamespace], record id) at revision 1, where the record id
+///   is Skir's own `<module path>:<qualified name>`, for example
+///   `editor/v1/type_catalog.skir:TypeUse`. A variant appends
+///   `.<variant name>`, for example `editor/v1/type_catalog.skir:TypeUse.named`.
+/// - bool is a boolean, int32 and int64 are signed integers of that width,
+///   hash64 is an unsigned 64 bit integer, float32 and float64 are floats of
+///   that width, string is text, and bytes and timestamp keep their kind. An
+///   optional is nullable and an array is the framework List.
+/// - The kernel Color and Icon are the declared Color and Icon types, so a
+///   read color equals an authored one.
+///
+/// Projection charges the invoking expression's budgets. Decoders read a read
+/// value back into the Skir value its descriptor describes.
 final class CanonicalReadModels {
-  CanonicalReadModels() {
-    final manifest = jsonDecode(_canonicalReadManifest) as Map<String, dynamic>;
-    for (final model in manifest["models"] as List<dynamic>) {
-      final entry = model as Map<String, dynamic>;
-      _fields[entry["native"] as String] = [
-        for (final field in entry["fields"] as List<dynamic>)
-          field["name"] as String,
-      ];
+  CanonicalReadModels(Iterable<skir.ReflectiveTypeDescriptor<dynamic>> roots) {
+    for (final root in roots) {
+      _declare(root);
     }
-    final definitions = [
-      for (final definition in manifest["definitions"] as List<dynamic>)
-        skir.TypeDefinition.serializer.fromJson(definition),
-    ];
-    for (final definition in definitions) {
+    definitions = List.unmodifiable(
+      [for (final record in _records.values) ...record.definitions]
+        ..sort((a, b) => _readIdName(a.id).compareTo(_readIdName(b.id))),
+    );
+    for (final definition in [...definitions, ...frameworkDefinitions]) {
       final fields = switch (definition.representation) {
         skir.RepresentationTemplate_recordWrapper(:final value) => value.fields,
         _ => const <skir.FieldDeclaration>[],
       };
-      _definitions[definition.id] = skir.PublishedType(
+      _published[definition.id] = skir.PublishedType(
         placementField: null,
         definition: definition,
         status: skir.DeclarationStatus.ready,
@@ -43,54 +72,135 @@ final class CanonicalReadModels {
             ),
         ],
         ancestorTemplates: definition.parents,
-        display: defaultTypeDisplay(_modelDisplayName(definition.id)),
+        display: defaultTypeDisplay(
+          _frameworkReadNames[definition.id] ??
+              _readIdName(definition.id).split(":").last,
+        ),
         searchKey: null,
       );
     }
   }
 
-  final _definitions = <skir.TypeDefinitionId, skir.PublishedType>{};
+  /// The derived definitions, ordered by identity. [frameworkDefinitions]
+  /// holds the framework ones they reference.
+  late final List<skir.TypeDefinition> definitions;
 
-  static String _modelDisplayName(skir.TypeDefinitionId id) =>
-      switch (id.typeId) {
-        skir.TypeId_qualifiedWrapper(:final value) =>
-          value.name.split(".").last,
-        _ => "Type",
-      };
-  final _fields = <String, List<String>>{};
-  skir.PublishedType? published(skir.TypeDefinitionId id) => _definitions[id];
+  /// The framework definitions the read definitions reference: the List and
+  /// the declared Color and Icon types, published here so read schemas resolve
+  /// in any catalog. Kotlin publishes the same definitions with its read
+  /// models.
+  List<skir.TypeDefinition> get frameworkDefinitions =>
+      _frameworkReadDefinitions;
+  final _records = <String, _ReadRecord>{};
+  final _published = <skir.TypeDefinitionId, skir.PublishedType>{};
+
+  skir.PublishedType? published(skir.TypeDefinitionId id) => _published[id];
 
   skir.TypeUse get typeUseUse =>
-      skir.TypeUse.wrapNamed(_use("com.typewritermc.types.TypeUse"));
+      skir.TypeUse.wrapNamed(useOf(skir.TypeUse.serializer.typeDescriptor));
 
-  skir.TypeUse get typeSelectionUse =>
-      skir.TypeUse.wrapNamed(_use("com.typewritermc.authoring.TypeSelection"));
+  skir.TypeUse get typeSelectionUse => skir.TypeUse.wrapNamed(
+    useOf(skir.TypeSelection.serializer.typeDescriptor),
+  );
+
   skir.TypeUse get publishedTypeUse => skir.TypeUse.wrapNamed(
-    _use("com.typewritermc.types.catalog.PublishedType"),
+    useOf(skir.PublishedType.serializer.typeDescriptor),
   );
 
   /// The evaluated display of a resource: its label, accent and icon.
   skir.NamedTypeUse get resourceAppearanceUse =>
-      _use("com.typewritermc.authoring.ResourceAppearance");
+      useOf(skir.ResourceAppearance.serializer.typeDescriptor);
 
-  skir.NamedTypeUse _use(String name) => skir.NamedTypeUse(
-    definition: skir.TypeDefinitionId(
-      typeId: skir.TypeId.createQualified(
-        namespace: "typewriter.read",
-        name: name,
-      ),
-      revision: 1,
-    ),
-    arguments: const [],
-  );
+  /// The read type of the Skir record [descriptor] describes.
+  skir.NamedTypeUse useOf(skir.ReflectiveTypeDescriptor<dynamic> descriptor) =>
+      skir.NamedTypeUse(definition: _declare(descriptor), arguments: const []);
 
+  /// Projects [value], described by [descriptor], to its read value, or to the
+  /// read value at the field [path] below it. Reading a field of a null value
+  /// is unfilled. Every visited value charges [consumeStep]; a list charges its
+  /// items and a whole record its fields to [consumeItems].
   skir.DataValue project(
-    Object value,
+    Object? value,
     skir.ReflectiveTypeDescriptor<dynamic> descriptor,
-    List<String> fields,
+    List<String> path,
     void Function() consumeStep,
     void Function(int) consumeItems,
-  ) => _project(value, descriptor, fields, consumeStep, consumeItems, 0);
+  ) => _project(value, descriptor, path, consumeStep, consumeItems, 0);
+
+  /// Reads [value] back as the Skir value [serializer] describes; rejects a
+  /// value of any other read type.
+  T decode<T>(skir.DataValue value, skir.Serializer<T> serializer) =>
+      serializer.fromJson(_json(value, serializer.typeDescriptor, 0));
+
+  skir.TypeSelection decodeTypeSelection(skir.DataValue value) =>
+      decode(value, skir.TypeSelection.serializer);
+
+  skir.TypeUse decodeTypeUse(skir.DataValue value) =>
+      decode(value, skir.TypeUse.serializer);
+
+  skir.TypeDefinitionId _declare(
+    skir.ReflectiveTypeDescriptor<dynamic> descriptor,
+  ) {
+    if (descriptor is! skir.ReflectiveRecordDescriptor) {
+      throw ArgumentError("A read model root must be a Skir struct or enum");
+    }
+    final name = _readRecordId(descriptor);
+    final declared = _declaredReads[name];
+    if (declared != null) return declared.use.definition;
+    final known = _records[name];
+    if (known != null) return known.id;
+    final id = _readId(name);
+    switch (descriptor) {
+      case skir.ReflectiveStructDescriptor():
+        final record = _StructRecord(id);
+        _records[name] = record;
+        record.fields = [
+          for (final field in _readFields(descriptor))
+            (field.name, _template(field.type)),
+        ];
+      case skir.ReflectiveEnumDescriptor():
+        final variants = _readVariants(descriptor);
+        if (variants.every(
+          (variant) => variant is skir.ReflectiveEnumConstantVariant,
+        )) {
+          _records[name] = _EnumerationRecord(id, [
+            for (final variant in variants) variant.name,
+          ]);
+        } else {
+          final record = _UnionRecord(id);
+          _records[name] = record;
+          record.variants = [
+            for (final variant in variants)
+              _ReadVariant(
+                _readId("$name.${variant.name}"),
+                variant.name,
+                variant is skir.ReflectiveEnumWrapperVariant
+                    ? _template(variant.type)
+                    : null,
+              ),
+          ];
+        }
+    }
+    return id;
+  }
+
+  skir.TypeTemplate _template(
+    skir.ReflectiveTypeDescriptor<dynamic> descriptor,
+  ) => switch (descriptor) {
+    skir.ReflectiveOptionalDescriptor(:final otherType) =>
+      skir.TypeTemplate.createNullable(value: _template(otherType)),
+    skir.ReflectiveArrayDescriptor(:final itemType) =>
+      skir.TypeTemplate.createNamed(
+        definition: _readListId,
+        arguments: [_template(itemType)],
+      ),
+    skir.PrimitiveDescriptor(:final primitiveType) =>
+      skir.TypeTemplate.wrapScalar(_readScalar(primitiveType)),
+    _ => skir.TypeTemplate.createNamed(
+      definition: _declare(descriptor),
+      arguments: const [],
+    ),
+  };
 
   skir.DataValue _project(
     Object? value,
@@ -100,463 +210,570 @@ final class CanonicalReadModels {
     void Function(int) items,
     int depth,
   ) {
-    step();
-    if (depth > 512) {
+    if (depth > _maxReadDepth) {
       throw const FormatException(
         "Canonical projection exceeded its depth limit",
       );
     }
-    if (value == null) return skir.DataValue.null_;
-    if (descriptor is skir.ReflectiveOptionalDescriptor) {
-      return _project(
-        value,
-        descriptor.otherType,
-        path,
-        step,
-        items,
-        depth + 1,
-      );
+    step();
+    if (value == null) {
+      return path.isEmpty ? skir.DataValue.null_ : skir.DataValue.unfilled;
     }
-    if (descriptor is skir.PrimitiveDescriptor) {
-      if (path.isNotEmpty) {
-        throw const FormatException("A canonical scalar has no fields");
-      }
-      return switch (descriptor.primitiveType) {
-        skir.PrimitiveType.bool => skir.DataValue.wrapBoolean(value as bool),
-        skir.PrimitiveType.int32 ||
-        skir.PrimitiveType.int64 ||
-        skir.PrimitiveType.hash64 => skir.DataValue.wrapInteger(
-          value.toString(),
-        ),
-        skir.PrimitiveType.float32 || skir.PrimitiveType.float64 =>
-          skir.DataValue.wrapFloat((value as num).toDouble()),
-        skir.PrimitiveType.string => skir.DataValue.wrapStringValue(
-          value as String,
-        ),
-        skir.PrimitiveType.timestamp => skir.DataValue.wrapTimestamp(
-          value as DateTime,
-        ),
-        skir.PrimitiveType.bytes => skir.DataValue.wrapBytes(
-          value as skir.ByteString,
-        ),
-      };
-    }
-    if (descriptor is skir.ReflectiveArrayDescriptor) {
-      if (path.isNotEmpty) {
-        throw const FormatException(
-          "A canonical collection needs an item binding before field access",
-        );
-      }
-      final values = value as Iterable;
-      items(values.length);
-      return skir.DataValue.createListValue(
-        items: [
-          for (final (index, item) in values.indexed)
-            skir.ListItem(
-              id: skir.ItemId(value: "canonical:$index"),
-              value: _project(
-                item,
-                descriptor.itemType,
-                const [],
-                step,
-                items,
-                depth + 1,
-              ),
-            ),
-        ],
-      );
-    }
-    if (value is skir.Icon) {
-      final icon = iconValue(value);
-      if (path.isEmpty) return icon;
-      final record =
-          (icon as skir.DataValue_namedWrapper).value.payload
-              as skir.DataValue_recordWrapper;
-      if (path.length == 1) {
-        final field = record.value.fields
-            .where((field) => field.name == path.single)
-            .firstOrNull;
-        if (field != null) return field.value;
-      }
-      throw FormatException("The canonical field ${path.first} is absent");
-    }
-    if (descriptor is skir.ReflectiveEnumDescriptor) {
-      final variant = descriptor.getVariant(value);
-      if (variant.number == 0) {
-        throw const FormatException("Unknown canonical enum variant");
-      }
-      final constants = _enumConstants[descriptor.name];
-      if (constants != null) {
-        if (path.isNotEmpty) {
-          throw const FormatException("A canonical enum has no fields");
-        }
-        final key = constants[variant.name];
-        if (key == null) {
-          throw const FormatException("Unknown canonical enum variant");
-        }
-        return skir.DataValue.createNamed(
-          actualType: _use(_nativeNames[descriptor.name]!),
-          payload: skir.DataValue.wrapEnumCase(key),
-        );
-      }
-      final base = _nativeNames[descriptor.name];
-      if (base == null) {
-        throw FormatException("No canonical model for ${descriptor.name}");
-      }
-      final variantName =
-          _variantNames[descriptor.name]?[variant.name] ??
-          _pascal(variant.name);
-      final model = "$base.$variantName";
-      if (!_fields.containsKey(model)) {
-        throw FormatException("No canonical model for $model");
-      }
-      final payload = variant is skir.ReflectiveEnumWrapperVariant
-          ? variant.get(value)
-          : value;
-      final payloadDescriptor = variant is skir.ReflectiveEnumWrapperVariant
-          ? variant.type
-          : descriptor;
-      final virtualField = _virtualFields["${descriptor.name}.${variant.name}"];
-      return _record(
-        model,
-        payload,
-        payloadDescriptor,
-        path,
-        step,
-        items,
-        depth,
-        virtualField: virtualField,
-      );
-    }
-    if (value is skir.Color) {
-      if (path.isNotEmpty) {
-        throw const FormatException("A canonical scalar has no fields");
-      }
-      return colorValue(value.argb.toUnsigned(32));
-    }
-    if (descriptor is skir.ReflectiveStructDescriptor) {
-      final model = _nativeNames[descriptor.name];
-      if (model == null) {
-        throw FormatException("No canonical model for ${descriptor.name}");
-      }
-      if (_scalarModels.contains(descriptor.name)) {
+    switch (descriptor) {
+      case skir.ReflectiveOptionalDescriptor(:final otherType):
+        return _project(value, otherType, path, step, items, depth + 1);
+      case skir.PrimitiveDescriptor(:final primitiveType):
         if (path.isNotEmpty) {
           throw const FormatException("A canonical scalar has no fields");
         }
-        final field = descriptor.getFieldByName("value")!;
-        return skir.DataValue.createNamed(
-          actualType: _use(model),
-          payload: _project(
-            field.get(value),
-            field.type,
-            const [],
-            step,
-            items,
-            depth + 1,
-          ),
+        return _readPrimitive(value, primitiveType);
+      case skir.ReflectiveArrayDescriptor(:final itemType):
+        if (path.isNotEmpty) {
+          throw const FormatException(
+            "A canonical collection needs an item binding before field access",
+          );
+        }
+        final values = (value as Iterable<Object?>).toList(growable: false);
+        items(values.length);
+        return skir.DataValue.createListValue(
+          items: [
+            for (final (index, item) in values.indexed)
+              skir.ListItem(
+                id: skir.ItemId(value: "canonical:$index"),
+                value: _project(
+                  item,
+                  itemType,
+                  const [],
+                  step,
+                  items,
+                  depth + 1,
+                ),
+              ),
+          ],
         );
-      }
-      return _record(model, value, descriptor, path, step, items, depth);
+      case skir.ReflectiveRecordDescriptor():
+        return _record(value, descriptor, path, step, items, depth);
     }
-    throw const FormatException("Unsupported canonical reflection descriptor");
   }
 
   skir.DataValue _record(
-    String model,
-    Object? value,
-    skir.ReflectiveTypeDescriptor<dynamic> descriptor,
+    Object value,
+    skir.ReflectiveRecordDescriptor<dynamic> descriptor,
     List<String> path,
     void Function() step,
     void Function(int) items,
-    int depth, {
-    String? virtualField,
-  }) {
-    final fields = _fields[model]!;
-    skir.DataValue field(String name, List<String> remaining) {
-      if (!fields.contains(name)) {
-        throw FormatException("The canonical field $name is absent");
+    int depth,
+  ) {
+    final name = _readRecordId(descriptor);
+    final declared = _declaredReads[name];
+    if (declared != null) return _readSelect(declared.encode(value), path);
+    final record = _records[name]!;
+    skir.DataValue named(
+      skir.TypeDefinitionId id,
+      Map<String, skir.DataValue Function(List<String>)> fields,
+    ) {
+      if (path.isNotEmpty) {
+        final field = fields[path.first];
+        if (field == null) {
+          throw FormatException("The canonical field ${path.first} is absent");
+        }
+        return field(path.sublist(1));
       }
-      if (virtualField == name) {
-        return _project(value, descriptor, remaining, step, items, depth + 1);
-      }
-      if (descriptor is! skir.ReflectiveStructDescriptor) {
-        throw FormatException("The canonical model $model has no field $name");
-      }
-      final wireName =
-          _fieldAliases["${descriptor.name}.$name"] ??
-          name.replaceAllMapped(
-            RegExp("[A-Z]"),
-            (match) => "_${match[0]!.toLowerCase()}",
-          );
-      final source = descriptor.getFieldByName(wireName);
-      if (source == null) {
-        throw FormatException("No canonical bridge for $model.$name");
-      }
-      return _project(
-        source.get(value),
-        source.type,
-        remaining,
-        step,
-        items,
-        depth + 1,
-      );
-    }
-
-    if (path.isNotEmpty) return field(path.first, path.skip(1).toList());
-    items(fields.length);
-    return skir.DataValue.createNamed(
-      actualType: _use(model),
-      payload: skir.DataValue.createRecord(
-        fields: [
-          for (final name in fields)
-            skir.FieldValue(name: name, value: field(name, const [])),
-        ],
-      ),
-    );
-  }
-
-  skir.TypeSelection decodeTypeSelection(skir.DataValue value) {
-    final name = _modelName(value);
-    if (name == "com.typewritermc.authoring.TypeSelection.Complete") {
-      final use = decodeTypeUse(_field(value, "use"));
-      if (use is! skir.TypeUse_namedWrapper) {
-        throw const FormatException(
-          "A complete selection requires a named type",
-        );
-      }
-      return skir.TypeSelection.wrapComplete(use.value);
-    }
-    if (name == "com.typewritermc.authoring.TypeSelection.Pending") {
-      return skir.TypeSelection.createPending(
-        definition: _decodeDefinition(_field(value, "definition")),
-        arguments: [
-          for (final argument in _list(_field(value, "arguments")))
-            switch (_modelName(argument)) {
-              "com.typewritermc.authoring.ArgumentSelection.Unfilled" =>
-                skir.ArgumentSelection.unfilled,
-              "com.typewritermc.authoring.ArgumentSelection.Chosen" =>
-                skir.ArgumentSelection.wrapChosen(
-                  decodeTypeUse(_field(argument, "type")),
-                ),
-              _ => throw const FormatException(
-                "Unknown canonical argument selection",
-              ),
-            },
-        ],
-      );
-    }
-    throw const FormatException(
-      "The expression is not a canonical type selection",
-    );
-  }
-
-  skir.TypeUse decodeTypeUse(skir.DataValue value) => _decodeTypeUse(value, 0);
-
-  skir.TypeUse _decodeTypeUse(skir.DataValue value, int depth) {
-    if (depth > 128) {
-      throw const FormatException(
-        "Canonical type witness exceeded its depth limit",
-      );
-    }
-    return switch (_modelName(value)) {
-      "com.typewritermc.types.TypeUse.Named" => skir.TypeUse.createNamed(
-        definition: _decodeDefinition(_field(value, "definition")),
-        arguments: _list(_field(value, "arguments"))
-            .map((argument) => _decodeTypeUse(argument, depth + 1)),
-      ),
-      "com.typewritermc.types.TypeUse.Nullable" => skir.TypeUse.createNullable(
-        value: _decodeTypeUse(_field(value, "value"), depth + 1),
-      ),
-      "com.typewritermc.types.TypeUse.Scalar" => skir.TypeUse.wrapScalar(
-        _decodeScalar(_field(value, "kind")),
-      ),
-      _ => throw const FormatException(
-        "The expression is not a canonical type use",
-      ),
-    };
-  }
-
-  skir.TypeDefinitionId _decodeDefinition(skir.DataValue value) {
-    if (_modelName(value) != "com.typewritermc.types.TypeDefinitionId") {
-      throw const FormatException("Invalid canonical type definition identity");
-    }
-    final id = _field(value, "type");
-    return skir.TypeDefinitionId(
-      typeId: switch (_modelName(id)) {
-        "com.typewritermc.types.TypeId.Declared" => skir.TypeId.createDeclared(
-          value: _text(_field(id, "id")),
+      items(fields.length);
+      return skir.DataValue.createNamed(
+        actualType: skir.NamedTypeUse(definition: id, arguments: const []),
+        payload: skir.DataValue.createRecord(
+          fields: [
+            for (final MapEntry(key: name, value: read) in fields.entries)
+              skir.FieldValue(name: name, value: read(const [])),
+          ],
         ),
-        "com.typewritermc.types.TypeId.Qualified" =>
-          skir.TypeId.createQualified(
-            namespace: _text(_field(id, "namespace")),
-            name: _text(_field(id, "name")),
+      );
+    }
+
+    switch (record) {
+      case _StructRecord():
+        final struct =
+            descriptor as skir.ReflectiveStructDescriptor<dynamic, dynamic>;
+        return named(record.id, {
+          for (final field in _readFields(struct))
+            field.name: (remaining) => _project(
+              field.get(value),
+              field.type,
+              remaining,
+              step,
+              items,
+              depth + 1,
+            ),
+        });
+      case _EnumerationRecord():
+        if (path.isNotEmpty) {
+          throw const FormatException("A canonical enum has no fields");
+        }
+        final variant = _readVariantOf(descriptor, value);
+        return skir.DataValue.createNamed(
+          actualType: skir.NamedTypeUse(
+            definition: record.id,
+            arguments: const [],
           ),
-        _ => throw const FormatException("Invalid canonical type identity"),
-      },
-      revision: _integer(_field(value, "revision")).toInt(),
-    );
-  }
-
-  skir.ScalarKind _decodeScalar(skir.DataValue value) {
-    final name = _modelName(value).split(".").last;
-    return switch (name) {
-      "Unit" => skir.ScalarKind.unit,
-      "Boolean" => skir.ScalarKind.boolean,
-      "Text" => skir.ScalarKind.text,
-      "Bytes" => skir.ScalarKind.bytes,
-      "Decimal" => skir.ScalarKind.decimal,
-      "Timestamp" => skir.ScalarKind.timestamp,
-      "Duration" => skir.ScalarKind.duration,
-      "Integer" => skir.ScalarKind.createInteger(
-        width:
-            _integerWidths[_enum(_field(value, "width"))] ??
-            (throw const FormatException("Unknown integer width")),
-      ),
-      "Float" => skir.ScalarKind.createFloat(
-        width: switch (_enum(_field(value, "width"))) {
-          "FLOAT_32" => skir.FloatWidth.thirtyTwo,
-          "FLOAT_64" => skir.FloatWidth.sixtyFour,
-          _ => throw const FormatException("Unknown floating width"),
-        },
-      ),
-      _ => throw const FormatException("Unknown canonical scalar"),
-    };
-  }
-
-  String _modelName(skir.DataValue value) {
-    if (value case skir.DataValue_namedWrapper(:final value)) {
-      if (value.actualType.definition.typeId
-          case skir.TypeId_qualifiedWrapper(:final value)
-          when value.namespace == "typewriter.read") {
-        return value.name;
-      }
+          payload: skir.DataValue.wrapEnumCase(variant.name),
+        );
+      case _UnionRecord():
+        final variant = _readVariantOf(descriptor, value);
+        final read = record.variants.firstWhere(
+          (candidate) => candidate.name == variant.name,
+        );
+        return named(read.id, {
+          if (variant is skir.ReflectiveEnumWrapperVariant)
+            _valueField: (remaining) {
+              return _project(
+                variant.get(value),
+                variant.type,
+                remaining,
+                step,
+                items,
+                depth + 1,
+              );
+            },
+        });
     }
-    throw const FormatException("Expected a canonical named value");
   }
 
-  skir.DataValue _field(skir.DataValue value, String name) =>
-      value.authoredField(name) ??
-      (throw FormatException("Canonical field $name is absent"));
-  Iterable<skir.DataValue> _list(skir.DataValue value) =>
-      switch (_unwrap(value)) {
-        skir.DataValue_listValueWrapper(:final value) => value.items.map(
-          (item) => item.value,
-        ),
-        _ => throw const FormatException("Expected a canonical list"),
-      };
-  String _enum(skir.DataValue value) => switch (_unwrap(value)) {
-    skir.DataValue_enumCaseWrapper(:final value) => value,
-    _ => throw const FormatException("Expected a canonical enum"),
-  };
+  dynamic _json(
+    skir.DataValue value,
+    skir.ReflectiveTypeDescriptor<dynamic> descriptor,
+    int depth,
+  ) {
+    if (depth > _maxReadDepth) {
+      throw const FormatException("Canonical value exceeded its depth limit");
+    }
+    switch (descriptor) {
+      case skir.ReflectiveOptionalDescriptor(:final otherType):
+        return value == skir.DataValue.null_
+            ? null
+            : _json(value, otherType, depth + 1);
+      case skir.PrimitiveDescriptor(:final primitiveType):
+        return _readPrimitiveJson(value, primitiveType);
+      case skir.ReflectiveArrayDescriptor(:final itemType):
+        final items = switch (value) {
+          skir.DataValue_listValueWrapper(:final value) => value.items,
+          skir.DataValue_setValueWrapper(:final value) => value.items,
+          _ => throw const FormatException("Expected a canonical list"),
+        };
+        return [
+          for (final item in items) _json(item.value, itemType, depth + 1),
+        ];
+      case skir.ReflectiveRecordDescriptor():
+        return _recordJson(value, descriptor, depth);
+    }
+  }
+
+  dynamic _recordJson(
+    skir.DataValue value,
+    skir.ReflectiveRecordDescriptor<dynamic> descriptor,
+    int depth,
+  ) {
+    if (value is! skir.DataValue_namedWrapper) {
+      throw const FormatException("Expected a canonical named value");
+    }
+    final named = value.value;
+    if (named.actualType.arguments.isNotEmpty) {
+      throw const FormatException("Canonical read types take no arguments");
+    }
+    final actual = named.actualType.definition;
+    final name = _readRecordId(descriptor);
+    final declared = _declaredReads[name];
+    if (declared != null) return declared.json(actual, named.payload);
+    final record = _records[name]!;
+    switch (record) {
+      case _StructRecord():
+        _expectReadType(actual, record.id);
+        final fields = _readRecordFields(named.payload);
+        return {
+          for (final field in _readFields(
+            descriptor as skir.ReflectiveStructDescriptor<dynamic, dynamic>,
+          ))
+            field.name: _json(
+              _readField(fields, field.name),
+              field.type,
+              depth + 1,
+            ),
+        };
+      case _EnumerationRecord():
+        _expectReadType(actual, record.id);
+        final payload = named.payload;
+        if (payload is! skir.DataValue_enumCaseWrapper ||
+            !record.cases.contains(payload.value)) {
+          throw const FormatException("Unknown canonical enum case");
+        }
+        return payload.value;
+      case _UnionRecord():
+        final read = record.variants
+            .where((variant) => variant.id == actual)
+            .firstOrNull;
+        if (read == null) {
+          throw FormatException(
+            "Expected a variant of ${_readIdName(record.id)}",
+          );
+        }
+        final variant = _readVariants(
+          descriptor as skir.ReflectiveEnumDescriptor<dynamic>,
+        ).firstWhere((candidate) => candidate.name == read.name);
+        if (variant is skir.ReflectiveEnumWrapperVariant) {
+          return {
+            "kind": read.name,
+            "value": _json(
+              _readField(_readRecordFields(named.payload), _valueField),
+              variant.type,
+              depth + 1,
+            ),
+          };
+        }
+        return read.name;
+    }
+  }
 }
 
-String _pascal(String name) => name
-    .split("_")
-    .map(
-      (part) =>
-          part.isEmpty ? part : "${part[0].toUpperCase()}${part.substring(1)}",
-    )
-    .join();
+sealed class _ReadRecord {
+  _ReadRecord(this.id);
+  final skir.TypeDefinitionId id;
+  List<skir.TypeDefinition> get definitions;
+}
 
-const _nativeNames = <String, String>{
-  "TypeUse": "com.typewritermc.types.TypeUse",
-  "NamedTypeUse": "com.typewritermc.types.TypeUse.Named",
-  "NullableTypeUse": "com.typewritermc.types.TypeUse.Nullable",
-  "TypeSelection": "com.typewritermc.authoring.TypeSelection",
-  "PendingTypeSelection": "com.typewritermc.authoring.TypeSelection.Pending",
-  "ArgumentSelection": "com.typewritermc.authoring.ArgumentSelection",
-  "PublishedType": "com.typewritermc.types.catalog.PublishedType",
-  "TypeDefinition": "com.typewritermc.types.TypeDefinition",
-  "TypeDefinitionId": "com.typewritermc.types.TypeDefinitionId",
-  "TypeId": "com.typewritermc.types.TypeId",
-  "DeclaredTypeId": "com.typewritermc.types.DeclaredTypeId",
-  "QualifiedTypeId": "com.typewritermc.types.TypeId.Qualified",
-  "TypeParameter": "com.typewritermc.types.TypeParameter",
-  "ParameterKey": "com.typewritermc.types.ParameterKey",
-  "TypeTemplate": "com.typewritermc.types.TypeTemplate",
-  "NamedTypeTemplate": "com.typewritermc.types.TypeTemplate.Named",
-  "NullableTypeTemplate": "com.typewritermc.types.TypeTemplate.Nullable",
-  "RepresentationTemplate": "com.typewritermc.types.RepresentationTemplate",
-  "ScalarRepresentationTemplate":
-      "com.typewritermc.types.RepresentationTemplate.Scalar",
-  "RecordRepresentationTemplate":
-      "com.typewritermc.types.RepresentationTemplate.Record",
-  "SequenceRepresentationTemplate":
-      "com.typewritermc.types.RepresentationTemplate.Sequence",
-  "MappingRepresentationTemplate":
-      "com.typewritermc.types.RepresentationTemplate.Mapping",
-  "EnumerationRepresentationTemplate":
-      "com.typewritermc.types.RepresentationTemplate.Enumeration",
-  "LinkRepresentationTemplate":
-      "com.typewritermc.types.RepresentationTemplate.Link",
-  "ScalarKind": "com.typewritermc.types.ScalarKind",
-  "IntegerScalar": "com.typewritermc.types.ScalarKind.Integer",
-  "FloatScalar": "com.typewritermc.types.ScalarKind.Float",
-  "IntegerWidth": "com.typewritermc.types.IntegerWidth",
-  "FloatWidth": "com.typewritermc.types.FloatWidth",
-  "CollectionKind": "com.typewritermc.types.CollectionKind",
-  "EnumVariant": "com.typewritermc.types.EnumVariant",
-  "FieldDeclaration": "com.typewritermc.types.FieldDeclaration",
-  "FieldOwner": "com.typewritermc.types.FieldOwner",
-  "EndpointId": "com.typewritermc.types.EndpointId",
-  "EffectiveFieldTemplate":
-      "com.typewritermc.types.catalog.EffectiveFieldTemplate",
-  "TypeDisplay": "com.typewritermc.types.TypeDisplay",
-  "DeclarationStatus": "com.typewritermc.types.catalog.DeclarationStatus",
-  "DeclarationDiagnostic":
-      "com.typewritermc.types.catalog.DeclarationDiagnostic",
-  "DeclarationOrigin": "com.typewritermc.types.catalog.DeclarationOrigin",
-  "DeclarationOwner": "com.typewritermc.types.DeclarationOwner",
-  "RuleId": "com.typewritermc.configuration.RuleId",
-  "RuleOrigin": "com.typewritermc.configuration.RuleOrigin",
-  "ContributionKey": "com.typewritermc.discovery.ContributionKey",
-  "ContributionSourceId": "com.typewritermc.imprint.ContributionSourceId",
-  "ProducerId": "com.typewritermc.imprint.ProducerId",
-  "ContributionName": "com.typewritermc.imprint.ContributionName",
-  "RelativeFieldPattern": "com.typewritermc.configuration.RelativeFieldPattern",
-  "FieldPatternSegment": "com.typewritermc.configuration.FieldPatternSegment",
-  "NamedFieldPatternSegment":
-      "com.typewritermc.configuration.FieldPatternSegment.Field",
+final class _StructRecord extends _ReadRecord {
+  _StructRecord(super.id);
+  late final List<(String, skir.TypeTemplate)> fields;
+
+  @override
+  List<skir.TypeDefinition> get definitions => [
+    _readRecordDefinition(id, fields, parent: null, abstract: false),
+  ];
+}
+
+final class _EnumerationRecord extends _ReadRecord {
+  _EnumerationRecord(super.id, this.cases);
+  final List<String> cases;
+
+  @override
+  List<skir.TypeDefinition> get definitions => [
+    skir.TypeDefinition(
+      id: id,
+      parameters: const [],
+      representation: skir.RepresentationTemplate.createEnumeration(
+        cases: [for (final key in cases) skir.EnumVariant(key: key)],
+      ),
+      parents: const [],
+    ),
+  ];
+}
+
+final class _UnionRecord extends _ReadRecord {
+  _UnionRecord(super.id);
+  late final List<_ReadVariant> variants;
+
+  @override
+  List<skir.TypeDefinition> get definitions => [
+    _readRecordDefinition(id, const [], parent: null, abstract: true),
+    for (final variant in variants)
+      _readRecordDefinition(
+        variant.id,
+        [if (variant.value case final value?) (_valueField, value)],
+        parent: id,
+        abstract: false,
+      ),
+  ];
+}
+
+final class _ReadVariant {
+  const _ReadVariant(this.id, this.name, this.value);
+  final skir.TypeDefinitionId id;
+  final String name;
+  final skir.TypeTemplate? value;
+}
+
+/// A Skir record that is the wire form of a framework declared type rather
+/// than a read model of its own.
+final class _DeclaredRead {
+  const _DeclaredRead(this.use, this.encode, this.json);
+  final skir.NamedTypeUse use;
+  final skir.DataValue Function(Object value) encode;
+  final dynamic Function(skir.TypeDefinitionId actual, skir.DataValue payload)
+  json;
+}
+
+final _declaredReads = <String, _DeclaredRead>{
+  "kernel/v1/color.skir:Color": _DeclaredRead(
+    expressionColorUse,
+    (value) => colorValue((value as skir.Color).argb.toUnsigned(32)),
+    (actual, payload) {
+      _expectReadType(actual, expressionColorUse.definition);
+      if (payload is! skir.DataValue_integerWrapper) {
+        throw const FormatException("Expected an ARGB color");
+      }
+      return {"argb": int.parse(payload.value).toSigned(32)};
+    },
+  ),
+  "kernel/v1/icon.skir:Icon": _DeclaredRead(
+    expressionIconUse,
+    (value) => iconValue(value as skir.Icon),
+    (actual, payload) {
+      final icon = decodeIconValue(
+        skir.DataValue.createNamed(
+          actualType: skir.NamedTypeUse(
+            definition: actual,
+            arguments: const [],
+          ),
+          payload: payload,
+        ),
+      );
+      return switch (icon) {
+        skir.Icon_iconifyWrapper(:final value) => {
+          "kind": "iconify",
+          "value": value,
+        },
+        skir.Icon_svgWrapper(:final value) => {"kind": "svg", "value": value},
+        _ => throw const FormatException("Expected a canonical icon"),
+      };
+    },
+  ),
 };
-const _scalarModels = {
-  "DeclaredTypeId",
-  "EndpointId",
-  "ContributionSourceId",
-  "ProducerId",
-  "ContributionName",
+
+final _frameworkReadNames = {
+  _readListId: "List",
+  expressionColorUse.definition: "Color",
+  expressionIconUse.definition: "Icon",
+  _iconifyUse.definition: "Iconify",
+  _svgIconUse.definition: "SVG",
 };
-const _fieldAliases = {"TypeDefinitionId.type": "type_id"};
-const _virtualFields = {
-  "TypeSelection.complete": "use",
-  "TypeUse.scalar": "kind",
-  "TypeTemplate.scalar": "kind",
-  "TypeTemplate.parameter": "key",
-  "TypeId.declared": "id",
-  "ArgumentSelection.chosen": "type",
-  "DeclarationStatus.unavailable": "reasons",
+
+/// The framework List and the declared Color and Icon definitions, ordered by
+/// identity as Kotlin's `StandardTypes` and generated declarations define them.
+final _frameworkReadDefinitions = List<skir.TypeDefinition>.unmodifiable(
+  [
+    skir.TypeDefinition(
+      id: _readListId,
+      parameters: [
+        skir.TypeParameter(
+          key: skir.ParameterKey(owner: _readListId, index: 0),
+          name: "T",
+          bounds: const [],
+        ),
+      ],
+      representation: skir.RepresentationTemplate.createSequence(
+        item: skir.TypeTemplate.wrapParameter(
+          skir.ParameterKey(owner: _readListId, index: 0),
+        ),
+        kind: skir.CollectionKind.list,
+      ),
+      parents: const [],
+    ),
+    skir.TypeDefinition(
+      id: expressionColorUse.definition,
+      parameters: const [],
+      representation: skir.RepresentationTemplate.createScalar(
+        kind: skir.ScalarKind.createInteger(
+          width: skir.IntegerWidth.unsignedThirtyTwo,
+        ),
+      ),
+      parents: const [],
+    ),
+    _readRecordDefinition(
+      expressionIconUse.definition,
+      const [],
+      parent: null,
+      abstract: true,
+    ),
+    _readRecordDefinition(
+      _iconifyUse.definition,
+      [("value", skir.TypeTemplate.wrapScalar(skir.ScalarKind.text))],
+      parent: expressionIconUse.definition,
+      abstract: false,
+    ),
+    _readRecordDefinition(
+      _svgIconUse.definition,
+      [("source", skir.TypeTemplate.wrapScalar(skir.ScalarKind.text))],
+      parent: expressionIconUse.definition,
+      abstract: false,
+    ),
+  ]..sort((a, b) => _readIdName(a.id).compareTo(_readIdName(b.id))),
+);
+
+final _readListId = skir.TypeDefinitionId(
+  typeId: skir.TypeId.createQualified(namespace: "typewriter", name: "List"),
+  revision: 1,
+);
+
+skir.TypeDefinitionId _readId(String record) => skir.TypeDefinitionId(
+  typeId: skir.TypeId.createQualified(
+    namespace: canonicalReadNamespace,
+    name: record,
+  ),
+  revision: 1,
+);
+
+String _readRecordId(skir.ReflectiveRecordDescriptor<dynamic> descriptor) =>
+    "${descriptor.modulePath}:${descriptor.qualifiedName}";
+
+String _readIdName(skir.TypeDefinitionId id) => switch (id.typeId) {
+  skir.TypeId_qualifiedWrapper(:final value) => value.name,
+  skir.TypeId_declaredWrapper(:final value) => value.value,
+  _ => "",
 };
-const _variantNames = <String, Map<String, String>>{};
-const _enumConstants = {
-  "IntegerWidth": {
-    "signed_eight": "SIGNED_8",
-    "signed_sixteen": "SIGNED_16",
-    "signed_thirty_two": "SIGNED_32",
-    "signed_sixty_four": "SIGNED_64",
-    "unsigned_eight": "UNSIGNED_8",
-    "unsigned_sixteen": "UNSIGNED_16",
-    "unsigned_thirty_two": "UNSIGNED_32",
-    "unsigned_sixty_four": "UNSIGNED_64",
-  },
-  "FloatWidth": {"thirty_two": "FLOAT_32", "sixty_four": "FLOAT_64"},
-  "CollectionKind": {"list": "LIST", "set": "SET"},
+
+void _expectReadType(
+  skir.TypeDefinitionId actual,
+  skir.TypeDefinitionId expected,
+) {
+  if (actual != expected) {
+    throw FormatException(
+      "Expected the canonical type ${_readIdName(expected)}",
+    );
+  }
+}
+
+skir.TypeDefinition _readRecordDefinition(
+  skir.TypeDefinitionId id,
+  List<(String, skir.TypeTemplate)> fields, {
+  required skir.TypeDefinitionId? parent,
+  required bool abstract,
+}) => skir.TypeDefinition(
+  id: id,
+  parameters: const [],
+  representation: skir.RepresentationTemplate.createRecord(
+    fields: [
+      for (final (name, type) in fields)
+        skir.FieldDeclaration(
+          owner: skir.FieldOwner(definition: id, name: name),
+          type: type,
+          overrides: const [],
+          hasConstructorDefault: false,
+        ),
+    ],
+    abstract_: abstract,
+  ),
+  parents: [
+    if (parent != null)
+      skir.NamedTypeTemplate(definition: parent, arguments: const []),
+  ],
+);
+
+List<skir.ReflectiveStructField<dynamic, dynamic, dynamic>> _readFields(
+  skir.ReflectiveStructDescriptor<dynamic, dynamic> descriptor,
+) => descriptor.fields.toList()..sort((a, b) => a.number.compareTo(b.number));
+
+List<skir.ReflectiveEnumVariant<dynamic>> _readVariants(
+  skir.ReflectiveEnumDescriptor<dynamic> descriptor,
+) =>
+    descriptor.variants.where((variant) => variant.number != 0).toList()
+      ..sort((a, b) => a.number.compareTo(b.number));
+
+skir.ReflectiveEnumVariant<dynamic> _readVariantOf(
+  skir.ReflectiveRecordDescriptor<dynamic> descriptor,
+  Object value,
+) {
+  final variant = (descriptor as skir.ReflectiveEnumDescriptor<dynamic>)
+      .getVariant(value);
+  if (variant.number == 0) {
+    throw const FormatException("Unknown canonical enum variant");
+  }
+  return variant;
+}
+
+skir.ScalarKind _readScalar(skir.PrimitiveType type) => switch (type) {
+  skir.PrimitiveType.bool => skir.ScalarKind.boolean,
+  skir.PrimitiveType.int32 => skir.ScalarKind.createInteger(
+    width: skir.IntegerWidth.signedThirtyTwo,
+  ),
+  skir.PrimitiveType.int64 => skir.ScalarKind.createInteger(
+    width: skir.IntegerWidth.signedSixtyFour,
+  ),
+  skir.PrimitiveType.hash64 => skir.ScalarKind.createInteger(
+    width: skir.IntegerWidth.unsignedSixtyFour,
+  ),
+  skir.PrimitiveType.float32 => skir.ScalarKind.createFloat(
+    width: skir.FloatWidth.thirtyTwo,
+  ),
+  skir.PrimitiveType.float64 => skir.ScalarKind.createFloat(
+    width: skir.FloatWidth.sixtyFour,
+  ),
+  skir.PrimitiveType.timestamp => skir.ScalarKind.timestamp,
+  skir.PrimitiveType.string => skir.ScalarKind.text,
+  skir.PrimitiveType.bytes => skir.ScalarKind.bytes,
 };
-final _integerWidths = <String, skir.IntegerWidth>{
-  "SIGNED_8": skir.IntegerWidth.signedEight,
-  "SIGNED_16": skir.IntegerWidth.signedSixteen,
-  "SIGNED_32": skir.IntegerWidth.signedThirtyTwo,
-  "SIGNED_64": skir.IntegerWidth.signedSixtyFour,
-  "UNSIGNED_8": skir.IntegerWidth.unsignedEight,
-  "UNSIGNED_16": skir.IntegerWidth.unsignedSixteen,
-  "UNSIGNED_32": skir.IntegerWidth.unsignedThirtyTwo,
-  "UNSIGNED_64": skir.IntegerWidth.unsignedSixtyFour,
-};
+
+skir.DataValue _readPrimitive(Object value, skir.PrimitiveType type) =>
+    switch (type) {
+      skir.PrimitiveType.bool => skir.DataValue.wrapBoolean(value as bool),
+      skir.PrimitiveType.int32 ||
+      skir.PrimitiveType.int64 ||
+      skir.PrimitiveType.hash64 => skir.DataValue.wrapInteger(value.toString()),
+      skir.PrimitiveType.float32 || skir.PrimitiveType.float64 =>
+        skir.DataValue.wrapFloat((value as num).toDouble()),
+      skir.PrimitiveType.timestamp => skir.DataValue.wrapTimestamp(
+        value as DateTime,
+      ),
+      skir.PrimitiveType.string => skir.DataValue.wrapStringValue(
+        value as String,
+      ),
+      skir.PrimitiveType.bytes => skir.DataValue.wrapBytes(
+        value as skir.ByteString,
+      ),
+    };
+
+dynamic _readPrimitiveJson(skir.DataValue value, skir.PrimitiveType type) =>
+    switch ((type, value)) {
+      (skir.PrimitiveType.bool, skir.DataValue_booleanWrapper(:final value)) =>
+        value,
+      (
+        skir.PrimitiveType.int32 ||
+            skir.PrimitiveType.int64 ||
+            skir.PrimitiveType.hash64,
+        skir.DataValue_integerWrapper(:final value),
+      ) =>
+        value,
+      (
+        skir.PrimitiveType.float32 || skir.PrimitiveType.float64,
+        skir.DataValue_floatWrapper(:final value),
+      ) =>
+        value,
+      (
+        skir.PrimitiveType.timestamp,
+        skir.DataValue_timestampWrapper(:final value),
+      ) =>
+        value.millisecondsSinceEpoch,
+      (
+        skir.PrimitiveType.string,
+        skir.DataValue_stringValueWrapper(:final value),
+      ) =>
+        value,
+      (skir.PrimitiveType.bytes, skir.DataValue_bytesWrapper(:final value)) =>
+        value.toBase64(),
+      _ => throw FormatException(
+        "The canonical value does not match its ${type.name} field",
+      ),
+    };
+
+Map<String, skir.DataValue> _readRecordFields(skir.DataValue payload) =>
+    switch (payload) {
+      skir.DataValue_recordWrapper(:final value) => {
+        for (final field in value.fields) field.name: field.value,
+      },
+      _ => throw const FormatException("Expected a canonical record"),
+    };
+
+skir.DataValue _readField(Map<String, skir.DataValue> fields, String name) =>
+    fields[name] ??
+    (throw FormatException("The canonical field $name is absent"));
+
+/// The value at the field [path] below a projected declared value.
+skir.DataValue _readSelect(skir.DataValue value, List<String> path) {
+  var current = value;
+  for (final name in path) {
+    final payload = switch (current) {
+      skir.DataValue_namedWrapper(:final value) => value.payload,
+      _ => current,
+    };
+    current = _readField(_readRecordFields(payload), name);
+  }
+  return current;
+}

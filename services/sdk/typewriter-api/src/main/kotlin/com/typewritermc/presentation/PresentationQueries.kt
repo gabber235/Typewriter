@@ -1,6 +1,5 @@
 package com.typewritermc.presentation
 
-import com.typewritermc.authoring.TypeSelection
 import com.typewritermc.expression.CanonicalReadModels
 import com.typewritermc.expression.Expr
 import com.typewritermc.expression.Handled
@@ -10,21 +9,20 @@ import com.typewritermc.expression.isNull
 import com.typewritermc.expression.literal
 import com.typewritermc.expression.not
 import com.typewritermc.expression.orElse
-import com.typewritermc.expression.portableLiteral
-import com.typewritermc.types.DataValue
 import com.typewritermc.types.Ref
 import com.typewritermc.types.RelationshipEndpoint
 import com.typewritermc.types.Resource
 import com.typewritermc.types.ResourceId
 import com.typewritermc.types.TypeTemplate
 import com.typewritermc.types.TypeUse
-import com.typewritermc.types.catalog.PublishedType
 import com.typewritermc.types.immutableCopy
 import com.typewritermc.types.skir.SkirTypeCodec
 import com.typewritermc.types.skir.getOrThrow
+import skirout.editor.v1.catalog.PublishedType
 import skirout.editor.v1.expression.ExpressionNode
 import skirout.editor.v1.expression.ExpressionQuery
 import skirout.editor.v1.expression.ResourceQuerySource
+import skirout.editor.v1.type_catalog.TypeSelection
 import kotlin.reflect.KClass
 
 internal sealed interface ResourceReadSource {
@@ -105,7 +103,10 @@ internal class RuntimePresentationQueries(
     }
 }
 
-fun literal(value: TypeSelection): Expr<TypeSelection, Handled> = portableLiteral(CanonicalReadModels.typeSelection.encode(value))
+fun literal(value: TypeSelection): Expr<TypeSelection, Handled> {
+    val encoded = CanonicalReadModels.typeSelection.encode(value)
+    return Expr { ExpressionNode.LiteralWrapper(encoded) }
+}
 
 fun <M : MissingPolicy> Expr<TypeSelection, M>.declaration(): Expr<PublishedType, MayBeMissing> =
     Expr { ExpressionNode.QueryWrapper(ExpressionQuery.CatalogDeclarationWrapper(lower(it))) }

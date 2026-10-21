@@ -356,11 +356,15 @@ internal class RuntimeControlBinding(
                         requireNotNull(state.presentationId(type.reference, state.type.rebind(type.type.toTemplate()))) {
                             "A concrete form presentation must be registered before use."
                         }
+                    // Without an authored label the form is named by the readable Skir JSON of its definition id,
+                    // a stable spelling that does not depend on Kotlin object formatting.
+                    val fallback =
+                        skirout.editor.v1.type_catalog.TypeDefinitionId.serializer
+                            .toJsonCode(SkirTypeCodec.encode(type.type.definition).getOrThrow(), build.skir.JsonFlavor.READABLE)
                     forms +=
                         skirout.editor.v1.presentation.ConcreteTypePresentation(
                             concreteType = SkirTypeCodec.encode(type.type).getOrThrow(),
-                            label =
-                                expression(label ?: type.type.definition.toString()),
+                            label = expression(label ?: fallback),
                             presentation =
                                 state.node(
                                     PresentationElement.createInvocation(

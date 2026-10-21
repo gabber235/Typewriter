@@ -59,7 +59,7 @@ interface PresentationBuildScope : Layout {
      * The evaluated display of the presented resource, which editors bind whenever they present one. Generated
      * resource presentation scopes expose it as `appearance`.
      */
-    fun resourceAppearance(): Expr<com.typewritermc.authoring.ResourceAppearance, Handled>
+    fun resourceAppearance(): Expr<skirout.editor.v1.catalog.ResourceAppearance, Handled>
 
     fun conditional(
         condition: Expr<Boolean, Handled>,

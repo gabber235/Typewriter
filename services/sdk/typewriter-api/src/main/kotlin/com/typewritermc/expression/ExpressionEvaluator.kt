@@ -13,6 +13,7 @@ import com.typewritermc.types.canonicalValueKey
 import com.typewritermc.types.skir.SkirAuthoringValueCodec
 import com.typewritermc.types.skir.SkirConversionResult
 import com.typewritermc.types.skir.SkirDataValueCodec
+import com.typewritermc.types.skir.SkirTypeCodec
 import com.typewritermc.types.skir.getOrThrow
 import com.typewritermc.types.unwrapNamed
 import kotlinx.coroutines.CancellationException
@@ -508,12 +509,10 @@ private class EvaluatorState(
         if (operation == ExpressionQuery.Kind.VALUE_CONFIGURATION_WRAPPER) {
             val named = source.value as? DataValue.Named ?: return Availability.Unavailable(emptyList())
             return projected(
-                CanonicalReadModels.encode(
+                readModel(
                     com.typewritermc.authoring.TypeSelection
                         .Complete(named.actualType),
                     fields,
-                    ::step,
-                    ::consumeItems,
                 ),
             )
         }
@@ -524,16 +523,28 @@ private class EvaluatorState(
             throw OperationFailure("query_catalog_mismatch", "Canonical queries must use the authored read catalog.")
         }
         if (operation == ExpressionQuery.Kind.CATALOG_DECLARATION_WRAPPER) {
-            val selection = CanonicalReadModels.typeSelection.decode(source.value)
+            // Temporary bridge until the Kotlin type mirrors are deleted: the read value is Skir, the catalog query mirrors.
+            val selection =
+                CanonicalReadModels.typeSelection.decode(SkirDataValueCodec.encode(source.value).getOrThrow())
             val definition =
                 when (selection) {
-                    is com.typewritermc.authoring.TypeSelection.Complete -> selection.use.definition
-                    is com.typewritermc.authoring.TypeSelection.Pending -> selection.definition
+                    is skirout.editor.v1.type_catalog.TypeSelection.CompleteWrapper -> selection.value.definition
+                    is skirout.editor.v1.type_catalog.TypeSelection.PendingWrapper -> selection.value.definition
+                    else -> throw OperationFailure("invalid_type_selection", "The type selection variant is unknown.")
                 }
-            return when (val declaration = query.declaration(definition)) {
-                is Availability.Available -> projected(CanonicalReadModels.encode(declaration.value, fields, ::step, ::consumeItems))
-                is Availability.Unavailable -> declaration
-                is Availability.Failed -> declaration
+            return when (val declaration = query.declaration(SkirTypeCodec.decode(definition).getOrThrow())) {
+                is Availability.Available -> {
+                    val published = SkirTypeCodec.encode(declaration.value).getOrThrow()
+                    projected(project(CanonicalReadModels.publishedType.encode(published, fields)))
+                }
+
+                is Availability.Unavailable -> {
+                    declaration
+                }
+
+                is Availability.Failed -> {
+                    declaration
+                }
             }
         }
         val id =
@@ -588,7 +599,7 @@ private class EvaluatorState(
             }
 
             ExpressionQuery.Kind.RESOURCE_CONFIGURATION_WRAPPER -> {
-                projected(CanonicalReadModels.encode(record.configuration, fields, ::step, ::consumeItems))
+                projected(readModel(record.configuration, fields))
             }
 
             ExpressionQuery.Kind.RESOURCE_VALUE_WRAPPER -> {
@@ -668,6 +679,22 @@ private class EvaluatorState(
             }
         }
     }
+
+    /**
+     * Projects a Kotlin mirror type selection through its Skir read model. Temporary bridge until the Kotlin type
+     * mirrors are deleted.
+     */
+    private fun readModel(
+        selection: com.typewritermc.authoring.TypeSelection,
+        fields: List<String>,
+    ): DataValue = project(CanonicalReadModels.typeSelection.encode(SkirAuthoringValueCodec.encode(selection).getOrThrow(), fields))
+
+    private fun project(value: skirout.editor.v1.type_catalog.DataValue): DataValue = SkirDataValueCodec.decode(value).getOrThrow()
+
+    private fun <T> CanonicalReadModel<T>.encode(
+        value: T,
+        fields: List<String>,
+    ) = CanonicalReadModels.encode(value, serializer.typeDescriptor, fields, ::step, ::consumeItems)
 
     private fun projected(value: DataValue): Availability<DataValue> =
         if (value ==

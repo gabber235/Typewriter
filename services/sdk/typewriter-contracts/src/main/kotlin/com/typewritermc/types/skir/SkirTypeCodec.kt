@@ -136,6 +136,8 @@ object SkirTypeCodec {
 
     fun encode(snapshot: EditorCatalogSnapshot): SkirConversionResult<EditorCatalog> = captureSkirConversion { encodeSnapshot(snapshot) }
 
+    fun encode(type: PublishedType): SkirConversionResult<SkirPublishedType> = captureSkirConversion { this.encode(type) }
+
     fun encode(diagnostic: DeclarationDiagnostic): SkirConversionResult<SkirDeclarationDiagnostic> =
         captureSkirConversion { this.encode(diagnostic) }
 

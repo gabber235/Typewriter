@@ -186,7 +186,7 @@ final class CheckedEditorCatalog {
       } {
     for (final id in _types.keys) {
       if (id.typeId case skir.TypeId_qualifiedWrapper(:final value)
-          when value.namespace == "typewriter.read") {
+          when value.namespace == canonicalReadNamespace) {
         throw const FormatException(
           "Authored declarations cannot use the reserved canonical read namespace",
         );

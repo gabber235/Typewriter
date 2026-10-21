@@ -222,7 +222,7 @@ void main() {
       final definition = skir.TypeDefinition(
         id: skir.TypeDefinitionId(
           typeId: skir.TypeId.createQualified(
-            namespace: "typewriter.read",
+            namespace: canonicalReadNamespace,
             name: "custom",
           ),
           revision: 1,

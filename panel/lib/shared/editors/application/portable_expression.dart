@@ -7,7 +7,6 @@ part "portable_expression_queries.dart";
 part "portable_expression_model.dart";
 part "portable_expression_scalars.dart";
 part "canonical_read_models.dart";
-part "canonical_read_models.generated.dart";
 
 /// Evaluation outcome together with the lexical and resource paths observed.
 /// Unavailable input remains distinct from an invalid expression or exhausted

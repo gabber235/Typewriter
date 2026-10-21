@@ -47,6 +47,8 @@ import com.typewritermc.types.catalog.DeclarationStatus
 import com.typewritermc.types.catalog.DefaultCheckedCatalog
 import com.typewritermc.types.catalog.PublishedType
 import com.typewritermc.types.catalog.Resolution
+import com.typewritermc.types.skir.SkirAuthoringValueCodec
+import com.typewritermc.types.skir.getOrThrow
 import de.infix.testBalloon.framework.core.testSuite
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.types.shouldBeInstanceOf
@@ -55,12 +57,15 @@ import skirout.editor.v1.expression.ExpressionQuery
 import skirout.editor.v1.expression.ResourceQuerySource
 
 val CanonicalQueryTest by testSuite {
-    test("generated canonical adapters preserve pending arguments and stay out of authored declarations") {
+    test("read models preserve pending arguments and stay out of authored declarations") {
         val selection =
-            TypeSelection.Pending(
-                queryTypeId,
-                listOf(ArgumentSelection.Unfilled, ArgumentSelection.Chosen(TypeUse.Scalar(ScalarKind.Text))),
-            )
+            SkirAuthoringValueCodec
+                .encode(
+                    TypeSelection.Pending(
+                        queryTypeId,
+                        listOf(ArgumentSelection.Unfilled, ArgumentSelection.Chosen(TypeUse.Scalar(ScalarKind.Text))),
+                    ),
+                ).getOrThrow()
         CanonicalReadModels.typeSelection.decode(CanonicalReadModels.typeSelection.encode(selection)) shouldBe selection
         queryCatalog.declaration(CanonicalReadModels.typeSelection.type.definition).shouldBeInstanceOf<Resolution.Invalid>()
     }

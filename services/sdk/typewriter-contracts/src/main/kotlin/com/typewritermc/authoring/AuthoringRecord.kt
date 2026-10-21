@@ -45,10 +45,7 @@ sealed interface TypeSelection {
     ) : TypeSelection
 }
 
-/**
- * The selected type, complete or pending. An extension rather than a member: an interface property would become a
- * field of the selection's canonical read model, which [TypeSelection.Pending.definition] would then override.
- */
+/** The selected type, complete or pending. */
 val TypeSelection.definition: TypeDefinitionId
     get() =
         when (this) {

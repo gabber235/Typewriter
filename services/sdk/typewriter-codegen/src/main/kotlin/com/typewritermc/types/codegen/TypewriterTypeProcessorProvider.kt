@@ -141,12 +141,10 @@ private class TypewriterTypeProcessor(
     private val registrarProviders = RegistrarProviderProcessor(output, logger)
     private val collectionProjectionProviders = CollectionProjectionProviderProcessor(output, logger)
     private val capabilityProviders = CapabilityProviderProcessor(output, owners, logger, options[SOURCE_PART_OPTION].orEmpty())
-    private val readModels = ReadModelProcessor(codeGenerator, logger)
     private val claimDependencyClosure = options[CLAIM_DEPENDENCY_CLOSURE_OPTION]?.toBooleanStrictOrNull() == true
     private var optionsValidated = false
 
     override fun process(resolver: Resolver): List<KSAnnotated> {
-        readModels.process(resolver)
         if (!optionsValidated) {
             optionsValidated = true
             if (!validateOptions()) return emptyList()
