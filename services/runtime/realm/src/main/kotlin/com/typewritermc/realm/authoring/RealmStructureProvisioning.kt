@@ -5,8 +5,6 @@ package com.typewritermc.realm.authoring
 import com.typewritermc.authoring.CommitResult
 import com.typewritermc.authoring.DefaultInitializationRuntime
 import com.typewritermc.authoring.GeneratedSdkApi
-import com.typewritermc.authoring.InitializationRequest
-import com.typewritermc.authoring.PreparationTarget
 import com.typewritermc.authoring.PreparedEdit
 import com.typewritermc.authoring.RealmRoot
 import com.typewritermc.authoring.RealmRootDefinition
@@ -32,7 +30,9 @@ import com.typewritermc.types.items
 import com.typewritermc.types.payload
 import com.typewritermc.types.unwrapNamed
 import com.typewritermc.types.use
+import skirout.editor.v1.catalog.PreparationTarget
 import skirout.editor.v1.catalog.PreparedContent
+import skirout.editor.v1.catalog.ValuePreparationRequest
 import skirout.editor.v1.type_catalog.AuthoringRecord
 import skirout.editor.v1.type_catalog.DataValue
 import skirout.editor.v1.type_catalog.NamedTypeUse
@@ -118,7 +118,11 @@ internal class RealmStructureProvisioning(
         val catalog = view.catalog
         val prepared =
             DefaultInitializationRuntime(catalog.checked, catalog.nativeBindings).prepare(
-                InitializationRequest(catalog.generation, PreparationTarget.Record(TypeSelection.CompleteWrapper(type)), null),
+                ValuePreparationRequest(
+                    catalog = catalog.generation,
+                    target = PreparationTarget.RecordWrapper(TypeSelection.CompleteWrapper(type)),
+                    suppliedValue = null,
+                ),
             )
         val content = prepared.content
         check(content is PreparedContent.RecordWrapper) { "Realm section $type must be creatable as a record without input." }

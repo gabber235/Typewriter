@@ -23,8 +23,15 @@ import com.typewritermc.types.rows
 import com.typewritermc.types.setValue
 import com.typewritermc.types.unknownVariant
 import com.typewritermc.types.use
+import skirout.editor.v1.catalog.InputAnswer
+import skirout.editor.v1.catalog.PreparationDraft
+import skirout.editor.v1.catalog.PreparationOperation
+import skirout.editor.v1.catalog.PreparationTarget
+import skirout.editor.v1.catalog.PrepareValueResult
 import skirout.editor.v1.catalog.PreparedContent
 import skirout.editor.v1.catalog.PreparedValue
+import skirout.editor.v1.catalog.RequiredInput
+import skirout.editor.v1.catalog.ValuePreparationRequest
 import skirout.editor.v1.diagnostic.InitializationDiagnostic
 import skirout.editor.v1.type_catalog.ArgumentSelection
 import skirout.editor.v1.type_catalog.AuthoringRecord
@@ -54,56 +61,61 @@ class DefaultInitializationRuntime(
     private val catalog: CheckedCatalog,
     private val bindings: NativeBindingRegistry,
 ) : InitializationRuntime {
-    override suspend fun prepare(request: InitializationRequest): PreparedValue = prepareNow(request)
+    override suspend fun prepare(request: ValuePreparationRequest): PreparedValue = prepareNow(request)
 
-    override suspend fun step(operation: PreparationOperation): PreparationStep = stepNow(operation)
+    override suspend fun step(operation: PreparationOperation): PrepareValueResult = stepNow(operation)
 
     /** Evaluates a portable continuation without retaining caller state in this runtime. */
-    fun stepNow(operation: PreparationOperation): PreparationStep {
-        val request: InitializationRequest
+    fun stepNow(operation: PreparationOperation): PrepareValueResult {
+        val request: ValuePreparationRequest
         val context: DefaultInitializationContext
         when (operation) {
-            is PreparationOperation.Start -> {
-                request = operation.request
+            is PreparationOperation.StartWrapper -> {
+                request = operation.value
                 context = DefaultInitializationContext()
             }
 
-            is PreparationOperation.Resume -> {
-                val draft = operation.draft.immutableCopy()
-                val invalid = validateContinuation(draft, operation.answers)
-                if (invalid != null) return PreparationStep.Unavailable(draft.copy(findings = listOf(invalid)))
+            is PreparationOperation.ResumeWrapper -> {
+                val draft = operation.value.draft
+                val invalid = validateContinuation(draft, operation.value.answers)
+                if (invalid != null) return PrepareValueResult.UnavailableErrorWrapper(draft.copy(findings = listOf(invalid)))
                 var value = draft.content.portableValue()
-                for (answer in operation.answers) {
+                for (answer in operation.value.answers) {
                     value = (value.writeField(answer.path, answer.value) as ValueReplacement.Replaced).value
                 }
-                request = InitializationRequest(draft.catalog, draft.target, value)
+                request = ValuePreparationRequest(catalog = draft.catalog, target = draft.target, suppliedValue = value)
                 context = DefaultInitializationContext(draft.pendingDefaults.toSet(), resuming = true)
+            }
+
+            else -> {
+                unknownVariant(operation)
             }
         }
         val prepared = evaluate(request, context)
         val requirements = requiredInputs(request.target, prepared.content, context.deferred)
         val draft =
             PreparationDraft(
-                request.catalog,
-                request.target,
-                prepared.content,
-                context.deferred.toSet(),
-                requirements,
-                prepared.findings.toList(),
-            ).immutableCopy()
+                catalog = request.catalog,
+                target = request.target,
+                content = prepared.content,
+                pendingDefaults = context.deferred.toList(),
+                requiredInputs = requirements,
+                findings = prepared.findings,
+            )
         val expected =
             when (val target = request.target) {
-                is PreparationTarget.Value -> target.type
-                is PreparationTarget.Record -> target.selection.completeUse()?.use
+                is PreparationTarget.ValueWrapper -> target.value
+                is PreparationTarget.RecordWrapper -> target.value.completeUse()?.use
+                else -> unknownVariant(target)
             }
         val failed =
             context.unavailable || expected == null || !admissibleInput(expected, prepared.content.portableValue()) ||
                 request.catalog != catalog.generation || requirements.any { catalog.resolve(it.expected) is Resolution.Invalid }
         return when {
-            failed -> PreparationStep.Unavailable(draft)
-            requirements.isNotEmpty() -> PreparationStep.NeedsInput(draft)
-            context.deferred.isNotEmpty() -> PreparationStep.Unavailable(draft)
-            else -> PreparationStep.Ready(PreparedValue(content = draft.content, findings = draft.findings))
+            failed -> PrepareValueResult.UnavailableErrorWrapper(draft)
+            requirements.isNotEmpty() -> PrepareValueResult.NeedsInputWrapper(draft)
+            context.deferred.isNotEmpty() -> PrepareValueResult.UnavailableErrorWrapper(draft)
+            else -> PrepareValueResult.ReadyWrapper(PreparedValue(content = draft.content, findings = draft.findings))
         }
     }
 
@@ -115,16 +127,20 @@ class DefaultInitializationRuntime(
             InitializationDiagnostic(field = null, code = "invalid_preparation_continuation", message = message, relativePath = null)
         if (draft.catalog != catalog.generation) return invalid("The preparation catalog changed.")
         when (val target = draft.target) {
-            is PreparationTarget.Record -> {
-                if ((draft.content as? PreparedContent.RecordWrapper)?.record?.configuration != target.selection) {
+            is PreparationTarget.RecordWrapper -> {
+                if ((draft.content as? PreparedContent.RecordWrapper)?.record?.configuration != target.value) {
                     return invalid("The prepared record does not match its requested selection.")
                 }
             }
 
-            is PreparationTarget.Value -> {
+            is PreparationTarget.ValueWrapper -> {
                 if (draft.content !is PreparedContent.ValueWrapper) {
                     return invalid("Value preparation requires value content.")
                 }
+            }
+
+            else -> {
+                unknownVariant(target)
             }
         }
         val validDefaults = linkedSetOf<ValuePath>()
@@ -134,7 +150,7 @@ class DefaultInitializationRuntime(
             }
         }
         if (!validDefaults.containsAll(draft.pendingDefaults)) return invalid("A pending default is not an omitted constructor field.")
-        val required = requiredInputs(draft.target, draft.content, draft.pendingDefaults)
+        val required = requiredInputs(draft.target, draft.content, draft.pendingDefaults.toSet())
         if ((required.toSet() != draft.requiredInputs.toSet()) ||
             (required.size != draft.requiredInputs.size)
         ) {
@@ -223,7 +239,7 @@ class DefaultInitializationRuntime(
             if ((value == DataValue.UNFILLED || (value is DataValue.NamedWrapper && value.payload == DataValue.UNFILLED)) &&
                 path !in pending
             ) {
-                inputs[path] = RequiredInput(path, type)
+                inputs[path] = RequiredInput(path = path, expected = type)
             }
         }
         return inputs.values.toList()
@@ -288,8 +304,9 @@ class DefaultInitializationRuntime(
         }
         val type =
             when (target) {
-                is PreparationTarget.Value -> target.type
-                is PreparationTarget.Record -> target.selection.completeUse()?.use
+                is PreparationTarget.ValueWrapper -> target.value
+                is PreparationTarget.RecordWrapper -> target.value.completeUse()?.use
+                else -> unknownVariant(target)
             } ?: return
         walk(type, content.portableValue(), ValuePath.root)
     }
@@ -399,10 +416,10 @@ class DefaultInitializationRuntime(
         return if (value is DataValue.NamedWrapper) DataValue.named(value.actualType, resumed) else resumed
     }
 
-    fun prepareNow(request: InitializationRequest): PreparedValue = evaluate(request, DefaultInitializationContext())
+    fun prepareNow(request: ValuePreparationRequest): PreparedValue = evaluate(request, DefaultInitializationContext())
 
     private fun evaluate(
-        request: InitializationRequest,
+        request: ValuePreparationRequest,
         context: DefaultInitializationContext,
     ): PreparedValue {
         if (request.catalog != catalog.generation) {
@@ -410,26 +427,27 @@ class DefaultInitializationRuntime(
             return unavailable(request, "catalog_generation_mismatch", "The initialization request uses a different catalog generation.")
         }
         return when (val target = request.target) {
-            is PreparationTarget.Value -> prepareValue(request, target.type, context)
-            is PreparationTarget.Record -> prepareRecord(request, target.selection, context)
+            is PreparationTarget.ValueWrapper -> prepareValue(request, target.value, context)
+            is PreparationTarget.RecordWrapper -> prepareRecord(request, target.value, context)
+            else -> unknownVariant(target)
         }
     }
 
     private fun prepareValue(
-        request: InitializationRequest,
+        request: ValuePreparationRequest,
         type: TypeUse,
         context: DefaultInitializationContext,
     ): PreparedValue {
         val findings = mutableListOf<InitializationDiagnostic>()
         val value =
-            request.supplied?.let {
+            request.suppliedValue?.let {
                 if (context.resuming) resumeValue(type, it, context, findings, ValuePath.root) else it
             } ?: ordinaryDefault(type, context, findings, ValuePath.root)
         return PreparedValue(content = PreparedContent.ValueWrapper(value), findings = findings)
     }
 
     private fun prepareRecord(
-        request: InitializationRequest,
+        request: ValuePreparationRequest,
         selection: TypeSelection,
         context: DefaultInitializationContext,
     ): PreparedValue {
@@ -571,7 +589,7 @@ class DefaultInitializationRuntime(
     }
 
     private fun preparePending(
-        request: InitializationRequest,
+        request: ValuePreparationRequest,
         selection: TypeSelection.PendingWrapper,
     ): PreparedValue {
         val supplied =
@@ -628,31 +646,35 @@ class DefaultInitializationRuntime(
     }
 
     private fun unavailable(
-        request: InitializationRequest,
+        request: ValuePreparationRequest,
         code: String,
         message: String,
     ): PreparedValue = unavailable(request, InitializationDiagnostic(field = null, code = code, message = message, relativePath = null))
 
     private fun unavailable(
-        request: InitializationRequest,
+        request: ValuePreparationRequest,
         diagnostic: InitializationDiagnostic,
     ): PreparedValue =
         PreparedValue(
             content =
                 when (val target = request.target) {
-                    is PreparationTarget.Value -> {
-                        PreparedContent.ValueWrapper(request.supplied ?: DataValue.UNFILLED)
+                    is PreparationTarget.ValueWrapper -> {
+                        PreparedContent.ValueWrapper(request.suppliedValue ?: DataValue.UNFILLED)
                     }
 
-                    is PreparationTarget.Record -> {
-                        PreparedContent.RecordWrapper(AuthoringRecord.of(target.selection, suppliedRecord(request).orEmpty()))
+                    is PreparationTarget.RecordWrapper -> {
+                        PreparedContent.RecordWrapper(AuthoringRecord.of(target.value, suppliedRecord(request).orEmpty()))
+                    }
+
+                    else -> {
+                        unknownVariant(target)
                     }
                 },
             findings = listOf(diagnostic),
         )
 
     private fun rejectUnknownFields(
-        request: InitializationRequest,
+        request: ValuePreparationRequest,
         supplied: Map<String, DataValue>,
         declared: Set<String>,
     ): PreparedValue? {
@@ -668,8 +690,8 @@ class DefaultInitializationRuntime(
         )
     }
 
-    private fun suppliedRecord(request: InitializationRequest): Map<String, DataValue>? =
-        when (val value = request.supplied) {
+    private fun suppliedRecord(request: ValuePreparationRequest): Map<String, DataValue>? =
+        when (val value = request.suppliedValue) {
             null -> emptyMap()
             is DataValue.RecordWrapper -> value.value.fieldMap
             else -> null

@@ -3,8 +3,6 @@ package com.typewritermc.engine.pages
 import com.typewritermc.authoring.CompletenessResult
 import com.typewritermc.authoring.DefaultInitializationRuntime
 import com.typewritermc.authoring.HierarchyPathDefinition
-import com.typewritermc.authoring.InitializationRequest
-import com.typewritermc.authoring.PreparationTarget
 import com.typewritermc.authoring.complete
 import com.typewritermc.authoring.fieldMap
 import com.typewritermc.authoring.record
@@ -28,7 +26,9 @@ import com.typewritermc.types.toSkir
 import com.typewritermc.types.use
 import de.infix.testBalloon.framework.core.testSuite
 import io.kotest.matchers.shouldBe
+import skirout.editor.v1.catalog.PreparationTarget
 import skirout.editor.v1.catalog.PreparedContent
+import skirout.editor.v1.catalog.ValuePreparationRequest
 import skirout.editor.v1.type_catalog.CatalogGeneration
 import skirout.editor.v1.type_catalog.DataValue
 import skirout.editor.v1.type_catalog.LinkTarget
@@ -67,10 +67,10 @@ val PageCreationDiagnosticTest by testSuite {
         val bindings = FactoryNativeBindingRegistry(catalog, factories)
         val prepared =
             DefaultInitializationRuntime(catalog, bindings).prepareNow(
-                InitializationRequest(
+                ValuePreparationRequest(
                     catalog = generation,
-                    target = PreparationTarget.Record(TypeSelection.CompleteWrapper(SequencePageDefinition.use)),
-                    supplied =
+                    target = PreparationTarget.RecordWrapper(TypeSelection.CompleteWrapper(SequencePageDefinition.use)),
+                    suppliedValue =
                         DataValue.record(
                             mapOf(
                                 "chapter" to DataValue.named(HierarchyPathDefinition.use, DataValue.StringValueWrapper("")),
@@ -112,10 +112,10 @@ val PageCreationDiagnosticTest by testSuite {
         val connectedFields = (connected.payload as DataValue.RecordWrapper).value.fieldMap
         val preparedWithBook =
             DefaultInitializationRuntime(catalog, bindings).prepareNow(
-                InitializationRequest(
+                ValuePreparationRequest(
                     catalog = generation,
-                    target = PreparationTarget.Record(TypeSelection.CompleteWrapper(SequencePageDefinition.use)),
-                    supplied = DataValue.record(connectedFields.filterKeys { it in setOf("book", "chapter", "priority") }),
+                    target = PreparationTarget.RecordWrapper(TypeSelection.CompleteWrapper(SequencePageDefinition.use)),
+                    suppliedValue = DataValue.record(connectedFields.filterKeys { it in setOf("book", "chapter", "priority") }),
                 ),
             )
         val withBookFields = (preparedWithBook.content as PreparedContent.RecordWrapper).record.fieldMap

@@ -1,7 +1,10 @@
 package com.typewritermc.authoring
 
 import com.typewritermc.types.NativeBinding
+import skirout.editor.v1.catalog.PreparationOperation
+import skirout.editor.v1.catalog.PrepareValueResult
 import skirout.editor.v1.catalog.PreparedValue
+import skirout.editor.v1.catalog.ValuePreparationRequest
 import skirout.editor.v1.type_catalog.TypeUse
 
 data class AppliedNativeArguments(
@@ -23,9 +26,9 @@ fun AppliedNativeArguments.requireOpaqueCompatibility(allowed: Set<Int>) {
 }
 
 interface InitializationRuntime {
-    suspend fun prepare(request: InitializationRequest): PreparedValue = step(PreparationOperation.Start(request)).materialize()
+    suspend fun prepare(request: ValuePreparationRequest): PreparedValue = step(PreparationOperation.StartWrapper(request)).materialize()
 
-    suspend fun step(operation: PreparationOperation): PreparationStep
+    suspend fun step(operation: PreparationOperation): PrepareValueResult
 }
 
-suspend fun InitializationRequest.prepareWith(runtime: InitializationRuntime): PreparedValue = runtime.prepare(this)
+suspend fun ValuePreparationRequest.prepareWith(runtime: InitializationRuntime): PreparedValue = runtime.prepare(this)

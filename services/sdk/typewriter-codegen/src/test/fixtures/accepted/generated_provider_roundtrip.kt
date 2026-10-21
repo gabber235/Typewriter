@@ -2,6 +2,8 @@
 
 package fixture
 
+import skirout.editor.v1.catalog.PreparationTarget
+import skirout.editor.v1.catalog.ValuePreparationRequest
 import com.typewritermc.types.type
 import skirout.editor.v1.type_catalog.ResourceTarget
 import com.typewritermc.configuration.name
@@ -15,9 +17,7 @@ import com.typewritermc.types.named
 import com.typewritermc.authoring.DefaultInitializationRuntime
 import com.typewritermc.authoring.field
 import com.typewritermc.authoring.fieldMap
-import com.typewritermc.authoring.InitializationRequest
 import skirout.editor.v1.catalog.PreparedContent
-import com.typewritermc.authoring.PreparationTarget
 import skirout.editor.v1.type_catalog.TypeSelection
 import skirout.editor.v1.type_catalog.DataValue
 import skirout.editor.v1.type_catalog.IntegerWidth
@@ -323,7 +323,7 @@ fun main(args: Array<String>) {
             fun counts(): Pair<*, *> = probeLoader.loadClass("fixture.GeneratedProviderRoundtrip").getMethod("evaluationCounts").invoke(null) as Pair<*, *>
             val initializer = DefaultInitializationRuntime(assembly.checked, assembly.bindings)
             fun prepare(type: NamedTypeUse, fields: Map<String, DataValue>) = initializer.prepareNow(
-                InitializationRequest(assembly.checked.generation, PreparationTarget.Record(TypeSelection.CompleteWrapper(type)), DataValue.record(fields)),
+                ValuePreparationRequest(catalog = assembly.checked.generation, target = PreparationTarget.RecordWrapper(TypeSelection.CompleteWrapper(type)), suppliedValue = DataValue.record(fields)),
             )
             fun integer(value: Int) = DataValue.integer(BigInteger.valueOf(value.toLong()))
             val supplied = mapOf("seed" to integer(7), "nullable" to DataValue.NULL, "guarded" to integer(20))
@@ -367,14 +367,14 @@ fun main(args: Array<String>) {
             val replacement = replacementContributions.assemble(CatalogAssemblyContext(CatalogGeneration(value = "fixture replacement")))
             replacementCountBindings = 0
             val replacementWrapped = DefaultInitializationRuntime(replacement.checked, replacement.bindings).prepareNow(
-                InitializationRequest(replacement.checked.generation, PreparationTarget.Record(TypeSelection.CompleteWrapper(WrappedDefaultsDefinition.use)),
-                    DataValue.record(mapOf("count" to DataValue.named(DefaultCountDefinition.use, integer(8))))),
+                ValuePreparationRequest(catalog = replacement.checked.generation, target = PreparationTarget.RecordWrapper(TypeSelection.CompleteWrapper(WrappedDefaultsDefinition.use)),
+                    suppliedValue = DataValue.record(mapOf("count" to DataValue.named(DefaultCountDefinition.use, integer(8))))),
             )
             check(replacementWrapped.findings.isEmpty())
             check((replacementWrapped.content as PreparedContent.RecordWrapper).value.field("doubled") == integer(16))
             check(replacementCountBindings == 1)
             val replacementDefaults = DefaultInitializationRuntime(replacement.checked, replacement.bindings).prepareNow(
-                InitializationRequest(replacement.checked.generation, PreparationTarget.Record(TypeSelection.CompleteWrapper(DependentDefaultsDefinition.use)), DataValue.record(supplied)),
+                ValuePreparationRequest(catalog = replacement.checked.generation, target = PreparationTarget.RecordWrapper(TypeSelection.CompleteWrapper(DependentDefaultsDefinition.use)), suppliedValue = DataValue.record(supplied)),
             )
             check(replacementDefaults.findings.isEmpty())
             check((replacementDefaults.content as PreparedContent.RecordWrapper).value.field("derived") == integer(21))

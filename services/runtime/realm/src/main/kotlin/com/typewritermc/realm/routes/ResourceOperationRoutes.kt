@@ -416,7 +416,7 @@ private fun CounterpartChoice.toWire(): WireCounterpart =
         is CounterpartChoice.New -> {
             WireCounterpart.createNew(
                 containing = containing,
-                prepared = SkirAuthoringOperationCodec.encode(prepared).getOrThrow(),
+                prepared = prepared,
             )
         }
     }
@@ -430,7 +430,7 @@ private fun WireCounterpart.decodeCounterpart(): CounterpartChoice =
         is WireCounterpart.NewWrapper -> {
             CounterpartChoice.New(
                 value.containing.requireValid(),
-                SkirAuthoringOperationCodec.decode(value.prepared).getOrThrow(),
+                value.prepared.requireValid(),
             )
         }
 

@@ -1,14 +1,13 @@
 package com.typewritermc.realm.routes
 
 import com.typewritermc.authoring.InitializationRuntime
-import com.typewritermc.authoring.skir.SkirAuthoringOperationCodec
 import com.typewritermc.protocol.transport.RealmRouteScope
 import com.typewritermc.protocol.transport.generated.editorCatalogFetch
 import com.typewritermc.protocol.transport.generated.editorCatalogWatch
 import com.typewritermc.protocol.transport.generated.editorValuePrepare
 import com.typewritermc.realm.authoring.PreparationCatalogChanged
 import com.typewritermc.services.libs.communicator.router.CommunicatorRoutesBuilder
-import com.typewritermc.types.skir.getOrThrow
+import com.typewritermc.types.requireValid
 import skirout.editor.v1.catalog.PrepareValueResult
 import skirout.editor.v1.catalog.WatchEditorCatalogResponse
 
@@ -29,8 +28,7 @@ internal class EditorCatalogRoutes(
             unary(address.editorCatalogFetch) { call -> source.fetch(call.request) }
             unary(address.editorValuePrepare) { call ->
                 try {
-                    val request = SkirAuthoringOperationCodec.decode(call.request).getOrThrow()
-                    SkirAuthoringOperationCodec.encode(preparation.step(request)).getOrThrow()
+                    preparation.step(call.request.requireValid())
                 } catch (changed: PreparationCatalogChanged) {
                     PrepareValueResult.createCatalogChangedError(value = changed.actual.value)
                 }

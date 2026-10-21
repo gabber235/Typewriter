@@ -4,9 +4,7 @@ import com.typewritermc.authoring.AppliedNativeArguments
 import com.typewritermc.authoring.CaptureResult
 import com.typewritermc.authoring.CompleteValue
 import com.typewritermc.authoring.DefaultInitializationRuntime
-import com.typewritermc.authoring.InitializationRequest
 import com.typewritermc.authoring.NativeConstructionPlan
-import com.typewritermc.authoring.PreparationTarget
 import com.typewritermc.authoring.StructuralResult
 import com.typewritermc.authoring.authoredDefault
 import com.typewritermc.authoring.field
@@ -33,8 +31,10 @@ import com.typewritermc.types.template
 import com.typewritermc.types.use
 import de.infix.testBalloon.framework.core.testSuite
 import io.kotest.matchers.shouldBe
+import skirout.editor.v1.catalog.PreparationTarget
 import skirout.editor.v1.catalog.PreparedContent
 import skirout.editor.v1.catalog.PreparedValue
+import skirout.editor.v1.catalog.ValuePreparationRequest
 import skirout.editor.v1.diagnostic.InitializationDiagnostic
 import skirout.editor.v1.type_catalog.ArgumentSelection
 import skirout.editor.v1.type_catalog.AuthoringRecord
@@ -69,10 +69,10 @@ val InitializationRuntimeConformanceTest by testSuite {
         val supplied = DataValue.StringValueWrapper("authored")
         val prepared =
             DefaultInitializationRuntime(catalog, FactoryNativeBindingRegistry(catalog, emptyList())).prepareNow(
-                InitializationRequest(
+                ValuePreparationRequest(
                     catalog = generation,
-                    target = PreparationTarget.Value(ScalarKind.TEXT.use),
-                    supplied = supplied,
+                    target = PreparationTarget.ValueWrapper(ScalarKind.TEXT.use),
+                    suppliedValue = supplied,
                 ),
             )
 
@@ -839,8 +839,8 @@ private fun recordRequest(
     generation: CatalogGeneration,
     selection: TypeSelection,
     supplied: Map<String, DataValue>,
-) = InitializationRequest(
+) = ValuePreparationRequest(
     catalog = generation,
-    target = PreparationTarget.Record(selection),
-    supplied = DataValue.record(supplied),
+    target = PreparationTarget.RecordWrapper(selection),
+    suppliedValue = DataValue.record(supplied),
 )

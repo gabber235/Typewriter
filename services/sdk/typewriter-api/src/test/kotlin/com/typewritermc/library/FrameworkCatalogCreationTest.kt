@@ -6,9 +6,7 @@ import com.typewritermc.authoring.DefaultInitializationRuntime
 import com.typewritermc.authoring.GeneratedSdkApi
 import com.typewritermc.authoring.GraphPlacement
 import com.typewritermc.authoring.GraphPlacementDefinition
-import com.typewritermc.authoring.InitializationRequest
 import com.typewritermc.authoring.PlacementSdkProvider
-import com.typewritermc.authoring.PreparationTarget
 import com.typewritermc.authoring.fieldMap
 import com.typewritermc.authoring.name
 import com.typewritermc.authoring.payload
@@ -67,11 +65,13 @@ import com.typewritermc.types.use
 import de.infix.testBalloon.framework.core.testSuite
 import io.kotest.matchers.collections.shouldHaveSize
 import io.kotest.matchers.shouldBe
+import skirout.editor.v1.catalog.PreparationTarget
 import skirout.editor.v1.catalog.PreparedContent
 import skirout.editor.v1.catalog.PreparedValue
 import skirout.editor.v1.catalog.PresentationDescriptor
 import skirout.editor.v1.catalog.PresentationRole
 import skirout.editor.v1.catalog.PresentationTarget
+import skirout.editor.v1.catalog.ValuePreparationRequest
 import skirout.editor.v1.presentation.AxisChild
 import skirout.editor.v1.presentation.ChildrenElement
 import skirout.editor.v1.presentation.PresentationElement
@@ -739,10 +739,10 @@ private fun request(
     generation: CatalogGeneration,
     use: NamedTypeUse,
     supplied: Map<String, DataValue> = emptyMap(),
-) = InitializationRequest(
+) = ValuePreparationRequest(
     catalog = generation,
-    target = PreparationTarget.Record(TypeSelection.CompleteWrapper(use)),
-    supplied = DataValue.record(supplied),
+    target = PreparationTarget.RecordWrapper(TypeSelection.CompleteWrapper(use)),
+    suppliedValue = DataValue.record(supplied),
 )
 
 private val PreparedValue.record

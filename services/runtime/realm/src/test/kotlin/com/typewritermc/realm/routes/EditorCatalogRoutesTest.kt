@@ -49,6 +49,6 @@ val EditorCatalogRoutesTest by testSuite {
 }
 
 private data object UnusedInitialization : InitializationRuntime {
-    override suspend fun step(operation: com.typewritermc.authoring.PreparationOperation): com.typewritermc.authoring.PreparationStep =
+    override suspend fun step(operation: skirout.editor.v1.catalog.PreparationOperation): skirout.editor.v1.catalog.PrepareValueResult =
         error("Not used")
 }

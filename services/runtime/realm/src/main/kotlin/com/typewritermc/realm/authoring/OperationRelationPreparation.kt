@@ -3,8 +3,6 @@ package com.typewritermc.realm.authoring
 import com.typewritermc.authoring.ConnectIntent
 import com.typewritermc.authoring.CounterpartChoice
 import com.typewritermc.authoring.DefaultInitializationRuntime
-import com.typewritermc.authoring.InitializationRequest
-import com.typewritermc.authoring.PreparationTarget
 import com.typewritermc.authoring.record
 import com.typewritermc.checking.InputIdentity
 import com.typewritermc.operations.OperationPreparation
@@ -19,7 +17,9 @@ import com.typewritermc.types.toResourceId
 import com.typewritermc.types.toSkir
 import skirout.editor.v1.authoring.LinkOccurrence
 import skirout.editor.v1.authoring.LinkOccurrenceId
+import skirout.editor.v1.catalog.PreparationTarget
 import skirout.editor.v1.catalog.PreparedContent
+import skirout.editor.v1.catalog.ValuePreparationRequest
 import skirout.editor.v1.type_catalog.LinkTarget
 import skirout.editor.v1.type_catalog.ResolvedRepresentation
 import skirout.editor.v1.type_catalog.TypeSelection
@@ -222,10 +222,10 @@ internal class OperationRelationPreparation(
                 if (itemSchema.value.schema.representation !is ResolvedRepresentation.RecordWrapper) return@forEach
                 val prepared =
                     DefaultInitializationRuntime(catalog.checked, catalog.nativeBindings).prepareNow(
-                        InitializationRequest(
-                            catalog.generation,
-                            PreparationTarget.Record(TypeSelection.CompleteWrapper(itemType.value)),
-                            null,
+                        ValuePreparationRequest(
+                            catalog = catalog.generation,
+                            target = PreparationTarget.RecordWrapper(TypeSelection.CompleteWrapper(itemType.value)),
+                            suppliedValue = null,
                         ),
                     )
                 val materialized = (prepared.content as? PreparedContent.RecordWrapper)?.record ?: return@forEach

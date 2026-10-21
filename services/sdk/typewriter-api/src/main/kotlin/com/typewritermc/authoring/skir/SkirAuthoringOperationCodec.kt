@@ -5,15 +5,8 @@ import com.typewritermc.authoring.ConnectIntent
 import com.typewritermc.authoring.CounterpartChoice
 import com.typewritermc.authoring.EditExpectation
 import com.typewritermc.authoring.EditIntent
-import com.typewritermc.authoring.InitializationRequest
-import com.typewritermc.authoring.InputAnswer
 import com.typewritermc.authoring.LinkProjection
-import com.typewritermc.authoring.PreparationDraft
-import com.typewritermc.authoring.PreparationOperation
-import com.typewritermc.authoring.PreparationStep
-import com.typewritermc.authoring.PreparationTarget
 import com.typewritermc.authoring.PreparedEdit
-import com.typewritermc.authoring.RequiredInput
 import com.typewritermc.authoring.TraversalDirection
 import com.typewritermc.authoring.record
 import com.typewritermc.types.ResourceId
@@ -56,20 +49,6 @@ import skirout.editor.v1.type_catalog.ResourceId as SkirResourceId
  * proposals and preconditions; continuation validation and edit acceptance still belong to their runtime owners.
  */
 object SkirAuthoringOperationCodec {
-    fun encode(value: PreparationOperation): SkirConversionResult<SkirPreparationOperation> =
-        captureOperationConversion { encodePreparationOperation(value) }
-
-    fun decode(value: SkirPreparationOperation): SkirConversionResult<PreparationOperation> =
-        captureOperationConversion {
-            decodePreparationOperation(value)
-        }
-
-    fun encode(value: PreparationStep): SkirConversionResult<SkirPrepareValueResult> =
-        captureOperationConversion { encodePreparationStep(value) }
-
-    fun decode(value: SkirPrepareValueResult): SkirConversionResult<PreparationStep> =
-        captureOperationConversion { decodePreparationStep(value) }
-
     fun encode(value: EditExpectation): SkirConversionResult<SkirEditExpectation> = captureOperationConversion { encodeExpectation(value) }
 
     fun decode(value: SkirEditExpectation): SkirConversionResult<EditExpectation> = captureOperationConversion { decodeExpectation(value) }
@@ -86,114 +65,6 @@ object SkirAuthoringOperationCodec {
         captureOperationConversion {
             encodeCommitResult(value)
         }
-
-    fun encode(value: InitializationRequest): SkirConversionResult<SkirInitializationRequest> =
-        captureOperationConversion { encodeInitializationRequest(value) }
-
-    fun decode(value: SkirInitializationRequest): SkirConversionResult<InitializationRequest> =
-        captureOperationConversion { decodeInitializationRequest(value) }
-
-    fun encode(value: PreparedValue): SkirConversionResult<SkirPreparedValue> = captureOperationConversion { encodePreparedValue(value) }
-
-    fun decode(value: SkirPreparedValue): SkirConversionResult<PreparedValue> = captureOperationConversion { decodePreparedValue(value) }
-}
-
-private fun OperationConversionScope.encodePreparationOperation(value: PreparationOperation): SkirPreparationOperation =
-    when (value) {
-        is PreparationOperation.Start -> {
-            SkirPreparationOperation.StartWrapper(encodeInitializationRequest(value.request))
-        }
-
-        is PreparationOperation.Resume -> {
-            SkirPreparationOperation.createResume(
-                draft = encodePreparationDraft(value.draft),
-                answers =
-                    value.answers.map {
-                        SkirInputAnswer(
-                            path = it.path,
-                            value = valid { it.value.requirePortable() },
-                        )
-                    },
-            )
-        }
-    }
-
-private fun OperationConversionScope.decodePreparationOperation(value: SkirPreparationOperation): PreparationOperation =
-    when (value) {
-        is SkirPreparationOperation.StartWrapper -> {
-            PreparationOperation.Start(decodeInitializationRequest(value.value))
-        }
-
-        is SkirPreparationOperation.ResumeWrapper -> {
-            PreparationOperation.Resume(
-                decodePreparationDraft(value.value.draft),
-                value.value.answers.map {
-                    InputAnswer(
-                        valid { it.path.requireValid() },
-                        valid { it.value.requirePortable() },
-                    )
-                },
-            )
-        }
-
-        else -> {
-            fail("Unknown preparation operation.")
-        }
-    }
-
-private fun OperationConversionScope.encodePreparationStep(value: PreparationStep): SkirPrepareValueResult =
-    when (value) {
-        is PreparationStep.Ready -> SkirPrepareValueResult.ReadyWrapper(encodePreparedValue(value.value))
-        is PreparationStep.NeedsInput -> SkirPrepareValueResult.NeedsInputWrapper(encodePreparationDraft(value.draft))
-        is PreparationStep.Unavailable -> SkirPrepareValueResult.UnavailableErrorWrapper(encodePreparationDraft(value.draft))
-    }
-
-private fun OperationConversionScope.decodePreparationStep(value: SkirPrepareValueResult): PreparationStep =
-    when (value) {
-        is SkirPrepareValueResult.ReadyWrapper -> PreparationStep.Ready(decodePreparedValue(value.value))
-        is SkirPrepareValueResult.NeedsInputWrapper -> PreparationStep.NeedsInput(decodePreparationDraft(value.value))
-        is SkirPrepareValueResult.UnavailableErrorWrapper -> PreparationStep.Unavailable(decodePreparationDraft(value.value))
-        else -> fail("Prepare value result does not carry a preparation step.")
-    }
-
-private fun OperationConversionScope.encodePreparationDraft(value: PreparationDraft): SkirPreparationDraft {
-    val request = encodeInitializationRequest(InitializationRequest(value.catalog, value.target, null))
-    val prepared = encodePreparedValue(PreparedValue(content = value.content, findings = value.findings))
-    return SkirPreparationDraft(
-        catalog = request.catalog,
-        target = request.target,
-        content = prepared.content,
-        pendingDefaults = value.pendingDefaults.toList(),
-        requiredInputs =
-            value.requiredInputs.map {
-                SkirRequiredInput(
-                    path = it.path,
-                    expected = it.expected,
-                )
-            },
-        findings = prepared.findings,
-    )
-}
-
-private fun OperationConversionScope.decodePreparationDraft(value: SkirPreparationDraft): PreparationDraft {
-    val request =
-        decodeInitializationRequest(SkirInitializationRequest(catalog = value.catalog, target = value.target, suppliedValue = null))
-    val prepared = decodePreparedValue(SkirPreparedValue(content = value.content, findings = value.findings))
-    val pending = value.pendingDefaults.map { valid { it.requireValid() } }
-    if (pending.toSet().size != pending.size) fail("A pending default path is duplicated.")
-    return PreparationDraft(
-        request.catalog,
-        request.target,
-        prepared.content,
-        pending.toSet(),
-        value.requiredInputs.map {
-            RequiredInput(
-                valid { it.path.requireValid() },
-                valid { it.expected.requireValid() },
-            )
-        },
-        prepared.findings,
-    )
 }
 
 private fun OperationConversionScope.encodePreparedEdit(value: PreparedEdit): SkirPreparedEdit =
@@ -491,7 +362,7 @@ private fun OperationConversionScope.encodeConnect(value: ConnectIntent): SkirCo
                     SkirCounterpartChoice.NewWrapper(
                         SkirNewCounterpartChoice(
                             containing = counterpart.containing,
-                            prepared = encodePreparedValue(counterpart.prepared),
+                            prepared = counterpart.prepared,
                         ),
                     )
                 }
@@ -515,7 +386,7 @@ private fun OperationConversionScope.decodeConnect(value: SkirConnectIntent): Co
                 is SkirCounterpartChoice.NewWrapper -> {
                     CounterpartChoice.New(
                         containing = valid { counterpart.value.containing.requireValid() },
-                        prepared = decodePreparedValue(counterpart.value.prepared),
+                        prepared = valid { counterpart.value.prepared.requireValid() },
                     )
                 }
 
@@ -558,94 +429,6 @@ private fun OperationConversionScope.encodeCommitResult(value: CommitResult): Sk
             SkirCommitPreparedEditResponse.CatalogChangedErrorWrapper(value.actual)
         }
     }
-
-private fun OperationConversionScope.encodeInitializationRequest(value: InitializationRequest): SkirInitializationRequest =
-    SkirInitializationRequest(
-        catalog = value.catalog,
-        target =
-            when (val target = value.target) {
-                is PreparationTarget.Value -> {
-                    SkirPreparationTarget.ValueWrapper(target.type)
-                }
-
-                is PreparationTarget.Record -> {
-                    SkirPreparationTarget.RecordWrapper(
-                        target.selection,
-                    )
-                }
-            },
-        suppliedValue = value.supplied?.let { valid { it.requirePortable() } },
-    )
-
-private fun OperationConversionScope.decodeInitializationRequest(value: SkirInitializationRequest): InitializationRequest =
-    InitializationRequest(
-        catalog = CatalogGeneration(value = requireText(value.catalog.value, "Catalog generation")),
-        target =
-            when (val target = value.target) {
-                is SkirPreparationTarget.ValueWrapper -> {
-                    PreparationTarget.Value(valid { target.value.requireValid() })
-                }
-
-                is SkirPreparationTarget.RecordWrapper -> {
-                    PreparationTarget.Record(valid { target.value.requireValid() })
-                }
-
-                else -> {
-                    fail("Preparation target is unknown.")
-                }
-            },
-        supplied = value.suppliedValue?.let { valid { it.requirePortable() } },
-    )
-
-private fun OperationConversionScope.encodePreparedValue(value: PreparedValue): SkirPreparedValue =
-    SkirPreparedValue(
-        content =
-            when (val content = value.content) {
-                is PreparedContent.ValueWrapper -> {
-                    SkirPreparedContent.ValueWrapper(valid { content.value.requirePortable() })
-                }
-
-                is PreparedContent.RecordWrapper -> {
-                    SkirPreparedContent.RecordWrapper(content.record)
-                }
-
-                else -> {
-                    unknownVariant(content)
-                }
-            },
-        findings =
-            value.findings.mapIndexed {
-                index,
-                finding,
-                ->
-                at("finding $index") { finding }
-            },
-    )
-
-private fun OperationConversionScope.decodePreparedValue(value: SkirPreparedValue): PreparedValue =
-    PreparedValue(
-        content =
-            when (val content = value.content) {
-                is SkirPreparedContent.ValueWrapper -> {
-                    PreparedContent.ValueWrapper(valid { content.value.requirePortable() })
-                }
-
-                is SkirPreparedContent.RecordWrapper -> {
-                    PreparedContent.RecordWrapper(valid { content.value.requireValid() })
-                }
-
-                else -> {
-                    fail("Prepared content is unknown.")
-                }
-            },
-        findings =
-            value.findings.mapIndexed {
-                index,
-                finding,
-                ->
-                at("finding $index") { valid { finding.requireValid() } }
-            },
-    )
 
 private fun OperationConversionScope.encodeListItem(value: ListItem) =
     ListItem(id = value.id, value = valid { value.value.requirePortable() })
