@@ -2,8 +2,7 @@ import { parse } from "yaml";
 import { z } from "zod";
 
 import { servedSubjects, subscriptionSubject } from "./dispatch.js";
-import type { Manifest } from "./manifest.js";
-import { routeChannels } from "./subject.js";
+import type { ResolvedRoutes } from "./resolve.js";
 
 /** The file each component's deploy/base directory receives, listed in its kustomization. */
 export const SUBSCRIPTIONS_FILE = "nats-subscriptions.generated.yaml";
@@ -18,7 +17,22 @@ const KubernetesName = z.string().regex(/^[a-z0-9]([a-z0-9-]*[a-z0-9])?$/u);
 
 const WorkloadDeployment = z.object({
   metadata: z.object({ name: KubernetesName, namespace: KubernetesName.optional() }),
+  spec: z.object({
+    template: z.object({
+      spec: z.object({
+        hostInterfaces: z.array(
+          z.object({
+            namespace: z.string(),
+            package: z.string(),
+            configFrom: z.array(z.object({ name: z.string() })).optional(),
+          }),
+        ),
+      }),
+    }),
+  }),
 });
+
+const Kustomization = z.object({ resources: z.array(z.string()).default([]) });
 
 /** The ConfigMap a component's WorkloadDeployment loads its NATS subscriptions from. */
 export function subscriptionsConfigMapName(component: string): string {
@@ -50,40 +64,78 @@ function configMap(
 }
 
 /**
+ * Reads the WorkloadDeployment of a receiving component and checks that its NATS host interface
+ * loads the subscriptions ConfigMap through `configFrom` and that its kustomization lists the
+ * generated file, so the generated subscriptions always reach the running component.
+ */
+function receivingDeployment(
+  component: string,
+  directory: string,
+  readFile: (path: string) => string,
+): z.infer<typeof WorkloadDeployment> {
+  const path = `${directory}/workloaddeployment.yaml`;
+  const deployment = WorkloadDeployment.safeParse(parse(readFile(path)));
+  if (!deployment.success) {
+    throw new Error(`${path}: invalid WorkloadDeployment: ${deployment.error.message}`);
+  }
+  const name = subscriptionsConfigMapName(component);
+  const nats = deployment.data.spec.template.spec.hostInterfaces.find(
+    (hostInterface) => hostInterface.namespace === "wasmcloud" && hostInterface.package === "nats",
+  );
+  if (!nats?.configFrom?.some((config) => config.name === name)) {
+    throw new Error(`${path}: the wasmcloud:nats host interface does not load configFrom ${name}`);
+  }
+  const kustomizationPath = `${directory}/kustomization.yaml`;
+  const kustomization = Kustomization.safeParse(parse(readFile(kustomizationPath)));
+  if (!kustomization.success) {
+    throw new Error(`${kustomizationPath}: invalid Kustomization: ${kustomization.error.message}`);
+  }
+  if (!kustomization.data.resources.includes(SUBSCRIPTIONS_FILE)) {
+    throw new Error(`${kustomizationPath}: resources do not list ${SUBSCRIPTIONS_FILE}`);
+  }
+  return deployment.data;
+}
+
+/**
  * Emits the NATS subscriptions ConfigMap of every component that receives messages, into the
  * component's deploy/base directory. It lists exactly the subjects the generated dispatcher
- * matches, each in the `typewriter.<workload>` queue group of the component's WorkloadDeployment,
- * whose NATS host interface loads it through `configFrom`. `readFile` reads repository files.
+ * matches, each in the `typewriter.<workload>` queue group of the component's WorkloadDeployment.
+ * Takes resolved routes, so nothing is written for a manifest the Skir model does not admit, and
+ * fails when a receiving component's deployment would not load the ConfigMap. `readFile` reads
+ * repository files.
  */
 export function subscriptionConfigMaps(
-  manifest: Manifest,
+  { routes, components }: ResolvedRoutes,
   readFile: (path: string) => string,
 ): GeneratedFile[] {
-  const served = servedSubjects(
-    manifest.routes.map((route) => ({
-      name: route.name,
-      channels: routeChannels(route, manifest.roles),
-    })),
-  );
-  return [...manifest.components].flatMap(([component, directory]) => {
+  const served = servedSubjects(routes);
+  return [...components].flatMap(([component, directory]) => {
     const subjects = served.get(component);
     if (!subjects) {
       return [];
     }
-    const path = `${directory}/workloaddeployment.yaml`;
-    const deployment = WorkloadDeployment.safeParse(parse(readFile(path)));
-    if (!deployment.success) {
-      throw new Error(`${path}: invalid WorkloadDeployment metadata: ${deployment.error.message}`);
-    }
+    const deployment = receivingDeployment(component, directory, readFile);
     return [
       {
         path: `${directory}/${SUBSCRIPTIONS_FILE}`,
         code: configMap(
           component,
-          deployment.data.metadata,
+          deployment.metadata,
           subjects.map((entry) => subscriptionSubject(entry.subject)),
         ),
       },
     ];
   });
+}
+
+/**
+ * The subscriptions files among `existing` that no component receives through any longer, such as
+ * the file of a component that stopped serving routes or left the manifest.
+ */
+export function orphanedSubscriptionFiles(
+  generated: readonly GeneratedFile[],
+  existing: readonly string[],
+): string[] {
+  const current = new Set(generated.map((file) => file.path));
+  return existing.filter((path) => path.endsWith(`/${SUBSCRIPTIONS_FILE}`) && !current.has(path));
 }
