@@ -121,7 +121,7 @@ final class RealmAuthoringSearchSource implements SearchSource {
           .search(
             skir.SearchAuthoringRequest(
               generation: document.generation,
-              query: encodeRealmSearchQuery(query).normalizedQuery,
+              query: query.normalizedQuery,
               roots: typeFilter.toList(growable: false),
               contexts: contexts.isNotEmpty ? contexts : [?contextResource],
               target: target,
