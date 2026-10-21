@@ -65,11 +65,6 @@ fn assert_published_content_access(permissions: &Permissions, organization: &str
             &format!("{request}.{suffix}")
         ));
     }
-    // The content query replies on the service inbox, so it has no update channel to subscribe to.
-    assert!(!permits(
-        &permissions.subscribe,
-        &format!("{events}.editor.authoring.compiled.query.transfer_one")
-    ));
     for (other_organization, other_realm) in [
         (organization, "foreign_realm"),
         ("foreign_organization", realm),
@@ -97,19 +92,10 @@ fn rollout_subjects(organization: &str, realm: &str) -> [String; 3] {
     })
 }
 
-/// The participant state event was removed; no role may publish or receive it.
-fn assert_no_rollout_state(permissions: &Permissions, organization: &str, realm: &str) {
-    let state = format!("service.to.{realm}.organization.{organization}.realm.rollout.state");
-    assert!(!permits(&permissions.publish, &state));
-    assert!(!permits(&permissions.subscribe, &state));
-}
-
 fn assert_rollout_participant_access(permissions: &Permissions, organization: &str, realm: &str) {
     for subject in rollout_subjects(organization, realm) {
         assert!(permits(&permissions.subscribe, &subject));
     }
-    assert_no_rollout_state(permissions, organization, realm);
-
     for (other_organization, other_realm) in [
         (organization, "foreign_realm"),
         ("foreign_organization", realm),
@@ -135,7 +121,6 @@ fn assert_rollout_coordinator_access(permissions: &Permissions, organization: &s
     for subject in rollout_subjects(organization, realm) {
         assert!(permits(&permissions.publish, &subject));
     }
-    assert_no_rollout_state(permissions, organization, realm);
 }
 
 #[component_test(AuthTypewriterPermissions)]

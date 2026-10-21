@@ -1,3 +1,7 @@
+//! Panel grants checked against subjects and consumer names written out by hand. These are a
+//! deliberate oracle independent of the transport generator, so a generator change that alters a
+//! grant fails here instead of updating the expectation with it.
+
 use base64::{Engine as _, engine::general_purpose::URL_SAFE_NO_PAD};
 use component_test::{TestContext, TestResult, component_test};
 use json_matcher::assert_jm;
