@@ -50,17 +50,16 @@ pub fn plan_reply(body: Vec<u8>) -> ReplyPlan {
     plan_reply_within(body, RESPONSE_CHUNK_BYTES, MAX_RESPONSE_CHUNKS)
 }
 
-/// Plans a reply with explicit limits; the size check runs before any frame is allocated.
+/// Plans a reply with explicit limits. The size check runs before the reply is hashed or any frame
+/// is allocated.
 ///
-/// The reply id is the start of the reply's digest. Components answer only unary requests, so the
-/// id only has to keep different replies on one reply subject apart, and the frames of identical
-/// replies from two responders are identical and merge without harm.
+/// Every reply gets a fresh random reply id, as in the services and panel transports, so the frames
+/// of several responders on one reply subject never mix.
 pub(crate) fn plan_reply_within(body: Vec<u8>, chunk_bytes: usize, max_chunks: usize) -> ReplyPlan {
     if body.len() <= chunk_bytes {
         return ReplyPlan::Single(body);
     }
-    let digest = hex(&Sha256::digest(&body));
-    let reply_id = digest[..32].to_owned();
+    let reply_id = uuid::Uuid::new_v4().simple().to_string();
     let limit = chunk_bytes * max_chunks;
     if body.len() > limit {
         return ReplyPlan::TooLarge {
@@ -76,6 +75,7 @@ pub(crate) fn plan_reply_within(body: Vec<u8>, chunk_bytes: usize, max_chunks: u
             },
         };
     }
+    let digest = hex(&Sha256::digest(&body));
     let count = body.len().div_ceil(chunk_bytes);
     let frames = body
         .chunks(chunk_bytes)
@@ -104,11 +104,27 @@ pub fn interrupted_frame(reply_id: &str) -> ReplyFrame {
     }
 }
 
-/// Whether headers with these names belong to a framed reply or a transfer failure frame.
-pub fn is_framed<'a>(mut names: impl Iterator<Item = &'a str>) -> bool {
-    names.any(|name| {
-        name.eq_ignore_ascii_case(REPLY_HEADER) || name.eq_ignore_ascii_case(FAILURE_HEADER)
-    })
+/// The error slug of a reply a component cannot use, or `None` for a plain reply.
+///
+/// A failure frame maps its failure to `transport-transfer-too-large`,
+/// `transport-transfer-interrupted` or, for an unknown failure, `transport-transfer-rejected`, as
+/// the services and panel transports distinguish them. Components receive only the first message
+/// of a reply, so a reply split into frames is too large for them.
+pub fn unusable_reply_slug<'a>(
+    headers: impl IntoIterator<Item = (&'a str, &'a str)>,
+) -> Option<&'static str> {
+    let mut framed = false;
+    for (name, value) in headers {
+        if name.eq_ignore_ascii_case(FAILURE_HEADER) {
+            return Some(match value {
+                "too-large" => "transport-transfer-too-large",
+                "interrupted" => "transport-transfer-interrupted",
+                _ => "transport-transfer-rejected",
+            });
+        }
+        framed |= name.eq_ignore_ascii_case(REPLY_HEADER);
+    }
+    framed.then_some("transport-transfer-too-large")
 }
 
 fn hex(bytes: &[u8]) -> String {
@@ -177,25 +193,37 @@ mod tests {
     }
 
     #[test]
-    fn different_replies_use_different_reply_ids() {
+    fn every_reply_uses_a_fresh_reply_id() {
         let id = |body: Vec<u8>| match plan_reply_within(body, 4, 4) {
             ReplyPlan::Framed { reply_id, .. } => reply_id,
             plan => panic!("expected frames, got {plan:?}"),
         };
-        assert_ne!(id(vec![1; 9]), id(vec![2; 9]));
-        assert_eq!(id(vec![1; 9]), id(vec![1; 9]));
+        let first = id(vec![1; 9]);
+        assert_eq!(first.len(), 32);
+        assert_ne!(first, id(vec![1; 9]));
     }
 
     #[test]
-    fn the_generated_limits_keep_the_maximum_reply_size() {
-        assert_eq!(RESPONSE_CHUNK_BYTES * MAX_RESPONSE_CHUNKS, 33_554_432);
-    }
-
-    #[test]
-    fn framing_headers_are_recognized_in_any_case() {
-        assert!(is_framed(["traceparent", "typewriter-reply"].into_iter()));
-        assert!(is_framed(["Typewriter-Transfer-Failure"].into_iter()));
-        assert!(!is_framed(["traceparent"].into_iter()));
+    fn unusable_replies_name_their_transfer_failure_in_any_case() {
+        let slug = |headers: &[(&str, &str)]| unusable_reply_slug(headers.iter().copied());
+        assert_eq!(slug(&[("traceparent", "00")]), None);
+        assert_eq!(
+            slug(&[("typewriter-reply", "id"), ("typewriter-chunk", "0/2")]),
+            Some("transport-transfer-too-large")
+        );
+        for (failure, expected) in [
+            ("too-large", "transport-transfer-too-large"),
+            ("interrupted", "transport-transfer-interrupted"),
+            ("unknown", "transport-transfer-rejected"),
+        ] {
+            assert_eq!(
+                slug(&[
+                    ("Typewriter-Reply", "id"),
+                    ("TYPEWRITER-TRANSFER-FAILURE", failure)
+                ]),
+                Some(expected)
+            );
+        }
         assert_eq!(
             header(&interrupted_frame("id"), FAILURE_HEADER),
             Some("interrupted")

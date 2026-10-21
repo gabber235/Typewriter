@@ -126,7 +126,8 @@ pub async fn publish(subject: String, data: impl Into<Vec<u8>>) -> Result<(), ot
 /// The returned message is untyped because the caller owns response decoding. Broker
 /// failures and timeout are returned as `message-request-failed`. Components receive only
 /// the first reply message, so a framed reply fails as `transport-transfer-too-large`
-/// instead of returning a partial body.
+/// instead of returning a partial body, and a failure frame fails with the slug of its
+/// failure (see [`crate::transport::unusable_reply_slug`]).
 pub async fn request(
     subject: String,
     data: impl Into<Vec<u8>>,
@@ -142,15 +143,15 @@ pub async fn request(
     )
     .await
     .error_with_slug("message-request-failed")?;
-    let names = reply
+    let headers = reply
         .headers
         .iter()
         .flatten()
-        .map(|entry| entry.name.as_str());
-    if transport::is_framed(names) {
+        .map(|entry| (entry.name.as_str(), entry.value.as_str()));
+    if let Some(slug) = transport::unusable_reply_slug(headers) {
         return Err(otel_wasi::Error::new(
-            "transport-transfer-too-large",
-            "framed replies need a collecting client",
+            slug,
+            "the reply is framed or failed, and components receive only its first message",
         ));
     }
     Ok(reply)

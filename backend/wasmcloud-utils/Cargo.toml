@@ -17,6 +17,7 @@ sha2.workspace = true
 skir-client.workspace = true
 surrealdb-types.workspace = true
 surrealdb-component-sdk.workspace = true
+uuid.workspace = true
 wasmcloud-utils-macros.workspace = true
 
 opentelemetry.workspace = true

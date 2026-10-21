@@ -18,7 +18,7 @@ mod dispatch_test;
 
 pub use frame::{
     CHUNK_HEADER, FAILURE_HEADER, LIMIT_HEADER, REPLY_HEADER, ReplyFrame, ReplyPlan, SHA256_HEADER,
-    SIZE_HEADER, interrupted_frame, is_framed, plan_reply,
+    SIZE_HEADER, interrupted_frame, plan_reply, unusable_reply_slug,
 };
 pub use grant::GrantSet;
 pub use route::{
