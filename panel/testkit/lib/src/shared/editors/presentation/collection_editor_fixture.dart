@@ -428,7 +428,7 @@ CheckedEditorCatalog _catalog(CollectionEditorExample example) {
   );
   final entryType = _entryType(example);
   return CheckedEditorCatalog(
-    (skir.EditorCatalogWireSnapshot.mutable()
+    (skir.EditorCatalog.mutable()
           ..generation = skir.CatalogGeneration(value: "collection.fixture")
           ..types = [
             record("Owner", {"entries": _named(entryType)}),

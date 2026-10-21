@@ -237,7 +237,7 @@ final _testSelectableUse = skir.NamedTypeUse(
   arguments: const [],
 );
 final _testSelectableCatalog = CheckedEditorCatalog(
-  skir.EditorCatalogWireSnapshot(
+  skir.EditorCatalog(
     resourceDisplays: const [],
     resourceOperations: const [],
     generation: skir.CatalogGeneration(value: "testkit:selectable"),

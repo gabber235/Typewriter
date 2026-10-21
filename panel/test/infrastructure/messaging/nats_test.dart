@@ -53,6 +53,7 @@ final class _PendingSubscribeNatsClient
     Uint8List payload, {
     Map<String, String> headers = const {},
     Duration timeout = const Duration(seconds: 10),
+    Future<void>? cancelled,
   }) {
     requests++;
     throw StateError("Request must not run after cancellation");
@@ -145,6 +146,7 @@ final class _PendingReconnectNatsClient
     Uint8List payload, {
     Map<String, String> headers = const {},
     Duration timeout = const Duration(seconds: 10),
+    Future<void>? cancelled,
   }) async {
     requests++;
     return NatsMessage(
@@ -190,6 +192,7 @@ final class _FailingOrderedNatsClient
     Uint8List payload, {
     Map<String, String> headers = const {},
     Duration timeout = const Duration(seconds: 10),
+    Future<void>? cancelled,
   }) async {
     requests++;
     return NatsMessage(
@@ -264,6 +267,7 @@ final class _RecoveringPersistentNatsClient
     Uint8List payload, {
     Map<String, String> headers = const {},
     Duration? timeout,
+    Future<void>? cancelled,
   }) async {
     requests++;
     return NatsMessage(

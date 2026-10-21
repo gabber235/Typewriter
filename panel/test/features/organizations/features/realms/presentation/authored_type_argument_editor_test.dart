@@ -348,7 +348,7 @@ _concreteResourceFixture() {
   );
   return (
     catalog: CheckedEditorCatalog(
-      skir.EditorCatalogWireSnapshot(
+      skir.EditorCatalog(
         resourceDisplays: const [],
         resourceOperations: const [],
         generation: skir.CatalogGeneration(value: "catalog:resources"),
@@ -447,7 +447,7 @@ _fixture({
   );
   return (
     catalog: CheckedEditorCatalog(
-      skir.EditorCatalogWireSnapshot(
+      skir.EditorCatalog(
         resourceDisplays: const [],
         resourceOperations: const [],
         generation: skir.CatalogGeneration(value: "catalog:1"),

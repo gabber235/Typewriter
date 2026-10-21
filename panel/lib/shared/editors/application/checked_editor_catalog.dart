@@ -196,7 +196,7 @@ final class CheckedEditorCatalog {
 
   late final expressionPrograms = PortableExpressionPrograms(this);
 
-  final skir.EditorCatalogWireSnapshot snapshot;
+  final skir.EditorCatalog snapshot;
   final Map<skir.TypeDefinitionId, skir.PublishedType> _types;
 
   skir.PublishedType? published(skir.TypeDefinitionId id) =>

@@ -14,17 +14,17 @@ Stream<skir.CatalogInvalidated> realmCatalogInvalidations(
         .watchInvalidations(organizationId, realmId);
 
 @riverpod
-Future<skir.EditorCatalogWireSnapshot> realmCatalogTransfer(
+Future<skir.EditorCatalog> realmCatalogTransfer(
   Ref ref,
   skir.RecordId organizationId,
   skir.RecordId realmId,
   String fetchId,
 ) => NatsRealmEditorCatalogSource(ref).fetch(organizationId, realmId);
 
-/// Transfers catalog snapshots and delegates value preparation through current Realm routes.
+/// Fetches catalogs and delegates value preparation through current Realm routes.
 ///
-/// Each fetch owns a bounded assembler cancelled with its provider. The source
-/// stores no catalog cache. [prepareStep] preserves resumable preparation outcomes;
+/// Each fetch is cancelled with its provider. The source stores no catalog
+/// cache. [prepareStep] preserves resumable preparation outcomes;
 /// [prepareValue] also exposes partial content for callers that handle unfinished
 /// values directly and therefore does not imply initialization reached ready.
 final class NatsRealmEditorCatalogSource {
@@ -32,17 +32,11 @@ final class NatsRealmEditorCatalogSource {
 
   final Ref ref;
 
-  Future<skir.EditorCatalogWireSnapshot> fetch(
+  Future<skir.EditorCatalog> fetch(
     skir.RecordId organizationId,
     skir.RecordId realmId, {
     skir.CatalogGeneration? expectedGeneration,
   }) async {
-    final transferId = uuid.v4();
-    final request = skir.CatalogFetchRequest(
-      expectedGeneration: expectedGeneration,
-      transferId: transferId,
-    );
-    final assembler = catalogTransferAssembler();
     final disposed = Completer<void>();
     ref.onDispose(() {
       if (!disposed.isCompleted) disposed.complete();
@@ -51,24 +45,21 @@ final class NatsRealmEditorCatalogSource {
       () => ref.read(natsProvider),
       () => ref.read(panelTelemetryProvider.future),
     );
-    final responses = request.watch(
-      transport,
-      organizationId: organizationId,
-      realmId: realmId,
-    );
-    return assembler.assemble(
-      responses.map(
-        (response) => switch (response) {
-          skir.CatalogFetchResult_chunkWrapper(:final value) => value,
-          skir.CatalogFetchResult_generationChangedWrapper(:final value) =>
-            throw CatalogGenerationChanged(value),
-          skir.CatalogFetchResult_unavailableWrapper(:final value) =>
-            throw CatalogTransferUnavailable(value),
-          _ => throw ApiException.internalServerError(),
-        },
-      ),
+    final operation = skir.CatalogFetchRequest(
+      expectedGeneration: expectedGeneration,
+    ).operation(organizationId: organizationId, realmId: realmId);
+    final response = await transport.request(
+      operation.subject,
+      operation.requestBytes,
+      operation.responseSerializer,
       cancelled: disposed.future,
     );
+    return switch (response) {
+      skir.CatalogFetchResult_catalogWrapper(:final value) => value,
+      skir.CatalogFetchResult_generationChangedErrorWrapper(:final value) =>
+        throw CatalogGenerationChanged(value),
+      _ => throw ApiException.internalServerError(),
+    };
   }
 
   Stream<skir.CatalogInvalidated> watchInvalidations(
@@ -121,32 +112,8 @@ final class NatsRealmEditorCatalogSource {
   }
 }
 
-/// Assembles one catalog snapshot whose chunks share its generation.
-GenerationCheckedTransferAssembler<
-  skir.CatalogTransferChunk,
-  skir.CatalogGeneration,
-  skir.EditorCatalogWireSnapshot
->
-catalogTransferAssembler() => GenerationCheckedTransferAssembler(
-  subject: "catalog",
-  chunkGeneration: (chunk) => chunk.generation,
-  chunkTransfer: (chunk) => chunk.transfer,
-  decode: skir.EditorCatalogWireSnapshot.serializer.fromBytes,
-  decodedGeneration: (snapshot) => snapshot.generation,
-);
-
 final class CatalogGenerationChanged implements Exception {
   const CatalogGenerationChanged(this.actual);
 
   final skir.CatalogGeneration actual;
-}
-
-final class CatalogTransferUnavailable implements Exception {
-  const CatalogTransferUnavailable(this.value);
-
-  final skir.CatalogUnavailable value;
-
-  @override
-  String toString() =>
-      "The editor catalog is ${value.encodedSize} bytes, above the ${value.maxEncodedSize} byte transfer limit";
 }

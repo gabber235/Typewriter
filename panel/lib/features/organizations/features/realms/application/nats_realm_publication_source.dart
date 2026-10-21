@@ -14,11 +14,11 @@ abstract interface class RealmPublicationRepository {
   Stream<PublicationObservation> watch();
 }
 
-/// Reconciles publication hints into complete, identity checked review transfers.
+/// Reconciles publication hints into complete, identity checked review views.
 ///
 /// Each newer hint cancels the previous fetch and fences late completion. A view
-/// changed response follows the new identity; stream cancellation stops transfer
-/// and hint observation. Prepared publication requests use the submission owner
+/// changed response follows the new identity; stream cancellation stops the
+/// fetch and hint observation. Prepared publication requests use the submission owner
 /// and declare automatic replay unsupported because the original outcome may be unknown.
 final class NatsRealmPublicationRepository
     implements RealmPublicationRepository {
@@ -74,42 +74,30 @@ final class NatsRealmPublicationRepository
     ) async {
       final stop = Completer<void>();
       cancelled = stop;
-      final transferId = uuid.v4();
       try {
         final transport = SkirMutationClient(
           () => ref.read(natsProvider),
           () => ref.read(panelTelemetryProvider.future),
         );
-        final responses = skir.QueryPublicationViewRequest(
-          expected: expected,
-          transferId: transferId,
-        ).watch(transport, organizationId: organizationId, realmId: realmId);
-        final assembler =
-            GenerationCheckedTransferAssembler<
-              skir.PublicationViewChunk,
-              skir.PublicationViewId,
-              skir.PublicationView
-            >(
-              subject: "publication review",
-              chunkGeneration: (chunk) => chunk.view,
-              chunkTransfer: (chunk) => chunk.transfer,
-              decode: skir.PublicationView.serializer.fromBytes,
-              decodedGeneration: (view) => view.id,
-              expectedGeneration: expected,
-              expectedTransferId: transferId,
-            );
-        final view = await assembler.assemble(
-          responses.map(
-            (response) => switch (response) {
-              skir.QueryPublicationViewResponse_changedWrapper(:final value) =>
-                throw PublicationViewChanged(value.current),
-              skir.QueryPublicationViewResponse_chunkWrapper(:final value) =>
-                value,
-              _ => throw StateError("Publication review is unavailable"),
-            },
-          ),
+        final operation = skir.QueryPublicationViewRequest(expected: expected)
+            .operation(organizationId: organizationId, realmId: realmId);
+        final response = await transport.request(
+          operation.subject,
+          operation.requestBytes,
+          operation.responseSerializer,
           cancelled: stop.future,
         );
+        final view = switch (response) {
+          skir.QueryPublicationViewResponse_viewWrapper(:final value) => value,
+          skir.QueryPublicationViewResponse_viewChangedErrorWrapper(
+            :final value,
+          ) =>
+            throw PublicationViewChanged(value.current),
+          _ => throw StateError("Publication review is unavailable"),
+        };
+        if (view.id != expected) {
+          throw StateError("The publication review differs from its request");
+        }
         if (requestGeneration == generation) {
           output.add(PublicationObservation.available(view));
         }

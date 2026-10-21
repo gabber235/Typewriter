@@ -6,9 +6,7 @@ import "package:typewriter_testkit/typewriter_testkit.dart";
 
 import "../../../support/catalog_fixture.dart";
 
-final _catalog = CheckedEditorCatalog(
-  skir.EditorCatalogWireSnapshot.defaultInstance,
-);
+final _catalog = CheckedEditorCatalog(skir.EditorCatalog.defaultInstance);
 final _rows = skir.ExpressionBindingId(value: "rows");
 final _text = skir.TypeUse.wrapScalar(skir.ScalarKind.text);
 final _i32 = skir.TypeUse.wrapScalar(

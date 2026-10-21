@@ -4,9 +4,9 @@ import "package:typewriter_panel/typewriter_panel.dart";
 
 final realmFixtureGeneration = skir.CatalogGeneration(value: "fixture");
 
-skir.EditorCatalogWireSnapshot receivedEditorCatalogWireSnapshot({
+skir.EditorCatalog receivedEditorCatalog({
   skir.CatalogGeneration? generation,
-}) => skir.EditorCatalogWireSnapshot(
+}) => skir.EditorCatalog(
   resourceDisplays: const [],
   resourceOperations: const [],
   generation: generation ?? realmFixtureGeneration,
@@ -26,6 +26,4 @@ skir.EditorCatalogWireSnapshot receivedEditorCatalogWireSnapshot({
 
 CheckedEditorCatalog receivedCheckedEditorCatalog({
   skir.CatalogGeneration? generation,
-}) => CheckedEditorCatalog(
-  receivedEditorCatalogWireSnapshot(generation: generation),
-);
+}) => CheckedEditorCatalog(receivedEditorCatalog(generation: generation));

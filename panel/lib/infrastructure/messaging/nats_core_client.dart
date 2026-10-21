@@ -187,26 +187,78 @@ final class NatsCoreClient implements NatsClient {
     }
   }
 
+  /// Collects the reply through the connection's shared request inbox.
+  ///
+  /// Every message for this request passes through one [ReplyAssembler], so a
+  /// plain reply completes at once and framed replies complete when every
+  /// frame arrived and verified. Collection stops on every exit.
   @override
   Future<NatsMessage> request(
     String subject,
     Uint8List payload, {
     Map<String, String> headers = const {},
     Duration timeout = const Duration(seconds: 10),
+    Future<void>? cancelled,
   }) async {
+    final NatsRequestMany replies;
     try {
       final connection = await _readyConnection();
-      final response = await connection.request(
+      replies = await connection.requestMany(
         subject,
         payload,
         headers: headers.isEmpty ? null : NatsHeaders(entries: headers.entries),
-        timeout: timeout,
+        options: NatsRequestManyOptions(
+          timeout: timeout + replyAssemblyBudget,
+          maximumBufferedMessages: transportLimits.maxChunks + 1,
+          maximumBufferedBytes:
+              transportLimits.maxEncodedSize + _framingAllowance,
+        ),
       );
-      return NatsMessage(response.payload, subject: response.subject);
     } on NatsClientException {
       rethrow;
     } on Object catch (error, stackTrace) {
       Error.throwWithStackTrace(_translate(error, stackTrace), stackTrace);
+    }
+    final assembler = ReplyAssembler(transportLimits);
+    final reply = Completer<NatsMessage>();
+    void fail(Object error, [StackTrace? stackTrace]) {
+      if (!reply.isCompleted) reply.completeError(error, stackTrace);
+    }
+
+    const timedOut = NatsClientException(
+      kind: NatsFailureKind.timeout,
+      message: "NATS request timed out",
+    );
+    var deadline = Timer(timeout, () => fail(timedOut));
+    var first = true;
+    final subscription = replies.messages.listen(
+      (message) {
+        if (reply.isCompleted) return;
+        if (first) {
+          first = false;
+          deadline.cancel();
+          deadline = Timer(replyAssemblyBudget, () => fail(timedOut));
+        }
+        try {
+          final bytes = assembler.accept(message.headers, message.payload);
+          if (bytes != null) {
+            reply.complete(NatsMessage(bytes, subject: message.subject));
+          }
+        } on TransferFailure catch (error, stackTrace) {
+          fail(error, stackTrace);
+        }
+      },
+      onError: (Object error, StackTrace stackTrace) =>
+          fail(_translate(error, stackTrace), stackTrace),
+      onDone: () => fail(timedOut),
+    );
+    unawaited(cancelled?.then((_) => fail(const TransferCancelled())));
+    try {
+      return await reply.future;
+    } finally {
+      deadline.cancel();
+      await subscription.cancel();
+      await replies.stop();
     }
   }
 
@@ -424,6 +476,9 @@ final class NatsCoreClient implements NatsClient {
     }
   }
 }
+
+/// Room for the headers of every frame on top of the largest encoded reply.
+const _framingAllowance = 64 * 1024;
 
 String _diagnostic(Object error) => switch (error) {
   NatsException(:final message, :final cause) =>

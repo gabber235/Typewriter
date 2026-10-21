@@ -10,9 +10,7 @@ ValueEditingRegistration _target(String id) => fakeEditorTarget(
   scope: "realm",
   document: EditorDocument(
     rootType: skir.TypeUse.wrapScalar(skir.ScalarKind.text),
-    catalog: CheckedEditorCatalog(
-      skir.EditorCatalogWireSnapshot.defaultInstance,
-    ),
+    catalog: CheckedEditorCatalog(skir.EditorCatalog.defaultInstance),
     confirmedValue: skir.DataValue.wrapStringValue("Original"),
     revision: 1,
   ),

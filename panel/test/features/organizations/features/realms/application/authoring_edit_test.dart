@@ -1424,7 +1424,7 @@ _parentFixture({
   final declaredStyleTemplate = nullableStyle
       ? skir.TypeTemplate.createNullable(value: styleTemplate)
       : styleTemplate;
-  final catalogSnapshot = skir.EditorCatalogWireSnapshot(
+  final catalogSnapshot = skir.EditorCatalog(
     resourceDisplays: const [],
     resourceOperations: const [],
     generation: skir.CatalogGeneration(value: generation),
@@ -1805,7 +1805,7 @@ _pageCreationFixture({bool ambiguous = false}) {
   );
   final pageParent = template(page);
   final generation = skir.CatalogGeneration(value: "catalog:page creation");
-  final snapshot = skir.EditorCatalogWireSnapshot(
+  final snapshot = skir.EditorCatalog(
     resourceDisplays: const [],
     resourceOperations: const [],
     generation: generation,
@@ -2107,7 +2107,7 @@ _relationFixture({
     arguments: const [],
   );
   final checked = CheckedEditorCatalog(
-    skir.EditorCatalogWireSnapshot(
+    skir.EditorCatalog(
       resourceDisplays: const [],
       resourceOperations: const [],
       generation: fixture.snapshot.generation,
@@ -2227,7 +2227,7 @@ _collectionRepairFixture() {
     effectiveFields: fields,
     ancestorTemplates: const [],
   );
-  final catalogSnapshot = skir.EditorCatalogWireSnapshot(
+  final catalogSnapshot = skir.EditorCatalog(
     resourceDisplays: const [],
     resourceOperations: const [],
     generation: skir.CatalogGeneration(value: "catalog:collection-repair"),

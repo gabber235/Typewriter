@@ -223,7 +223,7 @@ _CreationFixture _fixture() {
     ancestorTemplates: const [],
     display: defaultTypeDisplay(""),
   );
-  final wire = skir.EditorCatalogWireSnapshot(
+  final wire = skir.EditorCatalog(
     resourceDisplays: const [],
     resourceOperations: const [],
     generation: generation,

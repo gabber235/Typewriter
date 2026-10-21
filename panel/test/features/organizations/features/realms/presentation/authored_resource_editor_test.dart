@@ -1069,7 +1069,7 @@ _emptyPageGraphFixture() {
     name: "elements",
   );
   final checked = CheckedEditorCatalog(
-    skir.EditorCatalogWireSnapshot(
+    skir.EditorCatalog(
       resourceDisplays: const [],
       resourceOperations: const [],
       generation: generation,
@@ -1251,7 +1251,7 @@ _numericFixture({
     segments: [skir.PathSegment.createField(name: fieldName)],
   );
   final checked = CheckedEditorCatalog(
-    skir.EditorCatalogWireSnapshot(
+    skir.EditorCatalog(
       resourceDisplays: const [],
       resourceOperations: const [],
       generation: catalogGeneration,
@@ -1573,7 +1573,7 @@ _fixture({
     header: null,
   );
   final checked = CheckedEditorCatalog(
-    skir.EditorCatalogWireSnapshot(
+    skir.EditorCatalog(
       resourceDisplays: const [],
       resourceOperations: const [],
       generation: generation,

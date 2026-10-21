@@ -325,7 +325,7 @@ void main() {
       typeId: skir.TypeId.createQualified(namespace: "test", name: "Result"),
       revision: 1,
     );
-    final catalogSnapshot = skir.EditorCatalogWireSnapshot(
+    final catalogSnapshot = skir.EditorCatalog(
       resourceDisplays: const [],
       resourceOperations: const [],
       generation: skir.CatalogGeneration(value: "catalog:http"),

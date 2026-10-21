@@ -261,39 +261,16 @@ skir.AuthoringState _snapshot(
   );
 }
 
-Uint8List _snapshotResponse(skir.AuthoringState snapshot) {
-  final encoded = skir.AuthoringState.serializer.toBytes(snapshot);
-  return skir.QueryAuthoringStateResponse.serializer.toBytes(
-    skir.QueryAuthoringStateResponse.wrapChunk(
-      skir.AuthoringStateTransferChunk(
-        generation: snapshot.generation,
-        transfer: _transfer("current_state", encoded),
-      ),
-    ),
-  );
-}
+Uint8List _snapshotResponse(skir.AuthoringState snapshot) => skir
+    .QueryAuthoringStateResponse
+    .serializer
+    .toBytes(skir.QueryAuthoringStateResponse.wrapState(snapshot));
 
-Uint8List _catalogResponse({skir.CatalogGeneration? generation}) {
-  final catalog = testCatalogSnapshot(generation: generation ?? _generation);
-  final encoded = skir.EditorCatalogWireSnapshot.serializer.toBytes(catalog);
-  return skir.CatalogFetchResult.serializer.toBytes(
-    skir.CatalogFetchResult.wrapChunk(
-      skir.CatalogTransferChunk(
-        generation: catalog.generation,
-        transfer: _transfer("catalog_transfer", encoded),
+Uint8List _catalogResponse({skir.CatalogGeneration? generation}) =>
+    skir.CatalogFetchResult.serializer.toBytes(
+      skir.CatalogFetchResult.wrapCatalog(
+        testCatalogSnapshot(generation: generation ?? _generation),
       ),
-    ),
-  );
-}
-
-skir.BoundedTransferChunk _transfer(String id, Uint8List encoded) =>
-    skir.BoundedTransferChunk(
-      transferId: id,
-      index: 0,
-      chunkCount: 1,
-      encodedSize: encoded.length,
-      sha256: sha256.convert(encoded).toString(),
-      payload: skir.ByteString.copy(encoded),
     );
 
 final class _Harness {

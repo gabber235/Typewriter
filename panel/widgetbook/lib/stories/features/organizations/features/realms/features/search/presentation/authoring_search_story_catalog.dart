@@ -41,7 +41,7 @@ CheckedEditorCatalog authoringSearchStoryCatalog() {
     );
   }
   return CheckedEditorCatalog(
-    skir.EditorCatalogWireSnapshot(
+    skir.EditorCatalog(
       resourceDisplays: [
         for (final definition in definitions.values)
           nameResourceDisplay(

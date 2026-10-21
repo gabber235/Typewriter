@@ -81,7 +81,7 @@ final _recordField = skir.EffectiveFieldTemplate(
   rules: const [],
 );
 final _recordCatalog = CheckedEditorCatalog(
-  skir.EditorCatalogWireSnapshot(
+  skir.EditorCatalog(
     resourceDisplays: const [],
     resourceOperations: const [],
     generation: skir.CatalogGeneration(value: "test"),

@@ -166,13 +166,20 @@ abstract interface class NatsClient {
   /// Terminal failure values retain their typed cause for recovery decisions.
   Stream<NatsConnectionState> get connectionStateChanges;
 
-  /// Sends a request and waits for the matching reply or [timeout].
-  /// Headers are transport metadata and are not part of the payload contract.
+  /// Sends a request and waits for its complete reply.
+  ///
+  /// The first reply message must arrive within [timeout]; a large reply
+  /// arrives as frames that the transport reassembles within its assembly
+  /// budget, failing with a [TransferFailure] when it cannot complete. When
+  /// [cancelled] completes first, collection stops and the request fails with
+  /// [TransferCancelled]. Headers are transport metadata and are not part of
+  /// the payload contract.
   Future<NatsMessage> request(
     String subject,
     Uint8List payload, {
     Map<String, String> headers = const {},
     Duration timeout = const Duration(seconds: 10),
+    Future<void>? cancelled,
   });
 
   /// Publishes bytes without waiting for an application response.

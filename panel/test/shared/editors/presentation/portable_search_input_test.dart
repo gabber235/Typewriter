@@ -475,7 +475,7 @@ final class _SearchFixture {
     final host = BoundPresentationHost(
       readOnly: readOnly,
       catalog: CheckedEditorCatalog(
-        (skir.EditorCatalogWireSnapshot.mutable()
+        (skir.EditorCatalog.mutable()
               ..types = [
                 (skir.PublishedType.mutable()
                       ..status = skir.DeclarationStatus.ready

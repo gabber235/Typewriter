@@ -194,14 +194,14 @@ class AuthoringSession extends _$AuthoringSession {
         catalog: CheckedEditorCatalog(catalog),
       );
     } on Object catch (error) {
-      if (error is BoundedTransferCancelled && repository._isDisposed) return;
+      if (error is TransferCancelled && repository._isDisposed) return;
       if (!_isActive(lifecycleRevision)) return;
       state = state.copyWith(refreshing: false, failure: error);
       rethrow;
     }
   }
 
-  Future<skir.EditorCatalogWireSnapshot> _fetchCatalog(
+  Future<skir.EditorCatalog> _fetchCatalog(
     skir.RecordId organizationId,
     skir.RecordId realmId,
   ) async {

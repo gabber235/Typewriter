@@ -65,7 +65,7 @@ void main() {
       definition: graphPlacementTypeRef,
       arguments: const [],
     );
-    final snapshot = skir.EditorCatalogWireSnapshot.defaultInstance.toMutable()
+    final snapshot = skir.EditorCatalog.defaultInstance.toMutable()
       ..types = [
         published(root, {
           "placement": skir.TypeTemplate.createNamed(
@@ -178,16 +178,13 @@ void main() {
   );
 
   test("placement variants are selected by declared type identity", () {
-    final placement =
-        skir.DataValue.createNamed(
-          actualType: skir.NamedTypeUse(
-            definition: graphPlacementTypeRef,
-            arguments: const [],
-          ),
-          payload: graphValue,
-        ).readPlacement(
-          CheckedEditorCatalog(skir.EditorCatalogWireSnapshot.defaultInstance),
-        );
+    final placement = skir.DataValue.createNamed(
+      actualType: skir.NamedTypeUse(
+        definition: graphPlacementTypeRef,
+        arguments: const [],
+      ),
+      payload: graphValue,
+    ).readPlacement(CheckedEditorCatalog(skir.EditorCatalog.defaultInstance));
 
     expect(placement, isA<ReadyPlacement>());
     expect(
@@ -208,9 +205,7 @@ void main() {
       skir.DataValue.createNamed(
         actualType: skir.NamedTypeUse(definition: unknown, arguments: const []),
         payload: graphValue,
-      ).readPlacement(
-        CheckedEditorCatalog(skir.EditorCatalogWireSnapshot.defaultInstance),
-      ),
+      ).readPlacement(CheckedEditorCatalog(skir.EditorCatalog.defaultInstance)),
       isA<UnavailablePlacement>(),
     );
   });

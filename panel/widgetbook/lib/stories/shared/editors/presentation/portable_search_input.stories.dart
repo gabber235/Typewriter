@@ -186,8 +186,7 @@ final class _SearchInputStoryState extends State<_SearchInputStory> {
 
   late final _host = BoundPresentationHost(
     readOnly: widget.readOnly,
-    catalog: skir.EditorCatalogWireSnapshot.defaultInstance
-        .asTrustedLocalCatalog(),
+    catalog: skir.EditorCatalog.defaultInstance.asTrustedLocalCatalog(),
     root: () => skir.PresentationNode(
       nodeId: "reward.search",
       properties: skir.PresentationProperties.defaultInstance,

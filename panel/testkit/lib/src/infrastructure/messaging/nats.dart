@@ -95,12 +95,15 @@ final class FakeNatsClient implements NatsClient {
     _handlers[subject] = handler;
   }
 
+  /// Answers with the handler registered for [subject]; completing
+  /// [cancelled] first fails the request with [TransferCancelled].
   @override
   Future<NatsMessage> request(
     String subject,
     Uint8List payload, {
     Map<String, String> headers = const {},
     Duration timeout = const Duration(seconds: 10),
+    Future<void>? cancelled,
   }) async {
     requests.add(
       FakeNatsRequest(
@@ -120,10 +123,15 @@ final class FakeNatsClient implements NatsClient {
     if (handler == null) {
       throw TimeoutException("No handler for subject: $subject", timeout);
     }
-    return NatsMessage(
-      await handler(Uint8List.fromList(payload)),
-      subject: subject,
-    );
+    final reply = Future.sync(() => handler(Uint8List.fromList(payload)));
+    final bytes = await switch (cancelled) {
+      null => reply,
+      final cancellation => Future.any([
+        reply,
+        cancellation.then<Uint8List>((_) => throw const TransferCancelled()),
+      ]),
+    };
+    return NatsMessage(bytes, subject: subject);
   }
 
   @override

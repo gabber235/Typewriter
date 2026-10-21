@@ -561,17 +561,14 @@ final class _Harness {
 /// TYPEWRITER_CREATION_FIXTURE_DIR names a directory, such as
 /// services/runtime/realm/src/test/resources/creation.
 void _capture({
-  required skir.EditorCatalogWireSnapshot catalog,
+  required skir.EditorCatalog catalog,
   required skir.PreparedEdit seed,
   required skir.PreparedEdit edit,
 }) {
   final directory = Platform.environment["TYPEWRITER_CREATION_FIXTURE_DIR"];
   if (directory == null || directory.isEmpty) return;
   for (final (name, bytes) in [
-    (
-      "catalog.skir",
-      skir.EditorCatalogWireSnapshot.serializer.toBytes(catalog),
-    ),
+    ("catalog.skir", skir.EditorCatalog.serializer.toBytes(catalog)),
     ("seed.skir", skir.PreparedEdit.serializer.toBytes(seed)),
     ("edit.skir", skir.PreparedEdit.serializer.toBytes(edit)),
   ]) {

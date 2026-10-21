@@ -328,9 +328,7 @@ class _GalleryHost extends ChangeNotifier
       const PortablePresentationCapabilities();
   @override
   PortablePresentationDocument get document => PortablePresentationDocument(
-    catalog: CheckedEditorCatalog(
-      skir.EditorCatalogWireSnapshot.defaultInstance,
-    ),
+    catalog: CheckedEditorCatalog(skir.EditorCatalog.defaultInstance),
     root: root,
     bindings: {
       _status: PortablePresentationBinding(

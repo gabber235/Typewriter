@@ -91,14 +91,17 @@ final class SkirMutationClient {
 
   /// Performs one typed Skir request without creating a mutation submission.
   ///
-  /// Request bytes cross the [NatsClient] boundary unchanged. The response is
-  /// decoded here, where the Skir serializer belongs, while transport failures
-  /// remain transport failures for the caller to handle.
+  /// Request bytes cross the [NatsClient] boundary unchanged and the transport
+  /// returns the complete reply, however large. The response is decoded here,
+  /// where the Skir serializer belongs, while transport failures remain
+  /// transport failures for the caller to handle. Completing [cancelled] stops
+  /// the request with [TransferCancelled].
   Future<T> request<T>(
     FutureOr<String> subject,
     Uint8List bytes,
-    skir.Serializer<T> serializer,
-  ) async {
+    skir.Serializer<T> serializer, {
+    Future<void>? cancelled,
+  }) async {
     final destination = await subject;
     final telemetry = await _telemetry();
     final client = _client();
@@ -111,63 +114,11 @@ final class SkirMutationClient {
         bytes,
         headers: headers,
         timeout: const Duration(seconds: 10),
+        cancelled: cancelled,
       ),
     );
     return serializer.fromBytes(response.payload);
   }
-
-  /// Opens the update subscription before sending one request, then yields the
-  /// initial response followed by every update from that concrete subject.
-  Stream<T> watchRequest<T>(
-    String subject,
-    String updateSubject,
-    Uint8List bytes,
-    skir.Serializer<T> serializer,
-  ) => Stream<T>.multi((controller) async {
-    NatsSubscription? subscription;
-    var active = true;
-    Future<void>? unsubscribeOperation;
-
-    Future<void> unsubscribe() => unsubscribeOperation ??= () async {
-      active = false;
-      await subscription?.unsubscribe();
-    }();
-
-    controller.onCancel = unsubscribe;
-    try {
-      final client = _client();
-      subscription = await client.subscribe(updateSubject);
-      if (!active) {
-        await subscription.unsubscribe();
-        return;
-      }
-      final telemetry = await _telemetry();
-      final initial = await telemetry.traceNats(
-        subject: subject,
-        payloadSize: bytes.length,
-        operationName: "request",
-        operation: (headers) => client.request(
-          subject,
-          bytes,
-          headers: headers,
-          timeout: const Duration(seconds: 10),
-        ),
-      );
-      if (!active) return;
-      controller.add(serializer.fromBytes(initial.payload));
-      await for (final message in subscription.messages) {
-        if (!active) return;
-        controller.add(serializer.fromBytes(message.payload));
-      }
-    } on Object catch (error, stackTrace) {
-      if (active) controller.addError(error, stackTrace);
-    } finally {
-      await unsubscribe();
-      if (!controller.isClosed) {
-        await controller.close();
-      }
-    }
-  });
 
   /// Captures a mutation attempt and returns a commit for the shared owner.
   ///

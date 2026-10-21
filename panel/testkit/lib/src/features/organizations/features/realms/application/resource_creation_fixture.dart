@@ -463,7 +463,7 @@ final class ResourceCreationFixture {
   AuthoringDocument document({bool existing = false}) {
     final realm = _realm();
     final catalog = CheckedEditorCatalog(
-      skir.EditorCatalogWireSnapshot(
+      skir.EditorCatalog(
         resourceDisplays: const [],
         resourceOperations: const [],
         generation: generation,

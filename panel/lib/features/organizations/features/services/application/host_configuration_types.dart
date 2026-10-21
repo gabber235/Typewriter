@@ -87,7 +87,7 @@ skir.PublishedType _draftPublished(
 ///
 /// Named variants preserve disabled and enabled choices while the snapshot
 /// translates the resulting value into a complete host configuration command.
-final _hostConfigurationCatalog = skir.EditorCatalogWireSnapshot(
+final _hostConfigurationCatalog = skir.EditorCatalog(
   resourceDisplays: const [],
   resourceOperations: const [],
   generation: skir.CatalogGeneration(value: "panel.host.configuration"),

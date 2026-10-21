@@ -13,8 +13,7 @@ ValueEditing _owner({
 }) => fakeValueEditing(
   document: EditorDocument(
     rootType: skir.TypeUse.wrapScalar(skir.ScalarKind.text),
-    catalog: skir.EditorCatalogWireSnapshot.defaultInstance
-        .asTrustedLocalCatalog(),
+    catalog: skir.EditorCatalog.defaultInstance.asTrustedLocalCatalog(),
     confirmedValue: skir.DataValue.wrapStringValue("Saved"),
     revision: 1,
   ),

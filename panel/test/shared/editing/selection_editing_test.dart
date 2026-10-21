@@ -4,8 +4,7 @@ import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
 import "package:typewriter_panel/typewriter_panel.dart";
 import "package:typewriter_testkit/typewriter_testkit.dart";
 
-final _catalog = skir.EditorCatalogWireSnapshot.defaultInstance
-    .asTrustedLocalCatalog();
+final _catalog = skir.EditorCatalog.defaultInstance.asTrustedLocalCatalog();
 skir.DataValue _text(String value) => skir.DataValue.wrapStringValue(value);
 EditorSnapshot _snapshot([String value = "Original", int revision = 1]) =>
     FakeEditorSnapshot(

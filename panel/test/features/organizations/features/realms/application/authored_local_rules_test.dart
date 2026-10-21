@@ -455,7 +455,7 @@ _nestedRuleFixture({
         : [skir.FieldPatternSegment.createField(name: "width")],
   );
   final checked = CheckedEditorCatalog(
-    skir.EditorCatalogWireSnapshot(
+    skir.EditorCatalog(
       resourceDisplays: const [],
       resourceOperations: const [],
       generation: generation,

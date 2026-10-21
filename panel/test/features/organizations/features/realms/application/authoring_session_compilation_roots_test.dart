@@ -163,26 +163,13 @@ void main() {
         );
         if (request.expected != view.id) {
           return skir.QueryPublicationViewResponse.serializer.toBytes(
-            skir.QueryPublicationViewResponse.wrapChanged(
+            skir.QueryPublicationViewResponse.wrapViewChangedError(
               skir.PublicationViewChanged(current: view.id),
             ),
           );
         }
-        final encoded = skir.PublicationView.serializer.toBytes(view);
         return skir.QueryPublicationViewResponse.serializer.toBytes(
-          skir.QueryPublicationViewResponse.wrapChunk(
-            skir.PublicationViewChunk(
-              view: view.id,
-              transfer: skir.BoundedTransferChunk(
-                transferId: request.transferId,
-                index: 0,
-                chunkCount: 1,
-                encodedSize: encoded.length,
-                sha256: sha256.convert(encoded).toString(),
-                payload: skir.ByteString.copy(encoded),
-              ),
-            ),
-          ),
+          skir.QueryPublicationViewResponse.wrapView(view),
         );
       });
     final container = ProviderContainer.test(

@@ -46,7 +46,7 @@ EditorDocument _document(String field, String value) {
     rules: const [],
   );
   final catalog = CheckedEditorCatalog(
-    skir.EditorCatalogWireSnapshot(
+    skir.EditorCatalog(
       resourceDisplays: const [],
       resourceOperations: const [],
       generation: skir.CatalogGeneration(value: "test"),

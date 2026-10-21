@@ -1601,7 +1601,7 @@ AuthoringDocument _document({
   String position = "0",
 }) => AuthoringDocument(
   catalog: CheckedEditorCatalog(
-    skir.EditorCatalogWireSnapshot(
+    skir.EditorCatalog(
       resourceDisplays: const [],
       resourceOperations: const [],
       generation: skir.CatalogGeneration(value: "fixture"),

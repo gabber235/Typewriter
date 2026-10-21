@@ -96,7 +96,7 @@ void main() {
                     )))
                 .toFrozen();
         final catalog = CheckedEditorCatalog(
-          (skir.EditorCatalogWireSnapshot.mutable()
+          (skir.EditorCatalog.mutable()
                 ..generation = skir.CatalogGeneration(value: "configured")
                 ..types = [published]
                 ..presentationMaterials = [material])
@@ -236,9 +236,7 @@ void main() {
       final writes = <skir.DataValue>[];
       final pending = Completer<void>();
       final host = BoundPresentationHost(
-        catalog: CheckedEditorCatalog(
-          skir.EditorCatalogWireSnapshot.defaultInstance,
-        ),
+        catalog: CheckedEditorCatalog(skir.EditorCatalog.defaultInstance),
         root: () => presentationNode(
           "numeric",
           skir.PresentationElement.wrapNumericInput(control),
@@ -338,9 +336,7 @@ void main() {
               ))
             .toFrozen();
     final host = BoundPresentationHost(
-      catalog: CheckedEditorCatalog(
-        skir.EditorCatalogWireSnapshot.defaultInstance,
-      ),
+      catalog: CheckedEditorCatalog(skir.EditorCatalog.defaultInstance),
       root: () => presentationNode(
         "float32",
         skir.PresentationElement.wrapNumericInput(control),
@@ -386,9 +382,7 @@ void main() {
         ),
       );
       final host = BoundPresentationHost(
-        catalog: CheckedEditorCatalog(
-          skir.EditorCatalogWireSnapshot.defaultInstance,
-        ),
+        catalog: CheckedEditorCatalog(skir.EditorCatalog.defaultInstance),
         root: () => presentationNode(
           "duration",
           skir.PresentationElement.wrapDurationInput(
@@ -542,9 +536,7 @@ void main() {
                         .toFrozen())
               .toFrozen();
       final host = BoundPresentationHost(
-        catalog: CheckedEditorCatalog(
-          skir.EditorCatalogWireSnapshot.defaultInstance,
-        ),
+        catalog: CheckedEditorCatalog(skir.EditorCatalog.defaultInstance),
         root: () => presentationNode(
           "states",
           skir.PresentationElement.wrapNumericInput(control),
@@ -636,9 +628,7 @@ void main() {
         ),
       );
       final host = BoundPresentationHost(
-        catalog: CheckedEditorCatalog(
-          skir.EditorCatalogWireSnapshot.defaultInstance,
-        ),
+        catalog: CheckedEditorCatalog(skir.EditorCatalog.defaultInstance),
         root: () => root,
         bindings: [
           BoundPresentationBinding(

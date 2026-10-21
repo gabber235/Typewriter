@@ -4,9 +4,7 @@ import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
 import "package:typewriter_panel/typewriter_panel.dart";
 
 void main() {
-  final catalog = CheckedEditorCatalog(
-    skir.EditorCatalogWireSnapshot.defaultInstance,
-  );
+  final catalog = CheckedEditorCatalog(skir.EditorCatalog.defaultInstance);
   final candidate = skir.ExpressionBindingId(value: "candidate");
   final parent = skir.ExpressionBindingId(value: "parent");
   final text = skir.TypeUse.wrapScalar(skir.ScalarKind.text);

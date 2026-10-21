@@ -104,7 +104,7 @@ final class InheritedFieldPresentationScenario {
                   skir.PresentationDependencies.defaultInstance)
             .toFrozen();
     catalog = CheckedEditorCatalog(
-      (skir.EditorCatalogWireSnapshot.mutable()
+      (skir.EditorCatalog.mutable()
             ..generation = skir.CatalogGeneration(
               value: "inherited field scenario",
             )

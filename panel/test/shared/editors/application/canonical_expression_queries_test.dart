@@ -236,8 +236,7 @@ void main() {
       );
       expect(
         () => CheckedEditorCatalog(
-          (skir.EditorCatalogWireSnapshot.mutable()
-                ..types = [_published(definition)])
+          (skir.EditorCatalog.mutable()..types = [_published(definition)])
               .toFrozen(),
         ),
         throwsFormatException,

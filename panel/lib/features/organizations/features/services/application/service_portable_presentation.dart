@@ -21,7 +21,7 @@ final _portableOptionalTimestampType = skir.TypeUse.createNullable(
   value: _portableTimestampType,
 );
 
-final _servicePortableCatalog = skir.EditorCatalogWireSnapshot.defaultInstance
+final _servicePortableCatalog = skir.EditorCatalog.defaultInstance
     .asTrustedLocalCatalog();
 
 /// Binds service observations and an existing name edit owner to portable UI.

@@ -1037,7 +1037,7 @@ CheckedEditorCatalog authoringFixtureCatalog({
     ),
   );
   return CheckedEditorCatalog(
-    skir.EditorCatalogWireSnapshot(
+    skir.EditorCatalog(
       resourceDisplays: _fixtureDisplays,
       resourceOperations: const [],
       generation:

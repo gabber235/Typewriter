@@ -442,8 +442,7 @@ BoundPresentationHost _host(
   skir.PresentationNode root, {
   List<BoundPresentationBinding> bindings = const [],
 }) => BoundPresentationHost(
-  catalog: skir.EditorCatalogWireSnapshot.defaultInstance
-      .asTrustedLocalCatalog(),
+  catalog: skir.EditorCatalog.defaultInstance.asTrustedLocalCatalog(),
   root: () => root,
   bindings: bindings,
   contextInputs: [panelSelectionCountInput],

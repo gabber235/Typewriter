@@ -148,7 +148,7 @@ final _serviceIdentityDefinition = _draftType("ServiceIdentity");
 final _serviceIdentityType = skir.TypeUse.wrapNamed(
   _draftUse(_serviceIdentityDefinition),
 );
-final _serviceIdentityCatalog = skir.EditorCatalogWireSnapshot(
+final _serviceIdentityCatalog = skir.EditorCatalog(
   resourceDisplays: const [],
   resourceOperations: const [],
   generation: skir.CatalogGeneration(value: "panel.service.identity"),
