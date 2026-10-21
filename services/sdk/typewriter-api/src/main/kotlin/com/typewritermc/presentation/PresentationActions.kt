@@ -6,16 +6,16 @@ import com.typewritermc.dsl.TypewriterDsl
 import com.typewritermc.expression.Expr
 import com.typewritermc.expression.ExpressionBindingId
 import com.typewritermc.expression.Handled
-import com.typewritermc.types.TypeDefinitionId
-import com.typewritermc.types.TypeTemplate
 import com.typewritermc.types.skir.SkirAuthoringValueCodec
-import com.typewritermc.types.skir.SkirTypeCodec
 import com.typewritermc.types.skir.getOrThrow
 import skirout.editor.v1.action.CreateFieldValue
 import skirout.editor.v1.action.EditorAction
 import skirout.editor.v1.binding.BindingRef
 import skirout.editor.v1.expression.ExpressionNode
 import skirout.editor.v1.presentation.PresentationNode
+import skirout.editor.v1.type_catalog.NamedTypeUse
+import skirout.editor.v1.type_catalog.TypeDefinitionId
+import skirout.editor.v1.type_catalog.TypeTemplate
 
 /** Owns completion for one configured scope before its parent captures child nodes. */
 internal class ControlScopeSession<S>(
@@ -104,7 +104,7 @@ interface PresentationActionFactory {
 
     fun chooseForm(
         binding: BindingRef,
-        type: com.typewritermc.types.TypeUse.Named,
+        type: NamedTypeUse,
     ): EditorAction
 }
 
@@ -168,7 +168,7 @@ fun createResource(
 ): EditorAction {
     val scope = CreateResourceScope().apply(presets)
     return EditorAction.createCreate(
-        type = SkirTypeCodec.encode(type).getOrThrow(),
+        type = type,
         owner =
             owner?.let {
                 BindingRef(

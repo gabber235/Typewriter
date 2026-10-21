@@ -1,7 +1,6 @@
 package com.typewritermc.configuration
 
 import com.typewritermc.authoring.CompleteValue
-import com.typewritermc.authoring.ValuePath
 import com.typewritermc.checking.CheckInput
 import com.typewritermc.checking.CheckRecipe
 import com.typewritermc.checking.DiagnosticSeverity
@@ -19,10 +18,9 @@ import com.typewritermc.expression.local
 import com.typewritermc.expression.portableRegexValidationError
 import com.typewritermc.types.DataValue
 import com.typewritermc.types.NativeBindingRegistry
-import com.typewritermc.types.TypeDefinitionId
-import com.typewritermc.types.TypeTemplate
 import com.typewritermc.types.skir.SkirDataValueCodec
 import com.typewritermc.types.skir.getOrThrow
+import com.typewritermc.types.template
 import skirout.editor.v1.expression.BoundDirection
 import skirout.editor.v1.expression.ExpressionNode
 import skirout.editor.v1.expression.RegexMatchMode
@@ -31,6 +29,11 @@ import skirout.editor.v1.expression.SizeBoundMetric
 import skirout.editor.v1.expression.SizeRangeMetric
 import skirout.editor.v1.expression.TextCompareOperation
 import skirout.editor.v1.expression.TimestampBoundDirection
+import skirout.editor.v1.type_catalog.RuleId
+import skirout.editor.v1.type_catalog.RuleOrigin
+import skirout.editor.v1.type_catalog.ScalarKind
+import skirout.editor.v1.type_catalog.TypeDefinitionId
+import skirout.editor.v1.type_catalog.TypeTemplate
 import kotlin.reflect.KClass
 
 /**
@@ -176,7 +179,7 @@ internal class RuntimeConfigurationBinding(
             message: String,
             at: RelativeFieldPattern?,
         ) {
-            val origin = RuleOrigin(target, state.nextRule++)
+            val origin = RuleOrigin(owner = target, ordinal = state.nextRule++)
             val effectivePredicate =
                 if (skipNull) {
                     ExpressionNode.createOr(
@@ -192,7 +195,7 @@ internal class RuntimeConfigurationBinding(
                     origin = origin,
                     relativePath = path,
                     representationCondition = representation,
-                    rules = listOf(OwnedRule(RuleId(origin, 0), RuleDescriptor(effectivePredicate), diagnostic)),
+                    rules = listOf(OwnedRule(RuleId(origin = origin, localIndex = 0), RuleDescriptor(effectivePredicate), diagnostic)),
                 )
         }
     }
@@ -204,7 +207,7 @@ internal class RuntimeConfigurationBinding(
             message: String,
             at: RelativeFieldPattern?,
         ) {
-            val origin = RuleOrigin(target, state.nextRule++)
+            val origin = RuleOrigin(owner = target, ordinal = state.nextRule++)
             state.checks +=
                 CheckRecipe(
                     owner = origin,
@@ -250,13 +253,13 @@ internal fun CheckRecipe.bindNative(registry: NativeBindingRegistry): CheckRecip
 
 private fun RepresentationKind.expectedTemplate(fallback: TypeTemplate): TypeTemplate =
     when (this) {
-        RepresentationKind.Unit -> TypeTemplate.Scalar(com.typewritermc.types.ScalarKind.Unit)
-        RepresentationKind.Boolean -> TypeTemplate.Scalar(com.typewritermc.types.ScalarKind.Boolean)
-        RepresentationKind.Text -> TypeTemplate.Scalar(com.typewritermc.types.ScalarKind.Text)
-        RepresentationKind.Bytes -> TypeTemplate.Scalar(com.typewritermc.types.ScalarKind.Bytes)
-        RepresentationKind.Decimal -> TypeTemplate.Scalar(com.typewritermc.types.ScalarKind.Decimal)
-        RepresentationKind.Timestamp -> TypeTemplate.Scalar(com.typewritermc.types.ScalarKind.Timestamp)
-        RepresentationKind.Duration -> TypeTemplate.Scalar(com.typewritermc.types.ScalarKind.Duration)
+        RepresentationKind.Unit -> ScalarKind.UNIT.template
+        RepresentationKind.Boolean -> ScalarKind.BOOLEAN.template
+        RepresentationKind.Text -> ScalarKind.TEXT.template
+        RepresentationKind.Bytes -> ScalarKind.BYTES.template
+        RepresentationKind.Decimal -> ScalarKind.DECIMAL.template
+        RepresentationKind.Timestamp -> ScalarKind.TIMESTAMP.template
+        RepresentationKind.Duration -> ScalarKind.DURATION.template
         else -> fallback
     }
 

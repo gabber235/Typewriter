@@ -5,10 +5,12 @@ import com.typewritermc.authoring.ValuePath
 import com.typewritermc.types.DataValue
 import com.typewritermc.types.RelationId
 import com.typewritermc.types.ResourceId
-import com.typewritermc.types.TypeDefinition
-import com.typewritermc.types.TypeUse
+import com.typewritermc.types.skir.NamedTypeUseSerializer
+import com.typewritermc.types.skir.TypeDefinitionSerializer
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
+import skirout.editor.v1.type_catalog.NamedTypeUse
+import skirout.editor.v1.type_catalog.TypeDefinition
 
 const val RESOURCE_GRAPH_FORMAT_REVISION = 1
 
@@ -48,7 +50,8 @@ data class CompiledResourceKey(
 @Serializable
 data class CompiledResource(
     val key: CompiledResourceKey,
-    val actualType: TypeUse.Named,
+    @Serializable(with = NamedTypeUseSerializer::class)
+    val actualType: NamedTypeUse,
     val bindingProvider: NativeBindingId,
     val bindingSignature: String,
     val value: DataValue.Named,
@@ -108,7 +111,10 @@ data class RuntimeCompilationFacts(
     val root: CompiledResourceKey,
     val resources: List<CompiledResource>,
     val edges: List<CompiledEdge>,
-    val types: List<TypeDefinition>,
+    val types: List<
+        @Serializable(with = TypeDefinitionSerializer::class)
+        TypeDefinition,
+    >,
     val relations: List<RuntimeRelationFact>,
 )
 

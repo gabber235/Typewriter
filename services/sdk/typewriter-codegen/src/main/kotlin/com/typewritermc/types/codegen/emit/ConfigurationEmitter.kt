@@ -16,8 +16,6 @@ import com.typewritermc.configuration.FieldPatternSegment
 import com.typewritermc.configuration.RelativeFieldPattern
 import com.typewritermc.configuration.RepresentationKind
 import com.typewritermc.discovery.GeneratedContract
-import com.typewritermc.types.RepresentationTemplate
-import com.typewritermc.types.TypeTemplate
 import com.typewritermc.types.codegen.FieldShape
 import com.typewritermc.types.codegen.SdkDeclaration
 import com.typewritermc.types.codegen.SdkEmitter
@@ -29,6 +27,9 @@ import com.typewritermc.types.codegen.kotlinCode
 import com.typewritermc.types.codegen.parameterizedOrSelf
 import com.typewritermc.types.codegen.rawClass
 import com.typewritermc.types.codegen.representationKind
+import com.typewritermc.types.template
+import skirout.editor.v1.type_catalog.RepresentationTemplate
+import skirout.editor.v1.type_catalog.TypeTemplate
 import kotlin.reflect.KClass
 import com.typewritermc.codegen.TypewriterApi as Api
 
@@ -124,25 +125,25 @@ private class RootConfiguration(
 
 private fun SdkDeclaration.rootConfiguration(): RootConfiguration =
     when (val representation = definition.representation) {
-        is RepresentationTemplate.Scalar -> {
+        is RepresentationTemplate.ScalarWrapper -> {
             val shape =
                 when (val own = shape) {
                     is FieldShape.Color, is FieldShape.Wrapped -> own
-                    else -> FieldShape.Scalar(representation.kind, TypeTemplate.Scalar(representation.kind), selfType)
+                    else -> FieldShape.Scalar(representation.value.kind, representation.value.kind.template, selfType)
                 }
             RootConfiguration(
                 scope = shape.configurationScope,
-                kind = representation.kind.representationKind,
-                expected = TypeTemplate.Scalar(representation.kind),
+                kind = representation.value.kind.representationKind,
+                expected = representation.value.kind.template,
                 expressions = shape.expressionFactory,
             )
         }
 
-        is RepresentationTemplate.Enumeration -> {
+        is RepresentationTemplate.EnumerationWrapper -> {
             RootConfiguration(
                 scope = Api.EnumField.parameterizedBy(starType),
                 kind = RepresentationKind.Enum,
-                expected = template,
+                expected = template.template,
                 expressions = Api.EnumExpressions.factory(),
             )
         }
@@ -151,7 +152,7 @@ private fun SdkDeclaration.rootConfiguration(): RootConfiguration =
             RootConfiguration(
                 scope = Api.RecordField.parameterizedBy(starType, names.expressions.parameterizedOrSelf(typeVariables.map { STAR })),
                 kind = RepresentationKind.Record,
-                expected = template,
+                expected = template.template,
                 expressions = names.expressionsFactory,
             )
         }

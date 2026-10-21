@@ -8,10 +8,8 @@ import com.typewritermc.authoring.RealmRootDefinition
 import com.typewritermc.authoring.RelationSelection
 import com.typewritermc.authoring.ResourceDisplayCatalog
 import com.typewritermc.authoring.SelectionId
-import com.typewritermc.authoring.TypeSelection
 import com.typewritermc.authoring.ValueLocation
 import com.typewritermc.authoring.ValuePath
-import com.typewritermc.authoring.definition
 import com.typewritermc.authoring.field
 import com.typewritermc.authoring.immutableAuthoringCopy
 import com.typewritermc.authoring.item
@@ -31,13 +29,13 @@ import com.typewritermc.types.NativeBindingRegistry
 import com.typewritermc.types.RelationContract
 import com.typewritermc.types.RelationId
 import com.typewritermc.types.ResourceId
-import com.typewritermc.types.TypeDefinitionId
 import com.typewritermc.types.catalog.CheckedCatalog
 import com.typewritermc.types.immutableMapCopy
 import com.typewritermc.types.ownsResources
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import skirout.editor.v1.type_catalog.TypeDefinitionId
 import java.util.IdentityHashMap
 import java.util.UUID
 import java.util.concurrent.ConcurrentHashMap

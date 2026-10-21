@@ -10,7 +10,7 @@ import com.typewritermc.realm.schema.openTestDatabase
 import com.typewritermc.types.DataValue
 import com.typewritermc.types.ListItem
 import com.typewritermc.types.MapRow
-import com.typewritermc.types.TypeUse
+import com.typewritermc.types.namedUse
 import de.infix.testBalloon.framework.core.testSuite
 import io.kotest.matchers.shouldBe
 import java.math.BigInteger
@@ -19,7 +19,7 @@ val NativeAuthoringStorageTestSuite by testSuite {
     test("native nested values preserve authored distinctions and stable identities") {
         val record =
             AuthoringRecord(
-                TypeSelection.Complete(TypeUse.Named(TEST_TYPE)),
+                TypeSelection.Complete(TEST_TYPE.namedUse()),
                 mapOf(
                     "empty" to DataValue.Unfilled,
                     "nullable" to DataValue.Null,

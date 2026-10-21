@@ -15,7 +15,7 @@ import com.typewritermc.services.libs.utils.sha256Hex
 import com.typewritermc.types.DataValue
 import com.typewritermc.types.ListItem
 import com.typewritermc.types.ResourceId
-import com.typewritermc.types.TypeUse
+import com.typewritermc.types.skir.NamedTypeUseSerializer
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.json.JsonArray
 import kotlinx.serialization.json.JsonElement
@@ -129,7 +129,7 @@ private fun EditIntent.canonical(): String =
         }
 
         is EditIntent.Retag -> {
-            frame("retag", canonical(ValueLocation.serializer(), at), canonical(TypeUse.Named.serializer(), type))
+            frame("retag", canonical(ValueLocation.serializer(), at), canonical(NamedTypeUseSerializer, type))
         }
 
         is EditIntent.ConfigureResource -> {

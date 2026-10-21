@@ -13,7 +13,6 @@ import com.typewritermc.authoring.PreparedContent
 import com.typewritermc.authoring.PreparedValue
 import com.typewritermc.authoring.TypeSelection
 import com.typewritermc.checking.CatalogGeneration
-import com.typewritermc.discovery.ContributionKey
 import com.typewritermc.discovery.GeneratedProviderIndex
 import com.typewritermc.discovery.GeneratedProviderKind
 import com.typewritermc.discovery.GeneratedTypeProvider
@@ -21,6 +20,7 @@ import com.typewritermc.discovery.OwnedPresentation
 import com.typewritermc.discovery.OwnedTypeDeclaration
 import com.typewritermc.discovery.ProviderOrigin
 import com.typewritermc.discovery.assemble
+import com.typewritermc.discovery.contributionKey
 import com.typewritermc.elements.Element
 import com.typewritermc.elements.ElementDefinition
 import com.typewritermc.expression.literal
@@ -42,29 +42,24 @@ import com.typewritermc.presentation.invoke
 import com.typewritermc.presentation.presentationPart
 import com.typewritermc.presentation.presentationTemplate
 import com.typewritermc.types.DataValue
-import com.typewritermc.types.DeclarationOwner
 import com.typewritermc.types.FactoryNativeBindingRegistry
-import com.typewritermc.types.FieldDeclaration
-import com.typewritermc.types.FieldOwner
 import com.typewritermc.types.Icon
 import com.typewritermc.types.IconDefinition
 import com.typewritermc.types.IconIconifyDefinition
 import com.typewritermc.types.IconSvgDefinition
 import com.typewritermc.types.NativeBindingFactory
-import com.typewritermc.types.RepresentationTemplate
-import com.typewritermc.types.ScalarKind
 import com.typewritermc.types.StandardTypes
-import com.typewritermc.types.TypeDefinition
-import com.typewritermc.types.TypeDefinitionId
-import com.typewritermc.types.TypeId
-import com.typewritermc.types.TypeTemplate
-import com.typewritermc.types.TypeUse
 import com.typewritermc.types.catalog.DefaultCheckedCatalog
 import com.typewritermc.types.catalog.Resolution
 import com.typewritermc.types.encodeGeneratedDefault
+import com.typewritermc.types.namedTemplate
+import com.typewritermc.types.namedUse
+import com.typewritermc.types.qualified
 import com.typewritermc.types.skir.SkirAuthoringValueCodec
 import com.typewritermc.types.skir.SkirDataValueCodec
 import com.typewritermc.types.skir.getOrThrow
+import com.typewritermc.types.template
+import com.typewritermc.types.use
 import de.infix.testBalloon.framework.core.testSuite
 import io.kotest.matchers.collections.shouldHaveSize
 import io.kotest.matchers.shouldBe
@@ -74,7 +69,15 @@ import skirout.editor.v1.presentation.ChildrenElement
 import skirout.editor.v1.presentation.PresentationElement
 import skirout.editor.v1.presentation.PresentationHeaderTitle
 import skirout.editor.v1.presentation.PresentationNode
+import skirout.editor.v1.type_catalog.DeclarationOwner
+import skirout.editor.v1.type_catalog.FieldDeclaration
+import skirout.editor.v1.type_catalog.FieldOwner
+import skirout.editor.v1.type_catalog.NamedTypeUse
 import skirout.editor.v1.type_catalog.PresentationId
+import skirout.editor.v1.type_catalog.RepresentationTemplate
+import skirout.editor.v1.type_catalog.ScalarKind
+import skirout.editor.v1.type_catalog.TypeDefinition
+import skirout.editor.v1.type_catalog.TypeDefinitionId
 import java.lang.reflect.Modifier
 import java.util.Collections
 import kotlin.reflect.KClass
@@ -93,22 +96,22 @@ val FrameworkCatalogCreationTest by testSuite {
                     (instantiateGeneratedProvider(Class.forName(entry.providerClass)) as GeneratedTypeProvider).definition
                 }.distinctBy(TypeDefinition::id)
         val concreteId =
-            com.typewritermc.types.TypeDefinitionId(
-                com.typewritermc.types.TypeId
-                    .Qualified("test", "ConcreteEntry"),
-                1,
-            )
+            TypeDefinitionId.qualified("test", "ConcreteEntry")
         val catalog =
             DefaultCheckedCatalog(
                 CatalogGeneration("entry graph inheritance"),
                 StandardTypes.definitions + definitions +
-                    TypeDefinition(
-                        concreteId,
-                        representation = RepresentationTemplate.Record(emptyList()),
-                        parents = listOf(TypeTemplate.Named(com.typewritermc.elements.ElementDefinition.id)),
+                    TypeDefinition.partial(
+                        id = concreteId,
+                        representation = RepresentationTemplate.createRecord(fields = emptyList(), abstract_ = false),
+                        parents =
+                            listOf(
+                                com.typewritermc.elements.ElementDefinition.id
+                                    .namedTemplate(),
+                            ),
                     ),
             )
-        val checked = (catalog.resolve(TypeUse.Named(concreteId)) as Resolution.Ready).value
+        val checked = (catalog.resolve(concreteId.use()) as Resolution.Ready).value
         val runtime = DefaultPresentationRuntime()
         val provider = com.typewritermc.elements.ElementGraphNodePresentation_ElementPresentationProvider(runtime)
         val inherited = provider.descriptor(origin("element_graph"))
@@ -124,7 +127,7 @@ val FrameworkCatalogCreationTest by testSuite {
                         .PresentationId(namespace = "test", name = "concrete entry graph"),
                 target =
                     com.typewritermc.presentation.PresentationTarget
-                        .Named(TypeTemplate.Named(concreteId)),
+                        .Named(concreteId.namedTemplate()),
                 priority = inherited.priority - 1,
             )
         val customRegistry = com.typewritermc.presentation.DefaultPresentationRegistry(catalog, listOf(inherited, concrete))
@@ -135,7 +138,11 @@ val FrameworkCatalogCreationTest by testSuite {
                 PresentationBuildBinding(
                     checked.presentationTemplate(),
                     PresentationRole.ITEM,
-                    mapOf(com.typewritermc.elements.Element::class to TypeTemplate.Named(com.typewritermc.elements.ElementDefinition.id)),
+                    mapOf(
+                        com.typewritermc.elements.Element::class to
+                            com.typewritermc.elements.ElementDefinition.id
+                                .namedTemplate(),
+                    ),
                 ),
             )
         val surface = (material.layout.singleFixed().element as PresentationElement.ContainerWrapper).value
@@ -181,8 +188,8 @@ val FrameworkCatalogCreationTest by testSuite {
                 }.map(GeneratedTypeProvider::definition)
                 .distinctBy(TypeDefinition::id)
         val catalog = DefaultCheckedCatalog(generation, StandardTypes.definitions + definitions)
-        val iconRepresentation = IconDefinition.declaration.representation as RepresentationTemplate.Record
-        iconRepresentation.fields shouldBe emptyList()
+        val iconRepresentation = IconDefinition.declaration.representation as RepresentationTemplate.RecordWrapper
+        iconRepresentation.value.fields shouldBe emptyList()
         val factories =
             entries
                 .filter { it.kind == GeneratedProviderKind.NativeBinding }
@@ -190,7 +197,7 @@ val FrameworkCatalogCreationTest by testSuite {
                     instantiateGeneratedProvider(Class.forName(entry.providerClass)) as NativeBindingFactory
                 }.distinctBy(NativeBindingFactory::provider)
         val bindings = FactoryNativeBindingRegistry(catalog, factories)
-        val checkedIconify = (catalog.resolve(IconIconifyDefinition.use) as Resolution.Ready).value
+        val checkedIconify = (catalog.resolve(IconIconifyDefinition.use.use) as Resolution.Ready).value
         val encodedIcon =
             bindings
                 .bind(checkedIconify)
@@ -205,16 +212,26 @@ val FrameworkCatalogCreationTest by testSuite {
         val initializer = DefaultInitializationRuntime(catalog, bindings)
 
         fun owner(
-            link: TypeUse.Named,
+            link: NamedTypeUse,
             target: String,
         ): DataValue =
             bindings
-                .bind((catalog.resolve(link) as Resolution.Ready).value)
+                .bind((catalog.resolve(link.use) as Resolution.Ready).value)
                 .encodeGeneratedDefault(com.typewritermc.types.Ref<Nothing, Nothing>(com.typewritermc.types.ResourceId(target)))
 
         // Books and tags are always created into their section, so creation supplies the owner link.
-        val library = owner(TypeUse.Named(LibraryBooks.Book.Definition.id, listOf(LibraryDefinition.use)), "library")
-        val taxonomy = owner(TypeUse.Named(TaxonomyTags.Tag.Definition.id, listOf(TaxonomyDefinition.use)), "taxonomy")
+        val library =
+            owner(
+                LibraryBooks.Book.Definition.id
+                    .namedUse(listOf(LibraryDefinition.use.use)),
+                "library",
+            )
+        val taxonomy =
+            owner(
+                TaxonomyTags.Tag.Definition.id
+                    .namedUse(listOf(TaxonomyDefinition.use.use)),
+                "taxonomy",
+            )
         val book = initializer.prepareNow(request(generation, BookDefinition.use, mapOf("library" to library)))
         val icon = book.record.fields.getValue("icon") as DataValue.Named
         icon.actualType shouldBe IconIconifyDefinition.use
@@ -265,13 +282,13 @@ val FrameworkCatalogCreationTest by testSuite {
         tagReferenceProvider.descriptor(origin("tag"))
         tagGraphProvider.descriptor(origin("tag"))
         pageReferenceProvider.descriptor(origin("page"))
-        val checkedBook = (catalog.resolve(BookDefinition.use) as Resolution.Ready).value
+        val checkedBook = (catalog.resolve(BookDefinition.use.use) as Resolution.Ready).value
         val resourceTypes =
             factories
                 .mapNotNull { factory ->
                     val native = factory.nativeClass ?: return@mapNotNull null
                     val definition = definitions.singleOrNull { it.id == factory.definition } ?: return@mapNotNull null
-                    native to TypeTemplate.Named(definition.id, definition.parameters.map { TypeTemplate.Parameter(it.key) })
+                    native to definition.id.namedTemplate(definition.parameters.map { it.key.template })
                 }.toMap()
         val iconifyMaterial =
             iconifyProvider.build(
@@ -341,12 +358,8 @@ val FrameworkCatalogCreationTest by testSuite {
         polymorphic.value.concreteTypes shouldHaveSize 2
         polymorphic.value.concreteTypes.map { it.concreteType } shouldBe
             listOf(
-                com.typewritermc.types.skir.SkirTypeCodec
-                    .encode(IconIconifyDefinition.use)
-                    .getOrThrow(),
-                com.typewritermc.types.skir.SkirTypeCodec
-                    .encode(IconSvgDefinition.use)
-                    .getOrThrow(),
+                IconIconifyDefinition.use.use,
+                IconSvgDefinition.use.use,
             )
         polymorphic.value.concreteTypes.map { it.presentation?.element }.all {
             it is PresentationElement.InvocationWrapper
@@ -358,7 +371,7 @@ val FrameworkCatalogCreationTest by testSuite {
             .sectionContent()
             .collectionGraphSource() shouldBe TAG_COLLECTION_SOURCE_ID
 
-        val checkedTag = (catalog.resolve(TagDefinition.use) as Resolution.Ready).value
+        val checkedTag = (catalog.resolve(TagDefinition.use.use) as Resolution.Ready).value
         val graphMaterial =
             tagGraphProvider.build(
                 PresentationBuildBinding(checkedTag.presentationTemplate(), PresentationRole.ITEM, resourceTypes),
@@ -414,7 +427,7 @@ val FrameworkCatalogCreationTest by testSuite {
         val placementInvocation = placementNode.element as PresentationElement.DefaultPresentationWrapper
         placementInvocation.value.presentationId?.name shouldBe placementDescriptor.id.name
 
-        val checkedPage = (catalog.resolve(PageDefinition.use) as Resolution.Ready).value
+        val checkedPage = (catalog.resolve(PageDefinition.use.use) as Resolution.Ready).value
         val pageMaterial =
             pageProvider.build(
                 PresentationBuildBinding(
@@ -484,7 +497,7 @@ val FrameworkCatalogCreationTest by testSuite {
                 .element
         (pageIcon as PresentationElement.IconWrapper).value.name.appearanceField() shouldBe "icon"
 
-        val checkedPlacement = (catalog.resolve(GraphPlacementDefinition.use) as Resolution.Ready).value
+        val checkedPlacement = (catalog.resolve(GraphPlacementDefinition.use.use) as Resolution.Ready).value
         val placementMaterial =
             placementProvider.build(
                 PresentationBuildBinding(
@@ -712,7 +725,7 @@ private fun generatedProviderEntries(): List<com.typewritermc.discovery.Generate
 
 private fun request(
     generation: CatalogGeneration,
-    use: TypeUse.Named,
+    use: NamedTypeUse,
     supplied: Map<String, DataValue> = emptyMap(),
 ) = InitializationRequest(
     catalog = generation,
@@ -728,7 +741,7 @@ private fun origin(name: String): ProviderOrigin =
         owner =
             DeclarationOwner(
                 source =
-                    ContributionKey(
+                    contributionKey(
                         source = ContributionSourceId("test"),
                         sourcePart = "main",
                         producer = ProducerId("test"),
@@ -758,7 +771,7 @@ private fun exportFrameworkControlFixture(
                 owner = inspectorOrigin.owner,
                 target =
                     com.typewritermc.presentation.PresentationTarget
-                        .Named(TypeTemplate.Named(entryGraphFixtureType)),
+                        .Named(entryGraphFixtureType.namedTemplate()),
                 roles = setOf(PresentationRole.INSPECTOR),
                 priority = 0,
             ),
@@ -780,10 +793,14 @@ private fun exportFrameworkControlFixture(
                 framework.declarations +
                     com.typewritermc.discovery.OwnedTypeDeclaration(
                         origin("fixture_entry"),
-                        TypeDefinition(
-                            entryGraphFixtureType,
-                            representation = RepresentationTemplate.Record(emptyList()),
-                            parents = listOf(TypeTemplate.Named(com.typewritermc.elements.ElementDefinition.id)),
+                        TypeDefinition.partial(
+                            id = entryGraphFixtureType,
+                            representation = RepresentationTemplate.createRecord(fields = emptyList(), abstract_ = false),
+                            parents =
+                                listOf(
+                                    com.typewritermc.elements.ElementDefinition.id
+                                        .namedTemplate(),
+                                ),
                         ),
                         com.typewritermc.types.TypeDisplay(
                             "Message action",
@@ -803,9 +820,7 @@ private fun exportFrameworkControlFixture(
         assembly.snapshot.presentationMaterials.single {
             it.role == skirout.editor.v1.catalog.PresentationRole.INSPECTOR &&
                 (it.target as? skirout.editor.v1.catalog.PresentationTarget.NamedWrapper)?.value?.definition ==
-                com.typewritermc.types.skir.SkirTypeCodec
-                    .encode(com.typewritermc.elements.ElementDefinition.id)
-                    .getOrThrow()
+                com.typewritermc.elements.ElementDefinition.id
         }
     elementMaterial.inheritableNodes.size shouldBe 3
     assembly.snapshot.presentationMaterials
@@ -822,7 +837,7 @@ private fun exportFrameworkControlFixture(
                 SkirDataValueCodec
                     .encode(
                         DataValue.Named(
-                            TypeUse.Named(entryGraphFixtureType),
+                            entryGraphFixtureType.namedUse(),
                             DataValue.Record(mapOf("name" to DataValue.StringValue("Welcome to the village"))),
                         ),
                     ).getOrThrow(),
@@ -834,7 +849,7 @@ private fun exportFrameworkControlFixture(
                 SkirDataValueCodec
                     .encode(
                         DataValue.Named(
-                            TypeUse.Named(inspectorMessageFixtureType),
+                            inspectorMessageFixtureType.namedUse(),
                             DataValue.Record(
                                 mapOf(
                                     "name" to DataValue.StringValue("Welcome"),
@@ -905,11 +920,7 @@ private fun exportFrameworkControlFixture(
 }
 
 private val entryGraphFixtureType =
-    com.typewritermc.types.TypeDefinitionId(
-        com.typewritermc.types.TypeId
-            .Qualified("fixture", "MessageEntry"),
-        1,
-    )
+    TypeDefinitionId.qualified("fixture", "MessageEntry")
 
 private interface CompiledInspectorFamily : Element {
     override val placement: GraphPlacement
@@ -917,55 +928,50 @@ private interface CompiledInspectorFamily : Element {
 }
 
 private val inspectorFamilyFixtureType =
-    TypeDefinitionId(
-        TypeId
-            .Qualified("fixture", "InspectorFamily"),
-        1,
-    )
+    TypeDefinitionId.qualified("fixture", "InspectorFamily")
 private val inspectorMessageFixtureType =
-    TypeDefinitionId(
-        TypeId
-            .Qualified("fixture", "InspectorMessage"),
-        1,
-    )
+    TypeDefinitionId.qualified("fixture", "InspectorMessage")
 
 private fun inheritedInspectorDeclarations(): List<OwnedTypeDeclaration> {
     val family =
-        TypeDefinition(
-            inspectorFamilyFixtureType,
+        TypeDefinition.partial(
+            id = inspectorFamilyFixtureType,
             representation =
-                RepresentationTemplate.Record(
-                    listOf(
-                        FieldDeclaration(
-                            FieldOwner(inspectorFamilyFixtureType, "placement"),
-                            TypeTemplate.Named(GraphPlacementDefinition.id),
-                            overrides =
-                                listOf(
-                                    FieldOwner(ElementDefinition.id, "placement"),
-                                ),
+                RepresentationTemplate.createRecord(
+                    fields =
+                        listOf(
+                            FieldDeclaration.partial(
+                                owner = FieldOwner(definition = inspectorFamilyFixtureType, name = "placement"),
+                                type = GraphPlacementDefinition.id.template(),
+                                overrides =
+                                    listOf(
+                                        FieldOwner(definition = ElementDefinition.id, name = "placement"),
+                                    ),
+                            ),
+                            FieldDeclaration.partial(
+                                owner = FieldOwner(definition = inspectorFamilyFixtureType, name = "notes"),
+                                type = ScalarKind.TEXT.template,
+                            ),
                         ),
-                        FieldDeclaration(
-                            FieldOwner(inspectorFamilyFixtureType, "notes"),
-                            TypeTemplate.Scalar(ScalarKind.Text),
-                        ),
-                    ),
-                    abstract = true,
+                    abstract_ = true,
                 ),
-            parents = listOf(TypeTemplate.Named(ElementDefinition.id)),
+            parents = listOf(ElementDefinition.id.namedTemplate()),
         )
     val message =
-        TypeDefinition(
-            inspectorMessageFixtureType,
+        TypeDefinition.partial(
+            id = inspectorMessageFixtureType,
             representation =
-                RepresentationTemplate.Record(
-                    listOf("message", "other").map { name ->
-                        FieldDeclaration(
-                            FieldOwner(inspectorMessageFixtureType, name),
-                            TypeTemplate.Scalar(ScalarKind.Text),
-                        )
-                    },
+                RepresentationTemplate.createRecord(
+                    fields =
+                        listOf("message", "other").map { name ->
+                            FieldDeclaration.partial(
+                                owner = FieldOwner(definition = inspectorMessageFixtureType, name = name),
+                                type = ScalarKind.TEXT.template,
+                            )
+                        },
+                    abstract_ = false,
                 ),
-            parents = listOf(TypeTemplate.Named(inspectorFamilyFixtureType)),
+            parents = listOf(inspectorFamilyFixtureType.namedTemplate()),
         )
     return listOf(
         OwnedTypeDeclaration(
@@ -994,7 +1000,7 @@ private fun inheritedInspectorPresentations(runtime: PresentationRuntime): List<
                 owner = owner.owner,
                 target =
                     PresentationTarget
-                        .Named(TypeTemplate.Named(target)),
+                        .Named(target.namedTemplate()),
                 roles = setOf(PresentationRole.INSPECTOR),
                 priority = 0,
             ),

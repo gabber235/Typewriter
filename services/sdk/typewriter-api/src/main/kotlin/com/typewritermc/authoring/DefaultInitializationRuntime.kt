@@ -1,16 +1,21 @@
 package com.typewritermc.authoring
 
-import com.typewritermc.types.CollectionKind
 import com.typewritermc.types.DataValue
-import com.typewritermc.types.FieldOwner
 import com.typewritermc.types.NativeBindingRegistry
-import com.typewritermc.types.ScalarKind
-import com.typewritermc.types.TypeDefinitionId
-import com.typewritermc.types.TypeUse
 import com.typewritermc.types.catalog.CheckedCatalog
 import com.typewritermc.types.catalog.CheckedType
 import com.typewritermc.types.catalog.Resolution
-import com.typewritermc.types.catalog.ResolvedRepresentation
+import com.typewritermc.types.namedUse
+import com.typewritermc.types.unknownVariant
+import com.typewritermc.types.use
+import skirout.editor.v1.type_catalog.CollectionKind
+import skirout.editor.v1.type_catalog.FieldOwner
+import skirout.editor.v1.type_catalog.NamedTypeUse
+import skirout.editor.v1.type_catalog.ResolvedField
+import skirout.editor.v1.type_catalog.ResolvedRepresentation
+import skirout.editor.v1.type_catalog.ScalarKind
+import skirout.editor.v1.type_catalog.TypeDefinitionId
+import skirout.editor.v1.type_catalog.TypeUse
 import java.math.BigInteger
 
 /**
@@ -65,7 +70,7 @@ class DefaultInitializationRuntime(
         val expected =
             when (val target = request.target) {
                 is PreparationTarget.Value -> target.type
-                is PreparationTarget.Record -> target.selection.completeUse()
+                is PreparationTarget.Record -> target.selection.completeUse()?.use
             }
         val failed =
             context.unavailable || expected == null || !admissibleInput(expected, prepared.content.portableValue()) ||
@@ -128,52 +133,57 @@ class DefaultInitializationRuntime(
     ): Boolean {
         if (depth > MAX_DEFAULT_DEPTH) return false
         if (value == DataValue.Unfilled) return true
-        if (expected is TypeUse.Nullable) {
+        if (expected is TypeUse.NullableWrapper) {
             if (value == DataValue.Null) return true
-            return admissibleInput(expected.value, value, depth + 1)
+            return admissibleInput(expected.value.value, value, depth + 1)
         }
-        val actual = (value as? DataValue.Named)?.actualType ?: expected
+        val actual = (value as? DataValue.Named)?.actualType?.use ?: expected
         if (!catalog.isReadableAs(actual, expected)) return false
         val checked = (catalog.resolve(actual) as? Resolution.Ready)?.value ?: return false
         val payload = (value as? DataValue.Named)?.payload ?: value
         if (payload == DataValue.Unfilled) return true
         return when (val representation = checked.schema.representation) {
-            is ResolvedRepresentation.Record -> {
+            is ResolvedRepresentation.RecordWrapper -> {
                 val record = payload as? DataValue.Record ?: return false
-                if (representation.abstract) return false
+                if (representation.value.abstract_) return false
                 record.fields.all { (key, fieldValue) ->
-                    val field = representation.fields.singleOrNull { it.key == key }
+                    val field = representation.value.fields.singleOrNull { it.key == key }
                     field != null && admissibleInput(field.type, fieldValue, depth + 1)
                 }
             }
 
-            is ResolvedRepresentation.Sequence -> {
+            is ResolvedRepresentation.SequenceWrapper -> {
                 val items =
-                    when (representation.kind) {
-                        CollectionKind.List -> (payload as? DataValue.ListValue)?.items
-                        CollectionKind.Set -> (payload as? DataValue.SetValue)?.items
+                    when (representation.value.kind) {
+                        CollectionKind.LIST -> (payload as? DataValue.ListValue)?.items
+                        CollectionKind.SET -> (payload as? DataValue.SetValue)?.items
+                        else -> unknownVariant(representation.value.kind)
                     } ?: return false
                 items.map { it.id }.toSet().size == items.size &&
-                    items.all { admissibleInput(representation.item, it.value, depth + 1) }
+                    items.all { admissibleInput(representation.value.item, it.value, depth + 1) }
             }
 
-            is ResolvedRepresentation.Mapping -> {
+            is ResolvedRepresentation.MappingWrapper -> {
                 val rows = (payload as? DataValue.MapValue)?.rows ?: return false
                 rows.map { it.id }.toSet().size == rows.size &&
                     rows.all {
-                        admissibleInput(representation.key, it.key, depth + 1) &&
-                            admissibleInput(representation.value, it.value, depth + 1)
+                        admissibleInput(representation.value.key, it.key, depth + 1) &&
+                            admissibleInput(representation.value.value, it.value, depth + 1)
                     }
             }
 
-            is ResolvedRepresentation.Scalar,
-            is ResolvedRepresentation.Enumeration,
-            is ResolvedRepresentation.Link,
+            is ResolvedRepresentation.ScalarWrapper,
+            is ResolvedRepresentation.EnumerationWrapper,
+            is ResolvedRepresentation.LinkWrapper,
             -> {
                 when (completeSample(expected, value)) {
                     is CompletenessResult.Complete, is CompletenessResult.Unfinished -> true
                     is CompletenessResult.Invalid, null -> false
                 }
+            }
+
+            else -> {
+                unknownVariant(representation)
             }
         }
     }
@@ -205,50 +215,54 @@ class DefaultInitializationRuntime(
         ) {
             visit(path, type, value, owner)
             if (value == DataValue.Unfilled || value == DataValue.Null) return
-            val actual = (value as? DataValue.Named)?.actualType ?: type
+            val actual = (value as? DataValue.Named)?.actualType?.use ?: type
             val checked = (catalog.resolve(actual) as? Resolution.Ready)?.value ?: return
             val payload = (value as? DataValue.Named)?.payload ?: value
             when (val representation = checked.schema.representation) {
-                is ResolvedRepresentation.Record -> {
+                is ResolvedRepresentation.RecordWrapper -> {
                     val record = payload as? DataValue.Record ?: return
-                    val definition = (actual as? TypeUse.Named)?.definition ?: return
-                    representation.fields.forEach { field ->
+                    val definition = (actual as? TypeUse.NamedWrapper)?.value?.definition ?: return
+                    representation.value.fields.forEach { field ->
                         walk(
                             field.type,
                             record.fields[field.key] ?: DataValue.Unfilled,
                             path.field(field.key),
-                            definition to FieldOwner(field.declarationOwner, field.key),
+                            definition to FieldOwner(definition = field.declarationOwner, name = field.key),
                         )
                     }
                 }
 
-                is ResolvedRepresentation.Sequence -> {
+                is ResolvedRepresentation.SequenceWrapper -> {
                     val items =
                         when (payload) {
                             is DataValue.ListValue -> payload.items
                             is DataValue.SetValue -> payload.items
                             else -> return
                         }
-                    items.forEach { walk(representation.item, it.value, path.item(it.id)) }
+                    items.forEach { walk(representation.value.item, it.value, path.item(it.id)) }
                 }
 
-                is ResolvedRepresentation.Mapping -> {
+                is ResolvedRepresentation.MappingWrapper -> {
                     (payload as? DataValue.MapValue)?.rows?.forEach {
-                        walk(representation.key, it.key, path.item(it.id).append(PathSegment.MapKey))
-                        walk(representation.value, it.value, path.item(it.id).append(PathSegment.MapValue))
+                        walk(representation.value.key, it.key, path.item(it.id).append(PathSegment.MapKey))
+                        walk(representation.value.value, it.value, path.item(it.id).append(PathSegment.MapValue))
                     }
                 }
 
-                is ResolvedRepresentation.Scalar,
-                is ResolvedRepresentation.Enumeration,
-                is ResolvedRepresentation.Link,
+                is ResolvedRepresentation.ScalarWrapper,
+                is ResolvedRepresentation.EnumerationWrapper,
+                is ResolvedRepresentation.LinkWrapper,
                 -> {}
+
+                else -> {
+                    unknownVariant(representation)
+                }
             }
         }
         val type =
             when (target) {
                 is PreparationTarget.Value -> target.type
-                is PreparationTarget.Record -> target.selection.completeUse()
+                is PreparationTarget.Record -> target.selection.completeUse()?.use
             } ?: return
         walk(type, content.portableValue(), ValuePath())
     }
@@ -261,12 +275,12 @@ class DefaultInitializationRuntime(
         path: ValuePath,
     ): DataValue {
         if (value == DataValue.Unfilled || value == DataValue.Null) return value
-        val actual = (value as? DataValue.Named)?.actualType ?: type
+        val actual = (value as? DataValue.Named)?.actualType?.use ?: type
         val checked = (catalog.resolve(actual) as? Resolution.Ready)?.value ?: return value
         val payload = (value as? DataValue.Named)?.payload ?: value
         val resumed =
             when (val representation = checked.schema.representation) {
-                is ResolvedRepresentation.Record -> {
+                is ResolvedRepresentation.RecordWrapper -> {
                     val record = payload as? DataValue.Record ?: return value
                     if (record.fields.keys.any { key -> checked.schema.fields.none { it.key == key } }) {
                         findings += InitializationDiagnostic(null, "unknown_field", "The continuation contains an undeclared field.", path)
@@ -277,13 +291,15 @@ class DefaultInitializationRuntime(
                     DataValue.Record(prepared.fields)
                 }
 
-                is ResolvedRepresentation.Sequence -> {
+                is ResolvedRepresentation.SequenceWrapper -> {
                     when (payload) {
                         is DataValue.ListValue -> {
                             payload.copy(
                                 items =
                                     payload.items.map {
-                                        it.copy(value = resumeValue(representation.item, it.value, context, findings, path.item(it.id)))
+                                        it.copy(
+                                            value = resumeValue(representation.value.item, it.value, context, findings, path.item(it.id)),
+                                        )
                                     },
                             )
                         }
@@ -292,7 +308,9 @@ class DefaultInitializationRuntime(
                             payload.copy(
                                 items =
                                     payload.items.map {
-                                        it.copy(value = resumeValue(representation.item, it.value, context, findings, path.item(it.id)))
+                                        it.copy(
+                                            value = resumeValue(representation.value.item, it.value, context, findings, path.item(it.id)),
+                                        )
                                     },
                             )
                         }
@@ -303,7 +321,7 @@ class DefaultInitializationRuntime(
                     }
                 }
 
-                is ResolvedRepresentation.Mapping -> {
+                is ResolvedRepresentation.MappingWrapper -> {
                     when (payload) {
                         is DataValue.MapValue -> {
                             payload.copy(
@@ -312,7 +330,7 @@ class DefaultInitializationRuntime(
                                         row.copy(
                                             key =
                                                 resumeValue(
-                                                    representation.key,
+                                                    representation.value.key,
                                                     row.key,
                                                     context,
                                                     findings,
@@ -320,7 +338,7 @@ class DefaultInitializationRuntime(
                                                 ),
                                             value =
                                                 resumeValue(
-                                                    representation.value,
+                                                    representation.value.value,
                                                     row.value,
                                                     context,
                                                     findings,
@@ -337,11 +355,15 @@ class DefaultInitializationRuntime(
                     }
                 }
 
-                is ResolvedRepresentation.Scalar,
-                is ResolvedRepresentation.Enumeration,
-                is ResolvedRepresentation.Link,
+                is ResolvedRepresentation.ScalarWrapper,
+                is ResolvedRepresentation.EnumerationWrapper,
+                is ResolvedRepresentation.LinkWrapper,
                 -> {
                     payload
+                }
+
+                else -> {
+                    unknownVariant(representation)
                 }
             }
         return if (value is DataValue.Named) DataValue.Named(value.actualType, resumed) else resumed
@@ -389,7 +411,7 @@ class DefaultInitializationRuntime(
             selection.completeUse()
                 ?: return unavailable(request, "incomplete_type_selection", "Initialization requires every type argument to be selected.")
         val checked =
-            when (val resolution = catalog.resolve(use)) {
+            when (val resolution = catalog.resolve(use.use)) {
                 is Resolution.Invalid -> {
                     return unavailable(request, "invalid_type_selection", resolution.diagnostics.joinToString { it.code })
                 }
@@ -401,7 +423,7 @@ class DefaultInitializationRuntime(
         rejectUnknownFields(
             request,
             suppliedFields,
-            checked.schema.fields.mapTo(linkedSetOf(), com.typewritermc.types.catalog.ResolvedField::key),
+            checked.schema.fields.mapTo(linkedSetOf(), ResolvedField::key),
         )?.let { return it }
         context.unavailable = false
         val prepared = prepareRecordFields(checked, suppliedFields, context, ValuePath())
@@ -425,10 +447,10 @@ class DefaultInitializationRuntime(
         val omitted =
             checked.schema.fields.filter { field ->
                 (field.key !in suppliedFields || path.field(field.key) in context.pending) &&
-                    FieldOwner(field.declarationOwner, field.key) in defaulted
+                    FieldOwner(definition = field.declarationOwner, name = field.key) in defaulted
             }
         checked.schema.fields.forEach { field ->
-            val owner = FieldOwner(field.declarationOwner, field.key)
+            val owner = FieldOwner(definition = field.declarationOwner, name = field.key)
             if (field in omitted) return@forEach
             val fieldFindings = mutableListOf<InitializationDiagnostic>()
             val value =
@@ -503,7 +525,7 @@ class DefaultInitializationRuntime(
         findings += (capture as? CaptureResult.Unavailable)?.reasons.orEmpty().map { it.atOwnField() }
         val captured = (capture as? CaptureResult.Captured)?.values.orEmpty()
         omitted.forEach { field ->
-            val owner = FieldOwner(field.declarationOwner, field.key)
+            val owner = FieldOwner(definition = field.declarationOwner, name = field.key)
             fields[field.key] = captured[owner] ?: DataValue.Unfilled
             if (owner !in captured) context.deferred += path.field(field.key)
         }
@@ -526,7 +548,7 @@ class DefaultInitializationRuntime(
                     resolution.value
                 }
             }
-        val knownKeys = partial.knownFields.mapTo(linkedSetOf(), com.typewritermc.types.catalog.ResolvedField::key)
+        val knownKeys = partial.knownFields.mapTo(linkedSetOf(), ResolvedField::key)
         val dependentKeys = partial.dependentFields.mapTo(linkedSetOf()) { it.owner.name }
         rejectUnknownFields(request, supplied, knownKeys + dependentKeys)?.let { return it }
         supplied.keys.firstOrNull { it in dependentKeys }?.let { dependent ->
@@ -544,7 +566,7 @@ class DefaultInitializationRuntime(
         val findings = mutableListOf<InitializationDiagnostic>()
         val fields = linkedMapOf<String, DataValue>()
         partial.knownFields.forEach { field ->
-            val owner = FieldOwner(field.declarationOwner, field.key)
+            val owner = FieldOwner(definition = field.declarationOwner, name = field.key)
             val fieldFindings = mutableListOf<InitializationDiagnostic>()
             fields[field.key] =
                 supplied[field.key]
@@ -645,9 +667,10 @@ class DefaultInitializationRuntime(
         }
         return try {
             when (use) {
-                is TypeUse.Nullable -> DataValue.Null
-                is TypeUse.Scalar -> use.kind.authoredDefault()
-                is TypeUse.Named -> namedDefault(use, context, findings, path)
+                is TypeUse.NullableWrapper -> DataValue.Null
+                is TypeUse.ScalarWrapper -> use.value.authoredDefault()
+                is TypeUse.NamedWrapper -> namedDefault(use.value, context, findings, path)
+                else -> unknownVariant(use)
             }
         } finally {
             context.exit()
@@ -655,13 +678,13 @@ class DefaultInitializationRuntime(
     }
 
     private fun namedDefault(
-        use: TypeUse.Named,
+        use: NamedTypeUse,
         context: DefaultInitializationContext,
         findings: MutableList<InitializationDiagnostic>,
         path: ValuePath,
     ): DataValue {
         val checked =
-            when (val resolution = catalog.resolve(use)) {
+            when (val resolution = catalog.resolve(use.use)) {
                 is Resolution.Invalid -> {
                     context.unavailable = true
                     return DataValue.Unfilled
@@ -673,34 +696,41 @@ class DefaultInitializationRuntime(
             }
         val payload =
             when (val representation = checked.schema.representation) {
-                is ResolvedRepresentation.Scalar -> {
-                    representation.kind.authoredDefault()
+                is ResolvedRepresentation.ScalarWrapper -> {
+                    representation.value.kind.authoredDefault()
                 }
 
-                is ResolvedRepresentation.Sequence -> {
-                    when (representation.kind) {
-                        CollectionKind.List -> DataValue.ListValue(emptyList())
-                        CollectionKind.Set -> DataValue.SetValue(emptyList())
+                is ResolvedRepresentation.SequenceWrapper -> {
+                    when (representation.value.kind) {
+                        CollectionKind.LIST -> DataValue.ListValue(emptyList())
+                        CollectionKind.SET -> DataValue.SetValue(emptyList())
+                        else -> unknownVariant(representation.value.kind)
                     }
                 }
 
-                is ResolvedRepresentation.Mapping -> {
+                is ResolvedRepresentation.MappingWrapper -> {
                     DataValue.MapValue(emptyList())
                 }
 
-                is ResolvedRepresentation.Enumeration -> {
-                    representation.cases.firstOrNull()?.let { DataValue.EnumCase(it.key) } ?: DataValue.Unfilled
+                is ResolvedRepresentation.EnumerationWrapper -> {
+                    representation.value.cases
+                        .firstOrNull()
+                        ?.let { DataValue.EnumCase(it.key) } ?: DataValue.Unfilled
                 }
 
-                is ResolvedRepresentation.Link -> {
+                is ResolvedRepresentation.LinkWrapper -> {
                     DataValue.Unfilled
                 }
 
-                is ResolvedRepresentation.Record -> {
-                    if (representation.abstract) return DataValue.Unfilled
+                is ResolvedRepresentation.RecordWrapper -> {
+                    if (representation.value.abstract_) return DataValue.Unfilled
                     val prepared = prepareRecordFields(checked, emptyMap(), context, path)
                     findings += prepared.findings
                     DataValue.Record(prepared.fields)
+                }
+
+                else -> {
+                    unknownVariant(representation)
                 }
             }
         return if (payload == DataValue.Unfilled) payload else DataValue.Named(use, payload)
@@ -721,9 +751,9 @@ class DefaultInitializationRuntime(
         value: DataValue,
     ): CompletenessResult? {
         val named = value as? DataValue.Named
-        if (named != null && named.actualType != expected) {
-            if (!catalog.isReadableAs(named.actualType, expected)) return null
-            val actual = resolveNamed(named.actualType) ?: return null
+        if (named != null && named.actualType.use != expected) {
+            if (!catalog.isReadableAs(named.actualType.use, expected)) return null
+            val actual = resolveNamed(named.actualType.use) ?: return null
             return actual.complete(value)
         }
         val checked =
@@ -737,9 +767,10 @@ class DefaultInitializationRuntime(
     private fun resolveNamed(use: TypeUse): CheckedType? {
         val named =
             when (use) {
-                is TypeUse.Named -> use
-                is TypeUse.Nullable -> use.value as? TypeUse.Named
-                is TypeUse.Scalar -> null
+                is TypeUse.NamedWrapper -> use
+                is TypeUse.NullableWrapper -> use.value.value as? TypeUse.NamedWrapper
+                is TypeUse.ScalarWrapper -> null
+                else -> unknownVariant(use)
             } ?: return null
         return when (val resolution = catalog.resolve(named)) {
             is Resolution.Invalid -> null
@@ -770,8 +801,8 @@ private class DefaultInitializationContext(
     fun enter(use: TypeUse): DefaultEntry {
         if (stack.size >= MAX_DEFAULT_DEPTH) return DefaultEntry.DepthLimit
         if (use in stack) return DefaultEntry.Recursive
-        if (use is TypeUse.Named) {
-            val previous = stack.filterIsInstance<TypeUse.Named>().lastOrNull { it.definition == use.definition }
+        if (use is TypeUse.NamedWrapper) {
+            val previous = stack.filterIsInstance<TypeUse.NamedWrapper>().lastOrNull { it.value.definition == use.value.definition }
             if (previous != null && !previous.strictlyContains(use)) return DefaultEntry.Recursive
         }
         stack += use
@@ -786,16 +817,18 @@ private class DefaultInitializationContext(
 private fun TypeUse.strictlyContains(candidate: TypeUse): Boolean {
     val pending = ArrayDeque<TypeUse>()
     when (this) {
-        is TypeUse.Named -> pending.addAll(arguments)
-        is TypeUse.Nullable -> pending += value
-        is TypeUse.Scalar -> Unit
+        is TypeUse.NamedWrapper -> pending.addAll(value.arguments)
+        is TypeUse.NullableWrapper -> pending += value.value
+        is TypeUse.ScalarWrapper -> Unit
+        else -> unknownVariant(this)
     }
     while (pending.isNotEmpty()) {
         when (val current = pending.removeFirst()) {
             candidate -> return true
-            is TypeUse.Named -> pending.addAll(current.arguments)
-            is TypeUse.Nullable -> pending += current.value
-            is TypeUse.Scalar -> Unit
+            is TypeUse.NamedWrapper -> pending.addAll(current.value.arguments)
+            is TypeUse.NullableWrapper -> pending += current.value.value
+            is TypeUse.ScalarWrapper -> Unit
+            else -> unknownVariant(current)
         }
     }
     return false
@@ -805,18 +838,19 @@ private const val MAX_DEFAULT_DEPTH = 512
 
 fun ScalarKind.authoredDefault(): DataValue =
     when (this) {
-        ScalarKind.Unit -> DataValue.Unit
-        ScalarKind.Boolean -> DataValue.Boolean(false)
-        ScalarKind.Text -> DataValue.StringValue("")
-        ScalarKind.Bytes -> DataValue.Bytes(byteArrayOf())
-        is ScalarKind.Integer -> DataValue.Integer(BigInteger.ZERO)
-        is ScalarKind.Float -> DataValue.Float(0.0)
-        ScalarKind.Decimal -> DataValue.Decimal("0")
-        ScalarKind.Duration -> DataValue.Duration(kotlin.time.Duration.ZERO)
-        ScalarKind.Timestamp -> DataValue.Unfilled
+        ScalarKind.UNIT -> DataValue.Unit
+        ScalarKind.BOOLEAN -> DataValue.Boolean(false)
+        ScalarKind.TEXT -> DataValue.StringValue("")
+        ScalarKind.BYTES -> DataValue.Bytes(byteArrayOf())
+        is ScalarKind.IntegerWrapper -> DataValue.Integer(BigInteger.ZERO)
+        is ScalarKind.FloatWrapper -> DataValue.Float(0.0)
+        ScalarKind.DECIMAL -> DataValue.Decimal("0")
+        ScalarKind.DURATION -> DataValue.Duration(kotlin.time.Duration.ZERO)
+        ScalarKind.TIMESTAMP -> DataValue.Unfilled
+        else -> unknownVariant(this)
     }
 
-private fun TypeSelection.completeUse(): TypeUse.Named? =
+private fun TypeSelection.completeUse(): NamedTypeUse? =
     when (this) {
         is TypeSelection.Complete -> {
             use
@@ -824,7 +858,7 @@ private fun TypeSelection.completeUse(): TypeUse.Named? =
 
         is TypeSelection.Pending -> {
             val chosen = arguments.map { (it as? ArgumentSelection.Chosen)?.type ?: return null }
-            TypeUse.Named(definition, chosen)
+            definition.namedUse(chosen)
         }
     }
 

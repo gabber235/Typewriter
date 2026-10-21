@@ -6,9 +6,9 @@ import com.typewritermc.authoring.defaultLabel
 import com.typewritermc.expression.orIfBlank
 import com.typewritermc.types.Resource
 import com.typewritermc.types.ResourceTarget
-import com.typewritermc.types.TypeTemplate
 import com.typewritermc.types.TypewriterRecordContract
 import com.typewritermc.types.TypewriterType
+import com.typewritermc.types.namedTemplate
 
 /** What every box shares, whatever it holds. */
 @TypewriterRecordContract
@@ -28,5 +28,5 @@ object LabeledNaming : LabeledDisplay {
 }
 
 fun main(args: Array<String>) {
-    check(LabeledNaming_LabeledDisplayProvider().target == ResourceTarget.Type(TypeTemplate.Named(LabeledDefinition.id, emptyList())))
+    check(LabeledNaming_LabeledDisplayProvider().target == ResourceTarget.Type(LabeledDefinition.id.namedTemplate(emptyList())))
 }

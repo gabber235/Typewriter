@@ -27,9 +27,6 @@ import com.typewritermc.configuration.OwnedRule
 import com.typewritermc.configuration.RelativeFieldPattern
 import com.typewritermc.configuration.RepresentationKind
 import com.typewritermc.configuration.RuleDescriptor
-import com.typewritermc.configuration.RuleId
-import com.typewritermc.configuration.RuleOrigin
-import com.typewritermc.discovery.ContributionKey
 import com.typewritermc.discovery.OwnedCheck
 import com.typewritermc.discovery.OwnedConfiguration
 import com.typewritermc.discovery.OwnedNativeBinding
@@ -37,6 +34,7 @@ import com.typewritermc.discovery.OwnedPresentation
 import com.typewritermc.discovery.OwnedProviderRegistry
 import com.typewritermc.discovery.ProviderLease
 import com.typewritermc.discovery.ProviderOrigin
+import com.typewritermc.discovery.contributionKey
 import com.typewritermc.expression.ExpressionBindingId
 import com.typewritermc.imprint.ArtifactId
 import com.typewritermc.imprint.ContributionName
@@ -48,27 +46,18 @@ import com.typewritermc.realm.authoring.InMemoryAuthoringViewStore
 import com.typewritermc.realm.compiler.AuthoringAcceptance
 import com.typewritermc.realm.compiler.CapturedAssessment
 import com.typewritermc.realm.repository.conflicts
-import com.typewritermc.types.CollectionKind
 import com.typewritermc.types.DataValue
-import com.typewritermc.types.DeclarationOwner
-import com.typewritermc.types.FieldDeclaration
-import com.typewritermc.types.FieldOwner
 import com.typewritermc.types.GeneratedNativeField
 import com.typewritermc.types.GeneratedRecordNativeBinding
 import com.typewritermc.types.ListItem
 import com.typewritermc.types.MapRow
 import com.typewritermc.types.NativeBinding
 import com.typewritermc.types.NativeBindingFactory
-import com.typewritermc.types.ParameterKey
-import com.typewritermc.types.RepresentationTemplate
 import com.typewritermc.types.ResourceId
-import com.typewritermc.types.ScalarKind
-import com.typewritermc.types.TypeDefinition
-import com.typewritermc.types.TypeDefinitionId
-import com.typewritermc.types.TypeId
-import com.typewritermc.types.TypeParameter
-import com.typewritermc.types.TypeTemplate
-import com.typewritermc.types.TypeUse
+import com.typewritermc.types.namedUse
+import com.typewritermc.types.qualified
+import com.typewritermc.types.template
+import com.typewritermc.types.use
 import de.infix.testBalloon.framework.core.testSuite
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.matchers.shouldBe
@@ -79,6 +68,18 @@ import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runTest
 import skirout.editor.v1.expression.ExpressionNode
+import skirout.editor.v1.type_catalog.CollectionKind
+import skirout.editor.v1.type_catalog.DeclarationOwner
+import skirout.editor.v1.type_catalog.FieldDeclaration
+import skirout.editor.v1.type_catalog.FieldOwner
+import skirout.editor.v1.type_catalog.ParameterKey
+import skirout.editor.v1.type_catalog.RepresentationTemplate
+import skirout.editor.v1.type_catalog.RuleId
+import skirout.editor.v1.type_catalog.RuleOrigin
+import skirout.editor.v1.type_catalog.ScalarKind
+import skirout.editor.v1.type_catalog.TypeDefinition
+import skirout.editor.v1.type_catalog.TypeDefinitionId
+import skirout.editor.v1.type_catalog.TypeParameter
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.Executors
@@ -123,8 +124,8 @@ val RealmCheckRuntimeTest by testSuite {
             }
         val owned =
             listOf(
-                OwnedCheck(PROVIDER_ORIGIN, RuleOrigin(TEST_TYPE, 8), provider),
-                OwnedCheck(PROVIDER_ORIGIN, RuleOrigin(TEST_TYPE, 9), provider),
+                OwnedCheck(PROVIDER_ORIGIN, RuleOrigin(owner = TEST_TYPE, ordinal = 8), provider),
+                OwnedCheck(PROVIDER_ORIGIN, RuleOrigin(owner = TEST_TYPE, ordinal = 9), provider),
             )
         val providers = TestCheckProviders(owned, failOnRetain = 2)
         val catalog = TestCatalogLease(providers = providers)
@@ -152,7 +153,7 @@ val RealmCheckRuntimeTest by testSuite {
                     realm { }
                 }
             }
-        val providers = TestCheckProviders(listOf(OwnedCheck(PROVIDER_ORIGIN, RuleOrigin(TEST_TYPE, 10), provider)))
+        val providers = TestCheckProviders(listOf(OwnedCheck(PROVIDER_ORIGIN, RuleOrigin(owner = TEST_TYPE, ordinal = 10), provider)))
         val catalog = TestCatalogLease(providers = providers)
         val base =
             InMemoryAuthoringViewStore(
@@ -196,7 +197,7 @@ val RealmCheckRuntimeTest by testSuite {
                         }
                     }
                 }
-            val providers = TestCheckProviders(listOf(OwnedCheck(PROVIDER_ORIGIN, RuleOrigin(TEST_TYPE, 5), provider)))
+            val providers = TestCheckProviders(listOf(OwnedCheck(PROVIDER_ORIGIN, RuleOrigin(owner = TEST_TYPE, ordinal = 5), provider)))
             val catalog = TestCatalogLease(providers = providers)
             val first = ResourceId("first")
             val initial = record(name = "bad")
@@ -276,7 +277,7 @@ val RealmCheckRuntimeTest by testSuite {
                     }
                 }
             }
-        val providers = TestCheckProviders(listOf(OwnedCheck(PROVIDER_ORIGIN, RuleOrigin(TEST_TYPE, 6), provider)))
+        val providers = TestCheckProviders(listOf(OwnedCheck(PROVIDER_ORIGIN, RuleOrigin(owner = TEST_TYPE, ordinal = 6), provider)))
         val catalog = TestCatalogLease(providers = providers)
         val store =
             InMemoryAuthoringViewStore(
@@ -324,7 +325,7 @@ val RealmCheckRuntimeTest by testSuite {
                         }
                     }
                 }
-            val providers = TestCheckProviders(listOf(OwnedCheck(PROVIDER_ORIGIN, RuleOrigin(TEST_TYPE, 11), provider)))
+            val providers = TestCheckProviders(listOf(OwnedCheck(PROVIDER_ORIGIN, RuleOrigin(owner = TEST_TYPE, ordinal = 11), provider)))
             val catalog = TestCatalogLease(providers = providers)
             val authored = record(name = "valid")
             val store =
@@ -357,11 +358,11 @@ val RealmCheckRuntimeTest by testSuite {
 
     test("portableConfigurationRuleRunsForCurrentAndCapturedChecks") {
         runTest {
-            val origin = RuleOrigin(TEST_TYPE, 20)
+            val origin = RuleOrigin(owner = TEST_TYPE, ordinal = 20)
             val path = RelativeFieldPattern(listOf(FieldPatternSegment.Field("name")))
             val rule =
                 OwnedRule(
-                    id = RuleId(origin, 0),
+                    id = RuleId(origin = origin, localIndex = 0),
                     descriptor =
                         RuleDescriptor(
                             ExpressionNode.createRuleUnary(
@@ -392,7 +393,7 @@ val RealmCheckRuntimeTest by testSuite {
             runtime.drain()
 
             val current = runtime.findings().single()
-            current.ticket.instance.rule shouldBe RuleId(origin, 0)
+            current.ticket.instance.rule shouldBe RuleId(origin = origin, localIndex = 0)
             current.ticket.instance.location shouldBe location(resource, "name")
             current.findings.map { it.code } shouldBe listOf("name_empty")
 
@@ -421,7 +422,7 @@ val RealmCheckRuntimeTest by testSuite {
                         }
                     }
                 }
-            val providers = TestCheckProviders(listOf(OwnedCheck(PROVIDER_ORIGIN, RuleOrigin(TEST_TYPE, 21), provider)))
+            val providers = TestCheckProviders(listOf(OwnedCheck(PROVIDER_ORIGIN, RuleOrigin(owner = TEST_TYPE, ordinal = 21), provider)))
             val catalog = TestCatalogLease(providers = providers, nativeBindingFactories = listOf(TestResourceNativeBindingFactory))
             val authored = record(name = "ready")
             val store =
@@ -473,7 +474,7 @@ val RealmCheckRuntimeTest by testSuite {
                 )
             val authored =
                 AuthoringRecord(
-                    TypeSelection.Complete(TypeUse.Named(TEST_TYPE)),
+                    TypeSelection.Complete(TEST_TYPE.namedUse()),
                     mapOf(
                         "values" to
                             DataValue.Named(
@@ -573,11 +574,11 @@ val RealmCheckRuntimeTest by testSuite {
 
     test("boundedSubjectDiscoveryPublishesFailureAndBlocksCapturedCoverageWithoutDroppingPartialSubjects") {
         runTest {
-            val origin = RuleOrigin(TEST_TYPE, 22)
+            val origin = RuleOrigin(owner = TEST_TYPE, ordinal = 22)
             val path = RelativeFieldPattern(listOf(FieldPatternSegment.Field("name")))
             val rule =
                 OwnedRule(
-                    id = RuleId(origin, 0),
+                    id = RuleId(origin = origin, localIndex = 0),
                     descriptor =
                         RuleDescriptor(
                             ExpressionNode.createRuleUnary(
@@ -650,7 +651,7 @@ val RealmCheckRuntimeTest by testSuite {
                     }
                 }
             }
-        val providers = TestCheckProviders(listOf(OwnedCheck(PROVIDER_ORIGIN, RuleOrigin(TEST_TYPE, 12), provider)))
+        val providers = TestCheckProviders(listOf(OwnedCheck(PROVIDER_ORIGIN, RuleOrigin(owner = TEST_TYPE, ordinal = 12), provider)))
         val catalog = TestCatalogLease(providers = providers)
         val authored = record(name = "valid")
         val store =
@@ -713,7 +714,7 @@ val RealmCheckRuntimeTest by testSuite {
                     }
                 }
             }
-        val providers = TestCheckProviders(listOf(OwnedCheck(PROVIDER_ORIGIN, RuleOrigin(TEST_TYPE, 13), provider)))
+        val providers = TestCheckProviders(listOf(OwnedCheck(PROVIDER_ORIGIN, RuleOrigin(owner = TEST_TYPE, ordinal = 13), provider)))
         val catalog = TestCatalogLease(providers = providers)
         val initial = record(name = "first")
         val store =
@@ -774,7 +775,7 @@ val RealmCheckRuntimeTest by testSuite {
                     }
                 }
             }
-        val providers = TestCheckProviders(listOf(OwnedCheck(PROVIDER_ORIGIN, RuleOrigin(TEST_TYPE, 7), provider)))
+        val providers = TestCheckProviders(listOf(OwnedCheck(PROVIDER_ORIGIN, RuleOrigin(owner = TEST_TYPE, ordinal = 7), provider)))
         val catalog = TestCatalogLease(providers = providers)
         val resource = ResourceId("page")
         val initial = record(name = "old")
@@ -822,67 +823,70 @@ private data class TestNativeResource(
     val numbers: List<*>,
 )
 
-private val DUPLICATE_VALUE_TYPE = TypeDefinitionId(TypeId.Qualified("test", "canonical_value"), 1)
-private val DUPLICATE_SET_TYPE = TypeDefinitionId(TypeId.Qualified("test", "canonical_set"), 1)
-private val DUPLICATE_MAP_TYPE = TypeDefinitionId(TypeId.Qualified("test", "canonical_map"), 1)
-private val DUPLICATE_SET_PARAMETER = ParameterKey(DUPLICATE_SET_TYPE, 0)
-private val DUPLICATE_MAP_KEY_PARAMETER = ParameterKey(DUPLICATE_MAP_TYPE, 0)
-private val DUPLICATE_MAP_VALUE_PARAMETER = ParameterKey(DUPLICATE_MAP_TYPE, 1)
-private val DUPLICATE_VALUE_USE = TypeUse.Named(DUPLICATE_VALUE_TYPE)
-private val DUPLICATE_SET_USE = TypeUse.Named(DUPLICATE_SET_TYPE, listOf(DUPLICATE_VALUE_USE))
+private val DUPLICATE_VALUE_TYPE = TypeDefinitionId.qualified("test", "canonical_value")
+private val DUPLICATE_SET_TYPE = TypeDefinitionId.qualified("test", "canonical_set")
+private val DUPLICATE_MAP_TYPE = TypeDefinitionId.qualified("test", "canonical_map")
+private val DUPLICATE_SET_PARAMETER = ParameterKey(owner = DUPLICATE_SET_TYPE, index = 0)
+private val DUPLICATE_MAP_KEY_PARAMETER = ParameterKey(owner = DUPLICATE_MAP_TYPE, index = 0)
+private val DUPLICATE_MAP_VALUE_PARAMETER = ParameterKey(owner = DUPLICATE_MAP_TYPE, index = 1)
+private val DUPLICATE_VALUE_USE = DUPLICATE_VALUE_TYPE.namedUse()
+private val DUPLICATE_SET_USE = DUPLICATE_SET_TYPE.namedUse(listOf(DUPLICATE_VALUE_USE.use))
 private val DUPLICATE_MAP_USE =
-    TypeUse.Named(
-        DUPLICATE_MAP_TYPE,
-        listOf(DUPLICATE_VALUE_USE, TypeUse.Scalar(ScalarKind.Text)),
-    )
+    DUPLICATE_MAP_TYPE.namedUse(listOf(DUPLICATE_VALUE_USE.use, ScalarKind.TEXT.use))
 private val DUPLICATE_DEFINITIONS =
     listOf(
-        TypeDefinition(
-            TEST_TYPE,
+        TypeDefinition.partial(
+            id = TEST_TYPE,
             representation =
-                RepresentationTemplate.Record(
-                    listOf(
-                        FieldDeclaration(
-                            FieldOwner(TEST_TYPE, "values"),
-                            TypeTemplate.Named(DUPLICATE_SET_TYPE, listOf(TypeTemplate.Named(DUPLICATE_VALUE_TYPE))),
-                        ),
-                        FieldDeclaration(
-                            FieldOwner(TEST_TYPE, "mapping"),
-                            TypeTemplate.Named(
-                                DUPLICATE_MAP_TYPE,
-                                listOf(TypeTemplate.Named(DUPLICATE_VALUE_TYPE), TypeTemplate.Scalar(ScalarKind.Text)),
+                RepresentationTemplate.createRecord(
+                    fields =
+                        listOf(
+                            FieldDeclaration.partial(
+                                owner = FieldOwner(definition = TEST_TYPE, name = "values"),
+                                type = DUPLICATE_SET_TYPE.template(listOf(DUPLICATE_VALUE_TYPE.template())),
+                            ),
+                            FieldDeclaration.partial(
+                                owner = FieldOwner(definition = TEST_TYPE, name = "mapping"),
+                                type = DUPLICATE_MAP_TYPE.template(listOf(DUPLICATE_VALUE_TYPE.template(), ScalarKind.TEXT.template)),
                             ),
                         ),
-                    ),
+                    abstract_ = false,
                 ),
         ),
-        TypeDefinition(
-            DUPLICATE_VALUE_TYPE,
+        TypeDefinition.partial(
+            id = DUPLICATE_VALUE_TYPE,
             representation =
-                RepresentationTemplate.Record(
-                    listOf(
-                        FieldDeclaration(FieldOwner(DUPLICATE_VALUE_TYPE, "first"), TypeTemplate.Scalar(ScalarKind.Text)),
-                        FieldDeclaration(FieldOwner(DUPLICATE_VALUE_TYPE, "second"), TypeTemplate.Scalar(ScalarKind.Text)),
-                    ),
+                RepresentationTemplate.createRecord(
+                    fields =
+                        listOf(
+                            FieldDeclaration.partial(
+                                owner = FieldOwner(definition = DUPLICATE_VALUE_TYPE, name = "first"),
+                                type = ScalarKind.TEXT.template,
+                            ),
+                            FieldDeclaration.partial(
+                                owner = FieldOwner(definition = DUPLICATE_VALUE_TYPE, name = "second"),
+                                type = ScalarKind.TEXT.template,
+                            ),
+                        ),
+                    abstract_ = false,
                 ),
         ),
-        TypeDefinition(
-            DUPLICATE_SET_TYPE,
-            parameters = listOf(TypeParameter(DUPLICATE_SET_PARAMETER, "T")),
-            representation =
-                RepresentationTemplate.Sequence(TypeTemplate.Parameter(DUPLICATE_SET_PARAMETER), CollectionKind.Set),
+        TypeDefinition.partial(
+            id = DUPLICATE_SET_TYPE,
+            parameters = listOf(TypeParameter.partial(key = DUPLICATE_SET_PARAMETER, name = "T")),
+            representation = RepresentationTemplate.createSequence(item = DUPLICATE_SET_PARAMETER.template, kind = CollectionKind.SET),
         ),
-        TypeDefinition(
-            DUPLICATE_MAP_TYPE,
+        TypeDefinition.partial(
+            id = DUPLICATE_MAP_TYPE,
             parameters =
                 listOf(
-                    TypeParameter(DUPLICATE_MAP_KEY_PARAMETER, "K"),
-                    TypeParameter(DUPLICATE_MAP_VALUE_PARAMETER, "V"),
+                    TypeParameter.partial(key = DUPLICATE_MAP_KEY_PARAMETER, name = "K"),
+                    TypeParameter.partial(key = DUPLICATE_MAP_VALUE_PARAMETER, name = "V"),
                 ),
             representation =
-                RepresentationTemplate.Mapping(
-                    TypeTemplate.Parameter(DUPLICATE_MAP_KEY_PARAMETER),
-                    TypeTemplate.Parameter(DUPLICATE_MAP_VALUE_PARAMETER),
+                RepresentationTemplate.createMapping(
+                    key = DUPLICATE_MAP_KEY_PARAMETER.template,
+                    value = DUPLICATE_MAP_VALUE_PARAMETER.template,
                 ),
         ),
     )
@@ -904,7 +908,7 @@ private object TestResourceNativeBindingFactory : NativeBindingFactory {
                 listOf(
                     GeneratedNativeField("name", { arguments.resolver.bind(TEXT_USE) }, TestNativeResource::name),
                     GeneratedNativeField("count", { arguments.resolver.bind(INT_USE) }, TestNativeResource::count),
-                    GeneratedNativeField("numbers", { arguments.resolver.bind(LIST_USE) }, TestNativeResource::numbers),
+                    GeneratedNativeField("numbers", { arguments.resolver.bind(LIST_USE.use) }, TestNativeResource::numbers),
                 ),
             construct = { fields ->
                 TestNativeResource(
@@ -1004,13 +1008,14 @@ private val PROVIDER_ORIGIN =
     ProviderOrigin(
         owner =
             DeclarationOwner(
-                ContributionKey(
-                    source = ContributionSourceId("test:checks"),
-                    sourcePart = "checks",
-                    producer = ProducerId("tests"),
-                    name = ContributionName("realm"),
-                ),
-                "checks",
+                source =
+                    contributionKey(
+                        source = ContributionSourceId("test:checks"),
+                        sourcePart = "checks",
+                        producer = ProducerId("tests"),
+                        name = ContributionName("realm"),
+                    ),
+                localIdentity = "checks",
             ),
         artifact = ArtifactId("test:checks"),
         sourcePart = "checks",

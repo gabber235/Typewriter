@@ -10,12 +10,15 @@ import com.typewritermc.types.DataValue
 import com.typewritermc.types.ListItem
 import com.typewritermc.types.MapRow
 import com.typewritermc.types.canonicalValueKey
+import com.typewritermc.types.requireValid
 import com.typewritermc.types.skir.SkirAuthoringValueCodec
 import com.typewritermc.types.skir.SkirConversionResult
 import com.typewritermc.types.skir.SkirDataValueCodec
 import com.typewritermc.types.skir.SkirTypeCodec
 import com.typewritermc.types.skir.getOrThrow
+import com.typewritermc.types.unknownVariant
 import com.typewritermc.types.unwrapNamed
+import com.typewritermc.types.use
 import kotlinx.coroutines.CancellationException
 import skirout.editor.v1.expression.BoundDirection
 import skirout.editor.v1.expression.ConditionalExpression
@@ -532,7 +535,7 @@ private class EvaluatorState(
                     is skirout.editor.v1.type_catalog.TypeSelection.PendingWrapper -> selection.value.definition
                     else -> throw OperationFailure("invalid_type_selection", "The type selection variant is unknown.")
                 }
-            return when (val declaration = query.declaration(SkirTypeCodec.decode(definition).getOrThrow())) {
+            return when (val declaration = query.declaration(definition.requireValid())) {
                 is Availability.Available -> {
                     val published = SkirTypeCodec.encode(declaration.value).getOrThrow()
                     projected(project(CanonicalReadModels.publishedType.encode(published, fields)))
@@ -584,7 +587,7 @@ private class EvaluatorState(
                 is Availability.Failed -> return selected
             }
         val expected = requireNotNull(contract.targetType)
-        val readable = query.catalog.knownApplications(record.configuration).any { query.catalog.isReadableAs(it, expected) }
+        val readable = query.catalog.knownApplications(record.configuration).any { query.catalog.isReadableAs(it.use, expected) }
         if (!readable) {
             if (!contract.sourceIsReference ||
                 record.configuration is com.typewritermc.authoring.TypeSelection.Pending

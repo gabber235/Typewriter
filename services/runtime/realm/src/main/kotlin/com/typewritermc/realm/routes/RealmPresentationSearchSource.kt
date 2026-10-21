@@ -16,9 +16,8 @@ import com.typewritermc.realm.authoring.operationObservation
 import com.typewritermc.realm.catalog.RealmCatalogLease
 import com.typewritermc.realm.catalog.RealmCatalogStore
 import com.typewritermc.realm.checking.CapturedAuthoringReads
-import com.typewritermc.types.skir.SkirConversionResult
+import com.typewritermc.types.isValid
 import com.typewritermc.types.skir.SkirDataValueCodec
-import com.typewritermc.types.skir.SkirTypeCodec
 import com.typewritermc.types.skir.getOrThrow
 import com.typewritermc.types.toTemplate
 import kotlinx.coroutines.CancellationException
@@ -217,15 +216,8 @@ class CapabilityRealmPresentationSearchSource(
                 .singleOrNull { it.id.value == request.capabilityId.value }
                 ?: return searchError(request.subscriptionId, "Realm search capability is unavailable")
         val resultType =
-            when (val decoded = SkirTypeCodec.decode(request.resultType)) {
-                is SkirConversionResult.Success -> {
-                    decoded.value
-                }
-
-                is SkirConversionResult.Failure -> {
-                    return searchError(request.subscriptionId, "Realm search result type is invalid")
-                }
-            }
+            request.resultType.takeIf { it.isValid }
+                ?: return searchError(request.subscriptionId, "Realm search result type is invalid")
         if (resultType != descriptor.resultType.toTemplate()) {
             return searchError(request.subscriptionId, "Realm search result type does not match its capability")
         }

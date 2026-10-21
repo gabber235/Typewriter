@@ -9,18 +9,15 @@ import com.typewritermc.authoring.TypeSelection
 import com.typewritermc.authoring.ValueLocation
 import com.typewritermc.authoring.ValuePath
 import com.typewritermc.authoring.ValueProblem
-import com.typewritermc.types.EndpointId
-import com.typewritermc.types.FieldOwner
 import com.typewritermc.types.LinkTarget
 import com.typewritermc.types.ResourceId
+import com.typewritermc.types.requireValid
 import skirout.editor.v1.authoring.LinkOccurrence as SkirLinkOccurrence
 import skirout.editor.v1.authoring.LinkOccurrenceId as SkirLinkOccurrenceId
 import skirout.editor.v1.diagnostic.InitializationDiagnostic as SkirInitializationDiagnostic
 import skirout.editor.v1.diagnostic.ValueProblem as SkirValueProblem
 import skirout.editor.v1.type_catalog.ArgumentSelection as SkirArgumentSelection
 import skirout.editor.v1.type_catalog.AuthoringRecord as SkirAuthoringRecord
-import skirout.editor.v1.type_catalog.EndpointId as SkirEndpointId
-import skirout.editor.v1.type_catalog.FieldOwner as SkirFieldOwner
 import skirout.editor.v1.type_catalog.FieldValue as SkirFieldValue
 import skirout.editor.v1.type_catalog.LinkTarget as SkirLinkTarget
 import skirout.editor.v1.type_catalog.ResourceId as SkirResourceId
@@ -88,17 +85,17 @@ internal fun ConversionScope.decodeAuthoringRecord(value: SkirAuthoringRecord): 
 internal fun ConversionScope.encodeTypeSelection(value: TypeSelection): SkirTypeSelection =
     when (value) {
         is TypeSelection.Complete -> {
-            SkirTypeSelection.CompleteWrapper(encodeNamedTypeUse(value.use))
+            SkirTypeSelection.CompleteWrapper(value.use)
         }
 
         is TypeSelection.Pending -> {
             SkirTypeSelection.createPending(
-                definition = encodeDefinitionId(value.definition),
+                definition = value.definition,
                 arguments =
                     value.arguments.mapIndexed { index, argument ->
                         at("argument $index") {
                             when (argument) {
-                                is ArgumentSelection.Chosen -> SkirArgumentSelection.ChosenWrapper(encodeTypeUse(argument.type))
+                                is ArgumentSelection.Chosen -> SkirArgumentSelection.ChosenWrapper(argument.type)
                                 ArgumentSelection.Unfilled -> SkirArgumentSelection.UNFILLED
                             }
                         }
@@ -110,17 +107,17 @@ internal fun ConversionScope.encodeTypeSelection(value: TypeSelection): SkirType
 internal fun ConversionScope.decodeTypeSelection(value: SkirTypeSelection): TypeSelection =
     when (value) {
         is SkirTypeSelection.CompleteWrapper -> {
-            TypeSelection.Complete(decodeNamedTypeUse(value.value))
+            TypeSelection.Complete(valid { value.value.requireValid() })
         }
 
         is SkirTypeSelection.PendingWrapper -> {
             TypeSelection.Pending(
-                definition = decodeDefinitionId(value.value.definition),
+                definition = valid { value.value.definition.requireValid() },
                 arguments =
                     value.value.arguments.mapIndexed { index, argument ->
                         at("argument $index") {
                             when (argument) {
-                                is SkirArgumentSelection.ChosenWrapper -> ArgumentSelection.Chosen(decodeTypeUse(argument.value))
+                                is SkirArgumentSelection.ChosenWrapper -> ArgumentSelection.Chosen(valid { argument.value.requireValid() })
                                 SkirArgumentSelection.UNFILLED -> ArgumentSelection.Unfilled
                                 else -> fail("Unknown Skir argument selection variant.")
                             }
@@ -142,13 +139,13 @@ internal fun ConversionScope.decodeValueLocation(value: SkirValueLocation): Valu
 
 internal fun ConversionScope.encodeLinkOccurrenceId(value: LinkOccurrenceId): SkirLinkOccurrenceId =
     SkirLinkOccurrenceId(
-        endpoint = SkirEndpointId(value = value.endpoint.value),
+        endpoint = value.endpoint,
         location = encodeValueLocation(value.location),
     )
 
 internal fun ConversionScope.decodeLinkOccurrenceId(value: SkirLinkOccurrenceId): LinkOccurrenceId =
     LinkOccurrenceId(
-        endpoint = EndpointId(requireText(value.endpoint.value, "Endpoint identity")),
+        endpoint = valid { value.endpoint.requireValid() },
         location = decodeValueLocation(value.location),
     )
 
@@ -168,7 +165,7 @@ internal fun ConversionScope.decodeLinkOccurrence(value: SkirLinkOccurrence): Li
 
 internal fun ConversionScope.encodeInitializationDiagnostic(value: InitializationDiagnostic): SkirInitializationDiagnostic =
     SkirInitializationDiagnostic(
-        field = value.field?.let(::encodeFieldOwner),
+        field = value.field,
         code = value.code,
         message = value.message,
         relativePath = value.relativePath?.let(::encodeValuePath),
@@ -176,7 +173,7 @@ internal fun ConversionScope.encodeInitializationDiagnostic(value: Initializatio
 
 internal fun ConversionScope.decodeInitializationDiagnostic(value: SkirInitializationDiagnostic): InitializationDiagnostic =
     InitializationDiagnostic(
-        field = value.field?.let(::decodeFieldOwner),
+        field = value.field?.let { valid { it.requireValid() } },
         code = value.code,
         message = value.message,
         relativePath = value.relativePath?.let(::decodeValuePath),
@@ -203,12 +200,6 @@ private fun ConversionScope.encodeLinkTarget(value: LinkTarget) =
 
 private fun ConversionScope.decodeLinkTarget(value: SkirLinkTarget) =
     LinkTarget(resource = decodeResourceId(value.resource), opposite = value.opposite?.let(::decodeValuePath))
-
-private fun ConversionScope.encodeFieldOwner(value: FieldOwner) =
-    SkirFieldOwner(definition = encodeDefinitionId(value.definition), name = value.name)
-
-private fun ConversionScope.decodeFieldOwner(value: SkirFieldOwner) =
-    FieldOwner(definition = decodeDefinitionId(value.definition), name = requireText(value.name, "Field name"))
 
 private fun ConversionScope.requireText(
     value: String,

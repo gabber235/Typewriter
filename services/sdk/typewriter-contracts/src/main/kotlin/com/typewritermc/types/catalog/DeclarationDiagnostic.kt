@@ -1,16 +1,13 @@
 package com.typewritermc.types.catalog
 
 import com.typewritermc.configuration.RelativeFieldPattern
-import com.typewritermc.types.DeclarationOwner
-import com.typewritermc.types.TypeDefinitionId
-import kotlinx.serialization.Serializable
+import skirout.editor.v1.type_catalog.DeclarationOwner
+import skirout.editor.v1.type_catalog.TypeDefinitionId
 
-@Serializable
 data class DeclarationOrigin(
     val owner: DeclarationOwner,
 )
 
-@Serializable
 data class DeclarationDiagnostic(
     val affected: TypeDefinitionId,
     val code: String,

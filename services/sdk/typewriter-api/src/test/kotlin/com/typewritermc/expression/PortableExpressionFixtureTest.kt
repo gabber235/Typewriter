@@ -16,19 +16,17 @@ import com.typewritermc.types.DataValue
 import com.typewritermc.types.ListItem
 import com.typewritermc.types.MapRow
 import com.typewritermc.types.ResourceId
-import com.typewritermc.types.TypeDefinitionId
-import com.typewritermc.types.TypeId
-import com.typewritermc.types.TypeUse
 import com.typewritermc.types.catalog.DefaultCheckedCatalog
 import com.typewritermc.types.catalog.resolve
+import com.typewritermc.types.namedUse
+import com.typewritermc.types.qualified
+import com.typewritermc.types.requireValid
 import com.typewritermc.types.skir.SkirAuthoringValueCodec
-import com.typewritermc.types.skir.SkirTypeCodec
 import com.typewritermc.types.skir.getOrThrow
 import com.typewritermc.types.unwrapNamed
 import de.infix.testBalloon.framework.core.testSuite
 import io.kotest.matchers.shouldBe
 import kotlinx.serialization.json.Json
-import kotlinx.serialization.json.JsonArray
 import kotlinx.serialization.json.JsonElement
 import kotlinx.serialization.json.JsonNull
 import kotlinx.serialization.json.JsonObject
@@ -37,6 +35,8 @@ import kotlinx.serialization.json.jsonArray
 import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
 import skirout.editor.v1.expression.ExpressionNode
+import skirout.editor.v1.type_catalog.TypeDefinitionId
+import skirout.editor.v1.type_catalog.TypeUse
 import java.nio.file.Files
 import java.nio.file.Path
 import kotlin.time.Duration.Companion.milliseconds
@@ -137,11 +137,10 @@ val PortableExpressionFixtureTest by testSuite {
                 val encodedType = case.getValue("resultType")
                 val definitions =
                     case["typeDefinitions"]?.jsonArray.orEmpty().map { encoded ->
-                        SkirTypeCodec
-                            .decode(
-                                skirout.editor.v1.type_catalog.TypeDefinition.serializer
-                                    .fromJsonCode(encoded.toString()),
-                            ).getOrThrow()
+                        (
+                            skirout.editor.v1.type_catalog.TypeDefinition.serializer
+                                .fromJsonCode(encoded.toString())
+                        ).requireValid()
                     }
                 val catalog = DefaultCheckedCatalog(FixtureReads.catalog, definitions)
                 val schemas =
@@ -262,25 +261,22 @@ private fun JsonObject.value(): DataValue =
         "named" in this -> {
             val named = getValue("named").jsonObject
             DataValue.Named(
-                TypeUse.Named(
-                    TypeDefinitionId(
-                        TypeId.Qualified(
-                            named.getValue("namespace").jsonPrimitive.content,
-                            named.getValue("name").jsonPrimitive.content,
-                        ),
+                TypeDefinitionId
+                    .qualified(
+                        named.getValue("namespace").jsonPrimitive.content,
+                        named.getValue("name").jsonPrimitive.content,
                         named
                             .getValue("revision")
                             .jsonPrimitive.content
                             .toInt(),
-                    ),
-                    named["arguments"]?.jsonArray.orEmpty().map { encoded ->
-                        SkirTypeCodec
-                            .decode(
+                    ).namedUse(
+                        named["arguments"]?.jsonArray.orEmpty().map { encoded ->
+                            (
                                 skirout.editor.v1.type_catalog.TypeUse.serializer
-                                    .fromJsonCode(encoded.toString()),
-                            ).getOrThrow()
-                    },
-                ),
+                                    .fromJsonCode(encoded.toString())
+                            ).requireValid()
+                        },
+                    ),
                 named.getValue("payload").jsonObject.value(),
             )
         }
@@ -346,7 +342,7 @@ internal object FixtureReads : AuthoredReads {
 
     override fun <T> readRepresentation(
         path: BoundPath<*>,
-        representation: com.typewritermc.types.TypeUse,
+        representation: TypeUse,
     ): Availability<T> = error("Fixture expressions use ExpressionValueReader.")
 
     override fun presence(path: BoundPath<*>): Availability<Boolean> = error("Fixture expressions use ExpressionValueReader.")

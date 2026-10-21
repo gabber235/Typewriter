@@ -4,7 +4,6 @@ package com.typewritermc.types.skir
 
 import com.typewritermc.authoring.ItemId
 import com.typewritermc.types.DataValue
-import com.typewritermc.types.EndpointId
 import com.typewritermc.types.LinkTarget
 import com.typewritermc.types.ListItem
 import com.typewritermc.types.MapRow
@@ -12,12 +11,12 @@ import com.typewritermc.types.ResourceId
 import com.typewritermc.types.isPortableDuration
 import com.typewritermc.types.isPortableDurationMilliseconds
 import com.typewritermc.types.requireCanonicalDecimal
+import com.typewritermc.types.requireValid
 import okio.ByteString.Companion.toByteString
 import kotlin.time.Duration.Companion.milliseconds
 import kotlin.time.toJavaInstant
 import kotlin.time.toKotlinInstant
 import skirout.editor.v1.type_catalog.DataValue as SkirDataValue
-import skirout.editor.v1.type_catalog.EndpointId as SkirEndpointId
 import skirout.editor.v1.type_catalog.FieldValue as SkirFieldValue
 import skirout.editor.v1.type_catalog.ItemId as SkirItemId
 import skirout.editor.v1.type_catalog.LinkTarget as SkirLinkTarget
@@ -107,7 +106,7 @@ internal fun ConversionScope.encodeDataValue(value: DataValue): SkirDataValue =
 
             is DataValue.Named -> {
                 SkirDataValue.createNamed(
-                    actualType = encodeNamedTypeUse(value.actualType),
+                    actualType = value.actualType,
                     payload = at("payload") { encodeDataValue(value.payload) },
                 )
             }
@@ -126,7 +125,7 @@ internal fun ConversionScope.encodeDataValue(value: DataValue): SkirDataValue =
 
             is DataValue.Link -> {
                 SkirDataValue.createLink(
-                    endpoint = SkirEndpointId(value = value.endpoint.value),
+                    endpoint = value.endpoint,
                     target =
                         SkirLinkTarget(
                             resource = SkirResourceId(value = value.target.resource.value),
@@ -199,7 +198,7 @@ internal fun ConversionScope.decodeDataValue(value: SkirDataValue): DataValue =
 
             is SkirDataValue.NamedWrapper -> {
                 DataValue.Named(
-                    actualType = decodeNamedTypeUse(value.value.actualType),
+                    actualType = valid { value.value.actualType.requireValid() },
                     payload = at("payload") { decodeDataValue(value.value.payload) },
                 )
             }
@@ -218,7 +217,7 @@ internal fun ConversionScope.decodeDataValue(value: SkirDataValue): DataValue =
 
             is SkirDataValue.LinkWrapper -> {
                 DataValue.Link(
-                    endpoint = EndpointId(value.value.endpoint.value),
+                    endpoint = valid { value.value.endpoint.requireValid() },
                     target =
                         LinkTarget(
                             resource = ResourceId(value.value.target.resource.value),

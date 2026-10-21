@@ -18,9 +18,9 @@ import com.typewritermc.realm.repository.ResourceValueMapper
 import com.typewritermc.realm.repository.valueAt
 import com.typewritermc.types.LinkTarget
 import com.typewritermc.types.ResourceId
-import com.typewritermc.types.TypeUse
 import com.typewritermc.types.catalog.Resolution
-import com.typewritermc.types.catalog.ResolvedRepresentation
+import skirout.editor.v1.type_catalog.ResolvedRepresentation
+import skirout.editor.v1.type_catalog.TypeUse
 
 /** Prepares ownership transfers and links through the same session used by menus and drops. */
 internal class OperationRelationPreparation(
@@ -207,15 +207,15 @@ internal class OperationRelationPreparation(
                 relations.reads.observeInput(InputIdentity.Membership(containing))
                 val collectionType = record.authoredTypeAt(containing.path, catalog.checked) ?: return@forEach
                 val checked = catalog.checked.resolve(collectionType) as? Resolution.Ready ?: return@forEach
-                val sequence = checked.value.schema.representation as? ResolvedRepresentation.Sequence ?: return@forEach
-                val itemType = sequence.item as? TypeUse.Named ?: return@forEach
+                val sequence = checked.value.schema.representation as? ResolvedRepresentation.SequenceWrapper ?: return@forEach
+                val itemType = sequence.value.item as? TypeUse.NamedWrapper ?: return@forEach
                 val itemSchema = catalog.checked.resolve(itemType) as? Resolution.Ready ?: return@forEach
-                if (itemSchema.value.schema.representation !is ResolvedRepresentation.Record) return@forEach
+                if (itemSchema.value.schema.representation !is ResolvedRepresentation.RecordWrapper) return@forEach
                 val prepared =
                     DefaultInitializationRuntime(catalog.checked, catalog.nativeBindings).prepareNow(
                         InitializationRequest(
                             catalog.generation,
-                            PreparationTarget.Record(TypeSelection.Complete(itemType)),
+                            PreparationTarget.Record(TypeSelection.Complete(itemType.value)),
                             null,
                         ),
                     )

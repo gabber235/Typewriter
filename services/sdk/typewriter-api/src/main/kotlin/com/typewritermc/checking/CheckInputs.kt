@@ -6,9 +6,9 @@ import com.typewritermc.authoring.CompleteValue
 import com.typewritermc.authoring.DraftBinding
 import com.typewritermc.authoring.ValueLocation
 import com.typewritermc.configuration.RelativeFieldPattern
-import com.typewritermc.configuration.RuleOrigin
-import com.typewritermc.types.TypeDefinitionId
-import com.typewritermc.types.TypeTemplate
+import skirout.editor.v1.type_catalog.RuleOrigin
+import skirout.editor.v1.type_catalog.TypeDefinitionId
+import skirout.editor.v1.type_catalog.TypeTemplate
 
 data class CheckInput(
     val owner: TypeDefinitionId,

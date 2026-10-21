@@ -3,7 +3,6 @@
 package com.typewritermc.presentation
 
 import com.typewritermc.authoring.GeneratedSdkApi
-import com.typewritermc.authoring.ValuePath
 import com.typewritermc.expression.Expr
 import com.typewritermc.expression.ExpressionBindingId
 import com.typewritermc.expression.Handled

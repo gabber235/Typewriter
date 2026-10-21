@@ -4,7 +4,6 @@ import com.typewritermc.authoring.PlacementSdkProvider
 import com.typewritermc.discovery.GraphDirection
 import com.typewritermc.expression.accent
 import com.typewritermc.expression.color
-import com.typewritermc.expression.display
 import com.typewritermc.expression.emptyListExpression
 import com.typewritermc.expression.icon
 import com.typewritermc.expression.label
@@ -29,14 +28,12 @@ import com.typewritermc.presentation.on
 import com.typewritermc.presentation.resource
 import com.typewritermc.presentation.resourceHeading
 import com.typewritermc.presentation.searchChip
-import com.typewritermc.presentation.searchDescription
 import com.typewritermc.presentation.stateColor
 import com.typewritermc.presentation.stateTransition
 import com.typewritermc.presentation.themeColor
 import com.typewritermc.presentation.transition
 import com.typewritermc.presentation.withAlpha
 import com.typewritermc.types.Color
-import com.typewritermc.types.Icon
 import com.typewritermc.types.Ref
 import skirout.editor.v1.catalog.PresentationRole
 import skirout.editor.v1.presentation.PresentationAlignment

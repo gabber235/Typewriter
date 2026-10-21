@@ -23,11 +23,8 @@ import com.typewritermc.types.IconIconifyDefinition
 import com.typewritermc.types.IconSvgDefinition
 import com.typewritermc.types.SVG_ICON_TYPE_ID
 import com.typewritermc.types.StandardTypes
-import com.typewritermc.types.TypeDefinitionId
-import com.typewritermc.types.TypeUse
 import com.typewritermc.types.catalog.DefaultCheckedCatalog
-import com.typewritermc.types.skir.SkirTypeCodec
-import com.typewritermc.types.skir.getOrThrow
+import com.typewritermc.types.unknownVariant
 import okio.ByteString
 import skirout.editor.v1.type_catalog.DeclaredTypeId
 import skirout.editor.v1.type_catalog.FieldDeclaration
@@ -43,17 +40,17 @@ import skirout.editor.v1.type_catalog.NullableTypeTemplate
 import skirout.editor.v1.type_catalog.QualifiedTypeId
 import skirout.editor.v1.type_catalog.RepresentationTemplate
 import skirout.editor.v1.type_catalog.ScalarKind
+import skirout.editor.v1.type_catalog.TypeDefinition
+import skirout.editor.v1.type_catalog.TypeDefinitionId
+import skirout.editor.v1.type_catalog.TypeId
 import skirout.editor.v1.type_catalog.TypeTemplate
+import skirout.editor.v1.type_catalog.TypeUse
 import java.time.Instant
 import java.util.Base64
 import skirout.editor.v1.type_catalog.DataValue as SkirDataValue
 import skirout.editor.v1.type_catalog.EnumVariant as SkirEnumVariant
 import skirout.editor.v1.type_catalog.EnumerationRepresentationTemplate as SkirEnumeration
 import skirout.editor.v1.type_catalog.RecordRepresentationTemplate as SkirRecord
-import skirout.editor.v1.type_catalog.TypeDefinition as SkirTypeDefinition
-import skirout.editor.v1.type_catalog.TypeDefinitionId as SkirTypeDefinitionId
-import skirout.editor.v1.type_catalog.TypeId as SkirTypeId
-import skirout.editor.v1.type_catalog.TypeUse as SkirTypeUse
 import skirout.kernel.v1.icon.Icon as SkirIcon
 
 /**
@@ -72,9 +69,6 @@ class CanonicalReadModel<T> internal constructor(
 ) {
     /** The read type of this root. */
     val use: NamedTypeUse = registry.useOf(serializer.typeDescriptor)
-
-    /** [use] as the Kotlin type mirror the checker still resolves. */
-    val type: TypeUse.Named = SkirTypeCodec.decode(SkirTypeUse.NamedWrapper(use)).getOrThrow() as TypeUse.Named
 
     fun encode(value: T): SkirDataValue = registry.encode(value, serializer.typeDescriptor)
 
@@ -111,7 +105,7 @@ open class CanonicalReadModelRegistry(
     }
 
     /** The derived definitions, ordered by identity. [frameworkDefinitions] holds the framework ones they reference. */
-    val definitions: List<SkirTypeDefinition> = records.values.flatMap(ReadRecord::definitions).sortedBy { it.id.name() }
+    val definitions: List<TypeDefinition> = records.values.flatMap(ReadRecord::definitions).sortedBy { it.id.name() }
 
     private val declaredDefinitions =
         listOf(ColorDefinition.declaration, IconDefinition.declaration, IconIconifyDefinition.declaration, IconSvgDefinition.declaration)
@@ -120,32 +114,24 @@ open class CanonicalReadModelRegistry(
      * The framework definitions the read definitions reference: the List and the declared Color and Icon types.
      * The panel publishes the same definitions with its read models.
      */
-    val frameworkDefinitions: List<SkirTypeDefinition> =
-        (StandardTypes.definitions.filter { it.id == StandardTypes.list } + declaredDefinitions)
-            .map { SkirTypeCodec.encode(it).getOrThrow() }
-            .sortedBy { it.id.name() }
+    val frameworkDefinitions: List<TypeDefinition> =
+        (StandardTypes.definitions.filter { it.id == StandardTypes.list } + declaredDefinitions).sortedBy { it.id.name() }
 
     /** Read types and the declared Color and Icon types they read, which resolve here even without the framework. */
     private val ownedIds: Set<TypeDefinitionId> =
-        definitions.mapTo(mutableSetOf()) { it.id.mirror() } + declaredDefinitions.map { it.id }
+        definitions.mapTo(mutableSetOf()) { it.id } + declaredDefinitions.map { it.id }
 
-    /**
-     * The read and framework definitions as the Kotlin type mirror catalog the checker resolves read types in, until
-     * the checker reads Skir definitions.
-     */
-    val catalog =
-        DefaultCheckedCatalog(
-            CatalogGeneration("canonical.read.v1"),
-            (definitions + frameworkDefinitions).map { SkirTypeCodec.decode(it).getOrThrow() },
-        )
+    /** The read and framework definitions as the checked catalog the checker resolves read types in. */
+    val catalog = DefaultCheckedCatalog(CatalogGeneration("canonical.read.v1"), definitions + frameworkDefinitions)
 
     fun owns(id: TypeDefinitionId): Boolean = id in ownedIds
 
     fun supports(use: TypeUse): Boolean =
         when (use) {
-            is TypeUse.Named -> owns(use.definition) || use.arguments.any(::supports)
-            is TypeUse.Nullable -> supports(use.value)
-            is TypeUse.Scalar -> false
+            is TypeUse.NamedWrapper -> owns(use.value.definition) || use.value.arguments.any(::supports)
+            is TypeUse.NullableWrapper -> supports(use.value.value)
+            is TypeUse.ScalarWrapper -> false
+            else -> unknownVariant(use)
         }
 
     fun <T> model(serializer: Serializer<T>): CanonicalReadModel<T> = CanonicalReadModel(serializer, this)
@@ -172,7 +158,7 @@ open class CanonicalReadModelRegistry(
         serializer: Serializer<T>,
     ): T = serializer.fromJsonCode(json(value, serializer.typeDescriptor, 0))
 
-    private fun declare(descriptor: TypeDescriptor.Reflective<*>): SkirTypeDefinitionId {
+    private fun declare(descriptor: TypeDescriptor.Reflective<*>): TypeDefinitionId {
         val record = descriptor as? RecordDescriptorBase ?: error("A read model root must be a Skir struct or enum.")
         val name = record.recordId
         DECLARED[name]?.let { return it.id }
@@ -322,7 +308,7 @@ open class CanonicalReadModelRegistry(
         }
 
         private fun named(
-            id: SkirTypeDefinitionId,
+            id: TypeDefinitionId,
             fields: Map<String, (List<String>) -> SkirDataValue>,
             path: List<String>,
         ): SkirDataValue {
@@ -422,12 +408,12 @@ open class CanonicalReadModelRegistry(
     }
 
     private sealed class ReadRecord(
-        val id: SkirTypeDefinitionId,
+        val id: TypeDefinitionId,
     ) {
-        abstract val definitions: List<SkirTypeDefinition>
+        abstract val definitions: List<TypeDefinition>
 
         class Struct(
-            id: SkirTypeDefinitionId,
+            id: TypeDefinitionId,
         ) : ReadRecord(id) {
             lateinit var fields: List<Pair<String, TypeTemplate>>
 
@@ -435,13 +421,13 @@ open class CanonicalReadModelRegistry(
         }
 
         class Enumeration(
-            id: SkirTypeDefinitionId,
+            id: TypeDefinitionId,
             val cases: List<String>,
         ) : ReadRecord(id) {
             override val definitions
                 get() =
                     listOf(
-                        SkirTypeDefinition(
+                        TypeDefinition(
                             id = id,
                             parameters = emptyList(),
                             representation =
@@ -454,7 +440,7 @@ open class CanonicalReadModelRegistry(
         }
 
         class Union(
-            id: SkirTypeDefinitionId,
+            id: TypeDefinitionId,
         ) : ReadRecord(id) {
             lateinit var variants: List<ReadVariant>
 
@@ -473,21 +459,21 @@ open class CanonicalReadModelRegistry(
     }
 
     private class ReadVariant(
-        val id: SkirTypeDefinitionId,
+        val id: TypeDefinitionId,
         val name: String,
         val value: TypeTemplate?,
     )
 
     /** A Skir record that is the wire form of a framework declared type rather than a read model of its own. */
     private class DeclaredRead(
-        val id: SkirTypeDefinitionId,
+        val id: TypeDefinitionId,
         val encode: (Any) -> SkirDataValue,
-        val json: (SkirTypeDefinitionId, SkirDataValue) -> String,
+        val json: (TypeDefinitionId, SkirDataValue) -> String,
     )
 
     private companion object {
         const val VALUE_FIELD = "value"
-        val LIST_ID: SkirTypeDefinitionId = SkirTypeCodec.encode(StandardTypes.list).getOrThrow()
+        val LIST_ID: TypeDefinitionId = StandardTypes.list
 
         val COLOR: NamedTypeUse = declaredUse(COLOR_TYPE_ID)
         val ICON: NamedTypeUse = declaredUse(ICON_TYPE_ID)
@@ -541,7 +527,7 @@ open class CanonicalReadModelRegistry(
 
         fun declaredUse(id: String) =
             NamedTypeUse(
-                definition = SkirTypeDefinitionId(typeId = SkirTypeId.DeclaredWrapper(DeclaredTypeId(value = id)), revision = 1),
+                definition = TypeDefinitionId(typeId = TypeId.DeclaredWrapper(DeclaredTypeId(value = id)), revision = 1),
                 arguments = emptyList(),
             )
 
@@ -555,17 +541,17 @@ open class CanonicalReadModelRegistry(
         )
 
         fun readId(record: String) =
-            SkirTypeDefinitionId(
-                typeId = SkirTypeId.QualifiedWrapper(QualifiedTypeId(namespace = CANONICAL_READ_NAMESPACE, name = record)),
+            TypeDefinitionId(
+                typeId = TypeId.QualifiedWrapper(QualifiedTypeId(namespace = CANONICAL_READ_NAMESPACE, name = record)),
                 revision = 1,
             )
 
         fun recordDefinition(
-            id: SkirTypeDefinitionId,
+            id: TypeDefinitionId,
             fields: List<Pair<String, TypeTemplate>>,
-            parent: SkirTypeDefinitionId?,
+            parent: TypeDefinitionId?,
             abstract: Boolean,
-        ) = SkirTypeDefinition(
+        ) = TypeDefinition(
             id = id,
             parameters = emptyList(),
             representation =
@@ -697,14 +683,12 @@ open class CanonicalReadModelRegistry(
 
 private val RecordDescriptorBase.recordId: String get() = "$modulePath:$qualifiedName"
 
-private fun SkirTypeDefinitionId.name(): String =
+private fun TypeDefinitionId.name(): String =
     when (val type = typeId) {
-        is SkirTypeId.QualifiedWrapper -> type.value.name
-        is SkirTypeId.DeclaredWrapper -> type.value.value
+        is TypeId.QualifiedWrapper -> type.value.name
+        is TypeId.DeclaredWrapper -> type.value.value
         else -> ""
     }
-
-private fun SkirTypeDefinitionId.mirror(): TypeDefinitionId = SkirTypeCodec.decode(this).getOrThrow()
 
 private fun StructDescriptor.Reflective<*, *>.orderedFields(): List<StructField.Reflective<*, *, *>> = fields.sortedBy { it.number }
 

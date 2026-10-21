@@ -22,11 +22,12 @@ import com.typewritermc.configuration.RelativeFieldPattern
 import com.typewritermc.expression.EvaluationDiagnostic
 import com.typewritermc.services.libs.utils.rethrowExceptional
 import com.typewritermc.types.DataValue
-import com.typewritermc.types.TypeUse
 import com.typewritermc.types.catalog.CheckedCatalog
 import com.typewritermc.types.catalog.CheckedType
 import com.typewritermc.types.catalog.Resolution
-import com.typewritermc.types.catalog.ResolvedRepresentation
+import com.typewritermc.types.use
+import skirout.editor.v1.type_catalog.ResolvedRepresentation
+import skirout.editor.v1.type_catalog.TypeUse
 import java.util.concurrent.atomic.AtomicLong
 
 /**
@@ -263,15 +264,15 @@ private fun TypeCursor.field(
 
 private fun TypeCursor.item(catalog: CheckedCatalog): TypeCursor? =
     when (val representation = resolve(catalog)?.schema?.representation) {
-        is ResolvedRepresentation.Sequence -> TypeCursor.Applied(representation.item)
+        is ResolvedRepresentation.SequenceWrapper -> TypeCursor.Applied(representation.value.item)
         else -> null
     }
 
 private fun TypeCursor.key(catalog: CheckedCatalog): TypeCursor? =
-    (resolve(catalog)?.schema?.representation as? ResolvedRepresentation.Mapping)?.key?.let(TypeCursor::Applied)
+    (resolve(catalog)?.schema?.representation as? ResolvedRepresentation.MappingWrapper)?.value?.key?.let(TypeCursor::Applied)
 
 private fun TypeCursor.value(catalog: CheckedCatalog): TypeCursor? =
-    (resolve(catalog)?.schema?.representation as? ResolvedRepresentation.Mapping)?.value?.let(TypeCursor::Applied)
+    (resolve(catalog)?.schema?.representation as? ResolvedRepresentation.MappingWrapper)?.value?.value?.let(TypeCursor::Applied)
 
 private fun TypeCursor.resolve(catalog: CheckedCatalog): CheckedType? =
     when (this) {

@@ -4,24 +4,25 @@ import com.typewritermc.authoring.ValuePath
 import com.typewritermc.capability.RealmCapabilityDescriptor
 import com.typewritermc.checking.CatalogGeneration
 import com.typewritermc.configuration.ConfigurationRecipe
-import com.typewritermc.configuration.RuleId
 import com.typewritermc.presentation.PresentationDescriptor
 import com.typewritermc.presentation.RoleFallback
 import com.typewritermc.types.EndpointBindingTemplate
-import com.typewritermc.types.FieldOwner
 import com.typewritermc.types.RelationContract
 import com.typewritermc.types.ResourceTarget
-import com.typewritermc.types.TypeDefinition
-import com.typewritermc.types.TypeDefinitionId
 import com.typewritermc.types.TypeDisplay
-import com.typewritermc.types.TypeTemplate
-import com.typewritermc.types.TypeUse
 import com.typewritermc.types.skir.SkirTypeCodec
 import com.typewritermc.types.skir.getOrThrow
 import skirout.editor.v1.catalog.EditorCatalog
 import skirout.editor.v1.catalog.PresentationMaterial
 import skirout.editor.v1.expression.ExpressionNode
 import skirout.editor.v1.operation.ResourceOperationDefinition
+import skirout.editor.v1.type_catalog.FieldOwner
+import skirout.editor.v1.type_catalog.NamedTypeTemplate
+import skirout.editor.v1.type_catalog.NamedTypeUse
+import skirout.editor.v1.type_catalog.RuleId
+import skirout.editor.v1.type_catalog.TypeDefinition
+import skirout.editor.v1.type_catalog.TypeDefinitionId
+import skirout.editor.v1.type_catalog.TypeTemplate
 
 /**
  * One declared type as published to editors.
@@ -35,7 +36,7 @@ data class PublishedType(
     val definition: TypeDefinition,
     val status: DeclarationStatus,
     val effectiveFields: List<EffectiveFieldTemplate>,
-    val ancestorTemplates: List<TypeTemplate.Named>,
+    val ancestorTemplates: List<NamedTypeTemplate>,
     val display: TypeDisplay,
     val searchKey: String? = null,
     val placementField: ValuePath? = null,
@@ -60,7 +61,7 @@ data class EffectiveFieldTemplate(
 )
 
 data class TypeRecommendation(
-    val type: TypeUse.Named,
+    val type: NamedTypeUse,
     val occurrences: Long,
 )
 

@@ -1,26 +1,19 @@
 package com.typewritermc.expression
 
-import com.typewritermc.types.TypeUse
-import com.typewritermc.types.skir.SkirTypeCodec
-import com.typewritermc.types.skir.getOrThrow
+import com.typewritermc.types.isValid
 import skirout.editor.v1.expression.ExpressionMappingType
 import skirout.editor.v1.expression.ExpressionType
 import skirout.editor.v1.expression.ExpressionValueType
+import skirout.editor.v1.type_catalog.TypeUse
 
 /** Describes a declared value while keeping derived collections and lexical entries structural. */
 fun nominalExpressionType(
     use: TypeUse,
     mayBeMissing: Boolean = false,
-): ExpressionType =
-    ExpressionType(value = ExpressionValueType.NominalWrapper(SkirTypeCodec.encode(use).getOrThrow()), mayBeMissing = mayBeMissing)
+): ExpressionType = ExpressionType(value = ExpressionValueType.NominalWrapper(use), mayBeMissing = mayBeMissing)
 
-fun ExpressionType.nominalUseOrNull(): TypeUse? =
-    (value as? ExpressionValueType.NominalWrapper)?.value?.let { use ->
-        when (val decoded = SkirTypeCodec.decode(use)) {
-            is com.typewritermc.types.skir.SkirConversionResult.Success -> decoded.value
-            is com.typewritermc.types.skir.SkirConversionResult.Failure -> null
-        }
-    }
+/** The declared type of a nominal expression type, or null for a structural type or an invalid nominal one. */
+fun ExpressionType.nominalUseOrNull(): TypeUse? = (value as? ExpressionValueType.NominalWrapper)?.value?.takeIf { it.isValid }
 
 fun listExpressionType(
     item: ExpressionType,

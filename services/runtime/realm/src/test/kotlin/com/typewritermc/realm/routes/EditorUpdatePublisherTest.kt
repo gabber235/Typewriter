@@ -6,8 +6,6 @@ import com.typewritermc.authoring.ValueLocation
 import com.typewritermc.authoring.ValuePath
 import com.typewritermc.checking.CatalogGeneration
 import com.typewritermc.checking.CheckOutcome
-import com.typewritermc.configuration.RuleId
-import com.typewritermc.configuration.RuleOrigin
 import com.typewritermc.protocol.transport.RealmRouteScope
 import com.typewritermc.realm.authoring.AuthoringSeed
 import com.typewritermc.realm.authoring.AuthoringViewDelta
@@ -26,8 +24,7 @@ import com.typewritermc.services.libs.communicator.transport.TransportError
 import com.typewritermc.services.libs.communicator.transport.TransportResult
 import com.typewritermc.services.libs.telemetry.testing.TelemetryTestHarness
 import com.typewritermc.types.ResourceId
-import com.typewritermc.types.TypeDefinitionId
-import com.typewritermc.types.TypeId
+import com.typewritermc.types.qualified
 import de.infix.testBalloon.framework.core.testSuite
 import io.kotest.matchers.shouldBe
 import io.opentelemetry.context.propagation.ContextPropagators
@@ -41,6 +38,9 @@ import kotlinx.coroutines.withTimeout
 import kotlinx.coroutines.yield
 import skirout.editor.v1.authoring.AuthoringChanged
 import skirout.editor.v1.checking.FindingStatus
+import skirout.editor.v1.type_catalog.RuleId
+import skirout.editor.v1.type_catalog.RuleOrigin
+import skirout.editor.v1.type_catalog.TypeDefinitionId
 import kotlin.time.Duration.Companion.seconds
 
 val EditorUpdatePublisherTest by testSuite {
@@ -115,7 +115,7 @@ val EditorUpdatePublisherTest by testSuite {
             val ticket =
                 CheckTicket(
                     CheckInstanceId(
-                        RuleId(RuleOrigin(TypeDefinitionId(TypeId.Qualified("test", "rule"), 1), 0), 0),
+                        RuleId(origin = RuleOrigin(owner = TypeDefinitionId.qualified("test", "rule"), ordinal = 0), localIndex = 0),
                         ValueLocation(resource, ValuePath()),
                     ),
                     "catalog:1",

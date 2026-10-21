@@ -6,12 +6,13 @@ import com.typewritermc.checking.PartialSelection
 import com.typewritermc.checking.ResourceTypeMatch
 import com.typewritermc.checking.UndecidedCandidate
 import com.typewritermc.expression.EvaluationDiagnostic
-import com.typewritermc.types.EndpointId
 import com.typewritermc.types.RelationFamilyId
 import com.typewritermc.types.RelationId
 import com.typewritermc.types.ResourceId
-import com.typewritermc.types.TypeUse
+import com.typewritermc.types.use
 import kotlinx.serialization.Serializable
+import skirout.editor.v1.type_catalog.EndpointId
+import skirout.editor.v1.type_catalog.NamedTypeUse
 
 interface GraphReads {
     context(reads: AuthoredReads)
@@ -154,7 +155,7 @@ private class BoundResourceDraft(
     override val catalog = binding.catalog
     override val readContext: ReadContext = binding.readContext
     override val location: ValueLocation = binding.location
-    override val actualType: Availability<TypeUse.Named> =
+    override val actualType: Availability<NamedTypeUse> =
         when (val actual = binding.actual) {
             is TypeSelection.Complete -> Availability.Available(actual.use)
             is TypeSelection.Pending -> Availability.Unavailable(listOf(location))

@@ -13,10 +13,12 @@ import com.google.devtools.ksp.symbol.KSTypeParameter
 import com.google.devtools.ksp.symbol.Modifier
 import com.squareup.kotlinpoet.ClassName
 import com.squareup.kotlinpoet.CodeBlock
-import com.typewritermc.types.FloatWidth
-import com.typewritermc.types.IntegerWidth
-import com.typewritermc.types.ScalarKind
+import com.typewritermc.types.floatScalar
+import com.typewritermc.types.integerScalar
 import kotlinx.serialization.SerialName
+import skirout.editor.v1.type_catalog.FloatWidth
+import skirout.editor.v1.type_catalog.IntegerWidth
+import skirout.editor.v1.type_catalog.ScalarKind
 import kotlin.reflect.KClass
 
 /** Finds symbols using the actual annotation type so processors do not duplicate qualified names as strings. */
@@ -90,23 +92,23 @@ fun Map<String, String>.stringMapCode(): CodeBlock {
 /** Interprets every portable scalar alias through one shared KSP policy. */
 fun KSType.portableScalarKind(): ScalarKind? =
     when (declaration.qualifiedName?.asString()) {
-        "kotlin.Unit" -> ScalarKind.Unit
-        "kotlin.Boolean" -> ScalarKind.Boolean
-        "kotlin.String", "kotlin.Char" -> ScalarKind.Text
-        "kotlin.ByteArray" -> ScalarKind.Bytes
-        "kotlin.Byte" -> ScalarKind.Integer(IntegerWidth.SIGNED_8)
-        "kotlin.Short" -> ScalarKind.Integer(IntegerWidth.SIGNED_16)
-        "kotlin.Int" -> ScalarKind.Integer(IntegerWidth.SIGNED_32)
-        "kotlin.Long", "java.math.BigInteger" -> ScalarKind.Integer(IntegerWidth.SIGNED_64)
-        "kotlin.UByte" -> ScalarKind.Integer(IntegerWidth.UNSIGNED_8)
-        "kotlin.UShort" -> ScalarKind.Integer(IntegerWidth.UNSIGNED_16)
-        "kotlin.UInt" -> ScalarKind.Integer(IntegerWidth.UNSIGNED_32)
-        "kotlin.ULong" -> ScalarKind.Integer(IntegerWidth.UNSIGNED_64)
-        "kotlin.Float" -> ScalarKind.Float(FloatWidth.FLOAT_32)
-        "kotlin.Double" -> ScalarKind.Float(FloatWidth.FLOAT_64)
-        "java.math.BigDecimal" -> ScalarKind.Decimal
-        "kotlin.time.Instant", "java.time.Instant" -> ScalarKind.Timestamp
-        "kotlin.time.Duration", "java.time.Duration" -> ScalarKind.Duration
+        "kotlin.Unit" -> ScalarKind.UNIT
+        "kotlin.Boolean" -> ScalarKind.BOOLEAN
+        "kotlin.String", "kotlin.Char" -> ScalarKind.TEXT
+        "kotlin.ByteArray" -> ScalarKind.BYTES
+        "kotlin.Byte" -> integerScalar(IntegerWidth.SIGNED_EIGHT)
+        "kotlin.Short" -> integerScalar(IntegerWidth.SIGNED_SIXTEEN)
+        "kotlin.Int" -> integerScalar(IntegerWidth.SIGNED_THIRTY_TWO)
+        "kotlin.Long", "java.math.BigInteger" -> integerScalar(IntegerWidth.SIGNED_SIXTY_FOUR)
+        "kotlin.UByte" -> integerScalar(IntegerWidth.UNSIGNED_EIGHT)
+        "kotlin.UShort" -> integerScalar(IntegerWidth.UNSIGNED_SIXTEEN)
+        "kotlin.UInt" -> integerScalar(IntegerWidth.UNSIGNED_THIRTY_TWO)
+        "kotlin.ULong" -> integerScalar(IntegerWidth.UNSIGNED_SIXTY_FOUR)
+        "kotlin.Float" -> floatScalar(FloatWidth.THIRTY_TWO)
+        "kotlin.Double" -> floatScalar(FloatWidth.SIXTY_FOUR)
+        "java.math.BigDecimal" -> ScalarKind.DECIMAL
+        "kotlin.time.Instant", "java.time.Instant" -> ScalarKind.TIMESTAMP
+        "kotlin.time.Duration", "java.time.Duration" -> ScalarKind.DURATION
         else -> null
     }
 

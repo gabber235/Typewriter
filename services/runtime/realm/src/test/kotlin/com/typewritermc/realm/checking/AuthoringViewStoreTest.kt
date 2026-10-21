@@ -29,30 +29,35 @@ import com.typewritermc.realm.authoring.AuthoringViewDelta
 import com.typewritermc.realm.authoring.InMemoryAuthoringViewStore
 import com.typewritermc.realm.authoring.RESOURCE_SELECTION_INPUT
 import com.typewritermc.realm.authoring.operationObservation
-import com.typewritermc.types.CollectionKind
 import com.typewritermc.types.DataValue
 import com.typewritermc.types.EndpointBindingTemplate
 import com.typewritermc.types.FactoryNativeBindingRegistry
-import com.typewritermc.types.FieldDeclaration
-import com.typewritermc.types.FieldOwner
-import com.typewritermc.types.IntegerWidth
 import com.typewritermc.types.ListItem
 import com.typewritermc.types.NativeBindingFactory
 import com.typewritermc.types.NativeBindingRegistry
 import com.typewritermc.types.RelationContract
-import com.typewritermc.types.RepresentationTemplate
 import com.typewritermc.types.ResourceId
-import com.typewritermc.types.ScalarKind
-import com.typewritermc.types.TypeDefinition
-import com.typewritermc.types.TypeDefinitionId
-import com.typewritermc.types.TypeId
-import com.typewritermc.types.TypeTemplate
-import com.typewritermc.types.TypeUse
 import com.typewritermc.types.catalog.CheckedCatalog
 import com.typewritermc.types.catalog.DefaultCheckedCatalog
+import com.typewritermc.types.integerScalar
+import com.typewritermc.types.namedUse
+import com.typewritermc.types.qualified
+import com.typewritermc.types.template
+import com.typewritermc.types.use
 import de.infix.testBalloon.framework.core.testSuite
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.matchers.shouldBe
+import skirout.editor.v1.type_catalog.CollectionKind
+import skirout.editor.v1.type_catalog.FieldDeclaration
+import skirout.editor.v1.type_catalog.FieldOwner
+import skirout.editor.v1.type_catalog.IntegerWidth
+import skirout.editor.v1.type_catalog.ParameterKey
+import skirout.editor.v1.type_catalog.RepresentationTemplate
+import skirout.editor.v1.type_catalog.ScalarKind
+import skirout.editor.v1.type_catalog.TypeDefinition
+import skirout.editor.v1.type_catalog.TypeDefinitionId
+import skirout.editor.v1.type_catalog.TypeParameter
+import skirout.editor.v1.type_catalog.TypeUse
 import java.math.BigInteger
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.Executors
@@ -167,9 +172,9 @@ val AuthoringViewStoreTest by testSuite {
             mutableMapOf<String, DataValue>(
                 "name" to DataValue.StringValue("Quest"),
                 "count" to DataValue.Integer(BigInteger.ONE),
-                "numbers" to DataValue.Named(TypeUse.Named(LIST_TYPE, rootArguments), DataValue.ListValue(rootItems)),
+                "numbers" to DataValue.Named(LIST_TYPE.namedUse(rootArguments), DataValue.ListValue(rootItems)),
             )
-        val seed = mutableMapOf(id to AuthoringRecord(TypeSelection.Complete(TypeUse.Named(TEST_TYPE)), rootFields))
+        val seed = mutableMapOf(id to AuthoringRecord(TypeSelection.Complete(TEST_TYPE.namedUse()), rootFields))
         val store = InMemoryAuthoringViewStore(TestCatalogLease(), AuthoringSeed(seed))
 
         seed.clear()
@@ -187,10 +192,8 @@ val AuthoringViewStoreTest by testSuite {
                 @Suppress("UNCHECKED_CAST")
                 (lease.root.resources as MutableMap<ResourceId, AuthoringRecord>)[ResourceId("other")] = retained
             }
-            shouldThrow<UnsupportedOperationException> {
-                @Suppress("UNCHECKED_CAST")
-                (retainedNumbers.actualType.arguments as MutableList<TypeUse>) += TEXT_USE
-            }
+            // Skir type values are deeply immutable: their lists are not mutable lists at all.
+            (retainedNumbers.actualType.arguments is MutableList<*>) shouldBe false
 
             val stagedItems = mutableListOf(ListItem(ItemId("staged"), DataValue.Integer(BigInteger.TWO)))
             val stagedFields =
@@ -199,7 +202,7 @@ val AuthoringViewStoreTest by testSuite {
                     "count" to DataValue.Integer(BigInteger.TWO),
                     "numbers" to DataValue.Named(LIST_USE, DataValue.ListValue(stagedItems)),
                 )
-            val upserts = mutableMapOf(id to AuthoringRecord(TypeSelection.Complete(TypeUse.Named(TEST_TYPE)), stagedFields))
+            val upserts = mutableMapOf(id to AuthoringRecord(TypeSelection.Complete(TEST_TYPE.namedUse()), stagedFields))
             val staged = lease.stagedView(upserts)
             upserts.clear()
             stagedFields["name"] = DataValue.StringValue("Changed")
@@ -291,7 +294,7 @@ internal class TestCatalogLease private constructor(
     override val checked: CheckedCatalog = DefaultCheckedCatalog(generation, definitions)
     override val nativeBindings: NativeBindingRegistry = FactoryNativeBindingRegistry(checked, nativeBindingFactories)
     override val operations = com.typewritermc.operations.OperationCatalog()
-    override val placementFields = emptyMap<com.typewritermc.types.TypeDefinitionId, com.typewritermc.authoring.ValuePath>()
+    override val placementFields = emptyMap<TypeDefinitionId, com.typewritermc.authoring.ValuePath>()
     internal val openCount: Int get() = state.open.get()
 
     override fun retain(): AuthoringCatalogLease {
@@ -336,7 +339,7 @@ internal fun record(
     numbers: List<Pair<String, Int>> = emptyList(),
 ): AuthoringRecord =
     AuthoringRecord(
-        configuration = TypeSelection.Complete(TypeUse.Named(TEST_TYPE)),
+        configuration = TypeSelection.Complete(TEST_TYPE.namedUse()),
         fields =
             mapOf(
                 "name" to DataValue.StringValue(name),
@@ -420,31 +423,38 @@ internal fun location(
 internal fun <T> com.typewritermc.authoring.Availability<T>.available(): T =
     (this as com.typewritermc.authoring.Availability.Available).value
 
-internal val TEST_TYPE = TypeDefinitionId(TypeId.Qualified("test", "resource"), 1)
-internal val LIST_TYPE = TypeDefinitionId(TypeId.Qualified("typewriter", "list"), 1)
-internal val TEXT_USE = TypeUse.Scalar(ScalarKind.Text)
-internal val INT_USE = TypeUse.Scalar(ScalarKind.Integer(IntegerWidth.SIGNED_32))
-internal val LIST_USE = TypeUse.Named(LIST_TYPE, listOf(INT_USE))
+internal val TEST_TYPE = TypeDefinitionId.qualified("test", "resource")
+internal val LIST_TYPE = TypeDefinitionId.qualified("typewriter", "list")
+internal val TEXT_USE = ScalarKind.TEXT.use
+internal val INT_USE = integerScalar(IntegerWidth.SIGNED_THIRTY_TWO).use
+internal val LIST_USE = LIST_TYPE.namedUse(listOf(INT_USE))
 internal val TEST_DEFINITION =
-    TypeDefinition(
+    TypeDefinition.partial(
         id = TEST_TYPE,
         representation =
-            RepresentationTemplate.Record(
+            RepresentationTemplate.createRecord(
                 fields =
                     listOf(
-                        FieldDeclaration(FieldOwner(TEST_TYPE, "name"), TypeTemplate.Scalar(ScalarKind.Text)),
-                        FieldDeclaration(FieldOwner(TEST_TYPE, "count"), TypeTemplate.Scalar(ScalarKind.Integer(IntegerWidth.SIGNED_32))),
-                        FieldDeclaration(
-                            FieldOwner(TEST_TYPE, "numbers"),
-                            TypeTemplate.Named(LIST_TYPE, listOf(TypeTemplate.Scalar(ScalarKind.Integer(IntegerWidth.SIGNED_32)))),
+                        FieldDeclaration.partial(
+                            owner = FieldOwner(definition = TEST_TYPE, name = "name"),
+                            type = ScalarKind.TEXT.template,
+                        ),
+                        FieldDeclaration.partial(
+                            owner = FieldOwner(definition = TEST_TYPE, name = "count"),
+                            type = integerScalar(IntegerWidth.SIGNED_THIRTY_TWO).template,
+                        ),
+                        FieldDeclaration.partial(
+                            owner = FieldOwner(definition = TEST_TYPE, name = "numbers"),
+                            type = LIST_TYPE.template(listOf(integerScalar(IntegerWidth.SIGNED_THIRTY_TWO).template)),
                         ),
                     ),
+                abstract_ = false,
             ),
     )
-internal val LIST_PARAMETER = com.typewritermc.types.ParameterKey(LIST_TYPE, 0)
+internal val LIST_PARAMETER = ParameterKey(owner = LIST_TYPE, index = 0)
 internal val LIST_DEFINITION =
-    TypeDefinition(
+    TypeDefinition.partial(
         id = LIST_TYPE,
-        parameters = listOf(com.typewritermc.types.TypeParameter(LIST_PARAMETER, "T")),
-        representation = RepresentationTemplate.Sequence(TypeTemplate.Parameter(LIST_PARAMETER), CollectionKind.List),
+        parameters = listOf(TypeParameter.partial(key = LIST_PARAMETER, name = "T")),
+        representation = RepresentationTemplate.createSequence(item = LIST_PARAMETER.template, kind = CollectionKind.LIST),
     )

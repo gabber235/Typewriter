@@ -17,12 +17,12 @@ import com.typewritermc.services.libs.utils.closeAll
 import com.typewritermc.types.EndpointBindingTemplate
 import com.typewritermc.types.NativeBindingRegistry
 import com.typewritermc.types.RelationContract
-import com.typewritermc.types.TypeDefinitionId
 import com.typewritermc.types.catalog.CheckedCatalog
 import com.typewritermc.types.catalog.EditorCatalogSnapshot
 import kotlinx.coroutines.channels.BufferOverflow
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.SharedFlow
+import skirout.editor.v1.type_catalog.TypeDefinitionId
 import java.util.concurrent.atomic.AtomicBoolean
 
 data class RealmCatalogIncarnation(

@@ -4,23 +4,30 @@ import com.typewritermc.authoring.ValuePath
 import com.typewritermc.checking.CatalogGeneration
 import com.typewritermc.configuration.PortableExpressionChecker
 import com.typewritermc.types.DataValue
-import com.typewritermc.types.FloatWidth
-import com.typewritermc.types.ScalarKind
-import com.typewritermc.types.TypeUse
 import com.typewritermc.types.catalog.DefaultCheckedCatalog
 import com.typewritermc.types.catalog.resolve
+import com.typewritermc.types.floatScalar
+import com.typewritermc.types.integerScalar
+import com.typewritermc.types.qualified
+import com.typewritermc.types.template
+import com.typewritermc.types.use
 import de.infix.testBalloon.framework.core.testSuite
 import io.kotest.matchers.shouldBe
 import skirout.editor.v1.expression.ExpressionNode
+import skirout.editor.v1.type_catalog.FloatWidth
+import skirout.editor.v1.type_catalog.IntegerWidth
+import skirout.editor.v1.type_catalog.ParameterKey
+import skirout.editor.v1.type_catalog.ScalarKind
+import skirout.editor.v1.type_catalog.TypeDefinitionId
 
 val PortableExpressionCheckingTest by testSuite {
     val catalog = DefaultCheckedCatalog(CatalogGeneration("expression mappings"), emptyList())
     val checker = PortableExpressionChecker(catalog::resolve)
     val candidate = ExpressionBindingId("candidate")
     val parent = ExpressionBindingId("parent")
-    val text = TypeUse.Scalar(ScalarKind.Text)
-    val decimal = TypeUse.Scalar(ScalarKind.Decimal)
-    val floating = TypeUse.Scalar(ScalarKind.Float(FloatWidth.FLOAT_32))
+    val text = ScalarKind.TEXT.use
+    val decimal = ScalarKind.DECIMAL.use
+    val floating = floatScalar(FloatWidth.THIRTY_TWO).use
 
     fun read(id: ExpressionBindingId) = testInput(id, ValuePath())
 
@@ -31,17 +38,11 @@ val PortableExpressionCheckingTest by testSuite {
 
     test("unused generic ambient bindings do not postpone concrete candidate checking") {
         val parameterOwner =
-            com.typewritermc.types.TypeDefinitionId(
-                com.typewritermc.types.TypeId
-                    .Qualified("test", "GenericAmbient"),
-                1,
-            )
+            TypeDefinitionId.qualified("test", "GenericAmbient")
         val generic =
-            com.typewritermc.types.TypeTemplate
-                .Parameter(com.typewritermc.types.ParameterKey(parameterOwner, 0))
+            ParameterKey(owner = parameterOwner, index = 0).template
         val concrete =
-            com.typewritermc.types.TypeTemplate
-                .Scalar(ScalarKind.Integer(com.typewritermc.types.IntegerWidth.SIGNED_32))
+            integerScalar(IntegerWidth.SIGNED_THIRTY_TWO).template
         val bindings = mapOf(parent to generic, candidate to concrete)
         com.typewritermc.presentation.checkPresentationExpression(
             read(candidate),
@@ -62,7 +63,7 @@ val PortableExpressionCheckingTest by testSuite {
             true
     }
     test("typed numeric rounding preserves declared unsigned width and missing input") {
-        val unsigned = TypeUse.Scalar(ScalarKind.Integer(com.typewritermc.types.IntegerWidth.UNSIGNED_64))
+        val unsigned = integerScalar(IntegerWidth.UNSIGNED_SIXTY_FOUR).use
         val expression = round(read(candidate), read(parent), testLiteral(DataValue.StringValue("Floor")))
         val inputs = mapOf(candidate to nominalExpressionType(unsigned), parent to nominalExpressionType(unsigned, true))
         checker.checkExpressionCodes(expression, inputs, nominalExpressionType(unsigned, true)) shouldBe emptyList()
@@ -109,7 +110,7 @@ val PortableExpressionCheckingTest by testSuite {
             ).isNotEmpty() shouldBe true
     }
     test("completion cannot implicitly narrow another declared source width") {
-        val wide = TypeUse.Scalar(ScalarKind.Float(FloatWidth.FLOAT_64))
+        val wide = floatScalar(FloatWidth.SIXTY_FOUR).use
         checker
             .checkExpressionCodes(
                 read(parent),
@@ -144,7 +145,7 @@ val PortableExpressionCheckingTest by testSuite {
                 testLiteral(DataValue.StringValue("MinutesAndSeconds")),
                 testLiteral(DataValue.Integer(java.math.BigInteger.ZERO)),
             ),
-            mapOf(candidate to nominalExpressionType(TypeUse.Scalar(ScalarKind.Duration), false)),
+            mapOf(candidate to nominalExpressionType(ScalarKind.DURATION.use, false)),
             nominalExpressionType(text, false),
         ) shouldBe emptyList()
     }

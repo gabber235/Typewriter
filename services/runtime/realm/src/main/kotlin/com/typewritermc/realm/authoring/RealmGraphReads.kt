@@ -40,6 +40,7 @@ import com.typewritermc.types.RelationContract
 import com.typewritermc.types.RelationFamilyId
 import com.typewritermc.types.ResourceId
 import com.typewritermc.types.catalog.Resolution
+import com.typewritermc.types.use
 
 /** Traverses only the graph derived from the retained authored reads. */
 internal object RealmGraphReads {
@@ -363,7 +364,7 @@ internal class CapturedGraphIndex(
             }
 
             is TypeSelection.Complete -> {
-                root.catalog.checked.resolve(selected.use) !is Resolution.Ready
+                root.catalog.checked.resolve(selected.use.use) !is Resolution.Ready
             }
         }
     }

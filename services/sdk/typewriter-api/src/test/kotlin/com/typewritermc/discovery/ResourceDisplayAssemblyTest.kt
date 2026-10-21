@@ -35,7 +35,6 @@ import com.typewritermc.types.ColorDefinition
 import com.typewritermc.types.DataValue
 import com.typewritermc.types.EndpointCardinality
 import com.typewritermc.types.EndpointDefinition
-import com.typewritermc.types.EndpointId
 import com.typewritermc.types.EndpointSlot
 import com.typewritermc.types.Icon
 import com.typewritermc.types.RESOURCE_OWNERSHIP_FAMILY_ID
@@ -43,19 +42,23 @@ import com.typewritermc.types.RelationContract
 import com.typewritermc.types.RelationDeletePolicy
 import com.typewritermc.types.RelationFamilyId
 import com.typewritermc.types.RelationId
-import com.typewritermc.types.RepresentationTemplate
 import com.typewritermc.types.ResourceId
 import com.typewritermc.types.ResourceTarget
-import com.typewritermc.types.TypeDefinition
-import com.typewritermc.types.TypeDefinitionId
 import com.typewritermc.types.TypeDisplay
-import com.typewritermc.types.TypeId
-import com.typewritermc.types.TypeTemplate
-import com.typewritermc.types.TypeUse
 import com.typewritermc.types.catalog.DeclarationOrigin
+import com.typewritermc.types.namedTemplate
+import com.typewritermc.types.namedUse
+import com.typewritermc.types.qualified
+import com.typewritermc.types.template
+import com.typewritermc.types.use
 import de.infix.testBalloon.framework.core.testSuite
 import io.kotest.matchers.collections.shouldNotContain
 import io.kotest.matchers.shouldBe
+import skirout.editor.v1.type_catalog.EndpointId
+import skirout.editor.v1.type_catalog.RepresentationTemplate
+import skirout.editor.v1.type_catalog.TypeDefinition
+import skirout.editor.v1.type_catalog.TypeDefinitionId
+import skirout.editor.v1.type_catalog.TypeUse
 
 val ResourceDisplayAssemblyTest by testSuite {
     test("a book with a blank title is labelled with its type name, and a titled book with its title") {
@@ -71,12 +74,12 @@ val ResourceDisplayAssemblyTest by testSuite {
         val displays = assembly.displays
 
         displays.displayFor(BookDefinition.id, assembly.checked)?.target shouldBe
-            ResourceTarget.Type(TypeTemplate.Named(BookDefinition.id))
+            ResourceTarget.Type(BookDefinition.id.namedTemplate())
         displays.displayFor(fixturePage, assembly.checked)?.target shouldBe
-            ResourceTarget.Type(TypeTemplate.Named(PageDefinition.id))
+            ResourceTarget.Type(PageDefinition.id.namedTemplate())
         displays.displayFor(CueDefinition.id, assembly.checked)?.target shouldBe ResourceTarget.AnyResource
         assembly.label(
-            AuthoringRecord(TypeSelection.Complete(TypeUse.Named(fixturePage)), mapOf("name" to DataValue.StringValue("Intro"))),
+            AuthoringRecord(TypeSelection.Complete(fixturePage.namedUse()), mapOf("name" to DataValue.StringValue("Intro"))),
         ) shouldBe
             "Intro"
     }
@@ -89,7 +92,7 @@ val ResourceDisplayAssemblyTest by testSuite {
                 searchKeys =
                     mapOf(fixtureResource to "fixture"),
             )
-        val record = AuthoringRecord(TypeSelection.Complete(TypeUse.Named(fixtureResource)), emptyMap())
+        val record = AuthoringRecord(TypeSelection.Complete(fixtureResource.namedUse()), emptyMap())
         val formulas = assembly.displays.displayFor(fixtureResource, assembly.checked)!!
 
         formulas.target shouldBe ResourceTarget.AnyResource
@@ -100,7 +103,7 @@ val ResourceDisplayAssemblyTest by testSuite {
 
     test("a display formula that reads a host context input is rejected") {
         val contextual =
-            displayProvider(ResourceTarget.Type(TypeTemplate.Named(BookDefinition.id))) {
+            displayProvider(ResourceTarget.Type(BookDefinition.id.namedTemplate())) {
                 DisplayFormulas(
                     label = input<String>(ExpressionBindingId("context:active")).orElse(literal("Book")),
                     accent = literal(Color(0xFF000000u)),
@@ -111,9 +114,9 @@ val ResourceDisplayAssemblyTest by testSuite {
 
         assembly.diagnosticCodes(BookDefinition.id) shouldBe listOf("display_reads_context")
         val otherResource =
-            displayProvider(ResourceTarget.Type(TypeTemplate.Named(BookDefinition.id))) {
+            displayProvider(ResourceTarget.Type(BookDefinition.id.namedTemplate())) {
                 val other =
-                    RuntimePresentationQueries(mapOf(Book::class to TypeTemplate.Named(BookDefinition.id)))
+                    RuntimePresentationQueries(mapOf(Book::class to BookDefinition.id.namedTemplate()))
                         .resource(literal(ResourceId("other")), Book::class)
                 DisplayFormulas(
                     label = other.fields.title.orElse(literal("Book")),
@@ -133,7 +136,7 @@ val ResourceDisplayAssemblyTest by testSuite {
     }
 
     test("two displays for one target are rejected and the resource falls back to a less specific display") {
-        val target = ResourceTarget.Type(TypeTemplate.Named(BookDefinition.id))
+        val target = ResourceTarget.Type(BookDefinition.id.namedTemplate())
         val constant = { label: String ->
             displayProvider(target) {
                 DisplayFormulas(literal(label), literal(Color(0xFF000000u)), literal(Icon.Iconify("mdi:book")))
@@ -216,8 +219,8 @@ val ResourceDisplayAssemblyTest by testSuite {
     }
 }
 
-private val fixtureResource = TypeDefinitionId(TypeId.Qualified("fixture", "DisplayResource"), 1)
-private val fixturePage = TypeDefinitionId(TypeId.Qualified("fixture", "DisplayPage"), 1)
+private val fixtureResource = TypeDefinitionId.qualified("fixture", "DisplayResource")
+private val fixturePage = TypeDefinitionId.qualified("fixture", "DisplayPage")
 
 private fun fixtureType(
     id: TypeDefinitionId,
@@ -225,10 +228,17 @@ private fun fixtureType(
     display: TypeDisplay? = null,
 ) = id to
     Pair(
-        TypeDefinition(
-            id,
-            representation = RepresentationTemplate.Record(emptyList()),
-            parents = listOfNotNull(parent).map { TypeTemplate.Named(it) },
+        TypeDefinition.partial(
+            id = id,
+            representation =
+                RepresentationTemplate.createRecord(
+                    fields = emptyList(),
+                    abstract_ = false,
+                ),
+            parents =
+                listOfNotNull(parent).map {
+                    it.namedTemplate()
+                },
         ),
         display,
     )
@@ -237,7 +247,7 @@ private fun endpoint(
     id: String,
     slot: EndpointSlot,
     resource: TypeDefinitionId,
-) = EndpointDefinition(EndpointId(id), slot, TypeTemplate.Named(resource), EndpointCardinality.Many, RelationDeletePolicy.CLEAR)
+) = EndpointDefinition(EndpointId(value = id), slot, resource.namedTemplate(), EndpointCardinality.Many, RelationDeletePolicy.CLEAR)
 
 private fun book(title: String) =
     AuthoringRecord(

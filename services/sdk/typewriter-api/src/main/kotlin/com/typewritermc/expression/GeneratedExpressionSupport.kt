@@ -17,6 +17,7 @@ import com.typewritermc.types.immutableCopy
 import com.typewritermc.types.skir.SkirAuthoringValueCodec
 import com.typewritermc.types.skir.SkirDataValueCodec
 import com.typewritermc.types.skir.getOrThrow
+import com.typewritermc.types.use
 import skirout.editor.v1.expression.ExpressionNode
 import skirout.editor.v1.expression.NumberCompareOperation
 import skirout.editor.v1.expression.RuleUnaryOperation

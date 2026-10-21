@@ -12,16 +12,20 @@ import com.squareup.kotlinpoet.asTypeName
 import com.squareup.kotlinpoet.joinToCode
 import com.typewritermc.codegen.DefinitionReferences
 import com.typewritermc.codegen.TypeParameterBindings
+import com.typewritermc.codegen.appliedNamedUseCode
 import com.typewritermc.codegen.appliedUseCode
 import com.typewritermc.codegen.kotlinCode
 import com.typewritermc.codegen.mapCode
 import com.typewritermc.configuration.FieldPatternSegment
 import com.typewritermc.configuration.RelativeFieldPattern
 import com.typewritermc.configuration.RepresentationKind
-import com.typewritermc.types.CollectionKind
-import com.typewritermc.types.ScalarKind
-import com.typewritermc.types.TypeTemplate
-import com.typewritermc.types.TypeUse
+import com.typewritermc.types.nullable
+import com.typewritermc.types.template
+import com.typewritermc.types.unknownVariant
+import skirout.editor.v1.type_catalog.CollectionKind
+import skirout.editor.v1.type_catalog.ScalarKind
+import skirout.editor.v1.type_catalog.TypeTemplate
+import skirout.editor.v1.type_catalog.TypeUse
 import java.math.BigDecimal
 import kotlin.reflect.KClass
 import com.typewritermc.codegen.TypewriterApi as Api
@@ -52,12 +56,16 @@ internal val FieldShape.configurationScope: TypeName
 
             is FieldShape.Sequence -> {
                 when (kind) {
-                    CollectionKind.List -> {
+                    CollectionKind.LIST -> {
                         Api.ListField.parameterizedBy(item.configurationValue, item.configurationScope, item.expressionScope)
                     }
 
-                    CollectionKind.Set -> {
+                    CollectionKind.SET -> {
                         Api.SetField.parameterizedBy(item.configurationValue, item.configurationScope)
+                    }
+
+                    else -> {
+                        unknownVariant(kind)
                     }
                 }
             }
@@ -98,8 +106,8 @@ internal val FieldShape.configurationValue: TypeName
 internal val FieldShape.configurationExpected: TypeTemplate
     get() =
         when (this) {
-            is FieldShape.Nullable -> TypeTemplate.Nullable(value.configurationExpected)
-            is FieldShape.Wrapped -> TypeTemplate.Scalar(kind)
+            is FieldShape.Nullable -> value.configurationExpected.nullable()
+            is FieldShape.Wrapped -> kind.template
             else -> template
         }
 
@@ -129,8 +137,9 @@ internal val FieldShape.expressionScope: TypeName
 
             is FieldShape.Sequence -> {
                 when (kind) {
-                    CollectionKind.List -> Api.ListExpressions.parameterizedBy(item.native)
-                    CollectionKind.Set -> Api.SetExpressions.parameterizedBy(item.native)
+                    CollectionKind.LIST -> Api.ListExpressions.parameterizedBy(item.native)
+                    CollectionKind.SET -> Api.SetExpressions.parameterizedBy(item.native)
+                    else -> unknownVariant(kind)
                 }
             }
 
@@ -181,8 +190,8 @@ internal val FieldShape.presentationControl: TypeName
 
             is FieldShape.Sequence -> {
                 when {
-                    kind == CollectionKind.List && item is FieldShape.Link -> Api.ResourcesControl.parameterizedBy(item.target)
-                    kind == CollectionKind.List -> Api.ListControl.parameterizedBy(item.presentationNested)
+                    kind == CollectionKind.LIST && item is FieldShape.Link -> Api.ResourcesControl.parameterizedBy(item.target)
+                    kind == CollectionKind.LIST -> Api.ListControl.parameterizedBy(item.presentationNested)
                     else -> Api.SetControl.parameterizedBy(item.presentationNested)
                 }
             }
@@ -223,7 +232,7 @@ internal val FieldShape.representationKind: RepresentationKind
             is FieldShape.Wrapped -> kind.representationKind
             is FieldShape.Color -> kind.representationKind
             is FieldShape.Link -> RepresentationKind.Link
-            is FieldShape.Sequence -> if (kind == CollectionKind.List) RepresentationKind.List else RepresentationKind.Set
+            is FieldShape.Sequence -> if (kind == CollectionKind.LIST) RepresentationKind.List else RepresentationKind.Set
             is FieldShape.Mapping -> RepresentationKind.Map
             is FieldShape.Enumeration -> RepresentationKind.Enum
             is FieldShape.Record, is FieldShape.Parameter -> RepresentationKind.Record
@@ -257,7 +266,7 @@ internal fun FieldShape.draftType(draftVariables: List<TypeVariableName>): TypeN
         }
 
         is FieldShape.Sequence -> {
-            (if (kind == CollectionKind.List) Api.DraftList else Api.DraftSet).parameterizedBy(item.draftType(draftVariables))
+            (if (kind == CollectionKind.LIST) Api.DraftList else Api.DraftSet).parameterizedBy(item.draftType(draftVariables))
         }
 
         is FieldShape.Mapping -> {
@@ -296,8 +305,8 @@ internal fun FieldShape.draftProjection(): CodeBlock =
         is FieldShape.Sequence -> {
             CodeBlock.of(
                 "%M(%L,♢%L)",
-                if (kind == CollectionKind.List) Api.listDraftProjection else Api.setDraftProjection,
-                template.appliedUseCode(),
+                if (kind == CollectionKind.LIST) Api.listDraftProjection else Api.setDraftProjection,
+                template.appliedNamedUseCode(),
                 item.draftProjection(),
             )
         }
@@ -306,7 +315,7 @@ internal fun FieldShape.draftProjection(): CodeBlock =
             CodeBlock.of(
                 "%M(%L,♢%L,♢%L)",
                 Api.mapDraftProjection,
-                template.appliedUseCode(),
+                template.appliedNamedUseCode(),
                 key.draftProjection(),
                 value.draftProjection(),
             )
@@ -342,8 +351,8 @@ private fun FieldShape.representationProjection(
         "%M<%T>(%L,♢%T(%L))",
         Api.representationReadProjection,
         representation,
-        template.appliedUseCode(),
-        TypeUse.Scalar::class,
+        template.appliedNamedUseCode(),
+        TypeUse.ScalarWrapper::class,
         kind.kotlinCode(),
     )
 
@@ -442,10 +451,11 @@ private fun FieldShape.nestedPresentationDescriptor(): CodeBlock =
 internal val TypeTemplate.containsParameter: Boolean
     get() =
         when (this) {
-            is TypeTemplate.Parameter -> true
-            is TypeTemplate.Named -> arguments.any { it.containsParameter }
-            is TypeTemplate.Nullable -> value.containsParameter
-            is TypeTemplate.Scalar -> false
+            is TypeTemplate.ParameterWrapper -> true
+            is TypeTemplate.NamedWrapper -> value.arguments.any { it.containsParameter }
+            is TypeTemplate.NullableWrapper -> value.value.containsParameter
+            is TypeTemplate.ScalarWrapper -> false
+            else -> unknownVariant(this)
         }
 
 internal fun RelativeFieldPattern.kotlinCode(): CodeBlock =
@@ -467,52 +477,81 @@ private fun ClassName.factory(): ClassName = peerClass(simpleName + "Factory")
 
 private fun ScalarKind.configurationScope(native: TypeName): TypeName =
     when (this) {
-        ScalarKind.Text -> Api.Text
-        is ScalarKind.Integer -> Api.Integer.parameterizedBy(native)
-        is ScalarKind.Float -> Api.Real.parameterizedBy(native)
-        ScalarKind.Decimal -> Api.Decimal
-        ScalarKind.Boolean -> Api.BooleanField
-        ScalarKind.Bytes -> Api.Bytes
-        ScalarKind.Timestamp -> Api.TimestampField
-        ScalarKind.Duration -> Api.DurationField
-        ScalarKind.Unit -> Api.RecordField.parameterizedBy(UNIT, Api.GenericValueExpressions.parameterizedBy(UNIT))
+        ScalarKind.TEXT -> Api.Text
+        is ScalarKind.IntegerWrapper -> Api.Integer.parameterizedBy(native)
+        is ScalarKind.FloatWrapper -> Api.Real.parameterizedBy(native)
+        ScalarKind.DECIMAL -> Api.Decimal
+        ScalarKind.BOOLEAN -> Api.BooleanField
+        ScalarKind.BYTES -> Api.Bytes
+        ScalarKind.TIMESTAMP -> Api.TimestampField
+        ScalarKind.DURATION -> Api.DurationField
+        ScalarKind.UNIT -> Api.RecordField.parameterizedBy(UNIT, Api.GenericValueExpressions.parameterizedBy(UNIT))
+        else -> unknownVariant(this)
     }
 
 private fun ScalarKind.expressionScope(native: TypeName): TypeName =
     when (this) {
-        ScalarKind.Text -> Api.TextExpressions
-        is ScalarKind.Integer, is ScalarKind.Float -> Api.NumberExpressions.parameterizedBy(native.copy(nullable = false))
-        ScalarKind.Decimal -> Api.NumberExpressions.parameterizedBy(BigDecimal::class.asTypeName())
-        ScalarKind.Boolean -> Api.BooleanExpressions
-        ScalarKind.Bytes -> Api.BytesExpressions
-        ScalarKind.Timestamp -> Api.TimestampExpressions
-        ScalarKind.Duration -> Api.DurationExpressions
-        ScalarKind.Unit -> Api.GenericValueExpressions.parameterizedBy(UNIT)
+        ScalarKind.TEXT -> Api.TextExpressions
+        is ScalarKind.IntegerWrapper, is ScalarKind.FloatWrapper -> Api.NumberExpressions.parameterizedBy(native.copy(nullable = false))
+        ScalarKind.DECIMAL -> Api.NumberExpressions.parameterizedBy(BigDecimal::class.asTypeName())
+        ScalarKind.BOOLEAN -> Api.BooleanExpressions
+        ScalarKind.BYTES -> Api.BytesExpressions
+        ScalarKind.TIMESTAMP -> Api.TimestampExpressions
+        ScalarKind.DURATION -> Api.DurationExpressions
+        ScalarKind.UNIT -> Api.GenericValueExpressions.parameterizedBy(UNIT)
+        else -> unknownVariant(this)
     }
 
 private fun ScalarKind.presentationControl(native: TypeName): TypeName =
     when (this) {
-        ScalarKind.Text -> Api.TextControl
-        is ScalarKind.Integer, is ScalarKind.Float, ScalarKind.Decimal -> Api.NumberControl.parameterizedBy(native.copy(nullable = false))
-        ScalarKind.Boolean -> Api.BooleanControl
-        ScalarKind.Bytes -> Api.BytesControl
-        ScalarKind.Timestamp -> Api.DateTimeControl
-        ScalarKind.Duration -> Api.DurationControl
-        ScalarKind.Unit -> Api.Control
+        ScalarKind.TEXT -> {
+            Api.TextControl
+        }
+
+        is ScalarKind.IntegerWrapper, is ScalarKind.FloatWrapper, ScalarKind.DECIMAL -> {
+            Api.NumberControl.parameterizedBy(
+                native.copy(nullable = false),
+            )
+        }
+
+        ScalarKind.BOOLEAN -> {
+            Api.BooleanControl
+        }
+
+        ScalarKind.BYTES -> {
+            Api.BytesControl
+        }
+
+        ScalarKind.TIMESTAMP -> {
+            Api.DateTimeControl
+        }
+
+        ScalarKind.DURATION -> {
+            Api.DurationControl
+        }
+
+        ScalarKind.UNIT -> {
+            Api.Control
+        }
+
+        else -> {
+            unknownVariant(this)
+        }
     }
 
 internal val ScalarKind.representationKind: RepresentationKind
     get() =
         when (this) {
-            ScalarKind.Unit -> RepresentationKind.Unit
-            ScalarKind.Boolean -> RepresentationKind.Boolean
-            ScalarKind.Text -> RepresentationKind.Text
-            ScalarKind.Bytes -> RepresentationKind.Bytes
-            is ScalarKind.Integer -> RepresentationKind.Integer
-            is ScalarKind.Float -> RepresentationKind.Float
-            ScalarKind.Decimal -> RepresentationKind.Decimal
-            ScalarKind.Timestamp -> RepresentationKind.Timestamp
-            ScalarKind.Duration -> RepresentationKind.Duration
+            ScalarKind.UNIT -> RepresentationKind.Unit
+            ScalarKind.BOOLEAN -> RepresentationKind.Boolean
+            ScalarKind.TEXT -> RepresentationKind.Text
+            ScalarKind.BYTES -> RepresentationKind.Bytes
+            is ScalarKind.IntegerWrapper -> RepresentationKind.Integer
+            is ScalarKind.FloatWrapper -> RepresentationKind.Float
+            ScalarKind.DECIMAL -> RepresentationKind.Decimal
+            ScalarKind.TIMESTAMP -> RepresentationKind.Timestamp
+            ScalarKind.DURATION -> RepresentationKind.Duration
+            else -> unknownVariant(this)
         }
 
 /** A generic draft projection is a function named like the projection object of a non generic declaration. */

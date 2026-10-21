@@ -37,13 +37,15 @@ import com.typewritermc.services.libs.utils.rethrowExceptional
 import com.typewritermc.types.DataValue
 import com.typewritermc.types.ResourceId
 import com.typewritermc.types.ResourceTarget
-import com.typewritermc.types.TypeTemplate
+import com.typewritermc.types.template
+import com.typewritermc.types.use
 import skirout.editor.v1.operation.OperationAvailability
 import skirout.editor.v1.operation.OperationCardinality
 import skirout.editor.v1.operation.OperationConfirmation
 import skirout.editor.v1.operation.ResolvedResourceOperation
 import skirout.editor.v1.operation.ResolvedResourceOperations
 import skirout.editor.v1.resource_operations.DropCandidates
+import skirout.editor.v1.type_catalog.NamedTypeTemplate
 import java.util.UUID
 import skirout.editor.v1.type_catalog.ResourceId as SkirResourceId
 
@@ -304,12 +306,12 @@ private fun BoundResourceOperation.covers(
 }
 
 private fun AuthoringRecord.matches(
-    target: TypeTemplate.Named,
+    target: NamedTypeTemplate,
     view: AuthoringView,
 ): Boolean =
     when (val actual = configuration) {
         is TypeSelection.Complete -> {
-            view.catalog.checked.isReadableAs(actual.use, target.asClosedUse())
+            view.catalog.checked.isReadableAs(actual.use.use, target.asClosedUse().use)
         }
 
         is TypeSelection.Pending -> {

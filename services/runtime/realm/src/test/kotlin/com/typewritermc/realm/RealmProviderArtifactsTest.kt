@@ -44,19 +44,20 @@ import com.typewritermc.presentation.PresentationTarget
 import com.typewritermc.types.DataValue
 import com.typewritermc.types.GeneratedRecordNativeBinding
 import com.typewritermc.types.NativeBindingFactory
-import com.typewritermc.types.RepresentationTemplate
-import com.typewritermc.types.TypeDefinition
-import com.typewritermc.types.TypeDefinitionId
-import com.typewritermc.types.TypeId
-import com.typewritermc.types.TypeTemplate
-import com.typewritermc.types.TypeUse
 import com.typewritermc.types.catalog.CheckedType
 import com.typewritermc.types.catalog.DeclarationStatus
 import com.typewritermc.types.catalog.Resolution
+import com.typewritermc.types.namedTemplate
+import com.typewritermc.types.namedUse
+import com.typewritermc.types.qualified
+import com.typewritermc.types.use
 import de.infix.testBalloon.framework.core.testSuite
 import io.kotest.matchers.shouldBe
 import skirout.editor.v1.catalog.PresentationRole
 import skirout.editor.v1.type_catalog.PresentationId
+import skirout.editor.v1.type_catalog.RepresentationTemplate
+import skirout.editor.v1.type_catalog.TypeDefinition
+import skirout.editor.v1.type_catalog.TypeDefinitionId
 import java.nio.file.Files
 import java.nio.file.Path
 import java.util.jar.JarEntry
@@ -136,15 +137,15 @@ val RealmProviderArtifactsTest by testSuite {
                 val assembly = deployment.providers.contributions.assemble(CatalogAssemblyContext(CatalogGeneration("realm common")))
                 val published = assembly.snapshot.types.single { it.definition.id == RealmProviderFixture.type }
                 published.status shouldBe DeclarationStatus.Ready
-                val checked = (assembly.checked.resolve(TypeUse.Named(RealmProviderFixture.type)) as Resolution.Ready).value
+                val checked = (assembly.checked.resolve(RealmProviderFixture.type.use()) as Resolution.Ready).value
                 val native = assembly.bindings.bind(checked)
                 @Suppress("UNCHECKED_CAST")
                 (native as com.typewritermc.types.NativeBinding<Unit>).encode(Unit) shouldBe
-                    DataValue.Named(TypeUse.Named(RealmProviderFixture.type), DataValue.Record(emptyMap()))
+                    DataValue.Named(RealmProviderFixture.type.namedUse(), DataValue.Record(emptyMap()))
                 assembly.snapshot.presentations
                     .single()
                     .target shouldBe
-                    PresentationTarget.Named(TypeTemplate.Named(RealmProviderFixture.type))
+                    PresentationTarget.Named(RealmProviderFixture.type.namedTemplate())
                 deployment.providers.registrars
                     .single()
                     .descriptor.id shouldBe RuntimeRegistrarId("fixture.realm")
@@ -162,7 +163,7 @@ val RealmProviderArtifactsTest by testSuite {
 }
 
 object RealmProviderFixture {
-    val type = TypeDefinitionId(TypeId.Qualified("fixture", "RealmCommon"), 1)
+    val type = TypeDefinitionId.qualified("fixture", "RealmCommon")
     var realmRegistrars = 0
     var executionRegistrars = 0
     val registrar =
@@ -173,7 +174,11 @@ object RealmProviderFixture {
 }
 
 class RealmCommonTypeProvider : GeneratedTypeProvider {
-    override val definition = TypeDefinition(RealmProviderFixture.type, representation = RepresentationTemplate.Record(emptyList()))
+    override val definition =
+        TypeDefinition.partial(
+            id = RealmProviderFixture.type,
+            representation = RepresentationTemplate.createRecord(fields = emptyList(), abstract_ = false),
+        )
 }
 
 class RealmCommonBindingProvider : NativeBindingFactory {
@@ -191,7 +196,7 @@ class RealmCommonPresentationProvider : GeneratedPresentationProvider {
         PresentationDescriptor(
             PresentationId(namespace = "fixture", name = "common"),
             origin.owner,
-            PresentationTarget.Named(TypeTemplate.Named(RealmProviderFixture.type)),
+            PresentationTarget.Named(RealmProviderFixture.type.namedTemplate()),
             setOf(PresentationRole.INSPECTOR),
             0,
         )
@@ -222,7 +227,11 @@ class RealmTargetedTypeProvider : GeneratedTypeProvider {
         error("Targeted engine code must never be constructed by Realm.")
     }
 
-    override val definition = TypeDefinition(RealmProviderFixture.type, representation = RepresentationTemplate.Record(emptyList()))
+    override val definition =
+        TypeDefinition.partial(
+            id = RealmProviderFixture.type,
+            representation = RepresentationTemplate.createRecord(fields = emptyList(), abstract_ = false),
+        )
 }
 
 private fun providerJar(

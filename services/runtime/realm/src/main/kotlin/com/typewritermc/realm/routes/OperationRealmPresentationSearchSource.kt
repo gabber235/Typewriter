@@ -18,8 +18,8 @@ import com.typewritermc.types.DataValue
 import com.typewritermc.types.NativeBinding
 import com.typewritermc.types.ResourceId
 import com.typewritermc.types.catalog.Resolution
+import com.typewritermc.types.requireValid
 import com.typewritermc.types.skir.SkirDataValueCodec
-import com.typewritermc.types.skir.SkirTypeCodec
 import com.typewritermc.types.skir.getOrThrow
 import com.typewritermc.types.toTemplate
 import kotlinx.coroutines.CoroutineScope
@@ -73,7 +73,7 @@ internal class OperationRealmPresentationSearchSource(
                 requireNotNull(baseline.catalog.operations.candidateSearch(CapabilityId(request.capabilityId.value))) {
                     "The operation search is unavailable."
                 }
-            require(SkirTypeCodec.decode(request.resultType).getOrThrow() == search.descriptor.resultType.toTemplate()) {
+            require(request.resultType.requireValid() == search.descriptor.resultType.toTemplate()) {
                 "The operation search result type is invalid."
             }
             require(

@@ -8,20 +8,20 @@ import com.typewritermc.engine.CompiledResourceKey
 import com.typewritermc.engine.RuntimeCompilationFacts
 import com.typewritermc.engine.canonicalized
 import com.typewritermc.types.DataValue
-import com.typewritermc.types.RepresentationTemplate
 import com.typewritermc.types.ResourceId
-import com.typewritermc.types.ScalarKind
-import com.typewritermc.types.TypeDefinition
-import com.typewritermc.types.TypeDefinitionId
-import com.typewritermc.types.TypeId
-import com.typewritermc.types.TypeUse
 import com.typewritermc.types.catalog.DefaultCheckedCatalog
+import com.typewritermc.types.namedUse
+import com.typewritermc.types.qualified
 import de.infix.testBalloon.framework.core.testSuite
 import io.kotest.assertions.throwables.shouldThrow
+import skirout.editor.v1.type_catalog.RepresentationTemplate
+import skirout.editor.v1.type_catalog.ScalarKind
+import skirout.editor.v1.type_catalog.TypeDefinition
+import skirout.editor.v1.type_catalog.TypeDefinitionId
 
 val RuntimeCompilationEncodingTest by testSuite {
     test("conflicting declarations with one identity are rejected before canonical encoding") {
-        val id = TypeDefinitionId(TypeId.Qualified("test", "runtime"), 1)
+        val id = TypeDefinitionId.qualified("test", "runtime")
         val facts =
             RuntimeCompilationFacts(
                 formatRevision = com.typewritermc.engine.RESOURCE_GRAPH_FORMAT_REVISION,
@@ -30,8 +30,8 @@ val RuntimeCompilationEncodingTest by testSuite {
                 edges = emptyList(),
                 types =
                     listOf(
-                        TypeDefinition(id, representation = RepresentationTemplate.Scalar(ScalarKind.Text)),
-                        TypeDefinition(id, representation = RepresentationTemplate.Scalar(ScalarKind.Boolean)),
+                        TypeDefinition.partial(id = id, representation = RepresentationTemplate.createScalar(kind = ScalarKind.TEXT)),
+                        TypeDefinition.partial(id = id, representation = RepresentationTemplate.createScalar(kind = ScalarKind.BOOLEAN)),
                     ),
                 relations = emptyList(),
             )
@@ -40,10 +40,12 @@ val RuntimeCompilationEncodingTest by testSuite {
     }
 
     test("admission closes declarations from the resource level actual type") {
-        val resourceId = TypeDefinitionId(TypeId.Qualified("test", "resource"), 1)
-        val payloadId = TypeDefinitionId(TypeId.Qualified("test", "payload"), 1)
-        val resourceDefinition = TypeDefinition(resourceId, representation = RepresentationTemplate.Scalar(ScalarKind.Text))
-        val payloadDefinition = TypeDefinition(payloadId, representation = RepresentationTemplate.Scalar(ScalarKind.Text))
+        val resourceId = TypeDefinitionId.qualified("test", "resource")
+        val payloadId = TypeDefinitionId.qualified("test", "payload")
+        val resourceDefinition =
+            TypeDefinition.partial(id = resourceId, representation = RepresentationTemplate.createScalar(kind = ScalarKind.TEXT))
+        val payloadDefinition =
+            TypeDefinition.partial(id = payloadId, representation = RepresentationTemplate.createScalar(kind = ScalarKind.TEXT))
         val key = CompiledResourceKey(ResourceId("page"), CompilationContext.Root)
         val facts =
             RuntimeCompilationFacts(
@@ -53,10 +55,10 @@ val RuntimeCompilationEncodingTest by testSuite {
                     listOf(
                         CompiledResource(
                             key = key,
-                            actualType = TypeUse.Named(resourceId),
+                            actualType = resourceId.namedUse(),
                             bindingProvider = NativeBindingId("test"),
                             bindingSignature = "test:v1",
-                            value = DataValue.Named(TypeUse.Named(payloadId), DataValue.StringValue("value")),
+                            value = DataValue.Named(payloadId.namedUse(), DataValue.StringValue("value")),
                         ),
                     ),
                 edges = emptyList(),

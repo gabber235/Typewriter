@@ -9,23 +9,19 @@ import com.typewritermc.realm.search.IndexedAuthoringSearchCandidate
 import com.typewritermc.services.libs.communicator.router.CommunicatorRoutesBuilder
 import com.typewritermc.types.DataValue
 import com.typewritermc.types.ResourceId
-import com.typewritermc.types.ScalarKind
-import com.typewritermc.types.TypeDefinitionId
-import com.typewritermc.types.TypeUse
+import com.typewritermc.types.requireValid
 import com.typewritermc.types.skir.SkirAuthoringValueCodec
 import com.typewritermc.types.skir.SkirDataValueCodec
-import com.typewritermc.types.skir.SkirTypeCodec
 import com.typewritermc.types.skir.getOrThrow
+import com.typewritermc.types.use
 import skirout.editor.v1.authoring.AuthoringDiagnostic
 import skirout.editor.v1.authoring.AuthoringSearchHit
 import skirout.editor.v1.authoring.PresentationSubject
 import skirout.editor.v1.authoring.SearchAuthoringRequest
 import skirout.editor.v1.authoring.SearchAuthoringResponse
+import skirout.editor.v1.type_catalog.ScalarKind
 import skirout.editor.v1.type_catalog.CatalogGeneration as SkirCatalogGeneration
-import skirout.editor.v1.type_catalog.NamedTypeUse as SkirNamedTypeUse
 import skirout.editor.v1.type_catalog.ResourceId as SkirResourceId
-import skirout.editor.v1.type_catalog.TypeDefinitionId as SkirTypeDefinitionId
-import skirout.editor.v1.type_catalog.TypeUse as SkirTypeUse
 import skirout.editor.v1.typed_value.PortableValue as SkirPortableValue
 
 internal class AuthoringSearchRoutes(
@@ -51,8 +47,8 @@ internal class AuthoringSearchRoutes(
                         root,
                         request.query,
                         request.contexts.mapTo(linkedSetOf()) { ResourceId(it.value) },
-                        request.roots.mapTo(linkedSetOf()) { it.toDomain() },
-                        request.target?.toDomain(),
+                        request.roots.mapTo(linkedSetOf()) { it.requireValid() },
+                        request.target?.requireValid(),
                         MAX_SEARCH_CANDIDATES,
                     )
                 SearchAuthoringResponse.createSuccess(
@@ -90,20 +86,11 @@ private fun IndexedAuthoringSearchCandidate.toWire(record: AuthoringRecord): Aut
             ),
         context =
             SkirPortableValue(
-                actualType = SkirTypeCodec.encode(TypeUse.Scalar(ScalarKind.Text)).getOrThrow(),
+                actualType = ScalarKind.TEXT.use,
                 payload = SkirDataValueCodec.encode(DataValue.StringValue(text)).getOrThrow(),
             ),
     )
 }
-
-private fun SkirTypeDefinitionId.toDomain(): TypeDefinitionId =
-    (
-        SkirTypeCodec
-            .decode(SkirTypeUse.NamedWrapper(SkirNamedTypeUse(definition = this, arguments = emptyList())))
-            .getOrThrow() as TypeUse.Named
-    ).definition
-
-private fun SkirNamedTypeUse.toDomain(): TypeUse.Named = SkirTypeCodec.decode(SkirTypeUse.NamedWrapper(this)).getOrThrow() as TypeUse.Named
 
 private const val MAX_SEARCH_CANDIDATES = 256
 private const val MAX_SEARCH_RESULTS = 100

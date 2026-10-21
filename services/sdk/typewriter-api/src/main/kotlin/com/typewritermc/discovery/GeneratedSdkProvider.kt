@@ -11,9 +11,9 @@ import com.typewritermc.presentation.PresentationProvider
 import com.typewritermc.types.EndpointBindingTemplate
 import com.typewritermc.types.RelationContract
 import com.typewritermc.types.ResourceTarget
-import com.typewritermc.types.TypeDefinition
-import com.typewritermc.types.TypeDefinitionId
 import com.typewritermc.types.TypeDisplay
+import skirout.editor.v1.type_catalog.TypeDefinition
+import skirout.editor.v1.type_catalog.TypeDefinitionId
 import kotlin.reflect.KClass
 
 interface GeneratedTypeProvider {

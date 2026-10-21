@@ -26,11 +26,11 @@ import com.typewritermc.types.DataValue
 import com.typewritermc.types.LinkTarget
 import com.typewritermc.types.ListItem
 import com.typewritermc.types.ResourceId
-import com.typewritermc.types.TypeUse
 import com.typewritermc.types.catalog.Resolution
-import com.typewritermc.types.catalog.ResolvedRepresentation
 import com.typewritermc.types.immutableCopy
 import com.typewritermc.types.immutableListCopy
+import com.typewritermc.types.use
+import skirout.editor.v1.type_catalog.ResolvedRepresentation
 import java.util.Collections
 
 /**
@@ -159,7 +159,7 @@ internal class AuthoringPlanningSession(
                     val declared = target.authoredTypeAt(requested.containing.path, baseline.catalog.checked)
                     val schema = declared?.let { baseline.catalog.checked.resolve(it) } as? Resolution.Ready
                     val embedded =
-                        if (schema?.value?.schema?.representation is ResolvedRepresentation.Sequence) {
+                        if (schema?.value?.schema?.representation is ResolvedRepresentation.SequenceWrapper) {
                             val id = item("counterpart:${source.id}:${requested.containing}")
                             val items =
                                 when (val payload = if (existing is DataValue.Named) existing.payload else existing) {
@@ -382,7 +382,7 @@ private fun EditIntent.freeze(): EditIntent =
         }
 
         is EditIntent.Retag -> {
-            copy(at = at.freeze(), type = type.immutableCopy() as TypeUse.Named)
+            copy(at = at.freeze())
         }
 
         is EditIntent.ConfigureResource -> {

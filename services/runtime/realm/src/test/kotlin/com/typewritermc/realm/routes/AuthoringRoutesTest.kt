@@ -34,9 +34,8 @@ import com.typewritermc.realm.repository.AuthoringRepository
 import com.typewritermc.services.libs.communicator.router.communicatorRoutes
 import com.typewritermc.types.DataValue
 import com.typewritermc.types.ResourceId
-import com.typewritermc.types.TypeDefinitionId
-import com.typewritermc.types.TypeId
-import com.typewritermc.types.TypeUse
+import com.typewritermc.types.namedUse
+import com.typewritermc.types.qualified
 import com.typewritermc.types.skir.SkirAuthoringValueCodec
 import com.typewritermc.types.skir.getOrThrow
 import de.infix.testBalloon.framework.core.testSuite
@@ -48,6 +47,7 @@ import skirout.editor.v1.authoring.PreviewTypeArgumentChangeResponse
 import skirout.editor.v1.authoring.QueryAuthoringStateRequest
 import skirout.editor.v1.authoring.QueryAuthoringStateResponse
 import skirout.editor.v1.checking.FindingStatus
+import skirout.editor.v1.type_catalog.TypeDefinitionId
 import skirout.editor.v1.authoring.AuthoringState as SkirAuthoringState
 import skirout.editor.v1.authoring.EditIntent as SkirEditIntent
 import skirout.editor.v1.authoring_facts.EditExpectation as SkirEditExpectation
@@ -76,12 +76,13 @@ val AuthoringRoutesTest by testSuite {
                         CheckTicket(
                             instance =
                                 CheckInstanceId(
-                                    com.typewritermc.configuration.RuleId(
-                                        com.typewritermc.configuration.RuleOrigin(
-                                            TypeDefinitionId(TypeId.Qualified("test", "rule"), 1),
-                                            3,
-                                        ),
-                                        7,
+                                    skirout.editor.v1.type_catalog.RuleId(
+                                        origin =
+                                            skirout.editor.v1.type_catalog.RuleOrigin(
+                                                owner = TypeDefinitionId.qualified("test", "rule"),
+                                                ordinal = 3,
+                                            ),
+                                        localIndex = 7,
                                     ),
                                     missing,
                                 ),
@@ -370,10 +371,10 @@ val AuthoringRoutesTest by testSuite {
             val catalog = TestCatalogLease()
             val unavailable = ResourceId("unavailable")
             val available = ResourceId("available")
-            val unavailableType = TypeDefinitionId(TypeId.Qualified("removed", "resource"), 1)
+            val unavailableType = TypeDefinitionId.qualified("removed", "resource")
             val unavailableRecord =
                 AuthoringRecord(
-                    configuration = TypeSelection.Complete(TypeUse.Named(unavailableType)),
+                    configuration = TypeSelection.Complete(unavailableType.namedUse()),
                     fields = mapOf("legacy" to DataValue.StringValue("preserved")),
                 )
             val resources = mapOf(unavailable to unavailableRecord, available to record(name = "book"))

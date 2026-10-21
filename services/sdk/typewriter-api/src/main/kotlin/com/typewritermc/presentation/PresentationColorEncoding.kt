@@ -1,9 +1,6 @@
 package com.typewritermc.presentation
 
-import skirout.editor.v1.presentation.PresentationAmbientColor
-import skirout.editor.v1.presentation.PresentationContrastMode
 import skirout.editor.v1.presentation.PresentationStateColorRule
-import skirout.editor.v1.presentation.PresentationThemeColor
 import skirout.editor.v1.presentation.PresentationColor as WireColor
 
 internal fun PresentationColor.wire(): WireColor =

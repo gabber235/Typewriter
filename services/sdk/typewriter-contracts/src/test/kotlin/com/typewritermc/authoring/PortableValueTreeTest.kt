@@ -3,13 +3,14 @@ package com.typewritermc.authoring
 import com.typewritermc.types.DataValue
 import com.typewritermc.types.ListItem
 import com.typewritermc.types.MapRow
-import com.typewritermc.types.ScalarKind
-import com.typewritermc.types.TypeDefinitionId
-import com.typewritermc.types.TypeId
-import com.typewritermc.types.TypeUse
+import com.typewritermc.types.namedUse
+import com.typewritermc.types.qualified
+import com.typewritermc.types.use
 import de.infix.testBalloon.framework.core.testSuite
 import io.kotest.matchers.collections.shouldContainExactly
 import io.kotest.matchers.shouldBe
+import skirout.editor.v1.type_catalog.ScalarKind
+import skirout.editor.v1.type_catalog.TypeDefinitionId
 
 val PortableValueTreeTest by testSuite {
     test("map rows remain distinct locations and expose structural observations") {
@@ -27,7 +28,7 @@ val PortableValueTreeTest by testSuite {
                 mapOf(
                     "mapping" to
                         DataValue.Named(
-                            TypeUse.Named(TypeDefinitionId(TypeId.Qualified("test", "mapping"), 1)),
+                            TypeDefinitionId.qualified("test", "mapping").namedUse(),
                             DataValue.MapValue(
                                 listOf(
                                     MapRow(
@@ -80,10 +81,7 @@ val PortableValueTreeTest by testSuite {
                 mapOf(
                     "wrapped" to
                         DataValue.Named(
-                            TypeUse.Named(
-                                TypeDefinitionId(TypeId.Qualified("test", "wrapped"), 1),
-                                listOf(TypeUse.Scalar(ScalarKind.Text)),
-                            ),
+                            TypeDefinitionId.qualified("test", "wrapped").namedUse(listOf(ScalarKind.TEXT.use)),
                             DataValue.MapValue(
                                 listOf(
                                     MapRow(

@@ -9,6 +9,7 @@ import com.typewritermc.types.catalog.CheckedCatalog
 import com.typewritermc.types.catalog.Resolution
 import com.typewritermc.types.catalog.runtimeDefinitions
 import com.typewritermc.types.ownsResources
+import com.typewritermc.types.use
 
 internal fun RuntimeCompilationFacts.requireAccepted(
     checked: CheckedCatalog,
@@ -21,7 +22,7 @@ internal fun RuntimeCompilationFacts.requireAccepted(
                     (located.value as? DataValue.Named)?.actualType
                 }
         }
-    val expectedTypes = checked.runtimeDefinitions(seeds).associateBy { type -> type.id }
+    val expectedTypes = checked.runtimeDefinitions(seeds.map { it.use }).associateBy { type -> type.id }
     require(types.size == types.map { type -> type.id }.toSet().size) {
         "Compiled runtime facts contain duplicate type declarations."
     }
@@ -58,7 +59,7 @@ internal fun RuntimeCompilationFacts.requireAccepted(
         }
     }
     resources.forEach { resource ->
-        require(checked.resolve(resource.actualType) is Resolution.Ready) {
+        require(checked.resolve(resource.actualType.use) is Resolution.Ready) {
             "Compiled resource type is unavailable in the accepted runtime catalog."
         }
     }

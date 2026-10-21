@@ -19,38 +19,40 @@ import com.typewritermc.realm.checking.dependencies
 import com.typewritermc.realm.repository.AuthoringMutationPlanner
 import com.typewritermc.realm.repository.AuthoringRepository
 import com.typewritermc.realm.repository.MutationPlanningResult
-import com.typewritermc.types.CollectionKind
 import com.typewritermc.types.DataValue
 import com.typewritermc.types.EndpointBindingTemplate
 import com.typewritermc.types.EndpointCardinality
 import com.typewritermc.types.EndpointDefinition
-import com.typewritermc.types.EndpointId
 import com.typewritermc.types.EndpointSlot
 import com.typewritermc.types.FactoryNativeBindingRegistry
-import com.typewritermc.types.FieldDeclaration
-import com.typewritermc.types.FieldOwner
 import com.typewritermc.types.LinkTarget
 import com.typewritermc.types.ListItem
 import com.typewritermc.types.NativeBindingRegistry
-import com.typewritermc.types.ParameterKey
 import com.typewritermc.types.RelationContract
 import com.typewritermc.types.RelationDeletePolicy
 import com.typewritermc.types.RelationId
-import com.typewritermc.types.RepresentationTemplate
 import com.typewritermc.types.ResourceId
-import com.typewritermc.types.ScalarKind
-import com.typewritermc.types.TypeDefinition
-import com.typewritermc.types.TypeDefinitionId
-import com.typewritermc.types.TypeId
-import com.typewritermc.types.TypeParameter
-import com.typewritermc.types.TypeTemplate
-import com.typewritermc.types.TypeUse
 import com.typewritermc.types.catalog.CheckedCatalog
 import com.typewritermc.types.catalog.DefaultCheckedCatalog
+import com.typewritermc.types.namedTemplate
+import com.typewritermc.types.namedUse
+import com.typewritermc.types.qualified
+import com.typewritermc.types.template
+import com.typewritermc.types.use
 import de.infix.testBalloon.framework.core.testSuite
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.types.shouldBeInstanceOf
 import kotlinx.coroutines.test.runTest
+import skirout.editor.v1.type_catalog.CollectionKind
+import skirout.editor.v1.type_catalog.EndpointId
+import skirout.editor.v1.type_catalog.FieldDeclaration
+import skirout.editor.v1.type_catalog.FieldOwner
+import skirout.editor.v1.type_catalog.ParameterKey
+import skirout.editor.v1.type_catalog.RepresentationTemplate
+import skirout.editor.v1.type_catalog.ScalarKind
+import skirout.editor.v1.type_catalog.TypeDefinition
+import skirout.editor.v1.type_catalog.TypeDefinitionId
+import skirout.editor.v1.type_catalog.TypeParameter
 
 class TypeArgumentOperationsTest {
     fun previewRejectsDefinitionReplacementAndStructurallyInvalidRepairBatch() {
@@ -206,7 +208,7 @@ class TypeArgumentOperationsTest {
             val pending =
                 TypeSelection.Pending(
                     DUAL,
-                    listOf(ArgumentSelection.Chosen(COIN_USE), ArgumentSelection.Unfilled),
+                    listOf(ArgumentSelection.Chosen(COIN_USE.use), ArgumentSelection.Unfilled),
                 )
 
             val pendingPreview =
@@ -265,7 +267,7 @@ class TypeArgumentOperationsTest {
             val pending =
                 TypeSelection.Pending(
                     DUAL,
-                    listOf(ArgumentSelection.Chosen(COIN_USE), ArgumentSelection.Unfilled),
+                    listOf(ArgumentSelection.Chosen(COIN_USE.use), ArgumentSelection.Unfilled),
                 )
             val preview =
                 store.capture().use { snapshot ->
@@ -325,7 +327,7 @@ class TypeArgumentOperationsTest {
         val pending =
             TypeSelection.Pending(
                 DUAL,
-                listOf(ArgumentSelection.Chosen(COIN_USE), ArgumentSelection.Unfilled),
+                listOf(ArgumentSelection.Chosen(COIN_USE.use), ArgumentSelection.Unfilled),
             )
         val preview =
             store.capture().use { snapshot ->
@@ -367,7 +369,7 @@ private class RepairCatalogLease(
     override val endpointBindings: List<EndpointBindingTemplate> = emptyList()
     override val configuration: List<com.typewritermc.configuration.ConfigurationRecipe> = emptyList()
     override val operations = com.typewritermc.operations.OperationCatalog()
-    override val placementFields = emptyMap<com.typewritermc.types.TypeDefinitionId, com.typewritermc.authoring.ValuePath>()
+    override val placementFields = emptyMap<TypeDefinitionId, com.typewritermc.authoring.ValuePath>()
 
     override fun retain(): AuthoringCatalogLease = RepairCatalogLease(generation)
 
@@ -435,26 +437,26 @@ private val LIST = definition("list")
 private val CONTAINER = definition("container")
 private val DUAL = definition("dual")
 private val LINK = definition("link")
-private val BUNDLE_PARAMETER = ParameterKey(BUNDLE, 0)
-private val LIST_PARAMETER = ParameterKey(LIST, 0)
-private val CONTAINER_PARAMETER = ParameterKey(CONTAINER, 0)
-private val DUAL_FIRST_PARAMETER = ParameterKey(DUAL, 0)
-private val DUAL_SECOND_PARAMETER = ParameterKey(DUAL, 1)
-private val LINK_PARAMETER = ParameterKey(LINK, 0)
-private val REWARD_USE = TypeUse.Named(REWARD)
-private val COIN_USE = TypeUse.Named(COIN)
-private val GEM_USE = TypeUse.Named(GEM)
-private val BUNDLE_REWARD = TypeUse.Named(BUNDLE, listOf(REWARD_USE))
-private val BUNDLE_COIN = TypeUse.Named(BUNDLE, listOf(COIN_USE))
-private val LIST_BUNDLE_REWARD = TypeUse.Named(LIST, listOf(BUNDLE_REWARD))
-private val LIST_BUNDLE_COIN = TypeUse.Named(LIST, listOf(BUNDLE_COIN))
-private val CONTAINER_REWARD = TypeUse.Named(CONTAINER, listOf(REWARD_USE))
-private val CONTAINER_COIN = TypeUse.Named(CONTAINER, listOf(COIN_USE))
-private val DUAL_COIN_GEM = TypeUse.Named(DUAL, listOf(COIN_USE, GEM_USE))
-private val DUAL_COIN_COIN = TypeUse.Named(DUAL, listOf(COIN_USE, COIN_USE))
-private val LINK_GEM = TypeUse.Named(LINK, listOf(GEM_USE))
-private val SOURCE_ENDPOINT = EndpointId("dual:source")
-private val TARGET_ENDPOINT = EndpointId("dual:target")
+private val BUNDLE_PARAMETER = ParameterKey(owner = BUNDLE, index = 0)
+private val LIST_PARAMETER = ParameterKey(owner = LIST, index = 0)
+private val CONTAINER_PARAMETER = ParameterKey(owner = CONTAINER, index = 0)
+private val DUAL_FIRST_PARAMETER = ParameterKey(owner = DUAL, index = 0)
+private val DUAL_SECOND_PARAMETER = ParameterKey(owner = DUAL, index = 1)
+private val LINK_PARAMETER = ParameterKey(owner = LINK, index = 0)
+private val REWARD_USE = REWARD.use()
+private val COIN_USE = COIN.namedUse()
+private val GEM_USE = GEM.namedUse()
+private val BUNDLE_REWARD = BUNDLE.namedUse(listOf(REWARD_USE))
+private val BUNDLE_COIN = BUNDLE.namedUse(listOf(COIN_USE.use))
+private val LIST_BUNDLE_REWARD = LIST.namedUse(listOf(BUNDLE_REWARD.use))
+private val LIST_BUNDLE_COIN = LIST.namedUse(listOf(BUNDLE_COIN.use))
+private val CONTAINER_REWARD = CONTAINER.namedUse(listOf(REWARD_USE))
+private val CONTAINER_COIN = CONTAINER.namedUse(listOf(COIN_USE.use))
+private val DUAL_COIN_GEM = DUAL.namedUse(listOf(COIN_USE.use, GEM_USE.use))
+private val DUAL_COIN_COIN = DUAL.namedUse(listOf(COIN_USE.use, COIN_USE.use))
+private val LINK_GEM = LINK.namedUse(listOf(GEM_USE.use))
+private val SOURCE_ENDPOINT = EndpointId(value = "dual:source")
+private val TARGET_ENDPOINT = EndpointId(value = "dual:target")
 private val RELATION = RelationId("dual:relation")
 private val DUAL_RELATION =
     RelationContract(
@@ -462,17 +464,14 @@ private val DUAL_RELATION =
         EndpointDefinition(
             SOURCE_ENDPOINT,
             EndpointSlot.First,
-            TypeTemplate.Named(
-                DUAL,
-                listOf(TypeTemplate.Parameter(DUAL_FIRST_PARAMETER), TypeTemplate.Parameter(DUAL_SECOND_PARAMETER)),
-            ),
+            DUAL.namedTemplate(listOf(DUAL_FIRST_PARAMETER.template, DUAL_SECOND_PARAMETER.template)),
             EndpointCardinality.One,
             RelationDeletePolicy.CLEAR,
         ),
         EndpointDefinition(
             TARGET_ENDPOINT,
             EndpointSlot.Second,
-            TypeTemplate.Named(REWARD),
+            REWARD.namedTemplate(),
             EndpointCardinality.One,
             RelationDeletePolicy.CLEAR,
         ),
@@ -480,66 +479,96 @@ private val DUAL_RELATION =
 
 private val REPAIR_DEFINITIONS =
     listOf(
-        TypeDefinition(REWARD, emptyList(), RepresentationTemplate.Record(emptyList(), abstract = true)),
-        TypeDefinition(COIN, emptyList(), RepresentationTemplate.Record(emptyList()), parents = listOf(TypeTemplate.Named(REWARD))),
-        TypeDefinition(GEM, emptyList(), RepresentationTemplate.Record(emptyList()), parents = listOf(TypeTemplate.Named(REWARD))),
-        TypeDefinition(
-            BUNDLE,
-            listOf(TypeParameter(BUNDLE_PARAMETER, "value")),
-            RepresentationTemplate.Record(
-                listOf(
-                    FieldDeclaration(FieldOwner(BUNDLE, "title"), TypeTemplate.Scalar(ScalarKind.Text)),
-                    FieldDeclaration(FieldOwner(BUNDLE, "value"), TypeTemplate.Parameter(BUNDLE_PARAMETER)),
-                ),
-            ),
+        TypeDefinition.partial(id = REWARD, representation = RepresentationTemplate.createRecord(fields = emptyList(), abstract_ = true)),
+        TypeDefinition.partial(
+            id = COIN,
+            representation = RepresentationTemplate.createRecord(fields = emptyList(), abstract_ = false),
+            parents = listOf(REWARD.namedTemplate()),
         ),
-        TypeDefinition(
-            LIST,
-            listOf(TypeParameter(LIST_PARAMETER, "item")),
-            RepresentationTemplate.Sequence(TypeTemplate.Parameter(LIST_PARAMETER), CollectionKind.List),
+        TypeDefinition.partial(
+            id = GEM,
+            representation = RepresentationTemplate.createRecord(fields = emptyList(), abstract_ = false),
+            parents = listOf(REWARD.namedTemplate()),
         ),
-        TypeDefinition(
-            CONTAINER,
-            listOf(TypeParameter(CONTAINER_PARAMETER, "reward")),
-            RepresentationTemplate.Record(
-                listOf(
-                    FieldDeclaration(
-                        FieldOwner(CONTAINER, "bundles"),
-                        TypeTemplate.Named(
-                            LIST,
-                            listOf(TypeTemplate.Named(BUNDLE, listOf(TypeTemplate.Parameter(CONTAINER_PARAMETER)))),
+        TypeDefinition.partial(
+            id = BUNDLE,
+            parameters = listOf(TypeParameter.partial(key = BUNDLE_PARAMETER, name = "value")),
+            representation =
+                RepresentationTemplate.createRecord(
+                    fields =
+                        listOf(
+                            FieldDeclaration.partial(
+                                owner = FieldOwner(definition = BUNDLE, name = "title"),
+                                type = ScalarKind.TEXT.template,
+                            ),
+                            FieldDeclaration.partial(
+                                owner = FieldOwner(definition = BUNDLE, name = "value"),
+                                type = BUNDLE_PARAMETER.template,
+                            ),
                         ),
-                    ),
-                    FieldDeclaration(FieldOwner(CONTAINER, "reward"), TypeTemplate.Parameter(CONTAINER_PARAMETER)),
+                    abstract_ = false,
                 ),
-            ),
         ),
-        TypeDefinition(
-            LINK,
-            listOf(TypeParameter(LINK_PARAMETER, "target")),
-            RepresentationTemplate.Link(SOURCE_ENDPOINT, TypeTemplate.Parameter(LINK_PARAMETER)),
+        TypeDefinition.partial(
+            id = LIST,
+            parameters = listOf(TypeParameter.partial(key = LIST_PARAMETER, name = "item")),
+            representation = RepresentationTemplate.createSequence(item = LIST_PARAMETER.template, kind = CollectionKind.LIST),
         ),
-        TypeDefinition(
-            DUAL,
-            listOf(
-                TypeParameter(DUAL_FIRST_PARAMETER, "first"),
-                TypeParameter(DUAL_SECOND_PARAMETER, "second"),
-            ),
-            RepresentationTemplate.Record(
+        TypeDefinition.partial(
+            id = CONTAINER,
+            parameters = listOf(TypeParameter.partial(key = CONTAINER_PARAMETER, name = "reward")),
+            representation =
+                RepresentationTemplate.createRecord(
+                    fields =
+                        listOf(
+                            FieldDeclaration.partial(
+                                owner = FieldOwner(definition = CONTAINER, name = "bundles"),
+                                type = LIST.template(listOf(BUNDLE.template(listOf(CONTAINER_PARAMETER.template)))),
+                            ),
+                            FieldDeclaration.partial(
+                                owner = FieldOwner(definition = CONTAINER, name = "reward"),
+                                type = CONTAINER_PARAMETER.template,
+                            ),
+                        ),
+                    abstract_ = false,
+                ),
+        ),
+        TypeDefinition.partial(
+            id = LINK,
+            parameters = listOf(TypeParameter.partial(key = LINK_PARAMETER, name = "target")),
+            representation = RepresentationTemplate.createLink(endpoint = SOURCE_ENDPOINT, target = LINK_PARAMETER.template),
+        ),
+        TypeDefinition.partial(
+            id = DUAL,
+            parameters =
                 listOf(
-                    FieldDeclaration(FieldOwner(DUAL, "name"), TypeTemplate.Scalar(ScalarKind.Text)),
-                    FieldDeclaration(FieldOwner(DUAL, "first"), TypeTemplate.Parameter(DUAL_FIRST_PARAMETER)),
-                    FieldDeclaration(FieldOwner(DUAL, "second"), TypeTemplate.Parameter(DUAL_SECOND_PARAMETER)),
-                    FieldDeclaration(
-                        FieldOwner(DUAL, "target"),
-                        TypeTemplate.Named(LINK, listOf(TypeTemplate.Parameter(DUAL_SECOND_PARAMETER))),
-                    ),
+                    TypeParameter.partial(key = DUAL_FIRST_PARAMETER, name = "first"),
+                    TypeParameter.partial(key = DUAL_SECOND_PARAMETER, name = "second"),
                 ),
-            ),
+            representation =
+                RepresentationTemplate.createRecord(
+                    fields =
+                        listOf(
+                            FieldDeclaration.partial(owner = FieldOwner(definition = DUAL, name = "name"), type = ScalarKind.TEXT.template),
+                            FieldDeclaration.partial(
+                                owner = FieldOwner(definition = DUAL, name = "first"),
+                                type = DUAL_FIRST_PARAMETER.template,
+                            ),
+                            FieldDeclaration.partial(
+                                owner = FieldOwner(definition = DUAL, name = "second"),
+                                type = DUAL_SECOND_PARAMETER.template,
+                            ),
+                            FieldDeclaration.partial(
+                                owner = FieldOwner(definition = DUAL, name = "target"),
+                                type = LINK.template(listOf(DUAL_SECOND_PARAMETER.template)),
+                            ),
+                        ),
+                    abstract_ = false,
+                ),
         ),
     )
 
-private fun definition(name: String) = TypeDefinitionId(TypeId.Qualified("repair", name), 1)
+private fun definition(name: String) = TypeDefinitionId.qualified("repair", name)
 
 val TypeArgumentOperationsTestSuite by testSuite {
     test("previewRejectsDefinitionReplacementAndStructurallyInvalidRepairBatch") {

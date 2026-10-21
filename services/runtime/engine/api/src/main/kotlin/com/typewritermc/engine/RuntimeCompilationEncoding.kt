@@ -1,5 +1,6 @@
 package com.typewritermc.engine
 
+import com.typewritermc.types.canonicalText
 import kotlinx.serialization.decodeFromString
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
@@ -37,7 +38,7 @@ fun RuntimeCompilationFacts.canonicalized(): RuntimeCompilationFacts {
     return copy(
         resources = resources.sortedBy { resource -> canonicalText(resource.key) },
         edges = edges.distinct().sortedBy(::canonicalText),
-        types = types.sortedBy { type -> canonicalText(type.id) },
+        types = types.sortedBy { type -> type.id.canonicalText },
         relations = relations.sortedBy { relation -> relation.relation.value },
     )
 }

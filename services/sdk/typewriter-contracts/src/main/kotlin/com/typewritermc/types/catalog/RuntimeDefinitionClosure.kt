@@ -1,10 +1,11 @@
 package com.typewritermc.types.catalog
 
-import com.typewritermc.types.RepresentationTemplate
-import com.typewritermc.types.TypeDefinition
-import com.typewritermc.types.TypeDefinitionId
-import com.typewritermc.types.TypeTemplate
-import com.typewritermc.types.TypeUse
+import com.typewritermc.types.unknownVariant
+import skirout.editor.v1.type_catalog.RepresentationTemplate
+import skirout.editor.v1.type_catalog.TypeDefinition
+import skirout.editor.v1.type_catalog.TypeDefinitionId
+import skirout.editor.v1.type_catalog.TypeTemplate
+import skirout.editor.v1.type_catalog.TypeUse
 
 fun CheckedCatalog.runtimeDefinitions(seeds: Iterable<TypeUse>): List<TypeDefinition> {
     val pending = ArrayDeque<TypeDefinitionId>()
@@ -23,35 +24,34 @@ fun CheckedCatalog.runtimeDefinitions(seeds: Iterable<TypeUse>): List<TypeDefini
 
 private fun TypeUse.referencedDefinitions(): Set<TypeDefinitionId> =
     when (this) {
-        is TypeUse.Named -> setOf(definition) + arguments.flatMap(TypeUse::referencedDefinitions)
-        is TypeUse.Nullable -> value.referencedDefinitions()
-        is TypeUse.Scalar -> emptySet()
+        is TypeUse.NamedWrapper -> setOf(value.definition) + value.arguments.flatMap(TypeUse::referencedDefinitions)
+        is TypeUse.NullableWrapper -> value.value.referencedDefinitions()
+        is TypeUse.ScalarWrapper -> emptySet()
+        else -> unknownVariant(this)
     }
 
 private fun TypeTemplate.referencedDefinitions(): Set<TypeDefinitionId> =
     when (this) {
-        is TypeTemplate.Parameter -> emptySet()
-        is TypeTemplate.Named -> setOf(definition) + arguments.flatMap(TypeTemplate::referencedDefinitions)
-        is TypeTemplate.Nullable -> value.referencedDefinitions()
-        is TypeTemplate.Scalar -> emptySet()
+        is TypeTemplate.ParameterWrapper -> emptySet()
+        is TypeTemplate.NamedWrapper -> setOf(value.definition) + value.arguments.flatMap(TypeTemplate::referencedDefinitions)
+        is TypeTemplate.NullableWrapper -> value.value.referencedDefinitions()
+        is TypeTemplate.ScalarWrapper -> emptySet()
+        else -> unknownVariant(this)
     }
 
 internal fun TypeDefinition.referencedDefinitions(): Set<TypeDefinitionId> {
     val roots =
-        parents +
-            parameters.flatMap { parameter -> parameter.bounds } +
-            when (val represented = representation) {
-                is RepresentationTemplate.Record -> represented.fields.map { field -> field.type }
-
-                is RepresentationTemplate.Sequence -> listOf(represented.item)
-
-                is RepresentationTemplate.Mapping -> listOf(represented.key, represented.value)
-
-                is RepresentationTemplate.Link -> listOf(represented.target)
-
-                is RepresentationTemplate.Scalar,
-                is RepresentationTemplate.Enumeration,
-                -> emptyList()
-            }
+        parents.map { TypeTemplate.NamedWrapper(it) } + parameters.flatMap { parameter -> parameter.bounds } + representation.templates()
     return roots.flatMapTo(linkedSetOf(), TypeTemplate::referencedDefinitions)
 }
+
+/** The type templates a representation mentions directly: field types, items, keys, values and link targets. */
+internal fun RepresentationTemplate.templates(): List<TypeTemplate> =
+    when (this) {
+        is RepresentationTemplate.RecordWrapper -> value.fields.map { field -> field.type }
+        is RepresentationTemplate.SequenceWrapper -> listOf(value.item)
+        is RepresentationTemplate.MappingWrapper -> listOf(value.key, value.value)
+        is RepresentationTemplate.LinkWrapper -> listOf(value.target)
+        is RepresentationTemplate.ScalarWrapper, is RepresentationTemplate.EnumerationWrapper -> emptyList()
+        else -> unknownVariant(this)
+    }

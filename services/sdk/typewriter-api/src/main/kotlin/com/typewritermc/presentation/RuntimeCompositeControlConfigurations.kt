@@ -6,6 +6,7 @@ import com.typewritermc.expression.Expr
 import com.typewritermc.expression.ExpressionBindingId
 import com.typewritermc.expression.Handled
 import com.typewritermc.expression.inputExpression
+import com.typewritermc.types.requireValid
 import skirout.editor.v1.expression.ExpressionNode
 import skirout.editor.v1.presentation.ControlDensity
 import skirout.editor.v1.presentation.PresentationNode

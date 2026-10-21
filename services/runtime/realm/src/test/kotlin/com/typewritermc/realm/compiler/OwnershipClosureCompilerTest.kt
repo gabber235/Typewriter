@@ -14,34 +14,36 @@ import com.typewritermc.realm.authoring.AuthoringCatalogLease
 import com.typewritermc.realm.authoring.AuthoringSeed
 import com.typewritermc.realm.authoring.InMemoryAuthoringViewStore
 import com.typewritermc.realm.checking.EmptyProviders
-import com.typewritermc.types.CollectionKind
 import com.typewritermc.types.DataValue
 import com.typewritermc.types.EndpointBindingTemplate
 import com.typewritermc.types.EndpointCardinality
 import com.typewritermc.types.EndpointDefinition
-import com.typewritermc.types.EndpointId
 import com.typewritermc.types.EndpointSlot
 import com.typewritermc.types.FactoryNativeBindingRegistry
-import com.typewritermc.types.FieldDeclaration
-import com.typewritermc.types.FieldOwner
 import com.typewritermc.types.LinkTarget
 import com.typewritermc.types.ListItem
 import com.typewritermc.types.NativeBindingRegistry
 import com.typewritermc.types.RelationContract
 import com.typewritermc.types.RelationDeletePolicy
 import com.typewritermc.types.RelationId
-import com.typewritermc.types.RepresentationTemplate
 import com.typewritermc.types.ResourceId
-import com.typewritermc.types.ScalarKind
-import com.typewritermc.types.TypeDefinition
-import com.typewritermc.types.TypeDefinitionId
-import com.typewritermc.types.TypeId
-import com.typewritermc.types.TypeTemplate
-import com.typewritermc.types.TypeUse
 import com.typewritermc.types.catalog.CheckedCatalog
 import com.typewritermc.types.catalog.DefaultCheckedCatalog
+import com.typewritermc.types.namedTemplate
+import com.typewritermc.types.namedUse
+import com.typewritermc.types.qualified
+import com.typewritermc.types.template
+import com.typewritermc.types.use
 import de.infix.testBalloon.framework.core.testSuite
 import io.kotest.matchers.shouldBe
+import skirout.editor.v1.type_catalog.CollectionKind
+import skirout.editor.v1.type_catalog.EndpointId
+import skirout.editor.v1.type_catalog.FieldDeclaration
+import skirout.editor.v1.type_catalog.FieldOwner
+import skirout.editor.v1.type_catalog.RepresentationTemplate
+import skirout.editor.v1.type_catalog.ScalarKind
+import skirout.editor.v1.type_catalog.TypeDefinition
+import skirout.editor.v1.type_catalog.TypeDefinitionId
 import java.util.concurrent.atomic.AtomicInteger
 
 private val pageId = ResourceId("page")
@@ -121,10 +123,10 @@ val OwnershipClosureCompilerTest by testSuite {
     }
 
     test("capturedUnavailableResourceBlocksCompilation") {
-        val unavailableType = TypeDefinitionId(TypeId.Qualified("removed", "page"), 1)
+        val unavailableType = TypeDefinitionId.qualified("removed", "page")
         val unavailable =
             AuthoringRecord(
-                TypeSelection.Complete(TypeUse.Named(unavailableType)),
+                TypeSelection.Complete(unavailableType.namedUse()),
                 mapOf("legacy" to DataValue.StringValue("preserved")),
             )
         fixture(resources = mapOf(pageId to unavailable)).use { captured ->
@@ -236,7 +238,7 @@ private class CompilerCatalogLease private constructor(
     override val endpointBindings = listOf(PAGE_BINDING)
     override val configuration: List<com.typewritermc.configuration.ConfigurationRecipe> = emptyList()
     override val operations = com.typewritermc.operations.OperationCatalog()
-    override val placementFields = emptyMap<com.typewritermc.types.TypeDefinitionId, com.typewritermc.authoring.ValuePath>()
+    override val placementFields = emptyMap<TypeDefinitionId, com.typewritermc.authoring.ValuePath>()
 
     override fun retain(): AuthoringCatalogLease {
         references.incrementAndGet()
@@ -248,33 +250,33 @@ private class CompilerCatalogLease private constructor(
     }
 }
 
-private val PAGE = TypeDefinitionId(TypeId.Qualified("compiler", "page"), 1)
-private val CHILD = TypeDefinitionId(TypeId.Qualified("compiler", "child"), 1)
-private val NESTED = TypeDefinitionId(TypeId.Qualified("compiler", "nested"), 1)
-private val NESTED_USE = TypeUse.Named(NESTED)
-private val CHILD_LINK = TypeDefinitionId(TypeId.Qualified("compiler", "child_link"), 1)
-private val CHILDREN = TypeDefinitionId(TypeId.Qualified("compiler", "children"), 1)
-private val PAGE_USE = TypeUse.Named(PAGE)
-private val CHILD_USE = TypeUse.Named(CHILD)
-private val CHILD_LINK_USE = TypeUse.Named(CHILD_LINK)
-private val CHILDREN_USE = TypeUse.Named(CHILDREN)
+private val PAGE = TypeDefinitionId.qualified("compiler", "page")
+private val CHILD = TypeDefinitionId.qualified("compiler", "child")
+private val NESTED = TypeDefinitionId.qualified("compiler", "nested")
+private val NESTED_USE = NESTED.namedUse()
+private val CHILD_LINK = TypeDefinitionId.qualified("compiler", "child_link")
+private val CHILDREN = TypeDefinitionId.qualified("compiler", "children")
+private val PAGE_USE = PAGE.namedUse()
+private val CHILD_USE = CHILD.namedUse()
+private val CHILD_LINK_USE = CHILD_LINK.namedUse()
+private val CHILDREN_USE = CHILDREN.namedUse()
 private val OWNERSHIP = RelationId("page_children")
-private val PAGE_ENDPOINT = EndpointId("page_children:first")
-private val CHILD_ENDPOINT = EndpointId("page_children:second")
+private val PAGE_ENDPOINT = EndpointId(value = "page_children:first")
+private val CHILD_ENDPOINT = EndpointId(value = "page_children:second")
 private val OWNERSHIP_CONTRACT =
     RelationContract(
         OWNERSHIP,
         EndpointDefinition(
             PAGE_ENDPOINT,
             EndpointSlot.First,
-            TypeTemplate.Named(PAGE),
+            PAGE.namedTemplate(),
             EndpointCardinality.One,
             RelationDeletePolicy.CASCADE,
         ),
         EndpointDefinition(
             CHILD_ENDPOINT,
             EndpointSlot.Second,
-            TypeTemplate.Named(CHILD),
+            CHILD.namedTemplate(),
             EndpointCardinality.Many,
             RelationDeletePolicy.CLEAR,
         ),
@@ -282,52 +284,65 @@ private val OWNERSHIP_CONTRACT =
 private val PAGE_BINDING =
     EndpointBindingTemplate(
         endpoint = PAGE_ENDPOINT,
-        containingResource = TypeTemplate.Named(PAGE),
+        containingResource = PAGE.namedTemplate(),
         valueOwner = PAGE,
         relativePath = RelativeFieldPattern(listOf(FieldPatternSegment.Field("children"), FieldPatternSegment.Items)),
-        target = TypeTemplate.Named(CHILD),
+        target = CHILD.template(),
         containsCollection = true,
     )
 private val DEFINITIONS =
     listOf(
-        TypeDefinition(
-            PAGE,
+        TypeDefinition.partial(
+            id = PAGE,
             representation =
-                RepresentationTemplate.Record(
-                    listOf(FieldDeclaration(FieldOwner(PAGE, "children"), TypeTemplate.Named(CHILDREN))),
-                ),
-        ),
-        TypeDefinition(
-            CHILD,
-            representation =
-                RepresentationTemplate.Record(
-                    listOf(FieldDeclaration(FieldOwner(CHILD, "value"), TypeTemplate.Scalar(ScalarKind.Text))),
-                ),
-        ),
-        TypeDefinition(
-            CompilationUnitDefinition.id,
-            representation = RepresentationTemplate.Record(emptyList(), abstract = true),
-        ),
-        TypeDefinition(
-            NESTED,
-            representation =
-                RepresentationTemplate.Record(
-                    listOf(
-                        FieldDeclaration(
-                            FieldOwner(NESTED, "value"),
-                            TypeTemplate.Scalar(ScalarKind.Text),
-                            overrides = listOf(FieldOwner(CHILD, "value")),
+                RepresentationTemplate.createRecord(
+                    fields =
+                        listOf(
+                            FieldDeclaration.partial(owner = FieldOwner(definition = PAGE, name = "children"), type = CHILDREN.template()),
                         ),
-                    ),
+                    abstract_ = false,
                 ),
-            parents = listOf(TypeTemplate.Named(CHILD), TypeTemplate.Named(CompilationUnitDefinition.id)),
         ),
-        TypeDefinition(
-            CHILD_LINK,
-            representation = RepresentationTemplate.Link(PAGE_ENDPOINT, TypeTemplate.Named(CHILD)),
+        TypeDefinition.partial(
+            id = CHILD,
+            representation =
+                RepresentationTemplate.createRecord(
+                    fields =
+                        listOf(
+                            FieldDeclaration.partial(
+                                owner = FieldOwner(definition = CHILD, name = "value"),
+                                type = ScalarKind.TEXT.template,
+                            ),
+                        ),
+                    abstract_ = false,
+                ),
         ),
-        TypeDefinition(
-            CHILDREN,
-            representation = RepresentationTemplate.Sequence(TypeTemplate.Named(CHILD_LINK), CollectionKind.List),
+        TypeDefinition.partial(
+            id = CompilationUnitDefinition.id,
+            representation = RepresentationTemplate.createRecord(fields = emptyList(), abstract_ = true),
+        ),
+        TypeDefinition.partial(
+            id = NESTED,
+            representation =
+                RepresentationTemplate.createRecord(
+                    fields =
+                        listOf(
+                            FieldDeclaration.partial(
+                                owner = FieldOwner(definition = NESTED, name = "value"),
+                                type = ScalarKind.TEXT.template,
+                                overrides = listOf(FieldOwner(definition = CHILD, name = "value")),
+                            ),
+                        ),
+                    abstract_ = false,
+                ),
+            parents = listOf(CHILD.namedTemplate(), CompilationUnitDefinition.id.namedTemplate()),
+        ),
+        TypeDefinition.partial(
+            id = CHILD_LINK,
+            representation = RepresentationTemplate.createLink(endpoint = PAGE_ENDPOINT, target = CHILD.template()),
+        ),
+        TypeDefinition.partial(
+            id = CHILDREN,
+            representation = RepresentationTemplate.createSequence(item = CHILD_LINK.template(), kind = CollectionKind.LIST),
         ),
     )

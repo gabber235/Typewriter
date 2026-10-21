@@ -2,16 +2,10 @@ package com.typewritermc.types
 
 import com.typewritermc.configuration.RelativeFieldPattern
 import kotlinx.serialization.Serializable
-
-@JvmInline
-@Serializable
-value class EndpointId(
-    val value: String,
-) {
-    init {
-        require(value.isNotBlank()) { "Endpoint ids must not be blank." }
-    }
-}
+import skirout.editor.v1.type_catalog.EndpointId
+import skirout.editor.v1.type_catalog.NamedTypeTemplate
+import skirout.editor.v1.type_catalog.TypeDefinitionId
+import skirout.editor.v1.type_catalog.TypeTemplate
 
 @Serializable
 enum class EndpointSlot {
@@ -25,16 +19,14 @@ enum class EndpointCardinality {
     Many,
 }
 
-@Serializable
 data class EndpointDefinition(
     val id: EndpointId,
     val slot: EndpointSlot,
-    val resource: TypeTemplate.Named,
+    val resource: NamedTypeTemplate,
     val cardinality: EndpointCardinality,
     val onDelete: RelationDeletePolicy,
 )
 
-@Serializable
 data class RelationContract(
     val id: RelationId,
     val first: EndpointDefinition,
@@ -47,15 +39,32 @@ data class RelationContract(
     }
 }
 
-@Serializable
 data class EndpointBindingTemplate(
     val endpoint: EndpointId,
-    val containingResource: TypeTemplate.Named,
+    val containingResource: NamedTypeTemplate,
     val valueOwner: TypeDefinitionId,
     val relativePath: RelativeFieldPattern,
     val target: TypeTemplate,
     val containsCollection: Boolean,
 )
+
+/** Checks the endpoint ids and resource templates a generated relation provider declared. */
+fun RelationContract.requireValid(): RelationContract =
+    apply {
+        listOf(first, second).forEach { endpoint ->
+            endpoint.id.requireValid()
+            endpoint.resource.requireValid()
+        }
+    }
+
+/** Checks the endpoint, owner and templates a generated endpoint bindings provider declared. */
+fun EndpointBindingTemplate.requireValid(): EndpointBindingTemplate =
+    apply {
+        endpoint.requireValid()
+        containingResource.requireValid()
+        valueOwner.requireValid()
+        target.requireValid()
+    }
 
 /** Reports whether this relation belongs to the resource ownership family. */
 val RelationContract.ownsResources: Boolean
@@ -65,4 +74,4 @@ val RelationContract.ownsResources: Boolean
 val RelationContract.isAcyclic: Boolean
     get() = RelationFamilyId(ACYCLIC_RELATION_FAMILY_ID) in families
 
-fun RelationId.endpointId(slot: EndpointSlot): EndpointId = EndpointId("$value:${slot.name.lowercase()}")
+fun RelationId.endpointId(slot: EndpointSlot): EndpointId = EndpointId(value = "$value:${slot.name.lowercase()}")

@@ -1,13 +1,13 @@
 package com.typewritermc.configuration
 
 import com.typewritermc.types.DataValue
-import com.typewritermc.types.ScalarKind
 import com.typewritermc.types.catalog.CheckedType
 import com.typewritermc.types.catalog.DeclarationDiagnostic
 import com.typewritermc.types.catalog.Resolution
 import com.typewritermc.types.catalog.resolve
 import com.typewritermc.types.skir.SkirDataValueCodec
 import com.typewritermc.types.skir.getOrThrow
+import com.typewritermc.types.use
 import skirout.editor.v1.expression.BoundDirection
 import skirout.editor.v1.expression.ExpressionNode
 import skirout.editor.v1.expression.SizeBoundMetric

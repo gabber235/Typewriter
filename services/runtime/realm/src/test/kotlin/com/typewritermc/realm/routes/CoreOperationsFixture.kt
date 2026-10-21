@@ -50,20 +50,18 @@ import com.typewritermc.realm.testBook
 import com.typewritermc.realm.testTag
 import com.typewritermc.realm.withRealmStructure
 import com.typewritermc.types.DataValue
-import com.typewritermc.types.FieldOwner
 import com.typewritermc.types.NativeBinding
 import com.typewritermc.types.Ref
-import com.typewritermc.types.RepresentationTemplate
 import com.typewritermc.types.ResourceId
-import com.typewritermc.types.TypeDefinition
-import com.typewritermc.types.TypeDefinitionId
-import com.typewritermc.types.TypeId
-import com.typewritermc.types.TypeTemplate
-import com.typewritermc.types.TypeUse
 import com.typewritermc.types.catalog.Resolution
 import com.typewritermc.types.catalog.apply
 import com.typewritermc.types.encodeGeneratedDefault
+import com.typewritermc.types.namedTemplate
+import com.typewritermc.types.namedUse
+import com.typewritermc.types.qualified
 import com.typewritermc.types.skir.getOrThrow
+import com.typewritermc.types.template
+import com.typewritermc.types.use
 import skirout.editor.v1.authoring.AuthoringObservationId
 import skirout.editor.v1.capability.InvocationId
 import skirout.editor.v1.operation.ResourceOperationId
@@ -76,6 +74,10 @@ import skirout.editor.v1.resource_operations.OperationWorkingOverlay
 import skirout.editor.v1.resource_operations.PrepareAuthoringActionRequest
 import skirout.editor.v1.resource_operations.ResolveDropCandidatesRequest
 import skirout.editor.v1.resource_operations.ResolveResourceOperationsRequest
+import skirout.editor.v1.type_catalog.FieldOwner
+import skirout.editor.v1.type_catalog.RepresentationTemplate
+import skirout.editor.v1.type_catalog.TypeDefinition
+import skirout.editor.v1.type_catalog.TypeDefinitionId
 import java.nio.file.Path
 
 /**
@@ -119,16 +121,27 @@ internal class CoreOperationsFixture(
             declaration: TypeDefinition,
             vararg extraParents: TypeDefinitionId,
         ): OwnedTypeDeclaration {
-            val fields = (declaration.representation as RepresentationTemplate.Record).fields
+            val fields = (declaration.representation as RepresentationTemplate.RecordWrapper).value.fields
             return OwnedTypeDeclaration(
                 origin,
-                TypeDefinition(
-                    type,
+                TypeDefinition.partial(
+                    id = type,
                     representation =
-                        RepresentationTemplate.Record(
-                            fields.map { field -> field.copy(owner = FieldOwner(type, field.owner.name), overrides = listOf(field.owner)) },
+                        RepresentationTemplate.createRecord(
+                            fields =
+                                fields.map { field ->
+                                    field.copy(
+                                        owner = FieldOwner(definition = type, name = field.owner.name),
+                                        overrides = listOf(field.owner),
+                                    )
+                                },
+                            abstract_ = false,
                         ),
-                    parents = (listOf(contract) + extraParents).map { TypeTemplate.Named(it) },
+                    parents =
+                        (
+                            listOf(contract) +
+                                extraParents
+                        ).map { it.namedTemplate() },
                 ),
             )
         }
@@ -138,7 +151,7 @@ internal class CoreOperationsFixture(
             contract: TypeDefinitionId,
         ) = contributions.endpointBindings
             .filter { it.valueOwner == contract }
-            .map { it.copy(containingResource = TypeTemplate.Named(type), valueOwner = type) }
+            .map { it.copy(containingResource = type.namedTemplate(), valueOwner = type) }
         val pages = withPages || withElements
         val fixtureTypes =
             buildList {
@@ -170,7 +183,7 @@ internal class CoreOperationsFixture(
             value: T,
             type: TypeDefinitionId,
         ): AuthoringRecord {
-            val checked = (lease.checked.resolve(TypeUse.Named(type)) as Resolution.Ready).value
+            val checked = (lease.checked.resolve(type.use()) as Resolution.Ready).value
 
             @Suppress("UNCHECKED_CAST")
             val binding = lease.nativeBindings.bind(checked) as NativeBinding<T>
@@ -182,7 +195,7 @@ internal class CoreOperationsFixture(
             declaration: TypeDefinition,
             values: Map<String, Any?>,
         ): Map<String, DataValue> =
-            (declaration.representation as RepresentationTemplate.Record).fields.associate { field ->
+            (declaration.representation as RepresentationTemplate.RecordWrapper).value.fields.associate { field ->
                 val use = (field.type.apply(emptyMap()) as Resolution.Ready).value
                 val checked = (lease.checked.resolve(use) as Resolution.Ready).value
                 field.owner.name to lease.nativeBindings.bind(checked).encodeGeneratedDefault(values.getValue(field.owner.name))
@@ -214,7 +227,7 @@ internal class CoreOperationsFixture(
                             )
                         },
                 )
-            return AuthoringRecord(TypeSelection.Complete(TypeUse.Named(type)), encodeFields(PageDefinition.declaration, values))
+            return AuthoringRecord(TypeSelection.Complete(type.namedUse()), encodeFields(PageDefinition.declaration, values))
         }
 
         fun entry(
@@ -232,7 +245,7 @@ internal class CoreOperationsFixture(
                     "name" to "Entry",
                     "placement" to placement,
                 )
-            return AuthoringRecord(TypeSelection.Complete(TypeUse.Named(ENTRY_TYPE)), encodeFields(ElementDefinition.declaration, values))
+            return AuthoringRecord(TypeSelection.Complete(ENTRY_TYPE.namedUse()), encodeFields(ElementDefinition.declaration, values))
         }
 
         fun bookOf(
@@ -301,7 +314,7 @@ internal class CoreOperationsFixture(
         type: TypeDefinitionId,
     ): skirout.editor.v1.type_catalog.DataValue =
         views.read { root ->
-            val checked = (root.catalog.checked.resolve(TypeUse.Named(type)) as Resolution.Ready).value
+            val checked = (root.catalog.checked.resolve(type.use()) as Resolution.Ready).value
             com.typewritermc.types.skir.SkirDataValueCodec
                 .encode(
                     root.catalog.nativeBindings
@@ -367,7 +380,7 @@ internal class CoreOperationsFixture(
         type: TypeDefinitionId,
     ): AuthoringRecord =
         views.read { root ->
-            val checked = (root.catalog.checked.resolve(TypeUse.Named(type)) as Resolution.Ready).value
+            val checked = (root.catalog.checked.resolve(type.use()) as Resolution.Ready).value
 
             @Suppress("UNCHECKED_CAST")
             val binding = root.catalog.nativeBindings.bind(checked) as NativeBinding<T>
@@ -397,6 +410,6 @@ internal class CoreOperationsFixture(
     }
 }
 
-private val PAGE_TYPE = TypeDefinitionId(TypeId.Qualified("fixture", "Page"), 1)
-private val GRAPH_PAGE_TYPE = TypeDefinitionId(TypeId.Qualified("fixture", "GraphPage"), 1)
-private val ENTRY_TYPE = TypeDefinitionId(TypeId.Qualified("fixture", "Entry"), 1)
+private val PAGE_TYPE = TypeDefinitionId.qualified("fixture", "Page")
+private val GRAPH_PAGE_TYPE = TypeDefinitionId.qualified("fixture", "GraphPage")
+private val ENTRY_TYPE = TypeDefinitionId.qualified("fixture", "Entry")

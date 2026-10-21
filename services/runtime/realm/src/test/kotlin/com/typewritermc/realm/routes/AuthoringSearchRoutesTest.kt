@@ -11,21 +11,23 @@ import com.typewritermc.realm.search.IndexedAuthoringSearchCandidate
 import com.typewritermc.services.libs.communicator.router.communicatorRoutes
 import com.typewritermc.types.DataValue
 import com.typewritermc.types.ResourceId
-import com.typewritermc.types.ScalarKind
-import com.typewritermc.types.TypeDefinitionId
-import com.typewritermc.types.TypeUse
+import com.typewritermc.types.namedUse
+import com.typewritermc.types.requireValid
 import com.typewritermc.types.skir.SkirAuthoringValueCodec
 import com.typewritermc.types.skir.SkirDataValueCodec
-import com.typewritermc.types.skir.SkirTypeCodec
 import com.typewritermc.types.skir.getOrThrow
+import com.typewritermc.types.use
 import de.infix.testBalloon.framework.core.testSuite
 import io.kotest.matchers.shouldBe
 import kotlinx.coroutines.test.runTest
 import skirout.editor.v1.authoring.SearchAuthoringRequest
 import skirout.editor.v1.authoring.SearchAuthoringResponse
+import skirout.editor.v1.type_catalog.NamedTypeUse
+import skirout.editor.v1.type_catalog.ScalarKind
+import skirout.editor.v1.type_catalog.TypeDefinitionId
+import skirout.editor.v1.type_catalog.TypeUse
 import skirout.editor.v1.type_catalog.CatalogGeneration as SkirCatalogGeneration
 import skirout.editor.v1.type_catalog.ResourceId as SkirResourceId
-import skirout.editor.v1.type_catalog.TypeUse as SkirTypeUse
 
 val AuthoringSearchRoutesTest by testSuite {
     test("authoring search route returns typed subjects and readable descriptors") {
@@ -57,11 +59,11 @@ val AuthoringSearchRoutesTest by testSuite {
                     repository.receivedQuery shouldBe "readable"
                     repository.receivedContexts shouldBe setOf(resource)
                     repository.receivedRoots shouldBe setOf(TEST_TYPE)
-                    repository.receivedTarget shouldBe TypeUse.Named(TEST_TYPE)
+                    repository.receivedTarget shouldBe TEST_TYPE.namedUse()
                     val hit = response.value.hits.single()
                     hit.resource.value shouldBe resource.value
                     SkirAuthoringValueCodec.decode(hit.subject.content).getOrThrow() shouldBe authored
-                    SkirTypeCodec.decode(hit.context.actualType).getOrThrow() shouldBe TypeUse.Scalar(ScalarKind.Text)
+                    hit.context.actualType.requireValid() shouldBe ScalarKind.TEXT.use
                     SkirDataValueCodec.decode(hit.context.payload).getOrThrow() shouldBe
                         DataValue.StringValue("book Readable Book")
                 }
@@ -107,30 +109,28 @@ val AuthoringSearchRoutesTest by testSuite {
 private fun searchRequest(
     generation: CatalogGeneration,
     context: ResourceId,
-): SearchAuthoringRequest {
-    val target = SkirTypeCodec.encode(TypeUse.Named(TEST_TYPE)).getOrThrow() as SkirTypeUse.NamedWrapper
-    return SearchAuthoringRequest(
+): SearchAuthoringRequest =
+    SearchAuthoringRequest(
         generation = SkirCatalogGeneration(value = generation.value),
         query = "readable",
-        roots = listOf(target.value.definition),
+        roots = listOf(TEST_TYPE),
         contexts = listOf(SkirResourceId(value = context.value)),
-        target = target.value,
+        target = TEST_TYPE.namedUse(),
     )
-}
 
 private class RecordingSearchRepository : AuthoringSearchRepository {
     var receivedGeneration: CatalogGeneration? = null
     var receivedQuery: String? = null
     var receivedContexts: Set<ResourceId>? = null
     var receivedRoots: Set<TypeDefinitionId>? = null
-    var receivedTarget: TypeUse.Named? = null
+    var receivedTarget: NamedTypeUse? = null
 
     override fun search(
         view: com.typewritermc.realm.authoring.AuthoringView,
         query: String,
         contexts: Set<ResourceId>,
         roots: Set<TypeDefinitionId>,
-        target: TypeUse.Named?,
+        target: NamedTypeUse?,
         limit: Int,
     ): List<IndexedAuthoringSearchCandidate> {
         receivedGeneration = view.catalog.generation

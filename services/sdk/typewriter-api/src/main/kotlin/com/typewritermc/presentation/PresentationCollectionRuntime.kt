@@ -1,14 +1,10 @@
 package com.typewritermc.presentation
 
-import com.typewritermc.authoring.ValuePath
 import com.typewritermc.expression.Expr
-import com.typewritermc.expression.ExpressionBindingId
 import com.typewritermc.expression.Handled
 import com.typewritermc.expression.MayBeMissing
-import com.typewritermc.types.TypeTemplate
 import com.typewritermc.types.skir.SkirAuthoringValueCodec
 import com.typewritermc.types.skir.SkirDataValueCodec
-import com.typewritermc.types.skir.SkirTypeCodec
 import com.typewritermc.types.skir.getOrThrow
 import skirout.editor.v1.expression.ExpressionNode
 import skirout.editor.v1.presentation.CollectionGraphDirection
@@ -21,6 +17,7 @@ import skirout.editor.v1.presentation.PresentationCollectionProjectionValue
 import skirout.editor.v1.presentation.PresentationCollectionRelationDefinition
 import skirout.editor.v1.presentation.PresentationElement
 import skirout.editor.v1.presentation.PresentationNode
+import skirout.editor.v1.type_catalog.TypeTemplate
 
 internal fun <V, ItemScope> RuntimePresentationData.renderRepeated(
     source: Expr<List<V>, Handled>,
@@ -343,7 +340,7 @@ private class RuntimeSequenceLayoutScope : SequenceLayoutScope {
 internal fun CollectionSource<*, *>.wire(state: PresentationBuildState): PresentationCollectionDefinition =
     PresentationCollectionDefinition(
         sourceId = id,
-        rowType = SkirTypeCodec.encode(rowType).getOrThrow(),
+        rowType = rowType,
         rowBindingId = rowBinding.wire(),
         key = expression(key),
         selectability = expression(selectability),
@@ -356,11 +353,8 @@ internal fun CollectionSource<*, *>.wire(state: PresentationBuildState): Present
             },
         projection =
             (rows as? CollectionRows.Projected)?.let { projected ->
-                val root =
-                    SkirTypeCodec.encode(projected.projection.root).getOrThrow()
-                        as skirout.editor.v1.type_catalog.TypeTemplate.NamedWrapper
                 PresentationCollectionProjection(
-                    root = root.value,
+                    root = projected.projection.root,
                     resourceBindingId = projected.resourceBinding.wire(),
                     fields =
                         projected.projection.fields.map { field ->

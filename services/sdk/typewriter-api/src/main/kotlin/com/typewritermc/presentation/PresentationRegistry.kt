@@ -1,14 +1,19 @@
 package com.typewritermc.presentation
 
 import com.typewritermc.configuration.kind
-import com.typewritermc.types.TypeTemplate
-import com.typewritermc.types.TypeUse
 import com.typewritermc.types.catalog.CheckedCatalog
 import com.typewritermc.types.catalog.CheckedType
 import com.typewritermc.types.catalog.Resolution
 import com.typewritermc.types.catalog.isNominalSubtype
 import com.typewritermc.types.catalog.resolve
+import com.typewritermc.types.template
+import com.typewritermc.types.unknownVariant
+import com.typewritermc.types.use
 import skirout.editor.v1.catalog.PresentationRole
+import skirout.editor.v1.type_catalog.NamedTypeUse
+import skirout.editor.v1.type_catalog.ParameterKey
+import skirout.editor.v1.type_catalog.TypeTemplate
+import skirout.editor.v1.type_catalog.TypeUse
 
 /**
  * Selects role presentations using nominal target specificity and explicitly configured role fallback.
@@ -71,7 +76,7 @@ internal fun PresentationTarget.isMoreSpecificThan(
                 }
 
                 else -> {
-                    other.type.subsumes(type, actual) && !type.subsumes(other.type, actual)
+                    other.type.template.subsumes(type.template, actual) && !type.template.subsumes(other.type.template, actual)
                 }
             }
         }
@@ -99,7 +104,7 @@ internal fun PresentationTarget.isMoreSpecificThan(
                 catalog.isNominalSubtype(type.definition, other.type.definition) &&
                     !catalog.isNominalSubtype(other.type.definition, type.definition)
             } else {
-                other.type.subsumes(type, catalog) && !type.subsumes(other.type, catalog)
+                other.type.template.subsumes(type.template, catalog) && !type.template.subsumes(other.type.template, catalog)
             }
         }
 
@@ -118,7 +123,7 @@ internal fun PresentationTarget.isEquivalentTo(
         }
 
         this is PresentationTarget.Named && other is PresentationTarget.Named -> {
-            type.subsumes(other.type, actual) && other.type.subsumes(type, actual)
+            type.template.subsumes(other.type.template, actual) && other.type.template.subsumes(type.template, actual)
         }
 
         else -> {
@@ -136,7 +141,7 @@ internal fun PresentationTarget.isEquivalentTo(
         }
 
         this is PresentationTarget.Named && other is PresentationTarget.Named -> {
-            type.subsumes(other.type, catalog) && other.type.subsumes(type, catalog)
+            type.template.subsumes(other.type.template, catalog) && other.type.template.subsumes(type.template, catalog)
         }
 
         else -> {
@@ -151,7 +156,7 @@ internal fun PresentationTarget.matches(actual: CheckedType): Boolean =
         }
 
         is PresentationTarget.Named -> {
-            actual.applications().any { application -> type.matches(application, linkedMapOf(), actual) }
+            actual.applications().any { application -> type.template.matches(application.use, linkedMapOf(), actual) }
         }
     }
 
@@ -187,42 +192,42 @@ internal fun selectMostSpecificDescriptors(
     return maxima.singleOrNull()
 }
 
-private fun CheckedType.applications(): List<TypeUse.Named> =
+private fun CheckedType.applications(): List<NamedTypeUse> =
     buildList {
-        (use as? TypeUse.Named)?.let(::add)
+        (use as? TypeUse.NamedWrapper)?.value?.let(::add)
         addAll(schema.ancestors)
     }
 
 private fun TypeTemplate.matches(
     actual: TypeUse,
-    parameters: MutableMap<com.typewritermc.types.ParameterKey, TypeUse>,
+    parameters: MutableMap<ParameterKey, TypeUse>,
     checked: CheckedType,
 ): Boolean =
     when (this) {
-        is TypeTemplate.Parameter -> {
-            parameters[key]?.let { it == actual } ?: run {
-                parameters[key] = actual
+        is TypeTemplate.ParameterWrapper -> {
+            parameters[value]?.let { it == actual } ?: run {
+                parameters[value] = actual
                 true
             }
         }
 
-        is TypeTemplate.Scalar -> {
-            actual == TypeUse.Scalar(kind)
+        is TypeTemplate.ScalarWrapper -> {
+            actual == value.use
         }
 
-        is TypeTemplate.Nullable -> {
-            actual is TypeUse.Nullable && value.matches(actual.value, parameters, checked)
+        is TypeTemplate.NullableWrapper -> {
+            actual is TypeUse.NullableWrapper && value.value.matches(actual.value.value, parameters, checked)
         }
 
-        is TypeTemplate.Named -> {
-            if (actual !is TypeUse.Named) return false
-            actual
+        is TypeTemplate.NamedWrapper -> {
+            if (actual !is TypeUse.NamedWrapper) return false
+            actual.value
                 .applications(checked)
-                .filter { application -> definition == application.definition && arguments.size == application.arguments.size }
+                .filter { application -> value.definition == application.definition && value.arguments.size == application.arguments.size }
                 .any { application ->
                     val candidateParameters = LinkedHashMap(parameters)
                     val matches =
-                        arguments.zip(application.arguments).all { (expected, supplied) ->
+                        value.arguments.zip(application.arguments).all { (expected, supplied) ->
                             expected.matches(supplied, candidateParameters, checked)
                         }
                     if (matches) {
@@ -232,10 +237,14 @@ private fun TypeTemplate.matches(
                     matches
                 }
         }
+
+        else -> {
+            unknownVariant(this)
+        }
     }
 
-private fun TypeUse.Named.applications(checked: CheckedType): List<TypeUse.Named> =
-    when (val resolution = checked.resolve(this)) {
+private fun NamedTypeUse.applications(checked: CheckedType): List<NamedTypeUse> =
+    when (val resolution = checked.resolve(this.use)) {
         is Resolution.Ready -> resolution.value.applications()
         is Resolution.Invalid -> emptyList()
     }
@@ -248,37 +257,41 @@ private fun TypeTemplate.subsumes(
 private fun TypeTemplate.subsumes(
     candidate: TypeTemplate,
     checked: CheckedType,
-    parameters: MutableMap<com.typewritermc.types.ParameterKey, TypeTemplate>,
+    parameters: MutableMap<ParameterKey, TypeTemplate>,
 ): Boolean =
     when (this) {
-        is TypeTemplate.Parameter -> {
-            parameters[key]?.let { it == candidate } ?: run {
-                parameters[key] = candidate
+        is TypeTemplate.ParameterWrapper -> {
+            parameters[value]?.let { it == candidate } ?: run {
+                parameters[value] = candidate
                 true
             }
         }
 
-        is TypeTemplate.Scalar -> {
+        is TypeTemplate.ScalarWrapper -> {
             candidate == this
         }
 
-        is TypeTemplate.Nullable -> {
-            candidate is TypeTemplate.Nullable && value.subsumes(candidate.value, checked, parameters)
+        is TypeTemplate.NullableWrapper -> {
+            candidate is TypeTemplate.NullableWrapper && value.value.subsumes(candidate.value.value, checked, parameters)
         }
 
-        is TypeTemplate.Named -> {
-            if (candidate !is TypeTemplate.Named) {
+        is TypeTemplate.NamedWrapper -> {
+            if (candidate !is TypeTemplate.NamedWrapper) {
                 false
-            } else if (definition == candidate.definition) {
-                arguments.size == candidate.arguments.size &&
-                    arguments.zip(candidate.arguments).all { (pattern, value) ->
+            } else if (value.definition == candidate.value.definition) {
+                value.arguments.size == candidate.value.arguments.size &&
+                    value.arguments.zip(candidate.value.arguments).all { (pattern, value) ->
                         pattern.subsumes(value, checked, parameters)
                     }
             } else {
-                arguments.isEmpty() &&
-                    candidate.arguments.isEmpty() &&
-                    checked.isNominalSubtype(candidate.definition, definition)
+                value.arguments.isEmpty() &&
+                    candidate.value.arguments.isEmpty() &&
+                    checked.isNominalSubtype(candidate.value.definition, value.definition)
             }
+        }
+
+        else -> {
+            unknownVariant(this)
         }
     }
 
@@ -290,37 +303,41 @@ private fun TypeTemplate.subsumes(
 private fun TypeTemplate.subsumes(
     candidate: TypeTemplate,
     catalog: CheckedCatalog,
-    parameters: MutableMap<com.typewritermc.types.ParameterKey, TypeTemplate>,
+    parameters: MutableMap<ParameterKey, TypeTemplate>,
 ): Boolean =
     when (this) {
-        is TypeTemplate.Parameter -> {
-            parameters[key]?.let { it == candidate } ?: run {
-                parameters[key] = candidate
+        is TypeTemplate.ParameterWrapper -> {
+            parameters[value]?.let { it == candidate } ?: run {
+                parameters[value] = candidate
                 true
             }
         }
 
-        is TypeTemplate.Scalar -> {
+        is TypeTemplate.ScalarWrapper -> {
             candidate == this
         }
 
-        is TypeTemplate.Nullable -> {
-            candidate is TypeTemplate.Nullable && value.subsumes(candidate.value, catalog, parameters)
+        is TypeTemplate.NullableWrapper -> {
+            candidate is TypeTemplate.NullableWrapper && value.value.subsumes(candidate.value.value, catalog, parameters)
         }
 
-        is TypeTemplate.Named -> {
-            if (candidate !is TypeTemplate.Named) {
+        is TypeTemplate.NamedWrapper -> {
+            if (candidate !is TypeTemplate.NamedWrapper) {
                 false
-            } else if (definition == candidate.definition) {
-                arguments.size == candidate.arguments.size &&
-                    arguments.zip(candidate.arguments).all { (pattern, value) ->
+            } else if (value.definition == candidate.value.definition) {
+                value.arguments.size == candidate.value.arguments.size &&
+                    value.arguments.zip(candidate.value.arguments).all { (pattern, value) ->
                         pattern.subsumes(value, catalog, parameters)
                     }
             } else {
-                arguments.isEmpty() &&
-                    candidate.arguments.isEmpty() &&
-                    catalog.isNominalSubtype(candidate.definition, definition)
+                value.arguments.isEmpty() &&
+                    candidate.value.arguments.isEmpty() &&
+                    catalog.isNominalSubtype(candidate.value.definition, value.definition)
             }
+        }
+
+        else -> {
+            unknownVariant(this)
         }
     }
 

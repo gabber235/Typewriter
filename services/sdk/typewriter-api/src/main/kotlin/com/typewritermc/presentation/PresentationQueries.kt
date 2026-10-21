@@ -13,22 +13,21 @@ import com.typewritermc.types.Ref
 import com.typewritermc.types.RelationshipEndpoint
 import com.typewritermc.types.Resource
 import com.typewritermc.types.ResourceId
-import com.typewritermc.types.TypeTemplate
-import com.typewritermc.types.TypeUse
-import com.typewritermc.types.immutableCopy
-import com.typewritermc.types.skir.SkirTypeCodec
-import com.typewritermc.types.skir.getOrThrow
+import com.typewritermc.types.namedUse
+import com.typewritermc.types.use
 import skirout.editor.v1.catalog.PublishedType
 import skirout.editor.v1.expression.ExpressionNode
 import skirout.editor.v1.expression.ExpressionQuery
 import skirout.editor.v1.expression.ResourceQuerySource
+import skirout.editor.v1.type_catalog.NamedTypeTemplate
+import skirout.editor.v1.type_catalog.NamedTypeUse
 import skirout.editor.v1.type_catalog.TypeSelection
 import kotlin.reflect.KClass
 
 internal sealed interface ResourceReadSource {
     data class Identity(
         val expression: Expr<*, *>,
-        val expected: TypeUse.Named,
+        val expected: NamedTypeUse,
     ) : ResourceReadSource
 
     data class Reference(
@@ -48,14 +47,14 @@ class ResourceExpr<T : Resource> internal constructor(
 
     private fun <V> query(make: (ResourceQuerySource) -> ExpressionQuery): Expr<V, MayBeMissing> {
         val selected = source
-        val witness = (selected as? ResourceReadSource.Identity)?.expected?.immutableCopy()?.let { SkirTypeCodec.encode(it).getOrThrow() }
+        val witness = (selected as? ResourceReadSource.Identity)?.expected
         return Expr { environment ->
             val source =
                 when (selected) {
                     is ResourceReadSource.Identity -> {
                         ResourceQuerySource.createIdentity(
                             identity = selected.expression.lower(environment),
-                            target = requireNotNull(witness),
+                            target = requireNotNull(witness).use,
                         )
                     }
 
@@ -90,7 +89,7 @@ val <E : RelationshipEndpoint<*, *>, T : Resource, M : MissingPolicy> Expr<Ref<E
     get() = ResourceExpr(ResourceReadSource.Reference(this))
 
 internal class RuntimePresentationQueries(
-    private val nativeTypes: Map<KClass<*>, TypeTemplate.Named>,
+    private val nativeTypes: Map<KClass<*>, NamedTypeTemplate>,
 ) : PresentationQueries {
     override fun <T : Resource> resource(
         id: Expr<ResourceId, MissingPolicy>,
@@ -99,7 +98,7 @@ internal class RuntimePresentationQueries(
         val template =
             requireNotNull(nativeTypes[resourceClass]) { "No unambiguous resource type is registered for ${resourceClass.qualifiedName}." }
         require(template.arguments.isEmpty()) { "Explicit class queries require a closed resource type." }
-        return ResourceExpr(ResourceReadSource.Identity(id, TypeUse.Named(template.definition)))
+        return ResourceExpr(ResourceReadSource.Identity(id, template.definition.namedUse()))
     }
 }
 

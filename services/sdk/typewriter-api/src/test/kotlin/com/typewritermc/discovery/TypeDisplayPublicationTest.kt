@@ -11,15 +11,13 @@ import com.typewritermc.library.PageDefinition
 import com.typewritermc.library.TagDefinition
 import com.typewritermc.types.Color
 import com.typewritermc.types.ColorDefinition
-import com.typewritermc.types.DeclarationOwner
 import com.typewritermc.types.Icon
 import com.typewritermc.types.TypeDisplay
 import com.typewritermc.types.catalog.toWire
-import com.typewritermc.types.skir.SkirTypeCodec
-import com.typewritermc.types.skir.getOrThrow
 import com.typewritermc.types.toWire
 import de.infix.testBalloon.framework.core.testSuite
 import io.kotest.matchers.shouldBe
+import skirout.editor.v1.type_catalog.DeclarationOwner
 import java.lang.reflect.Modifier
 import java.util.Collections
 
@@ -50,7 +48,7 @@ val TypeDisplayPublicationTest by testSuite {
             assembly.snapshot
                 .toWire()
                 .types
-                .single { published -> published.definition == SkirTypeCodec.encode(BookDefinition.declaration).getOrThrow() }
+                .single { published -> published.definition == BookDefinition.declaration }
                 .display
         wireDisplay.description shouldBe expected.description
         wireDisplay.icon shouldBe expected.icon.toWire()
@@ -119,7 +117,7 @@ internal fun providerOrigin(): ProviderOrigin =
         owner =
             DeclarationOwner(
                 source =
-                    ContributionKey(
+                    contributionKey(
                         source = ContributionSourceId("test"),
                         sourcePart = "main",
                         producer = ProducerId("test"),

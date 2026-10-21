@@ -3,16 +3,14 @@ package com.typewritermc.checking
 import com.typewritermc.authoring.Availability
 import com.typewritermc.authoring.DraftBinding
 import com.typewritermc.authoring.GeneratedSdkApi
-import com.typewritermc.authoring.ValuePath
 import com.typewritermc.expression.EvaluationDiagnostic
 import com.typewritermc.expression.Expr
 import com.typewritermc.expression.ExpressionBindingId
 import com.typewritermc.expression.ExpressionFactory
 import com.typewritermc.expression.MissingPolicy
-import com.typewritermc.expression.portableExpression
-import com.typewritermc.types.TypeDefinitionId
-import com.typewritermc.types.TypeUse
 import skirout.editor.v1.expression.ExpressionNode
+import skirout.editor.v1.type_catalog.NamedTypeUse
+import skirout.editor.v1.type_catalog.TypeDefinitionId
 
 sealed interface ResourceTypeMatch {
     data object AnyResource : ResourceTypeMatch
@@ -23,7 +21,7 @@ sealed interface ResourceTypeMatch {
 
     /** Matches only this exact applied type. Definition represents nominal subtype and broader generic views. */
     data class Application(
-        val use: TypeUse.Named,
+        val use: NamedTypeUse,
     ) : ResourceTypeMatch
 }
 

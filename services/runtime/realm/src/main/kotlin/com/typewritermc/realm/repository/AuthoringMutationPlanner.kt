@@ -28,23 +28,27 @@ import com.typewritermc.authoring.validateStructure
 import com.typewritermc.authoring.writeField
 import com.typewritermc.realm.authoring.authoredTypeAt
 import com.typewritermc.services.libs.utils.sha256Hex
-import com.typewritermc.types.CollectionKind
 import com.typewritermc.types.DataValue
 import com.typewritermc.types.EndpointBindingTemplate
 import com.typewritermc.types.EndpointCardinality
-import com.typewritermc.types.EndpointId
 import com.typewritermc.types.LinkTarget
 import com.typewritermc.types.ListItem
 import com.typewritermc.types.RelationContract
 import com.typewritermc.types.RelationDeletePolicy
 import com.typewritermc.types.ResourceId
-import com.typewritermc.types.TypeDefinitionId
-import com.typewritermc.types.TypeUse
 import com.typewritermc.types.catalog.CheckedCatalog
 import com.typewritermc.types.catalog.Resolution
-import com.typewritermc.types.catalog.ResolvedRepresentation
 import com.typewritermc.types.isAcyclic
 import com.typewritermc.types.ownsResources
+import com.typewritermc.types.unknownVariant
+import com.typewritermc.types.use
+import skirout.editor.v1.type_catalog.CollectionKind
+import skirout.editor.v1.type_catalog.EndpointId
+import skirout.editor.v1.type_catalog.NamedTypeUse
+import skirout.editor.v1.type_catalog.ResolvedRepresentation
+import skirout.editor.v1.type_catalog.SequenceResolvedRepresentation
+import skirout.editor.v1.type_catalog.TypeDefinitionId
+import skirout.editor.v1.type_catalog.TypeUse
 
 internal sealed interface MutationPlanningResult {
     data class Accepted(
@@ -57,8 +61,8 @@ internal sealed interface MutationPlanningResult {
 }
 
 private data class AuthoredCollection(
-    val type: TypeUse.Named,
-    val representation: ResolvedRepresentation.Sequence,
+    val type: NamedTypeUse,
+    val representation: SequenceResolvedRepresentation,
 )
 
 /**
@@ -733,17 +737,18 @@ internal class AuthoringMutationPlanner(
         }
         val payload =
             when (collection.representation.kind) {
-                CollectionKind.List -> DataValue.ListValue(emptyList())
-                CollectionKind.Set -> DataValue.SetValue(emptyList())
+                CollectionKind.LIST -> DataValue.ListValue(emptyList())
+                CollectionKind.SET -> DataValue.SetValue(emptyList())
+                else -> unknownVariant(collection.representation.kind)
             }
         return DataValue.Named(collection.type, payload)
     }
 
     private fun AuthoringRecord.declaredCollection(location: ValueLocation): AuthoredCollection? {
         val type = authoredTypeAt(location.path, catalog).namedType() ?: return null
-        val checked = (catalog.resolve(type) as? Resolution.Ready)?.value ?: return null
-        val representation = checked.schema.representation as? ResolvedRepresentation.Sequence ?: return null
-        return AuthoredCollection(type, representation)
+        val checked = (catalog.resolve(type.use) as? Resolution.Ready)?.value ?: return null
+        val representation = checked.schema.representation as? ResolvedRepresentation.SequenceWrapper ?: return null
+        return AuthoredCollection(type, representation.value)
     }
 
     private fun disconnect(
@@ -840,7 +845,7 @@ internal class AuthoringMutationPlanner(
             remove(resources, EditIntent.Remove(parent, last.id), problems)
             return
         }
-        val nullable = resources[location.resource]?.authoredTypeAt(location.path, catalog) is TypeUse.Nullable
+        val nullable = resources[location.resource]?.authoredTypeAt(location.path, catalog) is TypeUse.NullableWrapper
         update(resources, location, if (nullable) DataValue.Null else DataValue.Unfilled, problems)
     }
 }
@@ -1018,12 +1023,12 @@ private fun DataValue.withItems(items: List<ListItem>): DataValue =
         else -> error("Expected a collection value.")
     }
 
-private fun DataValue.namedType(): TypeUse.Named? = (this as? DataValue.Named)?.actualType
+private fun DataValue.namedType(): NamedTypeUse? = (this as? DataValue.Named)?.actualType
 
-private fun TypeUse?.namedType(): TypeUse.Named? =
+private fun TypeUse?.namedType(): NamedTypeUse? =
     when (this) {
-        is TypeUse.Named -> this
-        is TypeUse.Nullable -> value.namedType()
+        is TypeUse.NamedWrapper -> value
+        is TypeUse.NullableWrapper -> value.value.namedType()
         else -> null
     }
 

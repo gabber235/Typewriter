@@ -6,6 +6,8 @@ import com.typewritermc.authoring.NativeBindingId
 import com.typewritermc.authoring.NativeConstructionPlan
 import com.typewritermc.authoring.complete
 import com.typewritermc.types.catalog.CheckedType
+import skirout.editor.v1.type_catalog.TypeDefinitionId
+import skirout.editor.v1.type_catalog.TypeUse
 
 interface NativeBindingFactory {
     val definition: TypeDefinitionId
@@ -48,7 +50,7 @@ class GeneratedRecordNativeBinding<T>(
 
     override fun encode(value: T): DataValue =
         DataValue.Named(
-            actualType = checked.use as TypeUse.Named,
+            actualType = (checked.use as TypeUse.NamedWrapper).value,
             payload = DataValue.Record(fields.associate { it.name to it.binding.encodeGenerated(it.read(value)) }),
         )
 
@@ -80,7 +82,8 @@ class GeneratedScalarNativeBinding<T>(
     GeneratedCheckedNativeBinding {
     override val actualType: TypeUse = checked.use
 
-    override fun encode(value: T): DataValue = DataValue.Named(checked.use as TypeUse.Named, representation.encodeGenerated(unwrap(value)))
+    override fun encode(value: T): DataValue =
+        DataValue.Named((checked.use as TypeUse.NamedWrapper).value, representation.encodeGenerated(unwrap(value)))
 
     override fun decode(value: com.typewritermc.authoring.CompleteValue): T =
         construct(representation.decodeGenerated(value.value.namedPayload()))
@@ -98,7 +101,7 @@ class GeneratedEnumNativeBinding<T>(
     GeneratedCheckedNativeBinding {
     override val actualType: TypeUse = checked.use
 
-    override fun encode(value: T): DataValue = DataValue.Named(checked.use as TypeUse.Named, DataValue.EnumCase(key(value)))
+    override fun encode(value: T): DataValue = DataValue.Named((checked.use as TypeUse.NamedWrapper).value, DataValue.EnumCase(key(value)))
 
     override fun decode(value: com.typewritermc.authoring.CompleteValue): T {
         val case =

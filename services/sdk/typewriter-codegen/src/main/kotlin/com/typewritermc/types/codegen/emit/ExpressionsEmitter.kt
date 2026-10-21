@@ -17,11 +17,11 @@ import com.squareup.kotlinpoet.TypeSpec
 import com.squareup.kotlinpoet.TypeVariableName
 import com.squareup.kotlinpoet.WildcardTypeName
 import com.squareup.kotlinpoet.asClassName
-import com.typewritermc.types.RepresentationTemplate
-import com.typewritermc.types.ScalarKind
 import com.typewritermc.types.codegen.SdkDeclaration
 import com.typewritermc.types.codegen.SdkEmitter
 import com.typewritermc.types.codegen.parameterizedOrSelf
+import skirout.editor.v1.type_catalog.RepresentationTemplate
+import skirout.editor.v1.type_catalog.ScalarKind
 import kotlin.reflect.KClass
 import com.typewritermc.codegen.TypewriterApi as Api
 
@@ -79,7 +79,9 @@ internal object ExpressionsEmitter : SdkEmitter {
                 ).build(),
         )
         if (declaration.resource) addProperty(declaration.resourceFields())
-        if (!declaration.generic && (declaration.definition.representation as? RepresentationTemplate.Scalar)?.kind == ScalarKind.Text) {
+        if (!declaration.generic &&
+            (declaration.definition.representation as? RepresentationTemplate.ScalarWrapper)?.value?.kind == ScalarKind.TEXT
+        ) {
             addProperty(declaration.textRepresentation())
         }
         addFunction(declaration.collectionHelper("any", Api.collectionAny, BOOLEAN))

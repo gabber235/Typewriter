@@ -16,17 +16,22 @@ import com.typewritermc.authoring.mapKey
 import com.typewritermc.authoring.mapValue
 import com.typewritermc.types.DataValue
 import com.typewritermc.types.EndpointCardinality
-import com.typewritermc.types.EndpointId
 import com.typewritermc.types.EndpointSlot
 import com.typewritermc.types.LinkTarget
 import com.typewritermc.types.RelationContract
 import com.typewritermc.types.RelationId
 import com.typewritermc.types.ResourceId
-import com.typewritermc.types.TypeTemplate
-import com.typewritermc.types.TypeUse
 import com.typewritermc.types.catalog.CheckedCatalog
 import com.typewritermc.types.catalog.Resolution
-import com.typewritermc.types.catalog.ResolvedRepresentation
+import com.typewritermc.types.nullable
+import com.typewritermc.types.template
+import com.typewritermc.types.unknownVariant
+import com.typewritermc.types.use
+import skirout.editor.v1.type_catalog.EndpointId
+import skirout.editor.v1.type_catalog.NamedTypeTemplate
+import skirout.editor.v1.type_catalog.ResolvedRepresentation
+import skirout.editor.v1.type_catalog.TypeTemplate
+import skirout.editor.v1.type_catalog.TypeUse
 import java.util.concurrent.ConcurrentHashMap
 
 internal data class StoredDeclaredEdge(
@@ -66,27 +71,27 @@ internal class LinkSchemaCapabilities(
         depth: Int,
     ): Boolean {
         if (depth >= MAX_SCHEMA_CAPABILITY_DEPTH) return true
-        val nonNull = if (use is TypeUse.Nullable) use.value else use
+        val nonNull = if (use is TypeUse.NullableWrapper) use.value.value else use
         if (nonNull in visited) return false
         val resolved = catalog.resolve(nonNull) as? Resolution.Ready ?: return true
         val nextVisited = visited + nonNull
         return when (val representation = resolved.value.schema.representation) {
-            is ResolvedRepresentation.Link -> {
-                representation.endpoint == endpoint
+            is ResolvedRepresentation.LinkWrapper -> {
+                representation.value.endpoint == endpoint
             }
 
-            is ResolvedRepresentation.Record -> {
-                representation.abstract ||
-                    representation.fields.any { contains(it.type, endpoint, nextVisited, depth + 1) }
+            is ResolvedRepresentation.RecordWrapper -> {
+                representation.value.abstract_ ||
+                    representation.value.fields.any { contains(it.type, endpoint, nextVisited, depth + 1) }
             }
 
-            is ResolvedRepresentation.Sequence -> {
-                contains(representation.item, endpoint, nextVisited, depth + 1)
+            is ResolvedRepresentation.SequenceWrapper -> {
+                contains(representation.value.item, endpoint, nextVisited, depth + 1)
             }
 
-            is ResolvedRepresentation.Mapping -> {
-                contains(representation.key, endpoint, nextVisited, depth + 1) ||
-                    contains(representation.value, endpoint, nextVisited, depth + 1)
+            is ResolvedRepresentation.MappingWrapper -> {
+                contains(representation.value.key, endpoint, nextVisited, depth + 1) ||
+                    contains(representation.value.value, endpoint, nextVisited, depth + 1)
             }
 
             else -> {
@@ -322,10 +327,10 @@ private fun AuthoringRecord.linkSlots(catalog: CheckedCatalog): List<LinkSchemaS
 private fun AuthoringRecord.resolvedFields(catalog: CheckedCatalog) =
     when (val selected = configuration) {
         is TypeSelection.Complete -> {
-            val resolved = catalog.resolve(selected.use) as? Resolution.Ready
+            val resolved = catalog.resolve(selected.use.use) as? Resolution.Ready
             val record =
-                resolved?.value?.schema?.representation as? ResolvedRepresentation.Record
-            record?.fields.orEmpty()
+                resolved?.value?.schema?.representation as? ResolvedRepresentation.RecordWrapper
+            record?.value?.fields.orEmpty()
         }
 
         is TypeSelection.Pending -> {
@@ -345,29 +350,29 @@ private fun collectLinkEvidence(
     memberships: MutableSet<ValuePath>,
     forms: MutableSet<ValuePath>,
 ) {
-    val nonNull = if (declared is TypeUse.Nullable) declared.value else declared
-    if (declared is TypeUse.Nullable && value == DataValue.Null) {
+    val nonNull = if (declared is TypeUse.NullableWrapper) declared.value.value else declared
+    if (declared is TypeUse.NullableWrapper && value == DataValue.Null) {
         if (capabilities.contains(nonNull, endpoint)) forms += path
         return
     }
     val named = value as? DataValue.Named
-    val effective = named?.actualType ?: nonNull
-    if (named != null && !catalog.isReadableAs(named.actualType, nonNull)) {
+    val effective = named?.actualType?.use ?: nonNull
+    if (named != null && !catalog.isReadableAs(named.actualType.use, nonNull)) {
         if (capabilities.contains(nonNull, endpoint)) forms += path
         return
     }
     val resolved = catalog.resolve(effective) as? Resolution.Ready ?: return
     val payload = named?.payload ?: value
     when (val representation = resolved.value.schema.representation) {
-        is ResolvedRepresentation.Link -> {
-            if (representation.endpoint == endpoint) values += path
+        is ResolvedRepresentation.LinkWrapper -> {
+            if (representation.value.endpoint == endpoint) values += path
         }
 
-        is ResolvedRepresentation.Record -> {
+        is ResolvedRepresentation.RecordWrapper -> {
             if (!capabilities.contains(effective, endpoint)) return
             forms += path
             val record = payload as? DataValue.Record ?: return
-            representation.fields.forEach { field ->
+            representation.value.fields.forEach { field ->
                 collectLinkEvidence(
                     field.type,
                     record.fields[field.key] ?: DataValue.Unfilled,
@@ -382,8 +387,8 @@ private fun collectLinkEvidence(
             }
         }
 
-        is ResolvedRepresentation.Sequence -> {
-            if (!capabilities.contains(representation.item, endpoint)) return
+        is ResolvedRepresentation.SequenceWrapper -> {
+            if (!capabilities.contains(representation.value.item, endpoint)) return
             forms += path
             memberships += path
             val items =
@@ -394,7 +399,7 @@ private fun collectLinkEvidence(
                 }
             items.forEach { item ->
                 collectLinkEvidence(
-                    representation.item,
+                    representation.value.item,
                     item.value,
                     path.item(item.id),
                     endpoint,
@@ -407,9 +412,9 @@ private fun collectLinkEvidence(
             }
         }
 
-        is ResolvedRepresentation.Mapping -> {
-            val keyContains = capabilities.contains(representation.key, endpoint)
-            val valueContains = capabilities.contains(representation.value, endpoint)
+        is ResolvedRepresentation.MappingWrapper -> {
+            val keyContains = capabilities.contains(representation.value.key, endpoint)
+            val valueContains = capabilities.contains(representation.value.value, endpoint)
             if (!keyContains && !valueContains) return
             forms += path
             memberships += path
@@ -417,7 +422,7 @@ private fun collectLinkEvidence(
             mapping.rows.forEach { row ->
                 if (keyContains) {
                     collectLinkEvidence(
-                        representation.key,
+                        representation.value.key,
                         row.key,
                         path.item(row.id).mapKey(),
                         endpoint,
@@ -430,7 +435,7 @@ private fun collectLinkEvidence(
                 }
                 if (valueContains) {
                     collectLinkEvidence(
-                        representation.value,
+                        representation.value.value,
                         row.value,
                         path.item(row.id).mapValue(),
                         endpoint,
@@ -459,33 +464,33 @@ private fun collectLinkSlots(
     directCollection: ValuePath?,
     slots: MutableList<LinkSchemaSlot>,
 ) {
-    val nonNull = if (declared is TypeUse.Nullable) declared.value else declared
+    val nonNull = if (declared is TypeUse.NullableWrapper) declared.value.value else declared
     if (value == DataValue.Null) return
     val named = value as? DataValue.Named
     val effective =
         if (named == null) {
             nonNull
         } else {
-            if (!catalog.isReadableAs(named.actualType, nonNull)) return
-            named.actualType
+            if (!catalog.isReadableAs(named.actualType.use, nonNull)) return
+            named.actualType.use
         }
     val resolved = catalog.resolve(effective) as? Resolution.Ready ?: return
     val payload = named?.payload ?: value
     when (val representation = resolved.value.schema.representation) {
-        is ResolvedRepresentation.Link -> {
+        is ResolvedRepresentation.LinkWrapper -> {
             slots +=
                 LinkSchemaSlot(
-                    endpoint = representation.endpoint,
-                    target = representation.target,
+                    endpoint = representation.value.endpoint,
+                    target = representation.value.target,
                     location = path,
                     containsCollection = containsCollection,
                     directCollection = directCollection,
                 )
         }
 
-        is ResolvedRepresentation.Record -> {
+        is ResolvedRepresentation.RecordWrapper -> {
             val record = payload as? DataValue.Record ?: return
-            representation.fields.forEach { field ->
+            representation.value.fields.forEach { field ->
                 val child = record.fields[field.key] ?: DataValue.Unfilled
                 collectLinkSlots(
                     field.type,
@@ -499,24 +504,24 @@ private fun collectLinkSlots(
             }
         }
 
-        is ResolvedRepresentation.Sequence -> {
+        is ResolvedRepresentation.SequenceWrapper -> {
             val items =
                 when (payload) {
                     is DataValue.ListValue -> payload.items
                     is DataValue.SetValue -> payload.items
                     else -> emptyList()
                 }
-            val itemRepresentation = catalog.resolve(representation.item) as? Resolution.Ready
+            val itemRepresentation = catalog.resolve(representation.value.item) as? Resolution.Ready
             val directLink =
                 itemRepresentation?.value?.schema?.representation
-                    as? ResolvedRepresentation.Link
+                    as? ResolvedRepresentation.LinkWrapper
             if (directLink != null) {
                 val link = directLink
-                slots += LinkSchemaSlot(link.endpoint, link.target, null, true, path)
+                slots += LinkSchemaSlot(link.value.endpoint, link.value.target, null, true, path)
             }
             items.forEach { item ->
                 collectLinkSlots(
-                    representation.item,
+                    representation.value.item,
                     item.value,
                     path.item(item.id),
                     catalog,
@@ -527,11 +532,11 @@ private fun collectLinkSlots(
             }
         }
 
-        is ResolvedRepresentation.Mapping -> {
+        is ResolvedRepresentation.MappingWrapper -> {
             val mapping = payload as? DataValue.MapValue ?: return
             mapping.rows.forEach { row ->
                 collectLinkSlots(
-                    representation.key,
+                    representation.value.key,
                     row.key,
                     path.item(row.id).mapKey(),
                     catalog,
@@ -540,7 +545,7 @@ private fun collectLinkSlots(
                     slots = slots,
                 )
                 collectLinkSlots(
-                    representation.value,
+                    representation.value.value,
                     row.value,
                     path.item(row.id).mapValue(),
                     catalog,
@@ -562,28 +567,28 @@ private fun AuthoringRecord.matches(
 ): Boolean =
     when (val selected = configuration) {
         is TypeSelection.Complete -> {
-            catalog.isReadableAs(selected.use, expected)
+            catalog.isReadableAs(selected.use.use, expected)
         }
 
         is TypeSelection.Pending -> {
-            catalog.knownApplications(selected).any { application -> catalog.isReadableAs(application, expected) }
+            catalog.knownApplications(selected).any { application -> catalog.isReadableAs(application.use, expected) }
         }
     }
 
 private fun AuthoringRecord.matches(
-    expected: TypeTemplate.Named,
+    expected: NamedTypeTemplate,
     catalog: CheckedCatalog,
 ): Boolean {
-    val expectedUse = expected.toUseOrNull()
+    val expectedUse = expected.template.toUseOrNull()
     return when (val selected = configuration) {
         is TypeSelection.Complete -> {
-            expectedUse?.let { catalog.isReadableAs(selected.use, it) }
+            expectedUse?.let { catalog.isReadableAs(selected.use.use, it) }
                 ?: catalog.isNominalSubtype(selected.use.definition, expected.definition)
         }
 
         is TypeSelection.Pending -> {
             expectedUse?.let { concrete ->
-                catalog.knownApplications(selected).any { application -> catalog.isReadableAs(application, concrete) }
+                catalog.knownApplications(selected).any { application -> catalog.isReadableAs(application.use, concrete) }
             } ?: catalog.isNominalSubtype(selected.definition, expected.definition)
         }
     }
@@ -591,21 +596,25 @@ private fun AuthoringRecord.matches(
 
 private fun TypeTemplate.toUseOrNull(): TypeUse? =
     when (this) {
-        is TypeTemplate.Parameter -> {
+        is TypeTemplate.ParameterWrapper -> {
             null
         }
 
-        is TypeTemplate.Named -> {
-            val applied = arguments.map { it.toUseOrNull() ?: return null }
-            TypeUse.Named(definition, applied)
+        is TypeTemplate.NamedWrapper -> {
+            val applied = value.arguments.map { it.toUseOrNull() ?: return null }
+            value.definition.use(applied)
         }
 
-        is TypeTemplate.Nullable -> {
-            value.toUseOrNull()?.let(TypeUse::Nullable)
+        is TypeTemplate.NullableWrapper -> {
+            value.value.toUseOrNull()?.nullable()
         }
 
-        is TypeTemplate.Scalar -> {
-            TypeUse.Scalar(kind)
+        is TypeTemplate.ScalarWrapper -> {
+            value.use
+        }
+
+        else -> {
+            unknownVariant(this)
         }
     }
 

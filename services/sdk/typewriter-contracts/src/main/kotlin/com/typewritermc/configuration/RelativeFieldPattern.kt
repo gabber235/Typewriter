@@ -1,8 +1,11 @@
 package com.typewritermc.configuration
 
-import com.typewritermc.types.catalog.ResolvedRepresentation
+import com.typewritermc.types.unknownVariant
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
+import skirout.editor.v1.type_catalog.CollectionKind
+import skirout.editor.v1.type_catalog.ResolvedRepresentation
+import skirout.editor.v1.type_catalog.ScalarKind
 
 @Serializable
 data class RelativeFieldPattern(
@@ -51,40 +54,46 @@ enum class RepresentationKind {
 
 fun ResolvedRepresentation.kind(): RepresentationKind =
     when (this) {
-        is ResolvedRepresentation.Scalar -> {
-            when (kind) {
-                com.typewritermc.types.ScalarKind.Unit -> RepresentationKind.Unit
-                com.typewritermc.types.ScalarKind.Boolean -> RepresentationKind.Boolean
-                com.typewritermc.types.ScalarKind.Text -> RepresentationKind.Text
-                com.typewritermc.types.ScalarKind.Bytes -> RepresentationKind.Bytes
-                is com.typewritermc.types.ScalarKind.Integer -> RepresentationKind.Integer
-                is com.typewritermc.types.ScalarKind.Float -> RepresentationKind.Float
-                com.typewritermc.types.ScalarKind.Decimal -> RepresentationKind.Decimal
-                com.typewritermc.types.ScalarKind.Timestamp -> RepresentationKind.Timestamp
-                com.typewritermc.types.ScalarKind.Duration -> RepresentationKind.Duration
+        is ResolvedRepresentation.ScalarWrapper -> {
+            when (val kind = value.kind) {
+                ScalarKind.UNIT -> RepresentationKind.Unit
+                ScalarKind.BOOLEAN -> RepresentationKind.Boolean
+                ScalarKind.TEXT -> RepresentationKind.Text
+                ScalarKind.BYTES -> RepresentationKind.Bytes
+                is ScalarKind.IntegerWrapper -> RepresentationKind.Integer
+                is ScalarKind.FloatWrapper -> RepresentationKind.Float
+                ScalarKind.DECIMAL -> RepresentationKind.Decimal
+                ScalarKind.TIMESTAMP -> RepresentationKind.Timestamp
+                ScalarKind.DURATION -> RepresentationKind.Duration
+                else -> unknownVariant(kind)
             }
         }
 
-        is ResolvedRepresentation.Record -> {
+        is ResolvedRepresentation.RecordWrapper -> {
             RepresentationKind.Record
         }
 
-        is ResolvedRepresentation.Sequence -> {
-            when (kind) {
-                com.typewritermc.types.CollectionKind.List -> RepresentationKind.List
-                com.typewritermc.types.CollectionKind.Set -> RepresentationKind.Set
+        is ResolvedRepresentation.SequenceWrapper -> {
+            when (val kind = value.kind) {
+                CollectionKind.LIST -> RepresentationKind.List
+                CollectionKind.SET -> RepresentationKind.Set
+                else -> unknownVariant(kind)
             }
         }
 
-        is ResolvedRepresentation.Mapping -> {
+        is ResolvedRepresentation.MappingWrapper -> {
             RepresentationKind.Map
         }
 
-        is ResolvedRepresentation.Enumeration -> {
+        is ResolvedRepresentation.EnumerationWrapper -> {
             RepresentationKind.Enum
         }
 
-        is ResolvedRepresentation.Link -> {
+        is ResolvedRepresentation.LinkWrapper -> {
             RepresentationKind.Link
+        }
+
+        else -> {
+            unknownVariant(this)
         }
     }

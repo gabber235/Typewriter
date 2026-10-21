@@ -1,7 +1,7 @@
 package com.typewritermc.authoring
 
 import com.typewritermc.types.DataValue
-import com.typewritermc.types.FieldOwner
+import skirout.editor.v1.type_catalog.FieldOwner
 
 interface NativeConstructionPlan {
     val defaultedFields: Set<FieldOwner>

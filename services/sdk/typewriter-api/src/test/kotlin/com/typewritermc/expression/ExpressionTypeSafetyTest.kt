@@ -3,13 +3,14 @@ package com.typewritermc.expression
 import com.typewritermc.authoring.ValuePath
 import com.typewritermc.library.BookExpressions
 import com.typewritermc.types.DataValue
-import com.typewritermc.types.EndpointId
 import com.typewritermc.types.LinkTarget
 import com.typewritermc.types.ResourceId
+import com.typewritermc.types.use
 import de.infix.testBalloon.framework.core.testSuite
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.types.shouldBeInstanceOf
 import skirout.editor.v1.expression.ExpressionNode
+import skirout.editor.v1.type_catalog.EndpointId
 
 val ExpressionTypeSafetyTest by testSuite {
     test("handled Boolean composition remains handled") {
@@ -34,7 +35,7 @@ val ExpressionTypeSafetyTest by testSuite {
     }
 
     test("relationship target projection exposes the resource key") {
-        val source = testLiteral(DataValue.Link(EndpointId("page.elements"), LinkTarget(ResourceId("page:first"), ValuePath())))
+        val source = testLiteral(DataValue.Link(EndpointId(value = "page.elements"), LinkTarget(ResourceId("page:first"), ValuePath())))
         val projected =
             with(FixtureReads) {
                 DefaultExpressionEvaluator(ExpressionValueReader { error("No authored read expected") }).evaluate(

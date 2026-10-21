@@ -4,6 +4,7 @@ import com.typewritermc.authoring.CanonicalValueHash
 import com.typewritermc.authoring.CompleteValue
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
+import skirout.editor.v1.type_catalog.TypeUse
 import java.security.MessageDigest
 
 interface CanonicalValueEquality {
@@ -97,7 +98,7 @@ fun DataValue.canonicalValueKey(): String =
         }
 
         is DataValue.Named -> {
-            listOf(actualType.semanticForm(), payload.canonicalValueKey()).framed("named")
+            listOf(actualType.use.semanticForm(), payload.canonicalValueKey()).framed("named")
         }
 
         is DataValue.ListValue -> {
@@ -120,6 +121,6 @@ fun DataValue.canonicalValueKey(): String =
         }
     }
 
-private fun TypeUse.semanticForm(): String = Json.encodeToString(this)
+private fun TypeUse.semanticForm(): String = canonicalText
 
 private fun List<String>.framed(kind: String): String = "$kind:$size:" + joinToString("") { "${it.length}:$it" }

@@ -2,29 +2,16 @@ package com.typewritermc.authoring
 
 import com.typewritermc.types.DataValue
 import com.typewritermc.types.ResourceId
-import com.typewritermc.types.TypeUse
 import com.typewritermc.types.immutableCopy
 import com.typewritermc.types.immutableListCopy
 import com.typewritermc.types.immutableMapCopy
 import com.typewritermc.types.immutableSetCopy
 
+/** Skir type values are deeply immutable, so only the argument list needs a copy. */
 fun TypeSelection.immutableCopy(): TypeSelection =
     when (this) {
-        is TypeSelection.Complete -> {
-            copy(use = use.immutableCopy() as TypeUse.Named)
-        }
-
-        is TypeSelection.Pending -> {
-            copy(
-                arguments =
-                    arguments.immutableListCopy { argument ->
-                        when (argument) {
-                            is ArgumentSelection.Chosen -> argument.copy(type = argument.type.immutableCopy())
-                            ArgumentSelection.Unfilled -> argument
-                        }
-                    },
-            )
-        }
+        is TypeSelection.Complete -> this
+        is TypeSelection.Pending -> copy(arguments = arguments.immutableListCopy())
     }
 
 fun AuthoringRecord.immutableCopy(): AuthoringRecord =
@@ -47,7 +34,7 @@ fun Map<ResourceId, AuthoringRecord>.immutableAuthoringCopy(): Map<ResourceId, A
 fun PreparationTarget.immutableCopy(): PreparationTarget =
     when (this) {
         is PreparationTarget.Record -> copy(selection = selection.immutableCopy())
-        is PreparationTarget.Value -> copy(type = type.immutableCopy())
+        is PreparationTarget.Value -> this
     }
 
 fun PreparedContent.immutableCopy(): PreparedContent =
@@ -63,10 +50,7 @@ fun PreparationDraft.immutableCopy(): PreparationDraft =
         pendingDefaults = pendingDefaults.map(ValuePath::immutableCopy).immutableSetCopy(),
         requiredInputs =
             requiredInputs.immutableListCopy {
-                it.copy(
-                    path = it.path.immutableCopy(),
-                    expected = it.expected.immutableCopy(),
-                )
+                it.copy(path = it.path.immutableCopy())
             },
         findings = findings.immutableListCopy { it.copy(relativePath = it.relativePath?.immutableCopy()) },
     )

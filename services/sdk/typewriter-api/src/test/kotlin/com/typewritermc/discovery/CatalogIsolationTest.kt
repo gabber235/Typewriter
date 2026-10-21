@@ -6,31 +6,36 @@ import com.typewritermc.imprint.ArtifactId
 import com.typewritermc.imprint.ContributionName
 import com.typewritermc.imprint.ContributionSourceId
 import com.typewritermc.imprint.ProducerId
-import com.typewritermc.types.DeclarationOwner
-import com.typewritermc.types.FieldDeclaration
-import com.typewritermc.types.FieldOwner
-import com.typewritermc.types.ParameterKey
-import com.typewritermc.types.RepresentationTemplate
-import com.typewritermc.types.ScalarKind
-import com.typewritermc.types.TypeDefinition
-import com.typewritermc.types.TypeDefinitionId
-import com.typewritermc.types.TypeId
-import com.typewritermc.types.TypeParameter
-import com.typewritermc.types.TypeTemplate
 import com.typewritermc.types.catalog.DeclarationDiagnostic
 import com.typewritermc.types.catalog.DeclarationStatus
 import com.typewritermc.types.catalog.DefaultCheckedCatalog
+import com.typewritermc.types.namedTemplate
+import com.typewritermc.types.qualified
+import com.typewritermc.types.template
 import de.infix.testBalloon.framework.core.testSuite
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.matchers.shouldBe
 import kotlinx.coroutines.CancellationException
 import skirout.editor.v1.catalog.PresentationRole
+import skirout.editor.v1.type_catalog.DeclarationOwner
+import skirout.editor.v1.type_catalog.FieldDeclaration
+import skirout.editor.v1.type_catalog.FieldOwner
+import skirout.editor.v1.type_catalog.ParameterKey
 import skirout.editor.v1.type_catalog.PresentationId
+import skirout.editor.v1.type_catalog.RepresentationTemplate
+import skirout.editor.v1.type_catalog.ScalarKind
+import skirout.editor.v1.type_catalog.TypeDefinition
+import skirout.editor.v1.type_catalog.TypeDefinitionId
+import skirout.editor.v1.type_catalog.TypeParameter
 
 val CatalogIsolationTest by testSuite {
     test("unknown field dependency makes its declaration unavailable") {
         val broken = id("Broken")
-        val definition = record(broken, FieldDeclaration(FieldOwner(broken, "payload"), TypeTemplate.Named(id("Missing"))))
+        val definition =
+            record(
+                broken,
+                FieldDeclaration.partial(owner = FieldOwner(definition = broken, name = "payload"), type = id("Missing").template()),
+            )
         val assembly =
             CatalogContributions(
                 declarations = listOf(OwnedTypeDeclaration(origin, definition)),
@@ -45,24 +50,25 @@ val CatalogIsolationTest by testSuite {
     test("quarantine follows parameter bounds and nested parent arguments") {
         val bound = record(id("Bound"))
         val generic =
-            TypeDefinition(
-                id("Generic"),
-                listOf(
-                    TypeParameter(
-                        ParameterKey(id("Generic"), 0),
-                        "T",
-                        listOf(TypeTemplate.Named(bound.id)),
+            TypeDefinition.partial(
+                id = id("Generic"),
+                parameters =
+                    listOf(
+                        TypeParameter(
+                            key = ParameterKey(owner = id("Generic"), index = 0),
+                            name = "T",
+                            bounds = listOf(bound.id.template()),
+                        ),
                     ),
-                ),
-                RepresentationTemplate.Record(emptyList()),
+                representation = RepresentationTemplate.createRecord(fields = emptyList(), abstract_ = false),
             )
         val parent =
-            TypeDefinition(
-                id("Parent"),
-                listOf(TypeParameter(ParameterKey(id("Parent"), 0), "T")),
-                RepresentationTemplate.Record(emptyList(), abstract = true),
+            TypeDefinition.partial(
+                id = id("Parent"),
+                parameters = listOf(TypeParameter.partial(key = ParameterKey(owner = id("Parent"), index = 0), name = "T")),
+                representation = RepresentationTemplate.createRecord(fields = emptyList(), abstract_ = true),
             )
-        val child = record(id("Child")).copy(parents = listOf(TypeTemplate.Named(parent.id, listOf(TypeTemplate.Named(bound.id)))))
+        val child = record(id("Child")).copy(parents = listOf(parent.id.namedTemplate(listOf(bound.id.template()))))
         val healthy = record(id("Healthy"))
         val catalog =
             DefaultCheckedCatalog(
@@ -115,7 +121,7 @@ val CatalogIsolationTest by testSuite {
                 .assemble(CatalogAssemblyContext(generation))
         val failure =
             assembly.callbackFailures.single { failure ->
-                (failure.callback as? CatalogCallback.Presentation)?.subject == TypeTemplate.Scalar(ScalarKind.Text)
+                (failure.callback as? CatalogCallback.Presentation)?.subject == ScalarKind.TEXT.template
             }
         (failure.cause === cause) shouldBe true
         (failure.callback as CatalogCallback.Presentation).role shouldBe PresentationRole.INSPECTOR
@@ -137,26 +143,24 @@ val CatalogIsolationTest by testSuite {
 
 private val generation = CatalogGeneration("catalog isolation")
 
-private fun id(name: String) = TypeDefinitionId(TypeId.Qualified("isolation", name), 1)
+private fun id(name: String) = TypeDefinitionId.qualified("isolation", name)
 
 private fun record(
     id: TypeDefinitionId,
     vararg fields: FieldDeclaration,
-) = TypeDefinition(
-    id,
-    representation = RepresentationTemplate.Record(fields.toList()),
-)
+) = TypeDefinition.partial(id = id, representation = RepresentationTemplate.createRecord(fields = fields.toList(), abstract_ = false))
 
 private val origin =
     ProviderOrigin(
         DeclarationOwner(
-            ContributionKey(
-                ContributionSourceId("test"),
-                "main",
-                ProducerId("sdk"),
-                ContributionName("isolation"),
-            ),
-            "isolation",
+            source =
+                contributionKey(
+                    ContributionSourceId("test"),
+                    "main",
+                    ProducerId("sdk"),
+                    ContributionName("isolation"),
+                ),
+            localIdentity = "isolation",
         ),
         ArtifactId("test:isolation"),
         "main",

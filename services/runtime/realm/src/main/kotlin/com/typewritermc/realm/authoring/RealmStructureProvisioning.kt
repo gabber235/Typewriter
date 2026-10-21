@@ -26,11 +26,14 @@ import com.typewritermc.types.DataValue
 import com.typewritermc.types.NativeBinding
 import com.typewritermc.types.Ref
 import com.typewritermc.types.ResourceId
-import com.typewritermc.types.TypeUse
+import com.typewritermc.types.canonicalText
 import com.typewritermc.types.catalog.CheckedCatalog
 import com.typewritermc.types.catalog.CheckedType
 import com.typewritermc.types.catalog.Resolution
 import com.typewritermc.types.unwrapNamed
+import com.typewritermc.types.use
+import skirout.editor.v1.type_catalog.NamedTypeUse
+import skirout.editor.v1.type_catalog.TypeUse
 import java.util.UUID
 
 /**
@@ -56,9 +59,9 @@ internal class RealmStructureProvisioning(
      */
     internal suspend fun prepare(view: AuthoringView): PreparedEdit? {
         val catalog = view.catalog
-        if (catalog.checked.readyOrNull(TypeUse.Named(RealmRootDefinition.id)) == null) return null
+        if (catalog.checked.readyOrNull(RealmRootDefinition.id.use()) == null) return null
         val present = view.resources.values.mapTo(hashSetOf()) { it.configuration.definition }
-        val displayName = { type: TypeUse.Named ->
+        val displayName = { type: NamedTypeUse ->
             catalog.displays
                 .publishedType(type.definition)
                 ?.display
@@ -66,12 +69,12 @@ internal class RealmStructureProvisioning(
         }
         val missing =
             catalog.checked
-                .readyOrNull(TypeUse.Named(RealmSectionDefinition.id))
+                .readyOrNull(RealmSectionDefinition.id.use())
                 ?.let(catalog.checked::concreteForms)
                 .orEmpty()
-                .map { it.use as TypeUse.Named }
+                .map { (it.use as TypeUse.NamedWrapper).value }
                 .filter { it.definition !in present }
-                .sortedWith(compareBy(displayName).thenBy { it.definition.toString() })
+                .sortedWith(compareBy(displayName).thenBy { it.definition.canonicalText })
         val existingRoot =
             view.resources.entries
                 .singleOrNull { (_, record) ->
@@ -96,13 +99,13 @@ internal class RealmStructureProvisioning(
     }
 
     private fun rootRecord(view: AuthoringView): AuthoringRecord {
-        val encoded = view.catalog.binding<RealmRoot>(TypeUse.Named(RealmRootDefinition.id)).encode(RealmRoot()) as DataValue.Named
+        val encoded = view.catalog.binding<RealmRoot>(RealmRootDefinition.id.use()).encode(RealmRoot()) as DataValue.Named
         return AuthoringRecord(TypeSelection.Complete(encoded.actualType), (encoded.payload as DataValue.Record).fields)
     }
 
     private suspend fun sectionRecord(
         view: AuthoringView,
-        type: TypeUse.Named,
+        type: NamedTypeUse,
     ): AuthoringRecord {
         val catalog = view.catalog
         val prepared =
@@ -122,7 +125,9 @@ internal class RealmStructureProvisioning(
     private fun newResource() = ResourceId(UUID.randomUUID().toString())
 
     private companion object {
-        val sectionLink = TypeUse.Named(RealmSections.Root.Definition.id, listOf(TypeUse.Named(RealmSectionDefinition.id)))
+        val sectionLink =
+            RealmSections.Root.Definition.id
+                .use(listOf(RealmSectionDefinition.id.use()))
     }
 }
 

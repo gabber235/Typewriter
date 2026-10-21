@@ -9,7 +9,6 @@ import com.typewritermc.authoring.ValuePath
 import com.typewritermc.authoring.descendants
 import com.typewritermc.checking.Diagnostic
 import com.typewritermc.checking.DiagnosticSeverity
-import com.typewritermc.configuration.RuleOrigin
 import com.typewritermc.engine.CompilationContext
 import com.typewritermc.engine.CompiledEdge
 import com.typewritermc.engine.CompiledEdgeOrigin
@@ -33,6 +32,8 @@ import com.typewritermc.types.ResourceId
 import com.typewritermc.types.catalog.CheckedCatalog
 import com.typewritermc.types.catalog.runtimeDefinitions
 import com.typewritermc.types.ownsResources
+import com.typewritermc.types.use
+import skirout.editor.v1.type_catalog.RuleOrigin
 
 /**
  * Compiles a compilation unit and its ownership closure from one assessed authoring view.
@@ -175,7 +176,7 @@ internal class OwnershipClosureCompiler(
                             resource.value
                                 .descendants()
                                 .mapNotNull { located ->
-                                    (located.value as? DataValue.Named)?.actualType
+                                    (located.value as? DataValue.Named)?.actualType?.use
                                 }.toList()
                         },
                     ),
@@ -238,7 +239,7 @@ internal fun compilationDiagnostic(
 ): Diagnostic =
     Diagnostic(
         DiagnosticId("publication:compiler:$location:${target?.value}:$code"),
-        RuleOrigin(PUBLICATION_DIAGNOSTIC_TYPE, 0),
+        RuleOrigin(owner = PUBLICATION_DIAGNOSTIC_TYPE, ordinal = 0),
         code,
         message,
         severity,

@@ -4,10 +4,13 @@ package com.typewritermc.authoring
 
 import com.typewritermc.checking.CatalogGeneration
 import com.typewritermc.expression.EvaluationDiagnostic
-import com.typewritermc.types.TypeDefinitionId
-import com.typewritermc.types.TypeTemplate
-import com.typewritermc.types.TypeUse
 import com.typewritermc.types.catalog.CheckedType
+import com.typewritermc.types.nullable
+import com.typewritermc.types.use
+import skirout.editor.v1.type_catalog.NamedTypeUse
+import skirout.editor.v1.type_catalog.TypeDefinitionId
+import skirout.editor.v1.type_catalog.TypeTemplate
+import skirout.editor.v1.type_catalog.TypeUse
 
 /** Identity token for one authored observation; equal catalog generations do not make two observations interchangeable. */
 class ReadContext(
@@ -91,33 +94,33 @@ fun <V> nativeReadProjection(expected: TypeUse): ReadProjection<V> =
 
 @GeneratedSdkApi
 fun <V> representationReadProjection(
-    expected: TypeUse.Named,
+    expected: NamedTypeUse,
     representation: TypeUse,
 ): ReadProjection<V> =
     object : ReadProjection<V> {
-        override val expected: TypeUse = expected
+        override val expected: TypeUse = expected.use
 
         context(reads: AuthoredReads)
         override fun read(location: ValueLocation): Availability<V> =
-            reads.readRepresentation(boundPath<Any?>(location, expected), representation)
+            reads.readRepresentation(boundPath<Any?>(location, expected.use), representation)
     }
 
 @GeneratedSdkApi
 fun <V> draftViewProjection(
-    expected: TypeUse.Named,
+    expected: NamedTypeUse,
     bind: (DraftBinding) -> V,
 ): ReadProjection<V> =
     object : ReadProjection<V> {
-        override val expected: TypeUse = expected
+        override val expected: TypeUse = expected.use
 
         context(reads: AuthoredReads)
-        override fun read(location: ValueLocation): Availability<V> = reads.binding(boundPath<V>(location, expected)).map(bind)
+        override fun read(location: ValueLocation): Availability<V> = reads.binding(boundPath<V>(location, expected.use)).map(bind)
     }
 
 @GeneratedSdkApi
 fun <V> nullableReadProjection(inner: ReadProjection<V>): ReadProjection<V?> =
     object : ReadProjection<V?> {
-        override val expected: TypeUse = TypeUse.Nullable(inner.expected)
+        override val expected: TypeUse = inner.expected.nullable()
 
         context(reads: AuthoredReads)
         override fun read(location: ValueLocation): Availability<V?> =
@@ -128,33 +131,33 @@ fun <V> nullableReadProjection(inner: ReadProjection<V>): ReadProjection<V?> =
 
 @GeneratedSdkApi
 fun <V> listDraftProjection(
-    expected: TypeUse.Named,
+    expected: NamedTypeUse,
     item: ReadProjection<V>,
 ): ReadProjection<DraftList<V>> = collectionProjection(expected) { location, context -> ProjectedDraftList(location, context, item) }
 
 @GeneratedSdkApi
 fun <V> setDraftProjection(
-    expected: TypeUse.Named,
+    expected: NamedTypeUse,
     item: ReadProjection<V>,
 ): ReadProjection<DraftSet<V>> = collectionProjection(expected) { location, context -> ProjectedDraftSet(location, context, item) }
 
 @GeneratedSdkApi
 fun <K, V> mapDraftProjection(
-    expected: TypeUse.Named,
+    expected: NamedTypeUse,
     key: ReadProjection<K>,
     value: ReadProjection<V>,
 ): ReadProjection<MapDraft<K, V>> = collectionProjection(expected) { location, context -> ProjectedMapDraft(location, context, key, value) }
 
 private fun <V> collectionProjection(
-    expected: TypeUse.Named,
+    expected: NamedTypeUse,
     create: (ValueLocation, ReadContext) -> V,
 ): ReadProjection<V> =
     object : ReadProjection<V> {
-        override val expected: TypeUse = expected
+        override val expected: TypeUse = expected.use
 
         context(reads: AuthoredReads)
         override fun read(location: ValueLocation): Availability<V> =
-            reads.presence(boundPath<V>(location, expected)).flatMap { present ->
+            reads.presence(boundPath<V>(location, expected.use)).flatMap { present ->
                 if (present) {
                     Availability.Available(create(location, reads.readContext))
                 } else {

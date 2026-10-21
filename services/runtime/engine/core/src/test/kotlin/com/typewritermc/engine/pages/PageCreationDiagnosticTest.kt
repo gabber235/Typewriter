@@ -19,13 +19,14 @@ import com.typewritermc.types.LinkTarget
 import com.typewritermc.types.NativeBindingFactory
 import com.typewritermc.types.ResourceId
 import com.typewritermc.types.StandardTypes
-import com.typewritermc.types.TypeDefinition
-import com.typewritermc.types.TypeUse
 import com.typewritermc.types.catalog.DefaultCheckedCatalog
 import com.typewritermc.types.catalog.Resolution
-import com.typewritermc.types.catalog.ResolvedRepresentation
+import com.typewritermc.types.use
 import de.infix.testBalloon.framework.core.testSuite
 import io.kotest.matchers.shouldBe
+import skirout.editor.v1.type_catalog.ResolvedRepresentation
+import skirout.editor.v1.type_catalog.TypeDefinition
+import skirout.editor.v1.type_catalog.TypeUse
 import java.math.BigInteger
 import java.util.Collections
 
@@ -71,13 +72,13 @@ val PageCreationDiagnosticTest by testSuite {
         val fields = (prepared.content as PreparedContent.Record).record.fields
         fields.filterValues { it == DataValue.Unfilled }.keys shouldBe setOf("book", "name", "elements")
         prepared.findings.map { it.code } shouldBe listOf("unfinished_constructor_input")
-        val page = (catalog.resolve(SequencePageDefinition.use) as Resolution.Ready).value
+        val page = (catalog.resolve(SequencePageDefinition.use.use) as Resolution.Ready).value
         val bookType =
             page.schema.fields
                 .single { it.key == "book" }
                 .type
         val bookSchema = (catalog.resolve(bookType) as Resolution.Ready).value
-        val endpoint = (bookSchema.schema.representation as ResolvedRepresentation.Link).endpoint
+        val endpoint = (bookSchema.schema.representation as ResolvedRepresentation.LinkWrapper).value.endpoint
         val connected =
             DataValue.Named(
                 SequencePageDefinition.use,
@@ -86,7 +87,7 @@ val PageCreationDiagnosticTest by testSuite {
                         (
                             "book" to
                                 DataValue.Named(
-                                    bookType as TypeUse.Named,
+                                    (bookType as TypeUse.NamedWrapper).value,
                                     DataValue.Link(endpoint, LinkTarget(ResourceId("book"), null)),
                                 )
                         ),

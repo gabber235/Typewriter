@@ -9,13 +9,16 @@ import com.squareup.kotlinpoet.TypeVariableName
 import com.typewritermc.codegen.DefinitionReferences
 import com.typewritermc.codegen.TypeParameterBindings
 import com.typewritermc.codegen.implements
-import com.typewritermc.types.ParameterKey
-import com.typewritermc.types.RepresentationTemplate
 import com.typewritermc.types.Resource
-import com.typewritermc.types.TypeDefinition
 import com.typewritermc.types.TypeDisplay
-import com.typewritermc.types.TypeTemplate
 import com.typewritermc.types.ksp.OwnedFieldDeclaration
+import com.typewritermc.types.namedTemplate
+import com.typewritermc.types.template
+import skirout.editor.v1.type_catalog.NamedTypeTemplate
+import skirout.editor.v1.type_catalog.ParameterKey
+import skirout.editor.v1.type_catalog.RepresentationTemplate
+import skirout.editor.v1.type_catalog.TypeDefinition
+import skirout.editor.v1.type_catalog.TypeTemplate
 
 /** One source declaration resolved for SDK emission. Built once by the processor; emitters only read it. */
 internal class SdkDeclaration(
@@ -38,7 +41,7 @@ internal class SdkDeclaration(
     val searchKey: String?,
 ) {
     val resource: Boolean = source.implements(Resource::class)
-    val record: Boolean = definition.representation is RepresentationTemplate.Record
+    val record: Boolean = definition.representation is RepresentationTemplate.RecordWrapper
     val abstract: Boolean = source.isAbstractDeclaration
     val generic: Boolean = typeVariables.isNotEmpty()
 
@@ -58,13 +61,16 @@ internal class SdkDeclaration(
     val exactVariables: List<TypeVariableName> = typeVariables + draftVariables
 
     /** The template of this declaration applied to its own parameters. */
-    val template: TypeTemplate.Named =
-        TypeTemplate.Named(definition.id, definition.parameters.map { TypeTemplate.Parameter(it.key) })
+    val template: NamedTypeTemplate =
+        definition.id.namedTemplate(definition.parameters.map { it.key.template })
 
     /** Binds each type parameter to the expected type of the draft projection argument of the same index. */
     val draftBindings: TypeParameterBindings =
         TypeParameterBindings.from(
-            typeVariables.indices.associate { index -> ParameterKey(definition.id, index) to CodeBlock.of("argument%L.expected", index) },
+            typeVariables.indices.associate { index ->
+                ParameterKey(owner = definition.id, index = index) to
+                    CodeBlock.of("argument%L.expected", index)
+            },
         )
 }
 

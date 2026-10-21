@@ -1,10 +1,10 @@
 package com.typewritermc.authoring
 
 import com.typewritermc.types.ResourceId
-import com.typewritermc.types.TypeDefinitionId
-import com.typewritermc.types.TypeUse
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
+import skirout.editor.v1.type_catalog.TypeDefinitionId
+import skirout.editor.v1.type_catalog.TypeUse
 
 @JvmInline
 @Serializable

@@ -28,27 +28,17 @@ import com.typewritermc.imprint.ProducerId
 import com.typewritermc.presentation.CheckedPresentationTemplate
 import com.typewritermc.presentation.NestedPresentationSlot
 import com.typewritermc.presentation.PresentationBuildBinding
-import com.typewritermc.presentation.PresentationDescriptor
 import com.typewritermc.presentation.PresentationNestedTemplate
 import com.typewritermc.presentation.PresentationTarget
 import com.typewritermc.presentation.RoleFallback
 import com.typewritermc.presentation.inferInheritableNodes
 import com.typewritermc.presentation.selectMostSpecificDescriptors
 import com.typewritermc.presentation.validateInheritableNodes
-import com.typewritermc.types.DeclarationOwner
 import com.typewritermc.types.EndpointBindingTemplate
-import com.typewritermc.types.FieldDeclaration
-import com.typewritermc.types.FieldOwner
-import com.typewritermc.types.ParameterKey
 import com.typewritermc.types.RelationContract
-import com.typewritermc.types.RepresentationTemplate
 import com.typewritermc.types.StandardTypes
-import com.typewritermc.types.TypeDefinition
-import com.typewritermc.types.TypeDefinitionId
 import com.typewritermc.types.TypeDisplay
-import com.typewritermc.types.TypeParameter
-import com.typewritermc.types.TypeTemplate
-import com.typewritermc.types.TypeUse
+import com.typewritermc.types.canonicalText
 import com.typewritermc.types.catalog.CheckedCatalog
 import com.typewritermc.types.catalog.DeclarationDiagnostic
 import com.typewritermc.types.catalog.DeclarationOrigin
@@ -61,8 +51,13 @@ import com.typewritermc.types.catalog.Resolution
 import com.typewritermc.types.catalog.apply
 import com.typewritermc.types.catalog.isReady
 import com.typewritermc.types.encodeGeneratedDefault
+import com.typewritermc.types.entries
+import com.typewritermc.types.floatScalar
 import com.typewritermc.types.immutableCopy
 import com.typewritermc.types.immutableListCopy
+import com.typewritermc.types.integerScalar
+import com.typewritermc.types.isValid
+import com.typewritermc.types.namedTemplate
 import com.typewritermc.types.ownsResources
 import com.typewritermc.types.parameterKeys
 import com.typewritermc.types.skir.SkirAuthoringValueCodec
@@ -71,9 +66,29 @@ import com.typewritermc.types.skir.SkirDataValueCodec
 import com.typewritermc.types.skir.SkirTypeCodec
 import com.typewritermc.types.skir.getOrThrow
 import com.typewritermc.types.substitute
+import com.typewritermc.types.template
+import com.typewritermc.types.unknownVariant
+import com.typewritermc.types.use
 import kotlinx.coroutines.CancellationException
 import skirout.editor.v1.catalog.PresentationMaterial
 import skirout.editor.v1.catalog.PresentationRole
+import skirout.editor.v1.type_catalog.CollectionKind
+import skirout.editor.v1.type_catalog.DeclarationOwner
+import skirout.editor.v1.type_catalog.EndpointId
+import skirout.editor.v1.type_catalog.FieldDeclaration
+import skirout.editor.v1.type_catalog.FieldOwner
+import skirout.editor.v1.type_catalog.FloatWidth
+import skirout.editor.v1.type_catalog.IntegerWidth
+import skirout.editor.v1.type_catalog.NamedTypeTemplate
+import skirout.editor.v1.type_catalog.ParameterKey
+import skirout.editor.v1.type_catalog.RepresentationTemplate
+import skirout.editor.v1.type_catalog.ScalarKind
+import skirout.editor.v1.type_catalog.TypeDefinition
+import skirout.editor.v1.type_catalog.TypeDefinitionId
+import skirout.editor.v1.type_catalog.TypeId
+import skirout.editor.v1.type_catalog.TypeParameter
+import skirout.editor.v1.type_catalog.TypeTemplate
+import skirout.editor.v1.type_catalog.TypeUse
 
 /**
  * One contributed type declaration. Codegen supplies the complete [display] of every declared type and the
@@ -159,7 +174,7 @@ fun CatalogContributions.assemble(context: CatalogAssemblyContext): CatalogAssem
         }
     val reservedDeclarations =
         assembledDeclarations.filter {
-            (it.definition.id.type as? com.typewritermc.types.TypeId.Qualified)?.namespace ==
+            (it.definition.id.typeId as? TypeId.QualifiedWrapper)?.value?.namespace ==
                 com.typewritermc.expression.CANONICAL_READ_NAMESPACE
         }
     val reservedDiagnostics =
@@ -218,14 +233,14 @@ fun CatalogContributions.assemble(context: CatalogAssemblyContext): CatalogAssem
             .groupBy(scopeKeys::getValue)
             .filterValues { it.size > 1 }
     val searchKeyDiagnostics =
-        searchKeyConflicts.values.flatten().sortedBy { it.toString() }.map { id ->
+        searchKeyConflicts.values.flatten().sortedBy { it.canonicalText }.map { id ->
             DeclarationDiagnostic(id, "duplicate_search_key", declarationGroups.getValue(id).map { DeclarationOrigin(it.origin.owner) })
         }
     val conflictingKeys = searchKeyConflicts.values.flatten().toSet()
-    val displayCollection = collectResourceDisplays(displays, definitionIndex, searchKeys.keys.sortedBy { it.toString() }, checked)
+    val displayCollection = collectResourceDisplays(displays, definitionIndex, searchKeys.keys.sortedBy { it.canonicalText }, checked)
     val placementDiagnostics = mutableListOf<DeclarationDiagnostic>()
     val published =
-        declarationGroups.entries.sortedBy { it.key.toString() }.map { (id, owned) ->
+        declarationGroups.entries.sortedBy { it.key.canonicalText }.map { (id, owned) ->
             val definition = owned.first().definition
             val status = checked.definition(id)
             val ready = status == DeclarationStatus.Ready
@@ -317,8 +332,10 @@ private fun realmStructureDiagnostics(
 ): List<DeclarationDiagnostic> {
     val members = relations.filter { it.ownsResources }.map { it.second.resource.definition }
     return declarations
-        .filter { it.definition.id in resourceTypes && (it.definition.representation as? RepresentationTemplate.Record)?.abstract == false }
-        .mapNotNull { owned ->
+        .filter {
+            it.definition.id in resourceTypes &&
+                (it.definition.representation as? RepresentationTemplate.RecordWrapper)?.value?.abstract_ == false
+        }.mapNotNull { owned ->
             val id = owned.definition.id
             val origins = listOf(DeclarationOrigin(owned.origin.owner))
             when {
@@ -342,8 +359,7 @@ private fun realmStructureDiagnostics(
 }
 
 /** The owner side endpoints of ownership relations: the link fields that hold owned resources. */
-private fun List<RelationContract>.ownershipEndpoints(): Set<com.typewritermc.types.EndpointId> =
-    filter { it.ownsResources }.mapTo(linkedSetOf()) { it.first.id }
+private fun List<RelationContract>.ownershipEndpoints(): Set<EndpointId> = filter { it.ownsResources }.mapTo(linkedSetOf()) { it.first.id }
 
 /** The owner endpoint types of ownership relations: the first endpoint, which holds the owned resources. */
 private fun List<RelationContract>.ownerTypes(): Set<TypeDefinitionId> =
@@ -357,9 +373,10 @@ private fun CheckedCatalog.isRealmStructure(id: TypeDefinitionId): Boolean =
 private fun TypeDefinitionId.derivedDisplay(): TypeDisplay =
     TypeDisplay(
         name =
-            when (val id = type) {
-                is com.typewritermc.types.TypeId.Qualified -> id.name.substringAfterLast('.')
-                is com.typewritermc.types.TypeId.Declared -> "Type"
+            when (val id = typeId) {
+                is TypeId.QualifiedWrapper -> id.value.name.substringAfterLast('.')
+                is TypeId.DeclaredWrapper -> "Type"
+                else -> unknownVariant(id)
             },
         description = "",
         icon = TypeDisplay.DEFAULT_ICON,
@@ -382,7 +399,7 @@ private fun List<EffectiveFieldTemplate>.placementField(
 }
 
 private fun TypeTemplate.isPlacement(checked: CheckedCatalog): Boolean =
-    this is TypeTemplate.Named && checked.isNominalSubtype(definition, PlacementDefinition.id)
+    this is TypeTemplate.NamedWrapper && checked.isNominalSubtype(value.definition, PlacementDefinition.id)
 
 private data class CollectedOwnedConfiguration(
     val owned: OwnedConfiguration,
@@ -409,7 +426,7 @@ private fun collectPresentationMaterials(
     definitions: Map<TypeDefinitionId, TypeDefinition>,
     catalog: CheckedCatalog,
     resourceTypes: Set<TypeDefinitionId>,
-    ownershipEndpoints: Set<com.typewritermc.types.EndpointId>,
+    ownershipEndpoints: Set<EndpointId>,
 ): PresentationMaterialCollection {
     val materials = mutableListOf<CollectedPresentationMaterial>()
     val failures = mutableListOf<DeclarationDiagnostic>()
@@ -420,16 +437,16 @@ private fun collectPresentationMaterials(
                 val native = owned.nativeClass ?: return@mapNotNull null
                 val definition = definitions[owned.definition.id] ?: return@mapNotNull null
                 if (catalog.declaration(definition.id) !is Resolution.Ready) return@mapNotNull null
-                native to TypeTemplate.Named(definition.id, definition.parameters.map { TypeTemplate.Parameter(it.key) })
+                native to definition.id.namedTemplate(definition.parameters.map { it.key.template })
             } +
                 nativeBindings
                     .mapNotNull { owned ->
                         val native = owned.factory.nativeClass ?: return@mapNotNull null
                         val definition = definitions[owned.factory.definition] ?: return@mapNotNull null
                         if (catalog.declaration(definition.id) !is Resolution.Ready) return@mapNotNull null
-                        native to TypeTemplate.Named(definition.id, definition.parameters.map { TypeTemplate.Parameter(it.key) })
+                        native to definition.id.namedTemplate(definition.parameters.map { it.key.template })
                     }
-        ).groupBy(Pair<kotlin.reflect.KClass<*>, TypeTemplate.Named>::first)
+        ).groupBy(Pair<kotlin.reflect.KClass<*>, NamedTypeTemplate>::first)
             .mapNotNull { (native, declarations) ->
                 declarations
                     .map { it.second }
@@ -458,9 +475,9 @@ private fun collectPresentationMaterials(
                         inferred,
                         result.dependencies,
                         partOwnerCompatible = { key ->
-                            val owner = SkirTypeCodec.decode(key.owner).valueOrNull()
-                            val actual = (subject as? TypeTemplate.Named)?.definition
-                            owner != null && actual != null && definitions[owner]?.representation is RepresentationTemplate.Record &&
+                            val owner = key.owner
+                            val actual = (subject as? TypeTemplate.NamedWrapper)?.value?.definition
+                            actual != null && definitions[owner]?.representation is RepresentationTemplate.RecordWrapper &&
                                 catalog.isNominalSubtype(actual, owner)
                         },
                     ) { field ->
@@ -479,12 +496,12 @@ private fun collectPresentationMaterials(
                                         role = role,
                                         layout = result.layout,
                                         dependencies = result.dependencies,
-                                        subject = SkirTypeCodec.encode(subject).getOrThrow(),
+                                        subject = subject,
                                         inheritableNodes = inferred,
                                     ),
                             )
                     } else {
-                        val affected = (subject as? TypeTemplate.Named)?.definition
+                        val affected = (subject as? TypeTemplate.NamedWrapper)?.value?.definition
                         if (affected != null) {
                             failures +=
                                 DeclarationDiagnostic(
@@ -500,10 +517,10 @@ private fun collectPresentationMaterials(
                     callbackFailures +=
                         CatalogCallbackFailure(
                             owned.origin,
-                            CatalogCallback.Presentation(subject.immutableCopy(), role),
+                            CatalogCallback.Presentation(subject, role),
                             cause,
                         )
-                    val affected = (subject as? TypeTemplate.Named)?.definition
+                    val affected = (subject as? TypeTemplate.NamedWrapper)?.value?.definition
                     if (affected != null) {
                         failures +=
                             DeclarationDiagnostic(
@@ -529,7 +546,8 @@ private fun skirout.editor.v1.presentation.PresentationDependencies.validCollect
     if (!contextInputs.all { input ->
             input.bindingId.value.startsWith("context:") &&
                 input.source.kind != skirout.editor.v1.presentation.PresentationContextSource.Kind.UNKNOWN &&
-                (SkirTypeCodec.decode(input.valueType).valueOrNull()?.let { catalog.resolve(it) } is Resolution.Ready)
+                input.valueType.isValid &&
+                catalog.resolve(input.valueType) is Resolution.Ready
         }
     ) {
         return false
@@ -544,8 +562,7 @@ private fun skirout.editor.v1.presentation.PresentationDependencies.validCollect
                 ?: return false
         }
     return collections.all { collection ->
-        val wireRowType = collection.rowType
-        val rowType = SkirTypeCodec.decode(wireRowType).valueOrNull() ?: return@all false
+        val rowType = collection.rowType.takeIf { it.isValid } ?: return@all false
         if (!rowType.isValidMaterialTemplate(definitions, parameterBounds, catalog)) return@all false
         collection.projection?.isValid(rowType, definitions, parameterBounds, catalog, resourceTypes) ?: true
     }
@@ -558,13 +575,8 @@ private fun skirout.editor.v1.presentation.PresentationCollectionProjection.isVa
     catalog: CheckedCatalog,
     resourceTypes: Set<TypeDefinitionId>,
 ): Boolean {
-    val root =
-        SkirTypeCodec
-            .decode(
-                skirout.editor.v1.type_catalog.TypeTemplate
-                    .NamedWrapper(this.root),
-            ).valueOrNull() as? TypeTemplate.Named ?: return false
-    if (!root.isValidMaterialTemplate(definitions, parameterBounds, catalog)) return false
+    val root = this.root.takeIf { it.isValid } ?: return false
+    if (!root.template.isValidMaterialTemplate(definitions, parameterBounds, catalog)) return false
     if (root.definition !in resourceTypes) return false
     return fields.all { field ->
         val targetPath = SkirAuthoringValueCodec.decode(field.target).valueOrNull() ?: return@all false
@@ -572,7 +584,7 @@ private fun skirout.editor.v1.presentation.PresentationCollectionProjection.isVa
         when (val source = field.source) {
             is skirout.editor.v1.presentation.PresentationCollectionProjectionValue.ContentWrapper -> {
                 val sourcePath = SkirAuthoringValueCodec.decode(source.value).valueOrNull() ?: return@all false
-                val sourceType = root.templateAt(sourcePath, definitions) ?: return@all false
+                val sourceType = root.template.templateAt(sourcePath, definitions) ?: return@all false
                 catalog.isTemplateReadableAs(sourceType, targetType, parameterBounds)
             }
 
@@ -594,21 +606,21 @@ private fun TypeTemplate.isValidMaterialTemplate(
     catalog: CheckedCatalog,
 ): Boolean =
     when (this) {
-        is TypeTemplate.Parameter -> {
-            key in parameterBounds
+        is TypeTemplate.ParameterWrapper -> {
+            value in parameterBounds
         }
 
-        is TypeTemplate.Named -> {
-            val definition = definitions[definition]
+        is TypeTemplate.NamedWrapper -> {
+            val definition = definitions[value.definition]
             definition != null &&
-                catalog.definition(this.definition) == DeclarationStatus.Ready &&
-                arguments.size == definition.parameters.size &&
-                arguments.all { it.isValidMaterialTemplate(definitions, parameterBounds, catalog) } &&
-                definition.parameters.zip(arguments).all { (parameter, argument) ->
+                catalog.definition(this.value.definition) == DeclarationStatus.Ready &&
+                value.arguments.size == definition.parameters.size &&
+                value.arguments.all { it.isValidMaterialTemplate(definitions, parameterBounds, catalog) } &&
+                definition.parameters.zip(value.arguments).all { (parameter, argument) ->
                     val bindings =
                         definition.parameters
                             .map(TypeParameter::key)
-                            .zip(arguments)
+                            .zip(value.arguments)
                             .toMap()
                     parameter.bounds.all { bound ->
                         val expected = bound.substitute(bindings)
@@ -617,12 +629,16 @@ private fun TypeTemplate.isValidMaterialTemplate(
                 }
         }
 
-        is TypeTemplate.Nullable -> {
-            value.isValidMaterialTemplate(definitions, parameterBounds, catalog)
+        is TypeTemplate.NullableWrapper -> {
+            value.value.isValidMaterialTemplate(definitions, parameterBounds, catalog)
         }
 
-        is TypeTemplate.Scalar -> {
+        is TypeTemplate.ScalarWrapper -> {
             true
+        }
+
+        else -> {
+            unknownVariant(this)
         }
     }
 
@@ -653,19 +669,19 @@ private fun TypeTemplate.templateAt(
 
                 is PathSegment.Item -> {
                     current.representation(definitions)?.let { (representation, arguments) ->
-                        (representation as? RepresentationTemplate.Sequence)?.item?.substitute(arguments)
+                        (representation as? RepresentationTemplate.SequenceWrapper)?.value?.item?.substitute(arguments)
                     }
                 }
 
                 PathSegment.MapKey -> {
                     current.representation(definitions)?.let { (representation, arguments) ->
-                        (representation as? RepresentationTemplate.Mapping)?.key?.substitute(arguments)
+                        (representation as? RepresentationTemplate.MappingWrapper)?.value?.key?.substitute(arguments)
                     }
                 }
 
                 PathSegment.MapValue -> {
                     current.representation(definitions)?.let { (representation, arguments) ->
-                        (representation as? RepresentationTemplate.Mapping)?.value?.substitute(arguments)
+                        (representation as? RepresentationTemplate.MappingWrapper)?.value?.value?.substitute(arguments)
                     }
                 }
             } ?: return null
@@ -683,7 +699,7 @@ private fun PresentationTarget.presentationSubjects(definitions: Map<TypeDefinit
     when (this) {
         is PresentationTarget.Named -> {
             val definition = definitions[type.definition]
-            if (definition == null || definition.parameters.size != type.arguments.size) emptyList() else listOf(type)
+            if (definition == null || definition.parameters.size != type.arguments.size) emptyList() else listOf(type.template)
         }
 
         is PresentationTarget.Representation -> {
@@ -691,58 +707,52 @@ private fun PresentationTarget.presentationSubjects(definitions: Map<TypeDefinit
                 definitions.values
                     .filter { it.representation.presentationKind() == kind }
                     .map { definition ->
-                        TypeTemplate.Named(definition.id, definition.parameters.map { TypeTemplate.Parameter(it.key) })
+                        definition.id.template(definition.parameters.map { it.key.template })
                     }
             (named + kind.scalarSubjects()).distinct()
         }
     }
 
-private fun RepresentationKind.scalarSubjects(): List<TypeTemplate.Scalar> =
+private fun RepresentationKind.scalarSubjects(): List<TypeTemplate> =
     when (this) {
         RepresentationKind.Unit -> {
-            listOf(TypeTemplate.Scalar(com.typewritermc.types.ScalarKind.Unit))
+            listOf(ScalarKind.UNIT.template)
         }
 
         RepresentationKind.Boolean -> {
-            listOf(TypeTemplate.Scalar(com.typewritermc.types.ScalarKind.Boolean))
+            listOf(ScalarKind.BOOLEAN.template)
         }
 
         RepresentationKind.Text -> {
-            listOf(TypeTemplate.Scalar(com.typewritermc.types.ScalarKind.Text))
+            listOf(ScalarKind.TEXT.template)
         }
 
         RepresentationKind.Bytes -> {
-            listOf(TypeTemplate.Scalar(com.typewritermc.types.ScalarKind.Bytes))
+            listOf(ScalarKind.BYTES.template)
         }
 
         RepresentationKind.Integer -> {
-            com.typewritermc.types.IntegerWidth.entries.map { width ->
-                TypeTemplate.Scalar(
-                    com.typewritermc.types.ScalarKind
-                        .Integer(width),
-                )
+            IntegerWidth.entries.map { width ->
+                integerScalar(width).template
             }
         }
 
         RepresentationKind.Float -> {
-            com.typewritermc.types.FloatWidth.entries.map { width ->
-                TypeTemplate.Scalar(
-                    com.typewritermc.types.ScalarKind
-                        .Float(width),
-                )
+            FloatWidth.entries.map { width ->
+                floatScalar(width).template
             }
         }
 
         RepresentationKind.Decimal -> {
-            listOf(TypeTemplate.Scalar(com.typewritermc.types.ScalarKind.Decimal))
+            listOf(ScalarKind.DECIMAL.template)
         }
 
         RepresentationKind.Timestamp -> {
-            listOf(TypeTemplate.Scalar(com.typewritermc.types.ScalarKind.Timestamp))
+            listOf(ScalarKind.TIMESTAMP.template)
         }
 
         RepresentationKind.Duration -> {
-            listOf(TypeTemplate.Scalar(com.typewritermc.types.ScalarKind.Duration))
+            listOf(ScalarKind.DURATION.template)
         }
 
         else -> {
@@ -763,41 +773,47 @@ private sealed interface ConfigurationCollectionResult {
 
 private fun RepresentationTemplate.presentationKind(): RepresentationKind =
     when (this) {
-        is RepresentationTemplate.Scalar -> {
-            when (kind) {
-                com.typewritermc.types.ScalarKind.Unit -> RepresentationKind.Unit
-                com.typewritermc.types.ScalarKind.Boolean -> RepresentationKind.Boolean
-                com.typewritermc.types.ScalarKind.Text -> RepresentationKind.Text
-                com.typewritermc.types.ScalarKind.Bytes -> RepresentationKind.Bytes
-                is com.typewritermc.types.ScalarKind.Integer -> RepresentationKind.Integer
-                is com.typewritermc.types.ScalarKind.Float -> RepresentationKind.Float
-                com.typewritermc.types.ScalarKind.Decimal -> RepresentationKind.Decimal
-                com.typewritermc.types.ScalarKind.Timestamp -> RepresentationKind.Timestamp
-                com.typewritermc.types.ScalarKind.Duration -> RepresentationKind.Duration
+        is RepresentationTemplate.ScalarWrapper -> {
+            when (val kind = value.kind) {
+                ScalarKind.UNIT -> RepresentationKind.Unit
+                ScalarKind.BOOLEAN -> RepresentationKind.Boolean
+                ScalarKind.TEXT -> RepresentationKind.Text
+                ScalarKind.BYTES -> RepresentationKind.Bytes
+                is ScalarKind.IntegerWrapper -> RepresentationKind.Integer
+                is ScalarKind.FloatWrapper -> RepresentationKind.Float
+                ScalarKind.DECIMAL -> RepresentationKind.Decimal
+                ScalarKind.TIMESTAMP -> RepresentationKind.Timestamp
+                ScalarKind.DURATION -> RepresentationKind.Duration
+                else -> unknownVariant(kind)
             }
         }
 
-        is RepresentationTemplate.Record -> {
+        is RepresentationTemplate.RecordWrapper -> {
             RepresentationKind.Record
         }
 
-        is RepresentationTemplate.Sequence -> {
-            when (kind) {
-                com.typewritermc.types.CollectionKind.List -> RepresentationKind.List
-                com.typewritermc.types.CollectionKind.Set -> RepresentationKind.Set
+        is RepresentationTemplate.SequenceWrapper -> {
+            when (val kind = value.kind) {
+                CollectionKind.LIST -> RepresentationKind.List
+                CollectionKind.SET -> RepresentationKind.Set
+                else -> unknownVariant(kind)
             }
         }
 
-        is RepresentationTemplate.Mapping -> {
+        is RepresentationTemplate.MappingWrapper -> {
             RepresentationKind.Map
         }
 
-        is RepresentationTemplate.Enumeration -> {
+        is RepresentationTemplate.EnumerationWrapper -> {
             RepresentationKind.Enum
         }
 
-        is RepresentationTemplate.Link -> {
+        is RepresentationTemplate.LinkWrapper -> {
             RepresentationKind.Link
+        }
+
+        else -> {
+            unknownVariant(this)
         }
     }
 
@@ -806,28 +822,30 @@ private fun TypeTemplate.matchesTemplate(
     parameters: MutableMap<ParameterKey, TypeTemplate>,
 ): Boolean =
     when (this) {
-        is TypeTemplate.Parameter -> {
-            parameters[key]?.let { it == actual } ?: run {
-                parameters[key] = actual
+        is TypeTemplate.ParameterWrapper -> {
+            parameters[value]?.let { it == actual } ?: run {
+                parameters[value] = actual
                 true
             }
         }
 
-        is TypeTemplate.Scalar -> {
+        is TypeTemplate.ScalarWrapper -> {
             actual == this
         }
 
-        is TypeTemplate.Nullable -> {
-            actual is TypeTemplate.Nullable && value.matchesTemplate(actual.value, parameters)
+        is TypeTemplate.NullableWrapper -> {
+            actual is TypeTemplate.NullableWrapper && value.value.matchesTemplate(actual.value.value, parameters)
         }
 
-        is TypeTemplate.Named -> {
-            if (actual !is TypeTemplate.Named || definition != actual.definition || arguments.size != actual.arguments.size) {
+        is TypeTemplate.NamedWrapper -> {
+            if (actual !is TypeTemplate.NamedWrapper || value.definition != actual.value.definition ||
+                value.arguments.size != actual.value.arguments.size
+            ) {
                 false
             } else {
                 val candidateParameters = LinkedHashMap(parameters)
                 val matches =
-                    arguments.zip(actual.arguments).all { (expected, supplied) ->
+                    value.arguments.zip(actual.value.arguments).all { (expected, supplied) ->
                         expected.matchesTemplate(supplied, candidateParameters)
                     }
                 if (matches) {
@@ -836,6 +854,10 @@ private fun TypeTemplate.matchesTemplate(
                 }
                 matches
             }
+        }
+
+        else -> {
+            unknownVariant(this)
         }
     }
 
@@ -874,7 +896,7 @@ private fun configurationRuleDiagnostics(
         }
     return definitions.values.flatMap { definition ->
         val applicableOwners =
-            (listOf(definition.id) + definition.transitiveAncestors(definitions).map(TypeTemplate.Named::definition)).toSet()
+            (listOf(definition.id) + definition.transitiveAncestors(definitions).map(NamedTypeTemplate::definition)).toSet()
         recipes
             .filter { it.target in applicableOwners }
             .groupBy { it.recipe.relativePath to it.recipe.representationCondition }
@@ -943,61 +965,54 @@ private fun checkedRuleSubject(
 private fun RepresentationKind.representativeUse(): TypeUse? =
     when (this) {
         RepresentationKind.Unit -> {
-            TypeUse.Scalar(com.typewritermc.types.ScalarKind.Unit)
+            ScalarKind.UNIT.use
         }
 
         RepresentationKind.Boolean -> {
-            TypeUse.Scalar(com.typewritermc.types.ScalarKind.Boolean)
+            ScalarKind.BOOLEAN.use
         }
 
         RepresentationKind.Text -> {
-            TypeUse.Scalar(com.typewritermc.types.ScalarKind.Text)
+            ScalarKind.TEXT.use
         }
 
         RepresentationKind.Bytes -> {
-            TypeUse.Scalar(com.typewritermc.types.ScalarKind.Bytes)
+            ScalarKind.BYTES.use
         }
 
         RepresentationKind.Integer -> {
-            TypeUse.Scalar(
-                com.typewritermc.types.ScalarKind
-                    .Integer(com.typewritermc.types.IntegerWidth.SIGNED_64),
-            )
+            integerScalar(IntegerWidth.SIGNED_SIXTY_FOUR).use
         }
 
         RepresentationKind.Float -> {
-            TypeUse.Scalar(
-                com.typewritermc.types.ScalarKind
-                    .Float(com.typewritermc.types.FloatWidth.FLOAT_64),
-            )
+            floatScalar(FloatWidth.SIXTY_FOUR).use
         }
 
         RepresentationKind.Decimal -> {
-            TypeUse.Scalar(com.typewritermc.types.ScalarKind.Decimal)
+            ScalarKind.DECIMAL.use
         }
 
         RepresentationKind.Timestamp -> {
-            TypeUse.Scalar(com.typewritermc.types.ScalarKind.Timestamp)
+            ScalarKind.TIMESTAMP.use
         }
 
         RepresentationKind.Duration -> {
-            TypeUse.Scalar(com.typewritermc.types.ScalarKind.Duration)
+            ScalarKind.DURATION.use
         }
 
         RepresentationKind.List -> {
-            TypeUse.Named(StandardTypes.list, listOf(TypeUse.Scalar(com.typewritermc.types.ScalarKind.Text)))
+            StandardTypes.list.use(listOf(ScalarKind.TEXT.use))
         }
 
         RepresentationKind.Set -> {
-            TypeUse.Named(StandardTypes.set, listOf(TypeUse.Scalar(com.typewritermc.types.ScalarKind.Text)))
+            StandardTypes.set.use(listOf(ScalarKind.TEXT.use))
         }
 
         RepresentationKind.Map -> {
-            TypeUse.Named(
-                StandardTypes.map,
+            StandardTypes.map.use(
                 listOf(
-                    TypeUse.Scalar(com.typewritermc.types.ScalarKind.Text),
-                    TypeUse.Scalar(com.typewritermc.types.ScalarKind.Text),
+                    ScalarKind.TEXT.use,
+                    ScalarKind.TEXT.use,
                 ),
             )
         }
@@ -1020,7 +1035,7 @@ private fun TypeDefinition.templateAt(
     path: RelativeFieldPattern,
     definitions: Map<TypeDefinitionId, TypeDefinition>,
 ): TypeTemplate? {
-    var current: TypeTemplate = TypeTemplate.Named(id, parameters.map { TypeTemplate.Parameter(it.key) })
+    var current: TypeTemplate = id.template(parameters.map { it.key.template })
     path.segments.forEach { segment ->
         current = current.unwrapNullable()
         current =
@@ -1031,19 +1046,19 @@ private fun TypeDefinition.templateAt(
 
                 FieldPatternSegment.Items -> {
                     current.representation(definitions)?.let { (representation, arguments) ->
-                        (representation as? RepresentationTemplate.Sequence)?.item?.substitute(arguments)
+                        (representation as? RepresentationTemplate.SequenceWrapper)?.value?.item?.substitute(arguments)
                     }
                 }
 
                 FieldPatternSegment.Keys -> {
                     current.representation(definitions)?.let { (representation, arguments) ->
-                        (representation as? RepresentationTemplate.Mapping)?.key?.substitute(arguments)
+                        (representation as? RepresentationTemplate.MappingWrapper)?.value?.key?.substitute(arguments)
                     }
                 }
 
                 FieldPatternSegment.Values -> {
                     current.representation(definitions)?.let { (representation, arguments) ->
-                        (representation as? RepresentationTemplate.Mapping)?.value?.substitute(arguments)
+                        (representation as? RepresentationTemplate.MappingWrapper)?.value?.value?.substitute(arguments)
                     }
                 }
             } ?: return null
@@ -1051,18 +1066,18 @@ private fun TypeDefinition.templateAt(
     return current
 }
 
-private fun TypeTemplate.unwrapNullable(): TypeTemplate = if (this is TypeTemplate.Nullable) value else this
+private fun TypeTemplate.unwrapNullable(): TypeTemplate = if (this is TypeTemplate.NullableWrapper) value.value else this
 
 private fun TypeTemplate.field(
     name: String,
     definitions: Map<TypeDefinitionId, TypeDefinition>,
 ): TypeTemplate? {
-    val named = this as? TypeTemplate.Named ?: return null
-    val definition = definitions[named.definition] ?: return null
+    val named = this as? TypeTemplate.NamedWrapper ?: return null
+    val definition = definitions[named.value.definition] ?: return null
     val arguments =
         definition.parameters
             .map(TypeParameter::key)
-            .zip(named.arguments)
+            .zip(named.value.arguments)
             .toMap()
     return definition
         .templateFields(definitions)
@@ -1075,12 +1090,12 @@ private fun TypeTemplate.field(
 private fun TypeTemplate.representation(
     definitions: Map<TypeDefinitionId, TypeDefinition>,
 ): Pair<RepresentationTemplate, Map<ParameterKey, TypeTemplate>>? {
-    val named = this as? TypeTemplate.Named ?: return null
-    val definition = definitions[named.definition] ?: return null
+    val named = this as? TypeTemplate.NamedWrapper ?: return null
+    val definition = definitions[named.value.definition] ?: return null
     return definition.representation to
         definition.parameters
             .map(TypeParameter::key)
-            .zip(named.arguments)
+            .zip(named.value.arguments)
             .toMap()
 }
 
@@ -1096,13 +1111,13 @@ private fun TypeTemplate.presentationTemplate(
             com.typewritermc.presentation.checkPresentationExpression(body, bindings, expected, present, catalog::resolve, mayBeMissing)
         },
         payloadResolver = { parent ->
-            val scalar = (parent.unwrapNullable().representation(definitions)?.first as? RepresentationTemplate.Scalar)?.kind
-            if (scalar == null) parent.unwrapNullable() else TypeTemplate.Scalar(scalar)
+            val scalar = (parent.unwrapNullable().representation(definitions)?.first as? RepresentationTemplate.ScalarWrapper)?.value?.kind
+            if (scalar == null) parent.unwrapNullable() else scalar.template
         },
         linkResolver = { parent ->
             parent.unwrapNullable().representation(definitions)?.let { (representation, arguments) ->
-                (representation as? RepresentationTemplate.Link)?.let { link ->
-                    com.typewritermc.presentation.PresentationLinkTemplate(link.endpoint, link.target.substitute(arguments))
+                (representation as? RepresentationTemplate.LinkWrapper)?.let { link ->
+                    com.typewritermc.presentation.PresentationLinkTemplate(link.value.endpoint, link.value.target.substitute(arguments))
                 }
             }
         },
@@ -1133,7 +1148,7 @@ private fun PresentationTarget.appliesTo(
 
         is PresentationTarget.Named -> {
             actual.presentationApplications(definitions, bounds, linkedSetOf()).any { application ->
-                type.matchesTemplate(application, linkedMapOf())
+                type.template.matchesTemplate(application.template, linkedMapOf())
             }
         }
     }
@@ -1146,26 +1161,30 @@ private fun TypeTemplate.presentationKinds(
     if (!visiting.add(this)) return emptySet()
     return try {
         when (this) {
-            is TypeTemplate.Scalar -> {
-                setOf(kind.presentationKind())
+            is TypeTemplate.ScalarWrapper -> {
+                setOf(value.presentationKind())
             }
 
-            is TypeTemplate.Nullable -> {
-                value.presentationKinds(definitions, bounds, visiting)
+            is TypeTemplate.NullableWrapper -> {
+                value.value.presentationKinds(definitions, bounds, visiting)
             }
 
-            is TypeTemplate.Parameter -> {
-                bounds[key].orEmpty().flatMapTo(
+            is TypeTemplate.ParameterWrapper -> {
+                bounds[value].orEmpty().flatMapTo(
                     linkedSetOf(),
                 ) { it.presentationKinds(definitions, bounds, visiting) }
             }
 
-            is TypeTemplate.Named -> {
-                definitions[definition]
+            is TypeTemplate.NamedWrapper -> {
+                definitions[value.definition]
                     ?.representation
                     ?.presentationKind()
                     ?.let(::setOf)
                     .orEmpty()
+            }
+
+            else -> {
+                unknownVariant(this)
             }
         }
     } finally {
@@ -1173,40 +1192,43 @@ private fun TypeTemplate.presentationKinds(
     }
 }
 
-private fun com.typewritermc.types.ScalarKind.presentationKind(): RepresentationKind =
-    RepresentationTemplate.Scalar(this).presentationKind()
+private fun ScalarKind.presentationKind(): RepresentationKind = RepresentationTemplate.createScalar(kind = this).presentationKind()
 
 private fun TypeTemplate.presentationApplications(
     definitions: Map<TypeDefinitionId, TypeDefinition>,
     bounds: Map<ParameterKey, List<TypeTemplate>>,
     visiting: MutableSet<TypeTemplate>,
-): List<TypeTemplate.Named> {
+): List<NamedTypeTemplate> {
     if (!visiting.add(this)) return emptyList()
     return try {
         when (this) {
-            is TypeTemplate.Scalar -> {
+            is TypeTemplate.ScalarWrapper -> {
                 emptyList()
             }
 
-            is TypeTemplate.Nullable -> {
-                value.presentationApplications(definitions, bounds, visiting)
+            is TypeTemplate.NullableWrapper -> {
+                value.value.presentationApplications(definitions, bounds, visiting)
             }
 
-            is TypeTemplate.Parameter -> {
-                bounds[key].orEmpty().flatMap { it.presentationApplications(definitions, bounds, visiting) }.distinct()
+            is TypeTemplate.ParameterWrapper -> {
+                bounds[value].orEmpty().flatMap { it.presentationApplications(definitions, bounds, visiting) }.distinct()
             }
 
-            is TypeTemplate.Named -> {
-                val declaration = definitions[definition] ?: return listOf(this)
+            is TypeTemplate.NamedWrapper -> {
+                val declaration = definitions[value.definition] ?: return listOf(value)
                 val substitutions =
                     declaration.parameters
                         .map(TypeParameter::key)
-                        .zip(arguments)
+                        .zip(value.arguments)
                         .toMap()
-                listOf(this) +
+                listOf(value) +
                     declaration.parents.flatMap { parent ->
-                        parent.substitute(substitutions).presentationApplications(definitions, bounds, visiting)
+                        parent.substitute(substitutions).template.presentationApplications(definitions, bounds, visiting)
                     }
+            }
+
+            else -> {
+                unknownVariant(this)
             }
         }
     } finally {
@@ -1225,23 +1247,23 @@ private fun TypeTemplate.presentationNested(
 
         NestedPresentationSlot.Items -> {
             val (representation, arguments) = unwrapNullable().representation(definitions) ?: return null
-            val sequence = representation as? RepresentationTemplate.Sequence ?: return null
-            PresentationNestedTemplate(sequence.item.substitute(arguments), sequence.kind)
+            val sequence = representation as? RepresentationTemplate.SequenceWrapper ?: return null
+            PresentationNestedTemplate(sequence.value.item.substitute(arguments), sequence.value.kind)
         }
 
         NestedPresentationSlot.Keys -> {
             val (representation, arguments) = unwrapNullable().representation(definitions) ?: return null
-            val mapping = representation as? RepresentationTemplate.Mapping ?: return null
-            PresentationNestedTemplate(mapping.key.substitute(arguments))
+            val mapping = representation as? RepresentationTemplate.MappingWrapper ?: return null
+            PresentationNestedTemplate(mapping.value.key.substitute(arguments))
         }
 
         NestedPresentationSlot.Values -> {
-            if (this is TypeTemplate.Nullable) {
-                PresentationNestedTemplate(value)
+            if (this is TypeTemplate.NullableWrapper) {
+                PresentationNestedTemplate(value.value)
             } else {
                 val (representation, arguments) = representation(definitions) ?: return null
-                val mapping = representation as? RepresentationTemplate.Mapping ?: return null
-                PresentationNestedTemplate(mapping.value.substitute(arguments))
+                val mapping = representation as? RepresentationTemplate.MappingWrapper ?: return null
+                PresentationNestedTemplate(mapping.value.value.substitute(arguments))
             }
         }
     }
@@ -1271,7 +1293,7 @@ private fun TypeDefinition.effectiveFields(
     recipes: List<ConfigurationRecipe>,
 ): List<EffectiveFieldTemplate> {
     val fields = templateFields(definitions).fields
-    val applicableOwners = (listOf(id) + transitiveAncestors(definitions).map(TypeTemplate.Named::definition)).toSet()
+    val applicableOwners = (listOf(id) + transitiveAncestors(definitions).map(NamedTypeTemplate::definition)).toSet()
     return fields.map { field ->
         val matching =
             recipes.filter { recipe ->
@@ -1280,7 +1302,7 @@ private fun TypeDefinition.effectiveFields(
             }
         EffectiveFieldTemplate(
             key = field.owner.name,
-            owner = FieldOwner(field.owner.definition, field.owner.name),
+            owner = FieldOwner(definition = field.owner.definition, name = field.owner.name),
             type = field.type,
             rules = matching.flatMap(ConfigurationRecipe::rules).map { it.id },
         )
@@ -1294,18 +1316,18 @@ private data class TemplateFieldsResult(
 
 private fun TypeDefinition.templateFields(definitions: Map<TypeDefinitionId, TypeDefinition>): TemplateFieldsResult =
     collectTemplateFields(
-        template = TypeTemplate.Named(id, parameters.map { TypeTemplate.Parameter(it.key) }),
+        template = id.namedTemplate(parameters.map { it.key.template }),
         definitions = definitions,
         affected = id,
         stack = emptySet(),
     )
 
-private fun TypeDefinition.transitiveAncestors(definitions: Map<TypeDefinitionId, TypeDefinition>): List<TypeTemplate.Named> {
+private fun TypeDefinition.transitiveAncestors(definitions: Map<TypeDefinitionId, TypeDefinition>): List<NamedTypeTemplate> {
     val roots = parents
-    val result = linkedSetOf<TypeTemplate.Named>()
+    val result = linkedSetOf<NamedTypeTemplate>()
 
     fun visit(
-        template: TypeTemplate.Named,
+        template: NamedTypeTemplate,
         stack: Set<TypeDefinitionId>,
     ) {
         if (!result.add(template) || template.definition in stack) return
@@ -1315,7 +1337,7 @@ private fun TypeDefinition.transitiveAncestors(definitions: Map<TypeDefinitionId
                 .map { it.key }
                 .zip(template.arguments)
                 .toMap()
-        definition.parents.forEach { parent -> visit(parent.substitute(arguments) as TypeTemplate.Named, stack + template.definition) }
+        definition.parents.forEach { parent -> visit(parent.substitute(arguments), stack + template.definition) }
     }
 
     roots.forEach { visit(it, setOf(id)) }
@@ -1323,7 +1345,7 @@ private fun TypeDefinition.transitiveAncestors(definitions: Map<TypeDefinitionId
 }
 
 private fun collectTemplateFields(
-    template: TypeTemplate.Named,
+    template: NamedTypeTemplate,
     definitions: Map<TypeDefinitionId, TypeDefinition>,
     affected: TypeDefinitionId,
     stack: Set<TypeDefinitionId>,
@@ -1338,7 +1360,7 @@ private fun collectTemplateFields(
     val parentResults =
         definition.parents.map { parent ->
             collectTemplateFields(
-                parent.substitute(arguments) as TypeTemplate.Named,
+                parent.substitute(arguments),
                 definitions,
                 affected,
                 stack + template.definition,
@@ -1347,7 +1369,7 @@ private fun collectTemplateFields(
     val inherited = parentResults.flatMap(TemplateFieldsResult::fields)
     val diagnostics = parentResults.flatMap(TemplateFieldsResult::diagnostics).toMutableList()
     val own =
-        (definition.representation as? RepresentationTemplate.Record)?.fields.orEmpty().map { field ->
+        (definition.representation as? RepresentationTemplate.RecordWrapper)?.value?.fields.orEmpty().map { field ->
             field.copy(type = field.type.substitute(arguments))
         }
     val fieldOrder = (inherited.map { it.owner.name } + own.map { it.owner.name }).distinct()
@@ -1420,12 +1442,13 @@ private val STANDARD_TYPE_ORIGIN =
     ProviderOrigin(
         owner =
             DeclarationOwner(
-                ContributionKey(
-                    source = ContributionSourceId("typewritermc:core"),
-                    sourcePart = "main",
-                    producer = ProducerId("sdk"),
-                    name = ContributionName("standard_types"),
-                ),
+                source =
+                    contributionKey(
+                        source = ContributionSourceId("typewritermc:core"),
+                        sourcePart = "main",
+                        producer = ProducerId("sdk"),
+                        name = ContributionName("standard_types"),
+                    ),
                 localIdentity = "StandardTypes",
             ),
         artifact = ArtifactId("typewritermc:core"),

@@ -1,18 +1,27 @@
 package com.typewritermc.authoring
 
-import com.typewritermc.types.CollectionKind
 import com.typewritermc.types.DataValue
-import com.typewritermc.types.FloatWidth
-import com.typewritermc.types.IntegerWidth
 import com.typewritermc.types.ResourceId
-import com.typewritermc.types.ScalarKind
-import com.typewritermc.types.TypeUse
+import com.typewritermc.types.bits
 import com.typewritermc.types.catalog.CheckedCatalog
 import com.typewritermc.types.catalog.CheckedType
 import com.typewritermc.types.catalog.DeclarationDiagnostic
 import com.typewritermc.types.catalog.Resolution
-import com.typewritermc.types.catalog.ResolvedRepresentation
 import com.typewritermc.types.requireCanonicalDecimal
+import com.typewritermc.types.signed
+import com.typewritermc.types.unknownVariant
+import com.typewritermc.types.use
+import skirout.editor.v1.type_catalog.CollectionKind
+import skirout.editor.v1.type_catalog.EnumerationResolvedRepresentation
+import skirout.editor.v1.type_catalog.FloatWidth
+import skirout.editor.v1.type_catalog.IntegerWidth
+import skirout.editor.v1.type_catalog.LinkResolvedRepresentation
+import skirout.editor.v1.type_catalog.MappingResolvedRepresentation
+import skirout.editor.v1.type_catalog.RecordResolvedRepresentation
+import skirout.editor.v1.type_catalog.ResolvedRepresentation
+import skirout.editor.v1.type_catalog.ScalarKind
+import skirout.editor.v1.type_catalog.SequenceResolvedRepresentation
+import skirout.editor.v1.type_catalog.TypeUse
 import java.math.BigInteger
 
 data class ValueProblem(
@@ -53,7 +62,7 @@ fun AuthoringRecord.validateStructure(catalog: CheckedCatalog): StructuralResult
     val root = ValueLocation(AUTHORING_ROOT, ValuePath())
     return when (val configuration = configuration) {
         is TypeSelection.Complete -> {
-            when (val resolved = catalog.resolve(configuration.use)) {
+            when (val resolved = catalog.resolve(configuration.use.use)) {
                 is Resolution.Invalid -> {
                     StructuralResult.Invalid(resolved.diagnostics.map { it.asValueProblem(root) })
                 }
@@ -139,26 +148,30 @@ private class ValueInspection(
             return
         }
         when (val use = checked.use) {
-            is TypeUse.Nullable -> {
+            is TypeUse.NullableWrapper -> {
                 if (value == DataValue.Null) return
-                validateUseWithResolver(value, use.value, at, depth + 1)
+                validateUseWithResolver(value, use.value.value, at, depth + 1)
             }
 
-            is TypeUse.Named -> {
+            is TypeUse.NamedWrapper -> {
                 val named = value as? DataValue.Named
                 if (named == null) {
                     problem(at, "expected_named")
                     return
                 }
-                if (named.actualType != use) {
+                if (named.actualType != use.value) {
                     problem(at, "wrong_actual_type")
                     return
                 }
                 validatePayload(named.payload, checked, at, depth + 1)
             }
 
-            is TypeUse.Scalar -> {
-                validateScalar(value, use.kind, at)
+            is TypeUse.ScalarWrapper -> {
+                validateScalar(value, use.value, at)
+            }
+
+            else -> {
+                unknownVariant(use)
             }
         }
     }
@@ -181,16 +194,16 @@ private class ValueInspection(
             return
         }
         when (expected) {
-            is TypeUse.Nullable -> {
+            is TypeUse.NullableWrapper -> {
                 if (value == DataValue.Null) return
-                validateUse(value, expected.value, at, depth + 1)
+                validateUse(value, expected.value.value, at, depth + 1)
             }
 
-            is TypeUse.Scalar -> {
-                validateScalar(value, expected.kind, at)
+            is TypeUse.ScalarWrapper -> {
+                validateScalar(value, expected.value, at)
             }
 
-            is TypeUse.Named -> {
+            is TypeUse.NamedWrapper -> {
                 val named = value as? DataValue.Named
                 if (named == null) {
                     problem(at, "expected_named")
@@ -198,17 +211,21 @@ private class ValueInspection(
                 }
                 val resolver = catalog
                 if (resolver == null) {
-                    if (named.actualType != expected) problem(at, "wrong_actual_type")
+                    if (named.actualType != expected.value) problem(at, "wrong_actual_type")
                     return
                 }
-                if (!resolver.isReadableAs(named.actualType, expected)) {
+                if (!resolver.isReadableAs(named.actualType.use, expected)) {
                     problem(at, "unreadable_actual_type")
                     return
                 }
-                when (val actual = resolver.resolve(named.actualType)) {
+                when (val actual = resolver.resolve(named.actualType.use)) {
                     is Resolution.Invalid -> problems += actual.diagnostics.map { it.asValueProblem(at) }
                     is Resolution.Ready -> validatePayload(named.payload, actual.value, at, depth + 1)
                 }
+            }
+
+            else -> {
+                unknownVariant(expected)
             }
         }
     }
@@ -231,12 +248,13 @@ private class ValueInspection(
             return
         }
         when (val representation = checked.schema.representation) {
-            is ResolvedRepresentation.Scalar -> validateScalar(value, representation.kind, at)
-            is ResolvedRepresentation.Record -> validateRecord(value, representation, at, depth)
-            is ResolvedRepresentation.Sequence -> validateSequence(value, representation, at, depth)
-            is ResolvedRepresentation.Mapping -> validateMapping(value, representation, at, depth)
-            is ResolvedRepresentation.Enumeration -> validateEnumeration(value, representation, at)
-            is ResolvedRepresentation.Link -> validateLink(value, representation, at)
+            is ResolvedRepresentation.ScalarWrapper -> validateScalar(value, representation.value.kind, at)
+            is ResolvedRepresentation.RecordWrapper -> validateRecord(value, representation.value, at, depth)
+            is ResolvedRepresentation.SequenceWrapper -> validateSequence(value, representation.value, at, depth)
+            is ResolvedRepresentation.MappingWrapper -> validateMapping(value, representation.value, at, depth)
+            is ResolvedRepresentation.EnumerationWrapper -> validateEnumeration(value, representation.value, at)
+            is ResolvedRepresentation.LinkWrapper -> validateLink(value, representation.value, at)
+            else -> unknownVariant(representation)
         }
     }
 
@@ -252,16 +270,20 @@ private class ValueInspection(
             validateUse(value, use, at, depth)
         } else {
             when (use) {
-                is TypeUse.Scalar -> {
-                    validateScalar(value, use.kind, at)
+                is TypeUse.ScalarWrapper -> {
+                    validateScalar(value, use.value, at)
                 }
 
-                is TypeUse.Nullable -> {
-                    if (value != DataValue.Null) validateUseWithResolver(value, use.value, at, depth + 1)
+                is TypeUse.NullableWrapper -> {
+                    if (value != DataValue.Null) validateUseWithResolver(value, use.value.value, at, depth + 1)
                 }
 
-                is TypeUse.Named -> {
+                is TypeUse.NamedWrapper -> {
                     problem(at, "catalog_required_for_nested_named")
+                }
+
+                else -> {
+                    unknownVariant(use)
                 }
             }
         }
@@ -269,7 +291,7 @@ private class ValueInspection(
 
     private fun validateRecord(
         value: DataValue,
-        representation: ResolvedRepresentation.Record,
+        representation: RecordResolvedRepresentation,
         at: ValueLocation,
         depth: Int,
     ) {
@@ -288,17 +310,18 @@ private class ValueInspection(
 
     private fun validateSequence(
         value: DataValue,
-        representation: ResolvedRepresentation.Sequence,
+        representation: SequenceResolvedRepresentation,
         at: ValueLocation,
         depth: Int,
     ) {
         val items =
             when (representation.kind) {
-                CollectionKind.List -> (value as? DataValue.ListValue)?.items
-                CollectionKind.Set -> (value as? DataValue.SetValue)?.items
+                CollectionKind.LIST -> (value as? DataValue.ListValue)?.items
+                CollectionKind.SET -> (value as? DataValue.SetValue)?.items
+                else -> unknownVariant(representation.kind)
             }
         if (items == null) {
-            problem(at, if (representation.kind == CollectionKind.List) "expected_list" else "expected_set")
+            problem(at, if (representation.kind == CollectionKind.LIST) "expected_list" else "expected_set")
             return
         }
         val duplicateIds = items.groupBy { it.id }.filterValues { it.size > 1 }.keys
@@ -308,7 +331,7 @@ private class ValueInspection(
 
     private fun validateMapping(
         value: DataValue,
-        representation: ResolvedRepresentation.Mapping,
+        representation: MappingResolvedRepresentation,
         at: ValueLocation,
         depth: Int,
     ) {
@@ -327,7 +350,7 @@ private class ValueInspection(
 
     private fun validateEnumeration(
         value: DataValue,
-        representation: ResolvedRepresentation.Enumeration,
+        representation: EnumerationResolvedRepresentation,
         at: ValueLocation,
     ) {
         val enum = value as? DataValue.EnumCase
@@ -340,7 +363,7 @@ private class ValueInspection(
 
     private fun validateLink(
         value: DataValue,
-        representation: ResolvedRepresentation.Link,
+        representation: LinkResolvedRepresentation,
         at: ValueLocation,
     ) {
         val link = value as? DataValue.Link
@@ -357,8 +380,8 @@ private class ValueInspection(
         at: ValueLocation,
     ) {
         if (
-            kind is ScalarKind.Float &&
-            kind.width == FloatWidth.FLOAT_32 &&
+            kind is ScalarKind.FloatWrapper &&
+            kind.value.width == FloatWidth.THIRTY_TWO &&
             value is DataValue.Float &&
             value.value.isFinite() &&
             value.value.toFloat().toDouble() != value.value
@@ -368,15 +391,16 @@ private class ValueInspection(
         }
         val valid =
             when (kind) {
-                ScalarKind.Unit -> value == DataValue.Unit
-                ScalarKind.Boolean -> value is DataValue.Boolean
-                ScalarKind.Text -> value is DataValue.StringValue
-                ScalarKind.Bytes -> value is DataValue.Bytes
-                is ScalarKind.Integer -> value is DataValue.Integer && value.value.fits(kind.width)
-                is ScalarKind.Float -> value is DataValue.Float && value.value.isFinite() && value.value.fits(kind.width)
-                ScalarKind.Decimal -> value is DataValue.Decimal && value.value.isCanonicalDecimal()
-                ScalarKind.Timestamp -> value is DataValue.Timestamp
-                ScalarKind.Duration -> value is DataValue.Duration
+                ScalarKind.UNIT -> value == DataValue.Unit
+                ScalarKind.BOOLEAN -> value is DataValue.Boolean
+                ScalarKind.TEXT -> value is DataValue.StringValue
+                ScalarKind.BYTES -> value is DataValue.Bytes
+                is ScalarKind.IntegerWrapper -> value is DataValue.Integer && value.value.fits(kind.value.width)
+                is ScalarKind.FloatWrapper -> value is DataValue.Float && value.value.isFinite() && value.value.fits(kind.value.width)
+                ScalarKind.DECIMAL -> value is DataValue.Decimal && value.value.isCanonicalDecimal()
+                ScalarKind.TIMESTAMP -> value is DataValue.Timestamp
+                ScalarKind.DURATION -> value is DataValue.Duration
+                else -> unknownVariant(kind)
             }
         if (!valid) problem(at, "wrong_scalar")
     }
@@ -412,8 +436,9 @@ private fun BigInteger.fits(width: IntegerWidth): Boolean {
 
 private fun Double.fits(width: FloatWidth): Boolean =
     when (width) {
-        FloatWidth.FLOAT_32 -> toFloat().isFinite() && toFloat().toDouble() == this
-        FloatWidth.FLOAT_64 -> true
+        FloatWidth.THIRTY_TWO -> toFloat().isFinite() && toFloat().toDouble() == this
+        FloatWidth.SIXTY_FOUR -> true
+        else -> unknownVariant(width)
     }
 
 private fun String.isCanonicalDecimal(): Boolean = runCatching { requireCanonicalDecimal("Decimal value") }.isSuccess

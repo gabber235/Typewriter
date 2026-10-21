@@ -17,28 +17,26 @@ import com.typewritermc.authoring.field
 import com.typewritermc.authoring.typedPath
 import com.typewritermc.checking.CatalogGeneration
 import com.typewritermc.discovery.CatalogAssemblyContext
-import com.typewritermc.discovery.ContributionKey
 import com.typewritermc.discovery.ProviderOrigin
 import com.typewritermc.discovery.assemble
+import com.typewritermc.discovery.contributionKey
 import com.typewritermc.imprint.ArtifactId
 import com.typewritermc.imprint.ContributionName
 import com.typewritermc.imprint.ContributionSourceId
 import com.typewritermc.imprint.ProducerId
 import com.typewritermc.library.frameworkContributions
 import com.typewritermc.types.DataValue
-import com.typewritermc.types.DeclarationOwner
-import com.typewritermc.types.EndpointId
 import com.typewritermc.types.FactoryNativeBindingRegistry
 import com.typewritermc.types.LinkTarget
 import com.typewritermc.types.ResourceId
 import com.typewritermc.types.ResourceIdDefinition
 import com.typewritermc.types.ResourceTarget
-import com.typewritermc.types.TypeDefinitionId
-import com.typewritermc.types.TypeId
-import com.typewritermc.types.TypeUse
 import com.typewritermc.types.catalog.DefaultCheckedCatalog
+import com.typewritermc.types.namedUse
+import com.typewritermc.types.qualified
 import com.typewritermc.types.skir.SkirAuthoringValueCodec
 import com.typewritermc.types.skir.getOrThrow
+import com.typewritermc.types.use
 import de.infix.testBalloon.framework.core.testSuite
 import io.kotest.matchers.collections.shouldContainAll
 import io.kotest.matchers.shouldBe
@@ -52,6 +50,9 @@ import skirout.editor.v1.operation.OperationShortcut
 import skirout.editor.v1.operation.ResourceOperationDefinition
 import skirout.editor.v1.presentation.ButtonVariant
 import skirout.editor.v1.presentation.HeaderActionTone
+import skirout.editor.v1.type_catalog.DeclarationOwner
+import skirout.editor.v1.type_catalog.EndpointId
+import skirout.editor.v1.type_catalog.TypeDefinitionId
 
 val OperationDeclarationTest by testSuite {
     test("declared appearance publishes with the tone following the group") {
@@ -118,7 +119,11 @@ val OperationDeclarationTest by testSuite {
         uncandidated.failure?.message!! shouldContain "must declare candidates"
 
         val second =
-            typedPath<MoveToOwnerInput, ResourceId>(MoveToOwnerInputDefinition.id, ValuePath().field("second"), ResourceIdDefinition.use)
+            typedPath<MoveToOwnerInput, ResourceId>(
+                MoveToOwnerInputDefinition.id,
+                ValuePath().field("second"),
+                ResourceIdDefinition.use.use,
+            )
         val twice =
             collect<MoveToOwnerInput> {
                 input {
@@ -164,7 +169,7 @@ val OperationDeclarationTest by testSuite {
                         typedPath<MoveToOwnerInput, ResourceId>(
                             LinkWithInputDefinition.id,
                             ValuePath().field("destination"),
-                            ResourceIdDefinition.use,
+                            ResourceIdDefinition.use.use,
                         )
                     foreign { candidates { emptySequence() } }
                 }
@@ -202,7 +207,7 @@ val OperationDeclarationTest by testSuite {
                 PreparedValue(
                     PreparedContent.Record(
                         AuthoringRecord(
-                            TypeSelection.Complete(TypeUse.Named(target)),
+                            TypeSelection.Complete(target.namedUse()),
                             mapOf("name" to DataValue.StringValue(name)),
                         ),
                     ),
@@ -210,7 +215,11 @@ val OperationDeclarationTest by testSuite {
                 ),
             )
         val source =
-            LinkOccurrence(LinkOccurrenceId(EndpointId("source"), location), ResourceId("owner"), LinkTarget(ResourceId("target"), null))
+            LinkOccurrence(
+                LinkOccurrenceId(EndpointId(value = "source"), location),
+                ResourceId("owner"),
+                LinkTarget(ResourceId("target"), null),
+            )
         val proposed = choice("retained default")
         val choices = PreparationChoices(mapOf("inverse" to PreparationChoiceAnswer.Counterpart(proposed)))
         choices.require(
@@ -220,7 +229,7 @@ val OperationDeclarationTest by testSuite {
     }
 }
 
-private val target = TypeDefinitionId(TypeId.Qualified("fixture", "Resource"), 1)
+private val target = TypeDefinitionId.qualified("fixture", "Resource")
 
 /** Collects one operation on any resource as a generated provider would, with the label derived from `ExampleOperation`. */
 private fun <I> collect(
@@ -251,8 +260,8 @@ private fun drop(
 private fun origin(): ProviderOrigin =
     ProviderOrigin(
         DeclarationOwner(
-            ContributionKey(ContributionSourceId("fixture"), "main", ProducerId("ksp"), ContributionName("ops")),
-            "fixture.ExampleOperation",
+            source = contributionKey(ContributionSourceId("fixture"), "main", ProducerId("ksp"), ContributionName("ops")),
+            localIdentity = "fixture.ExampleOperation",
         ),
         ArtifactId("fixture"),
         "main",

@@ -12,8 +12,7 @@ import com.typewritermc.discovery.ProviderOrigin
 import com.typewritermc.presentation.PresentationReference
 import com.typewritermc.types.ResourceId
 import com.typewritermc.types.ResourceTarget
-import com.typewritermc.types.TypeDefinitionId
-import com.typewritermc.types.TypeUse
+import com.typewritermc.types.requireValid
 import kotlinx.coroutines.CancellationException
 import skirout.editor.v1.operation.OperationAvailability
 import skirout.editor.v1.operation.OperationCardinality
@@ -24,6 +23,8 @@ import skirout.editor.v1.operation.OperationPresentation
 import skirout.editor.v1.operation.OperationShortcut
 import skirout.editor.v1.operation.ResourceOperationId
 import skirout.editor.v1.presentation.ButtonVariant
+import skirout.editor.v1.type_catalog.NamedTypeUse
+import skirout.editor.v1.type_catalog.TypeDefinitionId
 
 /** The input an operation receives, computed by codegen from its input type argument. */
 sealed interface OperationInput {
@@ -32,7 +33,7 @@ sealed interface OperationInput {
 
     /** The operation takes a value of [use], a closed application of a `@TypewriterType`. */
     data class Typed(
-        val use: TypeUse.Named,
+        val use: NamedTypeUse,
     ) : OperationInput
 }
 

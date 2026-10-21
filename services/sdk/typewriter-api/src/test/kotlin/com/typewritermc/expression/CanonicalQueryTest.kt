@@ -22,39 +22,42 @@ import com.typewritermc.presentation.resource
 import com.typewritermc.types.Color
 import com.typewritermc.types.ColorDefinition
 import com.typewritermc.types.DataValue
-import com.typewritermc.types.EndpointId
-import com.typewritermc.types.FieldDeclaration
-import com.typewritermc.types.FieldOwner
 import com.typewritermc.types.Icon
 import com.typewritermc.types.LinkTarget
 import com.typewritermc.types.ListItem
 import com.typewritermc.types.Ref
 import com.typewritermc.types.RelationshipEndpoint
-import com.typewritermc.types.RepresentationTemplate
 import com.typewritermc.types.Resource
 import com.typewritermc.types.ResourceId
 import com.typewritermc.types.ResourceIdDefinition
-import com.typewritermc.types.ScalarKind
 import com.typewritermc.types.StandardTypes
-import com.typewritermc.types.TypeDefinition
-import com.typewritermc.types.TypeDefinitionId
 import com.typewritermc.types.TypeDisplay
-import com.typewritermc.types.TypeId
-import com.typewritermc.types.TypeTemplate
-import com.typewritermc.types.TypeUse
 import com.typewritermc.types.catalog.CheckedCatalog
 import com.typewritermc.types.catalog.DeclarationStatus
 import com.typewritermc.types.catalog.DefaultCheckedCatalog
 import com.typewritermc.types.catalog.PublishedType
 import com.typewritermc.types.catalog.Resolution
+import com.typewritermc.types.namedTemplate
+import com.typewritermc.types.namedUse
+import com.typewritermc.types.qualified
 import com.typewritermc.types.skir.SkirAuthoringValueCodec
 import com.typewritermc.types.skir.getOrThrow
+import com.typewritermc.types.template
+import com.typewritermc.types.use
 import de.infix.testBalloon.framework.core.testSuite
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.types.shouldBeInstanceOf
 import skirout.editor.v1.expression.ExpressionNode
 import skirout.editor.v1.expression.ExpressionQuery
 import skirout.editor.v1.expression.ResourceQuerySource
+import skirout.editor.v1.type_catalog.EndpointId
+import skirout.editor.v1.type_catalog.FieldDeclaration
+import skirout.editor.v1.type_catalog.FieldOwner
+import skirout.editor.v1.type_catalog.RepresentationTemplate
+import skirout.editor.v1.type_catalog.ScalarKind
+import skirout.editor.v1.type_catalog.TypeDefinition
+import skirout.editor.v1.type_catalog.TypeDefinitionId
+import skirout.editor.v1.type_catalog.TypeUse
 
 val CanonicalQueryTest by testSuite {
     test("read models preserve pending arguments and stay out of authored declarations") {
@@ -63,22 +66,22 @@ val CanonicalQueryTest by testSuite {
                 .encode(
                     TypeSelection.Pending(
                         queryTypeId,
-                        listOf(ArgumentSelection.Unfilled, ArgumentSelection.Chosen(TypeUse.Scalar(ScalarKind.Text))),
+                        listOf(ArgumentSelection.Unfilled, ArgumentSelection.Chosen(ScalarKind.TEXT.use)),
                     ),
                 ).getOrThrow()
         CanonicalReadModels.typeSelection.decode(CanonicalReadModels.typeSelection.encode(selection)) shouldBe selection
-        queryCatalog.declaration(CanonicalReadModels.typeSelection.type.definition).shouldBeInstanceOf<Resolution.Invalid>()
+        queryCatalog.declaration(CanonicalReadModels.typeSelection.use.definition).shouldBeInstanceOf<Resolution.Invalid>()
     }
 
     test("resource leaf reads select before rejecting an unfinished sibling") {
         val resource =
-            RuntimePresentationQueries(mapOf(QueryResource::class to TypeTemplate.Named(queryTypeId)))
+            RuntimePresentationQueries(mapOf(QueryResource::class to queryTypeId.namedTemplate()))
                 .resource(literal(ResourceId("result")), QueryResource::class)
         val body = resource.value.field<String>("name").toNode()
-        val program = queryProgram(body, TypeUse.Scalar(ScalarKind.Text))
+        val program = queryProgram(body, ScalarKind.TEXT.use)
         val record =
             AuthoringRecord(
-                TypeSelection.Complete(TypeUse.Named(queryTypeId)),
+                TypeSelection.Complete(queryTypeId.namedUse()),
                 mapOf("name" to DataValue.StringValue("Current name"), "extra" to DataValue.Unfilled),
             )
         val observation = QueryObservation(mapOf(ResourceId("result") to record))
@@ -92,15 +95,15 @@ val CanonicalQueryTest by testSuite {
 
     test("declaration leaf projection follows the supplied observation") {
         val resource =
-            RuntimePresentationQueries(mapOf(QueryResource::class to TypeTemplate.Named(queryTypeId)))
+            RuntimePresentationQueries(mapOf(QueryResource::class to queryTypeId.namedTemplate()))
                 .resource(literal(ResourceId("result")), QueryResource::class)
         val body =
             resource.type.display.color
                 .toNode()
-        val program = queryProgram(body, TypeUse.Named(ColorDefinition.id))
+        val program = queryProgram(body, ColorDefinition.id.use())
         val record =
             AuthoringRecord(
-                TypeSelection.Complete(TypeUse.Named(queryTypeId)),
+                TypeSelection.Complete(queryTypeId.namedUse()),
                 mapOf(
                     "name" to DataValue.StringValue("Name"),
                     "extra" to DataValue.Unfilled,
@@ -122,13 +125,13 @@ val CanonicalQueryTest by testSuite {
 
     test("query identity has the same representation as its caller literal") {
         val resource =
-            RuntimePresentationQueries(mapOf(QueryResource::class to TypeTemplate.Named(queryTypeId)))
+            RuntimePresentationQueries(mapOf(QueryResource::class to queryTypeId.namedTemplate()))
                 .resource(literal(ResourceId("result")), QueryResource::class)
         val body = (resource.id eq literal(ResourceId("result"))).toNode()
-        val program = queryProgram(body, TypeUse.Scalar(ScalarKind.Boolean))
+        val program = queryProgram(body, ScalarKind.BOOLEAN.use)
         val record =
             AuthoringRecord(
-                TypeSelection.Complete(TypeUse.Named(queryTypeId)),
+                TypeSelection.Complete(queryTypeId.namedUse()),
                 mapOf(
                     "name" to DataValue.Unfilled,
                     "extra" to DataValue.Unfilled,
@@ -147,7 +150,7 @@ val CanonicalQueryTest by testSuite {
 
     test("unchecked and unsupported queries fail instead of becoming missing") {
         val resource =
-            RuntimePresentationQueries(mapOf(QueryResource::class to TypeTemplate.Named(queryTypeId)))
+            RuntimePresentationQueries(mapOf(QueryResource::class to queryTypeId.namedTemplate()))
                 .resource(literal(ResourceId("result")), QueryResource::class)
         val evaluator = DefaultExpressionEvaluator(ExpressionValueReader { error("Unexpected authored value read") })
         with(QueryReads) {
@@ -155,7 +158,7 @@ val CanonicalQueryTest by testSuite {
         }.shouldBeInstanceOf<Availability.Failed>()
         with(QueryReads) {
             evaluator.evaluateChecked(
-                queryProgram(resource.id.toNode(), ResourceIdDefinition.use),
+                queryProgram(resource.id.toNode(), ResourceIdDefinition.use.use),
                 ExpressionBindings(emptyMap()),
                 EvaluationBudget(100, 100),
             )
@@ -176,14 +179,14 @@ val CanonicalQueryTest by testSuite {
             (
                 PortableExpressionChecker(queryCatalog::resolve).checkProgram(
                     body,
-                    mapOf(binding to nominalExpressionType(TypeUse.Named(queryLinkId), false)),
-                    nominalExpressionType(TypeUse.Scalar(ScalarKind.Text), true),
+                    mapOf(binding to nominalExpressionType(queryLinkId.use(), false)),
+                    nominalExpressionType(ScalarKind.TEXT.use, true),
                     queryTypeId,
                 ) as Resolution.Ready
             ).value
         val record =
             AuthoringRecord(
-                TypeSelection.Complete(TypeUse.Named(queryTypeId)),
+                TypeSelection.Complete(queryTypeId.namedUse()),
                 mapOf(
                     "name" to DataValue.StringValue("Root name"),
                     "extra" to DataValue.Unfilled,
@@ -191,7 +194,7 @@ val CanonicalQueryTest by testSuite {
             )
         val referenceValue =
             DataValue.Link(
-                EndpointId("query.endpoint"),
+                EndpointId(value = "query.endpoint"),
                 LinkTarget(ResourceId("result"), ValuePath(listOf(PathSegment.Field("reverse")))),
             )
         with(QueryReads) {
@@ -207,11 +210,11 @@ val CanonicalQueryTest by testSuite {
 
     test("a full resource projection respects the shared evaluation budget") {
         val resource =
-            RuntimePresentationQueries(mapOf(QueryResource::class to TypeTemplate.Named(queryTypeId)))
+            RuntimePresentationQueries(mapOf(QueryResource::class to queryTypeId.namedTemplate()))
                 .resource(literal(ResourceId("result")), QueryResource::class)
         val record =
             AuthoringRecord(
-                TypeSelection.Complete(TypeUse.Named(queryTypeId)),
+                TypeSelection.Complete(queryTypeId.namedUse()),
                 mapOf(
                     "name" to DataValue.StringValue("Name"),
                     "extra" to DataValue.Unfilled,
@@ -225,7 +228,7 @@ val CanonicalQueryTest by testSuite {
                         mapOf(ResourceId("result") to record),
                     ),
             ).evaluateChecked(
-                queryProgram(resource.value.toNode(), TypeUse.Named(queryTypeId)),
+                queryProgram(resource.value.toNode(), queryTypeId.use()),
                 ExpressionBindings(emptyMap()),
                 EvaluationBudget(3, 100),
             )
@@ -259,23 +262,23 @@ val CanonicalQueryTest by testSuite {
                 PortableExpressionChecker(queryCatalog::resolve).checkProgram(
                     body,
                     mapOf(
-                        first to nominalExpressionType(TypeUse.Named(StandardTypes.list, listOf(TypeUse.Named(queryLinkId))), false),
-                        second to nominalExpressionType(TypeUse.Named(StandardTypes.list, listOf(TypeUse.Named(otherQueryLinkId))), false),
+                        first to nominalExpressionType(StandardTypes.list.use(listOf(queryLinkId.use())), false),
+                        second to nominalExpressionType(StandardTypes.list.use(listOf(otherQueryLinkId.use())), false),
                     ),
-                    nominalExpressionType(TypeUse.Scalar(ScalarKind.Boolean), true),
+                    nominalExpressionType(ScalarKind.BOOLEAN.use, true),
                     queryTypeId,
                 ) as Resolution.Ready
             ).value
         program.queries.values
             .map { it.targetType }
-            .toSet() shouldBe setOf(TypeUse.Named(queryTypeId), TypeUse.Named(otherQueryTypeId))
+            .toSet() shouldBe setOf(queryTypeId.use(), otherQueryTypeId.use())
 
         fun links(target: String) =
             DataValue.ListValue(
                 listOf(
                     ListItem(
                         ItemId(target),
-                        DataValue.Link(EndpointId("query.endpoint"), LinkTarget(ResourceId(target), null)),
+                        DataValue.Link(EndpointId(value = "query.endpoint"), LinkTarget(ResourceId(target), null)),
                     ),
                 ),
             )
@@ -283,13 +286,13 @@ val CanonicalQueryTest by testSuite {
             mapOf(
                 ResourceId("first") to
                     AuthoringRecord(
-                        TypeSelection.Complete(TypeUse.Named(queryTypeId)),
+                        TypeSelection.Complete(queryTypeId.namedUse()),
                         mapOf(
                             "name" to DataValue.Unfilled,
                             "extra" to DataValue.Unfilled,
                         ),
                     ),
-                ResourceId("second") to AuthoringRecord(TypeSelection.Complete(TypeUse.Named(otherQueryTypeId)), emptyMap()),
+                ResourceId("second") to AuthoringRecord(TypeSelection.Complete(otherQueryTypeId.namedUse()), emptyMap()),
             )
         with(QueryReads) {
             DefaultExpressionEvaluator(
@@ -312,18 +315,20 @@ private class QueryResource : Resource
 
 private interface QueryEndpoint : RelationshipEndpoint<QueryResource, QueryResource>
 
-private val queryTypeId = TypeDefinitionId(TypeId.Qualified("query.test", "Resource"), 1)
-private val queryLinkId = TypeDefinitionId(TypeId.Qualified("query.test", "Reference"), 1)
-private val otherQueryTypeId = TypeDefinitionId(TypeId.Qualified("query.test", "OtherResource"), 1)
-private val otherQueryLinkId = TypeDefinitionId(TypeId.Qualified("query.test", "OtherReference"), 1)
+private val queryTypeId = TypeDefinitionId.qualified("query.test", "Resource")
+private val queryLinkId = TypeDefinitionId.qualified("query.test", "Reference")
+private val otherQueryTypeId = TypeDefinitionId.qualified("query.test", "OtherResource")
+private val otherQueryLinkId = TypeDefinitionId.qualified("query.test", "OtherReference")
 private val queryDefinition =
-    TypeDefinition(
-        queryTypeId,
+    TypeDefinition.partial(
+        id = queryTypeId,
         representation =
-            RepresentationTemplate.Record(
-                listOf("name", "extra").map {
-                    FieldDeclaration(FieldOwner(queryTypeId, it), TypeTemplate.Scalar(ScalarKind.Text))
-                },
+            RepresentationTemplate.createRecord(
+                fields =
+                    listOf("name", "extra").map {
+                        FieldDeclaration.partial(owner = FieldOwner(definition = queryTypeId, name = it), type = ScalarKind.TEXT.template)
+                    },
+                abstract_ = false,
             ),
     )
 private val queryCatalog =
@@ -331,17 +336,28 @@ private val queryCatalog =
         QueryReads.catalog,
         StandardTypes.definitions +
             listOf(
-                TypeDefinition(otherQueryTypeId, representation = RepresentationTemplate.Record(emptyList())),
-                TypeDefinition(
-                    otherQueryLinkId,
-                    representation = RepresentationTemplate.Link(EndpointId("query.endpoint"), TypeTemplate.Named(otherQueryTypeId)),
+                TypeDefinition.partial(
+                    id = otherQueryTypeId,
+                    representation = RepresentationTemplate.createRecord(fields = emptyList(), abstract_ = false),
+                ),
+                TypeDefinition.partial(
+                    id = otherQueryLinkId,
+                    representation =
+                        RepresentationTemplate.createLink(
+                            endpoint = EndpointId(value = "query.endpoint"),
+                            target = otherQueryTypeId.template(),
+                        ),
                 ),
                 queryDefinition,
                 ResourceIdDefinition.declaration,
                 ColorDefinition.declaration,
-                TypeDefinition(
-                    queryLinkId,
-                    representation = RepresentationTemplate.Link(EndpointId("query.endpoint"), TypeTemplate.Named(queryTypeId)),
+                TypeDefinition.partial(
+                    id = queryLinkId,
+                    representation =
+                        RepresentationTemplate.createLink(
+                            endpoint = EndpointId(value = "query.endpoint"),
+                            target = queryTypeId.template(),
+                        ),
                 ),
             ),
     )

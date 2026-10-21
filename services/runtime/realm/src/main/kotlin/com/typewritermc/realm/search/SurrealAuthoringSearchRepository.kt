@@ -13,9 +13,10 @@ import com.typewritermc.realm.repository.utils.surrealRecordId
 import com.typewritermc.realm.repository.utils.toResourceId
 import com.typewritermc.types.RelationId
 import com.typewritermc.types.ResourceId
-import com.typewritermc.types.TypeDefinitionId
-import com.typewritermc.types.TypeUse
 import com.typewritermc.types.catalog.CheckedCatalog
+import com.typewritermc.types.use
+import skirout.editor.v1.type_catalog.NamedTypeUse
+import skirout.editor.v1.type_catalog.TypeDefinitionId
 
 internal data class IndexedAuthoringSearchCandidate(
     val resource: ResourceId,
@@ -29,7 +30,7 @@ internal interface AuthoringSearchRepository {
         query: String,
         contexts: Set<ResourceId>,
         roots: Set<TypeDefinitionId>,
-        target: TypeUse.Named?,
+        target: NamedTypeUse?,
         limit: Int,
     ): List<IndexedAuthoringSearchCandidate>
 }
@@ -49,7 +50,7 @@ internal class SurrealAuthoringSearchRepository(
         query: String,
         contexts: Set<ResourceId>,
         roots: Set<TypeDefinitionId>,
-        target: TypeUse.Named?,
+        target: NamedTypeUse?,
         limit: Int,
     ): List<IndexedAuthoringSearchCandidate> {
         require(limit > 0)
@@ -123,7 +124,7 @@ private fun AuthoringView.linksForOwnership(contracts: Set<RelationId>): Map<Res
 
 private fun AuthoringRecord.matches(
     roots: Set<TypeDefinitionId>,
-    target: TypeUse.Named?,
+    target: NamedTypeUse?,
     realmRoot: TypeDefinitionId,
     catalog: CheckedCatalog,
 ): Boolean {
@@ -133,7 +134,7 @@ private fun AuthoringRecord.matches(
     if (roots.isNotEmpty() && roots.none { catalog.isNominalSubtype(actualDefinition, it) }) return false
     if (target == null) return true
     return when (val selected = configuration) {
-        is TypeSelection.Complete -> catalog.isReadableAs(selected.use, target)
-        is TypeSelection.Pending -> catalog.knownApplications(selected).any { catalog.isReadableAs(it, target) }
+        is TypeSelection.Complete -> catalog.isReadableAs(selected.use.use, target.use)
+        is TypeSelection.Pending -> catalog.knownApplications(selected).any { catalog.isReadableAs(it.use, target.use) }
     }
 }

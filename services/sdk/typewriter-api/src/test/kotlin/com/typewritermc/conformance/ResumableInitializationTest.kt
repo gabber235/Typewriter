@@ -21,36 +21,39 @@ import com.typewritermc.authoring.ValuePath
 import com.typewritermc.authoring.materialize
 import com.typewritermc.authoring.skir.SkirAuthoringOperationCodec
 import com.typewritermc.checking.CatalogGeneration
-import com.typewritermc.types.CollectionKind
 import com.typewritermc.types.DataValue
-import com.typewritermc.types.EndpointId
 import com.typewritermc.types.FactoryNativeBindingRegistry
-import com.typewritermc.types.FieldDeclaration
-import com.typewritermc.types.FieldOwner
 import com.typewritermc.types.LinkTarget
 import com.typewritermc.types.ListItem
 import com.typewritermc.types.MapRow
 import com.typewritermc.types.NativeBinding
 import com.typewritermc.types.NativeBindingFactory
-import com.typewritermc.types.RepresentationTemplate
 import com.typewritermc.types.ResourceId
-import com.typewritermc.types.ScalarKind
-import com.typewritermc.types.TypeDefinition
-import com.typewritermc.types.TypeDefinitionId
-import com.typewritermc.types.TypeId
-import com.typewritermc.types.TypeTemplate
-import com.typewritermc.types.TypeUse
 import com.typewritermc.types.catalog.CheckedType
 import com.typewritermc.types.catalog.DefaultCheckedCatalog
+import com.typewritermc.types.namedTemplate
+import com.typewritermc.types.namedUse
+import com.typewritermc.types.qualified
 import com.typewritermc.types.skir.getOrThrow
+import com.typewritermc.types.template
+import com.typewritermc.types.use
 import de.infix.testBalloon.framework.core.testSuite
 import io.kotest.matchers.shouldBe
+import skirout.editor.v1.type_catalog.CollectionKind
+import skirout.editor.v1.type_catalog.EndpointId
+import skirout.editor.v1.type_catalog.FieldDeclaration
+import skirout.editor.v1.type_catalog.FieldOwner
+import skirout.editor.v1.type_catalog.NamedTypeUse
+import skirout.editor.v1.type_catalog.RepresentationTemplate
+import skirout.editor.v1.type_catalog.ScalarKind
+import skirout.editor.v1.type_catalog.TypeDefinition
+import skirout.editor.v1.type_catalog.TypeDefinitionId
 
 val ResumableInitializationTest by testSuite {
     test("required references are reported in a record without constructor defaults") {
         val fixture = resumeFixture()
         val step = fixture.runtime.stepNow(PreparationOperation.Start(fixture.request)) as PreparationStep.NeedsInput
-        step.draft.requiredInputs shouldBe listOf(RequiredInput(path("settings", "target"), LINK_USE))
+        step.draft.requiredInputs shouldBe listOf(RequiredInput(path("settings", "target"), LINK_USE.use))
         val ready =
             fixture.runtime.stepNow(
                 PreparationOperation.Resume(step.draft, listOf(InputAnswer(path("settings", "target"), reference()))),
@@ -85,44 +88,61 @@ val ResumableInitializationTest by testSuite {
         val nested = id("CollectionSettings")
         val list = id("SettingsList")
         val mapping = id("SettingsMap")
-        val nestedUse = TypeUse.Named(nested, emptyList())
-        val listUse = TypeUse.Named(list, emptyList())
-        val mapUse = TypeUse.Named(mapping, emptyList())
+        val nestedUse = nested.namedUse(emptyList())
+        val listUse = list.namedUse(emptyList())
+        val mapUse = mapping.namedUse(emptyList())
         val catalog =
             DefaultCheckedCatalog(
                 GENERATION,
                 listOf(
                     resourceDefinition(),
                     linkDefinition(),
-                    TypeDefinition(
-                        nested,
+                    TypeDefinition.partial(
+                        id = nested,
                         representation =
-                            RepresentationTemplate.Record(
-                                listOf(
-                                    FieldDeclaration(FieldOwner(nested, "target"), LINK_USE.template()),
-                                ),
+                            RepresentationTemplate.createRecord(
+                                fields =
+                                    listOf(
+                                        FieldDeclaration.partial(
+                                            owner = FieldOwner(definition = nested, name = "target"),
+                                            type = LINK_USE.template(),
+                                        ),
+                                    ),
+                                abstract_ = false,
                             ),
                     ),
-                    TypeDefinition(
-                        list,
-                        representation = RepresentationTemplate.Sequence(TypeTemplate.Named(nested, emptyList()), CollectionKind.List),
-                    ),
-                    TypeDefinition(
-                        mapping,
+                    TypeDefinition.partial(
+                        id = list,
                         representation =
-                            RepresentationTemplate.Mapping(
-                                TypeTemplate.Scalar(ScalarKind.Text),
-                                TypeTemplate.Named(nested, emptyList()),
+                            RepresentationTemplate.createSequence(
+                                item = nested.template(emptyList()),
+                                kind = CollectionKind.LIST,
                             ),
                     ),
-                    TypeDefinition(
-                        root,
+                    TypeDefinition.partial(
+                        id = mapping,
                         representation =
-                            RepresentationTemplate.Record(
-                                listOf(
-                                    FieldDeclaration(FieldOwner(root, "items"), TypeTemplate.Named(list, emptyList())),
-                                    FieldDeclaration(FieldOwner(root, "mapping"), TypeTemplate.Named(mapping, emptyList())),
-                                ),
+                            RepresentationTemplate.createMapping(
+                                key = ScalarKind.TEXT.template,
+                                value = nested.template(emptyList()),
+                            ),
+                    ),
+                    TypeDefinition.partial(
+                        id = root,
+                        representation =
+                            RepresentationTemplate.createRecord(
+                                fields =
+                                    listOf(
+                                        FieldDeclaration.partial(
+                                            owner = FieldOwner(definition = root, name = "items"),
+                                            type = list.template(emptyList()),
+                                        ),
+                                        FieldDeclaration.partial(
+                                            owner = FieldOwner(definition = root, name = "mapping"),
+                                            type = mapping.template(emptyList()),
+                                        ),
+                                    ),
+                                abstract_ = false,
                             ),
                     ),
                 ),
@@ -190,31 +210,44 @@ val ResumableInitializationTest by testSuite {
         val abstractId = id("Abstract")
         val concreteId = id("Concrete")
         val ownerId = id("Owner")
-        val concreteUse = TypeUse.Named(concreteId, emptyList())
+        val concreteUse = concreteId.namedUse(emptyList())
         val catalog =
             DefaultCheckedCatalog(
                 GENERATION,
                 listOf(
                     resourceDefinition(),
                     linkDefinition(),
-                    TypeDefinition(abstractId, representation = RepresentationTemplate.Record(emptyList(), abstract = true)),
-                    TypeDefinition(
-                        concreteId,
-                        parents = listOf(TypeTemplate.Named(abstractId, emptyList())),
-                        representation =
-                            RepresentationTemplate.Record(
-                                listOf(
-                                    FieldDeclaration(FieldOwner(concreteId, "target"), LINK_USE.template()),
-                                ),
-                            ),
+                    TypeDefinition.partial(
+                        id = abstractId,
+                        representation = RepresentationTemplate.createRecord(fields = emptyList(), abstract_ = true),
                     ),
-                    TypeDefinition(
-                        ownerId,
+                    TypeDefinition.partial(
+                        id = concreteId,
                         representation =
-                            RepresentationTemplate.Record(
-                                listOf(
-                                    FieldDeclaration(FieldOwner(ownerId, "choice"), TypeTemplate.Named(abstractId, emptyList())),
-                                ),
+                            RepresentationTemplate.createRecord(
+                                fields =
+                                    listOf(
+                                        FieldDeclaration.partial(
+                                            owner = FieldOwner(definition = concreteId, name = "target"),
+                                            type = LINK_USE.template(),
+                                        ),
+                                    ),
+                                abstract_ = false,
+                            ),
+                        parents = listOf(abstractId.namedTemplate(emptyList())),
+                    ),
+                    TypeDefinition.partial(
+                        id = ownerId,
+                        representation =
+                            RepresentationTemplate.createRecord(
+                                fields =
+                                    listOf(
+                                        FieldDeclaration.partial(
+                                            owner = FieldOwner(definition = ownerId, name = "choice"),
+                                            type = abstractId.template(emptyList()),
+                                        ),
+                                    ),
+                                abstract_ = false,
                             ),
                     ),
                 ),
@@ -231,7 +264,7 @@ val ResumableInitializationTest by testSuite {
                     listOf(InputAnswer(path("choice"), DataValue.Named(concreteUse, DataValue.Record(emptyMap())))),
                 ),
             ) as PreparationStep.NeedsInput
-        next.draft.requiredInputs shouldBe listOf(RequiredInput(path("choice", "target"), LINK_USE))
+        next.draft.requiredInputs shouldBe listOf(RequiredInput(path("choice", "target"), LINK_USE.use))
         (
             runtime.stepNow(
                 PreparationOperation.Resume(next.draft, listOf(InputAnswer(path("choice", "target"), reference()))),
@@ -251,7 +284,7 @@ val ResumableInitializationTest by testSuite {
     }
     test("a valid default reference is retained without an input prompt") {
         val referenceId = id("DefaultReference")
-        val field = FieldOwner(referenceId, "target")
+        val field = FieldOwner(definition = referenceId, name = "target")
         val plan = CountingPlan(field, value = reference())
         val catalog =
             DefaultCheckedCatalog(
@@ -259,11 +292,15 @@ val ResumableInitializationTest by testSuite {
                 listOf(
                     resourceDefinition(),
                     linkDefinition(),
-                    TypeDefinition(
-                        referenceId,
+                    TypeDefinition.partial(
+                        id = referenceId,
                         representation =
-                            RepresentationTemplate.Record(
-                                listOf(FieldDeclaration(field, LINK_USE.template(), hasConstructorDefault = true)),
+                            RepresentationTemplate.createRecord(
+                                fields =
+                                    listOf(
+                                        FieldDeclaration.partial(owner = field, type = LINK_USE.template(), hasConstructorDefault = true),
+                                    ),
+                                abstract_ = false,
                             ),
                     ),
                 ),
@@ -290,14 +327,20 @@ private fun resumeFixture(
     val root = id("Root")
     val settings = id("Settings")
     val marker = id("Marker")
-    val markerPlan = CountingPlan(FieldOwner(marker, "id"), fail = failMarker)
-    val settingsPlan = CountingPlan(FieldOwner(settings, "label"))
+    val markerPlan = CountingPlan(FieldOwner(definition = marker, name = "id"), fail = failMarker)
+    val settingsPlan = CountingPlan(FieldOwner(definition = settings, name = "label"))
     val settingsFields =
         buildList {
-            add(FieldDeclaration(FieldOwner(settings, "target"), LINK_USE.template()))
+            add(
+                FieldDeclaration.partial(owner = FieldOwner(definition = settings, name = "target"), type = LINK_USE.template()),
+            )
             if (defaultedSettings) {
                 add(
-                    FieldDeclaration(FieldOwner(settings, "label"), TypeTemplate.Scalar(ScalarKind.Text), hasConstructorDefault = true),
+                    FieldDeclaration.partial(
+                        owner = FieldOwner(definition = settings, name = "label"),
+                        type = ScalarKind.TEXT.template,
+                        hasConstructorDefault = true,
+                    ),
                 )
             }
         }
@@ -307,28 +350,41 @@ private fun resumeFixture(
             listOf(
                 resourceDefinition(),
                 linkDefinition(),
-                TypeDefinition(
-                    root,
+                TypeDefinition.partial(
+                    id = root,
                     representation =
-                        RepresentationTemplate.Record(
-                            listOf(
-                                FieldDeclaration(FieldOwner(root, "settings"), TypeTemplate.Named(settings, emptyList())),
-                                FieldDeclaration(FieldOwner(root, "marker"), TypeTemplate.Named(marker, emptyList())),
-                            ),
+                        RepresentationTemplate.createRecord(
+                            fields =
+                                listOf(
+                                    FieldDeclaration.partial(
+                                        owner = FieldOwner(definition = root, name = "settings"),
+                                        type = settings.template(emptyList()),
+                                    ),
+                                    FieldDeclaration.partial(
+                                        owner = FieldOwner(definition = root, name = "marker"),
+                                        type = marker.template(emptyList()),
+                                    ),
+                                ),
+                            abstract_ = false,
                         ),
                 ),
-                TypeDefinition(settings, representation = RepresentationTemplate.Record(settingsFields)),
-                TypeDefinition(
-                    marker,
+                TypeDefinition.partial(
+                    id = settings,
+                    representation = RepresentationTemplate.createRecord(fields = settingsFields, abstract_ = false),
+                ),
+                TypeDefinition.partial(
+                    id = marker,
                     representation =
-                        RepresentationTemplate.Record(
-                            listOf(
-                                FieldDeclaration(
-                                    FieldOwner(marker, "id"),
-                                    TypeTemplate.Scalar(ScalarKind.Text),
-                                    hasConstructorDefault = true,
+                        RepresentationTemplate.createRecord(
+                            fields =
+                                listOf(
+                                    FieldDeclaration.partial(
+                                        owner = FieldOwner(definition = marker, name = "id"),
+                                        type = ScalarKind.TEXT.template,
+                                        hasConstructorDefault = true,
+                                    ),
                                 ),
-                            ),
+                            abstract_ = false,
                         ),
                 ),
             ),
@@ -382,22 +438,26 @@ private class ResumePlanFactory(
 private val GENERATION = CatalogGeneration("resume")
 private val RESOURCE_ID = id("Resource")
 private val LINK_ID = id("Reference")
-private val LINK_USE = TypeUse.Named(LINK_ID, emptyList())
-private val ENDPOINT = EndpointId("required-reference")
+private val LINK_USE = LINK_ID.namedUse(emptyList())
+private val ENDPOINT = EndpointId(value = "required-reference")
 
-private fun id(name: String) = TypeDefinitionId(TypeId.Qualified("test.resume", name), 1)
+private fun id(name: String) = TypeDefinitionId.qualified("test.resume", name)
 
-private fun TypeUse.Named.template() = TypeTemplate.Named(definition, emptyList())
+private fun NamedTypeUse.template() = definition.template(emptyList())
 
-private fun resourceDefinition() = TypeDefinition(RESOURCE_ID, representation = RepresentationTemplate.Record(emptyList()))
+private fun resourceDefinition() =
+    TypeDefinition.partial(id = RESOURCE_ID, representation = RepresentationTemplate.createRecord(fields = emptyList(), abstract_ = false))
 
 private fun linkDefinition() =
-    TypeDefinition(LINK_ID, representation = RepresentationTemplate.Link(ENDPOINT, TypeTemplate.Named(RESOURCE_ID, emptyList())))
+    TypeDefinition.partial(
+        id = LINK_ID,
+        representation = RepresentationTemplate.createLink(endpoint = ENDPOINT, target = RESOURCE_ID.template(emptyList())),
+    )
 
 private fun request(id: TypeDefinitionId) =
     InitializationRequest(
         GENERATION,
-        PreparationTarget.Record(TypeSelection.Complete(TypeUse.Named(id, emptyList()))),
+        PreparationTarget.Record(TypeSelection.Complete(id.namedUse(emptyList()))),
         DataValue.Record(emptyMap()),
     )
 

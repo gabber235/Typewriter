@@ -37,10 +37,10 @@ import com.typewritermc.types.LinkTarget
 import com.typewritermc.types.NativeBinding
 import com.typewritermc.types.Ref
 import com.typewritermc.types.ResourceId
-import com.typewritermc.types.TypeDefinitionId
-import com.typewritermc.types.TypeUse
 import com.typewritermc.types.catalog.Resolution
 import com.typewritermc.types.encodeGeneratedDefault
+import com.typewritermc.types.use
+import skirout.editor.v1.type_catalog.TypeDefinitionId
 import java.nio.file.Path
 
 /** Resource ids of the realm root and the core sections in test resource graphs. */
@@ -103,7 +103,7 @@ internal fun <T : Any> AuthoringCatalogLease.record(
     value: T,
     type: TypeDefinitionId,
 ): AuthoringRecord {
-    val checked = (checked.resolve(TypeUse.Named(type)) as Resolution.Ready).value
+    val checked = (checked.resolve(type.use()) as Resolution.Ready).value
 
     @Suppress("UNCHECKED_CAST")
     val binding = nativeBindings.bind(checked) as NativeBinding<T>

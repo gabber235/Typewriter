@@ -1,13 +1,15 @@
 package com.typewritermc.authoring
 
-import com.typewritermc.types.EndpointId
 import com.typewritermc.types.LinkTarget
 import com.typewritermc.types.RelationId
 import com.typewritermc.types.ResourceId
+import com.typewritermc.types.skir.EndpointIdSerializer
 import kotlinx.serialization.Serializable
+import skirout.editor.v1.type_catalog.EndpointId
 
 @Serializable
 data class LinkOccurrenceId(
+    @Serializable(with = EndpointIdSerializer::class)
     val endpoint: EndpointId,
     val location: ValueLocation,
 )

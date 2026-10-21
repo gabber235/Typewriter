@@ -21,7 +21,6 @@ import com.typewritermc.authoring.ValueLocation
 import com.typewritermc.checking.CatalogGeneration
 import com.typewritermc.codegen.appliedUseCode
 import com.typewritermc.types.ResourceId
-import com.typewritermc.types.TypeUse
 import com.typewritermc.types.codegen.SdkDeclaration
 import com.typewritermc.types.codegen.SdkEmitter
 import com.typewritermc.types.codegen.SdkField
@@ -29,6 +28,8 @@ import com.typewritermc.types.codegen.containsParameter
 import com.typewritermc.types.codegen.draftProjection
 import com.typewritermc.types.codegen.draftType
 import com.typewritermc.types.codegen.parameterizedOrSelf
+import com.typewritermc.types.template
+import skirout.editor.v1.type_catalog.NamedTypeUse
 import com.typewritermc.codegen.TypewriterApi as Api
 
 /** `XDraft`, its projection, the exact draft of generic declarations and the draft types of resources. */
@@ -82,7 +83,7 @@ internal object DraftEmitter : SdkEmitter {
             .addProperty(delegated("location", ValueLocation::class.asClassName(), "binding.location"))
             .addProperty(
                 PropertySpec
-                    .builder("actualType", Api.Availability.parameterizedBy(TypeUse.Named::class.asClassName()), KModifier.OVERRIDE)
+                    .builder("actualType", Api.Availability.parameterizedBy(NamedTypeUse::class.asClassName()), KModifier.OVERRIDE)
                     .initializer(
                         CodeBlock
                             .builder()
@@ -228,7 +229,7 @@ internal object DraftEmitter : SdkEmitter {
             .addSuperinterface(Api.DraftType.parameterizedBy(exactDraftClass))
             .addProperty(
                 PropertySpec
-                    .builder("application", TypeUse.Named::class.asClassName(), KModifier.PRIVATE)
+                    .builder("application", NamedTypeUse::class.asClassName(), KModifier.PRIVATE)
                     .initializer("%T.applied(listOf(%L))", names.definition, uses)
                     .build(),
             ).addProperty(

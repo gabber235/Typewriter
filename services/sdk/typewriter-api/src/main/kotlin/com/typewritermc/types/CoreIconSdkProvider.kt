@@ -17,8 +17,8 @@ import com.typewritermc.presentation.history
 import com.typewritermc.presentation.limit
 import com.typewritermc.presentation.section
 import skirout.editor.v1.catalog.PresentationRole
-import skirout.editor.v1.expression.ExpressionNode
 import skirout.editor.v1.presentation.PresentationTextOverflow
+import skirout.editor.v1.type_catalog.ScalarKind
 import kotlin.time.Duration.Companion.milliseconds
 import kotlin.time.Duration.Companion.seconds
 
@@ -62,7 +62,7 @@ object CoreIconSdkProvider : IconIconifyPresentation, IconSvgPresentation {
                             uri(literal("https://api.iconify.design/search"))
                             parameter("query", query)
                             parameter("limit", literal("64"))
-                            result("$.icons[*]", TypeTemplate.Scalar(ScalarKind.Text))
+                            result("$.icons[*]", ScalarKind.TEXT.template)
                             timeout(5.seconds)
                         }.gate(query.length gte 2, literal("Enter at least two characters"))
                         .debounce(150.milliseconds)

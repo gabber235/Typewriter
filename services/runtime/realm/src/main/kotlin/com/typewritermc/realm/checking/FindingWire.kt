@@ -18,7 +18,7 @@ internal fun FindingSet.toWire(): SkirFindingSet =
             SkirCheckTicket(
                 instance =
                     SkirCheckInstanceId(
-                        rule = SkirTypeCodec.encode(ticket.instance.rule).getOrThrow(),
+                        rule = ticket.instance.rule,
                         location = SkirAuthoringValueCodec.encode(ticket.instance.location).getOrThrow(),
                     ),
                 incarnation = ticket.incarnation,

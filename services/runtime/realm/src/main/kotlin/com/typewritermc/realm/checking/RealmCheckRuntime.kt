@@ -19,8 +19,6 @@ import com.typewritermc.checking.InputIdentity
 import com.typewritermc.checking.RealmChecks
 import com.typewritermc.configuration.ConfigurationRecipe
 import com.typewritermc.configuration.OwnedRule
-import com.typewritermc.configuration.RuleId
-import com.typewritermc.configuration.RuleOrigin
 import com.typewritermc.discovery.OwnedCheck
 import com.typewritermc.discovery.OwnedCheckRecipe
 import com.typewritermc.discovery.ProviderLease
@@ -44,6 +42,8 @@ import kotlinx.coroutines.joinAll
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import skirout.editor.v1.checking.FindingStatus
+import skirout.editor.v1.type_catalog.RuleId
+import skirout.editor.v1.type_catalog.RuleOrigin
 import java.util.concurrent.atomic.AtomicLong
 
 interface CheckScheduler : AutoCloseable {
@@ -597,7 +597,7 @@ class RealmCheckRuntime(
         try {
             root.catalog.checks.forEach { owned ->
                 leases += root.catalog.providers.retain(owned.origin)
-                plans += CheckPlan.Simple(RuleId(owned.recipe.owner, 0), owned)
+                plans += CheckPlan.Simple(RuleId(origin = owned.recipe.owner, localIndex = 0), owned)
             }
             root.catalog.configuration.forEach { recipe ->
                 recipe.rules.forEach { rule -> plans += CheckPlan.Portable(rule.id, recipe, rule) }
@@ -612,7 +612,7 @@ class RealmCheckRuntime(
                     failure.rethrowExceptional()
                     plans +=
                         CheckPlan.RegistrationFailure(
-                            rule = RuleId(owned.ruleOrigin, 0),
+                            rule = RuleId(origin = owned.ruleOrigin, localIndex = 0),
                             diagnostic =
                                 diagnostic(
                                     owned.ruleOrigin,
@@ -685,12 +685,12 @@ class RealmCheckRuntime(
             type: DraftType<D>,
             check: CheckContext.(D) -> Unit,
         ) {
-            val rule = RuleId(owned.ruleOrigin, nextRegistration++)
+            val rule = RuleId(origin = owned.ruleOrigin, localIndex = nextRegistration++)
             plans += CheckPlan.Each(rule, type, check)
         }
 
         override fun realm(check: CheckContext.() -> Unit) {
-            val rule = RuleId(owned.ruleOrigin, nextRegistration++)
+            val rule = RuleId(origin = owned.ruleOrigin, localIndex = nextRegistration++)
             plans += CheckPlan.Realm(rule, check)
         }
     }

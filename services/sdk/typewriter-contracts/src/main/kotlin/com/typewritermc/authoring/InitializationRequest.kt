@@ -2,10 +2,11 @@ package com.typewritermc.authoring
 
 import com.typewritermc.checking.CatalogGeneration
 import com.typewritermc.types.DataValue
-import com.typewritermc.types.FieldOwner
+import com.typewritermc.types.skir.FieldOwnerSerializer
 import kotlinx.serialization.Serializable
+import skirout.editor.v1.type_catalog.FieldOwner
+import skirout.editor.v1.type_catalog.TypeUse
 
-@Serializable
 data class InitializationRequest(
     val catalog: CatalogGeneration,
     val target: PreparationTarget,
@@ -13,14 +14,11 @@ data class InitializationRequest(
     val supplied: DataValue?,
 )
 
-@Serializable
 sealed interface PreparationTarget {
-    @Serializable
     data class Value(
-        val type: com.typewritermc.types.TypeUse,
+        val type: TypeUse,
     ) : PreparationTarget
 
-    @Serializable
     data class Record(
         val selection: TypeSelection,
     ) : PreparationTarget
@@ -47,6 +45,7 @@ data class PreparedValue(
 
 @Serializable
 data class InitializationDiagnostic(
+    @Serializable(with = FieldOwnerSerializer::class)
     val field: FieldOwner?,
     val code: String,
     val message: String,
@@ -54,7 +53,6 @@ data class InitializationDiagnostic(
 )
 
 /** A caller owned continuation of initialization, retaining evaluated values and deferred defaults. */
-@Serializable
 data class PreparationDraft(
     val catalog: CatalogGeneration,
     val target: PreparationTarget,
@@ -64,45 +62,36 @@ data class PreparationDraft(
     val findings: List<InitializationDiagnostic>,
 )
 
-@Serializable
 data class RequiredInput(
     val path: ValuePath,
-    val expected: com.typewritermc.types.TypeUse,
+    val expected: TypeUse,
 )
 
-@Serializable
 data class InputAnswer(
     val path: ValuePath,
     val value: DataValue,
 )
 
-@Serializable
 sealed interface PreparationOperation {
-    @Serializable
     data class Start(
         val request: InitializationRequest,
     ) : PreparationOperation
 
-    @Serializable
     data class Resume(
         val draft: PreparationDraft,
         val answers: List<InputAnswer>,
     ) : PreparationOperation
 }
 
-@Serializable
 sealed interface PreparationStep {
-    @Serializable
     data class Ready(
         val value: PreparedValue,
     ) : PreparationStep
 
-    @Serializable
     data class NeedsInput(
         val draft: PreparationDraft,
     ) : PreparationStep
 
-    @Serializable
     data class Unavailable(
         val draft: PreparationDraft,
     ) : PreparationStep

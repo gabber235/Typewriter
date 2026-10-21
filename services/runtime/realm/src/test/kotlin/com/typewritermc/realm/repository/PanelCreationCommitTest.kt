@@ -14,28 +14,25 @@ import com.typewritermc.realm.schema.openTestDatabase
 import com.typewritermc.types.EndpointBindingTemplate
 import com.typewritermc.types.EndpointCardinality
 import com.typewritermc.types.EndpointDefinition
-import com.typewritermc.types.EndpointId
 import com.typewritermc.types.EndpointSlot
 import com.typewritermc.types.RelationContract
 import com.typewritermc.types.RelationDeletePolicy
 import com.typewritermc.types.RelationFamilyId
 import com.typewritermc.types.RelationId
 import com.typewritermc.types.ResourceId
-import com.typewritermc.types.TypeDefinitionId
-import com.typewritermc.types.TypeTemplate
-import com.typewritermc.types.TypeUse
-import com.typewritermc.types.skir.SkirTypeCodec
+import com.typewritermc.types.requireValid
 import com.typewritermc.types.skir.getOrThrow
 import de.infix.testBalloon.framework.core.testSuite
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.types.shouldBeInstanceOf
 import skirout.editor.v1.catalog.EditorCatalog
+import skirout.editor.v1.type_catalog.EndpointId
+import skirout.editor.v1.type_catalog.NamedTypeUse
+import skirout.editor.v1.type_catalog.TypeDefinitionId
+import skirout.editor.v1.type_catalog.TypeTemplate
+import skirout.editor.v1.type_catalog.TypeUse
 import skirout.editor.v1.authoring.PreparedEdit as WireEdit
 import skirout.editor.v1.catalog.EndpointDefinition as WireEndpoint
-import skirout.editor.v1.type_catalog.NamedTypeUse as WireNamedTypeUse
-import skirout.editor.v1.type_catalog.TypeDefinitionId as WireDefinitionId
-import skirout.editor.v1.type_catalog.TypeTemplate as WireTemplate
-import skirout.editor.v1.type_catalog.TypeUse as WireTypeUse
 
 val PanelCreationCommitTest by testSuite {
     test("the panel page and Book creation commits into the Library through Realm and survives reload") {
@@ -100,7 +97,7 @@ private fun panelCreationFixture(name: String): ByteArray =
 private fun panelCreationCatalog(snapshot: EditorCatalog): TestCatalogLease =
     TestCatalogLease(
         generation = CatalogGeneration(snapshot.generation.value),
-        definitions = snapshot.types.map { SkirTypeCodec.decode(it.definition).getOrThrow() },
+        definitions = snapshot.types.map { it.definition.requireValid() },
         relations =
             snapshot.relations.map { relation ->
                 RelationContract(
@@ -113,9 +110,9 @@ private fun panelCreationCatalog(snapshot: EditorCatalog): TestCatalogLease =
         endpointBindings =
             snapshot.endpointBindings.map { binding ->
                 EndpointBindingTemplate(
-                    EndpointId(binding.endpoint.value),
-                    SkirTypeCodec.decode(WireTemplate.NamedWrapper(binding.containingResource)).getOrThrow() as TypeTemplate.Named,
-                    definitionId(binding.valueOwner),
+                    binding.endpoint.requireValid(),
+                    binding.containingResource.requireValid(),
+                    binding.valueOwner.requireValid(),
                     RelativeFieldPattern(
                         binding.relativePath.segments.map { segment ->
                             when (segment) {
@@ -141,29 +138,21 @@ private fun panelCreationCatalog(snapshot: EditorCatalog): TestCatalogLease =
                             }
                         },
                     ),
-                    SkirTypeCodec.decode(binding.target).getOrThrow(),
+                    binding.target.requireValid(),
                     binding.containsCollection,
                 )
             },
     )
 
-private fun definitionId(id: WireDefinitionId): TypeDefinitionId =
-    (
-        SkirTypeCodec
-            .decode(
-                WireTypeUse.NamedWrapper(WireNamedTypeUse(definition = id, arguments = emptyList())),
-            ).getOrThrow() as TypeUse.Named
-    ).definition
-
 private fun endpoint(endpoint: WireEndpoint): EndpointDefinition =
     EndpointDefinition(
-        EndpointId(endpoint.id.value),
+        endpoint.id.requireValid(),
         when (endpoint.slot) {
             skirout.editor.v1.catalog.EndpointSlot.FIRST -> EndpointSlot.First
             skirout.editor.v1.catalog.EndpointSlot.SECOND -> EndpointSlot.Second
             else -> error("Unknown captured endpoint slot")
         },
-        SkirTypeCodec.decode(WireTemplate.NamedWrapper(endpoint.resource)).getOrThrow() as TypeTemplate.Named,
+        endpoint.resource.requireValid(),
         when (endpoint.cardinality) {
             skirout.editor.v1.catalog.EndpointCardinality.ONE -> EndpointCardinality.One
             skirout.editor.v1.catalog.EndpointCardinality.MANY -> EndpointCardinality.Many

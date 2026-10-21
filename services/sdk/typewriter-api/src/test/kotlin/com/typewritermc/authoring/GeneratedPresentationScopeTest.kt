@@ -15,13 +15,12 @@ import com.typewritermc.expression.orElse
 import com.typewritermc.presentation.DefaultPresentationRuntime
 import com.typewritermc.presentation.PresentationBuildBinding
 import com.typewritermc.presentation.presentationTemplate
-import com.typewritermc.types.TypeUse
 import com.typewritermc.types.catalog.DefaultCheckedCatalog
 import com.typewritermc.types.catalog.Resolution
+import com.typewritermc.types.use
 import de.infix.testBalloon.framework.core.testSuite
 import io.kotest.matchers.shouldBe
 import skirout.editor.v1.catalog.PresentationRole
-import skirout.editor.v1.expression.ExpressionNode
 import skirout.editor.v1.presentation.AxisChild
 import skirout.editor.v1.presentation.ChildrenElement
 import skirout.editor.v1.presentation.PresentationElement
@@ -52,7 +51,7 @@ val GeneratedPresentationScopeTest by testSuite {
             )
         val checked =
             (
-                catalog.resolve(TypeUse.Named(TimelineSegmentPlacementDefinition.id)) as
+                catalog.resolve(TimelineSegmentPlacementDefinition.id.use()) as
                     Resolution.Ready
             ).value
         val root =

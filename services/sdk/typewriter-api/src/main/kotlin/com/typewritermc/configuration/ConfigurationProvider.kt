@@ -5,7 +5,7 @@ import com.typewritermc.checking.CheckRecipe
 import com.typewritermc.checking.Diagnostic
 import com.typewritermc.expression.EvaluationDiagnostic
 import com.typewritermc.expression.ExpressionFactory
-import com.typewritermc.types.TypeTemplate
+import skirout.editor.v1.type_catalog.TypeTemplate
 
 data class CollectedConfiguration(
     val recipes: List<ConfigurationRecipe>,

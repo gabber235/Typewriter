@@ -27,38 +27,40 @@ import com.typewritermc.realm.checking.EmptyProviders
 import com.typewritermc.realm.checking.dependencies
 import com.typewritermc.realm.repository.conflicts
 import com.typewritermc.realm.repository.valueAt
-import com.typewritermc.types.CollectionKind
 import com.typewritermc.types.DataValue
 import com.typewritermc.types.EndpointBindingTemplate
 import com.typewritermc.types.EndpointCardinality
 import com.typewritermc.types.EndpointDefinition
-import com.typewritermc.types.EndpointId
 import com.typewritermc.types.EndpointSlot
 import com.typewritermc.types.FactoryNativeBindingRegistry
-import com.typewritermc.types.FieldDeclaration
-import com.typewritermc.types.FieldOwner
 import com.typewritermc.types.LinkTarget
 import com.typewritermc.types.ListItem
 import com.typewritermc.types.NativeBindingRegistry
-import com.typewritermc.types.ParameterKey
 import com.typewritermc.types.RelationContract
 import com.typewritermc.types.RelationDeletePolicy
 import com.typewritermc.types.RelationFamilyId
 import com.typewritermc.types.RelationId
-import com.typewritermc.types.RepresentationTemplate
 import com.typewritermc.types.ResourceId
-import com.typewritermc.types.ScalarKind
-import com.typewritermc.types.TypeDefinition
-import com.typewritermc.types.TypeDefinitionId
-import com.typewritermc.types.TypeId
-import com.typewritermc.types.TypeParameter
-import com.typewritermc.types.TypeTemplate
-import com.typewritermc.types.TypeUse
 import com.typewritermc.types.catalog.CheckedCatalog
 import com.typewritermc.types.catalog.DefaultCheckedCatalog
+import com.typewritermc.types.namedTemplate
+import com.typewritermc.types.namedUse
+import com.typewritermc.types.nullable
+import com.typewritermc.types.qualified
+import com.typewritermc.types.template
 import de.infix.testBalloon.framework.core.testSuite
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.types.shouldBeInstanceOf
+import skirout.editor.v1.type_catalog.CollectionKind
+import skirout.editor.v1.type_catalog.EndpointId
+import skirout.editor.v1.type_catalog.FieldDeclaration
+import skirout.editor.v1.type_catalog.FieldOwner
+import skirout.editor.v1.type_catalog.ParameterKey
+import skirout.editor.v1.type_catalog.RepresentationTemplate
+import skirout.editor.v1.type_catalog.ScalarKind
+import skirout.editor.v1.type_catalog.TypeDefinition
+import skirout.editor.v1.type_catalog.TypeDefinitionId
+import skirout.editor.v1.type_catalog.TypeParameter
 
 class RealmGraphReadsTest {
     fun traversalUsesTheSelectedStagedGraphWithBoundedBreadthFirstSearch() {
@@ -606,7 +608,7 @@ private class GraphCatalogLease(
 
     override val configuration: List<com.typewritermc.configuration.ConfigurationRecipe> = emptyList()
     override val operations = com.typewritermc.operations.OperationCatalog()
-    override val placementFields = emptyMap<com.typewritermc.types.TypeDefinitionId, com.typewritermc.authoring.ValuePath>()
+    override val placementFields = emptyMap<TypeDefinitionId, com.typewritermc.authoring.ValuePath>()
 
     override fun retain(): AuthoringCatalogLease = GraphCatalogLease(generation)
 
@@ -647,7 +649,7 @@ private fun graphRecord(
         ),
     )
 
-private fun graphDefinition(name: String) = TypeDefinitionId(TypeId.Qualified("graph", name), 1)
+private fun graphDefinition(name: String) = TypeDefinitionId.qualified("graph", name)
 
 private val GRAPH_GENERATION = CatalogGeneration("graph_catalog")
 private val NODE = graphDefinition("node")
@@ -662,34 +664,34 @@ private val LINK_MESSAGE = graphDefinition("link_message")
 private val BOX = graphDefinition("box")
 private val EXPANDING = graphDefinition("expanding")
 private val WRAPPER = graphDefinition("wrapper")
-private val BOX_PARAMETER = ParameterKey(BOX, 0)
-private val EXPANDING_PARAMETER = ParameterKey(EXPANDING, 0)
-private val WRAPPER_PARAMETER = ParameterKey(WRAPPER, 0)
-private val NODE_USE = TypeUse.Named(NODE)
-private val EDGE_LINK_USE = TypeUse.Named(EDGE_LINK)
-private val EDGE_LIST_USE = TypeUse.Named(EDGE_LIST)
-private val BAD_LINK_USE = TypeUse.Named(BAD_LINK)
-private val BUTTON_LIST_USE = TypeUse.Named(BUTTON_LIST)
-private val BUTTON_USE = TypeUse.Named(BUTTON)
-private val OPTIONAL_LINK_HOLDER_USE = TypeUse.Named(OPTIONAL_LINK_HOLDER)
-private val EDGE_SOURCE = EndpointId("edge:source")
-private val EDGE_TARGET = EndpointId("edge:target")
-private val BAD_ENDPOINT = EndpointId("bad:source")
-private val BAD_TARGET = EndpointId("bad:target")
+private val BOX_PARAMETER = ParameterKey(owner = BOX, index = 0)
+private val EXPANDING_PARAMETER = ParameterKey(owner = EXPANDING, index = 0)
+private val WRAPPER_PARAMETER = ParameterKey(owner = WRAPPER, index = 0)
+private val NODE_USE = NODE.namedUse()
+private val EDGE_LINK_USE = EDGE_LINK.namedUse()
+private val EDGE_LIST_USE = EDGE_LIST.namedUse()
+private val BAD_LINK_USE = BAD_LINK.namedUse()
+private val BUTTON_LIST_USE = BUTTON_LIST.namedUse()
+private val BUTTON_USE = BUTTON.namedUse()
+private val OPTIONAL_LINK_HOLDER_USE = OPTIONAL_LINK_HOLDER.namedUse()
+private val EDGE_SOURCE = EndpointId(value = "edge:source")
+private val EDGE_TARGET = EndpointId(value = "edge:target")
+private val BAD_ENDPOINT = EndpointId(value = "bad:source")
+private val BAD_TARGET = EndpointId(value = "bad:target")
 private val EDGE =
     RelationContract(
         RelationId("edge"),
         EndpointDefinition(
             EDGE_SOURCE,
             EndpointSlot.First,
-            TypeTemplate.Named(NODE),
+            NODE.namedTemplate(),
             EndpointCardinality.Many,
             RelationDeletePolicy.CLEAR,
         ),
         EndpointDefinition(
             EDGE_TARGET,
             EndpointSlot.Second,
-            TypeTemplate.Named(NODE),
+            NODE.namedTemplate(),
             EndpointCardinality.Many,
             RelationDeletePolicy.CLEAR,
         ),
@@ -701,14 +703,14 @@ private val BAD =
         EndpointDefinition(
             BAD_ENDPOINT,
             EndpointSlot.First,
-            TypeTemplate.Named(NODE),
+            NODE.namedTemplate(),
             EndpointCardinality.Many,
             RelationDeletePolicy.CLEAR,
         ),
         EndpointDefinition(
             BAD_TARGET,
             EndpointSlot.Second,
-            TypeTemplate.Named(NODE),
+            NODE.namedTemplate(),
             EndpointCardinality.Many,
             RelationDeletePolicy.CLEAR,
         ),
@@ -716,127 +718,160 @@ private val BAD =
 private val EDGE_BINDING =
     EndpointBindingTemplate(
         EDGE_SOURCE,
-        TypeTemplate.Named(NODE),
+        NODE.namedTemplate(),
         NODE,
         RelativeFieldPattern(listOf(FieldPatternSegment.Field("outgoing"), FieldPatternSegment.Items)),
-        TypeTemplate.Named(NODE),
+        NODE.template(),
         containsCollection = true,
     )
 private val BAD_BINDING =
     EndpointBindingTemplate(
         BAD_ENDPOINT,
-        TypeTemplate.Named(NODE),
+        NODE.namedTemplate(),
         NODE,
         RelativeFieldPattern(listOf(FieldPatternSegment.Field("bad"))),
-        TypeTemplate.Named(NODE),
+        NODE.template(),
         containsCollection = false,
     )
 private val GRAPH_DEFINITIONS =
     listOf(
-        TypeDefinition(
-            NODE,
+        TypeDefinition.partial(
+            id = NODE,
             representation =
-                RepresentationTemplate.Record(
-                    listOf(
-                        FieldDeclaration(FieldOwner(NODE, "outgoing"), TypeTemplate.Named(EDGE_LIST)),
-                        FieldDeclaration(FieldOwner(NODE, "bad"), TypeTemplate.Named(BAD_LINK)),
-                        FieldDeclaration(FieldOwner(NODE, "buttons"), TypeTemplate.Named(BUTTON_LIST)),
-                        FieldDeclaration(
-                            FieldOwner(NODE, "optional"),
-                            TypeTemplate.Nullable(TypeTemplate.Named(OPTIONAL_LINK_HOLDER)),
-                        ),
-                        FieldDeclaration(FieldOwner(NODE, "message"), TypeTemplate.Named(ABSTRACT_MESSAGE)),
-                        FieldDeclaration(
-                            FieldOwner(NODE, "nested"),
-                            TypeTemplate.Named(
-                                BOX,
-                                listOf(TypeTemplate.Named(BOX, listOf(TypeTemplate.Named(BAD_LINK)))),
+                RepresentationTemplate.createRecord(
+                    fields =
+                        listOf(
+                            FieldDeclaration.partial(owner = FieldOwner(definition = NODE, name = "outgoing"), type = EDGE_LIST.template()),
+                            FieldDeclaration.partial(owner = FieldOwner(definition = NODE, name = "bad"), type = BAD_LINK.template()),
+                            FieldDeclaration.partial(
+                                owner = FieldOwner(definition = NODE, name = "buttons"),
+                                type = BUTTON_LIST.template(),
+                            ),
+                            FieldDeclaration.partial(
+                                owner = FieldOwner(definition = NODE, name = "optional"),
+                                type = OPTIONAL_LINK_HOLDER.template().nullable(),
+                            ),
+                            FieldDeclaration.partial(
+                                owner = FieldOwner(definition = NODE, name = "message"),
+                                type = ABSTRACT_MESSAGE.template(),
+                            ),
+                            FieldDeclaration.partial(
+                                owner = FieldOwner(definition = NODE, name = "nested"),
+                                type = BOX.template(listOf(BOX.template(listOf(BAD_LINK.template())))),
+                            ),
+                            FieldDeclaration.partial(
+                                owner = FieldOwner(definition = NODE, name = "expanding"),
+                                type = EXPANDING.template(listOf(ScalarKind.TEXT.template)),
                             ),
                         ),
-                        FieldDeclaration(
-                            FieldOwner(NODE, "expanding"),
-                            TypeTemplate.Named(EXPANDING, listOf(TypeTemplate.Scalar(ScalarKind.Text))),
+                    abstract_ = false,
+                ),
+        ),
+        TypeDefinition.partial(
+            id = EDGE_LINK,
+            representation = RepresentationTemplate.createLink(endpoint = EDGE_SOURCE, target = NODE.template()),
+        ),
+        TypeDefinition.partial(
+            id = EDGE_LIST,
+            representation = RepresentationTemplate.createSequence(item = EDGE_LINK.template(), kind = CollectionKind.LIST),
+        ),
+        TypeDefinition.partial(
+            id = BAD_LINK,
+            representation = RepresentationTemplate.createLink(endpoint = BAD_ENDPOINT, target = NODE.template()),
+        ),
+        TypeDefinition.partial(
+            id = BUTTON,
+            representation =
+                RepresentationTemplate.createRecord(
+                    fields =
+                        listOf(
+                            FieldDeclaration.partial(owner = FieldOwner(definition = BUTTON, name = "target"), type = BAD_LINK.template()),
                         ),
-                    ),
+                    abstract_ = false,
                 ),
         ),
-        TypeDefinition(
-            EDGE_LINK,
-            representation = RepresentationTemplate.Link(EDGE_SOURCE, TypeTemplate.Named(NODE)),
+        TypeDefinition.partial(
+            id = BUTTON_LIST,
+            representation = RepresentationTemplate.createSequence(item = BUTTON.template(), kind = CollectionKind.LIST),
         ),
-        TypeDefinition(
-            EDGE_LIST,
-            representation = RepresentationTemplate.Sequence(TypeTemplate.Named(EDGE_LINK), CollectionKind.List),
-        ),
-        TypeDefinition(
-            BAD_LINK,
-            representation = RepresentationTemplate.Link(BAD_ENDPOINT, TypeTemplate.Named(NODE)),
-        ),
-        TypeDefinition(
-            BUTTON,
+        TypeDefinition.partial(
+            id = OPTIONAL_LINK_HOLDER,
             representation =
-                RepresentationTemplate.Record(
-                    listOf(FieldDeclaration(FieldOwner(BUTTON, "target"), TypeTemplate.Named(BAD_LINK))),
+                RepresentationTemplate.createRecord(
+                    fields =
+                        listOf(
+                            FieldDeclaration.partial(
+                                owner = FieldOwner(definition = OPTIONAL_LINK_HOLDER, name = "target"),
+                                type = BAD_LINK.template(),
+                            ),
+                        ),
+                    abstract_ = false,
                 ),
         ),
-        TypeDefinition(
-            BUTTON_LIST,
-            representation = RepresentationTemplate.Sequence(TypeTemplate.Named(BUTTON), CollectionKind.List),
+        TypeDefinition.partial(
+            id = ABSTRACT_MESSAGE,
+            representation = RepresentationTemplate.createRecord(fields = emptyList(), abstract_ = true),
         ),
-        TypeDefinition(
-            OPTIONAL_LINK_HOLDER,
+        TypeDefinition.partial(
+            id = LINK_MESSAGE,
             representation =
-                RepresentationTemplate.Record(
-                    listOf(FieldDeclaration(FieldOwner(OPTIONAL_LINK_HOLDER, "target"), TypeTemplate.Named(BAD_LINK))),
+                RepresentationTemplate.createRecord(
+                    fields =
+                        listOf(
+                            FieldDeclaration.partial(
+                                owner = FieldOwner(definition = LINK_MESSAGE, name = "target"),
+                                type = BAD_LINK.template(),
+                            ),
+                        ),
+                    abstract_ = false,
+                ),
+            parents = listOf(ABSTRACT_MESSAGE.namedTemplate()),
+        ),
+        TypeDefinition.partial(
+            id = BOX,
+            parameters = listOf(TypeParameter.partial(key = BOX_PARAMETER, name = "T")),
+            representation =
+                RepresentationTemplate.createRecord(
+                    fields =
+                        listOf(
+                            FieldDeclaration.partial(owner = FieldOwner(definition = BOX, name = "value"), type = BOX_PARAMETER.template),
+                        ),
+                    abstract_ = false,
                 ),
         ),
-        TypeDefinition(
-            ABSTRACT_MESSAGE,
-            representation = RepresentationTemplate.Record(emptyList(), abstract = true),
-        ),
-        TypeDefinition(
-            LINK_MESSAGE,
+        TypeDefinition.partial(
+            id = WRAPPER,
+            parameters = listOf(TypeParameter.partial(key = WRAPPER_PARAMETER, name = "T")),
             representation =
-                RepresentationTemplate.Record(
-                    listOf(FieldDeclaration(FieldOwner(LINK_MESSAGE, "target"), TypeTemplate.Named(BAD_LINK))),
-                ),
-            parents = listOf(TypeTemplate.Named(ABSTRACT_MESSAGE)),
-        ),
-        TypeDefinition(
-            BOX,
-            parameters = listOf(TypeParameter(BOX_PARAMETER, "T")),
-            representation =
-                RepresentationTemplate.Record(
-                    listOf(FieldDeclaration(FieldOwner(BOX, "value"), TypeTemplate.Parameter(BOX_PARAMETER))),
+                RepresentationTemplate.createRecord(
+                    fields =
+                        listOf(
+                            FieldDeclaration.partial(
+                                owner = FieldOwner(definition = WRAPPER, name = "value"),
+                                type = WRAPPER_PARAMETER.template,
+                            ),
+                        ),
+                    abstract_ = false,
                 ),
         ),
-        TypeDefinition(
-            WRAPPER,
-            parameters = listOf(TypeParameter(WRAPPER_PARAMETER, "T")),
+        TypeDefinition.partial(
+            id = EXPANDING,
+            parameters = listOf(TypeParameter.partial(key = EXPANDING_PARAMETER, name = "T")),
             representation =
-                RepresentationTemplate.Record(
-                    listOf(FieldDeclaration(FieldOwner(WRAPPER, "value"), TypeTemplate.Parameter(WRAPPER_PARAMETER))),
-                ),
-        ),
-        TypeDefinition(
-            EXPANDING,
-            parameters = listOf(TypeParameter(EXPANDING_PARAMETER, "T")),
-            representation =
-                RepresentationTemplate.Record(
-                    listOf(
-                        FieldDeclaration(
-                            FieldOwner(EXPANDING, "next"),
-                            TypeTemplate.Named(
-                                EXPANDING,
-                                listOf(
-                                    TypeTemplate.Named(
-                                        WRAPPER,
-                                        listOf(TypeTemplate.Parameter(EXPANDING_PARAMETER)),
+                RepresentationTemplate.createRecord(
+                    fields =
+                        listOf(
+                            FieldDeclaration.partial(
+                                owner = FieldOwner(definition = EXPANDING, name = "next"),
+                                type =
+                                    EXPANDING.template(
+                                        listOf(
+                                            WRAPPER.template(listOf(EXPANDING_PARAMETER.template)),
+                                        ),
                                     ),
-                                ),
                             ),
                         ),
-                    ),
+                    abstract_ = false,
                 ),
         ),
     )

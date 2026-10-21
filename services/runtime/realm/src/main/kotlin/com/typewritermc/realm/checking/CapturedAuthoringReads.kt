@@ -45,13 +45,14 @@ import com.typewritermc.types.DataValue
 import com.typewritermc.types.ListItem
 import com.typewritermc.types.MapRow
 import com.typewritermc.types.ResourceId
-import com.typewritermc.types.TypeDefinitionId
-import com.typewritermc.types.TypeUse
 import com.typewritermc.types.canonicalValueKey
 import com.typewritermc.types.catalog.CheckedType
 import com.typewritermc.types.catalog.Resolution
 import com.typewritermc.types.unwrapNamed
+import com.typewritermc.types.use
 import skirout.editor.v1.expression.ExpressionNode
+import skirout.editor.v1.type_catalog.TypeDefinitionId
+import skirout.editor.v1.type_catalog.TypeUse
 
 fun interface SelectionPredicateEvaluator {
     fun evaluate(
@@ -136,7 +137,7 @@ class CapturedAuthoringReads(
                     listOf(path.location),
                 ).cast()
         if (!view.original.catalog.checked
-                .isReadableAs(named.actualType, path.expected)
+                .isReadableAs(named.actualType.use, path.expected)
         ) {
             return failed(
                 "unreadable_value",
@@ -218,7 +219,7 @@ class CapturedAuthoringReads(
                 when (selection) {
                     is TypeSelection.Complete -> {
                         view.original.catalog.checked
-                            .isReadableAs(selection.use, path.expected)
+                            .isReadableAs(selection.use.use, path.expected)
                     }
 
                     is TypeSelection.Pending -> {
@@ -232,7 +233,7 @@ class CapturedAuthoringReads(
                     listOf(path.location),
                 )
             }
-            val checked = (selection as? TypeSelection.Complete)?.let { resolve(it.use, path.location) }
+            val checked = (selection as? TypeSelection.Complete)?.let { resolve(it.use.use, path.location) }
             return binding(path.location, selection, checked)
                 ?.let { Availability.Available(it) }
                 ?: Availability.Failed(failures.last())
@@ -256,7 +257,7 @@ class CapturedAuthoringReads(
                             listOf(path.location),
                         )
                 if (!view.original.catalog.checked
-                        .isReadableAs(named.actualType, path.expected)
+                        .isReadableAs(named.actualType.use, path.expected)
                 ) {
                     return failed(
                         "unreadable_binding",
@@ -264,7 +265,7 @@ class CapturedAuthoringReads(
                         listOf(path.location),
                     )
                 }
-                val checked = resolve(named.actualType, path.location) ?: return Availability.Failed(failures.last())
+                val checked = resolve(named.actualType.use, path.location) ?: return Availability.Failed(failures.last())
                 Availability.Available(
                     DraftBinding(
                         catalog,
@@ -294,7 +295,7 @@ class CapturedAuthoringReads(
                 observe(InputIdentity.Value(path.location))
                 val value = located.value
                 if (value == DataValue.Unfilled || value == DataValue.Null) return unavailable(path.location)
-                val actual = (value as? DataValue.Named)?.actualType ?: path.expected
+                val actual = (value as? DataValue.Named)?.actualType?.use ?: path.expected
                 if (!view.original.catalog.checked
                         .isReadableAs(actual, path.expected)
                 ) {
@@ -423,7 +424,7 @@ class CapturedAuthoringReads(
         located as LocatedValue.Available
         observe(InputIdentity.Value(path.location))
         if (located.value == DataValue.Unfilled) return unavailable(path.location)
-        val actual = (located.value as? DataValue.Named)?.actualType ?: path.expected
+        val actual = (located.value as? DataValue.Named)?.actualType?.use ?: path.expected
         if (!view.original.catalog.checked
                 .isReadableAs(actual, path.expected)
         ) {
@@ -490,7 +491,7 @@ class CapturedAuthoringReads(
                     val checked =
                         value.actualType
                             .takeIf { it.definition.couldRepresent(owner) }
-                            ?.let { resolve(it, at) }
+                            ?.let { resolve(it.use, at) }
                     if (checked != null && checked.represents(owner)) {
                         occurrences +=
                             DraftBinding(
@@ -537,7 +538,7 @@ class CapturedAuthoringReads(
                     val checked =
                         selection.use
                             .takeIf { it.definition.couldRepresent(owner) }
-                            ?.let { resolve(it, root) }
+                            ?.let { resolve(it.use, root) }
                     if (checked != null && checked.represents(owner)) {
                         occurrences += DraftBinding(catalog, readContext, root, DraftExpectation.Complete(checked), selection)
                     }
@@ -602,7 +603,7 @@ class CapturedAuthoringReads(
         val record = view.resources[resource] ?: return unavailable(ValueLocation(resource, ValuePath()))
         val location = ValueLocation(resource, ValuePath())
         observe(InputIdentity.Form(location))
-        val checked = (record.configuration as? TypeSelection.Complete)?.let { resolve(it.use, location) }
+        val checked = (record.configuration as? TypeSelection.Complete)?.let { resolve(it.use.use, location) }
         val binding = binding(location, record.configuration, checked)
         return binding?.let { Availability.Available(it) }
             ?: failed("resource_binding_failed", "The resource could not be bound to its captured catalog.", listOf(location))
@@ -633,7 +634,7 @@ class CapturedAuthoringReads(
             val selection = record.configuration
             val checked =
                 when (selection) {
-                    is TypeSelection.Complete -> resolve(selection.use, location)
+                    is TypeSelection.Complete -> resolve(selection.use.use, location)
                     is TypeSelection.Pending -> null
                 }
             if (
@@ -650,7 +651,7 @@ class CapturedAuthoringReads(
         val located = valueAt(location) as? LocatedValue.Available ?: return null
         observe(InputIdentity.Form(location))
         val named = located.value as? DataValue.Named ?: return null
-        val checked = resolve(named.actualType, location) ?: return null
+        val checked = resolve(named.actualType.use, location) ?: return null
         if (!checked.represents(owner)) return null
         return DraftBinding(
             catalog,
@@ -805,7 +806,7 @@ class CapturedAuthoringReads(
         when (requested) {
             ResourceTypeMatch.AnyResource -> {
                 when (selection) {
-                    is TypeSelection.Complete -> TypeMatch.Yes(resolve(selection.use, null))
+                    is TypeSelection.Complete -> TypeMatch.Yes(resolve(selection.use.use, null))
                     is TypeSelection.Pending -> TypeMatch.Yes(null)
                 }
             }
@@ -814,7 +815,7 @@ class CapturedAuthoringReads(
                 when (selection) {
                     is TypeSelection.Complete -> {
                         if (!selection.use.definition.couldRepresent(requested.id)) return TypeMatch.No
-                        val checked = resolve(selection.use, null)
+                        val checked = resolve(selection.use.use, null)
                         if (checked?.represents(requested.id) == true) TypeMatch.Yes(checked) else TypeMatch.No
                     }
 
@@ -834,7 +835,7 @@ class CapturedAuthoringReads(
                 when (selection) {
                     is TypeSelection.Complete -> {
                         if (selection.use != requested.use) return TypeMatch.No
-                        val checked = resolve(selection.use, null)
+                        val checked = resolve(selection.use.use, null)
                         TypeMatch.Yes(checked)
                     }
 
@@ -858,10 +859,10 @@ class CapturedAuthoringReads(
         selection: TypeSelection.Pending,
         expected: TypeUse,
     ): Boolean {
-        val expectedNamed = expected as? TypeUse.Named
-        if (expectedNamed != null && selection.definition == expectedNamed.definition) {
-            if (selection.arguments.size != expectedNamed.arguments.size) return false
-            return selection.arguments.zip(expectedNamed.arguments).all { (actual, required) ->
+        val expectedNamed = expected as? TypeUse.NamedWrapper
+        if (expectedNamed != null && selection.definition == expectedNamed.value.definition) {
+            if (selection.arguments.size != expectedNamed.value.arguments.size) return false
+            return selection.arguments.zip(expectedNamed.value.arguments).all { (actual, required) ->
                 when (actual) {
                     is ArgumentSelection.Chosen -> {
                         view.original.catalog.checked
@@ -878,7 +879,7 @@ class CapturedAuthoringReads(
             .knownApplications(selection)
             .any { application ->
                 view.original.catalog.checked
-                    .isReadableAs(application, expected)
+                    .isReadableAs(application.use, expected)
             }
     }
 
@@ -889,7 +890,7 @@ class CapturedAuthoringReads(
     ): DraftBinding? =
         when (selection) {
             is TypeSelection.Complete -> {
-                val resolved = checked ?: resolve(selection.use, location) ?: return null
+                val resolved = checked ?: resolve(selection.use.use, location) ?: return null
                 DraftBinding(catalog, readContext, location, DraftExpectation.Complete(resolved), selection)
             }
 
@@ -1061,7 +1062,7 @@ private enum class CollectionPart {
 }
 
 private fun CheckedType.represents(definition: TypeDefinitionId): Boolean =
-    (use as? TypeUse.Named)?.definition == definition || schema.ancestors.any { it.definition == definition }
+    (use as? TypeUse.NamedWrapper)?.value?.definition == definition || schema.ancestors.any { it.definition == definition }
 
 @Suppress("UNCHECKED_CAST")
 private fun <T> Availability<*>.cast(): Availability<T> = this as Availability<T>

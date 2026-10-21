@@ -3,8 +3,7 @@ package com.typewritermc.expression
 import build.skir.JsonFlavor
 import com.typewritermc.types.ColorDefinition
 import com.typewritermc.types.IconDefinition
-import com.typewritermc.types.skir.SkirTypeCodec
-import com.typewritermc.types.skir.getOrThrow
+import com.typewritermc.types.use
 import de.infix.testBalloon.framework.core.testSuite
 import io.kotest.matchers.shouldBe
 import kotlinx.serialization.json.Json
@@ -100,14 +99,12 @@ val CanonicalReadModelsTest by testSuite {
         val published =
             PublishedType(
                 definition =
-                    TypeDefinition(
+                    TypeDefinition.partial(
                         id = readId("example:Book"),
-                        parameters = emptyList(),
                         representation =
                             RepresentationTemplate.RecordWrapper(
                                 RecordRepresentationTemplate(fields = emptyList(), abstract_ = false),
                             ),
-                        parents = emptyList(),
                     ),
                 status = DeclarationStatus.READY,
                 effectiveFields = emptyList(),
@@ -140,13 +137,12 @@ private val text =
 private fun readId(record: String) =
     TypeDefinitionId(typeId = TypeId.QualifiedWrapper(QualifiedTypeId(namespace = CANONICAL_READ_NAMESPACE, name = record)), revision = 1)
 
-private fun declaredUse(id: com.typewritermc.types.TypeDefinitionId) =
-    NamedTypeUse(definition = SkirTypeCodec.encode(id).getOrThrow(), arguments = emptyList())
+private fun declaredUse(id: TypeDefinitionId) = NamedTypeUse(definition = id, arguments = emptyList())
 
-private fun declared(id: com.typewritermc.types.TypeDefinitionId) =
+private fun declared(id: TypeDefinitionId) =
     skirout.editor.v1.type_catalog.TypeTemplate.NamedWrapper(
         skirout.editor.v1.type_catalog
-            .NamedTypeTemplate(definition = SkirTypeCodec.encode(id).getOrThrow(), arguments = emptyList()),
+            .NamedTypeTemplate(definition = id, arguments = emptyList()),
     )
 
 private fun fixtureDirectory(): Path =

@@ -10,15 +10,12 @@ import com.typewritermc.capability.RealmCapabilityRuntime
 import com.typewritermc.capability.RealmCommandContext
 import com.typewritermc.capability.RealmComputationContext
 import com.typewritermc.realm.catalog.RealmCatalogStore
-import com.typewritermc.types.TypeDefinitionId
-import com.typewritermc.types.TypeId
-import com.typewritermc.types.TypeTemplate
-import com.typewritermc.types.TypeUse
-import com.typewritermc.types.skir.SkirConversionResult
+import com.typewritermc.types.isValid
+import com.typewritermc.types.qualified
 import com.typewritermc.types.skir.SkirDataValueCodec
-import com.typewritermc.types.skir.SkirTypeCodec
 import com.typewritermc.types.skir.getOrThrow
 import com.typewritermc.types.toTemplate
+import com.typewritermc.types.use
 import skirout.editor.v1.capability.CapabilityInvocationRequest
 import skirout.editor.v1.capability.CommandResult
 import skirout.editor.v1.capability.ComputationResult
@@ -30,10 +27,10 @@ import skirout.editor.v1.type_catalog.CatalogGeneration
 import skirout.editor.v1.type_catalog.DataValue
 import skirout.editor.v1.type_catalog.DiagnosticId
 import skirout.editor.v1.type_catalog.RuleOrigin
+import skirout.editor.v1.type_catalog.TypeDefinitionId
+import skirout.editor.v1.type_catalog.TypeUse
 import skirout.editor.v1.capability.NotificationSeverity as WireNotificationSeverity
 import skirout.editor.v1.capability.PanelInstruction as WirePanelInstruction
-import skirout.editor.v1.type_catalog.TypeTemplate as SkirTypeTemplate
-import skirout.editor.v1.type_catalog.TypeUse as SkirTypeUse
 
 /**
  * Dispatches editor computation and command invocations through a retained Realm catalog.
@@ -60,7 +57,7 @@ class RealmCapabilityInvocationSource(
                     .singleOrNull { descriptor -> descriptor.id.value == request.capabilityId.value }
                     ?: return invalidComputation(request, "Realm computation capability is unavailable")
             val expected =
-                request.expectedResultType?.decode()
+                request.expectedResultType?.takeIf { it.isValid }
                     ?: return invalidComputation(request, "Realm computation result type is required")
             if (expected != descriptor.resultType.toTemplate()) {
                 return invalidComputation(request, "Realm computation result type does not match its capability")
@@ -188,12 +185,6 @@ private fun InvocationValidationFailure.toCommandResult(invocationId: Invocation
         }
     }
 
-private fun SkirTypeTemplate.decode(): TypeTemplate? =
-    when (val result = SkirTypeCodec.decode(this)) {
-        is SkirConversionResult.Success -> result.value
-        is SkirConversionResult.Failure -> null
-    }
-
 private fun invalidComputation(
     request: CapabilityInvocationRequest,
     message: String,
@@ -251,7 +242,7 @@ private fun PanelInstruction.toWire(): WirePanelInstruction =
 
 private fun TypeUse.toWireResource(identity: DataValue) =
     ResourceAddress(
-        resourceType = SkirTypeCodec.encode(this).getOrThrow(),
+        resourceType = this,
         identity = identity,
     )
 
@@ -268,14 +259,7 @@ internal fun realmDiagnostic(message: String): Diagnostic =
         id =
             DiagnosticId(value = "realm:capability"),
         origin =
-            RuleOrigin(
-                owner =
-                    (
-                        SkirTypeCodec.encode(TypeUse.Named(REALM_CAPABILITY_DIAGNOSTIC_TYPE)).getOrThrow() as
-                            SkirTypeUse.NamedWrapper
-                    ).value.definition,
-                ordinal = 0,
-            ),
+            RuleOrigin(owner = REALM_CAPABILITY_DIAGNOSTIC_TYPE, ordinal = 0),
         code = "realm_capability",
         message = message,
         severity = DiagnosticSeverity.ERROR,
@@ -284,4 +268,4 @@ internal fun realmDiagnostic(message: String): Diagnostic =
     )
 
 private val REALM_CAPABILITY_DIAGNOSTIC_TYPE =
-    TypeDefinitionId(TypeId.Qualified("typewriter", "realm_capability"), 1)
+    TypeDefinitionId.qualified("typewriter", "realm_capability")

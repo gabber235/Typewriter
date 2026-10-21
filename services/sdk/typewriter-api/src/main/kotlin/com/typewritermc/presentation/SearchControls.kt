@@ -1,16 +1,15 @@
 package com.typewritermc.presentation
 
-import com.typewritermc.authoring.ValuePath
 import com.typewritermc.capability.CapabilityId
 import com.typewritermc.expression.Expr
 import com.typewritermc.expression.ExpressionBindingId
 import com.typewritermc.expression.Handled
-import com.typewritermc.types.TypeTemplate
 import skirout.editor.v1.expression.ExpressionNode
 import skirout.editor.v1.presentation.PopupSide
 import skirout.editor.v1.presentation.SearchSelectionMode
 import skirout.editor.v1.presentation.SearchSelectorMultiplicity
 import skirout.editor.v1.presentation.SearchSelectorValues
+import skirout.editor.v1.type_catalog.TypeTemplate
 import kotlin.time.Duration
 
 interface SearchInputScope<Value, Row> :

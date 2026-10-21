@@ -20,12 +20,9 @@ import com.typewritermc.presentation.createResource
 import com.typewritermc.presentation.presentationTemplate
 import com.typewritermc.presentation.resource
 import com.typewritermc.types.RESOURCE_OWNERSHIP_FAMILY_ID
-import com.typewritermc.types.TypeDefinitionId
-import com.typewritermc.types.TypeUse
 import com.typewritermc.types.catalog.DeclarationStatus
 import com.typewritermc.types.catalog.Resolution
-import com.typewritermc.types.skir.SkirTypeCodec
-import com.typewritermc.types.skir.getOrThrow
+import com.typewritermc.types.use
 import de.infix.testBalloon.framework.core.testSuite
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.matchers.collections.shouldContain
@@ -48,6 +45,7 @@ import skirout.editor.v1.presentation.ResourcesLayout
 import skirout.editor.v1.presentation.StackChild
 import skirout.editor.v1.type_catalog.DataValue
 import skirout.editor.v1.type_catalog.PathSegment
+import skirout.editor.v1.type_catalog.TypeDefinitionId
 import skirout.editor.v1.catalog.PresentationTarget as WirePresentationTarget
 import skirout.editor.v1.presentation.PresentationColor as WireColor
 
@@ -133,7 +131,7 @@ val CorePlacesTest by testSuite {
         (resources.order != null) shouldBe true
         val tree = resources.layout.shouldBeInstanceOf<ResourcesLayout.TreeWrapper>().value
         tree.path.segments shouldBe listOf(PathSegment.createField(name = "chapter"))
-        material.dependencies.types shouldContain SkirTypeCodec.encode(TypeUse.Named(HierarchyGroupDefinition.id)).getOrThrow()
+        material.dependencies.types shouldContain HierarchyGroupDefinition.id.use()
 
         val create =
             requireNotNull(tree.group)
@@ -141,7 +139,7 @@ val CorePlacesTest by testSuite {
                 .single()
                 .shouldBeInstanceOf<EditorAction.CreateWrapper>()
                 .value
-        create.type shouldBe SkirTypeCodec.encode(PageDefinition.id).getOrThrow()
+        create.type shouldBe PageDefinition.id
         requireNotNull(create.owner).path.segments shouldBe listOf(PathSegment.createField(name = "pages"))
         create.fields
             .single()
@@ -198,7 +196,7 @@ val CorePlacesTest by testSuite {
 
 /** Builds a Book workspace whose only content is a button running the action [action] creates. */
 private fun CatalogAssembly.bookBuild(): (() -> EditorAction) -> Unit {
-    val checked = (checked.resolve(BookDefinition.use) as Resolution.Ready).value
+    val checked = (checked.resolve(BookDefinition.use.use) as Resolution.Ready).value
     val ownership =
         snapshot.relations
             .filter { relation -> relation.families.any { it.value == RESOURCE_OWNERSHIP_FAMILY_ID } }
@@ -209,7 +207,7 @@ private fun CatalogAssembly.bookBuild(): (() -> EditorAction) -> Unit {
 
 /** Builds a Book workspace whose content [content] declares through the generated Book presentation scope. */
 private fun CatalogAssembly.bookPresentation(): (BookPresentationScope.() -> Unit) -> Unit {
-    val checked = (checked.resolve(BookDefinition.use) as Resolution.Ready).value
+    val checked = (checked.resolve(BookDefinition.use.use) as Resolution.Ready).value
     val binding = PresentationBuildBinding(checked.presentationTemplate(), PresentationRole.WORKSPACE)
     return { content -> DefaultPresentationRuntime().build(binding) { scope -> BookPresentationScopeImpl(scope).content() } }
 }
@@ -218,7 +216,7 @@ private fun CatalogAssembly.material(
     type: TypeDefinitionId,
     role: PresentationRole,
 ): PresentationMaterial {
-    val wireType = SkirTypeCodec.encode(type).getOrThrow()
+    val wireType = type
     return snapshot.presentationMaterials.single {
         it.role == role && (it.target as? WirePresentationTarget.NamedWrapper)?.value?.definition == wireType
     }

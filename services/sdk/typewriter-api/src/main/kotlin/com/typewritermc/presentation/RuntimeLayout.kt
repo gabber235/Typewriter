@@ -3,8 +3,9 @@ package com.typewritermc.presentation
 import com.typewritermc.expression.Expr
 import com.typewritermc.expression.Handled
 import com.typewritermc.expression.literal
+import com.typewritermc.types.requireValid
+import com.typewritermc.types.use
 import skirout.editor.v1.binding.BindingRef
-import skirout.editor.v1.expression.ExpressionNode
 import skirout.editor.v1.presentation.ChildrenElement
 import skirout.editor.v1.presentation.CrossAxisAlignment
 import skirout.editor.v1.presentation.FlexFit
@@ -30,7 +31,7 @@ internal class RuntimeLayout(
     override val role get() = state.role
     override val subject: PresentationSubjectExpressions
         get() {
-            state.type(com.typewritermc.types.ResourceIdDefinition.use)
+            state.type(com.typewritermc.types.ResourceIdDefinition.use.use)
             return PresentationSubjectExpressions(
                 com.typewritermc.expression.inputExpression(
                     com.typewritermc.expression.ExpressionBindingId("presentation.subject.identifier"),

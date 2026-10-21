@@ -13,7 +13,6 @@ import com.typewritermc.capability.RealmSearchContext
 import com.typewritermc.capability.RealmSearchUpdate
 import com.typewritermc.checking.CatalogGeneration
 import com.typewritermc.discovery.CapabilityOwnerResolver
-import com.typewritermc.discovery.ContributionKey
 import com.typewritermc.discovery.DeploymentFacts
 import com.typewritermc.discovery.DiscoveryDomains
 import com.typewritermc.discovery.GENERATED_PROVIDER_INDEX_PATH
@@ -25,6 +24,7 @@ import com.typewritermc.discovery.GeneratedTypeProvider
 import com.typewritermc.discovery.ProviderOrigin
 import com.typewritermc.discovery.RuntimeRegistrarId
 import com.typewritermc.discovery.RuntimeScope
+import com.typewritermc.discovery.contributionKey
 import com.typewritermc.imprint.ArtifactId
 import com.typewritermc.imprint.ContributionName
 import com.typewritermc.imprint.ContributionSourceId
@@ -35,8 +35,6 @@ import com.typewritermc.presentation.PresentationBuildBinding
 import com.typewritermc.presentation.presentationTemplate
 import com.typewritermc.types.ACYCLIC_RELATION_FAMILY_ID
 import com.typewritermc.types.DataValue
-import com.typewritermc.types.DeclarationOwner
-import com.typewritermc.types.DeclaredTypeId
 import com.typewritermc.types.EndpointCardinality
 import com.typewritermc.types.FactoryNativeBindingRegistry
 import com.typewritermc.types.NativeBinding
@@ -44,16 +42,15 @@ import com.typewritermc.types.NativeBindingFactory
 import com.typewritermc.types.RESOURCE_OWNERSHIP_FAMILY_ID
 import com.typewritermc.types.Ref
 import com.typewritermc.types.RelationFamilyId
-import com.typewritermc.types.RepresentationTemplate
 import com.typewritermc.types.ResourceId
 import com.typewritermc.types.StandardTypes
-import com.typewritermc.types.TypeDefinition
-import com.typewritermc.types.TypeDefinitionId
-import com.typewritermc.types.TypeId
-import com.typewritermc.types.TypeTemplate
-import com.typewritermc.types.TypeUse
 import com.typewritermc.types.catalog.DefaultCheckedCatalog
 import com.typewritermc.types.catalog.Resolution
+import com.typewritermc.types.declared
+import com.typewritermc.types.namedTemplate
+import com.typewritermc.types.qualified
+import com.typewritermc.types.template
+import com.typewritermc.types.use
 import de.infix.testBalloon.framework.core.testSuite
 import io.kotest.matchers.collections.shouldContainExactly
 import io.kotest.matchers.collections.shouldHaveSize
@@ -67,17 +64,22 @@ import skirout.editor.v1.presentation.ChildrenElement
 import skirout.editor.v1.presentation.PresentationElement
 import skirout.editor.v1.presentation.PresentationNode
 import skirout.editor.v1.search.RealmSearchQuery
+import skirout.editor.v1.type_catalog.DeclarationOwner
+import skirout.editor.v1.type_catalog.RepresentationTemplate
+import skirout.editor.v1.type_catalog.TypeDefinition
+import skirout.editor.v1.type_catalog.TypeDefinitionId
+import skirout.editor.v1.type_catalog.TypeTemplate
 import java.math.BigInteger
 import java.util.Collections
 
 val SyntheticDiscoveryTest by testSuite {
     test("generates stable declarations for the entry and polymorphic message family") {
         SyntheticEntryDefinition.id shouldBe
-            TypeDefinitionId(TypeId.Declared(DeclaredTypeId.parse("019d1c2a8f7b7cc18c2a4a7b2fd1e281")), 1)
-        val entryFields = (SyntheticEntryDefinition.definition.representation as RepresentationTemplate.Record).fields
+            TypeDefinitionId.declared("019d1c2a8f7b7cc18c2a4a7b2fd1e281")
+        val entryFields = (SyntheticEntryDefinition.definition.representation as RepresentationTemplate.RecordWrapper).value.fields
         entryFields.map { it.owner.name } shouldContainExactly listOf("page", "name", "placement", "message", "cues")
 
-        (SyntheticMessageDefinition.definition.representation as RepresentationTemplate.Record).abstract shouldBe true
+        (SyntheticMessageDefinition.definition.representation as RepresentationTemplate.RecordWrapper).value.abstract_ shouldBe true
         LiteralMessageDefinition.definition.parents
             .single()
             .definition shouldBe SyntheticMessageDefinition.id
@@ -94,10 +96,10 @@ val SyntheticDiscoveryTest by testSuite {
         SyntheticEntryEndpointBindings.bindings
             .single {
                 it.valueOwner == SyntheticEntryDefinition.id &&
-                    it.target == TypeTemplate.Named(SyntheticSegmentDefinition.id)
+                    it.target == SyntheticSegmentDefinition.id.template()
             }.let { binding ->
                 binding.valueOwner shouldBe SyntheticEntryDefinition.id
-                binding.target shouldBe TypeTemplate.Named(SyntheticSegmentDefinition.id)
+                binding.target shouldBe SyntheticSegmentDefinition.id.template()
                 binding.containsCollection shouldBe true
             }
 
@@ -108,7 +110,7 @@ val SyntheticDiscoveryTest by testSuite {
     test("native bindings preserve named identity and serialized field names") {
         val catalog = messageCatalog()
         val bindings = messageBindings(catalog)
-        val checked = (catalog.resolve(RepeatedMessageDefinition.use) as Resolution.Ready).value
+        val checked = (catalog.resolve(RepeatedMessageDefinition.use.use) as Resolution.Ready).value
 
         @Suppress("UNCHECKED_CAST")
         val binding = bindings.bind(checked) as NativeBinding<RepeatedMessage>
@@ -132,22 +134,22 @@ val SyntheticDiscoveryTest by testSuite {
 
     test("generated page reference bindings retain the exact relation endpoint and target") {
         val pageField =
-            (SyntheticPageReferenceEntryDefinition.definition.representation as RepresentationTemplate.Record)
+            (SyntheticPageReferenceEntryDefinition.definition.representation as RepresentationTemplate.RecordWrapper)
+                .value
                 .fields
                 .single { it.owner.name == "referencedPage" }
-                .type as TypeTemplate.Named
+                .type as TypeTemplate.NamedWrapper
 
-        pageField.definition shouldBe
-            TypeDefinitionId(
-                TypeId.Qualified("relation", "com.typewritermc.extensions.conformance.SyntheticPageReferences.Entry"),
-                1,
-            )
+        pageField.value.definition shouldBe
+            TypeDefinitionId.qualified("relation", "com.typewritermc.extensions.conformance.SyntheticPageReferences.Entry")
         SyntheticPageReferenceEntryEndpointBindings.bindings
             .single {
                 it.endpoint == SyntheticPageReferences.contract.first.id
             }.target shouldBe
-            TypeTemplate.Named(SyntheticPageDefinition.id)
-        SyntheticPageReferences.contract.second.resource shouldBe TypeTemplate.Named(com.typewritermc.library.PageDefinition.id)
+            SyntheticPageDefinition.id.template()
+        SyntheticPageReferences.contract.second.resource shouldBe
+            com.typewritermc.library.PageDefinition.id
+                .namedTemplate()
     }
 
     test("containing page and ordinary referenced page retain separate native fields") {
@@ -159,7 +161,7 @@ val SyntheticDiscoveryTest by testSuite {
                 .map { generatedProviderInstance(it.providerClass) as NativeBindingFactory }
                 .distinctBy(NativeBindingFactory::provider)
         val bindings = FactoryNativeBindingRegistry(catalog, factories)
-        val checked = (catalog.resolve(SyntheticPageReferenceEntryDefinition.use) as Resolution.Ready).value
+        val checked = (catalog.resolve(SyntheticPageReferenceEntryDefinition.use.use) as Resolution.Ready).value
 
         @Suppress("UNCHECKED_CAST")
         val binding = bindings.bind(checked) as NativeBinding<SyntheticPageReferenceEntry>
@@ -183,13 +185,11 @@ val SyntheticDiscoveryTest by testSuite {
         checked.schema.fields
             .single { it.key == "page" }
             .type shouldBe
-            TypeUse.Named(
-                TypeDefinitionId(
-                    TypeId.Qualified("relation", "com.typewritermc.library.PageElements.Element"),
-                    1,
-                ),
-                listOf(SyntheticPageDefinition.use),
-            )
+            TypeDefinitionId
+                .qualified(
+                    "relation",
+                    "com.typewritermc.library.PageElements.Element",
+                ).use(listOf(SyntheticPageDefinition.use.use))
     }
 
     test("generated presentation composes concrete polymorphic controls with serialized paths") {
@@ -204,7 +204,7 @@ val SyntheticDiscoveryTest by testSuite {
         repeated.descriptor(providerOrigin("repeated"))
         entry.descriptor(providerOrigin("entry"))
         val catalog = presentationCatalog()
-        val checked = (catalog.resolve(SyntheticEntryDefinition.use) as Resolution.Ready).value
+        val checked = (catalog.resolve(SyntheticEntryDefinition.use.use) as Resolution.Ready).value
 
         val root = entry.build(PresentationBuildBinding(checked.presentationTemplate(), PresentationRole.WORKSPACE)).layout
         val children = (root.element as PresentationElement.ChildrenWrapper).value.axisNodes()
@@ -215,7 +215,7 @@ val SyntheticDiscoveryTest by testSuite {
         polymorphic.value.concreteTypes shouldHaveSize 2
         val repeatedPresentation = requireNotNull(polymorphic.value.concreteTypes[1].presentation)
         (repeatedPresentation.element is PresentationElement.InvocationWrapper) shouldBe true
-        val repeatedChecked = (catalog.resolve(RepeatedMessageDefinition.use) as Resolution.Ready).value
+        val repeatedChecked = (catalog.resolve(RepeatedMessageDefinition.use.use) as Resolution.Ready).value
         val repeatedFields =
             (
                 repeated
@@ -370,9 +370,9 @@ private fun presentationCatalog(): DefaultCheckedCatalog {
 
 private fun providerOrigin(local: String): ProviderOrigin {
     val source = ContributionSourceId("artifact:typewritermc:conformance")
-    val key = ContributionKey(source, "common", ProducerId("types"), ContributionName(local))
+    val key = contributionKey(source, "common", ProducerId("types"), ContributionName(local))
     return ProviderOrigin(
-        owner = DeclarationOwner(key, local),
+        owner = DeclarationOwner(source = key, localIdentity = local),
         artifact = ArtifactId("typewritermc:conformance"),
         sourcePart = "common",
     )

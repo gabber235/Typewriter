@@ -13,6 +13,7 @@ import com.typewritermc.operations.requireAuthored
 import com.typewritermc.realm.repository.valueAt
 import com.typewritermc.types.DataValue
 import com.typewritermc.types.ResourceId
+import com.typewritermc.types.use
 import kotlin.math.abs
 import kotlin.math.roundToLong
 

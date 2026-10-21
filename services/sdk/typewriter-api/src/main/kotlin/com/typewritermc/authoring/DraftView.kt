@@ -1,13 +1,14 @@
 package com.typewritermc.authoring
 
 import com.typewritermc.checking.CatalogGeneration
-import com.typewritermc.types.TypeUse
+import skirout.editor.v1.type_catalog.NamedTypeUse
+import skirout.editor.v1.type_catalog.TypeUse
 
 interface DraftView {
     val catalog: CatalogGeneration
     val readContext: ReadContext
     val location: ValueLocation
-    val actualType: Availability<TypeUse.Named>
+    val actualType: Availability<NamedTypeUse>
 }
 
 interface DraftCodec<T> {

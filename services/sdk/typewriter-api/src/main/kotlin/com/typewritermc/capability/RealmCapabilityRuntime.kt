@@ -7,8 +7,6 @@ import com.typewritermc.types.DataValue
 import com.typewritermc.types.NativeBinding
 import com.typewritermc.types.NativeBindingException
 import com.typewritermc.types.NativeBindingRegistry
-import com.typewritermc.types.ResourceId
-import com.typewritermc.types.TypeUse
 import com.typewritermc.types.catalog.CheckedCatalog
 import com.typewritermc.types.catalog.Resolution
 import kotlinx.coroutines.flow.Flow
@@ -16,6 +14,7 @@ import kotlinx.coroutines.flow.FlowCollector
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.map
 import skirout.editor.v1.search.RealmSearchQuery
+import skirout.editor.v1.type_catalog.TypeUse
 import kotlin.reflect.KClass
 
 sealed interface RealmCapabilityRef<Request : Any> {

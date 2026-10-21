@@ -5,8 +5,9 @@ import com.typewritermc.authoring.ValuePath
 import com.typewritermc.expression.ExpressionFactory
 import com.typewritermc.types.DataValue
 import com.typewritermc.types.Resource
-import com.typewritermc.types.TypeDefinitionId
-import com.typewritermc.types.TypeTemplate
+import skirout.editor.v1.type_catalog.NamedTypeTemplate
+import skirout.editor.v1.type_catalog.TypeDefinitionId
+import skirout.editor.v1.type_catalog.TypeTemplate
 
 /**
  * Declares a portable row view over authored resources using source paths and literal field values.
@@ -15,7 +16,7 @@ import com.typewritermc.types.TypeTemplate
  */
 data class CollectionProjectionSpec(
     val sourceId: String,
-    val root: TypeTemplate.Named,
+    val root: NamedTypeTemplate,
     val rowType: TypeTemplate,
     val fields: List<CollectionProjectionFieldSpec>,
 ) {
@@ -50,7 +51,7 @@ data class CollectionProjection<Resource : com.typewritermc.types.Resource, Row,
 
 fun <Resource : com.typewritermc.types.Resource, Row, Expressions : Any> collectionProjection(
     sourceId: String,
-    root: TypeTemplate.Named,
+    root: NamedTypeTemplate,
     rowType: TypeTemplate,
     expressions: ExpressionFactory<Expressions>,
     block: CollectionProjectionBuilder<Resource, Row>.() -> Unit,
@@ -61,7 +62,7 @@ fun <Resource : com.typewritermc.types.Resource, Row, Expressions : Any> collect
     )
 
 class CollectionProjectionBuilder<Resource : com.typewritermc.types.Resource, Row> internal constructor(
-    private val root: TypeTemplate.Named,
+    private val root: NamedTypeTemplate,
     private val rowType: TypeTemplate,
 ) {
     private val fields = mutableListOf<CollectionProjectionFieldSpec>()
@@ -96,8 +97,8 @@ class CollectionProjectionBuilder<Resource : com.typewritermc.types.Resource, Ro
 }
 
 private fun TypedPath<*, *>.requireRowOwner(rowType: TypeTemplate) {
-    val named = rowType as? TypeTemplate.Named ?: error("Nested projection targets require a named row type.")
-    requireOwner(named.definition)
+    val named = rowType as? TypeTemplate.NamedWrapper ?: error("Nested projection targets require a named row type.")
+    requireOwner(named.value.definition)
 }
 
 private fun TypedPath<*, *>.requireOwner(expected: TypeDefinitionId) {

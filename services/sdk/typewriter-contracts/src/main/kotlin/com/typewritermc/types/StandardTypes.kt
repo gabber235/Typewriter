@@ -1,5 +1,12 @@
 package com.typewritermc.types
 
+import skirout.editor.v1.type_catalog.CollectionKind
+import skirout.editor.v1.type_catalog.ParameterKey
+import skirout.editor.v1.type_catalog.RepresentationTemplate
+import skirout.editor.v1.type_catalog.TypeDefinition
+import skirout.editor.v1.type_catalog.TypeDefinitionId
+import skirout.editor.v1.type_catalog.TypeParameter
+
 /**
  * Builtin collection definitions every catalog contains.
  *
@@ -8,46 +15,51 @@ package com.typewritermc.types
  */
 object StandardTypes {
     object List {
-        val id: TypeDefinitionId = TypeDefinitionId(TypeId.Qualified("typewriter", "List"), 1)
+        val id: TypeDefinitionId = TypeDefinitionId.qualified("typewriter", "List")
     }
 
     object Set {
-        val id: TypeDefinitionId = TypeDefinitionId(TypeId.Qualified("typewriter", "Set"), 1)
+        val id: TypeDefinitionId = TypeDefinitionId.qualified("typewriter", "Set")
     }
 
     object Map {
-        val id: TypeDefinitionId = TypeDefinitionId(TypeId.Qualified("typewriter", "Map"), 1)
+        val id: TypeDefinitionId = TypeDefinitionId.qualified("typewriter", "Map")
     }
 
     val list: TypeDefinitionId get() = List.id
     val set: TypeDefinitionId get() = Set.id
     val map: TypeDefinitionId get() = Map.id
 
-    private val listItem = TypeParameter(ParameterKey(list, 0), "T")
-    private val setItem = TypeParameter(ParameterKey(set, 0), "T")
-    private val mapKey = TypeParameter(ParameterKey(map, 0), "K")
-    private val mapValue = TypeParameter(ParameterKey(map, 1), "V")
+    private val listItem = parameter(list, 0, "T")
+    private val setItem = parameter(set, 0, "T")
+    private val mapKey = parameter(map, 0, "K")
+    private val mapValue = parameter(map, 1, "V")
 
     val definitions: kotlin.collections.List<TypeDefinition> =
         listOf(
             TypeDefinition(
                 id = list,
                 parameters = listOf(listItem),
-                representation = RepresentationTemplate.Sequence(TypeTemplate.Parameter(listItem.key), CollectionKind.List),
+                representation = RepresentationTemplate.createSequence(item = listItem.key.template, kind = CollectionKind.LIST),
+                parents = emptyList(),
             ),
             TypeDefinition(
                 id = set,
                 parameters = listOf(setItem),
-                representation = RepresentationTemplate.Sequence(TypeTemplate.Parameter(setItem.key), CollectionKind.Set),
+                representation = RepresentationTemplate.createSequence(item = setItem.key.template, kind = CollectionKind.SET),
+                parents = emptyList(),
             ),
             TypeDefinition(
                 id = map,
                 parameters = listOf(mapKey, mapValue),
-                representation =
-                    RepresentationTemplate.Mapping(
-                        TypeTemplate.Parameter(mapKey.key),
-                        TypeTemplate.Parameter(mapValue.key),
-                    ),
+                representation = RepresentationTemplate.createMapping(key = mapKey.key.template, value = mapValue.key.template),
+                parents = emptyList(),
             ),
         )
+
+    private fun parameter(
+        owner: TypeDefinitionId,
+        index: Int,
+        name: String,
+    ) = TypeParameter(key = ParameterKey(owner = owner, index = index), name = name, bounds = emptyList())
 }

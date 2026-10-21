@@ -4,7 +4,6 @@ package com.typewritermc.realm.authoring
 
 import com.typewritermc.authoring.CheckedWriteResult
 import com.typewritermc.authoring.GeneratedSdkApi
-import com.typewritermc.authoring.GraphLayout
 import com.typewritermc.authoring.GraphLayoutDefinition
 import com.typewritermc.authoring.GraphPlacement
 import com.typewritermc.authoring.GraphPlacementDefinition
@@ -17,10 +16,11 @@ import com.typewritermc.authoring.definition
 import com.typewritermc.checking.InputIdentity
 import com.typewritermc.operations.OperationPreparation
 import com.typewritermc.types.ResourceId
-import com.typewritermc.types.TypeDefinitionId
 import com.typewritermc.types.catalog.Resolution
 import com.typewritermc.types.encodeGeneratedDefault
 import com.typewritermc.types.ownsResources
+import com.typewritermc.types.use
+import skirout.editor.v1.type_catalog.TypeDefinitionId
 
 /** Lays out moved members when their destination is laid out as a graph, without inferring layout from presentation. */
 internal class OperationLayoutPreparation(
@@ -90,8 +90,8 @@ internal class OperationLayoutPreparation(
         val container = record.authoredTypeAt(ValuePath(location.path.segments.dropLast(1)), catalog.checked) ?: return null
         val schema = (catalog.checked.resolve(container) as? Resolution.Ready)?.value?.schema ?: return null
         val declared = schema.fields.singleOrNull { it.key == field.name }?.type ?: return null
-        if (!catalog.checked.isReadableAs(GraphPlacementDefinition.use, declared)) return null
-        val checked = (catalog.checked.resolve(GraphPlacementDefinition.use) as Resolution.Ready).value
+        if (!catalog.checked.isReadableAs(GraphPlacementDefinition.use.use, declared)) return null
+        val checked = (catalog.checked.resolve(GraphPlacementDefinition.use.use) as Resolution.Ready).value
         val value = catalog.nativeBindings.bind(checked).encodeGeneratedDefault(GraphPlacement())
         val written = operation.checkedSet(location, value)
         check(written == CheckedWriteResult.Applied) { "The graph placement of $this was rejected: $written" }

@@ -22,14 +22,15 @@ import com.typewritermc.codegen.sentenceCase
 import com.typewritermc.discovery.GeneratedContract
 import com.typewritermc.presentation.PresentationDescriptor
 import com.typewritermc.presentation.PresentationTarget
-import com.typewritermc.types.ParameterKey
 import com.typewritermc.types.Resource
 import com.typewritermc.types.ResourceTarget
-import com.typewritermc.types.TypeDefinitionId
-import com.typewritermc.types.TypeTemplate
-import com.typewritermc.types.TypeUse
 import com.typewritermc.types.toTemplate
+import skirout.editor.v1.type_catalog.NamedTypeTemplate
+import skirout.editor.v1.type_catalog.NamedTypeUse
+import skirout.editor.v1.type_catalog.ParameterKey
 import skirout.editor.v1.type_catalog.PresentationId
+import skirout.editor.v1.type_catalog.TypeDefinitionId
+import skirout.editor.v1.type_catalog.TypeTemplate
 import com.typewritermc.codegen.TypewriterApi as Api
 
 /**
@@ -148,11 +149,11 @@ internal class ProviderAdapter(
      */
     context(_: DefinitionReferences)
     fun operation(
-        application: TypeUse.Named?,
+        application: NamedTypeUse?,
         arguments: List<TypeName>,
         projections: List<CodeBlock>,
         input: TypeName,
-        inputUse: TypeUse.Named?,
+        inputUse: NamedTypeUse?,
     ): FileSpec {
         val draft: TypeName
         val target: CodeBlock
@@ -273,14 +274,14 @@ internal class ProviderAdapter(
             .initializer("%T.id", targetNames.definition)
             .build()
 
-    /** `TypeTemplate.Named(TargetDefinition.id, [Parameter(ParameterKey(TargetDefinition.id, i))...])`. */
+    /** `NamedTypeTemplate(TargetDefinition.id, [ParameterWrapper(ParameterKey(TargetDefinition.id, i))...])`. */
     private fun symbolicTarget(): CodeBlock {
         val id = CodeBlock.of("%T.id", targetNames.definition)
         val parameters =
             (0 until targetParameters).map { index ->
-                CodeBlock.of("%T(%T(%L,♢%L))", TypeTemplate.Parameter::class, ParameterKey::class, id, index)
+                CodeBlock.of("%T(%T(owner·=·%L,♢index·=·%L))", TypeTemplate.ParameterWrapper::class, ParameterKey::class, id, index)
             }
-        return CodeBlock.of("%T(%L,♢%L)", TypeTemplate.Named::class, id, parameters.listCode())
+        return CodeBlock.of("%T(definition·=·%L,♢arguments·=·%L)", NamedTypeTemplate::class, id, parameters.listCode())
     }
 
     private fun file(type: TypeSpec.Builder): FileSpec =

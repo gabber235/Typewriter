@@ -1,25 +1,18 @@
 package com.typewritermc.presentation
 
 import com.typewritermc.configuration.RepresentationKind
-import com.typewritermc.types.DeclarationOwner
-import com.typewritermc.types.TypeTemplate
 import com.typewritermc.types.catalog.CheckedCatalog
 import com.typewritermc.types.catalog.CheckedType
-import kotlinx.serialization.SerialName
-import kotlinx.serialization.Serializable
 import skirout.editor.v1.catalog.PresentationRole
+import skirout.editor.v1.type_catalog.DeclarationOwner
+import skirout.editor.v1.type_catalog.NamedTypeTemplate
 import skirout.editor.v1.type_catalog.PresentationId
 
-@Serializable
 sealed interface PresentationTarget {
-    @Serializable
-    @SerialName("named")
     data class Named(
-        val type: TypeTemplate.Named,
+        val type: NamedTypeTemplate,
     ) : PresentationTarget
 
-    @Serializable
-    @SerialName("representation")
     data class Representation(
         val kind: RepresentationKind,
     ) : PresentationTarget

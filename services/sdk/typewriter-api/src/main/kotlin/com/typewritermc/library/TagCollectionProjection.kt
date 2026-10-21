@@ -4,7 +4,8 @@ import com.typewritermc.presentation.CollectionProjection
 import com.typewritermc.presentation.TypewriterCollectionProjection
 import com.typewritermc.presentation.collectionProjection
 import com.typewritermc.types.DataValue
-import com.typewritermc.types.TypeTemplate
+import com.typewritermc.types.namedTemplate
+import com.typewritermc.types.template
 
 const val TAG_COLLECTION_SOURCE_ID: String = "typewriter.tags"
 
@@ -12,8 +13,8 @@ const val TAG_COLLECTION_SOURCE_ID: String = "typewriter.tags"
 fun coreTagCollectionProjection(): CollectionProjection<Tag, TagCollectionRow, TagCollectionRowExpressions> =
     collectionProjection<Tag, TagCollectionRow, TagCollectionRowExpressions>(
         sourceId = TAG_COLLECTION_SOURCE_ID,
-        root = TypeTemplate.Named(TagDefinition.id),
-        rowType = TypeTemplate.Named(TagCollectionRowDefinition.id),
+        root = TagDefinition.id.namedTemplate(),
+        rowType = TagCollectionRowDefinition.id.template(),
         expressions = TagCollectionRowExpressionsFactory,
     ) {
         content(TagCollectionRowFields.name, TagFields.name)

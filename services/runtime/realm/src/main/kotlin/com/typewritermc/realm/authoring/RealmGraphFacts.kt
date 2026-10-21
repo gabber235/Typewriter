@@ -13,10 +13,11 @@ import com.typewritermc.operations.LinkCapacity
 import com.typewritermc.realm.repository.CounterpartBinding
 import com.typewritermc.realm.repository.ResourceValueMapper
 import com.typewritermc.types.ResourceId
-import com.typewritermc.types.TypeUse
 import com.typewritermc.types.catalog.Resolution
-import com.typewritermc.types.catalog.ResolvedRepresentation
 import com.typewritermc.types.ownsResources
+import com.typewritermc.types.use
+import skirout.editor.v1.type_catalog.ResolvedRepresentation
+import skirout.editor.v1.type_catalog.TypeUse
 
 /**
  * Graph facts of one captured working graph, read through [relations] so every fact is recorded as an observation.
@@ -104,7 +105,7 @@ internal class RealmGraphFacts(
     override fun linkCapacityOf(id: ResourceId): LinkCapacity {
         relations.observeForm(id)
         val actual = (relations.recordOf(id).configuration as? TypeSelection.Complete)?.use ?: return LinkCapacity.None
-        val slots = referenceSlots(id).filter { slot -> catalog.checked.isReadableAs(actual, slot.target) }
+        val slots = referenceSlots(id).filter { slot -> catalog.checked.isReadableAs(actual.use, slot.target) }
         if (slots.isEmpty()) return LinkCapacity.None
         val current = relations.links.values.associateBy { it.id.location }
         return if (slots.any { it.collection || current[it.at] == null }) LinkCapacity.Available else LinkCapacity.Full
@@ -168,10 +169,12 @@ internal class RealmGraphFacts(
                     relations.reads.observeInput(InputIdentity.Value(at))
                     val declared = record.authoredTypeAt(at.path, catalog.checked) ?: return@forEach
                     val resolved =
-                        catalog.checked.resolve(if (declared is TypeUse.Nullable) declared.value else declared) as? Resolution.Ready
+                        catalog.checked.resolve(
+                            if (declared is TypeUse.NullableWrapper) declared.value.value else declared,
+                        ) as? Resolution.Ready
                             ?: return@forEach
-                    val link = resolved.value.schema.representation as? ResolvedRepresentation.Link ?: return@forEach
-                    if (link.endpoint == endpoint) slots += ReferenceSlot(at, collection, link.target)
+                    val link = resolved.value.schema.representation as? ResolvedRepresentation.LinkWrapper ?: return@forEach
+                    if (link.value.endpoint == endpoint) slots += ReferenceSlot(at, collection, link.value.target)
                 }
             }
         return slots

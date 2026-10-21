@@ -19,12 +19,15 @@ import com.typewritermc.codegen.isOneOf
 import com.typewritermc.codegen.isType
 import com.typewritermc.codegen.portableScalarKind
 import com.typewritermc.codegen.valueClassStoredType
-import com.typewritermc.types.CollectionKind
 import com.typewritermc.types.Color
 import com.typewritermc.types.Ref
-import com.typewritermc.types.ScalarKind
-import com.typewritermc.types.TypeTemplate
 import com.typewritermc.types.TypewriterString
+import com.typewritermc.types.template
+import com.typewritermc.types.unknownVariant
+import skirout.editor.v1.type_catalog.CollectionKind
+import skirout.editor.v1.type_catalog.NamedTypeTemplate
+import skirout.editor.v1.type_catalog.ScalarKind
+import skirout.editor.v1.type_catalog.TypeTemplate
 
 /**
  * The one classification of an authoring field. Emitters derive every Kotlin type and every runtime descriptor from
@@ -117,16 +120,17 @@ internal fun classify(
 ): FieldShape {
     val native = type.toTypeName(parameters)
     return when (template) {
-        is TypeTemplate.Nullable -> FieldShape.Nullable(classify(template.value, type.makeNotNullable()), template, native)
-        is TypeTemplate.Parameter -> FieldShape.Parameter(template.key.index, template, native)
-        is TypeTemplate.Scalar -> FieldShape.Scalar(template.kind, template, native.copy(nullable = false))
-        is TypeTemplate.Named -> classifyNamed(template, type, native)
+        is TypeTemplate.NullableWrapper -> FieldShape.Nullable(classify(template.value.value, type.makeNotNullable()), template, native)
+        is TypeTemplate.ParameterWrapper -> FieldShape.Parameter(template.value.index, template, native)
+        is TypeTemplate.ScalarWrapper -> FieldShape.Scalar(template.value, template, native.copy(nullable = false))
+        is TypeTemplate.NamedWrapper -> classifyNamed(template.value, type, native)
+        else -> unknownVariant(template)
     }
 }
 
 context(parameters: TypeParameterResolver)
 private fun classifyNamed(
-    template: TypeTemplate.Named,
+    template: NamedTypeTemplate,
     type: KSType,
     native: TypeName,
 ): FieldShape {
@@ -135,29 +139,29 @@ private fun classifyNamed(
     return when {
         declaration isType Ref::class.asClassName() -> {
             val target = arguments[1]
-            FieldShape.Link(target.toTypeName(parameters), type.makeNotNullable().erasedTypeName(), template, native)
+            FieldShape.Link(target.toTypeName(parameters), type.makeNotNullable().erasedTypeName(), template.template, native)
         }
 
         declaration isOneOf KnownTypes.lists -> {
-            FieldShape.Sequence(CollectionKind.List, classify(template.arguments.single(), arguments.single()), template, native)
+            FieldShape.Sequence(CollectionKind.LIST, classify(template.arguments.single(), arguments.single()), template.template, native)
         }
 
         declaration isOneOf KnownTypes.sets -> {
-            FieldShape.Sequence(CollectionKind.Set, classify(template.arguments.single(), arguments.single()), template, native)
+            FieldShape.Sequence(CollectionKind.SET, classify(template.arguments.single(), arguments.single()), template.template, native)
         }
 
         declaration isOneOf KnownTypes.maps -> {
             FieldShape.Mapping(
                 classify(template.arguments[0], arguments[0]),
                 classify(template.arguments[1], arguments[1]),
-                template,
+                template.template,
                 native,
             )
         }
 
         else -> {
             declaration.declarationShape(
-                template = template,
+                template = template.template,
                 native = native,
                 arguments = template.arguments.zip(arguments) { argument, argumentType -> classify(argument, argumentType) },
             )
@@ -205,7 +209,7 @@ internal data class ScalarRepresentation(
 /** `@TypewriterString` types are Text over String; value classes are their single property's scalar kind. */
 context(parameters: TypeParameterResolver)
 internal fun KSClassDeclaration.scalarRepresentation(): ScalarRepresentation? {
-    if (annotation<TypewriterString>() != null) return ScalarRepresentation(ScalarKind.Text, STRING)
+    if (annotation<TypewriterString>() != null) return ScalarRepresentation(ScalarKind.TEXT, STRING)
     val stored = valueClassStoredType() ?: return null
     val kind = stored.portableScalarKind() ?: return null
     return ScalarRepresentation(kind, stored.toTypeName(parameters))

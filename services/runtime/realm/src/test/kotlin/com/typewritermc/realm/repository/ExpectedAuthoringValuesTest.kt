@@ -11,12 +11,13 @@ import com.typewritermc.realm.checking.record
 import com.typewritermc.types.DataValue
 import com.typewritermc.types.RelationId
 import com.typewritermc.types.ResourceId
-import com.typewritermc.types.TypeDefinitionId
-import com.typewritermc.types.TypeUse
+import com.typewritermc.types.namedUse
+import com.typewritermc.types.qualified
 import de.infix.testBalloon.framework.core.testSuite
 import io.kotest.matchers.collections.shouldBeEmpty
 import io.kotest.matchers.collections.shouldHaveSize
 import io.kotest.matchers.shouldBe
+import skirout.editor.v1.type_catalog.TypeDefinitionId
 
 val ExpectedAuthoringValuesTestSuite by testSuite {
     val resource = ResourceId("quest")
@@ -51,13 +52,7 @@ val ExpectedAuthoringValuesTestSuite by testSuite {
 
     test("nested configuration guards the named type independently of its fields") {
         val chapterType =
-            TypeUse.Named(
-                TypeDefinitionId(
-                    com.typewritermc.types.TypeId
-                        .Qualified("test", "chapter"),
-                    1,
-                ),
-            )
+            TypeDefinitionId.qualified("test", "chapter").namedUse()
         val chapter =
             DataValue.Named(
                 chapterType,
@@ -90,13 +85,7 @@ val ExpectedAuthoringValuesTestSuite by testSuite {
         val retagged =
             changed.copy(
                 actualType =
-                    TypeUse.Named(
-                        TypeDefinitionId(
-                            com.typewritermc.types.TypeId
-                                .Qualified("test", "other_chapter"),
-                            1,
-                        ),
-                    ),
+                    TypeDefinitionId.qualified("test", "other_chapter").namedUse(),
             )
         CapturedAuthoringValues(mapOf(resource to original.copy(fields = mapOf("chapter" to retagged))), emptyList())
             .conflicts(expected) shouldHaveSize 1

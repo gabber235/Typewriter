@@ -2,7 +2,6 @@ package com.typewritermc.realm.routes
 
 import com.typewritermc.authoring.ArgumentLocation
 import com.typewritermc.authoring.PreparedEditResult
-import com.typewritermc.authoring.TypeSelection
 import com.typewritermc.authoring.definition
 import com.typewritermc.authoring.skir.SkirAuthoringOperationCodec
 import com.typewritermc.checking.CatalogGeneration
@@ -22,13 +21,11 @@ import com.typewritermc.realm.repository.AuthoringRepository
 import com.typewritermc.realm.repository.ResourceValueMapper
 import com.typewritermc.services.libs.communicator.router.CommunicatorRoutesBuilder
 import com.typewritermc.types.ResourceId
-import com.typewritermc.types.TypeUse
 import com.typewritermc.types.catalog.DeclarationDiagnostic
 import com.typewritermc.types.skir.SkirAuthoringValueCodec
 import com.typewritermc.types.skir.SkirTypeCodec
 import com.typewritermc.types.skir.getOrThrow
 import skirout.editor.v1.authoring.AuthoringObservationId
-import skirout.editor.v1.authoring.CommitPreparedEditResponse
 import skirout.editor.v1.authoring.PrepareTypeArgumentChangeResponse
 import skirout.editor.v1.authoring.PreviewTypeArgumentChangeRequest
 import skirout.editor.v1.authoring.PreviewTypeArgumentChangeResponse
@@ -43,9 +40,7 @@ import skirout.editor.v1.authoring.LinkRepairIntent as SkirLinkRepairIntent
 import skirout.editor.v1.authoring.TypeArgumentChangePreview as SkirTypeArgumentChangePreview
 import skirout.editor.v1.authoring_facts.LinkProjection as SkirLinkProjection
 import skirout.editor.v1.type_catalog.CatalogGeneration as SkirCatalogGeneration
-import skirout.editor.v1.type_catalog.NamedTypeUse as SkirNamedTypeUse
 import skirout.editor.v1.type_catalog.ResourceId as SkirResourceId
-import skirout.editor.v1.type_catalog.TypeUse as SkirTypeUse
 
 /**
  * Exposes saved snapshot queries, prepared edit commit, and type argument previews to the editor.
@@ -222,7 +217,3 @@ private fun SkirLinkRepairIntent.toDomain(): LinkRepairIntent =
     }
 
 private fun ArgumentLocation.toWire() = SkirArgumentLocation(index = index)
-
-private fun TypeUse.Named.toWire(): SkirNamedTypeUse = (SkirTypeCodec.encode(this).getOrThrow() as SkirTypeUse.NamedWrapper).value
-
-private fun SkirNamedTypeUse.toDomain(): TypeUse.Named = SkirTypeCodec.decode(SkirTypeUse.NamedWrapper(this)).getOrThrow() as TypeUse.Named

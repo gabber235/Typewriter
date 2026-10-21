@@ -3,6 +3,7 @@ package com.typewritermc.presentation
 import com.typewritermc.checking.CatalogGeneration
 import com.typewritermc.types.catalog.EditorCatalogSnapshot
 import com.typewritermc.types.catalog.toWire
+import com.typewritermc.types.qualified
 import com.typewritermc.types.skir.getOrThrow
 import de.infix.testBalloon.framework.core.testSuite
 import io.kotest.assertions.throwables.shouldThrow
@@ -25,6 +26,7 @@ import skirout.editor.v1.type_catalog.ExpressionBindingId
 import skirout.editor.v1.type_catalog.PathSegment
 import skirout.editor.v1.type_catalog.PresentationId
 import skirout.editor.v1.type_catalog.ScalarKind
+import skirout.editor.v1.type_catalog.TypeDefinitionId
 import skirout.editor.v1.type_catalog.TypeTemplate
 import skirout.editor.v1.type_catalog.ValuePath
 
@@ -700,11 +702,7 @@ val FieldPresentationInferenceTest by testSuite {
                 relations = emptyList(),
                 resourceDisplays = emptyList(),
                 realmRoot =
-                    com.typewritermc.types.TypeDefinitionId(
-                        com.typewritermc.types.TypeId
-                            .Qualified("test", "realm.root"),
-                        1,
-                    ),
+                    TypeDefinitionId.qualified("test", "realm.root"),
                 presentations = emptyList(),
                 presentationMaterials = listOf(material),
                 configuration = emptyList(),
@@ -759,15 +757,7 @@ private fun partNode(
             PresentationElement.createPart(
                 key =
                     skirout.editor.v1.presentation.PresentationPartId(
-                        owner =
-                            com.typewritermc.types.skir.SkirTypeCodec
-                                .encode(
-                                    com.typewritermc.types.TypeDefinitionId(
-                                        com.typewritermc.types.TypeId
-                                            .Qualified("test", "PartOwner"),
-                                        1,
-                                    ),
-                                ).getOrThrow(),
+                        owner = TypeDefinitionId.qualified("test", "PartOwner"),
                         name = name,
                     ),
                 body = body,

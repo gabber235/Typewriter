@@ -3,8 +3,18 @@
 package com.typewritermc.types
 
 import com.typewritermc.authoring.ItemId
+import com.typewritermc.types.skir.EndpointIdSerializer
+import com.typewritermc.types.skir.NamedTypeUseSerializer
+import kotlinx.serialization.KSerializer
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
+import kotlinx.serialization.descriptors.PrimitiveKind
+import kotlinx.serialization.descriptors.PrimitiveSerialDescriptor
+import kotlinx.serialization.descriptors.SerialDescriptor
+import kotlinx.serialization.encoding.Decoder
+import kotlinx.serialization.encoding.Encoder
+import skirout.editor.v1.type_catalog.EndpointId
+import skirout.editor.v1.type_catalog.NamedTypeUse
 import java.math.BigInteger
 import kotlin.time.Instant
 
@@ -102,7 +112,8 @@ sealed interface DataValue {
     @Serializable
     @SerialName("named")
     data class Named(
-        val actualType: TypeUse.Named,
+        @Serializable(with = NamedTypeUseSerializer::class)
+        val actualType: NamedTypeUse,
         val payload: DataValue,
     ) : DataValue
 
@@ -127,6 +138,7 @@ sealed interface DataValue {
     @Serializable
     @SerialName("link")
     data class Link(
+        @Serializable(with = EndpointIdSerializer::class)
         val endpoint: EndpointId,
         val target: LinkTarget,
     ) : DataValue
@@ -147,3 +159,27 @@ data class MapRow(
     val key: DataValue,
     val value: DataValue,
 )
+
+/**
+ * Serializes arbitrary precision integers as decimal strings to avoid numeric width loss.
+ *
+ * Malformed decimal input fails during conversion to BigInteger.
+ */
+object BigIntegerAsStringSerializer : KSerializer<BigInteger> {
+    override val descriptor: SerialDescriptor = PrimitiveSerialDescriptor("BigInteger", PrimitiveKind.STRING)
+
+    override fun serialize(
+        encoder: Encoder,
+        value: BigInteger,
+    ) {
+        encoder.encodeString(value.toString())
+    }
+
+    override fun deserialize(decoder: Decoder): BigInteger = decoder.decodeString().toBigInteger()
+}
+
+internal fun String.requireCanonicalDecimal(label: String) {
+    require(CANONICAL_DECIMAL.matches(this)) { "$label must use canonical decimal syntax." }
+}
+
+private val CANONICAL_DECIMAL = Regex("-?(0|[1-9][0-9]*)(\\.[0-9]+)?")

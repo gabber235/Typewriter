@@ -1,18 +1,14 @@
 package com.typewritermc.presentation
 
-import com.typewritermc.authoring.ValuePath
 import com.typewritermc.expression.Expr
 import com.typewritermc.expression.ExpressionBindingId
 import com.typewritermc.expression.ExpressionFactory
 import com.typewritermc.expression.Handled
 import com.typewritermc.expression.MayBeMissing
 import com.typewritermc.expression.literal
-import com.typewritermc.types.Color
 import com.typewritermc.types.Icon
 import com.typewritermc.types.Resource
 import com.typewritermc.types.ResourceId
-import com.typewritermc.types.TypeDefinitionId
-import com.typewritermc.types.TypeTemplate
 import skirout.editor.v1.action.EditorAction
 import skirout.editor.v1.expression.ExpressionNode
 import skirout.editor.v1.presentation.CollectionGraphDirection
@@ -23,6 +19,7 @@ import skirout.editor.v1.presentation.HeaderActionTone
 import skirout.editor.v1.presentation.PresentationTextOverflow
 import skirout.editor.v1.presentation.PresentationTextTone
 import skirout.editor.v1.presentation.RelativeTimeStyle
+import skirout.editor.v1.type_catalog.TypeTemplate
 import kotlin.time.Instant
 
 interface PresentationContent {

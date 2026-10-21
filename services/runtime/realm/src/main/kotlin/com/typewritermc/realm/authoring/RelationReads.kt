@@ -17,14 +17,15 @@ import com.typewritermc.realm.repository.DeclaredLinkEvidence
 import com.typewritermc.realm.repository.ResourceValueMapper
 import com.typewritermc.realm.repository.valueAt
 import com.typewritermc.types.DataValue
-import com.typewritermc.types.EndpointId
 import com.typewritermc.types.LinkTarget
 import com.typewritermc.types.RelationContract
 import com.typewritermc.types.ResourceId
 import com.typewritermc.types.catalog.Resolution
-import com.typewritermc.types.catalog.ResolvedRepresentation
 import com.typewritermc.types.isAcyclic
 import com.typewritermc.types.ownsResources
+import com.typewritermc.types.use
+import skirout.editor.v1.type_catalog.EndpointId
+import skirout.editor.v1.type_catalog.ResolvedRepresentation
 
 /**
  * Reads relation bindings, ownership and endpoint compatibility over one captured working graph.
@@ -152,9 +153,9 @@ internal class RelationReads(
             ResourceValueMapper.expectedTarget(source, sourceRecord, catalog.checked) ?: run {
                 val type = sourceRecord.authoredTypeAt(source.id.location.path, catalog.checked) ?: return false
                 val checked = catalog.checked.resolve(type) as? Resolution.Ready ?: return false
-                (checked.value.schema.representation as? ResolvedRepresentation.Link)?.target ?: return false
+                (checked.value.schema.representation as? ResolvedRepresentation.LinkWrapper)?.value?.target ?: return false
             }
-        return catalog.checked.isReadableAs(actual, expected)
+        return catalog.checked.isReadableAs(actual.use, expected)
     }
 
     /**

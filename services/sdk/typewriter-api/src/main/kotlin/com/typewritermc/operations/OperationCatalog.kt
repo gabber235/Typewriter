@@ -16,25 +16,34 @@ import com.typewritermc.types.NativeBinding
 import com.typewritermc.types.NativeBindingRegistry
 import com.typewritermc.types.ResourceIdDefinition
 import com.typewritermc.types.ResourceTarget
-import com.typewritermc.types.ScalarKind
-import com.typewritermc.types.TypeTemplate
-import com.typewritermc.types.TypeUse
 import com.typewritermc.types.catalog.CheckedCatalog
 import com.typewritermc.types.catalog.CheckedType
 import com.typewritermc.types.catalog.DeclarationDiagnostic
 import com.typewritermc.types.catalog.DeclarationOrigin
 import com.typewritermc.types.catalog.Resolution
-import com.typewritermc.types.catalog.ResolvedRepresentation
 import com.typewritermc.types.catalog.resolve
+import com.typewritermc.types.namedUse
+import com.typewritermc.types.nullable
+import com.typewritermc.types.requireValid
 import com.typewritermc.types.skir.SkirAuthoringValueCodec
 import com.typewritermc.types.skir.SkirTypeCodec
 import com.typewritermc.types.skir.getOrThrow
+import com.typewritermc.types.template
+import com.typewritermc.types.unknownVariant
+import com.typewritermc.types.use
 import kotlinx.coroutines.CancellationException
 import skirout.editor.v1.operation.OperationAvailability
 import skirout.editor.v1.operation.OperationDrop
 import skirout.editor.v1.operation.OperationTargets
 import skirout.editor.v1.operation.ResourceOperationDefinition
+import skirout.editor.v1.type_catalog.NamedTypeTemplate
+import skirout.editor.v1.type_catalog.NamedTypeUse
 import skirout.editor.v1.type_catalog.PresentationId
+import skirout.editor.v1.type_catalog.ResolvedRepresentation
+import skirout.editor.v1.type_catalog.ScalarKind
+import skirout.editor.v1.type_catalog.TypeDefinitionId
+import skirout.editor.v1.type_catalog.TypeTemplate
+import skirout.editor.v1.type_catalog.TypeUse
 import skirout.editor.v1.type_catalog.CapabilityId as SkirCapabilityId
 
 class BoundOperationInput internal constructor(
@@ -61,8 +70,8 @@ class CandidateSearch internal constructor(
     val descriptor: RealmCapabilityDescriptor.Search =
         RealmCapabilityDescriptor.Search(
             operation.definition.id.candidateSearch(field.path),
-            TypeUse.Scalar(ScalarKind.Text),
-            OperationResourceOptionDefinition.use,
+            ScalarKind.TEXT.use,
+            OperationResourceOptionDefinition.use.use,
         )
 }
 
@@ -152,7 +161,7 @@ fun bindOperations(
             require(operations.none { it.definition.id == declaration.id }) { "Duplicate operation ${declaration.id}." }
             when (val target = declaration.target) {
                 is ResourceTarget.Type -> {
-                    require(catalog.resolve(target.template.asClosedUse()) is Resolution.Ready) {
+                    require(catalog.resolve(target.template.asClosedUse().use) is Resolution.Ready) {
                         "Operation target is unavailable: ${target.template}."
                     }
                 }
@@ -171,7 +180,7 @@ fun bindOperations(
                         require(
                             catalog.isOwnedBy(schema, field.owner),
                         ) { "The operation input field ${field.path} belongs to another type." }
-                        val resource = type.withoutNullable() == ResourceIdDefinition.use
+                        val resource = type.withoutNullable() == ResourceIdDefinition.use.use
                         require(field.drop == null || resource) { "Only resource identity fields can be filled on drop." }
                         resource
                     }.mapTo(hashSetOf()) { it.path }
@@ -222,7 +231,7 @@ private fun OperationInput.bind(
         }
 
         is OperationInput.Typed -> {
-            val checked = (catalog.resolve(use) as? Resolution.Ready)?.value ?: error("Operation input type is unavailable: $use.")
+            val checked = (catalog.resolve(use.use) as? Resolution.Ready)?.value ?: error("Operation input type is unavailable: $use.")
             val presentation =
                 collected.form?.let { reference ->
                     val matches =
@@ -243,8 +252,10 @@ private fun CheckedType.typeAt(path: ValuePath): TypeUse? {
     var type: TypeUse? = null
     path.segments.forEachIndexed { index, segment ->
         val name = (segment as? PathSegment.Field)?.name ?: return null
-        val record = current.schema.representation as? ResolvedRepresentation.Record ?: return null
-        type = record.fields.singleOrNull { it.key == name }?.type ?: return null
+        val record = current.schema.representation as? ResolvedRepresentation.RecordWrapper ?: return null
+        type = record.value.fields
+            .singleOrNull { it.key == name }
+            ?.type ?: return null
         if (index < path.segments.lastIndex) {
             current = (current.resolve(requireNotNull(type).withoutNullable()) as? Resolution.Ready)?.value ?: return null
         }
@@ -252,21 +263,22 @@ private fun CheckedType.typeAt(path: ValuePath): TypeUse? {
     return type
 }
 
-private fun TypeUse.withoutNullable(): TypeUse = if (this is TypeUse.Nullable) value.withoutNullable() else this
+private fun TypeUse.withoutNullable(): TypeUse = if (this is TypeUse.NullableWrapper) value.value.withoutNullable() else this
 
-private fun TypeUse.definitionOrNull() = (this as? TypeUse.Named)?.definition
+private fun TypeUse.definitionOrNull() = (this as? TypeUse.NamedWrapper)?.value?.definition
 
 private fun CheckedCatalog.isOwnedBy(
     input: CheckedType,
-    owner: com.typewritermc.types.TypeDefinitionId,
+    owner: TypeDefinitionId,
 ): Boolean = input.use.definitionOrNull()?.let { isNominalSubtype(it, owner) } == true
 
-fun TypeTemplate.Named.asClosedUse(): TypeUse.Named = TypeUse.Named(definition, arguments.map { it.asClosedUse() })
+fun NamedTypeTemplate.asClosedUse(): NamedTypeUse = definition.namedUse(arguments.map { it.asClosedUse() })
 
 private fun TypeTemplate.asClosedUse(): TypeUse =
     when (this) {
-        is TypeTemplate.Named -> asClosedUse()
-        is TypeTemplate.Nullable -> TypeUse.Nullable(value.asClosedUse())
-        is TypeTemplate.Scalar -> TypeUse.Scalar(kind)
-        is TypeTemplate.Parameter -> error("Resource operations require closed type applications.")
+        is TypeTemplate.NamedWrapper -> value.asClosedUse().use
+        is TypeTemplate.NullableWrapper -> value.value.asClosedUse().nullable()
+        is TypeTemplate.ScalarWrapper -> value.use
+        is TypeTemplate.ParameterWrapper -> error("Resource operations require closed type applications.")
+        else -> unknownVariant(this)
     }

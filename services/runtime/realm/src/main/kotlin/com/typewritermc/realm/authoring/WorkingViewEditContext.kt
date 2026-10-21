@@ -20,9 +20,9 @@ import com.typewritermc.types.DataValue
 import com.typewritermc.types.ListItem
 import com.typewritermc.types.NativeBinding
 import com.typewritermc.types.ResourceId
-import com.typewritermc.types.TypeUse
 import com.typewritermc.types.catalog.Resolution
 import com.typewritermc.types.immutableListCopy
+import skirout.editor.v1.type_catalog.NamedTypeUse
 import java.util.UUID
 
 /** A request owned edit context. Reads see prior writes and expectations witness its working baseline. */
@@ -115,7 +115,7 @@ internal class WorkingViewEditContext(
 
     override suspend fun retag(
         at: ValueLocation,
-        type: TypeUse.Named,
+        type: NamedTypeUse,
     ) = append(EditIntent.Retag(at, type))
 
     override suspend fun checkedSet(

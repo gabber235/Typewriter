@@ -9,8 +9,7 @@ import com.typewritermc.authoring.PreparedContent
 import com.typewritermc.authoring.PreparationTarget
 import com.typewritermc.authoring.TypeSelection
 import com.typewritermc.types.DataValue
-import com.typewritermc.types.IntegerWidth
-import com.typewritermc.types.ScalarKind
+import skirout.editor.v1.type_catalog.IntegerWidth
 import java.math.BigInteger
 import kotlinx.serialization.Transient
 import kotlinx.serialization.SerialName
@@ -25,20 +24,18 @@ import com.typewritermc.discovery.assemble
 import com.typewritermc.expression.literal
 import com.typewritermc.expression.eq
 import com.typewritermc.expression.orElse
-import com.typewritermc.expression.portableExpression
 import com.typewritermc.expression.ExpressionBindingId
 import com.typewritermc.authoring.ValuePath
 import skirout.editor.v1.expression.ExpressionNode
 import com.typewritermc.imprint.ArtifactId
 import com.typewritermc.presentation.CollectionProjection
 import com.typewritermc.presentation.DefaultPresentationRuntime
-import com.typewritermc.presentation.PresentationBuildBinding
 import com.typewritermc.presentation.PresentationRuntime
 import com.typewritermc.presentation.TypewriterCollectionProjection
 import com.typewritermc.presentation.collectionProjection
 import com.typewritermc.presentation.projectedCollectionSource
 import skirout.editor.v1.catalog.PresentationRole
-import com.typewritermc.types.RepresentationTemplate
+import skirout.editor.v1.type_catalog.RepresentationTemplate
 import com.typewritermc.types.DeletionPolicy
 import com.typewritermc.types.Many
 import com.typewritermc.types.One
@@ -48,12 +45,10 @@ import com.typewritermc.types.ReferenceContract
 import com.typewritermc.types.RelationDeletePolicy
 import com.typewritermc.types.Resource
 import com.typewritermc.types.ResourceTarget
-import com.typewritermc.types.TypeTemplate
 import com.typewritermc.authoring.defaultLabel
 import com.typewritermc.expression.orIfBlank
 import com.typewritermc.types.ResourceId
 import com.typewritermc.types.TypeDisplay
-import com.typewritermc.types.TypeUse
 import com.typewritermc.types.TypewriterDisplay
 import com.typewritermc.types.TypewriterType
 import com.typewritermc.types.TypewriterTypeImports
@@ -63,6 +58,11 @@ import skirout.editor.v1.presentation.ChildrenElement
 import skirout.editor.v1.presentation.PresentationElement
 import skirout.editor.v1.presentation.PresentationNode
 import skirout.editor.v1.type_catalog.PathSegment
+import skirout.editor.v1.type_catalog.NamedTypeUse
+import com.typewritermc.types.use
+import com.typewritermc.types.template
+import com.typewritermc.types.namedTemplate
+import com.typewritermc.types.integerScalar
 
 /** Names an Example by its title, keeping the type display accent and icon. */
 object ExampleNaming : ExampleDisplay {
@@ -168,8 +168,8 @@ data class TransientDefaults(@Transient val hidden: Int = 5, val derived: Int = 
 fun exampleCollectionProjection(): CollectionProjection<Example, ExampleRow, ExampleRowExpressions> =
     collectionProjection<Example, ExampleRow, ExampleRowExpressions>(
         sourceId = "fixture.examples",
-        root = com.typewritermc.types.TypeTemplate.Named(ExampleDefinition.id),
-        rowType = com.typewritermc.types.TypeTemplate.Named(ExampleRowDefinition.id),
+        root = ExampleDefinition.id.namedTemplate(),
+        rowType = ExampleRowDefinition.id.template(),
         expressions = ExampleRowExpressionsFactory,
     ) {
         content(ExampleRowFields.title, ExampleFields.title)
@@ -251,10 +251,10 @@ fun main(args: Array<String>) {
             ),
     )
     check(ExampleDefinition.searchKey == "example")
-    val contractRepresentation = StoredContractDefinition.declaration.representation as RepresentationTemplate.Record
-    check(contractRepresentation.fields.map { it.owner.name } == listOf("stored"))
-    val valueRepresentation = StoredValueDefinition.declaration.representation as RepresentationTemplate.Record
-    check(valueRepresentation.fields.map { it.owner.name } == listOf("stored"))
+    val contractRepresentation = StoredContractDefinition.declaration.representation as RepresentationTemplate.RecordWrapper
+    check(contractRepresentation.value.fields.map { it.owner.name } == listOf("stored"))
+    val valueRepresentation = StoredValueDefinition.declaration.representation as RepresentationTemplate.RecordWrapper
+    check(valueRepresentation.value.fields.map { it.owner.name } == listOf("stored"))
     val source = com.typewritermc.expression.input<Any?>(ExpressionBindingId("fixture"))
     val rowExpressions = ExampleRowExpressionsFactory.create(source)
     check(rowExpressions.title.toNode() == com.typewritermc.expression.input<Any?>(ExpressionBindingId("fixture"), ValuePath(listOf(com.typewritermc.authoring.PathSegment.Field("title")))).toNode())
@@ -283,9 +283,9 @@ fun main(args: Array<String>) {
             val contributions = deployment.providers.contributions
             check(contributions.configurations.size == 1)
             check(contributions.presentations.size == 1)
-            check(contributions.displays.single().provider.target == ResourceTarget.Type(TypeTemplate.Named(ExampleDefinition.id)))
+            check(contributions.displays.single().provider.target == ResourceTarget.Type(ExampleDefinition.id.namedTemplate()))
             val assembly = contributions.assemble(CatalogAssemblyContext(CatalogGeneration("fixture")))
-            check(assembly.snapshot.resourceDisplays.single().target == ResourceTarget.Type(TypeTemplate.Named(ExampleDefinition.id)))
+            check(assembly.snapshot.resourceDisplays.single().target == ResourceTarget.Type(ExampleDefinition.id.namedTemplate()))
             check(assembly.snapshot.types.single { it.definition.id == ExampleDefinition.id }.searchKey == "example")
             val configuredPaths = assembly.snapshot.configuration.filter { it.rules.isNotEmpty() }
                 .map { recipe -> recipe.relativePath.segments.joinToString(".") { segment ->
@@ -298,7 +298,7 @@ fun main(args: Array<String>) {
                 } }.toSet()
             check(configuredPaths.containsAll(setOf("title", "details.title", "rows.items.title", "labels.keys", "labels.values.title")))
             val checked =
-                when (val resolved = assembly.checked.resolve(TypeUse.Named(ExampleDefinition.id))) {
+                when (val resolved = assembly.checked.resolve(ExampleDefinition.id.use())) {
                     is Resolution.Ready -> resolved.value
                     is Resolution.Invalid -> error(resolved.diagnostics.joinToString())
                 }
@@ -308,7 +308,7 @@ fun main(args: Array<String>) {
                 .factory.nativeClass!!.java.classLoader
             fun counts(): Pair<*, *> = probeLoader.loadClass("fixture.GeneratedProviderRoundtrip").getMethod("evaluationCounts").invoke(null) as Pair<*, *>
             val initializer = DefaultInitializationRuntime(assembly.checked, assembly.bindings)
-            fun prepare(type: TypeUse.Named, fields: Map<String, DataValue>) = initializer.prepareNow(
+            fun prepare(type: NamedTypeUse, fields: Map<String, DataValue>) = initializer.prepareNow(
                 InitializationRequest(assembly.snapshot.generation, PreparationTarget.Record(TypeSelection.Complete(type)), DataValue.Record(fields)),
             )
             fun integer(value: Int) = DataValue.Integer(BigInteger.valueOf(value.toLong()))
@@ -332,7 +332,7 @@ fun main(args: Array<String>) {
             val transient = prepare(TransientDefaultsDefinition.use, emptyMap())
             check(transient.findings.isEmpty())
             check((transient.content as PreparedContent.Record).record.fields == mapOf("derived" to integer(10)))
-            val intType = TypeUse.Scalar(ScalarKind.Integer(IntegerWidth.SIGNED_32))
+            val intType = integerScalar(IntegerWidth.SIGNED_THIRTY_TWO).use
             val generic = prepare(GenericDefaultsDefinition.applied(listOf(intType)), mapOf("value" to integer(9)))
             check(generic.findings.isEmpty())
             check((generic.content as PreparedContent.Record).record.fields["duplicate"] == integer(9))

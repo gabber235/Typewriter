@@ -6,23 +6,25 @@ import com.typewritermc.authoring.TypeSelection
 import com.typewritermc.authoring.ValuePath
 import com.typewritermc.types.DataValue
 import com.typewritermc.types.MapRow
-import com.typewritermc.types.TypeUse
 import com.typewritermc.types.catalog.CheckedCatalog
 import com.typewritermc.types.catalog.Resolution
-import com.typewritermc.types.catalog.ResolvedRepresentation
 import com.typewritermc.types.unwrapNamed
+import com.typewritermc.types.use
+import skirout.editor.v1.type_catalog.MappingResolvedRepresentation
+import skirout.editor.v1.type_catalog.ResolvedRepresentation
+import skirout.editor.v1.type_catalog.TypeUse
 
 internal fun AuthoringRecord.authoredTypeAt(
     path: ValuePath,
     catalog: CheckedCatalog,
 ): TypeUse? {
-    if (path.segments.isEmpty()) return (configuration as? TypeSelection.Complete)?.use
+    if (path.segments.isEmpty()) return (configuration as? TypeSelection.Complete)?.use?.use
     var type: TypeUse?
     var value: DataValue?
     var remaining: List<PathSegment>
     when (val selection = configuration) {
         is TypeSelection.Complete -> {
-            type = selection.use
+            type = selection.use.use
             value = DataValue.Record(fields)
             remaining = path.segments
         }
@@ -42,7 +44,7 @@ internal fun AuthoringRecord.authoredTypeAt(
         }
     }
     var mapRow: MapRow? = null
-    var mapping: ResolvedRepresentation.Mapping? = null
+    var mapping: MappingResolvedRepresentation? = null
     for (segment in remaining) {
         val pendingMapping = mapping
         if (pendingMapping != null) {
@@ -79,13 +81,13 @@ internal fun AuthoringRecord.authoredTypeAt(
 
             is PathSegment.Item -> {
                 when (val representation = resolved.value.schema.representation) {
-                    is ResolvedRepresentation.Sequence -> {
-                        type = representation.item
+                    is ResolvedRepresentation.SequenceWrapper -> {
+                        type = representation.value.item
                         value = value?.unwrapNamed().collectionItem(segment)
                     }
 
-                    is ResolvedRepresentation.Mapping -> {
-                        mapping = representation
+                    is ResolvedRepresentation.MappingWrapper -> {
+                        mapping = representation.value
                         mapRow = (value?.unwrapNamed() as? DataValue.MapValue)?.rows?.singleOrNull { it.id == segment.id }
                     }
 
@@ -108,9 +110,9 @@ internal fun AuthoringRecord.authoredTypeAt(
     return type
 }
 
-private fun TypeUse.traversable(): TypeUse = if (this is TypeUse.Nullable) value else this
+private fun TypeUse.traversable(): TypeUse = if (this is TypeUse.NullableWrapper) value.value else this
 
-private fun DataValue?.namedPayload(): Pair<TypeUse.Named, DataValue>? = (this as? DataValue.Named)?.let { it.actualType to it.payload }
+private fun DataValue?.namedPayload(): Pair<TypeUse, DataValue>? = (this as? DataValue.Named)?.let { it.actualType.use to it.payload }
 
 private fun DataValue?.recordField(name: String): DataValue? = (this as? DataValue.Record)?.fields?.get(name)
 

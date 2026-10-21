@@ -9,6 +9,7 @@ import com.typewritermc.expression.Handled
 import com.typewritermc.types.Resource
 import skirout.editor.v1.presentation.ControlDensity
 import skirout.editor.v1.presentation.LinkRejectionDisplay
+import skirout.editor.v1.type_catalog.NamedTypeUse
 
 /** Settings shared by collection editors without changing item identity or writes. */
 @TypewriterDsl
@@ -319,6 +320,6 @@ value class LinkCandidatePolicyId(
 )
 
 data class AppliedPresentation<V>(
-    val type: com.typewritermc.types.TypeUse.Named,
+    val type: NamedTypeUse,
     val reference: PresentationReference,
 )

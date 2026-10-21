@@ -3,12 +3,9 @@ package com.typewritermc.presentation
 import com.typewritermc.expression.Expr
 import com.typewritermc.expression.ExpressionBindingId
 import com.typewritermc.types.DataValue
-import com.typewritermc.types.skir.SkirTypeCodec
 import com.typewritermc.types.skir.getOrThrow
 import skirout.editor.v1.binding.BindingRef
 import skirout.editor.v1.expression.ExpressionNode
-import skirout.editor.v1.presentation.CrossAxisAlignment
-import skirout.editor.v1.presentation.MainAxisAlignment
 import skirout.editor.v1.type_catalog.FieldPathSegment
 import java.math.BigInteger
 import skirout.editor.v1.type_catalog.ExpressionBindingId as WireExpressionBindingId

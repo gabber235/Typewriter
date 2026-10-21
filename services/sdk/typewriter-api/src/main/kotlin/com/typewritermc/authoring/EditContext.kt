@@ -4,8 +4,8 @@ import com.typewritermc.checking.CatalogGeneration
 import com.typewritermc.types.DataValue
 import com.typewritermc.types.ListItem
 import com.typewritermc.types.ResourceId
-import com.typewritermc.types.TypeUse
-import kotlinx.serialization.Serializable
+import skirout.editor.v1.type_catalog.NamedTypeUse
+import skirout.editor.v1.type_catalog.TypeUse
 
 /** An edit proposal carrying its catalog generation, observed preconditions, and ordered intents for later acceptance. */
 data class PreparedEdit(
@@ -14,69 +14,57 @@ data class PreparedEdit(
     val intents: List<EditIntent>,
 )
 
-@Serializable
 sealed interface EditIntent {
-    @Serializable
     data class CreateResource(
         val id: ResourceId,
         val record: AuthoringRecord,
     ) : EditIntent
 
-    @Serializable
     data class DeleteResource(
         val id: ResourceId,
     ) : EditIntent
 
-    @Serializable
     data class SetValue(
         val at: ValueLocation,
         val value: DataValue,
     ) : EditIntent
 
-    @Serializable
     data class Insert(
         val at: ValueLocation,
         val after: ItemId?,
         val item: ListItem,
     ) : EditIntent
 
-    @Serializable
     data class Remove(
         val at: ValueLocation,
         val item: ItemId,
     ) : EditIntent
 
-    @Serializable
     data class Move(
         val at: ValueLocation,
         val item: ItemId,
         val after: ItemId?,
     ) : EditIntent
 
-    @Serializable
     data class ConnectRelation(
         val intent: ConnectIntent,
     ) : EditIntent
 
-    @Serializable
     data class DisconnectRelation(
         val occurrence: LinkOccurrenceId,
     ) : EditIntent
 
-    @Serializable
     data class Retag(
         val at: ValueLocation,
-        val type: TypeUse.Named,
+        val type: NamedTypeUse,
     ) : EditIntent
 
-    @Serializable
     data class ConfigureResource(
         val resource: ResourceId,
         val configuration: TypeSelection,
     ) : EditIntent
 }
 
-@Serializable
 data class ConnectIntent(
     val source: LinkOccurrence,
     val target: ResourceId,
@@ -97,14 +85,11 @@ fun <Value> DraftBinding.exactEditablePath(
     expected: TypeUse,
 ): EditablePath<Value> = EditablePath(this, relative, expected)
 
-@Serializable
 sealed interface CounterpartChoice {
-    @Serializable
     data class Existing(
         val occurrence: LinkOccurrence,
     ) : CounterpartChoice
 
-    @Serializable
     data class New(
         val containing: ValueLocation,
         val prepared: PreparedValue,
@@ -149,7 +134,7 @@ interface EditContext : AuthoredReads {
 
     suspend fun retag(
         at: ValueLocation,
-        type: TypeUse.Named,
+        type: NamedTypeUse,
     )
 
     suspend fun checkedSet(

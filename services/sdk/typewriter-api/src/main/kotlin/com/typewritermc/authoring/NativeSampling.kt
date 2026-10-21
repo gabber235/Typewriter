@@ -1,7 +1,7 @@
 package com.typewritermc.authoring
 
 import com.typewritermc.types.NativeBinding
-import com.typewritermc.types.TypeUse
+import skirout.editor.v1.type_catalog.TypeUse
 
 data class AppliedNativeArguments(
     val portable: List<TypeUse>,

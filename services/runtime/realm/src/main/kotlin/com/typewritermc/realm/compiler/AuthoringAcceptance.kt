@@ -16,7 +16,6 @@ import com.typewritermc.checking.CheckOutcome
 import com.typewritermc.checking.Diagnostic
 import com.typewritermc.checking.DiagnosticSeverity
 import com.typewritermc.checking.InputToken
-import com.typewritermc.configuration.RuleOrigin
 import com.typewritermc.realm.authoring.AuthoringLease
 import com.typewritermc.realm.authoring.AuthoringView
 import com.typewritermc.realm.authoring.AuthoringViewStore
@@ -28,17 +27,19 @@ import com.typewritermc.services.libs.utils.sha256Hex
 import com.typewritermc.types.DataValue
 import com.typewritermc.types.NativeBindingException
 import com.typewritermc.types.ResourceId
-import com.typewritermc.types.TypeDefinitionId
-import com.typewritermc.types.TypeId
-import com.typewritermc.types.TypeUse
 import com.typewritermc.types.canonicalValueKey
 import com.typewritermc.types.catalog.Resolution
+import com.typewritermc.types.qualified
+import com.typewritermc.types.use
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import kotlinx.serialization.Serializable
+import skirout.editor.v1.type_catalog.NamedTypeUse
+import skirout.editor.v1.type_catalog.RuleOrigin
+import skirout.editor.v1.type_catalog.TypeDefinitionId
 
 data class NativeBindingRequirement(
-    val actual: TypeUse.Named,
+    val actual: NamedTypeUse,
     val provider: NativeBindingId,
     val signature: String,
 )
@@ -244,7 +245,7 @@ internal class AuthoringAcceptance(
                 }
                 val resolved =
                     snapshot.root.catalog.checked
-                        .resolve(actual)
+                        .resolve(actual.use)
                 val checked = (resolved as? Resolution.Ready)?.value
                 if (checked == null) {
                     findings +=
@@ -404,7 +405,7 @@ internal fun publicationDiagnostic(
 ): Diagnostic =
     Diagnostic(
         id = DiagnosticId("publication:${"$location\u0000$code\u0000$message".sha256Hex()}"),
-        origin = RuleOrigin(PUBLICATION_DIAGNOSTIC_TYPE, 0),
+        origin = RuleOrigin(owner = PUBLICATION_DIAGNOSTIC_TYPE, ordinal = 0),
         code = code,
         message = message,
         severity = DiagnosticSeverity.Error,
@@ -413,4 +414,4 @@ internal fun publicationDiagnostic(
     )
 
 internal val PUBLICATION_DIAGNOSTIC_TYPE =
-    TypeDefinitionId(TypeId.Qualified("typewriter", "publication"), 1)
+    TypeDefinitionId.qualified("typewriter", "publication")

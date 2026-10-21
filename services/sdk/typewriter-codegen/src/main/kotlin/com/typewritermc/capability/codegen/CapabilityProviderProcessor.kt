@@ -32,12 +32,13 @@ import com.typewritermc.codegen.kotlinCode
 import com.typewritermc.codegen.rawAnnotation
 import com.typewritermc.discovery.GeneratedProviderKind
 import com.typewritermc.types.DataValue
-import com.typewritermc.types.TypeUse
+import com.typewritermc.types.canonicalText
 import com.typewritermc.types.codegen.DefinitionOwners
 import com.typewritermc.types.codegen.referencedIds
 import com.typewritermc.types.ksp.KspTypeConversionResult
 import com.typewritermc.types.ksp.KspTypeGraphConverter
 import skirout.editor.v1.search.RealmSearchQuery
+import skirout.editor.v1.type_catalog.TypeUse
 import java.security.MessageDigest
 import kotlin.reflect.KClass
 import com.typewritermc.codegen.TypewriterApi as Api
@@ -130,7 +131,8 @@ internal class CapabilityProviderProcessor(
         val functionName = function.simpleName.asString()
         val suffix = functionName.replaceFirstChar(Char::uppercase)
         val identity =
-            listOf(sourcePart, ownerClass.canonicalName, functionName, kind.name, request.use, resultUse?.use).joinToString("|")
+            listOf(sourcePart, ownerClass.canonicalName, functionName, kind.name, request.use.canonicalText, resultUse?.use?.canonicalText)
+                .joinToString("|")
         val references =
             owners.references(
                 request.conversion.declarations + resultUse?.conversion?.declarations.orEmpty(),

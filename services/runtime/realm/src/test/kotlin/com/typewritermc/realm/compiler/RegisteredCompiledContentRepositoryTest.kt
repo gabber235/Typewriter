@@ -7,7 +7,6 @@ import com.typewritermc.checking.CatalogGeneration
 import com.typewritermc.checking.Diagnostic
 import com.typewritermc.checking.DiagnosticSeverity
 import com.typewritermc.checking.InputToken
-import com.typewritermc.configuration.RuleOrigin
 import com.typewritermc.engine.CompilationProjectionId
 import com.typewritermc.engine.CompilationRoot
 import com.typewritermc.engine.CompiledArtifactReference
@@ -22,6 +21,7 @@ import com.typewritermc.types.ResourceId
 import de.infix.testBalloon.framework.core.testSuite
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.matchers.shouldBe
+import skirout.editor.v1.type_catalog.RuleOrigin
 
 val RegisteredCompiledContentRepositoryTest by testSuite {
     test("selection replaces the complete set and empty results remove every previous root") {
@@ -88,7 +88,7 @@ val RegisteredCompiledContentRepositoryTest by testSuite {
             val finding =
                 Diagnostic(
                     DiagnosticId("broken"),
-                    RuleOrigin(TEST_TYPE, 0),
+                    RuleOrigin(owner = TEST_TYPE, ordinal = 0),
                     "broken",
                     "A nested value is missing",
                     DiagnosticSeverity.Error,

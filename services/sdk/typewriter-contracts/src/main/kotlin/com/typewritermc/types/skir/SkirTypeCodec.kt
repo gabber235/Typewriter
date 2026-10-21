@@ -10,36 +10,16 @@ import com.typewritermc.configuration.FieldPatternSegment
 import com.typewritermc.configuration.OwnedRule
 import com.typewritermc.configuration.RelativeFieldPattern
 import com.typewritermc.configuration.RepresentationKind
-import com.typewritermc.configuration.RuleId
-import com.typewritermc.configuration.RuleOrigin
-import com.typewritermc.discovery.ContributionKey
 import com.typewritermc.presentation.PresentationDescriptor
 import com.typewritermc.presentation.PresentationTarget
 import com.typewritermc.presentation.RoleFallback
-import com.typewritermc.types.CollectionKind
-import com.typewritermc.types.DeclarationOwner
-import com.typewritermc.types.DeclaredTypeId
 import com.typewritermc.types.EndpointCardinality
 import com.typewritermc.types.EndpointDefinition
 import com.typewritermc.types.EndpointSlot
-import com.typewritermc.types.EnumVariant
-import com.typewritermc.types.FieldDeclaration
-import com.typewritermc.types.FieldOwner
-import com.typewritermc.types.FloatWidth
-import com.typewritermc.types.IntegerWidth
-import com.typewritermc.types.ParameterKey
 import com.typewritermc.types.RelationContract
 import com.typewritermc.types.RelationDeletePolicy
-import com.typewritermc.types.RepresentationTemplate
 import com.typewritermc.types.ResourceTarget
-import com.typewritermc.types.ScalarKind
-import com.typewritermc.types.TypeDefinition
-import com.typewritermc.types.TypeDefinitionId
 import com.typewritermc.types.TypeDisplay
-import com.typewritermc.types.TypeId
-import com.typewritermc.types.TypeParameter
-import com.typewritermc.types.TypeTemplate
-import com.typewritermc.types.TypeUse
 import com.typewritermc.types.catalog.DeclarationDiagnostic
 import com.typewritermc.types.catalog.DeclarationStatus
 import com.typewritermc.types.catalog.EditorCatalogSnapshot
@@ -49,6 +29,7 @@ import com.typewritermc.types.catalog.ResourceDisplayFormulas
 import com.typewritermc.types.catalog.TypeRecommendation
 import com.typewritermc.types.toWire
 import skirout.editor.v1.catalog.EditorCatalog
+import skirout.editor.v1.type_catalog.TypeTemplate
 import skirout.editor.v1.capability.CapabilityDefinition as SkirCapabilityDefinition
 import skirout.editor.v1.capability.CommandCapabilityDefinition as SkirCommandCapabilityDefinition
 import skirout.editor.v1.capability.ComputationCapabilityDefinition as SkirComputationCapabilityDefinition
@@ -75,65 +56,18 @@ import skirout.editor.v1.diagnostic.DeclarationOrigin as SkirDeclarationOrigin
 import skirout.editor.v1.diagnostic.Diagnostic as SkirDiagnostic
 import skirout.editor.v1.diagnostic.DiagnosticSeverity as SkirDiagnosticSeverity
 import skirout.editor.v1.diagnostic.DiagnosticTemplate as SkirDiagnosticTemplate
-import skirout.editor.v1.diagnostic.InitializationDiagnostic as SkirInitializationDiagnostic
-import skirout.editor.v1.type_catalog.CollectionKind as SkirCollectionKind
-import skirout.editor.v1.type_catalog.ContributionKey as SkirContributionKey
-import skirout.editor.v1.type_catalog.ContributionName as SkirContributionName
-import skirout.editor.v1.type_catalog.ContributionSourceId as SkirContributionSourceId
-import skirout.editor.v1.type_catalog.DeclarationOwner as SkirDeclarationOwner
-import skirout.editor.v1.type_catalog.DeclaredTypeId as SkirDeclaredTypeId
-import skirout.editor.v1.type_catalog.EnumVariant as SkirEnumVariant
-import skirout.editor.v1.type_catalog.FieldDeclaration as SkirFieldDeclaration
-import skirout.editor.v1.type_catalog.FieldOwner as SkirFieldOwner
 import skirout.editor.v1.type_catalog.FieldPathSegment as SkirFieldPathSegment
 import skirout.editor.v1.type_catalog.FieldPatternSegment as SkirFieldPatternSegment
-import skirout.editor.v1.type_catalog.FloatWidth as SkirFloatWidth
-import skirout.editor.v1.type_catalog.IntegerWidth as SkirIntegerWidth
 import skirout.editor.v1.type_catalog.ItemId as SkirItemId
 import skirout.editor.v1.type_catalog.ItemPathSegment as SkirItemPathSegment
 import skirout.editor.v1.type_catalog.NamedFieldPatternSegment as SkirNamedFieldPatternSegment
-import skirout.editor.v1.type_catalog.NamedTypeTemplate as SkirNamedTypeTemplate
-import skirout.editor.v1.type_catalog.NamedTypeUse as SkirNamedTypeUse
-import skirout.editor.v1.type_catalog.NullableTypeTemplate as SkirNullableTypeTemplate
-import skirout.editor.v1.type_catalog.NullableTypeUse as SkirNullableTypeUse
-import skirout.editor.v1.type_catalog.ParameterKey as SkirParameterKey
 import skirout.editor.v1.type_catalog.PathSegment as SkirPathSegment
-import skirout.editor.v1.type_catalog.ProducerId as SkirProducerId
-import skirout.editor.v1.type_catalog.QualifiedTypeId as SkirQualifiedTypeId
 import skirout.editor.v1.type_catalog.RelativeFieldPattern as SkirRelativeFieldPattern
-import skirout.editor.v1.type_catalog.RepresentationTemplate as SkirRepresentationTemplate
 import skirout.editor.v1.type_catalog.ResourceTarget as SkirResourceTarget
-import skirout.editor.v1.type_catalog.RuleId as SkirRuleId
-import skirout.editor.v1.type_catalog.RuleOrigin as SkirRuleOrigin
-import skirout.editor.v1.type_catalog.ScalarKind as SkirScalarKind
-import skirout.editor.v1.type_catalog.TypeDefinition as SkirTypeDefinition
-import skirout.editor.v1.type_catalog.TypeDefinitionId as SkirTypeDefinitionId
-import skirout.editor.v1.type_catalog.TypeId as SkirTypeId
-import skirout.editor.v1.type_catalog.TypeParameter as SkirTypeParameter
-import skirout.editor.v1.type_catalog.TypeTemplate as SkirTypeTemplate
-import skirout.editor.v1.type_catalog.TypeUse as SkirTypeUse
 import skirout.editor.v1.type_catalog.ValuePath as SkirValuePath
 import skirout.kernel.v1.color.Color as SkirColor
 
 object SkirTypeCodec {
-    fun encode(id: TypeDefinitionId): SkirConversionResult<SkirTypeDefinitionId> = captureSkirConversion { encodeDefinitionId(id) }
-
-    fun decode(id: SkirTypeDefinitionId): SkirConversionResult<TypeDefinitionId> = captureSkirConversion { decodeDefinitionId(id) }
-
-    fun encode(definition: TypeDefinition): SkirConversionResult<SkirTypeDefinition> =
-        captureSkirConversion { encodeTypeDefinition(definition) }
-
-    fun decode(definition: SkirTypeDefinition): SkirConversionResult<TypeDefinition> =
-        captureSkirConversion { decodeTypeDefinition(definition) }
-
-    fun encode(template: TypeTemplate): SkirConversionResult<SkirTypeTemplate> = captureSkirConversion { encodeTypeTemplate(template) }
-
-    fun decode(template: SkirTypeTemplate): SkirConversionResult<TypeTemplate> = captureSkirConversion { decodeTypeTemplate(template) }
-
-    fun encode(use: TypeUse): SkirConversionResult<SkirTypeUse> = captureSkirConversion { encodeTypeUse(use) }
-
-    fun decode(use: SkirTypeUse): SkirConversionResult<TypeUse> = captureSkirConversion { decodeTypeUse(use) }
-
     fun encode(snapshot: EditorCatalogSnapshot): SkirConversionResult<EditorCatalog> = captureSkirConversion { encodeSnapshot(snapshot) }
 
     fun encode(type: PublishedType): SkirConversionResult<SkirPublishedType> = captureSkirConversion { this.encode(type) }
@@ -143,333 +77,10 @@ object SkirTypeCodec {
 
     fun encode(diagnostic: Diagnostic): SkirConversionResult<SkirDiagnostic> = captureSkirConversion { this.encode(diagnostic) }
 
-    fun encode(rule: RuleId): SkirConversionResult<SkirRuleId> = captureSkirConversion { this.encode(rule) }
-
     fun encode(target: ResourceTarget): SkirConversionResult<SkirResourceTarget> = captureSkirConversion { this.encode(target) }
 
     fun encode(target: PresentationTarget): SkirConversionResult<SkirPresentationTarget> = captureSkirConversion { this.encode(target) }
 }
-
-internal fun ConversionScope.encodeTypeId(id: TypeId): SkirTypeId =
-    when (id) {
-        is TypeId.Declared -> SkirTypeId.DeclaredWrapper(SkirDeclaredTypeId(value = id.id.toString()))
-        is TypeId.Qualified -> SkirTypeId.QualifiedWrapper(SkirQualifiedTypeId(namespace = id.namespace, name = id.name))
-    }
-
-internal fun ConversionScope.decodeTypeId(id: SkirTypeId): TypeId =
-    when (id) {
-        is SkirTypeId.DeclaredWrapper -> {
-            TypeId.Declared(
-                runCatching {
-                    DeclaredTypeId.parse(id.value.value)
-                }.getOrElse { fail("Declared type identity is invalid.") },
-            )
-        }
-
-        is SkirTypeId.QualifiedWrapper -> {
-            TypeId.Qualified(id.value.namespace, id.value.name)
-        }
-
-        else -> {
-            fail("Unknown Skir type identity variant.")
-        }
-    }
-
-internal fun ConversionScope.encodeDefinitionId(id: TypeDefinitionId) =
-    SkirTypeDefinitionId(typeId = encodeTypeId(id.type), revision = id.revision)
-
-internal fun ConversionScope.decodeDefinitionId(id: SkirTypeDefinitionId) =
-    TypeDefinitionId(type = decodeTypeId(id.typeId), revision = id.revision)
-
-private fun ConversionScope.encodeParameterKey(key: ParameterKey) =
-    SkirParameterKey(owner = encodeDefinitionId(key.owner), index = key.index)
-
-private fun ConversionScope.decodeParameterKey(key: SkirParameterKey) =
-    ParameterKey(owner = decodeDefinitionId(key.owner), index = key.index)
-
-internal fun ConversionScope.encodeTypeTemplate(template: TypeTemplate): SkirTypeTemplate =
-    withinTypeDepth {
-        when (template) {
-            is TypeTemplate.Parameter -> {
-                SkirTypeTemplate.ParameterWrapper(encodeParameterKey(template.key))
-            }
-
-            is TypeTemplate.Named -> {
-                SkirTypeTemplate.NamedWrapper(encodeNamedTypeTemplateBody(template))
-            }
-
-            is TypeTemplate.Nullable -> {
-                SkirTypeTemplate.NullableWrapper(
-                    SkirNullableTypeTemplate(value = encodeTypeTemplate(template.value)),
-                )
-            }
-
-            is TypeTemplate.Scalar -> {
-                SkirTypeTemplate.ScalarWrapper(encodeScalar(template.kind))
-            }
-        }
-    }
-
-internal fun ConversionScope.decodeTypeTemplate(template: SkirTypeTemplate): TypeTemplate =
-    withinTypeDepth {
-        when (template) {
-            is SkirTypeTemplate.ParameterWrapper -> TypeTemplate.Parameter(decodeParameterKey(template.value))
-            is SkirTypeTemplate.NamedWrapper -> decodeNamedTypeTemplateBody(template.value)
-            is SkirTypeTemplate.NullableWrapper -> TypeTemplate.Nullable(decodeTypeTemplate(template.value.value))
-            is SkirTypeTemplate.ScalarWrapper -> TypeTemplate.Scalar(decodeScalar(template.value))
-            else -> fail("Unknown Skir type template variant.")
-        }
-    }
-
-internal fun ConversionScope.encodeNamedTypeTemplate(template: TypeTemplate.Named) =
-    withinTypeDepth { encodeNamedTypeTemplateBody(template) }
-
-private fun ConversionScope.encodeNamedTypeTemplateBody(template: TypeTemplate.Named) =
-    SkirNamedTypeTemplate(
-        definition = encodeDefinitionId(template.definition),
-        arguments = template.arguments.mapIndexed { index, value -> at("argument $index") { encodeTypeTemplate(value) } },
-    )
-
-private fun ConversionScope.decodeNamedTypeTemplateBody(template: SkirNamedTypeTemplate) =
-    TypeTemplate.Named(
-        definition = decodeDefinitionId(template.definition),
-        arguments = template.arguments.mapIndexed { index, value -> at("argument $index") { decodeTypeTemplate(value) } },
-    )
-
-private fun ConversionScope.decodeNamedTypeTemplate(template: SkirNamedTypeTemplate) =
-    withinTypeDepth { decodeNamedTypeTemplateBody(template) }
-
-internal fun ConversionScope.encodeTypeUse(use: TypeUse): SkirTypeUse =
-    withinTypeDepth {
-        when (use) {
-            is TypeUse.Named -> SkirTypeUse.NamedWrapper(encodeNamedTypeUseBody(use))
-            is TypeUse.Nullable -> SkirTypeUse.NullableWrapper(SkirNullableTypeUse(value = encodeTypeUse(use.value)))
-            is TypeUse.Scalar -> SkirTypeUse.ScalarWrapper(encodeScalar(use.kind))
-        }
-    }
-
-internal fun ConversionScope.decodeTypeUse(use: SkirTypeUse): TypeUse =
-    withinTypeDepth {
-        when (use) {
-            is SkirTypeUse.NamedWrapper -> decodeNamedTypeUseBody(use.value)
-            is SkirTypeUse.NullableWrapper -> TypeUse.Nullable(decodeTypeUse(use.value.value))
-            is SkirTypeUse.ScalarWrapper -> TypeUse.Scalar(decodeScalar(use.value))
-            else -> fail("Unknown Skir type use variant.")
-        }
-    }
-
-internal fun ConversionScope.encodeNamedTypeUse(use: TypeUse.Named) = withinTypeDepth { encodeNamedTypeUseBody(use) }
-
-private fun ConversionScope.encodeNamedTypeUseBody(use: TypeUse.Named) =
-    SkirNamedTypeUse(
-        definition = encodeDefinitionId(use.definition),
-        arguments = use.arguments.mapIndexed { index, value -> at("argument $index") { encodeTypeUse(value) } },
-    )
-
-internal fun ConversionScope.decodeNamedTypeUse(use: SkirNamedTypeUse) = withinTypeDepth { decodeNamedTypeUseBody(use) }
-
-private fun ConversionScope.decodeNamedTypeUseBody(use: SkirNamedTypeUse) =
-    TypeUse.Named(
-        definition = decodeDefinitionId(use.definition),
-        arguments = use.arguments.mapIndexed { index, value -> at("argument $index") { decodeTypeUse(value) } },
-    )
-
-private fun ConversionScope.encodeScalar(kind: ScalarKind): SkirScalarKind =
-    when (kind) {
-        ScalarKind.Unit -> SkirScalarKind.UNIT
-        ScalarKind.Boolean -> SkirScalarKind.BOOLEAN
-        ScalarKind.Text -> SkirScalarKind.TEXT
-        ScalarKind.Bytes -> SkirScalarKind.BYTES
-        is ScalarKind.Integer -> SkirScalarKind.createInteger(width = encode(kind.width))
-        is ScalarKind.Float -> SkirScalarKind.createFloat(width = encode(kind.width))
-        ScalarKind.Decimal -> SkirScalarKind.DECIMAL
-        ScalarKind.Timestamp -> SkirScalarKind.TIMESTAMP
-        ScalarKind.Duration -> SkirScalarKind.DURATION
-    }
-
-private fun ConversionScope.decodeScalar(kind: SkirScalarKind): ScalarKind =
-    when (kind) {
-        SkirScalarKind.UNIT -> ScalarKind.Unit
-        SkirScalarKind.BOOLEAN -> ScalarKind.Boolean
-        SkirScalarKind.TEXT -> ScalarKind.Text
-        SkirScalarKind.BYTES -> ScalarKind.Bytes
-        is SkirScalarKind.IntegerWrapper -> ScalarKind.Integer(decode(kind.value.width))
-        is SkirScalarKind.FloatWrapper -> ScalarKind.Float(decode(kind.value.width))
-        SkirScalarKind.DECIMAL -> ScalarKind.Decimal
-        SkirScalarKind.TIMESTAMP -> ScalarKind.Timestamp
-        SkirScalarKind.DURATION -> ScalarKind.Duration
-        else -> fail("Unknown Skir scalar kind.")
-    }
-
-private fun encode(width: IntegerWidth): SkirIntegerWidth =
-    when (width) {
-        IntegerWidth.SIGNED_8 -> SkirIntegerWidth.SIGNED_EIGHT
-        IntegerWidth.SIGNED_16 -> SkirIntegerWidth.SIGNED_SIXTEEN
-        IntegerWidth.SIGNED_32 -> SkirIntegerWidth.SIGNED_THIRTY_TWO
-        IntegerWidth.SIGNED_64 -> SkirIntegerWidth.SIGNED_SIXTY_FOUR
-        IntegerWidth.UNSIGNED_8 -> SkirIntegerWidth.UNSIGNED_EIGHT
-        IntegerWidth.UNSIGNED_16 -> SkirIntegerWidth.UNSIGNED_SIXTEEN
-        IntegerWidth.UNSIGNED_32 -> SkirIntegerWidth.UNSIGNED_THIRTY_TWO
-        IntegerWidth.UNSIGNED_64 -> SkirIntegerWidth.UNSIGNED_SIXTY_FOUR
-    }
-
-private fun ConversionScope.decode(width: SkirIntegerWidth): IntegerWidth =
-    when (width) {
-        SkirIntegerWidth.SIGNED_EIGHT -> IntegerWidth.SIGNED_8
-        SkirIntegerWidth.SIGNED_SIXTEEN -> IntegerWidth.SIGNED_16
-        SkirIntegerWidth.SIGNED_THIRTY_TWO -> IntegerWidth.SIGNED_32
-        SkirIntegerWidth.SIGNED_SIXTY_FOUR -> IntegerWidth.SIGNED_64
-        SkirIntegerWidth.UNSIGNED_EIGHT -> IntegerWidth.UNSIGNED_8
-        SkirIntegerWidth.UNSIGNED_SIXTEEN -> IntegerWidth.UNSIGNED_16
-        SkirIntegerWidth.UNSIGNED_THIRTY_TWO -> IntegerWidth.UNSIGNED_32
-        SkirIntegerWidth.UNSIGNED_SIXTY_FOUR -> IntegerWidth.UNSIGNED_64
-        else -> fail("Unknown Skir integer width.")
-    }
-
-private fun encode(width: FloatWidth): SkirFloatWidth =
-    when (width) {
-        FloatWidth.FLOAT_32 -> SkirFloatWidth.THIRTY_TWO
-        FloatWidth.FLOAT_64 -> SkirFloatWidth.SIXTY_FOUR
-    }
-
-private fun ConversionScope.decode(width: SkirFloatWidth): FloatWidth =
-    when (width) {
-        SkirFloatWidth.THIRTY_TWO -> FloatWidth.FLOAT_32
-        SkirFloatWidth.SIXTY_FOUR -> FloatWidth.FLOAT_64
-        else -> fail("Unknown Skir float width.")
-    }
-
-private fun ConversionScope.encodeTypeDefinition(definition: TypeDefinition) =
-    SkirTypeDefinition(
-        id = encodeDefinitionId(definition.id),
-        parameters = definition.parameters.mapIndexed { index, value -> at("parameter $index") { encode(value) } },
-        representation = at("representation") { encode(definition.representation) },
-        parents = definition.parents.mapIndexed { index, value -> at("parent $index") { encodeNamedTypeTemplate(value) } },
-    )
-
-private fun ConversionScope.decodeTypeDefinition(definition: SkirTypeDefinition) =
-    TypeDefinition(
-        id = decodeDefinitionId(definition.id),
-        parameters = definition.parameters.mapIndexed { index, value -> at("parameter $index") { decode(value) } },
-        representation = at("representation") { decode(definition.representation) },
-        parents = definition.parents.mapIndexed { index, value -> at("parent $index") { decodeNamedTypeTemplate(value) } },
-    )
-
-private fun ConversionScope.encode(parameter: TypeParameter) =
-    SkirTypeParameter(
-        key = encodeParameterKey(parameter.key),
-        name = parameter.name,
-        bounds = parameter.bounds.mapIndexed { index, value -> at("bound $index") { encodeTypeTemplate(value) } },
-    )
-
-private fun ConversionScope.decode(parameter: SkirTypeParameter) =
-    TypeParameter(
-        key = decodeParameterKey(parameter.key),
-        name = parameter.name,
-        bounds = parameter.bounds.mapIndexed { index, value -> at("bound $index") { decodeTypeTemplate(value) } },
-    )
-
-private fun ConversionScope.encode(owner: FieldOwner) = SkirFieldOwner(definition = encodeDefinitionId(owner.definition), name = owner.name)
-
-private fun ConversionScope.decode(owner: SkirFieldOwner) = FieldOwner(definition = decodeDefinitionId(owner.definition), name = owner.name)
-
-private fun ConversionScope.encode(field: FieldDeclaration) =
-    SkirFieldDeclaration(
-        owner = encode(field.owner),
-        type = encodeTypeTemplate(field.type),
-        overrides = field.overrides.map(::encode),
-        hasConstructorDefault = field.hasConstructorDefault,
-    )
-
-private fun ConversionScope.decode(field: SkirFieldDeclaration) =
-    FieldDeclaration(
-        owner = decode(field.owner),
-        type = decodeTypeTemplate(field.type),
-        overrides = field.overrides.map(::decode),
-        hasConstructorDefault = field.hasConstructorDefault,
-    )
-
-private fun ConversionScope.encode(representation: RepresentationTemplate): SkirRepresentationTemplate =
-    when (representation) {
-        is RepresentationTemplate.Scalar -> {
-            SkirRepresentationTemplate.createScalar(kind = encodeScalar(representation.kind))
-        }
-
-        is RepresentationTemplate.Record -> {
-            SkirRepresentationTemplate.createRecord(fields = representation.fields.map(::encode), abstract_ = representation.abstract)
-        }
-
-        is RepresentationTemplate.Sequence -> {
-            SkirRepresentationTemplate.createSequence(item = encodeTypeTemplate(representation.item), kind = encode(representation.kind))
-        }
-
-        is RepresentationTemplate.Mapping -> {
-            SkirRepresentationTemplate.createMapping(
-                key = encodeTypeTemplate(representation.key),
-                value = encodeTypeTemplate(representation.value),
-            )
-        }
-
-        is RepresentationTemplate.Enumeration -> {
-            SkirRepresentationTemplate.createEnumeration(cases = representation.cases.map { SkirEnumVariant(key = it.key) })
-        }
-
-        is RepresentationTemplate.Link -> {
-            SkirRepresentationTemplate.createLink(
-                endpoint =
-                    skirout.editor.v1.type_catalog
-                        .EndpointId(value = representation.endpoint.value),
-                target = encodeTypeTemplate(representation.target),
-            )
-        }
-    }
-
-private fun ConversionScope.decode(representation: SkirRepresentationTemplate): RepresentationTemplate =
-    when (representation) {
-        is SkirRepresentationTemplate.ScalarWrapper -> {
-            RepresentationTemplate.Scalar(decodeScalar(representation.value.kind))
-        }
-
-        is SkirRepresentationTemplate.RecordWrapper -> {
-            RepresentationTemplate.Record(representation.value.fields.map(::decode), representation.value.abstract_)
-        }
-
-        is SkirRepresentationTemplate.SequenceWrapper -> {
-            RepresentationTemplate.Sequence(decodeTypeTemplate(representation.value.item), decode(representation.value.kind))
-        }
-
-        is SkirRepresentationTemplate.MappingWrapper -> {
-            RepresentationTemplate.Mapping(decodeTypeTemplate(representation.value.key), decodeTypeTemplate(representation.value.value))
-        }
-
-        is SkirRepresentationTemplate.EnumerationWrapper -> {
-            RepresentationTemplate.Enumeration(representation.value.cases.map { EnumVariant(it.key) })
-        }
-
-        is SkirRepresentationTemplate.LinkWrapper -> {
-            RepresentationTemplate.Link(
-                endpoint = com.typewritermc.types.EndpointId(representation.value.endpoint.value),
-                target = decodeTypeTemplate(representation.value.target),
-            )
-        }
-
-        else -> {
-            fail("Unknown Skir representation template.")
-        }
-    }
-
-private fun encode(kind: CollectionKind): SkirCollectionKind =
-    when (kind) {
-        CollectionKind.List -> SkirCollectionKind.LIST
-        CollectionKind.Set -> SkirCollectionKind.SET
-    }
-
-private fun ConversionScope.decode(kind: SkirCollectionKind): CollectionKind =
-    when (kind) {
-        SkirCollectionKind.LIST -> CollectionKind.List
-        SkirCollectionKind.SET -> CollectionKind.Set
-        else -> fail("Unknown Skir collection kind.")
-    }
 
 internal fun ConversionScope.encodeValuePath(path: ValuePath) =
     SkirValuePath(
@@ -514,7 +125,7 @@ private fun ConversionScope.encodeSnapshot(snapshot: EditorCatalogSnapshot) =
         recommendations = snapshot.recommendations.mapIndexed { index, value -> at("recommendation $index") { encode(value) } },
         roleFallbacks = snapshot.roleFallbacks.mapIndexed { index, value -> at("role fallback $index") { encode(value) } },
         resourceOperations = snapshot.resourceOperations,
-        realmRoot = encodeDefinitionId(snapshot.realmRoot),
+        realmRoot = snapshot.realmRoot,
     )
 
 private fun ConversionScope.encode(display: ResourceDisplayFormulas) =
@@ -527,7 +138,7 @@ private fun ConversionScope.encode(display: ResourceDisplayFormulas) =
 
 internal fun ConversionScope.encode(target: ResourceTarget): SkirResourceTarget =
     when (target) {
-        is ResourceTarget.Type -> SkirResourceTarget.TypeWrapper(encodeTypeTemplate(target.template))
+        is ResourceTarget.Type -> SkirResourceTarget.TypeWrapper(TypeTemplate.NamedWrapper(target.template))
         ResourceTarget.AnyResource -> SkirResourceTarget.ANY_RESOURCE
     }
 
@@ -541,8 +152,8 @@ private fun ConversionScope.encode(capability: RealmCapabilityDescriptor): SkirC
                     capabilityId =
                         skirout.editor.v1.type_catalog
                             .CapabilityId(value = capability.id.value),
-                    requestType = encodeTypeUse(capability.requestType),
-                    resultType = encodeTypeUse(capability.resultType),
+                    requestType = capability.requestType,
+                    resultType = capability.resultType,
                 ),
             )
         }
@@ -553,8 +164,8 @@ private fun ConversionScope.encode(capability: RealmCapabilityDescriptor): SkirC
                     capabilityId =
                         skirout.editor.v1.type_catalog
                             .CapabilityId(value = capability.id.value),
-                    requestType = encodeTypeUse(capability.requestType),
-                    resultType = encodeTypeUse(capability.resultType),
+                    requestType = capability.requestType,
+                    resultType = capability.resultType,
                 ),
             )
         }
@@ -565,7 +176,7 @@ private fun ConversionScope.encode(capability: RealmCapabilityDescriptor): SkirC
                     capabilityId =
                         skirout.editor.v1.type_catalog
                             .CapabilityId(value = capability.id.value),
-                    requestType = encodeTypeUse(capability.requestType),
+                    requestType = capability.requestType,
                 ),
             )
         }
@@ -580,7 +191,7 @@ private fun ConversionScope.encode(capability: RealmCapabilityDescriptor): SkirC
                     input =
                         capability.requestType?.let { type ->
                             skirout.editor.v1.operation.OperationInputDefinition(
-                                type = encodeTypeUse(type),
+                                type = type,
                                 presentation = capability.inputPresentation,
                             )
                         },
@@ -591,32 +202,30 @@ private fun ConversionScope.encode(capability: RealmCapabilityDescriptor): SkirC
 
 private fun ConversionScope.encode(recommendation: TypeRecommendation) =
     skirout.editor.v1.catalog.TypeRecommendation(
-        type = encodeNamedTypeUse(recommendation.type),
+        type = recommendation.type,
         occurrences = recommendation.occurrences,
     )
 
 private fun ConversionScope.encode(binding: com.typewritermc.types.EndpointBindingTemplate) =
     skirout.editor.v1.catalog.EndpointBindingTemplate(
-        endpoint =
-            skirout.editor.v1.type_catalog
-                .EndpointId(value = binding.endpoint.value),
-        containingResource = encodeNamedTypeTemplate(binding.containingResource),
-        valueOwner = encodeDefinitionId(binding.valueOwner),
+        endpoint = binding.endpoint,
+        containingResource = binding.containingResource,
+        valueOwner = binding.valueOwner,
         relativePath = encode(binding.relativePath),
-        target = encodeTypeTemplate(binding.target),
+        target = binding.target,
         containsCollection = binding.containsCollection,
     )
 
 private fun ConversionScope.encode(type: PublishedType) =
     SkirPublishedType(
-        definition = encodeTypeDefinition(type.definition),
+        definition = type.definition,
         status =
             when (val status = type.status) {
                 DeclarationStatus.Ready -> SkirDeclarationStatus.READY
                 is DeclarationStatus.Unavailable -> SkirDeclarationStatus.UnavailableWrapper(status.reasons.map(::encode))
             },
         effectiveFields = type.effectiveFields.map(::encode),
-        ancestorTemplates = type.ancestorTemplates.map(::encodeNamedTypeTemplate),
+        ancestorTemplates = type.ancestorTemplates,
         display = encode(type.display),
         searchKey = type.searchKey,
         placementField = type.placementField?.let { encodeValuePath(it) },
@@ -633,9 +242,9 @@ private fun ConversionScope.encode(display: TypeDisplay) =
 private fun ConversionScope.encode(field: EffectiveFieldTemplate) =
     SkirEffectiveFieldTemplate(
         key = field.key,
-        owner = encode(field.owner),
-        type = encodeTypeTemplate(field.type),
-        rules = field.rules.map(::encode),
+        owner = field.owner,
+        type = field.type,
+        rules = field.rules,
     )
 
 private fun ConversionScope.encode(relation: RelationContract) =
@@ -654,15 +263,13 @@ private fun ConversionScope.encode(relation: RelationContract) =
 
 private fun ConversionScope.encode(endpoint: EndpointDefinition) =
     SkirEndpointDefinition(
-        id =
-            skirout.editor.v1.type_catalog
-                .EndpointId(value = endpoint.id.value),
+        id = endpoint.id,
         slot =
             when (endpoint.slot) {
                 EndpointSlot.First -> SkirEndpointSlot.FIRST
                 EndpointSlot.Second -> SkirEndpointSlot.SECOND
             },
-        resource = encodeNamedTypeTemplate(endpoint.resource),
+        resource = endpoint.resource,
         cardinality =
             when (endpoint.cardinality) {
                 EndpointCardinality.One -> SkirEndpointCardinality.ONE
@@ -679,26 +286,15 @@ private fun ConversionScope.encode(endpoint: EndpointDefinition) =
 private fun ConversionScope.encode(presentation: PresentationDescriptor) =
     SkirPresentationDescriptor(
         id = presentation.id,
-        owner = encode(presentation.owner),
+        owner = presentation.owner,
         target = encode(presentation.target),
         roles = presentation.roles.sortedBy { it.kind.ordinal },
         priority = presentation.priority,
     )
 
-private fun ConversionScope.encode(owner: DeclarationOwner) =
-    SkirDeclarationOwner(source = encode(owner.source), localIdentity = owner.localIdentity)
-
-private fun encode(key: ContributionKey) =
-    SkirContributionKey(
-        source = SkirContributionSourceId(value = key.source.value),
-        sourcePart = key.sourcePart,
-        producer = SkirProducerId(value = key.producer.value),
-        name = SkirContributionName(value = key.name.value),
-    )
-
 private fun ConversionScope.encode(target: PresentationTarget): SkirPresentationTarget =
     when (target) {
-        is PresentationTarget.Named -> SkirPresentationTarget.NamedWrapper(encodeNamedTypeTemplate(target.type))
+        is PresentationTarget.Named -> SkirPresentationTarget.NamedWrapper(target.type)
         is PresentationTarget.Representation -> SkirPresentationTarget.RepresentationWrapper(encode(target.kind))
     }
 
@@ -723,7 +319,7 @@ private fun encode(kind: RepresentationKind): SkirRepresentationKind =
 
 private fun ConversionScope.encode(recipe: ConfigurationRecipe) =
     SkirConfigurationRecipe(
-        origin = encode(recipe.origin),
+        origin = recipe.origin,
         relativePath = encode(recipe.relativePath),
         representationCondition = recipe.representationCondition?.let(::encode),
         rules = recipe.rules.map(::encode),
@@ -731,7 +327,7 @@ private fun ConversionScope.encode(recipe: ConfigurationRecipe) =
 
 private fun ConversionScope.encode(rule: OwnedRule) =
     SkirOwnedRule(
-        id = encode(rule.id),
+        id = rule.id,
         descriptor = SkirRuleDescriptor(predicate = rule.descriptor.predicate),
         diagnostic =
             SkirDiagnosticTemplate(
@@ -744,9 +340,9 @@ private fun ConversionScope.encode(rule: OwnedRule) =
 
 private fun ConversionScope.encode(diagnostic: DeclarationDiagnostic) =
     SkirDeclarationDiagnostic(
-        affected = encodeDefinitionId(diagnostic.affected),
+        affected = diagnostic.affected,
         code = diagnostic.code,
-        origins = diagnostic.origins.map { SkirDeclarationOrigin(owner = encode(it.owner)) },
+        origins = diagnostic.origins.map { SkirDeclarationOrigin(owner = it.owner) },
         field = diagnostic.field?.let(::encode),
     )
 
@@ -755,7 +351,7 @@ private fun ConversionScope.encode(diagnostic: Diagnostic) =
         id =
             skirout.editor.v1.type_catalog
                 .DiagnosticId(value = diagnostic.id.value),
-        origin = encode(diagnostic.origin),
+        origin = diagnostic.origin,
         code = diagnostic.code,
         message = diagnostic.message,
         severity = encode(diagnostic.severity),
@@ -775,10 +371,6 @@ private fun ConversionScope.encode(pattern: RelativeFieldPattern) =
                 }
             },
     )
-
-private fun ConversionScope.encode(origin: RuleOrigin) = SkirRuleOrigin(owner = encodeDefinitionId(origin.owner), ordinal = origin.ordinal)
-
-private fun ConversionScope.encode(id: RuleId) = SkirRuleId(origin = encode(id.origin), localIndex = id.localIndex)
 
 private fun encode(severity: DiagnosticSeverity): SkirDiagnosticSeverity =
     when (severity) {

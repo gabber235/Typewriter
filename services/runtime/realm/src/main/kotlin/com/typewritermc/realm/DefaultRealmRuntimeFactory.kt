@@ -44,6 +44,9 @@ import com.typewritermc.services.libs.telemetry.serviceTelemetry
 import com.typewritermc.services.libs.utils.CoroutineDelayScheduler
 import com.typewritermc.services.libs.utils.RetryPolicy
 import com.typewritermc.services.libs.utils.closeAll
+import com.typewritermc.types.ResourceTarget
+import com.typewritermc.types.canonicalText
+import com.typewritermc.types.template
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
@@ -290,12 +293,12 @@ internal fun CatalogAssembly.reportCallbackFailures() {
             when (val callback = failure.callback) {
                 is CatalogCallback.Configuration -> {
                     attribute("catalog.callback.kind", "configuration")
-                    attribute("catalog.subject", callback.target.toString())
+                    attribute("catalog.subject", callback.target.canonicalText)
                 }
 
                 is CatalogCallback.Presentation -> {
                     attribute("catalog.callback.kind", "presentation")
-                    attribute("catalog.subject", callback.subject.toString())
+                    attribute("catalog.subject", callback.subject.canonicalText)
                     attribute(
                         "presentation.role",
                         callback.role.kind.name
@@ -305,7 +308,13 @@ internal fun CatalogAssembly.reportCallbackFailures() {
 
                 is CatalogCallback.Display -> {
                     attribute("catalog.callback.kind", "display")
-                    attribute("catalog.subject", callback.target.toString())
+                    attribute(
+                        "catalog.subject",
+                        when (val target = callback.target) {
+                            is ResourceTarget.Type -> target.template.template.canonicalText
+                            ResourceTarget.AnyResource -> "any_resource"
+                        },
+                    )
                 }
             }
             exception(failure.cause)

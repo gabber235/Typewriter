@@ -6,11 +6,10 @@ import com.typewritermc.authoring.GeneratedSdkApi
 import com.typewritermc.checking.CatalogGeneration
 import com.typewritermc.expression.literal
 import com.typewritermc.types.Color
-import com.typewritermc.types.ScalarKind
 import com.typewritermc.types.StandardTypes
-import com.typewritermc.types.TypeUse
 import com.typewritermc.types.catalog.DefaultCheckedCatalog
 import com.typewritermc.types.catalog.Resolution
+import com.typewritermc.types.use
 import de.infix.testBalloon.framework.core.testSuite
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.matchers.shouldBe
@@ -29,13 +28,14 @@ import skirout.editor.v1.presentation.PresentationInteractionState.SELECTED
 import skirout.editor.v1.presentation.PresentationNode
 import skirout.editor.v1.presentation.StackChild
 import skirout.editor.v1.type_catalog.DataValue
+import skirout.editor.v1.type_catalog.ScalarKind
 import skirout.editor.v1.presentation.PresentationColor as WireColor
 import skirout.editor.v1.presentation.PresentationNumber as WireNumber
 
 val PresentationPaintTest by testSuite {
     fun build(content: (PresentationBuildScope) -> Unit): PresentationNode {
         val catalog = DefaultCheckedCatalog(CatalogGeneration("paint"), StandardTypes.definitions)
-        val checked = (catalog.resolve(TypeUse.Scalar(ScalarKind.Text)) as Resolution.Ready).value
+        val checked = (catalog.resolve(ScalarKind.TEXT.use) as Resolution.Ready).value
         return DefaultPresentationRuntime()
             .build(PresentationBuildBinding(checked.presentationTemplate(), PresentationRole.ITEM), content)
             .layout

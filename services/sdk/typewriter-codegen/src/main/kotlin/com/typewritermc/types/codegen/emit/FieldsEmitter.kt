@@ -15,6 +15,7 @@ import com.typewritermc.types.codegen.SdkDeclaration
 import com.typewritermc.types.codegen.SdkEmitter
 import com.typewritermc.types.codegen.SdkField
 import com.typewritermc.types.codegen.containsParameter
+import com.typewritermc.types.template
 import com.typewritermc.codegen.TypewriterApi as Api
 
 /** `XFields`: one typed path per authoring field, for hand written selections, projections and checks. */

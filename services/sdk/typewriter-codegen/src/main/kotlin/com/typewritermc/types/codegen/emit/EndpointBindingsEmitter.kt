@@ -14,9 +14,9 @@ import com.typewritermc.codegen.kotlinCode
 import com.typewritermc.codegen.listCode
 import com.typewritermc.codegen.namedArguments
 import com.typewritermc.types.EndpointBindingTemplate
-import com.typewritermc.types.EndpointId
 import com.typewritermc.types.codegen.SdkNames
 import com.typewritermc.types.codegen.kotlinCode
+import skirout.editor.v1.type_catalog.EndpointId
 import com.typewritermc.codegen.TypewriterApi as Api
 
 /** `XEndpointBindings`: every relation endpoint a resource root reaches through its fields. */
@@ -44,7 +44,7 @@ private fun EndpointBindingTemplate.kotlinCode(): CodeBlock =
         "%T%L",
         EndpointBindingTemplate::class,
         namedArguments(
-            "endpoint" to CodeBlock.of("%T(%S)", EndpointId::class, endpoint.value),
+            "endpoint" to CodeBlock.of("%T(value·=·%S)", EndpointId::class, endpoint.value),
             "containingResource" to containingResource.kotlinCode(),
             "valueOwner" to valueOwner.kotlinCode(),
             "relativePath" to relativePath.kotlinCode(),

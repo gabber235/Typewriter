@@ -1,9 +1,9 @@
 package com.typewritermc.presentation
 
-import com.typewritermc.authoring.ValuePath
 import com.typewritermc.expression.Expr
 import com.typewritermc.expression.Handled
 import com.typewritermc.expression.literal
+import com.typewritermc.types.template
 import skirout.editor.v1.expression.ExpressionNode
 import skirout.editor.v1.presentation.BytesEditingEncoding
 import skirout.editor.v1.presentation.ChoicePresentation
@@ -20,6 +20,8 @@ import skirout.editor.v1.presentation.TextCapitalization
 import skirout.editor.v1.presentation.TextPurpose
 import skirout.editor.v1.presentation.TogglePosition
 import skirout.editor.v1.presentation.TogglePresentation
+import skirout.editor.v1.type_catalog.ScalarKind
+import skirout.editor.v1.type_catalog.TypeTemplate
 import skirout.editor.v1.presentation.BorderOverride as WireBorderOverride
 import skirout.editor.v1.presentation.BoundControl as WireBoundControl
 import skirout.editor.v1.presentation.BytesControl as WireBytesControl
@@ -215,7 +217,7 @@ private class RuntimeValueExpressionScope<V>(
 internal class RuntimeValueMappings<V>(
     private val state: PresentationBuildState,
     private val target: WireValueMappings.Mutable,
-    private val payload: com.typewritermc.types.TypeTemplate,
+    private val payload: TypeTemplate,
 ) : ValueMappingScope<V> {
     override fun onComplete(body: ValueExpressionScope<V>.() -> Expr<V, Handled>) {
         target.completion = mapping("completion", body)
@@ -236,8 +238,7 @@ internal class RuntimeValueMappings<V>(
             if (purpose ==
                 "display"
             ) {
-                com.typewritermc.types.TypeTemplate
-                    .Scalar(com.typewritermc.types.ScalarKind.Text)
+                ScalarKind.TEXT.template
             } else {
                 payload
             }
@@ -398,7 +399,7 @@ internal class InputConfigurationDraft {
 
     fun <V> mappings(
         state: PresentationBuildState,
-        payload: com.typewritermc.types.TypeTemplate,
+        payload: TypeTemplate,
     ) = RuntimeValueMappings<V>(state, mappings, payload)
 
     fun popup() = RuntimePopupAppearance(popup)
@@ -443,7 +444,7 @@ private class RuntimeTextInputScope(
 
 internal class RuntimeInputConfigurationFactories(
     private val state: PresentationBuildState,
-    private val payload: com.typewritermc.types.TypeTemplate,
+    private val payload: TypeTemplate,
 ) {
     fun <N> numeric(
         author: RuntimePresentationBuildScope,

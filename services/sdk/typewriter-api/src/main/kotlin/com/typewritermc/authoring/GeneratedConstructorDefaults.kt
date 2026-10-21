@@ -2,11 +2,11 @@
 
 package com.typewritermc.authoring
 
-import com.typewritermc.types.FieldOwner
 import com.typewritermc.types.NativeBindingException
-import com.typewritermc.types.TypeUse
 import com.typewritermc.types.encodeGeneratedDefault
 import kotlinx.coroutines.CancellationException
+import skirout.editor.v1.type_catalog.FieldOwner
+import skirout.editor.v1.type_catalog.TypeUse
 import java.lang.reflect.InvocationTargetException
 import kotlin.reflect.KClass
 import kotlin.reflect.KParameter

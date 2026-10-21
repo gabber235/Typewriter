@@ -16,6 +16,7 @@ import com.typewritermc.types.RelationId
 import com.typewritermc.types.catalog.CheckedCatalog
 import com.typewritermc.types.catalog.Resolution
 import com.typewritermc.types.ownsResources
+import com.typewritermc.types.use
 
 /** Hydrated resource roles and the compiled links between them. */
 class CompiledResourceGraph private constructor(
@@ -84,7 +85,7 @@ class CompiledResourceGraph private constructor(
                         "Compiled resource $key has inconsistent actual type evidence."
                     }
                     val checked =
-                        when (val resolution = catalog.resolve(record.actualType)) {
+                        when (val resolution = catalog.resolve(record.actualType.use)) {
                             is Resolution.Ready -> {
                                 resolution.value
                             }

@@ -19,19 +19,19 @@ import com.typewritermc.codegen.namedArguments
 import com.typewritermc.codegen.setCode
 import com.typewritermc.types.EndpointCardinality
 import com.typewritermc.types.EndpointDefinition
-import com.typewritermc.types.EndpointId
 import com.typewritermc.types.EndpointSlot
 import com.typewritermc.types.RelationContract
 import com.typewritermc.types.RelationDeletePolicy
 import com.typewritermc.types.RelationFamilyId
 import com.typewritermc.types.RelationId
 import com.typewritermc.types.RelationshipEndpoint
-import com.typewritermc.types.TypeDefinition
-import com.typewritermc.types.TypeDefinitionId
-import com.typewritermc.types.TypeTemplate
 import com.typewritermc.types.TypewriterGeneratedEndpoint
 import com.typewritermc.types.ksp.relationLinkDefinition
 import com.typewritermc.types.ksp.relationLinkId
+import skirout.editor.v1.type_catalog.EndpointId
+import skirout.editor.v1.type_catalog.NamedTypeTemplate
+import skirout.editor.v1.type_catalog.TypeDefinition
+import skirout.editor.v1.type_catalog.TypeDefinitionId
 import com.typewritermc.codegen.TypewriterApi as Api
 
 /** One endpoint of a reference contract, resolved for emission. */
@@ -39,7 +39,7 @@ internal class SdkEndpoint(
     val name: String,
     val slot: EndpointSlot,
     val resource: TypeName,
-    val resourceTemplate: TypeTemplate.Named,
+    val resourceTemplate: NamedTypeTemplate,
     val cardinality: EndpointCardinality,
     val onDelete: RelationDeletePolicy,
 )
@@ -66,7 +66,7 @@ internal class SdkRelation(
     fun linkId(endpoint: SdkEndpoint): TypeDefinitionId = relationLinkId(endpointClass(endpoint).canonicalName)
 
     fun linkDefinition(endpoint: SdkEndpoint): TypeDefinition =
-        relationLinkDefinition(endpointClass(endpoint).canonicalName, EndpointId("$id:${endpoint.slot.name.lowercase()}"))
+        relationLinkDefinition(endpointClass(endpoint).canonicalName, EndpointId(value = "$id:${endpoint.slot.name.lowercase()}"))
 
     companion object {
         /** Name of the object nested in each endpoint interface that owns its link definition. */

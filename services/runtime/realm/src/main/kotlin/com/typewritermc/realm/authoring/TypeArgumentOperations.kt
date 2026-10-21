@@ -29,12 +29,17 @@ import com.typewritermc.types.DataValue
 import com.typewritermc.types.EndpointSlot
 import com.typewritermc.types.RelationContract
 import com.typewritermc.types.ResourceId
-import com.typewritermc.types.TypeTemplate
-import com.typewritermc.types.TypeUse
 import com.typewritermc.types.catalog.CheckedCatalog
 import com.typewritermc.types.catalog.DeclarationDiagnostic
 import com.typewritermc.types.catalog.Resolution
-import com.typewritermc.types.catalog.ResolvedRepresentation
+import com.typewritermc.types.nullable
+import com.typewritermc.types.template
+import com.typewritermc.types.unknownVariant
+import com.typewritermc.types.use
+import skirout.editor.v1.type_catalog.NamedTypeTemplate
+import skirout.editor.v1.type_catalog.ResolvedRepresentation
+import skirout.editor.v1.type_catalog.TypeTemplate
+import skirout.editor.v1.type_catalog.TypeUse
 
 internal data class TypeArgumentChangePreview(
     val resource: ResourceId,
@@ -313,23 +318,23 @@ private fun collectRepairs(
     inspected += InputIdentity.Value(at)
     if (value == DataValue.Unfilled) return
     if (value == DataValue.Null) {
-        if (next !is TypeUse.Nullable) repairs += at
+        if (next !is TypeUse.NullableWrapper) repairs += at
         return
     }
 
-    val expected = if (next is TypeUse.Nullable) next.value else next
-    val declaredActual = if (old is TypeUse.Nullable) old.value else old
-    val actual = (value as? DataValue.Named)?.actualType ?: declaredActual
+    val expected = if (next is TypeUse.NullableWrapper) next.value.value else next
+    val declaredActual = if (old is TypeUse.NullableWrapper) old.value.value else old
+    val actual = (value as? DataValue.Named)?.actualType?.use ?: declaredActual
     if (catalog.isReadableAs(actual, next)) return
 
     val namedValue = value as? DataValue.Named
-    val actualNamed = actual as? TypeUse.Named
-    val expectedNamed = expected as? TypeUse.Named
+    val actualNamed = actual as? TypeUse.NamedWrapper
+    val expectedNamed = expected as? TypeUse.NamedWrapper
     val canRetag =
         namedValue != null &&
             actualNamed != null &&
             expectedNamed != null &&
-            actualNamed.definition == expectedNamed.definition
+            actualNamed.value.definition == expectedNamed.value.definition
     if (!canRetag) {
         repairs += at
         return
@@ -346,13 +351,13 @@ private fun collectRepairs(
         repairs += at
         return
     }
-    retags += EditIntent.Retag(at, expectedType)
+    retags += EditIntent.Retag(at, expectedType.value)
     val payload = requireNotNull(namedValue).payload
     when {
-        payload is DataValue.Record && oldRepresentation is ResolvedRepresentation.Record &&
-            newRepresentation is ResolvedRepresentation.Record -> {
-            val oldFields = oldRepresentation.fields.associateBy { it.key }
-            newRepresentation.fields.forEach { field ->
+        payload is DataValue.Record && oldRepresentation is ResolvedRepresentation.RecordWrapper &&
+            newRepresentation is ResolvedRepresentation.RecordWrapper -> {
+            val oldFields = oldRepresentation.value.fields.associateBy { it.key }
+            newRepresentation.value.fields.forEach { field ->
                 val child = payload.fields[field.key]
                 val previous = oldFields[field.key]
                 val childLocation = at.field(field.key)
@@ -365,15 +370,15 @@ private fun collectRepairs(
             }
         }
 
-        payload is DataValue.ListValue && oldRepresentation is ResolvedRepresentation.Sequence &&
-            newRepresentation is ResolvedRepresentation.Sequence -> {
+        payload is DataValue.ListValue && oldRepresentation is ResolvedRepresentation.SequenceWrapper &&
+            newRepresentation is ResolvedRepresentation.SequenceWrapper -> {
             inspected += InputIdentity.Membership(at)
             inspected += InputIdentity.Order(at)
             payload.items.forEach { item ->
                 collectRepairs(
                     item.value,
-                    oldRepresentation.item,
-                    newRepresentation.item,
+                    oldRepresentation.value.item,
+                    newRepresentation.value.item,
                     at.item(item.id),
                     catalog,
                     repairs,
@@ -383,14 +388,14 @@ private fun collectRepairs(
             }
         }
 
-        payload is DataValue.SetValue && oldRepresentation is ResolvedRepresentation.Sequence &&
-            newRepresentation is ResolvedRepresentation.Sequence -> {
+        payload is DataValue.SetValue && oldRepresentation is ResolvedRepresentation.SequenceWrapper &&
+            newRepresentation is ResolvedRepresentation.SequenceWrapper -> {
             inspected += InputIdentity.Membership(at)
             payload.items.forEach { item ->
                 collectRepairs(
                     item.value,
-                    oldRepresentation.item,
-                    newRepresentation.item,
+                    oldRepresentation.value.item,
+                    newRepresentation.value.item,
                     at.item(item.id),
                     catalog,
                     repairs,
@@ -400,15 +405,15 @@ private fun collectRepairs(
             }
         }
 
-        payload is DataValue.MapValue && oldRepresentation is ResolvedRepresentation.Mapping &&
-            newRepresentation is ResolvedRepresentation.Mapping -> {
+        payload is DataValue.MapValue && oldRepresentation is ResolvedRepresentation.MappingWrapper &&
+            newRepresentation is ResolvedRepresentation.MappingWrapper -> {
             inspected += InputIdentity.Membership(at)
             inspected += InputIdentity.Order(at)
             payload.rows.forEach { row ->
                 collectRepairs(
                     row.key,
-                    oldRepresentation.key,
-                    newRepresentation.key,
+                    oldRepresentation.value.key,
+                    newRepresentation.value.key,
                     at.item(row.id).mapKey(),
                     catalog,
                     repairs,
@@ -417,8 +422,8 @@ private fun collectRepairs(
                 )
                 collectRepairs(
                     row.value,
-                    oldRepresentation.value,
-                    newRepresentation.value,
+                    oldRepresentation.value.value,
+                    newRepresentation.value.value,
                     at.item(row.id).mapValue(),
                     catalog,
                     repairs,
@@ -488,15 +493,15 @@ private fun AuthoringRecord.matches(
     catalog: CheckedCatalog,
 ): Boolean =
     when (val selected = configuration) {
-        is TypeSelection.Complete -> catalog.isReadableAs(selected.use, expected)
-        is TypeSelection.Pending -> catalog.knownApplications(selected).any { catalog.isReadableAs(it, expected) }
+        is TypeSelection.Complete -> catalog.isReadableAs(selected.use.use, expected)
+        is TypeSelection.Pending -> catalog.knownApplications(selected).any { catalog.isReadableAs(it.use, expected) }
     }
 
 private fun AuthoringRecord.matches(
-    expected: TypeTemplate.Named,
+    expected: NamedTypeTemplate,
     catalog: CheckedCatalog,
 ): Boolean {
-    val concrete = expected.concreteUseOrNull()
+    val concrete = expected.template.concreteUseOrNull()
     if (concrete != null) return matches(concrete, catalog)
     return catalog.isNominalSubtype(configuration.definition, expected.definition)
 }
@@ -510,9 +515,10 @@ private val LinkRepairIntent.location: ValueLocation
 
 private fun TypeTemplate.concreteUseOrNull(): TypeUse? {
     return when (this) {
-        is TypeTemplate.Parameter -> null
-        is TypeTemplate.Named -> TypeUse.Named(definition, arguments.map { it.concreteUseOrNull() ?: return null })
-        is TypeTemplate.Nullable -> value.concreteUseOrNull()?.let(TypeUse::Nullable)
-        is TypeTemplate.Scalar -> TypeUse.Scalar(kind)
+        is TypeTemplate.ParameterWrapper -> null
+        is TypeTemplate.NamedWrapper -> value.definition.use(value.arguments.map { it.concreteUseOrNull() ?: return null })
+        is TypeTemplate.NullableWrapper -> value.value.concreteUseOrNull()?.nullable()
+        is TypeTemplate.ScalarWrapper -> value.use
+        else -> unknownVariant(this)
     }
 }

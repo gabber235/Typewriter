@@ -8,7 +8,9 @@ import com.typewritermc.realm.catalog.RealmCatalogStore
 import com.typewritermc.realm.catalog.installTestCatalog
 import com.typewritermc.types.catalog.Resolution
 import com.typewritermc.types.skir.getOrThrow
+import com.typewritermc.types.template
 import com.typewritermc.types.toTemplate
+import com.typewritermc.types.use
 import de.infix.testBalloon.framework.core.testSuite
 import io.kotest.matchers.collections.shouldContainExactly
 import io.kotest.matchers.shouldBe
@@ -263,11 +265,9 @@ private fun CoreOperationsFixture.candidateRequest(
     generation = CatalogGeneration(value = catalogGeneration()),
     capabilityId = CapabilityId(value = candidateSearch(operation, field).value),
     resultType =
-        com.typewritermc.types.skir.SkirTypeCodec
-            .encode(
-                com.typewritermc.operations.OperationResourceOptionDefinition.use
-                    .toTemplate(),
-            ).getOrThrow(),
+        com.typewritermc.operations.OperationResourceOptionDefinition.use
+            .toTemplate()
+            .template,
     operationContext = searchContext(*subjects),
     query = RealmSearchQuery(normalizedQuery = query, terms = listOf(query), selectors = emptyList(), selectorExpression = null),
 )
@@ -276,7 +276,7 @@ private fun CoreOperationsFixture.candidateRequest(
 private fun CoreOperationsFixture.option(value: DataValue): OperationResourceOption =
     views.read { root ->
         val checked =
-            (root.catalog.checked.resolve(com.typewritermc.operations.OperationResourceOptionDefinition.use) as Resolution.Ready).value
+            (root.catalog.checked.resolve(com.typewritermc.operations.OperationResourceOptionDefinition.use.use) as Resolution.Ready).value
         val complete =
             checked.complete(
                 com.typewritermc.types.skir.SkirDataValueCodec

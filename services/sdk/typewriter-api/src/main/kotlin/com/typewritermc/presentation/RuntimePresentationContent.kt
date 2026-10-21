@@ -10,8 +10,6 @@ import com.typewritermc.types.skir.getOrThrow
 import skirout.editor.v1.presentation.DateTimeZone
 import skirout.editor.v1.presentation.PresentationElement
 import skirout.editor.v1.presentation.PresentationNode
-import skirout.editor.v1.presentation.PresentationTextOverflow
-import skirout.editor.v1.presentation.PresentationTextTone
 import skirout.editor.v1.presentation.RelativeTimeStyle
 import kotlin.time.Instant
 

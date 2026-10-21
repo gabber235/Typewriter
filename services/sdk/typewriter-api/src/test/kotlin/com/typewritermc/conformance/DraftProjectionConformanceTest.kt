@@ -13,7 +13,6 @@ import com.typewritermc.authoring.GeneratedSdkApi
 import com.typewritermc.authoring.ItemId
 import com.typewritermc.authoring.MapDraft
 import com.typewritermc.authoring.PartialSchema
-import com.typewritermc.authoring.PathSegment
 import com.typewritermc.authoring.ReadContext
 import com.typewritermc.authoring.TypeSelection
 import com.typewritermc.authoring.ValueLocation
@@ -33,19 +32,22 @@ import com.typewritermc.expression.EvaluationDiagnostic
 import com.typewritermc.library.TagDefinition
 import com.typewritermc.library.TagDraftType
 import com.typewritermc.types.DataValue
-import com.typewritermc.types.IntegerWidth
 import com.typewritermc.types.ListItem
 import com.typewritermc.types.MapRow
 import com.typewritermc.types.ResourceId
-import com.typewritermc.types.ScalarKind
 import com.typewritermc.types.StandardTypes
-import com.typewritermc.types.TypeDefinitionId
-import com.typewritermc.types.TypeId
-import com.typewritermc.types.TypeUse
 import com.typewritermc.types.canonicalValueKey
+import com.typewritermc.types.integerScalar
+import com.typewritermc.types.namedUse
+import com.typewritermc.types.qualified
 import com.typewritermc.types.unwrapNamed
+import com.typewritermc.types.use
 import de.infix.testBalloon.framework.core.testSuite
 import io.kotest.matchers.shouldBe
+import skirout.editor.v1.type_catalog.IntegerWidth
+import skirout.editor.v1.type_catalog.ScalarKind
+import skirout.editor.v1.type_catalog.TypeDefinitionId
+import skirout.editor.v1.type_catalog.TypeUse
 import java.math.BigInteger
 
 val DraftProjectionConformanceTest by testSuite {
@@ -99,7 +101,7 @@ val DraftProjectionConformanceTest by testSuite {
     test("collection projections retain item identity and their captured read view") {
         val root = ValueLocation(ResourceId("draft:list"), ValuePath())
         val first = ItemId("first")
-        val listUse = TypeUse.Named(StandardTypes.list, listOf(INT_USE))
+        val listUse = StandardTypes.list.namedUse(listOf(INT_USE))
         val reads =
             FixtureDraftReads(
                 CatalogGeneration("list catalog"),
@@ -129,8 +131,8 @@ val DraftProjectionConformanceTest by testSuite {
         val duplicate = ItemId("duplicate")
         val unique = ItemId("unique")
         val unfinished = ItemId("unfinished")
-        val keyUse = TypeUse.Named(FIXTURE_KEY_ID, emptyList())
-        val mapUse = TypeUse.Named(StandardTypes.map, listOf(keyUse, TEXT_USE))
+        val keyUse = FIXTURE_KEY_ID.namedUse(emptyList())
+        val mapUse = StandardTypes.map.namedUse(listOf(keyUse.use, TEXT_USE))
         val meaningfulKey = DataValue.Named(keyUse, DataValue.Record(mapOf("code" to DataValue.StringValue("same"))))
         val uniqueKey = DataValue.Named(keyUse, DataValue.Record(mapOf("code" to DataValue.StringValue("unique"))))
         val reads =
@@ -257,6 +259,6 @@ private fun <T> failed(
     location: ValueLocation,
 ): Availability<T> = Availability.Failed(EvaluationDiagnostic(code, code, listOf(location)))
 
-private val INT_USE = TypeUse.Scalar(ScalarKind.Integer(IntegerWidth.SIGNED_32))
-private val TEXT_USE = TypeUse.Scalar(ScalarKind.Text)
-private val FIXTURE_KEY_ID = TypeDefinitionId(TypeId.Qualified("test", "DraftKey"), 1)
+private val INT_USE = integerScalar(IntegerWidth.SIGNED_THIRTY_TWO).use
+private val TEXT_USE = ScalarKind.TEXT.use
+private val FIXTURE_KEY_ID = TypeDefinitionId.qualified("test", "DraftKey")

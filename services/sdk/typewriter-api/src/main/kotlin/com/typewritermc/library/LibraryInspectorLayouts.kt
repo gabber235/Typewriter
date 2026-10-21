@@ -2,7 +2,6 @@ package com.typewritermc.library
 
 import com.typewritermc.expression.Expr
 import com.typewritermc.expression.Handled
-import com.typewritermc.expression.MissingPolicy
 import com.typewritermc.expression.emptyListExpression
 import com.typewritermc.expression.eq
 import com.typewritermc.expression.gt
@@ -31,8 +30,6 @@ import com.typewritermc.presentation.projectedCollectionSource
 import com.typewritermc.presentation.withAlpha
 import com.typewritermc.types.Color
 import com.typewritermc.types.ResourceId
-import skirout.editor.v1.expression.ExpressionNode
-import skirout.editor.v1.expression.RuleUnaryOperation
 import skirout.editor.v1.presentation.CrossAxisAlignment
 
 internal fun Layout.inspectorSection(

@@ -3,8 +3,8 @@ package com.typewritermc.authoring
 import com.typewritermc.types.Color
 import com.typewritermc.types.Icon
 import com.typewritermc.types.ResourceId
-import com.typewritermc.types.TypeUse
 import com.typewritermc.types.TypewriterType
+import skirout.editor.v1.type_catalog.NamedTypeUse
 
 /** Generic presentation subject shared by authoring, search, and reference resolution. */
 data class PresentationSubject(
@@ -17,7 +17,7 @@ data class PresentationSubject(
 sealed interface ReferenceResourceResolution {
     data class Resolved(
         val subject: PresentationSubject,
-        val compatibleTypes: List<TypeUse.Named>,
+        val compatibleTypes: List<NamedTypeUse>,
     ) : ReferenceResourceResolution
 
     data class Missing(

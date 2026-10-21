@@ -58,18 +58,11 @@ import com.typewritermc.types.EndpointSlot
 import com.typewritermc.types.Icon
 import com.typewritermc.types.Many
 import com.typewritermc.types.One
-import com.typewritermc.types.ParameterKey
 import com.typewritermc.types.ReferenceContract
 import com.typewritermc.types.RelationDeletePolicy
-import com.typewritermc.types.RepresentationTemplate
 import com.typewritermc.types.Resource
 import com.typewritermc.types.StandardTypes
-import com.typewritermc.types.TypeDefinition
-import com.typewritermc.types.TypeDefinitionId
 import com.typewritermc.types.TypeDisplay
-import com.typewritermc.types.TypeParameter
-import com.typewritermc.types.TypeTemplate
-import com.typewritermc.types.TypeUse
 import com.typewritermc.types.TypewriterDisplay
 import com.typewritermc.types.TypewriterRelationFamily
 import com.typewritermc.types.TypewriterType
@@ -94,8 +87,22 @@ import com.typewritermc.types.ksp.KspTypeConversionResult
 import com.typewritermc.types.ksp.KspTypeGraphConverter
 import com.typewritermc.types.ksp.OwnedFieldDeclaration
 import com.typewritermc.types.ksp.typeDefinitionIdentity
+import com.typewritermc.types.namedTemplate
+import com.typewritermc.types.nullable
 import com.typewritermc.types.substitute
+import com.typewritermc.types.template
 import com.typewritermc.types.toTemplate
+import com.typewritermc.types.unknownVariant
+import com.typewritermc.types.use
+import skirout.editor.v1.type_catalog.NamedTypeTemplate
+import skirout.editor.v1.type_catalog.NamedTypeUse
+import skirout.editor.v1.type_catalog.ParameterKey
+import skirout.editor.v1.type_catalog.RepresentationTemplate
+import skirout.editor.v1.type_catalog.TypeDefinition
+import skirout.editor.v1.type_catalog.TypeDefinitionId
+import skirout.editor.v1.type_catalog.TypeParameter
+import skirout.editor.v1.type_catalog.TypeTemplate
+import skirout.editor.v1.type_catalog.TypeUse
 
 class TypewriterTypeProcessorProvider : SymbolProcessorProvider {
     override fun create(environment: SymbolProcessorEnvironment): SymbolProcessor =
@@ -280,7 +287,7 @@ private class TypewriterTypeProcessor(
             name = simpleName.asString(),
             slot = EndpointSlot.First,
             resourceType = resource,
-            resourceTemplate = resourceTemplate as TypeTemplate.Named,
+            resourceTemplate = (resourceTemplate as TypeTemplate.NamedWrapper).value,
             cardinality = if (marker.declaration isType One::class.asClassName()) EndpointCardinality.One else EndpointCardinality.Many,
             onDelete =
                 rawAnnotation(DeletionPolicy::class)?.enumArgumentOrNull<RelationDeletePolicy>("onDelete") ?: RelationDeletePolicy.CLEAR,
@@ -362,14 +369,11 @@ private class TypewriterTypeProcessor(
                     shape =
                         declaration.declarationShape(
                             template =
-                                TypeTemplate.Named(
-                                    typeDefinition.id,
-                                    typeDefinition.parameters.map { TypeTemplate.Parameter(it.key) },
-                                ),
+                                typeDefinition.id.namedTemplate(typeDefinition.parameters.map { it.key.template }).template,
                             native = SdkNames.of(declaration).source.parameterizedOrSelf(typeVariables),
                             arguments =
                                 typeVariables.mapIndexed { index, variable ->
-                                    FieldShape.Parameter(index, TypeTemplate.Parameter(ParameterKey(typeDefinition.id, index)), variable)
+                                    FieldShape.Parameter(index, ParameterKey(owner = typeDefinition.id, index = index).template, variable)
                                 },
                         ),
                     references = references,
@@ -455,12 +459,12 @@ private class TypewriterTypeProcessor(
         root: TypeDefinition,
         conversion: KspTypeConversionResult.Success,
     ): List<EffectiveAccessorField>? {
-        if (root.representation !is RepresentationTemplate.Record) return emptyList()
+        if (root.representation !is RepresentationTemplate.RecordWrapper) return emptyList()
         val definitions = conversion.definitions.associateBy(TypeDefinition::id)
         var valid = true
 
         fun collect(
-            template: TypeTemplate.Named,
+            template: NamedTypeTemplate,
             stack: Set<TypeDefinitionId>,
         ): List<OwnedFieldDeclaration> {
             if (template.definition in stack) return emptyList()
@@ -472,7 +476,7 @@ private class TypewriterTypeProcessor(
                     .toMap()
             val inherited =
                 definition.parents.flatMap { parent ->
-                    collect(parent.substitute(substitutions) as TypeTemplate.Named, stack + template.definition)
+                    collect(parent.substitute(substitutions), stack + template.definition)
                 }
             val own =
                 conversion.ownedFields[definition.id].orEmpty().map { field ->
@@ -490,7 +494,7 @@ private class TypewriterTypeProcessor(
                 ownByName[name] ?: inheritedByName.getValue(name).first()
             }
         }
-        val fields = collect(TypeTemplate.Named(root.id, root.parameters.map { TypeTemplate.Parameter(it.key) }), emptySet())
+        val fields = collect(root.id.namedTemplate(root.parameters.map { it.key.template }), emptySet())
         for ((name, candidates) in fields.groupBy(OwnedFieldDeclaration::sourceName)) {
             if (candidates.size > 1) {
                 logger.error(
@@ -529,7 +533,7 @@ private class TypewriterTypeProcessor(
     ) {
         val identity = declaration.typeDefinitionIdentity() ?: return
         val root = definitions[identity] ?: return
-        val rootTemplate = TypeTemplate.Named(root.id, root.parameters.map { TypeTemplate.Parameter(it.key) })
+        val rootTemplate = root.id.namedTemplate(root.parameters.map { it.key.template })
         val bindings = discoverEndpointBindings(rootTemplate, definitions)
         if (bindings.isEmpty()) return
         val names = SdkNames.of(declaration)
@@ -636,15 +640,15 @@ private class TypewriterTypeProcessor(
         }
         val applied = resource.asType(nativeArguments)
         val conversion = KspTypeGraphConverter().convert(applied)
-        if (conversion !is KspTypeConversionResult.Success || conversion.root !is TypeUse.Named) {
+        if (conversion !is KspTypeConversionResult.Success || conversion.root !is TypeUse.NamedWrapper) {
             logger.error("Resource operations require a supported closed resource application.", owner)
             return null
         }
-        val application = conversion.root as TypeUse.Named
+        val application = conversion.root as TypeUse.NamedWrapper
         val nativeTypes = nativeArguments.map { requireNotNull(it.type).resolve() }
         val shapes =
             context(emptyList<KSTypeParameter>().toTypeParameterResolver()) {
-                application.arguments.zip(nativeTypes) { use, type -> classify(use.toTemplate(), type) }
+                application.value.arguments.zip(nativeTypes) { use, type -> classify(use.toTemplate(), type) }
             }
         val expected = shapes.map { it.draftType(emptyList()) }
         val actual = resourceArguments.drop(count).map { requireNotNull(it.type).resolve().toTypeName() }
@@ -663,7 +667,7 @@ private class TypewriterTypeProcessor(
             ) ?: return null
         return context(references) {
             val projections = context(TypeParameterBindings.from(emptyMap())) { shapes.map { it.draftProjection() } }
-            adapter.operation(application, nativeTypes.map { it.toTypeName() } + expected, projections, input.type, input.use)
+            adapter.operation(application.value, nativeTypes.map { it.toTypeName() } + expected, projections, input.type, input.use)
         }
     }
 
@@ -682,13 +686,13 @@ private class TypewriterTypeProcessor(
         val conversion = type?.takeIf { !it.isError && !it.isMarkedNullable }?.let { KspTypeGraphConverter().convert(it) }
         if (declaration?.rawAnnotation(TypewriterType::class) == null ||
             conversion !is KspTypeConversionResult.Success ||
-            conversion.root !is TypeUse.Named
+            conversion.root !is TypeUse.NamedWrapper
         ) {
             logger.error("Operation input must be Unit or a closed application of a @TypewriterType.", owner)
             return null
         }
-        val use = conversion.root as TypeUse.Named
-        return OperationInputShape(type.toTypeName(), use, conversion.declarations, use.referencedIds())
+        val use = conversion.root as TypeUse.NamedWrapper
+        return OperationInputShape(type.toTypeName(), use.value, conversion.declarations, use.referencedIds())
     }
 
     private fun validateOptions(): Boolean {
@@ -713,7 +717,7 @@ private class TypewriterTypeProcessor(
 /** The native and portable input of one operation object, with the declarations its portable type mentions. */
 private class OperationInputShape(
     val type: TypeName,
-    val use: TypeUse.Named?,
+    val use: NamedTypeUse?,
     val declarations: Map<TypeDefinitionId, KSClassDeclaration>,
     val referenced: Set<TypeDefinitionId>,
 )
@@ -732,7 +736,7 @@ private data class RelationEndpointSource(
     val name: String,
     val slot: EndpointSlot,
     val resourceType: KSType,
-    val resourceTemplate: TypeTemplate.Named,
+    val resourceTemplate: NamedTypeTemplate,
     val cardinality: EndpointCardinality,
     val onDelete: RelationDeletePolicy,
 ) {
@@ -740,7 +744,7 @@ private data class RelationEndpointSource(
 }
 
 private fun discoverEndpointBindings(
-    root: TypeTemplate.Named,
+    root: NamedTypeTemplate,
     definitions: Map<TypeDefinitionId, TypeDefinition>,
 ): List<EndpointBindingTemplate> {
     val bindings = mutableListOf<EndpointBindingTemplate>()
@@ -753,37 +757,37 @@ private fun discoverEndpointBindings(
         stack: Set<Pair<TypeDefinitionId, Boolean>>,
     ) {
         when (template) {
-            is TypeTemplate.Nullable -> {
-                visit(template.value, path, containsCollection, valueOwner, stack)
+            is TypeTemplate.NullableWrapper -> {
+                visit(template.value.value, path, containsCollection, valueOwner, stack)
             }
 
-            is TypeTemplate.Parameter, is TypeTemplate.Scalar -> {}
+            is TypeTemplate.ParameterWrapper, is TypeTemplate.ScalarWrapper -> {}
 
-            is TypeTemplate.Named -> {
-                val definition = definitions[template.definition] ?: return
+            is TypeTemplate.NamedWrapper -> {
+                val definition = definitions[template.value.definition] ?: return
                 val substitutions =
                     definition.parameters
                         .map(TypeParameter::key)
-                        .zip(template.arguments)
+                        .zip(template.value.arguments)
                         .toMap()
                 when (val representation = definition.representation) {
-                    is RepresentationTemplate.Link -> {
+                    is RepresentationTemplate.LinkWrapper -> {
                         bindings +=
                             EndpointBindingTemplate(
-                                endpoint = representation.endpoint,
+                                endpoint = representation.value.endpoint,
                                 containingResource = root,
                                 valueOwner = valueOwner,
                                 relativePath = RelativeFieldPattern(path),
-                                target = representation.target.substitute(substitutions),
+                                target = representation.value.target.substitute(substitutions),
                                 containsCollection = containsCollection,
                             )
                     }
 
-                    is RepresentationTemplate.Record -> {
-                        val key = template.definition to containsCollection
+                    is RepresentationTemplate.RecordWrapper -> {
+                        val key = template.value.definition to containsCollection
                         if (key in stack) return
                         val nestedStack = stack + key
-                        representation.fields.forEach { field ->
+                        representation.value.fields.forEach { field ->
                             visit(
                                 field.type.substitute(substitutions),
                                 path + FieldPatternSegment.Field(field.owner.name),
@@ -794,22 +798,42 @@ private fun discoverEndpointBindings(
                         }
                     }
 
-                    is RepresentationTemplate.Sequence -> {
-                        visit(representation.item.substitute(substitutions), path + FieldPatternSegment.Items, true, valueOwner, stack)
+                    is RepresentationTemplate.SequenceWrapper -> {
+                        visit(
+                            representation.value.item.substitute(substitutions),
+                            path + FieldPatternSegment.Items,
+                            true,
+                            valueOwner,
+                            stack,
+                        )
                     }
 
-                    is RepresentationTemplate.Mapping -> {
-                        visit(representation.key.substitute(substitutions), path + FieldPatternSegment.Keys, true, valueOwner, stack)
-                        visit(representation.value.substitute(substitutions), path + FieldPatternSegment.Values, true, valueOwner, stack)
+                    is RepresentationTemplate.MappingWrapper -> {
+                        visit(representation.value.key.substitute(substitutions), path + FieldPatternSegment.Keys, true, valueOwner, stack)
+                        visit(
+                            representation.value.value.substitute(substitutions),
+                            path + FieldPatternSegment.Values,
+                            true,
+                            valueOwner,
+                            stack,
+                        )
                     }
 
-                    is RepresentationTemplate.Enumeration, is RepresentationTemplate.Scalar -> {}
+                    is RepresentationTemplate.EnumerationWrapper, is RepresentationTemplate.ScalarWrapper -> {}
+
+                    else -> {
+                        unknownVariant(representation)
+                    }
                 }
+            }
+
+            else -> {
+                unknownVariant(template)
             }
         }
     }
 
-    visit(root, emptyList(), false, root.definition, emptySet())
+    visit(root.template, emptyList(), false, root.definition, emptySet())
     return bindings.distinct()
 }
 
@@ -830,12 +854,12 @@ private fun KSType.endpointTemplate(declarations: MutableMap<TypeDefinitionId, K
         require(index >= 0) { "Relation endpoint parameters must belong to their declaration." }
         val identity = owner.typeDefinitionIdentity() ?: return null
         declarations[identity] = owner
-        return TypeTemplate.Parameter(ParameterKey(identity, index)).withNullability(this)
+        return ParameterKey(owner = identity, index = index).template.withNullability(this)
     }
     val declaration =
         declaration as? KSClassDeclaration
             ?: error("Relation endpoint arguments must use class or parameter types.")
-    portableScalarKind()?.let { scalar -> return TypeTemplate.Scalar(scalar).withNullability(this) }
+    portableScalarKind()?.let { scalar -> return scalar.template.withNullability(this) }
     val identity =
         when {
             declaration isOneOf KnownTypes.lists -> StandardTypes.list
@@ -845,13 +869,13 @@ private fun KSType.endpointTemplate(declarations: MutableMap<TypeDefinitionId, K
         }
     val arguments =
         arguments.mapIndexed { index, argument ->
-            val type = argument.type?.resolve() ?: return@mapIndexed TypeTemplate.Parameter(ParameterKey(identity, index))
+            val type = argument.type?.resolve() ?: return@mapIndexed ParameterKey(owner = identity, index = index).template
             type.endpointTemplate(declarations) ?: return null
         }
-    return TypeTemplate.Named(identity, arguments).withNullability(this)
+    return identity.template(arguments).withNullability(this)
 }
 
-private fun TypeTemplate.withNullability(type: KSType): TypeTemplate = if (type.isMarkedNullable) TypeTemplate.Nullable(this) else this
+private fun TypeTemplate.withNullability(type: KSType): TypeTemplate = if (type.isMarkedNullable) this.nullable() else this
 
 private fun KSClassDeclaration.isTypeGraphReady(): Boolean {
     val references =

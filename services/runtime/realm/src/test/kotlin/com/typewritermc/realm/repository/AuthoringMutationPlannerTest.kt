@@ -33,38 +33,46 @@ import com.typewritermc.realm.authoring.AuthoringView
 import com.typewritermc.realm.authoring.RuntimeOperationPreparation
 import com.typewritermc.realm.authoring.WorkingViewEditContext
 import com.typewritermc.types.ACYCLIC_RELATION_FAMILY_ID
-import com.typewritermc.types.CollectionKind
 import com.typewritermc.types.DataValue
 import com.typewritermc.types.EndpointBindingTemplate
 import com.typewritermc.types.EndpointCardinality
 import com.typewritermc.types.EndpointDefinition
-import com.typewritermc.types.EndpointId
 import com.typewritermc.types.EndpointSlot
-import com.typewritermc.types.FieldDeclaration
-import com.typewritermc.types.FieldOwner
 import com.typewritermc.types.LinkTarget
 import com.typewritermc.types.ListItem
-import com.typewritermc.types.ParameterKey
 import com.typewritermc.types.RESOURCE_OWNERSHIP_FAMILY_ID
 import com.typewritermc.types.RelationContract
 import com.typewritermc.types.RelationDeletePolicy
 import com.typewritermc.types.RelationFamilyId
 import com.typewritermc.types.RelationId
-import com.typewritermc.types.RepresentationTemplate
 import com.typewritermc.types.ResourceId
-import com.typewritermc.types.ScalarKind
-import com.typewritermc.types.TypeDefinition
-import com.typewritermc.types.TypeDefinitionId
-import com.typewritermc.types.TypeId
-import com.typewritermc.types.TypeParameter
-import com.typewritermc.types.TypeTemplate
-import com.typewritermc.types.TypeUse
 import com.typewritermc.types.catalog.DefaultCheckedCatalog
+import com.typewritermc.types.integerScalar
+import com.typewritermc.types.namedTemplate
+import com.typewritermc.types.namedUse
+import com.typewritermc.types.nullable
+import com.typewritermc.types.qualified
 import com.typewritermc.types.skir.getOrThrow
+import com.typewritermc.types.template
+import com.typewritermc.types.unknownVariant
+import com.typewritermc.types.use
 import de.infix.testBalloon.framework.core.testSuite
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.types.shouldBeInstanceOf
 import kotlinx.coroutines.runBlocking
+import skirout.editor.v1.type_catalog.CollectionKind
+import skirout.editor.v1.type_catalog.DeclarationOwner
+import skirout.editor.v1.type_catalog.EndpointId
+import skirout.editor.v1.type_catalog.FieldDeclaration
+import skirout.editor.v1.type_catalog.FieldOwner
+import skirout.editor.v1.type_catalog.IntegerWidth
+import skirout.editor.v1.type_catalog.NamedTypeUse
+import skirout.editor.v1.type_catalog.ParameterKey
+import skirout.editor.v1.type_catalog.RepresentationTemplate
+import skirout.editor.v1.type_catalog.ScalarKind
+import skirout.editor.v1.type_catalog.TypeDefinition
+import skirout.editor.v1.type_catalog.TypeDefinitionId
+import skirout.editor.v1.type_catalog.TypeParameter
 
 class AuthoringMutationPlannerTest {
     fun inverseOnlyReferencesDoNotOfferLinkedDuplication() {
@@ -76,13 +84,15 @@ class AuthoringMutationPlannerTest {
                 ) {
                     definition.copy(
                         representation =
-                            (definition.representation as RepresentationTemplate.Record).let {
-                                it.copy(
-                                    fields =
-                                        it.fields.filterNot { field ->
-                                            field.owner.name ==
-                                                "manyFirst"
-                                        },
+                            (definition.representation as RepresentationTemplate.RecordWrapper).let {
+                                RepresentationTemplate.RecordWrapper(
+                                    it.value.copy(
+                                        fields =
+                                            it.value.fields.filterNot { field ->
+                                                field.owner.name ==
+                                                    "manyFirst"
+                                            },
+                                    ),
                                 )
                             },
                     )
@@ -125,14 +135,15 @@ class AuthoringMutationPlannerTest {
             val baseline = operationBaseline(resources, emptyList())
             val origin =
                 com.typewritermc.discovery.ProviderOrigin(
-                    com.typewritermc.types.DeclarationOwner(
-                        com.typewritermc.discovery.ContributionKey(
-                            com.typewritermc.imprint.ContributionSourceId("operation-test"),
-                            "main",
-                            com.typewritermc.imprint.ProducerId("test"),
-                            com.typewritermc.imprint.ContributionName("inline"),
-                        ),
-                        "fixture.InlineOperations",
+                    DeclarationOwner(
+                        source =
+                            com.typewritermc.discovery.contributionKey(
+                                com.typewritermc.imprint.ContributionSourceId("operation-test"),
+                                "main",
+                                com.typewritermc.imprint.ProducerId("test"),
+                                com.typewritermc.imprint.ContributionName("inline"),
+                            ),
+                        localIdentity = "fixture.InlineOperations",
                     ),
                     com.typewritermc.imprint.ArtifactId("fixture:operations"),
                     "main",
@@ -142,7 +153,7 @@ class AuthoringMutationPlannerTest {
                     origin,
                     "fixture.InlineOperations",
                     com.typewritermc.types.ResourceTarget
-                        .Type(TypeTemplate.Named(NODE)),
+                        .Type(NODE.namedTemplate()),
                     com.typewritermc.operations.projectedSubjects(
                         com.typewritermc.authoring.draftViewProjection(NODE_USE, com.typewritermc.authoring.ResourceDrafts::bind),
                     ),
@@ -157,7 +168,7 @@ class AuthoringMutationPlannerTest {
                                     read(
                                         com.typewritermc.authoring.boundPath<String>(
                                             location(it.id, "label"),
-                                            TypeUse.Scalar(ScalarKind.Text),
+                                            ScalarKind.TEXT.use,
                                         ),
                                     )
                                 }
@@ -174,7 +185,7 @@ class AuthoringMutationPlannerTest {
                                         read(
                                             com.typewritermc.authoring.boundPath<String>(
                                                 location(subject, "label"),
-                                                TypeUse.Scalar(ScalarKind.Text),
+                                                ScalarKind.TEXT.use,
                                             ),
                                         ),
                                     )
@@ -736,10 +747,7 @@ class AuthoringMutationPlannerTest {
                 ) {
                     definition.copy(
                         representation =
-                            RepresentationTemplate.Sequence(
-                                item = TypeTemplate.Named(WRAPPER_USE.definition),
-                                kind = CollectionKind.List,
-                            ),
+                            RepresentationTemplate.createSequence(item = WRAPPER_USE.definition.template(), kind = CollectionKind.LIST),
                     )
                 } else {
                     definition
@@ -847,16 +855,19 @@ class AuthoringMutationPlannerTest {
             CounterpartBinding.Collection(location(resource, "children"))
         ResourceValueMapper.counterpartBinding(NESTED_FIRST, resource, record(), CATALOG) shouldBe
             CounterpartBinding.Scalar(ValueLocation(resource, ValuePath(listOf(PathSegment.Field("wrapper"), PathSegment.Field("inner")))))
-        ResourceValueMapper.counterpartBinding(EndpointId("absent"), resource, record(), CATALOG) shouldBe CounterpartBinding.Missing
+        ResourceValueMapper.counterpartBinding(EndpointId(value = "absent"), resource, record(), CATALOG) shouldBe
+            CounterpartBinding.Missing
 
         val node = DEFINITIONS.single { it.id == NODE }
-        val shape = node.representation as RepresentationTemplate.Record
+        val shape = node.representation as RepresentationTemplate.RecordWrapper
         val ambiguous =
             node.copy(
                 representation =
-                    shape.copy(
-                        fields =
-                            shape.fields + field("secondAlternative", PAIR_SECOND_TYPE.definition),
+                    RepresentationTemplate.RecordWrapper(
+                        shape.value.copy(
+                            fields =
+                                shape.value.fields + field("secondAlternative", PAIR_SECOND_TYPE.definition),
+                        ),
                     ),
             )
         val catalog = DefaultCheckedCatalog(GENERATION, DEFINITIONS.map { if (it.id == NODE) ambiguous else it })
@@ -873,7 +884,7 @@ class AuthoringMutationPlannerTest {
                     mapOf(source to record(), target to record()),
                     edit(
                         EditIntent.ConnectRelation(
-                            ConnectIntent(occurrence(EndpointId("absent"), location(source, "first"), target, null), target, null),
+                            ConnectIntent(occurrence(EndpointId(value = "absent"), location(source, "first"), target, null), target, null),
                         ),
                     ),
                 ).shouldBeInstanceOf<MutationPlanningResult.Rejected>()
@@ -881,35 +892,37 @@ class AuthoringMutationPlannerTest {
     }
 
     fun insertMaterializesTheCheckedUnfilledSequenceShape() {
-        listOf(CollectionKind.List, CollectionKind.Set).forEach { kind ->
-            val rootType = id("insert_${kind.name.lowercase()}_root")
-            val collectionType = id("insert_${kind.name.lowercase()}_collection")
-            val rootUse = TypeUse.Named(rootType)
-            val collectionUse = TypeUse.Named(collectionType)
+        listOf(CollectionKind.LIST to "list", CollectionKind.SET to "set").forEach { (kind, kindName) ->
+            val rootType = id("insert_${kindName}_root")
+            val collectionType = id("insert_${kindName}_collection")
+            val rootUse = rootType.namedUse()
+            val collectionUse = collectionType.namedUse()
             val catalog =
                 DefaultCheckedCatalog(
                     GENERATION,
                     listOf(
-                        TypeDefinition(
-                            rootType,
+                        TypeDefinition.partial(
+                            id = rootType,
                             representation =
-                                RepresentationTemplate.Record(
-                                    listOf(
-                                        FieldDeclaration(
-                                            FieldOwner(rootType, "values"),
-                                            TypeTemplate.Named(collectionType),
+                                RepresentationTemplate.createRecord(
+                                    fields =
+                                        listOf(
+                                            FieldDeclaration.partial(
+                                                owner = FieldOwner(definition = rootType, name = "values"),
+                                                type = collectionType.template(),
+                                            ),
                                         ),
-                                    ),
+                                    abstract_ = false,
                                 ),
                         ),
-                        TypeDefinition(
-                            collectionType,
-                            representation = RepresentationTemplate.Sequence(TypeTemplate.Scalar(ScalarKind.Text), kind),
+                        TypeDefinition.partial(
+                            id = collectionType,
+                            representation = RepresentationTemplate.createSequence(item = ScalarKind.TEXT.template, kind = kind),
                         ),
                     ),
                 )
             val planner = AuthoringMutationPlanner(catalog, emptyList())
-            val resource = ResourceId("insert_${kind.name.lowercase()}")
+            val resource = ResourceId("insert_$kindName")
             val location = location(resource, "values")
             val before =
                 mapOf(
@@ -937,8 +950,9 @@ class AuthoringMutationPlannerTest {
 
             collection.actualType shouldBe collectionUse
             when (kind) {
-                CollectionKind.List -> collection.payload.shouldBeInstanceOf<DataValue.ListValue>().items shouldBe listOf(item)
-                CollectionKind.Set -> collection.payload.shouldBeInstanceOf<DataValue.SetValue>().items shouldBe listOf(item)
+                CollectionKind.LIST -> collection.payload.shouldBeInstanceOf<DataValue.ListValue>().items shouldBe listOf(item)
+                CollectionKind.SET -> collection.payload.shouldBeInstanceOf<DataValue.SetValue>().items shouldBe listOf(item)
+                else -> unknownVariant(kind)
             }
             planner
                 .plan(
@@ -959,49 +973,48 @@ class AuthoringMutationPlannerTest {
         val derived = id("generic_derived")
         val target = id("generic_target")
         val link = id("generic_link")
-        val baseParameter = ParameterKey(base, 0)
-        val derivedParameter = ParameterKey(derived, 0)
-        val linkParameter = ParameterKey(link, 0)
-        val endpoint = EndpointId("generic:target")
+        val baseParameter = ParameterKey(owner = base, index = 0)
+        val derivedParameter = ParameterKey(owner = derived, index = 0)
+        val linkParameter = ParameterKey(owner = link, index = 0)
+        val endpoint = EndpointId(value = "generic:target")
         val catalog =
             DefaultCheckedCatalog(
                 GENERATION,
                 listOf(
-                    TypeDefinition(
-                        base,
-                        parameters = listOf(TypeParameter(baseParameter, "T")),
+                    TypeDefinition.partial(
+                        id = base,
+                        parameters = listOf(TypeParameter.partial(key = baseParameter, name = "T")),
                         representation =
-                            RepresentationTemplate.Record(
-                                listOf(
-                                    FieldDeclaration(
-                                        FieldOwner(base, "link"),
-                                        TypeTemplate.Named(link, listOf(TypeTemplate.Parameter(baseParameter))),
+                            RepresentationTemplate.createRecord(
+                                fields =
+                                    listOf(
+                                        FieldDeclaration.partial(
+                                            owner = FieldOwner(definition = base, name = "link"),
+                                            type = link.template(listOf(baseParameter.template)),
+                                        ),
                                     ),
-                                ),
+                                abstract_ = false,
                             ),
                     ),
                     TypeDefinition(
-                        derived,
-                        parameters = listOf(TypeParameter(derivedParameter, "T")),
-                        representation = RepresentationTemplate.Record(emptyList()),
-                        parents =
-                            listOf(
-                                TypeTemplate.Named(
-                                    base,
-                                    listOf(TypeTemplate.Parameter(derivedParameter)),
-                                ),
-                            ),
+                        id = derived,
+                        parameters = listOf(TypeParameter.partial(key = derivedParameter, name = "T")),
+                        representation = RepresentationTemplate.createRecord(fields = emptyList(), abstract_ = false),
+                        parents = listOf(base.namedTemplate(listOf(derivedParameter.template))),
                     ),
-                    TypeDefinition(target, representation = RepresentationTemplate.Record(emptyList())),
-                    TypeDefinition(
-                        link,
-                        parameters = listOf(TypeParameter(linkParameter, "T")),
-                        representation = RepresentationTemplate.Link(endpoint, TypeTemplate.Parameter(linkParameter)),
+                    TypeDefinition.partial(
+                        id = target,
+                        representation = RepresentationTemplate.createRecord(fields = emptyList(), abstract_ = false),
+                    ),
+                    TypeDefinition.partial(
+                        id = link,
+                        parameters = listOf(TypeParameter.partial(key = linkParameter, name = "T")),
+                        representation = RepresentationTemplate.createLink(endpoint = endpoint, target = linkParameter.template),
                     ),
                 ),
             )
         val resource = ResourceId("source")
-        val targetUse = TypeUse.Named(target)
+        val targetUse = target.use()
         val record =
             AuthoringRecord(
                 TypeSelection.Pending(derived, listOf(ArgumentSelection.Chosen(targetUse))),
@@ -1021,52 +1034,55 @@ class AuthoringMutationPlannerTest {
         val sourceType = id("partial_source")
         val config = id("partial_config")
         val linkType = id("partial_link")
-        val first = ParameterKey(config, 0)
-        val second = ParameterKey(config, 1)
-        val linkParameter = ParameterKey(linkType, 0)
-        val endpoint = EndpointId("partial:first")
-        val opposite = EndpointId("partial:second")
-        val text = TypeUse.Scalar(ScalarKind.Text)
-        val integer = TypeUse.Scalar(ScalarKind.Integer(com.typewritermc.types.IntegerWidth.SIGNED_32))
-        val expected = TypeUse.Named(config, listOf(text, integer))
+        val first = ParameterKey(owner = config, index = 0)
+        val second = ParameterKey(owner = config, index = 1)
+        val linkParameter = ParameterKey(owner = linkType, index = 0)
+        val endpoint = EndpointId(value = "partial:first")
+        val opposite = EndpointId(value = "partial:second")
+        val text = ScalarKind.TEXT.use
+        val integer = integerScalar(IntegerWidth.SIGNED_THIRTY_TWO).use
+        val expected = config.use(listOf(text, integer))
         val catalog =
             DefaultCheckedCatalog(
                 GENERATION,
                 listOf(
-                    TypeDefinition(
-                        sourceType,
+                    TypeDefinition.partial(
+                        id = sourceType,
                         representation =
-                            RepresentationTemplate.Record(
-                                listOf(
-                                    FieldDeclaration(
-                                        FieldOwner(sourceType, "target"),
-                                        TypeTemplate.Named(
-                                            linkType,
-                                            listOf(
-                                                TypeTemplate.Named(
-                                                    config,
+                            RepresentationTemplate.createRecord(
+                                fields =
+                                    listOf(
+                                        FieldDeclaration.partial(
+                                            owner = FieldOwner(definition = sourceType, name = "target"),
+                                            type =
+                                                linkType.template(
                                                     listOf(
-                                                        TypeTemplate.Scalar(ScalarKind.Text),
-                                                        TypeTemplate.Scalar(
-                                                            ScalarKind.Integer(com.typewritermc.types.IntegerWidth.SIGNED_32),
+                                                        config.template(
+                                                            listOf(
+                                                                ScalarKind.TEXT.template,
+                                                                integerScalar(IntegerWidth.SIGNED_THIRTY_TWO).template,
+                                                            ),
                                                         ),
                                                     ),
                                                 ),
-                                            ),
                                         ),
                                     ),
-                                ),
+                                abstract_ = false,
                             ),
                     ),
-                    TypeDefinition(
-                        config,
-                        parameters = listOf(TypeParameter(first, "T"), TypeParameter(second, "U")),
-                        representation = RepresentationTemplate.Record(emptyList()),
+                    TypeDefinition.partial(
+                        id = config,
+                        parameters =
+                            listOf(
+                                TypeParameter.partial(key = first, name = "T"),
+                                TypeParameter.partial(key = second, name = "U"),
+                            ),
+                        representation = RepresentationTemplate.createRecord(fields = emptyList(), abstract_ = false),
                     ),
-                    TypeDefinition(
-                        linkType,
-                        parameters = listOf(TypeParameter(linkParameter, "T")),
-                        representation = RepresentationTemplate.Link(endpoint, TypeTemplate.Parameter(linkParameter)),
+                    TypeDefinition.partial(
+                        id = linkType,
+                        parameters = listOf(TypeParameter.partial(key = linkParameter, name = "T")),
+                        representation = RepresentationTemplate.createLink(endpoint = endpoint, target = linkParameter.template),
                     ),
                 ),
             )
@@ -1076,18 +1092,17 @@ class AuthoringMutationPlannerTest {
                 EndpointDefinition(
                     endpoint,
                     EndpointSlot.First,
-                    TypeTemplate.Named(sourceType),
+                    sourceType.namedTemplate(),
                     EndpointCardinality.One,
                     RelationDeletePolicy.CLEAR,
                 ),
                 EndpointDefinition(
                     opposite,
                     EndpointSlot.Second,
-                    TypeTemplate.Named(
-                        config,
+                    config.namedTemplate(
                         listOf(
-                            TypeTemplate.Scalar(ScalarKind.Text),
-                            TypeTemplate.Scalar(ScalarKind.Integer(com.typewritermc.types.IntegerWidth.SIGNED_32)),
+                            ScalarKind.TEXT.template,
+                            integerScalar(IntegerWidth.SIGNED_THIRTY_TWO).template,
                         ),
                     ),
                     EndpointCardinality.One,
@@ -1098,8 +1113,8 @@ class AuthoringMutationPlannerTest {
         val target = ResourceId("partial_target")
         val sourceRecord =
             AuthoringRecord(
-                TypeSelection.Complete(TypeUse.Named(sourceType)),
-                mapOf("target" to link(TypeUse.Named(linkType, listOf(expected)), endpoint, target, null)),
+                TypeSelection.Complete(sourceType.namedUse()),
+                mapOf("target" to link(linkType.namedUse(listOf(expected)), endpoint, target, null)),
             )
 
         listOf(
@@ -1120,48 +1135,51 @@ class AuthoringMutationPlannerTest {
         val view = id("partial_view")
         val derived = id("partial_derived")
         val linkType = id("partial_ancestor_link")
-        val viewParameter = ParameterKey(view, 0)
-        val first = ParameterKey(derived, 0)
-        val unused = ParameterKey(derived, 1)
-        val linkParameter = ParameterKey(linkType, 0)
-        val endpoint = EndpointId("partial_ancestor:first")
-        val opposite = EndpointId("partial_ancestor:second")
-        val text = TypeUse.Scalar(ScalarKind.Text)
-        val expected = TypeUse.Named(view, listOf(text))
+        val viewParameter = ParameterKey(owner = view, index = 0)
+        val first = ParameterKey(owner = derived, index = 0)
+        val unused = ParameterKey(owner = derived, index = 1)
+        val linkParameter = ParameterKey(owner = linkType, index = 0)
+        val endpoint = EndpointId(value = "partial_ancestor:first")
+        val opposite = EndpointId(value = "partial_ancestor:second")
+        val text = ScalarKind.TEXT.use
+        val expected = view.use(listOf(text))
         val catalog =
             DefaultCheckedCatalog(
                 GENERATION,
                 listOf(
-                    TypeDefinition(
-                        sourceType,
+                    TypeDefinition.partial(
+                        id = sourceType,
                         representation =
-                            RepresentationTemplate.Record(
-                                listOf(
-                                    FieldDeclaration(
-                                        FieldOwner(sourceType, "target"),
-                                        TypeTemplate.Named(
-                                            linkType,
-                                            listOf(TypeTemplate.Named(view, listOf(TypeTemplate.Scalar(ScalarKind.Text)))),
+                            RepresentationTemplate.createRecord(
+                                fields =
+                                    listOf(
+                                        FieldDeclaration.partial(
+                                            owner = FieldOwner(definition = sourceType, name = "target"),
+                                            type = linkType.template(listOf(view.template(listOf(ScalarKind.TEXT.template)))),
                                         ),
                                     ),
-                                ),
+                                abstract_ = false,
                             ),
                     ),
-                    TypeDefinition(
-                        view,
-                        parameters = listOf(TypeParameter(viewParameter, "T")),
-                        representation = RepresentationTemplate.Record(emptyList()),
+                    TypeDefinition.partial(
+                        id = view,
+                        parameters = listOf(TypeParameter.partial(key = viewParameter, name = "T")),
+                        representation = RepresentationTemplate.createRecord(fields = emptyList(), abstract_ = false),
                     ),
                     TypeDefinition(
-                        derived,
-                        parameters = listOf(TypeParameter(first, "T"), TypeParameter(unused, "Unused")),
-                        representation = RepresentationTemplate.Record(emptyList()),
-                        parents = listOf(TypeTemplate.Named(view, listOf(TypeTemplate.Parameter(first)))),
+                        id = derived,
+                        parameters =
+                            listOf(
+                                TypeParameter.partial(key = first, name = "T"),
+                                TypeParameter.partial(key = unused, name = "Unused"),
+                            ),
+                        representation = RepresentationTemplate.createRecord(fields = emptyList(), abstract_ = false),
+                        parents = listOf(view.namedTemplate(listOf(first.template))),
                     ),
-                    TypeDefinition(
-                        linkType,
-                        parameters = listOf(TypeParameter(linkParameter, "T")),
-                        representation = RepresentationTemplate.Link(endpoint, TypeTemplate.Parameter(linkParameter)),
+                    TypeDefinition.partial(
+                        id = linkType,
+                        parameters = listOf(TypeParameter.partial(key = linkParameter, name = "T")),
+                        representation = RepresentationTemplate.createLink(endpoint = endpoint, target = linkParameter.template),
                     ),
                 ),
             )
@@ -1171,14 +1189,14 @@ class AuthoringMutationPlannerTest {
                 EndpointDefinition(
                     endpoint,
                     EndpointSlot.First,
-                    TypeTemplate.Named(sourceType),
+                    sourceType.namedTemplate(),
                     EndpointCardinality.One,
                     RelationDeletePolicy.CLEAR,
                 ),
                 EndpointDefinition(
                     opposite,
                     EndpointSlot.Second,
-                    TypeTemplate.Named(view, listOf(TypeTemplate.Scalar(ScalarKind.Text))),
+                    view.namedTemplate(listOf(ScalarKind.TEXT.template)),
                     EndpointCardinality.One,
                     RelationDeletePolicy.CLEAR,
                 ),
@@ -1189,8 +1207,8 @@ class AuthoringMutationPlannerTest {
             mapOf(
                 source to
                     AuthoringRecord(
-                        TypeSelection.Complete(TypeUse.Named(sourceType)),
-                        mapOf("target" to link(TypeUse.Named(linkType, listOf(expected)), endpoint, target, null)),
+                        TypeSelection.Complete(sourceType.namedUse()),
+                        mapOf("target" to link(linkType.namedUse(listOf(expected)), endpoint, target, null)),
                     ),
                 target to
                     AuthoringRecord(
@@ -1845,29 +1863,49 @@ class AuthoringMutationPlannerTest {
         val message = id("polymorphic_message")
         val linkedMessage = id("linked_message")
         val linkType = id("polymorphic_link")
-        val endpoint = EndpointId("polymorphic:first")
-        val opposite = EndpointId("polymorphic:second")
+        val endpoint = EndpointId(value = "polymorphic:first")
+        val opposite = EndpointId(value = "polymorphic:second")
         val catalog =
             DefaultCheckedCatalog(
                 GENERATION,
                 listOf(
-                    TypeDefinition(
-                        host,
+                    TypeDefinition.partial(
+                        id = host,
                         representation =
-                            RepresentationTemplate.Record(
-                                listOf(FieldDeclaration(FieldOwner(host, "message"), TypeTemplate.Named(message))),
+                            RepresentationTemplate.createRecord(
+                                fields =
+                                    listOf(
+                                        FieldDeclaration.partial(
+                                            owner = FieldOwner(definition = host, name = "message"),
+                                            type = message.template(),
+                                        ),
+                                    ),
+                                abstract_ = false,
                             ),
                     ),
-                    TypeDefinition(message, representation = RepresentationTemplate.Record(emptyList())),
-                    TypeDefinition(
-                        linkedMessage,
-                        representation =
-                            RepresentationTemplate.Record(
-                                listOf(FieldDeclaration(FieldOwner(linkedMessage, "target"), TypeTemplate.Named(linkType))),
-                            ),
-                        parents = listOf(TypeTemplate.Named(message)),
+                    TypeDefinition.partial(
+                        id = message,
+                        representation = RepresentationTemplate.createRecord(fields = emptyList(), abstract_ = false),
                     ),
-                    TypeDefinition(linkType, representation = RepresentationTemplate.Link(endpoint, TypeTemplate.Named(host))),
+                    TypeDefinition.partial(
+                        id = linkedMessage,
+                        representation =
+                            RepresentationTemplate.createRecord(
+                                fields =
+                                    listOf(
+                                        FieldDeclaration.partial(
+                                            owner = FieldOwner(definition = linkedMessage, name = "target"),
+                                            type = linkType.template(),
+                                        ),
+                                    ),
+                                abstract_ = false,
+                            ),
+                        parents = listOf(message.namedTemplate()),
+                    ),
+                    TypeDefinition.partial(
+                        id = linkType,
+                        representation = RepresentationTemplate.createLink(endpoint = endpoint, target = host.template()),
+                    ),
                 ),
             )
         val contract = relation(endpoint, opposite, host)
@@ -1877,20 +1915,20 @@ class AuthoringMutationPlannerTest {
             mapOf(
                 source to
                     AuthoringRecord(
-                        TypeSelection.Complete(TypeUse.Named(host)),
+                        TypeSelection.Complete(host.namedUse()),
                         mapOf(
                             "message" to
                                 DataValue.Named(
-                                    TypeUse.Named(linkedMessage),
+                                    linkedMessage.namedUse(),
                                     DataValue.Record(
                                         mapOf(
-                                            "target" to link(TypeUse.Named(linkType), endpoint, target, null),
+                                            "target" to link(linkType.namedUse(), endpoint, target, null),
                                         ),
                                     ),
                                 ),
                         ),
                     ),
-                target to AuthoringRecord(TypeSelection.Complete(TypeUse.Named(host)), mapOf("message" to DataValue.Unfilled)),
+                target to AuthoringRecord(TypeSelection.Complete(host.namedUse()), mapOf("message" to DataValue.Unfilled)),
             )
 
         val projection = ResourceValueMapper.project(ResourceValueMapper.discover(resources), resources, listOf(contract), catalog)
@@ -1903,30 +1941,48 @@ class AuthoringMutationPlannerTest {
         val host = id("recursive_host")
         val node = id("recursive_node")
         val linkType = id("recursive_link")
-        val endpoint = EndpointId("recursive:first")
-        val opposite = EndpointId("recursive:second")
+        val endpoint = EndpointId(value = "recursive:first")
+        val opposite = EndpointId(value = "recursive:second")
         val catalog =
             DefaultCheckedCatalog(
                 GENERATION,
                 listOf(
-                    TypeDefinition(
-                        host,
+                    TypeDefinition.partial(
+                        id = host,
                         representation =
-                            RepresentationTemplate.Record(
-                                listOf(FieldDeclaration(FieldOwner(host, "tree"), TypeTemplate.Named(node))),
+                            RepresentationTemplate.createRecord(
+                                fields =
+                                    listOf(
+                                        FieldDeclaration.partial(
+                                            owner = FieldOwner(definition = host, name = "tree"),
+                                            type = node.template(),
+                                        ),
+                                    ),
+                                abstract_ = false,
                             ),
                     ),
-                    TypeDefinition(
-                        node,
+                    TypeDefinition.partial(
+                        id = node,
                         representation =
-                            RepresentationTemplate.Record(
-                                listOf(
-                                    FieldDeclaration(FieldOwner(node, "next"), TypeTemplate.Nullable(TypeTemplate.Named(node))),
-                                    FieldDeclaration(FieldOwner(node, "target"), TypeTemplate.Named(linkType)),
-                                ),
+                            RepresentationTemplate.createRecord(
+                                fields =
+                                    listOf(
+                                        FieldDeclaration.partial(
+                                            owner = FieldOwner(definition = node, name = "next"),
+                                            type = node.template().nullable(),
+                                        ),
+                                        FieldDeclaration.partial(
+                                            owner = FieldOwner(definition = node, name = "target"),
+                                            type = linkType.template(),
+                                        ),
+                                    ),
+                                abstract_ = false,
                             ),
                     ),
-                    TypeDefinition(linkType, representation = RepresentationTemplate.Link(endpoint, TypeTemplate.Named(host))),
+                    TypeDefinition.partial(
+                        id = linkType,
+                        representation = RepresentationTemplate.createLink(endpoint = endpoint, target = host.template()),
+                    ),
                 ),
             )
         val contract = relation(endpoint, opposite, host)
@@ -1934,11 +1990,11 @@ class AuthoringMutationPlannerTest {
         val target = ResourceId("recursive_target")
         val nested =
             DataValue.Named(
-                TypeUse.Named(node),
+                node.namedUse(),
                 DataValue.Record(
                     mapOf(
                         "next" to DataValue.Null,
-                        "target" to link(TypeUse.Named(linkType), endpoint, target, null),
+                        "target" to link(linkType.namedUse(), endpoint, target, null),
                     ),
                 ),
             )
@@ -1946,11 +2002,11 @@ class AuthoringMutationPlannerTest {
             mapOf(
                 source to
                     AuthoringRecord(
-                        TypeSelection.Complete(TypeUse.Named(host)),
+                        TypeSelection.Complete(host.namedUse()),
                         mapOf(
                             "tree" to
                                 DataValue.Named(
-                                    TypeUse.Named(node),
+                                    node.namedUse(),
                                     DataValue.Record(
                                         mapOf(
                                             "next" to nested,
@@ -1960,7 +2016,7 @@ class AuthoringMutationPlannerTest {
                                 ),
                         ),
                     ),
-                target to AuthoringRecord(TypeSelection.Complete(TypeUse.Named(host)), mapOf("tree" to DataValue.Unfilled)),
+                target to AuthoringRecord(TypeSelection.Complete(host.namedUse()), mapOf("tree" to DataValue.Unfilled)),
             )
 
         val projection = ResourceValueMapper.project(ResourceValueMapper.discover(resources), resources, listOf(contract), catalog)
@@ -1982,41 +2038,46 @@ class AuthoringMutationPlannerTest {
         val allowed = id("bounded_allowed")
         val disallowed = id("bounded_disallowed")
         val linkType = id("bounded_link")
-        val parameter = ParameterKey(linkType, 0)
-        val endpoint = EndpointId("bounded:first")
-        val opposite = EndpointId("bounded:second")
+        val parameter = ParameterKey(owner = linkType, index = 0)
+        val endpoint = EndpointId(value = "bounded:first")
+        val opposite = EndpointId(value = "bounded:second")
         val catalog =
             DefaultCheckedCatalog(
                 GENERATION,
                 listOf(
-                    TypeDefinition(resource, representation = RepresentationTemplate.Record(emptyList())),
-                    TypeDefinition(
-                        sourceType,
+                    TypeDefinition.partial(
+                        id = resource,
+                        representation = RepresentationTemplate.createRecord(fields = emptyList(), abstract_ = false),
+                    ),
+                    TypeDefinition.partial(
+                        id = sourceType,
                         representation =
-                            RepresentationTemplate.Record(
-                                listOf(
-                                    FieldDeclaration(
-                                        FieldOwner(sourceType, "target"),
-                                        TypeTemplate.Named(linkType, listOf(TypeTemplate.Named(allowed))),
+                            RepresentationTemplate.createRecord(
+                                fields =
+                                    listOf(
+                                        FieldDeclaration.partial(
+                                            owner = FieldOwner(definition = sourceType, name = "target"),
+                                            type = linkType.template(listOf(allowed.template())),
+                                        ),
                                     ),
-                                ),
+                                abstract_ = false,
                             ),
-                        parents = listOf(TypeTemplate.Named(resource)),
+                        parents = listOf(resource.namedTemplate()),
                     ),
-                    TypeDefinition(
-                        allowed,
-                        representation = RepresentationTemplate.Record(emptyList()),
-                        parents = listOf(TypeTemplate.Named(resource)),
+                    TypeDefinition.partial(
+                        id = allowed,
+                        representation = RepresentationTemplate.createRecord(fields = emptyList(), abstract_ = false),
+                        parents = listOf(resource.namedTemplate()),
                     ),
-                    TypeDefinition(
-                        disallowed,
-                        representation = RepresentationTemplate.Record(emptyList()),
-                        parents = listOf(TypeTemplate.Named(resource)),
+                    TypeDefinition.partial(
+                        id = disallowed,
+                        representation = RepresentationTemplate.createRecord(fields = emptyList(), abstract_ = false),
+                        parents = listOf(resource.namedTemplate()),
                     ),
-                    TypeDefinition(
-                        linkType,
-                        parameters = listOf(TypeParameter(parameter, "T", listOf(TypeTemplate.Named(resource)))),
-                        representation = RepresentationTemplate.Link(endpoint, TypeTemplate.Parameter(parameter)),
+                    TypeDefinition.partial(
+                        id = linkType,
+                        parameters = listOf(TypeParameter(key = parameter, name = "T", bounds = listOf(resource.template()))),
+                        representation = RepresentationTemplate.createLink(endpoint = endpoint, target = parameter.template),
                     ),
                 ),
             )
@@ -2027,18 +2088,18 @@ class AuthoringMutationPlannerTest {
             mapOf(
                 source to
                     AuthoringRecord(
-                        TypeSelection.Complete(TypeUse.Named(sourceType)),
+                        TypeSelection.Complete(sourceType.namedUse()),
                         mapOf(
                             "target" to
                                 link(
-                                    TypeUse.Named(linkType, listOf(TypeUse.Named(allowed))),
+                                    linkType.namedUse(listOf(allowed.use())),
                                     endpoint,
                                     target,
                                     null,
                                 ),
                         ),
                     ),
-                target to AuthoringRecord(TypeSelection.Complete(TypeUse.Named(disallowed)), emptyMap()),
+                target to AuthoringRecord(TypeSelection.Complete(disallowed.namedUse()), emptyMap()),
             )
 
         val projection = ResourceValueMapper.project(ResourceValueMapper.discover(resources), resources, listOf(contract), catalog)
@@ -2051,17 +2112,20 @@ class AuthoringMutationPlannerTest {
         val resource = id("unavailable_resource")
         val unavailable = id("unavailable_source")
         val missing = id("missing_parent")
-        val endpoint = EndpointId("unavailable:first")
-        val opposite = EndpointId("unavailable:second")
+        val endpoint = EndpointId(value = "unavailable:first")
+        val opposite = EndpointId(value = "unavailable:second")
         val catalog =
             DefaultCheckedCatalog(
                 GENERATION,
                 listOf(
-                    TypeDefinition(resource, representation = RepresentationTemplate.Record(emptyList())),
-                    TypeDefinition(
-                        unavailable,
-                        representation = RepresentationTemplate.Record(emptyList()),
-                        parents = listOf(TypeTemplate.Named(missing)),
+                    TypeDefinition.partial(
+                        id = resource,
+                        representation = RepresentationTemplate.createRecord(fields = emptyList(), abstract_ = false),
+                    ),
+                    TypeDefinition.partial(
+                        id = unavailable,
+                        representation = RepresentationTemplate.createRecord(fields = emptyList(), abstract_ = false),
+                        parents = listOf(missing.namedTemplate()),
                     ),
                 ),
             )
@@ -2072,10 +2136,10 @@ class AuthoringMutationPlannerTest {
             mapOf(
                 source to
                     AuthoringRecord(
-                        TypeSelection.Complete(TypeUse.Named(unavailable)),
+                        TypeSelection.Complete(unavailable.namedUse()),
                         mapOf("target" to DataValue.Link(endpoint, LinkTarget(target, null))),
                     ),
-                target to AuthoringRecord(TypeSelection.Complete(TypeUse.Named(resource)), emptyMap()),
+                target to AuthoringRecord(TypeSelection.Complete(resource.namedUse()), emptyMap()),
             )
 
         val projection = ResourceValueMapper.project(ResourceValueMapper.discover(resources), resources, listOf(contract), catalog)
@@ -2231,14 +2295,14 @@ private fun pairContract(families: Set<RelationFamilyId> = emptySet()) =
         EndpointDefinition(
             PAIR_FIRST,
             EndpointSlot.First,
-            TypeTemplate.Named(NODE),
+            NODE.namedTemplate(),
             EndpointCardinality.One,
             RelationDeletePolicy.CLEAR,
         ),
         EndpointDefinition(
             PAIR_SECOND,
             EndpointSlot.Second,
-            TypeTemplate.Named(NODE),
+            NODE.namedTemplate(),
             EndpointCardinality.One,
             RelationDeletePolicy.CLEAR,
         ),
@@ -2253,14 +2317,14 @@ private fun parentContract(
     EndpointDefinition(
         PARENT_FIRST,
         EndpointSlot.First,
-        TypeTemplate.Named(NODE),
+        NODE.namedTemplate(),
         EndpointCardinality.One,
         firstDelete,
     ),
     EndpointDefinition(
         PARENT_SECOND,
         EndpointSlot.Second,
-        TypeTemplate.Named(NODE),
+        NODE.namedTemplate(),
         EndpointCardinality.Many,
         secondDelete,
     ),
@@ -2272,14 +2336,14 @@ private fun manyContract() =
         EndpointDefinition(
             MANY_FIRST,
             EndpointSlot.First,
-            TypeTemplate.Named(NODE),
+            NODE.namedTemplate(),
             EndpointCardinality.Many,
             RelationDeletePolicy.CLEAR,
         ),
         EndpointDefinition(
             MANY_SECOND,
             EndpointSlot.Second,
-            TypeTemplate.Named(NODE),
+            NODE.namedTemplate(),
             EndpointCardinality.Many,
             RelationDeletePolicy.CLEAR,
         ),
@@ -2291,14 +2355,14 @@ private fun nestedContract() =
         EndpointDefinition(
             NESTED_FIRST,
             EndpointSlot.First,
-            TypeTemplate.Named(NODE),
+            NODE.namedTemplate(),
             EndpointCardinality.One,
             RelationDeletePolicy.CLEAR,
         ),
         EndpointDefinition(
             NESTED_SECOND,
             EndpointSlot.Second,
-            TypeTemplate.Named(NODE),
+            NODE.namedTemplate(),
             EndpointCardinality.One,
             RelationDeletePolicy.CLEAR,
         ),
@@ -2313,14 +2377,14 @@ private fun relation(
     EndpointDefinition(
         first,
         EndpointSlot.First,
-        TypeTemplate.Named(resource),
+        resource.namedTemplate(),
         EndpointCardinality.One,
         RelationDeletePolicy.CLEAR,
     ),
     EndpointDefinition(
         second,
         EndpointSlot.Second,
-        TypeTemplate.Named(resource),
+        resource.namedTemplate(),
         EndpointCardinality.One,
         RelationDeletePolicy.CLEAR,
     ),
@@ -2336,7 +2400,7 @@ private fun occurrence(
 ) = LinkOccurrence(LinkOccurrenceId(endpoint, location), location.resource, LinkTarget(target, opposite))
 
 private fun link(
-    type: TypeUse.Named,
+    type: NamedTypeUse,
     endpoint: EndpointId,
     target: ResourceId,
     opposite: ValuePath?,
@@ -2377,19 +2441,19 @@ private fun location(
 
 private fun fieldPath(field: String) = ValuePath(listOf(PathSegment.Field(field)))
 
-private fun id(name: String) = TypeDefinitionId(TypeId.Qualified("test", name), 1)
+private fun id(name: String) = TypeDefinitionId.qualified("test", name)
 
 private fun linkDefinition(
     id: TypeDefinitionId,
     endpoint: EndpointId,
-) = TypeDefinition(id, representation = RepresentationTemplate.Link(endpoint, TypeTemplate.Named(NODE)))
+) = TypeDefinition.partial(id = id, representation = RepresentationTemplate.createLink(endpoint = endpoint, target = NODE.template()))
 
 private fun listDefinition(
     id: TypeDefinitionId,
     item: TypeDefinitionId,
-) = TypeDefinition(
-    id,
-    representation = RepresentationTemplate.Sequence(TypeTemplate.Named(item), CollectionKind.List),
+) = TypeDefinition.partial(
+    id = id,
+    representation = RepresentationTemplate.createSequence(item = item.template(), kind = CollectionKind.LIST),
 )
 
 private fun wrapper(value: DataValue): DataValue = DataValue.Named(WRAPPER_USE, DataValue.Record(mapOf("inner" to value)))
@@ -2397,7 +2461,7 @@ private fun wrapper(value: DataValue): DataValue = DataValue.Named(WRAPPER_USE, 
 private fun field(
     name: String,
     type: TypeDefinitionId,
-) = FieldDeclaration(FieldOwner(NODE, name), TypeTemplate.Named(type))
+) = FieldDeclaration.partial(owner = FieldOwner(definition = NODE, name = name), type = type.template())
 
 private fun binding(
     endpoint: EndpointId,
@@ -2406,7 +2470,7 @@ private fun binding(
     containsCollection: Boolean,
 ) = EndpointBindingTemplate(
     endpoint,
-    TypeTemplate.Named(NODE),
+    NODE.namedTemplate(),
     owner,
     RelativeFieldPattern(
         buildList {
@@ -2414,51 +2478,56 @@ private fun binding(
             if (containsCollection) add(FieldPatternSegment.Items)
         },
     ),
-    TypeTemplate.Named(NODE),
+    NODE.template(),
     containsCollection,
 )
 
 private val GENERATION = CatalogGeneration("catalog")
 private val NODE = id("node")
 private val OWNING_FAMILIES = setOf(RelationFamilyId(RESOURCE_OWNERSHIP_FAMILY_ID), RelationFamilyId(ACYCLIC_RELATION_FAMILY_ID))
-private val PAIR_FIRST = EndpointId("pair:first")
-private val PAIR_SECOND = EndpointId("pair:second")
-private val PARENT_FIRST = EndpointId("parent:first")
-private val PARENT_SECOND = EndpointId("parent:second")
-private val MANY_FIRST = EndpointId("many:first")
-private val MANY_SECOND = EndpointId("many:second")
-private val NESTED_FIRST = EndpointId("nested:first")
-private val NESTED_SECOND = EndpointId("nested:second")
-private val PAIR_FIRST_TYPE = TypeUse.Named(id("pair_first_link"))
-private val PAIR_SECOND_TYPE = TypeUse.Named(id("pair_second_link"))
-private val PARENT_FIRST_TYPE = TypeUse.Named(id("parent_first_link"))
-private val PARENT_SECOND_TYPE = TypeUse.Named(id("parent_second_link"))
-private val MANY_FIRST_TYPE = TypeUse.Named(id("many_first_link"))
-private val MANY_SECOND_TYPE = TypeUse.Named(id("many_second_link"))
-private val NESTED_FIRST_TYPE = TypeUse.Named(id("nested_first_link"))
-private val NESTED_SECOND_TYPE = TypeUse.Named(id("nested_second_link"))
-private val WRAPPER_USE = TypeUse.Named(id("wrapper"))
-private val CHILDREN_USE = TypeUse.Named(id("children"))
-private val MANY_FIRST_LIST_USE = TypeUse.Named(id("many_first_list"))
-private val MANY_SECOND_LIST_USE = TypeUse.Named(id("many_second_list"))
-private val NODE_USE = TypeUse.Named(NODE)
+private val PAIR_FIRST = EndpointId(value = "pair:first")
+private val PAIR_SECOND = EndpointId(value = "pair:second")
+private val PARENT_FIRST = EndpointId(value = "parent:first")
+private val PARENT_SECOND = EndpointId(value = "parent:second")
+private val MANY_FIRST = EndpointId(value = "many:first")
+private val MANY_SECOND = EndpointId(value = "many:second")
+private val NESTED_FIRST = EndpointId(value = "nested:first")
+private val NESTED_SECOND = EndpointId(value = "nested:second")
+private val PAIR_FIRST_TYPE = id("pair_first_link").namedUse()
+private val PAIR_SECOND_TYPE = id("pair_second_link").namedUse()
+private val PARENT_FIRST_TYPE = id("parent_first_link").namedUse()
+private val PARENT_SECOND_TYPE = id("parent_second_link").namedUse()
+private val MANY_FIRST_TYPE = id("many_first_link").namedUse()
+private val MANY_SECOND_TYPE = id("many_second_link").namedUse()
+private val NESTED_FIRST_TYPE = id("nested_first_link").namedUse()
+private val NESTED_SECOND_TYPE = id("nested_second_link").namedUse()
+private val WRAPPER_USE = id("wrapper").namedUse()
+private val CHILDREN_USE = id("children").namedUse()
+private val MANY_FIRST_LIST_USE = id("many_first_list").namedUse()
+private val MANY_SECOND_LIST_USE = id("many_second_list").namedUse()
+private val NODE_USE = NODE.namedUse()
 private val DEFINITIONS =
     listOf(
-        TypeDefinition(
-            NODE,
+        TypeDefinition.partial(
+            id = NODE,
             representation =
-                RepresentationTemplate.Record(
-                    listOf(
-                        field("first", PAIR_FIRST_TYPE.definition),
-                        field("second", PAIR_SECOND_TYPE.definition),
-                        field("children", CHILDREN_USE.definition),
-                        field("parent", PARENT_SECOND_TYPE.definition),
-                        field("manyFirst", MANY_FIRST_LIST_USE.definition),
-                        field("manySecond", MANY_SECOND_LIST_USE.definition),
-                        field("wrapper", WRAPPER_USE.definition),
-                        field("nestedSecond", NESTED_SECOND_TYPE.definition),
-                        FieldDeclaration(FieldOwner(NODE, "label"), TypeTemplate.Scalar(ScalarKind.Text)),
-                    ),
+                RepresentationTemplate.createRecord(
+                    fields =
+                        listOf(
+                            field("first", PAIR_FIRST_TYPE.definition),
+                            field("second", PAIR_SECOND_TYPE.definition),
+                            field("children", CHILDREN_USE.definition),
+                            field("parent", PARENT_SECOND_TYPE.definition),
+                            field("manyFirst", MANY_FIRST_LIST_USE.definition),
+                            field("manySecond", MANY_SECOND_LIST_USE.definition),
+                            field("wrapper", WRAPPER_USE.definition),
+                            field("nestedSecond", NESTED_SECOND_TYPE.definition),
+                            FieldDeclaration.partial(
+                                owner = FieldOwner(definition = NODE, name = "label"),
+                                type = ScalarKind.TEXT.template,
+                            ),
+                        ),
+                    abstract_ = false,
                 ),
         ),
         linkDefinition(PAIR_FIRST_TYPE.definition, PAIR_FIRST),
@@ -2469,11 +2538,18 @@ private val DEFINITIONS =
         linkDefinition(MANY_SECOND_TYPE.definition, MANY_SECOND),
         linkDefinition(NESTED_FIRST_TYPE.definition, NESTED_FIRST),
         linkDefinition(NESTED_SECOND_TYPE.definition, NESTED_SECOND),
-        TypeDefinition(
-            WRAPPER_USE.definition,
+        TypeDefinition.partial(
+            id = WRAPPER_USE.definition,
             representation =
-                RepresentationTemplate.Record(
-                    listOf(FieldDeclaration(FieldOwner(WRAPPER_USE.definition, "inner"), TypeTemplate.Named(NESTED_FIRST_TYPE.definition))),
+                RepresentationTemplate.createRecord(
+                    fields =
+                        listOf(
+                            FieldDeclaration.partial(
+                                owner = FieldOwner(definition = WRAPPER_USE.definition, name = "inner"),
+                                type = NESTED_FIRST_TYPE.definition.template(),
+                            ),
+                        ),
+                    abstract_ = false,
                 ),
         ),
         listDefinition(CHILDREN_USE.definition, PARENT_FIRST_TYPE.definition),
@@ -2494,7 +2570,7 @@ private val NESTED_BINDINGS =
     listOf(
         EndpointBindingTemplate(
             NESTED_FIRST,
-            TypeTemplate.Named(NODE),
+            NODE.namedTemplate(),
             NESTED_FIRST_TYPE.definition,
             RelativeFieldPattern(
                 listOf(
@@ -2502,7 +2578,7 @@ private val NESTED_BINDINGS =
                     FieldPatternSegment.Field("inner"),
                 ),
             ),
-            TypeTemplate.Named(NODE),
+            NODE.template(),
             false,
         ),
         binding(NESTED_SECOND, NESTED_SECOND_TYPE.definition, "nestedSecond", false),

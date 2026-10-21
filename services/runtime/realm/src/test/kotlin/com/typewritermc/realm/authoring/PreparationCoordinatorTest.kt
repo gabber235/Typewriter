@@ -12,8 +12,7 @@ import com.typewritermc.authoring.TypeSelection
 import com.typewritermc.checking.CatalogGeneration
 import com.typewritermc.realm.checking.TestCatalogLease
 import com.typewritermc.types.DataValue
-import com.typewritermc.types.TypeDefinitionId
-import com.typewritermc.types.TypeId
+import com.typewritermc.types.qualified
 import de.infix.testBalloon.framework.core.testSuite
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.matchers.shouldBe
@@ -21,6 +20,7 @@ import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.test.runTest
+import skirout.editor.v1.type_catalog.TypeDefinitionId
 import java.util.concurrent.atomic.AtomicInteger
 
 val PreparationCoordinatorTestSuite by testSuite {
@@ -101,4 +101,4 @@ private fun prepared(value: String) =
     )
 
 private val CATALOG = CatalogGeneration("catalog")
-private val CREATION_TYPE = TypeDefinitionId(TypeId.Qualified("creation", "value"), 1)
+private val CREATION_TYPE = TypeDefinitionId.qualified("creation", "value")

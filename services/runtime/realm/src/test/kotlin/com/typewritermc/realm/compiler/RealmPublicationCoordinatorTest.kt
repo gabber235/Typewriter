@@ -24,16 +24,12 @@ import com.typewritermc.services.libs.filetransfer.blob.BlobEndpoint
 import com.typewritermc.services.libs.filetransfer.blob.BlobMetadata
 import com.typewritermc.services.libs.filetransfer.blob.BlobResult
 import com.typewritermc.types.DataValue
-import com.typewritermc.types.FieldDeclaration
-import com.typewritermc.types.FieldOwner
-import com.typewritermc.types.RepresentationTemplate
 import com.typewritermc.types.ResourceId
-import com.typewritermc.types.ScalarKind
-import com.typewritermc.types.TypeDefinition
-import com.typewritermc.types.TypeDefinitionId
-import com.typewritermc.types.TypeId
-import com.typewritermc.types.TypeTemplate
-import com.typewritermc.types.TypeUse
+import com.typewritermc.types.namedTemplate
+import com.typewritermc.types.namedUse
+import com.typewritermc.types.qualified
+import com.typewritermc.types.template
+import com.typewritermc.types.use
 import de.infix.testBalloon.framework.core.testSuite
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.types.shouldBeInstanceOf
@@ -44,6 +40,12 @@ import kotlinx.coroutines.test.runTest
 import skirout.editor.v1.publication.PublicationBaseline
 import skirout.editor.v1.publication.PublicationCandidateId
 import skirout.editor.v1.publication.PublicationChange
+import skirout.editor.v1.type_catalog.FieldDeclaration
+import skirout.editor.v1.type_catalog.FieldOwner
+import skirout.editor.v1.type_catalog.RepresentationTemplate
+import skirout.editor.v1.type_catalog.ScalarKind
+import skirout.editor.v1.type_catalog.TypeDefinition
+import skirout.editor.v1.type_catalog.TypeDefinitionId
 import skirout.editor.v1.type_catalog.PublicationId as SkirPublicationId
 
 val RealmPublicationCoordinatorTest by testSuite {
@@ -56,7 +58,12 @@ val RealmPublicationCoordinatorTest by testSuite {
                     com.typewritermc.realm.checking.FindingSet(
                         com.typewritermc.realm.checking.CheckTicket(
                             com.typewritermc.realm.checking.CheckInstanceId(
-                                com.typewritermc.configuration.RuleId(com.typewritermc.configuration.RuleOrigin(PUBLICATION_PAGE, 0), 0),
+                                skirout.editor.v1.type_catalog.RuleId(
+                                    origin =
+                                        skirout.editor.v1.type_catalog
+                                            .RuleOrigin(owner = PUBLICATION_PAGE, ordinal = 0),
+                                    localIndex = 0,
+                                ),
                                 location,
                             ),
                             "external_input",
@@ -500,21 +507,28 @@ private fun publicationPageRecord(value: String) =
         mapOf("value" to DataValue.StringValue(value)),
     )
 
-private val PUBLICATION_PAGE = TypeDefinitionId(TypeId.Qualified("publication", "page"), 1)
-private val PUBLICATION_PAGE_USE = TypeUse.Named(PUBLICATION_PAGE)
+private val PUBLICATION_PAGE = TypeDefinitionId.qualified("publication", "page")
+private val PUBLICATION_PAGE_USE = PUBLICATION_PAGE.namedUse()
 private val PUBLICATION_DEFINITIONS =
     listOf(
-        TypeDefinition(
-            CompilationUnitDefinition.id,
-            representation = RepresentationTemplate.Record(emptyList(), abstract = true),
+        TypeDefinition.partial(
+            id = CompilationUnitDefinition.id,
+            representation = RepresentationTemplate.createRecord(fields = emptyList(), abstract_ = true),
         ),
-        TypeDefinition(
-            PUBLICATION_PAGE,
+        TypeDefinition.partial(
+            id = PUBLICATION_PAGE,
             representation =
-                RepresentationTemplate.Record(
-                    listOf(FieldDeclaration(FieldOwner(PUBLICATION_PAGE, "value"), TypeTemplate.Scalar(ScalarKind.Text))),
+                RepresentationTemplate.createRecord(
+                    fields =
+                        listOf(
+                            FieldDeclaration.partial(
+                                owner = FieldOwner(definition = PUBLICATION_PAGE, name = "value"),
+                                type = ScalarKind.TEXT.template,
+                            ),
+                        ),
+                    abstract_ = false,
                 ),
-            parents = listOf(TypeTemplate.Named(CompilationUnitDefinition.id)),
+            parents = listOf(CompilationUnitDefinition.id.namedTemplate()),
         ),
     )
 

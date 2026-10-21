@@ -37,20 +37,21 @@ import com.typewritermc.realm.schema.openTestDatabase
 import com.typewritermc.realm.testTag
 import com.typewritermc.types.DataValue
 import com.typewritermc.types.Ref
-import com.typewritermc.types.RepresentationTemplate
 import com.typewritermc.types.ResourceId
-import com.typewritermc.types.TypeDefinition
-import com.typewritermc.types.TypeDefinitionId
-import com.typewritermc.types.TypeId
-import com.typewritermc.types.TypeTemplate
-import com.typewritermc.types.TypeUse
 import com.typewritermc.types.catalog.Resolution
 import com.typewritermc.types.encodeGeneratedDefault
+import com.typewritermc.types.namedTemplate
+import com.typewritermc.types.namedUse
+import com.typewritermc.types.qualified
 import com.typewritermc.types.unwrapNamed
+import com.typewritermc.types.use
 import de.infix.testBalloon.framework.core.testSuite
 import io.kotest.matchers.collections.shouldContain
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.types.shouldBeInstanceOf
+import skirout.editor.v1.type_catalog.RepresentationTemplate
+import skirout.editor.v1.type_catalog.TypeDefinition
+import skirout.editor.v1.type_catalog.TypeDefinitionId
 
 val RealmStructureTest by testSuite {
     test("a fresh realm gets its root and one instance of every section in display name order") {
@@ -170,7 +171,7 @@ val RealmStructureTest by testSuite {
     }
 }
 
-private val EXTRA_SECTION = TypeDefinitionId(TypeId.Qualified("structure", "ExtraSection"), 1)
+private val EXTRA_SECTION = TypeDefinitionId.qualified("structure", "ExtraSection")
 
 /** A realm on the core catalog backed by a test database, provisioned like Realm start does. */
 private class RealmStructureFixture(
@@ -213,8 +214,10 @@ private class RealmStructureFixture(
     /** The taxonomy's link item for [tag], pointing back at the tag's owner field. */
     fun taxonomyLink(tag: ResourceId): DataValue =
         views.read { view ->
-            val use = TypeUse.Named(TaxonomyTags.Taxonomy.Definition.id, listOf(TypeUse.Named(TagDefinition.id)))
-            val checked = (view.catalog.checked.resolve(use) as Resolution.Ready).value
+            val use =
+                TaxonomyTags.Taxonomy.Definition.id
+                    .namedUse(listOf(TagDefinition.id.use()))
+            val checked = (view.catalog.checked.resolve(use.use) as Resolution.Ready).value
             view.catalog.nativeBindings
                 .bind(checked)
                 .encodeGeneratedDefault(Ref<Nothing, Nothing>(tag, ValuePath(listOf(PathSegment.Field("taxonomy")))))
@@ -239,10 +242,10 @@ private class RealmStructureFixture(
     private fun extraSection(core: CatalogContributions) =
         OwnedTypeDeclaration(
             core.declarations.first().origin,
-            TypeDefinition(
-                EXTRA_SECTION,
-                representation = RepresentationTemplate.Record(emptyList()),
-                parents = listOf(TypeTemplate.Named(RealmSectionDefinition.id)),
+            TypeDefinition.partial(
+                id = EXTRA_SECTION,
+                representation = RepresentationTemplate.createRecord(fields = emptyList(), abstract_ = false),
+                parents = listOf(RealmSectionDefinition.id.namedTemplate()),
             ),
             searchKey = "extrasection",
         )

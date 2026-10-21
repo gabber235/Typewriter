@@ -35,7 +35,6 @@ internal inline fun <Value> captureSkirConversion(block: ConversionScope.() -> V
 internal class ConversionScope {
     private val path = ArrayDeque<String>()
     private var valueDepth = 0
-    private var typeDepth = 0
 
     inline fun <Value> withinValueDepth(block: () -> Value): Value {
         if (valueDepth > MAX_VALUE_DEPTH) fail("Authored value exceeds the supported nesting depth.")
@@ -47,15 +46,13 @@ internal class ConversionScope {
         }
     }
 
-    inline fun <Value> withinTypeDepth(block: () -> Value): Value {
-        if (typeDepth >= MAX_TYPE_DEPTH) fail("Type expression exceeds the supported nesting depth.")
-        typeDepth++
-        return try {
-            block()
-        } finally {
-            typeDepth--
+    /** Reports a value that fails its boundary check as a conversion failure at the current path. */
+    inline fun <Value> valid(check: () -> Value): Value =
+        try {
+            check()
+        } catch (invalid: IllegalArgumentException) {
+            fail(invalid.message ?: "Value is invalid.")
         }
-    }
 
     inline fun <Value> at(
         segment: String,
@@ -73,7 +70,6 @@ internal class ConversionScope {
 }
 
 private const val MAX_VALUE_DEPTH = 512
-private const val MAX_TYPE_DEPTH = 512
 
 internal class ConversionFailure(
     val diagnostic: SkirConversionDiagnostic,

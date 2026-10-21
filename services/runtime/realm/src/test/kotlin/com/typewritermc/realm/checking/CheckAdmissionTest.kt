@@ -5,8 +5,6 @@ import com.typewritermc.authoring.EditExpectation
 import com.typewritermc.authoring.ValueLocation
 import com.typewritermc.authoring.ValuePath
 import com.typewritermc.checking.CheckOutcome
-import com.typewritermc.configuration.RuleId
-import com.typewritermc.configuration.RuleOrigin
 import com.typewritermc.realm.authoring.AuthoringSeed
 import com.typewritermc.realm.authoring.AuthoringViewDelta
 import com.typewritermc.realm.authoring.InMemoryAuthoringViewStore
@@ -14,10 +12,13 @@ import com.typewritermc.types.DataValue
 import com.typewritermc.types.ResourceId
 import de.infix.testBalloon.framework.core.testSuite
 import io.kotest.matchers.shouldBe
+import skirout.editor.v1.type_catalog.RuleId
+import skirout.editor.v1.type_catalog.RuleOrigin
 
 val CheckAdmissionTest by testSuite {
     val id = ResourceId("page")
-    val instance = CheckInstanceId(RuleId(RuleOrigin(TEST_TYPE, 0), 0), ValueLocation(id, ValuePath()))
+    val instance =
+        CheckInstanceId(RuleId(origin = RuleOrigin(owner = TEST_TYPE, ordinal = 0), localIndex = 0), ValueLocation(id, ValuePath()))
     test("current admission installs evidence only while values and execution still match") {
         val catalog = TestCatalogLease()
         val store = InMemoryAuthoringViewStore(catalog, AuthoringSeed(mapOf(id to record(name = "Quest"))))

@@ -8,12 +8,12 @@ import com.typewritermc.discovery.checkedGeneratedScope
 import com.typewritermc.expression.Expr
 import com.typewritermc.expression.ExpressionBindingId
 import com.typewritermc.expression.Handled
-import com.typewritermc.types.CollectionKind
-import com.typewritermc.types.TypeTemplate
 import com.typewritermc.types.skir.SkirAuthoringValueCodec
-import com.typewritermc.types.skir.SkirTypeCodec
 import com.typewritermc.types.skir.getOrThrow
+import com.typewritermc.types.template
 import com.typewritermc.types.toTemplate
+import com.typewritermc.types.unknownVariant
+import com.typewritermc.types.use
 import skirout.editor.v1.binding.BindingRef
 import skirout.editor.v1.expression.ExpressionNode
 import skirout.editor.v1.presentation.BoundControl
@@ -21,6 +21,8 @@ import skirout.editor.v1.presentation.LinkRejectionDisplay
 import skirout.editor.v1.presentation.PresentationElement
 import skirout.editor.v1.presentation.PresentationNode
 import skirout.editor.v1.presentation.ResourcesLayout
+import skirout.editor.v1.type_catalog.CollectionKind
+import skirout.editor.v1.type_catalog.TypeTemplate
 import skirout.editor.v1.presentation.GraphDirection as WireGraphDirection
 import skirout.editor.v1.presentation.PresentationProperties as WirePresentationProperties
 import skirout.editor.v1.type_catalog.ExpressionBindingId as WireExpressionBindingId
@@ -351,19 +353,19 @@ internal class RuntimeControlBinding(
                     type: AppliedPresentation<Subtype>,
                     label: Expr<String, Handled>?,
                 ) {
-                    state.type(type.type)
+                    state.type(type.type.use)
                     val id =
-                        requireNotNull(state.presentationId(type.reference, state.type.rebind(type.type.toTemplate()))) {
+                        requireNotNull(state.presentationId(type.reference, state.type.rebind(type.type.toTemplate().template))) {
                             "A concrete form presentation must be registered before use."
                         }
                     // Without an authored label the form is named by the readable Skir JSON of its definition id,
                     // a stable spelling that does not depend on Kotlin object formatting.
                     val fallback =
                         skirout.editor.v1.type_catalog.TypeDefinitionId.serializer
-                            .toJsonCode(SkirTypeCodec.encode(type.type.definition).getOrThrow(), build.skir.JsonFlavor.READABLE)
+                            .toJsonCode(type.type.definition, build.skir.JsonFlavor.READABLE)
                     forms +=
                         skirout.editor.v1.presentation.ConcreteTypePresentation(
-                            concreteType = SkirTypeCodec.encode(type.type).getOrThrow(),
+                            concreteType = type.type.use,
                             label = expression(label ?: fallback),
                             presentation =
                                 state.node(
@@ -507,8 +509,9 @@ private fun BindingRef.nested(
         NestedPresentationSlot.Items -> {
             val bindingId =
                 when (requireNotNull(nested.collectionKind)) {
-                    CollectionKind.List -> "list_item"
-                    CollectionKind.Set -> "set_item"
+                    CollectionKind.LIST -> "list_item"
+                    CollectionKind.SET -> "set_item"
+                    else -> unknownVariant(nested.collectionKind)
                 }
             BindingRef(
                 path = WireValuePath(segments = emptyList()),
@@ -524,7 +527,7 @@ private fun BindingRef.nested(
         }
 
         NestedPresentationSlot.Values -> {
-            if (checked.type is TypeTemplate.Nullable) {
+            if (checked.type is TypeTemplate.NullableWrapper) {
                 this
             } else {
                 BindingRef(

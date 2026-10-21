@@ -18,18 +18,15 @@ import com.typewritermc.authoring.PreparedEdit
 import com.typewritermc.authoring.PreparedValue
 import com.typewritermc.authoring.RequiredInput
 import com.typewritermc.authoring.TraversalDirection
-import com.typewritermc.authoring.ValueProblem
 import com.typewritermc.checking.CatalogGeneration
-import com.typewritermc.types.DataValue
 import com.typewritermc.types.ListItem
 import com.typewritermc.types.RelationId
 import com.typewritermc.types.ResourceId
-import com.typewritermc.types.TypeUse
+import com.typewritermc.types.requireValid
 import com.typewritermc.types.skir.SkirAuthoringValueCodec
 import com.typewritermc.types.skir.SkirConversionDiagnostic
 import com.typewritermc.types.skir.SkirConversionResult
 import com.typewritermc.types.skir.SkirDataValueCodec
-import com.typewritermc.types.skir.SkirTypeCodec
 import skirout.editor.v1.authoring.CommitPreparedEditResponse as SkirCommitPreparedEditResponse
 import skirout.editor.v1.authoring.ConnectIntent as SkirConnectIntent
 import skirout.editor.v1.authoring.CounterpartChoice as SkirCounterpartChoice
@@ -51,13 +48,10 @@ import skirout.editor.v1.catalog.RequiredInput as SkirRequiredInput
 import skirout.editor.v1.catalog.ValuePreparationRequest as SkirInitializationRequest
 import skirout.editor.v1.diagnostic.ValueProblem as SkirValueProblem
 import skirout.editor.v1.type_catalog.CatalogGeneration as SkirCatalogGeneration
-import skirout.editor.v1.type_catalog.DataValue as SkirDataValue
 import skirout.editor.v1.type_catalog.ItemId as SkirItemId
 import skirout.editor.v1.type_catalog.ListItem as SkirListItem
-import skirout.editor.v1.type_catalog.NamedTypeUse as SkirNamedTypeUse
 import skirout.editor.v1.type_catalog.RelationId as SkirRelationId
 import skirout.editor.v1.type_catalog.ResourceId as SkirResourceId
-import skirout.editor.v1.type_catalog.TypeUse as SkirTypeUse
 
 /**
  * Carries initialization continuations, observed edit expectations, ordered intents, and commit outcomes over Skir.
@@ -177,7 +171,7 @@ private fun OperationConversionScope.encodePreparationDraft(value: PreparationDr
             value.requiredInputs.map {
                 SkirRequiredInput(
                     path = convert(SkirAuthoringValueCodec.encode(it.path)),
-                    expected = convert(SkirTypeCodec.encode(it.expected)),
+                    expected = it.expected,
                 )
             },
         findings = prepared.findings,
@@ -198,7 +192,7 @@ private fun OperationConversionScope.decodePreparationDraft(value: SkirPreparati
         value.requiredInputs.map {
             RequiredInput(
                 convert(SkirAuthoringValueCodec.decode(it.path)),
-                convert(SkirTypeCodec.decode(it.expected)),
+                valid { it.expected.requireValid() },
             )
         },
         prepared.findings,
@@ -410,7 +404,7 @@ private fun OperationConversionScope.encodeIntent(value: EditIntent): SkirEditIn
         is EditIntent.Retag -> {
             SkirEditIntent.createRetag(
                 at = convert(SkirAuthoringValueCodec.encode(value.at)),
-                type = encodeNamedType(value.type),
+                type = value.type,
             )
         }
 
@@ -476,7 +470,7 @@ private fun OperationConversionScope.decodeIntent(value: SkirEditIntent): EditIn
         is SkirEditIntent.RetagWrapper -> {
             EditIntent.Retag(
                 at = convert(SkirAuthoringValueCodec.decode(value.value.at)),
-                type = decodeNamedType(value.value.type),
+                type = valid { value.value.type.requireValid() },
             )
         }
 
@@ -580,7 +574,7 @@ private fun OperationConversionScope.encodeInitializationRequest(value: Initiali
         target =
             when (val target = value.target) {
                 is PreparationTarget.Value -> {
-                    SkirPreparationTarget.ValueWrapper(convert(SkirTypeCodec.encode(target.type)))
+                    SkirPreparationTarget.ValueWrapper(target.type)
                 }
 
                 is PreparationTarget.Record -> {
@@ -598,7 +592,7 @@ private fun OperationConversionScope.decodeInitializationRequest(value: SkirInit
         target =
             when (val target = value.target) {
                 is SkirPreparationTarget.ValueWrapper -> {
-                    PreparationTarget.Value(convert(SkirTypeCodec.decode(target.value)))
+                    PreparationTarget.Value(valid { target.value.requireValid() })
                 }
 
                 is SkirPreparationTarget.RecordWrapper -> {
@@ -667,18 +661,6 @@ private fun OperationConversionScope.decodeListItem(value: SkirListItem) =
         value = convert(SkirDataValueCodec.decode(value.value)),
     )
 
-private fun OperationConversionScope.encodeNamedType(value: TypeUse.Named): SkirNamedTypeUse =
-    when (val encoded = convert(SkirTypeCodec.encode(value))) {
-        is SkirTypeUse.NamedWrapper -> encoded.value
-        else -> fail("Named type encoded as another Skir variant.")
-    }
-
-private fun OperationConversionScope.decodeNamedType(value: SkirNamedTypeUse): TypeUse.Named =
-    when (val decoded = convert(SkirTypeCodec.decode(SkirTypeUse.NamedWrapper(value)))) {
-        is TypeUse.Named -> decoded
-        else -> fail("Named Skir type decoded as another domain variant.")
-    }
-
 private inline fun <Value> captureOperationConversion(block: OperationConversionScope.() -> Value): SkirConversionResult<Value> =
     try {
         SkirConversionResult.Success(OperationConversionScope().block())
@@ -714,6 +696,14 @@ private class OperationConversionScope {
         }
 
     fun fail(message: String): Nothing = throw OperationConversionFailure(SkirConversionDiagnostic(path.toList(), message))
+
+    /** Reports a value that fails its boundary check as a conversion failure at the current path. */
+    inline fun <Value> valid(check: () -> Value): Value =
+        try {
+            check()
+        } catch (invalid: IllegalArgumentException) {
+            fail(invalid.message ?: "Value is invalid.")
+        }
 
     fun requireText(
         value: String,

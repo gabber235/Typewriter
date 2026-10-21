@@ -45,9 +45,10 @@ import com.typewritermc.types.Ref
 import com.typewritermc.types.RelationId
 import com.typewritermc.types.ResourceId
 import com.typewritermc.types.ResourceTarget
-import com.typewritermc.types.TypeTemplate
 import com.typewritermc.types.endpointId
+import com.typewritermc.types.namedTemplate
 import com.typewritermc.types.skir.getOrThrow
+import com.typewritermc.types.use
 import de.infix.testBalloon.framework.core.testSuite
 import io.kotest.matchers.collections.shouldContain
 import io.kotest.matchers.collections.shouldContainAll
@@ -433,7 +434,7 @@ private fun manyCandidates(origin: ProviderOrigin) =
     collectOperation<ResourceDraft, LinkWithInput>(
         origin,
         "fixture.ManyCandidates",
-        ResourceTarget.Type(TypeTemplate.Named(TagDefinition.id)),
+        ResourceTarget.Type(TagDefinition.id.namedTemplate()),
         AnyResourceSubjects,
         OperationInput.Typed(LinkWithInputDefinition.use),
         "Many candidates",
@@ -454,7 +455,7 @@ private fun orphanTag(origin: ProviderOrigin) =
     collectOperation<ResourceDraft, Unit>(
         origin,
         "fixture.OrphanTag",
-        ResourceTarget.Type(TypeTemplate.Named(TagDefinition.id)),
+        ResourceTarget.Type(TagDefinition.id.namedTemplate()),
         AnyResourceSubjects,
         OperationInput.None,
         "Orphan tag",
@@ -472,7 +473,7 @@ private fun brokenAvailability(origin: ProviderOrigin) =
     collectOperation<ResourceDraft, Unit>(
         origin,
         "fixture.BrokenAvailability",
-        ResourceTarget.Type(TypeTemplate.Named(TagDefinition.id)),
+        ResourceTarget.Type(TagDefinition.id.namedTemplate()),
         AnyResourceSubjects,
         OperationInput.None,
         "Broken availability",

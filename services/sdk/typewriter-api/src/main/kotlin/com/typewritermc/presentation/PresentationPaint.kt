@@ -3,6 +3,7 @@ package com.typewritermc.presentation
 import com.typewritermc.expression.Expr
 import com.typewritermc.expression.Handled
 import com.typewritermc.expression.literal
+import com.typewritermc.types.requireValid
 import skirout.editor.v1.presentation.PresentationAlignment
 import skirout.editor.v1.presentation.PresentationCurve
 import skirout.editor.v1.presentation.PresentationInteractionState

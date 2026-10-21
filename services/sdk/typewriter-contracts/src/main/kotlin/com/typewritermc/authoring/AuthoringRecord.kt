@@ -1,20 +1,25 @@
 package com.typewritermc.authoring
 
 import com.typewritermc.types.DataValue
-import com.typewritermc.types.FieldOwner
-import com.typewritermc.types.ParameterKey
-import com.typewritermc.types.TypeDefinitionId
-import com.typewritermc.types.TypeTemplate
-import com.typewritermc.types.TypeUse
-import com.typewritermc.types.catalog.ResolvedField
+import com.typewritermc.types.skir.NamedTypeUseSerializer
+import com.typewritermc.types.skir.TypeDefinitionIdSerializer
+import com.typewritermc.types.skir.TypeUseSerializer
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
+import skirout.editor.v1.type_catalog.FieldOwner
+import skirout.editor.v1.type_catalog.NamedTypeUse
+import skirout.editor.v1.type_catalog.ParameterKey
+import skirout.editor.v1.type_catalog.ResolvedField
+import skirout.editor.v1.type_catalog.TypeDefinitionId
+import skirout.editor.v1.type_catalog.TypeTemplate
+import skirout.editor.v1.type_catalog.TypeUse
 
 @Serializable
 sealed interface ArgumentSelection {
     @Serializable
     @SerialName("chosen")
     data class Chosen(
+        @Serializable(with = TypeUseSerializer::class)
         val type: TypeUse,
     ) : ArgumentSelection
 
@@ -34,12 +39,14 @@ sealed interface TypeSelection {
     @Serializable
     @SerialName("complete")
     data class Complete(
-        val use: TypeUse.Named,
+        @Serializable(with = NamedTypeUseSerializer::class)
+        val use: NamedTypeUse,
     ) : TypeSelection
 
     @Serializable
     @SerialName("pending")
     data class Pending(
+        @Serializable(with = TypeDefinitionIdSerializer::class)
         val definition: TypeDefinitionId,
         val arguments: List<ArgumentSelection>,
     ) : TypeSelection
@@ -63,19 +70,16 @@ data class AuthoringRecord(
     val fields: Map<String, DataValue>,
 )
 
-@Serializable
 data class ArgumentLocation(
     val index: Int,
 )
 
-@Serializable
 data class DependentField(
     val owner: FieldOwner,
     val type: TypeTemplate,
     val missing: Set<ParameterKey>,
 )
 
-@Serializable
 data class PartialSchema(
     val knownFields: List<ResolvedField>,
     val dependentFields: List<DependentField>,

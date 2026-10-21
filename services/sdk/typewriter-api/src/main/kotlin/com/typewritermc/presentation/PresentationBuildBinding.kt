@@ -3,17 +3,14 @@ package com.typewritermc.presentation
 import com.typewritermc.expression.Expr
 import com.typewritermc.expression.Handled
 import com.typewritermc.expression.children
-import com.typewritermc.types.CollectionKind
-import com.typewritermc.types.TypeDefinitionId
-import com.typewritermc.types.TypeTemplate
-import com.typewritermc.types.TypeUse
 import com.typewritermc.types.catalog.CheckedType
 import com.typewritermc.types.catalog.Resolution
-import com.typewritermc.types.catalog.ResolvedRepresentation
 import com.typewritermc.types.catalog.apply
 import com.typewritermc.types.catalog.isNominalSubtype
 import com.typewritermc.types.catalog.resolve
+import com.typewritermc.types.template
 import com.typewritermc.types.toTemplate
+import com.typewritermc.types.use
 import skirout.editor.v1.catalog.PresentationRole
 import skirout.editor.v1.expression.ExpressionNode
 import skirout.editor.v1.presentation.ConnectionAxis
@@ -24,6 +21,13 @@ import skirout.editor.v1.presentation.MainAxisAlignment
 import skirout.editor.v1.presentation.PresentationAlignment
 import skirout.editor.v1.presentation.PresentationAnchorSelector
 import skirout.editor.v1.presentation.PresentationTransitionPolicy
+import skirout.editor.v1.type_catalog.CollectionKind
+import skirout.editor.v1.type_catalog.EndpointId
+import skirout.editor.v1.type_catalog.NamedTypeTemplate
+import skirout.editor.v1.type_catalog.ResolvedRepresentation
+import skirout.editor.v1.type_catalog.TypeDefinitionId
+import skirout.editor.v1.type_catalog.TypeTemplate
+import skirout.editor.v1.type_catalog.TypeUse
 
 /**
  * What one presentation build is for: the subject [type], the requested [role], the native classes of published
@@ -32,8 +36,8 @@ import skirout.editor.v1.presentation.PresentationTransitionPolicy
 class PresentationBuildBinding(
     val type: CheckedPresentationTemplate,
     val role: PresentationRole,
-    internal val nativeTypes: Map<kotlin.reflect.KClass<*>, TypeTemplate.Named> = emptyMap(),
-    internal val ownershipEndpoints: Set<com.typewritermc.types.EndpointId> = emptySet(),
+    internal val nativeTypes: Map<kotlin.reflect.KClass<*>, NamedTypeTemplate> = emptyMap(),
+    internal val ownershipEndpoints: Set<EndpointId> = emptySet(),
 )
 
 class CheckedPresentationTemplate internal constructor(
@@ -124,7 +128,7 @@ class CheckedPresentationTemplate internal constructor(
 
 /** A link type: the endpoint of its relation on the side of the resource holding it, and its target type. */
 internal data class PresentationLinkTemplate(
-    val endpoint: com.typewritermc.types.EndpointId,
+    val endpoint: EndpointId,
     val target: TypeTemplate,
 )
 
@@ -168,19 +172,19 @@ fun CheckedType.presentationTemplate(): CheckedPresentationTemplate {
                 }
 
                 NestedPresentationSlot.Items -> {
-                    val representation = checked.schema.representation as? ResolvedRepresentation.Sequence
-                    representation?.let { PresentationNestedTemplate(it.item.toTemplate(), it.kind) }
+                    val representation = checked.schema.representation as? ResolvedRepresentation.SequenceWrapper
+                    representation?.let { PresentationNestedTemplate(it.value.item.toTemplate(), it.value.kind) }
                 }
 
                 NestedPresentationSlot.Keys -> {
-                    val representation = checked.schema.representation as? ResolvedRepresentation.Mapping
-                    representation?.let { PresentationNestedTemplate(it.key.toTemplate()) }
+                    val representation = checked.schema.representation as? ResolvedRepresentation.MappingWrapper
+                    representation?.let { PresentationNestedTemplate(it.value.key.toTemplate()) }
                 }
 
                 NestedPresentationSlot.Values -> {
                     when (val representation = checked.schema.representation) {
-                        is ResolvedRepresentation.Mapping -> PresentationNestedTemplate(representation.value.toTemplate())
-                        else -> (checked.use as? TypeUse.Nullable)?.let { PresentationNestedTemplate(it.value.toTemplate()) }
+                        is ResolvedRepresentation.MappingWrapper -> PresentationNestedTemplate(representation.value.value.toTemplate())
+                        else -> (checked.use as? TypeUse.NullableWrapper)?.let { PresentationNestedTemplate(it.value.value.toTemplate()) }
                     }
                 }
             }
@@ -196,11 +200,11 @@ fun CheckedType.presentationTemplate(): CheckedPresentationTemplate {
         },
         payloadResolver = { parent ->
             val checked = resolve(parent)
-            (checked.schema.representation as? ResolvedRepresentation.Scalar)?.let { TypeTemplate.Scalar(it.kind) } ?: parent
+            (checked.schema.representation as? ResolvedRepresentation.ScalarWrapper)?.let { it.value.kind.template } ?: parent
         },
         linkResolver = { parent ->
-            (resolve(parent).schema.representation as? ResolvedRepresentation.Link)?.let { link ->
-                PresentationLinkTemplate(link.endpoint, link.target.toTemplate())
+            (resolve(parent).schema.representation as? ResolvedRepresentation.LinkWrapper)?.let { link ->
+                PresentationLinkTemplate(link.value.endpoint, link.value.target.toTemplate())
             }
         },
         subtypeChecker = { actual, expected -> isNominalSubtype(actual, expected) },

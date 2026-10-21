@@ -7,27 +7,28 @@ import com.typewritermc.imprint.ArtifactId
 import com.typewritermc.imprint.ContributionName
 import com.typewritermc.imprint.ContributionSourceId
 import com.typewritermc.imprint.ProducerId
-import com.typewritermc.types.DeclarationOwner
 import com.typewritermc.types.EndpointCardinality
 import com.typewritermc.types.EndpointDefinition
-import com.typewritermc.types.EndpointId
 import com.typewritermc.types.EndpointSlot
-import com.typewritermc.types.ParameterKey
 import com.typewritermc.types.RESOURCE_OWNERSHIP_FAMILY_ID
 import com.typewritermc.types.RelationContract
 import com.typewritermc.types.RelationDeletePolicy
 import com.typewritermc.types.RelationFamilyId
 import com.typewritermc.types.RelationId
-import com.typewritermc.types.RepresentationTemplate
-import com.typewritermc.types.TypeDefinition
-import com.typewritermc.types.TypeDefinitionId
-import com.typewritermc.types.TypeId
-import com.typewritermc.types.TypeParameter
-import com.typewritermc.types.TypeTemplate
 import com.typewritermc.types.catalog.DeclarationStatus
+import com.typewritermc.types.namedTemplate
+import com.typewritermc.types.qualified
 import de.infix.testBalloon.framework.core.testSuite
 import io.kotest.matchers.shouldBe
 import skirout.editor.v1.catalog.RESOURCE_OWNERSHIP_FAMILY
+import skirout.editor.v1.type_catalog.DeclarationOwner
+import skirout.editor.v1.type_catalog.EndpointId
+import skirout.editor.v1.type_catalog.ParameterKey
+import skirout.editor.v1.type_catalog.RepresentationTemplate
+import skirout.editor.v1.type_catalog.TypeDefinition
+import skirout.editor.v1.type_catalog.TypeDefinitionId
+import skirout.editor.v1.type_catalog.TypeParameter
+import skirout.editor.v1.type_catalog.TypeTemplate
 
 val RealmStructureAssemblyTest by testSuite {
     test("the ownership family annotation id is the editor contract's ownership family") {
@@ -35,7 +36,7 @@ val RealmStructureAssemblyTest by testSuite {
     }
 
     test("reserved read identities cannot replace intrinsic schemas or isolate unrelated declarations") {
-        val reserved = TypeDefinitionId(TypeId.Qualified(com.typewritermc.expression.CANONICAL_READ_NAMESPACE, "UnfamiliarModel"), 1)
+        val reserved = TypeDefinitionId.qualified(com.typewritermc.expression.CANONICAL_READ_NAMESPACE, "UnfamiliarModel")
         val healthy = id("Healthy")
         val assembly = assemble(listOf(record(reserved), record(healthy)))
         assembly.snapshot.types
@@ -92,9 +93,9 @@ val RealmStructureAssemblyTest by testSuite {
         val declaration =
             TypeDefinition(
                 id = generic,
-                parameters = listOf(TypeParameter(ParameterKey(generic, 0), "T", emptyList())),
-                representation = RepresentationTemplate.Record(emptyList(), abstract = false),
-                parents = listOf(TypeTemplate.Named(RealmSectionDefinition.id)),
+                parameters = listOf(TypeParameter.partial(key = ParameterKey(owner = generic, index = 0), name = "T")),
+                representation = RepresentationTemplate.createRecord(fields = emptyList(), abstract_ = false),
+                parents = listOf(RealmSectionDefinition.id.namedTemplate()),
             )
 
         val assembly = assemble(structure() + OwnedTypeDeclaration(origin, declaration, searchKey = "generic"))
@@ -135,10 +136,17 @@ private fun record(
     id: TypeDefinitionId,
     abstract: Boolean = false,
     parents: List<TypeDefinitionId> = emptyList(),
-) = TypeDefinition(
+) = TypeDefinition.partial(
     id = id,
-    representation = RepresentationTemplate.Record(emptyList(), abstract),
-    parents = parents.map(TypeTemplate::Named),
+    representation =
+        RepresentationTemplate.createRecord(
+            fields = emptyList(),
+            abstract_ = abstract,
+        ),
+    parents =
+        parents.map {
+            it.namedTemplate()
+        },
 )
 
 private fun ownership(
@@ -149,17 +157,17 @@ private fun ownership(
     id = RelationId(relation),
     first =
         EndpointDefinition(
-            EndpointId("$relation:first"),
+            EndpointId(value = "$relation:first"),
             EndpointSlot.First,
-            TypeTemplate.Named(owner),
+            owner.namedTemplate(),
             EndpointCardinality.One,
             RelationDeletePolicy.CASCADE,
         ),
     second =
         EndpointDefinition(
-            EndpointId("$relation:second"),
+            EndpointId(value = "$relation:second"),
             EndpointSlot.Second,
-            TypeTemplate.Named(member),
+            member.namedTemplate(),
             EndpointCardinality.Many,
             RelationDeletePolicy.CLEAR,
         ),
@@ -171,19 +179,20 @@ private fun DeclarationStatus.codes(): Set<String> =
         it.code
     }
 
-private fun id(name: String) = TypeDefinitionId(TypeId.Qualified("structure", name), 1)
+private fun id(name: String) = TypeDefinitionId.qualified("structure", name)
 
 private val origin =
     ProviderOrigin(
         owner =
             DeclarationOwner(
-                ContributionKey(
-                    ContributionSourceId("test"),
-                    "main",
-                    ProducerId("sdk"),
-                    ContributionName("realm_structure"),
-                ),
-                "realm structure",
+                source =
+                    contributionKey(
+                        ContributionSourceId("test"),
+                        "main",
+                        ProducerId("sdk"),
+                        ContributionName("realm_structure"),
+                    ),
+                localIdentity = "realm structure",
             ),
         artifact = ArtifactId("test:realm_structure"),
         sourcePart = "main",

@@ -11,6 +11,9 @@ import com.typewritermc.expression.MayBeMissing
 import com.typewritermc.types.TypewriterRecordContract
 import com.typewritermc.types.TypewriterTypeImports
 import kotlinx.serialization.SerialName
+import skirout.editor.v1.type_catalog.RepresentationTemplate
+import com.typewritermc.types.template
+import com.typewritermc.types.nullable
 
 interface ImportedEntry : Element {
     override val placement: GraphPlacement
@@ -95,17 +98,13 @@ suspend fun <C, D> genericEdit(
 }
 
 fun verifyCanonicalOwnership() {
-    val imported = ImportedEntryDefinition.definition.representation as com.typewritermc.types.RepresentationTemplate.Record
-    check(imported.fields.map { it.owner.name } == listOf("placement"))
-    val child = GenericChildDefinition.definition.representation as com.typewritermc.types.RepresentationTemplate.Record
-    check(child.fields.isEmpty())
+    val imported = ImportedEntryDefinition.definition.representation as RepresentationTemplate.RecordWrapper
+    check(imported.value.fields.map { it.owner.name } == listOf("placement"))
+    val child = GenericChildDefinition.definition.representation as RepresentationTemplate.RecordWrapper
+    check(child.value.fields.isEmpty())
     check(
         NullableChildDefinition.definition.parents.single().arguments.single() ==
-            com.typewritermc.types.TypeTemplate.Nullable(
-                com.typewritermc.types.TypeTemplate.Parameter(
-                    NullableChildDefinition.definition.parameters.single().key,
-                ),
-            ),
+            NullableChildDefinition.definition.parameters.single().key.template.nullable(),
     )
     check(
         GenericChildFields.payload.path.segments

@@ -7,18 +7,16 @@ import com.typewritermc.checking.CatalogGeneration
 import com.typewritermc.elements.ElementDefinition
 import com.typewritermc.library.BookDefinition
 import com.typewritermc.library.TagDefinition
-import com.typewritermc.types.FieldDeclaration
-import com.typewritermc.types.FieldOwner
-import com.typewritermc.types.RepresentationTemplate
-import com.typewritermc.types.TypeDefinition
-import com.typewritermc.types.TypeDefinitionId
-import com.typewritermc.types.TypeId
-import com.typewritermc.types.TypeTemplate
 import com.typewritermc.types.catalog.toWire
-import com.typewritermc.types.skir.SkirTypeCodec
-import com.typewritermc.types.skir.getOrThrow
+import com.typewritermc.types.qualified
+import com.typewritermc.types.template
 import de.infix.testBalloon.framework.core.testSuite
 import io.kotest.matchers.shouldBe
+import skirout.editor.v1.type_catalog.FieldDeclaration
+import skirout.editor.v1.type_catalog.FieldOwner
+import skirout.editor.v1.type_catalog.RepresentationTemplate
+import skirout.editor.v1.type_catalog.TypeDefinition
+import skirout.editor.v1.type_catalog.TypeDefinitionId
 
 val PlacementFieldPublicationTest by testSuite {
     test("the single field typed as a placement is published with its path") {
@@ -32,22 +30,27 @@ val PlacementFieldPublicationTest by testSuite {
         assembly.snapshot
             .toWire()
             .types
-            .single { it.definition == SkirTypeCodec.encode(TagDefinition.declaration).getOrThrow() }
+            .single { it.definition == TagDefinition.declaration }
             .placementField
             ?.segments
             ?.size shouldBe 1
     }
 
     test("a type with two placement fields publishes none and reports the ambiguity") {
-        val twice = TypeDefinitionId(TypeId.Qualified("fixture", "TwicePlaced"), 1)
+        val twice = TypeDefinitionId.qualified("fixture", "TwicePlaced")
         val declaration =
-            TypeDefinition(
-                twice,
+            TypeDefinition.partial(
+                id = twice,
                 representation =
-                    RepresentationTemplate.Record(
-                        listOf("first", "second").map { name ->
-                            FieldDeclaration(FieldOwner(twice, name), TypeTemplate.Named(GraphPlacementDefinition.id))
-                        },
+                    RepresentationTemplate.createRecord(
+                        fields =
+                            listOf("first", "second").map { name ->
+                                FieldDeclaration.partial(
+                                    owner = FieldOwner(definition = twice, name = name),
+                                    type = GraphPlacementDefinition.id.template(),
+                                )
+                            },
+                        abstract_ = false,
                     ),
             )
         val assembly = assemble(declaration)
