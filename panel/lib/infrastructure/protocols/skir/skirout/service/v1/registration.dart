@@ -510,6 +510,8 @@ sealed class BindServiceResponse {
   );
 
   /// Create a 'invalid_registration_token_error' variant wrapping around the given value.
+  ///
+  /// Invalid or expired registration token.
   factory BindServiceResponse.wrapInvalidRegistrationTokenError(
     BindServiceResponse_InvalidRegistrationTokenError value,
   ) => BindServiceResponse_invalidRegistrationTokenErrorWrapper._(value);
@@ -521,6 +523,8 @@ sealed class BindServiceResponse {
       );
 
   /// Create a 'organization_not_found_error' variant wrapping around the given value.
+  ///
+  /// Organization not found.
   factory BindServiceResponse.wrapOrganizationNotFoundError(
     BindServiceResponse_OrganizationNotFoundError value,
   ) => BindServiceResponse_organizationNotFoundErrorWrapper._(value);
@@ -562,7 +566,7 @@ sealed class BindServiceResponse {
         "invalid_registration_token_error",
         "wrapInvalidRegistrationTokenError",
         BindServiceResponse_InvalidRegistrationTokenError.serializer,
-        "",
+        "Invalid or expired registration token.",
         BindServiceResponse_invalidRegistrationTokenErrorWrapper._,
         (it) => it.value,
         ordinal: BindServiceResponse_kind
@@ -574,7 +578,7 @@ sealed class BindServiceResponse {
         "organization_not_found_error",
         "wrapOrganizationNotFoundError",
         BindServiceResponse_OrganizationNotFoundError.serializer,
-        "",
+        "Organization not found.",
         BindServiceResponse_organizationNotFoundErrorWrapper._,
         (it) => it.value,
         ordinal:
@@ -1140,6 +1144,8 @@ sealed class UnbindServiceResponse {
       UnbindServiceResponse.wrapSuccess(UnbindServiceResponse_Success());
 
   /// Create a 'service_not_found_error' variant wrapping around the given value.
+  ///
+  /// Service not found in organization.
   factory UnbindServiceResponse.wrapServiceNotFoundError(
     UnbindServiceResponse_ServiceNotFoundError value,
   ) => UnbindServiceResponse_serviceNotFoundErrorWrapper._(value);
@@ -1181,7 +1187,7 @@ sealed class UnbindServiceResponse {
         "service_not_found_error",
         "wrapServiceNotFoundError",
         UnbindServiceResponse_ServiceNotFoundError.serializer,
-        "",
+        "Service not found in organization.",
         UnbindServiceResponse_serviceNotFoundErrorWrapper._,
         (it) => it.value,
         ordinal:

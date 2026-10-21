@@ -18,7 +18,9 @@ method BindService(
     service_role: ServiceRole;
   };
 
+  /// Invalid or expired registration token.
   invalid_registration_token_error: struct {};
+  /// Organization not found.
   organization_not_found_error: struct {};
 } = 304691;
 
@@ -42,5 +44,6 @@ method UnbindService(
 
   success: struct {};
 
+  /// Service not found in organization.
   service_not_found_error: struct {};
 } = 950343;

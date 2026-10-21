@@ -35,15 +35,14 @@ import skirout.editor.v1.authoring.QueryAuthoringStateResponse
 import skirout.editor.v1.authoring.SearchAuthoringResponse
 import skirout.editor.v1.capability.CommandResult
 import skirout.editor.v1.capability.ComputationResult
-import skirout.editor.v1.capability.InvocationId
 import skirout.editor.v1.catalog.CatalogFetchResult
-import skirout.editor.v1.catalog.CatalogInvalidated
+import skirout.editor.v1.catalog.WatchEditorCatalogResponse
 import skirout.editor.v1.catalog.PrepareValueResult
 import skirout.editor.v1.compiled_content.QueryCompiledResourceStatusResponse
 import skirout.editor.v1.compiled_content.QueryPublishedContentResponse
-import skirout.editor.v1.publication.PublicationViewChanged
 import skirout.editor.v1.publication.PublishAuthoringResponse
 import skirout.editor.v1.publication.QueryPublicationViewResponse
+import skirout.editor.v1.publication.WatchPublicationResponse
 import skirout.editor.v1.resource_operations.AuthoringActionResult
 import skirout.editor.v1.resource_operations.ResolveDropCandidatesResult
 import skirout.editor.v1.resource_operations.ResolveResourceOperationsResult
@@ -59,7 +58,7 @@ internal class EditorContracts(
         address.editorCatalogFetch(policy(CatalogFetchResult.createInternalError(), catalogFetchResponseClassifier()))
     val watchEditorCatalog =
         address.editorCatalogWatch(
-            policy(CatalogInvalidated.partial(), responseClassifier(ResponseOutcome.INTERNAL_ERROR)),
+            policy(WatchEditorCatalogResponse.createInternalError()),
             responseClassifier(ResponseOutcome.SUCCESS),
         )
     val prepareValue = address.editorValuePrepare(policy(PrepareValueResult.createInternalError()))
@@ -87,32 +86,20 @@ internal class EditorContracts(
     val watchRealmPresentationSearch =
         address.editorPresentationSearch(
             policy(
-                unavailableRealmPresentationSearchUpdate("", "Realm presentation search failed"),
+                RealmPresentationSearchUpdate.createInternalError(),
                 realmPresentationSearchResponseClassifier(),
             ),
             realmPresentationSearchResponseClassifier(),
         )
     val cancelRealmPresentationSearch =
-        address.editorPresentationSearchCancel(policy(CancelRealmPresentationSearchResult.UNAVAILABLE))
+        address.editorPresentationSearchCancel(policy(CancelRealmPresentationSearchResult.createInternalError()))
     val invokeRealmComputation =
         address.editorCapabilityComputationInvoke(
-            policy(
-                ComputationResult.createUnavailable(
-                    invocationId =
-                        InvocationId(value = ""),
-                    diagnostics = emptyList(),
-                ),
-            ),
+            policy(ComputationResult.createInternalError()),
         )
     val invokeRealmCommand =
         address.editorCapabilityCommandInvoke(
-            policy(
-                CommandResult.createUnavailable(
-                    invocationId =
-                        InvocationId(value = ""),
-                    diagnostics = emptyList(),
-                ),
-            ),
+            policy(CommandResult.createInternalError()),
         )
     val queryAuthoringState = address.authoringStateQuery(policy(QueryAuthoringStateResponse.createInternalError()))
     val commitPreparedEdit = address.authoringEditCommit(policy(CommitPreparedEditResponse.createInternalError()))
@@ -128,7 +115,7 @@ internal class EditorContracts(
     val queryPublicationView = address.authoringPublicationQuery(policy(QueryPublicationViewResponse.createInternalError()))
     val watchPublication =
         address.authoringPublicationWatch(
-            policy(PublicationViewChanged.partial(), responseClassifier(ResponseOutcome.INTERNAL_ERROR)),
+            policy(WatchPublicationResponse.createInternalError()),
             responseClassifier(ResponseOutcome.SUCCESS),
         )
 }
@@ -158,7 +145,7 @@ private fun realmPresentationSearchResponseClassifier(): ResponseClassifier<Real
                     }
                 }
 
-                is RealmPresentationSearchUpdate.UnavailableWrapper -> {
+                is RealmPresentationSearchUpdate.InternalErrorWrapper -> {
                     ResponseOutcome.INTERNAL_ERROR
                 }
 
@@ -179,12 +166,13 @@ private fun <Response : Any> responseClassifier(): ResponseClassifier<Response> 
         val variant = response.variant()
         val outcome =
             when (variant.value) {
-                "internal-error", "unavailable" -> {
+                "internal-error" -> {
                     ResponseOutcome.INTERNAL_ERROR
                 }
 
                 "success", "prepared", "committed", "result", "applied", "initial", "activated", "canceled",
-                "resolved", "preview", "needs-input", "state", "content", "view",
+                "resolved", "preview", "needs-input", "state", "content", "view", "ready", "incomplete", "publishing",
+                "no-changes",
                 -> {
                     ResponseOutcome.SUCCESS
                 }

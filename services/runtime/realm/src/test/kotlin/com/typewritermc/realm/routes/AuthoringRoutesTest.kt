@@ -50,7 +50,6 @@ import skirout.editor.v1.authoring.QueryAuthoringStateRequest
 import skirout.editor.v1.authoring.QueryAuthoringStateResponse
 import skirout.editor.v1.authoring.AuthoringState as SkirAuthoringState
 import skirout.editor.v1.authoring.EditIntent as SkirEditIntent
-import skirout.editor.v1.authoring.TypePreviewResult as SkirTypePreviewResult
 import skirout.editor.v1.authoring_facts.EditExpectation as SkirEditExpectation
 import skirout.editor.v1.checking.CheckOutcome as SkirCheckOutcome
 import skirout.editor.v1.checking.FindingStatus as SkirFindingStatus
@@ -160,8 +159,7 @@ val AuthoringRoutesTest by testSuite {
                     )
 
                 repository.received shouldBe prepared
-                response as CommitPreparedEditResponse.ResultWrapper
-                response.value shouldBe SkirAuthoringOperationCodec.encode(repository.result).getOrThrow()
+                response shouldBe SkirAuthoringOperationCodec.encode(repository.result).getOrThrow()
             }
         }
     }
@@ -236,8 +234,7 @@ val AuthoringRoutesTest by testSuite {
                             CommitPreparedEditResponse.serializer,
                         )
                     repository.received shouldBe prepared
-                    recoveredResponse as CommitPreparedEditResponse.ResultWrapper
-                    recoveredResponse.value shouldBe SkirAuthoringOperationCodec.encode(repository.result).getOrThrow()
+                    recoveredResponse shouldBe SkirAuthoringOperationCodec.encode(repository.result).getOrThrow()
                 }
             }
         }
@@ -355,10 +352,10 @@ val AuthoringRoutesTest by testSuite {
                             ),
                             PreviewTypeArgumentChangeRequest.serializer,
                             PreviewTypeArgumentChangeResponse.serializer,
-                        ) as PreviewTypeArgumentChangeResponse.ResultWrapper
+                        ) as PreviewTypeArgumentChangeResponse.ReadyWrapper
 
                     typeArguments.requested shouldBe requested
-                    val ready = response.value as SkirTypePreviewResult.ReadyWrapper
+                    val ready = response
                     SkirAuthoringValueCodec.decode(ready.value.next).getOrThrow() shouldBe requested
                     val edit = SkirAuthoringOperationCodec.decode(ready.value.edit).getOrThrow()
                     edit.intents shouldBe listOf(EditIntent.ConfigureResource(resource, requested))

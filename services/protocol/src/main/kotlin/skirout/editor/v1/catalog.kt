@@ -5398,175 +5398,14 @@ sealed class PreparationOperation private constructor() {
  *
  * Deeply immutable.
  */
-sealed class PreparationStep private constructor() {
-    /** The kind of variant held by a `PreparationStep`. */
-    enum class Kind {
-        UNKNOWN,
-        READY_WRAPPER,
-        NEEDS_INPUT_WRAPPER,
-        UNAVAILABLE_WRAPPER,
-    }
-
-    class Unknown @kotlin.Deprecated("For internal use", kotlin.ReplaceWith("skirout.editor.v1.catalog.PreparationStep.UNKNOWN")) internal constructor(
-        internal val _kind: Kind,
-        internal override val _unrecognized: _UnrecognizedVariant<skirout.editor.v1.catalog.PreparationStep>?,
-    ) : skirout.editor.v1.catalog.PreparationStep() {
-        override val kind get() = _kind;
-
-        override fun equals(other: kotlin.Any?): kotlin.Boolean {
-            return other is skirout.editor.v1.catalog.PreparationStep && other.kind == kind;
-        }
-
-        override fun hashCode(): kotlin.Int {
-            return kind.ordinal;
-        }
-    }
-
-    class ReadyWrapper private constructor (
-        val value: skirout.editor.v1.catalog.PreparedValue,
-    ) : skirout.editor.v1.catalog.PreparationStep() {
-        constructor(
-            value: skirout.editor.v1.catalog.PreparedValue_OrMutable,
-        ): this(value.toFrozen()) {}
-
-        override val kind get() = Kind.READY_WRAPPER;
-
-        override fun equals(other: kotlin.Any?): kotlin.Boolean {
-            return other is skirout.editor.v1.catalog.PreparationStep.ReadyWrapper && value == other.value;
-        }
-
-        override fun hashCode(): kotlin.Int {
-            return this.value.hashCode() + 108386723;
-        }
-    }
-
-    class NeedsInputWrapper private constructor (
-        val value: skirout.editor.v1.catalog.PreparationDraft,
-    ) : skirout.editor.v1.catalog.PreparationStep() {
-        constructor(
-            value: skirout.editor.v1.catalog.PreparationDraft_OrMutable,
-        ): this(value.toFrozen()) {}
-
-        override val kind get() = Kind.NEEDS_INPUT_WRAPPER;
-
-        override fun equals(other: kotlin.Any?): kotlin.Boolean {
-            return other is skirout.editor.v1.catalog.PreparationStep.NeedsInputWrapper && value == other.value;
-        }
-
-        override fun hashCode(): kotlin.Int {
-            return this.value.hashCode() + -642245720;
-        }
-    }
-
-    class UnavailableWrapper private constructor (
-        val value: skirout.editor.v1.catalog.PreparationDraft,
-    ) : skirout.editor.v1.catalog.PreparationStep() {
-        constructor(
-            value: skirout.editor.v1.catalog.PreparationDraft_OrMutable,
-        ): this(value.toFrozen()) {}
-
-        override val kind get() = Kind.UNAVAILABLE_WRAPPER;
-
-        override fun equals(other: kotlin.Any?): kotlin.Boolean {
-            return other is skirout.editor.v1.catalog.PreparationStep.UnavailableWrapper && value == other.value;
-        }
-
-        override fun hashCode(): kotlin.Int {
-            return this.value.hashCode() + -665462704;
-        }
-    }
-
-    internal open val _unrecognized: _UnrecognizedVariant<skirout.editor.v1.catalog.PreparationStep>? get() = null;
-
-    abstract val kind: Kind;
-
-    override fun toString(): kotlin.String {
-        return build.skir.internal.toStringImpl(
-            this,
-            _SerializerRegistry.PreparationStepSerializerImpl,
-        )
-    }
-
-    companion object {
-        /**
-         * Constant indicating an unknown [PreparationStep].
-         * Default value for fields of type [PreparationStep].
-         */
-        val UNKNOWN = @kotlin.Suppress("DEPRECATION") Unknown(Kind.UNKNOWN, null);
-
-        /** Shortcut for `ReadyWrapper(skirout.editor.v1.catalog.PreparedValue(...))`. */
-        @kotlin.Suppress("UNUSED_PARAMETER")
-        fun createReady(
-            _mustNameArguments: _MustNameArguments =
-                _MustNameArguments,
-            content: skirout.editor.v1.catalog.PreparedContent,
-            findings: kotlin.collections.Iterable<skirout.editor.v1.diagnostic.InitializationDiagnostic_OrMutable>,
-        ) = ReadyWrapper(
-            skirout.editor.v1.catalog.PreparedValue(
-                content = content,
-                findings = findings,
-            )
-        );
-
-        /** Shortcut for `NeedsInputWrapper(skirout.editor.v1.catalog.PreparationDraft(...))`. */
-        @kotlin.Suppress("UNUSED_PARAMETER")
-        fun createNeedsInput(
-            _mustNameArguments: _MustNameArguments =
-                _MustNameArguments,
-            catalog: skirout.editor.v1.type_catalog.CatalogGeneration_OrMutable,
-            target: skirout.editor.v1.catalog.PreparationTarget,
-            content: skirout.editor.v1.catalog.PreparedContent,
-            pendingDefaults: kotlin.collections.Iterable<skirout.editor.v1.type_catalog.ValuePath_OrMutable>,
-            requiredInputs: kotlin.collections.Iterable<skirout.editor.v1.catalog.RequiredInput_OrMutable>,
-            findings: kotlin.collections.Iterable<skirout.editor.v1.diagnostic.InitializationDiagnostic_OrMutable>,
-        ) = NeedsInputWrapper(
-            skirout.editor.v1.catalog.PreparationDraft(
-                catalog = catalog,
-                target = target,
-                content = content,
-                pendingDefaults = pendingDefaults,
-                requiredInputs = requiredInputs,
-                findings = findings,
-            )
-        );
-
-        /** Shortcut for `UnavailableWrapper(skirout.editor.v1.catalog.PreparationDraft(...))`. */
-        @kotlin.Suppress("UNUSED_PARAMETER")
-        fun createUnavailable(
-            _mustNameArguments: _MustNameArguments =
-                _MustNameArguments,
-            catalog: skirout.editor.v1.type_catalog.CatalogGeneration_OrMutable,
-            target: skirout.editor.v1.catalog.PreparationTarget,
-            content: skirout.editor.v1.catalog.PreparedContent,
-            pendingDefaults: kotlin.collections.Iterable<skirout.editor.v1.type_catalog.ValuePath_OrMutable>,
-            requiredInputs: kotlin.collections.Iterable<skirout.editor.v1.catalog.RequiredInput_OrMutable>,
-            findings: kotlin.collections.Iterable<skirout.editor.v1.diagnostic.InitializationDiagnostic_OrMutable>,
-        ) = UnavailableWrapper(
-            skirout.editor.v1.catalog.PreparationDraft(
-                catalog = catalog,
-                target = target,
-                content = content,
-                pendingDefaults = pendingDefaults,
-                requiredInputs = requiredInputs,
-                findings = findings,
-            )
-        );
-
-        /** Serializer for [PreparationStep] instances. */
-        val serializer get() = _SerializerRegistry.PreparationStepSerializer;
-
-        /** Describes the [PreparationStep] type. Provides runtime introspection capabilities. */
-        val typeDescriptor get() = _SerializerRegistry.PreparationStepSerializerImpl.typeDescriptor;
-    }
-}
-
-/** Deeply immutable. */
 sealed class PrepareValueResult private constructor() {
     /** The kind of variant held by a `PrepareValueResult`. */
     enum class Kind {
         UNKNOWN,
-        PREPARED_WRAPPER,
-        CATALOG_CHANGED_WRAPPER,
+        READY_WRAPPER,
+        NEEDS_INPUT_WRAPPER,
+        UNAVAILABLE_ERROR_WRAPPER,
+        CATALOG_CHANGED_ERROR_WRAPPER,
         INTERNAL_ERROR_WRAPPER,
     }
 
@@ -5585,35 +5424,75 @@ sealed class PrepareValueResult private constructor() {
         }
     }
 
-    class PreparedWrapper(
-        val value: skirout.editor.v1.catalog.PreparationStep,
+    class ReadyWrapper private constructor (
+        val value: skirout.editor.v1.catalog.PreparedValue,
     ) : skirout.editor.v1.catalog.PrepareValueResult() {
-        override val kind get() = Kind.PREPARED_WRAPPER;
+        constructor(
+            value: skirout.editor.v1.catalog.PreparedValue_OrMutable,
+        ): this(value.toFrozen()) {}
+
+        override val kind get() = Kind.READY_WRAPPER;
 
         override fun equals(other: kotlin.Any?): kotlin.Boolean {
-            return other is skirout.editor.v1.catalog.PrepareValueResult.PreparedWrapper && value == other.value;
+            return other is skirout.editor.v1.catalog.PrepareValueResult.ReadyWrapper && value == other.value;
         }
 
         override fun hashCode(): kotlin.Int {
-            return this.value.hashCode() + -1279552451;
+            return this.value.hashCode() + 108386723;
         }
     }
 
-    class CatalogChangedWrapper private constructor (
+    class NeedsInputWrapper private constructor (
+        val value: skirout.editor.v1.catalog.PreparationDraft,
+    ) : skirout.editor.v1.catalog.PrepareValueResult() {
+        constructor(
+            value: skirout.editor.v1.catalog.PreparationDraft_OrMutable,
+        ): this(value.toFrozen()) {}
+
+        override val kind get() = Kind.NEEDS_INPUT_WRAPPER;
+
+        override fun equals(other: kotlin.Any?): kotlin.Boolean {
+            return other is skirout.editor.v1.catalog.PrepareValueResult.NeedsInputWrapper && value == other.value;
+        }
+
+        override fun hashCode(): kotlin.Int {
+            return this.value.hashCode() + -642245720;
+        }
+    }
+
+    class UnavailableErrorWrapper private constructor (
+        val value: skirout.editor.v1.catalog.PreparationDraft,
+    ) : skirout.editor.v1.catalog.PrepareValueResult() {
+        constructor(
+            value: skirout.editor.v1.catalog.PreparationDraft_OrMutable,
+        ): this(value.toFrozen()) {}
+
+        override val kind get() = Kind.UNAVAILABLE_ERROR_WRAPPER;
+
+        override fun equals(other: kotlin.Any?): kotlin.Boolean {
+            return other is skirout.editor.v1.catalog.PrepareValueResult.UnavailableErrorWrapper && value == other.value;
+        }
+
+        override fun hashCode(): kotlin.Int {
+            return this.value.hashCode() + -160984743;
+        }
+    }
+
+    class CatalogChangedErrorWrapper private constructor (
         val value: skirout.editor.v1.type_catalog.CatalogGeneration,
     ) : skirout.editor.v1.catalog.PrepareValueResult() {
         constructor(
             value: skirout.editor.v1.type_catalog.CatalogGeneration_OrMutable,
         ): this(value.toFrozen()) {}
 
-        override val kind get() = Kind.CATALOG_CHANGED_WRAPPER;
+        override val kind get() = Kind.CATALOG_CHANGED_ERROR_WRAPPER;
 
         override fun equals(other: kotlin.Any?): kotlin.Boolean {
-            return other is skirout.editor.v1.catalog.PrepareValueResult.CatalogChangedWrapper && value == other.value;
+            return other is skirout.editor.v1.catalog.PrepareValueResult.CatalogChangedErrorWrapper && value == other.value;
         }
 
         override fun hashCode(): kotlin.Int {
-            return this.value.hashCode() + 1862877326;
+            return this.value.hashCode() + -760261865;
         }
     }
 
@@ -5653,13 +5532,71 @@ sealed class PrepareValueResult private constructor() {
          */
         val UNKNOWN = @kotlin.Suppress("DEPRECATION") Unknown(Kind.UNKNOWN, null);
 
-        /** Shortcut for `CatalogChangedWrapper(skirout.editor.v1.type_catalog.CatalogGeneration(...))`. */
+        /** Shortcut for `ReadyWrapper(skirout.editor.v1.catalog.PreparedValue(...))`. */
         @kotlin.Suppress("UNUSED_PARAMETER")
-        fun createCatalogChanged(
+        fun createReady(
+            _mustNameArguments: _MustNameArguments =
+                _MustNameArguments,
+            content: skirout.editor.v1.catalog.PreparedContent,
+            findings: kotlin.collections.Iterable<skirout.editor.v1.diagnostic.InitializationDiagnostic_OrMutable>,
+        ) = ReadyWrapper(
+            skirout.editor.v1.catalog.PreparedValue(
+                content = content,
+                findings = findings,
+            )
+        );
+
+        /** Shortcut for `NeedsInputWrapper(skirout.editor.v1.catalog.PreparationDraft(...))`. */
+        @kotlin.Suppress("UNUSED_PARAMETER")
+        fun createNeedsInput(
+            _mustNameArguments: _MustNameArguments =
+                _MustNameArguments,
+            catalog: skirout.editor.v1.type_catalog.CatalogGeneration_OrMutable,
+            target: skirout.editor.v1.catalog.PreparationTarget,
+            content: skirout.editor.v1.catalog.PreparedContent,
+            pendingDefaults: kotlin.collections.Iterable<skirout.editor.v1.type_catalog.ValuePath_OrMutable>,
+            requiredInputs: kotlin.collections.Iterable<skirout.editor.v1.catalog.RequiredInput_OrMutable>,
+            findings: kotlin.collections.Iterable<skirout.editor.v1.diagnostic.InitializationDiagnostic_OrMutable>,
+        ) = NeedsInputWrapper(
+            skirout.editor.v1.catalog.PreparationDraft(
+                catalog = catalog,
+                target = target,
+                content = content,
+                pendingDefaults = pendingDefaults,
+                requiredInputs = requiredInputs,
+                findings = findings,
+            )
+        );
+
+        /** Shortcut for `UnavailableErrorWrapper(skirout.editor.v1.catalog.PreparationDraft(...))`. */
+        @kotlin.Suppress("UNUSED_PARAMETER")
+        fun createUnavailableError(
+            _mustNameArguments: _MustNameArguments =
+                _MustNameArguments,
+            catalog: skirout.editor.v1.type_catalog.CatalogGeneration_OrMutable,
+            target: skirout.editor.v1.catalog.PreparationTarget,
+            content: skirout.editor.v1.catalog.PreparedContent,
+            pendingDefaults: kotlin.collections.Iterable<skirout.editor.v1.type_catalog.ValuePath_OrMutable>,
+            requiredInputs: kotlin.collections.Iterable<skirout.editor.v1.catalog.RequiredInput_OrMutable>,
+            findings: kotlin.collections.Iterable<skirout.editor.v1.diagnostic.InitializationDiagnostic_OrMutable>,
+        ) = UnavailableErrorWrapper(
+            skirout.editor.v1.catalog.PreparationDraft(
+                catalog = catalog,
+                target = target,
+                content = content,
+                pendingDefaults = pendingDefaults,
+                requiredInputs = requiredInputs,
+                findings = findings,
+            )
+        );
+
+        /** Shortcut for `CatalogChangedErrorWrapper(skirout.editor.v1.type_catalog.CatalogGeneration(...))`. */
+        @kotlin.Suppress("UNUSED_PARAMETER")
+        fun createCatalogChangedError(
             _mustNameArguments: _MustNameArguments =
                 _MustNameArguments,
             value: kotlin.String,
-        ) = CatalogChangedWrapper(
+        ) = CatalogChangedErrorWrapper(
             skirout.editor.v1.type_catalog.CatalogGeneration(
                 value = value,
             )
@@ -6150,6 +6087,113 @@ class WatchEditorCatalogRequest private constructor(
     }
 }
 
+/** Deeply immutable. */
+sealed class WatchEditorCatalogResponse private constructor() {
+    /** The kind of variant held by a `WatchEditorCatalogResponse`. */
+    enum class Kind {
+        UNKNOWN,
+        INVALIDATED_WRAPPER,
+        INTERNAL_ERROR_WRAPPER,
+    }
+
+    class Unknown @kotlin.Deprecated("For internal use", kotlin.ReplaceWith("skirout.editor.v1.catalog.WatchEditorCatalogResponse.UNKNOWN")) internal constructor(
+        internal val _kind: Kind,
+        internal override val _unrecognized: _UnrecognizedVariant<skirout.editor.v1.catalog.WatchEditorCatalogResponse>?,
+    ) : skirout.editor.v1.catalog.WatchEditorCatalogResponse() {
+        override val kind get() = _kind;
+
+        override fun equals(other: kotlin.Any?): kotlin.Boolean {
+            return other is skirout.editor.v1.catalog.WatchEditorCatalogResponse && other.kind == kind;
+        }
+
+        override fun hashCode(): kotlin.Int {
+            return kind.ordinal;
+        }
+    }
+
+    class InvalidatedWrapper private constructor (
+        val value: skirout.editor.v1.catalog.CatalogInvalidated,
+    ) : skirout.editor.v1.catalog.WatchEditorCatalogResponse() {
+        constructor(
+            value: skirout.editor.v1.catalog.CatalogInvalidated_OrMutable,
+        ): this(value.toFrozen()) {}
+
+        override val kind get() = Kind.INVALIDATED_WRAPPER;
+
+        override fun equals(other: kotlin.Any?): kotlin.Boolean {
+            return other is skirout.editor.v1.catalog.WatchEditorCatalogResponse.InvalidatedWrapper && value == other.value;
+        }
+
+        override fun hashCode(): kotlin.Int {
+            return this.value.hashCode() + -952764791;
+        }
+    }
+
+    class InternalErrorWrapper private constructor (
+        val value: skirout.kernel.v1.errors.InternalError,
+    ) : skirout.editor.v1.catalog.WatchEditorCatalogResponse() {
+        constructor(
+            value: skirout.kernel.v1.errors.InternalError_OrMutable,
+        ): this(value.toFrozen()) {}
+
+        override val kind get() = Kind.INTERNAL_ERROR_WRAPPER;
+
+        override fun equals(other: kotlin.Any?): kotlin.Boolean {
+            return other is skirout.editor.v1.catalog.WatchEditorCatalogResponse.InternalErrorWrapper && value == other.value;
+        }
+
+        override fun hashCode(): kotlin.Int {
+            return this.value.hashCode() + 778975750;
+        }
+    }
+
+    internal open val _unrecognized: _UnrecognizedVariant<skirout.editor.v1.catalog.WatchEditorCatalogResponse>? get() = null;
+
+    abstract val kind: Kind;
+
+    override fun toString(): kotlin.String {
+        return build.skir.internal.toStringImpl(
+            this,
+            _SerializerRegistry.WatchEditorCatalogResponseSerializerImpl,
+        )
+    }
+
+    companion object {
+        /**
+         * Constant indicating an unknown [WatchEditorCatalogResponse].
+         * Default value for fields of type [WatchEditorCatalogResponse].
+         */
+        val UNKNOWN = @kotlin.Suppress("DEPRECATION") Unknown(Kind.UNKNOWN, null);
+
+        /** Shortcut for `InvalidatedWrapper(skirout.editor.v1.catalog.CatalogInvalidated(...))`. */
+        @kotlin.Suppress("UNUSED_PARAMETER")
+        fun createInvalidated(
+            _mustNameArguments: _MustNameArguments =
+                _MustNameArguments,
+            generation: skirout.editor.v1.type_catalog.CatalogGeneration_OrMutable,
+        ) = InvalidatedWrapper(
+            skirout.editor.v1.catalog.CatalogInvalidated(
+                generation = generation,
+            )
+        );
+
+        /** Shortcut for `InternalErrorWrapper(skirout.kernel.v1.errors.InternalError(...))`. */
+        @kotlin.Suppress("UNUSED_PARAMETER")
+        fun createInternalError(
+            _mustNameArguments: _MustNameArguments =
+                _MustNameArguments,
+        ) = InternalErrorWrapper(
+            skirout.kernel.v1.errors.InternalError()
+        );
+
+        /** Serializer for [WatchEditorCatalogResponse] instances. */
+        val serializer get() = _SerializerRegistry.WatchEditorCatalogResponseSerializer;
+
+        /** Describes the [WatchEditorCatalogResponse] type. Provides runtime introspection capabilities. */
+        val typeDescriptor get() = _SerializerRegistry.WatchEditorCatalogResponseSerializerImpl.typeDescriptor;
+    }
+}
+
 val FetchEditorCatalog: build.skir.service.Method<
     skirout.editor.v1.catalog.CatalogFetchRequest,
     skirout.editor.v1.catalog.CatalogFetchResult,
@@ -6165,13 +6209,13 @@ val FetchEditorCatalog: build.skir.service.Method<
 
 val WatchEditorCatalog: build.skir.service.Method<
     skirout.editor.v1.catalog.WatchEditorCatalogRequest,
-    skirout.editor.v1.catalog.CatalogInvalidated,
+    skirout.editor.v1.catalog.WatchEditorCatalogResponse,
 > by kotlin.lazy {
     build.skir.service.Method(
         "WatchEditorCatalog",
         920002,
         skirout.editor.v1.catalog.WatchEditorCatalogRequest.serializer,
-        skirout.editor.v1.catalog.CatalogInvalidated.serializer,
+        skirout.editor.v1.catalog.WatchEditorCatalogResponse.serializer,
         "",
     )
 }
@@ -6395,19 +6439,6 @@ private object _SerializerRegistry {
 
     val PreparationOperation_ResumeSerializer = build.skir.internal.makeSerializer(PreparationOperation_ResumeSerializerImpl);
 
-    val PreparationStepSerializerImpl =
-        build.skir.internal.EnumSerializer.create<skirout.editor.v1.catalog.PreparationStep, skirout.editor.v1.catalog.PreparationStep.Unknown>(
-            recordId = "editor/v1/catalog.skir:PreparationStep",
-            doc = "Separates prepared editable content from a continuation needing caller input or unavailable\npreparation. ready describes completion of initialization, not saved authoring or publication.",
-            getKindOrdinal = { it.kind.ordinal },
-            kindCount = skirout.editor.v1.catalog.PreparationStep.Kind.values().size,
-            unknownInstance = skirout.editor.v1.catalog.PreparationStep.UNKNOWN,
-            wrapUnrecognized = { @kotlin.Suppress("DEPRECATION") skirout.editor.v1.catalog.PreparationStep.Unknown(skirout.editor.v1.catalog.PreparationStep.Kind.UNKNOWN, it) },
-            getUnrecognized = { it._unrecognized },
-        );
-
-    val PreparationStepSerializer = build.skir.internal.makeSerializer(PreparationStepSerializerImpl);
-
     val PreparationTargetSerializerImpl =
         build.skir.internal.EnumSerializer.create<skirout.editor.v1.catalog.PreparationTarget, skirout.editor.v1.catalog.PreparationTarget.Unknown>(
             recordId = "editor/v1/catalog.skir:PreparationTarget",
@@ -6449,7 +6480,7 @@ private object _SerializerRegistry {
     val PrepareValueResultSerializerImpl =
         build.skir.internal.EnumSerializer.create<skirout.editor.v1.catalog.PrepareValueResult, skirout.editor.v1.catalog.PrepareValueResult.Unknown>(
             recordId = "editor/v1/catalog.skir:PrepareValueResult",
-            doc = "",
+            doc = "Separates prepared editable content from a continuation needing caller input or unavailable\npreparation. ready describes completion of initialization, not saved authoring or publication.",
             getKindOrdinal = { it.kind.ordinal },
             kindCount = skirout.editor.v1.catalog.PrepareValueResult.Kind.values().size,
             unknownInstance = skirout.editor.v1.catalog.PrepareValueResult.UNKNOWN,
@@ -6654,6 +6685,19 @@ private object _SerializerRegistry {
     );
 
     val WatchEditorCatalogRequestSerializer = build.skir.internal.makeSerializer(WatchEditorCatalogRequestSerializerImpl);
+
+    val WatchEditorCatalogResponseSerializerImpl =
+        build.skir.internal.EnumSerializer.create<skirout.editor.v1.catalog.WatchEditorCatalogResponse, skirout.editor.v1.catalog.WatchEditorCatalogResponse.Unknown>(
+            recordId = "editor/v1/catalog.skir:WatchEditorCatalogResponse",
+            doc = "",
+            getKindOrdinal = { it.kind.ordinal },
+            kindCount = skirout.editor.v1.catalog.WatchEditorCatalogResponse.Kind.values().size,
+            unknownInstance = skirout.editor.v1.catalog.WatchEditorCatalogResponse.UNKNOWN,
+            wrapUnrecognized = { @kotlin.Suppress("DEPRECATION") skirout.editor.v1.catalog.WatchEditorCatalogResponse.Unknown(skirout.editor.v1.catalog.WatchEditorCatalogResponse.Kind.UNKNOWN, it) },
+            getUnrecognized = { it._unrecognized },
+        );
+
+    val WatchEditorCatalogResponseSerializer = build.skir.internal.makeSerializer(WatchEditorCatalogResponseSerializerImpl);
 
     init {
         CatalogFetchRequestSerializerImpl.addField(
@@ -7251,35 +7295,6 @@ private object _SerializerRegistry {
         );
         PreparationOperation_ResumeSerializerImpl.finalizeStruct();
 
-        PreparationStepSerializerImpl.addWrapperVariant(
-            1,
-            "ready",
-            skirout.editor.v1.catalog.PreparationStep.Kind.READY_WRAPPER.ordinal,
-            _SerializerRegistry.PreparedValueSerializer,
-            "",
-            { skirout.editor.v1.catalog.PreparationStep.ReadyWrapper(it) },
-            { it.value },
-        );
-        PreparationStepSerializerImpl.addWrapperVariant(
-            2,
-            "needs_input",
-            skirout.editor.v1.catalog.PreparationStep.Kind.NEEDS_INPUT_WRAPPER.ordinal,
-            _SerializerRegistry.PreparationDraftSerializer,
-            "",
-            { skirout.editor.v1.catalog.PreparationStep.NeedsInputWrapper(it) },
-            { it.value },
-        );
-        PreparationStepSerializerImpl.addWrapperVariant(
-            3,
-            "unavailable",
-            skirout.editor.v1.catalog.PreparationStep.Kind.UNAVAILABLE_WRAPPER.ordinal,
-            _SerializerRegistry.PreparationDraftSerializer,
-            "",
-            { skirout.editor.v1.catalog.PreparationStep.UnavailableWrapper(it) },
-            { it.value },
-        );
-        PreparationStepSerializerImpl.finalizeEnum();
-
         PreparationTargetSerializerImpl.addWrapperVariant(
             1,
             "value",
@@ -7344,24 +7359,42 @@ private object _SerializerRegistry {
 
         PrepareValueResultSerializerImpl.addWrapperVariant(
             1,
-            "prepared",
-            skirout.editor.v1.catalog.PrepareValueResult.Kind.PREPARED_WRAPPER.ordinal,
-            _SerializerRegistry.PreparationStepSerializer,
+            "ready",
+            skirout.editor.v1.catalog.PrepareValueResult.Kind.READY_WRAPPER.ordinal,
+            _SerializerRegistry.PreparedValueSerializer,
             "",
-            { skirout.editor.v1.catalog.PrepareValueResult.PreparedWrapper(it) },
+            { skirout.editor.v1.catalog.PrepareValueResult.ReadyWrapper(it) },
             { it.value },
         );
         PrepareValueResultSerializerImpl.addWrapperVariant(
             2,
-            "catalog_changed",
-            skirout.editor.v1.catalog.PrepareValueResult.Kind.CATALOG_CHANGED_WRAPPER.ordinal,
-            skirout.editor.v1.type_catalog.CatalogGeneration.serializer,
+            "needs_input",
+            skirout.editor.v1.catalog.PrepareValueResult.Kind.NEEDS_INPUT_WRAPPER.ordinal,
+            _SerializerRegistry.PreparationDraftSerializer,
             "",
-            { skirout.editor.v1.catalog.PrepareValueResult.CatalogChangedWrapper(it) },
+            { skirout.editor.v1.catalog.PrepareValueResult.NeedsInputWrapper(it) },
             { it.value },
         );
         PrepareValueResultSerializerImpl.addWrapperVariant(
             3,
+            "unavailable_error",
+            skirout.editor.v1.catalog.PrepareValueResult.Kind.UNAVAILABLE_ERROR_WRAPPER.ordinal,
+            _SerializerRegistry.PreparationDraftSerializer,
+            "",
+            { skirout.editor.v1.catalog.PrepareValueResult.UnavailableErrorWrapper(it) },
+            { it.value },
+        );
+        PrepareValueResultSerializerImpl.addWrapperVariant(
+            4,
+            "catalog_changed_error",
+            skirout.editor.v1.catalog.PrepareValueResult.Kind.CATALOG_CHANGED_ERROR_WRAPPER.ordinal,
+            skirout.editor.v1.type_catalog.CatalogGeneration.serializer,
+            "",
+            { skirout.editor.v1.catalog.PrepareValueResult.CatalogChangedErrorWrapper(it) },
+            { it.value },
+        );
+        PrepareValueResultSerializerImpl.addWrapperVariant(
+            5,
             "internal_error",
             skirout.editor.v1.catalog.PrepareValueResult.Kind.INTERNAL_ERROR_WRAPPER.ordinal,
             skirout.kernel.v1.errors.InternalError.serializer,
@@ -7984,5 +8017,25 @@ private object _SerializerRegistry {
         ValuePreparationRequestSerializerImpl.finalizeStruct();
 
         WatchEditorCatalogRequestSerializerImpl.finalizeStruct();
+
+        WatchEditorCatalogResponseSerializerImpl.addWrapperVariant(
+            1,
+            "invalidated",
+            skirout.editor.v1.catalog.WatchEditorCatalogResponse.Kind.INVALIDATED_WRAPPER.ordinal,
+            _SerializerRegistry.CatalogInvalidatedSerializer,
+            "",
+            { skirout.editor.v1.catalog.WatchEditorCatalogResponse.InvalidatedWrapper(it) },
+            { it.value },
+        );
+        WatchEditorCatalogResponseSerializerImpl.addWrapperVariant(
+            2,
+            "internal_error",
+            skirout.editor.v1.catalog.WatchEditorCatalogResponse.Kind.INTERNAL_ERROR_WRAPPER.ordinal,
+            skirout.kernel.v1.errors.InternalError.serializer,
+            "",
+            { skirout.editor.v1.catalog.WatchEditorCatalogResponse.InternalErrorWrapper(it) },
+            { it.value },
+        );
+        WatchEditorCatalogResponseSerializerImpl.finalizeEnum();
     }
 }

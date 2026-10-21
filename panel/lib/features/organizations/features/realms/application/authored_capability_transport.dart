@@ -65,24 +65,29 @@ final class NatsAuthoredCapabilityTransport {
 skir.InvocationId? _commandInvocation(skir.CommandResult result) =>
     switch (result) {
       skir.CommandResult_successWrapper(:final value) => value.invocationId,
-      skir.CommandResult_invalidWrapper(:final value) => value.invocationId,
-      skir.CommandResult_unavailableWrapper(:final value) => value.invocationId,
-      skir.CommandResult_permissionDeniedWrapper(:final value) =>
+      skir.CommandResult_invalidErrorWrapper(:final value) =>
         value.invocationId,
-      skir.CommandResult_staleGenerationWrapper(:final value) =>
+      skir.CommandResult_unavailableErrorWrapper(:final value) =>
         value.invocationId,
+      skir.CommandResult_permissionDeniedErrorWrapper(:final value) =>
+        value.invocationId,
+      skir.CommandResult_staleGenerationErrorWrapper(:final value) =>
+        value.invocationId,
+      skir.CommandResult_internalErrorWrapper() ||
       skir.CommandResult_unknown() => null,
     };
 
 skir.InvocationId? _computationInvocation(skir.ComputationResult result) =>
     switch (result) {
       skir.ComputationResult_successWrapper(:final value) => value.invocationId,
-      skir.ComputationResult_invalidWrapper(:final value) => value.invocationId,
-      skir.ComputationResult_unavailableWrapper(:final value) =>
+      skir.ComputationResult_invalidErrorWrapper(:final value) =>
         value.invocationId,
-      skir.ComputationResult_permissionDeniedWrapper(:final value) =>
+      skir.ComputationResult_unavailableErrorWrapper(:final value) =>
         value.invocationId,
-      skir.ComputationResult_staleGenerationWrapper(:final value) =>
+      skir.ComputationResult_permissionDeniedErrorWrapper(:final value) =>
         value.invocationId,
+      skir.ComputationResult_staleGenerationErrorWrapper(:final value) =>
+        value.invocationId,
+      skir.ComputationResult_internalErrorWrapper() ||
       skir.ComputationResult_unknown() => null,
     };

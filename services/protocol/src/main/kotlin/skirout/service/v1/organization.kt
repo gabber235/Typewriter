@@ -620,6 +620,7 @@ sealed class UpdateOrganizationServiceResponse private constructor() {
         }
     }
 
+    /** Service changed elsewhere. */
     class ConflictErrorWrapper private constructor (
         val value: skirout.service.v1.organization.UpdateOrganizationServiceResponse.ConflictError,
     ) : skirout.service.v1.organization.UpdateOrganizationServiceResponse() {
@@ -638,6 +639,7 @@ sealed class UpdateOrganizationServiceResponse private constructor() {
         }
     }
 
+    /** Service not found in organization. */
     class ServiceNotFoundErrorWrapper private constructor (
         val value: skirout.service.v1.organization.UpdateOrganizationServiceResponse.ServiceNotFoundError,
     ) : skirout.service.v1.organization.UpdateOrganizationServiceResponse() {
@@ -656,6 +658,7 @@ sealed class UpdateOrganizationServiceResponse private constructor() {
         }
     }
 
+    /** Service update is invalid. */
     class ValidationErrorWrapper(
         val value: skirout.service.v1.organization.ServiceUpdateValidationError,
     ) : skirout.service.v1.organization.UpdateOrganizationServiceResponse() {
@@ -670,6 +673,7 @@ sealed class UpdateOrganizationServiceResponse private constructor() {
         }
     }
 
+    /** Record IDs from an unexpected table. */
     class InvalidRecordIdErrorWrapper private constructor (
         val value: skirout.kernel.v1.errors.InvalidRecordIdError,
     ) : skirout.service.v1.organization.UpdateOrganizationServiceResponse() {
@@ -1226,7 +1230,7 @@ private object _SerializerRegistry {
             "conflict_error",
             skirout.service.v1.organization.UpdateOrganizationServiceResponse.Kind.CONFLICT_ERROR_WRAPPER.ordinal,
             _SerializerRegistry.UpdateOrganizationServiceResponse_ConflictErrorSerializer,
-            "",
+            "Service changed elsewhere.",
             { skirout.service.v1.organization.UpdateOrganizationServiceResponse.ConflictErrorWrapper(it) },
             { it.value },
         );
@@ -1235,7 +1239,7 @@ private object _SerializerRegistry {
             "service_not_found_error",
             skirout.service.v1.organization.UpdateOrganizationServiceResponse.Kind.SERVICE_NOT_FOUND_ERROR_WRAPPER.ordinal,
             _SerializerRegistry.UpdateOrganizationServiceResponse_ServiceNotFoundErrorSerializer,
-            "",
+            "Service not found in organization.",
             { skirout.service.v1.organization.UpdateOrganizationServiceResponse.ServiceNotFoundErrorWrapper(it) },
             { it.value },
         );
@@ -1244,7 +1248,7 @@ private object _SerializerRegistry {
             "validation_error",
             skirout.service.v1.organization.UpdateOrganizationServiceResponse.Kind.VALIDATION_ERROR_WRAPPER.ordinal,
             _SerializerRegistry.ServiceUpdateValidationErrorSerializer,
-            "",
+            "Service update is invalid.",
             { skirout.service.v1.organization.UpdateOrganizationServiceResponse.ValidationErrorWrapper(it) },
             { it.value },
         );
@@ -1253,7 +1257,7 @@ private object _SerializerRegistry {
             "invalid_record_id_error",
             skirout.service.v1.organization.UpdateOrganizationServiceResponse.Kind.INVALID_RECORD_ID_ERROR_WRAPPER.ordinal,
             skirout.kernel.v1.errors.InvalidRecordIdError.serializer,
-            "",
+            "Record IDs from an unexpected table.",
             { skirout.service.v1.organization.UpdateOrganizationServiceResponse.InvalidRecordIdErrorWrapper(it) },
             { it.value },
         );

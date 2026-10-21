@@ -604,11 +604,17 @@ pub enum SubmitUserJoinRequestResponse {
     InternalError(Box<crate::skirout::base::kernel::v1::errors::InternalError>),
     RequestMade(Box<SubmitUserJoinRequestResponse_RequestMade>),
     AutoAccepted(Box<SubmitUserJoinRequestResponse_AutoAccepted>),
+    /// Join code not found.
     CodeNotFoundError(Box<SubmitUserJoinRequestResponse_CodeNotFoundError>),
+    /// User is already a member of this organization.
     AlreadyMemberError(Box<SubmitUserJoinRequestResponse_AlreadyMemberError>),
+    /// No assignable roles are available for this organization.
     NoAssignableRolesError(Box<SubmitUserJoinRequestResponse_NoAssignableRolesError>),
+    /// User already has the maximum number of pending join requests.
     MaxPendingRequestsError(Box<SubmitUserJoinRequestResponse_MaxPendingRequestsError>),
+    /// User already has a pending join request for this organization.
     PendingRequestExistsError(Box<SubmitUserJoinRequestResponse_PendingRequestExistsError>),
+    /// Record IDs from an unexpected table.
     InvalidRecordIdError(Box<crate::skirout::base::kernel::v1::errors::InvalidRecordIdError>),
 }
 
@@ -803,7 +809,9 @@ pub enum CancelUserJoinRequestResponse {
     Unknown(Option<crate::skir_client::UnrecognizedVariant<CancelUserJoinRequestResponse>>),
     InternalError(Box<crate::skirout::base::kernel::v1::errors::InternalError>),
     Success(Box<CancelUserJoinRequestResponse_Success>),
+    /// Join request not found.
     RequestNotFoundError(Box<CancelUserJoinRequestResponse_RequestNotFoundError>),
+    /// Record IDs from an unexpected table.
     InvalidRecordIdError(Box<crate::skirout::base::kernel::v1::errors::InvalidRecordIdError>),
 }
 
@@ -1028,7 +1036,7 @@ fn initialize_module_serializers() {
                 crate::skir_client::internal::struct_serializer_from_static(
                     SubmitUserJoinRequestResponse_CodeNotFoundError::_adapter(),
                 ),
-                "",
+                "Join code not found.",
                 |v| SubmitUserJoinRequestResponse::CodeNotFoundError(Box::new(v)),
                 |x| match x {
                     SubmitUserJoinRequestResponse::CodeNotFoundError(b) => b.as_ref(),
@@ -1042,7 +1050,7 @@ fn initialize_module_serializers() {
                 crate::skir_client::internal::struct_serializer_from_static(
                     SubmitUserJoinRequestResponse_AlreadyMemberError::_adapter(),
                 ),
-                "",
+                "User is already a member of this organization.",
                 |v| SubmitUserJoinRequestResponse::AlreadyMemberError(Box::new(v)),
                 |x| match x {
                     SubmitUserJoinRequestResponse::AlreadyMemberError(b) => b.as_ref(),
@@ -1056,7 +1064,7 @@ fn initialize_module_serializers() {
                 crate::skir_client::internal::struct_serializer_from_static(
                     SubmitUserJoinRequestResponse_NoAssignableRolesError::_adapter(),
                 ),
-                "",
+                "No assignable roles are available for this organization.",
                 |v| SubmitUserJoinRequestResponse::NoAssignableRolesError(Box::new(v)),
                 |x| match x {
                     SubmitUserJoinRequestResponse::NoAssignableRolesError(b) => b.as_ref(),
@@ -1070,7 +1078,7 @@ fn initialize_module_serializers() {
                 crate::skir_client::internal::struct_serializer_from_static(
                     SubmitUserJoinRequestResponse_MaxPendingRequestsError::_adapter(),
                 ),
-                "",
+                "User already has the maximum number of pending join requests.",
                 |v| SubmitUserJoinRequestResponse::MaxPendingRequestsError(Box::new(v)),
                 |x| match x {
                     SubmitUserJoinRequestResponse::MaxPendingRequestsError(b) => b.as_ref(),
@@ -1084,7 +1092,7 @@ fn initialize_module_serializers() {
                 crate::skir_client::internal::struct_serializer_from_static(
                     SubmitUserJoinRequestResponse_PendingRequestExistsError::_adapter(),
                 ),
-                "",
+                "User already has a pending join request for this organization.",
                 |v| SubmitUserJoinRequestResponse::PendingRequestExistsError(Box::new(v)),
                 |x| match x {
                     SubmitUserJoinRequestResponse::PendingRequestExistsError(b) => b.as_ref(),
@@ -1096,7 +1104,7 @@ fn initialize_module_serializers() {
                 9,
                 9,
                 crate::skirout::base::kernel::v1::errors::InvalidRecordIdError::serializer(),
-                "",
+                "Record IDs from an unexpected table.",
                 |v| SubmitUserJoinRequestResponse::InvalidRecordIdError(Box::new(v)),
                 |x| match x {
                     SubmitUserJoinRequestResponse::InvalidRecordIdError(b) => b.as_ref(),
@@ -1176,7 +1184,7 @@ fn initialize_module_serializers() {
                 crate::skir_client::internal::struct_serializer_from_static(
                     CancelUserJoinRequestResponse_RequestNotFoundError::_adapter(),
                 ),
-                "",
+                "Join request not found.",
                 |v| CancelUserJoinRequestResponse::RequestNotFoundError(Box::new(v)),
                 |x| match x {
                     CancelUserJoinRequestResponse::RequestNotFoundError(b) => b.as_ref(),
@@ -1188,7 +1196,7 @@ fn initialize_module_serializers() {
                 4,
                 4,
                 crate::skirout::base::kernel::v1::errors::InvalidRecordIdError::serializer(),
-                "",
+                "Record IDs from an unexpected table.",
                 |v| CancelUserJoinRequestResponse::InvalidRecordIdError(Box::new(v)),
                 |x| match x {
                     CancelUserJoinRequestResponse::InvalidRecordIdError(b) => b.as_ref(),

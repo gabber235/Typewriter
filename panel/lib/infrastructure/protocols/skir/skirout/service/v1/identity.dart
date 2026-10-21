@@ -1221,6 +1221,8 @@ sealed class IssueServiceIdentityResponse {
   );
 
   /// Create a 'malformed_request_error' variant wrapping around the given value.
+  ///
+  /// Malformed request.
   factory IssueServiceIdentityResponse.wrapMalformedRequestError(
     IssueServiceIdentityResponse_MalformedRequestError value,
   ) => IssueServiceIdentityResponse_malformedRequestErrorWrapper._(value);
@@ -1232,6 +1234,8 @@ sealed class IssueServiceIdentityResponse {
       );
 
   /// Create a 'unknown_role_error' variant wrapping around the given value.
+  ///
+  /// Unknown role.
   factory IssueServiceIdentityResponse.wrapUnknownRoleError(
     IssueServiceIdentityResponse_UnknownRoleError value,
   ) => IssueServiceIdentityResponse_unknownRoleErrorWrapper._(value);
@@ -1243,6 +1247,8 @@ sealed class IssueServiceIdentityResponse {
       );
 
   /// Create a 'role_unknown_property_error' variant wrapping around the given value.
+  ///
+  /// Unknown role property.
   factory IssueServiceIdentityResponse.wrapRoleUnknownPropertyError(
     IssueServiceIdentityResponse_RoleUnknownPropertyError value,
   ) => IssueServiceIdentityResponse_roleUnknownPropertyErrorWrapper._(value);
@@ -1254,6 +1260,8 @@ sealed class IssueServiceIdentityResponse {
       );
 
   /// Create a 'role_type_invalid_error' variant wrapping around the given value.
+  ///
+  /// Invalid role type.
   factory IssueServiceIdentityResponse.wrapRoleTypeInvalidError(
     IssueServiceIdentityResponse_RoleTypeInvalidError value,
   ) => IssueServiceIdentityResponse_roleTypeInvalidErrorWrapper._(value);
@@ -1265,6 +1273,8 @@ sealed class IssueServiceIdentityResponse {
       );
 
   /// Create a 'role_version_invalid_error' variant wrapping around the given value.
+  ///
+  /// Invalid role version.
   factory IssueServiceIdentityResponse.wrapRoleVersionInvalidError(
     IssueServiceIdentityResponse_RoleVersionInvalidError value,
   ) => IssueServiceIdentityResponse_roleVersionInvalidErrorWrapper._(value);
@@ -1276,6 +1286,8 @@ sealed class IssueServiceIdentityResponse {
       );
 
   /// Create a 'custom_role_name_required_error' variant wrapping around the given value.
+  ///
+  /// Custom role name required.
   factory IssueServiceIdentityResponse.wrapCustomRoleNameRequiredError(
     IssueServiceIdentityResponse_CustomRoleNameRequiredError value,
   ) => IssueServiceIdentityResponse_customRoleNameRequiredErrorWrapper._(value);
@@ -1287,6 +1299,8 @@ sealed class IssueServiceIdentityResponse {
       );
 
   /// Create a 'custom_role_name_invalid_error' variant wrapping around the given value.
+  ///
+  /// Invalid custom role name.
   factory IssueServiceIdentityResponse.wrapCustomRoleNameInvalidError(
     IssueServiceIdentityResponse_CustomRoleNameInvalidError value,
   ) => IssueServiceIdentityResponse_customRoleNameInvalidErrorWrapper._(value);
@@ -1298,6 +1312,8 @@ sealed class IssueServiceIdentityResponse {
       );
 
   /// Create a 'builtin_role_name_forbidden_error' variant wrapping around the given value.
+  ///
+  /// Built in role name forbidden.
   factory IssueServiceIdentityResponse.wrapBuiltinRoleNameForbiddenError(
     IssueServiceIdentityResponse_BuiltinRoleNameForbiddenError value,
   ) => IssueServiceIdentityResponse_builtinRoleNameForbiddenErrorWrapper._(
@@ -1311,6 +1327,8 @@ sealed class IssueServiceIdentityResponse {
       );
 
   /// Create a 'identity_provider_unavailable_error' variant wrapping around the given value.
+  ///
+  /// Identity provider unavailable.
   factory IssueServiceIdentityResponse.wrapIdentityProviderUnavailableError(
     IssueServiceIdentityResponse_IdentityProviderUnavailableError value,
   ) => IssueServiceIdentityResponse_identityProviderUnavailableErrorWrapper._(
@@ -1355,7 +1373,7 @@ sealed class IssueServiceIdentityResponse {
         "malformed_request_error",
         "wrapMalformedRequestError",
         IssueServiceIdentityResponse_MalformedRequestError.serializer,
-        "",
+        "Malformed request.",
         IssueServiceIdentityResponse_malformedRequestErrorWrapper._,
         (it) => it.value,
         ordinal: IssueServiceIdentityResponse_kind
@@ -1367,7 +1385,7 @@ sealed class IssueServiceIdentityResponse {
         "unknown_role_error",
         "wrapUnknownRoleError",
         IssueServiceIdentityResponse_UnknownRoleError.serializer,
-        "",
+        "Unknown role.",
         IssueServiceIdentityResponse_unknownRoleErrorWrapper._,
         (it) => it.value,
         ordinal:
@@ -1378,7 +1396,7 @@ sealed class IssueServiceIdentityResponse {
         "role_unknown_property_error",
         "wrapRoleUnknownPropertyError",
         IssueServiceIdentityResponse_RoleUnknownPropertyError.serializer,
-        "",
+        "Unknown role property.",
         IssueServiceIdentityResponse_roleUnknownPropertyErrorWrapper._,
         (it) => it.value,
         ordinal: IssueServiceIdentityResponse_kind
@@ -1390,7 +1408,7 @@ sealed class IssueServiceIdentityResponse {
         "role_type_invalid_error",
         "wrapRoleTypeInvalidError",
         IssueServiceIdentityResponse_RoleTypeInvalidError.serializer,
-        "",
+        "Invalid role type.",
         IssueServiceIdentityResponse_roleTypeInvalidErrorWrapper._,
         (it) => it.value,
         ordinal: IssueServiceIdentityResponse_kind
@@ -1402,7 +1420,7 @@ sealed class IssueServiceIdentityResponse {
         "role_version_invalid_error",
         "wrapRoleVersionInvalidError",
         IssueServiceIdentityResponse_RoleVersionInvalidError.serializer,
-        "",
+        "Invalid role version.",
         IssueServiceIdentityResponse_roleVersionInvalidErrorWrapper._,
         (it) => it.value,
         ordinal: IssueServiceIdentityResponse_kind
@@ -1414,7 +1432,7 @@ sealed class IssueServiceIdentityResponse {
         "custom_role_name_required_error",
         "wrapCustomRoleNameRequiredError",
         IssueServiceIdentityResponse_CustomRoleNameRequiredError.serializer,
-        "",
+        "Custom role name required.",
         IssueServiceIdentityResponse_customRoleNameRequiredErrorWrapper._,
         (it) => it.value,
         ordinal: IssueServiceIdentityResponse_kind
@@ -1426,7 +1444,7 @@ sealed class IssueServiceIdentityResponse {
         "custom_role_name_invalid_error",
         "wrapCustomRoleNameInvalidError",
         IssueServiceIdentityResponse_CustomRoleNameInvalidError.serializer,
-        "",
+        "Invalid custom role name.",
         IssueServiceIdentityResponse_customRoleNameInvalidErrorWrapper._,
         (it) => it.value,
         ordinal: IssueServiceIdentityResponse_kind
@@ -1438,7 +1456,7 @@ sealed class IssueServiceIdentityResponse {
         "builtin_role_name_forbidden_error",
         "wrapBuiltinRoleNameForbiddenError",
         IssueServiceIdentityResponse_BuiltinRoleNameForbiddenError.serializer,
-        "",
+        "Built in role name forbidden.",
         IssueServiceIdentityResponse_builtinRoleNameForbiddenErrorWrapper._,
         (it) => it.value,
         ordinal: IssueServiceIdentityResponse_kind
@@ -1451,7 +1469,7 @@ sealed class IssueServiceIdentityResponse {
         "wrapIdentityProviderUnavailableError",
         IssueServiceIdentityResponse_IdentityProviderUnavailableError
             .serializer,
-        "",
+        "Identity provider unavailable.",
         IssueServiceIdentityResponse_identityProviderUnavailableErrorWrapper._,
         (it) => it.value,
         ordinal: IssueServiceIdentityResponse_kind

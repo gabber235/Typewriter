@@ -365,24 +365,20 @@ void main() {
   });
 
   test("commit rejection reports each located value problem", () {
-    final response = skir.CommitPreparedEditResponse.wrapResult(
-      skir.CommitResult.wrapRejected([
-        skir.ValueProblem(
-          location: skir.ValueLocation(
-            resource: skir.ResourceId(value: "page:created"),
-            path: skir.ValuePath(
-              segments: [
-                skir.PathSegment.createField(name: "book"),
-                skir.PathSegment.createItem(
-                  id: skir.ItemId(value: "page:item"),
-                ),
-              ],
-            ),
+    final response = skir.CommitPreparedEditResponse.wrapRejectedError([
+      skir.ValueProblem(
+        location: skir.ValueLocation(
+          resource: skir.ResourceId(value: "page:created"),
+          path: skir.ValuePath(
+            segments: [
+              skir.PathSegment.createField(name: "book"),
+              skir.PathSegment.createItem(id: skir.ItemId(value: "page:item")),
+            ],
           ),
-          code: "item_missing",
         ),
-      ]),
-    );
+        code: "item_missing",
+      ),
+    ]);
 
     expect(
       response.rejectionMessage,

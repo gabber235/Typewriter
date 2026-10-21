@@ -5,6 +5,7 @@
 //! `SkirResponse` contract, so every handler can return a typed reply, including the generated
 //! `InternalError` fallback.
 
+use crate::skir::base::access::v1::permission::*;
 use crate::skir::base::access::v1::sentinel::*;
 use crate::skir::base::organization::v1::join_codes::*;
 use crate::skir::base::organization::v1::join_request::*;
@@ -17,6 +18,13 @@ use crate::skir::base::service::v1::registration::*;
 use crate::skir::base::service::v1::status::*;
 use crate::skir::base::service::v1::topology::*;
 use crate::skirout::base::organization::v1::role::*;
+
+wasmcloud_utils_macros::skir_response! {
+    GetEntityPermissionResponse {
+        success: Granted,
+        errors {}
+    }
+}
 
 wasmcloud_utils_macros::skir_response! {
     GetSentinelCredentialsResponse {
@@ -145,7 +153,7 @@ wasmcloud_utils_macros::skir_response! {
     GetServiceMessagingScopeResponse {
         success: Found,
         errors {
-            NotFound => "Service messaging scope not found",
+            NotFoundError => "Service messaging scope not found",
         }
     }
 }

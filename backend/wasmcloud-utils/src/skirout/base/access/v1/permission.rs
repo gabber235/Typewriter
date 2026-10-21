@@ -272,6 +272,49 @@ impl Permissions {
 }
 
 // ==============================================================================
+// struct EntityPermissionGrant
+// ==============================================================================
+
+#[derive(Clone, Debug, PartialEq, Default)]
+pub struct EntityPermissionGrant {
+    pub permissions: Permissions,
+    pub tags: Vec<String>,
+    /// Set this to None when you're creating a struct.
+    pub _unrecognized: Option<crate::skir_client::UnrecognizedFields<EntityPermissionGrant>>,
+}
+
+impl EntityPermissionGrant {
+    pub fn default_ref() -> &'static EntityPermissionGrant {
+        static D: std::sync::LazyLock<EntityPermissionGrant> =
+            std::sync::LazyLock::new(EntityPermissionGrant::default);
+        &D
+    }
+}
+
+impl EntityPermissionGrant {
+    fn _adapter() -> &'static crate::skir_client::internal::StructAdapter<EntityPermissionGrant> {
+        static ADAPTER: std::sync::LazyLock<
+            crate::skir_client::internal::StructAdapter<EntityPermissionGrant>,
+        > = std::sync::LazyLock::new(|| {
+            crate::skir_client::internal::StructAdapter::new(
+                "access/v1/permission.skir",
+                "EntityPermissionGrant",
+                "",
+                |x: &EntityPermissionGrant| &x._unrecognized,
+                |x: &mut EntityPermissionGrant, u| x._unrecognized = u,
+            )
+        });
+        &*ADAPTER
+    }
+    pub fn serializer() -> crate::skir_client::Serializer<EntityPermissionGrant> {
+        initialize_module_serializers();
+        crate::skir_client::internal::struct_serializer_from_static(
+            EntityPermissionGrant::_adapter(),
+        )
+    }
+}
+
+// ==============================================================================
 // struct GetEntityPermissionRequest
 // ==============================================================================
 
@@ -316,44 +359,49 @@ impl GetEntityPermissionRequest {
 }
 
 // ==============================================================================
-// struct GetEntityPermissionResponse
+// enum GetEntityPermissionResponse
 // ==============================================================================
 
-#[derive(Clone, Debug, PartialEq, Default)]
-pub struct GetEntityPermissionResponse {
-    pub permissions: Permissions,
-    pub tags: Vec<String>,
-    /// Set this to None when you're creating a struct.
-    pub _unrecognized: Option<crate::skir_client::UnrecognizedFields<GetEntityPermissionResponse>>,
+#[derive(Debug, Clone, PartialEq)]
+pub enum GetEntityPermissionResponse {
+    Unknown(Option<crate::skir_client::UnrecognizedVariant<GetEntityPermissionResponse>>),
+    Granted(Box<EntityPermissionGrant>),
+    InternalError(Box<crate::skirout::base::kernel::v1::errors::InternalError>),
 }
 
-impl GetEntityPermissionResponse {
-    pub fn default_ref() -> &'static GetEntityPermissionResponse {
-        static D: std::sync::LazyLock<GetEntityPermissionResponse> =
-            std::sync::LazyLock::new(GetEntityPermissionResponse::default);
-        &D
+impl Default for GetEntityPermissionResponse {
+    fn default() -> Self {
+        GetEntityPermissionResponse::Unknown(None)
     }
 }
 
 impl GetEntityPermissionResponse {
-    fn _adapter()
-    -> &'static crate::skir_client::internal::StructAdapter<GetEntityPermissionResponse> {
+    fn _adapter() -> &'static crate::skir_client::internal::EnumAdapter<GetEntityPermissionResponse>
+    {
         static ADAPTER: std::sync::LazyLock<
-            crate::skir_client::internal::StructAdapter<GetEntityPermissionResponse>,
+            crate::skir_client::internal::EnumAdapter<GetEntityPermissionResponse>,
         > = std::sync::LazyLock::new(|| {
-            crate::skir_client::internal::StructAdapter::new(
+            crate::skir_client::internal::EnumAdapter::new(
+                |x: &GetEntityPermissionResponse| match x {
+                    GetEntityPermissionResponse::Unknown(_) => 0,
+                    GetEntityPermissionResponse::Granted(_) => 1,
+                    GetEntityPermissionResponse::InternalError(_) => 2,
+                },
+                |u| GetEntityPermissionResponse::Unknown(Some(u)),
+                |x: &GetEntityPermissionResponse| match x {
+                    GetEntityPermissionResponse::Unknown(Some(u)) => Some(u.as_ref()),
+                    _ => None,
+                },
                 "access/v1/permission.skir",
                 "GetEntityPermissionResponse",
                 "",
-                |x: &GetEntityPermissionResponse| &x._unrecognized,
-                |x: &mut GetEntityPermissionResponse, u| x._unrecognized = u,
             )
         });
         &*ADAPTER
     }
     pub fn serializer() -> crate::skir_client::Serializer<GetEntityPermissionResponse> {
         initialize_module_serializers();
-        crate::skir_client::internal::struct_serializer_from_static(
+        crate::skir_client::internal::enum_serializer_from_static(
             GetEntityPermissionResponse::_adapter(),
         )
     }
@@ -506,6 +554,20 @@ fn initialize_module_serializers() {
             (*a).finalize();
         }
         unsafe {
+            let a: *mut crate::skir_client::internal::StructAdapter<EntityPermissionGrant> =
+                EntityPermissionGrant::_adapter() as *const _ as *mut _;
+            (*a).add_field("permissions", 0, crate::skir_client::internal::struct_serializer_from_static(Permissions::_adapter()), "", |x: &EntityPermissionGrant| &x.permissions, |x: &mut EntityPermissionGrant, v| x.permissions = v);
+            (*a).add_field(
+                "tags",
+                1,
+                crate::skir_client::Serializer::array(crate::skir_client::Serializer::string()),
+                "",
+                |x: &EntityPermissionGrant| &x.tags,
+                |x: &mut EntityPermissionGrant, v| x.tags = v,
+            );
+            (*a).finalize();
+        }
+        unsafe {
             let a: *mut crate::skir_client::internal::StructAdapter<GetEntityPermissionRequest> =
                 GetEntityPermissionRequest::_adapter() as *const _ as *mut _;
             (*a).add_field(
@@ -529,16 +591,33 @@ fn initialize_module_serializers() {
             (*a).finalize();
         }
         unsafe {
-            let a: *mut crate::skir_client::internal::StructAdapter<GetEntityPermissionResponse> =
+            let a: *mut crate::skir_client::internal::EnumAdapter<GetEntityPermissionResponse> =
                 GetEntityPermissionResponse::_adapter() as *const _ as *mut _;
-            (*a).add_field("permissions", 0, crate::skir_client::internal::struct_serializer_from_static(Permissions::_adapter()), "", |x: &GetEntityPermissionResponse| &x.permissions, |x: &mut GetEntityPermissionResponse, v| x.permissions = v);
-            (*a).add_field(
-                "tags",
+            (*a).add_wrapper_variant(
+                "granted",
                 1,
-                crate::skir_client::Serializer::array(crate::skir_client::Serializer::string()),
+                1,
+                crate::skir_client::internal::struct_serializer_from_static(
+                    EntityPermissionGrant::_adapter(),
+                ),
                 "",
-                |x: &GetEntityPermissionResponse| &x.tags,
-                |x: &mut GetEntityPermissionResponse, v| x.tags = v,
+                |v| GetEntityPermissionResponse::Granted(Box::new(v)),
+                |x| match x {
+                    GetEntityPermissionResponse::Granted(b) => b.as_ref(),
+                    _ => unreachable!(),
+                },
+            );
+            (*a).add_wrapper_variant(
+                "internal_error",
+                2,
+                2,
+                crate::skirout::base::kernel::v1::errors::InternalError::serializer(),
+                "",
+                |v| GetEntityPermissionResponse::InternalError(Box::new(v)),
+                |x| match x {
+                    GetEntityPermissionResponse::InternalError(b) => b.as_ref(),
+                    _ => unreachable!(),
+                },
             );
             (*a).finalize();
         }

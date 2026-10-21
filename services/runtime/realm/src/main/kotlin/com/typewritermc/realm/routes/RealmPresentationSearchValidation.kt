@@ -36,7 +36,7 @@ internal fun invalidRealmPresentationSearchRequest(request: RealmPresentationSea
 
     return RealmPresentationSearchUpdate.createSnapshot(
         subscriptionId = request.subscriptionId,
-        status = RealmPresentationSearchStatus.ERROR,
+        status = RealmPresentationSearchStatus.SEARCH_FAILED_ERROR,
         values = emptyList(),
         guidance = emptyList(),
         diagnostics = messages.map(::realmDiagnostic),
@@ -51,7 +51,7 @@ internal fun invalidRealmPresentationSearchRequest(request: RealmPresentationSea
 internal fun invalidRealmPresentationSearchResponse(subscriptionId: String): RealmPresentationSearchUpdate =
     RealmPresentationSearchUpdate.createSnapshot(
         subscriptionId = subscriptionId,
-        status = RealmPresentationSearchStatus.ERROR,
+        status = RealmPresentationSearchStatus.SEARCH_FAILED_ERROR,
         values = emptyList(),
         guidance = emptyList(),
         diagnostics =

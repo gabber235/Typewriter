@@ -15,6 +15,8 @@ import "dart:core" as _core;
 
 import "package:skir_client/skir_client.dart" as _skir;
 
+import "../../kernel/v1/errors.dart" as _lib_kernel_v1_errors;
+
 // -----------------------------------------------------------------------------
 // struct ArtifactDigest
 // -----------------------------------------------------------------------------
@@ -1765,97 +1767,6 @@ final class FetchSharedArtifactCatalogRequest_mutable
 }
 
 // -----------------------------------------------------------------------------
-// struct FetchSharedArtifactCatalogResponse.Unavailable
-// -----------------------------------------------------------------------------
-
-sealed class FetchSharedArtifactCatalogResponse_Unavailable_orMutable {
-  FetchSharedArtifactCatalogResponse_Unavailable toFrozen();
-}
-
-/// Deeply immutable.
-final class FetchSharedArtifactCatalogResponse_Unavailable
-    implements FetchSharedArtifactCatalogResponse_Unavailable_orMutable {
-  _skir.internal__UnrecognizedFields? _u;
-
-  factory FetchSharedArtifactCatalogResponse_Unavailable() =>
-      FetchSharedArtifactCatalogResponse_Unavailable._();
-
-  FetchSharedArtifactCatalogResponse_Unavailable._();
-
-  /// Default instance with all fields set to their default values.
-  static final defaultInstance =
-      FetchSharedArtifactCatalogResponse_Unavailable._();
-
-  /// Returns a new mutable instance.
-  /// Fields are initialized to their default values.
-  static FetchSharedArtifactCatalogResponse_Unavailable_mutable mutable() =>
-      FetchSharedArtifactCatalogResponse_Unavailable_mutable._();
-
-  /// Returns this instance (no-op).
-  @_core.Deprecated("This instance is already frozen.")
-  @_core.override
-  FetchSharedArtifactCatalogResponse_Unavailable toFrozen() => this;
-
-  /// Returns a mutable shallow copy of this instance.
-  FetchSharedArtifactCatalogResponse_Unavailable_mutable toMutable() =>
-      FetchSharedArtifactCatalogResponse_Unavailable_mutable._();
-
-  @_core.override
-  _core.bool operator ==(other) {
-    if (_core.identical(this, other)) return true;
-    if (other is! FetchSharedArtifactCatalogResponse_Unavailable) return false;
-    return _skir.internal__listEquality.equals(
-      _equality_proxy,
-      other._equality_proxy,
-    );
-  }
-
-  @_core.override
-  _core.int get hashCode => _skir.internal__listEquality.hash(_equality_proxy);
-
-  _core.List get _equality_proxy => [];
-
-  @_core.override
-  _core.String toString() => _skir.internal__stringify(this, serializer);
-
-  /// Serializer for `FetchSharedArtifactCatalogResponse_Unavailable` instances.
-  static _skir.StructSerializer<
-    FetchSharedArtifactCatalogResponse_Unavailable,
-    FetchSharedArtifactCatalogResponse_Unavailable_mutable
-  >
-  get serializer {
-    if (_serializerBuilder.mustInitialize()) {
-      _serializerBuilder.finalize();
-    }
-    return _serializerBuilder.serializer;
-  }
-
-  static final _serializerBuilder = _skir.internal__StructSerializerBuilder(
-    recordId: "service/v1/artifact.skir:FetchSharedArtifactCatalogResponse.Unavailable",
-    doc: "",
-    defaultInstance: defaultInstance,
-    newMutable: (it) => (it != null) ? it.toMutable() : mutable(),
-    toFrozen: (FetchSharedArtifactCatalogResponse_Unavailable_mutable it) =>
-        it.toFrozen(),
-    getUnrecognizedFields: (it) => it._u,
-    setUnrecognizedFields: (it, u) => it._u = u,
-  );
-}
-
-/// Mutable version of [FetchSharedArtifactCatalogResponse_Unavailable].
-final class FetchSharedArtifactCatalogResponse_Unavailable_mutable
-    implements FetchSharedArtifactCatalogResponse_Unavailable_orMutable {
-  _skir.internal__UnrecognizedFields? _u;
-
-  FetchSharedArtifactCatalogResponse_Unavailable_mutable._();
-
-  /// Returns a deeply immutable copy of this instance.
-  @_core.override
-  FetchSharedArtifactCatalogResponse_Unavailable toFrozen() =>
-      FetchSharedArtifactCatalogResponse_Unavailable().._u = this._u;
-}
-
-// -----------------------------------------------------------------------------
 // enum FetchSharedArtifactCatalogResponse
 // -----------------------------------------------------------------------------
 
@@ -1864,7 +1775,7 @@ final class FetchSharedArtifactCatalogResponse_Unavailable_mutable
 ///   switch (e) {
 ///     case FetchSharedArtifactCatalogResponse_unknown(): { ... }
 ///     case FetchSharedArtifactCatalogResponse_success(:var value): { ... }
-///     case FetchSharedArtifactCatalogResponse_unavailable(:var value): { ... }
+///     case FetchSharedArtifactCatalogResponse_internalError(:var value): { ... }
 ///   }
 ///   ```
 ///
@@ -1888,15 +1799,15 @@ sealed class FetchSharedArtifactCatalogResponse {
     SharedArtifactCatalog(revision: revision, artifacts: artifacts),
   );
 
-  /// Create a 'unavailable' variant wrapping around the given value.
-  factory FetchSharedArtifactCatalogResponse.wrapUnavailable(
-    FetchSharedArtifactCatalogResponse_Unavailable value,
-  ) => FetchSharedArtifactCatalogResponse_unavailableWrapper._(value);
+  /// Create a 'internal_error' variant wrapping around the given value.
+  factory FetchSharedArtifactCatalogResponse.wrapInternalError(
+    _lib_kernel_v1_errors.InternalError value,
+  ) => FetchSharedArtifactCatalogResponse_internalErrorWrapper._(value);
 
-  /// Same as `wrapUnavailable(FetchSharedArtifactCatalogResponse_Unavailable(...))`.
-  factory FetchSharedArtifactCatalogResponse.createUnavailable() =>
-      FetchSharedArtifactCatalogResponse.wrapUnavailable(
-        FetchSharedArtifactCatalogResponse_Unavailable(),
+  /// Same as `wrapInternalError(_lib_kernel_v1_errors.InternalError(...))`.
+  factory FetchSharedArtifactCatalogResponse.createInternalError() =>
+      FetchSharedArtifactCatalogResponse.wrapInternalError(
+        _lib_kernel_v1_errors.InternalError(),
       );
 
   /// Returns the kind of variant held by this FetchSharedArtifactCatalogResponse.
@@ -1919,14 +1830,15 @@ sealed class FetchSharedArtifactCatalogResponse {
       );
       _serializerBuilder.addWrapperVariant(
         2,
-        "unavailable",
-        "wrapUnavailable",
-        FetchSharedArtifactCatalogResponse_Unavailable.serializer,
+        "internal_error",
+        "wrapInternalError",
+        _lib_kernel_v1_errors.InternalError.serializer,
         "",
-        FetchSharedArtifactCatalogResponse_unavailableWrapper._,
+        FetchSharedArtifactCatalogResponse_internalErrorWrapper._,
         (it) => it.value,
-        ordinal:
-            FetchSharedArtifactCatalogResponse_kind.unavailableWrapper._ordinal,
+        ordinal: FetchSharedArtifactCatalogResponse_kind
+            .internalErrorWrapper
+            ._ordinal,
       );
       _serializerBuilder.finalize();
     }
@@ -1950,7 +1862,7 @@ sealed class FetchSharedArtifactCatalogResponse {
 enum FetchSharedArtifactCatalogResponse_kind {
   unknown(0),
   successWrapper(1),
-  unavailableWrapper(2);
+  internalErrorWrapper(2);
 
   final _core.int _ordinal;
 
@@ -2012,15 +1924,15 @@ final class FetchSharedArtifactCatalogResponse_successWrapper
       FetchSharedArtifactCatalogResponse_kind.successWrapper;
 }
 
-final class FetchSharedArtifactCatalogResponse_unavailableWrapper
+final class FetchSharedArtifactCatalogResponse_internalErrorWrapper
     extends _FetchSharedArtifactCatalogResponse_wrapper {
-  final FetchSharedArtifactCatalogResponse_Unavailable value;
+  final _lib_kernel_v1_errors.InternalError value;
 
-  FetchSharedArtifactCatalogResponse_unavailableWrapper._(this.value);
+  FetchSharedArtifactCatalogResponse_internalErrorWrapper._(this.value);
 
   @_core.override
   FetchSharedArtifactCatalogResponse_kind get kind =>
-      FetchSharedArtifactCatalogResponse_kind.unavailableWrapper;
+      FetchSharedArtifactCatalogResponse_kind.internalErrorWrapper;
 }
 
 // -----------------------------------------------------------------------------
@@ -2319,97 +2231,6 @@ final class PublishSharedArtifactRequest_mutable
 }
 
 // -----------------------------------------------------------------------------
-// struct PublishSharedArtifactResponse.Unavailable
-// -----------------------------------------------------------------------------
-
-sealed class PublishSharedArtifactResponse_Unavailable_orMutable {
-  PublishSharedArtifactResponse_Unavailable toFrozen();
-}
-
-/// Deeply immutable.
-final class PublishSharedArtifactResponse_Unavailable
-    implements PublishSharedArtifactResponse_Unavailable_orMutable {
-  _skir.internal__UnrecognizedFields? _u;
-
-  factory PublishSharedArtifactResponse_Unavailable() =>
-      PublishSharedArtifactResponse_Unavailable._();
-
-  PublishSharedArtifactResponse_Unavailable._();
-
-  /// Default instance with all fields set to their default values.
-  static final defaultInstance = PublishSharedArtifactResponse_Unavailable._();
-
-  /// Returns a new mutable instance.
-  /// Fields are initialized to their default values.
-  static PublishSharedArtifactResponse_Unavailable_mutable mutable() =>
-      PublishSharedArtifactResponse_Unavailable_mutable._();
-
-  /// Returns this instance (no-op).
-  @_core.Deprecated("This instance is already frozen.")
-  @_core.override
-  PublishSharedArtifactResponse_Unavailable toFrozen() => this;
-
-  /// Returns a mutable shallow copy of this instance.
-  PublishSharedArtifactResponse_Unavailable_mutable toMutable() =>
-      PublishSharedArtifactResponse_Unavailable_mutable._();
-
-  @_core.override
-  _core.bool operator ==(other) {
-    if (_core.identical(this, other)) return true;
-    if (other is! PublishSharedArtifactResponse_Unavailable) return false;
-    return _skir.internal__listEquality.equals(
-      _equality_proxy,
-      other._equality_proxy,
-    );
-  }
-
-  @_core.override
-  _core.int get hashCode => _skir.internal__listEquality.hash(_equality_proxy);
-
-  _core.List get _equality_proxy => [];
-
-  @_core.override
-  _core.String toString() => _skir.internal__stringify(this, serializer);
-
-  /// Serializer for `PublishSharedArtifactResponse_Unavailable` instances.
-  static _skir.StructSerializer<
-    PublishSharedArtifactResponse_Unavailable,
-    PublishSharedArtifactResponse_Unavailable_mutable
-  >
-  get serializer {
-    if (_serializerBuilder.mustInitialize()) {
-      _serializerBuilder.finalize();
-    }
-    return _serializerBuilder.serializer;
-  }
-
-  static final _serializerBuilder = _skir.internal__StructSerializerBuilder(
-    recordId:
-        "service/v1/artifact.skir:PublishSharedArtifactResponse.Unavailable",
-    doc: "",
-    defaultInstance: defaultInstance,
-    newMutable: (it) => (it != null) ? it.toMutable() : mutable(),
-    toFrozen: (PublishSharedArtifactResponse_Unavailable_mutable it) =>
-        it.toFrozen(),
-    getUnrecognizedFields: (it) => it._u,
-    setUnrecognizedFields: (it, u) => it._u = u,
-  );
-}
-
-/// Mutable version of [PublishSharedArtifactResponse_Unavailable].
-final class PublishSharedArtifactResponse_Unavailable_mutable
-    implements PublishSharedArtifactResponse_Unavailable_orMutable {
-  _skir.internal__UnrecognizedFields? _u;
-
-  PublishSharedArtifactResponse_Unavailable_mutable._();
-
-  /// Returns a deeply immutable copy of this instance.
-  @_core.override
-  PublishSharedArtifactResponse_Unavailable toFrozen() =>
-      PublishSharedArtifactResponse_Unavailable().._u = this._u;
-}
-
-// -----------------------------------------------------------------------------
 // enum PublishSharedArtifactResponse
 // -----------------------------------------------------------------------------
 
@@ -2419,8 +2240,8 @@ final class PublishSharedArtifactResponse_Unavailable_mutable
 ///     case PublishSharedArtifactResponse_unknown(): { ... }
 ///     case PublishSharedArtifactResponse_published(:var value): { ... }
 ///     case PublishSharedArtifactResponse_unchanged(:var value): { ... }
-///     case PublishSharedArtifactResponse_conflict(:var value): { ... }
-///     case PublishSharedArtifactResponse_unavailable(:var value): { ... }
+///     case PublishSharedArtifactResponse_conflictError(:var value): { ... }
+///     case PublishSharedArtifactResponse_internalError(:var value): { ... }
 ///   }
 ///   ```
 ///
@@ -2491,20 +2312,20 @@ sealed class PublishSharedArtifactResponse {
     ),
   );
 
-  /// Create a 'conflict' variant wrapping around the given value.
-  factory PublishSharedArtifactResponse.wrapConflict(
+  /// Create a 'conflict_error' variant wrapping around the given value.
+  factory PublishSharedArtifactResponse.wrapConflictError(
     SharedArtifactDescriptor? value,
-  ) => PublishSharedArtifactResponse_conflictWrapper._(value);
+  ) => PublishSharedArtifactResponse_conflictErrorWrapper._(value);
 
-  /// Create a 'unavailable' variant wrapping around the given value.
-  factory PublishSharedArtifactResponse.wrapUnavailable(
-    PublishSharedArtifactResponse_Unavailable value,
-  ) => PublishSharedArtifactResponse_unavailableWrapper._(value);
+  /// Create a 'internal_error' variant wrapping around the given value.
+  factory PublishSharedArtifactResponse.wrapInternalError(
+    _lib_kernel_v1_errors.InternalError value,
+  ) => PublishSharedArtifactResponse_internalErrorWrapper._(value);
 
-  /// Same as `wrapUnavailable(PublishSharedArtifactResponse_Unavailable(...))`.
-  factory PublishSharedArtifactResponse.createUnavailable() =>
-      PublishSharedArtifactResponse.wrapUnavailable(
-        PublishSharedArtifactResponse_Unavailable(),
+  /// Same as `wrapInternalError(_lib_kernel_v1_errors.InternalError(...))`.
+  factory PublishSharedArtifactResponse.createInternalError() =>
+      PublishSharedArtifactResponse.wrapInternalError(
+        _lib_kernel_v1_errors.InternalError(),
       );
 
   /// Returns the kind of variant held by this PublishSharedArtifactResponse.
@@ -2535,23 +2356,25 @@ sealed class PublishSharedArtifactResponse {
       );
       _serializerBuilder.addWrapperVariant(
         3,
-        "conflict",
-        "wrapConflict",
+        "conflict_error",
+        "wrapConflictError",
         _skir.Serializers.optional(SharedArtifactDescriptor.serializer),
         "",
-        PublishSharedArtifactResponse_conflictWrapper._,
+        PublishSharedArtifactResponse_conflictErrorWrapper._,
         (it) => it.value,
-        ordinal: PublishSharedArtifactResponse_kind.conflictWrapper._ordinal,
+        ordinal:
+            PublishSharedArtifactResponse_kind.conflictErrorWrapper._ordinal,
       );
       _serializerBuilder.addWrapperVariant(
         4,
-        "unavailable",
-        "wrapUnavailable",
-        PublishSharedArtifactResponse_Unavailable.serializer,
+        "internal_error",
+        "wrapInternalError",
+        _lib_kernel_v1_errors.InternalError.serializer,
         "",
-        PublishSharedArtifactResponse_unavailableWrapper._,
+        PublishSharedArtifactResponse_internalErrorWrapper._,
         (it) => it.value,
-        ordinal: PublishSharedArtifactResponse_kind.unavailableWrapper._ordinal,
+        ordinal:
+            PublishSharedArtifactResponse_kind.internalErrorWrapper._ordinal,
       );
       _serializerBuilder.finalize();
     }
@@ -2575,8 +2398,8 @@ enum PublishSharedArtifactResponse_kind {
   unknown(0),
   publishedWrapper(1),
   unchangedWrapper(2),
-  conflictWrapper(3),
-  unavailableWrapper(4);
+  conflictErrorWrapper(3),
+  internalErrorWrapper(4);
 
   final _core.int _ordinal;
 
@@ -2645,26 +2468,26 @@ final class PublishSharedArtifactResponse_unchangedWrapper
       PublishSharedArtifactResponse_kind.unchangedWrapper;
 }
 
-final class PublishSharedArtifactResponse_conflictWrapper
+final class PublishSharedArtifactResponse_conflictErrorWrapper
     extends _PublishSharedArtifactResponse_wrapper {
   final SharedArtifactDescriptor? value;
 
-  PublishSharedArtifactResponse_conflictWrapper._(this.value);
+  PublishSharedArtifactResponse_conflictErrorWrapper._(this.value);
 
   @_core.override
   PublishSharedArtifactResponse_kind get kind =>
-      PublishSharedArtifactResponse_kind.conflictWrapper;
+      PublishSharedArtifactResponse_kind.conflictErrorWrapper;
 }
 
-final class PublishSharedArtifactResponse_unavailableWrapper
+final class PublishSharedArtifactResponse_internalErrorWrapper
     extends _PublishSharedArtifactResponse_wrapper {
-  final PublishSharedArtifactResponse_Unavailable value;
+  final _lib_kernel_v1_errors.InternalError value;
 
-  PublishSharedArtifactResponse_unavailableWrapper._(this.value);
+  PublishSharedArtifactResponse_internalErrorWrapper._(this.value);
 
   @_core.override
   PublishSharedArtifactResponse_kind get kind =>
-      PublishSharedArtifactResponse_kind.unavailableWrapper;
+      PublishSharedArtifactResponse_kind.internalErrorWrapper;
 }
 
 // -----------------------------------------------------------------------------
@@ -2830,44 +2653,44 @@ final class ReadArtifactBlobRequest_mutable
 }
 
 // -----------------------------------------------------------------------------
-// struct ReadArtifactBlobResponse.NotFound
+// struct ReadArtifactBlobResponse.NotFoundError
 // -----------------------------------------------------------------------------
 
-sealed class ReadArtifactBlobResponse_NotFound_orMutable {
-  ReadArtifactBlobResponse_NotFound toFrozen();
+sealed class ReadArtifactBlobResponse_NotFoundError_orMutable {
+  ReadArtifactBlobResponse_NotFoundError toFrozen();
 }
 
 /// Deeply immutable.
-final class ReadArtifactBlobResponse_NotFound
-    implements ReadArtifactBlobResponse_NotFound_orMutable {
+final class ReadArtifactBlobResponse_NotFoundError
+    implements ReadArtifactBlobResponse_NotFoundError_orMutable {
   _skir.internal__UnrecognizedFields? _u;
 
-  factory ReadArtifactBlobResponse_NotFound() =>
-      ReadArtifactBlobResponse_NotFound._();
+  factory ReadArtifactBlobResponse_NotFoundError() =>
+      ReadArtifactBlobResponse_NotFoundError._();
 
-  ReadArtifactBlobResponse_NotFound._();
+  ReadArtifactBlobResponse_NotFoundError._();
 
   /// Default instance with all fields set to their default values.
-  static final defaultInstance = ReadArtifactBlobResponse_NotFound._();
+  static final defaultInstance = ReadArtifactBlobResponse_NotFoundError._();
 
   /// Returns a new mutable instance.
   /// Fields are initialized to their default values.
-  static ReadArtifactBlobResponse_NotFound_mutable mutable() =>
-      ReadArtifactBlobResponse_NotFound_mutable._();
+  static ReadArtifactBlobResponse_NotFoundError_mutable mutable() =>
+      ReadArtifactBlobResponse_NotFoundError_mutable._();
 
   /// Returns this instance (no-op).
   @_core.Deprecated("This instance is already frozen.")
   @_core.override
-  ReadArtifactBlobResponse_NotFound toFrozen() => this;
+  ReadArtifactBlobResponse_NotFoundError toFrozen() => this;
 
   /// Returns a mutable shallow copy of this instance.
-  ReadArtifactBlobResponse_NotFound_mutable toMutable() =>
-      ReadArtifactBlobResponse_NotFound_mutable._();
+  ReadArtifactBlobResponse_NotFoundError_mutable toMutable() =>
+      ReadArtifactBlobResponse_NotFoundError_mutable._();
 
   @_core.override
   _core.bool operator ==(other) {
     if (_core.identical(this, other)) return true;
-    if (other is! ReadArtifactBlobResponse_NotFound) return false;
+    if (other is! ReadArtifactBlobResponse_NotFoundError) return false;
     return _skir.internal__listEquality.equals(
       _equality_proxy,
       other._equality_proxy,
@@ -2882,10 +2705,10 @@ final class ReadArtifactBlobResponse_NotFound
   @_core.override
   _core.String toString() => _skir.internal__stringify(this, serializer);
 
-  /// Serializer for `ReadArtifactBlobResponse_NotFound` instances.
+  /// Serializer for `ReadArtifactBlobResponse_NotFoundError` instances.
   static _skir.StructSerializer<
-    ReadArtifactBlobResponse_NotFound,
-    ReadArtifactBlobResponse_NotFound_mutable
+    ReadArtifactBlobResponse_NotFoundError,
+    ReadArtifactBlobResponse_NotFoundError_mutable
   >
   get serializer {
     if (_serializerBuilder.mustInitialize()) {
@@ -2895,72 +2718,74 @@ final class ReadArtifactBlobResponse_NotFound
   }
 
   static final _serializerBuilder = _skir.internal__StructSerializerBuilder(
-    recordId: "service/v1/artifact.skir:ReadArtifactBlobResponse.NotFound",
+    recordId: "service/v1/artifact.skir:ReadArtifactBlobResponse.NotFoundError",
     doc: "",
     defaultInstance: defaultInstance,
     newMutable: (it) => (it != null) ? it.toMutable() : mutable(),
-    toFrozen: (ReadArtifactBlobResponse_NotFound_mutable it) => it.toFrozen(),
+    toFrozen: (ReadArtifactBlobResponse_NotFoundError_mutable it) =>
+        it.toFrozen(),
     getUnrecognizedFields: (it) => it._u,
     setUnrecognizedFields: (it, u) => it._u = u,
   );
 }
 
-/// Mutable version of [ReadArtifactBlobResponse_NotFound].
-final class ReadArtifactBlobResponse_NotFound_mutable
-    implements ReadArtifactBlobResponse_NotFound_orMutable {
+/// Mutable version of [ReadArtifactBlobResponse_NotFoundError].
+final class ReadArtifactBlobResponse_NotFoundError_mutable
+    implements ReadArtifactBlobResponse_NotFoundError_orMutable {
   _skir.internal__UnrecognizedFields? _u;
 
-  ReadArtifactBlobResponse_NotFound_mutable._();
+  ReadArtifactBlobResponse_NotFoundError_mutable._();
 
   /// Returns a deeply immutable copy of this instance.
   @_core.override
-  ReadArtifactBlobResponse_NotFound toFrozen() =>
-      ReadArtifactBlobResponse_NotFound().._u = this._u;
+  ReadArtifactBlobResponse_NotFoundError toFrozen() =>
+      ReadArtifactBlobResponse_NotFoundError().._u = this._u;
 }
 
 // -----------------------------------------------------------------------------
-// struct ReadArtifactBlobResponse.Invalid
+// struct ReadArtifactBlobResponse.InvalidError
 // -----------------------------------------------------------------------------
 
-sealed class ReadArtifactBlobResponse_Invalid_orMutable {
+sealed class ReadArtifactBlobResponse_InvalidError_orMutable {
   _core.String get reason;
 
-  ReadArtifactBlobResponse_Invalid toFrozen();
+  ReadArtifactBlobResponse_InvalidError toFrozen();
 }
 
 /// Deeply immutable.
-final class ReadArtifactBlobResponse_Invalid
-    implements ReadArtifactBlobResponse_Invalid_orMutable {
+final class ReadArtifactBlobResponse_InvalidError
+    implements ReadArtifactBlobResponse_InvalidError_orMutable {
   @_core.override
   final _core.String reason;
   _skir.internal__UnrecognizedFields? _u;
 
-  factory ReadArtifactBlobResponse_Invalid({required _core.String reason}) =>
-      ReadArtifactBlobResponse_Invalid._(reason);
+  factory ReadArtifactBlobResponse_InvalidError({
+    required _core.String reason,
+  }) => ReadArtifactBlobResponse_InvalidError._(reason);
 
-  ReadArtifactBlobResponse_Invalid._(this.reason);
+  ReadArtifactBlobResponse_InvalidError._(this.reason);
 
   /// Default instance with all fields set to their default values.
-  static final defaultInstance = ReadArtifactBlobResponse_Invalid._("");
+  static final defaultInstance = ReadArtifactBlobResponse_InvalidError._("");
 
   /// Returns a new mutable instance.
   /// Fields are initialized to their default values.
-  static ReadArtifactBlobResponse_Invalid_mutable mutable() =>
-      ReadArtifactBlobResponse_Invalid_mutable._("");
+  static ReadArtifactBlobResponse_InvalidError_mutable mutable() =>
+      ReadArtifactBlobResponse_InvalidError_mutable._("");
 
   /// Returns this instance (no-op).
   @_core.Deprecated("This instance is already frozen.")
   @_core.override
-  ReadArtifactBlobResponse_Invalid toFrozen() => this;
+  ReadArtifactBlobResponse_InvalidError toFrozen() => this;
 
   /// Returns a mutable shallow copy of this instance.
-  ReadArtifactBlobResponse_Invalid_mutable toMutable() =>
-      ReadArtifactBlobResponse_Invalid_mutable._(this.reason);
+  ReadArtifactBlobResponse_InvalidError_mutable toMutable() =>
+      ReadArtifactBlobResponse_InvalidError_mutable._(this.reason);
 
   @_core.override
   _core.bool operator ==(other) {
     if (_core.identical(this, other)) return true;
-    if (other is! ReadArtifactBlobResponse_Invalid) return false;
+    if (other is! ReadArtifactBlobResponse_InvalidError) return false;
     return _skir.internal__listEquality.equals(
       _equality_proxy,
       other._equality_proxy,
@@ -2975,10 +2800,10 @@ final class ReadArtifactBlobResponse_Invalid
   @_core.override
   _core.String toString() => _skir.internal__stringify(this, serializer);
 
-  /// Serializer for `ReadArtifactBlobResponse_Invalid` instances.
+  /// Serializer for `ReadArtifactBlobResponse_InvalidError` instances.
   static _skir.StructSerializer<
-    ReadArtifactBlobResponse_Invalid,
-    ReadArtifactBlobResponse_Invalid_mutable
+    ReadArtifactBlobResponse_InvalidError,
+    ReadArtifactBlobResponse_InvalidError_mutable
   >
   get serializer {
     if (_serializerBuilder.mustInitialize()) {
@@ -2997,118 +2822,29 @@ final class ReadArtifactBlobResponse_Invalid
   }
 
   static final _serializerBuilder = _skir.internal__StructSerializerBuilder(
-    recordId: "service/v1/artifact.skir:ReadArtifactBlobResponse.Invalid",
+    recordId: "service/v1/artifact.skir:ReadArtifactBlobResponse.InvalidError",
     doc: "",
     defaultInstance: defaultInstance,
     newMutable: (it) => (it != null) ? it.toMutable() : mutable(),
-    toFrozen: (ReadArtifactBlobResponse_Invalid_mutable it) => it.toFrozen(),
-    getUnrecognizedFields: (it) => it._u,
-    setUnrecognizedFields: (it, u) => it._u = u,
-  );
-}
-
-/// Mutable version of [ReadArtifactBlobResponse_Invalid].
-final class ReadArtifactBlobResponse_Invalid_mutable
-    implements ReadArtifactBlobResponse_Invalid_orMutable {
-  _core.String reason;
-  _skir.internal__UnrecognizedFields? _u;
-
-  ReadArtifactBlobResponse_Invalid_mutable._(this.reason);
-
-  /// Returns a deeply immutable copy of this instance.
-  @_core.override
-  ReadArtifactBlobResponse_Invalid toFrozen() =>
-      ReadArtifactBlobResponse_Invalid(reason: this.reason).._u = this._u;
-}
-
-// -----------------------------------------------------------------------------
-// struct ReadArtifactBlobResponse.Unavailable
-// -----------------------------------------------------------------------------
-
-sealed class ReadArtifactBlobResponse_Unavailable_orMutable {
-  ReadArtifactBlobResponse_Unavailable toFrozen();
-}
-
-/// Deeply immutable.
-final class ReadArtifactBlobResponse_Unavailable
-    implements ReadArtifactBlobResponse_Unavailable_orMutable {
-  _skir.internal__UnrecognizedFields? _u;
-
-  factory ReadArtifactBlobResponse_Unavailable() =>
-      ReadArtifactBlobResponse_Unavailable._();
-
-  ReadArtifactBlobResponse_Unavailable._();
-
-  /// Default instance with all fields set to their default values.
-  static final defaultInstance = ReadArtifactBlobResponse_Unavailable._();
-
-  /// Returns a new mutable instance.
-  /// Fields are initialized to their default values.
-  static ReadArtifactBlobResponse_Unavailable_mutable mutable() =>
-      ReadArtifactBlobResponse_Unavailable_mutable._();
-
-  /// Returns this instance (no-op).
-  @_core.Deprecated("This instance is already frozen.")
-  @_core.override
-  ReadArtifactBlobResponse_Unavailable toFrozen() => this;
-
-  /// Returns a mutable shallow copy of this instance.
-  ReadArtifactBlobResponse_Unavailable_mutable toMutable() =>
-      ReadArtifactBlobResponse_Unavailable_mutable._();
-
-  @_core.override
-  _core.bool operator ==(other) {
-    if (_core.identical(this, other)) return true;
-    if (other is! ReadArtifactBlobResponse_Unavailable) return false;
-    return _skir.internal__listEquality.equals(
-      _equality_proxy,
-      other._equality_proxy,
-    );
-  }
-
-  @_core.override
-  _core.int get hashCode => _skir.internal__listEquality.hash(_equality_proxy);
-
-  _core.List get _equality_proxy => [];
-
-  @_core.override
-  _core.String toString() => _skir.internal__stringify(this, serializer);
-
-  /// Serializer for `ReadArtifactBlobResponse_Unavailable` instances.
-  static _skir.StructSerializer<
-    ReadArtifactBlobResponse_Unavailable,
-    ReadArtifactBlobResponse_Unavailable_mutable
-  >
-  get serializer {
-    if (_serializerBuilder.mustInitialize()) {
-      _serializerBuilder.finalize();
-    }
-    return _serializerBuilder.serializer;
-  }
-
-  static final _serializerBuilder = _skir.internal__StructSerializerBuilder(
-    recordId: "service/v1/artifact.skir:ReadArtifactBlobResponse.Unavailable",
-    doc: "",
-    defaultInstance: defaultInstance,
-    newMutable: (it) => (it != null) ? it.toMutable() : mutable(),
-    toFrozen: (ReadArtifactBlobResponse_Unavailable_mutable it) =>
+    toFrozen: (ReadArtifactBlobResponse_InvalidError_mutable it) =>
         it.toFrozen(),
     getUnrecognizedFields: (it) => it._u,
     setUnrecognizedFields: (it, u) => it._u = u,
   );
 }
 
-/// Mutable version of [ReadArtifactBlobResponse_Unavailable].
-final class ReadArtifactBlobResponse_Unavailable_mutable
-    implements ReadArtifactBlobResponse_Unavailable_orMutable {
+/// Mutable version of [ReadArtifactBlobResponse_InvalidError].
+final class ReadArtifactBlobResponse_InvalidError_mutable
+    implements ReadArtifactBlobResponse_InvalidError_orMutable {
+  _core.String reason;
   _skir.internal__UnrecognizedFields? _u;
 
-  ReadArtifactBlobResponse_Unavailable_mutable._();
+  ReadArtifactBlobResponse_InvalidError_mutable._(this.reason);
 
   /// Returns a deeply immutable copy of this instance.
   @_core.override
-  ReadArtifactBlobResponse_Unavailable toFrozen() =>
-      ReadArtifactBlobResponse_Unavailable().._u = this._u;
+  ReadArtifactBlobResponse_InvalidError toFrozen() =>
+      ReadArtifactBlobResponse_InvalidError(reason: this.reason).._u = this._u;
 }
 
 // -----------------------------------------------------------------------------
@@ -3120,9 +2856,9 @@ final class ReadArtifactBlobResponse_Unavailable_mutable
 ///   switch (e) {
 ///     case ReadArtifactBlobResponse_unknown(): { ... }
 ///     case ReadArtifactBlobResponse_success(:var value): { ... }
-///     case ReadArtifactBlobResponse_notFound(:var value): { ... }
-///     case ReadArtifactBlobResponse_invalid(:var value): { ... }
-///     case ReadArtifactBlobResponse_unavailable(:var value): { ... }
+///     case ReadArtifactBlobResponse_notFoundError(:var value): { ... }
+///     case ReadArtifactBlobResponse_invalidError(:var value): { ... }
+///     case ReadArtifactBlobResponse_internalError(:var value): { ... }
 ///   }
 ///   ```
 ///
@@ -3146,38 +2882,38 @@ sealed class ReadArtifactBlobResponse {
     BlobChunk(offset: offset, bytes: bytes, complete: complete),
   );
 
-  /// Create a 'not_found' variant wrapping around the given value.
-  factory ReadArtifactBlobResponse.wrapNotFound(
-    ReadArtifactBlobResponse_NotFound value,
-  ) => ReadArtifactBlobResponse_notFoundWrapper._(value);
+  /// Create a 'not_found_error' variant wrapping around the given value.
+  factory ReadArtifactBlobResponse.wrapNotFoundError(
+    ReadArtifactBlobResponse_NotFoundError value,
+  ) => ReadArtifactBlobResponse_notFoundErrorWrapper._(value);
 
-  /// Same as `wrapNotFound(ReadArtifactBlobResponse_NotFound(...))`.
-  factory ReadArtifactBlobResponse.createNotFound() =>
-      ReadArtifactBlobResponse.wrapNotFound(
-        ReadArtifactBlobResponse_NotFound(),
+  /// Same as `wrapNotFoundError(ReadArtifactBlobResponse_NotFoundError(...))`.
+  factory ReadArtifactBlobResponse.createNotFoundError() =>
+      ReadArtifactBlobResponse.wrapNotFoundError(
+        ReadArtifactBlobResponse_NotFoundError(),
       );
 
-  /// Create a 'invalid' variant wrapping around the given value.
-  factory ReadArtifactBlobResponse.wrapInvalid(
-    ReadArtifactBlobResponse_Invalid value,
-  ) => ReadArtifactBlobResponse_invalidWrapper._(value);
+  /// Create a 'invalid_error' variant wrapping around the given value.
+  factory ReadArtifactBlobResponse.wrapInvalidError(
+    ReadArtifactBlobResponse_InvalidError value,
+  ) => ReadArtifactBlobResponse_invalidErrorWrapper._(value);
 
-  /// Same as `wrapInvalid(ReadArtifactBlobResponse_Invalid(...))`.
-  factory ReadArtifactBlobResponse.createInvalid({
+  /// Same as `wrapInvalidError(ReadArtifactBlobResponse_InvalidError(...))`.
+  factory ReadArtifactBlobResponse.createInvalidError({
     required _core.String reason,
-  }) => ReadArtifactBlobResponse.wrapInvalid(
-    ReadArtifactBlobResponse_Invalid(reason: reason),
+  }) => ReadArtifactBlobResponse.wrapInvalidError(
+    ReadArtifactBlobResponse_InvalidError(reason: reason),
   );
 
-  /// Create a 'unavailable' variant wrapping around the given value.
-  factory ReadArtifactBlobResponse.wrapUnavailable(
-    ReadArtifactBlobResponse_Unavailable value,
-  ) => ReadArtifactBlobResponse_unavailableWrapper._(value);
+  /// Create a 'internal_error' variant wrapping around the given value.
+  factory ReadArtifactBlobResponse.wrapInternalError(
+    _lib_kernel_v1_errors.InternalError value,
+  ) => ReadArtifactBlobResponse_internalErrorWrapper._(value);
 
-  /// Same as `wrapUnavailable(ReadArtifactBlobResponse_Unavailable(...))`.
-  factory ReadArtifactBlobResponse.createUnavailable() =>
-      ReadArtifactBlobResponse.wrapUnavailable(
-        ReadArtifactBlobResponse_Unavailable(),
+  /// Same as `wrapInternalError(_lib_kernel_v1_errors.InternalError(...))`.
+  factory ReadArtifactBlobResponse.createInternalError() =>
+      ReadArtifactBlobResponse.wrapInternalError(
+        _lib_kernel_v1_errors.InternalError(),
       );
 
   /// Returns the kind of variant held by this ReadArtifactBlobResponse.
@@ -3198,33 +2934,33 @@ sealed class ReadArtifactBlobResponse {
       );
       _serializerBuilder.addWrapperVariant(
         2,
-        "not_found",
-        "wrapNotFound",
-        ReadArtifactBlobResponse_NotFound.serializer,
+        "not_found_error",
+        "wrapNotFoundError",
+        ReadArtifactBlobResponse_NotFoundError.serializer,
         "",
-        ReadArtifactBlobResponse_notFoundWrapper._,
+        ReadArtifactBlobResponse_notFoundErrorWrapper._,
         (it) => it.value,
-        ordinal: ReadArtifactBlobResponse_kind.notFoundWrapper._ordinal,
+        ordinal: ReadArtifactBlobResponse_kind.notFoundErrorWrapper._ordinal,
       );
       _serializerBuilder.addWrapperVariant(
         3,
-        "invalid",
-        "wrapInvalid",
-        ReadArtifactBlobResponse_Invalid.serializer,
+        "invalid_error",
+        "wrapInvalidError",
+        ReadArtifactBlobResponse_InvalidError.serializer,
         "",
-        ReadArtifactBlobResponse_invalidWrapper._,
+        ReadArtifactBlobResponse_invalidErrorWrapper._,
         (it) => it.value,
-        ordinal: ReadArtifactBlobResponse_kind.invalidWrapper._ordinal,
+        ordinal: ReadArtifactBlobResponse_kind.invalidErrorWrapper._ordinal,
       );
       _serializerBuilder.addWrapperVariant(
         4,
-        "unavailable",
-        "wrapUnavailable",
-        ReadArtifactBlobResponse_Unavailable.serializer,
+        "internal_error",
+        "wrapInternalError",
+        _lib_kernel_v1_errors.InternalError.serializer,
         "",
-        ReadArtifactBlobResponse_unavailableWrapper._,
+        ReadArtifactBlobResponse_internalErrorWrapper._,
         (it) => it.value,
-        ordinal: ReadArtifactBlobResponse_kind.unavailableWrapper._ordinal,
+        ordinal: ReadArtifactBlobResponse_kind.internalErrorWrapper._ordinal,
       );
       _serializerBuilder.finalize();
     }
@@ -3247,9 +2983,9 @@ sealed class ReadArtifactBlobResponse {
 enum ReadArtifactBlobResponse_kind {
   unknown(0),
   successWrapper(1),
-  notFoundWrapper(2),
-  invalidWrapper(3),
-  unavailableWrapper(4);
+  notFoundErrorWrapper(2),
+  invalidErrorWrapper(3),
+  internalErrorWrapper(4);
 
   final _core.int _ordinal;
 
@@ -3306,37 +3042,37 @@ final class ReadArtifactBlobResponse_successWrapper
       ReadArtifactBlobResponse_kind.successWrapper;
 }
 
-final class ReadArtifactBlobResponse_notFoundWrapper
+final class ReadArtifactBlobResponse_notFoundErrorWrapper
     extends _ReadArtifactBlobResponse_wrapper {
-  final ReadArtifactBlobResponse_NotFound value;
+  final ReadArtifactBlobResponse_NotFoundError value;
 
-  ReadArtifactBlobResponse_notFoundWrapper._(this.value);
+  ReadArtifactBlobResponse_notFoundErrorWrapper._(this.value);
 
   @_core.override
   ReadArtifactBlobResponse_kind get kind =>
-      ReadArtifactBlobResponse_kind.notFoundWrapper;
+      ReadArtifactBlobResponse_kind.notFoundErrorWrapper;
 }
 
-final class ReadArtifactBlobResponse_invalidWrapper
+final class ReadArtifactBlobResponse_invalidErrorWrapper
     extends _ReadArtifactBlobResponse_wrapper {
-  final ReadArtifactBlobResponse_Invalid value;
+  final ReadArtifactBlobResponse_InvalidError value;
 
-  ReadArtifactBlobResponse_invalidWrapper._(this.value);
+  ReadArtifactBlobResponse_invalidErrorWrapper._(this.value);
 
   @_core.override
   ReadArtifactBlobResponse_kind get kind =>
-      ReadArtifactBlobResponse_kind.invalidWrapper;
+      ReadArtifactBlobResponse_kind.invalidErrorWrapper;
 }
 
-final class ReadArtifactBlobResponse_unavailableWrapper
+final class ReadArtifactBlobResponse_internalErrorWrapper
     extends _ReadArtifactBlobResponse_wrapper {
-  final ReadArtifactBlobResponse_Unavailable value;
+  final _lib_kernel_v1_errors.InternalError value;
 
-  ReadArtifactBlobResponse_unavailableWrapper._(this.value);
+  ReadArtifactBlobResponse_internalErrorWrapper._(this.value);
 
   @_core.override
   ReadArtifactBlobResponse_kind get kind =>
-      ReadArtifactBlobResponse_kind.unavailableWrapper;
+      ReadArtifactBlobResponse_kind.internalErrorWrapper;
 }
 
 // -----------------------------------------------------------------------------
@@ -3581,154 +3317,51 @@ final class BeginArtifactBlobWriteResponse_Accepted_mutable
 }
 
 // -----------------------------------------------------------------------------
-// struct BeginArtifactBlobWriteResponse.Invalid
+// struct BeginArtifactBlobWriteResponse.InvalidError
 // -----------------------------------------------------------------------------
 
-sealed class BeginArtifactBlobWriteResponse_Invalid_orMutable {
+sealed class BeginArtifactBlobWriteResponse_InvalidError_orMutable {
   _core.String get reason;
 
-  BeginArtifactBlobWriteResponse_Invalid toFrozen();
+  BeginArtifactBlobWriteResponse_InvalidError toFrozen();
 }
 
 /// Deeply immutable.
-final class BeginArtifactBlobWriteResponse_Invalid
-    implements BeginArtifactBlobWriteResponse_Invalid_orMutable {
+final class BeginArtifactBlobWriteResponse_InvalidError
+    implements BeginArtifactBlobWriteResponse_InvalidError_orMutable {
   @_core.override
   final _core.String reason;
   _skir.internal__UnrecognizedFields? _u;
 
-  factory BeginArtifactBlobWriteResponse_Invalid({
+  factory BeginArtifactBlobWriteResponse_InvalidError({
     required _core.String reason,
-  }) => BeginArtifactBlobWriteResponse_Invalid._(reason);
+  }) => BeginArtifactBlobWriteResponse_InvalidError._(reason);
 
-  BeginArtifactBlobWriteResponse_Invalid._(this.reason);
+  BeginArtifactBlobWriteResponse_InvalidError._(this.reason);
 
   /// Default instance with all fields set to their default values.
-  static final defaultInstance = BeginArtifactBlobWriteResponse_Invalid._("");
-
-  /// Returns a new mutable instance.
-  /// Fields are initialized to their default values.
-  static BeginArtifactBlobWriteResponse_Invalid_mutable mutable() =>
-      BeginArtifactBlobWriteResponse_Invalid_mutable._("");
-
-  /// Returns this instance (no-op).
-  @_core.Deprecated("This instance is already frozen.")
-  @_core.override
-  BeginArtifactBlobWriteResponse_Invalid toFrozen() => this;
-
-  /// Returns a mutable shallow copy of this instance.
-  BeginArtifactBlobWriteResponse_Invalid_mutable toMutable() =>
-      BeginArtifactBlobWriteResponse_Invalid_mutable._(this.reason);
-
-  @_core.override
-  _core.bool operator ==(other) {
-    if (_core.identical(this, other)) return true;
-    if (other is! BeginArtifactBlobWriteResponse_Invalid) return false;
-    return _skir.internal__listEquality.equals(
-      _equality_proxy,
-      other._equality_proxy,
-    );
-  }
-
-  @_core.override
-  _core.int get hashCode => _skir.internal__listEquality.hash(_equality_proxy);
-
-  _core.List get _equality_proxy => [this.reason];
-
-  @_core.override
-  _core.String toString() => _skir.internal__stringify(this, serializer);
-
-  /// Serializer for `BeginArtifactBlobWriteResponse_Invalid` instances.
-  static _skir.StructSerializer<
-    BeginArtifactBlobWriteResponse_Invalid,
-    BeginArtifactBlobWriteResponse_Invalid_mutable
-  >
-  get serializer {
-    if (_serializerBuilder.mustInitialize()) {
-      _serializerBuilder.addField(
-        "reason",
-        "reason",
-        0,
-        _skir.Serializers.string,
-        "",
-        (it) => it.reason,
-        (it, v) => it.reason = v,
-      );
-      _serializerBuilder.finalize();
-    }
-    return _serializerBuilder.serializer;
-  }
-
-  static final _serializerBuilder = _skir.internal__StructSerializerBuilder(
-    recordId: "service/v1/artifact.skir:BeginArtifactBlobWriteResponse.Invalid",
-    doc: "",
-    defaultInstance: defaultInstance,
-    newMutable: (it) => (it != null) ? it.toMutable() : mutable(),
-    toFrozen: (BeginArtifactBlobWriteResponse_Invalid_mutable it) =>
-        it.toFrozen(),
-    getUnrecognizedFields: (it) => it._u,
-    setUnrecognizedFields: (it, u) => it._u = u,
+  static final defaultInstance = BeginArtifactBlobWriteResponse_InvalidError._(
+    "",
   );
-}
-
-/// Mutable version of [BeginArtifactBlobWriteResponse_Invalid].
-final class BeginArtifactBlobWriteResponse_Invalid_mutable
-    implements BeginArtifactBlobWriteResponse_Invalid_orMutable {
-  _core.String reason;
-  _skir.internal__UnrecognizedFields? _u;
-
-  BeginArtifactBlobWriteResponse_Invalid_mutable._(this.reason);
-
-  /// Returns a deeply immutable copy of this instance.
-  @_core.override
-  BeginArtifactBlobWriteResponse_Invalid toFrozen() =>
-      BeginArtifactBlobWriteResponse_Invalid(reason: this.reason).._u = this._u;
-}
-
-// -----------------------------------------------------------------------------
-// struct BeginArtifactBlobWriteResponse.Conflict
-// -----------------------------------------------------------------------------
-
-sealed class BeginArtifactBlobWriteResponse_Conflict_orMutable {
-  _core.String get reason;
-
-  BeginArtifactBlobWriteResponse_Conflict toFrozen();
-}
-
-/// Deeply immutable.
-final class BeginArtifactBlobWriteResponse_Conflict
-    implements BeginArtifactBlobWriteResponse_Conflict_orMutable {
-  @_core.override
-  final _core.String reason;
-  _skir.internal__UnrecognizedFields? _u;
-
-  factory BeginArtifactBlobWriteResponse_Conflict({
-    required _core.String reason,
-  }) => BeginArtifactBlobWriteResponse_Conflict._(reason);
-
-  BeginArtifactBlobWriteResponse_Conflict._(this.reason);
-
-  /// Default instance with all fields set to their default values.
-  static final defaultInstance = BeginArtifactBlobWriteResponse_Conflict._("");
 
   /// Returns a new mutable instance.
   /// Fields are initialized to their default values.
-  static BeginArtifactBlobWriteResponse_Conflict_mutable mutable() =>
-      BeginArtifactBlobWriteResponse_Conflict_mutable._("");
+  static BeginArtifactBlobWriteResponse_InvalidError_mutable mutable() =>
+      BeginArtifactBlobWriteResponse_InvalidError_mutable._("");
 
   /// Returns this instance (no-op).
   @_core.Deprecated("This instance is already frozen.")
   @_core.override
-  BeginArtifactBlobWriteResponse_Conflict toFrozen() => this;
+  BeginArtifactBlobWriteResponse_InvalidError toFrozen() => this;
 
   /// Returns a mutable shallow copy of this instance.
-  BeginArtifactBlobWriteResponse_Conflict_mutable toMutable() =>
-      BeginArtifactBlobWriteResponse_Conflict_mutable._(this.reason);
+  BeginArtifactBlobWriteResponse_InvalidError_mutable toMutable() =>
+      BeginArtifactBlobWriteResponse_InvalidError_mutable._(this.reason);
 
   @_core.override
   _core.bool operator ==(other) {
     if (_core.identical(this, other)) return true;
-    if (other is! BeginArtifactBlobWriteResponse_Conflict) return false;
+    if (other is! BeginArtifactBlobWriteResponse_InvalidError) return false;
     return _skir.internal__listEquality.equals(
       _equality_proxy,
       other._equality_proxy,
@@ -3743,10 +3376,10 @@ final class BeginArtifactBlobWriteResponse_Conflict
   @_core.override
   _core.String toString() => _skir.internal__stringify(this, serializer);
 
-  /// Serializer for `BeginArtifactBlobWriteResponse_Conflict` instances.
+  /// Serializer for `BeginArtifactBlobWriteResponse_InvalidError` instances.
   static _skir.StructSerializer<
-    BeginArtifactBlobWriteResponse_Conflict,
-    BeginArtifactBlobWriteResponse_Conflict_mutable
+    BeginArtifactBlobWriteResponse_InvalidError,
+    BeginArtifactBlobWriteResponse_InvalidError_mutable
   >
   get serializer {
     if (_serializerBuilder.mustInitialize()) {
@@ -3766,71 +3399,78 @@ final class BeginArtifactBlobWriteResponse_Conflict
 
   static final _serializerBuilder = _skir.internal__StructSerializerBuilder(
     recordId:
-        "service/v1/artifact.skir:BeginArtifactBlobWriteResponse.Conflict",
+        "service/v1/artifact.skir:BeginArtifactBlobWriteResponse.InvalidError",
     doc: "",
     defaultInstance: defaultInstance,
     newMutable: (it) => (it != null) ? it.toMutable() : mutable(),
-    toFrozen: (BeginArtifactBlobWriteResponse_Conflict_mutable it) =>
+    toFrozen: (BeginArtifactBlobWriteResponse_InvalidError_mutable it) =>
         it.toFrozen(),
     getUnrecognizedFields: (it) => it._u,
     setUnrecognizedFields: (it, u) => it._u = u,
   );
 }
 
-/// Mutable version of [BeginArtifactBlobWriteResponse_Conflict].
-final class BeginArtifactBlobWriteResponse_Conflict_mutable
-    implements BeginArtifactBlobWriteResponse_Conflict_orMutable {
+/// Mutable version of [BeginArtifactBlobWriteResponse_InvalidError].
+final class BeginArtifactBlobWriteResponse_InvalidError_mutable
+    implements BeginArtifactBlobWriteResponse_InvalidError_orMutable {
   _core.String reason;
   _skir.internal__UnrecognizedFields? _u;
 
-  BeginArtifactBlobWriteResponse_Conflict_mutable._(this.reason);
+  BeginArtifactBlobWriteResponse_InvalidError_mutable._(this.reason);
 
   /// Returns a deeply immutable copy of this instance.
   @_core.override
-  BeginArtifactBlobWriteResponse_Conflict toFrozen() =>
-      BeginArtifactBlobWriteResponse_Conflict(reason: this.reason)
+  BeginArtifactBlobWriteResponse_InvalidError toFrozen() =>
+      BeginArtifactBlobWriteResponse_InvalidError(reason: this.reason)
         .._u = this._u;
 }
 
 // -----------------------------------------------------------------------------
-// struct BeginArtifactBlobWriteResponse.Unavailable
+// struct BeginArtifactBlobWriteResponse.ConflictError
 // -----------------------------------------------------------------------------
 
-sealed class BeginArtifactBlobWriteResponse_Unavailable_orMutable {
-  BeginArtifactBlobWriteResponse_Unavailable toFrozen();
+sealed class BeginArtifactBlobWriteResponse_ConflictError_orMutable {
+  _core.String get reason;
+
+  BeginArtifactBlobWriteResponse_ConflictError toFrozen();
 }
 
 /// Deeply immutable.
-final class BeginArtifactBlobWriteResponse_Unavailable
-    implements BeginArtifactBlobWriteResponse_Unavailable_orMutable {
+final class BeginArtifactBlobWriteResponse_ConflictError
+    implements BeginArtifactBlobWriteResponse_ConflictError_orMutable {
+  @_core.override
+  final _core.String reason;
   _skir.internal__UnrecognizedFields? _u;
 
-  factory BeginArtifactBlobWriteResponse_Unavailable() =>
-      BeginArtifactBlobWriteResponse_Unavailable._();
+  factory BeginArtifactBlobWriteResponse_ConflictError({
+    required _core.String reason,
+  }) => BeginArtifactBlobWriteResponse_ConflictError._(reason);
 
-  BeginArtifactBlobWriteResponse_Unavailable._();
+  BeginArtifactBlobWriteResponse_ConflictError._(this.reason);
 
   /// Default instance with all fields set to their default values.
-  static final defaultInstance = BeginArtifactBlobWriteResponse_Unavailable._();
+  static final defaultInstance = BeginArtifactBlobWriteResponse_ConflictError._(
+    "",
+  );
 
   /// Returns a new mutable instance.
   /// Fields are initialized to their default values.
-  static BeginArtifactBlobWriteResponse_Unavailable_mutable mutable() =>
-      BeginArtifactBlobWriteResponse_Unavailable_mutable._();
+  static BeginArtifactBlobWriteResponse_ConflictError_mutable mutable() =>
+      BeginArtifactBlobWriteResponse_ConflictError_mutable._("");
 
   /// Returns this instance (no-op).
   @_core.Deprecated("This instance is already frozen.")
   @_core.override
-  BeginArtifactBlobWriteResponse_Unavailable toFrozen() => this;
+  BeginArtifactBlobWriteResponse_ConflictError toFrozen() => this;
 
   /// Returns a mutable shallow copy of this instance.
-  BeginArtifactBlobWriteResponse_Unavailable_mutable toMutable() =>
-      BeginArtifactBlobWriteResponse_Unavailable_mutable._();
+  BeginArtifactBlobWriteResponse_ConflictError_mutable toMutable() =>
+      BeginArtifactBlobWriteResponse_ConflictError_mutable._(this.reason);
 
   @_core.override
   _core.bool operator ==(other) {
     if (_core.identical(this, other)) return true;
-    if (other is! BeginArtifactBlobWriteResponse_Unavailable) return false;
+    if (other is! BeginArtifactBlobWriteResponse_ConflictError) return false;
     return _skir.internal__listEquality.equals(
       _equality_proxy,
       other._equality_proxy,
@@ -3840,18 +3480,27 @@ final class BeginArtifactBlobWriteResponse_Unavailable
   @_core.override
   _core.int get hashCode => _skir.internal__listEquality.hash(_equality_proxy);
 
-  _core.List get _equality_proxy => [];
+  _core.List get _equality_proxy => [this.reason];
 
   @_core.override
   _core.String toString() => _skir.internal__stringify(this, serializer);
 
-  /// Serializer for `BeginArtifactBlobWriteResponse_Unavailable` instances.
+  /// Serializer for `BeginArtifactBlobWriteResponse_ConflictError` instances.
   static _skir.StructSerializer<
-    BeginArtifactBlobWriteResponse_Unavailable,
-    BeginArtifactBlobWriteResponse_Unavailable_mutable
+    BeginArtifactBlobWriteResponse_ConflictError,
+    BeginArtifactBlobWriteResponse_ConflictError_mutable
   >
   get serializer {
     if (_serializerBuilder.mustInitialize()) {
+      _serializerBuilder.addField(
+        "reason",
+        "reason",
+        0,
+        _skir.Serializers.string,
+        "",
+        (it) => it.reason,
+        (it, v) => it.reason = v,
+      );
       _serializerBuilder.finalize();
     }
     return _serializerBuilder.serializer;
@@ -3859,28 +3508,30 @@ final class BeginArtifactBlobWriteResponse_Unavailable
 
   static final _serializerBuilder = _skir.internal__StructSerializerBuilder(
     recordId:
-        "service/v1/artifact.skir:BeginArtifactBlobWriteResponse.Unavailable",
+        "service/v1/artifact.skir:BeginArtifactBlobWriteResponse.ConflictError",
     doc: "",
     defaultInstance: defaultInstance,
     newMutable: (it) => (it != null) ? it.toMutable() : mutable(),
-    toFrozen: (BeginArtifactBlobWriteResponse_Unavailable_mutable it) =>
+    toFrozen: (BeginArtifactBlobWriteResponse_ConflictError_mutable it) =>
         it.toFrozen(),
     getUnrecognizedFields: (it) => it._u,
     setUnrecognizedFields: (it, u) => it._u = u,
   );
 }
 
-/// Mutable version of [BeginArtifactBlobWriteResponse_Unavailable].
-final class BeginArtifactBlobWriteResponse_Unavailable_mutable
-    implements BeginArtifactBlobWriteResponse_Unavailable_orMutable {
+/// Mutable version of [BeginArtifactBlobWriteResponse_ConflictError].
+final class BeginArtifactBlobWriteResponse_ConflictError_mutable
+    implements BeginArtifactBlobWriteResponse_ConflictError_orMutable {
+  _core.String reason;
   _skir.internal__UnrecognizedFields? _u;
 
-  BeginArtifactBlobWriteResponse_Unavailable_mutable._();
+  BeginArtifactBlobWriteResponse_ConflictError_mutable._(this.reason);
 
   /// Returns a deeply immutable copy of this instance.
   @_core.override
-  BeginArtifactBlobWriteResponse_Unavailable toFrozen() =>
-      BeginArtifactBlobWriteResponse_Unavailable().._u = this._u;
+  BeginArtifactBlobWriteResponse_ConflictError toFrozen() =>
+      BeginArtifactBlobWriteResponse_ConflictError(reason: this.reason)
+        .._u = this._u;
 }
 
 // -----------------------------------------------------------------------------
@@ -3892,9 +3543,9 @@ final class BeginArtifactBlobWriteResponse_Unavailable_mutable
 ///   switch (e) {
 ///     case BeginArtifactBlobWriteResponse_unknown(): { ... }
 ///     case BeginArtifactBlobWriteResponse_accepted(:var value): { ... }
-///     case BeginArtifactBlobWriteResponse_invalid(:var value): { ... }
-///     case BeginArtifactBlobWriteResponse_conflict(:var value): { ... }
-///     case BeginArtifactBlobWriteResponse_unavailable(:var value): { ... }
+///     case BeginArtifactBlobWriteResponse_invalidError(:var value): { ... }
+///     case BeginArtifactBlobWriteResponse_conflictError(:var value): { ... }
+///     case BeginArtifactBlobWriteResponse_internalError(:var value): { ... }
 ///   }
 ///   ```
 ///
@@ -3917,39 +3568,39 @@ sealed class BeginArtifactBlobWriteResponse {
     BeginArtifactBlobWriteResponse_Accepted(offset: offset),
   );
 
-  /// Create a 'invalid' variant wrapping around the given value.
-  factory BeginArtifactBlobWriteResponse.wrapInvalid(
-    BeginArtifactBlobWriteResponse_Invalid value,
-  ) => BeginArtifactBlobWriteResponse_invalidWrapper._(value);
+  /// Create a 'invalid_error' variant wrapping around the given value.
+  factory BeginArtifactBlobWriteResponse.wrapInvalidError(
+    BeginArtifactBlobWriteResponse_InvalidError value,
+  ) => BeginArtifactBlobWriteResponse_invalidErrorWrapper._(value);
 
-  /// Same as `wrapInvalid(BeginArtifactBlobWriteResponse_Invalid(...))`.
-  factory BeginArtifactBlobWriteResponse.createInvalid({
+  /// Same as `wrapInvalidError(BeginArtifactBlobWriteResponse_InvalidError(...))`.
+  factory BeginArtifactBlobWriteResponse.createInvalidError({
     required _core.String reason,
-  }) => BeginArtifactBlobWriteResponse.wrapInvalid(
-    BeginArtifactBlobWriteResponse_Invalid(reason: reason),
+  }) => BeginArtifactBlobWriteResponse.wrapInvalidError(
+    BeginArtifactBlobWriteResponse_InvalidError(reason: reason),
   );
 
-  /// Create a 'conflict' variant wrapping around the given value.
-  factory BeginArtifactBlobWriteResponse.wrapConflict(
-    BeginArtifactBlobWriteResponse_Conflict value,
-  ) => BeginArtifactBlobWriteResponse_conflictWrapper._(value);
+  /// Create a 'conflict_error' variant wrapping around the given value.
+  factory BeginArtifactBlobWriteResponse.wrapConflictError(
+    BeginArtifactBlobWriteResponse_ConflictError value,
+  ) => BeginArtifactBlobWriteResponse_conflictErrorWrapper._(value);
 
-  /// Same as `wrapConflict(BeginArtifactBlobWriteResponse_Conflict(...))`.
-  factory BeginArtifactBlobWriteResponse.createConflict({
+  /// Same as `wrapConflictError(BeginArtifactBlobWriteResponse_ConflictError(...))`.
+  factory BeginArtifactBlobWriteResponse.createConflictError({
     required _core.String reason,
-  }) => BeginArtifactBlobWriteResponse.wrapConflict(
-    BeginArtifactBlobWriteResponse_Conflict(reason: reason),
+  }) => BeginArtifactBlobWriteResponse.wrapConflictError(
+    BeginArtifactBlobWriteResponse_ConflictError(reason: reason),
   );
 
-  /// Create a 'unavailable' variant wrapping around the given value.
-  factory BeginArtifactBlobWriteResponse.wrapUnavailable(
-    BeginArtifactBlobWriteResponse_Unavailable value,
-  ) => BeginArtifactBlobWriteResponse_unavailableWrapper._(value);
+  /// Create a 'internal_error' variant wrapping around the given value.
+  factory BeginArtifactBlobWriteResponse.wrapInternalError(
+    _lib_kernel_v1_errors.InternalError value,
+  ) => BeginArtifactBlobWriteResponse_internalErrorWrapper._(value);
 
-  /// Same as `wrapUnavailable(BeginArtifactBlobWriteResponse_Unavailable(...))`.
-  factory BeginArtifactBlobWriteResponse.createUnavailable() =>
-      BeginArtifactBlobWriteResponse.wrapUnavailable(
-        BeginArtifactBlobWriteResponse_Unavailable(),
+  /// Same as `wrapInternalError(_lib_kernel_v1_errors.InternalError(...))`.
+  factory BeginArtifactBlobWriteResponse.createInternalError() =>
+      BeginArtifactBlobWriteResponse.wrapInternalError(
+        _lib_kernel_v1_errors.InternalError(),
       );
 
   /// Returns the kind of variant held by this BeginArtifactBlobWriteResponse.
@@ -3970,34 +3621,36 @@ sealed class BeginArtifactBlobWriteResponse {
       );
       _serializerBuilder.addWrapperVariant(
         2,
-        "invalid",
-        "wrapInvalid",
-        BeginArtifactBlobWriteResponse_Invalid.serializer,
+        "invalid_error",
+        "wrapInvalidError",
+        BeginArtifactBlobWriteResponse_InvalidError.serializer,
         "",
-        BeginArtifactBlobWriteResponse_invalidWrapper._,
+        BeginArtifactBlobWriteResponse_invalidErrorWrapper._,
         (it) => it.value,
-        ordinal: BeginArtifactBlobWriteResponse_kind.invalidWrapper._ordinal,
+        ordinal:
+            BeginArtifactBlobWriteResponse_kind.invalidErrorWrapper._ordinal,
       );
       _serializerBuilder.addWrapperVariant(
         3,
-        "conflict",
-        "wrapConflict",
-        BeginArtifactBlobWriteResponse_Conflict.serializer,
+        "conflict_error",
+        "wrapConflictError",
+        BeginArtifactBlobWriteResponse_ConflictError.serializer,
         "",
-        BeginArtifactBlobWriteResponse_conflictWrapper._,
+        BeginArtifactBlobWriteResponse_conflictErrorWrapper._,
         (it) => it.value,
-        ordinal: BeginArtifactBlobWriteResponse_kind.conflictWrapper._ordinal,
+        ordinal:
+            BeginArtifactBlobWriteResponse_kind.conflictErrorWrapper._ordinal,
       );
       _serializerBuilder.addWrapperVariant(
         4,
-        "unavailable",
-        "wrapUnavailable",
-        BeginArtifactBlobWriteResponse_Unavailable.serializer,
+        "internal_error",
+        "wrapInternalError",
+        _lib_kernel_v1_errors.InternalError.serializer,
         "",
-        BeginArtifactBlobWriteResponse_unavailableWrapper._,
+        BeginArtifactBlobWriteResponse_internalErrorWrapper._,
         (it) => it.value,
         ordinal:
-            BeginArtifactBlobWriteResponse_kind.unavailableWrapper._ordinal,
+            BeginArtifactBlobWriteResponse_kind.internalErrorWrapper._ordinal,
       );
       _serializerBuilder.finalize();
     }
@@ -4020,9 +3673,9 @@ sealed class BeginArtifactBlobWriteResponse {
 enum BeginArtifactBlobWriteResponse_kind {
   unknown(0),
   acceptedWrapper(1),
-  invalidWrapper(2),
-  conflictWrapper(3),
-  unavailableWrapper(4);
+  invalidErrorWrapper(2),
+  conflictErrorWrapper(3),
+  internalErrorWrapper(4);
 
   final _core.int _ordinal;
 
@@ -4084,37 +3737,37 @@ final class BeginArtifactBlobWriteResponse_acceptedWrapper
       BeginArtifactBlobWriteResponse_kind.acceptedWrapper;
 }
 
-final class BeginArtifactBlobWriteResponse_invalidWrapper
+final class BeginArtifactBlobWriteResponse_invalidErrorWrapper
     extends _BeginArtifactBlobWriteResponse_wrapper {
-  final BeginArtifactBlobWriteResponse_Invalid value;
+  final BeginArtifactBlobWriteResponse_InvalidError value;
 
-  BeginArtifactBlobWriteResponse_invalidWrapper._(this.value);
+  BeginArtifactBlobWriteResponse_invalidErrorWrapper._(this.value);
 
   @_core.override
   BeginArtifactBlobWriteResponse_kind get kind =>
-      BeginArtifactBlobWriteResponse_kind.invalidWrapper;
+      BeginArtifactBlobWriteResponse_kind.invalidErrorWrapper;
 }
 
-final class BeginArtifactBlobWriteResponse_conflictWrapper
+final class BeginArtifactBlobWriteResponse_conflictErrorWrapper
     extends _BeginArtifactBlobWriteResponse_wrapper {
-  final BeginArtifactBlobWriteResponse_Conflict value;
+  final BeginArtifactBlobWriteResponse_ConflictError value;
 
-  BeginArtifactBlobWriteResponse_conflictWrapper._(this.value);
+  BeginArtifactBlobWriteResponse_conflictErrorWrapper._(this.value);
 
   @_core.override
   BeginArtifactBlobWriteResponse_kind get kind =>
-      BeginArtifactBlobWriteResponse_kind.conflictWrapper;
+      BeginArtifactBlobWriteResponse_kind.conflictErrorWrapper;
 }
 
-final class BeginArtifactBlobWriteResponse_unavailableWrapper
+final class BeginArtifactBlobWriteResponse_internalErrorWrapper
     extends _BeginArtifactBlobWriteResponse_wrapper {
-  final BeginArtifactBlobWriteResponse_Unavailable value;
+  final _lib_kernel_v1_errors.InternalError value;
 
-  BeginArtifactBlobWriteResponse_unavailableWrapper._(this.value);
+  BeginArtifactBlobWriteResponse_internalErrorWrapper._(this.value);
 
   @_core.override
   BeginArtifactBlobWriteResponse_kind get kind =>
-      BeginArtifactBlobWriteResponse_kind.unavailableWrapper;
+      BeginArtifactBlobWriteResponse_kind.internalErrorWrapper;
 }
 
 // -----------------------------------------------------------------------------
@@ -4372,44 +4025,45 @@ final class WriteArtifactBlobChunkResponse_Accepted_mutable
 }
 
 // -----------------------------------------------------------------------------
-// struct WriteArtifactBlobChunkResponse.NotFound
+// struct WriteArtifactBlobChunkResponse.NotFoundError
 // -----------------------------------------------------------------------------
 
-sealed class WriteArtifactBlobChunkResponse_NotFound_orMutable {
-  WriteArtifactBlobChunkResponse_NotFound toFrozen();
+sealed class WriteArtifactBlobChunkResponse_NotFoundError_orMutable {
+  WriteArtifactBlobChunkResponse_NotFoundError toFrozen();
 }
 
 /// Deeply immutable.
-final class WriteArtifactBlobChunkResponse_NotFound
-    implements WriteArtifactBlobChunkResponse_NotFound_orMutable {
+final class WriteArtifactBlobChunkResponse_NotFoundError
+    implements WriteArtifactBlobChunkResponse_NotFoundError_orMutable {
   _skir.internal__UnrecognizedFields? _u;
 
-  factory WriteArtifactBlobChunkResponse_NotFound() =>
-      WriteArtifactBlobChunkResponse_NotFound._();
+  factory WriteArtifactBlobChunkResponse_NotFoundError() =>
+      WriteArtifactBlobChunkResponse_NotFoundError._();
 
-  WriteArtifactBlobChunkResponse_NotFound._();
+  WriteArtifactBlobChunkResponse_NotFoundError._();
 
   /// Default instance with all fields set to their default values.
-  static final defaultInstance = WriteArtifactBlobChunkResponse_NotFound._();
+  static final defaultInstance =
+      WriteArtifactBlobChunkResponse_NotFoundError._();
 
   /// Returns a new mutable instance.
   /// Fields are initialized to their default values.
-  static WriteArtifactBlobChunkResponse_NotFound_mutable mutable() =>
-      WriteArtifactBlobChunkResponse_NotFound_mutable._();
+  static WriteArtifactBlobChunkResponse_NotFoundError_mutable mutable() =>
+      WriteArtifactBlobChunkResponse_NotFoundError_mutable._();
 
   /// Returns this instance (no-op).
   @_core.Deprecated("This instance is already frozen.")
   @_core.override
-  WriteArtifactBlobChunkResponse_NotFound toFrozen() => this;
+  WriteArtifactBlobChunkResponse_NotFoundError toFrozen() => this;
 
   /// Returns a mutable shallow copy of this instance.
-  WriteArtifactBlobChunkResponse_NotFound_mutable toMutable() =>
-      WriteArtifactBlobChunkResponse_NotFound_mutable._();
+  WriteArtifactBlobChunkResponse_NotFoundError_mutable toMutable() =>
+      WriteArtifactBlobChunkResponse_NotFoundError_mutable._();
 
   @_core.override
   _core.bool operator ==(other) {
     if (_core.identical(this, other)) return true;
-    if (other is! WriteArtifactBlobChunkResponse_NotFound) return false;
+    if (other is! WriteArtifactBlobChunkResponse_NotFoundError) return false;
     return _skir.internal__listEquality.equals(
       _equality_proxy,
       other._equality_proxy,
@@ -4424,10 +4078,10 @@ final class WriteArtifactBlobChunkResponse_NotFound
   @_core.override
   _core.String toString() => _skir.internal__stringify(this, serializer);
 
-  /// Serializer for `WriteArtifactBlobChunkResponse_NotFound` instances.
+  /// Serializer for `WriteArtifactBlobChunkResponse_NotFoundError` instances.
   static _skir.StructSerializer<
-    WriteArtifactBlobChunkResponse_NotFound,
-    WriteArtifactBlobChunkResponse_NotFound_mutable
+    WriteArtifactBlobChunkResponse_NotFoundError,
+    WriteArtifactBlobChunkResponse_NotFoundError_mutable
   >
   get serializer {
     if (_serializerBuilder.mustInitialize()) {
@@ -4438,74 +4092,76 @@ final class WriteArtifactBlobChunkResponse_NotFound
 
   static final _serializerBuilder = _skir.internal__StructSerializerBuilder(
     recordId:
-        "service/v1/artifact.skir:WriteArtifactBlobChunkResponse.NotFound",
+        "service/v1/artifact.skir:WriteArtifactBlobChunkResponse.NotFoundError",
     doc: "",
     defaultInstance: defaultInstance,
     newMutable: (it) => (it != null) ? it.toMutable() : mutable(),
-    toFrozen: (WriteArtifactBlobChunkResponse_NotFound_mutable it) =>
+    toFrozen: (WriteArtifactBlobChunkResponse_NotFoundError_mutable it) =>
         it.toFrozen(),
     getUnrecognizedFields: (it) => it._u,
     setUnrecognizedFields: (it, u) => it._u = u,
   );
 }
 
-/// Mutable version of [WriteArtifactBlobChunkResponse_NotFound].
-final class WriteArtifactBlobChunkResponse_NotFound_mutable
-    implements WriteArtifactBlobChunkResponse_NotFound_orMutable {
+/// Mutable version of [WriteArtifactBlobChunkResponse_NotFoundError].
+final class WriteArtifactBlobChunkResponse_NotFoundError_mutable
+    implements WriteArtifactBlobChunkResponse_NotFoundError_orMutable {
   _skir.internal__UnrecognizedFields? _u;
 
-  WriteArtifactBlobChunkResponse_NotFound_mutable._();
+  WriteArtifactBlobChunkResponse_NotFoundError_mutable._();
 
   /// Returns a deeply immutable copy of this instance.
   @_core.override
-  WriteArtifactBlobChunkResponse_NotFound toFrozen() =>
-      WriteArtifactBlobChunkResponse_NotFound().._u = this._u;
+  WriteArtifactBlobChunkResponse_NotFoundError toFrozen() =>
+      WriteArtifactBlobChunkResponse_NotFoundError().._u = this._u;
 }
 
 // -----------------------------------------------------------------------------
-// struct WriteArtifactBlobChunkResponse.Invalid
+// struct WriteArtifactBlobChunkResponse.InvalidError
 // -----------------------------------------------------------------------------
 
-sealed class WriteArtifactBlobChunkResponse_Invalid_orMutable {
+sealed class WriteArtifactBlobChunkResponse_InvalidError_orMutable {
   _core.String get reason;
 
-  WriteArtifactBlobChunkResponse_Invalid toFrozen();
+  WriteArtifactBlobChunkResponse_InvalidError toFrozen();
 }
 
 /// Deeply immutable.
-final class WriteArtifactBlobChunkResponse_Invalid
-    implements WriteArtifactBlobChunkResponse_Invalid_orMutable {
+final class WriteArtifactBlobChunkResponse_InvalidError
+    implements WriteArtifactBlobChunkResponse_InvalidError_orMutable {
   @_core.override
   final _core.String reason;
   _skir.internal__UnrecognizedFields? _u;
 
-  factory WriteArtifactBlobChunkResponse_Invalid({
+  factory WriteArtifactBlobChunkResponse_InvalidError({
     required _core.String reason,
-  }) => WriteArtifactBlobChunkResponse_Invalid._(reason);
+  }) => WriteArtifactBlobChunkResponse_InvalidError._(reason);
 
-  WriteArtifactBlobChunkResponse_Invalid._(this.reason);
+  WriteArtifactBlobChunkResponse_InvalidError._(this.reason);
 
   /// Default instance with all fields set to their default values.
-  static final defaultInstance = WriteArtifactBlobChunkResponse_Invalid._("");
+  static final defaultInstance = WriteArtifactBlobChunkResponse_InvalidError._(
+    "",
+  );
 
   /// Returns a new mutable instance.
   /// Fields are initialized to their default values.
-  static WriteArtifactBlobChunkResponse_Invalid_mutable mutable() =>
-      WriteArtifactBlobChunkResponse_Invalid_mutable._("");
+  static WriteArtifactBlobChunkResponse_InvalidError_mutable mutable() =>
+      WriteArtifactBlobChunkResponse_InvalidError_mutable._("");
 
   /// Returns this instance (no-op).
   @_core.Deprecated("This instance is already frozen.")
   @_core.override
-  WriteArtifactBlobChunkResponse_Invalid toFrozen() => this;
+  WriteArtifactBlobChunkResponse_InvalidError toFrozen() => this;
 
   /// Returns a mutable shallow copy of this instance.
-  WriteArtifactBlobChunkResponse_Invalid_mutable toMutable() =>
-      WriteArtifactBlobChunkResponse_Invalid_mutable._(this.reason);
+  WriteArtifactBlobChunkResponse_InvalidError_mutable toMutable() =>
+      WriteArtifactBlobChunkResponse_InvalidError_mutable._(this.reason);
 
   @_core.override
   _core.bool operator ==(other) {
     if (_core.identical(this, other)) return true;
-    if (other is! WriteArtifactBlobChunkResponse_Invalid) return false;
+    if (other is! WriteArtifactBlobChunkResponse_InvalidError) return false;
     return _skir.internal__listEquality.equals(
       _equality_proxy,
       other._equality_proxy,
@@ -4520,115 +4176,10 @@ final class WriteArtifactBlobChunkResponse_Invalid
   @_core.override
   _core.String toString() => _skir.internal__stringify(this, serializer);
 
-  /// Serializer for `WriteArtifactBlobChunkResponse_Invalid` instances.
+  /// Serializer for `WriteArtifactBlobChunkResponse_InvalidError` instances.
   static _skir.StructSerializer<
-    WriteArtifactBlobChunkResponse_Invalid,
-    WriteArtifactBlobChunkResponse_Invalid_mutable
-  >
-  get serializer {
-    if (_serializerBuilder.mustInitialize()) {
-      _serializerBuilder.addField(
-        "reason",
-        "reason",
-        0,
-        _skir.Serializers.string,
-        "",
-        (it) => it.reason,
-        (it, v) => it.reason = v,
-      );
-      _serializerBuilder.finalize();
-    }
-    return _serializerBuilder.serializer;
-  }
-
-  static final _serializerBuilder = _skir.internal__StructSerializerBuilder(
-    recordId: "service/v1/artifact.skir:WriteArtifactBlobChunkResponse.Invalid",
-    doc: "",
-    defaultInstance: defaultInstance,
-    newMutable: (it) => (it != null) ? it.toMutable() : mutable(),
-    toFrozen: (WriteArtifactBlobChunkResponse_Invalid_mutable it) =>
-        it.toFrozen(),
-    getUnrecognizedFields: (it) => it._u,
-    setUnrecognizedFields: (it, u) => it._u = u,
-  );
-}
-
-/// Mutable version of [WriteArtifactBlobChunkResponse_Invalid].
-final class WriteArtifactBlobChunkResponse_Invalid_mutable
-    implements WriteArtifactBlobChunkResponse_Invalid_orMutable {
-  _core.String reason;
-  _skir.internal__UnrecognizedFields? _u;
-
-  WriteArtifactBlobChunkResponse_Invalid_mutable._(this.reason);
-
-  /// Returns a deeply immutable copy of this instance.
-  @_core.override
-  WriteArtifactBlobChunkResponse_Invalid toFrozen() =>
-      WriteArtifactBlobChunkResponse_Invalid(reason: this.reason).._u = this._u;
-}
-
-// -----------------------------------------------------------------------------
-// struct WriteArtifactBlobChunkResponse.Conflict
-// -----------------------------------------------------------------------------
-
-sealed class WriteArtifactBlobChunkResponse_Conflict_orMutable {
-  _core.String get reason;
-
-  WriteArtifactBlobChunkResponse_Conflict toFrozen();
-}
-
-/// Deeply immutable.
-final class WriteArtifactBlobChunkResponse_Conflict
-    implements WriteArtifactBlobChunkResponse_Conflict_orMutable {
-  @_core.override
-  final _core.String reason;
-  _skir.internal__UnrecognizedFields? _u;
-
-  factory WriteArtifactBlobChunkResponse_Conflict({
-    required _core.String reason,
-  }) => WriteArtifactBlobChunkResponse_Conflict._(reason);
-
-  WriteArtifactBlobChunkResponse_Conflict._(this.reason);
-
-  /// Default instance with all fields set to their default values.
-  static final defaultInstance = WriteArtifactBlobChunkResponse_Conflict._("");
-
-  /// Returns a new mutable instance.
-  /// Fields are initialized to their default values.
-  static WriteArtifactBlobChunkResponse_Conflict_mutable mutable() =>
-      WriteArtifactBlobChunkResponse_Conflict_mutable._("");
-
-  /// Returns this instance (no-op).
-  @_core.Deprecated("This instance is already frozen.")
-  @_core.override
-  WriteArtifactBlobChunkResponse_Conflict toFrozen() => this;
-
-  /// Returns a mutable shallow copy of this instance.
-  WriteArtifactBlobChunkResponse_Conflict_mutable toMutable() =>
-      WriteArtifactBlobChunkResponse_Conflict_mutable._(this.reason);
-
-  @_core.override
-  _core.bool operator ==(other) {
-    if (_core.identical(this, other)) return true;
-    if (other is! WriteArtifactBlobChunkResponse_Conflict) return false;
-    return _skir.internal__listEquality.equals(
-      _equality_proxy,
-      other._equality_proxy,
-    );
-  }
-
-  @_core.override
-  _core.int get hashCode => _skir.internal__listEquality.hash(_equality_proxy);
-
-  _core.List get _equality_proxy => [this.reason];
-
-  @_core.override
-  _core.String toString() => _skir.internal__stringify(this, serializer);
-
-  /// Serializer for `WriteArtifactBlobChunkResponse_Conflict` instances.
-  static _skir.StructSerializer<
-    WriteArtifactBlobChunkResponse_Conflict,
-    WriteArtifactBlobChunkResponse_Conflict_mutable
+    WriteArtifactBlobChunkResponse_InvalidError,
+    WriteArtifactBlobChunkResponse_InvalidError_mutable
   >
   get serializer {
     if (_serializerBuilder.mustInitialize()) {
@@ -4648,71 +4199,78 @@ final class WriteArtifactBlobChunkResponse_Conflict
 
   static final _serializerBuilder = _skir.internal__StructSerializerBuilder(
     recordId:
-        "service/v1/artifact.skir:WriteArtifactBlobChunkResponse.Conflict",
+        "service/v1/artifact.skir:WriteArtifactBlobChunkResponse.InvalidError",
     doc: "",
     defaultInstance: defaultInstance,
     newMutable: (it) => (it != null) ? it.toMutable() : mutable(),
-    toFrozen: (WriteArtifactBlobChunkResponse_Conflict_mutable it) =>
+    toFrozen: (WriteArtifactBlobChunkResponse_InvalidError_mutable it) =>
         it.toFrozen(),
     getUnrecognizedFields: (it) => it._u,
     setUnrecognizedFields: (it, u) => it._u = u,
   );
 }
 
-/// Mutable version of [WriteArtifactBlobChunkResponse_Conflict].
-final class WriteArtifactBlobChunkResponse_Conflict_mutable
-    implements WriteArtifactBlobChunkResponse_Conflict_orMutable {
+/// Mutable version of [WriteArtifactBlobChunkResponse_InvalidError].
+final class WriteArtifactBlobChunkResponse_InvalidError_mutable
+    implements WriteArtifactBlobChunkResponse_InvalidError_orMutable {
   _core.String reason;
   _skir.internal__UnrecognizedFields? _u;
 
-  WriteArtifactBlobChunkResponse_Conflict_mutable._(this.reason);
+  WriteArtifactBlobChunkResponse_InvalidError_mutable._(this.reason);
 
   /// Returns a deeply immutable copy of this instance.
   @_core.override
-  WriteArtifactBlobChunkResponse_Conflict toFrozen() =>
-      WriteArtifactBlobChunkResponse_Conflict(reason: this.reason)
+  WriteArtifactBlobChunkResponse_InvalidError toFrozen() =>
+      WriteArtifactBlobChunkResponse_InvalidError(reason: this.reason)
         .._u = this._u;
 }
 
 // -----------------------------------------------------------------------------
-// struct WriteArtifactBlobChunkResponse.Unavailable
+// struct WriteArtifactBlobChunkResponse.ConflictError
 // -----------------------------------------------------------------------------
 
-sealed class WriteArtifactBlobChunkResponse_Unavailable_orMutable {
-  WriteArtifactBlobChunkResponse_Unavailable toFrozen();
+sealed class WriteArtifactBlobChunkResponse_ConflictError_orMutable {
+  _core.String get reason;
+
+  WriteArtifactBlobChunkResponse_ConflictError toFrozen();
 }
 
 /// Deeply immutable.
-final class WriteArtifactBlobChunkResponse_Unavailable
-    implements WriteArtifactBlobChunkResponse_Unavailable_orMutable {
+final class WriteArtifactBlobChunkResponse_ConflictError
+    implements WriteArtifactBlobChunkResponse_ConflictError_orMutable {
+  @_core.override
+  final _core.String reason;
   _skir.internal__UnrecognizedFields? _u;
 
-  factory WriteArtifactBlobChunkResponse_Unavailable() =>
-      WriteArtifactBlobChunkResponse_Unavailable._();
+  factory WriteArtifactBlobChunkResponse_ConflictError({
+    required _core.String reason,
+  }) => WriteArtifactBlobChunkResponse_ConflictError._(reason);
 
-  WriteArtifactBlobChunkResponse_Unavailable._();
+  WriteArtifactBlobChunkResponse_ConflictError._(this.reason);
 
   /// Default instance with all fields set to their default values.
-  static final defaultInstance = WriteArtifactBlobChunkResponse_Unavailable._();
+  static final defaultInstance = WriteArtifactBlobChunkResponse_ConflictError._(
+    "",
+  );
 
   /// Returns a new mutable instance.
   /// Fields are initialized to their default values.
-  static WriteArtifactBlobChunkResponse_Unavailable_mutable mutable() =>
-      WriteArtifactBlobChunkResponse_Unavailable_mutable._();
+  static WriteArtifactBlobChunkResponse_ConflictError_mutable mutable() =>
+      WriteArtifactBlobChunkResponse_ConflictError_mutable._("");
 
   /// Returns this instance (no-op).
   @_core.Deprecated("This instance is already frozen.")
   @_core.override
-  WriteArtifactBlobChunkResponse_Unavailable toFrozen() => this;
+  WriteArtifactBlobChunkResponse_ConflictError toFrozen() => this;
 
   /// Returns a mutable shallow copy of this instance.
-  WriteArtifactBlobChunkResponse_Unavailable_mutable toMutable() =>
-      WriteArtifactBlobChunkResponse_Unavailable_mutable._();
+  WriteArtifactBlobChunkResponse_ConflictError_mutable toMutable() =>
+      WriteArtifactBlobChunkResponse_ConflictError_mutable._(this.reason);
 
   @_core.override
   _core.bool operator ==(other) {
     if (_core.identical(this, other)) return true;
-    if (other is! WriteArtifactBlobChunkResponse_Unavailable) return false;
+    if (other is! WriteArtifactBlobChunkResponse_ConflictError) return false;
     return _skir.internal__listEquality.equals(
       _equality_proxy,
       other._equality_proxy,
@@ -4722,18 +4280,27 @@ final class WriteArtifactBlobChunkResponse_Unavailable
   @_core.override
   _core.int get hashCode => _skir.internal__listEquality.hash(_equality_proxy);
 
-  _core.List get _equality_proxy => [];
+  _core.List get _equality_proxy => [this.reason];
 
   @_core.override
   _core.String toString() => _skir.internal__stringify(this, serializer);
 
-  /// Serializer for `WriteArtifactBlobChunkResponse_Unavailable` instances.
+  /// Serializer for `WriteArtifactBlobChunkResponse_ConflictError` instances.
   static _skir.StructSerializer<
-    WriteArtifactBlobChunkResponse_Unavailable,
-    WriteArtifactBlobChunkResponse_Unavailable_mutable
+    WriteArtifactBlobChunkResponse_ConflictError,
+    WriteArtifactBlobChunkResponse_ConflictError_mutable
   >
   get serializer {
     if (_serializerBuilder.mustInitialize()) {
+      _serializerBuilder.addField(
+        "reason",
+        "reason",
+        0,
+        _skir.Serializers.string,
+        "",
+        (it) => it.reason,
+        (it, v) => it.reason = v,
+      );
       _serializerBuilder.finalize();
     }
     return _serializerBuilder.serializer;
@@ -4741,28 +4308,30 @@ final class WriteArtifactBlobChunkResponse_Unavailable
 
   static final _serializerBuilder = _skir.internal__StructSerializerBuilder(
     recordId:
-        "service/v1/artifact.skir:WriteArtifactBlobChunkResponse.Unavailable",
+        "service/v1/artifact.skir:WriteArtifactBlobChunkResponse.ConflictError",
     doc: "",
     defaultInstance: defaultInstance,
     newMutable: (it) => (it != null) ? it.toMutable() : mutable(),
-    toFrozen: (WriteArtifactBlobChunkResponse_Unavailable_mutable it) =>
+    toFrozen: (WriteArtifactBlobChunkResponse_ConflictError_mutable it) =>
         it.toFrozen(),
     getUnrecognizedFields: (it) => it._u,
     setUnrecognizedFields: (it, u) => it._u = u,
   );
 }
 
-/// Mutable version of [WriteArtifactBlobChunkResponse_Unavailable].
-final class WriteArtifactBlobChunkResponse_Unavailable_mutable
-    implements WriteArtifactBlobChunkResponse_Unavailable_orMutable {
+/// Mutable version of [WriteArtifactBlobChunkResponse_ConflictError].
+final class WriteArtifactBlobChunkResponse_ConflictError_mutable
+    implements WriteArtifactBlobChunkResponse_ConflictError_orMutable {
+  _core.String reason;
   _skir.internal__UnrecognizedFields? _u;
 
-  WriteArtifactBlobChunkResponse_Unavailable_mutable._();
+  WriteArtifactBlobChunkResponse_ConflictError_mutable._(this.reason);
 
   /// Returns a deeply immutable copy of this instance.
   @_core.override
-  WriteArtifactBlobChunkResponse_Unavailable toFrozen() =>
-      WriteArtifactBlobChunkResponse_Unavailable().._u = this._u;
+  WriteArtifactBlobChunkResponse_ConflictError toFrozen() =>
+      WriteArtifactBlobChunkResponse_ConflictError(reason: this.reason)
+        .._u = this._u;
 }
 
 // -----------------------------------------------------------------------------
@@ -4774,10 +4343,10 @@ final class WriteArtifactBlobChunkResponse_Unavailable_mutable
 ///   switch (e) {
 ///     case WriteArtifactBlobChunkResponse_unknown(): { ... }
 ///     case WriteArtifactBlobChunkResponse_accepted(:var value): { ... }
-///     case WriteArtifactBlobChunkResponse_notFound(:var value): { ... }
-///     case WriteArtifactBlobChunkResponse_invalid(:var value): { ... }
-///     case WriteArtifactBlobChunkResponse_conflict(:var value): { ... }
-///     case WriteArtifactBlobChunkResponse_unavailable(:var value): { ... }
+///     case WriteArtifactBlobChunkResponse_notFoundError(:var value): { ... }
+///     case WriteArtifactBlobChunkResponse_invalidError(:var value): { ... }
+///     case WriteArtifactBlobChunkResponse_conflictError(:var value): { ... }
+///     case WriteArtifactBlobChunkResponse_internalError(:var value): { ... }
 ///   }
 ///   ```
 ///
@@ -4800,50 +4369,50 @@ sealed class WriteArtifactBlobChunkResponse {
     WriteArtifactBlobChunkResponse_Accepted(offset: offset),
   );
 
-  /// Create a 'not_found' variant wrapping around the given value.
-  factory WriteArtifactBlobChunkResponse.wrapNotFound(
-    WriteArtifactBlobChunkResponse_NotFound value,
-  ) => WriteArtifactBlobChunkResponse_notFoundWrapper._(value);
+  /// Create a 'not_found_error' variant wrapping around the given value.
+  factory WriteArtifactBlobChunkResponse.wrapNotFoundError(
+    WriteArtifactBlobChunkResponse_NotFoundError value,
+  ) => WriteArtifactBlobChunkResponse_notFoundErrorWrapper._(value);
 
-  /// Same as `wrapNotFound(WriteArtifactBlobChunkResponse_NotFound(...))`.
-  factory WriteArtifactBlobChunkResponse.createNotFound() =>
-      WriteArtifactBlobChunkResponse.wrapNotFound(
-        WriteArtifactBlobChunkResponse_NotFound(),
+  /// Same as `wrapNotFoundError(WriteArtifactBlobChunkResponse_NotFoundError(...))`.
+  factory WriteArtifactBlobChunkResponse.createNotFoundError() =>
+      WriteArtifactBlobChunkResponse.wrapNotFoundError(
+        WriteArtifactBlobChunkResponse_NotFoundError(),
       );
 
-  /// Create a 'invalid' variant wrapping around the given value.
-  factory WriteArtifactBlobChunkResponse.wrapInvalid(
-    WriteArtifactBlobChunkResponse_Invalid value,
-  ) => WriteArtifactBlobChunkResponse_invalidWrapper._(value);
+  /// Create a 'invalid_error' variant wrapping around the given value.
+  factory WriteArtifactBlobChunkResponse.wrapInvalidError(
+    WriteArtifactBlobChunkResponse_InvalidError value,
+  ) => WriteArtifactBlobChunkResponse_invalidErrorWrapper._(value);
 
-  /// Same as `wrapInvalid(WriteArtifactBlobChunkResponse_Invalid(...))`.
-  factory WriteArtifactBlobChunkResponse.createInvalid({
+  /// Same as `wrapInvalidError(WriteArtifactBlobChunkResponse_InvalidError(...))`.
+  factory WriteArtifactBlobChunkResponse.createInvalidError({
     required _core.String reason,
-  }) => WriteArtifactBlobChunkResponse.wrapInvalid(
-    WriteArtifactBlobChunkResponse_Invalid(reason: reason),
+  }) => WriteArtifactBlobChunkResponse.wrapInvalidError(
+    WriteArtifactBlobChunkResponse_InvalidError(reason: reason),
   );
 
-  /// Create a 'conflict' variant wrapping around the given value.
-  factory WriteArtifactBlobChunkResponse.wrapConflict(
-    WriteArtifactBlobChunkResponse_Conflict value,
-  ) => WriteArtifactBlobChunkResponse_conflictWrapper._(value);
+  /// Create a 'conflict_error' variant wrapping around the given value.
+  factory WriteArtifactBlobChunkResponse.wrapConflictError(
+    WriteArtifactBlobChunkResponse_ConflictError value,
+  ) => WriteArtifactBlobChunkResponse_conflictErrorWrapper._(value);
 
-  /// Same as `wrapConflict(WriteArtifactBlobChunkResponse_Conflict(...))`.
-  factory WriteArtifactBlobChunkResponse.createConflict({
+  /// Same as `wrapConflictError(WriteArtifactBlobChunkResponse_ConflictError(...))`.
+  factory WriteArtifactBlobChunkResponse.createConflictError({
     required _core.String reason,
-  }) => WriteArtifactBlobChunkResponse.wrapConflict(
-    WriteArtifactBlobChunkResponse_Conflict(reason: reason),
+  }) => WriteArtifactBlobChunkResponse.wrapConflictError(
+    WriteArtifactBlobChunkResponse_ConflictError(reason: reason),
   );
 
-  /// Create a 'unavailable' variant wrapping around the given value.
-  factory WriteArtifactBlobChunkResponse.wrapUnavailable(
-    WriteArtifactBlobChunkResponse_Unavailable value,
-  ) => WriteArtifactBlobChunkResponse_unavailableWrapper._(value);
+  /// Create a 'internal_error' variant wrapping around the given value.
+  factory WriteArtifactBlobChunkResponse.wrapInternalError(
+    _lib_kernel_v1_errors.InternalError value,
+  ) => WriteArtifactBlobChunkResponse_internalErrorWrapper._(value);
 
-  /// Same as `wrapUnavailable(WriteArtifactBlobChunkResponse_Unavailable(...))`.
-  factory WriteArtifactBlobChunkResponse.createUnavailable() =>
-      WriteArtifactBlobChunkResponse.wrapUnavailable(
-        WriteArtifactBlobChunkResponse_Unavailable(),
+  /// Same as `wrapInternalError(_lib_kernel_v1_errors.InternalError(...))`.
+  factory WriteArtifactBlobChunkResponse.createInternalError() =>
+      WriteArtifactBlobChunkResponse.wrapInternalError(
+        _lib_kernel_v1_errors.InternalError(),
       );
 
   /// Returns the kind of variant held by this WriteArtifactBlobChunkResponse.
@@ -4864,44 +4433,47 @@ sealed class WriteArtifactBlobChunkResponse {
       );
       _serializerBuilder.addWrapperVariant(
         2,
-        "not_found",
-        "wrapNotFound",
-        WriteArtifactBlobChunkResponse_NotFound.serializer,
+        "not_found_error",
+        "wrapNotFoundError",
+        WriteArtifactBlobChunkResponse_NotFoundError.serializer,
         "",
-        WriteArtifactBlobChunkResponse_notFoundWrapper._,
+        WriteArtifactBlobChunkResponse_notFoundErrorWrapper._,
         (it) => it.value,
-        ordinal: WriteArtifactBlobChunkResponse_kind.notFoundWrapper._ordinal,
+        ordinal:
+            WriteArtifactBlobChunkResponse_kind.notFoundErrorWrapper._ordinal,
       );
       _serializerBuilder.addWrapperVariant(
         3,
-        "invalid",
-        "wrapInvalid",
-        WriteArtifactBlobChunkResponse_Invalid.serializer,
+        "invalid_error",
+        "wrapInvalidError",
+        WriteArtifactBlobChunkResponse_InvalidError.serializer,
         "",
-        WriteArtifactBlobChunkResponse_invalidWrapper._,
+        WriteArtifactBlobChunkResponse_invalidErrorWrapper._,
         (it) => it.value,
-        ordinal: WriteArtifactBlobChunkResponse_kind.invalidWrapper._ordinal,
+        ordinal:
+            WriteArtifactBlobChunkResponse_kind.invalidErrorWrapper._ordinal,
       );
       _serializerBuilder.addWrapperVariant(
         4,
-        "conflict",
-        "wrapConflict",
-        WriteArtifactBlobChunkResponse_Conflict.serializer,
+        "conflict_error",
+        "wrapConflictError",
+        WriteArtifactBlobChunkResponse_ConflictError.serializer,
         "",
-        WriteArtifactBlobChunkResponse_conflictWrapper._,
+        WriteArtifactBlobChunkResponse_conflictErrorWrapper._,
         (it) => it.value,
-        ordinal: WriteArtifactBlobChunkResponse_kind.conflictWrapper._ordinal,
+        ordinal:
+            WriteArtifactBlobChunkResponse_kind.conflictErrorWrapper._ordinal,
       );
       _serializerBuilder.addWrapperVariant(
         5,
-        "unavailable",
-        "wrapUnavailable",
-        WriteArtifactBlobChunkResponse_Unavailable.serializer,
+        "internal_error",
+        "wrapInternalError",
+        _lib_kernel_v1_errors.InternalError.serializer,
         "",
-        WriteArtifactBlobChunkResponse_unavailableWrapper._,
+        WriteArtifactBlobChunkResponse_internalErrorWrapper._,
         (it) => it.value,
         ordinal:
-            WriteArtifactBlobChunkResponse_kind.unavailableWrapper._ordinal,
+            WriteArtifactBlobChunkResponse_kind.internalErrorWrapper._ordinal,
       );
       _serializerBuilder.finalize();
     }
@@ -4924,10 +4496,10 @@ sealed class WriteArtifactBlobChunkResponse {
 enum WriteArtifactBlobChunkResponse_kind {
   unknown(0),
   acceptedWrapper(1),
-  notFoundWrapper(2),
-  invalidWrapper(3),
-  conflictWrapper(4),
-  unavailableWrapper(5);
+  notFoundErrorWrapper(2),
+  invalidErrorWrapper(3),
+  conflictErrorWrapper(4),
+  internalErrorWrapper(5);
 
   final _core.int _ordinal;
 
@@ -4989,48 +4561,48 @@ final class WriteArtifactBlobChunkResponse_acceptedWrapper
       WriteArtifactBlobChunkResponse_kind.acceptedWrapper;
 }
 
-final class WriteArtifactBlobChunkResponse_notFoundWrapper
+final class WriteArtifactBlobChunkResponse_notFoundErrorWrapper
     extends _WriteArtifactBlobChunkResponse_wrapper {
-  final WriteArtifactBlobChunkResponse_NotFound value;
+  final WriteArtifactBlobChunkResponse_NotFoundError value;
 
-  WriteArtifactBlobChunkResponse_notFoundWrapper._(this.value);
+  WriteArtifactBlobChunkResponse_notFoundErrorWrapper._(this.value);
 
   @_core.override
   WriteArtifactBlobChunkResponse_kind get kind =>
-      WriteArtifactBlobChunkResponse_kind.notFoundWrapper;
+      WriteArtifactBlobChunkResponse_kind.notFoundErrorWrapper;
 }
 
-final class WriteArtifactBlobChunkResponse_invalidWrapper
+final class WriteArtifactBlobChunkResponse_invalidErrorWrapper
     extends _WriteArtifactBlobChunkResponse_wrapper {
-  final WriteArtifactBlobChunkResponse_Invalid value;
+  final WriteArtifactBlobChunkResponse_InvalidError value;
 
-  WriteArtifactBlobChunkResponse_invalidWrapper._(this.value);
+  WriteArtifactBlobChunkResponse_invalidErrorWrapper._(this.value);
 
   @_core.override
   WriteArtifactBlobChunkResponse_kind get kind =>
-      WriteArtifactBlobChunkResponse_kind.invalidWrapper;
+      WriteArtifactBlobChunkResponse_kind.invalidErrorWrapper;
 }
 
-final class WriteArtifactBlobChunkResponse_conflictWrapper
+final class WriteArtifactBlobChunkResponse_conflictErrorWrapper
     extends _WriteArtifactBlobChunkResponse_wrapper {
-  final WriteArtifactBlobChunkResponse_Conflict value;
+  final WriteArtifactBlobChunkResponse_ConflictError value;
 
-  WriteArtifactBlobChunkResponse_conflictWrapper._(this.value);
+  WriteArtifactBlobChunkResponse_conflictErrorWrapper._(this.value);
 
   @_core.override
   WriteArtifactBlobChunkResponse_kind get kind =>
-      WriteArtifactBlobChunkResponse_kind.conflictWrapper;
+      WriteArtifactBlobChunkResponse_kind.conflictErrorWrapper;
 }
 
-final class WriteArtifactBlobChunkResponse_unavailableWrapper
+final class WriteArtifactBlobChunkResponse_internalErrorWrapper
     extends _WriteArtifactBlobChunkResponse_wrapper {
-  final WriteArtifactBlobChunkResponse_Unavailable value;
+  final _lib_kernel_v1_errors.InternalError value;
 
-  WriteArtifactBlobChunkResponse_unavailableWrapper._(this.value);
+  WriteArtifactBlobChunkResponse_internalErrorWrapper._(this.value);
 
   @_core.override
   WriteArtifactBlobChunkResponse_kind get kind =>
-      WriteArtifactBlobChunkResponse_kind.unavailableWrapper;
+      WriteArtifactBlobChunkResponse_kind.internalErrorWrapper;
 }
 
 // -----------------------------------------------------------------------------
@@ -5139,354 +4711,45 @@ final class CompleteArtifactBlobWriteRequest_mutable
 }
 
 // -----------------------------------------------------------------------------
-// struct CompleteArtifactBlobWriteResponse.NotFound
+// struct CompleteArtifactBlobWriteResponse.NotFoundError
 // -----------------------------------------------------------------------------
 
-sealed class CompleteArtifactBlobWriteResponse_NotFound_orMutable {
-  CompleteArtifactBlobWriteResponse_NotFound toFrozen();
+sealed class CompleteArtifactBlobWriteResponse_NotFoundError_orMutable {
+  CompleteArtifactBlobWriteResponse_NotFoundError toFrozen();
 }
 
 /// Deeply immutable.
-final class CompleteArtifactBlobWriteResponse_NotFound
-    implements CompleteArtifactBlobWriteResponse_NotFound_orMutable {
+final class CompleteArtifactBlobWriteResponse_NotFoundError
+    implements CompleteArtifactBlobWriteResponse_NotFoundError_orMutable {
   _skir.internal__UnrecognizedFields? _u;
 
-  factory CompleteArtifactBlobWriteResponse_NotFound() =>
-      CompleteArtifactBlobWriteResponse_NotFound._();
+  factory CompleteArtifactBlobWriteResponse_NotFoundError() =>
+      CompleteArtifactBlobWriteResponse_NotFoundError._();
 
-  CompleteArtifactBlobWriteResponse_NotFound._();
-
-  /// Default instance with all fields set to their default values.
-  static final defaultInstance = CompleteArtifactBlobWriteResponse_NotFound._();
-
-  /// Returns a new mutable instance.
-  /// Fields are initialized to their default values.
-  static CompleteArtifactBlobWriteResponse_NotFound_mutable mutable() =>
-      CompleteArtifactBlobWriteResponse_NotFound_mutable._();
-
-  /// Returns this instance (no-op).
-  @_core.Deprecated("This instance is already frozen.")
-  @_core.override
-  CompleteArtifactBlobWriteResponse_NotFound toFrozen() => this;
-
-  /// Returns a mutable shallow copy of this instance.
-  CompleteArtifactBlobWriteResponse_NotFound_mutable toMutable() =>
-      CompleteArtifactBlobWriteResponse_NotFound_mutable._();
-
-  @_core.override
-  _core.bool operator ==(other) {
-    if (_core.identical(this, other)) return true;
-    if (other is! CompleteArtifactBlobWriteResponse_NotFound) return false;
-    return _skir.internal__listEquality.equals(
-      _equality_proxy,
-      other._equality_proxy,
-    );
-  }
-
-  @_core.override
-  _core.int get hashCode => _skir.internal__listEquality.hash(_equality_proxy);
-
-  _core.List get _equality_proxy => [];
-
-  @_core.override
-  _core.String toString() => _skir.internal__stringify(this, serializer);
-
-  /// Serializer for `CompleteArtifactBlobWriteResponse_NotFound` instances.
-  static _skir.StructSerializer<
-    CompleteArtifactBlobWriteResponse_NotFound,
-    CompleteArtifactBlobWriteResponse_NotFound_mutable
-  >
-  get serializer {
-    if (_serializerBuilder.mustInitialize()) {
-      _serializerBuilder.finalize();
-    }
-    return _serializerBuilder.serializer;
-  }
-
-  static final _serializerBuilder = _skir.internal__StructSerializerBuilder(
-    recordId:
-        "service/v1/artifact.skir:CompleteArtifactBlobWriteResponse.NotFound",
-    doc: "",
-    defaultInstance: defaultInstance,
-    newMutable: (it) => (it != null) ? it.toMutable() : mutable(),
-    toFrozen: (CompleteArtifactBlobWriteResponse_NotFound_mutable it) =>
-        it.toFrozen(),
-    getUnrecognizedFields: (it) => it._u,
-    setUnrecognizedFields: (it, u) => it._u = u,
-  );
-}
-
-/// Mutable version of [CompleteArtifactBlobWriteResponse_NotFound].
-final class CompleteArtifactBlobWriteResponse_NotFound_mutable
-    implements CompleteArtifactBlobWriteResponse_NotFound_orMutable {
-  _skir.internal__UnrecognizedFields? _u;
-
-  CompleteArtifactBlobWriteResponse_NotFound_mutable._();
-
-  /// Returns a deeply immutable copy of this instance.
-  @_core.override
-  CompleteArtifactBlobWriteResponse_NotFound toFrozen() =>
-      CompleteArtifactBlobWriteResponse_NotFound().._u = this._u;
-}
-
-// -----------------------------------------------------------------------------
-// struct CompleteArtifactBlobWriteResponse.Invalid
-// -----------------------------------------------------------------------------
-
-sealed class CompleteArtifactBlobWriteResponse_Invalid_orMutable {
-  _core.String get reason;
-
-  CompleteArtifactBlobWriteResponse_Invalid toFrozen();
-}
-
-/// Deeply immutable.
-final class CompleteArtifactBlobWriteResponse_Invalid
-    implements CompleteArtifactBlobWriteResponse_Invalid_orMutable {
-  @_core.override
-  final _core.String reason;
-  _skir.internal__UnrecognizedFields? _u;
-
-  factory CompleteArtifactBlobWriteResponse_Invalid({
-    required _core.String reason,
-  }) => CompleteArtifactBlobWriteResponse_Invalid._(reason);
-
-  CompleteArtifactBlobWriteResponse_Invalid._(this.reason);
-
-  /// Default instance with all fields set to their default values.
-  static final defaultInstance = CompleteArtifactBlobWriteResponse_Invalid._(
-    "",
-  );
-
-  /// Returns a new mutable instance.
-  /// Fields are initialized to their default values.
-  static CompleteArtifactBlobWriteResponse_Invalid_mutable mutable() =>
-      CompleteArtifactBlobWriteResponse_Invalid_mutable._("");
-
-  /// Returns this instance (no-op).
-  @_core.Deprecated("This instance is already frozen.")
-  @_core.override
-  CompleteArtifactBlobWriteResponse_Invalid toFrozen() => this;
-
-  /// Returns a mutable shallow copy of this instance.
-  CompleteArtifactBlobWriteResponse_Invalid_mutable toMutable() =>
-      CompleteArtifactBlobWriteResponse_Invalid_mutable._(this.reason);
-
-  @_core.override
-  _core.bool operator ==(other) {
-    if (_core.identical(this, other)) return true;
-    if (other is! CompleteArtifactBlobWriteResponse_Invalid) return false;
-    return _skir.internal__listEquality.equals(
-      _equality_proxy,
-      other._equality_proxy,
-    );
-  }
-
-  @_core.override
-  _core.int get hashCode => _skir.internal__listEquality.hash(_equality_proxy);
-
-  _core.List get _equality_proxy => [this.reason];
-
-  @_core.override
-  _core.String toString() => _skir.internal__stringify(this, serializer);
-
-  /// Serializer for `CompleteArtifactBlobWriteResponse_Invalid` instances.
-  static _skir.StructSerializer<
-    CompleteArtifactBlobWriteResponse_Invalid,
-    CompleteArtifactBlobWriteResponse_Invalid_mutable
-  >
-  get serializer {
-    if (_serializerBuilder.mustInitialize()) {
-      _serializerBuilder.addField(
-        "reason",
-        "reason",
-        0,
-        _skir.Serializers.string,
-        "",
-        (it) => it.reason,
-        (it, v) => it.reason = v,
-      );
-      _serializerBuilder.finalize();
-    }
-    return _serializerBuilder.serializer;
-  }
-
-  static final _serializerBuilder = _skir.internal__StructSerializerBuilder(
-    recordId:
-        "service/v1/artifact.skir:CompleteArtifactBlobWriteResponse.Invalid",
-    doc: "",
-    defaultInstance: defaultInstance,
-    newMutable: (it) => (it != null) ? it.toMutable() : mutable(),
-    toFrozen: (CompleteArtifactBlobWriteResponse_Invalid_mutable it) =>
-        it.toFrozen(),
-    getUnrecognizedFields: (it) => it._u,
-    setUnrecognizedFields: (it, u) => it._u = u,
-  );
-}
-
-/// Mutable version of [CompleteArtifactBlobWriteResponse_Invalid].
-final class CompleteArtifactBlobWriteResponse_Invalid_mutable
-    implements CompleteArtifactBlobWriteResponse_Invalid_orMutable {
-  _core.String reason;
-  _skir.internal__UnrecognizedFields? _u;
-
-  CompleteArtifactBlobWriteResponse_Invalid_mutable._(this.reason);
-
-  /// Returns a deeply immutable copy of this instance.
-  @_core.override
-  CompleteArtifactBlobWriteResponse_Invalid toFrozen() =>
-      CompleteArtifactBlobWriteResponse_Invalid(reason: this.reason)
-        .._u = this._u;
-}
-
-// -----------------------------------------------------------------------------
-// struct CompleteArtifactBlobWriteResponse.Conflict
-// -----------------------------------------------------------------------------
-
-sealed class CompleteArtifactBlobWriteResponse_Conflict_orMutable {
-  _core.String get reason;
-
-  CompleteArtifactBlobWriteResponse_Conflict toFrozen();
-}
-
-/// Deeply immutable.
-final class CompleteArtifactBlobWriteResponse_Conflict
-    implements CompleteArtifactBlobWriteResponse_Conflict_orMutable {
-  @_core.override
-  final _core.String reason;
-  _skir.internal__UnrecognizedFields? _u;
-
-  factory CompleteArtifactBlobWriteResponse_Conflict({
-    required _core.String reason,
-  }) => CompleteArtifactBlobWriteResponse_Conflict._(reason);
-
-  CompleteArtifactBlobWriteResponse_Conflict._(this.reason);
-
-  /// Default instance with all fields set to their default values.
-  static final defaultInstance = CompleteArtifactBlobWriteResponse_Conflict._(
-    "",
-  );
-
-  /// Returns a new mutable instance.
-  /// Fields are initialized to their default values.
-  static CompleteArtifactBlobWriteResponse_Conflict_mutable mutable() =>
-      CompleteArtifactBlobWriteResponse_Conflict_mutable._("");
-
-  /// Returns this instance (no-op).
-  @_core.Deprecated("This instance is already frozen.")
-  @_core.override
-  CompleteArtifactBlobWriteResponse_Conflict toFrozen() => this;
-
-  /// Returns a mutable shallow copy of this instance.
-  CompleteArtifactBlobWriteResponse_Conflict_mutable toMutable() =>
-      CompleteArtifactBlobWriteResponse_Conflict_mutable._(this.reason);
-
-  @_core.override
-  _core.bool operator ==(other) {
-    if (_core.identical(this, other)) return true;
-    if (other is! CompleteArtifactBlobWriteResponse_Conflict) return false;
-    return _skir.internal__listEquality.equals(
-      _equality_proxy,
-      other._equality_proxy,
-    );
-  }
-
-  @_core.override
-  _core.int get hashCode => _skir.internal__listEquality.hash(_equality_proxy);
-
-  _core.List get _equality_proxy => [this.reason];
-
-  @_core.override
-  _core.String toString() => _skir.internal__stringify(this, serializer);
-
-  /// Serializer for `CompleteArtifactBlobWriteResponse_Conflict` instances.
-  static _skir.StructSerializer<
-    CompleteArtifactBlobWriteResponse_Conflict,
-    CompleteArtifactBlobWriteResponse_Conflict_mutable
-  >
-  get serializer {
-    if (_serializerBuilder.mustInitialize()) {
-      _serializerBuilder.addField(
-        "reason",
-        "reason",
-        0,
-        _skir.Serializers.string,
-        "",
-        (it) => it.reason,
-        (it, v) => it.reason = v,
-      );
-      _serializerBuilder.finalize();
-    }
-    return _serializerBuilder.serializer;
-  }
-
-  static final _serializerBuilder = _skir.internal__StructSerializerBuilder(
-    recordId:
-        "service/v1/artifact.skir:CompleteArtifactBlobWriteResponse.Conflict",
-    doc: "",
-    defaultInstance: defaultInstance,
-    newMutable: (it) => (it != null) ? it.toMutable() : mutable(),
-    toFrozen: (CompleteArtifactBlobWriteResponse_Conflict_mutable it) =>
-        it.toFrozen(),
-    getUnrecognizedFields: (it) => it._u,
-    setUnrecognizedFields: (it, u) => it._u = u,
-  );
-}
-
-/// Mutable version of [CompleteArtifactBlobWriteResponse_Conflict].
-final class CompleteArtifactBlobWriteResponse_Conflict_mutable
-    implements CompleteArtifactBlobWriteResponse_Conflict_orMutable {
-  _core.String reason;
-  _skir.internal__UnrecognizedFields? _u;
-
-  CompleteArtifactBlobWriteResponse_Conflict_mutable._(this.reason);
-
-  /// Returns a deeply immutable copy of this instance.
-  @_core.override
-  CompleteArtifactBlobWriteResponse_Conflict toFrozen() =>
-      CompleteArtifactBlobWriteResponse_Conflict(reason: this.reason)
-        .._u = this._u;
-}
-
-// -----------------------------------------------------------------------------
-// struct CompleteArtifactBlobWriteResponse.Unavailable
-// -----------------------------------------------------------------------------
-
-sealed class CompleteArtifactBlobWriteResponse_Unavailable_orMutable {
-  CompleteArtifactBlobWriteResponse_Unavailable toFrozen();
-}
-
-/// Deeply immutable.
-final class CompleteArtifactBlobWriteResponse_Unavailable
-    implements CompleteArtifactBlobWriteResponse_Unavailable_orMutable {
-  _skir.internal__UnrecognizedFields? _u;
-
-  factory CompleteArtifactBlobWriteResponse_Unavailable() =>
-      CompleteArtifactBlobWriteResponse_Unavailable._();
-
-  CompleteArtifactBlobWriteResponse_Unavailable._();
+  CompleteArtifactBlobWriteResponse_NotFoundError._();
 
   /// Default instance with all fields set to their default values.
   static final defaultInstance =
-      CompleteArtifactBlobWriteResponse_Unavailable._();
+      CompleteArtifactBlobWriteResponse_NotFoundError._();
 
   /// Returns a new mutable instance.
   /// Fields are initialized to their default values.
-  static CompleteArtifactBlobWriteResponse_Unavailable_mutable mutable() =>
-      CompleteArtifactBlobWriteResponse_Unavailable_mutable._();
+  static CompleteArtifactBlobWriteResponse_NotFoundError_mutable mutable() =>
+      CompleteArtifactBlobWriteResponse_NotFoundError_mutable._();
 
   /// Returns this instance (no-op).
   @_core.Deprecated("This instance is already frozen.")
   @_core.override
-  CompleteArtifactBlobWriteResponse_Unavailable toFrozen() => this;
+  CompleteArtifactBlobWriteResponse_NotFoundError toFrozen() => this;
 
   /// Returns a mutable shallow copy of this instance.
-  CompleteArtifactBlobWriteResponse_Unavailable_mutable toMutable() =>
-      CompleteArtifactBlobWriteResponse_Unavailable_mutable._();
+  CompleteArtifactBlobWriteResponse_NotFoundError_mutable toMutable() =>
+      CompleteArtifactBlobWriteResponse_NotFoundError_mutable._();
 
   @_core.override
   _core.bool operator ==(other) {
     if (_core.identical(this, other)) return true;
-    if (other is! CompleteArtifactBlobWriteResponse_Unavailable) return false;
+    if (other is! CompleteArtifactBlobWriteResponse_NotFoundError) return false;
     return _skir.internal__listEquality.equals(
       _equality_proxy,
       other._equality_proxy,
@@ -5501,10 +4764,10 @@ final class CompleteArtifactBlobWriteResponse_Unavailable
   @_core.override
   _core.String toString() => _skir.internal__stringify(this, serializer);
 
-  /// Serializer for `CompleteArtifactBlobWriteResponse_Unavailable` instances.
+  /// Serializer for `CompleteArtifactBlobWriteResponse_NotFoundError` instances.
   static _skir.StructSerializer<
-    CompleteArtifactBlobWriteResponse_Unavailable,
-    CompleteArtifactBlobWriteResponse_Unavailable_mutable
+    CompleteArtifactBlobWriteResponse_NotFoundError,
+    CompleteArtifactBlobWriteResponse_NotFoundError_mutable
   >
   get serializer {
     if (_serializerBuilder.mustInitialize()) {
@@ -5514,28 +4777,242 @@ final class CompleteArtifactBlobWriteResponse_Unavailable
   }
 
   static final _serializerBuilder = _skir.internal__StructSerializerBuilder(
-    recordId: "service/v1/artifact.skir:CompleteArtifactBlobWriteResponse.Unavailable",
+    recordId: "service/v1/artifact.skir:CompleteArtifactBlobWriteResponse.NotFoundError",
     doc: "",
     defaultInstance: defaultInstance,
     newMutable: (it) => (it != null) ? it.toMutable() : mutable(),
-    toFrozen: (CompleteArtifactBlobWriteResponse_Unavailable_mutable it) =>
+    toFrozen: (CompleteArtifactBlobWriteResponse_NotFoundError_mutable it) =>
         it.toFrozen(),
     getUnrecognizedFields: (it) => it._u,
     setUnrecognizedFields: (it, u) => it._u = u,
   );
 }
 
-/// Mutable version of [CompleteArtifactBlobWriteResponse_Unavailable].
-final class CompleteArtifactBlobWriteResponse_Unavailable_mutable
-    implements CompleteArtifactBlobWriteResponse_Unavailable_orMutable {
+/// Mutable version of [CompleteArtifactBlobWriteResponse_NotFoundError].
+final class CompleteArtifactBlobWriteResponse_NotFoundError_mutable
+    implements CompleteArtifactBlobWriteResponse_NotFoundError_orMutable {
   _skir.internal__UnrecognizedFields? _u;
 
-  CompleteArtifactBlobWriteResponse_Unavailable_mutable._();
+  CompleteArtifactBlobWriteResponse_NotFoundError_mutable._();
 
   /// Returns a deeply immutable copy of this instance.
   @_core.override
-  CompleteArtifactBlobWriteResponse_Unavailable toFrozen() =>
-      CompleteArtifactBlobWriteResponse_Unavailable().._u = this._u;
+  CompleteArtifactBlobWriteResponse_NotFoundError toFrozen() =>
+      CompleteArtifactBlobWriteResponse_NotFoundError().._u = this._u;
+}
+
+// -----------------------------------------------------------------------------
+// struct CompleteArtifactBlobWriteResponse.InvalidError
+// -----------------------------------------------------------------------------
+
+sealed class CompleteArtifactBlobWriteResponse_InvalidError_orMutable {
+  _core.String get reason;
+
+  CompleteArtifactBlobWriteResponse_InvalidError toFrozen();
+}
+
+/// Deeply immutable.
+final class CompleteArtifactBlobWriteResponse_InvalidError
+    implements CompleteArtifactBlobWriteResponse_InvalidError_orMutable {
+  @_core.override
+  final _core.String reason;
+  _skir.internal__UnrecognizedFields? _u;
+
+  factory CompleteArtifactBlobWriteResponse_InvalidError({
+    required _core.String reason,
+  }) => CompleteArtifactBlobWriteResponse_InvalidError._(reason);
+
+  CompleteArtifactBlobWriteResponse_InvalidError._(this.reason);
+
+  /// Default instance with all fields set to their default values.
+  static final defaultInstance =
+      CompleteArtifactBlobWriteResponse_InvalidError._("");
+
+  /// Returns a new mutable instance.
+  /// Fields are initialized to their default values.
+  static CompleteArtifactBlobWriteResponse_InvalidError_mutable mutable() =>
+      CompleteArtifactBlobWriteResponse_InvalidError_mutable._("");
+
+  /// Returns this instance (no-op).
+  @_core.Deprecated("This instance is already frozen.")
+  @_core.override
+  CompleteArtifactBlobWriteResponse_InvalidError toFrozen() => this;
+
+  /// Returns a mutable shallow copy of this instance.
+  CompleteArtifactBlobWriteResponse_InvalidError_mutable toMutable() =>
+      CompleteArtifactBlobWriteResponse_InvalidError_mutable._(this.reason);
+
+  @_core.override
+  _core.bool operator ==(other) {
+    if (_core.identical(this, other)) return true;
+    if (other is! CompleteArtifactBlobWriteResponse_InvalidError) return false;
+    return _skir.internal__listEquality.equals(
+      _equality_proxy,
+      other._equality_proxy,
+    );
+  }
+
+  @_core.override
+  _core.int get hashCode => _skir.internal__listEquality.hash(_equality_proxy);
+
+  _core.List get _equality_proxy => [this.reason];
+
+  @_core.override
+  _core.String toString() => _skir.internal__stringify(this, serializer);
+
+  /// Serializer for `CompleteArtifactBlobWriteResponse_InvalidError` instances.
+  static _skir.StructSerializer<
+    CompleteArtifactBlobWriteResponse_InvalidError,
+    CompleteArtifactBlobWriteResponse_InvalidError_mutable
+  >
+  get serializer {
+    if (_serializerBuilder.mustInitialize()) {
+      _serializerBuilder.addField(
+        "reason",
+        "reason",
+        0,
+        _skir.Serializers.string,
+        "",
+        (it) => it.reason,
+        (it, v) => it.reason = v,
+      );
+      _serializerBuilder.finalize();
+    }
+    return _serializerBuilder.serializer;
+  }
+
+  static final _serializerBuilder = _skir.internal__StructSerializerBuilder(
+    recordId: "service/v1/artifact.skir:CompleteArtifactBlobWriteResponse.InvalidError",
+    doc: "",
+    defaultInstance: defaultInstance,
+    newMutable: (it) => (it != null) ? it.toMutable() : mutable(),
+    toFrozen: (CompleteArtifactBlobWriteResponse_InvalidError_mutable it) =>
+        it.toFrozen(),
+    getUnrecognizedFields: (it) => it._u,
+    setUnrecognizedFields: (it, u) => it._u = u,
+  );
+}
+
+/// Mutable version of [CompleteArtifactBlobWriteResponse_InvalidError].
+final class CompleteArtifactBlobWriteResponse_InvalidError_mutable
+    implements CompleteArtifactBlobWriteResponse_InvalidError_orMutable {
+  _core.String reason;
+  _skir.internal__UnrecognizedFields? _u;
+
+  CompleteArtifactBlobWriteResponse_InvalidError_mutable._(this.reason);
+
+  /// Returns a deeply immutable copy of this instance.
+  @_core.override
+  CompleteArtifactBlobWriteResponse_InvalidError toFrozen() =>
+      CompleteArtifactBlobWriteResponse_InvalidError(reason: this.reason)
+        .._u = this._u;
+}
+
+// -----------------------------------------------------------------------------
+// struct CompleteArtifactBlobWriteResponse.ConflictError
+// -----------------------------------------------------------------------------
+
+sealed class CompleteArtifactBlobWriteResponse_ConflictError_orMutable {
+  _core.String get reason;
+
+  CompleteArtifactBlobWriteResponse_ConflictError toFrozen();
+}
+
+/// Deeply immutable.
+final class CompleteArtifactBlobWriteResponse_ConflictError
+    implements CompleteArtifactBlobWriteResponse_ConflictError_orMutable {
+  @_core.override
+  final _core.String reason;
+  _skir.internal__UnrecognizedFields? _u;
+
+  factory CompleteArtifactBlobWriteResponse_ConflictError({
+    required _core.String reason,
+  }) => CompleteArtifactBlobWriteResponse_ConflictError._(reason);
+
+  CompleteArtifactBlobWriteResponse_ConflictError._(this.reason);
+
+  /// Default instance with all fields set to their default values.
+  static final defaultInstance =
+      CompleteArtifactBlobWriteResponse_ConflictError._("");
+
+  /// Returns a new mutable instance.
+  /// Fields are initialized to their default values.
+  static CompleteArtifactBlobWriteResponse_ConflictError_mutable mutable() =>
+      CompleteArtifactBlobWriteResponse_ConflictError_mutable._("");
+
+  /// Returns this instance (no-op).
+  @_core.Deprecated("This instance is already frozen.")
+  @_core.override
+  CompleteArtifactBlobWriteResponse_ConflictError toFrozen() => this;
+
+  /// Returns a mutable shallow copy of this instance.
+  CompleteArtifactBlobWriteResponse_ConflictError_mutable toMutable() =>
+      CompleteArtifactBlobWriteResponse_ConflictError_mutable._(this.reason);
+
+  @_core.override
+  _core.bool operator ==(other) {
+    if (_core.identical(this, other)) return true;
+    if (other is! CompleteArtifactBlobWriteResponse_ConflictError) return false;
+    return _skir.internal__listEquality.equals(
+      _equality_proxy,
+      other._equality_proxy,
+    );
+  }
+
+  @_core.override
+  _core.int get hashCode => _skir.internal__listEquality.hash(_equality_proxy);
+
+  _core.List get _equality_proxy => [this.reason];
+
+  @_core.override
+  _core.String toString() => _skir.internal__stringify(this, serializer);
+
+  /// Serializer for `CompleteArtifactBlobWriteResponse_ConflictError` instances.
+  static _skir.StructSerializer<
+    CompleteArtifactBlobWriteResponse_ConflictError,
+    CompleteArtifactBlobWriteResponse_ConflictError_mutable
+  >
+  get serializer {
+    if (_serializerBuilder.mustInitialize()) {
+      _serializerBuilder.addField(
+        "reason",
+        "reason",
+        0,
+        _skir.Serializers.string,
+        "",
+        (it) => it.reason,
+        (it, v) => it.reason = v,
+      );
+      _serializerBuilder.finalize();
+    }
+    return _serializerBuilder.serializer;
+  }
+
+  static final _serializerBuilder = _skir.internal__StructSerializerBuilder(
+    recordId: "service/v1/artifact.skir:CompleteArtifactBlobWriteResponse.ConflictError",
+    doc: "",
+    defaultInstance: defaultInstance,
+    newMutable: (it) => (it != null) ? it.toMutable() : mutable(),
+    toFrozen: (CompleteArtifactBlobWriteResponse_ConflictError_mutable it) =>
+        it.toFrozen(),
+    getUnrecognizedFields: (it) => it._u,
+    setUnrecognizedFields: (it, u) => it._u = u,
+  );
+}
+
+/// Mutable version of [CompleteArtifactBlobWriteResponse_ConflictError].
+final class CompleteArtifactBlobWriteResponse_ConflictError_mutable
+    implements CompleteArtifactBlobWriteResponse_ConflictError_orMutable {
+  _core.String reason;
+  _skir.internal__UnrecognizedFields? _u;
+
+  CompleteArtifactBlobWriteResponse_ConflictError_mutable._(this.reason);
+
+  /// Returns a deeply immutable copy of this instance.
+  @_core.override
+  CompleteArtifactBlobWriteResponse_ConflictError toFrozen() =>
+      CompleteArtifactBlobWriteResponse_ConflictError(reason: this.reason)
+        .._u = this._u;
 }
 
 // -----------------------------------------------------------------------------
@@ -5547,10 +5024,10 @@ final class CompleteArtifactBlobWriteResponse_Unavailable_mutable
 ///   switch (e) {
 ///     case CompleteArtifactBlobWriteResponse_unknown(): { ... }
 ///     case CompleteArtifactBlobWriteResponse_success(:var value): { ... }
-///     case CompleteArtifactBlobWriteResponse_notFound(:var value): { ... }
-///     case CompleteArtifactBlobWriteResponse_invalid(:var value): { ... }
-///     case CompleteArtifactBlobWriteResponse_conflict(:var value): { ... }
-///     case CompleteArtifactBlobWriteResponse_unavailable(:var value): { ... }
+///     case CompleteArtifactBlobWriteResponse_notFoundError(:var value): { ... }
+///     case CompleteArtifactBlobWriteResponse_invalidError(:var value): { ... }
+///     case CompleteArtifactBlobWriteResponse_conflictError(:var value): { ... }
+///     case CompleteArtifactBlobWriteResponse_internalError(:var value): { ... }
 ///   }
 ///   ```
 ///
@@ -5573,50 +5050,50 @@ sealed class CompleteArtifactBlobWriteResponse {
     BlobMetadata(digest: digest, size: size),
   );
 
-  /// Create a 'not_found' variant wrapping around the given value.
-  factory CompleteArtifactBlobWriteResponse.wrapNotFound(
-    CompleteArtifactBlobWriteResponse_NotFound value,
-  ) => CompleteArtifactBlobWriteResponse_notFoundWrapper._(value);
+  /// Create a 'not_found_error' variant wrapping around the given value.
+  factory CompleteArtifactBlobWriteResponse.wrapNotFoundError(
+    CompleteArtifactBlobWriteResponse_NotFoundError value,
+  ) => CompleteArtifactBlobWriteResponse_notFoundErrorWrapper._(value);
 
-  /// Same as `wrapNotFound(CompleteArtifactBlobWriteResponse_NotFound(...))`.
-  factory CompleteArtifactBlobWriteResponse.createNotFound() =>
-      CompleteArtifactBlobWriteResponse.wrapNotFound(
-        CompleteArtifactBlobWriteResponse_NotFound(),
+  /// Same as `wrapNotFoundError(CompleteArtifactBlobWriteResponse_NotFoundError(...))`.
+  factory CompleteArtifactBlobWriteResponse.createNotFoundError() =>
+      CompleteArtifactBlobWriteResponse.wrapNotFoundError(
+        CompleteArtifactBlobWriteResponse_NotFoundError(),
       );
 
-  /// Create a 'invalid' variant wrapping around the given value.
-  factory CompleteArtifactBlobWriteResponse.wrapInvalid(
-    CompleteArtifactBlobWriteResponse_Invalid value,
-  ) => CompleteArtifactBlobWriteResponse_invalidWrapper._(value);
+  /// Create a 'invalid_error' variant wrapping around the given value.
+  factory CompleteArtifactBlobWriteResponse.wrapInvalidError(
+    CompleteArtifactBlobWriteResponse_InvalidError value,
+  ) => CompleteArtifactBlobWriteResponse_invalidErrorWrapper._(value);
 
-  /// Same as `wrapInvalid(CompleteArtifactBlobWriteResponse_Invalid(...))`.
-  factory CompleteArtifactBlobWriteResponse.createInvalid({
+  /// Same as `wrapInvalidError(CompleteArtifactBlobWriteResponse_InvalidError(...))`.
+  factory CompleteArtifactBlobWriteResponse.createInvalidError({
     required _core.String reason,
-  }) => CompleteArtifactBlobWriteResponse.wrapInvalid(
-    CompleteArtifactBlobWriteResponse_Invalid(reason: reason),
+  }) => CompleteArtifactBlobWriteResponse.wrapInvalidError(
+    CompleteArtifactBlobWriteResponse_InvalidError(reason: reason),
   );
 
-  /// Create a 'conflict' variant wrapping around the given value.
-  factory CompleteArtifactBlobWriteResponse.wrapConflict(
-    CompleteArtifactBlobWriteResponse_Conflict value,
-  ) => CompleteArtifactBlobWriteResponse_conflictWrapper._(value);
+  /// Create a 'conflict_error' variant wrapping around the given value.
+  factory CompleteArtifactBlobWriteResponse.wrapConflictError(
+    CompleteArtifactBlobWriteResponse_ConflictError value,
+  ) => CompleteArtifactBlobWriteResponse_conflictErrorWrapper._(value);
 
-  /// Same as `wrapConflict(CompleteArtifactBlobWriteResponse_Conflict(...))`.
-  factory CompleteArtifactBlobWriteResponse.createConflict({
+  /// Same as `wrapConflictError(CompleteArtifactBlobWriteResponse_ConflictError(...))`.
+  factory CompleteArtifactBlobWriteResponse.createConflictError({
     required _core.String reason,
-  }) => CompleteArtifactBlobWriteResponse.wrapConflict(
-    CompleteArtifactBlobWriteResponse_Conflict(reason: reason),
+  }) => CompleteArtifactBlobWriteResponse.wrapConflictError(
+    CompleteArtifactBlobWriteResponse_ConflictError(reason: reason),
   );
 
-  /// Create a 'unavailable' variant wrapping around the given value.
-  factory CompleteArtifactBlobWriteResponse.wrapUnavailable(
-    CompleteArtifactBlobWriteResponse_Unavailable value,
-  ) => CompleteArtifactBlobWriteResponse_unavailableWrapper._(value);
+  /// Create a 'internal_error' variant wrapping around the given value.
+  factory CompleteArtifactBlobWriteResponse.wrapInternalError(
+    _lib_kernel_v1_errors.InternalError value,
+  ) => CompleteArtifactBlobWriteResponse_internalErrorWrapper._(value);
 
-  /// Same as `wrapUnavailable(CompleteArtifactBlobWriteResponse_Unavailable(...))`.
-  factory CompleteArtifactBlobWriteResponse.createUnavailable() =>
-      CompleteArtifactBlobWriteResponse.wrapUnavailable(
-        CompleteArtifactBlobWriteResponse_Unavailable(),
+  /// Same as `wrapInternalError(_lib_kernel_v1_errors.InternalError(...))`.
+  factory CompleteArtifactBlobWriteResponse.createInternalError() =>
+      CompleteArtifactBlobWriteResponse.wrapInternalError(
+        _lib_kernel_v1_errors.InternalError(),
       );
 
   /// Returns the kind of variant held by this CompleteArtifactBlobWriteResponse.
@@ -5638,46 +5115,50 @@ sealed class CompleteArtifactBlobWriteResponse {
       );
       _serializerBuilder.addWrapperVariant(
         2,
-        "not_found",
-        "wrapNotFound",
-        CompleteArtifactBlobWriteResponse_NotFound.serializer,
+        "not_found_error",
+        "wrapNotFoundError",
+        CompleteArtifactBlobWriteResponse_NotFoundError.serializer,
         "",
-        CompleteArtifactBlobWriteResponse_notFoundWrapper._,
+        CompleteArtifactBlobWriteResponse_notFoundErrorWrapper._,
         (it) => it.value,
-        ordinal:
-            CompleteArtifactBlobWriteResponse_kind.notFoundWrapper._ordinal,
+        ordinal: CompleteArtifactBlobWriteResponse_kind
+            .notFoundErrorWrapper
+            ._ordinal,
       );
       _serializerBuilder.addWrapperVariant(
         3,
-        "invalid",
-        "wrapInvalid",
-        CompleteArtifactBlobWriteResponse_Invalid.serializer,
+        "invalid_error",
+        "wrapInvalidError",
+        CompleteArtifactBlobWriteResponse_InvalidError.serializer,
         "",
-        CompleteArtifactBlobWriteResponse_invalidWrapper._,
+        CompleteArtifactBlobWriteResponse_invalidErrorWrapper._,
         (it) => it.value,
-        ordinal: CompleteArtifactBlobWriteResponse_kind.invalidWrapper._ordinal,
+        ordinal:
+            CompleteArtifactBlobWriteResponse_kind.invalidErrorWrapper._ordinal,
       );
       _serializerBuilder.addWrapperVariant(
         4,
-        "conflict",
-        "wrapConflict",
-        CompleteArtifactBlobWriteResponse_Conflict.serializer,
+        "conflict_error",
+        "wrapConflictError",
+        CompleteArtifactBlobWriteResponse_ConflictError.serializer,
         "",
-        CompleteArtifactBlobWriteResponse_conflictWrapper._,
+        CompleteArtifactBlobWriteResponse_conflictErrorWrapper._,
         (it) => it.value,
-        ordinal:
-            CompleteArtifactBlobWriteResponse_kind.conflictWrapper._ordinal,
+        ordinal: CompleteArtifactBlobWriteResponse_kind
+            .conflictErrorWrapper
+            ._ordinal,
       );
       _serializerBuilder.addWrapperVariant(
         5,
-        "unavailable",
-        "wrapUnavailable",
-        CompleteArtifactBlobWriteResponse_Unavailable.serializer,
+        "internal_error",
+        "wrapInternalError",
+        _lib_kernel_v1_errors.InternalError.serializer,
         "",
-        CompleteArtifactBlobWriteResponse_unavailableWrapper._,
+        CompleteArtifactBlobWriteResponse_internalErrorWrapper._,
         (it) => it.value,
-        ordinal:
-            CompleteArtifactBlobWriteResponse_kind.unavailableWrapper._ordinal,
+        ordinal: CompleteArtifactBlobWriteResponse_kind
+            .internalErrorWrapper
+            ._ordinal,
       );
       _serializerBuilder.finalize();
     }
@@ -5701,10 +5182,10 @@ sealed class CompleteArtifactBlobWriteResponse {
 enum CompleteArtifactBlobWriteResponse_kind {
   unknown(0),
   successWrapper(1),
-  notFoundWrapper(2),
-  invalidWrapper(3),
-  conflictWrapper(4),
-  unavailableWrapper(5);
+  notFoundErrorWrapper(2),
+  invalidErrorWrapper(3),
+  conflictErrorWrapper(4),
+  internalErrorWrapper(5);
 
   final _core.int _ordinal;
 
@@ -5766,48 +5247,48 @@ final class CompleteArtifactBlobWriteResponse_successWrapper
       CompleteArtifactBlobWriteResponse_kind.successWrapper;
 }
 
-final class CompleteArtifactBlobWriteResponse_notFoundWrapper
+final class CompleteArtifactBlobWriteResponse_notFoundErrorWrapper
     extends _CompleteArtifactBlobWriteResponse_wrapper {
-  final CompleteArtifactBlobWriteResponse_NotFound value;
+  final CompleteArtifactBlobWriteResponse_NotFoundError value;
 
-  CompleteArtifactBlobWriteResponse_notFoundWrapper._(this.value);
+  CompleteArtifactBlobWriteResponse_notFoundErrorWrapper._(this.value);
 
   @_core.override
   CompleteArtifactBlobWriteResponse_kind get kind =>
-      CompleteArtifactBlobWriteResponse_kind.notFoundWrapper;
+      CompleteArtifactBlobWriteResponse_kind.notFoundErrorWrapper;
 }
 
-final class CompleteArtifactBlobWriteResponse_invalidWrapper
+final class CompleteArtifactBlobWriteResponse_invalidErrorWrapper
     extends _CompleteArtifactBlobWriteResponse_wrapper {
-  final CompleteArtifactBlobWriteResponse_Invalid value;
+  final CompleteArtifactBlobWriteResponse_InvalidError value;
 
-  CompleteArtifactBlobWriteResponse_invalidWrapper._(this.value);
+  CompleteArtifactBlobWriteResponse_invalidErrorWrapper._(this.value);
 
   @_core.override
   CompleteArtifactBlobWriteResponse_kind get kind =>
-      CompleteArtifactBlobWriteResponse_kind.invalidWrapper;
+      CompleteArtifactBlobWriteResponse_kind.invalidErrorWrapper;
 }
 
-final class CompleteArtifactBlobWriteResponse_conflictWrapper
+final class CompleteArtifactBlobWriteResponse_conflictErrorWrapper
     extends _CompleteArtifactBlobWriteResponse_wrapper {
-  final CompleteArtifactBlobWriteResponse_Conflict value;
+  final CompleteArtifactBlobWriteResponse_ConflictError value;
 
-  CompleteArtifactBlobWriteResponse_conflictWrapper._(this.value);
+  CompleteArtifactBlobWriteResponse_conflictErrorWrapper._(this.value);
 
   @_core.override
   CompleteArtifactBlobWriteResponse_kind get kind =>
-      CompleteArtifactBlobWriteResponse_kind.conflictWrapper;
+      CompleteArtifactBlobWriteResponse_kind.conflictErrorWrapper;
 }
 
-final class CompleteArtifactBlobWriteResponse_unavailableWrapper
+final class CompleteArtifactBlobWriteResponse_internalErrorWrapper
     extends _CompleteArtifactBlobWriteResponse_wrapper {
-  final CompleteArtifactBlobWriteResponse_Unavailable value;
+  final _lib_kernel_v1_errors.InternalError value;
 
-  CompleteArtifactBlobWriteResponse_unavailableWrapper._(this.value);
+  CompleteArtifactBlobWriteResponse_internalErrorWrapper._(this.value);
 
   @_core.override
   CompleteArtifactBlobWriteResponse_kind get kind =>
-      CompleteArtifactBlobWriteResponse_kind.unavailableWrapper;
+      CompleteArtifactBlobWriteResponse_kind.internalErrorWrapper;
 }
 
 // -----------------------------------------------------------------------------
@@ -5930,44 +5411,45 @@ final class FetchArtifactBlobMetadataRequest_mutable
 }
 
 // -----------------------------------------------------------------------------
-// struct FetchArtifactBlobMetadataResponse.NotFound
+// struct FetchArtifactBlobMetadataResponse.NotFoundError
 // -----------------------------------------------------------------------------
 
-sealed class FetchArtifactBlobMetadataResponse_NotFound_orMutable {
-  FetchArtifactBlobMetadataResponse_NotFound toFrozen();
+sealed class FetchArtifactBlobMetadataResponse_NotFoundError_orMutable {
+  FetchArtifactBlobMetadataResponse_NotFoundError toFrozen();
 }
 
 /// Deeply immutable.
-final class FetchArtifactBlobMetadataResponse_NotFound
-    implements FetchArtifactBlobMetadataResponse_NotFound_orMutable {
+final class FetchArtifactBlobMetadataResponse_NotFoundError
+    implements FetchArtifactBlobMetadataResponse_NotFoundError_orMutable {
   _skir.internal__UnrecognizedFields? _u;
 
-  factory FetchArtifactBlobMetadataResponse_NotFound() =>
-      FetchArtifactBlobMetadataResponse_NotFound._();
+  factory FetchArtifactBlobMetadataResponse_NotFoundError() =>
+      FetchArtifactBlobMetadataResponse_NotFoundError._();
 
-  FetchArtifactBlobMetadataResponse_NotFound._();
+  FetchArtifactBlobMetadataResponse_NotFoundError._();
 
   /// Default instance with all fields set to their default values.
-  static final defaultInstance = FetchArtifactBlobMetadataResponse_NotFound._();
+  static final defaultInstance =
+      FetchArtifactBlobMetadataResponse_NotFoundError._();
 
   /// Returns a new mutable instance.
   /// Fields are initialized to their default values.
-  static FetchArtifactBlobMetadataResponse_NotFound_mutable mutable() =>
-      FetchArtifactBlobMetadataResponse_NotFound_mutable._();
+  static FetchArtifactBlobMetadataResponse_NotFoundError_mutable mutable() =>
+      FetchArtifactBlobMetadataResponse_NotFoundError_mutable._();
 
   /// Returns this instance (no-op).
   @_core.Deprecated("This instance is already frozen.")
   @_core.override
-  FetchArtifactBlobMetadataResponse_NotFound toFrozen() => this;
+  FetchArtifactBlobMetadataResponse_NotFoundError toFrozen() => this;
 
   /// Returns a mutable shallow copy of this instance.
-  FetchArtifactBlobMetadataResponse_NotFound_mutable toMutable() =>
-      FetchArtifactBlobMetadataResponse_NotFound_mutable._();
+  FetchArtifactBlobMetadataResponse_NotFoundError_mutable toMutable() =>
+      FetchArtifactBlobMetadataResponse_NotFoundError_mutable._();
 
   @_core.override
   _core.bool operator ==(other) {
     if (_core.identical(this, other)) return true;
-    if (other is! FetchArtifactBlobMetadataResponse_NotFound) return false;
+    if (other is! FetchArtifactBlobMetadataResponse_NotFoundError) return false;
     return _skir.internal__listEquality.equals(
       _equality_proxy,
       other._equality_proxy,
@@ -5982,10 +5464,10 @@ final class FetchArtifactBlobMetadataResponse_NotFound
   @_core.override
   _core.String toString() => _skir.internal__stringify(this, serializer);
 
-  /// Serializer for `FetchArtifactBlobMetadataResponse_NotFound` instances.
+  /// Serializer for `FetchArtifactBlobMetadataResponse_NotFoundError` instances.
   static _skir.StructSerializer<
-    FetchArtifactBlobMetadataResponse_NotFound,
-    FetchArtifactBlobMetadataResponse_NotFound_mutable
+    FetchArtifactBlobMetadataResponse_NotFoundError,
+    FetchArtifactBlobMetadataResponse_NotFoundError_mutable
   >
   get serializer {
     if (_serializerBuilder.mustInitialize()) {
@@ -5995,77 +5477,75 @@ final class FetchArtifactBlobMetadataResponse_NotFound
   }
 
   static final _serializerBuilder = _skir.internal__StructSerializerBuilder(
-    recordId:
-        "service/v1/artifact.skir:FetchArtifactBlobMetadataResponse.NotFound",
+    recordId: "service/v1/artifact.skir:FetchArtifactBlobMetadataResponse.NotFoundError",
     doc: "",
     defaultInstance: defaultInstance,
     newMutable: (it) => (it != null) ? it.toMutable() : mutable(),
-    toFrozen: (FetchArtifactBlobMetadataResponse_NotFound_mutable it) =>
+    toFrozen: (FetchArtifactBlobMetadataResponse_NotFoundError_mutable it) =>
         it.toFrozen(),
     getUnrecognizedFields: (it) => it._u,
     setUnrecognizedFields: (it, u) => it._u = u,
   );
 }
 
-/// Mutable version of [FetchArtifactBlobMetadataResponse_NotFound].
-final class FetchArtifactBlobMetadataResponse_NotFound_mutable
-    implements FetchArtifactBlobMetadataResponse_NotFound_orMutable {
+/// Mutable version of [FetchArtifactBlobMetadataResponse_NotFoundError].
+final class FetchArtifactBlobMetadataResponse_NotFoundError_mutable
+    implements FetchArtifactBlobMetadataResponse_NotFoundError_orMutable {
   _skir.internal__UnrecognizedFields? _u;
 
-  FetchArtifactBlobMetadataResponse_NotFound_mutable._();
+  FetchArtifactBlobMetadataResponse_NotFoundError_mutable._();
 
   /// Returns a deeply immutable copy of this instance.
   @_core.override
-  FetchArtifactBlobMetadataResponse_NotFound toFrozen() =>
-      FetchArtifactBlobMetadataResponse_NotFound().._u = this._u;
+  FetchArtifactBlobMetadataResponse_NotFoundError toFrozen() =>
+      FetchArtifactBlobMetadataResponse_NotFoundError().._u = this._u;
 }
 
 // -----------------------------------------------------------------------------
-// struct FetchArtifactBlobMetadataResponse.Invalid
+// struct FetchArtifactBlobMetadataResponse.InvalidError
 // -----------------------------------------------------------------------------
 
-sealed class FetchArtifactBlobMetadataResponse_Invalid_orMutable {
+sealed class FetchArtifactBlobMetadataResponse_InvalidError_orMutable {
   _core.String get reason;
 
-  FetchArtifactBlobMetadataResponse_Invalid toFrozen();
+  FetchArtifactBlobMetadataResponse_InvalidError toFrozen();
 }
 
 /// Deeply immutable.
-final class FetchArtifactBlobMetadataResponse_Invalid
-    implements FetchArtifactBlobMetadataResponse_Invalid_orMutable {
+final class FetchArtifactBlobMetadataResponse_InvalidError
+    implements FetchArtifactBlobMetadataResponse_InvalidError_orMutable {
   @_core.override
   final _core.String reason;
   _skir.internal__UnrecognizedFields? _u;
 
-  factory FetchArtifactBlobMetadataResponse_Invalid({
+  factory FetchArtifactBlobMetadataResponse_InvalidError({
     required _core.String reason,
-  }) => FetchArtifactBlobMetadataResponse_Invalid._(reason);
+  }) => FetchArtifactBlobMetadataResponse_InvalidError._(reason);
 
-  FetchArtifactBlobMetadataResponse_Invalid._(this.reason);
+  FetchArtifactBlobMetadataResponse_InvalidError._(this.reason);
 
   /// Default instance with all fields set to their default values.
-  static final defaultInstance = FetchArtifactBlobMetadataResponse_Invalid._(
-    "",
-  );
+  static final defaultInstance =
+      FetchArtifactBlobMetadataResponse_InvalidError._("");
 
   /// Returns a new mutable instance.
   /// Fields are initialized to their default values.
-  static FetchArtifactBlobMetadataResponse_Invalid_mutable mutable() =>
-      FetchArtifactBlobMetadataResponse_Invalid_mutable._("");
+  static FetchArtifactBlobMetadataResponse_InvalidError_mutable mutable() =>
+      FetchArtifactBlobMetadataResponse_InvalidError_mutable._("");
 
   /// Returns this instance (no-op).
   @_core.Deprecated("This instance is already frozen.")
   @_core.override
-  FetchArtifactBlobMetadataResponse_Invalid toFrozen() => this;
+  FetchArtifactBlobMetadataResponse_InvalidError toFrozen() => this;
 
   /// Returns a mutable shallow copy of this instance.
-  FetchArtifactBlobMetadataResponse_Invalid_mutable toMutable() =>
-      FetchArtifactBlobMetadataResponse_Invalid_mutable._(this.reason);
+  FetchArtifactBlobMetadataResponse_InvalidError_mutable toMutable() =>
+      FetchArtifactBlobMetadataResponse_InvalidError_mutable._(this.reason);
 
   @_core.override
   _core.bool operator ==(other) {
     if (_core.identical(this, other)) return true;
-    if (other is! FetchArtifactBlobMetadataResponse_Invalid) return false;
+    if (other is! FetchArtifactBlobMetadataResponse_InvalidError) return false;
     return _skir.internal__listEquality.equals(
       _equality_proxy,
       other._equality_proxy,
@@ -6080,10 +5560,10 @@ final class FetchArtifactBlobMetadataResponse_Invalid
   @_core.override
   _core.String toString() => _skir.internal__stringify(this, serializer);
 
-  /// Serializer for `FetchArtifactBlobMetadataResponse_Invalid` instances.
+  /// Serializer for `FetchArtifactBlobMetadataResponse_InvalidError` instances.
   static _skir.StructSerializer<
-    FetchArtifactBlobMetadataResponse_Invalid,
-    FetchArtifactBlobMetadataResponse_Invalid_mutable
+    FetchArtifactBlobMetadataResponse_InvalidError,
+    FetchArtifactBlobMetadataResponse_InvalidError_mutable
   >
   get serializer {
     if (_serializerBuilder.mustInitialize()) {
@@ -6102,122 +5582,30 @@ final class FetchArtifactBlobMetadataResponse_Invalid
   }
 
   static final _serializerBuilder = _skir.internal__StructSerializerBuilder(
-    recordId:
-        "service/v1/artifact.skir:FetchArtifactBlobMetadataResponse.Invalid",
+    recordId: "service/v1/artifact.skir:FetchArtifactBlobMetadataResponse.InvalidError",
     doc: "",
     defaultInstance: defaultInstance,
     newMutable: (it) => (it != null) ? it.toMutable() : mutable(),
-    toFrozen: (FetchArtifactBlobMetadataResponse_Invalid_mutable it) =>
+    toFrozen: (FetchArtifactBlobMetadataResponse_InvalidError_mutable it) =>
         it.toFrozen(),
     getUnrecognizedFields: (it) => it._u,
     setUnrecognizedFields: (it, u) => it._u = u,
   );
 }
 
-/// Mutable version of [FetchArtifactBlobMetadataResponse_Invalid].
-final class FetchArtifactBlobMetadataResponse_Invalid_mutable
-    implements FetchArtifactBlobMetadataResponse_Invalid_orMutable {
+/// Mutable version of [FetchArtifactBlobMetadataResponse_InvalidError].
+final class FetchArtifactBlobMetadataResponse_InvalidError_mutable
+    implements FetchArtifactBlobMetadataResponse_InvalidError_orMutable {
   _core.String reason;
   _skir.internal__UnrecognizedFields? _u;
 
-  FetchArtifactBlobMetadataResponse_Invalid_mutable._(this.reason);
+  FetchArtifactBlobMetadataResponse_InvalidError_mutable._(this.reason);
 
   /// Returns a deeply immutable copy of this instance.
   @_core.override
-  FetchArtifactBlobMetadataResponse_Invalid toFrozen() =>
-      FetchArtifactBlobMetadataResponse_Invalid(reason: this.reason)
+  FetchArtifactBlobMetadataResponse_InvalidError toFrozen() =>
+      FetchArtifactBlobMetadataResponse_InvalidError(reason: this.reason)
         .._u = this._u;
-}
-
-// -----------------------------------------------------------------------------
-// struct FetchArtifactBlobMetadataResponse.Unavailable
-// -----------------------------------------------------------------------------
-
-sealed class FetchArtifactBlobMetadataResponse_Unavailable_orMutable {
-  FetchArtifactBlobMetadataResponse_Unavailable toFrozen();
-}
-
-/// Deeply immutable.
-final class FetchArtifactBlobMetadataResponse_Unavailable
-    implements FetchArtifactBlobMetadataResponse_Unavailable_orMutable {
-  _skir.internal__UnrecognizedFields? _u;
-
-  factory FetchArtifactBlobMetadataResponse_Unavailable() =>
-      FetchArtifactBlobMetadataResponse_Unavailable._();
-
-  FetchArtifactBlobMetadataResponse_Unavailable._();
-
-  /// Default instance with all fields set to their default values.
-  static final defaultInstance =
-      FetchArtifactBlobMetadataResponse_Unavailable._();
-
-  /// Returns a new mutable instance.
-  /// Fields are initialized to their default values.
-  static FetchArtifactBlobMetadataResponse_Unavailable_mutable mutable() =>
-      FetchArtifactBlobMetadataResponse_Unavailable_mutable._();
-
-  /// Returns this instance (no-op).
-  @_core.Deprecated("This instance is already frozen.")
-  @_core.override
-  FetchArtifactBlobMetadataResponse_Unavailable toFrozen() => this;
-
-  /// Returns a mutable shallow copy of this instance.
-  FetchArtifactBlobMetadataResponse_Unavailable_mutable toMutable() =>
-      FetchArtifactBlobMetadataResponse_Unavailable_mutable._();
-
-  @_core.override
-  _core.bool operator ==(other) {
-    if (_core.identical(this, other)) return true;
-    if (other is! FetchArtifactBlobMetadataResponse_Unavailable) return false;
-    return _skir.internal__listEquality.equals(
-      _equality_proxy,
-      other._equality_proxy,
-    );
-  }
-
-  @_core.override
-  _core.int get hashCode => _skir.internal__listEquality.hash(_equality_proxy);
-
-  _core.List get _equality_proxy => [];
-
-  @_core.override
-  _core.String toString() => _skir.internal__stringify(this, serializer);
-
-  /// Serializer for `FetchArtifactBlobMetadataResponse_Unavailable` instances.
-  static _skir.StructSerializer<
-    FetchArtifactBlobMetadataResponse_Unavailable,
-    FetchArtifactBlobMetadataResponse_Unavailable_mutable
-  >
-  get serializer {
-    if (_serializerBuilder.mustInitialize()) {
-      _serializerBuilder.finalize();
-    }
-    return _serializerBuilder.serializer;
-  }
-
-  static final _serializerBuilder = _skir.internal__StructSerializerBuilder(
-    recordId: "service/v1/artifact.skir:FetchArtifactBlobMetadataResponse.Unavailable",
-    doc: "",
-    defaultInstance: defaultInstance,
-    newMutable: (it) => (it != null) ? it.toMutable() : mutable(),
-    toFrozen: (FetchArtifactBlobMetadataResponse_Unavailable_mutable it) =>
-        it.toFrozen(),
-    getUnrecognizedFields: (it) => it._u,
-    setUnrecognizedFields: (it, u) => it._u = u,
-  );
-}
-
-/// Mutable version of [FetchArtifactBlobMetadataResponse_Unavailable].
-final class FetchArtifactBlobMetadataResponse_Unavailable_mutable
-    implements FetchArtifactBlobMetadataResponse_Unavailable_orMutable {
-  _skir.internal__UnrecognizedFields? _u;
-
-  FetchArtifactBlobMetadataResponse_Unavailable_mutable._();
-
-  /// Returns a deeply immutable copy of this instance.
-  @_core.override
-  FetchArtifactBlobMetadataResponse_Unavailable toFrozen() =>
-      FetchArtifactBlobMetadataResponse_Unavailable().._u = this._u;
 }
 
 // -----------------------------------------------------------------------------
@@ -6229,9 +5617,9 @@ final class FetchArtifactBlobMetadataResponse_Unavailable_mutable
 ///   switch (e) {
 ///     case FetchArtifactBlobMetadataResponse_unknown(): { ... }
 ///     case FetchArtifactBlobMetadataResponse_success(:var value): { ... }
-///     case FetchArtifactBlobMetadataResponse_notFound(:var value): { ... }
-///     case FetchArtifactBlobMetadataResponse_invalid(:var value): { ... }
-///     case FetchArtifactBlobMetadataResponse_unavailable(:var value): { ... }
+///     case FetchArtifactBlobMetadataResponse_notFoundError(:var value): { ... }
+///     case FetchArtifactBlobMetadataResponse_invalidError(:var value): { ... }
+///     case FetchArtifactBlobMetadataResponse_internalError(:var value): { ... }
 ///   }
 ///   ```
 ///
@@ -6254,38 +5642,38 @@ sealed class FetchArtifactBlobMetadataResponse {
     BlobMetadata(digest: digest, size: size),
   );
 
-  /// Create a 'not_found' variant wrapping around the given value.
-  factory FetchArtifactBlobMetadataResponse.wrapNotFound(
-    FetchArtifactBlobMetadataResponse_NotFound value,
-  ) => FetchArtifactBlobMetadataResponse_notFoundWrapper._(value);
+  /// Create a 'not_found_error' variant wrapping around the given value.
+  factory FetchArtifactBlobMetadataResponse.wrapNotFoundError(
+    FetchArtifactBlobMetadataResponse_NotFoundError value,
+  ) => FetchArtifactBlobMetadataResponse_notFoundErrorWrapper._(value);
 
-  /// Same as `wrapNotFound(FetchArtifactBlobMetadataResponse_NotFound(...))`.
-  factory FetchArtifactBlobMetadataResponse.createNotFound() =>
-      FetchArtifactBlobMetadataResponse.wrapNotFound(
-        FetchArtifactBlobMetadataResponse_NotFound(),
+  /// Same as `wrapNotFoundError(FetchArtifactBlobMetadataResponse_NotFoundError(...))`.
+  factory FetchArtifactBlobMetadataResponse.createNotFoundError() =>
+      FetchArtifactBlobMetadataResponse.wrapNotFoundError(
+        FetchArtifactBlobMetadataResponse_NotFoundError(),
       );
 
-  /// Create a 'invalid' variant wrapping around the given value.
-  factory FetchArtifactBlobMetadataResponse.wrapInvalid(
-    FetchArtifactBlobMetadataResponse_Invalid value,
-  ) => FetchArtifactBlobMetadataResponse_invalidWrapper._(value);
+  /// Create a 'invalid_error' variant wrapping around the given value.
+  factory FetchArtifactBlobMetadataResponse.wrapInvalidError(
+    FetchArtifactBlobMetadataResponse_InvalidError value,
+  ) => FetchArtifactBlobMetadataResponse_invalidErrorWrapper._(value);
 
-  /// Same as `wrapInvalid(FetchArtifactBlobMetadataResponse_Invalid(...))`.
-  factory FetchArtifactBlobMetadataResponse.createInvalid({
+  /// Same as `wrapInvalidError(FetchArtifactBlobMetadataResponse_InvalidError(...))`.
+  factory FetchArtifactBlobMetadataResponse.createInvalidError({
     required _core.String reason,
-  }) => FetchArtifactBlobMetadataResponse.wrapInvalid(
-    FetchArtifactBlobMetadataResponse_Invalid(reason: reason),
+  }) => FetchArtifactBlobMetadataResponse.wrapInvalidError(
+    FetchArtifactBlobMetadataResponse_InvalidError(reason: reason),
   );
 
-  /// Create a 'unavailable' variant wrapping around the given value.
-  factory FetchArtifactBlobMetadataResponse.wrapUnavailable(
-    FetchArtifactBlobMetadataResponse_Unavailable value,
-  ) => FetchArtifactBlobMetadataResponse_unavailableWrapper._(value);
+  /// Create a 'internal_error' variant wrapping around the given value.
+  factory FetchArtifactBlobMetadataResponse.wrapInternalError(
+    _lib_kernel_v1_errors.InternalError value,
+  ) => FetchArtifactBlobMetadataResponse_internalErrorWrapper._(value);
 
-  /// Same as `wrapUnavailable(FetchArtifactBlobMetadataResponse_Unavailable(...))`.
-  factory FetchArtifactBlobMetadataResponse.createUnavailable() =>
-      FetchArtifactBlobMetadataResponse.wrapUnavailable(
-        FetchArtifactBlobMetadataResponse_Unavailable(),
+  /// Same as `wrapInternalError(_lib_kernel_v1_errors.InternalError(...))`.
+  factory FetchArtifactBlobMetadataResponse.createInternalError() =>
+      FetchArtifactBlobMetadataResponse.wrapInternalError(
+        _lib_kernel_v1_errors.InternalError(),
       );
 
   /// Returns the kind of variant held by this FetchArtifactBlobMetadataResponse.
@@ -6307,35 +5695,38 @@ sealed class FetchArtifactBlobMetadataResponse {
       );
       _serializerBuilder.addWrapperVariant(
         2,
-        "not_found",
-        "wrapNotFound",
-        FetchArtifactBlobMetadataResponse_NotFound.serializer,
+        "not_found_error",
+        "wrapNotFoundError",
+        FetchArtifactBlobMetadataResponse_NotFoundError.serializer,
         "",
-        FetchArtifactBlobMetadataResponse_notFoundWrapper._,
+        FetchArtifactBlobMetadataResponse_notFoundErrorWrapper._,
         (it) => it.value,
-        ordinal:
-            FetchArtifactBlobMetadataResponse_kind.notFoundWrapper._ordinal,
+        ordinal: FetchArtifactBlobMetadataResponse_kind
+            .notFoundErrorWrapper
+            ._ordinal,
       );
       _serializerBuilder.addWrapperVariant(
         3,
-        "invalid",
-        "wrapInvalid",
-        FetchArtifactBlobMetadataResponse_Invalid.serializer,
+        "invalid_error",
+        "wrapInvalidError",
+        FetchArtifactBlobMetadataResponse_InvalidError.serializer,
         "",
-        FetchArtifactBlobMetadataResponse_invalidWrapper._,
+        FetchArtifactBlobMetadataResponse_invalidErrorWrapper._,
         (it) => it.value,
-        ordinal: FetchArtifactBlobMetadataResponse_kind.invalidWrapper._ordinal,
+        ordinal:
+            FetchArtifactBlobMetadataResponse_kind.invalidErrorWrapper._ordinal,
       );
       _serializerBuilder.addWrapperVariant(
         4,
-        "unavailable",
-        "wrapUnavailable",
-        FetchArtifactBlobMetadataResponse_Unavailable.serializer,
+        "internal_error",
+        "wrapInternalError",
+        _lib_kernel_v1_errors.InternalError.serializer,
         "",
-        FetchArtifactBlobMetadataResponse_unavailableWrapper._,
+        FetchArtifactBlobMetadataResponse_internalErrorWrapper._,
         (it) => it.value,
-        ordinal:
-            FetchArtifactBlobMetadataResponse_kind.unavailableWrapper._ordinal,
+        ordinal: FetchArtifactBlobMetadataResponse_kind
+            .internalErrorWrapper
+            ._ordinal,
       );
       _serializerBuilder.finalize();
     }
@@ -6359,9 +5750,9 @@ sealed class FetchArtifactBlobMetadataResponse {
 enum FetchArtifactBlobMetadataResponse_kind {
   unknown(0),
   successWrapper(1),
-  notFoundWrapper(2),
-  invalidWrapper(3),
-  unavailableWrapper(4);
+  notFoundErrorWrapper(2),
+  invalidErrorWrapper(3),
+  internalErrorWrapper(4);
 
   final _core.int _ordinal;
 
@@ -6423,37 +5814,37 @@ final class FetchArtifactBlobMetadataResponse_successWrapper
       FetchArtifactBlobMetadataResponse_kind.successWrapper;
 }
 
-final class FetchArtifactBlobMetadataResponse_notFoundWrapper
+final class FetchArtifactBlobMetadataResponse_notFoundErrorWrapper
     extends _FetchArtifactBlobMetadataResponse_wrapper {
-  final FetchArtifactBlobMetadataResponse_NotFound value;
+  final FetchArtifactBlobMetadataResponse_NotFoundError value;
 
-  FetchArtifactBlobMetadataResponse_notFoundWrapper._(this.value);
+  FetchArtifactBlobMetadataResponse_notFoundErrorWrapper._(this.value);
 
   @_core.override
   FetchArtifactBlobMetadataResponse_kind get kind =>
-      FetchArtifactBlobMetadataResponse_kind.notFoundWrapper;
+      FetchArtifactBlobMetadataResponse_kind.notFoundErrorWrapper;
 }
 
-final class FetchArtifactBlobMetadataResponse_invalidWrapper
+final class FetchArtifactBlobMetadataResponse_invalidErrorWrapper
     extends _FetchArtifactBlobMetadataResponse_wrapper {
-  final FetchArtifactBlobMetadataResponse_Invalid value;
+  final FetchArtifactBlobMetadataResponse_InvalidError value;
 
-  FetchArtifactBlobMetadataResponse_invalidWrapper._(this.value);
+  FetchArtifactBlobMetadataResponse_invalidErrorWrapper._(this.value);
 
   @_core.override
   FetchArtifactBlobMetadataResponse_kind get kind =>
-      FetchArtifactBlobMetadataResponse_kind.invalidWrapper;
+      FetchArtifactBlobMetadataResponse_kind.invalidErrorWrapper;
 }
 
-final class FetchArtifactBlobMetadataResponse_unavailableWrapper
+final class FetchArtifactBlobMetadataResponse_internalErrorWrapper
     extends _FetchArtifactBlobMetadataResponse_wrapper {
-  final FetchArtifactBlobMetadataResponse_Unavailable value;
+  final _lib_kernel_v1_errors.InternalError value;
 
-  FetchArtifactBlobMetadataResponse_unavailableWrapper._(this.value);
+  FetchArtifactBlobMetadataResponse_internalErrorWrapper._(this.value);
 
   @_core.override
   FetchArtifactBlobMetadataResponse_kind get kind =>
-      FetchArtifactBlobMetadataResponse_kind.unavailableWrapper;
+      FetchArtifactBlobMetadataResponse_kind.internalErrorWrapper;
 }
 
 final _skir.Method<

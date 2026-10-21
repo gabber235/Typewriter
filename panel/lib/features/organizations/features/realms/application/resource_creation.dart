@@ -333,18 +333,22 @@ abstract class _PendingCreation with _$PendingCreation {
   const factory _PendingCreation({
     required ResourceCreationRequest request,
     required CreationContext context,
-    required skir.PreparationStep step,
+    required skir.PrepareValueResult step,
   }) = __PendingCreation;
 }
 
-extension on skir.PreparationStep {
+extension on skir.PrepareValueResult {
   skir.PreparedValue get materialized => switch (this) {
-    skir.PreparationStep_readyWrapper(:final value) => value,
-    skir.PreparationStep_needsInputWrapper(:final value) ||
-    skir.PreparationStep_unavailableWrapper(
+    skir.PrepareValueResult_readyWrapper(:final value) => value,
+    skir.PrepareValueResult_needsInputWrapper(:final value) ||
+    skir.PrepareValueResult_unavailableErrorWrapper(
       :final value,
     ) => skir.PreparedValue(content: value.content, findings: value.findings),
-    skir.PreparationStep_unknown() => throw StateError(
+    skir.PrepareValueResult_catalogChangedErrorWrapper(:final value) =>
+      throw CatalogGenerationChanged(value),
+    skir.PrepareValueResult_internalErrorWrapper() =>
+      throw ApiException.internalServerError(),
+    skir.PrepareValueResult_unknown() => throw StateError(
       "Unknown preparation outcome",
     ),
   };

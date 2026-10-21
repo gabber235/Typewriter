@@ -275,7 +275,7 @@ private fun searchError(
 ): RealmPresentationSearchUpdate =
     RealmPresentationSearchUpdate.createSnapshot(
         subscriptionId = subscriptionId,
-        status = RealmPresentationSearchStatus.ERROR,
+        status = RealmPresentationSearchStatus.SEARCH_FAILED_ERROR,
         values = emptyList(),
         guidance = emptyList(),
         diagnostics = listOf(realmDiagnostic(message)),
@@ -285,7 +285,7 @@ internal fun unavailableRealmPresentationSearchUpdate(
     subscriptionId: String,
     message: String = "Realm presentation search source is unavailable",
 ): RealmPresentationSearchUpdate =
-    RealmPresentationSearchUpdate.createUnavailable(
+    RealmPresentationSearchUpdate.createUnavailableError(
         subscriptionId = subscriptionId,
         diagnostics = listOf(realmDiagnostic(message)),
     )

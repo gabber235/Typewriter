@@ -47,7 +47,7 @@ fun RealmRouteScope.editorCatalogFetch(policy: ResponsePolicy<skirout.editor.v1.
 
 private val editorCatalogWatchRequestAddress = "service.to.{realm}.organization.{organization}.realm.editor.catalog.invalidate".realmTemplate()
 private val editorCatalogWatchUpdateAddress = "service.from.{realm}.organization.{organization}.realm.editor.catalog.invalidate".realmTemplate()
-fun RealmRouteScope.editorCatalogWatch(policy: ResponsePolicy<skirout.editor.v1.catalog.CatalogInvalidated>, updates: ResponseClassifier<skirout.editor.v1.catalog.CatalogInvalidated>) = skirWatchContract(
+fun RealmRouteScope.editorCatalogWatch(policy: ResponsePolicy<skirout.editor.v1.catalog.WatchEditorCatalogResponse>, updates: ResponseClassifier<skirout.editor.v1.catalog.CatalogInvalidated>) = skirWatchContract(
     method = WatchEditorCatalog, updateSerializer = skirout.editor.v1.catalog.CatalogInvalidated.serializer,
     name = OperationName.of("editor.catalog.invalidate"), requestAddress = editorCatalogWatchRequestAddress.subscribedAt(this),
     updateAddress = editorCatalogWatchUpdateAddress, initialPolicy = policy, updateClassifier = updates,
@@ -189,7 +189,7 @@ fun RealmRouteScope.authoringPublicationQuery(policy: ResponsePolicy<skirout.edi
 
 private val authoringPublicationWatchRequestAddress = "service.to.{realm}.organization.{organization}.realm.editor.authoring.publication.watch".realmTemplate()
 private val authoringPublicationWatchUpdateAddress = "service.from.{realm}.organization.{organization}.realm.editor.authoring.publication.watch".realmTemplate()
-fun RealmRouteScope.authoringPublicationWatch(policy: ResponsePolicy<skirout.editor.v1.publication.PublicationViewChanged>, updates: ResponseClassifier<skirout.editor.v1.publication.PublicationViewChanged>) = skirWatchContract(
+fun RealmRouteScope.authoringPublicationWatch(policy: ResponsePolicy<skirout.editor.v1.publication.WatchPublicationResponse>, updates: ResponseClassifier<skirout.editor.v1.publication.PublicationViewChanged>) = skirWatchContract(
     method = WatchPublication, updateSerializer = skirout.editor.v1.publication.PublicationViewChanged.serializer,
     name = OperationName.of("editor.authoring.publication.watch"), requestAddress = authoringPublicationWatchRequestAddress.subscribedAt(this),
     updateAddress = authoringPublicationWatchUpdateAddress, initialPolicy = policy, updateClassifier = updates,

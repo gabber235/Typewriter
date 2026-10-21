@@ -307,19 +307,15 @@ enum PreparationOperation(810900031) {
 
 /// Separates prepared editable content from a continuation needing caller input or unavailable
 /// preparation. ready describes completion of initialization, not saved authoring or publication.
-enum PreparationStep(810900032) {
+enum PrepareValueResult(810900032) {
   ready: PreparedValue = 1;
   needs_input: PreparationDraft = 2;
-  unavailable: PreparationDraft = 3;
+  unavailable_error: PreparationDraft = 3;
+  catalog_changed_error: CatalogGeneration = 4;
+  internal_error: InternalError = 5;
 }
 
-enum PrepareValueResult(810900033) {
-  prepared: PreparationStep = 1;
-  catalog_changed: CatalogGeneration = 2;
-  internal_error: InternalError = 3;
-}
-
-struct EndpointBindingTemplate(810900034) {
+struct EndpointBindingTemplate(810900033) {
   endpoint: EndpointId = 0;
   containing_resource: NamedTypeTemplate = 1;
   value_owner: TypeDefinitionId = 2;
@@ -328,7 +324,7 @@ struct EndpointBindingTemplate(810900034) {
   contains_collection: bool = 5;
 }
 
-struct TypeRecommendation(810900035) {
+struct TypeRecommendation(810900034) {
   type: NamedTypeUse = 0;
   occurrences: int64 = 1;
 }
@@ -339,7 +335,10 @@ method FetchEditorCatalog(
 
 method WatchEditorCatalog(
   struct {}
-): CatalogInvalidated = 920002;
+): enum {
+  invalidated: CatalogInvalidated = 1;
+  internal_error: InternalError = 2;
+} = 920002;
 
 method PrepareValue(
   PreparationOperation

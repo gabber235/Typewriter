@@ -488,337 +488,6 @@ class PublicationAttempt private constructor(
     }
 }
 
-/**
- * Reports release admission and selection. activated identifies the newly selected publication,
- * not an acknowledgement from engine hosts. candidate_changed requires a fresh review; publishing
- * means another release currently owns the publication gate.
- *
- * Deeply immutable.
- */
-sealed class PublicationResult private constructor() {
-    /** The kind of variant held by a `PublicationResult`. */
-    enum class Kind {
-        UNKNOWN,
-        PUBLISHING_CONST,
-        NO_CHANGES_CONST,
-        ACTIVATED_WRAPPER,
-        BLOCKED_WRAPPER,
-        INTERRUPTED_WRAPPER,
-        CANDIDATE_CHANGED_WRAPPER,
-    }
-
-    class Unknown @kotlin.Deprecated("For internal use", kotlin.ReplaceWith("skirout.editor.v1.publication.PublicationResult.UNKNOWN")) internal constructor(
-        internal val _kind: Kind,
-        internal override val _unrecognized: _UnrecognizedVariant<skirout.editor.v1.publication.PublicationResult>?,
-    ) : skirout.editor.v1.publication.PublicationResult() {
-        override val kind get() = _kind;
-
-        override fun equals(other: kotlin.Any?): kotlin.Boolean {
-            return other is skirout.editor.v1.publication.PublicationResult && other.kind == kind;
-        }
-
-        override fun hashCode(): kotlin.Int {
-            return kind.ordinal;
-        }
-    }
-
-    object PUBLISHING : skirout.editor.v1.publication.PublicationResult() {
-        override val kind get() = Kind.PUBLISHING_CONST;
-
-        override fun equals(other: kotlin.Any?): kotlin.Boolean {
-            return other is skirout.editor.v1.publication.PublicationResult && other.kind == Kind.PUBLISHING_CONST;
-        }
-
-        override fun hashCode(): kotlin.Int {
-            return Kind.PUBLISHING_CONST.ordinal;
-        }
-    }
-
-    object NO_CHANGES : skirout.editor.v1.publication.PublicationResult() {
-        override val kind get() = Kind.NO_CHANGES_CONST;
-
-        override fun equals(other: kotlin.Any?): kotlin.Boolean {
-            return other is skirout.editor.v1.publication.PublicationResult && other.kind == Kind.NO_CHANGES_CONST;
-        }
-
-        override fun hashCode(): kotlin.Int {
-            return Kind.NO_CHANGES_CONST.ordinal;
-        }
-    }
-
-    class ActivatedWrapper private constructor (
-        val value: skirout.editor.v1.publication.PublicationResult.Activated,
-    ) : skirout.editor.v1.publication.PublicationResult() {
-        constructor(
-            value: skirout.editor.v1.publication.PublicationResult.Activated_OrMutable,
-        ): this(value.toFrozen()) {}
-
-        override val kind get() = Kind.ACTIVATED_WRAPPER;
-
-        override fun equals(other: kotlin.Any?): kotlin.Boolean {
-            return other is skirout.editor.v1.publication.PublicationResult.ActivatedWrapper && value == other.value;
-        }
-
-        override fun hashCode(): kotlin.Int {
-            return this.value.hashCode() + 204392913;
-        }
-    }
-
-    class BlockedWrapper private constructor (
-        val value: skirout.editor.v1.publication.PublicationBlockers,
-    ) : skirout.editor.v1.publication.PublicationResult() {
-        constructor(
-            value: skirout.editor.v1.publication.PublicationBlockers_OrMutable,
-        ): this(value.toFrozen()) {}
-
-        override val kind get() = Kind.BLOCKED_WRAPPER;
-
-        override fun equals(other: kotlin.Any?): kotlin.Boolean {
-            return other is skirout.editor.v1.publication.PublicationResult.BlockedWrapper && value == other.value;
-        }
-
-        override fun hashCode(): kotlin.Int {
-            return this.value.hashCode() + -21437972;
-        }
-    }
-
-    class InterruptedWrapper private constructor (
-        val value: skirout.editor.v1.type_catalog.PublicationId,
-    ) : skirout.editor.v1.publication.PublicationResult() {
-        constructor(
-            value: skirout.editor.v1.type_catalog.PublicationId_OrMutable,
-        ): this(value.toFrozen()) {}
-
-        override val kind get() = Kind.INTERRUPTED_WRAPPER;
-
-        override fun equals(other: kotlin.Any?): kotlin.Boolean {
-            return other is skirout.editor.v1.publication.PublicationResult.InterruptedWrapper && value == other.value;
-        }
-
-        override fun hashCode(): kotlin.Int {
-            return this.value.hashCode() + -1947652542;
-        }
-    }
-
-    class CandidateChangedWrapper private constructor (
-        val value: skirout.editor.v1.publication.PublicationViewChanged,
-    ) : skirout.editor.v1.publication.PublicationResult() {
-        constructor(
-            value: skirout.editor.v1.publication.PublicationViewChanged_OrMutable,
-        ): this(value.toFrozen()) {}
-
-        override val kind get() = Kind.CANDIDATE_CHANGED_WRAPPER;
-
-        override fun equals(other: kotlin.Any?): kotlin.Boolean {
-            return other is skirout.editor.v1.publication.PublicationResult.CandidateChangedWrapper && value == other.value;
-        }
-
-        override fun hashCode(): kotlin.Int {
-            return this.value.hashCode() + -1450415112;
-        }
-    }
-
-    internal open val _unrecognized: _UnrecognizedVariant<skirout.editor.v1.publication.PublicationResult>? get() = null;
-
-    abstract val kind: Kind;
-
-    override fun toString(): kotlin.String {
-        return build.skir.internal.toStringImpl(
-            this,
-            _SerializerRegistry.PublicationResultSerializerImpl,
-        )
-    }
-
-    companion object {
-        /**
-         * Constant indicating an unknown [PublicationResult].
-         * Default value for fields of type [PublicationResult].
-         */
-        val UNKNOWN = @kotlin.Suppress("DEPRECATION") Unknown(Kind.UNKNOWN, null);
-
-        /** Shortcut for `ActivatedWrapper(skirout.editor.v1.publication.PublicationResult.Activated(...))`. */
-        @kotlin.Suppress("UNUSED_PARAMETER")
-        fun createActivated(
-            _mustNameArguments: _MustNameArguments =
-                _MustNameArguments,
-            publication: skirout.editor.v1.type_catalog.PublicationId_OrMutable,
-        ) = ActivatedWrapper(
-            skirout.editor.v1.publication.PublicationResult.Activated(
-                publication = publication,
-            )
-        );
-
-        /** Shortcut for `BlockedWrapper(skirout.editor.v1.publication.PublicationBlockers(...))`. */
-        @kotlin.Suppress("UNUSED_PARAMETER")
-        fun createBlocked(
-            _mustNameArguments: _MustNameArguments =
-                _MustNameArguments,
-            first: skirout.editor.v1.publication.PublicationBlocker_OrMutable,
-            additional: kotlin.collections.Iterable<skirout.editor.v1.publication.PublicationBlocker_OrMutable>,
-        ) = BlockedWrapper(
-            skirout.editor.v1.publication.PublicationBlockers(
-                first = first,
-                additional = additional,
-            )
-        );
-
-        /** Shortcut for `InterruptedWrapper(skirout.editor.v1.type_catalog.PublicationId(...))`. */
-        @kotlin.Suppress("UNUSED_PARAMETER")
-        fun createInterrupted(
-            _mustNameArguments: _MustNameArguments =
-                _MustNameArguments,
-            value: kotlin.String,
-        ) = InterruptedWrapper(
-            skirout.editor.v1.type_catalog.PublicationId(
-                value = value,
-            )
-        );
-
-        /** Shortcut for `CandidateChangedWrapper(skirout.editor.v1.publication.PublicationViewChanged(...))`. */
-        @kotlin.Suppress("UNUSED_PARAMETER")
-        fun createCandidateChanged(
-            _mustNameArguments: _MustNameArguments =
-                _MustNameArguments,
-            current: skirout.editor.v1.publication.PublicationViewId_OrMutable,
-        ) = CandidateChangedWrapper(
-            skirout.editor.v1.publication.PublicationViewChanged(
-                current = current,
-            )
-        );
-
-        /** Serializer for [PublicationResult] instances. */
-        val serializer get() = _SerializerRegistry.PublicationResultSerializer;
-
-        /** Describes the [PublicationResult] type. Provides runtime introspection capabilities. */
-        val typeDescriptor get() = _SerializerRegistry.PublicationResultSerializerImpl.typeDescriptor;
-    }
-
-    sealed interface Activated_OrMutable {
-        val publication: skirout.editor.v1.type_catalog.PublicationId_OrMutable;
-
-        fun toFrozen(): skirout.editor.v1.publication.PublicationResult.Activated;
-    }
-
-    /** Deeply immutable. */
-    @kotlin.Suppress("UNUSED_PARAMETER")
-    class Activated private constructor(
-        override val publication: skirout.editor.v1.type_catalog.PublicationId,
-        internal val _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.publication.PublicationResult.Activated>? =
-            null,
-    ): skirout.editor.v1.publication.PublicationResult.Activated_OrMutable {
-        constructor(
-            _mustNameArguments: _MustNameArguments =
-                _MustNameArguments,
-            publication: skirout.editor.v1.type_catalog.PublicationId_OrMutable,
-            _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.publication.PublicationResult.Activated>? =
-                null,
-        ): this(
-            publication.toFrozen(),
-            _unrecognizedFields,
-        ) {}
-
-        @kotlin.Deprecated("Already frozen", kotlin.ReplaceWith("this"))
-        override fun toFrozen() = this;
-
-        /** Returns a mutable shallow copy of this instance */
-        fun toMutable() = Mutable(
-            publication = this.publication,
-        );
-
-        /** Returns a shallow copy of this instance with the specified fields replaced. */
-        fun copy(
-            _mustNameArguments: _MustNameArguments =
-                _MustNameArguments,
-            publication: skirout.editor.v1.type_catalog.PublicationId_OrMutable =
-                this.publication,
-        ) = skirout.editor.v1.publication.PublicationResult.Activated(
-            publication.toFrozen(),
-            this._unrecognizedFields,
-        );
-
-        @kotlin.Deprecated("No point in creating an exact copy of an immutable object", kotlin.ReplaceWith("this"))
-        fun copy() = this;
-
-        override fun equals(other: kotlin.Any?): kotlin.Boolean {
-            return this === other || (other is skirout.editor.v1.publication.PublicationResult.Activated && this.publication == other.publication);
-        }
-
-        override fun hashCode(): kotlin.Int {
-            return kotlin.collections.listOf<kotlin.Any?>(this.publication).hashCode();
-        }
-
-        override fun toString(): kotlin.String {
-            return build.skir.internal.toStringImpl(
-                this,
-                _SerializerRegistry.PublicationResult_ActivatedSerializerImpl,
-            )
-        }
-
-        /** Mutable version of [Activated]. */
-        class Mutable internal constructor(
-            _mustNameArguments: _MustNameArguments =
-                _MustNameArguments,
-            override var publication: skirout.editor.v1.type_catalog.PublicationId_OrMutable =
-                skirout.editor.v1.type_catalog.PublicationId.partial(),
-            internal var _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.publication.PublicationResult.Activated>? =
-                null,
-        ): skirout.editor.v1.publication.PublicationResult.Activated_OrMutable {
-            /** Returns a deeply immutable copy of this instance */
-            override fun toFrozen() = skirout.editor.v1.publication.PublicationResult.Activated(
-                publication = this.publication,
-                _unrecognizedFields = this._unrecognizedFields,
-            );
-
-            /**
-             * If the value of [publication] is already mutable, returns it as-is.
-             * Otherwise, makes a mutable copy, assigns it back to [publication] and returns it.
-             */
-            val mutablePublication: skirout.editor.v1.type_catalog.PublicationId.Mutable get() {
-                var value = this.publication;
-                return when (value) {
-                    is skirout.editor.v1.type_catalog.PublicationId -> {
-                        value = value.toMutable();
-                        this.publication = value;
-                        return value;
-                    }
-                    is skirout.editor.v1.type_catalog.PublicationId.Mutable -> value;
-                }
-            }
-        }
-
-        companion object {
-            private val default =
-                skirout.editor.v1.publication.PublicationResult.Activated(
-                    skirout.editor.v1.type_catalog.PublicationId.partial(),
-                );
-
-            /** Returns an instance with all fields set to their default values. */
-            fun partial() = default;
-
-            /**
-             * Creates a new instance of [Activated].
-             * Unlike the constructor, does not require all fields to be specified.
-             * Missing fields will be set to their default values.
-             */
-            fun partial(
-                _mustNameArguments: _MustNameArguments =
-                    _MustNameArguments,
-                publication: skirout.editor.v1.type_catalog.PublicationId_OrMutable =
-                    skirout.editor.v1.type_catalog.PublicationId.partial(),
-            ) = skirout.editor.v1.publication.PublicationResult.Activated(
-                publication = publication,
-                _unrecognizedFields = null,
-            );
-
-            /** Serializer for [Activated] instances. */
-            val serializer get() = _SerializerRegistry.PublicationResult_ActivatedSerializer;
-
-            /** Describes the [Activated] type. Provides runtime introspection capabilities. */
-            val typeDescriptor get() = _SerializerRegistry.PublicationResult_ActivatedSerializerImpl.typeDescriptor;
-        }
-    }
-}
-
 sealed interface PublicationReport_OrMutable {
     val id: skirout.editor.v1.type_catalog.PublicationId_OrMutable;
     val state: skirout.editor.v1.publication.PublicationState;
@@ -4785,7 +4454,12 @@ sealed class PublishAuthoringResponse private constructor() {
     /** The kind of variant held by a `PublishAuthoringResponse`. */
     enum class Kind {
         UNKNOWN,
-        RESULT_WRAPPER,
+        PUBLISHING_CONST,
+        NO_CHANGES_CONST,
+        ACTIVATED_WRAPPER,
+        BLOCKED_ERROR_WRAPPER,
+        INTERRUPTED_ERROR_WRAPPER,
+        CANDIDATE_CHANGED_ERROR_WRAPPER,
         INTERNAL_ERROR_WRAPPER,
     }
 
@@ -4804,17 +4478,99 @@ sealed class PublishAuthoringResponse private constructor() {
         }
     }
 
-    class ResultWrapper(
-        val value: skirout.editor.v1.publication.PublicationResult,
-    ) : skirout.editor.v1.publication.PublishAuthoringResponse() {
-        override val kind get() = Kind.RESULT_WRAPPER;
+    object PUBLISHING : skirout.editor.v1.publication.PublishAuthoringResponse() {
+        override val kind get() = Kind.PUBLISHING_CONST;
 
         override fun equals(other: kotlin.Any?): kotlin.Boolean {
-            return other is skirout.editor.v1.publication.PublishAuthoringResponse.ResultWrapper && value == other.value;
+            return other is skirout.editor.v1.publication.PublishAuthoringResponse && other.kind == Kind.PUBLISHING_CONST;
         }
 
         override fun hashCode(): kotlin.Int {
-            return this.value.hashCode() + -934426595;
+            return Kind.PUBLISHING_CONST.ordinal;
+        }
+    }
+
+    object NO_CHANGES : skirout.editor.v1.publication.PublishAuthoringResponse() {
+        override val kind get() = Kind.NO_CHANGES_CONST;
+
+        override fun equals(other: kotlin.Any?): kotlin.Boolean {
+            return other is skirout.editor.v1.publication.PublishAuthoringResponse && other.kind == Kind.NO_CHANGES_CONST;
+        }
+
+        override fun hashCode(): kotlin.Int {
+            return Kind.NO_CHANGES_CONST.ordinal;
+        }
+    }
+
+    class ActivatedWrapper private constructor (
+        val value: skirout.editor.v1.publication.PublishAuthoringResponse.Activated,
+    ) : skirout.editor.v1.publication.PublishAuthoringResponse() {
+        constructor(
+            value: skirout.editor.v1.publication.PublishAuthoringResponse.Activated_OrMutable,
+        ): this(value.toFrozen()) {}
+
+        override val kind get() = Kind.ACTIVATED_WRAPPER;
+
+        override fun equals(other: kotlin.Any?): kotlin.Boolean {
+            return other is skirout.editor.v1.publication.PublishAuthoringResponse.ActivatedWrapper && value == other.value;
+        }
+
+        override fun hashCode(): kotlin.Int {
+            return this.value.hashCode() + 204392913;
+        }
+    }
+
+    class BlockedErrorWrapper private constructor (
+        val value: skirout.editor.v1.publication.PublicationBlockers,
+    ) : skirout.editor.v1.publication.PublishAuthoringResponse() {
+        constructor(
+            value: skirout.editor.v1.publication.PublicationBlockers_OrMutable,
+        ): this(value.toFrozen()) {}
+
+        override val kind get() = Kind.BLOCKED_ERROR_WRAPPER;
+
+        override fun equals(other: kotlin.Any?): kotlin.Boolean {
+            return other is skirout.editor.v1.publication.PublishAuthoringResponse.BlockedErrorWrapper && value == other.value;
+        }
+
+        override fun hashCode(): kotlin.Int {
+            return this.value.hashCode() + -622070283;
+        }
+    }
+
+    class InterruptedErrorWrapper private constructor (
+        val value: skirout.editor.v1.type_catalog.PublicationId,
+    ) : skirout.editor.v1.publication.PublishAuthoringResponse() {
+        constructor(
+            value: skirout.editor.v1.type_catalog.PublicationId_OrMutable,
+        ): this(value.toFrozen()) {}
+
+        override val kind get() = Kind.INTERRUPTED_ERROR_WRAPPER;
+
+        override fun equals(other: kotlin.Any?): kotlin.Boolean {
+            return other is skirout.editor.v1.publication.PublishAuthoringResponse.InterruptedErrorWrapper && value == other.value;
+        }
+
+        override fun hashCode(): kotlin.Int {
+            return this.value.hashCode() + -485807669;
+        }
+    }
+
+    class CandidateChangedErrorWrapper private constructor (
+        val value: skirout.editor.v1.publication.PublicationViewChanged,
+    ) : skirout.editor.v1.publication.PublishAuthoringResponse() {
+        constructor(
+            value: skirout.editor.v1.publication.PublicationViewChanged_OrMutable,
+        ): this(value.toFrozen()) {}
+
+        override val kind get() = Kind.CANDIDATE_CHANGED_ERROR_WRAPPER;
+
+        override fun equals(other: kotlin.Any?): kotlin.Boolean {
+            return other is skirout.editor.v1.publication.PublishAuthoringResponse.CandidateChangedErrorWrapper && value == other.value;
+        }
+
+        override fun hashCode(): kotlin.Int {
+            return this.value.hashCode() + 1916454657;
         }
     }
 
@@ -4854,6 +4610,56 @@ sealed class PublishAuthoringResponse private constructor() {
          */
         val UNKNOWN = @kotlin.Suppress("DEPRECATION") Unknown(Kind.UNKNOWN, null);
 
+        /** Shortcut for `ActivatedWrapper(skirout.editor.v1.publication.PublishAuthoringResponse.Activated(...))`. */
+        @kotlin.Suppress("UNUSED_PARAMETER")
+        fun createActivated(
+            _mustNameArguments: _MustNameArguments =
+                _MustNameArguments,
+            publication: skirout.editor.v1.type_catalog.PublicationId_OrMutable,
+        ) = ActivatedWrapper(
+            skirout.editor.v1.publication.PublishAuthoringResponse.Activated(
+                publication = publication,
+            )
+        );
+
+        /** Shortcut for `BlockedErrorWrapper(skirout.editor.v1.publication.PublicationBlockers(...))`. */
+        @kotlin.Suppress("UNUSED_PARAMETER")
+        fun createBlockedError(
+            _mustNameArguments: _MustNameArguments =
+                _MustNameArguments,
+            first: skirout.editor.v1.publication.PublicationBlocker_OrMutable,
+            additional: kotlin.collections.Iterable<skirout.editor.v1.publication.PublicationBlocker_OrMutable>,
+        ) = BlockedErrorWrapper(
+            skirout.editor.v1.publication.PublicationBlockers(
+                first = first,
+                additional = additional,
+            )
+        );
+
+        /** Shortcut for `InterruptedErrorWrapper(skirout.editor.v1.type_catalog.PublicationId(...))`. */
+        @kotlin.Suppress("UNUSED_PARAMETER")
+        fun createInterruptedError(
+            _mustNameArguments: _MustNameArguments =
+                _MustNameArguments,
+            value: kotlin.String,
+        ) = InterruptedErrorWrapper(
+            skirout.editor.v1.type_catalog.PublicationId(
+                value = value,
+            )
+        );
+
+        /** Shortcut for `CandidateChangedErrorWrapper(skirout.editor.v1.publication.PublicationViewChanged(...))`. */
+        @kotlin.Suppress("UNUSED_PARAMETER")
+        fun createCandidateChangedError(
+            _mustNameArguments: _MustNameArguments =
+                _MustNameArguments,
+            current: skirout.editor.v1.publication.PublicationViewId_OrMutable,
+        ) = CandidateChangedErrorWrapper(
+            skirout.editor.v1.publication.PublicationViewChanged(
+                current = current,
+            )
+        );
+
         /** Shortcut for `InternalErrorWrapper(skirout.kernel.v1.errors.InternalError(...))`. */
         @kotlin.Suppress("UNUSED_PARAMETER")
         fun createInternalError(
@@ -4868,6 +4674,131 @@ sealed class PublishAuthoringResponse private constructor() {
 
         /** Describes the [PublishAuthoringResponse] type. Provides runtime introspection capabilities. */
         val typeDescriptor get() = _SerializerRegistry.PublishAuthoringResponseSerializerImpl.typeDescriptor;
+    }
+
+    sealed interface Activated_OrMutable {
+        val publication: skirout.editor.v1.type_catalog.PublicationId_OrMutable;
+
+        fun toFrozen(): skirout.editor.v1.publication.PublishAuthoringResponse.Activated;
+    }
+
+    /** Deeply immutable. */
+    @kotlin.Suppress("UNUSED_PARAMETER")
+    class Activated private constructor(
+        override val publication: skirout.editor.v1.type_catalog.PublicationId,
+        internal val _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.publication.PublishAuthoringResponse.Activated>? =
+            null,
+    ): skirout.editor.v1.publication.PublishAuthoringResponse.Activated_OrMutable {
+        constructor(
+            _mustNameArguments: _MustNameArguments =
+                _MustNameArguments,
+            publication: skirout.editor.v1.type_catalog.PublicationId_OrMutable,
+            _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.publication.PublishAuthoringResponse.Activated>? =
+                null,
+        ): this(
+            publication.toFrozen(),
+            _unrecognizedFields,
+        ) {}
+
+        @kotlin.Deprecated("Already frozen", kotlin.ReplaceWith("this"))
+        override fun toFrozen() = this;
+
+        /** Returns a mutable shallow copy of this instance */
+        fun toMutable() = Mutable(
+            publication = this.publication,
+        );
+
+        /** Returns a shallow copy of this instance with the specified fields replaced. */
+        fun copy(
+            _mustNameArguments: _MustNameArguments =
+                _MustNameArguments,
+            publication: skirout.editor.v1.type_catalog.PublicationId_OrMutable =
+                this.publication,
+        ) = skirout.editor.v1.publication.PublishAuthoringResponse.Activated(
+            publication.toFrozen(),
+            this._unrecognizedFields,
+        );
+
+        @kotlin.Deprecated("No point in creating an exact copy of an immutable object", kotlin.ReplaceWith("this"))
+        fun copy() = this;
+
+        override fun equals(other: kotlin.Any?): kotlin.Boolean {
+            return this === other || (other is skirout.editor.v1.publication.PublishAuthoringResponse.Activated && this.publication == other.publication);
+        }
+
+        override fun hashCode(): kotlin.Int {
+            return kotlin.collections.listOf<kotlin.Any?>(this.publication).hashCode();
+        }
+
+        override fun toString(): kotlin.String {
+            return build.skir.internal.toStringImpl(
+                this,
+                _SerializerRegistry.PublishAuthoringResponse_ActivatedSerializerImpl,
+            )
+        }
+
+        /** Mutable version of [Activated]. */
+        class Mutable internal constructor(
+            _mustNameArguments: _MustNameArguments =
+                _MustNameArguments,
+            override var publication: skirout.editor.v1.type_catalog.PublicationId_OrMutable =
+                skirout.editor.v1.type_catalog.PublicationId.partial(),
+            internal var _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.publication.PublishAuthoringResponse.Activated>? =
+                null,
+        ): skirout.editor.v1.publication.PublishAuthoringResponse.Activated_OrMutable {
+            /** Returns a deeply immutable copy of this instance */
+            override fun toFrozen() = skirout.editor.v1.publication.PublishAuthoringResponse.Activated(
+                publication = this.publication,
+                _unrecognizedFields = this._unrecognizedFields,
+            );
+
+            /**
+             * If the value of [publication] is already mutable, returns it as-is.
+             * Otherwise, makes a mutable copy, assigns it back to [publication] and returns it.
+             */
+            val mutablePublication: skirout.editor.v1.type_catalog.PublicationId.Mutable get() {
+                var value = this.publication;
+                return when (value) {
+                    is skirout.editor.v1.type_catalog.PublicationId -> {
+                        value = value.toMutable();
+                        this.publication = value;
+                        return value;
+                    }
+                    is skirout.editor.v1.type_catalog.PublicationId.Mutable -> value;
+                }
+            }
+        }
+
+        companion object {
+            private val default =
+                skirout.editor.v1.publication.PublishAuthoringResponse.Activated(
+                    skirout.editor.v1.type_catalog.PublicationId.partial(),
+                );
+
+            /** Returns an instance with all fields set to their default values. */
+            fun partial() = default;
+
+            /**
+             * Creates a new instance of [Activated].
+             * Unlike the constructor, does not require all fields to be specified.
+             * Missing fields will be set to their default values.
+             */
+            fun partial(
+                _mustNameArguments: _MustNameArguments =
+                    _MustNameArguments,
+                publication: skirout.editor.v1.type_catalog.PublicationId_OrMutable =
+                    skirout.editor.v1.type_catalog.PublicationId.partial(),
+            ) = skirout.editor.v1.publication.PublishAuthoringResponse.Activated(
+                publication = publication,
+                _unrecognizedFields = null,
+            );
+
+            /** Serializer for [Activated] instances. */
+            val serializer get() = _SerializerRegistry.PublishAuthoringResponse_ActivatedSerializer;
+
+            /** Describes the [Activated] type. Provides runtime introspection capabilities. */
+            val typeDescriptor get() = _SerializerRegistry.PublishAuthoringResponse_ActivatedSerializerImpl.typeDescriptor;
+        }
     }
 }
 
@@ -4948,6 +4879,113 @@ class WatchPublicationRequest private constructor(
 
         /** Describes the [WatchPublicationRequest] type. Provides runtime introspection capabilities. */
         val typeDescriptor get() = _SerializerRegistry.WatchPublicationRequestSerializerImpl.typeDescriptor;
+    }
+}
+
+/** Deeply immutable. */
+sealed class WatchPublicationResponse private constructor() {
+    /** The kind of variant held by a `WatchPublicationResponse`. */
+    enum class Kind {
+        UNKNOWN,
+        VIEW_CHANGED_WRAPPER,
+        INTERNAL_ERROR_WRAPPER,
+    }
+
+    class Unknown @kotlin.Deprecated("For internal use", kotlin.ReplaceWith("skirout.editor.v1.publication.WatchPublicationResponse.UNKNOWN")) internal constructor(
+        internal val _kind: Kind,
+        internal override val _unrecognized: _UnrecognizedVariant<skirout.editor.v1.publication.WatchPublicationResponse>?,
+    ) : skirout.editor.v1.publication.WatchPublicationResponse() {
+        override val kind get() = _kind;
+
+        override fun equals(other: kotlin.Any?): kotlin.Boolean {
+            return other is skirout.editor.v1.publication.WatchPublicationResponse && other.kind == kind;
+        }
+
+        override fun hashCode(): kotlin.Int {
+            return kind.ordinal;
+        }
+    }
+
+    class ViewChangedWrapper private constructor (
+        val value: skirout.editor.v1.publication.PublicationViewChanged,
+    ) : skirout.editor.v1.publication.WatchPublicationResponse() {
+        constructor(
+            value: skirout.editor.v1.publication.PublicationViewChanged_OrMutable,
+        ): this(value.toFrozen()) {}
+
+        override val kind get() = Kind.VIEW_CHANGED_WRAPPER;
+
+        override fun equals(other: kotlin.Any?): kotlin.Boolean {
+            return other is skirout.editor.v1.publication.WatchPublicationResponse.ViewChangedWrapper && value == other.value;
+        }
+
+        override fun hashCode(): kotlin.Int {
+            return this.value.hashCode() + -1558982886;
+        }
+    }
+
+    class InternalErrorWrapper private constructor (
+        val value: skirout.kernel.v1.errors.InternalError,
+    ) : skirout.editor.v1.publication.WatchPublicationResponse() {
+        constructor(
+            value: skirout.kernel.v1.errors.InternalError_OrMutable,
+        ): this(value.toFrozen()) {}
+
+        override val kind get() = Kind.INTERNAL_ERROR_WRAPPER;
+
+        override fun equals(other: kotlin.Any?): kotlin.Boolean {
+            return other is skirout.editor.v1.publication.WatchPublicationResponse.InternalErrorWrapper && value == other.value;
+        }
+
+        override fun hashCode(): kotlin.Int {
+            return this.value.hashCode() + 778975750;
+        }
+    }
+
+    internal open val _unrecognized: _UnrecognizedVariant<skirout.editor.v1.publication.WatchPublicationResponse>? get() = null;
+
+    abstract val kind: Kind;
+
+    override fun toString(): kotlin.String {
+        return build.skir.internal.toStringImpl(
+            this,
+            _SerializerRegistry.WatchPublicationResponseSerializerImpl,
+        )
+    }
+
+    companion object {
+        /**
+         * Constant indicating an unknown [WatchPublicationResponse].
+         * Default value for fields of type [WatchPublicationResponse].
+         */
+        val UNKNOWN = @kotlin.Suppress("DEPRECATION") Unknown(Kind.UNKNOWN, null);
+
+        /** Shortcut for `ViewChangedWrapper(skirout.editor.v1.publication.PublicationViewChanged(...))`. */
+        @kotlin.Suppress("UNUSED_PARAMETER")
+        fun createViewChanged(
+            _mustNameArguments: _MustNameArguments =
+                _MustNameArguments,
+            current: skirout.editor.v1.publication.PublicationViewId_OrMutable,
+        ) = ViewChangedWrapper(
+            skirout.editor.v1.publication.PublicationViewChanged(
+                current = current,
+            )
+        );
+
+        /** Shortcut for `InternalErrorWrapper(skirout.kernel.v1.errors.InternalError(...))`. */
+        @kotlin.Suppress("UNUSED_PARAMETER")
+        fun createInternalError(
+            _mustNameArguments: _MustNameArguments =
+                _MustNameArguments,
+        ) = InternalErrorWrapper(
+            skirout.kernel.v1.errors.InternalError()
+        );
+
+        /** Serializer for [WatchPublicationResponse] instances. */
+        val serializer get() = _SerializerRegistry.WatchPublicationResponseSerializer;
+
+        /** Describes the [WatchPublicationResponse] type. Provides runtime introspection capabilities. */
+        val typeDescriptor get() = _SerializerRegistry.WatchPublicationResponseSerializerImpl.typeDescriptor;
     }
 }
 
@@ -5216,7 +5254,12 @@ sealed class QueryPublicationViewResponse private constructor() {
     }
 }
 
-/** Releases only the issued candidate while its captured saved inputs and engine requirements still match. */
+/**
+ * Releases only the issued candidate while its captured saved inputs and engine requirements still
+ * match. Reports release admission and selection: activated identifies the newly selected
+ * publication, not an acknowledgement from engine hosts; publishing means another release currently
+ * owns the publication gate; candidate_changed_error requires a fresh review.
+ */
 val PublishAuthoring: build.skir.service.Method<
     skirout.editor.v1.publication.PublishAuthoringRequest,
     skirout.editor.v1.publication.PublishAuthoringResponse,
@@ -5226,20 +5269,21 @@ val PublishAuthoring: build.skir.service.Method<
         920018,
         skirout.editor.v1.publication.PublishAuthoringRequest.serializer,
         skirout.editor.v1.publication.PublishAuthoringResponse.serializer,
-        "Releases only the issued candidate while its captured saved inputs and engine requirements still match.",
+        "Releases only the issued candidate while its captured saved inputs and engine requirements still\nmatch. Reports release admission and selection: activated identifies the newly selected\npublication, not an acknowledgement from engine hosts; publishing means another release currently\nowns the publication gate; candidate_changed_error requires a fresh review.",
     )
 }
 
+/** Returns the current review view identity; later identities arrive as update hints. */
 val WatchPublication: build.skir.service.Method<
     skirout.editor.v1.publication.WatchPublicationRequest,
-    skirout.editor.v1.publication.PublicationViewChanged,
+    skirout.editor.v1.publication.WatchPublicationResponse,
 > by kotlin.lazy {
     build.skir.service.Method(
         "WatchPublication",
         920019,
         skirout.editor.v1.publication.WatchPublicationRequest.serializer,
-        skirout.editor.v1.publication.PublicationViewChanged.serializer,
-        "",
+        skirout.editor.v1.publication.WatchPublicationResponse.serializer,
+        "Returns the current review view identity; later identities arrive as update hints.",
     )
 }
 
@@ -5446,31 +5490,6 @@ private object _SerializerRegistry {
 
     val PublicationReportSerializer = build.skir.internal.makeSerializer(PublicationReportSerializerImpl);
 
-    val PublicationResultSerializerImpl =
-        build.skir.internal.EnumSerializer.create<skirout.editor.v1.publication.PublicationResult, skirout.editor.v1.publication.PublicationResult.Unknown>(
-            recordId = "editor/v1/publication.skir:PublicationResult",
-            doc = "Reports release admission and selection. activated identifies the newly selected publication,\nnot an acknowledgement from engine hosts. candidate_changed requires a fresh review; publishing\nmeans another release currently owns the publication gate.",
-            getKindOrdinal = { it.kind.ordinal },
-            kindCount = skirout.editor.v1.publication.PublicationResult.Kind.values().size,
-            unknownInstance = skirout.editor.v1.publication.PublicationResult.UNKNOWN,
-            wrapUnrecognized = { @kotlin.Suppress("DEPRECATION") skirout.editor.v1.publication.PublicationResult.Unknown(skirout.editor.v1.publication.PublicationResult.Kind.UNKNOWN, it) },
-            getUnrecognized = { it._unrecognized },
-        );
-
-    val PublicationResultSerializer = build.skir.internal.makeSerializer(PublicationResultSerializerImpl);
-
-    val PublicationResult_ActivatedSerializerImpl = build.skir.internal.StructSerializer(
-        recordId = "editor/v1/publication.skir:PublicationResult.Activated",
-        doc = "",
-        defaultInstance = skirout.editor.v1.publication.PublicationResult.Activated.partial(),
-        newMutableFn = { it?.toMutable() ?: skirout.editor.v1.publication.PublicationResult.Activated.Mutable() },
-        toFrozenFn = { it.toFrozen() },
-        getUnrecognizedFields = { it._unrecognizedFields },
-        setUnrecognizedFields = { m, u -> m._unrecognizedFields = u },
-    );
-
-    val PublicationResult_ActivatedSerializer = build.skir.internal.makeSerializer(PublicationResult_ActivatedSerializerImpl);
-
     val PublicationStateSerializerImpl =
         build.skir.internal.EnumSerializer.create<skirout.editor.v1.publication.PublicationState, skirout.editor.v1.publication.PublicationState.Unknown>(
             recordId = "editor/v1/publication.skir:PublicationState",
@@ -5642,6 +5661,18 @@ private object _SerializerRegistry {
 
     val PublishAuthoringResponseSerializer = build.skir.internal.makeSerializer(PublishAuthoringResponseSerializerImpl);
 
+    val PublishAuthoringResponse_ActivatedSerializerImpl = build.skir.internal.StructSerializer(
+        recordId = "editor/v1/publication.skir:PublishAuthoringResponse.Activated",
+        doc = "",
+        defaultInstance = skirout.editor.v1.publication.PublishAuthoringResponse.Activated.partial(),
+        newMutableFn = { it?.toMutable() ?: skirout.editor.v1.publication.PublishAuthoringResponse.Activated.Mutable() },
+        toFrozenFn = { it.toFrozen() },
+        getUnrecognizedFields = { it._unrecognizedFields },
+        setUnrecognizedFields = { m, u -> m._unrecognizedFields = u },
+    );
+
+    val PublishAuthoringResponse_ActivatedSerializer = build.skir.internal.makeSerializer(PublishAuthoringResponse_ActivatedSerializerImpl);
+
     val QueryPublicationViewRequestSerializerImpl = build.skir.internal.StructSerializer(
         recordId = "editor/v1/publication.skir:QueryPublicationViewRequest",
         doc = "",
@@ -5678,6 +5709,19 @@ private object _SerializerRegistry {
     );
 
     val WatchPublicationRequestSerializer = build.skir.internal.makeSerializer(WatchPublicationRequestSerializerImpl);
+
+    val WatchPublicationResponseSerializerImpl =
+        build.skir.internal.EnumSerializer.create<skirout.editor.v1.publication.WatchPublicationResponse, skirout.editor.v1.publication.WatchPublicationResponse.Unknown>(
+            recordId = "editor/v1/publication.skir:WatchPublicationResponse",
+            doc = "",
+            getKindOrdinal = { it.kind.ordinal },
+            kindCount = skirout.editor.v1.publication.WatchPublicationResponse.Kind.values().size,
+            unknownInstance = skirout.editor.v1.publication.WatchPublicationResponse.UNKNOWN,
+            wrapUnrecognized = { @kotlin.Suppress("DEPRECATION") skirout.editor.v1.publication.WatchPublicationResponse.Unknown(skirout.editor.v1.publication.WatchPublicationResponse.Kind.UNKNOWN, it) },
+            getUnrecognized = { it._unrecognized },
+        );
+
+    val WatchPublicationResponseSerializer = build.skir.internal.makeSerializer(WatchPublicationResponseSerializerImpl);
 
     init {
         DiagnosticEvidenceSerializerImpl.addField(
@@ -6095,69 +6139,6 @@ private object _SerializerRegistry {
         );
         PublicationReportSerializerImpl.finalizeStruct();
 
-        PublicationResultSerializerImpl.addConstantVariant(
-            1,
-            "publishing",
-            skirout.editor.v1.publication.PublicationResult.Kind.PUBLISHING_CONST.ordinal,
-            "",
-            skirout.editor.v1.publication.PublicationResult.PUBLISHING,
-        );
-        PublicationResultSerializerImpl.addWrapperVariant(
-            2,
-            "activated",
-            skirout.editor.v1.publication.PublicationResult.Kind.ACTIVATED_WRAPPER.ordinal,
-            _SerializerRegistry.PublicationResult_ActivatedSerializer,
-            "",
-            { skirout.editor.v1.publication.PublicationResult.ActivatedWrapper(it) },
-            { it.value },
-        );
-        PublicationResultSerializerImpl.addWrapperVariant(
-            3,
-            "blocked",
-            skirout.editor.v1.publication.PublicationResult.Kind.BLOCKED_WRAPPER.ordinal,
-            _SerializerRegistry.PublicationBlockersSerializer,
-            "",
-            { skirout.editor.v1.publication.PublicationResult.BlockedWrapper(it) },
-            { it.value },
-        );
-        PublicationResultSerializerImpl.addWrapperVariant(
-            4,
-            "interrupted",
-            skirout.editor.v1.publication.PublicationResult.Kind.INTERRUPTED_WRAPPER.ordinal,
-            skirout.editor.v1.type_catalog.PublicationId.serializer,
-            "",
-            { skirout.editor.v1.publication.PublicationResult.InterruptedWrapper(it) },
-            { it.value },
-        );
-        PublicationResultSerializerImpl.addConstantVariant(
-            5,
-            "no_changes",
-            skirout.editor.v1.publication.PublicationResult.Kind.NO_CHANGES_CONST.ordinal,
-            "",
-            skirout.editor.v1.publication.PublicationResult.NO_CHANGES,
-        );
-        PublicationResultSerializerImpl.addWrapperVariant(
-            6,
-            "candidate_changed",
-            skirout.editor.v1.publication.PublicationResult.Kind.CANDIDATE_CHANGED_WRAPPER.ordinal,
-            _SerializerRegistry.PublicationViewChangedSerializer,
-            "",
-            { skirout.editor.v1.publication.PublicationResult.CandidateChangedWrapper(it) },
-            { it.value },
-        );
-        PublicationResultSerializerImpl.finalizeEnum();
-
-        PublicationResult_ActivatedSerializerImpl.addField(
-            "publication",
-            "publication",
-            0,
-            skirout.editor.v1.type_catalog.PublicationId.serializer,
-            "",
-            { it.publication },
-            { mut, v -> mut.publication = v },
-        );
-        PublicationResult_ActivatedSerializerImpl.finalizeStruct();
-
         PublicationStateSerializerImpl.addConstantVariant(
             1,
             "checking",
@@ -6543,17 +6524,58 @@ private object _SerializerRegistry {
         );
         PublishAuthoringRequestSerializerImpl.finalizeStruct();
 
-        PublishAuthoringResponseSerializerImpl.addWrapperVariant(
+        PublishAuthoringResponseSerializerImpl.addConstantVariant(
             1,
-            "result",
-            skirout.editor.v1.publication.PublishAuthoringResponse.Kind.RESULT_WRAPPER.ordinal,
-            _SerializerRegistry.PublicationResultSerializer,
+            "publishing",
+            skirout.editor.v1.publication.PublishAuthoringResponse.Kind.PUBLISHING_CONST.ordinal,
             "",
-            { skirout.editor.v1.publication.PublishAuthoringResponse.ResultWrapper(it) },
-            { it.value },
+            skirout.editor.v1.publication.PublishAuthoringResponse.PUBLISHING,
         );
         PublishAuthoringResponseSerializerImpl.addWrapperVariant(
             2,
+            "activated",
+            skirout.editor.v1.publication.PublishAuthoringResponse.Kind.ACTIVATED_WRAPPER.ordinal,
+            _SerializerRegistry.PublishAuthoringResponse_ActivatedSerializer,
+            "",
+            { skirout.editor.v1.publication.PublishAuthoringResponse.ActivatedWrapper(it) },
+            { it.value },
+        );
+        PublishAuthoringResponseSerializerImpl.addWrapperVariant(
+            3,
+            "blocked_error",
+            skirout.editor.v1.publication.PublishAuthoringResponse.Kind.BLOCKED_ERROR_WRAPPER.ordinal,
+            _SerializerRegistry.PublicationBlockersSerializer,
+            "",
+            { skirout.editor.v1.publication.PublishAuthoringResponse.BlockedErrorWrapper(it) },
+            { it.value },
+        );
+        PublishAuthoringResponseSerializerImpl.addWrapperVariant(
+            4,
+            "interrupted_error",
+            skirout.editor.v1.publication.PublishAuthoringResponse.Kind.INTERRUPTED_ERROR_WRAPPER.ordinal,
+            skirout.editor.v1.type_catalog.PublicationId.serializer,
+            "",
+            { skirout.editor.v1.publication.PublishAuthoringResponse.InterruptedErrorWrapper(it) },
+            { it.value },
+        );
+        PublishAuthoringResponseSerializerImpl.addConstantVariant(
+            5,
+            "no_changes",
+            skirout.editor.v1.publication.PublishAuthoringResponse.Kind.NO_CHANGES_CONST.ordinal,
+            "",
+            skirout.editor.v1.publication.PublishAuthoringResponse.NO_CHANGES,
+        );
+        PublishAuthoringResponseSerializerImpl.addWrapperVariant(
+            6,
+            "candidate_changed_error",
+            skirout.editor.v1.publication.PublishAuthoringResponse.Kind.CANDIDATE_CHANGED_ERROR_WRAPPER.ordinal,
+            _SerializerRegistry.PublicationViewChangedSerializer,
+            "",
+            { skirout.editor.v1.publication.PublishAuthoringResponse.CandidateChangedErrorWrapper(it) },
+            { it.value },
+        );
+        PublishAuthoringResponseSerializerImpl.addWrapperVariant(
+            7,
             "internal_error",
             skirout.editor.v1.publication.PublishAuthoringResponse.Kind.INTERNAL_ERROR_WRAPPER.ordinal,
             skirout.kernel.v1.errors.InternalError.serializer,
@@ -6562,6 +6584,17 @@ private object _SerializerRegistry {
             { it.value },
         );
         PublishAuthoringResponseSerializerImpl.finalizeEnum();
+
+        PublishAuthoringResponse_ActivatedSerializerImpl.addField(
+            "publication",
+            "publication",
+            0,
+            skirout.editor.v1.type_catalog.PublicationId.serializer,
+            "",
+            { it.publication },
+            { mut, v -> mut.publication = v },
+        );
+        PublishAuthoringResponse_ActivatedSerializerImpl.finalizeStruct();
 
         QueryPublicationViewRequestSerializerImpl.addField(
             "expected",
@@ -6604,5 +6637,25 @@ private object _SerializerRegistry {
         QueryPublicationViewResponseSerializerImpl.finalizeEnum();
 
         WatchPublicationRequestSerializerImpl.finalizeStruct();
+
+        WatchPublicationResponseSerializerImpl.addWrapperVariant(
+            1,
+            "view_changed",
+            skirout.editor.v1.publication.WatchPublicationResponse.Kind.VIEW_CHANGED_WRAPPER.ordinal,
+            _SerializerRegistry.PublicationViewChangedSerializer,
+            "",
+            { skirout.editor.v1.publication.WatchPublicationResponse.ViewChangedWrapper(it) },
+            { it.value },
+        );
+        WatchPublicationResponseSerializerImpl.addWrapperVariant(
+            2,
+            "internal_error",
+            skirout.editor.v1.publication.WatchPublicationResponse.Kind.INTERNAL_ERROR_WRAPPER.ordinal,
+            skirout.kernel.v1.errors.InternalError.serializer,
+            "",
+            { skirout.editor.v1.publication.WatchPublicationResponse.InternalErrorWrapper(it) },
+            { it.value },
+        );
+        WatchPublicationResponseSerializerImpl.finalizeEnum();
     }
 }

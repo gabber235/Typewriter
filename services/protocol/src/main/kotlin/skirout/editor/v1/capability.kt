@@ -2491,10 +2491,11 @@ sealed class ComputationResult private constructor() {
     enum class Kind {
         UNKNOWN,
         SUCCESS_WRAPPER,
-        INVALID_WRAPPER,
-        UNAVAILABLE_WRAPPER,
-        PERMISSION_DENIED_WRAPPER,
-        STALE_GENERATION_WRAPPER,
+        INVALID_ERROR_WRAPPER,
+        UNAVAILABLE_ERROR_WRAPPER,
+        PERMISSION_DENIED_ERROR_WRAPPER,
+        STALE_GENERATION_ERROR_WRAPPER,
+        INTERNAL_ERROR_WRAPPER,
     }
 
     class Unknown @kotlin.Deprecated("For internal use", kotlin.ReplaceWith("skirout.editor.v1.capability.ComputationResult.UNKNOWN")) internal constructor(
@@ -2530,75 +2531,93 @@ sealed class ComputationResult private constructor() {
         }
     }
 
-    class InvalidWrapper private constructor (
+    class InvalidErrorWrapper private constructor (
         val value: skirout.editor.v1.capability.CapabilityFailure,
     ) : skirout.editor.v1.capability.ComputationResult() {
         constructor(
             value: skirout.editor.v1.capability.CapabilityFailure_OrMutable,
         ): this(value.toFrozen()) {}
 
-        override val kind get() = Kind.INVALID_WRAPPER;
+        override val kind get() = Kind.INVALID_ERROR_WRAPPER;
 
         override fun equals(other: kotlin.Any?): kotlin.Boolean {
-            return other is skirout.editor.v1.capability.ComputationResult.InvalidWrapper && value == other.value;
+            return other is skirout.editor.v1.capability.ComputationResult.InvalidErrorWrapper && value == other.value;
         }
 
         override fun hashCode(): kotlin.Int {
-            return this.value.hashCode() + 1959784951;
+            return this.value.hashCode() + -849636928;
         }
     }
 
-    class UnavailableWrapper private constructor (
+    class UnavailableErrorWrapper private constructor (
         val value: skirout.editor.v1.capability.CapabilityFailure,
     ) : skirout.editor.v1.capability.ComputationResult() {
         constructor(
             value: skirout.editor.v1.capability.CapabilityFailure_OrMutable,
         ): this(value.toFrozen()) {}
 
-        override val kind get() = Kind.UNAVAILABLE_WRAPPER;
+        override val kind get() = Kind.UNAVAILABLE_ERROR_WRAPPER;
 
         override fun equals(other: kotlin.Any?): kotlin.Boolean {
-            return other is skirout.editor.v1.capability.ComputationResult.UnavailableWrapper && value == other.value;
+            return other is skirout.editor.v1.capability.ComputationResult.UnavailableErrorWrapper && value == other.value;
         }
 
         override fun hashCode(): kotlin.Int {
-            return this.value.hashCode() + -665462704;
+            return this.value.hashCode() + -160984743;
         }
     }
 
-    class PermissionDeniedWrapper private constructor (
+    class PermissionDeniedErrorWrapper private constructor (
         val value: skirout.editor.v1.capability.CapabilityPermissionDenied,
     ) : skirout.editor.v1.capability.ComputationResult() {
         constructor(
             value: skirout.editor.v1.capability.CapabilityPermissionDenied_OrMutable,
         ): this(value.toFrozen()) {}
 
-        override val kind get() = Kind.PERMISSION_DENIED_WRAPPER;
+        override val kind get() = Kind.PERMISSION_DENIED_ERROR_WRAPPER;
 
         override fun equals(other: kotlin.Any?): kotlin.Boolean {
-            return other is skirout.editor.v1.capability.ComputationResult.PermissionDeniedWrapper && value == other.value;
+            return other is skirout.editor.v1.capability.ComputationResult.PermissionDeniedErrorWrapper && value == other.value;
         }
 
         override fun hashCode(): kotlin.Int {
-            return this.value.hashCode() + 330128395;
+            return this.value.hashCode() + -1996612396;
         }
     }
 
-    class StaleGenerationWrapper private constructor (
+    class StaleGenerationErrorWrapper private constructor (
         val value: skirout.editor.v1.capability.StaleCatalogGeneration,
     ) : skirout.editor.v1.capability.ComputationResult() {
         constructor(
             value: skirout.editor.v1.capability.StaleCatalogGeneration_OrMutable,
         ): this(value.toFrozen()) {}
 
-        override val kind get() = Kind.STALE_GENERATION_WRAPPER;
+        override val kind get() = Kind.STALE_GENERATION_ERROR_WRAPPER;
 
         override fun equals(other: kotlin.Any?): kotlin.Boolean {
-            return other is skirout.editor.v1.capability.ComputationResult.StaleGenerationWrapper && value == other.value;
+            return other is skirout.editor.v1.capability.ComputationResult.StaleGenerationErrorWrapper && value == other.value;
         }
 
         override fun hashCode(): kotlin.Int {
-            return this.value.hashCode() + -1670368898;
+            return this.value.hashCode() + 1257885703;
+        }
+    }
+
+    class InternalErrorWrapper private constructor (
+        val value: skirout.kernel.v1.errors.InternalError,
+    ) : skirout.editor.v1.capability.ComputationResult() {
+        constructor(
+            value: skirout.kernel.v1.errors.InternalError_OrMutable,
+        ): this(value.toFrozen()) {}
+
+        override val kind get() = Kind.INTERNAL_ERROR_WRAPPER;
+
+        override fun equals(other: kotlin.Any?): kotlin.Boolean {
+            return other is skirout.editor.v1.capability.ComputationResult.InternalErrorWrapper && value == other.value;
+        }
+
+        override fun hashCode(): kotlin.Int {
+            return this.value.hashCode() + 778975750;
         }
     }
 
@@ -2634,60 +2653,69 @@ sealed class ComputationResult private constructor() {
             )
         );
 
-        /** Shortcut for `InvalidWrapper(skirout.editor.v1.capability.CapabilityFailure(...))`. */
+        /** Shortcut for `InvalidErrorWrapper(skirout.editor.v1.capability.CapabilityFailure(...))`. */
         @kotlin.Suppress("UNUSED_PARAMETER")
-        fun createInvalid(
+        fun createInvalidError(
             _mustNameArguments: _MustNameArguments =
                 _MustNameArguments,
             invocationId: skirout.editor.v1.capability.InvocationId_OrMutable,
             diagnostics: kotlin.collections.Iterable<skirout.editor.v1.diagnostic.Diagnostic_OrMutable>,
-        ) = InvalidWrapper(
+        ) = InvalidErrorWrapper(
             skirout.editor.v1.capability.CapabilityFailure(
                 invocationId = invocationId,
                 diagnostics = diagnostics,
             )
         );
 
-        /** Shortcut for `UnavailableWrapper(skirout.editor.v1.capability.CapabilityFailure(...))`. */
+        /** Shortcut for `UnavailableErrorWrapper(skirout.editor.v1.capability.CapabilityFailure(...))`. */
         @kotlin.Suppress("UNUSED_PARAMETER")
-        fun createUnavailable(
+        fun createUnavailableError(
             _mustNameArguments: _MustNameArguments =
                 _MustNameArguments,
             invocationId: skirout.editor.v1.capability.InvocationId_OrMutable,
             diagnostics: kotlin.collections.Iterable<skirout.editor.v1.diagnostic.Diagnostic_OrMutable>,
-        ) = UnavailableWrapper(
+        ) = UnavailableErrorWrapper(
             skirout.editor.v1.capability.CapabilityFailure(
                 invocationId = invocationId,
                 diagnostics = diagnostics,
             )
         );
 
-        /** Shortcut for `PermissionDeniedWrapper(skirout.editor.v1.capability.CapabilityPermissionDenied(...))`. */
+        /** Shortcut for `PermissionDeniedErrorWrapper(skirout.editor.v1.capability.CapabilityPermissionDenied(...))`. */
         @kotlin.Suppress("UNUSED_PARAMETER")
-        fun createPermissionDenied(
+        fun createPermissionDeniedError(
             _mustNameArguments: _MustNameArguments =
                 _MustNameArguments,
             invocationId: skirout.editor.v1.capability.InvocationId_OrMutable,
             message: kotlin.String,
-        ) = PermissionDeniedWrapper(
+        ) = PermissionDeniedErrorWrapper(
             skirout.editor.v1.capability.CapabilityPermissionDenied(
                 invocationId = invocationId,
                 message = message,
             )
         );
 
-        /** Shortcut for `StaleGenerationWrapper(skirout.editor.v1.capability.StaleCatalogGeneration(...))`. */
+        /** Shortcut for `StaleGenerationErrorWrapper(skirout.editor.v1.capability.StaleCatalogGeneration(...))`. */
         @kotlin.Suppress("UNUSED_PARAMETER")
-        fun createStaleGeneration(
+        fun createStaleGenerationError(
             _mustNameArguments: _MustNameArguments =
                 _MustNameArguments,
             invocationId: skirout.editor.v1.capability.InvocationId_OrMutable,
             actualGeneration: skirout.editor.v1.type_catalog.CatalogGeneration_OrMutable,
-        ) = StaleGenerationWrapper(
+        ) = StaleGenerationErrorWrapper(
             skirout.editor.v1.capability.StaleCatalogGeneration(
                 invocationId = invocationId,
                 actualGeneration = actualGeneration,
             )
+        );
+
+        /** Shortcut for `InternalErrorWrapper(skirout.kernel.v1.errors.InternalError(...))`. */
+        @kotlin.Suppress("UNUSED_PARAMETER")
+        fun createInternalError(
+            _mustNameArguments: _MustNameArguments =
+                _MustNameArguments,
+        ) = InternalErrorWrapper(
+            skirout.kernel.v1.errors.InternalError()
         );
 
         /** Serializer for [ComputationResult] instances. */
@@ -2704,10 +2732,11 @@ sealed class CommandResult private constructor() {
     enum class Kind {
         UNKNOWN,
         SUCCESS_WRAPPER,
-        INVALID_WRAPPER,
-        UNAVAILABLE_WRAPPER,
-        PERMISSION_DENIED_WRAPPER,
-        STALE_GENERATION_WRAPPER,
+        INVALID_ERROR_WRAPPER,
+        UNAVAILABLE_ERROR_WRAPPER,
+        PERMISSION_DENIED_ERROR_WRAPPER,
+        STALE_GENERATION_ERROR_WRAPPER,
+        INTERNAL_ERROR_WRAPPER,
     }
 
     class Unknown @kotlin.Deprecated("For internal use", kotlin.ReplaceWith("skirout.editor.v1.capability.CommandResult.UNKNOWN")) internal constructor(
@@ -2743,75 +2772,93 @@ sealed class CommandResult private constructor() {
         }
     }
 
-    class InvalidWrapper private constructor (
+    class InvalidErrorWrapper private constructor (
         val value: skirout.editor.v1.capability.CapabilityFailure,
     ) : skirout.editor.v1.capability.CommandResult() {
         constructor(
             value: skirout.editor.v1.capability.CapabilityFailure_OrMutable,
         ): this(value.toFrozen()) {}
 
-        override val kind get() = Kind.INVALID_WRAPPER;
+        override val kind get() = Kind.INVALID_ERROR_WRAPPER;
 
         override fun equals(other: kotlin.Any?): kotlin.Boolean {
-            return other is skirout.editor.v1.capability.CommandResult.InvalidWrapper && value == other.value;
+            return other is skirout.editor.v1.capability.CommandResult.InvalidErrorWrapper && value == other.value;
         }
 
         override fun hashCode(): kotlin.Int {
-            return this.value.hashCode() + 1959784951;
+            return this.value.hashCode() + -849636928;
         }
     }
 
-    class UnavailableWrapper private constructor (
+    class UnavailableErrorWrapper private constructor (
         val value: skirout.editor.v1.capability.CapabilityFailure,
     ) : skirout.editor.v1.capability.CommandResult() {
         constructor(
             value: skirout.editor.v1.capability.CapabilityFailure_OrMutable,
         ): this(value.toFrozen()) {}
 
-        override val kind get() = Kind.UNAVAILABLE_WRAPPER;
+        override val kind get() = Kind.UNAVAILABLE_ERROR_WRAPPER;
 
         override fun equals(other: kotlin.Any?): kotlin.Boolean {
-            return other is skirout.editor.v1.capability.CommandResult.UnavailableWrapper && value == other.value;
+            return other is skirout.editor.v1.capability.CommandResult.UnavailableErrorWrapper && value == other.value;
         }
 
         override fun hashCode(): kotlin.Int {
-            return this.value.hashCode() + -665462704;
+            return this.value.hashCode() + -160984743;
         }
     }
 
-    class PermissionDeniedWrapper private constructor (
+    class PermissionDeniedErrorWrapper private constructor (
         val value: skirout.editor.v1.capability.CapabilityPermissionDenied,
     ) : skirout.editor.v1.capability.CommandResult() {
         constructor(
             value: skirout.editor.v1.capability.CapabilityPermissionDenied_OrMutable,
         ): this(value.toFrozen()) {}
 
-        override val kind get() = Kind.PERMISSION_DENIED_WRAPPER;
+        override val kind get() = Kind.PERMISSION_DENIED_ERROR_WRAPPER;
 
         override fun equals(other: kotlin.Any?): kotlin.Boolean {
-            return other is skirout.editor.v1.capability.CommandResult.PermissionDeniedWrapper && value == other.value;
+            return other is skirout.editor.v1.capability.CommandResult.PermissionDeniedErrorWrapper && value == other.value;
         }
 
         override fun hashCode(): kotlin.Int {
-            return this.value.hashCode() + 330128395;
+            return this.value.hashCode() + -1996612396;
         }
     }
 
-    class StaleGenerationWrapper private constructor (
+    class StaleGenerationErrorWrapper private constructor (
         val value: skirout.editor.v1.capability.StaleCatalogGeneration,
     ) : skirout.editor.v1.capability.CommandResult() {
         constructor(
             value: skirout.editor.v1.capability.StaleCatalogGeneration_OrMutable,
         ): this(value.toFrozen()) {}
 
-        override val kind get() = Kind.STALE_GENERATION_WRAPPER;
+        override val kind get() = Kind.STALE_GENERATION_ERROR_WRAPPER;
 
         override fun equals(other: kotlin.Any?): kotlin.Boolean {
-            return other is skirout.editor.v1.capability.CommandResult.StaleGenerationWrapper && value == other.value;
+            return other is skirout.editor.v1.capability.CommandResult.StaleGenerationErrorWrapper && value == other.value;
         }
 
         override fun hashCode(): kotlin.Int {
-            return this.value.hashCode() + -1670368898;
+            return this.value.hashCode() + 1257885703;
+        }
+    }
+
+    class InternalErrorWrapper private constructor (
+        val value: skirout.kernel.v1.errors.InternalError,
+    ) : skirout.editor.v1.capability.CommandResult() {
+        constructor(
+            value: skirout.kernel.v1.errors.InternalError_OrMutable,
+        ): this(value.toFrozen()) {}
+
+        override val kind get() = Kind.INTERNAL_ERROR_WRAPPER;
+
+        override fun equals(other: kotlin.Any?): kotlin.Boolean {
+            return other is skirout.editor.v1.capability.CommandResult.InternalErrorWrapper && value == other.value;
+        }
+
+        override fun hashCode(): kotlin.Int {
+            return this.value.hashCode() + 778975750;
         }
     }
 
@@ -2847,60 +2894,69 @@ sealed class CommandResult private constructor() {
             )
         );
 
-        /** Shortcut for `InvalidWrapper(skirout.editor.v1.capability.CapabilityFailure(...))`. */
+        /** Shortcut for `InvalidErrorWrapper(skirout.editor.v1.capability.CapabilityFailure(...))`. */
         @kotlin.Suppress("UNUSED_PARAMETER")
-        fun createInvalid(
+        fun createInvalidError(
             _mustNameArguments: _MustNameArguments =
                 _MustNameArguments,
             invocationId: skirout.editor.v1.capability.InvocationId_OrMutable,
             diagnostics: kotlin.collections.Iterable<skirout.editor.v1.diagnostic.Diagnostic_OrMutable>,
-        ) = InvalidWrapper(
+        ) = InvalidErrorWrapper(
             skirout.editor.v1.capability.CapabilityFailure(
                 invocationId = invocationId,
                 diagnostics = diagnostics,
             )
         );
 
-        /** Shortcut for `UnavailableWrapper(skirout.editor.v1.capability.CapabilityFailure(...))`. */
+        /** Shortcut for `UnavailableErrorWrapper(skirout.editor.v1.capability.CapabilityFailure(...))`. */
         @kotlin.Suppress("UNUSED_PARAMETER")
-        fun createUnavailable(
+        fun createUnavailableError(
             _mustNameArguments: _MustNameArguments =
                 _MustNameArguments,
             invocationId: skirout.editor.v1.capability.InvocationId_OrMutable,
             diagnostics: kotlin.collections.Iterable<skirout.editor.v1.diagnostic.Diagnostic_OrMutable>,
-        ) = UnavailableWrapper(
+        ) = UnavailableErrorWrapper(
             skirout.editor.v1.capability.CapabilityFailure(
                 invocationId = invocationId,
                 diagnostics = diagnostics,
             )
         );
 
-        /** Shortcut for `PermissionDeniedWrapper(skirout.editor.v1.capability.CapabilityPermissionDenied(...))`. */
+        /** Shortcut for `PermissionDeniedErrorWrapper(skirout.editor.v1.capability.CapabilityPermissionDenied(...))`. */
         @kotlin.Suppress("UNUSED_PARAMETER")
-        fun createPermissionDenied(
+        fun createPermissionDeniedError(
             _mustNameArguments: _MustNameArguments =
                 _MustNameArguments,
             invocationId: skirout.editor.v1.capability.InvocationId_OrMutable,
             message: kotlin.String,
-        ) = PermissionDeniedWrapper(
+        ) = PermissionDeniedErrorWrapper(
             skirout.editor.v1.capability.CapabilityPermissionDenied(
                 invocationId = invocationId,
                 message = message,
             )
         );
 
-        /** Shortcut for `StaleGenerationWrapper(skirout.editor.v1.capability.StaleCatalogGeneration(...))`. */
+        /** Shortcut for `StaleGenerationErrorWrapper(skirout.editor.v1.capability.StaleCatalogGeneration(...))`. */
         @kotlin.Suppress("UNUSED_PARAMETER")
-        fun createStaleGeneration(
+        fun createStaleGenerationError(
             _mustNameArguments: _MustNameArguments =
                 _MustNameArguments,
             invocationId: skirout.editor.v1.capability.InvocationId_OrMutable,
             actualGeneration: skirout.editor.v1.type_catalog.CatalogGeneration_OrMutable,
-        ) = StaleGenerationWrapper(
+        ) = StaleGenerationErrorWrapper(
             skirout.editor.v1.capability.StaleCatalogGeneration(
                 invocationId = invocationId,
                 actualGeneration = actualGeneration,
             )
+        );
+
+        /** Shortcut for `InternalErrorWrapper(skirout.kernel.v1.errors.InternalError(...))`. */
+        @kotlin.Suppress("UNUSED_PARAMETER")
+        fun createInternalError(
+            _mustNameArguments: _MustNameArguments =
+                _MustNameArguments,
+        ) = InternalErrorWrapper(
+            skirout.kernel.v1.errors.InternalError()
         );
 
         /** Serializer for [CommandResult] instances. */
@@ -3546,38 +3602,47 @@ private object _SerializerRegistry {
         );
         CommandResultSerializerImpl.addWrapperVariant(
             2,
-            "invalid",
-            skirout.editor.v1.capability.CommandResult.Kind.INVALID_WRAPPER.ordinal,
+            "invalid_error",
+            skirout.editor.v1.capability.CommandResult.Kind.INVALID_ERROR_WRAPPER.ordinal,
             _SerializerRegistry.CapabilityFailureSerializer,
             "",
-            { skirout.editor.v1.capability.CommandResult.InvalidWrapper(it) },
+            { skirout.editor.v1.capability.CommandResult.InvalidErrorWrapper(it) },
             { it.value },
         );
         CommandResultSerializerImpl.addWrapperVariant(
             3,
-            "unavailable",
-            skirout.editor.v1.capability.CommandResult.Kind.UNAVAILABLE_WRAPPER.ordinal,
+            "unavailable_error",
+            skirout.editor.v1.capability.CommandResult.Kind.UNAVAILABLE_ERROR_WRAPPER.ordinal,
             _SerializerRegistry.CapabilityFailureSerializer,
             "",
-            { skirout.editor.v1.capability.CommandResult.UnavailableWrapper(it) },
+            { skirout.editor.v1.capability.CommandResult.UnavailableErrorWrapper(it) },
             { it.value },
         );
         CommandResultSerializerImpl.addWrapperVariant(
             4,
-            "permission_denied",
-            skirout.editor.v1.capability.CommandResult.Kind.PERMISSION_DENIED_WRAPPER.ordinal,
+            "permission_denied_error",
+            skirout.editor.v1.capability.CommandResult.Kind.PERMISSION_DENIED_ERROR_WRAPPER.ordinal,
             _SerializerRegistry.CapabilityPermissionDeniedSerializer,
             "",
-            { skirout.editor.v1.capability.CommandResult.PermissionDeniedWrapper(it) },
+            { skirout.editor.v1.capability.CommandResult.PermissionDeniedErrorWrapper(it) },
             { it.value },
         );
         CommandResultSerializerImpl.addWrapperVariant(
             5,
-            "stale_generation",
-            skirout.editor.v1.capability.CommandResult.Kind.STALE_GENERATION_WRAPPER.ordinal,
+            "stale_generation_error",
+            skirout.editor.v1.capability.CommandResult.Kind.STALE_GENERATION_ERROR_WRAPPER.ordinal,
             _SerializerRegistry.StaleCatalogGenerationSerializer,
             "",
-            { skirout.editor.v1.capability.CommandResult.StaleGenerationWrapper(it) },
+            { skirout.editor.v1.capability.CommandResult.StaleGenerationErrorWrapper(it) },
+            { it.value },
+        );
+        CommandResultSerializerImpl.addWrapperVariant(
+            6,
+            "internal_error",
+            skirout.editor.v1.capability.CommandResult.Kind.INTERNAL_ERROR_WRAPPER.ordinal,
+            skirout.kernel.v1.errors.InternalError.serializer,
+            "",
+            { skirout.editor.v1.capability.CommandResult.InternalErrorWrapper(it) },
             { it.value },
         );
         CommandResultSerializerImpl.finalizeEnum();
@@ -3644,38 +3709,47 @@ private object _SerializerRegistry {
         );
         ComputationResultSerializerImpl.addWrapperVariant(
             2,
-            "invalid",
-            skirout.editor.v1.capability.ComputationResult.Kind.INVALID_WRAPPER.ordinal,
+            "invalid_error",
+            skirout.editor.v1.capability.ComputationResult.Kind.INVALID_ERROR_WRAPPER.ordinal,
             _SerializerRegistry.CapabilityFailureSerializer,
             "",
-            { skirout.editor.v1.capability.ComputationResult.InvalidWrapper(it) },
+            { skirout.editor.v1.capability.ComputationResult.InvalidErrorWrapper(it) },
             { it.value },
         );
         ComputationResultSerializerImpl.addWrapperVariant(
             3,
-            "unavailable",
-            skirout.editor.v1.capability.ComputationResult.Kind.UNAVAILABLE_WRAPPER.ordinal,
+            "unavailable_error",
+            skirout.editor.v1.capability.ComputationResult.Kind.UNAVAILABLE_ERROR_WRAPPER.ordinal,
             _SerializerRegistry.CapabilityFailureSerializer,
             "",
-            { skirout.editor.v1.capability.ComputationResult.UnavailableWrapper(it) },
+            { skirout.editor.v1.capability.ComputationResult.UnavailableErrorWrapper(it) },
             { it.value },
         );
         ComputationResultSerializerImpl.addWrapperVariant(
             4,
-            "permission_denied",
-            skirout.editor.v1.capability.ComputationResult.Kind.PERMISSION_DENIED_WRAPPER.ordinal,
+            "permission_denied_error",
+            skirout.editor.v1.capability.ComputationResult.Kind.PERMISSION_DENIED_ERROR_WRAPPER.ordinal,
             _SerializerRegistry.CapabilityPermissionDeniedSerializer,
             "",
-            { skirout.editor.v1.capability.ComputationResult.PermissionDeniedWrapper(it) },
+            { skirout.editor.v1.capability.ComputationResult.PermissionDeniedErrorWrapper(it) },
             { it.value },
         );
         ComputationResultSerializerImpl.addWrapperVariant(
             5,
-            "stale_generation",
-            skirout.editor.v1.capability.ComputationResult.Kind.STALE_GENERATION_WRAPPER.ordinal,
+            "stale_generation_error",
+            skirout.editor.v1.capability.ComputationResult.Kind.STALE_GENERATION_ERROR_WRAPPER.ordinal,
             _SerializerRegistry.StaleCatalogGenerationSerializer,
             "",
-            { skirout.editor.v1.capability.ComputationResult.StaleGenerationWrapper(it) },
+            { skirout.editor.v1.capability.ComputationResult.StaleGenerationErrorWrapper(it) },
+            { it.value },
+        );
+        ComputationResultSerializerImpl.addWrapperVariant(
+            6,
+            "internal_error",
+            skirout.editor.v1.capability.ComputationResult.Kind.INTERNAL_ERROR_WRAPPER.ordinal,
+            skirout.kernel.v1.errors.InternalError.serializer,
+            "",
+            { skirout.editor.v1.capability.ComputationResult.InternalErrorWrapper(it) },
             { it.value },
         );
         ComputationResultSerializerImpl.finalizeEnum();

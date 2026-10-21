@@ -907,7 +907,8 @@ extension EditorCatalogFetchRouteNats
 
 extension EditorCatalogWatchRouteNats
     on _lib_editor_v1_catalog.WatchEditorCatalogRequest {
-  SkirRouteOperation<_lib_editor_v1_catalog.CatalogInvalidated> operation({
+  SkirRouteOperation<_lib_editor_v1_catalog.WatchEditorCatalogResponse>
+  operation({
     required _skir.RecordId organizationId,
 
     required _skir.RecordId realmId,
@@ -931,12 +932,13 @@ extension EditorCatalogWatchRouteNats
 
     required _skir.RecordId realmId,
 
-    required TData Function(_lib_editor_v1_catalog.CatalogInvalidated) snapshot,
+    required TData Function(_lib_editor_v1_catalog.WatchEditorCatalogResponse)
+    snapshot,
     required TData Function(TData, _lib_editor_v1_catalog.CatalogInvalidated)
     reduce,
     required ProjectionReconciliation<
       TData,
-      _lib_editor_v1_catalog.CatalogInvalidated,
+      _lib_editor_v1_catalog.WatchEditorCatalogResponse,
       _lib_editor_v1_catalog.CatalogInvalidated
     >
     reconciliation,
@@ -957,7 +959,7 @@ extension EditorCatalogWatchRouteNats
     );
     return ref.watchProjection<
       TData,
-      _lib_editor_v1_catalog.CatalogInvalidated,
+      _lib_editor_v1_catalog.WatchEditorCatalogResponse,
       _lib_editor_v1_catalog.CatalogInvalidated
     >(
       subject: operation.subject,
@@ -1460,7 +1462,7 @@ extension AuthoringPublicationQueryRouteNats
 
 extension AuthoringPublicationWatchRouteNats
     on _lib_editor_v1_publication.WatchPublicationRequest {
-  SkirRouteOperation<_lib_editor_v1_publication.PublicationViewChanged>
+  SkirRouteOperation<_lib_editor_v1_publication.WatchPublicationResponse>
   operation({
     required _skir.RecordId organizationId,
 
@@ -1485,7 +1487,7 @@ extension AuthoringPublicationWatchRouteNats
 
     required _skir.RecordId realmId,
 
-    required TData Function(_lib_editor_v1_publication.PublicationViewChanged)
+    required TData Function(_lib_editor_v1_publication.WatchPublicationResponse)
     snapshot,
     required TData Function(
       TData,
@@ -1494,7 +1496,7 @@ extension AuthoringPublicationWatchRouteNats
     reduce,
     required ProjectionReconciliation<
       TData,
-      _lib_editor_v1_publication.PublicationViewChanged,
+      _lib_editor_v1_publication.WatchPublicationResponse,
       _lib_editor_v1_publication.PublicationViewChanged
     >
     reconciliation,
@@ -1515,7 +1517,7 @@ extension AuthoringPublicationWatchRouteNats
     );
     return ref.watchProjection<
       TData,
-      _lib_editor_v1_publication.PublicationViewChanged,
+      _lib_editor_v1_publication.WatchPublicationResponse,
       _lib_editor_v1_publication.PublicationViewChanged
     >(
       subject: operation.subject,

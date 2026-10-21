@@ -56,14 +56,20 @@ method SubmitUserJoinRequest(
     event: UserOrganizationsChanged;
   };
 
+  /// Join code not found.
   code_not_found_error: struct {
     code: RecordId;
   };
+  /// User is already a member of this organization.
   already_member_error: struct {};
+  /// No assignable roles are available for this organization.
   no_assignable_roles_error: struct {};
+  /// User already has the maximum number of pending join requests.
   max_pending_requests_error: struct {};
+  /// User already has a pending join request for this organization.
   pending_request_exists_error: struct {};
 
+  /// Record IDs from an unexpected table.
   invalid_record_id_error: InvalidRecordIdError;
 } = 4962;
 
@@ -80,9 +86,11 @@ method CancelUserJoinRequest(
     event: UserJoinRequestsChanged;
   };
 
+  /// Join request not found.
   request_not_found_error: struct {
     request_id: RecordId;
   };
 
+  /// Record IDs from an unexpected table.
   invalid_record_id_error: InvalidRecordIdError;
 } = 387737;

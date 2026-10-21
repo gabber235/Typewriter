@@ -233,7 +233,7 @@ async fn query_service_messaging_scope(
     };
     match request_route::<ServiceMessagingScopeRoute>(service_scope, &request_value).await? {
         GetServiceMessagingScopeResponse::Found(scope) => Ok(*scope),
-        GetServiceMessagingScopeResponse::NotFound(_) => Err(wasi_error!(
+        GetServiceMessagingScopeResponse::NotFoundError(_) => Err(wasi_error!(
             "permissions-service-messaging-scope-not-found",
             "Service has no host messaging scope",
         )),

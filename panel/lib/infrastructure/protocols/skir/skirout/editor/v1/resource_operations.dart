@@ -2979,11 +2979,11 @@ final class ResolveResourceOperationsRequest_mutable
 ///   switch (e) {
 ///     case ResolveResourceOperationsResult_unknown(): { ... }
 ///     case ResolveResourceOperationsResult_resolved(:var value): { ... }
-///     case ResolveResourceOperationsResult_staleObservation(:var value): { ... }
-///     case ResolveResourceOperationsResult_invalid(:var value): { ... }
-///     case ResolveResourceOperationsResult_catalogChanged(:var value): { ... }
-///     case ResolveResourceOperationsResult_permissionDenied(:var value): { ... }
-///     case ResolveResourceOperationsResult_failed(:var value): { ... }
+///     case ResolveResourceOperationsResult_staleObservationError(:var value): { ... }
+///     case ResolveResourceOperationsResult_invalidError(:var value): { ... }
+///     case ResolveResourceOperationsResult_catalogChangedError(:var value): { ... }
+///     case ResolveResourceOperationsResult_permissionDeniedError(:var value): { ... }
+///     case ResolveResourceOperationsResult_failedError(:var value): { ... }
 ///     case ResolveResourceOperationsResult_internalError(:var value): { ... }
 ///   }
 ///   ```
@@ -3010,73 +3010,73 @@ sealed class ResolveResourceOperationsResult {
     _lib_editor_v1_operation.ResolvedResourceOperations(operations: operations),
   );
 
-  /// Create a 'stale_observation' variant wrapping around the given value.
-  factory ResolveResourceOperationsResult.wrapStaleObservation(
+  /// Create a 'stale_observation_error' variant wrapping around the given value.
+  factory ResolveResourceOperationsResult.wrapStaleObservationError(
     StaleAuthoringObservation value,
-  ) => ResolveResourceOperationsResult_staleObservationWrapper._(value);
+  ) => ResolveResourceOperationsResult_staleObservationErrorWrapper._(value);
 
-  /// Same as `wrapStaleObservation(StaleAuthoringObservation(...))`.
-  factory ResolveResourceOperationsResult.createStaleObservation({
+  /// Same as `wrapStaleObservationError(StaleAuthoringObservation(...))`.
+  factory ResolveResourceOperationsResult.createStaleObservationError({
     required _lib_editor_v1_authoring.AuthoringObservationId_orMutable actual,
-  }) => ResolveResourceOperationsResult.wrapStaleObservation(
+  }) => ResolveResourceOperationsResult.wrapStaleObservationError(
     StaleAuthoringObservation(actual: actual),
   );
 
-  /// Create a 'invalid' variant wrapping around the given value.
-  factory ResolveResourceOperationsResult.wrapInvalid(
+  /// Create a 'invalid_error' variant wrapping around the given value.
+  factory ResolveResourceOperationsResult.wrapInvalidError(
     ResourceOperationFailure value,
-  ) => ResolveResourceOperationsResult_invalidWrapper._(value);
+  ) => ResolveResourceOperationsResult_invalidErrorWrapper._(value);
 
-  /// Same as `wrapInvalid(ResourceOperationFailure(...))`.
-  factory ResolveResourceOperationsResult.createInvalid({
+  /// Same as `wrapInvalidError(ResourceOperationFailure(...))`.
+  factory ResolveResourceOperationsResult.createInvalidError({
     required _core.Iterable<
       _lib_editor_v1_authoring.AuthoringDiagnostic_orMutable
     >
     diagnostics,
-  }) => ResolveResourceOperationsResult.wrapInvalid(
+  }) => ResolveResourceOperationsResult.wrapInvalidError(
     ResourceOperationFailure(diagnostics: diagnostics),
   );
 
-  /// Create a 'catalog_changed' variant wrapping around the given value.
-  factory ResolveResourceOperationsResult.wrapCatalogChanged(
+  /// Create a 'catalog_changed_error' variant wrapping around the given value.
+  factory ResolveResourceOperationsResult.wrapCatalogChangedError(
     _lib_editor_v1_authoring.CatalogChanged value,
-  ) => ResolveResourceOperationsResult_catalogChangedWrapper._(value);
+  ) => ResolveResourceOperationsResult_catalogChangedErrorWrapper._(value);
 
-  /// Same as `wrapCatalogChanged(_lib_editor_v1_authoring.CatalogChanged(...))`.
-  factory ResolveResourceOperationsResult.createCatalogChanged({
+  /// Same as `wrapCatalogChangedError(_lib_editor_v1_authoring.CatalogChanged(...))`.
+  factory ResolveResourceOperationsResult.createCatalogChangedError({
     required _lib_editor_v1_type_catalog.CatalogGeneration_orMutable
     actualGeneration,
-  }) => ResolveResourceOperationsResult.wrapCatalogChanged(
+  }) => ResolveResourceOperationsResult.wrapCatalogChangedError(
     _lib_editor_v1_authoring.CatalogChanged(actualGeneration: actualGeneration),
   );
 
-  /// Create a 'permission_denied' variant wrapping around the given value.
-  factory ResolveResourceOperationsResult.wrapPermissionDenied(
+  /// Create a 'permission_denied_error' variant wrapping around the given value.
+  factory ResolveResourceOperationsResult.wrapPermissionDeniedError(
     ResourceOperationFailure value,
-  ) => ResolveResourceOperationsResult_permissionDeniedWrapper._(value);
+  ) => ResolveResourceOperationsResult_permissionDeniedErrorWrapper._(value);
 
-  /// Same as `wrapPermissionDenied(ResourceOperationFailure(...))`.
-  factory ResolveResourceOperationsResult.createPermissionDenied({
+  /// Same as `wrapPermissionDeniedError(ResourceOperationFailure(...))`.
+  factory ResolveResourceOperationsResult.createPermissionDeniedError({
     required _core.Iterable<
       _lib_editor_v1_authoring.AuthoringDiagnostic_orMutable
     >
     diagnostics,
-  }) => ResolveResourceOperationsResult.wrapPermissionDenied(
+  }) => ResolveResourceOperationsResult.wrapPermissionDeniedError(
     ResourceOperationFailure(diagnostics: diagnostics),
   );
 
-  /// Create a 'failed' variant wrapping around the given value.
-  factory ResolveResourceOperationsResult.wrapFailed(
+  /// Create a 'failed_error' variant wrapping around the given value.
+  factory ResolveResourceOperationsResult.wrapFailedError(
     ResourceOperationFailure value,
-  ) => ResolveResourceOperationsResult_failedWrapper._(value);
+  ) => ResolveResourceOperationsResult_failedErrorWrapper._(value);
 
-  /// Same as `wrapFailed(ResourceOperationFailure(...))`.
-  factory ResolveResourceOperationsResult.createFailed({
+  /// Same as `wrapFailedError(ResourceOperationFailure(...))`.
+  factory ResolveResourceOperationsResult.createFailedError({
     required _core.Iterable<
       _lib_editor_v1_authoring.AuthoringDiagnostic_orMutable
     >
     diagnostics,
-  }) => ResolveResourceOperationsResult.wrapFailed(
+  }) => ResolveResourceOperationsResult.wrapFailedError(
     ResourceOperationFailure(diagnostics: diagnostics),
   );
 
@@ -3109,58 +3109,61 @@ sealed class ResolveResourceOperationsResult {
       );
       _serializerBuilder.addWrapperVariant(
         2,
-        "stale_observation",
-        "wrapStaleObservation",
+        "stale_observation_error",
+        "wrapStaleObservationError",
         StaleAuthoringObservation.serializer,
         "",
-        ResolveResourceOperationsResult_staleObservationWrapper._,
+        ResolveResourceOperationsResult_staleObservationErrorWrapper._,
         (it) => it.value,
         ordinal: ResolveResourceOperationsResult_kind
-            .staleObservationWrapper
+            .staleObservationErrorWrapper
             ._ordinal,
       );
       _serializerBuilder.addWrapperVariant(
         3,
-        "invalid",
-        "wrapInvalid",
+        "invalid_error",
+        "wrapInvalidError",
         ResourceOperationFailure.serializer,
         "",
-        ResolveResourceOperationsResult_invalidWrapper._,
+        ResolveResourceOperationsResult_invalidErrorWrapper._,
         (it) => it.value,
-        ordinal: ResolveResourceOperationsResult_kind.invalidWrapper._ordinal,
+        ordinal:
+            ResolveResourceOperationsResult_kind.invalidErrorWrapper._ordinal,
       );
       _serializerBuilder.addWrapperVariant(
         4,
-        "catalog_changed",
-        "wrapCatalogChanged",
+        "catalog_changed_error",
+        "wrapCatalogChangedError",
         _lib_editor_v1_authoring.CatalogChanged.serializer,
         "",
-        ResolveResourceOperationsResult_catalogChangedWrapper._,
+        ResolveResourceOperationsResult_catalogChangedErrorWrapper._,
         (it) => it.value,
-        ordinal:
-            ResolveResourceOperationsResult_kind.catalogChangedWrapper._ordinal,
+        ordinal: ResolveResourceOperationsResult_kind
+            .catalogChangedErrorWrapper
+            ._ordinal,
       );
       _serializerBuilder.addWrapperVariant(
         5,
-        "permission_denied",
-        "wrapPermissionDenied",
+        "permission_denied_error",
+        "wrapPermissionDeniedError",
         ResourceOperationFailure.serializer,
         "",
-        ResolveResourceOperationsResult_permissionDeniedWrapper._,
+        ResolveResourceOperationsResult_permissionDeniedErrorWrapper._,
         (it) => it.value,
         ordinal: ResolveResourceOperationsResult_kind
-            .permissionDeniedWrapper
+            .permissionDeniedErrorWrapper
             ._ordinal,
       );
       _serializerBuilder.addWrapperVariant(
         6,
-        "failed",
-        "wrapFailed",
+        "failed_error",
+        "wrapFailedError",
         ResourceOperationFailure.serializer,
         "",
-        ResolveResourceOperationsResult_failedWrapper._,
+        ResolveResourceOperationsResult_failedErrorWrapper._,
         (it) => it.value,
-        ordinal: ResolveResourceOperationsResult_kind.failedWrapper._ordinal,
+        ordinal:
+            ResolveResourceOperationsResult_kind.failedErrorWrapper._ordinal,
       );
       _serializerBuilder.addWrapperVariant(
         7,
@@ -3194,11 +3197,11 @@ sealed class ResolveResourceOperationsResult {
 enum ResolveResourceOperationsResult_kind {
   unknown(0),
   resolvedWrapper(1),
-  staleObservationWrapper(2),
-  invalidWrapper(3),
-  catalogChangedWrapper(4),
-  permissionDeniedWrapper(5),
-  failedWrapper(6),
+  staleObservationErrorWrapper(2),
+  invalidErrorWrapper(3),
+  catalogChangedErrorWrapper(4),
+  permissionDeniedErrorWrapper(5),
+  failedErrorWrapper(6),
   internalErrorWrapper(7);
 
   final _core.int _ordinal;
@@ -3261,59 +3264,59 @@ final class ResolveResourceOperationsResult_resolvedWrapper
       ResolveResourceOperationsResult_kind.resolvedWrapper;
 }
 
-final class ResolveResourceOperationsResult_staleObservationWrapper
+final class ResolveResourceOperationsResult_staleObservationErrorWrapper
     extends _ResolveResourceOperationsResult_wrapper {
   final StaleAuthoringObservation value;
 
-  ResolveResourceOperationsResult_staleObservationWrapper._(this.value);
+  ResolveResourceOperationsResult_staleObservationErrorWrapper._(this.value);
 
   @_core.override
   ResolveResourceOperationsResult_kind get kind =>
-      ResolveResourceOperationsResult_kind.staleObservationWrapper;
+      ResolveResourceOperationsResult_kind.staleObservationErrorWrapper;
 }
 
-final class ResolveResourceOperationsResult_invalidWrapper
+final class ResolveResourceOperationsResult_invalidErrorWrapper
     extends _ResolveResourceOperationsResult_wrapper {
   final ResourceOperationFailure value;
 
-  ResolveResourceOperationsResult_invalidWrapper._(this.value);
+  ResolveResourceOperationsResult_invalidErrorWrapper._(this.value);
 
   @_core.override
   ResolveResourceOperationsResult_kind get kind =>
-      ResolveResourceOperationsResult_kind.invalidWrapper;
+      ResolveResourceOperationsResult_kind.invalidErrorWrapper;
 }
 
-final class ResolveResourceOperationsResult_catalogChangedWrapper
+final class ResolveResourceOperationsResult_catalogChangedErrorWrapper
     extends _ResolveResourceOperationsResult_wrapper {
   final _lib_editor_v1_authoring.CatalogChanged value;
 
-  ResolveResourceOperationsResult_catalogChangedWrapper._(this.value);
+  ResolveResourceOperationsResult_catalogChangedErrorWrapper._(this.value);
 
   @_core.override
   ResolveResourceOperationsResult_kind get kind =>
-      ResolveResourceOperationsResult_kind.catalogChangedWrapper;
+      ResolveResourceOperationsResult_kind.catalogChangedErrorWrapper;
 }
 
-final class ResolveResourceOperationsResult_permissionDeniedWrapper
+final class ResolveResourceOperationsResult_permissionDeniedErrorWrapper
     extends _ResolveResourceOperationsResult_wrapper {
   final ResourceOperationFailure value;
 
-  ResolveResourceOperationsResult_permissionDeniedWrapper._(this.value);
+  ResolveResourceOperationsResult_permissionDeniedErrorWrapper._(this.value);
 
   @_core.override
   ResolveResourceOperationsResult_kind get kind =>
-      ResolveResourceOperationsResult_kind.permissionDeniedWrapper;
+      ResolveResourceOperationsResult_kind.permissionDeniedErrorWrapper;
 }
 
-final class ResolveResourceOperationsResult_failedWrapper
+final class ResolveResourceOperationsResult_failedErrorWrapper
     extends _ResolveResourceOperationsResult_wrapper {
   final ResourceOperationFailure value;
 
-  ResolveResourceOperationsResult_failedWrapper._(this.value);
+  ResolveResourceOperationsResult_failedErrorWrapper._(this.value);
 
   @_core.override
   ResolveResourceOperationsResult_kind get kind =>
-      ResolveResourceOperationsResult_kind.failedWrapper;
+      ResolveResourceOperationsResult_kind.failedErrorWrapper;
 }
 
 final class ResolveResourceOperationsResult_internalErrorWrapper
@@ -4100,12 +4103,12 @@ final class AuthoringActionPreview_mutable
 ///     case AuthoringActionResult_unknown(): { ... }
 ///     case AuthoringActionResult_needsInput(:var value): { ... }
 ///     case AuthoringActionResult_preview(:var value): { ... }
-///     case AuthoringActionResult_staleObservation(:var value): { ... }
-///     case AuthoringActionResult_invalid(:var value): { ... }
-///     case AuthoringActionResult_unavailable(:var value): { ... }
-///     case AuthoringActionResult_catalogChanged(:var value): { ... }
-///     case AuthoringActionResult_permissionDenied(:var value): { ... }
-///     case AuthoringActionResult_failed(:var value): { ... }
+///     case AuthoringActionResult_staleObservationError(:var value): { ... }
+///     case AuthoringActionResult_invalidError(:var value): { ... }
+///     case AuthoringActionResult_unavailableError(:var value): { ... }
+///     case AuthoringActionResult_catalogChangedError(:var value): { ... }
+///     case AuthoringActionResult_permissionDeniedError(:var value): { ... }
+///     case AuthoringActionResult_failedError(:var value): { ... }
 ///     case AuthoringActionResult_internalError(:var value): { ... }
 ///   }
 ///   ```
@@ -4161,86 +4164,88 @@ sealed class AuthoringActionResult {
     ),
   );
 
-  /// Create a 'stale_observation' variant wrapping around the given value.
-  factory AuthoringActionResult.wrapStaleObservation(
+  /// Create a 'stale_observation_error' variant wrapping around the given value.
+  factory AuthoringActionResult.wrapStaleObservationError(
     StaleAuthoringObservation value,
-  ) => AuthoringActionResult_staleObservationWrapper._(value);
+  ) => AuthoringActionResult_staleObservationErrorWrapper._(value);
 
-  /// Same as `wrapStaleObservation(StaleAuthoringObservation(...))`.
-  factory AuthoringActionResult.createStaleObservation({
+  /// Same as `wrapStaleObservationError(StaleAuthoringObservation(...))`.
+  factory AuthoringActionResult.createStaleObservationError({
     required _lib_editor_v1_authoring.AuthoringObservationId_orMutable actual,
-  }) => AuthoringActionResult.wrapStaleObservation(
+  }) => AuthoringActionResult.wrapStaleObservationError(
     StaleAuthoringObservation(actual: actual),
   );
 
-  /// Create a 'invalid' variant wrapping around the given value.
-  factory AuthoringActionResult.wrapInvalid(ResourceOperationFailure value) =>
-      AuthoringActionResult_invalidWrapper._(value);
-
-  /// Same as `wrapInvalid(ResourceOperationFailure(...))`.
-  factory AuthoringActionResult.createInvalid({
-    required _core.Iterable<
-      _lib_editor_v1_authoring.AuthoringDiagnostic_orMutable
-    >
-    diagnostics,
-  }) => AuthoringActionResult.wrapInvalid(
-    ResourceOperationFailure(diagnostics: diagnostics),
-  );
-
-  /// Create a 'unavailable' variant wrapping around the given value.
-  factory AuthoringActionResult.wrapUnavailable(
+  /// Create a 'invalid_error' variant wrapping around the given value.
+  factory AuthoringActionResult.wrapInvalidError(
     ResourceOperationFailure value,
-  ) => AuthoringActionResult_unavailableWrapper._(value);
+  ) => AuthoringActionResult_invalidErrorWrapper._(value);
 
-  /// Same as `wrapUnavailable(ResourceOperationFailure(...))`.
-  factory AuthoringActionResult.createUnavailable({
+  /// Same as `wrapInvalidError(ResourceOperationFailure(...))`.
+  factory AuthoringActionResult.createInvalidError({
     required _core.Iterable<
       _lib_editor_v1_authoring.AuthoringDiagnostic_orMutable
     >
     diagnostics,
-  }) => AuthoringActionResult.wrapUnavailable(
+  }) => AuthoringActionResult.wrapInvalidError(
     ResourceOperationFailure(diagnostics: diagnostics),
   );
 
-  /// Create a 'catalog_changed' variant wrapping around the given value.
-  factory AuthoringActionResult.wrapCatalogChanged(
-    _lib_editor_v1_authoring.CatalogChanged value,
-  ) => AuthoringActionResult_catalogChangedWrapper._(value);
+  /// Create a 'unavailable_error' variant wrapping around the given value.
+  factory AuthoringActionResult.wrapUnavailableError(
+    ResourceOperationFailure value,
+  ) => AuthoringActionResult_unavailableErrorWrapper._(value);
 
-  /// Same as `wrapCatalogChanged(_lib_editor_v1_authoring.CatalogChanged(...))`.
-  factory AuthoringActionResult.createCatalogChanged({
+  /// Same as `wrapUnavailableError(ResourceOperationFailure(...))`.
+  factory AuthoringActionResult.createUnavailableError({
+    required _core.Iterable<
+      _lib_editor_v1_authoring.AuthoringDiagnostic_orMutable
+    >
+    diagnostics,
+  }) => AuthoringActionResult.wrapUnavailableError(
+    ResourceOperationFailure(diagnostics: diagnostics),
+  );
+
+  /// Create a 'catalog_changed_error' variant wrapping around the given value.
+  factory AuthoringActionResult.wrapCatalogChangedError(
+    _lib_editor_v1_authoring.CatalogChanged value,
+  ) => AuthoringActionResult_catalogChangedErrorWrapper._(value);
+
+  /// Same as `wrapCatalogChangedError(_lib_editor_v1_authoring.CatalogChanged(...))`.
+  factory AuthoringActionResult.createCatalogChangedError({
     required _lib_editor_v1_type_catalog.CatalogGeneration_orMutable
     actualGeneration,
-  }) => AuthoringActionResult.wrapCatalogChanged(
+  }) => AuthoringActionResult.wrapCatalogChangedError(
     _lib_editor_v1_authoring.CatalogChanged(actualGeneration: actualGeneration),
   );
 
-  /// Create a 'permission_denied' variant wrapping around the given value.
-  factory AuthoringActionResult.wrapPermissionDenied(
+  /// Create a 'permission_denied_error' variant wrapping around the given value.
+  factory AuthoringActionResult.wrapPermissionDeniedError(
     ResourceOperationFailure value,
-  ) => AuthoringActionResult_permissionDeniedWrapper._(value);
+  ) => AuthoringActionResult_permissionDeniedErrorWrapper._(value);
 
-  /// Same as `wrapPermissionDenied(ResourceOperationFailure(...))`.
-  factory AuthoringActionResult.createPermissionDenied({
+  /// Same as `wrapPermissionDeniedError(ResourceOperationFailure(...))`.
+  factory AuthoringActionResult.createPermissionDeniedError({
     required _core.Iterable<
       _lib_editor_v1_authoring.AuthoringDiagnostic_orMutable
     >
     diagnostics,
-  }) => AuthoringActionResult.wrapPermissionDenied(
+  }) => AuthoringActionResult.wrapPermissionDeniedError(
     ResourceOperationFailure(diagnostics: diagnostics),
   );
 
-  /// Create a 'failed' variant wrapping around the given value.
-  factory AuthoringActionResult.wrapFailed(ResourceOperationFailure value) =>
-      AuthoringActionResult_failedWrapper._(value);
+  /// Create a 'failed_error' variant wrapping around the given value.
+  factory AuthoringActionResult.wrapFailedError(
+    ResourceOperationFailure value,
+  ) => AuthoringActionResult_failedErrorWrapper._(value);
 
-  /// Same as `wrapFailed(ResourceOperationFailure(...))`.
-  factory AuthoringActionResult.createFailed({
+  /// Same as `wrapFailedError(ResourceOperationFailure(...))`.
+  factory AuthoringActionResult.createFailedError({
     required _core.Iterable<
       _lib_editor_v1_authoring.AuthoringDiagnostic_orMutable
     >
     diagnostics,
-  }) => AuthoringActionResult.wrapFailed(
+  }) => AuthoringActionResult.wrapFailedError(
     ResourceOperationFailure(diagnostics: diagnostics),
   );
 
@@ -4283,63 +4288,65 @@ sealed class AuthoringActionResult {
       );
       _serializerBuilder.addWrapperVariant(
         3,
-        "stale_observation",
-        "wrapStaleObservation",
+        "stale_observation_error",
+        "wrapStaleObservationError",
         StaleAuthoringObservation.serializer,
         "",
-        AuthoringActionResult_staleObservationWrapper._,
+        AuthoringActionResult_staleObservationErrorWrapper._,
         (it) => it.value,
-        ordinal: AuthoringActionResult_kind.staleObservationWrapper._ordinal,
+        ordinal:
+            AuthoringActionResult_kind.staleObservationErrorWrapper._ordinal,
       );
       _serializerBuilder.addWrapperVariant(
         4,
-        "invalid",
-        "wrapInvalid",
+        "invalid_error",
+        "wrapInvalidError",
         ResourceOperationFailure.serializer,
         "",
-        AuthoringActionResult_invalidWrapper._,
+        AuthoringActionResult_invalidErrorWrapper._,
         (it) => it.value,
-        ordinal: AuthoringActionResult_kind.invalidWrapper._ordinal,
+        ordinal: AuthoringActionResult_kind.invalidErrorWrapper._ordinal,
       );
       _serializerBuilder.addWrapperVariant(
         5,
-        "unavailable",
-        "wrapUnavailable",
+        "unavailable_error",
+        "wrapUnavailableError",
         ResourceOperationFailure.serializer,
         "",
-        AuthoringActionResult_unavailableWrapper._,
+        AuthoringActionResult_unavailableErrorWrapper._,
         (it) => it.value,
-        ordinal: AuthoringActionResult_kind.unavailableWrapper._ordinal,
+        ordinal: AuthoringActionResult_kind.unavailableErrorWrapper._ordinal,
       );
       _serializerBuilder.addWrapperVariant(
         6,
-        "catalog_changed",
-        "wrapCatalogChanged",
+        "catalog_changed_error",
+        "wrapCatalogChangedError",
         _lib_editor_v1_authoring.CatalogChanged.serializer,
         "",
-        AuthoringActionResult_catalogChangedWrapper._,
+        AuthoringActionResult_catalogChangedErrorWrapper._,
         (it) => it.value,
-        ordinal: AuthoringActionResult_kind.catalogChangedWrapper._ordinal,
+        ordinal: AuthoringActionResult_kind.catalogChangedErrorWrapper._ordinal,
       );
       _serializerBuilder.addWrapperVariant(
         7,
-        "permission_denied",
-        "wrapPermissionDenied",
+        "permission_denied_error",
+        "wrapPermissionDeniedError",
         ResourceOperationFailure.serializer,
         "",
-        AuthoringActionResult_permissionDeniedWrapper._,
+        AuthoringActionResult_permissionDeniedErrorWrapper._,
         (it) => it.value,
-        ordinal: AuthoringActionResult_kind.permissionDeniedWrapper._ordinal,
+        ordinal:
+            AuthoringActionResult_kind.permissionDeniedErrorWrapper._ordinal,
       );
       _serializerBuilder.addWrapperVariant(
         8,
-        "failed",
-        "wrapFailed",
+        "failed_error",
+        "wrapFailedError",
         ResourceOperationFailure.serializer,
         "",
-        AuthoringActionResult_failedWrapper._,
+        AuthoringActionResult_failedErrorWrapper._,
         (it) => it.value,
-        ordinal: AuthoringActionResult_kind.failedWrapper._ordinal,
+        ordinal: AuthoringActionResult_kind.failedErrorWrapper._ordinal,
       );
       _serializerBuilder.addWrapperVariant(
         9,
@@ -4373,12 +4380,12 @@ enum AuthoringActionResult_kind {
   unknown(0),
   needsInputWrapper(1),
   previewWrapper(2),
-  staleObservationWrapper(3),
-  invalidWrapper(4),
-  unavailableWrapper(5),
-  catalogChangedWrapper(6),
-  permissionDeniedWrapper(7),
-  failedWrapper(8),
+  staleObservationErrorWrapper(3),
+  invalidErrorWrapper(4),
+  unavailableErrorWrapper(5),
+  catalogChangedErrorWrapper(6),
+  permissionDeniedErrorWrapper(7),
+  failedErrorWrapper(8),
   internalErrorWrapper(9);
 
   final _core.int _ordinal;
@@ -4444,70 +4451,70 @@ final class AuthoringActionResult_previewWrapper
       AuthoringActionResult_kind.previewWrapper;
 }
 
-final class AuthoringActionResult_staleObservationWrapper
+final class AuthoringActionResult_staleObservationErrorWrapper
     extends _AuthoringActionResult_wrapper {
   final StaleAuthoringObservation value;
 
-  AuthoringActionResult_staleObservationWrapper._(this.value);
+  AuthoringActionResult_staleObservationErrorWrapper._(this.value);
 
   @_core.override
   AuthoringActionResult_kind get kind =>
-      AuthoringActionResult_kind.staleObservationWrapper;
+      AuthoringActionResult_kind.staleObservationErrorWrapper;
 }
 
-final class AuthoringActionResult_invalidWrapper
+final class AuthoringActionResult_invalidErrorWrapper
     extends _AuthoringActionResult_wrapper {
   final ResourceOperationFailure value;
 
-  AuthoringActionResult_invalidWrapper._(this.value);
+  AuthoringActionResult_invalidErrorWrapper._(this.value);
 
   @_core.override
   AuthoringActionResult_kind get kind =>
-      AuthoringActionResult_kind.invalidWrapper;
+      AuthoringActionResult_kind.invalidErrorWrapper;
 }
 
-final class AuthoringActionResult_unavailableWrapper
+final class AuthoringActionResult_unavailableErrorWrapper
     extends _AuthoringActionResult_wrapper {
   final ResourceOperationFailure value;
 
-  AuthoringActionResult_unavailableWrapper._(this.value);
+  AuthoringActionResult_unavailableErrorWrapper._(this.value);
 
   @_core.override
   AuthoringActionResult_kind get kind =>
-      AuthoringActionResult_kind.unavailableWrapper;
+      AuthoringActionResult_kind.unavailableErrorWrapper;
 }
 
-final class AuthoringActionResult_catalogChangedWrapper
+final class AuthoringActionResult_catalogChangedErrorWrapper
     extends _AuthoringActionResult_wrapper {
   final _lib_editor_v1_authoring.CatalogChanged value;
 
-  AuthoringActionResult_catalogChangedWrapper._(this.value);
+  AuthoringActionResult_catalogChangedErrorWrapper._(this.value);
 
   @_core.override
   AuthoringActionResult_kind get kind =>
-      AuthoringActionResult_kind.catalogChangedWrapper;
+      AuthoringActionResult_kind.catalogChangedErrorWrapper;
 }
 
-final class AuthoringActionResult_permissionDeniedWrapper
+final class AuthoringActionResult_permissionDeniedErrorWrapper
     extends _AuthoringActionResult_wrapper {
   final ResourceOperationFailure value;
 
-  AuthoringActionResult_permissionDeniedWrapper._(this.value);
+  AuthoringActionResult_permissionDeniedErrorWrapper._(this.value);
 
   @_core.override
   AuthoringActionResult_kind get kind =>
-      AuthoringActionResult_kind.permissionDeniedWrapper;
+      AuthoringActionResult_kind.permissionDeniedErrorWrapper;
 }
 
-final class AuthoringActionResult_failedWrapper
+final class AuthoringActionResult_failedErrorWrapper
     extends _AuthoringActionResult_wrapper {
   final ResourceOperationFailure value;
 
-  AuthoringActionResult_failedWrapper._(this.value);
+  AuthoringActionResult_failedErrorWrapper._(this.value);
 
   @_core.override
   AuthoringActionResult_kind get kind =>
-      AuthoringActionResult_kind.failedWrapper;
+      AuthoringActionResult_kind.failedErrorWrapper;
 }
 
 final class AuthoringActionResult_internalErrorWrapper
@@ -5048,11 +5055,11 @@ final class ResolveDropCandidatesRequest_mutable
 ///   switch (e) {
 ///     case ResolveDropCandidatesResult_unknown(): { ... }
 ///     case ResolveDropCandidatesResult_resolved(:var value): { ... }
-///     case ResolveDropCandidatesResult_staleObservation(:var value): { ... }
-///     case ResolveDropCandidatesResult_invalid(:var value): { ... }
-///     case ResolveDropCandidatesResult_catalogChanged(:var value): { ... }
-///     case ResolveDropCandidatesResult_permissionDenied(:var value): { ... }
-///     case ResolveDropCandidatesResult_failed(:var value): { ... }
+///     case ResolveDropCandidatesResult_staleObservationError(:var value): { ... }
+///     case ResolveDropCandidatesResult_invalidError(:var value): { ... }
+///     case ResolveDropCandidatesResult_catalogChangedError(:var value): { ... }
+///     case ResolveDropCandidatesResult_permissionDeniedError(:var value): { ... }
+///     case ResolveDropCandidatesResult_failedError(:var value): { ... }
 ///     case ResolveDropCandidatesResult_internalError(:var value): { ... }
 ///   }
 ///   ```
@@ -5069,73 +5076,73 @@ sealed class ResolveDropCandidatesResult {
     _core.Iterable<DropCandidates> value,
   ) => ResolveDropCandidatesResult_resolvedWrapper._(value);
 
-  /// Create a 'stale_observation' variant wrapping around the given value.
-  factory ResolveDropCandidatesResult.wrapStaleObservation(
+  /// Create a 'stale_observation_error' variant wrapping around the given value.
+  factory ResolveDropCandidatesResult.wrapStaleObservationError(
     StaleAuthoringObservation value,
-  ) => ResolveDropCandidatesResult_staleObservationWrapper._(value);
+  ) => ResolveDropCandidatesResult_staleObservationErrorWrapper._(value);
 
-  /// Same as `wrapStaleObservation(StaleAuthoringObservation(...))`.
-  factory ResolveDropCandidatesResult.createStaleObservation({
+  /// Same as `wrapStaleObservationError(StaleAuthoringObservation(...))`.
+  factory ResolveDropCandidatesResult.createStaleObservationError({
     required _lib_editor_v1_authoring.AuthoringObservationId_orMutable actual,
-  }) => ResolveDropCandidatesResult.wrapStaleObservation(
+  }) => ResolveDropCandidatesResult.wrapStaleObservationError(
     StaleAuthoringObservation(actual: actual),
   );
 
-  /// Create a 'invalid' variant wrapping around the given value.
-  factory ResolveDropCandidatesResult.wrapInvalid(
+  /// Create a 'invalid_error' variant wrapping around the given value.
+  factory ResolveDropCandidatesResult.wrapInvalidError(
     ResourceOperationFailure value,
-  ) => ResolveDropCandidatesResult_invalidWrapper._(value);
+  ) => ResolveDropCandidatesResult_invalidErrorWrapper._(value);
 
-  /// Same as `wrapInvalid(ResourceOperationFailure(...))`.
-  factory ResolveDropCandidatesResult.createInvalid({
+  /// Same as `wrapInvalidError(ResourceOperationFailure(...))`.
+  factory ResolveDropCandidatesResult.createInvalidError({
     required _core.Iterable<
       _lib_editor_v1_authoring.AuthoringDiagnostic_orMutable
     >
     diagnostics,
-  }) => ResolveDropCandidatesResult.wrapInvalid(
+  }) => ResolveDropCandidatesResult.wrapInvalidError(
     ResourceOperationFailure(diagnostics: diagnostics),
   );
 
-  /// Create a 'catalog_changed' variant wrapping around the given value.
-  factory ResolveDropCandidatesResult.wrapCatalogChanged(
+  /// Create a 'catalog_changed_error' variant wrapping around the given value.
+  factory ResolveDropCandidatesResult.wrapCatalogChangedError(
     _lib_editor_v1_authoring.CatalogChanged value,
-  ) => ResolveDropCandidatesResult_catalogChangedWrapper._(value);
+  ) => ResolveDropCandidatesResult_catalogChangedErrorWrapper._(value);
 
-  /// Same as `wrapCatalogChanged(_lib_editor_v1_authoring.CatalogChanged(...))`.
-  factory ResolveDropCandidatesResult.createCatalogChanged({
+  /// Same as `wrapCatalogChangedError(_lib_editor_v1_authoring.CatalogChanged(...))`.
+  factory ResolveDropCandidatesResult.createCatalogChangedError({
     required _lib_editor_v1_type_catalog.CatalogGeneration_orMutable
     actualGeneration,
-  }) => ResolveDropCandidatesResult.wrapCatalogChanged(
+  }) => ResolveDropCandidatesResult.wrapCatalogChangedError(
     _lib_editor_v1_authoring.CatalogChanged(actualGeneration: actualGeneration),
   );
 
-  /// Create a 'permission_denied' variant wrapping around the given value.
-  factory ResolveDropCandidatesResult.wrapPermissionDenied(
+  /// Create a 'permission_denied_error' variant wrapping around the given value.
+  factory ResolveDropCandidatesResult.wrapPermissionDeniedError(
     ResourceOperationFailure value,
-  ) => ResolveDropCandidatesResult_permissionDeniedWrapper._(value);
+  ) => ResolveDropCandidatesResult_permissionDeniedErrorWrapper._(value);
 
-  /// Same as `wrapPermissionDenied(ResourceOperationFailure(...))`.
-  factory ResolveDropCandidatesResult.createPermissionDenied({
+  /// Same as `wrapPermissionDeniedError(ResourceOperationFailure(...))`.
+  factory ResolveDropCandidatesResult.createPermissionDeniedError({
     required _core.Iterable<
       _lib_editor_v1_authoring.AuthoringDiagnostic_orMutable
     >
     diagnostics,
-  }) => ResolveDropCandidatesResult.wrapPermissionDenied(
+  }) => ResolveDropCandidatesResult.wrapPermissionDeniedError(
     ResourceOperationFailure(diagnostics: diagnostics),
   );
 
-  /// Create a 'failed' variant wrapping around the given value.
-  factory ResolveDropCandidatesResult.wrapFailed(
+  /// Create a 'failed_error' variant wrapping around the given value.
+  factory ResolveDropCandidatesResult.wrapFailedError(
     ResourceOperationFailure value,
-  ) => ResolveDropCandidatesResult_failedWrapper._(value);
+  ) => ResolveDropCandidatesResult_failedErrorWrapper._(value);
 
-  /// Same as `wrapFailed(ResourceOperationFailure(...))`.
-  factory ResolveDropCandidatesResult.createFailed({
+  /// Same as `wrapFailedError(ResourceOperationFailure(...))`.
+  factory ResolveDropCandidatesResult.createFailedError({
     required _core.Iterable<
       _lib_editor_v1_authoring.AuthoringDiagnostic_orMutable
     >
     diagnostics,
-  }) => ResolveDropCandidatesResult.wrapFailed(
+  }) => ResolveDropCandidatesResult.wrapFailedError(
     ResourceOperationFailure(diagnostics: diagnostics),
   );
 
@@ -5168,56 +5175,59 @@ sealed class ResolveDropCandidatesResult {
       );
       _serializerBuilder.addWrapperVariant(
         2,
-        "stale_observation",
-        "wrapStaleObservation",
+        "stale_observation_error",
+        "wrapStaleObservationError",
         StaleAuthoringObservation.serializer,
         "",
-        ResolveDropCandidatesResult_staleObservationWrapper._,
+        ResolveDropCandidatesResult_staleObservationErrorWrapper._,
         (it) => it.value,
-        ordinal:
-            ResolveDropCandidatesResult_kind.staleObservationWrapper._ordinal,
+        ordinal: ResolveDropCandidatesResult_kind
+            .staleObservationErrorWrapper
+            ._ordinal,
       );
       _serializerBuilder.addWrapperVariant(
         3,
-        "invalid",
-        "wrapInvalid",
+        "invalid_error",
+        "wrapInvalidError",
         ResourceOperationFailure.serializer,
         "",
-        ResolveDropCandidatesResult_invalidWrapper._,
+        ResolveDropCandidatesResult_invalidErrorWrapper._,
         (it) => it.value,
-        ordinal: ResolveDropCandidatesResult_kind.invalidWrapper._ordinal,
+        ordinal: ResolveDropCandidatesResult_kind.invalidErrorWrapper._ordinal,
       );
       _serializerBuilder.addWrapperVariant(
         4,
-        "catalog_changed",
-        "wrapCatalogChanged",
+        "catalog_changed_error",
+        "wrapCatalogChangedError",
         _lib_editor_v1_authoring.CatalogChanged.serializer,
         "",
-        ResolveDropCandidatesResult_catalogChangedWrapper._,
+        ResolveDropCandidatesResult_catalogChangedErrorWrapper._,
         (it) => it.value,
-        ordinal:
-            ResolveDropCandidatesResult_kind.catalogChangedWrapper._ordinal,
+        ordinal: ResolveDropCandidatesResult_kind
+            .catalogChangedErrorWrapper
+            ._ordinal,
       );
       _serializerBuilder.addWrapperVariant(
         5,
-        "permission_denied",
-        "wrapPermissionDenied",
+        "permission_denied_error",
+        "wrapPermissionDeniedError",
         ResourceOperationFailure.serializer,
         "",
-        ResolveDropCandidatesResult_permissionDeniedWrapper._,
+        ResolveDropCandidatesResult_permissionDeniedErrorWrapper._,
         (it) => it.value,
-        ordinal:
-            ResolveDropCandidatesResult_kind.permissionDeniedWrapper._ordinal,
+        ordinal: ResolveDropCandidatesResult_kind
+            .permissionDeniedErrorWrapper
+            ._ordinal,
       );
       _serializerBuilder.addWrapperVariant(
         6,
-        "failed",
-        "wrapFailed",
+        "failed_error",
+        "wrapFailedError",
         ResourceOperationFailure.serializer,
         "",
-        ResolveDropCandidatesResult_failedWrapper._,
+        ResolveDropCandidatesResult_failedErrorWrapper._,
         (it) => it.value,
-        ordinal: ResolveDropCandidatesResult_kind.failedWrapper._ordinal,
+        ordinal: ResolveDropCandidatesResult_kind.failedErrorWrapper._ordinal,
       );
       _serializerBuilder.addWrapperVariant(
         7,
@@ -5251,11 +5261,11 @@ sealed class ResolveDropCandidatesResult {
 enum ResolveDropCandidatesResult_kind {
   unknown(0),
   resolvedWrapper(1),
-  staleObservationWrapper(2),
-  invalidWrapper(3),
-  catalogChangedWrapper(4),
-  permissionDeniedWrapper(5),
-  failedWrapper(6),
+  staleObservationErrorWrapper(2),
+  invalidErrorWrapper(3),
+  catalogChangedErrorWrapper(4),
+  permissionDeniedErrorWrapper(5),
+  failedErrorWrapper(6),
   internalErrorWrapper(7);
 
   final _core.int _ordinal;
@@ -5313,59 +5323,59 @@ final class ResolveDropCandidatesResult_resolvedWrapper
       ResolveDropCandidatesResult_kind.resolvedWrapper;
 }
 
-final class ResolveDropCandidatesResult_staleObservationWrapper
+final class ResolveDropCandidatesResult_staleObservationErrorWrapper
     extends _ResolveDropCandidatesResult_wrapper {
   final StaleAuthoringObservation value;
 
-  ResolveDropCandidatesResult_staleObservationWrapper._(this.value);
+  ResolveDropCandidatesResult_staleObservationErrorWrapper._(this.value);
 
   @_core.override
   ResolveDropCandidatesResult_kind get kind =>
-      ResolveDropCandidatesResult_kind.staleObservationWrapper;
+      ResolveDropCandidatesResult_kind.staleObservationErrorWrapper;
 }
 
-final class ResolveDropCandidatesResult_invalidWrapper
+final class ResolveDropCandidatesResult_invalidErrorWrapper
     extends _ResolveDropCandidatesResult_wrapper {
   final ResourceOperationFailure value;
 
-  ResolveDropCandidatesResult_invalidWrapper._(this.value);
+  ResolveDropCandidatesResult_invalidErrorWrapper._(this.value);
 
   @_core.override
   ResolveDropCandidatesResult_kind get kind =>
-      ResolveDropCandidatesResult_kind.invalidWrapper;
+      ResolveDropCandidatesResult_kind.invalidErrorWrapper;
 }
 
-final class ResolveDropCandidatesResult_catalogChangedWrapper
+final class ResolveDropCandidatesResult_catalogChangedErrorWrapper
     extends _ResolveDropCandidatesResult_wrapper {
   final _lib_editor_v1_authoring.CatalogChanged value;
 
-  ResolveDropCandidatesResult_catalogChangedWrapper._(this.value);
+  ResolveDropCandidatesResult_catalogChangedErrorWrapper._(this.value);
 
   @_core.override
   ResolveDropCandidatesResult_kind get kind =>
-      ResolveDropCandidatesResult_kind.catalogChangedWrapper;
+      ResolveDropCandidatesResult_kind.catalogChangedErrorWrapper;
 }
 
-final class ResolveDropCandidatesResult_permissionDeniedWrapper
+final class ResolveDropCandidatesResult_permissionDeniedErrorWrapper
     extends _ResolveDropCandidatesResult_wrapper {
   final ResourceOperationFailure value;
 
-  ResolveDropCandidatesResult_permissionDeniedWrapper._(this.value);
+  ResolveDropCandidatesResult_permissionDeniedErrorWrapper._(this.value);
 
   @_core.override
   ResolveDropCandidatesResult_kind get kind =>
-      ResolveDropCandidatesResult_kind.permissionDeniedWrapper;
+      ResolveDropCandidatesResult_kind.permissionDeniedErrorWrapper;
 }
 
-final class ResolveDropCandidatesResult_failedWrapper
+final class ResolveDropCandidatesResult_failedErrorWrapper
     extends _ResolveDropCandidatesResult_wrapper {
   final ResourceOperationFailure value;
 
-  ResolveDropCandidatesResult_failedWrapper._(this.value);
+  ResolveDropCandidatesResult_failedErrorWrapper._(this.value);
 
   @_core.override
   ResolveDropCandidatesResult_kind get kind =>
-      ResolveDropCandidatesResult_kind.failedWrapper;
+      ResolveDropCandidatesResult_kind.failedErrorWrapper;
 }
 
 final class ResolveDropCandidatesResult_internalErrorWrapper

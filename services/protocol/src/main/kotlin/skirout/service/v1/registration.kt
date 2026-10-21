@@ -191,6 +191,7 @@ sealed class BindServiceResponse private constructor() {
         }
     }
 
+    /** Invalid or expired registration token. */
     class InvalidRegistrationTokenErrorWrapper private constructor (
         val value: skirout.service.v1.registration.BindServiceResponse.InvalidRegistrationTokenError,
     ) : skirout.service.v1.registration.BindServiceResponse() {
@@ -209,6 +210,7 @@ sealed class BindServiceResponse private constructor() {
         }
     }
 
+    /** Organization not found. */
     class OrganizationNotFoundErrorWrapper private constructor (
         val value: skirout.service.v1.registration.BindServiceResponse.OrganizationNotFoundError,
     ) : skirout.service.v1.registration.BindServiceResponse() {
@@ -889,6 +891,7 @@ sealed class UnbindServiceResponse private constructor() {
         }
     }
 
+    /** Service not found in organization. */
     class ServiceNotFoundErrorWrapper private constructor (
         val value: skirout.service.v1.registration.UnbindServiceResponse.ServiceNotFoundError,
     ) : skirout.service.v1.registration.UnbindServiceResponse() {
@@ -1304,7 +1307,7 @@ private object _SerializerRegistry {
             "invalid_registration_token_error",
             skirout.service.v1.registration.BindServiceResponse.Kind.INVALID_REGISTRATION_TOKEN_ERROR_WRAPPER.ordinal,
             _SerializerRegistry.BindServiceResponse_InvalidRegistrationTokenErrorSerializer,
-            "",
+            "Invalid or expired registration token.",
             { skirout.service.v1.registration.BindServiceResponse.InvalidRegistrationTokenErrorWrapper(it) },
             { it.value },
         );
@@ -1313,7 +1316,7 @@ private object _SerializerRegistry {
             "organization_not_found_error",
             skirout.service.v1.registration.BindServiceResponse.Kind.ORGANIZATION_NOT_FOUND_ERROR_WRAPPER.ordinal,
             _SerializerRegistry.BindServiceResponse_OrganizationNotFoundErrorSerializer,
-            "",
+            "Organization not found.",
             { skirout.service.v1.registration.BindServiceResponse.OrganizationNotFoundErrorWrapper(it) },
             { it.value },
         );
@@ -1410,7 +1413,7 @@ private object _SerializerRegistry {
             "service_not_found_error",
             skirout.service.v1.registration.UnbindServiceResponse.Kind.SERVICE_NOT_FOUND_ERROR_WRAPPER.ordinal,
             _SerializerRegistry.UnbindServiceResponse_ServiceNotFoundErrorSerializer,
-            "",
+            "Service not found in organization.",
             { skirout.service.v1.registration.UnbindServiceResponse.ServiceNotFoundErrorWrapper(it) },
             { it.value },
         );

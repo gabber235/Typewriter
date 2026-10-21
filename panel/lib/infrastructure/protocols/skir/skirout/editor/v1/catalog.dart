@@ -6004,7 +6004,7 @@ final class PreparationOperation_resumeWrapper
 }
 
 // -----------------------------------------------------------------------------
-// enum PreparationStep
+// enum PrepareValueResult
 // -----------------------------------------------------------------------------
 
 /// Separates prepared editable content from a continuation needing caller input or unavailable
@@ -6013,227 +6013,11 @@ final class PreparationOperation_resumeWrapper
 /// To switch on the variants:
 ///   ```
 ///   switch (e) {
-///     case PreparationStep_unknown(): { ... }
-///     case PreparationStep_ready(:var value): { ... }
-///     case PreparationStep_needsInput(:var value): { ... }
-///     case PreparationStep_unavailable(:var value): { ... }
-///   }
-///   ```
-///
-/// Deeply immutable.
-sealed class PreparationStep {
-  /// Constant indicating an unknown `PreparationStep`.
-  /// Default value for fields of type `PreparationStep`.
-  static const PreparationStep unknown = PreparationStep_unknown._instance;
-
-  /// Create a 'ready' variant wrapping around the given value.
-  factory PreparationStep.wrapReady(PreparedValue value) =>
-      PreparationStep_readyWrapper._(value);
-
-  /// Same as `wrapReady(PreparedValue(...))`.
-  factory PreparationStep.createReady({
-    required PreparedContent content,
-    required _core.Iterable<
-      _lib_editor_v1_diagnostic.InitializationDiagnostic_orMutable
-    >
-    findings,
-  }) => PreparationStep.wrapReady(
-    PreparedValue(content: content, findings: findings),
-  );
-
-  /// Create a 'needs_input' variant wrapping around the given value.
-  factory PreparationStep.wrapNeedsInput(PreparationDraft value) =>
-      PreparationStep_needsInputWrapper._(value);
-
-  /// Same as `wrapNeedsInput(PreparationDraft(...))`.
-  factory PreparationStep.createNeedsInput({
-    required _lib_editor_v1_type_catalog.CatalogGeneration_orMutable catalog,
-    required PreparationTarget target,
-    required PreparedContent content,
-    required _core.Iterable<_lib_editor_v1_type_catalog.ValuePath_orMutable>
-    pendingDefaults,
-    required _core.Iterable<RequiredInput_orMutable> requiredInputs,
-    required _core.Iterable<
-      _lib_editor_v1_diagnostic.InitializationDiagnostic_orMutable
-    >
-    findings,
-  }) => PreparationStep.wrapNeedsInput(
-    PreparationDraft(
-      catalog: catalog,
-      target: target,
-      content: content,
-      pendingDefaults: pendingDefaults,
-      requiredInputs: requiredInputs,
-      findings: findings,
-    ),
-  );
-
-  /// Create a 'unavailable' variant wrapping around the given value.
-  factory PreparationStep.wrapUnavailable(PreparationDraft value) =>
-      PreparationStep_unavailableWrapper._(value);
-
-  /// Same as `wrapUnavailable(PreparationDraft(...))`.
-  factory PreparationStep.createUnavailable({
-    required _lib_editor_v1_type_catalog.CatalogGeneration_orMutable catalog,
-    required PreparationTarget target,
-    required PreparedContent content,
-    required _core.Iterable<_lib_editor_v1_type_catalog.ValuePath_orMutable>
-    pendingDefaults,
-    required _core.Iterable<RequiredInput_orMutable> requiredInputs,
-    required _core.Iterable<
-      _lib_editor_v1_diagnostic.InitializationDiagnostic_orMutable
-    >
-    findings,
-  }) => PreparationStep.wrapUnavailable(
-    PreparationDraft(
-      catalog: catalog,
-      target: target,
-      content: content,
-      pendingDefaults: pendingDefaults,
-      requiredInputs: requiredInputs,
-      findings: findings,
-    ),
-  );
-
-  /// Returns the kind of variant held by this PreparationStep.
-  PreparationStep_kind get kind;
-
-  /// Serializer for `PreparationStep` instances.
-  static _skir.EnumSerializer<PreparationStep> get serializer {
-    if (_serializerBuilder.mustInitialize()) {
-      _serializerBuilder.addWrapperVariant(
-        1,
-        "ready",
-        "wrapReady",
-        PreparedValue.serializer,
-        "",
-        PreparationStep_readyWrapper._,
-        (it) => it.value,
-        ordinal: PreparationStep_kind.readyWrapper._ordinal,
-      );
-      _serializerBuilder.addWrapperVariant(
-        2,
-        "needs_input",
-        "wrapNeedsInput",
-        PreparationDraft.serializer,
-        "",
-        PreparationStep_needsInputWrapper._,
-        (it) => it.value,
-        ordinal: PreparationStep_kind.needsInputWrapper._ordinal,
-      );
-      _serializerBuilder.addWrapperVariant(
-        3,
-        "unavailable",
-        "wrapUnavailable",
-        PreparationDraft.serializer,
-        "",
-        PreparationStep_unavailableWrapper._,
-        (it) => it.value,
-        ordinal: PreparationStep_kind.unavailableWrapper._ordinal,
-      );
-      _serializerBuilder.finalize();
-    }
-    return _serializerBuilder.serializer;
-  }
-
-  static final _serializerBuilder = _skir.internal__EnumSerializerBuilder
-      .create(
-        recordId: "editor/v1/catalog.skir:PreparationStep",
-        doc: "Separates prepared editable content from a continuation needing caller input or unavailable\npreparation. ready describes completion of initialization, not saved authoring or publication.",
-        unknownInstance: PreparationStep_unknown._instance,
-        enumInstance: PreparationStep.unknown,
-        getOrdinal: (it) => it.kind._ordinal,
-        wrapUnrecognized: PreparationStep_unknown._unrecognized,
-        getUnrecognized: (it) => it._u,
-      );
-}
-
-/// The kind of variant held by a `PreparationStep`.
-enum PreparationStep_kind {
-  unknown(0),
-  readyWrapper(1),
-  needsInputWrapper(2),
-  unavailableWrapper(3);
-
-  final _core.int _ordinal;
-
-  const PreparationStep_kind(this._ordinal);
-}
-
-final class PreparationStep_unknown implements PreparationStep {
-  static const _instance = PreparationStep_unknown._();
-
-  final _skir.internal__UnrecognizedVariant? _u;
-
-  const PreparationStep_unknown._() : _u = null;
-  PreparationStep_unknown._unrecognized(this._u);
-
-  @_core.override
-  PreparationStep_kind get kind => PreparationStep_kind.unknown;
-  @_core.override
-  _core.bool operator ==(other) => other is PreparationStep_unknown;
-  @_core.override
-  _core.int get hashCode => 8118964;
-  @_core.override
-  _core.String toString() =>
-      _skir.internal__stringify(this, PreparationStep.serializer);
-}
-
-sealed class _PreparationStep_wrapper implements PreparationStep {
-  _core.dynamic get value;
-
-  @_core.override
-  _core.bool operator ==(other) {
-    if (other is! _PreparationStep_wrapper) return false;
-    return kind == other.kind && value == other.value;
-  }
-
-  @_core.override
-  _core.int get hashCode => (kind._ordinal * 31) ^ value.hashCode;
-
-  @_core.override
-  _core.String toString() =>
-      _skir.internal__stringify(this, PreparationStep.serializer);
-}
-
-final class PreparationStep_readyWrapper extends _PreparationStep_wrapper {
-  final PreparedValue value;
-
-  PreparationStep_readyWrapper._(this.value);
-
-  @_core.override
-  PreparationStep_kind get kind => PreparationStep_kind.readyWrapper;
-}
-
-final class PreparationStep_needsInputWrapper extends _PreparationStep_wrapper {
-  final PreparationDraft value;
-
-  PreparationStep_needsInputWrapper._(this.value);
-
-  @_core.override
-  PreparationStep_kind get kind => PreparationStep_kind.needsInputWrapper;
-}
-
-final class PreparationStep_unavailableWrapper
-    extends _PreparationStep_wrapper {
-  final PreparationDraft value;
-
-  PreparationStep_unavailableWrapper._(this.value);
-
-  @_core.override
-  PreparationStep_kind get kind => PreparationStep_kind.unavailableWrapper;
-}
-
-// -----------------------------------------------------------------------------
-// enum PrepareValueResult
-// -----------------------------------------------------------------------------
-
-/// To switch on the variants:
-///   ```
-///   switch (e) {
 ///     case PrepareValueResult_unknown(): { ... }
-///     case PrepareValueResult_prepared(:var value): { ... }
-///     case PrepareValueResult_catalogChanged(:var value): { ... }
+///     case PrepareValueResult_ready(:var value): { ... }
+///     case PrepareValueResult_needsInput(:var value): { ... }
+///     case PrepareValueResult_unavailableError(:var value): { ... }
+///     case PrepareValueResult_catalogChangedError(:var value): { ... }
 ///     case PrepareValueResult_internalError(:var value): { ... }
 ///   }
 ///   ```
@@ -6245,19 +6029,84 @@ sealed class PrepareValueResult {
   static const PrepareValueResult unknown =
       PrepareValueResult_unknown._instance;
 
-  /// Create a 'prepared' variant wrapping around the given value.
-  factory PrepareValueResult.wrapPrepared(PreparationStep value) =>
-      PrepareValueResult_preparedWrapper._(value);
+  /// Create a 'ready' variant wrapping around the given value.
+  factory PrepareValueResult.wrapReady(PreparedValue value) =>
+      PrepareValueResult_readyWrapper._(value);
 
-  /// Create a 'catalog_changed' variant wrapping around the given value.
-  factory PrepareValueResult.wrapCatalogChanged(
+  /// Same as `wrapReady(PreparedValue(...))`.
+  factory PrepareValueResult.createReady({
+    required PreparedContent content,
+    required _core.Iterable<
+      _lib_editor_v1_diagnostic.InitializationDiagnostic_orMutable
+    >
+    findings,
+  }) => PrepareValueResult.wrapReady(
+    PreparedValue(content: content, findings: findings),
+  );
+
+  /// Create a 'needs_input' variant wrapping around the given value.
+  factory PrepareValueResult.wrapNeedsInput(PreparationDraft value) =>
+      PrepareValueResult_needsInputWrapper._(value);
+
+  /// Same as `wrapNeedsInput(PreparationDraft(...))`.
+  factory PrepareValueResult.createNeedsInput({
+    required _lib_editor_v1_type_catalog.CatalogGeneration_orMutable catalog,
+    required PreparationTarget target,
+    required PreparedContent content,
+    required _core.Iterable<_lib_editor_v1_type_catalog.ValuePath_orMutable>
+    pendingDefaults,
+    required _core.Iterable<RequiredInput_orMutable> requiredInputs,
+    required _core.Iterable<
+      _lib_editor_v1_diagnostic.InitializationDiagnostic_orMutable
+    >
+    findings,
+  }) => PrepareValueResult.wrapNeedsInput(
+    PreparationDraft(
+      catalog: catalog,
+      target: target,
+      content: content,
+      pendingDefaults: pendingDefaults,
+      requiredInputs: requiredInputs,
+      findings: findings,
+    ),
+  );
+
+  /// Create a 'unavailable_error' variant wrapping around the given value.
+  factory PrepareValueResult.wrapUnavailableError(PreparationDraft value) =>
+      PrepareValueResult_unavailableErrorWrapper._(value);
+
+  /// Same as `wrapUnavailableError(PreparationDraft(...))`.
+  factory PrepareValueResult.createUnavailableError({
+    required _lib_editor_v1_type_catalog.CatalogGeneration_orMutable catalog,
+    required PreparationTarget target,
+    required PreparedContent content,
+    required _core.Iterable<_lib_editor_v1_type_catalog.ValuePath_orMutable>
+    pendingDefaults,
+    required _core.Iterable<RequiredInput_orMutable> requiredInputs,
+    required _core.Iterable<
+      _lib_editor_v1_diagnostic.InitializationDiagnostic_orMutable
+    >
+    findings,
+  }) => PrepareValueResult.wrapUnavailableError(
+    PreparationDraft(
+      catalog: catalog,
+      target: target,
+      content: content,
+      pendingDefaults: pendingDefaults,
+      requiredInputs: requiredInputs,
+      findings: findings,
+    ),
+  );
+
+  /// Create a 'catalog_changed_error' variant wrapping around the given value.
+  factory PrepareValueResult.wrapCatalogChangedError(
     _lib_editor_v1_type_catalog.CatalogGeneration value,
-  ) => PrepareValueResult_catalogChangedWrapper._(value);
+  ) => PrepareValueResult_catalogChangedErrorWrapper._(value);
 
-  /// Same as `wrapCatalogChanged(_lib_editor_v1_type_catalog.CatalogGeneration(...))`.
-  factory PrepareValueResult.createCatalogChanged({
+  /// Same as `wrapCatalogChangedError(_lib_editor_v1_type_catalog.CatalogGeneration(...))`.
+  factory PrepareValueResult.createCatalogChangedError({
     required _core.String value,
-  }) => PrepareValueResult.wrapCatalogChanged(
+  }) => PrepareValueResult.wrapCatalogChangedError(
     _lib_editor_v1_type_catalog.CatalogGeneration(value: value),
   );
 
@@ -6280,26 +6129,46 @@ sealed class PrepareValueResult {
     if (_serializerBuilder.mustInitialize()) {
       _serializerBuilder.addWrapperVariant(
         1,
-        "prepared",
-        "wrapPrepared",
-        PreparationStep.serializer,
+        "ready",
+        "wrapReady",
+        PreparedValue.serializer,
         "",
-        PrepareValueResult_preparedWrapper._,
+        PrepareValueResult_readyWrapper._,
         (it) => it.value,
-        ordinal: PrepareValueResult_kind.preparedWrapper._ordinal,
+        ordinal: PrepareValueResult_kind.readyWrapper._ordinal,
       );
       _serializerBuilder.addWrapperVariant(
         2,
-        "catalog_changed",
-        "wrapCatalogChanged",
-        _lib_editor_v1_type_catalog.CatalogGeneration.serializer,
+        "needs_input",
+        "wrapNeedsInput",
+        PreparationDraft.serializer,
         "",
-        PrepareValueResult_catalogChangedWrapper._,
+        PrepareValueResult_needsInputWrapper._,
         (it) => it.value,
-        ordinal: PrepareValueResult_kind.catalogChangedWrapper._ordinal,
+        ordinal: PrepareValueResult_kind.needsInputWrapper._ordinal,
       );
       _serializerBuilder.addWrapperVariant(
         3,
+        "unavailable_error",
+        "wrapUnavailableError",
+        PreparationDraft.serializer,
+        "",
+        PrepareValueResult_unavailableErrorWrapper._,
+        (it) => it.value,
+        ordinal: PrepareValueResult_kind.unavailableErrorWrapper._ordinal,
+      );
+      _serializerBuilder.addWrapperVariant(
+        4,
+        "catalog_changed_error",
+        "wrapCatalogChangedError",
+        _lib_editor_v1_type_catalog.CatalogGeneration.serializer,
+        "",
+        PrepareValueResult_catalogChangedErrorWrapper._,
+        (it) => it.value,
+        ordinal: PrepareValueResult_kind.catalogChangedErrorWrapper._ordinal,
+      );
+      _serializerBuilder.addWrapperVariant(
+        5,
         "internal_error",
         "wrapInternalError",
         _lib_kernel_v1_errors.InternalError.serializer,
@@ -6316,7 +6185,7 @@ sealed class PrepareValueResult {
   static final _serializerBuilder = _skir.internal__EnumSerializerBuilder
       .create(
         recordId: "editor/v1/catalog.skir:PrepareValueResult",
-        doc: "",
+        doc: "Separates prepared editable content from a continuation needing caller input or unavailable\npreparation. ready describes completion of initialization, not saved authoring or publication.",
         unknownInstance: PrepareValueResult_unknown._instance,
         enumInstance: PrepareValueResult.unknown,
         getOrdinal: (it) => it.kind._ordinal,
@@ -6328,9 +6197,11 @@ sealed class PrepareValueResult {
 /// The kind of variant held by a `PrepareValueResult`.
 enum PrepareValueResult_kind {
   unknown(0),
-  preparedWrapper(1),
-  catalogChangedWrapper(2),
-  internalErrorWrapper(3);
+  readyWrapper(1),
+  needsInputWrapper(2),
+  unavailableErrorWrapper(3),
+  catalogChangedErrorWrapper(4),
+  internalErrorWrapper(5);
 
   final _core.int _ordinal;
 
@@ -6373,25 +6244,46 @@ sealed class _PrepareValueResult_wrapper implements PrepareValueResult {
       _skir.internal__stringify(this, PrepareValueResult.serializer);
 }
 
-final class PrepareValueResult_preparedWrapper
+final class PrepareValueResult_readyWrapper
     extends _PrepareValueResult_wrapper {
-  final PreparationStep value;
+  final PreparedValue value;
 
-  PrepareValueResult_preparedWrapper._(this.value);
+  PrepareValueResult_readyWrapper._(this.value);
 
   @_core.override
-  PrepareValueResult_kind get kind => PrepareValueResult_kind.preparedWrapper;
+  PrepareValueResult_kind get kind => PrepareValueResult_kind.readyWrapper;
 }
 
-final class PrepareValueResult_catalogChangedWrapper
+final class PrepareValueResult_needsInputWrapper
     extends _PrepareValueResult_wrapper {
-  final _lib_editor_v1_type_catalog.CatalogGeneration value;
+  final PreparationDraft value;
 
-  PrepareValueResult_catalogChangedWrapper._(this.value);
+  PrepareValueResult_needsInputWrapper._(this.value);
+
+  @_core.override
+  PrepareValueResult_kind get kind => PrepareValueResult_kind.needsInputWrapper;
+}
+
+final class PrepareValueResult_unavailableErrorWrapper
+    extends _PrepareValueResult_wrapper {
+  final PreparationDraft value;
+
+  PrepareValueResult_unavailableErrorWrapper._(this.value);
 
   @_core.override
   PrepareValueResult_kind get kind =>
-      PrepareValueResult_kind.catalogChangedWrapper;
+      PrepareValueResult_kind.unavailableErrorWrapper;
+}
+
+final class PrepareValueResult_catalogChangedErrorWrapper
+    extends _PrepareValueResult_wrapper {
+  final _lib_editor_v1_type_catalog.CatalogGeneration value;
+
+  PrepareValueResult_catalogChangedErrorWrapper._(this.value);
+
+  @_core.override
+  PrepareValueResult_kind get kind =>
+      PrepareValueResult_kind.catalogChangedErrorWrapper;
 }
 
 final class PrepareValueResult_internalErrorWrapper
@@ -6907,6 +6799,164 @@ final class WatchEditorCatalogRequest_mutable
       WatchEditorCatalogRequest().._u = this._u;
 }
 
+// -----------------------------------------------------------------------------
+// enum WatchEditorCatalogResponse
+// -----------------------------------------------------------------------------
+
+/// To switch on the variants:
+///   ```
+///   switch (e) {
+///     case WatchEditorCatalogResponse_unknown(): { ... }
+///     case WatchEditorCatalogResponse_invalidated(:var value): { ... }
+///     case WatchEditorCatalogResponse_internalError(:var value): { ... }
+///   }
+///   ```
+///
+/// Deeply immutable.
+sealed class WatchEditorCatalogResponse {
+  /// Constant indicating an unknown `WatchEditorCatalogResponse`.
+  /// Default value for fields of type `WatchEditorCatalogResponse`.
+  static const WatchEditorCatalogResponse unknown =
+      WatchEditorCatalogResponse_unknown._instance;
+
+  /// Create a 'invalidated' variant wrapping around the given value.
+  factory WatchEditorCatalogResponse.wrapInvalidated(
+    CatalogInvalidated value,
+  ) => WatchEditorCatalogResponse_invalidatedWrapper._(value);
+
+  /// Same as `wrapInvalidated(CatalogInvalidated(...))`.
+  factory WatchEditorCatalogResponse.createInvalidated({
+    required _lib_editor_v1_type_catalog.CatalogGeneration_orMutable generation,
+  }) => WatchEditorCatalogResponse.wrapInvalidated(
+    CatalogInvalidated(generation: generation),
+  );
+
+  /// Create a 'internal_error' variant wrapping around the given value.
+  factory WatchEditorCatalogResponse.wrapInternalError(
+    _lib_kernel_v1_errors.InternalError value,
+  ) => WatchEditorCatalogResponse_internalErrorWrapper._(value);
+
+  /// Same as `wrapInternalError(_lib_kernel_v1_errors.InternalError(...))`.
+  factory WatchEditorCatalogResponse.createInternalError() =>
+      WatchEditorCatalogResponse.wrapInternalError(
+        _lib_kernel_v1_errors.InternalError(),
+      );
+
+  /// Returns the kind of variant held by this WatchEditorCatalogResponse.
+  WatchEditorCatalogResponse_kind get kind;
+
+  /// Serializer for `WatchEditorCatalogResponse` instances.
+  static _skir.EnumSerializer<WatchEditorCatalogResponse> get serializer {
+    if (_serializerBuilder.mustInitialize()) {
+      _serializerBuilder.addWrapperVariant(
+        1,
+        "invalidated",
+        "wrapInvalidated",
+        CatalogInvalidated.serializer,
+        "",
+        WatchEditorCatalogResponse_invalidatedWrapper._,
+        (it) => it.value,
+        ordinal: WatchEditorCatalogResponse_kind.invalidatedWrapper._ordinal,
+      );
+      _serializerBuilder.addWrapperVariant(
+        2,
+        "internal_error",
+        "wrapInternalError",
+        _lib_kernel_v1_errors.InternalError.serializer,
+        "",
+        WatchEditorCatalogResponse_internalErrorWrapper._,
+        (it) => it.value,
+        ordinal: WatchEditorCatalogResponse_kind.internalErrorWrapper._ordinal,
+      );
+      _serializerBuilder.finalize();
+    }
+    return _serializerBuilder.serializer;
+  }
+
+  static final _serializerBuilder = _skir.internal__EnumSerializerBuilder
+      .create(
+        recordId: "editor/v1/catalog.skir:WatchEditorCatalogResponse",
+        doc: "",
+        unknownInstance: WatchEditorCatalogResponse_unknown._instance,
+        enumInstance: WatchEditorCatalogResponse.unknown,
+        getOrdinal: (it) => it.kind._ordinal,
+        wrapUnrecognized: WatchEditorCatalogResponse_unknown._unrecognized,
+        getUnrecognized: (it) => it._u,
+      );
+}
+
+/// The kind of variant held by a `WatchEditorCatalogResponse`.
+enum WatchEditorCatalogResponse_kind {
+  unknown(0),
+  invalidatedWrapper(1),
+  internalErrorWrapper(2);
+
+  final _core.int _ordinal;
+
+  const WatchEditorCatalogResponse_kind(this._ordinal);
+}
+
+final class WatchEditorCatalogResponse_unknown
+    implements WatchEditorCatalogResponse {
+  static const _instance = WatchEditorCatalogResponse_unknown._();
+
+  final _skir.internal__UnrecognizedVariant? _u;
+
+  const WatchEditorCatalogResponse_unknown._() : _u = null;
+  WatchEditorCatalogResponse_unknown._unrecognized(this._u);
+
+  @_core.override
+  WatchEditorCatalogResponse_kind get kind =>
+      WatchEditorCatalogResponse_kind.unknown;
+  @_core.override
+  _core.bool operator ==(other) => other is WatchEditorCatalogResponse_unknown;
+  @_core.override
+  _core.int get hashCode => 8118964;
+  @_core.override
+  _core.String toString() =>
+      _skir.internal__stringify(this, WatchEditorCatalogResponse.serializer);
+}
+
+sealed class _WatchEditorCatalogResponse_wrapper
+    implements WatchEditorCatalogResponse {
+  _core.dynamic get value;
+
+  @_core.override
+  _core.bool operator ==(other) {
+    if (other is! _WatchEditorCatalogResponse_wrapper) return false;
+    return kind == other.kind && value == other.value;
+  }
+
+  @_core.override
+  _core.int get hashCode => (kind._ordinal * 31) ^ value.hashCode;
+
+  @_core.override
+  _core.String toString() =>
+      _skir.internal__stringify(this, WatchEditorCatalogResponse.serializer);
+}
+
+final class WatchEditorCatalogResponse_invalidatedWrapper
+    extends _WatchEditorCatalogResponse_wrapper {
+  final CatalogInvalidated value;
+
+  WatchEditorCatalogResponse_invalidatedWrapper._(this.value);
+
+  @_core.override
+  WatchEditorCatalogResponse_kind get kind =>
+      WatchEditorCatalogResponse_kind.invalidatedWrapper;
+}
+
+final class WatchEditorCatalogResponse_internalErrorWrapper
+    extends _WatchEditorCatalogResponse_wrapper {
+  final _lib_kernel_v1_errors.InternalError value;
+
+  WatchEditorCatalogResponse_internalErrorWrapper._(this.value);
+
+  @_core.override
+  WatchEditorCatalogResponse_kind get kind =>
+      WatchEditorCatalogResponse_kind.internalErrorWrapper;
+}
+
 final _skir.Method<CatalogFetchRequest, CatalogFetchResult>
 fetchEditorCatalogMethod = _skir.Method(
   "FetchEditorCatalog",
@@ -6916,12 +6966,12 @@ fetchEditorCatalogMethod = _skir.Method(
   "",
 );
 
-final _skir.Method<WatchEditorCatalogRequest, CatalogInvalidated>
+final _skir.Method<WatchEditorCatalogRequest, WatchEditorCatalogResponse>
 watchEditorCatalogMethod = _skir.Method(
   "WatchEditorCatalog",
   920002,
   WatchEditorCatalogRequest.serializer,
-  CatalogInvalidated.serializer,
+  WatchEditorCatalogResponse.serializer,
   "",
 );
 

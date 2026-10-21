@@ -485,6 +485,7 @@ sealed class QueryServiceBindingResponse private constructor() {
         }
     }
 
+    /** Service not found. */
     class ServiceNotFoundErrorWrapper private constructor (
         val value: skirout.service.v1.status.QueryServiceBindingResponse.ServiceNotFoundError,
     ) : skirout.service.v1.status.QueryServiceBindingResponse() {
@@ -908,6 +909,7 @@ sealed class EnsureRegistrationLeaseResponse private constructor() {
         }
     }
 
+    /** Service not found. */
     class ServiceNotFoundErrorWrapper private constructor (
         val value: skirout.service.v1.status.EnsureRegistrationLeaseResponse.ServiceNotFoundError,
     ) : skirout.service.v1.status.EnsureRegistrationLeaseResponse() {
@@ -1408,7 +1410,7 @@ private object _SerializerRegistry {
             "service_not_found_error",
             skirout.service.v1.status.EnsureRegistrationLeaseResponse.Kind.SERVICE_NOT_FOUND_ERROR_WRAPPER.ordinal,
             _SerializerRegistry.EnsureRegistrationLeaseResponse_ServiceNotFoundErrorSerializer,
-            "",
+            "Service not found.",
             { skirout.service.v1.status.EnsureRegistrationLeaseResponse.ServiceNotFoundErrorWrapper(it) },
             { it.value },
         );
@@ -1463,7 +1465,7 @@ private object _SerializerRegistry {
             "service_not_found_error",
             skirout.service.v1.status.QueryServiceBindingResponse.Kind.SERVICE_NOT_FOUND_ERROR_WRAPPER.ordinal,
             _SerializerRegistry.QueryServiceBindingResponse_ServiceNotFoundErrorSerializer,
-            "",
+            "Service not found.",
             { skirout.service.v1.status.QueryServiceBindingResponse.ServiceNotFoundErrorWrapper(it) },
             { it.value },
         );

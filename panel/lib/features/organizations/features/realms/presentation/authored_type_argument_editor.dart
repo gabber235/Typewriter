@@ -4,9 +4,10 @@ import "package:typewriter_panel/typewriter_panel.dart";
 
 part "authored_type_argument_editor.freezed.dart";
 
-typedef AuthoredTypePreview = Future<skir.TypePreviewResult> Function(
-  skir.TypeSelection requested,
-);
+typedef AuthoredTypePreview =
+    Future<skir.PreviewTypeArgumentChangeResponse> Function(
+      skir.TypeSelection requested,
+    );
 typedef AuthoredTypeCommit = Future<EditStageResult> Function(
   skir.TypeArgumentChangePreview preview,
 );
@@ -570,21 +571,27 @@ final class _AuthoredTypeArgumentEditorState
       final result = await widget.preview(requested);
       if (!mounted) return;
       switch (result) {
-        case skir.TypePreviewResult_readyWrapper(:final value):
+        case skir.PreviewTypeArgumentChangeResponse_readyWrapper(:final value):
           final accepted = await showDialog<bool>(
             context: context,
             builder: (context) =>
                 _TypeRepairReview(preview: value, catalog: widget.catalog),
           );
           if (accepted == true && mounted) await _commit(value);
-        case skir.TypePreviewResult_incompleteWrapper(:final value):
+        case skir.PreviewTypeArgumentChangeResponse_incompleteWrapper(
+          :final value,
+        ):
           setState(
             () => _error =
                 "${value.length} type arguments still need a selection",
           );
-        case skir.TypePreviewResult_invalidArgumentsWrapper(:final value):
+        case skir.PreviewTypeArgumentChangeResponse_invalidArgumentsErrorWrapper(
+          :final value,
+        ):
           setState(() => _error = value.map((item) => item.code).join("\n"));
-        case skir.TypePreviewResult_rejectedWrapper(:final value):
+        case skir.PreviewTypeArgumentChangeResponse_rejectedErrorWrapper(
+          :final value,
+        ):
           setState(() => _error = value.map((item) => item.code).join("\n"));
         default:
           setState(() => _error = "The type change preview is unavailable");

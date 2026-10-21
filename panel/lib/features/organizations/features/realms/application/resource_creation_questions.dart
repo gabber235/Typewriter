@@ -4,7 +4,7 @@ part of "resource_creation.dart";
 final class _CreationQuestion {
   _CreationQuestion(this.step, this.previous, this.restore);
 
-  final skir.PreparationStep step;
+  final skir.PrepareValueResult step;
   final _CreationQuestion? previous;
   final VoidCallback restore;
   String query = "";
@@ -18,7 +18,7 @@ final class _CreationBack implements Exception {
 
 extension on _ResourceCreationOperation {
   _CreationQuestion _checkpoint(
-    skir.PreparationStep step,
+    skir.PrepareValueResult step,
     _CreationQuestion? previous,
   ) {
     final nodes = Map.of(_nodes);

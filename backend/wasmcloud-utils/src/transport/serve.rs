@@ -64,7 +64,8 @@ mod tests {
     use super::*;
     use crate::skir_client::{Method, Serializer};
     use crate::skirout::base::access::v1::permission::{
-        GetEntityPermissionRequest, GetEntityPermissionResponse, get_entity_permission_method,
+        EntityPermissionGrant, GetEntityPermissionRequest, GetEntityPermissionResponse,
+        get_entity_permission_method,
     };
     use crate::skirout::base::service::v1::lifecycle::ServiceHeartbeatNotification;
     use crate::transport::test_support::{block_on, nats_message};
@@ -131,10 +132,10 @@ mod tests {
     #[test]
     fn serve_request_hands_scope_and_request_to_the_handler_and_replies() {
         let msg = nats_message("auth.permissions.test", &request_body());
-        let response = GetEntityPermissionResponse {
+        let response = GetEntityPermissionResponse::Granted(Box::new(EntityPermissionGrant {
             tags: vec!["seen".to_owned()],
             ..Default::default()
-        };
+        }));
         let expected = GetEntityPermissionResponse::serializer().to_bytes(&response);
         block_on(serve_request::<PermissionRoute>(
             msg,

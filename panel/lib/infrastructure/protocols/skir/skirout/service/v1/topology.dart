@@ -3613,6 +3613,8 @@ sealed class ConfigureServiceHostResponse {
   );
 
   /// Create a 'conflict_error' variant wrapping around the given value.
+  ///
+  /// Host changed elsewhere.
   factory ConfigureServiceHostResponse.wrapConflictError(
     ConfigureServiceHostResponse_ConflictError value,
   ) => ConfigureServiceHostResponse_conflictErrorWrapper._(value);
@@ -3625,6 +3627,8 @@ sealed class ConfigureServiceHostResponse {
   );
 
   /// Create a 'invalid_configuration_error' variant wrapping around the given value.
+  ///
+  /// Host configuration is invalid.
   factory ConfigureServiceHostResponse.wrapInvalidConfigurationError(
     ConfigureServiceHostResponse_InvalidConfigurationError value,
   ) => ConfigureServiceHostResponse_invalidConfigurationErrorWrapper._(value);
@@ -3637,6 +3641,8 @@ sealed class ConfigureServiceHostResponse {
   );
 
   /// Create a 'incompatible_engine_error' variant wrapping around the given value.
+  ///
+  /// Engine target is incompatible.
   factory ConfigureServiceHostResponse.wrapIncompatibleEngineError(
     ConfigureServiceHostResponse_IncompatibleEngineError value,
   ) => ConfigureServiceHostResponse_incompatibleEngineErrorWrapper._(value);
@@ -3649,6 +3655,8 @@ sealed class ConfigureServiceHostResponse {
   );
 
   /// Create a 'realm_not_found_error' variant wrapping around the given value.
+  ///
+  /// Realm not found.
   factory ConfigureServiceHostResponse.wrapRealmNotFoundError(
     ConfigureServiceHostResponse_RealmNotFoundError value,
   ) => ConfigureServiceHostResponse_realmNotFoundErrorWrapper._(value);
@@ -3661,6 +3669,8 @@ sealed class ConfigureServiceHostResponse {
   );
 
   /// Create a 'invalid_record_id_error' variant wrapping around the given value.
+  ///
+  /// Record IDs from an unexpected table.
   factory ConfigureServiceHostResponse.wrapInvalidRecordIdError(
     _lib_kernel_v1_errors.InvalidRecordIdError value,
   ) => ConfigureServiceHostResponse_invalidRecordIdErrorWrapper._(value);
@@ -3708,7 +3718,7 @@ sealed class ConfigureServiceHostResponse {
         "conflict_error",
         "wrapConflictError",
         ConfigureServiceHostResponse_ConflictError.serializer,
-        "",
+        "Host changed elsewhere.",
         ConfigureServiceHostResponse_conflictErrorWrapper._,
         (it) => it.value,
         ordinal:
@@ -3719,7 +3729,7 @@ sealed class ConfigureServiceHostResponse {
         "invalid_configuration_error",
         "wrapInvalidConfigurationError",
         ConfigureServiceHostResponse_InvalidConfigurationError.serializer,
-        "",
+        "Host configuration is invalid.",
         ConfigureServiceHostResponse_invalidConfigurationErrorWrapper._,
         (it) => it.value,
         ordinal: ConfigureServiceHostResponse_kind
@@ -3731,7 +3741,7 @@ sealed class ConfigureServiceHostResponse {
         "incompatible_engine_error",
         "wrapIncompatibleEngineError",
         ConfigureServiceHostResponse_IncompatibleEngineError.serializer,
-        "",
+        "Engine target is incompatible.",
         ConfigureServiceHostResponse_incompatibleEngineErrorWrapper._,
         (it) => it.value,
         ordinal: ConfigureServiceHostResponse_kind
@@ -3743,7 +3753,7 @@ sealed class ConfigureServiceHostResponse {
         "realm_not_found_error",
         "wrapRealmNotFoundError",
         ConfigureServiceHostResponse_RealmNotFoundError.serializer,
-        "",
+        "Realm not found.",
         ConfigureServiceHostResponse_realmNotFoundErrorWrapper._,
         (it) => it.value,
         ordinal: ConfigureServiceHostResponse_kind
@@ -3755,7 +3765,7 @@ sealed class ConfigureServiceHostResponse {
         "invalid_record_id_error",
         "wrapInvalidRecordIdError",
         _lib_kernel_v1_errors.InvalidRecordIdError.serializer,
-        "",
+        "Record IDs from an unexpected table.",
         ConfigureServiceHostResponse_invalidRecordIdErrorWrapper._,
         (it) => it.value,
         ordinal: ConfigureServiceHostResponse_kind
@@ -5869,6 +5879,8 @@ sealed class ReportHostExecutionResponse {
       );
 
   /// Create a 'stale_revision_error' variant wrapping around the given value.
+  ///
+  /// Host topology revision is stale.
   factory ReportHostExecutionResponse.wrapStaleRevisionError(
     ReportHostExecutionResponse_StaleRevisionError value,
   ) => ReportHostExecutionResponse_staleRevisionErrorWrapper._(value);
@@ -5911,7 +5923,7 @@ sealed class ReportHostExecutionResponse {
         "stale_revision_error",
         "wrapStaleRevisionError",
         ReportHostExecutionResponse_StaleRevisionError.serializer,
-        "",
+        "Host topology revision is stale.",
         ReportHostExecutionResponse_staleRevisionErrorWrapper._,
         (it) => it.value,
         ordinal:
@@ -6306,44 +6318,45 @@ final class GetServiceMessagingScopeRequest_mutable
 }
 
 // -----------------------------------------------------------------------------
-// struct GetServiceMessagingScopeResponse.NotFound
+// struct GetServiceMessagingScopeResponse.NotFoundError
 // -----------------------------------------------------------------------------
 
-sealed class GetServiceMessagingScopeResponse_NotFound_orMutable {
-  GetServiceMessagingScopeResponse_NotFound toFrozen();
+sealed class GetServiceMessagingScopeResponse_NotFoundError_orMutable {
+  GetServiceMessagingScopeResponse_NotFoundError toFrozen();
 }
 
 /// Deeply immutable.
-final class GetServiceMessagingScopeResponse_NotFound
-    implements GetServiceMessagingScopeResponse_NotFound_orMutable {
+final class GetServiceMessagingScopeResponse_NotFoundError
+    implements GetServiceMessagingScopeResponse_NotFoundError_orMutable {
   _skir.internal__UnrecognizedFields? _u;
 
-  factory GetServiceMessagingScopeResponse_NotFound() =>
-      GetServiceMessagingScopeResponse_NotFound._();
+  factory GetServiceMessagingScopeResponse_NotFoundError() =>
+      GetServiceMessagingScopeResponse_NotFoundError._();
 
-  GetServiceMessagingScopeResponse_NotFound._();
+  GetServiceMessagingScopeResponse_NotFoundError._();
 
   /// Default instance with all fields set to their default values.
-  static final defaultInstance = GetServiceMessagingScopeResponse_NotFound._();
+  static final defaultInstance =
+      GetServiceMessagingScopeResponse_NotFoundError._();
 
   /// Returns a new mutable instance.
   /// Fields are initialized to their default values.
-  static GetServiceMessagingScopeResponse_NotFound_mutable mutable() =>
-      GetServiceMessagingScopeResponse_NotFound_mutable._();
+  static GetServiceMessagingScopeResponse_NotFoundError_mutable mutable() =>
+      GetServiceMessagingScopeResponse_NotFoundError_mutable._();
 
   /// Returns this instance (no-op).
   @_core.Deprecated("This instance is already frozen.")
   @_core.override
-  GetServiceMessagingScopeResponse_NotFound toFrozen() => this;
+  GetServiceMessagingScopeResponse_NotFoundError toFrozen() => this;
 
   /// Returns a mutable shallow copy of this instance.
-  GetServiceMessagingScopeResponse_NotFound_mutable toMutable() =>
-      GetServiceMessagingScopeResponse_NotFound_mutable._();
+  GetServiceMessagingScopeResponse_NotFoundError_mutable toMutable() =>
+      GetServiceMessagingScopeResponse_NotFoundError_mutable._();
 
   @_core.override
   _core.bool operator ==(other) {
     if (_core.identical(this, other)) return true;
-    if (other is! GetServiceMessagingScopeResponse_NotFound) return false;
+    if (other is! GetServiceMessagingScopeResponse_NotFoundError) return false;
     return _skir.internal__listEquality.equals(
       _equality_proxy,
       other._equality_proxy,
@@ -6358,10 +6371,10 @@ final class GetServiceMessagingScopeResponse_NotFound
   @_core.override
   _core.String toString() => _skir.internal__stringify(this, serializer);
 
-  /// Serializer for `GetServiceMessagingScopeResponse_NotFound` instances.
+  /// Serializer for `GetServiceMessagingScopeResponse_NotFoundError` instances.
   static _skir.StructSerializer<
-    GetServiceMessagingScopeResponse_NotFound,
-    GetServiceMessagingScopeResponse_NotFound_mutable
+    GetServiceMessagingScopeResponse_NotFoundError,
+    GetServiceMessagingScopeResponse_NotFoundError_mutable
   >
   get serializer {
     if (_serializerBuilder.mustInitialize()) {
@@ -6371,29 +6384,28 @@ final class GetServiceMessagingScopeResponse_NotFound
   }
 
   static final _serializerBuilder = _skir.internal__StructSerializerBuilder(
-    recordId:
-        "service/v1/topology.skir:GetServiceMessagingScopeResponse.NotFound",
+    recordId: "service/v1/topology.skir:GetServiceMessagingScopeResponse.NotFoundError",
     doc: "",
     defaultInstance: defaultInstance,
     newMutable: (it) => (it != null) ? it.toMutable() : mutable(),
-    toFrozen: (GetServiceMessagingScopeResponse_NotFound_mutable it) =>
+    toFrozen: (GetServiceMessagingScopeResponse_NotFoundError_mutable it) =>
         it.toFrozen(),
     getUnrecognizedFields: (it) => it._u,
     setUnrecognizedFields: (it, u) => it._u = u,
   );
 }
 
-/// Mutable version of [GetServiceMessagingScopeResponse_NotFound].
-final class GetServiceMessagingScopeResponse_NotFound_mutable
-    implements GetServiceMessagingScopeResponse_NotFound_orMutable {
+/// Mutable version of [GetServiceMessagingScopeResponse_NotFoundError].
+final class GetServiceMessagingScopeResponse_NotFoundError_mutable
+    implements GetServiceMessagingScopeResponse_NotFoundError_orMutable {
   _skir.internal__UnrecognizedFields? _u;
 
-  GetServiceMessagingScopeResponse_NotFound_mutable._();
+  GetServiceMessagingScopeResponse_NotFoundError_mutable._();
 
   /// Returns a deeply immutable copy of this instance.
   @_core.override
-  GetServiceMessagingScopeResponse_NotFound toFrozen() =>
-      GetServiceMessagingScopeResponse_NotFound().._u = this._u;
+  GetServiceMessagingScopeResponse_NotFoundError toFrozen() =>
+      GetServiceMessagingScopeResponse_NotFoundError().._u = this._u;
 }
 
 // -----------------------------------------------------------------------------
@@ -6405,7 +6417,7 @@ final class GetServiceMessagingScopeResponse_NotFound_mutable
 ///   switch (e) {
 ///     case GetServiceMessagingScopeResponse_unknown(): { ... }
 ///     case GetServiceMessagingScopeResponse_found(:var value): { ... }
-///     case GetServiceMessagingScopeResponse_notFound(:var value): { ... }
+///     case GetServiceMessagingScopeResponse_notFoundError(:var value): { ... }
 ///     case GetServiceMessagingScopeResponse_internalError(:var value): { ... }
 ///   }
 ///   ```
@@ -6435,15 +6447,17 @@ sealed class GetServiceMessagingScopeResponse {
     ),
   );
 
-  /// Create a 'not_found' variant wrapping around the given value.
-  factory GetServiceMessagingScopeResponse.wrapNotFound(
-    GetServiceMessagingScopeResponse_NotFound value,
-  ) => GetServiceMessagingScopeResponse_notFoundWrapper._(value);
+  /// Create a 'not_found_error' variant wrapping around the given value.
+  ///
+  /// Service messaging scope not found.
+  factory GetServiceMessagingScopeResponse.wrapNotFoundError(
+    GetServiceMessagingScopeResponse_NotFoundError value,
+  ) => GetServiceMessagingScopeResponse_notFoundErrorWrapper._(value);
 
-  /// Same as `wrapNotFound(GetServiceMessagingScopeResponse_NotFound(...))`.
-  factory GetServiceMessagingScopeResponse.createNotFound() =>
-      GetServiceMessagingScopeResponse.wrapNotFound(
-        GetServiceMessagingScopeResponse_NotFound(),
+  /// Same as `wrapNotFoundError(GetServiceMessagingScopeResponse_NotFoundError(...))`.
+  factory GetServiceMessagingScopeResponse.createNotFoundError() =>
+      GetServiceMessagingScopeResponse.wrapNotFoundError(
+        GetServiceMessagingScopeResponse_NotFoundError(),
       );
 
   /// Create a 'internal_error' variant wrapping around the given value.
@@ -6475,13 +6489,14 @@ sealed class GetServiceMessagingScopeResponse {
       );
       _serializerBuilder.addWrapperVariant(
         2,
-        "not_found",
-        "wrapNotFound",
-        GetServiceMessagingScopeResponse_NotFound.serializer,
-        "",
-        GetServiceMessagingScopeResponse_notFoundWrapper._,
+        "not_found_error",
+        "wrapNotFoundError",
+        GetServiceMessagingScopeResponse_NotFoundError.serializer,
+        "Service messaging scope not found.",
+        GetServiceMessagingScopeResponse_notFoundErrorWrapper._,
         (it) => it.value,
-        ordinal: GetServiceMessagingScopeResponse_kind.notFoundWrapper._ordinal,
+        ordinal:
+            GetServiceMessagingScopeResponse_kind.notFoundErrorWrapper._ordinal,
       );
       _serializerBuilder.addWrapperVariant(
         3,
@@ -6516,7 +6531,7 @@ sealed class GetServiceMessagingScopeResponse {
 enum GetServiceMessagingScopeResponse_kind {
   unknown(0),
   foundWrapper(1),
-  notFoundWrapper(2),
+  notFoundErrorWrapper(2),
   internalErrorWrapper(3);
 
   final _core.int _ordinal;
@@ -6579,15 +6594,15 @@ final class GetServiceMessagingScopeResponse_foundWrapper
       GetServiceMessagingScopeResponse_kind.foundWrapper;
 }
 
-final class GetServiceMessagingScopeResponse_notFoundWrapper
+final class GetServiceMessagingScopeResponse_notFoundErrorWrapper
     extends _GetServiceMessagingScopeResponse_wrapper {
-  final GetServiceMessagingScopeResponse_NotFound value;
+  final GetServiceMessagingScopeResponse_NotFoundError value;
 
-  GetServiceMessagingScopeResponse_notFoundWrapper._(this.value);
+  GetServiceMessagingScopeResponse_notFoundErrorWrapper._(this.value);
 
   @_core.override
   GetServiceMessagingScopeResponse_kind get kind =>
-      GetServiceMessagingScopeResponse_kind.notFoundWrapper;
+      GetServiceMessagingScopeResponse_kind.notFoundErrorWrapper;
 }
 
 final class GetServiceMessagingScopeResponse_internalErrorWrapper

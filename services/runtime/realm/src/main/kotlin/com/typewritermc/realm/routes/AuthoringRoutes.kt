@@ -35,9 +35,7 @@ import skirout.editor.v1.authoring.AuthoringResource as SkirAuthoringResource
 import skirout.editor.v1.authoring.AuthoringState as SkirAuthoringState
 import skirout.editor.v1.authoring.CatalogChanged as SkirCatalogChanged
 import skirout.editor.v1.authoring.LinkRepairIntent as SkirLinkRepairIntent
-import skirout.editor.v1.authoring.PreparedEditResult as SkirPreparedEditResult
 import skirout.editor.v1.authoring.TypeArgumentChangePreview as SkirTypeArgumentChangePreview
-import skirout.editor.v1.authoring.TypePreviewResult as SkirTypePreviewResult
 import skirout.editor.v1.authoring_facts.LinkProjection as SkirLinkProjection
 import skirout.editor.v1.type_catalog.CatalogGeneration as SkirCatalogGeneration
 import skirout.editor.v1.type_catalog.NamedTypeUse as SkirNamedTypeUse
@@ -63,18 +61,14 @@ internal class AuthoringRoutes(
             unary(contracts.queryAuthoringState) { call -> query(call.request) }
             unary(contracts.commitPreparedEdit) { call ->
                 val edit = SkirAuthoringOperationCodec.decode(call.request).getOrThrow()
-                CommitPreparedEditResponse.ResultWrapper(
-                    SkirAuthoringOperationCodec.encode(repository.commit(edit)).getOrThrow(),
-                )
+                SkirAuthoringOperationCodec.encode(repository.commit(edit)).getOrThrow()
             }
             unary(contracts.previewTypeArgumentChange) { call ->
-                PreviewTypeArgumentChangeResponse.ResultWrapper(preview(call.request).toWire())
+                preview(call.request).toWire()
             }
             unary(contracts.prepareTypeArgumentChange) { call ->
                 val preview = call.request.toDomain()
-                PrepareTypeArgumentChangeResponse.ResultWrapper(
-                    typeArguments.prepare(preview).toWire(),
-                )
+                typeArguments.prepare(preview).toWire()
             }
         }
 
@@ -140,24 +134,24 @@ internal class AuthoringRoutes(
     }
 }
 
-private fun TypePreviewResult.toWire(): SkirTypePreviewResult =
+private fun TypePreviewResult.toWire(): PreviewTypeArgumentChangeResponse =
     when (this) {
         is TypePreviewResult.Ready -> {
-            SkirTypePreviewResult.ReadyWrapper(preview.toWire())
+            PreviewTypeArgumentChangeResponse.ReadyWrapper(preview.toWire())
         }
 
         is TypePreviewResult.InvalidArguments -> {
-            SkirTypePreviewResult.InvalidArgumentsWrapper(
+            PreviewTypeArgumentChangeResponse.InvalidArgumentsErrorWrapper(
                 diagnostics.map { SkirTypeCodec.encode(it).getOrThrow() },
             )
         }
 
         is TypePreviewResult.Incomplete -> {
-            SkirTypePreviewResult.IncompleteWrapper(arguments.map(ArgumentLocation::toWire))
+            PreviewTypeArgumentChangeResponse.IncompleteWrapper(arguments.map(ArgumentLocation::toWire))
         }
 
         is TypePreviewResult.Rejected -> {
-            SkirTypePreviewResult.RejectedWrapper(
+            PreviewTypeArgumentChangeResponse.RejectedErrorWrapper(
                 problems.map { SkirAuthoringValueCodec.encode(it).getOrThrow() },
             )
         }
@@ -181,18 +175,18 @@ private fun SkirTypeArgumentChangePreview.toDomain(): TypeArgumentChangePreview 
         clearedLocations = clearedLocations.map { SkirAuthoringValueCodec.decode(it).getOrThrow() },
     )
 
-private fun PreparedEditResult.toWire(): SkirPreparedEditResult =
+private fun PreparedEditResult.toWire(): PrepareTypeArgumentChangeResponse =
     when (this) {
         is PreparedEditResult.Prepared -> {
-            SkirPreparedEditResult.createPrepared(edit = SkirAuthoringOperationCodec.encode(edit).getOrThrow())
+            PrepareTypeArgumentChangeResponse.createPrepared(edit = SkirAuthoringOperationCodec.encode(edit).getOrThrow())
         }
 
         is PreparedEditResult.NeedsInput -> {
-            SkirPreparedEditResult.NeedsInputWrapper(locations.map { SkirAuthoringValueCodec.encode(it).getOrThrow() })
+            PrepareTypeArgumentChangeResponse.NeedsInputWrapper(locations.map { SkirAuthoringValueCodec.encode(it).getOrThrow() })
         }
 
         is PreparedEditResult.Rejected -> {
-            SkirPreparedEditResult.RejectedWrapper(problems.map { SkirAuthoringValueCodec.encode(it).getOrThrow() })
+            PrepareTypeArgumentChangeResponse.RejectedErrorWrapper(problems.map { SkirAuthoringValueCodec.encode(it).getOrThrow() })
         }
     }
 

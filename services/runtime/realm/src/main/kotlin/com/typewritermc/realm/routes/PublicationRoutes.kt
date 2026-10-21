@@ -32,6 +32,7 @@ import skirout.editor.v1.publication.PublicationViewChanged
 import skirout.editor.v1.publication.PublicationViewId
 import skirout.editor.v1.publication.PublishAuthoringResponse
 import skirout.editor.v1.publication.QueryPublicationViewResponse
+import skirout.editor.v1.publication.WatchPublicationResponse
 import skirout.editor.v1.type_catalog.CatalogGeneration
 import skirout.editor.v1.type_catalog.PublicationId
 import skirout.editor.v1.type_catalog.ResourceId
@@ -46,7 +47,6 @@ import skirout.editor.v1.publication.PublicationChange as WirePublicationChange
 import skirout.editor.v1.publication.PublicationDelta as SkirPublicationDelta
 import skirout.editor.v1.publication.PublicationFailure as WirePublicationFailure
 import skirout.editor.v1.publication.PublicationNotice as WirePublicationNotice
-import skirout.editor.v1.publication.PublicationResult as WirePublicationResult
 import skirout.editor.v1.publication.PublicationStatus as WirePublicationStatus
 import skirout.editor.v1.publication.PublicationView as WirePublicationView
 
@@ -62,9 +62,7 @@ internal class PublicationRoutes(
                 if (call.request.candidate.value
                         .isBlank()
                 ) {
-                    return@unary PublishAuthoringResponse.ResultWrapper(
-                        WirePublicationResult.CandidateChangedWrapper(publisher.views.value.changed()),
-                    )
+                    return@unary PublishAuthoringResponse.CandidateChangedErrorWrapper(publisher.views.value.changed())
                 }
                 val result =
                     publisher.publish(
@@ -82,9 +80,9 @@ internal class PublicationRoutes(
                                 ).requirePublished()
                         }
                     }
-                PublishAuthoringResponse.ResultWrapper(result.toWire())
+                result.toWire()
             }
-            watch(contracts.watchPublication) { publisher.views.value.changed() }
+            watch(contracts.watchPublication) { WatchPublicationResponse.ViewChangedWrapper(publisher.views.value.changed()) }
             unary(contracts.queryPublicationView) { call ->
                 val view = publisher.views.value
                 if (view.id.value != call.request.expected.value) {
@@ -285,35 +283,35 @@ private fun Diagnostic.details(evidence: DiagnosticEvidence?): PublicationDiagno
     )
 }
 
-private fun PublicationResult.toWire(): WirePublicationResult =
+private fun PublicationResult.toWire(): PublishAuthoringResponse =
     when (this) {
         PublicationResult.Publishing -> {
-            WirePublicationResult.PUBLISHING
+            PublishAuthoringResponse.PUBLISHING
         }
 
         is PublicationResult.Activated -> {
-            WirePublicationResult.createActivated(
+            PublishAuthoringResponse.createActivated(
                 publication =
                     PublicationId(value = publication.value),
             )
         }
 
         is PublicationResult.Blocked -> {
-            WirePublicationResult.BlockedWrapper(blockers.toWire())
+            PublishAuthoringResponse.BlockedErrorWrapper(blockers.toWire())
         }
 
         is PublicationResult.Interrupted -> {
-            WirePublicationResult.InterruptedWrapper(
+            PublishAuthoringResponse.InterruptedErrorWrapper(
                 PublicationId(value = publication.value),
             )
         }
 
         PublicationResult.NoChanges -> {
-            WirePublicationResult.NO_CHANGES
+            PublishAuthoringResponse.NO_CHANGES
         }
 
         is PublicationResult.CandidateChanged -> {
-            WirePublicationResult.CandidateChangedWrapper(
+            PublishAuthoringResponse.CandidateChangedErrorWrapper(
                 PublicationViewChanged(
                     current =
                         PublicationViewId(value = view.value),

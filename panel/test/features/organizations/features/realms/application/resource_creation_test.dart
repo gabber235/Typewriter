@@ -26,7 +26,7 @@ void main() {
         );
         final transport = ScriptedAuthoringTransport(AsyncData(document));
         addTearDown(transport.dispose);
-        final preparation = Completer<skir.PreparationStep>();
+        final preparation = Completer<skir.PrepareValueResult>();
         skir.PreparationOperation? operation;
         AuthoringResourceIdentifier? created;
         RealmEditing? workspace;
@@ -120,7 +120,9 @@ void main() {
         } else if (cancellation == "dispose") {
           await tester.pumpWidget(const SizedBox());
         }
-        preparation.complete(skir.PreparationStep.wrapReady(fixture.prepared));
+        preparation.complete(
+          skir.PrepareValueResult.wrapReady(fixture.prepared),
+        );
         await tester.pump();
         if (cancellation == "none") {
           expect(created?.resourceId, fixture.request.id);

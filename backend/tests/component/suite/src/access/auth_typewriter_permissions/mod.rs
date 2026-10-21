@@ -8,7 +8,9 @@ use typewriter_component_test::prelude::{
     SchemaPreset, SkirMessagingExt, TypewriterFixtureBuilderExt,
 };
 use wasmcloud_utils::{
-    skir::base::access::v1::permission::{GetEntityPermissionRequest, GetEntityPermissionResponse},
+    skir::base::access::v1::permission::{
+        EntityPermissionGrant, GetEntityPermissionRequest, GetEntityPermissionResponse,
+    },
     skir_client::UnrecognizedValues,
 };
 
@@ -38,7 +40,8 @@ impl FixtureSpec for AuthTypewriterPermissions {
     }
 }
 
-async fn request_permissions(
+/// Requests policy resolution and returns the typed reply, including a failure reply.
+async fn request_permission_response(
     context: &TestContext<AuthTypewriterPermissions>,
     subject: &str,
     request: &GetEntityPermissionRequest,
@@ -54,4 +57,16 @@ async fn request_permissions(
             UnrecognizedValues::Drop,
         )
         .await
+}
+
+/// Requests policy resolution and returns the granted permissions, failing on any other reply.
+async fn request_permissions(
+    context: &TestContext<AuthTypewriterPermissions>,
+    subject: &str,
+    request: &GetEntityPermissionRequest,
+) -> anyhow::Result<EntityPermissionGrant> {
+    match request_permission_response(context, subject, request).await? {
+        GetEntityPermissionResponse::Granted(grant) => Ok(*grant),
+        other => anyhow::bail!("expected granted permissions, received {other:?}"),
+    }
 }

@@ -220,6 +220,6 @@ final class _SaveBoundary {
   }
 
   void accept(int index) => requests[index].response.complete(
-    skir.CommitPreparedEditResponse.wrapResult(skir.CommitResult.committed),
+    skir.CommitPreparedEditResponse.committed,
   );
 }

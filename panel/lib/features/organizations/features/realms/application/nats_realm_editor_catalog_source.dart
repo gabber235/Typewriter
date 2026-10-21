@@ -69,7 +69,10 @@ final class NatsRealmEditorCatalogSource {
     ref,
     organizationId: organizationId,
     realmId: realmId,
-    snapshot: (response) => response,
+    snapshot: (response) => switch (response) {
+      skir.WatchEditorCatalogResponse_invalidatedWrapper(:final value) => value,
+      _ => throw ApiException.internalServerError(),
+    },
     reduce: (_, event) => event,
     reconciliation: const ProjectionReconciliation.latest(),
   );
@@ -83,19 +86,19 @@ final class NatsRealmEditorCatalogSource {
     realmId,
     skir.PreparationOperation.wrapStart(request),
   )) {
-    skir.PreparationStep_readyWrapper(:final value) => value,
-    skir.PreparationStep_needsInputWrapper(:final value) => skir.PreparedValue(
-      content: value.content,
-      findings: value.findings,
-    ),
-    skir.PreparationStep_unavailableWrapper(:final value) => skir.PreparedValue(
-      content: value.content,
-      findings: value.findings,
-    ),
-    skir.PreparationStep_unknown() => throw ApiException.internalServerError(),
+    skir.PrepareValueResult_readyWrapper(:final value) => value,
+    skir.PrepareValueResult_needsInputWrapper(:final value) =>
+      skir.PreparedValue(content: value.content, findings: value.findings),
+    skir.PrepareValueResult_unavailableErrorWrapper(:final value) =>
+      skir.PreparedValue(content: value.content, findings: value.findings),
+    skir.PrepareValueResult_catalogChangedErrorWrapper(:final value) =>
+      throw CatalogGenerationChanged(value),
+    skir.PrepareValueResult_internalErrorWrapper() ||
+    skir.PrepareValueResult_unknown() =>
+      throw ApiException.internalServerError(),
   };
 
-  Future<skir.PreparationStep> prepareStep(
+  Future<skir.PrepareValueResult> prepareStep(
     skir.RecordId organizationId,
     skir.RecordId realmId,
     skir.PreparationOperation operation,
@@ -104,10 +107,12 @@ final class NatsRealmEditorCatalogSource {
       operation.operation(organizationId: organizationId, realmId: realmId),
     );
     return switch (response) {
-      skir.PrepareValueResult_preparedWrapper(:final value) => value,
-      skir.PrepareValueResult_catalogChangedWrapper(:final value) =>
+      skir.PrepareValueResult_catalogChangedErrorWrapper(:final value) =>
         throw CatalogGenerationChanged(value),
-      _ => throw ApiException.internalServerError(),
+      skir.PrepareValueResult_internalErrorWrapper() ||
+      skir.PrepareValueResult_unknown() =>
+        throw ApiException.internalServerError(),
+      _ => response,
     };
   }
 }

@@ -353,7 +353,7 @@ pub enum RealmPresentationSearchStatus {
     Unknown(Option<crate::skir_client::UnrecognizedVariant<RealmPresentationSearchStatus>>),
     Loading,
     Ready,
-    Error,
+    SearchFailedError,
 }
 
 impl Default for RealmPresentationSearchStatus {
@@ -373,7 +373,7 @@ impl RealmPresentationSearchStatus {
                     RealmPresentationSearchStatus::Unknown(_) => 0,
                     RealmPresentationSearchStatus::Loading => 1,
                     RealmPresentationSearchStatus::Ready => 2,
-                    RealmPresentationSearchStatus::Error => 3,
+                    RealmPresentationSearchStatus::SearchFailedError => 3,
                 },
                 |u| RealmPresentationSearchStatus::Unknown(Some(u)),
                 |x: &RealmPresentationSearchStatus| match x {
@@ -400,7 +400,8 @@ impl RealmPresentationSearchStatus {
 // ==============================================================================
 
 /// Complete values accumulated for this subscription so far, not an incremental append batch.
-/// loading allows further snapshots; ready marks producer completion; error carries diagnostics.
+/// loading allows further snapshots; ready marks producer completion; search_failed_error carries
+/// diagnostics.
 #[derive(Clone, Debug, PartialEq, Default)]
 pub struct RealmPresentationSearchSnapshot {
     pub subscription_id: String,
@@ -430,7 +431,7 @@ impl RealmPresentationSearchSnapshot {
             crate::skir_client::internal::StructAdapter::new(
                 "editor/v1/search.skir",
                 "RealmPresentationSearchSnapshot",
-                "Complete values accumulated for this subscription so far, not an incremental append batch.\nloading allows further snapshots; ready marks producer completion; error carries diagnostics.",
+                "Complete values accumulated for this subscription so far, not an incremental append batch.\nloading allows further snapshots; ready marks producer completion; search_failed_error carries\ndiagnostics.",
                 |x: &RealmPresentationSearchSnapshot| &x._unrecognized,
                 |x: &mut RealmPresentationSearchSnapshot, u| x._unrecognized = u,
             )
@@ -492,52 +493,54 @@ impl RealmPresentationSearchUnavailable {
 }
 
 // ==============================================================================
-// struct RealmPresentationSearchUpdate.StaleObservation
+// struct RealmPresentationSearchUpdate.StaleObservationError
 // ==============================================================================
 
 #[derive(Clone, Debug, PartialEq, Default)]
-pub struct RealmPresentationSearchUpdate_StaleObservation {
+pub struct RealmPresentationSearchUpdate_StaleObservationError {
     pub subscription_id: String,
     pub observation:
         crate::skirout::base::editor::v1::resource_operations::StaleAuthoringObservation,
     /// Set this to None when you're creating a struct.
     pub _unrecognized: Option<
-        crate::skir_client::UnrecognizedFields<RealmPresentationSearchUpdate_StaleObservation>,
+        crate::skir_client::UnrecognizedFields<RealmPresentationSearchUpdate_StaleObservationError>,
     >,
 }
 
-impl RealmPresentationSearchUpdate_StaleObservation {
-    pub fn default_ref() -> &'static RealmPresentationSearchUpdate_StaleObservation {
-        static D: std::sync::LazyLock<RealmPresentationSearchUpdate_StaleObservation> =
-            std::sync::LazyLock::new(RealmPresentationSearchUpdate_StaleObservation::default);
+impl RealmPresentationSearchUpdate_StaleObservationError {
+    pub fn default_ref() -> &'static RealmPresentationSearchUpdate_StaleObservationError {
+        static D: std::sync::LazyLock<RealmPresentationSearchUpdate_StaleObservationError> =
+            std::sync::LazyLock::new(RealmPresentationSearchUpdate_StaleObservationError::default);
         &D
     }
 }
 
-impl RealmPresentationSearchUpdate_StaleObservation {
+impl RealmPresentationSearchUpdate_StaleObservationError {
     fn _adapter() -> &'static crate::skir_client::internal::StructAdapter<
-        RealmPresentationSearchUpdate_StaleObservation,
+        RealmPresentationSearchUpdate_StaleObservationError,
     > {
         static ADAPTER: std::sync::LazyLock<
             crate::skir_client::internal::StructAdapter<
-                RealmPresentationSearchUpdate_StaleObservation,
+                RealmPresentationSearchUpdate_StaleObservationError,
             >,
         > = std::sync::LazyLock::new(|| {
             crate::skir_client::internal::StructAdapter::new(
                 "editor/v1/search.skir",
-                "RealmPresentationSearchUpdate.StaleObservation",
+                "RealmPresentationSearchUpdate.StaleObservationError",
                 "",
-                |x: &RealmPresentationSearchUpdate_StaleObservation| &x._unrecognized,
-                |x: &mut RealmPresentationSearchUpdate_StaleObservation, u| x._unrecognized = u,
+                |x: &RealmPresentationSearchUpdate_StaleObservationError| &x._unrecognized,
+                |x: &mut RealmPresentationSearchUpdate_StaleObservationError, u| {
+                    x._unrecognized = u
+                },
             )
         });
         &*ADAPTER
     }
     pub fn serializer()
-    -> crate::skir_client::Serializer<RealmPresentationSearchUpdate_StaleObservation> {
+    -> crate::skir_client::Serializer<RealmPresentationSearchUpdate_StaleObservationError> {
         initialize_module_serializers();
         crate::skir_client::internal::struct_serializer_from_static(
-            RealmPresentationSearchUpdate_StaleObservation::_adapter(),
+            RealmPresentationSearchUpdate_StaleObservationError::_adapter(),
         )
     }
 }
@@ -550,8 +553,9 @@ impl RealmPresentationSearchUpdate_StaleObservation {
 pub enum RealmPresentationSearchUpdate {
     Unknown(Option<crate::skir_client::UnrecognizedVariant<RealmPresentationSearchUpdate>>),
     Snapshot(Box<RealmPresentationSearchSnapshot>),
-    Unavailable(Box<RealmPresentationSearchUnavailable>),
-    StaleObservation(Box<RealmPresentationSearchUpdate_StaleObservation>),
+    UnavailableError(Box<RealmPresentationSearchUnavailable>),
+    StaleObservationError(Box<RealmPresentationSearchUpdate_StaleObservationError>),
+    InternalError(Box<crate::skirout::base::kernel::v1::errors::InternalError>),
 }
 
 impl Default for RealmPresentationSearchUpdate {
@@ -570,8 +574,9 @@ impl RealmPresentationSearchUpdate {
                 |x: &RealmPresentationSearchUpdate| match x {
                     RealmPresentationSearchUpdate::Unknown(_) => 0,
                     RealmPresentationSearchUpdate::Snapshot(_) => 1,
-                    RealmPresentationSearchUpdate::Unavailable(_) => 2,
-                    RealmPresentationSearchUpdate::StaleObservation(_) => 3,
+                    RealmPresentationSearchUpdate::UnavailableError(_) => 2,
+                    RealmPresentationSearchUpdate::StaleObservationError(_) => 3,
+                    RealmPresentationSearchUpdate::InternalError(_) => 4,
                 },
                 |u| RealmPresentationSearchUpdate::Unknown(Some(u)),
                 |x: &RealmPresentationSearchUpdate| match x {
@@ -646,8 +651,8 @@ impl CancelRealmPresentationSearchRequest {
 pub enum CancelRealmPresentationSearchResult {
     Unknown(Option<crate::skir_client::UnrecognizedVariant<CancelRealmPresentationSearchResult>>),
     Canceled,
-    NotFound,
-    Unavailable,
+    NotFoundError,
+    InternalError(Box<crate::skirout::base::kernel::v1::errors::InternalError>),
 }
 
 impl Default for CancelRealmPresentationSearchResult {
@@ -666,8 +671,8 @@ impl CancelRealmPresentationSearchResult {
                 |x: &CancelRealmPresentationSearchResult| match x {
                     CancelRealmPresentationSearchResult::Unknown(_) => 0,
                     CancelRealmPresentationSearchResult::Canceled => 1,
-                    CancelRealmPresentationSearchResult::NotFound => 2,
-                    CancelRealmPresentationSearchResult::Unavailable => 3,
+                    CancelRealmPresentationSearchResult::NotFoundError => 2,
+                    CancelRealmPresentationSearchResult::InternalError(_) => 3,
                 },
                 |u| CancelRealmPresentationSearchResult::Unknown(Some(u)),
                 |x: &CancelRealmPresentationSearchResult| match x {
@@ -937,7 +942,13 @@ fn initialize_module_serializers() {
                 RealmPresentationSearchStatus::_adapter() as *const _ as *mut _;
             (*a).add_constant_variant("loading", 1, 1, "", RealmPresentationSearchStatus::Loading);
             (*a).add_constant_variant("ready", 2, 2, "", RealmPresentationSearchStatus::Ready);
-            (*a).add_constant_variant("error", 3, 3, "", RealmPresentationSearchStatus::Error);
+            (*a).add_constant_variant(
+                "search_failed_error",
+                3,
+                3,
+                "",
+                RealmPresentationSearchStatus::SearchFailedError,
+            );
             (*a).finalize();
         }
         unsafe {
@@ -1018,17 +1029,20 @@ fn initialize_module_serializers() {
         }
         unsafe {
             let a: *mut crate::skir_client::internal::StructAdapter<
-                RealmPresentationSearchUpdate_StaleObservation,
-            > = RealmPresentationSearchUpdate_StaleObservation::_adapter() as *const _ as *mut _;
+                RealmPresentationSearchUpdate_StaleObservationError,
+            > = RealmPresentationSearchUpdate_StaleObservationError::_adapter() as *const _
+                as *mut _;
             (*a).add_field(
                 "subscription_id",
                 0,
                 crate::skir_client::Serializer::string(),
                 "",
-                |x: &RealmPresentationSearchUpdate_StaleObservation| &x.subscription_id,
-                |x: &mut RealmPresentationSearchUpdate_StaleObservation, v| x.subscription_id = v,
+                |x: &RealmPresentationSearchUpdate_StaleObservationError| &x.subscription_id,
+                |x: &mut RealmPresentationSearchUpdate_StaleObservationError, v| {
+                    x.subscription_id = v
+                },
             );
-            (*a).add_field("observation", 1, crate::skirout::base::editor::v1::resource_operations::StaleAuthoringObservation::serializer(), "", |x: &RealmPresentationSearchUpdate_StaleObservation| &x.observation, |x: &mut RealmPresentationSearchUpdate_StaleObservation, v| x.observation = v);
+            (*a).add_field("observation", 1, crate::skirout::base::editor::v1::resource_operations::StaleAuthoringObservation::serializer(), "", |x: &RealmPresentationSearchUpdate_StaleObservationError| &x.observation, |x: &mut RealmPresentationSearchUpdate_StaleObservationError, v| x.observation = v);
             (*a).finalize();
         }
         unsafe {
@@ -1049,30 +1063,42 @@ fn initialize_module_serializers() {
                 },
             );
             (*a).add_wrapper_variant(
-                "unavailable",
+                "unavailable_error",
                 2,
                 2,
                 crate::skir_client::internal::struct_serializer_from_static(
                     RealmPresentationSearchUnavailable::_adapter(),
                 ),
                 "",
-                |v| RealmPresentationSearchUpdate::Unavailable(Box::new(v)),
+                |v| RealmPresentationSearchUpdate::UnavailableError(Box::new(v)),
                 |x| match x {
-                    RealmPresentationSearchUpdate::Unavailable(b) => b.as_ref(),
+                    RealmPresentationSearchUpdate::UnavailableError(b) => b.as_ref(),
                     _ => unreachable!(),
                 },
             );
             (*a).add_wrapper_variant(
-                "stale_observation",
+                "stale_observation_error",
                 3,
                 3,
                 crate::skir_client::internal::struct_serializer_from_static(
-                    RealmPresentationSearchUpdate_StaleObservation::_adapter(),
+                    RealmPresentationSearchUpdate_StaleObservationError::_adapter(),
                 ),
                 "",
-                |v| RealmPresentationSearchUpdate::StaleObservation(Box::new(v)),
+                |v| RealmPresentationSearchUpdate::StaleObservationError(Box::new(v)),
                 |x| match x {
-                    RealmPresentationSearchUpdate::StaleObservation(b) => b.as_ref(),
+                    RealmPresentationSearchUpdate::StaleObservationError(b) => b.as_ref(),
+                    _ => unreachable!(),
+                },
+            );
+            (*a).add_wrapper_variant(
+                "internal_error",
+                4,
+                4,
+                crate::skirout::base::kernel::v1::errors::InternalError::serializer(),
+                "",
+                |v| RealmPresentationSearchUpdate::InternalError(Box::new(v)),
+                |x| match x {
+                    RealmPresentationSearchUpdate::InternalError(b) => b.as_ref(),
                     _ => unreachable!(),
                 },
             );
@@ -1104,18 +1130,23 @@ fn initialize_module_serializers() {
                 CancelRealmPresentationSearchResult::Canceled,
             );
             (*a).add_constant_variant(
-                "not_found",
+                "not_found_error",
                 2,
                 2,
                 "",
-                CancelRealmPresentationSearchResult::NotFound,
+                CancelRealmPresentationSearchResult::NotFoundError,
             );
-            (*a).add_constant_variant(
-                "unavailable",
+            (*a).add_wrapper_variant(
+                "internal_error",
                 3,
                 3,
+                crate::skirout::base::kernel::v1::errors::InternalError::serializer(),
                 "",
-                CancelRealmPresentationSearchResult::Unavailable,
+                |v| CancelRealmPresentationSearchResult::InternalError(Box::new(v)),
+                |x| match x {
+                    CancelRealmPresentationSearchResult::InternalError(b) => b.as_ref(),
+                    _ => unreachable!(),
+                },
             );
             (*a).finalize();
         }
@@ -1143,7 +1174,8 @@ pub fn watch_realm_presentation_search_method() -> &'static crate::skir_client::
     &*METHOD
 }
 
-/// Requests cancellation of a source owned search job. not_found also covers work already retired.
+/// Requests cancellation of a source owned search job. not_found_error also covers work already
+/// retired.
 pub fn cancel_realm_presentation_search_method() -> &'static crate::skir_client::Method<
     CancelRealmPresentationSearchRequest,
     CancelRealmPresentationSearchResult,
@@ -1159,7 +1191,7 @@ pub fn cancel_realm_presentation_search_method() -> &'static crate::skir_client:
             number: 920007_i64,
             request_serializer: CancelRealmPresentationSearchRequest::serializer(),
             response_serializer: CancelRealmPresentationSearchResult::serializer(),
-            doc: "Requests cancellation of a source owned search job. not_found also covers work already retired.".to_string(),
+            doc: "Requests cancellation of a source owned search job. not_found_error also covers work already\nretired.".to_string(),
         }
     });
     &*METHOD

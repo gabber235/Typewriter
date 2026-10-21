@@ -93,7 +93,7 @@ val AuthoringSearchRoutesTest by testSuite {
                             searchRequest(CatalogGeneration("old"), resource),
                             SearchAuthoringRequest.serializer,
                             SearchAuthoringResponse.serializer,
-                        ) as SearchAuthoringResponse.CatalogChangedWrapper
+                        ) as SearchAuthoringResponse.CatalogChangedErrorWrapper
 
                     response.value.actualGeneration.value shouldBe catalog.generation.value
                 }

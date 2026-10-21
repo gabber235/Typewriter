@@ -1641,6 +1641,8 @@ sealed class SubmitUserJoinRequestResponse {
   );
 
   /// Create a 'code_not_found_error' variant wrapping around the given value.
+  ///
+  /// Join code not found.
   factory SubmitUserJoinRequestResponse.wrapCodeNotFoundError(
     SubmitUserJoinRequestResponse_CodeNotFoundError value,
   ) => SubmitUserJoinRequestResponse_codeNotFoundErrorWrapper._(value);
@@ -1653,6 +1655,8 @@ sealed class SubmitUserJoinRequestResponse {
   );
 
   /// Create a 'already_member_error' variant wrapping around the given value.
+  ///
+  /// User is already a member of this organization.
   factory SubmitUserJoinRequestResponse.wrapAlreadyMemberError(
     SubmitUserJoinRequestResponse_AlreadyMemberError value,
   ) => SubmitUserJoinRequestResponse_alreadyMemberErrorWrapper._(value);
@@ -1664,6 +1668,8 @@ sealed class SubmitUserJoinRequestResponse {
       );
 
   /// Create a 'no_assignable_roles_error' variant wrapping around the given value.
+  ///
+  /// No assignable roles are available for this organization.
   factory SubmitUserJoinRequestResponse.wrapNoAssignableRolesError(
     SubmitUserJoinRequestResponse_NoAssignableRolesError value,
   ) => SubmitUserJoinRequestResponse_noAssignableRolesErrorWrapper._(value);
@@ -1675,6 +1681,8 @@ sealed class SubmitUserJoinRequestResponse {
       );
 
   /// Create a 'max_pending_requests_error' variant wrapping around the given value.
+  ///
+  /// User already has the maximum number of pending join requests.
   factory SubmitUserJoinRequestResponse.wrapMaxPendingRequestsError(
     SubmitUserJoinRequestResponse_MaxPendingRequestsError value,
   ) => SubmitUserJoinRequestResponse_maxPendingRequestsErrorWrapper._(value);
@@ -1686,6 +1694,8 @@ sealed class SubmitUserJoinRequestResponse {
       );
 
   /// Create a 'pending_request_exists_error' variant wrapping around the given value.
+  ///
+  /// User already has a pending join request for this organization.
   factory SubmitUserJoinRequestResponse.wrapPendingRequestExistsError(
     SubmitUserJoinRequestResponse_PendingRequestExistsError value,
   ) => SubmitUserJoinRequestResponse_pendingRequestExistsErrorWrapper._(value);
@@ -1697,6 +1707,8 @@ sealed class SubmitUserJoinRequestResponse {
       );
 
   /// Create a 'invalid_record_id_error' variant wrapping around the given value.
+  ///
+  /// Record IDs from an unexpected table.
   factory SubmitUserJoinRequestResponse.wrapInvalidRecordIdError(
     _lib_kernel_v1_errors.InvalidRecordIdError value,
   ) => SubmitUserJoinRequestResponse_invalidRecordIdErrorWrapper._(value);
@@ -1755,7 +1767,7 @@ sealed class SubmitUserJoinRequestResponse {
         "code_not_found_error",
         "wrapCodeNotFoundError",
         SubmitUserJoinRequestResponse_CodeNotFoundError.serializer,
-        "",
+        "Join code not found.",
         SubmitUserJoinRequestResponse_codeNotFoundErrorWrapper._,
         (it) => it.value,
         ordinal: SubmitUserJoinRequestResponse_kind
@@ -1767,7 +1779,7 @@ sealed class SubmitUserJoinRequestResponse {
         "already_member_error",
         "wrapAlreadyMemberError",
         SubmitUserJoinRequestResponse_AlreadyMemberError.serializer,
-        "",
+        "User is already a member of this organization.",
         SubmitUserJoinRequestResponse_alreadyMemberErrorWrapper._,
         (it) => it.value,
         ordinal: SubmitUserJoinRequestResponse_kind
@@ -1779,7 +1791,7 @@ sealed class SubmitUserJoinRequestResponse {
         "no_assignable_roles_error",
         "wrapNoAssignableRolesError",
         SubmitUserJoinRequestResponse_NoAssignableRolesError.serializer,
-        "",
+        "No assignable roles are available for this organization.",
         SubmitUserJoinRequestResponse_noAssignableRolesErrorWrapper._,
         (it) => it.value,
         ordinal: SubmitUserJoinRequestResponse_kind
@@ -1791,7 +1803,7 @@ sealed class SubmitUserJoinRequestResponse {
         "max_pending_requests_error",
         "wrapMaxPendingRequestsError",
         SubmitUserJoinRequestResponse_MaxPendingRequestsError.serializer,
-        "",
+        "User already has the maximum number of pending join requests.",
         SubmitUserJoinRequestResponse_maxPendingRequestsErrorWrapper._,
         (it) => it.value,
         ordinal: SubmitUserJoinRequestResponse_kind
@@ -1803,7 +1815,7 @@ sealed class SubmitUserJoinRequestResponse {
         "pending_request_exists_error",
         "wrapPendingRequestExistsError",
         SubmitUserJoinRequestResponse_PendingRequestExistsError.serializer,
-        "",
+        "User already has a pending join request for this organization.",
         SubmitUserJoinRequestResponse_pendingRequestExistsErrorWrapper._,
         (it) => it.value,
         ordinal: SubmitUserJoinRequestResponse_kind
@@ -1815,7 +1827,7 @@ sealed class SubmitUserJoinRequestResponse {
         "invalid_record_id_error",
         "wrapInvalidRecordIdError",
         _lib_kernel_v1_errors.InvalidRecordIdError.serializer,
-        "",
+        "Record IDs from an unexpected table.",
         SubmitUserJoinRequestResponse_invalidRecordIdErrorWrapper._,
         (it) => it.value,
         ordinal: SubmitUserJoinRequestResponse_kind
@@ -2419,6 +2431,8 @@ sealed class CancelUserJoinRequestResponse {
   );
 
   /// Create a 'request_not_found_error' variant wrapping around the given value.
+  ///
+  /// Join request not found.
   factory CancelUserJoinRequestResponse.wrapRequestNotFoundError(
     CancelUserJoinRequestResponse_RequestNotFoundError value,
   ) => CancelUserJoinRequestResponse_requestNotFoundErrorWrapper._(value);
@@ -2431,6 +2445,8 @@ sealed class CancelUserJoinRequestResponse {
   );
 
   /// Create a 'invalid_record_id_error' variant wrapping around the given value.
+  ///
+  /// Record IDs from an unexpected table.
   factory CancelUserJoinRequestResponse.wrapInvalidRecordIdError(
     _lib_kernel_v1_errors.InvalidRecordIdError value,
   ) => CancelUserJoinRequestResponse_invalidRecordIdErrorWrapper._(value);
@@ -2478,7 +2494,7 @@ sealed class CancelUserJoinRequestResponse {
         "request_not_found_error",
         "wrapRequestNotFoundError",
         CancelUserJoinRequestResponse_RequestNotFoundError.serializer,
-        "",
+        "Join request not found.",
         CancelUserJoinRequestResponse_requestNotFoundErrorWrapper._,
         (it) => it.value,
         ordinal: CancelUserJoinRequestResponse_kind
@@ -2490,7 +2506,7 @@ sealed class CancelUserJoinRequestResponse {
         "invalid_record_id_error",
         "wrapInvalidRecordIdError",
         _lib_kernel_v1_errors.InvalidRecordIdError.serializer,
-        "",
+        "Record IDs from an unexpected table.",
         CancelUserJoinRequestResponse_invalidRecordIdErrorWrapper._,
         (it) => it.value,
         ordinal: CancelUserJoinRequestResponse_kind

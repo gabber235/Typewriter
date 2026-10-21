@@ -118,7 +118,11 @@ final class NatsRealmPublicationRepository
           ref,
           organizationId: organizationId,
           realmId: realmId,
-          snapshot: (response) => response,
+          snapshot: (response) => switch (response) {
+            skir.WatchPublicationResponse_viewChangedWrapper(:final value) =>
+              value,
+            _ => throw StateError("Publication review is unavailable"),
+          },
           reduce: (_, event) => event,
           reconciliation: const ProjectionReconciliation.latest(),
         )
@@ -152,22 +156,17 @@ final class NatsRealmPublicationRepository
 MutationResponseDisposition classifyPublicationResponse(
   skir.PublishAuthoringResponse response,
 ) => switch (response) {
-  skir.PublishAuthoringResponse_resultWrapper(
-    value: skir.PublicationResult_blockedWrapper(),
-  ) ||
-  skir.PublishAuthoringResponse_resultWrapper(
-    value: skir.PublicationResult_interruptedWrapper(),
-  ) ||
-  skir.PublishAuthoringResponse_resultWrapper(
-    value: skir.PublicationResult_candidateChangedWrapper(),
-  ) => MutationResponseDisposition.rejected,
-  skir.PublishAuthoringResponse_resultWrapper(
-    value: skir.PublicationResult_unknown(),
-  ) =>
-    MutationResponseDisposition.uncertain,
-  skir.PublishAuthoringResponse_resultWrapper() =>
+  skir.PublishAuthoringResponse_blockedErrorWrapper() ||
+  skir.PublishAuthoringResponse_interruptedErrorWrapper() ||
+  skir.PublishAuthoringResponse_candidateChangedErrorWrapper() =>
+    MutationResponseDisposition.rejected,
+  skir.PublishAuthoringResponse.publishing ||
+  skir.PublishAuthoringResponse_activatedWrapper() ||
+  skir.PublishAuthoringResponse.noChanges =>
     MutationResponseDisposition.confirmed,
-  _ => MutationResponseDisposition.uncertain,
+  skir.PublishAuthoringResponse_internalErrorWrapper() ||
+  skir.PublishAuthoringResponse_unknown() =>
+    MutationResponseDisposition.uncertain,
 };
 
 final class PublicationViewChanged implements Exception {

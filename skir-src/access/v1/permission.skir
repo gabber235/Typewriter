@@ -1,4 +1,5 @@
 import { Duration } from "kernel/v1/duration.skir";
+import { InternalError } from "kernel/v1/errors.skir";
 import { RecordId } from "kernel/v1/record_id.skir";
 
 // Access policy boundary for NATS identities. The auth callout validates the presented JWT, then
@@ -30,17 +31,23 @@ struct Permissions {
   response: ResponsePermission?;
 }
 
+// Permissions and identity tags granted to one authenticated entity.
+struct EntityPermissionGrant {
+  permissions: Permissions;
+  tags: [string];
+}
+
 // Internal authenticated resolution between the auth callout and the permission service. The
 // callout invokes it after JWT validation and supplies serialized claims plus an entity qualifier;
 // the permission service resolves user and service policy, including dependent organization or
-// service data, and returns permissions and tags. Resolution errors propagate instead of becoming
-// an authorization grant.
+// service data, and returns the granted permissions and tags. A resolution failure replies with
+// internal_error, which the callout treats as an authorization failure, never as an empty grant.
 method GetEntityPermission(
   struct {
     qualifier: EntityPermissionQualifier;
     jwt_claims: bytes;
   }
-): struct {
-  permissions: Permissions;
-  tags: [string];
+): enum {
+  granted: EntityPermissionGrant;
+  internal_error: InternalError;
 } = 209684;

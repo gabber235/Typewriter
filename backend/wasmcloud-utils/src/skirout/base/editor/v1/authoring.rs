@@ -1351,107 +1351,6 @@ impl PreparedEditReady {
 }
 
 // ==============================================================================
-// enum PreparedEditResult
-// ==============================================================================
-
-#[derive(Debug, Clone, PartialEq)]
-pub enum PreparedEditResult {
-    Unknown(Option<crate::skir_client::UnrecognizedVariant<PreparedEditResult>>),
-    Prepared(Box<PreparedEditReady>),
-    NeedsInput(Vec<crate::skirout::base::editor::v1::type_catalog::ValueLocation>),
-    Rejected(Vec<crate::skirout::base::editor::v1::diagnostic::ValueProblem>),
-}
-
-impl Default for PreparedEditResult {
-    fn default() -> Self {
-        PreparedEditResult::Unknown(None)
-    }
-}
-
-impl PreparedEditResult {
-    fn _adapter() -> &'static crate::skir_client::internal::EnumAdapter<PreparedEditResult> {
-        static ADAPTER: std::sync::LazyLock<
-            crate::skir_client::internal::EnumAdapter<PreparedEditResult>,
-        > = std::sync::LazyLock::new(|| {
-            crate::skir_client::internal::EnumAdapter::new(
-                |x: &PreparedEditResult| match x {
-                    PreparedEditResult::Unknown(_) => 0,
-                    PreparedEditResult::Prepared(_) => 1,
-                    PreparedEditResult::NeedsInput(_) => 2,
-                    PreparedEditResult::Rejected(_) => 3,
-                },
-                |u| PreparedEditResult::Unknown(Some(u)),
-                |x: &PreparedEditResult| match x {
-                    PreparedEditResult::Unknown(Some(u)) => Some(u.as_ref()),
-                    _ => None,
-                },
-                "editor/v1/authoring.skir",
-                "PreparedEditResult",
-                "",
-            )
-        });
-        &*ADAPTER
-    }
-    pub fn serializer() -> crate::skir_client::Serializer<PreparedEditResult> {
-        initialize_module_serializers();
-        crate::skir_client::internal::enum_serializer_from_static(PreparedEditResult::_adapter())
-    }
-}
-
-// ==============================================================================
-// enum CommitResult
-// ==============================================================================
-
-/// committed confirms installation of saved authoring state. It does not confirm check completion,
-/// compilation, publication selection, or engine application. Conflict requires refreshing original
-/// facts; rejection reports invalid intent or missing guards; catalog_changed requires a new catalog.
-#[derive(Debug, Clone, PartialEq)]
-pub enum CommitResult {
-    Unknown(Option<crate::skir_client::UnrecognizedVariant<CommitResult>>),
-    Committed,
-    Conflict(Vec<crate::skirout::base::editor::v1::authoring_facts::ExpectationConflict>),
-    Rejected(Vec<crate::skirout::base::editor::v1::diagnostic::ValueProblem>),
-    CatalogChanged(Box<crate::skirout::base::editor::v1::type_catalog::CatalogGeneration>),
-}
-
-impl Default for CommitResult {
-    fn default() -> Self {
-        CommitResult::Unknown(None)
-    }
-}
-
-impl CommitResult {
-    fn _adapter() -> &'static crate::skir_client::internal::EnumAdapter<CommitResult> {
-        static ADAPTER: std::sync::LazyLock<
-            crate::skir_client::internal::EnumAdapter<CommitResult>,
-        > = std::sync::LazyLock::new(|| {
-            crate::skir_client::internal::EnumAdapter::new(
-                |x: &CommitResult| match x {
-                    CommitResult::Unknown(_) => 0,
-                    CommitResult::Committed => 1,
-                    CommitResult::Conflict(_) => 2,
-                    CommitResult::Rejected(_) => 3,
-                    CommitResult::CatalogChanged(_) => 4,
-                },
-                |u| CommitResult::Unknown(Some(u)),
-                |x: &CommitResult| match x {
-                    CommitResult::Unknown(Some(u)) => Some(u.as_ref()),
-                    _ => None,
-                },
-                "editor/v1/authoring.skir",
-                "CommitResult",
-                "committed confirms installation of saved authoring state. It does not confirm check completion,\ncompilation, publication selection, or engine application. Conflict requires refreshing original\nfacts; rejection reports invalid intent or missing guards; catalog_changed requires a new catalog.",
-            )
-        });
-        &*ADAPTER
-    }
-    pub fn serializer() -> crate::skir_client::Serializer<CommitResult> {
-        initialize_module_serializers();
-        crate::skir_client::internal::enum_serializer_from_static(CommitResult::_adapter())
-    }
-}
-
-// ==============================================================================
 // enum AuthoringOperation
 // ==============================================================================
 
@@ -1668,56 +1567,6 @@ impl ArgumentLocation {
     pub fn serializer() -> crate::skir_client::Serializer<ArgumentLocation> {
         initialize_module_serializers();
         crate::skir_client::internal::struct_serializer_from_static(ArgumentLocation::_adapter())
-    }
-}
-
-// ==============================================================================
-// enum TypePreviewResult
-// ==============================================================================
-
-#[derive(Debug, Clone, PartialEq)]
-pub enum TypePreviewResult {
-    Unknown(Option<crate::skir_client::UnrecognizedVariant<TypePreviewResult>>),
-    Ready(Box<TypeArgumentChangePreview>),
-    InvalidArguments(Vec<crate::skirout::base::editor::v1::diagnostic::DeclarationDiagnostic>),
-    Incomplete(Vec<ArgumentLocation>),
-    Rejected(Vec<crate::skirout::base::editor::v1::diagnostic::ValueProblem>),
-}
-
-impl Default for TypePreviewResult {
-    fn default() -> Self {
-        TypePreviewResult::Unknown(None)
-    }
-}
-
-impl TypePreviewResult {
-    fn _adapter() -> &'static crate::skir_client::internal::EnumAdapter<TypePreviewResult> {
-        static ADAPTER: std::sync::LazyLock<
-            crate::skir_client::internal::EnumAdapter<TypePreviewResult>,
-        > = std::sync::LazyLock::new(|| {
-            crate::skir_client::internal::EnumAdapter::new(
-                |x: &TypePreviewResult| match x {
-                    TypePreviewResult::Unknown(_) => 0,
-                    TypePreviewResult::Ready(_) => 1,
-                    TypePreviewResult::InvalidArguments(_) => 2,
-                    TypePreviewResult::Incomplete(_) => 3,
-                    TypePreviewResult::Rejected(_) => 4,
-                },
-                |u| TypePreviewResult::Unknown(Some(u)),
-                |x: &TypePreviewResult| match x {
-                    TypePreviewResult::Unknown(Some(u)) => Some(u.as_ref()),
-                    _ => None,
-                },
-                "editor/v1/authoring.skir",
-                "TypePreviewResult",
-                "",
-            )
-        });
-        &*ADAPTER
-    }
-    pub fn serializer() -> crate::skir_client::Serializer<TypePreviewResult> {
-        initialize_module_serializers();
-        crate::skir_client::internal::enum_serializer_from_static(TypePreviewResult::_adapter())
     }
 }
 
@@ -2000,8 +1849,8 @@ impl SearchAuthoringRequest {
 pub enum SearchAuthoringResponse {
     Unknown(Option<crate::skir_client::UnrecognizedVariant<SearchAuthoringResponse>>),
     Success(Box<AuthoringSearchResult>),
-    Invalid(Box<AuthoringInvalid>),
-    CatalogChanged(Box<CatalogChanged>),
+    InvalidError(Box<AuthoringInvalid>),
+    CatalogChangedError(Box<CatalogChanged>),
     InternalError(Box<crate::skirout::base::kernel::v1::errors::InternalError>),
 }
 
@@ -2020,8 +1869,8 @@ impl SearchAuthoringResponse {
                 |x: &SearchAuthoringResponse| match x {
                     SearchAuthoringResponse::Unknown(_) => 0,
                     SearchAuthoringResponse::Success(_) => 1,
-                    SearchAuthoringResponse::Invalid(_) => 2,
-                    SearchAuthoringResponse::CatalogChanged(_) => 3,
+                    SearchAuthoringResponse::InvalidError(_) => 2,
+                    SearchAuthoringResponse::CatalogChangedError(_) => 3,
                     SearchAuthoringResponse::InternalError(_) => 4,
                 },
                 |u| SearchAuthoringResponse::Unknown(Some(u)),
@@ -2051,7 +1900,10 @@ impl SearchAuthoringResponse {
 #[derive(Debug, Clone, PartialEq)]
 pub enum CommitPreparedEditResponse {
     Unknown(Option<crate::skir_client::UnrecognizedVariant<CommitPreparedEditResponse>>),
-    Result(Box<CommitResult>),
+    Committed,
+    ConflictError(Vec<crate::skirout::base::editor::v1::authoring_facts::ExpectationConflict>),
+    RejectedError(Vec<crate::skirout::base::editor::v1::diagnostic::ValueProblem>),
+    CatalogChangedError(Box<crate::skirout::base::editor::v1::type_catalog::CatalogGeneration>),
     InternalError(Box<crate::skirout::base::kernel::v1::errors::InternalError>),
 }
 
@@ -2070,8 +1922,11 @@ impl CommitPreparedEditResponse {
             crate::skir_client::internal::EnumAdapter::new(
                 |x: &CommitPreparedEditResponse| match x {
                     CommitPreparedEditResponse::Unknown(_) => 0,
-                    CommitPreparedEditResponse::Result(_) => 1,
-                    CommitPreparedEditResponse::InternalError(_) => 2,
+                    CommitPreparedEditResponse::Committed => 1,
+                    CommitPreparedEditResponse::ConflictError(_) => 2,
+                    CommitPreparedEditResponse::RejectedError(_) => 3,
+                    CommitPreparedEditResponse::CatalogChangedError(_) => 4,
+                    CommitPreparedEditResponse::InternalError(_) => 5,
                 },
                 |u| CommitPreparedEditResponse::Unknown(Some(u)),
                 |x: &CommitPreparedEditResponse| match x {
@@ -2146,7 +2001,10 @@ impl PreviewTypeArgumentChangeRequest {
 #[derive(Debug, Clone, PartialEq)]
 pub enum PreviewTypeArgumentChangeResponse {
     Unknown(Option<crate::skir_client::UnrecognizedVariant<PreviewTypeArgumentChangeResponse>>),
-    Result(Box<TypePreviewResult>),
+    Ready(Box<TypeArgumentChangePreview>),
+    InvalidArgumentsError(Vec<crate::skirout::base::editor::v1::diagnostic::DeclarationDiagnostic>),
+    Incomplete(Vec<ArgumentLocation>),
+    RejectedError(Vec<crate::skirout::base::editor::v1::diagnostic::ValueProblem>),
     InternalError(Box<crate::skirout::base::kernel::v1::errors::InternalError>),
 }
 
@@ -2165,8 +2023,11 @@ impl PreviewTypeArgumentChangeResponse {
             crate::skir_client::internal::EnumAdapter::new(
                 |x: &PreviewTypeArgumentChangeResponse| match x {
                     PreviewTypeArgumentChangeResponse::Unknown(_) => 0,
-                    PreviewTypeArgumentChangeResponse::Result(_) => 1,
-                    PreviewTypeArgumentChangeResponse::InternalError(_) => 2,
+                    PreviewTypeArgumentChangeResponse::Ready(_) => 1,
+                    PreviewTypeArgumentChangeResponse::InvalidArgumentsError(_) => 2,
+                    PreviewTypeArgumentChangeResponse::Incomplete(_) => 3,
+                    PreviewTypeArgumentChangeResponse::RejectedError(_) => 4,
+                    PreviewTypeArgumentChangeResponse::InternalError(_) => 5,
                 },
                 |u| PreviewTypeArgumentChangeResponse::Unknown(Some(u)),
                 |x: &PreviewTypeArgumentChangeResponse| match x {
@@ -2195,7 +2056,9 @@ impl PreviewTypeArgumentChangeResponse {
 #[derive(Debug, Clone, PartialEq)]
 pub enum PrepareTypeArgumentChangeResponse {
     Unknown(Option<crate::skir_client::UnrecognizedVariant<PrepareTypeArgumentChangeResponse>>),
-    Result(Box<PreparedEditResult>),
+    Prepared(Box<PreparedEditReady>),
+    NeedsInput(Vec<crate::skirout::base::editor::v1::type_catalog::ValueLocation>),
+    RejectedError(Vec<crate::skirout::base::editor::v1::diagnostic::ValueProblem>),
     InternalError(Box<crate::skirout::base::kernel::v1::errors::InternalError>),
 }
 
@@ -2214,8 +2077,10 @@ impl PrepareTypeArgumentChangeResponse {
             crate::skir_client::internal::EnumAdapter::new(
                 |x: &PrepareTypeArgumentChangeResponse| match x {
                     PrepareTypeArgumentChangeResponse::Unknown(_) => 0,
-                    PrepareTypeArgumentChangeResponse::Result(_) => 1,
-                    PrepareTypeArgumentChangeResponse::InternalError(_) => 2,
+                    PrepareTypeArgumentChangeResponse::Prepared(_) => 1,
+                    PrepareTypeArgumentChangeResponse::NeedsInput(_) => 2,
+                    PrepareTypeArgumentChangeResponse::RejectedError(_) => 3,
+                    PrepareTypeArgumentChangeResponse::InternalError(_) => 4,
                 },
                 |u| PrepareTypeArgumentChangeResponse::Unknown(Some(u)),
                 |x: &PrepareTypeArgumentChangeResponse| match x {
@@ -3187,86 +3052,6 @@ fn initialize_module_serializers() {
             (*a).finalize();
         }
         unsafe {
-            let a: *mut crate::skir_client::internal::EnumAdapter<PreparedEditResult> =
-                PreparedEditResult::_adapter() as *const _ as *mut _;
-            (*a).add_wrapper_variant(
-                "prepared",
-                1,
-                1,
-                crate::skir_client::internal::struct_serializer_from_static(
-                    PreparedEditReady::_adapter(),
-                ),
-                "",
-                |v| PreparedEditResult::Prepared(Box::new(v)),
-                |x| match x {
-                    PreparedEditResult::Prepared(b) => b.as_ref(),
-                    _ => unreachable!(),
-                },
-            );
-            (*a).add_wrapper_variant(
-                "needs_input",
-                2,
-                2,
-                crate::skir_client::Serializer::array(
-                    crate::skirout::base::editor::v1::type_catalog::ValueLocation::serializer(),
-                ),
-                "",
-                |v| PreparedEditResult::NeedsInput(v),
-                |x| match x {
-                    PreparedEditResult::NeedsInput(v) => v,
-                    _ => unreachable!(),
-                },
-            );
-            (*a).add_wrapper_variant(
-                "rejected",
-                3,
-                3,
-                crate::skir_client::Serializer::array(
-                    crate::skirout::base::editor::v1::diagnostic::ValueProblem::serializer(),
-                ),
-                "",
-                |v| PreparedEditResult::Rejected(v),
-                |x| match x {
-                    PreparedEditResult::Rejected(v) => v,
-                    _ => unreachable!(),
-                },
-            );
-            (*a).finalize();
-        }
-        unsafe {
-            let a: *mut crate::skir_client::internal::EnumAdapter<CommitResult> =
-                CommitResult::_adapter() as *const _ as *mut _;
-            (*a).add_constant_variant("committed", 1, 1, "", CommitResult::Committed);
-            (*a).add_wrapper_variant("conflict", 2, 2, crate::skir_client::Serializer::array(crate::skirout::base::editor::v1::authoring_facts::ExpectationConflict::serializer()), "", |v| CommitResult::Conflict(v), |x| match x { CommitResult::Conflict(v) => v, _ => unreachable!() });
-            (*a).add_wrapper_variant(
-                "rejected",
-                3,
-                3,
-                crate::skir_client::Serializer::array(
-                    crate::skirout::base::editor::v1::diagnostic::ValueProblem::serializer(),
-                ),
-                "",
-                |v| CommitResult::Rejected(v),
-                |x| match x {
-                    CommitResult::Rejected(v) => v,
-                    _ => unreachable!(),
-                },
-            );
-            (*a).add_wrapper_variant(
-                "catalog_changed",
-                4,
-                4,
-                crate::skirout::base::editor::v1::type_catalog::CatalogGeneration::serializer(),
-                "",
-                |v| CommitResult::CatalogChanged(Box::new(v)),
-                |x| match x {
-                    CommitResult::CatalogChanged(b) => b.as_ref(),
-                    _ => unreachable!(),
-                },
-            );
-            (*a).finalize();
-        }
-        unsafe {
             let a: *mut crate::skir_client::internal::EnumAdapter<AuthoringOperation> =
                 AuthoringOperation::_adapter() as *const _ as *mut _;
             (*a).add_wrapper_variant(
@@ -3394,70 +3179,6 @@ fn initialize_module_serializers() {
                 "",
                 |x: &ArgumentLocation| &x.index,
                 |x: &mut ArgumentLocation, v| x.index = v,
-            );
-            (*a).finalize();
-        }
-        unsafe {
-            let a: *mut crate::skir_client::internal::EnumAdapter<TypePreviewResult> =
-                TypePreviewResult::_adapter() as *const _ as *mut _;
-            (*a).add_wrapper_variant(
-                "ready",
-                1,
-                1,
-                crate::skir_client::internal::struct_serializer_from_static(
-                    TypeArgumentChangePreview::_adapter(),
-                ),
-                "",
-                |v| TypePreviewResult::Ready(Box::new(v)),
-                |x| match x {
-                    TypePreviewResult::Ready(b) => b.as_ref(),
-                    _ => unreachable!(),
-                },
-            );
-            (*a).add_wrapper_variant(
-                "invalid_arguments",
-                2,
-                2,
-                crate::skir_client::Serializer::array(
-                    crate::skirout::base::editor::v1::diagnostic::DeclarationDiagnostic::serializer(
-                    ),
-                ),
-                "",
-                |v| TypePreviewResult::InvalidArguments(v),
-                |x| match x {
-                    TypePreviewResult::InvalidArguments(v) => v,
-                    _ => unreachable!(),
-                },
-            );
-            (*a).add_wrapper_variant(
-                "incomplete",
-                3,
-                3,
-                crate::skir_client::Serializer::array(
-                    crate::skir_client::internal::struct_serializer_from_static(
-                        ArgumentLocation::_adapter(),
-                    ),
-                ),
-                "",
-                |v| TypePreviewResult::Incomplete(v),
-                |x| match x {
-                    TypePreviewResult::Incomplete(v) => v,
-                    _ => unreachable!(),
-                },
-            );
-            (*a).add_wrapper_variant(
-                "rejected",
-                4,
-                4,
-                crate::skir_client::Serializer::array(
-                    crate::skirout::base::editor::v1::diagnostic::ValueProblem::serializer(),
-                ),
-                "",
-                |v| TypePreviewResult::Rejected(v),
-                |x| match x {
-                    TypePreviewResult::Rejected(v) => v,
-                    _ => unreachable!(),
-                },
             );
             (*a).finalize();
         }
@@ -3667,30 +3388,30 @@ fn initialize_module_serializers() {
                 },
             );
             (*a).add_wrapper_variant(
-                "invalid",
+                "invalid_error",
                 2,
                 2,
                 crate::skir_client::internal::struct_serializer_from_static(
                     AuthoringInvalid::_adapter(),
                 ),
                 "",
-                |v| SearchAuthoringResponse::Invalid(Box::new(v)),
+                |v| SearchAuthoringResponse::InvalidError(Box::new(v)),
                 |x| match x {
-                    SearchAuthoringResponse::Invalid(b) => b.as_ref(),
+                    SearchAuthoringResponse::InvalidError(b) => b.as_ref(),
                     _ => unreachable!(),
                 },
             );
             (*a).add_wrapper_variant(
-                "catalog_changed",
+                "catalog_changed_error",
                 3,
                 3,
                 crate::skir_client::internal::struct_serializer_from_static(
                     CatalogChanged::_adapter(),
                 ),
                 "",
-                |v| SearchAuthoringResponse::CatalogChanged(Box::new(v)),
+                |v| SearchAuthoringResponse::CatalogChangedError(Box::new(v)),
                 |x| match x {
-                    SearchAuthoringResponse::CatalogChanged(b) => b.as_ref(),
+                    SearchAuthoringResponse::CatalogChangedError(b) => b.as_ref(),
                     _ => unreachable!(),
                 },
             );
@@ -3711,22 +3432,38 @@ fn initialize_module_serializers() {
         unsafe {
             let a: *mut crate::skir_client::internal::EnumAdapter<CommitPreparedEditResponse> =
                 CommitPreparedEditResponse::_adapter() as *const _ as *mut _;
+            (*a).add_constant_variant("committed", 1, 1, "", CommitPreparedEditResponse::Committed);
+            (*a).add_wrapper_variant("conflict_error", 2, 2, crate::skir_client::Serializer::array(crate::skirout::base::editor::v1::authoring_facts::ExpectationConflict::serializer()), "", |v| CommitPreparedEditResponse::ConflictError(v), |x| match x { CommitPreparedEditResponse::ConflictError(v) => v, _ => unreachable!() });
             (*a).add_wrapper_variant(
-                "result",
-                1,
-                1,
-                crate::skir_client::internal::enum_serializer_from_static(CommitResult::_adapter()),
+                "rejected_error",
+                3,
+                3,
+                crate::skir_client::Serializer::array(
+                    crate::skirout::base::editor::v1::diagnostic::ValueProblem::serializer(),
+                ),
                 "",
-                |v| CommitPreparedEditResponse::Result(Box::new(v)),
+                |v| CommitPreparedEditResponse::RejectedError(v),
                 |x| match x {
-                    CommitPreparedEditResponse::Result(b) => b.as_ref(),
+                    CommitPreparedEditResponse::RejectedError(v) => v,
+                    _ => unreachable!(),
+                },
+            );
+            (*a).add_wrapper_variant(
+                "catalog_changed_error",
+                4,
+                4,
+                crate::skirout::base::editor::v1::type_catalog::CatalogGeneration::serializer(),
+                "",
+                |v| CommitPreparedEditResponse::CatalogChangedError(Box::new(v)),
+                |x| match x {
+                    CommitPreparedEditResponse::CatalogChangedError(b) => b.as_ref(),
                     _ => unreachable!(),
                 },
             );
             (*a).add_wrapper_variant(
                 "internal_error",
-                2,
-                2,
+                5,
+                5,
                 crate::skirout::base::kernel::v1::errors::InternalError::serializer(),
                 "",
                 |v| CommitPreparedEditResponse::InternalError(Box::new(v)),
@@ -3772,23 +3509,68 @@ fn initialize_module_serializers() {
                 PreviewTypeArgumentChangeResponse,
             > = PreviewTypeArgumentChangeResponse::_adapter() as *const _ as *mut _;
             (*a).add_wrapper_variant(
-                "result",
+                "ready",
                 1,
                 1,
-                crate::skir_client::internal::enum_serializer_from_static(
-                    TypePreviewResult::_adapter(),
+                crate::skir_client::internal::struct_serializer_from_static(
+                    TypeArgumentChangePreview::_adapter(),
                 ),
                 "",
-                |v| PreviewTypeArgumentChangeResponse::Result(Box::new(v)),
+                |v| PreviewTypeArgumentChangeResponse::Ready(Box::new(v)),
                 |x| match x {
-                    PreviewTypeArgumentChangeResponse::Result(b) => b.as_ref(),
+                    PreviewTypeArgumentChangeResponse::Ready(b) => b.as_ref(),
+                    _ => unreachable!(),
+                },
+            );
+            (*a).add_wrapper_variant(
+                "invalid_arguments_error",
+                2,
+                2,
+                crate::skir_client::Serializer::array(
+                    crate::skirout::base::editor::v1::diagnostic::DeclarationDiagnostic::serializer(
+                    ),
+                ),
+                "",
+                |v| PreviewTypeArgumentChangeResponse::InvalidArgumentsError(v),
+                |x| match x {
+                    PreviewTypeArgumentChangeResponse::InvalidArgumentsError(v) => v,
+                    _ => unreachable!(),
+                },
+            );
+            (*a).add_wrapper_variant(
+                "incomplete",
+                3,
+                3,
+                crate::skir_client::Serializer::array(
+                    crate::skir_client::internal::struct_serializer_from_static(
+                        ArgumentLocation::_adapter(),
+                    ),
+                ),
+                "",
+                |v| PreviewTypeArgumentChangeResponse::Incomplete(v),
+                |x| match x {
+                    PreviewTypeArgumentChangeResponse::Incomplete(v) => v,
+                    _ => unreachable!(),
+                },
+            );
+            (*a).add_wrapper_variant(
+                "rejected_error",
+                4,
+                4,
+                crate::skir_client::Serializer::array(
+                    crate::skirout::base::editor::v1::diagnostic::ValueProblem::serializer(),
+                ),
+                "",
+                |v| PreviewTypeArgumentChangeResponse::RejectedError(v),
+                |x| match x {
+                    PreviewTypeArgumentChangeResponse::RejectedError(v) => v,
                     _ => unreachable!(),
                 },
             );
             (*a).add_wrapper_variant(
                 "internal_error",
-                2,
-                2,
+                5,
+                5,
                 crate::skirout::base::kernel::v1::errors::InternalError::serializer(),
                 "",
                 |v| PreviewTypeArgumentChangeResponse::InternalError(Box::new(v)),
@@ -3804,23 +3586,51 @@ fn initialize_module_serializers() {
                 PrepareTypeArgumentChangeResponse,
             > = PrepareTypeArgumentChangeResponse::_adapter() as *const _ as *mut _;
             (*a).add_wrapper_variant(
-                "result",
+                "prepared",
                 1,
                 1,
-                crate::skir_client::internal::enum_serializer_from_static(
-                    PreparedEditResult::_adapter(),
+                crate::skir_client::internal::struct_serializer_from_static(
+                    PreparedEditReady::_adapter(),
                 ),
                 "",
-                |v| PrepareTypeArgumentChangeResponse::Result(Box::new(v)),
+                |v| PrepareTypeArgumentChangeResponse::Prepared(Box::new(v)),
                 |x| match x {
-                    PrepareTypeArgumentChangeResponse::Result(b) => b.as_ref(),
+                    PrepareTypeArgumentChangeResponse::Prepared(b) => b.as_ref(),
+                    _ => unreachable!(),
+                },
+            );
+            (*a).add_wrapper_variant(
+                "needs_input",
+                2,
+                2,
+                crate::skir_client::Serializer::array(
+                    crate::skirout::base::editor::v1::type_catalog::ValueLocation::serializer(),
+                ),
+                "",
+                |v| PrepareTypeArgumentChangeResponse::NeedsInput(v),
+                |x| match x {
+                    PrepareTypeArgumentChangeResponse::NeedsInput(v) => v,
+                    _ => unreachable!(),
+                },
+            );
+            (*a).add_wrapper_variant(
+                "rejected_error",
+                3,
+                3,
+                crate::skir_client::Serializer::array(
+                    crate::skirout::base::editor::v1::diagnostic::ValueProblem::serializer(),
+                ),
+                "",
+                |v| PrepareTypeArgumentChangeResponse::RejectedError(v),
+                |x| match x {
+                    PrepareTypeArgumentChangeResponse::RejectedError(v) => v,
                     _ => unreachable!(),
                 },
             );
             (*a).add_wrapper_variant(
                 "internal_error",
-                2,
-                2,
+                4,
+                4,
                 crate::skirout::base::kernel::v1::errors::InternalError::serializer(),
                 "",
                 |v| PrepareTypeArgumentChangeResponse::InternalError(Box::new(v)),
@@ -3868,16 +3678,22 @@ pub fn search_authoring_method()
     &*METHOD
 }
 
+/// committed confirms installation of saved authoring state. It does not confirm check completion,
+/// compilation, publication selection, or engine application. conflict_error requires refreshing
+/// original facts; rejected_error reports invalid intent or missing guards; catalog_changed_error
+/// requires a new catalog.
 pub fn commit_prepared_edit_method()
 -> &'static crate::skir_client::Method<PreparedEdit, CommitPreparedEditResponse> {
     static METHOD: std::sync::LazyLock<
         crate::skir_client::Method<PreparedEdit, CommitPreparedEditResponse>,
-    > = std::sync::LazyLock::new(|| crate::skir_client::Method {
-        name: "CommitPreparedEdit".to_string(),
-        number: 920012_i64,
-        request_serializer: PreparedEdit::serializer(),
-        response_serializer: CommitPreparedEditResponse::serializer(),
-        doc: "".to_string(),
+    > = std::sync::LazyLock::new(|| {
+        crate::skir_client::Method {
+            name: "CommitPreparedEdit".to_string(),
+            number: 920012_i64,
+            request_serializer: PreparedEdit::serializer(),
+            response_serializer: CommitPreparedEditResponse::serializer(),
+            doc: "committed confirms installation of saved authoring state. It does not confirm check completion,\ncompilation, publication selection, or engine application. conflict_error requires refreshing\noriginal facts; rejected_error reports invalid intent or missing guards; catalog_changed_error\nrequires a new catalog.".to_string(),
+        }
     });
     &*METHOD
 }

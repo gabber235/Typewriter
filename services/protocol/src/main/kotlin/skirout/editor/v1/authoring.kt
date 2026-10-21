@@ -5058,259 +5058,6 @@ class PreparedEditReady private constructor(
 }
 
 /** Deeply immutable. */
-sealed class PreparedEditResult private constructor() {
-    /** The kind of variant held by a `PreparedEditResult`. */
-    enum class Kind {
-        UNKNOWN,
-        PREPARED_WRAPPER,
-        NEEDS_INPUT_WRAPPER,
-        REJECTED_WRAPPER,
-    }
-
-    class Unknown @kotlin.Deprecated("For internal use", kotlin.ReplaceWith("skirout.editor.v1.authoring.PreparedEditResult.UNKNOWN")) internal constructor(
-        internal val _kind: Kind,
-        internal override val _unrecognized: _UnrecognizedVariant<skirout.editor.v1.authoring.PreparedEditResult>?,
-    ) : skirout.editor.v1.authoring.PreparedEditResult() {
-        override val kind get() = _kind;
-
-        override fun equals(other: kotlin.Any?): kotlin.Boolean {
-            return other is skirout.editor.v1.authoring.PreparedEditResult && other.kind == kind;
-        }
-
-        override fun hashCode(): kotlin.Int {
-            return kind.ordinal;
-        }
-    }
-
-    class PreparedWrapper private constructor (
-        val value: skirout.editor.v1.authoring.PreparedEditReady,
-    ) : skirout.editor.v1.authoring.PreparedEditResult() {
-        constructor(
-            value: skirout.editor.v1.authoring.PreparedEditReady_OrMutable,
-        ): this(value.toFrozen()) {}
-
-        override val kind get() = Kind.PREPARED_WRAPPER;
-
-        override fun equals(other: kotlin.Any?): kotlin.Boolean {
-            return other is skirout.editor.v1.authoring.PreparedEditResult.PreparedWrapper && value == other.value;
-        }
-
-        override fun hashCode(): kotlin.Int {
-            return this.value.hashCode() + -1279552451;
-        }
-    }
-
-    class NeedsInputWrapper private constructor (
-        val value: kotlin.collections.List<skirout.editor.v1.type_catalog.ValueLocation>,
-    ) : skirout.editor.v1.authoring.PreparedEditResult() {
-        constructor(
-            value: kotlin.collections.Iterable<skirout.editor.v1.type_catalog.ValueLocation_OrMutable>,
-        ): this(build.skir.internal.toFrozenList(value, { it.toFrozen() })) {}
-
-        override val kind get() = Kind.NEEDS_INPUT_WRAPPER;
-
-        override fun equals(other: kotlin.Any?): kotlin.Boolean {
-            return other is skirout.editor.v1.authoring.PreparedEditResult.NeedsInputWrapper && value == other.value;
-        }
-
-        override fun hashCode(): kotlin.Int {
-            return this.value.hashCode() + -642245720;
-        }
-    }
-
-    class RejectedWrapper private constructor (
-        val value: kotlin.collections.List<skirout.editor.v1.diagnostic.ValueProblem>,
-    ) : skirout.editor.v1.authoring.PreparedEditResult() {
-        constructor(
-            value: kotlin.collections.Iterable<skirout.editor.v1.diagnostic.ValueProblem_OrMutable>,
-        ): this(build.skir.internal.toFrozenList(value, { it.toFrozen() })) {}
-
-        override val kind get() = Kind.REJECTED_WRAPPER;
-
-        override fun equals(other: kotlin.Any?): kotlin.Boolean {
-            return other is skirout.editor.v1.authoring.PreparedEditResult.RejectedWrapper && value == other.value;
-        }
-
-        override fun hashCode(): kotlin.Int {
-            return this.value.hashCode() + -608496514;
-        }
-    }
-
-    internal open val _unrecognized: _UnrecognizedVariant<skirout.editor.v1.authoring.PreparedEditResult>? get() = null;
-
-    abstract val kind: Kind;
-
-    override fun toString(): kotlin.String {
-        return build.skir.internal.toStringImpl(
-            this,
-            _SerializerRegistry.PreparedEditResultSerializerImpl,
-        )
-    }
-
-    companion object {
-        /**
-         * Constant indicating an unknown [PreparedEditResult].
-         * Default value for fields of type [PreparedEditResult].
-         */
-        val UNKNOWN = @kotlin.Suppress("DEPRECATION") Unknown(Kind.UNKNOWN, null);
-
-        /** Shortcut for `PreparedWrapper(skirout.editor.v1.authoring.PreparedEditReady(...))`. */
-        @kotlin.Suppress("UNUSED_PARAMETER")
-        fun createPrepared(
-            _mustNameArguments: _MustNameArguments =
-                _MustNameArguments,
-            edit: skirout.editor.v1.authoring.PreparedEdit_OrMutable,
-        ) = PreparedWrapper(
-            skirout.editor.v1.authoring.PreparedEditReady(
-                edit = edit,
-            )
-        );
-
-        /** Serializer for [PreparedEditResult] instances. */
-        val serializer get() = _SerializerRegistry.PreparedEditResultSerializer;
-
-        /** Describes the [PreparedEditResult] type. Provides runtime introspection capabilities. */
-        val typeDescriptor get() = _SerializerRegistry.PreparedEditResultSerializerImpl.typeDescriptor;
-    }
-}
-
-/**
- * committed confirms installation of saved authoring state. It does not confirm check completion,
- * compilation, publication selection, or engine application. Conflict requires refreshing original
- * facts; rejection reports invalid intent or missing guards; catalog_changed requires a new catalog.
- *
- * Deeply immutable.
- */
-sealed class CommitResult private constructor() {
-    /** The kind of variant held by a `CommitResult`. */
-    enum class Kind {
-        UNKNOWN,
-        COMMITTED_CONST,
-        CONFLICT_WRAPPER,
-        REJECTED_WRAPPER,
-        CATALOG_CHANGED_WRAPPER,
-    }
-
-    class Unknown @kotlin.Deprecated("For internal use", kotlin.ReplaceWith("skirout.editor.v1.authoring.CommitResult.UNKNOWN")) internal constructor(
-        internal val _kind: Kind,
-        internal override val _unrecognized: _UnrecognizedVariant<skirout.editor.v1.authoring.CommitResult>?,
-    ) : skirout.editor.v1.authoring.CommitResult() {
-        override val kind get() = _kind;
-
-        override fun equals(other: kotlin.Any?): kotlin.Boolean {
-            return other is skirout.editor.v1.authoring.CommitResult && other.kind == kind;
-        }
-
-        override fun hashCode(): kotlin.Int {
-            return kind.ordinal;
-        }
-    }
-
-    object COMMITTED : skirout.editor.v1.authoring.CommitResult() {
-        override val kind get() = Kind.COMMITTED_CONST;
-
-        override fun equals(other: kotlin.Any?): kotlin.Boolean {
-            return other is skirout.editor.v1.authoring.CommitResult && other.kind == Kind.COMMITTED_CONST;
-        }
-
-        override fun hashCode(): kotlin.Int {
-            return Kind.COMMITTED_CONST.ordinal;
-        }
-    }
-
-    class ConflictWrapper private constructor (
-        val value: kotlin.collections.List<skirout.editor.v1.authoring_facts.ExpectationConflict>,
-    ) : skirout.editor.v1.authoring.CommitResult() {
-        constructor(
-            value: kotlin.collections.Iterable<skirout.editor.v1.authoring_facts.ExpectationConflict_OrMutable>,
-        ): this(build.skir.internal.toFrozenList(value, { it.toFrozen() })) {}
-
-        override val kind get() = Kind.CONFLICT_WRAPPER;
-
-        override fun equals(other: kotlin.Any?): kotlin.Boolean {
-            return other is skirout.editor.v1.authoring.CommitResult.ConflictWrapper && value == other.value;
-        }
-
-        override fun hashCode(): kotlin.Int {
-            return this.value.hashCode() + -580047918;
-        }
-    }
-
-    class RejectedWrapper private constructor (
-        val value: kotlin.collections.List<skirout.editor.v1.diagnostic.ValueProblem>,
-    ) : skirout.editor.v1.authoring.CommitResult() {
-        constructor(
-            value: kotlin.collections.Iterable<skirout.editor.v1.diagnostic.ValueProblem_OrMutable>,
-        ): this(build.skir.internal.toFrozenList(value, { it.toFrozen() })) {}
-
-        override val kind get() = Kind.REJECTED_WRAPPER;
-
-        override fun equals(other: kotlin.Any?): kotlin.Boolean {
-            return other is skirout.editor.v1.authoring.CommitResult.RejectedWrapper && value == other.value;
-        }
-
-        override fun hashCode(): kotlin.Int {
-            return this.value.hashCode() + -608496514;
-        }
-    }
-
-    class CatalogChangedWrapper private constructor (
-        val value: skirout.editor.v1.type_catalog.CatalogGeneration,
-    ) : skirout.editor.v1.authoring.CommitResult() {
-        constructor(
-            value: skirout.editor.v1.type_catalog.CatalogGeneration_OrMutable,
-        ): this(value.toFrozen()) {}
-
-        override val kind get() = Kind.CATALOG_CHANGED_WRAPPER;
-
-        override fun equals(other: kotlin.Any?): kotlin.Boolean {
-            return other is skirout.editor.v1.authoring.CommitResult.CatalogChangedWrapper && value == other.value;
-        }
-
-        override fun hashCode(): kotlin.Int {
-            return this.value.hashCode() + 1862877326;
-        }
-    }
-
-    internal open val _unrecognized: _UnrecognizedVariant<skirout.editor.v1.authoring.CommitResult>? get() = null;
-
-    abstract val kind: Kind;
-
-    override fun toString(): kotlin.String {
-        return build.skir.internal.toStringImpl(
-            this,
-            _SerializerRegistry.CommitResultSerializerImpl,
-        )
-    }
-
-    companion object {
-        /**
-         * Constant indicating an unknown [CommitResult].
-         * Default value for fields of type [CommitResult].
-         */
-        val UNKNOWN = @kotlin.Suppress("DEPRECATION") Unknown(Kind.UNKNOWN, null);
-
-        /** Shortcut for `CatalogChangedWrapper(skirout.editor.v1.type_catalog.CatalogGeneration(...))`. */
-        @kotlin.Suppress("UNUSED_PARAMETER")
-        fun createCatalogChanged(
-            _mustNameArguments: _MustNameArguments =
-                _MustNameArguments,
-            value: kotlin.String,
-        ) = CatalogChangedWrapper(
-            skirout.editor.v1.type_catalog.CatalogGeneration(
-                value = value,
-            )
-        );
-
-        /** Serializer for [CommitResult] instances. */
-        val serializer get() = _SerializerRegistry.CommitResultSerializer;
-
-        /** Describes the [CommitResult] type. Provides runtime introspection capabilities. */
-        val typeDescriptor get() = _SerializerRegistry.CommitResultSerializerImpl.typeDescriptor;
-    }
-}
-
-/** Deeply immutable. */
 sealed class AuthoringOperation private constructor() {
     /** The kind of variant held by a `AuthoringOperation`. */
     enum class Kind {
@@ -5980,150 +5727,6 @@ class ArgumentLocation private constructor(
 
         /** Describes the [ArgumentLocation] type. Provides runtime introspection capabilities. */
         val typeDescriptor get() = _SerializerRegistry.ArgumentLocationSerializerImpl.typeDescriptor;
-    }
-}
-
-/** Deeply immutable. */
-sealed class TypePreviewResult private constructor() {
-    /** The kind of variant held by a `TypePreviewResult`. */
-    enum class Kind {
-        UNKNOWN,
-        READY_WRAPPER,
-        INVALID_ARGUMENTS_WRAPPER,
-        INCOMPLETE_WRAPPER,
-        REJECTED_WRAPPER,
-    }
-
-    class Unknown @kotlin.Deprecated("For internal use", kotlin.ReplaceWith("skirout.editor.v1.authoring.TypePreviewResult.UNKNOWN")) internal constructor(
-        internal val _kind: Kind,
-        internal override val _unrecognized: _UnrecognizedVariant<skirout.editor.v1.authoring.TypePreviewResult>?,
-    ) : skirout.editor.v1.authoring.TypePreviewResult() {
-        override val kind get() = _kind;
-
-        override fun equals(other: kotlin.Any?): kotlin.Boolean {
-            return other is skirout.editor.v1.authoring.TypePreviewResult && other.kind == kind;
-        }
-
-        override fun hashCode(): kotlin.Int {
-            return kind.ordinal;
-        }
-    }
-
-    class ReadyWrapper private constructor (
-        val value: skirout.editor.v1.authoring.TypeArgumentChangePreview,
-    ) : skirout.editor.v1.authoring.TypePreviewResult() {
-        constructor(
-            value: skirout.editor.v1.authoring.TypeArgumentChangePreview_OrMutable,
-        ): this(value.toFrozen()) {}
-
-        override val kind get() = Kind.READY_WRAPPER;
-
-        override fun equals(other: kotlin.Any?): kotlin.Boolean {
-            return other is skirout.editor.v1.authoring.TypePreviewResult.ReadyWrapper && value == other.value;
-        }
-
-        override fun hashCode(): kotlin.Int {
-            return this.value.hashCode() + 108386723;
-        }
-    }
-
-    class InvalidArgumentsWrapper private constructor (
-        val value: kotlin.collections.List<skirout.editor.v1.diagnostic.DeclarationDiagnostic>,
-    ) : skirout.editor.v1.authoring.TypePreviewResult() {
-        constructor(
-            value: kotlin.collections.Iterable<skirout.editor.v1.diagnostic.DeclarationDiagnostic_OrMutable>,
-        ): this(build.skir.internal.toFrozenList(value, { it.toFrozen() })) {}
-
-        override val kind get() = Kind.INVALID_ARGUMENTS_WRAPPER;
-
-        override fun equals(other: kotlin.Any?): kotlin.Boolean {
-            return other is skirout.editor.v1.authoring.TypePreviewResult.InvalidArgumentsWrapper && value == other.value;
-        }
-
-        override fun hashCode(): kotlin.Int {
-            return this.value.hashCode() + 552377614;
-        }
-    }
-
-    class IncompleteWrapper private constructor (
-        val value: kotlin.collections.List<skirout.editor.v1.authoring.ArgumentLocation>,
-    ) : skirout.editor.v1.authoring.TypePreviewResult() {
-        constructor(
-            value: kotlin.collections.Iterable<skirout.editor.v1.authoring.ArgumentLocation_OrMutable>,
-        ): this(build.skir.internal.toFrozenList(value, { it.toFrozen() })) {}
-
-        override val kind get() = Kind.INCOMPLETE_WRAPPER;
-
-        override fun equals(other: kotlin.Any?): kotlin.Boolean {
-            return other is skirout.editor.v1.authoring.TypePreviewResult.IncompleteWrapper && value == other.value;
-        }
-
-        override fun hashCode(): kotlin.Int {
-            return this.value.hashCode() + -1010022050;
-        }
-    }
-
-    class RejectedWrapper private constructor (
-        val value: kotlin.collections.List<skirout.editor.v1.diagnostic.ValueProblem>,
-    ) : skirout.editor.v1.authoring.TypePreviewResult() {
-        constructor(
-            value: kotlin.collections.Iterable<skirout.editor.v1.diagnostic.ValueProblem_OrMutable>,
-        ): this(build.skir.internal.toFrozenList(value, { it.toFrozen() })) {}
-
-        override val kind get() = Kind.REJECTED_WRAPPER;
-
-        override fun equals(other: kotlin.Any?): kotlin.Boolean {
-            return other is skirout.editor.v1.authoring.TypePreviewResult.RejectedWrapper && value == other.value;
-        }
-
-        override fun hashCode(): kotlin.Int {
-            return this.value.hashCode() + -608496514;
-        }
-    }
-
-    internal open val _unrecognized: _UnrecognizedVariant<skirout.editor.v1.authoring.TypePreviewResult>? get() = null;
-
-    abstract val kind: Kind;
-
-    override fun toString(): kotlin.String {
-        return build.skir.internal.toStringImpl(
-            this,
-            _SerializerRegistry.TypePreviewResultSerializerImpl,
-        )
-    }
-
-    companion object {
-        /**
-         * Constant indicating an unknown [TypePreviewResult].
-         * Default value for fields of type [TypePreviewResult].
-         */
-        val UNKNOWN = @kotlin.Suppress("DEPRECATION") Unknown(Kind.UNKNOWN, null);
-
-        /** Shortcut for `ReadyWrapper(skirout.editor.v1.authoring.TypeArgumentChangePreview(...))`. */
-        @kotlin.Suppress("UNUSED_PARAMETER")
-        fun createReady(
-            _mustNameArguments: _MustNameArguments =
-                _MustNameArguments,
-            resource: skirout.editor.v1.type_catalog.ResourceId_OrMutable,
-            next: skirout.editor.v1.type_catalog.TypeSelection,
-            edit: skirout.editor.v1.authoring.PreparedEdit_OrMutable,
-            linkRepairs: kotlin.collections.Iterable<skirout.editor.v1.authoring.LinkRepairIntent>,
-            clearedLocations: kotlin.collections.Iterable<skirout.editor.v1.type_catalog.ValueLocation_OrMutable>,
-        ) = ReadyWrapper(
-            skirout.editor.v1.authoring.TypeArgumentChangePreview(
-                resource = resource,
-                next = next,
-                edit = edit,
-                linkRepairs = linkRepairs,
-                clearedLocations = clearedLocations,
-            )
-        );
-
-        /** Serializer for [TypePreviewResult] instances. */
-        val serializer get() = _SerializerRegistry.TypePreviewResultSerializer;
-
-        /** Describes the [TypePreviewResult] type. Provides runtime introspection capabilities. */
-        val typeDescriptor get() = _SerializerRegistry.TypePreviewResultSerializerImpl.typeDescriptor;
     }
 }
 
@@ -7110,8 +6713,8 @@ sealed class SearchAuthoringResponse private constructor() {
     enum class Kind {
         UNKNOWN,
         SUCCESS_WRAPPER,
-        INVALID_WRAPPER,
-        CATALOG_CHANGED_WRAPPER,
+        INVALID_ERROR_WRAPPER,
+        CATALOG_CHANGED_ERROR_WRAPPER,
         INTERNAL_ERROR_WRAPPER,
     }
 
@@ -7148,39 +6751,39 @@ sealed class SearchAuthoringResponse private constructor() {
         }
     }
 
-    class InvalidWrapper private constructor (
+    class InvalidErrorWrapper private constructor (
         val value: skirout.editor.v1.authoring.AuthoringInvalid,
     ) : skirout.editor.v1.authoring.SearchAuthoringResponse() {
         constructor(
             value: skirout.editor.v1.authoring.AuthoringInvalid_OrMutable,
         ): this(value.toFrozen()) {}
 
-        override val kind get() = Kind.INVALID_WRAPPER;
+        override val kind get() = Kind.INVALID_ERROR_WRAPPER;
 
         override fun equals(other: kotlin.Any?): kotlin.Boolean {
-            return other is skirout.editor.v1.authoring.SearchAuthoringResponse.InvalidWrapper && value == other.value;
+            return other is skirout.editor.v1.authoring.SearchAuthoringResponse.InvalidErrorWrapper && value == other.value;
         }
 
         override fun hashCode(): kotlin.Int {
-            return this.value.hashCode() + 1959784951;
+            return this.value.hashCode() + -849636928;
         }
     }
 
-    class CatalogChangedWrapper private constructor (
+    class CatalogChangedErrorWrapper private constructor (
         val value: skirout.editor.v1.authoring.CatalogChanged,
     ) : skirout.editor.v1.authoring.SearchAuthoringResponse() {
         constructor(
             value: skirout.editor.v1.authoring.CatalogChanged_OrMutable,
         ): this(value.toFrozen()) {}
 
-        override val kind get() = Kind.CATALOG_CHANGED_WRAPPER;
+        override val kind get() = Kind.CATALOG_CHANGED_ERROR_WRAPPER;
 
         override fun equals(other: kotlin.Any?): kotlin.Boolean {
-            return other is skirout.editor.v1.authoring.SearchAuthoringResponse.CatalogChangedWrapper && value == other.value;
+            return other is skirout.editor.v1.authoring.SearchAuthoringResponse.CatalogChangedErrorWrapper && value == other.value;
         }
 
         override fun hashCode(): kotlin.Int {
-            return this.value.hashCode() + 1862877326;
+            return this.value.hashCode() + -760261865;
         }
     }
 
@@ -7236,25 +6839,25 @@ sealed class SearchAuthoringResponse private constructor() {
             )
         );
 
-        /** Shortcut for `InvalidWrapper(skirout.editor.v1.authoring.AuthoringInvalid(...))`. */
+        /** Shortcut for `InvalidErrorWrapper(skirout.editor.v1.authoring.AuthoringInvalid(...))`. */
         @kotlin.Suppress("UNUSED_PARAMETER")
-        fun createInvalid(
+        fun createInvalidError(
             _mustNameArguments: _MustNameArguments =
                 _MustNameArguments,
             diagnostics: kotlin.collections.Iterable<skirout.editor.v1.authoring.AuthoringDiagnostic_OrMutable>,
-        ) = InvalidWrapper(
+        ) = InvalidErrorWrapper(
             skirout.editor.v1.authoring.AuthoringInvalid(
                 diagnostics = diagnostics,
             )
         );
 
-        /** Shortcut for `CatalogChangedWrapper(skirout.editor.v1.authoring.CatalogChanged(...))`. */
+        /** Shortcut for `CatalogChangedErrorWrapper(skirout.editor.v1.authoring.CatalogChanged(...))`. */
         @kotlin.Suppress("UNUSED_PARAMETER")
-        fun createCatalogChanged(
+        fun createCatalogChangedError(
             _mustNameArguments: _MustNameArguments =
                 _MustNameArguments,
             actualGeneration: skirout.editor.v1.type_catalog.CatalogGeneration_OrMutable,
-        ) = CatalogChangedWrapper(
+        ) = CatalogChangedErrorWrapper(
             skirout.editor.v1.authoring.CatalogChanged(
                 actualGeneration = actualGeneration,
             )
@@ -7282,7 +6885,10 @@ sealed class CommitPreparedEditResponse private constructor() {
     /** The kind of variant held by a `CommitPreparedEditResponse`. */
     enum class Kind {
         UNKNOWN,
-        RESULT_WRAPPER,
+        COMMITTED_CONST,
+        CONFLICT_ERROR_WRAPPER,
+        REJECTED_ERROR_WRAPPER,
+        CATALOG_CHANGED_ERROR_WRAPPER,
         INTERNAL_ERROR_WRAPPER,
     }
 
@@ -7301,17 +6907,69 @@ sealed class CommitPreparedEditResponse private constructor() {
         }
     }
 
-    class ResultWrapper(
-        val value: skirout.editor.v1.authoring.CommitResult,
-    ) : skirout.editor.v1.authoring.CommitPreparedEditResponse() {
-        override val kind get() = Kind.RESULT_WRAPPER;
+    object COMMITTED : skirout.editor.v1.authoring.CommitPreparedEditResponse() {
+        override val kind get() = Kind.COMMITTED_CONST;
 
         override fun equals(other: kotlin.Any?): kotlin.Boolean {
-            return other is skirout.editor.v1.authoring.CommitPreparedEditResponse.ResultWrapper && value == other.value;
+            return other is skirout.editor.v1.authoring.CommitPreparedEditResponse && other.kind == Kind.COMMITTED_CONST;
         }
 
         override fun hashCode(): kotlin.Int {
-            return this.value.hashCode() + -934426595;
+            return Kind.COMMITTED_CONST.ordinal;
+        }
+    }
+
+    class ConflictErrorWrapper private constructor (
+        val value: kotlin.collections.List<skirout.editor.v1.authoring_facts.ExpectationConflict>,
+    ) : skirout.editor.v1.authoring.CommitPreparedEditResponse() {
+        constructor(
+            value: kotlin.collections.Iterable<skirout.editor.v1.authoring_facts.ExpectationConflict_OrMutable>,
+        ): this(build.skir.internal.toFrozenList(value, { it.toFrozen() })) {}
+
+        override val kind get() = Kind.CONFLICT_ERROR_WRAPPER;
+
+        override fun equals(other: kotlin.Any?): kotlin.Boolean {
+            return other is skirout.editor.v1.authoring.CommitPreparedEditResponse.ConflictErrorWrapper && value == other.value;
+        }
+
+        override fun hashCode(): kotlin.Int {
+            return this.value.hashCode() + 274643803;
+        }
+    }
+
+    class RejectedErrorWrapper private constructor (
+        val value: kotlin.collections.List<skirout.editor.v1.diagnostic.ValueProblem>,
+    ) : skirout.editor.v1.authoring.CommitPreparedEditResponse() {
+        constructor(
+            value: kotlin.collections.Iterable<skirout.editor.v1.diagnostic.ValueProblem_OrMutable>,
+        ): this(build.skir.internal.toFrozenList(value, { it.toFrozen() })) {}
+
+        override val kind get() = Kind.REJECTED_ERROR_WRAPPER;
+
+        override fun equals(other: kotlin.Any?): kotlin.Boolean {
+            return other is skirout.editor.v1.authoring.CommitPreparedEditResponse.RejectedErrorWrapper && value == other.value;
+        }
+
+        override fun hashCode(): kotlin.Int {
+            return this.value.hashCode() + -1857129721;
+        }
+    }
+
+    class CatalogChangedErrorWrapper private constructor (
+        val value: skirout.editor.v1.type_catalog.CatalogGeneration,
+    ) : skirout.editor.v1.authoring.CommitPreparedEditResponse() {
+        constructor(
+            value: skirout.editor.v1.type_catalog.CatalogGeneration_OrMutable,
+        ): this(value.toFrozen()) {}
+
+        override val kind get() = Kind.CATALOG_CHANGED_ERROR_WRAPPER;
+
+        override fun equals(other: kotlin.Any?): kotlin.Boolean {
+            return other is skirout.editor.v1.authoring.CommitPreparedEditResponse.CatalogChangedErrorWrapper && value == other.value;
+        }
+
+        override fun hashCode(): kotlin.Int {
+            return this.value.hashCode() + -760261865;
         }
     }
 
@@ -7350,6 +7008,18 @@ sealed class CommitPreparedEditResponse private constructor() {
          * Default value for fields of type [CommitPreparedEditResponse].
          */
         val UNKNOWN = @kotlin.Suppress("DEPRECATION") Unknown(Kind.UNKNOWN, null);
+
+        /** Shortcut for `CatalogChangedErrorWrapper(skirout.editor.v1.type_catalog.CatalogGeneration(...))`. */
+        @kotlin.Suppress("UNUSED_PARAMETER")
+        fun createCatalogChangedError(
+            _mustNameArguments: _MustNameArguments =
+                _MustNameArguments,
+            value: kotlin.String,
+        ) = CatalogChangedErrorWrapper(
+            skirout.editor.v1.type_catalog.CatalogGeneration(
+                value = value,
+            )
+        );
 
         /** Shortcut for `InternalErrorWrapper(skirout.kernel.v1.errors.InternalError(...))`. */
         @kotlin.Suppress("UNUSED_PARAMETER")
@@ -7544,7 +7214,10 @@ sealed class PreviewTypeArgumentChangeResponse private constructor() {
     /** The kind of variant held by a `PreviewTypeArgumentChangeResponse`. */
     enum class Kind {
         UNKNOWN,
-        RESULT_WRAPPER,
+        READY_WRAPPER,
+        INVALID_ARGUMENTS_ERROR_WRAPPER,
+        INCOMPLETE_WRAPPER,
+        REJECTED_ERROR_WRAPPER,
         INTERNAL_ERROR_WRAPPER,
     }
 
@@ -7563,17 +7236,75 @@ sealed class PreviewTypeArgumentChangeResponse private constructor() {
         }
     }
 
-    class ResultWrapper(
-        val value: skirout.editor.v1.authoring.TypePreviewResult,
+    class ReadyWrapper private constructor (
+        val value: skirout.editor.v1.authoring.TypeArgumentChangePreview,
     ) : skirout.editor.v1.authoring.PreviewTypeArgumentChangeResponse() {
-        override val kind get() = Kind.RESULT_WRAPPER;
+        constructor(
+            value: skirout.editor.v1.authoring.TypeArgumentChangePreview_OrMutable,
+        ): this(value.toFrozen()) {}
+
+        override val kind get() = Kind.READY_WRAPPER;
 
         override fun equals(other: kotlin.Any?): kotlin.Boolean {
-            return other is skirout.editor.v1.authoring.PreviewTypeArgumentChangeResponse.ResultWrapper && value == other.value;
+            return other is skirout.editor.v1.authoring.PreviewTypeArgumentChangeResponse.ReadyWrapper && value == other.value;
         }
 
         override fun hashCode(): kotlin.Int {
-            return this.value.hashCode() + -934426595;
+            return this.value.hashCode() + 108386723;
+        }
+    }
+
+    class InvalidArgumentsErrorWrapper private constructor (
+        val value: kotlin.collections.List<skirout.editor.v1.diagnostic.DeclarationDiagnostic>,
+    ) : skirout.editor.v1.authoring.PreviewTypeArgumentChangeResponse() {
+        constructor(
+            value: kotlin.collections.Iterable<skirout.editor.v1.diagnostic.DeclarationDiagnostic_OrMutable>,
+        ): this(build.skir.internal.toFrozenList(value, { it.toFrozen() })) {}
+
+        override val kind get() = Kind.INVALID_ARGUMENTS_ERROR_WRAPPER;
+
+        override fun equals(other: kotlin.Any?): kotlin.Boolean {
+            return other is skirout.editor.v1.authoring.PreviewTypeArgumentChangeResponse.InvalidArgumentsErrorWrapper && value == other.value;
+        }
+
+        override fun hashCode(): kotlin.Int {
+            return this.value.hashCode() + 2126204823;
+        }
+    }
+
+    class IncompleteWrapper private constructor (
+        val value: kotlin.collections.List<skirout.editor.v1.authoring.ArgumentLocation>,
+    ) : skirout.editor.v1.authoring.PreviewTypeArgumentChangeResponse() {
+        constructor(
+            value: kotlin.collections.Iterable<skirout.editor.v1.authoring.ArgumentLocation_OrMutable>,
+        ): this(build.skir.internal.toFrozenList(value, { it.toFrozen() })) {}
+
+        override val kind get() = Kind.INCOMPLETE_WRAPPER;
+
+        override fun equals(other: kotlin.Any?): kotlin.Boolean {
+            return other is skirout.editor.v1.authoring.PreviewTypeArgumentChangeResponse.IncompleteWrapper && value == other.value;
+        }
+
+        override fun hashCode(): kotlin.Int {
+            return this.value.hashCode() + -1010022050;
+        }
+    }
+
+    class RejectedErrorWrapper private constructor (
+        val value: kotlin.collections.List<skirout.editor.v1.diagnostic.ValueProblem>,
+    ) : skirout.editor.v1.authoring.PreviewTypeArgumentChangeResponse() {
+        constructor(
+            value: kotlin.collections.Iterable<skirout.editor.v1.diagnostic.ValueProblem_OrMutable>,
+        ): this(build.skir.internal.toFrozenList(value, { it.toFrozen() })) {}
+
+        override val kind get() = Kind.REJECTED_ERROR_WRAPPER;
+
+        override fun equals(other: kotlin.Any?): kotlin.Boolean {
+            return other is skirout.editor.v1.authoring.PreviewTypeArgumentChangeResponse.RejectedErrorWrapper && value == other.value;
+        }
+
+        override fun hashCode(): kotlin.Int {
+            return this.value.hashCode() + -1857129721;
         }
     }
 
@@ -7613,6 +7344,26 @@ sealed class PreviewTypeArgumentChangeResponse private constructor() {
          */
         val UNKNOWN = @kotlin.Suppress("DEPRECATION") Unknown(Kind.UNKNOWN, null);
 
+        /** Shortcut for `ReadyWrapper(skirout.editor.v1.authoring.TypeArgumentChangePreview(...))`. */
+        @kotlin.Suppress("UNUSED_PARAMETER")
+        fun createReady(
+            _mustNameArguments: _MustNameArguments =
+                _MustNameArguments,
+            resource: skirout.editor.v1.type_catalog.ResourceId_OrMutable,
+            next: skirout.editor.v1.type_catalog.TypeSelection,
+            edit: skirout.editor.v1.authoring.PreparedEdit_OrMutable,
+            linkRepairs: kotlin.collections.Iterable<skirout.editor.v1.authoring.LinkRepairIntent>,
+            clearedLocations: kotlin.collections.Iterable<skirout.editor.v1.type_catalog.ValueLocation_OrMutable>,
+        ) = ReadyWrapper(
+            skirout.editor.v1.authoring.TypeArgumentChangePreview(
+                resource = resource,
+                next = next,
+                edit = edit,
+                linkRepairs = linkRepairs,
+                clearedLocations = clearedLocations,
+            )
+        );
+
         /** Shortcut for `InternalErrorWrapper(skirout.kernel.v1.errors.InternalError(...))`. */
         @kotlin.Suppress("UNUSED_PARAMETER")
         fun createInternalError(
@@ -7635,7 +7386,9 @@ sealed class PrepareTypeArgumentChangeResponse private constructor() {
     /** The kind of variant held by a `PrepareTypeArgumentChangeResponse`. */
     enum class Kind {
         UNKNOWN,
-        RESULT_WRAPPER,
+        PREPARED_WRAPPER,
+        NEEDS_INPUT_WRAPPER,
+        REJECTED_ERROR_WRAPPER,
         INTERNAL_ERROR_WRAPPER,
     }
 
@@ -7654,17 +7407,57 @@ sealed class PrepareTypeArgumentChangeResponse private constructor() {
         }
     }
 
-    class ResultWrapper(
-        val value: skirout.editor.v1.authoring.PreparedEditResult,
+    class PreparedWrapper private constructor (
+        val value: skirout.editor.v1.authoring.PreparedEditReady,
     ) : skirout.editor.v1.authoring.PrepareTypeArgumentChangeResponse() {
-        override val kind get() = Kind.RESULT_WRAPPER;
+        constructor(
+            value: skirout.editor.v1.authoring.PreparedEditReady_OrMutable,
+        ): this(value.toFrozen()) {}
+
+        override val kind get() = Kind.PREPARED_WRAPPER;
 
         override fun equals(other: kotlin.Any?): kotlin.Boolean {
-            return other is skirout.editor.v1.authoring.PrepareTypeArgumentChangeResponse.ResultWrapper && value == other.value;
+            return other is skirout.editor.v1.authoring.PrepareTypeArgumentChangeResponse.PreparedWrapper && value == other.value;
         }
 
         override fun hashCode(): kotlin.Int {
-            return this.value.hashCode() + -934426595;
+            return this.value.hashCode() + -1279552451;
+        }
+    }
+
+    class NeedsInputWrapper private constructor (
+        val value: kotlin.collections.List<skirout.editor.v1.type_catalog.ValueLocation>,
+    ) : skirout.editor.v1.authoring.PrepareTypeArgumentChangeResponse() {
+        constructor(
+            value: kotlin.collections.Iterable<skirout.editor.v1.type_catalog.ValueLocation_OrMutable>,
+        ): this(build.skir.internal.toFrozenList(value, { it.toFrozen() })) {}
+
+        override val kind get() = Kind.NEEDS_INPUT_WRAPPER;
+
+        override fun equals(other: kotlin.Any?): kotlin.Boolean {
+            return other is skirout.editor.v1.authoring.PrepareTypeArgumentChangeResponse.NeedsInputWrapper && value == other.value;
+        }
+
+        override fun hashCode(): kotlin.Int {
+            return this.value.hashCode() + -642245720;
+        }
+    }
+
+    class RejectedErrorWrapper private constructor (
+        val value: kotlin.collections.List<skirout.editor.v1.diagnostic.ValueProblem>,
+    ) : skirout.editor.v1.authoring.PrepareTypeArgumentChangeResponse() {
+        constructor(
+            value: kotlin.collections.Iterable<skirout.editor.v1.diagnostic.ValueProblem_OrMutable>,
+        ): this(build.skir.internal.toFrozenList(value, { it.toFrozen() })) {}
+
+        override val kind get() = Kind.REJECTED_ERROR_WRAPPER;
+
+        override fun equals(other: kotlin.Any?): kotlin.Boolean {
+            return other is skirout.editor.v1.authoring.PrepareTypeArgumentChangeResponse.RejectedErrorWrapper && value == other.value;
+        }
+
+        override fun hashCode(): kotlin.Int {
+            return this.value.hashCode() + -1857129721;
         }
     }
 
@@ -7703,6 +7496,18 @@ sealed class PrepareTypeArgumentChangeResponse private constructor() {
          * Default value for fields of type [PrepareTypeArgumentChangeResponse].
          */
         val UNKNOWN = @kotlin.Suppress("DEPRECATION") Unknown(Kind.UNKNOWN, null);
+
+        /** Shortcut for `PreparedWrapper(skirout.editor.v1.authoring.PreparedEditReady(...))`. */
+        @kotlin.Suppress("UNUSED_PARAMETER")
+        fun createPrepared(
+            _mustNameArguments: _MustNameArguments =
+                _MustNameArguments,
+            edit: skirout.editor.v1.authoring.PreparedEdit_OrMutable,
+        ) = PreparedWrapper(
+            skirout.editor.v1.authoring.PreparedEditReady(
+                edit = edit,
+            )
+        );
 
         /** Shortcut for `InternalErrorWrapper(skirout.kernel.v1.errors.InternalError(...))`. */
         @kotlin.Suppress("UNUSED_PARAMETER")
@@ -7748,6 +7553,12 @@ val SearchAuthoring: build.skir.service.Method<
     )
 }
 
+/**
+ * committed confirms installation of saved authoring state. It does not confirm check completion,
+ * compilation, publication selection, or engine application. conflict_error requires refreshing
+ * original facts; rejected_error reports invalid intent or missing guards; catalog_changed_error
+ * requires a new catalog.
+ */
 val CommitPreparedEdit: build.skir.service.Method<
     skirout.editor.v1.authoring.PreparedEdit,
     skirout.editor.v1.authoring.CommitPreparedEditResponse,
@@ -7757,7 +7568,7 @@ val CommitPreparedEdit: build.skir.service.Method<
         920012,
         skirout.editor.v1.authoring.PreparedEdit.serializer,
         skirout.editor.v1.authoring.CommitPreparedEditResponse.serializer,
-        "",
+        "committed confirms installation of saved authoring state. It does not confirm check completion,\ncompilation, publication selection, or engine application. conflict_error requires refreshing\noriginal facts; rejected_error reports invalid intent or missing guards; catalog_changed_error\nrequires a new catalog.",
     )
 }
 
@@ -7946,19 +7757,6 @@ private object _SerializerRegistry {
         );
 
     val CommitPreparedEditResponseSerializer = build.skir.internal.makeSerializer(CommitPreparedEditResponseSerializerImpl);
-
-    val CommitResultSerializerImpl =
-        build.skir.internal.EnumSerializer.create<skirout.editor.v1.authoring.CommitResult, skirout.editor.v1.authoring.CommitResult.Unknown>(
-            recordId = "editor/v1/authoring.skir:CommitResult",
-            doc = "committed confirms installation of saved authoring state. It does not confirm check completion,\ncompilation, publication selection, or engine application. Conflict requires refreshing original\nfacts; rejection reports invalid intent or missing guards; catalog_changed requires a new catalog.",
-            getKindOrdinal = { it.kind.ordinal },
-            kindCount = skirout.editor.v1.authoring.CommitResult.Kind.values().size,
-            unknownInstance = skirout.editor.v1.authoring.CommitResult.UNKNOWN,
-            wrapUnrecognized = { @kotlin.Suppress("DEPRECATION") skirout.editor.v1.authoring.CommitResult.Unknown(skirout.editor.v1.authoring.CommitResult.Kind.UNKNOWN, it) },
-            getUnrecognized = { it._unrecognized },
-        );
-
-    val CommitResultSerializer = build.skir.internal.makeSerializer(CommitResultSerializerImpl);
 
     val ConnectIntentSerializerImpl = build.skir.internal.StructSerializer(
         recordId = "editor/v1/authoring.skir:ConnectIntent",
@@ -8167,19 +7965,6 @@ private object _SerializerRegistry {
 
     val PreparedEditReadySerializer = build.skir.internal.makeSerializer(PreparedEditReadySerializerImpl);
 
-    val PreparedEditResultSerializerImpl =
-        build.skir.internal.EnumSerializer.create<skirout.editor.v1.authoring.PreparedEditResult, skirout.editor.v1.authoring.PreparedEditResult.Unknown>(
-            recordId = "editor/v1/authoring.skir:PreparedEditResult",
-            doc = "",
-            getKindOrdinal = { it.kind.ordinal },
-            kindCount = skirout.editor.v1.authoring.PreparedEditResult.Kind.values().size,
-            unknownInstance = skirout.editor.v1.authoring.PreparedEditResult.UNKNOWN,
-            wrapUnrecognized = { @kotlin.Suppress("DEPRECATION") skirout.editor.v1.authoring.PreparedEditResult.Unknown(skirout.editor.v1.authoring.PreparedEditResult.Kind.UNKNOWN, it) },
-            getUnrecognized = { it._unrecognized },
-        );
-
-    val PreparedEditResultSerializer = build.skir.internal.makeSerializer(PreparedEditResultSerializerImpl);
-
     val PrepareTypeArgumentChangeResponseSerializerImpl =
         build.skir.internal.EnumSerializer.create<skirout.editor.v1.authoring.PrepareTypeArgumentChangeResponse, skirout.editor.v1.authoring.PrepareTypeArgumentChangeResponse.Unknown>(
             recordId = "editor/v1/authoring.skir:PrepareTypeArgumentChangeResponse",
@@ -8376,19 +8161,6 @@ private object _SerializerRegistry {
     );
 
     val TypeArgumentChangePreviewSerializer = build.skir.internal.makeSerializer(TypeArgumentChangePreviewSerializerImpl);
-
-    val TypePreviewResultSerializerImpl =
-        build.skir.internal.EnumSerializer.create<skirout.editor.v1.authoring.TypePreviewResult, skirout.editor.v1.authoring.TypePreviewResult.Unknown>(
-            recordId = "editor/v1/authoring.skir:TypePreviewResult",
-            doc = "",
-            getKindOrdinal = { it.kind.ordinal },
-            kindCount = skirout.editor.v1.authoring.TypePreviewResult.Kind.values().size,
-            unknownInstance = skirout.editor.v1.authoring.TypePreviewResult.UNKNOWN,
-            wrapUnrecognized = { @kotlin.Suppress("DEPRECATION") skirout.editor.v1.authoring.TypePreviewResult.Unknown(skirout.editor.v1.authoring.TypePreviewResult.Kind.UNKNOWN, it) },
-            getUnrecognized = { it._unrecognized },
-        );
-
-    val TypePreviewResultSerializer = build.skir.internal.makeSerializer(TypePreviewResultSerializerImpl);
 
     val UnresolvedLinkSerializerImpl =
         build.skir.internal.EnumSerializer.create<skirout.editor.v1.authoring.UnresolvedLink, skirout.editor.v1.authoring.UnresolvedLink.Unknown>(
@@ -8660,17 +8432,46 @@ private object _SerializerRegistry {
         );
         CatalogChangedSerializerImpl.finalizeStruct();
 
-        CommitPreparedEditResponseSerializerImpl.addWrapperVariant(
+        CommitPreparedEditResponseSerializerImpl.addConstantVariant(
             1,
-            "result",
-            skirout.editor.v1.authoring.CommitPreparedEditResponse.Kind.RESULT_WRAPPER.ordinal,
-            _SerializerRegistry.CommitResultSerializer,
+            "committed",
+            skirout.editor.v1.authoring.CommitPreparedEditResponse.Kind.COMMITTED_CONST.ordinal,
             "",
-            { skirout.editor.v1.authoring.CommitPreparedEditResponse.ResultWrapper(it) },
-            { it.value },
+            skirout.editor.v1.authoring.CommitPreparedEditResponse.COMMITTED,
         );
         CommitPreparedEditResponseSerializerImpl.addWrapperVariant(
             2,
+            "conflict_error",
+            skirout.editor.v1.authoring.CommitPreparedEditResponse.Kind.CONFLICT_ERROR_WRAPPER.ordinal,
+            build.skir.Serializers.list(
+                skirout.editor.v1.authoring_facts.ExpectationConflict.serializer,
+            ),
+            "",
+            { skirout.editor.v1.authoring.CommitPreparedEditResponse.ConflictErrorWrapper(it) },
+            { it.value },
+        );
+        CommitPreparedEditResponseSerializerImpl.addWrapperVariant(
+            3,
+            "rejected_error",
+            skirout.editor.v1.authoring.CommitPreparedEditResponse.Kind.REJECTED_ERROR_WRAPPER.ordinal,
+            build.skir.Serializers.list(
+                skirout.editor.v1.diagnostic.ValueProblem.serializer,
+            ),
+            "",
+            { skirout.editor.v1.authoring.CommitPreparedEditResponse.RejectedErrorWrapper(it) },
+            { it.value },
+        );
+        CommitPreparedEditResponseSerializerImpl.addWrapperVariant(
+            4,
+            "catalog_changed_error",
+            skirout.editor.v1.authoring.CommitPreparedEditResponse.Kind.CATALOG_CHANGED_ERROR_WRAPPER.ordinal,
+            skirout.editor.v1.type_catalog.CatalogGeneration.serializer,
+            "",
+            { skirout.editor.v1.authoring.CommitPreparedEditResponse.CatalogChangedErrorWrapper(it) },
+            { it.value },
+        );
+        CommitPreparedEditResponseSerializerImpl.addWrapperVariant(
+            5,
             "internal_error",
             skirout.editor.v1.authoring.CommitPreparedEditResponse.Kind.INTERNAL_ERROR_WRAPPER.ordinal,
             skirout.kernel.v1.errors.InternalError.serializer,
@@ -8679,46 +8480,6 @@ private object _SerializerRegistry {
             { it.value },
         );
         CommitPreparedEditResponseSerializerImpl.finalizeEnum();
-
-        CommitResultSerializerImpl.addConstantVariant(
-            1,
-            "committed",
-            skirout.editor.v1.authoring.CommitResult.Kind.COMMITTED_CONST.ordinal,
-            "",
-            skirout.editor.v1.authoring.CommitResult.COMMITTED,
-        );
-        CommitResultSerializerImpl.addWrapperVariant(
-            2,
-            "conflict",
-            skirout.editor.v1.authoring.CommitResult.Kind.CONFLICT_WRAPPER.ordinal,
-            build.skir.Serializers.list(
-                skirout.editor.v1.authoring_facts.ExpectationConflict.serializer,
-            ),
-            "",
-            { skirout.editor.v1.authoring.CommitResult.ConflictWrapper(it) },
-            { it.value },
-        );
-        CommitResultSerializerImpl.addWrapperVariant(
-            3,
-            "rejected",
-            skirout.editor.v1.authoring.CommitResult.Kind.REJECTED_WRAPPER.ordinal,
-            build.skir.Serializers.list(
-                skirout.editor.v1.diagnostic.ValueProblem.serializer,
-            ),
-            "",
-            { skirout.editor.v1.authoring.CommitResult.RejectedWrapper(it) },
-            { it.value },
-        );
-        CommitResultSerializerImpl.addWrapperVariant(
-            4,
-            "catalog_changed",
-            skirout.editor.v1.authoring.CommitResult.Kind.CATALOG_CHANGED_WRAPPER.ordinal,
-            skirout.editor.v1.type_catalog.CatalogGeneration.serializer,
-            "",
-            { skirout.editor.v1.authoring.CommitResult.CatalogChangedWrapper(it) },
-            { it.value },
-        );
-        CommitResultSerializerImpl.finalizeEnum();
 
         ConnectIntentSerializerImpl.addField(
             "source",
@@ -9191,50 +8952,39 @@ private object _SerializerRegistry {
         );
         PreparedEditReadySerializerImpl.finalizeStruct();
 
-        PreparedEditResultSerializerImpl.addWrapperVariant(
+        PrepareTypeArgumentChangeResponseSerializerImpl.addWrapperVariant(
             1,
             "prepared",
-            skirout.editor.v1.authoring.PreparedEditResult.Kind.PREPARED_WRAPPER.ordinal,
+            skirout.editor.v1.authoring.PrepareTypeArgumentChangeResponse.Kind.PREPARED_WRAPPER.ordinal,
             _SerializerRegistry.PreparedEditReadySerializer,
             "",
-            { skirout.editor.v1.authoring.PreparedEditResult.PreparedWrapper(it) },
+            { skirout.editor.v1.authoring.PrepareTypeArgumentChangeResponse.PreparedWrapper(it) },
             { it.value },
         );
-        PreparedEditResultSerializerImpl.addWrapperVariant(
+        PrepareTypeArgumentChangeResponseSerializerImpl.addWrapperVariant(
             2,
             "needs_input",
-            skirout.editor.v1.authoring.PreparedEditResult.Kind.NEEDS_INPUT_WRAPPER.ordinal,
+            skirout.editor.v1.authoring.PrepareTypeArgumentChangeResponse.Kind.NEEDS_INPUT_WRAPPER.ordinal,
             build.skir.Serializers.list(
                 skirout.editor.v1.type_catalog.ValueLocation.serializer,
             ),
             "",
-            { skirout.editor.v1.authoring.PreparedEditResult.NeedsInputWrapper(it) },
+            { skirout.editor.v1.authoring.PrepareTypeArgumentChangeResponse.NeedsInputWrapper(it) },
             { it.value },
         );
-        PreparedEditResultSerializerImpl.addWrapperVariant(
+        PrepareTypeArgumentChangeResponseSerializerImpl.addWrapperVariant(
             3,
-            "rejected",
-            skirout.editor.v1.authoring.PreparedEditResult.Kind.REJECTED_WRAPPER.ordinal,
+            "rejected_error",
+            skirout.editor.v1.authoring.PrepareTypeArgumentChangeResponse.Kind.REJECTED_ERROR_WRAPPER.ordinal,
             build.skir.Serializers.list(
                 skirout.editor.v1.diagnostic.ValueProblem.serializer,
             ),
             "",
-            { skirout.editor.v1.authoring.PreparedEditResult.RejectedWrapper(it) },
-            { it.value },
-        );
-        PreparedEditResultSerializerImpl.finalizeEnum();
-
-        PrepareTypeArgumentChangeResponseSerializerImpl.addWrapperVariant(
-            1,
-            "result",
-            skirout.editor.v1.authoring.PrepareTypeArgumentChangeResponse.Kind.RESULT_WRAPPER.ordinal,
-            _SerializerRegistry.PreparedEditResultSerializer,
-            "",
-            { skirout.editor.v1.authoring.PrepareTypeArgumentChangeResponse.ResultWrapper(it) },
+            { skirout.editor.v1.authoring.PrepareTypeArgumentChangeResponse.RejectedErrorWrapper(it) },
             { it.value },
         );
         PrepareTypeArgumentChangeResponseSerializerImpl.addWrapperVariant(
-            2,
+            4,
             "internal_error",
             skirout.editor.v1.authoring.PrepareTypeArgumentChangeResponse.Kind.INTERNAL_ERROR_WRAPPER.ordinal,
             skirout.kernel.v1.errors.InternalError.serializer,
@@ -9295,15 +9045,48 @@ private object _SerializerRegistry {
 
         PreviewTypeArgumentChangeResponseSerializerImpl.addWrapperVariant(
             1,
-            "result",
-            skirout.editor.v1.authoring.PreviewTypeArgumentChangeResponse.Kind.RESULT_WRAPPER.ordinal,
-            _SerializerRegistry.TypePreviewResultSerializer,
+            "ready",
+            skirout.editor.v1.authoring.PreviewTypeArgumentChangeResponse.Kind.READY_WRAPPER.ordinal,
+            _SerializerRegistry.TypeArgumentChangePreviewSerializer,
             "",
-            { skirout.editor.v1.authoring.PreviewTypeArgumentChangeResponse.ResultWrapper(it) },
+            { skirout.editor.v1.authoring.PreviewTypeArgumentChangeResponse.ReadyWrapper(it) },
             { it.value },
         );
         PreviewTypeArgumentChangeResponseSerializerImpl.addWrapperVariant(
             2,
+            "invalid_arguments_error",
+            skirout.editor.v1.authoring.PreviewTypeArgumentChangeResponse.Kind.INVALID_ARGUMENTS_ERROR_WRAPPER.ordinal,
+            build.skir.Serializers.list(
+                skirout.editor.v1.diagnostic.DeclarationDiagnostic.serializer,
+            ),
+            "",
+            { skirout.editor.v1.authoring.PreviewTypeArgumentChangeResponse.InvalidArgumentsErrorWrapper(it) },
+            { it.value },
+        );
+        PreviewTypeArgumentChangeResponseSerializerImpl.addWrapperVariant(
+            3,
+            "incomplete",
+            skirout.editor.v1.authoring.PreviewTypeArgumentChangeResponse.Kind.INCOMPLETE_WRAPPER.ordinal,
+            build.skir.Serializers.list(
+                _SerializerRegistry.ArgumentLocationSerializer,
+            ),
+            "",
+            { skirout.editor.v1.authoring.PreviewTypeArgumentChangeResponse.IncompleteWrapper(it) },
+            { it.value },
+        );
+        PreviewTypeArgumentChangeResponseSerializerImpl.addWrapperVariant(
+            4,
+            "rejected_error",
+            skirout.editor.v1.authoring.PreviewTypeArgumentChangeResponse.Kind.REJECTED_ERROR_WRAPPER.ordinal,
+            build.skir.Serializers.list(
+                skirout.editor.v1.diagnostic.ValueProblem.serializer,
+            ),
+            "",
+            { skirout.editor.v1.authoring.PreviewTypeArgumentChangeResponse.RejectedErrorWrapper(it) },
+            { it.value },
+        );
+        PreviewTypeArgumentChangeResponseSerializerImpl.addWrapperVariant(
+            5,
             "internal_error",
             skirout.editor.v1.authoring.PreviewTypeArgumentChangeResponse.Kind.INTERNAL_ERROR_WRAPPER.ordinal,
             skirout.kernel.v1.errors.InternalError.serializer,
@@ -9541,20 +9324,20 @@ private object _SerializerRegistry {
         );
         SearchAuthoringResponseSerializerImpl.addWrapperVariant(
             2,
-            "invalid",
-            skirout.editor.v1.authoring.SearchAuthoringResponse.Kind.INVALID_WRAPPER.ordinal,
+            "invalid_error",
+            skirout.editor.v1.authoring.SearchAuthoringResponse.Kind.INVALID_ERROR_WRAPPER.ordinal,
             _SerializerRegistry.AuthoringInvalidSerializer,
             "",
-            { skirout.editor.v1.authoring.SearchAuthoringResponse.InvalidWrapper(it) },
+            { skirout.editor.v1.authoring.SearchAuthoringResponse.InvalidErrorWrapper(it) },
             { it.value },
         );
         SearchAuthoringResponseSerializerImpl.addWrapperVariant(
             3,
-            "catalog_changed",
-            skirout.editor.v1.authoring.SearchAuthoringResponse.Kind.CATALOG_CHANGED_WRAPPER.ordinal,
+            "catalog_changed_error",
+            skirout.editor.v1.authoring.SearchAuthoringResponse.Kind.CATALOG_CHANGED_ERROR_WRAPPER.ordinal,
             _SerializerRegistry.CatalogChangedSerializer,
             "",
-            { skirout.editor.v1.authoring.SearchAuthoringResponse.CatalogChangedWrapper(it) },
+            { skirout.editor.v1.authoring.SearchAuthoringResponse.CatalogChangedErrorWrapper(it) },
             { it.value },
         );
         SearchAuthoringResponseSerializerImpl.addWrapperVariant(
@@ -9676,50 +9459,6 @@ private object _SerializerRegistry {
             { mut, v -> mut.clearedLocations = v },
         );
         TypeArgumentChangePreviewSerializerImpl.finalizeStruct();
-
-        TypePreviewResultSerializerImpl.addWrapperVariant(
-            1,
-            "ready",
-            skirout.editor.v1.authoring.TypePreviewResult.Kind.READY_WRAPPER.ordinal,
-            _SerializerRegistry.TypeArgumentChangePreviewSerializer,
-            "",
-            { skirout.editor.v1.authoring.TypePreviewResult.ReadyWrapper(it) },
-            { it.value },
-        );
-        TypePreviewResultSerializerImpl.addWrapperVariant(
-            2,
-            "invalid_arguments",
-            skirout.editor.v1.authoring.TypePreviewResult.Kind.INVALID_ARGUMENTS_WRAPPER.ordinal,
-            build.skir.Serializers.list(
-                skirout.editor.v1.diagnostic.DeclarationDiagnostic.serializer,
-            ),
-            "",
-            { skirout.editor.v1.authoring.TypePreviewResult.InvalidArgumentsWrapper(it) },
-            { it.value },
-        );
-        TypePreviewResultSerializerImpl.addWrapperVariant(
-            3,
-            "incomplete",
-            skirout.editor.v1.authoring.TypePreviewResult.Kind.INCOMPLETE_WRAPPER.ordinal,
-            build.skir.Serializers.list(
-                _SerializerRegistry.ArgumentLocationSerializer,
-            ),
-            "",
-            { skirout.editor.v1.authoring.TypePreviewResult.IncompleteWrapper(it) },
-            { it.value },
-        );
-        TypePreviewResultSerializerImpl.addWrapperVariant(
-            4,
-            "rejected",
-            skirout.editor.v1.authoring.TypePreviewResult.Kind.REJECTED_WRAPPER.ordinal,
-            build.skir.Serializers.list(
-                skirout.editor.v1.diagnostic.ValueProblem.serializer,
-            ),
-            "",
-            { skirout.editor.v1.authoring.TypePreviewResult.RejectedWrapper(it) },
-            { it.value },
-        );
-        TypePreviewResultSerializerImpl.finalizeEnum();
 
         UnresolvedLinkSerializerImpl.addWrapperVariant(
             1,

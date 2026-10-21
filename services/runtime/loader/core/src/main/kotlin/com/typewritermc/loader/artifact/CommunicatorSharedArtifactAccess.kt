@@ -225,7 +225,7 @@ private class CommunicatorSharedMetadataClient(
                 PublishResult.Unchanged(response.value.toApi())
             }
 
-            is PublishSharedArtifactResponse.ConflictWrapper -> {
+            is PublishSharedArtifactResponse.ConflictErrorWrapper -> {
                 PublishResult.Conflict(response.value?.toApi())
             }
 
@@ -254,20 +254,20 @@ private class CommunicatorSharedMetadataClient(
 
 internal class SharedContracts {
     fun catalog(scope: RealmRouteScope) =
-        scope.sharedCatalogFetch(ResponsePolicy(FetchSharedArtifactCatalogResponse.createUnavailable(), unavailableClassifier()))
+        scope.sharedCatalogFetch(ResponsePolicy(FetchSharedArtifactCatalogResponse.createInternalError(), unavailableClassifier()))
 
     fun publish(scope: RealmRouteScope) =
-        scope.sharedPublish(ResponsePolicy(PublishSharedArtifactResponse.createUnavailable(), unavailableClassifier()))
+        scope.sharedPublish(ResponsePolicy(PublishSharedArtifactResponse.createInternalError(), unavailableClassifier()))
 }
 
 internal val sharedContracts = SharedContracts()
 
 private fun <Response : Any> unavailableClassifier() =
     com.typewritermc.services.libs.communicator.contract.ResponseClassifier<Response> { response ->
-        val failed = response::class.simpleName == "UnavailableWrapper"
+        val failed = response::class.simpleName == "InternalErrorWrapper"
         ResponseClassification(
             if (failed) ResponseOutcome.INTERNAL_ERROR else ResponseOutcome.SUCCESS,
-            ResponseVariant.of(if (failed) "unavailable" else "success"),
+            ResponseVariant.of(if (failed) "internal-error" else "success"),
         )
     }
 

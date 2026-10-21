@@ -1527,64 +1527,18 @@ impl PreparationOperation {
 }
 
 // ==============================================================================
-// enum PreparationStep
+// enum PrepareValueResult
 // ==============================================================================
 
 /// Separates prepared editable content from a continuation needing caller input or unavailable
 /// preparation. ready describes completion of initialization, not saved authoring or publication.
 #[derive(Debug, Clone, PartialEq)]
-pub enum PreparationStep {
-    Unknown(Option<crate::skir_client::UnrecognizedVariant<PreparationStep>>),
-    Ready(Box<PreparedValue>),
-    NeedsInput(Box<PreparationDraft>),
-    Unavailable(Box<PreparationDraft>),
-}
-
-impl Default for PreparationStep {
-    fn default() -> Self {
-        PreparationStep::Unknown(None)
-    }
-}
-
-impl PreparationStep {
-    fn _adapter() -> &'static crate::skir_client::internal::EnumAdapter<PreparationStep> {
-        static ADAPTER: std::sync::LazyLock<
-            crate::skir_client::internal::EnumAdapter<PreparationStep>,
-        > = std::sync::LazyLock::new(|| {
-            crate::skir_client::internal::EnumAdapter::new(
-                |x: &PreparationStep| match x {
-                    PreparationStep::Unknown(_) => 0,
-                    PreparationStep::Ready(_) => 1,
-                    PreparationStep::NeedsInput(_) => 2,
-                    PreparationStep::Unavailable(_) => 3,
-                },
-                |u| PreparationStep::Unknown(Some(u)),
-                |x: &PreparationStep| match x {
-                    PreparationStep::Unknown(Some(u)) => Some(u.as_ref()),
-                    _ => None,
-                },
-                "editor/v1/catalog.skir",
-                "PreparationStep",
-                "Separates prepared editable content from a continuation needing caller input or unavailable\npreparation. ready describes completion of initialization, not saved authoring or publication.",
-            )
-        });
-        &*ADAPTER
-    }
-    pub fn serializer() -> crate::skir_client::Serializer<PreparationStep> {
-        initialize_module_serializers();
-        crate::skir_client::internal::enum_serializer_from_static(PreparationStep::_adapter())
-    }
-}
-
-// ==============================================================================
-// enum PrepareValueResult
-// ==============================================================================
-
-#[derive(Debug, Clone, PartialEq)]
 pub enum PrepareValueResult {
     Unknown(Option<crate::skir_client::UnrecognizedVariant<PrepareValueResult>>),
-    Prepared(Box<PreparationStep>),
-    CatalogChanged(Box<crate::skirout::base::editor::v1::type_catalog::CatalogGeneration>),
+    Ready(Box<PreparedValue>),
+    NeedsInput(Box<PreparationDraft>),
+    UnavailableError(Box<PreparationDraft>),
+    CatalogChangedError(Box<crate::skirout::base::editor::v1::type_catalog::CatalogGeneration>),
     InternalError(Box<crate::skirout::base::kernel::v1::errors::InternalError>),
 }
 
@@ -1602,9 +1556,11 @@ impl PrepareValueResult {
             crate::skir_client::internal::EnumAdapter::new(
                 |x: &PrepareValueResult| match x {
                     PrepareValueResult::Unknown(_) => 0,
-                    PrepareValueResult::Prepared(_) => 1,
-                    PrepareValueResult::CatalogChanged(_) => 2,
-                    PrepareValueResult::InternalError(_) => 3,
+                    PrepareValueResult::Ready(_) => 1,
+                    PrepareValueResult::NeedsInput(_) => 2,
+                    PrepareValueResult::UnavailableError(_) => 3,
+                    PrepareValueResult::CatalogChangedError(_) => 4,
+                    PrepareValueResult::InternalError(_) => 5,
                 },
                 |u| PrepareValueResult::Unknown(Some(u)),
                 |x: &PrepareValueResult| match x {
@@ -1613,7 +1569,7 @@ impl PrepareValueResult {
                 },
                 "editor/v1/catalog.skir",
                 "PrepareValueResult",
-                "",
+                "Separates prepared editable content from a continuation needing caller input or unavailable\npreparation. ready describes completion of initialization, not saved authoring or publication.",
             )
         });
         &*ADAPTER
@@ -1750,6 +1706,55 @@ impl WatchEditorCatalogRequest {
         initialize_module_serializers();
         crate::skir_client::internal::struct_serializer_from_static(
             WatchEditorCatalogRequest::_adapter(),
+        )
+    }
+}
+
+// ==============================================================================
+// enum WatchEditorCatalogResponse
+// ==============================================================================
+
+#[derive(Debug, Clone, PartialEq)]
+pub enum WatchEditorCatalogResponse {
+    Unknown(Option<crate::skir_client::UnrecognizedVariant<WatchEditorCatalogResponse>>),
+    Invalidated(Box<CatalogInvalidated>),
+    InternalError(Box<crate::skirout::base::kernel::v1::errors::InternalError>),
+}
+
+impl Default for WatchEditorCatalogResponse {
+    fn default() -> Self {
+        WatchEditorCatalogResponse::Unknown(None)
+    }
+}
+
+impl WatchEditorCatalogResponse {
+    fn _adapter() -> &'static crate::skir_client::internal::EnumAdapter<WatchEditorCatalogResponse>
+    {
+        static ADAPTER: std::sync::LazyLock<
+            crate::skir_client::internal::EnumAdapter<WatchEditorCatalogResponse>,
+        > = std::sync::LazyLock::new(|| {
+            crate::skir_client::internal::EnumAdapter::new(
+                |x: &WatchEditorCatalogResponse| match x {
+                    WatchEditorCatalogResponse::Unknown(_) => 0,
+                    WatchEditorCatalogResponse::Invalidated(_) => 1,
+                    WatchEditorCatalogResponse::InternalError(_) => 2,
+                },
+                |u| WatchEditorCatalogResponse::Unknown(Some(u)),
+                |x: &WatchEditorCatalogResponse| match x {
+                    WatchEditorCatalogResponse::Unknown(Some(u)) => Some(u.as_ref()),
+                    _ => None,
+                },
+                "editor/v1/catalog.skir",
+                "WatchEditorCatalogResponse",
+                "",
+            )
+        });
+        &*ADAPTER
+    }
+    pub fn serializer() -> crate::skir_client::Serializer<WatchEditorCatalogResponse> {
+        initialize_module_serializers();
+        crate::skir_client::internal::enum_serializer_from_static(
+            WatchEditorCatalogResponse::_adapter(),
         )
     }
 }
@@ -2846,8 +2851,8 @@ fn initialize_module_serializers() {
             (*a).finalize();
         }
         unsafe {
-            let a: *mut crate::skir_client::internal::EnumAdapter<PreparationStep> =
-                PreparationStep::_adapter() as *const _ as *mut _;
+            let a: *mut crate::skir_client::internal::EnumAdapter<PrepareValueResult> =
+                PrepareValueResult::_adapter() as *const _ as *mut _;
             (*a).add_wrapper_variant(
                 "ready",
                 1,
@@ -2856,9 +2861,9 @@ fn initialize_module_serializers() {
                     PreparedValue::_adapter(),
                 ),
                 "",
-                |v| PreparationStep::Ready(Box::new(v)),
+                |v| PrepareValueResult::Ready(Box::new(v)),
                 |x| match x {
-                    PreparationStep::Ready(b) => b.as_ref(),
+                    PrepareValueResult::Ready(b) => b.as_ref(),
                     _ => unreachable!(),
                 },
             );
@@ -2870,61 +2875,42 @@ fn initialize_module_serializers() {
                     PreparationDraft::_adapter(),
                 ),
                 "",
-                |v| PreparationStep::NeedsInput(Box::new(v)),
+                |v| PrepareValueResult::NeedsInput(Box::new(v)),
                 |x| match x {
-                    PreparationStep::NeedsInput(b) => b.as_ref(),
+                    PrepareValueResult::NeedsInput(b) => b.as_ref(),
                     _ => unreachable!(),
                 },
             );
             (*a).add_wrapper_variant(
-                "unavailable",
+                "unavailable_error",
                 3,
                 3,
                 crate::skir_client::internal::struct_serializer_from_static(
                     PreparationDraft::_adapter(),
                 ),
                 "",
-                |v| PreparationStep::Unavailable(Box::new(v)),
+                |v| PrepareValueResult::UnavailableError(Box::new(v)),
                 |x| match x {
-                    PreparationStep::Unavailable(b) => b.as_ref(),
-                    _ => unreachable!(),
-                },
-            );
-            (*a).finalize();
-        }
-        unsafe {
-            let a: *mut crate::skir_client::internal::EnumAdapter<PrepareValueResult> =
-                PrepareValueResult::_adapter() as *const _ as *mut _;
-            (*a).add_wrapper_variant(
-                "prepared",
-                1,
-                1,
-                crate::skir_client::internal::enum_serializer_from_static(
-                    PreparationStep::_adapter(),
-                ),
-                "",
-                |v| PrepareValueResult::Prepared(Box::new(v)),
-                |x| match x {
-                    PrepareValueResult::Prepared(b) => b.as_ref(),
+                    PrepareValueResult::UnavailableError(b) => b.as_ref(),
                     _ => unreachable!(),
                 },
             );
             (*a).add_wrapper_variant(
-                "catalog_changed",
-                2,
-                2,
+                "catalog_changed_error",
+                4,
+                4,
                 crate::skirout::base::editor::v1::type_catalog::CatalogGeneration::serializer(),
                 "",
-                |v| PrepareValueResult::CatalogChanged(Box::new(v)),
+                |v| PrepareValueResult::CatalogChangedError(Box::new(v)),
                 |x| match x {
-                    PrepareValueResult::CatalogChanged(b) => b.as_ref(),
+                    PrepareValueResult::CatalogChangedError(b) => b.as_ref(),
                     _ => unreachable!(),
                 },
             );
             (*a).add_wrapper_variant(
                 "internal_error",
-                3,
-                3,
+                5,
+                5,
                 crate::skirout::base::kernel::v1::errors::InternalError::serializer(),
                 "",
                 |v| PrepareValueResult::InternalError(Box::new(v)),
@@ -3014,6 +3000,37 @@ fn initialize_module_serializers() {
                 WatchEditorCatalogRequest::_adapter() as *const _ as *mut _;
             (*a).finalize();
         }
+        unsafe {
+            let a: *mut crate::skir_client::internal::EnumAdapter<WatchEditorCatalogResponse> =
+                WatchEditorCatalogResponse::_adapter() as *const _ as *mut _;
+            (*a).add_wrapper_variant(
+                "invalidated",
+                1,
+                1,
+                crate::skir_client::internal::struct_serializer_from_static(
+                    CatalogInvalidated::_adapter(),
+                ),
+                "",
+                |v| WatchEditorCatalogResponse::Invalidated(Box::new(v)),
+                |x| match x {
+                    WatchEditorCatalogResponse::Invalidated(b) => b.as_ref(),
+                    _ => unreachable!(),
+                },
+            );
+            (*a).add_wrapper_variant(
+                "internal_error",
+                2,
+                2,
+                crate::skirout::base::kernel::v1::errors::InternalError::serializer(),
+                "",
+                |v| WatchEditorCatalogResponse::InternalError(Box::new(v)),
+                |x| match x {
+                    WatchEditorCatalogResponse::InternalError(b) => b.as_ref(),
+                    _ => unreachable!(),
+                },
+            );
+            (*a).finalize();
+        }
     });
     let _ = *INIT;
 }
@@ -3037,14 +3054,14 @@ pub fn fetch_editor_catalog_method()
 }
 
 pub fn watch_editor_catalog_method()
--> &'static crate::skir_client::Method<WatchEditorCatalogRequest, CatalogInvalidated> {
+-> &'static crate::skir_client::Method<WatchEditorCatalogRequest, WatchEditorCatalogResponse> {
     static METHOD: std::sync::LazyLock<
-        crate::skir_client::Method<WatchEditorCatalogRequest, CatalogInvalidated>,
+        crate::skir_client::Method<WatchEditorCatalogRequest, WatchEditorCatalogResponse>,
     > = std::sync::LazyLock::new(|| crate::skir_client::Method {
         name: "WatchEditorCatalog".to_string(),
         number: 920002_i64,
         request_serializer: WatchEditorCatalogRequest::serializer(),
-        response_serializer: CatalogInvalidated::serializer(),
+        response_serializer: WatchEditorCatalogResponse::serializer(),
         doc: "".to_string(),
     });
     &*METHOD

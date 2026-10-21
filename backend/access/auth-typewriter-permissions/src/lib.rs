@@ -25,8 +25,8 @@ wit_bindgen::generate!({
 use otel_wasi::{ResultWithSlug, main_attribute};
 use wasmcloud_utils::{
     skir::base::access::v1::permission::{
-        EntityPermissionQualifier, GetEntityPermissionRequest, GetEntityPermissionResponse,
-        Permissions,
+        EntityPermissionGrant, EntityPermissionQualifier, GetEntityPermissionRequest,
+        GetEntityPermissionResponse, Permissions,
     },
     transport_routes::auth_typewriter_permissions::{Handlers, dispatch},
     wasmcloud::messaging::{core_handler::Guest, types},
@@ -71,18 +71,18 @@ fn permission_response(
     let (permissions, tags) = result.inspect_err(|_| {
         main_attribute!("auth.outcome" = "failed");
     })?;
-    let response = GetEntityPermissionResponse {
+    let grant = EntityPermissionGrant {
         permissions,
         tags,
         ..Default::default()
     };
     main_attribute!(
         "auth.outcome" = "authorized",
-        "auth.response.permissions.tags.count" = response.tags.len() as i64,
-        "auth.permissions.publish.deny.count" = response.permissions.publish.deny.len() as i64,
-        "auth.permissions.subscribe.deny.count" = response.permissions.subscribe.deny.len() as i64,
+        "auth.response.permissions.tags.count" = grant.tags.len() as i64,
+        "auth.permissions.publish.deny.count" = grant.permissions.publish.deny.len() as i64,
+        "auth.permissions.subscribe.deny.count" = grant.permissions.subscribe.deny.len() as i64,
     );
-    Ok(response)
+    Ok(GetEntityPermissionResponse::Granted(Box::new(grant)))
 }
 
 #[tracing::instrument(skip(request))]

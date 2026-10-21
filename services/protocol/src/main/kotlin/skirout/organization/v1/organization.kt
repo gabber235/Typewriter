@@ -1146,6 +1146,7 @@ sealed class DeleteOrganizationResponse private constructor() {
         }
     }
 
+    /** Record IDs from an unexpected table. */
     class InvalidRecordIdErrorWrapper private constructor (
         val value: skirout.kernel.v1.errors.InvalidRecordIdError,
     ) : skirout.organization.v1.organization.DeleteOrganizationResponse() {
@@ -1549,7 +1550,7 @@ private object _SerializerRegistry {
             "invalid_record_id_error",
             skirout.organization.v1.organization.DeleteOrganizationResponse.Kind.INVALID_RECORD_ID_ERROR_WRAPPER.ordinal,
             skirout.kernel.v1.errors.InvalidRecordIdError.serializer,
-            "",
+            "Record IDs from an unexpected table.",
             { skirout.organization.v1.organization.DeleteOrganizationResponse.InvalidRecordIdErrorWrapper(it) },
             { it.value },
         );

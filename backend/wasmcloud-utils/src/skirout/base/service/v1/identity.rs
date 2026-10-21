@@ -585,14 +585,23 @@ pub enum IssueServiceIdentityResponse {
     Unknown(Option<crate::skir_client::UnrecognizedVariant<IssueServiceIdentityResponse>>),
     InternalError(Box<crate::skirout::base::kernel::v1::errors::InternalError>),
     Success(Box<IssueServiceIdentityResponse_Success>),
+    /// Malformed request.
     MalformedRequestError(Box<IssueServiceIdentityResponse_MalformedRequestError>),
+    /// Unknown role.
     UnknownRoleError(Box<IssueServiceIdentityResponse_UnknownRoleError>),
+    /// Unknown role property.
     RoleUnknownPropertyError(Box<IssueServiceIdentityResponse_RoleUnknownPropertyError>),
+    /// Invalid role type.
     RoleTypeInvalidError(Box<IssueServiceIdentityResponse_RoleTypeInvalidError>),
+    /// Invalid role version.
     RoleVersionInvalidError(Box<IssueServiceIdentityResponse_RoleVersionInvalidError>),
+    /// Custom role name required.
     CustomRoleNameRequiredError(Box<IssueServiceIdentityResponse_CustomRoleNameRequiredError>),
+    /// Invalid custom role name.
     CustomRoleNameInvalidError(Box<IssueServiceIdentityResponse_CustomRoleNameInvalidError>),
+    /// Built in role name forbidden.
     BuiltinRoleNameForbiddenError(Box<IssueServiceIdentityResponse_BuiltinRoleNameForbiddenError>),
+    /// Identity provider unavailable.
     IdentityProviderUnavailableError(
         Box<IssueServiceIdentityResponse_IdentityProviderUnavailableError>,
     ),
@@ -799,7 +808,7 @@ fn initialize_module_serializers() {
                 crate::skir_client::internal::struct_serializer_from_static(
                     IssueServiceIdentityResponse_MalformedRequestError::_adapter(),
                 ),
-                "",
+                "Malformed request.",
                 |v| IssueServiceIdentityResponse::MalformedRequestError(Box::new(v)),
                 |x| match x {
                     IssueServiceIdentityResponse::MalformedRequestError(b) => b.as_ref(),
@@ -813,7 +822,7 @@ fn initialize_module_serializers() {
                 crate::skir_client::internal::struct_serializer_from_static(
                     IssueServiceIdentityResponse_UnknownRoleError::_adapter(),
                 ),
-                "",
+                "Unknown role.",
                 |v| IssueServiceIdentityResponse::UnknownRoleError(Box::new(v)),
                 |x| match x {
                     IssueServiceIdentityResponse::UnknownRoleError(b) => b.as_ref(),
@@ -827,7 +836,7 @@ fn initialize_module_serializers() {
                 crate::skir_client::internal::struct_serializer_from_static(
                     IssueServiceIdentityResponse_RoleUnknownPropertyError::_adapter(),
                 ),
-                "",
+                "Unknown role property.",
                 |v| IssueServiceIdentityResponse::RoleUnknownPropertyError(Box::new(v)),
                 |x| match x {
                     IssueServiceIdentityResponse::RoleUnknownPropertyError(b) => b.as_ref(),
@@ -841,7 +850,7 @@ fn initialize_module_serializers() {
                 crate::skir_client::internal::struct_serializer_from_static(
                     IssueServiceIdentityResponse_RoleTypeInvalidError::_adapter(),
                 ),
-                "",
+                "Invalid role type.",
                 |v| IssueServiceIdentityResponse::RoleTypeInvalidError(Box::new(v)),
                 |x| match x {
                     IssueServiceIdentityResponse::RoleTypeInvalidError(b) => b.as_ref(),
@@ -855,7 +864,7 @@ fn initialize_module_serializers() {
                 crate::skir_client::internal::struct_serializer_from_static(
                     IssueServiceIdentityResponse_RoleVersionInvalidError::_adapter(),
                 ),
-                "",
+                "Invalid role version.",
                 |v| IssueServiceIdentityResponse::RoleVersionInvalidError(Box::new(v)),
                 |x| match x {
                     IssueServiceIdentityResponse::RoleVersionInvalidError(b) => b.as_ref(),
@@ -869,7 +878,7 @@ fn initialize_module_serializers() {
                 crate::skir_client::internal::struct_serializer_from_static(
                     IssueServiceIdentityResponse_CustomRoleNameRequiredError::_adapter(),
                 ),
-                "",
+                "Custom role name required.",
                 |v| IssueServiceIdentityResponse::CustomRoleNameRequiredError(Box::new(v)),
                 |x| match x {
                     IssueServiceIdentityResponse::CustomRoleNameRequiredError(b) => b.as_ref(),
@@ -883,7 +892,7 @@ fn initialize_module_serializers() {
                 crate::skir_client::internal::struct_serializer_from_static(
                     IssueServiceIdentityResponse_CustomRoleNameInvalidError::_adapter(),
                 ),
-                "",
+                "Invalid custom role name.",
                 |v| IssueServiceIdentityResponse::CustomRoleNameInvalidError(Box::new(v)),
                 |x| match x {
                     IssueServiceIdentityResponse::CustomRoleNameInvalidError(b) => b.as_ref(),
@@ -897,7 +906,7 @@ fn initialize_module_serializers() {
                 crate::skir_client::internal::struct_serializer_from_static(
                     IssueServiceIdentityResponse_BuiltinRoleNameForbiddenError::_adapter(),
                 ),
-                "",
+                "Built in role name forbidden.",
                 |v| IssueServiceIdentityResponse::BuiltinRoleNameForbiddenError(Box::new(v)),
                 |x| match x {
                     IssueServiceIdentityResponse::BuiltinRoleNameForbiddenError(b) => b.as_ref(),
@@ -911,7 +920,7 @@ fn initialize_module_serializers() {
                 crate::skir_client::internal::struct_serializer_from_static(
                     IssueServiceIdentityResponse_IdentityProviderUnavailableError::_adapter(),
                 ),
-                "",
+                "Identity provider unavailable.",
                 |v| IssueServiceIdentityResponse::IdentityProviderUnavailableError(Box::new(v)),
                 |x| match x {
                     IssueServiceIdentityResponse::IdentityProviderUnavailableError(b) => b.as_ref(),

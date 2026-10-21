@@ -2193,6 +2193,8 @@ sealed class GenerateOrganizationJoinCodeResponse {
   );
 
   /// Create a 'roles_not_found_error' variant wrapping around the given value.
+  ///
+  /// Roles not found.
   factory GenerateOrganizationJoinCodeResponse.wrapRolesNotFoundError(
     GenerateOrganizationJoinCodeResponse_RolesNotFoundError value,
   ) => GenerateOrganizationJoinCodeResponse_rolesNotFoundErrorWrapper._(value);
@@ -2206,6 +2208,8 @@ sealed class GenerateOrganizationJoinCodeResponse {
   );
 
   /// Create a 'roles_not_assignable_error' variant wrapping around the given value.
+  ///
+  /// Roles not assignable.
   factory GenerateOrganizationJoinCodeResponse.wrapRolesNotAssignableError(
     GenerateOrganizationJoinCodeResponse_RolesNotAssignableError value,
   ) => GenerateOrganizationJoinCodeResponse_rolesNotAssignableErrorWrapper._(
@@ -2223,6 +2227,8 @@ sealed class GenerateOrganizationJoinCodeResponse {
   );
 
   /// Create a 'invalid_expiration_error' variant wrapping around the given value.
+  ///
+  /// Invalid expiration duration.
   factory GenerateOrganizationJoinCodeResponse.wrapInvalidExpirationError(
     GenerateOrganizationJoinCodeResponse_InvalidExpirationError value,
   ) => GenerateOrganizationJoinCodeResponse_invalidExpirationErrorWrapper._(
@@ -2239,6 +2245,8 @@ sealed class GenerateOrganizationJoinCodeResponse {
   );
 
   /// Create a 'invalid_record_id_error' variant wrapping around the given value.
+  ///
+  /// Record IDs from an unexpected table.
   factory GenerateOrganizationJoinCodeResponse.wrapInvalidRecordIdError(
     _lib_kernel_v1_errors.InvalidRecordIdError value,
   ) =>
@@ -2290,7 +2298,7 @@ sealed class GenerateOrganizationJoinCodeResponse {
         "roles_not_found_error",
         "wrapRolesNotFoundError",
         GenerateOrganizationJoinCodeResponse_RolesNotFoundError.serializer,
-        "",
+        "Roles not found.",
         GenerateOrganizationJoinCodeResponse_rolesNotFoundErrorWrapper._,
         (it) => it.value,
         ordinal: GenerateOrganizationJoinCodeResponse_kind
@@ -2302,7 +2310,7 @@ sealed class GenerateOrganizationJoinCodeResponse {
         "roles_not_assignable_error",
         "wrapRolesNotAssignableError",
         GenerateOrganizationJoinCodeResponse_RolesNotAssignableError.serializer,
-        "",
+        "Roles not assignable.",
         GenerateOrganizationJoinCodeResponse_rolesNotAssignableErrorWrapper._,
         (it) => it.value,
         ordinal: GenerateOrganizationJoinCodeResponse_kind
@@ -2314,7 +2322,7 @@ sealed class GenerateOrganizationJoinCodeResponse {
         "invalid_expiration_error",
         "wrapInvalidExpirationError",
         GenerateOrganizationJoinCodeResponse_InvalidExpirationError.serializer,
-        "",
+        "Invalid expiration duration.",
         GenerateOrganizationJoinCodeResponse_invalidExpirationErrorWrapper._,
         (it) => it.value,
         ordinal: GenerateOrganizationJoinCodeResponse_kind
@@ -2326,7 +2334,7 @@ sealed class GenerateOrganizationJoinCodeResponse {
         "invalid_record_id_error",
         "wrapInvalidRecordIdError",
         _lib_kernel_v1_errors.InvalidRecordIdError.serializer,
-        "",
+        "Record IDs from an unexpected table.",
         GenerateOrganizationJoinCodeResponse_invalidRecordIdErrorWrapper._,
         (it) => it.value,
         ordinal: GenerateOrganizationJoinCodeResponse_kind
@@ -2898,6 +2906,8 @@ sealed class RevokeOrganizationJoinCodeResponse {
   );
 
   /// Create a 'code_not_found_error' variant wrapping around the given value.
+  ///
+  /// Join code not found.
   factory RevokeOrganizationJoinCodeResponse.wrapCodeNotFoundError(
     RevokeOrganizationJoinCodeResponse_CodeNotFoundError value,
   ) => RevokeOrganizationJoinCodeResponse_codeNotFoundErrorWrapper._(value);
@@ -2910,6 +2920,8 @@ sealed class RevokeOrganizationJoinCodeResponse {
   );
 
   /// Create a 'invalid_record_id_error' variant wrapping around the given value.
+  ///
+  /// Record IDs from an unexpected table.
   factory RevokeOrganizationJoinCodeResponse.wrapInvalidRecordIdError(
     _lib_kernel_v1_errors.InvalidRecordIdError value,
   ) => RevokeOrganizationJoinCodeResponse_invalidRecordIdErrorWrapper._(value);
@@ -2960,7 +2972,7 @@ sealed class RevokeOrganizationJoinCodeResponse {
         "code_not_found_error",
         "wrapCodeNotFoundError",
         RevokeOrganizationJoinCodeResponse_CodeNotFoundError.serializer,
-        "",
+        "Join code not found.",
         RevokeOrganizationJoinCodeResponse_codeNotFoundErrorWrapper._,
         (it) => it.value,
         ordinal: RevokeOrganizationJoinCodeResponse_kind
@@ -2972,7 +2984,7 @@ sealed class RevokeOrganizationJoinCodeResponse {
         "invalid_record_id_error",
         "wrapInvalidRecordIdError",
         _lib_kernel_v1_errors.InvalidRecordIdError.serializer,
-        "",
+        "Record IDs from an unexpected table.",
         RevokeOrganizationJoinCodeResponse_invalidRecordIdErrorWrapper._,
         (it) => it.value,
         ordinal: RevokeOrganizationJoinCodeResponse_kind

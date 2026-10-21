@@ -219,7 +219,7 @@ val ResourceOperationRoutesTest by testSuite {
                                     value = fixture.operationId("fixture.OrphanTag").capability.value,
                                 ),
                         )
-                val result = fixture.routes.prepare(request) as AuthoringActionResult.InvalidWrapper
+                val result = fixture.routes.prepare(request) as AuthoringActionResult.InvalidErrorWrapper
                 result.value.diagnostics.map { it.code } shouldContain "owner_required"
             }
         }
@@ -358,7 +358,7 @@ val ResourceOperationRoutesTest by testSuite {
     test("a failing availability callback fails menu resolution but not drops or the preparation of another operation") {
         runTest {
             CoreOperationsFixture(extraOperations = { origin -> listOf(brokenAvailability(origin)) }).use { fixture ->
-                (fixture.resolve("tag") is ResolveResourceOperationsResult.FailedWrapper) shouldBe true
+                (fixture.resolve("tag") is ResolveResourceOperationsResult.FailedErrorWrapper) shouldBe true
                 // Drops only evaluate operations that declare a drop field.
                 (fixture.dropCandidates("tag") is ResolveDropCandidatesResult.ResolvedWrapper) shouldBe true
                 (fixture.routes.prepare(fixture.prepare(Delete, "tag")) is AuthoringActionResult.PreviewWrapper) shouldBe true
@@ -374,7 +374,7 @@ val ResourceOperationRoutesTest by testSuite {
                                             .capability.value,
                                 ),
                         )
-                (fixture.routes.prepare(broken) is AuthoringActionResult.FailedWrapper) shouldBe true
+                (fixture.routes.prepare(broken) is AuthoringActionResult.FailedErrorWrapper) shouldBe true
             }
         }
     }
@@ -386,7 +386,7 @@ val ResourceOperationRoutesTest by testSuite {
                 fixture.routes.resolve(
                     request.copy(context = request.context.copy(confirmedObservation = AuthoringObservationId(value = "previous"))),
                 )
-            (stale is ResolveResourceOperationsResult.StaleObservationWrapper) shouldBe true
+            (stale is ResolveResourceOperationsResult.StaleObservationErrorWrapper) shouldBe true
             val catalog =
                 fixture.routes.resolve(
                     request.copy(
@@ -398,9 +398,9 @@ val ResourceOperationRoutesTest by testSuite {
                             ),
                     ),
                 )
-            (catalog is ResolveResourceOperationsResult.CatalogChangedWrapper) shouldBe true
+            (catalog is ResolveResourceOperationsResult.CatalogChangedErrorWrapper) shouldBe true
             val empty = fixture.routes.resolve(request.copy(invocation = request.invocation.copy(targets = emptyList())))
-            (empty is ResolveResourceOperationsResult.InvalidWrapper) shouldBe true
+            (empty is ResolveResourceOperationsResult.InvalidErrorWrapper) shouldBe true
         }
     }
 }

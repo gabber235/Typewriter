@@ -78,7 +78,7 @@ class RealmCapabilityInvocationSource(
                     value = SkirDataValueCodec.encode(value).getOrThrow(),
                 )
             } catch (failure: RealmCapabilityPermissionDeniedException) {
-                ComputationResult.createPermissionDenied(
+                ComputationResult.createPermissionDeniedError(
                     invocationId = request.invocationId,
                     message = failure.message ?: "Permission denied",
                 )
@@ -118,7 +118,7 @@ class RealmCapabilityInvocationSource(
                     instructions = outcome.instructions.map { instruction -> instruction.toWire() },
                 )
             } catch (failure: RealmCapabilityPermissionDeniedException) {
-                CommandResult.createPermissionDenied(
+                CommandResult.createPermissionDeniedError(
                     invocationId = request.invocationId,
                     message = failure.message ?: "Permission denied",
                 )
@@ -163,11 +163,11 @@ private data class CommandContext(
 private fun InvocationValidationFailure.toComputationResult(invocationId: InvocationId): ComputationResult =
     when (this) {
         is InvocationValidationFailure.Invalid -> {
-            ComputationResult.createInvalid(invocationId = invocationId, diagnostics = listOf(realmDiagnostic(message)))
+            ComputationResult.createInvalidError(invocationId = invocationId, diagnostics = listOf(realmDiagnostic(message)))
         }
 
         is InvocationValidationFailure.Stale -> {
-            ComputationResult.createStaleGeneration(
+            ComputationResult.createStaleGenerationError(
                 invocationId = invocationId,
                 actualGeneration = CatalogGeneration(value = actualGeneration),
             )
@@ -177,11 +177,11 @@ private fun InvocationValidationFailure.toComputationResult(invocationId: Invoca
 private fun InvocationValidationFailure.toCommandResult(invocationId: InvocationId): CommandResult =
     when (this) {
         is InvocationValidationFailure.Invalid -> {
-            CommandResult.createInvalid(invocationId = invocationId, diagnostics = listOf(realmDiagnostic(message)))
+            CommandResult.createInvalidError(invocationId = invocationId, diagnostics = listOf(realmDiagnostic(message)))
         }
 
         is InvocationValidationFailure.Stale -> {
-            CommandResult.createStaleGeneration(
+            CommandResult.createStaleGenerationError(
                 invocationId = invocationId,
                 actualGeneration = CatalogGeneration(value = actualGeneration),
             )
@@ -198,7 +198,7 @@ private fun invalidComputation(
     request: CapabilityInvocationRequest,
     message: String,
 ): ComputationResult =
-    ComputationResult.createInvalid(
+    ComputationResult.createInvalidError(
         invocationId = request.invocationId,
         diagnostics = listOf(realmDiagnostic(message)),
     )
@@ -207,7 +207,7 @@ private fun unavailableComputation(
     request: CapabilityInvocationRequest,
     message: String,
 ): ComputationResult =
-    ComputationResult.createUnavailable(
+    ComputationResult.createUnavailableError(
         invocationId = request.invocationId,
         diagnostics = listOf(realmDiagnostic(message)),
     )
@@ -216,7 +216,7 @@ private fun invalidCommand(
     request: CapabilityInvocationRequest,
     message: String,
 ): CommandResult =
-    CommandResult.createInvalid(
+    CommandResult.createInvalidError(
         invocationId = request.invocationId,
         diagnostics = listOf(realmDiagnostic(message)),
     )
@@ -225,7 +225,7 @@ private fun unavailableCommand(
     request: CapabilityInvocationRequest,
     message: String,
 ): CommandResult =
-    CommandResult.createUnavailable(
+    CommandResult.createUnavailableError(
         invocationId = request.invocationId,
         diagnostics = listOf(realmDiagnostic(message)),
     )

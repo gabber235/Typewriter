@@ -1404,6 +1404,7 @@ sealed class GenerateOrganizationJoinCodeResponse private constructor() {
         }
     }
 
+    /** Roles not found. */
     class RolesNotFoundErrorWrapper private constructor (
         val value: skirout.organization.v1.join_codes.GenerateOrganizationJoinCodeResponse.RolesNotFoundError,
     ) : skirout.organization.v1.join_codes.GenerateOrganizationJoinCodeResponse() {
@@ -1422,6 +1423,7 @@ sealed class GenerateOrganizationJoinCodeResponse private constructor() {
         }
     }
 
+    /** Roles not assignable. */
     class RolesNotAssignableErrorWrapper private constructor (
         val value: skirout.organization.v1.join_codes.GenerateOrganizationJoinCodeResponse.RolesNotAssignableError,
     ) : skirout.organization.v1.join_codes.GenerateOrganizationJoinCodeResponse() {
@@ -1440,6 +1442,7 @@ sealed class GenerateOrganizationJoinCodeResponse private constructor() {
         }
     }
 
+    /** Invalid expiration duration. */
     class InvalidExpirationErrorWrapper private constructor (
         val value: skirout.organization.v1.join_codes.GenerateOrganizationJoinCodeResponse.InvalidExpirationError,
     ) : skirout.organization.v1.join_codes.GenerateOrganizationJoinCodeResponse() {
@@ -1458,6 +1461,7 @@ sealed class GenerateOrganizationJoinCodeResponse private constructor() {
         }
     }
 
+    /** Record IDs from an unexpected table. */
     class InvalidRecordIdErrorWrapper private constructor (
         val value: skirout.kernel.v1.errors.InvalidRecordIdError,
     ) : skirout.organization.v1.join_codes.GenerateOrganizationJoinCodeResponse() {
@@ -2293,6 +2297,7 @@ sealed class RevokeOrganizationJoinCodeResponse private constructor() {
         }
     }
 
+    /** Join code not found. */
     class CodeNotFoundErrorWrapper private constructor (
         val value: skirout.organization.v1.join_codes.RevokeOrganizationJoinCodeResponse.CodeNotFoundError,
     ) : skirout.organization.v1.join_codes.RevokeOrganizationJoinCodeResponse() {
@@ -2311,6 +2316,7 @@ sealed class RevokeOrganizationJoinCodeResponse private constructor() {
         }
     }
 
+    /** Record IDs from an unexpected table. */
     class InvalidRecordIdErrorWrapper private constructor (
         val value: skirout.kernel.v1.errors.InvalidRecordIdError,
     ) : skirout.organization.v1.join_codes.RevokeOrganizationJoinCodeResponse() {
@@ -3009,7 +3015,7 @@ private object _SerializerRegistry {
             "roles_not_found_error",
             skirout.organization.v1.join_codes.GenerateOrganizationJoinCodeResponse.Kind.ROLES_NOT_FOUND_ERROR_WRAPPER.ordinal,
             _SerializerRegistry.GenerateOrganizationJoinCodeResponse_RolesNotFoundErrorSerializer,
-            "",
+            "Roles not found.",
             { skirout.organization.v1.join_codes.GenerateOrganizationJoinCodeResponse.RolesNotFoundErrorWrapper(it) },
             { it.value },
         );
@@ -3018,7 +3024,7 @@ private object _SerializerRegistry {
             "roles_not_assignable_error",
             skirout.organization.v1.join_codes.GenerateOrganizationJoinCodeResponse.Kind.ROLES_NOT_ASSIGNABLE_ERROR_WRAPPER.ordinal,
             _SerializerRegistry.GenerateOrganizationJoinCodeResponse_RolesNotAssignableErrorSerializer,
-            "",
+            "Roles not assignable.",
             { skirout.organization.v1.join_codes.GenerateOrganizationJoinCodeResponse.RolesNotAssignableErrorWrapper(it) },
             { it.value },
         );
@@ -3027,7 +3033,7 @@ private object _SerializerRegistry {
             "invalid_expiration_error",
             skirout.organization.v1.join_codes.GenerateOrganizationJoinCodeResponse.Kind.INVALID_EXPIRATION_ERROR_WRAPPER.ordinal,
             _SerializerRegistry.GenerateOrganizationJoinCodeResponse_InvalidExpirationErrorSerializer,
-            "",
+            "Invalid expiration duration.",
             { skirout.organization.v1.join_codes.GenerateOrganizationJoinCodeResponse.InvalidExpirationErrorWrapper(it) },
             { it.value },
         );
@@ -3036,7 +3042,7 @@ private object _SerializerRegistry {
             "invalid_record_id_error",
             skirout.organization.v1.join_codes.GenerateOrganizationJoinCodeResponse.Kind.INVALID_RECORD_ID_ERROR_WRAPPER.ordinal,
             skirout.kernel.v1.errors.InvalidRecordIdError.serializer,
-            "",
+            "Record IDs from an unexpected table.",
             { skirout.organization.v1.join_codes.GenerateOrganizationJoinCodeResponse.InvalidRecordIdErrorWrapper(it) },
             { it.value },
         );
@@ -3259,7 +3265,7 @@ private object _SerializerRegistry {
             "code_not_found_error",
             skirout.organization.v1.join_codes.RevokeOrganizationJoinCodeResponse.Kind.CODE_NOT_FOUND_ERROR_WRAPPER.ordinal,
             _SerializerRegistry.RevokeOrganizationJoinCodeResponse_CodeNotFoundErrorSerializer,
-            "",
+            "Join code not found.",
             { skirout.organization.v1.join_codes.RevokeOrganizationJoinCodeResponse.CodeNotFoundErrorWrapper(it) },
             { it.value },
         );
@@ -3268,7 +3274,7 @@ private object _SerializerRegistry {
             "invalid_record_id_error",
             skirout.organization.v1.join_codes.RevokeOrganizationJoinCodeResponse.Kind.INVALID_RECORD_ID_ERROR_WRAPPER.ordinal,
             skirout.kernel.v1.errors.InvalidRecordIdError.serializer,
-            "",
+            "Record IDs from an unexpected table.",
             { skirout.organization.v1.join_codes.RevokeOrganizationJoinCodeResponse.InvalidRecordIdErrorWrapper(it) },
             { it.value },
         );

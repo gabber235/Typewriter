@@ -1080,7 +1080,7 @@ sealed class RealmPresentationSearchStatus private constructor() {
         UNKNOWN,
         LOADING_CONST,
         READY_CONST,
-        ERROR_CONST,
+        SEARCH_FAILED_ERROR_CONST,
     }
 
     class Unknown @kotlin.Deprecated("For internal use", kotlin.ReplaceWith("skirout.editor.v1.search.RealmPresentationSearchStatus.UNKNOWN")) internal constructor(
@@ -1122,15 +1122,15 @@ sealed class RealmPresentationSearchStatus private constructor() {
         }
     }
 
-    object ERROR : skirout.editor.v1.search.RealmPresentationSearchStatus() {
-        override val kind get() = Kind.ERROR_CONST;
+    object SEARCH_FAILED_ERROR : skirout.editor.v1.search.RealmPresentationSearchStatus() {
+        override val kind get() = Kind.SEARCH_FAILED_ERROR_CONST;
 
         override fun equals(other: kotlin.Any?): kotlin.Boolean {
-            return other is skirout.editor.v1.search.RealmPresentationSearchStatus && other.kind == Kind.ERROR_CONST;
+            return other is skirout.editor.v1.search.RealmPresentationSearchStatus && other.kind == Kind.SEARCH_FAILED_ERROR_CONST;
         }
 
         override fun hashCode(): kotlin.Int {
-            return Kind.ERROR_CONST.ordinal;
+            return Kind.SEARCH_FAILED_ERROR_CONST.ordinal;
         }
     }
 
@@ -1172,7 +1172,8 @@ sealed interface RealmPresentationSearchSnapshot_OrMutable {
 
 /**
  * Complete values accumulated for this subscription so far, not an incremental append batch.
- * loading allows further snapshots; ready marks producer completion; error carries diagnostics.
+ * loading allows further snapshots; ready marks producer completion; search_failed_error carries
+ * diagnostics.
  *
  * Deeply immutable.
  */
@@ -1528,8 +1529,9 @@ sealed class RealmPresentationSearchUpdate private constructor() {
     enum class Kind {
         UNKNOWN,
         SNAPSHOT_WRAPPER,
-        UNAVAILABLE_WRAPPER,
-        STALE_OBSERVATION_WRAPPER,
+        UNAVAILABLE_ERROR_WRAPPER,
+        STALE_OBSERVATION_ERROR_WRAPPER,
+        INTERNAL_ERROR_WRAPPER,
     }
 
     class Unknown @kotlin.Deprecated("For internal use", kotlin.ReplaceWith("skirout.editor.v1.search.RealmPresentationSearchUpdate.UNKNOWN")) internal constructor(
@@ -1565,39 +1567,57 @@ sealed class RealmPresentationSearchUpdate private constructor() {
         }
     }
 
-    class UnavailableWrapper private constructor (
+    class UnavailableErrorWrapper private constructor (
         val value: skirout.editor.v1.search.RealmPresentationSearchUnavailable,
     ) : skirout.editor.v1.search.RealmPresentationSearchUpdate() {
         constructor(
             value: skirout.editor.v1.search.RealmPresentationSearchUnavailable_OrMutable,
         ): this(value.toFrozen()) {}
 
-        override val kind get() = Kind.UNAVAILABLE_WRAPPER;
+        override val kind get() = Kind.UNAVAILABLE_ERROR_WRAPPER;
 
         override fun equals(other: kotlin.Any?): kotlin.Boolean {
-            return other is skirout.editor.v1.search.RealmPresentationSearchUpdate.UnavailableWrapper && value == other.value;
+            return other is skirout.editor.v1.search.RealmPresentationSearchUpdate.UnavailableErrorWrapper && value == other.value;
         }
 
         override fun hashCode(): kotlin.Int {
-            return this.value.hashCode() + -665462704;
+            return this.value.hashCode() + -160984743;
         }
     }
 
-    class StaleObservationWrapper private constructor (
-        val value: skirout.editor.v1.search.RealmPresentationSearchUpdate.StaleObservation,
+    class StaleObservationErrorWrapper private constructor (
+        val value: skirout.editor.v1.search.RealmPresentationSearchUpdate.StaleObservationError,
     ) : skirout.editor.v1.search.RealmPresentationSearchUpdate() {
         constructor(
-            value: skirout.editor.v1.search.RealmPresentationSearchUpdate.StaleObservation_OrMutable,
+            value: skirout.editor.v1.search.RealmPresentationSearchUpdate.StaleObservationError_OrMutable,
         ): this(value.toFrozen()) {}
 
-        override val kind get() = Kind.STALE_OBSERVATION_WRAPPER;
+        override val kind get() = Kind.STALE_OBSERVATION_ERROR_WRAPPER;
 
         override fun equals(other: kotlin.Any?): kotlin.Boolean {
-            return other is skirout.editor.v1.search.RealmPresentationSearchUpdate.StaleObservationWrapper && value == other.value;
+            return other is skirout.editor.v1.search.RealmPresentationSearchUpdate.StaleObservationErrorWrapper && value == other.value;
         }
 
         override fun hashCode(): kotlin.Int {
-            return this.value.hashCode() + -1006347130;
+            return this.value.hashCode() + -961309425;
+        }
+    }
+
+    class InternalErrorWrapper private constructor (
+        val value: skirout.kernel.v1.errors.InternalError,
+    ) : skirout.editor.v1.search.RealmPresentationSearchUpdate() {
+        constructor(
+            value: skirout.kernel.v1.errors.InternalError_OrMutable,
+        ): this(value.toFrozen()) {}
+
+        override val kind get() = Kind.INTERNAL_ERROR_WRAPPER;
+
+        override fun equals(other: kotlin.Any?): kotlin.Boolean {
+            return other is skirout.editor.v1.search.RealmPresentationSearchUpdate.InternalErrorWrapper && value == other.value;
+        }
+
+        override fun hashCode(): kotlin.Int {
+            return this.value.hashCode() + 778975750;
         }
     }
 
@@ -1639,32 +1659,41 @@ sealed class RealmPresentationSearchUpdate private constructor() {
             )
         );
 
-        /** Shortcut for `UnavailableWrapper(skirout.editor.v1.search.RealmPresentationSearchUnavailable(...))`. */
+        /** Shortcut for `UnavailableErrorWrapper(skirout.editor.v1.search.RealmPresentationSearchUnavailable(...))`. */
         @kotlin.Suppress("UNUSED_PARAMETER")
-        fun createUnavailable(
+        fun createUnavailableError(
             _mustNameArguments: _MustNameArguments =
                 _MustNameArguments,
             subscriptionId: kotlin.String,
             diagnostics: kotlin.collections.Iterable<skirout.editor.v1.diagnostic.Diagnostic_OrMutable>,
-        ) = UnavailableWrapper(
+        ) = UnavailableErrorWrapper(
             skirout.editor.v1.search.RealmPresentationSearchUnavailable(
                 subscriptionId = subscriptionId,
                 diagnostics = diagnostics,
             )
         );
 
-        /** Shortcut for `StaleObservationWrapper(skirout.editor.v1.search.RealmPresentationSearchUpdate.StaleObservation(...))`. */
+        /** Shortcut for `StaleObservationErrorWrapper(skirout.editor.v1.search.RealmPresentationSearchUpdate.StaleObservationError(...))`. */
         @kotlin.Suppress("UNUSED_PARAMETER")
-        fun createStaleObservation(
+        fun createStaleObservationError(
             _mustNameArguments: _MustNameArguments =
                 _MustNameArguments,
             subscriptionId: kotlin.String,
             observation: skirout.editor.v1.resource_operations.StaleAuthoringObservation_OrMutable,
-        ) = StaleObservationWrapper(
-            skirout.editor.v1.search.RealmPresentationSearchUpdate.StaleObservation(
+        ) = StaleObservationErrorWrapper(
+            skirout.editor.v1.search.RealmPresentationSearchUpdate.StaleObservationError(
                 subscriptionId = subscriptionId,
                 observation = observation,
             )
+        );
+
+        /** Shortcut for `InternalErrorWrapper(skirout.kernel.v1.errors.InternalError(...))`. */
+        @kotlin.Suppress("UNUSED_PARAMETER")
+        fun createInternalError(
+            _mustNameArguments: _MustNameArguments =
+                _MustNameArguments,
+        ) = InternalErrorWrapper(
+            skirout.kernel.v1.errors.InternalError()
         );
 
         /** Serializer for [RealmPresentationSearchUpdate] instances. */
@@ -1674,27 +1703,27 @@ sealed class RealmPresentationSearchUpdate private constructor() {
         val typeDescriptor get() = _SerializerRegistry.RealmPresentationSearchUpdateSerializerImpl.typeDescriptor;
     }
 
-    sealed interface StaleObservation_OrMutable {
+    sealed interface StaleObservationError_OrMutable {
         val subscriptionId: kotlin.String;
         val observation: skirout.editor.v1.resource_operations.StaleAuthoringObservation_OrMutable;
 
-        fun toFrozen(): skirout.editor.v1.search.RealmPresentationSearchUpdate.StaleObservation;
+        fun toFrozen(): skirout.editor.v1.search.RealmPresentationSearchUpdate.StaleObservationError;
     }
 
     /** Deeply immutable. */
     @kotlin.Suppress("UNUSED_PARAMETER")
-    class StaleObservation private constructor(
+    class StaleObservationError private constructor(
         override val subscriptionId: kotlin.String,
         override val observation: skirout.editor.v1.resource_operations.StaleAuthoringObservation,
-        internal val _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.search.RealmPresentationSearchUpdate.StaleObservation>? =
+        internal val _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.search.RealmPresentationSearchUpdate.StaleObservationError>? =
             null,
-    ): skirout.editor.v1.search.RealmPresentationSearchUpdate.StaleObservation_OrMutable {
+    ): skirout.editor.v1.search.RealmPresentationSearchUpdate.StaleObservationError_OrMutable {
         constructor(
             _mustNameArguments: _MustNameArguments =
                 _MustNameArguments,
             subscriptionId: kotlin.String,
             observation: skirout.editor.v1.resource_operations.StaleAuthoringObservation_OrMutable,
-            _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.search.RealmPresentationSearchUpdate.StaleObservation>? =
+            _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.search.RealmPresentationSearchUpdate.StaleObservationError>? =
                 null,
         ): this(
             subscriptionId,
@@ -1719,7 +1748,7 @@ sealed class RealmPresentationSearchUpdate private constructor() {
                 this.subscriptionId,
             observation: skirout.editor.v1.resource_operations.StaleAuthoringObservation_OrMutable =
                 this.observation,
-        ) = skirout.editor.v1.search.RealmPresentationSearchUpdate.StaleObservation(
+        ) = skirout.editor.v1.search.RealmPresentationSearchUpdate.StaleObservationError(
             subscriptionId,
             observation.toFrozen(),
             this._unrecognizedFields,
@@ -1729,7 +1758,7 @@ sealed class RealmPresentationSearchUpdate private constructor() {
         fun copy() = this;
 
         override fun equals(other: kotlin.Any?): kotlin.Boolean {
-            return this === other || (other is skirout.editor.v1.search.RealmPresentationSearchUpdate.StaleObservation && this.subscriptionId == other.subscriptionId && this.observation == other.observation);
+            return this === other || (other is skirout.editor.v1.search.RealmPresentationSearchUpdate.StaleObservationError && this.subscriptionId == other.subscriptionId && this.observation == other.observation);
         }
 
         override fun hashCode(): kotlin.Int {
@@ -1739,11 +1768,11 @@ sealed class RealmPresentationSearchUpdate private constructor() {
         override fun toString(): kotlin.String {
             return build.skir.internal.toStringImpl(
                 this,
-                _SerializerRegistry.RealmPresentationSearchUpdate_StaleObservationSerializerImpl,
+                _SerializerRegistry.RealmPresentationSearchUpdate_StaleObservationErrorSerializerImpl,
             )
         }
 
-        /** Mutable version of [StaleObservation]. */
+        /** Mutable version of [StaleObservationError]. */
         class Mutable internal constructor(
             _mustNameArguments: _MustNameArguments =
                 _MustNameArguments,
@@ -1751,11 +1780,11 @@ sealed class RealmPresentationSearchUpdate private constructor() {
                 "",
             override var observation: skirout.editor.v1.resource_operations.StaleAuthoringObservation_OrMutable =
                 skirout.editor.v1.resource_operations.StaleAuthoringObservation.partial(),
-            internal var _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.search.RealmPresentationSearchUpdate.StaleObservation>? =
+            internal var _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.search.RealmPresentationSearchUpdate.StaleObservationError>? =
                 null,
-        ): skirout.editor.v1.search.RealmPresentationSearchUpdate.StaleObservation_OrMutable {
+        ): skirout.editor.v1.search.RealmPresentationSearchUpdate.StaleObservationError_OrMutable {
             /** Returns a deeply immutable copy of this instance */
-            override fun toFrozen() = skirout.editor.v1.search.RealmPresentationSearchUpdate.StaleObservation(
+            override fun toFrozen() = skirout.editor.v1.search.RealmPresentationSearchUpdate.StaleObservationError(
                 subscriptionId = this.subscriptionId,
                 observation = this.observation,
                 _unrecognizedFields = this._unrecognizedFields,
@@ -1780,7 +1809,7 @@ sealed class RealmPresentationSearchUpdate private constructor() {
 
         companion object {
             private val default =
-                skirout.editor.v1.search.RealmPresentationSearchUpdate.StaleObservation(
+                skirout.editor.v1.search.RealmPresentationSearchUpdate.StaleObservationError(
                     "",
                     skirout.editor.v1.resource_operations.StaleAuthoringObservation.partial(),
                 );
@@ -1789,7 +1818,7 @@ sealed class RealmPresentationSearchUpdate private constructor() {
             fun partial() = default;
 
             /**
-             * Creates a new instance of [StaleObservation].
+             * Creates a new instance of [StaleObservationError].
              * Unlike the constructor, does not require all fields to be specified.
              * Missing fields will be set to their default values.
              */
@@ -1800,17 +1829,17 @@ sealed class RealmPresentationSearchUpdate private constructor() {
                     "",
                 observation: skirout.editor.v1.resource_operations.StaleAuthoringObservation_OrMutable =
                     skirout.editor.v1.resource_operations.StaleAuthoringObservation.partial(),
-            ) = skirout.editor.v1.search.RealmPresentationSearchUpdate.StaleObservation(
+            ) = skirout.editor.v1.search.RealmPresentationSearchUpdate.StaleObservationError(
                 subscriptionId = subscriptionId,
                 observation = observation,
                 _unrecognizedFields = null,
             );
 
-            /** Serializer for [StaleObservation] instances. */
-            val serializer get() = _SerializerRegistry.RealmPresentationSearchUpdate_StaleObservationSerializer;
+            /** Serializer for [StaleObservationError] instances. */
+            val serializer get() = _SerializerRegistry.RealmPresentationSearchUpdate_StaleObservationErrorSerializer;
 
-            /** Describes the [StaleObservation] type. Provides runtime introspection capabilities. */
-            val typeDescriptor get() = _SerializerRegistry.RealmPresentationSearchUpdate_StaleObservationSerializerImpl.typeDescriptor;
+            /** Describes the [StaleObservationError] type. Provides runtime introspection capabilities. */
+            val typeDescriptor get() = _SerializerRegistry.RealmPresentationSearchUpdate_StaleObservationErrorSerializerImpl.typeDescriptor;
         }
     }
 }
@@ -1930,8 +1959,8 @@ sealed class CancelRealmPresentationSearchResult private constructor() {
     enum class Kind {
         UNKNOWN,
         CANCELED_CONST,
-        NOT_FOUND_CONST,
-        UNAVAILABLE_CONST,
+        NOT_FOUND_ERROR_CONST,
+        INTERNAL_ERROR_WRAPPER,
     }
 
     class Unknown @kotlin.Deprecated("For internal use", kotlin.ReplaceWith("skirout.editor.v1.search.CancelRealmPresentationSearchResult.UNKNOWN")) internal constructor(
@@ -1961,27 +1990,33 @@ sealed class CancelRealmPresentationSearchResult private constructor() {
         }
     }
 
-    object NOT_FOUND : skirout.editor.v1.search.CancelRealmPresentationSearchResult() {
-        override val kind get() = Kind.NOT_FOUND_CONST;
+    object NOT_FOUND_ERROR : skirout.editor.v1.search.CancelRealmPresentationSearchResult() {
+        override val kind get() = Kind.NOT_FOUND_ERROR_CONST;
 
         override fun equals(other: kotlin.Any?): kotlin.Boolean {
-            return other is skirout.editor.v1.search.CancelRealmPresentationSearchResult && other.kind == Kind.NOT_FOUND_CONST;
+            return other is skirout.editor.v1.search.CancelRealmPresentationSearchResult && other.kind == Kind.NOT_FOUND_ERROR_CONST;
         }
 
         override fun hashCode(): kotlin.Int {
-            return Kind.NOT_FOUND_CONST.ordinal;
+            return Kind.NOT_FOUND_ERROR_CONST.ordinal;
         }
     }
 
-    object UNAVAILABLE : skirout.editor.v1.search.CancelRealmPresentationSearchResult() {
-        override val kind get() = Kind.UNAVAILABLE_CONST;
+    class InternalErrorWrapper private constructor (
+        val value: skirout.kernel.v1.errors.InternalError,
+    ) : skirout.editor.v1.search.CancelRealmPresentationSearchResult() {
+        constructor(
+            value: skirout.kernel.v1.errors.InternalError_OrMutable,
+        ): this(value.toFrozen()) {}
+
+        override val kind get() = Kind.INTERNAL_ERROR_WRAPPER;
 
         override fun equals(other: kotlin.Any?): kotlin.Boolean {
-            return other is skirout.editor.v1.search.CancelRealmPresentationSearchResult && other.kind == Kind.UNAVAILABLE_CONST;
+            return other is skirout.editor.v1.search.CancelRealmPresentationSearchResult.InternalErrorWrapper && value == other.value;
         }
 
         override fun hashCode(): kotlin.Int {
-            return Kind.UNAVAILABLE_CONST.ordinal;
+            return this.value.hashCode() + 778975750;
         }
     }
 
@@ -2002,6 +2037,15 @@ sealed class CancelRealmPresentationSearchResult private constructor() {
          * Default value for fields of type [CancelRealmPresentationSearchResult].
          */
         val UNKNOWN = @kotlin.Suppress("DEPRECATION") Unknown(Kind.UNKNOWN, null);
+
+        /** Shortcut for `InternalErrorWrapper(skirout.kernel.v1.errors.InternalError(...))`. */
+        @kotlin.Suppress("UNUSED_PARAMETER")
+        fun createInternalError(
+            _mustNameArguments: _MustNameArguments =
+                _MustNameArguments,
+        ) = InternalErrorWrapper(
+            skirout.kernel.v1.errors.InternalError()
+        );
 
         /** Serializer for [CancelRealmPresentationSearchResult] instances. */
         val serializer get() = _SerializerRegistry.CancelRealmPresentationSearchResultSerializer;
@@ -2024,7 +2068,10 @@ val WatchRealmPresentationSearch: build.skir.service.Method<
     )
 }
 
-/** Requests cancellation of a source owned search job. not_found also covers work already retired. */
+/**
+ * Requests cancellation of a source owned search job. not_found_error also covers work already
+ * retired.
+ */
 val CancelRealmPresentationSearch: build.skir.service.Method<
     skirout.editor.v1.search.CancelRealmPresentationSearchRequest,
     skirout.editor.v1.search.CancelRealmPresentationSearchResult,
@@ -2034,7 +2081,7 @@ val CancelRealmPresentationSearch: build.skir.service.Method<
         920007,
         skirout.editor.v1.search.CancelRealmPresentationSearchRequest.serializer,
         skirout.editor.v1.search.CancelRealmPresentationSearchResult.serializer,
-        "Requests cancellation of a source owned search job. not_found also covers work already retired.",
+        "Requests cancellation of a source owned search job. not_found_error also covers work already\nretired.",
     )
 }
 
@@ -2078,7 +2125,7 @@ private object _SerializerRegistry {
 
     val RealmPresentationSearchSnapshotSerializerImpl = build.skir.internal.StructSerializer(
         recordId = "editor/v1/search.skir:RealmPresentationSearchSnapshot",
-        doc = "Complete values accumulated for this subscription so far, not an incremental append batch.\nloading allows further snapshots; ready marks producer completion; error carries diagnostics.",
+        doc = "Complete values accumulated for this subscription so far, not an incremental append batch.\nloading allows further snapshots; ready marks producer completion; search_failed_error carries\ndiagnostics.",
         defaultInstance = skirout.editor.v1.search.RealmPresentationSearchSnapshot.partial(),
         newMutableFn = { it?.toMutable() ?: skirout.editor.v1.search.RealmPresentationSearchSnapshot.Mutable() },
         toFrozenFn = { it.toFrozen() },
@@ -2126,17 +2173,17 @@ private object _SerializerRegistry {
 
     val RealmPresentationSearchUpdateSerializer = build.skir.internal.makeSerializer(RealmPresentationSearchUpdateSerializerImpl);
 
-    val RealmPresentationSearchUpdate_StaleObservationSerializerImpl = build.skir.internal.StructSerializer(
-        recordId = "editor/v1/search.skir:RealmPresentationSearchUpdate.StaleObservation",
+    val RealmPresentationSearchUpdate_StaleObservationErrorSerializerImpl = build.skir.internal.StructSerializer(
+        recordId = "editor/v1/search.skir:RealmPresentationSearchUpdate.StaleObservationError",
         doc = "",
-        defaultInstance = skirout.editor.v1.search.RealmPresentationSearchUpdate.StaleObservation.partial(),
-        newMutableFn = { it?.toMutable() ?: skirout.editor.v1.search.RealmPresentationSearchUpdate.StaleObservation.Mutable() },
+        defaultInstance = skirout.editor.v1.search.RealmPresentationSearchUpdate.StaleObservationError.partial(),
+        newMutableFn = { it?.toMutable() ?: skirout.editor.v1.search.RealmPresentationSearchUpdate.StaleObservationError.Mutable() },
         toFrozenFn = { it.toFrozen() },
         getUnrecognizedFields = { it._unrecognizedFields },
         setUnrecognizedFields = { m, u -> m._unrecognizedFields = u },
     );
 
-    val RealmPresentationSearchUpdate_StaleObservationSerializer = build.skir.internal.makeSerializer(RealmPresentationSearchUpdate_StaleObservationSerializerImpl);
+    val RealmPresentationSearchUpdate_StaleObservationErrorSerializer = build.skir.internal.makeSerializer(RealmPresentationSearchUpdate_StaleObservationErrorSerializerImpl);
 
     val RealmSearchQuerySerializerImpl = build.skir.internal.StructSerializer(
         recordId = "editor/v1/search.skir:RealmSearchQuery",
@@ -2233,17 +2280,19 @@ private object _SerializerRegistry {
         );
         CancelRealmPresentationSearchResultSerializerImpl.addConstantVariant(
             2,
-            "not_found",
-            skirout.editor.v1.search.CancelRealmPresentationSearchResult.Kind.NOT_FOUND_CONST.ordinal,
+            "not_found_error",
+            skirout.editor.v1.search.CancelRealmPresentationSearchResult.Kind.NOT_FOUND_ERROR_CONST.ordinal,
             "",
-            skirout.editor.v1.search.CancelRealmPresentationSearchResult.NOT_FOUND,
+            skirout.editor.v1.search.CancelRealmPresentationSearchResult.NOT_FOUND_ERROR,
         );
-        CancelRealmPresentationSearchResultSerializerImpl.addConstantVariant(
+        CancelRealmPresentationSearchResultSerializerImpl.addWrapperVariant(
             3,
-            "unavailable",
-            skirout.editor.v1.search.CancelRealmPresentationSearchResult.Kind.UNAVAILABLE_CONST.ordinal,
+            "internal_error",
+            skirout.editor.v1.search.CancelRealmPresentationSearchResult.Kind.INTERNAL_ERROR_WRAPPER.ordinal,
+            skirout.kernel.v1.errors.InternalError.serializer,
             "",
-            skirout.editor.v1.search.CancelRealmPresentationSearchResult.UNAVAILABLE,
+            { skirout.editor.v1.search.CancelRealmPresentationSearchResult.InternalErrorWrapper(it) },
+            { it.value },
         );
         CancelRealmPresentationSearchResultSerializerImpl.finalizeEnum();
 
@@ -2383,10 +2432,10 @@ private object _SerializerRegistry {
         );
         RealmPresentationSearchStatusSerializerImpl.addConstantVariant(
             3,
-            "error",
-            skirout.editor.v1.search.RealmPresentationSearchStatus.Kind.ERROR_CONST.ordinal,
+            "search_failed_error",
+            skirout.editor.v1.search.RealmPresentationSearchStatus.Kind.SEARCH_FAILED_ERROR_CONST.ordinal,
             "",
-            skirout.editor.v1.search.RealmPresentationSearchStatus.ERROR,
+            skirout.editor.v1.search.RealmPresentationSearchStatus.SEARCH_FAILED_ERROR,
         );
         RealmPresentationSearchStatusSerializerImpl.finalizeEnum();
 
@@ -2423,25 +2472,34 @@ private object _SerializerRegistry {
         );
         RealmPresentationSearchUpdateSerializerImpl.addWrapperVariant(
             2,
-            "unavailable",
-            skirout.editor.v1.search.RealmPresentationSearchUpdate.Kind.UNAVAILABLE_WRAPPER.ordinal,
+            "unavailable_error",
+            skirout.editor.v1.search.RealmPresentationSearchUpdate.Kind.UNAVAILABLE_ERROR_WRAPPER.ordinal,
             _SerializerRegistry.RealmPresentationSearchUnavailableSerializer,
             "",
-            { skirout.editor.v1.search.RealmPresentationSearchUpdate.UnavailableWrapper(it) },
+            { skirout.editor.v1.search.RealmPresentationSearchUpdate.UnavailableErrorWrapper(it) },
             { it.value },
         );
         RealmPresentationSearchUpdateSerializerImpl.addWrapperVariant(
             3,
-            "stale_observation",
-            skirout.editor.v1.search.RealmPresentationSearchUpdate.Kind.STALE_OBSERVATION_WRAPPER.ordinal,
-            _SerializerRegistry.RealmPresentationSearchUpdate_StaleObservationSerializer,
+            "stale_observation_error",
+            skirout.editor.v1.search.RealmPresentationSearchUpdate.Kind.STALE_OBSERVATION_ERROR_WRAPPER.ordinal,
+            _SerializerRegistry.RealmPresentationSearchUpdate_StaleObservationErrorSerializer,
             "",
-            { skirout.editor.v1.search.RealmPresentationSearchUpdate.StaleObservationWrapper(it) },
+            { skirout.editor.v1.search.RealmPresentationSearchUpdate.StaleObservationErrorWrapper(it) },
+            { it.value },
+        );
+        RealmPresentationSearchUpdateSerializerImpl.addWrapperVariant(
+            4,
+            "internal_error",
+            skirout.editor.v1.search.RealmPresentationSearchUpdate.Kind.INTERNAL_ERROR_WRAPPER.ordinal,
+            skirout.kernel.v1.errors.InternalError.serializer,
+            "",
+            { skirout.editor.v1.search.RealmPresentationSearchUpdate.InternalErrorWrapper(it) },
             { it.value },
         );
         RealmPresentationSearchUpdateSerializerImpl.finalizeEnum();
 
-        RealmPresentationSearchUpdate_StaleObservationSerializerImpl.addField(
+        RealmPresentationSearchUpdate_StaleObservationErrorSerializerImpl.addField(
             "subscription_id",
             "subscriptionId",
             0,
@@ -2450,7 +2508,7 @@ private object _SerializerRegistry {
             { it.subscriptionId },
             { mut, v -> mut.subscriptionId = v },
         );
-        RealmPresentationSearchUpdate_StaleObservationSerializerImpl.addField(
+        RealmPresentationSearchUpdate_StaleObservationErrorSerializerImpl.addField(
             "observation",
             "observation",
             1,
@@ -2459,7 +2517,7 @@ private object _SerializerRegistry {
             { it.observation },
             { mut, v -> mut.observation = v },
         );
-        RealmPresentationSearchUpdate_StaleObservationSerializerImpl.finalizeStruct();
+        RealmPresentationSearchUpdate_StaleObservationErrorSerializerImpl.finalizeStruct();
 
         RealmSearchQuerySerializerImpl.addField(
             "normalized_query",

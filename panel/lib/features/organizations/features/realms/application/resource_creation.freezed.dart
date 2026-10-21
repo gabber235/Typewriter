@@ -857,7 +857,7 @@ as Set<skir.TypeDefinitionId>,
 /// @nodoc
 mixin _$PendingCreation {
 
- ResourceCreationRequest get request; CreationContext get context; skir.PreparationStep get step;
+ ResourceCreationRequest get request; CreationContext get context; skir.PrepareValueResult get step;
 /// Create a copy of _PendingCreation
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -893,7 +893,7 @@ abstract mixin class _$PendingCreationCopyWith<$Res>  {
   factory _$PendingCreationCopyWith(_PendingCreation value, $Res Function(_PendingCreation) _then) = __$PendingCreationCopyWithImpl;
 @useResult
 $Res call({
- ResourceCreationRequest request, CreationContext context, skir.PreparationStep step
+ ResourceCreationRequest request, CreationContext context, skir.PrepareValueResult step
 });
 
 
@@ -915,7 +915,7 @@ class __$PendingCreationCopyWithImpl<$Res>
 request: null == request ? _self.request : request // ignore: cast_nullable_to_non_nullable
 as ResourceCreationRequest,context: null == context ? _self.context : context // ignore: cast_nullable_to_non_nullable
 as CreationContext,step: null == step ? _self.step : step // ignore: cast_nullable_to_non_nullable
-as skir.PreparationStep,
+as skir.PrepareValueResult,
   ));
 }
 /// Create a copy of _PendingCreation
@@ -1018,7 +1018,7 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( ResourceCreationRequest request,  CreationContext context,  skir.PreparationStep step)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( ResourceCreationRequest request,  CreationContext context,  skir.PrepareValueResult step)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case __PendingCreation() when $default != null:
 return $default(_that.request,_that.context,_that.step);case _:
@@ -1039,7 +1039,7 @@ return $default(_that.request,_that.context,_that.step);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( ResourceCreationRequest request,  CreationContext context,  skir.PreparationStep step)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( ResourceCreationRequest request,  CreationContext context,  skir.PrepareValueResult step)  $default,) {final _that = this;
 switch (_that) {
 case __PendingCreation():
 return $default(_that.request,_that.context,_that.step);case _:
@@ -1059,7 +1059,7 @@ return $default(_that.request,_that.context,_that.step);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( ResourceCreationRequest request,  CreationContext context,  skir.PreparationStep step)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( ResourceCreationRequest request,  CreationContext context,  skir.PrepareValueResult step)?  $default,) {final _that = this;
 switch (_that) {
 case __PendingCreation() when $default != null:
 return $default(_that.request,_that.context,_that.step);case _:
@@ -1079,7 +1079,7 @@ class __PendingCreation implements _PendingCreation {
 
 @override final  ResourceCreationRequest request;
 @override final  CreationContext context;
-@override final  skir.PreparationStep step;
+@override final  skir.PrepareValueResult step;
 
 /// Create a copy of _PendingCreation
 /// with the given fields replaced by the non-null parameter values.
@@ -1113,7 +1113,7 @@ abstract mixin class _$_PendingCreationCopyWith<$Res> implements _$PendingCreati
   factory _$_PendingCreationCopyWith(__PendingCreation value, $Res Function(__PendingCreation) _then) = __$_PendingCreationCopyWithImpl;
 @override @useResult
 $Res call({
- ResourceCreationRequest request, CreationContext context, skir.PreparationStep step
+ ResourceCreationRequest request, CreationContext context, skir.PrepareValueResult step
 });
 
 
@@ -1135,7 +1135,7 @@ class __$_PendingCreationCopyWithImpl<$Res>
 request: null == request ? _self.request : request // ignore: cast_nullable_to_non_nullable
 as ResourceCreationRequest,context: null == context ? _self.context : context // ignore: cast_nullable_to_non_nullable
 as CreationContext,step: null == step ? _self.step : step // ignore: cast_nullable_to_non_nullable
-as skir.PreparationStep,
+as skir.PrepareValueResult,
   ));
 }
 

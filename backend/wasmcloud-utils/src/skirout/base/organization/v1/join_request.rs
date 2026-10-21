@@ -1045,12 +1045,19 @@ pub enum ApproveOrganizationJoinRequestsResponse {
     ),
     InternalError(Box<crate::skirout::base::kernel::v1::errors::InternalError>),
     Success(Box<ApproveOrganizationJoinRequestsResponse_Success>),
+    /// Join requests not found.
     RequestNotFoundError(Box<ApproveOrganizationJoinRequestsResponse_RequestNotFoundError>),
+    /// Roles not found.
     RolesNotFoundError(Box<ApproveOrganizationJoinRequestsResponse_RolesNotFoundError>),
+    /// Roles not assignable.
     RolesNotAssignableError(Box<ApproveOrganizationJoinRequestsResponse_RolesNotAssignableError>),
+    /// At least one role is required.
     RolesRequiredError(Box<ApproveOrganizationJoinRequestsResponse_RolesRequiredError>),
+    /// Users are already members.
     UserAlreadyMemberError(Box<ApproveOrganizationJoinRequestsResponse_UserAlreadyMemberError>),
+    /// Selection must contain distinct targets.
     InvalidSelectionError(Box<ApproveOrganizationJoinRequestsResponse_InvalidSelectionError>),
+    /// Record IDs from an unexpected table.
     InvalidRecordIdError(Box<crate::skirout::base::kernel::v1::errors::InvalidRecordIdError>),
 }
 
@@ -1261,7 +1268,9 @@ pub enum DeclineOrganizationJoinRequestResponse {
     ),
     InternalError(Box<crate::skirout::base::kernel::v1::errors::InternalError>),
     Success(Box<DeclineOrganizationJoinRequestResponse_Success>),
+    /// Join request not found.
     RequestNotFoundError(Box<DeclineOrganizationJoinRequestResponse_RequestNotFoundError>),
+    /// Record IDs from an unexpected table.
     InvalidRecordIdError(Box<crate::skirout::base::kernel::v1::errors::InvalidRecordIdError>),
 }
 
@@ -1887,7 +1896,7 @@ fn initialize_module_serializers() {
                 crate::skir_client::internal::struct_serializer_from_static(
                     ApproveOrganizationJoinRequestsResponse_RequestNotFoundError::_adapter(),
                 ),
-                "",
+                "Join requests not found.",
                 |v| ApproveOrganizationJoinRequestsResponse::RequestNotFoundError(Box::new(v)),
                 |x| match x {
                     ApproveOrganizationJoinRequestsResponse::RequestNotFoundError(b) => b.as_ref(),
@@ -1901,7 +1910,7 @@ fn initialize_module_serializers() {
                 crate::skir_client::internal::struct_serializer_from_static(
                     ApproveOrganizationJoinRequestsResponse_RolesNotFoundError::_adapter(),
                 ),
-                "",
+                "Roles not found.",
                 |v| ApproveOrganizationJoinRequestsResponse::RolesNotFoundError(Box::new(v)),
                 |x| match x {
                     ApproveOrganizationJoinRequestsResponse::RolesNotFoundError(b) => b.as_ref(),
@@ -1915,7 +1924,7 @@ fn initialize_module_serializers() {
                 crate::skir_client::internal::struct_serializer_from_static(
                     ApproveOrganizationJoinRequestsResponse_RolesNotAssignableError::_adapter(),
                 ),
-                "",
+                "Roles not assignable.",
                 |v| ApproveOrganizationJoinRequestsResponse::RolesNotAssignableError(Box::new(v)),
                 |x| match x {
                     ApproveOrganizationJoinRequestsResponse::RolesNotAssignableError(b) => {
@@ -1931,7 +1940,7 @@ fn initialize_module_serializers() {
                 crate::skir_client::internal::struct_serializer_from_static(
                     ApproveOrganizationJoinRequestsResponse_RolesRequiredError::_adapter(),
                 ),
-                "",
+                "At least one role is required.",
                 |v| ApproveOrganizationJoinRequestsResponse::RolesRequiredError(Box::new(v)),
                 |x| match x {
                     ApproveOrganizationJoinRequestsResponse::RolesRequiredError(b) => b.as_ref(),
@@ -1945,7 +1954,7 @@ fn initialize_module_serializers() {
                 crate::skir_client::internal::struct_serializer_from_static(
                     ApproveOrganizationJoinRequestsResponse_UserAlreadyMemberError::_adapter(),
                 ),
-                "",
+                "Users are already members.",
                 |v| ApproveOrganizationJoinRequestsResponse::UserAlreadyMemberError(Box::new(v)),
                 |x| match x {
                     ApproveOrganizationJoinRequestsResponse::UserAlreadyMemberError(b) => {
@@ -1961,7 +1970,7 @@ fn initialize_module_serializers() {
                 crate::skir_client::internal::struct_serializer_from_static(
                     ApproveOrganizationJoinRequestsResponse_InvalidSelectionError::_adapter(),
                 ),
-                "",
+                "Selection must contain distinct targets.",
                 |v| ApproveOrganizationJoinRequestsResponse::InvalidSelectionError(Box::new(v)),
                 |x| match x {
                     ApproveOrganizationJoinRequestsResponse::InvalidSelectionError(b) => b.as_ref(),
@@ -1973,7 +1982,7 @@ fn initialize_module_serializers() {
                 9,
                 9,
                 crate::skirout::base::kernel::v1::errors::InvalidRecordIdError::serializer(),
-                "",
+                "Record IDs from an unexpected table.",
                 |v| ApproveOrganizationJoinRequestsResponse::InvalidRecordIdError(Box::new(v)),
                 |x| match x {
                     ApproveOrganizationJoinRequestsResponse::InvalidRecordIdError(b) => b.as_ref(),
@@ -2066,7 +2075,7 @@ fn initialize_module_serializers() {
                 crate::skir_client::internal::struct_serializer_from_static(
                     DeclineOrganizationJoinRequestResponse_RequestNotFoundError::_adapter(),
                 ),
-                "",
+                "Join request not found.",
                 |v| DeclineOrganizationJoinRequestResponse::RequestNotFoundError(Box::new(v)),
                 |x| match x {
                     DeclineOrganizationJoinRequestResponse::RequestNotFoundError(b) => b.as_ref(),
@@ -2078,7 +2087,7 @@ fn initialize_module_serializers() {
                 4,
                 4,
                 crate::skirout::base::kernel::v1::errors::InvalidRecordIdError::serializer(),
-                "",
+                "Record IDs from an unexpected table.",
                 |v| DeclineOrganizationJoinRequestResponse::InvalidRecordIdError(Box::new(v)),
                 |x| match x {
                     DeclineOrganizationJoinRequestResponse::InvalidRecordIdError(b) => b.as_ref(),

@@ -193,7 +193,7 @@ void main() {
           catalog: fixture.catalog,
           preview: (next) async {
             requested = next;
-            return skir.TypePreviewResult.createReady(
+            return skir.PreviewTypeArgumentChangeResponse.createReady(
               resource: skir.ResourceId(value: "variable:1"),
               next: next,
               edit: skir.PreparedEdit(
@@ -270,7 +270,7 @@ void main() {
           catalog: fixture.catalog,
           preview: (next) async {
             requested = next;
-            return skir.TypePreviewResult.createReady(
+            return skir.PreviewTypeArgumentChangeResponse.createReady(
               resource: skir.ResourceId(value: "variable:1"),
               next: next,
               edit: skir.PreparedEdit(

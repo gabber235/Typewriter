@@ -320,7 +320,7 @@ class AuthoringMutationPlannerTest {
                     routes
                         .resolve(
                             wire,
-                        ).shouldBeInstanceOf<skirout.editor.v1.resource_operations.ResolveResourceOperationsResult.FailedWrapper>()
+                        ).shouldBeInstanceOf<skirout.editor.v1.resource_operations.ResolveResourceOperationsResult.FailedErrorWrapper>()
                 wireFailure.value.diagnostics
                     .single()
                     .message

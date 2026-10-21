@@ -17,8 +17,8 @@ use nats_jwt_rs::{
 use nkeys::KeyPair;
 use typewriter_component_test::prelude::SkirMessagingExpectationExt;
 use wasmcloud_utils::skir::base::access::v1::permission::{
-    EntityPermissionQualifier, EntityPermissionQualifier_User, GetEntityPermissionResponse,
-    Permission, Permissions, ResponsePermission,
+    EntityPermissionGrant, EntityPermissionQualifier, EntityPermissionQualifier_User,
+    GetEntityPermissionResponse, Permission, Permissions, ResponsePermission,
 };
 use wasmcloud_utils::skir::base::kernel::v1::duration::Duration as SkirDuration;
 
@@ -240,31 +240,32 @@ fn expect_jwks(context: &TestContext<AuthCallout>) -> anyhow::Result<()> {
 }
 
 fn expect_permissions(context: &TestContext<AuthCallout>) -> anyhow::Result<()> {
-    let permission_response = GetEntityPermissionResponse {
-        permissions: Permissions {
-            publish: Permission {
-                allow: vec!["cloud.to.user.panel_user.organization.watch".into()],
-                deny: vec!["private.>".into()],
-                _unrecognized: None,
-            },
-            subscribe: Permission {
-                allow: vec!["cloud.from.user.panel_user.organization.watch".into()],
-                deny: Vec::new(),
-                _unrecognized: None,
-            },
-            response: Some(ResponsePermission {
-                max_messages: Some(1),
-                ttl: Some(SkirDuration {
-                    milliseconds: 300_000,
+    let permission_response =
+        GetEntityPermissionResponse::Granted(Box::new(EntityPermissionGrant {
+            permissions: Permissions {
+                publish: Permission {
+                    allow: vec!["cloud.to.user.panel_user.organization.watch".into()],
+                    deny: vec!["private.>".into()],
+                    _unrecognized: None,
+                },
+                subscribe: Permission {
+                    allow: vec!["cloud.from.user.panel_user.organization.watch".into()],
+                    deny: Vec::new(),
+                    _unrecognized: None,
+                },
+                response: Some(ResponsePermission {
+                    max_messages: Some(1),
+                    ttl: Some(SkirDuration {
+                        milliseconds: 300_000,
+                        _unrecognized: None,
+                    }),
                     _unrecognized: None,
                 }),
                 _unrecognized: None,
-            }),
+            },
+            tags: vec!["user:panel_user".into()],
             _unrecognized: None,
-        },
-        tags: vec!["user:panel_user".into()],
-        _unrecognized: None,
-    };
+        }));
     context
         .messaging_mock()?
         .expect_request("auth.permissions.typewriter-panel")

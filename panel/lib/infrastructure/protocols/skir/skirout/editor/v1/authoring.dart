@@ -5083,383 +5083,6 @@ final class PreparedEditReady_mutable implements PreparedEditReady_orMutable {
 }
 
 // -----------------------------------------------------------------------------
-// enum PreparedEditResult
-// -----------------------------------------------------------------------------
-
-/// To switch on the variants:
-///   ```
-///   switch (e) {
-///     case PreparedEditResult_unknown(): { ... }
-///     case PreparedEditResult_prepared(:var value): { ... }
-///     case PreparedEditResult_needsInput(:var value): { ... }
-///     case PreparedEditResult_rejected(:var value): { ... }
-///   }
-///   ```
-///
-/// Deeply immutable.
-sealed class PreparedEditResult {
-  /// Constant indicating an unknown `PreparedEditResult`.
-  /// Default value for fields of type `PreparedEditResult`.
-  static const PreparedEditResult unknown =
-      PreparedEditResult_unknown._instance;
-
-  /// Create a 'prepared' variant wrapping around the given value.
-  factory PreparedEditResult.wrapPrepared(PreparedEditReady value) =>
-      PreparedEditResult_preparedWrapper._(value);
-
-  /// Same as `wrapPrepared(PreparedEditReady(...))`.
-  factory PreparedEditResult.createPrepared({
-    required PreparedEdit_orMutable edit,
-  }) => PreparedEditResult.wrapPrepared(PreparedEditReady(edit: edit));
-
-  /// Create a 'needs_input' variant wrapping around the given value.
-  factory PreparedEditResult.wrapNeedsInput(
-    _core.Iterable<_lib_editor_v1_type_catalog.ValueLocation> value,
-  ) => PreparedEditResult_needsInputWrapper._(value);
-
-  /// Create a 'rejected' variant wrapping around the given value.
-  factory PreparedEditResult.wrapRejected(
-    _core.Iterable<_lib_editor_v1_diagnostic.ValueProblem> value,
-  ) => PreparedEditResult_rejectedWrapper._(value);
-
-  /// Returns the kind of variant held by this PreparedEditResult.
-  PreparedEditResult_kind get kind;
-
-  /// Serializer for `PreparedEditResult` instances.
-  static _skir.EnumSerializer<PreparedEditResult> get serializer {
-    if (_serializerBuilder.mustInitialize()) {
-      _serializerBuilder.addWrapperVariant(
-        1,
-        "prepared",
-        "wrapPrepared",
-        PreparedEditReady.serializer,
-        "",
-        PreparedEditResult_preparedWrapper._,
-        (it) => it.value,
-        ordinal: PreparedEditResult_kind.preparedWrapper._ordinal,
-      );
-      _serializerBuilder.addWrapperVariant(
-        2,
-        "needs_input",
-        "wrapNeedsInput",
-        _skir.Serializers.iterable(
-          _lib_editor_v1_type_catalog.ValueLocation.serializer,
-        ),
-        "",
-        PreparedEditResult_needsInputWrapper._,
-        (it) => it.value,
-        ordinal: PreparedEditResult_kind.needsInputWrapper._ordinal,
-      );
-      _serializerBuilder.addWrapperVariant(
-        3,
-        "rejected",
-        "wrapRejected",
-        _skir.Serializers.iterable(
-          _lib_editor_v1_diagnostic.ValueProblem.serializer,
-        ),
-        "",
-        PreparedEditResult_rejectedWrapper._,
-        (it) => it.value,
-        ordinal: PreparedEditResult_kind.rejectedWrapper._ordinal,
-      );
-      _serializerBuilder.finalize();
-    }
-    return _serializerBuilder.serializer;
-  }
-
-  static final _serializerBuilder = _skir.internal__EnumSerializerBuilder
-      .create(
-        recordId: "editor/v1/authoring.skir:PreparedEditResult",
-        doc: "",
-        unknownInstance: PreparedEditResult_unknown._instance,
-        enumInstance: PreparedEditResult.unknown,
-        getOrdinal: (it) => it.kind._ordinal,
-        wrapUnrecognized: PreparedEditResult_unknown._unrecognized,
-        getUnrecognized: (it) => it._u,
-      );
-}
-
-/// The kind of variant held by a `PreparedEditResult`.
-enum PreparedEditResult_kind {
-  unknown(0),
-  preparedWrapper(1),
-  needsInputWrapper(2),
-  rejectedWrapper(3);
-
-  final _core.int _ordinal;
-
-  const PreparedEditResult_kind(this._ordinal);
-}
-
-final class PreparedEditResult_unknown implements PreparedEditResult {
-  static const _instance = PreparedEditResult_unknown._();
-
-  final _skir.internal__UnrecognizedVariant? _u;
-
-  const PreparedEditResult_unknown._() : _u = null;
-  PreparedEditResult_unknown._unrecognized(this._u);
-
-  @_core.override
-  PreparedEditResult_kind get kind => PreparedEditResult_kind.unknown;
-  @_core.override
-  _core.bool operator ==(other) => other is PreparedEditResult_unknown;
-  @_core.override
-  _core.int get hashCode => 8118964;
-  @_core.override
-  _core.String toString() =>
-      _skir.internal__stringify(this, PreparedEditResult.serializer);
-}
-
-sealed class _PreparedEditResult_wrapper implements PreparedEditResult {
-  _core.dynamic get value;
-
-  @_core.override
-  _core.bool operator ==(other) {
-    if (other is! _PreparedEditResult_wrapper) return false;
-    return kind == other.kind && value == other.value;
-  }
-
-  @_core.override
-  _core.int get hashCode => (kind._ordinal * 31) ^ value.hashCode;
-
-  @_core.override
-  _core.String toString() =>
-      _skir.internal__stringify(this, PreparedEditResult.serializer);
-}
-
-final class PreparedEditResult_preparedWrapper
-    extends _PreparedEditResult_wrapper {
-  final PreparedEditReady value;
-
-  PreparedEditResult_preparedWrapper._(this.value);
-
-  @_core.override
-  PreparedEditResult_kind get kind => PreparedEditResult_kind.preparedWrapper;
-}
-
-final class PreparedEditResult_needsInputWrapper
-    extends _PreparedEditResult_wrapper {
-  final _core.Iterable<_lib_editor_v1_type_catalog.ValueLocation> value;
-
-  PreparedEditResult_needsInputWrapper._(this.value);
-
-  @_core.override
-  PreparedEditResult_kind get kind => PreparedEditResult_kind.needsInputWrapper;
-}
-
-final class PreparedEditResult_rejectedWrapper
-    extends _PreparedEditResult_wrapper {
-  final _core.Iterable<_lib_editor_v1_diagnostic.ValueProblem> value;
-
-  PreparedEditResult_rejectedWrapper._(this.value);
-
-  @_core.override
-  PreparedEditResult_kind get kind => PreparedEditResult_kind.rejectedWrapper;
-}
-
-// -----------------------------------------------------------------------------
-// enum CommitResult
-// -----------------------------------------------------------------------------
-
-/// committed confirms installation of saved authoring state. It does not confirm check completion,
-/// compilation, publication selection, or engine application. Conflict requires refreshing original
-/// facts; rejection reports invalid intent or missing guards; catalog_changed requires a new catalog.
-///
-/// To switch on the variants:
-///   ```
-///   switch (e) {
-///     case CommitResult_unknown(): { ... }
-///     case CommitResult.committed: { ... }
-///     case CommitResult_conflict(:var value): { ... }
-///     case CommitResult_rejected(:var value): { ... }
-///     case CommitResult_catalogChanged(:var value): { ... }
-///   }
-///   ```
-///
-/// Deeply immutable.
-sealed class CommitResult {
-  /// Constant indicating an unknown `CommitResult`.
-  /// Default value for fields of type `CommitResult`.
-  static const CommitResult unknown = CommitResult_unknown._instance;
-
-  static const committed = _CommitResult_consts.committedConst;
-
-  /// Create a 'conflict' variant wrapping around the given value.
-  factory CommitResult.wrapConflict(
-    _core.Iterable<_lib_editor_v1_authoring_facts.ExpectationConflict> value,
-  ) => CommitResult_conflictWrapper._(value);
-
-  /// Create a 'rejected' variant wrapping around the given value.
-  factory CommitResult.wrapRejected(
-    _core.Iterable<_lib_editor_v1_diagnostic.ValueProblem> value,
-  ) => CommitResult_rejectedWrapper._(value);
-
-  /// Create a 'catalog_changed' variant wrapping around the given value.
-  factory CommitResult.wrapCatalogChanged(
-    _lib_editor_v1_type_catalog.CatalogGeneration value,
-  ) => CommitResult_catalogChangedWrapper._(value);
-
-  /// Same as `wrapCatalogChanged(_lib_editor_v1_type_catalog.CatalogGeneration(...))`.
-  factory CommitResult.createCatalogChanged({required _core.String value}) =>
-      CommitResult.wrapCatalogChanged(
-        _lib_editor_v1_type_catalog.CatalogGeneration(value: value),
-      );
-
-  /// Returns the kind of variant held by this CommitResult.
-  CommitResult_kind get kind;
-
-  /// Serializer for `CommitResult` instances.
-  static _skir.EnumSerializer<CommitResult> get serializer {
-    if (_serializerBuilder.mustInitialize()) {
-      _serializerBuilder.addConstantVariant(
-        1,
-        "committed",
-        "committed",
-        "",
-        committed,
-      );
-      _serializerBuilder.addWrapperVariant(
-        2,
-        "conflict",
-        "wrapConflict",
-        _skir.Serializers.iterable(
-          _lib_editor_v1_authoring_facts.ExpectationConflict.serializer,
-        ),
-        "",
-        CommitResult_conflictWrapper._,
-        (it) => it.value,
-        ordinal: CommitResult_kind.conflictWrapper._ordinal,
-      );
-      _serializerBuilder.addWrapperVariant(
-        3,
-        "rejected",
-        "wrapRejected",
-        _skir.Serializers.iterable(
-          _lib_editor_v1_diagnostic.ValueProblem.serializer,
-        ),
-        "",
-        CommitResult_rejectedWrapper._,
-        (it) => it.value,
-        ordinal: CommitResult_kind.rejectedWrapper._ordinal,
-      );
-      _serializerBuilder.addWrapperVariant(
-        4,
-        "catalog_changed",
-        "wrapCatalogChanged",
-        _lib_editor_v1_type_catalog.CatalogGeneration.serializer,
-        "",
-        CommitResult_catalogChangedWrapper._,
-        (it) => it.value,
-        ordinal: CommitResult_kind.catalogChangedWrapper._ordinal,
-      );
-      _serializerBuilder.finalize();
-    }
-    return _serializerBuilder.serializer;
-  }
-
-  static final _serializerBuilder = _skir.internal__EnumSerializerBuilder
-      .create(
-        recordId: "editor/v1/authoring.skir:CommitResult",
-        doc: "committed confirms installation of saved authoring state. It does not confirm check completion,\ncompilation, publication selection, or engine application. Conflict requires refreshing original\nfacts; rejection reports invalid intent or missing guards; catalog_changed requires a new catalog.",
-        unknownInstance: CommitResult_unknown._instance,
-        enumInstance: CommitResult.unknown,
-        getOrdinal: (it) => it.kind._ordinal,
-        wrapUnrecognized: CommitResult_unknown._unrecognized,
-        getUnrecognized: (it) => it._u,
-      );
-}
-
-/// The kind of variant held by a `CommitResult`.
-enum CommitResult_kind {
-  unknown(0),
-  committedConst(1),
-  conflictWrapper(2),
-  rejectedWrapper(3),
-  catalogChangedWrapper(4);
-
-  final _core.int _ordinal;
-
-  const CommitResult_kind(this._ordinal);
-}
-
-final class CommitResult_unknown implements CommitResult {
-  static const _instance = CommitResult_unknown._();
-
-  final _skir.internal__UnrecognizedVariant? _u;
-
-  const CommitResult_unknown._() : _u = null;
-  CommitResult_unknown._unrecognized(this._u);
-
-  @_core.override
-  CommitResult_kind get kind => CommitResult_kind.unknown;
-  @_core.override
-  _core.bool operator ==(other) => other is CommitResult_unknown;
-  @_core.override
-  _core.int get hashCode => 8118964;
-  @_core.override
-  _core.String toString() =>
-      _skir.internal__stringify(this, CommitResult.serializer);
-}
-
-enum _CommitResult_consts implements CommitResult {
-  committedConst(CommitResult_kind.committedConst);
-
-  @_core.override
-  final CommitResult_kind kind;
-
-  const _CommitResult_consts(this.kind);
-
-  @_core.override
-  _core.String toString() =>
-      _skir.internal__stringify(this, CommitResult.serializer);
-}
-
-sealed class _CommitResult_wrapper implements CommitResult {
-  _core.dynamic get value;
-
-  @_core.override
-  _core.bool operator ==(other) {
-    if (other is! _CommitResult_wrapper) return false;
-    return kind == other.kind && value == other.value;
-  }
-
-  @_core.override
-  _core.int get hashCode => (kind._ordinal * 31) ^ value.hashCode;
-
-  @_core.override
-  _core.String toString() =>
-      _skir.internal__stringify(this, CommitResult.serializer);
-}
-
-final class CommitResult_conflictWrapper extends _CommitResult_wrapper {
-  final _core.Iterable<_lib_editor_v1_authoring_facts.ExpectationConflict>
-  value;
-
-  CommitResult_conflictWrapper._(this.value);
-
-  @_core.override
-  CommitResult_kind get kind => CommitResult_kind.conflictWrapper;
-}
-
-final class CommitResult_rejectedWrapper extends _CommitResult_wrapper {
-  final _core.Iterable<_lib_editor_v1_diagnostic.ValueProblem> value;
-
-  CommitResult_rejectedWrapper._(this.value);
-
-  @_core.override
-  CommitResult_kind get kind => CommitResult_kind.rejectedWrapper;
-}
-
-final class CommitResult_catalogChangedWrapper extends _CommitResult_wrapper {
-  final _lib_editor_v1_type_catalog.CatalogGeneration value;
-
-  CommitResult_catalogChangedWrapper._(this.value);
-
-  @_core.override
-  CommitResult_kind get kind => CommitResult_kind.catalogChangedWrapper;
-}
-
-// -----------------------------------------------------------------------------
 // enum AuthoringOperation
 // -----------------------------------------------------------------------------
 
@@ -6213,220 +5836,6 @@ final class ArgumentLocation_mutable implements ArgumentLocation_orMutable {
   @_core.override
   ArgumentLocation toFrozen() =>
       ArgumentLocation(index: this.index).._u = this._u;
-}
-
-// -----------------------------------------------------------------------------
-// enum TypePreviewResult
-// -----------------------------------------------------------------------------
-
-/// To switch on the variants:
-///   ```
-///   switch (e) {
-///     case TypePreviewResult_unknown(): { ... }
-///     case TypePreviewResult_ready(:var value): { ... }
-///     case TypePreviewResult_invalidArguments(:var value): { ... }
-///     case TypePreviewResult_incomplete(:var value): { ... }
-///     case TypePreviewResult_rejected(:var value): { ... }
-///   }
-///   ```
-///
-/// Deeply immutable.
-sealed class TypePreviewResult {
-  /// Constant indicating an unknown `TypePreviewResult`.
-  /// Default value for fields of type `TypePreviewResult`.
-  static const TypePreviewResult unknown = TypePreviewResult_unknown._instance;
-
-  /// Create a 'ready' variant wrapping around the given value.
-  factory TypePreviewResult.wrapReady(TypeArgumentChangePreview value) =>
-      TypePreviewResult_readyWrapper._(value);
-
-  /// Same as `wrapReady(TypeArgumentChangePreview(...))`.
-  factory TypePreviewResult.createReady({
-    required _lib_editor_v1_type_catalog.ResourceId_orMutable resource,
-    required _lib_editor_v1_type_catalog.TypeSelection next,
-    required PreparedEdit_orMutable edit,
-    required _core.Iterable<LinkRepairIntent> linkRepairs,
-    required _core.Iterable<_lib_editor_v1_type_catalog.ValueLocation_orMutable>
-    clearedLocations,
-  }) => TypePreviewResult.wrapReady(
-    TypeArgumentChangePreview(
-      resource: resource,
-      next: next,
-      edit: edit,
-      linkRepairs: linkRepairs,
-      clearedLocations: clearedLocations,
-    ),
-  );
-
-  /// Create a 'invalid_arguments' variant wrapping around the given value.
-  factory TypePreviewResult.wrapInvalidArguments(
-    _core.Iterable<_lib_editor_v1_diagnostic.DeclarationDiagnostic> value,
-  ) => TypePreviewResult_invalidArgumentsWrapper._(value);
-
-  /// Create a 'incomplete' variant wrapping around the given value.
-  factory TypePreviewResult.wrapIncomplete(
-    _core.Iterable<ArgumentLocation> value,
-  ) => TypePreviewResult_incompleteWrapper._(value);
-
-  /// Create a 'rejected' variant wrapping around the given value.
-  factory TypePreviewResult.wrapRejected(
-    _core.Iterable<_lib_editor_v1_diagnostic.ValueProblem> value,
-  ) => TypePreviewResult_rejectedWrapper._(value);
-
-  /// Returns the kind of variant held by this TypePreviewResult.
-  TypePreviewResult_kind get kind;
-
-  /// Serializer for `TypePreviewResult` instances.
-  static _skir.EnumSerializer<TypePreviewResult> get serializer {
-    if (_serializerBuilder.mustInitialize()) {
-      _serializerBuilder.addWrapperVariant(
-        1,
-        "ready",
-        "wrapReady",
-        TypeArgumentChangePreview.serializer,
-        "",
-        TypePreviewResult_readyWrapper._,
-        (it) => it.value,
-        ordinal: TypePreviewResult_kind.readyWrapper._ordinal,
-      );
-      _serializerBuilder.addWrapperVariant(
-        2,
-        "invalid_arguments",
-        "wrapInvalidArguments",
-        _skir.Serializers.iterable(
-          _lib_editor_v1_diagnostic.DeclarationDiagnostic.serializer,
-        ),
-        "",
-        TypePreviewResult_invalidArgumentsWrapper._,
-        (it) => it.value,
-        ordinal: TypePreviewResult_kind.invalidArgumentsWrapper._ordinal,
-      );
-      _serializerBuilder.addWrapperVariant(
-        3,
-        "incomplete",
-        "wrapIncomplete",
-        _skir.Serializers.iterable(ArgumentLocation.serializer),
-        "",
-        TypePreviewResult_incompleteWrapper._,
-        (it) => it.value,
-        ordinal: TypePreviewResult_kind.incompleteWrapper._ordinal,
-      );
-      _serializerBuilder.addWrapperVariant(
-        4,
-        "rejected",
-        "wrapRejected",
-        _skir.Serializers.iterable(
-          _lib_editor_v1_diagnostic.ValueProblem.serializer,
-        ),
-        "",
-        TypePreviewResult_rejectedWrapper._,
-        (it) => it.value,
-        ordinal: TypePreviewResult_kind.rejectedWrapper._ordinal,
-      );
-      _serializerBuilder.finalize();
-    }
-    return _serializerBuilder.serializer;
-  }
-
-  static final _serializerBuilder = _skir.internal__EnumSerializerBuilder
-      .create(
-        recordId: "editor/v1/authoring.skir:TypePreviewResult",
-        doc: "",
-        unknownInstance: TypePreviewResult_unknown._instance,
-        enumInstance: TypePreviewResult.unknown,
-        getOrdinal: (it) => it.kind._ordinal,
-        wrapUnrecognized: TypePreviewResult_unknown._unrecognized,
-        getUnrecognized: (it) => it._u,
-      );
-}
-
-/// The kind of variant held by a `TypePreviewResult`.
-enum TypePreviewResult_kind {
-  unknown(0),
-  readyWrapper(1),
-  invalidArgumentsWrapper(2),
-  incompleteWrapper(3),
-  rejectedWrapper(4);
-
-  final _core.int _ordinal;
-
-  const TypePreviewResult_kind(this._ordinal);
-}
-
-final class TypePreviewResult_unknown implements TypePreviewResult {
-  static const _instance = TypePreviewResult_unknown._();
-
-  final _skir.internal__UnrecognizedVariant? _u;
-
-  const TypePreviewResult_unknown._() : _u = null;
-  TypePreviewResult_unknown._unrecognized(this._u);
-
-  @_core.override
-  TypePreviewResult_kind get kind => TypePreviewResult_kind.unknown;
-  @_core.override
-  _core.bool operator ==(other) => other is TypePreviewResult_unknown;
-  @_core.override
-  _core.int get hashCode => 8118964;
-  @_core.override
-  _core.String toString() =>
-      _skir.internal__stringify(this, TypePreviewResult.serializer);
-}
-
-sealed class _TypePreviewResult_wrapper implements TypePreviewResult {
-  _core.dynamic get value;
-
-  @_core.override
-  _core.bool operator ==(other) {
-    if (other is! _TypePreviewResult_wrapper) return false;
-    return kind == other.kind && value == other.value;
-  }
-
-  @_core.override
-  _core.int get hashCode => (kind._ordinal * 31) ^ value.hashCode;
-
-  @_core.override
-  _core.String toString() =>
-      _skir.internal__stringify(this, TypePreviewResult.serializer);
-}
-
-final class TypePreviewResult_readyWrapper extends _TypePreviewResult_wrapper {
-  final TypeArgumentChangePreview value;
-
-  TypePreviewResult_readyWrapper._(this.value);
-
-  @_core.override
-  TypePreviewResult_kind get kind => TypePreviewResult_kind.readyWrapper;
-}
-
-final class TypePreviewResult_invalidArgumentsWrapper
-    extends _TypePreviewResult_wrapper {
-  final _core.Iterable<_lib_editor_v1_diagnostic.DeclarationDiagnostic> value;
-
-  TypePreviewResult_invalidArgumentsWrapper._(this.value);
-
-  @_core.override
-  TypePreviewResult_kind get kind =>
-      TypePreviewResult_kind.invalidArgumentsWrapper;
-}
-
-final class TypePreviewResult_incompleteWrapper
-    extends _TypePreviewResult_wrapper {
-  final _core.Iterable<ArgumentLocation> value;
-
-  TypePreviewResult_incompleteWrapper._(this.value);
-
-  @_core.override
-  TypePreviewResult_kind get kind => TypePreviewResult_kind.incompleteWrapper;
-}
-
-final class TypePreviewResult_rejectedWrapper
-    extends _TypePreviewResult_wrapper {
-  final _core.Iterable<_lib_editor_v1_diagnostic.ValueProblem> value;
-
-  TypePreviewResult_rejectedWrapper._(this.value);
-
-  @_core.override
-  TypePreviewResult_kind get kind => TypePreviewResult_kind.rejectedWrapper;
 }
 
 // -----------------------------------------------------------------------------
@@ -7503,8 +6912,8 @@ final class SearchAuthoringRequest_mutable
 ///   switch (e) {
 ///     case SearchAuthoringResponse_unknown(): { ... }
 ///     case SearchAuthoringResponse_success(:var value): { ... }
-///     case SearchAuthoringResponse_invalid(:var value): { ... }
-///     case SearchAuthoringResponse_catalogChanged(:var value): { ... }
+///     case SearchAuthoringResponse_invalidError(:var value): { ... }
+///     case SearchAuthoringResponse_catalogChangedError(:var value): { ... }
 ///     case SearchAuthoringResponse_internalError(:var value): { ... }
 ///   }
 ///   ```
@@ -7534,26 +6943,27 @@ sealed class SearchAuthoringResponse {
     ),
   );
 
-  /// Create a 'invalid' variant wrapping around the given value.
-  factory SearchAuthoringResponse.wrapInvalid(AuthoringInvalid value) =>
-      SearchAuthoringResponse_invalidWrapper._(value);
+  /// Create a 'invalid_error' variant wrapping around the given value.
+  factory SearchAuthoringResponse.wrapInvalidError(AuthoringInvalid value) =>
+      SearchAuthoringResponse_invalidErrorWrapper._(value);
 
-  /// Same as `wrapInvalid(AuthoringInvalid(...))`.
-  factory SearchAuthoringResponse.createInvalid({
+  /// Same as `wrapInvalidError(AuthoringInvalid(...))`.
+  factory SearchAuthoringResponse.createInvalidError({
     required _core.Iterable<AuthoringDiagnostic_orMutable> diagnostics,
-  }) => SearchAuthoringResponse.wrapInvalid(
+  }) => SearchAuthoringResponse.wrapInvalidError(
     AuthoringInvalid(diagnostics: diagnostics),
   );
 
-  /// Create a 'catalog_changed' variant wrapping around the given value.
-  factory SearchAuthoringResponse.wrapCatalogChanged(CatalogChanged value) =>
-      SearchAuthoringResponse_catalogChangedWrapper._(value);
+  /// Create a 'catalog_changed_error' variant wrapping around the given value.
+  factory SearchAuthoringResponse.wrapCatalogChangedError(
+    CatalogChanged value,
+  ) => SearchAuthoringResponse_catalogChangedErrorWrapper._(value);
 
-  /// Same as `wrapCatalogChanged(CatalogChanged(...))`.
-  factory SearchAuthoringResponse.createCatalogChanged({
+  /// Same as `wrapCatalogChangedError(CatalogChanged(...))`.
+  factory SearchAuthoringResponse.createCatalogChangedError({
     required _lib_editor_v1_type_catalog.CatalogGeneration_orMutable
     actualGeneration,
-  }) => SearchAuthoringResponse.wrapCatalogChanged(
+  }) => SearchAuthoringResponse.wrapCatalogChangedError(
     CatalogChanged(actualGeneration: actualGeneration),
   );
 
@@ -7586,23 +6996,24 @@ sealed class SearchAuthoringResponse {
       );
       _serializerBuilder.addWrapperVariant(
         2,
-        "invalid",
-        "wrapInvalid",
+        "invalid_error",
+        "wrapInvalidError",
         AuthoringInvalid.serializer,
         "",
-        SearchAuthoringResponse_invalidWrapper._,
+        SearchAuthoringResponse_invalidErrorWrapper._,
         (it) => it.value,
-        ordinal: SearchAuthoringResponse_kind.invalidWrapper._ordinal,
+        ordinal: SearchAuthoringResponse_kind.invalidErrorWrapper._ordinal,
       );
       _serializerBuilder.addWrapperVariant(
         3,
-        "catalog_changed",
-        "wrapCatalogChanged",
+        "catalog_changed_error",
+        "wrapCatalogChangedError",
         CatalogChanged.serializer,
         "",
-        SearchAuthoringResponse_catalogChangedWrapper._,
+        SearchAuthoringResponse_catalogChangedErrorWrapper._,
         (it) => it.value,
-        ordinal: SearchAuthoringResponse_kind.catalogChangedWrapper._ordinal,
+        ordinal:
+            SearchAuthoringResponse_kind.catalogChangedErrorWrapper._ordinal,
       );
       _serializerBuilder.addWrapperVariant(
         4,
@@ -7635,8 +7046,8 @@ sealed class SearchAuthoringResponse {
 enum SearchAuthoringResponse_kind {
   unknown(0),
   successWrapper(1),
-  invalidWrapper(2),
-  catalogChangedWrapper(3),
+  invalidErrorWrapper(2),
+  catalogChangedErrorWrapper(3),
   internalErrorWrapper(4);
 
   final _core.int _ordinal;
@@ -7692,26 +7103,26 @@ final class SearchAuthoringResponse_successWrapper
       SearchAuthoringResponse_kind.successWrapper;
 }
 
-final class SearchAuthoringResponse_invalidWrapper
+final class SearchAuthoringResponse_invalidErrorWrapper
     extends _SearchAuthoringResponse_wrapper {
   final AuthoringInvalid value;
 
-  SearchAuthoringResponse_invalidWrapper._(this.value);
+  SearchAuthoringResponse_invalidErrorWrapper._(this.value);
 
   @_core.override
   SearchAuthoringResponse_kind get kind =>
-      SearchAuthoringResponse_kind.invalidWrapper;
+      SearchAuthoringResponse_kind.invalidErrorWrapper;
 }
 
-final class SearchAuthoringResponse_catalogChangedWrapper
+final class SearchAuthoringResponse_catalogChangedErrorWrapper
     extends _SearchAuthoringResponse_wrapper {
   final CatalogChanged value;
 
-  SearchAuthoringResponse_catalogChangedWrapper._(this.value);
+  SearchAuthoringResponse_catalogChangedErrorWrapper._(this.value);
 
   @_core.override
   SearchAuthoringResponse_kind get kind =>
-      SearchAuthoringResponse_kind.catalogChangedWrapper;
+      SearchAuthoringResponse_kind.catalogChangedErrorWrapper;
 }
 
 final class SearchAuthoringResponse_internalErrorWrapper
@@ -7733,7 +7144,10 @@ final class SearchAuthoringResponse_internalErrorWrapper
 ///   ```
 ///   switch (e) {
 ///     case CommitPreparedEditResponse_unknown(): { ... }
-///     case CommitPreparedEditResponse_result(:var value): { ... }
+///     case CommitPreparedEditResponse.committed: { ... }
+///     case CommitPreparedEditResponse_conflictError(:var value): { ... }
+///     case CommitPreparedEditResponse_rejectedError(:var value): { ... }
+///     case CommitPreparedEditResponse_catalogChangedError(:var value): { ... }
 ///     case CommitPreparedEditResponse_internalError(:var value): { ... }
 ///   }
 ///   ```
@@ -7745,9 +7159,29 @@ sealed class CommitPreparedEditResponse {
   static const CommitPreparedEditResponse unknown =
       CommitPreparedEditResponse_unknown._instance;
 
-  /// Create a 'result' variant wrapping around the given value.
-  factory CommitPreparedEditResponse.wrapResult(CommitResult value) =>
-      CommitPreparedEditResponse_resultWrapper._(value);
+  static const committed = _CommitPreparedEditResponse_consts.committedConst;
+
+  /// Create a 'conflict_error' variant wrapping around the given value.
+  factory CommitPreparedEditResponse.wrapConflictError(
+    _core.Iterable<_lib_editor_v1_authoring_facts.ExpectationConflict> value,
+  ) => CommitPreparedEditResponse_conflictErrorWrapper._(value);
+
+  /// Create a 'rejected_error' variant wrapping around the given value.
+  factory CommitPreparedEditResponse.wrapRejectedError(
+    _core.Iterable<_lib_editor_v1_diagnostic.ValueProblem> value,
+  ) => CommitPreparedEditResponse_rejectedErrorWrapper._(value);
+
+  /// Create a 'catalog_changed_error' variant wrapping around the given value.
+  factory CommitPreparedEditResponse.wrapCatalogChangedError(
+    _lib_editor_v1_type_catalog.CatalogGeneration value,
+  ) => CommitPreparedEditResponse_catalogChangedErrorWrapper._(value);
+
+  /// Same as `wrapCatalogChangedError(_lib_editor_v1_type_catalog.CatalogGeneration(...))`.
+  factory CommitPreparedEditResponse.createCatalogChangedError({
+    required _core.String value,
+  }) => CommitPreparedEditResponse.wrapCatalogChangedError(
+    _lib_editor_v1_type_catalog.CatalogGeneration(value: value),
+  );
 
   /// Create a 'internal_error' variant wrapping around the given value.
   factory CommitPreparedEditResponse.wrapInternalError(
@@ -7766,18 +7200,50 @@ sealed class CommitPreparedEditResponse {
   /// Serializer for `CommitPreparedEditResponse` instances.
   static _skir.EnumSerializer<CommitPreparedEditResponse> get serializer {
     if (_serializerBuilder.mustInitialize()) {
-      _serializerBuilder.addWrapperVariant(
+      _serializerBuilder.addConstantVariant(
         1,
-        "result",
-        "wrapResult",
-        CommitResult.serializer,
+        "committed",
+        "committed",
         "",
-        CommitPreparedEditResponse_resultWrapper._,
-        (it) => it.value,
-        ordinal: CommitPreparedEditResponse_kind.resultWrapper._ordinal,
+        committed,
       );
       _serializerBuilder.addWrapperVariant(
         2,
+        "conflict_error",
+        "wrapConflictError",
+        _skir.Serializers.iterable(
+          _lib_editor_v1_authoring_facts.ExpectationConflict.serializer,
+        ),
+        "",
+        CommitPreparedEditResponse_conflictErrorWrapper._,
+        (it) => it.value,
+        ordinal: CommitPreparedEditResponse_kind.conflictErrorWrapper._ordinal,
+      );
+      _serializerBuilder.addWrapperVariant(
+        3,
+        "rejected_error",
+        "wrapRejectedError",
+        _skir.Serializers.iterable(
+          _lib_editor_v1_diagnostic.ValueProblem.serializer,
+        ),
+        "",
+        CommitPreparedEditResponse_rejectedErrorWrapper._,
+        (it) => it.value,
+        ordinal: CommitPreparedEditResponse_kind.rejectedErrorWrapper._ordinal,
+      );
+      _serializerBuilder.addWrapperVariant(
+        4,
+        "catalog_changed_error",
+        "wrapCatalogChangedError",
+        _lib_editor_v1_type_catalog.CatalogGeneration.serializer,
+        "",
+        CommitPreparedEditResponse_catalogChangedErrorWrapper._,
+        (it) => it.value,
+        ordinal:
+            CommitPreparedEditResponse_kind.catalogChangedErrorWrapper._ordinal,
+      );
+      _serializerBuilder.addWrapperVariant(
+        5,
         "internal_error",
         "wrapInternalError",
         _lib_kernel_v1_errors.InternalError.serializer,
@@ -7806,8 +7272,11 @@ sealed class CommitPreparedEditResponse {
 /// The kind of variant held by a `CommitPreparedEditResponse`.
 enum CommitPreparedEditResponse_kind {
   unknown(0),
-  resultWrapper(1),
-  internalErrorWrapper(2);
+  committedConst(1),
+  conflictErrorWrapper(2),
+  rejectedErrorWrapper(3),
+  catalogChangedErrorWrapper(4),
+  internalErrorWrapper(5);
 
   final _core.int _ordinal;
 
@@ -7835,6 +7304,19 @@ final class CommitPreparedEditResponse_unknown
       _skir.internal__stringify(this, CommitPreparedEditResponse.serializer);
 }
 
+enum _CommitPreparedEditResponse_consts implements CommitPreparedEditResponse {
+  committedConst(CommitPreparedEditResponse_kind.committedConst);
+
+  @_core.override
+  final CommitPreparedEditResponse_kind kind;
+
+  const _CommitPreparedEditResponse_consts(this.kind);
+
+  @_core.override
+  _core.String toString() =>
+      _skir.internal__stringify(this, CommitPreparedEditResponse.serializer);
+}
+
 sealed class _CommitPreparedEditResponse_wrapper
     implements CommitPreparedEditResponse {
   _core.dynamic get value;
@@ -7853,15 +7335,38 @@ sealed class _CommitPreparedEditResponse_wrapper
       _skir.internal__stringify(this, CommitPreparedEditResponse.serializer);
 }
 
-final class CommitPreparedEditResponse_resultWrapper
+final class CommitPreparedEditResponse_conflictErrorWrapper
     extends _CommitPreparedEditResponse_wrapper {
-  final CommitResult value;
+  final _core.Iterable<_lib_editor_v1_authoring_facts.ExpectationConflict>
+  value;
 
-  CommitPreparedEditResponse_resultWrapper._(this.value);
+  CommitPreparedEditResponse_conflictErrorWrapper._(this.value);
 
   @_core.override
   CommitPreparedEditResponse_kind get kind =>
-      CommitPreparedEditResponse_kind.resultWrapper;
+      CommitPreparedEditResponse_kind.conflictErrorWrapper;
+}
+
+final class CommitPreparedEditResponse_rejectedErrorWrapper
+    extends _CommitPreparedEditResponse_wrapper {
+  final _core.Iterable<_lib_editor_v1_diagnostic.ValueProblem> value;
+
+  CommitPreparedEditResponse_rejectedErrorWrapper._(this.value);
+
+  @_core.override
+  CommitPreparedEditResponse_kind get kind =>
+      CommitPreparedEditResponse_kind.rejectedErrorWrapper;
+}
+
+final class CommitPreparedEditResponse_catalogChangedErrorWrapper
+    extends _CommitPreparedEditResponse_wrapper {
+  final _lib_editor_v1_type_catalog.CatalogGeneration value;
+
+  CommitPreparedEditResponse_catalogChangedErrorWrapper._(this.value);
+
+  @_core.override
+  CommitPreparedEditResponse_kind get kind =>
+      CommitPreparedEditResponse_kind.catalogChangedErrorWrapper;
 }
 
 final class CommitPreparedEditResponse_internalErrorWrapper
@@ -8071,7 +7576,10 @@ final class PreviewTypeArgumentChangeRequest_mutable
 ///   ```
 ///   switch (e) {
 ///     case PreviewTypeArgumentChangeResponse_unknown(): { ... }
-///     case PreviewTypeArgumentChangeResponse_result(:var value): { ... }
+///     case PreviewTypeArgumentChangeResponse_ready(:var value): { ... }
+///     case PreviewTypeArgumentChangeResponse_invalidArgumentsError(:var value): { ... }
+///     case PreviewTypeArgumentChangeResponse_incomplete(:var value): { ... }
+///     case PreviewTypeArgumentChangeResponse_rejectedError(:var value): { ... }
 ///     case PreviewTypeArgumentChangeResponse_internalError(:var value): { ... }
 ///   }
 ///   ```
@@ -8083,10 +7591,43 @@ sealed class PreviewTypeArgumentChangeResponse {
   static const PreviewTypeArgumentChangeResponse unknown =
       PreviewTypeArgumentChangeResponse_unknown._instance;
 
-  /// Create a 'result' variant wrapping around the given value.
-  factory PreviewTypeArgumentChangeResponse.wrapResult(
-    TypePreviewResult value,
-  ) => PreviewTypeArgumentChangeResponse_resultWrapper._(value);
+  /// Create a 'ready' variant wrapping around the given value.
+  factory PreviewTypeArgumentChangeResponse.wrapReady(
+    TypeArgumentChangePreview value,
+  ) => PreviewTypeArgumentChangeResponse_readyWrapper._(value);
+
+  /// Same as `wrapReady(TypeArgumentChangePreview(...))`.
+  factory PreviewTypeArgumentChangeResponse.createReady({
+    required _lib_editor_v1_type_catalog.ResourceId_orMutable resource,
+    required _lib_editor_v1_type_catalog.TypeSelection next,
+    required PreparedEdit_orMutable edit,
+    required _core.Iterable<LinkRepairIntent> linkRepairs,
+    required _core.Iterable<_lib_editor_v1_type_catalog.ValueLocation_orMutable>
+    clearedLocations,
+  }) => PreviewTypeArgumentChangeResponse.wrapReady(
+    TypeArgumentChangePreview(
+      resource: resource,
+      next: next,
+      edit: edit,
+      linkRepairs: linkRepairs,
+      clearedLocations: clearedLocations,
+    ),
+  );
+
+  /// Create a 'invalid_arguments_error' variant wrapping around the given value.
+  factory PreviewTypeArgumentChangeResponse.wrapInvalidArgumentsError(
+    _core.Iterable<_lib_editor_v1_diagnostic.DeclarationDiagnostic> value,
+  ) => PreviewTypeArgumentChangeResponse_invalidArgumentsErrorWrapper._(value);
+
+  /// Create a 'incomplete' variant wrapping around the given value.
+  factory PreviewTypeArgumentChangeResponse.wrapIncomplete(
+    _core.Iterable<ArgumentLocation> value,
+  ) => PreviewTypeArgumentChangeResponse_incompleteWrapper._(value);
+
+  /// Create a 'rejected_error' variant wrapping around the given value.
+  factory PreviewTypeArgumentChangeResponse.wrapRejectedError(
+    _core.Iterable<_lib_editor_v1_diagnostic.ValueProblem> value,
+  ) => PreviewTypeArgumentChangeResponse_rejectedErrorWrapper._(value);
 
   /// Create a 'internal_error' variant wrapping around the given value.
   factory PreviewTypeArgumentChangeResponse.wrapInternalError(
@@ -8108,16 +7649,55 @@ sealed class PreviewTypeArgumentChangeResponse {
     if (_serializerBuilder.mustInitialize()) {
       _serializerBuilder.addWrapperVariant(
         1,
-        "result",
-        "wrapResult",
-        TypePreviewResult.serializer,
+        "ready",
+        "wrapReady",
+        TypeArgumentChangePreview.serializer,
         "",
-        PreviewTypeArgumentChangeResponse_resultWrapper._,
+        PreviewTypeArgumentChangeResponse_readyWrapper._,
         (it) => it.value,
-        ordinal: PreviewTypeArgumentChangeResponse_kind.resultWrapper._ordinal,
+        ordinal: PreviewTypeArgumentChangeResponse_kind.readyWrapper._ordinal,
       );
       _serializerBuilder.addWrapperVariant(
         2,
+        "invalid_arguments_error",
+        "wrapInvalidArgumentsError",
+        _skir.Serializers.iterable(
+          _lib_editor_v1_diagnostic.DeclarationDiagnostic.serializer,
+        ),
+        "",
+        PreviewTypeArgumentChangeResponse_invalidArgumentsErrorWrapper._,
+        (it) => it.value,
+        ordinal: PreviewTypeArgumentChangeResponse_kind
+            .invalidArgumentsErrorWrapper
+            ._ordinal,
+      );
+      _serializerBuilder.addWrapperVariant(
+        3,
+        "incomplete",
+        "wrapIncomplete",
+        _skir.Serializers.iterable(ArgumentLocation.serializer),
+        "",
+        PreviewTypeArgumentChangeResponse_incompleteWrapper._,
+        (it) => it.value,
+        ordinal:
+            PreviewTypeArgumentChangeResponse_kind.incompleteWrapper._ordinal,
+      );
+      _serializerBuilder.addWrapperVariant(
+        4,
+        "rejected_error",
+        "wrapRejectedError",
+        _skir.Serializers.iterable(
+          _lib_editor_v1_diagnostic.ValueProblem.serializer,
+        ),
+        "",
+        PreviewTypeArgumentChangeResponse_rejectedErrorWrapper._,
+        (it) => it.value,
+        ordinal: PreviewTypeArgumentChangeResponse_kind
+            .rejectedErrorWrapper
+            ._ordinal,
+      );
+      _serializerBuilder.addWrapperVariant(
+        5,
         "internal_error",
         "wrapInternalError",
         _lib_kernel_v1_errors.InternalError.serializer,
@@ -8149,8 +7729,11 @@ sealed class PreviewTypeArgumentChangeResponse {
 /// The kind of variant held by a `PreviewTypeArgumentChangeResponse`.
 enum PreviewTypeArgumentChangeResponse_kind {
   unknown(0),
-  resultWrapper(1),
-  internalErrorWrapper(2);
+  readyWrapper(1),
+  invalidArgumentsErrorWrapper(2),
+  incompleteWrapper(3),
+  rejectedErrorWrapper(4),
+  internalErrorWrapper(5);
 
   final _core.int _ordinal;
 
@@ -8201,15 +7784,48 @@ sealed class _PreviewTypeArgumentChangeResponse_wrapper
   );
 }
 
-final class PreviewTypeArgumentChangeResponse_resultWrapper
+final class PreviewTypeArgumentChangeResponse_readyWrapper
     extends _PreviewTypeArgumentChangeResponse_wrapper {
-  final TypePreviewResult value;
+  final TypeArgumentChangePreview value;
 
-  PreviewTypeArgumentChangeResponse_resultWrapper._(this.value);
+  PreviewTypeArgumentChangeResponse_readyWrapper._(this.value);
 
   @_core.override
   PreviewTypeArgumentChangeResponse_kind get kind =>
-      PreviewTypeArgumentChangeResponse_kind.resultWrapper;
+      PreviewTypeArgumentChangeResponse_kind.readyWrapper;
+}
+
+final class PreviewTypeArgumentChangeResponse_invalidArgumentsErrorWrapper
+    extends _PreviewTypeArgumentChangeResponse_wrapper {
+  final _core.Iterable<_lib_editor_v1_diagnostic.DeclarationDiagnostic> value;
+
+  PreviewTypeArgumentChangeResponse_invalidArgumentsErrorWrapper._(this.value);
+
+  @_core.override
+  PreviewTypeArgumentChangeResponse_kind get kind =>
+      PreviewTypeArgumentChangeResponse_kind.invalidArgumentsErrorWrapper;
+}
+
+final class PreviewTypeArgumentChangeResponse_incompleteWrapper
+    extends _PreviewTypeArgumentChangeResponse_wrapper {
+  final _core.Iterable<ArgumentLocation> value;
+
+  PreviewTypeArgumentChangeResponse_incompleteWrapper._(this.value);
+
+  @_core.override
+  PreviewTypeArgumentChangeResponse_kind get kind =>
+      PreviewTypeArgumentChangeResponse_kind.incompleteWrapper;
+}
+
+final class PreviewTypeArgumentChangeResponse_rejectedErrorWrapper
+    extends _PreviewTypeArgumentChangeResponse_wrapper {
+  final _core.Iterable<_lib_editor_v1_diagnostic.ValueProblem> value;
+
+  PreviewTypeArgumentChangeResponse_rejectedErrorWrapper._(this.value);
+
+  @_core.override
+  PreviewTypeArgumentChangeResponse_kind get kind =>
+      PreviewTypeArgumentChangeResponse_kind.rejectedErrorWrapper;
 }
 
 final class PreviewTypeArgumentChangeResponse_internalErrorWrapper
@@ -8231,7 +7847,9 @@ final class PreviewTypeArgumentChangeResponse_internalErrorWrapper
 ///   ```
 ///   switch (e) {
 ///     case PrepareTypeArgumentChangeResponse_unknown(): { ... }
-///     case PrepareTypeArgumentChangeResponse_result(:var value): { ... }
+///     case PrepareTypeArgumentChangeResponse_prepared(:var value): { ... }
+///     case PrepareTypeArgumentChangeResponse_needsInput(:var value): { ... }
+///     case PrepareTypeArgumentChangeResponse_rejectedError(:var value): { ... }
 ///     case PrepareTypeArgumentChangeResponse_internalError(:var value): { ... }
 ///   }
 ///   ```
@@ -8243,10 +7861,27 @@ sealed class PrepareTypeArgumentChangeResponse {
   static const PrepareTypeArgumentChangeResponse unknown =
       PrepareTypeArgumentChangeResponse_unknown._instance;
 
-  /// Create a 'result' variant wrapping around the given value.
-  factory PrepareTypeArgumentChangeResponse.wrapResult(
-    PreparedEditResult value,
-  ) => PrepareTypeArgumentChangeResponse_resultWrapper._(value);
+  /// Create a 'prepared' variant wrapping around the given value.
+  factory PrepareTypeArgumentChangeResponse.wrapPrepared(
+    PreparedEditReady value,
+  ) => PrepareTypeArgumentChangeResponse_preparedWrapper._(value);
+
+  /// Same as `wrapPrepared(PreparedEditReady(...))`.
+  factory PrepareTypeArgumentChangeResponse.createPrepared({
+    required PreparedEdit_orMutable edit,
+  }) => PrepareTypeArgumentChangeResponse.wrapPrepared(
+    PreparedEditReady(edit: edit),
+  );
+
+  /// Create a 'needs_input' variant wrapping around the given value.
+  factory PrepareTypeArgumentChangeResponse.wrapNeedsInput(
+    _core.Iterable<_lib_editor_v1_type_catalog.ValueLocation> value,
+  ) => PrepareTypeArgumentChangeResponse_needsInputWrapper._(value);
+
+  /// Create a 'rejected_error' variant wrapping around the given value.
+  factory PrepareTypeArgumentChangeResponse.wrapRejectedError(
+    _core.Iterable<_lib_editor_v1_diagnostic.ValueProblem> value,
+  ) => PrepareTypeArgumentChangeResponse_rejectedErrorWrapper._(value);
 
   /// Create a 'internal_error' variant wrapping around the given value.
   factory PrepareTypeArgumentChangeResponse.wrapInternalError(
@@ -8268,16 +7903,44 @@ sealed class PrepareTypeArgumentChangeResponse {
     if (_serializerBuilder.mustInitialize()) {
       _serializerBuilder.addWrapperVariant(
         1,
-        "result",
-        "wrapResult",
-        PreparedEditResult.serializer,
+        "prepared",
+        "wrapPrepared",
+        PreparedEditReady.serializer,
         "",
-        PrepareTypeArgumentChangeResponse_resultWrapper._,
+        PrepareTypeArgumentChangeResponse_preparedWrapper._,
         (it) => it.value,
-        ordinal: PrepareTypeArgumentChangeResponse_kind.resultWrapper._ordinal,
+        ordinal:
+            PrepareTypeArgumentChangeResponse_kind.preparedWrapper._ordinal,
       );
       _serializerBuilder.addWrapperVariant(
         2,
+        "needs_input",
+        "wrapNeedsInput",
+        _skir.Serializers.iterable(
+          _lib_editor_v1_type_catalog.ValueLocation.serializer,
+        ),
+        "",
+        PrepareTypeArgumentChangeResponse_needsInputWrapper._,
+        (it) => it.value,
+        ordinal:
+            PrepareTypeArgumentChangeResponse_kind.needsInputWrapper._ordinal,
+      );
+      _serializerBuilder.addWrapperVariant(
+        3,
+        "rejected_error",
+        "wrapRejectedError",
+        _skir.Serializers.iterable(
+          _lib_editor_v1_diagnostic.ValueProblem.serializer,
+        ),
+        "",
+        PrepareTypeArgumentChangeResponse_rejectedErrorWrapper._,
+        (it) => it.value,
+        ordinal: PrepareTypeArgumentChangeResponse_kind
+            .rejectedErrorWrapper
+            ._ordinal,
+      );
+      _serializerBuilder.addWrapperVariant(
+        4,
         "internal_error",
         "wrapInternalError",
         _lib_kernel_v1_errors.InternalError.serializer,
@@ -8309,8 +7972,10 @@ sealed class PrepareTypeArgumentChangeResponse {
 /// The kind of variant held by a `PrepareTypeArgumentChangeResponse`.
 enum PrepareTypeArgumentChangeResponse_kind {
   unknown(0),
-  resultWrapper(1),
-  internalErrorWrapper(2);
+  preparedWrapper(1),
+  needsInputWrapper(2),
+  rejectedErrorWrapper(3),
+  internalErrorWrapper(4);
 
   final _core.int _ordinal;
 
@@ -8361,15 +8026,37 @@ sealed class _PrepareTypeArgumentChangeResponse_wrapper
   );
 }
 
-final class PrepareTypeArgumentChangeResponse_resultWrapper
+final class PrepareTypeArgumentChangeResponse_preparedWrapper
     extends _PrepareTypeArgumentChangeResponse_wrapper {
-  final PreparedEditResult value;
+  final PreparedEditReady value;
 
-  PrepareTypeArgumentChangeResponse_resultWrapper._(this.value);
+  PrepareTypeArgumentChangeResponse_preparedWrapper._(this.value);
 
   @_core.override
   PrepareTypeArgumentChangeResponse_kind get kind =>
-      PrepareTypeArgumentChangeResponse_kind.resultWrapper;
+      PrepareTypeArgumentChangeResponse_kind.preparedWrapper;
+}
+
+final class PrepareTypeArgumentChangeResponse_needsInputWrapper
+    extends _PrepareTypeArgumentChangeResponse_wrapper {
+  final _core.Iterable<_lib_editor_v1_type_catalog.ValueLocation> value;
+
+  PrepareTypeArgumentChangeResponse_needsInputWrapper._(this.value);
+
+  @_core.override
+  PrepareTypeArgumentChangeResponse_kind get kind =>
+      PrepareTypeArgumentChangeResponse_kind.needsInputWrapper;
+}
+
+final class PrepareTypeArgumentChangeResponse_rejectedErrorWrapper
+    extends _PrepareTypeArgumentChangeResponse_wrapper {
+  final _core.Iterable<_lib_editor_v1_diagnostic.ValueProblem> value;
+
+  PrepareTypeArgumentChangeResponse_rejectedErrorWrapper._(this.value);
+
+  @_core.override
+  PrepareTypeArgumentChangeResponse_kind get kind =>
+      PrepareTypeArgumentChangeResponse_kind.rejectedErrorWrapper;
 }
 
 final class PrepareTypeArgumentChangeResponse_internalErrorWrapper
@@ -8402,13 +8089,17 @@ searchAuthoringMethod = _skir.Method(
   "",
 );
 
+/// committed confirms installation of saved authoring state. It does not confirm check completion,
+/// compilation, publication selection, or engine application. conflict_error requires refreshing
+/// original facts; rejected_error reports invalid intent or missing guards; catalog_changed_error
+/// requires a new catalog.
 final _skir.Method<PreparedEdit, CommitPreparedEditResponse>
 commitPreparedEditMethod = _skir.Method(
   "CommitPreparedEdit",
   920012,
   PreparedEdit.serializer,
   CommitPreparedEditResponse.serializer,
-  "",
+  "committed confirms installation of saved authoring state. It does not confirm check completion,\ncompilation, publication selection, or engine application. conflict_error requires refreshing\noriginal facts; rejected_error reports invalid intent or missing guards; catalog_changed_error\nrequires a new catalog.",
 );
 
 final _skir.Method<

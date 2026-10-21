@@ -141,7 +141,7 @@ kind = "sql_expect"
 actor = "root"
 sql = "CREATE service:bound_and_registration SET name = 'bound_and_registration', role = { type: 'host', version: '1.0.0' }, organization = organization:acme, registration = { token: 'ABCDEF1234', expires_at: time::now() + 1h };"
 allow = false
-error_contains = "service-organization-registration-conflict"
+error_contains = "service-organization-registration-conflict-error"
 
 [[cases]]
 name = "deleting_organization_unbinds_services"

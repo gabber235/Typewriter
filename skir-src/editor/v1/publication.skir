@@ -40,21 +40,7 @@ struct PublicationAttempt(811600003) {
   state: PublicationState = 3;
 }
 
-/// Reports release admission and selection. activated identifies the newly selected publication,
-/// not an acknowledgement from engine hosts. candidate_changed requires a fresh review; publishing
-/// means another release currently owns the publication gate.
-enum PublicationResult(811600004) {
-  publishing = 1;
-  activated: struct {
-    publication: PublicationId = 0;
-  } = 2;
-  blocked: PublicationBlockers = 3;
-  interrupted: PublicationId = 4;
-  no_changes = 5;
-  candidate_changed: PublicationViewChanged = 6;
-}
-
-struct PublicationReport(811600005) {
+struct PublicationReport(811600004) {
   id: PublicationId = 0;
   state: PublicationState = 1;
   findings: [Diagnostic] = 2;
@@ -62,28 +48,28 @@ struct PublicationReport(811600005) {
 
 /// Identifies one releasable Ready assessment tied to exact saved inputs, baseline, and engine requirements.
 /// A newer review may invalidate it even when no resource revision counter is exposed.
-struct PublicationCandidateId(811600006) {
+struct PublicationCandidateId(811600005) {
   value: string = 0;
 }
 /// Identifies one emitted review state, including checking and failure states without a candidate.
 /// It is a freshness identity rather than a sortable publication or resource revision.
-struct PublicationViewId(811600007) {
+struct PublicationViewId(811600006) {
   value: string = 0;
 }
 
-enum PublicationBaseline(811600008) {
+enum PublicationBaseline(811600007) {
   initial = 1;
   selected: PublicationId = 2;
 }
 
 /// Original facts under which a publication diagnostic applies to an authored value.
 /// Consumers compare this evidence with their working state before presenting it as current.
-struct DiagnosticEvidence(811600009) {
+struct DiagnosticEvidence(811600008) {
   catalog: CatalogGeneration = 0;
   expectations: [EditExpectation] = 1;
 }
 
-struct PublicationDiagnosticDetails(811600010) {
+struct PublicationDiagnosticDetails(811600009) {
   id: DiagnosticId = 0;
   origin: RuleOrigin = 1;
   code: string = 2;
@@ -94,39 +80,39 @@ struct PublicationDiagnosticDetails(811600010) {
 }
 
 // Severity is determined by the variant, not another independent field.
-enum PublicationNotice(811600011) {
+enum PublicationNotice(811600010) {
   information: PublicationDiagnosticDetails = 1;
   warning: PublicationDiagnosticDetails = 2;
 }
-struct PublicationBlocker(811600012) {
+struct PublicationBlocker(811600011) {
   details: PublicationDiagnosticDetails = 0;
 }
 
 /// Semantic runtime changes relative to selection. A root update compares artifact meaning and
 /// format, independently of blob storage location or a newly allocated publication identity.
-enum PublicationChange(811600013) {
+enum PublicationChange(811600012) {
   root_added: CompilationRoot = 1;
   root_updated: CompilationRoot = 2;
   root_removed: CompilationRoot = 3;
   requirements_changed = 4;
 }
 /// A releasable change set is nonempty by construction; additional entries extend its first change.
-struct PublicationDelta(811600014) {
+struct PublicationDelta(811600013) {
   first: PublicationChange = 0;
   additional: [PublicationChange] = 1;
 }
-struct PublicationBlockers(811600015) {
+struct PublicationBlockers(811600014) {
   first: PublicationBlocker = 0;
   additional: [PublicationBlocker] = 1;
 }
 
-enum PublicationActivationPhase(811600016) {
+enum PublicationActivationPhase(811600015) {
   storing = 1;
   activating = 2;
 }
 
 // Later saved work can be reviewed during activation without authorizing it.
-struct PublicationPendingReview(811600017) {
+struct PublicationPendingReview(811600016) {
   findings: [FindingSet] = 0;
   confirmed_changes: [PublicationChange] = 1;
   pending_roots: [CompilationRoot] = 2;
@@ -134,7 +120,7 @@ struct PublicationPendingReview(811600017) {
   notices: [PublicationNotice] = 4;
 }
 
-enum PublicationFailure(811600018) {
+enum PublicationFailure(811600017) {
   evaluation_interrupted: string = 1;
   implementation_unavailable: string = 2;
   publication_interrupted: PublicationId = 3;
@@ -143,7 +129,7 @@ enum PublicationFailure(811600018) {
 /// Current saved review state. ready authorizes only its issued candidate; blocked can still
 /// report confirmed changes while failed roots remain pending. During publishing, releasing is
 /// frozen and next describes later saved work without adding it to the in progress release.
-enum PublicationStatus(811600019) {
+enum PublicationStatus(811600018) {
   empty: struct {
     notices: [PublicationNotice] = 0;
   } = 1;
@@ -180,27 +166,41 @@ enum PublicationStatus(811600019) {
     findings: [FindingSet] = 2;
   } = 7;
 }
-struct PublicationView(811600020) {
+struct PublicationView(811600019) {
   id: PublicationViewId = 0;
   status: PublicationStatus = 1;
 }
 /// Invalidation hint naming the current review view. Query that exact identity to read its content.
-struct PublicationViewChanged(811600021) {
+struct PublicationViewChanged(811600020) {
   current: PublicationViewId = 0;
 }
 
-/// Releases only the issued candidate while its captured saved inputs and engine requirements still match.
+/// Releases only the issued candidate while its captured saved inputs and engine requirements still
+/// match. Reports release admission and selection: activated identifies the newly selected
+/// publication, not an acknowledgement from engine hosts; publishing means another release currently
+/// owns the publication gate; candidate_changed_error requires a fresh review.
 method PublishAuthoring(
   struct {
     candidate: PublicationCandidateId = 0;
   }
 ): enum {
-  result: PublicationResult = 1;
-  internal_error: InternalError = 2;
+  publishing = 1;
+  activated: struct {
+    publication: PublicationId = 0;
+  } = 2;
+  blocked_error: PublicationBlockers = 3;
+  interrupted_error: PublicationId = 4;
+  no_changes = 5;
+  candidate_changed_error: PublicationViewChanged = 6;
+  internal_error: InternalError = 7;
 } = 920018;
+/// Returns the current review view identity; later identities arrive as update hints.
 method WatchPublication(
   struct {}
-): PublicationViewChanged = 920019;
+): enum {
+  view_changed: PublicationViewChanged = 1;
+  internal_error: InternalError = 2;
+} = 920019;
 
 /// Returns one immutable review view, or the current view identity when expected is no longer
 /// current. Later invalidations require a separate query.

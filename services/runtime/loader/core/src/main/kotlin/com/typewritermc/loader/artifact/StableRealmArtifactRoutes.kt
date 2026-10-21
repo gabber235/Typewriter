@@ -56,9 +56,9 @@ class StableRealmArtifactRoutes(
         unaryAt(blobContracts.metadata(address), address) { call ->
             when (val result = artifacts.metadata(call.request.digest.toApi())) {
                 is BlobResult.Success -> FetchArtifactBlobMetadataResponse.SuccessWrapper(result.value.toSkir())
-                BlobResult.NotFound -> FetchArtifactBlobMetadataResponse.createNotFound()
-                is BlobResult.Invalid -> FetchArtifactBlobMetadataResponse.createInvalid(reason = result.reason)
-                is BlobResult.Conflict -> FetchArtifactBlobMetadataResponse.createInvalid(reason = result.reason)
+                BlobResult.NotFound -> FetchArtifactBlobMetadataResponse.createNotFoundError()
+                is BlobResult.Invalid -> FetchArtifactBlobMetadataResponse.createInvalidError(reason = result.reason)
+                is BlobResult.Conflict -> FetchArtifactBlobMetadataResponse.createInvalidError(reason = result.reason)
             }
         }
         unaryAt(blobContracts.read(address), address) { call ->
@@ -72,24 +72,24 @@ class StableRealmArtifactRoutes(
                 }
 
                 BlobResult.NotFound -> {
-                    ReadArtifactBlobResponse.createNotFound()
+                    ReadArtifactBlobResponse.createNotFoundError()
                 }
 
                 is BlobResult.Invalid -> {
-                    ReadArtifactBlobResponse.createInvalid(reason = result.reason)
+                    ReadArtifactBlobResponse.createInvalidError(reason = result.reason)
                 }
 
                 is BlobResult.Conflict -> {
-                    ReadArtifactBlobResponse.createInvalid(reason = result.reason)
+                    ReadArtifactBlobResponse.createInvalidError(reason = result.reason)
                 }
             }
         }
         unaryAt(blobContracts.begin(address), address) { call ->
             when (val result = artifacts.beginWrite(TransferId(call.request.transferId), call.request.expected.toApi())) {
                 is BlobResult.Success -> BeginArtifactBlobWriteResponse.createAccepted(offset = result.value.offset)
-                BlobResult.NotFound -> BeginArtifactBlobWriteResponse.createInvalid(reason = "Transfer was not found.")
-                is BlobResult.Invalid -> BeginArtifactBlobWriteResponse.createInvalid(reason = result.reason)
-                is BlobResult.Conflict -> BeginArtifactBlobWriteResponse.createConflict(reason = result.reason)
+                BlobResult.NotFound -> BeginArtifactBlobWriteResponse.createInvalidError(reason = "Transfer was not found.")
+                is BlobResult.Invalid -> BeginArtifactBlobWriteResponse.createInvalidError(reason = result.reason)
+                is BlobResult.Conflict -> BeginArtifactBlobWriteResponse.createConflictError(reason = result.reason)
             }
         }
         unaryAt(blobContracts.write(address), address) { call ->
@@ -102,17 +102,17 @@ class StableRealmArtifactRoutes(
                     )
             ) {
                 is BlobResult.Success -> WriteArtifactBlobChunkResponse.createAccepted(offset = result.value)
-                BlobResult.NotFound -> WriteArtifactBlobChunkResponse.createNotFound()
-                is BlobResult.Invalid -> WriteArtifactBlobChunkResponse.createInvalid(reason = result.reason)
-                is BlobResult.Conflict -> WriteArtifactBlobChunkResponse.createConflict(reason = result.reason)
+                BlobResult.NotFound -> WriteArtifactBlobChunkResponse.createNotFoundError()
+                is BlobResult.Invalid -> WriteArtifactBlobChunkResponse.createInvalidError(reason = result.reason)
+                is BlobResult.Conflict -> WriteArtifactBlobChunkResponse.createConflictError(reason = result.reason)
             }
         }
         unaryAt(blobContracts.complete(address), address) { call ->
             when (val result = artifacts.complete(TransferId(call.request.transferId))) {
                 is BlobResult.Success -> CompleteArtifactBlobWriteResponse.SuccessWrapper(result.value.toSkir())
-                BlobResult.NotFound -> CompleteArtifactBlobWriteResponse.createNotFound()
-                is BlobResult.Invalid -> CompleteArtifactBlobWriteResponse.createInvalid(reason = result.reason)
-                is BlobResult.Conflict -> CompleteArtifactBlobWriteResponse.createConflict(reason = result.reason)
+                BlobResult.NotFound -> CompleteArtifactBlobWriteResponse.createNotFoundError()
+                is BlobResult.Invalid -> CompleteArtifactBlobWriteResponse.createInvalidError(reason = result.reason)
+                is BlobResult.Conflict -> CompleteArtifactBlobWriteResponse.createConflictError(reason = result.reason)
             }
         }
     }
@@ -139,7 +139,7 @@ class StableRealmArtifactRoutes(
         return when (result) {
             is PublishResult.Published -> PublishSharedArtifactResponse.PublishedWrapper(result.descriptor.toSkir())
             is PublishResult.Unchanged -> PublishSharedArtifactResponse.UnchangedWrapper(result.descriptor.toSkir())
-            is PublishResult.Conflict -> PublishSharedArtifactResponse.ConflictWrapper(result.current?.toSkir())
+            is PublishResult.Conflict -> PublishSharedArtifactResponse.ConflictErrorWrapper(result.current?.toSkir())
         }
     }
 }

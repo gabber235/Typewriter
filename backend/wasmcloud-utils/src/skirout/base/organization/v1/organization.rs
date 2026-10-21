@@ -426,6 +426,7 @@ pub enum DeleteOrganizationResponse {
     Unknown(Option<crate::skir_client::UnrecognizedVariant<DeleteOrganizationResponse>>),
     InternalError(Box<crate::skirout::base::kernel::v1::errors::InternalError>),
     Success(Box<DeleteOrganizationResponse_Success>),
+    /// Record IDs from an unexpected table.
     InvalidRecordIdError(Box<crate::skirout::base::kernel::v1::errors::InvalidRecordIdError>),
 }
 
@@ -715,7 +716,7 @@ fn initialize_module_serializers() {
                 3,
                 3,
                 crate::skirout::base::kernel::v1::errors::InvalidRecordIdError::serializer(),
-                "",
+                "Record IDs from an unexpected table.",
                 |v| DeleteOrganizationResponse::InvalidRecordIdError(Box::new(v)),
                 |x| match x {
                     DeleteOrganizationResponse::InvalidRecordIdError(b) => b.as_ref(),

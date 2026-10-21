@@ -222,39 +222,23 @@ struct PreparedEditReady(812200031) {
   edit: PreparedEdit = 0;
 }
 
-enum PreparedEditResult(812200032) {
-  prepared: PreparedEditReady = 1;
-  needs_input: [ValueLocation] = 2;
-  rejected: [ValueProblem] = 3;
-}
-
-/// committed confirms installation of saved authoring state. It does not confirm check completion,
-/// compilation, publication selection, or engine application. Conflict requires refreshing original
-/// facts; rejection reports invalid intent or missing guards; catalog_changed requires a new catalog.
-enum CommitResult(812200033) {
-  committed = 1;
-  conflict: [ExpectationConflict] = 2;
-  rejected: [ValueProblem] = 3;
-  catalog_changed: CatalogGeneration = 4;
-}
-
-enum AuthoringOperation(812200034) {
+enum AuthoringOperation(812200032) {
   commit_prepared: PreparedEdit = 1;
 }
 
 /// Hints that clients should query saved authoring state or findings. This is not an edit log or revision counter.
-struct AuthoringChanged(812200035) {
+struct AuthoringChanged(812200033) {
   generation: CatalogGeneration = 0;
 }
 
-enum LinkRepairIntent(812200036) {
+enum LinkRepairIntent(812200034) {
   clear: LinkOccurrenceId = 1;
   remove: LinkOccurrenceId = 2;
 }
 
 /// Proposes a fixed definition type configuration change together with all value and link repairs.
 /// Preparation rechecks expectations and regenerates repairs before yielding a committable edit.
-struct TypeArgumentChangePreview(812200037) {
+struct TypeArgumentChangePreview(812200035) {
   resource: ResourceId = 0;
   next: TypeSelection = 1;
   edit: PreparedEdit = 2;
@@ -262,24 +246,17 @@ struct TypeArgumentChangePreview(812200037) {
   cleared_locations: [ValueLocation] = 4;
 }
 
-struct ArgumentLocation(812200038) {
+struct ArgumentLocation(812200036) {
   index: int32 = 0;
 }
 
-enum TypePreviewResult(812200039) {
-  ready: TypeArgumentChangePreview = 1;
-  invalid_arguments: [DeclarationDiagnostic] = 2;
-  incomplete: [ArgumentLocation] = 3;
-  rejected: [ValueProblem] = 4;
-}
-
-struct AuthoringSearchHit(812200040) {
+struct AuthoringSearchHit(812200037) {
   resource: ResourceId = 0;
   subject: PresentationSubject = 1;
   context: PortableValue = 2;
 }
 
-struct AuthoringSearchResult(812200041) {
+struct AuthoringSearchResult(812200038) {
   generation: CatalogGeneration = 0;
   hits: [AuthoringSearchHit] = 1;
   diagnostics: [Diagnostic] = 2;
@@ -288,7 +265,7 @@ struct AuthoringSearchResult(812200041) {
 /// Identifies one saved authoring observation without ordering resource changes.
 /// A local operation overlay echoes this identity while carrying separate proposed values; a
 /// changed saved view requires refreshing the baseline.
-struct AuthoringObservationId(812200042) {
+struct AuthoringObservationId(812200039) {
   value: string = 0;
 }
 
@@ -313,16 +290,23 @@ method SearchAuthoring(
   }
 ): enum {
   success: AuthoringSearchResult = 1;
-  invalid: AuthoringInvalid = 2;
-  catalog_changed: CatalogChanged = 3;
+  invalid_error: AuthoringInvalid = 2;
+  catalog_changed_error: CatalogChanged = 3;
   internal_error: InternalError = 4;
 } = 920011;
 
+/// committed confirms installation of saved authoring state. It does not confirm check completion,
+/// compilation, publication selection, or engine application. conflict_error requires refreshing
+/// original facts; rejected_error reports invalid intent or missing guards; catalog_changed_error
+/// requires a new catalog.
 method CommitPreparedEdit(
   PreparedEdit
 ): enum {
-  result: CommitResult = 1;
-  internal_error: InternalError = 2;
+  committed = 1;
+  conflict_error: [ExpectationConflict] = 2;
+  rejected_error: [ValueProblem] = 3;
+  catalog_changed_error: CatalogGeneration = 4;
+  internal_error: InternalError = 5;
 } = 920012;
 
 method PreviewTypeArgumentChange(
@@ -332,14 +316,19 @@ method PreviewTypeArgumentChange(
     catalog: CatalogGeneration = 2;
   }
 ): enum {
-  result: TypePreviewResult = 1;
-  internal_error: InternalError = 2;
+  ready: TypeArgumentChangePreview = 1;
+  invalid_arguments_error: [DeclarationDiagnostic] = 2;
+  incomplete: [ArgumentLocation] = 3;
+  rejected_error: [ValueProblem] = 4;
+  internal_error: InternalError = 5;
 } = 920013;
 
 /// Revalidates a preview and returns proposed intent. CommitPreparedEdit performs the separate saved write.
 method PrepareTypeArgumentChange(
   TypeArgumentChangePreview
 ): enum {
-  result: PreparedEditResult = 1;
-  internal_error: InternalError = 2;
+  prepared: PreparedEditReady = 1;
+  needs_input: [ValueLocation] = 2;
+  rejected_error: [ValueProblem] = 3;
+  internal_error: InternalError = 4;
 } = 920014;

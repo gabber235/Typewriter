@@ -184,7 +184,7 @@ internal class OperationRealmPresentationSearchSource(
 internal fun staleSearch(
     subscriptionId: String,
     actual: String,
-) = RealmPresentationSearchUpdate.createStaleObservation(
+) = RealmPresentationSearchUpdate.createStaleObservationError(
     subscriptionId = subscriptionId,
     observation =
         StaleAuthoringObservation(

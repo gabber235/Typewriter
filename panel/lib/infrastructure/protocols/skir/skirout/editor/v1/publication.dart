@@ -538,385 +538,6 @@ final class PublicationAttempt_mutable implements PublicationAttempt_orMutable {
 }
 
 // -----------------------------------------------------------------------------
-// struct PublicationResult.Activated
-// -----------------------------------------------------------------------------
-
-sealed class PublicationResult_Activated_orMutable {
-  _lib_editor_v1_type_catalog.PublicationId_orMutable get publication;
-
-  PublicationResult_Activated toFrozen();
-}
-
-/// Deeply immutable.
-final class PublicationResult_Activated
-    implements PublicationResult_Activated_orMutable {
-  @_core.override
-  final _lib_editor_v1_type_catalog.PublicationId publication;
-  _skir.internal__UnrecognizedFields? _u;
-
-  factory PublicationResult_Activated({
-    required _lib_editor_v1_type_catalog.PublicationId_orMutable publication,
-  }) => PublicationResult_Activated._(publication.toFrozen());
-
-  PublicationResult_Activated._(this.publication);
-
-  /// Default instance with all fields set to their default values.
-  static final defaultInstance = PublicationResult_Activated._(
-    _lib_editor_v1_type_catalog.PublicationId.defaultInstance,
-  );
-
-  /// Returns a new mutable instance.
-  /// Fields are initialized to their default values.
-  static PublicationResult_Activated_mutable mutable() =>
-      PublicationResult_Activated_mutable._(
-        _lib_editor_v1_type_catalog.PublicationId.defaultInstance,
-      );
-
-  /// Returns this instance (no-op).
-  @_core.Deprecated("This instance is already frozen.")
-  @_core.override
-  PublicationResult_Activated toFrozen() => this;
-
-  /// Returns a mutable shallow copy of this instance.
-  PublicationResult_Activated_mutable toMutable() =>
-      PublicationResult_Activated_mutable._(this.publication);
-
-  @_core.override
-  _core.bool operator ==(other) {
-    if (_core.identical(this, other)) return true;
-    if (other is! PublicationResult_Activated) return false;
-    return _skir.internal__listEquality.equals(
-      _equality_proxy,
-      other._equality_proxy,
-    );
-  }
-
-  @_core.override
-  _core.int get hashCode => _skir.internal__listEquality.hash(_equality_proxy);
-
-  _core.List get _equality_proxy => [this.publication];
-
-  @_core.override
-  _core.String toString() => _skir.internal__stringify(this, serializer);
-
-  /// Serializer for `PublicationResult_Activated` instances.
-  static _skir.StructSerializer<
-    PublicationResult_Activated,
-    PublicationResult_Activated_mutable
-  >
-  get serializer {
-    if (_serializerBuilder.mustInitialize()) {
-      _serializerBuilder.addField(
-        "publication",
-        "publication",
-        0,
-        _lib_editor_v1_type_catalog.PublicationId.serializer,
-        "",
-        (it) => it.publication,
-        (it, v) => it.publication = v,
-      );
-      _serializerBuilder.finalize();
-    }
-    return _serializerBuilder.serializer;
-  }
-
-  static final _serializerBuilder = _skir.internal__StructSerializerBuilder(
-    recordId: "editor/v1/publication.skir:PublicationResult.Activated",
-    doc: "",
-    defaultInstance: defaultInstance,
-    newMutable: (it) => (it != null) ? it.toMutable() : mutable(),
-    toFrozen: (PublicationResult_Activated_mutable it) => it.toFrozen(),
-    getUnrecognizedFields: (it) => it._u,
-    setUnrecognizedFields: (it, u) => it._u = u,
-  );
-}
-
-/// Mutable version of [PublicationResult_Activated].
-final class PublicationResult_Activated_mutable
-    implements PublicationResult_Activated_orMutable {
-  _lib_editor_v1_type_catalog.PublicationId_orMutable publication;
-  _skir.internal__UnrecognizedFields? _u;
-
-  PublicationResult_Activated_mutable._(this.publication);
-
-  /// If the value of [publication] is already mutable, returns it as-is.
-  /// Otherwise, makes a mutable copy, assigns it back to [publication] and returns it.
-  _lib_editor_v1_type_catalog.PublicationId_mutable get mutablePublication {
-    final value = this.publication;
-    if (value is _lib_editor_v1_type_catalog.PublicationId_mutable) {
-      return value;
-    } else {
-      return this.publication =
-          (value as _lib_editor_v1_type_catalog.PublicationId).toMutable();
-    }
-  }
-
-  /// Returns a deeply immutable copy of this instance.
-  @_core.override
-  PublicationResult_Activated toFrozen() =>
-      PublicationResult_Activated(publication: this.publication).._u = this._u;
-}
-
-// -----------------------------------------------------------------------------
-// enum PublicationResult
-// -----------------------------------------------------------------------------
-
-/// Reports release admission and selection. activated identifies the newly selected publication,
-/// not an acknowledgement from engine hosts. candidate_changed requires a fresh review; publishing
-/// means another release currently owns the publication gate.
-///
-/// To switch on the variants:
-///   ```
-///   switch (e) {
-///     case PublicationResult_unknown(): { ... }
-///     case PublicationResult.publishing: { ... }
-///     case PublicationResult.noChanges: { ... }
-///     case PublicationResult_activated(:var value): { ... }
-///     case PublicationResult_blocked(:var value): { ... }
-///     case PublicationResult_interrupted(:var value): { ... }
-///     case PublicationResult_candidateChanged(:var value): { ... }
-///   }
-///   ```
-///
-/// Deeply immutable.
-sealed class PublicationResult {
-  /// Constant indicating an unknown `PublicationResult`.
-  /// Default value for fields of type `PublicationResult`.
-  static const PublicationResult unknown = PublicationResult_unknown._instance;
-
-  static const publishing = _PublicationResult_consts.publishingConst;
-  static const noChanges = _PublicationResult_consts.noChangesConst;
-
-  /// Create a 'activated' variant wrapping around the given value.
-  factory PublicationResult.wrapActivated(PublicationResult_Activated value) =>
-      PublicationResult_activatedWrapper._(value);
-
-  /// Same as `wrapActivated(PublicationResult_Activated(...))`.
-  factory PublicationResult.createActivated({
-    required _lib_editor_v1_type_catalog.PublicationId_orMutable publication,
-  }) => PublicationResult.wrapActivated(
-    PublicationResult_Activated(publication: publication),
-  );
-
-  /// Create a 'blocked' variant wrapping around the given value.
-  factory PublicationResult.wrapBlocked(PublicationBlockers value) =>
-      PublicationResult_blockedWrapper._(value);
-
-  /// Same as `wrapBlocked(PublicationBlockers(...))`.
-  factory PublicationResult.createBlocked({
-    required PublicationBlocker_orMutable first,
-    required _core.Iterable<PublicationBlocker_orMutable> additional,
-  }) => PublicationResult.wrapBlocked(
-    PublicationBlockers(first: first, additional: additional),
-  );
-
-  /// Create a 'interrupted' variant wrapping around the given value.
-  factory PublicationResult.wrapInterrupted(
-    _lib_editor_v1_type_catalog.PublicationId value,
-  ) => PublicationResult_interruptedWrapper._(value);
-
-  /// Same as `wrapInterrupted(_lib_editor_v1_type_catalog.PublicationId(...))`.
-  factory PublicationResult.createInterrupted({required _core.String value}) =>
-      PublicationResult.wrapInterrupted(
-        _lib_editor_v1_type_catalog.PublicationId(value: value),
-      );
-
-  /// Create a 'candidate_changed' variant wrapping around the given value.
-  factory PublicationResult.wrapCandidateChanged(
-    PublicationViewChanged value,
-  ) => PublicationResult_candidateChangedWrapper._(value);
-
-  /// Same as `wrapCandidateChanged(PublicationViewChanged(...))`.
-  factory PublicationResult.createCandidateChanged({
-    required PublicationViewId_orMutable current,
-  }) => PublicationResult.wrapCandidateChanged(
-    PublicationViewChanged(current: current),
-  );
-
-  /// Returns the kind of variant held by this PublicationResult.
-  PublicationResult_kind get kind;
-
-  /// Serializer for `PublicationResult` instances.
-  static _skir.EnumSerializer<PublicationResult> get serializer {
-    if (_serializerBuilder.mustInitialize()) {
-      _serializerBuilder.addConstantVariant(
-        1,
-        "publishing",
-        "publishing",
-        "",
-        publishing,
-      );
-      _serializerBuilder.addConstantVariant(
-        5,
-        "no_changes",
-        "noChanges",
-        "",
-        noChanges,
-      );
-      _serializerBuilder.addWrapperVariant(
-        2,
-        "activated",
-        "wrapActivated",
-        PublicationResult_Activated.serializer,
-        "",
-        PublicationResult_activatedWrapper._,
-        (it) => it.value,
-        ordinal: PublicationResult_kind.activatedWrapper._ordinal,
-      );
-      _serializerBuilder.addWrapperVariant(
-        3,
-        "blocked",
-        "wrapBlocked",
-        PublicationBlockers.serializer,
-        "",
-        PublicationResult_blockedWrapper._,
-        (it) => it.value,
-        ordinal: PublicationResult_kind.blockedWrapper._ordinal,
-      );
-      _serializerBuilder.addWrapperVariant(
-        4,
-        "interrupted",
-        "wrapInterrupted",
-        _lib_editor_v1_type_catalog.PublicationId.serializer,
-        "",
-        PublicationResult_interruptedWrapper._,
-        (it) => it.value,
-        ordinal: PublicationResult_kind.interruptedWrapper._ordinal,
-      );
-      _serializerBuilder.addWrapperVariant(
-        6,
-        "candidate_changed",
-        "wrapCandidateChanged",
-        PublicationViewChanged.serializer,
-        "",
-        PublicationResult_candidateChangedWrapper._,
-        (it) => it.value,
-        ordinal: PublicationResult_kind.candidateChangedWrapper._ordinal,
-      );
-      _serializerBuilder.finalize();
-    }
-    return _serializerBuilder.serializer;
-  }
-
-  static final _serializerBuilder = _skir.internal__EnumSerializerBuilder
-      .create(
-        recordId: "editor/v1/publication.skir:PublicationResult",
-        doc: "Reports release admission and selection. activated identifies the newly selected publication,\nnot an acknowledgement from engine hosts. candidate_changed requires a fresh review; publishing\nmeans another release currently owns the publication gate.",
-        unknownInstance: PublicationResult_unknown._instance,
-        enumInstance: PublicationResult.unknown,
-        getOrdinal: (it) => it.kind._ordinal,
-        wrapUnrecognized: PublicationResult_unknown._unrecognized,
-        getUnrecognized: (it) => it._u,
-      );
-}
-
-/// The kind of variant held by a `PublicationResult`.
-enum PublicationResult_kind {
-  unknown(0),
-  publishingConst(1),
-  noChangesConst(2),
-  activatedWrapper(3),
-  blockedWrapper(4),
-  interruptedWrapper(5),
-  candidateChangedWrapper(6);
-
-  final _core.int _ordinal;
-
-  const PublicationResult_kind(this._ordinal);
-}
-
-final class PublicationResult_unknown implements PublicationResult {
-  static const _instance = PublicationResult_unknown._();
-
-  final _skir.internal__UnrecognizedVariant? _u;
-
-  const PublicationResult_unknown._() : _u = null;
-  PublicationResult_unknown._unrecognized(this._u);
-
-  @_core.override
-  PublicationResult_kind get kind => PublicationResult_kind.unknown;
-  @_core.override
-  _core.bool operator ==(other) => other is PublicationResult_unknown;
-  @_core.override
-  _core.int get hashCode => 8118964;
-  @_core.override
-  _core.String toString() =>
-      _skir.internal__stringify(this, PublicationResult.serializer);
-}
-
-enum _PublicationResult_consts implements PublicationResult {
-  publishingConst(PublicationResult_kind.publishingConst),
-  noChangesConst(PublicationResult_kind.noChangesConst);
-
-  @_core.override
-  final PublicationResult_kind kind;
-
-  const _PublicationResult_consts(this.kind);
-
-  @_core.override
-  _core.String toString() =>
-      _skir.internal__stringify(this, PublicationResult.serializer);
-}
-
-sealed class _PublicationResult_wrapper implements PublicationResult {
-  _core.dynamic get value;
-
-  @_core.override
-  _core.bool operator ==(other) {
-    if (other is! _PublicationResult_wrapper) return false;
-    return kind == other.kind && value == other.value;
-  }
-
-  @_core.override
-  _core.int get hashCode => (kind._ordinal * 31) ^ value.hashCode;
-
-  @_core.override
-  _core.String toString() =>
-      _skir.internal__stringify(this, PublicationResult.serializer);
-}
-
-final class PublicationResult_activatedWrapper
-    extends _PublicationResult_wrapper {
-  final PublicationResult_Activated value;
-
-  PublicationResult_activatedWrapper._(this.value);
-
-  @_core.override
-  PublicationResult_kind get kind => PublicationResult_kind.activatedWrapper;
-}
-
-final class PublicationResult_blockedWrapper
-    extends _PublicationResult_wrapper {
-  final PublicationBlockers value;
-
-  PublicationResult_blockedWrapper._(this.value);
-
-  @_core.override
-  PublicationResult_kind get kind => PublicationResult_kind.blockedWrapper;
-}
-
-final class PublicationResult_interruptedWrapper
-    extends _PublicationResult_wrapper {
-  final _lib_editor_v1_type_catalog.PublicationId value;
-
-  PublicationResult_interruptedWrapper._(this.value);
-
-  @_core.override
-  PublicationResult_kind get kind => PublicationResult_kind.interruptedWrapper;
-}
-
-final class PublicationResult_candidateChangedWrapper
-    extends _PublicationResult_wrapper {
-  final PublicationViewChanged value;
-
-  PublicationResult_candidateChangedWrapper._(this.value);
-
-  @_core.override
-  PublicationResult_kind get kind =>
-      PublicationResult_kind.candidateChangedWrapper;
-}
-
-// -----------------------------------------------------------------------------
 // struct PublicationReport
 // -----------------------------------------------------------------------------
 
@@ -5266,6 +4887,127 @@ final class PublishAuthoringRequest_mutable
 }
 
 // -----------------------------------------------------------------------------
+// struct PublishAuthoringResponse.Activated
+// -----------------------------------------------------------------------------
+
+sealed class PublishAuthoringResponse_Activated_orMutable {
+  _lib_editor_v1_type_catalog.PublicationId_orMutable get publication;
+
+  PublishAuthoringResponse_Activated toFrozen();
+}
+
+/// Deeply immutable.
+final class PublishAuthoringResponse_Activated
+    implements PublishAuthoringResponse_Activated_orMutable {
+  @_core.override
+  final _lib_editor_v1_type_catalog.PublicationId publication;
+  _skir.internal__UnrecognizedFields? _u;
+
+  factory PublishAuthoringResponse_Activated({
+    required _lib_editor_v1_type_catalog.PublicationId_orMutable publication,
+  }) => PublishAuthoringResponse_Activated._(publication.toFrozen());
+
+  PublishAuthoringResponse_Activated._(this.publication);
+
+  /// Default instance with all fields set to their default values.
+  static final defaultInstance = PublishAuthoringResponse_Activated._(
+    _lib_editor_v1_type_catalog.PublicationId.defaultInstance,
+  );
+
+  /// Returns a new mutable instance.
+  /// Fields are initialized to their default values.
+  static PublishAuthoringResponse_Activated_mutable mutable() =>
+      PublishAuthoringResponse_Activated_mutable._(
+        _lib_editor_v1_type_catalog.PublicationId.defaultInstance,
+      );
+
+  /// Returns this instance (no-op).
+  @_core.Deprecated("This instance is already frozen.")
+  @_core.override
+  PublishAuthoringResponse_Activated toFrozen() => this;
+
+  /// Returns a mutable shallow copy of this instance.
+  PublishAuthoringResponse_Activated_mutable toMutable() =>
+      PublishAuthoringResponse_Activated_mutable._(this.publication);
+
+  @_core.override
+  _core.bool operator ==(other) {
+    if (_core.identical(this, other)) return true;
+    if (other is! PublishAuthoringResponse_Activated) return false;
+    return _skir.internal__listEquality.equals(
+      _equality_proxy,
+      other._equality_proxy,
+    );
+  }
+
+  @_core.override
+  _core.int get hashCode => _skir.internal__listEquality.hash(_equality_proxy);
+
+  _core.List get _equality_proxy => [this.publication];
+
+  @_core.override
+  _core.String toString() => _skir.internal__stringify(this, serializer);
+
+  /// Serializer for `PublishAuthoringResponse_Activated` instances.
+  static _skir.StructSerializer<
+    PublishAuthoringResponse_Activated,
+    PublishAuthoringResponse_Activated_mutable
+  >
+  get serializer {
+    if (_serializerBuilder.mustInitialize()) {
+      _serializerBuilder.addField(
+        "publication",
+        "publication",
+        0,
+        _lib_editor_v1_type_catalog.PublicationId.serializer,
+        "",
+        (it) => it.publication,
+        (it, v) => it.publication = v,
+      );
+      _serializerBuilder.finalize();
+    }
+    return _serializerBuilder.serializer;
+  }
+
+  static final _serializerBuilder = _skir.internal__StructSerializerBuilder(
+    recordId: "editor/v1/publication.skir:PublishAuthoringResponse.Activated",
+    doc: "",
+    defaultInstance: defaultInstance,
+    newMutable: (it) => (it != null) ? it.toMutable() : mutable(),
+    toFrozen: (PublishAuthoringResponse_Activated_mutable it) => it.toFrozen(),
+    getUnrecognizedFields: (it) => it._u,
+    setUnrecognizedFields: (it, u) => it._u = u,
+  );
+}
+
+/// Mutable version of [PublishAuthoringResponse_Activated].
+final class PublishAuthoringResponse_Activated_mutable
+    implements PublishAuthoringResponse_Activated_orMutable {
+  _lib_editor_v1_type_catalog.PublicationId_orMutable publication;
+  _skir.internal__UnrecognizedFields? _u;
+
+  PublishAuthoringResponse_Activated_mutable._(this.publication);
+
+  /// If the value of [publication] is already mutable, returns it as-is.
+  /// Otherwise, makes a mutable copy, assigns it back to [publication] and returns it.
+  _lib_editor_v1_type_catalog.PublicationId_mutable get mutablePublication {
+    final value = this.publication;
+    if (value is _lib_editor_v1_type_catalog.PublicationId_mutable) {
+      return value;
+    } else {
+      return this.publication =
+          (value as _lib_editor_v1_type_catalog.PublicationId).toMutable();
+    }
+  }
+
+  /// Returns a deeply immutable copy of this instance.
+  @_core.override
+  PublishAuthoringResponse_Activated toFrozen() =>
+      PublishAuthoringResponse_Activated(publication: this.publication)
+        .._u = this._u;
+}
+
+// -----------------------------------------------------------------------------
 // enum PublishAuthoringResponse
 // -----------------------------------------------------------------------------
 
@@ -5273,7 +5015,12 @@ final class PublishAuthoringRequest_mutable
 ///   ```
 ///   switch (e) {
 ///     case PublishAuthoringResponse_unknown(): { ... }
-///     case PublishAuthoringResponse_result(:var value): { ... }
+///     case PublishAuthoringResponse.publishing: { ... }
+///     case PublishAuthoringResponse.noChanges: { ... }
+///     case PublishAuthoringResponse_activated(:var value): { ... }
+///     case PublishAuthoringResponse_blockedError(:var value): { ... }
+///     case PublishAuthoringResponse_interruptedError(:var value): { ... }
+///     case PublishAuthoringResponse_candidateChangedError(:var value): { ... }
 ///     case PublishAuthoringResponse_internalError(:var value): { ... }
 ///   }
 ///   ```
@@ -5285,9 +5032,57 @@ sealed class PublishAuthoringResponse {
   static const PublishAuthoringResponse unknown =
       PublishAuthoringResponse_unknown._instance;
 
-  /// Create a 'result' variant wrapping around the given value.
-  factory PublishAuthoringResponse.wrapResult(PublicationResult value) =>
-      PublishAuthoringResponse_resultWrapper._(value);
+  static const publishing = _PublishAuthoringResponse_consts.publishingConst;
+  static const noChanges = _PublishAuthoringResponse_consts.noChangesConst;
+
+  /// Create a 'activated' variant wrapping around the given value.
+  factory PublishAuthoringResponse.wrapActivated(
+    PublishAuthoringResponse_Activated value,
+  ) => PublishAuthoringResponse_activatedWrapper._(value);
+
+  /// Same as `wrapActivated(PublishAuthoringResponse_Activated(...))`.
+  factory PublishAuthoringResponse.createActivated({
+    required _lib_editor_v1_type_catalog.PublicationId_orMutable publication,
+  }) => PublishAuthoringResponse.wrapActivated(
+    PublishAuthoringResponse_Activated(publication: publication),
+  );
+
+  /// Create a 'blocked_error' variant wrapping around the given value.
+  factory PublishAuthoringResponse.wrapBlockedError(
+    PublicationBlockers value,
+  ) => PublishAuthoringResponse_blockedErrorWrapper._(value);
+
+  /// Same as `wrapBlockedError(PublicationBlockers(...))`.
+  factory PublishAuthoringResponse.createBlockedError({
+    required PublicationBlocker_orMutable first,
+    required _core.Iterable<PublicationBlocker_orMutable> additional,
+  }) => PublishAuthoringResponse.wrapBlockedError(
+    PublicationBlockers(first: first, additional: additional),
+  );
+
+  /// Create a 'interrupted_error' variant wrapping around the given value.
+  factory PublishAuthoringResponse.wrapInterruptedError(
+    _lib_editor_v1_type_catalog.PublicationId value,
+  ) => PublishAuthoringResponse_interruptedErrorWrapper._(value);
+
+  /// Same as `wrapInterruptedError(_lib_editor_v1_type_catalog.PublicationId(...))`.
+  factory PublishAuthoringResponse.createInterruptedError({
+    required _core.String value,
+  }) => PublishAuthoringResponse.wrapInterruptedError(
+    _lib_editor_v1_type_catalog.PublicationId(value: value),
+  );
+
+  /// Create a 'candidate_changed_error' variant wrapping around the given value.
+  factory PublishAuthoringResponse.wrapCandidateChangedError(
+    PublicationViewChanged value,
+  ) => PublishAuthoringResponse_candidateChangedErrorWrapper._(value);
+
+  /// Same as `wrapCandidateChangedError(PublicationViewChanged(...))`.
+  factory PublishAuthoringResponse.createCandidateChangedError({
+    required PublicationViewId_orMutable current,
+  }) => PublishAuthoringResponse.wrapCandidateChangedError(
+    PublicationViewChanged(current: current),
+  );
 
   /// Create a 'internal_error' variant wrapping around the given value.
   factory PublishAuthoringResponse.wrapInternalError(
@@ -5306,18 +5101,63 @@ sealed class PublishAuthoringResponse {
   /// Serializer for `PublishAuthoringResponse` instances.
   static _skir.EnumSerializer<PublishAuthoringResponse> get serializer {
     if (_serializerBuilder.mustInitialize()) {
-      _serializerBuilder.addWrapperVariant(
+      _serializerBuilder.addConstantVariant(
         1,
-        "result",
-        "wrapResult",
-        PublicationResult.serializer,
+        "publishing",
+        "publishing",
         "",
-        PublishAuthoringResponse_resultWrapper._,
-        (it) => it.value,
-        ordinal: PublishAuthoringResponse_kind.resultWrapper._ordinal,
+        publishing,
+      );
+      _serializerBuilder.addConstantVariant(
+        5,
+        "no_changes",
+        "noChanges",
+        "",
+        noChanges,
       );
       _serializerBuilder.addWrapperVariant(
         2,
+        "activated",
+        "wrapActivated",
+        PublishAuthoringResponse_Activated.serializer,
+        "",
+        PublishAuthoringResponse_activatedWrapper._,
+        (it) => it.value,
+        ordinal: PublishAuthoringResponse_kind.activatedWrapper._ordinal,
+      );
+      _serializerBuilder.addWrapperVariant(
+        3,
+        "blocked_error",
+        "wrapBlockedError",
+        PublicationBlockers.serializer,
+        "",
+        PublishAuthoringResponse_blockedErrorWrapper._,
+        (it) => it.value,
+        ordinal: PublishAuthoringResponse_kind.blockedErrorWrapper._ordinal,
+      );
+      _serializerBuilder.addWrapperVariant(
+        4,
+        "interrupted_error",
+        "wrapInterruptedError",
+        _lib_editor_v1_type_catalog.PublicationId.serializer,
+        "",
+        PublishAuthoringResponse_interruptedErrorWrapper._,
+        (it) => it.value,
+        ordinal: PublishAuthoringResponse_kind.interruptedErrorWrapper._ordinal,
+      );
+      _serializerBuilder.addWrapperVariant(
+        6,
+        "candidate_changed_error",
+        "wrapCandidateChangedError",
+        PublicationViewChanged.serializer,
+        "",
+        PublishAuthoringResponse_candidateChangedErrorWrapper._,
+        (it) => it.value,
+        ordinal:
+            PublishAuthoringResponse_kind.candidateChangedErrorWrapper._ordinal,
+      );
+      _serializerBuilder.addWrapperVariant(
+        7,
         "internal_error",
         "wrapInternalError",
         _lib_kernel_v1_errors.InternalError.serializer,
@@ -5346,8 +5186,13 @@ sealed class PublishAuthoringResponse {
 /// The kind of variant held by a `PublishAuthoringResponse`.
 enum PublishAuthoringResponse_kind {
   unknown(0),
-  resultWrapper(1),
-  internalErrorWrapper(2);
+  publishingConst(1),
+  noChangesConst(2),
+  activatedWrapper(3),
+  blockedErrorWrapper(4),
+  interruptedErrorWrapper(5),
+  candidateChangedErrorWrapper(6),
+  internalErrorWrapper(7);
 
   final _core.int _ordinal;
 
@@ -5375,6 +5220,20 @@ final class PublishAuthoringResponse_unknown
       _skir.internal__stringify(this, PublishAuthoringResponse.serializer);
 }
 
+enum _PublishAuthoringResponse_consts implements PublishAuthoringResponse {
+  publishingConst(PublishAuthoringResponse_kind.publishingConst),
+  noChangesConst(PublishAuthoringResponse_kind.noChangesConst);
+
+  @_core.override
+  final PublishAuthoringResponse_kind kind;
+
+  const _PublishAuthoringResponse_consts(this.kind);
+
+  @_core.override
+  _core.String toString() =>
+      _skir.internal__stringify(this, PublishAuthoringResponse.serializer);
+}
+
 sealed class _PublishAuthoringResponse_wrapper
     implements PublishAuthoringResponse {
   _core.dynamic get value;
@@ -5393,15 +5252,48 @@ sealed class _PublishAuthoringResponse_wrapper
       _skir.internal__stringify(this, PublishAuthoringResponse.serializer);
 }
 
-final class PublishAuthoringResponse_resultWrapper
+final class PublishAuthoringResponse_activatedWrapper
     extends _PublishAuthoringResponse_wrapper {
-  final PublicationResult value;
+  final PublishAuthoringResponse_Activated value;
 
-  PublishAuthoringResponse_resultWrapper._(this.value);
+  PublishAuthoringResponse_activatedWrapper._(this.value);
 
   @_core.override
   PublishAuthoringResponse_kind get kind =>
-      PublishAuthoringResponse_kind.resultWrapper;
+      PublishAuthoringResponse_kind.activatedWrapper;
+}
+
+final class PublishAuthoringResponse_blockedErrorWrapper
+    extends _PublishAuthoringResponse_wrapper {
+  final PublicationBlockers value;
+
+  PublishAuthoringResponse_blockedErrorWrapper._(this.value);
+
+  @_core.override
+  PublishAuthoringResponse_kind get kind =>
+      PublishAuthoringResponse_kind.blockedErrorWrapper;
+}
+
+final class PublishAuthoringResponse_interruptedErrorWrapper
+    extends _PublishAuthoringResponse_wrapper {
+  final _lib_editor_v1_type_catalog.PublicationId value;
+
+  PublishAuthoringResponse_interruptedErrorWrapper._(this.value);
+
+  @_core.override
+  PublishAuthoringResponse_kind get kind =>
+      PublishAuthoringResponse_kind.interruptedErrorWrapper;
+}
+
+final class PublishAuthoringResponse_candidateChangedErrorWrapper
+    extends _PublishAuthoringResponse_wrapper {
+  final PublicationViewChanged value;
+
+  PublishAuthoringResponse_candidateChangedErrorWrapper._(this.value);
+
+  @_core.override
+  PublishAuthoringResponse_kind get kind =>
+      PublishAuthoringResponse_kind.candidateChangedErrorWrapper;
 }
 
 final class PublishAuthoringResponse_internalErrorWrapper
@@ -5500,6 +5392,164 @@ final class WatchPublicationRequest_mutable
   /// Returns a deeply immutable copy of this instance.
   @_core.override
   WatchPublicationRequest toFrozen() => WatchPublicationRequest().._u = this._u;
+}
+
+// -----------------------------------------------------------------------------
+// enum WatchPublicationResponse
+// -----------------------------------------------------------------------------
+
+/// To switch on the variants:
+///   ```
+///   switch (e) {
+///     case WatchPublicationResponse_unknown(): { ... }
+///     case WatchPublicationResponse_viewChanged(:var value): { ... }
+///     case WatchPublicationResponse_internalError(:var value): { ... }
+///   }
+///   ```
+///
+/// Deeply immutable.
+sealed class WatchPublicationResponse {
+  /// Constant indicating an unknown `WatchPublicationResponse`.
+  /// Default value for fields of type `WatchPublicationResponse`.
+  static const WatchPublicationResponse unknown =
+      WatchPublicationResponse_unknown._instance;
+
+  /// Create a 'view_changed' variant wrapping around the given value.
+  factory WatchPublicationResponse.wrapViewChanged(
+    PublicationViewChanged value,
+  ) => WatchPublicationResponse_viewChangedWrapper._(value);
+
+  /// Same as `wrapViewChanged(PublicationViewChanged(...))`.
+  factory WatchPublicationResponse.createViewChanged({
+    required PublicationViewId_orMutable current,
+  }) => WatchPublicationResponse.wrapViewChanged(
+    PublicationViewChanged(current: current),
+  );
+
+  /// Create a 'internal_error' variant wrapping around the given value.
+  factory WatchPublicationResponse.wrapInternalError(
+    _lib_kernel_v1_errors.InternalError value,
+  ) => WatchPublicationResponse_internalErrorWrapper._(value);
+
+  /// Same as `wrapInternalError(_lib_kernel_v1_errors.InternalError(...))`.
+  factory WatchPublicationResponse.createInternalError() =>
+      WatchPublicationResponse.wrapInternalError(
+        _lib_kernel_v1_errors.InternalError(),
+      );
+
+  /// Returns the kind of variant held by this WatchPublicationResponse.
+  WatchPublicationResponse_kind get kind;
+
+  /// Serializer for `WatchPublicationResponse` instances.
+  static _skir.EnumSerializer<WatchPublicationResponse> get serializer {
+    if (_serializerBuilder.mustInitialize()) {
+      _serializerBuilder.addWrapperVariant(
+        1,
+        "view_changed",
+        "wrapViewChanged",
+        PublicationViewChanged.serializer,
+        "",
+        WatchPublicationResponse_viewChangedWrapper._,
+        (it) => it.value,
+        ordinal: WatchPublicationResponse_kind.viewChangedWrapper._ordinal,
+      );
+      _serializerBuilder.addWrapperVariant(
+        2,
+        "internal_error",
+        "wrapInternalError",
+        _lib_kernel_v1_errors.InternalError.serializer,
+        "",
+        WatchPublicationResponse_internalErrorWrapper._,
+        (it) => it.value,
+        ordinal: WatchPublicationResponse_kind.internalErrorWrapper._ordinal,
+      );
+      _serializerBuilder.finalize();
+    }
+    return _serializerBuilder.serializer;
+  }
+
+  static final _serializerBuilder = _skir.internal__EnumSerializerBuilder
+      .create(
+        recordId: "editor/v1/publication.skir:WatchPublicationResponse",
+        doc: "",
+        unknownInstance: WatchPublicationResponse_unknown._instance,
+        enumInstance: WatchPublicationResponse.unknown,
+        getOrdinal: (it) => it.kind._ordinal,
+        wrapUnrecognized: WatchPublicationResponse_unknown._unrecognized,
+        getUnrecognized: (it) => it._u,
+      );
+}
+
+/// The kind of variant held by a `WatchPublicationResponse`.
+enum WatchPublicationResponse_kind {
+  unknown(0),
+  viewChangedWrapper(1),
+  internalErrorWrapper(2);
+
+  final _core.int _ordinal;
+
+  const WatchPublicationResponse_kind(this._ordinal);
+}
+
+final class WatchPublicationResponse_unknown
+    implements WatchPublicationResponse {
+  static const _instance = WatchPublicationResponse_unknown._();
+
+  final _skir.internal__UnrecognizedVariant? _u;
+
+  const WatchPublicationResponse_unknown._() : _u = null;
+  WatchPublicationResponse_unknown._unrecognized(this._u);
+
+  @_core.override
+  WatchPublicationResponse_kind get kind =>
+      WatchPublicationResponse_kind.unknown;
+  @_core.override
+  _core.bool operator ==(other) => other is WatchPublicationResponse_unknown;
+  @_core.override
+  _core.int get hashCode => 8118964;
+  @_core.override
+  _core.String toString() =>
+      _skir.internal__stringify(this, WatchPublicationResponse.serializer);
+}
+
+sealed class _WatchPublicationResponse_wrapper
+    implements WatchPublicationResponse {
+  _core.dynamic get value;
+
+  @_core.override
+  _core.bool operator ==(other) {
+    if (other is! _WatchPublicationResponse_wrapper) return false;
+    return kind == other.kind && value == other.value;
+  }
+
+  @_core.override
+  _core.int get hashCode => (kind._ordinal * 31) ^ value.hashCode;
+
+  @_core.override
+  _core.String toString() =>
+      _skir.internal__stringify(this, WatchPublicationResponse.serializer);
+}
+
+final class WatchPublicationResponse_viewChangedWrapper
+    extends _WatchPublicationResponse_wrapper {
+  final PublicationViewChanged value;
+
+  WatchPublicationResponse_viewChangedWrapper._(this.value);
+
+  @_core.override
+  WatchPublicationResponse_kind get kind =>
+      WatchPublicationResponse_kind.viewChangedWrapper;
+}
+
+final class WatchPublicationResponse_internalErrorWrapper
+    extends _WatchPublicationResponse_wrapper {
+  final _lib_kernel_v1_errors.InternalError value;
+
+  WatchPublicationResponse_internalErrorWrapper._(this.value);
+
+  @_core.override
+  WatchPublicationResponse_kind get kind =>
+      WatchPublicationResponse_kind.internalErrorWrapper;
 }
 
 // -----------------------------------------------------------------------------
@@ -5815,23 +5865,27 @@ final class QueryPublicationViewResponse_internalErrorWrapper
       QueryPublicationViewResponse_kind.internalErrorWrapper;
 }
 
-/// Releases only the issued candidate while its captured saved inputs and engine requirements still match.
+/// Releases only the issued candidate while its captured saved inputs and engine requirements still
+/// match. Reports release admission and selection: activated identifies the newly selected
+/// publication, not an acknowledgement from engine hosts; publishing means another release currently
+/// owns the publication gate; candidate_changed_error requires a fresh review.
 final _skir.Method<PublishAuthoringRequest, PublishAuthoringResponse>
 publishAuthoringMethod = _skir.Method(
   "PublishAuthoring",
   920018,
   PublishAuthoringRequest.serializer,
   PublishAuthoringResponse.serializer,
-  "Releases only the issued candidate while its captured saved inputs and engine requirements still match.",
+  "Releases only the issued candidate while its captured saved inputs and engine requirements still\nmatch. Reports release admission and selection: activated identifies the newly selected\npublication, not an acknowledgement from engine hosts; publishing means another release currently\nowns the publication gate; candidate_changed_error requires a fresh review.",
 );
 
-final _skir.Method<WatchPublicationRequest, PublicationViewChanged>
+/// Returns the current review view identity; later identities arrive as update hints.
+final _skir.Method<WatchPublicationRequest, WatchPublicationResponse>
 watchPublicationMethod = _skir.Method(
   "WatchPublication",
   920019,
   WatchPublicationRequest.serializer,
-  PublicationViewChanged.serializer,
-  "",
+  WatchPublicationResponse.serializer,
+  "Returns the current review view identity; later identities arrive as update hints.",
 );
 
 /// Returns one immutable review view, or the current view identity when expected is no longer

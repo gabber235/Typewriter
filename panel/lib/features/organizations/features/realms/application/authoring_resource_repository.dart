@@ -139,7 +139,7 @@ final class AuthoringResourceRepository {
     return response;
   }
 
-  Future<skir.TypePreviewResult> previewTypeArgumentChange(
+  Future<skir.PreviewTypeArgumentChangeResponse> previewTypeArgumentChange(
     skir.PreviewTypeArgumentChangeRequest request,
   ) async {
     session.checkActive();
@@ -154,9 +154,10 @@ final class AuthoringResourceRepository {
     );
     session.checkActive();
     return switch (response) {
-      skir.PreviewTypeArgumentChangeResponse_resultWrapper(:final value) =>
-        value,
-      _ => throw ApiException.internalServerError(),
+      skir.PreviewTypeArgumentChangeResponse_internalErrorWrapper() ||
+      skir.PreviewTypeArgumentChangeResponse_unknown() =>
+        throw ApiException.internalServerError(),
+      _ => response,
     };
   }
 
@@ -172,9 +173,7 @@ final class AuthoringResourceRepository {
         (organization, realm, resource),
     },
     classify: (response) => switch (response) {
-      skir.CommitPreparedEditResponse_resultWrapper(
-        value: skir.CommitResult.committed,
-      ) =>
+      skir.CommitPreparedEditResponse.committed =>
         MutationResponseDisposition.confirmed,
       skir.CommitPreparedEditResponse_internalErrorWrapper() ||
       skir.CommitPreparedEditResponse_unknown() =>
@@ -184,7 +183,7 @@ final class AuthoringResourceRepository {
     rejectionMessage: (response) => response.rejectionMessage,
   );
 
-  Future<skir.PreparedEditResult> prepareTypeArgumentChange(
+  Future<skir.PrepareTypeArgumentChangeResponse> prepareTypeArgumentChange(
     skir.TypeArgumentChangePreview preview,
   ) async {
     session.checkActive();
@@ -199,9 +198,10 @@ final class AuthoringResourceRepository {
     );
     session.checkActive();
     return switch (response) {
-      skir.PrepareTypeArgumentChangeResponse_resultWrapper(:final value) =>
-        value,
-      _ => throw ApiException.internalServerError(),
+      skir.PrepareTypeArgumentChangeResponse_internalErrorWrapper() ||
+      skir.PrepareTypeArgumentChangeResponse_unknown() =>
+        throw ApiException.internalServerError(),
+      _ => response,
     };
   }
 
@@ -242,18 +242,12 @@ final class AuthoringResourceRepository {
 extension CommitPreparedEditResponseMessaging
     on skir.CommitPreparedEditResponse {
   String get rejectionMessage => switch (this) {
-    skir.CommitPreparedEditResponse_resultWrapper(:final value) =>
+    skir.CommitPreparedEditResponse_rejectedErrorWrapper(:final value) =>
       value.rejectionMessage,
-    _ => "The operation was rejected",
-  };
-}
-
-extension CommitResultMessaging on skir.CommitResult {
-  String get rejectionMessage => switch (this) {
-    skir.CommitResult_rejectedWrapper(:final value) => value.rejectionMessage,
-    skir.CommitResult_conflictWrapper() =>
+    skir.CommitPreparedEditResponse_conflictErrorWrapper() =>
       "The Realm changed before this edit was saved",
-    skir.CommitResult_catalogChangedWrapper() => "The editor catalog changed",
+    skir.CommitPreparedEditResponse_catalogChangedErrorWrapper() =>
+      "The editor catalog changed",
     _ => "The operation was rejected",
   };
 }

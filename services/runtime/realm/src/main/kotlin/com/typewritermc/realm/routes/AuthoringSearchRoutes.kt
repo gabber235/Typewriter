@@ -39,7 +39,7 @@ internal class AuthoringSearchRoutes(
     internal fun search(request: SearchAuthoringRequest): SearchAuthoringResponse =
         views.read { root ->
             if (root.catalog.generation.value != request.generation.value) {
-                return@read SearchAuthoringResponse.createCatalogChanged(
+                return@read SearchAuthoringResponse.createCatalogChangedError(
                     actualGeneration = SkirCatalogGeneration(value = root.catalog.generation.value),
                 )
             }
@@ -73,7 +73,7 @@ private fun invalidSearch(
     code: String,
     message: String,
 ): SearchAuthoringResponse =
-    SearchAuthoringResponse.createInvalid(
+    SearchAuthoringResponse.createInvalidError(
         diagnostics = listOf(AuthoringDiagnostic(code = code, message = message, resource = null, path = null)),
     )
 

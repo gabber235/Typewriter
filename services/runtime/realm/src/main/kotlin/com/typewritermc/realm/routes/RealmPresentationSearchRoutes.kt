@@ -28,7 +28,7 @@ internal class RealmPresentationSearchRoutes(
                 if (source.cancel(call.request.subscriptionId)) {
                     CancelRealmPresentationSearchResult.CANCELED
                 } else {
-                    CancelRealmPresentationSearchResult.NOT_FOUND
+                    CancelRealmPresentationSearchResult.NOT_FOUND_ERROR
                 }
             }
             watch(contracts.watchRealmPresentationSearch) { call ->
@@ -52,8 +52,8 @@ private fun RealmPresentationSearchUpdate.forSubscription(subscriptionId: String
     val actualSubscriptionId =
         when (this) {
             is RealmPresentationSearchUpdate.SnapshotWrapper -> value.subscriptionId
-            is RealmPresentationSearchUpdate.UnavailableWrapper -> value.subscriptionId
-            is RealmPresentationSearchUpdate.StaleObservationWrapper -> value.subscriptionId
+            is RealmPresentationSearchUpdate.UnavailableErrorWrapper -> value.subscriptionId
+            is RealmPresentationSearchUpdate.StaleObservationErrorWrapper -> value.subscriptionId
             else -> null
         }
     if (actualSubscriptionId == subscriptionId) return this

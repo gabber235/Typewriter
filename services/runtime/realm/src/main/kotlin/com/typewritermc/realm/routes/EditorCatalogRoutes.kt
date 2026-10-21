@@ -6,6 +6,7 @@ import com.typewritermc.realm.authoring.PreparationCatalogChanged
 import com.typewritermc.services.libs.communicator.router.CommunicatorRoutesBuilder
 import com.typewritermc.types.skir.getOrThrow
 import skirout.editor.v1.catalog.PrepareValueResult
+import skirout.editor.v1.catalog.WatchEditorCatalogResponse
 
 /**
  * Owns the transport adapters for editor catalog fetches and generation watches.
@@ -25,15 +26,13 @@ internal class EditorCatalogRoutes(
             unary(contracts.prepareValue) { call ->
                 try {
                     val request = SkirAuthoringOperationCodec.decode(call.request).getOrThrow()
-                    PrepareValueResult.PreparedWrapper(
-                        SkirAuthoringOperationCodec.encode(preparation.step(request)).getOrThrow(),
-                    )
+                    SkirAuthoringOperationCodec.encode(preparation.step(request)).getOrThrow()
                 } catch (changed: PreparationCatalogChanged) {
-                    PrepareValueResult.createCatalogChanged(value = changed.actual.value)
+                    PrepareValueResult.createCatalogChangedError(value = changed.actual.value)
                 }
             }
             watch(contracts.watchEditorCatalog) { call ->
-                source.initialGeneration(call.request)
+                WatchEditorCatalogResponse.InvalidatedWrapper(source.initialGeneration(call.request))
             }
         }
 }

@@ -67,8 +67,8 @@ class CommunicatorBlobEndpoint(
                 )
         ) {
             is FetchArtifactBlobMetadataResponse.SuccessWrapper -> BlobResult.Success(response.value.toApi())
-            is FetchArtifactBlobMetadataResponse.NotFoundWrapper -> BlobResult.NotFound
-            is FetchArtifactBlobMetadataResponse.InvalidWrapper -> BlobResult.Invalid(response.value.reason)
+            is FetchArtifactBlobMetadataResponse.NotFoundErrorWrapper -> BlobResult.NotFound
+            is FetchArtifactBlobMetadataResponse.InvalidErrorWrapper -> BlobResult.Invalid(response.value.reason)
             else -> throw RealmArtifactCommunicationException("Realm artifact metadata is unavailable.")
         }
 
@@ -98,11 +98,11 @@ class CommunicatorBlobEndpoint(
                 )
             }
 
-            is ReadArtifactBlobResponse.NotFoundWrapper -> {
+            is ReadArtifactBlobResponse.NotFoundErrorWrapper -> {
                 BlobResult.NotFound
             }
 
-            is ReadArtifactBlobResponse.InvalidWrapper -> {
+            is ReadArtifactBlobResponse.InvalidErrorWrapper -> {
                 BlobResult.Invalid(response.value.reason)
             }
 
@@ -129,11 +129,11 @@ class CommunicatorBlobEndpoint(
                 BlobResult.Success(BlobWriteSession(transfer, expected, response.value.offset))
             }
 
-            is BeginArtifactBlobWriteResponse.InvalidWrapper -> {
+            is BeginArtifactBlobWriteResponse.InvalidErrorWrapper -> {
                 BlobResult.Invalid(response.value.reason)
             }
 
-            is BeginArtifactBlobWriteResponse.ConflictWrapper -> {
+            is BeginArtifactBlobWriteResponse.ConflictErrorWrapper -> {
                 BlobResult.Conflict(response.value.reason)
             }
 
@@ -159,9 +159,9 @@ class CommunicatorBlobEndpoint(
                 )
         ) {
             is WriteArtifactBlobChunkResponse.AcceptedWrapper -> BlobResult.Success(response.value.offset)
-            is WriteArtifactBlobChunkResponse.NotFoundWrapper -> BlobResult.NotFound
-            is WriteArtifactBlobChunkResponse.InvalidWrapper -> BlobResult.Invalid(response.value.reason)
-            is WriteArtifactBlobChunkResponse.ConflictWrapper -> BlobResult.Conflict(response.value.reason)
+            is WriteArtifactBlobChunkResponse.NotFoundErrorWrapper -> BlobResult.NotFound
+            is WriteArtifactBlobChunkResponse.InvalidErrorWrapper -> BlobResult.Invalid(response.value.reason)
+            is WriteArtifactBlobChunkResponse.ConflictErrorWrapper -> BlobResult.Conflict(response.value.reason)
             else -> throw RealmArtifactCommunicationException("Realm artifact write is unavailable.")
         }
 
@@ -174,9 +174,9 @@ class CommunicatorBlobEndpoint(
                 )
         ) {
             is CompleteArtifactBlobWriteResponse.SuccessWrapper -> BlobResult.Success(response.value.toApi())
-            is CompleteArtifactBlobWriteResponse.NotFoundWrapper -> BlobResult.NotFound
-            is CompleteArtifactBlobWriteResponse.InvalidWrapper -> BlobResult.Invalid(response.value.reason)
-            is CompleteArtifactBlobWriteResponse.ConflictWrapper -> BlobResult.Conflict(response.value.reason)
+            is CompleteArtifactBlobWriteResponse.NotFoundErrorWrapper -> BlobResult.NotFound
+            is CompleteArtifactBlobWriteResponse.InvalidErrorWrapper -> BlobResult.Invalid(response.value.reason)
+            is CompleteArtifactBlobWriteResponse.ConflictErrorWrapper -> BlobResult.Conflict(response.value.reason)
             else -> throw RealmArtifactCommunicationException("Realm artifact completion is unavailable.")
         }
 
@@ -200,29 +200,29 @@ class CommunicatorBlobEndpoint(
 
 internal class BlobContracts {
     fun metadata(scope: RealmRouteScope) =
-        scope.sharedBlobMetadata(ResponsePolicy(FetchArtifactBlobMetadataResponse.createUnavailable(), unavailableClassifier()))
+        scope.sharedBlobMetadata(ResponsePolicy(FetchArtifactBlobMetadataResponse.createInternalError(), unavailableClassifier()))
 
     fun read(scope: RealmRouteScope) =
-        scope.sharedBlobRead(ResponsePolicy(ReadArtifactBlobResponse.createUnavailable(), unavailableClassifier()))
+        scope.sharedBlobRead(ResponsePolicy(ReadArtifactBlobResponse.createInternalError(), unavailableClassifier()))
 
     fun begin(scope: RealmRouteScope) =
-        scope.sharedBlobBegin(ResponsePolicy(BeginArtifactBlobWriteResponse.createUnavailable(), unavailableClassifier()))
+        scope.sharedBlobBegin(ResponsePolicy(BeginArtifactBlobWriteResponse.createInternalError(), unavailableClassifier()))
 
     fun write(scope: RealmRouteScope) =
-        scope.sharedBlobWrite(ResponsePolicy(WriteArtifactBlobChunkResponse.createUnavailable(), unavailableClassifier()))
+        scope.sharedBlobWrite(ResponsePolicy(WriteArtifactBlobChunkResponse.createInternalError(), unavailableClassifier()))
 
     fun complete(scope: RealmRouteScope) =
-        scope.sharedBlobComplete(ResponsePolicy(CompleteArtifactBlobWriteResponse.createUnavailable(), unavailableClassifier()))
+        scope.sharedBlobComplete(ResponsePolicy(CompleteArtifactBlobWriteResponse.createInternalError(), unavailableClassifier()))
 }
 
 internal val blobContracts = BlobContracts()
 
 private fun <Response : Any> unavailableClassifier(): ResponseClassifier<Response> =
     ResponseClassifier { response ->
-        val unavailable = response::class.simpleName == "UnavailableWrapper"
+        val unavailable = response::class.simpleName == "InternalErrorWrapper"
         ResponseClassification(
             if (unavailable) ResponseOutcome.INTERNAL_ERROR else ResponseOutcome.SUCCESS,
-            ResponseVariant.of(if (unavailable) "unavailable" else "success"),
+            ResponseVariant.of(if (unavailable) "internal-error" else "success"),
         )
     }
 

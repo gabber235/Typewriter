@@ -36,7 +36,7 @@ DEFINE FUNCTION OVERWRITE fn::service::valid_role($role: object) -> bool {
 DEFINE FUNCTION OVERWRITE fn::service::valid_state($service: object) -> bool {
     fn::service::valid_role($service.role);
     IF $service.organization != NONE AND $service.registration != NONE {
-        THROW "service-organization-registration-conflict"
+        THROW "service-organization-registration-conflict-error"
     };
     RETURN true;
 };

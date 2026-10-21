@@ -18,6 +18,7 @@ import "package:skir_client/skir_client.dart" as _skir;
 import "./diagnostic.dart" as _lib_editor_v1_diagnostic;
 import "./operation.dart" as _lib_editor_v1_operation;
 import "./type_catalog.dart" as _lib_editor_v1_type_catalog;
+import "../../kernel/v1/errors.dart" as _lib_kernel_v1_errors;
 
 // -----------------------------------------------------------------------------
 // struct InvocationId
@@ -2598,10 +2599,11 @@ final class CapabilityFailure_mutable implements CapabilityFailure_orMutable {
 ///   switch (e) {
 ///     case ComputationResult_unknown(): { ... }
 ///     case ComputationResult_success(:var value): { ... }
-///     case ComputationResult_invalid(:var value): { ... }
-///     case ComputationResult_unavailable(:var value): { ... }
-///     case ComputationResult_permissionDenied(:var value): { ... }
-///     case ComputationResult_staleGeneration(:var value): { ... }
+///     case ComputationResult_invalidError(:var value): { ... }
+///     case ComputationResult_unavailableError(:var value): { ... }
+///     case ComputationResult_permissionDeniedError(:var value): { ... }
+///     case ComputationResult_staleGenerationError(:var value): { ... }
+///     case ComputationResult_internalError(:var value): { ... }
 ///   }
 ///   ```
 ///
@@ -2623,60 +2625,72 @@ sealed class ComputationResult {
     ComputationSuccess(invocationId: invocationId, value: value),
   );
 
-  /// Create a 'invalid' variant wrapping around the given value.
-  factory ComputationResult.wrapInvalid(CapabilityFailure value) =>
-      ComputationResult_invalidWrapper._(value);
+  /// Create a 'invalid_error' variant wrapping around the given value.
+  factory ComputationResult.wrapInvalidError(CapabilityFailure value) =>
+      ComputationResult_invalidErrorWrapper._(value);
 
-  /// Same as `wrapInvalid(CapabilityFailure(...))`.
-  factory ComputationResult.createInvalid({
+  /// Same as `wrapInvalidError(CapabilityFailure(...))`.
+  factory ComputationResult.createInvalidError({
     required InvocationId_orMutable invocationId,
     required _core.Iterable<_lib_editor_v1_diagnostic.Diagnostic_orMutable>
     diagnostics,
-  }) => ComputationResult.wrapInvalid(
+  }) => ComputationResult.wrapInvalidError(
     CapabilityFailure(invocationId: invocationId, diagnostics: diagnostics),
   );
 
-  /// Create a 'unavailable' variant wrapping around the given value.
-  factory ComputationResult.wrapUnavailable(CapabilityFailure value) =>
-      ComputationResult_unavailableWrapper._(value);
+  /// Create a 'unavailable_error' variant wrapping around the given value.
+  factory ComputationResult.wrapUnavailableError(CapabilityFailure value) =>
+      ComputationResult_unavailableErrorWrapper._(value);
 
-  /// Same as `wrapUnavailable(CapabilityFailure(...))`.
-  factory ComputationResult.createUnavailable({
+  /// Same as `wrapUnavailableError(CapabilityFailure(...))`.
+  factory ComputationResult.createUnavailableError({
     required InvocationId_orMutable invocationId,
     required _core.Iterable<_lib_editor_v1_diagnostic.Diagnostic_orMutable>
     diagnostics,
-  }) => ComputationResult.wrapUnavailable(
+  }) => ComputationResult.wrapUnavailableError(
     CapabilityFailure(invocationId: invocationId, diagnostics: diagnostics),
   );
 
-  /// Create a 'permission_denied' variant wrapping around the given value.
-  factory ComputationResult.wrapPermissionDenied(
+  /// Create a 'permission_denied_error' variant wrapping around the given value.
+  factory ComputationResult.wrapPermissionDeniedError(
     CapabilityPermissionDenied value,
-  ) => ComputationResult_permissionDeniedWrapper._(value);
+  ) => ComputationResult_permissionDeniedErrorWrapper._(value);
 
-  /// Same as `wrapPermissionDenied(CapabilityPermissionDenied(...))`.
-  factory ComputationResult.createPermissionDenied({
+  /// Same as `wrapPermissionDeniedError(CapabilityPermissionDenied(...))`.
+  factory ComputationResult.createPermissionDeniedError({
     required InvocationId_orMutable invocationId,
     required _core.String message,
-  }) => ComputationResult.wrapPermissionDenied(
+  }) => ComputationResult.wrapPermissionDeniedError(
     CapabilityPermissionDenied(invocationId: invocationId, message: message),
   );
 
-  /// Create a 'stale_generation' variant wrapping around the given value.
-  factory ComputationResult.wrapStaleGeneration(StaleCatalogGeneration value) =>
-      ComputationResult_staleGenerationWrapper._(value);
+  /// Create a 'stale_generation_error' variant wrapping around the given value.
+  factory ComputationResult.wrapStaleGenerationError(
+    StaleCatalogGeneration value,
+  ) => ComputationResult_staleGenerationErrorWrapper._(value);
 
-  /// Same as `wrapStaleGeneration(StaleCatalogGeneration(...))`.
-  factory ComputationResult.createStaleGeneration({
+  /// Same as `wrapStaleGenerationError(StaleCatalogGeneration(...))`.
+  factory ComputationResult.createStaleGenerationError({
     required InvocationId_orMutable invocationId,
     required _lib_editor_v1_type_catalog.CatalogGeneration_orMutable
     actualGeneration,
-  }) => ComputationResult.wrapStaleGeneration(
+  }) => ComputationResult.wrapStaleGenerationError(
     StaleCatalogGeneration(
       invocationId: invocationId,
       actualGeneration: actualGeneration,
     ),
   );
+
+  /// Create a 'internal_error' variant wrapping around the given value.
+  factory ComputationResult.wrapInternalError(
+    _lib_kernel_v1_errors.InternalError value,
+  ) => ComputationResult_internalErrorWrapper._(value);
+
+  /// Same as `wrapInternalError(_lib_kernel_v1_errors.InternalError(...))`.
+  factory ComputationResult.createInternalError() =>
+      ComputationResult.wrapInternalError(
+        _lib_kernel_v1_errors.InternalError(),
+      );
 
   /// Returns the kind of variant held by this ComputationResult.
   ComputationResult_kind get kind;
@@ -2696,43 +2710,53 @@ sealed class ComputationResult {
       );
       _serializerBuilder.addWrapperVariant(
         2,
-        "invalid",
-        "wrapInvalid",
+        "invalid_error",
+        "wrapInvalidError",
         CapabilityFailure.serializer,
         "",
-        ComputationResult_invalidWrapper._,
+        ComputationResult_invalidErrorWrapper._,
         (it) => it.value,
-        ordinal: ComputationResult_kind.invalidWrapper._ordinal,
+        ordinal: ComputationResult_kind.invalidErrorWrapper._ordinal,
       );
       _serializerBuilder.addWrapperVariant(
         3,
-        "unavailable",
-        "wrapUnavailable",
+        "unavailable_error",
+        "wrapUnavailableError",
         CapabilityFailure.serializer,
         "",
-        ComputationResult_unavailableWrapper._,
+        ComputationResult_unavailableErrorWrapper._,
         (it) => it.value,
-        ordinal: ComputationResult_kind.unavailableWrapper._ordinal,
+        ordinal: ComputationResult_kind.unavailableErrorWrapper._ordinal,
       );
       _serializerBuilder.addWrapperVariant(
         4,
-        "permission_denied",
-        "wrapPermissionDenied",
+        "permission_denied_error",
+        "wrapPermissionDeniedError",
         CapabilityPermissionDenied.serializer,
         "",
-        ComputationResult_permissionDeniedWrapper._,
+        ComputationResult_permissionDeniedErrorWrapper._,
         (it) => it.value,
-        ordinal: ComputationResult_kind.permissionDeniedWrapper._ordinal,
+        ordinal: ComputationResult_kind.permissionDeniedErrorWrapper._ordinal,
       );
       _serializerBuilder.addWrapperVariant(
         5,
-        "stale_generation",
-        "wrapStaleGeneration",
+        "stale_generation_error",
+        "wrapStaleGenerationError",
         StaleCatalogGeneration.serializer,
         "",
-        ComputationResult_staleGenerationWrapper._,
+        ComputationResult_staleGenerationErrorWrapper._,
         (it) => it.value,
-        ordinal: ComputationResult_kind.staleGenerationWrapper._ordinal,
+        ordinal: ComputationResult_kind.staleGenerationErrorWrapper._ordinal,
+      );
+      _serializerBuilder.addWrapperVariant(
+        6,
+        "internal_error",
+        "wrapInternalError",
+        _lib_kernel_v1_errors.InternalError.serializer,
+        "",
+        ComputationResult_internalErrorWrapper._,
+        (it) => it.value,
+        ordinal: ComputationResult_kind.internalErrorWrapper._ordinal,
       );
       _serializerBuilder.finalize();
     }
@@ -2755,10 +2779,11 @@ sealed class ComputationResult {
 enum ComputationResult_kind {
   unknown(0),
   successWrapper(1),
-  invalidWrapper(2),
-  unavailableWrapper(3),
-  permissionDeniedWrapper(4),
-  staleGenerationWrapper(5);
+  invalidErrorWrapper(2),
+  unavailableErrorWrapper(3),
+  permissionDeniedErrorWrapper(4),
+  staleGenerationErrorWrapper(5),
+  internalErrorWrapper(6);
 
   final _core.int _ordinal;
 
@@ -2811,46 +2836,58 @@ final class ComputationResult_successWrapper
   ComputationResult_kind get kind => ComputationResult_kind.successWrapper;
 }
 
-final class ComputationResult_invalidWrapper
+final class ComputationResult_invalidErrorWrapper
     extends _ComputationResult_wrapper {
   final CapabilityFailure value;
 
-  ComputationResult_invalidWrapper._(this.value);
+  ComputationResult_invalidErrorWrapper._(this.value);
 
   @_core.override
-  ComputationResult_kind get kind => ComputationResult_kind.invalidWrapper;
+  ComputationResult_kind get kind => ComputationResult_kind.invalidErrorWrapper;
 }
 
-final class ComputationResult_unavailableWrapper
+final class ComputationResult_unavailableErrorWrapper
     extends _ComputationResult_wrapper {
   final CapabilityFailure value;
 
-  ComputationResult_unavailableWrapper._(this.value);
+  ComputationResult_unavailableErrorWrapper._(this.value);
 
   @_core.override
-  ComputationResult_kind get kind => ComputationResult_kind.unavailableWrapper;
+  ComputationResult_kind get kind =>
+      ComputationResult_kind.unavailableErrorWrapper;
 }
 
-final class ComputationResult_permissionDeniedWrapper
+final class ComputationResult_permissionDeniedErrorWrapper
     extends _ComputationResult_wrapper {
   final CapabilityPermissionDenied value;
 
-  ComputationResult_permissionDeniedWrapper._(this.value);
+  ComputationResult_permissionDeniedErrorWrapper._(this.value);
 
   @_core.override
   ComputationResult_kind get kind =>
-      ComputationResult_kind.permissionDeniedWrapper;
+      ComputationResult_kind.permissionDeniedErrorWrapper;
 }
 
-final class ComputationResult_staleGenerationWrapper
+final class ComputationResult_staleGenerationErrorWrapper
     extends _ComputationResult_wrapper {
   final StaleCatalogGeneration value;
 
-  ComputationResult_staleGenerationWrapper._(this.value);
+  ComputationResult_staleGenerationErrorWrapper._(this.value);
 
   @_core.override
   ComputationResult_kind get kind =>
-      ComputationResult_kind.staleGenerationWrapper;
+      ComputationResult_kind.staleGenerationErrorWrapper;
+}
+
+final class ComputationResult_internalErrorWrapper
+    extends _ComputationResult_wrapper {
+  final _lib_kernel_v1_errors.InternalError value;
+
+  ComputationResult_internalErrorWrapper._(this.value);
+
+  @_core.override
+  ComputationResult_kind get kind =>
+      ComputationResult_kind.internalErrorWrapper;
 }
 
 // -----------------------------------------------------------------------------
@@ -2862,10 +2899,11 @@ final class ComputationResult_staleGenerationWrapper
 ///   switch (e) {
 ///     case CommandResult_unknown(): { ... }
 ///     case CommandResult_success(:var value): { ... }
-///     case CommandResult_invalid(:var value): { ... }
-///     case CommandResult_unavailable(:var value): { ... }
-///     case CommandResult_permissionDenied(:var value): { ... }
-///     case CommandResult_staleGeneration(:var value): { ... }
+///     case CommandResult_invalidError(:var value): { ... }
+///     case CommandResult_unavailableError(:var value): { ... }
+///     case CommandResult_permissionDeniedError(:var value): { ... }
+///     case CommandResult_staleGenerationError(:var value): { ... }
+///     case CommandResult_internalError(:var value): { ... }
 ///   }
 ///   ```
 ///
@@ -2887,60 +2925,70 @@ sealed class CommandResult {
     CommandSuccess(invocationId: invocationId, instructions: instructions),
   );
 
-  /// Create a 'invalid' variant wrapping around the given value.
-  factory CommandResult.wrapInvalid(CapabilityFailure value) =>
-      CommandResult_invalidWrapper._(value);
+  /// Create a 'invalid_error' variant wrapping around the given value.
+  factory CommandResult.wrapInvalidError(CapabilityFailure value) =>
+      CommandResult_invalidErrorWrapper._(value);
 
-  /// Same as `wrapInvalid(CapabilityFailure(...))`.
-  factory CommandResult.createInvalid({
+  /// Same as `wrapInvalidError(CapabilityFailure(...))`.
+  factory CommandResult.createInvalidError({
     required InvocationId_orMutable invocationId,
     required _core.Iterable<_lib_editor_v1_diagnostic.Diagnostic_orMutable>
     diagnostics,
-  }) => CommandResult.wrapInvalid(
+  }) => CommandResult.wrapInvalidError(
     CapabilityFailure(invocationId: invocationId, diagnostics: diagnostics),
   );
 
-  /// Create a 'unavailable' variant wrapping around the given value.
-  factory CommandResult.wrapUnavailable(CapabilityFailure value) =>
-      CommandResult_unavailableWrapper._(value);
+  /// Create a 'unavailable_error' variant wrapping around the given value.
+  factory CommandResult.wrapUnavailableError(CapabilityFailure value) =>
+      CommandResult_unavailableErrorWrapper._(value);
 
-  /// Same as `wrapUnavailable(CapabilityFailure(...))`.
-  factory CommandResult.createUnavailable({
+  /// Same as `wrapUnavailableError(CapabilityFailure(...))`.
+  factory CommandResult.createUnavailableError({
     required InvocationId_orMutable invocationId,
     required _core.Iterable<_lib_editor_v1_diagnostic.Diagnostic_orMutable>
     diagnostics,
-  }) => CommandResult.wrapUnavailable(
+  }) => CommandResult.wrapUnavailableError(
     CapabilityFailure(invocationId: invocationId, diagnostics: diagnostics),
   );
 
-  /// Create a 'permission_denied' variant wrapping around the given value.
-  factory CommandResult.wrapPermissionDenied(
+  /// Create a 'permission_denied_error' variant wrapping around the given value.
+  factory CommandResult.wrapPermissionDeniedError(
     CapabilityPermissionDenied value,
-  ) => CommandResult_permissionDeniedWrapper._(value);
+  ) => CommandResult_permissionDeniedErrorWrapper._(value);
 
-  /// Same as `wrapPermissionDenied(CapabilityPermissionDenied(...))`.
-  factory CommandResult.createPermissionDenied({
+  /// Same as `wrapPermissionDeniedError(CapabilityPermissionDenied(...))`.
+  factory CommandResult.createPermissionDeniedError({
     required InvocationId_orMutable invocationId,
     required _core.String message,
-  }) => CommandResult.wrapPermissionDenied(
+  }) => CommandResult.wrapPermissionDeniedError(
     CapabilityPermissionDenied(invocationId: invocationId, message: message),
   );
 
-  /// Create a 'stale_generation' variant wrapping around the given value.
-  factory CommandResult.wrapStaleGeneration(StaleCatalogGeneration value) =>
-      CommandResult_staleGenerationWrapper._(value);
+  /// Create a 'stale_generation_error' variant wrapping around the given value.
+  factory CommandResult.wrapStaleGenerationError(
+    StaleCatalogGeneration value,
+  ) => CommandResult_staleGenerationErrorWrapper._(value);
 
-  /// Same as `wrapStaleGeneration(StaleCatalogGeneration(...))`.
-  factory CommandResult.createStaleGeneration({
+  /// Same as `wrapStaleGenerationError(StaleCatalogGeneration(...))`.
+  factory CommandResult.createStaleGenerationError({
     required InvocationId_orMutable invocationId,
     required _lib_editor_v1_type_catalog.CatalogGeneration_orMutable
     actualGeneration,
-  }) => CommandResult.wrapStaleGeneration(
+  }) => CommandResult.wrapStaleGenerationError(
     StaleCatalogGeneration(
       invocationId: invocationId,
       actualGeneration: actualGeneration,
     ),
   );
+
+  /// Create a 'internal_error' variant wrapping around the given value.
+  factory CommandResult.wrapInternalError(
+    _lib_kernel_v1_errors.InternalError value,
+  ) => CommandResult_internalErrorWrapper._(value);
+
+  /// Same as `wrapInternalError(_lib_kernel_v1_errors.InternalError(...))`.
+  factory CommandResult.createInternalError() =>
+      CommandResult.wrapInternalError(_lib_kernel_v1_errors.InternalError());
 
   /// Returns the kind of variant held by this CommandResult.
   CommandResult_kind get kind;
@@ -2960,43 +3008,53 @@ sealed class CommandResult {
       );
       _serializerBuilder.addWrapperVariant(
         2,
-        "invalid",
-        "wrapInvalid",
+        "invalid_error",
+        "wrapInvalidError",
         CapabilityFailure.serializer,
         "",
-        CommandResult_invalidWrapper._,
+        CommandResult_invalidErrorWrapper._,
         (it) => it.value,
-        ordinal: CommandResult_kind.invalidWrapper._ordinal,
+        ordinal: CommandResult_kind.invalidErrorWrapper._ordinal,
       );
       _serializerBuilder.addWrapperVariant(
         3,
-        "unavailable",
-        "wrapUnavailable",
+        "unavailable_error",
+        "wrapUnavailableError",
         CapabilityFailure.serializer,
         "",
-        CommandResult_unavailableWrapper._,
+        CommandResult_unavailableErrorWrapper._,
         (it) => it.value,
-        ordinal: CommandResult_kind.unavailableWrapper._ordinal,
+        ordinal: CommandResult_kind.unavailableErrorWrapper._ordinal,
       );
       _serializerBuilder.addWrapperVariant(
         4,
-        "permission_denied",
-        "wrapPermissionDenied",
+        "permission_denied_error",
+        "wrapPermissionDeniedError",
         CapabilityPermissionDenied.serializer,
         "",
-        CommandResult_permissionDeniedWrapper._,
+        CommandResult_permissionDeniedErrorWrapper._,
         (it) => it.value,
-        ordinal: CommandResult_kind.permissionDeniedWrapper._ordinal,
+        ordinal: CommandResult_kind.permissionDeniedErrorWrapper._ordinal,
       );
       _serializerBuilder.addWrapperVariant(
         5,
-        "stale_generation",
-        "wrapStaleGeneration",
+        "stale_generation_error",
+        "wrapStaleGenerationError",
         StaleCatalogGeneration.serializer,
         "",
-        CommandResult_staleGenerationWrapper._,
+        CommandResult_staleGenerationErrorWrapper._,
         (it) => it.value,
-        ordinal: CommandResult_kind.staleGenerationWrapper._ordinal,
+        ordinal: CommandResult_kind.staleGenerationErrorWrapper._ordinal,
+      );
+      _serializerBuilder.addWrapperVariant(
+        6,
+        "internal_error",
+        "wrapInternalError",
+        _lib_kernel_v1_errors.InternalError.serializer,
+        "",
+        CommandResult_internalErrorWrapper._,
+        (it) => it.value,
+        ordinal: CommandResult_kind.internalErrorWrapper._ordinal,
       );
       _serializerBuilder.finalize();
     }
@@ -3019,10 +3077,11 @@ sealed class CommandResult {
 enum CommandResult_kind {
   unknown(0),
   successWrapper(1),
-  invalidWrapper(2),
-  unavailableWrapper(3),
-  permissionDeniedWrapper(4),
-  staleGenerationWrapper(5);
+  invalidErrorWrapper(2),
+  unavailableErrorWrapper(3),
+  permissionDeniedErrorWrapper(4),
+  staleGenerationErrorWrapper(5),
+  internalErrorWrapper(6);
 
   final _core.int _ordinal;
 
@@ -3074,42 +3133,53 @@ final class CommandResult_successWrapper extends _CommandResult_wrapper {
   CommandResult_kind get kind => CommandResult_kind.successWrapper;
 }
 
-final class CommandResult_invalidWrapper extends _CommandResult_wrapper {
+final class CommandResult_invalidErrorWrapper extends _CommandResult_wrapper {
   final CapabilityFailure value;
 
-  CommandResult_invalidWrapper._(this.value);
+  CommandResult_invalidErrorWrapper._(this.value);
 
   @_core.override
-  CommandResult_kind get kind => CommandResult_kind.invalidWrapper;
+  CommandResult_kind get kind => CommandResult_kind.invalidErrorWrapper;
 }
 
-final class CommandResult_unavailableWrapper extends _CommandResult_wrapper {
+final class CommandResult_unavailableErrorWrapper
+    extends _CommandResult_wrapper {
   final CapabilityFailure value;
 
-  CommandResult_unavailableWrapper._(this.value);
+  CommandResult_unavailableErrorWrapper._(this.value);
 
   @_core.override
-  CommandResult_kind get kind => CommandResult_kind.unavailableWrapper;
+  CommandResult_kind get kind => CommandResult_kind.unavailableErrorWrapper;
 }
 
-final class CommandResult_permissionDeniedWrapper
+final class CommandResult_permissionDeniedErrorWrapper
     extends _CommandResult_wrapper {
   final CapabilityPermissionDenied value;
 
-  CommandResult_permissionDeniedWrapper._(this.value);
+  CommandResult_permissionDeniedErrorWrapper._(this.value);
 
   @_core.override
-  CommandResult_kind get kind => CommandResult_kind.permissionDeniedWrapper;
+  CommandResult_kind get kind =>
+      CommandResult_kind.permissionDeniedErrorWrapper;
 }
 
-final class CommandResult_staleGenerationWrapper
+final class CommandResult_staleGenerationErrorWrapper
     extends _CommandResult_wrapper {
   final StaleCatalogGeneration value;
 
-  CommandResult_staleGenerationWrapper._(this.value);
+  CommandResult_staleGenerationErrorWrapper._(this.value);
 
   @_core.override
-  CommandResult_kind get kind => CommandResult_kind.staleGenerationWrapper;
+  CommandResult_kind get kind => CommandResult_kind.staleGenerationErrorWrapper;
+}
+
+final class CommandResult_internalErrorWrapper extends _CommandResult_wrapper {
+  final _lib_kernel_v1_errors.InternalError value;
+
+  CommandResult_internalErrorWrapper._(this.value);
+
+  @_core.override
+  CommandResult_kind get kind => CommandResult_kind.internalErrorWrapper;
 }
 
 // -----------------------------------------------------------------------------

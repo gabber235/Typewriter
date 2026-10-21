@@ -16,6 +16,7 @@ import "dart:core" as _core;
 import "package:skir_client/skir_client.dart" as _skir;
 
 import "../../kernel/v1/duration.dart" as _lib_kernel_v1_duration;
+import "../../kernel/v1/errors.dart" as _lib_kernel_v1_errors;
 import "../../kernel/v1/record_id.dart" as _lib_kernel_v1_record_id;
 
 // -----------------------------------------------------------------------------
@@ -827,6 +828,155 @@ final class Permissions_mutable implements Permissions_orMutable {
 }
 
 // -----------------------------------------------------------------------------
+// struct EntityPermissionGrant
+// -----------------------------------------------------------------------------
+
+sealed class EntityPermissionGrant_orMutable {
+  Permissions_orMutable get permissions;
+  _core.Iterable<_core.String> get tags;
+
+  EntityPermissionGrant toFrozen();
+}
+
+/// Deeply immutable.
+final class EntityPermissionGrant implements EntityPermissionGrant_orMutable {
+  @_core.override
+  final Permissions permissions;
+  @_core.override
+  final _core.Iterable<_core.String> tags;
+  _skir.internal__UnrecognizedFields? _u;
+
+  factory EntityPermissionGrant({
+    required Permissions_orMutable permissions,
+    required _core.Iterable<_core.String> tags,
+  }) => EntityPermissionGrant._(
+    permissions.toFrozen(),
+    _skir.internal__frozenCopy(tags),
+  );
+
+  EntityPermissionGrant._(this.permissions, this.tags);
+
+  /// Default instance with all fields set to their default values.
+  static final defaultInstance = EntityPermissionGrant._(
+    Permissions.defaultInstance,
+    _skir.KeyedIterable.empty,
+  );
+
+  /// Returns a new mutable instance.
+  /// Fields are initialized to their default values.
+  static EntityPermissionGrant_mutable mutable() =>
+      EntityPermissionGrant_mutable._(
+        Permissions.defaultInstance,
+        _skir.KeyedIterable.empty,
+      );
+
+  /// Returns this instance (no-op).
+  @_core.Deprecated("This instance is already frozen.")
+  @_core.override
+  EntityPermissionGrant toFrozen() => this;
+
+  /// Returns a mutable shallow copy of this instance.
+  EntityPermissionGrant_mutable toMutable() =>
+      EntityPermissionGrant_mutable._(this.permissions, this.tags);
+
+  @_core.override
+  _core.bool operator ==(other) {
+    if (_core.identical(this, other)) return true;
+    if (other is! EntityPermissionGrant) return false;
+    return _skir.internal__listEquality.equals(
+      _equality_proxy,
+      other._equality_proxy,
+    );
+  }
+
+  @_core.override
+  _core.int get hashCode => _skir.internal__listEquality.hash(_equality_proxy);
+
+  _core.List get _equality_proxy => [this.permissions, this.tags];
+
+  @_core.override
+  _core.String toString() => _skir.internal__stringify(this, serializer);
+
+  /// Serializer for `EntityPermissionGrant` instances.
+  static _skir.StructSerializer<
+    EntityPermissionGrant,
+    EntityPermissionGrant_mutable
+  >
+  get serializer {
+    if (_serializerBuilder.mustInitialize()) {
+      _serializerBuilder.addField(
+        "permissions",
+        "permissions",
+        0,
+        Permissions.serializer,
+        "",
+        (it) => it.permissions,
+        (it, v) => it.permissions = v,
+      );
+      _serializerBuilder.addField(
+        "tags",
+        "tags",
+        1,
+        _skir.Serializers.iterable(_skir.Serializers.string),
+        "",
+        (it) => it.tags,
+        (it, v) => it.tags = v,
+      );
+      _serializerBuilder.finalize();
+    }
+    return _serializerBuilder.serializer;
+  }
+
+  static final _serializerBuilder = _skir.internal__StructSerializerBuilder(
+    recordId: "access/v1/permission.skir:EntityPermissionGrant",
+    doc: "",
+    defaultInstance: defaultInstance,
+    newMutable: (it) => (it != null) ? it.toMutable() : mutable(),
+    toFrozen: (EntityPermissionGrant_mutable it) => it.toFrozen(),
+    getUnrecognizedFields: (it) => it._u,
+    setUnrecognizedFields: (it, u) => it._u = u,
+  );
+}
+
+/// Mutable version of [EntityPermissionGrant].
+final class EntityPermissionGrant_mutable
+    implements EntityPermissionGrant_orMutable {
+  Permissions_orMutable permissions;
+  _core.Iterable<_core.String> tags;
+  _skir.internal__UnrecognizedFields? _u;
+
+  EntityPermissionGrant_mutable._(this.permissions, this.tags);
+
+  /// If the value of [permissions] is already mutable, returns it as-is.
+  /// Otherwise, makes a mutable copy, assigns it back to [permissions] and returns it.
+  Permissions_mutable get mutablePermissions {
+    final value = this.permissions;
+    if (value is Permissions_mutable) {
+      return value;
+    } else {
+      return this.permissions = (value as Permissions).toMutable();
+    }
+  }
+
+  /// If the value of [tags] is already mutable, returns it as-is.
+  /// Otherwise, makes a mutable copy, assigns it back to [tags] and returns it.
+  _core.List<_core.String> get mutableTags {
+    final value = this.tags;
+    if (value is _skir.internal__MutableList<_core.String>) {
+      return value;
+    } else {
+      return this.tags = _skir.internal__MutableList([...value]);
+    }
+  }
+
+  /// Returns a deeply immutable copy of this instance.
+  @_core.override
+  EntityPermissionGrant toFrozen() =>
+      EntityPermissionGrant(permissions: this.permissions, tags: this.tags)
+        .._u = this._u;
+}
+
+// -----------------------------------------------------------------------------
 // struct GetEntityPermissionRequest
 // -----------------------------------------------------------------------------
 
@@ -953,154 +1103,162 @@ final class GetEntityPermissionRequest_mutable
 }
 
 // -----------------------------------------------------------------------------
-// struct GetEntityPermissionResponse
+// enum GetEntityPermissionResponse
 // -----------------------------------------------------------------------------
 
-sealed class GetEntityPermissionResponse_orMutable {
-  Permissions_orMutable get permissions;
-  _core.Iterable<_core.String> get tags;
-
-  GetEntityPermissionResponse toFrozen();
-}
-
+/// To switch on the variants:
+///   ```
+///   switch (e) {
+///     case GetEntityPermissionResponse_unknown(): { ... }
+///     case GetEntityPermissionResponse_granted(:var value): { ... }
+///     case GetEntityPermissionResponse_internalError(:var value): { ... }
+///   }
+///   ```
+///
 /// Deeply immutable.
-final class GetEntityPermissionResponse
-    implements GetEntityPermissionResponse_orMutable {
-  @_core.override
-  final Permissions permissions;
-  @_core.override
-  final _core.Iterable<_core.String> tags;
-  _skir.internal__UnrecognizedFields? _u;
+sealed class GetEntityPermissionResponse {
+  /// Constant indicating an unknown `GetEntityPermissionResponse`.
+  /// Default value for fields of type `GetEntityPermissionResponse`.
+  static const GetEntityPermissionResponse unknown =
+      GetEntityPermissionResponse_unknown._instance;
 
-  factory GetEntityPermissionResponse({
+  /// Create a 'granted' variant wrapping around the given value.
+  factory GetEntityPermissionResponse.wrapGranted(
+    EntityPermissionGrant value,
+  ) => GetEntityPermissionResponse_grantedWrapper._(value);
+
+  /// Same as `wrapGranted(EntityPermissionGrant(...))`.
+  factory GetEntityPermissionResponse.createGranted({
     required Permissions_orMutable permissions,
     required _core.Iterable<_core.String> tags,
-  }) => GetEntityPermissionResponse._(
-    permissions.toFrozen(),
-    _skir.internal__frozenCopy(tags),
+  }) => GetEntityPermissionResponse.wrapGranted(
+    EntityPermissionGrant(permissions: permissions, tags: tags),
   );
 
-  GetEntityPermissionResponse._(this.permissions, this.tags);
+  /// Create a 'internal_error' variant wrapping around the given value.
+  factory GetEntityPermissionResponse.wrapInternalError(
+    _lib_kernel_v1_errors.InternalError value,
+  ) => GetEntityPermissionResponse_internalErrorWrapper._(value);
 
-  /// Default instance with all fields set to their default values.
-  static final defaultInstance = GetEntityPermissionResponse._(
-    Permissions.defaultInstance,
-    _skir.KeyedIterable.empty,
-  );
-
-  /// Returns a new mutable instance.
-  /// Fields are initialized to their default values.
-  static GetEntityPermissionResponse_mutable mutable() =>
-      GetEntityPermissionResponse_mutable._(
-        Permissions.defaultInstance,
-        _skir.KeyedIterable.empty,
+  /// Same as `wrapInternalError(_lib_kernel_v1_errors.InternalError(...))`.
+  factory GetEntityPermissionResponse.createInternalError() =>
+      GetEntityPermissionResponse.wrapInternalError(
+        _lib_kernel_v1_errors.InternalError(),
       );
 
-  /// Returns this instance (no-op).
-  @_core.Deprecated("This instance is already frozen.")
-  @_core.override
-  GetEntityPermissionResponse toFrozen() => this;
-
-  /// Returns a mutable shallow copy of this instance.
-  GetEntityPermissionResponse_mutable toMutable() =>
-      GetEntityPermissionResponse_mutable._(this.permissions, this.tags);
-
-  @_core.override
-  _core.bool operator ==(other) {
-    if (_core.identical(this, other)) return true;
-    if (other is! GetEntityPermissionResponse) return false;
-    return _skir.internal__listEquality.equals(
-      _equality_proxy,
-      other._equality_proxy,
-    );
-  }
-
-  @_core.override
-  _core.int get hashCode => _skir.internal__listEquality.hash(_equality_proxy);
-
-  _core.List get _equality_proxy => [this.permissions, this.tags];
-
-  @_core.override
-  _core.String toString() => _skir.internal__stringify(this, serializer);
+  /// Returns the kind of variant held by this GetEntityPermissionResponse.
+  GetEntityPermissionResponse_kind get kind;
 
   /// Serializer for `GetEntityPermissionResponse` instances.
-  static _skir.StructSerializer<
-    GetEntityPermissionResponse,
-    GetEntityPermissionResponse_mutable
-  >
-  get serializer {
+  static _skir.EnumSerializer<GetEntityPermissionResponse> get serializer {
     if (_serializerBuilder.mustInitialize()) {
-      _serializerBuilder.addField(
-        "permissions",
-        "permissions",
-        0,
-        Permissions.serializer,
-        "",
-        (it) => it.permissions,
-        (it, v) => it.permissions = v,
-      );
-      _serializerBuilder.addField(
-        "tags",
-        "tags",
+      _serializerBuilder.addWrapperVariant(
         1,
-        _skir.Serializers.iterable(_skir.Serializers.string),
+        "granted",
+        "wrapGranted",
+        EntityPermissionGrant.serializer,
         "",
-        (it) => it.tags,
-        (it, v) => it.tags = v,
+        GetEntityPermissionResponse_grantedWrapper._,
+        (it) => it.value,
+        ordinal: GetEntityPermissionResponse_kind.grantedWrapper._ordinal,
+      );
+      _serializerBuilder.addWrapperVariant(
+        2,
+        "internal_error",
+        "wrapInternalError",
+        _lib_kernel_v1_errors.InternalError.serializer,
+        "",
+        GetEntityPermissionResponse_internalErrorWrapper._,
+        (it) => it.value,
+        ordinal: GetEntityPermissionResponse_kind.internalErrorWrapper._ordinal,
       );
       _serializerBuilder.finalize();
     }
     return _serializerBuilder.serializer;
   }
 
-  static final _serializerBuilder = _skir.internal__StructSerializerBuilder(
-    recordId: "access/v1/permission.skir:GetEntityPermissionResponse",
-    doc: "",
-    defaultInstance: defaultInstance,
-    newMutable: (it) => (it != null) ? it.toMutable() : mutable(),
-    toFrozen: (GetEntityPermissionResponse_mutable it) => it.toFrozen(),
-    getUnrecognizedFields: (it) => it._u,
-    setUnrecognizedFields: (it, u) => it._u = u,
-  );
+  static final _serializerBuilder = _skir.internal__EnumSerializerBuilder
+      .create(
+        recordId: "access/v1/permission.skir:GetEntityPermissionResponse",
+        doc: "",
+        unknownInstance: GetEntityPermissionResponse_unknown._instance,
+        enumInstance: GetEntityPermissionResponse.unknown,
+        getOrdinal: (it) => it.kind._ordinal,
+        wrapUnrecognized: GetEntityPermissionResponse_unknown._unrecognized,
+        getUnrecognized: (it) => it._u,
+      );
 }
 
-/// Mutable version of [GetEntityPermissionResponse].
-final class GetEntityPermissionResponse_mutable
-    implements GetEntityPermissionResponse_orMutable {
-  Permissions_orMutable permissions;
-  _core.Iterable<_core.String> tags;
-  _skir.internal__UnrecognizedFields? _u;
+/// The kind of variant held by a `GetEntityPermissionResponse`.
+enum GetEntityPermissionResponse_kind {
+  unknown(0),
+  grantedWrapper(1),
+  internalErrorWrapper(2);
 
-  GetEntityPermissionResponse_mutable._(this.permissions, this.tags);
+  final _core.int _ordinal;
 
-  /// If the value of [permissions] is already mutable, returns it as-is.
-  /// Otherwise, makes a mutable copy, assigns it back to [permissions] and returns it.
-  Permissions_mutable get mutablePermissions {
-    final value = this.permissions;
-    if (value is Permissions_mutable) {
-      return value;
-    } else {
-      return this.permissions = (value as Permissions).toMutable();
-    }
-  }
+  const GetEntityPermissionResponse_kind(this._ordinal);
+}
 
-  /// If the value of [tags] is already mutable, returns it as-is.
-  /// Otherwise, makes a mutable copy, assigns it back to [tags] and returns it.
-  _core.List<_core.String> get mutableTags {
-    final value = this.tags;
-    if (value is _skir.internal__MutableList<_core.String>) {
-      return value;
-    } else {
-      return this.tags = _skir.internal__MutableList([...value]);
-    }
-  }
+final class GetEntityPermissionResponse_unknown
+    implements GetEntityPermissionResponse {
+  static const _instance = GetEntityPermissionResponse_unknown._();
 
-  /// Returns a deeply immutable copy of this instance.
+  final _skir.internal__UnrecognizedVariant? _u;
+
+  const GetEntityPermissionResponse_unknown._() : _u = null;
+  GetEntityPermissionResponse_unknown._unrecognized(this._u);
+
   @_core.override
-  GetEntityPermissionResponse toFrozen() => GetEntityPermissionResponse(
-    permissions: this.permissions,
-    tags: this.tags,
-  ).._u = this._u;
+  GetEntityPermissionResponse_kind get kind =>
+      GetEntityPermissionResponse_kind.unknown;
+  @_core.override
+  _core.bool operator ==(other) => other is GetEntityPermissionResponse_unknown;
+  @_core.override
+  _core.int get hashCode => 8118964;
+  @_core.override
+  _core.String toString() =>
+      _skir.internal__stringify(this, GetEntityPermissionResponse.serializer);
+}
+
+sealed class _GetEntityPermissionResponse_wrapper
+    implements GetEntityPermissionResponse {
+  _core.dynamic get value;
+
+  @_core.override
+  _core.bool operator ==(other) {
+    if (other is! _GetEntityPermissionResponse_wrapper) return false;
+    return kind == other.kind && value == other.value;
+  }
+
+  @_core.override
+  _core.int get hashCode => (kind._ordinal * 31) ^ value.hashCode;
+
+  @_core.override
+  _core.String toString() =>
+      _skir.internal__stringify(this, GetEntityPermissionResponse.serializer);
+}
+
+final class GetEntityPermissionResponse_grantedWrapper
+    extends _GetEntityPermissionResponse_wrapper {
+  final EntityPermissionGrant value;
+
+  GetEntityPermissionResponse_grantedWrapper._(this.value);
+
+  @_core.override
+  GetEntityPermissionResponse_kind get kind =>
+      GetEntityPermissionResponse_kind.grantedWrapper;
+}
+
+final class GetEntityPermissionResponse_internalErrorWrapper
+    extends _GetEntityPermissionResponse_wrapper {
+  final _lib_kernel_v1_errors.InternalError value;
+
+  GetEntityPermissionResponse_internalErrorWrapper._(this.value);
+
+  @_core.override
+  GetEntityPermissionResponse_kind get kind =>
+      GetEntityPermissionResponse_kind.internalErrorWrapper;
 }
 
 final _skir.Method<GetEntityPermissionRequest, GetEntityPermissionResponse>

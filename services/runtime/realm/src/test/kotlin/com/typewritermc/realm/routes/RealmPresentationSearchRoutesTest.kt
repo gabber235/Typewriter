@@ -43,7 +43,8 @@ val RealmPresentationSearchRoutesTest by testSuite {
                     val replacement = source.watch(validSearchRequest()) { }
                     runCurrent()
 
-                    (replacement as RealmPresentationSearchUpdate.SnapshotWrapper).value.status shouldBe RealmPresentationSearchStatus.ERROR
+                    (replacement as RealmPresentationSearchUpdate.SnapshotWrapper).value.status shouldBe
+                        RealmPresentationSearchStatus.SEARCH_FAILED_ERROR
                     operation.active.toSet() shouldBe emptySet()
                     source.cancel("search") shouldBe false
                 }
@@ -82,7 +83,7 @@ val RealmPresentationSearchRoutesTest by testSuite {
                             capabilityId = CapabilityId(value = "unknown"),
                         ),
                     ) { }
-                (response is RealmPresentationSearchUpdate.UnavailableWrapper) shouldBe true
+                (response is RealmPresentationSearchUpdate.UnavailableErrorWrapper) shouldBe true
             }
         }
     }
@@ -91,7 +92,7 @@ val RealmPresentationSearchRoutesTest by testSuite {
         runTest {
             val response = UnavailableRealmPresentationSearchSource().watch(validSearchRequest()) { }
 
-            val unavailable = response as RealmPresentationSearchUpdate.UnavailableWrapper
+            val unavailable = response as RealmPresentationSearchUpdate.UnavailableErrorWrapper
             unavailable.value.subscriptionId shouldBe "search"
             unavailable.value.diagnostics
                 .single()
@@ -127,7 +128,7 @@ val RealmPresentationSearchRoutesTest by testSuite {
 
         val response = requireNotNull(invalidRealmPresentationSearchRequest(invalid)) as RealmPresentationSearchUpdate.SnapshotWrapper
 
-        response.value.status shouldBe RealmPresentationSearchStatus.ERROR
+        response.value.status shouldBe RealmPresentationSearchStatus.SEARCH_FAILED_ERROR
         response.value.diagnostics.size shouldBe 3
     }
 
@@ -135,7 +136,7 @@ val RealmPresentationSearchRoutesTest by testSuite {
         val response = invalidRealmPresentationSearchResponse("search") as RealmPresentationSearchUpdate.SnapshotWrapper
 
         response.value.subscriptionId shouldBe "search"
-        response.value.status shouldBe RealmPresentationSearchStatus.ERROR
+        response.value.status shouldBe RealmPresentationSearchStatus.SEARCH_FAILED_ERROR
         response.value.diagnostics
             .single()
             .message shouldBe "Realm presentation search response used a different subscription ID"

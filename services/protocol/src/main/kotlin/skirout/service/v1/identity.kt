@@ -198,6 +198,7 @@ sealed class IssueServiceIdentityResponse private constructor() {
         }
     }
 
+    /** Malformed request. */
     class MalformedRequestErrorWrapper private constructor (
         val value: skirout.service.v1.identity.IssueServiceIdentityResponse.MalformedRequestError,
     ) : skirout.service.v1.identity.IssueServiceIdentityResponse() {
@@ -216,6 +217,7 @@ sealed class IssueServiceIdentityResponse private constructor() {
         }
     }
 
+    /** Unknown role. */
     class UnknownRoleErrorWrapper private constructor (
         val value: skirout.service.v1.identity.IssueServiceIdentityResponse.UnknownRoleError,
     ) : skirout.service.v1.identity.IssueServiceIdentityResponse() {
@@ -234,6 +236,7 @@ sealed class IssueServiceIdentityResponse private constructor() {
         }
     }
 
+    /** Unknown role property. */
     class RoleUnknownPropertyErrorWrapper private constructor (
         val value: skirout.service.v1.identity.IssueServiceIdentityResponse.RoleUnknownPropertyError,
     ) : skirout.service.v1.identity.IssueServiceIdentityResponse() {
@@ -252,6 +255,7 @@ sealed class IssueServiceIdentityResponse private constructor() {
         }
     }
 
+    /** Invalid role type. */
     class RoleTypeInvalidErrorWrapper private constructor (
         val value: skirout.service.v1.identity.IssueServiceIdentityResponse.RoleTypeInvalidError,
     ) : skirout.service.v1.identity.IssueServiceIdentityResponse() {
@@ -270,6 +274,7 @@ sealed class IssueServiceIdentityResponse private constructor() {
         }
     }
 
+    /** Invalid role version. */
     class RoleVersionInvalidErrorWrapper private constructor (
         val value: skirout.service.v1.identity.IssueServiceIdentityResponse.RoleVersionInvalidError,
     ) : skirout.service.v1.identity.IssueServiceIdentityResponse() {
@@ -288,6 +293,7 @@ sealed class IssueServiceIdentityResponse private constructor() {
         }
     }
 
+    /** Custom role name required. */
     class CustomRoleNameRequiredErrorWrapper private constructor (
         val value: skirout.service.v1.identity.IssueServiceIdentityResponse.CustomRoleNameRequiredError,
     ) : skirout.service.v1.identity.IssueServiceIdentityResponse() {
@@ -306,6 +312,7 @@ sealed class IssueServiceIdentityResponse private constructor() {
         }
     }
 
+    /** Invalid custom role name. */
     class CustomRoleNameInvalidErrorWrapper private constructor (
         val value: skirout.service.v1.identity.IssueServiceIdentityResponse.CustomRoleNameInvalidError,
     ) : skirout.service.v1.identity.IssueServiceIdentityResponse() {
@@ -324,6 +331,7 @@ sealed class IssueServiceIdentityResponse private constructor() {
         }
     }
 
+    /** Built in role name forbidden. */
     class BuiltinRoleNameForbiddenErrorWrapper private constructor (
         val value: skirout.service.v1.identity.IssueServiceIdentityResponse.BuiltinRoleNameForbiddenError,
     ) : skirout.service.v1.identity.IssueServiceIdentityResponse() {
@@ -342,6 +350,7 @@ sealed class IssueServiceIdentityResponse private constructor() {
         }
     }
 
+    /** Identity provider unavailable. */
     class IdentityProviderUnavailableErrorWrapper private constructor (
         val value: skirout.service.v1.identity.IssueServiceIdentityResponse.IdentityProviderUnavailableError,
     ) : skirout.service.v1.identity.IssueServiceIdentityResponse() {
@@ -1562,7 +1571,7 @@ private object _SerializerRegistry {
             "malformed_request_error",
             skirout.service.v1.identity.IssueServiceIdentityResponse.Kind.MALFORMED_REQUEST_ERROR_WRAPPER.ordinal,
             _SerializerRegistry.IssueServiceIdentityResponse_MalformedRequestErrorSerializer,
-            "",
+            "Malformed request.",
             { skirout.service.v1.identity.IssueServiceIdentityResponse.MalformedRequestErrorWrapper(it) },
             { it.value },
         );
@@ -1571,7 +1580,7 @@ private object _SerializerRegistry {
             "unknown_role_error",
             skirout.service.v1.identity.IssueServiceIdentityResponse.Kind.UNKNOWN_ROLE_ERROR_WRAPPER.ordinal,
             _SerializerRegistry.IssueServiceIdentityResponse_UnknownRoleErrorSerializer,
-            "",
+            "Unknown role.",
             { skirout.service.v1.identity.IssueServiceIdentityResponse.UnknownRoleErrorWrapper(it) },
             { it.value },
         );
@@ -1580,7 +1589,7 @@ private object _SerializerRegistry {
             "role_unknown_property_error",
             skirout.service.v1.identity.IssueServiceIdentityResponse.Kind.ROLE_UNKNOWN_PROPERTY_ERROR_WRAPPER.ordinal,
             _SerializerRegistry.IssueServiceIdentityResponse_RoleUnknownPropertyErrorSerializer,
-            "",
+            "Unknown role property.",
             { skirout.service.v1.identity.IssueServiceIdentityResponse.RoleUnknownPropertyErrorWrapper(it) },
             { it.value },
         );
@@ -1589,7 +1598,7 @@ private object _SerializerRegistry {
             "role_type_invalid_error",
             skirout.service.v1.identity.IssueServiceIdentityResponse.Kind.ROLE_TYPE_INVALID_ERROR_WRAPPER.ordinal,
             _SerializerRegistry.IssueServiceIdentityResponse_RoleTypeInvalidErrorSerializer,
-            "",
+            "Invalid role type.",
             { skirout.service.v1.identity.IssueServiceIdentityResponse.RoleTypeInvalidErrorWrapper(it) },
             { it.value },
         );
@@ -1598,7 +1607,7 @@ private object _SerializerRegistry {
             "role_version_invalid_error",
             skirout.service.v1.identity.IssueServiceIdentityResponse.Kind.ROLE_VERSION_INVALID_ERROR_WRAPPER.ordinal,
             _SerializerRegistry.IssueServiceIdentityResponse_RoleVersionInvalidErrorSerializer,
-            "",
+            "Invalid role version.",
             { skirout.service.v1.identity.IssueServiceIdentityResponse.RoleVersionInvalidErrorWrapper(it) },
             { it.value },
         );
@@ -1607,7 +1616,7 @@ private object _SerializerRegistry {
             "custom_role_name_required_error",
             skirout.service.v1.identity.IssueServiceIdentityResponse.Kind.CUSTOM_ROLE_NAME_REQUIRED_ERROR_WRAPPER.ordinal,
             _SerializerRegistry.IssueServiceIdentityResponse_CustomRoleNameRequiredErrorSerializer,
-            "",
+            "Custom role name required.",
             { skirout.service.v1.identity.IssueServiceIdentityResponse.CustomRoleNameRequiredErrorWrapper(it) },
             { it.value },
         );
@@ -1616,7 +1625,7 @@ private object _SerializerRegistry {
             "custom_role_name_invalid_error",
             skirout.service.v1.identity.IssueServiceIdentityResponse.Kind.CUSTOM_ROLE_NAME_INVALID_ERROR_WRAPPER.ordinal,
             _SerializerRegistry.IssueServiceIdentityResponse_CustomRoleNameInvalidErrorSerializer,
-            "",
+            "Invalid custom role name.",
             { skirout.service.v1.identity.IssueServiceIdentityResponse.CustomRoleNameInvalidErrorWrapper(it) },
             { it.value },
         );
@@ -1625,7 +1634,7 @@ private object _SerializerRegistry {
             "builtin_role_name_forbidden_error",
             skirout.service.v1.identity.IssueServiceIdentityResponse.Kind.BUILTIN_ROLE_NAME_FORBIDDEN_ERROR_WRAPPER.ordinal,
             _SerializerRegistry.IssueServiceIdentityResponse_BuiltinRoleNameForbiddenErrorSerializer,
-            "",
+            "Built in role name forbidden.",
             { skirout.service.v1.identity.IssueServiceIdentityResponse.BuiltinRoleNameForbiddenErrorWrapper(it) },
             { it.value },
         );
@@ -1634,7 +1643,7 @@ private object _SerializerRegistry {
             "identity_provider_unavailable_error",
             skirout.service.v1.identity.IssueServiceIdentityResponse.Kind.IDENTITY_PROVIDER_UNAVAILABLE_ERROR_WRAPPER.ordinal,
             _SerializerRegistry.IssueServiceIdentityResponse_IdentityProviderUnavailableErrorSerializer,
-            "",
+            "Identity provider unavailable.",
             { skirout.service.v1.identity.IssueServiceIdentityResponse.IdentityProviderUnavailableErrorWrapper(it) },
             { it.value },
         );

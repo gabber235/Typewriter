@@ -129,7 +129,7 @@ void main() {
             ready,
             RealmPublishCommand(ready.candidate, () async {
               published++;
-              return skir.PublicationResult.noChanges;
+              return skir.PublishAuthoringResponse.noChanges;
             }),
           ),
         ),

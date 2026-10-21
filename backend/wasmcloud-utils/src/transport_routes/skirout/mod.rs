@@ -1006,7 +1006,7 @@ impl crate::transport::RequestRoute for PanelPermissionResolveRoute {
     type Scope = crate::transport::InternalComponentScope;
     type Request = crate::skirout::base::access::v1::permission::GetEntityPermissionRequest;
     type Response = crate::skirout::base::access::v1::permission::GetEntityPermissionResponse;
-    type Delivery = crate::transport::PlainResponseDelivery;
+    type Delivery = crate::transport::DomainResponseDelivery;
     fn method() -> &'static crate::skir_client::Method<Self::Request, Self::Response> {
         crate::skirout::base::access::v1::permission::get_entity_permission_method()
     }
@@ -1021,7 +1021,7 @@ impl crate::transport::RequestRoute for ServicesPermissionResolveRoute {
     type Scope = crate::transport::InternalComponentScope;
     type Request = crate::skirout::base::access::v1::permission::GetEntityPermissionRequest;
     type Response = crate::skirout::base::access::v1::permission::GetEntityPermissionResponse;
-    type Delivery = crate::transport::PlainResponseDelivery;
+    type Delivery = crate::transport::DomainResponseDelivery;
     fn method() -> &'static crate::skir_client::Method<Self::Request, Self::Response> {
         crate::skirout::base::access::v1::permission::get_entity_permission_method()
     }

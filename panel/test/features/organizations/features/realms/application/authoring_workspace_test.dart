@@ -469,11 +469,7 @@ void main() {
       expect(transport.current.facts.conflicts(request.expectations), isEmpty);
       transport
         ..current = editing.document
-        ..reply.complete(
-          skir.CommitPreparedEditResponse.wrapResult(
-            skir.CommitResult.committed,
-          ),
-        );
+        ..reply.complete(skir.CommitPreparedEditResponse.committed);
       await saving;
       expect(editing.state.groups, isEmpty);
     },
@@ -521,11 +517,7 @@ void main() {
       );
       transport
         ..current = editing.document
-        ..reply.complete(
-          skir.CommitPreparedEditResponse.wrapResult(
-            skir.CommitResult.committed,
-          ),
-        );
+        ..reply.complete(skir.CommitPreparedEditResponse.committed);
       await saving;
       expect(editing.state.groups, isEmpty);
     },
@@ -630,9 +622,7 @@ void main() {
         ),
     ];
     final settlement =
-        skir.CommitPreparedEditResponse.wrapResult(
-              skir.CommitResult.wrapConflict(facts),
-            ).editSettlement
+        skir.CommitPreparedEditResponse.wrapConflictError(facts).editSettlement
             as EditConflict<AuthoringDocument>;
     expect((settlement.evidence as AuthoringConflictEvidence).facts, facts);
   });
@@ -663,9 +653,7 @@ void main() {
     expect(_read(editing.document, _name), _text("Quest"));
     transport
       ..current = _document(name: "Quest")
-      ..reply.complete(
-        skir.CommitPreparedEditResponse.wrapResult(skir.CommitResult.committed),
-      );
+      ..reply.complete(skir.CommitPreparedEditResponse.committed);
     await saving;
     expect(editing.state.groups, isEmpty);
   });
@@ -710,7 +698,7 @@ void main() {
         ),
       );
       gate.complete();
-      expect(await publishing, skir.PublicationResult.publishing);
+      expect(await publishing, skir.PublishAuthoringResponse.publishing);
       await waitForPublication(() => driver.view is PublishingRealmPublication);
       expect(
         work.state.entries.values.single.phase,
@@ -818,7 +806,7 @@ void main() {
       await waitForPublication(() => publication.view is ReadyRealmPublication);
       expect(
         await (publication.view as ReadyRealmPublication).command.invoke(),
-        skir.PublicationResult.publishing,
+        skir.PublishAuthoringResponse.publishing,
       );
       expect(repository.publishedValues, [_text("Original")]);
       expect(workspace.state, same(before));
@@ -860,7 +848,7 @@ void main() {
     expect(driver.view, isA<UncertainRealmPublication>());
     expect(
       await command.invoke(),
-      isA<skir.PublicationResult_candidateChangedWrapper>(),
+      isA<skir.PublishAuthoringResponse_candidateChangedErrorWrapper>(),
     );
     expect(repository.publishedValues, hasLength(1));
     expect(work.state.blocksNavigation, isFalse);
@@ -937,11 +925,7 @@ void main() {
       );
       transport
         ..current = _document(position: "50")
-        ..reply.complete(
-          skir.CommitPreparedEditResponse.wrapResult(
-            skir.CommitResult.committed,
-          ),
-        );
+        ..reply.complete(skir.CommitPreparedEditResponse.committed);
       await saving;
       expect(_read(workspace.document, _name), _text("Local"));
       expect(_read(workspace.document, _position), _text("50"));
@@ -1042,9 +1026,7 @@ void main() {
     );
     transport
       ..current = _document(name: "First")
-      ..reply.complete(
-        skir.CommitPreparedEditResponse.wrapResult(skir.CommitResult.committed),
-      );
+      ..reply.complete(skir.CommitPreparedEditResponse.committed);
     await saving;
     expect(_read(workspace.document, _name), _text("Second"));
     expect(workspace.state.groups[form.editingGroup]!.operationCount, 1);
@@ -1107,11 +1089,7 @@ void main() {
         if (uncertain) {
           transport.reply.completeError(StateError("Reply lost"));
         } else {
-          transport.reply.complete(
-            skir.CommitPreparedEditResponse.wrapResult(
-              skir.CommitResult.committed,
-            ),
-          );
+          transport.reply.complete(skir.CommitPreparedEditResponse.committed);
         }
         await saving;
         final phase = binding.phase;
@@ -1337,9 +1315,7 @@ void main() {
       final saving = form.save();
       await Future<void>.delayed(Duration.zero);
       form.edit(label: "Tail", apply: (edit) => edit.set(_name, _text("Tail")));
-      transport.reply.complete(
-        skir.CommitPreparedEditResponse.wrapResult(skir.CommitResult.committed),
-      );
+      transport.reply.complete(skir.CommitPreparedEditResponse.committed);
       await saving;
       expect(form.phase, isA<EditGroupCommittedAwaitingRefresh>());
       expect(form.control.state.canDiscard, isTrue);
@@ -1380,21 +1356,13 @@ void main() {
       expect(transport.requests, hasLength(1));
       transport
         ..current = _document(name: "First")
-        ..reply.complete(
-          skir.CommitPreparedEditResponse.wrapResult(
-            skir.CommitResult.committed,
-          ),
-        );
+        ..reply.complete(skir.CommitPreparedEditResponse.committed);
       await Future<void>.delayed(Duration.zero);
       expect(transport.requests, hasLength(2));
       expect(transport.requests.last.intents, hasLength(1));
       transport
         ..current = _document(name: "First", position: "Second")
-        ..reply.complete(
-          skir.CommitPreparedEditResponse.wrapResult(
-            skir.CommitResult.committed,
-          ),
-        );
+        ..reply.complete(skir.CommitPreparedEditResponse.committed);
       await saving;
       expect(workspace.state.groups, isEmpty);
     },
@@ -1422,9 +1390,7 @@ void main() {
       final saving = form.save();
       await Future<void>.delayed(Duration.zero);
       transport.reply.complete(
-        skir.CommitPreparedEditResponse.wrapResult(
-          skir.CommitResult.wrapConflict(const []),
-        ),
+        skir.CommitPreparedEditResponse.wrapConflictError(const []),
       );
       await saving;
       await form.save();
@@ -1691,11 +1657,7 @@ final class _WorkPublicationRepository extends TestPublicationRepository {
           stackTrace: StackTrace.current,
         );
       }
-      return SubmissionConfirmed(
-        skir.PublishAuthoringResponse.wrapResult(
-          skir.PublicationResult.publishing,
-        ),
-      );
+      return SubmissionConfirmed(skir.PublishAuthoringResponse.publishing);
     },
   );
   @override

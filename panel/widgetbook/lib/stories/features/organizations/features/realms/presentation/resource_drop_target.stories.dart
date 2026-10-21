@@ -351,7 +351,7 @@ AuthoredResourceCommands _commands(
         }
         final target = skir.ResourceId(value: destination);
         if (document().entry(target) == null) {
-          return skir.AuthoringActionResult.createUnavailable(
+          return skir.AuthoringActionResult.createUnavailableError(
             diagnostics: [
               skir.AuthoringDiagnostic(
                 code: "fixture_unavailable",

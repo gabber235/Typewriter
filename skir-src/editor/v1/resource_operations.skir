@@ -126,11 +126,11 @@ struct ResolveResourceOperationsRequest(812500015) {
 
 enum ResolveResourceOperationsResult(812500016) {
   resolved: ResolvedResourceOperations = 1;
-  stale_observation: StaleAuthoringObservation = 2;
-  invalid: ResourceOperationFailure = 3;
-  catalog_changed: CatalogChanged = 4;
-  permission_denied: ResourceOperationFailure = 5;
-  failed: ResourceOperationFailure = 6;
+  stale_observation_error: StaleAuthoringObservation = 2;
+  invalid_error: ResourceOperationFailure = 3;
+  catalog_changed_error: CatalogChanged = 4;
+  permission_denied_error: ResourceOperationFailure = 5;
+  failed_error: ResourceOperationFailure = 6;
   internal_error: InternalError = 7;
 }
 
@@ -169,12 +169,12 @@ struct AuthoringActionPreview(812500019) {
 enum AuthoringActionResult(812500020) {
   needs_input: AuthoringActionNeedsInput = 1;
   preview: AuthoringActionPreview = 2;
-  stale_observation: StaleAuthoringObservation = 3;
-  invalid: ResourceOperationFailure = 4;
-  unavailable: ResourceOperationFailure = 5;
-  catalog_changed: CatalogChanged = 6;
-  permission_denied: ResourceOperationFailure = 7;
-  failed: ResourceOperationFailure = 8;
+  stale_observation_error: StaleAuthoringObservation = 3;
+  invalid_error: ResourceOperationFailure = 4;
+  unavailable_error: ResourceOperationFailure = 5;
+  catalog_changed_error: CatalogChanged = 6;
+  permission_denied_error: ResourceOperationFailure = 7;
+  failed_error: ResourceOperationFailure = 8;
   internal_error: InternalError = 9;
 }
 
@@ -203,11 +203,11 @@ struct ResolveDropCandidatesRequest(812500023) {
 /// declare a drop field contribute candidates.
 enum ResolveDropCandidatesResult(812500024) {
   resolved: [DropCandidates] = 1;
-  stale_observation: StaleAuthoringObservation = 2;
-  invalid: ResourceOperationFailure = 3;
-  catalog_changed: CatalogChanged = 4;
-  permission_denied: ResourceOperationFailure = 5;
-  failed: ResourceOperationFailure = 6;
+  stale_observation_error: StaleAuthoringObservation = 2;
+  invalid_error: ResourceOperationFailure = 3;
+  catalog_changed_error: CatalogChanged = 4;
+  permission_denied_error: ResourceOperationFailure = 5;
+  failed_error: ResourceOperationFailure = 6;
   internal_error: InternalError = 7;
 }
 

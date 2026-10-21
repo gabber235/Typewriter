@@ -784,6 +784,162 @@ class Permissions private constructor(
     }
 }
 
+sealed interface EntityPermissionGrant_OrMutable {
+    val permissions: skirout.access.v1.permission.Permissions_OrMutable;
+    val tags: kotlin.collections.List<kotlin.String>;
+
+    fun toFrozen(): skirout.access.v1.permission.EntityPermissionGrant;
+}
+
+/** Deeply immutable. */
+@kotlin.Suppress("UNUSED_PARAMETER")
+class EntityPermissionGrant private constructor(
+    override val permissions: skirout.access.v1.permission.Permissions,
+    override val tags: kotlin.collections.List<kotlin.String>,
+    internal val _unrecognizedFields: _UnrecognizedFields<skirout.access.v1.permission.EntityPermissionGrant>? =
+        null,
+): skirout.access.v1.permission.EntityPermissionGrant_OrMutable {
+    constructor(
+        _mustNameArguments: _MustNameArguments =
+            _MustNameArguments,
+        permissions: skirout.access.v1.permission.Permissions_OrMutable,
+        tags: kotlin.collections.Iterable<kotlin.String>,
+        _unrecognizedFields: _UnrecognizedFields<skirout.access.v1.permission.EntityPermissionGrant>? =
+            null,
+    ): this(
+        permissions.toFrozen(),
+        build.skir.internal.toFrozenList(tags),
+        _unrecognizedFields,
+    ) {}
+
+    @kotlin.Deprecated("Already frozen", kotlin.ReplaceWith("this"))
+    override fun toFrozen() = this;
+
+    /** Returns a mutable shallow copy of this instance */
+    fun toMutable() = Mutable(
+        permissions = this.permissions,
+        tags = this.tags,
+    );
+
+    /** Returns a shallow copy of this instance with the specified fields replaced. */
+    fun copy(
+        _mustNameArguments: _MustNameArguments =
+            _MustNameArguments,
+        permissions: skirout.access.v1.permission.Permissions_OrMutable =
+            this.permissions,
+        tags: kotlin.collections.Iterable<kotlin.String> =
+            this.tags,
+    ) = skirout.access.v1.permission.EntityPermissionGrant(
+        permissions.toFrozen(),
+        build.skir.internal.toFrozenList(tags),
+        this._unrecognizedFields,
+    );
+
+    @kotlin.Deprecated("No point in creating an exact copy of an immutable object", kotlin.ReplaceWith("this"))
+    fun copy() = this;
+
+    override fun equals(other: kotlin.Any?): kotlin.Boolean {
+        return this === other || (other is skirout.access.v1.permission.EntityPermissionGrant && this.permissions == other.permissions && this.tags == other.tags);
+    }
+
+    override fun hashCode(): kotlin.Int {
+        return kotlin.collections.listOf<kotlin.Any?>(this.permissions, this.tags).hashCode();
+    }
+
+    override fun toString(): kotlin.String {
+        return build.skir.internal.toStringImpl(
+            this,
+            _SerializerRegistry.EntityPermissionGrantSerializerImpl,
+        )
+    }
+
+    /** Mutable version of [EntityPermissionGrant]. */
+    class Mutable internal constructor(
+        _mustNameArguments: _MustNameArguments =
+            _MustNameArguments,
+        override var permissions: skirout.access.v1.permission.Permissions_OrMutable =
+            skirout.access.v1.permission.Permissions.partial(),
+        override var tags: kotlin.collections.List<kotlin.String> =
+            build.skir.internal.emptyFrozenList<kotlin.String>(),
+        internal var _unrecognizedFields: _UnrecognizedFields<skirout.access.v1.permission.EntityPermissionGrant>? =
+            null,
+    ): skirout.access.v1.permission.EntityPermissionGrant_OrMutable {
+        /** Returns a deeply immutable copy of this instance */
+        override fun toFrozen() = skirout.access.v1.permission.EntityPermissionGrant(
+            permissions = this.permissions,
+            tags = this.tags,
+            _unrecognizedFields = this._unrecognizedFields,
+        );
+
+        /**
+         * If the value of [permissions] is already mutable, returns it as-is.
+         * Otherwise, makes a mutable copy, assigns it back to [permissions] and returns it.
+         */
+        val mutablePermissions: skirout.access.v1.permission.Permissions.Mutable get() {
+            var value = this.permissions;
+            return when (value) {
+                is skirout.access.v1.permission.Permissions -> {
+                    value = value.toMutable();
+                    this.permissions = value;
+                    return value;
+                }
+                is skirout.access.v1.permission.Permissions.Mutable -> value;
+            }
+        }
+
+        /**
+         * If the value of [tags] is already mutable, returns it as-is.
+         * Otherwise, makes a mutable copy, assigns it back to [tags] and returns it.
+         */
+        val mutableTags: kotlin.collections.MutableList<kotlin.String> get() {
+            var value = this.tags;
+            return when (value) {
+                is build.skir.internal.MutableList -> value;
+                else -> {
+                    value = build.skir.internal.MutableList(value);
+                    this.tags = value;
+                    value;
+                }
+            }
+        }
+    }
+
+    companion object {
+        private val default =
+            skirout.access.v1.permission.EntityPermissionGrant(
+                skirout.access.v1.permission.Permissions.partial(),
+                build.skir.internal.emptyFrozenList<kotlin.String>(),
+            );
+
+        /** Returns an instance with all fields set to their default values. */
+        fun partial() = default;
+
+        /**
+         * Creates a new instance of [EntityPermissionGrant].
+         * Unlike the constructor, does not require all fields to be specified.
+         * Missing fields will be set to their default values.
+         */
+        fun partial(
+            _mustNameArguments: _MustNameArguments =
+                _MustNameArguments,
+            permissions: skirout.access.v1.permission.Permissions_OrMutable =
+                skirout.access.v1.permission.Permissions.partial(),
+            tags: kotlin.collections.Iterable<kotlin.String> =
+                build.skir.internal.emptyFrozenList<kotlin.String>(),
+        ) = skirout.access.v1.permission.EntityPermissionGrant(
+            permissions = permissions,
+            tags = tags,
+            _unrecognizedFields = null,
+        );
+
+        /** Serializer for [EntityPermissionGrant] instances. */
+        val serializer get() = _SerializerRegistry.EntityPermissionGrantSerializer;
+
+        /** Describes the [EntityPermissionGrant] type. Provides runtime introspection capabilities. */
+        val typeDescriptor get() = _SerializerRegistry.EntityPermissionGrantSerializerImpl.typeDescriptor;
+    }
+}
+
 sealed interface GetEntityPermissionRequest_OrMutable {
     val qualifier: skirout.access.v1.permission.EntityPermissionQualifier;
     val jwtClaims: okio.ByteString;
@@ -908,67 +1064,69 @@ class GetEntityPermissionRequest private constructor(
     }
 }
 
-sealed interface GetEntityPermissionResponse_OrMutable {
-    val permissions: skirout.access.v1.permission.Permissions_OrMutable;
-    val tags: kotlin.collections.List<kotlin.String>;
-
-    fun toFrozen(): skirout.access.v1.permission.GetEntityPermissionResponse;
-}
-
 /** Deeply immutable. */
-@kotlin.Suppress("UNUSED_PARAMETER")
-class GetEntityPermissionResponse private constructor(
-    override val permissions: skirout.access.v1.permission.Permissions,
-    override val tags: kotlin.collections.List<kotlin.String>,
-    internal val _unrecognizedFields: _UnrecognizedFields<skirout.access.v1.permission.GetEntityPermissionResponse>? =
-        null,
-): skirout.access.v1.permission.GetEntityPermissionResponse_OrMutable {
-    constructor(
-        _mustNameArguments: _MustNameArguments =
-            _MustNameArguments,
-        permissions: skirout.access.v1.permission.Permissions_OrMutable,
-        tags: kotlin.collections.Iterable<kotlin.String>,
-        _unrecognizedFields: _UnrecognizedFields<skirout.access.v1.permission.GetEntityPermissionResponse>? =
-            null,
-    ): this(
-        permissions.toFrozen(),
-        build.skir.internal.toFrozenList(tags),
-        _unrecognizedFields,
-    ) {}
-
-    @kotlin.Deprecated("Already frozen", kotlin.ReplaceWith("this"))
-    override fun toFrozen() = this;
-
-    /** Returns a mutable shallow copy of this instance */
-    fun toMutable() = Mutable(
-        permissions = this.permissions,
-        tags = this.tags,
-    );
-
-    /** Returns a shallow copy of this instance with the specified fields replaced. */
-    fun copy(
-        _mustNameArguments: _MustNameArguments =
-            _MustNameArguments,
-        permissions: skirout.access.v1.permission.Permissions_OrMutable =
-            this.permissions,
-        tags: kotlin.collections.Iterable<kotlin.String> =
-            this.tags,
-    ) = skirout.access.v1.permission.GetEntityPermissionResponse(
-        permissions.toFrozen(),
-        build.skir.internal.toFrozenList(tags),
-        this._unrecognizedFields,
-    );
-
-    @kotlin.Deprecated("No point in creating an exact copy of an immutable object", kotlin.ReplaceWith("this"))
-    fun copy() = this;
-
-    override fun equals(other: kotlin.Any?): kotlin.Boolean {
-        return this === other || (other is skirout.access.v1.permission.GetEntityPermissionResponse && this.permissions == other.permissions && this.tags == other.tags);
+sealed class GetEntityPermissionResponse private constructor() {
+    /** The kind of variant held by a `GetEntityPermissionResponse`. */
+    enum class Kind {
+        UNKNOWN,
+        GRANTED_WRAPPER,
+        INTERNAL_ERROR_WRAPPER,
     }
 
-    override fun hashCode(): kotlin.Int {
-        return kotlin.collections.listOf<kotlin.Any?>(this.permissions, this.tags).hashCode();
+    class Unknown @kotlin.Deprecated("For internal use", kotlin.ReplaceWith("skirout.access.v1.permission.GetEntityPermissionResponse.UNKNOWN")) internal constructor(
+        internal val _kind: Kind,
+        internal override val _unrecognized: _UnrecognizedVariant<skirout.access.v1.permission.GetEntityPermissionResponse>?,
+    ) : skirout.access.v1.permission.GetEntityPermissionResponse() {
+        override val kind get() = _kind;
+
+        override fun equals(other: kotlin.Any?): kotlin.Boolean {
+            return other is skirout.access.v1.permission.GetEntityPermissionResponse && other.kind == kind;
+        }
+
+        override fun hashCode(): kotlin.Int {
+            return kind.ordinal;
+        }
     }
+
+    class GrantedWrapper private constructor (
+        val value: skirout.access.v1.permission.EntityPermissionGrant,
+    ) : skirout.access.v1.permission.GetEntityPermissionResponse() {
+        constructor(
+            value: skirout.access.v1.permission.EntityPermissionGrant_OrMutable,
+        ): this(value.toFrozen()) {}
+
+        override val kind get() = Kind.GRANTED_WRAPPER;
+
+        override fun equals(other: kotlin.Any?): kotlin.Boolean {
+            return other is skirout.access.v1.permission.GetEntityPermissionResponse.GrantedWrapper && value == other.value;
+        }
+
+        override fun hashCode(): kotlin.Int {
+            return this.value.hashCode() + 280295099;
+        }
+    }
+
+    class InternalErrorWrapper private constructor (
+        val value: skirout.kernel.v1.errors.InternalError,
+    ) : skirout.access.v1.permission.GetEntityPermissionResponse() {
+        constructor(
+            value: skirout.kernel.v1.errors.InternalError_OrMutable,
+        ): this(value.toFrozen()) {}
+
+        override val kind get() = Kind.INTERNAL_ERROR_WRAPPER;
+
+        override fun equals(other: kotlin.Any?): kotlin.Boolean {
+            return other is skirout.access.v1.permission.GetEntityPermissionResponse.InternalErrorWrapper && value == other.value;
+        }
+
+        override fun hashCode(): kotlin.Int {
+            return this.value.hashCode() + 778975750;
+        }
+    }
+
+    internal open val _unrecognized: _UnrecognizedVariant<skirout.access.v1.permission.GetEntityPermissionResponse>? get() = null;
+
+    abstract val kind: Kind;
 
     override fun toString(): kotlin.String {
         return build.skir.internal.toStringImpl(
@@ -977,83 +1135,34 @@ class GetEntityPermissionResponse private constructor(
         )
     }
 
-    /** Mutable version of [GetEntityPermissionResponse]. */
-    class Mutable internal constructor(
-        _mustNameArguments: _MustNameArguments =
-            _MustNameArguments,
-        override var permissions: skirout.access.v1.permission.Permissions_OrMutable =
-            skirout.access.v1.permission.Permissions.partial(),
-        override var tags: kotlin.collections.List<kotlin.String> =
-            build.skir.internal.emptyFrozenList<kotlin.String>(),
-        internal var _unrecognizedFields: _UnrecognizedFields<skirout.access.v1.permission.GetEntityPermissionResponse>? =
-            null,
-    ): skirout.access.v1.permission.GetEntityPermissionResponse_OrMutable {
-        /** Returns a deeply immutable copy of this instance */
-        override fun toFrozen() = skirout.access.v1.permission.GetEntityPermissionResponse(
-            permissions = this.permissions,
-            tags = this.tags,
-            _unrecognizedFields = this._unrecognizedFields,
-        );
-
-        /**
-         * If the value of [permissions] is already mutable, returns it as-is.
-         * Otherwise, makes a mutable copy, assigns it back to [permissions] and returns it.
-         */
-        val mutablePermissions: skirout.access.v1.permission.Permissions.Mutable get() {
-            var value = this.permissions;
-            return when (value) {
-                is skirout.access.v1.permission.Permissions -> {
-                    value = value.toMutable();
-                    this.permissions = value;
-                    return value;
-                }
-                is skirout.access.v1.permission.Permissions.Mutable -> value;
-            }
-        }
-
-        /**
-         * If the value of [tags] is already mutable, returns it as-is.
-         * Otherwise, makes a mutable copy, assigns it back to [tags] and returns it.
-         */
-        val mutableTags: kotlin.collections.MutableList<kotlin.String> get() {
-            var value = this.tags;
-            return when (value) {
-                is build.skir.internal.MutableList -> value;
-                else -> {
-                    value = build.skir.internal.MutableList(value);
-                    this.tags = value;
-                    value;
-                }
-            }
-        }
-    }
-
     companion object {
-        private val default =
-            skirout.access.v1.permission.GetEntityPermissionResponse(
-                skirout.access.v1.permission.Permissions.partial(),
-                build.skir.internal.emptyFrozenList<kotlin.String>(),
-            );
-
-        /** Returns an instance with all fields set to their default values. */
-        fun partial() = default;
-
         /**
-         * Creates a new instance of [GetEntityPermissionResponse].
-         * Unlike the constructor, does not require all fields to be specified.
-         * Missing fields will be set to their default values.
+         * Constant indicating an unknown [GetEntityPermissionResponse].
+         * Default value for fields of type [GetEntityPermissionResponse].
          */
-        fun partial(
+        val UNKNOWN = @kotlin.Suppress("DEPRECATION") Unknown(Kind.UNKNOWN, null);
+
+        /** Shortcut for `GrantedWrapper(skirout.access.v1.permission.EntityPermissionGrant(...))`. */
+        @kotlin.Suppress("UNUSED_PARAMETER")
+        fun createGranted(
             _mustNameArguments: _MustNameArguments =
                 _MustNameArguments,
-            permissions: skirout.access.v1.permission.Permissions_OrMutable =
-                skirout.access.v1.permission.Permissions.partial(),
-            tags: kotlin.collections.Iterable<kotlin.String> =
-                build.skir.internal.emptyFrozenList<kotlin.String>(),
-        ) = skirout.access.v1.permission.GetEntityPermissionResponse(
-            permissions = permissions,
-            tags = tags,
-            _unrecognizedFields = null,
+            permissions: skirout.access.v1.permission.Permissions_OrMutable,
+            tags: kotlin.collections.Iterable<kotlin.String>,
+        ) = GrantedWrapper(
+            skirout.access.v1.permission.EntityPermissionGrant(
+                permissions = permissions,
+                tags = tags,
+            )
+        );
+
+        /** Shortcut for `InternalErrorWrapper(skirout.kernel.v1.errors.InternalError(...))`. */
+        @kotlin.Suppress("UNUSED_PARAMETER")
+        fun createInternalError(
+            _mustNameArguments: _MustNameArguments =
+                _MustNameArguments,
+        ) = InternalErrorWrapper(
+            skirout.kernel.v1.errors.InternalError()
         );
 
         /** Serializer for [GetEntityPermissionResponse] instances. */
@@ -1078,6 +1187,18 @@ val GetEntityPermission: build.skir.service.Method<
 }
 
 private object _SerializerRegistry {
+    val EntityPermissionGrantSerializerImpl = build.skir.internal.StructSerializer(
+        recordId = "access/v1/permission.skir:EntityPermissionGrant",
+        doc = "",
+        defaultInstance = skirout.access.v1.permission.EntityPermissionGrant.partial(),
+        newMutableFn = { it?.toMutable() ?: skirout.access.v1.permission.EntityPermissionGrant.Mutable() },
+        toFrozenFn = { it.toFrozen() },
+        getUnrecognizedFields = { it._unrecognizedFields },
+        setUnrecognizedFields = { m, u -> m._unrecognizedFields = u },
+    );
+
+    val EntityPermissionGrantSerializer = build.skir.internal.makeSerializer(EntityPermissionGrantSerializerImpl);
+
     val EntityPermissionQualifierSerializerImpl =
         build.skir.internal.EnumSerializer.create<skirout.access.v1.permission.EntityPermissionQualifier, skirout.access.v1.permission.EntityPermissionQualifier.Unknown>(
             recordId = "access/v1/permission.skir:EntityPermissionQualifier",
@@ -1127,15 +1248,16 @@ private object _SerializerRegistry {
 
     val GetEntityPermissionRequestSerializer = build.skir.internal.makeSerializer(GetEntityPermissionRequestSerializerImpl);
 
-    val GetEntityPermissionResponseSerializerImpl = build.skir.internal.StructSerializer(
-        recordId = "access/v1/permission.skir:GetEntityPermissionResponse",
-        doc = "",
-        defaultInstance = skirout.access.v1.permission.GetEntityPermissionResponse.partial(),
-        newMutableFn = { it?.toMutable() ?: skirout.access.v1.permission.GetEntityPermissionResponse.Mutable() },
-        toFrozenFn = { it.toFrozen() },
-        getUnrecognizedFields = { it._unrecognizedFields },
-        setUnrecognizedFields = { m, u -> m._unrecognizedFields = u },
-    );
+    val GetEntityPermissionResponseSerializerImpl =
+        build.skir.internal.EnumSerializer.create<skirout.access.v1.permission.GetEntityPermissionResponse, skirout.access.v1.permission.GetEntityPermissionResponse.Unknown>(
+            recordId = "access/v1/permission.skir:GetEntityPermissionResponse",
+            doc = "",
+            getKindOrdinal = { it.kind.ordinal },
+            kindCount = skirout.access.v1.permission.GetEntityPermissionResponse.Kind.values().size,
+            unknownInstance = skirout.access.v1.permission.GetEntityPermissionResponse.UNKNOWN,
+            wrapUnrecognized = { @kotlin.Suppress("DEPRECATION") skirout.access.v1.permission.GetEntityPermissionResponse.Unknown(skirout.access.v1.permission.GetEntityPermissionResponse.Kind.UNKNOWN, it) },
+            getUnrecognized = { it._unrecognized },
+        );
 
     val GetEntityPermissionResponseSerializer = build.skir.internal.makeSerializer(GetEntityPermissionResponseSerializerImpl);
 
@@ -1176,6 +1298,28 @@ private object _SerializerRegistry {
     val ResponsePermissionSerializer = build.skir.internal.makeSerializer(ResponsePermissionSerializerImpl);
 
     init {
+        EntityPermissionGrantSerializerImpl.addField(
+            "permissions",
+            "permissions",
+            0,
+            _SerializerRegistry.PermissionsSerializer,
+            "",
+            { it.permissions },
+            { mut, v -> mut.permissions = v },
+        );
+        EntityPermissionGrantSerializerImpl.addField(
+            "tags",
+            "tags",
+            1,
+            build.skir.Serializers.list(
+                build.skir.Serializers.string,
+            ),
+            "",
+            { it.tags },
+            { mut, v -> mut.tags = v },
+        );
+        EntityPermissionGrantSerializerImpl.finalizeStruct();
+
         EntityPermissionQualifierSerializerImpl.addWrapperVariant(
             1,
             "user",
@@ -1240,27 +1384,25 @@ private object _SerializerRegistry {
         );
         GetEntityPermissionRequestSerializerImpl.finalizeStruct();
 
-        GetEntityPermissionResponseSerializerImpl.addField(
-            "permissions",
-            "permissions",
-            0,
-            _SerializerRegistry.PermissionsSerializer,
-            "",
-            { it.permissions },
-            { mut, v -> mut.permissions = v },
-        );
-        GetEntityPermissionResponseSerializerImpl.addField(
-            "tags",
-            "tags",
+        GetEntityPermissionResponseSerializerImpl.addWrapperVariant(
             1,
-            build.skir.Serializers.list(
-                build.skir.Serializers.string,
-            ),
+            "granted",
+            skirout.access.v1.permission.GetEntityPermissionResponse.Kind.GRANTED_WRAPPER.ordinal,
+            _SerializerRegistry.EntityPermissionGrantSerializer,
             "",
-            { it.tags },
-            { mut, v -> mut.tags = v },
+            { skirout.access.v1.permission.GetEntityPermissionResponse.GrantedWrapper(it) },
+            { it.value },
         );
-        GetEntityPermissionResponseSerializerImpl.finalizeStruct();
+        GetEntityPermissionResponseSerializerImpl.addWrapperVariant(
+            2,
+            "internal_error",
+            skirout.access.v1.permission.GetEntityPermissionResponse.Kind.INTERNAL_ERROR_WRAPPER.ordinal,
+            skirout.kernel.v1.errors.InternalError.serializer,
+            "",
+            { skirout.access.v1.permission.GetEntityPermissionResponse.InternalErrorWrapper(it) },
+            { it.value },
+        );
+        GetEntityPermissionResponseSerializerImpl.finalizeEnum();
 
         PermissionSerializerImpl.addField(
             "allow",

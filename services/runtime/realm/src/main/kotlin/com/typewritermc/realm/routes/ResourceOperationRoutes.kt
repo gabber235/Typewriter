@@ -76,14 +76,14 @@ internal class ResourceOperationRoutes(
                 )
             ResolveResourceOperationsResult.ResolvedWrapper(SkirOperationCodec.encode(resolved).getOrThrow())
         } catch (stale: StaleOperationObservation) {
-            ResolveResourceOperationsResult.createStaleObservation(actual = AuthoringObservationId(value = stale.actual))
+            ResolveResourceOperationsResult.createStaleObservationError(actual = AuthoringObservationId(value = stale.actual))
         } catch (stale: OperationCatalogChanged) {
-            ResolveResourceOperationsResult.createCatalogChanged(
+            ResolveResourceOperationsResult.createCatalogChangedError(
                 actualGeneration =
                     SkirCatalogGeneration(value = stale.actual.value),
             )
         } catch (denied: RealmCapabilityPermissionDeniedException) {
-            ResolveResourceOperationsResult.createPermissionDenied(
+            ResolveResourceOperationsResult.createPermissionDeniedError(
                 diagnostics =
                     listOf(
                         operationDiagnostic(
@@ -94,7 +94,7 @@ internal class ResourceOperationRoutes(
             )
         } catch (failed: OperationResolutionFailure) {
             if (failed.cause is RealmCapabilityPermissionDeniedException) {
-                ResolveResourceOperationsResult.createPermissionDenied(
+                ResolveResourceOperationsResult.createPermissionDeniedError(
                     diagnostics =
                         listOf(
                             operationDiagnostic(
@@ -104,7 +104,7 @@ internal class ResourceOperationRoutes(
                         ),
                 )
             } else {
-                ResolveResourceOperationsResult.createFailed(
+                ResolveResourceOperationsResult.createFailedError(
                     diagnostics =
                         listOf(
                             operationDiagnostic(
@@ -116,7 +116,7 @@ internal class ResourceOperationRoutes(
             }
         } catch (invalid: IllegalArgumentException) {
             invalid.rethrowExceptional()
-            ResolveResourceOperationsResult.createInvalid(
+            ResolveResourceOperationsResult.createInvalidError(
                 diagnostics =
                     listOf(
                         operationDiagnostic(
@@ -140,26 +140,26 @@ internal class ResourceOperationRoutes(
                 )
             ResolveDropCandidatesResult.ResolvedWrapper(SkirOperationCodec.encode(candidates).getOrThrow())
         } catch (stale: StaleOperationObservation) {
-            ResolveDropCandidatesResult.createStaleObservation(actual = AuthoringObservationId(value = stale.actual))
+            ResolveDropCandidatesResult.createStaleObservationError(actual = AuthoringObservationId(value = stale.actual))
         } catch (stale: OperationCatalogChanged) {
-            ResolveDropCandidatesResult.createCatalogChanged(actualGeneration = SkirCatalogGeneration(value = stale.actual.value))
+            ResolveDropCandidatesResult.createCatalogChangedError(actualGeneration = SkirCatalogGeneration(value = stale.actual.value))
         } catch (denied: RealmCapabilityPermissionDeniedException) {
-            ResolveDropCandidatesResult.createPermissionDenied(
+            ResolveDropCandidatesResult.createPermissionDeniedError(
                 diagnostics = listOf(operationDiagnostic("permission_denied", denied.message ?: "Permission denied")),
             )
         } catch (failed: OperationResolutionFailure) {
             if (failed.cause is RealmCapabilityPermissionDeniedException) {
-                ResolveDropCandidatesResult.createPermissionDenied(
+                ResolveDropCandidatesResult.createPermissionDeniedError(
                     diagnostics = listOf(operationDiagnostic("permission_denied", failed.cause?.message ?: "Permission denied")),
                 )
             } else {
-                ResolveDropCandidatesResult.createFailed(
+                ResolveDropCandidatesResult.createFailedError(
                     diagnostics = listOf(operationDiagnostic("resolution_failed", failed.message ?: "Drop candidates failed")),
                 )
             }
         } catch (invalid: IllegalArgumentException) {
             invalid.rethrowExceptional()
-            ResolveDropCandidatesResult.createInvalid(
+            ResolveDropCandidatesResult.createInvalidError(
                 diagnostics =
                     listOf(operationDiagnostic("invalid_operation_context", invalid.message ?: "The operation context is invalid")),
             )
@@ -246,7 +246,7 @@ internal class ResourceOperationRoutes(
                 }
 
                 is OperationPreparationResult.Invalid -> {
-                    AuthoringActionResult.createInvalid(
+                    AuthoringActionResult.createInvalidError(
                         diagnostics =
                             result.problems.map {
                                 operationDiagnostic(it.code, it.code.replace('_', ' '), it.location)
@@ -255,14 +255,14 @@ internal class ResourceOperationRoutes(
                 }
 
                 is OperationPreparationResult.Unavailable -> {
-                    AuthoringActionResult.createUnavailable(
+                    AuthoringActionResult.createUnavailableError(
                         diagnostics = listOf(operationDiagnostic("operation_unavailable", result.reason)),
                     )
                 }
 
                 is OperationPreparationResult.Failed -> {
                     if (result.cause is RealmCapabilityPermissionDeniedException) {
-                        AuthoringActionResult.createPermissionDenied(
+                        AuthoringActionResult.createPermissionDeniedError(
                             diagnostics =
                                 listOf(
                                     operationDiagnostic(
@@ -272,7 +272,7 @@ internal class ResourceOperationRoutes(
                                 ),
                         )
                     } else {
-                        AuthoringActionResult.createFailed(
+                        AuthoringActionResult.createFailedError(
                             diagnostics =
                                 listOf(
                                     operationDiagnostic(
@@ -285,15 +285,15 @@ internal class ResourceOperationRoutes(
                 }
             }
         } catch (stale: StaleOperationObservation) {
-            AuthoringActionResult.createStaleObservation(actual = AuthoringObservationId(value = stale.actual))
+            AuthoringActionResult.createStaleObservationError(actual = AuthoringObservationId(value = stale.actual))
         } catch (stale: OperationCatalogChanged) {
-            AuthoringActionResult.createCatalogChanged(
+            AuthoringActionResult.createCatalogChangedError(
                 actualGeneration =
                     SkirCatalogGeneration(value = stale.actual.value),
             )
         } catch (failed: OperationResolutionFailure) {
             if (failed.cause is RealmCapabilityPermissionDeniedException) {
-                AuthoringActionResult.createPermissionDenied(
+                AuthoringActionResult.createPermissionDeniedError(
                     diagnostics =
                         listOf(
                             operationDiagnostic(
@@ -303,7 +303,7 @@ internal class ResourceOperationRoutes(
                         ),
                 )
             } else {
-                AuthoringActionResult.createFailed(
+                AuthoringActionResult.createFailedError(
                     diagnostics =
                         listOf(
                             operationDiagnostic(
@@ -315,7 +315,7 @@ internal class ResourceOperationRoutes(
             }
         } catch (invalid: IllegalArgumentException) {
             invalid.rethrowExceptional()
-            AuthoringActionResult.createInvalid(
+            AuthoringActionResult.createInvalidError(
                 diagnostics =
                     listOf(
                         operationDiagnostic(

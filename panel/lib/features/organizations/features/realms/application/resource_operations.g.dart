@@ -72,7 +72,7 @@ final class ResourceOperationsProvider
 }
 
 String _$resourceOperationsHash() =>
-    r'922713453e17075a0a5df641f9fa42778ec0a477';
+    r'9a5b5ec02a56ace278fc12c24aa5700b8abe8633';
 
 /// Resolves one complete operation set against a coherent working observation.
 

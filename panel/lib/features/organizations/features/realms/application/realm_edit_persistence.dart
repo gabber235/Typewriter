@@ -36,13 +36,9 @@ final class RealmEditPersistence
 
 extension RealmResponseSettlement on skir.CommitPreparedEditResponse {
   EditSettlement<AuthoringDocument> get editSettlement => switch (this) {
-    skir.CommitPreparedEditResponse_resultWrapper(
-      value: skir.CommitResult.committed,
-    ) =>
+    skir.CommitPreparedEditResponse.committed =>
       const EditSettlement.accepted(),
-    skir.CommitPreparedEditResponse_resultWrapper(
-      value: skir.CommitResult_conflictWrapper(:final value),
-    ) =>
+    skir.CommitPreparedEditResponse_conflictErrorWrapper(:final value) =>
       EditSettlement.conflict(
         evidence: AuthoringConflictEvidence(
           facts: value.toList(),
@@ -54,9 +50,7 @@ extension RealmResponseSettlement on skir.CommitPreparedEditResponse {
           ],
         ),
       ),
-    skir.CommitPreparedEditResponse_resultWrapper(
-      value: skir.CommitResult_catalogChangedWrapper(),
-    ) =>
+    skir.CommitPreparedEditResponse_catalogChangedErrorWrapper() =>
       const EditSettlement.rejected(contractChanged: true),
     _ => EditSettlement.rejected(
       cause: this,

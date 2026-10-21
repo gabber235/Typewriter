@@ -30,7 +30,7 @@ import com.typewritermc.types.skir.SkirConversionDiagnostic
 import com.typewritermc.types.skir.SkirConversionResult
 import com.typewritermc.types.skir.SkirDataValueCodec
 import com.typewritermc.types.skir.SkirTypeCodec
-import skirout.editor.v1.authoring.CommitResult as SkirCommitResult
+import skirout.editor.v1.authoring.CommitPreparedEditResponse as SkirCommitPreparedEditResponse
 import skirout.editor.v1.authoring.ConnectIntent as SkirConnectIntent
 import skirout.editor.v1.authoring.CounterpartChoice as SkirCounterpartChoice
 import skirout.editor.v1.authoring.EditIntent as SkirEditIntent
@@ -43,8 +43,8 @@ import skirout.editor.v1.authoring_facts.TraversalDirection as SkirTraversalDire
 import skirout.editor.v1.catalog.InputAnswer as SkirInputAnswer
 import skirout.editor.v1.catalog.PreparationDraft as SkirPreparationDraft
 import skirout.editor.v1.catalog.PreparationOperation as SkirPreparationOperation
-import skirout.editor.v1.catalog.PreparationStep as SkirPreparationStep
 import skirout.editor.v1.catalog.PreparationTarget as SkirPreparationTarget
+import skirout.editor.v1.catalog.PrepareValueResult as SkirPrepareValueResult
 import skirout.editor.v1.catalog.PreparedContent as SkirPreparedContent
 import skirout.editor.v1.catalog.PreparedValue as SkirPreparedValue
 import skirout.editor.v1.catalog.RequiredInput as SkirRequiredInput
@@ -73,10 +73,10 @@ object SkirAuthoringOperationCodec {
             decodePreparationOperation(value)
         }
 
-    fun encode(value: PreparationStep): SkirConversionResult<SkirPreparationStep> =
+    fun encode(value: PreparationStep): SkirConversionResult<SkirPrepareValueResult> =
         captureOperationConversion { encodePreparationStep(value) }
 
-    fun decode(value: SkirPreparationStep): SkirConversionResult<PreparationStep> =
+    fun decode(value: SkirPrepareValueResult): SkirConversionResult<PreparationStep> =
         captureOperationConversion { decodePreparationStep(value) }
 
     fun encode(value: EditExpectation): SkirConversionResult<SkirEditExpectation> = captureOperationConversion { encodeExpectation(value) }
@@ -91,7 +91,10 @@ object SkirAuthoringOperationCodec {
 
     fun decode(value: SkirPreparedEdit): SkirConversionResult<PreparedEdit> = captureOperationConversion { decodePreparedEdit(value) }
 
-    fun encode(value: CommitResult): SkirConversionResult<SkirCommitResult> = captureOperationConversion { encodeCommitResult(value) }
+    fun encode(value: CommitResult): SkirConversionResult<SkirCommitPreparedEditResponse> =
+        captureOperationConversion {
+            encodeCommitResult(value)
+        }
 
     fun encode(value: InitializationRequest): SkirConversionResult<SkirInitializationRequest> =
         captureOperationConversion { encodeInitializationRequest(value) }
@@ -147,19 +150,19 @@ private fun OperationConversionScope.decodePreparationOperation(value: SkirPrepa
         }
     }
 
-private fun OperationConversionScope.encodePreparationStep(value: PreparationStep): SkirPreparationStep =
+private fun OperationConversionScope.encodePreparationStep(value: PreparationStep): SkirPrepareValueResult =
     when (value) {
-        is PreparationStep.Ready -> SkirPreparationStep.ReadyWrapper(encodePreparedValue(value.value))
-        is PreparationStep.NeedsInput -> SkirPreparationStep.NeedsInputWrapper(encodePreparationDraft(value.draft))
-        is PreparationStep.Unavailable -> SkirPreparationStep.UnavailableWrapper(encodePreparationDraft(value.draft))
+        is PreparationStep.Ready -> SkirPrepareValueResult.ReadyWrapper(encodePreparedValue(value.value))
+        is PreparationStep.NeedsInput -> SkirPrepareValueResult.NeedsInputWrapper(encodePreparationDraft(value.draft))
+        is PreparationStep.Unavailable -> SkirPrepareValueResult.UnavailableErrorWrapper(encodePreparationDraft(value.draft))
     }
 
-private fun OperationConversionScope.decodePreparationStep(value: SkirPreparationStep): PreparationStep =
+private fun OperationConversionScope.decodePreparationStep(value: SkirPrepareValueResult): PreparationStep =
     when (value) {
-        is SkirPreparationStep.ReadyWrapper -> PreparationStep.Ready(decodePreparedValue(value.value))
-        is SkirPreparationStep.NeedsInputWrapper -> PreparationStep.NeedsInput(decodePreparationDraft(value.value))
-        is SkirPreparationStep.UnavailableWrapper -> PreparationStep.Unavailable(decodePreparationDraft(value.value))
-        else -> fail("Unknown preparation step.")
+        is SkirPrepareValueResult.ReadyWrapper -> PreparationStep.Ready(decodePreparedValue(value.value))
+        is SkirPrepareValueResult.NeedsInputWrapper -> PreparationStep.NeedsInput(decodePreparationDraft(value.value))
+        is SkirPrepareValueResult.UnavailableErrorWrapper -> PreparationStep.Unavailable(decodePreparationDraft(value.value))
+        else -> fail("Prepare value result does not carry a preparation step.")
     }
 
 private fun OperationConversionScope.encodePreparationDraft(value: PreparationDraft): SkirPreparationDraft {
@@ -541,14 +544,14 @@ private fun OperationConversionScope.decodeConnect(value: SkirConnectIntent): Co
             },
     )
 
-private fun OperationConversionScope.encodeCommitResult(value: CommitResult): SkirCommitResult =
+private fun OperationConversionScope.encodeCommitResult(value: CommitResult): SkirCommitPreparedEditResponse =
     when (value) {
         CommitResult.Committed -> {
-            SkirCommitResult.COMMITTED
+            SkirCommitPreparedEditResponse.COMMITTED
         }
 
         is CommitResult.Conflict -> {
-            SkirCommitResult.ConflictWrapper(
+            SkirCommitPreparedEditResponse.ConflictErrorWrapper(
                 value.values.map { conflict ->
                     SkirExpectationConflict(expected = encodeExpectation(conflict.expected), actual = encodeExpectation(conflict.actual))
                 },
@@ -556,7 +559,7 @@ private fun OperationConversionScope.encodeCommitResult(value: CommitResult): Sk
         }
 
         is CommitResult.Rejected -> {
-            SkirCommitResult.RejectedWrapper(
+            SkirCommitPreparedEditResponse.RejectedErrorWrapper(
                 value.problems.map { problem ->
                     SkirValueProblem(
                         location = convert(SkirAuthoringValueCodec.encode(problem.location)),
@@ -567,7 +570,7 @@ private fun OperationConversionScope.encodeCommitResult(value: CommitResult): Sk
         }
 
         is CommitResult.CatalogChanged -> {
-            SkirCommitResult.createCatalogChanged(value = value.actual.value)
+            SkirCommitPreparedEditResponse.CatalogChangedErrorWrapper(SkirCatalogGeneration(value = value.actual.value))
         }
     }
 

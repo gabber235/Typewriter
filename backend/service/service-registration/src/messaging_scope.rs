@@ -10,7 +10,7 @@ use wasmcloud_utils::{
     database::{RecordId, read_query},
     skir::base::service::v1::topology::{
         GetServiceMessagingScopeRequest, GetServiceMessagingScopeResponse,
-        GetServiceMessagingScopeResponse_NotFound, ServiceMessagingScope,
+        GetServiceMessagingScopeResponse_NotFoundError, ServiceMessagingScope,
     },
     skir_utils::RecordIdKeyIdentity,
     skir_variant,
@@ -72,6 +72,6 @@ pub async fn handle(
             attached_realm: scope.attached_realm.map(Into::into),
             _unrecognized: None,
         })),
-        None => skir_variant!(GetServiceMessagingScopeResponse::NotFound {}),
+        None => skir_variant!(GetServiceMessagingScopeResponse::NotFoundError {}),
     })
 }

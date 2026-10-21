@@ -75,8 +75,8 @@ sealed class RealmPublicationView with _$RealmPublicationView {
 final class RealmPublishCommand {
   RealmPublishCommand(this.candidate, this._invoke);
   final skir.PublicationCandidateId candidate;
-  final Future<skir.PublicationResult> Function() _invoke;
-  Future<skir.PublicationResult> invoke() => _invoke();
+  final Future<skir.PublishAuthoringResponse> Function() _invoke;
+  Future<skir.PublishAuthoringResponse> invoke() => _invoke();
 }
 
 /// Rejects default or future wire variants before deriving a command capability.

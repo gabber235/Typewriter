@@ -106,20 +106,27 @@ method ApproveOrganizationJoinRequests(
     join_requests_event: OrganizationJoinRequestsChanged;
     members_event: OrganizationMembersChanged;
   };
+  /// Join requests not found.
   request_not_found_error: struct {
     request_ids: [RecordId];
   };
+  /// Roles not found.
   roles_not_found_error: struct {
     role_ids: [RecordId];
   };
+  /// Roles not assignable.
   roles_not_assignable_error: struct {
     role_ids: [RecordId];
   };
+  /// At least one role is required.
   roles_required_error: struct {};
+  /// Users are already members.
   user_already_member_error: struct {
     user_ids: [RecordId];
   };
+  /// Selection must contain distinct targets.
   invalid_selection_error: struct {};
+  /// Record IDs from an unexpected table.
   invalid_record_id_error: InvalidRecordIdError;
 } = 167357;
 
@@ -136,9 +143,11 @@ method DeclineOrganizationJoinRequest(
     event: OrganizationJoinRequestsChanged;
   };
 
+  /// Join request not found.
   request_not_found_error: struct {
     request_id: RecordId;
   };
 
+  /// Record IDs from an unexpected table.
   invalid_record_id_error: InvalidRecordIdError;
 } = 329306;
