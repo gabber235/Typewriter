@@ -9,7 +9,6 @@ import com.typewritermc.authoring.BoundCollectionPath
 import com.typewritermc.authoring.BoundPath
 import com.typewritermc.authoring.CompletenessResult
 import com.typewritermc.authoring.GeneratedSdkApi
-import com.typewritermc.authoring.PortableValue
 import com.typewritermc.authoring.complete
 import com.typewritermc.authoring.of
 import com.typewritermc.authoring.root
@@ -113,6 +112,7 @@ import skirout.editor.v1.type_catalog.TypeTemplate
 import skirout.editor.v1.type_catalog.TypeUse
 import skirout.editor.v1.type_catalog.ValueLocation
 import skirout.editor.v1.type_catalog.ValuePath
+import skirout.editor.v1.typed_value.PortableValue
 import kotlin.reflect.KClass
 
 val SdkRuntimeConformanceTest by testSuite {
@@ -1020,7 +1020,7 @@ val SdkRuntimeConformanceTest by testSuite {
         @Suppress("UNCHECKED_CAST")
         val binding = assembly.bindings.bind(checked) as NativeBinding<PortableValue>
         val decoded = binding.decode(checked.complete(value).complete())
-        decoded shouldBe PortableValue(TEST_PORTABLE_RECORD_USE.use, payload)
+        decoded shouldBe PortableValue(actualType = TEST_PORTABLE_RECORD_USE.use, payload = payload)
         binding.encode(decoded) shouldBe value
 
         val listChecked = assembly.checked.resolve(TEST_PORTABLE_RECORD_LIST_USE.use).ready()
@@ -1042,7 +1042,7 @@ val SdkRuntimeConformanceTest by testSuite {
         @Suppress("UNCHECKED_CAST")
         val listBinding = assembly.bindings.bind(listChecked) as NativeBinding<List<PortableValue>>
         val portableList = listBinding.decode(listChecked.complete(authoredList).complete())
-        portableList shouldBe listOf(PortableValue(TEST_PORTABLE_RECORD_USE.use, payload))
+        portableList shouldBe listOf(PortableValue(actualType = TEST_PORTABLE_RECORD_USE.use, payload = payload))
         listBinding.encode(portableList) shouldBe
             DataValue.named(
                 TEST_PORTABLE_RECORD_LIST_USE,
@@ -1059,7 +1059,7 @@ val SdkRuntimeConformanceTest by testSuite {
             )
 
         shouldThrow<NativeBindingException> {
-            binding.encode(PortableValue(TEST_CODE_USE.use, payload))
+            binding.encode(PortableValue(actualType = TEST_CODE_USE.use, payload = payload))
         }.code shouldBe "wrong_portable_actual_type"
         val invalid = checked.complete(DataValue.named(TEST_PORTABLE_RECORD_USE, DataValue.record(emptyMap())))
         (invalid as CompletenessResult.Invalid).problems.single().code shouldBe "missing_field"

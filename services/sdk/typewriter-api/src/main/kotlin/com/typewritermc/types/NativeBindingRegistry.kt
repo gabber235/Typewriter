@@ -3,7 +3,6 @@ package com.typewritermc.types
 import com.typewritermc.authoring.CaptureResult
 import com.typewritermc.authoring.CompleteValue
 import com.typewritermc.authoring.CompletenessResult
-import com.typewritermc.authoring.PortableValue
 import com.typewritermc.authoring.complete
 import com.typewritermc.types.catalog.CheckedCatalog
 import com.typewritermc.types.catalog.CheckedType
@@ -26,6 +25,7 @@ import skirout.editor.v1.type_catalog.ScalarKind
 import skirout.editor.v1.type_catalog.TypeDefinitionId
 import skirout.editor.v1.type_catalog.TypeTemplate
 import skirout.editor.v1.type_catalog.TypeUse
+import skirout.editor.v1.typed_value.PortableValue
 import java.math.BigDecimal
 import java.math.BigInteger
 
@@ -356,7 +356,7 @@ private class PortableNativeBinding(
         return DataValue.named(application, value.payload)
     }
 
-    override fun decode(value: CompleteValue): PortableValue = PortableValue(actualType, value.payload<DataValue>())
+    override fun decode(value: CompleteValue): PortableValue = PortableValue(actualType = actualType, payload = value.payload<DataValue>())
 }
 
 private class PolymorphicNativeBinding(

@@ -18,7 +18,7 @@ import skirout.editor.v1.type_catalog.CatalogGeneration
 import skirout.editor.v1.type_catalog.DataValue
 import skirout.editor.v1.type_catalog.ResourceId
 import skirout.editor.v1.type_catalog.ScalarKind
-import skirout.editor.v1.typed_value.PortableValue as SkirPortableValue
+import skirout.editor.v1.typed_value.PortableValue
 
 internal class AuthoringSearchRoutes(
     private val repository: AuthoringSearchRepository,
@@ -80,7 +80,7 @@ private fun IndexedAuthoringSearchCandidate.toWire(record: AuthoringRecord): Aut
                 content = record,
             ),
         context =
-            SkirPortableValue(
+            PortableValue(
                 actualType = ScalarKind.TEXT.use,
                 payload = DataValue.StringValueWrapper(text),
             ),
