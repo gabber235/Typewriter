@@ -4183,6 +4183,119 @@ impl crate::SkirResponse
         }
     }
 }
+impl crate::SkirResponse for crate::skirout::base::service::v1::rollout::ProbeRealmHostsResponse {
+    fn to_skir_bytes(&self) -> Vec<u8> {
+        Self::serializer().to_bytes(self)
+    }
+    fn outcome(&self) -> crate::SkirResponseOutcome {
+        match self {
+            crate::skirout::base::service::v1::rollout::ProbeRealmHostsResponse::Present(_) => {
+                crate::SkirResponseOutcome::Success
+            }
+            // internal_error and the generated unknown variant
+            _ => crate::SkirResponseOutcome::InternalError,
+        }
+    }
+    fn variant_slug(&self) -> &'static str {
+        match self {
+            crate::skirout::base::service::v1::rollout::ProbeRealmHostsResponse::Present(_) => {
+                "present"
+            }
+            crate::skirout::base::service::v1::rollout::ProbeRealmHostsResponse::InternalError(
+                _,
+            ) => "internal-error",
+            _ => "unknown",
+        }
+    }
+    fn variant_message(&self) -> String {
+        self.variant_slug().to_owned()
+    }
+    fn internal_error() -> Self {
+        crate::skirout::base::service::v1::rollout::ProbeRealmHostsResponse::InternalError(
+            ::std::default::Default::default(),
+        )
+    }
+}
+impl crate::SkirResponse
+    for crate::skirout::base::service::v1::rollout::ApplyRolloutCommandResponse
+{
+    fn to_skir_bytes(&self) -> Vec<u8> {
+        Self::serializer().to_bytes(self)
+    }
+    fn outcome(&self) -> crate::SkirResponseOutcome {
+        match self {
+            crate::skirout::base::service::v1::rollout::ApplyRolloutCommandResponse::Accepted(_) => crate::SkirResponseOutcome::Success,
+            crate::skirout::base::service::v1::rollout::ApplyRolloutCommandResponse::StaleAttemptError(_) | crate::skirout::base::service::v1::rollout::ApplyRolloutCommandResponse::AttemptConflictError(_) | crate::skirout::base::service::v1::rollout::ApplyRolloutCommandResponse::CommandRejectedError(_) | crate::skirout::base::service::v1::rollout::ApplyRolloutCommandResponse::CommandFailedError(_) => crate::SkirResponseOutcome::DomainError,
+            // internal_error and the generated unknown variant
+            _ => crate::SkirResponseOutcome::InternalError,
+        }
+    }
+    fn variant_slug(&self) -> &'static str {
+        match self {
+            crate::skirout::base::service::v1::rollout::ApplyRolloutCommandResponse::Accepted(_) => "accepted",
+            crate::skirout::base::service::v1::rollout::ApplyRolloutCommandResponse::StaleAttemptError(_) => "stale-attempt-error",
+            crate::skirout::base::service::v1::rollout::ApplyRolloutCommandResponse::AttemptConflictError(_) => "attempt-conflict-error",
+            crate::skirout::base::service::v1::rollout::ApplyRolloutCommandResponse::CommandRejectedError(_) => "command-rejected-error",
+            crate::skirout::base::service::v1::rollout::ApplyRolloutCommandResponse::CommandFailedError(_) => "command-failed-error",
+            crate::skirout::base::service::v1::rollout::ApplyRolloutCommandResponse::InternalError(_) => "internal-error",
+            _ => "unknown",
+        }
+    }
+    fn variant_message(&self) -> String {
+        match self {
+            crate::skirout::base::service::v1::rollout::ApplyRolloutCommandResponse::StaleAttemptError(_) => "Rollout attempt is stale.".to_owned(),
+            crate::skirout::base::service::v1::rollout::ApplyRolloutCommandResponse::AttemptConflictError(_) => "Rollout attempt conflicts with another projection.".to_owned(),
+            crate::skirout::base::service::v1::rollout::ApplyRolloutCommandResponse::CommandRejectedError(_) => "Participant rejected the command in its current lifecycle state.".to_owned(),
+            crate::skirout::base::service::v1::rollout::ApplyRolloutCommandResponse::CommandFailedError(_) => "Participant failed while applying the command.".to_owned(),
+            other => other.variant_slug().to_owned(),
+        }
+    }
+    fn internal_error() -> Self {
+        crate::skirout::base::service::v1::rollout::ApplyRolloutCommandResponse::InternalError(
+            ::std::default::Default::default(),
+        )
+    }
+    fn domain_error_from_slug(slug: &str) -> Option<Self> {
+        match slug {
+            "stale-attempt-error" => Some(crate::skirout::base::service::v1::rollout::ApplyRolloutCommandResponse::StaleAttemptError(::std::default::Default::default())),
+            "attempt-conflict-error" => Some(crate::skirout::base::service::v1::rollout::ApplyRolloutCommandResponse::AttemptConflictError(::std::default::Default::default())),
+            "command-rejected-error" => Some(crate::skirout::base::service::v1::rollout::ApplyRolloutCommandResponse::CommandRejectedError(::std::default::Default::default())),
+            "command-failed-error" => Some(crate::skirout::base::service::v1::rollout::ApplyRolloutCommandResponse::CommandFailedError(::std::default::Default::default())),
+            _ => None,
+        }
+    }
+}
+impl crate::SkirResponse
+    for crate::skirout::base::service::v1::rollout::QueryParticipantStatusResponse
+{
+    fn to_skir_bytes(&self) -> Vec<u8> {
+        Self::serializer().to_bytes(self)
+    }
+    fn outcome(&self) -> crate::SkirResponseOutcome {
+        match self {
+            crate::skirout::base::service::v1::rollout::QueryParticipantStatusResponse::Status(
+                _,
+            ) => crate::SkirResponseOutcome::Success,
+            // internal_error and the generated unknown variant
+            _ => crate::SkirResponseOutcome::InternalError,
+        }
+    }
+    fn variant_slug(&self) -> &'static str {
+        match self {
+            crate::skirout::base::service::v1::rollout::QueryParticipantStatusResponse::Status(_) => "status",
+            crate::skirout::base::service::v1::rollout::QueryParticipantStatusResponse::InternalError(_) => "internal-error",
+            _ => "unknown",
+        }
+    }
+    fn variant_message(&self) -> String {
+        self.variant_slug().to_owned()
+    }
+    fn internal_error() -> Self {
+        crate::skirout::base::service::v1::rollout::QueryParticipantStatusResponse::InternalError(
+            ::std::default::Default::default(),
+        )
+    }
+}
 impl crate::SkirResponse
     for crate::skirout::base::service::v1::status::QueryServiceBindingResponse
 {

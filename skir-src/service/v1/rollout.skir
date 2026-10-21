@@ -1,0 +1,201 @@
+// A Realm rollout moves every responding host of one Realm to the projections of one deployment generation.
+// The Realm coordinator asks the hosts for presence, sends lifecycle commands for one attempt and reads participant status
+// until every participant is staged, active and healthy. Hosts that are not listed in a command do not reply to it.
+
+import { InternalError } from "kernel/v1/errors.skir";
+import { ArtifactDigest } from "service/v1/artifact.skir";
+
+// The runtime roles a host can take for a Realm.
+enum RuntimePlacement(812700001) {
+  realm = 1;
+  panel_engine = 2;
+  primary_engine = 3;
+}
+
+// The artifact version a projection runs in one placement. It supports reporting and never replaces digest verification.
+struct RuntimeVersion(812700002) {
+  placement: RuntimePlacement = 0;
+  version: string = 1;
+}
+
+// Pins one host generation to immutable projection bytes. Hosts verify the Realm, host and generation of the fetched projection.
+struct ProjectionReference(812700003) {
+  realm_id: string = 0;
+  generation: int64 = 1;
+  service_id: string = 2;
+  blob: ArtifactDigest = 3;
+  runtime_versions: [RuntimeVersion|placement.kind] = 4;
+}
+
+// Runtime health of a projection, independent of whether it is merely staged or active.
+enum ProjectionHealth(812700004) {
+  staged = 1;
+  healthy = 2;
+  unhealthy: struct {
+    reasons: [string] = 0;
+  } = 3;
+}
+
+// The projection active on a host and its observed health.
+struct ActiveProjection(812700005) {
+  projection: ProjectionReference = 0;
+  health: ProjectionHealth = 1;
+}
+
+// One host's answer to a presence probe, used to select participants and their recovery baselines.
+struct RealmHostPresence(812700006) {
+  service_id: string = 0;
+  host_api: string = 1;
+  assigned_roles: [RuntimePlacement] = 2;
+  active_projection: ActiveProjection? = 3;
+}
+
+// Distinguishes coordinator attempts, including retries of the same generation. The positive ordinal fences stale commands;
+// the generation alone is not an attempt identity.
+struct RolloutAttempt(812700007) {
+  ordinal: int64 = 0;
+  generation: int64 = 1;
+}
+
+// Whether a participant restores an empty state or an exact retained projection. Recovery never selects whichever artifact
+// version happens to be newest.
+enum RollbackTarget(812700008) {
+  empty = 1;
+  projection: ProjectionReference = 2;
+}
+
+// The exact projection one participant applies a command to.
+struct ParticipantProjection(812700009) {
+  service_id: string = 0;
+  projection: ProjectionReference = 1;
+}
+
+// Every participant of a command with its exact projection.
+struct ParticipantProjections(812700010) {
+  participants: [ParticipantProjection|service_id] = 0;
+}
+
+// The failed projection of one participant next to the exact target it restores.
+struct ParticipantRollback(812700011) {
+  service_id: string = 0;
+  projection: ProjectionReference = 1;
+  target: RollbackTarget = 2;
+}
+
+// Every participant of a rollback with its failed projection and restore target.
+struct ParticipantRollbacks(812700012) {
+  participants: [ParticipantRollback|service_id] = 0;
+}
+
+// A lifecycle command for one attempt. Each listed participant applies only its own entry.
+enum RolloutCommand(812700013) {
+  stage: ParticipantProjections = 1;
+  commit: ParticipantProjections = 2;
+  abort: ParticipantProjections = 3;
+  roll_back: ParticipantRollbacks = 4;
+}
+
+// The lifecycle command a failed participant was applying.
+enum RolloutCommandKind(812700014) {
+  stage = 1;
+  commit = 2;
+  abort = 3;
+  roll_back = 4;
+}
+
+// A candidate projection next to the projection that was active before it was staged.
+struct StagedCandidate(812700015) {
+  candidate: ProjectionReference = 0;
+  baseline: ActiveProjection? = 1;
+}
+
+// The active projection of a participant and the one prior projection it retains for rollback.
+struct ActiveParticipant(812700016) {
+  current: ActiveProjection = 0;
+  retained: ProjectionReference? = 1;
+}
+
+// The resources a participant retains after a failed command. Recovery distinguishes empty, active and staged states
+// instead of assuming that every failure leaves the same baseline.
+enum RecoverableParticipantState(812700017) {
+  empty = 1;
+  active: ActiveParticipant = 2;
+  staged: StagedCandidate = 3;
+}
+
+// Lifecycle progress of one participant. Active does not necessarily mean healthy.
+enum ParticipantPhase(812700018) {
+  idle = 1;
+  staging: StagedCandidate = 2;
+  staged: StagedCandidate = 3;
+  committing: StagedCandidate = 4;
+  active: ActiveParticipant = 5;
+  aborting: StagedCandidate = 6;
+  rolling_back: struct {
+    failed: ProjectionReference = 0;
+    target: RollbackTarget = 1;
+  } = 7;
+  failed: struct {
+    command: RolloutCommandKind = 0;
+    recoverable: RecoverableParticipantState = 1;
+    reason: string = 2;
+  } = 8;
+}
+
+// The lifecycle phase of one participant for one attempt. Consumers compare the attempt and the exact projection before
+// treating an observation as confirmation.
+struct ParticipantStatus(812700019) {
+  service_id: string = 0;
+  attempt: RolloutAttempt = 1;
+  phase: ParticipantPhase = 2;
+}
+
+// Asks every host assigned to the Realm for presence. Each host replies at most once.
+method ProbeRealmHosts(
+  struct {}
+): enum {
+  present: RealmHostPresence = 1;
+  internal_error: InternalError = 2;
+} = 910008;
+
+// Applies one lifecycle command of one attempt. Hosts that the command does not list do not reply. Every other reply
+// names its host, so the coordinator stops collecting as soon as every participant answered.
+method ApplyRolloutCommand(
+  struct {
+    attempt: RolloutAttempt = 0;
+    command: RolloutCommand = 1;
+  }
+): enum {
+  accepted: struct {
+    service_id: string = 0;
+  } = 1;
+  /// Rollout attempt is stale.
+  stale_attempt_error: struct {
+    service_id: string = 0;
+  } = 2;
+  /// Rollout attempt conflicts with another projection.
+  attempt_conflict_error: struct {
+    service_id: string = 0;
+  } = 3;
+  /// Participant rejected the command in its current lifecycle state.
+  command_rejected_error: struct {
+    service_id: string = 0;
+    reason: string = 1;
+  } = 4;
+  /// Participant failed while applying the command.
+  command_failed_error: struct {
+    service_id: string = 0;
+    reason: string = 1;
+  } = 5;
+  internal_error: InternalError = 6;
+} = 910009;
+
+// Reads the lifecycle phase of every host for one attempt.
+method QueryParticipantStatus(
+  struct {
+    attempt: RolloutAttempt = 0;
+  }
+): enum {
+  status: ParticipantStatus = 1;
+  internal_error: InternalError = 2;
+} = 910010;

@@ -17,6 +17,7 @@ pub mod identity;
 pub mod lifecycle;
 pub mod organization;
 pub mod registration;
+pub mod rollout;
 pub mod service;
 pub mod status;
 pub mod topology;
