@@ -15,7 +15,6 @@ import com.typewritermc.capability.RealmSearch
 import com.typewritermc.capability.RealmSearchContext
 import com.typewritermc.capability.RealmSearchRequest
 import com.typewritermc.capability.realmSearch
-import com.typewritermc.discovery.GraphDirection
 import com.typewritermc.discovery.RuntimeRegistrar
 import com.typewritermc.discovery.RuntimeScope
 import com.typewritermc.discovery.TypewriterRegistrar
@@ -36,6 +35,7 @@ import com.typewritermc.types.TypewriterType
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import skirout.editor.v1.catalog.PresentationRole
+import skirout.editor.v1.presentation.GraphDirection
 
 /**
  * Polymorphic message family exercising generated schema discovery, serialized field aliases, and presentation

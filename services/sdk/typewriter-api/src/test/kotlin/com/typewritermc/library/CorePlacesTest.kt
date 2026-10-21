@@ -169,7 +169,7 @@ val CorePlacesTest by testSuite {
             build {
                 pages {
                     order { resource.fields.name.orElse(literal("")) }
-                    graph(com.typewritermc.discovery.GraphDirection.TOP_TO_BOTTOM)
+                    graph(GraphDirection.TOP_TO_BOTTOM)
                 }
             }
         }.message shouldContain "cannot declare an order"

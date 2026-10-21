@@ -39,11 +39,3 @@ fun contributionKey(
         producer = SkirProducerId(value = producer.value),
         name = SkirContributionName(value = name.value),
     )
-
-@Serializable
-enum class GraphDirection {
-    LEFT_TO_RIGHT,
-    RIGHT_TO_LEFT,
-    TOP_TO_BOTTOM,
-    BOTTOM_TO_TOP,
-}

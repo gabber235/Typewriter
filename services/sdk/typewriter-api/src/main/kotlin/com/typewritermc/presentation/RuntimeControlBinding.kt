@@ -3,7 +3,6 @@
 package com.typewritermc.presentation
 
 import com.typewritermc.authoring.GeneratedSdkApi
-import com.typewritermc.discovery.GraphDirection
 import com.typewritermc.discovery.checkedGeneratedScope
 import com.typewritermc.expression.Expr
 import com.typewritermc.expression.Handled
@@ -14,6 +13,7 @@ import com.typewritermc.types.use
 import skirout.editor.v1.binding.BindingRef
 import skirout.editor.v1.expression.ExpressionNode
 import skirout.editor.v1.presentation.BoundControl
+import skirout.editor.v1.presentation.GraphDirection
 import skirout.editor.v1.presentation.LinkRejectionDisplay
 import skirout.editor.v1.presentation.PresentationElement
 import skirout.editor.v1.presentation.PresentationNode
@@ -21,7 +21,6 @@ import skirout.editor.v1.presentation.ResourcesLayout
 import skirout.editor.v1.type_catalog.CollectionKind
 import skirout.editor.v1.type_catalog.ExpressionBindingId
 import skirout.editor.v1.type_catalog.TypeTemplate
-import skirout.editor.v1.presentation.GraphDirection as WireGraphDirection
 import skirout.editor.v1.presentation.PresentationProperties as WirePresentationProperties
 import skirout.editor.v1.type_catalog.ValuePath as WireValuePath
 
@@ -263,16 +262,10 @@ internal class RuntimeControlBinding(
                 .partial()
                 .toMutable()
         RuntimeGraphAppearanceScope(draft).configure()
-        val wireDirection =
-            when (direction) {
-                GraphDirection.LEFT_TO_RIGHT -> WireGraphDirection.LEFT_TO_RIGHT
-                GraphDirection.RIGHT_TO_LEFT -> WireGraphDirection.RIGHT_TO_LEFT
-                GraphDirection.TOP_TO_BOTTOM -> WireGraphDirection.TOP_TO_BOTTOM
-                GraphDirection.BOTTOM_TO_TOP -> WireGraphDirection.BOTTOM_TO_TOP
-            }
+        require(direction != GraphDirection.UNKNOWN) { "Unknown graph direction." }
         resources(
             ResourcesLayout.createGraph(
-                direction = wireDirection,
+                direction = direction,
                 appearance = draft.toFrozen(),
             ),
         )

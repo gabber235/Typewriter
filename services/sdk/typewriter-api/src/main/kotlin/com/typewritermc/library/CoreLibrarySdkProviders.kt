@@ -1,7 +1,6 @@
 package com.typewritermc.library
 
 import com.typewritermc.authoring.PlacementSdkProvider
-import com.typewritermc.discovery.GraphDirection
 import com.typewritermc.expression.accent
 import com.typewritermc.expression.color
 import com.typewritermc.expression.emptyListExpression
@@ -36,6 +35,7 @@ import com.typewritermc.presentation.withAlpha
 import com.typewritermc.types.Color
 import com.typewritermc.types.Ref
 import skirout.editor.v1.catalog.PresentationRole
+import skirout.editor.v1.presentation.GraphDirection
 import skirout.editor.v1.presentation.PresentationAlignment
 import skirout.editor.v1.presentation.PresentationInteractionState.FOCUSED
 import skirout.editor.v1.presentation.PresentationInteractionState.HOVERED

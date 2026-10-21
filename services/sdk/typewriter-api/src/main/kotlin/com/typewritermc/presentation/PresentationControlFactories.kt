@@ -2,12 +2,12 @@ package com.typewritermc.presentation
 
 import com.typewritermc.authoring.HierarchyPath
 import com.typewritermc.authoring.TypedPath
-import com.typewritermc.discovery.GraphDirection
 import com.typewritermc.discovery.checkedGeneratedScope
 import com.typewritermc.expression.Expr
 import com.typewritermc.expression.Handled
 import com.typewritermc.types.Resource
 import com.typewritermc.types.ResourceId
+import skirout.editor.v1.presentation.GraphDirection
 import skirout.editor.v1.presentation.LinkRejectionDisplay
 import kotlin.reflect.KClass
 
