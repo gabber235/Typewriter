@@ -90,7 +90,7 @@ pub async fn handle_watch(
         ));
     };
     Ok(skir_variant!(WatchHostExecutionResponse::Desired {
-        topology_revision: host.topology_revision.desired,
+        topology_revision: host.topology_revision.0.desired,
         realm: desired.realm.map(Into::into),
         engine: desired.engine.map(Into::into),
     }))

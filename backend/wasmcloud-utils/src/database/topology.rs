@@ -14,26 +14,9 @@ use crate::skir::base::service::v1::topology::{
     SupportedEngine,
 };
 
-/// Stored desired and applied topology revisions.
-///
-/// Desired state is what configuration requests require. Applied state is what host execution
-/// has reported as completed; callers must not treat the two values as interchangeable.
-#[derive(Debug, Serialize, Deserialize, Clone, PartialEq, Eq)]
-pub struct ReconciledRevisionRecord {
-    pub desired: i64,
-    pub applied: i64,
-}
-
-impl From<ReconciledRevisionRecord> for ReconciledRevision {
-    fn from(value: ReconciledRevisionRecord) -> Self {
-        Self {
-            desired: value.desired,
-            applied: value.applied,
-            _unrecognized: None,
-        }
-    }
-}
-
+/// Stored engine target. It stays a storage shape instead of [`SkirDb`] because the schema
+/// validates every stored field: [`SkirDb`] omits an empty version constraint, which would
+/// replace the schema's typed validation error with a type mismatch.
 #[derive(Debug, Serialize, Deserialize, Clone, PartialEq, Eq)]
 pub struct EngineTargetRecord {
     pub engine_id: String,
@@ -59,6 +42,8 @@ impl From<EngineTargetRecord> for EngineTarget {
     }
 }
 
+/// Stored supported engine. Like [`EngineTargetRecord`] it keeps every field, so an empty engine id
+/// reaches the schema's typed validation error.
 #[derive(Debug, Serialize, Deserialize, Clone, PartialEq, Eq)]
 pub struct SupportedEngineRecord {
     pub engine_id: String,
@@ -141,7 +126,9 @@ pub struct ServiceHostRecord {
     pub entrypoint: String,
     pub can_host_realm: bool,
     pub supported_engines: Vec<SupportedEngineRecord>,
-    pub topology_revision: ReconciledRevisionRecord,
+    /// Desired and applied topology revisions. Desired state is what configuration requests
+    /// require; applied state is what host execution reported as completed.
+    pub topology_revision: SkirDb<ReconciledRevision>,
     pub state: HostRuntimeStateRecord,
 }
 
@@ -158,21 +145,11 @@ impl From<ServiceHostRecord> for ServiceHost {
                 .into_iter()
                 .map(Into::into)
                 .collect(),
-            topology_revision: value.topology_revision.into(),
+            topology_revision: value.topology_revision.0,
             state: value.state.into(),
             _unrecognized: None,
         }
     }
-}
-
-/// Stored realm instance before related host data is joined into a view.
-#[derive(Debug, Serialize, Deserialize, Clone)]
-pub struct RealmInstanceRecord {
-    pub id: RecordId,
-    pub owner_host_id: RecordId,
-    pub revision: i64,
-    pub target_engine: EngineTargetRecord,
-    pub state: ChildRuntimeStateRecord,
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
@@ -212,17 +189,6 @@ impl From<RealmInstanceViewRecord> for RealmInstance {
             _unrecognized: None,
         }
     }
-}
-
-/// Stored engine instance before related host and realm data is joined into a view.
-#[derive(Debug, Serialize, Deserialize, Clone)]
-pub struct EngineInstanceRecord {
-    pub id: RecordId,
-    pub owner_host_id: RecordId,
-    pub realm_id: RecordId,
-    pub revision: i64,
-    pub target: EngineTargetRecord,
-    pub state: ChildRuntimeStateRecord,
 }
 
 /// Minimal realm and owner information embedded in an engine view.
