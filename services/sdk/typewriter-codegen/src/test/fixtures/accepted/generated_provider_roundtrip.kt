@@ -285,9 +285,12 @@ fun main(args: Array<String>) {
             check(contributions.presentations.size == 1)
             check(contributions.displays.single().provider.target == ResourceTarget.Type(ExampleDefinition.id.namedTemplate()))
             val assembly = contributions.assemble(CatalogAssemblyContext(CatalogGeneration("fixture")))
-            check(assembly.snapshot.resourceDisplays.single().target == ResourceTarget.Type(ExampleDefinition.id.namedTemplate()))
-            check(assembly.snapshot.types.single { it.definition.id == ExampleDefinition.id }.searchKey == "example")
-            val configuredPaths = assembly.snapshot.configuration.filter { it.rules.isNotEmpty() }
+            check(
+                assembly.editorCatalog.resourceDisplays.single().target ==
+                    skirout.editor.v1.type_catalog.ResourceTarget.TypeWrapper(ExampleDefinition.id.template()),
+            )
+            check(assembly.editorCatalog.types.single { it.definition.id == ExampleDefinition.id }.searchKey == "example")
+            val configuredPaths = assembly.configuration.filter { it.rules.isNotEmpty() }
                 .map { recipe -> recipe.relativePath.segments.joinToString(".") { segment ->
                     when (segment) {
                         is com.typewritermc.configuration.FieldPatternSegment.Field -> segment.name
@@ -309,7 +312,7 @@ fun main(args: Array<String>) {
             fun counts(): Pair<*, *> = probeLoader.loadClass("fixture.GeneratedProviderRoundtrip").getMethod("evaluationCounts").invoke(null) as Pair<*, *>
             val initializer = DefaultInitializationRuntime(assembly.checked, assembly.bindings)
             fun prepare(type: NamedTypeUse, fields: Map<String, DataValue>) = initializer.prepareNow(
-                InitializationRequest(assembly.snapshot.generation, PreparationTarget.Record(TypeSelection.Complete(type)), DataValue.Record(fields)),
+                InitializationRequest(assembly.checked.generation, PreparationTarget.Record(TypeSelection.Complete(type)), DataValue.Record(fields)),
             )
             fun integer(value: Int) = DataValue.Integer(BigInteger.valueOf(value.toLong()))
             val supplied = mapOf("seed" to integer(7), "nullable" to DataValue.Null, "guarded" to integer(20))
@@ -353,19 +356,19 @@ fun main(args: Array<String>) {
             val replacement = replacementContributions.assemble(CatalogAssemblyContext(CatalogGeneration("fixture replacement")))
             replacementCountBindings = 0
             val replacementWrapped = DefaultInitializationRuntime(replacement.checked, replacement.bindings).prepareNow(
-                InitializationRequest(replacement.snapshot.generation, PreparationTarget.Record(TypeSelection.Complete(WrappedDefaultsDefinition.use)),
+                InitializationRequest(replacement.checked.generation, PreparationTarget.Record(TypeSelection.Complete(WrappedDefaultsDefinition.use)),
                     DataValue.Record(mapOf("count" to DataValue.Named(DefaultCountDefinition.use, integer(8))))),
             )
             check(replacementWrapped.findings.isEmpty())
             check((replacementWrapped.content as PreparedContent.Record).record.fields["doubled"] == integer(16))
             check(replacementCountBindings == 1)
             val replacementDefaults = DefaultInitializationRuntime(replacement.checked, replacement.bindings).prepareNow(
-                InitializationRequest(replacement.snapshot.generation, PreparationTarget.Record(TypeSelection.Complete(DependentDefaultsDefinition.use)), DataValue.Record(supplied)),
+                InitializationRequest(replacement.checked.generation, PreparationTarget.Record(TypeSelection.Complete(DependentDefaultsDefinition.use)), DataValue.Record(supplied)),
             )
             check(replacementDefaults.findings.isEmpty())
             check((replacementDefaults.content as PreparedContent.Record).record.fields["derived"] == integer(21))
             check(counts() == (2 to 2))
-            val material = assembly.snapshot.presentationMaterials.single()
+            val material = assembly.editorCatalog.presentationMaterials.single()
             check(material.layout.nodeId.isNotEmpty())
             check(material.dependencies.collections.single().relations.single().relationId == "identity")
             val graphs =

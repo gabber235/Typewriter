@@ -2,7 +2,6 @@ package com.typewritermc.realm.routes
 
 import com.typewritermc.checking.CatalogGeneration
 import com.typewritermc.realm.catalog.RealmCatalogStore
-import com.typewritermc.types.catalog.toWire
 import skirout.editor.v1.catalog.CatalogFetchRequest
 import skirout.editor.v1.catalog.CatalogFetchResult
 import skirout.editor.v1.catalog.CatalogInvalidated
@@ -30,7 +29,7 @@ class RetainedRealmEditorCatalogSource(
             if (expected != null && expected != catalog.generation) {
                 CatalogFetchResult.GenerationChangedErrorWrapper(WireCatalogGeneration(value = catalog.generation.value))
             } else {
-                CatalogFetchResult.CatalogWrapper(catalog.editorSnapshot.toWire())
+                CatalogFetchResult.CatalogWrapper(catalog.editorCatalog)
             }
         }
 

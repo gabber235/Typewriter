@@ -17,7 +17,6 @@ import com.typewritermc.presentation.PresentationDescriptor
 import com.typewritermc.presentation.PresentationTarget
 import com.typewritermc.types.catalog.DeclarationStatus
 import com.typewritermc.types.catalog.DefaultCheckedCatalog
-import com.typewritermc.types.catalog.EditorCatalogSnapshot
 import com.typewritermc.types.catalog.Resolution
 import com.typewritermc.types.skir.SkirAuthoringValueCodec
 import com.typewritermc.types.skir.SkirConversionResult
@@ -708,67 +707,40 @@ val TypeSystemFoundationTest by testSuite {
                     ),
                 localIdentity = "message.editor",
             )
-        val snapshot =
-            EditorCatalogSnapshot(
-                generation = CatalogGeneration("catalog one"),
-                types = emptyList(),
-                relations = emptyList(),
-                resourceDisplays = emptyList(),
-                realmRoot =
-                    TypeDefinitionId.qualified("test", "realm.root"),
-                presentations =
-                    listOf(
-                        PresentationDescriptor(
-                            id = PresentationId(namespace = "example", name = "editor"),
-                            owner = owner,
-                            target = PresentationTarget.Representation(com.typewritermc.configuration.RepresentationKind.Text),
-                            roles = setOf(PresentationRole.WORKSPACE),
-                            priority = 1,
+        val presentation =
+            PresentationDescriptor(
+                id = PresentationId(namespace = "example", name = "editor"),
+                owner = owner,
+                target = PresentationTarget.Representation(com.typewritermc.configuration.RepresentationKind.Text),
+                roles = setOf(PresentationRole.WORKSPACE),
+                priority = 1,
+            )
+        val endpointBinding =
+            EndpointBindingTemplate(
+                endpoint = EndpointId(value = "menu.destination"),
+                containingResource = id("menu").namedTemplate(),
+                valueOwner = id("button"),
+                relativePath =
+                    com.typewritermc.configuration.RelativeFieldPattern(
+                        listOf(
+                            com.typewritermc.configuration.FieldPatternSegment
+                                .Field("buttons"),
+                            com.typewritermc.configuration.FieldPatternSegment.Items,
+                            com.typewritermc.configuration.FieldPatternSegment
+                                .Field("destination"),
                         ),
                     ),
-                presentationMaterials = emptyList(),
-                configuration = emptyList(),
-                diagnostics = emptyList(),
-                endpointBindings =
-                    listOf(
-                        EndpointBindingTemplate(
-                            endpoint = EndpointId(value = "menu.destination"),
-                            containingResource = id("menu").namedTemplate(),
-                            valueOwner = id("button"),
-                            relativePath =
-                                com.typewritermc.configuration.RelativeFieldPattern(
-                                    listOf(
-                                        com.typewritermc.configuration.FieldPatternSegment
-                                            .Field("buttons"),
-                                        com.typewritermc.configuration.FieldPatternSegment.Items,
-                                        com.typewritermc.configuration.FieldPatternSegment
-                                            .Field("destination"),
-                                    ),
-                                ),
-                            target = id("page").template(),
-                            containsCollection = true,
-                        ),
-                    ),
+                target = id("page").template(),
+                containsCollection = true,
             )
 
-        val encoded =
-            SkirTypeCodec
-                .encode(snapshot)
-                .getOrThrow()
-                .presentations
-                .single()
-                .owner
+        val encoded = SkirTypeCodec.encode(presentation).getOrThrow().owner
         encoded.source.source.value shouldBe "extension.example"
         encoded.source.sourcePart shouldBe "realm"
         encoded.source.producer.value shouldBe "types"
         encoded.source.name.value shouldBe "presentations/editor"
         encoded.localIdentity shouldBe "message.editor"
-        val binding =
-            SkirTypeCodec
-                .encode(snapshot)
-                .getOrThrow()
-                .endpointBindings
-                .single()
+        val binding = SkirTypeCodec.encode(endpointBinding).getOrThrow()
         binding.endpoint.value shouldBe "menu.destination"
         binding.containsCollection shouldBe true
         binding.relativePath.segments.size shouldBe 3

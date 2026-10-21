@@ -53,8 +53,9 @@ val CorePlacesTest by testSuite {
     val assembly = frameworkContributions().assemble(CatalogAssemblyContext(CatalogGeneration("core places")))
 
     test("the core catalog publishes its realm root and keeps every core resource type owned") {
-        assembly.snapshot.realmRoot shouldBe RealmRootDefinition.id
-        assembly.snapshot.diagnostics.filter { it.code in setOf("unowned_resource_type", "generic_realm_section") } shouldBe emptyList()
+        assembly.editorCatalog.realmRoot shouldBe RealmRootDefinition.id
+        assembly.editorCatalog.diagnostics.filter { it.code in setOf("unowned_resource_type", "generic_realm_section") } shouldBe
+            emptyList()
         listOf(RealmRootDefinition.id, LibraryDefinition.id, TaxonomyDefinition.id, BookDefinition.id, TagDefinition.id).forEach {
             assembly.checked.definition(it) shouldBe DeclarationStatus.Ready
         }
@@ -198,7 +199,7 @@ val CorePlacesTest by testSuite {
 private fun CatalogAssembly.bookBuild(): (() -> EditorAction) -> Unit {
     val checked = (checked.resolve(BookDefinition.use.use) as Resolution.Ready).value
     val ownership =
-        snapshot.relations
+        relations
             .filter { relation -> relation.families.any { it.value == RESOURCE_OWNERSHIP_FAMILY_ID } }
             .mapTo(hashSetOf()) { it.first.id }
     val binding = PresentationBuildBinding(checked.presentationTemplate(), PresentationRole.WORKSPACE, ownershipEndpoints = ownership)
@@ -217,7 +218,7 @@ private fun CatalogAssembly.material(
     role: PresentationRole,
 ): PresentationMaterial {
     val wireType = type
-    return snapshot.presentationMaterials.single {
+    return editorCatalog.presentationMaterials.single {
         it.role == role && (it.target as? WirePresentationTarget.NamedWrapper)?.value?.definition == wireType
     }
 }

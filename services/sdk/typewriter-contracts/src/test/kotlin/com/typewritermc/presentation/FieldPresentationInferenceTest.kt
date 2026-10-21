@@ -1,10 +1,7 @@
 package com.typewritermc.presentation
 
 import com.typewritermc.checking.CatalogGeneration
-import com.typewritermc.types.catalog.EditorCatalogSnapshot
-import com.typewritermc.types.catalog.toWire
 import com.typewritermc.types.qualified
-import com.typewritermc.types.skir.getOrThrow
 import de.infix.testBalloon.framework.core.testSuite
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.matchers.shouldBe
@@ -696,18 +693,13 @@ val FieldPresentationInferenceTest by testSuite {
                 inheritableNodes = layout.inferInheritableNodes(),
             )
         val wire =
-            EditorCatalogSnapshot(
-                generation = CatalogGeneration("field defaults"),
-                types = emptyList(),
-                relations = emptyList(),
-                resourceDisplays = emptyList(),
-                realmRoot =
-                    TypeDefinitionId.qualified("test", "realm.root"),
-                presentations = emptyList(),
+            skirout.editor.v1.catalog.EditorCatalog.partial(
+                generation =
+                    skirout.editor.v1.type_catalog
+                        .CatalogGeneration(value = "field defaults"),
+                realmRoot = TypeDefinitionId.qualified("test", "realm.root"),
                 presentationMaterials = listOf(material),
-                configuration = emptyList(),
-                diagnostics = emptyList(),
-            ).toWire()
+            )
         val decoded =
             skirout.editor.v1.catalog.EditorCatalog.serializer
                 .fromBytes(

@@ -5,7 +5,7 @@ import com.typewritermc.authoring.AuthoringRecord
 import com.typewritermc.authoring.Availability
 import com.typewritermc.types.ResourceId
 import com.typewritermc.types.catalog.CheckedCatalog
-import com.typewritermc.types.catalog.PublishedType
+import skirout.editor.v1.catalog.PublishedType
 import skirout.editor.v1.expression.ExpressionNode
 import skirout.editor.v1.expression.ExpressionType
 import skirout.editor.v1.type_catalog.TypeDefinitionId

@@ -33,9 +33,7 @@ import com.typewritermc.types.ResourceIdDefinition
 import com.typewritermc.types.StandardTypes
 import com.typewritermc.types.TypeDisplay
 import com.typewritermc.types.catalog.CheckedCatalog
-import com.typewritermc.types.catalog.DeclarationStatus
 import com.typewritermc.types.catalog.DefaultCheckedCatalog
-import com.typewritermc.types.catalog.PublishedType
 import com.typewritermc.types.catalog.Resolution
 import com.typewritermc.types.namedTemplate
 import com.typewritermc.types.namedUse
@@ -43,10 +41,13 @@ import com.typewritermc.types.qualified
 import com.typewritermc.types.skir.SkirAuthoringValueCodec
 import com.typewritermc.types.skir.getOrThrow
 import com.typewritermc.types.template
+import com.typewritermc.types.toWire
 import com.typewritermc.types.use
 import de.infix.testBalloon.framework.core.testSuite
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.types.shouldBeInstanceOf
+import skirout.editor.v1.catalog.DeclarationStatus
+import skirout.editor.v1.catalog.PublishedType
 import skirout.editor.v1.expression.ExpressionNode
 import skirout.editor.v1.expression.ExpressionQuery
 import skirout.editor.v1.expression.ResourceQuerySource
@@ -388,12 +389,10 @@ private class QueryObservation(
     context(reads: AuthoredReads)
     override fun declaration(id: TypeDefinitionId): Availability<PublishedType> =
         Availability.Available(
-            PublishedType(
-                queryDefinition,
-                DeclarationStatus.Ready,
-                emptyList(),
-                emptyList(),
-                TypeDisplay("Resource", "Description", Icon.Iconify("lucide:box"), color),
+            PublishedType.partial(
+                definition = queryDefinition,
+                status = DeclarationStatus.READY,
+                display = TypeDisplay("Resource", "Description", Icon.Iconify("lucide:box"), color).toWire(),
             ),
         )
 }

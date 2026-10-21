@@ -15,6 +15,7 @@ import com.typewritermc.authoring.ValueLocation
 import com.typewritermc.authoring.ValuePath
 import com.typewritermc.authoring.field
 import com.typewritermc.authoring.typedPath
+import com.typewritermc.capability.CapabilityId
 import com.typewritermc.checking.CatalogGeneration
 import com.typewritermc.discovery.CatalogAssemblyContext
 import com.typewritermc.discovery.ProviderOrigin
@@ -87,7 +88,7 @@ val OperationDeclarationTest by testSuite {
     test("the core catalog publishes every core operation for any resource with labels from object names") {
         val assembly = frameworkContributions().assemble(CatalogAssemblyContext(CatalogGeneration("core operations")))
         assembly.operations.diagnostics shouldBe emptyList()
-        val definitions = assembly.snapshot.resourceOperations.associateBy { it.id.declaration.substringAfterLast('.') }
+        val definitions = assembly.editorCatalog.resourceOperations.associateBy { it.id.declaration.substringAfterLast('.') }
         definitions.mapValues { it.value.presentation.label } shouldBe
             mapOf(
                 "Delete" to "Delete",
@@ -103,7 +104,12 @@ val OperationDeclarationTest by testSuite {
         definitions.getValue("MoveToOwner").drop shouldBe drop(ValuePath().field("destination"), "Move here")
         definitions.getValue("LinkWith").drop shouldBe drop(ValuePath().field("target"), "Link")
         definitions.getValue("Unlink").drop shouldBe drop(ValuePath().field("target"), "Unlink")
-        val searches = assembly.snapshot.capabilities.map { it.id }
+        val searches =
+            assembly.editorCatalog.capabilities.mapNotNull { capability ->
+                (capability as? skirout.editor.v1.capability.CapabilityDefinition.SearchWrapper)?.value?.capabilityId?.value?.let(
+                    ::CapabilityId,
+                )
+            }
         searches shouldContainAll
             listOf("MoveToOwner" to "destination", "LinkWith" to "target", "Unlink" to "target").map { (operation, field) ->
                 definitions.getValue(operation).id.candidateSearch(ValuePath().field(field))

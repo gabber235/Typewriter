@@ -12,11 +12,11 @@ import com.typewritermc.types.DataValue
 import com.typewritermc.types.ResourceId
 import com.typewritermc.types.ResourceTarget
 import com.typewritermc.types.catalog.CheckedCatalog
-import com.typewritermc.types.catalog.PublishedType
 import com.typewritermc.types.catalog.ResourceDisplayFormulas
 import com.typewritermc.types.template
 import com.typewritermc.types.unwrapNamed
 import com.typewritermc.types.use
+import skirout.editor.v1.catalog.PublishedType
 import skirout.editor.v1.type_catalog.TypeDefinitionId
 
 /** One published resource display with its formulas checked against the catalog that published them. */

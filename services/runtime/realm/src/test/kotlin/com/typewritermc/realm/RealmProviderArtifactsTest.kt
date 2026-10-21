@@ -135,17 +135,18 @@ val RealmProviderArtifactsTest by testSuite {
             RealmProviderFixture.executionRegistrars = 0
             GeneratedProviderLoader().load(artifacts, DeploymentFacts(), DiscoveryDomains.Realm).use { deployment ->
                 val assembly = deployment.providers.contributions.assemble(CatalogAssemblyContext(CatalogGeneration("realm common")))
-                val published = assembly.snapshot.types.single { it.definition.id == RealmProviderFixture.type }
-                published.status shouldBe DeclarationStatus.Ready
+                val published = assembly.editorCatalog.types.single { it.definition.id == RealmProviderFixture.type }
+                published.status shouldBe skirout.editor.v1.catalog.DeclarationStatus.READY
                 val checked = (assembly.checked.resolve(RealmProviderFixture.type.use()) as Resolution.Ready).value
                 val native = assembly.bindings.bind(checked)
                 @Suppress("UNCHECKED_CAST")
                 (native as com.typewritermc.types.NativeBinding<Unit>).encode(Unit) shouldBe
                     DataValue.Named(RealmProviderFixture.type.namedUse(), DataValue.Record(emptyMap()))
-                assembly.snapshot.presentations
+                assembly.editorCatalog.presentations
                     .single()
                     .target shouldBe
-                    PresentationTarget.Named(RealmProviderFixture.type.namedTemplate())
+                    skirout.editor.v1.catalog.PresentationTarget
+                        .NamedWrapper(RealmProviderFixture.type.namedTemplate())
                 deployment.providers.registrars
                     .single()
                     .descriptor.id shouldBe RuntimeRegistrarId("fixture.realm")

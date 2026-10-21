@@ -775,7 +775,7 @@ val DefaultPresentationRuntimeTest by testSuite {
                 presentations = listOf(OwnedPresentation(origin, descriptor, provider)),
             ).assemble(CatalogAssemblyContext(CatalogGeneration("symbolic presentation")))
 
-        val material = assembly.snapshot.presentationMaterials.single()
+        val material = assembly.editorCatalog.presentationMaterials.single()
         material.target shouldBe SkirTypeCodec.encode(target).getOrThrow()
         val valueNode =
             material.layout
@@ -807,8 +807,8 @@ val DefaultPresentationRuntimeTest by testSuite {
                 declarations = listOf(OwnedTypeDeclaration(origin, definition)),
                 presentations = listOf(OwnedPresentation(origin, descriptor, provider)),
             ).assemble(CatalogAssemblyContext(CatalogGeneration("invalid symbolic presentation")))
-        rejected.snapshot.presentationMaterials.isEmpty() shouldBe true
-        rejected.snapshot.diagnostics.isNotEmpty() shouldBe true
+        rejected.editorCatalog.presentationMaterials.isEmpty() shouldBe true
+        rejected.editorCatalog.diagnostics.isNotEmpty() shouldBe true
     }
 
     test("isolates a named presentation with an invalid collection projection") {
@@ -885,14 +885,14 @@ val DefaultPresentationRuntimeTest by testSuite {
             )
 
         val status =
-            assembly.snapshot.types
+            assembly.editorCatalog.types
                 .single { it.definition.id == subjectId }
-                .status as DeclarationStatus.Unavailable
-        status.reasons.map { it.code } shouldBe listOf("invalid_presentation_collection_dependency")
-        assembly.snapshot.types
+                .status as skirout.editor.v1.catalog.DeclarationStatus.UnavailableWrapper
+        status.value.map { it.code } shouldBe listOf("invalid_presentation_collection_dependency")
+        assembly.editorCatalog.types
             .single { it.definition.id == unrelatedId }
-            .status shouldBe DeclarationStatus.Ready
-        assembly.snapshot.presentationMaterials shouldBe emptyList()
+            .status shouldBe skirout.editor.v1.catalog.DeclarationStatus.READY
+        assembly.editorCatalog.presentationMaterials shouldBe emptyList()
     }
 
     test("admits readable projection mappings from declared resource roots") {
@@ -990,10 +990,10 @@ val DefaultPresentationRuntimeTest by testSuite {
                 ),
             )
 
-        assembly.snapshot.types
+        assembly.editorCatalog.types
             .single { it.definition.id == resourceId }
-            .status shouldBe DeclarationStatus.Ready
-        assembly.snapshot.presentationMaterials
+            .status shouldBe skirout.editor.v1.catalog.DeclarationStatus.READY
+        assembly.editorCatalog.presentationMaterials
             .single()
             .dependencies.collections
             .single()
@@ -1157,15 +1157,15 @@ val DefaultPresentationRuntimeTest by testSuite {
 
         projections.keys.forEach { id ->
             val status =
-                assembly.snapshot.types
+                assembly.editorCatalog.types
                     .single { it.definition.id == id }
-                    .status as DeclarationStatus.Unavailable
-            status.reasons.map { it.code } shouldBe listOf("invalid_presentation_collection_dependency")
+                    .status as skirout.editor.v1.catalog.DeclarationStatus.UnavailableWrapper
+            status.value.map { it.code } shouldBe listOf("invalid_presentation_collection_dependency")
         }
-        assembly.snapshot.types
+        assembly.editorCatalog.types
             .single { it.definition.id == unrelatedId }
-            .status shouldBe DeclarationStatus.Ready
-        assembly.snapshot.presentationMaterials shouldBe emptyList()
+            .status shouldBe skirout.editor.v1.catalog.DeclarationStatus.READY
+        assembly.editorCatalog.presentationMaterials shouldBe emptyList()
     }
 
     test("resolves one presentation reference by its checked binding without mutating rejected registrations") {
@@ -1648,7 +1648,7 @@ val DefaultPresentationRuntimeTest by testSuite {
                             OwnedTypeDeclaration(owner, it)
                         },
                 ).assemble(CatalogAssemblyContext(CatalogGeneration("nested remainder fixture")))
-            val wire = SkirTypeCodec.encode(assembly.snapshot).getOrThrow()
+            val wire = assembly.editorCatalog
             java.io
                 .File(
                     directory,

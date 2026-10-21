@@ -15,7 +15,6 @@ import com.typewritermc.imprint.ProducerId
 import com.typewritermc.services.libs.telemetry.ErrorSlug
 import com.typewritermc.services.libs.telemetry.mainSpanBlocking
 import com.typewritermc.services.libs.telemetry.testing.TelemetryTestHarness
-import com.typewritermc.types.catalog.toWire
 import com.typewritermc.types.qualified
 import de.infix.testBalloon.framework.core.testSuite
 import io.kotest.matchers.shouldBe
@@ -69,7 +68,7 @@ val RealmCatalogReportingTest by testSuite {
                 .get(AttributeKey.stringKey("exception.stacktrace"))!!
                 .shouldContain("fixture explanation")
             event.attributes.get(AttributeKey.stringKey("catalog.provider")) shouldBe "ArticleConfiguration"
-            assembly.snapshot.toWire().let { wire ->
+            assembly.editorCatalog.let { wire ->
                 EditorCatalog.serializer.toJsonCode(wire).shouldNotContain("fixture explanation")
             }
             harness.assertNoActiveSpans()

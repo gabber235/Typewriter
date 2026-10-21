@@ -13,7 +13,6 @@ import com.typewritermc.types.Color
 import com.typewritermc.types.ColorDefinition
 import com.typewritermc.types.Icon
 import com.typewritermc.types.TypeDisplay
-import com.typewritermc.types.catalog.toWire
 import com.typewritermc.types.toWire
 import de.infix.testBalloon.framework.core.testSuite
 import io.kotest.matchers.shouldBe
@@ -40,16 +39,11 @@ val TypeDisplayPublicationTest by testSuite {
             ).assemble(CatalogAssemblyContext(CatalogGeneration("type display publication")))
 
         BookDefinition.display shouldBe expected
-        assembly.snapshot.types
-            .single { published -> published.definition.id == BookDefinition.id }
-            .display shouldBe expected
-
         val wireDisplay =
-            assembly.snapshot
-                .toWire()
-                .types
+            assembly.editorCatalog.types
                 .single { published -> published.definition == BookDefinition.declaration }
                 .display
+        wireDisplay shouldBe expected.toWire()
         wireDisplay.description shouldBe expected.description
         wireDisplay.icon shouldBe expected.icon.toWire()
         wireDisplay.color.argb shouldBe expected.color.argb.toInt()
@@ -76,7 +70,7 @@ val TypeDisplayPublicationTest by testSuite {
                         OwnedTypeDeclaration(origin, provider.definition, provider.display, searchKey = provider.searchKey)
                     },
             ).assemble(CatalogAssemblyContext(CatalogGeneration("search keys")))
-                .snapshot.types
+                .editorCatalog.types
                 .associate { it.definition.id to it.searchKey }
 
         published[BookDefinition.id] shouldBe "book"

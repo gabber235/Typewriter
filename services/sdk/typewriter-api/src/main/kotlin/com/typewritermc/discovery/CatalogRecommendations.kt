@@ -4,11 +4,11 @@ import com.typewritermc.types.StandardTypes
 import com.typewritermc.types.canonicalText
 import com.typewritermc.types.catalog.CheckedCatalog
 import com.typewritermc.types.catalog.Resolution
-import com.typewritermc.types.catalog.TypeRecommendation
 import com.typewritermc.types.catalog.isReady
 import com.typewritermc.types.nullable
 import com.typewritermc.types.unknownVariant
 import com.typewritermc.types.use
+import skirout.editor.v1.catalog.TypeRecommendation
 import skirout.editor.v1.type_catalog.NamedTypeUse
 import skirout.editor.v1.type_catalog.RepresentationTemplate
 import skirout.editor.v1.type_catalog.TypeDefinition
@@ -60,7 +60,7 @@ internal fun typeRecommendations(
     return counts.entries
         .sortedWith(compareByDescending<Map.Entry<NamedTypeUse, Long>> { it.value }.thenBy { it.key.use.canonicalText })
         .take(TYPE_RECOMMENDATION_LIMIT)
-        .map { (type, occurrences) -> TypeRecommendation(type, occurrences) }
+        .map { (type, occurrences) -> TypeRecommendation(type = type, occurrences = occurrences) }
 }
 
 private fun TypeTemplate.toCompleteUse(): TypeUse? =

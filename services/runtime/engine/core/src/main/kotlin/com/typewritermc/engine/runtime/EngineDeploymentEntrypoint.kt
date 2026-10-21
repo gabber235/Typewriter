@@ -69,7 +69,7 @@ class EngineDeploymentEntrypoint : HostedRuntimeEntrypoint {
                     implementationToken = implementation.fingerprint(),
                     enforceImplementationCompatibility =
                         context.identity.placement == RuntimePlacement.PRIMARY_ENGINE,
-                    contentGateway = ResourceGraphContentGateway(assembly.checked, assembly.bindings, assembly.snapshot.relations),
+                    contentGateway = ResourceGraphContentGateway(assembly.checked, assembly.bindings, assembly.relations),
                     contentDelivery = MessagingEngineContentDelivery(context.host, context.identity.realmId, deploymentScope),
                 )
             ScopedEngineRuntime(runtime, deploymentScope)

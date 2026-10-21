@@ -28,7 +28,6 @@ import skirout.editor.v1.type_catalog.RepresentationTemplate
 import skirout.editor.v1.type_catalog.TypeDefinition
 import skirout.editor.v1.type_catalog.TypeDefinitionId
 import skirout.editor.v1.type_catalog.TypeParameter
-import skirout.editor.v1.type_catalog.TypeTemplate
 
 val RealmStructureAssemblyTest by testSuite {
     test("the ownership family annotation id is the editor contract's ownership family") {
@@ -39,17 +38,14 @@ val RealmStructureAssemblyTest by testSuite {
         val reserved = TypeDefinitionId.qualified(com.typewritermc.expression.CANONICAL_READ_NAMESPACE, "UnfamiliarModel")
         val healthy = id("Healthy")
         val assembly = assemble(listOf(record(reserved), record(healthy)))
-        assembly.snapshot.types
-            .single { it.definition.id == reserved }
-            .status
-            .codes() shouldBe setOf("reserved_intrinsic_type_identity")
+        assembly.checked.definition(reserved).codes() shouldBe setOf("reserved_intrinsic_type_identity")
         assembly.checked.definition(healthy) shouldBe DeclarationStatus.Ready
     }
 
     test("publishes the realm root type and keeps the root available without an owner") {
         val assembly = assemble(structure())
 
-        assembly.snapshot.realmRoot shouldBe RealmRootDefinition.id
+        assembly.editorCatalog.realmRoot shouldBe RealmRootDefinition.id
         assembly.checked.definition(RealmRootDefinition.id) shouldBe DeclarationStatus.Ready
         assembly.checked.definition(section) shouldBe DeclarationStatus.Ready
     }

@@ -7,7 +7,6 @@ import com.typewritermc.checking.CatalogGeneration
 import com.typewritermc.elements.ElementDefinition
 import com.typewritermc.library.BookDefinition
 import com.typewritermc.library.TagDefinition
-import com.typewritermc.types.catalog.toWire
 import com.typewritermc.types.qualified
 import com.typewritermc.types.template
 import de.infix.testBalloon.framework.core.testSuite
@@ -27,9 +26,7 @@ val PlacementFieldPublicationTest by testSuite {
         // Fields typed as the sealed placement base count as placements too.
         assembly.placementField(ElementDefinition.id) shouldBe placement
         assembly.placementField(BookDefinition.id) shouldBe null
-        assembly.snapshot
-            .toWire()
-            .types
+        assembly.editorCatalog.types
             .single { it.definition == TagDefinition.declaration }
             .placementField
             ?.segments
@@ -56,7 +53,7 @@ val PlacementFieldPublicationTest by testSuite {
         val assembly = assemble(declaration)
 
         assembly.placementField(twice) shouldBe null
-        assembly.snapshot.diagnostics
+        assembly.editorCatalog.diagnostics
             .filter { it.affected == twice }
             .map { it.code } shouldBe listOf("ambiguous_placement_field")
     }
@@ -72,5 +69,4 @@ private fun assemble(vararg extra: TypeDefinition): CatalogAssembly {
     ).assemble(CatalogAssemblyContext(CatalogGeneration("placement field publication")))
 }
 
-private fun CatalogAssembly.placementField(type: TypeDefinitionId): ValuePath? =
-    snapshot.types.single { it.definition.id == type }.placementField
+private fun CatalogAssembly.placementField(type: TypeDefinitionId): ValuePath? = placementFields[type]

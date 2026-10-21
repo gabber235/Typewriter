@@ -322,7 +322,7 @@ val RealmLifecycleTest by testSuite {
                         session,
                         "editor.authoring.state.query",
                         QueryAuthoringStateRequest(
-                            generation = SkirCatalogGeneration(value = incarnation.assembly.snapshot.generation.value),
+                            generation = SkirCatalogGeneration(value = incarnation.assembly.checked.generation.value),
                         ),
                         QueryAuthoringStateRequest.serializer,
                         QueryAuthoringStateResponse.serializer,
@@ -382,7 +382,7 @@ val RealmLifecycleTest by testSuite {
                     ) as CatalogFetchResult.CatalogWrapper
                 val catalog =
                     catalogResult.value
-                catalog.generation.value shouldBe incarnation.assembly.snapshot.generation.value
+                catalog.generation.value shouldBe incarnation.assembly.checked.generation.value
                 catalog.types.map { it.definition.requireValid().id }.containsAll(listOf(valid, unavailable)) shouldBe
                     true
 
@@ -391,7 +391,7 @@ val RealmLifecycleTest by testSuite {
                         session,
                         "editor.authoring.state.query",
                         QueryAuthoringStateRequest(
-                            generation = SkirCatalogGeneration(value = incarnation.assembly.snapshot.generation.value),
+                            generation = SkirCatalogGeneration(value = incarnation.assembly.checked.generation.value),
                         ),
                         QueryAuthoringStateRequest.serializer,
                         QueryAuthoringStateResponse.serializer,

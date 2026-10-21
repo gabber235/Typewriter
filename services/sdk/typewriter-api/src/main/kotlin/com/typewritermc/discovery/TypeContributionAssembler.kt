@@ -10,6 +10,7 @@ import com.typewritermc.authoring.RealmRootDefinition
 import com.typewritermc.authoring.RealmSectionDefinition
 import com.typewritermc.authoring.ValuePath
 import com.typewritermc.authoring.complete
+import com.typewritermc.authoring.immutableCopy
 import com.typewritermc.capability.RealmCapabilityDescriptor
 import com.typewritermc.checking.CatalogGeneration
 import com.typewritermc.configuration.ConfigurationRecipe
@@ -44,9 +45,6 @@ import com.typewritermc.types.catalog.DeclarationDiagnostic
 import com.typewritermc.types.catalog.DeclarationOrigin
 import com.typewritermc.types.catalog.DeclarationStatus
 import com.typewritermc.types.catalog.DefaultCheckedCatalog
-import com.typewritermc.types.catalog.EditorCatalogSnapshot
-import com.typewritermc.types.catalog.EffectiveFieldTemplate
-import com.typewritermc.types.catalog.PublishedType
 import com.typewritermc.types.catalog.Resolution
 import com.typewritermc.types.catalog.apply
 import com.typewritermc.types.catalog.isReady
@@ -55,6 +53,7 @@ import com.typewritermc.types.entries
 import com.typewritermc.types.floatScalar
 import com.typewritermc.types.immutableCopy
 import com.typewritermc.types.immutableListCopy
+import com.typewritermc.types.immutableMapCopy
 import com.typewritermc.types.integerScalar
 import com.typewritermc.types.isValid
 import com.typewritermc.types.namedTemplate
@@ -67,11 +66,15 @@ import com.typewritermc.types.skir.SkirTypeCodec
 import com.typewritermc.types.skir.getOrThrow
 import com.typewritermc.types.substitute
 import com.typewritermc.types.template
+import com.typewritermc.types.toWire
 import com.typewritermc.types.unknownVariant
 import com.typewritermc.types.use
 import kotlinx.coroutines.CancellationException
+import skirout.editor.v1.catalog.EditorCatalog
+import skirout.editor.v1.catalog.EffectiveFieldTemplate
 import skirout.editor.v1.catalog.PresentationMaterial
 import skirout.editor.v1.catalog.PresentationRole
+import skirout.editor.v1.catalog.PublishedType
 import skirout.editor.v1.type_catalog.CollectionKind
 import skirout.editor.v1.type_catalog.DeclarationOwner
 import skirout.editor.v1.type_catalog.EndpointId
@@ -89,6 +92,7 @@ import skirout.editor.v1.type_catalog.TypeId
 import skirout.editor.v1.type_catalog.TypeParameter
 import skirout.editor.v1.type_catalog.TypeTemplate
 import skirout.editor.v1.type_catalog.TypeUse
+import skirout.editor.v1.type_catalog.CatalogGeneration as SkirCatalogGeneration
 
 /**
  * One contributed type declaration. Codegen supplies the complete [display] of every declared type and the
@@ -115,12 +119,22 @@ val DEFAULT_ROLE_FALLBACKS: List<RoleFallback> =
         RoleFallback(PresentationRole.REFERENCE_PICKER_RESULT, listOf(PresentationRole.REFERENCE_PREVIEW)),
     )
 
+/**
+ * One assembled catalog generation: the [editorCatalog] published to editors, the [checked] catalog and native
+ * bindings it was built from, and the runtime facts the Realm and engines read beside it. [relations],
+ * [endpointBindings] and [configuration] are the published relations, endpoint bindings and configuration recipes;
+ * [placementFields] maps each type with a placement field to its path.
+ */
 data class CatalogAssembly(
-    val snapshot: EditorCatalogSnapshot,
+    val editorCatalog: EditorCatalog,
     val checked: CheckedCatalog,
     val bindings: com.typewritermc.types.NativeBindingRegistry,
     val providers: OwnedProviderRegistry,
     val checks: List<OwnedCheckRecipe>,
+    val relations: List<RelationContract> = emptyList(),
+    val endpointBindings: List<EndpointBindingTemplate> = emptyList(),
+    val configuration: List<ConfigurationRecipe> = emptyList(),
+    val placementFields: Map<TypeDefinitionId, ValuePath> = emptyMap(),
     val operations: com.typewritermc.operations.OperationCatalog = com.typewritermc.operations.OperationCatalog(),
     val callbackFailures: List<CatalogCallbackFailure> = emptyList(),
     val displays: com.typewritermc.authoring.ResourceDisplayCatalog = com.typewritermc.authoring.ResourceDisplayCatalog(),
@@ -154,8 +168,8 @@ data class CatalogCallbackFailure(
  *
  * A structural catalog first supplies schemas for collecting configuration and presentation recipes. Declaration
  * failures then quarantine affected types and required dependents before final native bindings and operations are
- * assembled. Unavailable declarations remain visible with diagnostics in the published snapshot.
- * Provider callbacks remain in the returned registry rather than the portable snapshot; the caller must retain
+ * assembled. Unavailable declarations remain visible with diagnostics in the published catalog.
+ * Provider callbacks remain in the returned registry rather than the portable catalog; the caller must retain
  * their deployment separately when catalog consumers outlive deployment replacement.
  */
 fun CatalogContributions.assemble(context: CatalogAssemblyContext): CatalogAssembly {
@@ -239,6 +253,7 @@ fun CatalogContributions.assemble(context: CatalogAssemblyContext): CatalogAssem
     val conflictingKeys = searchKeyConflicts.values.flatten().toSet()
     val displayCollection = collectResourceDisplays(displays, definitionIndex, searchKeys.keys.sortedBy { it.canonicalText }, checked)
     val placementDiagnostics = mutableListOf<DeclarationDiagnostic>()
+    val placementFields = linkedMapOf<TypeDefinitionId, ValuePath>()
     val published =
         declarationGroups.entries.sortedBy { it.key.canonicalText }.map { (id, owned) ->
             val definition = owned.first().definition
@@ -246,22 +261,24 @@ fun CatalogContributions.assemble(context: CatalogAssemblyContext): CatalogAssem
             val ready = status == DeclarationStatus.Ready
             val ancestry = if (ready) definition.transitiveAncestors(definitionIndex) else emptyList()
             val effectiveFields = if (ready) definition.effectiveFields(definitionIndex, recipes) else emptyList()
+            val placementField =
+                effectiveFields.placementField(checked) {
+                    placementDiagnostics +=
+                        DeclarationDiagnostic(
+                            id,
+                            "ambiguous_placement_field",
+                            owned.map { DeclarationOrigin(it.origin.owner) }.distinct(),
+                        )
+                }
+            placementField?.let { placementFields[id] = it }
             PublishedType(
                 definition = definition,
-                status = status,
+                status = SkirTypeCodec.encode(status).getOrThrow(),
                 effectiveFields = effectiveFields,
                 ancestorTemplates = ancestry,
-                display = owned.first().display ?: id.derivedDisplay(),
+                display = (owned.first().display ?: id.derivedDisplay()).toWire(),
                 searchKey = scopeKeys[id]?.takeUnless { id in conflictingKeys },
-                placementField =
-                    effectiveFields.placementField(checked) {
-                        placementDiagnostics +=
-                            DeclarationDiagnostic(
-                                id,
-                                "ambiguous_placement_field",
-                                owned.map { DeclarationOrigin(it.origin.owner) }.distinct(),
-                            )
-                    },
+                placementField = placementField?.let { SkirAuthoringValueCodec.encode(it).getOrThrow() },
             )
         }
     val publishedPresentations =
@@ -278,13 +295,16 @@ fun CatalogContributions.assemble(context: CatalogAssemblyContext): CatalogAssem
             bindingRegistry,
             publishedPresentations,
         )
-    val snapshot =
-        EditorCatalogSnapshot(
-            generation = context.generation,
+    val publishedBindings = (endpointBindings + context.endpointBindings).distinct()
+    // The relations, displays, presentations, configuration, diagnostics, bindings, capabilities and fallbacks are
+    // still Kotlin catalog models; SkirTypeCodec encodes them into the published catalog.
+    val editorCatalog =
+        EditorCatalog(
+            generation = SkirCatalogGeneration(value = context.generation.value),
             types = published,
-            relations = publishedRelations,
-            resourceDisplays = displayCollection.displays.map { it.formulas },
-            presentations = publishedPresentations.map(OwnedPresentation::descriptor),
+            relations = publishedRelations.map { SkirTypeCodec.encode(it).getOrThrow() },
+            resourceDisplays = displayCollection.displays.map { SkirTypeCodec.encode(it.formulas).getOrThrow() },
+            presentations = publishedPresentations.map { SkirTypeCodec.encode(it.descriptor).getOrThrow() },
             presentationMaterials =
                 materialCollection.materials
                     .filter { collected ->
@@ -294,23 +314,31 @@ fun CatalogContributions.assemble(context: CatalogAssemblyContext): CatalogAssem
                                 is PresentationTarget.Representation -> true
                             }
                     }.map(CollectedPresentationMaterial::material),
-            configuration = recipes,
+            configuration = recipes.map { SkirTypeCodec.encode(it).getOrThrow() },
             diagnostics =
-                diagnostics + placementDiagnostics + boundOperations.diagnostics + searchKeyDiagnostics + displayCollection.diagnostics,
-            endpointBindings = (endpointBindings + context.endpointBindings).distinct(),
-            capabilities = (context.capabilities + boundOperations.capabilities).sortedBy { it.id.value },
-            resourceOperations = boundOperations.definitions,
+                (diagnostics + placementDiagnostics + boundOperations.diagnostics + searchKeyDiagnostics + displayCollection.diagnostics)
+                    .map { SkirTypeCodec.encode(it).getOrThrow() },
+            endpointBindings = publishedBindings.map { SkirTypeCodec.encode(it).getOrThrow() },
+            capabilities =
+                (context.capabilities + boundOperations.capabilities)
+                    .sortedBy { it.id.value }
+                    .map { SkirTypeCodec.encode(it).getOrThrow() },
             recommendations = typeRecommendations(definitionIndex, checked),
-            roleFallbacks = context.roleFallbacks,
+            roleFallbacks = context.roleFallbacks.map { SkirTypeCodec.encode(it).getOrThrow() },
+            resourceOperations = boundOperations.definitions,
             realmRoot = RealmRootDefinition.id,
-        ).immutableCopy()
+        )
     return CatalogAssembly(
-        snapshot,
+        editorCatalog,
         checked,
         bindingRegistry,
         providerRegistry,
         simpleChecks,
-        boundOperations,
+        relations = publishedRelations.immutableListCopy(RelationContract::immutableCopy),
+        endpointBindings = publishedBindings.immutableListCopy(EndpointBindingTemplate::immutableCopy),
+        configuration = recipes.immutableListCopy(ConfigurationRecipe::immutableCopy),
+        placementFields = placementFields.immutableMapCopy(ValuePath::immutableCopy),
+        operations = boundOperations,
         callbackFailures =
             (configurationFailures.map { it.evidence } + materialCollection.callbackFailures + displayCollection.callbackFailures)
                 .immutableListCopy(),
@@ -1302,7 +1330,7 @@ private fun TypeDefinition.effectiveFields(
             }
         EffectiveFieldTemplate(
             key = field.owner.name,
-            owner = FieldOwner(definition = field.owner.definition, name = field.owner.name),
+            owner = field.owner,
             type = field.type,
             rules = matching.flatMap(ConfigurationRecipe::rules).map { it.id },
         )

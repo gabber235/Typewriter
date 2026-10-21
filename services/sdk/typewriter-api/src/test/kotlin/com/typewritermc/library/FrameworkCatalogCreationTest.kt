@@ -814,22 +814,19 @@ private fun exportFrameworkControlFixture(
         )
     val assembly = contributions.assemble(com.typewritermc.discovery.CatalogAssemblyContext(CatalogGeneration("compiled controls fixture")))
     assembly.callbackFailures.map { "${it.callback}: ${it.cause}" } shouldBe emptyList()
-    assembly.snapshot.diagnostics.filter { it.code.contains("display") || it.code.contains("search_key") } shouldBe emptyList()
-    assembly.snapshot.diagnostics.filter { it.code.contains("presentation") } shouldBe emptyList()
+    assembly.editorCatalog.diagnostics.filter { it.code.contains("display") || it.code.contains("search_key") } shouldBe emptyList()
+    assembly.editorCatalog.diagnostics.filter { it.code.contains("presentation") } shouldBe emptyList()
     val elementMaterial =
-        assembly.snapshot.presentationMaterials.single {
+        assembly.editorCatalog.presentationMaterials.single {
             it.role == skirout.editor.v1.catalog.PresentationRole.INSPECTOR &&
                 (it.target as? skirout.editor.v1.catalog.PresentationTarget.NamedWrapper)?.value?.definition ==
                 com.typewritermc.elements.ElementDefinition.id
         }
     elementMaterial.inheritableNodes.size shouldBe 3
-    assembly.snapshot.presentationMaterials
+    assembly.editorCatalog.presentationMaterials
         .single { it.provider.namespace == entryInspector.descriptor.id.namespace && it.provider.name == entryInspector.descriptor.id.name }
         .inheritableNodes.size shouldBe 3
-    val wire =
-        com.typewritermc.types.skir.SkirTypeCodec
-            .encode(assembly.snapshot)
-            .getOrThrow()
+    val wire = assembly.editorCatalog
     directory.mkdirs()
     java.io.File(directory, "element-value.bin").writeBytes(
         skirout.editor.v1.type_catalog.DataValue.serializer

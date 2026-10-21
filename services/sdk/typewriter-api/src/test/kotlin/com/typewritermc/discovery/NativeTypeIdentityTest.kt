@@ -34,14 +34,14 @@ import skirout.editor.v1.type_catalog.TypeDefinitionId
 val NativeTypeIdentityTest by testSuite {
     test("abstract resource identity builds queries without a native codec") {
         val assembly = nativeIdentityAssembly(ambiguous = false)
-        assembly.snapshot.presentationMaterials.size shouldBe 1
-        assembly.snapshot.diagnostics.any { it.code == "presentation_material_build_failed" } shouldBe false
+        assembly.editorCatalog.presentationMaterials.size shouldBe 1
+        assembly.editorCatalog.diagnostics.any { it.code == "presentation_material_build_failed" } shouldBe false
     }
 
     test("conflicting declarations cannot choose an arbitrary native class identity") {
         val assembly = nativeIdentityAssembly(ambiguous = true)
-        assembly.snapshot.presentationMaterials shouldBe emptyList()
-        assembly.snapshot.diagnostics.any { it.code == "presentation_material_build_failed" } shouldBe true
+        assembly.editorCatalog.presentationMaterials shouldBe emptyList()
+        assembly.editorCatalog.diagnostics.any { it.code == "presentation_material_build_failed" } shouldBe true
     }
 }
 

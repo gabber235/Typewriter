@@ -526,7 +526,7 @@ private class EvaluatorState(
             throw OperationFailure("query_catalog_mismatch", "Canonical queries must use the authored read catalog.")
         }
         if (operation == ExpressionQuery.Kind.CATALOG_DECLARATION_WRAPPER) {
-            // Temporary bridge until the Kotlin type mirrors are deleted: the read value is Skir, the catalog query mirrors.
+            // Temporary bridge until data values are Skir values: the selection is read back through its Skir read model.
             val selection =
                 CanonicalReadModels.typeSelection.decode(SkirDataValueCodec.encode(source.value).getOrThrow())
             val definition =
@@ -537,8 +537,7 @@ private class EvaluatorState(
                 }
             return when (val declaration = query.declaration(definition.requireValid())) {
                 is Availability.Available -> {
-                    val published = SkirTypeCodec.encode(declaration.value).getOrThrow()
-                    projected(project(CanonicalReadModels.publishedType.encode(published, fields)))
+                    projected(project(CanonicalReadModels.publishedType.encode(declaration.value, fields)))
                 }
 
                 is Availability.Unavailable -> {
@@ -683,10 +682,7 @@ private class EvaluatorState(
         }
     }
 
-    /**
-     * Projects a Kotlin mirror type selection through its Skir read model. Temporary bridge until the Kotlin type
-     * mirrors are deleted.
-     */
+    /** Projects a type selection through its Skir read model. Temporary bridge until type selections are Skir values. */
     private fun readModel(
         selection: com.typewritermc.authoring.TypeSelection,
         fields: List<String>,

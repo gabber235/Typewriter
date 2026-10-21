@@ -11,6 +11,8 @@ import com.typewritermc.types.catalog.DeclarationStatus
 import com.typewritermc.types.catalog.DefaultCheckedCatalog
 import com.typewritermc.types.namedTemplate
 import com.typewritermc.types.qualified
+import com.typewritermc.types.skir.SkirTypeCodec
+import com.typewritermc.types.skir.getOrThrow
 import com.typewritermc.types.template
 import de.infix.testBalloon.framework.core.testSuite
 import io.kotest.assertions.throwables.shouldThrow
@@ -41,10 +43,10 @@ val CatalogIsolationTest by testSuite {
                 declarations = listOf(OwnedTypeDeclaration(origin, definition)),
             ).assemble(CatalogAssemblyContext(generation))
         (assembly.checked.definition(broken) is DeclarationStatus.Unavailable) shouldBe true
-        assembly.snapshot.types
+        assembly.editorCatalog.types
             .single { it.definition.id == broken }
-            .status shouldBe assembly.checked.definition(broken)
-        assembly.snapshot.recommendations shouldBe emptyList()
+            .status shouldBe SkirTypeCodec.encode(assembly.checked.definition(broken)).getOrThrow()
+        assembly.editorCatalog.recommendations shouldBe emptyList()
     }
 
     test("quarantine follows parameter bounds and nested parent arguments") {
@@ -93,7 +95,7 @@ val CatalogIsolationTest by testSuite {
         val failure = assembly.callbackFailures.single()
         (failure.cause === cause) shouldBe true
         failure.callback shouldBe CatalogCallback.Configuration(broken.id)
-        assembly.snapshot.diagnostics
+        assembly.editorCatalog.diagnostics
             .single { it.affected == broken.id }
             .code shouldBe "configuration_callback_failed"
         assembly.checked.definition(healthy.id) shouldBe DeclarationStatus.Ready

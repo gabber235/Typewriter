@@ -67,6 +67,17 @@ data class TypeDisplay(
     }
 }
 
+/** The catalog wire form of this display; the author facing icon and color convert here once. */
+fun TypeDisplay.toWire(): skirout.editor.v1.catalog.TypeDisplay =
+    skirout.editor.v1.catalog.TypeDisplay(
+        name = name,
+        description = description,
+        icon = icon.toWire(),
+        color =
+            skirout.kernel.v1.color
+                .Color(argb = color.argb.toInt()),
+    )
+
 @Target(AnnotationTarget.CLASS)
 @Retention(AnnotationRetention.BINARY)
 annotation class TypewriterRecordContract

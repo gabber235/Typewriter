@@ -70,6 +70,7 @@ import com.typewritermc.types.namedTemplate
 import com.typewritermc.types.namedUse
 import com.typewritermc.types.nullable
 import com.typewritermc.types.qualified
+import com.typewritermc.types.skir.SkirTypeCodec
 import com.typewritermc.types.skir.getOrThrow
 import com.typewritermc.types.template
 import com.typewritermc.types.use
@@ -1045,23 +1046,26 @@ val SdkRuntimeConformanceTest by testSuite {
                     ),
             ).assemble(CatalogAssemblyContext(CatalogGeneration("catalog conflicts")))
 
-        assembly.snapshot.types
+        assembly.editorCatalog.types
             .single { it.definition.id == childId }
             .status shouldBe
-            DeclarationStatus.Unavailable(
-                listOf(
-                    com.typewritermc.types.catalog.DeclarationDiagnostic(
-                        childId,
-                        "ambiguous_inherited_field",
-                        field = RelativeFieldPattern(listOf(FieldPatternSegment.Field("value"))),
+            SkirTypeCodec
+                .encode(
+                    DeclarationStatus.Unavailable(
+                        listOf(
+                            com.typewritermc.types.catalog.DeclarationDiagnostic(
+                                childId,
+                                "ambiguous_inherited_field",
+                                field = RelativeFieldPattern(listOf(FieldPatternSegment.Field("value"))),
+                            ),
+                        ),
                     ),
-                ),
-            )
-        assembly.snapshot.types.count { it.definition.id == duplicate.id } shouldBe 1
+                ).getOrThrow()
+        assembly.editorCatalog.types.count { it.definition.id == duplicate.id } shouldBe 1
         (
-            assembly.snapshot.types
+            assembly.editorCatalog.types
                 .single { it.definition.id == duplicate.id }
-                .status is DeclarationStatus.Unavailable
+                .status is skirout.editor.v1.catalog.DeclarationStatus.UnavailableWrapper
         ) shouldBe true
     }
 
@@ -1140,13 +1144,13 @@ val SdkRuntimeConformanceTest by testSuite {
                 presentations = descriptors,
             ).assemble(CatalogAssemblyContext(CatalogGeneration("field presentation conflicts")))
 
-        assembly.snapshot.types
+        assembly.editorCatalog.types
             .filter { it.definition.id in setOf(conflicted.id, resolved.id, unrelated.id) }
-            .forEach { it.status shouldBe DeclarationStatus.Ready }
-        assembly.snapshot.presentationMaterials.forEach { material ->
+            .forEach { it.status shouldBe skirout.editor.v1.catalog.DeclarationStatus.READY }
+        assembly.editorCatalog.presentationMaterials.forEach { material ->
             material.inheritableNodes shouldBe listOf("field choice")
         }
-        assembly.snapshot.diagnostics.none { it.code == "conflicting_field_presentation" } shouldBe true
+        assembly.editorCatalog.diagnostics.none { it.code == "conflicting_field_presentation" } shouldBe true
     }
 
     test("catalog assembly rejects an inferred control outside its owning record") {
@@ -1169,10 +1173,10 @@ val SdkRuntimeConformanceTest by testSuite {
                 presentations = listOf(ownedPresentation(origin, provider, target, material)),
             ).assemble(CatalogAssemblyContext(CatalogGeneration("invalid field")))
         val status =
-            assembly.snapshot.types
+            assembly.editorCatalog.types
                 .single { it.definition.id == definition.id }
-                .status as DeclarationStatus.Unavailable
-        status.reasons.map { it.code } shouldBe listOf("presentation_material_build_failed")
+                .status as skirout.editor.v1.catalog.DeclarationStatus.UnavailableWrapper
+        status.value.map { it.code } shouldBe listOf("presentation_material_build_failed")
     }
 
     test("catalog assembly admits bounded atomic parts and rejects foreign owners or owner remainders") {
@@ -1240,23 +1244,24 @@ val SdkRuntimeConformanceTest by testSuite {
                     presentations = listOf(ownedPresentation(origin, provider, target, base.copy(layout = layout))),
                 ).assemble(CatalogAssemblyContext(CatalogGeneration("atomic parts")))
             val status =
-                assembly.snapshot.types
+                assembly.editorCatalog.types
                     .single { it.definition.id == definition.id }
                     .status
             if (admitted) {
-                status shouldBe DeclarationStatus.Ready
-                assembly.snapshot.presentationMaterials
+                status shouldBe skirout.editor.v1.catalog.DeclarationStatus.READY
+                assembly.editorCatalog.presentationMaterials
                     .single()
                     .inheritableNodes shouldBe listOf("part")
             } else {
-                (status as DeclarationStatus.Unavailable).reasons.map { it.code } shouldBe listOf("presentation_material_build_failed")
+                (status as skirout.editor.v1.catalog.DeclarationStatus.UnavailableWrapper).value.map { it.code } shouldBe
+                    listOf("presentation_material_build_failed")
             }
         }
     }
 
     test("published materials own immutable inferred references") {
         val references = mutableListOf("node")
-        val material =
+        val published =
             fieldPresentationMaterial(
                 skirout.editor.v1.type_catalog
                     .PresentationId(namespace = "test", name = "immutable fields"),
@@ -1264,25 +1269,11 @@ val SdkRuntimeConformanceTest by testSuite {
                 skirout.editor.v1.type_catalog
                     .PresentationId(namespace = "test", name = "text"),
             ).copy(inheritableNodes = references)
-        val snapshot =
-            com.typewritermc.types.catalog.EditorCatalogSnapshot(
-                generation = CatalogGeneration("immutable fields"),
-                types = emptyList(),
-                relations = emptyList(),
-                resourceDisplays = emptyList(),
-                realmRoot = com.typewritermc.authoring.RealmRootDefinition.id,
-                presentations = emptyList(),
-                presentationMaterials = listOf(material),
-                configuration = emptyList(),
-                diagnostics = emptyList(),
-            )
-        val published = snapshot.immutableCopy()
         references.clear()
-        published.presentationMaterials.single().inheritableNodes shouldBe
-            listOf("node")
+        published.inheritableNodes shouldBe listOf("node")
     }
 
-    test("catalog assembly owns one immutable portable snapshot graph") {
+    test("catalog assembly owns one immutable published catalog graph") {
         val id = definitionId("ImmutableSnapshot")
         val argumentList = mutableListOf<TypeTemplate>(ScalarKind.TEXT.template)
         val fieldList =
@@ -1358,17 +1349,17 @@ val SdkRuntimeConformanceTest by testSuite {
         endpointPath += FieldPatternSegment.Items
         rules.clear()
 
-        val published = assembly.snapshot.types.single { it.definition.id == id }
+        val published = assembly.editorCatalog.types.single { it.definition.id == id }
         val publishedField = (published.definition.representation as RepresentationTemplate.RecordWrapper).value.fields.single()
         (publishedField.type as TypeTemplate.NamedWrapper).value.arguments shouldBe listOf(ScalarKind.TEXT.template)
-        assembly.snapshot.configuration
+        assembly.configuration
             .single()
             .rules.size shouldBe 1
-        assembly.snapshot.endpointBindings
+        assembly.endpointBindings
             .single()
             .relativePath.segments shouldBe
             listOf(FieldPatternSegment.Field("items"))
-        assembly.snapshot.roleFallbacks
+        assembly.editorCatalog.roleFallbacks
             .single()
             .parents shouldBe
             listOf(skirout.editor.v1.catalog.PresentationRole.WORKSPACE)
@@ -1403,14 +1394,14 @@ val SdkRuntimeConformanceTest by testSuite {
                     ),
             ).assemble(CatalogAssemblyContext(CatalogGeneration("inherited rules")))
 
-        assembly.snapshot.types
+        assembly.editorCatalog.types
             .single { it.definition.id == parent.id }
-            .status shouldBe DeclarationStatus.Ready
+            .status shouldBe skirout.editor.v1.catalog.DeclarationStatus.READY
         val childStatus =
-            assembly.snapshot.types
+            assembly.editorCatalog.types
                 .single { it.definition.id == child.id }
-                .status as DeclarationStatus.Unavailable
-        childStatus.reasons.map { it.code } shouldBe listOf("contradictory_configuration_rules")
+                .status as skirout.editor.v1.catalog.DeclarationStatus.UnavailableWrapper
+        childStatus.value.map { it.code } shouldBe listOf("contradictory_configuration_rules")
     }
 
     test("generic representation rules receive semantic validation") {
@@ -1451,10 +1442,10 @@ val SdkRuntimeConformanceTest by testSuite {
             ).assemble(CatalogAssemblyContext(CatalogGeneration("generic rules")))
 
         val status =
-            assembly.snapshot.types
+            assembly.editorCatalog.types
                 .single { it.definition.id == generic.id }
-                .status as DeclarationStatus.Unavailable
-        status.reasons.map { it.code } shouldBe listOf("contradictory_configuration_rules")
+                .status as skirout.editor.v1.catalog.DeclarationStatus.UnavailableWrapper
+        status.value.map { it.code } shouldBe listOf("contradictory_configuration_rules")
     }
 }
 

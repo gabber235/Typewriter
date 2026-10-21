@@ -13,22 +13,16 @@ import com.typewritermc.configuration.RepresentationKind
 import com.typewritermc.presentation.PresentationDescriptor
 import com.typewritermc.presentation.PresentationTarget
 import com.typewritermc.presentation.RoleFallback
+import com.typewritermc.types.EndpointBindingTemplate
 import com.typewritermc.types.EndpointCardinality
 import com.typewritermc.types.EndpointDefinition
 import com.typewritermc.types.EndpointSlot
 import com.typewritermc.types.RelationContract
 import com.typewritermc.types.RelationDeletePolicy
 import com.typewritermc.types.ResourceTarget
-import com.typewritermc.types.TypeDisplay
 import com.typewritermc.types.catalog.DeclarationDiagnostic
 import com.typewritermc.types.catalog.DeclarationStatus
-import com.typewritermc.types.catalog.EditorCatalogSnapshot
-import com.typewritermc.types.catalog.EffectiveFieldTemplate
-import com.typewritermc.types.catalog.PublishedType
 import com.typewritermc.types.catalog.ResourceDisplayFormulas
-import com.typewritermc.types.catalog.TypeRecommendation
-import com.typewritermc.types.toWire
-import skirout.editor.v1.catalog.EditorCatalog
 import skirout.editor.v1.type_catalog.TypeTemplate
 import skirout.editor.v1.capability.CapabilityDefinition as SkirCapabilityDefinition
 import skirout.editor.v1.capability.CommandCapabilityDefinition as SkirCommandCapabilityDefinition
@@ -36,21 +30,19 @@ import skirout.editor.v1.capability.ComputationCapabilityDefinition as SkirCompu
 import skirout.editor.v1.capability.SearchCapabilityDefinition as SkirSearchCapabilityDefinition
 import skirout.editor.v1.catalog.ConfigurationRecipe as SkirConfigurationRecipe
 import skirout.editor.v1.catalog.DeclarationStatus as SkirDeclarationStatus
-import skirout.editor.v1.catalog.EffectiveFieldTemplate as SkirEffectiveFieldTemplate
+import skirout.editor.v1.catalog.EndpointBindingTemplate as SkirEndpointBindingTemplate
 import skirout.editor.v1.catalog.EndpointCardinality as SkirEndpointCardinality
 import skirout.editor.v1.catalog.EndpointDefinition as SkirEndpointDefinition
 import skirout.editor.v1.catalog.EndpointSlot as SkirEndpointSlot
 import skirout.editor.v1.catalog.OwnedRule as SkirOwnedRule
 import skirout.editor.v1.catalog.PresentationDescriptor as SkirPresentationDescriptor
 import skirout.editor.v1.catalog.PresentationTarget as SkirPresentationTarget
-import skirout.editor.v1.catalog.PublishedType as SkirPublishedType
 import skirout.editor.v1.catalog.RelationContract as SkirRelationContract
 import skirout.editor.v1.catalog.RelationDeletePolicy as SkirRelationDeletePolicy
 import skirout.editor.v1.catalog.RepresentationKind as SkirRepresentationKind
 import skirout.editor.v1.catalog.ResourceDisplayFormulas as SkirResourceDisplayFormulas
 import skirout.editor.v1.catalog.RoleFallback as SkirRoleFallback
 import skirout.editor.v1.catalog.RuleDescriptor as SkirRuleDescriptor
-import skirout.editor.v1.catalog.TypeDisplay as SkirTypeDisplay
 import skirout.editor.v1.diagnostic.DeclarationDiagnostic as SkirDeclarationDiagnostic
 import skirout.editor.v1.diagnostic.DeclarationOrigin as SkirDeclarationOrigin
 import skirout.editor.v1.diagnostic.Diagnostic as SkirDiagnostic
@@ -65,12 +57,32 @@ import skirout.editor.v1.type_catalog.PathSegment as SkirPathSegment
 import skirout.editor.v1.type_catalog.RelativeFieldPattern as SkirRelativeFieldPattern
 import skirout.editor.v1.type_catalog.ResourceTarget as SkirResourceTarget
 import skirout.editor.v1.type_catalog.ValuePath as SkirValuePath
-import skirout.kernel.v1.color.Color as SkirColor
 
+/**
+ * Encodes the catalog models that are still Kotlin classes (relations, displays, presentation descriptors,
+ * configuration, endpoint bindings, capabilities, role fallbacks and declaration diagnostics) into the Skir catalog
+ * the assembler publishes. Type values are already Skir values and pass through.
+ */
 object SkirTypeCodec {
-    fun encode(snapshot: EditorCatalogSnapshot): SkirConversionResult<EditorCatalog> = captureSkirConversion { encodeSnapshot(snapshot) }
+    fun encode(relation: RelationContract): SkirConversionResult<SkirRelationContract> = captureSkirConversion { this.encode(relation) }
 
-    fun encode(type: PublishedType): SkirConversionResult<SkirPublishedType> = captureSkirConversion { this.encode(type) }
+    fun encode(display: ResourceDisplayFormulas): SkirConversionResult<SkirResourceDisplayFormulas> =
+        captureSkirConversion { this.encode(display) }
+
+    fun encode(presentation: PresentationDescriptor): SkirConversionResult<SkirPresentationDescriptor> =
+        captureSkirConversion { this.encode(presentation) }
+
+    fun encode(recipe: ConfigurationRecipe): SkirConversionResult<SkirConfigurationRecipe> = captureSkirConversion { this.encode(recipe) }
+
+    fun encode(binding: EndpointBindingTemplate): SkirConversionResult<SkirEndpointBindingTemplate> =
+        captureSkirConversion { this.encode(binding) }
+
+    fun encode(capability: RealmCapabilityDescriptor): SkirConversionResult<SkirCapabilityDefinition> =
+        captureSkirConversion { this.encode(capability) }
+
+    fun encode(fallback: RoleFallback): SkirConversionResult<SkirRoleFallback> = captureSkirConversion { encodeFallback(fallback) }
+
+    fun encode(status: DeclarationStatus): SkirConversionResult<SkirDeclarationStatus> = captureSkirConversion { this.encode(status) }
 
     fun encode(diagnostic: DeclarationDiagnostic): SkirConversionResult<SkirDeclarationDiagnostic> =
         captureSkirConversion { this.encode(diagnostic) }
@@ -108,26 +120,6 @@ internal fun ConversionScope.decodeValuePath(path: SkirValuePath) =
         },
     )
 
-private fun ConversionScope.encodeSnapshot(snapshot: EditorCatalogSnapshot) =
-    EditorCatalog(
-        generation =
-            skirout.editor.v1.type_catalog
-                .CatalogGeneration(value = snapshot.generation.value),
-        types = snapshot.types.mapIndexed { index, value -> at("type $index") { encode(value) } },
-        relations = snapshot.relations.mapIndexed { index, value -> at("relation $index") { encode(value) } },
-        resourceDisplays = snapshot.resourceDisplays.mapIndexed { index, value -> at("resource display $index") { encode(value) } },
-        presentations = snapshot.presentations.mapIndexed { index, value -> at("presentation $index") { encode(value) } },
-        presentationMaterials = snapshot.presentationMaterials,
-        configuration = snapshot.configuration.mapIndexed { index, value -> at("configuration $index") { encode(value) } },
-        diagnostics = snapshot.diagnostics.mapIndexed { index, value -> at("diagnostic $index") { encode(value) } },
-        endpointBindings = snapshot.endpointBindings.mapIndexed { index, value -> at("endpoint binding $index") { encode(value) } },
-        capabilities = snapshot.capabilities.mapIndexed { index, value -> at("capability $index") { encode(value) } },
-        recommendations = snapshot.recommendations.mapIndexed { index, value -> at("recommendation $index") { encode(value) } },
-        roleFallbacks = snapshot.roleFallbacks.mapIndexed { index, value -> at("role fallback $index") { encode(value) } },
-        resourceOperations = snapshot.resourceOperations,
-        realmRoot = snapshot.realmRoot,
-    )
-
 private fun ConversionScope.encode(display: ResourceDisplayFormulas) =
     SkirResourceDisplayFormulas(
         target = encode(display.target),
@@ -142,7 +134,7 @@ internal fun ConversionScope.encode(target: ResourceTarget): SkirResourceTarget 
         ResourceTarget.AnyResource -> SkirResourceTarget.ANY_RESOURCE
     }
 
-private fun encode(fallback: RoleFallback): SkirRoleFallback = SkirRoleFallback(role = fallback.role, parents = fallback.parents)
+private fun encodeFallback(fallback: RoleFallback): SkirRoleFallback = SkirRoleFallback(role = fallback.role, parents = fallback.parents)
 
 private fun ConversionScope.encode(capability: RealmCapabilityDescriptor): SkirCapabilityDefinition =
     when (capability) {
@@ -200,14 +192,8 @@ private fun ConversionScope.encode(capability: RealmCapabilityDescriptor): SkirC
         }
     }
 
-private fun ConversionScope.encode(recommendation: TypeRecommendation) =
-    skirout.editor.v1.catalog.TypeRecommendation(
-        type = recommendation.type,
-        occurrences = recommendation.occurrences,
-    )
-
-private fun ConversionScope.encode(binding: com.typewritermc.types.EndpointBindingTemplate) =
-    skirout.editor.v1.catalog.EndpointBindingTemplate(
+private fun ConversionScope.encode(binding: EndpointBindingTemplate) =
+    SkirEndpointBindingTemplate(
         endpoint = binding.endpoint,
         containingResource = binding.containingResource,
         valueOwner = binding.valueOwner,
@@ -216,36 +202,11 @@ private fun ConversionScope.encode(binding: com.typewritermc.types.EndpointBindi
         containsCollection = binding.containsCollection,
     )
 
-private fun ConversionScope.encode(type: PublishedType) =
-    SkirPublishedType(
-        definition = type.definition,
-        status =
-            when (val status = type.status) {
-                DeclarationStatus.Ready -> SkirDeclarationStatus.READY
-                is DeclarationStatus.Unavailable -> SkirDeclarationStatus.UnavailableWrapper(status.reasons.map(::encode))
-            },
-        effectiveFields = type.effectiveFields.map(::encode),
-        ancestorTemplates = type.ancestorTemplates,
-        display = encode(type.display),
-        searchKey = type.searchKey,
-        placementField = type.placementField?.let { encodeValuePath(it) },
-    )
-
-private fun ConversionScope.encode(display: TypeDisplay) =
-    SkirTypeDisplay(
-        name = display.name,
-        description = display.description,
-        icon = display.icon.toWire(),
-        color = SkirColor(argb = display.color.argb.toInt()),
-    )
-
-private fun ConversionScope.encode(field: EffectiveFieldTemplate) =
-    SkirEffectiveFieldTemplate(
-        key = field.key,
-        owner = field.owner,
-        type = field.type,
-        rules = field.rules,
-    )
+private fun ConversionScope.encode(status: DeclarationStatus): SkirDeclarationStatus =
+    when (status) {
+        DeclarationStatus.Ready -> SkirDeclarationStatus.READY
+        is DeclarationStatus.Unavailable -> SkirDeclarationStatus.UnavailableWrapper(status.reasons.map(::encode))
+    }
 
 private fun ConversionScope.encode(relation: RelationContract) =
     SkirRelationContract(

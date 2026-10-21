@@ -49,7 +49,6 @@ import com.typewritermc.types.catalog.DeclarationOrigin
 import com.typewritermc.types.namedTemplate
 import com.typewritermc.types.namedUse
 import com.typewritermc.types.qualified
-import com.typewritermc.types.template
 import com.typewritermc.types.use
 import de.infix.testBalloon.framework.core.testSuite
 import io.kotest.matchers.collections.shouldNotContain
@@ -125,7 +124,7 @@ val ResourceDisplayAssemblyTest by testSuite {
                 )
             }
         assemble(displays = listOf(otherResource)).diagnosticCodes(BookDefinition.id) shouldBe listOf("display_reads_context")
-        assembly.snapshot.resourceDisplays.none {
+        assembly.editorCatalog.resourceDisplays.none {
             it.label ==
                 contextual.provider
                     .formulas()
@@ -145,8 +144,8 @@ val ResourceDisplayAssemblyTest by testSuite {
         val assembly = assemble(displays = listOf(constant("First"), constant("Second")), includeGenerated = false)
 
         assembly.diagnosticCodes(BookDefinition.id) shouldBe listOf("duplicate_resource_display")
-        assembly.snapshot.resourceDisplays
-            .map { it.target } shouldBe listOf(ResourceTarget.AnyResource)
+        assembly.editorCatalog.resourceDisplays
+            .map { it.target } shouldBe listOf(skirout.editor.v1.type_catalog.ResourceTarget.ANY_RESOURCE)
         assembly.label(book(title = "")) shouldBe "Book"
     }
 
@@ -157,10 +156,14 @@ val ResourceDisplayAssemblyTest by testSuite {
             }
         val assembly = assemble(displays = listOf(extension), includeGenerated = false)
 
-        val duplicate = assembly.snapshot.diagnostics.single { it.code == "duplicate_resource_display" }
-        duplicate.origins shouldBe listOf(DeclarationOrigin(extension.origin.owner))
-        assembly.snapshot.resourceDisplays
-            .map { it.target } shouldBe listOf(ResourceTarget.AnyResource)
+        val duplicate = assembly.editorCatalog.diagnostics.single { it.code == "duplicate_resource_display" }
+        duplicate.origins shouldBe
+            listOf(
+                skirout.editor.v1.diagnostic
+                    .DeclarationOrigin(owner = extension.origin.owner),
+            )
+        assembly.editorCatalog.resourceDisplays
+            .map { it.target } shouldBe listOf(skirout.editor.v1.type_catalog.ResourceTarget.ANY_RESOURCE)
         assembly.label(book(title = "")) shouldBe "Book"
     }
 
@@ -179,7 +182,7 @@ val ResourceDisplayAssemblyTest by testSuite {
                 searchKeys = mapOf(fixtureResource to "library"),
                 relations = listOf(ownership),
             )
-        val keys = assembly.snapshot.types.associate { it.definition.id to it.searchKey }
+        val keys = assembly.editorCatalog.types.associate { it.definition.id to it.searchKey }
 
         listOf(RealmRootDefinition.id, LibraryDefinition.id, TaxonomyDefinition.id).map(keys::getValue) shouldBe
             listOf(null, null, null)
@@ -213,7 +216,7 @@ val ResourceDisplayAssemblyTest by testSuite {
 
         assembly.diagnosticCodes(BookDefinition.id) shouldBe listOf("duplicate_search_key")
         assembly.diagnosticCodes(fixtureResource) shouldBe listOf("duplicate_search_key")
-        assembly.snapshot.types
+        assembly.editorCatalog.types
             .filter { it.definition.id == BookDefinition.id || it.definition.id == fixtureResource }
             .map { it.searchKey } shouldBe listOf(null, null)
     }
@@ -298,7 +301,7 @@ private fun assemble(
 }
 
 private fun CatalogAssembly.diagnosticCodes(type: TypeDefinitionId): List<String> =
-    snapshot.diagnostics.filter { it.affected == type }.map { it.code }
+    editorCatalog.diagnostics.filter { it.affected == type }.map { it.code }
 
 private fun CatalogAssembly.label(record: AuthoringRecord): String? = with(DisplayReads) { displays.label(record, checked) }
 
@@ -308,7 +311,7 @@ private fun CatalogAssembly.evaluate(
     record: AuthoringRecord,
 ): DataValue? {
     val subject = DataValue.Named((record.configuration as TypeSelection.Complete).use, DataValue.Record(record.fields))
-    val types = snapshot.types.associateBy { it.definition.id }
+    val types = editorCatalog.types.associateBy { it.definition.id }
     val queries =
         object : com.typewritermc.expression.CanonicalQueryReader {
             override val catalog = checked
