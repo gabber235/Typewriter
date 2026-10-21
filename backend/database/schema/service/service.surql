@@ -35,7 +35,7 @@ DEFINE FIELD OVERWRITE created_at ON service TYPE datetime
     VALUE $before OR time::now();
 
 DEFINE FIELD OVERWRITE state ON service TYPE option<object>;
-DEFINE FIELD OVERWRITE state.status ON service TYPE "ONLINE" | "OFFLINE";
+DEFINE FIELD OVERWRITE state.status ON service TYPE "online" | "offline";
 DEFINE FIELD OVERWRITE state.last_seen ON service TYPE datetime;
 
 DEFINE FIELD OVERWRITE organization ON service TYPE option<record<organization>>

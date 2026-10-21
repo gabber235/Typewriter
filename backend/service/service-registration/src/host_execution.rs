@@ -100,7 +100,7 @@ pub async fn handle_watch(
 /// Applies runtime observations for the requested topology revision.
 ///
 /// Reports for a different revision are rejected without changing child or host state. For the
-/// current revision, only supplied child observations are written. The host becomes `ACTIVE`
+/// current revision, only supplied child observations are written. The host becomes `active`
 /// only when this report includes an active observation for every assigned child. Failed, rolled back, or drifted child
 /// states determine the corresponding host status; otherwise it remains reconciling.
 pub async fn handle_report(
@@ -175,33 +175,33 @@ pub async fn handle_report(
             };
             LET $complete = (
                 $realm = NONE
-                OR ($realm_state != NONE AND $realm_state != NULL AND $realm_state.status = 'ACTIVE')
+                OR ($realm_state != NONE AND $realm_state != NULL AND $realm_state.status = 'active')
             ) AND (
                 $engine = NONE
-                OR ($engine_state != NONE AND $engine_state != NULL AND $engine_state.status = 'ACTIVE')
+                OR ($engine_state != NONE AND $engine_state != NULL AND $engine_state.status = 'active')
             );
             LET $failed = (
-                $realm_state != NONE AND $realm_state != NULL AND $realm_state.status = 'FAILED'
+                $realm_state != NONE AND $realm_state != NULL AND $realm_state.status = 'failed'
             ) OR (
-                $engine_state != NONE AND $engine_state != NULL AND $engine_state.status = 'FAILED'
+                $engine_state != NONE AND $engine_state != NULL AND $engine_state.status = 'failed'
             );
             LET $drifted = (
                 $realm_state != NONE
                 AND $realm_state != NULL
-                AND $realm_state.status IN ['ROLLED_BACK', 'DRIFTED']
+                AND $realm_state.status IN ['rolled_back', 'drifted']
             ) OR (
                 $engine_state != NONE
                 AND $engine_state != NULL
-                AND $engine_state.status IN ['ROLLED_BACK', 'DRIFTED']
+                AND $engine_state.status IN ['rolled_back', 'drifted']
             );
             LET $host_status = IF $complete {
-                'ACTIVE'
+                'active'
             } ELSE IF $failed {
-                'FAILED'
+                'failed'
             } ELSE IF $drifted {
-                'DRIFTED'
+                'drifted'
             } ELSE {
-                'RECONCILING'
+                'reconciling'
             };
             LET $updated_host = UPDATE ONLY $host_id SET
                 topology_revision.applied = IF $complete {

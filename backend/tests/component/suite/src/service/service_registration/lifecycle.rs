@@ -49,7 +49,7 @@ async fn heartbeat_updates_unbound_service_without_organization_event(
     let state = database
         .query_json("SELECT VALUE state.status AS status FROM ONLY service:demo_service")
         .await?;
-    assert_jm!(state, "ONLINE");
+    assert_jm!(state, "online");
     assert_jm!(
         database
             .query_json("SELECT VALUE revision FROM ONLY service:demo_service")
@@ -90,7 +90,7 @@ async fn heartbeat_publishes_bound_service_state(
         .await?;
     assert_eq!(
         state.get("status").and_then(serde_json::Value::as_str),
-        Some("ONLINE")
+        Some("online")
     );
     assert!(state.get("last_seen").is_some_and(|value| !value.is_null()));
     assert_jm!(
@@ -109,7 +109,7 @@ async fn shutdown_marks_bound_service_offline_and_publishes_update(
     let database = database(context)?;
     database
         .seed(
-            "CREATE user:actor SET name = 'actor'; CREATE organization:test_org SET name = 'test_org', founder = user:actor; CREATE service:bound_service SET name = 'bound_service', role = { type: 'host', version: '1.0.0' }, organization = organization:test_org, state = { status: 'ONLINE', last_seen: time::now() }",
+            "CREATE user:actor SET name = 'actor'; CREATE organization:test_org SET name = 'test_org', founder = user:actor; CREATE service:bound_service SET name = 'bound_service', role = { type: 'host', version: '1.0.0' }, organization = organization:test_org, state = { status: 'online', last_seen: time::now() }",
         )
         .execute()
         .await?;
@@ -132,7 +132,7 @@ async fn shutdown_marks_bound_service_offline_and_publishes_update(
         database
             .query_json("SELECT VALUE state.status FROM ONLY service:bound_service")
             .await?,
-        "OFFLINE"
+        "offline"
     );
     Ok(())
 }

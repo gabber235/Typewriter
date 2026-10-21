@@ -3,10 +3,10 @@
 //! Shutdown uses the same state owner as heartbeat. It validates the lifecycle payload, marks the
 //! service offline, and publishes the bound service projection when an organization is present.
 
-use wasmcloud_utils::database::{RecordId, service::ServiceStatusRecord};
-
 use wasmcloud_utils::{
-    skir::base::service::v1::lifecycle::ServiceShutdownNotification, transport::ServiceScope,
+    database::RecordId,
+    skir::base::service::v1::{lifecycle::ServiceShutdownNotification, service::ServiceStatus},
+    transport::ServiceScope,
 };
 
 #[tracing::instrument(skip(scope, _event))]
@@ -22,7 +22,7 @@ pub async fn handle_shutdown(
 
     crate::heartbeat::update_state(
         &RecordId::new("service", scope.service.as_str()),
-        &ServiceStatusRecord::Offline,
+        ServiceStatus::Offline,
     )
     .await
 }

@@ -157,7 +157,7 @@ equals = true
 name = "service_state_accepts_known_status_values"
 kind = "sql_expect"
 actor = "root"
-sql = "RETURN { UPDATE service:engine_acme SET state = { status: 'ONLINE', last_seen: time::now() }; RETURN service:engine_acme.state.status = 'ONLINE' AND service:engine_acme.state.last_seen != NONE; };"
+sql = "RETURN { UPDATE service:engine_acme SET state = { status: 'online', last_seen: time::now() }; RETURN service:engine_acme.state.status = 'online' AND service:engine_acme.state.last_seen != NONE; };"
 allow = true
 [[cases.assertions]]
 path = ""
@@ -168,5 +168,13 @@ name = "service_state_rejects_unknown_status"
 kind = "sql_expect"
 actor = "root"
 sql = "UPDATE service:engine_acme SET state = { status: 'MAYBE', last_seen: time::now() };"
+allow = false
+error_contains = "state.status"
+
+[[cases]]
+name = "service_state_rejects_upper_case_status"
+kind = "sql_expect"
+actor = "root"
+sql = "UPDATE service:engine_acme SET state = { status: 'ONLINE', last_seen: time::now() };"
 allow = false
 error_contains = "state.status"

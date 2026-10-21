@@ -533,7 +533,7 @@ async fn host_watch_and_report_apply_only_current_topology_revision(
         database
             .query_json("RETURN [service_host:host.topology_revision.applied, service_host:host.state.status, realm_instance:realm.state.status, service_host:other_host.topology_revision.applied, service_host:other_host.state.status]")
             .await?,
-        [4, "ACTIVE", "ACTIVE", 0, "OFFLINE"]
+        [4, "active", "active", 0, "offline"]
     );
     Ok(())
 }

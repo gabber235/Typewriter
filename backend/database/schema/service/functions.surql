@@ -223,7 +223,7 @@ DEFINE FUNCTION OVERWRITE fn::service::configure_host(
             UPDATE ONLY $current_realm.id SET
                 target_engine = $realm_target,
                 revision += 1,
-                state = { status: 'STAGING', updated_at: time::now() }
+                state = { status: 'staging', updated_at: time::now() }
         } ELSE {
             $current_realm
         }
@@ -245,7 +245,7 @@ DEFINE FUNCTION OVERWRITE fn::service::configure_host(
                 realm_id = $assigned_realm.id,
                 target = $engine_target,
                 revision += 1,
-                state = { status: 'STAGING', updated_at: time::now() }
+                state = { status: 'staging', updated_at: time::now() }
         } ELSE {
             $current_engine
         }
@@ -274,7 +274,7 @@ DEFINE FUNCTION OVERWRITE fn::service::configure_host(
     LET $updated_host = UPDATE ONLY $host_id SET
         revision += 1,
         topology_revision.desired += 1,
-        state = { status: 'RECONCILING', updated_at: time::now() }
+        state = { status: 'reconciling', updated_at: time::now() }
     RETURN AFTER;
 
     LET $result = {

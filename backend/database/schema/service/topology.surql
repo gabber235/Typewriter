@@ -47,11 +47,11 @@ DEFINE FIELD OVERWRITE topology_revision.applied ON service_host TYPE int DEFAUL
         RETURN TRUE;
     };
 DEFINE FIELD OVERWRITE state ON service_host TYPE object DEFAULT {
-    status: "OFFLINE",
+    status: "offline",
     updated_at: time::now(),
 };
 DEFINE FIELD OVERWRITE state.status ON service_host
-    TYPE "OFFLINE" | "RECONCILING" | "ACTIVE" | "FAILED" | "DRIFTED";
+    TYPE "offline" | "reconciling" | "active" | "failed" | "drifted";
 DEFINE FIELD OVERWRITE state.message ON service_host TYPE option<string>;
 DEFINE FIELD OVERWRITE state.updated_at ON service_host TYPE datetime;
 
@@ -81,11 +81,11 @@ DEFINE FIELD OVERWRITE target_engine.version_constraint ON realm_instance TYPE s
         RETURN TRUE;
     };
 DEFINE FIELD OVERWRITE state ON realm_instance TYPE object DEFAULT {
-    status: "ABSENT",
+    status: "absent",
     updated_at: time::now(),
 };
 DEFINE FIELD OVERWRITE state.status ON realm_instance
-    TYPE "ABSENT" | "STAGING" | "ACTIVE" | "QUIESCING" | "FAILED" | "ROLLED_BACK" | "DRIFTED";
+    TYPE "absent" | "staging" | "active" | "quiescing" | "failed" | "rolled_back" | "drifted";
 DEFINE FIELD OVERWRITE state.active_artifact_version ON realm_instance TYPE option<string>
     ASSERT {
         IF $value = NONE {
@@ -127,11 +127,11 @@ DEFINE FIELD OVERWRITE target.version_constraint ON engine_instance TYPE string
         RETURN TRUE;
     };
 DEFINE FIELD OVERWRITE state ON engine_instance TYPE object DEFAULT {
-    status: "ABSENT",
+    status: "absent",
     updated_at: time::now(),
 };
 DEFINE FIELD OVERWRITE state.status ON engine_instance
-    TYPE "ABSENT" | "STAGING" | "ACTIVE" | "QUIESCING" | "FAILED" | "ROLLED_BACK" | "DRIFTED";
+    TYPE "absent" | "staging" | "active" | "quiescing" | "failed" | "rolled_back" | "drifted";
 DEFINE FIELD OVERWRITE state.active_artifact_version ON engine_instance TYPE option<string>
     ASSERT {
         IF $value = NONE {

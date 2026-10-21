@@ -4,12 +4,11 @@
 //! database optionality, unknown variants, and invalid stored combinations are handled before
 //! values cross into service responses or publication.
 
-use std::fmt::Display;
-
 use otel_wasi::wasi_error;
 use serde::{Deserialize, Serialize};
 use surrealdb_component_sdk::{Datetime, RecordId};
 
+use super::SkirDb;
 use crate::{
     skir::base::service::v1::service::{
         Service, ServiceRegistration, ServiceRole, ServiceRole_Custom, ServiceRole_Host,
@@ -43,27 +42,11 @@ pub struct ServiceRoleRecord {
     pub name: Option<String>,
 }
 
-/// Stored service availability state.
-#[derive(Debug, Serialize, Deserialize, Clone)]
-#[serde(rename_all = "UPPERCASE")]
-pub enum ServiceStatusRecord {
-    Online,
-    Offline,
-}
-
-impl Display for ServiceStatusRecord {
-    fn fmt(&self, formatter: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        formatter.write_str(match self {
-            Self::Online => "ONLINE",
-            Self::Offline => "OFFLINE",
-        })
-    }
-}
-
-/// Stored service state and the time at which it was last observed.
+/// Stored service state. The status is the generated Skir enum; `last_seen` stays a storage
+/// field because the schema declares it as a `datetime`.
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct ServiceStateRecord {
-    pub status: ServiceStatusRecord,
+    pub status: SkirDb<ServiceStatus>,
     pub last_seen: Datetime,
 }
 
@@ -138,10 +121,7 @@ impl From<ServiceRegistrationRecord> for ServiceRegistration {
 impl From<ServiceStateRecord> for ServiceState {
     fn from(value: ServiceStateRecord) -> Self {
         Self {
-            status: match value.status {
-                ServiceStatusRecord::Online => ServiceStatus::Online,
-                ServiceStatusRecord::Offline => ServiceStatus::Offline,
-            },
+            status: value.status.0,
             last_seen: value.last_seen.into(),
             _unrecognized: None,
         }
@@ -244,7 +224,7 @@ mod tests {
     }
 
     #[test]
-    fn serializes_role_and_status_database_shapes() {
+    fn serializes_role_database_shapes() {
         let host = ServiceRoleRecord {
             role_type: ServiceRoleTypeRecord::Host,
             version: "1".into(),
@@ -264,16 +244,5 @@ mod tests {
             serde_json::to_value(custom).unwrap(),
             serde_json::json!({ "type": "custom", "version": "2", "name": "voice" })
         );
-
-        assert_eq!(
-            serde_json::to_value(ServiceStatusRecord::Online).unwrap(),
-            serde_json::json!("ONLINE")
-        );
-        assert_eq!(
-            serde_json::to_value(ServiceStatusRecord::Offline).unwrap(),
-            serde_json::json!("OFFLINE")
-        );
-        assert_eq!(ServiceStatusRecord::Online.to_string(), "ONLINE");
-        assert_eq!(ServiceStatusRecord::Offline.to_string(), "OFFLINE");
     }
 }
