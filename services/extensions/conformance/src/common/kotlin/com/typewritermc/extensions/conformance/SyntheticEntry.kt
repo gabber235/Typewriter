@@ -4,8 +4,6 @@ import com.typewritermc.authoring.GraphLayout
 import com.typewritermc.authoring.GraphPlacement
 import com.typewritermc.authoring.HierarchyPath
 import com.typewritermc.authoring.PlacementSdkProvider
-import com.typewritermc.capability.NotificationSeverity
-import com.typewritermc.capability.PanelInstruction
 import com.typewritermc.capability.RealmCapabilities
 import com.typewritermc.capability.RealmCapability
 import com.typewritermc.capability.RealmCommandContext
@@ -34,6 +32,8 @@ import com.typewritermc.types.TypewriterDisplay
 import com.typewritermc.types.TypewriterType
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
+import skirout.editor.v1.capability.NotificationSeverity
+import skirout.editor.v1.capability.PanelInstruction
 import skirout.editor.v1.catalog.PresentationRole
 import skirout.editor.v1.presentation.GraphDirection
 
@@ -136,7 +136,7 @@ class SyntheticRealmCapabilities {
         RealmCommandOutcome(
             instructions =
                 listOf(
-                    PanelInstruction.Notify(
+                    PanelInstruction.createNotify(
                         severity = NotificationSeverity.SUCCESS,
                         message = request.value,
                     ),

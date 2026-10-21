@@ -1,7 +1,5 @@
 package com.typewritermc.realm.routes
 
-import com.typewritermc.capability.NotificationSeverity
-import com.typewritermc.capability.PanelInstruction
 import com.typewritermc.capability.RealmCapabilityPermissionDeniedException
 import com.typewritermc.capability.RealmCapabilityRegistry
 import com.typewritermc.capability.RealmCapabilityRuntime
@@ -19,6 +17,8 @@ import skirout.editor.v1.capability.CapabilityInvocationRequest
 import skirout.editor.v1.capability.CommandResult
 import skirout.editor.v1.capability.ComputationResult
 import skirout.editor.v1.capability.InvocationId
+import skirout.editor.v1.capability.NotificationSeverity
+import skirout.editor.v1.capability.PanelInstruction
 import skirout.editor.v1.capability.ResourceAddress
 import skirout.editor.v1.diagnostic.Diagnostic
 import skirout.editor.v1.diagnostic.DiagnosticSeverity
@@ -28,9 +28,6 @@ import skirout.editor.v1.type_catalog.DataValue
 import skirout.editor.v1.type_catalog.DiagnosticId
 import skirout.editor.v1.type_catalog.RuleOrigin
 import skirout.editor.v1.type_catalog.TypeDefinitionId
-import skirout.editor.v1.type_catalog.TypeUse
-import skirout.editor.v1.capability.NotificationSeverity as WireNotificationSeverity
-import skirout.editor.v1.capability.PanelInstruction as WirePanelInstruction
 
 /**
  * Dispatches editor computation and command invocations through a retained Realm catalog.
@@ -114,7 +111,7 @@ class RealmCapabilityInvocationSource(
                     )
                 CommandResult.createSuccess(
                     invocationId = request.invocationId,
-                    instructions = outcome.instructions.map { instruction -> instruction.toWire() },
+                    instructions = outcome.instructions.map { instruction -> instruction.requireValid() },
                 )
             } catch (failure: RealmCapabilityPermissionDeniedException) {
                 CommandResult.createPermissionDeniedError(
@@ -223,38 +220,27 @@ private fun unavailableCommand(
         diagnostics = listOf(realmDiagnostic(message)),
     )
 
-private fun PanelInstruction.toWire(): WirePanelInstruction =
+/** Checks a panel instruction a command returned; resource identities return in canonical notation. */
+private fun PanelInstruction.requireValid(): PanelInstruction =
     when (this) {
-        is PanelInstruction.InvalidateResource -> {
-            WirePanelInstruction.createInvalidateResource(
-                resource = resource.type.toWireResource(resource.identity.requirePortable()),
-            )
+        is PanelInstruction.InvalidateResourceWrapper -> {
+            PanelInstruction.createInvalidateResource(resource = value.resource.requireValid())
         }
 
-        is PanelInstruction.OpenResource -> {
-            WirePanelInstruction.createOpenResource(
-                resource = resource.type.toWireResource(resource.identity.requirePortable()),
-            )
+        is PanelInstruction.OpenResourceWrapper -> {
+            PanelInstruction.createOpenResource(resource = value.resource.requireValid())
         }
 
-        is PanelInstruction.Notify -> {
-            WirePanelInstruction.createNotify(severity = severity.toWire(), message = message)
+        is PanelInstruction.NotifyWrapper -> {
+            apply { require(value.severity != NotificationSeverity.UNKNOWN) { "Unknown notification severity." } }
+        }
+
+        else -> {
+            throw IllegalArgumentException("Unknown panel instruction.")
         }
     }
 
-private fun TypeUse.toWireResource(identity: DataValue) =
-    ResourceAddress(
-        resourceType = this,
-        identity = identity,
-    )
-
-private fun NotificationSeverity.toWire(): WireNotificationSeverity =
-    when (this) {
-        NotificationSeverity.INFO -> WireNotificationSeverity.INFO
-        NotificationSeverity.SUCCESS -> WireNotificationSeverity.SUCCESS
-        NotificationSeverity.WARNING -> WireNotificationSeverity.WARNING
-        NotificationSeverity.ERROR -> WireNotificationSeverity.ERROR
-    }
+private fun ResourceAddress.requireValid(): ResourceAddress = copy(identity = identity.requirePortable())
 
 internal fun realmDiagnostic(message: String): Diagnostic =
     Diagnostic(

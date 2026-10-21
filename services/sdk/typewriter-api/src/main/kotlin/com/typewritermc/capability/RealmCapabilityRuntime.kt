@@ -15,6 +15,7 @@ import kotlinx.coroutines.flow.map
 import skirout.editor.v1.capability.CapabilityDefinition
 import skirout.editor.v1.capability.CommandCapabilityDefinition
 import skirout.editor.v1.capability.ComputationCapabilityDefinition
+import skirout.editor.v1.capability.PanelInstruction
 import skirout.editor.v1.capability.SearchCapabilityDefinition
 import skirout.editor.v1.search.RealmSearchQuery
 import skirout.editor.v1.type_catalog.CapabilityId
@@ -106,33 +107,6 @@ interface RealmCommandContext : RealmInvocationContext
 class RealmCapabilityPermissionDeniedException(
     message: String,
 ) : RuntimeException(message)
-
-data class ResourceAddress(
-    val type: TypeUse,
-    val identity: DataValue,
-)
-
-enum class NotificationSeverity {
-    INFO,
-    SUCCESS,
-    WARNING,
-    ERROR,
-}
-
-sealed interface PanelInstruction {
-    data class InvalidateResource(
-        val resource: ResourceAddress,
-    ) : PanelInstruction
-
-    data class OpenResource(
-        val resource: ResourceAddress,
-    ) : PanelInstruction
-
-    data class Notify(
-        val severity: NotificationSeverity,
-        val message: String,
-    ) : PanelInstruction
-}
 
 data class RealmCommandOutcome(
     val instructions: List<PanelInstruction> = emptyList(),

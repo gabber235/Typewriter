@@ -3,8 +3,6 @@ package com.typewritermc.extensions.conformance
 import com.typewritermc.authoring.CompletenessResult
 import com.typewritermc.authoring.GraphPlacement
 import com.typewritermc.authoring.complete
-import com.typewritermc.capability.NotificationSeverity
-import com.typewritermc.capability.PanelInstruction
 import com.typewritermc.capability.RealmCapabilityRegistry
 import com.typewritermc.capability.RealmCapabilityRuntime
 import com.typewritermc.capability.RealmCommandContext
@@ -63,6 +61,8 @@ import io.kotest.matchers.shouldBe
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.toList
 import kotlinx.coroutines.test.runTest
+import skirout.editor.v1.capability.NotificationSeverity
+import skirout.editor.v1.capability.PanelInstruction
 import skirout.editor.v1.catalog.EndpointCardinality
 import skirout.editor.v1.catalog.PresentationRole
 import skirout.editor.v1.presentation.AxisChild
@@ -327,7 +327,7 @@ val SyntheticDiscoveryTest by testSuite {
                 .requireCommand(publishMessageCapability.id)
                 .invoke(SyntheticCapabilityContext, runtime, literal)
                 .instructions shouldBe
-                listOf(PanelInstruction.Notify(NotificationSeverity.SUCCESS, "hello"))
+                listOf(PanelInstruction.createNotify(severity = NotificationSeverity.SUCCESS, message = "hello"))
         }
     }
 }
