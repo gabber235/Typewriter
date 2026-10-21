@@ -2,6 +2,8 @@ package com.typewritermc.realm.compiler
 
 import com.typewritermc.engine.CompilationRoot
 import com.typewritermc.realm.authoring.AuthoringView
+import skirout.editor.v1.compiled_content.CompiledResourceState
+import skirout.editor.v1.type_catalog.PublicationId
 
 internal sealed interface CompilationStatusSelection {
     data object All : CompilationStatusSelection
@@ -18,7 +20,7 @@ internal class CompiledRootStatuses(
     suspend fun query(
         view: AuthoringView,
         selection: CompilationStatusSelection,
-    ): Map<CompilationRoot, RegisteredCompiledState> {
+    ): Map<CompilationRoot, CompiledResourceState> {
         val selected = results.selected()
         val available = selected?.outputs?.mapTo(linkedSetOf()) { output -> output.reference.root }.orEmpty()
         val roots =
@@ -30,9 +32,9 @@ internal class CompiledRootStatuses(
             .sortedWith(compareBy({ root -> root.projection.value }, { root -> root.resource.value }))
             .associateWithTo(linkedMapOf()) { root ->
                 if (root in available) {
-                    RegisteredCompiledState.Active(requireNotNull(selected).publication)
+                    CompiledResourceState.ActiveWrapper(PublicationId(value = requireNotNull(selected).publication.value))
                 } else {
-                    RegisteredCompiledState.NotCompiled
+                    CompiledResourceState.NOT_COMPILED
                 }
             }
     }

@@ -16,6 +16,7 @@ import com.typewritermc.realm.checking.TestCatalogLease
 import com.typewritermc.types.ResourceId
 import de.infix.testBalloon.framework.core.testSuite
 import io.kotest.matchers.shouldBe
+import skirout.editor.v1.compiled_content.CompiledResourceState
 
 val CompiledRootStatusesTest by testSuite {
     test("all roots combines producer roots with the selected publication in stable order") {
@@ -29,8 +30,12 @@ val CompiledRootStatusesTest by testSuite {
             val result = statuses.query(capture.root, CompilationStatusSelection.All)
 
             result.keys.toList() shouldBe listOf(active, current)
-            result.getValue(active) shouldBe RegisteredCompiledState.Active(publication.publication)
-            result.getValue(current) shouldBe RegisteredCompiledState.NotCompiled
+            result.getValue(active) shouldBe
+                CompiledResourceState.ActiveWrapper(
+                    skirout.editor.v1.type_catalog
+                        .PublicationId(value = publication.publication.value),
+                )
+            result.getValue(current) shouldBe CompiledResourceState.NOT_COMPILED
         }
         views.close()
     }

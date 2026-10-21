@@ -7,13 +7,10 @@ import com.typewritermc.protocol.transport.generated.authoringCompiledStatusQuer
 import com.typewritermc.realm.authoring.AuthoringViewStore
 import com.typewritermc.realm.compiler.CompilationStatusSelection
 import com.typewritermc.realm.compiler.CompiledRootStatuses
-import com.typewritermc.realm.compiler.RegisteredCompiledState
 import com.typewritermc.services.libs.communicator.router.CommunicatorRoutesBuilder
 import com.typewritermc.types.ResourceId
-import skirout.editor.v1.compiled_content.CompiledResourceState
 import skirout.editor.v1.compiled_content.CompiledResourceStatus
 import skirout.editor.v1.compiled_content.QueryCompiledResourceStatusResponse
-import skirout.editor.v1.type_catalog.PublicationId
 import skirout.editor.v1.compilation_root.CompilationProjectionId as SkirCompilationProjectionId
 import skirout.editor.v1.compilation_root.CompilationRoot as SkirCompilationRoot
 import skirout.editor.v1.compiled_content.CompilationStatusSelection as SkirCompilationStatusSelection
@@ -47,7 +44,7 @@ internal class EditorCompiledResourceStatusRoutes(
                         statuses =
                             statuses
                                 .query(capture.root, selection)
-                                .map { (root, state) -> state.toWire(root) },
+                                .map { (root, state) -> CompiledResourceStatus(root = root.toWire(), state = state) },
                     )
                 }
             }
@@ -60,25 +57,8 @@ private fun SkirCompilationRoot.toDomain() =
         resource = ResourceId(resource.value),
     )
 
-private fun RegisteredCompiledState.toWire(root: CompilationRoot) =
-    CompiledResourceStatus(
-        root =
-            SkirCompilationRoot(
-                projection =
-                    SkirCompilationProjectionId(value = root.projection.value),
-                resource =
-                    SkirResourceId(value = root.resource.value),
-            ),
-        state =
-            when (this) {
-                RegisteredCompiledState.NotCompiled -> {
-                    CompiledResourceState.NOT_COMPILED
-                }
-
-                is RegisteredCompiledState.Active -> {
-                    CompiledResourceState.ActiveWrapper(
-                        PublicationId(value = publication.value),
-                    )
-                }
-            },
+private fun CompilationRoot.toWire() =
+    SkirCompilationRoot(
+        projection = SkirCompilationProjectionId(value = projection.value),
+        resource = SkirResourceId(value = resource.value),
     )

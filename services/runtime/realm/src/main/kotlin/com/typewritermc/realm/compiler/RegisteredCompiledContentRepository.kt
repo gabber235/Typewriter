@@ -6,14 +6,6 @@ import com.typewritermc.checking.Diagnostic
 import com.typewritermc.engine.PublishedContent
 import kotlinx.serialization.builtins.ListSerializer
 
-sealed interface RegisteredCompiledState {
-    data object NotCompiled : RegisteredCompiledState
-
-    data class Active(
-        val publication: PublicationId,
-    ) : RegisteredCompiledState
-}
-
 data class PublicationReport(
     val id: PublicationId,
     val state: PublicationState,
