@@ -6,7 +6,6 @@ import com.typewritermc.authoring.ValueLocation
 import com.typewritermc.authoring.ValuePath
 import com.typewritermc.checking.CatalogGeneration
 import com.typewritermc.checking.CheckOutcome
-import com.typewritermc.checking.FindingStatus
 import com.typewritermc.configuration.RuleId
 import com.typewritermc.configuration.RuleOrigin
 import com.typewritermc.protocol.transport.RealmRouteScope
@@ -41,6 +40,7 @@ import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.withTimeout
 import kotlinx.coroutines.yield
 import skirout.editor.v1.authoring.AuthoringChanged
+import skirout.editor.v1.checking.FindingStatus
 import kotlin.time.Duration.Companion.seconds
 
 val EditorUpdatePublisherTest by testSuite {
@@ -128,15 +128,15 @@ val EditorUpdatePublisherTest by testSuite {
                     listOf(EditExpectation.Resource(resource, original)),
                     CheckOutcome.Finished,
                     emptyList(),
-                    FindingStatus.Current,
+                    FindingStatus.CURRENT,
                 )
             try {
                 views.install(views.prepare(AuthoringViewDelta(upsertedResources = mapOf(resource to record(name = "Story")))))
                 views.read { captureFindings(it, listOf(finding)).findings.single().status } shouldBe
-                    skirout.editor.v1.checking.FindingStatus.OUTDATED
+                    FindingStatus.OUTDATED
                 views.install(views.prepare(AuthoringViewDelta(upsertedResources = mapOf(resource to original))))
                 views.read { captureFindings(it, listOf(finding)).findings.single().status } shouldBe
-                    skirout.editor.v1.checking.FindingStatus.CURRENT
+                    FindingStatus.CURRENT
             } finally {
                 views.close()
             }

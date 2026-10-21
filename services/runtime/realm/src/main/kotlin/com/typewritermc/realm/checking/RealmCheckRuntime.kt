@@ -15,7 +15,6 @@ import com.typewritermc.checking.Diagnostic
 import com.typewritermc.checking.DiagnosticReporter
 import com.typewritermc.checking.DiagnosticSeverity
 import com.typewritermc.checking.DraftType
-import com.typewritermc.checking.FindingStatus
 import com.typewritermc.checking.InputIdentity
 import com.typewritermc.checking.RealmChecks
 import com.typewritermc.configuration.ConfigurationRecipe
@@ -44,6 +43,7 @@ import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.joinAll
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
+import skirout.editor.v1.checking.FindingStatus
 import java.util.concurrent.atomic.AtomicLong
 
 interface CheckScheduler : AutoCloseable {
@@ -119,7 +119,7 @@ class RealmCheckRuntime(
                 activeCatalog = replacement
                 instances.values.forEach { state ->
                     state.job?.cancel()
-                    state.findings = state.findings?.copy(status = FindingStatus.Outdated)
+                    state.findings = state.findings?.copy(status = FindingStatus.OUTDATED)
                 }
                 old
             }
@@ -142,7 +142,7 @@ class RealmCheckRuntime(
                 instances.values.forEach { state ->
                     val evidence = state.findings?.expectations ?: return@forEach
                     if (values.conflicts(evidence).isNotEmpty()) {
-                        state.findings = state.findings?.copy(status = FindingStatus.Outdated)
+                        state.findings = state.findings?.copy(status = FindingStatus.OUTDATED)
                         retireJobLocked(state.job)
                         state.job = null
                         scheduleLocked(state)
@@ -161,7 +161,7 @@ class RealmCheckRuntime(
             val affected = dependencies.affectedBy(changed)
             affected.forEach { id ->
                 val state = instances[id] ?: return@forEach
-                state.findings = state.findings?.copy(status = FindingStatus.Outdated)
+                state.findings = state.findings?.copy(status = FindingStatus.OUTDATED)
                 retireJobLocked(state.job)
                 state.job = null
                 scheduleLocked(state)
@@ -277,7 +277,7 @@ class RealmCheckRuntime(
                     val tickets = mutableListOf<CheckTicket>()
                     instances.values
                         .filter { state -> state.id.rule in discovery.incompleteRules }
-                        .forEach { state -> state.findings = state.findings?.copy(status = FindingStatus.Outdated) }
+                        .forEach { state -> state.findings = state.findings?.copy(status = FindingStatus.OUTDATED) }
                     val removed = (instances.keys - discovered.keys).filter { id -> id.rule !in discovery.incompleteRules }
                     removed.forEach { id ->
                         val state = instances.remove(id) ?: return@forEach
@@ -293,7 +293,7 @@ class RealmCheckRuntime(
                             scheduleLocked(created)
                         } else {
                             state.subject = subject
-                            if (state.job == null && state.findings?.status != FindingStatus.Current) scheduleLocked(state)
+                            if (state.job == null && state.findings?.status != FindingStatus.CURRENT) scheduleLocked(state)
                         }
                     }
                     tickets
@@ -429,7 +429,7 @@ class RealmCheckRuntime(
                 val admission =
                     DefaultCheckAdmission(views, this).requireCurrentExecutionAndInputs(result) {
                         state.findings =
-                            FindingSet(result.ticket, result.expectations, result.outcome, result.findings, FindingStatus.Current)
+                            FindingSet(result.ticket, result.expectations, result.outcome, result.findings, FindingStatus.CURRENT)
                     }
                 state.job = null
                 when (admission) {
@@ -438,7 +438,7 @@ class RealmCheckRuntime(
                     }
 
                     AdmissionResult.RetryRequired -> {
-                        state.findings = state.findings?.copy(status = FindingStatus.Outdated)
+                        state.findings = state.findings?.copy(status = FindingStatus.OUTDATED)
                         scheduleLocked(state)
                         false
                     }

@@ -14,7 +14,6 @@ import com.typewritermc.authoring.ValuePath
 import com.typewritermc.authoring.skir.SkirAuthoringOperationCodec
 import com.typewritermc.checking.CatalogGeneration
 import com.typewritermc.checking.CheckOutcome
-import com.typewritermc.checking.FindingStatus
 import com.typewritermc.checking.InputIdentity
 import com.typewritermc.realm.authoring.AuthoringLease
 import com.typewritermc.realm.authoring.AuthoringSeed
@@ -48,11 +47,11 @@ import skirout.editor.v1.authoring.PreviewTypeArgumentChangeRequest
 import skirout.editor.v1.authoring.PreviewTypeArgumentChangeResponse
 import skirout.editor.v1.authoring.QueryAuthoringStateRequest
 import skirout.editor.v1.authoring.QueryAuthoringStateResponse
+import skirout.editor.v1.checking.FindingStatus
 import skirout.editor.v1.authoring.AuthoringState as SkirAuthoringState
 import skirout.editor.v1.authoring.EditIntent as SkirEditIntent
 import skirout.editor.v1.authoring_facts.EditExpectation as SkirEditExpectation
 import skirout.editor.v1.checking.CheckOutcome as SkirCheckOutcome
-import skirout.editor.v1.checking.FindingStatus as SkirFindingStatus
 import skirout.editor.v1.type_catalog.AuthoringRecord as SkirAuthoringRecord
 import skirout.editor.v1.type_catalog.CatalogGeneration as SkirCatalogGeneration
 import skirout.editor.v1.type_catalog.DataValue as SkirDataValue
@@ -93,7 +92,7 @@ val AuthoringRoutesTest by testSuite {
                     expectations = emptyList(),
                     outcome = CheckOutcome.NeedsInput(listOf(missing)),
                     findings = emptyList(),
-                    status = FindingStatus.Outdated,
+                    status = FindingStatus.OUTDATED,
                 )
             try {
                 RouteFixture { address, _ ->
@@ -121,7 +120,7 @@ val AuthoringRoutesTest by testSuite {
                         .ticket.instance.rule.localIndex shouldBe 7
                     response.findings
                         .single()
-                        .status shouldBe SkirFindingStatus.CURRENT
+                        .status shouldBe FindingStatus.CURRENT
                     response.findings
                         .single()
                         .outcome shouldBe

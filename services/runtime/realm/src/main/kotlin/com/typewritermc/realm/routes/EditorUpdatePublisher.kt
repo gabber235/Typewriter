@@ -1,6 +1,5 @@
 package com.typewritermc.realm.routes
 
-import com.typewritermc.checking.FindingStatus
 import com.typewritermc.protocol.transport.RealmRouteScope
 import com.typewritermc.protocol.transport.generated.authoringChanged
 import com.typewritermc.protocol.transport.generated.authoringPublicationWatch
@@ -24,6 +23,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 import skirout.editor.v1.authoring.AuthoringChanged
+import skirout.editor.v1.checking.FindingStatus
 import skirout.editor.v1.type_catalog.CatalogGeneration
 import skirout.editor.v1.checking.FindingSet as SkirFindingSet
 
@@ -137,6 +137,6 @@ internal fun captureFindings(
     CapturedFindings(
         findings.map { set ->
             val current = set.ticket.catalog == root.catalog.generation && root.values.conflicts(set.expectations).isEmpty()
-            set.copy(status = if (current) FindingStatus.Current else FindingStatus.Outdated).toWire()
+            set.copy(status = if (current) FindingStatus.CURRENT else FindingStatus.OUTDATED).toWire()
         },
     )

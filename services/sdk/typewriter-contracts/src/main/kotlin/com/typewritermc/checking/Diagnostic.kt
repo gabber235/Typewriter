@@ -31,12 +31,3 @@ data class Diagnostic(
     val primary: ValueLocation?,
     val related: List<ValueLocation>,
 )
-
-@Serializable
-sealed interface FindingStatus {
-    @Serializable
-    data object Current : FindingStatus
-
-    @Serializable
-    data object Outdated : FindingStatus
-}

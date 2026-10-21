@@ -6,11 +6,11 @@ import com.typewritermc.authoring.ValueLocation
 import com.typewritermc.checking.CatalogGeneration
 import com.typewritermc.checking.CheckOutcome
 import com.typewritermc.checking.Diagnostic
-import com.typewritermc.checking.FindingStatus
 import com.typewritermc.configuration.RuleId
 import com.typewritermc.realm.authoring.AuthoringView
 import com.typewritermc.realm.authoring.AuthoringViewStore
 import com.typewritermc.realm.repository.conflicts
+import skirout.editor.v1.checking.FindingStatus
 
 data class CheckInstanceId(
     val rule: RuleId,

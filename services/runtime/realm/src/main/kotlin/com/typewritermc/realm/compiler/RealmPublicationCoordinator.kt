@@ -8,7 +8,6 @@ import com.typewritermc.authoring.PublicationId
 import com.typewritermc.checking.CatalogGeneration
 import com.typewritermc.checking.Diagnostic
 import com.typewritermc.checking.DiagnosticSeverity
-import com.typewritermc.checking.FindingStatus
 import com.typewritermc.engine.CompilationResult
 import com.typewritermc.engine.CompiledArtifact
 import com.typewritermc.engine.PublishedContent
@@ -40,6 +39,7 @@ import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.builtins.ListSerializer
+import skirout.editor.v1.checking.FindingStatus
 import java.util.UUID
 
 data class PublicationAttempt(
@@ -432,10 +432,10 @@ internal class RealmPublicationCoordinator(
     private fun capturedFindings(root: AuthoringView) =
         findings().map { set ->
             val current =
-                set.status == FindingStatus.Current &&
+                set.status == FindingStatus.CURRENT &&
                     set.ticket.catalog == root.catalog.generation && root.values.conflicts(set.expectations).isEmpty()
             set.copy(
-                status = if (current) FindingStatus.Current else FindingStatus.Outdated,
+                status = if (current) FindingStatus.CURRENT else FindingStatus.OUTDATED,
             )
         }
 

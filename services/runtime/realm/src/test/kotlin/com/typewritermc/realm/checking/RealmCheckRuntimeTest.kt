@@ -347,7 +347,7 @@ val RealmCheckRuntimeTest by testSuite {
             finding.outcome shouldBe
                 com.typewritermc.checking.CheckOutcome
                     .Incomplete("graph traversal limit exceeded")
-            finding.status shouldBe com.typewritermc.checking.FindingStatus.Current
+            finding.status shouldBe skirout.editor.v1.checking.FindingStatus.CURRENT
             finding.findings.map { it.message } shouldBe listOf("Partial finding.")
 
             runtime.close()

@@ -64,7 +64,7 @@ val RealmPublicationCoordinatorTest by testSuite {
                         ),
                         com.typewritermc.checking.CheckOutcome.Finished,
                         listOf(compilationDiagnostic("external_check", "An external input requires attention.", location = location)),
-                        com.typewritermc.checking.FindingStatus.Current,
+                        skirout.editor.v1.checking.FindingStatus.CURRENT,
                     )
                 }
             val invalidated =
@@ -78,7 +78,7 @@ val RealmPublicationCoordinatorTest by testSuite {
                                             .copy(localIndex = 1),
                                 ),
                         ),
-                    status = com.typewritermc.checking.FindingStatus.Outdated,
+                    status = skirout.editor.v1.checking.FindingStatus.OUTDATED,
                 )
             fixture.findings = listOf(current, invalidated)
             var observed: PublicationStatus.Checking? = null
@@ -86,8 +86,8 @@ val RealmPublicationCoordinatorTest by testSuite {
             fixture.publisher.refresh()
             observed!!.findings.map { it.status } shouldBe
                 listOf(
-                    com.typewritermc.checking.FindingStatus.Current,
-                    com.typewritermc.checking.FindingStatus.Outdated,
+                    skirout.editor.v1.checking.FindingStatus.CURRENT,
+                    skirout.editor.v1.checking.FindingStatus.OUTDATED,
                 )
         } finally {
             fixture.close()
