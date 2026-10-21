@@ -9,6 +9,7 @@ import com.typewritermc.loader.deployment.DeploymentSnapshot
 import com.typewritermc.loader.deployment.HostDeploymentProjection
 import com.typewritermc.loader.deployment.RealmDeploymentSelection
 import com.typewritermc.loader.deployment.projectFor
+import com.typewritermc.protocol.transport.generated.TRANSPORT_REPLY_TTL
 import com.typewritermc.services.libs.registrar.ServiceId
 import com.typewritermc.services.libs.telemetry.ServiceTelemetry
 import com.typewritermc.services.libs.telemetry.SpanPresentation
@@ -81,7 +82,8 @@ interface RolloutStateRepository {
  *
  * The Realm host must answer discovery; absent engine hosts can reconcile later. Selection must remain unchanged
  * before commit. Failure triggers abort before committing or rollback afterward; compensation itself may fail and
- * is not an atomic distributed transaction.
+ * is not an atomic distributed transaction. A command waits at most the transport reply time to live by default,
+ * the longest a host is permitted to reply.
  */
 class CoordinatedRollout(
     private val realmId: RealmId,
@@ -92,7 +94,7 @@ class CoordinatedRollout(
     private val state: RolloutStateRepository,
     private val currentSelection: suspend () -> RealmDeploymentSelection = { selection },
     private val requestTimeout: Duration = 5.seconds,
-    private val commandTimeout: Duration = 5.minutes,
+    private val commandTimeout: Duration = TRANSPORT_REPLY_TTL,
     private val participantDeadline: Duration = 5.minutes,
     private val healthyDuration: Duration = 30.seconds,
     private val telemetry: ServiceTelemetry? = null,

@@ -3,6 +3,7 @@ import type { CodeGenerator } from "skir-internal";
 import { UNKNOWN_SLUG, type Outcome, type OutcomeResponse } from "../../outcomes.js";
 import { importedKotlinSymbol, kotlinWrapperClass } from "../../symbols.js";
 import { lowerCamel, quoted } from "../../text.js";
+import { REPLY_INBOX } from "../grants.js";
 import type { Channel, TransportLimits } from "../manifest.js";
 import {
   clientSubject,
@@ -50,7 +51,8 @@ function kotlinFile(
   blocks: readonly string[],
 ): string {
   const directives = [...new Set(imports)].sort().map((line) => `${line}\n`);
-  return `package ${packageName}\n\n${directives.join("")}\n${blocks.join("\n\n")}\n`;
+  const importSection = directives.length === 0 ? "" : `${directives.join("")}\n`;
+  return `package ${packageName}\n\n${importSection}${blocks.join("\n\n")}\n`;
 }
 
 const CLASSIFICATION: Record<Outcome, string> = {
@@ -156,19 +158,43 @@ val ${scope}.${name} get() = ${contract}(
   return { path, code: kotlinFile(GENERATED_PACKAGE, imports, [...policies.values(), ...blocks]) };
 }
 
-/** The manifest reply framing limits, which the services NATS transport is constructed with. */
-function limitsFile({ chunkBytes, maxChunks }: TransportLimits): CodeGenerator.OutputFile {
-  const block = `/** Reply framing limits of the transport route manifest: frame size and frames per reply. */
-val TRANSPORT_LIMITS = TransportLimits(chunkBytes = ${chunkBytes}, maxChunks = ${maxChunks})`;
-  return {
-    path: "TransportLimits.kt",
-    code: kotlinFile(GENERATED_PACKAGE, [`import ${COMMUNICATOR}.transfer.TransportLimits`], [block]),
-  };
+/**
+ * The manifest reply framing limits, which the services NATS transport is constructed with, and the
+ * reply time to live, which bounds how long a service waits for replies it requested.
+ */
+function limitsFile({ chunkBytes, maxChunks, replyTtlMs }: TransportLimits): CodeGenerator.OutputFile {
+  const blocks = [
+    `/** Reply framing limits of the transport route manifest: frame size and frames per reply. */
+val TRANSPORT_LIMITS = TransportLimits(chunkBytes = ${chunkBytes}, maxChunks = ${maxChunks})`,
+    `/** How long a responder may send replies after it received a request, so no requester waits longer. */
+val TRANSPORT_REPLY_TTL: Duration = ${replyTtlMs}.milliseconds`,
+  ];
+  const imports = [
+    `import ${COMMUNICATOR}.transfer.TransportLimits`,
+    "import kotlin.time.Duration",
+    "import kotlin.time.Duration.Companion.milliseconds",
+  ];
+  return { path: "TransportLimits.kt", code: kotlinFile(GENERATED_PACKAGE, imports, blocks) };
+}
+
+/** The service reply inbox prefix rule of {@link REPLY_INBOX}, which the backend grants. */
+function replyInboxFile(): CodeGenerator.OutputFile {
+  const values = REPLY_INBOX.service;
+  const pattern = [REPLY_INBOX.root, ...values.map((value) => `{${value}}`)].join(".");
+  const prefix = [REPLY_INBOX.root, ...values.map((value) => `\${${value}}`)].join(".");
+  const parameters = values.map((value) => `${value}: String`).join(", ");
+  const block = `/**
+ * The reply inbox prefix of a service connection, \`${pattern}\`. Its reply inboxes are single tokens below
+ * it, and the backend grants the connection exactly those.
+ */
+fun serviceReplyInboxPrefix(${parameters}): String = "${prefix}"`;
+  return { path: "ReplyInboxes.kt", code: kotlinFile(GENERATED_PACKAGE, [], [block]) };
 }
 
 /**
  * Emits the Kotlin contracts of the routes a service role takes part in for the services runtime:
- * realm routes, the service routes of the registered service and the reply framing limits.
+ * realm routes, the service routes of the registered service, the reply framing limits and reply
+ * time to live, and the service reply inbox prefix.
  */
 export function emitKotlin(
   { limits, roles, routes }: ResolvedRoutes,
@@ -194,5 +220,6 @@ export function emitKotlin(
       symbols,
     ),
     limitsFile(limits),
+    replyInboxFile(),
   ];
 }

@@ -11,7 +11,13 @@ import {
   type Lines,
 } from "../../text.js";
 import type { Outcome } from "../../outcomes.js";
-import { CONSUMER_NAME, grantSubject, type GrantToken } from "../grants.js";
+import {
+  CONSUMER_NAME,
+  grantSubject,
+  REPLY_INBOX,
+  type GrantToken,
+  type ReplyInboxValue,
+} from "../grants.js";
 import type {
   Delivery,
   RoleDeclaration,
@@ -217,29 +223,30 @@ const CONSUMER_VALUES: Record<(typeof CONSUMER_NAME.tuple)[number], string> = {
   projection: "projection",
 };
 
-const CONSUMER_RULE = lines(`String _persistentConsumerName({required String actor, required String? organization, required String session, required String projection}) {
+const CONSUMER_RULE = lines(`/// Names a connection's persistent projection consumer. The backend grants the same name.
+String persistentConsumerName({required String actor, required String? organization, required String session, required String projection}) {
     final identity = jsonEncode([${CONSUMER_NAME.tuple.map((name) => CONSUMER_VALUES[name]).join(", ")}]);
     final encoded = base64Url.encode(utf8.encode(identity)).replaceAll("=", "");
     return ${interpolated([{ text: CONSUMER_NAME.prefix }, { variable: "encoded" }])};
 }`);
 
-const RUNTIME = lines(String.raw`final class PersistentProjectionRoute {
-    const PersistentProjectionRoute({required this.id, required this.organizationScoped});
-    final String id;
-    final bool organizationScoped;
-    String consumerName(NatsClient client) {
-        final organization = client.organizationId;
-        if (organizationScoped && organization == null) {
-            throw StateError("Persistent organization projection requires an admitted organization");
-        }
-        return _persistentConsumerName(
-            actor: client.actorId.transportIdentity,
-            organization: organizationScoped ? organization?.transportIdentity : null,
-            session: client.connectionSession.transportSession,
-            projection: id,
-        );
-    }
-}`);
+/** Dart expressions that validate each reply inbox value, by {@link REPLY_INBOX} entry. */
+const REPLY_INBOX_VALUES: Record<ReplyInboxValue, string> = {
+  user: "user.transportIdentity",
+  session: "session.transportSession",
+  service: "service.transportIdentity",
+};
+
+/** The panel reply inbox prefix rule of {@link REPLY_INBOX}, which the backend grants. */
+function replyInboxRule(): Lines {
+  const values = REPLY_INBOX.panel;
+  const pattern = [REPLY_INBOX.root, ...values.map((value) => `{${value}}`)].join(".");
+  const prefix = [REPLY_INBOX.root, ...values.map((value) => `\${${REPLY_INBOX_VALUES[value]}}`)].join(".");
+  return lines(`/// The reply inbox prefix of a panel connection, \`${pattern}\`. Its reply inboxes are single
+/// tokens below it, and the backend grants the connection exactly those.
+String panelReplyInboxPrefix({${values.map((value) => `required String ${value}`).join(", ")}}) =>
+    "${prefix}";`);
+}
 
 /** Names the Dart operation of a unary route, disambiguating routes that share a request type. */
 function unaryOperationName(
@@ -500,9 +507,9 @@ function dartName(route: ResolvedRoute): string {
 
 /**
  * Emits the panel transport routes: one extension per panel request route, an event class per panel
- * event, one outcome function per request method, the reply framing limits and the consumer naming
- * rule of persistent projections. The backend owns the panel's
- * permissions; the panel never derives them.
+ * event, one outcome function per request method, the reply framing limits, the consumer naming
+ * rule of persistent projections and the reply inbox prefix rule. The hand written messaging
+ * runtime builds on them. The backend owns the panel's permissions; the panel never derives them.
  */
 export function emitDart(
   resolved: ResolvedRoutes,
@@ -522,8 +529,8 @@ export function emitDart(
     ...declarations,
     ...outcomes.declarations(),
     limits(resolved.limits),
-    RUNTIME,
     CONSUMER_RULE,
+    replyInboxRule(),
   ]);
   return [
     {

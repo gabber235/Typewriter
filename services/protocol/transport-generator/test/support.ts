@@ -2,20 +2,41 @@ import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 
 import type { CodeGenerator } from "skir-internal";
-import { collectModules } from "skir/dist/module_collector.js";
-import { ModuleSet } from "skir/dist/module_set.js";
+import { parse } from "yaml";
+import { z } from "zod";
 
-import type { Config } from "../src/config.js";
+import { Config } from "../src/config.js";
 import { parseManifest, type Manifest } from "../src/routes/manifest.js";
 import { resolveRoutes, type ResolvedRoute, type ResolvedRoutes } from "../src/routes/resolve.js";
+import { compileSkirSources } from "../src/skir_sources.js";
 
-const repository = (path: string) => fileURLToPath(new URL(`../../../../${path}`, import.meta.url));
+/** Resolves a path relative to the repository root, where skir.yml lives. */
+export const repository = (path: string) => fileURLToPath(new URL(`../../../../${path}`, import.meta.url));
 
-/** The committed transport route manifest. */
-export const MANIFEST_PATH = repository("services/protocol/transport-routes.yaml");
+const SkirConfig = z.object({
+  generators: z.array(z.object({ mod: z.string(), config: z.record(z.string(), z.unknown()) })),
+});
+
+/** The generator entries of the repository skir.yml. */
+export const SKIR_GENERATORS = SkirConfig.parse(parse(readFileSync(repository("skir.yml"), "utf8"))).generators;
+
+/** The config skir.yml gives the generator module `mod`. */
+export function generatorConfig(mod: string): Record<string, unknown> {
+  const entry = SKIR_GENERATORS.find((generator) => generator.mod === mod);
+  if (!entry) {
+    throw new Error(`skir.yml configures no generator ${mod}`);
+  }
+  return entry.config;
+}
+
+/** The config skir.yml gives the Dart transport target, the only one that takes every option. */
+const TRANSPORT_CONFIG = Config.parse(generatorConfig("typewriter-transport/dart"));
+
+/** The committed transport route manifest skir.yml configures. */
+export const MANIFEST_PATH = repository(TRANSPORT_CONFIG.manifest);
 
 /** The Dart import prefix skir.yml configures for the panel. */
-export const DART_PREFIX = "package:typewriter_panel/infrastructure/protocols/skir/skirout/";
+export const DART_PREFIX = TRANSPORT_CONFIG.dartImportUriPrefix!;
 
 /** Parses the committed transport route manifest. */
 export function committedManifest(): Manifest {
@@ -26,14 +47,9 @@ export function committedManifest(): Manifest {
 export async function loadSkirInput(
   config: Partial<Config> = {},
 ): Promise<CodeGenerator.Input<Config>> {
-  const modules = await collectModules(repository("skir-src"), ModuleSet.empty(), undefined, "strict");
-  if (modules.errors.length > 0) {
-    throw new Error(`skir-src does not compile: ${modules.errors.length} errors`);
-  }
   return {
-    modules: [...modules.modules.values()].map((module) => module.result),
-    recordMap: modules.recordMap,
-    config: { manifest: MANIFEST_PATH, dartImportUriPrefix: DART_PREFIX, ...config },
+    ...(await compileSkirSources(repository("skir-src"))),
+    config: { ...TRANSPORT_CONFIG, manifest: MANIFEST_PATH, ...config },
   };
 }
 
@@ -58,7 +74,10 @@ const ROLES = `roles:
 `;
 
 /** The committed reply framing limits, appended so inline route lines keep their positions. */
-const LIMITS = "limits: { chunk_bytes: 524288, max_chunks: 64 }\n";
+const LIMITS = (() => {
+  const { chunkBytes, maxChunks, replyTtlMs } = committedManifest().limits;
+  return `limits: { chunk_bytes: ${chunkBytes}, max_chunks: ${maxChunks}, reply_ttl_ms: ${replyTtlMs} }\n`;
+})();
 
 /**
  * A manifest with the committed role declarations and limits, the given components (each served or

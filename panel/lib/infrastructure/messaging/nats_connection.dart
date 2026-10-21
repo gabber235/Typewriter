@@ -34,7 +34,7 @@ abstract class NatsConnectionSettings with _$NatsConnectionSettings {
       connectNkey: base64.encode(
         skir.EntityPermissionQualifier.serializer.toBytes(qualifier),
       ),
-      requestInboxPrefix: "_INBOX.${user.sub}.$session",
+      requestInboxPrefix: panelReplyInboxPrefix(user: user.sub, session: session),
     );
   }
 }

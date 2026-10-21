@@ -23,8 +23,8 @@ use wasmcloud_utils::{
     skir_utils::RecordIdKeyIdentity,
     transport::{GrantSet, RealmScope, ServiceScope, SubjectToken, request_route},
     transport_routes::{
-        MAX_RESPONSE_CHUNKS, RealmRole, ServiceBindingQueryRoute, ServiceMessagingScopeRoute,
-        ServiceRole,
+        MAX_RESPONSE_CHUNKS, REPLY_TTL_MS, RealmRole, ServiceBindingQueryRoute,
+        ServiceMessagingScopeRoute, ServiceRole, service_reply_inbox_prefix,
     },
 };
 
@@ -74,7 +74,10 @@ pub async fn handle_service(
     service_scope.grant(ServiceRole::RegisteredService, &mut grants);
     let mut tags = vec![format!("service:{service_id}")];
 
-    grants.subscribe.insert(format!("_INBOX.{service_id}.*"));
+    grants.subscribe.insert(format!(
+        "{}.*",
+        service_reply_inbox_prefix(&service_scope.service)
+    ));
     main_attribute!("auth.permissions.category.registration" = true);
 
     handle_service_binding(binding, &service_id, &mut grants, &mut tags).await?;
@@ -93,13 +96,13 @@ pub async fn handle_service(
     Ok((permissions, tags))
 }
 
-/// Lets a service answer each request it receives within five minutes. A framed reply sends up to
-/// [`MAX_RESPONSE_CHUNKS`] frames to the requester's inbox, so that is the reply message limit.
+/// Lets a service answer each request it receives within [`REPLY_TTL_MS`]. A framed reply sends up
+/// to [`MAX_RESPONSE_CHUNKS`] frames to the requester's inbox, so that is the reply message limit.
 pub(crate) fn service_response_permission() -> ResponsePermission {
     ResponsePermission {
         max_messages: Some(MAX_RESPONSE_CHUNKS as i32),
         ttl: Some(Duration {
-            milliseconds: 300_000,
+            milliseconds: REPLY_TTL_MS,
             _unrecognized: None,
         }),
         _unrecognized: None,

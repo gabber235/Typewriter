@@ -1,5 +1,6 @@
 package com.typewritermc.services.libs.registrar.runtime
 
+import com.typewritermc.protocol.transport.generated.serviceReplyInboxPrefix
 import com.typewritermc.services.libs.communicator.nats.NatsAuthentication
 import com.typewritermc.services.libs.communicator.nats.NatsAuthenticationChallenge
 import com.typewritermc.services.libs.communicator.nats.NatsAuthenticationProvider
@@ -18,7 +19,7 @@ internal fun serviceNatsConfiguration(
 ) = NatsConnectionConfiguration(
     serverUrl = configuration.natsServerUri.toString(),
     clientName = credentials.identity.serviceId.value,
-    inboxPrefix = "_INBOX.${credentials.identity.serviceId.value}.",
+    inboxPrefix = "${serviceReplyInboxPrefix(credentials.identity.serviceId.value)}.",
     shutdownTimeout = configuration.shutdownTimeout,
 )
 

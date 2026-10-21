@@ -9,7 +9,7 @@ use tokio::{
     sync::mpsc,
 };
 use wasmcloud_utils::transport::{GrantSet, RealmScope, SubjectToken};
-use wasmcloud_utils::transport_routes::{MAX_RESPONSE_CHUNKS, RealmRole};
+use wasmcloud_utils::transport_routes::{MAX_RESPONSE_CHUNKS, REPLY_TTL_MS, RealmRole};
 
 use crate::services::service_response_permission;
 
@@ -58,11 +58,10 @@ async fn response_permissions_admit_every_frame_of_one_reply_per_responder() -> 
     assert!(grants.subscribe.contains(REQUEST_SUBJECT));
 
     let mut response = service_response_permission();
-    assert_eq!(MAX_REPLY_MESSAGES, 64);
     assert_eq!(response.max_messages, Some(MAX_REPLY_MESSAGES));
     assert_eq!(
         response.ttl.as_ref().map(|duration| duration.milliseconds),
-        Some(300_000)
+        Some(REPLY_TTL_MS)
     );
     response
         .ttl

@@ -15,6 +15,39 @@ sealed class ProjectionDelivery with _$ProjectionDelivery {
   }) = ProjectionDeliveryPersistent;
 }
 
+/// One persistent projection a generated watch route reads through a named
+/// consumer.
+///
+/// The consumer name identifies the connection: its actor, its organization
+/// when [organizationScoped], its session and the projection [id]. The backend
+/// grants the same name, so a connection only reads its own consumer.
+final class PersistentProjectionRoute {
+  const PersistentProjectionRoute({
+    required this.id,
+    required this.organizationScoped,
+  });
+
+  final String id;
+  final bool organizationScoped;
+
+  /// Names the consumer of [client]. Throws a [StateError] when the
+  /// projection is organization scoped and the client admitted none.
+  String consumerName(NatsClient client) {
+    final organization = client.organizationId;
+    if (organizationScoped && organization == null) {
+      throw StateError(
+        "Persistent organization projection requires an admitted organization",
+      );
+    }
+    return persistentConsumerName(
+      actor: client.actorId.transportIdentity,
+      organization: organizationScoped ? organization?.transportIdentity : null,
+      session: client.connectionSession.transportSession,
+      projection: id,
+    );
+  }
+}
+
 /// Chooses how a snapshot and later events reconcile into one projection.
 @freezed
 sealed class ProjectionReconciliation<TData, TResponse, TEvent>

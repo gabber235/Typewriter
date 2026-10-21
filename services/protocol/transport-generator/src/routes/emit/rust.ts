@@ -1,7 +1,14 @@
 import type { CodeGenerator } from "skir-internal";
 
 import { upperCamel } from "../../text.js";
-import { CONSUMER_NAME, grantText, type Grant, type GrantToken } from "../grants.js";
+import {
+  CONSUMER_NAME,
+  grantText,
+  REPLY_INBOX,
+  type Grant,
+  type GrantToken,
+  type ReplyInboxValue,
+} from "../grants.js";
 import {
   SCOPE_KINDS,
   type RoleDeclaration,
@@ -184,19 +191,44 @@ function emitGrants({ roles, routes }: ResolvedRoutes): string[] {
 }
 
 /** The manifest reply framing limits, which bound replies and the service response permission. */
-function emitLimits({ chunkBytes, maxChunks }: TransportLimits): string[] {
+function emitLimits({ chunkBytes, maxChunks, replyTtlMs }: TransportLimits): string[] {
   return [
     "/// The most bytes of an encoded reply that one reply frame carries.",
     `pub const RESPONSE_CHUNK_BYTES: usize = ${chunkBytes};`,
     "/// The most frames one reply may have, and so the most messages a responder may send to one",
     "/// requester inbox.",
     `pub const MAX_RESPONSE_CHUNKS: usize = ${maxChunks};`,
+    "/// How long in milliseconds a responder may send replies after it received a request.",
+    `pub const REPLY_TTL_MS: i64 = ${replyTtlMs};`,
   ];
+}
+
+const REPLY_INBOX_PARAMETERS: Record<ReplyInboxValue, string> = {
+  user: `user: &${TRANSPORT}::SubjectToken`,
+  session: `session: &${TRANSPORT}::ConnectionSession`,
+  service: `service: &${TRANSPORT}::SubjectToken`,
+};
+
+/** The reply inbox prefix rule of {@link REPLY_INBOX}, which the backend grants per connection. */
+function emitReplyInboxes(): string[] {
+  return (["panel", "service"] as const).flatMap((side) => {
+    const values = REPLY_INBOX[side];
+    const pattern = [REPLY_INBOX.root, ...values.map((value) => `{${value}}`)].join(".");
+    const parameters = values.map((value) => REPLY_INBOX_PARAMETERS[value]).join(", ");
+    const format = JSON.stringify([REPLY_INBOX.root, ...values.map(() => "{}")].join("."));
+    return [
+      `/// The reply inbox prefix of a ${side} connection, \`${pattern}\`. Its reply inboxes are`,
+      "/// single tokens below it.",
+      `pub fn ${side}_reply_inbox_prefix(${parameters}) -> String {`,
+      `    format!(${format}, ${values.map((value) => `${value}.as_str()`).join(", ")})`,
+      "}",
+    ];
+  });
 }
 
 /**
  * Emits the backend transport module: the reply framing limits, the role grants of each scope, the
- * consumer naming rule, one route type per route a component serves or publishes on, one
+ * consumer naming rule, the reply inbox prefixes, one route type per route a component serves or publishes on, one
  * dispatcher per component that receives messages and the `SkirResponse` implementation of every
  * method response. Its `skir_types` child module implements `SkirType` for every Skir record. The
  * route independent runtime they build on is hand written in `crate::transport`. generate.ts
@@ -214,6 +246,7 @@ export function emitRust(
     ...emitLimits(resolved.limits),
     ...emitGrants(resolved),
     ...emitConsumerName(),
+    ...emitReplyInboxes(),
     ...routes.flatMap((route) => emitRequestRoute(route, symbols)),
     ...routes.flatMap((route) => emitEventRoute(route, symbols)),
     ...routes.flatMap((route) => emitUpdateDelivery(route, symbols)),

@@ -2596,30 +2596,8 @@ ResponseOutcome _completeArtifactBlobWriteOutcome(
 /// Reply framing limits of the transport route manifest: frame size and frames per reply.
 const transportLimits = TransportLimits(chunkBytes: 524288, maxChunks: 64);
 
-final class PersistentProjectionRoute {
-  const PersistentProjectionRoute({
-    required this.id,
-    required this.organizationScoped,
-  });
-  final String id;
-  final bool organizationScoped;
-  String consumerName(NatsClient client) {
-    final organization = client.organizationId;
-    if (organizationScoped && organization == null) {
-      throw StateError(
-        "Persistent organization projection requires an admitted organization",
-      );
-    }
-    return _persistentConsumerName(
-      actor: client.actorId.transportIdentity,
-      organization: organizationScoped ? organization?.transportIdentity : null,
-      session: client.connectionSession.transportSession,
-      projection: id,
-    );
-  }
-}
-
-String _persistentConsumerName({
+/// Names a connection's persistent projection consumer. The backend grants the same name.
+String persistentConsumerName({
   required String actor,
   required String? organization,
   required String session,
@@ -2629,3 +2607,8 @@ String _persistentConsumerName({
   final encoded = base64Url.encode(utf8.encode(identity)).replaceAll("=", "");
   return "TW_$encoded";
 }
+
+/// The reply inbox prefix of a panel connection, `_INBOX.{user}.{session}`. Its reply inboxes are single
+/// tokens below it, and the backend grants the connection exactly those.
+String panelReplyInboxPrefix({required String user, required String session}) =>
+    "_INBOX.${user.transportIdentity}.${session.transportSession}";

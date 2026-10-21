@@ -102,7 +102,7 @@ describe("grant rule", () => {
       updates:
         payload: "organization/v1/member.skir:OrganizationMembersChanged"
         address: organization.{organization}.members.changed
-        delivery: { kind: persistent, stream: TYPEWRITER_MEMBERSHIP, projection: organization_members_changed, consumer: connection_projection }
+        delivery: { kind: persistent, stream: TYPEWRITER_MEMBERSHIP, projection: organization_members_changed }
 `,
         ["organization-members"],
       ),

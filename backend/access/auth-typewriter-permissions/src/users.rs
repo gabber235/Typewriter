@@ -20,7 +20,7 @@ use wasmcloud_utils::skir_utils::RecordIdKeyIdentity;
 use wasmcloud_utils::transport::{
     ConnectionSession, GrantSet, OrganizationActorScope, SubjectToken, UserScope,
 };
-use wasmcloud_utils::transport_routes::{OrganizationActorRole, UserRole};
+use wasmcloud_utils::transport_routes::{OrganizationActorRole, UserRole, panel_reply_inbox_prefix};
 
 use crate::common::{AuthentikClaims, TrustedUserProfile, User, build_permissions};
 
@@ -84,9 +84,10 @@ pub async fn handle_panel_user(
         &connection_session,
         &mut grants,
     );
-    grants
-        .subscribe
-        .insert(format!("_INBOX.{actor}.{}.*", connection_session.as_str()));
+    grants.subscribe.insert(format!(
+        "{}.*",
+        panel_reply_inbox_prefix(&actor, &connection_session)
+    ));
     main_attribute!("auth.permissions.category.organizations" = true);
 
     if let Some(ref org_id) = organization_id {

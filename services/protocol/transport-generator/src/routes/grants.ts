@@ -28,6 +28,21 @@ export const CONSUMER_NAME = {
   tuple: ["actor", "organization", "session", "projection"],
 } as const;
 
+/**
+ * The reply inbox prefix of a requester on each side: the root followed by these identity values,
+ * dot separated, such as `_INBOX.{user}.{session}`. A requester's reply inboxes are single tokens
+ * below its prefix, and the backend grants each connection the subscription to exactly those.
+ * Emitted into Rust, Dart and Kotlin, so the grant and the clients' inboxes always agree.
+ */
+export const REPLY_INBOX = {
+  root: "_INBOX",
+  panel: ["user", "session"],
+  service: ["service"],
+} as const;
+
+/** One identity value a reply inbox prefix holds. */
+export type ReplyInboxValue = (typeof REPLY_INBOX)["panel" | "service"][number];
+
 /** Renders a grant as `service.to.*.organization.{organization}.realm.editor.catalog.fetch`. */
 export function grantText(tokens: readonly GrantToken[]): string {
   return tokens

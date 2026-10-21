@@ -133,7 +133,6 @@ const Delivery = z.discriminatedUnion("kind", [
     kind: z.literal("persistent"),
     stream: z.string(),
     projection: RouteName,
-    consumer: z.literal("connection_projection"),
   }),
 ]);
 
@@ -226,11 +225,13 @@ export function routeParties(route: Route): readonly Party[] {
 
 /**
  * How the transports split a large reply: frames carry at most `chunkBytes` of the encoded reply
- * and one reply has at most `maxChunks` frames.
+ * and one reply has at most `maxChunks` frames. A service may answer a request for `replyTtlMs`
+ * after receiving it, so a requester never needs to wait longer.
  */
 export interface TransportLimits {
   readonly chunkBytes: number;
   readonly maxChunks: number;
+  readonly replyTtlMs: number;
 }
 
 /** The admitted route manifest. */
@@ -245,6 +246,7 @@ export interface Manifest {
 const Limits = z.strictObject({
   chunk_bytes: z.int().positive(),
   max_chunks: z.int().positive(),
+  reply_ttl_ms: z.int().positive(),
 });
 
 const RawManifest = z
@@ -379,7 +381,11 @@ export function parseManifest(source: string, file: string): Manifest {
   }
   const { limits, roles, components, routes } = result.data;
   return {
-    limits: { chunkBytes: limits.chunk_bytes, maxChunks: limits.max_chunks },
+    limits: {
+      chunkBytes: limits.chunk_bytes,
+      maxChunks: limits.max_chunks,
+      replyTtlMs: limits.reply_ttl_ms,
+    },
     roles: new Map(Object.entries(roles).map(([name, role]) => [name, { name, ...role }])),
     components: new Map(Object.entries(components)),
     routes: routes.map(({ name, scope, callers, server, publishers, subscribers, flow }): Route =>

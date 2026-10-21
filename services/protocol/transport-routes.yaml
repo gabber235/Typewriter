@@ -6,8 +6,9 @@
 
 # Reply framing shared by every transport. A reply above chunk_bytes travels as frames of at most
 # chunk_bytes on the requester's reply inbox; a reply needing more than max_chunks frames fails as
-# too large. max_chunks also bounds how many messages a service may send to one reply inbox.
-limits: { chunk_bytes: 524288, max_chunks: 64 }
+# too large. max_chunks also bounds how many messages a service may send to one reply inbox, and
+# reply_ttl_ms how long after a request it may send them, so no requester waits longer.
+limits: { chunk_bytes: 524288, max_chunks: 64, reply_ttl_ms: 300000 }
 
 roles:
   authenticated_user: { side: panel, personal: user }
@@ -50,7 +51,7 @@ routes:
       updates:
         payload: "organization/v1/organization.skir:UserOrganizationsChanged"
         address: user.{user}.organizations.changed
-        delivery: { kind: persistent, stream: TYPEWRITER_MEMBERSHIP, projection: user_organizations_changed, consumer: connection_projection }
+        delivery: { kind: persistent, stream: TYPEWRITER_MEMBERSHIP, projection: user_organizations_changed }
 
   - name: user_join_requests_watch
     scope: user
@@ -64,7 +65,7 @@ routes:
       updates:
         payload: "organization/v1/join_request.skir:UserJoinRequestsChanged"
         address: user.{user}.join_requests.changed
-        delivery: { kind: persistent, stream: TYPEWRITER_MEMBERSHIP, projection: user_join_requests_changed, consumer: connection_projection }
+        delivery: { kind: persistent, stream: TYPEWRITER_MEMBERSHIP, projection: user_join_requests_changed }
 
   - name: user_join_request_submit
     scope: user
@@ -98,7 +99,7 @@ routes:
       updates:
         payload: "organization/v1/member.skir:OrganizationMembersChanged"
         address: organization.{organization}.members.changed
-        delivery: { kind: persistent, stream: TYPEWRITER_MEMBERSHIP, projection: organization_members_changed, consumer: connection_projection }
+        delivery: { kind: persistent, stream: TYPEWRITER_MEMBERSHIP, projection: organization_members_changed }
 
   - name: organization_members_update
     scope: organization_actor
@@ -132,7 +133,7 @@ routes:
       updates:
         payload: "organization/v1/join_request.skir:OrganizationJoinRequestsChanged"
         address: organization.{organization}.join_requests.changed
-        delivery: { kind: persistent, stream: TYPEWRITER_MEMBERSHIP, projection: organization_join_requests_changed, consumer: connection_projection }
+        delivery: { kind: persistent, stream: TYPEWRITER_MEMBERSHIP, projection: organization_join_requests_changed }
 
   - name: organization_join_requests_approve
     scope: organization_actor
@@ -166,7 +167,7 @@ routes:
       updates:
         payload: "organization/v1/join_codes.skir:OrganizationJoinCodesChanged"
         address: organization.{organization}.join_codes.changed
-        delivery: { kind: persistent, stream: TYPEWRITER_MEMBERSHIP, projection: organization_join_codes_changed, consumer: connection_projection }
+        delivery: { kind: persistent, stream: TYPEWRITER_MEMBERSHIP, projection: organization_join_codes_changed }
 
   - name: organization_join_code_generate
     scope: organization_actor

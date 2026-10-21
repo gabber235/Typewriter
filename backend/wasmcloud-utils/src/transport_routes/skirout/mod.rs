@@ -5,6 +5,8 @@ pub const RESPONSE_CHUNK_BYTES: usize = 524288;
 /// The most frames one reply may have, and so the most messages a responder may send to one
 /// requester inbox.
 pub const MAX_RESPONSE_CHUNKS: usize = 64;
+/// How long in milliseconds a responder may send replies after it received a request.
+pub const REPLY_TTL_MS: i64 = 300000;
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum RealmRole {
     RealmCoordinator,
@@ -695,6 +697,19 @@ pub fn consumer_name(
         "TW_{}",
         base64::engine::general_purpose::URL_SAFE_NO_PAD.encode(identity.to_string())
     )
+}
+/// The reply inbox prefix of a panel connection, `_INBOX.{user}.{session}`. Its reply inboxes are
+/// single tokens below it.
+pub fn panel_reply_inbox_prefix(
+    user: &crate::transport::SubjectToken,
+    session: &crate::transport::ConnectionSession,
+) -> String {
+    format!("_INBOX.{}.{}", user.as_str(), session.as_str())
+}
+/// The reply inbox prefix of a service connection, `_INBOX.{service}`. Its reply inboxes are
+/// single tokens below it.
+pub fn service_reply_inbox_prefix(service: &crate::transport::SubjectToken) -> String {
+    format!("_INBOX.{}", service.as_str())
 }
 pub struct UserOrganizationCreateRoute;
 impl crate::transport::RequestRoute for UserOrganizationCreateRoute {

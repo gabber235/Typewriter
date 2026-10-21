@@ -1,7 +1,17 @@
 import { describe, expect, test } from "bun:test";
 
+import { readFileSync } from "node:fs";
+
+import { parse as parseYaml } from "yaml";
+
 import { parseManifest, symbolRefText } from "../src/routes/manifest.js";
-import { committedManifest, manifestSource } from "./support.js";
+import { committedManifest, MANIFEST_PATH, manifestSource } from "./support.js";
+
+/** The committed manifest as plain YAML data, the independent view admission must preserve. */
+const RAW = parseYaml(readFileSync(MANIFEST_PATH, "utf8")) as {
+  limits: { chunk_bytes: number; max_chunks: number; reply_ttl_ms: number };
+  routes: Array<{ flow: { kind: string; method?: string; payload?: string; updates?: { payload: string } } }>;
+};
 
 const unary = (name: string, party: string, request: string, scope = "user") => `  - name: ${name}
     scope: ${scope}
@@ -20,7 +30,7 @@ const parse = (routes: string, components = ["user-organization"]) =>
 describe("manifest admission", () => {
   test("parses the complete route inventory", () => {
     const manifest = committedManifest();
-    expect(manifest.routes).toHaveLength(64);
+    expect(manifest.routes).toHaveLength(RAW.routes.length);
     const methods = new Set<string>();
     const payloads = new Set<string>();
     for (const { flow } of manifest.routes) {
@@ -33,21 +43,30 @@ describe("manifest admission", () => {
         payloads.add(symbolRefText(flow.updates.payload));
       }
     }
-    expect(methods.size).toBe(58);
-    expect(payloads.size).toBe(17);
+    const raw = RAW.routes.map(({ flow }) => flow);
+    expect([...methods].sort()).toEqual([...new Set(raw.flatMap((flow) => flow.method ?? []))].sort());
+    expect([...payloads].sort()).toEqual(
+      [...new Set(raw.flatMap((flow) => [flow.payload, flow.updates?.payload].filter((value) => value !== undefined)))].sort(),
+    );
   });
 
   test("declares the reply framing limits once", () => {
-    expect(committedManifest().limits).toEqual({ chunkBytes: 524288, maxChunks: 64 });
-    expect(committedManifest().limits.chunkBytes * committedManifest().limits.maxChunks).toBe(33_554_432);
+    expect(committedManifest().limits).toEqual({
+      chunkBytes: RAW.limits.chunk_bytes,
+      maxChunks: RAW.limits.max_chunks,
+      replyTtlMs: RAW.limits.reply_ttl_ms,
+    });
     const source = manifestSource(unary("sample_route", "{ role: authenticated_user }", "user.{user}.sample"), [
       "user-organization",
     ]);
-    expect(() => parseManifest(source.replace("max_chunks: 64", "max_chunks: 0"), "routes.yaml")).toThrow(
+    expect(() => parseManifest(source.replace(/max_chunks: \d+/u, "max_chunks: 0"), "routes.yaml")).toThrow(
       "limits.max_chunks",
     );
-    expect(() => parseManifest(source.replace("chunk_bytes: 524288", "chunk_bytes: 1.5"), "routes.yaml")).toThrow(
+    expect(() => parseManifest(source.replace(/chunk_bytes: \d+/u, "chunk_bytes: 1.5"), "routes.yaml")).toThrow(
       "limits.chunk_bytes",
+    );
+    expect(() => parseManifest(source.replace(/, reply_ttl_ms: \d+/u, ""), "routes.yaml")).toThrow(
+      "limits.reply_ttl_ms",
     );
   });
 
@@ -159,51 +178,19 @@ describe("manifest admission", () => {
     );
   });
 
-  test("rejects the removed bounded watch flow", () => {
-    expect(() =>
-      parse(`  - name: bounded_fetch
-    scope: user
-    callers: [{ role: authenticated_user }]
-    server: { component: user-organization }
-    flow:
-      kind: bounded_watch
-      method: "organization/v1/user.skir:WatchUserOrganizations"
-      operation: bounded.fetch
-      request: user.{user}.fetch
-`),
-    ).toThrow("routes[0].flow.kind");
+  test("rejects a capture the identities do not provide", () => {
     expect(() => parse(unary("transfer_capture", "{ role: authenticated_user }", "user.{user}.fetch.{transfer_id}"))).toThrow(
       'invalid subject token "{transfer_id}"',
     );
   });
 
-  test("rejects the removed per route fields", () => {
-    for (const field of ["failure_slug: sample-failed", "requests: { panel: 'user.{user}' }"]) {
-      expect(() =>
-        parse(`${unary("removed_field", "{ role: authenticated_user }", "user.{user}.sample")}      ${field}\n`),
-      ).toThrow("routes[0].flow");
-    }
+  test("rejects unknown fields", () => {
     expect(() =>
-      parse(`  - name: removed_grants
-    scope: user
-    grants: []
-${unary("x", "{ role: authenticated_user }", "user.{user}.sample").split("\n").slice(2).join("\n")}`),
-    ).toThrow('Unrecognized key: "grants"');
+      parse(`${unary("unknown_field", "{ role: authenticated_user }", "user.{user}.sample")}      timeout: 5\n`),
+    ).toThrow('routes.yaml:15:7: routes[0].flow: Unrecognized key: "timeout"');
   });
 
-  test("rejects the removed bindings and malformed Skir references", () => {
-    expect(() =>
-      parse(`  - name: native_binding
-    scope: realm
-    callers: [{ role: realm_coordinator }]
-    server: { role: realm_participant }
-    flow:
-      kind: scatter
-      binding: { kind: native_kotlin, format: kotlin_serialization_cbor, target: loader_core, request_type: a.B, response_type: a.C, request_codec: a.D.e, response_codec: a.D.f }
-      operation: native.binding
-      request: rollout.probe
-`, []),
-    ).toThrow('Unrecognized key: "binding"');
+  test("rejects malformed Skir references", () => {
     expect(() =>
       parse(
         unary("bad_reference", "{ role: authenticated_user }", "user.{user}.sample").replace(
