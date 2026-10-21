@@ -31,16 +31,17 @@ void _testResourceConnections() {
         ..registerHandler(
           "cloud.to.user.user1.organization.org1.services.watch",
           (_) => skir.WatchOrganizationServicesResponse.serializer.toBytes(
-            skir.WatchOrganizationServicesResponse.wrapList([
-              harness.service.toSkir(),
-            ]),
+            skir.WatchOrganizationServicesResponse.wrapList([harness.service]),
           ),
         )
         ..registerHandler(
           _updateSubject,
           (_) => skir.UpdateOrganizationServiceResponse.serializer.toBytes(
             skir.UpdateOrganizationServiceResponse.wrapSuccess(
-              harness.service.copyWith(name: "renamed", revision: 2).toSkir(),
+              (harness.service.toMutable()
+                    ..name = "renamed"
+                    ..revision = 2)
+                  .toFrozen(),
             ),
           ),
         );

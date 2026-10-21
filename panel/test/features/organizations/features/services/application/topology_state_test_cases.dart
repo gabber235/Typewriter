@@ -55,7 +55,7 @@ void topologyStateTests() {
 
           final command = _configureHost(
             container,
-            TopologyHost.fromSkir(_host()),
+            _host(),
             skir.HostExecutionConfiguration(realm: null, primaryEngine: null),
           );
           final commandCompleted = expectLater(
@@ -92,7 +92,7 @@ void topologyStateTests() {
             container.read(provider).requireValue.hosts.single.revision,
             2,
           );
-          expect(container.read(provider).requireValue.realmInstances, isEmpty);
+          expect(container.read(provider).requireValue.realms, isEmpty);
 
           emit(
             skir.OrganizationTopologyChanged.wrapObservationsReported(
@@ -126,7 +126,7 @@ void topologyStateTests() {
 
           expect(observed.hosts.first.revision, 2);
           expect(observed.hosts.first.state.message, "fresh");
-          expect(observed.realmInstances, isEmpty);
+          expect(observed.realms, isEmpty);
           emit(
             skir.OrganizationTopologyChanged.wrapConfigurationChanged(change),
           );
@@ -211,7 +211,7 @@ void topologyStateTests() {
 
       await _configureHost(
         container,
-        TopologyHost.fromSkir(_host()),
+        _host(),
         skir.HostExecutionConfiguration(realm: null, primaryEngine: null),
       );
       await container.pump();
@@ -269,11 +269,7 @@ void topologyStateTests() {
         primaryEngine: null,
       );
 
-      await _configureHost(
-        container,
-        TopologyHost.fromSkir(_host()),
-        execution,
-      );
+      await _configureHost(container, _host(), execution);
 
       expect(
         nats.requests

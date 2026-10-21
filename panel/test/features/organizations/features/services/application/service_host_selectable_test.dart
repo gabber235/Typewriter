@@ -56,7 +56,10 @@ void main() {
       );
       return skir.UpdateOrganizationServiceResponse.serializer.toBytes(
         skir.UpdateOrganizationServiceResponse.wrapSuccess(
-          harness.service.copyWith(revision: 2, name: "renamed").toSkir(),
+          (harness.service.toMutable()
+                ..revision = 2
+                ..name = "renamed")
+              .toFrozen(),
         ),
       );
     });
@@ -92,7 +95,10 @@ void main() {
       );
       return skir.UpdateOrganizationServiceResponse.serializer.toBytes(
         skir.UpdateOrganizationServiceResponse.wrapSuccess(
-          harness.service.copyWith(revision: 2, name: "portable_name").toSkir(),
+          (harness.service.toMutable()
+                ..revision = 2
+                ..name = "portable_name")
+              .toFrozen(),
         ),
       );
     });

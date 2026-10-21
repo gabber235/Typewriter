@@ -10,20 +10,24 @@ const _unbindSubject = "cloud.to.user.user1.organization.org1.services.unbind";
 const _watchSubject = "cloud.to.user.user1.organization.org1.services.watch";
 final _organizationId = skir.recordId("organization:org1");
 
-Service _service({String name = "Original", int revision = 1}) => Service(
-  serviceId: skir.recordId("service:service1"),
-  revision: revision,
-  name: name,
-  role: HostServiceRole(version: "1"),
-  createdAt: DateTime.utc(2025),
-);
+skir.Service _service({String name = "Original", int revision = 1}) =>
+    skir.Service(
+      serviceId: skir.recordId("service:service1"),
+      revision: revision,
+      name: name,
+      role: skir.ServiceRole.createHost(version: "1"),
+      createdAt: DateTime.utc(2025),
+      organization: null,
+      registration: null,
+      state: null,
+    );
 
 class _Harness {
   _Harness({String? userId = "user1", Object? organizationId = _default}) {
     nats.registerHandler(
       _watchSubject,
       (_) => skir.WatchOrganizationServicesResponse.serializer.toBytes(
-        skir.WatchOrganizationServicesResponse.wrapList([_service().toSkir()]),
+        skir.WatchOrganizationServicesResponse.wrapList([_service()]),
       ),
     );
     container = ProviderContainer.test(
@@ -45,7 +49,7 @@ class _Harness {
   static const _default = Object();
   final FakeNatsClient nats = FakeNatsClient();
   late final ProviderContainer container;
-  ProviderSubscription<AsyncValue<List<Service>>>? subscription;
+  ProviderSubscription<AsyncValue<List<skir.Service>>>? subscription;
 
   Future<void> ready() async {
     subscription = container.listen(
@@ -58,7 +62,7 @@ class _Harness {
   void respond(String subject, Uint8List Function(Uint8List data) handler) =>
       nats.registerHandler(subject, handler);
 
-  void observe(Service service) => container
+  void observe(skir.Service service) => container
       .read(resourceRepositoriesProvider)
       .services(_organizationId)
       .acceptService(service);
@@ -83,7 +87,7 @@ extension _ServiceRepositoryCommands on ProviderContainer {
     response.requireAcceptedBinding();
   }
 
-  Future<TypedMutationResult> updateService(Service service) async {
+  Future<TypedMutationResult> updateService(skir.Service service) async {
     final response = await read(localWorkControllerProvider).execute(
       _services.rename(service.serviceId, service.revision, service.name),
     );
@@ -91,7 +95,7 @@ extension _ServiceRepositoryCommands on ProviderContainer {
       skir.UpdateOrganizationServiceResponse_successWrapper(:final value) =>
         TypedMutationResult.success(
           revision: value.revision,
-          value: Service.fromSkir(value).identityValue,
+          value: value.requireKnown().identityValue,
         ),
       skir.UpdateOrganizationServiceResponse_conflictErrorWrapper(
         :final value,
@@ -99,7 +103,7 @@ extension _ServiceRepositoryCommands on ProviderContainer {
         TypedMutationResult.conflict(
           expectedRevision: value.expectedRevision,
           actualRevision: value.actual.revision,
-          actualValue: Service.fromSkir(value.actual).identityValue,
+          actualValue: value.actual.requireKnown().identityValue,
         ),
       skir.UpdateOrganizationServiceResponse_serviceNotFoundErrorWrapper() =>
         unavailableMutation(
@@ -172,16 +176,15 @@ void main() {
       "update sends complete state and applies the canonical response",
       () async {
         final updated = _service(name: "Updated");
-        final canonical = updated.copyWith(revision: updated.revision + 1);
+        final canonical = (updated.toMutable()..revision = updated.revision + 1)
+            .toFrozen();
         skir.UpdateOrganizationServiceRequest? request;
         harness.respond(_updateSubject, (data) {
           request = skir.UpdateOrganizationServiceRequest.serializer.fromBytes(
             data,
           );
           return skir.UpdateOrganizationServiceResponse.serializer.toBytes(
-            skir.UpdateOrganizationServiceResponse.wrapSuccess(
-              canonical.toSkir(),
-            ),
+            skir.UpdateOrganizationServiceResponse.wrapSuccess(canonical),
           );
         });
 
@@ -212,9 +215,7 @@ void main() {
         harness.respond(_updateSubject, (data) {
           harness.observe(newest);
           return skir.UpdateOrganizationServiceResponse.serializer.toBytes(
-            skir.UpdateOrganizationServiceResponse.wrapSuccess(
-              delayed.toSkir(),
-            ),
+            skir.UpdateOrganizationServiceResponse.wrapSuccess(delayed),
           );
         });
 

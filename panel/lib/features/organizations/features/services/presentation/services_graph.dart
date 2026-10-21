@@ -21,8 +21,8 @@ class ServicesGraph extends ConsumerWidget {
     super.key,
   });
 
-  final List<Service> services;
-  final OrganizationTopology topology;
+  final List<skir.Service> services;
+  final skir.OrganizationTopologySnapshot topology;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -72,7 +72,7 @@ class ServicesGraph extends ConsumerWidget {
           servicesById[host.serviceId],
           availability[host.serviceId] ?? false,
         ),
-      for (final realm in topology.realmInstances)
+      for (final realm in topology.realms)
         _realmItem(
           context,
           ref,
@@ -81,7 +81,7 @@ class ServicesGraph extends ConsumerWidget {
           servicesById,
           availability,
         ),
-      for (final engine in topology.engineInstances)
+      for (final engine in topology.engines)
         _engineItem(
           context,
           engine,
@@ -102,7 +102,7 @@ class ServicesGraph extends ConsumerWidget {
 
     final nodeIds = nodes.map((node) => node.id).toSet();
     final connections = <ServicesPackedConnection?>[
-      for (final realm in topology.realmInstances)
+      for (final realm in topology.realms)
         if (hostsById.containsKey(realm.ownerHost.id))
           _connection(
             id: "${realm.ownerHost.id}:${realm.realmId.id}",
@@ -111,7 +111,7 @@ class ServicesGraph extends ConsumerWidget {
             color: realmServiceRoleColor,
             nodeIds: nodeIds,
           ),
-      for (final engine in topology.engineInstances)
+      for (final engine in topology.engines)
         if (hostsById.containsKey(engine.ownerHost.id))
           _connection(
             id: "${engine.ownerHost.id}:${engine.engineId.id}",
@@ -148,7 +148,7 @@ class ServicesGraph extends ConsumerWidget {
 
   _ServiceGraphItem _customServiceItem(
     BuildContext context,
-    Service service,
+    skir.Service service,
     bool connected,
   ) => _ServiceGraphItem(
     selectableId: ServiceIdentifier(service.serviceId),
@@ -163,8 +163,8 @@ class ServicesGraph extends ConsumerWidget {
 
   _ServiceGraphItem _hostItem(
     BuildContext context,
-    TopologyHost host,
-    Service? service,
+    skir.ServiceHost host,
+    skir.Service? service,
     bool connected,
   ) {
     final status = connected
@@ -189,9 +189,9 @@ class ServicesGraph extends ConsumerWidget {
   _ServiceGraphItem _realmItem(
     BuildContext context,
     WidgetRef ref,
-    TopologyRealm realm,
-    TopologyHost? host,
-    Map<skir.RecordId, Service> services,
+    skir.RealmInstance realm,
+    skir.ServiceHost? host,
+    Map<skir.RecordId, skir.Service> services,
     Map<skir.RecordId, bool> connections,
   ) {
     final service = host == null ? null : services[host.serviceId];
@@ -218,9 +218,9 @@ class ServicesGraph extends ConsumerWidget {
 
   _ServiceGraphItem _engineItem(
     BuildContext context,
-    TopologyEngine engine,
-    TopologyHost? host,
-    Map<skir.RecordId, Service> services,
+    skir.EngineInstance engine,
+    skir.ServiceHost? host,
+    Map<skir.RecordId, skir.Service> services,
     Map<skir.RecordId, bool> connections,
   ) {
     final service = host == null ? null : services[host.serviceId];
@@ -386,27 +386,27 @@ class _ServiceGraphItem {
 /// Maps operational host states to the limited visual vocabulary of the graph.
 enum TopologyStatusTone { active, warning, error, offline }
 
-TopologyStatusTone topologyHostStatusTone(TopologyHostStatus status) =>
+TopologyStatusTone topologyHostStatusTone(skir.HostRuntimeStatus status) =>
     switch (status) {
-      TopologyHostStatus.active => TopologyStatusTone.active,
-      TopologyHostStatus.reconciling ||
-      TopologyHostStatus.drifted => TopologyStatusTone.warning,
-      TopologyHostStatus.failed => TopologyStatusTone.error,
-      TopologyHostStatus.offline ||
-      TopologyHostStatus.unknown => TopologyStatusTone.offline,
+      skir.HostRuntimeStatus.active => TopologyStatusTone.active,
+      skir.HostRuntimeStatus.reconciling ||
+      skir.HostRuntimeStatus.drifted => TopologyStatusTone.warning,
+      skir.HostRuntimeStatus.failed => TopologyStatusTone.error,
+      skir.HostRuntimeStatus.offline ||
+      skir.HostRuntimeStatus_unknown() => TopologyStatusTone.offline,
     };
 
 TopologyStatusTone topologyChildRuntimeStatusTone(
-  TopologyRuntimeStatus status,
+  skir.ChildRuntimeStatus status,
 ) => switch (status) {
-  TopologyRuntimeStatus.active => TopologyStatusTone.active,
-  TopologyRuntimeStatus.staging ||
-  TopologyRuntimeStatus.quiescing ||
-  TopologyRuntimeStatus.drifted => TopologyStatusTone.warning,
-  TopologyRuntimeStatus.failed => TopologyStatusTone.error,
-  TopologyRuntimeStatus.absent ||
-  TopologyRuntimeStatus.rolledBack ||
-  TopologyRuntimeStatus.unknown => TopologyStatusTone.offline,
+  skir.ChildRuntimeStatus.active => TopologyStatusTone.active,
+  skir.ChildRuntimeStatus.staging ||
+  skir.ChildRuntimeStatus.quiescing ||
+  skir.ChildRuntimeStatus.drifted => TopologyStatusTone.warning,
+  skir.ChildRuntimeStatus.failed => TopologyStatusTone.error,
+  skir.ChildRuntimeStatus.absent ||
+  skir.ChildRuntimeStatus.rolledBack ||
+  skir.ChildRuntimeStatus_unknown() => TopologyStatusTone.offline,
 };
 
 extension TopologyToneOperations on TopologyStatusTone {

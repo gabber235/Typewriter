@@ -88,8 +88,8 @@ class ServiceSelectable extends InspectableSelectable<ServiceIdentifier> {
 
   @override
   final ServiceIdentifier id;
-  final Service service;
-  final Service canonicalService;
+  final skir.Service service;
+  final skir.Service canonicalService;
   final bool connected;
   final ValueEditingRegistration editTarget;
   final Future<void> Function() onUnbind;
@@ -183,7 +183,7 @@ final _serviceIdentityCatalog = skir.EditorCatalog(
 /// draft, preserving optimistic revision checks at commit time.
 ValueEditingRegistration serviceIdentityTarget({
   required ServiceIdentifier id,
-  required Service service,
+  required skir.Service service,
   required bool connected,
   required ServiceResourceRepository repository,
   LocalWork? work,

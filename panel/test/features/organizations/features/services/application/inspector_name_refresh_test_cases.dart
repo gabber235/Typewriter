@@ -165,7 +165,7 @@ void _testInspectorNameRefresh() {
     final service = _draftService();
     final proposed = ValueEditDocument(
       metadata: service.editorSnapshot,
-      value: service.copyWith(name: "ga").identityValue,
+      value: (service.toMutable()..name = "ga").toFrozen().identityValue,
       identity: service.serviceId,
     );
 
@@ -212,15 +212,18 @@ void _reportHostObservation(_Harness harness) {
   (harness.container.read(
     organizationTopologyControllerProvider(_organizationId).notifier,
   ) as _SeededTopology).replace(
-    topology.copyWith(
-      hosts: [
-        host.copyWith(
-          state: host.state.copyWith(
-            updatedAt: host.state.updatedAt.add(const Duration(seconds: 5)),
-          ),
-        ),
-      ],
-    ),
+    (topology.toMutable()
+          ..hosts = [
+            (host.toMutable()
+                  ..state =
+                      (host.state.toMutable()
+                            ..updatedAt = host.state.updatedAt.add(
+                              const Duration(seconds: 5),
+                            ))
+                          .toFrozen())
+                .toFrozen(),
+          ])
+        .toFrozen(),
   );
 }
 
@@ -272,13 +275,16 @@ Iterable<Object> _renameRequests(_Harness harness) {
   );
 }
 
-Service _draftService() {
-  return Service(
+skir.Service _draftService() {
+  return skir.Service(
     serviceId: skir.recordId("service:draft_test"),
     revision: 1,
     name: "gabbe",
-    role: HostServiceRole(version: "1.0.0"),
+    role: skir.ServiceRole.createHost(version: "1.0.0"),
     createdAt: DateTime.utc(2026),
+    organization: null,
+    registration: null,
+    state: null,
   );
 }
 

@@ -15,57 +15,59 @@ void main() {
       addTearDown(tester.view.resetPhysicalSize);
       addTearDown(tester.view.resetDevicePixelRatio);
       final organization = skir.recordId("organization:focus");
-      final realm = TopologyRealm(
+      final realm = skir.RealmInstance(
         realmId: skir.recordId("realm_instance:focus"),
-        ownerHost: TopologyOwnerHost(
+        ownerHost: skir.OwnerHost(
           id: skir.recordId("service_host:focus"),
           name: "focus",
         ),
         revision: 1,
-        targetEngine: const TopologyEngineTarget(
+        targetEngine: skir.EngineTarget(
           engineId: "typewritermc:paper",
           versionConstraint: "*",
         ),
-        state: TopologyRuntimeState(
-          status: TopologyRuntimeStatus.active,
+        state: skir.ChildRuntimeState(
+          status: skir.ChildRuntimeStatus.active,
           activeArtifactVersion: "1.0.0",
           message: null,
           updatedAt: DateTime.utc(2026),
         ),
       );
       final serviceId = skir.recordId("service:focus");
-      final service = Service(
+      final service = skir.Service(
         serviceId: serviceId,
         revision: 1,
         name: "focus",
-        role: HostServiceRole(version: "1.0.0"),
+        role: skir.ServiceRole.createHost(version: "1.0.0"),
         createdAt: DateTime.utc(2026),
-        state: ServiceState(
-          status: ServiceStateStatus.online,
+        state: skir.ServiceState(
+          status: skir.ServiceStatus.online,
           lastSeen: DateTime.now(),
         ),
+        organization: null,
+        registration: null,
       );
       final services = _Services(service);
       addTearDown(services.updates.close);
-      final host = TopologyHost(
+      final host = skir.ServiceHost(
         hostId: realm.ownerHost.id,
         serviceId: serviceId,
         revision: 1,
         entrypoint: "PAPER",
         canHostRealm: true,
         supportedEngines: [],
-        topologyRevision: const TopologyRevision(desired: 1, applied: 1),
-        state: TopologyHostState(
-          status: TopologyHostStatus.active,
+        topologyRevision: skir.ReconciledRevision(desired: 1, applied: 1),
+        state: skir.HostRuntimeState(
+          status: skir.HostRuntimeStatus.active,
           message: null,
           updatedAt: DateTime.utc(2026),
         ),
       );
       final source = _Topology(
-        OrganizationTopology(
+        skir.OrganizationTopologySnapshot(
           hosts: [host],
-          realmInstances: [realm],
-          engineInstances: [],
+          realms: [realm],
+          engines: [],
         ),
       );
       var taps = 0;
@@ -116,9 +118,12 @@ void main() {
       expect(tester.takeException(), isNull);
 
       services.updates.add([
-        service.copyWith(
-          state: service.state!.copyWith(status: ServiceStateStatus.offline),
-        ),
+        (service.toMutable()
+              ..state =
+                  (service.state!.toMutable()
+                        ..status = skir.ServiceStatus.offline)
+                      .toFrozen())
+            .toFrozen(),
       ]);
       await tester.pump();
       expect(
@@ -190,11 +195,13 @@ String _leafName(SidebarLink link) => link.route.flattened.last.routeName;
 
 class _Topology extends OrganizationTopologyController {
   _Topology(this.topology);
-  final OrganizationTopology topology;
+  final skir.OrganizationTopologySnapshot topology;
   int snapshots = 0;
 
   @override
-  Stream<OrganizationTopology> build(skir.RecordId organizationId) async* {
+  Stream<skir.OrganizationTopologySnapshot> build(
+    skir.RecordId organizationId,
+  ) async* {
     snapshots++;
     yield topology;
   }
@@ -202,13 +209,12 @@ class _Topology extends OrganizationTopologyController {
 
 class _Services extends CanonicalOrganizationServices {
   _Services(this.initial);
-  final Service initial;
-  final StreamController<List<Service>> updates = StreamController.broadcast(
-    sync: true,
-  );
+  final skir.Service initial;
+  final StreamController<List<skir.Service>> updates =
+      StreamController.broadcast(sync: true);
 
   @override
-  Stream<List<Service>> build(skir.RecordId organizationId) async* {
+  Stream<List<skir.Service>> build(skir.RecordId organizationId) async* {
     yield [initial];
     yield* updates.stream;
   }

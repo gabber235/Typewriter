@@ -16,7 +16,7 @@ final exemptions = <Exemption>[
     "design-system palette seeds",
   ),
   Exemption(
-    "lib/features/organizations/features/services/application/service_models.dart",
+    "lib/features/organizations/features/services/application/service_projection.dart",
     RegExp(r"Colors\.(?:blue|deepPurple|deepOrangeAccent|green)"),
     "service-role identity colors",
   ),

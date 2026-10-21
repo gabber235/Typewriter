@@ -8,8 +8,8 @@ part "host_configuration_value.dart";
 part "service_connections.dart";
 part "service_identity_editing.dart";
 part "service_inspector_layout.dart";
-part "service_models.dart";
 part "service_portable_presentation.dart";
+part "service_projection.dart";
 part "service_resource_repository.dart";
 part "service_route_projection.dart";
 part "service_selection.dart";
@@ -18,8 +18,8 @@ part "services.g.dart";
 part "topology.dart";
 part "topology_configuration.dart";
 part "topology_host_selection.dart";
-part "topology_models.dart";
 part "topology_portable_presentation.dart";
+part "topology_projection.dart";
 part "topology_runtime_selection.dart";
 part "topology_selection.dart";
 
@@ -34,7 +34,7 @@ part "topology_selection.dart";
 @riverpod
 class CanonicalOrganizationServices extends _$CanonicalOrganizationServices {
   @override
-  Stream<List<Service>> build(skir.RecordId organizationId) async* {
+  Stream<List<skir.Service>> build(skir.RecordId organizationId) async* {
     final userId = await ref.watch(userIdProvider.future);
     if (userId == null) {
       yield [];
@@ -61,9 +61,9 @@ class CanonicalOrganizationServices extends _$CanonicalOrganizationServices {
 }
 
 extension ServiceSnapshotReply on skir.WatchOrganizationServicesResponse {
-  List<Service> readSnapshot() => switch (this) {
+  List<skir.Service> readSnapshot() => switch (this) {
     skir.WatchOrganizationServicesResponse_listWrapper(:final value) =>
-      value.map(Service.fromSkir).toList(),
+      value.map((service) => service.requireKnown()).toList(),
     skir.WatchOrganizationServicesResponse_internalErrorWrapper() =>
       throw ApiException.internalServerError(),
     skir.WatchOrganizationServicesResponse_unknown() =>
@@ -72,25 +72,28 @@ extension ServiceSnapshotReply on skir.WatchOrganizationServicesResponse {
 }
 
 extension ServiceProjectionChange on skir.OrganizationServicesChanged {
-  List<Service> applyWatched(List<Service> current) => _apply(
+  List<skir.Service> applyWatched(List<skir.Service> current) => _apply(
     current,
     (values, incoming) => values.reconcileWatched(incoming).values,
   );
 
-  List<Service> applyCanonical(List<Service> current) => _apply(
+  List<skir.Service> applyCanonical(List<skir.Service> current) => _apply(
     current,
     (values, incoming) => values.reconcileCanonical(incoming).values,
   );
 
-  List<Service> _apply(
-    List<Service> current,
-    List<Service> Function(List<Service>, Service) update,
+  List<skir.Service> _apply(
+    List<skir.Service> current,
+    List<skir.Service> Function(List<skir.Service>, skir.Service) update,
   ) => switch (this) {
     skir.OrganizationServicesChanged_replaceWrapper(:final value) =>
-      value.map(Service.fromSkir).toList().reconcileSnapshot(current),
+      value
+          .map((service) => service.requireKnown())
+          .toList()
+          .reconcileSnapshot(current),
     skir.OrganizationServicesChanged_updateWrapper(:final value) => update(
       current,
-      Service.fromSkir(value),
+      value.requireKnown(),
     ),
     skir.OrganizationServicesChanged_removeWrapper(:final value) =>
       current.where((service) => service.serviceId != value).toList(),
@@ -103,15 +106,15 @@ extension ServiceProjectionChange on skir.OrganizationServicesChanged {
 ///
 /// A missing identifier is a normal absent result, not a transport failure.
 @riverpod
-Future<Service?> canonicalService(Ref ref, skir.RecordId id) async {
+Future<skir.Service?> canonicalService(Ref ref, skir.RecordId id) async {
   return (await ref.watch(canonicalServicesProvider.future))
       .firstWhereOrNull((service) => service.serviceId == id);
 }
 
 /// Replacement membership is authoritative, while surviving identities retain
 /// newer accepted revisions and heartbeat observations.
-extension ServiceSnapshotReconciliation on List<Service> {
-  List<Service> reconcileSnapshot(List<Service> previous) => [
+extension ServiceSnapshotReconciliation on List<skir.Service> {
+  List<skir.Service> reconcileSnapshot(List<skir.Service> previous) => [
     for (final incoming in this)
       incoming.reconcileSnapshot(
         previous.firstWhereOrNull(
@@ -121,8 +124,8 @@ extension ServiceSnapshotReconciliation on List<Service> {
   ];
 }
 
-extension ServiceSnapshotProgress on Service {
-  Service reconcileSnapshot(Service? previous) {
+extension ServiceSnapshotProgress on skir.Service {
+  skir.Service reconcileSnapshot(skir.Service? previous) {
     final incoming = this;
     if (previous == null) return incoming;
     final identity = [previous].reconcileWatched(incoming).canonical;
@@ -134,6 +137,6 @@ extension ServiceSnapshotProgress on Service {
                 previousState.lastSeen.isAfter(incomingState.lastSeen))
         ? previousState
         : incomingState;
-    return identity.copyWith(state: observation);
+    return identity.withState(observation);
   }
 }

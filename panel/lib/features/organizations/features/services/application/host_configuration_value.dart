@@ -7,8 +7,8 @@ part of "services.dart";
 /// apply. Supported targets and external Realm choices come from the snapshot.
 extension _HostConfigurationValue on HostEditorSnapshot {
   skir.DataValue _configurationValue(
-    TopologyRealm? realm,
-    TopologyEngine? engine,
+    skir.RealmInstance? realm,
+    skir.EngineInstance? engine,
   ) => skir.DataValue.createRecord(
     fields: [
       skir.FieldValue(
@@ -79,7 +79,7 @@ extension _HostConfigurationValue on HostEditorSnapshot {
       issue("engine.target", "Choose a supported engine target");
     }
     if (!_usesHostedRealm(realm, engine) &&
-        !topology.realmInstances.any(
+        !topology.realms.any(
           (candidate) =>
               candidate.realmId.id == _draftString(engine, "realm") &&
               candidate.ownerHost.id != host.hostId &&
@@ -104,7 +104,7 @@ extension _HostConfigurationValue on HostEditorSnapshot {
               primaryEngine: _decodeTarget(
                 _draftString(realm, "target"),
                 _realmTargets,
-              )!.toSkir(),
+              )!,
             )
           : null,
       primaryEngine: _actualType(engine) == _engineEnabled
@@ -112,11 +112,11 @@ extension _HostConfigurationValue on HostEditorSnapshot {
               target: _decodeTarget(
                 _draftString(engine, "target"),
                 _engineTargets,
-              )!.toSkir(),
+              )!,
               realm: _usesHostedRealm(realm, engine)
                   ? skir.EngineRealmSelection.hostedRealm
                   : skir.EngineRealmSelection.createExistingRealm(
-                      realmId: topology.realmInstances
+                      realmId: topology.realms
                           .singleWhere(
                             (candidate) =>
                                 candidate.realmId.id ==

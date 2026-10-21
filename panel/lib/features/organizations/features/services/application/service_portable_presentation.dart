@@ -29,7 +29,7 @@ final _servicePortableCatalog = skir.EditorCatalog.defaultInstance
 /// Runtime bindings capture this service snapshot. Name writes delegate to
 /// [EditOwner], including its validation and commit policy; the presentation
 /// host does not submit transport commands directly.
-extension ServicePortablePresentation on Service {
+extension ServicePortablePresentation on skir.Service {
   BoundPresentationHost portablePresentationHost({
     required bool connected,
     required EditOwner identityOwner,

@@ -9,29 +9,34 @@ void main() {
   ) async {
     final organization = skir.recordId("organization:heartbeat");
     final now = DateTime.now();
-    final service = Service(
+    final service = skir.Service(
       serviceId: skir.recordId("service:heartbeat"),
       revision: 1,
       name: "heartbeat",
-      role: HostServiceRole(version: "1"),
+      role: skir.ServiceRole.createHost(version: "1"),
       createdAt: now,
-      state: ServiceState(status: ServiceStateStatus.online, lastSeen: now),
+      state: skir.ServiceState(
+        status: skir.ServiceStatus.online,
+        lastSeen: now,
+      ),
+      organization: null,
+      registration: null,
     );
-    final host = TopologyHost(
+    final host = skir.ServiceHost(
       hostId: skir.recordId("service_host:heartbeat"),
       serviceId: service.serviceId,
       revision: 1,
       entrypoint: "PAPER",
       canHostRealm: true,
       supportedEngines: [],
-      topologyRevision: const TopologyRevision(desired: 1, applied: 1),
-      state: TopologyHostState(
-        status: TopologyHostStatus.active,
+      topologyRevision: skir.ReconciledRevision(desired: 1, applied: 1),
+      state: skir.HostRuntimeState(
+        status: skir.HostRuntimeStatus.active,
         message: null,
         updatedAt: now,
       ),
     );
-    final source = StreamController<List<Service>>(sync: true);
+    final source = StreamController<List<skir.Service>>(sync: true);
     addTearDown(source.close);
     final states = <bool>[];
     final container =
@@ -41,10 +46,10 @@ void main() {
             canonicalOrganizationServicesProvider(organization)
                 .overrideWith(() => _Services(source.stream)),
             organizationTopologyProvider.overrideWith(
-              (ref) async => OrganizationTopology(
+              (ref) async => skir.OrganizationTopologySnapshot(
                 hosts: [host],
-                realmInstances: [],
-                engineInstances: [],
+                realms: [],
+                engines: [],
               ),
             ),
           ],
@@ -59,11 +64,12 @@ void main() {
     states.clear();
 
     source.add([
-      service.copyWith(
-        state: service.state!.copyWith(
-          lastSeen: now.add(const Duration(seconds: 30)),
-        ),
-      ),
+      (service.toMutable()
+            ..state =
+                (service.state!.toMutable()
+                      ..lastSeen = now.add(const Duration(seconds: 30)))
+                    .toFrozen())
+          .toFrozen(),
     ]);
     await tester.pump();
     expect(states, isNot(contains(false)));
@@ -78,25 +84,30 @@ void main() {
     (tester) async {
       var now = DateTime.utc(2026, 9, 6);
       await withClock(Clock(() => now), () async {
-        final service = Service(
+        final service = skir.Service(
           serviceId: skir.recordId("service:deadline"),
           revision: 1,
           name: "deadline",
-          role: HostServiceRole(version: "1"),
+          role: skir.ServiceRole.createHost(version: "1"),
           createdAt: now,
-          state: ServiceState(status: ServiceStateStatus.online, lastSeen: now),
+          state: skir.ServiceState(
+            status: skir.ServiceStatus.online,
+            lastSeen: now,
+          ),
+          organization: null,
+          registration: null,
         );
 
-        final host = TopologyHost(
+        final host = skir.ServiceHost(
           hostId: skir.recordId("service_host:deadline"),
           serviceId: service.serviceId,
           revision: 1,
           entrypoint: "PAPER",
           canHostRealm: true,
           supportedEngines: [],
-          topologyRevision: const TopologyRevision(desired: 1, applied: 1),
-          state: TopologyHostState(
-            status: TopologyHostStatus.active,
+          topologyRevision: skir.ReconciledRevision(desired: 1, applied: 1),
+          state: skir.HostRuntimeState(
+            status: skir.HostRuntimeStatus.active,
             message: null,
             updatedAt: now,
           ),
@@ -106,10 +117,10 @@ void main() {
           overrides: [
             canonicalServicesProvider.overrideWith((ref) async => [service]),
             organizationTopologyProvider.overrideWith(
-              (ref) async => OrganizationTopology(
+              (ref) async => skir.OrganizationTopologySnapshot(
                 hosts: [host],
-                realmInstances: [],
-                engineInstances: [],
+                realms: [],
+                engines: [],
               ),
             ),
           ],
@@ -156,8 +167,8 @@ void main() {
 
 class _Services extends CanonicalOrganizationServices {
   _Services(this.values);
-  final Stream<List<Service>> values;
+  final Stream<List<skir.Service>> values;
 
   @override
-  Stream<List<Service>> build(skir.RecordId organizationId) => values;
+  Stream<List<skir.Service>> build(skir.RecordId organizationId) => values;
 }

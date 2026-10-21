@@ -16,9 +16,10 @@ Widget serviceInspectorUseCase(BuildContext context) {
   return serviceInspectorStory(width: _inspectorWidth(context));
 }
 
-Widget serviceInspectorStory({Service? service, double width = 360}) => FakeApp(
-  child: _ServiceInspectorStory(service: service, width: width),
-);
+Widget serviceInspectorStory({skir.Service? service, double width = 360}) =>
+    FakeApp(
+      child: _ServiceInspectorStory(service: service, width: width),
+    );
 
 Widget servicesPageStory() {
   final scenario = completeTopologyScenario();
@@ -42,27 +43,28 @@ Widget servicesPageStory() {
 class _StoryServices extends CanonicalOrganizationServices {
   _StoryServices(this.services);
 
-  final List<Service> services;
+  final List<skir.Service> services;
 
   @override
-  Stream<List<Service>> build(skir.RecordId organizationId) =>
+  Stream<List<skir.Service>> build(skir.RecordId organizationId) =>
       Stream.value(services);
 }
 
 class _StoryTopology extends OrganizationTopologyController {
   _StoryTopology(this.topology);
 
-  final OrganizationTopology topology;
+  final skir.OrganizationTopologySnapshot topology;
 
   @override
-  Stream<OrganizationTopology> build(skir.RecordId organizationId) =>
-      Stream.value(topology);
+  Stream<skir.OrganizationTopologySnapshot> build(
+    skir.RecordId organizationId,
+  ) => Stream.value(topology);
 }
 
 final class _ServiceInspectorStory extends StatefulWidget {
   const _ServiceInspectorStory({required this.width, this.service});
 
-  final Service? service;
+  final skir.Service? service;
   final double width;
 
   @override
@@ -70,7 +72,7 @@ final class _ServiceInspectorStory extends StatefulWidget {
 }
 
 final class _ServiceInspectorStoryState extends State<_ServiceInspectorStory> {
-  late final Service _service =
+  late final skir.Service _service =
       widget.service ?? completeTopologyScenario().services.first;
   late final ValueEditing _source = fakeValueEditing(
     document: _service.editorSnapshot.document,
@@ -138,17 +140,18 @@ final class _RuntimeInspectorStoryState extends State<_RuntimeInspectorStory> {
   );
 }
 
-Widget hostInspectorStory({TopologyHost? host, double width = 360}) => FakeApp(
-  child: _HostInspectorStory(
-    key: ValueKey(host?.hostId),
-    host: host,
-    width: width,
-  ),
-);
+Widget hostInspectorStory({skir.ServiceHost? host, double width = 360}) =>
+    FakeApp(
+      child: _HostInspectorStory(
+        key: ValueKey(host?.hostId),
+        host: host,
+        width: width,
+      ),
+    );
 
 final class _HostInspectorStory extends StatefulWidget {
   const _HostInspectorStory({required this.width, this.host, super.key});
-  final TopologyHost? host;
+  final skir.ServiceHost? host;
   final double width;
   @override
   State<_HostInspectorStory> createState() => _HostInspectorStoryState();
@@ -176,7 +179,7 @@ final class _HostInspectorStoryState extends State<_HostInspectorStory> {
   late final _host = topologyHostPortableHost(
     host: _hostValue,
     service: _service,
-    connected: _hostValue.state.status != TopologyHostStatus.offline,
+    connected: _hostValue.state.status != skir.HostRuntimeStatus.offline,
     configurationOwner: _configuration,
     identityOwner: _identity,
     realmTargets: const {
@@ -186,7 +189,7 @@ final class _HostInspectorStoryState extends State<_HostInspectorStory> {
     engineTargets: {
       for (final engine in _hostValue.supportedEngines) engine.engineId: ["^1"],
     },
-    realms: _scenario.topology.realmInstances
+    realms: _scenario.topology.realms
         .where((realm) => realm.ownerHost.id != _hostValue.hostId)
         .toList(),
   );
@@ -214,7 +217,7 @@ final class _HostInspectorStoryState extends State<_HostInspectorStory> {
 
 @widgetbook.UseCase(name: "Realm inspector", type: ServicesPage)
 Widget realmInspectorUseCase(BuildContext context) {
-  final realms = completeTopologyScenario().topology.realmInstances;
+  final realms = completeTopologyScenario().topology.realms;
   final index = context.knobs.int.slider(
     label: "Realm scenario",
     initialValue: 0,
@@ -222,14 +225,14 @@ Widget realmInspectorUseCase(BuildContext context) {
     max: realms.length - 1,
   );
   return runtimeInspectorStory(
-    host: realms[index].portablePresentationHost(),
+    host: realms.elementAt(index).portablePresentationHost(),
     width: _inspectorWidth(context),
   );
 }
 
 @widgetbook.UseCase(name: "Engine inspector", type: ServicesPage)
 Widget engineInspectorUseCase(BuildContext context) {
-  final engines = completeTopologyScenario().topology.engineInstances;
+  final engines = completeTopologyScenario().topology.engines;
   final index = context.knobs.int.slider(
     label: "Engine scenario",
     initialValue: 0,
@@ -237,7 +240,7 @@ Widget engineInspectorUseCase(BuildContext context) {
     max: engines.length - 1,
   );
   return runtimeInspectorStory(
-    host: engines[index].portablePresentationHost(),
+    host: engines.elementAt(index).portablePresentationHost(),
     width: _inspectorWidth(context),
   );
 }

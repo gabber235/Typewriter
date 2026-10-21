@@ -5,13 +5,15 @@ import "package:faker/faker.dart";
 
 import "package:typewriter_testkit/src/shared/testing/testing.dart";
 
-Service generateRandomService({
+skir.Service generateRandomService({
   skir.RecordId? organization,
-  ServiceRole? role,
+  skir.ServiceRole? role,
 }) {
   final generatedRole = faker.randomGenerator.boolean()
-      ? HostServiceRole(version: generateRandomVersion().canonicalizedVersion)
-      : CustomServiceRole(
+      ? skir.ServiceRole.createHost(
+          version: generateRandomVersion().canonicalizedVersion,
+        )
+      : skir.ServiceRole.createCustom(
           name: "integration",
           version: generateRandomVersion().canonicalizedVersion,
         );
@@ -26,7 +28,7 @@ Service generateRandomService({
           DateTime.now(),
         )
       : faker.date.dateTimeBetween(createdAt, DateTime.now().subtract(14.days));
-  return Service(
+  return skir.Service(
     serviceId: skir.recordId("service:${faker.guid.guid()}"),
     revision: 1,
     name: faker.lorem
@@ -35,12 +37,13 @@ Service generateRandomService({
         .toLowerCase(),
     role: role ?? generatedRole,
     createdAt: createdAt,
-    state: ServiceState(
-      status: online ? ServiceStateStatus.online : ServiceStateStatus.offline,
+    state: skir.ServiceState(
+      status: online ? skir.ServiceStatus.online : skir.ServiceStatus.offline,
       lastSeen: lastSeen,
     ),
     organization:
         organization ?? skir.recordId("organization:${faker.guid.guid()}"),
+    registration: null,
   );
 }
 
@@ -49,15 +52,15 @@ class ServicesMock extends CanonicalOrganizationServices {
   final DisplayState displayState;
 
   @override
-  Stream<List<Service>> build(skir.RecordId organizationId) async* {
+  Stream<List<skir.Service>> build(skir.RecordId organizationId) async* {
     yield await displayState.generateBatch((count) {
       final organization = skir.recordId("organization:${faker.guid.guid()}");
       return List.generate(count, (index) {
         final role = switch (index) {
-          0 => HostServiceRole(
+          0 => skir.ServiceRole.createHost(
             version: generateRandomVersion().canonicalizedVersion,
           ),
-          1 => CustomServiceRole(
+          1 => skir.ServiceRole.createCustom(
             name: "realm",
             version: generateRandomVersion().canonicalizedVersion,
           ),

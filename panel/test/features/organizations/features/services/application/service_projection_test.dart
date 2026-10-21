@@ -8,22 +8,23 @@ final _organization = skir.recordId("organization:projection");
 final _firstId = skir.recordId("service:first");
 final _secondId = skir.recordId("service:second");
 
-Service _service(
+skir.Service _service(
   skir.RecordId id,
   String name, {
   int revision = 4,
   DateTime? lastSeen,
-}) => Service(
+}) => skir.Service(
   serviceId: id,
   revision: revision,
   name: name,
-  role: HostServiceRole(version: "1"),
+  role: skir.ServiceRole.createHost(version: "1"),
   createdAt: DateTime.utc(2026),
   organization: _organization,
-  state: ServiceState(
-    status: ServiceStateStatus.online,
+  state: skir.ServiceState(
+    status: skir.ServiceStatus.online,
     lastSeen: lastSeen ?? DateTime.utc(2026, 1, 1),
   ),
+  registration: null,
 );
 
 void main() {
@@ -123,9 +124,9 @@ void main() {
 
 class _SeededServices extends CanonicalOrganizationServices {
   _SeededServices(this.services);
-  final List<Service> services;
+  final List<skir.Service> services;
 
   @override
-  Stream<List<Service>> build(skir.RecordId organizationId) =>
+  Stream<List<skir.Service>> build(skir.RecordId organizationId) =>
       Stream.value(services);
 }

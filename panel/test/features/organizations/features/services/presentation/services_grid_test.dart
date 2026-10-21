@@ -69,7 +69,7 @@ void main() {
     tester,
   ) async {
     final fixture = _Fixture(connected: true);
-    final orphaned = fixture.topology.copyWith(hosts: []);
+    final orphaned = (fixture.topology.toMutable()..hosts = []).toFrozen();
     await tester.pumpTestApp(
       child: SizedBox(
         width: 1200,
@@ -243,13 +243,13 @@ class _Fixture {
       id: "paper-eu",
       name: "paper_eu",
       connected: connected,
-      role: HostServiceRole(version: "1.0.0"),
+      role: skir.ServiceRole.createHost(version: "1.0.0"),
     );
     customService = _service(
       id: "discord",
       name: "discord_bridge",
       connected: true,
-      role: CustomServiceRole(name: "discord", version: "1.0.0"),
+      role: skir.ServiceRole.createCustom(name: "discord", version: "1.0.0"),
     );
     host = skir.ServiceHost(
       hostId: skir.recordId("service_host:paper-eu"),
@@ -283,22 +283,22 @@ class _Fixture {
       target: skir.EngineTarget(engineId: "paper", versionConstraint: "^1"),
       state: _childState(message: childMessage),
     );
-    topology = OrganizationTopology(
-      hosts: [TopologyHost.fromSkir(host)],
-      realmInstances: [TopologyRealm.fromSkir(realm)],
-      engineInstances: [TopologyEngine.fromSkir(engine)],
+    topology = skir.OrganizationTopologySnapshot(
+      hosts: [host],
+      realms: [realm],
+      engines: [engine],
     );
   }
 
-  late final Service hostService;
-  late final Service customService;
+  late final skir.Service hostService;
+  late final skir.Service customService;
   late final skir.ServiceHost host;
   late final skir.RealmInstance realm;
   late final skir.EngineInstance engine;
-  late final OrganizationTopology topology;
+  late final skir.OrganizationTopologySnapshot topology;
   final nats = FakeNatsClient();
 
-  List<Service> get services => [hostService, customService];
+  List<skir.Service> get services => [hostService, customService];
 
   List<Override> get overrides => [
     userIdProvider.overrideWith((ref) async => "test-user"),
@@ -312,22 +312,23 @@ class _Fixture {
   ];
 }
 
-Service _service({
+skir.Service _service({
   required String id,
   required String name,
   required bool connected,
-  required ServiceRole role,
-}) => Service(
+  required skir.ServiceRole role,
+}) => skir.Service(
   serviceId: skir.recordId("service:$id"),
   revision: 1,
   name: name,
   role: role,
   createdAt: DateTime.utc(2026, 8, 20),
   organization: skir.recordId("organization:test"),
-  state: ServiceState(
-    status: connected ? ServiceStateStatus.online : ServiceStateStatus.offline,
+  state: skir.ServiceState(
+    status: connected ? skir.ServiceStatus.online : skir.ServiceStatus.offline,
     lastSeen: DateTime.now(),
   ),
+  registration: null,
 );
 
 skir.ChildRuntimeState _childState({String? message}) => skir.ChildRuntimeState(
@@ -339,9 +340,10 @@ skir.ChildRuntimeState _childState({String? message}) => skir.ChildRuntimeState(
 
 class _FixtureScopedTopology extends OrganizationTopologyController {
   _FixtureScopedTopology(this.topology);
-  final OrganizationTopology topology;
+  final skir.OrganizationTopologySnapshot topology;
 
   @override
-  Stream<OrganizationTopology> build(skir.RecordId organizationId) =>
-      Stream.value(topology);
+  Stream<skir.OrganizationTopologySnapshot> build(
+    skir.RecordId organizationId,
+  ) => Stream.value(topology);
 }

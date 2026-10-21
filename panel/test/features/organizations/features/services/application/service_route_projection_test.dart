@@ -6,7 +6,7 @@ import "package:typewriter_panel/typewriter_panel.dart";
 final _organization = skir.recordId("organization:route");
 
 void main() {
-  _routeProjectionTests<List<Service>>(
+  _routeProjectionTests<List<skir.Service>>(
     name: "services",
     provider: canonicalServicesProvider,
     result: canonicalServicesProvider.future,
@@ -15,42 +15,45 @@ void main() {
             .overrideWith(() => _Services(values)),
     first: const [],
     second: [
-      Service(
+      skir.Service(
         serviceId: skir.recordId("service:one"),
         revision: 1,
         name: "One",
-        role: HostServiceRole(version: "1"),
+        role: skir.ServiceRole.createHost(version: "1"),
         createdAt: DateTime.utc(2026),
+        organization: null,
+        registration: null,
+        state: null,
       ),
     ],
   );
-  _routeProjectionTests<OrganizationTopology>(
+  _routeProjectionTests<skir.OrganizationTopologySnapshot>(
     name: "topology",
     provider: organizationTopologyProvider,
     result: organizationTopologyProvider.future,
     sourceOverride: (values) =>
         organizationTopologyControllerProvider(_organization)
             .overrideWith(() => _Topology(values)),
-    first: OrganizationTopology.empty,
-    second: OrganizationTopology(
+    first: skir.OrganizationTopologySnapshot.defaultInstance,
+    second: skir.OrganizationTopologySnapshot(
       hosts: [
-        TopologyHost(
+        skir.ServiceHost(
           hostId: skir.recordId("service_host:one"),
           serviceId: skir.recordId("service:one"),
           revision: 1,
           entrypoint: "PAPER",
           canHostRealm: true,
           supportedEngines: [],
-          topologyRevision: const TopologyRevision(desired: 1, applied: 1),
-          state: TopologyHostState(
-            status: TopologyHostStatus.active,
+          topologyRevision: skir.ReconciledRevision(desired: 1, applied: 1),
+          state: skir.HostRuntimeState(
+            status: skir.HostRuntimeStatus.active,
             message: null,
             updatedAt: DateTime.utc(2026),
           ),
         ),
       ],
-      realmInstances: [],
-      engineInstances: [],
+      realms: [],
+      engines: [],
     ),
   );
 }
@@ -183,16 +186,18 @@ void _routeProjectionTests<T>({
 
 class _Services extends CanonicalOrganizationServices {
   _Services(this.values);
-  final Stream<List<Service>> values;
+  final Stream<List<skir.Service>> values;
 
   @override
-  Stream<List<Service>> build(skir.RecordId organizationId) => values;
+  Stream<List<skir.Service>> build(skir.RecordId organizationId) => values;
 }
 
 class _Topology extends OrganizationTopologyController {
   _Topology(this.values);
-  final Stream<OrganizationTopology> values;
+  final Stream<skir.OrganizationTopologySnapshot> values;
 
   @override
-  Stream<OrganizationTopology> build(skir.RecordId organizationId) => values;
+  Stream<skir.OrganizationTopologySnapshot> build(
+    skir.RecordId organizationId,
+  ) => values;
 }

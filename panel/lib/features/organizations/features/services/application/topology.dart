@@ -3,7 +3,7 @@ part of "services.dart";
 /// Owns the live organization topology projection.
 ///
 /// The projection combines the topology watch with canonical configuration
-/// replies from [ServiceResourceRepository]. [TopologyHost] contains desired
+/// replies from [ServiceResourceRepository]. [skir.ServiceHost] contains desired
 /// and applied configuration revisions alongside host runtime observations.
 /// Snapshots and configuration changes own child membership. Runtime reports
 /// update observed state only and cannot create or revive child resources. A
@@ -16,15 +16,17 @@ part of "services.dart";
 @riverpod
 class OrganizationTopologyController extends _$OrganizationTopologyController {
   @override
-  Stream<OrganizationTopology> build(skir.RecordId organizationId) async* {
+  Stream<skir.OrganizationTopologySnapshot> build(
+    skir.RecordId organizationId,
+  ) async* {
     final userId = await ref.watch(userIdProvider.future);
     if (!ref.mounted) return;
     if (userId == null) {
-      yield OrganizationTopology.empty;
+      yield skir.OrganizationTopologySnapshot.defaultInstance;
       return;
     }
     final projection = skir.WatchOrganizationTopologyRequest()
-        .watch<OrganizationTopology>(
+        .watch<skir.OrganizationTopologySnapshot>(
           ref,
           userId: userId,
           organizationId: organizationId,
@@ -37,7 +39,7 @@ class OrganizationTopologyController extends _$OrganizationTopologyController {
               .map(skir.OrganizationTopologyChanged.wrapConfigurationChanged),
           reconcileSnapshot: (current, incoming) =>
               incoming.reconcileSnapshot(current),
-          initialValue: OrganizationTopology.empty,
+          initialValue: skir.OrganizationTopologySnapshot.defaultInstance,
           reconciliation: const ProjectionReconciliation.latest(),
         );
     await for (final topology in projection) {
@@ -51,9 +53,8 @@ class OrganizationTopologyController extends _$OrganizationTopologyController {
 }
 
 extension TopologySnapshotReply on skir.WatchOrganizationTopologyResponse {
-  OrganizationTopology readSnapshot() => switch (this) {
-    skir.WatchOrganizationTopologyResponse_listWrapper(:final value) =>
-      OrganizationTopology.fromSkir(value),
+  skir.OrganizationTopologySnapshot readSnapshot() => switch (this) {
+    skir.WatchOrganizationTopologyResponse_listWrapper(:final value) => value,
     skir.WatchOrganizationTopologyResponse_internalErrorWrapper() =>
       throw ApiException.internalServerError(),
     skir.WatchOrganizationTopologyResponse_unknown() =>
@@ -62,9 +63,11 @@ extension TopologySnapshotReply on skir.WatchOrganizationTopologyResponse {
 }
 
 extension TopologyProjectionChange on skir.OrganizationTopologyChanged {
-  OrganizationTopology applyTo(OrganizationTopology current) => switch (this) {
+  skir.OrganizationTopologySnapshot applyTo(
+    skir.OrganizationTopologySnapshot current,
+  ) => switch (this) {
     skir.OrganizationTopologyChanged_replaceWrapper(:final value) =>
-      OrganizationTopology.fromSkir(value).reconcileSnapshot(current),
+      value.reconcileSnapshot(current),
     skir.OrganizationTopologyChanged_configurationChangedWrapper(
       :final value,
     ) =>

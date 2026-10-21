@@ -15,22 +15,20 @@ void _testTopologySelectionRemoval() {
             (container.read(
               organizationTopologyControllerProvider(_organizationId).notifier,
             ) as _SeededTopology)..replace(
-              OrganizationTopology(
-                hosts: [TopologyHost.fromSkir(harness.host)],
-                realmInstances: [TopologyRealm.fromSkir(harness.realm)],
-                engineInstances: [
-                  TopologyEngine.fromSkir(
-                    skir.EngineInstance(
-                      engineId: engineId,
+              skir.OrganizationTopologySnapshot(
+                hosts: [harness.host],
+                realms: [harness.realm],
+                engines: [
+                  skir.EngineInstance(
+                    engineId: engineId,
+                    ownerHost: harness.realm.ownerHost,
+                    realm: skir.RealmInfo(
+                      realmId: harness.realm.realmId,
                       ownerHost: harness.realm.ownerHost,
-                      realm: skir.RealmInfo(
-                        realmId: harness.realm.realmId,
-                        ownerHost: harness.realm.ownerHost,
-                      ),
-                      revision: 1,
-                      target: harness.realm.targetEngine,
-                      state: skir.ChildRuntimeState.defaultInstance,
                     ),
+                    revision: 1,
+                    target: harness.realm.targetEngine,
+                    state: skir.ChildRuntimeState.defaultInstance,
                   ),
                 ],
               ),
@@ -59,7 +57,7 @@ void _testTopologySelectionRemoval() {
           if (value.hasError && !missing.isCompleted) missing.complete(value);
         });
         addTearDown(errors.close);
-        topology.replace(OrganizationTopology.empty);
+        topology.replace(skir.OrganizationTopologySnapshot.defaultInstance);
         final removed = await missing.future.timeout(
           const Duration(seconds: 2),
         );

@@ -4,7 +4,7 @@ part of "services.dart";
 @riverpod
 Map<skir.RecordId, bool> serviceConnections(Ref ref) {
   final services =
-      ref.watch(canonicalServicesProvider).value ?? const <Service>[];
+      ref.watch(canonicalServicesProvider).value ?? const <skir.Service>[];
 
   final now = clock.now();
   final deadline = services
@@ -30,7 +30,7 @@ Map<skir.RecordId, bool> serviceConnections(Ref ref) {
 /// Resolves host connectivity through its linked service heartbeat.
 ///
 /// Host runtime status describes reconciliation, not transport reachability.
-/// This provider therefore follows [TopologyHost.serviceId] into the shared
+/// This provider therefore follows [skir.ServiceHost.serviceId] into the shared
 /// service deadline projection and returns false when either record is absent.
 @riverpod
 bool hostConnected(Ref ref, skir.RecordId hostId) {

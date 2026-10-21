@@ -31,7 +31,10 @@ final canonicalOrganizationServicesProvider =
 /// conflict result so the caller can refresh or merge.
 final class CanonicalOrganizationServicesProvider
     extends
-        $StreamNotifierProvider<CanonicalOrganizationServices, List<Service>> {
+        $StreamNotifierProvider<
+          CanonicalOrganizationServices,
+          List<skir.Service>
+        > {
   /// Owns the organization scoped canonical service identity projection.
   ///
   /// The provider combines the backend watch with committed mutation results
@@ -78,7 +81,7 @@ final class CanonicalOrganizationServicesProvider
 }
 
 String _$canonicalOrganizationServicesHash() =>
-    r'9ee87b480965dfb7610a7ed66a24ac966a42038f';
+    r'8c8b42d69ff5882417a21739d0818892e3b074a0';
 
 /// Owns the organization scoped canonical service identity projection.
 ///
@@ -93,9 +96,9 @@ final class CanonicalOrganizationServicesFamily extends $Family
     with
         $ClassFamilyOverride<
           CanonicalOrganizationServices,
-          AsyncValue<List<Service>>,
-          List<Service>,
-          Stream<List<Service>>,
+          AsyncValue<List<skir.Service>>,
+          List<skir.Service>,
+          Stream<List<skir.Service>>,
           skir.RecordId
         > {
   CanonicalOrganizationServicesFamily._()
@@ -136,20 +139,21 @@ final class CanonicalOrganizationServicesFamily extends $Family
 /// conflict result so the caller can refresh or merge.
 
 abstract class _$CanonicalOrganizationServices
-    extends $StreamNotifier<List<Service>> {
+    extends $StreamNotifier<List<skir.Service>> {
   late final _$args = ref.$arg as skir.RecordId;
   skir.RecordId get organizationId => _$args;
 
-  Stream<List<Service>> build(skir.RecordId organizationId);
+  Stream<List<skir.Service>> build(skir.RecordId organizationId);
   @$mustCallSuper
   @override
   WhenComplete runBuild() {
-    final ref = this.ref as $Ref<AsyncValue<List<Service>>, List<Service>>;
+    final ref =
+        this.ref as $Ref<AsyncValue<List<skir.Service>>, List<skir.Service>>;
     final element =
         ref.element
             as $ClassProviderElement<
-              AnyNotifier<AsyncValue<List<Service>>, List<Service>>,
-              AsyncValue<List<Service>>,
+              AnyNotifier<AsyncValue<List<skir.Service>>, List<skir.Service>>,
+              AsyncValue<List<skir.Service>>,
               Object?,
               Object?
             >;
@@ -170,8 +174,12 @@ final canonicalServiceProvider = CanonicalServiceFamily._();
 
 final class CanonicalServiceProvider
     extends
-        $FunctionalProvider<AsyncValue<Service?>, Service?, FutureOr<Service?>>
-    with $FutureModifier<Service?>, $FutureProvider<Service?> {
+        $FunctionalProvider<
+          AsyncValue<skir.Service?>,
+          skir.Service?,
+          FutureOr<skir.Service?>
+        >
+    with $FutureModifier<skir.Service?>, $FutureProvider<skir.Service?> {
   /// Resolves one service from the organization scoped canonical projection.
   ///
   /// A missing identifier is a normal absent result, not a transport failure.
@@ -198,11 +206,12 @@ final class CanonicalServiceProvider
 
   @$internal
   @override
-  $FutureProviderElement<Service?> $createElement($ProviderPointer pointer) =>
-      $FutureProviderElement(pointer);
+  $FutureProviderElement<skir.Service?> $createElement(
+    $ProviderPointer pointer,
+  ) => $FutureProviderElement(pointer);
 
   @override
-  FutureOr<Service?> create(Ref ref) {
+  FutureOr<skir.Service?> create(Ref ref) {
     final argument = this.argument as skir.RecordId;
     return canonicalService(ref, argument);
   }
@@ -218,14 +227,14 @@ final class CanonicalServiceProvider
   }
 }
 
-String _$canonicalServiceHash() => r'b4cabbb3f59a4a93bb98b2074038a92c916a1661';
+String _$canonicalServiceHash() => r'77b86d5ef72eee1ddb6bde3ebbbab9a5fd4630d8';
 
 /// Resolves one service from the organization scoped canonical projection.
 ///
 /// A missing identifier is a normal absent result, not a transport failure.
 
 final class CanonicalServiceFamily extends $Family
-    with $FunctionalFamilyOverride<FutureOr<Service?>, skir.RecordId> {
+    with $FunctionalFamilyOverride<FutureOr<skir.Service?>, skir.RecordId> {
   CanonicalServiceFamily._()
     : super(
         retry: null,
@@ -249,7 +258,7 @@ final class CanonicalServiceFamily extends $Family
 /// Owns the live organization topology projection.
 ///
 /// The projection combines the topology watch with canonical configuration
-/// replies from [ServiceResourceRepository]. [TopologyHost] contains desired
+/// replies from [ServiceResourceRepository]. [skir.ServiceHost] contains desired
 /// and applied configuration revisions alongside host runtime observations.
 /// Snapshots and configuration changes own child membership. Runtime reports
 /// update observed state only and cannot create or revive child resources. A
@@ -267,7 +276,7 @@ final organizationTopologyControllerProvider =
 /// Owns the live organization topology projection.
 ///
 /// The projection combines the topology watch with canonical configuration
-/// replies from [ServiceResourceRepository]. [TopologyHost] contains desired
+/// replies from [ServiceResourceRepository]. [skir.ServiceHost] contains desired
 /// and applied configuration revisions alongside host runtime observations.
 /// Snapshots and configuration changes own child membership. Runtime reports
 /// update observed state only and cannot create or revive child resources. A
@@ -281,12 +290,12 @@ final class OrganizationTopologyControllerProvider
     extends
         $StreamNotifierProvider<
           OrganizationTopologyController,
-          OrganizationTopology
+          skir.OrganizationTopologySnapshot
         > {
   /// Owns the live organization topology projection.
   ///
   /// The projection combines the topology watch with canonical configuration
-  /// replies from [ServiceResourceRepository]. [TopologyHost] contains desired
+  /// replies from [ServiceResourceRepository]. [skir.ServiceHost] contains desired
   /// and applied configuration revisions alongside host runtime observations.
   /// Snapshots and configuration changes own child membership. Runtime reports
   /// update observed state only and cannot create or revive child resources. A
@@ -334,12 +343,12 @@ final class OrganizationTopologyControllerProvider
 }
 
 String _$organizationTopologyControllerHash() =>
-    r'e52a29fe3d83816fae5c1f55d8fa1c581668d7d8';
+    r'b4fdc45ff0a804156b1bd5f57e11afe21780fe4d';
 
 /// Owns the live organization topology projection.
 ///
 /// The projection combines the topology watch with canonical configuration
-/// replies from [ServiceResourceRepository]. [TopologyHost] contains desired
+/// replies from [ServiceResourceRepository]. [skir.ServiceHost] contains desired
 /// and applied configuration revisions alongside host runtime observations.
 /// Snapshots and configuration changes own child membership. Runtime reports
 /// update observed state only and cannot create or revive child resources. A
@@ -354,9 +363,9 @@ final class OrganizationTopologyControllerFamily extends $Family
     with
         $ClassFamilyOverride<
           OrganizationTopologyController,
-          AsyncValue<OrganizationTopology>,
-          OrganizationTopology,
-          Stream<OrganizationTopology>,
+          AsyncValue<skir.OrganizationTopologySnapshot>,
+          skir.OrganizationTopologySnapshot,
+          Stream<skir.OrganizationTopologySnapshot>,
           skir.RecordId
         > {
   OrganizationTopologyControllerFamily._()
@@ -371,7 +380,7 @@ final class OrganizationTopologyControllerFamily extends $Family
   /// Owns the live organization topology projection.
   ///
   /// The projection combines the topology watch with canonical configuration
-  /// replies from [ServiceResourceRepository]. [TopologyHost] contains desired
+  /// replies from [ServiceResourceRepository]. [skir.ServiceHost] contains desired
   /// and applied configuration revisions alongside host runtime observations.
   /// Snapshots and configuration changes own child membership. Runtime reports
   /// update observed state only and cannot create or revive child resources. A
@@ -395,7 +404,7 @@ final class OrganizationTopologyControllerFamily extends $Family
 /// Owns the live organization topology projection.
 ///
 /// The projection combines the topology watch with canonical configuration
-/// replies from [ServiceResourceRepository]. [TopologyHost] contains desired
+/// replies from [ServiceResourceRepository]. [skir.ServiceHost] contains desired
 /// and applied configuration revisions alongside host runtime observations.
 /// Snapshots and configuration changes own child membership. Runtime reports
 /// update observed state only and cannot create or revive child resources. A
@@ -407,25 +416,28 @@ final class OrganizationTopologyControllerFamily extends $Family
 /// from a host without resolving its service identifier.
 
 abstract class _$OrganizationTopologyController
-    extends $StreamNotifier<OrganizationTopology> {
+    extends $StreamNotifier<skir.OrganizationTopologySnapshot> {
   late final _$args = ref.$arg as skir.RecordId;
   skir.RecordId get organizationId => _$args;
 
-  Stream<OrganizationTopology> build(skir.RecordId organizationId);
+  Stream<skir.OrganizationTopologySnapshot> build(skir.RecordId organizationId);
   @$mustCallSuper
   @override
   WhenComplete runBuild() {
     final ref =
         this.ref
-            as $Ref<AsyncValue<OrganizationTopology>, OrganizationTopology>;
+            as $Ref<
+              AsyncValue<skir.OrganizationTopologySnapshot>,
+              skir.OrganizationTopologySnapshot
+            >;
     final element =
         ref.element
             as $ClassProviderElement<
               AnyNotifier<
-                AsyncValue<OrganizationTopology>,
-                OrganizationTopology
+                AsyncValue<skir.OrganizationTopologySnapshot>,
+                skir.OrganizationTopologySnapshot
               >,
-              AsyncValue<OrganizationTopology>,
+              AsyncValue<skir.OrganizationTopologySnapshot>,
               Object?,
               Object?
             >;
@@ -484,12 +496,12 @@ final class ServiceConnectionsProvider
 }
 
 String _$serviceConnectionsHash() =>
-    r'81da9210c2a948b562f83b91902888be9edf7f2d';
+    r'79795a576937e494a0c747506ea3f8418a507412';
 
 /// Resolves host connectivity through its linked service heartbeat.
 ///
 /// Host runtime status describes reconciliation, not transport reachability.
-/// This provider therefore follows [TopologyHost.serviceId] into the shared
+/// This provider therefore follows [skir.ServiceHost.serviceId] into the shared
 /// service deadline projection and returns false when either record is absent.
 
 @ProviderFor(hostConnected)
@@ -498,7 +510,7 @@ final hostConnectedProvider = HostConnectedFamily._();
 /// Resolves host connectivity through its linked service heartbeat.
 ///
 /// Host runtime status describes reconciliation, not transport reachability.
-/// This provider therefore follows [TopologyHost.serviceId] into the shared
+/// This provider therefore follows [skir.ServiceHost.serviceId] into the shared
 /// service deadline projection and returns false when either record is absent.
 
 final class HostConnectedProvider extends $FunctionalProvider<bool, bool, bool>
@@ -506,7 +518,7 @@ final class HostConnectedProvider extends $FunctionalProvider<bool, bool, bool>
   /// Resolves host connectivity through its linked service heartbeat.
   ///
   /// Host runtime status describes reconciliation, not transport reachability.
-  /// This provider therefore follows [TopologyHost.serviceId] into the shared
+  /// This provider therefore follows [skir.ServiceHost.serviceId] into the shared
   /// service deadline projection and returns false when either record is absent.
   HostConnectedProvider._({
     required HostConnectedFamily super.from,
@@ -564,7 +576,7 @@ String _$hostConnectedHash() => r'0de38fbae6e101f0292ab3e1283be5a8fad89257';
 /// Resolves host connectivity through its linked service heartbeat.
 ///
 /// Host runtime status describes reconciliation, not transport reachability.
-/// This provider therefore follows [TopologyHost.serviceId] into the shared
+/// This provider therefore follows [skir.ServiceHost.serviceId] into the shared
 /// service deadline projection and returns false when either record is absent.
 
 final class HostConnectedFamily extends $Family
@@ -581,7 +593,7 @@ final class HostConnectedFamily extends $Family
   /// Resolves host connectivity through its linked service heartbeat.
   ///
   /// Host runtime status describes reconciliation, not transport reachability.
-  /// This provider therefore follows [TopologyHost.serviceId] into the shared
+  /// This provider therefore follows [skir.ServiceHost.serviceId] into the shared
   /// service deadline projection and returns false when either record is absent.
 
   HostConnectedProvider call(skir.RecordId hostId) =>
@@ -613,11 +625,13 @@ final canonicalServicesProvider = CanonicalServicesProvider._();
 final class CanonicalServicesProvider
     extends
         $FunctionalProvider<
-          AsyncValue<List<Service>>,
-          List<Service>,
-          FutureOr<List<Service>>
+          AsyncValue<List<skir.Service>>,
+          List<skir.Service>,
+          FutureOr<List<skir.Service>>
         >
-    with $FutureModifier<List<Service>>, $FutureProvider<List<Service>> {
+    with
+        $FutureModifier<List<skir.Service>>,
+        $FutureProvider<List<skir.Service>> {
   /// Adapts the organization scoped service projection to the current route.
   ///
   /// The route provider owns no service data. It follows the selected
@@ -641,17 +655,17 @@ final class CanonicalServicesProvider
 
   @$internal
   @override
-  $FutureProviderElement<List<Service>> $createElement(
+  $FutureProviderElement<List<skir.Service>> $createElement(
     $ProviderPointer pointer,
   ) => $FutureProviderElement(pointer);
 
   @override
-  FutureOr<List<Service>> create(Ref ref) {
+  FutureOr<List<skir.Service>> create(Ref ref) {
     return canonicalServices(ref);
   }
 }
 
-String _$canonicalServicesHash() => r'dc9812ce715f853aa7dd8bee7023de488698a3a8';
+String _$canonicalServicesHash() => r'4bd39c3bb1e35442d334fc2f4f228da58e01b695';
 
 /// Overlays active local editor drafts on canonical service identities.
 ///
@@ -671,11 +685,11 @@ final projectedServicesProvider = ProjectedServicesProvider._();
 final class ProjectedServicesProvider
     extends
         $FunctionalProvider<
-          AsyncValue<List<Service>>,
-          AsyncValue<List<Service>>,
-          AsyncValue<List<Service>>
+          AsyncValue<List<skir.Service>>,
+          AsyncValue<List<skir.Service>>,
+          AsyncValue<List<skir.Service>>
         >
-    with $Provider<AsyncValue<List<Service>>> {
+    with $Provider<AsyncValue<List<skir.Service>>> {
   /// Overlays active local editor drafts on canonical service identities.
   ///
   /// Canonical revisions and runtime observations remain untouched. Consumers
@@ -697,25 +711,27 @@ final class ProjectedServicesProvider
 
   @$internal
   @override
-  $ProviderElement<AsyncValue<List<Service>>> $createElement(
+  $ProviderElement<AsyncValue<List<skir.Service>>> $createElement(
     $ProviderPointer pointer,
   ) => $ProviderElement(pointer);
 
   @override
-  AsyncValue<List<Service>> create(Ref ref) {
+  AsyncValue<List<skir.Service>> create(Ref ref) {
     return projectedServices(ref);
   }
 
   /// {@macro riverpod.override_with_value}
-  Override overrideWithValue(AsyncValue<List<Service>> value) {
+  Override overrideWithValue(AsyncValue<List<skir.Service>> value) {
     return $ProviderOverride(
       origin: this,
-      providerOverride: $SyncValueProvider<AsyncValue<List<Service>>>(value),
+      providerOverride: $SyncValueProvider<AsyncValue<List<skir.Service>>>(
+        value,
+      ),
     );
   }
 }
 
-String _$projectedServicesHash() => r'3b12ff8d3f1dfb2b264c2cc7604208167e89d319';
+String _$projectedServicesHash() => r'2a44f5db302e4899a42243143d0adcfeb1e1d00b';
 
 /// Resolves one service with its unsaved local identity draft applied.
 
@@ -727,11 +743,11 @@ final projectedServiceProvider = ProjectedServiceFamily._();
 final class ProjectedServiceProvider
     extends
         $FunctionalProvider<
-          AsyncValue<Service?>,
-          AsyncValue<Service?>,
-          AsyncValue<Service?>
+          AsyncValue<skir.Service?>,
+          AsyncValue<skir.Service?>,
+          AsyncValue<skir.Service?>
         >
-    with $Provider<AsyncValue<Service?>> {
+    with $Provider<AsyncValue<skir.Service?>> {
   /// Resolves one service with its unsaved local identity draft applied.
   ProjectedServiceProvider._({
     required ProjectedServiceFamily super.from,
@@ -756,21 +772,21 @@ final class ProjectedServiceProvider
 
   @$internal
   @override
-  $ProviderElement<AsyncValue<Service?>> $createElement(
+  $ProviderElement<AsyncValue<skir.Service?>> $createElement(
     $ProviderPointer pointer,
   ) => $ProviderElement(pointer);
 
   @override
-  AsyncValue<Service?> create(Ref ref) {
+  AsyncValue<skir.Service?> create(Ref ref) {
     final argument = this.argument as skir.RecordId;
     return projectedService(ref, argument);
   }
 
   /// {@macro riverpod.override_with_value}
-  Override overrideWithValue(AsyncValue<Service?> value) {
+  Override overrideWithValue(AsyncValue<skir.Service?> value) {
     return $ProviderOverride(
       origin: this,
-      providerOverride: $SyncValueProvider<AsyncValue<Service?>>(value),
+      providerOverride: $SyncValueProvider<AsyncValue<skir.Service?>>(value),
     );
   }
 
@@ -785,12 +801,12 @@ final class ProjectedServiceProvider
   }
 }
 
-String _$projectedServiceHash() => r'a8ae591bfa8d83435ff7659db7a81506ebafec2d';
+String _$projectedServiceHash() => r'21178cd32133cfcd399698eabb3beba2ebd1073d';
 
 /// Resolves one service with its unsaved local identity draft applied.
 
 final class ProjectedServiceFamily extends $Family
-    with $FunctionalFamilyOverride<AsyncValue<Service?>, skir.RecordId> {
+    with $FunctionalFamilyOverride<AsyncValue<skir.Service?>, skir.RecordId> {
   ProjectedServiceFamily._()
     : super(
         retry: null,
@@ -831,13 +847,13 @@ final organizationTopologyProvider = OrganizationTopologyProvider._();
 final class OrganizationTopologyProvider
     extends
         $FunctionalProvider<
-          AsyncValue<OrganizationTopology>,
-          OrganizationTopology,
-          FutureOr<OrganizationTopology>
+          AsyncValue<skir.OrganizationTopologySnapshot>,
+          skir.OrganizationTopologySnapshot,
+          FutureOr<skir.OrganizationTopologySnapshot>
         >
     with
-        $FutureModifier<OrganizationTopology>,
-        $FutureProvider<OrganizationTopology> {
+        $FutureModifier<skir.OrganizationTopologySnapshot>,
+        $FutureProvider<skir.OrganizationTopologySnapshot> {
   /// Exposes topology for the organization selected by the current route.
   ///
   /// The route projection delegates lifecycle and reconciliation to
@@ -861,15 +877,15 @@ final class OrganizationTopologyProvider
 
   @$internal
   @override
-  $FutureProviderElement<OrganizationTopology> $createElement(
+  $FutureProviderElement<skir.OrganizationTopologySnapshot> $createElement(
     $ProviderPointer pointer,
   ) => $FutureProviderElement(pointer);
 
   @override
-  FutureOr<OrganizationTopology> create(Ref ref) {
+  FutureOr<skir.OrganizationTopologySnapshot> create(Ref ref) {
     return organizationTopology(ref);
   }
 }
 
 String _$organizationTopologyHash() =>
-    r'276805ac09e0da70d9c19f715d49c92f24c7c33f';
+    r'2b0fee0597dd1503634a3a61f4909154c35730c2';

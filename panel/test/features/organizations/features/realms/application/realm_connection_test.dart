@@ -8,9 +8,10 @@ void main() {
     "keeps the workspace available during ordinary topology observations",
     () async {
       final organization = skir.recordId("organization:test");
-      final source = StreamController<OrganizationTopology>.broadcast(
-        sync: true,
-      );
+      final source =
+          StreamController<skir.OrganizationTopologySnapshot>.broadcast(
+            sync: true,
+          );
       final states = <RealmConnectionState>[];
       final container = ProviderContainer.test(
         overrides: [
@@ -30,10 +31,10 @@ void main() {
         states.add(next.connectionState);
       }, fireImmediately: true);
       source.add(
-        OrganizationTopology(
+        skir.OrganizationTopologySnapshot(
           hosts: [],
-          realmInstances: [_realm()],
-          engineInstances: [],
+          realms: [_realm()],
+          engines: [],
         ),
       );
       await container.read(realmConnectionProvider.future);
@@ -41,10 +42,10 @@ void main() {
       states.clear();
 
       source.add(
-        OrganizationTopology(
+        skir.OrganizationTopologySnapshot(
           hosts: [],
-          realmInstances: [_realm().copyWith(revision: 2)],
-          engineInstances: [],
+          realms: [(_realm().toMutable()..revision = 2).toFrozen()],
+          engines: [],
         ),
       );
       await container.pump();
@@ -60,10 +61,10 @@ void main() {
         RealmConnectionState.checking,
       );
       source.add(
-        OrganizationTopology(
+        skir.OrganizationTopologySnapshot(
           hosts: [],
-          realmInstances: [_realm()],
-          engineInstances: [],
+          realms: [_realm()],
+          engines: [],
         ),
       );
       await container.read(realmConnectionProvider.future);
@@ -81,10 +82,10 @@ void main() {
                 .overrideWithValue(true),
             routeParamProvider("realmId").overrideWithValue("test"),
             organizationTopologyProvider.overrideWith(
-              (ref) async => OrganizationTopology(
+              (ref) async => skir.OrganizationTopologySnapshot(
                 hosts: [],
-                realmInstances: [realm],
-                engineInstances: [],
+                realms: [realm],
+                engines: [],
               ),
             ),
           ],
@@ -171,7 +172,7 @@ void main() {
   test("reports explicit inactive state", () async {
     final states = <RealmConnectionState>[];
     final container = _containerWithRealm(
-      _realm(status: TopologyRuntimeStatus.failed),
+      _realm(status: skir.ChildRuntimeStatus.failed),
     );
     addTearDown(container.dispose);
     final subscription = container.listen(realmConnectionProvider, (
@@ -213,7 +214,7 @@ void main() {
             .overrideWithValue(true),
         realmIdProvider.overrideWithValue(id),
         selectedRealmProvider.overrideWith(
-          (ref) => Future<TopologyRealm?>.error(StateError("Unavailable")),
+          (ref) => Future<skir.RealmInstance?>.error(StateError("Unavailable")),
         ),
       ],
     );
@@ -234,7 +235,7 @@ void main() {
   test("resumes when the selected Realm becomes active", () async {
     final states = <RealmConnectionState>[];
     final id = skir.recordId("realm_instance:test");
-    var selected = _realm(status: TopologyRuntimeStatus.failed);
+    var selected = _realm(status: skir.ChildRuntimeStatus.failed);
     final container = ProviderContainer(
       overrides: [
         hostConnectedProvider(skir.recordId("service_host:host"))
@@ -273,13 +274,15 @@ void main() {
 
 class _Topology extends OrganizationTopologyController {
   _Topology(this.values);
-  final Stream<OrganizationTopology> values;
+  final Stream<skir.OrganizationTopologySnapshot> values;
 
   @override
-  Stream<OrganizationTopology> build(skir.RecordId organizationId) => values;
+  Stream<skir.OrganizationTopologySnapshot> build(
+    skir.RecordId organizationId,
+  ) => values;
 }
 
-ProviderContainer _containerWithRealm(TopologyRealm? realm) {
+ProviderContainer _containerWithRealm(skir.RealmInstance? realm) {
   final id = skir.recordId("realm_instance:test");
   return ProviderContainer(
     overrides: [
@@ -291,22 +294,22 @@ ProviderContainer _containerWithRealm(TopologyRealm? realm) {
   );
 }
 
-TopologyRealm _realm({
-  TopologyRuntimeStatus status = TopologyRuntimeStatus.active,
-}) => TopologyRealm(
+skir.RealmInstance _realm({
+  skir.ChildRuntimeStatus status = skir.ChildRuntimeStatus.active,
+}) => skir.RealmInstance(
   realmId: skir.recordId("realm_instance:test"),
-  ownerHost: TopologyOwnerHost(
+  ownerHost: skir.OwnerHost(
     id: skir.recordId("service_host:host"),
     name: "test_realm",
   ),
   revision: 1,
-  targetEngine: TopologyEngineTarget(
+  targetEngine: skir.EngineTarget(
     engineId: "typewritermc:paper",
     versionConstraint: "*",
   ),
-  state: TopologyRuntimeState(
+  state: skir.ChildRuntimeState(
     status: status,
-    activeArtifactVersion: status == TopologyRuntimeStatus.active
+    activeArtifactVersion: status == skir.ChildRuntimeStatus.active
         ? "1.0.0"
         : null,
     message: null,
