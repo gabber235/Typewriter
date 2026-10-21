@@ -1,7 +1,6 @@
 import { describe, expect, test } from "bun:test";
 
 import { generatorFor, type Target } from "../src/index.js";
-import { methodResponses } from "../src/outcomes.js";
 import { emitDart } from "../src/routes/emit/dart.js";
 import { emitKotlin } from "../src/routes/emit/kotlin.js";
 import { emitRust } from "../src/routes/emit/rust.js";
@@ -17,8 +16,9 @@ function section(code: string, start: string, end: string): string {
 describe("route emission", () => {
   test("the complete inventory emits backend routes", async () => {
     const { input, resolved } = await committedRoutes();
-    const [rust, ...otherRustFiles] = emitRust(resolved, symbolProviders(input).rust, methodResponses(input));
-    expect(otherRustFiles).toEqual([]);
+    const [rust, ...otherRustFiles] = emitRust(resolved, symbolProviders(input).rust, input);
+    expect(otherRustFiles.map(({ path }) => path)).toEqual(["skir_types.rs"]);
+    expect(rust!.code).toContain("\nmod skir_types;\n");
     const code = rust!.code;
     const impl = (contract: string, route: string) => `impl crate::transport::${contract} for ${route}`;
     expect(code).toContain(impl("OutboundRequestRoute", "ServiceBindingQueryRoute"));
@@ -39,7 +39,7 @@ describe("route emission", () => {
 
   test("role grants bind the grantee's identifiers and wildcard the rest", async () => {
     const { input, resolved } = await committedRoutes();
-    const [rust] = emitRust(resolved, symbolProviders(input).rust, methodResponses(input));
+    const [rust] = emitRust(resolved, symbolProviders(input).rust, input);
     const member = section(rust!.code, "impl crate::transport::OrganizationActorScope {", "\n}\n");
     expect(member).toContain("session: &crate::transport::ConnectionSession,");
     expect(member).toContain('"service.to.*.organization.{organization}.realm.editor.catalog.fetch"');
@@ -57,7 +57,7 @@ describe("route emission", () => {
 
   test("both languages name persistent consumers from one template", async () => {
     const { input, resolved } = await committedRoutes();
-    const [rust] = emitRust(resolved, symbolProviders(input).rust, methodResponses(input));
+    const [rust] = emitRust(resolved, symbolProviders(input).rust, input);
     const [dart] = emitDart(resolved, symbolProviders(input).dart);
     expect(rust!.code).toContain(
       "let identity = serde_json::json!([actor.as_str(), organization.map(crate::transport::SubjectToken::as_str), session.as_str(), projection]);",
@@ -154,7 +154,7 @@ describe("reply framing limits", () => {
     expect(kotlin!.code).toContain("val TRANSPORT_LIMITS = TransportLimits(chunkBytes = 524288, maxChunks = 64)");
     const [dart] = emitDart(resolved, providers.dart);
     expect(dart!.code).toContain("const transportLimits = TransportLimits(chunkBytes: 524288, maxChunks: 64);");
-    const [rust] = emitRust(resolved, providers.rust, methodResponses(input));
+    const [rust] = emitRust(resolved, providers.rust, input);
     expect(rust!.code).toContain("pub const RESPONSE_CHUNK_BYTES: usize = 524288;");
     expect(rust!.code).toContain("pub const MAX_RESPONSE_CHUNKS: usize = 64;");
   });
@@ -175,7 +175,7 @@ describe("generator entry points", () => {
   const targets: Array<[Target, string[]]> = [
     ["kotlin", ["RealmRoutes.kt", "ServiceRegistrationRoutes.kt", "TransportLimits.kt"]],
     ["dart", ["transport_routes.dart"]],
-    ["rust", ["mod.rs"]],
+    ["rust", ["mod.rs", "skir_types.rs"]],
   ];
 
   test.each(targets)("%s writes its files relative to the output directory", async (target, paths) => {

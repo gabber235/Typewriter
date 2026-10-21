@@ -8,11 +8,12 @@ import {
   type ScopeKind,
   type TransportLimits,
 } from "../manifest.js";
-import type { MethodResponse } from "../../outcomes.js";
+import { methodResponses } from "../../outcomes.js";
 import type { ResolvedRoutes } from "../resolve.js";
 import { scopeParameters } from "../subject.js";
 import { emitDispatchers } from "./rust_dispatch.js";
 import { emitResponses } from "./rust_responses.js";
+import { emitSkirTypes } from "./rust_skir_types.js";
 import {
   emitEventRoute,
   emitRequestRoute,
@@ -197,17 +198,19 @@ function emitLimits({ chunkBytes, maxChunks }: TransportLimits): string[] {
  * Emits the backend transport module: the reply framing limits, the role grants of each scope, the
  * consumer naming rule, one route type per route a component serves or publishes on, one
  * dispatcher per component that receives messages and the `SkirResponse` implementation of every
- * method response. The route independent runtime they build on is hand written in
- * `crate::transport`. generate.ts formats the module with rustfmt.
+ * method response. Its `skir_types` child module implements `SkirType` for every Skir record. The
+ * route independent runtime they build on is hand written in `crate::transport`. generate.ts
+ * formats both files with rustfmt.
  */
 export function emitRust(
   resolved: ResolvedRoutes,
   symbols: CodeGenerator.SymbolProvider,
-  responses: readonly MethodResponse[],
+  input: CodeGenerator.Input<unknown>,
 ): CodeGenerator.OutputFile[] {
   const { routes } = resolved;
   const lines = [
     "//! Generated transport routes. Do not edit; regenerate with `bun run generate:protocol`.",
+    "mod skir_types;",
     ...emitLimits(resolved.limits),
     ...emitGrants(resolved),
     ...emitConsumerName(),
@@ -215,7 +218,10 @@ export function emitRust(
     ...routes.flatMap((route) => emitEventRoute(route, symbols)),
     ...routes.flatMap((route) => emitUpdateDelivery(route, symbols)),
     ...emitDispatchers(resolved, symbols),
-    ...emitResponses(responses, symbols),
+    ...emitResponses(methodResponses(input), symbols),
   ];
-  return [{ path: "mod.rs", code: `${lines.join("\n")}\n` }];
+  return [
+    { path: "mod.rs", code: `${lines.join("\n")}\n` },
+    { path: "skir_types.rs", code: `${emitSkirTypes(input, symbols).join("\n")}\n` },
+  ];
 }

@@ -42,10 +42,12 @@ pub use wasmcloud_utils_macros::{
 };
 
 // Response classification and conversion from database outcomes. The transport generator
-// implements `SkirResponse` for every Skir method response in `transport_routes`.
+// implements `SkirType` for every Skir record and `SkirResponse` for every Skir method response
+// in `transport_routes`.
+pub use database::SkirType;
 mod skir_response_trait;
 pub use skir_response_trait::{
-    SkirDomainResult, SkirDomainResultExt, SkirResponse, SkirResponseOutcome,
+    SkirDomainResult, SkirDomainResultExt, SkirResponse, SkirResponseOutcome, database_domain_slug,
 };
 
 pub mod skir_utils;

@@ -1,6 +1,5 @@
 import { describe, expect, test } from "bun:test";
 
-import { methodResponses } from "../src/outcomes.js";
 import { servedSubjects, subscriptionSubject } from "../src/routes/dispatch.js";
 import { emitRust } from "../src/routes/emit/rust.js";
 import { parseManifest, type Manifest } from "../src/routes/manifest.js";
@@ -102,7 +101,7 @@ describe("component dispatch", () => {
 
   test("the Rust target emits one typed dispatcher per receiving component", async () => {
     const { input, resolved } = await committedRoutes();
-    const [rust] = emitRust(resolved, symbolProviders(input).rust, methodResponses(input));
+    const [rust] = emitRust(resolved, symbolProviders(input).rust, input);
     const code = rust!.code;
     expect(code).not.toContain("pub mod auth_callout");
     expect(code).not.toContain("fn scope(");
@@ -141,7 +140,7 @@ describe("component dispatch", () => {
 
   test("route types name their Skir types and leave scope parsing to the dispatcher", async () => {
     const { input, resolved } = await committedRoutes();
-    const [rust] = emitRust(resolved, symbolProviders(input).rust, methodResponses(input));
+    const [rust] = emitRust(resolved, symbolProviders(input).rust, input);
     const create = section(rust!.code, "impl crate::transport::RequestRoute for UserOrganizationCreateRoute {", "\n}\n");
     expect(create).toContain(
       "type Response = crate::skirout::base::organization::v1::organization::CreateOrganizationResponse;",

@@ -178,9 +178,10 @@ method Ping(struct {}): enum {
 
   test("Rust implements SkirResponse from the variant names and docs", () => {
     const input = skirInput(source);
-    const [rust] = emitRust(resolve("", input), symbolProviders(input).rust, methodResponses(input));
+    const [rust] = emitRust(resolve("", input), symbolProviders(input).rust, input);
     const response = "crate::skirout::base::test::PingResponse";
-    expect(rust!.code).toContain(`impl crate::SkirResponse for ${response} {`);
+    expect(rust!.code).toContain(`impl crate::SkirResponse for ${response} {\n    fn outcome(&self)`);
+    expect(rust!.code).not.toContain("to_skir_bytes");
     expect(rust!.code).toContain(
       `            ${response}::Ok(_) => crate::SkirResponseOutcome::Success,\n` +
         `            ${response}::RefusedError(_) => crate::SkirResponseOutcome::DomainError,\n` +

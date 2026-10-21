@@ -1,4 +1,5 @@
 //! Generated transport routes. Do not edit; regenerate with `bun run generate:protocol`.
+mod skir_types;
 /// The most bytes of an encoded reply that one reply frame carries.
 pub const RESPONSE_CHUNK_BYTES: usize = 524288;
 /// The most frames one reply may have, and so the most messages a responder may send to one
@@ -2215,9 +2216,6 @@ pub mod auth_typewriter_permissions {
 impl crate::SkirResponse
     for crate::skirout::base::access::v1::permission::GetEntityPermissionResponse
 {
-    fn to_skir_bytes(&self) -> Vec<u8> {
-        Self::serializer().to_bytes(self)
-    }
     fn outcome(&self) -> crate::SkirResponseOutcome {
         match self {
             crate::skirout::base::access::v1::permission::GetEntityPermissionResponse::Granted(
@@ -2246,9 +2244,6 @@ impl crate::SkirResponse
 impl crate::SkirResponse
     for crate::skirout::base::access::v1::sentinel::GetSentinelCredentialsResponse
 {
-    fn to_skir_bytes(&self) -> Vec<u8> {
-        Self::serializer().to_bytes(self)
-    }
     fn outcome(&self) -> crate::SkirResponseOutcome {
         match self {
             crate::skirout::base::access::v1::sentinel::GetSentinelCredentialsResponse::Success(
@@ -2277,9 +2272,6 @@ impl crate::SkirResponse
 impl crate::SkirResponse
     for crate::skirout::base::editor::v1::authoring::QueryAuthoringStateResponse
 {
-    fn to_skir_bytes(&self) -> Vec<u8> {
-        Self::serializer().to_bytes(self)
-    }
     fn outcome(&self) -> crate::SkirResponseOutcome {
         match self {
             crate::skirout::base::editor::v1::authoring::QueryAuthoringStateResponse::State(_) => crate::SkirResponseOutcome::Success,
@@ -2312,9 +2304,6 @@ impl crate::SkirResponse
     }
 }
 impl crate::SkirResponse for crate::skirout::base::editor::v1::authoring::SearchAuthoringResponse {
-    fn to_skir_bytes(&self) -> Vec<u8> {
-        Self::serializer().to_bytes(self)
-    }
     fn outcome(&self) -> crate::SkirResponseOutcome {
         match self {
             crate::skirout::base::editor::v1::authoring::SearchAuthoringResponse::Success(_) => crate::SkirResponseOutcome::Success,
@@ -2351,9 +2340,6 @@ impl crate::SkirResponse for crate::skirout::base::editor::v1::authoring::Search
 impl crate::SkirResponse
     for crate::skirout::base::editor::v1::authoring::CommitPreparedEditResponse
 {
-    fn to_skir_bytes(&self) -> Vec<u8> {
-        Self::serializer().to_bytes(self)
-    }
     fn outcome(&self) -> crate::SkirResponseOutcome {
         match self {
             crate::skirout::base::editor::v1::authoring::CommitPreparedEditResponse::Committed => crate::SkirResponseOutcome::Success,
@@ -2392,9 +2378,6 @@ impl crate::SkirResponse
 impl crate::SkirResponse
     for crate::skirout::base::editor::v1::authoring::PreviewTypeArgumentChangeResponse
 {
-    fn to_skir_bytes(&self) -> Vec<u8> {
-        Self::serializer().to_bytes(self)
-    }
     fn outcome(&self) -> crate::SkirResponseOutcome {
         match self {
             crate::skirout::base::editor::v1::authoring::PreviewTypeArgumentChangeResponse::Ready(_) | crate::skirout::base::editor::v1::authoring::PreviewTypeArgumentChangeResponse::Incomplete(_) => crate::SkirResponseOutcome::Success,
@@ -2430,9 +2413,6 @@ impl crate::SkirResponse
 impl crate::SkirResponse
     for crate::skirout::base::editor::v1::authoring::PrepareTypeArgumentChangeResponse
 {
-    fn to_skir_bytes(&self) -> Vec<u8> {
-        Self::serializer().to_bytes(self)
-    }
     fn outcome(&self) -> crate::SkirResponseOutcome {
         match self {
             crate::skirout::base::editor::v1::authoring::PrepareTypeArgumentChangeResponse::Prepared(_) | crate::skirout::base::editor::v1::authoring::PrepareTypeArgumentChangeResponse::NeedsInput(_) => crate::SkirResponseOutcome::Success,
@@ -2464,9 +2444,6 @@ impl crate::SkirResponse
     }
 }
 impl crate::SkirResponse for crate::skirout::base::editor::v1::capability::ComputationResult {
-    fn to_skir_bytes(&self) -> Vec<u8> {
-        Self::serializer().to_bytes(self)
-    }
     fn outcome(&self) -> crate::SkirResponseOutcome {
         match self {
             crate::skirout::base::editor::v1::capability::ComputationResult::Success(_) => crate::SkirResponseOutcome::Success,
@@ -2505,9 +2482,6 @@ impl crate::SkirResponse for crate::skirout::base::editor::v1::capability::Compu
     }
 }
 impl crate::SkirResponse for crate::skirout::base::editor::v1::capability::CommandResult {
-    fn to_skir_bytes(&self) -> Vec<u8> {
-        Self::serializer().to_bytes(self)
-    }
     fn outcome(&self) -> crate::SkirResponseOutcome {
         match self {
             crate::skirout::base::editor::v1::capability::CommandResult::Success(_) => {
@@ -2581,9 +2555,6 @@ impl crate::SkirResponse for crate::skirout::base::editor::v1::capability::Comma
     }
 }
 impl crate::SkirResponse for crate::skirout::base::editor::v1::catalog::CatalogFetchResult {
-    fn to_skir_bytes(&self) -> Vec<u8> {
-        Self::serializer().to_bytes(self)
-    }
     fn outcome(&self) -> crate::SkirResponseOutcome {
         match self {
             crate::skirout::base::editor::v1::catalog::CatalogFetchResult::Catalog(_) => crate::SkirResponseOutcome::Success,
@@ -2616,9 +2587,6 @@ impl crate::SkirResponse for crate::skirout::base::editor::v1::catalog::CatalogF
     }
 }
 impl crate::SkirResponse for crate::skirout::base::editor::v1::catalog::WatchEditorCatalogResponse {
-    fn to_skir_bytes(&self) -> Vec<u8> {
-        Self::serializer().to_bytes(self)
-    }
     fn outcome(&self) -> crate::SkirResponseOutcome {
         match self {
             crate::skirout::base::editor::v1::catalog::WatchEditorCatalogResponse::Invalidated(
@@ -2645,9 +2613,6 @@ impl crate::SkirResponse for crate::skirout::base::editor::v1::catalog::WatchEdi
     }
 }
 impl crate::SkirResponse for crate::skirout::base::editor::v1::catalog::PrepareValueResult {
-    fn to_skir_bytes(&self) -> Vec<u8> {
-        Self::serializer().to_bytes(self)
-    }
     fn outcome(&self) -> crate::SkirResponseOutcome {
         match self {
             crate::skirout::base::editor::v1::catalog::PrepareValueResult::Ready(_)
@@ -2707,9 +2672,6 @@ impl crate::SkirResponse for crate::skirout::base::editor::v1::catalog::PrepareV
 impl crate::SkirResponse
     for crate::skirout::base::editor::v1::compiled_content::QueryPublishedContentResponse
 {
-    fn to_skir_bytes(&self) -> Vec<u8> {
-        Self::serializer().to_bytes(self)
-    }
     fn outcome(&self) -> crate::SkirResponseOutcome {
         match self {
             crate::skirout::base::editor::v1::compiled_content::QueryPublishedContentResponse::Content(_) | crate::skirout::base::editor::v1::compiled_content::QueryPublishedContentResponse::Absent(_) => crate::SkirResponseOutcome::Success,
@@ -2735,9 +2697,6 @@ impl crate::SkirResponse
 impl crate::SkirResponse
     for crate::skirout::base::editor::v1::compiled_content::QueryCompiledResourceStatusResponse
 {
-    fn to_skir_bytes(&self) -> Vec<u8> {
-        Self::serializer().to_bytes(self)
-    }
     fn outcome(&self) -> crate::SkirResponseOutcome {
         match self {
             crate::skirout::base::editor::v1::compiled_content::QueryCompiledResourceStatusResponse::Success(_) => crate::SkirResponseOutcome::Success,
@@ -2762,9 +2721,6 @@ impl crate::SkirResponse
 impl crate::SkirResponse
     for crate::skirout::base::editor::v1::publication::PublishAuthoringResponse
 {
-    fn to_skir_bytes(&self) -> Vec<u8> {
-        Self::serializer().to_bytes(self)
-    }
     fn outcome(&self) -> crate::SkirResponseOutcome {
         match self {
             crate::skirout::base::editor::v1::publication::PublishAuthoringResponse::Publishing | crate::skirout::base::editor::v1::publication::PublishAuthoringResponse::Activated(_) | crate::skirout::base::editor::v1::publication::PublishAuthoringResponse::NoChanges => crate::SkirResponseOutcome::Success,
@@ -2805,9 +2761,6 @@ impl crate::SkirResponse
 impl crate::SkirResponse
     for crate::skirout::base::editor::v1::publication::WatchPublicationResponse
 {
-    fn to_skir_bytes(&self) -> Vec<u8> {
-        Self::serializer().to_bytes(self)
-    }
     fn outcome(&self) -> crate::SkirResponseOutcome {
         match self {
             crate::skirout::base::editor::v1::publication::WatchPublicationResponse::ViewChanged(_) => crate::SkirResponseOutcome::Success,
@@ -2834,9 +2787,6 @@ impl crate::SkirResponse
 impl crate::SkirResponse
     for crate::skirout::base::editor::v1::publication::QueryPublicationViewResponse
 {
-    fn to_skir_bytes(&self) -> Vec<u8> {
-        Self::serializer().to_bytes(self)
-    }
     fn outcome(&self) -> crate::SkirResponseOutcome {
         match self {
             crate::skirout::base::editor::v1::publication::QueryPublicationViewResponse::View(_) => crate::SkirResponseOutcome::Success,
@@ -2871,9 +2821,6 @@ impl crate::SkirResponse
 impl crate::SkirResponse
     for crate::skirout::base::editor::v1::resource_operations::ResolveResourceOperationsResult
 {
-    fn to_skir_bytes(&self) -> Vec<u8> {
-        Self::serializer().to_bytes(self)
-    }
     fn outcome(&self) -> crate::SkirResponseOutcome {
         match self {
             crate::skirout::base::editor::v1::resource_operations::ResolveResourceOperationsResult::Resolved(_) => crate::SkirResponseOutcome::Success,
@@ -2914,9 +2861,6 @@ impl crate::SkirResponse
 impl crate::SkirResponse
     for crate::skirout::base::editor::v1::resource_operations::AuthoringActionResult
 {
-    fn to_skir_bytes(&self) -> Vec<u8> {
-        Self::serializer().to_bytes(self)
-    }
     fn outcome(&self) -> crate::SkirResponseOutcome {
         match self {
             crate::skirout::base::editor::v1::resource_operations::AuthoringActionResult::NeedsInput(_) | crate::skirout::base::editor::v1::resource_operations::AuthoringActionResult::Preview(_) => crate::SkirResponseOutcome::Success,
@@ -2962,9 +2906,6 @@ impl crate::SkirResponse
 impl crate::SkirResponse
     for crate::skirout::base::editor::v1::resource_operations::ResolveDropCandidatesResult
 {
-    fn to_skir_bytes(&self) -> Vec<u8> {
-        Self::serializer().to_bytes(self)
-    }
     fn outcome(&self) -> crate::SkirResponseOutcome {
         match self {
             crate::skirout::base::editor::v1::resource_operations::ResolveDropCandidatesResult::Resolved(_) => crate::SkirResponseOutcome::Success,
@@ -3005,9 +2946,6 @@ impl crate::SkirResponse
 impl crate::SkirResponse
     for crate::skirout::base::editor::v1::search::RealmPresentationSearchUpdate
 {
-    fn to_skir_bytes(&self) -> Vec<u8> {
-        Self::serializer().to_bytes(self)
-    }
     fn outcome(&self) -> crate::SkirResponseOutcome {
         match self {
             crate::skirout::base::editor::v1::search::RealmPresentationSearchUpdate::Snapshot(_) => crate::SkirResponseOutcome::Success,
@@ -3044,9 +2982,6 @@ impl crate::SkirResponse
 impl crate::SkirResponse
     for crate::skirout::base::editor::v1::search::CancelRealmPresentationSearchResult
 {
-    fn to_skir_bytes(&self) -> Vec<u8> {
-        Self::serializer().to_bytes(self)
-    }
     fn outcome(&self) -> crate::SkirResponseOutcome {
         match self {
             crate::skirout::base::editor::v1::search::CancelRealmPresentationSearchResult::Canceled => crate::SkirResponseOutcome::Success,
@@ -3081,9 +3016,6 @@ impl crate::SkirResponse
 impl crate::SkirResponse
     for crate::skirout::base::organization::v1::join_codes::WatchOrganizationJoinCodesResponse
 {
-    fn to_skir_bytes(&self) -> Vec<u8> {
-        Self::serializer().to_bytes(self)
-    }
     fn outcome(&self) -> crate::SkirResponseOutcome {
         match self {
             crate::skirout::base::organization::v1::join_codes::WatchOrganizationJoinCodesResponse::Snapshot(_) | crate::skirout::base::organization::v1::join_codes::WatchOrganizationJoinCodesResponse::Changed(_) => crate::SkirResponseOutcome::Success,
@@ -3109,9 +3041,6 @@ impl crate::SkirResponse
 impl crate::SkirResponse
     for crate::skirout::base::organization::v1::join_codes::GenerateOrganizationJoinCodeResponse
 {
-    fn to_skir_bytes(&self) -> Vec<u8> {
-        Self::serializer().to_bytes(self)
-    }
     fn outcome(&self) -> crate::SkirResponseOutcome {
         match self {
             crate::skirout::base::organization::v1::join_codes::GenerateOrganizationJoinCodeResponse::Success(_) => crate::SkirResponseOutcome::Success,
@@ -3156,9 +3085,6 @@ impl crate::SkirResponse
 impl crate::SkirResponse
     for crate::skirout::base::organization::v1::join_codes::RevokeOrganizationJoinCodeResponse
 {
-    fn to_skir_bytes(&self) -> Vec<u8> {
-        Self::serializer().to_bytes(self)
-    }
     fn outcome(&self) -> crate::SkirResponseOutcome {
         match self {
             crate::skirout::base::organization::v1::join_codes::RevokeOrganizationJoinCodeResponse::Success(_) => crate::SkirResponseOutcome::Success,
@@ -3197,9 +3123,6 @@ impl crate::SkirResponse
 impl crate::SkirResponse
     for crate::skirout::base::organization::v1::join_request::WatchOrganizationJoinRequestsResponse
 {
-    fn to_skir_bytes(&self) -> Vec<u8> {
-        Self::serializer().to_bytes(self)
-    }
     fn outcome(&self) -> crate::SkirResponseOutcome {
         match self {
             crate::skirout::base::organization::v1::join_request::WatchOrganizationJoinRequestsResponse::Snapshot(_) | crate::skirout::base::organization::v1::join_request::WatchOrganizationJoinRequestsResponse::Changed(_) => crate::SkirResponseOutcome::Success,
@@ -3223,9 +3146,6 @@ impl crate::SkirResponse
     }
 }
 impl crate::SkirResponse for crate::skirout::base::organization::v1::join_request::ApproveOrganizationJoinRequestsResponse {
-    fn to_skir_bytes(&self) -> Vec<u8> {
-        Self::serializer().to_bytes(self)
-    }
     fn outcome(&self) -> crate::SkirResponseOutcome {
         match self {
             crate::skirout::base::organization::v1::join_request::ApproveOrganizationJoinRequestsResponse::Success(_) => crate::SkirResponseOutcome::Success,
@@ -3279,9 +3199,6 @@ impl crate::SkirResponse for crate::skirout::base::organization::v1::join_reques
 impl crate::SkirResponse
     for crate::skirout::base::organization::v1::join_request::DeclineOrganizationJoinRequestResponse
 {
-    fn to_skir_bytes(&self) -> Vec<u8> {
-        Self::serializer().to_bytes(self)
-    }
     fn outcome(&self) -> crate::SkirResponseOutcome {
         match self {
             crate::skirout::base::organization::v1::join_request::DeclineOrganizationJoinRequestResponse::Success(_) => crate::SkirResponseOutcome::Success,
@@ -3320,9 +3237,6 @@ impl crate::SkirResponse
 impl crate::SkirResponse
     for crate::skirout::base::organization::v1::member::WatchOrganizationMembersResponse
 {
-    fn to_skir_bytes(&self) -> Vec<u8> {
-        Self::serializer().to_bytes(self)
-    }
     fn outcome(&self) -> crate::SkirResponseOutcome {
         match self {
             crate::skirout::base::organization::v1::member::WatchOrganizationMembersResponse::Snapshot(_) => crate::SkirResponseOutcome::Success,
@@ -3347,9 +3261,6 @@ impl crate::SkirResponse
 impl crate::SkirResponse
     for crate::skirout::base::organization::v1::member::UpdateOrganizationMemberRolesResponse
 {
-    fn to_skir_bytes(&self) -> Vec<u8> {
-        Self::serializer().to_bytes(self)
-    }
     fn outcome(&self) -> crate::SkirResponseOutcome {
         match self {
             crate::skirout::base::organization::v1::member::UpdateOrganizationMemberRolesResponse::Success(_) => crate::SkirResponseOutcome::Success,
@@ -3403,9 +3314,6 @@ impl crate::SkirResponse
 impl crate::SkirResponse
     for crate::skirout::base::organization::v1::member::RemoveOrganizationMemberResponse
 {
-    fn to_skir_bytes(&self) -> Vec<u8> {
-        Self::serializer().to_bytes(self)
-    }
     fn outcome(&self) -> crate::SkirResponseOutcome {
         match self {
             crate::skirout::base::organization::v1::member::RemoveOrganizationMemberResponse::Success(_) => crate::SkirResponseOutcome::Success,
@@ -3447,9 +3355,6 @@ impl crate::SkirResponse
 impl crate::SkirResponse
     for crate::skirout::base::organization::v1::organization::CreateOrganizationResponse
 {
-    fn to_skir_bytes(&self) -> Vec<u8> {
-        Self::serializer().to_bytes(self)
-    }
     fn outcome(&self) -> crate::SkirResponseOutcome {
         match self {
             crate::skirout::base::organization::v1::organization::CreateOrganizationResponse::Success(_) => crate::SkirResponseOutcome::Success,
@@ -3474,9 +3379,6 @@ impl crate::SkirResponse
 impl crate::SkirResponse
     for crate::skirout::base::organization::v1::organization::DeleteOrganizationResponse
 {
-    fn to_skir_bytes(&self) -> Vec<u8> {
-        Self::serializer().to_bytes(self)
-    }
     fn outcome(&self) -> crate::SkirResponseOutcome {
         match self {
             crate::skirout::base::organization::v1::organization::DeleteOrganizationResponse::Success(_) => crate::SkirResponseOutcome::Success,
@@ -3512,9 +3414,6 @@ impl crate::SkirResponse
 impl crate::SkirResponse
     for crate::skirout::base::organization::v1::role::WatchOrganizationRolesResponse
 {
-    fn to_skir_bytes(&self) -> Vec<u8> {
-        Self::serializer().to_bytes(self)
-    }
     fn outcome(&self) -> crate::SkirResponseOutcome {
         match self {
             crate::skirout::base::organization::v1::role::WatchOrganizationRolesResponse::List(_) | crate::skirout::base::organization::v1::role::WatchOrganizationRolesResponse::Add(_) | crate::skirout::base::organization::v1::role::WatchOrganizationRolesResponse::Update(_) | crate::skirout::base::organization::v1::role::WatchOrganizationRolesResponse::Remove(_) => crate::SkirResponseOutcome::Success,
@@ -3544,9 +3443,6 @@ impl crate::SkirResponse
 impl crate::SkirResponse
     for crate::skirout::base::organization::v1::user::WatchUserOrganizationsResponse
 {
-    fn to_skir_bytes(&self) -> Vec<u8> {
-        Self::serializer().to_bytes(self)
-    }
     fn outcome(&self) -> crate::SkirResponseOutcome {
         match self {
             crate::skirout::base::organization::v1::user::WatchUserOrganizationsResponse::Snapshot(_) | crate::skirout::base::organization::v1::user::WatchUserOrganizationsResponse::Changed(_) => crate::SkirResponseOutcome::Success,
@@ -3574,9 +3470,6 @@ impl crate::SkirResponse
 impl crate::SkirResponse
     for crate::skirout::base::organization::v1::user::WatchUserJoinRequestsResponse
 {
-    fn to_skir_bytes(&self) -> Vec<u8> {
-        Self::serializer().to_bytes(self)
-    }
     fn outcome(&self) -> crate::SkirResponseOutcome {
         match self {
             crate::skirout::base::organization::v1::user::WatchUserJoinRequestsResponse::Snapshot(_) | crate::skirout::base::organization::v1::user::WatchUserJoinRequestsResponse::Changed(_) => crate::SkirResponseOutcome::Success,
@@ -3604,9 +3497,6 @@ impl crate::SkirResponse
 impl crate::SkirResponse
     for crate::skirout::base::organization::v1::user::SubmitUserJoinRequestResponse
 {
-    fn to_skir_bytes(&self) -> Vec<u8> {
-        Self::serializer().to_bytes(self)
-    }
     fn outcome(&self) -> crate::SkirResponseOutcome {
         match self {
             crate::skirout::base::organization::v1::user::SubmitUserJoinRequestResponse::RequestMade(_) | crate::skirout::base::organization::v1::user::SubmitUserJoinRequestResponse::AutoAccepted(_) => crate::SkirResponseOutcome::Success,
@@ -3660,9 +3550,6 @@ impl crate::SkirResponse
 impl crate::SkirResponse
     for crate::skirout::base::organization::v1::user::CancelUserJoinRequestResponse
 {
-    fn to_skir_bytes(&self) -> Vec<u8> {
-        Self::serializer().to_bytes(self)
-    }
     fn outcome(&self) -> crate::SkirResponseOutcome {
         match self {
             crate::skirout::base::organization::v1::user::CancelUserJoinRequestResponse::Success(_) => crate::SkirResponseOutcome::Success,
@@ -3703,9 +3590,6 @@ impl crate::SkirResponse
 impl crate::SkirResponse
     for crate::skirout::base::service::v1::artifact::FetchSharedArtifactCatalogResponse
 {
-    fn to_skir_bytes(&self) -> Vec<u8> {
-        Self::serializer().to_bytes(self)
-    }
     fn outcome(&self) -> crate::SkirResponseOutcome {
         match self {
             crate::skirout::base::service::v1::artifact::FetchSharedArtifactCatalogResponse::Success(_) => crate::SkirResponseOutcome::Success,
@@ -3730,9 +3614,6 @@ impl crate::SkirResponse
 impl crate::SkirResponse
     for crate::skirout::base::service::v1::artifact::PublishSharedArtifactResponse
 {
-    fn to_skir_bytes(&self) -> Vec<u8> {
-        Self::serializer().to_bytes(self)
-    }
     fn outcome(&self) -> crate::SkirResponseOutcome {
         match self {
             crate::skirout::base::service::v1::artifact::PublishSharedArtifactResponse::Published(_) | crate::skirout::base::service::v1::artifact::PublishSharedArtifactResponse::Unchanged(_) => crate::SkirResponseOutcome::Success,
@@ -3766,9 +3647,6 @@ impl crate::SkirResponse
     }
 }
 impl crate::SkirResponse for crate::skirout::base::service::v1::artifact::ReadArtifactBlobResponse {
-    fn to_skir_bytes(&self) -> Vec<u8> {
-        Self::serializer().to_bytes(self)
-    }
     fn outcome(&self) -> crate::SkirResponseOutcome {
         match self {
             crate::skirout::base::service::v1::artifact::ReadArtifactBlobResponse::Success(_) => crate::SkirResponseOutcome::Success,
@@ -3805,9 +3683,6 @@ impl crate::SkirResponse for crate::skirout::base::service::v1::artifact::ReadAr
 impl crate::SkirResponse
     for crate::skirout::base::service::v1::artifact::BeginArtifactBlobWriteResponse
 {
-    fn to_skir_bytes(&self) -> Vec<u8> {
-        Self::serializer().to_bytes(self)
-    }
     fn outcome(&self) -> crate::SkirResponseOutcome {
         match self {
             crate::skirout::base::service::v1::artifact::BeginArtifactBlobWriteResponse::Accepted(_) => crate::SkirResponseOutcome::Success,
@@ -3844,9 +3719,6 @@ impl crate::SkirResponse
 impl crate::SkirResponse
     for crate::skirout::base::service::v1::artifact::WriteArtifactBlobChunkResponse
 {
-    fn to_skir_bytes(&self) -> Vec<u8> {
-        Self::serializer().to_bytes(self)
-    }
     fn outcome(&self) -> crate::SkirResponseOutcome {
         match self {
             crate::skirout::base::service::v1::artifact::WriteArtifactBlobChunkResponse::Accepted(_) => crate::SkirResponseOutcome::Success,
@@ -3885,9 +3757,6 @@ impl crate::SkirResponse
 impl crate::SkirResponse
     for crate::skirout::base::service::v1::artifact::CompleteArtifactBlobWriteResponse
 {
-    fn to_skir_bytes(&self) -> Vec<u8> {
-        Self::serializer().to_bytes(self)
-    }
     fn outcome(&self) -> crate::SkirResponseOutcome {
         match self {
             crate::skirout::base::service::v1::artifact::CompleteArtifactBlobWriteResponse::Success(_) => crate::SkirResponseOutcome::Success,
@@ -3924,9 +3793,6 @@ impl crate::SkirResponse
 impl crate::SkirResponse
     for crate::skirout::base::service::v1::artifact::FetchArtifactBlobMetadataResponse
 {
-    fn to_skir_bytes(&self) -> Vec<u8> {
-        Self::serializer().to_bytes(self)
-    }
     fn outcome(&self) -> crate::SkirResponseOutcome {
         match self {
             crate::skirout::base::service::v1::artifact::FetchArtifactBlobMetadataResponse::Success(_) => crate::SkirResponseOutcome::Success,
@@ -3961,9 +3827,6 @@ impl crate::SkirResponse
 impl crate::SkirResponse
     for crate::skirout::base::service::v1::identity::IssueServiceIdentityResponse
 {
-    fn to_skir_bytes(&self) -> Vec<u8> {
-        Self::serializer().to_bytes(self)
-    }
     fn outcome(&self) -> crate::SkirResponseOutcome {
         match self {
             crate::skirout::base::service::v1::identity::IssueServiceIdentityResponse::Success(_) => crate::SkirResponseOutcome::Success,
@@ -4025,9 +3888,6 @@ impl crate::SkirResponse
 impl crate::SkirResponse
     for crate::skirout::base::service::v1::organization::WatchOrganizationServicesResponse
 {
-    fn to_skir_bytes(&self) -> Vec<u8> {
-        Self::serializer().to_bytes(self)
-    }
     fn outcome(&self) -> crate::SkirResponseOutcome {
         match self {
             crate::skirout::base::service::v1::organization::WatchOrganizationServicesResponse::List(_) => crate::SkirResponseOutcome::Success,
@@ -4052,9 +3912,6 @@ impl crate::SkirResponse
 impl crate::SkirResponse
     for crate::skirout::base::service::v1::organization::UpdateOrganizationServiceResponse
 {
-    fn to_skir_bytes(&self) -> Vec<u8> {
-        Self::serializer().to_bytes(self)
-    }
     fn outcome(&self) -> crate::SkirResponseOutcome {
         match self {
             crate::skirout::base::service::v1::organization::UpdateOrganizationServiceResponse::Success(_) => crate::SkirResponseOutcome::Success,
@@ -4097,9 +3954,6 @@ impl crate::SkirResponse
     }
 }
 impl crate::SkirResponse for crate::skirout::base::service::v1::registration::BindServiceResponse {
-    fn to_skir_bytes(&self) -> Vec<u8> {
-        Self::serializer().to_bytes(self)
-    }
     fn outcome(&self) -> crate::SkirResponseOutcome {
         match self {
             crate::skirout::base::service::v1::registration::BindServiceResponse::Success(_) => crate::SkirResponseOutcome::Success,
@@ -4140,9 +3994,6 @@ impl crate::SkirResponse for crate::skirout::base::service::v1::registration::Bi
 impl crate::SkirResponse
     for crate::skirout::base::service::v1::registration::UnbindServiceResponse
 {
-    fn to_skir_bytes(&self) -> Vec<u8> {
-        Self::serializer().to_bytes(self)
-    }
     fn outcome(&self) -> crate::SkirResponseOutcome {
         match self {
             crate::skirout::base::service::v1::registration::UnbindServiceResponse::Success(_) => crate::SkirResponseOutcome::Success,
@@ -4178,9 +4029,6 @@ impl crate::SkirResponse
     }
 }
 impl crate::SkirResponse for crate::skirout::base::service::v1::rollout::ProbeRealmHostsResponse {
-    fn to_skir_bytes(&self) -> Vec<u8> {
-        Self::serializer().to_bytes(self)
-    }
     fn outcome(&self) -> crate::SkirResponseOutcome {
         match self {
             crate::skirout::base::service::v1::rollout::ProbeRealmHostsResponse::Present(_) => {
@@ -4213,9 +4061,6 @@ impl crate::SkirResponse for crate::skirout::base::service::v1::rollout::ProbeRe
 impl crate::SkirResponse
     for crate::skirout::base::service::v1::rollout::ApplyRolloutCommandResponse
 {
-    fn to_skir_bytes(&self) -> Vec<u8> {
-        Self::serializer().to_bytes(self)
-    }
     fn outcome(&self) -> crate::SkirResponseOutcome {
         match self {
             crate::skirout::base::service::v1::rollout::ApplyRolloutCommandResponse::Accepted(_) => crate::SkirResponseOutcome::Success,
@@ -4262,9 +4107,6 @@ impl crate::SkirResponse
 impl crate::SkirResponse
     for crate::skirout::base::service::v1::rollout::QueryParticipantStatusResponse
 {
-    fn to_skir_bytes(&self) -> Vec<u8> {
-        Self::serializer().to_bytes(self)
-    }
     fn outcome(&self) -> crate::SkirResponseOutcome {
         match self {
             crate::skirout::base::service::v1::rollout::QueryParticipantStatusResponse::Status(
@@ -4293,9 +4135,6 @@ impl crate::SkirResponse
 impl crate::SkirResponse
     for crate::skirout::base::service::v1::status::QueryServiceBindingResponse
 {
-    fn to_skir_bytes(&self) -> Vec<u8> {
-        Self::serializer().to_bytes(self)
-    }
     fn outcome(&self) -> crate::SkirResponseOutcome {
         match self {
             crate::skirout::base::service::v1::status::QueryServiceBindingResponse::Binding(_) => crate::SkirResponseOutcome::Success,
@@ -4333,9 +4172,6 @@ impl crate::SkirResponse
 impl crate::SkirResponse
     for crate::skirout::base::service::v1::status::EnsureRegistrationLeaseResponse
 {
-    fn to_skir_bytes(&self) -> Vec<u8> {
-        Self::serializer().to_bytes(self)
-    }
     fn outcome(&self) -> crate::SkirResponseOutcome {
         match self {
             crate::skirout::base::service::v1::status::EnsureRegistrationLeaseResponse::Issued(_) | crate::skirout::base::service::v1::status::EnsureRegistrationLeaseResponse::AlreadyBound(_) => crate::SkirResponseOutcome::Success,
@@ -4374,9 +4210,6 @@ impl crate::SkirResponse
 impl crate::SkirResponse
     for crate::skirout::base::service::v1::topology::ConfigureServiceHostResponse
 {
-    fn to_skir_bytes(&self) -> Vec<u8> {
-        Self::serializer().to_bytes(self)
-    }
     fn outcome(&self) -> crate::SkirResponseOutcome {
         match self {
             crate::skirout::base::service::v1::topology::ConfigureServiceHostResponse::Success(_) => crate::SkirResponseOutcome::Success,
@@ -4426,9 +4259,6 @@ impl crate::SkirResponse
 impl crate::SkirResponse
     for crate::skirout::base::service::v1::topology::WatchOrganizationTopologyResponse
 {
-    fn to_skir_bytes(&self) -> Vec<u8> {
-        Self::serializer().to_bytes(self)
-    }
     fn outcome(&self) -> crate::SkirResponseOutcome {
         match self {
             crate::skirout::base::service::v1::topology::WatchOrganizationTopologyResponse::List(_) => crate::SkirResponseOutcome::Success,
@@ -4453,9 +4283,6 @@ impl crate::SkirResponse
 impl crate::SkirResponse
     for crate::skirout::base::service::v1::topology::WatchHostExecutionResponse
 {
-    fn to_skir_bytes(&self) -> Vec<u8> {
-        Self::serializer().to_bytes(self)
-    }
     fn outcome(&self) -> crate::SkirResponseOutcome {
         match self {
             crate::skirout::base::service::v1::topology::WatchHostExecutionResponse::Desired(_) => {
@@ -4484,9 +4311,6 @@ impl crate::SkirResponse
 impl crate::SkirResponse
     for crate::skirout::base::service::v1::topology::ReportHostExecutionResponse
 {
-    fn to_skir_bytes(&self) -> Vec<u8> {
-        Self::serializer().to_bytes(self)
-    }
     fn outcome(&self) -> crate::SkirResponseOutcome {
         match self {
             crate::skirout::base::service::v1::topology::ReportHostExecutionResponse::Success(_) => crate::SkirResponseOutcome::Success,
@@ -4524,9 +4348,6 @@ impl crate::SkirResponse
 impl crate::SkirResponse
     for crate::skirout::base::service::v1::topology::GetServiceMessagingScopeResponse
 {
-    fn to_skir_bytes(&self) -> Vec<u8> {
-        Self::serializer().to_bytes(self)
-    }
     fn outcome(&self) -> crate::SkirResponseOutcome {
         match self {
             crate::skirout::base::service::v1::topology::GetServiceMessagingScopeResponse::Found(_) => crate::SkirResponseOutcome::Success,
@@ -4564,9 +4385,6 @@ impl crate::SkirResponse
 impl crate::SkirResponse
     for crate::skirout::base::service::v1::topology::RegisterServiceHostResponse
 {
-    fn to_skir_bytes(&self) -> Vec<u8> {
-        Self::serializer().to_bytes(self)
-    }
     fn outcome(&self) -> crate::SkirResponseOutcome {
         match self {
             crate::skirout::base::service::v1::topology::RegisterServiceHostResponse::Success(

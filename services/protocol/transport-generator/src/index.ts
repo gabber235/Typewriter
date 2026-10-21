@@ -5,7 +5,6 @@ import type { CodeGenerator } from "skir-internal";
 import { Config } from "./config.js";
 import { emitDart } from "./routes/emit/dart.js";
 import { emitKotlin } from "./routes/emit/kotlin.js";
-import { methodResponses } from "./outcomes.js";
 import { emitRust } from "./routes/emit/rust.js";
 import { parseManifest } from "./routes/manifest.js";
 import { resolveRoutes, type ResolvedRoutes } from "./routes/resolve.js";
@@ -25,7 +24,7 @@ type Emitter = (
 const EMITTERS: Record<Target, Emitter> = {
   kotlin: (routes, symbols) => emitKotlin(routes, symbols.kotlin),
   dart: (routes, symbols) => emitDart(routes, symbols.dart),
-  rust: (routes, symbols, input) => emitRust(routes, symbols.rust, methodResponses(input)),
+  rust: (routes, symbols, input) => emitRust(routes, symbols.rust, input),
 };
 
 function assertRelative(file: CodeGenerator.OutputFile): void {

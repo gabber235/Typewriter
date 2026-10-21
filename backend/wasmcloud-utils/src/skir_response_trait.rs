@@ -1,3 +1,5 @@
+use crate::SkirType;
+
 /// Runtime classification for a Skir response variant.
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
 pub enum SkirResponseOutcome {
@@ -28,12 +30,14 @@ impl SkirResponseOutcome {
 /// this trait to serialize replies, classify telemetry, expose a stable variant slug, and
 /// construct the fallback response used when a handler fails before producing a domain
 /// result.
-pub trait SkirResponse: Sized {
+pub trait SkirResponse: SkirType {
     /// Serialize the response using its generated SKIR serializer.
     ///
     /// The bytes are the wire payload for messaging replies and do not include a
     /// transport envelope.
-    fn to_skir_bytes(&self) -> Vec<u8>;
+    fn to_skir_bytes(&self) -> Vec<u8> {
+        Self::serializer().to_bytes(self)
+    }
 
     /// Classify this variant for handler control flow and telemetry.
     fn outcome(&self) -> SkirResponseOutcome;
@@ -166,8 +170,9 @@ where
 /// Remove the prefix SurrealDB adds when a structured `THROW` crosses a query block.
 ///
 /// Only this known wrapper is removed. Other messages remain unchanged so unknown
-/// database failures are not mistaken for domain slugs.
-fn database_domain_slug(message: &str) -> &str {
+/// database failures are not mistaken for domain slugs. Pass the result to
+/// [`SkirResponse::domain_error_from_slug`] to build the matching domain response.
+pub fn database_domain_slug(message: &str) -> &str {
     message.trim_start_matches("An error occurred: ")
 }
 

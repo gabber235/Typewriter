@@ -18,7 +18,8 @@ function literal(value: string): string {
  * Emits `impl crate::SkirResponse` for one method response enum. Outcomes follow the variant names;
  * internal_error and the generated unknown variant are internal. Messages come from variant doc
  * comments, never from payloads. Every domain error variant can be built from its slug with a
- * default payload, which `skir_domain_result!` uses for database rejections.
+ * default payload, which `skir_domain_result!` uses for database rejections. Serialization is the
+ * trait default over the record's `crate::SkirType` implementation.
  */
 function emitResponse(
   { response }: MethodResponse,
@@ -36,9 +37,6 @@ function emitResponse(
   const domainErrors = variants.filter(({ outcome }) => outcome === "domain_error");
   return [
     `impl crate::SkirResponse for ${symbols.record(location).reference} {`,
-    "    fn to_skir_bytes(&self) -> Vec<u8> {",
-    "        Self::serializer().to_bytes(self)",
-    "    }",
     "    fn outcome(&self) -> crate::SkirResponseOutcome {",
     ...(outcomeArms.length === 0
       ? [`        ${OUTCOME.internal_error}`]

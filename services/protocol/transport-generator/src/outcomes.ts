@@ -1,5 +1,7 @@
 import type { CodeGenerator, Field, Method, Module, RecordLocation, Token } from "skir-internal";
 
+import { modulesInPathOrder } from "./modules.js";
+
 /**
  * Outcome classification of Skir responses. The variant name is the single source: every emitter
  * renders the result of {@link classifyVariant}, so Kotlin, Rust and the panel classify a response
@@ -127,12 +129,7 @@ export interface MethodResponse {
  */
 export function methodResponses(input: CodeGenerator.Input<unknown>): MethodResponse[] {
   const seen = new Set<string>();
-  // Skir hands modules over in collection order, which varies between runs; module paths keep
-  // the output stable.
-  const modules = [...input.modules].sort((left, right) =>
-    left.path < right.path ? -1 : left.path > right.path ? 1 : 0,
-  );
-  return modules.flatMap((module) =>
+  return modulesInPathOrder(input).flatMap((module) =>
     module.methods.flatMap((method): MethodResponse[] => {
       const type = method.responseType;
       const location = type?.kind === "record" ? input.recordMap.get(type.key) : undefined;

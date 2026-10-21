@@ -18,7 +18,10 @@ pub use surrealdb_component_sdk::{
 
 pub mod organization;
 pub mod service;
+mod skir_db;
 pub mod topology;
+
+pub use skir_db::{SkirDb, SkirType};
 
 /// Maximum number of attempts made for a transaction when the database reports a conflict.
 pub const TRANSACTION_CONFLICT_MAX_ATTEMPTS: u32 = 3;
