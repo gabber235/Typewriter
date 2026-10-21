@@ -72,7 +72,8 @@ class Communicator(
      *
      * Replies accumulate until the supplied policy completes or its timeout expires. Collection cancellation
      * releases the channel. The transport does not provide exactly one reply per logical host; callers choose
-     * validation and completion rules.
+     * validation and completion rules. A responder whose reply could not be delivered complete is emitted as a
+     * failure and collection continues with the other responders; any other transport failure ends collection.
      */
     fun <Address : Any, Request : Any, Response : Any> scatter(
         contract: ScatterContract<Address, Request, Response>,
@@ -170,7 +171,7 @@ class Communicator(
                                                     delivery.error.toCommunicationError(contract.failureSlug),
                                                 ),
                                             )
-                                            return@withTimeoutOrNull true
+                                            if (!delivery.isResponderFailure) return@withTimeoutOrNull true
                                         }
 
                                         TransportDelivery.Completed -> {

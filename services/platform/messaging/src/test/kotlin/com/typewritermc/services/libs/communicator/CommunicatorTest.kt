@@ -23,6 +23,7 @@ import com.typewritermc.services.libs.communicator.result.CommunicationResult
 import com.typewritermc.services.libs.communicator.router.RouterResult
 import com.typewritermc.services.libs.communicator.router.communicatorRoutes
 import com.typewritermc.services.libs.communicator.testing.FakeMessageTransport
+import com.typewritermc.services.libs.communicator.transfer.TransferTooLarge
 import com.typewritermc.services.libs.communicator.transport.InboundMessage
 import com.typewritermc.services.libs.communicator.transport.MessageHeaders
 import com.typewritermc.services.libs.communicator.transport.MessageTransport
@@ -157,6 +158,42 @@ val CommunicatorTest by testSuite {
                 span.attributes[AttributeKey.longKey("messaging.reply.count")] shouldBe 2L
                 span.attributes[AttributeKey.stringKey("messaging.destination.name")] shouldBe "service.realm.get"
                 span.attributes[AttributeKey.stringKey("operation.outcome")] shouldBe "success"
+            }
+        }
+    }
+
+    test("scatter reports one responder's transfer failure and keeps collecting") {
+        runTest {
+            fixture().use { (client, fake, _) ->
+                val result =
+                    async {
+                        client
+                            .scatter(
+                                scatter,
+                                Target("realm"),
+                                "probe",
+                                ScatterPolicy(2.seconds) { responses -> responses.size == 1 },
+                            ).toList()
+                    }
+                runCurrent()
+                val inbox =
+                    requireNotNull(
+                        fake.actions
+                            .filterIsInstance<FakeMessageTransport.Action.Publish>()
+                            .single()
+                            .message.replyTo,
+                    )
+                val tooLarge = TransferTooLarge(size = 10, limit = 5)
+
+                fake.deliver(TransportDelivery.Failure(TransportError.Failure(tooLarge)))
+                fake.deliver(TransportDelivery.Message(InboundMessage(inbox, "host-b".encodeToByteArray())))
+
+                result.await() shouldBe
+                    listOf(
+                        CommunicationResult.Failure(CommunicationError.Transport(scatter.failureSlug, tooLarge)),
+                        CommunicationResult.Success("host-b"),
+                    )
+                fake.activeSubscriptionCount shouldBe 0
             }
         }
     }

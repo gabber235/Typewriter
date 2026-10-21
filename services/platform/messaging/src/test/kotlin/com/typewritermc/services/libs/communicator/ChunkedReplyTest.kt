@@ -133,6 +133,28 @@ val ChunkedReplyTest by testSuite {
         channel.close()
     }
 
+    test("one responder's framing failure does not end a reply channel") {
+        val broker = LoopbackBroker()
+        val transport = broker.transport()
+        val channel = (transport.openReplyChannel() as TransportResult.Success).value
+        transport.reply(OutboundMessage(channel.address, bytes(LIMITS.maxEncodedSize.toInt() + 1)))
+        transport.reply(OutboundMessage(channel.address, bytes(LIMITS.chunkBytes * 2 + 1, seed = 3)))
+        val (tooLargeFrame, partialFrame) = broker.takePublished()
+        val framed = bytes(LIMITS.chunkBytes * 2 + 1, seed = 7)
+        transport.reply(OutboundMessage(channel.address, framed))
+        broker.deliver(channel.address.value, listOf(tooLargeFrame, partialFrame, partialFrame.interrupted()) + broker.takePublished())
+
+        val deliveries = channel.deliveries.take(3).toList()
+
+        deliveries[0].failureCause().shouldBeInstanceOf<TransferTooLarge>()
+        deliveries[1].failureCause().shouldBeInstanceOf<TransferInterrupted>()
+        (deliveries[2] as TransportDelivery.Message)
+            .message.payload
+            .toByteArray()
+            .toList() shouldBe framed.toList()
+        channel.close()
+    }
+
     test("cancellation closes the reply inbox") {
         coroutineScope {
             val broker = LoopbackBroker(respond = false)
@@ -157,6 +179,18 @@ private fun bytes(
 ) = ByteArray(size) { (it * 31 + seed).toByte() }
 
 private fun NatsClientMessage.tampered() = copy(payload = Payload.copyOf(payload!!.toByteArray().also { it[0] = (it[0] + 1).toByte() }))
+
+private fun NatsClientMessage.interrupted() =
+    copy(
+        payload = Payload.Empty,
+        headers =
+            mapOf(
+                "Typewriter-Reply" to headers!!.getValue("Typewriter-Reply"),
+                "Typewriter-Transfer-Failure" to listOf("interrupted"),
+            ),
+    )
+
+private fun TransportDelivery.failureCause(): Throwable? = ((this as TransportDelivery.Failure).error as TransportError.Failure).cause
 
 private fun TransportResult<Unit>.failureCause(): Throwable? = ((this as TransportResult.Failure).error as TransportError.Failure).cause
 

@@ -231,8 +231,10 @@ private class NatsInbox(
 )
 
 /**
- * A reply channel whose deliveries are complete replies. Each collection assembles frames by reply id; a framing
- * failure is delivered as a terminal [TransportDelivery.Failure] whose cause is the [TransferFailure].
+ * A reply channel whose deliveries are complete replies. Each collection assembles frames by reply id. A framing
+ * failure belongs to one responder's reply: it is delivered as a [TransportDelivery.Failure] whose cause is the
+ * [TransferFailure], and the channel keeps delivering the other responders' replies. Only a failure of the
+ * underlying subscription ends the deliveries.
  */
 private class NatsReplyChannel(
     private val inbox: NatsInbox,
@@ -245,10 +247,7 @@ private class NatsReplyChannel(
             val assembler = ReplyAssembler(limits)
             inbox.subscription.deliveries
                 .mapNotNull { delivery -> delivery.assembledBy(assembler) }
-                .transformWhile { delivery ->
-                    emit(delivery)
-                    delivery !is TransportDelivery.Failure
-                }.collect { emit(it) }
+                .collect { emit(it) }
         }
 
     override suspend fun close() = inbox.subscription.close()

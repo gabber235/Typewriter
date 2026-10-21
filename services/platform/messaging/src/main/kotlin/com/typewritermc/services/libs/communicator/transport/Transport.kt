@@ -2,6 +2,7 @@ package com.typewritermc.services.libs.communicator.transport
 
 import com.typewritermc.services.libs.communicator.address.AddressPattern
 import com.typewritermc.services.libs.communicator.address.MessageAddress
+import com.typewritermc.services.libs.communicator.transfer.TransferFailure
 import kotlinx.coroutines.flow.Flow
 import java.util.ArrayList
 import java.util.Collections
@@ -215,7 +216,13 @@ sealed interface TransportDelivery {
 
     data class Failure(
         val error: TransportError,
-    ) : TransportDelivery
+    ) : TransportDelivery {
+        /**
+         * Whether this failure belongs to one responder's reply, which a reply channel could not assemble, rather
+         * than to the subscription. A [ReplyChannel] keeps delivering after such a failure.
+         */
+        val isResponderFailure: Boolean get() = error.cause is TransferFailure
+    }
 
     data object Completed : TransportDelivery
 }
@@ -236,8 +243,9 @@ interface TransportSubscription {
  * Owns a temporary subscription at a transport selected reply address.
  *
  * Use for scatter replies rather than inventing an inbox incompatible with transport permissions. Deliveries are
- * complete replies: a transport that frames large replies assembles them per responder before delivering. The
- * acquiring caller must close it.
+ * complete replies: a transport that frames large replies assembles them per responder before delivering. A reply
+ * one responder could not deliver complete arrives as a [TransportDelivery.Failure] whose cause is a
+ * [TransferFailure] and does not end the deliveries; any other failure is terminal. The acquiring caller must close it.
  */
 interface ReplyChannel {
     val address: MessageAddress
