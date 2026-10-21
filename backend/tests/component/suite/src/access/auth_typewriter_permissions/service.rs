@@ -49,15 +49,10 @@ fn assert_published_content_access(permissions: &Permissions, organization: &str
         &permissions.publish,
         &format!("{request}.editor.authoring.compiled.query")
     ));
-    for suffix in [
-        "editor.authoring.compiled.changed",
-        "editor.authoring.compiled.query.transfer_one",
-    ] {
-        assert!(permits(
-            &permissions.subscribe,
-            &format!("{events}.{suffix}")
-        ));
-    }
+    assert!(permits(
+        &permissions.subscribe,
+        &format!("{events}.editor.authoring.compiled.changed")
+    ));
     for suffix in [
         "editor.authoring.edit.commit",
         "editor.authoring.type.commit",
@@ -69,9 +64,10 @@ fn assert_published_content_access(permissions: &Permissions, organization: &str
             &format!("{request}.{suffix}")
         ));
     }
+    // The content query replies on the service inbox, so it has no update channel to subscribe to.
     assert!(!permits(
         &permissions.subscribe,
-        &format!("{events}.editor.authoring.compiled.query.transfer_one.extra")
+        &format!("{events}.editor.authoring.compiled.query.transfer_one")
     ));
     for (other_organization, other_realm) in [
         (organization, "foreign_realm"),
@@ -83,17 +79,12 @@ fn assert_published_content_access(permissions: &Permissions, organization: &str
                 "service.to.{other_realm}.organization.{other_organization}.realm.editor.authoring.compiled.query"
             )
         ));
-        for suffix in [
-            "editor.authoring.compiled.changed",
-            "editor.authoring.compiled.query.transfer_one",
-        ] {
-            assert!(!permits(
-                &permissions.subscribe,
-                &format!(
-                    "service.from.{other_realm}.organization.{other_organization}.realm.{suffix}"
-                )
-            ));
-        }
+        assert!(!permits(
+            &permissions.subscribe,
+            &format!(
+                "service.from.{other_realm}.organization.{other_organization}.realm.editor.authoring.compiled.changed"
+            )
+        ));
     }
 }
 
@@ -233,15 +224,10 @@ async fn attached_service_receives_only_its_realm_permissions(
             &format!("service.to.quests.organization.writers.realm.{suffix}")
         ));
     }
-    for suffix in [
-        "editor.authoring.compiled.changed",
-        "editor.authoring.compiled.query.transfer_one",
-    ] {
-        assert!(!permits(
-            &response.permissions.publish,
-            &format!("service.from.quests.organization.writers.realm.{suffix}")
-        ));
-    }
+    assert!(!permits(
+        &response.permissions.publish,
+        "service.from.quests.organization.writers.realm.editor.authoring.compiled.changed"
+    ));
     let publish = &response.permissions.publish.allow;
     assert!(publish.contains(&"cloud.to.service.engine_one.execution.watch".into()));
     assert!(publish.contains(&"cloud.to.service.engine_one.execution.register".into()));
@@ -353,16 +339,24 @@ async fn realm_service_executes_realm_routes_and_coordinates_hosts(
         )));
     }
     for suffix in [
-        "editor.catalog.fetch.*",
         "editor.catalog.invalidate",
         "editor.presentation.search",
         "editor.authoring.changed",
-        "editor.authoring.state.query.*",
         "editor.authoring.compiled.changed",
-        "editor.authoring.compiled.query.*",
         "editor.authoring.publication.watch",
     ] {
         assert!(publish.contains(&format!(
+            "service.from.quests.organization.writers.realm.{suffix}"
+        )));
+    }
+    // Bulk read replies go to the requester inbox under the response permission.
+    for suffix in [
+        "editor.catalog.fetch.*",
+        "editor.authoring.state.query.*",
+        "editor.authoring.compiled.query.*",
+        "editor.authoring.publication.query.*",
+    ] {
+        assert!(!publish.contains(&format!(
             "service.from.quests.organization.writers.realm.{suffix}"
         )));
     }

@@ -268,12 +268,9 @@ async fn member_receives_all_organization_capabilities(
         "cloud.from.organization.writers.services.watch",
         "cloud.from.organization.writers.topology.watch",
         "service.from.*.organization.writers.realm.editor.catalog.invalidate",
-        "service.from.*.organization.writers.realm.editor.catalog.fetch.*",
         "service.from.*.organization.writers.realm.editor.presentation.search",
         "service.from.*.organization.writers.realm.editor.authoring.changed",
-        "service.from.*.organization.writers.realm.editor.authoring.state.query.*",
         "service.from.*.organization.writers.realm.editor.authoring.compiled.changed",
-        "service.from.*.organization.writers.realm.editor.authoring.compiled.query.*",
         "service.from.*.organization.writers.realm.editor.authoring.publication.watch",
         "typewriter.presence.organization.writers.user.*",
     ] {
@@ -287,6 +284,11 @@ async fn member_receives_all_organization_capabilities(
         "editor.authoring.compiled.activated",
         "editor.authoring.compiled.watch",
         "editor.authoring.snapshot.query.*",
+        // Bulk reads reply on the session inbox; members never subscribe to other transfers.
+        "editor.catalog.fetch.*",
+        "editor.authoring.state.query.*",
+        "editor.authoring.compiled.query.*",
+        "editor.authoring.publication.query.*",
     ] {
         assert!(subscribe.iter().all(|subject| !subject.ends_with(obsolete)));
     }
@@ -327,8 +329,9 @@ async fn member_reaches_every_realm_of_its_organization_only(
         publish.contains(&"service.to.*.organization.writers.realm.editor.catalog.fetch".into())
     );
     assert!(
-        subscribe
-            .contains(&"service.from.*.organization.writers.realm.editor.catalog.fetch.*".into())
+        subscribe.contains(
+            &"service.from.*.organization.writers.realm.editor.catalog.invalidate".into()
+        )
     );
     let realm_grants = publish
         .iter()
@@ -386,7 +389,7 @@ async fn punctuation_in_record_keys_remains_raw_in_generated_grants(
             .contains(&"service.to.*.organization.writers-world.realm.editor.catalog.fetch".into())
     );
     assert!(response.permissions.subscribe.allow.contains(
-        &"service.from.*.organization.writers-world.realm.editor.catalog.fetch.*".into()
+        &"service.from.*.organization.writers-world.realm.editor.catalog.invalidate".into()
     ));
     assert!(
         response
