@@ -1,22 +1,20 @@
 package com.typewritermc.realm.repository
 
 import com.surrealdb.Surreal
-import com.typewritermc.authoring.CommitResult
-import com.typewritermc.authoring.EditIntent
-import com.typewritermc.authoring.skir.SkirAuthoringOperationCodec
+import com.typewritermc.authoring.requireValid
 import com.typewritermc.configuration.field
 import com.typewritermc.configuration.name
 import com.typewritermc.realm.authoring.InMemoryAuthoringViewStore
 import com.typewritermc.realm.checking.TestCatalogLease
 import com.typewritermc.realm.schema.MigrationResources
 import com.typewritermc.realm.schema.openTestDatabase
-import com.typewritermc.types.ResourceId
 import com.typewritermc.types.of
 import com.typewritermc.types.requireValid
-import com.typewritermc.types.skir.getOrThrow
 import de.infix.testBalloon.framework.core.testSuite
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.types.shouldBeInstanceOf
+import skirout.editor.v1.authoring.CommitPreparedEditResponse
+import skirout.editor.v1.authoring.EditIntent
 import skirout.editor.v1.catalog.EditorCatalog
 import skirout.editor.v1.catalog.EndpointBindingTemplate
 import skirout.editor.v1.catalog.EndpointCardinality
@@ -31,6 +29,7 @@ import skirout.editor.v1.type_catalog.NamedTypeUse
 import skirout.editor.v1.type_catalog.RelationFamilyId
 import skirout.editor.v1.type_catalog.RelationId
 import skirout.editor.v1.type_catalog.RelativeFieldPattern
+import skirout.editor.v1.type_catalog.ResourceId
 import skirout.editor.v1.type_catalog.TypeDefinitionId
 import skirout.editor.v1.type_catalog.TypeTemplate
 import skirout.editor.v1.type_catalog.TypeUse
@@ -40,8 +39,8 @@ import skirout.editor.v1.catalog.EndpointDefinition as WireEndpoint
 val PanelCreationCommitTest by testSuite {
     test("the panel page and Book creation commits into the Library through Realm and survives reload") {
         val snapshot = EditorCatalog.serializer.fromBytes(panelCreationFixture("catalog.skir"))
-        val seed = SkirAuthoringOperationCodec.decode(WireEdit.serializer.fromBytes(panelCreationFixture("seed.skir"))).getOrThrow()
-        val edit = SkirAuthoringOperationCodec.decode(WireEdit.serializer.fromBytes(panelCreationFixture("edit.skir"))).getOrThrow()
+        val seed = WireEdit.serializer.fromBytes(panelCreationFixture("seed.skir")).requireValid()
+        val edit = WireEdit.serializer.fromBytes(panelCreationFixture("edit.skir")).requireValid()
         val catalog = panelCreationCatalog(snapshot)
         Surreal().use { database ->
             database.openTestDatabase("panel_creation")
@@ -49,22 +48,22 @@ val PanelCreationCommitTest by testSuite {
             val storage = SurrealAuthoringStorage(database)
             val views = InMemoryAuthoringViewStore(catalog, storage.readCoherent())
             val owner = RealmAuthoringOwner(storage, views)
-            owner.commit(seed) shouldBe CommitResult.Committed
+            owner.commit(seed) shouldBe CommitPreparedEditResponse.COMMITTED
             storage.readCoherent().resources.size shouldBe 1
             val broken =
                 edit.copy(
                     intents =
                         edit.intents.map { intent ->
-                            if (intent is EditIntent.ConnectRelation) {
-                                intent.copy(intent = intent.intent.copy(target = ResourceId("absent")))
+                            if (intent is EditIntent.ConnectRelationWrapper) {
+                                EditIntent.ConnectRelationWrapper(intent.value.copy(target = ResourceId(value = "absent")))
                             } else {
                                 intent
                             }
                         },
                 )
-            owner.commit(broken).shouldBeInstanceOf<CommitResult.Rejected>()
+            owner.commit(broken).shouldBeInstanceOf<CommitPreparedEditResponse.RejectedErrorWrapper>()
             storage.readCoherent().resources.size shouldBe 1
-            owner.commit(edit) shouldBe CommitResult.Committed
+            owner.commit(edit) shouldBe CommitPreparedEditResponse.COMMITTED
             val saved = storage.readCoherent()
             saved.resources.size shouldBe 3
             val links =

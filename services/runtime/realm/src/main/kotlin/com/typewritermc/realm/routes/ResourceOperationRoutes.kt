@@ -1,7 +1,5 @@
 package com.typewritermc.realm.routes
 
-import com.typewritermc.authoring.CounterpartChoice
-import com.typewritermc.authoring.skir.SkirAuthoringOperationCodec
 import com.typewritermc.authoring.text
 import com.typewritermc.capability.RealmCapabilityPermissionDeniedException
 import com.typewritermc.operations.OperationInvocation
@@ -20,12 +18,14 @@ import com.typewritermc.realm.authoring.ResourceOperationRuntime
 import com.typewritermc.realm.authoring.StaleOperationObservation
 import com.typewritermc.services.libs.communicator.router.CommunicatorRoutesBuilder
 import com.typewritermc.services.libs.utils.rethrowExceptional
-import com.typewritermc.types.ResourceId
 import com.typewritermc.types.requirePortable
 import com.typewritermc.types.requireValid
-import com.typewritermc.types.skir.getOrThrow
+import com.typewritermc.types.toResourceId
+import com.typewritermc.types.toResourceIds
+import com.typewritermc.types.unknownVariant
 import skirout.editor.v1.authoring.AuthoringDiagnostic
 import skirout.editor.v1.authoring.AuthoringObservationId
+import skirout.editor.v1.authoring.CounterpartChoice
 import skirout.editor.v1.resource_operations.AuthoringActionResult
 import skirout.editor.v1.resource_operations.OperationInputProblem
 import skirout.editor.v1.resource_operations.OperationSelectionEffect
@@ -41,12 +41,11 @@ import skirout.editor.v1.resource_operations.ResolveResourceOperationsResult
 import skirout.editor.v1.type_catalog.AuthoringRecord
 import skirout.editor.v1.type_catalog.CapabilityId
 import skirout.editor.v1.type_catalog.CatalogGeneration
+import skirout.editor.v1.type_catalog.ResourceId
 import skirout.editor.v1.type_catalog.ValueLocation
-import skirout.editor.v1.authoring.CounterpartChoice as WireCounterpart
 import skirout.editor.v1.resource_operations.OperationInvocation as SkirOperationInvocation
 import skirout.editor.v1.resource_operations.PreparationChoice as WireChoice
 import skirout.editor.v1.resource_operations.PreparationChoiceAnswer as WireAnswer
-import skirout.editor.v1.type_catalog.ResourceId as SkirResourceId
 
 /**
  * Adapts operation requests on generated Realm routes into validated working observations.
@@ -217,16 +216,10 @@ internal class ResourceOperationRoutes(
                     AuthoringActionResult.createPreview(
                         invocationId = request.invocation.invocationId,
                         inputRevision = request.inputRevision,
-                        edit = SkirAuthoringOperationCodec.encode(result.edit).getOrThrow(),
+                        edit = result.edit,
                         confirmation = result.confirmation,
                         selection =
-                            result.selection?.let {
-                                OperationSelectionEffect.ReplaceWrapper(
-                                    it.map { id ->
-                                        SkirResourceId(value = id.value)
-                                    },
-                                )
-                            }
+                            result.selection?.let(OperationSelectionEffect::ReplaceWrapper)
                                 ?: OperationSelectionEffect.UNCHANGED,
                     )
                 }
@@ -338,8 +331,8 @@ internal data class DecodedOperationContext(
 
 internal fun OperationWorkingContext.decodeWorkingContext(): DecodedOperationContext {
     require(confirmedObservation.value.isNotBlank()) { "The saved authoring observation is required." }
-    val upserts = overlay.upserts.map { ResourceId(it.resource.value) to it.content.requireValid() }
-    val removals = overlay.removals.map { ResourceId(it.value) }
+    val upserts = overlay.upserts.map { it.resource.requireValid() to it.content.requireValid() }
+    val removals = overlay.removals.map { it.requireValid() }
     require(
         upserts
             .map {
@@ -354,15 +347,8 @@ internal fun SkirOperationInvocation.decodeInvocation(): OperationInvocation {
     require(catalog.value.isNotBlank()) { "The catalog generation is required." }
     return OperationInvocation(
         invocationId.value,
-        targets.map {
-            ResourceId(it.value)
-        },
-        OperationOrigin(
-            origin.container?.let {
-                ResourceId(it.value)
-            },
-            origin.occurrences.map { it.requireValid() },
-        ),
+        targets.toResourceIds(),
+        OperationOrigin(origin.container?.toResourceId(), origin.occurrences.map { it.requireValid() }),
     )
 }
 
@@ -392,45 +378,35 @@ private fun PreparationChoice.toWire(): WireChoice =
                         PreparationCounterpartOption(
                             label =
                                 when (it) {
-                                    is CounterpartChoice.Existing -> {
-                                        it.occurrence.id.location.path.text
+                                    is CounterpartChoice.ExistingWrapper -> {
+                                        it.value.id.location.path.text
                                     }
 
-                                    is CounterpartChoice.New -> {
-                                        "Create in ${it.containing.path.text}"
+                                    is CounterpartChoice.NewWrapper -> {
+                                        "Create in ${it.value.containing.path.text}"
+                                    }
+
+                                    else -> {
+                                        unknownVariant(it)
                                     }
                                 },
-                            counterpart = it.toWire(),
+                            counterpart = it,
                         )
                     },
             )
         }
     }
 
-private fun CounterpartChoice.toWire(): WireCounterpart =
+private fun CounterpartChoice.decodeCounterpart(): CounterpartChoice =
     when (this) {
-        is CounterpartChoice.Existing -> {
-            WireCounterpart.ExistingWrapper(occurrence)
+        is CounterpartChoice.ExistingWrapper -> {
+            CounterpartChoice.ExistingWrapper(value.requireValid())
         }
 
-        is CounterpartChoice.New -> {
-            WireCounterpart.createNew(
-                containing = containing,
-                prepared = prepared,
-            )
-        }
-    }
-
-private fun WireCounterpart.decodeCounterpart(): CounterpartChoice =
-    when (this) {
-        is WireCounterpart.ExistingWrapper -> {
-            CounterpartChoice.Existing(value.requireValid())
-        }
-
-        is WireCounterpart.NewWrapper -> {
-            CounterpartChoice.New(
-                value.containing.requireValid(),
-                value.prepared.requireValid(),
+        is CounterpartChoice.NewWrapper -> {
+            CounterpartChoice.createNew(
+                containing = value.containing.requireValid(),
+                prepared = value.prepared.requireValid(),
             )
         }
 
@@ -446,9 +422,6 @@ private fun operationDiagnostic(
 ) = AuthoringDiagnostic(
     code = code,
     message = message,
-    resource =
-        location?.let {
-            SkirResourceId(value = it.resource.value)
-        },
-    path = location?.let { it.path },
+    resource = location?.resource,
+    path = location?.path,
 )

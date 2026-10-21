@@ -3,10 +3,7 @@
 package com.typewritermc.realm.authoring
 
 import com.surrealdb.Surreal
-import com.typewritermc.authoring.CommitResult
-import com.typewritermc.authoring.EditIntent
 import com.typewritermc.authoring.GeneratedSdkApi
-import com.typewritermc.authoring.PreparedEdit
 import com.typewritermc.authoring.RealmRootDefinition
 import com.typewritermc.authoring.RealmRootFields
 import com.typewritermc.authoring.RealmSectionDefinition
@@ -36,7 +33,6 @@ import com.typewritermc.realm.schema.MigrationResources
 import com.typewritermc.realm.schema.openTestDatabase
 import com.typewritermc.realm.testTag
 import com.typewritermc.types.Ref
-import com.typewritermc.types.ResourceId
 import com.typewritermc.types.catalog.Resolution
 import com.typewritermc.types.encodeGeneratedDefault
 import com.typewritermc.types.fields
@@ -51,9 +47,13 @@ import de.infix.testBalloon.framework.core.testSuite
 import io.kotest.matchers.collections.shouldContain
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.types.shouldBeInstanceOf
+import skirout.editor.v1.authoring.CommitPreparedEditResponse
+import skirout.editor.v1.authoring.EditIntent
+import skirout.editor.v1.authoring.PreparedEdit
 import skirout.editor.v1.type_catalog.AuthoringRecord
 import skirout.editor.v1.type_catalog.DataValue
 import skirout.editor.v1.type_catalog.RepresentationTemplate
+import skirout.editor.v1.type_catalog.ResourceId
 import skirout.editor.v1.type_catalog.TypeDefinition
 import skirout.editor.v1.type_catalog.TypeDefinitionId
 import skirout.editor.v1.type_catalog.ValueLocation
@@ -104,11 +104,11 @@ val RealmStructureTest by testSuite {
         RealmStructureFixture("owned_tag").use { fixture ->
             fixture.provision()
             val taxonomy = fixture.resources().typesOf(TaxonomyDefinition.id).single()
-            val tag = ResourceId("tag")
+            val tag = ResourceId(value = "tag")
             val edit =
                 fixture.views.capture().use { lease ->
                     val context = WorkingViewEditContext(lease.root, "owned-tag")
-                    context.create(tag, fixture.unownedTag())
+                    context.create(tag.toResourceId(), fixture.unownedTag())
                     context.insert(
                         boundCollectionPath(ValueLocation.of(taxonomy, TaxonomyFields.tags.path)),
                         null,
@@ -117,7 +117,7 @@ val RealmStructureTest by testSuite {
                     context.finish()
                 }
 
-            fixture.owner.commit(edit) shouldBe CommitResult.Committed
+            fixture.owner.commit(edit) shouldBe CommitPreparedEditResponse.COMMITTED
 
             fixture.restart()
             val saved = fixture.resources().getValue(tag)
@@ -126,8 +126,7 @@ val RealmStructureTest by testSuite {
                     .valueAt(
                         ValuePath.root.field("taxonomy"),
                     )?.unwrapNamed() as DataValue.LinkWrapper
-            ).value.target.resource
-                .toResourceId() shouldBe taxonomy
+            ).value.target.resource shouldBe taxonomy
         }
     }
 
@@ -135,7 +134,7 @@ val RealmStructureTest by testSuite {
         RealmStructureFixture("owner_required").use { fixture ->
             fixture.provision()
 
-            val problems = fixture.reject(EditIntent.CreateResource(ResourceId("loose"), fixture.unownedTag()))
+            val problems = fixture.reject(EditIntent.createCreateResource(id = ResourceId(value = "loose"), record = fixture.unownedTag()))
 
             problems shouldContain ("loose" to "owner_required")
         }
@@ -152,12 +151,11 @@ val RealmStructureTest by testSuite {
                 sections.items
                     .single {
                         (it.value.unwrapNamed() as DataValue.LinkWrapper)
-                            .value.target.resource
-                            .toResourceId() ==
+                            .value.target.resource ==
                             library
                     }.id
 
-            val problems = fixture.reject(EditIntent.Remove(ValueLocation.of(root, RealmRootFields.sections.path), item))
+            val problems = fixture.reject(EditIntent.createRemove(at = ValueLocation.of(root, RealmRootFields.sections.path), item = item))
 
             problems shouldContain (library.value to "owner_required")
         }
@@ -170,8 +168,9 @@ val RealmStructureTest by testSuite {
             val root = resources.getValue(resources.typesOf(RealmRootDefinition.id).single())
             val library = resources.getValue(resources.typesOf(LibraryDefinition.id).single())
 
-            fixture.reject(EditIntent.CreateResource(ResourceId("second_root"), root)) shouldContain ("second_root" to "singleton_exists")
-            fixture.reject(EditIntent.CreateResource(ResourceId("second_library"), library)) shouldContain
+            fixture.reject(EditIntent.createCreateResource(id = ResourceId(value = "second_root"), record = root)) shouldContain
+                ("second_root" to "singleton_exists")
+            fixture.reject(EditIntent.createCreateResource(id = ResourceId(value = "second_library"), record = library)) shouldContain
                 ("second_library" to "singleton_exists")
         }
     }
@@ -183,8 +182,8 @@ val RealmStructureTest by testSuite {
             val root = resources.typesOf(RealmRootDefinition.id).single()
             val library = resources.typesOf(LibraryDefinition.id).single()
 
-            fixture.reject(EditIntent.DeleteResource(library)) shouldContain (library.value to "singleton_required")
-            fixture.reject(EditIntent.DeleteResource(root)) shouldContain (root.value to "singleton_required")
+            fixture.reject(EditIntent.createDeleteResource(id = library)) shouldContain (library.value to "singleton_required")
+            fixture.reject(EditIntent.createDeleteResource(id = root)) shouldContain (root.value to "singleton_required")
         }
     }
 }
@@ -239,7 +238,7 @@ private class RealmStructureFixture(
             view.catalog.nativeBindings
                 .bind(checked)
                 .encodeGeneratedDefault(
-                    Ref<Nothing, Nothing>(tag, ValuePath.root.field("taxonomy")),
+                    Ref<Nothing, Nothing>(tag.toResourceId(), ValuePath.root.field("taxonomy")),
                 )
         }
 
@@ -247,7 +246,11 @@ private class RealmStructureFixture(
     fun reject(intent: EditIntent): List<Pair<String, String>> =
         views.read { view ->
             val planner = AuthoringMutationPlanner(view.catalog.checked, view.catalog.relations, view.catalog.endpointBindings)
-            val result = planner.plan(view.resources, PreparedEdit(view.catalog.generation, emptyList(), listOf(intent)))
+            val result =
+                planner.plan(
+                    view.resources,
+                    PreparedEdit(catalog = view.catalog.generation, expectations = emptyList(), intents = listOf(intent)),
+                )
             result.shouldBeInstanceOf<MutationPlanningResult.Rejected>().problems.map { it.location.resource.value to it.code }
         }
 
@@ -280,6 +283,5 @@ private fun Map<ResourceId, AuthoringRecord>.sectionsOfRoot(): List<ResourceId> 
     return sections.items.map {
         (it.value.unwrapNamed() as DataValue.LinkWrapper)
             .value.target.resource
-            .toResourceId()
     }
 }

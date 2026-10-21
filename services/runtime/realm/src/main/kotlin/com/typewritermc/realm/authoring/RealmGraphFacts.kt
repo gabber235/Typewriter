@@ -11,16 +11,19 @@ import com.typewritermc.operations.Cloneability
 import com.typewritermc.operations.LinkCapacity
 import com.typewritermc.realm.repository.CounterpartBinding
 import com.typewritermc.realm.repository.ResourceValueMapper
-import com.typewritermc.types.ResourceId
 import com.typewritermc.types.catalog.Resolution
 import com.typewritermc.types.ownsResources
 import com.typewritermc.types.toResourceId
+import com.typewritermc.types.toResourceIds
+import com.typewritermc.types.toSkir
 import com.typewritermc.types.use
 import skirout.editor.v1.type_catalog.ItemId
 import skirout.editor.v1.type_catalog.ResolvedRepresentation
+import skirout.editor.v1.type_catalog.ResourceId
 import skirout.editor.v1.type_catalog.TypeSelection
 import skirout.editor.v1.type_catalog.TypeUse
 import skirout.editor.v1.type_catalog.ValueLocation
+import com.typewritermc.types.ResourceId as AuthorResourceId
 
 /**
  * Graph facts of one captured working graph, read through [relations] so every fact is recorded as an observation.
@@ -49,7 +52,9 @@ internal class RealmGraphFacts(
         }
     }
 
-    override fun ownerOf(id: ResourceId): ResourceId? {
+    override fun ownerOf(id: AuthorResourceId): AuthorResourceId? = ownerOf(id.toSkir())?.toResourceId()
+
+    private fun ownerOf(id: ResourceId): ResourceId? {
         relations.reads.observeInput(InputIdentity.Incoming(id, null))
         val ownership = catalog.ownershipRelationIds
         return relations.projections
@@ -59,7 +64,9 @@ internal class RealmGraphFacts(
             .singleOrNull()
     }
 
-    override fun ownerCandidatesOf(id: ResourceId): Sequence<ResourceId> =
+    override fun ownerCandidatesOf(id: AuthorResourceId): Sequence<AuthorResourceId> = ownerCandidatesOf(id.toSkir()).toResourceIds()
+
+    private fun ownerCandidatesOf(id: ResourceId): Sequence<ResourceId> =
         memo.ownerCandidates
             .getOrPut(id) {
                 val membership = relations.ownership(id) ?: return@getOrPut emptyList()
@@ -74,17 +81,19 @@ internal class RealmGraphFacts(
                     }
             }.asSequence()
 
-    override fun canBeOwned(id: ResourceId): Boolean {
-        val type = typeOf(id) ?: return false
+    override fun canBeOwned(id: AuthorResourceId): Boolean {
+        val type = typeOf(id.toSkir()) ?: return false
         return catalog.relations.any { it.ownsResources && catalog.checked.isNominalSubtype(type, it.second.resource.definition) }
     }
 
-    override fun isSingleton(id: ResourceId): Boolean {
-        val type = typeOf(id) ?: return false
+    override fun isSingleton(id: AuthorResourceId): Boolean {
+        val type = typeOf(id.toSkir()) ?: return false
         return type == catalog.realmRoot || catalog.checked.isNominalSubtype(type, RealmSectionDefinition.id)
     }
 
-    override fun linkTargetsOf(ids: List<ResourceId>): Sequence<ResourceId> {
+    override fun linkTargetsOf(ids: List<AuthorResourceId>): Sequence<AuthorResourceId> = linkTargets(ids.toSkir()).toResourceIds()
+
+    private fun linkTargets(ids: List<ResourceId>): Sequence<ResourceId> {
         relations.reads.observeInput(RESOURCE_SELECTION_INPUT)
         return relations.resources.keys
             .sortedBy { it.value }
@@ -93,19 +102,23 @@ internal class RealmGraphFacts(
             .filter { candidate -> ids.all { id -> relations.linkSources(id, candidate, ::candidateItem).isNotEmpty() } }
     }
 
-    override fun linksOf(id: ResourceId): Sequence<ResourceId> =
+    override fun linksOf(id: AuthorResourceId): Sequence<AuthorResourceId> = linksOf(id.toSkir()).toResourceIds()
+
+    private fun linksOf(id: ResourceId): Sequence<ResourceId> =
         relations
             .linksOf(id)
-            .map { if (it.source.toResourceId() == id) it.target.resource.toResourceId() else it.source.toResourceId() }
+            .map { if (it.source == id) it.target.resource else it.source }
             .distinct()
             .asSequence()
 
     override fun isLinked(
-        id: ResourceId,
-        target: ResourceId,
-    ): Boolean = relations.linksBetween(id, target).isNotEmpty()
+        id: AuthorResourceId,
+        target: AuthorResourceId,
+    ): Boolean = relations.linksBetween(id.toSkir(), target.toSkir()).isNotEmpty()
 
-    override fun linkCapacityOf(id: ResourceId): LinkCapacity {
+    override fun linkCapacityOf(id: AuthorResourceId): LinkCapacity = linkCapacityOf(id.toSkir())
+
+    private fun linkCapacityOf(id: ResourceId): LinkCapacity {
         relations.observeForm(id)
         val actual = (relations.recordOf(id).configuration as? TypeSelection.CompleteWrapper)?.use ?: return LinkCapacity.None
         val slots = referenceSlots(id).filter { slot -> catalog.checked.isReadableAs(actual.use, slot.target) }
@@ -114,17 +127,19 @@ internal class RealmGraphFacts(
         return if (slots.any { it.collection || current[it.at] == null }) LinkCapacity.Available else LinkCapacity.Full
     }
 
-    override fun cloneabilityOf(roots: List<ResourceId>): Cloneability {
+    override fun cloneabilityOf(roots: List<AuthorResourceId>): Cloneability = cloneability(roots.toSkir())
+
+    private fun cloneability(roots: List<ResourceId>): Cloneability {
         val owning = catalog.ownershipRelationIds
         val closure = ownershipClosure(roots)
         val contracts = catalog.relations.flatMap { listOf(it.first.id to it, it.second.id to it) }.toMap()
-        val leaving = relations.links.values.filter { it.source.toResourceId() in closure && it.target.resource.toResourceId() !in closure }
+        val leaving = relations.links.values.filter { it.source in closure && it.target.resource !in closure }
         leaving.forEach { source ->
             val relation = contracts.getValue(source.id.endpoint)
             if (relation.id !in owning && source.id.endpoint != relation.first.id) return@forEach
             val opposite = if (source.id.endpoint == relation.first.id) relation.second.id else relation.first.id
-            val record = relations.resources[source.target.resource.toResourceId()] ?: return@forEach
-            val binding = ResourceValueMapper.counterpartBinding(opposite, source.target.resource.toResourceId(), record, catalog.checked)
+            val record = relations.resources[source.target.resource] ?: return@forEach
+            val binding = ResourceValueMapper.counterpartBinding(opposite, source.target.resource, record, catalog.checked)
             if (binding is CounterpartBinding.Scalar) {
                 relations.reads.observeInput(InputIdentity.Value(binding.location))
                 if (relations.links.values.any { it.id.location == binding.location }) {

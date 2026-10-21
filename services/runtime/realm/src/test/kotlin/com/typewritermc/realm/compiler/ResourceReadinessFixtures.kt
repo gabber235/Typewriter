@@ -9,7 +9,6 @@ import com.typewritermc.realm.checking.CapturedCheckReport
 import com.typewritermc.types.catalog.Resolution
 import com.typewritermc.types.named
 import com.typewritermc.types.record
-import com.typewritermc.types.toSkir
 import com.typewritermc.types.use
 import skirout.editor.v1.type_catalog.DataValue
 import skirout.editor.v1.type_catalog.TypeSelection
@@ -34,7 +33,7 @@ internal fun testAssessment(
                             compilationDiagnostic(
                                 "unfinished_value",
                                 "A required value is unfinished.",
-                                location = it.copy(resource = id.toSkir()),
+                                location = it.copy(resource = id),
                             )
                         },
                     )

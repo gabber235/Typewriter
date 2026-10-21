@@ -1,8 +1,8 @@
 package com.typewritermc.checking
 
-import com.typewritermc.types.ResourceId
 import skirout.editor.v1.type_catalog.CatalogGeneration
 import skirout.editor.v1.type_catalog.RelationId
+import skirout.editor.v1.type_catalog.ResourceId
 import skirout.editor.v1.type_catalog.SelectionId
 import skirout.editor.v1.type_catalog.ValueLocation
 

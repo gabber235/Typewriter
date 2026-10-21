@@ -4,9 +4,9 @@ import com.typewritermc.authoring.StructuralResult
 import com.typewritermc.authoring.validateStructure
 import com.typewritermc.realm.repository.AuthoringMutationPlanner
 import com.typewritermc.realm.repository.ResourceValueMapper
-import com.typewritermc.types.ResourceId
 import com.typewritermc.types.immutableMapCopy
 import skirout.editor.v1.type_catalog.AuthoringRecord
+import skirout.editor.v1.type_catalog.ResourceId
 
 /** Signals that a caller must refresh saved state before inspecting its proposed overlay. */
 internal class StaleOperationObservation(

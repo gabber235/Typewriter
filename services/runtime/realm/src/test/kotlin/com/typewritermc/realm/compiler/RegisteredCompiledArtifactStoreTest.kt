@@ -9,8 +9,6 @@ import com.typewritermc.services.libs.filetransfer.blob.BlobMetadata
 import com.typewritermc.services.libs.filetransfer.blob.BlobResult
 import com.typewritermc.services.libs.filetransfer.blob.BlobWriteSession
 import com.typewritermc.services.libs.filetransfer.blob.TransferId
-import com.typewritermc.types.ResourceId
-import com.typewritermc.types.toSkir
 import de.infix.testBalloon.framework.core.testSuite
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.matchers.shouldBe
@@ -18,6 +16,7 @@ import skirout.editor.v1.compilation_root.CompilationProjectionId
 import skirout.editor.v1.compilation_root.CompilationRoot
 import skirout.editor.v1.type_catalog.CatalogGeneration
 import skirout.editor.v1.type_catalog.PublicationId
+import skirout.editor.v1.type_catalog.ResourceId
 
 val RegisteredCompiledArtifactStoreTest by testSuite {
     test("publication outputs are complete and reuse verified payload blobs") {
@@ -100,7 +99,7 @@ val RegisteredCompiledArtifactStoreTest by testSuite {
 
 private fun Char.compiledArtifact(resource: String) =
     CompiledArtifact(
-        root = CompilationRoot(projection = CompilationProjectionId(value = "test.projection"), resource = ResourceId(resource).toSkir()),
+        root = CompilationRoot(projection = CompilationProjectionId(value = "test.projection"), resource = ResourceId(value = resource)),
         formatRevision = 1,
         mediaType = "application/vnd.typewriter.test",
         inputFingerprint = ContentDigest(toString().repeat(64)),

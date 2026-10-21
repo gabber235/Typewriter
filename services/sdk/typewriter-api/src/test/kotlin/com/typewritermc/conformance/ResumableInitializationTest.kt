@@ -7,7 +7,6 @@ import com.typewritermc.authoring.DefaultInitializationRuntime
 import com.typewritermc.authoring.NativeConstructionPlan
 import com.typewritermc.authoring.fieldMap
 import com.typewritermc.authoring.materialize
-import com.typewritermc.authoring.skir.SkirAuthoringOperationCodec
 import com.typewritermc.types.FactoryNativeBindingRegistry
 import com.typewritermc.types.NativeBinding
 import com.typewritermc.types.NativeBindingFactory
@@ -27,7 +26,6 @@ import com.typewritermc.types.qualified
 import com.typewritermc.types.record
 import com.typewritermc.types.requireValid
 import com.typewritermc.types.rows
-import com.typewritermc.types.skir.getOrThrow
 import com.typewritermc.types.template
 import com.typewritermc.types.toSkir
 import com.typewritermc.types.use

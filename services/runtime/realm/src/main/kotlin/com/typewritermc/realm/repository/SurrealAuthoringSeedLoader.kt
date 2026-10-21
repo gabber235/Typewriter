@@ -5,9 +5,9 @@ import com.typewritermc.realm.authoring.AuthoringSeed
 import com.typewritermc.realm.repository.utils.decodeSkir
 import com.typewritermc.realm.repository.utils.inTransaction
 import com.typewritermc.realm.repository.utils.toResourceId
-import com.typewritermc.types.ResourceId
 import com.typewritermc.types.requireValid
 import skirout.editor.v1.type_catalog.AuthoringRecord
+import skirout.editor.v1.type_catalog.ResourceId
 
 /** Loads a coherent authored graph without operation history or revision counters. */
 internal class SurrealAuthoringSeedLoader(

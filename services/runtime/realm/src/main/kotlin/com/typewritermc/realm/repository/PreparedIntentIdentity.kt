@@ -1,22 +1,22 @@
 package com.typewritermc.realm.repository
 
-import com.typewritermc.authoring.CounterpartChoice
-import com.typewritermc.authoring.EditIntent
-import com.typewritermc.authoring.PreparedEdit
 import com.typewritermc.services.libs.utils.sha256Hex
-import com.typewritermc.types.toSkir
+import com.typewritermc.types.unknownVariant
+import skirout.editor.v1.authoring.CounterpartChoice
+import skirout.editor.v1.authoring.EditIntent
 import skirout.editor.v1.authoring.LinkOccurrence
 import skirout.editor.v1.authoring.LinkOccurrenceId
+import skirout.editor.v1.authoring.PreparedEdit
 import skirout.editor.v1.catalog.PreparedValue
 import skirout.editor.v1.type_catalog.AuthoringRecord
 import skirout.editor.v1.type_catalog.DataValue
 import skirout.editor.v1.type_catalog.ItemId
 import skirout.editor.v1.type_catalog.ListItem
 import skirout.editor.v1.type_catalog.NamedTypeUse
+import skirout.editor.v1.type_catalog.ResourceId
 import skirout.editor.v1.type_catalog.TypeSelection
 import skirout.editor.v1.type_catalog.ValueLocation
 import build.skir.Serializer as SkirSerializer
-import skirout.editor.v1.type_catalog.ResourceId as SkirResourceId
 
 /** Derives stable counterpart item identities from intent without retaining operation history. */
 internal fun canonicalPreparedIntentDigest(edit: PreparedEdit): String =
@@ -24,107 +24,115 @@ internal fun canonicalPreparedIntentDigest(edit: PreparedEdit): String =
 
 private fun EditIntent.canonical(): String =
     when (this) {
-        is EditIntent.CreateResource -> {
-            frame("create", canonical(SkirResourceId.serializer, id.toSkir()), canonical(AuthoringRecord.serializer, record))
+        is EditIntent.CreateResourceWrapper -> {
+            frame("create", canonical(ResourceId.serializer, value.id), canonical(AuthoringRecord.serializer, value.record))
         }
 
-        is EditIntent.DeleteResource -> {
-            frame("delete", canonical(SkirResourceId.serializer, id.toSkir()))
+        is EditIntent.DeleteResourceWrapper -> {
+            frame("delete", canonical(ResourceId.serializer, value.id))
         }
 
-        is EditIntent.SetValue -> {
+        is EditIntent.SetValueWrapper -> {
             frame(
                 "set",
-                canonical(ValueLocation.serializer, at),
-                canonical(DataValue.serializer, value),
+                canonical(ValueLocation.serializer, value.at),
+                canonical(DataValue.serializer, value.value),
             )
         }
 
-        is EditIntent.Insert -> {
+        is EditIntent.InsertWrapper -> {
             frame(
                 "insert",
-                canonical(ValueLocation.serializer, at),
-                after.canonicalNullable(),
-                canonical(ListItem.serializer, item),
+                canonical(ValueLocation.serializer, value.at),
+                value.after.canonicalNullable(),
+                canonical(ListItem.serializer, value.item),
             )
         }
 
-        is EditIntent.Remove -> {
-            frame("remove", canonical(ValueLocation.serializer, at), canonical(ItemId.serializer, item))
+        is EditIntent.RemoveWrapper -> {
+            frame("remove", canonical(ValueLocation.serializer, value.at), canonical(ItemId.serializer, value.item))
         }
 
-        is EditIntent.Move -> {
+        is EditIntent.MoveWrapper -> {
             frame(
                 "move",
-                canonical(ValueLocation.serializer, at),
-                canonical(ItemId.serializer, item),
-                after.canonicalNullable(),
+                canonical(ValueLocation.serializer, value.at),
+                canonical(ItemId.serializer, value.item),
+                value.after.canonicalNullable(),
             )
         }
 
-        is EditIntent.ConnectRelation -> {
-            val value = intent
+        is EditIntent.ConnectRelationWrapper -> {
+            val connect = value
             val counterpart =
-                when (val choice = value.counterpart) {
+                when (val choice = connect.counterpart) {
                     null -> {
                         frame("none")
                     }
 
-                    is CounterpartChoice.Existing -> {
+                    is CounterpartChoice.ExistingWrapper -> {
                         frame(
                             "existing",
                             canonical(
                                 LinkOccurrence.serializer,
-                                choice.occurrence,
+                                choice.value,
                             ),
                         )
                     }
 
-                    is CounterpartChoice.New -> {
+                    is CounterpartChoice.NewWrapper -> {
                         frame(
                             "new",
-                            canonical(ValueLocation.serializer, choice.containing),
+                            canonical(ValueLocation.serializer, choice.value.containing),
                             canonical(
                                 PreparedValue.serializer,
-                                choice.prepared,
+                                choice.value.prepared,
                             ),
                         )
+                    }
+
+                    else -> {
+                        unknownVariant(choice)
                     }
                 }
             frame(
                 "connect",
                 canonical(
                     LinkOccurrence.serializer,
-                    value.source,
+                    connect.source,
                 ),
-                canonical(SkirResourceId.serializer, value.target.toSkir()),
+                canonical(ResourceId.serializer, connect.target),
                 counterpart,
             )
         }
 
-        is EditIntent.DisconnectRelation -> {
+        is EditIntent.DisconnectRelationWrapper -> {
             frame(
                 "disconnect",
                 canonical(
                     LinkOccurrenceId.serializer,
-                    occurrence,
+                    value,
                 ),
             )
         }
 
-        is EditIntent.Retag -> {
-            frame("retag", canonical(ValueLocation.serializer, at), canonical(NamedTypeUse.serializer, type))
+        is EditIntent.RetagWrapper -> {
+            frame("retag", canonical(ValueLocation.serializer, value.at), canonical(NamedTypeUse.serializer, value.type))
         }
 
-        is EditIntent.ConfigureResource -> {
+        is EditIntent.ConfigureResourceWrapper -> {
             frame(
                 "configure_resource",
-                canonical(SkirResourceId.serializer, resource.toSkir()),
+                canonical(ResourceId.serializer, value.resource),
                 canonical(
                     TypeSelection.serializer,
-                    configuration,
+                    value.configuration,
                 ),
             )
+        }
+
+        else -> {
+            unknownVariant(this)
         }
     }
 

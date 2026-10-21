@@ -1,7 +1,5 @@
 package com.typewritermc.realm.authoring
 
-import com.typewritermc.authoring.ConnectIntent
-import com.typewritermc.authoring.CounterpartChoice
 import com.typewritermc.authoring.DefaultInitializationRuntime
 import com.typewritermc.authoring.record
 import com.typewritermc.checking.InputIdentity
@@ -11,10 +9,11 @@ import com.typewritermc.operations.PreparationChoices
 import com.typewritermc.realm.repository.CounterpartBinding
 import com.typewritermc.realm.repository.ResourceValueMapper
 import com.typewritermc.realm.repository.valueAt
-import com.typewritermc.types.ResourceId
 import com.typewritermc.types.catalog.Resolution
 import com.typewritermc.types.toResourceId
 import com.typewritermc.types.toSkir
+import skirout.editor.v1.authoring.ConnectIntent
+import skirout.editor.v1.authoring.CounterpartChoice
 import skirout.editor.v1.authoring.LinkOccurrence
 import skirout.editor.v1.authoring.LinkOccurrenceId
 import skirout.editor.v1.catalog.PreparationTarget
@@ -22,6 +21,7 @@ import skirout.editor.v1.catalog.PreparedContent
 import skirout.editor.v1.catalog.ValuePreparationRequest
 import skirout.editor.v1.type_catalog.LinkTarget
 import skirout.editor.v1.type_catalog.ResolvedRepresentation
+import skirout.editor.v1.type_catalog.ResourceId
 import skirout.editor.v1.type_catalog.TypeSelection
 import skirout.editor.v1.type_catalog.TypeUse
 
@@ -47,7 +47,7 @@ internal class OperationRelationPreparation(
             val membership =
                 relations.ownership(subject, operation.invocation.origin)
                     ?: error("The resource does not have one exact owner occurrence")
-            if (membership.source.toResourceId() == destination) return@forEach
+            if (membership.source == destination) return@forEach
             val sources = relations.ownerSources(subject, membership, destination, operation.identities::item)
             require(sources.isNotEmpty()) { "The destination does not accept this resource" }
             val source =
@@ -56,14 +56,14 @@ internal class OperationRelationPreparation(
                 )
             relations.observe(source)
             moved += subject
-            if (source.source.toResourceId() == subject) inverse += source else ownerSide += membership to source
+            if (source.source == subject) inverse += source else ownerSide += membership to source
         }
         assignCounterparts(inverse, destination, operation.choices).forEach { operation.connect(it) }
         ownerSide.forEach { (membership, source) ->
             val subject = membership.target.resource
             operation.disconnect(membership.id)
             operation.connect(
-                ConnectIntent(source, subject.toResourceId(), counterpartFor(source, subject.toResourceId(), operation.choices)),
+                ConnectIntent(source = source, target = subject, counterpart = counterpartFor(source, subject, operation.choices)),
             )
         }
         return moved
@@ -94,7 +94,7 @@ internal class OperationRelationPreparation(
         // Each linked resource offers its own counterpart slots, so assignments are independent per linked resource.
         additions
             .groupBy { it.target.resource }
-            .flatMap { (linked, sources) -> assignCounterparts(sources, linked.toResourceId(), operation.choices) }
+            .flatMap { (linked, sources) -> assignCounterparts(sources, linked, operation.choices) }
             .forEach { operation.connect(it) }
     }
 
@@ -138,7 +138,7 @@ internal class OperationRelationPreparation(
     ): List<ConnectIntent> {
         val candidates = sources.map { counterpartCandidates(it, target) }
 
-        fun slot(choice: CounterpartChoice?): LinkOccurrenceId? = (choice as? CounterpartChoice.Existing)?.occurrence?.id
+        fun slot(choice: CounterpartChoice?): LinkOccurrenceId? = (choice as? CounterpartChoice.ExistingWrapper)?.value?.id
         var attempts = 0
 
         fun feasible(
@@ -174,7 +174,7 @@ internal class OperationRelationPreparation(
                     )
                 }
             slot(choice)?.let(reserved::add)
-            ConnectIntent(source, target, choice)
+            ConnectIntent(source = source, target = target, counterpart = choice)
         }
     }
 
@@ -202,10 +202,10 @@ internal class OperationRelationPreparation(
                     (old?.target?.resource == source.source && old.target.opposite == source.id.location.path) ||
                         record.valueAt(at.path)?.unfilled() != false
                 }.mapTo(mutableListOf()) { at ->
-                    CounterpartChoice.Existing(
+                    CounterpartChoice.ExistingWrapper(
                         LinkOccurrence(
                             id = LinkOccurrenceId(endpoint = opposite, location = at),
-                            source = target.toSkir(),
+                            source = target,
                             target = LinkTarget(resource = source.source, opposite = source.id.location.path),
                         ),
                     )
@@ -230,7 +230,7 @@ internal class OperationRelationPreparation(
                     )
                 val materialized = (prepared.content as? PreparedContent.RecordWrapper)?.record ?: return@forEach
                 if (ResourceValueMapper.declaredLocations(opposite, target, materialized, catalog.checked).size == 1) {
-                    candidates += CounterpartChoice.New(containing, prepared)
+                    candidates += CounterpartChoice.createNew(containing = containing, prepared = prepared)
                 }
             }
         }

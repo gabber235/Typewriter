@@ -16,14 +16,13 @@ import com.typewritermc.configuration.field
 import com.typewritermc.realm.authoring.AuthoringSeed
 import com.typewritermc.realm.authoring.AuthoringViewDelta
 import com.typewritermc.realm.authoring.InMemoryAuthoringViewStore
-import com.typewritermc.types.ResourceId
 import com.typewritermc.types.fields
 import com.typewritermc.types.named
 import com.typewritermc.types.namedTemplate
 import com.typewritermc.types.namedUse
 import com.typewritermc.types.nullable
 import com.typewritermc.types.qualified
-import com.typewritermc.types.toResourceId
+import com.typewritermc.types.toSkir
 import com.typewritermc.types.use
 import de.infix.testBalloon.framework.core.testSuite
 import io.kotest.matchers.shouldBe
@@ -38,6 +37,7 @@ import skirout.editor.v1.type_catalog.ParameterKey
 import skirout.editor.v1.type_catalog.PathSegment
 import skirout.editor.v1.type_catalog.RelativeFieldPattern
 import skirout.editor.v1.type_catalog.RepresentationTemplate
+import skirout.editor.v1.type_catalog.ResourceId
 import skirout.editor.v1.type_catalog.RuleId
 import skirout.editor.v1.type_catalog.RuleOrigin
 import skirout.editor.v1.type_catalog.ScalarKind
@@ -51,7 +51,7 @@ import skirout.editor.v1.type_catalog.ValuePath
 val CapturedAuthoringReadsTest by testSuite {
     test("projection reads preserve partial bindings and exact value evidence") {
         val catalog = TestCatalogLease(definitions = listOf(TEST_DEFINITION, LIST_DEFINITION, REPRESENTATION_DEFINITION))
-        val resource = ResourceId("projection")
+        val resource = ResourceId(value = "projection")
         val root = ValueLocation.of(resource)
         val nullValue = location(resource, "nullValue")
         val missingValue = location(resource, "missingValue")
@@ -97,7 +97,7 @@ val CapturedAuthoringReadsTest by testSuite {
 
     test("composedReadsTreatNullAndUnfilledParentsAsUnavailable") {
         val catalog = TestCatalogLease()
-        val resource = ResourceId("nested")
+        val resource = ResourceId(value = "nested")
         val record =
             AuthoringRecord.of(
                 configuration = TypeSelection.CompleteWrapper(TEST_TYPE.namedUse()),
@@ -146,8 +146,8 @@ val CapturedAuthoringReadsTest by testSuite {
 
     test("typedSelectionIgnoresAnUnrelatedUnavailableResourceWithoutRecordingFailure") {
         val catalog = TestCatalogLease()
-        val available = ResourceId("available")
-        val unavailable = ResourceId("unavailable")
+        val available = ResourceId(value = "available")
+        val unavailable = ResourceId(value = "unavailable")
         val unavailableType = TypeDefinitionId.qualified("removed", "resource")
         val resources =
             mapOf(
@@ -170,7 +170,6 @@ val CapturedAuthoringReadsTest by testSuite {
 
         selected.knownMatches.map {
             it.binding.location.resource
-                .toResourceId()
         } shouldBe listOf(available)
         selected.undecided.isEmpty() shouldBe true
         selected.failures.isEmpty() shouldBe true
@@ -190,7 +189,7 @@ val CapturedAuthoringReadsTest by testSuite {
                 parents = listOf(TEST_TYPE.namedTemplate()),
             )
         val catalog = TestCatalogLease(definitions = listOf(TEST_DEFINITION, LIST_DEFINITION, derived))
-        val resource = ResourceId("pending")
+        val resource = ResourceId(value = "pending")
         val record =
             AuthoringRecord.of(
                 configuration = TypeSelection.createPending(definition = DERIVED_TYPE, arguments = listOf(ArgumentSelection.UNFILLED)),
@@ -206,7 +205,7 @@ val CapturedAuthoringReadsTest by testSuite {
 
         val found = CapturedAuthoringReads(lease.originalView()).discoverResources(TestDraftType(ResourceTypeMatch.Definition(TEST_TYPE)))
 
-        found.map { it.location.resource.toResourceId() } shouldBe listOf(resource)
+        found.map { it.location.resource } shouldBe listOf(resource)
         found.single().expected.shouldBeInstanceOf<com.typewritermc.authoring.DraftExpectation.PartialRoot>()
 
         lease.close()
@@ -215,8 +214,8 @@ val CapturedAuthoringReadsTest by testSuite {
 
     test("partialApplicationSelectionKeepsUndecidedMembershipInThresholds") {
         val catalog = TestCatalogLease()
-        val complete = ResourceId("complete")
-        val pending = ResourceId("pending")
+        val complete = ResourceId(value = "complete")
+        val pending = ResourceId(value = "pending")
         val completeRecord = record()
         val pendingRecord =
             AuthoringRecord.of(
@@ -237,7 +236,7 @@ val CapturedAuthoringReadsTest by testSuite {
             )
 
         result.knownMatches.size shouldBe 1
-        result.undecided.map { it.resource } shouldBe listOf(pending)
+        result.undecided.map { it.resource.toSkir() } shouldBe listOf(pending)
         result.atLeast(1) shouldBe Availability.Available(true)
         result.atMost(0) shouldBe Availability.Available(false)
         result.count().shouldBeInstanceOf<Availability.Unavailable>()
@@ -256,8 +255,8 @@ val CapturedAuthoringReadsTest by testSuite {
                 representation = RepresentationTemplate.createRecord(fields = emptyList(), abstract_ = false),
             )
         val catalog = TestCatalogLease(definitions = listOf(TEST_DEFINITION, LIST_DEFINITION, definition))
-        val text = ResourceId("text")
-        val number = ResourceId("number")
+        val text = ResourceId(value = "text")
+        val number = ResourceId(value = "number")
         val textUse = generic.namedUse(listOf(TEXT_USE))
         val numberUse = generic.namedUse(listOf(INT_USE))
         val resources =
@@ -279,7 +278,6 @@ val CapturedAuthoringReadsTest by testSuite {
 
         selected.knownMatches.map {
             it.binding.location.resource
-                .toResourceId()
         } shouldBe listOf(text)
         selected.undecided.isEmpty() shouldBe true
 
@@ -297,8 +295,8 @@ val CapturedAuthoringReadsTest by testSuite {
                 representation = RepresentationTemplate.createRecord(fields = emptyList(), abstract_ = false),
             )
         val catalog = TestCatalogLease(definitions = listOf(TEST_DEFINITION, LIST_DEFINITION, definition))
-        val resource = ResourceId("pending")
-        val unresolved = ResourceId("unresolved")
+        val resource = ResourceId(value = "pending")
+        val unresolved = ResourceId(value = "unresolved")
         val textUse = generic.namedUse(listOf(TEXT_USE))
         val numberUse = generic.namedUse(listOf(INT_USE))
         val record =
@@ -338,7 +336,7 @@ val CapturedAuthoringReadsTest by testSuite {
 
     test("descendantPatternsUseStableItemLocationsAndRecordMembership") {
         val catalog = TestCatalogLease()
-        val resource = ResourceId("page")
+        val resource = ResourceId(value = "page")
         val authored = record(numbers = listOf("a" to 1, "b" to 2))
         val store =
             InMemoryAuthoringViewStore(
@@ -400,7 +398,7 @@ val CapturedAuthoringReadsTest by testSuite {
             )
         val lease = store.capture()
         val reads = CapturedAuthoringReads(lease.originalView())
-        reads.resourceBinding(ResourceId("missing"))
+        reads.resourceBinding(ResourceId(value = "missing"))
         reads.recordIncomplete("graph traversal limit exceeded")
 
         val outcome = reads.health().outcome(RuleOrigin(owner = TEST_TYPE, ordinal = 0))
@@ -412,7 +410,7 @@ val CapturedAuthoringReadsTest by testSuite {
 
     test("incrementalDependencyResultsEqualFullRecomputationAfterScriptedEdits") {
         val catalog = TestCatalogLease()
-        val resource = ResourceId("page")
+        val resource = ResourceId(value = "page")
         val root = ValueLocation.of(resource)
         val name = location(resource, "name")
         val count = location(resource, "count")
@@ -427,7 +425,7 @@ val CapturedAuthoringReadsTest by testSuite {
         val index = DefaultReverseDependencyIndex()
         val incremental = linkedMapOf<CheckInstanceId, Boolean>()
 
-        fun evaluate(id: CheckInstanceId): Pair<Boolean, List<com.typewritermc.authoring.EditExpectation>> {
+        fun evaluate(id: CheckInstanceId): Pair<Boolean, List<skirout.editor.v1.authoring_facts.EditExpectation>> {
             val lease = store.capture()
             return lease.use {
                 val reads = CapturedAuthoringReads(it.originalView())

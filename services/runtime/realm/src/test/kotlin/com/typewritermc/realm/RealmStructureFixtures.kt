@@ -33,7 +33,6 @@ import com.typewritermc.realm.authoring.AuthoringCatalogLease
 import com.typewritermc.realm.catalog.RealmCatalogIncarnation
 import com.typewritermc.types.NativeBinding
 import com.typewritermc.types.Ref
-import com.typewritermc.types.ResourceId
 import com.typewritermc.types.actualType
 import com.typewritermc.types.catalog.Resolution
 import com.typewritermc.types.encodeGeneratedDefault
@@ -41,7 +40,7 @@ import com.typewritermc.types.endpoint
 import com.typewritermc.types.fieldMap
 import com.typewritermc.types.named
 import com.typewritermc.types.payload
-import com.typewritermc.types.toSkir
+import com.typewritermc.types.toResourceId
 import com.typewritermc.types.use
 import skirout.editor.v1.type_catalog.AuthoringRecord
 import skirout.editor.v1.type_catalog.CatalogGeneration
@@ -49,6 +48,7 @@ import skirout.editor.v1.type_catalog.DataValue
 import skirout.editor.v1.type_catalog.ItemId
 import skirout.editor.v1.type_catalog.LinkTarget
 import skirout.editor.v1.type_catalog.PathSegment
+import skirout.editor.v1.type_catalog.ResourceId
 import skirout.editor.v1.type_catalog.TypeDefinitionId
 import skirout.editor.v1.type_catalog.TypeSelection
 import skirout.editor.v1.type_catalog.ValuePath
@@ -56,15 +56,15 @@ import java.nio.file.Path
 
 /** Resource ids of the realm root and the core sections in test resource graphs. */
 internal object TestRealmStructure {
-    val root = ResourceId("realm-root")
-    val library = ResourceId("realm-library")
-    val taxonomy = ResourceId("realm-taxonomy")
+    val root = ResourceId(value = "realm-root")
+    val library = ResourceId(value = "realm-library")
+    val taxonomy = ResourceId(value = "realm-taxonomy")
 
     /** A placeholder owner link for a Book; [withRealmStructure] rewrites it with its inverse location. */
-    val libraryLink = Ref<com.typewritermc.library.LibraryBooks.Book, Library>(library)
+    val libraryLink = Ref<com.typewritermc.library.LibraryBooks.Book, Library>(library.toResourceId())
 
     /** A placeholder owner link for a Tag; [withRealmStructure] rewrites it with its inverse location. */
-    val taxonomyLink = Ref<com.typewritermc.library.TaxonomyTags.Tag, Taxonomy>(taxonomy)
+    val taxonomyLink = Ref<com.typewritermc.library.TaxonomyTags.Tag, Taxonomy>(taxonomy.toResourceId())
 }
 
 /**
@@ -100,7 +100,7 @@ internal fun Map<ResourceId, AuthoringRecord>.withRealmStructure(catalog: Author
         val rewritten =
             DataValue.named(
                 link.actualType,
-                DataValue.createLink(endpoint = endpoint, target = LinkTarget(resource = owner.section.toSkir(), opposite = opposite)),
+                DataValue.createLink(endpoint = endpoint, target = LinkTarget(resource = owner.section, opposite = opposite)),
             )
         return record.with(owner.field, rewritten)
     }
@@ -110,11 +110,15 @@ internal fun Map<ResourceId, AuthoringRecord>.withRealmStructure(catalog: Author
         mapOf(
             TestRealmStructure.root to
                 catalog.record(
-                    RealmRoot(sections = listOf(Ref(TestRealmStructure.library), Ref(TestRealmStructure.taxonomy))),
+                    RealmRoot(
+                        sections = listOf(Ref(TestRealmStructure.library.toResourceId()), Ref(TestRealmStructure.taxonomy.toResourceId())),
+                    ),
                     RealmRootDefinition.id,
                 ),
-            TestRealmStructure.library to catalog.record(Library(books = books.map { Ref(it, back("library")) }), LibraryDefinition.id),
-            TestRealmStructure.taxonomy to catalog.record(Taxonomy(tags = tags.map { Ref(it, back("taxonomy")) }), TaxonomyDefinition.id),
+            TestRealmStructure.library to
+                catalog.record(Library(books = books.map { Ref(it.toResourceId(), back("library")) }), LibraryDefinition.id),
+            TestRealmStructure.taxonomy to
+                catalog.record(Taxonomy(tags = tags.map { Ref(it.toResourceId(), back("taxonomy")) }), TaxonomyDefinition.id),
         )
     return mapValues { (id, record) -> owned(id, record) } + structure
 }

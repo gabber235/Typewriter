@@ -10,7 +10,6 @@ import com.typewritermc.realm.repository.ResourceValueMapper
 import com.typewritermc.realm.repository.utils.surrealRecordId
 import com.typewritermc.realm.schema.openTestDatabase
 import com.typewritermc.types.RESOURCE_OWNERSHIP_FAMILY_ID
-import com.typewritermc.types.ResourceId
 import com.typewritermc.types.catalog.DefaultCheckedCatalog
 import com.typewritermc.types.endpointId
 import com.typewritermc.types.namedTemplate
@@ -18,7 +17,6 @@ import com.typewritermc.types.namedUse
 import com.typewritermc.types.of
 import com.typewritermc.types.qualified
 import com.typewritermc.types.template
-import com.typewritermc.types.toSkir
 import com.typewritermc.types.use
 import de.infix.testBalloon.framework.core.testSuite
 import io.kotest.matchers.shouldBe
@@ -38,6 +36,7 @@ import skirout.editor.v1.type_catalog.ParameterKey
 import skirout.editor.v1.type_catalog.RelationFamilyId
 import skirout.editor.v1.type_catalog.RelationId
 import skirout.editor.v1.type_catalog.RepresentationTemplate
+import skirout.editor.v1.type_catalog.ResourceId
 import skirout.editor.v1.type_catalog.TypeDefinition
 import skirout.editor.v1.type_catalog.TypeDefinitionId
 import skirout.editor.v1.type_catalog.TypeParameter
@@ -86,7 +85,7 @@ class SurrealAuthoringSearchRepositoryTest {
                         limit = 100,
                     )
 
-            results.map { it.resource } shouldBe listOf(ResourceId("z_compatible"))
+            results.map { it.resource } shouldBe listOf(ResourceId(value = "z_compatible"))
         }
     }
 
@@ -111,12 +110,12 @@ class SurrealAuthoringSearchRepositoryTest {
                 SurrealAuthoringSearchRepository(database).search(
                     searchView(catalog),
                     "",
-                    setOf(ResourceId("inside")),
+                    setOf(ResourceId(value = "inside")),
                     emptySet(),
                     null,
                     10,
                 )
-            results.map { it.resource } shouldBe listOf(ResourceId("inside"))
+            results.map { it.resource } shouldBe listOf(ResourceId(value = "inside"))
         }
     }
 
@@ -174,7 +173,7 @@ class SurrealAuthoringSearchRepositoryTest {
                         limit = 10,
                     )
 
-            matching.map { it.resource } shouldBe listOf(ResourceId("pending"))
+            matching.map { it.resource } shouldBe listOf(ResourceId(value = "pending"))
             mismatched.map { it.resource } shouldBe emptyList<ResourceId>()
         }
     }
@@ -205,7 +204,7 @@ class SurrealAuthoringSearchRepositoryTest {
                 SurrealAuthoringSearchRepository(database)
                     .search(searchView(catalog), "", emptySet(), emptySet(), null, 10)
 
-            results.map { it.resource } shouldBe listOf(ResourceId("section"))
+            results.map { it.resource } shouldBe listOf(ResourceId(value = "section"))
         }
     }
 
@@ -245,7 +244,7 @@ class SurrealAuthoringSearchRepositoryTest {
                         limit = 10,
                     )
 
-            results.map { it.resource } shouldBe listOf(ResourceId("book"))
+            results.map { it.resource } shouldBe listOf(ResourceId(value = "book"))
         }
     }
 }
@@ -266,7 +265,7 @@ private fun Surreal.insertSearchRow(
     selection: TypeSelection,
     text: String = "",
 ) {
-    val resource = ResourceId(id)
+    val resource = ResourceId(value = id)
     val record = AuthoringRecord.of(selection, emptyMap())
     query(
         "CREATE ONLY \$resource CONTENT { content: \$content, search: { text: \$text } };",
@@ -362,17 +361,17 @@ val SurrealAuthoringSearchRepositoryTestSuite by testSuite {
                     ),
                 relations = listOf(contract(ownership, true), contract(related, false)),
             )
-        val root = ResourceId("root")
-        val child = ResourceId("child")
-        val grandchild = ResourceId("grandchild")
-        val outside = ResourceId("outside")
+        val root = ResourceId(value = "root")
+        val child = ResourceId(value = "child")
+        val grandchild = ResourceId(value = "grandchild")
+        val outside = ResourceId(value = "outside")
 
         fun link(
             id: RelationId,
             target: ResourceId,
         ) = DataValue.createLink(
             endpoint = id.endpointId(EndpointSlot.FIRST),
-            target = LinkTarget(resource = target.toSkir(), opposite = null),
+            target = LinkTarget(resource = target, opposite = null),
         )
         val selected = TypeSelection.CompleteWrapper(type.namedUse())
         val resources =

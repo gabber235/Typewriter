@@ -2,7 +2,6 @@
 
 package com.typewritermc.operations
 
-import com.typewritermc.authoring.CounterpartChoice
 import com.typewritermc.authoring.GeneratedSdkApi
 import com.typewritermc.authoring.ResourceDraft
 import com.typewritermc.authoring.field
@@ -31,6 +30,7 @@ import de.infix.testBalloon.framework.core.testSuite
 import io.kotest.matchers.collections.shouldContainAll
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.string.shouldContain
+import skirout.editor.v1.authoring.CounterpartChoice
 import skirout.editor.v1.authoring.LinkOccurrence
 import skirout.editor.v1.authoring.LinkOccurrenceId
 import skirout.editor.v1.catalog.PreparedContent
@@ -208,18 +208,19 @@ val OperationDeclarationTest by testSuite {
         val location = ValueLocation.of(ResourceId("owner"))
 
         fun choice(name: String) =
-            CounterpartChoice.New(
-                location,
-                PreparedValue(
-                    content =
-                        PreparedContent.RecordWrapper(
-                            AuthoringRecord.of(
-                                TypeSelection.CompleteWrapper(target.namedUse()),
-                                mapOf("name" to DataValue.StringValueWrapper(name)),
+            CounterpartChoice.createNew(
+                containing = location,
+                prepared =
+                    PreparedValue(
+                        content =
+                            PreparedContent.RecordWrapper(
+                                AuthoringRecord.of(
+                                    TypeSelection.CompleteWrapper(target.namedUse()),
+                                    mapOf("name" to DataValue.StringValueWrapper(name)),
+                                ),
                             ),
-                        ),
-                    findings = emptyList(),
-                ),
+                        findings = emptyList(),
+                    ),
             )
         val source =
             LinkOccurrence(

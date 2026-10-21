@@ -1,6 +1,5 @@
 package com.typewritermc.types.catalog
 
-import com.typewritermc.authoring.ArgumentLocation
 import com.typewritermc.authoring.DependentField
 import com.typewritermc.authoring.PartialSchema
 import com.typewritermc.authoring.StructuralResult
@@ -24,6 +23,7 @@ import com.typewritermc.types.template
 import com.typewritermc.types.toTemplate
 import com.typewritermc.types.unknownVariant
 import com.typewritermc.types.use
+import skirout.editor.v1.authoring.ArgumentLocation
 import skirout.editor.v1.catalog.DeclarationStatus
 import skirout.editor.v1.diagnostic.DeclarationDiagnostic
 import skirout.editor.v1.type_catalog.AppliedSchema
@@ -510,7 +510,7 @@ class DefaultCheckedCatalog(
                 }
 
                 ArgumentSelection.UNFILLED -> {
-                    pending += ArgumentLocation(index)
+                    pending += ArgumentLocation(index = index)
                 }
 
                 else -> {

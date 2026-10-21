@@ -18,7 +18,6 @@ import com.typewritermc.engine.relation
 import com.typewritermc.engine.semanticDigest
 import com.typewritermc.realm.authoring.AuthoringView
 import com.typewritermc.services.libs.utils.sha256Hex
-import com.typewritermc.types.ResourceId
 import com.typewritermc.types.actualType
 import com.typewritermc.types.catalog.CheckedCatalog
 import com.typewritermc.types.catalog.runtimeDefinitions
@@ -26,7 +25,6 @@ import com.typewritermc.types.endpoint
 import com.typewritermc.types.named
 import com.typewritermc.types.ownsResources
 import com.typewritermc.types.record
-import com.typewritermc.types.toResourceId
 import com.typewritermc.types.toSkir
 import com.typewritermc.types.unknownVariant
 import com.typewritermc.types.use
@@ -45,6 +43,7 @@ import skirout.editor.v1.type_catalog.AuthoringRecord
 import skirout.editor.v1.type_catalog.DataValue
 import skirout.editor.v1.type_catalog.DiagnosticId
 import skirout.editor.v1.type_catalog.RelationId
+import skirout.editor.v1.type_catalog.ResourceId
 import skirout.editor.v1.type_catalog.RuleOrigin
 import skirout.editor.v1.type_catalog.TypeSelection
 import skirout.editor.v1.type_catalog.ValueLocation
@@ -86,8 +85,8 @@ internal class OwnershipClosureCompiler(
                 .flatMap { occurrence ->
                     ownershipEndpoints[occurrence.id.endpoint].orEmpty().map { slot ->
                         when (slot) {
-                            EndpointSlot.FIRST -> occurrence.source.toResourceId() to occurrence.target.resource.toResourceId()
-                            EndpointSlot.SECOND -> occurrence.target.resource.toResourceId() to occurrence.source.toResourceId()
+                            EndpointSlot.FIRST -> occurrence.source to occurrence.target.resource
+                            EndpointSlot.SECOND -> occurrence.target.resource to occurrence.source
                             else -> unknownVariant(slot)
                         }
                     }
@@ -105,8 +104,8 @@ internal class OwnershipClosureCompiler(
         diagnostics +=
             projected.problems
                 .filter { problem ->
-                    problem.location.resource.toResourceId() in owned ||
-                        occurrencesByLocation[problem.location]?.target?.resource?.toResourceId() in owned
+                    problem.location.resource in owned ||
+                        occurrencesByLocation[problem.location]?.target?.resource in owned
                 }.map { problem ->
                     val occurrence = occurrencesByLocation[problem.location]
                     val missingOwned =
@@ -122,9 +121,9 @@ internal class OwnershipClosureCompiler(
                                 "Captured link projection is invalid at ${problem.location.resource.value} ${problem.location.path.text}."
                             },
                         severity = DiagnosticSeverity.ERROR,
-                        source = occurrence?.source?.toResourceId() ?: problem.location.resource.toResourceId(),
+                        source = occurrence?.source ?: problem.location.resource,
                         location = problem.location,
-                        target = occurrence?.target?.resource?.toResourceId(),
+                        target = occurrence?.target?.resource,
                     )
                 }
         val projectedEdges =
@@ -132,8 +131,8 @@ internal class OwnershipClosureCompiler(
                 .filter { projection -> projection.first in owned || projection.second in owned }
                 .map { projection ->
                     CompiledEdge(
-                        source = CompiledResourceKey(source = projection.first.toSkir(), context = CompilationContext.Root),
-                        target = CompiledResourceKey(source = projection.second.toSkir(), context = CompilationContext.Root),
+                        source = CompiledResourceKey(source = projection.first, context = CompilationContext.Root),
+                        target = CompiledResourceKey(source = projection.second, context = CompilationContext.Root),
                         origin =
                             CompiledEdgeOrigin.createRelation(
                                 relation = projection.contract,
@@ -189,7 +188,7 @@ internal class OwnershipClosureCompiler(
         val facts =
             RuntimeCompilationFacts(
                 formatRevision = formatRevision,
-                root = CompiledResourceKey(source = root.toSkir(), context = CompilationContext.Root),
+                root = CompiledResourceKey(source = root, context = CompilationContext.Root),
                 resources = runtimeResources,
                 edges = projectedEdges,
                 types =
@@ -238,7 +237,7 @@ private fun AuthoringRecord.compile(
     val actual = (configuration as TypeSelection.CompleteWrapper).use
     val binding = readiness.binding
     return CompiledResource(
-        key = CompiledResourceKey(source = id.toSkir(), context = CompilationContext.Root),
+        key = CompiledResourceKey(source = id, context = CompilationContext.Root),
         actualType = actual,
         bindingProvider = binding.provider,
         bindingSignature = binding.signature,

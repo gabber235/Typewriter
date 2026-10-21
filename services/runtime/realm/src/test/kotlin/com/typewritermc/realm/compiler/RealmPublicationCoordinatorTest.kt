@@ -15,19 +15,15 @@ import com.typewritermc.realm.authoring.AuthoringView
 import com.typewritermc.realm.authoring.AuthoringViewDelta
 import com.typewritermc.realm.authoring.InMemoryAuthoringViewStore
 import com.typewritermc.realm.checking.TestCatalogLease
-import com.typewritermc.realm.checking.encodedExpectations
 import com.typewritermc.services.libs.filetransfer.blob.ArtifactDigest
 import com.typewritermc.services.libs.filetransfer.blob.BlobEndpoint
 import com.typewritermc.services.libs.filetransfer.blob.BlobMetadata
 import com.typewritermc.services.libs.filetransfer.blob.BlobResult
-import com.typewritermc.types.ResourceId
 import com.typewritermc.types.namedTemplate
 import com.typewritermc.types.namedUse
 import com.typewritermc.types.payload
 import com.typewritermc.types.qualified
 import com.typewritermc.types.template
-import com.typewritermc.types.toResourceId
-import com.typewritermc.types.toSkir
 import com.typewritermc.types.use
 import de.infix.testBalloon.framework.core.testSuite
 import io.kotest.matchers.shouldBe
@@ -59,6 +55,7 @@ import skirout.editor.v1.type_catalog.FieldOwner
 import skirout.editor.v1.type_catalog.NativeBindingId
 import skirout.editor.v1.type_catalog.PublicationId
 import skirout.editor.v1.type_catalog.RepresentationTemplate
+import skirout.editor.v1.type_catalog.ResourceId
 import skirout.editor.v1.type_catalog.ScalarKind
 import skirout.editor.v1.type_catalog.TypeDefinition
 import skirout.editor.v1.type_catalog.TypeDefinitionId
@@ -70,7 +67,7 @@ val RealmPublicationCoordinatorTest by testSuite {
     test("checking preserves runtime invalidation even when authoring witnesses still match") {
         val fixture = PublicationFixture()
         try {
-            val location = ValueLocation.of(ResourceId("page"))
+            val location = ValueLocation.of(ResourceId(value = "page"))
             val current =
                 fixture.views.read { view ->
                     FindingSet(
@@ -92,10 +89,10 @@ val RealmPublicationCoordinatorTest by testSuite {
                                 catalog = view.catalog.generation,
                             ),
                         expectations =
-                            listOf<com.typewritermc.authoring.EditExpectation>(
-                                com.typewritermc.authoring.EditExpectation
-                                    .Resource(location.resource.toResourceId(), view.resources.getValue(location.resource.toResourceId())),
-                            ).encodedExpectations(),
+                            listOf<skirout.editor.v1.authoring_facts.EditExpectation>(
+                                skirout.editor.v1.authoring_facts.EditExpectation
+                                    .createResource(id = location.resource, expected = view.resources.getValue(location.resource)),
+                            ),
                         outcome = CheckOutcome.FINISHED,
                         findings =
                             listOf(
@@ -199,7 +196,7 @@ val RealmPublicationCoordinatorTest by testSuite {
         fixture.attempts.started shouldBe 0
         fixture.update("Quest")
         fixture.release()
-        fixture.views.install(fixture.views.prepare(AuthoringViewDelta(emptyMap(), removedResources = setOf(ResourceId("page")))))
+        fixture.views.install(fixture.views.prepare(AuthoringViewDelta(emptyMap(), removedResources = setOf(ResourceId(value = "page")))))
         fixture.publisher.refresh()
         val ready =
             fixture.publisher.views.value.status
@@ -314,12 +311,12 @@ val RealmPublicationCoordinatorTest by testSuite {
                 .shouldBeInstanceOf<PublicationStatus.BlockedWrapper>()
                 .value
         blocked.confirmedChanges shouldBe listOf(PublicationChange.RootAddedWrapper(fixture.root))
-        blocked.pendingRoots.single().resource shouldBe ResourceId("broken").toSkir()
+        blocked.pendingRoots.single().resource shouldBe ResourceId(value = "broken")
         blocked.blockers.first.details.primary
-            ?.resource shouldBe ResourceId("broken").toSkir()
+            ?.resource shouldBe ResourceId(value = "broken")
         blocked.blockers.first.details.related
             .single()
-            .resource shouldBe ResourceId("target").toSkir()
+            .resource shouldBe ResourceId(value = "target")
         fixture.attempts.started shouldBe 0
         fixture.blobRequests shouldBe 0
         fixture.publisher.publish(PublicationCandidateId(value = "forged")).shouldBeInstanceOf<PublicationResult.CandidateChanged>()
@@ -366,7 +363,7 @@ val RealmPublicationCoordinatorTest by testSuite {
                     OwnershipClosureCompiler(
                         emptySet(),
                         testAssessment(capture.root, fixture.bindings).resources,
-                    ).compile(ResourceId("page"))
+                    ).compile(ResourceId(value = "page"))
                 }.shouldBeInstanceOf<ResourceGraphCompileResult.Success>()
             val inputs = CompilationInputs(capture.root, testAssessment(capture.root, fixture.bindings).resources)
             val artifact =
@@ -387,7 +384,7 @@ val RealmPublicationCoordinatorTest by testSuite {
 }
 
 internal class PublicationFixture(
-    initial: Map<ResourceId, AuthoringRecord> = mapOf(ResourceId("page") to publicationPageRecord("Quest")),
+    initial: Map<ResourceId, AuthoringRecord> = mapOf(ResourceId(value = "page") to publicationPageRecord("Quest")),
     producers: List<CompiledArtifactProducer> = listOf(ResourceGraphArtifactProducer),
 ) {
     val views =
@@ -398,7 +395,7 @@ internal class PublicationFixture(
     val attempts = RecordingAttempts()
     val bindings = listOf(NativeBindingRequirement(PUBLICATION_PAGE_USE, NativeBindingId(value = "publication_page"), "page:v1"))
     val root =
-        CompilationRoot(projection = CompilationProjectionId(value = "typewriter.resource-graph"), resource = ResourceId("page").toSkir())
+        CompilationRoot(projection = CompilationProjectionId(value = "typewriter.resource-graph"), resource = ResourceId(value = "page"))
     var engineInputs = testEngineInputs()
     var blobRequests = 0
     var captureFailure = false
@@ -443,7 +440,14 @@ internal class PublicationFixture(
             .shouldBeInstanceOf<PublicationStatus.ReadyWrapper>()
             .value
 
-    fun update(value: String) = views.install(views.prepare(AuthoringViewDelta(mapOf(ResourceId("page") to publicationPageRecord(value)))))
+    fun update(value: String) =
+        views.install(
+            views.prepare(
+                AuthoringViewDelta(
+                    mapOf(ResourceId(value = "page") to publicationPageRecord(value)),
+                ),
+            ),
+        )
 
     suspend fun release(): PublicationResult.Activated {
         publisher.refresh()
@@ -455,7 +459,7 @@ internal class PublicationFixture(
             InMemoryAuthoringViewStore(
                 TestCatalogLease(definitions = PUBLICATION_DEFINITIONS),
                 AuthoringSeed(
-                    mapOf(ResourceId("page") to publicationPageRecord(value)),
+                    mapOf(ResourceId(value = "page") to publicationPageRecord(value)),
                 ),
             )
         try {
@@ -520,7 +524,7 @@ private fun blockedProducer() =
         override val projection = CompilationProjectionId(value = "fixture.blocked")
         override val mediaType = "application/blocked"
 
-        override fun roots(view: AuthoringView) = setOf(CompilationRoot(projection = projection, resource = ResourceId("broken").toSkir()))
+        override fun roots(view: AuthoringView) = setOf(CompilationRoot(projection = projection, resource = ResourceId(value = "broken")))
 
         context(inputs: CompilationInputs)
         override fun compile(roots: Set<CompilationRoot>): List<CompilationResult> =
@@ -533,8 +537,8 @@ private fun blockedProducer() =
                             "broken_link",
                             "The target is missing",
                             DiagnosticSeverity.ERROR,
-                            ResourceId("broken"),
-                            ResourceId("target"),
+                            ResourceId(value = "broken"),
+                            ResourceId(value = "target"),
                         ),
                     ),
                 ),

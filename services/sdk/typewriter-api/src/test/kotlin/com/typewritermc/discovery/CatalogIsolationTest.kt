@@ -10,7 +10,6 @@ import com.typewritermc.types.catalog.DefaultCheckedCatalog
 import com.typewritermc.types.catalog.of
 import com.typewritermc.types.namedTemplate
 import com.typewritermc.types.qualified
-import com.typewritermc.types.skir.getOrThrow
 import com.typewritermc.types.template
 import de.infix.testBalloon.framework.core.testSuite
 import io.kotest.assertions.throwables.shouldThrow

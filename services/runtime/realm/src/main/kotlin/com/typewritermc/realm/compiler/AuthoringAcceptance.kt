@@ -2,7 +2,6 @@ package com.typewritermc.realm.compiler
 
 import com.typewritermc.authoring.CompleteValue
 import com.typewritermc.authoring.CompletenessResult
-import com.typewritermc.authoring.EditExpectation
 import com.typewritermc.authoring.append
 import com.typewritermc.authoring.complete
 import com.typewritermc.authoring.of
@@ -18,11 +17,9 @@ import com.typewritermc.realm.authoring.AuthoringViewStore
 import com.typewritermc.realm.checking.CapturedCheckReport
 import com.typewritermc.realm.checking.CheckAdmissionTarget
 import com.typewritermc.realm.checking.RealmCheckRuntime
-import com.typewritermc.realm.checking.encodedExpectations
 import com.typewritermc.services.libs.utils.rethrowExceptional
 import com.typewritermc.services.libs.utils.sha256Hex
 import com.typewritermc.types.NativeBindingException
-import com.typewritermc.types.ResourceId
 import com.typewritermc.types.canonicalValueKey
 import com.typewritermc.types.catalog.Resolution
 import com.typewritermc.types.fields
@@ -32,14 +29,17 @@ import com.typewritermc.types.payload
 import com.typewritermc.types.qualified
 import com.typewritermc.types.record
 import com.typewritermc.types.rows
+import com.typewritermc.types.toResourceId
 import com.typewritermc.types.toSkir
 import com.typewritermc.types.unknownVariant
 import com.typewritermc.types.use
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
+import skirout.editor.v1.authoring_facts.EditExpectation
 import skirout.editor.v1.checking.CheckOutcome
 import skirout.editor.v1.diagnostic.Diagnostic
 import skirout.editor.v1.diagnostic.DiagnosticSeverity
+import skirout.editor.v1.publication.DiagnosticEvidence
 import skirout.editor.v1.publication.EngineImplementationInputs
 import skirout.editor.v1.type_catalog.CatalogGeneration
 import skirout.editor.v1.type_catalog.DataValue
@@ -47,11 +47,11 @@ import skirout.editor.v1.type_catalog.DiagnosticId
 import skirout.editor.v1.type_catalog.NamedTypeUse
 import skirout.editor.v1.type_catalog.NativeBindingId
 import skirout.editor.v1.type_catalog.PathSegment
+import skirout.editor.v1.type_catalog.ResourceId
 import skirout.editor.v1.type_catalog.RuleOrigin
 import skirout.editor.v1.type_catalog.TypeDefinitionId
 import skirout.editor.v1.type_catalog.TypeSelection
 import skirout.editor.v1.type_catalog.ValueLocation
-import skirout.editor.v1.publication.DiagnosticEvidence as SkirDiagnosticEvidence
 
 data class NativeBindingRequirement(
     val actual: NamedTypeUse,
@@ -107,18 +107,6 @@ internal sealed interface ResourceReadiness {
         }
     }
 }
-
-/**
- * Authoring facts required for a saved finding to describe a working value. Its expectations stay Kotlin edit
- * expectations until those are Skir values; [toSkir] gives the form publication notices carry.
- */
-data class DiagnosticEvidence(
-    val catalog: CatalogGeneration,
-    val expectations: List<EditExpectation>,
-)
-
-internal fun DiagnosticEvidence.toSkir(): SkirDiagnosticEvidence =
-    SkirDiagnosticEvidence(catalog = catalog, expectations = expectations.encodedExpectations())
 
 internal data class CapturedAssessment(
     val resources: Map<ResourceId, ResourceReadiness>,
@@ -189,8 +177,8 @@ internal class AuthoringAcceptance(
                         emitted.forEach { finding ->
                             evidence[finding.id] =
                                 DiagnosticEvidence(
-                                    snapshot.root.catalog.generation,
-                                    (evidence[finding.id]?.expectations.orEmpty() + result.expectations).distinct(),
+                                    catalog = snapshot.root.catalog.generation,
+                                    expectations = (evidence[finding.id]?.expectations.orEmpty() + result.expectations).distinct(),
                                 )
                         }
                         emitted
@@ -202,7 +190,11 @@ internal class AuthoringAcceptance(
                 fun blocked() {
                     val own = findings.drop(firstFinding)
                     resources[id] = ResourceReadiness.Blocked(own)
-                    val witness = DiagnosticEvidence(snapshot.root.catalog.generation, listOf(EditExpectation.Resource(id, record)))
+                    val witness =
+                        DiagnosticEvidence(
+                            catalog = snapshot.root.catalog.generation,
+                            expectations = listOf(EditExpectation.createResource(id = id, expected = record)),
+                        )
                     own.forEach { evidence[it.id] = witness }
                 }
                 val actual = (record.configuration as? TypeSelection.CompleteWrapper)?.use
@@ -241,7 +233,7 @@ internal class AuthoringAcceptance(
                                 publicationDiagnostic(
                                     "unfinished_value",
                                     "A required value is unfinished.",
-                                    location.copy(resource = id.toSkir()),
+                                    location.copy(resource = id),
                                 )
                         }
                     }
@@ -252,7 +244,7 @@ internal class AuthoringAcceptance(
                                 publicationDiagnostic(
                                     problem.code,
                                     "The authored value is structurally invalid.",
-                                    problem.location.copy(resource = id.toSkir()),
+                                    problem.location.copy(resource = id),
                                 )
                         }
                     }

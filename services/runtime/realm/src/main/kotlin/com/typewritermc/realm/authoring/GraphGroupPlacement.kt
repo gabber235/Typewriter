@@ -11,11 +11,11 @@ import com.typewritermc.authoring.of
 import com.typewritermc.authoring.use
 import com.typewritermc.operations.requireAuthored
 import com.typewritermc.realm.repository.valueAt
-import com.typewritermc.types.ResourceId
 import com.typewritermc.types.actualType
 import com.typewritermc.types.use
 import skirout.editor.v1.type_catalog.AuthoringRecord
 import skirout.editor.v1.type_catalog.DataValue
+import skirout.editor.v1.type_catalog.ResourceId
 import skirout.editor.v1.type_catalog.TypeSelection
 import skirout.editor.v1.type_catalog.ValueLocation
 import kotlin.math.abs

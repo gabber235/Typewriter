@@ -5,7 +5,6 @@ import com.typewritermc.protocol.transport.generated.authoringChanged
 import com.typewritermc.protocol.transport.generated.authoringPublicationWatch
 import com.typewritermc.realm.authoring.AuthoringView
 import com.typewritermc.realm.authoring.AuthoringViewStore
-import com.typewritermc.realm.checking.decodedExpectations
 import com.typewritermc.realm.compiler.RealmPublicationCoordinator
 import com.typewritermc.realm.repository.conflicts
 import com.typewritermc.services.libs.communicator.client.Communicator
@@ -137,7 +136,7 @@ internal fun captureFindings(
         findings.map { set ->
             val current =
                 set.ticket.catalog == root.catalog.generation &&
-                    root.values.conflicts(set.expectations.decodedExpectations()).isEmpty()
+                    root.values.conflicts(set.expectations).isEmpty()
             set.copy(status = if (current) FindingStatus.CURRENT else FindingStatus.OUTDATED)
         },
     )

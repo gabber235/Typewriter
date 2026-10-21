@@ -28,7 +28,6 @@ import com.typewritermc.realm.authoring.operationObservation
 import com.typewritermc.types.FactoryNativeBindingRegistry
 import com.typewritermc.types.NativeBindingFactory
 import com.typewritermc.types.NativeBindingRegistry
-import com.typewritermc.types.ResourceId
 import com.typewritermc.types.actualType
 import com.typewritermc.types.catalog.CheckedCatalog
 import com.typewritermc.types.catalog.DefaultCheckedCatalog
@@ -62,6 +61,7 @@ import skirout.editor.v1.type_catalog.ListItem
 import skirout.editor.v1.type_catalog.ParameterKey
 import skirout.editor.v1.type_catalog.PathSegment
 import skirout.editor.v1.type_catalog.RepresentationTemplate
+import skirout.editor.v1.type_catalog.ResourceId
 import skirout.editor.v1.type_catalog.ScalarKind
 import skirout.editor.v1.type_catalog.TypeDefinition
 import skirout.editor.v1.type_catalog.TypeDefinitionId
@@ -78,7 +78,7 @@ import java.util.concurrent.atomic.AtomicInteger
 
 val AuthoringViewStoreTest by testSuite {
     test("operation overlays require the exact saved observation and preserve saved state") {
-        val id = ResourceId("operation-page")
+        val id = ResourceId(value = "operation-page")
         val store = InMemoryAuthoringViewStore(TestCatalogLease(), AuthoringSeed(mapOf(id to record(name = "Saved"))))
         try {
             val token =
@@ -111,7 +111,7 @@ val AuthoringViewStoreTest by testSuite {
     }
     test("retained views preserve original values while new reads see installed state") {
         val catalog = TestCatalogLease()
-        val id = ResourceId("page")
+        val id = ResourceId(value = "page")
         val original = record(name = "Quest", numbers = listOf("a" to 1, "b" to 2))
         val store = InMemoryAuthoringViewStore(catalog, AuthoringSeed(mapOf(id to original)))
         val retained = store.capture()
@@ -138,7 +138,7 @@ val AuthoringViewStoreTest by testSuite {
         store.close()
     }
     test("reload failure prevents serving old current state but preserves retained reads") {
-        val id = ResourceId("page")
+        val id = ResourceId(value = "page")
         val original = record(name = "Quest")
         val catalog = TestCatalogLease()
         val store = InMemoryAuthoringViewStore(catalog, AuthoringSeed(mapOf(id to original)))
@@ -161,23 +161,23 @@ val AuthoringViewStoreTest by testSuite {
         store.close()
     }
     test("staged reads keep expectations from the original baseline") {
-        val id = ResourceId("page")
+        val id = ResourceId(value = "page")
         val original = record(name = "Quest")
         val store = InMemoryAuthoringViewStore(TestCatalogLease(), AuthoringSeed(mapOf(id to original)))
         store.capture().use { lease ->
             val reads = CapturedAuthoringReads(lease.stagedView(mapOf(id to record(name = "Story"))))
             reads.read(boundPath<String>(location(id, "name"), TEXT_USE)).available() shouldBe "Story"
             val expected =
-                reads.observations().filterIsInstance<com.typewritermc.authoring.EditExpectation.Value>().single {
-                    it.at ==
+                reads.observations().filterIsInstance<skirout.editor.v1.authoring_facts.EditExpectation.ValueWrapper>().single {
+                    it.value.at ==
                         location(id, "name")
                 }
-            expected.expected shouldBe DataValue.StringValueWrapper("Quest")
+            expected.value.expected shouldBe DataValue.StringValueWrapper("Quest")
         }
         store.close()
     }
     test("root and staged views reject caller and exposed collection mutation") {
-        val id = ResourceId("page")
+        val id = ResourceId(value = "page")
         val rootArguments = mutableListOf<TypeUse>(INT_USE)
         val rootItems = mutableListOf(ListItem(id = ItemId(value = "root"), value = DataValue.integer(BigInteger.ONE)))
         val rootFields =
@@ -202,7 +202,7 @@ val AuthoringViewStoreTest by testSuite {
             (retainedNumbers.payload as DataValue.ListValueWrapper).items.map(ListItem::id) shouldBe listOf(ItemId(value = "root"))
             shouldThrow<UnsupportedOperationException> {
                 @Suppress("UNCHECKED_CAST")
-                (lease.root.resources as MutableMap<ResourceId, AuthoringRecord>)[ResourceId("other")] = retained
+                (lease.root.resources as MutableMap<ResourceId, AuthoringRecord>)[ResourceId(value = "other")] = retained
             }
             // Skir type values are deeply immutable: their lists are not mutable lists at all.
             (retainedNumbers.actualType.arguments is MutableList<*>) shouldBe false
@@ -230,7 +230,7 @@ val AuthoringViewStoreTest by testSuite {
         store.close()
     }
     test("installation and current reads share one lock") {
-        val id = ResourceId("page")
+        val id = ResourceId(value = "page")
         val store = InMemoryAuthoringViewStore(TestCatalogLease(), AuthoringSeed(mapOf(id to record(name = "Quest"))))
         val executor = Executors.newFixedThreadPool(2)
         val reading = CountDownLatch(1)

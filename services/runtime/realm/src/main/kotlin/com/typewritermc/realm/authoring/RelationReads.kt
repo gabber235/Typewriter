@@ -1,6 +1,5 @@
 package com.typewritermc.realm.authoring
 
-import com.typewritermc.authoring.LinkProjection
 import com.typewritermc.authoring.item
 import com.typewritermc.authoring.of
 import com.typewritermc.authoring.use
@@ -11,17 +10,16 @@ import com.typewritermc.realm.repository.CounterpartBinding
 import com.typewritermc.realm.repository.DeclaredLinkEvidence
 import com.typewritermc.realm.repository.ResourceValueMapper
 import com.typewritermc.realm.repository.valueAt
-import com.typewritermc.types.ResourceId
 import com.typewritermc.types.catalog.Resolution
 import com.typewritermc.types.endpoint
 import com.typewritermc.types.isAcyclic
 import com.typewritermc.types.ownsResources
 import com.typewritermc.types.payload
-import com.typewritermc.types.toResourceId
 import com.typewritermc.types.toSkir
 import com.typewritermc.types.use
 import skirout.editor.v1.authoring.LinkOccurrence
 import skirout.editor.v1.authoring.LinkOccurrenceId
+import skirout.editor.v1.authoring_facts.LinkProjection
 import skirout.editor.v1.catalog.RelationContract
 import skirout.editor.v1.type_catalog.AuthoringRecord
 import skirout.editor.v1.type_catalog.DataValue
@@ -29,6 +27,7 @@ import skirout.editor.v1.type_catalog.EndpointId
 import skirout.editor.v1.type_catalog.ItemId
 import skirout.editor.v1.type_catalog.LinkTarget
 import skirout.editor.v1.type_catalog.ResolvedRepresentation
+import skirout.editor.v1.type_catalog.ResourceId
 import skirout.editor.v1.type_catalog.TypeSelection
 import skirout.editor.v1.type_catalog.ValueLocation
 
@@ -78,8 +77,8 @@ internal class RelationReads(
 
     fun observe(source: LinkOccurrence) {
         reads.observeInput(InputIdentity.Value(source.id.location))
-        reads.observeInput(InputIdentity.Incoming(source.source.toResourceId(), null))
-        reads.observeInput(InputIdentity.Incoming(source.target.resource.toResourceId(), null))
+        reads.observeInput(InputIdentity.Incoming(source.source, null))
+        reads.observeInput(InputIdentity.Incoming(source.target.resource, null))
     }
 
     /** Bindings this resource declares for [endpoint]; the evidence is recorded as read before anyone inspects it. */
@@ -99,8 +98,8 @@ internal class RelationReads(
     ): LinkOccurrence? {
         reads.observeInput(InputIdentity.Incoming(subject, null))
         val membership =
-            origin.occurrences.singleOrNull { it.target.resource.toResourceId() == subject && it.holdsOwnership() }
-                ?: links.values.singleOrNull { it.target.resource.toResourceId() == subject && it.holdsOwnership() }
+            origin.occurrences.singleOrNull { it.target.resource == subject && it.holdsOwnership() }
+                ?: links.values.singleOrNull { it.target.resource == subject && it.holdsOwnership() }
                 ?: return null
         require(links[membership.id] == membership) { "The source ownership changed" }
         observe(membership)
@@ -123,7 +122,7 @@ internal class RelationReads(
         val endpoint = if (relation.first.id == membership.id.endpoint) relation.second.id else relation.first.id
         return LinkOccurrence(
             id = LinkOccurrenceId(endpoint = endpoint, location = ValueLocation.of(subject, inverse)),
-            source = subject.toSkir(),
+            source = subject,
             target = LinkTarget(resource = membership.source, opposite = membership.id.location.path),
         )
     }
@@ -151,7 +150,7 @@ internal class RelationReads(
         source: LinkOccurrence,
         target: ResourceId,
     ): Boolean {
-        val sourceRecord = resources[source.source.toResourceId()] ?: return false
+        val sourceRecord = resources[source.source] ?: return false
         val destination = resources[target] ?: return false
         val actual = (destination.configuration as? TypeSelection.CompleteWrapper)?.use ?: return false
         val expected =
@@ -221,7 +220,7 @@ internal class RelationReads(
         val locations = evidence.values.toMutableList()
         val collection = ResourceValueMapper.counterpartBinding(endpoint, this, record, catalog.checked) as? CounterpartBinding.Collection
         if (collection != null &&
-            locations.none { links[LinkOccurrenceId(endpoint = endpoint, location = it)]?.target?.resource?.toResourceId() == linked }
+            locations.none { links[LinkOccurrenceId(endpoint = endpoint, location = it)]?.target?.resource == linked }
         ) {
             locations += collection.location.item(item("source:$this:$endpoint:$linked"))
         }
@@ -229,14 +228,14 @@ internal class RelationReads(
             reads.observeInput(InputIdentity.Value(at))
             val present = links[LinkOccurrenceId(endpoint = endpoint, location = at)]
             val value = record.valueAt(at.path)
-            if (present != null && present.target.resource.toResourceId() != linked) return@mapNotNull null
+            if (present != null && present.target.resource != linked) return@mapNotNull null
             if (present == null && value != null && !value.unfilled()) return@mapNotNull null
             val occurrence =
                 present
                     ?: LinkOccurrence(
                         id = LinkOccurrenceId(endpoint = endpoint, location = at),
-                        source = this.toSkir(),
-                        target = LinkTarget(resource = linked.toSkir(), opposite = null),
+                        source = this,
+                        target = LinkTarget(resource = linked, opposite = null),
                     )
             occurrence.takeIf { accepts(it, linked) }
         }
@@ -246,14 +245,14 @@ internal class RelationReads(
     fun linksBetween(
         id: ResourceId,
         target: ResourceId,
-    ): List<LinkOccurrence> = linksOf(id).filter { it.source.toResourceId() == target || it.target.resource.toResourceId() == target }
+    ): List<LinkOccurrence> = linksOf(id).filter { it.source == target || it.target.resource == target }
 
     /** Non owning link occurrences held by [id] or pointing at it. */
     fun linksOf(id: ResourceId): List<LinkOccurrence> {
         reads.observeInput(InputIdentity.Value(ValueLocation.of(id)))
         reads.observeInput(InputIdentity.Incoming(id, null))
         return links.values.filter { occurrence ->
-            (occurrence.source.toResourceId() == id || occurrence.target.resource.toResourceId() == id) &&
+            (occurrence.source == id || occurrence.target.resource == id) &&
                 !contract(occurrence.id.endpoint).ownsResources
         }
     }

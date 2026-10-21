@@ -1,17 +1,13 @@
 package com.typewritermc.realm.authoring
 
-import com.typewritermc.authoring.ArgumentLocation
-import com.typewritermc.authoring.EditIntent
-import com.typewritermc.authoring.PreparedEdit
-import com.typewritermc.authoring.PreparedEditResult
 import com.typewritermc.authoring.definition
 import com.typewritermc.authoring.field
 import com.typewritermc.authoring.item
 import com.typewritermc.authoring.mapKey
 import com.typewritermc.authoring.mapValue
 import com.typewritermc.authoring.of
+import com.typewritermc.authoring.requireValid
 import com.typewritermc.authoring.root
-import com.typewritermc.authoring.skir.SkirAuthoringOperationCodec
 import com.typewritermc.authoring.use
 import com.typewritermc.checking.InputIdentity
 import com.typewritermc.realm.checking.CapturedAuthoringReads
@@ -21,7 +17,6 @@ import com.typewritermc.realm.repository.ResourceValueMapper
 import com.typewritermc.realm.repository.conflicts
 import com.typewritermc.realm.repository.requiredExpectations
 import com.typewritermc.realm.repository.sameFact
-import com.typewritermc.types.ResourceId
 import com.typewritermc.types.actualType
 import com.typewritermc.types.catalog.CheckedCatalog
 import com.typewritermc.types.catalog.Resolution
@@ -34,15 +29,18 @@ import com.typewritermc.types.nullable
 import com.typewritermc.types.payload
 import com.typewritermc.types.requireValid
 import com.typewritermc.types.rows
-import com.typewritermc.types.skir.getOrThrow
 import com.typewritermc.types.template
 import com.typewritermc.types.toResourceId
 import com.typewritermc.types.toSkir
 import com.typewritermc.types.unknownVariant
 import com.typewritermc.types.use
+import skirout.editor.v1.authoring.EditIntent
 import skirout.editor.v1.authoring.LinkOccurrence
 import skirout.editor.v1.authoring.LinkOccurrenceId
 import skirout.editor.v1.authoring.LinkRepairIntent
+import skirout.editor.v1.authoring.PrepareTypeArgumentChangeResponse
+import skirout.editor.v1.authoring.PreparedEdit
+import skirout.editor.v1.authoring.PreviewTypeArgumentChangeResponse
 import skirout.editor.v1.authoring.TypeArgumentChangePreview
 import skirout.editor.v1.catalog.EndpointSlot
 import skirout.editor.v1.catalog.RelationContract
@@ -53,12 +51,12 @@ import skirout.editor.v1.type_catalog.DataValue
 import skirout.editor.v1.type_catalog.NamedTypeTemplate
 import skirout.editor.v1.type_catalog.PathSegment
 import skirout.editor.v1.type_catalog.ResolvedRepresentation
+import skirout.editor.v1.type_catalog.ResourceId
 import skirout.editor.v1.type_catalog.TypeSelection
 import skirout.editor.v1.type_catalog.TypeTemplate
 import skirout.editor.v1.type_catalog.TypeUse
 import skirout.editor.v1.type_catalog.ValueLocation
 import skirout.editor.v1.type_catalog.ValuePath
-import skirout.editor.v1.authoring.PreparedEdit as SkirPreparedEdit
 
 /** Checks a preview received from an editor; preparation decodes and checks its edit. */
 internal fun TypeArgumentChangePreview.requireValid(): TypeArgumentChangePreview =
@@ -69,32 +67,14 @@ internal fun TypeArgumentChangePreview.requireValid(): TypeArgumentChangePreview
         clearedLocations.forEach { it.requireValid() }
     }
 
-internal sealed interface TypePreviewResult {
-    data class Ready(
-        val preview: TypeArgumentChangePreview,
-    ) : TypePreviewResult
-
-    data class InvalidArguments(
-        val diagnostics: List<DeclarationDiagnostic>,
-    ) : TypePreviewResult
-
-    data class Incomplete(
-        val arguments: List<ArgumentLocation>,
-    ) : TypePreviewResult
-
-    data class Rejected(
-        val problems: List<ValueProblem>,
-    ) : TypePreviewResult
-}
-
 internal interface TypeArgumentOperations {
     fun preview(
         resource: ResourceId,
         requested: TypeSelection,
         snapshot: AuthoringLease,
-    ): TypePreviewResult
+    ): PreviewTypeArgumentChangeResponse
 
-    suspend fun prepare(preview: TypeArgumentChangePreview): PreparedEditResult
+    suspend fun prepare(preview: TypeArgumentChangePreview): PrepareTypeArgumentChangeResponse
 }
 
 /**
@@ -112,29 +92,29 @@ internal class DefaultTypeArgumentOperations(
         resource: ResourceId,
         requested: TypeSelection,
         snapshot: AuthoringLease,
-    ): TypePreviewResult {
+    ): PreviewTypeArgumentChangeResponse {
         val root = snapshot.root
         val requestedDefinition = requested.definition
         val record =
             root.resources[resource]
-                ?: return TypePreviewResult.InvalidArguments(
+                ?: return PreviewTypeArgumentChangeResponse.InvalidArgumentsErrorWrapper(
                     listOf(DeclarationDiagnostic.of(requestedDefinition, "resource_missing")),
                 )
         val previous = record.configuration
         if (previous.definition != requestedDefinition) {
-            return TypePreviewResult.InvalidArguments(
+            return PreviewTypeArgumentChangeResponse.InvalidArgumentsErrorWrapper(
                 listOf(DeclarationDiagnostic.of(requestedDefinition, "type_argument_definition_changed")),
             )
         }
         val next = root.catalog.checked.resolvePartial(requested)
-        if (next is Resolution.Invalid) return TypePreviewResult.InvalidArguments(next.diagnostics)
+        if (next is Resolution.Invalid) return PreviewTypeArgumentChangeResponse.InvalidArgumentsErrorWrapper(next.diagnostics)
         val old = root.catalog.checked.resolvePartial(previous)
-        if (old is Resolution.Invalid) return TypePreviewResult.InvalidArguments(old.diagnostics)
+        if (old is Resolution.Invalid) return PreviewTypeArgumentChangeResponse.InvalidArgumentsErrorWrapper(old.diagnostics)
         old as Resolution.Ready
         next as Resolution.Ready
 
         val cleared = mutableListOf<ValueLocation>()
-        val nestedRetags = mutableListOf<EditIntent.Retag>()
+        val nestedRetags = mutableListOf<EditIntent.RetagWrapper>()
         val inspected = linkedSetOf<InputIdentity>()
         val rootLocation = ValueLocation.of(resource)
         val oldFields = old.value.knownFields.associateBy { it.key }
@@ -186,17 +166,17 @@ internal class DefaultTypeArgumentOperations(
             }.toMutableSet()
         val repairs =
             buildList {
-                add(EditIntent.ConfigureResource(resource, requested))
+                add(EditIntent.createConfigureResource(resource = resource, configuration = requested))
                 addAll(nestedRetags)
                 cleared
                     .distinct()
                     .filterNot(relationRepairLocations::contains)
-                    .forEach { add(EditIntent.SetValue(it, DataValue.UNFILLED)) }
+                    .forEach { add(EditIntent.createSetValue(at = it, value = DataValue.UNFILLED)) }
             }
         val plannedIntents =
             buildList {
                 addAll(repairs)
-                relationRepairs.forEach { repair -> add(EditIntent.DisconnectRelation(repair.occurrence)) }
+                relationRepairs.forEach { repair -> add(EditIntent.DisconnectRelationWrapper(repair.occurrence)) }
             }
         val planned =
             AuthoringMutationPlanner(
@@ -206,16 +186,16 @@ internal class DefaultTypeArgumentOperations(
             ).plan(
                 root.resources,
                 PreparedEdit(
-                    root.catalog.generation,
-                    emptyList(),
-                    plannedIntents,
+                    catalog = root.catalog.generation,
+                    expectations = emptyList(),
+                    intents = plannedIntents,
                 ),
             )
-        if (planned is MutationPlanningResult.Rejected) return TypePreviewResult.Rejected(planned.problems)
+        if (planned is MutationPlanningResult.Rejected) return PreviewTypeArgumentChangeResponse.RejectedErrorWrapper(planned.problems)
         planned as MutationPlanningResult.Accepted
         val reads = CapturedAuthoringReads(snapshot.originalView())
         evidence.forEach(reads::observeInput)
-        val witness = PreparedEdit(root.catalog.generation, emptyList(), plannedIntents)
+        val witness = PreparedEdit(catalog = root.catalog.generation, expectations = emptyList(), intents = plannedIntents)
         val required =
             root.values.requiredExpectations(
                 witness,
@@ -226,11 +206,11 @@ internal class DefaultTypeArgumentOperations(
                 planned.plan,
             )
         val observed = (reads.observations() + required).distinct()
-        return TypePreviewResult.Ready(
+        return PreviewTypeArgumentChangeResponse.ReadyWrapper(
             TypeArgumentChangePreview(
-                resource = resource.toSkir(),
+                resource = resource,
                 next = requested,
-                edit = PreparedEdit(root.catalog.generation, observed, plannedIntents).encoded(),
+                edit = PreparedEdit(catalog = root.catalog.generation, expectations = observed, intents = plannedIntents),
                 linkRepairs = relationRepairs,
                 clearedLocations =
                     (cleared + relationRepairLocations).distinct(),
@@ -238,47 +218,57 @@ internal class DefaultTypeArgumentOperations(
         )
     }
 
-    override suspend fun prepare(preview: TypeArgumentChangePreview): PreparedEditResult {
-        val resource = preview.resource.toResourceId()
-        val edit = preview.edit.decoded()
+    override suspend fun prepare(preview: TypeArgumentChangePreview): PrepareTypeArgumentChangeResponse {
+        val resource = preview.resource
+        val edit = preview.edit.requireValid()
         val rootLocation = ValueLocation.of(resource)
         if (!preview.hasCoherentMetadata(resource, edit)) {
-            return PreparedEditResult.Rejected(listOf(ValueProblem(location = rootLocation, code = "type_argument_preview_mismatch")))
+            return PrepareTypeArgumentChangeResponse.RejectedErrorWrapper(
+                listOf(ValueProblem(location = rootLocation, code = "type_argument_preview_mismatch")),
+            )
         }
         return views.capture().use { snapshot ->
             if (snapshot.root.catalog.generation != edit.catalog) {
-                return PreparedEditResult.Rejected(listOf(ValueProblem(location = rootLocation, code = "catalog_changed")))
+                return PrepareTypeArgumentChangeResponse.RejectedErrorWrapper(
+                    listOf(ValueProblem(location = rootLocation, code = "catalog_changed")),
+                )
             }
             val conflicts = snapshot.root.values.conflicts(edit.expectations)
             if (conflicts.isNotEmpty()) {
-                return PreparedEditResult.Rejected(listOf(ValueProblem(location = rootLocation, code = "expectation_conflict")))
+                return PrepareTypeArgumentChangeResponse.RejectedErrorWrapper(
+                    listOf(ValueProblem(location = rootLocation, code = "expectation_conflict")),
+                )
             }
             val verified =
                 when (val regenerated = preview(resource, preview.next, snapshot)) {
-                    is TypePreviewResult.Ready -> {
-                        regenerated.preview
+                    is PreviewTypeArgumentChangeResponse.ReadyWrapper -> {
+                        regenerated.value
                     }
 
-                    is TypePreviewResult.Rejected -> {
-                        return PreparedEditResult.Rejected(regenerated.problems)
+                    is PreviewTypeArgumentChangeResponse.RejectedErrorWrapper -> {
+                        return PrepareTypeArgumentChangeResponse.RejectedErrorWrapper(regenerated.value)
                     }
 
                     else -> {
-                        return PreparedEditResult.Rejected(
+                        return PrepareTypeArgumentChangeResponse.RejectedErrorWrapper(
                             listOf(ValueProblem(location = rootLocation, code = "type_argument_preview_no_longer_valid")),
                         )
                     }
                 }
             if (!verified.sameRepairs(preview)) {
-                return PreparedEditResult.Rejected(listOf(ValueProblem(location = rootLocation, code = "type_argument_preview_mismatch")))
+                return PrepareTypeArgumentChangeResponse.RejectedErrorWrapper(
+                    listOf(ValueProblem(location = rootLocation, code = "type_argument_preview_mismatch")),
+                )
             }
-            val verifiedEdit = verified.edit.decoded()
+            val verifiedEdit = verified.edit
             if (edit.expectations.any { expected -> verifiedEdit.expectations.none { it.sameFact(expected) } } ||
                 verifiedEdit.expectations.any { expected -> edit.expectations.none { it.sameFact(expected) } }
             ) {
-                return PreparedEditResult.Rejected(listOf(ValueProblem(location = rootLocation, code = "type_argument_preview_mismatch")))
+                return PrepareTypeArgumentChangeResponse.RejectedErrorWrapper(
+                    listOf(ValueProblem(location = rootLocation, code = "type_argument_preview_mismatch")),
+                )
             }
-            PreparedEditResult.Prepared(verifiedEdit)
+            PrepareTypeArgumentChangeResponse.createPrepared(edit = verifiedEdit)
         }
     }
 
@@ -293,25 +283,19 @@ internal class DefaultTypeArgumentOperations(
         resource: ResourceId,
         edit: PreparedEdit,
     ): Boolean {
-        val configuration = edit.intents.filterIsInstance<EditIntent.ConfigureResource>()
-        if (configuration != listOf(EditIntent.ConfigureResource(resource, next))) return false
+        val configuration = edit.intents.filterIsInstance<EditIntent.ConfigureResourceWrapper>()
+        if (configuration != listOf(EditIntent.createConfigureResource(resource = resource, configuration = next))) return false
         val cleared =
             (
                 edit.intents
-                    .filterIsInstance<EditIntent.SetValue>()
-                    .filter { it.value == DataValue.UNFILLED }
-                    .map { it.at } +
+                    .filterIsInstance<EditIntent.SetValueWrapper>()
+                    .filter { it.value.value == DataValue.UNFILLED }
+                    .map { it.value.at } +
                     linkRepairs.map { it.occurrence.location }
             ).distinct()
         return clearedLocations == cleared
     }
 }
-
-/** The Skir form of a prepared edit, which previews carry, until prepared edits are Skir values. */
-private fun PreparedEdit.encoded(): SkirPreparedEdit = SkirAuthoringOperationCodec.encode(this).getOrThrow()
-
-/** Reads the edit of a preview, checking it as every other operation decoding does, until prepared edits are Skir values. */
-private fun SkirPreparedEdit.decoded(): PreparedEdit = SkirAuthoringOperationCodec.decode(this).getOrThrow()
 
 private fun collectRepairs(
     value: DataValue,
@@ -320,7 +304,7 @@ private fun collectRepairs(
     at: ValueLocation,
     catalog: CheckedCatalog,
     repairs: MutableList<ValueLocation>,
-    retags: MutableList<EditIntent.Retag>,
+    retags: MutableList<EditIntent.RetagWrapper>,
     inspected: MutableSet<InputIdentity>,
 ) {
     inspected += InputIdentity.Value(at)
@@ -359,7 +343,7 @@ private fun collectRepairs(
         repairs += at
         return
     }
-    retags += EditIntent.Retag(at, expectedType.value)
+    retags += EditIntent.createRetag(at = at, type = expectedType.value)
     val payload = requireNotNull(namedValue).payload
     when {
         payload is DataValue.RecordWrapper && oldRepresentation is ResolvedRepresentation.RecordWrapper &&
@@ -460,13 +444,13 @@ private fun incompatibleLinks(
         contracts.flatMap { contract -> listOf(contract.first.id to contract, contract.second.id to contract) }.toMap()
     return occurrences
         .mapNotNull { occurrence ->
-            if (occurrence.source.toResourceId() != resource &&
-                occurrence.target.resource.toResourceId() != resource
+            if (occurrence.source != resource &&
+                occurrence.target.resource != resource
             ) {
                 return@mapNotNull null
             }
-            val sourceRecord = resources[occurrence.source.toResourceId()]
-            val targetRecord = resources[occurrence.target.resource.toResourceId()]
+            val sourceRecord = resources[occurrence.source]
+            val targetRecord = resources[occurrence.target.resource]
             inspected += InputIdentity.Form(ValueLocation(resource = occurrence.source, path = ValuePath.root))
             inspected += InputIdentity.Value(occurrence.id.location)
             inspected += InputIdentity.Form(ValueLocation(resource = occurrence.target.resource, path = ValuePath.root))
@@ -474,8 +458,8 @@ private fun incompatibleLinks(
             val sourceEndpoint = if (contract.first.id == occurrence.id.endpoint) contract.first else contract.second
             val targetEndpoint = if (sourceEndpoint.slot == EndpointSlot.FIRST) contract.second else contract.first
             inspected += InputIdentity.Incoming(resource, contract.id)
-            val proposedSource = sourceRecord?.proposedIf(occurrence.source.toResourceId() == resource, requested)
-            val proposedTarget = targetRecord?.proposedIf(occurrence.target.resource.toResourceId() == resource, requested)
+            val proposedSource = sourceRecord?.proposedIf(occurrence.source == resource, requested)
+            val proposedTarget = targetRecord?.proposedIf(occurrence.target.resource == resource, requested)
             val expectedTarget =
                 proposedSource?.let {
                     ResourceValueMapper.expectedTarget(occurrence, it, catalog)

@@ -2,13 +2,7 @@
 
 package com.typewritermc.realm.repository
 
-import com.typewritermc.authoring.ConnectIntent
-import com.typewritermc.authoring.CounterpartChoice
-import com.typewritermc.authoring.EditIntent
 import com.typewritermc.authoring.GeneratedSdkApi
-import com.typewritermc.authoring.LinkProjection
-import com.typewritermc.authoring.PreparedEdit
-import com.typewritermc.authoring.RelationProjectionDelta
 import com.typewritermc.authoring.append
 import com.typewritermc.authoring.field
 import com.typewritermc.authoring.fieldMap
@@ -26,7 +20,6 @@ import com.typewritermc.realm.authoring.RuntimeOperationPreparation
 import com.typewritermc.realm.authoring.WorkingViewEditContext
 import com.typewritermc.types.ACYCLIC_RELATION_FAMILY_ID
 import com.typewritermc.types.RESOURCE_OWNERSHIP_FAMILY_ID
-import com.typewritermc.types.ResourceId
 import com.typewritermc.types.actualType
 import com.typewritermc.types.catalog.DefaultCheckedCatalog
 import com.typewritermc.types.field
@@ -44,6 +37,7 @@ import com.typewritermc.types.qualified
 import com.typewritermc.types.record
 import com.typewritermc.types.template
 import com.typewritermc.types.toResourceId
+import com.typewritermc.types.toResourceIds
 import com.typewritermc.types.toSkir
 import com.typewritermc.types.type
 import com.typewritermc.types.unknownVariant
@@ -52,8 +46,14 @@ import de.infix.testBalloon.framework.core.testSuite
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.types.shouldBeInstanceOf
 import kotlinx.coroutines.runBlocking
+import skirout.editor.v1.authoring.ConnectIntent
+import skirout.editor.v1.authoring.CounterpartChoice
+import skirout.editor.v1.authoring.EditIntent
 import skirout.editor.v1.authoring.LinkOccurrence
 import skirout.editor.v1.authoring.LinkOccurrenceId
+import skirout.editor.v1.authoring.PreparedEdit
+import skirout.editor.v1.authoring.RelationProjectionDelta
+import skirout.editor.v1.authoring_facts.LinkProjection
 import skirout.editor.v1.catalog.EndpointBindingTemplate
 import skirout.editor.v1.catalog.EndpointCardinality
 import skirout.editor.v1.catalog.EndpointDefinition
@@ -83,6 +83,7 @@ import skirout.editor.v1.type_catalog.RelationFamilyId
 import skirout.editor.v1.type_catalog.RelationId
 import skirout.editor.v1.type_catalog.RelativeFieldPattern
 import skirout.editor.v1.type_catalog.RepresentationTemplate
+import skirout.editor.v1.type_catalog.ResourceId
 import skirout.editor.v1.type_catalog.ScalarKind
 import skirout.editor.v1.type_catalog.TypeDefinition
 import skirout.editor.v1.type_catalog.TypeDefinitionId
@@ -93,7 +94,7 @@ import skirout.editor.v1.type_catalog.ValuePath
 
 class AuthoringMutationPlannerTest {
     fun inverseOnlyReferencesDoNotOfferLinkedDuplication() {
-        val id = ResourceId("inverse_only")
+        val id = ResourceId(value = "inverse_only")
         val definitions =
             DEFINITIONS.map { definition ->
                 if (definition.id ==
@@ -138,7 +139,7 @@ class AuthoringMutationPlannerTest {
                         com.typewritermc.realm.authoring
                             .RelationReads(reads),
                     )
-            facts.linkCapacityOf(id) shouldBe com.typewritermc.operations.LinkCapacity.None
+            facts.linkCapacityOf(id.toResourceId()) shouldBe com.typewritermc.operations.LinkCapacity.None
         } finally {
             catalog.close()
         }
@@ -146,8 +147,8 @@ class AuthoringMutationPlannerTest {
 
     fun runtimeResolvesInlineCallbacksAndPreparesAgainstWorkingValues() =
         runBlocking {
-            val first = ResourceId("callback_first")
-            val second = ResourceId("callback_second")
+            val first = ResourceId(value = "callback_first")
+            val second = ResourceId(value = "callback_second")
             val resources = mapOf(first to record(label = "Saved"), second to record(label = "Second"))
             val baseline = operationBaseline(resources, emptyList())
             val origin =
@@ -184,7 +185,7 @@ class AuthoringMutationPlannerTest {
                                 drafts.map {
                                     read(
                                         com.typewritermc.authoring.boundPath<String>(
-                                            location(it.id, "label"),
+                                            location(it.id.toSkir(), "label"),
                                             ScalarKind.TEXT.use,
                                         ),
                                     )
@@ -201,13 +202,13 @@ class AuthoringMutationPlannerTest {
                                     com.typewritermc.operations.requireAuthored(
                                         read(
                                             com.typewritermc.authoring.boundPath<String>(
-                                                location(subject, "label"),
+                                                location(subject.toSkir(), "label"),
                                                 ScalarKind.TEXT.use,
                                             ),
                                         ),
                                     )
                                 require(previous != "reject") { "The complete selection cannot be changed" }
-                                checkedSet(location(subject, "label"), DataValue.StringValueWrapper("$previous!"))
+                                checkedSet(location(subject.toSkir(), "label"), DataValue.StringValueWrapper("$previous!"))
                             }
                         }
                     }
@@ -238,7 +239,7 @@ class AuthoringMutationPlannerTest {
                 val runtime =
                     com.typewritermc.realm.authoring
                         .ResourceOperationRuntime(store)
-                val invocation = OperationInvocation("callback-operation", listOf(first, second))
+                val invocation = OperationInvocation("callback-operation", listOf(first, second).toResourceIds())
                 val token = store.capture().use { it.root.observationId }
                 val overlay = mapOf(first to record(label = "Draft"))
                 val resolved = runtime.resolve(invocation, GENERATION, token, overlay, emptySet())
@@ -265,11 +266,17 @@ class AuthoringMutationPlannerTest {
                             null,
                             PreparationChoices(),
                         ).shouldBeInstanceOf<com.typewritermc.realm.authoring.OperationPreparationResult.Preview>()
-                preview.edit.intents.any { it is EditIntent.SetValue && it.value == DataValue.StringValueWrapper("Draft!") } shouldBe true
+                preview.edit.intents.any {
+                    it is EditIntent.SetValueWrapper && it.value.value ==
+                        DataValue.StringValueWrapper(
+                            "Draft!",
+                        )
+                } shouldBe
+                    true
                 preview.edit.expectations.any {
-                    it is com.typewritermc.authoring.EditExpectation.Value &&
-                        it.at == location(first, "label") &&
-                        it.expected == DataValue.StringValueWrapper("Draft")
+                    it is skirout.editor.v1.authoring_facts.EditExpectation.ValueWrapper &&
+                        it.value.at == location(first, "label") &&
+                        it.value.expected == DataValue.StringValueWrapper("Draft")
                 } shouldBe true
                 val failed =
                     runtime.prepare(
@@ -354,9 +361,9 @@ class AuthoringMutationPlannerTest {
         }
 
     fun adjacentDeletesValidateRestrictionAgainstTheWholeSet() {
-        val first = ResourceId("restricted_first")
-        val second = ResourceId("restricted_second")
-        val third = ResourceId("unrelated_write")
+        val first = ResourceId(value = "restricted_first")
+        val second = ResourceId(value = "restricted_second")
+        val third = ResourceId(value = "unrelated_write")
         val resources =
             mapOf(
                 first to record(first = link(PAIR_FIRST_TYPE, PAIR_FIRST, second, fieldPath("second"))),
@@ -375,7 +382,7 @@ class AuthoringMutationPlannerTest {
             planner
                 .plan(
                     resources,
-                    edit(EditIntent.DeleteResource(first), EditIntent.DeleteResource(second)),
+                    edit(EditIntent.createDeleteResource(id = first), EditIntent.createDeleteResource(id = second)),
                 ).shouldBeInstanceOf<MutationPlanningResult.Accepted>()
                 .plan
         complete.removedResources shouldBe setOf(first, second)
@@ -383,9 +390,9 @@ class AuthoringMutationPlannerTest {
             planner.plan(
                 resources,
                 edit(
-                    EditIntent.DeleteResource(first),
-                    EditIntent.SetValue(location(third, "label"), DataValue.StringValueWrapper("ordered boundary")),
-                    EditIntent.DeleteResource(second),
+                    EditIntent.createDeleteResource(id = first),
+                    EditIntent.createSetValue(at = location(third, "label"), value = DataValue.StringValueWrapper("ordered boundary")),
+                    EditIntent.createDeleteResource(id = second),
                 ),
             )
         (separated is MutationPlanningResult.Rejected) shouldBe true
@@ -393,8 +400,8 @@ class AuthoringMutationPlannerTest {
 
     fun deletionSelectionIncludesCascadeAndExplicitDescendantOnce() =
         runBlocking {
-            val parent = ResourceId("delete_parent")
-            val child = ResourceId("delete_child")
+            val parent = ResourceId(value = "delete_parent")
+            val child = ResourceId(value = "delete_child")
             val item = ItemId(value = "child")
             val resources =
                 mapOf(
@@ -412,14 +419,14 @@ class AuthoringMutationPlannerTest {
                 val edit = WorkingViewEditContext(baseline, "delete-overlap")
                 val session =
                     RuntimeOperationPreparation(
-                        OperationInvocation("delete-overlap", listOf(parent, child)),
+                        OperationInvocation("delete-overlap", listOf(parent, child).toResourceIds()),
                         PreparationChoices(),
                         edit,
                     )
-                session.delete(listOf(parent, child))
+                session.delete(listOf(parent, child).toResourceIds())
                 val result = edit.finish()
                 edit.session.resources.isEmpty() shouldBe true
-                result.intents.filterIsInstance<EditIntent.DeleteResource>().size shouldBe 2
+                result.intents.filterIsInstance<EditIntent.DeleteResourceWrapper>().size shouldBe 2
             } finally {
                 baseline.catalog.close()
             }
@@ -427,11 +434,11 @@ class AuthoringMutationPlannerTest {
 
     fun moveTransfersTheWholeSelectionThroughExactOwnershipInverses() =
         runBlocking {
-            val root = ResourceId("move_root")
-            val from = ResourceId("move_from")
-            val to = ResourceId("move_to")
-            val first = ResourceId("move_first")
-            val second = ResourceId("move_second")
+            val root = ResourceId(value = "move_root")
+            val from = ResourceId(value = "move_from")
+            val to = ResourceId(value = "move_to")
+            val first = ResourceId(value = "move_first")
+            val second = ResourceId(value = "move_second")
             val firstItem = ItemId(value = "first")
             val secondItem = ItemId(value = "second")
             val fromItem = ItemId(value = "from")
@@ -480,26 +487,26 @@ class AuthoringMutationPlannerTest {
                 )
             try {
                 val edit = WorkingViewEditContext(baseline, "move-selection")
-                val origin = OperationOrigin(from, baseline.links.values.filter { it.source.toResourceId() == from })
+                val origin = OperationOrigin(from.toResourceId(), baseline.links.values.filter { it.source == from })
                 val session =
                     RuntimeOperationPreparation(
-                        OperationInvocation("move-selection", listOf(first, second), origin),
+                        OperationInvocation("move-selection", listOf(first, second).toResourceIds(), origin),
                         PreparationChoices(),
                         edit,
                     )
-                session.move(listOf(first, second), to, null)
+                session.move(listOf(first, second).toResourceIds(), to.toResourceId(), null)
                 val prepared = edit.finish()
-                prepared.intents.filterIsInstance<EditIntent.ConnectRelation>().all {
-                    it.intent.counterpart is CounterpartChoice.Existing
+                prepared.intents.filterIsInstance<EditIntent.ConnectRelationWrapper>().all {
+                    it.value.counterpart is CounterpartChoice.ExistingWrapper
                 } shouldBe true
                 val final = ResourceValueMapper.discover(edit.session.resources)
                 final
                     .filter {
-                        it.source.toResourceId() == to && it.target.resource.toResourceId() != root
-                    }.map { it.target.resource.toResourceId() }
+                        it.source == to && it.target.resource != root
+                    }.map { it.target.resource }
                     .toSet() shouldBe
                     setOf(first, second)
-                final.filter { it.source.toResourceId() == from }.map { it.target.resource.toResourceId() } shouldBe listOf(root)
+                final.filter { it.source == from }.map { it.target.resource } shouldBe listOf(root)
                 (
                     edit.session.resources
                         .getValue(first)
@@ -514,11 +521,11 @@ class AuthoringMutationPlannerTest {
 
     fun impossibleBatchMoveRejectsBeforeChangingAnyResource() =
         runBlocking {
-            val ownerA = ResourceId("owner_a")
-            val ownerB = ResourceId("owner_b")
-            val destination = ResourceId("single_owner")
-            val childA = ResourceId("child_a")
-            val childB = ResourceId("child_b")
+            val ownerA = ResourceId(value = "owner_a")
+            val ownerB = ResourceId(value = "owner_b")
+            val destination = ResourceId(value = "single_owner")
+            val childA = ResourceId(value = "child_a")
+            val childB = ResourceId(value = "child_b")
             val resources =
                 mapOf(
                     ownerA to record(first = link(PAIR_FIRST_TYPE, PAIR_FIRST, childA, fieldPath("second"))),
@@ -532,13 +539,13 @@ class AuthoringMutationPlannerTest {
                 val edit = WorkingViewEditContext(baseline, "impossible-move")
                 val session =
                     RuntimeOperationPreparation(
-                        OperationInvocation("impossible-move", listOf(childA, childB)),
+                        OperationInvocation("impossible-move", listOf(childA, childB).toResourceIds()),
                         PreparationChoices(),
                         edit,
                     )
                 var rejected = false
                 try {
-                    session.move(listOf(childA, childB), destination, null)
+                    session.move(listOf(childA, childB).toResourceIds(), destination.toResourceId(), null)
                 } catch (
                     _: IllegalArgumentException,
                 ) {
@@ -555,11 +562,11 @@ class AuthoringMutationPlannerTest {
 
     fun cloneCopiesOwnedClosureAndDeduplicatesSelectedDescendants() =
         runBlocking {
-            val root = ResourceId("clone_root")
-            val book = ResourceId("clone_book")
-            val page = ResourceId("clone_page")
-            val element = ResourceId("clone_element")
-            val outside = ResourceId("clone_shared")
+            val root = ResourceId(value = "clone_root")
+            val book = ResourceId(value = "clone_book")
+            val page = ResourceId(value = "clone_page")
+            val element = ResourceId(value = "clone_element")
+            val outside = ResourceId(value = "clone_shared")
             val rootItem = ItemId(value = "root")
             val bookItem = ItemId(value = "book")
             val outsideItem = ItemId(value = "outside")
@@ -636,16 +643,16 @@ class AuthoringMutationPlannerTest {
                 val edit = WorkingViewEditContext(baseline, "clone-closure")
                 val session =
                     RuntimeOperationPreparation(
-                        OperationInvocation("clone-closure", listOf(book, page)),
+                        OperationInvocation("clone-closure", listOf(book, page).toResourceIds()),
                         PreparationChoices(),
                         edit,
                     )
-                val result = session.duplicate(listOf(book, page))
+                val result = session.duplicate(listOf(book, page).toResourceIds())
                 val final = edit.finish()
                 result.size shouldBe 2
-                final.intents.filterIsInstance<EditIntent.CreateResource>().size shouldBe 3
+                final.intents.filterIsInstance<EditIntent.CreateResourceWrapper>().size shouldBe 3
                 edit.session.resources.size shouldBe 8
-                val copy = edit.session.resources.getValue(result[0])
+                val copy = edit.session.resources.getValue(result[0].toSkir())
                 val copiedChildItem =
                     (
                         (
@@ -672,7 +679,7 @@ class AuthoringMutationPlannerTest {
                         baseline.catalog.checked,
                     )
                 copied.problems.isEmpty() shouldBe true
-                copied.projections.any { it.first == result[0] && it.second == result[1] } shouldBe true
+                copied.projections.any { it.first == result[0].toSkir() && it.second == result[1].toSkir() } shouldBe true
             } finally {
                 baseline.catalog.close()
             }
@@ -680,9 +687,9 @@ class AuthoringMutationPlannerTest {
 
     fun clonePreservesOutsideOutgoingAndLeavesIncomingOnOriginal() =
         runBlocking {
-            val source = ResourceId("copy_source")
-            val outside = ResourceId("copy_outside")
-            val incoming = ResourceId("copy_incoming")
+            val source = ResourceId(value = "copy_source")
+            val outside = ResourceId(value = "copy_outside")
+            val incoming = ResourceId(value = "copy_incoming")
             val outgoingItem = ItemId(value = "outgoing")
             val outsideItem = ItemId(value = "outside_inverse")
             val incomingItem = ItemId(value = "incoming")
@@ -731,14 +738,18 @@ class AuthoringMutationPlannerTest {
             try {
                 val edit = WorkingViewEditContext(baseline, "clone-outside")
                 val session =
-                    RuntimeOperationPreparation(OperationInvocation("clone-outside", listOf(source)), PreparationChoices(), edit)
-                val copy = session.duplicate(listOf(source)).single()
+                    RuntimeOperationPreparation(
+                        OperationInvocation("clone-outside", listOf(source).toResourceIds()),
+                        PreparationChoices(),
+                        edit,
+                    )
+                val copy = session.duplicate(listOf(source).toResourceIds()).single().toSkir()
                 edit.finish()
                 val links = ResourceValueMapper.discover(edit.session.resources)
-                links.any { it.source.toResourceId() == copy && it.target.resource.toResourceId() == outside } shouldBe true
-                links.none { it.source.toResourceId() == incoming && it.target.resource.toResourceId() == copy } shouldBe true
+                links.any { it.source == copy && it.target.resource == outside } shouldBe true
+                links.none { it.source == incoming && it.target.resource == copy } shouldBe true
                 edit.session.resources.getValue(incoming) shouldBe resources.getValue(incoming)
-                links.none { it.source.toResourceId() == copy && it.target.resource.toResourceId() == incoming } shouldBe true
+                links.none { it.source == copy && it.target.resource == incoming } shouldBe true
             } finally {
                 baseline.catalog.close()
             }
@@ -746,8 +757,8 @@ class AuthoringMutationPlannerTest {
 
     fun cloneRejectsOccupiedExternalScalarWithoutChangingSavedState() =
         runBlocking {
-            val source = ResourceId("scalar_copy_source")
-            val outside = ResourceId("scalar_copy_outside")
+            val source = ResourceId(value = "scalar_copy_source")
+            val outside = ResourceId(value = "scalar_copy_outside")
             val resources =
                 mapOf(
                     source to record(first = link(PAIR_FIRST_TYPE, PAIR_FIRST, outside, fieldPath("second"))),
@@ -757,10 +768,14 @@ class AuthoringMutationPlannerTest {
             try {
                 val edit = WorkingViewEditContext(baseline, "clone-scalar")
                 val session =
-                    RuntimeOperationPreparation(OperationInvocation("clone-scalar", listOf(source)), PreparationChoices(), edit)
+                    RuntimeOperationPreparation(
+                        OperationInvocation("clone-scalar", listOf(source).toResourceIds()),
+                        PreparationChoices(),
+                        edit,
+                    )
                 var rejected = false
                 try {
-                    session.duplicate(listOf(source))
+                    session.duplicate(listOf(source).toResourceIds())
                 } catch (_: IllegalArgumentException) {
                     rejected = true
                 }
@@ -772,8 +787,8 @@ class AuthoringMutationPlannerTest {
         }
 
     fun repeatedEmbeddedCounterpartsRetainDistinctExplicitIdentities() {
-        val source = ResourceId("embedded_source")
-        val target = ResourceId("embedded_target")
+        val source = ResourceId(value = "embedded_source")
+        val target = ResourceId(value = "embedded_target")
         val definitions =
             DEFINITIONS.map { definition ->
                 if (definition.id ==
@@ -810,28 +825,29 @@ class AuthoringMutationPlannerTest {
             val session = AuthoringPlanningSession(baseline, "embedded-normalization")
             val occurrence = occurrence(NESTED_SECOND, location(source, "nestedSecond"), target, null)
             val choice =
-                CounterpartChoice.New(
-                    location(target, "children"),
-                    PreparedValue(
-                        content =
-                            PreparedContent.RecordWrapper(
-                                AuthoringRecord.of(
-                                    TypeSelection.CompleteWrapper(WRAPPER_USE),
-                                    mapOf("inner" to DataValue.UNFILLED),
+                CounterpartChoice.createNew(
+                    containing = location(target, "children"),
+                    prepared =
+                        PreparedValue(
+                            content =
+                                PreparedContent.RecordWrapper(
+                                    AuthoringRecord.of(
+                                        TypeSelection.CompleteWrapper(WRAPPER_USE),
+                                        mapOf("inner" to DataValue.UNFILLED),
+                                    ),
                                 ),
-                            ),
-                        findings = emptyList(),
-                    ),
+                            findings = emptyList(),
+                        ),
                 )
-            session.append(EditIntent.ConnectRelation(ConnectIntent(occurrence, target, choice)))
-            session.append(EditIntent.DisconnectRelation(occurrence.id))
-            session.append(EditIntent.ConnectRelation(ConnectIntent(occurrence, target, choice)))
+            session.append(EditIntent.ConnectRelationWrapper(ConnectIntent(source = occurrence, target = target, counterpart = choice)))
+            session.append(EditIntent.DisconnectRelationWrapper(occurrence.id))
+            session.append(EditIntent.ConnectRelationWrapper(ConnectIntent(source = occurrence, target = target, counterpart = choice)))
             val (prepared, _) = session.finish()
-            val inserts = prepared.intents.filterIsInstance<EditIntent.Insert>()
+            val inserts = prepared.intents.filterIsInstance<EditIntent.InsertWrapper>()
             inserts.size shouldBe 2
-            (inserts[0].item.id != inserts[1].item.id) shouldBe true
-            prepared.intents.filterIsInstance<EditIntent.ConnectRelation>().all {
-                it.intent.counterpart is CounterpartChoice.Existing
+            (inserts[0].value.item.id != inserts[1].value.item.id) shouldBe true
+            prepared.intents.filterIsInstance<EditIntent.ConnectRelationWrapper>().all {
+                it.value.counterpart is CounterpartChoice.ExistingWrapper
             } shouldBe
                 true
         } finally {
@@ -840,8 +856,8 @@ class AuthoringMutationPlannerTest {
     }
 
     fun normalizedInverseIdentitySurvivesLaterWritesAndComposition() {
-        val parent = ResourceId("normalized_parent")
-        val child = ResourceId("normalized_child")
+        val parent = ResourceId(value = "normalized_parent")
+        val child = ResourceId(value = "normalized_child")
         val resources = mapOf(parent to record(), child to record())
         val catalog =
             com.typewritermc.realm.checking.TestCatalogLease(
@@ -859,17 +875,29 @@ class AuthoringMutationPlannerTest {
         try {
             val session = AuthoringPlanningSession(baseline, "normalization-test")
             session.append(
-                EditIntent.ConnectRelation(ConnectIntent(occurrence(PARENT_SECOND, location(child, "parent"), parent, null), parent, null)),
+                EditIntent.ConnectRelationWrapper(
+                    ConnectIntent(
+                        source = occurrence(PARENT_SECOND, location(child, "parent"), parent, null),
+                        target = parent,
+                        counterpart = null,
+                    ),
+                ),
             )
-            val inverse = ResourceValueMapper.discover(session.resources).single { it.source.toResourceId() == parent }
-            ((session.intents.single() as EditIntent.ConnectRelation).intent.counterpart is CounterpartChoice.Existing) shouldBe true
-            session.append(EditIntent.SetValue(location(child, "label"), DataValue.StringValueWrapper("later write")))
+            val inverse = ResourceValueMapper.discover(session.resources).single { it.source == parent }
+            val connected = (session.intents.single() as EditIntent.ConnectRelationWrapper).value
+            (connected.counterpart is CounterpartChoice.ExistingWrapper) shouldBe true
+            session.append(EditIntent.createSetValue(at = location(child, "label"), value = DataValue.StringValueWrapper("later write")))
             val (prepared, plan) = session.finish()
             resources + plan.resources - plan.removedResources shouldBe session.resources
             val composed =
                 prepared.copy(
                     intents =
-                        listOf(EditIntent.SetValue(location(parent, "label"), DataValue.StringValueWrapper("earlier draft"))) +
+                        listOf(
+                            EditIntent.createSetValue(
+                                at = location(parent, "label"),
+                                value = DataValue.StringValueWrapper("earlier draft"),
+                            ),
+                        ) +
                             prepared.intents,
                 )
             val final =
@@ -884,7 +912,7 @@ class AuthoringMutationPlannerTest {
     }
 
     fun counterpartClassificationPreservesBroaderServerCapabilities() {
-        val resource = ResourceId("counterpart")
+        val resource = ResourceId(value = "counterpart")
         ResourceValueMapper.counterpartBinding(PAIR_SECOND, resource, record(), CATALOG) shouldBe
             CounterpartBinding.Scalar(location(resource, "second"))
         ResourceValueMapper.counterpartBinding(PARENT_FIRST, resource, record(), CATALOG) shouldBe
@@ -917,15 +945,19 @@ class AuthoringMutationPlannerTest {
     }
 
     fun unknownConnectEndpointIsRejectedBeforeInferringACounterpart() {
-        val source = ResourceId("source")
-        val target = ResourceId("target")
+        val source = ResourceId(value = "source")
+        val target = ResourceId(value = "target")
         val result =
             planner(pairContract())
                 .plan(
                     mapOf(source to record(), target to record()),
                     edit(
-                        EditIntent.ConnectRelation(
-                            ConnectIntent(occurrence(EndpointId(value = "absent"), location(source, "first"), target, null), target, null),
+                        EditIntent.ConnectRelationWrapper(
+                            ConnectIntent(
+                                source = occurrence(EndpointId(value = "absent"), location(source, "first"), target, null),
+                                target = target,
+                                counterpart = null,
+                            ),
                         ),
                     ),
                 ).shouldBeInstanceOf<MutationPlanningResult.Rejected>()
@@ -963,7 +995,7 @@ class AuthoringMutationPlannerTest {
                     ),
                 )
             val planner = AuthoringMutationPlanner(catalog, emptyList())
-            val resource = ResourceId("insert_$kindName")
+            val resource = ResourceId(value = "insert_$kindName")
             val location = location(resource, "values")
             val before =
                 mapOf(
@@ -978,7 +1010,7 @@ class AuthoringMutationPlannerTest {
                 planner
                     .plan(
                         before,
-                        edit(EditIntent.Insert(location, null, item)),
+                        edit(EditIntent.createInsert(at = location, after = null, item = item)),
                     ).shouldBeInstanceOf<MutationPlanningResult.Accepted>()
                     .plan
             val collection =
@@ -999,10 +1031,10 @@ class AuthoringMutationPlannerTest {
                 .plan(
                     before,
                     edit(
-                        EditIntent.Insert(
-                            location,
-                            null,
-                            ListItem(id = ItemId(value = "invalid_item"), value = DataValue.BooleanWrapper(true)),
+                        EditIntent.createInsert(
+                            at = location,
+                            after = null,
+                            item = ListItem(id = ItemId(value = "invalid_item"), value = DataValue.BooleanWrapper(true)),
                         ),
                     ),
                 ).shouldBeInstanceOf<MutationPlanningResult.Rejected>()
@@ -1054,7 +1086,7 @@ class AuthoringMutationPlannerTest {
                     ),
                 ),
             )
-        val resource = ResourceId("source")
+        val resource = ResourceId(value = "source")
         val targetUse = target.use()
         val record =
             AuthoringRecord.of(
@@ -1065,7 +1097,7 @@ class AuthoringMutationPlannerTest {
             occurrence(
                 endpoint,
                 location(resource, "link"),
-                ResourceId("target"),
+                ResourceId(value = "target"),
                 null,
             )
         ResourceValueMapper.expectedTarget(occurrence, record, catalog) shouldBe targetUse
@@ -1151,8 +1183,8 @@ class AuthoringMutationPlannerTest {
                     onDelete = RelationDeletePolicy.CLEAR,
                 ),
             )
-        val source = ResourceId("partial_source")
-        val target = ResourceId("partial_target")
+        val source = ResourceId(value = "partial_source")
+        val target = ResourceId(value = "partial_target")
         val sourceRecord =
             AuthoringRecord.of(
                 TypeSelection.CompleteWrapper(sourceType.namedUse()),
@@ -1249,8 +1281,8 @@ class AuthoringMutationPlannerTest {
                     onDelete = RelationDeletePolicy.CLEAR,
                 ),
             )
-        val source = ResourceId("partial_ancestor_source")
-        val target = ResourceId("partial_ancestor_target")
+        val source = ResourceId(value = "partial_ancestor_source")
+        val target = ResourceId(value = "partial_ancestor_target")
         val resources =
             mapOf(
                 source to
@@ -1276,8 +1308,8 @@ class AuthoringMutationPlannerTest {
 
     fun connectAndDisconnectSynchronizeBothDirectSides() {
         val planner = planner(pairContract())
-        val source = ResourceId("source")
-        val target = ResourceId("target")
+        val source = ResourceId(value = "source")
+        val target = ResourceId(value = "target")
         val sourceLocation = location(source, "first")
         val targetLocation = location(target, "second")
         val sourceOccurrence = occurrence(PAIR_FIRST, sourceLocation, target, targetLocation.path)
@@ -1289,8 +1321,12 @@ class AuthoringMutationPlannerTest {
                 .plan(
                     before,
                     edit(
-                        EditIntent.ConnectRelation(
-                            ConnectIntent(sourceOccurrence, target, CounterpartChoice.Existing(targetOccurrence)),
+                        EditIntent.ConnectRelationWrapper(
+                            ConnectIntent(
+                                source = sourceOccurrence,
+                                target = target,
+                                counterpart = CounterpartChoice.ExistingWrapper(targetOccurrence),
+                            ),
                         ),
                     ),
                 ).shouldBeInstanceOf<MutationPlanningResult.Accepted>()
@@ -1307,20 +1343,20 @@ class AuthoringMutationPlannerTest {
             planner
                 .plan(
                     connectedResources,
-                    edit(EditIntent.DisconnectRelation(sourceOccurrence.id)),
+                    edit(EditIntent.DisconnectRelationWrapper(sourceOccurrence.id)),
                 ).shouldBeInstanceOf<MutationPlanningResult.Accepted>()
                 .plan
         val disconnectedResources = connectedResources.apply(disconnected)
 
         disconnectedResources.getValue(source).fieldMap.getValue("first") shouldBe DataValue.UNFILLED
         disconnectedResources.getValue(target).fieldMap.getValue("second") shouldBe DataValue.UNFILLED
-        disconnected.relations.removed.size shouldBe 1
+        disconnected.relations.removals.size shouldBe 1
     }
 
     fun scalarConnectAppendsItsDirectCollectionCounterpart() {
         val planner = planner(parentContract(RelationDeletePolicy.CLEAR, RelationDeletePolicy.CLEAR))
-        val parent = ResourceId("page")
-        val child = ResourceId("element")
+        val parent = ResourceId(value = "page")
+        val child = ResourceId(value = "element")
         val sourceLocation = location(child, "parent")
         val source = occurrence(PARENT_SECOND, sourceLocation, parent, null)
         val before = mapOf(parent to record(), child to record())
@@ -1329,7 +1365,7 @@ class AuthoringMutationPlannerTest {
             planner
                 .plan(
                     before,
-                    edit(EditIntent.ConnectRelation(ConnectIntent(source, parent, null))),
+                    edit(EditIntent.ConnectRelationWrapper(ConnectIntent(source = source, target = parent, counterpart = null))),
                 ).shouldBeInstanceOf<MutationPlanningResult.Accepted>()
                 .plan
         val resources = before.apply(plan)
@@ -1353,8 +1389,8 @@ class AuthoringMutationPlannerTest {
 
     fun scalarConnectMaterializesItsUnfilledDirectCollectionCounterpart() {
         val planner = planner(parentContract(RelationDeletePolicy.CLEAR, RelationDeletePolicy.CLEAR))
-        val parent = ResourceId("page")
-        val child = ResourceId("element")
+        val parent = ResourceId(value = "page")
+        val child = ResourceId(value = "element")
         val sourceLocation = location(child, "parent")
         val source = occurrence(PARENT_SECOND, sourceLocation, parent, null)
         val parentRecord = record().with("children", DataValue.UNFILLED)
@@ -1364,7 +1400,7 @@ class AuthoringMutationPlannerTest {
             planner
                 .plan(
                     before,
-                    edit(EditIntent.ConnectRelation(ConnectIntent(source, parent, null))),
+                    edit(EditIntent.ConnectRelationWrapper(ConnectIntent(source = source, target = parent, counterpart = null))),
                 ).shouldBeInstanceOf<MutationPlanningResult.Accepted>()
                 .plan
         val resources = before.apply(plan)
@@ -1386,13 +1422,12 @@ class AuthoringMutationPlannerTest {
             .shouldBeInstanceOf<DataValue.NamedWrapper>()
             .payload
             .shouldBeInstanceOf<DataValue.LinkWrapper>()
-            .value.target.resource
-            .toResourceId() shouldBe child
+            .value.target.resource shouldBe child
     }
 
     fun newCounterpartEvidenceProtectsPriorStateWithoutRequiringThePlannedLocation() {
-        val source = ResourceId("source")
-        val target = ResourceId("target")
+        val source = ResourceId(value = "source")
+        val target = ResourceId(value = "target")
         val sourceLocation = location(source, "nestedSecond")
         val containing = location(target, "children")
         val generatedItem = ItemId(value = "relation:server_generated")
@@ -1411,23 +1446,25 @@ class AuthoringMutationPlannerTest {
         val before = mapOf(source to record(), target to record())
         val edit =
             edit(
-                EditIntent.ConnectRelation(
+                EditIntent.ConnectRelationWrapper(
                     ConnectIntent(
-                        occurrence(NESTED_SECOND, sourceLocation, target, null),
-                        target,
-                        CounterpartChoice.New(
-                            containing,
-                            PreparedValue(
-                                content =
-                                    PreparedContent.RecordWrapper(
-                                        AuthoringRecord.of(
-                                            TypeSelection.CompleteWrapper(WRAPPER_USE),
-                                            mapOf("inner" to DataValue.UNFILLED),
-                                        ),
+                        source = occurrence(NESTED_SECOND, sourceLocation, target, null),
+                        target = target,
+                        counterpart =
+                            CounterpartChoice.createNew(
+                                containing = containing,
+                                prepared =
+                                    PreparedValue(
+                                        content =
+                                            PreparedContent.RecordWrapper(
+                                                AuthoringRecord.of(
+                                                    TypeSelection.CompleteWrapper(WRAPPER_USE),
+                                                    mapOf("inner" to DataValue.UNFILLED),
+                                                ),
+                                            ),
+                                        findings = emptyList(),
                                     ),
-                                findings = emptyList(),
                             ),
-                        ),
                     ),
                 ),
             )
@@ -1437,7 +1474,7 @@ class AuthoringMutationPlannerTest {
                 removedResources = emptySet(),
                 relations =
                     RelationProjectionDelta(
-                        removed = emptyList(),
+                        removals = emptyList(),
                         created =
                             listOf(
                                 LinkProjection(
@@ -1454,16 +1491,17 @@ class AuthoringMutationPlannerTest {
 
         val values = CapturedAuthoringValues(before, emptyList())
         val evidence = values.requiredExpectations(edit, before, setOf(nestedContract().id), plan)
-        evidence.any { it is com.typewritermc.authoring.EditExpectation.Value && it.at == sourceLocation } shouldBe true
-        evidence.any { it is com.typewritermc.authoring.EditExpectation.Configuration && it.at == containing } shouldBe true
-        evidence.any { it is com.typewritermc.authoring.EditExpectation.Links && it.resource == source } shouldBe true
-        evidence.any { it is com.typewritermc.authoring.EditExpectation.Links && it.resource == target } shouldBe true
+        evidence.any { it is skirout.editor.v1.authoring_facts.EditExpectation.ValueWrapper && it.value.at == sourceLocation } shouldBe true
+        evidence.any { it is skirout.editor.v1.authoring_facts.EditExpectation.ConfigurationWrapper && it.value.at == containing } shouldBe
+            true
+        evidence.any { it is skirout.editor.v1.authoring_facts.EditExpectation.LinksWrapper && it.value.resource == source } shouldBe true
+        evidence.any { it is skirout.editor.v1.authoring_facts.EditExpectation.LinksWrapper && it.value.resource == target } shouldBe true
     }
 
     fun proposedCollectionOccurrenceConnectsItsDirectScalarCounterpart() {
         val planner = planner(parentContract(RelationDeletePolicy.CLEAR, RelationDeletePolicy.CLEAR))
-        val parent = ResourceId("book")
-        val child = ResourceId("page")
+        val parent = ResourceId(value = "book")
+        val child = ResourceId(value = "page")
         val item = ItemId(value = "page_occurrence")
         val sourceLocation =
             ValueLocation.of(
@@ -1477,7 +1515,7 @@ class AuthoringMutationPlannerTest {
             planner
                 .plan(
                     before,
-                    edit(EditIntent.ConnectRelation(ConnectIntent(source, child, null))),
+                    edit(EditIntent.ConnectRelationWrapper(ConnectIntent(source = source, target = child, counterpart = null))),
                 ).shouldBeInstanceOf<MutationPlanningResult.Accepted>()
                 .plan
         val resources = before.apply(plan)
@@ -1499,8 +1537,8 @@ class AuthoringMutationPlannerTest {
 
     fun proposedCollectionOccurrenceMaterializesItsUnfilledCollection() {
         val planner = planner(parentContract(RelationDeletePolicy.CLEAR, RelationDeletePolicy.CLEAR))
-        val parent = ResourceId("book")
-        val child = ResourceId("page")
+        val parent = ResourceId(value = "book")
+        val child = ResourceId(value = "page")
         val item = ItemId(value = "page_occurrence")
         val sourceLocation =
             ValueLocation.of(
@@ -1515,7 +1553,7 @@ class AuthoringMutationPlannerTest {
             planner
                 .plan(
                     before,
-                    edit(EditIntent.ConnectRelation(ConnectIntent(source, child, null))),
+                    edit(EditIntent.ConnectRelationWrapper(ConnectIntent(source = source, target = child, counterpart = null))),
                 ).shouldBeInstanceOf<MutationPlanningResult.Accepted>()
                 .plan
         val resources = before.apply(plan)
@@ -1536,8 +1574,8 @@ class AuthoringMutationPlannerTest {
 
     fun ordinaryLinkSetAndClearSynchronizeTheDirectCounterpart() {
         val planner = planner(parentContract(RelationDeletePolicy.CLEAR, RelationDeletePolicy.CLEAR))
-        val parent = ResourceId("page")
-        val child = ResourceId("element")
+        val parent = ResourceId(value = "page")
+        val child = ResourceId(value = "element")
         val parentLocation = location(child, "parent")
         val before = mapOf(parent to record(), child to record())
 
@@ -1546,9 +1584,9 @@ class AuthoringMutationPlannerTest {
                 .plan(
                     before,
                     edit(
-                        EditIntent.SetValue(
-                            parentLocation,
-                            link(PARENT_SECOND_TYPE, PARENT_SECOND, parent, null),
+                        EditIntent.createSetValue(
+                            at = parentLocation,
+                            value = link(PARENT_SECOND_TYPE, PARENT_SECOND, parent, null),
                         ),
                     ),
                 ).shouldBeInstanceOf<MutationPlanningResult.Accepted>()
@@ -1570,7 +1608,7 @@ class AuthoringMutationPlannerTest {
             planner
                 .plan(
                     connectedResources,
-                    edit(EditIntent.SetValue(parentLocation, DataValue.UNFILLED)),
+                    edit(EditIntent.createSetValue(at = parentLocation, value = DataValue.UNFILLED)),
                 ).shouldBeInstanceOf<MutationPlanningResult.Accepted>()
                 .plan
         val clearedResources = connectedResources.apply(cleared)
@@ -1591,8 +1629,8 @@ class AuthoringMutationPlannerTest {
 
     fun ordinaryCollectionRemoveClearsTheDirectScalarCounterpart() {
         val planner = planner(parentContract(RelationDeletePolicy.CLEAR, RelationDeletePolicy.CLEAR))
-        val parent = ResourceId("book")
-        val child = ResourceId("page")
+        val parent = ResourceId(value = "book")
+        val child = ResourceId(value = "page")
         val item = ItemId(value = "page_occurrence")
         val itemPath = ValuePath(segments = listOf(PathSegment.createField(name = "children"), PathSegment.createItem(id = item)))
         val resources =
@@ -1614,7 +1652,7 @@ class AuthoringMutationPlannerTest {
             planner
                 .plan(
                     resources,
-                    edit(EditIntent.Remove(location(parent, "children"), item)),
+                    edit(EditIntent.createRemove(at = location(parent, "children"), item = item)),
                 ).shouldBeInstanceOf<MutationPlanningResult.Accepted>()
                 .plan
         val next = resources.apply(plan)
@@ -1636,8 +1674,8 @@ class AuthoringMutationPlannerTest {
     fun ordinaryContainingRecordSetAndClearSynchronizeNestedLinks() {
         val contract = nestedContract()
         val planner = AuthoringMutationPlanner(CATALOG, listOf(contract), NESTED_BINDINGS)
-        val source = ResourceId("source")
-        val target = ResourceId("target")
+        val source = ResourceId(value = "source")
+        val target = ResourceId(value = "target")
         val nestedPath = ValuePath(segments = listOf(PathSegment.createField(name = "wrapper"), PathSegment.createField(name = "inner")))
         val oppositePath = fieldPath("nestedSecond")
         val before = mapOf(source to record(), target to record())
@@ -1647,9 +1685,9 @@ class AuthoringMutationPlannerTest {
                 .plan(
                     before,
                     edit(
-                        EditIntent.SetValue(
-                            location(source, "wrapper"),
-                            wrapper(link(NESTED_FIRST_TYPE, NESTED_FIRST, target, null)),
+                        EditIntent.createSetValue(
+                            at = location(source, "wrapper"),
+                            value = wrapper(link(NESTED_FIRST_TYPE, NESTED_FIRST, target, null)),
                         ),
                     ),
                 ).shouldBeInstanceOf<MutationPlanningResult.Accepted>()
@@ -1674,7 +1712,7 @@ class AuthoringMutationPlannerTest {
             planner
                 .plan(
                     connectedResources,
-                    edit(EditIntent.SetValue(location(source, "wrapper"), wrapper(DataValue.UNFILLED))),
+                    edit(EditIntent.createSetValue(at = location(source, "wrapper"), value = wrapper(DataValue.UNFILLED))),
                 ).shouldBeInstanceOf<MutationPlanningResult.Accepted>()
                 .plan
         val clearedResources = connectedResources.apply(cleared)
@@ -1684,8 +1722,8 @@ class AuthoringMutationPlannerTest {
 
     fun clearRemovesCollectionOccurrenceWithoutRetainingItsItemIdentity() {
         val planner = planner(parentContract(RelationDeletePolicy.CLEAR, RelationDeletePolicy.CLEAR))
-        val parent = ResourceId("parent")
-        val child = ResourceId("child")
+        val parent = ResourceId(value = "parent")
+        val child = ResourceId(value = "child")
         val item = ItemId(value = "child_occurrence")
         val itemPath = ValuePath(segments = listOf(PathSegment.createField(name = "children"), PathSegment.createItem(id = item)))
         val parentPath = fieldPath("parent")
@@ -1705,7 +1743,12 @@ class AuthoringMutationPlannerTest {
             )
 
         val deletedChild =
-            planner.plan(before, edit(EditIntent.DeleteResource(child))).shouldBeInstanceOf<MutationPlanningResult.Accepted>().plan
+            planner
+                .plan(
+                    before,
+                    edit(EditIntent.createDeleteResource(id = child)),
+                ).shouldBeInstanceOf<MutationPlanningResult.Accepted>()
+                .plan
         val retainedParent = before.apply(deletedChild).getValue(parent)
         val children =
             retainedParent.fieldMap
@@ -1717,7 +1760,12 @@ class AuthoringMutationPlannerTest {
         deletedChild.removedResources shouldBe setOf(child)
 
         val deletedParent =
-            planner.plan(before, edit(EditIntent.DeleteResource(parent))).shouldBeInstanceOf<MutationPlanningResult.Accepted>().plan
+            planner
+                .plan(
+                    before,
+                    edit(EditIntent.createDeleteResource(id = parent)),
+                ).shouldBeInstanceOf<MutationPlanningResult.Accepted>()
+                .plan
         val retainedChild = before.apply(deletedParent).getValue(child)
 
         retainedChild.fieldMap.getValue("parent") shouldBe DataValue.UNFILLED
@@ -1726,8 +1774,8 @@ class AuthoringMutationPlannerTest {
 
     fun cascadeComputesTheCompleteClosureBeforeRemovingResources() {
         val planner = planner(parentContract(RelationDeletePolicy.CASCADE, RelationDeletePolicy.CLEAR))
-        val parent = ResourceId("parent")
-        val child = ResourceId("child")
+        val parent = ResourceId(value = "parent")
+        val child = ResourceId(value = "child")
         val item = ItemId(value = "owned_child")
         val itemPath = ValuePath(segments = listOf(PathSegment.createField(name = "children"), PathSegment.createItem(id = item)))
         val before =
@@ -1746,15 +1794,20 @@ class AuthoringMutationPlannerTest {
             )
 
         val plan =
-            planner.plan(before, edit(EditIntent.DeleteResource(parent))).shouldBeInstanceOf<MutationPlanningResult.Accepted>().plan
+            planner
+                .plan(
+                    before,
+                    edit(EditIntent.createDeleteResource(id = parent)),
+                ).shouldBeInstanceOf<MutationPlanningResult.Accepted>()
+                .plan
 
         plan.removedResources shouldBe setOf(parent, child)
         before.apply(plan).isEmpty() shouldBe true
     }
 
     fun repeatedManyOccurrencesKeepTheirExactLocations() {
-        val target = ResourceId("target")
-        val source = ResourceId("source")
+        val target = ResourceId(value = "target")
+        val source = ResourceId(value = "source")
         val first = ItemId(value = "first")
         val second = ItemId(value = "second")
         val resources =
@@ -1788,8 +1841,8 @@ class AuthoringMutationPlannerTest {
 
     fun shrinkingRepeatedPairRemovesOnlyTheExactOldOccurrence() {
         val planner = planner(manyContract())
-        val source = ResourceId("source")
-        val target = ResourceId("target")
+        val source = ResourceId(value = "source")
+        val target = ResourceId(value = "target")
         val removed = ItemId(value = "removed")
         val retained = ItemId(value = "retained")
         val before =
@@ -1809,12 +1862,12 @@ class AuthoringMutationPlannerTest {
             planner
                 .plan(
                     before,
-                    edit(EditIntent.Remove(location(source, "manyFirst"), removed)),
+                    edit(EditIntent.createRemove(at = location(source, "manyFirst"), item = removed)),
                 ).shouldBeInstanceOf<MutationPlanningResult.Accepted>()
                 .plan
 
-        plan.relations.removed.size shouldBe 1
-        plan.relations.removed
+        plan.relations.removals.size shouldBe 1
+        plan.relations.removals
             .single()
             .firstLocation shouldBe
             ValuePath(segments = listOf(PathSegment.createField(name = "manyFirst"), PathSegment.createItem(id = removed)))
@@ -1824,8 +1877,8 @@ class AuthoringMutationPlannerTest {
 
     fun pairingOneSidedOccurrencesReplacesTheirExactProjections() {
         val planner = planner(manyContract())
-        val source = ResourceId("source")
-        val target = ResourceId("target")
+        val source = ResourceId(value = "source")
+        val target = ResourceId(value = "target")
         val sourceItem = ItemId(value = "source_occurrence")
         val targetItem = ItemId(value = "target_occurrence")
         val sourcePath = ValuePath(segments = listOf(PathSegment.createField(name = "manyFirst"), PathSegment.createItem(id = sourceItem)))
@@ -1849,15 +1902,19 @@ class AuthoringMutationPlannerTest {
                 .plan(
                     before,
                     edit(
-                        EditIntent.ConnectRelation(
-                            ConnectIntent(sourceOccurrence, target, CounterpartChoice.Existing(targetOccurrence)),
+                        EditIntent.ConnectRelationWrapper(
+                            ConnectIntent(
+                                source = sourceOccurrence,
+                                target = target,
+                                counterpart = CounterpartChoice.ExistingWrapper(targetOccurrence),
+                            ),
                         ),
                     ),
                 ).shouldBeInstanceOf<MutationPlanningResult.Accepted>()
                 .plan
 
-        plan.relations.removed.size shouldBe 2
-        plan.relations.removed.mapTo(linkedSetOf()) { it.firstLocation to it.secondLocation } shouldBe
+        plan.relations.removals.size shouldBe 2
+        plan.relations.removals.mapTo(linkedSetOf()) { it.firstLocation to it.secondLocation } shouldBe
             setOf(sourcePath to null, null to targetPath)
         plan.relations.created.size shouldBe 1
         plan.relations.created
@@ -1870,8 +1927,8 @@ class AuthoringMutationPlannerTest {
     }
 
     fun manyOccurrencesRejectCrossedReciprocalLocations() {
-        val source = ResourceId("source")
-        val target = ResourceId("target")
+        val source = ResourceId(value = "source")
+        val target = ResourceId(value = "target")
         val sourceFirst = ItemId(value = "source_first")
         val sourceSecond = ItemId(value = "source_second")
         val targetFirst = ItemId(value = "target_first")
@@ -1974,8 +2031,8 @@ class AuthoringMutationPlannerTest {
                 ),
             )
         val contract = relation(endpoint, opposite, host)
-        val source = ResourceId("polymorphic_source")
-        val target = ResourceId("polymorphic_target")
+        val source = ResourceId(value = "polymorphic_source")
+        val target = ResourceId(value = "polymorphic_target")
         val resources =
             mapOf(
                 source to
@@ -2052,8 +2109,8 @@ class AuthoringMutationPlannerTest {
                 ),
             )
         val contract = relation(endpoint, opposite, host)
-        val source = ResourceId("recursive_source")
-        val target = ResourceId("recursive_target")
+        val source = ResourceId(value = "recursive_source")
+        val target = ResourceId(value = "recursive_target")
         val nested =
             DataValue.named(
                 node.namedUse(),
@@ -2149,8 +2206,8 @@ class AuthoringMutationPlannerTest {
                 ),
             )
         val contract = relation(endpoint, opposite, resource)
-        val source = ResourceId("bounded_source")
-        val target = ResourceId("bounded_target")
+        val source = ResourceId(value = "bounded_source")
+        val target = ResourceId(value = "bounded_target")
         val resources =
             mapOf(
                 source to
@@ -2197,8 +2254,8 @@ class AuthoringMutationPlannerTest {
                 ),
             )
         val contract = relation(endpoint, opposite, resource)
-        val source = ResourceId("unavailable_source")
-        val target = ResourceId("unavailable_target")
+        val source = ResourceId(value = "unavailable_source")
+        val target = ResourceId(value = "unavailable_target")
         val resources =
             mapOf(
                 source to
@@ -2206,7 +2263,7 @@ class AuthoringMutationPlannerTest {
                         TypeSelection.CompleteWrapper(unavailable.namedUse()),
                         mapOf(
                             "target" to
-                                DataValue.createLink(endpoint = endpoint, target = LinkTarget(resource = target.toSkir(), opposite = null)),
+                                DataValue.createLink(endpoint = endpoint, target = LinkTarget(resource = target, opposite = null)),
                         ),
                     ),
                 target to AuthoringRecord.of(TypeSelection.CompleteWrapper(resource.namedUse()), emptyMap()),
@@ -2221,9 +2278,9 @@ class AuthoringMutationPlannerTest {
     fun ownershipRejectsTwoImmediateOwners() {
         val contract = pairContract(setOf(RelationFamilyId(value = RESOURCE_OWNERSHIP_FAMILY_ID)))
         val planner = planner(contract)
-        val target = ResourceId("target")
-        val first = ResourceId("first_owner")
-        val second = ResourceId("second_owner")
+        val target = ResourceId(value = "target")
+        val first = ResourceId(value = "first_owner")
+        val second = ResourceId(value = "second_owner")
         val resources =
             mapOf(
                 first to record(first = link(PAIR_FIRST_TYPE, PAIR_FIRST, target, null)),
@@ -2234,7 +2291,12 @@ class AuthoringMutationPlannerTest {
             planner
                 .plan(
                     resources,
-                    edit(EditIntent.CreateResource(second, record(first = link(PAIR_FIRST_TYPE, PAIR_FIRST, target, null)))),
+                    edit(
+                        EditIntent.createCreateResource(
+                            id = second,
+                            record = record(first = link(PAIR_FIRST_TYPE, PAIR_FIRST, target, null)),
+                        ),
+                    ),
                 ).shouldBeInstanceOf<MutationPlanningResult.Rejected>()
 
         rejected.problems.any { it.code == "multiple_immediate_owners" } shouldBe true
@@ -2242,8 +2304,8 @@ class AuthoringMutationPlannerTest {
 
     fun ownershipCycleIsRejected() {
         val planner = planner(pairContract(OWNING_FAMILIES))
-        val first = ResourceId("cycle_first")
-        val second = ResourceId("cycle_second")
+        val first = ResourceId(value = "cycle_first")
+        val second = ResourceId(value = "cycle_second")
         val resources =
             mapOf(
                 first to record(first = link(PAIR_FIRST_TYPE, PAIR_FIRST, second, null)),
@@ -2254,19 +2316,19 @@ class AuthoringMutationPlannerTest {
             planner
                 .plan(
                     resources,
-                    edit(EditIntent.SetValue(location(second, "first"), link(PAIR_FIRST_TYPE, PAIR_FIRST, first, null))),
+                    edit(EditIntent.createSetValue(at = location(second, "first"), value = link(PAIR_FIRST_TYPE, PAIR_FIRST, first, null))),
                 ).shouldBeInstanceOf<MutationPlanningResult.Rejected>()
 
         // Every affected resource on the cycle reports it.
         rejected.problems
             .filter { it.code == "relation_cycle" }
-            .map { it.location.resource.toResourceId() }
+            .map { it.location.resource }
             .toSet() shouldBe setOf(first, second)
     }
 
     fun acyclicRelationAcceptsALongChainAndRejectsClosingIt() {
         val planner = planner(pairContract(setOf(RelationFamilyId(value = ACYCLIC_RELATION_FAMILY_ID))))
-        val chain = (0 until 100_000).map { ResourceId("chain_$it") }
+        val chain = (0 until 100_000).map { ResourceId(value = "chain_$it") }
         val resources =
             chain.withIndex().associate { (index, id) ->
                 val next = chain.getOrNull(index + 1)
@@ -2275,20 +2337,29 @@ class AuthoringMutationPlannerTest {
         val last = chain.last()
 
         planner
-            .plan(resources, edit(EditIntent.SetValue(location(chain.first(), "label"), DataValue.StringValueWrapper("head"))))
-            .shouldBeInstanceOf<MutationPlanningResult.Accepted>()
+            .plan(
+                resources,
+                edit(EditIntent.createSetValue(at = location(chain.first(), "label"), value = DataValue.StringValueWrapper("head"))),
+            ).shouldBeInstanceOf<MutationPlanningResult.Accepted>()
         val rejected =
             planner
-                .plan(resources, edit(EditIntent.SetValue(location(last, "first"), link(PAIR_FIRST_TYPE, PAIR_FIRST, chain.first(), null))))
-                .shouldBeInstanceOf<MutationPlanningResult.Rejected>()
+                .plan(
+                    resources,
+                    edit(
+                        EditIntent.createSetValue(
+                            at = location(last, "first"),
+                            value = link(PAIR_FIRST_TYPE, PAIR_FIRST, chain.first(), null),
+                        ),
+                    ),
+                ).shouldBeInstanceOf<MutationPlanningResult.Rejected>()
 
         rejected.problems.map { it.code }.toSet() shouldBe setOf("relation_cycle")
     }
 
     fun nonAcyclicRelationAllowsACycle() {
         val planner = planner(pairContract())
-        val first = ResourceId("loop_first")
-        val second = ResourceId("loop_second")
+        val first = ResourceId(value = "loop_first")
+        val second = ResourceId(value = "loop_second")
         val resources =
             mapOf(
                 first to record(first = link(PAIR_FIRST_TYPE, PAIR_FIRST, second, null)),
@@ -2296,15 +2367,17 @@ class AuthoringMutationPlannerTest {
             )
 
         planner
-            .plan(resources, edit(EditIntent.SetValue(location(second, "first"), link(PAIR_FIRST_TYPE, PAIR_FIRST, first, null))))
-            .shouldBeInstanceOf<MutationPlanningResult.Accepted>()
+            .plan(
+                resources,
+                edit(EditIntent.createSetValue(at = location(second, "first"), value = link(PAIR_FIRST_TYPE, PAIR_FIRST, first, null))),
+            ).shouldBeInstanceOf<MutationPlanningResult.Accepted>()
     }
 
     fun oneEndpointRejectsASecondResourceRelation() {
         val planner = planner(pairContract())
-        val target = ResourceId("target")
-        val first = ResourceId("first_source")
-        val second = ResourceId("second_source")
+        val target = ResourceId(value = "target")
+        val first = ResourceId(value = "first_source")
+        val second = ResourceId(value = "second_source")
         val resources =
             mapOf(
                 first to record(first = link(PAIR_FIRST_TYPE, PAIR_FIRST, target, null)),
@@ -2315,7 +2388,12 @@ class AuthoringMutationPlannerTest {
             planner
                 .plan(
                     resources,
-                    edit(EditIntent.CreateResource(second, record(first = link(PAIR_FIRST_TYPE, PAIR_FIRST, target, null)))),
+                    edit(
+                        EditIntent.createCreateResource(
+                            id = second,
+                            record = record(first = link(PAIR_FIRST_TYPE, PAIR_FIRST, target, null)),
+                        ),
+                    ),
                 ).shouldBeInstanceOf<MutationPlanningResult.Rejected>()
 
         rejected.problems.any { it.code == "first_endpoint_cardinality_exceeded" } shouldBe true
@@ -2323,15 +2401,15 @@ class AuthoringMutationPlannerTest {
 
     fun unrelatedInvalidResourceDoesNotBlockAValidEdit() {
         val planner = planner(pairContract())
-        val invalid = ResourceId("invalid")
-        val valid = ResourceId("valid")
+        val invalid = ResourceId(value = "invalid")
+        val valid = ResourceId(value = "valid")
         val invalidRecord = record().copy(fields = record().fields.filterNot { it.name == "label" })
         val resources = mapOf(invalid to invalidRecord, valid to record())
 
         val result =
             planner.plan(
                 resources,
-                edit(EditIntent.SetValue(location(valid, "label"), DataValue.StringValueWrapper("changed"))),
+                edit(EditIntent.createSetValue(at = location(valid, "label"), value = DataValue.StringValueWrapper("changed"))),
             )
 
         result.shouldBeInstanceOf<MutationPlanningResult.Accepted>()
@@ -2460,7 +2538,7 @@ private fun relation(
     ),
 )
 
-private fun edit(vararg intents: EditIntent) = PreparedEdit(GENERATION, emptyList(), intents.toList())
+private fun edit(vararg intents: EditIntent) = PreparedEdit(catalog = GENERATION, expectations = emptyList(), intents = intents.toList())
 
 private fun occurrence(
     endpoint: EndpointId,
@@ -2470,7 +2548,7 @@ private fun occurrence(
 ) = LinkOccurrence(
     id = LinkOccurrenceId(endpoint = endpoint, location = location),
     source = location.resource,
-    target = LinkTarget(resource = target.toSkir(), opposite = opposite),
+    target = LinkTarget(resource = target, opposite = opposite),
 )
 
 private fun link(
@@ -2478,7 +2556,7 @@ private fun link(
     endpoint: EndpointId,
     target: ResourceId,
     opposite: ValuePath?,
-) = DataValue.named(type, DataValue.createLink(endpoint = endpoint, target = LinkTarget(resource = target.toSkir(), opposite = opposite)))
+) = DataValue.named(type, DataValue.createLink(endpoint = endpoint, target = LinkTarget(resource = target, opposite = opposite)))
 
 private fun record(
     first: DataValue = DataValue.UNFILLED,

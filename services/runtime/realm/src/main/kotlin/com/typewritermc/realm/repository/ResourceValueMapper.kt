@@ -1,6 +1,5 @@
 package com.typewritermc.realm.repository
 
-import com.typewritermc.authoring.LinkProjection
 import com.typewritermc.authoring.definition
 import com.typewritermc.authoring.descendants
 import com.typewritermc.authoring.field
@@ -13,7 +12,6 @@ import com.typewritermc.authoring.payload
 import com.typewritermc.authoring.record
 import com.typewritermc.authoring.root
 import com.typewritermc.authoring.use
-import com.typewritermc.types.ResourceId
 import com.typewritermc.types.actualType
 import com.typewritermc.types.catalog.CheckedCatalog
 import com.typewritermc.types.catalog.Resolution
@@ -32,6 +30,7 @@ import com.typewritermc.types.unknownVariant
 import com.typewritermc.types.use
 import skirout.editor.v1.authoring.LinkOccurrence
 import skirout.editor.v1.authoring.LinkOccurrenceId
+import skirout.editor.v1.authoring_facts.LinkProjection
 import skirout.editor.v1.catalog.EndpointCardinality
 import skirout.editor.v1.catalog.EndpointSlot
 import skirout.editor.v1.catalog.RelationContract
@@ -42,6 +41,7 @@ import skirout.editor.v1.type_catalog.EndpointId
 import skirout.editor.v1.type_catalog.NamedTypeTemplate
 import skirout.editor.v1.type_catalog.RelationId
 import skirout.editor.v1.type_catalog.ResolvedRepresentation
+import skirout.editor.v1.type_catalog.ResourceId
 import skirout.editor.v1.type_catalog.TypeSelection
 import skirout.editor.v1.type_catalog.TypeTemplate
 import skirout.editor.v1.type_catalog.TypeUse
@@ -149,7 +149,7 @@ internal object ResourceValueMapper {
                     val location = ValueLocation.of(source, node.path)
                     LinkOccurrence(
                         id = LinkOccurrenceId(endpoint = link.endpoint, location = location),
-                        source = source.toSkir(),
+                        source = source,
                         target = link.value.target,
                     )
                 }.toList()
@@ -180,7 +180,7 @@ internal object ResourceValueMapper {
                     )
                 return@forEach
             }
-            if (occurrence.target.resource.toResourceId() !in resources) {
+            if (occurrence.target.resource !in resources) {
                 problems += ValueProblem(location = occurrence.id.location, code = "target_resource_missing")
                 return@forEach
             }
@@ -188,15 +188,15 @@ internal object ResourceValueMapper {
             if (catalog != null) {
                 val sourceEndpoint = if (slot == EndpointSlot.FIRST) contract.first else contract.second
                 val targetEndpoint = if (slot == EndpointSlot.FIRST) contract.second else contract.first
-                if (!resources.getValue(occurrence.source.toResourceId()).matches(sourceEndpoint.resource, catalog)) {
+                if (!resources.getValue(occurrence.source).matches(sourceEndpoint.resource, catalog)) {
                     problems += ValueProblem(location = occurrence.id.location, code = "source_resource_type_mismatch")
                     return@forEach
                 }
-                if (!resources.getValue(occurrence.target.resource.toResourceId()).matches(targetEndpoint.resource, catalog)) {
+                if (!resources.getValue(occurrence.target.resource).matches(targetEndpoint.resource, catalog)) {
                     problems += ValueProblem(location = occurrence.id.location, code = "target_resource_type_mismatch")
                     return@forEach
                 }
-                val sourceRecord = resources.getValue(occurrence.source.toResourceId())
+                val sourceRecord = resources.getValue(occurrence.source)
                 val declared = sourceRecord.linkSlots(catalog).singleOrNull { it.location == occurrence.id.location.path }
                 if (declared == null || declared.endpoint != occurrence.id.endpoint) {
                     problems += ValueProblem(location = occurrence.id.location, code = "endpoint_location_not_declared")
@@ -207,7 +207,7 @@ internal object ResourceValueMapper {
                     problems += ValueProblem(location = occurrence.id.location, code = "endpoint_binding_cardinality_mismatch")
                     return@forEach
                 }
-                if (!resources.getValue(occurrence.target.resource.toResourceId()).matches(declared.target, catalog)) {
+                if (!resources.getValue(occurrence.target.resource).matches(declared.target, catalog)) {
                     problems += ValueProblem(location = occurrence.id.location, code = "binding_target_type_mismatch")
                     return@forEach
                 }
@@ -230,16 +230,16 @@ internal object ResourceValueMapper {
                 if (slot == EndpointSlot.FIRST) {
                     LinkProjection(
                         contract = contract.id,
-                        first = occurrence.source.toResourceId(),
-                        second = occurrence.target.resource.toResourceId(),
+                        first = occurrence.source,
+                        second = occurrence.target.resource,
                         firstLocation = occurrence.id.location.path,
                         secondLocation = opposite?.id?.location?.path,
                     )
                 } else {
                     LinkProjection(
                         contract = contract.id,
-                        first = occurrence.target.resource.toResourceId(),
-                        second = occurrence.source.toResourceId(),
+                        first = occurrence.target.resource,
+                        second = occurrence.source,
                         firstLocation = opposite?.id?.location?.path,
                         secondLocation = occurrence.id.location.path,
                     )

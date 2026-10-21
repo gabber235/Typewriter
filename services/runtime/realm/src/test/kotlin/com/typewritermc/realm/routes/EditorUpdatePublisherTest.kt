@@ -1,13 +1,11 @@
 package com.typewritermc.realm.routes
 
-import com.typewritermc.authoring.EditExpectation
 import com.typewritermc.authoring.of
 import com.typewritermc.protocol.transport.RealmRouteScope
 import com.typewritermc.realm.authoring.AuthoringSeed
 import com.typewritermc.realm.authoring.AuthoringViewDelta
 import com.typewritermc.realm.authoring.InMemoryAuthoringViewStore
 import com.typewritermc.realm.checking.TestCatalogLease
-import com.typewritermc.realm.checking.encodedExpectations
 import com.typewritermc.realm.checking.record
 import com.typewritermc.realm.compiler.PublicationFixture
 import com.typewritermc.services.libs.communicator.client.Communicator
@@ -17,7 +15,6 @@ import com.typewritermc.services.libs.communicator.transport.OutboundMessage
 import com.typewritermc.services.libs.communicator.transport.TransportError
 import com.typewritermc.services.libs.communicator.transport.TransportResult
 import com.typewritermc.services.libs.telemetry.testing.TelemetryTestHarness
-import com.typewritermc.types.ResourceId
 import com.typewritermc.types.qualified
 import de.infix.testBalloon.framework.core.testSuite
 import io.kotest.matchers.shouldBe
@@ -31,6 +28,7 @@ import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.withTimeout
 import kotlinx.coroutines.yield
 import skirout.editor.v1.authoring.AuthoringChanged
+import skirout.editor.v1.authoring_facts.EditExpectation
 import skirout.editor.v1.checking.CheckInstanceId
 import skirout.editor.v1.checking.CheckOutcome
 import skirout.editor.v1.checking.CheckTicket
@@ -38,6 +36,7 @@ import skirout.editor.v1.checking.FindingSet
 import skirout.editor.v1.checking.FindingStatus
 import skirout.editor.v1.type_catalog.CatalogGeneration
 import skirout.editor.v1.type_catalog.CheckExecutionId
+import skirout.editor.v1.type_catalog.ResourceId
 import skirout.editor.v1.type_catalog.RuleId
 import skirout.editor.v1.type_catalog.RuleOrigin
 import skirout.editor.v1.type_catalog.TypeDefinitionId
@@ -110,7 +109,7 @@ val EditorUpdatePublisherTest by testSuite {
     }
     test("finding evidence is current when expected values return") {
         runTest {
-            val resource = ResourceId("resource")
+            val resource = ResourceId(value = "resource")
             val original = record(name = "Quest")
             val views = InMemoryAuthoringViewStore(TestCatalogLease(), AuthoringSeed(mapOf(resource to original)))
             val ticket =
@@ -131,7 +130,7 @@ val EditorUpdatePublisherTest by testSuite {
             val finding =
                 FindingSet(
                     ticket = ticket,
-                    expectations = listOf<EditExpectation>(EditExpectation.Resource(resource, original)).encodedExpectations(),
+                    expectations = listOf<EditExpectation>(EditExpectation.createResource(id = resource, expected = original)),
                     outcome = CheckOutcome.FINISHED,
                     findings = emptyList(),
                     status = FindingStatus.CURRENT,

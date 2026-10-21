@@ -14,12 +14,11 @@ import com.typewritermc.realm.authoring.operationObservation
 import com.typewritermc.realm.checking.CapturedAuthoringReads
 import com.typewritermc.services.libs.utils.rethrowExceptional
 import com.typewritermc.types.NativeBinding
-import com.typewritermc.types.ResourceId
 import com.typewritermc.types.catalog.Resolution
 import com.typewritermc.types.payload
 import com.typewritermc.types.requirePortable
 import com.typewritermc.types.requireValid
-import com.typewritermc.types.skir.getOrThrow
+import com.typewritermc.types.toSkir
 import com.typewritermc.types.toTemplate
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.CoroutineStart
@@ -34,6 +33,7 @@ import skirout.editor.v1.search.RealmPresentationSearchUpdate
 import skirout.editor.v1.type_catalog.CapabilityId
 import skirout.editor.v1.type_catalog.DataValue
 import java.util.concurrent.ConcurrentHashMap
+import com.typewritermc.types.ResourceId as AuthorResourceId
 
 /**
  * Searches the declared candidates of one operation input field, the source of the search input generated forms show
@@ -112,10 +112,10 @@ internal class OperationRealmPresentationSearchSource(
                             .guarded(reads) {
                                 search.field
                                     .acceptedCandidates(invocation.targets, RealmOperationReads(reads))
-                                    .filterIsInstance<ResourceId>()
+                                    .filterIsInstance<AuthorResourceId>()
                                     .mapNotNull { id ->
                                         active.ensureActive()
-                                        val record = baseline.resources[id] ?: return@mapNotNull null
+                                        val record = baseline.resources[id.toSkir()] ?: return@mapNotNull null
                                         val label = with(reads) { baseline.catalog.displays.label(record, baseline.catalog.checked) }
                                         OperationResourceOption(id, label ?: "Unnamed resource")
                                     }.filter { query.isEmpty() || query in it.label.lowercase() }

@@ -7,12 +7,11 @@ import com.typewritermc.authoring.GraphLayoutDefinition
 import com.typewritermc.authoring.GraphPlacement
 import com.typewritermc.authoring.HierarchyPath
 import com.typewritermc.authoring.Placement
-import com.typewritermc.authoring.PreparedEdit
 import com.typewritermc.authoring.TimelineEntryPlacement
 import com.typewritermc.authoring.field
 import com.typewritermc.authoring.of
+import com.typewritermc.authoring.requireValid
 import com.typewritermc.authoring.root
-import com.typewritermc.authoring.skir.SkirAuthoringOperationCodec
 import com.typewritermc.discovery.CatalogAssemblyContext
 import com.typewritermc.discovery.DeploymentFacts
 import com.typewritermc.discovery.DiscoveryDomains
@@ -47,7 +46,6 @@ import com.typewritermc.realm.testTag
 import com.typewritermc.realm.withRealmStructure
 import com.typewritermc.types.NativeBinding
 import com.typewritermc.types.Ref
-import com.typewritermc.types.ResourceId
 import com.typewritermc.types.actualType
 import com.typewritermc.types.catalog.Resolution
 import com.typewritermc.types.catalog.apply
@@ -59,9 +57,10 @@ import com.typewritermc.types.namedUse
 import com.typewritermc.types.payload
 import com.typewritermc.types.qualified
 import com.typewritermc.types.requirePortable
-import com.typewritermc.types.skir.getOrThrow
+import com.typewritermc.types.toResourceId
 import com.typewritermc.types.use
 import skirout.editor.v1.authoring.AuthoringObservationId
+import skirout.editor.v1.authoring.PreparedEdit
 import skirout.editor.v1.capability.InvocationId
 import skirout.editor.v1.operation.ResourceOperationId
 import skirout.editor.v1.resource_operations.AuthoringActionResult
@@ -81,6 +80,7 @@ import skirout.editor.v1.type_catalog.FieldOwner
 import skirout.editor.v1.type_catalog.ItemId
 import skirout.editor.v1.type_catalog.PathSegment
 import skirout.editor.v1.type_catalog.RepresentationTemplate
+import skirout.editor.v1.type_catalog.ResourceId
 import skirout.editor.v1.type_catalog.TypeDefinition
 import skirout.editor.v1.type_catalog.TypeDefinitionId
 import skirout.editor.v1.type_catalog.TypeSelection
@@ -223,7 +223,7 @@ internal class CoreOperationsFixture(
                 mapOf(
                     "book" to
                         Ref<BookPages.Page, Book>(
-                            ResourceId(book),
+                            ResourceId(value = book).toResourceId(),
                             ValuePath(
                                 segments =
                                     listOf(
@@ -238,7 +238,7 @@ internal class CoreOperationsFixture(
                     "elements" to
                         elements.map {
                             Ref<PageElements.Page, com.typewritermc.elements.Element>(
-                                ResourceId(it),
+                                ResourceId(value = it).toResourceId(),
                                 ValuePath.root.field("page"),
                             )
                         },
@@ -255,7 +255,7 @@ internal class CoreOperationsFixture(
                 mapOf(
                     "page" to
                         Ref<PageElements.Element, com.typewritermc.library.Page>(
-                            ResourceId(page),
+                            ResourceId(value = page).toResourceId(),
                             ValuePath(
                                 segments =
                                     listOf(
@@ -281,39 +281,43 @@ internal class CoreOperationsFixture(
                 title = title,
                 pages =
                     pages.map {
-                        Ref(ResourceId(it), ValuePath.root.field("book"))
+                        Ref(ResourceId(value = it).toResourceId(), ValuePath.root.field("book"))
                     },
             ),
             BookDefinition.id,
         )
         val resources =
             mutableMapOf(
-                ResourceId("book") to bookOf("Tutorial"),
-                ResourceId("tag") to
+                ResourceId(value = "book") to bookOf("Tutorial"),
+                ResourceId(value = "tag") to
                     record(
-                        testTag(name = "Quest", parents = setOf(Ref(ResourceId("parent"))), placement = GraphPlacement()),
+                        testTag(
+                            name = "Quest",
+                            parents = setOf(Ref(ResourceId(value = "parent").toResourceId())),
+                            placement = GraphPlacement(),
+                        ),
                         TagDefinition.id,
                     ),
-                ResourceId("parent") to record(testTag(name = "Adventure", placement = GraphPlacement(5, 0)), TagDefinition.id),
-                ResourceId("loose") to record(testTag(name = "Loose", placement = GraphPlacement(9, 0)), TagDefinition.id),
+                ResourceId(value = "parent") to record(testTag(name = "Adventure", placement = GraphPlacement(5, 0)), TagDefinition.id),
+                ResourceId(value = "loose") to record(testTag(name = "Loose", placement = GraphPlacement(9, 0)), TagDefinition.id),
             )
         if (withPages) {
-            resources[ResourceId("book")] = bookOf("Source", "first", "second", "other")
-            resources[ResourceId("destination")] = bookOf("Destination", "resident", "peer")
-            resources[ResourceId("first")] = page("book", "intro", 100, 0)
-            resources[ResourceId("second")] = page("book", "intro", 1, 1)
-            resources[ResourceId("other")] = page("book", "outro", 77, 2)
-            resources[ResourceId("resident")] = page("destination", "intro", 9, 0)
-            resources[ResourceId("peer")] = page("destination", "outro", 3, 1)
+            resources[ResourceId(value = "book")] = bookOf("Source", "first", "second", "other")
+            resources[ResourceId(value = "destination")] = bookOf("Destination", "resident", "peer")
+            resources[ResourceId(value = "first")] = page("book", "intro", 100, 0)
+            resources[ResourceId(value = "second")] = page("book", "intro", 1, 1)
+            resources[ResourceId(value = "other")] = page("book", "outro", 77, 2)
+            resources[ResourceId(value = "resident")] = page("destination", "intro", 9, 0)
+            resources[ResourceId(value = "peer")] = page("destination", "outro", 3, 1)
         }
         if (withElements) {
-            resources[ResourceId("library")] = bookOf("Library", "graph", "canvas", "timeline")
-            resources[ResourceId("graph")] = page("library", "intro", 0, 0, GRAPH_PAGE_TYPE, listOf("graph-entry"))
-            resources[ResourceId("canvas")] = page("library", "intro", 1, 1, GRAPH_PAGE_TYPE, listOf("resident-entry"))
-            resources[ResourceId("timeline")] = page("library", "intro", 2, 2, elements = listOf("timeline-entry"))
-            resources[ResourceId("graph-entry")] = entry("graph", 0, GraphPlacement(0, 0, 2, 2))
-            resources[ResourceId("resident-entry")] = entry("canvas", 0, GraphPlacement(0, 0, 2, 2))
-            resources[ResourceId("timeline-entry")] = entry("timeline", 0, TimelineEntryPlacement(0))
+            resources[ResourceId(value = "library")] = bookOf("Library", "graph", "canvas", "timeline")
+            resources[ResourceId(value = "graph")] = page("library", "intro", 0, 0, GRAPH_PAGE_TYPE, listOf("graph-entry"))
+            resources[ResourceId(value = "canvas")] = page("library", "intro", 1, 1, GRAPH_PAGE_TYPE, listOf("resident-entry"))
+            resources[ResourceId(value = "timeline")] = page("library", "intro", 2, 2, elements = listOf("timeline-entry"))
+            resources[ResourceId(value = "graph-entry")] = entry("graph", 0, GraphPlacement(0, 0, 2, 2))
+            resources[ResourceId(value = "resident-entry")] = entry("canvas", 0, GraphPlacement(0, 0, 2, 2))
+            resources[ResourceId(value = "timeline-entry")] = entry("timeline", 0, TimelineEntryPlacement(0))
         }
         views = InMemoryAuthoringViewStore(lease, AuthoringSeed(resources.withRealmStructure(lease)))
         runtime = ResourceOperationRuntime(views)
@@ -427,7 +431,7 @@ internal class CoreOperationsFixture(
         val response = routes.prepare(request)
         val preview = response as? AuthoringActionResult.PreviewWrapper ?: error(response.toString())
         val before = views.read { it.resources }
-        val accepted = plan(SkirAuthoringOperationCodec.decode(preview.value.edit).getOrThrow()) as MutationPlanningResult.Accepted
+        val accepted = plan(preview.value.edit.requireValid()) as MutationPlanningResult.Accepted
         return before + accepted.plan.resources - accepted.plan.removedResources
     }
 

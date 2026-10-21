@@ -3,7 +3,6 @@ package com.typewritermc.realm
 import build.skir.Serializer
 import com.surrealdb.Surreal
 import com.typewritermc.authoring.RealmRootDefinition
-import com.typewritermc.authoring.RelationProjectionDelta
 import com.typewritermc.authoring.definition
 import com.typewritermc.authoring.of
 import com.typewritermc.discovery.CatalogAssemblyContext
@@ -59,7 +58,6 @@ import com.typewritermc.services.libs.telemetry.mainSpan
 import com.typewritermc.services.libs.telemetry.testing.TelemetryTestHarness
 import com.typewritermc.services.libs.utils.DelayScheduler
 import com.typewritermc.services.libs.utils.RetryPolicy
-import com.typewritermc.types.ResourceId
 import com.typewritermc.types.namedUse
 import com.typewritermc.types.payload
 import com.typewritermc.types.qualified
@@ -80,6 +78,7 @@ import kotlinx.coroutines.withTimeout
 import kotlinx.coroutines.yield
 import skirout.editor.v1.authoring.QueryAuthoringStateRequest
 import skirout.editor.v1.authoring.QueryAuthoringStateResponse
+import skirout.editor.v1.authoring.RelationProjectionDelta
 import skirout.editor.v1.catalog.CatalogFetchRequest
 import skirout.editor.v1.catalog.CatalogFetchResult
 import skirout.editor.v1.publication.EngineImplementationInputs
@@ -91,6 +90,7 @@ import skirout.editor.v1.type_catalog.FieldDeclaration
 import skirout.editor.v1.type_catalog.FieldOwner
 import skirout.editor.v1.type_catalog.InputToken
 import skirout.editor.v1.type_catalog.RepresentationTemplate
+import skirout.editor.v1.type_catalog.ResourceId
 import skirout.editor.v1.type_catalog.ScalarKind
 import skirout.editor.v1.type_catalog.TypeDefinition
 import skirout.editor.v1.type_catalog.TypeDefinitionId
@@ -345,8 +345,8 @@ val RealmLifecycleTest by testSuite {
         runTest {
             val valid = TypeDefinitionId.qualified("lifecycle", "valid")
             val unavailable = TypeDefinitionId.qualified("lifecycle", "unavailable")
-            val availableResource = ResourceId("available")
-            val unavailableResource = ResourceId("unavailable")
+            val availableResource = ResourceId(value = "available")
+            val unavailableResource = ResourceId(value = "unavailable")
             val availableRecord =
                 AuthoringRecord.of(
                     TypeSelection.CompleteWrapper(valid.namedUse()),
@@ -502,7 +502,7 @@ private class RealmLifecycleFixture(
                                 AuthoringMutationPlan(
                                     initialSeed.resources,
                                     emptySet(),
-                                    RelationProjectionDelta(emptyList(), emptyList(), emptyList()),
+                                    RelationProjectionDelta(removals = emptyList(), created = emptyList(), metadataChanged = emptyList()),
                                 ),
                             )
                         }

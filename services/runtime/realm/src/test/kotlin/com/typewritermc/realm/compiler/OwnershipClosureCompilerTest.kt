@@ -11,7 +11,6 @@ import com.typewritermc.realm.authoring.InMemoryAuthoringViewStore
 import com.typewritermc.realm.checking.EmptyProviders
 import com.typewritermc.types.FactoryNativeBindingRegistry
 import com.typewritermc.types.NativeBindingRegistry
-import com.typewritermc.types.ResourceId
 import com.typewritermc.types.catalog.CheckedCatalog
 import com.typewritermc.types.catalog.DefaultCheckedCatalog
 import com.typewritermc.types.listValue
@@ -21,8 +20,6 @@ import com.typewritermc.types.namedUse
 import com.typewritermc.types.of
 import com.typewritermc.types.qualified
 import com.typewritermc.types.template
-import com.typewritermc.types.toResourceId
-import com.typewritermc.types.toSkir
 import com.typewritermc.types.use
 import de.infix.testBalloon.framework.core.testSuite
 import io.kotest.matchers.shouldBe
@@ -47,6 +44,7 @@ import skirout.editor.v1.type_catalog.ListItem
 import skirout.editor.v1.type_catalog.RelationId
 import skirout.editor.v1.type_catalog.RelativeFieldPattern
 import skirout.editor.v1.type_catalog.RepresentationTemplate
+import skirout.editor.v1.type_catalog.ResourceId
 import skirout.editor.v1.type_catalog.ScalarKind
 import skirout.editor.v1.type_catalog.TypeDefinition
 import skirout.editor.v1.type_catalog.TypeDefinitionId
@@ -54,9 +52,9 @@ import skirout.editor.v1.type_catalog.TypeSelection
 import skirout.editor.v1.type_catalog.ValuePath
 import java.util.concurrent.atomic.AtomicInteger
 
-private val pageId = ResourceId("page")
-private val childId = ResourceId("child")
-private val missingId = ResourceId("missing")
+private val pageId = ResourceId(value = "page")
+private val childId = ResourceId(value = "child")
+private val missingId = ResourceId(value = "missing")
 
 val OwnershipClosureCompilerTest by testSuite {
     test("one sided ownership links compile the complete owned shard") {
@@ -65,11 +63,11 @@ val OwnershipClosureCompilerTest by testSuite {
 
             result as ResourceGraphCompileResult.Success
             result.shard.facts.resources
-                .map { it.key.source.toResourceId() }
+                .map { it.key.source }
                 .toSet() shouldBe setOf(pageId, childId)
             result.shard.facts.edges.single().let { edge ->
-                edge.source.source shouldBe pageId.toSkir()
-                edge.target.source shouldBe childId.toSkir()
+                edge.source.source shouldBe pageId
+                edge.target.source shouldBe childId
                 edge.relation shouldBe OWNERSHIP
             }
         }
@@ -91,7 +89,7 @@ val OwnershipClosureCompilerTest by testSuite {
     }
 
     test("a nested compilation unit is its own shard, not part of its owner's") {
-        val nested = ResourceId("nested")
+        val nested = ResourceId(value = "nested")
         val records = mapOf(pageId to pageRecord(listOf(childId, nested)), childId to childRecord("first"), nested to nestedRecord())
         fixture(records).use { captured ->
             val compiler = compiler(captured.root)
@@ -99,13 +97,13 @@ val OwnershipClosureCompilerTest by testSuite {
             val unit = with(captured.root) { compiler.compile(nested) } as ResourceGraphCompileResult.Success
 
             page.shard.facts.resources
-                .map { it.key.source.toResourceId() }
+                .map { it.key.source }
                 .toSet() shouldBe setOf(pageId, childId)
             page.shard.facts.edges
-                .map { it.target.source.toResourceId() }
+                .map { it.target.source }
                 .toSet() shouldBe setOf(childId, nested)
             unit.shard.facts.resources
-                .map { it.key.source.toResourceId() } shouldBe listOf(nested)
+                .map { it.key.source } shouldBe listOf(nested)
         }
     }
 
@@ -145,18 +143,18 @@ val OwnershipClosureCompilerTest by testSuite {
         }
     }
     test("an invalid ownership edge does not block an independent page") {
-        val other = ResourceId("other")
+        val other = ResourceId(value = "other")
         fixture(mapOf(pageId to pageRecord(listOf(missingId)), other to pageRecord(emptyList()))).use { captured ->
             val compiler = compiler(captured.root)
             with(captured.root) { compiler.compile(pageId) } as ResourceGraphCompileResult.Blocked
             val independent = with(captured.root) { compiler.compile(other) } as ResourceGraphCompileResult.Success
             independent.shard.facts.resources
-                .map { it.key.source.toResourceId() } shouldBe listOf(other)
+                .map { it.key.source } shouldBe listOf(other)
         }
     }
 
     test("a complete sibling cannot hide an unfinished owned resource") {
-        val sibling = ResourceId("sibling")
+        val sibling = ResourceId(value = "sibling")
         val unfinished = AuthoringRecord.of(childRecord("draft").configuration, mapOf("value" to DataValue.UNFILLED))
         val original = mapOf(pageId to pageRecord(listOf(childId)), childId to unfinished)
         val findings =
@@ -171,8 +169,7 @@ val OwnershipClosureCompilerTest by testSuite {
         findings[0]
             .single()
             .primary!!
-            .resource
-            .toResourceId() shouldBe childId
+            .resource shouldBe childId
     }
 }
 
@@ -235,7 +232,7 @@ private fun pageRecord(targets: List<ResourceId>) =
                                         CHILD_LINK_USE,
                                         DataValue.createLink(
                                             endpoint = PAGE_ENDPOINT,
-                                            target = LinkTarget(resource = target.toSkir(), opposite = null),
+                                            target = LinkTarget(resource = target, opposite = null),
                                         ),
                                     ),
                             )

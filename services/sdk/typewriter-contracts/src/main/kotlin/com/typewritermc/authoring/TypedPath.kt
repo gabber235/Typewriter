@@ -24,6 +24,11 @@ fun ValueLocation.Companion.of(
     path: ValuePath = ValuePath.root,
 ): ValueLocation = ValueLocation(resource = resource.toSkir(), path = path)
 
+fun ValueLocation.Companion.of(
+    resource: skirout.editor.v1.type_catalog.ResourceId,
+    path: ValuePath = ValuePath.root,
+): ValueLocation = ValueLocation(resource = resource, path = path)
+
 /**
  * A compact readable form of this path for messages and labels: field names joined by dots, `[id]` for a collection
  * item and `key` or `value` for the branch of a map row.

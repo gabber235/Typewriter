@@ -18,7 +18,6 @@ import com.typewritermc.operations.OperationCatalog
 import com.typewritermc.realm.repository.CapturedAuthoringValues
 import com.typewritermc.realm.repository.ResourceValueMapper
 import com.typewritermc.types.NativeBindingRegistry
-import com.typewritermc.types.ResourceId
 import com.typewritermc.types.catalog.CheckedCatalog
 import com.typewritermc.types.field
 import com.typewritermc.types.fields
@@ -40,6 +39,7 @@ import skirout.editor.v1.type_catalog.AuthoringRecord
 import skirout.editor.v1.type_catalog.CatalogGeneration
 import skirout.editor.v1.type_catalog.DataValue
 import skirout.editor.v1.type_catalog.RelationId
+import skirout.editor.v1.type_catalog.ResourceId
 import skirout.editor.v1.type_catalog.SelectionId
 import skirout.editor.v1.type_catalog.TypeDefinitionId
 import skirout.editor.v1.type_catalog.ValueLocation

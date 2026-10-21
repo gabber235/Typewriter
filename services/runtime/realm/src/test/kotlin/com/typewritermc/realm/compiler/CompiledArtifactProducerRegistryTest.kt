@@ -6,13 +6,12 @@ import com.typewritermc.engine.ContentDigest
 import com.typewritermc.realm.authoring.AuthoringSeed
 import com.typewritermc.realm.authoring.InMemoryAuthoringViewStore
 import com.typewritermc.realm.checking.TestCatalogLease
-import com.typewritermc.types.ResourceId
-import com.typewritermc.types.toSkir
 import de.infix.testBalloon.framework.core.testSuite
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.matchers.shouldBe
 import skirout.editor.v1.compilation_root.CompilationProjectionId
 import skirout.editor.v1.compilation_root.CompilationRoot
+import skirout.editor.v1.type_catalog.ResourceId
 
 val CompiledArtifactProducerRegistryTest by testSuite {
     test("one blocked producer retains a partial ready batch and every producer receives the retained inputs") {
@@ -32,7 +31,7 @@ val CompiledArtifactProducerRegistryTest by testSuite {
                         CompilationResult.Blocked(
                             CompilationRoot(
                                 projection = CompilationProjectionId(value = "fixture.blocked"),
-                                resource = ResourceId("root").toSkir(),
+                                resource = ResourceId(value = "root"),
                             ),
                             ContentDigest("a".repeat(64)),
                             listOf(compilationDiagnostic("blocked", "Blocked")),
@@ -115,7 +114,7 @@ private fun producer(
         override val mediaType = mediaType
 
         override fun roots(view: com.typewritermc.realm.authoring.AuthoringView): Set<CompilationRoot> =
-            setOf(CompilationRoot(projection = this.projection, resource = ResourceId("root").toSkir()))
+            setOf(CompilationRoot(projection = this.projection, resource = ResourceId(value = "root")))
 
         context(inputs: CompilationInputs)
         override fun compile(roots: Set<CompilationRoot>): List<CompilationResult> = compile.invoke(inputs)
@@ -125,7 +124,7 @@ private fun artifact(
     projection: String,
     mediaType: String,
 ) = CompiledArtifact(
-    root = CompilationRoot(projection = CompilationProjectionId(value = projection), resource = ResourceId("root").toSkir()),
+    root = CompilationRoot(projection = CompilationProjectionId(value = projection), resource = ResourceId(value = "root")),
     formatRevision = 2,
     mediaType = mediaType,
     inputFingerprint = ContentDigest("1".repeat(64)),

@@ -1,6 +1,7 @@
 package com.typewritermc.authoring
 
 import com.typewritermc.types.with
+import skirout.editor.v1.authoring.ArgumentLocation
 import skirout.editor.v1.type_catalog.ArgumentSelection
 import skirout.editor.v1.type_catalog.AuthoringRecord
 import skirout.editor.v1.type_catalog.DataValue
@@ -71,10 +72,6 @@ val TypeSelection.definition: TypeDefinitionId
             is TypeSelection.PendingWrapper -> value.definition
             else -> throw IllegalArgumentException("Unknown type selection variant.")
         }
-
-data class ArgumentLocation(
-    val index: Int,
-)
 
 data class DependentField(
     val owner: FieldOwner,

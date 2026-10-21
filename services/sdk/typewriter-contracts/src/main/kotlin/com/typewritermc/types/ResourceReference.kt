@@ -115,6 +115,15 @@ fun ResourceId.toSkir(): SkirResourceId = SkirResourceId(value = value)
 /** The author facing form of a generated resource id; rejects a blank id. */
 fun SkirResourceId.toResourceId(): ResourceId = ResourceId(value)
 
+/** The generated forms of these author facing ids, in order. */
+fun Iterable<ResourceId>.toSkir(): List<SkirResourceId> = map(ResourceId::toSkir)
+
+/** The author facing forms of these generated ids, in order; rejects a blank id. */
+fun Iterable<SkirResourceId>.toResourceIds(): List<ResourceId> = map(SkirResourceId::toResourceId)
+
+/** The author facing forms of these generated ids, in order; rejects a blank id. */
+fun Sequence<SkirResourceId>.toResourceIds(): Sequence<ResourceId> = map(SkirResourceId::toResourceId)
+
 @Serializable
 enum class RelationDeletePolicy {
     RESTRICT,

@@ -4,9 +4,7 @@ import com.typewritermc.types.unknownVariant
 import skirout.editor.v1.catalog.PrepareValueResult
 import skirout.editor.v1.catalog.PreparedContent
 import skirout.editor.v1.catalog.PreparedValue
-import skirout.editor.v1.diagnostic.InitializationDiagnostic
 import skirout.editor.v1.type_catalog.AuthoringRecord
-import skirout.editor.v1.type_catalog.ValueLocation
 
 val PreparedContent.RecordWrapper.record: AuthoringRecord get() = value
 
@@ -21,8 +19,3 @@ fun PrepareValueResult.materialize(): PreparedValue =
         is PrepareValueResult.UnavailableErrorWrapper -> PreparedValue(content = value.content, findings = value.findings)
         else -> unknownVariant(this)
     }
-
-data class LocatedInitializationDiagnostic(
-    val location: ValueLocation,
-    val diagnostic: InitializationDiagnostic,
-)

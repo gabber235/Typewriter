@@ -5,8 +5,6 @@ import com.typewritermc.realm.authoring.AuthoringSeed
 import com.typewritermc.realm.authoring.AuthoringView
 import com.typewritermc.realm.authoring.InMemoryAuthoringViewStore
 import com.typewritermc.realm.checking.TestCatalogLease
-import com.typewritermc.types.ResourceId
-import com.typewritermc.types.toSkir
 import de.infix.testBalloon.framework.core.testSuite
 import io.kotest.matchers.shouldBe
 import skirout.editor.v1.compilation_root.CompilationProjectionId
@@ -18,11 +16,12 @@ import skirout.editor.v1.compiled_content.PublishedContent
 import skirout.editor.v1.compiled_content.PublishedOutput
 import skirout.editor.v1.type_catalog.CatalogGeneration
 import skirout.editor.v1.type_catalog.PublicationId
+import skirout.editor.v1.type_catalog.ResourceId
 
 val CompiledRootStatusesTest by testSuite {
     test("all roots combines producer roots with the selected publication in stable order") {
-        val current = CompilationRoot(projection = CompilationProjectionId(value = "current"), resource = ResourceId("b").toSkir())
-        val active = CompilationRoot(projection = CompilationProjectionId(value = "active"), resource = ResourceId("a").toSkir())
+        val current = CompilationRoot(projection = CompilationProjectionId(value = "current"), resource = ResourceId(value = "b"))
+        val active = CompilationRoot(projection = CompilationProjectionId(value = "active"), resource = ResourceId(value = "a"))
         val views = InMemoryAuthoringViewStore(TestCatalogLease(), AuthoringSeed(emptyMap()))
         views.capture().use { capture ->
             val publication = published(active)
@@ -42,7 +41,7 @@ val CompiledRootStatusesTest by testSuite {
     }
 
     test("an empty supplied selection queries no roots") {
-        val active = CompilationRoot(projection = CompilationProjectionId(value = "active"), resource = ResourceId("a").toSkir())
+        val active = CompilationRoot(projection = CompilationProjectionId(value = "active"), resource = ResourceId(value = "a"))
         val views = InMemoryAuthoringViewStore(TestCatalogLease(), AuthoringSeed(emptyMap()))
         views.capture().use { capture ->
             CompiledRootStatuses(registry(active), selected(published(active)))

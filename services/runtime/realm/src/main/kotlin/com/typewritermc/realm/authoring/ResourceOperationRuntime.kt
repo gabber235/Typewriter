@@ -4,7 +4,6 @@ import com.typewritermc.authoring.AuthoredReads
 import com.typewritermc.authoring.CompletenessResult
 import com.typewritermc.authoring.EditContext
 import com.typewritermc.authoring.PlacementAnchor
-import com.typewritermc.authoring.PreparedEdit
 import com.typewritermc.authoring.ResourceDraft
 import com.typewritermc.authoring.ResourceDrafts
 import com.typewritermc.authoring.complete
@@ -30,11 +29,12 @@ import com.typewritermc.operations.requireAuthored
 import com.typewritermc.realm.checking.CapturedAuthoringReads
 import com.typewritermc.realm.repository.AuthoringPlanRejected
 import com.typewritermc.services.libs.utils.rethrowExceptional
-import com.typewritermc.types.ResourceId
 import com.typewritermc.types.template
-import com.typewritermc.types.toResourceId
+import com.typewritermc.types.toResourceIds
+import com.typewritermc.types.toSkir
 import com.typewritermc.types.unknownVariant
 import com.typewritermc.types.use
+import skirout.editor.v1.authoring.PreparedEdit
 import skirout.editor.v1.diagnostic.ValueProblem
 import skirout.editor.v1.operation.OperationAvailability
 import skirout.editor.v1.operation.OperationCardinality
@@ -48,12 +48,13 @@ import skirout.editor.v1.type_catalog.CatalogGeneration
 import skirout.editor.v1.type_catalog.DataValue
 import skirout.editor.v1.type_catalog.ItemId
 import skirout.editor.v1.type_catalog.NamedTypeTemplate
+import skirout.editor.v1.type_catalog.ResourceId
 import skirout.editor.v1.type_catalog.ResourceTarget
 import skirout.editor.v1.type_catalog.TypeSelection
 import skirout.editor.v1.type_catalog.ValueLocation
 import skirout.editor.v1.type_catalog.ValuePath
 import java.util.UUID
-import skirout.editor.v1.type_catalog.ResourceId as SkirResourceId
+import com.typewritermc.types.ResourceId as AuthorResourceId
 
 internal sealed interface OperationPreparationResult {
     data class Preview(
@@ -154,7 +155,7 @@ internal class ResourceOperationRuntime(
                         operation.guarded(captured) {
                             field
                                 .acceptedCandidates(invocation.targets, reads)
-                                .filterIsInstance<ResourceId>()
+                                .filterIsInstance<AuthorResourceId>()
                                 .filterNot { it in invocation.targets }
                                 .distinct()
                                 .take(DROP_CANDIDATE_LIMIT + 1)
@@ -162,7 +163,7 @@ internal class ResourceOperationRuntime(
                         }
                     DropCandidates(
                         operation = operation.definition.id,
-                        destinations = destinations.take(DROP_CANDIDATE_LIMIT).map { SkirResourceId(value = it.value) },
+                        destinations = destinations.take(DROP_CANDIDATE_LIMIT).toSkir(),
                         complete = destinations.size <= DROP_CANDIDATE_LIMIT,
                     )
                 }
@@ -246,7 +247,7 @@ internal class ResourceOperationRuntime(
 
     /** Availability of this operation for [subjects]; a callback failure or incomplete read is a resolution failure. */
     private fun BoundResourceOperation.evaluate(
-        subjects: List<ResourceId>,
+        subjects: List<AuthorResourceId>,
         reads: OperationReads,
         captured: CapturedAuthoringReads,
     ): OperationAvailability = guarded(captured) { availability(subjects, reads) }
@@ -259,8 +260,8 @@ internal class ResourceOperationRuntime(
         invocation.origin.occurrences.forEach { occurrence ->
             require(baseline.links[occurrence.id] == occurrence) { "The captured resource occurrence changed" }
             reads.observeInput(InputIdentity.Value(occurrence.id.location))
-            reads.observeInput(InputIdentity.Incoming(occurrence.source.toResourceId(), null))
-            reads.observeInput(InputIdentity.Incoming(occurrence.target.resource.toResourceId(), null))
+            reads.observeInput(InputIdentity.Incoming(occurrence.source, null))
+            reads.observeInput(InputIdentity.Incoming(occurrence.target.resource, null))
         }
     }
 }
@@ -270,8 +271,9 @@ internal fun OperationInvocation.applicableIn(
     view: AuthoringView,
     reads: CapturedAuthoringReads,
 ): List<BoundResourceOperation> {
-    val records = targets.map { id -> requireNotNull(view.resources[id]) { "The operation target is unavailable" } }
-    targets.forEach { id ->
+    val ids = targets.toSkir()
+    val records = ids.map { id -> requireNotNull(view.resources[id]) { "The operation target is unavailable" } }
+    ids.forEach { id ->
         reads.observeInput(InputIdentity.Existence(id))
         reads.observeInput(InputIdentity.Form(ValueLocation.of(id)))
     }
@@ -342,7 +344,7 @@ internal class RealmOperationReads(
 ) : OperationReads,
     AuthoredReads by captured,
     AuthoringGraphFacts by RealmGraphFacts(RelationReads(captured)) {
-    override fun resourceDraft(id: ResourceId): ResourceDraft = captured.resourceDraft(id)
+    override fun resourceDraft(id: AuthorResourceId): ResourceDraft = captured.resourceDraft(id.toSkir())
 }
 
 /** One preparation attempt: authored reads, graph facts and edits, all staged into [edit]. */
@@ -360,7 +362,7 @@ internal class RuntimeOperationPreparation(
 
     override val identities: OperationIdentities =
         object : OperationIdentities {
-            override fun resource(key: String) = ResourceId(identity("resource", key))
+            override fun resource(key: String) = AuthorResourceId(identity("resource", key))
 
             override fun item(key: String) = ItemId(value = identity("item", key))
 
@@ -373,35 +375,37 @@ internal class RuntimeOperationPreparation(
     var selection: List<ResourceId>? = null
         private set
 
-    override fun resourceDraft(id: ResourceId): ResourceDraft = edit.capturedReads.resourceDraft(id)
+    override fun resourceDraft(id: AuthorResourceId): ResourceDraft = edit.capturedReads.resourceDraft(id.toSkir())
 
-    override fun selectAfterStaging(ids: List<ResourceId>) {
-        require(ids.all { it in edit.session.resources }) { "The result selection contains an absent resource" }
-        selection = ids.distinct()
+    override fun selectAfterStaging(ids: List<AuthorResourceId>) {
+        val selected = ids.toSkir()
+        require(selected.all { it in edit.session.resources }) { "The result selection contains an absent resource" }
+        selection = selected.distinct()
     }
 
-    override suspend fun delete(ids: List<ResourceId>) = edit.deleteAll(ids)
+    override suspend fun delete(ids: List<AuthorResourceId>) = edit.deleteAll(ids.toSkir())
 
-    override suspend fun duplicate(roots: List<ResourceId>): List<ResourceId> = cloner.duplicateOwned(roots)
+    override suspend fun duplicate(roots: List<AuthorResourceId>): List<AuthorResourceId> =
+        cloner.duplicateOwned(roots.toSkir()).toResourceIds()
 
     override suspend fun move(
-        ids: List<ResourceId>,
-        destination: ResourceId,
+        ids: List<AuthorResourceId>,
+        destination: AuthorResourceId,
         anchor: PlacementAnchor?,
     ) {
-        val moved = relationEdits.move(ids, destination)
-        with(layouts) { moved.placeIn(destination, anchor) }
+        val moved = relationEdits.move(ids.toSkir(), destination.toSkir())
+        with(layouts) { moved.placeIn(destination.toSkir(), anchor) }
     }
 
     override suspend fun link(
-        ids: List<ResourceId>,
-        target: ResourceId,
-    ) = relationEdits.link(ids, target)
+        ids: List<AuthorResourceId>,
+        target: AuthorResourceId,
+    ) = relationEdits.link(ids.toSkir(), target.toSkir())
 
     override suspend fun unlink(
-        ids: List<ResourceId>,
-        target: ResourceId,
-    ) = relationEdits.unlink(ids, target)
+        ids: List<AuthorResourceId>,
+        target: AuthorResourceId,
+    ) = relationEdits.unlink(ids.toSkir(), target.toSkir())
 }
 
 /** [id] bound as a draft of any resource; an unreadable binding fails the read. */

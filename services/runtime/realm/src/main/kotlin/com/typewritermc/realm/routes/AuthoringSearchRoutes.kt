@@ -6,7 +6,6 @@ import com.typewritermc.realm.authoring.AuthoringViewStore
 import com.typewritermc.realm.search.AuthoringSearchRepository
 import com.typewritermc.realm.search.IndexedAuthoringSearchCandidate
 import com.typewritermc.services.libs.communicator.router.CommunicatorRoutesBuilder
-import com.typewritermc.types.ResourceId
 import com.typewritermc.types.requireValid
 import com.typewritermc.types.use
 import skirout.editor.v1.authoring.AuthoringDiagnostic
@@ -17,8 +16,8 @@ import skirout.editor.v1.authoring.SearchAuthoringResponse
 import skirout.editor.v1.type_catalog.AuthoringRecord
 import skirout.editor.v1.type_catalog.CatalogGeneration
 import skirout.editor.v1.type_catalog.DataValue
+import skirout.editor.v1.type_catalog.ResourceId
 import skirout.editor.v1.type_catalog.ScalarKind
-import skirout.editor.v1.type_catalog.ResourceId as SkirResourceId
 import skirout.editor.v1.typed_value.PortableValue as SkirPortableValue
 
 internal class AuthoringSearchRoutes(
@@ -43,7 +42,7 @@ internal class AuthoringSearchRoutes(
                     repository.search(
                         root,
                         request.query,
-                        request.contexts.mapTo(linkedSetOf()) { ResourceId(it.value) },
+                        request.contexts.mapTo(linkedSetOf()) { it.requireValid() },
                         request.roots.mapTo(linkedSetOf()) { it.requireValid() },
                         request.target?.requireValid(),
                         MAX_SEARCH_CANDIDATES,
@@ -72,13 +71,12 @@ private fun invalidSearch(
         diagnostics = listOf(AuthoringDiagnostic(code = code, message = message, resource = null, path = null)),
     )
 
-private fun IndexedAuthoringSearchCandidate.toWire(record: AuthoringRecord): AuthoringSearchHit {
-    val wireResource = SkirResourceId(value = resource.value)
-    return AuthoringSearchHit(
-        resource = wireResource,
+private fun IndexedAuthoringSearchCandidate.toWire(record: AuthoringRecord): AuthoringSearchHit =
+    AuthoringSearchHit(
+        resource = resource,
         subject =
             PresentationSubject(
-                resource = wireResource,
+                resource = resource,
                 content = record,
             ),
         context =
@@ -87,7 +85,6 @@ private fun IndexedAuthoringSearchCandidate.toWire(record: AuthoringRecord): Aut
                 payload = DataValue.StringValueWrapper(text),
             ),
     )
-}
 
 private const val MAX_SEARCH_CANDIDATES = 256
 private const val MAX_SEARCH_RESULTS = 100

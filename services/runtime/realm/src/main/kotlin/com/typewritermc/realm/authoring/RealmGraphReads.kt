@@ -6,7 +6,6 @@ import com.typewritermc.authoring.GraphEndpoint
 import com.typewritermc.authoring.GraphStep
 import com.typewritermc.authoring.LinkInspectionQuery
 import com.typewritermc.authoring.LinkInspectionResult
-import com.typewritermc.authoring.LinkProjection
 import com.typewritermc.authoring.LocatedPortableValue
 import com.typewritermc.authoring.ReachabilityQuery
 import com.typewritermc.authoring.ReachabilityResult
@@ -15,7 +14,6 @@ import com.typewritermc.authoring.ResourceDraft
 import com.typewritermc.authoring.ResourceDrafts
 import com.typewritermc.authoring.RouteQuery
 import com.typewritermc.authoring.RouteResult
-import com.typewritermc.authoring.TraversalDirection
 import com.typewritermc.authoring.UnresolvedLink
 import com.typewritermc.authoring.definition
 import com.typewritermc.authoring.locate
@@ -34,20 +32,23 @@ import com.typewritermc.expression.EvaluationDiagnostic
 import com.typewritermc.realm.checking.CapturedAuthoringReads
 import com.typewritermc.realm.repository.LinkSchemaCapabilities
 import com.typewritermc.realm.repository.ResourceValueMapper
-import com.typewritermc.types.ResourceId
 import com.typewritermc.types.catalog.Resolution
 import com.typewritermc.types.endpoint
 import com.typewritermc.types.record
 import com.typewritermc.types.toResourceId
+import com.typewritermc.types.toSkir
 import com.typewritermc.types.unknownVariant
 import com.typewritermc.types.use
 import skirout.editor.v1.authoring.LinkOccurrence
 import skirout.editor.v1.authoring.LinkOccurrenceId
+import skirout.editor.v1.authoring_facts.LinkProjection
+import skirout.editor.v1.authoring_facts.TraversalDirection
 import skirout.editor.v1.catalog.RelationContract
 import skirout.editor.v1.diagnostic.ValueProblem
 import skirout.editor.v1.type_catalog.AuthoringRecord
 import skirout.editor.v1.type_catalog.DataValue
 import skirout.editor.v1.type_catalog.RelationFamilyId
+import skirout.editor.v1.type_catalog.ResourceId
 import skirout.editor.v1.type_catalog.TypeSelection
 import skirout.editor.v1.type_catalog.ValueLocation
 import skirout.editor.v1.type_catalog.ValuePath
@@ -58,7 +59,10 @@ internal object RealmGraphReads {
     fun <D : ResourceDraft> reachable(query: ReachabilityQuery<D>): ReachabilityResult<D> {
         val graph = CapturedGraph(reads, query.links)
         val queue = ArrayDeque<Pair<ResourceId, Int>>()
-        query.seeds.sortedBy(ResourceId::value).forEach { queue += it to 0 }
+        query.seeds
+            .toSkir()
+            .sortedBy(ResourceId::value)
+            .forEach { queue += it to 0 }
         val visited = linkedSetOf<ResourceId>()
         val resources = mutableListOf<D>()
         val undecided = mutableListOf<UndecidedCandidate>()
@@ -100,7 +104,7 @@ internal object RealmGraphReads {
         target: ResourceId,
         family: RelationFamilyId,
     ): PartialSelection<ResourceDraft> {
-        val graph = CapturedGraph(reads, RelationSelection.Family(family, TraversalDirection.Forward))
+        val graph = CapturedGraph(reads, RelationSelection.Family(family, TraversalDirection.FORWARD))
         graph.observeAt(target)
         val known = mutableListOf<ResourceDraft>()
         val undecided = mutableListOf<UndecidedCandidate>()
@@ -124,7 +128,10 @@ internal object RealmGraphReads {
         var completion: InspectionCompletion = InspectionCompletion.Complete
         val queue = ArrayDeque<RouteState>()
         val inspected = linkedSetOf<ResourceId>()
-        query.seeds.sortedBy(ResourceId::value).forEach { seed -> queue += RouteState(seed, emptyList(), setOf(seed)) }
+        query.seeds
+            .toSkir()
+            .sortedBy(ResourceId::value)
+            .forEach { seed -> queue += RouteState(seed, emptyList(), setOf(seed)) }
         while (queue.isNotEmpty()) {
             val state = queue.removeFirst()
             if (state.resource !in inspected && inspected.size.toLong() >= query.budget.maxResources) {
@@ -133,7 +140,7 @@ internal object RealmGraphReads {
             }
             inspected += state.resource
             graph.observeAt(state.resource)
-            if (state.resource == query.target) {
+            if (state.resource == query.target.toSkir()) {
                 if (paths.size.toLong() >= query.budget.maxRoutes) {
                     completion = interrupted(reads, "route budget exceeded")
                     break
@@ -165,7 +172,8 @@ internal object RealmGraphReads {
         val occurrences = mutableListOf<LinkOccurrence>()
         var inspected = 0L
         var completion: InspectionCompletion = InspectionCompletion.Complete
-        occurrenceLoop@ for (resource in query.sources.sortedBy(ResourceId::value)) {
+        val sources = query.sources.toSkir().sortedBy(ResourceId::value)
+        occurrenceLoop@ for (resource in sources) {
             graph.observeAt(resource)
             for (occurrence in graph.occurrencesAt(resource)) {
                 if (++inspected > query.budget.maxLinks) {
@@ -176,7 +184,7 @@ internal object RealmGraphReads {
                 occurrences += occurrence
             }
         }
-        val unresolved = query.sources.flatMap(graph::unresolvedAt).distinct()
+        val unresolved = sources.flatMap(graph::unresolvedAt).distinct()
         if (completion is InspectionCompletion.Complete && unresolved.any { it is UnresolvedLink.UnavailableTarget }) {
             completion = interrupted(reads, "selected link target unavailable")
         }
@@ -186,8 +194,8 @@ internal object RealmGraphReads {
     context(reads: CapturedAuthoringReads)
     fun follow(occurrence: LinkOccurrence): Availability<DraftBinding> {
         reads.observeInput(InputIdentity.Value(occurrence.id.location))
-        reads.observeInput(InputIdentity.Existence(occurrence.target.resource.toResourceId()))
-        return reads.resourceBinding(occurrence.target.resource.toResourceId())
+        reads.observeInput(InputIdentity.Existence(occurrence.target.resource))
+        return reads.resourceBinding(occurrence.target.resource)
     }
 }
 
@@ -263,7 +271,7 @@ private class CapturedGraph(
             }.sortedBy { it.resource.value }
 
     private fun observeUnavailableTarget(occurrence: LinkOccurrence) {
-        reads.observeInput(InputIdentity.Existence(occurrence.target.resource.toResourceId()))
+        reads.observeInput(InputIdentity.Existence(occurrence.target.resource))
         reads.observeInput(InputIdentity.Form(ValueLocation(resource = occurrence.target.resource, path = ValuePath.root)))
     }
 
@@ -303,7 +311,7 @@ private class CapturedGraph(
 
                         is TypeSelection.PendingWrapper -> {
                             return if (actual.definition == requested.use.definition) {
-                                BoundMatch.Undecided(UndecidedCandidate(resource, listOf(location)))
+                                BoundMatch.Undecided(UndecidedCandidate(resource.toResourceId(), listOf(location)))
                             } else {
                                 BoundMatch.No
                             }
@@ -318,7 +326,7 @@ private class CapturedGraph(
         if (!matches) return BoundMatch.No
         return when (val binding = reads.resourceBinding(resource)) {
             is Availability.Available -> BoundMatch.Match(type.bind(binding.value))
-            is Availability.Unavailable -> BoundMatch.Undecided(UndecidedCandidate(resource, binding.locations))
+            is Availability.Unavailable -> BoundMatch.Undecided(UndecidedCandidate(resource.toResourceId(), binding.locations))
             is Availability.Failed -> BoundMatch.No
         }
     }
@@ -335,10 +343,10 @@ internal class CapturedGraphIndex(
     val selectedEndpoints = contracts.flatMapTo(linkedSetOf()) { listOf(it.first.id, it.second.id) }
     private val occurrences = view.links.values.filter { it.id.endpoint in selectedEndpoints }
     val occurrenceIds = occurrences.mapTo(hashSetOf(), LinkOccurrence::id)
-    val occurrencesBySource = occurrences.groupBy { it.source.toResourceId() }
+    val occurrencesBySource = occurrences.groupBy { it.source }
     val unavailableOccurrences = occurrences.filterTo(linkedSetOf(), ::hasUnavailableTarget)
-    val unavailableBySource = unavailableOccurrences.groupBy { it.source.toResourceId() }
-    val unavailableByTarget = unavailableOccurrences.groupBy { it.target.resource.toResourceId() }
+    val unavailableBySource = unavailableOccurrences.groupBy { it.source }
+    val unavailableByTarget = unavailableOccurrences.groupBy { it.target.resource }
     val unavailableOccurrenceIds = unavailableOccurrences.mapTo(hashSetOf(), LinkOccurrence::id)
     val declaredEvidence =
         view.resources.mapValues { (resource, record) ->
@@ -362,7 +370,7 @@ internal class CapturedGraphIndex(
             result.problems
                 .filterNot { problem ->
                     unavailableOccurrences.any { it.id.location == problem.location }
-                }.groupBy { it.location.resource.toResourceId() }
+                }.groupBy { it.location.resource }
         val directed =
             result.projections.flatMap { projection ->
                 projection.directed(contractById.getValue(projection.contract), direction(selection))
@@ -372,7 +380,7 @@ internal class CapturedGraphIndex(
     }
 
     private fun hasUnavailableTarget(occurrence: LinkOccurrence): Boolean {
-        val target = view.resources[occurrence.target.resource.toResourceId()] ?: return true
+        val target = view.resources[occurrence.target.resource] ?: return true
         return when (val selected = target.configuration) {
             is TypeSelection.PendingWrapper -> {
                 true
@@ -418,8 +426,8 @@ private fun LinkProjection.directed(
     direction: TraversalDirection,
 ): List<DirectedEdge> =
     buildList {
-        if (direction != TraversalDirection.Reverse) add(forward(contract))
-        if (direction != TraversalDirection.Forward) add(reverse(contract))
+        if (direction != TraversalDirection.REVERSE) add(forward(contract))
+        if (direction != TraversalDirection.FORWARD) add(reverse(contract))
     }
 
 private fun LinkProjection.forward(contract: RelationContract): DirectedEdge =
@@ -428,8 +436,8 @@ private fun LinkProjection.forward(contract: RelationContract): DirectedEdge =
         second,
         GraphStep(
             contract.id,
-            GraphEndpoint(first, contract.first.id, firstLocation),
-            GraphEndpoint(second, contract.second.id, secondLocation),
+            GraphEndpoint(first.toResourceId(), contract.first.id, firstLocation),
+            GraphEndpoint(second.toResourceId(), contract.second.id, secondLocation),
         ),
     )
 
@@ -439,8 +447,8 @@ private fun LinkProjection.reverse(contract: RelationContract): DirectedEdge =
         first,
         GraphStep(
             contract.id,
-            GraphEndpoint(second, contract.second.id, secondLocation),
-            GraphEndpoint(first, contract.first.id, firstLocation),
+            GraphEndpoint(second.toResourceId(), contract.second.id, secondLocation),
+            GraphEndpoint(first.toResourceId(), contract.first.id, firstLocation),
         ),
     )
 

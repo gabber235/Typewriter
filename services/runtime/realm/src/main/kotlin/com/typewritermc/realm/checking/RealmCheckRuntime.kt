@@ -2,7 +2,6 @@ package com.typewritermc.realm.checking
 
 import com.typewritermc.authoring.Availability
 import com.typewritermc.authoring.DraftBinding
-import com.typewritermc.authoring.EditExpectation
 import com.typewritermc.authoring.ReadContext
 import com.typewritermc.authoring.field
 import com.typewritermc.authoring.of
@@ -22,7 +21,6 @@ import com.typewritermc.realm.authoring.RESOURCE_SELECTION_INPUT
 import com.typewritermc.realm.repository.conflicts
 import com.typewritermc.services.libs.utils.closeAll
 import com.typewritermc.services.libs.utils.rethrowExceptional
-import com.typewritermc.types.ResourceId
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -35,10 +33,12 @@ import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.joinAll
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
+import skirout.editor.v1.authoring_facts.EditExpectation
 import skirout.editor.v1.catalog.ConfigurationRecipe
 import skirout.editor.v1.catalog.OwnedRule
 import skirout.editor.v1.checking.CheckInstanceId
 import skirout.editor.v1.checking.CheckOutcome
+import skirout.editor.v1.checking.CheckResult
 import skirout.editor.v1.checking.CheckTicket
 import skirout.editor.v1.checking.FindingSet
 import skirout.editor.v1.checking.FindingStatus
@@ -47,6 +47,7 @@ import skirout.editor.v1.diagnostic.DiagnosticSeverity
 import skirout.editor.v1.type_catalog.CatalogGeneration
 import skirout.editor.v1.type_catalog.CheckExecutionId
 import skirout.editor.v1.type_catalog.DiagnosticId
+import skirout.editor.v1.type_catalog.ResourceId
 import skirout.editor.v1.type_catalog.RuleId
 import skirout.editor.v1.type_catalog.RuleOrigin
 import skirout.editor.v1.type_catalog.ValueLocation
@@ -147,8 +148,8 @@ class RealmCheckRuntime(
             synchronized(lock) {
                 if (closed) return
                 instances.values.forEach { state ->
-                    if (state.findings == null) return@forEach
-                    if (values.conflicts(state.evidence).isNotEmpty()) {
+                    val findings = state.findings ?: return@forEach
+                    if (values.conflicts(findings.expectations).isNotEmpty()) {
                         state.findings = state.findings?.copy(status = FindingStatus.OUTDATED)
                         retireJobLocked(state.job)
                         state.job = null
@@ -439,12 +440,11 @@ class RealmCheckRuntime(
                         state.findings =
                             FindingSet(
                                 ticket = result.ticket,
-                                expectations = result.expectations.encodedExpectations(),
+                                expectations = result.expectations,
                                 outcome = result.outcome,
                                 findings = result.findings,
                                 status = FindingStatus.CURRENT,
                             )
-                        state.evidence = result.expectations
                     }
                 state.job = null
                 when (admission) {
@@ -599,7 +599,7 @@ class RealmCheckRuntime(
                     )
             }
             val outcome = mergeOutcome(explicitOutcome, reads.health().outcome(subject.plan.rule.origin))
-            CheckResult(actualTicket, outcome, reads.observations(), findings)
+            CheckResult(ticket = actualTicket, outcome = outcome, expectations = reads.observations(), findings = findings)
         } finally {
             if (suppliedLease == null) lease.close()
         }
@@ -717,8 +717,6 @@ class RealmCheckRuntime(
         var ticket: CheckTicket? = null,
         var job: Job? = null,
         var findings: FindingSet? = null,
-        /** The expectations of [findings] in the Kotlin form conflict checks read, until edit expectations are Skir values. */
-        var evidence: List<EditExpectation> = emptyList(),
     )
 }
 
@@ -902,5 +900,5 @@ private fun mergeOutcome(
         else -> tracked
     }
 
-private val REALM_SUBJECT_KEY = ValueLocation.of(ResourceId("typewriter.realm"))
-private val DISCOVERY_SUBJECT_KEY = ValueLocation.of(ResourceId("typewriter.discovery"), ValuePath.root.field("subjects"))
+private val REALM_SUBJECT_KEY = ValueLocation.of(ResourceId(value = "typewriter.realm"))
+private val DISCOVERY_SUBJECT_KEY = ValueLocation.of(ResourceId(value = "typewriter.discovery"), ValuePath.root.field("subjects"))

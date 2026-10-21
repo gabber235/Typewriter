@@ -8,22 +8,22 @@ import com.typewritermc.authoring.CompleteValue
 import com.typewritermc.authoring.CompletenessResult
 import com.typewritermc.authoring.DraftBinding
 import com.typewritermc.authoring.DraftExpectation
-import com.typewritermc.authoring.EditExpectation
 import com.typewritermc.authoring.LocatedPortableValue
 import com.typewritermc.authoring.ReadContext
 import com.typewritermc.authoring.StructuralStep
-import com.typewritermc.authoring.TraversalDirection
 import com.typewritermc.authoring.append
 import com.typewritermc.authoring.arguments
 import com.typewritermc.authoring.complete
 import com.typewritermc.authoring.definition
 import com.typewritermc.authoring.field
 import com.typewritermc.authoring.item
+import com.typewritermc.authoring.links
 import com.typewritermc.authoring.locate
 import com.typewritermc.authoring.mapKey
 import com.typewritermc.authoring.mapValue
 import com.typewritermc.authoring.of
 import com.typewritermc.authoring.payload
+import com.typewritermc.authoring.resourceIds
 import com.typewritermc.authoring.root
 import com.typewritermc.authoring.type
 import com.typewritermc.authoring.use
@@ -40,7 +40,6 @@ import com.typewritermc.expression.EvaluationDiagnostic
 import com.typewritermc.realm.authoring.AuthoredReadView
 import com.typewritermc.realm.authoring.RESOURCE_SELECTION_INPUT
 import com.typewritermc.services.libs.utils.rethrowExceptional
-import com.typewritermc.types.ResourceId
 import com.typewritermc.types.actualType
 import com.typewritermc.types.canonicalValueKey
 import com.typewritermc.types.catalog.CheckedType
@@ -53,9 +52,12 @@ import com.typewritermc.types.payload
 import com.typewritermc.types.record
 import com.typewritermc.types.rows
 import com.typewritermc.types.toResourceId
+import com.typewritermc.types.toSkir
 import com.typewritermc.types.unknownVariant
 import com.typewritermc.types.unwrapNamed
 import com.typewritermc.types.use
+import skirout.editor.v1.authoring_facts.EditExpectation
+import skirout.editor.v1.authoring_facts.TraversalDirection
 import skirout.editor.v1.catalog.RepresentationKind
 import skirout.editor.v1.expression.ExpressionNode
 import skirout.editor.v1.type_catalog.ArgumentSelection
@@ -66,6 +68,7 @@ import skirout.editor.v1.type_catalog.ItemId
 import skirout.editor.v1.type_catalog.ListItem
 import skirout.editor.v1.type_catalog.MapRow
 import skirout.editor.v1.type_catalog.RelativeFieldPattern
+import skirout.editor.v1.type_catalog.ResourceId
 import skirout.editor.v1.type_catalog.TypeDefinitionId
 import skirout.editor.v1.type_catalog.TypeSelection
 import skirout.editor.v1.type_catalog.TypeUse
@@ -139,7 +142,7 @@ class CapturedAuthoringReads(
         path: BoundPath<*>,
         representation: TypeUse,
     ): Availability<T> {
-        observeResource(path.location.resource.toResourceId())
+        observeResource(path.location.resource)
         observe(InputIdentity.Catalog(catalog))
         val located = valueAt(path.location)
         if (located is LocatedValue.Missing) return unavailable(located.at)
@@ -201,7 +204,7 @@ class CapturedAuthoringReads(
     }
 
     override fun presence(path: BoundPath<*>): Availability<Boolean> {
-        observeResource(path.location.resource.toResourceId())
+        observeResource(path.location.resource)
         observe(InputIdentity.Catalog(catalog))
         return when (val located = valueAt(path.location)) {
             is LocatedValue.Missing -> {
@@ -224,13 +227,13 @@ class CapturedAuthoringReads(
     }
 
     override fun binding(path: BoundPath<*>): Availability<DraftBinding> {
-        observeResource(path.location.resource.toResourceId())
+        observeResource(path.location.resource)
         observe(InputIdentity.Catalog(catalog))
         observe(InputIdentity.Form(path.location))
         if (path.location.path.segments
                 .isEmpty()
         ) {
-            val record = view.resources[path.location.resource.toResourceId()] ?: return unavailable(path.location)
+            val record = view.resources[path.location.resource] ?: return unavailable(path.location)
             val selection = record.configuration
             val readable =
                 when (selection) {
@@ -301,7 +304,7 @@ class CapturedAuthoringReads(
     }
 
     override fun canonicalValueKey(path: BoundPath<*>): Availability<String> {
-        observeResource(path.location.resource.toResourceId())
+        observeResource(path.location.resource)
         observe(InputIdentity.Catalog(catalog))
         return when (val located = valueAt(path.location)) {
             is LocatedValue.Missing -> {
@@ -332,7 +335,7 @@ class CapturedAuthoringReads(
     }
 
     override fun members(path: BoundCollectionPath): List<ItemId> {
-        observeResource(path.location.resource.toResourceId())
+        observeResource(path.location.resource)
         observe(InputIdentity.Form(path.location))
         observe(InputIdentity.Membership(path.location))
         observe(InputIdentity.Order(path.location))
@@ -397,13 +400,13 @@ class CapturedAuthoringReads(
                 TypeMatch.No -> {}
 
                 TypeMatch.Undecided -> {
-                    undecided += UndecidedCandidate(resource, listOf(root))
+                    undecided += UndecidedCandidate(resource.toResourceId(), listOf(root))
                 }
 
                 is TypeMatch.Yes -> {
                     val binding = binding(root, record.configuration, match.checked)
                     if (binding == null) {
-                        undecided += UndecidedCandidate(resource, listOf(root))
+                        undecided += UndecidedCandidate(resource.toResourceId(), listOf(root))
                         continue
                     }
                     val predicate = query.predicate
@@ -417,7 +420,7 @@ class CapturedAuthoringReads(
                         }
 
                         is Availability.Unavailable -> {
-                            undecided += UndecidedCandidate(resource, result.locations)
+                            undecided += UndecidedCandidate(resource.toResourceId(), result.locations)
                         }
 
                         is Availability.Failed -> {
@@ -437,7 +440,7 @@ class CapturedAuthoringReads(
     }
 
     fun portable(path: BoundPath<*>): Availability<CompleteValue> {
-        observeResource(path.location.resource.toResourceId())
+        observeResource(path.location.resource)
         observe(InputIdentity.Catalog(catalog))
         val located = valueAt(path.location)
         if (located is LocatedValue.Missing) return unavailable(located.at)
@@ -473,7 +476,7 @@ class CapturedAuthoringReads(
     }
 
     internal fun authoredValue(location: ValueLocation): Availability<DataValue> {
-        observeResource(location.resource.toResourceId())
+        observeResource(location.resource)
         observe(InputIdentity.Catalog(catalog))
         return when (val located = valueAt(location)) {
             is LocatedValue.Missing -> {
@@ -639,10 +642,10 @@ class CapturedAuthoringReads(
         requested: ResourceTypeMatch,
     ): DraftBinding? {
         require(location.path.segments.isEmpty()) { "A resource check subject must use a root location." }
-        observeResource(location.resource.toResourceId())
+        observeResource(location.resource)
         observe(InputIdentity.Catalog(catalog))
         observe(InputIdentity.Form(location))
-        val record = view.resources[location.resource.toResourceId()] ?: return null
+        val record = view.resources[location.resource] ?: return null
         val match = match(record.configuration, requested) as? TypeMatch.Yes ?: return null
         return binding(location, record.configuration, match.checked)
     }
@@ -651,10 +654,10 @@ class CapturedAuthoringReads(
         location: ValueLocation,
         owner: TypeDefinitionId,
     ): DraftBinding? {
-        observeResource(location.resource.toResourceId())
+        observeResource(location.resource)
         observe(InputIdentity.Catalog(catalog))
         if (location.path.segments.isEmpty()) {
-            val record = view.resources[location.resource.toResourceId()] ?: return null
+            val record = view.resources[location.resource] ?: return null
             observe(InputIdentity.Form(location))
             val selection = record.configuration
             val checked =
@@ -740,7 +743,7 @@ class CapturedAuthoringReads(
     }
 
     private fun valueAt(location: ValueLocation): LocatedValue {
-        val record = view.resources[location.resource.toResourceId()] ?: return LocatedValue.Missing(location)
+        val record = view.resources[location.resource] ?: return LocatedValue.Missing(location)
         if (location.path.segments.isEmpty()) {
             val selection = record.configuration as? TypeSelection.CompleteWrapper ?: return LocatedValue.Missing(location)
             return LocatedValue.Available(DataValue.named(selection.use, DataValue.RecordWrapper(record.payload)))
@@ -995,42 +998,42 @@ class CapturedAuthoringReads(
         val values = original.values
         when (identity) {
             is InputIdentity.Value -> {
-                recorder.observe(EditExpectation.Value(identity.at, values.value(identity.at)))
+                recorder.observe(EditExpectation.createValue(at = identity.at, expected = values.value(identity.at)))
             }
 
             is InputIdentity.Form -> {
-                recorder.observe(EditExpectation.Configuration(identity.at, values.configuration(identity.at)))
+                recorder.observe(EditExpectation.createConfiguration(at = identity.at, expected = values.configuration(identity.at)))
             }
 
             is InputIdentity.Membership -> {
-                recorder.observe(EditExpectation.Value(identity.at, values.value(identity.at)))
+                recorder.observe(EditExpectation.createValue(at = identity.at, expected = values.value(identity.at)))
             }
 
             is InputIdentity.Order -> {
-                recorder.observe(EditExpectation.Value(identity.at, values.value(identity.at)))
+                recorder.observe(EditExpectation.createValue(at = identity.at, expected = values.value(identity.at)))
             }
 
             is InputIdentity.Existence -> {
                 recorder.observe(
-                    EditExpectation.ResourceExists(
-                        identity.resource,
-                        values.resource(identity.resource) != null,
+                    EditExpectation.createResourceExists(
+                        id = identity.resource,
+                        expected = values.resource(identity.resource) != null,
                     ),
                 )
             }
 
             is InputIdentity.Selection -> {
-                recorder.observe(EditExpectation.ResourceIds(values.resourceIds()))
+                recorder.observe(EditExpectation.resourceIds(values.resourceIds()))
             }
 
             is InputIdentity.Incoming -> {
                 original.catalog.relations.filter { identity.relation == null || it.id == identity.relation }.forEach { contract ->
                     recorder.observe(
-                        EditExpectation.Links(
+                        EditExpectation.links(
                             identity.resource,
                             contract.id,
-                            TraversalDirection.Both,
-                            values.links(identity.resource, contract.id, TraversalDirection.Both),
+                            TraversalDirection.BOTH,
+                            values.links(identity.resource, contract.id, TraversalDirection.BOTH),
                         ),
                     )
                 }

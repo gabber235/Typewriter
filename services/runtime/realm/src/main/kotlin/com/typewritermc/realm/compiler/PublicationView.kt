@@ -3,6 +3,7 @@ package com.typewritermc.realm.compiler
 import com.typewritermc.types.unknownVariant
 import skirout.editor.v1.diagnostic.Diagnostic
 import skirout.editor.v1.diagnostic.DiagnosticSeverity
+import skirout.editor.v1.publication.DiagnosticEvidence
 import skirout.editor.v1.publication.PublicationBlocker
 import skirout.editor.v1.publication.PublicationBlockers
 import skirout.editor.v1.publication.PublicationDiagnosticDetails
@@ -59,5 +60,5 @@ private fun Diagnostic.details(evidence: DiagnosticEvidence?): PublicationDiagno
         message = message,
         primary = primary,
         related = related,
-        evidence = evidence?.toSkir(),
+        evidence = evidence,
     )

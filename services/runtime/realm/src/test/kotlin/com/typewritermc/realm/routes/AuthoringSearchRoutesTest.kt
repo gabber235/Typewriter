@@ -8,7 +8,6 @@ import com.typewritermc.realm.checking.record
 import com.typewritermc.realm.search.AuthoringSearchRepository
 import com.typewritermc.realm.search.IndexedAuthoringSearchCandidate
 import com.typewritermc.services.libs.communicator.router.communicatorRoutes
-import com.typewritermc.types.ResourceId
 import com.typewritermc.types.actualType
 import com.typewritermc.types.namedUse
 import com.typewritermc.types.payload
@@ -23,14 +22,14 @@ import skirout.editor.v1.authoring.SearchAuthoringResponse
 import skirout.editor.v1.type_catalog.CatalogGeneration
 import skirout.editor.v1.type_catalog.DataValue
 import skirout.editor.v1.type_catalog.NamedTypeUse
+import skirout.editor.v1.type_catalog.ResourceId
 import skirout.editor.v1.type_catalog.ScalarKind
 import skirout.editor.v1.type_catalog.TypeDefinitionId
-import skirout.editor.v1.type_catalog.ResourceId as SkirResourceId
 
 val AuthoringSearchRoutesTest by testSuite {
     test("authoring search route returns typed subjects and readable descriptors") {
         runTest {
-            val resource = ResourceId("book")
+            val resource = ResourceId(value = "book")
             val authored = record(name = "Readable Book")
             val catalog = TestCatalogLease()
             val views =
@@ -73,7 +72,7 @@ val AuthoringSearchRoutesTest by testSuite {
 
     test("authoring search route rejects a changed catalog") {
         runTest {
-            val resource = ResourceId("book")
+            val resource = ResourceId(value = "book")
             val authored = record(name = "Readable Book")
             val catalog = TestCatalogLease()
             val views =
@@ -112,7 +111,7 @@ private fun searchRequest(
         generation = generation,
         query = "readable",
         roots = listOf(TEST_TYPE),
-        contexts = listOf(SkirResourceId(value = context.value)),
+        contexts = listOf(ResourceId(value = context.value)),
         target = TEST_TYPE.namedUse(),
     )
 
@@ -138,7 +137,7 @@ private class RecordingSearchRepository : AuthoringSearchRepository {
         receivedTarget = target
         return listOf(
             IndexedAuthoringSearchCandidate(
-                ResourceId("book"),
+                ResourceId(value = "book"),
                 record(name = "stale indexed content"),
                 "book Readable Book",
             ),

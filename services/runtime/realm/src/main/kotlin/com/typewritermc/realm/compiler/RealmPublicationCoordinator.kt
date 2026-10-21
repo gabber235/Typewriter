@@ -3,12 +3,10 @@ package com.typewritermc.realm.compiler
 import build.skir.Serializers
 import com.surrealdb.RecordId
 import com.surrealdb.Surreal
-import com.typewritermc.authoring.EditExpectation
 import com.typewritermc.engine.CompilationResult
 import com.typewritermc.engine.CompiledArtifact
 import com.typewritermc.realm.authoring.AuthoringLease
 import com.typewritermc.realm.authoring.AuthoringView
-import com.typewritermc.realm.checking.decodedExpectations
 import com.typewritermc.realm.repository.conflicts
 import com.typewritermc.realm.repository.utils.encodeSkir
 import com.typewritermc.realm.repository.utils.inTransaction
@@ -33,11 +31,13 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
+import skirout.editor.v1.authoring_facts.EditExpectation
 import skirout.editor.v1.checking.FindingSet
 import skirout.editor.v1.checking.FindingStatus
 import skirout.editor.v1.compiled_content.PublishedContent
 import skirout.editor.v1.diagnostic.Diagnostic
 import skirout.editor.v1.diagnostic.DiagnosticSeverity
+import skirout.editor.v1.publication.DiagnosticEvidence
 import skirout.editor.v1.publication.EngineImplementationInputs
 import skirout.editor.v1.publication.PublicationActivationPhase
 import skirout.editor.v1.publication.PublicationBaseline
@@ -249,13 +249,14 @@ internal class RealmPublicationCoordinator(
                         .mapTo(linkedSetOf()) { it.location }
                 failed.flatMap { it.diagnostics }.forEach { finding ->
                     if (finding.id !in evidence && finding.primary in projectionLocations) {
-                        val dependencies = (listOfNotNull(finding.primary) + finding.related).map { it.resource.toResourceId() }.distinct()
+                        val dependencies = (listOfNotNull(finding.primary) + finding.related).map { it.resource }.distinct()
                         evidence[finding.id] =
                             DiagnosticEvidence(
-                                captured.root.catalog.generation,
-                                dependencies.map { id ->
-                                    EditExpectation.Resource(id, captured.root.resources[id])
-                                },
+                                catalog = captured.root.catalog.generation,
+                                expectations =
+                                    dependencies.map { id ->
+                                        EditExpectation.createResource(id = id, expected = captured.root.resources[id])
+                                    },
                             )
                     }
                 }
@@ -449,7 +450,7 @@ internal class RealmPublicationCoordinator(
             val current =
                 set.status == FindingStatus.CURRENT &&
                     set.ticket.catalog == root.catalog.generation &&
-                    root.values.conflicts(set.expectations.decodedExpectations()).isEmpty()
+                    root.values.conflicts(set.expectations).isEmpty()
             set.copy(
                 status = if (current) FindingStatus.CURRENT else FindingStatus.OUTDATED,
             )

@@ -1,9 +1,11 @@
 package com.typewritermc.realm.checking
 
-import com.typewritermc.authoring.EditExpectation
 import com.typewritermc.authoring.of
 import com.typewritermc.checking.InputIdentity
 import com.typewritermc.realm.authoring.RESOURCE_SELECTION_INPUT
+import com.typewritermc.types.toSkir
+import com.typewritermc.types.unknownVariant
+import skirout.editor.v1.authoring_facts.EditExpectation
 import skirout.editor.v1.checking.CheckInstanceId
 import skirout.editor.v1.type_catalog.ValueLocation
 
@@ -25,32 +27,36 @@ class DefaultObservationRecorder : ObservationRecorder {
 
 internal fun EditExpectation.dependencies(): Set<InputIdentity> =
     when (this) {
-        is EditExpectation.Value -> {
-            setOf(InputIdentity.Value(at))
+        is EditExpectation.ValueWrapper -> {
+            setOf(InputIdentity.Value(value.at))
         }
 
-        is EditExpectation.Configuration -> {
-            setOf(InputIdentity.Form(at))
+        is EditExpectation.ConfigurationWrapper -> {
+            setOf(InputIdentity.Form(value.at))
         }
 
-        is EditExpectation.ResourceExists -> {
-            setOf(InputIdentity.Existence(id))
+        is EditExpectation.ResourceExistsWrapper -> {
+            setOf(InputIdentity.Existence(value.id))
         }
 
-        is EditExpectation.Resource -> {
+        is EditExpectation.ResourceWrapper -> {
             setOf(
-                InputIdentity.Existence(id),
-                InputIdentity.Form(ValueLocation.of(id)),
-                InputIdentity.Value(ValueLocation.of(id)),
+                InputIdentity.Existence(value.id),
+                InputIdentity.Form(ValueLocation.of(value.id)),
+                InputIdentity.Value(ValueLocation.of(value.id)),
             )
         }
 
-        is EditExpectation.ResourceIds -> {
+        is EditExpectation.ResourceIdsWrapper -> {
             setOf(RESOURCE_SELECTION_INPUT)
         }
 
-        is EditExpectation.Links -> {
-            setOf(InputIdentity.Incoming(resource, contract))
+        is EditExpectation.LinksWrapper -> {
+            setOf(InputIdentity.Incoming(value.resource, value.contract))
+        }
+
+        else -> {
+            unknownVariant(this)
         }
     }
 

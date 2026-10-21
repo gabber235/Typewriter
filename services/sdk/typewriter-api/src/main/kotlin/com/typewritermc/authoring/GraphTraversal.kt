@@ -10,9 +10,9 @@ import com.typewritermc.types.ResourceId
 import com.typewritermc.types.toResourceId
 import com.typewritermc.types.unknownVariant
 import com.typewritermc.types.use
-import kotlinx.serialization.Serializable
 import skirout.editor.v1.authoring.LinkOccurrence
 import skirout.editor.v1.authoring.LinkOccurrenceId
+import skirout.editor.v1.authoring_facts.TraversalDirection
 import skirout.editor.v1.type_catalog.EndpointId
 import skirout.editor.v1.type_catalog.NamedTypeUse
 import skirout.editor.v1.type_catalog.RelationFamilyId
@@ -40,9 +40,6 @@ interface GraphReads {
     context(reads: AuthoredReads)
     fun follow(occurrence: LinkOccurrence): Availability<DraftBinding>
 }
-
-@Serializable
-enum class TraversalDirection { Forward, Reverse, Both }
 
 sealed interface RelationSelection {
     data class Family(
@@ -134,13 +131,13 @@ data class LinkInspectionResult(
     val completion: InspectionCompletion,
 )
 
-fun RelationFamilyId.forward(): RelationSelection = RelationSelection.Family(this, TraversalDirection.Forward)
+fun RelationFamilyId.forward(): RelationSelection = RelationSelection.Family(this, TraversalDirection.FORWARD)
 
-fun RelationFamilyId.reverse(): RelationSelection = RelationSelection.Family(this, TraversalDirection.Reverse)
+fun RelationFamilyId.reverse(): RelationSelection = RelationSelection.Family(this, TraversalDirection.REVERSE)
 
-fun RelationId.forward(): RelationSelection = RelationSelection.Contracts(setOf(this), TraversalDirection.Forward)
+fun RelationId.forward(): RelationSelection = RelationSelection.Contracts(setOf(this), TraversalDirection.FORWARD)
 
-fun RelationId.reverse(): RelationSelection = RelationSelection.Contracts(setOf(this), TraversalDirection.Reverse)
+fun RelationId.reverse(): RelationSelection = RelationSelection.Contracts(setOf(this), TraversalDirection.REVERSE)
 
 object ResourceDrafts : DraftType<ResourceDraft> {
     override val match: ResourceTypeMatch = ResourceTypeMatch.AnyResource

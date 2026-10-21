@@ -53,7 +53,9 @@ val PublicationRoutesTest by testSuite {
         }
     }
     test("publication blockers retain exact locations and captured evidence") {
-        val resource = com.typewritermc.types.ResourceId("page")
+        val resource =
+            skirout.editor.v1.type_catalog
+                .ResourceId(value = "page")
         val location =
             ValueLocation.of(
                 resource,
@@ -71,13 +73,15 @@ val PublicationRoutesTest by testSuite {
                 location = location,
             )
         val captured =
-            com.typewritermc.realm.compiler.DiagnosticEvidence(
-                skirout.editor.v1.type_catalog
-                    .CatalogGeneration(value = "catalog"),
-                listOf(
-                    com.typewritermc.authoring.EditExpectation
-                        .Value(location, skirout.editor.v1.type_catalog.DataValue.UNFILLED),
-                ),
+            skirout.editor.v1.publication.DiagnosticEvidence(
+                catalog =
+                    skirout.editor.v1.type_catalog
+                        .CatalogGeneration(value = "catalog"),
+                expectations =
+                    listOf(
+                        skirout.editor.v1.authoring_facts.EditExpectation
+                            .createValue(at = location, expected = skirout.editor.v1.type_catalog.DataValue.UNFILLED),
+                    ),
             )
         val details = finding.blocker(captured).details
         details.primary!!

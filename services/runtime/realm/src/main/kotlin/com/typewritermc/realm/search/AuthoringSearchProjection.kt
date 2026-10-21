@@ -1,12 +1,12 @@
 package com.typewritermc.realm.search
 
-import com.typewritermc.types.ResourceId
 import com.typewritermc.types.fields
 import com.typewritermc.types.items
 import com.typewritermc.types.payload
 import com.typewritermc.types.rows
 import skirout.editor.v1.type_catalog.AuthoringRecord
 import skirout.editor.v1.type_catalog.DataValue
+import skirout.editor.v1.type_catalog.ResourceId
 
 /** Derived search terms are stored beside the canonical resource in its write transaction. */
 internal fun authoredSearchText(

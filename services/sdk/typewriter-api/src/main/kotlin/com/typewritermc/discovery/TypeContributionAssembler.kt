@@ -54,7 +54,6 @@ import com.typewritermc.types.namedTemplate
 import com.typewritermc.types.ownsResources
 import com.typewritermc.types.parameterKeys
 import com.typewritermc.types.portableOrNull
-import com.typewritermc.types.skir.getOrThrow
 import com.typewritermc.types.substitute
 import com.typewritermc.types.template
 import com.typewritermc.types.toWire

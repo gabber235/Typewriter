@@ -1,15 +1,15 @@
 package com.typewritermc.realm.repository
 
-import com.typewritermc.authoring.CommitResult
-import com.typewritermc.authoring.PreparedEdit
-import com.typewritermc.authoring.RelationProjectionDelta
 import com.typewritermc.realm.authoring.AuthoringSeed
-import com.typewritermc.types.ResourceId
+import skirout.editor.v1.authoring.CommitPreparedEditResponse
+import skirout.editor.v1.authoring.PreparedEdit
+import skirout.editor.v1.authoring.RelationProjectionDelta
 import skirout.editor.v1.type_catalog.AuthoringRecord
+import skirout.editor.v1.type_catalog.ResourceId
 
 /** Accepts edits when their original expected facts still hold. */
 interface AuthoringRepository {
-    suspend fun commit(edit: PreparedEdit): CommitResult
+    suspend fun commit(edit: PreparedEdit): CommitPreparedEditResponse
 }
 
 data class AuthoringMutationPlan(

@@ -6,7 +6,6 @@ import com.typewritermc.expression.literal
 import com.typewritermc.types.Icon
 import com.typewritermc.types.integer
 import com.typewritermc.types.requirePortable
-import com.typewritermc.types.skir.getOrThrow
 import skirout.editor.v1.presentation.DateTimeZone
 import skirout.editor.v1.presentation.PresentationElement
 import skirout.editor.v1.presentation.PresentationNode

@@ -43,7 +43,6 @@ import com.typewritermc.types.requirePortable
 import com.typewritermc.types.requireValid
 import com.typewritermc.types.rows
 import com.typewritermc.types.setValue
-import com.typewritermc.types.skir.getOrThrow
 import com.typewritermc.types.template
 import com.typewritermc.types.text
 import com.typewritermc.types.use

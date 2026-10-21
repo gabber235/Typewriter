@@ -2,17 +2,15 @@
 
 package com.typewritermc.realm.routes
 
-import com.typewritermc.authoring.EditIntent
 import com.typewritermc.authoring.GeneratedSdkApi
 import com.typewritermc.authoring.GraphPlacement
 import com.typewritermc.authoring.PlacementAnchor
-import com.typewritermc.authoring.PreparedEdit
 import com.typewritermc.authoring.ResourceDraft
 import com.typewritermc.authoring.field
 import com.typewritermc.authoring.fieldMap
 import com.typewritermc.authoring.of
+import com.typewritermc.authoring.requireValid
 import com.typewritermc.authoring.root
-import com.typewritermc.authoring.skir.SkirAuthoringOperationCodec
 import com.typewritermc.discovery.ProviderOrigin
 import com.typewritermc.library.TAXONOMY_TAGS_RELATION_ID
 import com.typewritermc.library.TagDefinition
@@ -39,14 +37,12 @@ import com.typewritermc.realm.TestRealmStructure
 import com.typewritermc.realm.repository.MutationPlanningResult
 import com.typewritermc.realm.testTag
 import com.typewritermc.types.Ref
-import com.typewritermc.types.ResourceId
 import com.typewritermc.types.endpointId
 import com.typewritermc.types.fieldMap
 import com.typewritermc.types.fields
 import com.typewritermc.types.items
 import com.typewritermc.types.namedTemplate
 import com.typewritermc.types.payload
-import com.typewritermc.types.skir.getOrThrow
 import com.typewritermc.types.toResourceId
 import com.typewritermc.types.type
 import com.typewritermc.types.use
@@ -56,7 +52,9 @@ import io.kotest.matchers.collections.shouldContainAll
 import io.kotest.matchers.shouldBe
 import kotlinx.coroutines.test.runTest
 import skirout.editor.v1.authoring.AuthoringObservationId
+import skirout.editor.v1.authoring.EditIntent
 import skirout.editor.v1.authoring.LinkOccurrenceId
+import skirout.editor.v1.authoring.PreparedEdit
 import skirout.editor.v1.catalog.EndpointSlot
 import skirout.editor.v1.resource_operations.AuthoringActionResult
 import skirout.editor.v1.resource_operations.OperationSelectionEffect
@@ -65,6 +63,7 @@ import skirout.editor.v1.resource_operations.ResolveResourceOperationsResult
 import skirout.editor.v1.type_catalog.AuthoringRecord
 import skirout.editor.v1.type_catalog.DataValue
 import skirout.editor.v1.type_catalog.RelationId
+import skirout.editor.v1.type_catalog.ResourceId
 import skirout.editor.v1.type_catalog.ResourceTarget
 import skirout.editor.v1.type_catalog.ValueLocation
 import skirout.editor.v1.type_catalog.ValuePath
@@ -103,15 +102,15 @@ val ResourceOperationRoutesTest by testSuite {
                 val before = fixture.views.read { it.resources }
                 val result = fixture.routes.prepare(fixture.prepare(LinkWithDuplicate, "tag")) as AuthoringActionResult.PreviewWrapper
                 val selected = result.value.selection as OperationSelectionEffect.ReplaceWrapper
-                val copy = ResourceId(selected.value.single().value)
-                val edit = SkirAuthoringOperationCodec.decode(result.value.edit).getOrThrow()
+                val copy = ResourceId(value = selected.value.single().value)
+                val edit = result.value.edit.requireValid()
                 val after =
                     (fixture.plan(edit) as MutationPlanningResult.Accepted).let {
                         before + it.plan.resources -
                             it.plan.removedResources
                     }
-                after.getValue(ResourceId("tag")).linkTargets("parents").toSet() shouldBe setOf(ResourceId("parent"), copy)
-                after.getValue(copy).linkTargets("parents") shouldBe listOf(ResourceId("parent"))
+                after.getValue(ResourceId(value = "tag")).linkTargets("parents").toSet() shouldBe setOf(ResourceId(value = "parent"), copy)
+                after.getValue(copy).linkTargets("parents") shouldBe listOf(ResourceId(value = "parent"))
                 fixture.views.read { it.resources } shouldBe before
             }
         }
@@ -125,16 +124,22 @@ val ResourceOperationRoutesTest by testSuite {
                     fixture.replay(
                         fixture
                             .prepare(MoveToOwner, "second", "first", "other")
-                            .copy(input = fixture.input(MoveToOwnerInput(ResourceId("destination")), MoveToOwnerInputDefinition.id)),
+                            .copy(
+                                input =
+                                    fixture.input(
+                                        MoveToOwnerInput(ResourceId(value = "destination").toResourceId()),
+                                        MoveToOwnerInputDefinition.id,
+                                    ),
+                            ),
                     )
                 listOf("first", "second", "other").forEach { id ->
-                    val moved = after.getValue(ResourceId(id))
-                    moved.linkTarget("book") shouldBe ResourceId("destination")
-                    moved.field("chapter") shouldBe before.getValue(ResourceId(id)).field("chapter")
-                    moved.field("priority") shouldBe before.getValue(ResourceId(id)).field("priority")
+                    val moved = after.getValue(ResourceId(value = id))
+                    moved.linkTarget("book") shouldBe ResourceId(value = "destination")
+                    moved.field("chapter") shouldBe before.getValue(ResourceId(value = id)).field("chapter")
+                    moved.field("priority") shouldBe before.getValue(ResourceId(value = id)).field("priority")
                 }
-                after.getValue(ResourceId("destination")).linkTargets("pages") shouldContainAll
-                    listOf("resident", "peer", "first", "second", "other").map(::ResourceId)
+                after.getValue(ResourceId(value = "destination")).linkTargets("pages") shouldContainAll
+                    listOf("resident", "peer", "first", "second", "other").map { ResourceId(value = it) }
                 fixture.views.read { it.resources } shouldBe before
             }
         }
@@ -151,14 +156,14 @@ val ResourceOperationRoutesTest by testSuite {
                             .copy(
                                 input =
                                     fixture.input(
-                                        MoveToOwnerInput(ResourceId("timeline"), PlacementAnchor(40.0, 40.0)),
+                                        MoveToOwnerInput(ResourceId(value = "timeline").toResourceId(), PlacementAnchor(40.0, 40.0)),
                                         MoveToOwnerInputDefinition.id,
                                     ),
                             ),
                     )
-                val moved = after.getValue(ResourceId("graph-entry"))
-                moved.linkTarget("page") shouldBe ResourceId("timeline")
-                moved.field("placement") shouldBe before.getValue(ResourceId("graph-entry")).field("placement")
+                val moved = after.getValue(ResourceId(value = "graph-entry"))
+                moved.linkTarget("page") shouldBe ResourceId(value = "timeline")
+                moved.field("placement") shouldBe before.getValue(ResourceId(value = "graph-entry")).field("placement")
             }
         }
     }
@@ -170,12 +175,18 @@ val ResourceOperationRoutesTest by testSuite {
                     fixture.replay(
                         fixture
                             .prepare(MoveToOwner, "graph-entry")
-                            .copy(input = fixture.input(MoveToOwnerInput(ResourceId("canvas")), MoveToOwnerInputDefinition.id)),
+                            .copy(
+                                input =
+                                    fixture.input(
+                                        MoveToOwnerInput(ResourceId(value = "canvas").toResourceId()),
+                                        MoveToOwnerInputDefinition.id,
+                                    ),
+                            ),
                     )
-                val moved = after.getValue(ResourceId("graph-entry"))
-                moved.linkTarget("page") shouldBe ResourceId("canvas")
+                val moved = after.getValue(ResourceId(value = "graph-entry"))
+                moved.linkTarget("page") shouldBe ResourceId(value = "canvas")
                 val placement = moved.graphPlacement()
-                placement.intersectsWithGap(after.getValue(ResourceId("resident-entry")).graphPlacement()) shouldBe false
+                placement.intersectsWithGap(after.getValue(ResourceId(value = "resident-entry")).graphPlacement()) shouldBe false
                 (placement.width to placement.height) shouldBe (2 to 2)
             }
         }
@@ -191,12 +202,12 @@ val ResourceOperationRoutesTest by testSuite {
                             .copy(
                                 input =
                                     fixture.input(
-                                        MoveToOwnerInput(ResourceId("canvas"), PlacementAnchor(20.0, 20.0)),
+                                        MoveToOwnerInput(ResourceId(value = "canvas").toResourceId(), PlacementAnchor(20.0, 20.0)),
                                         MoveToOwnerInputDefinition.id,
                                     ),
                             ),
                     )
-                after.getValue(ResourceId("graph-entry")).graphPlacement() shouldBe GraphPlacement(19, 19, 2, 2)
+                after.getValue(ResourceId(value = "graph-entry")).graphPlacement() shouldBe GraphPlacement(19, 19, 2, 2)
             }
         }
     }
@@ -208,12 +219,18 @@ val ResourceOperationRoutesTest by testSuite {
                     fixture.replay(
                         fixture
                             .prepare(MoveToOwner, "timeline-entry")
-                            .copy(input = fixture.input(MoveToOwnerInput(ResourceId("canvas")), MoveToOwnerInputDefinition.id)),
+                            .copy(
+                                input =
+                                    fixture.input(
+                                        MoveToOwnerInput(ResourceId(value = "canvas").toResourceId()),
+                                        MoveToOwnerInputDefinition.id,
+                                    ),
+                            ),
                     )
-                val moved = after.getValue(ResourceId("timeline-entry"))
-                moved.linkTarget("page") shouldBe ResourceId("canvas")
+                val moved = after.getValue(ResourceId(value = "timeline-entry"))
+                moved.linkTarget("page") shouldBe ResourceId(value = "canvas")
                 val placement = moved.graphPlacement()
-                placement.intersectsWithGap(after.getValue(ResourceId("resident-entry")).graphPlacement()) shouldBe false
+                placement.intersectsWithGap(after.getValue(ResourceId(value = "resident-entry")).graphPlacement()) shouldBe false
             }
         }
     }
@@ -242,8 +259,8 @@ val ResourceOperationRoutesTest by testSuite {
                 val before = fixture.views.read { it.resources }
                 val after = fixture.replay(fixture.prepare(Duplicate, "timeline-entry"))
                 val copy = (after.keys - before.keys).single()
-                after.getValue(copy).linkTarget("page") shouldBe ResourceId("timeline")
-                after.getValue(copy).field("placement") shouldBe before.getValue(ResourceId("timeline-entry")).field("placement")
+                after.getValue(copy).linkTarget("page") shouldBe ResourceId(value = "timeline")
+                after.getValue(copy).field("placement") shouldBe before.getValue(ResourceId(value = "timeline-entry")).field("placement")
             }
         }
     }
@@ -252,9 +269,9 @@ val ResourceOperationRoutesTest by testSuite {
         runTest {
             CoreOperationsFixture(withElements = true).use { fixture ->
                 val after = fixture.replay(fixture.prepare(Delete, "graph"))
-                (ResourceId("graph") in after) shouldBe false
-                (ResourceId("graph-entry") in after) shouldBe false
-                (ResourceId("canvas") in after) shouldBe true
+                (ResourceId(value = "graph") in after) shouldBe false
+                (ResourceId(value = "graph-entry") in after) shouldBe false
+                (ResourceId(value = "canvas") in after) shouldBe true
             }
         }
     }
@@ -267,10 +284,12 @@ val ResourceOperationRoutesTest by testSuite {
                     fixture.replay(
                         fixture
                             .prepare(LinkWith, "tag")
-                            .copy(input = fixture.input(LinkWithInput(ResourceId("book")), LinkWithInputDefinition.id)),
+                            .copy(
+                                input = fixture.input(LinkWithInput(ResourceId(value = "book").toResourceId()), LinkWithInputDefinition.id),
+                            ),
                     )
-                after.getValue(ResourceId("book")).linkTargets("tags") shouldBe listOf(ResourceId("tag"))
-                after.getValue(ResourceId("tag")).fields shouldBe before.getValue(ResourceId("tag")).fields
+                after.getValue(ResourceId(value = "book")).linkTargets("tags") shouldBe listOf(ResourceId(value = "tag"))
+                after.getValue(ResourceId(value = "tag")).fields shouldBe before.getValue(ResourceId(value = "tag")).fields
             }
         }
     }
@@ -282,10 +301,12 @@ val ResourceOperationRoutesTest by testSuite {
                     fixture.replay(
                         fixture
                             .prepare(LinkWith, "loose")
-                            .copy(input = fixture.input(LinkWithInput(ResourceId("tag")), LinkWithInputDefinition.id)),
+                            .copy(
+                                input = fixture.input(LinkWithInput(ResourceId(value = "tag").toResourceId()), LinkWithInputDefinition.id),
+                            ),
                     )
-                after.getValue(ResourceId("loose")).linkTargets("parents") shouldBe listOf(ResourceId("tag"))
-                after.getValue(ResourceId("tag")).linkTargets("parents") shouldBe listOf(ResourceId("parent"))
+                after.getValue(ResourceId(value = "loose")).linkTargets("parents") shouldBe listOf(ResourceId(value = "tag"))
+                after.getValue(ResourceId(value = "tag")).linkTargets("parents") shouldBe listOf(ResourceId(value = "parent"))
             }
         }
     }
@@ -298,16 +319,24 @@ val ResourceOperationRoutesTest by testSuite {
                     fixture.replay(
                         fixture
                             .prepare(LinkWith, "tag")
-                            .copy(input = fixture.input(LinkWithInput(ResourceId("parent")), LinkWithInputDefinition.id)),
+                            .copy(
+                                input =
+                                    fixture.input(
+                                        LinkWithInput(ResourceId(value = "parent").toResourceId()),
+                                        LinkWithInputDefinition.id,
+                                    ),
+                            ),
                     )
                 relinked shouldBe before
                 val unlinked =
                     fixture.replay(
                         fixture
                             .prepare(Unlink, "tag")
-                            .copy(input = fixture.input(UnlinkInput(ResourceId("parent")), UnlinkInputDefinition.id)),
+                            .copy(
+                                input = fixture.input(UnlinkInput(ResourceId(value = "parent").toResourceId()), UnlinkInputDefinition.id),
+                            ),
                     )
-                unlinked.getValue(ResourceId("tag")).linkTargets("parents") shouldBe emptyList()
+                unlinked.getValue(ResourceId(value = "tag")).linkTargets("parents") shouldBe emptyList()
             }
         }
     }
@@ -316,20 +345,25 @@ val ResourceOperationRoutesTest by testSuite {
         CoreOperationsFixture().use { fixture ->
             val cyclic =
                 fixture.record(
-                    testTag(name = "Adventure", parents = setOf(Ref(ResourceId("tag"))), placement = GraphPlacement(5, 0)),
+                    testTag(
+                        name = "Adventure",
+                        parents = setOf(Ref(ResourceId(value = "tag").toResourceId())),
+                        placement = GraphPlacement(5, 0),
+                    ),
                     TagDefinition.id,
                 )
             val generation = fixture.views.read { it.catalog.generation }
             val edit =
                 PreparedEdit(
-                    generation,
-                    emptyList(),
-                    listOf(
-                        EditIntent.SetValue(
-                            ValueLocation.of(ResourceId("parent"), ValuePath.root.field("parents")),
-                            cyclic.fieldMap.getValue("parents"),
+                    catalog = generation,
+                    expectations = emptyList(),
+                    intents =
+                        listOf(
+                            EditIntent.createSetValue(
+                                at = ValueLocation.of(ResourceId(value = "parent"), ValuePath.root.field("parents")),
+                                value = cyclic.fieldMap.getValue("parents"),
+                            ),
                         ),
-                    ),
                 )
             val rejected = fixture.plan(edit) as MutationPlanningResult.Rejected
             rejected.problems.map { it.code }.toSet() shouldBe setOf("relation_cycle")
@@ -451,7 +485,7 @@ private fun manyCandidates(origin: ProviderOrigin) =
         with(ResourceOperationSpecImpl(spec)) {
             input {
                 LinkWithInputFields.target {
-                    candidates { (0 until 250).asSequence().map { ResourceId("candidate-$it") } }
+                    candidates { (0 until 250).asSequence().map { ResourceId(value = "candidate-$it").toResourceId() } }
                     fillOnDrop()
                 }
             }
@@ -516,7 +550,6 @@ private fun GraphPlacement.intersectsWithGap(other: GraphPlacement): Boolean =
 private fun AuthoringRecord.linkTarget(field: String): ResourceId =
     ((fieldMap.getValue(field) as DataValue.NamedWrapper).payload as DataValue.LinkWrapper)
         .value.target.resource
-        .toResourceId()
 
 private fun AuthoringRecord.linkTargets(field: String): List<ResourceId> {
     val payload = (fieldMap.getValue(field) as DataValue.NamedWrapper).payload
@@ -529,6 +562,5 @@ private fun AuthoringRecord.linkTargets(field: String): List<ResourceId> {
     return items.map {
         ((it.value as DataValue.NamedWrapper).payload as DataValue.LinkWrapper)
             .value.target.resource
-            .toResourceId()
     }
 }

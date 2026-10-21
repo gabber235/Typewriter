@@ -2,12 +2,12 @@ package com.typewritermc.operations
 
 import com.typewritermc.authoring.AuthoredReads
 import com.typewritermc.authoring.Availability
-import com.typewritermc.authoring.CounterpartChoice
 import com.typewritermc.authoring.EditContext
 import com.typewritermc.authoring.ResourceDraft
 import com.typewritermc.authoring.record
 import com.typewritermc.dsl.TypewriterDsl
 import com.typewritermc.types.ResourceId
+import skirout.editor.v1.authoring.CounterpartChoice
 import skirout.editor.v1.authoring.LinkOccurrence
 import skirout.editor.v1.catalog.PreparedContent
 import skirout.editor.v1.operation.OperationAvailability
@@ -69,15 +69,15 @@ data class PreparationChoices(
         (answers[choice.id] as? PreparationChoiceAnswer.Counterpart)?.counterpart?.takeIf { answer ->
             choice.candidates.any { candidate ->
                 when {
-                    candidate is CounterpartChoice.Existing && answer is CounterpartChoice.Existing -> {
+                    candidate is CounterpartChoice.ExistingWrapper && answer is CounterpartChoice.ExistingWrapper -> {
                         candidate == answer
                     }
 
-                    candidate is CounterpartChoice.New && answer is CounterpartChoice.New -> {
-                        candidate.containing == answer.containing &&
-                            (candidate.prepared.content as? PreparedContent.RecordWrapper)?.record?.configuration ==
-                            (answer.prepared.content as? PreparedContent.RecordWrapper)?.record?.configuration &&
-                            answer.prepared.content is PreparedContent.RecordWrapper
+                    candidate is CounterpartChoice.NewWrapper && answer is CounterpartChoice.NewWrapper -> {
+                        candidate.value.containing == answer.value.containing &&
+                            (candidate.value.prepared.content as? PreparedContent.RecordWrapper)?.record?.configuration ==
+                            (answer.value.prepared.content as? PreparedContent.RecordWrapper)?.record?.configuration &&
+                            answer.value.prepared.content is PreparedContent.RecordWrapper
                     }
 
                     else -> {

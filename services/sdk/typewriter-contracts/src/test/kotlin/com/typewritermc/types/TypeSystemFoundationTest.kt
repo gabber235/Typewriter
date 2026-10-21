@@ -15,7 +15,6 @@ import com.typewritermc.presentation.of
 import com.typewritermc.types.catalog.DefaultCheckedCatalog
 import com.typewritermc.types.catalog.Resolution
 import com.typewritermc.types.catalog.reasons
-import com.typewritermc.types.skir.getOrThrow
 import de.infix.testBalloon.framework.core.testSuite
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.matchers.collections.shouldContainExactly
@@ -782,7 +781,7 @@ val TypeSystemFoundationTest by testSuite {
         unordered.requirePortable() shouldBe DataValue.record("first" to DataValue.integer(0), "second" to DataValue.integer(7))
     }
 
-    test("authoring codecs reject duplicate root and nested record fields") {
+    test("authoring record checks reject duplicate root and nested record fields") {
         val fields =
             listOf(
                 skirout.editor.v1.type_catalog.FieldValue(

@@ -9,7 +9,6 @@ import com.typewritermc.engine.encodeShard
 import com.typewritermc.engine.semanticDigest
 import com.typewritermc.realm.authoring.AuthoringView
 import com.typewritermc.realm.authoring.ownershipRelationIds
-import com.typewritermc.types.toResourceId
 import com.typewritermc.types.toSkir
 import skirout.editor.v1.compilation_root.CompilationRoot
 
@@ -22,7 +21,7 @@ internal object ResourceGraphArtifactProducer : CompiledArtifactProducer {
         view.resources.entries
             .asSequence()
             .filter { (_, record) -> record.isCompilationUnit(view.catalog.checked) }
-            .map { (resource, _) -> CompilationRoot(projection = projection, resource = resource.toSkir()) }
+            .map { (resource, _) -> CompilationRoot(projection = projection, resource = resource) }
             .sortedBy { root -> root.resource.value }
             .toCollection(linkedSetOf())
 
@@ -31,7 +30,7 @@ internal object ResourceGraphArtifactProducer : CompiledArtifactProducer {
         require(roots.all { root -> root.projection == projection })
         val compiler = OwnershipClosureCompiler(inputs.view.catalog.ownershipRelationIds, inputs.resources)
         return roots.sortedBy { root -> root.resource.value }.map { root ->
-            when (val result = with(inputs.view) { compiler.compile(root.resource.toResourceId()) }) {
+            when (val result = with(inputs.view) { compiler.compile(root.resource) }) {
                 is ResourceGraphCompileResult.Blocked -> {
                     CompilationResult.Blocked(root, result.inputFingerprint, result.diagnostics)
                 }

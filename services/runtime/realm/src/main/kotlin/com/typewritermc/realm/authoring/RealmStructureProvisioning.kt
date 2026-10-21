@@ -2,10 +2,8 @@
 
 package com.typewritermc.realm.authoring
 
-import com.typewritermc.authoring.CommitResult
 import com.typewritermc.authoring.DefaultInitializationRuntime
 import com.typewritermc.authoring.GeneratedSdkApi
-import com.typewritermc.authoring.PreparedEdit
 import com.typewritermc.authoring.RealmRoot
 import com.typewritermc.authoring.RealmRootDefinition
 import com.typewritermc.authoring.RealmRootFields
@@ -20,7 +18,6 @@ import com.typewritermc.realm.repository.AuthoringRepository
 import com.typewritermc.realm.repository.valueAt
 import com.typewritermc.types.NativeBinding
 import com.typewritermc.types.Ref
-import com.typewritermc.types.ResourceId
 import com.typewritermc.types.actualType
 import com.typewritermc.types.canonicalText
 import com.typewritermc.types.catalog.CheckedCatalog
@@ -28,14 +25,18 @@ import com.typewritermc.types.catalog.CheckedType
 import com.typewritermc.types.catalog.Resolution
 import com.typewritermc.types.items
 import com.typewritermc.types.payload
+import com.typewritermc.types.toResourceId
 import com.typewritermc.types.unwrapNamed
 import com.typewritermc.types.use
+import skirout.editor.v1.authoring.CommitPreparedEditResponse
+import skirout.editor.v1.authoring.PreparedEdit
 import skirout.editor.v1.catalog.PreparationTarget
 import skirout.editor.v1.catalog.PreparedContent
 import skirout.editor.v1.catalog.ValuePreparationRequest
 import skirout.editor.v1.type_catalog.AuthoringRecord
 import skirout.editor.v1.type_catalog.DataValue
 import skirout.editor.v1.type_catalog.NamedTypeUse
+import skirout.editor.v1.type_catalog.ResourceId
 import skirout.editor.v1.type_catalog.TypeSelection
 import skirout.editor.v1.type_catalog.TypeUse
 import skirout.editor.v1.type_catalog.ValueLocation
@@ -55,7 +56,7 @@ internal class RealmStructureProvisioning(
     suspend fun ensure(views: AuthoringViewStore) {
         val edit = views.capture().use { lease -> prepare(lease.root) } ?: return
         val result = authoring.commit(edit)
-        check(result == CommitResult.Committed) { "The realm root and sections could not be created: $result" }
+        check(result == CommitPreparedEditResponse.COMMITTED) { "The realm root and sections could not be created: $result" }
     }
 
     /**
@@ -87,18 +88,18 @@ internal class RealmStructureProvisioning(
                 }?.key
         if (existingRoot != null && missing.isEmpty()) return null
         val edit = WorkingViewEditContext(view, "realm-structure:${view.observationId}")
-        val root = existingRoot ?: newResource().also { edit.create(it, rootRecord(view)) }
+        val root = existingRoot ?: newResource().also { edit.create(it.toResourceId(), rootRecord(view)) }
         val links = boundCollectionPath(ValueLocation.of(root, RealmRootFields.sections.path))
         val linkBinding = catalog.binding<Ref<RealmSections.Root, RealmSection>>(sectionLink)
         missing.forEach { type ->
             val section = newResource()
-            edit.create(section, sectionRecord(view, type))
+            edit.create(section.toResourceId(), sectionRecord(view, type))
             val after =
                 edit.session.resources
                     .getValue(root)
                     .sectionItems()
                     .lastOrNull()
-            edit.insert(links, after, linkBinding.encode(Ref(section)))
+            edit.insert(links, after, linkBinding.encode(Ref(section.toResourceId())))
         }
         return edit.finish()
     }
@@ -134,7 +135,7 @@ internal class RealmStructureProvisioning(
             it.id
         }
 
-    private fun newResource() = ResourceId(UUID.randomUUID().toString())
+    private fun newResource() = ResourceId(value = UUID.randomUUID().toString())
 
     private companion object {
         val sectionLink =

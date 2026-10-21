@@ -5,8 +5,6 @@ import com.typewritermc.engine.ContentDigest
 import com.typewritermc.realm.checking.TEST_TYPE
 import com.typewritermc.realm.schema.MigrationResources
 import com.typewritermc.realm.schema.openTestDatabase
-import com.typewritermc.types.ResourceId
-import com.typewritermc.types.toSkir
 import de.infix.testBalloon.framework.core.testSuite
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.matchers.shouldBe
@@ -23,6 +21,7 @@ import skirout.editor.v1.type_catalog.CatalogGeneration
 import skirout.editor.v1.type_catalog.DiagnosticId
 import skirout.editor.v1.type_catalog.InputToken
 import skirout.editor.v1.type_catalog.PublicationId
+import skirout.editor.v1.type_catalog.ResourceId
 import skirout.editor.v1.type_catalog.RuleOrigin
 
 val RegisteredCompiledContentRepositoryTest by testSuite {
@@ -158,7 +157,7 @@ internal fun testPublishedContent(
                             root =
                                 CompilationRoot(
                                     projection = CompilationProjectionId(value = "test"),
-                                    resource = ResourceId(resource).toSkir(),
+                                    resource = ResourceId(value = resource),
                                 ),
                             formatRevision = 1,
                             mediaType = "application/test",

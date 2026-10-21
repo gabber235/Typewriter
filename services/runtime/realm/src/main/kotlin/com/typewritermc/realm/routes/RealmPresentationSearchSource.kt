@@ -17,7 +17,7 @@ import com.typewritermc.realm.checking.CapturedAuthoringReads
 import com.typewritermc.types.isValid
 import com.typewritermc.types.payload
 import com.typewritermc.types.requirePortable
-import com.typewritermc.types.skir.getOrThrow
+import com.typewritermc.types.toSkir
 import com.typewritermc.types.toTemplate
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
@@ -188,7 +188,7 @@ class CapabilityRealmPresentationSearchSource(
             val invocation = context.invocation.decodeInvocation()
             val captured = context.context.decodeWorkingContext()
             val baseline = lease.operationObservation(captured.confirmed, captured.upserts, captured.removals)
-            require(invocation.targets.all { it in baseline.resources }) { "The operation search selection changed." }
+            require(invocation.targets.all { it.toSkir() in baseline.resources }) { "The operation search selection changed." }
             require(invocation.origin.occurrences.all { baseline.links[it.id] == it }) { "The operation search origin changed." }
             return CapturedOperationSearch(
                 lease,

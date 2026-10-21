@@ -1,7 +1,5 @@
 package com.typewritermc.realm.authoring
 
-import com.typewritermc.authoring.EditIntent
-import com.typewritermc.authoring.PreparedEdit
 import com.typewritermc.authoring.RealmRootDefinition
 import com.typewritermc.authoring.field
 import com.typewritermc.authoring.fieldMap
@@ -16,7 +14,6 @@ import com.typewritermc.realm.repository.MutationPlanningResult
 import com.typewritermc.types.FactoryNativeBindingRegistry
 import com.typewritermc.types.NativeBindingRegistry
 import com.typewritermc.types.RESOURCE_OWNERSHIP_FAMILY_ID
-import com.typewritermc.types.ResourceId
 import com.typewritermc.types.catalog.CheckedCatalog
 import com.typewritermc.types.catalog.DefaultCheckedCatalog
 import com.typewritermc.types.items
@@ -29,11 +26,13 @@ import com.typewritermc.types.payload
 import com.typewritermc.types.qualified
 import com.typewritermc.types.template
 import com.typewritermc.types.toResourceId
-import com.typewritermc.types.toSkir
+import com.typewritermc.types.toResourceIds
 import com.typewritermc.types.use
 import de.infix.testBalloon.framework.core.testSuite
 import io.kotest.matchers.shouldBe
 import kotlinx.coroutines.test.runTest
+import skirout.editor.v1.authoring.EditIntent
+import skirout.editor.v1.authoring.PreparedEdit
 import skirout.editor.v1.catalog.EndpointBindingTemplate
 import skirout.editor.v1.catalog.EndpointCardinality
 import skirout.editor.v1.catalog.EndpointDefinition
@@ -55,6 +54,7 @@ import skirout.editor.v1.type_catalog.RelationFamilyId
 import skirout.editor.v1.type_catalog.RelationId
 import skirout.editor.v1.type_catalog.RelativeFieldPattern
 import skirout.editor.v1.type_catalog.RepresentationTemplate
+import skirout.editor.v1.type_catalog.ResourceId
 import skirout.editor.v1.type_catalog.ScalarKind
 import skirout.editor.v1.type_catalog.TypeDefinition
 import skirout.editor.v1.type_catalog.TypeDefinitionId
@@ -62,10 +62,10 @@ import skirout.editor.v1.type_catalog.TypeSelection
 import skirout.editor.v1.type_catalog.ValueLocation
 import skirout.editor.v1.type_catalog.ValuePath
 
-private val first = ResourceId("first")
-private val second = ResourceId("second")
-private val keyframe = ResourceId("keyframe")
-private val other = ResourceId("other")
+private val first = ResourceId(value = "first")
+private val second = ResourceId(value = "second")
+private val keyframe = ResourceId(value = "keyframe")
+private val other = ResourceId(value = "other")
 
 /**
  * Ownership over a catalog whose members are held only by their owner's collection, like keyframes in a segment. They
@@ -74,17 +74,17 @@ private val other = ResourceId("other")
 val OwnershipRulesTest by testSuite {
     test("a member without a back reference lists every owner whose collection accepts it") {
         withPreparation { preparation, _ ->
-            preparation.ownerCandidatesOf(keyframe).toList() shouldBe listOf(first, second)
+            preparation.ownerCandidatesOf(keyframe.toResourceId()).toList() shouldBe listOf(first, second).toResourceIds()
         }
     }
 
     test("moving members without a back reference releases them from the old owner and reads current owners") {
         runTest {
             withPreparation { preparation, edit ->
-                preparation.move(listOf(keyframe), second, null)
-                preparation.ownerOf(keyframe) shouldBe second
-                preparation.move(listOf(other), second, null)
-                preparation.ownerOf(other) shouldBe second
+                preparation.move(listOf(keyframe.toResourceId()), second.toResourceId(), null)
+                preparation.ownerOf(keyframe.toResourceId()) shouldBe second.toResourceId()
+                preparation.move(listOf(other.toResourceId()), second.toResourceId(), null)
+                preparation.ownerOf(other.toResourceId()) shouldBe second.toResourceId()
 
                 val resources = edit.planned()
                 resources.getValue(first).children() shouldBe emptyList()
@@ -94,7 +94,7 @@ val OwnershipRulesTest by testSuite {
     }
 
     test("the realm root needs no owner even when its type could be owned") {
-        val root = ResourceId("root")
+        val root = ResourceId(value = "root")
         val resources =
             seed() +
                 (root to AuthoringRecord.of(TypeSelection.CompleteWrapper(ROOT_USE), mapOf("frame" to DataValue.StringValueWrapper("0"))))
@@ -102,14 +102,15 @@ val OwnershipRulesTest by testSuite {
         val planner = AuthoringMutationPlanner(catalog.checked, listOf(OWNERSHIP_CONTRACT), listOf(OWNER_BINDING))
         val edit =
             PreparedEdit(
-                catalog.generation,
-                emptyList(),
-                listOf(
-                    EditIntent.SetValue(
-                        ValueLocation.of(root, ValuePath.root.field("frame")),
-                        DataValue.StringValueWrapper("1"),
+                catalog = catalog.generation,
+                expectations = emptyList(),
+                intents =
+                    listOf(
+                        EditIntent.createSetValue(
+                            at = ValueLocation.of(root, ValuePath.root.field("frame")),
+                            value = DataValue.StringValueWrapper("1"),
+                        ),
                     ),
-                ),
             )
 
         (planner.plan(resources, edit) is MutationPlanningResult.Accepted) shouldBe true
@@ -121,7 +122,7 @@ private inline fun withPreparation(body: (RuntimeOperationPreparation, WorkingVi
     try {
         store.capture().use { lease ->
             val edit = WorkingViewEditContext(lease.root, "owner-side")
-            val invocation = OperationInvocation("owner-side", listOf(keyframe, other))
+            val invocation = OperationInvocation("owner-side", listOf(keyframe, other).toResourceIds())
             body(RuntimeOperationPreparation(invocation, PreparationChoices(), edit), edit)
         }
     } finally {
@@ -142,7 +143,6 @@ private fun AuthoringRecord.children(): List<ResourceId> {
     return items.map {
         ((it.value as DataValue.NamedWrapper).payload as DataValue.LinkWrapper)
             .value.target.resource
-            .toResourceId()
     }
 }
 
@@ -170,7 +170,7 @@ private fun ownerRecord(members: List<ResourceId>) =
                                         CHILD_LINK_USE,
                                         DataValue.createLink(
                                             endpoint = OWNER_ENDPOINT,
-                                            target = LinkTarget(resource = member.toSkir(), opposite = null),
+                                            target = LinkTarget(resource = member, opposite = null),
                                         ),
                                     ),
                             )

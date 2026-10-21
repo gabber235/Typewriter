@@ -14,7 +14,6 @@ import com.typewritermc.checking.RegisteredPredicate
 import com.typewritermc.configuration.field
 import com.typewritermc.realm.authoring.AuthoringSeed
 import com.typewritermc.realm.authoring.InMemoryAuthoringViewStore
-import com.typewritermc.types.ResourceId
 import com.typewritermc.types.catalog.Resolution
 import com.typewritermc.types.fields
 import com.typewritermc.types.integer
@@ -45,6 +44,7 @@ import skirout.editor.v1.type_catalog.ParameterKey
 import skirout.editor.v1.type_catalog.PathSegment
 import skirout.editor.v1.type_catalog.RelativeFieldPattern
 import skirout.editor.v1.type_catalog.RepresentationTemplate
+import skirout.editor.v1.type_catalog.ResourceId
 import skirout.editor.v1.type_catalog.RuleOrigin
 import skirout.editor.v1.type_catalog.TypeDefinition
 import skirout.editor.v1.type_catalog.TypeDefinitionId
@@ -90,7 +90,7 @@ val RealmCheckInputsTest by testSuite {
                     ),
             )
         val catalog = TestCatalogLease(definitions = listOf(root, map))
-        val resource = ResourceId("map")
+        val resource = ResourceId(value = "map")
         val record =
             AuthoringRecord.of(
                 TypeSelection.CompleteWrapper(TEST_TYPE.namedUse()),
@@ -136,7 +136,7 @@ val RealmCheckInputsTest by testSuite {
 
     test("completeFindingsRemainVisibleWhenAnotherOccurrenceNeedsInput") {
         val catalog = TestCatalogLease()
-        val resource = ResourceId("list")
+        val resource = ResourceId(value = "list")
         val record =
             record(numbers = emptyList()).with(
                 "numbers",
@@ -177,7 +177,7 @@ val RealmCheckInputsTest by testSuite {
 
     test("occurrenceCartesianProductsStopAtTheCapturedReadBudget") {
         val catalog = TestCatalogLease()
-        val resource = ResourceId("list")
+        val resource = ResourceId(value = "list")
         val record = record(numbers = listOf("a" to 1, "b" to 2))
         val recipe =
             recipe(

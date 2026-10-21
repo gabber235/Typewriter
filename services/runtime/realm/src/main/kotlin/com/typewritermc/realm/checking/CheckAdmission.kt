@@ -1,40 +1,14 @@
 package com.typewritermc.realm.checking
 
-import com.typewritermc.authoring.EditExpectation
-import com.typewritermc.authoring.skir.SkirAuthoringOperationCodec
 import com.typewritermc.realm.authoring.AuthoringView
 import com.typewritermc.realm.authoring.AuthoringViewStore
 import com.typewritermc.realm.repository.conflicts
-import com.typewritermc.types.skir.getOrThrow
 import skirout.editor.v1.checking.CheckInstanceId
 import skirout.editor.v1.checking.CheckOutcome
+import skirout.editor.v1.checking.CheckResult
 import skirout.editor.v1.checking.CheckTicket
 import skirout.editor.v1.checking.FindingSet
 import skirout.editor.v1.diagnostic.Diagnostic
-import skirout.editor.v1.authoring_facts.EditExpectation as SkirEditExpectation
-
-/**
- * The outcome of one scheduled check execution. Its expectations stay Kotlin edit expectations until those are Skir
- * values; [FindingSet] stores their Skir form.
- */
-data class CheckResult(
-    val ticket: CheckTicket,
-    val outcome: CheckOutcome,
-    val expectations: List<EditExpectation>,
-    val findings: List<Diagnostic>,
-)
-
-/** The Skir form of check expectations, which finding sets store, until edit expectations are Skir values. */
-internal fun List<EditExpectation>.encodedExpectations(): List<SkirEditExpectation> =
-    map {
-        SkirAuthoringOperationCodec.encode(it).getOrThrow()
-    }
-
-/** The Kotlin form of stored finding expectations, which conflict checks read, until edit expectations are Skir values. */
-internal fun List<SkirEditExpectation>.decodedExpectations(): List<EditExpectation> =
-    map {
-        SkirAuthoringOperationCodec.decode(it).getOrThrow()
-    }
 
 sealed interface CheckAdmissionTarget {
     data object CurrentFindings : CheckAdmissionTarget

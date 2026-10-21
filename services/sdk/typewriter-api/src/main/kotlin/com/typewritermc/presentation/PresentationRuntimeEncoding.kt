@@ -5,7 +5,6 @@ import com.typewritermc.expression.ExpressionBindingId
 import com.typewritermc.types.field
 import com.typewritermc.types.integer
 import com.typewritermc.types.requirePortable
-import com.typewritermc.types.skir.getOrThrow
 import skirout.editor.v1.binding.BindingRef
 import skirout.editor.v1.expression.ExpressionNode
 import skirout.editor.v1.type_catalog.DataValue

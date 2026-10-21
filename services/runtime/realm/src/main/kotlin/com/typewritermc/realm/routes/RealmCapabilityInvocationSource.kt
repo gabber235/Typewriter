@@ -12,7 +12,6 @@ import com.typewritermc.types.isValid
 import com.typewritermc.types.payload
 import com.typewritermc.types.qualified
 import com.typewritermc.types.requirePortable
-import com.typewritermc.types.skir.getOrThrow
 import com.typewritermc.types.toTemplate
 import com.typewritermc.types.use
 import skirout.editor.v1.capability.CapabilityDefinition

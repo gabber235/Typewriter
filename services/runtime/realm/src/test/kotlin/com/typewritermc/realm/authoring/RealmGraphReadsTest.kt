@@ -8,7 +8,6 @@ import com.typewritermc.authoring.RelationSelection
 import com.typewritermc.authoring.ResourceDrafts
 import com.typewritermc.authoring.RouteQuery
 import com.typewritermc.authoring.TraversalBudget
-import com.typewritermc.authoring.TraversalDirection
 import com.typewritermc.authoring.UnresolvedLink
 import com.typewritermc.authoring.of
 import com.typewritermc.authoring.with
@@ -24,7 +23,6 @@ import com.typewritermc.realm.repository.conflicts
 import com.typewritermc.realm.repository.valueAt
 import com.typewritermc.types.FactoryNativeBindingRegistry
 import com.typewritermc.types.NativeBindingRegistry
-import com.typewritermc.types.ResourceId
 import com.typewritermc.types.catalog.CheckedCatalog
 import com.typewritermc.types.catalog.DefaultCheckedCatalog
 import com.typewritermc.types.endpoint
@@ -43,6 +41,7 @@ import com.typewritermc.types.toSkir
 import de.infix.testBalloon.framework.core.testSuite
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.types.shouldBeInstanceOf
+import skirout.editor.v1.authoring_facts.TraversalDirection
 import skirout.editor.v1.catalog.EndpointBindingTemplate
 import skirout.editor.v1.catalog.EndpointCardinality
 import skirout.editor.v1.catalog.EndpointDefinition
@@ -66,6 +65,7 @@ import skirout.editor.v1.type_catalog.RelationFamilyId
 import skirout.editor.v1.type_catalog.RelationId
 import skirout.editor.v1.type_catalog.RelativeFieldPattern
 import skirout.editor.v1.type_catalog.RepresentationTemplate
+import skirout.editor.v1.type_catalog.ResourceId
 import skirout.editor.v1.type_catalog.ScalarKind
 import skirout.editor.v1.type_catalog.TypeDefinition
 import skirout.editor.v1.type_catalog.TypeDefinitionId
@@ -77,15 +77,20 @@ import skirout.editor.v1.type_catalog.ValuePath
 class RealmGraphReadsTest {
     fun traversalUsesTheSelectedStagedGraphWithBoundedBreadthFirstSearch() {
         val catalog = GraphCatalogLease()
-        val a = ResourceId("a")
-        val b = ResourceId("b")
-        val c = ResourceId("c")
-        val d = ResourceId("d")
-        val e = ResourceId("e")
-        val unrelated = ResourceId("unrelated")
+        val a = ResourceId(value = "a")
+        val b = ResourceId(value = "b")
+        val c = ResourceId(value = "c")
+        val d = ResourceId(value = "d")
+        val e = ResourceId(value = "e")
+        val unrelated = ResourceId(value = "unrelated")
         val original =
             mapOf(
-                a to graphRecord(a, listOf(b, c, ResourceId("missing_selected")), badTarget = ResourceId("missing_unrelated")),
+                a to
+                    graphRecord(
+                        a,
+                        listOf(b, c, ResourceId(value = "missing_selected")),
+                        badTarget = ResourceId(value = "missing_unrelated"),
+                    ),
                 b to graphRecord(b, listOf(d)),
                 c to graphRecord(c, listOf(d)),
                 d to graphRecord(d, listOf(a, e)),
@@ -97,7 +102,7 @@ class RealmGraphReadsTest {
                             BAD_LINK_USE,
                             DataValue.createLink(
                                 endpoint = EDGE_SOURCE,
-                                target = LinkTarget(resource = e.toSkir(), opposite = null),
+                                target = LinkTarget(resource = e, opposite = null),
                             ),
                         ),
                     ),
@@ -108,23 +113,23 @@ class RealmGraphReadsTest {
                 AuthoringSeed(original),
             )
         val lease = store.capture()
-        val selection = RelationSelection.Contracts(setOf(EDGE.id), TraversalDirection.Forward)
+        val selection = RelationSelection.Contracts(setOf(EDGE.id), TraversalDirection.FORWARD)
         val reads = CapturedAuthoringReads(lease.originalView())
 
         val reachable =
             with(reads) {
                 RealmGraphReads.reachable(
-                    ReachabilityQuery(setOf(a), selection, ResourceDrafts, maxDepth = 3),
+                    ReachabilityQuery(setOf(a.toResourceId()), selection, ResourceDrafts, maxDepth = 3),
                 )
             }
-        reachable.resources.map { it.id } shouldBe listOf(a, b, c, d, e)
+        reachable.resources.map { it.id.toSkir() } shouldBe listOf(a, b, c, d, e)
         reachable.resources
-            .map { it.id }
+            .map { it.id.toSkir() }
             .distinct()
             .size shouldBe 5
         reachable.failures.isEmpty() shouldBe true
         val unavailable = reachable.unresolved.single().shouldBeInstanceOf<UnresolvedLink.UnavailableTarget>()
-        unavailable.target shouldBe ResourceId("missing_selected")
+        unavailable.target.toSkir() shouldBe ResourceId(value = "missing_selected")
         reachable.completion.shouldBeInstanceOf<InspectionCompletion.Interrupted>()
         val dependencies = reads.observations().flatMapTo(linkedSetOf()) { it.dependencies() }
         (InputIdentity.Incoming(a, EDGE.id) in dependencies) shouldBe true
@@ -146,7 +151,7 @@ class RealmGraphReadsTest {
 
         val routes =
             with(reads) {
-                RealmGraphReads.routes(RouteQuery(setOf(a), d, selection, maxDepth = 3))
+                RealmGraphReads.routes(RouteQuery(setOf(a.toResourceId()), d.toResourceId(), selection, maxDepth = 3))
             }
         routes.paths.size shouldBe 2
         routes.paths.all { it.size == 2 } shouldBe true
@@ -156,8 +161,8 @@ class RealmGraphReadsTest {
             with(exactBudget) {
                 RealmGraphReads.routes(
                     RouteQuery(
-                        setOf(b),
-                        d,
+                        setOf(b.toResourceId()),
+                        d.toResourceId(),
                         selection,
                         maxDepth = 1,
                         budget = TraversalBudget(maxRoutes = 1),
@@ -172,8 +177,8 @@ class RealmGraphReadsTest {
             with(exactResourceBudget) {
                 RealmGraphReads.routes(
                     RouteQuery(
-                        setOf(b),
-                        d,
+                        setOf(b.toResourceId()),
+                        d.toResourceId(),
                         selection,
                         maxDepth = 1,
                         budget = TraversalBudget(maxResources = 2),
@@ -188,8 +193,8 @@ class RealmGraphReadsTest {
             with(truncatedResourceBudget) {
                 RealmGraphReads.routes(
                     RouteQuery(
-                        setOf(b),
-                        d,
+                        setOf(b.toResourceId()),
+                        d.toResourceId(),
                         selection,
                         maxDepth = 1,
                         budget = TraversalBudget(maxResources = 1),
@@ -204,8 +209,8 @@ class RealmGraphReadsTest {
             with(truncatedReads) {
                 RealmGraphReads.routes(
                     RouteQuery(
-                        setOf(a),
-                        d,
+                        setOf(a.toResourceId()),
+                        d.toResourceId(),
                         selection,
                         maxDepth = 3,
                         budget = TraversalBudget(maxRoutes = 1),
@@ -220,21 +225,21 @@ class RealmGraphReadsTest {
             with(reverse) {
                 RealmGraphReads.reachable(
                     ReachabilityQuery(
-                        setOf(d),
-                        RelationSelection.Contracts(setOf(EDGE.id), TraversalDirection.Reverse),
+                        setOf(d.toResourceId()),
+                        RelationSelection.Contracts(setOf(EDGE.id), TraversalDirection.REVERSE),
                         ResourceDrafts,
                         maxDepth = 1,
                     ),
                 )
             }
-        incoming.resources.mapTo(linkedSetOf()) { it.id } shouldBe setOf(b, c, d)
+        incoming.resources.mapTo(linkedSetOf()) { it.id.toSkir() } shouldBe setOf(b, c, d)
 
         val bounded = CapturedAuthoringReads(lease.originalView())
         val interrupted =
             with(bounded) {
                 RealmGraphReads.reachable(
                     ReachabilityQuery(
-                        setOf(a),
+                        setOf(a.toResourceId()),
                         selection,
                         ResourceDrafts,
                         budget = TraversalBudget(maxResources = 2),
@@ -248,20 +253,20 @@ class RealmGraphReadsTest {
         val staged =
             with(stagedReads) {
                 RealmGraphReads.reachable(
-                    ReachabilityQuery(setOf(a), selection, ResourceDrafts, maxDepth = 1),
+                    ReachabilityQuery(setOf(a.toResourceId()), selection, ResourceDrafts, maxDepth = 1),
                 )
             }
-        staged.resources.mapTo(linkedSetOf()) { it.id } shouldBe setOf(a, c)
-        staged.resources.any { it.id == b } shouldBe false
+        staged.resources.mapTo(linkedSetOf()) { it.id.toSkir() } shouldBe setOf(a, c)
+        staged.resources.any { it.id == b.toResourceId() } shouldBe false
 
         lease.close()
         store.close()
     }
 
     fun graphReadsUseTheCurrentStagedSnapshot() {
-        val source = ResourceId("source")
-        val originalTarget = ResourceId("original_target")
-        val stagedTarget = ResourceId("staged_target")
+        val source = ResourceId(value = "source")
+        val originalTarget = ResourceId(value = "original_target")
+        val stagedTarget = ResourceId(value = "staged_target")
         val store =
             InMemoryAuthoringViewStore(
                 GraphCatalogLease(),
@@ -274,15 +279,15 @@ class RealmGraphReadsTest {
                 ),
             )
         val lease = store.capture()
-        val selection = RelationSelection.Contracts(setOf(EDGE.id), TraversalDirection.Forward)
+        val selection = RelationSelection.Contracts(setOf(EDGE.id), TraversalDirection.FORWARD)
         val originalReads = CapturedAuthoringReads(lease.originalView())
         val originalReachable =
             with(originalReads) {
                 RealmGraphReads.reachable(
-                    ReachabilityQuery(setOf(source), selection, ResourceDrafts, maxDepth = 1),
+                    ReachabilityQuery(setOf(source.toResourceId()), selection, ResourceDrafts, maxDepth = 1),
                 )
             }
-        originalReachable.resources.mapTo(linkedSetOf()) { it.id } shouldBe setOf(source, originalTarget)
+        originalReachable.resources.mapTo(linkedSetOf()) { it.id.toSkir() } shouldBe setOf(source, originalTarget)
 
         val stagedReads =
             CapturedAuthoringReads(
@@ -291,13 +296,12 @@ class RealmGraphReadsTest {
         with(stagedReads) {
             val stagedReachable =
                 RealmGraphReads.reachable(
-                    ReachabilityQuery(setOf(source), selection, ResourceDrafts, maxDepth = 1),
+                    ReachabilityQuery(setOf(source.toResourceId()), selection, ResourceDrafts, maxDepth = 1),
                 )
-            stagedReachable.resources.mapTo(linkedSetOf()) { it.id } shouldBe setOf(source, stagedTarget)
-            val occurrence = RealmGraphReads.occurrences(LinkInspectionQuery(setOf(source), selection)).occurrences.single()
+            stagedReachable.resources.mapTo(linkedSetOf()) { it.id.toSkir() } shouldBe setOf(source, stagedTarget)
+            val occurrence = RealmGraphReads.occurrences(LinkInspectionQuery(setOf(source.toResourceId()), selection)).occurrences.single()
             val followed = RealmGraphReads.follow(occurrence).shouldBeInstanceOf<Availability.Available<DraftBinding>>()
-            followed.value.location.resource
-                .toResourceId() shouldBe stagedTarget
+            followed.value.location.resource shouldBe stagedTarget
         }
         val outgoing =
             ValueLocation.of(
@@ -318,8 +322,8 @@ class RealmGraphReadsTest {
 
     fun pendingUnavailableTargetProducesAnUndecidedIncomingCandidate() {
         val catalog = GraphCatalogLease()
-        val source = ResourceId("source")
-        val target = ResourceId("pending_target")
+        val source = ResourceId(value = "source")
+        val target = ResourceId(value = "pending_target")
         val pending =
             graphRecord(
                 target,
@@ -340,7 +344,7 @@ class RealmGraphReadsTest {
             }
 
         selection.knownMatches.isEmpty() shouldBe true
-        selection.undecided.map { it.resource } shouldBe listOf(source)
+        selection.undecided.map { it.resource.toSkir() } shouldBe listOf(source)
         selection.completion.shouldBeInstanceOf<InspectionCompletion.Complete>()
         val identities = reads.observations().flatMapTo(linkedSetOf()) { it.dependencies() }
         (InputIdentity.Form(ValueLocation.of(target)) in identities) shouldBe true
@@ -350,8 +354,8 @@ class RealmGraphReadsTest {
 
     fun unfilledLinkKeepsValidSiblingTraversalComplete() {
         val catalog = GraphCatalogLease()
-        val source = ResourceId("source")
-        val target = ResourceId("target")
+        val source = ResourceId(value = "source")
+        val target = ResourceId(value = "target")
         val resources =
             mapOf(
                 source to graphRecord(source, listOf(target)),
@@ -366,22 +370,21 @@ class RealmGraphReadsTest {
         val selection =
             RelationSelection.Contracts(
                 setOf(EDGE.id, BAD.id),
-                TraversalDirection.Forward,
+                TraversalDirection.FORWARD,
             )
 
         val reachableReads = CapturedAuthoringReads(lease.originalView())
         val reachable =
             with(reachableReads) {
                 RealmGraphReads.reachable(
-                    ReachabilityQuery(setOf(source), selection, ResourceDrafts, maxDepth = 1),
+                    ReachabilityQuery(setOf(source.toResourceId()), selection, ResourceDrafts, maxDepth = 1),
                 )
             }
-        reachable.resources.mapTo(linkedSetOf()) { it.id } shouldBe setOf(source, target)
+        reachable.resources.mapTo(linkedSetOf()) { it.id.toSkir() } shouldBe setOf(source, target)
         reachable.unresolved
             .filterIsInstance<UnresolvedLink.Unfilled>()
             .single {
-                it.occurrence.location.resource
-                    .toResourceId() == source
+                it.occurrence.location.resource == source
             }.occurrence.endpoint shouldBe BAD_ENDPOINT
         reachable.completion.shouldBeInstanceOf<InspectionCompletion.Complete>()
         val dependencies = reachableReads.observations().flatMapTo(linkedSetOf()) { it.dependencies() }
@@ -455,20 +458,19 @@ class RealmGraphReadsTest {
 
         val routes =
             with(CapturedAuthoringReads(lease.originalView())) {
-                RealmGraphReads.routes(RouteQuery(setOf(source), target, selection, maxDepth = 1))
+                RealmGraphReads.routes(RouteQuery(setOf(source.toResourceId()), target.toResourceId(), selection, maxDepth = 1))
             }
         routes.paths.size shouldBe 1
         routes.unresolved
             .filterIsInstance<UnresolvedLink.Unfilled>()
             .single {
-                it.occurrence.location.resource
-                    .toResourceId() == source
+                it.occurrence.location.resource == source
             }.occurrence.endpoint shouldBe BAD_ENDPOINT
         routes.completion.shouldBeInstanceOf<InspectionCompletion.Complete>()
 
         val occurrences =
             with(CapturedAuthoringReads(lease.originalView())) {
-                RealmGraphReads.occurrences(LinkInspectionQuery(setOf(source), selection))
+                RealmGraphReads.occurrences(LinkInspectionQuery(setOf(source.toResourceId()), selection))
             }
         occurrences.occurrences.size shouldBe 1
         occurrences.occurrences
@@ -554,8 +556,8 @@ class RealmGraphReadsTest {
                 ),
             )
         val expected =
-            com.typewritermc.authoring.EditExpectation
-                .Value(buttons, resources.getValue(source).valueAt(buttons.path))
+            skirout.editor.v1.authoring_facts.EditExpectation
+                .createValue(at = buttons, expected = resources.getValue(source).valueAt(buttons.path))
         val actual =
             com.typewritermc.realm.repository
                 .CapturedAuthoringValues(mapOf(source to changedSource), emptyList())
@@ -571,8 +573,8 @@ class RealmGraphReadsTest {
                 RealmGraphReads
                     .reachable(
                         ReachabilityQuery(
-                            setOf(source),
-                            RelationSelection.Contracts(setOf(BAD.id), TraversalDirection.Forward),
+                            setOf(source.toResourceId()),
+                            RelationSelection.Contracts(setOf(BAD.id), TraversalDirection.FORWARD),
                             ResourceDrafts,
                             maxDepth = 0,
                         ),
@@ -649,7 +651,7 @@ private fun graphRecord(
                                         EDGE_LINK_USE,
                                         DataValue.createLink(
                                             endpoint = EDGE_SOURCE,
-                                            target = LinkTarget(resource = target.toSkir(), opposite = null),
+                                            target = LinkTarget(resource = target, opposite = null),
                                         ),
                                     ),
                             )
@@ -662,7 +664,7 @@ private fun graphRecord(
                 } else {
                     DataValue.named(
                         BAD_LINK_USE,
-                        DataValue.createLink(endpoint = BAD_ENDPOINT, target = LinkTarget(resource = badTarget.toSkir(), opposite = null)),
+                        DataValue.createLink(endpoint = BAD_ENDPOINT, target = LinkTarget(resource = badTarget, opposite = null)),
                     )
                 },
             "buttons" to DataValue.named(BUTTON_LIST_USE, DataValue.listValue(emptyList())),

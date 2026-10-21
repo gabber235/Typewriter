@@ -3,12 +3,13 @@ package com.typewritermc.realm.repository
 import com.surrealdb.RecordId
 import com.surrealdb.Transaction
 import com.surrealdb.Value
-import com.typewritermc.authoring.LinkProjection
-import com.typewritermc.authoring.RelationProjectionDelta
 import com.typewritermc.realm.repository.utils.decodeSkir
 import com.typewritermc.realm.repository.utils.encodeSkir
 import com.typewritermc.realm.repository.utils.surrealRecordId
 import com.typewritermc.types.requireValid
+import com.typewritermc.types.toSkir
+import skirout.editor.v1.authoring.RelationProjectionDelta
+import skirout.editor.v1.authoring_facts.LinkProjection
 import skirout.editor.v1.type_catalog.ValuePath
 import java.util.UUID
 
@@ -37,7 +38,7 @@ internal class SurrealDeclaredRelationStore : DeclaredRelationStore {
         transaction: Transaction,
     ): StoredRelationDelta =
         StoredRelationDelta(
-            removed = delta.removed.map { transaction.requireStored(it) },
+            removed = delta.removals.map { transaction.requireStored(it) },
             created = delta.created.map { it.stored(UUID.randomUUID().toString()) },
             metadataChanged = delta.metadataChanged.map { transaction.requireStored(it).copyLocations(it) },
         )

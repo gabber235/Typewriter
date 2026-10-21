@@ -2,8 +2,6 @@ package com.typewritermc.realm.compiler
 
 import com.typewritermc.engine.CompiledArtifact
 import com.typewritermc.engine.ContentDigest
-import com.typewritermc.types.ResourceId
-import com.typewritermc.types.toSkir
 import de.infix.testBalloon.framework.core.testSuite
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.matchers.shouldBe
@@ -19,6 +17,7 @@ import skirout.editor.v1.publication.PublicationChange
 import skirout.editor.v1.type_catalog.CatalogGeneration
 import skirout.editor.v1.type_catalog.InputToken
 import skirout.editor.v1.type_catalog.PublicationId
+import skirout.editor.v1.type_catalog.ResourceId
 
 val PublicationComparisonTest by testSuite {
     test("publication identity catalog provenance input fingerprints and blob pointers are not runtime changes") {
@@ -106,7 +105,7 @@ val PublicationComparisonTest by testSuite {
 
 private fun comparisonArtifact(id: String = "root") =
     CompiledArtifact(
-        CompilationRoot(projection = CompilationProjectionId(value = "fixture"), resource = ResourceId(id).toSkir()),
+        CompilationRoot(projection = CompilationProjectionId(value = "fixture"), resource = ResourceId(value = id)),
         2,
         "application/fixture",
         ContentDigest("1".repeat(64)),

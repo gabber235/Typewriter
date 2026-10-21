@@ -1,25 +1,26 @@
 package com.typewritermc.realm.checking
 
-import com.typewritermc.authoring.EditExpectation
 import com.typewritermc.authoring.of
 import com.typewritermc.authoring.root
 import com.typewritermc.realm.authoring.AuthoringSeed
 import com.typewritermc.realm.authoring.AuthoringViewDelta
 import com.typewritermc.realm.authoring.InMemoryAuthoringViewStore
-import com.typewritermc.types.ResourceId
 import de.infix.testBalloon.framework.core.testSuite
 import io.kotest.matchers.shouldBe
+import skirout.editor.v1.authoring_facts.EditExpectation
 import skirout.editor.v1.checking.CheckInstanceId
 import skirout.editor.v1.checking.CheckOutcome
+import skirout.editor.v1.checking.CheckResult
 import skirout.editor.v1.checking.CheckTicket
 import skirout.editor.v1.type_catalog.CheckExecutionId
 import skirout.editor.v1.type_catalog.DataValue
+import skirout.editor.v1.type_catalog.ResourceId
 import skirout.editor.v1.type_catalog.RuleId
 import skirout.editor.v1.type_catalog.RuleOrigin
 import skirout.editor.v1.type_catalog.ValueLocation
 
 val CheckAdmissionTest by testSuite {
-    val id = ResourceId("page")
+    val id = ResourceId(value = "page")
     val instance =
         CheckInstanceId(
             rule = RuleId(origin = RuleOrigin(owner = TEST_TYPE, ordinal = 0), localIndex = 0),
@@ -37,10 +38,13 @@ val CheckAdmissionTest by testSuite {
             )
         val result =
             CheckResult(
-                ticket,
-                CheckOutcome.FINISHED,
-                listOf(EditExpectation.Value(location(id, "name"), DataValue.StringValueWrapper("Quest"))),
-                emptyList(),
+                ticket = ticket,
+                outcome = CheckOutcome.FINISHED,
+                expectations =
+                    listOf(
+                        EditExpectation.createValue(at = location(id, "name"), expected = DataValue.StringValueWrapper("Quest")),
+                    ),
+                findings = emptyList(),
             )
         val admission =
             DefaultCheckAdmission(
@@ -73,10 +77,13 @@ val CheckAdmissionTest by testSuite {
                 )
             val result =
                 CheckResult(
-                    ticket,
-                    CheckOutcome.FINISHED,
-                    listOf(EditExpectation.Value(location(id, "name"), DataValue.StringValueWrapper("Quest"))),
-                    emptyList(),
+                    ticket = ticket,
+                    outcome = CheckOutcome.FINISHED,
+                    expectations =
+                        listOf(
+                            EditExpectation.createValue(at = location(id, "name"), expected = DataValue.StringValueWrapper("Quest")),
+                        ),
+                    findings = emptyList(),
                 )
             val admission =
                 DefaultCheckAdmission(

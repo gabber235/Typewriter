@@ -7,7 +7,6 @@ import com.typewritermc.types.catalog.of
 import com.typewritermc.types.catalog.resolve
 import com.typewritermc.types.payload
 import com.typewritermc.types.requirePortable
-import com.typewritermc.types.skir.getOrThrow
 import com.typewritermc.types.use
 import skirout.editor.v1.catalog.OwnedRule
 import skirout.editor.v1.diagnostic.DeclarationDiagnostic
