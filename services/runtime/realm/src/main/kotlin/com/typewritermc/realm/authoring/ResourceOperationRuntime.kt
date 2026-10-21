@@ -20,7 +20,6 @@ import com.typewritermc.operations.OperationIdentities
 import com.typewritermc.operations.OperationInvocation
 import com.typewritermc.operations.OperationPreparation
 import com.typewritermc.operations.OperationReads
-import com.typewritermc.operations.PreparationChoice
 import com.typewritermc.operations.PreparationChoices
 import com.typewritermc.operations.UnavailableAuthoredValue
 import com.typewritermc.operations.UnfinishedOperationInput
@@ -42,6 +41,7 @@ import skirout.editor.v1.operation.OperationConfirmation
 import skirout.editor.v1.operation.ResolvedResourceOperation
 import skirout.editor.v1.operation.ResolvedResourceOperations
 import skirout.editor.v1.resource_operations.DropCandidates
+import skirout.editor.v1.resource_operations.PreparationChoice
 import skirout.editor.v1.type_catalog.AuthoringRecord
 import skirout.editor.v1.type_catalog.CapabilityId
 import skirout.editor.v1.type_catalog.CatalogGeneration

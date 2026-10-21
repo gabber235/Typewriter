@@ -4,9 +4,9 @@ import com.typewritermc.authoring.text
 import com.typewritermc.capability.RealmCapabilityPermissionDeniedException
 import com.typewritermc.operations.OperationInvocation
 import com.typewritermc.operations.OperationOrigin
-import com.typewritermc.operations.PreparationChoice
-import com.typewritermc.operations.PreparationChoiceAnswer
 import com.typewritermc.operations.PreparationChoices
+import com.typewritermc.operations.choiceId
+import com.typewritermc.operations.requireValid
 import com.typewritermc.protocol.transport.RealmRouteScope
 import com.typewritermc.protocol.transport.generated.authoringActionPrepare
 import com.typewritermc.protocol.transport.generated.resourceDropCandidatesResolve
@@ -30,9 +30,6 @@ import skirout.editor.v1.resource_operations.AuthoringActionResult
 import skirout.editor.v1.resource_operations.OperationInputProblem
 import skirout.editor.v1.resource_operations.OperationSelectionEffect
 import skirout.editor.v1.resource_operations.OperationWorkingContext
-import skirout.editor.v1.resource_operations.PreparationChoiceId
-import skirout.editor.v1.resource_operations.PreparationCounterpartOption
-import skirout.editor.v1.resource_operations.PreparationSourceOption
 import skirout.editor.v1.resource_operations.PrepareAuthoringActionRequest
 import skirout.editor.v1.resource_operations.ResolveDropCandidatesRequest
 import skirout.editor.v1.resource_operations.ResolveDropCandidatesResult
@@ -44,8 +41,6 @@ import skirout.editor.v1.type_catalog.CatalogGeneration
 import skirout.editor.v1.type_catalog.ResourceId
 import skirout.editor.v1.type_catalog.ValueLocation
 import skirout.editor.v1.resource_operations.OperationInvocation as SkirOperationInvocation
-import skirout.editor.v1.resource_operations.PreparationChoice as WireChoice
-import skirout.editor.v1.resource_operations.PreparationChoiceAnswer as WireAnswer
 
 /**
  * Adapts operation requests on generated Realm routes into validated working observations.
@@ -172,31 +167,8 @@ internal class ResourceOperationRoutes(
             require(request.inputRevision >= 0) { "The operation input revision is invalid." }
             require(request.capability.value.isNotBlank()) { "The authoring capability is required." }
             val context = request.context.decodeWorkingContext()
-            val choices =
-                request.choices.map { answer ->
-                    when (answer) {
-                        is WireAnswer.SourceWrapper -> {
-                            answer.value.choiceId.value to
-                                PreparationChoiceAnswer.Source(answer.value.occurrence.requireValid())
-                        }
-
-                        is WireAnswer.CounterpartWrapper -> {
-                            answer.value.choiceId.value to
-                                PreparationChoiceAnswer.Counterpart(answer.value.counterpart.decodeCounterpart())
-                        }
-
-                        else -> {
-                            error("Unknown operation choice answer")
-                        }
-                    }
-                }
-            require(
-                choices
-                    .map {
-                        it.first
-                    }.distinct()
-                    .size == choices.size && choices.all { it.first.isNotBlank() },
-            ) { "Operation choices require unique identities." }
+            val choices = request.choices.map { it.requireValid() }
+            require(choices.map { it.choiceId }.distinct().size == choices.size) { "Operation choices require unique identities." }
             when (
                 val result =
                     runtime.prepare(
@@ -209,7 +181,7 @@ internal class ResourceOperationRoutes(
                         request.input?.let {
                             it.requirePortable()
                         },
-                        PreparationChoices(choices.toMap()),
+                        PreparationChoices(choices),
                     )
             ) {
                 is OperationPreparationResult.Preview -> {
@@ -237,7 +209,7 @@ internal class ResourceOperationRoutes(
                                     message = "Complete this input",
                                 )
                             },
-                        choices = result.choices.map { it.toWire() },
+                        choices = result.choices,
                     )
                 }
 
@@ -351,69 +323,6 @@ internal fun SkirOperationInvocation.decodeInvocation(): OperationInvocation {
         OperationOrigin(origin.container?.toResourceId(), origin.occurrences.map { it.requireValid() }),
     )
 }
-
-private fun PreparationChoice.toWire(): WireChoice =
-    when (this) {
-        is PreparationChoice.Source -> {
-            WireChoice.createSource(
-                choiceId = PreparationChoiceId(value = id),
-                label = label,
-                candidates =
-                    candidates.map {
-                        PreparationSourceOption(
-                            label = it.id.location.path.text,
-                            occurrence = it,
-                        )
-                    },
-            )
-        }
-
-        is PreparationChoice.Counterpart -> {
-            WireChoice.createCounterpart(
-                choiceId = PreparationChoiceId(value = id),
-                label = label,
-                source = source,
-                candidates =
-                    candidates.map {
-                        PreparationCounterpartOption(
-                            label =
-                                when (it) {
-                                    is CounterpartChoice.ExistingWrapper -> {
-                                        it.value.id.location.path.text
-                                    }
-
-                                    is CounterpartChoice.NewWrapper -> {
-                                        "Create in ${it.value.containing.path.text}"
-                                    }
-
-                                    else -> {
-                                        unknownVariant(it)
-                                    }
-                                },
-                            counterpart = it,
-                        )
-                    },
-            )
-        }
-    }
-
-private fun CounterpartChoice.decodeCounterpart(): CounterpartChoice =
-    when (this) {
-        is CounterpartChoice.ExistingWrapper -> {
-            CounterpartChoice.ExistingWrapper(value.requireValid())
-        }
-
-        is CounterpartChoice.NewWrapper -> {
-            CounterpartChoice.createNew(
-                containing = value.containing.requireValid(),
-                prepared = value.prepared.requireValid(),
-            )
-        }
-
-        else -> {
-            throw IllegalArgumentException("Unknown counterpart choice")
-        }
-    }
 
 private fun operationDiagnostic(
     code: String,

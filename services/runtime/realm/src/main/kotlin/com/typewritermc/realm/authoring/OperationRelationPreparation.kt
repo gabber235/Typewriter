@@ -2,9 +2,9 @@ package com.typewritermc.realm.authoring
 
 import com.typewritermc.authoring.DefaultInitializationRuntime
 import com.typewritermc.authoring.record
+import com.typewritermc.authoring.text
 import com.typewritermc.checking.InputIdentity
 import com.typewritermc.operations.OperationPreparation
-import com.typewritermc.operations.PreparationChoice
 import com.typewritermc.operations.PreparationChoices
 import com.typewritermc.realm.repository.CounterpartBinding
 import com.typewritermc.realm.repository.ResourceValueMapper
@@ -12,6 +12,7 @@ import com.typewritermc.realm.repository.valueAt
 import com.typewritermc.types.catalog.Resolution
 import com.typewritermc.types.toResourceId
 import com.typewritermc.types.toSkir
+import com.typewritermc.types.unknownVariant
 import skirout.editor.v1.authoring.ConnectIntent
 import skirout.editor.v1.authoring.CounterpartChoice
 import skirout.editor.v1.authoring.LinkOccurrence
@@ -19,6 +20,10 @@ import skirout.editor.v1.authoring.LinkOccurrenceId
 import skirout.editor.v1.catalog.PreparationTarget
 import skirout.editor.v1.catalog.PreparedContent
 import skirout.editor.v1.catalog.ValuePreparationRequest
+import skirout.editor.v1.resource_operations.PreparationChoice
+import skirout.editor.v1.resource_operations.PreparationChoiceId
+import skirout.editor.v1.resource_operations.PreparationCounterpartOption
+import skirout.editor.v1.resource_operations.PreparationSourceOption
 import skirout.editor.v1.type_catalog.LinkTarget
 import skirout.editor.v1.type_catalog.ResolvedRepresentation
 import skirout.editor.v1.type_catalog.ResourceId
@@ -52,7 +57,7 @@ internal class OperationRelationPreparation(
             require(sources.isNotEmpty()) { "The destination does not accept this resource" }
             val source =
                 sources.singleOrNull() ?: operation.choices.require(
-                    PreparationChoice.Source("owner-source:$subject:$destination", "Choose owning reference", sources),
+                    sourceChoice("owner-source:${subject.value}:${destination.value}", "Choose owning reference", sources),
                 )
             relations.observe(source)
             moved += subject
@@ -85,7 +90,7 @@ internal class OperationRelationPreparation(
                         candidates.single()
                     } else {
                         operation.choices.require(
-                            PreparationChoice.Source("link-source:$subject:$target", "Choose source reference", candidates),
+                            sourceChoice("link-source:${subject.value}:${target.value}", "Choose source reference", candidates),
                         )
                     }
                 relations.observe(selected)
@@ -121,14 +126,7 @@ internal class OperationRelationPreparation(
     ): CounterpartChoice? {
         val candidates = counterpartCandidates(source, target)
         if (candidates.size == 1) return candidates.single()
-        return answers.require(
-            PreparationChoice.Counterpart(
-                "counterpart:${LinkOccurrenceId.serializer.toJsonCode(source.id)}:$target",
-                "Choose inverse counterpart",
-                source,
-                candidates.filterNotNull(),
-            ),
-        )
+        return answers.require(counterpartChoice(source, target, candidates.filterNotNull()))
     }
 
     private fun assignCounterparts(
@@ -164,14 +162,7 @@ internal class OperationRelationPreparation(
                 if (valid.size == 1) {
                     valid.single()
                 } else {
-                    answers.require(
-                        PreparationChoice.Counterpart(
-                            "counterpart:${LinkOccurrenceId.serializer.toJsonCode(source.id)}:$target",
-                            "Choose inverse counterpart",
-                            source,
-                            valid.filterNotNull(),
-                        ),
-                    )
+                    answers.require(counterpartChoice(source, target, valid.filterNotNull()))
                 }
             slot(choice)?.let(reserved::add)
             ConnectIntent(source = source, target = target, counterpart = choice)
@@ -238,3 +229,36 @@ internal class OperationRelationPreparation(
         return candidates
     }
 }
+
+/** A choice among [candidates] for the reference that holds a link; each option is labelled by its value path. */
+private fun sourceChoice(
+    id: String,
+    label: String,
+    candidates: List<LinkOccurrence>,
+): PreparationChoice.Source =
+    PreparationChoice.Source(
+        choiceId = PreparationChoiceId(value = id),
+        label = label,
+        candidates = candidates.map { PreparationSourceOption(label = it.id.location.path.text, occurrence = it) },
+    )
+
+/** A choice among [candidates] for the inverse of [source] on [target]: an existing slot or a new record. */
+private fun counterpartChoice(
+    source: LinkOccurrence,
+    target: ResourceId,
+    candidates: List<CounterpartChoice>,
+): PreparationChoice.Counterpart =
+    PreparationChoice.Counterpart(
+        choiceId = PreparationChoiceId(value = "counterpart:${LinkOccurrenceId.serializer.toJsonCode(source.id)}:${target.value}"),
+        label = "Choose inverse counterpart",
+        source = source,
+        candidates = candidates.map { PreparationCounterpartOption(label = it.optionLabel, counterpart = it) },
+    )
+
+private val CounterpartChoice.optionLabel: String
+    get() =
+        when (this) {
+            is CounterpartChoice.ExistingWrapper -> value.id.location.path.text
+            is CounterpartChoice.NewWrapper -> "Create in ${value.containing.path.text}"
+            else -> unknownVariant(this)
+        }

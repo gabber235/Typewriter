@@ -44,6 +44,10 @@ import skirout.editor.v1.operation.OperationShortcut
 import skirout.editor.v1.operation.ResourceOperationDefinition
 import skirout.editor.v1.presentation.ButtonVariant
 import skirout.editor.v1.presentation.HeaderActionTone
+import skirout.editor.v1.resource_operations.PreparationChoice
+import skirout.editor.v1.resource_operations.PreparationChoiceAnswer
+import skirout.editor.v1.resource_operations.PreparationChoiceId
+import skirout.editor.v1.resource_operations.PreparationCounterpartOption
 import skirout.editor.v1.type_catalog.AuthoringRecord
 import skirout.editor.v1.type_catalog.CapabilityId
 import skirout.editor.v1.type_catalog.CatalogGeneration
@@ -229,9 +233,15 @@ val OperationDeclarationTest by testSuite {
                 target = LinkTarget(resource = ResourceId("target").toSkir(), opposite = null),
             )
         val proposed = choice("retained default")
-        val choices = PreparationChoices(mapOf("inverse" to PreparationChoiceAnswer.Counterpart(proposed)))
+        val inverse = PreparationChoiceId(value = "inverse")
+        val choices = PreparationChoices(listOf(PreparationChoiceAnswer.createCounterpart(choiceId = inverse, counterpart = proposed)))
         choices.require(
-            PreparationChoice.Counterpart("inverse", "Choose inverse", source, listOf(choice("newly sampled default"))),
+            PreparationChoice.Counterpart(
+                choiceId = inverse,
+                label = "Choose inverse",
+                source = source,
+                candidates = listOf(PreparationCounterpartOption(label = "Create", counterpart = choice("newly sampled default"))),
+            ),
         ) shouldBe
             proposed
     }
