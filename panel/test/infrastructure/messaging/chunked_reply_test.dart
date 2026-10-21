@@ -302,6 +302,39 @@ void main() {
     );
 
     test(
+      "a NATS status reply fails instead of decoding as an empty reply",
+      () async {
+        reply = (request) => responder.publish(
+          request.replySubject!,
+          Uint8List(0),
+          headers: NatsHeaders(
+            statusCode: 408,
+            statusDescription: "Request Timeout",
+          ),
+        );
+
+        await expectLater(
+          client.request(_subject, Uint8List(0)),
+          throwsA(
+            isA<NatsClientException>()
+                .having(
+                  (failure) => failure.kind,
+                  "kind",
+                  NatsFailureKind.protocol,
+                )
+                .having(
+                  (failure) => failure.message,
+                  "message",
+                  "NATS status 408: Request Timeout",
+                ),
+          ),
+        );
+      },
+      skip: skipReason,
+      timeout: const Timeout(Duration(seconds: 30)),
+    );
+
+    test(
       "cancellation stops collection before the reply completes",
       () async {
         final frames = _frames(

@@ -264,5 +264,7 @@ private class ReplyParts(
 private fun reject(reason: String): Nothing = throw TransferRejected(reason)
 
 private val chunkPattern = Regex("""(\d{1,9})/(\d{1,9})""")
-private val sizePattern = Regex("""\d{1,19}""")
+
+// Fifteen digits parse exactly in every transport, including the panel on the web, and cover every admitted size.
+private val sizePattern = Regex("""\d{1,15}""")
 private val sha256Pattern = Regex("[0-9a-f]{64}")

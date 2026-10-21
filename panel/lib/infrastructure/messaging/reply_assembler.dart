@@ -232,5 +232,7 @@ final class _ReplyParts {
 }
 
 final _chunkPattern = RegExp(r"^(\d{1,9})/(\d{1,9})$");
+// Fifteen digits parse exactly on the web too and cover every admitted size;
+// the services transport uses the same bound.
 final _sizePattern = RegExp(r"^\d{1,15}$");
 final _sha256Pattern = RegExp(r"^[0-9a-f]{64}$");

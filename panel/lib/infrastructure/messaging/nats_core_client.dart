@@ -239,6 +239,10 @@ final class NatsCoreClient implements NatsClient {
           deadline.cancel();
           deadline = Timer(replyAssemblyBudget, () => fail(timedOut));
         }
+        if (_statusFailure(message.headers) case final failure?) {
+          fail(failure);
+          return;
+        }
         try {
           final bytes = assembler.accept(message.headers, message.payload);
           if (bytes != null) {
@@ -640,3 +644,21 @@ String _translatedMessage(Object error, NatsFailureKind kind) =>
       FormatException() => "Invalid NATS client configuration",
       _ => kind.safeDescription,
     };
+
+/// The failure a NATS status reply carries, or null for an ordinary reply.
+///
+/// The package reports a 503 without payload as no responders; any other
+/// status of at least 300 is a broker failure rather than a reply, as in the
+/// services transport.
+NatsClientException? _statusFailure(NatsHeaders? headers) {
+  final status = headers?.statusCode;
+  if (status == null || status < 300) return null;
+  final description = headers?.statusDescription;
+  return NatsClientException(
+    kind: status == 503
+        ? NatsFailureKind.noResponders
+        : NatsFailureKind.protocol,
+    message:
+        "NATS status $status${description == null ? "" : ": $description"}",
+  );
+}
