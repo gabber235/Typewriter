@@ -4,7 +4,7 @@ import com.typewritermc.authoring.EditContext
 import com.typewritermc.authoring.PathSegment
 import com.typewritermc.authoring.ValuePath
 import com.typewritermc.authoring.append
-import com.typewritermc.types.DataValue
+import skirout.editor.v1.type_catalog.DataValue
 import com.typewritermc.types.Resource
 import com.typewritermc.types.TypewriterRecordContract
 import com.typewritermc.types.TypewriterType

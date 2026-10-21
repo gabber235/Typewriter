@@ -4,7 +4,6 @@ import com.typewritermc.authoring.AuthoringRecord
 import com.typewritermc.authoring.ConnectIntent
 import com.typewritermc.authoring.CounterpartChoice
 import com.typewritermc.authoring.EditIntent
-import com.typewritermc.authoring.ItemId
 import com.typewritermc.authoring.LinkOccurrence
 import com.typewritermc.authoring.LinkOccurrenceId
 import com.typewritermc.authoring.LinkProjection
@@ -28,22 +27,35 @@ import com.typewritermc.authoring.validateStructure
 import com.typewritermc.authoring.writeField
 import com.typewritermc.realm.authoring.authoredTypeAt
 import com.typewritermc.services.libs.utils.sha256Hex
-import com.typewritermc.types.DataValue
 import com.typewritermc.types.EndpointBindingTemplate
 import com.typewritermc.types.EndpointCardinality
 import com.typewritermc.types.LinkTarget
-import com.typewritermc.types.ListItem
 import com.typewritermc.types.RelationContract
 import com.typewritermc.types.RelationDeletePolicy
 import com.typewritermc.types.ResourceId
+import com.typewritermc.types.actualType
 import com.typewritermc.types.catalog.CheckedCatalog
 import com.typewritermc.types.catalog.Resolution
+import com.typewritermc.types.endpoint
+import com.typewritermc.types.fieldMap
+import com.typewritermc.types.fields
 import com.typewritermc.types.isAcyclic
+import com.typewritermc.types.items
+import com.typewritermc.types.link
+import com.typewritermc.types.linkTarget
+import com.typewritermc.types.listValue
+import com.typewritermc.types.named
 import com.typewritermc.types.ownsResources
+import com.typewritermc.types.payload
+import com.typewritermc.types.record
+import com.typewritermc.types.setValue
 import com.typewritermc.types.unknownVariant
 import com.typewritermc.types.use
 import skirout.editor.v1.type_catalog.CollectionKind
+import skirout.editor.v1.type_catalog.DataValue
 import skirout.editor.v1.type_catalog.EndpointId
+import skirout.editor.v1.type_catalog.ItemId
+import skirout.editor.v1.type_catalog.ListItem
 import skirout.editor.v1.type_catalog.NamedTypeUse
 import skirout.editor.v1.type_catalog.ResolvedRepresentation
 import skirout.editor.v1.type_catalog.SequenceResolvedRepresentation
@@ -498,7 +510,7 @@ internal class AuthoringMutationPlanner(
                         problems += ValueProblem(counterpart.containing, "counterpart_type_pending")
                         return
                     }
-                    val materialized = DataValue.Named(actual, DataValue.Record(prepared.fields))
+                    val materialized = DataValue.named(actual, DataValue.record(prepared.fields))
                     val targetRecord = resources[intent.intent.target]
                     val collection = targetRecord?.declaredCollection(counterpart.containing)
                     val embedded =
@@ -510,7 +522,7 @@ internal class AuthoringMutationPlanner(
                                 EditIntent.Insert(
                                     counterpart.containing,
                                     current.itemsOrNull()?.lastOrNull()?.id,
-                                    ListItem(item, materialized),
+                                    ListItem(id = item, value = materialized),
                                 ),
                                 problems,
                             )
@@ -666,7 +678,7 @@ internal class AuthoringMutationPlanner(
                     EditIntent.Insert(
                         collection,
                         values.lastOrNull()?.id,
-                        ListItem(item.id, DataValue.Named(named, DataValue.Link(endpoint, target))),
+                        ListItem(id = item.id, value = DataValue.named(named, DataValue.link(endpoint, target))),
                     ),
                     problems,
                 )
@@ -678,7 +690,7 @@ internal class AuthoringMutationPlanner(
             problems += ValueProblem(location, "expected_named_link")
             return
         }
-        update(resources, location, DataValue.Named(named, DataValue.Link(endpoint, target)), problems)
+        update(resources, location, DataValue.named(named, DataValue.link(endpoint, target)), problems)
     }
 
     private fun appendDirectLink(
@@ -709,7 +721,7 @@ internal class AuthoringMutationPlanner(
             EditIntent.Insert(
                 collection,
                 items.lastOrNull()?.id,
-                ListItem(item, DataValue.Named(named, DataValue.Link(endpoint, target))),
+                ListItem(id = item, value = DataValue.named(named, DataValue.link(endpoint, target))),
             ),
             problems,
         )
@@ -726,7 +738,7 @@ internal class AuthoringMutationPlanner(
             return null
         }
         if (current.itemsOrNull() != null) return current
-        if (current != DataValue.Unfilled) {
+        if (current != DataValue.UNFILLED) {
             problems += ValueProblem(location, "expected_collection")
             return null
         }
@@ -737,11 +749,11 @@ internal class AuthoringMutationPlanner(
         }
         val payload =
             when (collection.representation.kind) {
-                CollectionKind.LIST -> DataValue.ListValue(emptyList())
-                CollectionKind.SET -> DataValue.SetValue(emptyList())
+                CollectionKind.LIST -> DataValue.listValue(emptyList())
+                CollectionKind.SET -> DataValue.setValue(emptyList())
                 else -> unknownVariant(collection.representation.kind)
             }
-        return DataValue.Named(collection.type, payload)
+        return DataValue.named(collection.type, payload)
     }
 
     private fun AuthoringRecord.declaredCollection(location: ValueLocation): AuthoredCollection? {
@@ -765,8 +777,8 @@ internal class AuthoringMutationPlanner(
         current.target.opposite?.let { opposite ->
             val other = ValueLocation(current.target.resource, opposite)
             val oppositeValue = resources[other.resource]?.valueAt(other.path)
-            val oppositeLink = (oppositeValue as? DataValue.Named)?.payload as? DataValue.Link
-            if (oppositeLink != null && oppositeLink.target.resource == current.source) {
+            val oppositeLink = (oppositeValue as? DataValue.NamedWrapper)?.payload as? DataValue.LinkWrapper
+            if (oppositeLink != null && oppositeLink.linkTarget.resource == current.source) {
                 clearLocation(resources, other, problems)
             }
         }
@@ -788,12 +800,12 @@ internal class AuthoringMutationPlanner(
             problems += ValueProblem(intent.at, "resource_configuration_requires_preview")
             return
         }
-        val current = record.valueAt(intent.at.path) as? DataValue.Named
+        val current = record.valueAt(intent.at.path) as? DataValue.NamedWrapper
         if (current == null) {
             problems += ValueProblem(intent.at, "expected_named")
             return
         }
-        update(resources, intent.at, current.copy(actualType = intent.type), problems)
+        update(resources, intent.at, DataValue.named(intent.type, current.payload), problems)
     }
 
     private fun configureResource(
@@ -846,7 +858,7 @@ internal class AuthoringMutationPlanner(
             return
         }
         val nullable = resources[location.resource]?.authoredTypeAt(location.path, catalog) is TypeUse.NullableWrapper
-        update(resources, location, if (nullable) DataValue.Null else DataValue.Unfilled, problems)
+        update(resources, location, if (nullable) DataValue.NULL else DataValue.UNFILLED, problems)
     }
 }
 
@@ -993,37 +1005,37 @@ private fun validateAcyclic(
 }
 
 internal fun AuthoringRecord.valueAt(path: ValuePath): DataValue? =
-    (DataValue.Record(fields).locate(path) as? LocatedPortableValue.Value)?.value
+    (DataValue.record(fields).locate(path) as? LocatedPortableValue.Value)?.value
 
 private fun AuthoringRecord.set(
     path: ValuePath,
     value: DataValue,
 ): AuthoringRecord? {
-    if (path.segments.isEmpty()) return (value as? DataValue.Record)?.let { copy(fields = it.fields) }
+    if (path.segments.isEmpty()) return (value as? DataValue.RecordWrapper)?.let { copy(fields = it.value.fieldMap) }
     val updated =
-        (DataValue.Record(fields).writeField(path, value) as? ValueReplacement.Replaced)
-            ?.value as? DataValue.Record
+        (DataValue.record(fields).writeField(path, value) as? ValueReplacement.Replaced)
+            ?.value as? DataValue.RecordWrapper
             ?: return null
-    return copy(fields = updated.fields)
+    return copy(fields = updated.value.fieldMap)
 }
 
 private fun DataValue?.itemsOrNull(): List<ListItem>? =
     when (this) {
-        is DataValue.Named -> payload.itemsOrNull()
-        is DataValue.ListValue -> items
-        is DataValue.SetValue -> items
+        is DataValue.NamedWrapper -> payload.itemsOrNull()
+        is DataValue.ListValueWrapper -> items
+        is DataValue.SetValueWrapper -> items
         else -> null
     }
 
 private fun DataValue.withItems(items: List<ListItem>): DataValue =
     when (this) {
-        is DataValue.Named -> copy(payload = payload.withItems(items))
-        is DataValue.ListValue -> copy(items = items)
-        is DataValue.SetValue -> copy(items = items)
+        is DataValue.NamedWrapper -> DataValue.named(actualType, payload.withItems(items))
+        is DataValue.ListValueWrapper -> DataValue.listValue(items)
+        is DataValue.SetValueWrapper -> DataValue.setValue(items)
         else -> error("Expected a collection value.")
     }
 
-private fun DataValue.namedType(): NamedTypeUse? = (this as? DataValue.Named)?.actualType
+private fun DataValue.namedType(): NamedTypeUse? = (this as? DataValue.NamedWrapper)?.actualType
 
 private fun TypeUse?.namedType(): NamedTypeUse? =
     when (this) {
@@ -1038,7 +1050,7 @@ private fun deterministicItem(
     containing: ValueLocation,
 ): ItemId {
     val content = "$batch:$ordinal:${containing.resource.value}:${containing.path}"
-    return ItemId("relation:${content.sha256Hex()}")
+    return ItemId(value = "relation:${content.sha256Hex()}")
 }
 
 private fun ValuePath.startsWith(prefix: ValuePath): Boolean =

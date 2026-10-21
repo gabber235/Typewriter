@@ -17,7 +17,8 @@ import com.typewritermc.realm.catalog.RealmCatalogLease
 import com.typewritermc.realm.catalog.RealmCatalogStore
 import com.typewritermc.realm.checking.CapturedAuthoringReads
 import com.typewritermc.types.isValid
-import com.typewritermc.types.skir.SkirDataValueCodec
+import com.typewritermc.types.payload
+import com.typewritermc.types.requirePortable
 import com.typewritermc.types.skir.getOrThrow
 import com.typewritermc.types.toTemplate
 import kotlinx.coroutines.CancellationException
@@ -106,7 +107,7 @@ class CapabilityRealmPresentationSearchSource(
                 try {
                     val registry = RealmCapabilityRegistry(catalog.capabilities)
                     val provider = registry.requireSearch(capability)
-                    val payload = SkirDataValueCodec.decode(request.payload).getOrThrow()
+                    val payload = request.payload.requirePortable()
                     provider
                         .invoke(
                             SearchContext(request.subscriptionId, operation?.context),
@@ -118,7 +119,7 @@ class CapabilityRealmPresentationSearchSource(
                             operation?.requireCurrent()
                             when (update) {
                                 is RealmSearchUpdate.Partial -> {
-                                    values += update.values.map { value -> SkirDataValueCodec.encode(value).getOrThrow() }
+                                    values += update.values.map { value -> value.requirePortable() }
                                     updates.publish(
                                         searchSnapshot(
                                             request.subscriptionId,

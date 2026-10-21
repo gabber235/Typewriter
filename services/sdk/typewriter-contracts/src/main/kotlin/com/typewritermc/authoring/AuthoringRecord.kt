@@ -1,11 +1,12 @@
 package com.typewritermc.authoring
 
-import com.typewritermc.types.DataValue
+import com.typewritermc.types.skir.DataValueSerializer
 import com.typewritermc.types.skir.NamedTypeUseSerializer
 import com.typewritermc.types.skir.TypeDefinitionIdSerializer
 import com.typewritermc.types.skir.TypeUseSerializer
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
+import skirout.editor.v1.type_catalog.DataValue
 import skirout.editor.v1.type_catalog.FieldOwner
 import skirout.editor.v1.type_catalog.NamedTypeUse
 import skirout.editor.v1.type_catalog.ParameterKey
@@ -62,12 +63,16 @@ val TypeSelection.definition: TypeDefinitionId
 
 /**
  * Stores a resource's type selection separately from its field payload so partially configured records remain editable.
- * Nested nominal values still carry their own actual types in [DataValue.Named].
+ * Nested nominal values still carry their own actual types in [DataValue.NamedWrapper].
  */
 @Serializable
 data class AuthoringRecord(
     val configuration: TypeSelection,
-    val fields: Map<String, DataValue>,
+    val fields: Map<
+        String,
+        @Serializable(with = DataValueSerializer::class)
+        DataValue,
+    >,
 )
 
 data class ArgumentLocation(

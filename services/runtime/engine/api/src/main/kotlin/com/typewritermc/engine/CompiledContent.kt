@@ -2,13 +2,14 @@ package com.typewritermc.engine
 
 import com.typewritermc.authoring.NativeBindingId
 import com.typewritermc.authoring.ValuePath
-import com.typewritermc.types.DataValue
 import com.typewritermc.types.RelationId
 import com.typewritermc.types.ResourceId
+import com.typewritermc.types.skir.NamedDataValueSerializer
 import com.typewritermc.types.skir.NamedTypeUseSerializer
 import com.typewritermc.types.skir.TypeDefinitionSerializer
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
+import skirout.editor.v1.type_catalog.DataValue
 import skirout.editor.v1.type_catalog.NamedTypeUse
 import skirout.editor.v1.type_catalog.TypeDefinition
 
@@ -54,7 +55,8 @@ data class CompiledResource(
     val actualType: NamedTypeUse,
     val bindingProvider: NativeBindingId,
     val bindingSignature: String,
-    val value: DataValue.Named,
+    @Serializable(with = NamedDataValueSerializer::class)
+    val value: DataValue.NamedWrapper,
 )
 
 @Serializable

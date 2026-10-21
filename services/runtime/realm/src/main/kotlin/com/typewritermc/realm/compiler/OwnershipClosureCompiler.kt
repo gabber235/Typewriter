@@ -25,14 +25,19 @@ import com.typewritermc.engine.relation
 import com.typewritermc.engine.semanticDigest
 import com.typewritermc.realm.authoring.AuthoringView
 import com.typewritermc.services.libs.utils.sha256Hex
-import com.typewritermc.types.DataValue
 import com.typewritermc.types.EndpointSlot
 import com.typewritermc.types.RelationId
 import com.typewritermc.types.ResourceId
+import com.typewritermc.types.actualType
 import com.typewritermc.types.catalog.CheckedCatalog
 import com.typewritermc.types.catalog.runtimeDefinitions
+import com.typewritermc.types.endpoint
+import com.typewritermc.types.fields
+import com.typewritermc.types.named
 import com.typewritermc.types.ownsResources
+import com.typewritermc.types.record
 import com.typewritermc.types.use
+import skirout.editor.v1.type_catalog.DataValue
 import skirout.editor.v1.type_catalog.RuleOrigin
 
 /**
@@ -139,7 +144,7 @@ internal class OwnershipClosureCompiler(
                     }
                     val actual =
                         (record.configuration as? TypeSelection.Complete)?.use ?: error("Ready resource has a pending configuration.")
-                    check(actual == state.binding.actual && state.value.value == DataValue.Named(actual, DataValue.Record(record.fields))) {
+                    check(actual == state.binding.actual && state.value.value == DataValue.named(actual, DataValue.record(record.fields))) {
                         "Resource readiness belongs to another captured value."
                     }
                 }
@@ -176,7 +181,7 @@ internal class OwnershipClosureCompiler(
                             resource.value
                                 .descendants()
                                 .mapNotNull { located ->
-                                    (located.value as? DataValue.Named)?.actualType?.use
+                                    (located.value as? DataValue.NamedWrapper)?.actualType?.use
                                 }.toList()
                         },
                     ),
@@ -220,7 +225,7 @@ private fun AuthoringRecord.compile(
         actualType = actual,
         bindingProvider = binding.provider,
         bindingSignature = binding.signature,
-        value = readiness.value.value as DataValue.Named,
+        value = readiness.value.value as DataValue.NamedWrapper,
     )
 }
 

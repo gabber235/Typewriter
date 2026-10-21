@@ -35,12 +35,15 @@ import com.typewritermc.expression.EvaluationDiagnostic
 import com.typewritermc.realm.checking.CapturedAuthoringReads
 import com.typewritermc.realm.repository.LinkSchemaCapabilities
 import com.typewritermc.realm.repository.ResourceValueMapper
-import com.typewritermc.types.DataValue
 import com.typewritermc.types.RelationContract
 import com.typewritermc.types.RelationFamilyId
 import com.typewritermc.types.ResourceId
 import com.typewritermc.types.catalog.Resolution
+import com.typewritermc.types.endpoint
+import com.typewritermc.types.fields
+import com.typewritermc.types.record
 import com.typewritermc.types.use
+import skirout.editor.v1.type_catalog.DataValue
 
 /** Traverses only the graph derived from the retained authored reads. */
 internal object RealmGraphReads {
@@ -236,7 +239,7 @@ private class CapturedGraph(
                         return@locationLoop
                     }
                     val value = rawValue(record, location.path)
-                    if (value == DataValue.Unfilled) add(UnresolvedLink.Unfilled(occurrence))
+                    if (value == DataValue.UNFILLED) add(UnresolvedLink.Unfilled(occurrence))
                 }
             }
         }
@@ -447,7 +450,7 @@ private fun rawValue(
     path: ValuePath,
 ): DataValue? {
     val fields = record?.fields ?: return null
-    return (DataValue.Record(fields).locate(path) as? LocatedPortableValue.Value)?.value
+    return (DataValue.record(fields).locate(path) as? LocatedPortableValue.Value)?.value
 }
 
 private fun interrupted(

@@ -4,7 +4,6 @@ import com.typewritermc.authoring.AuthoringRecord
 import com.typewritermc.authoring.ConnectIntent
 import com.typewritermc.authoring.CounterpartChoice
 import com.typewritermc.authoring.EditIntent
-import com.typewritermc.authoring.ItemId
 import com.typewritermc.authoring.LinkOccurrence
 import com.typewritermc.authoring.LinkOccurrenceId
 import com.typewritermc.authoring.PathSegment
@@ -22,14 +21,28 @@ import com.typewritermc.authoring.mapValue
 import com.typewritermc.realm.authoring.AuthoringView
 import com.typewritermc.realm.authoring.authoredTypeAt
 import com.typewritermc.services.libs.utils.sha256Hex
-import com.typewritermc.types.DataValue
 import com.typewritermc.types.LinkTarget
-import com.typewritermc.types.ListItem
 import com.typewritermc.types.ResourceId
+import com.typewritermc.types.actualType
 import com.typewritermc.types.catalog.Resolution
-import com.typewritermc.types.immutableCopy
+import com.typewritermc.types.endpoint
+import com.typewritermc.types.field
+import com.typewritermc.types.fieldMap
+import com.typewritermc.types.fields
 import com.typewritermc.types.immutableListCopy
+import com.typewritermc.types.items
+import com.typewritermc.types.linkTarget
+import com.typewritermc.types.listValue
+import com.typewritermc.types.mapValue
+import com.typewritermc.types.named
+import com.typewritermc.types.payload
+import com.typewritermc.types.record
+import com.typewritermc.types.rows
+import com.typewritermc.types.setValue
 import com.typewritermc.types.use
+import skirout.editor.v1.type_catalog.DataValue
+import skirout.editor.v1.type_catalog.ItemId
+import skirout.editor.v1.type_catalog.ListItem
 import skirout.editor.v1.type_catalog.ResolvedRepresentation
 import java.util.Collections
 
@@ -77,11 +90,11 @@ internal class AuthoringPlanningSession(
                 val references = mutableListOf<LinkOccurrence>()
                 val fields =
                     strip(
-                        DataValue.Record(intent.record.fields),
+                        DataValue.record(intent.record.fields),
                         ValueLocation(intent.id, ValuePath()),
                         references,
-                    ) as DataValue.Record
-                emit(intent.copy(record = intent.record.copy(fields = fields.fields)))
+                    ) as DataValue.RecordWrapper
+                emit(intent.copy(record = intent.record.copy(fields = fields.value.fieldMap)))
                 references.forEach { connection(ConnectIntent(it, it.target.resource, explicitOpposite(it))) }
             }
 
@@ -154,7 +167,7 @@ internal class AuthoringPlanningSession(
                     val record =
                         (requested.prepared.content as? PreparedContent.Record)?.record ?: error("A counterpart must be a prepared record")
                     val configured = (record.configuration as? TypeSelection.Complete)?.use ?: error("The counterpart type is incomplete")
-                    val value = DataValue.Named(configured, DataValue.Record(record.fields))
+                    val value = DataValue.named(configured, DataValue.record(record.fields))
                     val existing = target.valueAt(requested.containing.path)
                     val declared = target.authoredTypeAt(requested.containing.path, baseline.catalog.checked)
                     val schema = declared?.let { baseline.catalog.checked.resolve(it) } as? Resolution.Ready
@@ -162,12 +175,12 @@ internal class AuthoringPlanningSession(
                         if (schema?.value?.schema?.representation is ResolvedRepresentation.SequenceWrapper) {
                             val id = item("counterpart:${source.id}:${requested.containing}")
                             val items =
-                                when (val payload = if (existing is DataValue.Named) existing.payload else existing) {
-                                    is DataValue.ListValue -> payload.items
-                                    is DataValue.SetValue -> payload.items
+                                when (val payload = if (existing is DataValue.NamedWrapper) existing.payload else existing) {
+                                    is DataValue.ListValueWrapper -> payload.items
+                                    is DataValue.SetValueWrapper -> payload.items
                                     else -> emptyList()
                                 }
-                            append(EditIntent.Insert(requested.containing, items.lastOrNull()?.id, ListItem(id, value)))
+                            append(EditIntent.Insert(requested.containing, items.lastOrNull()?.id, ListItem(id = id, value = value)))
                             requested.containing.item(id)
                         } else {
                             append(EditIntent.SetValue(requested.containing, value))
@@ -255,7 +268,7 @@ internal class AuthoringPlanningSession(
     ) {
         if (resources[at.resource]?.valueAt(at.path) == null && at.path.segments.lastOrNull() is PathSegment.Item) {
             val id = (at.path.segments.last() as PathSegment.Item).id
-            emit(EditIntent.Insert(at.copy(path = ValuePath(at.path.segments.dropLast(1))), null, ListItem(id, value)))
+            emit(EditIntent.Insert(at.copy(path = ValuePath(at.path.segments.dropLast(1))), null, ListItem(id = id, value = value)))
         } else {
             emit(EditIntent.SetValue(at, value))
         }
@@ -267,36 +280,35 @@ internal class AuthoringPlanningSession(
         links: MutableList<LinkOccurrence>,
     ): DataValue =
         when (value) {
-            is DataValue.Link -> {
-                links += LinkOccurrence(LinkOccurrenceId(value.endpoint, at), at.resource, value.target)
-                DataValue.Unfilled
+            is DataValue.LinkWrapper -> {
+                links += LinkOccurrence(LinkOccurrenceId(value.endpoint, at), at.resource, value.linkTarget)
+                DataValue.UNFILLED
             }
 
-            is DataValue.Named -> {
-                value.copy(payload = strip(value.payload, at, links))
+            is DataValue.NamedWrapper -> {
+                DataValue.named(value.actualType, strip(value.payload, at, links))
             }
 
-            is DataValue.Record -> {
-                value.copy(fields = value.fields.mapValues { (key, child) -> strip(child, at.field(key), links) })
+            is DataValue.RecordWrapper -> {
+                DataValue.record(value.fields.associate { field -> field.name to strip(field.value, at.field(field.name), links) })
             }
 
-            is DataValue.ListValue -> {
-                value.copy(items = value.items.map { it.copy(value = strip(it.value, at.item(it.id), links)) })
+            is DataValue.ListValueWrapper -> {
+                DataValue.listValue(value.items.map { it.copy(value = strip(it.value, at.item(it.id), links)) })
             }
 
-            is DataValue.SetValue -> {
-                value.copy(items = value.items.map { it.copy(value = strip(it.value, at.item(it.id), links)) })
+            is DataValue.SetValueWrapper -> {
+                DataValue.setValue(value.items.map { it.copy(value = strip(it.value, at.item(it.id), links)) })
             }
 
-            is DataValue.MapValue -> {
-                value.copy(
-                    rows =
-                        value.rows.map {
-                            it.copy(
-                                key = strip(it.key, at.item(it.id).mapKey(), links),
-                                value = strip(it.value, at.item(it.id).mapValue(), links),
-                            )
-                        },
+            is DataValue.MapValueWrapper -> {
+                DataValue.mapValue(
+                    value.rows.map {
+                        it.copy(
+                            key = strip(it.key, at.item(it.id).mapKey(), links),
+                            value = strip(it.value, at.item(it.id).mapValue(), links),
+                        )
+                    },
                 )
             }
 
@@ -305,7 +317,7 @@ internal class AuthoringPlanningSession(
             }
         }
 
-    private fun item(key: String): ItemId = ItemId("operation:" + "$invocationId:$key:${allocation++}".sha256Hex())
+    private fun item(key: String): ItemId = ItemId(value = "operation:" + "$invocationId:$key:${allocation++}".sha256Hex())
 
     private fun accepted(result: MutationPlanningResult): AuthoringMutationPlan =
         when (result) {
@@ -327,11 +339,11 @@ private fun EditIntent.freeze(): EditIntent =
         }
 
         is EditIntent.SetValue -> {
-            copy(at = at.freeze(), value = value.immutableCopy())
+            copy(at = at.freeze())
         }
 
         is EditIntent.Insert -> {
-            copy(at = at.freeze(), item = item.copy(value = item.value.immutableCopy()))
+            copy(at = at.freeze())
         }
 
         is EditIntent.Remove -> {

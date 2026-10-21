@@ -10,7 +10,6 @@ import com.typewritermc.authoring.CompletenessResult
 import com.typewritermc.authoring.DraftBinding
 import com.typewritermc.authoring.DraftExpectation
 import com.typewritermc.authoring.EditExpectation
-import com.typewritermc.authoring.ItemId
 import com.typewritermc.authoring.LocatedPortableValue
 import com.typewritermc.authoring.ReadContext
 import com.typewritermc.authoring.StructuralStep
@@ -41,16 +40,25 @@ import com.typewritermc.expression.EvaluationDiagnostic
 import com.typewritermc.realm.authoring.AuthoredReadView
 import com.typewritermc.realm.authoring.RESOURCE_SELECTION_INPUT
 import com.typewritermc.services.libs.utils.rethrowExceptional
-import com.typewritermc.types.DataValue
-import com.typewritermc.types.ListItem
-import com.typewritermc.types.MapRow
 import com.typewritermc.types.ResourceId
+import com.typewritermc.types.actualType
 import com.typewritermc.types.canonicalValueKey
 import com.typewritermc.types.catalog.CheckedType
 import com.typewritermc.types.catalog.Resolution
+import com.typewritermc.types.field
+import com.typewritermc.types.fields
+import com.typewritermc.types.items
+import com.typewritermc.types.named
+import com.typewritermc.types.payload
+import com.typewritermc.types.record
+import com.typewritermc.types.rows
 import com.typewritermc.types.unwrapNamed
 import com.typewritermc.types.use
 import skirout.editor.v1.expression.ExpressionNode
+import skirout.editor.v1.type_catalog.DataValue
+import skirout.editor.v1.type_catalog.ItemId
+import skirout.editor.v1.type_catalog.ListItem
+import skirout.editor.v1.type_catalog.MapRow
 import skirout.editor.v1.type_catalog.TypeDefinitionId
 import skirout.editor.v1.type_catalog.TypeUse
 
@@ -130,7 +138,7 @@ class CapturedAuthoringReads(
         located as LocatedValue.Available
         observe(InputIdentity.Value(path.location))
         val named =
-            located.value as? DataValue.Named
+            located.value as? DataValue.NamedWrapper
                 ?: return failed(
                     "expected_named_representation",
                     "A representation read requires a named authored value.",
@@ -146,7 +154,7 @@ class CapturedAuthoringReads(
             ).cast()
         }
         val payload = named.payload
-        if (payload == DataValue.Unfilled || payload == DataValue.Null) return unavailable(path.location)
+        if (payload == DataValue.UNFILLED || payload == DataValue.NULL) return unavailable(path.location)
         val checked = resolve(representation, path.location) ?: return Availability.Failed(failures.last())
         val complete =
             when (val result = checked.complete(payload)) {
@@ -198,8 +206,8 @@ class CapturedAuthoringReads(
             is LocatedValue.Available -> {
                 observe(InputIdentity.Value(path.location))
                 when (located.value) {
-                    DataValue.Unfilled -> unavailable(path.location)
-                    DataValue.Null -> Availability.Available(false)
+                    DataValue.UNFILLED -> unavailable(path.location)
+                    DataValue.NULL -> Availability.Available(false)
                     else -> Availability.Available(true)
                 }
             }
@@ -248,9 +256,9 @@ class CapturedAuthoringReads(
             }
 
             is LocatedValue.Available -> {
-                if (located.value == DataValue.Unfilled || located.value == DataValue.Null) return unavailable(path.location)
+                if (located.value == DataValue.UNFILLED || located.value == DataValue.NULL) return unavailable(path.location)
                 val named =
-                    located.value as? DataValue.Named
+                    located.value as? DataValue.NamedWrapper
                         ?: return failed(
                             "expected_named_binding",
                             "A draft binding requires a named authored value.",
@@ -294,8 +302,8 @@ class CapturedAuthoringReads(
             is LocatedValue.Available -> {
                 observe(InputIdentity.Value(path.location))
                 val value = located.value
-                if (value == DataValue.Unfilled || value == DataValue.Null) return unavailable(path.location)
-                val actual = (value as? DataValue.Named)?.actualType?.use ?: path.expected
+                if (value == DataValue.UNFILLED || value == DataValue.NULL) return unavailable(path.location)
+                val actual = (value as? DataValue.NamedWrapper)?.actualType?.use ?: path.expected
                 if (!view.original.catalog.checked
                         .isReadableAs(actual, path.expected)
                 ) {
@@ -318,19 +326,19 @@ class CapturedAuthoringReads(
         return when (val value = valueAt(path.location)) {
             is LocatedValue.Available -> {
                 when (val data = value.value.unwrapNamed()) {
-                    is DataValue.ListValue -> {
+                    is DataValue.ListValueWrapper -> {
                         data.items.map(ListItem::id)
                     }
 
-                    is DataValue.SetValue -> {
+                    is DataValue.SetValueWrapper -> {
                         data.items.map(ListItem::id)
                     }
 
-                    is DataValue.MapValue -> {
+                    is DataValue.MapValueWrapper -> {
                         data.rows.map(MapRow::id)
                     }
 
-                    DataValue.Unfilled -> {
+                    DataValue.UNFILLED -> {
                         unavailable(path.location)
                         emptyList()
                     }
@@ -423,8 +431,8 @@ class CapturedAuthoringReads(
         if (located is LocatedValue.Invalid) return failed(located.code, located.message, listOf(located.at))
         located as LocatedValue.Available
         observe(InputIdentity.Value(path.location))
-        if (located.value == DataValue.Unfilled) return unavailable(path.location)
-        val actual = (located.value as? DataValue.Named)?.actualType?.use ?: path.expected
+        if (located.value == DataValue.UNFILLED) return unavailable(path.location)
+        val actual = (located.value as? DataValue.NamedWrapper)?.actualType?.use ?: path.expected
         if (!view.original.catalog.checked
                 .isReadableAs(actual, path.expected)
         ) {
@@ -465,7 +473,7 @@ class CapturedAuthoringReads(
 
             is LocatedValue.Available -> {
                 observe(InputIdentity.Value(location))
-                if (located.value == DataValue.Unfilled) unavailable(location) else Availability.Available(located.value)
+                if (located.value == DataValue.UNFILLED) unavailable(location) else Availability.Available(located.value)
             }
         }
     }
@@ -486,7 +494,7 @@ class CapturedAuthoringReads(
                 return
             }
             when (value) {
-                is DataValue.Named -> {
+                is DataValue.NamedWrapper -> {
                     observe(InputIdentity.Form(at))
                     val checked =
                         value.actualType
@@ -505,21 +513,21 @@ class CapturedAuthoringReads(
                     visit(resource, value.payload, at)
                 }
 
-                is DataValue.Record -> {
-                    value.fields.forEach { (name, field) -> visit(resource, field, at.field(name)) }
+                is DataValue.RecordWrapper -> {
+                    value.fields.forEach { field -> visit(resource, field.value, at.field(field.name)) }
                 }
 
-                is DataValue.ListValue -> {
+                is DataValue.ListValueWrapper -> {
                     observe(InputIdentity.Membership(at))
                     value.items.forEach { visit(resource, it.value, at.item(it.id)) }
                 }
 
-                is DataValue.SetValue -> {
+                is DataValue.SetValueWrapper -> {
                     observe(InputIdentity.Membership(at))
                     value.items.forEach { visit(resource, it.value, at.item(it.id)) }
                 }
 
-                is DataValue.MapValue -> {
+                is DataValue.MapValueWrapper -> {
                     observe(InputIdentity.Membership(at))
                     value.rows.forEach { row ->
                         visit(resource, row.key, at.item(row.id).mapKey())
@@ -650,7 +658,7 @@ class CapturedAuthoringReads(
         }
         val located = valueAt(location) as? LocatedValue.Available ?: return null
         observe(InputIdentity.Form(location))
-        val named = located.value as? DataValue.Named ?: return null
+        val named = located.value as? DataValue.NamedWrapper ?: return null
         val checked = resolve(named.actualType.use, location) ?: return null
         if (!checked.represents(owner)) return null
         return DraftBinding(
@@ -689,7 +697,7 @@ class CapturedAuthoringReads(
                     when (segment) {
                         is FieldPatternSegment.Field -> {
                             val value = (valueAt(location) as? LocatedValue.Available)?.value?.unwrapNamed()
-                            if (value == DataValue.Null) emptyList() else listOf(location.field(segment.name))
+                            if (value == DataValue.NULL) emptyList() else listOf(location.field(segment.name))
                         }
 
                         FieldPatternSegment.Items -> {
@@ -713,10 +721,10 @@ class CapturedAuthoringReads(
         val record = view.resources[location.resource] ?: return LocatedValue.Missing(location)
         if (location.path.segments.isEmpty()) {
             val selection = record.configuration as? TypeSelection.Complete ?: return LocatedValue.Missing(location)
-            return LocatedValue.Available(DataValue.Named(selection.use, DataValue.Record(record.fields)))
+            return LocatedValue.Available(DataValue.named(selection.use, DataValue.record(record.fields)))
         }
         val result =
-            DataValue.Record(record.fields).locate(location.path) { step ->
+            DataValue.record(record.fields).locate(location.path) { step ->
                 val at = ValueLocation(location.resource, step.at)
                 when (step) {
                     is StructuralStep.Form -> observe(InputIdentity.Form(at))
@@ -758,15 +766,15 @@ class CapturedAuthoringReads(
         return when (val located = valueAt(location)) {
             is LocatedValue.Available -> {
                 when (val value = located.value.unwrapNamed()) {
-                    is DataValue.ListValue -> {
+                    is DataValue.ListValueWrapper -> {
                         value.items.map { location.item(it.id) }
                     }
 
-                    is DataValue.SetValue -> {
+                    is DataValue.SetValueWrapper -> {
                         value.items.map { location.item(it.id) }
                     }
 
-                    is DataValue.MapValue -> {
+                    is DataValue.MapValueWrapper -> {
                         when (part) {
                             CollectionPart.Item -> {
                                 value.rows.flatMap {

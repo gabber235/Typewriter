@@ -3,14 +3,15 @@ package com.typewritermc.presentation
 import com.typewritermc.expression.Expr
 import com.typewritermc.expression.Handled
 import com.typewritermc.expression.literal
-import com.typewritermc.types.DataValue
 import com.typewritermc.types.Icon
-import com.typewritermc.types.skir.SkirDataValueCodec
+import com.typewritermc.types.integer
+import com.typewritermc.types.requirePortable
 import com.typewritermc.types.skir.getOrThrow
 import skirout.editor.v1.presentation.DateTimeZone
 import skirout.editor.v1.presentation.PresentationElement
 import skirout.editor.v1.presentation.PresentationNode
 import skirout.editor.v1.presentation.RelativeTimeStyle
+import skirout.editor.v1.type_catalog.DataValue
 import kotlin.time.Instant
 
 internal class RuntimePresentationContent(
@@ -228,9 +229,7 @@ internal class RuntimePresentationContent(
             cases.map { candidate ->
                 skirout.editor.v1.presentation.StatusCase(
                     match =
-                        com.typewritermc.types.skir.SkirDataValueCodec
-                            .encode(portableLiteral(candidate.value))
-                            .getOrThrow(),
+                        portableLiteral(candidate.value).requirePortable(),
                     appearance = candidate.appearance.wire(state),
                 )
             }
@@ -264,20 +263,20 @@ internal class RuntimePresentationContent(
 
 private fun portableLiteral(value: Any?): DataValue =
     when (value) {
-        null -> DataValue.Null
+        null -> DataValue.NULL
         is DataValue -> value
-        is String -> DataValue.StringValue(value)
-        is Boolean -> DataValue.Boolean(value)
-        is Byte -> DataValue.Integer(value.toLong().toBigInteger())
-        is Short -> DataValue.Integer(value.toLong().toBigInteger())
-        is Int -> DataValue.Integer(value.toBigInteger())
-        is Long -> DataValue.Integer(value.toBigInteger())
-        is UByte -> DataValue.Integer(value.toLong().toBigInteger())
-        is UShort -> DataValue.Integer(value.toLong().toBigInteger())
-        is UInt -> DataValue.Integer(value.toLong().toBigInteger())
-        is ULong -> DataValue.Integer(value.toString().toBigInteger())
-        is Float -> DataValue.Float(value.toDouble())
-        is Double -> DataValue.Float(value)
+        is String -> DataValue.StringValueWrapper(value)
+        is Boolean -> DataValue.BooleanWrapper(value)
+        is Byte -> DataValue.integer(value.toLong().toBigInteger())
+        is Short -> DataValue.integer(value.toLong().toBigInteger())
+        is Int -> DataValue.integer(value.toBigInteger())
+        is Long -> DataValue.integer(value.toBigInteger())
+        is UByte -> DataValue.integer(value.toLong().toBigInteger())
+        is UShort -> DataValue.integer(value.toLong().toBigInteger())
+        is UInt -> DataValue.integer(value.toLong().toBigInteger())
+        is ULong -> DataValue.integer(value.toString().toBigInteger())
+        is Float -> DataValue.FloatWrapper(value.toDouble())
+        is Double -> DataValue.FloatWrapper(value)
         else -> throw IllegalArgumentException("A status case value must have a portable literal representation.")
     }
 

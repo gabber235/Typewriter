@@ -6,7 +6,6 @@ import com.typewritermc.authoring.AppliedNativeArguments
 import com.typewritermc.authoring.AuthoringRecord
 import com.typewritermc.authoring.Availability
 import com.typewritermc.authoring.GeneratedSdkApi
-import com.typewritermc.authoring.ItemId
 import com.typewritermc.authoring.NativeBindingId
 import com.typewritermc.authoring.PathSegment
 import com.typewritermc.authoring.TypeSelection
@@ -46,16 +45,17 @@ import com.typewritermc.realm.authoring.InMemoryAuthoringViewStore
 import com.typewritermc.realm.compiler.AuthoringAcceptance
 import com.typewritermc.realm.compiler.CapturedAssessment
 import com.typewritermc.realm.repository.conflicts
-import com.typewritermc.types.DataValue
 import com.typewritermc.types.GeneratedNativeField
 import com.typewritermc.types.GeneratedRecordNativeBinding
-import com.typewritermc.types.ListItem
-import com.typewritermc.types.MapRow
 import com.typewritermc.types.NativeBinding
 import com.typewritermc.types.NativeBindingFactory
 import com.typewritermc.types.ResourceId
+import com.typewritermc.types.mapValue
+import com.typewritermc.types.named
 import com.typewritermc.types.namedUse
 import com.typewritermc.types.qualified
+import com.typewritermc.types.record
+import com.typewritermc.types.setValue
 import com.typewritermc.types.template
 import com.typewritermc.types.use
 import de.infix.testBalloon.framework.core.testSuite
@@ -69,9 +69,13 @@ import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runTest
 import skirout.editor.v1.expression.ExpressionNode
 import skirout.editor.v1.type_catalog.CollectionKind
+import skirout.editor.v1.type_catalog.DataValue
 import skirout.editor.v1.type_catalog.DeclarationOwner
 import skirout.editor.v1.type_catalog.FieldDeclaration
 import skirout.editor.v1.type_catalog.FieldOwner
+import skirout.editor.v1.type_catalog.ItemId
+import skirout.editor.v1.type_catalog.ListItem
+import skirout.editor.v1.type_catalog.MapRow
 import skirout.editor.v1.type_catalog.ParameterKey
 import skirout.editor.v1.type_catalog.RepresentationTemplate
 import skirout.editor.v1.type_catalog.RuleId
@@ -453,22 +457,22 @@ val RealmCheckRuntimeTest by testSuite {
         runTest {
             val resource = ResourceId("duplicates")
             val repeated =
-                DataValue.Named(
+                DataValue.named(
                     DUPLICATE_VALUE_USE,
-                    DataValue.Record(
+                    DataValue.record(
                         linkedMapOf(
-                            "first" to DataValue.StringValue("same"),
-                            "second" to DataValue.StringValue("value"),
+                            "first" to DataValue.StringValueWrapper("same"),
+                            "second" to DataValue.StringValueWrapper("value"),
                         ),
                     ),
                 )
             val equivalent =
-                DataValue.Named(
+                DataValue.named(
                     DUPLICATE_VALUE_USE,
-                    DataValue.Record(
+                    DataValue.record(
                         linkedMapOf(
-                            "second" to DataValue.StringValue("value"),
-                            "first" to DataValue.StringValue("same"),
+                            "second" to DataValue.StringValueWrapper("value"),
+                            "first" to DataValue.StringValueWrapper("same"),
                         ),
                     ),
                 )
@@ -477,22 +481,30 @@ val RealmCheckRuntimeTest by testSuite {
                     TypeSelection.Complete(TEST_TYPE.namedUse()),
                     mapOf(
                         "values" to
-                            DataValue.Named(
+                            DataValue.named(
                                 DUPLICATE_SET_USE,
-                                DataValue.SetValue(
+                                DataValue.setValue(
                                     listOf(
-                                        ListItem(ItemId("set_first"), repeated),
-                                        ListItem(ItemId("set_duplicate"), equivalent),
+                                        ListItem(id = ItemId(value = "set_first"), value = repeated),
+                                        ListItem(id = ItemId(value = "set_duplicate"), value = equivalent),
                                     ),
                                 ),
                             ),
                         "mapping" to
-                            DataValue.Named(
+                            DataValue.named(
                                 DUPLICATE_MAP_USE,
-                                DataValue.MapValue(
+                                DataValue.mapValue(
                                     listOf(
-                                        MapRow(ItemId("map_first"), repeated, DataValue.StringValue("one")),
-                                        MapRow(ItemId("map_duplicate"), equivalent, DataValue.StringValue("two")),
+                                        MapRow(
+                                            id = ItemId(value = "map_first"),
+                                            key = repeated,
+                                            value = DataValue.StringValueWrapper("one"),
+                                        ),
+                                        MapRow(
+                                            id = ItemId(value = "map_duplicate"),
+                                            key = equivalent,
+                                            value = DataValue.StringValueWrapper("two"),
+                                        ),
                                     ),
                                 ),
                             ),
@@ -516,22 +528,22 @@ val RealmCheckRuntimeTest by testSuite {
                         )
                 }
 
-            intrinsic.map { it.code } shouldBe listOf("duplicate_set_value", "duplicate_map_key")
+            intrinsic.map { it.code } shouldBe listOf("duplicate_map_key", "duplicate_set_value")
             intrinsic.map { it.primary } shouldBe
                 listOf(
-                    ValueLocation(
-                        resource,
-                        ValuePath(listOf(PathSegment.Field("values"), PathSegment.Item(ItemId("set_duplicate")))),
-                    ),
                     ValueLocation(
                         resource,
                         ValuePath(
                             listOf(
                                 PathSegment.Field("mapping"),
-                                PathSegment.Item(ItemId("map_duplicate")),
+                                PathSegment.Item(ItemId(value = "map_duplicate")),
                                 PathSegment.MapKey,
                             ),
                         ),
+                    ),
+                    ValueLocation(
+                        resource,
+                        ValuePath(listOf(PathSegment.Field("values"), PathSegment.Item(ItemId(value = "set_duplicate")))),
                     ),
                 )
 

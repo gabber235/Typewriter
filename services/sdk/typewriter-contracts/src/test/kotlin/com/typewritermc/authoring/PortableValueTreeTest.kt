@@ -1,20 +1,25 @@
 package com.typewritermc.authoring
 
-import com.typewritermc.types.DataValue
-import com.typewritermc.types.ListItem
-import com.typewritermc.types.MapRow
+import com.typewritermc.types.listValue
+import com.typewritermc.types.mapValue
+import com.typewritermc.types.named
 import com.typewritermc.types.namedUse
 import com.typewritermc.types.qualified
+import com.typewritermc.types.record
 import com.typewritermc.types.use
 import de.infix.testBalloon.framework.core.testSuite
 import io.kotest.matchers.collections.shouldContainExactly
 import io.kotest.matchers.shouldBe
+import skirout.editor.v1.type_catalog.DataValue
+import skirout.editor.v1.type_catalog.ItemId
+import skirout.editor.v1.type_catalog.ListItem
+import skirout.editor.v1.type_catalog.MapRow
 import skirout.editor.v1.type_catalog.ScalarKind
 import skirout.editor.v1.type_catalog.TypeDefinitionId
 
 val PortableValueTreeTest by testSuite {
     test("map rows remain distinct locations and expose structural observations") {
-        val row = ItemId("row")
+        val row = ItemId(value = "row")
         val path =
             ValuePath(
                 listOf(
@@ -24,17 +29,17 @@ val PortableValueTreeTest by testSuite {
                 ),
             )
         val value =
-            DataValue.Record(
+            DataValue.record(
                 mapOf(
                     "mapping" to
-                        DataValue.Named(
+                        DataValue.named(
                             TypeDefinitionId.qualified("test", "mapping").namedUse(),
-                            DataValue.MapValue(
+                            DataValue.mapValue(
                                 listOf(
                                     MapRow(
-                                        row,
-                                        DataValue.StringValue("key"),
-                                        DataValue.StringValue("value"),
+                                        id = row,
+                                        key = DataValue.StringValueWrapper("key"),
+                                        value = DataValue.StringValueWrapper("value"),
                                     ),
                                 ),
                             ),
@@ -43,7 +48,7 @@ val PortableValueTreeTest by testSuite {
             )
         val steps = mutableListOf<StructuralStep>()
 
-        value.locate(path, steps::add) shouldBe LocatedPortableValue.Value(DataValue.StringValue("value"))
+        value.locate(path, steps::add) shouldBe LocatedPortableValue.Value(DataValue.StringValueWrapper("value"))
         steps shouldContainExactly
             listOf(
                 StructuralStep.Form(ValuePath()),
@@ -61,35 +66,38 @@ val PortableValueTreeTest by testSuite {
     }
 
     test("field writing distinguishes terminal insertion from a missing parent") {
-        val root = DataValue.Record(emptyMap())
+        val root = DataValue.record(emptyMap())
         val terminal = ValuePath(listOf(PathSegment.Field("created")))
         val nested = ValuePath(listOf(PathSegment.Field("missing"), PathSegment.Field("child")))
 
-        root.replace(terminal, DataValue.StringValue("value")) shouldBe ValueReplacement.Unavailable(terminal)
-        root.writeField(terminal, DataValue.StringValue("value")) shouldBe
+        root.replace(terminal, DataValue.StringValueWrapper("value")) shouldBe ValueReplacement.Unavailable(terminal)
+        root.writeField(terminal, DataValue.StringValueWrapper("value")) shouldBe
             ValueReplacement.Replaced(
-                DataValue.Record(mapOf("created" to DataValue.StringValue("value"))),
+                DataValue.record(mapOf("created" to DataValue.StringValueWrapper("value"))),
             )
-        root.writeField(nested, DataValue.StringValue("value")) shouldBe ValueReplacement.Unavailable(nested)
+        root.writeField(nested, DataValue.StringValueWrapper("value")) shouldBe ValueReplacement.Unavailable(nested)
     }
 
     test("descendants preserve named wrappers and map branch paths") {
-        val row = ItemId("row")
+        val row = ItemId(value = "row")
         val field = ValuePath(listOf(PathSegment.Field("wrapped")))
         val value =
-            DataValue.Record(
+            DataValue.record(
                 mapOf(
                     "wrapped" to
-                        DataValue.Named(
+                        DataValue.named(
                             TypeDefinitionId.qualified("test", "wrapped").namedUse(listOf(ScalarKind.TEXT.use)),
-                            DataValue.MapValue(
+                            DataValue.mapValue(
                                 listOf(
                                     MapRow(
-                                        row,
-                                        DataValue.StringValue("key"),
-                                        DataValue.ListValue(
-                                            listOf(ListItem(ItemId("value"), DataValue.StringValue("nested"))),
-                                        ),
+                                        id = row,
+                                        key = DataValue.StringValueWrapper("key"),
+                                        value =
+                                            DataValue.listValue(
+                                                listOf(
+                                                    ListItem(id = ItemId(value = "value"), value = DataValue.StringValueWrapper("nested")),
+                                                ),
+                                            ),
                                     ),
                                 ),
                             ),
@@ -109,7 +117,7 @@ val PortableValueTreeTest by testSuite {
                         PathSegment.Field("wrapped"),
                         PathSegment.Item(row),
                         PathSegment.MapValue,
-                        PathSegment.Item(ItemId("value")),
+                        PathSegment.Item(ItemId(value = "value")),
                     ),
                 ),
             )

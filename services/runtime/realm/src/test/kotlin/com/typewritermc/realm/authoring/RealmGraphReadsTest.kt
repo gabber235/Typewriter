@@ -3,7 +3,6 @@ package com.typewritermc.realm.authoring
 import com.typewritermc.authoring.AuthoringRecord
 import com.typewritermc.authoring.Availability
 import com.typewritermc.authoring.DraftBinding
-import com.typewritermc.authoring.ItemId
 import com.typewritermc.authoring.LinkInspectionQuery
 import com.typewritermc.authoring.ReachabilityQuery
 import com.typewritermc.authoring.RelationSelection
@@ -27,14 +26,12 @@ import com.typewritermc.realm.checking.EmptyProviders
 import com.typewritermc.realm.checking.dependencies
 import com.typewritermc.realm.repository.conflicts
 import com.typewritermc.realm.repository.valueAt
-import com.typewritermc.types.DataValue
 import com.typewritermc.types.EndpointBindingTemplate
 import com.typewritermc.types.EndpointCardinality
 import com.typewritermc.types.EndpointDefinition
 import com.typewritermc.types.EndpointSlot
 import com.typewritermc.types.FactoryNativeBindingRegistry
 import com.typewritermc.types.LinkTarget
-import com.typewritermc.types.ListItem
 import com.typewritermc.types.NativeBindingRegistry
 import com.typewritermc.types.RelationContract
 import com.typewritermc.types.RelationDeletePolicy
@@ -43,18 +40,27 @@ import com.typewritermc.types.RelationId
 import com.typewritermc.types.ResourceId
 import com.typewritermc.types.catalog.CheckedCatalog
 import com.typewritermc.types.catalog.DefaultCheckedCatalog
+import com.typewritermc.types.endpoint
+import com.typewritermc.types.fields
+import com.typewritermc.types.link
+import com.typewritermc.types.listValue
+import com.typewritermc.types.named
 import com.typewritermc.types.namedTemplate
 import com.typewritermc.types.namedUse
 import com.typewritermc.types.nullable
 import com.typewritermc.types.qualified
+import com.typewritermc.types.record
 import com.typewritermc.types.template
 import de.infix.testBalloon.framework.core.testSuite
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.types.shouldBeInstanceOf
 import skirout.editor.v1.type_catalog.CollectionKind
+import skirout.editor.v1.type_catalog.DataValue
 import skirout.editor.v1.type_catalog.EndpointId
 import skirout.editor.v1.type_catalog.FieldDeclaration
 import skirout.editor.v1.type_catalog.FieldOwner
+import skirout.editor.v1.type_catalog.ItemId
+import skirout.editor.v1.type_catalog.ListItem
 import skirout.editor.v1.type_catalog.ParameterKey
 import skirout.editor.v1.type_catalog.RepresentationTemplate
 import skirout.editor.v1.type_catalog.ScalarKind
@@ -84,9 +90,9 @@ class RealmGraphReadsTest {
                             graphRecord(unrelated, emptyList()).fields +
                                 (
                                     "bad" to
-                                        DataValue.Named(
+                                        DataValue.named(
                                             BAD_LINK_USE,
-                                            DataValue.Link(EDGE_SOURCE, LinkTarget(e, null)),
+                                            DataValue.link(EDGE_SOURCE, LinkTarget(e, null)),
                                         )
                                 ),
                     ),
@@ -463,16 +469,17 @@ class RealmGraphReadsTest {
                     resources.getValue(source).fields +
                         (
                             "buttons" to
-                                DataValue.Named(
+                                DataValue.named(
                                     BUTTON_LIST_USE,
-                                    DataValue.ListValue(
+                                    DataValue.listValue(
                                         listOf(
                                             ListItem(
-                                                ItemId("button"),
-                                                DataValue.Named(
-                                                    BUTTON_USE,
-                                                    DataValue.Record(mapOf("target" to DataValue.Unfilled)),
-                                                ),
+                                                id = ItemId(value = "button"),
+                                                value =
+                                                    DataValue.named(
+                                                        BUTTON_USE,
+                                                        DataValue.record(mapOf("target" to DataValue.UNFILLED)),
+                                                    ),
                                             ),
                                         ),
                                     ),
@@ -480,9 +487,9 @@ class RealmGraphReadsTest {
                         ) +
                         (
                             "optional" to
-                                DataValue.Named(
+                                DataValue.named(
                                     OPTIONAL_LINK_HOLDER_USE,
-                                    DataValue.Record(mapOf("target" to DataValue.Unfilled)),
+                                    DataValue.record(mapOf("target" to DataValue.UNFILLED)),
                                 )
                         ),
             )
@@ -514,7 +521,7 @@ class RealmGraphReadsTest {
                         com.typewritermc.authoring.PathSegment
                             .Field("buttons"),
                         com.typewritermc.authoring.PathSegment
-                            .Item(ItemId("button")),
+                            .Item(ItemId(value = "button")),
                     ),
                 ),
             )
@@ -575,7 +582,7 @@ class RealmGraphReadsTest {
                         com.typewritermc.authoring.PathSegment
                             .Field("buttons"),
                         com.typewritermc.authoring.PathSegment
-                            .Item(ItemId("button")),
+                            .Item(ItemId(value = "button")),
                         com.typewritermc.authoring.PathSegment
                             .Field("target"),
                     ),
@@ -624,28 +631,28 @@ private fun graphRecord(
         TypeSelection.Complete(NODE_USE),
         mapOf(
             "outgoing" to
-                DataValue.Named(
+                DataValue.named(
                     EDGE_LIST_USE,
-                    DataValue.ListValue(
+                    DataValue.listValue(
                         targets.mapIndexed { index, target ->
                             ListItem(
-                                ItemId("${source.value}_$index"),
-                                DataValue.Named(EDGE_LINK_USE, DataValue.Link(EDGE_SOURCE, LinkTarget(target, null))),
+                                id = ItemId(value = "${source.value}_$index"),
+                                value = DataValue.named(EDGE_LINK_USE, DataValue.link(EDGE_SOURCE, LinkTarget(target, null))),
                             )
                         },
                     ),
                 ),
             "bad" to
                 if (badTarget == null) {
-                    DataValue.Unfilled
+                    DataValue.UNFILLED
                 } else {
-                    DataValue.Named(BAD_LINK_USE, DataValue.Link(BAD_ENDPOINT, LinkTarget(badTarget, null)))
+                    DataValue.named(BAD_LINK_USE, DataValue.link(BAD_ENDPOINT, LinkTarget(badTarget, null)))
                 },
-            "buttons" to DataValue.Named(BUTTON_LIST_USE, DataValue.ListValue(emptyList())),
-            "optional" to DataValue.Null,
-            "message" to DataValue.Unfilled,
-            "nested" to DataValue.Unfilled,
-            "expanding" to DataValue.Unfilled,
+            "buttons" to DataValue.named(BUTTON_LIST_USE, DataValue.listValue(emptyList())),
+            "optional" to DataValue.NULL,
+            "message" to DataValue.UNFILLED,
+            "nested" to DataValue.UNFILLED,
+            "expanding" to DataValue.UNFILLED,
         ),
     )
 

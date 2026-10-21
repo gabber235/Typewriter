@@ -11,7 +11,6 @@ import com.typewritermc.discovery.ProviderOrigin
 import com.typewritermc.discovery.affected
 import com.typewritermc.presentation.PresentationTarget
 import com.typewritermc.presentation.matches
-import com.typewritermc.types.DataValue
 import com.typewritermc.types.NativeBinding
 import com.typewritermc.types.NativeBindingRegistry
 import com.typewritermc.types.ResourceIdDefinition
@@ -22,6 +21,7 @@ import com.typewritermc.types.catalog.DeclarationDiagnostic
 import com.typewritermc.types.catalog.DeclarationOrigin
 import com.typewritermc.types.catalog.Resolution
 import com.typewritermc.types.catalog.resolve
+import com.typewritermc.types.fields
 import com.typewritermc.types.namedUse
 import com.typewritermc.types.nullable
 import com.typewritermc.types.requireValid
@@ -36,6 +36,7 @@ import skirout.editor.v1.operation.OperationAvailability
 import skirout.editor.v1.operation.OperationDrop
 import skirout.editor.v1.operation.OperationTargets
 import skirout.editor.v1.operation.ResourceOperationDefinition
+import skirout.editor.v1.type_catalog.DataValue
 import skirout.editor.v1.type_catalog.NamedTypeTemplate
 import skirout.editor.v1.type_catalog.NamedTypeUse
 import skirout.editor.v1.type_catalog.PresentationId

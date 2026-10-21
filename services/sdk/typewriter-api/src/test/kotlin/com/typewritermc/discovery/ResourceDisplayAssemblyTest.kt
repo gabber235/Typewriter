@@ -7,7 +7,6 @@ import com.typewritermc.authoring.BoundCollectionPath
 import com.typewritermc.authoring.BoundPath
 import com.typewritermc.authoring.DisplayFormulas
 import com.typewritermc.authoring.DraftBinding
-import com.typewritermc.authoring.ItemId
 import com.typewritermc.authoring.ReadContext
 import com.typewritermc.authoring.RealmRootDefinition
 import com.typewritermc.authoring.TypeSelection
@@ -32,7 +31,6 @@ import com.typewritermc.library.fields
 import com.typewritermc.presentation.RuntimePresentationQueries
 import com.typewritermc.types.Color
 import com.typewritermc.types.ColorDefinition
-import com.typewritermc.types.DataValue
 import com.typewritermc.types.EndpointCardinality
 import com.typewritermc.types.EndpointDefinition
 import com.typewritermc.types.EndpointSlot
@@ -46,14 +44,20 @@ import com.typewritermc.types.ResourceId
 import com.typewritermc.types.ResourceTarget
 import com.typewritermc.types.TypeDisplay
 import com.typewritermc.types.catalog.DeclarationOrigin
+import com.typewritermc.types.fields
+import com.typewritermc.types.integer
+import com.typewritermc.types.named
 import com.typewritermc.types.namedTemplate
 import com.typewritermc.types.namedUse
 import com.typewritermc.types.qualified
+import com.typewritermc.types.record
 import com.typewritermc.types.use
 import de.infix.testBalloon.framework.core.testSuite
 import io.kotest.matchers.collections.shouldNotContain
 import io.kotest.matchers.shouldBe
+import skirout.editor.v1.type_catalog.DataValue
 import skirout.editor.v1.type_catalog.EndpointId
+import skirout.editor.v1.type_catalog.ItemId
 import skirout.editor.v1.type_catalog.RepresentationTemplate
 import skirout.editor.v1.type_catalog.TypeDefinition
 import skirout.editor.v1.type_catalog.TypeDefinitionId
@@ -78,7 +82,7 @@ val ResourceDisplayAssemblyTest by testSuite {
             ResourceTarget.Type(PageDefinition.id.namedTemplate())
         displays.displayFor(CueDefinition.id, assembly.checked)?.target shouldBe ResourceTarget.AnyResource
         assembly.label(
-            AuthoringRecord(TypeSelection.Complete(fixturePage.namedUse()), mapOf("name" to DataValue.StringValue("Intro"))),
+            AuthoringRecord(TypeSelection.Complete(fixturePage.namedUse()), mapOf("name" to DataValue.StringValueWrapper("Intro"))),
         ) shouldBe
             "Intro"
     }
@@ -97,7 +101,7 @@ val ResourceDisplayAssemblyTest by testSuite {
         formulas.target shouldBe ResourceTarget.AnyResource
         assembly.label(record) shouldBe "Fixture resource"
         assembly.evaluate(formulas.accent, record) shouldBe
-            DataValue.Named(ColorDefinition.use, DataValue.Integer(0xFF123456u.toString().toBigInteger()))
+            DataValue.named(ColorDefinition.use, DataValue.integer(0xFF123456u.toString().toBigInteger()))
     }
 
     test("a display formula that reads a host context input is rejected") {
@@ -256,11 +260,11 @@ private fun book(title: String) =
     AuthoringRecord(
         TypeSelection.Complete(BookDefinition.use),
         mapOf(
-            "title" to DataValue.StringValue(title),
-            "icon" to DataValue.Unfilled,
-            "color" to DataValue.Unfilled,
-            "tags" to DataValue.Unfilled,
-            "pages" to DataValue.Unfilled,
+            "title" to DataValue.StringValueWrapper(title),
+            "icon" to DataValue.UNFILLED,
+            "color" to DataValue.UNFILLED,
+            "tags" to DataValue.UNFILLED,
+            "pages" to DataValue.UNFILLED,
         ),
     )
 
@@ -310,7 +314,7 @@ private fun CatalogAssembly.evaluate(
     formula: com.typewritermc.expression.CheckedExpressionProgram,
     record: AuthoringRecord,
 ): DataValue? {
-    val subject = DataValue.Named((record.configuration as TypeSelection.Complete).use, DataValue.Record(record.fields))
+    val subject = DataValue.named((record.configuration as TypeSelection.Complete).use, DataValue.record(record.fields))
     val types = editorCatalog.types.associateBy { it.definition.id }
     val queries =
         object : com.typewritermc.expression.CanonicalQueryReader {

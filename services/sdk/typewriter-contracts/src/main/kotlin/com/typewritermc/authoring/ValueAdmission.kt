@@ -1,17 +1,25 @@
 package com.typewritermc.authoring
 
-import com.typewritermc.types.DataValue
 import com.typewritermc.types.ResourceId
+import com.typewritermc.types.actualType
 import com.typewritermc.types.bits
 import com.typewritermc.types.catalog.CheckedCatalog
 import com.typewritermc.types.catalog.CheckedType
 import com.typewritermc.types.catalog.DeclarationDiagnostic
 import com.typewritermc.types.catalog.Resolution
-import com.typewritermc.types.requireCanonicalDecimal
+import com.typewritermc.types.endpoint
+import com.typewritermc.types.field
+import com.typewritermc.types.fields
+import com.typewritermc.types.isCanonicalDecimal
+import com.typewritermc.types.items
+import com.typewritermc.types.payload
+import com.typewritermc.types.record
+import com.typewritermc.types.rows
 import com.typewritermc.types.signed
 import com.typewritermc.types.unknownVariant
 import com.typewritermc.types.use
 import skirout.editor.v1.type_catalog.CollectionKind
+import skirout.editor.v1.type_catalog.DataValue
 import skirout.editor.v1.type_catalog.EnumerationResolvedRepresentation
 import skirout.editor.v1.type_catalog.FloatWidth
 import skirout.editor.v1.type_catalog.IntegerWidth
@@ -57,7 +65,7 @@ sealed interface CompletenessResult {
     ) : CompletenessResult
 }
 
-/** Checks record shape and type compatibility while allowing [DataValue.Unfilled] at otherwise valid locations. */
+/** Checks record shape and type compatibility while allowing [DataValue.UNFILLED] at otherwise valid locations. */
 fun AuthoringRecord.validateStructure(catalog: CheckedCatalog): StructuralResult {
     val root = ValueLocation(AUTHORING_ROOT, ValuePath())
     return when (val configuration = configuration) {
@@ -69,7 +77,7 @@ fun AuthoringRecord.validateStructure(catalog: CheckedCatalog): StructuralResult
 
                 is Resolution.Ready -> {
                     val inspection = ValueInspection(catalog)
-                    inspection.validatePayload(DataValue.Record(fields), resolved.value, root)
+                    inspection.validatePayload(DataValue.record(fields), resolved.value, root)
                     inspection.structuralResult()
                 }
             }
@@ -116,7 +124,7 @@ private fun AuthoringRecord.validatePending(
     }
     dependent.forEach { (name, _) ->
         val value = fields[name] ?: return@forEach
-        if (value != DataValue.Unfilled) problems += ValueProblem(root.field(name), "dependent_field_requires_type")
+        if (value != DataValue.UNFILLED) problems += ValueProblem(root.field(name), "dependent_field_requires_type")
     }
     problems += inspection.problems
     return if (problems.isEmpty()) StructuralResult.Valid else StructuralResult.Invalid(problems)
@@ -143,18 +151,18 @@ private class ValueInspection(
         depth: Int,
     ) {
         if (!withinDepth(at, depth)) return
-        if (value == DataValue.Unfilled) {
+        if (value == DataValue.UNFILLED) {
             unfinished += at
             return
         }
         when (val use = checked.use) {
             is TypeUse.NullableWrapper -> {
-                if (value == DataValue.Null) return
+                if (value == DataValue.NULL) return
                 validateUseWithResolver(value, use.value.value, at, depth + 1)
             }
 
             is TypeUse.NamedWrapper -> {
-                val named = value as? DataValue.Named
+                val named = value as? DataValue.NamedWrapper
                 if (named == null) {
                     problem(at, "expected_named")
                     return
@@ -189,13 +197,13 @@ private class ValueInspection(
         depth: Int,
     ) {
         if (!withinDepth(at, depth)) return
-        if (value == DataValue.Unfilled) {
+        if (value == DataValue.UNFILLED) {
             unfinished += at
             return
         }
         when (expected) {
             is TypeUse.NullableWrapper -> {
-                if (value == DataValue.Null) return
+                if (value == DataValue.NULL) return
                 validateUse(value, expected.value.value, at, depth + 1)
             }
 
@@ -204,7 +212,7 @@ private class ValueInspection(
             }
 
             is TypeUse.NamedWrapper -> {
-                val named = value as? DataValue.Named
+                val named = value as? DataValue.NamedWrapper
                 if (named == null) {
                     problem(at, "expected_named")
                     return
@@ -243,7 +251,7 @@ private class ValueInspection(
         depth: Int,
     ) {
         if (!withinDepth(at, depth)) return
-        if (value == DataValue.Unfilled) {
+        if (value == DataValue.UNFILLED) {
             unfinished += at
             return
         }
@@ -275,7 +283,7 @@ private class ValueInspection(
                 }
 
                 is TypeUse.NullableWrapper -> {
-                    if (value != DataValue.Null) validateUseWithResolver(value, use.value.value, at, depth + 1)
+                    if (value != DataValue.NULL) validateUseWithResolver(value, use.value.value, at, depth + 1)
                 }
 
                 is TypeUse.NamedWrapper -> {
@@ -295,16 +303,17 @@ private class ValueInspection(
         at: ValueLocation,
         depth: Int,
     ) {
-        val record = value as? DataValue.Record
+        val record = value as? DataValue.RecordWrapper
         if (record == null) {
             problem(at, "expected_record")
             return
         }
         val fields = representation.fields.associateBy { it.key }
-        (record.fields.keys - fields.keys).forEach { name -> problem(at.field(name), "unknown_field") }
-        (fields.keys - record.fields.keys).forEach { name -> problem(at.field(name), "missing_field") }
+        val present = record.fields.mapView
+        (present.keys - fields.keys).forEach { name -> problem(at.field(name), "unknown_field") }
+        (fields.keys - present.keys).forEach { name -> problem(at.field(name), "missing_field") }
         fields.forEach { (name, field) ->
-            record.fields[name]?.let { validateUse(it, field.type, at.field(name), depth + 1) }
+            present[name]?.let { validateUse(it.value, field.type, at.field(name), depth + 1) }
         }
     }
 
@@ -316,8 +325,8 @@ private class ValueInspection(
     ) {
         val items =
             when (representation.kind) {
-                CollectionKind.LIST -> (value as? DataValue.ListValue)?.items
-                CollectionKind.SET -> (value as? DataValue.SetValue)?.items
+                CollectionKind.LIST -> (value as? DataValue.ListValueWrapper)?.items
+                CollectionKind.SET -> (value as? DataValue.SetValueWrapper)?.items
                 else -> unknownVariant(representation.kind)
             }
         if (items == null) {
@@ -335,7 +344,7 @@ private class ValueInspection(
         at: ValueLocation,
         depth: Int,
     ) {
-        val rows = (value as? DataValue.MapValue)?.rows
+        val rows = (value as? DataValue.MapValueWrapper)?.rows
         if (rows == null) {
             problem(at, "expected_map")
             return
@@ -353,12 +362,12 @@ private class ValueInspection(
         representation: EnumerationResolvedRepresentation,
         at: ValueLocation,
     ) {
-        val enum = value as? DataValue.EnumCase
+        val enum = value as? DataValue.EnumCaseWrapper
         if (enum == null) {
             problem(at, "expected_enum")
             return
         }
-        if (representation.cases.none { it.key == enum.key }) problem(at, "unknown_enum_case")
+        if (representation.cases.none { it.key == enum.value }) problem(at, "unknown_enum_case")
     }
 
     private fun validateLink(
@@ -366,7 +375,7 @@ private class ValueInspection(
         representation: LinkResolvedRepresentation,
         at: ValueLocation,
     ) {
-        val link = value as? DataValue.Link
+        val link = value as? DataValue.LinkWrapper
         if (link == null) {
             problem(at, "expected_link")
             return
@@ -382,7 +391,7 @@ private class ValueInspection(
         if (
             kind is ScalarKind.FloatWrapper &&
             kind.value.width == FloatWidth.THIRTY_TWO &&
-            value is DataValue.Float &&
+            value is DataValue.FloatWrapper &&
             value.value.isFinite() &&
             value.value.toFloat().toDouble() != value.value
         ) {
@@ -391,15 +400,15 @@ private class ValueInspection(
         }
         val valid =
             when (kind) {
-                ScalarKind.UNIT -> value == DataValue.Unit
-                ScalarKind.BOOLEAN -> value is DataValue.Boolean
-                ScalarKind.TEXT -> value is DataValue.StringValue
-                ScalarKind.BYTES -> value is DataValue.Bytes
-                is ScalarKind.IntegerWrapper -> value is DataValue.Integer && value.value.fits(kind.value.width)
-                is ScalarKind.FloatWrapper -> value is DataValue.Float && value.value.isFinite() && value.value.fits(kind.value.width)
-                ScalarKind.DECIMAL -> value is DataValue.Decimal && value.value.isCanonicalDecimal()
-                ScalarKind.TIMESTAMP -> value is DataValue.Timestamp
-                ScalarKind.DURATION -> value is DataValue.Duration
+                ScalarKind.UNIT -> value == DataValue.UNIT
+                ScalarKind.BOOLEAN -> value is DataValue.BooleanWrapper
+                ScalarKind.TEXT -> value is DataValue.StringValueWrapper
+                ScalarKind.BYTES -> value is DataValue.BytesWrapper
+                is ScalarKind.IntegerWrapper -> value is DataValue.IntegerWrapper && value.fits(kind.value.width)
+                is ScalarKind.FloatWrapper -> value is DataValue.FloatWrapper && value.fits(kind.value.width)
+                ScalarKind.DECIMAL -> value is DataValue.DecimalWrapper && value.value.isCanonicalDecimal()
+                ScalarKind.TIMESTAMP -> value is DataValue.TimestampWrapper
+                ScalarKind.DURATION -> value is DataValue.DurationWrapper
                 else -> unknownVariant(kind)
             }
         if (!valid) problem(at, "wrong_scalar")
@@ -422,6 +431,10 @@ private class ValueInspection(
     }
 }
 
+private fun DataValue.IntegerWrapper.fits(width: IntegerWidth): Boolean = value.toBigIntegerOrNull()?.fits(width) == true
+
+private fun DataValue.FloatWrapper.fits(width: FloatWidth): Boolean = value.isFinite() && value.fits(width)
+
 private fun BigInteger.fits(width: IntegerWidth): Boolean {
     val bits = width.bits
     val minimum = if (width.signed) BigInteger.ONE.shiftLeft(bits - 1).negate() else BigInteger.ZERO
@@ -440,8 +453,6 @@ private fun Double.fits(width: FloatWidth): Boolean =
         FloatWidth.SIXTY_FOUR -> true
         else -> unknownVariant(width)
     }
-
-private fun String.isCanonicalDecimal(): Boolean = runCatching { requireCanonicalDecimal("Decimal value") }.isSuccess
 
 private fun DeclarationDiagnostic.asValueProblem(at: ValueLocation) = ValueProblem(at, code)
 

@@ -23,7 +23,12 @@ import com.typewritermc.types.IconIconifyDefinition
 import com.typewritermc.types.IconSvgDefinition
 import com.typewritermc.types.SVG_ICON_TYPE_ID
 import com.typewritermc.types.StandardTypes
+import com.typewritermc.types.actualType
 import com.typewritermc.types.catalog.DefaultCheckedCatalog
+import com.typewritermc.types.field
+import com.typewritermc.types.fields
+import com.typewritermc.types.items
+import com.typewritermc.types.payload
 import com.typewritermc.types.unknownVariant
 import okio.ByteString
 import skirout.editor.v1.type_catalog.DeclaredTypeId

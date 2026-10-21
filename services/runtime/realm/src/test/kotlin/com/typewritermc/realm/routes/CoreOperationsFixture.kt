@@ -7,7 +7,6 @@ import com.typewritermc.authoring.GeneratedSdkApi
 import com.typewritermc.authoring.GraphLayoutDefinition
 import com.typewritermc.authoring.GraphPlacement
 import com.typewritermc.authoring.HierarchyPath
-import com.typewritermc.authoring.ItemId
 import com.typewritermc.authoring.PathSegment
 import com.typewritermc.authoring.Placement
 import com.typewritermc.authoring.PreparedEdit
@@ -49,16 +48,20 @@ import com.typewritermc.realm.repository.MutationPlanningResult
 import com.typewritermc.realm.testBook
 import com.typewritermc.realm.testTag
 import com.typewritermc.realm.withRealmStructure
-import com.typewritermc.types.DataValue
 import com.typewritermc.types.NativeBinding
 import com.typewritermc.types.Ref
 import com.typewritermc.types.ResourceId
+import com.typewritermc.types.actualType
 import com.typewritermc.types.catalog.Resolution
 import com.typewritermc.types.catalog.apply
 import com.typewritermc.types.encodeGeneratedDefault
+import com.typewritermc.types.fieldMap
+import com.typewritermc.types.fields
 import com.typewritermc.types.namedTemplate
 import com.typewritermc.types.namedUse
+import com.typewritermc.types.payload
 import com.typewritermc.types.qualified
+import com.typewritermc.types.requirePortable
 import com.typewritermc.types.skir.getOrThrow
 import com.typewritermc.types.template
 import com.typewritermc.types.use
@@ -74,7 +77,9 @@ import skirout.editor.v1.resource_operations.OperationWorkingOverlay
 import skirout.editor.v1.resource_operations.PrepareAuthoringActionRequest
 import skirout.editor.v1.resource_operations.ResolveDropCandidatesRequest
 import skirout.editor.v1.resource_operations.ResolveResourceOperationsRequest
+import skirout.editor.v1.type_catalog.DataValue
 import skirout.editor.v1.type_catalog.FieldOwner
+import skirout.editor.v1.type_catalog.ItemId
 import skirout.editor.v1.type_catalog.RepresentationTemplate
 import skirout.editor.v1.type_catalog.TypeDefinition
 import skirout.editor.v1.type_catalog.TypeDefinitionId
@@ -187,8 +192,8 @@ internal class CoreOperationsFixture(
 
             @Suppress("UNCHECKED_CAST")
             val binding = lease.nativeBindings.bind(checked) as NativeBinding<T>
-            val encoded = binding.encode(value) as DataValue.Named
-            return AuthoringRecord(TypeSelection.Complete(encoded.actualType), (encoded.payload as DataValue.Record).fields)
+            val encoded = binding.encode(value) as DataValue.NamedWrapper
+            return AuthoringRecord(TypeSelection.Complete(encoded.actualType), (encoded.payload as DataValue.RecordWrapper).value.fieldMap)
         }
 
         fun encodeFields(
@@ -214,7 +219,7 @@ internal class CoreOperationsFixture(
                     "book" to
                         Ref<BookPages.Page, Book>(
                             ResourceId(book),
-                            ValuePath(listOf(PathSegment.Field("pages"), PathSegment.Item(ItemId("native:$index")))),
+                            ValuePath(listOf(PathSegment.Field("pages"), PathSegment.Item(ItemId(value = "native:$index")))),
                         ),
                     "name" to "Page $index",
                     "chapter" to HierarchyPath.parse(chapter),
@@ -240,7 +245,7 @@ internal class CoreOperationsFixture(
                     "page" to
                         Ref<PageElements.Element, com.typewritermc.library.Page>(
                             ResourceId(page),
-                            ValuePath(listOf(PathSegment.Field("elements"), PathSegment.Item(ItemId("native:$index")))),
+                            ValuePath(listOf(PathSegment.Field("elements"), PathSegment.Item(ItemId(value = "native:$index")))),
                         ),
                     "name" to "Entry",
                     "placement" to placement,
@@ -315,12 +320,11 @@ internal class CoreOperationsFixture(
     ): skirout.editor.v1.type_catalog.DataValue =
         views.read { root ->
             val checked = (root.catalog.checked.resolve(type.use()) as Resolution.Ready).value
-            com.typewritermc.types.skir.SkirDataValueCodec
-                .encode(
-                    root.catalog.nativeBindings
-                        .bind(checked)
-                        .encodeGeneratedDefault(value),
-                ).getOrThrow()
+            (
+                root.catalog.nativeBindings
+                    .bind(checked)
+                    .encodeGeneratedDefault(value)
+            ).requirePortable()
         }
 
     fun resolve(vararg ids: String) = routes.resolve(resolveRequest(*ids))
@@ -384,8 +388,8 @@ internal class CoreOperationsFixture(
 
             @Suppress("UNCHECKED_CAST")
             val binding = root.catalog.nativeBindings.bind(checked) as NativeBinding<T>
-            val encoded = binding.encode(value) as DataValue.Named
-            AuthoringRecord(TypeSelection.Complete(encoded.actualType), (encoded.payload as DataValue.Record).fields)
+            val encoded = binding.encode(value) as DataValue.NamedWrapper
+            AuthoringRecord(TypeSelection.Complete(encoded.actualType), (encoded.payload as DataValue.RecordWrapper).value.fieldMap)
         }
 
     /** Plans [edit] against the saved resources and returns the resulting resources, or the planner rejection. */

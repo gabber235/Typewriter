@@ -5,9 +5,12 @@ import com.typewritermc.authoring.TypeSelection
 import com.typewritermc.authoring.complete
 import com.typewritermc.realm.authoring.AuthoringView
 import com.typewritermc.realm.checking.CapturedCheckReport
-import com.typewritermc.types.DataValue
 import com.typewritermc.types.catalog.Resolution
+import com.typewritermc.types.fields
+import com.typewritermc.types.named
+import com.typewritermc.types.record
 import com.typewritermc.types.use
+import skirout.editor.v1.type_catalog.DataValue
 
 internal fun testAssessment(
     view: AuthoringView,
@@ -17,7 +20,7 @@ internal fun testAssessment(
         view.resources.mapValues { (id, record) ->
             val actual = (record.configuration as? TypeSelection.Complete)?.use
             val checked = actual?.let { (view.catalog.checked.resolve(it.use) as? Resolution.Ready)?.value }
-            val complete = checked?.complete(DataValue.Named(actual, DataValue.Record(record.fields)))
+            val complete = checked?.complete(DataValue.named(actual, DataValue.record(record.fields)))
             when (complete) {
                 is CompletenessResult.Complete -> {
                     ResourceReadiness.Ready(complete.value, bindings.single { it.actual == actual })

@@ -2,7 +2,6 @@ package com.typewritermc.realm.compiler
 
 import com.typewritermc.authoring.AuthoringRecord
 import com.typewritermc.authoring.CompilationUnitDefinition
-import com.typewritermc.authoring.ItemId
 import com.typewritermc.authoring.TypeSelection
 import com.typewritermc.checking.CatalogGeneration
 import com.typewritermc.configuration.FieldPatternSegment
@@ -14,14 +13,12 @@ import com.typewritermc.realm.authoring.AuthoringCatalogLease
 import com.typewritermc.realm.authoring.AuthoringSeed
 import com.typewritermc.realm.authoring.InMemoryAuthoringViewStore
 import com.typewritermc.realm.checking.EmptyProviders
-import com.typewritermc.types.DataValue
 import com.typewritermc.types.EndpointBindingTemplate
 import com.typewritermc.types.EndpointCardinality
 import com.typewritermc.types.EndpointDefinition
 import com.typewritermc.types.EndpointSlot
 import com.typewritermc.types.FactoryNativeBindingRegistry
 import com.typewritermc.types.LinkTarget
-import com.typewritermc.types.ListItem
 import com.typewritermc.types.NativeBindingRegistry
 import com.typewritermc.types.RelationContract
 import com.typewritermc.types.RelationDeletePolicy
@@ -29,6 +26,9 @@ import com.typewritermc.types.RelationId
 import com.typewritermc.types.ResourceId
 import com.typewritermc.types.catalog.CheckedCatalog
 import com.typewritermc.types.catalog.DefaultCheckedCatalog
+import com.typewritermc.types.link
+import com.typewritermc.types.listValue
+import com.typewritermc.types.named
 import com.typewritermc.types.namedTemplate
 import com.typewritermc.types.namedUse
 import com.typewritermc.types.qualified
@@ -37,9 +37,12 @@ import com.typewritermc.types.use
 import de.infix.testBalloon.framework.core.testSuite
 import io.kotest.matchers.shouldBe
 import skirout.editor.v1.type_catalog.CollectionKind
+import skirout.editor.v1.type_catalog.DataValue
 import skirout.editor.v1.type_catalog.EndpointId
 import skirout.editor.v1.type_catalog.FieldDeclaration
 import skirout.editor.v1.type_catalog.FieldOwner
+import skirout.editor.v1.type_catalog.ItemId
+import skirout.editor.v1.type_catalog.ListItem
 import skirout.editor.v1.type_catalog.RepresentationTemplate
 import skirout.editor.v1.type_catalog.ScalarKind
 import skirout.editor.v1.type_catalog.TypeDefinition
@@ -127,7 +130,7 @@ val OwnershipClosureCompilerTest by testSuite {
         val unavailable =
             AuthoringRecord(
                 TypeSelection.Complete(unavailableType.namedUse()),
-                mapOf("legacy" to DataValue.StringValue("preserved")),
+                mapOf("legacy" to DataValue.StringValueWrapper("preserved")),
             )
         fixture(resources = mapOf(pageId to unavailable)).use { captured ->
             val result = with(captured.root) { compiler(captured.root).compile(pageId) } as ResourceGraphCompileResult.Blocked
@@ -149,7 +152,7 @@ val OwnershipClosureCompilerTest by testSuite {
 
     test("a complete sibling cannot hide an unfinished owned resource") {
         val sibling = ResourceId("sibling")
-        val unfinished = childRecord("draft").copy(fields = mapOf("value" to DataValue.Unfilled))
+        val unfinished = childRecord("draft").copy(fields = mapOf("value" to DataValue.UNFILLED))
         val original = mapOf(pageId to pageRecord(listOf(childId)), childId to unfinished)
         val findings =
             listOf(original, original + (sibling to childRecord("complete"))).map { records ->
@@ -197,13 +200,13 @@ private fun pageRecord(targets: List<ResourceId>) =
         TypeSelection.Complete(PAGE_USE),
         mapOf(
             "children" to
-                DataValue.Named(
+                DataValue.named(
                     CHILDREN_USE,
-                    DataValue.ListValue(
+                    DataValue.listValue(
                         targets.mapIndexed { index, target ->
                             ListItem(
-                                ItemId("child_$index"),
-                                DataValue.Named(CHILD_LINK_USE, DataValue.Link(PAGE_ENDPOINT, LinkTarget(target, null))),
+                                id = ItemId(value = "child_$index"),
+                                value = DataValue.named(CHILD_LINK_USE, DataValue.link(PAGE_ENDPOINT, LinkTarget(target, null))),
                             )
                         },
                     ),
@@ -214,14 +217,14 @@ private fun pageRecord(targets: List<ResourceId>) =
 private fun childRecord(value: String) =
     AuthoringRecord(
         TypeSelection.Complete(CHILD_USE),
-        mapOf("value" to DataValue.StringValue(value)),
+        mapOf("value" to DataValue.StringValueWrapper(value)),
     )
 
 /** A child that is a compilation unit itself. */
 private fun nestedRecord() =
     AuthoringRecord(
         TypeSelection.Complete(NESTED_USE),
-        mapOf("value" to DataValue.StringValue("nested")),
+        mapOf("value" to DataValue.StringValueWrapper("nested")),
     )
 
 private class CompilerCatalogLease private constructor(

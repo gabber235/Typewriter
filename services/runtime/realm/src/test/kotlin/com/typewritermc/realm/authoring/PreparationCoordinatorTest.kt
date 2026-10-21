@@ -11,8 +11,10 @@ import com.typewritermc.authoring.PreparedValue
 import com.typewritermc.authoring.TypeSelection
 import com.typewritermc.checking.CatalogGeneration
 import com.typewritermc.realm.checking.TestCatalogLease
-import com.typewritermc.types.DataValue
+import com.typewritermc.types.fieldMap
+import com.typewritermc.types.fields
 import com.typewritermc.types.qualified
+import com.typewritermc.types.record
 import de.infix.testBalloon.framework.core.testSuite
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.matchers.shouldBe
@@ -20,6 +22,7 @@ import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.test.runTest
+import skirout.editor.v1.type_catalog.DataValue
 import skirout.editor.v1.type_catalog.TypeDefinitionId
 import java.util.concurrent.atomic.AtomicInteger
 
@@ -54,8 +57,10 @@ val PreparationCoordinatorTestSuite by testSuite {
                     catalog = { TestCatalogLease(CATALOG) },
                     evaluator =
                         PreparationEvaluator { request, _ ->
-                            val supplied = ((request as PreparationOperation.Start).request.supplied as DataValue.Record).fields
-                            val seed = supplied.getValue("seed") as DataValue.StringValue
+                            val supplied =
+                                ((request as PreparationOperation.Start).request.supplied as DataValue.RecordWrapper)
+                                    .value.fieldMap
+                            val seed = supplied.getValue("seed") as DataValue.StringValueWrapper
                             PreparationStep.Ready(prepared(seed.value))
                         },
                 )
@@ -86,7 +91,7 @@ private fun request(supplied: String = "seed") =
             PreparationTarget.Record(
                 TypeSelection.Pending(CREATION_TYPE, listOf(ArgumentSelection.Unfilled)),
             ),
-        supplied = DataValue.Record(mapOf("seed" to DataValue.StringValue(supplied))),
+        supplied = DataValue.record(mapOf("seed" to DataValue.StringValueWrapper(supplied))),
     )
 
 private fun prepared(value: String) =
@@ -94,7 +99,7 @@ private fun prepared(value: String) =
         PreparedContent.Record(
             AuthoringRecord(
                 configuration = TypeSelection.Pending(CREATION_TYPE, listOf(ArgumentSelection.Unfilled)),
-                fields = mapOf("value" to DataValue.StringValue(value)),
+                fields = mapOf("value" to DataValue.StringValueWrapper(value)),
             ),
         ),
         emptyList(),

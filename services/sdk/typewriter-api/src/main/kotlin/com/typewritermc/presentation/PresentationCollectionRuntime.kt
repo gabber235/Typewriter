@@ -3,8 +3,10 @@ package com.typewritermc.presentation
 import com.typewritermc.expression.Expr
 import com.typewritermc.expression.Handled
 import com.typewritermc.expression.MayBeMissing
+import com.typewritermc.types.fields
+import com.typewritermc.types.items
+import com.typewritermc.types.requirePortable
 import com.typewritermc.types.skir.SkirAuthoringValueCodec
-import com.typewritermc.types.skir.SkirDataValueCodec
 import com.typewritermc.types.skir.getOrThrow
 import skirout.editor.v1.expression.ExpressionNode
 import skirout.editor.v1.presentation.CollectionGraphDirection
@@ -370,7 +372,7 @@ internal fun CollectionSource<*, *>.wire(state: PresentationBuildState): Present
 
                                         is CollectionProjectionValueSpec.Literal -> {
                                             PresentationCollectionProjectionValue.LiteralWrapper(
-                                                SkirDataValueCodec.encode(source.value).getOrThrow(),
+                                                source.value.requirePortable(),
                                             )
                                         }
                                     },

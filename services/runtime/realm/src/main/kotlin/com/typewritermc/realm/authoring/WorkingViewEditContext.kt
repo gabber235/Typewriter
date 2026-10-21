@@ -8,7 +8,6 @@ import com.typewritermc.authoring.ConnectIntent
 import com.typewritermc.authoring.EditContext
 import com.typewritermc.authoring.EditIntent
 import com.typewritermc.authoring.EditablePath
-import com.typewritermc.authoring.ItemId
 import com.typewritermc.authoring.LinkOccurrenceId
 import com.typewritermc.authoring.PreparedEdit
 import com.typewritermc.authoring.ValueLocation
@@ -16,12 +15,13 @@ import com.typewritermc.authoring.ValueProblem
 import com.typewritermc.realm.checking.CapturedAuthoringReads
 import com.typewritermc.realm.repository.AuthoringPlanningSession
 import com.typewritermc.realm.repository.requiredExpectations
-import com.typewritermc.types.DataValue
-import com.typewritermc.types.ListItem
 import com.typewritermc.types.NativeBinding
 import com.typewritermc.types.ResourceId
 import com.typewritermc.types.catalog.Resolution
 import com.typewritermc.types.immutableListCopy
+import skirout.editor.v1.type_catalog.DataValue
+import skirout.editor.v1.type_catalog.ItemId
+import skirout.editor.v1.type_catalog.ListItem
 import skirout.editor.v1.type_catalog.NamedTypeUse
 import java.util.UUID
 
@@ -85,7 +85,7 @@ internal class WorkingViewEditContext(
 
     override suspend fun <V> clear(path: EditablePath<V>) {
         require(path.binding.readContext === readContext) { "The editable path belongs to another operation observation" }
-        append(EditIntent.SetValue(path.location, DataValue.Unfilled))
+        append(EditIntent.SetValue(path.location, DataValue.UNFILLED))
     }
 
     override suspend fun insert(
@@ -93,8 +93,8 @@ internal class WorkingViewEditContext(
         after: ItemId?,
         value: DataValue,
     ): ItemId {
-        val id = ItemId(UUID.nameUUIDFromBytes("$invocationId:insert:${path.location}:${allocated++}".toByteArray()).toString())
-        append(EditIntent.Insert(path.location, after, ListItem(id, value)))
+        val id = ItemId(value = UUID.nameUUIDFromBytes("$invocationId:insert:${path.location}:${allocated++}".toByteArray()).toString())
+        append(EditIntent.Insert(path.location, after, ListItem(id = id, value = value)))
         return id
     }
 

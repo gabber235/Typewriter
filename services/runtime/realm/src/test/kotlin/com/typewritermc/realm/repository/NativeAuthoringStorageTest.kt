@@ -2,17 +2,24 @@ package com.typewritermc.realm.repository
 
 import com.surrealdb.Surreal
 import com.typewritermc.authoring.AuthoringRecord
-import com.typewritermc.authoring.ItemId
 import com.typewritermc.authoring.TypeSelection
 import com.typewritermc.realm.authoring.authoredDatabaseValues
 import com.typewritermc.realm.checking.TEST_TYPE
 import com.typewritermc.realm.schema.openTestDatabase
-import com.typewritermc.types.DataValue
-import com.typewritermc.types.ListItem
-import com.typewritermc.types.MapRow
+import com.typewritermc.types.bytes
+import com.typewritermc.types.fields
+import com.typewritermc.types.integer
+import com.typewritermc.types.items
+import com.typewritermc.types.listValue
+import com.typewritermc.types.mapValue
 import com.typewritermc.types.namedUse
+import com.typewritermc.types.record
 import de.infix.testBalloon.framework.core.testSuite
 import io.kotest.matchers.shouldBe
+import skirout.editor.v1.type_catalog.DataValue
+import skirout.editor.v1.type_catalog.ItemId
+import skirout.editor.v1.type_catalog.ListItem
+import skirout.editor.v1.type_catalog.MapRow
 import java.math.BigInteger
 
 val NativeAuthoringStorageTestSuite by testSuite {
@@ -21,16 +28,24 @@ val NativeAuthoringStorageTestSuite by testSuite {
             AuthoringRecord(
                 TypeSelection.Complete(TEST_TYPE.namedUse()),
                 mapOf(
-                    "empty" to DataValue.Unfilled,
-                    "nullable" to DataValue.Null,
-                    "integer" to DataValue.Integer(BigInteger("9007199254740993123456789")),
-                    "decimal" to DataValue.Decimal("1.234567890123456789"),
-                    "bytes" to DataValue.Bytes(byteArrayOf(0, 1, 127, -128)),
-                    "list" to DataValue.ListValue(listOf(ListItem(ItemId("stable"), DataValue.StringValue("Quest")))),
+                    "empty" to DataValue.UNFILLED,
+                    "nullable" to DataValue.NULL,
+                    "integer" to DataValue.integer(BigInteger("9007199254740993123456789")),
+                    "decimal" to DataValue.DecimalWrapper("1.234567890123456789"),
+                    "bytes" to DataValue.bytes(byteArrayOf(0, 1, 127, -128)),
+                    "list" to
+                        DataValue.listValue(listOf(ListItem(id = ItemId(value = "stable"), value = DataValue.StringValueWrapper("Quest")))),
                     "map" to
-                        DataValue.MapValue(
+                        DataValue.mapValue(
                             listOf(
-                                MapRow(ItemId("row"), DataValue.StringValue("key"), DataValue.Record(mapOf("nested" to DataValue.Null))),
+                                MapRow(
+                                    id = ItemId(value = "row"),
+                                    key = DataValue.StringValueWrapper("key"),
+                                    value =
+                                        DataValue.record(
+                                            mapOf("nested" to DataValue.NULL),
+                                        ),
+                                ),
                             ),
                         ),
                 ),
@@ -47,7 +62,7 @@ val NativeAuthoringStorageTestSuite by testSuite {
             content.isObject shouldBe true
             content.getObject().get("fields").isObject shouldBe true
             authoredDatabaseValues.decode(AuthoringRecord.serializer(), content) shouldBe record
-            val title = database.query("SELECT VALUE content.fields.list.items[0].value.value FROM ONLY resource:quest;").take(0)
+            val title = database.query("SELECT VALUE content.fields.list.value.items[0].value.value FROM ONLY resource:quest;").take(0)
             title.getString() shouldBe "Quest"
         }
     }

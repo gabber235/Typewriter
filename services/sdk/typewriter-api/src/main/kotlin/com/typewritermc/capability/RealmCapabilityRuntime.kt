@@ -3,7 +3,6 @@ package com.typewritermc.capability
 import com.typewritermc.authoring.CompletenessResult
 import com.typewritermc.authoring.GeneratedSdkApi
 import com.typewritermc.authoring.complete
-import com.typewritermc.types.DataValue
 import com.typewritermc.types.NativeBinding
 import com.typewritermc.types.NativeBindingException
 import com.typewritermc.types.NativeBindingRegistry
@@ -14,6 +13,7 @@ import kotlinx.coroutines.flow.FlowCollector
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.map
 import skirout.editor.v1.search.RealmSearchQuery
+import skirout.editor.v1.type_catalog.DataValue
 import skirout.editor.v1.type_catalog.TypeUse
 import kotlin.reflect.KClass
 

@@ -14,12 +14,12 @@ import com.typewritermc.realm.authoring.guarded
 import com.typewritermc.realm.authoring.operationObservation
 import com.typewritermc.realm.checking.CapturedAuthoringReads
 import com.typewritermc.services.libs.utils.rethrowExceptional
-import com.typewritermc.types.DataValue
 import com.typewritermc.types.NativeBinding
 import com.typewritermc.types.ResourceId
 import com.typewritermc.types.catalog.Resolution
+import com.typewritermc.types.payload
+import com.typewritermc.types.requirePortable
 import com.typewritermc.types.requireValid
-import com.typewritermc.types.skir.SkirDataValueCodec
 import com.typewritermc.types.skir.getOrThrow
 import com.typewritermc.types.toTemplate
 import kotlinx.coroutines.CoroutineScope
@@ -32,6 +32,7 @@ import skirout.editor.v1.resource_operations.StaleAuthoringObservation
 import skirout.editor.v1.search.RealmPresentationSearchRequest
 import skirout.editor.v1.search.RealmPresentationSearchStatus
 import skirout.editor.v1.search.RealmPresentationSearchUpdate
+import skirout.editor.v1.type_catalog.DataValue
 import java.util.concurrent.ConcurrentHashMap
 
 /**
@@ -77,7 +78,7 @@ internal class OperationRealmPresentationSearchSource(
                 "The operation search result type is invalid."
             }
             require(
-                SkirDataValueCodec.decode(request.payload).getOrThrow() is DataValue.StringValue,
+                request.payload.requirePortable() is DataValue.StringValueWrapper,
             ) { "The operation search payload is invalid." }
             require(search.operation in invocation.applicableIn(baseline, CapturedAuthoringReads(AuthoredReadView.Original(baseline)))) {
                 "The operation does not apply to the search selection."
@@ -125,7 +126,7 @@ internal class OperationRealmPresentationSearchSource(
                         options
                             .take(MAX_RESULTS)
                             .sortedWith(compareBy({ it.label.lowercase() }, { it.id.value }))
-                            .map { SkirDataValueCodec.encode(resultBinding.encode(it)).getOrThrow() }
+                            .map { resultBinding.encode(it).requirePortable() }
                     val actual = views.read { it.observationId }
                     if (actual != captured.confirmed) {
                         updates.publish(staleSearch(request.subscriptionId, actual))

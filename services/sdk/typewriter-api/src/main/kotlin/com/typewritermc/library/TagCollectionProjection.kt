@@ -3,9 +3,9 @@ package com.typewritermc.library
 import com.typewritermc.presentation.CollectionProjection
 import com.typewritermc.presentation.TypewriterCollectionProjection
 import com.typewritermc.presentation.collectionProjection
-import com.typewritermc.types.DataValue
 import com.typewritermc.types.namedTemplate
 import com.typewritermc.types.template
+import skirout.editor.v1.type_catalog.DataValue
 
 const val TAG_COLLECTION_SOURCE_ID: String = "typewriter.tags"
 
@@ -20,5 +20,5 @@ fun coreTagCollectionProjection(): CollectionProjection<Tag, TagCollectionRow, T
         content(TagCollectionRowFields.name, TagFields.name)
         content(TagCollectionRowFields.color, TagFields.color)
         content(TagCollectionRowFields.parents, TagFields.parents)
-        literal(TagCollectionRowFields.selectable, DataValue.Boolean(true))
+        literal(TagCollectionRowFields.selectable, DataValue.BooleanWrapper(true))
     }

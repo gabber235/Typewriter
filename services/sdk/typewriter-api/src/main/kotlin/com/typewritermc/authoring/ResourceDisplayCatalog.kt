@@ -8,15 +8,18 @@ import com.typewritermc.expression.DefaultExpressionEvaluator
 import com.typewritermc.expression.EvaluationBudget
 import com.typewritermc.expression.ExpressionBindings
 import com.typewritermc.expression.ExpressionValueReader
-import com.typewritermc.types.DataValue
 import com.typewritermc.types.ResourceId
 import com.typewritermc.types.ResourceTarget
 import com.typewritermc.types.catalog.CheckedCatalog
 import com.typewritermc.types.catalog.ResourceDisplayFormulas
+import com.typewritermc.types.fields
+import com.typewritermc.types.named
+import com.typewritermc.types.record
 import com.typewritermc.types.template
 import com.typewritermc.types.unwrapNamed
 import com.typewritermc.types.use
 import skirout.editor.v1.catalog.PublishedType
+import skirout.editor.v1.type_catalog.DataValue
 import skirout.editor.v1.type_catalog.TypeDefinitionId
 
 /** One published resource display with its formulas checked against the catalog that published them. */
@@ -74,7 +77,7 @@ class ResourceDisplayCatalog(
     ): String? {
         val configuration = record.configuration as? TypeSelection.Complete ?: return null
         val display = displayFor(configuration.use.definition, catalog) ?: return null
-        val subject = DataValue.Named(configuration.use, DataValue.Record(record.fields))
+        val subject = DataValue.named(configuration.use, DataValue.record(record.fields))
         val evaluator =
             DefaultExpressionEvaluator(
                 ExpressionValueReader { error("Display formulas read their subject as a local value.") },
@@ -87,7 +90,7 @@ class ResourceDisplayCatalog(
                 DISPLAY_BUDGET,
                 mapOf(ResourceDisplaySubject.binding to subject),
             )
-        return ((result as? Availability.Available)?.value?.unwrapNamed() as? DataValue.StringValue)?.value
+        return ((result as? Availability.Available)?.value?.unwrapNamed() as? DataValue.StringValueWrapper)?.value
     }
 
     /** Answers the declaration queries of display formulas; catalog assembly rejects formulas reading other resources. */

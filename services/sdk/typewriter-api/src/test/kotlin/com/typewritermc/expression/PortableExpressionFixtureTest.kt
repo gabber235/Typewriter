@@ -4,7 +4,6 @@ import com.typewritermc.authoring.AuthoredReads
 import com.typewritermc.authoring.Availability
 import com.typewritermc.authoring.BoundCollectionPath
 import com.typewritermc.authoring.BoundPath
-import com.typewritermc.authoring.ItemId
 import com.typewritermc.authoring.PathSegment
 import com.typewritermc.authoring.ValueLocation
 import com.typewritermc.authoring.ValuePath
@@ -12,17 +11,24 @@ import com.typewritermc.checking.CatalogGeneration
 import com.typewritermc.checking.PartialSelection
 import com.typewritermc.checking.TypedSelection
 import com.typewritermc.configuration.PortableExpressionChecker
-import com.typewritermc.types.DataValue
-import com.typewritermc.types.ListItem
-import com.typewritermc.types.MapRow
 import com.typewritermc.types.ResourceId
 import com.typewritermc.types.catalog.DefaultCheckedCatalog
 import com.typewritermc.types.catalog.resolve
+import com.typewritermc.types.duration
+import com.typewritermc.types.field
+import com.typewritermc.types.fields
+import com.typewritermc.types.integer
+import com.typewritermc.types.listValue
+import com.typewritermc.types.mapValue
+import com.typewritermc.types.named
 import com.typewritermc.types.namedUse
 import com.typewritermc.types.qualified
+import com.typewritermc.types.record
 import com.typewritermc.types.requireValid
+import com.typewritermc.types.setValue
 import com.typewritermc.types.skir.SkirAuthoringValueCodec
 import com.typewritermc.types.skir.getOrThrow
+import com.typewritermc.types.timestamp
 import com.typewritermc.types.unwrapNamed
 import de.infix.testBalloon.framework.core.testSuite
 import io.kotest.matchers.shouldBe
@@ -35,6 +41,10 @@ import kotlinx.serialization.json.jsonArray
 import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
 import skirout.editor.v1.expression.ExpressionNode
+import skirout.editor.v1.type_catalog.DataValue
+import skirout.editor.v1.type_catalog.ItemId
+import skirout.editor.v1.type_catalog.ListItem
+import skirout.editor.v1.type_catalog.MapRow
 import skirout.editor.v1.type_catalog.TypeDefinitionId
 import skirout.editor.v1.type_catalog.TypeUse
 import java.nio.file.Files
@@ -49,7 +59,7 @@ val PortableExpressionFixtureTest by testSuite {
             DefaultExpressionEvaluator(
                 ExpressionValueReader {
                     reads++
-                    Availability.Available(DataValue.StringValue("stored"))
+                    Availability.Available(DataValue.StringValueWrapper("stored"))
                 },
             )
         val candidate = ExpressionBindingId("candidate")
@@ -62,10 +72,10 @@ val PortableExpressionFixtureTest by testSuite {
             evaluator.evaluateScoped(
                 expression,
                 ExpressionBindings(emptyMap()),
-                mapOf(candidate to DataValue.StringValue("  local  ")),
+                mapOf(candidate to DataValue.StringValueWrapper("  local  ")),
                 EvaluationBudget(20, 20),
             )
-        } shouldBe Availability.Available(DataValue.StringValue("local"))
+        } shouldBe Availability.Available(DataValue.StringValueWrapper("local"))
         reads shouldBe 0
     }
     test("handled candidates retain runtime operation failures") {
@@ -75,7 +85,7 @@ val PortableExpressionFixtureTest by testSuite {
             ExpressionNode.createNumberArithmetic(
                 operation = skirout.editor.v1.expression.NumberArithmeticOperation.DIVIDE,
                 first = testInput(candidate),
-                second = testLiteral(DataValue.Integer(java.math.BigInteger.ZERO)),
+                second = testLiteral(DataValue.integer(java.math.BigInteger.ZERO)),
                 remaining = emptyList(),
             )
         val result =
@@ -83,7 +93,7 @@ val PortableExpressionFixtureTest by testSuite {
                 evaluator.evaluateScoped(
                     expression,
                     ExpressionBindings(emptyMap()),
-                    mapOf(candidate to DataValue.Integer(java.math.BigInteger.ONE)),
+                    mapOf(candidate to DataValue.integer(java.math.BigInteger.ONE)),
                     EvaluationBudget(20, 20),
                 )
             }
@@ -113,7 +123,7 @@ val PortableExpressionFixtureTest by testSuite {
                                     location.path.segments.fold(configured.value()) { current, segment ->
                                         val field =
                                             segment as? PathSegment.Field ?: error("Fixture root projections require field segments")
-                                        (current.unwrapNamed() as DataValue.Record).fields.getValue(field.name)
+                                        requireNotNull((current.unwrapNamed() as DataValue.RecordWrapper).field(field.name))
                                     }
                                 }
                             Availability.Available(value)
@@ -218,27 +228,27 @@ private fun fixturePath(): Path =
 private fun JsonObject.value(): DataValue =
     when {
         "null" in this -> {
-            DataValue.Null
+            DataValue.NULL
         }
 
         "unfilled" in this -> {
-            DataValue.Unfilled
+            DataValue.UNFILLED
         }
 
         "boolean" in this -> {
-            DataValue.Boolean(getValue("boolean").jsonPrimitive.boolean)
+            DataValue.BooleanWrapper(getValue("boolean").jsonPrimitive.boolean)
         }
 
         "integer" in this -> {
-            DataValue.Integer(getValue("integer").jsonPrimitive.content.toBigInteger())
+            DataValue.integer(getValue("integer").jsonPrimitive.content.toBigInteger())
         }
 
         "decimal" in this -> {
-            DataValue.Decimal(getValue("decimal").jsonPrimitive.content)
+            DataValue.DecimalWrapper(getValue("decimal").jsonPrimitive.content)
         }
 
         "duration" in this -> {
-            DataValue.Duration(
+            DataValue.duration(
                 getValue("duration")
                     .jsonPrimitive.content
                     .toLong()
@@ -247,20 +257,20 @@ private fun JsonObject.value(): DataValue =
         }
 
         "timestamp" in this -> {
-            DataValue.Timestamp(Instant.parse(getValue("timestamp").jsonPrimitive.content))
+            DataValue.timestamp(Instant.parse(getValue("timestamp").jsonPrimitive.content))
         }
 
         "float" in this -> {
-            DataValue.Float(getValue("float").jsonPrimitive.content.toDouble())
+            DataValue.FloatWrapper(getValue("float").jsonPrimitive.content.toDouble())
         }
 
         "string" in this -> {
-            DataValue.StringValue(getValue("string").jsonPrimitive.content)
+            DataValue.StringValueWrapper(getValue("string").jsonPrimitive.content)
         }
 
         "named" in this -> {
             val named = getValue("named").jsonObject
-            DataValue.Named(
+            DataValue.named(
                 TypeDefinitionId
                     .qualified(
                         named.getValue("namespace").jsonPrimitive.content,
@@ -282,41 +292,41 @@ private fun JsonObject.value(): DataValue =
         }
 
         "record" in this -> {
-            DataValue.Record(getValue("record").jsonObject.mapValues { (_, value) -> value.jsonObject.value() })
+            DataValue.record(getValue("record").jsonObject.mapValues { (_, value) -> value.jsonObject.value() })
         }
 
         "list" in this -> {
-            DataValue.ListValue(
+            DataValue.listValue(
                 getValue("list").jsonArray.map { item ->
                     val encoded = item.jsonObject
                     ListItem(
-                        ItemId(encoded.getValue("id").jsonPrimitive.content),
-                        encoded.getValue("value").jsonObject.value(),
+                        id = ItemId(value = encoded.getValue("id").jsonPrimitive.content),
+                        value = encoded.getValue("value").jsonObject.value(),
                     )
                 },
             )
         }
 
         "set" in this -> {
-            DataValue.SetValue(
+            DataValue.setValue(
                 getValue("set").jsonArray.map { item ->
                     val encoded = item.jsonObject
                     ListItem(
-                        ItemId(encoded.getValue("id").jsonPrimitive.content),
-                        encoded.getValue("value").jsonObject.value(),
+                        id = ItemId(value = encoded.getValue("id").jsonPrimitive.content),
+                        value = encoded.getValue("value").jsonObject.value(),
                     )
                 },
             )
         }
 
         "map" in this -> {
-            DataValue.MapValue(
+            DataValue.mapValue(
                 getValue("map").jsonArray.map { row ->
                     val encoded = row.jsonObject
                     MapRow(
-                        ItemId(encoded.getValue("id").jsonPrimitive.content),
-                        encoded.getValue("key").jsonObject.value(),
-                        encoded.getValue("value").jsonObject.value(),
+                        id = ItemId(value = encoded.getValue("id").jsonPrimitive.content),
+                        key = encoded.getValue("key").jsonObject.value(),
+                        value = encoded.getValue("value").jsonObject.value(),
                     )
                 },
             )

@@ -34,7 +34,6 @@ import com.typewritermc.presentation.DefaultPresentationRuntime
 import com.typewritermc.presentation.PresentationBuildBinding
 import com.typewritermc.presentation.presentationTemplate
 import com.typewritermc.types.ACYCLIC_RELATION_FAMILY_ID
-import com.typewritermc.types.DataValue
 import com.typewritermc.types.EndpointCardinality
 import com.typewritermc.types.FactoryNativeBindingRegistry
 import com.typewritermc.types.NativeBinding
@@ -47,8 +46,16 @@ import com.typewritermc.types.StandardTypes
 import com.typewritermc.types.catalog.DefaultCheckedCatalog
 import com.typewritermc.types.catalog.Resolution
 import com.typewritermc.types.declared
+import com.typewritermc.types.endpoint
+import com.typewritermc.types.fieldMap
+import com.typewritermc.types.fields
+import com.typewritermc.types.integer
+import com.typewritermc.types.linkTarget
+import com.typewritermc.types.named
 import com.typewritermc.types.namedTemplate
+import com.typewritermc.types.payload
 import com.typewritermc.types.qualified
+import com.typewritermc.types.record
 import com.typewritermc.types.template
 import com.typewritermc.types.use
 import de.infix.testBalloon.framework.core.testSuite
@@ -64,6 +71,7 @@ import skirout.editor.v1.presentation.ChildrenElement
 import skirout.editor.v1.presentation.PresentationElement
 import skirout.editor.v1.presentation.PresentationNode
 import skirout.editor.v1.search.RealmSearchQuery
+import skirout.editor.v1.type_catalog.DataValue
 import skirout.editor.v1.type_catalog.DeclarationOwner
 import skirout.editor.v1.type_catalog.RepresentationTemplate
 import skirout.editor.v1.type_catalog.TypeDefinition
@@ -119,12 +127,12 @@ val SyntheticDiscoveryTest by testSuite {
         val encoded = binding.encode(source)
 
         encoded shouldBe
-            DataValue.Named(
+            DataValue.named(
                 RepeatedMessageDefinition.use,
-                DataValue.Record(
+                DataValue.record(
                     mapOf(
-                        "value" to DataValue.StringValue("hello"),
-                        "repeat_count" to DataValue.Integer(BigInteger.valueOf(3)),
+                        "value" to DataValue.StringValueWrapper("hello"),
+                        "repeat_count" to DataValue.integer(BigInteger.valueOf(3)),
                     ),
                 ),
             )
@@ -173,14 +181,14 @@ val SyntheticDiscoveryTest by testSuite {
                 referencedPage = Ref(ResourceId("referenced")),
             )
         val encoded = binding.encode(source)
-        val fields = ((encoded as DataValue.Named).payload as DataValue.Record).fields
+        val fields = ((encoded as DataValue.NamedWrapper).payload as DataValue.RecordWrapper).value.fieldMap
         fields.keys shouldBe setOf("page", "name", "placement", "referencedPage")
-        val containing = (fields.getValue("page") as DataValue.Named).payload as DataValue.Link
-        val referenced = (fields.getValue("referencedPage") as DataValue.Named).payload as DataValue.Link
+        val containing = (fields.getValue("page") as DataValue.NamedWrapper).payload as DataValue.LinkWrapper
+        val referenced = (fields.getValue("referencedPage") as DataValue.NamedWrapper).payload as DataValue.LinkWrapper
         containing.endpoint shouldBe PageElements.contract.second.id
         referenced.endpoint shouldBe SyntheticPageReferences.contract.first.id
-        containing.target.resource shouldBe ResourceId("containing")
-        referenced.target.resource shouldBe ResourceId("referenced")
+        containing.linkTarget.resource shouldBe ResourceId("containing")
+        referenced.linkTarget.resource shouldBe ResourceId("referenced")
         binding.decode((checked.complete(encoded) as CompletenessResult.Complete).value) shouldBe source
         checked.schema.fields
             .single { it.key == "page" }
@@ -270,9 +278,9 @@ val SyntheticDiscoveryTest by testSuite {
                 listOf(publishMessageCapability.id, repeatMessageCapability.id, searchMessagesCapability.id)
                     .sortedBy { it.value }
             val literal =
-                DataValue.Named(
+                DataValue.named(
                     LiteralMessageDefinition.use,
-                    DataValue.Record(mapOf("value" to DataValue.StringValue("hello"))),
+                    DataValue.record(mapOf("value" to DataValue.StringValueWrapper("hello"))),
                 )
             registry
                 .requireSearch(searchMessagesCapability.id)
@@ -282,12 +290,12 @@ val SyntheticDiscoveryTest by testSuite {
                 listOf(
                     RealmSearchUpdate.Partial(
                         listOf(
-                            DataValue.Named(
+                            DataValue.named(
                                 RepeatedMessageDefinition.use,
-                                DataValue.Record(
+                                DataValue.record(
                                     mapOf(
-                                        "value" to DataValue.StringValue("hello"),
-                                        "repeat_count" to DataValue.Integer(BigInteger.ONE),
+                                        "value" to DataValue.StringValueWrapper("hello"),
+                                        "repeat_count" to DataValue.integer(BigInteger.ONE),
                                     ),
                                 ),
                             ),
@@ -299,19 +307,19 @@ val SyntheticDiscoveryTest by testSuite {
             registry.requireComputation(repeatMessageCapability.id).invoke(
                 SyntheticCapabilityContext,
                 runtime,
-                DataValue.Named(
+                DataValue.named(
                     RepeatedMessageDefinition.use,
-                    DataValue.Record(
+                    DataValue.record(
                         mapOf(
-                            "value" to DataValue.StringValue("go"),
-                            "repeat_count" to DataValue.Integer(BigInteger.TWO),
+                            "value" to DataValue.StringValueWrapper("go"),
+                            "repeat_count" to DataValue.integer(BigInteger.TWO),
                         ),
                     ),
                 ),
             ) shouldBe
-                DataValue.Named(
+                DataValue.named(
                     LiteralMessageDefinition.use,
-                    DataValue.Record(mapOf("value" to DataValue.StringValue("gogo"))),
+                    DataValue.record(mapOf("value" to DataValue.StringValueWrapper("gogo"))),
                 )
             registry
                 .requireCommand(publishMessageCapability.id)

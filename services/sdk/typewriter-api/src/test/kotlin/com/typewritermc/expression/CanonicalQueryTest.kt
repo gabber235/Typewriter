@@ -7,7 +7,6 @@ import com.typewritermc.authoring.Availability
 import com.typewritermc.authoring.BoundCollectionPath
 import com.typewritermc.authoring.BoundPath
 import com.typewritermc.authoring.DraftBinding
-import com.typewritermc.authoring.ItemId
 import com.typewritermc.authoring.PathSegment
 import com.typewritermc.authoring.ReadContext
 import com.typewritermc.authoring.TypeSelection
@@ -21,10 +20,8 @@ import com.typewritermc.presentation.RuntimePresentationQueries
 import com.typewritermc.presentation.resource
 import com.typewritermc.types.Color
 import com.typewritermc.types.ColorDefinition
-import com.typewritermc.types.DataValue
 import com.typewritermc.types.Icon
 import com.typewritermc.types.LinkTarget
-import com.typewritermc.types.ListItem
 import com.typewritermc.types.Ref
 import com.typewritermc.types.RelationshipEndpoint
 import com.typewritermc.types.Resource
@@ -35,6 +32,11 @@ import com.typewritermc.types.TypeDisplay
 import com.typewritermc.types.catalog.CheckedCatalog
 import com.typewritermc.types.catalog.DefaultCheckedCatalog
 import com.typewritermc.types.catalog.Resolution
+import com.typewritermc.types.endpoint
+import com.typewritermc.types.integer
+import com.typewritermc.types.link
+import com.typewritermc.types.listValue
+import com.typewritermc.types.named
 import com.typewritermc.types.namedTemplate
 import com.typewritermc.types.namedUse
 import com.typewritermc.types.qualified
@@ -51,9 +53,12 @@ import skirout.editor.v1.catalog.PublishedType
 import skirout.editor.v1.expression.ExpressionNode
 import skirout.editor.v1.expression.ExpressionQuery
 import skirout.editor.v1.expression.ResourceQuerySource
+import skirout.editor.v1.type_catalog.DataValue
 import skirout.editor.v1.type_catalog.EndpointId
 import skirout.editor.v1.type_catalog.FieldDeclaration
 import skirout.editor.v1.type_catalog.FieldOwner
+import skirout.editor.v1.type_catalog.ItemId
+import skirout.editor.v1.type_catalog.ListItem
 import skirout.editor.v1.type_catalog.RepresentationTemplate
 import skirout.editor.v1.type_catalog.ScalarKind
 import skirout.editor.v1.type_catalog.TypeDefinition
@@ -83,14 +88,14 @@ val CanonicalQueryTest by testSuite {
         val record =
             AuthoringRecord(
                 TypeSelection.Complete(queryTypeId.namedUse()),
-                mapOf("name" to DataValue.StringValue("Current name"), "extra" to DataValue.Unfilled),
+                mapOf("name" to DataValue.StringValueWrapper("Current name"), "extra" to DataValue.UNFILLED),
             )
         val observation = QueryObservation(mapOf(ResourceId("result") to record))
         val evaluator =
             DefaultExpressionEvaluator(ExpressionValueReader { error("The query owns its resource read") }, queries = observation)
         with(QueryReads) {
             evaluator.evaluateChecked(program, ExpressionBindings(emptyMap()), EvaluationBudget(100, 100))
-        } shouldBe Availability.Available(DataValue.StringValue("Current name"))
+        } shouldBe Availability.Available(DataValue.StringValueWrapper("Current name"))
         observation.seenReadContext shouldBe QueryReads.readContext
     }
 
@@ -106,8 +111,8 @@ val CanonicalQueryTest by testSuite {
             AuthoringRecord(
                 TypeSelection.Complete(queryTypeId.namedUse()),
                 mapOf(
-                    "name" to DataValue.StringValue("Name"),
-                    "extra" to DataValue.Unfilled,
+                    "name" to DataValue.StringValueWrapper("Name"),
+                    "extra" to DataValue.UNFILLED,
                 ),
             )
         val first = QueryObservation(mapOf(ResourceId("result") to record), Color(0xFF123456u))
@@ -119,9 +124,9 @@ val CanonicalQueryTest by testSuite {
                     .evaluateChecked(program, ExpressionBindings(emptyMap()), EvaluationBudget(100, 100))
             }
         evaluate(first) shouldBe
-            Availability.Available(DataValue.Named(ColorDefinition.use, DataValue.Integer(0xFF123456u.toString().toBigInteger())))
+            Availability.Available(DataValue.named(ColorDefinition.use, DataValue.integer(0xFF123456u.toString().toBigInteger())))
         evaluate(second) shouldBe
-            Availability.Available(DataValue.Named(ColorDefinition.use, DataValue.Integer(0xFF654321u.toString().toBigInteger())))
+            Availability.Available(DataValue.named(ColorDefinition.use, DataValue.integer(0xFF654321u.toString().toBigInteger())))
     }
 
     test("query identity has the same representation as its caller literal") {
@@ -134,8 +139,8 @@ val CanonicalQueryTest by testSuite {
             AuthoringRecord(
                 TypeSelection.Complete(queryTypeId.namedUse()),
                 mapOf(
-                    "name" to DataValue.Unfilled,
-                    "extra" to DataValue.Unfilled,
+                    "name" to DataValue.UNFILLED,
+                    "extra" to DataValue.UNFILLED,
                 ),
             )
         with(QueryReads) {
@@ -146,7 +151,7 @@ val CanonicalQueryTest by testSuite {
                         mapOf(ResourceId("result") to record),
                     ),
             ).evaluateChecked(program, ExpressionBindings(emptyMap()), EvaluationBudget(100, 100))
-        } shouldBe Availability.Available(DataValue.Boolean(true))
+        } shouldBe Availability.Available(DataValue.BooleanWrapper(true))
     }
 
     test("unchecked and unsupported queries fail instead of becoming missing") {
@@ -189,12 +194,12 @@ val CanonicalQueryTest by testSuite {
             AuthoringRecord(
                 TypeSelection.Complete(queryTypeId.namedUse()),
                 mapOf(
-                    "name" to DataValue.StringValue("Root name"),
-                    "extra" to DataValue.Unfilled,
+                    "name" to DataValue.StringValueWrapper("Root name"),
+                    "extra" to DataValue.UNFILLED,
                 ),
             )
         val referenceValue =
-            DataValue.Link(
+            DataValue.link(
                 EndpointId(value = "query.endpoint"),
                 LinkTarget(ResourceId("result"), ValuePath(listOf(PathSegment.Field("reverse")))),
             )
@@ -206,7 +211,7 @@ val CanonicalQueryTest by testSuite {
                         mapOf(ResourceId("result") to record),
                     ),
             ).evaluateChecked(program, ExpressionBindings(emptyMap()), EvaluationBudget(100, 100), mapOf(binding to referenceValue))
-        } shouldBe Availability.Available(DataValue.StringValue("Root name"))
+        } shouldBe Availability.Available(DataValue.StringValueWrapper("Root name"))
     }
 
     test("a full resource projection respects the shared evaluation budget") {
@@ -217,8 +222,8 @@ val CanonicalQueryTest by testSuite {
             AuthoringRecord(
                 TypeSelection.Complete(queryTypeId.namedUse()),
                 mapOf(
-                    "name" to DataValue.StringValue("Name"),
-                    "extra" to DataValue.Unfilled,
+                    "name" to DataValue.StringValueWrapper("Name"),
+                    "extra" to DataValue.UNFILLED,
                 ),
             )
         with(QueryReads) {
@@ -275,11 +280,11 @@ val CanonicalQueryTest by testSuite {
             .toSet() shouldBe setOf(queryTypeId.use(), otherQueryTypeId.use())
 
         fun links(target: String) =
-            DataValue.ListValue(
+            DataValue.listValue(
                 listOf(
                     ListItem(
-                        ItemId(target),
-                        DataValue.Link(EndpointId(value = "query.endpoint"), LinkTarget(ResourceId(target), null)),
+                        id = ItemId(value = target),
+                        value = DataValue.link(EndpointId(value = "query.endpoint"), LinkTarget(ResourceId(target), null)),
                     ),
                 ),
             )
@@ -289,8 +294,8 @@ val CanonicalQueryTest by testSuite {
                     AuthoringRecord(
                         TypeSelection.Complete(queryTypeId.namedUse()),
                         mapOf(
-                            "name" to DataValue.Unfilled,
-                            "extra" to DataValue.Unfilled,
+                            "name" to DataValue.UNFILLED,
+                            "extra" to DataValue.UNFILLED,
                         ),
                     ),
                 ResourceId("second") to AuthoringRecord(TypeSelection.Complete(otherQueryTypeId.namedUse()), emptyMap()),
@@ -308,7 +313,7 @@ val CanonicalQueryTest by testSuite {
                     second to links("second"),
                 ),
             )
-        } shouldBe Availability.Available(DataValue.Boolean(true))
+        } shouldBe Availability.Available(DataValue.BooleanWrapper(true))
     }
 }
 

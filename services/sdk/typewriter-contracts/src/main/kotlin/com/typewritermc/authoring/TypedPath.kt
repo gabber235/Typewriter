@@ -1,20 +1,17 @@
 package com.typewritermc.authoring
 
 import com.typewritermc.types.ResourceId
+import com.typewritermc.types.requireValid
+import com.typewritermc.types.skir.ItemIdSerializer
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
+import skirout.editor.v1.type_catalog.FieldPathSegment
+import skirout.editor.v1.type_catalog.ItemId
+import skirout.editor.v1.type_catalog.ItemPathSegment
 import skirout.editor.v1.type_catalog.TypeDefinitionId
 import skirout.editor.v1.type_catalog.TypeUse
-
-@JvmInline
-@Serializable
-value class ItemId(
-    val value: String,
-) {
-    init {
-        require(value.isNotBlank()) { "Item ids must not be blank." }
-    }
-}
+import skirout.editor.v1.type_catalog.PathSegment as SkirPathSegment
+import skirout.editor.v1.type_catalog.ValuePath as SkirValuePath
 
 @Serializable
 data class ValuePath(
@@ -62,6 +59,7 @@ sealed interface PathSegment {
     @Serializable
     @SerialName("item")
     data class Item(
+        @Serializable(with = ItemIdSerializer::class)
         val id: ItemId,
     ) : PathSegment
 
@@ -73,6 +71,34 @@ sealed interface PathSegment {
     @SerialName("map_value")
     data object MapValue : PathSegment
 }
+
+/** The Skir form of this path, used where the path sits inside a generated value such as a link target. */
+fun ValuePath.toSkir(): SkirValuePath =
+    SkirValuePath(
+        segments =
+            segments.map { segment ->
+                when (segment) {
+                    is PathSegment.Field -> SkirPathSegment.FieldWrapper(FieldPathSegment(name = segment.name))
+                    is PathSegment.Item -> SkirPathSegment.ItemWrapper(ItemPathSegment(id = segment.id))
+                    PathSegment.MapKey -> SkirPathSegment.MAP_KEY
+                    PathSegment.MapValue -> SkirPathSegment.MAP_VALUE
+                }
+            },
+    )
+
+/** Reads a Skir path, rejecting blank item ids and unknown segments. */
+fun SkirValuePath.toTypewriter(): ValuePath =
+    ValuePath(
+        segments.map { segment ->
+            when (segment) {
+                is SkirPathSegment.FieldWrapper -> PathSegment.Field(segment.value.name)
+                is SkirPathSegment.ItemWrapper -> PathSegment.Item(segment.value.id.requireValid())
+                SkirPathSegment.MAP_KEY -> PathSegment.MapKey
+                SkirPathSegment.MAP_VALUE -> PathSegment.MapValue
+                else -> throw IllegalArgumentException("Unknown path segment.")
+            }
+        },
+    )
 
 class TypedPath<Owner, Value> internal constructor(
     val owner: TypeDefinitionId,

@@ -7,7 +7,6 @@ import com.typewritermc.authoring.DefaultInitializationRuntime
 import com.typewritermc.authoring.InitializationDiagnostic
 import com.typewritermc.authoring.InitializationRequest
 import com.typewritermc.authoring.InputAnswer
-import com.typewritermc.authoring.ItemId
 import com.typewritermc.authoring.NativeBindingId
 import com.typewritermc.authoring.NativeConstructionPlan
 import com.typewritermc.authoring.PathSegment
@@ -21,28 +20,39 @@ import com.typewritermc.authoring.ValuePath
 import com.typewritermc.authoring.materialize
 import com.typewritermc.authoring.skir.SkirAuthoringOperationCodec
 import com.typewritermc.checking.CatalogGeneration
-import com.typewritermc.types.DataValue
 import com.typewritermc.types.FactoryNativeBindingRegistry
 import com.typewritermc.types.LinkTarget
-import com.typewritermc.types.ListItem
-import com.typewritermc.types.MapRow
 import com.typewritermc.types.NativeBinding
 import com.typewritermc.types.NativeBindingFactory
 import com.typewritermc.types.ResourceId
 import com.typewritermc.types.catalog.CheckedType
 import com.typewritermc.types.catalog.DefaultCheckedCatalog
+import com.typewritermc.types.field
+import com.typewritermc.types.fields
+import com.typewritermc.types.items
+import com.typewritermc.types.link
+import com.typewritermc.types.listValue
+import com.typewritermc.types.mapValue
+import com.typewritermc.types.named
 import com.typewritermc.types.namedTemplate
 import com.typewritermc.types.namedUse
+import com.typewritermc.types.payload
 import com.typewritermc.types.qualified
+import com.typewritermc.types.record
+import com.typewritermc.types.rows
 import com.typewritermc.types.skir.getOrThrow
 import com.typewritermc.types.template
 import com.typewritermc.types.use
 import de.infix.testBalloon.framework.core.testSuite
 import io.kotest.matchers.shouldBe
 import skirout.editor.v1.type_catalog.CollectionKind
+import skirout.editor.v1.type_catalog.DataValue
 import skirout.editor.v1.type_catalog.EndpointId
 import skirout.editor.v1.type_catalog.FieldDeclaration
 import skirout.editor.v1.type_catalog.FieldOwner
+import skirout.editor.v1.type_catalog.ItemId
+import skirout.editor.v1.type_catalog.ListItem
+import skirout.editor.v1.type_catalog.MapRow
 import skirout.editor.v1.type_catalog.NamedTypeUse
 import skirout.editor.v1.type_catalog.RepresentationTemplate
 import skirout.editor.v1.type_catalog.ScalarKind
@@ -77,10 +87,10 @@ val ResumableInitializationTest by testSuite {
         fixture.marker.calls shouldBe 1
         fixture.settings.calls shouldBe 1
         val fields = (resumed.value.content as PreparedContent.Record).record.fields
-        val marker = (fields.getValue("marker") as DataValue.Named).payload as DataValue.Record
-        marker.fields.getValue("id") shouldBe DataValue.StringValue("capture:1")
-        val settings = (fields.getValue("settings") as DataValue.Named).payload as DataValue.Record
-        settings.fields.getValue("label") shouldBe DataValue.StringValue("capture:1")
+        val marker = (fields.getValue("marker") as DataValue.NamedWrapper).payload as DataValue.RecordWrapper
+        marker.field("id") shouldBe DataValue.StringValueWrapper("capture:1")
+        val settings = (fields.getValue("settings") as DataValue.NamedWrapper).payload as DataValue.RecordWrapper
+        settings.field("label") shouldBe DataValue.StringValueWrapper("capture:1")
         resumed.value.findings shouldBe emptyList()
     }
     test("nested reference answers preserve list and map item identity") {
@@ -147,14 +157,18 @@ val ResumableInitializationTest by testSuite {
                     ),
                 ),
             )
-        val listItem = ItemId("list-item")
-        val mapItem = ItemId("map-item")
-        val value = DataValue.Named(nestedUse, DataValue.Record(mapOf("target" to DataValue.Unfilled)))
+        val listItem = ItemId(value = "list-item")
+        val mapItem = ItemId(value = "map-item")
+        val value = DataValue.named(nestedUse, DataValue.record(mapOf("target" to DataValue.UNFILLED)))
         val supplied =
-            DataValue.Record(
+            DataValue.record(
                 mapOf(
-                    "items" to DataValue.Named(listUse, DataValue.ListValue(listOf(ListItem(listItem, value)))),
-                    "mapping" to DataValue.Named(mapUse, DataValue.MapValue(listOf(MapRow(mapItem, DataValue.StringValue("key"), value)))),
+                    "items" to DataValue.named(listUse, DataValue.listValue(listOf(ListItem(id = listItem, value = value)))),
+                    "mapping" to
+                        DataValue.named(
+                            mapUse,
+                            DataValue.mapValue(listOf(MapRow(id = mapItem, key = DataValue.StringValueWrapper("key"), value = value))),
+                        ),
                 ),
             )
         val runtime = DefaultInitializationRuntime(catalog, FactoryNativeBindingRegistry(catalog, emptyList()))
@@ -175,9 +189,9 @@ val ResumableInitializationTest by testSuite {
                 ),
             ) as PreparationStep.Ready
         val record = (ready.value.content as PreparedContent.Record).record
-        val items = ((record.fields.getValue("items") as DataValue.Named).payload as DataValue.ListValue).items
+        val items = ((record.fields.getValue("items") as DataValue.NamedWrapper).payload as DataValue.ListValueWrapper).items
         items.single().id shouldBe listItem
-        val rows = ((record.fields.getValue("mapping") as DataValue.Named).payload as DataValue.MapValue).rows
+        val rows = ((record.fields.getValue("mapping") as DataValue.NamedWrapper).payload as DataValue.MapValueWrapper).rows
         rows.single().id shouldBe mapItem
     }
     test("continuations and answers round trip through the current wire") {
@@ -196,7 +210,7 @@ val ResumableInitializationTest by testSuite {
             listOf(
                 PreparationOperation.Resume(first.draft, listOf(answer, answer)),
                 PreparationOperation.Resume(first.draft, listOf(InputAnswer(path("absent"), reference()))),
-                PreparationOperation.Resume(first.draft, listOf(InputAnswer(answer.path, DataValue.StringValue("wrong")))),
+                PreparationOperation.Resume(first.draft, listOf(InputAnswer(answer.path, DataValue.StringValueWrapper("wrong")))),
                 PreparationOperation.Resume(first.draft.copy(pendingDefaults = setOf(answer.path)), listOf(answer)),
                 PreparationOperation.Resume(first.draft.copy(catalog = CatalogGeneration("old")), listOf(answer)),
             )
@@ -261,7 +275,7 @@ val ResumableInitializationTest by testSuite {
             runtime.stepNow(
                 PreparationOperation.Resume(
                     start.draft,
-                    listOf(InputAnswer(path("choice"), DataValue.Named(concreteUse, DataValue.Record(emptyMap())))),
+                    listOf(InputAnswer(path("choice"), DataValue.named(concreteUse, DataValue.record(emptyMap())))),
                 ),
             ) as PreparationStep.NeedsInput
         next.draft.requiredInputs shouldBe listOf(RequiredInput(path("choice", "target"), LINK_USE.use))
@@ -418,7 +432,7 @@ private class CountingPlan(
         return if (fail) {
             CaptureResult.Unavailable(listOf(InitializationDiagnostic(field, "test_capture_failed", "Capture failed.")))
         } else {
-            CaptureResult.Captured(mapOf(field to (value ?: DataValue.StringValue("capture:$calls"))))
+            CaptureResult.Captured(mapOf(field to (value ?: DataValue.StringValueWrapper("capture:$calls"))))
         }
     }
 }
@@ -458,9 +472,9 @@ private fun request(id: TypeDefinitionId) =
     InitializationRequest(
         GENERATION,
         PreparationTarget.Record(TypeSelection.Complete(id.namedUse(emptyList()))),
-        DataValue.Record(emptyMap()),
+        DataValue.record(emptyMap()),
     )
 
 private fun path(vararg fields: String) = ValuePath(fields.map(PathSegment::Field))
 
-private fun reference() = DataValue.Named(LINK_USE, DataValue.Link(ENDPOINT, LinkTarget(ResourceId("reserved-target"), null)))
+private fun reference() = DataValue.named(LINK_USE, DataValue.link(ENDPOINT, LinkTarget(ResourceId("reserved-target"), null)))

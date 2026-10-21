@@ -49,9 +49,11 @@ import com.typewritermc.types.catalog.Resolution
 import com.typewritermc.types.catalog.apply
 import com.typewritermc.types.catalog.isReady
 import com.typewritermc.types.encodeGeneratedDefault
+import com.typewritermc.types.endpoint
 import com.typewritermc.types.entries
+import com.typewritermc.types.field
+import com.typewritermc.types.fields
 import com.typewritermc.types.floatScalar
-import com.typewritermc.types.immutableCopy
 import com.typewritermc.types.immutableListCopy
 import com.typewritermc.types.immutableMapCopy
 import com.typewritermc.types.integerScalar
@@ -59,9 +61,9 @@ import com.typewritermc.types.isValid
 import com.typewritermc.types.namedTemplate
 import com.typewritermc.types.ownsResources
 import com.typewritermc.types.parameterKeys
+import com.typewritermc.types.portableOrNull
 import com.typewritermc.types.skir.SkirAuthoringValueCodec
 import com.typewritermc.types.skir.SkirConversionResult
-import com.typewritermc.types.skir.SkirDataValueCodec
 import com.typewritermc.types.skir.SkirTypeCodec
 import com.typewritermc.types.skir.getOrThrow
 import com.typewritermc.types.substitute
@@ -617,7 +619,7 @@ private fun skirout.editor.v1.presentation.PresentationCollectionProjection.isVa
             }
 
             is skirout.editor.v1.presentation.PresentationCollectionProjectionValue.LiteralWrapper -> {
-                val value = SkirDataValueCodec.decode(source.value).valueOrNull() ?: return@all false
+                val value = source.value.portableOrNull() ?: return@all false
                 targetType.acceptsLiteral(value, parameterBounds.keys, catalog)
             }
 
@@ -671,11 +673,11 @@ private fun TypeTemplate.isValidMaterialTemplate(
     }
 
 private fun TypeTemplate.acceptsLiteral(
-    value: com.typewritermc.types.DataValue,
+    value: skirout.editor.v1.type_catalog.DataValue,
     parameters: Set<ParameterKey>,
     catalog: CheckedCatalog,
 ): Boolean {
-    if (value == com.typewritermc.types.DataValue.Unfilled) return true
+    if (value == skirout.editor.v1.type_catalog.DataValue.UNFILLED) return true
     if (parameterKeys().any(parameters::contains)) return false
     val use = (apply(emptyMap()) as? Resolution.Ready)?.value ?: return false
     val checked = (catalog.resolve(use) as? Resolution.Ready)?.value ?: return false
@@ -1302,7 +1304,7 @@ private fun encodeConstant(
     value: Any?,
     catalog: CheckedCatalog,
     bindings: com.typewritermc.types.NativeBindingRegistry,
-): com.typewritermc.types.DataValue {
+): skirout.editor.v1.type_catalog.DataValue {
     val use =
         when (val applied = expected.apply(emptyMap())) {
             is Resolution.Ready -> applied.value

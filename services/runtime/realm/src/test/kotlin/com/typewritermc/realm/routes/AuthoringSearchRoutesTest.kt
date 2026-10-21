@@ -9,12 +9,13 @@ import com.typewritermc.realm.checking.record
 import com.typewritermc.realm.search.AuthoringSearchRepository
 import com.typewritermc.realm.search.IndexedAuthoringSearchCandidate
 import com.typewritermc.services.libs.communicator.router.communicatorRoutes
-import com.typewritermc.types.DataValue
 import com.typewritermc.types.ResourceId
+import com.typewritermc.types.actualType
 import com.typewritermc.types.namedUse
+import com.typewritermc.types.payload
+import com.typewritermc.types.requirePortable
 import com.typewritermc.types.requireValid
 import com.typewritermc.types.skir.SkirAuthoringValueCodec
-import com.typewritermc.types.skir.SkirDataValueCodec
 import com.typewritermc.types.skir.getOrThrow
 import com.typewritermc.types.use
 import de.infix.testBalloon.framework.core.testSuite
@@ -22,6 +23,7 @@ import io.kotest.matchers.shouldBe
 import kotlinx.coroutines.test.runTest
 import skirout.editor.v1.authoring.SearchAuthoringRequest
 import skirout.editor.v1.authoring.SearchAuthoringResponse
+import skirout.editor.v1.type_catalog.DataValue
 import skirout.editor.v1.type_catalog.NamedTypeUse
 import skirout.editor.v1.type_catalog.ScalarKind
 import skirout.editor.v1.type_catalog.TypeDefinitionId
@@ -64,8 +66,8 @@ val AuthoringSearchRoutesTest by testSuite {
                     hit.resource.value shouldBe resource.value
                     SkirAuthoringValueCodec.decode(hit.subject.content).getOrThrow() shouldBe authored
                     hit.context.actualType.requireValid() shouldBe ScalarKind.TEXT.use
-                    SkirDataValueCodec.decode(hit.context.payload).getOrThrow() shouldBe
-                        DataValue.StringValue("book Readable Book")
+                    hit.context.payload.requirePortable() shouldBe
+                        DataValue.StringValueWrapper("book Readable Book")
                 }
             } finally {
                 views.close()

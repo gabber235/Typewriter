@@ -31,13 +31,13 @@ import com.typewritermc.codegen.isType
 import com.typewritermc.codegen.kotlinCode
 import com.typewritermc.codegen.rawAnnotation
 import com.typewritermc.discovery.GeneratedProviderKind
-import com.typewritermc.types.DataValue
 import com.typewritermc.types.canonicalText
 import com.typewritermc.types.codegen.DefinitionOwners
 import com.typewritermc.types.codegen.referencedIds
 import com.typewritermc.types.ksp.KspTypeConversionResult
 import com.typewritermc.types.ksp.KspTypeGraphConverter
 import skirout.editor.v1.search.RealmSearchQuery
+import skirout.editor.v1.type_catalog.DataValue
 import skirout.editor.v1.type_catalog.TypeUse
 import java.security.MessageDigest
 import kotlin.reflect.KClass

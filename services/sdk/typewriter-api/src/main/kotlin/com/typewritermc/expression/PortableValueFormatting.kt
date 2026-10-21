@@ -1,8 +1,11 @@
 package com.typewritermc.expression
 
-import com.typewritermc.types.DataValue
+import com.typewritermc.types.bigInteger
+import com.typewritermc.types.duration
+import com.typewritermc.types.integer
 import com.typewritermc.types.isPortableDuration
 import com.typewritermc.types.unwrapNamed
+import skirout.editor.v1.type_catalog.DataValue
 import java.math.BigDecimal
 import java.math.RoundingMode
 import java.text.DecimalFormat
@@ -36,18 +39,18 @@ internal fun roundPortableNumber(values: List<DataValue>): DataValue {
         }
     val result = value.displayDecimal().divide(step, 0, mode).multiply(step)
     return when (value) {
-        is DataValue.Integer -> {
-            DataValue.Integer(result.toBigIntegerExact())
+        is DataValue.IntegerWrapper -> {
+            DataValue.integer(result.toBigIntegerExact())
         }
 
-        is DataValue.Decimal -> {
-            DataValue.Decimal(result.stripTrailingZeros().toPlainString())
+        is DataValue.DecimalWrapper -> {
+            DataValue.DecimalWrapper(result.stripTrailingZeros().toPlainString())
         }
 
-        is DataValue.Float -> {
+        is DataValue.FloatWrapper -> {
             val number = result.toDouble()
             if (!number.isFinite()) throw OperationFailure("non_finite_number", "The numeric result must be finite.")
-            DataValue.Float(number)
+            DataValue.FloatWrapper(number)
         }
 
         else -> {
@@ -73,14 +76,14 @@ internal fun formatPortableNumber(values: List<DataValue>): DataValue {
             formatter.roundingMode = RoundingMode.HALF_EVEN
             formatter.format(source)
         }
-    return DataValue.StringValue(result)
+    return DataValue.StringValueWrapper(result)
 }
 
 internal fun formatPortableDuration(values: List<DataValue>): DataValue {
     val duration =
-        values[0].unwrapNamed() as? DataValue.Duration
+        values[0].unwrapNamed() as? DataValue.DurationWrapper
             ?: throw OperationFailure("expected_duration", "The expression value is not a duration.")
-    if (!duration.value.isPortableDuration()) {
+    if (!duration.duration.isPortableDuration()) {
         throw OperationFailure(
             "duration_range",
             "Duration millisecond count exceeds the finite portable range.",
@@ -91,7 +94,7 @@ internal fun formatPortableDuration(values: List<DataValue>): DataValue {
         throw OperationFailure("invalid_duration_units", "The duration display units are unavailable.")
     }
     val digits = values[2].formatDigits(3)
-    val milliseconds = java.math.BigInteger.valueOf(duration.value.inWholeMilliseconds)
+    val milliseconds = java.math.BigInteger.valueOf(duration.duration.inWholeMilliseconds)
     val magnitude = milliseconds.abs()
     val seconds = magnitude / java.math.BigInteger.valueOf(1000)
     val minutes = seconds / java.math.BigInteger.valueOf(60)
@@ -117,12 +120,12 @@ internal fun formatPortableDuration(values: List<DataValue>): DataValue {
                     .padStart(3, '0')
                     .take(digits)
         }
-    return DataValue.StringValue((if (milliseconds.signum() < 0) "-" else "") + whole + fraction)
+    return DataValue.StringValueWrapper((if (milliseconds.signum() < 0) "-" else "") + whole + fraction)
 }
 
 internal fun formatPortableTimestamp(values: List<DataValue>): DataValue {
     val timestamp =
-        values[0].unwrapNamed() as? DataValue.Timestamp
+        values[0].unwrapNamed() as? DataValue.TimestampWrapper
             ?: throw OperationFailure("expected_timestamp", "The expression value is not a timestamp.")
     val pattern = values[1].formatText()
     if (!Regex("(?:yyyy|MM|dd|HH|mm|ss|SSS|[^A-Za-z])+").matches(pattern) || pattern.length > 128) {
@@ -136,21 +139,21 @@ internal fun formatPortableTimestamp(values: List<DataValue>): DataValue {
         }
     val locale = values[3].formatText()
     val formatter = DateTimeFormatter.ofPattern(pattern, if (locale == "und") Locale.ROOT else portableLocale(locale)).withZone(zone)
-    return DataValue.StringValue(formatter.format(java.time.Instant.parse(timestamp.value.toString())))
+    return DataValue.StringValueWrapper(formatter.format(timestamp.value))
 }
 
 internal fun DataValue.displayDecimal(): BigDecimal {
     val source =
         when (val value = unwrapNamed()) {
-            is DataValue.Integer -> {
+            is DataValue.IntegerWrapper -> {
                 value.value.toString()
             }
 
-            is DataValue.Decimal -> {
+            is DataValue.DecimalWrapper -> {
                 value.value
             }
 
-            is DataValue.Float -> {
+            is DataValue.FloatWrapper -> {
                 if (value.value.isFinite()) {
                     value.value.toString()
                 } else {
@@ -176,12 +179,12 @@ internal fun DataValue.displayDecimal(): BigDecimal {
 }
 
 private fun DataValue.formatText(): String =
-    (unwrapNamed() as? DataValue.StringValue)?.value
+    (unwrapNamed() as? DataValue.StringValueWrapper)?.value
         ?: throw OperationFailure("expected_text", "The expression value is not text.")
 
 private fun DataValue.formatDigits(maximum: Int): Int {
     val value =
-        (unwrapNamed() as? DataValue.Integer)?.value
+        (unwrapNamed() as? DataValue.IntegerWrapper)?.bigInteger
             ?: throw OperationFailure("expected_integer", "Display precision must be an integer.")
     if (value.signum() < 0 ||
         value > maximum.toBigInteger()

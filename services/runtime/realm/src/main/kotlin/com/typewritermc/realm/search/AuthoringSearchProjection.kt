@@ -1,8 +1,12 @@
 package com.typewritermc.realm.search
 
 import com.typewritermc.authoring.AuthoringRecord
-import com.typewritermc.types.DataValue
 import com.typewritermc.types.ResourceId
+import com.typewritermc.types.fields
+import com.typewritermc.types.items
+import com.typewritermc.types.payload
+import com.typewritermc.types.rows
+import skirout.editor.v1.type_catalog.DataValue
 
 /** Derived search terms are stored beside the canonical resource in its write transaction. */
 internal fun authoredSearchText(
@@ -16,31 +20,31 @@ internal fun authoredSearchText(
 
 private fun DataValue.collectText(target: MutableList<String>) {
     when (this) {
-        is DataValue.StringValue -> {
+        is DataValue.StringValueWrapper -> {
             target += value
         }
 
-        is DataValue.EnumCase -> {
-            target += key
+        is DataValue.EnumCaseWrapper -> {
+            target += value
         }
 
-        is DataValue.Named -> {
+        is DataValue.NamedWrapper -> {
             payload.collectText(target)
         }
 
-        is DataValue.Record -> {
-            fields.values.forEach { it.collectText(target) }
+        is DataValue.RecordWrapper -> {
+            fields.forEach { it.value.collectText(target) }
         }
 
-        is DataValue.ListValue -> {
+        is DataValue.ListValueWrapper -> {
             items.forEach { it.value.collectText(target) }
         }
 
-        is DataValue.SetValue -> {
+        is DataValue.SetValueWrapper -> {
             items.forEach { it.value.collectText(target) }
         }
 
-        is DataValue.MapValue -> {
+        is DataValue.MapValueWrapper -> {
             rows.forEach { row ->
                 row.key.collectText(target)
                 row.value.collectText(target)

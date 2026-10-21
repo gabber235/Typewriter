@@ -16,11 +16,15 @@ import com.typewritermc.expression.field
 import com.typewritermc.expression.inputExpression
 import com.typewritermc.expression.local
 import com.typewritermc.expression.portableRegexValidationError
-import com.typewritermc.types.DataValue
 import com.typewritermc.types.NativeBindingRegistry
-import com.typewritermc.types.skir.SkirDataValueCodec
+import com.typewritermc.types.bytes
+import com.typewritermc.types.duration
+import com.typewritermc.types.field
+import com.typewritermc.types.integer
+import com.typewritermc.types.requirePortable
 import com.typewritermc.types.skir.getOrThrow
 import com.typewritermc.types.template
+import com.typewritermc.types.timestamp
 import skirout.editor.v1.expression.BoundDirection
 import skirout.editor.v1.expression.ExpressionNode
 import skirout.editor.v1.expression.RegexMatchMode
@@ -29,6 +33,7 @@ import skirout.editor.v1.expression.SizeBoundMetric
 import skirout.editor.v1.expression.SizeRangeMetric
 import skirout.editor.v1.expression.TextCompareOperation
 import skirout.editor.v1.expression.TimestampBoundDirection
+import skirout.editor.v1.type_catalog.DataValue
 import skirout.editor.v1.type_catalog.RuleId
 import skirout.editor.v1.type_catalog.RuleOrigin
 import skirout.editor.v1.type_catalog.ScalarKind
@@ -280,91 +285,88 @@ private fun literal(
     constants: PortableConstantEncoder?,
 ): ExpressionNode =
     ExpressionNode.LiteralWrapper(
-        SkirDataValueCodec
-            .encode(
-                when (value) {
-                    null -> {
-                        DataValue.Null
-                    }
+        when (value) {
+            null -> {
+                DataValue.NULL
+            }
 
-                    Unit -> {
-                        DataValue.Unit
-                    }
+            Unit -> {
+                DataValue.UNIT
+            }
 
-                    is Boolean -> {
-                        DataValue.Boolean(value)
-                    }
+            is Boolean -> {
+                DataValue.BooleanWrapper(value)
+            }
 
-                    is Byte -> {
-                        DataValue.Integer(value.toLong().toBigInteger())
-                    }
+            is Byte -> {
+                DataValue.integer(value.toLong().toBigInteger())
+            }
 
-                    is Short -> {
-                        DataValue.Integer(value.toLong().toBigInteger())
-                    }
+            is Short -> {
+                DataValue.integer(value.toLong().toBigInteger())
+            }
 
-                    is Int -> {
-                        DataValue.Integer(value.toLong().toBigInteger())
-                    }
+            is Int -> {
+                DataValue.integer(value.toLong().toBigInteger())
+            }
 
-                    is Long -> {
-                        DataValue.Integer(value.toBigInteger())
-                    }
+            is Long -> {
+                DataValue.integer(value.toBigInteger())
+            }
 
-                    is UByte -> {
-                        DataValue.Integer(value.toLong().toBigInteger())
-                    }
+            is UByte -> {
+                DataValue.integer(value.toLong().toBigInteger())
+            }
 
-                    is UShort -> {
-                        DataValue.Integer(value.toLong().toBigInteger())
-                    }
+            is UShort -> {
+                DataValue.integer(value.toLong().toBigInteger())
+            }
 
-                    is UInt -> {
-                        DataValue.Integer(value.toString().toBigInteger())
-                    }
+            is UInt -> {
+                DataValue.integer(value.toString().toBigInteger())
+            }
 
-                    is ULong -> {
-                        DataValue.Integer(value.toString().toBigInteger())
-                    }
+            is ULong -> {
+                DataValue.integer(value.toString().toBigInteger())
+            }
 
-                    is Float -> {
-                        DataValue.Float(value.toDouble())
-                    }
+            is Float -> {
+                DataValue.FloatWrapper(value.toDouble())
+            }
 
-                    is Double -> {
-                        DataValue.Float(value)
-                    }
+            is Double -> {
+                DataValue.FloatWrapper(value)
+            }
 
-                    is java.math.BigInteger -> {
-                        DataValue.Integer(value)
-                    }
+            is java.math.BigInteger -> {
+                DataValue.integer(value)
+            }
 
-                    is java.math.BigDecimal -> {
-                        DataValue.Decimal(value.toPlainString())
-                    }
+            is java.math.BigDecimal -> {
+                DataValue.DecimalWrapper(value.toPlainString())
+            }
 
-                    is String -> {
-                        DataValue.StringValue(value)
-                    }
+            is String -> {
+                DataValue.StringValueWrapper(value)
+            }
 
-                    is ByteArray -> {
-                        DataValue.Bytes(value)
-                    }
+            is ByteArray -> {
+                DataValue.bytes(value)
+            }
 
-                    is kotlin.time.Instant -> {
-                        DataValue.Timestamp(value)
-                    }
+            is kotlin.time.Instant -> {
+                DataValue.timestamp(value)
+            }
 
-                    is kotlin.time.Duration -> {
-                        DataValue.Duration(value)
-                    }
+            is kotlin.time.Duration -> {
+                DataValue.duration(value)
+            }
 
-                    else -> {
-                        constants?.encode(expected, value)
-                            ?: throw IllegalArgumentException("Unsupported portable rule constant ${value::class.qualifiedName}.")
-                    }
-                },
-            ).getOrThrow(),
+            else -> {
+                constants?.encode(expected, value)
+                    ?: throw IllegalArgumentException("Unsupported portable rule constant ${value::class.qualifiedName}.")
+            }
+        }.requirePortable(),
     )
 
 internal fun helperMessage(name: ConfigurationRuleHelper): String =

@@ -41,19 +41,21 @@ import com.typewritermc.presentation.DefaultPresentationRuntime
 import com.typewritermc.presentation.PresentationBuildBinding
 import com.typewritermc.presentation.PresentationDescriptor
 import com.typewritermc.presentation.PresentationTarget
-import com.typewritermc.types.DataValue
 import com.typewritermc.types.GeneratedRecordNativeBinding
 import com.typewritermc.types.NativeBindingFactory
 import com.typewritermc.types.catalog.CheckedType
 import com.typewritermc.types.catalog.DeclarationStatus
 import com.typewritermc.types.catalog.Resolution
+import com.typewritermc.types.named
 import com.typewritermc.types.namedTemplate
 import com.typewritermc.types.namedUse
 import com.typewritermc.types.qualified
+import com.typewritermc.types.record
 import com.typewritermc.types.use
 import de.infix.testBalloon.framework.core.testSuite
 import io.kotest.matchers.shouldBe
 import skirout.editor.v1.catalog.PresentationRole
+import skirout.editor.v1.type_catalog.DataValue
 import skirout.editor.v1.type_catalog.PresentationId
 import skirout.editor.v1.type_catalog.RepresentationTemplate
 import skirout.editor.v1.type_catalog.TypeDefinition
@@ -141,7 +143,7 @@ val RealmProviderArtifactsTest by testSuite {
                 val native = assembly.bindings.bind(checked)
                 @Suppress("UNCHECKED_CAST")
                 (native as com.typewritermc.types.NativeBinding<Unit>).encode(Unit) shouldBe
-                    DataValue.Named(RealmProviderFixture.type.namedUse(), DataValue.Record(emptyMap()))
+                    DataValue.named(RealmProviderFixture.type.namedUse(), DataValue.record(emptyMap()))
                 assembly.editorCatalog.presentations
                     .single()
                     .target shouldBe

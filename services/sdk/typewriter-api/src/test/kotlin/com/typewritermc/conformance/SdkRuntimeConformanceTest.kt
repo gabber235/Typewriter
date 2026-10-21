@@ -53,7 +53,6 @@ import com.typewritermc.imprint.ProducerId
 import com.typewritermc.presentation.PresentationDescriptor
 import com.typewritermc.presentation.PresentationProvider
 import com.typewritermc.presentation.PresentationTarget
-import com.typewritermc.types.DataValue
 import com.typewritermc.types.GeneratedNativeField
 import com.typewritermc.types.GeneratedRecordNativeBinding
 import com.typewritermc.types.GeneratedScalarNativeBinding
@@ -64,12 +63,21 @@ import com.typewritermc.types.RelationDeletePolicy
 import com.typewritermc.types.ResourceId
 import com.typewritermc.types.StandardTypes
 import com.typewritermc.types.catalog.DeclarationStatus
+import com.typewritermc.types.field
+import com.typewritermc.types.fields
 import com.typewritermc.types.floatScalar
+import com.typewritermc.types.integer
 import com.typewritermc.types.integerScalar
+import com.typewritermc.types.listValue
+import com.typewritermc.types.mapValue
+import com.typewritermc.types.named
 import com.typewritermc.types.namedTemplate
 import com.typewritermc.types.namedUse
 import com.typewritermc.types.nullable
 import com.typewritermc.types.qualified
+import com.typewritermc.types.record
+import com.typewritermc.types.rows
+import com.typewritermc.types.setValue
 import com.typewritermc.types.skir.SkirTypeCodec
 import com.typewritermc.types.skir.getOrThrow
 import com.typewritermc.types.template
@@ -79,6 +87,7 @@ import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.matchers.shouldBe
 import skirout.editor.v1.catalog.PresentationMaterial
 import skirout.editor.v1.expression.ExpressionNode
+import skirout.editor.v1.type_catalog.DataValue
 import skirout.editor.v1.type_catalog.DeclarationOwner
 import skirout.editor.v1.type_catalog.EndpointId
 import skirout.editor.v1.type_catalog.FieldDeclaration
@@ -116,14 +125,14 @@ val SdkRuntimeConformanceTest by testSuite {
                 ResourceId("book:requested"),
                 com.typewritermc.authoring.ValuePath(),
             )
-        val evaluator = DefaultExpressionEvaluator(ExpressionValueReader { DataValue.StringValue("Requested").available() })
+        val evaluator = DefaultExpressionEvaluator(ExpressionValueReader { DataValue.StringValueWrapper("Requested").available() })
 
         with(EmptyReads) {
             evaluator.evaluate(
                 predicate,
                 ExpressionBindings(mapOf(ExpressionBindingId("configured_value") to location)),
                 EvaluationBudget(100, 100),
-            ) shouldBe Availability.Available(DataValue.Boolean(true))
+            ) shouldBe Availability.Available(DataValue.BooleanWrapper(true))
         }
     }
 
@@ -155,26 +164,26 @@ val SdkRuntimeConformanceTest by testSuite {
 
         with(EmptyReads) {
             evaluator.evaluate(
-                ExpressionNode.createAnd(left = testLiteral(DataValue.Boolean(false)), right = read),
+                ExpressionNode.createAnd(left = testLiteral(DataValue.BooleanWrapper(false)), right = read),
                 bindings,
                 budget,
             ) shouldBe
-                Availability.Available(DataValue.Boolean(false))
+                Availability.Available(DataValue.BooleanWrapper(false))
             reads shouldBe 0
             evaluator.evaluate(
-                ExpressionNode.createOrElse(input = read, fallback = testLiteral(DataValue.StringValue("fallback"))),
+                ExpressionNode.createOrElse(input = read, fallback = testLiteral(DataValue.StringValueWrapper("fallback"))),
                 bindings,
                 budget,
-            ) shouldBe Availability.Available(DataValue.StringValue("fallback"))
-            result = DataValue.Named(TEST_CODE_USE, DataValue.StringValue("chapter")).available()
+            ) shouldBe Availability.Available(DataValue.StringValueWrapper("fallback"))
+            result = DataValue.named(TEST_CODE_USE, DataValue.StringValueWrapper("chapter")).available()
             evaluator.evaluate(
                 ExpressionNode.createRuleUnary(operation = skirout.editor.v1.expression.RuleUnaryOperation.NON_BLANK, source = read),
                 bindings,
                 budget,
-            ) shouldBe Availability.Available(DataValue.Boolean(true))
+            ) shouldBe Availability.Available(DataValue.BooleanWrapper(true))
             result = Availability.Failed(EvaluationDiagnostic("read_failed", "broken", listOf(location)))
             evaluator.evaluate(
-                ExpressionNode.createOrElse(input = read, fallback = testLiteral(DataValue.StringValue("hidden"))),
+                ExpressionNode.createOrElse(input = read, fallback = testLiteral(DataValue.StringValueWrapper("hidden"))),
                 bindings,
                 budget,
             ) shouldBe result
@@ -182,19 +191,19 @@ val SdkRuntimeConformanceTest by testSuite {
     }
 
     test("portable evaluation bounds expression depth without evaluating a short circuited branch") {
-        var nested: ExpressionNode = testLiteral(DataValue.Boolean(true))
+        var nested: ExpressionNode = testLiteral(DataValue.BooleanWrapper(true))
         repeat(PortableExpressionLimits.MAX_DEPTH + 1) {
-            nested = ExpressionNode.createAnd(left = testLiteral(DataValue.Boolean(true)), right = nested)
+            nested = ExpressionNode.createAnd(left = testLiteral(DataValue.BooleanWrapper(true)), right = nested)
         }
         val evaluator = DefaultExpressionEvaluator(ExpressionValueReader { error("No reads expected") })
         with(EmptyReads) {
             val failed = evaluator.evaluate(nested, ExpressionBindings(emptyMap()), EvaluationBudget(100_000, 100))
             (failed as Availability.Failed).diagnostic.code shouldBe "expression_depth_limit"
             evaluator.evaluate(
-                ExpressionNode.createAnd(left = testLiteral(DataValue.Boolean(false)), right = nested),
+                ExpressionNode.createAnd(left = testLiteral(DataValue.BooleanWrapper(false)), right = nested),
                 ExpressionBindings(emptyMap()),
                 EvaluationBudget(100_000, 100),
-            ) shouldBe Availability.Available(DataValue.Boolean(false))
+            ) shouldBe Availability.Available(DataValue.BooleanWrapper(false))
         }
     }
 
@@ -204,13 +213,13 @@ val SdkRuntimeConformanceTest by testSuite {
         fun nonBlank(value: String) =
             ExpressionNode.createRuleUnary(
                 operation = skirout.editor.v1.expression.RuleUnaryOperation.NON_BLANK,
-                source = testLiteral(DataValue.StringValue(value)),
+                source = testLiteral(DataValue.StringValueWrapper(value)),
             )
 
         fun trim(value: String) =
             ExpressionNode.createTextUnary(
                 operation = skirout.editor.v1.expression.TextUnaryOperation.TRIM,
-                source = testLiteral(DataValue.StringValue(value)),
+                source = testLiteral(DataValue.StringValueWrapper(value)),
             )
 
         with(EmptyReads) {
@@ -219,18 +228,18 @@ val SdkRuntimeConformanceTest by testSuite {
                     nonBlank(whitespace),
                     ExpressionBindings(emptyMap()),
                     EvaluationBudget(10, 0),
-                ) shouldBe Availability.Available(DataValue.Boolean(false))
+                ) shouldBe Availability.Available(DataValue.BooleanWrapper(false))
             }
             evaluator.evaluate(
                 nonBlank("\u001C"),
                 ExpressionBindings(emptyMap()),
                 EvaluationBudget(10, 0),
-            ) shouldBe Availability.Available(DataValue.Boolean(true))
+            ) shouldBe Availability.Available(DataValue.BooleanWrapper(true))
             evaluator.evaluate(
                 trim("\uFEFF value \u0085"),
                 ExpressionBindings(emptyMap()),
                 EvaluationBudget(10, 0),
-            ) shouldBe Availability.Available(DataValue.StringValue("value"))
+            ) shouldBe Availability.Available(DataValue.StringValueWrapper("value"))
         }
     }
 
@@ -267,21 +276,21 @@ val SdkRuntimeConformanceTest by testSuite {
             pattern: String,
         ) = ExpressionNode.createRegexTest(
             mode = skirout.editor.v1.expression.RegexMatchMode.FULL_MATCH,
-            source = testLiteral(DataValue.StringValue(value)),
-            pattern = testLiteral(DataValue.StringValue(pattern)),
+            source = testLiteral(DataValue.StringValueWrapper(value)),
+            pattern = testLiteral(DataValue.StringValueWrapper(pattern)),
         )
 
         with(EmptyReads) {
             evaluator.evaluate(fullMatch("\u00A0", "\\s"), ExpressionBindings(emptyMap()), EvaluationBudget(10, 0)) shouldBe
-                Availability.Available(DataValue.Boolean(true))
+                Availability.Available(DataValue.BooleanWrapper(true))
             evaluator.evaluate(fullMatch("\u00A0", "[\\s]"), ExpressionBindings(emptyMap()), EvaluationBudget(10, 0)) shouldBe
-                Availability.Available(DataValue.Boolean(true))
+                Availability.Available(DataValue.BooleanWrapper(true))
             evaluator.evaluate(fullMatch("😀", "."), ExpressionBindings(emptyMap()), EvaluationBudget(10, 0)) shouldBe
-                Availability.Available(DataValue.Boolean(true))
+                Availability.Available(DataValue.BooleanWrapper(true))
             evaluator.evaluate(fullMatch("\u0085", "."), ExpressionBindings(emptyMap()), EvaluationBudget(10, 0)) shouldBe
-                Availability.Available(DataValue.Boolean(true))
+                Availability.Available(DataValue.BooleanWrapper(true))
             evaluator.evaluate(fullMatch("\n", "."), ExpressionBindings(emptyMap()), EvaluationBudget(10, 0)) shouldBe
-                Availability.Available(DataValue.Boolean(false))
+                Availability.Available(DataValue.BooleanWrapper(false))
         }
     }
 
@@ -293,8 +302,8 @@ val SdkRuntimeConformanceTest by testSuite {
             pattern: String,
         ) = ExpressionNode.createRegexTest(
             mode = skirout.editor.v1.expression.RegexMatchMode.SEARCH,
-            source = testLiteral(DataValue.StringValue(source)),
-            pattern = testLiteral(DataValue.StringValue(pattern)),
+            source = testLiteral(DataValue.StringValueWrapper(source)),
+            pattern = testLiteral(DataValue.StringValueWrapper(pattern)),
         )
 
         fun replace(
@@ -302,9 +311,9 @@ val SdkRuntimeConformanceTest by testSuite {
             pattern: String,
             replacement: String,
         ) = ExpressionNode.createRegexReplace(
-            source = testLiteral(DataValue.StringValue(source)),
-            pattern = testLiteral(DataValue.StringValue(pattern)),
-            replacement = testLiteral(DataValue.StringValue(replacement)),
+            source = testLiteral(DataValue.StringValueWrapper(source)),
+            pattern = testLiteral(DataValue.StringValueWrapper(pattern)),
+            replacement = testLiteral(DataValue.StringValueWrapper(replacement)),
         )
 
         with(EmptyReads) {
@@ -379,42 +388,53 @@ val SdkRuntimeConformanceTest by testSuite {
 
         with(EmptyReads) {
             replace(
-                listOf(DataValue.StringValue("😀"), DataValue.StringValue(""), DataValue.StringValue("_")),
-            ) shouldBe Availability.Available(DataValue.StringValue("_😀_"))
+                listOf(DataValue.StringValueWrapper("😀"), DataValue.StringValueWrapper(""), DataValue.StringValueWrapper("_")),
+            ) shouldBe Availability.Available(DataValue.StringValueWrapper("_😀_"))
 
             split(
-                listOf(DataValue.StringValue("😀x"), DataValue.StringValue("")),
+                listOf(DataValue.StringValueWrapper("😀x"), DataValue.StringValueWrapper("")),
             ) shouldBe
                 Availability.Available(
-                    DataValue.ListValue(
+                    DataValue.listValue(
                         listOf(
-                            com.typewritermc.types.ListItem(
-                                com.typewritermc.authoring.ItemId("split.0"),
-                                DataValue.StringValue("😀"),
+                            skirout.editor.v1.type_catalog.ListItem(
+                                id =
+                                    skirout.editor.v1.type_catalog
+                                        .ItemId(value = "split.0"),
+                                value = DataValue.StringValueWrapper("😀"),
                             ),
-                            com.typewritermc.types.ListItem(
-                                com.typewritermc.authoring.ItemId("split.1"),
-                                DataValue.StringValue("x"),
+                            skirout.editor.v1.type_catalog.ListItem(
+                                id =
+                                    skirout.editor.v1.type_catalog
+                                        .ItemId(value = "split.1"),
+                                value = DataValue.StringValueWrapper("x"),
                             ),
                         ),
                     ),
                 )
             split(
-                listOf(DataValue.StringValue(""), DataValue.StringValue("")),
-            ) shouldBe Availability.Available(DataValue.ListValue(emptyList()))
+                listOf(DataValue.StringValueWrapper(""), DataValue.StringValueWrapper("")),
+            ) shouldBe Availability.Available(DataValue.listValue(emptyList()))
 
-            val large = DataValue.StringValue("value".repeat(20))
+            val large = DataValue.StringValueWrapper("value".repeat(20))
             listOf(
                 replace(
-                    listOf(DataValue.StringValue("a"), DataValue.StringValue(""), large),
+                    listOf(DataValue.StringValueWrapper("a"), DataValue.StringValueWrapper(""), large),
                     EvaluationBudget(30, 100),
                 ),
                 join(
                     listOf(
-                        DataValue.ListValue(
-                            listOf(com.typewritermc.types.ListItem(com.typewritermc.authoring.ItemId("only"), large)),
+                        DataValue.listValue(
+                            listOf(
+                                skirout.editor.v1.type_catalog.ListItem(
+                                    id =
+                                        skirout.editor.v1.type_catalog
+                                            .ItemId(value = "only"),
+                                    value = large,
+                                ),
+                            ),
                         ),
-                        DataValue.StringValue(""),
+                        DataValue.StringValueWrapper(""),
                     ),
                     EvaluationBudget(30, 100),
                 ),
@@ -428,7 +448,7 @@ val SdkRuntimeConformanceTest by testSuite {
 
             val splitLimit =
                 split(
-                    listOf(DataValue.StringValue("😀x"), DataValue.StringValue("")),
+                    listOf(DataValue.StringValueWrapper("😀x"), DataValue.StringValueWrapper("")),
                     EvaluationBudget(100, 1),
                 )
             (splitLimit as Availability.Failed).diagnostic.code shouldBe "expression_collection_limit"
@@ -440,10 +460,20 @@ val SdkRuntimeConformanceTest by testSuite {
         val binding = ExpressionBindingId("items")
         val item = ExpressionBindingId("item")
         var value: DataValue =
-            DataValue.ListValue(
+            DataValue.listValue(
                 listOf(
-                    com.typewritermc.types.ListItem(com.typewritermc.authoring.ItemId("first"), DataValue.StringValue("same")),
-                    com.typewritermc.types.ListItem(com.typewritermc.authoring.ItemId("second"), DataValue.StringValue("same")),
+                    skirout.editor.v1.type_catalog.ListItem(
+                        id =
+                            skirout.editor.v1.type_catalog
+                                .ItemId(value = "first"),
+                        value = DataValue.StringValueWrapper("same"),
+                    ),
+                    skirout.editor.v1.type_catalog.ListItem(
+                        id =
+                            skirout.editor.v1.type_catalog
+                                .ItemId(value = "second"),
+                        value = DataValue.StringValueWrapper("same"),
+                    ),
                 ),
             )
         val evaluator = DefaultExpressionEvaluator(ExpressionValueReader { value.available() })
@@ -454,13 +484,15 @@ val SdkRuntimeConformanceTest by testSuite {
                 ExpressionNode.createRuleUnary(operation = skirout.editor.v1.expression.RuleUnaryOperation.UNIQUE, source = input),
                 bindings,
                 EvaluationBudget(100, 10),
-            ) shouldBe Availability.Available(DataValue.Boolean(false))
+            ) shouldBe Availability.Available(DataValue.BooleanWrapper(false))
             value =
-                DataValue.ListValue(
+                DataValue.listValue(
                     listOf(
-                        com.typewritermc.types.ListItem(
-                            com.typewritermc.authoring.ItemId("unfinished"),
-                            DataValue.Record(mapOf("valid" to DataValue.Unfilled)),
+                        skirout.editor.v1.type_catalog.ListItem(
+                            id =
+                                skirout.editor.v1.type_catalog
+                                    .ItemId(value = "unfinished"),
+                            value = DataValue.record(mapOf("valid" to DataValue.UNFILLED)),
                         ),
                     ),
                 )
@@ -476,7 +508,10 @@ val SdkRuntimeConformanceTest by testSuite {
                                 com.typewritermc.authoring.ValuePath(
                                     listOf(
                                         com.typewritermc.authoring.PathSegment
-                                            .Item(com.typewritermc.authoring.ItemId("unfinished")),
+                                            .Item(
+                                                skirout.editor.v1.type_catalog
+                                                    .ItemId(value = "unfinished"),
+                                            ),
                                     ),
                                 ),
                         ),
@@ -484,19 +519,25 @@ val SdkRuntimeConformanceTest by testSuite {
                 )
 
             value =
-                DataValue.ListValue(
+                DataValue.listValue(
                     listOf(
-                        com.typewritermc.types.ListItem(
-                            com.typewritermc.authoring.ItemId("known one"),
-                            DataValue.StringValue("same"),
+                        skirout.editor.v1.type_catalog.ListItem(
+                            id =
+                                skirout.editor.v1.type_catalog
+                                    .ItemId(value = "known one"),
+                            value = DataValue.StringValueWrapper("same"),
                         ),
-                        com.typewritermc.types.ListItem(
-                            com.typewritermc.authoring.ItemId("known two"),
-                            DataValue.StringValue("same"),
+                        skirout.editor.v1.type_catalog.ListItem(
+                            id =
+                                skirout.editor.v1.type_catalog
+                                    .ItemId(value = "known two"),
+                            value = DataValue.StringValueWrapper("same"),
                         ),
-                        com.typewritermc.types.ListItem(
-                            com.typewritermc.authoring.ItemId("unfinished"),
-                            DataValue.Record(mapOf("valid" to DataValue.Unfilled)),
+                        skirout.editor.v1.type_catalog.ListItem(
+                            id =
+                                skirout.editor.v1.type_catalog
+                                    .ItemId(value = "unfinished"),
+                            value = DataValue.record(mapOf("valid" to DataValue.UNFILLED)),
                         ),
                     ),
                 )
@@ -504,18 +545,20 @@ val SdkRuntimeConformanceTest by testSuite {
                 ExpressionNode.CollectionSizeWrapper(input),
                 bindings,
                 EvaluationBudget(100, 10),
-            ) shouldBe Availability.Available(DataValue.Integer(3.toBigInteger()))
+            ) shouldBe Availability.Available(DataValue.integer(3.toBigInteger()))
             evaluator.evaluate(
                 ExpressionNode.createRuleUnary(operation = skirout.editor.v1.expression.RuleUnaryOperation.UNIQUE, source = input),
                 bindings,
                 EvaluationBudget(100, 10),
-            ) shouldBe Availability.Available(DataValue.Boolean(false))
+            ) shouldBe Availability.Available(DataValue.BooleanWrapper(false))
             value =
-                DataValue.ListValue(
+                DataValue.listValue(
                     listOf(
-                        com.typewritermc.types.ListItem(
-                            com.typewritermc.authoring.ItemId("unfinished"),
-                            DataValue.Record(mapOf("valid" to DataValue.Unfilled)),
+                        skirout.editor.v1.type_catalog.ListItem(
+                            id =
+                                skirout.editor.v1.type_catalog
+                                    .ItemId(value = "unfinished"),
+                            value = DataValue.record(mapOf("valid" to DataValue.UNFILLED)),
                         ),
                     ),
                 )
@@ -542,7 +585,10 @@ val SdkRuntimeConformanceTest by testSuite {
                                 com.typewritermc.authoring.ValuePath(
                                     listOf(
                                         com.typewritermc.authoring.PathSegment
-                                            .Item(com.typewritermc.authoring.ItemId("unfinished")),
+                                            .Item(
+                                                skirout.editor.v1.type_catalog
+                                                    .ItemId(value = "unfinished"),
+                                            ),
                                         com.typewritermc.authoring.PathSegment
                                             .Field("valid"),
                                     ),
@@ -552,57 +598,75 @@ val SdkRuntimeConformanceTest by testSuite {
                 )
 
             value =
-                DataValue.ListValue(
+                DataValue.listValue(
                     listOf(
-                        com.typewritermc.types.ListItem(com.typewritermc.authoring.ItemId("yes"), DataValue.Boolean(true)),
-                        com.typewritermc.types.ListItem(com.typewritermc.authoring.ItemId("no"), DataValue.Boolean(false)),
+                        skirout.editor.v1.type_catalog.ListItem(
+                            id =
+                                skirout.editor.v1.type_catalog
+                                    .ItemId(value = "yes"),
+                            value = DataValue.BooleanWrapper(true),
+                        ),
+                        skirout.editor.v1.type_catalog.ListItem(
+                            id =
+                                skirout.editor.v1.type_catalog
+                                    .ItemId(value = "no"),
+                            value = DataValue.BooleanWrapper(false),
+                        ),
                     ),
                 )
             evaluator.evaluate(
                 ExpressionNode.createAny(source = input, body = localNode(com.typewritermc.authoring.ValuePath())),
                 bindings,
                 EvaluationBudget(100, 1),
-            ) shouldBe Availability.Available(DataValue.Boolean(true))
+            ) shouldBe Availability.Available(DataValue.BooleanWrapper(true))
         }
     }
 
     test("map access preserves named key identity and retains unfinished key uncertainty") {
         val location = com.typewritermc.authoring.ValueLocation(ResourceId("map:test"), com.typewritermc.authoring.ValuePath())
         val binding = ExpressionBindingId("map")
-        var value: DataValue = DataValue.MapValue(emptyList())
+        var value: DataValue = DataValue.mapValue(emptyList())
         val evaluator = DefaultExpressionEvaluator(ExpressionValueReader { value.available() })
         val input = testInput(binding, com.typewritermc.authoring.ValuePath())
 
         fun access(key: DataValue) = ExpressionNode.createCollectionAccess(source = input, index = testLiteral(key))
 
         value =
-            DataValue.MapValue(
+            DataValue.mapValue(
                 listOf(
-                    com.typewritermc.types.MapRow(
-                        com.typewritermc.authoring.ItemId("target"),
-                        DataValue.StringValue("target"),
-                        DataValue.StringValue("available"),
+                    skirout.editor.v1.type_catalog.MapRow(
+                        id =
+                            skirout.editor.v1.type_catalog
+                                .ItemId(value = "target"),
+                        key = DataValue.StringValueWrapper("target"),
+                        value = DataValue.StringValueWrapper("available"),
                     ),
-                    com.typewritermc.types.MapRow(
-                        com.typewritermc.authoring.ItemId("duplicate one"),
-                        DataValue.StringValue("duplicate"),
-                        DataValue.StringValue("one"),
+                    skirout.editor.v1.type_catalog.MapRow(
+                        id =
+                            skirout.editor.v1.type_catalog
+                                .ItemId(value = "duplicate one"),
+                        key = DataValue.StringValueWrapper("duplicate"),
+                        value = DataValue.StringValueWrapper("one"),
                     ),
-                    com.typewritermc.types.MapRow(
-                        com.typewritermc.authoring.ItemId("duplicate two"),
-                        DataValue.StringValue("duplicate"),
-                        DataValue.StringValue("two"),
+                    skirout.editor.v1.type_catalog.MapRow(
+                        id =
+                            skirout.editor.v1.type_catalog
+                                .ItemId(value = "duplicate two"),
+                        key = DataValue.StringValueWrapper("duplicate"),
+                        value = DataValue.StringValueWrapper("two"),
                     ),
-                    com.typewritermc.types.MapRow(
-                        com.typewritermc.authoring.ItemId("unfinished"),
-                        DataValue.Unfilled,
-                        DataValue.Unfilled,
+                    skirout.editor.v1.type_catalog.MapRow(
+                        id =
+                            skirout.editor.v1.type_catalog
+                                .ItemId(value = "unfinished"),
+                        key = DataValue.UNFILLED,
+                        value = DataValue.UNFILLED,
                     ),
                 ),
             )
         with(EmptyReads) {
             evaluator.evaluate(
-                access(DataValue.StringValue("target")),
+                access(DataValue.StringValueWrapper("target")),
                 ExpressionBindings(mapOf(binding to location)),
                 EvaluationBudget(100, 100),
             ) shouldBe
@@ -613,7 +677,10 @@ val SdkRuntimeConformanceTest by testSuite {
                                 com.typewritermc.authoring.ValuePath(
                                     listOf(
                                         com.typewritermc.authoring.PathSegment
-                                            .Item(com.typewritermc.authoring.ItemId("target")),
+                                            .Item(
+                                                skirout.editor.v1.type_catalog
+                                                    .ItemId(value = "target"),
+                                            ),
                                         com.typewritermc.authoring.PathSegment.MapValue,
                                     ),
                                 ),
@@ -623,7 +690,10 @@ val SdkRuntimeConformanceTest by testSuite {
                                 com.typewritermc.authoring.ValuePath(
                                     listOf(
                                         com.typewritermc.authoring.PathSegment
-                                            .Item(com.typewritermc.authoring.ItemId("unfinished")),
+                                            .Item(
+                                                skirout.editor.v1.type_catalog
+                                                    .ItemId(value = "unfinished"),
+                                            ),
                                         com.typewritermc.authoring.PathSegment.MapKey,
                                     ),
                                 ),
@@ -632,26 +702,27 @@ val SdkRuntimeConformanceTest by testSuite {
                 )
 
             value =
-                (value as DataValue.MapValue).copy(
-                    rows =
-                        (value as DataValue.MapValue).rows.map { row ->
-                            if (row.id.value == "unfinished") row.copy(key = DataValue.StringValue("other")) else row
-                        },
+                DataValue.mapValue(
+                    (value as DataValue.MapValueWrapper).rows.map { row ->
+                        if (row.id.value == "unfinished") row.copy(key = DataValue.StringValueWrapper("other")) else row
+                    },
                 )
             evaluator.evaluate(
-                access(DataValue.StringValue("target")),
+                access(DataValue.StringValueWrapper("target")),
                 ExpressionBindings(mapOf(binding to location)),
                 EvaluationBudget(100, 100),
-            ) shouldBe Availability.Available(DataValue.StringValue("available"))
+            ) shouldBe Availability.Available(DataValue.StringValueWrapper("available"))
 
-            val namedKey = DataValue.Named(TEST_CODE_USE, DataValue.StringValue("wrapped"))
+            val namedKey = DataValue.named(TEST_CODE_USE, DataValue.StringValueWrapper("wrapped"))
             value =
-                DataValue.MapValue(
+                DataValue.mapValue(
                     listOf(
-                        com.typewritermc.types.MapRow(
-                            com.typewritermc.authoring.ItemId("named"),
-                            namedKey,
-                            DataValue.StringValue("named value"),
+                        skirout.editor.v1.type_catalog.MapRow(
+                            id =
+                                skirout.editor.v1.type_catalog
+                                    .ItemId(value = "named"),
+                            key = namedKey,
+                            value = DataValue.StringValueWrapper("named value"),
                         ),
                     ),
                 )
@@ -659,25 +730,29 @@ val SdkRuntimeConformanceTest by testSuite {
                 access(namedKey),
                 ExpressionBindings(mapOf(binding to location)),
                 EvaluationBudget(100, 100),
-            ) shouldBe Availability.Available(DataValue.StringValue("named value"))
+            ) shouldBe Availability.Available(DataValue.StringValueWrapper("named value"))
 
             value =
-                DataValue.MapValue(
+                DataValue.mapValue(
                     listOf(
-                        com.typewritermc.types.MapRow(
-                            com.typewritermc.authoring.ItemId("first"),
-                            DataValue.StringValue("same"),
-                            DataValue.StringValue("one"),
+                        skirout.editor.v1.type_catalog.MapRow(
+                            id =
+                                skirout.editor.v1.type_catalog
+                                    .ItemId(value = "first"),
+                            key = DataValue.StringValueWrapper("same"),
+                            value = DataValue.StringValueWrapper("one"),
                         ),
-                        com.typewritermc.types.MapRow(
-                            com.typewritermc.authoring.ItemId("second"),
-                            DataValue.StringValue("same"),
-                            DataValue.StringValue("two"),
+                        skirout.editor.v1.type_catalog.MapRow(
+                            id =
+                                skirout.editor.v1.type_catalog
+                                    .ItemId(value = "second"),
+                            key = DataValue.StringValueWrapper("same"),
+                            value = DataValue.StringValueWrapper("two"),
                         ),
                     ),
                 )
             evaluator.evaluate(
-                access(DataValue.StringValue("same")),
+                access(DataValue.StringValueWrapper("same")),
                 ExpressionBindings(mapOf(binding to location)),
                 EvaluationBudget(100, 100),
             ) shouldBe
@@ -688,7 +763,10 @@ val SdkRuntimeConformanceTest by testSuite {
                                 com.typewritermc.authoring.ValuePath(
                                     listOf(
                                         com.typewritermc.authoring.PathSegment
-                                            .Item(com.typewritermc.authoring.ItemId(id)),
+                                            .Item(
+                                                skirout.editor.v1.type_catalog
+                                                    .ItemId(value = id),
+                                            ),
                                         com.typewritermc.authoring.PathSegment.MapValue,
                                     ),
                                 ),
@@ -737,14 +815,14 @@ val SdkRuntimeConformanceTest by testSuite {
             assembly.checked
                 .resolve(INT_USE)
                 .ready()
-                .complete(DataValue.Integer(5.toBigInteger()))
+                .complete(DataValue.integer(5.toBigInteger()))
                 .complete()
         val chapterUse = TEST_CODE_USE
         val chapter =
             assembly.checked
                 .resolve(chapterUse.use)
                 .ready()
-                .complete(DataValue.Named(chapterUse, DataValue.StringValue("chapter")))
+                .complete(DataValue.named(chapterUse, DataValue.StringValueWrapper("chapter")))
                 .complete()
 
         assembly.checks
@@ -767,10 +845,10 @@ val SdkRuntimeConformanceTest by testSuite {
                 .descriptor.predicate
         val configured = ExpressionBindingId("configured_value")
         val location = com.typewritermc.authoring.ValueLocation(ResourceId("counter:1"), com.typewritermc.authoring.ValuePath())
-        val evaluator = DefaultExpressionEvaluator(ExpressionValueReader { DataValue.Integer(5.toBigInteger()).available() })
+        val evaluator = DefaultExpressionEvaluator(ExpressionValueReader { DataValue.integer(5.toBigInteger()).available() })
         with(EmptyReads) {
             evaluator.evaluate(rule, ExpressionBindings(mapOf(configured to location)), EvaluationBudget(100, 100)) shouldBe
-                Availability.Available(DataValue.Boolean(true))
+                Availability.Available(DataValue.BooleanWrapper(true))
         }
 
         val unsigned = DefaultConfigurationCollectionScope(counter.id)
@@ -786,14 +864,14 @@ val SdkRuntimeConformanceTest by testSuite {
                 .descriptor.predicate
         val unsignedEvaluator =
             DefaultExpressionEvaluator(
-                ExpressionValueReader { DataValue.Integer(ULong.MAX_VALUE.toString().toBigInteger()).available() },
+                ExpressionValueReader { DataValue.integer(ULong.MAX_VALUE.toString().toBigInteger()).available() },
             )
         with(EmptyReads) {
             unsignedEvaluator.evaluate(
                 unsignedRule,
                 ExpressionBindings(mapOf(configured to location)),
                 EvaluationBudget(100, 100),
-            ) shouldBe Availability.Available(DataValue.Boolean(true))
+            ) shouldBe Availability.Available(DataValue.BooleanWrapper(true))
         }
     }
 
@@ -896,8 +974,8 @@ val SdkRuntimeConformanceTest by testSuite {
             CatalogContributions(
                 declarations = listOf(OwnedTypeDeclaration(origin, TEST_PORTABLE_RECORD_DEFINITION)),
             ).assemble(CatalogAssemblyContext(CatalogGeneration("portable bindings")))
-        val payload = DataValue.Record(mapOf("label" to DataValue.StringValue("opaque")))
-        val value = DataValue.Named(TEST_PORTABLE_RECORD_USE, payload)
+        val payload = DataValue.record(mapOf("label" to DataValue.StringValueWrapper("opaque")))
+        val value = DataValue.named(TEST_PORTABLE_RECORD_USE, payload)
         val checked = assembly.checked.resolve(TEST_PORTABLE_RECORD_USE.use).ready()
 
         @Suppress("UNCHECKED_CAST")
@@ -908,13 +986,15 @@ val SdkRuntimeConformanceTest by testSuite {
 
         val listChecked = assembly.checked.resolve(TEST_PORTABLE_RECORD_LIST_USE.use).ready()
         val authoredList =
-            DataValue.Named(
+            DataValue.named(
                 TEST_PORTABLE_RECORD_LIST_USE,
-                DataValue.ListValue(
+                DataValue.listValue(
                     listOf(
-                        com.typewritermc.types.ListItem(
-                            com.typewritermc.authoring.ItemId("opaque"),
-                            value,
+                        skirout.editor.v1.type_catalog.ListItem(
+                            id =
+                                skirout.editor.v1.type_catalog
+                                    .ItemId(value = "opaque"),
+                            value = value,
                         ),
                     ),
                 ),
@@ -925,13 +1005,15 @@ val SdkRuntimeConformanceTest by testSuite {
         val portableList = listBinding.decode(listChecked.complete(authoredList).complete())
         portableList shouldBe listOf(PortableValue(TEST_PORTABLE_RECORD_USE.use, payload))
         listBinding.encode(portableList) shouldBe
-            DataValue.Named(
+            DataValue.named(
                 TEST_PORTABLE_RECORD_LIST_USE,
-                DataValue.ListValue(
+                DataValue.listValue(
                     listOf(
-                        com.typewritermc.types.ListItem(
-                            com.typewritermc.authoring.ItemId("native:0"),
-                            value,
+                        skirout.editor.v1.type_catalog.ListItem(
+                            id =
+                                skirout.editor.v1.type_catalog
+                                    .ItemId(value = "native:0"),
+                            value = value,
                         ),
                     ),
                 ),
@@ -940,7 +1022,7 @@ val SdkRuntimeConformanceTest by testSuite {
         shouldThrow<NativeBindingException> {
             binding.encode(PortableValue(TEST_CODE_USE.use, payload))
         }.code shouldBe "wrong_portable_actual_type"
-        val invalid = checked.complete(DataValue.Named(TEST_PORTABLE_RECORD_USE, DataValue.Record(emptyMap())))
+        val invalid = checked.complete(DataValue.named(TEST_PORTABLE_RECORD_USE, DataValue.record(emptyMap())))
         (invalid as CompletenessResult.Invalid).problems.single().code shouldBe "missing_field"
     }
 
@@ -952,24 +1034,35 @@ val SdkRuntimeConformanceTest by testSuite {
                 nativeBindings = listOf(OwnedNativeBinding(origin, TestIdentityKeyNativeBindingFactory)),
             ).assemble(CatalogAssemblyContext(CatalogGeneration("canonical native duplicates")))
         val first =
-            DataValue.Named(
+            DataValue.named(
                 TEST_IDENTITY_KEY_USE,
-                DataValue.Record(mapOf("value" to DataValue.StringValue("same"))),
+                DataValue.record(mapOf("value" to DataValue.StringValueWrapper("same"))),
             )
         val second =
-            DataValue.Named(
+            DataValue.named(
                 TEST_IDENTITY_KEY_USE,
-                DataValue.Record(mapOf("value" to DataValue.StringValue("same"))),
+                DataValue.record(mapOf("value" to DataValue.StringValueWrapper("same"))),
             )
 
         val setChecked = assembly.checked.resolve(TEST_IDENTITY_KEY_SET_USE.use).ready()
         val setValue =
-            DataValue.Named(
+            DataValue.named(
                 TEST_IDENTITY_KEY_SET_USE,
-                DataValue.SetValue(
+                DataValue.setValue(
                     listOf(
-                        com.typewritermc.types.ListItem(com.typewritermc.authoring.ItemId("first"), first),
-                        com.typewritermc.types.ListItem(com.typewritermc.authoring.ItemId("second"), second),
+                        skirout.editor.v1.type_catalog
+                            .ListItem(
+                                id =
+                                    skirout.editor.v1.type_catalog
+                                        .ItemId(value = "first"),
+                                value = first,
+                            ),
+                        skirout.editor.v1.type_catalog.ListItem(
+                            id =
+                                skirout.editor.v1.type_catalog
+                                    .ItemId(value = "second"),
+                            value = second,
+                        ),
                     ),
                 ),
             )
@@ -980,19 +1073,23 @@ val SdkRuntimeConformanceTest by testSuite {
 
         val mapChecked = assembly.checked.resolve(TEST_IDENTITY_KEY_MAP_USE.use).ready()
         val mapValue =
-            DataValue.Named(
+            DataValue.named(
                 TEST_IDENTITY_KEY_MAP_USE,
-                DataValue.MapValue(
+                DataValue.mapValue(
                     listOf(
-                        com.typewritermc.types.MapRow(
-                            com.typewritermc.authoring.ItemId("first"),
-                            first,
-                            DataValue.StringValue("one"),
+                        skirout.editor.v1.type_catalog.MapRow(
+                            id =
+                                skirout.editor.v1.type_catalog
+                                    .ItemId(value = "first"),
+                            key = first,
+                            value = DataValue.StringValueWrapper("one"),
                         ),
-                        com.typewritermc.types.MapRow(
-                            com.typewritermc.authoring.ItemId("second"),
-                            second,
-                            DataValue.StringValue("two"),
+                        skirout.editor.v1.type_catalog.MapRow(
+                            id =
+                                skirout.editor.v1.type_catalog
+                                    .ItemId(value = "second"),
+                            key = second,
+                            value = DataValue.StringValueWrapper("two"),
                         ),
                     ),
                 ),
@@ -1015,10 +1112,10 @@ val SdkRuntimeConformanceTest by testSuite {
         val binding = assembly.bindings.bind(checked) as NativeBinding<Float>
         val original = 1.25f
         val encoded = binding.encode(original)
-        encoded shouldBe DataValue.Float(original.toDouble())
+        encoded shouldBe DataValue.FloatWrapper(original.toDouble())
         binding.decode(checked.complete(encoded).complete()) shouldBe original
 
-        val imprecise = checked.complete(DataValue.Float(0.1)) as CompletenessResult.Invalid
+        val imprecise = checked.complete(DataValue.FloatWrapper(0.1)) as CompletenessResult.Invalid
         imprecise.problems.single().code shouldBe "float32_precision_loss"
     }
 
@@ -1292,7 +1389,7 @@ val SdkRuntimeConformanceTest by testSuite {
             mutableListOf(
                 com.typewritermc.configuration.OwnedRule(
                     RuleId(origin = RuleOrigin(owner = id, ordinal = 0), localIndex = 0),
-                    com.typewritermc.configuration.RuleDescriptor(testLiteral(DataValue.Boolean(true))),
+                    com.typewritermc.configuration.RuleDescriptor(testLiteral(DataValue.BooleanWrapper(true))),
                     com.typewritermc.checking.DiagnosticTemplate(
                         "valid",
                         "valid",
@@ -1652,7 +1749,7 @@ private object EmptyReads : AuthoredReads {
     override fun canonicalValueKey(path: BoundPath<*>): Availability<String> =
         error("Portable reads use the expression reader in this fixture.")
 
-    override fun members(path: BoundCollectionPath): List<com.typewritermc.authoring.ItemId> = emptyList()
+    override fun members(path: BoundCollectionPath): List<skirout.editor.v1.type_catalog.ItemId> = emptyList()
 
     override fun <D> select(query: TypedSelection<D>): PartialSelection<D> = error("Selections are not used in this fixture.")
 }

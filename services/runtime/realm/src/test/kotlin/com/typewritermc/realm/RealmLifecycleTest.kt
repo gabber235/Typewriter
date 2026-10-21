@@ -63,9 +63,9 @@ import com.typewritermc.services.libs.telemetry.mainSpan
 import com.typewritermc.services.libs.telemetry.testing.TelemetryTestHarness
 import com.typewritermc.services.libs.utils.DelayScheduler
 import com.typewritermc.services.libs.utils.RetryPolicy
-import com.typewritermc.types.DataValue
 import com.typewritermc.types.ResourceId
 import com.typewritermc.types.namedUse
+import com.typewritermc.types.payload
 import com.typewritermc.types.qualified
 import com.typewritermc.types.requireValid
 import com.typewritermc.types.skir.SkirAuthoringValueCodec
@@ -88,6 +88,7 @@ import skirout.editor.v1.authoring.QueryAuthoringStateRequest
 import skirout.editor.v1.authoring.QueryAuthoringStateResponse
 import skirout.editor.v1.catalog.CatalogFetchRequest
 import skirout.editor.v1.catalog.CatalogFetchResult
+import skirout.editor.v1.type_catalog.DataValue
 import skirout.editor.v1.type_catalog.DeclarationOwner
 import skirout.editor.v1.type_catalog.FieldDeclaration
 import skirout.editor.v1.type_catalog.FieldOwner
@@ -352,12 +353,12 @@ val RealmLifecycleTest by testSuite {
             val availableRecord =
                 AuthoringRecord(
                     TypeSelection.Complete(valid.namedUse()),
-                    mapOf("name" to DataValue.StringValue("Book")),
+                    mapOf("name" to DataValue.StringValueWrapper("Book")),
                 )
             val unavailableRecord =
                 AuthoringRecord(
                     TypeSelection.Complete(unavailable.namedUse()),
-                    mapOf("legacy" to DataValue.StringValue("preserved")),
+                    mapOf("legacy" to DataValue.StringValueWrapper("preserved")),
                 )
             val resources = mapOf(availableResource to availableRecord, unavailableResource to unavailableRecord)
             val incarnation = lifecycleIsolationCatalog(valid, unavailable)

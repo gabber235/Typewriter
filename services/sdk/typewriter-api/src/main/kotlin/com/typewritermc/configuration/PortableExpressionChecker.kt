@@ -19,20 +19,23 @@ import com.typewritermc.expression.nominalExpressionType
 import com.typewritermc.expression.nominalUseOrNull
 import com.typewritermc.expression.resourceSourceOrNull
 import com.typewritermc.expression.sourceExpression
-import com.typewritermc.types.DataValue
 import com.typewritermc.types.ResourceIdDefinition
 import com.typewritermc.types.StandardTypes
+import com.typewritermc.types.actualType
 import com.typewritermc.types.catalog.CheckedType
 import com.typewritermc.types.catalog.DeclarationDiagnostic
 import com.typewritermc.types.catalog.Resolution
 import com.typewritermc.types.catalog.resolve
+import com.typewritermc.types.fields
 import com.typewritermc.types.floatScalar
 import com.typewritermc.types.integerScalar
 import com.typewritermc.types.isValid
+import com.typewritermc.types.items
 import com.typewritermc.types.namedUse
+import com.typewritermc.types.portableOrNull
+import com.typewritermc.types.rows
 import com.typewritermc.types.skir.SkirAuthoringValueCodec
 import com.typewritermc.types.skir.SkirConversionResult
-import com.typewritermc.types.skir.SkirDataValueCodec
 import com.typewritermc.types.use
 import skirout.editor.v1.expression.BoundDirection
 import skirout.editor.v1.expression.EntryBranch
@@ -52,6 +55,7 @@ import skirout.editor.v1.expression.TextCompareOperation
 import skirout.editor.v1.expression.TextUnaryOperation
 import skirout.editor.v1.expression.TimestampBoundDirection
 import skirout.editor.v1.expression.ValueCompareOperation
+import skirout.editor.v1.type_catalog.DataValue
 import skirout.editor.v1.type_catalog.FloatWidth
 import skirout.editor.v1.type_catalog.IntegerWidth
 import skirout.editor.v1.type_catalog.ResolvedRepresentation
@@ -594,60 +598,60 @@ class PortableExpressionChecker(
 
         private fun literal(value: DataValue): ExpressionType =
             when (value) {
-                DataValue.Null -> {
+                DataValue.NULL -> {
                     ExpressionType(value = ExpressionValueType.NULL_VALUE, mayBeMissing = false)
                 }
 
-                is DataValue.Named -> {
+                is DataValue.NamedWrapper -> {
                     nominalExpressionType(value.actualType.use)
                 }
 
-                is DataValue.Boolean -> {
+                is DataValue.BooleanWrapper -> {
                     boolean()
                 }
 
-                is DataValue.Integer -> {
+                is DataValue.IntegerWrapper -> {
                     integer().also(literalTypes::add)
                 }
 
-                is DataValue.Float -> {
+                is DataValue.FloatWrapper -> {
                     scalar(floatScalar(FloatWidth.SIXTY_FOUR)).also(literalTypes::add)
                 }
 
-                is DataValue.Decimal -> {
+                is DataValue.DecimalWrapper -> {
                     scalar(ScalarKind.DECIMAL).also(literalTypes::add)
                 }
 
-                is DataValue.StringValue -> {
+                is DataValue.StringValueWrapper -> {
                     text()
                 }
 
-                is DataValue.Bytes -> {
+                is DataValue.BytesWrapper -> {
                     scalar(ScalarKind.BYTES)
                 }
 
-                is DataValue.Timestamp -> {
+                is DataValue.TimestampWrapper -> {
                     scalar(ScalarKind.TIMESTAMP)
                 }
 
-                is DataValue.Duration -> {
+                is DataValue.DurationWrapper -> {
                     scalar(ScalarKind.DURATION)
                 }
 
-                DataValue.Unit -> {
+                DataValue.UNIT -> {
                     scalar(ScalarKind.UNIT)
                 }
 
-                is DataValue.ListValue -> {
+                is DataValue.ListValueWrapper -> {
                     listExpressionType(literalItems(value.items.map { it.value }))
                 }
 
-                is DataValue.SetValue -> {
+                is DataValue.SetValueWrapper -> {
                     val item = literalItems(value.items.map { it.value }).nominalUseOrNull() ?: fail("expression_type_inference_failed")
                     nominalExpressionType(StandardTypes.set.use(listOf(item)))
                 }
 
-                is DataValue.MapValue -> {
+                is DataValue.MapValueWrapper -> {
                     demand(value.rows.isNotEmpty(), "expression_type_inference_failed")
                     mapExpressionType(literalItems(value.rows.map { it.key }), literalItems(value.rows.map { it.value }))
                 }
@@ -658,7 +662,7 @@ class PortableExpressionChecker(
             }
 
         private fun literalItems(items: List<DataValue>): ExpressionType {
-            val populated = items.filter { it != DataValue.Unfilled }
+            val populated = items.filter { it != DataValue.UNFILLED }
             demand(populated.isNotEmpty(), "expression_type_inference_failed")
             val inferred = populated.map(::literal).reduce(::join)
             return withMissing(inferred, inferred.mayBeMissing || populated.size != items.size)
@@ -691,10 +695,7 @@ class PortableExpressionChecker(
             return when (node) {
                 is ExpressionNode.LiteralWrapper -> {
                     literal(
-                        when (val decoded = SkirDataValueCodec.decode(node.value)) {
-                            is SkirConversionResult.Success -> decoded.value
-                            is SkirConversionResult.Failure -> fail("invalid_expression_literal")
-                        },
+                        node.value.portableOrNull() ?: fail("invalid_expression_literal"),
                     )
                 }
 
@@ -829,11 +830,11 @@ class PortableExpressionChecker(
 
         private fun untypedEmpty(node: ExpressionNode): DataValue? {
             val raw = (node as? ExpressionNode.LiteralWrapper)?.value ?: return null
-            val value = (SkirDataValueCodec.decode(raw) as? SkirConversionResult.Success)?.value ?: return null
+            val value = raw.portableOrNull() ?: return null
             return when (value) {
-                is DataValue.ListValue -> value.takeIf { it.items.isEmpty() }
-                is DataValue.SetValue -> value.takeIf { it.items.isEmpty() }
-                is DataValue.MapValue -> value.takeIf { it.rows.isEmpty() }
+                is DataValue.ListValueWrapper -> value.takeIf { it.items.isEmpty() }
+                is DataValue.SetValueWrapper -> value.takeIf { it.items.isEmpty() }
+                is DataValue.MapValueWrapper -> value.takeIf { it.rows.isEmpty() }
                 else -> null
             }
         }
@@ -850,9 +851,9 @@ class PortableExpressionChecker(
             val use = known.nominalUseOrNull()
             val matches =
                 when (empty) {
-                    is DataValue.ListValue -> known.value is ExpressionValueType.ListWrapper
-                    is DataValue.MapValue -> known.value is ExpressionValueType.MapWrapper
-                    is DataValue.SetValue -> use is TypeUse.NamedWrapper && use.value.definition == StandardTypes.set
+                    is DataValue.ListValueWrapper -> known.value is ExpressionValueType.ListWrapper
+                    is DataValue.MapValueWrapper -> known.value is ExpressionValueType.MapWrapper
+                    is DataValue.SetValueWrapper -> use is TypeUse.NamedWrapper && use.value.definition == StandardTypes.set
                     else -> false
                 }
             return if (matches) withMissing(known, false) else null

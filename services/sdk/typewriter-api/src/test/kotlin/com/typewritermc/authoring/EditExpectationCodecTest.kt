@@ -2,7 +2,6 @@ package com.typewritermc.authoring
 
 import com.typewritermc.authoring.skir.SkirAuthoringOperationCodec
 import com.typewritermc.checking.CatalogGeneration
-import com.typewritermc.types.DataValue
 import com.typewritermc.types.RelationId
 import com.typewritermc.types.ResourceId
 import com.typewritermc.types.namedUse
@@ -10,6 +9,7 @@ import com.typewritermc.types.qualified
 import com.typewritermc.types.skir.getOrThrow
 import de.infix.testBalloon.framework.core.testSuite
 import io.kotest.matchers.shouldBe
+import skirout.editor.v1.type_catalog.DataValue
 import skirout.editor.v1.type_catalog.TypeDefinitionId
 
 val EditExpectationCodecTest by testSuite {
@@ -17,12 +17,12 @@ val EditExpectationCodecTest by testSuite {
         val resource = ResourceId("quest")
         val at = ValueLocation(resource, ValuePath(listOf(PathSegment.Field("chapter"))))
         val selection = TypeSelection.Complete(TypeDefinitionId.qualified("test", "chapter").namedUse())
-        val record = AuthoringRecord(selection, mapOf("title" to DataValue.StringValue("Quest")))
+        val record = AuthoringRecord(selection, mapOf("title" to DataValue.StringValueWrapper("Quest")))
         val projection = LinkProjection(RelationId("chapters"), resource, ResourceId("chapter"), at.path, null)
         val expectations =
             listOf(
                 EditExpectation.Value(at, null),
-                EditExpectation.Value(at, DataValue.Null),
+                EditExpectation.Value(at, DataValue.NULL),
                 EditExpectation.Resource(resource, record),
                 EditExpectation.ResourceExists(resource, true),
                 EditExpectation.Configuration(at, selection),

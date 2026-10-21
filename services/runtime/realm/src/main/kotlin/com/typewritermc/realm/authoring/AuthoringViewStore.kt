@@ -23,18 +23,24 @@ import com.typewritermc.discovery.OwnedProviderRegistry
 import com.typewritermc.operations.OperationCatalog
 import com.typewritermc.realm.repository.CapturedAuthoringValues
 import com.typewritermc.realm.repository.ResourceValueMapper
-import com.typewritermc.types.DataValue
 import com.typewritermc.types.EndpointBindingTemplate
 import com.typewritermc.types.NativeBindingRegistry
 import com.typewritermc.types.RelationContract
 import com.typewritermc.types.RelationId
 import com.typewritermc.types.ResourceId
 import com.typewritermc.types.catalog.CheckedCatalog
+import com.typewritermc.types.field
+import com.typewritermc.types.fields
 import com.typewritermc.types.immutableMapCopy
+import com.typewritermc.types.items
 import com.typewritermc.types.ownsResources
+import com.typewritermc.types.payload
+import com.typewritermc.types.record
+import com.typewritermc.types.rows
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import skirout.editor.v1.type_catalog.DataValue
 import skirout.editor.v1.type_catalog.TypeDefinitionId
 import java.util.IdentityHashMap
 import java.util.UUID
@@ -374,7 +380,7 @@ internal fun requiredAuthoringInputs(resources: Map<ResourceId, AuthoringRecord>
         resources.forEach { (id, record) ->
             add(InputIdentity.Existence(id))
             add(InputIdentity.Form(ValueLocation(id, ValuePath())))
-            collectValueInputs(DataValue.Record(record.fields), ValueLocation(id, ValuePath()), this)
+            collectValueInputs(DataValue.record(record.fields), ValueLocation(id, ValuePath()), this)
         }
     }
 
@@ -385,28 +391,28 @@ private fun collectValueInputs(
 ) {
     inputs += InputIdentity.Value(at)
     when (value) {
-        is DataValue.Named -> {
+        is DataValue.NamedWrapper -> {
             inputs += InputIdentity.Form(at)
             collectValueInputs(value.payload, at, inputs)
         }
 
-        is DataValue.Record -> {
-            value.fields.forEach { (name, field) -> collectValueInputs(field, at.field(name), inputs) }
+        is DataValue.RecordWrapper -> {
+            value.fields.forEach { field -> collectValueInputs(field.value, at.field(field.name), inputs) }
         }
 
-        is DataValue.ListValue -> {
+        is DataValue.ListValueWrapper -> {
             inputs += InputIdentity.Membership(at)
             inputs += InputIdentity.Order(at)
             value.items.forEach { collectValueInputs(it.value, at.item(it.id), inputs) }
         }
 
-        is DataValue.SetValue -> {
+        is DataValue.SetValueWrapper -> {
             inputs += InputIdentity.Membership(at)
             inputs += InputIdentity.Order(at)
             value.items.forEach { collectValueInputs(it.value, at.item(it.id), inputs) }
         }
 
-        is DataValue.MapValue -> {
+        is DataValue.MapValueWrapper -> {
             inputs += InputIdentity.Membership(at)
             inputs += InputIdentity.Order(at)
             value.rows.forEach { row ->

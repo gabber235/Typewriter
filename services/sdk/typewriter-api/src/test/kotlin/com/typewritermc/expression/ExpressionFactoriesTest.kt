@@ -2,6 +2,9 @@ package com.typewritermc.expression
 
 import com.typewritermc.configuration.TextExpressions
 import com.typewritermc.configuration.TextExpressionsFactory
+import com.typewritermc.types.integer
+import com.typewritermc.types.items
+import com.typewritermc.types.listValue
 import de.infix.testBalloon.framework.core.testSuite
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.matchers.shouldBe
@@ -18,12 +21,15 @@ val ExpressionFactoriesTest by testSuite {
     test("nested collection lowering captures outer locals without allocating serialized names") {
         val source =
             portableLiteral<List<Int>>(
-                com.typewritermc.types.DataValue.ListValue(
+                skirout.editor.v1.type_catalog.DataValue.listValue(
                     listOf(1, 2).map { value ->
-                        com.typewritermc.types.ListItem(
-                            com.typewritermc.authoring.ItemId("item:$value"),
-                            com.typewritermc.types.DataValue
-                                .Integer(value.toBigInteger()),
+                        skirout.editor.v1.type_catalog.ListItem(
+                            id =
+                                skirout.editor.v1.type_catalog
+                                    .ItemId(value = "item:$value"),
+                            value =
+                                skirout.editor.v1.type_catalog.DataValue
+                                    .integer(value.toBigInteger()),
                         )
                     },
                 ),
@@ -51,11 +57,11 @@ val ExpressionFactoriesTest by testSuite {
                     ExpressionBindings(emptyMap()),
                     EvaluationBudget(100, 100),
                 )
-            } as com.typewritermc.authoring.Availability.Available<com.typewritermc.types.DataValue>
+            } as com.typewritermc.authoring.Availability.Available<skirout.editor.v1.type_catalog.DataValue>
         val rows =
-            (result.value as com.typewritermc.types.DataValue.ListValue).items.map { row ->
-                (row.value as com.typewritermc.types.DataValue.ListValue).items.map {
-                    (it.value as com.typewritermc.types.DataValue.Integer)
+            (result.value as skirout.editor.v1.type_catalog.DataValue.ListValueWrapper).items.map { row ->
+                (row.value as skirout.editor.v1.type_catalog.DataValue.ListValueWrapper).items.map {
+                    (it.value as skirout.editor.v1.type_catalog.DataValue.IntegerWrapper)
                         .value
                         .toInt()
                 }
@@ -71,12 +77,15 @@ val ExpressionFactoriesTest by testSuite {
     test("nested fold captures accumulator and outer item using lexical depth") {
         val source =
             portableLiteral<List<Int>>(
-                com.typewritermc.types.DataValue.ListValue(
+                skirout.editor.v1.type_catalog.DataValue.listValue(
                     listOf(1, 2).map { value ->
-                        com.typewritermc.types.ListItem(
-                            com.typewritermc.authoring.ItemId("item:$value"),
-                            com.typewritermc.types.DataValue
-                                .Integer(value.toBigInteger()),
+                        skirout.editor.v1.type_catalog.ListItem(
+                            id =
+                                skirout.editor.v1.type_catalog
+                                    .ItemId(value = "item:$value"),
+                            value =
+                                skirout.editor.v1.type_catalog.DataValue
+                                    .integer(value.toBigInteger()),
                         )
                     },
                 ),
@@ -96,8 +105,8 @@ val ExpressionFactoriesTest by testSuite {
         result shouldBe
             com.typewritermc.authoring.Availability
                 .Available(
-                    com.typewritermc.types.DataValue
-                        .Integer(12.toBigInteger()),
+                    skirout.editor.v1.type_catalog.DataValue
+                        .integer(12.toBigInteger()),
                 )
     }
 

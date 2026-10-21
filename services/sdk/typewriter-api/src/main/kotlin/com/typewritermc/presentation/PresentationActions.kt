@@ -1,6 +1,5 @@
 package com.typewritermc.presentation
 
-import com.typewritermc.authoring.ItemId
 import com.typewritermc.authoring.TypedPath
 import com.typewritermc.dsl.TypewriterDsl
 import com.typewritermc.expression.Expr
@@ -13,6 +12,7 @@ import skirout.editor.v1.action.EditorAction
 import skirout.editor.v1.binding.BindingRef
 import skirout.editor.v1.expression.ExpressionNode
 import skirout.editor.v1.presentation.PresentationNode
+import skirout.editor.v1.type_catalog.ItemId
 import skirout.editor.v1.type_catalog.NamedTypeUse
 import skirout.editor.v1.type_catalog.TypeDefinitionId
 import skirout.editor.v1.type_catalog.TypeTemplate

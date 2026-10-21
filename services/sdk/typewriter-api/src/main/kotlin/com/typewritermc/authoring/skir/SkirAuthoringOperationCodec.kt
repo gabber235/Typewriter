@@ -7,7 +7,6 @@ import com.typewritermc.authoring.EditExpectation
 import com.typewritermc.authoring.EditIntent
 import com.typewritermc.authoring.InitializationRequest
 import com.typewritermc.authoring.InputAnswer
-import com.typewritermc.authoring.ItemId
 import com.typewritermc.authoring.LinkProjection
 import com.typewritermc.authoring.PreparationDraft
 import com.typewritermc.authoring.PreparationOperation
@@ -19,14 +18,15 @@ import com.typewritermc.authoring.PreparedValue
 import com.typewritermc.authoring.RequiredInput
 import com.typewritermc.authoring.TraversalDirection
 import com.typewritermc.checking.CatalogGeneration
-import com.typewritermc.types.ListItem
 import com.typewritermc.types.RelationId
 import com.typewritermc.types.ResourceId
+import com.typewritermc.types.requirePortable
 import com.typewritermc.types.requireValid
 import com.typewritermc.types.skir.SkirAuthoringValueCodec
 import com.typewritermc.types.skir.SkirConversionDiagnostic
 import com.typewritermc.types.skir.SkirConversionResult
-import com.typewritermc.types.skir.SkirDataValueCodec
+import skirout.editor.v1.type_catalog.ItemId
+import skirout.editor.v1.type_catalog.ListItem
 import skirout.editor.v1.authoring.CommitPreparedEditResponse as SkirCommitPreparedEditResponse
 import skirout.editor.v1.authoring.ConnectIntent as SkirConnectIntent
 import skirout.editor.v1.authoring.CounterpartChoice as SkirCounterpartChoice
@@ -48,8 +48,6 @@ import skirout.editor.v1.catalog.RequiredInput as SkirRequiredInput
 import skirout.editor.v1.catalog.ValuePreparationRequest as SkirInitializationRequest
 import skirout.editor.v1.diagnostic.ValueProblem as SkirValueProblem
 import skirout.editor.v1.type_catalog.CatalogGeneration as SkirCatalogGeneration
-import skirout.editor.v1.type_catalog.ItemId as SkirItemId
-import skirout.editor.v1.type_catalog.ListItem as SkirListItem
 import skirout.editor.v1.type_catalog.RelationId as SkirRelationId
 import skirout.editor.v1.type_catalog.ResourceId as SkirResourceId
 
@@ -114,7 +112,7 @@ private fun OperationConversionScope.encodePreparationOperation(value: Preparati
                     value.answers.map {
                         SkirInputAnswer(
                             path = convert(SkirAuthoringValueCodec.encode(it.path)),
-                            value = convert(SkirDataValueCodec.encode(it.value)),
+                            value = valid { it.value.requirePortable() },
                         )
                     },
             )
@@ -133,7 +131,7 @@ private fun OperationConversionScope.decodePreparationOperation(value: SkirPrepa
                 value.value.answers.map {
                     InputAnswer(
                         convert(SkirAuthoringValueCodec.decode(it.path)),
-                        convert(SkirDataValueCodec.decode(it.value)),
+                        valid { it.value.requirePortable() },
                     )
                 },
             )
@@ -223,7 +221,7 @@ private fun OperationConversionScope.encodeExpectation(value: EditExpectation): 
                 at = convert(SkirAuthoringValueCodec.encode(value.at)),
                 expected =
                     value.expected?.let {
-                        convert(SkirDataValueCodec.encode(it))
+                        valid { it.requirePortable() }
                     },
             )
         }
@@ -277,7 +275,7 @@ private fun OperationConversionScope.decodeExpectation(value: SkirEditExpectatio
             EditExpectation.Value(
                 convert(SkirAuthoringValueCodec.decode(value.value.at)),
                 value.value.expected?.let {
-                    convert(SkirDataValueCodec.decode(it))
+                    valid { it.requirePortable() }
                 },
             )
         }
@@ -366,14 +364,14 @@ private fun OperationConversionScope.encodeIntent(value: EditIntent): SkirEditIn
         is EditIntent.SetValue -> {
             SkirEditIntent.createSetValue(
                 at = convert(SkirAuthoringValueCodec.encode(value.at)),
-                value = convert(SkirDataValueCodec.encode(value.value)),
+                value = valid { value.value.requirePortable() },
             )
         }
 
         is EditIntent.Insert -> {
             SkirEditIntent.createInsert(
                 at = convert(SkirAuthoringValueCodec.encode(value.at)),
-                after = value.after?.let { SkirItemId(value = it.value) },
+                after = value.after,
                 item = encodeListItem(value.item),
             )
         }
@@ -381,15 +379,15 @@ private fun OperationConversionScope.encodeIntent(value: EditIntent): SkirEditIn
         is EditIntent.Remove -> {
             SkirEditIntent.createRemove(
                 at = convert(SkirAuthoringValueCodec.encode(value.at)),
-                item = SkirItemId(value = value.item.value),
+                item = value.item,
             )
         }
 
         is EditIntent.Move -> {
             SkirEditIntent.createMove(
                 at = convert(SkirAuthoringValueCodec.encode(value.at)),
-                item = SkirItemId(value = value.item.value),
-                after = value.after?.let { SkirItemId(value = it.value) },
+                item = value.item,
+                after = value.after,
             )
         }
 
@@ -432,14 +430,14 @@ private fun OperationConversionScope.decodeIntent(value: SkirEditIntent): EditIn
         is SkirEditIntent.SetValueWrapper -> {
             EditIntent.SetValue(
                 at = convert(SkirAuthoringValueCodec.decode(value.value.at)),
-                value = convert(SkirDataValueCodec.decode(value.value.value)),
+                value = valid { value.value.value.requirePortable() },
             )
         }
 
         is SkirEditIntent.InsertWrapper -> {
             EditIntent.Insert(
                 at = convert(SkirAuthoringValueCodec.decode(value.value.at)),
-                after = value.value.after?.let { ItemId(requireText(it.value, "Previous item identity")) },
+                after = value.value.after?.let { ItemId(value = requireText(it.value, "Previous item identity")) },
                 item = decodeListItem(value.value.item),
             )
         }
@@ -447,15 +445,15 @@ private fun OperationConversionScope.decodeIntent(value: SkirEditIntent): EditIn
         is SkirEditIntent.RemoveWrapper -> {
             EditIntent.Remove(
                 at = convert(SkirAuthoringValueCodec.decode(value.value.at)),
-                item = ItemId(requireText(value.value.item.value, "Item identity")),
+                item = ItemId(value = requireText(value.value.item.value, "Item identity")),
             )
         }
 
         is SkirEditIntent.MoveWrapper -> {
             EditIntent.Move(
                 at = convert(SkirAuthoringValueCodec.decode(value.value.at)),
-                item = ItemId(requireText(value.value.item.value, "Item identity")),
-                after = value.value.after?.let { ItemId(requireText(it.value, "Previous item identity")) },
+                item = ItemId(value = requireText(value.value.item.value, "Item identity")),
+                after = value.value.after?.let { ItemId(value = requireText(it.value, "Previous item identity")) },
             )
         }
 
@@ -583,7 +581,7 @@ private fun OperationConversionScope.encodeInitializationRequest(value: Initiali
                     )
                 }
             },
-        suppliedValue = value.supplied?.let { convert(SkirDataValueCodec.encode(it)) },
+        suppliedValue = value.supplied?.let { valid { it.requirePortable() } },
     )
 
 private fun OperationConversionScope.decodeInitializationRequest(value: SkirInitializationRequest): InitializationRequest =
@@ -603,7 +601,7 @@ private fun OperationConversionScope.decodeInitializationRequest(value: SkirInit
                     fail("Preparation target is unknown.")
                 }
             },
-        supplied = value.suppliedValue?.let { convert(SkirDataValueCodec.decode(it)) },
+        supplied = value.suppliedValue?.let { valid { it.requirePortable() } },
     )
 
 private fun OperationConversionScope.encodePreparedValue(value: PreparedValue): SkirPreparedValue =
@@ -611,7 +609,7 @@ private fun OperationConversionScope.encodePreparedValue(value: PreparedValue): 
         content =
             when (val content = value.content) {
                 is PreparedContent.Value -> {
-                    SkirPreparedContent.ValueWrapper(convert(SkirDataValueCodec.encode(content.value)))
+                    SkirPreparedContent.ValueWrapper(valid { content.value.requirePortable() })
                 }
 
                 is PreparedContent.Record -> {
@@ -632,7 +630,7 @@ private fun OperationConversionScope.decodePreparedValue(value: SkirPreparedValu
         content =
             when (val content = value.content) {
                 is SkirPreparedContent.ValueWrapper -> {
-                    PreparedContent.Value(convert(SkirDataValueCodec.decode(content.value)))
+                    PreparedContent.Value(valid { content.value.requirePortable() })
                 }
 
                 is SkirPreparedContent.RecordWrapper -> {
@@ -653,12 +651,12 @@ private fun OperationConversionScope.decodePreparedValue(value: SkirPreparedValu
     )
 
 private fun OperationConversionScope.encodeListItem(value: ListItem) =
-    SkirListItem(id = SkirItemId(value = value.id.value), value = convert(SkirDataValueCodec.encode(value.value)))
+    ListItem(id = value.id, value = valid { value.value.requirePortable() })
 
-private fun OperationConversionScope.decodeListItem(value: SkirListItem) =
+private fun OperationConversionScope.decodeListItem(value: ListItem) =
     ListItem(
-        id = ItemId(requireText(value.id.value, "Item identity")),
-        value = convert(SkirDataValueCodec.decode(value.value)),
+        id = ItemId(value = requireText(value.id.value, "Item identity")),
+        value = valid { value.value.requirePortable() },
     )
 
 private inline fun <Value> captureOperationConversion(block: OperationConversionScope.() -> Value): SkirConversionResult<Value> =

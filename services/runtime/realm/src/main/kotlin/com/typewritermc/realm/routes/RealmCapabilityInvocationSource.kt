@@ -11,8 +11,9 @@ import com.typewritermc.capability.RealmCommandContext
 import com.typewritermc.capability.RealmComputationContext
 import com.typewritermc.realm.catalog.RealmCatalogStore
 import com.typewritermc.types.isValid
+import com.typewritermc.types.payload
 import com.typewritermc.types.qualified
-import com.typewritermc.types.skir.SkirDataValueCodec
+import com.typewritermc.types.requirePortable
 import com.typewritermc.types.skir.getOrThrow
 import com.typewritermc.types.toTemplate
 import com.typewritermc.types.use
@@ -63,7 +64,7 @@ class RealmCapabilityInvocationSource(
                 return invalidComputation(request, "Realm computation result type does not match its capability")
             }
             return try {
-                val payload = SkirDataValueCodec.decode(request.payload).getOrThrow()
+                val payload = request.payload.requirePortable()
                 val value =
                     registry.requireComputation(CapabilityId(request.capabilityId.value)).invoke(
                         ComputationContext(request.invocationId.value),
@@ -72,7 +73,7 @@ class RealmCapabilityInvocationSource(
                     )
                 ComputationResult.createSuccess(
                     invocationId = request.invocationId,
-                    value = SkirDataValueCodec.encode(value).getOrThrow(),
+                    value = value.requirePortable(),
                 )
             } catch (failure: RealmCapabilityPermissionDeniedException) {
                 ComputationResult.createPermissionDeniedError(
@@ -103,7 +104,7 @@ class RealmCapabilityInvocationSource(
                 return invalidCommand(request, "Realm command result type must be absent")
             }
             return try {
-                val payload = SkirDataValueCodec.decode(request.payload).getOrThrow()
+                val payload = request.payload.requirePortable()
                 val outcome =
                     registry.requireCommand(descriptor.id).invoke(
                         CommandContext(request.invocationId.value),
@@ -225,13 +226,13 @@ private fun PanelInstruction.toWire(): WirePanelInstruction =
     when (this) {
         is PanelInstruction.InvalidateResource -> {
             WirePanelInstruction.createInvalidateResource(
-                resource = resource.type.toWireResource(SkirDataValueCodec.encode(resource.identity).getOrThrow()),
+                resource = resource.type.toWireResource(resource.identity.requirePortable()),
             )
         }
 
         is PanelInstruction.OpenResource -> {
             WirePanelInstruction.createOpenResource(
-                resource = resource.type.toWireResource(SkirDataValueCodec.encode(resource.identity).getOrThrow()),
+                resource = resource.type.toWireResource(resource.identity.requirePortable()),
             )
         }
 

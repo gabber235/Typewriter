@@ -1,9 +1,10 @@
 package com.typewritermc.authoring
 
 import com.typewritermc.checking.CatalogGeneration
-import com.typewritermc.types.DataValue
+import com.typewritermc.types.skir.DataValueSerializer
 import com.typewritermc.types.skir.FieldOwnerSerializer
 import kotlinx.serialization.Serializable
+import skirout.editor.v1.type_catalog.DataValue
 import skirout.editor.v1.type_catalog.FieldOwner
 import skirout.editor.v1.type_catalog.TypeUse
 
@@ -28,6 +29,7 @@ sealed interface PreparationTarget {
 sealed interface PreparedContent {
     @Serializable
     data class Value(
+        @Serializable(with = DataValueSerializer::class)
         val value: DataValue,
     ) : PreparedContent
 

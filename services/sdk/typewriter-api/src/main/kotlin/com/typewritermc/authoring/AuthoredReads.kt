@@ -4,6 +4,7 @@ import com.typewritermc.checking.CatalogGeneration
 import com.typewritermc.checking.PartialSelection
 import com.typewritermc.checking.TypedSelection
 import com.typewritermc.expression.EvaluationDiagnostic
+import skirout.editor.v1.type_catalog.ItemId
 import skirout.editor.v1.type_catalog.TypeUse
 
 sealed interface Availability<out T> {

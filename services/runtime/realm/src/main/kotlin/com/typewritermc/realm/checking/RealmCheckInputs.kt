@@ -21,11 +21,13 @@ import com.typewritermc.configuration.FieldPatternSegment
 import com.typewritermc.configuration.RelativeFieldPattern
 import com.typewritermc.expression.EvaluationDiagnostic
 import com.typewritermc.services.libs.utils.rethrowExceptional
-import com.typewritermc.types.DataValue
 import com.typewritermc.types.catalog.CheckedCatalog
 import com.typewritermc.types.catalog.CheckedType
 import com.typewritermc.types.catalog.Resolution
+import com.typewritermc.types.field
+import com.typewritermc.types.fields
 import com.typewritermc.types.use
+import skirout.editor.v1.type_catalog.DataValue
 import skirout.editor.v1.type_catalog.ResolvedRepresentation
 import skirout.editor.v1.type_catalog.TypeUse
 import java.util.concurrent.atomic.AtomicLong
@@ -75,7 +77,7 @@ class RealmCheckInputs(
             if (failure != null) return failed(recipe, failure.diagnostic)
             if (values.any { it !is Availability.Available }) return@forEach
             val complete = values.map { (it as Availability.Available).value }
-            if (tuple.candidates.zip(complete).any { (candidate, value) -> candidate.input.skipNull && value.value == DataValue.Null }) {
+            if (tuple.candidates.zip(complete).any { (candidate, value) -> candidate.input.skipNull && value.value == DataValue.NULL }) {
                 return@forEach
             }
             try {

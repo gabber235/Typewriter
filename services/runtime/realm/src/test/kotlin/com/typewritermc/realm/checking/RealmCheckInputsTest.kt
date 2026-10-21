@@ -4,7 +4,6 @@ import com.typewritermc.authoring.AuthoringRecord
 import com.typewritermc.authoring.CompleteValue
 import com.typewritermc.authoring.DraftBinding
 import com.typewritermc.authoring.DraftExpectation
-import com.typewritermc.authoring.ItemId
 import com.typewritermc.authoring.PathSegment
 import com.typewritermc.authoring.ReadContext
 import com.typewritermc.authoring.TypeSelection
@@ -20,12 +19,14 @@ import com.typewritermc.configuration.FieldPatternSegment
 import com.typewritermc.configuration.RelativeFieldPattern
 import com.typewritermc.realm.authoring.AuthoringSeed
 import com.typewritermc.realm.authoring.InMemoryAuthoringViewStore
-import com.typewritermc.types.DataValue
-import com.typewritermc.types.ListItem
-import com.typewritermc.types.MapRow
 import com.typewritermc.types.ResourceId
 import com.typewritermc.types.catalog.Resolution
+import com.typewritermc.types.fields
+import com.typewritermc.types.integer
 import com.typewritermc.types.integerScalar
+import com.typewritermc.types.listValue
+import com.typewritermc.types.mapValue
+import com.typewritermc.types.named
 import com.typewritermc.types.namedUse
 import com.typewritermc.types.qualified
 import com.typewritermc.types.template
@@ -33,9 +34,13 @@ import com.typewritermc.types.use
 import de.infix.testBalloon.framework.core.testSuite
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.types.shouldBeInstanceOf
+import skirout.editor.v1.type_catalog.DataValue
 import skirout.editor.v1.type_catalog.FieldDeclaration
 import skirout.editor.v1.type_catalog.FieldOwner
 import skirout.editor.v1.type_catalog.IntegerWidth
+import skirout.editor.v1.type_catalog.ItemId
+import skirout.editor.v1.type_catalog.ListItem
+import skirout.editor.v1.type_catalog.MapRow
 import skirout.editor.v1.type_catalog.ParameterKey
 import skirout.editor.v1.type_catalog.RepresentationTemplate
 import skirout.editor.v1.type_catalog.RuleOrigin
@@ -87,12 +92,12 @@ val RealmCheckInputsTest by testSuite {
                 TypeSelection.Complete(TEST_TYPE.namedUse()),
                 mapOf(
                     "mapping" to
-                        DataValue.Named(
+                        DataValue.named(
                             mapUse,
-                            DataValue.MapValue(
+                            DataValue.mapValue(
                                 listOf(
-                                    MapRow(ItemId("a"), integer(1), integer(1)),
-                                    MapRow(ItemId("b"), integer(2), integer(2)),
+                                    MapRow(id = ItemId(value = "a"), key = integer(1), value = integer(1)),
+                                    MapRow(id = ItemId(value = "b"), key = integer(2), value = integer(2)),
                                 ),
                             ),
                         ),
@@ -134,12 +139,12 @@ val RealmCheckInputsTest by testSuite {
                     record(numbers = emptyList()).fields +
                         (
                             "numbers" to
-                                DataValue.Named(
+                                DataValue.named(
                                     LIST_USE,
-                                    DataValue.ListValue(
+                                    DataValue.listValue(
                                         listOf(
-                                            ListItem(ItemId("missing"), DataValue.Unfilled),
-                                            ListItem(ItemId("known"), integer(2)),
+                                            ListItem(id = ItemId(value = "missing"), value = DataValue.UNFILLED),
+                                            ListItem(id = ItemId(value = "known"), value = integer(2)),
                                         ),
                                     ),
                                 )
@@ -165,7 +170,7 @@ val RealmCheckInputsTest by testSuite {
                 ?.path
                 ?.segments
                 ?.last() as PathSegment.Item
-        ).id shouldBe ItemId("known")
+        ).id shouldBe ItemId(value = "known")
         lease.close()
         store.close()
     }
@@ -247,7 +252,7 @@ private fun store(
     )
 }
 
-private fun integer(value: Int): DataValue.Integer = DataValue.Integer(BigInteger.valueOf(value.toLong()))
+private fun integer(value: Int): DataValue.IntegerWrapper = DataValue.integer(BigInteger.valueOf(value.toLong()))
 
 private val MAP_TYPE = TypeDefinitionId.qualified("typewriter", "map")
 private val INT_KIND = integerScalar(IntegerWidth.SIGNED_THIRTY_TWO)

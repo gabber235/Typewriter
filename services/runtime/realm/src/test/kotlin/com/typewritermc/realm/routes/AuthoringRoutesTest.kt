@@ -32,7 +32,6 @@ import com.typewritermc.realm.checking.TestCatalogLease
 import com.typewritermc.realm.checking.record
 import com.typewritermc.realm.repository.AuthoringRepository
 import com.typewritermc.services.libs.communicator.router.communicatorRoutes
-import com.typewritermc.types.DataValue
 import com.typewritermc.types.ResourceId
 import com.typewritermc.types.namedUse
 import com.typewritermc.types.qualified
@@ -47,6 +46,7 @@ import skirout.editor.v1.authoring.PreviewTypeArgumentChangeResponse
 import skirout.editor.v1.authoring.QueryAuthoringStateRequest
 import skirout.editor.v1.authoring.QueryAuthoringStateResponse
 import skirout.editor.v1.checking.FindingStatus
+import skirout.editor.v1.type_catalog.DataValue
 import skirout.editor.v1.type_catalog.TypeDefinitionId
 import skirout.editor.v1.authoring.AuthoringState as SkirAuthoringState
 import skirout.editor.v1.authoring.EditIntent as SkirEditIntent
@@ -54,7 +54,6 @@ import skirout.editor.v1.authoring_facts.EditExpectation as SkirEditExpectation
 import skirout.editor.v1.checking.CheckOutcome as SkirCheckOutcome
 import skirout.editor.v1.type_catalog.AuthoringRecord as SkirAuthoringRecord
 import skirout.editor.v1.type_catalog.CatalogGeneration as SkirCatalogGeneration
-import skirout.editor.v1.type_catalog.DataValue as SkirDataValue
 import skirout.editor.v1.type_catalog.FieldValue as SkirFieldValue
 import skirout.editor.v1.type_catalog.ResourceId as SkirResourceId
 
@@ -290,7 +289,7 @@ val AuthoringRoutesTest by testSuite {
                         listOf(
                             SkirEditIntent.createSetValue(
                                 at = SkirAuthoringValueCodec.encode(ValueLocation(ResourceId("resource"), ValuePath())).getOrThrow(),
-                                value = SkirDataValue.createRecord(fields = duplicateWireFields()),
+                                value = DataValue.createRecord(fields = duplicateWireFields()),
                             ),
                         ),
                 )
@@ -375,7 +374,7 @@ val AuthoringRoutesTest by testSuite {
             val unavailableRecord =
                 AuthoringRecord(
                     configuration = TypeSelection.Complete(unavailableType.namedUse()),
-                    fields = mapOf("legacy" to DataValue.StringValue("preserved")),
+                    fields = mapOf("legacy" to DataValue.StringValueWrapper("preserved")),
                 )
             val resources = mapOf(unavailable to unavailableRecord, available to record(name = "book"))
             val views =
@@ -426,8 +425,8 @@ private fun validPreparedEditWire() =
 
 private fun duplicateWireFields(): List<SkirFieldValue> =
     listOf(
-        SkirFieldValue(name = "name", value = SkirDataValue.StringValueWrapper("first")),
-        SkirFieldValue(name = "name", value = SkirDataValue.StringValueWrapper("second")),
+        SkirFieldValue(name = "name", value = DataValue.StringValueWrapper("first")),
+        SkirFieldValue(name = "name", value = DataValue.StringValueWrapper("second")),
     )
 
 private class RecordingAuthoringRepository : AuthoringRepository {

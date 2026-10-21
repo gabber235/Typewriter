@@ -1,9 +1,10 @@
 package com.typewritermc.authoring
 
 import com.typewritermc.checking.CatalogGeneration
-import com.typewritermc.types.DataValue
-import com.typewritermc.types.ListItem
 import com.typewritermc.types.ResourceId
+import skirout.editor.v1.type_catalog.DataValue
+import skirout.editor.v1.type_catalog.ItemId
+import skirout.editor.v1.type_catalog.ListItem
 import skirout.editor.v1.type_catalog.NamedTypeUse
 import skirout.editor.v1.type_catalog.TypeUse
 

@@ -14,11 +14,26 @@ import com.typewritermc.authoring.mapValue
 import com.typewritermc.checking.InputIdentity
 import com.typewritermc.operations.OperationPreparation
 import com.typewritermc.realm.repository.ResourceValueMapper
-import com.typewritermc.types.DataValue
 import com.typewritermc.types.LinkTarget
-import com.typewritermc.types.ListItem
-import com.typewritermc.types.MapRow
 import com.typewritermc.types.ResourceId
+import com.typewritermc.types.actualType
+import com.typewritermc.types.endpoint
+import com.typewritermc.types.field
+import com.typewritermc.types.fieldMap
+import com.typewritermc.types.fields
+import com.typewritermc.types.items
+import com.typewritermc.types.link
+import com.typewritermc.types.linkTarget
+import com.typewritermc.types.listValue
+import com.typewritermc.types.mapValue
+import com.typewritermc.types.named
+import com.typewritermc.types.payload
+import com.typewritermc.types.record
+import com.typewritermc.types.rows
+import com.typewritermc.types.setValue
+import skirout.editor.v1.type_catalog.DataValue
+import skirout.editor.v1.type_catalog.ListItem
+import skirout.editor.v1.type_catalog.MapRow
 
 /** Copies the ownership closure before reconnecting any of its references. */
 internal class OperationClonePreparation(
@@ -59,15 +74,15 @@ internal class OperationClonePreparation(
                 .flatMap { listOf(it.first.id to it, it.second.id to it) }
                 .toMap()
 
-        fun retained(link: DataValue.Link): Boolean {
+        fun retained(link: DataValue.LinkWrapper): Boolean {
             val contract = requireNotNull(contracts[link.endpoint])
-            return link.target.resource in closure || contract.id in owning || link.endpoint == contract.first.id
+            return link.linkTarget.resource in closure || contract.id in owning || link.endpoint == contract.first.id
         }
 
-        fun directLink(value: DataValue): DataValue.Link? =
+        fun directLink(value: DataValue): DataValue.LinkWrapper? =
             when (value) {
-                is DataValue.Link -> value
-                is DataValue.Named -> directLink(value.payload)
+                is DataValue.LinkWrapper -> value
+                is DataValue.NamedWrapper -> directLink(value.payload)
                 else -> null
             }
 
@@ -78,59 +93,61 @@ internal class OperationClonePreparation(
         ): DataValue {
             locations[from] = to
             return when (value) {
-                is DataValue.Link -> {
-                    DataValue.Unfilled
+                is DataValue.LinkWrapper -> {
+                    DataValue.UNFILLED
                 }
 
-                is DataValue.Named -> {
-                    value.copy(payload = copyValue(value.payload, from, to))
+                is DataValue.NamedWrapper -> {
+                    DataValue.named(value.actualType, copyValue(value.payload, from, to))
                 }
 
-                is DataValue.Record -> {
-                    value.copy(fields = value.fields.mapValues { (key, child) -> copyValue(child, from.field(key), to.field(key)) })
-                }
-
-                is DataValue.ListValue -> {
-                    value.copy(
-                        items =
-                            value.items.mapNotNull { item ->
-                                if (directLink(item.value)?.let { !retained(it) } == true) return@mapNotNull null
-                                val id = operation.identities.item("clone:${from.identityKey()}:${item.id.value.length}:${item.id.value}")
-                                ListItem(id, copyValue(item.value, from.item(item.id), to.item(id)))
-                            },
+                is DataValue.RecordWrapper -> {
+                    DataValue.record(
+                        value.fields.associate { field ->
+                            field.name to
+                                copyValue(field.value, from.field(field.name), to.field(field.name))
+                        },
                     )
                 }
 
-                is DataValue.SetValue -> {
-                    value.copy(
-                        items =
-                            value.items.mapNotNull { item ->
-                                if (directLink(item.value)?.let { !retained(it) } == true) return@mapNotNull null
-                                val id = operation.identities.item("clone:${from.identityKey()}:${item.id.value.length}:${item.id.value}")
-                                ListItem(id, copyValue(item.value, from.item(item.id), to.item(id)))
-                            },
+                is DataValue.ListValueWrapper -> {
+                    DataValue.listValue(
+                        value.items.mapNotNull { item ->
+                            if (directLink(item.value)?.let { !retained(it) } == true) return@mapNotNull null
+                            val id = operation.identities.item("clone:${from.identityKey()}:${item.id.value.length}:${item.id.value}")
+                            ListItem(id = id, value = copyValue(item.value, from.item(item.id), to.item(id)))
+                        },
                     )
                 }
 
-                is DataValue.MapValue -> {
-                    value.copy(
-                        rows =
-                            value.rows.mapNotNull { row ->
-                                if (listOf(row.key, row.value).any {
-                                        directLink(it)?.let { link ->
-                                            !retained(link)
-                                        } == true
-                                    }
-                                ) {
-                                    return@mapNotNull null
+                is DataValue.SetValueWrapper -> {
+                    DataValue.setValue(
+                        value.items.mapNotNull { item ->
+                            if (directLink(item.value)?.let { !retained(it) } == true) return@mapNotNull null
+                            val id = operation.identities.item("clone:${from.identityKey()}:${item.id.value.length}:${item.id.value}")
+                            ListItem(id = id, value = copyValue(item.value, from.item(item.id), to.item(id)))
+                        },
+                    )
+                }
+
+                is DataValue.MapValueWrapper -> {
+                    DataValue.mapValue(
+                        value.rows.mapNotNull { row ->
+                            if (listOf(row.key, row.value).any {
+                                    directLink(it)?.let { link ->
+                                        !retained(link)
+                                    } == true
                                 }
-                                val id = operation.identities.item("clone:${from.identityKey()}:${row.id.value.length}:${row.id.value}")
-                                MapRow(
-                                    id,
-                                    copyValue(row.key, from.item(row.id).mapKey(), to.item(id).mapKey()),
-                                    copyValue(row.value, from.item(row.id).mapValue(), to.item(id).mapValue()),
-                                )
-                            },
+                            ) {
+                                return@mapNotNull null
+                            }
+                            val id = operation.identities.item("clone:${from.identityKey()}:${row.id.value.length}:${row.id.value}")
+                            MapRow(
+                                id = id,
+                                key = copyValue(row.key, from.item(row.id).mapKey(), to.item(id).mapKey()),
+                                value = copyValue(row.value, from.item(row.id).mapValue(), to.item(id).mapValue()),
+                            )
+                        },
                     )
                 }
 
@@ -144,18 +161,18 @@ internal class OperationClonePreparation(
                 val record = resources.getValue(original)
                 val fields =
                     copyValue(
-                        DataValue.Record(record.fields),
+                        DataValue.record(record.fields),
                         ValueLocation(original, ValuePath()),
                         ValueLocation(copies.getValue(original), ValuePath()),
-                    ) as DataValue.Record
-                copies.getValue(original) to record.copy(fields = fields.fields)
+                    ) as DataValue.RecordWrapper
+                copies.getValue(original) to record.copy(fields = fields.value.fieldMap)
             }
         records.forEach { (id, record) -> operation.create(id, record) }
 
         val connected = hashSetOf<LinkOccurrenceId>()
         for (old in occurrences.filter { it.source in closure }) {
             if (old.id in connected) continue
-            if (!retained(DataValue.Link(old.id.endpoint, old.target))) continue
+            if (!retained(DataValue.link(old.id.endpoint, old.target))) continue
             val sourceLocation = locations.getValue(old.id.location)
             val target = copies[old.target.resource] ?: old.target.resource
             val oldOpposite = old.target.opposite?.let { ValueLocation(old.target.resource, it) }

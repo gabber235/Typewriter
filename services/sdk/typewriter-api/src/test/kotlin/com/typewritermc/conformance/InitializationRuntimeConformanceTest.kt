@@ -17,20 +17,26 @@ import com.typewritermc.authoring.TypeSelection
 import com.typewritermc.authoring.authoredDefault
 import com.typewritermc.authoring.validateStructure
 import com.typewritermc.checking.CatalogGeneration
-import com.typewritermc.types.DataValue
 import com.typewritermc.types.FactoryNativeBindingRegistry
 import com.typewritermc.types.NativeBinding
 import com.typewritermc.types.NativeBindingFactory
 import com.typewritermc.types.StandardTypes
+import com.typewritermc.types.bytes
 import com.typewritermc.types.catalog.DefaultCheckedCatalog
+import com.typewritermc.types.fields
+import com.typewritermc.types.integer
 import com.typewritermc.types.integerScalar
+import com.typewritermc.types.listValue
+import com.typewritermc.types.named
 import com.typewritermc.types.namedTemplate
 import com.typewritermc.types.namedUse
 import com.typewritermc.types.qualified
+import com.typewritermc.types.record
 import com.typewritermc.types.template
 import com.typewritermc.types.use
 import de.infix.testBalloon.framework.core.testSuite
 import io.kotest.matchers.shouldBe
+import skirout.editor.v1.type_catalog.DataValue
 import skirout.editor.v1.type_catalog.FieldDeclaration
 import skirout.editor.v1.type_catalog.FieldOwner
 import skirout.editor.v1.type_catalog.IntegerWidth
@@ -46,14 +52,14 @@ import kotlin.coroutines.startCoroutine
 
 val InitializationRuntimeConformanceTest by testSuite {
     test("shared scalar defaults preserve the authored representation") {
-        ScalarKind.BYTES.authoredDefault() shouldBe DataValue.Bytes(emptyList())
-        ScalarKind.TIMESTAMP.authoredDefault() shouldBe DataValue.Unfilled
+        ScalarKind.BYTES.authoredDefault() shouldBe DataValue.bytes(byteArrayOf())
+        ScalarKind.TIMESTAMP.authoredDefault() shouldBe DataValue.UNFILLED
     }
 
     test("complete supplied values pass through without record synthesis") {
         val generation = CatalogGeneration("complete supplied value")
         val catalog = DefaultCheckedCatalog(generation, emptyList())
-        val supplied = DataValue.StringValue("authored")
+        val supplied = DataValue.StringValueWrapper("authored")
         val prepared =
             DefaultInitializationRuntime(catalog, FactoryNativeBindingRegistry(catalog, emptyList())).prepareNow(
                 InitializationRequest(
@@ -99,15 +105,15 @@ val InitializationRuntimeConformanceTest by testSuite {
                 recordRequest(
                     generation,
                     TypeSelection.Complete(INITIALIZED_USE),
-                    mapOf("required" to DataValue.StringValue("authored")),
+                    mapOf("required" to DataValue.StringValueWrapper("authored")),
                 ),
             )
 
-        plan.sampled.getValue(REQUIRED_OWNER).value shouldBe DataValue.StringValue("authored")
+        plan.sampled.getValue(REQUIRED_OWNER).value shouldBe DataValue.StringValueWrapper("authored")
         prepared.record.fields shouldBe
             mapOf(
-                "required" to DataValue.StringValue("authored"),
-                "defaulted" to DataValue.Integer(java.math.BigInteger.valueOf(3)),
+                "required" to DataValue.StringValueWrapper("authored"),
+                "defaulted" to DataValue.integer(java.math.BigInteger.valueOf(3)),
             )
         prepared.findings shouldBe emptyList()
     }
@@ -168,9 +174,9 @@ val InitializationRuntimeConformanceTest by testSuite {
             com.typewritermc.authoring.AuthoringRecord(
                 selection,
                 mapOf(
-                    "independent" to DataValue.StringValue(""),
-                    "defaulted" to DataValue.Unfilled,
-                    "dependent" to DataValue.Unfilled,
+                    "independent" to DataValue.StringValueWrapper(""),
+                    "defaulted" to DataValue.UNFILLED,
+                    "dependent" to DataValue.UNFILLED,
                 ),
             )
         prepared.record.validateStructure(catalog) shouldBe StructuralResult.Valid
@@ -181,10 +187,10 @@ val InitializationRuntimeConformanceTest by testSuite {
                 recordRequest(
                     generation,
                     selection,
-                    mapOf("unknown" to DataValue.Boolean(true)),
+                    mapOf("unknown" to DataValue.BooleanWrapper(true)),
                 ),
             )
-        unknown.record.fields shouldBe mapOf("unknown" to DataValue.Boolean(true))
+        unknown.record.fields shouldBe mapOf("unknown" to DataValue.BooleanWrapper(true))
         unknown.findings.map(InitializationDiagnostic::code) shouldBe listOf("unknown_field")
 
         val dependentSupplied =
@@ -192,10 +198,10 @@ val InitializationRuntimeConformanceTest by testSuite {
                 recordRequest(
                     generation,
                     selection,
-                    mapOf("dependent" to DataValue.StringValue("unchecked")),
+                    mapOf("dependent" to DataValue.StringValueWrapper("unchecked")),
                 ),
             )
-        dependentSupplied.record.fields shouldBe mapOf("dependent" to DataValue.StringValue("unchecked"))
+        dependentSupplied.record.fields shouldBe mapOf("dependent" to DataValue.StringValueWrapper("unchecked"))
         dependentSupplied.findings.map(InitializationDiagnostic::code) shouldBe listOf("dependent_field_type_unavailable")
     }
 
@@ -234,11 +240,11 @@ val InitializationRuntimeConformanceTest by testSuite {
                 )
             }
 
-        plan.sampled.getValue(REQUIRED_OWNER).value shouldBe DataValue.StringValue("")
+        plan.sampled.getValue(REQUIRED_OWNER).value shouldBe DataValue.StringValueWrapper("")
         prepared.record.fields shouldBe
             mapOf(
-                "required" to DataValue.StringValue(""),
-                "defaulted" to DataValue.Integer(java.math.BigInteger.valueOf(3)),
+                "required" to DataValue.StringValueWrapper(""),
+                "defaulted" to DataValue.integer(java.math.BigInteger.valueOf(3)),
             )
         prepared.findings shouldBe emptyList()
 
@@ -247,10 +253,10 @@ val InitializationRuntimeConformanceTest by testSuite {
                 recordRequest(
                     generation,
                     TypeSelection.Complete(INITIALIZED_USE),
-                    mapOf("unknown" to DataValue.Boolean(true)),
+                    mapOf("unknown" to DataValue.BooleanWrapper(true)),
                 ),
             )
-        unknown.record.fields shouldBe mapOf("unknown" to DataValue.Boolean(true))
+        unknown.record.fields shouldBe mapOf("unknown" to DataValue.BooleanWrapper(true))
         unknown.findings.map(InitializationDiagnostic::code) shouldBe listOf("unknown_field")
     }
 
@@ -288,8 +294,8 @@ val InitializationRuntimeConformanceTest by testSuite {
                 )
             }
 
-        prepared.record.fields.getValue("required") shouldBe DataValue.StringValue("")
-        prepared.record.fields.getValue("defaulted") shouldBe DataValue.Unfilled
+        prepared.record.fields.getValue("required") shouldBe DataValue.StringValueWrapper("")
+        prepared.record.fields.getValue("defaulted") shouldBe DataValue.UNFILLED
         prepared.findings shouldBe
             listOf(
                 diagnostic.copy(relativePath = com.typewritermc.authoring.ValuePath(listOf(PathSegment.Field("defaulted")))),
@@ -349,8 +355,8 @@ val InitializationRuntimeConformanceTest by testSuite {
             }
 
         plan.sampled shouldBe emptyMap()
-        prepared.record.fields.getValue("input") shouldBe DataValue.Unfilled
-        prepared.record.fields.getValue("defaulted") shouldBe DataValue.Unfilled
+        prepared.record.fields.getValue("input") shouldBe DataValue.UNFILLED
+        prepared.record.fields.getValue("defaulted") shouldBe DataValue.UNFILLED
         prepared.findings.map(InitializationDiagnostic::code) shouldBe listOf("unfinished_constructor_input")
         prepared.findings
             .single()
@@ -405,12 +411,12 @@ val InitializationRuntimeConformanceTest by testSuite {
             }
 
         prepared.record.fields.getValue("child") shouldBe
-            DataValue.Named(
+            DataValue.named(
                 CHILD_ID.namedUse(),
-                DataValue.Record(
+                DataValue.record(
                     mapOf(
-                        "required" to DataValue.StringValue(""),
-                        "defaulted" to DataValue.Integer(java.math.BigInteger.valueOf(7)),
+                        "required" to DataValue.StringValueWrapper(""),
+                        "defaulted" to DataValue.integer(java.math.BigInteger.valueOf(7)),
                     ),
                 ),
             )
@@ -467,11 +473,11 @@ val InitializationRuntimeConformanceTest by testSuite {
                 recordRequest(
                     generation,
                     TypeSelection.Complete(themeId.namedUse()),
-                    mapOf("label" to DataValue.StringValue("supplied")),
+                    mapOf("label" to DataValue.StringValueWrapper("supplied")),
                 ),
             )
 
-        prepared.record.fields.getValue("label") shouldBe DataValue.StringValue("supplied")
+        prepared.record.fields.getValue("label") shouldBe DataValue.StringValueWrapper("supplied")
         prepared.findings.map { finding -> finding.relativePath?.segments } shouldBe
             listOf(
                 listOf(PathSegment.Field("styleA"), PathSegment.Field("seed")),
@@ -610,7 +616,7 @@ val InitializationRuntimeConformanceTest by testSuite {
                 ),
             )
 
-        prepared.record.fields.getValue("node") shouldBe DataValue.Unfilled
+        prepared.record.fields.getValue("node") shouldBe DataValue.UNFILLED
         prepared.findings shouldBe emptyList()
     }
 
@@ -671,7 +677,7 @@ val InitializationRuntimeConformanceTest by testSuite {
             )
         boxed.findings shouldBe emptyList()
         boxed.record.fields.getValue("value") shouldBe
-            DataValue.Named(innerBox, DataValue.Record(mapOf("value" to DataValue.StringValue(""))))
+            DataValue.named(innerBox, DataValue.record(mapOf("value" to DataValue.StringValueWrapper(""))))
 
         val treeUse = treeId.namedUse(listOf(text))
         val preparedTree =
@@ -685,11 +691,11 @@ val InitializationRuntimeConformanceTest by testSuite {
         preparedTree.findings shouldBe emptyList()
         preparedTree.record.fields shouldBe
             mapOf(
-                "value" to DataValue.StringValue(""),
+                "value" to DataValue.StringValueWrapper(""),
                 "children" to
-                    DataValue.Named(
+                    DataValue.named(
                         StandardTypes.list.namedUse(listOf(treeUse.use)),
-                        DataValue.ListValue(emptyList()),
+                        DataValue.listValue(emptyList()),
                     ),
             )
     }
@@ -704,7 +710,7 @@ private class CapturingPlan : NativeConstructionPlan {
         supplied: Map<FieldOwner, CompleteValue>,
     ): CaptureResult {
         sampled = supplied
-        return CaptureResult.Captured(mapOf(DEFAULTED_OWNER to DataValue.Integer(java.math.BigInteger.valueOf(3))))
+        return CaptureResult.Captured(mapOf(DEFAULTED_OWNER to DataValue.integer(java.math.BigInteger.valueOf(3))))
     }
 }
 
@@ -745,7 +751,7 @@ private class AbstractInputPlan : NativeConstructionPlan {
     ): CaptureResult {
         sampled = supplied
         return CaptureResult.Captured(
-            mapOf(ABSTRACT_DEFAULT_OWNER to DataValue.Integer(java.math.BigInteger.valueOf(11))),
+            mapOf(ABSTRACT_DEFAULT_OWNER to DataValue.integer(java.math.BigInteger.valueOf(11))),
         )
     }
 }
@@ -760,7 +766,7 @@ private class ChildPlan : NativeConstructionPlan {
     ): CaptureResult {
         samples++
         return CaptureResult.Captured(
-            mapOf(CHILD_DEFAULT_OWNER to DataValue.Integer(java.math.BigInteger.valueOf(7))),
+            mapOf(CHILD_DEFAULT_OWNER to DataValue.integer(java.math.BigInteger.valueOf(7))),
         )
     }
 }
@@ -817,5 +823,5 @@ private fun recordRequest(
 ) = InitializationRequest(
     catalog = generation,
     target = PreparationTarget.Record(selection),
-    supplied = DataValue.Record(supplied),
+    supplied = DataValue.record(supplied),
 )

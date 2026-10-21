@@ -22,16 +22,21 @@ import com.typewritermc.authoring.boundCollectionPath
 import com.typewritermc.authoring.definition
 import com.typewritermc.realm.repository.AuthoringRepository
 import com.typewritermc.realm.repository.valueAt
-import com.typewritermc.types.DataValue
 import com.typewritermc.types.NativeBinding
 import com.typewritermc.types.Ref
 import com.typewritermc.types.ResourceId
+import com.typewritermc.types.actualType
 import com.typewritermc.types.canonicalText
 import com.typewritermc.types.catalog.CheckedCatalog
 import com.typewritermc.types.catalog.CheckedType
 import com.typewritermc.types.catalog.Resolution
+import com.typewritermc.types.fieldMap
+import com.typewritermc.types.fields
+import com.typewritermc.types.items
+import com.typewritermc.types.payload
 import com.typewritermc.types.unwrapNamed
 import com.typewritermc.types.use
+import skirout.editor.v1.type_catalog.DataValue
 import skirout.editor.v1.type_catalog.NamedTypeUse
 import skirout.editor.v1.type_catalog.TypeUse
 import java.util.UUID
@@ -99,8 +104,8 @@ internal class RealmStructureProvisioning(
     }
 
     private fun rootRecord(view: AuthoringView): AuthoringRecord {
-        val encoded = view.catalog.binding<RealmRoot>(RealmRootDefinition.id.use()).encode(RealmRoot()) as DataValue.Named
-        return AuthoringRecord(TypeSelection.Complete(encoded.actualType), (encoded.payload as DataValue.Record).fields)
+        val encoded = view.catalog.binding<RealmRoot>(RealmRootDefinition.id.use()).encode(RealmRoot()) as DataValue.NamedWrapper
+        return AuthoringRecord(TypeSelection.Complete(encoded.actualType), (encoded.payload as DataValue.RecordWrapper).value.fieldMap)
     }
 
     private suspend fun sectionRecord(
@@ -118,7 +123,7 @@ internal class RealmStructureProvisioning(
     }
 
     private fun AuthoringRecord.sectionItems() =
-        (valueAt(RealmRootFields.sections.path)?.unwrapNamed() as? DataValue.ListValue)?.items.orEmpty().map {
+        (valueAt(RealmRootFields.sections.path)?.unwrapNamed() as? DataValue.ListValueWrapper)?.items.orEmpty().map {
             it.id
         }
 

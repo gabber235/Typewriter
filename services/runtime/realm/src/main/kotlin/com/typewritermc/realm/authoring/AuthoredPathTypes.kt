@@ -4,12 +4,19 @@ import com.typewritermc.authoring.AuthoringRecord
 import com.typewritermc.authoring.PathSegment
 import com.typewritermc.authoring.TypeSelection
 import com.typewritermc.authoring.ValuePath
-import com.typewritermc.types.DataValue
-import com.typewritermc.types.MapRow
+import com.typewritermc.types.actualType
 import com.typewritermc.types.catalog.CheckedCatalog
 import com.typewritermc.types.catalog.Resolution
+import com.typewritermc.types.field
+import com.typewritermc.types.fields
+import com.typewritermc.types.items
+import com.typewritermc.types.payload
+import com.typewritermc.types.record
+import com.typewritermc.types.rows
 import com.typewritermc.types.unwrapNamed
 import com.typewritermc.types.use
+import skirout.editor.v1.type_catalog.DataValue
+import skirout.editor.v1.type_catalog.MapRow
 import skirout.editor.v1.type_catalog.MappingResolvedRepresentation
 import skirout.editor.v1.type_catalog.ResolvedRepresentation
 import skirout.editor.v1.type_catalog.TypeUse
@@ -25,7 +32,7 @@ internal fun AuthoringRecord.authoredTypeAt(
     when (val selection = configuration) {
         is TypeSelection.Complete -> {
             type = selection.use.use
-            value = DataValue.Record(fields)
+            value = DataValue.record(fields)
             remaining = path.segments
         }
 
@@ -88,7 +95,7 @@ internal fun AuthoringRecord.authoredTypeAt(
 
                     is ResolvedRepresentation.MappingWrapper -> {
                         mapping = representation.value
-                        mapRow = (value?.unwrapNamed() as? DataValue.MapValue)?.rows?.singleOrNull { it.id == segment.id }
+                        mapRow = (value?.unwrapNamed() as? DataValue.MapValueWrapper)?.rows?.singleOrNull { it.id == segment.id }
                     }
 
                     else -> {
@@ -112,13 +119,16 @@ internal fun AuthoringRecord.authoredTypeAt(
 
 private fun TypeUse.traversable(): TypeUse = if (this is TypeUse.NullableWrapper) value.value else this
 
-private fun DataValue?.namedPayload(): Pair<TypeUse, DataValue>? = (this as? DataValue.Named)?.let { it.actualType.use to it.payload }
+private fun DataValue?.namedPayload(): Pair<TypeUse, DataValue>? =
+    (this as? DataValue.NamedWrapper)?.let {
+        it.actualType.use to it.payload
+    }
 
-private fun DataValue?.recordField(name: String): DataValue? = (this as? DataValue.Record)?.fields?.get(name)
+private fun DataValue?.recordField(name: String): DataValue? = (this as? DataValue.RecordWrapper)?.field(name)
 
 private fun DataValue?.collectionItem(segment: PathSegment.Item): DataValue? =
     when (this) {
-        is DataValue.ListValue -> items.singleOrNull { it.id == segment.id }?.value
-        is DataValue.SetValue -> items.singleOrNull { it.id == segment.id }?.value
+        is DataValue.ListValueWrapper -> items.singleOrNull { it.id == segment.id }?.value
+        is DataValue.SetValueWrapper -> items.singleOrNull { it.id == segment.id }?.value
         else -> null
     }

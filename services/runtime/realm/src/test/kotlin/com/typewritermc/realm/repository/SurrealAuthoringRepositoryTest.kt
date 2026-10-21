@@ -19,12 +19,14 @@ import com.typewritermc.realm.checking.record
 import com.typewritermc.realm.compiler.AuthoringAcceptance
 import com.typewritermc.realm.schema.MigrationResources
 import com.typewritermc.realm.schema.openTestDatabase
-import com.typewritermc.types.DataValue
 import com.typewritermc.types.ResourceId
+import com.typewritermc.types.fields
+import com.typewritermc.types.integer
 import de.infix.testBalloon.framework.core.testSuite
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.matchers.collections.shouldHaveSize
 import io.kotest.matchers.shouldBe
+import skirout.editor.v1.type_catalog.DataValue
 
 val SurrealAuthoringRepositoryTestSuite by testSuite {
     val id = ResourceId("quest")
@@ -41,16 +43,16 @@ val SurrealAuthoringRepositoryTestSuite by testSuite {
             EditExpectation.ResourceExists(id, true),
             EditExpectation.Configuration(ValueLocation(id, ValuePath()), initial.configuration),
             EditExpectation.Configuration(title, null),
-            EditExpectation.Value(title, DataValue.StringValue(expected)),
+            EditExpectation.Value(title, DataValue.StringValueWrapper(expected)),
         ),
-        listOf(EditIntent.SetValue(title, DataValue.StringValue(next))),
+        listOf(EditIntent.SetValue(title, DataValue.StringValueWrapper(next))),
     )
 
     test("independent fields remain compatible and a changed expected title conflicts") {
         val catalog = TestCatalogLease()
         val seed =
             AuthoringSeed(
-                mapOf(id to initial.copy(fields = initial.fields + ("count" to DataValue.Integer(java.math.BigInteger.TWO)))),
+                mapOf(id to initial.copy(fields = initial.fields + ("count" to DataValue.integer(java.math.BigInteger.TWO)))),
             )
         val storage = MemoryAuthoringStorage(seed)
         val views = InMemoryAuthoringViewStore(catalog, seed)
@@ -59,7 +61,7 @@ val SurrealAuthoringRepositoryTestSuite by testSuite {
         views.capture().use {
             it.root.resources
                 .getValue(id)
-                .fields["count"] shouldBe DataValue.Integer(java.math.BigInteger.TWO)
+                .fields["count"] shouldBe DataValue.integer(java.math.BigInteger.TWO)
         }
         val conflict = owner.commit(edit(catalog.generation)) as CommitResult.Conflict
         conflict.values shouldHaveSize 1
@@ -77,7 +79,7 @@ val SurrealAuthoringRepositoryTestSuite by testSuite {
                 edit(catalog.generation).copy(
                     intents =
                         listOf("Q", "Qu", "Story").map {
-                            EditIntent.SetValue(title, DataValue.StringValue(it))
+                            EditIntent.SetValue(title, DataValue.StringValueWrapper(it))
                         },
                 )
             RealmAuthoringOwner(storage, views).commit(request) shouldBe CommitResult.Committed
@@ -85,7 +87,7 @@ val SurrealAuthoringRepositoryTestSuite by testSuite {
             views.capture().use { saved ->
                 saved.root.resources
                     .getValue(id)
-                    .fields["name"] shouldBe DataValue.StringValue("Story")
+                    .fields["name"] shouldBe DataValue.StringValueWrapper("Story")
             }
         } finally {
             views.close()
@@ -101,12 +103,12 @@ val SurrealAuthoringRepositoryTestSuite by testSuite {
                 edit(catalog.generation, expected = "Qu").copy(
                     intents =
                         listOf("Q", "Qu", "Story").map {
-                            EditIntent.SetValue(title, DataValue.StringValue(it))
+                            EditIntent.SetValue(title, DataValue.StringValueWrapper(it))
                         },
                 )
             val result = RealmAuthoringOwner(storage, views).commit(request) as CommitResult.Conflict
             result.values shouldHaveSize 1
-            result.values.single().actual shouldBe EditExpectation.Value(title, DataValue.StringValue("Quest"))
+            result.values.single().actual shouldBe EditExpectation.Value(title, DataValue.StringValueWrapper("Quest"))
             storage.writes shouldBe 0
         } finally {
             views.close()
@@ -119,18 +121,18 @@ val SurrealAuthoringRepositoryTestSuite by testSuite {
         val views = InMemoryAuthoringViewStore(catalog, storage.seed)
         val checks = RealmCheckRuntime(views)
         try {
-            val request = edit(catalog.generation).copy(intents = listOf(EditIntent.SetValue(title, DataValue.Unfilled)))
+            val request = edit(catalog.generation).copy(intents = listOf(EditIntent.SetValue(title, DataValue.UNFILLED)))
             RealmAuthoringOwner(storage, views).commit(request) shouldBe CommitResult.Committed
             storage.writes shouldBe 1
             storage
                 .readCoherent()
                 .resources
                 .getValue(id)
-                .fields["name"] shouldBe DataValue.Unfilled
+                .fields["name"] shouldBe DataValue.UNFILLED
             views.capture().use { saved ->
                 saved.root.resources
                     .getValue(id)
-                    .fields["name"] shouldBe DataValue.Unfilled
+                    .fields["name"] shouldBe DataValue.UNFILLED
                 val blocked = AuthoringAcceptance(views, checks).evaluate(saved)
                 blocked.findings.any { it.code == "unfinished_value" && it.primary == title } shouldBe true
             }
@@ -180,7 +182,7 @@ val SurrealAuthoringRepositoryTestSuite by testSuite {
         views.capture().use {
             it.root.resources
                 .getValue(id)
-                .fields["name"] shouldBe DataValue.StringValue("Story")
+                .fields["name"] shouldBe DataValue.StringValueWrapper("Story")
         }
         (owner.commit(edit(catalog.generation)) is CommitResult.Conflict) shouldBe true
         storage.writes shouldBe 1
@@ -216,7 +218,8 @@ val SurrealAuthoringRepositoryTestSuite by testSuite {
             RealmAuthoringOwner(storage, views).commit(edit(catalog.generation)) shouldBe CommitResult.Committed
             val content = database.query("SELECT VALUE content FROM ONLY resource:quest;").take(0)
             content.isObject shouldBe true
-            authoredDatabaseValues.decode(AuthoringRecord.serializer(), content).fields["name"] shouldBe DataValue.StringValue("Story")
+            authoredDatabaseValues.decode(AuthoringRecord.serializer(), content).fields["name"] shouldBe
+                DataValue.StringValueWrapper("Story")
             database
                 .query("SELECT VALUE search.text FROM ONLY resource:quest;")
                 .take(0)
@@ -227,7 +230,7 @@ val SurrealAuthoringRepositoryTestSuite by testSuite {
             restarted.capture().use {
                 it.root.resources
                     .getValue(id)
-                    .fields["name"] shouldBe DataValue.StringValue("Story")
+                    .fields["name"] shouldBe DataValue.StringValueWrapper("Story")
             }
             restarted.close()
         }

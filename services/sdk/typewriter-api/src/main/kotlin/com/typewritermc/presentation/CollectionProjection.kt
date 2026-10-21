@@ -3,8 +3,8 @@ package com.typewritermc.presentation
 import com.typewritermc.authoring.TypedPath
 import com.typewritermc.authoring.ValuePath
 import com.typewritermc.expression.ExpressionFactory
-import com.typewritermc.types.DataValue
 import com.typewritermc.types.Resource
+import skirout.editor.v1.type_catalog.DataValue
 import skirout.editor.v1.type_catalog.NamedTypeTemplate
 import skirout.editor.v1.type_catalog.TypeDefinitionId
 import skirout.editor.v1.type_catalog.TypeTemplate

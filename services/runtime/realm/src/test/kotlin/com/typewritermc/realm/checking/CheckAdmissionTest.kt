@@ -8,10 +8,10 @@ import com.typewritermc.checking.CheckOutcome
 import com.typewritermc.realm.authoring.AuthoringSeed
 import com.typewritermc.realm.authoring.AuthoringViewDelta
 import com.typewritermc.realm.authoring.InMemoryAuthoringViewStore
-import com.typewritermc.types.DataValue
 import com.typewritermc.types.ResourceId
 import de.infix.testBalloon.framework.core.testSuite
 import io.kotest.matchers.shouldBe
+import skirout.editor.v1.type_catalog.DataValue
 import skirout.editor.v1.type_catalog.RuleId
 import skirout.editor.v1.type_catalog.RuleOrigin
 
@@ -27,7 +27,7 @@ val CheckAdmissionTest by testSuite {
             CheckResult(
                 ticket,
                 CheckOutcome.Finished,
-                listOf(EditExpectation.Value(location(id, "name"), DataValue.StringValue("Quest"))),
+                listOf(EditExpectation.Value(location(id, "name"), DataValue.StringValueWrapper("Quest"))),
                 emptyList(),
             )
         val admission =
@@ -57,7 +57,7 @@ val CheckAdmissionTest by testSuite {
                 CheckResult(
                     ticket,
                     CheckOutcome.Finished,
-                    listOf(EditExpectation.Value(location(id, "name"), DataValue.StringValue("Quest"))),
+                    listOf(EditExpectation.Value(location(id, "name"), DataValue.StringValueWrapper("Quest"))),
                     emptyList(),
                 )
             val admission =

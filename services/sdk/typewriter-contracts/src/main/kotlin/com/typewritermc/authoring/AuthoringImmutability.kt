@@ -1,13 +1,11 @@
 package com.typewritermc.authoring
 
-import com.typewritermc.types.DataValue
 import com.typewritermc.types.ResourceId
-import com.typewritermc.types.immutableCopy
 import com.typewritermc.types.immutableListCopy
 import com.typewritermc.types.immutableMapCopy
 import com.typewritermc.types.immutableSetCopy
 
-/** Skir type values are deeply immutable, so only the argument list needs a copy. */
+/** Skir type and data values are deeply immutable, so only Kotlin collections need a copy. */
 fun TypeSelection.immutableCopy(): TypeSelection =
     when (this) {
         is TypeSelection.Complete -> this
@@ -17,7 +15,7 @@ fun TypeSelection.immutableCopy(): TypeSelection =
 fun AuthoringRecord.immutableCopy(): AuthoringRecord =
     copy(
         configuration = configuration.immutableCopy(),
-        fields = fields.immutableMapCopy(DataValue::immutableCopy),
+        fields = fields.immutableMapCopy(),
     )
 
 fun ValuePath.immutableCopy(): ValuePath = copy(segments = segments.immutableListCopy())
@@ -40,7 +38,7 @@ fun PreparationTarget.immutableCopy(): PreparationTarget =
 fun PreparedContent.immutableCopy(): PreparedContent =
     when (this) {
         is PreparedContent.Record -> copy(record = record.immutableCopy())
-        is PreparedContent.Value -> copy(value = value.immutableCopy())
+        is PreparedContent.Value -> this
     }
 
 fun PreparationDraft.immutableCopy(): PreparationDraft =

@@ -7,11 +7,9 @@ import com.typewritermc.realm.authoring.AuthoringViewStore
 import com.typewritermc.realm.search.AuthoringSearchRepository
 import com.typewritermc.realm.search.IndexedAuthoringSearchCandidate
 import com.typewritermc.services.libs.communicator.router.CommunicatorRoutesBuilder
-import com.typewritermc.types.DataValue
 import com.typewritermc.types.ResourceId
 import com.typewritermc.types.requireValid
 import com.typewritermc.types.skir.SkirAuthoringValueCodec
-import com.typewritermc.types.skir.SkirDataValueCodec
 import com.typewritermc.types.skir.getOrThrow
 import com.typewritermc.types.use
 import skirout.editor.v1.authoring.AuthoringDiagnostic
@@ -19,6 +17,7 @@ import skirout.editor.v1.authoring.AuthoringSearchHit
 import skirout.editor.v1.authoring.PresentationSubject
 import skirout.editor.v1.authoring.SearchAuthoringRequest
 import skirout.editor.v1.authoring.SearchAuthoringResponse
+import skirout.editor.v1.type_catalog.DataValue
 import skirout.editor.v1.type_catalog.ScalarKind
 import skirout.editor.v1.type_catalog.CatalogGeneration as SkirCatalogGeneration
 import skirout.editor.v1.type_catalog.ResourceId as SkirResourceId
@@ -87,7 +86,7 @@ private fun IndexedAuthoringSearchCandidate.toWire(record: AuthoringRecord): Aut
         context =
             SkirPortableValue(
                 actualType = ScalarKind.TEXT.use,
-                payload = SkirDataValueCodec.encode(DataValue.StringValue(text)).getOrThrow(),
+                payload = DataValue.StringValueWrapper(text),
             ),
     )
 }

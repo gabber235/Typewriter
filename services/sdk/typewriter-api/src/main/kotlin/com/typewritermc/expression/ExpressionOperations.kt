@@ -1,9 +1,10 @@
 package com.typewritermc.expression
 
-import com.typewritermc.types.DataValue
+import com.typewritermc.types.integer
 import skirout.editor.v1.expression.ExpressionNode
 import skirout.editor.v1.expression.NumberArithmeticOperation
 import skirout.editor.v1.expression.TextUnaryOperation
+import skirout.editor.v1.type_catalog.DataValue
 import java.math.BigDecimal
 import java.math.BigInteger
 import kotlin.time.Duration
@@ -98,10 +99,10 @@ fun <M : MissingPolicy> Expr<Instant, M>.formatTimestamp(
 
 private fun portableNumber(value: Number): DataValue =
     when (value) {
-        is Byte, is Short, is Int, is Long -> DataValue.Integer(value.toLong().toBigInteger())
-        is BigInteger -> DataValue.Integer(value)
-        is BigDecimal -> DataValue.Decimal(value.toPlainString())
-        is Float, is Double -> DataValue.Float(value.toDouble())
+        is Byte, is Short, is Int, is Long -> DataValue.integer(value.toLong().toBigInteger())
+        is BigInteger -> DataValue.integer(value)
+        is BigDecimal -> DataValue.DecimalWrapper(value.toPlainString())
+        is Float, is Double -> DataValue.FloatWrapper(value.toDouble())
         else -> throw IllegalArgumentException("The numeric literal is not portable.")
     }
 
@@ -236,7 +237,7 @@ operator fun <N : Number, M : MissingPolicy> Expr<N, M>.rem(other: N): Expr<N, M
     }
 
 @JvmName("literalUByte")
-fun literal(value: UByte): Expr<UByte, Handled> = portableLiteral(DataValue.Integer(value.toString().toBigInteger()))
+fun literal(value: UByte): Expr<UByte, Handled> = portableLiteral(DataValue.integer(value.toString().toBigInteger()))
 
 @JvmName("roundUByteTo")
 fun <M : MissingPolicy> Expr<UByte, M>.roundTo(
@@ -401,7 +402,7 @@ operator fun <M : MissingPolicy> Expr<UByte, M>.rem(other: UByte): Expr<UByte, M
     }
 
 @JvmName("literalUShort")
-fun literal(value: UShort): Expr<UShort, Handled> = portableLiteral(DataValue.Integer(value.toString().toBigInteger()))
+fun literal(value: UShort): Expr<UShort, Handled> = portableLiteral(DataValue.integer(value.toString().toBigInteger()))
 
 @JvmName("roundUShortTo")
 fun <M : MissingPolicy> Expr<UShort, M>.roundTo(
@@ -566,7 +567,7 @@ operator fun <M : MissingPolicy> Expr<UShort, M>.rem(other: UShort): Expr<UShort
     }
 
 @JvmName("literalUInt")
-fun literal(value: UInt): Expr<UInt, Handled> = portableLiteral(DataValue.Integer(value.toString().toBigInteger()))
+fun literal(value: UInt): Expr<UInt, Handled> = portableLiteral(DataValue.integer(value.toString().toBigInteger()))
 
 @JvmName("roundUIntTo")
 fun <M : MissingPolicy> Expr<UInt, M>.roundTo(
@@ -731,7 +732,7 @@ operator fun <M : MissingPolicy> Expr<UInt, M>.rem(other: UInt): Expr<UInt, M> =
     }
 
 @JvmName("literalULong")
-fun literal(value: ULong): Expr<ULong, Handled> = portableLiteral(DataValue.Integer(value.toString().toBigInteger()))
+fun literal(value: ULong): Expr<ULong, Handled> = portableLiteral(DataValue.integer(value.toString().toBigInteger()))
 
 @JvmName("roundULongTo")
 fun <M : MissingPolicy> Expr<ULong, M>.roundTo(

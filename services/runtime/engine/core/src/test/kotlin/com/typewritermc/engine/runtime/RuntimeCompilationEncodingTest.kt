@@ -7,13 +7,14 @@ import com.typewritermc.engine.CompiledResource
 import com.typewritermc.engine.CompiledResourceKey
 import com.typewritermc.engine.RuntimeCompilationFacts
 import com.typewritermc.engine.canonicalized
-import com.typewritermc.types.DataValue
 import com.typewritermc.types.ResourceId
 import com.typewritermc.types.catalog.DefaultCheckedCatalog
+import com.typewritermc.types.named
 import com.typewritermc.types.namedUse
 import com.typewritermc.types.qualified
 import de.infix.testBalloon.framework.core.testSuite
 import io.kotest.assertions.throwables.shouldThrow
+import skirout.editor.v1.type_catalog.DataValue
 import skirout.editor.v1.type_catalog.RepresentationTemplate
 import skirout.editor.v1.type_catalog.ScalarKind
 import skirout.editor.v1.type_catalog.TypeDefinition
@@ -58,7 +59,7 @@ val RuntimeCompilationEncodingTest by testSuite {
                             actualType = resourceId.namedUse(),
                             bindingProvider = NativeBindingId("test"),
                             bindingSignature = "test:v1",
-                            value = DataValue.Named(payloadId.namedUse(), DataValue.StringValue("value")),
+                            value = DataValue.named(payloadId.namedUse(), DataValue.StringValueWrapper("value")),
                         ),
                     ),
                 edges = emptyList(),

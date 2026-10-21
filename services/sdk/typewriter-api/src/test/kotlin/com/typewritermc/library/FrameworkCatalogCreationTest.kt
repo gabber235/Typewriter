@@ -41,7 +41,6 @@ import com.typewritermc.presentation.TextControl
 import com.typewritermc.presentation.invoke
 import com.typewritermc.presentation.presentationPart
 import com.typewritermc.presentation.presentationTemplate
-import com.typewritermc.types.DataValue
 import com.typewritermc.types.FactoryNativeBindingRegistry
 import com.typewritermc.types.Icon
 import com.typewritermc.types.IconDefinition
@@ -49,14 +48,22 @@ import com.typewritermc.types.IconIconifyDefinition
 import com.typewritermc.types.IconSvgDefinition
 import com.typewritermc.types.NativeBindingFactory
 import com.typewritermc.types.StandardTypes
+import com.typewritermc.types.actualType
 import com.typewritermc.types.catalog.DefaultCheckedCatalog
 import com.typewritermc.types.catalog.Resolution
 import com.typewritermc.types.encodeGeneratedDefault
+import com.typewritermc.types.field
+import com.typewritermc.types.fields
+import com.typewritermc.types.integer
+import com.typewritermc.types.named
 import com.typewritermc.types.namedTemplate
 import com.typewritermc.types.namedUse
+import com.typewritermc.types.payload
 import com.typewritermc.types.qualified
+import com.typewritermc.types.record
+import com.typewritermc.types.requirePortable
+import com.typewritermc.types.setValue
 import com.typewritermc.types.skir.SkirAuthoringValueCodec
-import com.typewritermc.types.skir.SkirDataValueCodec
 import com.typewritermc.types.skir.getOrThrow
 import com.typewritermc.types.template
 import com.typewritermc.types.use
@@ -69,6 +76,7 @@ import skirout.editor.v1.presentation.ChildrenElement
 import skirout.editor.v1.presentation.PresentationElement
 import skirout.editor.v1.presentation.PresentationHeaderTitle
 import skirout.editor.v1.presentation.PresentationNode
+import skirout.editor.v1.type_catalog.DataValue
 import skirout.editor.v1.type_catalog.DeclarationOwner
 import skirout.editor.v1.type_catalog.FieldDeclaration
 import skirout.editor.v1.type_catalog.FieldOwner
@@ -168,7 +176,7 @@ val FrameworkCatalogCreationTest by testSuite {
             listOf(left, top, right, bottom)
         } shouldBe listOf(4.0, 4.0, 4.0, 4.0)
         requireNotNull((leading.leading.element as PresentationElement.IconWrapper).value.size)
-            .evaluate(emptyMap()) shouldBe DataValue.Float(18.0)
+            .evaluate(emptyMap()) shouldBe DataValue.FloatWrapper(18.0)
         System.getenv("TYPEWRITER_CONTROL_FIXTURE_DIR")?.let { output ->
             java.io.File(output).mkdirs()
             java.io.File(output, "element-graph-layout.bin").writeBytes(
@@ -205,9 +213,9 @@ val FrameworkCatalogCreationTest by testSuite {
                     Icon.Iconify("material-symbols:book"),
                 )
         encodedIcon shouldBe
-            DataValue.Named(
+            DataValue.named(
                 IconIconifyDefinition.use,
-                DataValue.Record(mapOf("value" to DataValue.StringValue("material-symbols:book"))),
+                DataValue.record(mapOf("value" to DataValue.StringValueWrapper("material-symbols:book"))),
             )
         val initializer = DefaultInitializationRuntime(catalog, bindings)
 
@@ -233,25 +241,25 @@ val FrameworkCatalogCreationTest by testSuite {
                 "taxonomy",
             )
         val book = initializer.prepareNow(request(generation, BookDefinition.use, mapOf("library" to library)))
-        val icon = book.record.fields.getValue("icon") as DataValue.Named
+        val icon = book.record.fields.getValue("icon") as DataValue.NamedWrapper
         icon.actualType shouldBe IconIconifyDefinition.use
         book.findings shouldBe emptyList()
 
         val tag = initializer.prepareNow(request(generation, TagDefinition.use, mapOf("taxonomy" to taxonomy)))
         tag.findings shouldBe emptyList()
-        tag.record.fields.getValue("name") shouldBe DataValue.StringValue("")
-        (tag.record.fields.getValue("color") is DataValue.Named) shouldBe true
-        val parents = tag.record.fields.getValue("parents") as DataValue.Named
-        parents.payload shouldBe DataValue.SetValue(emptyList())
-        val placement = tag.record.fields.getValue("placement") as DataValue.Named
+        tag.record.fields.getValue("name") shouldBe DataValue.StringValueWrapper("")
+        (tag.record.fields.getValue("color") is DataValue.NamedWrapper) shouldBe true
+        val parents = tag.record.fields.getValue("parents") as DataValue.NamedWrapper
+        parents.payload shouldBe DataValue.setValue(emptyList())
+        val placement = tag.record.fields.getValue("placement") as DataValue.NamedWrapper
         placement.actualType shouldBe GraphPlacementDefinition.use
         placement.payload shouldBe
-            DataValue.Record(
+            DataValue.record(
                 mapOf(
-                    "x" to DataValue.Integer(java.math.BigInteger.ZERO),
-                    "y" to DataValue.Integer(java.math.BigInteger.ZERO),
-                    "width" to DataValue.Integer(java.math.BigInteger.ONE),
-                    "height" to DataValue.Integer(java.math.BigInteger.ONE),
+                    "x" to DataValue.integer(java.math.BigInteger.ZERO),
+                    "y" to DataValue.integer(java.math.BigInteger.ZERO),
+                    "width" to DataValue.integer(java.math.BigInteger.ONE),
+                    "height" to DataValue.integer(java.math.BigInteger.ONE),
                 ),
             )
 
@@ -653,7 +661,7 @@ private fun WireExpressionNode.appearanceField(): String? {
 private fun WireExpressionNode.evaluate(bindings: Map<WireExpressionBindingId, DataValue>): DataValue? =
     when (this) {
         is WireExpressionNode.LiteralWrapper -> {
-            SkirDataValueCodec.decode(value).getOrThrow()
+            value.requirePortable()
         }
 
         is WireExpressionNode.InputWrapper -> {
@@ -662,11 +670,11 @@ private fun WireExpressionNode.evaluate(bindings: Map<WireExpressionBindingId, D
 
         is WireExpressionNode.RuleUnaryWrapper -> {
             require(value.operation == skirout.editor.v1.expression.RuleUnaryOperation.NON_BLANK)
-            DataValue.Boolean((value.source.evaluate(bindings) as? DataValue.StringValue)?.value?.isNotBlank() == true)
+            DataValue.BooleanWrapper((value.source.evaluate(bindings) as? DataValue.StringValueWrapper)?.value?.isNotBlank() == true)
         }
 
         is WireExpressionNode.ConditionalWrapper -> {
-            if ((value.test.evaluate(bindings) as? DataValue.Boolean)?.value == true) {
+            if ((value.test.evaluate(bindings) as? DataValue.BooleanWrapper)?.value == true) {
                 value.yes.evaluate(bindings)
             } else {
                 value.no.evaluate(bindings)
@@ -675,7 +683,7 @@ private fun WireExpressionNode.evaluate(bindings: Map<WireExpressionBindingId, D
 
         is WireExpressionNode.OrElseWrapper -> {
             value.input.evaluate(bindings).let { resolved ->
-                if (resolved == null || resolved == DataValue.Null || resolved == DataValue.Unfilled) {
+                if (resolved == null || resolved == DataValue.NULL || resolved == DataValue.UNFILLED) {
                     value.fallback.evaluate(bindings)
                 } else {
                     resolved
@@ -691,7 +699,7 @@ private fun WireExpressionNode.evaluate(bindings: Map<WireExpressionBindingId, D
 private fun DataValue.at(path: WireValuePath): DataValue? {
     var current = this
     for (wireSegment in path.segments) {
-        while (current is DataValue.Named) current = current.payload
+        while (current is DataValue.NamedWrapper) current = current.payload
         val segment =
             SkirAuthoringValueCodec
                 .decode(WireValuePath(segments = listOf(wireSegment)))
@@ -701,7 +709,7 @@ private fun DataValue.at(path: WireValuePath): DataValue? {
         current =
             when (segment) {
                 is com.typewritermc.authoring.PathSegment.Field -> {
-                    (current as? DataValue.Record)?.fields?.get(segment.name)
+                    (current as? DataValue.RecordWrapper)?.field(segment.name)
                 }
 
                 else -> {
@@ -730,7 +738,7 @@ private fun request(
 ) = InitializationRequest(
     catalog = generation,
     target = PreparationTarget.Record(TypeSelection.Complete(use)),
-    supplied = DataValue.Record(supplied),
+    supplied = DataValue.record(supplied),
 )
 
 private val PreparedValue.record
@@ -831,33 +839,29 @@ private fun exportFrameworkControlFixture(
     java.io.File(directory, "element-value.bin").writeBytes(
         skirout.editor.v1.type_catalog.DataValue.serializer
             .toBytes(
-                SkirDataValueCodec
-                    .encode(
-                        DataValue.Named(
-                            entryGraphFixtureType.namedUse(),
-                            DataValue.Record(mapOf("name" to DataValue.StringValue("Welcome to the village"))),
-                        ),
-                    ).getOrThrow(),
+                DataValue
+                    .named(
+                        entryGraphFixtureType.namedUse(),
+                        DataValue.record(mapOf("name" to DataValue.StringValueWrapper("Welcome to the village"))),
+                    ).requirePortable(),
             ).toByteArray(),
     )
     java.io.File(directory, "inherited-inspector-value.bin").writeBytes(
         skirout.editor.v1.type_catalog.DataValue.serializer
             .toBytes(
-                SkirDataValueCodec
-                    .encode(
-                        DataValue.Named(
-                            inspectorMessageFixtureType.namedUse(),
-                            DataValue.Record(
-                                mapOf(
-                                    "name" to DataValue.StringValue("Welcome"),
-                                    "message" to DataValue.StringValue("Hello player"),
-                                    "other" to DataValue.StringValue("Cooldown"),
-                                    "notes" to DataValue.StringValue("Shared note"),
-                                    "placement" to placement,
-                                ),
+                DataValue
+                    .named(
+                        inspectorMessageFixtureType.namedUse(),
+                        DataValue.record(
+                            mapOf(
+                                "name" to DataValue.StringValueWrapper("Welcome"),
+                                "message" to DataValue.StringValueWrapper("Hello player"),
+                                "other" to DataValue.StringValueWrapper("Cooldown"),
+                                "notes" to DataValue.StringValueWrapper("Shared note"),
+                                "placement" to placement,
                             ),
                         ),
-                    ).getOrThrow(),
+                    ).requirePortable(),
             ).toByteArray(),
     )
     java.io.File(directory, "book.bin").writeBytes(
@@ -867,7 +871,7 @@ private fun exportFrameworkControlFixture(
     )
     java.io.File(directory, "book-value.bin").writeBytes(
         skirout.editor.v1.type_catalog.DataValue.serializer
-            .toBytes(SkirDataValueCodec.encode(DataValue.Named(BookDefinition.use, DataValue.Record(book.fields))).getOrThrow())
+            .toBytes(DataValue.named(BookDefinition.use, DataValue.record(book.fields)).requirePortable())
             .toByteArray(),
     )
     java.io
@@ -895,7 +899,7 @@ private fun exportFrameworkControlFixture(
         ).writeBytes(
             skirout.editor.v1.type_catalog.DataValue.serializer
                 .toBytes(
-                    SkirDataValueCodec.encode(DataValue.Named(TagDefinition.use, DataValue.Record(tag.fields))).getOrThrow(),
+                    DataValue.named(TagDefinition.use, DataValue.record(tag.fields)).requirePortable(),
                 ).toByteArray(),
         )
     java.io
@@ -904,7 +908,7 @@ private fun exportFrameworkControlFixture(
             "placement.bin",
         ).writeBytes(
             skirout.editor.v1.type_catalog.DataValue.serializer
-                .toBytes(SkirDataValueCodec.encode(placement).getOrThrow())
+                .toBytes(placement.requirePortable())
                 .toByteArray(),
         )
     java.io

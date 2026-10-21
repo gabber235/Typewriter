@@ -3,7 +3,6 @@ package com.typewritermc.types
 import com.typewritermc.authoring.ArgumentSelection
 import com.typewritermc.authoring.AuthoringRecord
 import com.typewritermc.authoring.CompletenessResult
-import com.typewritermc.authoring.ItemId
 import com.typewritermc.authoring.StructuralResult
 import com.typewritermc.authoring.TypeSelection
 import com.typewritermc.authoring.complete
@@ -20,7 +19,6 @@ import com.typewritermc.types.catalog.DefaultCheckedCatalog
 import com.typewritermc.types.catalog.Resolution
 import com.typewritermc.types.skir.SkirAuthoringValueCodec
 import com.typewritermc.types.skir.SkirConversionResult
-import com.typewritermc.types.skir.SkirDataValueCodec
 import com.typewritermc.types.skir.SkirTypeCodec
 import com.typewritermc.types.skir.getOrThrow
 import de.infix.testBalloon.framework.core.testSuite
@@ -28,14 +26,19 @@ import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.matchers.collections.shouldContainExactly
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.types.shouldBeInstanceOf
+import io.kotest.matchers.types.shouldBeSameInstanceAs
 import skirout.editor.v1.catalog.PresentationRole
 import skirout.editor.v1.type_catalog.CollectionKind
+import skirout.editor.v1.type_catalog.DataValue
 import skirout.editor.v1.type_catalog.DeclarationOwner
 import skirout.editor.v1.type_catalog.EndpointId
 import skirout.editor.v1.type_catalog.FieldDeclaration
 import skirout.editor.v1.type_catalog.FieldOwner
+import skirout.editor.v1.type_catalog.FieldValue
 import skirout.editor.v1.type_catalog.FloatWidth
 import skirout.editor.v1.type_catalog.IntegerWidth
+import skirout.editor.v1.type_catalog.ItemId
+import skirout.editor.v1.type_catalog.ListItem
 import skirout.editor.v1.type_catalog.ParameterKey
 import skirout.editor.v1.type_catalog.PresentationId
 import skirout.editor.v1.type_catalog.RepresentationTemplate
@@ -223,8 +226,8 @@ val TypeSystemFoundationTest by testSuite {
             AuthoringRecord(
                 TypeSelection.Complete(actual),
                 mapOf(
-                    "name" to DataValue.StringValue("Variable"),
-                    "value" to DataValue.Named(resourceUse, DataValue.Record(mapOf("name" to DataValue.StringValue("Broad")))),
+                    "name" to DataValue.StringValueWrapper("Variable"),
+                    "value" to DataValue.named(resourceUse, DataValue.record(mapOf("name" to DataValue.StringValueWrapper("Broad")))),
                 ),
             )
         (wrongWrite.validateStructure(catalog) as StructuralResult.Invalid).problems.map { it.code } shouldContainExactly
@@ -427,20 +430,20 @@ val TypeSystemFoundationTest by testSuite {
         val listUse = list.id.namedUse(listOf(treeUse.use))
         val checked = (catalog.resolve(treeUse.use) as Resolution.Ready).value
         var value: DataValue =
-            DataValue.Named(
+            DataValue.named(
                 treeUse,
-                DataValue.Record(mapOf("children" to DataValue.Named(listUse, DataValue.ListValue(emptyList())))),
+                DataValue.record(mapOf("children" to DataValue.named(listUse, DataValue.listValue(emptyList())))),
             )
         repeat(600) { depth ->
             value =
-                DataValue.Named(
+                DataValue.named(
                     treeUse,
-                    DataValue.Record(
+                    DataValue.record(
                         mapOf(
                             "children" to
-                                DataValue.Named(
+                                DataValue.named(
                                     listUse,
-                                    DataValue.ListValue(listOf(ListItem(ItemId("item$depth"), value))),
+                                    DataValue.listValue(listOf(ListItem(id = ItemId(value = "item$depth"), value = value))),
                                 ),
                         ),
                     ),
@@ -516,12 +519,12 @@ val TypeSystemFoundationTest by testSuite {
         val checked = (catalog.resolve(listUse.use) as Resolution.Ready).value
 
         fun sequence(children: List<DataValue>): DataValue =
-            DataValue.Named(
+            DataValue.named(
                 listUse,
-                DataValue.ListValue(children.mapIndexed { index, value -> ListItem(ItemId("item$index"), value) }),
+                DataValue.listValue(children.mapIndexed { index, value -> ListItem(id = ItemId(value = "item$index"), value = value) }),
             )
 
-        fun node(children: List<DataValue>): DataValue = DataValue.Named(treeUse, DataValue.Record(mapOf("children" to sequence(children))))
+        fun node(children: List<DataValue>): DataValue = DataValue.named(treeUse, DataValue.record(mapOf("children" to sequence(children))))
         val leaf = node(emptyList())
         val nested = (checked.complete(sequence(listOf(node(listOf(leaf, leaf))))) as CompletenessResult.Complete).value
         val siblings = (checked.complete(sequence(listOf(node(listOf(leaf)), leaf))) as CompletenessResult.Complete).value
@@ -599,21 +602,21 @@ val TypeSystemFoundationTest by testSuite {
         val use = optional.id.namedUse()
         val checked = (catalog.resolve(use.use) as Resolution.Ready).value
         val unfinished =
-            DataValue.Named(
+            DataValue.named(
                 use,
-                DataValue.Record(
+                DataValue.record(
                     mapOf(
-                        "note" to DataValue.Null,
-                        "count" to DataValue.Unfilled,
+                        "note" to DataValue.NULL,
+                        "count" to DataValue.UNFILLED,
                     ),
                 ),
             )
 
         (checked.complete(unfinished) is CompletenessResult.Unfinished) shouldBe true
         val invalidNull =
-            DataValue.Named(
+            DataValue.named(
                 use,
-                DataValue.Record(mapOf("note" to DataValue.Null, "count" to DataValue.Null)),
+                DataValue.record(mapOf("note" to DataValue.NULL, "count" to DataValue.NULL)),
             )
         (checked.complete(invalidNull) is CompletenessResult.Invalid) shouldBe true
     }
@@ -625,7 +628,7 @@ val TypeSystemFoundationTest by testSuite {
         val use = code.id.namedUse()
         val checked = (catalog.resolve(use.use) as Resolution.Ready).value
 
-        val result = checked.complete(DataValue.Named(use, DataValue.Unfilled)) as CompletenessResult.Unfinished
+        val result = checked.complete(DataValue.named(use, DataValue.UNFILLED)) as CompletenessResult.Unfinished
         result.locations.size shouldBe 1
     }
 
@@ -635,7 +638,7 @@ val TypeSystemFoundationTest by testSuite {
         val record =
             AuthoringRecord(
                 TypeSelection.Complete(simple.id.namedUse()),
-                mapOf("name" to DataValue.StringValue("ok"), "extra" to DataValue.StringValue("no")),
+                mapOf("name" to DataValue.StringValueWrapper("ok"), "extra" to DataValue.StringValueWrapper("no")),
             )
 
         (record.validateStructure(catalog) as StructuralResult.Invalid).problems.map { it.code } shouldContainExactly
@@ -647,8 +650,16 @@ val TypeSystemFoundationTest by testSuite {
         val catalog = catalog(list)
         val use = list.id.namedUse(listOf(TEXT))
         val checked = (catalog.resolve(use.use) as Resolution.Ready).value
-        val first = DataValue.Named(use, DataValue.ListValue(listOf(ListItem(ItemId("a"), DataValue.StringValue("one")))))
-        val second = DataValue.Named(use, DataValue.ListValue(listOf(ListItem(ItemId("b"), DataValue.StringValue("one")))))
+        val first =
+            DataValue.named(
+                use,
+                DataValue.listValue(listOf(ListItem(id = ItemId(value = "a"), value = DataValue.StringValueWrapper("one")))),
+            )
+        val second =
+            DataValue.named(
+                use,
+                DataValue.listValue(listOf(ListItem(id = ItemId(value = "b"), value = DataValue.StringValueWrapper("one")))),
+            )
         val firstComplete = (checked.complete(first) as CompletenessResult.Complete).value
         val secondComplete = (checked.complete(second) as CompletenessResult.Complete).value
 
@@ -656,12 +667,12 @@ val TypeSystemFoundationTest by testSuite {
         DefaultCanonicalValueEquality.hash(firstComplete) shouldBe DefaultCanonicalValueEquality.hash(secondComplete)
 
         val duplicate =
-            DataValue.Named(
+            DataValue.named(
                 use,
-                DataValue.ListValue(
+                DataValue.listValue(
                     listOf(
-                        ListItem(ItemId("same"), DataValue.StringValue("one")),
-                        ListItem(ItemId("same"), DataValue.StringValue("two")),
+                        ListItem(id = ItemId(value = "same"), value = DataValue.StringValueWrapper("one")),
+                        ListItem(id = ItemId(value = "same"), value = DataValue.StringValueWrapper("two")),
                     ),
                 ),
             )
@@ -747,12 +758,31 @@ val TypeSystemFoundationTest by testSuite {
         binding.valueOwner shouldBe recordDefinition("button").id
     }
 
-    test("data value codec preserves applied identity and rejects nonfinite floats") {
+    test("the portable check keeps canonical values and rejects nonfinite floats") {
         val actual = id("actual").namedUse()
-        val value = DataValue.Named(actual, DataValue.Record(mapOf("value" to DataValue.StringValue("text"))))
+        val value = DataValue.named(actual, DataValue.record(mapOf("value" to DataValue.StringValueWrapper("text"))))
 
-        SkirDataValueCodec.decode(SkirDataValueCodec.encode(value).getOrThrow()).getOrThrow() shouldBe value
-        (SkirDataValueCodec.encode(DataValue.Float(Double.NaN)) is SkirConversionResult.Failure) shouldBe true
+        value.requirePortable() shouldBeSameInstanceAs value
+        shouldThrow<IllegalArgumentException> { DataValue.FloatWrapper(Double.NaN).requirePortable() }
+        shouldThrow<IllegalArgumentException> { DataValue.UNKNOWN.requirePortable() }
+        shouldThrow<IllegalArgumentException> {
+            DataValue.listValue(listOf(ListItem(id = ItemId(value = " "), value = DataValue.NULL))).requirePortable()
+        }
+        shouldThrow<IllegalArgumentException> { DataValue.DecimalWrapper("01.5").requirePortable() }
+        shouldThrow<IllegalArgumentException> { DataValue.IntegerWrapper("seven").requirePortable() }
+    }
+
+    test("the portable check restores record field order and integer notation") {
+        val unordered =
+            DataValue.createRecord(
+                fields =
+                    listOf(
+                        FieldValue(name = "second", value = DataValue.IntegerWrapper("007")),
+                        FieldValue(name = "first", value = DataValue.IntegerWrapper("-0")),
+                    ),
+            )
+
+        unordered.requirePortable() shouldBe DataValue.record("first" to DataValue.integer(0), "second" to DataValue.integer(7))
     }
 
     test("authoring codecs reject duplicate root and nested record fields") {
@@ -772,10 +802,11 @@ val TypeSystemFoundationTest by testSuite {
                 ),
             )
         val nested =
-            SkirDataValueCodec.decode(
+            shouldThrow<IllegalArgumentException> {
                 skirout.editor.v1.type_catalog.DataValue
-                    .createRecord(fields = fields),
-            )
+                    .createRecord(fields = fields)
+                    .requirePortable()
+            }
         val encodedRoot =
             SkirAuthoringValueCodec
                 .encode(
@@ -786,7 +817,7 @@ val TypeSystemFoundationTest by testSuite {
                 ).getOrThrow()
         val root = SkirAuthoringValueCodec.decode(encodedRoot.copy(fields = fields))
 
-        (nested as SkirConversionResult.Failure).diagnostics.single().message shouldBe "Record field value is duplicated."
+        nested.message shouldBe "Record field value is duplicated."
         (root as SkirConversionResult.Failure).diagnostics.single().message shouldBe "Record field value is duplicated."
     }
 
@@ -798,11 +829,11 @@ val TypeSystemFoundationTest by testSuite {
                     Resolution.Ready
             ).value
 
-        val rejected = checked.complete(DataValue.Float(9.9999999))
+        val rejected = checked.complete(DataValue.FloatWrapper(9.9999999))
         (rejected as CompletenessResult.Invalid).problems.single().code shouldBe "float32_precision_loss"
 
         val narrowed = 9.9999999f
-        checked.complete(DataValue.Float(narrowed.toDouble())).shouldBeInstanceOf<CompletenessResult.Complete>()
+        checked.complete(DataValue.FloatWrapper(narrowed.toDouble())).shouldBeInstanceOf<CompletenessResult.Complete>()
     }
 }
 

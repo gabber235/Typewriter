@@ -2,14 +2,16 @@ package com.typewritermc.expression
 
 import com.typewritermc.authoring.ValuePath
 import com.typewritermc.library.BookExpressions
-import com.typewritermc.types.DataValue
 import com.typewritermc.types.LinkTarget
 import com.typewritermc.types.ResourceId
+import com.typewritermc.types.link
+import com.typewritermc.types.named
 import com.typewritermc.types.use
 import de.infix.testBalloon.framework.core.testSuite
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.types.shouldBeInstanceOf
 import skirout.editor.v1.expression.ExpressionNode
+import skirout.editor.v1.type_catalog.DataValue
 import skirout.editor.v1.type_catalog.EndpointId
 
 val ExpressionTypeSafetyTest by testSuite {
@@ -35,7 +37,7 @@ val ExpressionTypeSafetyTest by testSuite {
     }
 
     test("relationship target projection exposes the resource key") {
-        val source = testLiteral(DataValue.Link(EndpointId(value = "page.elements"), LinkTarget(ResourceId("page:first"), ValuePath())))
+        val source = testLiteral(DataValue.link(EndpointId(value = "page.elements"), LinkTarget(ResourceId("page:first"), ValuePath())))
         val projected =
             with(FixtureReads) {
                 DefaultExpressionEvaluator(ExpressionValueReader { error("No authored read expected") }).evaluate(
@@ -46,7 +48,7 @@ val ExpressionTypeSafetyTest by testSuite {
             }
         projected shouldBe
             com.typewritermc.authoring.Availability.Available(
-                DataValue.Named(com.typewritermc.types.ResourceIdDefinition.use, DataValue.StringValue("page:first")),
+                DataValue.named(com.typewritermc.types.ResourceIdDefinition.use, DataValue.StringValueWrapper("page:first")),
             )
     }
 

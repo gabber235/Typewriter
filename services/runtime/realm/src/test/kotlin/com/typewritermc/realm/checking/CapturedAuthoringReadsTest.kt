@@ -21,8 +21,9 @@ import com.typewritermc.configuration.RelativeFieldPattern
 import com.typewritermc.realm.authoring.AuthoringSeed
 import com.typewritermc.realm.authoring.AuthoringViewDelta
 import com.typewritermc.realm.authoring.InMemoryAuthoringViewStore
-import com.typewritermc.types.DataValue
 import com.typewritermc.types.ResourceId
+import com.typewritermc.types.fields
+import com.typewritermc.types.named
 import com.typewritermc.types.namedTemplate
 import com.typewritermc.types.namedUse
 import com.typewritermc.types.nullable
@@ -31,6 +32,7 @@ import com.typewritermc.types.use
 import de.infix.testBalloon.framework.core.testSuite
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.types.shouldBeInstanceOf
+import skirout.editor.v1.type_catalog.DataValue
 import skirout.editor.v1.type_catalog.ParameterKey
 import skirout.editor.v1.type_catalog.RepresentationTemplate
 import skirout.editor.v1.type_catalog.RuleId
@@ -54,9 +56,9 @@ val CapturedAuthoringReadsTest by testSuite {
                 configuration = TypeSelection.Pending(TEST_TYPE, emptyList()),
                 fields =
                     complete.fields +
-                        ("nullValue" to DataValue.Null) +
-                        ("missingValue" to DataValue.Unfilled) +
-                        ("representation" to DataValue.Named(REPRESENTATION_TYPE.namedUse(), DataValue.StringValue("value"))),
+                        ("nullValue" to DataValue.NULL) +
+                        ("missingValue" to DataValue.UNFILLED) +
+                        ("representation" to DataValue.named(REPRESENTATION_TYPE.namedUse(), DataValue.StringValueWrapper("value"))),
             )
         val resources = mapOf(resource to authored)
         val store =
@@ -93,7 +95,7 @@ val CapturedAuthoringReadsTest by testSuite {
         val record =
             AuthoringRecord(
                 configuration = TypeSelection.Complete(TEST_TYPE.namedUse()),
-                fields = mapOf("nullParent" to DataValue.Null, "missingParent" to DataValue.Unfilled),
+                fields = mapOf("nullParent" to DataValue.NULL, "missingParent" to DataValue.UNFILLED),
             )
         val resources = mapOf(resource to record)
         val store =
@@ -141,7 +143,7 @@ val CapturedAuthoringReadsTest by testSuite {
                 unavailable to
                     AuthoringRecord(
                         configuration = TypeSelection.Complete(unavailableType.namedUse()),
-                        fields = mapOf("legacy" to DataValue.StringValue("preserved")),
+                        fields = mapOf("legacy" to DataValue.StringValueWrapper("preserved")),
                     ),
             )
         val store =
@@ -338,11 +340,27 @@ val CapturedAuthoringReadsTest by testSuite {
             listOf(
                 ValueLocation(
                     resource,
-                    ValuePath(listOf(PathSegment.Field("numbers"), PathSegment.Item(com.typewritermc.authoring.ItemId("a")))),
+                    ValuePath(
+                        listOf(
+                            PathSegment.Field("numbers"),
+                            PathSegment.Item(
+                                skirout.editor.v1.type_catalog
+                                    .ItemId(value = "a"),
+                            ),
+                        ),
+                    ),
                 ),
                 ValueLocation(
                     resource,
-                    ValuePath(listOf(PathSegment.Field("numbers"), PathSegment.Item(com.typewritermc.authoring.ItemId("b")))),
+                    ValuePath(
+                        listOf(
+                            PathSegment.Field("numbers"),
+                            PathSegment.Item(
+                                skirout.editor.v1.type_catalog
+                                    .ItemId(value = "b"),
+                            ),
+                        ),
+                    ),
                 ),
             )
         reads.observations().any { InputIdentity.Value(location(resource, "numbers")) in it.dependencies() } shouldBe true

@@ -73,7 +73,7 @@ val PublicationRoutesTest by testSuite {
                 com.typewritermc.checking.CatalogGeneration("catalog"),
                 listOf(
                     com.typewritermc.authoring.EditExpectation
-                        .Value(location, com.typewritermc.types.DataValue.Unfilled),
+                        .Value(location, skirout.editor.v1.type_catalog.DataValue.UNFILLED),
                 ),
             )
         val status =

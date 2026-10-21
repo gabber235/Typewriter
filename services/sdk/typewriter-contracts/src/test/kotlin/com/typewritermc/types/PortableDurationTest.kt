@@ -1,7 +1,5 @@
 package com.typewritermc.types
 
-import com.typewritermc.types.skir.SkirConversionResult
-import com.typewritermc.types.skir.SkirDataValueCodec
 import de.infix.testBalloon.framework.core.testSuite
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.matchers.shouldBe
@@ -11,12 +9,12 @@ import kotlinx.serialization.json.boolean
 import kotlinx.serialization.json.jsonArray
 import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
+import skirout.editor.v1.type_catalog.DataValue
 import java.nio.file.Files
 import java.nio.file.Path
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.milliseconds
 import kotlin.time.Duration.Companion.nanoseconds
-import skirout.editor.v1.type_catalog.DataValue as WireValue
 import skirout.kernel.v1.duration.Duration as WireDuration
 
 val PortableDurationTest by testSuite {
@@ -39,19 +37,14 @@ val PortableDurationTest by testSuite {
                     .toLong()
             val admitted = case.getValue("admitted").jsonPrimitive.boolean
             milliseconds.isPortableDurationMilliseconds() shouldBe admitted
-            val wire = WireValue.createDuration(value = WireDuration(milliseconds = milliseconds))
-            val result = SkirDataValueCodec.decode(wire)
+            val wire = DataValue.createDuration(value = WireDuration(milliseconds = milliseconds))
             if (admitted) {
-                val duration = result.shouldBeInstanceOf<SkirConversionResult.Success<DataValue>>().value as DataValue.Duration
-                duration.value.inWholeMilliseconds shouldBe milliseconds
-                SkirDataValueCodec.encode(duration).shouldBeInstanceOf<SkirConversionResult.Success<WireValue>>().value shouldBe wire
+                val duration = wire.requirePortable().shouldBeInstanceOf<DataValue.DurationWrapper>()
+                duration.duration.inWholeMilliseconds shouldBe milliseconds
+                DataValue.duration(milliseconds.milliseconds) shouldBe wire
             } else {
-                shouldThrow<IllegalArgumentException> { DataValue.Duration(milliseconds.milliseconds) }
-                result
-                    .shouldBeInstanceOf<SkirConversionResult.Failure>()
-                    .diagnostics
-                    .single()
-                    .message shouldBe
+                shouldThrow<IllegalArgumentException> { DataValue.duration(milliseconds.milliseconds) }
+                shouldThrow<IllegalArgumentException> { wire.requirePortable() }.message shouldBe
                     "Duration millisecond count exceeds the finite portable range."
             }
         }
@@ -75,8 +68,8 @@ val PortableDurationTest by testSuite {
         }
     }
     test("model rejects infinite and fractional millisecond durations") {
-        shouldThrow<IllegalArgumentException> { DataValue.Duration(Duration.INFINITE) }
-        shouldThrow<IllegalArgumentException> { DataValue.Duration(-Duration.INFINITE) }
-        shouldThrow<IllegalArgumentException> { DataValue.Duration(1.nanoseconds) }
+        shouldThrow<IllegalArgumentException> { DataValue.duration(Duration.INFINITE) }
+        shouldThrow<IllegalArgumentException> { DataValue.duration(-Duration.INFINITE) }
+        shouldThrow<IllegalArgumentException> { DataValue.duration(1.nanoseconds) }
     }
 }

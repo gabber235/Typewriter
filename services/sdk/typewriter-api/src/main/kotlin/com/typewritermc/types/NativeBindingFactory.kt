@@ -6,6 +6,7 @@ import com.typewritermc.authoring.NativeBindingId
 import com.typewritermc.authoring.NativeConstructionPlan
 import com.typewritermc.authoring.complete
 import com.typewritermc.types.catalog.CheckedType
+import skirout.editor.v1.type_catalog.DataValue
 import skirout.editor.v1.type_catalog.TypeDefinitionId
 import skirout.editor.v1.type_catalog.TypeUse
 
@@ -49,19 +50,19 @@ class GeneratedRecordNativeBinding<T>(
     override val actualType: TypeUse = checked.use
 
     override fun encode(value: T): DataValue =
-        DataValue.Named(
+        DataValue.named(
             actualType = (checked.use as TypeUse.NamedWrapper).value,
-            payload = DataValue.Record(fields.associate { it.name to it.binding.encodeGenerated(it.read(value)) }),
+            payload = DataValue.record(fields.associate { it.name to it.binding.encodeGenerated(it.read(value)) }),
         )
 
     override fun decode(value: com.typewritermc.authoring.CompleteValue): T {
         val record =
-            value.value.namedPayload() as? DataValue.Record
+            value.value.namedPayload() as? DataValue.RecordWrapper
                 ?: throw NativeBindingException("wrong_native_representation", "Expected a named record value.")
         return construct(
             fields.associate { field ->
                 val fieldValue =
-                    record.fields[field.name]
+                    record.field(field.name)
                         ?: throw NativeBindingException("missing_native_field", "Missing native field ${field.name}.")
                 field.name to field.binding.decodeGenerated(fieldValue)
             },
@@ -83,7 +84,7 @@ class GeneratedScalarNativeBinding<T>(
     override val actualType: TypeUse = checked.use
 
     override fun encode(value: T): DataValue =
-        DataValue.Named((checked.use as TypeUse.NamedWrapper).value, representation.encodeGenerated(unwrap(value)))
+        DataValue.named((checked.use as TypeUse.NamedWrapper).value, representation.encodeGenerated(unwrap(value)))
 
     override fun decode(value: com.typewritermc.authoring.CompleteValue): T =
         construct(representation.decodeGenerated(value.value.namedPayload()))
@@ -101,17 +102,18 @@ class GeneratedEnumNativeBinding<T>(
     GeneratedCheckedNativeBinding {
     override val actualType: TypeUse = checked.use
 
-    override fun encode(value: T): DataValue = DataValue.Named((checked.use as TypeUse.NamedWrapper).value, DataValue.EnumCase(key(value)))
+    override fun encode(value: T): DataValue =
+        DataValue.named((checked.use as TypeUse.NamedWrapper).value, DataValue.EnumCaseWrapper(key(value)))
 
     override fun decode(value: com.typewritermc.authoring.CompleteValue): T {
         val case =
-            value.value.namedPayload() as? DataValue.EnumCase
+            value.value.namedPayload() as? DataValue.EnumCaseWrapper
                 ?: throw NativeBindingException("wrong_native_representation", "Expected a named enum value.")
-        return construct(case.key)
+        return construct(case.value)
     }
 }
 
-private fun DataValue.namedPayload(): DataValue = (this as? DataValue.Named)?.payload ?: this
+private fun DataValue.namedPayload(): DataValue = (this as? DataValue.NamedWrapper)?.payload ?: this
 
 private fun NativeBinding<*>.encodeGenerated(value: Any?): DataValue {
     @Suppress("UNCHECKED_CAST")

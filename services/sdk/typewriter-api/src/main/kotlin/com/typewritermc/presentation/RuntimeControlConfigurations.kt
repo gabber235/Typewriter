@@ -3,6 +3,8 @@ package com.typewritermc.presentation
 import com.typewritermc.expression.Expr
 import com.typewritermc.expression.Handled
 import com.typewritermc.expression.literal
+import com.typewritermc.types.integer
+import com.typewritermc.types.listValue
 import com.typewritermc.types.template
 import skirout.editor.v1.expression.ExpressionNode
 import skirout.editor.v1.presentation.BytesEditingEncoding
@@ -884,12 +886,15 @@ private class RuntimeColorInputScope(
 
     override fun offeredSwatches(value: List<com.typewritermc.types.Color>) {
         val colors =
-            com.typewritermc.types.DataValue.ListValue(
+            skirout.editor.v1.type_catalog.DataValue.listValue(
                 value.mapIndexed { index, color ->
-                    com.typewritermc.types.ListItem(
-                        com.typewritermc.authoring.ItemId("swatch.$index"),
-                        com.typewritermc.types.DataValue
-                            .Integer(color.argb.toString().toBigInteger()),
+                    skirout.editor.v1.type_catalog.ListItem(
+                        id =
+                            skirout.editor.v1.type_catalog
+                                .ItemId(value = "swatch.$index"),
+                        value =
+                            skirout.editor.v1.type_catalog.DataValue
+                                .integer(color.argb.toString().toBigInteger()),
                     )
                 },
             )

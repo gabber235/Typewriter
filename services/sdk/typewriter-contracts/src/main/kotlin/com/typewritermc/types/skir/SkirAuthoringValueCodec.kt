@@ -11,7 +11,11 @@ import com.typewritermc.authoring.ValuePath
 import com.typewritermc.authoring.ValueProblem
 import com.typewritermc.types.LinkTarget
 import com.typewritermc.types.ResourceId
+import com.typewritermc.types.endpoint
+import com.typewritermc.types.fields
+import com.typewritermc.types.requirePortable
 import com.typewritermc.types.requireValid
+import skirout.editor.v1.type_catalog.DataValue
 import skirout.editor.v1.authoring.LinkOccurrence as SkirLinkOccurrence
 import skirout.editor.v1.authoring.LinkOccurrenceId as SkirLinkOccurrenceId
 import skirout.editor.v1.diagnostic.InitializationDiagnostic as SkirInitializationDiagnostic
@@ -27,7 +31,7 @@ import skirout.editor.v1.type_catalog.ValuePath as SkirValuePath
 
 /**
  * Preserves editable record selections, identity based paths, and link locations at the Skir boundary.
- * Nested values use [SkirDataValueCodec]'s conversion rules; pending arguments and unfinished values remain portable.
+ * Field values are checked with requirePortable; pending arguments and unfinished values remain portable.
  */
 object SkirAuthoringValueCodec {
     fun encode(value: AuthoringRecord): SkirConversionResult<SkirAuthoringRecord> = captureSkirConversion { encodeAuthoringRecord(value) }
@@ -71,9 +75,7 @@ internal fun ConversionScope.encodeAuthoringRecord(value: AuthoringRecord): Skir
     SkirAuthoringRecord(
         configuration = encodeTypeSelection(value.configuration),
         fields =
-            value.fields.toSortedMap().map { (name, field) ->
-                SkirFieldValue(name = name, value = at(name) { encodeDataValue(field) })
-            },
+            value.fields.toSortedMap().map { (name, field) -> SkirFieldValue(name = name, value = field) },
     )
 
 internal fun ConversionScope.decodeAuthoringRecord(value: SkirAuthoringRecord): AuthoringRecord =
@@ -81,6 +83,18 @@ internal fun ConversionScope.decodeAuthoringRecord(value: SkirAuthoringRecord): 
         configuration = decodeTypeSelection(value.configuration),
         fields = decodeRecordFields(value.fields),
     )
+
+/** Checks each field as a portable value and rejects a field name that appears twice. */
+private fun ConversionScope.decodeRecordFields(fields: List<SkirFieldValue>): Map<String, DataValue> {
+    val decoded = linkedMapOf<String, DataValue>()
+    fields.forEachIndexed { index, field ->
+        at("field $index") {
+            if (field.name in decoded) fail("Record field ${field.name} is duplicated.")
+            decoded[field.name] = at(field.name) { valid { field.value.requirePortable() } }
+        }
+    }
+    return decoded
+}
 
 internal fun ConversionScope.encodeTypeSelection(value: TypeSelection): SkirTypeSelection =
     when (value) {

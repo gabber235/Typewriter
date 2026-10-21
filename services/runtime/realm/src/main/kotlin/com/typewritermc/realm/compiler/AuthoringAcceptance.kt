@@ -24,16 +24,22 @@ import com.typewritermc.realm.checking.CheckAdmissionTarget
 import com.typewritermc.realm.checking.RealmCheckRuntime
 import com.typewritermc.services.libs.utils.rethrowExceptional
 import com.typewritermc.services.libs.utils.sha256Hex
-import com.typewritermc.types.DataValue
 import com.typewritermc.types.NativeBindingException
 import com.typewritermc.types.ResourceId
 import com.typewritermc.types.canonicalValueKey
 import com.typewritermc.types.catalog.Resolution
+import com.typewritermc.types.fields
+import com.typewritermc.types.items
+import com.typewritermc.types.named
+import com.typewritermc.types.payload
 import com.typewritermc.types.qualified
+import com.typewritermc.types.record
+import com.typewritermc.types.rows
 import com.typewritermc.types.use
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import kotlinx.serialization.Serializable
+import skirout.editor.v1.type_catalog.DataValue
 import skirout.editor.v1.type_catalog.NamedTypeUse
 import skirout.editor.v1.type_catalog.RuleOrigin
 import skirout.editor.v1.type_catalog.TypeDefinitionId
@@ -257,7 +263,7 @@ internal class AuthoringAcceptance(
                     blocked()
                     return@forEach
                 }
-                val value = DataValue.Named(actual, DataValue.Record(record.fields))
+                val value = DataValue.named(actual, DataValue.record(record.fields))
                 intrinsicCollectionProblems(value, ValueLocation(id, ValuePath())).forEach { problem ->
                     findings += publicationDiagnostic(problem.code, problem.message, problem.location)
                 }
@@ -330,23 +336,23 @@ private fun intrinsicCollectionProblems(
 ): List<IntrinsicCollectionProblem> =
     buildList {
         when (value) {
-            is DataValue.Named -> {
+            is DataValue.NamedWrapper -> {
                 addAll(intrinsicCollectionProblems(value.payload, at))
             }
 
-            is DataValue.Record -> {
-                value.fields.forEach { (name, field) ->
-                    addAll(intrinsicCollectionProblems(field, at.append(PathSegment.Field(name))))
+            is DataValue.RecordWrapper -> {
+                value.fields.forEach { field ->
+                    addAll(intrinsicCollectionProblems(field.value, at.append(PathSegment.Field(field.name))))
                 }
             }
 
-            is DataValue.ListValue -> {
+            is DataValue.ListValueWrapper -> {
                 value.items.forEach { item ->
                     addAll(intrinsicCollectionProblems(item.value, at.append(PathSegment.Item(item.id))))
                 }
             }
 
-            is DataValue.SetValue -> {
+            is DataValue.SetValueWrapper -> {
                 value.items
                     .groupBy { item -> item.value.canonicalValueKey() }
                     .values
@@ -366,7 +372,7 @@ private fun intrinsicCollectionProblems(
                 }
             }
 
-            is DataValue.MapValue -> {
+            is DataValue.MapValueWrapper -> {
                 value.rows
                     .groupBy { row -> row.key.canonicalValueKey() }
                     .values

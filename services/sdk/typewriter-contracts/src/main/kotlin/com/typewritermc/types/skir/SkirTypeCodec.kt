@@ -2,6 +2,8 @@ package com.typewritermc.types.skir
 
 import com.typewritermc.authoring.PathSegment
 import com.typewritermc.authoring.ValuePath
+import com.typewritermc.authoring.toSkir
+import com.typewritermc.authoring.toTypewriter
 import com.typewritermc.capability.RealmCapabilityDescriptor
 import com.typewritermc.checking.Diagnostic
 import com.typewritermc.checking.DiagnosticSeverity
@@ -23,6 +25,7 @@ import com.typewritermc.types.ResourceTarget
 import com.typewritermc.types.catalog.DeclarationDiagnostic
 import com.typewritermc.types.catalog.DeclarationStatus
 import com.typewritermc.types.catalog.ResourceDisplayFormulas
+import com.typewritermc.types.requireValid
 import skirout.editor.v1.type_catalog.TypeTemplate
 import skirout.editor.v1.capability.CapabilityDefinition as SkirCapabilityDefinition
 import skirout.editor.v1.capability.CommandCapabilityDefinition as SkirCommandCapabilityDefinition
@@ -50,7 +53,6 @@ import skirout.editor.v1.diagnostic.DiagnosticSeverity as SkirDiagnosticSeverity
 import skirout.editor.v1.diagnostic.DiagnosticTemplate as SkirDiagnosticTemplate
 import skirout.editor.v1.type_catalog.FieldPathSegment as SkirFieldPathSegment
 import skirout.editor.v1.type_catalog.FieldPatternSegment as SkirFieldPatternSegment
-import skirout.editor.v1.type_catalog.ItemId as SkirItemId
 import skirout.editor.v1.type_catalog.ItemPathSegment as SkirItemPathSegment
 import skirout.editor.v1.type_catalog.NamedFieldPatternSegment as SkirNamedFieldPatternSegment
 import skirout.editor.v1.type_catalog.PathSegment as SkirPathSegment
@@ -94,31 +96,9 @@ object SkirTypeCodec {
     fun encode(target: PresentationTarget): SkirConversionResult<SkirPresentationTarget> = captureSkirConversion { this.encode(target) }
 }
 
-internal fun ConversionScope.encodeValuePath(path: ValuePath) =
-    SkirValuePath(
-        segments =
-            path.segments.map { segment ->
-                when (segment) {
-                    is PathSegment.Field -> SkirPathSegment.FieldWrapper(SkirFieldPathSegment(name = segment.name))
-                    is PathSegment.Item -> SkirPathSegment.ItemWrapper(SkirItemPathSegment(id = SkirItemId(value = segment.id.value)))
-                    PathSegment.MapKey -> SkirPathSegment.MAP_KEY
-                    PathSegment.MapValue -> SkirPathSegment.MAP_VALUE
-                }
-            },
-    )
+internal fun encodeValuePath(path: ValuePath): SkirValuePath = path.toSkir()
 
-internal fun ConversionScope.decodeValuePath(path: SkirValuePath) =
-    ValuePath(
-        path.segments.map { segment ->
-            when (segment) {
-                is SkirPathSegment.FieldWrapper -> PathSegment.Field(segment.value.name)
-                is SkirPathSegment.ItemWrapper -> PathSegment.Item(com.typewritermc.authoring.ItemId(segment.value.id.value))
-                SkirPathSegment.MAP_KEY -> PathSegment.MapKey
-                SkirPathSegment.MAP_VALUE -> PathSegment.MapValue
-                else -> fail("Unknown Skir path segment.")
-            }
-        },
-    )
+internal fun ConversionScope.decodeValuePath(path: SkirValuePath): ValuePath = valid { path.toTypewriter() }
 
 private fun ConversionScope.encode(display: ResourceDisplayFormulas) =
     SkirResourceDisplayFormulas(

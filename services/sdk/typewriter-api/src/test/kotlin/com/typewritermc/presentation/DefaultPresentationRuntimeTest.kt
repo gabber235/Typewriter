@@ -3,7 +3,6 @@
 package com.typewritermc.presentation
 
 import com.typewritermc.authoring.GeneratedSdkApi
-import com.typewritermc.authoring.ItemId
 import com.typewritermc.authoring.PathSegment
 import com.typewritermc.authoring.ValuePath
 import com.typewritermc.checking.CatalogGeneration
@@ -23,8 +22,6 @@ import com.typewritermc.imprint.ContributionName
 import com.typewritermc.imprint.ContributionSourceId
 import com.typewritermc.imprint.ProducerId
 import com.typewritermc.library.coreTagCollectionProjection
-import com.typewritermc.types.DataValue
-import com.typewritermc.types.ListItem
 import com.typewritermc.types.Resource
 import com.typewritermc.types.ResourceId
 import com.typewritermc.types.StandardTypes
@@ -32,12 +29,21 @@ import com.typewritermc.types.catalog.DeclarationStatus
 import com.typewritermc.types.catalog.DefaultCheckedCatalog
 import com.typewritermc.types.catalog.Resolution
 import com.typewritermc.types.catalog.apply
+import com.typewritermc.types.field
+import com.typewritermc.types.integer
 import com.typewritermc.types.integerScalar
+import com.typewritermc.types.listValue
+import com.typewritermc.types.mapValue
+import com.typewritermc.types.named
 import com.typewritermc.types.namedTemplate
 import com.typewritermc.types.namedUse
 import com.typewritermc.types.nullable
 import com.typewritermc.types.qualified
+import com.typewritermc.types.record
+import com.typewritermc.types.requirePortable
 import com.typewritermc.types.requireValid
+import com.typewritermc.types.rows
+import com.typewritermc.types.setValue
 import com.typewritermc.types.skir.SkirTypeCodec
 import com.typewritermc.types.skir.getOrThrow
 import com.typewritermc.types.template
@@ -59,11 +65,14 @@ import skirout.editor.v1.presentation.PresentationElement
 import skirout.editor.v1.presentation.PresentationInteractionState
 import skirout.editor.v1.presentation.PresentationNode
 import skirout.editor.v1.presentation.PresentationTextTone
+import skirout.editor.v1.type_catalog.DataValue
 import skirout.editor.v1.type_catalog.DeclarationOwner
 import skirout.editor.v1.type_catalog.EndpointId
 import skirout.editor.v1.type_catalog.FieldDeclaration
 import skirout.editor.v1.type_catalog.FieldOwner
 import skirout.editor.v1.type_catalog.IntegerWidth
+import skirout.editor.v1.type_catalog.ItemId
+import skirout.editor.v1.type_catalog.ListItem
 import skirout.editor.v1.type_catalog.ParameterKey
 import skirout.editor.v1.type_catalog.RepresentationTemplate
 import skirout.editor.v1.type_catalog.ScalarKind
@@ -653,16 +662,10 @@ val DefaultPresentationRuntimeTest by testSuite {
                 .fixedChildren()
         val title = (paragraphs.first().element as PresentationElement.TextWrapper).value
         val fit = title.sizing as skirout.editor.v1.presentation.TextSizing.FitWrapper
-        com.typewritermc.types.skir.SkirDataValueCodec
-            .decode(
-                (fit.value.minimum as skirout.editor.v1.expression.ExpressionNode.LiteralWrapper).value,
-            ).getOrThrow() shouldBe
-            DataValue.Float(18.0)
-        com.typewritermc.types.skir.SkirDataValueCodec
-            .decode(
-                (fit.value.maximum as skirout.editor.v1.expression.ExpressionNode.LiteralWrapper).value,
-            ).getOrThrow() shouldBe
-            DataValue.Float(40.0)
+        ((fit.value.minimum as skirout.editor.v1.expression.ExpressionNode.LiteralWrapper).value).requirePortable() shouldBe
+            DataValue.FloatWrapper(18.0)
+        ((fit.value.maximum as skirout.editor.v1.expression.ExpressionNode.LiteralWrapper).value).requirePortable() shouldBe
+            DataValue.FloatWrapper(40.0)
         title.paragraph.maxLines shouldBe 1
         title.paragraph.selectable shouldBe true
         title.paragraph.overflow shouldBe skirout.editor.v1.presentation.PresentationTextOverflow.ELLIPSIS
@@ -1074,7 +1077,7 @@ val DefaultPresentationRuntimeTest by testSuite {
                             listOf(
                                 CollectionProjectionFieldSpec(
                                     ValuePath(),
-                                    CollectionProjectionValueSpec.Literal(DataValue.StringValue("wrong")),
+                                    CollectionProjectionValueSpec.Literal(DataValue.StringValueWrapper("wrong")),
                                 ),
                             ),
                     ),
@@ -1088,7 +1091,7 @@ val DefaultPresentationRuntimeTest by testSuite {
                             listOf(
                                 CollectionProjectionFieldSpec(
                                     ValuePath(listOf(PathSegment.Field("value"))),
-                                    CollectionProjectionValueSpec.Literal(DataValue.StringValue("value")),
+                                    CollectionProjectionValueSpec.Literal(DataValue.StringValueWrapper("value")),
                                 ),
                             ),
                     ),
@@ -1594,28 +1597,26 @@ val DefaultPresentationRuntimeTest by testSuite {
             directory.mkdirs()
             java.io.File(directory, "composite-layout.bin").writeBytes(PresentationNode.serializer.toBytes(root.layout).toByteArray())
             val value =
-                DataValue.Record(
+                DataValue.record(
                     mapOf(
-                        "list" to DataValue.ListValue(emptyList()),
-                        "set" to DataValue.SetValue(emptyList()),
-                        "map" to DataValue.MapValue(emptyList()),
-                        "code" to DataValue.Named(wrapperId.namedUse(), DataValue.StringValue("Authored code")),
+                        "list" to DataValue.listValue(emptyList()),
+                        "set" to DataValue.setValue(emptyList()),
+                        "map" to DataValue.mapValue(emptyList()),
+                        "code" to DataValue.named(wrapperId.namedUse(), DataValue.StringValueWrapper("Authored code")),
                         "position" to
-                            DataValue.Named(
+                            DataValue.named(
                                 positionId.namedUse(),
-                                DataValue.Record(
+                                DataValue.record(
                                     mapOf(
-                                        "x" to DataValue.Integer(java.math.BigInteger.valueOf(7)),
-                                        "y" to DataValue.Integer(java.math.BigInteger.valueOf(8)),
+                                        "x" to DataValue.integer(java.math.BigInteger.valueOf(7)),
+                                        "y" to DataValue.integer(java.math.BigInteger.valueOf(8)),
                                     ),
                                 ),
                             ),
                     ),
                 )
             val encoded =
-                com.typewritermc.types.skir.SkirDataValueCodec
-                    .encode(value)
-                    .getOrThrow()
+                value.requirePortable()
             java.io
                 .File(
                     directory,
@@ -1686,10 +1687,7 @@ val DefaultPresentationRuntimeTest by testSuite {
                     "nullable-layout.bin",
                 ).writeBytes(PresentationNode.serializer.toBytes(map.value.valuePresentation!!).toByteArray())
             val value =
-                com.typewritermc.types.skir.SkirDataValueCodec
-                    .encode(
-                        DataValue.Integer(java.math.BigInteger.valueOf(42)),
-                    ).getOrThrow()
+                DataValue.integer(java.math.BigInteger.valueOf(42))
             java.io
                 .File(
                     output,
@@ -1840,8 +1838,8 @@ val DefaultPresentationRuntimeTest by testSuite {
             }
         val repeatedSource =
             com.typewritermc.expression.portableLiteral<List<String>>(
-                DataValue.ListValue(
-                    listOf(ListItem(ItemId("first"), DataValue.StringValue("value"))),
+                DataValue.listValue(
+                    listOf(ListItem(id = ItemId(value = "first"), value = DataValue.StringValueWrapper("value"))),
                 ),
             )
         val source =
@@ -1909,12 +1907,10 @@ val DefaultPresentationRuntimeTest by testSuite {
                     "typed-layout.bin",
                 ).writeBytes(PresentationNode.serializer.toBytes(root.layout.fixedChildren()[2]).toByteArray())
             val value =
-                com.typewritermc.types.skir.SkirDataValueCodec
-                    .encode(
-                        DataValue.Record(
-                            mapOf("title" to DataValue.StringValue("Authored title")),
-                        ),
-                    ).getOrThrow()
+                DataValue
+                    .record(
+                        mapOf("title" to DataValue.StringValueWrapper("Authored title")),
+                    ).requirePortable()
             java.io
                 .File(
                     output,

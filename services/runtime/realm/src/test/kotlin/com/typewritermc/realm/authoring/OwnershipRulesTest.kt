@@ -2,7 +2,6 @@ package com.typewritermc.realm.authoring
 
 import com.typewritermc.authoring.AuthoringRecord
 import com.typewritermc.authoring.EditIntent
-import com.typewritermc.authoring.ItemId
 import com.typewritermc.authoring.PathSegment
 import com.typewritermc.authoring.PreparedEdit
 import com.typewritermc.authoring.RealmRootDefinition
@@ -17,14 +16,12 @@ import com.typewritermc.operations.PreparationChoices
 import com.typewritermc.realm.checking.EmptyProviders
 import com.typewritermc.realm.repository.AuthoringMutationPlanner
 import com.typewritermc.realm.repository.MutationPlanningResult
-import com.typewritermc.types.DataValue
 import com.typewritermc.types.EndpointBindingTemplate
 import com.typewritermc.types.EndpointCardinality
 import com.typewritermc.types.EndpointDefinition
 import com.typewritermc.types.EndpointSlot
 import com.typewritermc.types.FactoryNativeBindingRegistry
 import com.typewritermc.types.LinkTarget
-import com.typewritermc.types.ListItem
 import com.typewritermc.types.NativeBindingRegistry
 import com.typewritermc.types.RESOURCE_OWNERSHIP_FAMILY_ID
 import com.typewritermc.types.RelationContract
@@ -34,8 +31,14 @@ import com.typewritermc.types.RelationId
 import com.typewritermc.types.ResourceId
 import com.typewritermc.types.catalog.CheckedCatalog
 import com.typewritermc.types.catalog.DefaultCheckedCatalog
+import com.typewritermc.types.items
+import com.typewritermc.types.link
+import com.typewritermc.types.linkTarget
+import com.typewritermc.types.listValue
+import com.typewritermc.types.named
 import com.typewritermc.types.namedTemplate
 import com.typewritermc.types.namedUse
+import com.typewritermc.types.payload
 import com.typewritermc.types.qualified
 import com.typewritermc.types.template
 import com.typewritermc.types.use
@@ -43,9 +46,12 @@ import de.infix.testBalloon.framework.core.testSuite
 import io.kotest.matchers.shouldBe
 import kotlinx.coroutines.test.runTest
 import skirout.editor.v1.type_catalog.CollectionKind
+import skirout.editor.v1.type_catalog.DataValue
 import skirout.editor.v1.type_catalog.EndpointId
 import skirout.editor.v1.type_catalog.FieldDeclaration
 import skirout.editor.v1.type_catalog.FieldOwner
+import skirout.editor.v1.type_catalog.ItemId
+import skirout.editor.v1.type_catalog.ListItem
 import skirout.editor.v1.type_catalog.RepresentationTemplate
 import skirout.editor.v1.type_catalog.ScalarKind
 import skirout.editor.v1.type_catalog.TypeDefinition
@@ -84,14 +90,20 @@ val OwnershipRulesTest by testSuite {
 
     test("the realm root needs no owner even when its type could be owned") {
         val root = ResourceId("root")
-        val resources = seed() + (root to AuthoringRecord(TypeSelection.Complete(ROOT_USE), mapOf("frame" to DataValue.StringValue("0"))))
+        val resources =
+            seed() + (root to AuthoringRecord(TypeSelection.Complete(ROOT_USE), mapOf("frame" to DataValue.StringValueWrapper("0"))))
         val catalog = OwnerSideCatalogLease()
         val planner = AuthoringMutationPlanner(catalog.checked, listOf(OWNERSHIP_CONTRACT), listOf(OWNER_BINDING))
         val edit =
             PreparedEdit(
                 catalog.generation,
                 emptyList(),
-                listOf(EditIntent.SetValue(ValueLocation(root, ValuePath(listOf(PathSegment.Field("frame")))), DataValue.StringValue("1"))),
+                listOf(
+                    EditIntent.SetValue(
+                        ValueLocation(root, ValuePath(listOf(PathSegment.Field("frame")))),
+                        DataValue.StringValueWrapper("1"),
+                    ),
+                ),
             )
 
         (planner.plan(resources, edit) is MutationPlanningResult.Accepted) shouldBe true
@@ -120,8 +132,8 @@ private fun WorkingViewEditContext.planned(): Map<ResourceId, AuthoringRecord> {
 }
 
 private fun AuthoringRecord.children(): List<ResourceId> {
-    val items = ((fields.getValue("children") as DataValue.Named).payload as DataValue.ListValue).items
-    return items.map { ((it.value as DataValue.Named).payload as DataValue.Link).target.resource }
+    val items = ((fields.getValue("children") as DataValue.NamedWrapper).payload as DataValue.ListValueWrapper).items
+    return items.map { ((it.value as DataValue.NamedWrapper).payload as DataValue.LinkWrapper).linkTarget.resource }
 }
 
 private fun seed() =
@@ -137,13 +149,13 @@ private fun ownerRecord(members: List<ResourceId>) =
         TypeSelection.Complete(OWNER_USE),
         mapOf(
             "children" to
-                DataValue.Named(
+                DataValue.named(
                     CHILDREN_USE,
-                    DataValue.ListValue(
+                    DataValue.listValue(
                         members.mapIndexed { index, member ->
                             ListItem(
-                                ItemId("child_$index"),
-                                DataValue.Named(CHILD_LINK_USE, DataValue.Link(OWNER_ENDPOINT, LinkTarget(member, null))),
+                                id = ItemId(value = "child_$index"),
+                                value = DataValue.named(CHILD_LINK_USE, DataValue.link(OWNER_ENDPOINT, LinkTarget(member, null))),
                             )
                         },
                     ),
@@ -151,7 +163,7 @@ private fun ownerRecord(members: List<ResourceId>) =
         ),
     )
 
-private fun memberRecord() = AuthoringRecord(TypeSelection.Complete(MEMBER_USE), mapOf("frame" to DataValue.StringValue("0")))
+private fun memberRecord() = AuthoringRecord(TypeSelection.Complete(MEMBER_USE), mapOf("frame" to DataValue.StringValueWrapper("0")))
 
 private class OwnerSideCatalogLease : AuthoringCatalogLease {
     override val generation = CatalogGeneration("owner_side")

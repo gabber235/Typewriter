@@ -3,10 +3,10 @@ package com.typewritermc.expression
 import com.typewritermc.authoring.ValuePath
 import com.typewritermc.checking.CatalogGeneration
 import com.typewritermc.configuration.PortableExpressionChecker
-import com.typewritermc.types.DataValue
 import com.typewritermc.types.catalog.DefaultCheckedCatalog
 import com.typewritermc.types.catalog.resolve
 import com.typewritermc.types.floatScalar
+import com.typewritermc.types.integer
 import com.typewritermc.types.integerScalar
 import com.typewritermc.types.qualified
 import com.typewritermc.types.template
@@ -14,6 +14,7 @@ import com.typewritermc.types.use
 import de.infix.testBalloon.framework.core.testSuite
 import io.kotest.matchers.shouldBe
 import skirout.editor.v1.expression.ExpressionNode
+import skirout.editor.v1.type_catalog.DataValue
 import skirout.editor.v1.type_catalog.FloatWidth
 import skirout.editor.v1.type_catalog.IntegerWidth
 import skirout.editor.v1.type_catalog.ParameterKey
@@ -64,7 +65,7 @@ val PortableExpressionCheckingTest by testSuite {
     }
     test("typed numeric rounding preserves declared unsigned width and missing input") {
         val unsigned = integerScalar(IntegerWidth.UNSIGNED_SIXTY_FOUR).use
-        val expression = round(read(candidate), read(parent), testLiteral(DataValue.StringValue("Floor")))
+        val expression = round(read(candidate), read(parent), testLiteral(DataValue.StringValueWrapper("Floor")))
         val inputs = mapOf(candidate to nominalExpressionType(unsigned), parent to nominalExpressionType(unsigned, true))
         checker.checkExpressionCodes(expression, inputs, nominalExpressionType(unsigned, true)) shouldBe emptyList()
         checker
@@ -79,8 +80,8 @@ val PortableExpressionCheckingTest by testSuite {
         checker.checkExpressionCodes(
             round(
                 read(candidate),
-                testLiteral(DataValue.Decimal("0.01")),
-                testLiteral(DataValue.StringValue("NearestTiesToEven")),
+                testLiteral(DataValue.DecimalWrapper("0.01")),
+                testLiteral(DataValue.StringValueWrapper("NearestTiesToEven")),
             ),
             mapOf(candidate to nominalExpressionType(decimal, false)),
             nominalExpressionType(decimal, false),
@@ -90,8 +91,8 @@ val PortableExpressionCheckingTest by testSuite {
         checker.checkExpressionCodes(
             round(
                 read(candidate),
-                testLiteral(DataValue.Float(0.5)),
-                testLiteral(DataValue.StringValue("Floor")),
+                testLiteral(DataValue.FloatWrapper(0.5)),
+                testLiteral(DataValue.StringValueWrapper("Floor")),
             ),
             mapOf(candidate to nominalExpressionType(floating, false)),
             nominalExpressionType(floating, false),
@@ -102,8 +103,8 @@ val PortableExpressionCheckingTest by testSuite {
             .checkExpressionCodes(
                 round(
                     read(candidate),
-                    testLiteral(DataValue.Decimal("0.5")),
-                    testLiteral(DataValue.StringValue("Floor")),
+                    testLiteral(DataValue.DecimalWrapper("0.5")),
+                    testLiteral(DataValue.StringValueWrapper("Floor")),
                 ),
                 mapOf(candidate to nominalExpressionType(floating, false)),
                 nominalExpressionType(floating, false),
@@ -142,8 +143,8 @@ val PortableExpressionCheckingTest by testSuite {
         checker.checkExpressionCodes(
             duration(
                 read(candidate),
-                testLiteral(DataValue.StringValue("MinutesAndSeconds")),
-                testLiteral(DataValue.Integer(java.math.BigInteger.ZERO)),
+                testLiteral(DataValue.StringValueWrapper("MinutesAndSeconds")),
+                testLiteral(DataValue.integer(java.math.BigInteger.ZERO)),
             ),
             mapOf(candidate to nominalExpressionType(ScalarKind.DURATION.use, false)),
             nominalExpressionType(text, false),

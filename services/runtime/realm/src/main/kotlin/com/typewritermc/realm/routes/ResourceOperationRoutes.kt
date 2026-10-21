@@ -24,8 +24,8 @@ import com.typewritermc.realm.authoring.StaleOperationObservation
 import com.typewritermc.services.libs.communicator.router.CommunicatorRoutesBuilder
 import com.typewritermc.services.libs.utils.rethrowExceptional
 import com.typewritermc.types.ResourceId
+import com.typewritermc.types.requirePortable
 import com.typewritermc.types.skir.SkirAuthoringValueCodec
-import com.typewritermc.types.skir.SkirDataValueCodec
 import com.typewritermc.types.skir.getOrThrow
 import skirout.editor.v1.authoring.AuthoringDiagnostic
 import skirout.editor.v1.authoring.AuthoringObservationId
@@ -208,7 +208,7 @@ internal class ResourceOperationRoutes(
                         context.upserts,
                         context.removals,
                         request.input?.let {
-                            SkirDataValueCodec.decode(it).getOrThrow()
+                            it.requirePortable()
                         },
                         PreparationChoices(choices.toMap()),
                     )
@@ -235,7 +235,7 @@ internal class ResourceOperationRoutes(
                     AuthoringActionResult.createNeedsInput(
                         invocationId = request.invocation.invocationId,
                         inputRevision = request.inputRevision,
-                        normalizedInput = result.input?.let { SkirDataValueCodec.encode(it).getOrThrow() },
+                        normalizedInput = result.input?.requirePortable(),
                         problems =
                             result.missing.map {
                                 OperationInputProblem(

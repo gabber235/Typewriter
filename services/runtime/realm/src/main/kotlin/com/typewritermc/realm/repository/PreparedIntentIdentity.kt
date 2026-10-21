@@ -3,7 +3,6 @@ package com.typewritermc.realm.repository
 import com.typewritermc.authoring.AuthoringRecord
 import com.typewritermc.authoring.CounterpartChoice
 import com.typewritermc.authoring.EditIntent
-import com.typewritermc.authoring.ItemId
 import com.typewritermc.authoring.LinkOccurrence
 import com.typewritermc.authoring.LinkOccurrenceId
 import com.typewritermc.authoring.PreparedEdit
@@ -12,8 +11,6 @@ import com.typewritermc.authoring.TypeSelection
 import com.typewritermc.authoring.ValueLocation
 import com.typewritermc.realm.authoring.authoringStorageJson
 import com.typewritermc.services.libs.utils.sha256Hex
-import com.typewritermc.types.DataValue
-import com.typewritermc.types.ListItem
 import com.typewritermc.types.ResourceId
 import com.typewritermc.types.skir.NamedTypeUseSerializer
 import kotlinx.serialization.KSerializer
@@ -21,6 +18,10 @@ import kotlinx.serialization.json.JsonArray
 import kotlinx.serialization.json.JsonElement
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
+import skirout.editor.v1.type_catalog.DataValue
+import skirout.editor.v1.type_catalog.ItemId
+import skirout.editor.v1.type_catalog.ListItem
+import build.skir.Serializer as SkirSerializer
 
 /** Derives stable counterpart item identities from intent without retaining operation history. */
 internal fun canonicalPreparedIntentDigest(edit: PreparedEdit): String =
@@ -40,11 +41,7 @@ private fun EditIntent.canonical(): String =
             frame(
                 "set",
                 canonical(ValueLocation.serializer(), at),
-                canonical(
-                    DataValue
-                        .serializer(),
-                    value,
-                ),
+                canonical(DataValue.serializer, value),
             )
         }
 
@@ -53,23 +50,19 @@ private fun EditIntent.canonical(): String =
                 "insert",
                 canonical(ValueLocation.serializer(), at),
                 after.canonicalNullable(),
-                canonical(
-                    ListItem
-                        .serializer(),
-                    item,
-                ),
+                canonical(ListItem.serializer, item),
             )
         }
 
         is EditIntent.Remove -> {
-            frame("remove", canonical(ValueLocation.serializer(), at), canonical(ItemId.serializer(), item))
+            frame("remove", canonical(ValueLocation.serializer(), at), canonical(ItemId.serializer, item))
         }
 
         is EditIntent.Move -> {
             frame(
                 "move",
                 canonical(ValueLocation.serializer(), at),
-                canonical(ItemId.serializer(), item),
+                canonical(ItemId.serializer, item),
                 after.canonicalNullable(),
             )
         }
@@ -145,7 +138,7 @@ private fun EditIntent.canonical(): String =
         }
     }
 
-private fun ItemId?.canonicalNullable(): String = if (this == null) frame("none") else frame("item", canonical(ItemId.serializer(), this))
+private fun ItemId?.canonicalNullable(): String = if (this == null) frame("none") else frame("item", canonical(ItemId.serializer, this))
 
 private fun frame(
     kind: String,
@@ -160,6 +153,12 @@ private fun <T> canonical(
     serializer: KSerializer<T>,
     value: T,
 ): String = authoringStorageJson.encodeToJsonElement(serializer, value).canonical().toString()
+
+/** Skir values have one dense JSON form, so it identifies them directly. */
+private fun <T> canonical(
+    serializer: SkirSerializer<T>,
+    value: T,
+): String = serializer.toJsonCode(value)
 
 private fun JsonElement.canonical(): JsonElement =
     when (this) {

@@ -23,10 +23,10 @@ import com.typewritermc.services.libs.filetransfer.blob.ArtifactDigest
 import com.typewritermc.services.libs.filetransfer.blob.BlobEndpoint
 import com.typewritermc.services.libs.filetransfer.blob.BlobMetadata
 import com.typewritermc.services.libs.filetransfer.blob.BlobResult
-import com.typewritermc.types.DataValue
 import com.typewritermc.types.ResourceId
 import com.typewritermc.types.namedTemplate
 import com.typewritermc.types.namedUse
+import com.typewritermc.types.payload
 import com.typewritermc.types.qualified
 import com.typewritermc.types.template
 import com.typewritermc.types.use
@@ -40,6 +40,7 @@ import kotlinx.coroutines.test.runTest
 import skirout.editor.v1.publication.PublicationBaseline
 import skirout.editor.v1.publication.PublicationCandidateId
 import skirout.editor.v1.publication.PublicationChange
+import skirout.editor.v1.type_catalog.DataValue
 import skirout.editor.v1.type_catalog.FieldDeclaration
 import skirout.editor.v1.type_catalog.FieldOwner
 import skirout.editor.v1.type_catalog.RepresentationTemplate
@@ -504,7 +505,7 @@ private fun publicationPageRecord(value: String) =
     com.typewritermc.authoring.AuthoringRecord(
         com.typewritermc.authoring.TypeSelection
             .Complete(PUBLICATION_PAGE_USE),
-        mapOf("value" to DataValue.StringValue(value)),
+        mapOf("value" to DataValue.StringValueWrapper(value)),
     )
 
 private val PUBLICATION_PAGE = TypeDefinitionId.qualified("publication", "page")

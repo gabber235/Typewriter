@@ -26,13 +26,13 @@ import com.typewritermc.imprint.ContributionName
 import com.typewritermc.imprint.ContributionSourceId
 import com.typewritermc.imprint.ProducerId
 import com.typewritermc.library.frameworkContributions
-import com.typewritermc.types.DataValue
 import com.typewritermc.types.FactoryNativeBindingRegistry
 import com.typewritermc.types.LinkTarget
 import com.typewritermc.types.ResourceId
 import com.typewritermc.types.ResourceIdDefinition
 import com.typewritermc.types.ResourceTarget
 import com.typewritermc.types.catalog.DefaultCheckedCatalog
+import com.typewritermc.types.field
 import com.typewritermc.types.namedUse
 import com.typewritermc.types.qualified
 import com.typewritermc.types.skir.SkirAuthoringValueCodec
@@ -51,6 +51,7 @@ import skirout.editor.v1.operation.OperationShortcut
 import skirout.editor.v1.operation.ResourceOperationDefinition
 import skirout.editor.v1.presentation.ButtonVariant
 import skirout.editor.v1.presentation.HeaderActionTone
+import skirout.editor.v1.type_catalog.DataValue
 import skirout.editor.v1.type_catalog.DeclarationOwner
 import skirout.editor.v1.type_catalog.EndpointId
 import skirout.editor.v1.type_catalog.TypeDefinitionId
@@ -214,7 +215,7 @@ val OperationDeclarationTest by testSuite {
                     PreparedContent.Record(
                         AuthoringRecord(
                             TypeSelection.Complete(target.namedUse()),
-                            mapOf("name" to DataValue.StringValue(name)),
+                            mapOf("name" to DataValue.StringValueWrapper(name)),
                         ),
                     ),
                     emptyList(),

@@ -25,17 +25,24 @@ import com.typewritermc.realm.repository.ResourceValueMapper
 import com.typewritermc.realm.repository.conflicts
 import com.typewritermc.realm.repository.requiredExpectations
 import com.typewritermc.realm.repository.sameFact
-import com.typewritermc.types.DataValue
 import com.typewritermc.types.EndpointSlot
 import com.typewritermc.types.RelationContract
 import com.typewritermc.types.ResourceId
+import com.typewritermc.types.actualType
 import com.typewritermc.types.catalog.CheckedCatalog
 import com.typewritermc.types.catalog.DeclarationDiagnostic
 import com.typewritermc.types.catalog.Resolution
+import com.typewritermc.types.endpoint
+import com.typewritermc.types.field
+import com.typewritermc.types.fields
+import com.typewritermc.types.items
 import com.typewritermc.types.nullable
+import com.typewritermc.types.payload
+import com.typewritermc.types.rows
 import com.typewritermc.types.template
 import com.typewritermc.types.unknownVariant
 import com.typewritermc.types.use
+import skirout.editor.v1.type_catalog.DataValue
 import skirout.editor.v1.type_catalog.NamedTypeTemplate
 import skirout.editor.v1.type_catalog.ResolvedRepresentation
 import skirout.editor.v1.type_catalog.TypeTemplate
@@ -152,7 +159,7 @@ internal class DefaultTypeArgumentOperations(
         next.value.dependentFields.forEach { field ->
             val location = rootLocation.field(field.owner.name)
             inspected += InputIdentity.Value(location)
-            if (record.fields[field.owner.name] != DataValue.Unfilled) cleared += location
+            if (record.fields[field.owner.name] != DataValue.UNFILLED) cleared += location
         }
         val relationRepairs =
             incompatibleLinks(
@@ -188,7 +195,7 @@ internal class DefaultTypeArgumentOperations(
                 cleared
                     .distinct()
                     .filterNot(relationRepairLocations::contains)
-                    .forEach { add(EditIntent.SetValue(it, DataValue.Unfilled)) }
+                    .forEach { add(EditIntent.SetValue(it, DataValue.UNFILLED)) }
             }
         val plannedIntents =
             buildList {
@@ -297,7 +304,7 @@ internal class DefaultTypeArgumentOperations(
             (
                 edit.intents
                     .filterIsInstance<EditIntent.SetValue>()
-                    .filter { it.value == DataValue.Unfilled }
+                    .filter { it.value == DataValue.UNFILLED }
                     .map { it.at } +
                     linkRepairs.map(LinkRepairIntent::location)
             ).distinct()
@@ -316,18 +323,18 @@ private fun collectRepairs(
     inspected: MutableSet<InputIdentity>,
 ) {
     inspected += InputIdentity.Value(at)
-    if (value == DataValue.Unfilled) return
-    if (value == DataValue.Null) {
+    if (value == DataValue.UNFILLED) return
+    if (value == DataValue.NULL) {
         if (next !is TypeUse.NullableWrapper) repairs += at
         return
     }
 
     val expected = if (next is TypeUse.NullableWrapper) next.value.value else next
     val declaredActual = if (old is TypeUse.NullableWrapper) old.value.value else old
-    val actual = (value as? DataValue.Named)?.actualType?.use ?: declaredActual
+    val actual = (value as? DataValue.NamedWrapper)?.actualType?.use ?: declaredActual
     if (catalog.isReadableAs(actual, next)) return
 
-    val namedValue = value as? DataValue.Named
+    val namedValue = value as? DataValue.NamedWrapper
     val actualNamed = actual as? TypeUse.NamedWrapper
     val expectedNamed = expected as? TypeUse.NamedWrapper
     val canRetag =
@@ -354,11 +361,11 @@ private fun collectRepairs(
     retags += EditIntent.Retag(at, expectedType.value)
     val payload = requireNotNull(namedValue).payload
     when {
-        payload is DataValue.Record && oldRepresentation is ResolvedRepresentation.RecordWrapper &&
+        payload is DataValue.RecordWrapper && oldRepresentation is ResolvedRepresentation.RecordWrapper &&
             newRepresentation is ResolvedRepresentation.RecordWrapper -> {
             val oldFields = oldRepresentation.value.fields.associateBy { it.key }
             newRepresentation.value.fields.forEach { field ->
-                val child = payload.fields[field.key]
+                val child = payload.field(field.key)
                 val previous = oldFields[field.key]
                 val childLocation = at.field(field.key)
                 if (child == null || previous == null) {
@@ -370,7 +377,7 @@ private fun collectRepairs(
             }
         }
 
-        payload is DataValue.ListValue && oldRepresentation is ResolvedRepresentation.SequenceWrapper &&
+        payload is DataValue.ListValueWrapper && oldRepresentation is ResolvedRepresentation.SequenceWrapper &&
             newRepresentation is ResolvedRepresentation.SequenceWrapper -> {
             inspected += InputIdentity.Membership(at)
             inspected += InputIdentity.Order(at)
@@ -388,7 +395,7 @@ private fun collectRepairs(
             }
         }
 
-        payload is DataValue.SetValue && oldRepresentation is ResolvedRepresentation.SequenceWrapper &&
+        payload is DataValue.SetValueWrapper && oldRepresentation is ResolvedRepresentation.SequenceWrapper &&
             newRepresentation is ResolvedRepresentation.SequenceWrapper -> {
             inspected += InputIdentity.Membership(at)
             payload.items.forEach { item ->
@@ -405,7 +412,7 @@ private fun collectRepairs(
             }
         }
 
-        payload is DataValue.MapValue && oldRepresentation is ResolvedRepresentation.MappingWrapper &&
+        payload is DataValue.MapValueWrapper && oldRepresentation is ResolvedRepresentation.MappingWrapper &&
             newRepresentation is ResolvedRepresentation.MappingWrapper -> {
             inspected += InputIdentity.Membership(at)
             inspected += InputIdentity.Order(at)

@@ -13,7 +13,6 @@ import com.typewritermc.checking.CatalogGeneration
 import com.typewritermc.discovery.GeneratedProviderIndex
 import com.typewritermc.discovery.GeneratedProviderKind
 import com.typewritermc.discovery.GeneratedTypeProvider
-import com.typewritermc.types.DataValue
 import com.typewritermc.types.FactoryNativeBindingRegistry
 import com.typewritermc.types.LinkTarget
 import com.typewritermc.types.NativeBindingFactory
@@ -21,9 +20,18 @@ import com.typewritermc.types.ResourceId
 import com.typewritermc.types.StandardTypes
 import com.typewritermc.types.catalog.DefaultCheckedCatalog
 import com.typewritermc.types.catalog.Resolution
+import com.typewritermc.types.endpoint
+import com.typewritermc.types.fieldMap
+import com.typewritermc.types.fields
+import com.typewritermc.types.integer
+import com.typewritermc.types.link
+import com.typewritermc.types.named
+import com.typewritermc.types.payload
+import com.typewritermc.types.record
 import com.typewritermc.types.use
 import de.infix.testBalloon.framework.core.testSuite
 import io.kotest.matchers.shouldBe
+import skirout.editor.v1.type_catalog.DataValue
 import skirout.editor.v1.type_catalog.ResolvedRepresentation
 import skirout.editor.v1.type_catalog.TypeDefinition
 import skirout.editor.v1.type_catalog.TypeUse
@@ -61,16 +69,16 @@ val PageCreationDiagnosticTest by testSuite {
                     catalog = generation,
                     target = PreparationTarget.Record(TypeSelection.Complete(SequencePageDefinition.use)),
                     supplied =
-                        DataValue.Record(
+                        DataValue.record(
                             mapOf(
-                                "chapter" to DataValue.Named(HierarchyPathDefinition.use, DataValue.StringValue("")),
-                                "priority" to DataValue.Integer(BigInteger.ZERO),
+                                "chapter" to DataValue.named(HierarchyPathDefinition.use, DataValue.StringValueWrapper("")),
+                                "priority" to DataValue.integer(BigInteger.ZERO),
                             ),
                         ),
                 ),
             )
         val fields = (prepared.content as PreparedContent.Record).record.fields
-        fields.filterValues { it == DataValue.Unfilled }.keys shouldBe setOf("book", "name", "elements")
+        fields.filterValues { it == DataValue.UNFILLED }.keys shouldBe setOf("book", "name", "elements")
         prepared.findings.map { it.code } shouldBe listOf("unfinished_constructor_input")
         val page = (catalog.resolve(SequencePageDefinition.use.use) as Resolution.Ready).value
         val bookType =
@@ -80,15 +88,15 @@ val PageCreationDiagnosticTest by testSuite {
         val bookSchema = (catalog.resolve(bookType) as Resolution.Ready).value
         val endpoint = (bookSchema.schema.representation as ResolvedRepresentation.LinkWrapper).value.endpoint
         val connected =
-            DataValue.Named(
+            DataValue.named(
                 SequencePageDefinition.use,
-                DataValue.Record(
+                DataValue.record(
                     fields +
                         (
                             "book" to
-                                DataValue.Named(
+                                DataValue.named(
                                     (bookType as TypeUse.NamedWrapper).value,
-                                    DataValue.Link(endpoint, LinkTarget(ResourceId("book"), null)),
+                                    DataValue.link(endpoint, LinkTarget(ResourceId("book"), null)),
                                 )
                         ),
                 ),
@@ -96,22 +104,22 @@ val PageCreationDiagnosticTest by testSuite {
         val unfinished = page.complete(connected) as CompletenessResult.Unfinished
         unfinished.locations.map { location -> location.path.segments } shouldBe
             listOf(listOf(PathSegment.Field("name")), listOf(PathSegment.Field("elements")))
-        val connectedFields = (connected.payload as DataValue.Record).fields
+        val connectedFields = (connected.payload as DataValue.RecordWrapper).value.fieldMap
         val preparedWithBook =
             DefaultInitializationRuntime(catalog, bindings).prepareNow(
                 InitializationRequest(
                     catalog = generation,
                     target = PreparationTarget.Record(TypeSelection.Complete(SequencePageDefinition.use)),
-                    supplied = DataValue.Record(connectedFields.filterKeys { it in setOf("book", "chapter", "priority") }),
+                    supplied = DataValue.record(connectedFields.filterKeys { it in setOf("book", "chapter", "priority") }),
                 ),
             )
         val withBookFields = (preparedWithBook.content as PreparedContent.Record).record.fields
-        withBookFields.filterValues { it == DataValue.Unfilled }.keys shouldBe emptySet()
+        withBookFields.filterValues { it == DataValue.UNFILLED }.keys shouldBe emptySet()
         preparedWithBook.findings shouldBe emptyList()
-        withBookFields.getValue("name") shouldBe DataValue.StringValue("")
+        withBookFields.getValue("name") shouldBe DataValue.StringValueWrapper("")
         (
             page.complete(
-                DataValue.Named(SequencePageDefinition.use, DataValue.Record(withBookFields)),
+                DataValue.named(SequencePageDefinition.use, DataValue.record(withBookFields)),
             ) is CompletenessResult.Complete
         ) shouldBe
             true

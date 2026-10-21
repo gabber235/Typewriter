@@ -14,19 +14,28 @@ import com.typewritermc.authoring.field
 import com.typewritermc.authoring.item
 import com.typewritermc.authoring.mapKey
 import com.typewritermc.authoring.mapValue
-import com.typewritermc.types.DataValue
 import com.typewritermc.types.EndpointCardinality
 import com.typewritermc.types.EndpointSlot
 import com.typewritermc.types.LinkTarget
 import com.typewritermc.types.RelationContract
 import com.typewritermc.types.RelationId
 import com.typewritermc.types.ResourceId
+import com.typewritermc.types.actualType
 import com.typewritermc.types.catalog.CheckedCatalog
 import com.typewritermc.types.catalog.Resolution
+import com.typewritermc.types.endpoint
+import com.typewritermc.types.field
+import com.typewritermc.types.fields
+import com.typewritermc.types.items
+import com.typewritermc.types.linkTarget
 import com.typewritermc.types.nullable
+import com.typewritermc.types.payload
+import com.typewritermc.types.record
+import com.typewritermc.types.rows
 import com.typewritermc.types.template
 import com.typewritermc.types.unknownVariant
 import com.typewritermc.types.use
+import skirout.editor.v1.type_catalog.DataValue
 import skirout.editor.v1.type_catalog.EndpointId
 import skirout.editor.v1.type_catalog.NamedTypeTemplate
 import skirout.editor.v1.type_catalog.ResolvedRepresentation
@@ -127,15 +136,15 @@ internal object ResourceValueMapper {
     fun discover(resources: Map<ResourceId, AuthoringRecord>): List<LinkOccurrence> =
         resources.flatMap { (source, record) ->
             DataValue
-                .Record(record.fields)
+                .record(record.fields)
                 .descendants()
                 .mapNotNull { node ->
-                    val link = node.value as? DataValue.Link ?: return@mapNotNull null
+                    val link = node.value as? DataValue.LinkWrapper ?: return@mapNotNull null
                     val location = ValueLocation(source, node.path)
                     LinkOccurrence(
                         LinkOccurrenceId(link.endpoint, location),
                         source,
-                        LinkTarget(link.target.resource, link.target.opposite),
+                        link.linkTarget,
                     )
                 }.toList()
         }
@@ -251,7 +260,7 @@ internal object ResourceValueMapper {
         fields.forEach { field ->
             collectLinkEvidence(
                 declared = field.type,
-                value = record.fields[field.key] ?: DataValue.Unfilled,
+                value = record.fields[field.key] ?: DataValue.UNFILLED,
                 path = ValuePath(listOf(PathSegment.Field(field.key))),
                 endpoint = endpoint,
                 catalog = catalog,
@@ -313,7 +322,7 @@ private fun AuthoringRecord.linkSlots(catalog: CheckedCatalog): List<LinkSchemaS
     resolvedFields(catalog).forEach { field ->
         collectLinkSlots(
             declared = field.type,
-            value = fields[field.key] ?: DataValue.Unfilled,
+            value = fields[field.key] ?: DataValue.UNFILLED,
             path = ValuePath(listOf(PathSegment.Field(field.key))),
             catalog = catalog,
             containsCollection = false,
@@ -351,11 +360,11 @@ private fun collectLinkEvidence(
     forms: MutableSet<ValuePath>,
 ) {
     val nonNull = if (declared is TypeUse.NullableWrapper) declared.value.value else declared
-    if (declared is TypeUse.NullableWrapper && value == DataValue.Null) {
+    if (declared is TypeUse.NullableWrapper && value == DataValue.NULL) {
         if (capabilities.contains(nonNull, endpoint)) forms += path
         return
     }
-    val named = value as? DataValue.Named
+    val named = value as? DataValue.NamedWrapper
     val effective = named?.actualType?.use ?: nonNull
     if (named != null && !catalog.isReadableAs(named.actualType.use, nonNull)) {
         if (capabilities.contains(nonNull, endpoint)) forms += path
@@ -371,11 +380,11 @@ private fun collectLinkEvidence(
         is ResolvedRepresentation.RecordWrapper -> {
             if (!capabilities.contains(effective, endpoint)) return
             forms += path
-            val record = payload as? DataValue.Record ?: return
+            val record = payload as? DataValue.RecordWrapper ?: return
             representation.value.fields.forEach { field ->
                 collectLinkEvidence(
                     field.type,
-                    record.fields[field.key] ?: DataValue.Unfilled,
+                    record.field(field.key) ?: DataValue.UNFILLED,
                     path.field(field.key),
                     endpoint,
                     catalog,
@@ -393,8 +402,8 @@ private fun collectLinkEvidence(
             memberships += path
             val items =
                 when (payload) {
-                    is DataValue.ListValue -> payload.items
-                    is DataValue.SetValue -> payload.items
+                    is DataValue.ListValueWrapper -> payload.items
+                    is DataValue.SetValueWrapper -> payload.items
                     else -> emptyList()
                 }
             items.forEach { item ->
@@ -418,7 +427,7 @@ private fun collectLinkEvidence(
             if (!keyContains && !valueContains) return
             forms += path
             memberships += path
-            val mapping = payload as? DataValue.MapValue ?: return
+            val mapping = payload as? DataValue.MapValueWrapper ?: return
             mapping.rows.forEach { row ->
                 if (keyContains) {
                     collectLinkEvidence(
@@ -465,8 +474,8 @@ private fun collectLinkSlots(
     slots: MutableList<LinkSchemaSlot>,
 ) {
     val nonNull = if (declared is TypeUse.NullableWrapper) declared.value.value else declared
-    if (value == DataValue.Null) return
-    val named = value as? DataValue.Named
+    if (value == DataValue.NULL) return
+    val named = value as? DataValue.NamedWrapper
     val effective =
         if (named == null) {
             nonNull
@@ -489,9 +498,9 @@ private fun collectLinkSlots(
         }
 
         is ResolvedRepresentation.RecordWrapper -> {
-            val record = payload as? DataValue.Record ?: return
+            val record = payload as? DataValue.RecordWrapper ?: return
             representation.value.fields.forEach { field ->
-                val child = record.fields[field.key] ?: DataValue.Unfilled
+                val child = record.field(field.key) ?: DataValue.UNFILLED
                 collectLinkSlots(
                     field.type,
                     child,
@@ -507,8 +516,8 @@ private fun collectLinkSlots(
         is ResolvedRepresentation.SequenceWrapper -> {
             val items =
                 when (payload) {
-                    is DataValue.ListValue -> payload.items
-                    is DataValue.SetValue -> payload.items
+                    is DataValue.ListValueWrapper -> payload.items
+                    is DataValue.SetValueWrapper -> payload.items
                     else -> emptyList()
                 }
             val itemRepresentation = catalog.resolve(representation.value.item) as? Resolution.Ready
@@ -533,7 +542,7 @@ private fun collectLinkSlots(
         }
 
         is ResolvedRepresentation.MappingWrapper -> {
-            val mapping = payload as? DataValue.MapValue ?: return
+            val mapping = payload as? DataValue.MapValueWrapper ?: return
             mapping.rows.forEach { row ->
                 collectLinkSlots(
                     representation.value.key,

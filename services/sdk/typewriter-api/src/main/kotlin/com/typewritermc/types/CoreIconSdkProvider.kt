@@ -1,6 +1,5 @@
 package com.typewritermc.types
 
-import com.typewritermc.authoring.ItemId
 import com.typewritermc.expression.Expr
 import com.typewritermc.expression.Handled
 import com.typewritermc.expression.gte
@@ -18,6 +17,9 @@ import com.typewritermc.presentation.limit
 import com.typewritermc.presentation.section
 import skirout.editor.v1.catalog.PresentationRole
 import skirout.editor.v1.presentation.PresentationTextOverflow
+import skirout.editor.v1.type_catalog.DataValue
+import skirout.editor.v1.type_catalog.ItemId
+import skirout.editor.v1.type_catalog.ListItem
 import skirout.editor.v1.type_catalog.ScalarKind
 import kotlin.time.Duration.Companion.milliseconds
 import kotlin.time.Duration.Companion.seconds
@@ -91,8 +93,13 @@ object CoreIconSdkProvider : IconIconifyPresentation, IconSvgPresentation {
 
 private val suggestedIcons: Expr<List<String>, Handled> =
     com.typewritermc.expression.portableLiteral(
-        DataValue.ListValue(
+        DataValue.listValue(
             listOf("mdi:home", "mdi:account", "mdi:star", "mdi:map-marker", "game-icons:broad-dagger")
-                .mapIndexed { index, icon -> ListItem(ItemId("icon.suggestion.$index"), DataValue.StringValue(icon)) },
+                .mapIndexed {
+                    index,
+                    icon,
+                    ->
+                    ListItem(id = ItemId(value = "icon.suggestion.$index"), value = DataValue.StringValueWrapper(icon))
+                },
         ),
     )

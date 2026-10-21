@@ -4,7 +4,6 @@ import com.typewritermc.authoring.ArgumentSelection
 import com.typewritermc.authoring.AuthoringRecord
 import com.typewritermc.authoring.CommitResult
 import com.typewritermc.authoring.EditIntent
-import com.typewritermc.authoring.ItemId
 import com.typewritermc.authoring.PreparedEdit
 import com.typewritermc.authoring.PreparedEditResult
 import com.typewritermc.authoring.TypeSelection
@@ -19,14 +18,12 @@ import com.typewritermc.realm.checking.dependencies
 import com.typewritermc.realm.repository.AuthoringMutationPlanner
 import com.typewritermc.realm.repository.AuthoringRepository
 import com.typewritermc.realm.repository.MutationPlanningResult
-import com.typewritermc.types.DataValue
 import com.typewritermc.types.EndpointBindingTemplate
 import com.typewritermc.types.EndpointCardinality
 import com.typewritermc.types.EndpointDefinition
 import com.typewritermc.types.EndpointSlot
 import com.typewritermc.types.FactoryNativeBindingRegistry
 import com.typewritermc.types.LinkTarget
-import com.typewritermc.types.ListItem
 import com.typewritermc.types.NativeBindingRegistry
 import com.typewritermc.types.RelationContract
 import com.typewritermc.types.RelationDeletePolicy
@@ -34,9 +31,14 @@ import com.typewritermc.types.RelationId
 import com.typewritermc.types.ResourceId
 import com.typewritermc.types.catalog.CheckedCatalog
 import com.typewritermc.types.catalog.DefaultCheckedCatalog
+import com.typewritermc.types.fields
+import com.typewritermc.types.link
+import com.typewritermc.types.listValue
+import com.typewritermc.types.named
 import com.typewritermc.types.namedTemplate
 import com.typewritermc.types.namedUse
 import com.typewritermc.types.qualified
+import com.typewritermc.types.record
 import com.typewritermc.types.template
 import com.typewritermc.types.use
 import de.infix.testBalloon.framework.core.testSuite
@@ -44,9 +46,12 @@ import io.kotest.matchers.shouldBe
 import io.kotest.matchers.types.shouldBeInstanceOf
 import kotlinx.coroutines.test.runTest
 import skirout.editor.v1.type_catalog.CollectionKind
+import skirout.editor.v1.type_catalog.DataValue
 import skirout.editor.v1.type_catalog.EndpointId
 import skirout.editor.v1.type_catalog.FieldDeclaration
 import skirout.editor.v1.type_catalog.FieldOwner
+import skirout.editor.v1.type_catalog.ItemId
+import skirout.editor.v1.type_catalog.ListItem
 import skirout.editor.v1.type_catalog.ParameterKey
 import skirout.editor.v1.type_catalog.RepresentationTemplate
 import skirout.editor.v1.type_catalog.ScalarKind
@@ -58,7 +63,7 @@ class TypeArgumentOperationsTest {
     fun previewRejectsDefinitionReplacementAndStructurallyInvalidRepairBatch() {
         val catalog = RepairCatalogLease()
         val resource = ResourceId("container")
-        val record = repairRecord(ItemId("bundle"))
+        val record = repairRecord(ItemId(value = "bundle"))
         val store =
             InMemoryAuthoringViewStore(
                 catalog,
@@ -76,7 +81,7 @@ class TypeArgumentOperationsTest {
         }
         store.close()
 
-        val invalid = record.copy(fields = record.fields + ("unknown" to DataValue.StringValue("retained")))
+        val invalid = record.copy(fields = record.fields + ("unknown" to DataValue.StringValueWrapper("retained")))
         val invalidCatalog = RepairCatalogLease()
         val invalidStore =
             InMemoryAuthoringViewStore(
@@ -94,7 +99,7 @@ class TypeArgumentOperationsTest {
     fun narrowingRetagsTaggedContainersAndClearsOnlyIncompatibleLeaves() {
         val catalog = RepairCatalogLease()
         val resource = ResourceId("container")
-        val item = ItemId("bundle")
+        val item = ItemId(value = "bundle")
         val record = repairRecord(item)
         val store =
             InMemoryAuthoringViewStore(
@@ -149,7 +154,7 @@ class TypeArgumentOperationsTest {
                 EditIntent.ConfigureResource(resource, TypeSelection.Complete(CONTAINER_COIN)),
                 EditIntent.Retag(bundles, LIST_BUNDLE_COIN),
                 EditIntent.Retag(bundle, BUNDLE_COIN),
-                EditIntent.SetValue(incompatible, DataValue.Unfilled),
+                EditIntent.SetValue(incompatible, DataValue.UNFILLED),
             )
         preview.clearedLocations shouldBe listOf(incompatible)
         val observed = preview.edit.expectations.flatMapTo(linkedSetOf()) { it.dependencies() }
@@ -158,7 +163,7 @@ class TypeArgumentOperationsTest {
         (InputIdentity.Value(incompatible) in observed) shouldBe true
         (InputIdentity.Value(bundles) in observed) shouldBe true
         (InputIdentity.Value(bundles) in observed) shouldBe true
-        preview.edit.intents.any { it == EditIntent.SetValue(compatible, DataValue.Unfilled) } shouldBe false
+        preview.edit.intents.any { it == EditIntent.SetValue(compatible, DataValue.UNFILLED) } shouldBe false
 
         store.close()
     }
@@ -167,7 +172,7 @@ class TypeArgumentOperationsTest {
         runTest {
             val catalog = RepairCatalogLease()
             val resource = ResourceId("container")
-            val record = repairRecord(ItemId("bundle"))
+            val record = repairRecord(ItemId(value = "bundle"))
             val store =
                 InMemoryAuthoringViewStore(
                     catalog,
@@ -218,9 +223,9 @@ class TypeArgumentOperationsTest {
 
             pendingPreview.next shouldBe pending
             pendingPreview.edit.intents.contains(EditIntent.ConfigureResource(resource, pending)) shouldBe true
-            pendingPreview.edit.intents.contains(EditIntent.SetValue(location(resource, "second"), DataValue.Unfilled)) shouldBe true
-            pendingPreview.edit.intents.contains(EditIntent.SetValue(location(resource, "name"), DataValue.Unfilled)) shouldBe false
-            pendingPreview.edit.intents.contains(EditIntent.SetValue(location(resource, "first"), DataValue.Unfilled)) shouldBe false
+            pendingPreview.edit.intents.contains(EditIntent.SetValue(location(resource, "second"), DataValue.UNFILLED)) shouldBe true
+            pendingPreview.edit.intents.contains(EditIntent.SetValue(location(resource, "name"), DataValue.UNFILLED)) shouldBe false
+            pendingPreview.edit.intents.contains(EditIntent.SetValue(location(resource, "first"), DataValue.UNFILLED)) shouldBe false
 
             val pendingEdit = operations.prepare(pendingPreview).shouldBeInstanceOf<PreparedEditResult.Prepared>().edit
             val pendingPlan =
@@ -230,9 +235,9 @@ class TypeArgumentOperationsTest {
                 ).plan(mapOf(resource to original), pendingEdit).shouldBeInstanceOf<MutationPlanningResult.Accepted>().plan
             val pendingRecord = pendingPlan.resources.getValue(resource)
             pendingRecord.configuration shouldBe pending
-            pendingRecord.fields.getValue("name") shouldBe DataValue.StringValue("kept")
+            pendingRecord.fields.getValue("name") shouldBe DataValue.StringValueWrapper("kept")
             pendingRecord.fields.getValue("first") shouldBe original.fields.getValue("first")
-            pendingRecord.fields.getValue("second") shouldBe DataValue.Unfilled
+            pendingRecord.fields.getValue("second") shouldBe DataValue.UNFILLED
 
             val pendingStore =
                 InMemoryAuthoringViewStore(
@@ -246,7 +251,7 @@ class TypeArgumentOperationsTest {
                 }
             completePreview.next shouldBe complete
             completePreview.edit.intents.contains(EditIntent.ConfigureResource(resource, complete)) shouldBe true
-            completePreview.edit.intents.contains(EditIntent.SetValue(location(resource, "first"), DataValue.Unfilled)) shouldBe false
+            completePreview.edit.intents.contains(EditIntent.SetValue(location(resource, "first"), DataValue.UNFILLED)) shouldBe false
 
             pendingStore.close()
             store.close()
@@ -308,9 +313,9 @@ class TypeArgumentOperationsTest {
                     dualRecord(TypeSelection.Complete(DUAL_COIN_GEM)).fields +
                         (
                             "target" to
-                                DataValue.Named(
+                                DataValue.named(
                                     LINK_GEM,
-                                    DataValue.Link(SOURCE_ENDPOINT, LinkTarget(target, null)),
+                                    DataValue.link(SOURCE_ENDPOINT, LinkTarget(target, null)),
                                 )
                         ),
             )
@@ -337,7 +342,7 @@ class TypeArgumentOperationsTest {
             }
 
         preview.clearedLocations.contains(linkLocation) shouldBe true
-        preview.edit.intents.none { it == EditIntent.SetValue(linkLocation, DataValue.Unfilled) } shouldBe true
+        preview.edit.intents.none { it == EditIntent.SetValue(linkLocation, DataValue.UNFILLED) } shouldBe true
         preview.linkRepairs shouldBe
             listOf(
                 LinkRepairIntent.Clear(
@@ -382,26 +387,27 @@ private fun repairRecord(item: ItemId): AuthoringRecord =
         fields =
             mapOf(
                 "bundles" to
-                    DataValue.Named(
+                    DataValue.named(
                         LIST_BUNDLE_REWARD,
-                        DataValue.ListValue(
+                        DataValue.listValue(
                             listOf(
                                 ListItem(
-                                    item,
-                                    DataValue.Named(
-                                        BUNDLE_REWARD,
-                                        DataValue.Record(
-                                            mapOf(
-                                                "title" to DataValue.StringValue("kept"),
-                                                "value" to DataValue.Named(GEM_USE, DataValue.Record(emptyMap())),
+                                    id = item,
+                                    value =
+                                        DataValue.named(
+                                            BUNDLE_REWARD,
+                                            DataValue.record(
+                                                mapOf(
+                                                    "title" to DataValue.StringValueWrapper("kept"),
+                                                    "value" to DataValue.named(GEM_USE, DataValue.record(emptyMap())),
+                                                ),
                                             ),
                                         ),
-                                    ),
                                 ),
                             ),
                         ),
                     ),
-                "reward" to DataValue.Named(COIN_USE, DataValue.Record(emptyMap())),
+                "reward" to DataValue.named(COIN_USE, DataValue.record(emptyMap())),
             ),
     )
 
@@ -410,9 +416,9 @@ private fun dualRecord(selection: TypeSelection): AuthoringRecord =
         configuration = selection,
         fields =
             mapOf(
-                "name" to DataValue.StringValue("kept"),
-                "first" to DataValue.Named(COIN_USE, DataValue.Record(emptyMap())),
-                "second" to DataValue.Named(GEM_USE, DataValue.Record(emptyMap())),
+                "name" to DataValue.StringValueWrapper("kept"),
+                "first" to DataValue.named(COIN_USE, DataValue.record(emptyMap())),
+                "second" to DataValue.named(GEM_USE, DataValue.record(emptyMap())),
             ),
     )
 

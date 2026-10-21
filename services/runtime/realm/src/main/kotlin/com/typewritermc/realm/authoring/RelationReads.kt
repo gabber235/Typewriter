@@ -1,7 +1,6 @@
 package com.typewritermc.realm.authoring
 
 import com.typewritermc.authoring.AuthoringRecord
-import com.typewritermc.authoring.ItemId
 import com.typewritermc.authoring.LinkOccurrence
 import com.typewritermc.authoring.LinkOccurrenceId
 import com.typewritermc.authoring.LinkProjection
@@ -16,15 +15,18 @@ import com.typewritermc.realm.repository.CounterpartBinding
 import com.typewritermc.realm.repository.DeclaredLinkEvidence
 import com.typewritermc.realm.repository.ResourceValueMapper
 import com.typewritermc.realm.repository.valueAt
-import com.typewritermc.types.DataValue
 import com.typewritermc.types.LinkTarget
 import com.typewritermc.types.RelationContract
 import com.typewritermc.types.ResourceId
 import com.typewritermc.types.catalog.Resolution
+import com.typewritermc.types.endpoint
 import com.typewritermc.types.isAcyclic
 import com.typewritermc.types.ownsResources
+import com.typewritermc.types.payload
 import com.typewritermc.types.use
+import skirout.editor.v1.type_catalog.DataValue
 import skirout.editor.v1.type_catalog.EndpointId
+import skirout.editor.v1.type_catalog.ItemId
 import skirout.editor.v1.type_catalog.ResolvedRepresentation
 
 /**
@@ -249,7 +251,7 @@ private fun DeclaredLinkEvidence.isEmpty(): Boolean = values.isEmpty() && member
 
 internal fun DataValue.unfilled(): Boolean =
     when (this) {
-        DataValue.Unfilled, DataValue.Null -> true
-        is DataValue.Named -> payload.unfilled()
+        DataValue.UNFILLED, DataValue.NULL -> true
+        is DataValue.NamedWrapper -> payload.unfilled()
         else -> false
     }

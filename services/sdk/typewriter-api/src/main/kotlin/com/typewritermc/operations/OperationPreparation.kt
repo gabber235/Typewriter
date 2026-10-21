@@ -95,7 +95,7 @@ class NeedsChoices(
 interface OperationIdentities {
     fun resource(key: String): ResourceId
 
-    fun item(key: String): com.typewritermc.authoring.ItemId
+    fun item(key: String): skirout.editor.v1.type_catalog.ItemId
 }
 
 /**

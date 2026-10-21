@@ -11,9 +11,10 @@ import com.typewritermc.authoring.TypeSelection
 import com.typewritermc.authoring.ValueLocation
 import com.typewritermc.operations.requireAuthored
 import com.typewritermc.realm.repository.valueAt
-import com.typewritermc.types.DataValue
 import com.typewritermc.types.ResourceId
+import com.typewritermc.types.actualType
 import com.typewritermc.types.use
+import skirout.editor.v1.type_catalog.DataValue
 import kotlin.math.abs
 import kotlin.math.roundToLong
 
@@ -117,5 +118,5 @@ internal fun AuthoringCatalogLease.graphPlacementLocation(
     record: AuthoringRecord,
 ): ValueLocation? =
     placementLocation(id, record)?.takeIf { location ->
-        (record.valueAt(location.path) as? DataValue.Named)?.actualType?.definition == GraphPlacementDefinition.id
+        (record.valueAt(location.path) as? DataValue.NamedWrapper)?.actualType?.definition == GraphPlacementDefinition.id
     }

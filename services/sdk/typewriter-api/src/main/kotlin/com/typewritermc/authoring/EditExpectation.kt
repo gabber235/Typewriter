@@ -1,17 +1,19 @@
 package com.typewritermc.authoring
 
-import com.typewritermc.types.DataValue
 import com.typewritermc.types.RelationId
 import com.typewritermc.types.ResourceId
+import com.typewritermc.types.skir.DataValueSerializer
 import kotlinx.serialization.Serializable
+import skirout.editor.v1.type_catalog.DataValue
 
 /** Facts from the original read view that must still hold when an edit is accepted. */
 @Serializable
 sealed interface EditExpectation {
-    /** A missing value is distinct from the authored [DataValue.Null] variant. */
+    /** A missing value is distinct from the authored [DataValue.NULL] variant. */
     @Serializable
     data class Value(
         val at: ValueLocation,
+        @Serializable(with = DataValueSerializer::class)
         val expected: DataValue?,
     ) : EditExpectation
 

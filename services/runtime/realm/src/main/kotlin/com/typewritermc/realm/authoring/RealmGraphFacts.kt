@@ -1,6 +1,5 @@
 package com.typewritermc.realm.authoring
 
-import com.typewritermc.authoring.ItemId
 import com.typewritermc.authoring.RealmSectionDefinition
 import com.typewritermc.authoring.TypeSelection
 import com.typewritermc.authoring.ValueLocation
@@ -16,6 +15,7 @@ import com.typewritermc.types.ResourceId
 import com.typewritermc.types.catalog.Resolution
 import com.typewritermc.types.ownsResources
 import com.typewritermc.types.use
+import skirout.editor.v1.type_catalog.ItemId
 import skirout.editor.v1.type_catalog.ResolvedRepresentation
 import skirout.editor.v1.type_catalog.TypeUse
 
@@ -188,4 +188,4 @@ internal class RealmGraphFacts(
 }
 
 /** A collection item that stands for a link a fact only considers, never one that is written. */
-private fun candidateItem(key: String): ItemId = ItemId("candidate:$key")
+private fun candidateItem(key: String): ItemId = ItemId(value = "candidate:$key")

@@ -2,13 +2,18 @@
 
 package fixture
 
+import com.typewritermc.types.fields
+import com.typewritermc.types.items
+import com.typewritermc.types.integer
+import com.typewritermc.types.record
+import com.typewritermc.types.named
 import com.typewritermc.checking.CatalogGeneration
 import com.typewritermc.authoring.DefaultInitializationRuntime
 import com.typewritermc.authoring.InitializationRequest
 import com.typewritermc.authoring.PreparedContent
 import com.typewritermc.authoring.PreparationTarget
 import com.typewritermc.authoring.TypeSelection
-import com.typewritermc.types.DataValue
+import skirout.editor.v1.type_catalog.DataValue
 import skirout.editor.v1.type_catalog.IntegerWidth
 import java.math.BigInteger
 import kotlinx.serialization.Transient
@@ -312,21 +317,21 @@ fun main(args: Array<String>) {
             fun counts(): Pair<*, *> = probeLoader.loadClass("fixture.GeneratedProviderRoundtrip").getMethod("evaluationCounts").invoke(null) as Pair<*, *>
             val initializer = DefaultInitializationRuntime(assembly.checked, assembly.bindings)
             fun prepare(type: NamedTypeUse, fields: Map<String, DataValue>) = initializer.prepareNow(
-                InitializationRequest(assembly.checked.generation, PreparationTarget.Record(TypeSelection.Complete(type)), DataValue.Record(fields)),
+                InitializationRequest(assembly.checked.generation, PreparationTarget.Record(TypeSelection.Complete(type)), DataValue.record(fields)),
             )
-            fun integer(value: Int) = DataValue.Integer(BigInteger.valueOf(value.toLong()))
-            val supplied = mapOf("seed" to integer(7), "nullable" to DataValue.Null, "guarded" to integer(20))
+            fun integer(value: Int) = DataValue.integer(BigInteger.valueOf(value.toLong()))
+            val supplied = mapOf("seed" to integer(7), "nullable" to DataValue.NULL, "guarded" to integer(20))
             val preparedDefaults = prepare(DependentDefaultsDefinition.use, supplied)
             val defaults = (preparedDefaults.content as PreparedContent.Record).record.fields
             check(preparedDefaults.findings.isEmpty())
-            check(defaults["derived"] == integer(21) && defaults["nullable"] == DataValue.Null)
+            check(defaults["derived"] == integer(21) && defaults["nullable"] == DataValue.NULL)
             check(counts() == (1 to 1))
-            val completeInputs = defaults + ("derived" to DataValue.Unfilled)
+            val completeInputs = defaults + ("derived" to DataValue.UNFILLED)
             val explicitUnfinished = prepare(DependentDefaultsDefinition.use, completeInputs)
             check(explicitUnfinished.findings.isEmpty())
             check((explicitUnfinished.content as PreparedContent.Record).record.fields == completeInputs)
             check(counts() == (1 to 1))
-            val blocked = prepare(DependentDefaultsDefinition.use, supplied + ("seed" to DataValue.Unfilled))
+            val blocked = prepare(DependentDefaultsDefinition.use, supplied + ("seed" to DataValue.UNFILLED))
             check(blocked.findings.single().relativePath?.segments == listOf(com.typewritermc.authoring.PathSegment.Field("seed")))
             check(counts() == (1 to 1))
             val throwing = prepare(DependentDefaultsDefinition.use, mapOf("derived" to integer(99)))
@@ -339,7 +344,7 @@ fun main(args: Array<String>) {
             val generic = prepare(GenericDefaultsDefinition.applied(listOf(intType)), mapOf("value" to integer(9)))
             check(generic.findings.isEmpty())
             check((generic.content as PreparedContent.Record).record.fields["duplicate"] == integer(9))
-            val wrapped = prepare(WrappedDefaultsDefinition.use, mapOf("count" to DataValue.Named(DefaultCountDefinition.use, integer(8))))
+            val wrapped = prepare(WrappedDefaultsDefinition.use, mapOf("count" to DataValue.named(DefaultCountDefinition.use, integer(8))))
             check(wrapped.findings.isEmpty())
             check((wrapped.content as PreparedContent.Record).record.fields["doubled"] == integer(16))
             check(runCatching { prepare(CancelledDefaultsDefinition.use, emptyMap()) }.exceptionOrNull() is kotlinx.coroutines.CancellationException)
@@ -357,13 +362,13 @@ fun main(args: Array<String>) {
             replacementCountBindings = 0
             val replacementWrapped = DefaultInitializationRuntime(replacement.checked, replacement.bindings).prepareNow(
                 InitializationRequest(replacement.checked.generation, PreparationTarget.Record(TypeSelection.Complete(WrappedDefaultsDefinition.use)),
-                    DataValue.Record(mapOf("count" to DataValue.Named(DefaultCountDefinition.use, integer(8))))),
+                    DataValue.record(mapOf("count" to DataValue.named(DefaultCountDefinition.use, integer(8))))),
             )
             check(replacementWrapped.findings.isEmpty())
             check((replacementWrapped.content as PreparedContent.Record).record.fields["doubled"] == integer(16))
             check(replacementCountBindings == 1)
             val replacementDefaults = DefaultInitializationRuntime(replacement.checked, replacement.bindings).prepareNow(
-                InitializationRequest(replacement.checked.generation, PreparationTarget.Record(TypeSelection.Complete(DependentDefaultsDefinition.use)), DataValue.Record(supplied)),
+                InitializationRequest(replacement.checked.generation, PreparationTarget.Record(TypeSelection.Complete(DependentDefaultsDefinition.use)), DataValue.record(supplied)),
             )
             check(replacementDefaults.findings.isEmpty())
             check((replacementDefaults.content as PreparedContent.Record).record.fields["derived"] == integer(21))

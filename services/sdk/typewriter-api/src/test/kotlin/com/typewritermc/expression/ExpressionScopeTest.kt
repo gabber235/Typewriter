@@ -1,12 +1,13 @@
 package com.typewritermc.expression
 
-import com.typewritermc.authoring.ItemId
-import com.typewritermc.types.DataValue
-import com.typewritermc.types.ListItem
+import com.typewritermc.types.listValue
 import de.infix.testBalloon.framework.core.testSuite
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.matchers.shouldBe
 import skirout.editor.v1.expression.ExpressionNode
+import skirout.editor.v1.type_catalog.DataValue
+import skirout.editor.v1.type_catalog.ItemId
+import skirout.editor.v1.type_catalog.ListItem
 import skirout.editor.v1.type_catalog.ValuePath
 
 val ExpressionScopeTest by testSuite {
@@ -61,10 +62,10 @@ val ExpressionScopeTest by testSuite {
     }
 
     test("literal builders capture caller supplied collections before lowering") {
-        val items = mutableListOf(ListItem(ItemId("first"), DataValue.StringValue("first")))
-        val literal = portableLiteral<List<String>>(DataValue.ListValue(items))
+        val items = mutableListOf(ListItem(id = ItemId(value = "first"), value = DataValue.StringValueWrapper("first")))
+        val literal = portableLiteral<List<String>>(DataValue.listValue(items))
         val before = literal.toNode()
-        items += ListItem(ItemId("second"), DataValue.StringValue("second"))
+        items += ListItem(id = ItemId(value = "second"), value = DataValue.StringValueWrapper("second"))
         literal.toNode() shouldBe before
     }
 }

@@ -7,9 +7,10 @@ import com.typewritermc.authoring.LinkProjection
 import com.typewritermc.authoring.TraversalDirection
 import com.typewritermc.authoring.TypeSelection
 import com.typewritermc.authoring.ValueLocation
-import com.typewritermc.types.DataValue
 import com.typewritermc.types.RelationId
 import com.typewritermc.types.ResourceId
+import com.typewritermc.types.actualType
+import skirout.editor.v1.type_catalog.DataValue
 
 internal interface CurrentAuthoringValues {
     fun value(at: ValueLocation): DataValue?
@@ -20,7 +21,7 @@ internal interface CurrentAuthoringValues {
         if (at.path.segments.isEmpty()) {
             resource(at.resource)?.configuration
         } else {
-            (value(at) as? DataValue.Named)?.actualType?.let(TypeSelection::Complete)
+            (value(at) as? DataValue.NamedWrapper)?.actualType?.let(TypeSelection::Complete)
         }
 
     fun resourceIds(): Set<ResourceId>

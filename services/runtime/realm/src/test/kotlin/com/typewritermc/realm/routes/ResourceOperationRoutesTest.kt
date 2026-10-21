@@ -39,14 +39,18 @@ import com.typewritermc.operations.fillOnDrop
 import com.typewritermc.realm.TestRealmStructure
 import com.typewritermc.realm.repository.MutationPlanningResult
 import com.typewritermc.realm.testTag
-import com.typewritermc.types.DataValue
 import com.typewritermc.types.EndpointSlot
 import com.typewritermc.types.Ref
 import com.typewritermc.types.RelationId
 import com.typewritermc.types.ResourceId
 import com.typewritermc.types.ResourceTarget
 import com.typewritermc.types.endpointId
+import com.typewritermc.types.fieldMap
+import com.typewritermc.types.fields
+import com.typewritermc.types.items
+import com.typewritermc.types.linkTarget
 import com.typewritermc.types.namedTemplate
+import com.typewritermc.types.payload
 import com.typewritermc.types.skir.getOrThrow
 import com.typewritermc.types.use
 import de.infix.testBalloon.framework.core.testSuite
@@ -59,6 +63,7 @@ import skirout.editor.v1.resource_operations.AuthoringActionResult
 import skirout.editor.v1.resource_operations.OperationSelectionEffect
 import skirout.editor.v1.resource_operations.ResolveDropCandidatesResult
 import skirout.editor.v1.resource_operations.ResolveResourceOperationsResult
+import skirout.editor.v1.type_catalog.DataValue
 
 val ResourceOperationRoutesTest by testSuite {
     test("every resource gets the core operations its graph facts allow") {
@@ -485,9 +490,9 @@ private fun brokenAvailability(origin: ProviderOrigin) =
     }
 
 private fun AuthoringRecord.graphPlacement(): GraphPlacement {
-    val fields = ((fields.getValue("placement") as DataValue.Named).payload as DataValue.Record).fields
+    val fields = ((fields.getValue("placement") as DataValue.NamedWrapper).payload as DataValue.RecordWrapper).value.fieldMap
 
-    fun int(name: String) = (fields.getValue(name) as DataValue.Integer).value.toInt()
+    fun int(name: String) = (fields.getValue(name) as DataValue.IntegerWrapper).value.toInt()
     return GraphPlacement(int("x"), int("y"), int("width"), int("height"))
 }
 
@@ -496,15 +501,15 @@ private fun GraphPlacement.intersectsWithGap(other: GraphPlacement): Boolean =
         y.toLong() < other.y.toLong() + other.height + 1 && y.toLong() + height + 1 > other.y
 
 private fun AuthoringRecord.linkTarget(field: String): ResourceId =
-    ((fields.getValue(field) as DataValue.Named).payload as DataValue.Link).target.resource
+    ((fields.getValue(field) as DataValue.NamedWrapper).payload as DataValue.LinkWrapper).linkTarget.resource
 
 private fun AuthoringRecord.linkTargets(field: String): List<ResourceId> {
-    val payload = (fields.getValue(field) as DataValue.Named).payload
+    val payload = (fields.getValue(field) as DataValue.NamedWrapper).payload
     val items =
         when (payload) {
-            is DataValue.ListValue -> payload.items
-            is DataValue.SetValue -> payload.items
+            is DataValue.ListValueWrapper -> payload.items
+            is DataValue.SetValueWrapper -> payload.items
             else -> error("Expected a collection in $field.")
         }
-    return items.map { ((it.value as DataValue.Named).payload as DataValue.Link).target.resource }
+    return items.map { ((it.value as DataValue.NamedWrapper).payload as DataValue.LinkWrapper).linkTarget.resource }
 }

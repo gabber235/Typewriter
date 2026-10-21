@@ -8,15 +8,20 @@ import com.typewritermc.authoring.TypeSelection
 import com.typewritermc.authoring.ValueLocation
 import com.typewritermc.authoring.ValuePath
 import com.typewritermc.realm.checking.record
-import com.typewritermc.types.DataValue
 import com.typewritermc.types.RelationId
 import com.typewritermc.types.ResourceId
+import com.typewritermc.types.actualType
+import com.typewritermc.types.fields
+import com.typewritermc.types.named
 import com.typewritermc.types.namedUse
+import com.typewritermc.types.payload
 import com.typewritermc.types.qualified
+import com.typewritermc.types.record
 import de.infix.testBalloon.framework.core.testSuite
 import io.kotest.matchers.collections.shouldBeEmpty
 import io.kotest.matchers.collections.shouldHaveSize
 import io.kotest.matchers.shouldBe
+import skirout.editor.v1.type_catalog.DataValue
 import skirout.editor.v1.type_catalog.TypeDefinitionId
 
 val ExpectedAuthoringValuesTestSuite by testSuite {
@@ -27,7 +32,7 @@ val ExpectedAuthoringValuesTestSuite by testSuite {
         listOf(
             EditExpectation.ResourceExists(resource, true),
             EditExpectation.Configuration(ValueLocation(resource, ValuePath()), original.configuration),
-            EditExpectation.Value(at, DataValue.StringValue("Quest")),
+            EditExpectation.Value(at, DataValue.StringValueWrapper("Quest")),
         )
 
     test("returning to the expected value accepts the original expectations") {
@@ -36,7 +41,7 @@ val ExpectedAuthoringValuesTestSuite by testSuite {
     }
 
     test("unrelated fields do not conflict with a focused field expectation") {
-        val changed = original.copy(fields = original.fields + ("description" to DataValue.StringValue("Changed")))
+        val changed = original.copy(fields = original.fields + ("description" to DataValue.StringValueWrapper("Changed")))
         CapturedAuthoringValues(mapOf(resource to changed), emptyList()).conflicts(expected).shouldBeEmpty()
         CapturedAuthoringValues(mapOf(resource to changed), emptyList())
             .conflicts(listOf(EditExpectation.Resource(resource, original))) shouldHaveSize 1
@@ -44,8 +49,8 @@ val ExpectedAuthoringValuesTestSuite by testSuite {
 
     test("missing values are distinct from authored null values") {
         val empty = CapturedAuthoringValues(emptyMap(), emptyList())
-        empty.actual(EditExpectation.Value(at, DataValue.Null)) shouldBe EditExpectation.Value(at, null)
-        empty.conflicts(listOf(EditExpectation.Value(at, DataValue.Null))) shouldHaveSize 1
+        empty.actual(EditExpectation.Value(at, DataValue.NULL)) shouldBe EditExpectation.Value(at, null)
+        empty.conflicts(listOf(EditExpectation.Value(at, DataValue.NULL))) shouldHaveSize 1
         empty.conflicts(listOf(EditExpectation.Value(at, null))).shouldBeEmpty()
         empty.conflicts(expected) shouldHaveSize 3
     }
@@ -54,12 +59,12 @@ val ExpectedAuthoringValuesTestSuite by testSuite {
         val chapterType =
             TypeDefinitionId.qualified("test", "chapter").namedUse()
         val chapter =
-            DataValue.Named(
+            DataValue.named(
                 chapterType,
-                DataValue.Record(
+                DataValue.record(
                     mapOf(
-                        "title" to DataValue.StringValue("Quest"),
-                        "description" to DataValue.StringValue("Original"),
+                        "title" to DataValue.StringValueWrapper("Quest"),
+                        "description" to DataValue.StringValueWrapper("Original"),
                     ),
                 ),
             )
@@ -68,25 +73,22 @@ val ExpectedAuthoringValuesTestSuite by testSuite {
         val expected =
             listOf(
                 EditExpectation.Configuration(chapterAt, TypeSelection.Complete(chapterType)),
-                EditExpectation.Value(titleAt, DataValue.StringValue("Quest")),
+                EditExpectation.Value(titleAt, DataValue.StringValueWrapper("Quest")),
             )
         val changed =
-            chapter.copy(
-                payload =
-                    DataValue.Record(
-                        mapOf(
-                            "title" to DataValue.StringValue("Quest"),
-                            "description" to DataValue.StringValue("Changed"),
-                        ),
+            DataValue.named(
+                chapter.actualType,
+                DataValue.record(
+                    mapOf(
+                        "title" to DataValue.StringValueWrapper("Quest"),
+                        "description" to DataValue.StringValueWrapper("Changed"),
                     ),
+                ),
             )
         val values = CapturedAuthoringValues(mapOf(resource to original.copy(fields = mapOf("chapter" to changed))), emptyList())
         values.conflicts(expected).shouldBeEmpty()
         val retagged =
-            changed.copy(
-                actualType =
-                    TypeDefinitionId.qualified("test", "other_chapter").namedUse(),
-            )
+            DataValue.named(TypeDefinitionId.qualified("test", "other_chapter").namedUse(), changed.payload)
         CapturedAuthoringValues(mapOf(resource to original.copy(fields = mapOf("chapter" to retagged))), emptyList())
             .conflicts(expected) shouldHaveSize 1
     }

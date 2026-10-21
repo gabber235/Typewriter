@@ -3,6 +3,9 @@ package com.typewritermc.expression
 import build.skir.JsonFlavor
 import com.typewritermc.types.ColorDefinition
 import com.typewritermc.types.IconDefinition
+import com.typewritermc.types.actualType
+import com.typewritermc.types.fields
+import com.typewritermc.types.payload
 import com.typewritermc.types.use
 import de.infix.testBalloon.framework.core.testSuite
 import io.kotest.matchers.shouldBe

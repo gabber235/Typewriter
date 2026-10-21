@@ -3,13 +3,14 @@ package com.typewritermc.engine.runtime
 import com.typewritermc.authoring.descendants
 import com.typewritermc.engine.RuntimeCompilationFacts
 import com.typewritermc.engine.relation
-import com.typewritermc.types.DataValue
 import com.typewritermc.types.RelationContract
+import com.typewritermc.types.actualType
 import com.typewritermc.types.catalog.CheckedCatalog
 import com.typewritermc.types.catalog.Resolution
 import com.typewritermc.types.catalog.runtimeDefinitions
 import com.typewritermc.types.ownsResources
 import com.typewritermc.types.use
+import skirout.editor.v1.type_catalog.DataValue
 
 internal fun RuntimeCompilationFacts.requireAccepted(
     checked: CheckedCatalog,
@@ -19,7 +20,7 @@ internal fun RuntimeCompilationFacts.requireAccepted(
         resources.flatMap { resource ->
             sequenceOf(resource.actualType) +
                 resource.value.descendants().mapNotNull { located ->
-                    (located.value as? DataValue.Named)?.actualType
+                    (located.value as? DataValue.NamedWrapper)?.actualType
                 }
         }
     val expectedTypes = checked.runtimeDefinitions(seeds.map { it.use }).associateBy { type -> type.id }

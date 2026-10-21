@@ -58,7 +58,7 @@ fun interface PortableConstantEncoder {
     fun encode(
         expected: TypeTemplate,
         value: Any?,
-    ): com.typewritermc.types.DataValue
+    ): skirout.editor.v1.type_catalog.DataValue
 }
 
 sealed interface RuleEvaluation {

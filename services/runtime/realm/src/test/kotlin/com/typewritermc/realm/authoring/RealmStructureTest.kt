@@ -35,11 +35,13 @@ import com.typewritermc.realm.repository.valueAt
 import com.typewritermc.realm.schema.MigrationResources
 import com.typewritermc.realm.schema.openTestDatabase
 import com.typewritermc.realm.testTag
-import com.typewritermc.types.DataValue
 import com.typewritermc.types.Ref
 import com.typewritermc.types.ResourceId
 import com.typewritermc.types.catalog.Resolution
 import com.typewritermc.types.encodeGeneratedDefault
+import com.typewritermc.types.fields
+import com.typewritermc.types.items
+import com.typewritermc.types.linkTarget
 import com.typewritermc.types.namedTemplate
 import com.typewritermc.types.namedUse
 import com.typewritermc.types.qualified
@@ -49,6 +51,7 @@ import de.infix.testBalloon.framework.core.testSuite
 import io.kotest.matchers.collections.shouldContain
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.types.shouldBeInstanceOf
+import skirout.editor.v1.type_catalog.DataValue
 import skirout.editor.v1.type_catalog.RepresentationTemplate
 import skirout.editor.v1.type_catalog.TypeDefinition
 import skirout.editor.v1.type_catalog.TypeDefinitionId
@@ -115,7 +118,12 @@ val RealmStructureTest by testSuite {
 
             fixture.restart()
             val saved = fixture.resources().getValue(tag)
-            (saved.valueAt(ValuePath(listOf(PathSegment.Field("taxonomy"))))?.unwrapNamed() as DataValue.Link).target.resource shouldBe
+            (
+                saved
+                    .valueAt(
+                        ValuePath(listOf(PathSegment.Field("taxonomy"))),
+                    )?.unwrapNamed() as DataValue.LinkWrapper
+            ).linkTarget.resource shouldBe
                 taxonomy
         }
     }
@@ -136,8 +144,8 @@ val RealmStructureTest by testSuite {
             val resources = fixture.resources()
             val root = resources.typesOf(RealmRootDefinition.id).single()
             val library = resources.typesOf(LibraryDefinition.id).single()
-            val sections = resources.getValue(root).valueAt(RealmRootFields.sections.path)?.unwrapNamed() as DataValue.ListValue
-            val item = sections.items.single { (it.value.unwrapNamed() as DataValue.Link).target.resource == library }.id
+            val sections = resources.getValue(root).valueAt(RealmRootFields.sections.path)?.unwrapNamed() as DataValue.ListValueWrapper
+            val item = sections.items.single { (it.value.unwrapNamed() as DataValue.LinkWrapper).linkTarget.resource == library }.id
 
             val problems = fixture.reject(EditIntent.Remove(ValueLocation(root, RealmRootFields.sections.path), item))
 
@@ -208,7 +216,7 @@ private class RealmStructureFixture(
     fun unownedTag(): AuthoringRecord =
         views.read { view ->
             val record = view.catalog.record(testTag(name = "Quest"), TagDefinition.id)
-            record.copy(fields = record.fields + ("taxonomy" to DataValue.Unfilled))
+            record.copy(fields = record.fields + ("taxonomy" to DataValue.UNFILLED))
         }
 
     /** The taxonomy's link item for [tag], pointing back at the tag's owner field. */
@@ -256,6 +264,6 @@ private fun Map<ResourceId, AuthoringRecord>.typesOf(type: TypeDefinitionId): Li
 
 private fun Map<ResourceId, AuthoringRecord>.sectionsOfRoot(): List<ResourceId> {
     val root = getValue(typesOf(RealmRootDefinition.id).single())
-    val sections = root.valueAt(RealmRootFields.sections.path)?.unwrapNamed() as DataValue.ListValue
-    return sections.items.map { (it.value.unwrapNamed() as DataValue.Link).target.resource }
+    val sections = root.valueAt(RealmRootFields.sections.path)?.unwrapNamed() as DataValue.ListValueWrapper
+    return sections.items.map { (it.value.unwrapNamed() as DataValue.LinkWrapper).linkTarget.resource }
 }

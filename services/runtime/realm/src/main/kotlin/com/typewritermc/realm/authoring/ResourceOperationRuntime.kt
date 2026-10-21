@@ -4,7 +4,6 @@ import com.typewritermc.authoring.AuthoredReads
 import com.typewritermc.authoring.AuthoringRecord
 import com.typewritermc.authoring.CompletenessResult
 import com.typewritermc.authoring.EditContext
-import com.typewritermc.authoring.ItemId
 import com.typewritermc.authoring.PlacementAnchor
 import com.typewritermc.authoring.PreparedEdit
 import com.typewritermc.authoring.ResourceDraft
@@ -34,7 +33,6 @@ import com.typewritermc.operations.requireAuthored
 import com.typewritermc.realm.checking.CapturedAuthoringReads
 import com.typewritermc.realm.repository.AuthoringPlanRejected
 import com.typewritermc.services.libs.utils.rethrowExceptional
-import com.typewritermc.types.DataValue
 import com.typewritermc.types.ResourceId
 import com.typewritermc.types.ResourceTarget
 import com.typewritermc.types.template
@@ -45,6 +43,8 @@ import skirout.editor.v1.operation.OperationConfirmation
 import skirout.editor.v1.operation.ResolvedResourceOperation
 import skirout.editor.v1.operation.ResolvedResourceOperations
 import skirout.editor.v1.resource_operations.DropCandidates
+import skirout.editor.v1.type_catalog.DataValue
+import skirout.editor.v1.type_catalog.ItemId
 import skirout.editor.v1.type_catalog.NamedTypeTemplate
 import java.util.UUID
 import skirout.editor.v1.type_catalog.ResourceId as SkirResourceId
@@ -194,7 +194,7 @@ internal class ResourceOperationRuntime(
             }
             validateOrigin(invocation, baseline, edit.capturedReads)
             operation.input.schema?.let { schema ->
-                when (val checked = schema.complete(input ?: DataValue.Unfilled)) {
+                when (val checked = schema.complete(input ?: DataValue.UNFILLED)) {
                     is CompletenessResult.Unfinished -> return OperationPreparationResult.NeedsInput(
                         input,
                         emptyList(),
@@ -349,7 +349,7 @@ internal class RuntimeOperationPreparation(
         object : OperationIdentities {
             override fun resource(key: String) = ResourceId(identity("resource", key))
 
-            override fun item(key: String) = ItemId(identity("item", key))
+            override fun item(key: String) = ItemId(value = identity("item", key))
 
             private fun identity(
                 kind: String,

@@ -4,7 +4,6 @@ package com.typewritermc.realm.checking
 
 import com.typewritermc.authoring.AuthoringRecord
 import com.typewritermc.authoring.GeneratedSdkApi
-import com.typewritermc.authoring.ItemId
 import com.typewritermc.authoring.PathSegment
 import com.typewritermc.authoring.TypeSelection
 import com.typewritermc.authoring.ValueLocation
@@ -29,28 +28,37 @@ import com.typewritermc.realm.authoring.AuthoringViewDelta
 import com.typewritermc.realm.authoring.InMemoryAuthoringViewStore
 import com.typewritermc.realm.authoring.RESOURCE_SELECTION_INPUT
 import com.typewritermc.realm.authoring.operationObservation
-import com.typewritermc.types.DataValue
 import com.typewritermc.types.EndpointBindingTemplate
 import com.typewritermc.types.FactoryNativeBindingRegistry
-import com.typewritermc.types.ListItem
 import com.typewritermc.types.NativeBindingFactory
 import com.typewritermc.types.NativeBindingRegistry
 import com.typewritermc.types.RelationContract
 import com.typewritermc.types.ResourceId
+import com.typewritermc.types.actualType
 import com.typewritermc.types.catalog.CheckedCatalog
 import com.typewritermc.types.catalog.DefaultCheckedCatalog
+import com.typewritermc.types.fields
+import com.typewritermc.types.integer
 import com.typewritermc.types.integerScalar
+import com.typewritermc.types.items
+import com.typewritermc.types.listValue
+import com.typewritermc.types.named
 import com.typewritermc.types.namedUse
+import com.typewritermc.types.payload
 import com.typewritermc.types.qualified
+import com.typewritermc.types.rows
 import com.typewritermc.types.template
 import com.typewritermc.types.use
 import de.infix.testBalloon.framework.core.testSuite
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.matchers.shouldBe
 import skirout.editor.v1.type_catalog.CollectionKind
+import skirout.editor.v1.type_catalog.DataValue
 import skirout.editor.v1.type_catalog.FieldDeclaration
 import skirout.editor.v1.type_catalog.FieldOwner
 import skirout.editor.v1.type_catalog.IntegerWidth
+import skirout.editor.v1.type_catalog.ItemId
+import skirout.editor.v1.type_catalog.ListItem
 import skirout.editor.v1.type_catalog.ParameterKey
 import skirout.editor.v1.type_catalog.RepresentationTemplate
 import skirout.editor.v1.type_catalog.ScalarKind
@@ -76,13 +84,13 @@ val AuthoringViewStoreTest by testSuite {
                         working.resources
                             .getValue(id)
                             .fields
-                            .getValue("name") as DataValue.StringValue
+                            .getValue("name") as DataValue.StringValueWrapper
                     ).value shouldBe "Draft"
                     (
                         saved.root.resources
                             .getValue(id)
                             .fields
-                            .getValue("name") as DataValue.StringValue
+                            .getValue("name") as DataValue.StringValueWrapper
                     ).value shouldBe "Saved"
                     saved.root.observationId
                 }
@@ -109,7 +117,7 @@ val AuthoringViewStoreTest by testSuite {
             CapturedAuthoringReads(it.originalView()).read(boundPath<String>(location(id, "name"), TEXT_USE)).available()
         } shouldBe "Story"
         CapturedAuthoringReads(retained.originalView()).members(boundCollectionPath(location(id, "numbers"))) shouldBe
-            listOf(ItemId("a"), ItemId("b"))
+            listOf(ItemId(value = "a"), ItemId(value = "b"))
         retained.close()
         store.close()
         catalog.openCount shouldBe 0
@@ -160,34 +168,34 @@ val AuthoringViewStoreTest by testSuite {
                     it.at ==
                         location(id, "name")
                 }
-            expected.expected shouldBe DataValue.StringValue("Quest")
+            expected.expected shouldBe DataValue.StringValueWrapper("Quest")
         }
         store.close()
     }
     test("root and staged views reject caller and exposed collection mutation") {
         val id = ResourceId("page")
         val rootArguments = mutableListOf<TypeUse>(INT_USE)
-        val rootItems = mutableListOf(ListItem(ItemId("root"), DataValue.Integer(BigInteger.ONE)))
+        val rootItems = mutableListOf(ListItem(id = ItemId(value = "root"), value = DataValue.integer(BigInteger.ONE)))
         val rootFields =
             mutableMapOf<String, DataValue>(
-                "name" to DataValue.StringValue("Quest"),
-                "count" to DataValue.Integer(BigInteger.ONE),
-                "numbers" to DataValue.Named(LIST_TYPE.namedUse(rootArguments), DataValue.ListValue(rootItems)),
+                "name" to DataValue.StringValueWrapper("Quest"),
+                "count" to DataValue.integer(BigInteger.ONE),
+                "numbers" to DataValue.named(LIST_TYPE.namedUse(rootArguments), DataValue.listValue(rootItems)),
             )
         val seed = mutableMapOf(id to AuthoringRecord(TypeSelection.Complete(TEST_TYPE.namedUse()), rootFields))
         val store = InMemoryAuthoringViewStore(TestCatalogLease(), AuthoringSeed(seed))
 
         seed.clear()
-        rootFields["name"] = DataValue.StringValue("Changed")
+        rootFields["name"] = DataValue.StringValueWrapper("Changed")
         rootArguments += TEXT_USE
-        rootItems += ListItem(ItemId("late"), DataValue.Integer(BigInteger.TWO))
+        rootItems += ListItem(id = ItemId(value = "late"), value = DataValue.integer(BigInteger.TWO))
 
         store.capture().use { lease ->
             val retained = lease.root.resources.getValue(id)
-            retained.fields.getValue("name") shouldBe DataValue.StringValue("Quest")
-            val retainedNumbers = retained.fields.getValue("numbers") as DataValue.Named
+            retained.fields.getValue("name") shouldBe DataValue.StringValueWrapper("Quest")
+            val retainedNumbers = retained.fields.getValue("numbers") as DataValue.NamedWrapper
             retainedNumbers.actualType.arguments shouldBe listOf(INT_USE)
-            (retainedNumbers.payload as DataValue.ListValue).items.map(ListItem::id) shouldBe listOf(ItemId("root"))
+            (retainedNumbers.payload as DataValue.ListValueWrapper).items.map(ListItem::id) shouldBe listOf(ItemId(value = "root"))
             shouldThrow<UnsupportedOperationException> {
                 @Suppress("UNCHECKED_CAST")
                 (lease.root.resources as MutableMap<ResourceId, AuthoringRecord>)[ResourceId("other")] = retained
@@ -195,27 +203,25 @@ val AuthoringViewStoreTest by testSuite {
             // Skir type values are deeply immutable: their lists are not mutable lists at all.
             (retainedNumbers.actualType.arguments is MutableList<*>) shouldBe false
 
-            val stagedItems = mutableListOf(ListItem(ItemId("staged"), DataValue.Integer(BigInteger.TWO)))
+            val stagedItems = mutableListOf(ListItem(id = ItemId(value = "staged"), value = DataValue.integer(BigInteger.TWO)))
             val stagedFields =
                 mutableMapOf<String, DataValue>(
-                    "name" to DataValue.StringValue("Story"),
-                    "count" to DataValue.Integer(BigInteger.TWO),
-                    "numbers" to DataValue.Named(LIST_USE, DataValue.ListValue(stagedItems)),
+                    "name" to DataValue.StringValueWrapper("Story"),
+                    "count" to DataValue.integer(BigInteger.TWO),
+                    "numbers" to DataValue.named(LIST_USE, DataValue.listValue(stagedItems)),
                 )
             val upserts = mutableMapOf(id to AuthoringRecord(TypeSelection.Complete(TEST_TYPE.namedUse()), stagedFields))
             val staged = lease.stagedView(upserts)
             upserts.clear()
-            stagedFields["name"] = DataValue.StringValue("Changed")
+            stagedFields["name"] = DataValue.StringValueWrapper("Changed")
             stagedItems.clear()
 
             val retainedStaged = staged.resources.getValue(id)
-            retainedStaged.fields.getValue("name") shouldBe DataValue.StringValue("Story")
-            val stagedNumbers = retainedStaged.fields.getValue("numbers") as DataValue.Named
-            (stagedNumbers.payload as DataValue.ListValue).items.map(ListItem::id) shouldBe listOf(ItemId("staged"))
-            shouldThrow<UnsupportedOperationException> {
-                @Suppress("UNCHECKED_CAST")
-                ((stagedNumbers.payload as DataValue.ListValue).items as MutableList<ListItem>).clear()
-            }
+            retainedStaged.fields.getValue("name") shouldBe DataValue.StringValueWrapper("Story")
+            val stagedNumbers = retainedStaged.fields.getValue("numbers") as DataValue.NamedWrapper
+            (stagedNumbers.payload as DataValue.ListValueWrapper).items.map(ListItem::id) shouldBe listOf(ItemId(value = "staged"))
+            // Skir data values are deeply immutable as well.
+            ((stagedNumbers.payload as DataValue.ListValueWrapper).items is MutableList<*>) shouldBe false
         }
         store.close()
     }
@@ -342,14 +348,14 @@ internal fun record(
         configuration = TypeSelection.Complete(TEST_TYPE.namedUse()),
         fields =
             mapOf(
-                "name" to DataValue.StringValue(name),
-                "count" to DataValue.Integer(BigInteger.valueOf(count.toLong())),
+                "name" to DataValue.StringValueWrapper(name),
+                "count" to DataValue.integer(BigInteger.valueOf(count.toLong())),
                 "numbers" to
-                    DataValue.Named(
+                    DataValue.named(
                         LIST_USE,
-                        DataValue.ListValue(
+                        DataValue.listValue(
                             numbers.map { (id, value) ->
-                                ListItem(ItemId(id), DataValue.Integer(BigInteger.valueOf(value.toLong())))
+                                ListItem(id = ItemId(value = id), value = DataValue.integer(BigInteger.valueOf(value.toLong())))
                             },
                         ),
                     ),
@@ -379,28 +385,28 @@ internal fun collectTokens(
 ) {
     identities += InputIdentity.Value(at)
     when (value) {
-        is DataValue.ListValue -> {
+        is DataValue.ListValueWrapper -> {
             identities += InputIdentity.Membership(at)
             identities += InputIdentity.Order(at)
             value.items.forEach { collectTokens(it.value, at.append(PathSegment.Item(it.id)), identities) }
         }
 
-        is DataValue.SetValue -> {
+        is DataValue.SetValueWrapper -> {
             identities += InputIdentity.Membership(at)
             identities += InputIdentity.Order(at)
             value.items.forEach { collectTokens(it.value, at.append(PathSegment.Item(it.id)), identities) }
         }
 
-        is DataValue.Record -> {
-            value.fields.forEach { (name, field) -> collectTokens(field, at.append(PathSegment.Field(name)), identities) }
+        is DataValue.RecordWrapper -> {
+            value.fields.forEach { field -> collectTokens(field.value, at.append(PathSegment.Field(field.name)), identities) }
         }
 
-        is DataValue.Named -> {
+        is DataValue.NamedWrapper -> {
             identities += InputIdentity.Form(at)
             collectTokens(value.payload, at, identities)
         }
 
-        is DataValue.MapValue -> {
+        is DataValue.MapValueWrapper -> {
             identities += InputIdentity.Membership(at)
             identities += InputIdentity.Order(at)
             value.rows.forEach { row ->

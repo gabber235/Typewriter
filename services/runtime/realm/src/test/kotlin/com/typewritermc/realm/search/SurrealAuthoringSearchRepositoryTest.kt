@@ -11,7 +11,6 @@ import com.typewritermc.realm.checking.TestCatalogLease
 import com.typewritermc.realm.repository.ResourceValueMapper
 import com.typewritermc.realm.repository.utils.surrealRecordId
 import com.typewritermc.realm.schema.openTestDatabase
-import com.typewritermc.types.DataValue
 import com.typewritermc.types.EndpointCardinality
 import com.typewritermc.types.EndpointDefinition
 import com.typewritermc.types.EndpointSlot
@@ -24,6 +23,7 @@ import com.typewritermc.types.RelationId
 import com.typewritermc.types.ResourceId
 import com.typewritermc.types.catalog.DefaultCheckedCatalog
 import com.typewritermc.types.endpointId
+import com.typewritermc.types.link
 import com.typewritermc.types.namedTemplate
 import com.typewritermc.types.namedUse
 import com.typewritermc.types.qualified
@@ -31,6 +31,7 @@ import com.typewritermc.types.template
 import com.typewritermc.types.use
 import de.infix.testBalloon.framework.core.testSuite
 import io.kotest.matchers.shouldBe
+import skirout.editor.v1.type_catalog.DataValue
 import skirout.editor.v1.type_catalog.FieldDeclaration
 import skirout.editor.v1.type_catalog.FieldOwner
 import skirout.editor.v1.type_catalog.NamedTypeUse
@@ -362,7 +363,7 @@ val SurrealAuthoringSearchRepositoryTestSuite by testSuite {
         fun link(
             id: RelationId,
             target: ResourceId,
-        ) = DataValue.Link(
+        ) = DataValue.link(
             id.endpointId(EndpointSlot.First),
             LinkTarget(target, null),
         )
