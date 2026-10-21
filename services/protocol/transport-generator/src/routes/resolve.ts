@@ -15,8 +15,6 @@ import {
   type Channel,
   type Delivery,
   type Manifest,
-  type NativeKotlinEventBinding,
-  type NativeKotlinRequestResponseBinding,
   type Party,
   type RoleDeclarations,
   type Route,
@@ -42,10 +40,6 @@ export interface ResolvedMethod {
   readonly outcomes: OutcomeResponse;
 }
 
-export type ResolvedEventBinding =
-  | { readonly kind: "skir"; readonly payload: RecordLocation }
-  | NativeKotlinEventBinding;
-
 export type ResolvedFlow =
   | { readonly kind: "unary"; readonly method: ResolvedMethod }
   | {
@@ -53,12 +47,8 @@ export type ResolvedFlow =
       readonly method: ResolvedMethod;
       readonly updates: { readonly payload: RecordLocation; readonly delivery: Delivery };
     }
-  | { readonly kind: "scatter"; readonly binding: NativeKotlinRequestResponseBinding }
-  | {
-      readonly kind: "event";
-      readonly binding: ResolvedEventBinding;
-      readonly delivery: Delivery;
-    };
+  | { readonly kind: "scatter"; readonly method: ResolvedMethod }
+  | { readonly kind: "event"; readonly payload: RecordLocation; readonly delivery: Delivery };
 
 /** A manifest route admitted against the role declarations and the Skir model. */
 export interface ResolvedRoute {
@@ -212,7 +202,8 @@ function resolveFlow(
   const flowAt = within(at, "flow");
   switch (flow.kind) {
     case "unary":
-      return { kind: "unary", method: resolveMethod(input, flow.method, within(flowAt, "method")) };
+    case "scatter":
+      return { kind: flow.kind, method: resolveMethod(input, flow.method, within(flowAt, "method")) };
     case "watch":
       return {
         kind: "watch",
@@ -222,28 +213,12 @@ function resolveFlow(
           delivery: flow.updates.delivery,
         },
       };
-    case "scatter":
-      if (flow.binding.kind !== "native_kotlin") {
-        throw routeError(
-          within(flowAt, "binding"),
-          "scatter routes require a native Kotlin binding",
-        );
-      }
-      return { kind: "scatter", binding: flow.binding };
-    case "event": {
-      const binding: ResolvedEventBinding =
-        flow.binding.kind === "skir"
-          ? {
-              kind: "skir",
-              payload: resolveRecord(
-                input,
-                flow.binding.payload,
-                within(flowAt, "binding.payload"),
-              ),
-            }
-          : flow.binding;
-      return { kind: "event", binding, delivery: flow.delivery };
-    }
+    case "event":
+      return {
+        kind: "event",
+        payload: resolveRecord(input, flow.payload, within(flowAt, "payload")),
+        delivery: flow.delivery,
+      };
   }
 }
 

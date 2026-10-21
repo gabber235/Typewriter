@@ -12,6 +12,19 @@ import com.typewritermc.services.libs.registrar.ServiceId
 import com.typewritermc.services.libs.telemetry.ServiceTelemetry
 import com.typewritermc.services.libs.telemetry.SpanPresentation
 import kotlinx.coroutines.delay
+import skirout.service.v1.rollout.ApplyRolloutCommandRequest
+import skirout.service.v1.rollout.ApplyRolloutCommandResponse
+import skirout.service.v1.rollout.ParticipantPhase
+import skirout.service.v1.rollout.ParticipantProjection
+import skirout.service.v1.rollout.ParticipantRollback
+import skirout.service.v1.rollout.ParticipantStatus
+import skirout.service.v1.rollout.ProjectionHealth
+import skirout.service.v1.rollout.ProjectionReference
+import skirout.service.v1.rollout.QueryParticipantStatusRequest
+import skirout.service.v1.rollout.RealmHostPresence
+import skirout.service.v1.rollout.RollbackTarget
+import skirout.service.v1.rollout.RolloutAttempt
+import skirout.service.v1.rollout.RolloutCommand
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.minutes
 import kotlin.time.Duration.Companion.seconds
@@ -19,25 +32,24 @@ import kotlin.time.TimeMark
 import kotlin.time.TimeSource
 
 /**
- * Exchanges bounded presence, command, and status requests with hosts.
+ * Exchanges bounded presence, command, and status requests with the hosts of one Realm.
  *
  * Timeouts can produce incomplete replies. The coordinator validates expected hosts and exact attempt and
  * projection state.
  */
 interface RolloutMessenger {
     suspend fun discover(
-        probe: ProbeRealmHosts,
         expected: Set<ServiceId>,
         timeout: Duration,
     ): List<RealmHostPresence>
 
     suspend fun command(
-        envelope: RolloutEnvelope,
+        request: ApplyRolloutCommandRequest,
         timeout: Duration,
-    ): List<CommandAcceptance>
+    ): List<ApplyRolloutCommandResponse>
 
     suspend fun statuses(
-        probe: ProbeParticipantStatus,
+        request: QueryParticipantStatusRequest,
         expected: Set<ServiceId>,
         timeout: Duration,
     ): Map<ServiceId, ParticipantStatus>
@@ -51,23 +63,16 @@ interface ProjectionRepository {
 }
 
 /**
- * Persists attempt ordering, progress, participant observations, and committed deployments.
+ * Persists attempt ordering and committed deployments.
  *
- * Progress persistence and final commit are separate operations. Attempt ordinals must survive restart to
- * distinguish stale commands.
+ * Attempt ordinals must survive restart to distinguish stale commands.
  */
 interface RolloutStateRepository {
     suspend fun nextAttempt(generation: DeploymentGeneration): RolloutAttempt
 
-    suspend fun persist(rollout: PersistedRollout)
-
-    suspend fun participantStatuses(attempt: RolloutAttempt): Map<ServiceId, ParticipantStatus>
-
     suspend fun committed(): CommittedDeployment?
 
     suspend fun commit(deployment: CommittedDeployment)
-
-    suspend fun record(event: ParticipantStateChanged)
 }
 
 /**
@@ -108,39 +113,13 @@ class CoordinatedRollout(
 
     private suspend fun rollOutContents(snapshot: DeploymentSnapshot) {
         val attempt = state.nextAttempt(snapshot.generation)
-        var persisted = PersistedRollout(realmId, attempt, RolloutPhase.PROPOSED, emptyMap(), emptyMap())
-        state.persist(persisted)
-        try {
-            persisted = persisted.copy(phase = RolloutPhase.DISCOVERING)
-            state.persist(persisted)
-            val participants = discoverParticipants()
-            val references = publishProjections(snapshot, participants.hosts.keys)
-            persisted = persisted.copy(phase = RolloutPhase.STAGING, projections = references, previous = participants.hosts.baselines())
-            state.persist(persisted)
-            requireAccepted(
-                messenger.command(envelope(attempt, references, RolloutCommand.Stage), commandTimeout),
-                participants.hosts.keys,
-            )
-            awaitStatuses(attempt, references.keys) { host, status ->
-                status is ParticipantStatus.Staged && status.candidate == references.getValue(host)
-            }
-            require(currentSelection() == selection) { "Realm selection changed while the deployment was staged." }
-
-            persisted = persisted.copy(phase = RolloutPhase.COMMITTING)
-            state.persist(persisted)
-            requireAccepted(
-                messenger.command(envelope(attempt, references, RolloutCommand.Commit), commandTimeout),
-                participants.hosts.keys,
-            )
-            persisted = persisted.copy(phase = RolloutPhase.STABILIZING)
-            state.persist(persisted)
-            awaitStableHealthy(attempt, references)
-            state.commit(CommittedDeployment(snapshot, references))
-            state.persist(persisted.copy(phase = RolloutPhase.SUCCEEDED))
-        } catch (failure: Throwable) {
-            compensate(persisted, failure)
-            throw failure
-        }
+        val participants = discoverParticipants()
+        val references = publishProjections(snapshot, participants.hosts.keys)
+        deploy(
+            RolloutProgress(attempt, references, participants.hosts.baselines()),
+            CommittedDeployment(snapshot, references.blobs()),
+            "Realm selection changed while the deployment was staged.",
+        )
     }
 
     /**
@@ -156,97 +135,86 @@ class CoordinatedRollout(
         val stale =
             participants.hosts
                 .filter { (host, presence) ->
-                    presence.activeProjection?.projection != expected.getValue(host) ||
-                        presence.activeProjection.health != RuntimeHealthSnapshot.Healthy
+                    val active = presence.activeProjection
+                    active?.projection != expected.getValue(host) || active.health != ProjectionHealth.HEALTHY
                 }.keys
         if (stale.isEmpty()) return
 
         val attempt = state.nextAttempt(deployment.snapshot.generation)
-        val references = expected.filterKeys { it in stale }
-        var persisted =
-            PersistedRollout(
-                realmId,
+        deploy(
+            RolloutProgress(
                 attempt,
-                RolloutPhase.STAGING,
-                references,
+                expected.filterKeys { it in stale },
                 participants.hosts.filterKeys { it in stale }.baselines(),
-            )
-        state.persist(persisted)
+            ),
+            CommittedDeployment(deployment.snapshot, expected.blobs()),
+            "Realm selection changed while participants reconciled.",
+        )
+    }
+
+    /**
+     * Stages and commits [progress] on its participants, proves stability and then records [deployment]. Any failure
+     * drives abort or exact baseline rollback before it propagates.
+     */
+    private suspend fun deploy(
+        progress: RolloutProgress,
+        deployment: CommittedDeployment,
+        selectionChanged: String,
+    ) {
+        val (attempt, references) = progress
         try {
-            requireAccepted(messenger.command(envelope(attempt, references, RolloutCommand.Stage), commandTimeout), stale)
-            awaitStatuses(attempt, stale) { host, status ->
-                status is ParticipantStatus.Staged && status.candidate == references.getValue(host)
-            }
-            require(currentSelection() == selection) { "Realm selection changed while participants reconciled." }
-            persisted = persisted.copy(phase = RolloutPhase.COMMITTING)
-            state.persist(persisted)
-            requireAccepted(messenger.command(envelope(attempt, references, RolloutCommand.Commit), commandTimeout), stale)
-            persisted = persisted.copy(phase = RolloutPhase.STABILIZING)
-            state.persist(persisted)
+            val stage = progress.request(RolloutCommand.createStage(participants = references.participants()))
+            requireAccepted(messenger.command(stage, commandTimeout), references.keys)
+            awaitStatuses(attempt, references.keys) { host, status -> status.stagedCandidate() == references.getValue(host) }
+            require(currentSelection() == selection) { selectionChanged }
+
+            progress.committing = true
+            val commit = progress.request(RolloutCommand.createCommit(participants = references.participants()))
+            requireAccepted(messenger.command(commit, commandTimeout), references.keys)
             awaitStableHealthy(attempt, references)
-            state.commit(CommittedDeployment(deployment.snapshot, expected))
-            state.persist(persisted.copy(phase = RolloutPhase.SUCCEEDED))
+            state.commit(deployment)
         } catch (failure: Throwable) {
-            compensate(persisted, failure)
+            compensate(progress)
             throw failure
         }
     }
 
     /**
-     * Records failure and drives abort or exact baseline rollback before the caller rethrows its failure.
+     * Drives abort or exact baseline rollback before the caller rethrows its failure.
      * Compensation errors propagate and may prevent that original failure from reaching the caller.
      */
-    private suspend fun compensate(
-        rollout: PersistedRollout,
-        failure: Throwable,
-    ) {
-        val participants = rollout.projections.keys
-        if (participants.isEmpty()) {
-            state.persist(rollout.copy(phase = RolloutPhase.FAILED, failure = failure.message))
-            return
-        }
-        if (rollout.phase < RolloutPhase.COMMITTING) {
-            state.persist(rollout.copy(phase = RolloutPhase.ABORTING, failure = failure.message))
-            messenger.command(envelope(rollout.attempt, rollout.projections, RolloutCommand.Abort), commandTimeout)
-        } else {
-            val targets =
-                participants.associateWith { host ->
-                    rollout.previous[host]?.let(RollbackTarget::Projection) ?: RollbackTarget.Empty
-                }
-            state.persist(rollout.copy(phase = RolloutPhase.ROLLING_BACK, failure = failure.message))
-            messenger.command(
-                envelope(rollout.attempt, rollout.projections, RolloutCommand.Rollback(targets)),
-                commandTimeout,
-            )
-        }
-        awaitRecovered(rollout.attempt, rollout.previous, participants)
-        state.persist(rollout.copy(phase = RolloutPhase.FAILED, failure = failure.message))
-    }
-
-    private suspend fun awaitRecovered(
-        attempt: RolloutAttempt,
-        previous: Map<ServiceId, ProjectionReference>,
-        participants: Set<ServiceId>,
-    ) = awaitStatuses(attempt, participants) { host, status ->
-        val target = previous[host]
-        if (target == null) {
-            status is ParticipantStatus.Idle
-        } else {
-            status is ParticipantStatus.Active &&
-                status.current.projection == target &&
-                status.current.health == RuntimeHealthSnapshot.Healthy
+    private suspend fun compensate(progress: RolloutProgress) {
+        val (attempt, references, baselines) = progress
+        val command =
+            if (!progress.committing) {
+                RolloutCommand.createAbort(participants = references.participants())
+            } else {
+                RolloutCommand.createRollBack(
+                    participants =
+                        references.map { (host, reference) ->
+                            ParticipantRollback(
+                                serviceId = host.value,
+                                projection = reference,
+                                target = baselines[host]?.let(RollbackTarget::ProjectionWrapper) ?: RollbackTarget.EMPTY,
+                            )
+                        },
+                )
+            }
+        messenger.command(progress.request(command), commandTimeout)
+        awaitStatuses(attempt, references.keys) { host, status ->
+            val target = baselines[host]
+            if (target == null) status.phase == ParticipantPhase.IDLE else status.runsHealthy(target)
         }
     }
 
     /** Uses a fresh probe to define the responding participant set for this attempt. */
     private suspend fun discoverParticipants(): RolloutParticipants {
-        val probe = ProbeRealmHosts(realmId)
         val selected = selection.selectedServices()
         val responding =
             messenger
-                .discover(probe, selected, requestTimeout)
-                .filter { it.probeId == probe.probeId && it.serviceId in selected }
-                .associateBy(RealmHostPresence::serviceId)
+                .discover(selected, requestTimeout)
+                .associateBy { ServiceId(it.serviceId) }
+                .filterKeys { it in selected }
         require(selection.realmService in responding) { "The Realm service did not answer its rollout presence probe." }
         return RolloutParticipants(responding)
     }
@@ -259,22 +227,18 @@ class CoordinatedRollout(
             projections.publish(snapshot.projectFor(realmId.value, selection, host, manifests))
         }
 
-    private fun envelope(
-        attempt: RolloutAttempt,
-        references: Map<ServiceId, ProjectionReference>,
-        command: RolloutCommand,
-    ) = RolloutEnvelope(realmId, attempt, references.keys, references, command)
-
     private fun Map<ServiceId, RealmHostPresence>.baselines(): Map<ServiceId, ProjectionReference> =
         mapNotNull { (host, presence) -> presence.activeProjection?.projection?.let { host to it } }.toMap()
 
     private fun requireAccepted(
-        replies: List<CommandAcceptance>,
+        replies: List<ApplyRolloutCommandResponse>,
         expected: Set<ServiceId>,
     ) {
-        val byService = replies.associateBy(CommandAcceptance::serviceId)
-        require(byService.keys.containsAll(expected)) { "Not every rollout participant replied." }
-        require(expected.all { byService.getValue(it).accepted }) { "A rollout participant rejected the command." }
+        val byService = replies.associateBy { it.serviceId }
+        require(expected.all { it.value in byService }) { "Not every rollout participant replied." }
+        require(expected.all { byService[it.value] is ApplyRolloutCommandResponse.AcceptedWrapper }) {
+            "A rollout participant rejected the command."
+        }
     }
 
     /**
@@ -288,14 +252,8 @@ class CoordinatedRollout(
         var healthySince: TimeMark? = null
         val deadline = timeSource.markNow()
         while (deadline.elapsedNow() < participantDeadline) {
-            val statuses = messenger.statuses(ProbeParticipantStatus(realmId, attempt), references.keys, requestTimeout)
-            val allHealthy =
-                references.all { (host, reference) ->
-                    val status = statuses[host]
-                    status is ParticipantStatus.Active &&
-                        status.current.projection == reference &&
-                        status.current.health == RuntimeHealthSnapshot.Healthy
-                }
+            val statuses = messenger.statuses(QueryParticipantStatusRequest(attempt = attempt), references.keys, requestTimeout)
+            val allHealthy = references.all { (host, reference) -> statuses[host]?.runsHealthy(reference) == true }
             if (!allHealthy) {
                 healthySince = null
             } else {
@@ -314,12 +272,39 @@ class CoordinatedRollout(
     ) {
         val deadline = timeSource.markNow()
         while (deadline.elapsedNow() < participantDeadline) {
-            val statuses = messenger.statuses(ProbeParticipantStatus(realmId, attempt), participants, requestTimeout)
+            val statuses = messenger.statuses(QueryParticipantStatusRequest(attempt = attempt), participants, requestTimeout)
             if (participants.all { host -> statuses[host]?.let { condition(host, it) } == true }) return
             delay(100)
         }
         error("Timed out waiting for rollout participants.")
     }
+}
+
+/**
+ * One attempt's participants with their exact projections and recovery baselines. [committing] records whether
+ * compensation must roll back instead of abort.
+ */
+private data class RolloutProgress(
+    val attempt: RolloutAttempt,
+    val references: Map<ServiceId, ProjectionReference>,
+    val baselines: Map<ServiceId, ProjectionReference>,
+) {
+    var committing = false
+
+    fun request(command: RolloutCommand) = ApplyRolloutCommandRequest(attempt = attempt, command = command)
+}
+
+private fun Map<ServiceId, ProjectionReference>.participants() =
+    map { (host, reference) -> ParticipantProjection(serviceId = host.value, projection = reference) }
+
+private fun Map<ServiceId, ProjectionReference>.blobs() = mapValues { (_, reference) -> reference.blob.toApi() }
+
+private fun ParticipantStatus.stagedCandidate(): ProjectionReference? = (phase as? ParticipantPhase.StagedWrapper)?.value?.candidate
+
+/** Whether this status reports [reference] active and healthy. */
+private fun ParticipantStatus.runsHealthy(reference: ProjectionReference): Boolean {
+    val current = (phase as? ParticipantPhase.ActiveWrapper)?.value?.current ?: return false
+    return current.projection == reference && current.health == ProjectionHealth.HEALTHY
 }
 
 /** Responding selected hosts for one rollout probe, including the required Realm host. */

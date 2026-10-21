@@ -82,7 +82,7 @@ function subjectFunction(scope: ScopeKind, template: SubjectTemplate): string[] 
       ];
 }
 
-/** The Skir method of a request route, if the route is a request flow. */
+/** The Skir method of a unary or watch route, the request flows a component serves. */
 export function requestMethod(route: ResolvedRoute): ResolvedMethod | undefined {
   const { flow } = route;
   return flow.kind === "unary" || flow.kind === "watch" ? flow.method : undefined;
@@ -138,7 +138,7 @@ export function emitEventRoute(
   symbols: CodeGenerator.SymbolProvider,
 ): string[] {
   const { flow } = route;
-  if (flow.kind !== "event" || flow.binding.kind !== "skir" || !servedByComponent(route)) {
+  if (flow.kind !== "event" || !servedByComponent(route)) {
     return [];
   }
   const name = routeTypeName(route);
@@ -146,7 +146,7 @@ export function emitEventRoute(
     `pub struct ${name};`,
     `impl ${TRANSPORT}::EventRoute for ${name} {`,
     `    type Scope = ${scopeType(route.scope)};`,
-    `    type Event = ${symbols.record(flow.binding.payload).reference};`,
+    `    type Event = ${symbols.record(flow.payload).reference};`,
     "    fn serializer() -> crate::skir_client::Serializer<Self::Event> {",
     "        <Self::Event>::serializer()",
     "    }",

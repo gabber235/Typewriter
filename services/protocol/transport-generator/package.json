@@ -8,7 +8,6 @@
   "exports": {
     "./rust": "./src/rust.ts",
     "./kotlin": "./src/kotlin.ts",
-    "./dart": "./src/dart.ts",
-    "./kotlin-loader": "./src/kotlin_loader.ts"
+    "./dart": "./src/dart.ts"
   }
 }

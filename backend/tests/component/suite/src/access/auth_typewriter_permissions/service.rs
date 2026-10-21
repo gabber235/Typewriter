@@ -89,34 +89,32 @@ fn assert_published_content_access(permissions: &Permissions, organization: &str
     }
 }
 
-/// Rollout commands flow from the coordinator on the realm mesh; participant state flows back.
-fn rollout_subjects(organization: &str, realm: &str) -> (String, String) {
-    (
-        format!("service.from.{realm}.organization.{organization}.realm.rollout"),
-        format!("service.to.{realm}.organization.{organization}.realm.rollout"),
-    )
+/// Rollout probes, commands and status queries flow from the coordinator on the realm mesh;
+/// participants answer on the reply inbox of each scatter.
+fn rollout_subjects(organization: &str, realm: &str) -> [String; 3] {
+    ["probe", "command", "status"].map(|suffix| {
+        format!("service.from.{realm}.organization.{organization}.realm.rollout.{suffix}")
+    })
+}
+
+/// The participant state event was removed; no role may publish or receive it.
+fn assert_no_rollout_state(permissions: &Permissions, organization: &str, realm: &str) {
+    let state = format!("service.to.{realm}.organization.{organization}.realm.rollout.state");
+    assert!(!permits(&permissions.publish, &state));
+    assert!(!permits(&permissions.subscribe, &state));
 }
 
 fn assert_rollout_participant_access(permissions: &Permissions, organization: &str, realm: &str) {
-    let (commands, state) = rollout_subjects(organization, realm);
-    for suffix in ["probe", "command", "status"] {
-        assert!(permits(
-            &permissions.subscribe,
-            &format!("{commands}.{suffix}")
-        ));
+    for subject in rollout_subjects(organization, realm) {
+        assert!(permits(&permissions.subscribe, &subject));
     }
-    assert!(permits(&permissions.publish, &format!("{state}.state")));
+    assert_no_rollout_state(permissions, organization, realm);
 
     for (other_organization, other_realm) in [
         (organization, "foreign_realm"),
         ("foreign_organization", realm),
     ] {
-        let (commands, state) = rollout_subjects(other_organization, other_realm);
-        for subject in ["probe", "command", "status"]
-            .map(|suffix| format!("{commands}.{suffix}"))
-            .into_iter()
-            .chain([format!("{state}.state")])
-        {
+        for subject in rollout_subjects(other_organization, other_realm) {
             assert!(!permits(&permissions.publish, &subject));
             assert!(!permits(&permissions.subscribe, &subject));
         }
@@ -128,25 +126,16 @@ fn assert_rollout_participant_only_denials(
     organization: &str,
     realm: &str,
 ) {
-    let (commands, state) = rollout_subjects(organization, realm);
-    for suffix in ["probe", "command", "status"] {
-        assert!(!permits(
-            &permissions.publish,
-            &format!("{commands}.{suffix}")
-        ));
+    for subject in rollout_subjects(organization, realm) {
+        assert!(!permits(&permissions.publish, &subject));
     }
-    assert!(!permits(&permissions.subscribe, &format!("{state}.state")));
 }
 
 fn assert_rollout_coordinator_access(permissions: &Permissions, organization: &str, realm: &str) {
-    let (commands, state) = rollout_subjects(organization, realm);
-    for suffix in ["probe", "command", "status"] {
-        assert!(permits(
-            &permissions.publish,
-            &format!("{commands}.{suffix}")
-        ));
+    for subject in rollout_subjects(organization, realm) {
+        assert!(permits(&permissions.publish, &subject));
     }
-    assert!(permits(&permissions.subscribe, &format!("{state}.state")));
+    assert_no_rollout_state(permissions, organization, realm);
 }
 
 #[component_test(AuthTypewriterPermissions)]

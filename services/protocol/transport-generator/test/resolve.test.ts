@@ -47,7 +47,7 @@ describe("route resolution", () => {
     subscribers: [{ role: registered_service }]
     flow:
       kind: event
-      binding: { kind: skir, payload: "service/v1/lifecycle.skir:ServiceHeartbeatNotification" }
+      payload: "service/v1/lifecycle.skir:ServiceHeartbeatNotification"
       operation: service.peers
       address: service.{service}.peers
       delivery: { kind: transient }
@@ -67,7 +67,7 @@ describe("route resolution", () => {
 
   test("resolves every committed route against the Skir sources", async () => {
     const { routes } = await committedRoutes();
-    expect(routes).toHaveLength(65);
+    expect(routes).toHaveLength(64);
     const catalog = routes.find((route) => route.name === "editor_catalog_fetch")!;
     expect(catalog.flow.kind).toBe("unary");
     if (catalog.flow.kind === "unary") {
@@ -81,13 +81,29 @@ describe("route resolution", () => {
 
   test("rollout routes use the realm mesh", async () => {
     const { routes } = await committedRoutes();
-    const subject = (name: string, channel: "request" | "event") =>
-      routeChannel(routes.find((route) => route.name === name)!, channel)?.subjects.client?.toString();
-    expect(subject("realm_hosts_probe", "request")).toBe(
-      "service.from.{realm}.organization.{organization}.realm.rollout.probe",
-    );
-    expect(subject("realm_rollout_state", "event")).toBe(
-      "service.to.{realm}.organization.{organization}.realm.rollout.state",
-    );
+    const rollout = routes.filter((route) => route.name.startsWith("rollout_"));
+    expect(rollout.map((route) => route.name)).toEqual(["rollout_probe", "rollout_command", "rollout_status"]);
+    for (const route of rollout) {
+      expect(route.flow.kind).toBe("scatter");
+      expect(routeChannel(route, "request")?.subjects.client?.toString()).toBe(
+        `service.from.{realm}.organization.{organization}.realm.rollout.${route.name.slice("rollout_".length)}`,
+      );
+    }
+    expect(routes.some((route) => route.operation === "realm.rollout.state")).toBe(false);
+  });
+
+  test("admits a scatter method through its response outcomes", async () => {
+    const { routes } = await committedRoutes();
+    const command = routes.find((route) => route.name === "rollout_command")!;
+    if (command.flow.kind !== "scatter") throw new Error("rollout_command must be a scatter route");
+    expect(command.flow.method.method.name.text).toBe("ApplyRolloutCommand");
+    expect(command.flow.method.outcomes.variants.map(({ slug, outcome }) => [slug, outcome])).toEqual([
+      ["accepted", "success"],
+      ["stale-attempt-error", "domain_error"],
+      ["attempt-conflict-error", "domain_error"],
+      ["command-rejected-error", "domain_error"],
+      ["command-failed-error", "domain_error"],
+      ["internal-error", "internal_error"],
+    ]);
   });
 });

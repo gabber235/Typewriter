@@ -416,14 +416,14 @@ function emitEvent(
   imports: Imports,
 ): Lines | undefined {
   const { flow } = route;
-  if (flow.kind !== "event" || flow.binding.kind !== "skir" || !hasSide(route, roles, "panel")) {
+  if (flow.kind !== "event" || !hasSide(route, roles, "panel")) {
     return undefined;
   }
   const address = clientSubject(route, "event");
   if (!address) {
     return undefined;
   }
-  const payloadType = imports.use(symbols.record(flow.binding.payload));
+  const payloadType = imports.use(symbols.record(flow.payload));
   const name = dartName(route);
   let projection: Lines = [];
   // A panel subscriber receiving every publisher's personal subject subscribes to a pattern and

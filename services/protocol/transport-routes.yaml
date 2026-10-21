@@ -340,7 +340,7 @@ routes:
     subscribers: [{ component: service-registration }]
     flow:
       kind: event
-      binding: { kind: skir, payload: "service/v1/lifecycle.skir:ServiceHeartbeatNotification" }
+      payload: "service/v1/lifecycle.skir:ServiceHeartbeatNotification"
       operation: registrar.heartbeat
       address: service.{service}.heartbeat
       delivery: { kind: transient }
@@ -351,7 +351,7 @@ routes:
     subscribers: [{ component: service-registration }]
     flow:
       kind: event
-      binding: { kind: skir, payload: "service/v1/lifecycle.skir:ServiceShutdownNotification" }
+      payload: "service/v1/lifecycle.skir:ServiceShutdownNotification"
       operation: registrar.shutdown
       address: service.{service}.shutdown
       delivery: { kind: transient }
@@ -520,7 +520,7 @@ routes:
     subscribers: [{ role: organization_member }]
     flow:
       kind: event
-      binding: { kind: skir, payload: "editor/v1/authoring.skir:AuthoringChanged" }
+      payload: "editor/v1/authoring.skir:AuthoringChanged"
       operation: editor.authoring.changed
       address: editor.authoring.changed
       delivery: { kind: transient }
@@ -541,7 +541,7 @@ routes:
     subscribers: [{ role: organization_member }, { role: realm_participant }]
     flow:
       kind: event
-      binding: { kind: skir, payload: "editor/v1/compiled_content.skir:CompiledContentChanged" }
+      payload: "editor/v1/compiled_content.skir:CompiledContentChanged"
       operation: editor.authoring.compiled.changed
       address: editor.authoring.compiled.changed
       delivery: { kind: transient }
@@ -660,46 +660,35 @@ routes:
       operation: shared.blob.complete
       request: shared.blob.complete
 
-  - name: realm_hosts_probe
+  - name: rollout_probe
     scope: realm
     callers: [{ role: realm_coordinator }]
     server: { role: realm_participant }
     flow:
       kind: scatter
-      binding: { kind: native_kotlin, format: kotlin_serialization_cbor, target: loader_core, request_type: com.typewritermc.loader.rollout.ProbeRealmHosts, response_type: com.typewritermc.loader.rollout.PresenceReply, request_codec: com.typewritermc.loader.rollout.RolloutCodecs.probeRequest, response_codec: com.typewritermc.loader.rollout.RolloutCodecs.presenceReply }
-      operation: realm.hosts.probe
+      method: "service/v1/rollout.skir:ProbeRealmHosts"
+      operation: realm.rollout.probe
       request: rollout.probe
 
-  - name: realm_rollout_command
+  - name: rollout_command
     scope: realm
     callers: [{ role: realm_coordinator }]
     server: { role: realm_participant }
     flow:
       kind: scatter
-      binding: { kind: native_kotlin, format: kotlin_serialization_cbor, target: loader_core, request_type: com.typewritermc.loader.rollout.RolloutEnvelope, response_type: com.typewritermc.loader.rollout.CommandAcceptance, request_codec: com.typewritermc.loader.rollout.RolloutCodecs.commandRequest, response_codec: com.typewritermc.loader.rollout.RolloutCodecs.commandResponse }
+      method: "service/v1/rollout.skir:ApplyRolloutCommand"
       operation: realm.rollout.command
       request: rollout.command
 
-  - name: realm_hosts_status
+  - name: rollout_status
     scope: realm
     callers: [{ role: realm_coordinator }]
     server: { role: realm_participant }
     flow:
       kind: scatter
-      binding: { kind: native_kotlin, format: kotlin_serialization_cbor, target: loader_core, request_type: com.typewritermc.loader.rollout.ProbeParticipantStatus, response_type: com.typewritermc.loader.rollout.ParticipantStatusReply, request_codec: com.typewritermc.loader.rollout.RolloutCodecs.statusRequest, response_codec: com.typewritermc.loader.rollout.RolloutCodecs.statusReply }
-      operation: realm.hosts.status
+      method: "service/v1/rollout.skir:QueryParticipantStatus"
+      operation: realm.rollout.status
       request: rollout.status
-
-  - name: realm_rollout_state
-    scope: realm
-    publishers: [{ role: realm_participant }]
-    subscribers: [{ role: realm_coordinator }]
-    flow:
-      kind: event
-      binding: { kind: native_kotlin, format: kotlin_serialization_cbor, target: loader_core, event_type: com.typewritermc.loader.rollout.ParticipantStateChanged, event_codec: com.typewritermc.loader.rollout.RolloutCodecs.participantState }
-      operation: realm.rollout.state
-      address: rollout.state
-      delivery: { kind: transient }
 
   - name: organization_presence
     scope: organization_actor
@@ -707,7 +696,7 @@ routes:
     subscribers: [{ role: organization_member }]
     flow:
       kind: event
-      binding: { kind: skir, payload: "organization/v1/presence.skir:PresenceEvent" }
+      payload: "organization/v1/presence.skir:PresenceEvent"
       operation: organization.presence
       address: presence.organization.{organization}.user.{user}
       delivery: { kind: transient }

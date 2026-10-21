@@ -16,10 +16,6 @@ generators:
     outDir: ./services/protocol/transport-adapters/kotlin/skirout
     config:
       manifest: ./services/protocol/transport-routes.yaml
-  - mod: typewriter-transport/kotlin-loader
-    outDir: ./services/runtime/loader/core/src/main/skirout
-    config:
-      manifest: ./services/protocol/transport-routes.yaml
   - mod: typewriter-transport/dart
     outDir: ./panel/lib/infrastructure/messaging/generated/skirout
     config:

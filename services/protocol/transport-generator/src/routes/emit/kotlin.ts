@@ -23,22 +23,15 @@ const ROUTE_IMPORTS = [
   `${COMMUNICATOR}.contract.OperationName`,
   `${COMMUNICATOR}.contract.ResponseClassification`,
   `${COMMUNICATOR}.contract.ResponsePolicy`,
-  `${COMMUNICATOR}.skir.skirEventContract`,
-  `${COMMUNICATOR}.skir.skirUnaryContract`,
-  `${COMMUNICATOR}.skir.skirWatchContract`,
 ];
 
-const LOADER_IMPORTS = [
-  `${SCOPES}.RealmRouteScope`,
-  `${SCOPES}.realmTemplate`,
-  `${COMMUNICATOR}.contract.EventContract`,
-  `${COMMUNICATOR}.contract.OperationName`,
-  `${COMMUNICATOR}.contract.ResponsePolicy`,
-  `${COMMUNICATOR}.contract.ScatterContract`,
-  "com.typewritermc.services.libs.telemetry.ErrorSlug",
-];
-
-const LOADER_PACKAGE = "com.typewritermc.loader.rollout";
+/** The Skir contract builder of each flow kind. */
+const CONTRACT_BUILDERS = {
+  unary: "skirUnaryContract",
+  scatter: "skirScatterContract",
+  watch: "skirWatchContract",
+  event: "skirEventContract",
+} as const;
 
 const kotlinString = (value: string) => quoted(value, "escaped");
 
@@ -123,12 +116,15 @@ function routeFile(
     const updateAddress = `${name}UpdateAddress`;
     const operation = kotlinString(route.operation);
     const { flow } = route;
+    const contract = CONTRACT_BUILDERS[flow.kind];
+    imports.push(`import ${COMMUNICATOR}.skir.${contract}`);
     switch (flow.kind) {
-      case "unary": {
+      case "unary":
+      case "scatter": {
         const method = importedKotlinSymbol(symbols.method(flow.method.module, flow.method.method));
         imports.push(...method.imports);
         blocks.push(`private val ${requestAddress} = ${kotlinString(serviceSubject(route, "request"))}.${template}
-val ${scope}.${name} get() = skirUnaryContract(
+val ${scope}.${name} get() = ${contract}(
     method = ${method.name}, name = OperationName.of(${operation}),
     address = ${requestAddress}.subscribedAt(this), responsePolicy = ${policyOf(flow.method)},
 )`);
@@ -140,22 +136,17 @@ val ${scope}.${name} get() = skirUnaryContract(
         imports.push(...method.imports);
         blocks.push(`private val ${requestAddress} = ${kotlinString(serviceSubject(route, "request"))}.${template}
 private val ${updateAddress} = ${kotlinString(serviceSubject(route, "updates"))}.${template}
-val ${scope}.${name} get() = skirWatchContract(
+val ${scope}.${name} get() = ${contract}(
     method = ${method.name}, updateSerializer = ${update}.serializer,
     name = OperationName.of(${operation}), requestAddress = ${requestAddress}.subscribedAt(this),
     updateAddress = ${updateAddress}, initialPolicy = ${policyOf(flow.method)},
 )`);
         break;
       }
-      case "scatter":
-        break;
       case "event": {
-        if (flow.binding.kind !== "skir") {
-          break;
-        }
-        const payload = symbols.record(flow.binding.payload).reference;
+        const payload = symbols.record(flow.payload).reference;
         blocks.push(`private val ${name}Address = ${kotlinString(serviceSubject(route, "event"))}.${template}
-val ${scope}.${name} get() = skirEventContract(
+val ${scope}.${name} get() = ${contract}(
     serializer = ${payload}.serializer, name = OperationName.of(${operation}), address = ${name}Address,
 )`);
         break;
@@ -204,59 +195,4 @@ export function emitKotlin(
     ),
     limitsFile(limits),
   ];
-}
-
-function shortName(symbol: string): string {
-  return symbol.slice(symbol.lastIndexOf(".") + 1);
-}
-
-/**
- * Emits the loader core contracts of the native Kotlin routes, which use realm scope and the CBOR
- * codecs the manifest names instead of Skir serializers.
- */
-export function emitKotlinLoader({ routes }: ResolvedRoutes): CodeGenerator.OutputFile[] {
-  const imports = [...LOADER_IMPORTS];
-  const blocks: string[] = [];
-  for (const route of routes) {
-    const { flow } = route;
-    if (flow.kind !== "scatter" && !(flow.kind === "event" && flow.binding.kind === "native_kotlin")) {
-      continue;
-    }
-    if (route.scope !== "realm") {
-      throw new Error(`native Kotlin route ${route.name} must use realm scope`);
-    }
-    const name = lowerCamel(route.name);
-    const operation = kotlinString(route.operation);
-    const slug = kotlinString(route.failureSlug);
-    if (flow.kind === "scatter") {
-      const { binding } = flow;
-      const requestType = shortName(binding.request_type);
-      const responseType = shortName(binding.response_type);
-      imports.push(binding.request_type, binding.response_type);
-      blocks.push(`private val ${name}RequestAddress = ${kotlinString(serviceSubject(route, "request"))}.realmTemplate()
-fun RealmRouteScope.${name}(policy: ResponsePolicy<${responseType}>): ScatterContract<RealmRouteScope, ${requestType}, ${responseType}> = ScatterContract(
-    name = OperationName.of(${operation}),
-    requestAddress = ${name}RequestAddress.subscribedAt(this),
-    requestCodec = ${binding.request_codec},
-    responseCodec = ${binding.response_codec},
-    responsePolicy = policy,
-    failureSlug = ErrorSlug.of(${slug}),
-)`);
-    } else if (flow.binding.kind === "native_kotlin") {
-      const { binding } = flow;
-      imports.push(binding.event_type);
-      blocks.push(`private val ${name}Address = ${kotlinString(serviceSubject(route, "event"))}.realmTemplate()
-val RealmRouteScope.${name}: EventContract<RealmRouteScope, ${shortName(binding.event_type)}>
-    get() = EventContract(
-        name = OperationName.of(${operation}),
-        address = ${name}Address,
-        codec = ${binding.event_codec},
-        failureSlug = ErrorSlug.of(${slug}),
-    )`);
-    }
-  }
-  const external = imports
-    .filter((name) => !name.startsWith(`${LOADER_PACKAGE}.`))
-    .map((name) => `import ${name}`);
-  return [{ path: "RolloutRoutes.kt", code: kotlinFile(LOADER_PACKAGE, external, blocks) }];
 }

@@ -26,6 +26,11 @@ import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flow
 import skirout.kernel.v1.record_id.RecordId
 import skirout.kernel.v1.record_id.RecordIdKey
+import skirout.service.v1.rollout.ParticipantPhase
+import skirout.service.v1.rollout.ParticipantStatus
+import skirout.service.v1.rollout.ProjectionHealth
+import skirout.service.v1.rollout.ProjectionReference
+import skirout.service.v1.rollout.RecoverableParticipantState
 import skirout.service.v1.topology.ChildRuntimeState
 import skirout.service.v1.topology.ChildRuntimeStatus
 import skirout.service.v1.topology.RegisterServiceHostRequest
@@ -194,86 +199,91 @@ internal fun ParticipantStatus.toChildRuntimeState(
     now: Instant,
     placement: RuntimePlacement,
 ): ChildRuntimeState {
+    val phase = phase
     val status =
-        when (this) {
-            is ParticipantStatus.Idle -> {
-                ChildRuntimeStatus.ABSENT
-            }
-
-            is ParticipantStatus.Staging, is ParticipantStatus.Staged -> {
+        when (phase) {
+            is ParticipantPhase.StagingWrapper, is ParticipantPhase.StagedWrapper, is ParticipantPhase.CommittingWrapper -> {
                 ChildRuntimeStatus.STAGING
             }
 
-            is ParticipantStatus.Committing -> {
-                ChildRuntimeStatus.STAGING
-            }
-
-            is ParticipantStatus.Active -> {
-                when (current.health) {
-                    RuntimeHealthSnapshot.Healthy -> ChildRuntimeStatus.ACTIVE
-                    RuntimeHealthSnapshot.Staged -> ChildRuntimeStatus.STAGING
-                    is RuntimeHealthSnapshot.Unhealthy -> ChildRuntimeStatus.FAILED
+            is ParticipantPhase.ActiveWrapper -> {
+                when (phase.value.current.health) {
+                    ProjectionHealth.HEALTHY -> ChildRuntimeStatus.ACTIVE
+                    ProjectionHealth.STAGED -> ChildRuntimeStatus.STAGING
+                    else -> ChildRuntimeStatus.FAILED
                 }
             }
 
-            is ParticipantStatus.Aborting -> {
+            is ParticipantPhase.AbortingWrapper, is ParticipantPhase.RollingBackWrapper -> {
                 ChildRuntimeStatus.QUIESCING
             }
 
-            is ParticipantStatus.RollingBack -> {
-                ChildRuntimeStatus.QUIESCING
-            }
-
-            is ParticipantStatus.Failed -> {
+            is ParticipantPhase.FailedWrapper -> {
                 ChildRuntimeStatus.FAILED
+            }
+
+            else -> {
+                ChildRuntimeStatus.ABSENT
             }
         }
     val message =
-        when (this) {
-            is ParticipantStatus.Active -> (current.health as? RuntimeHealthSnapshot.Unhealthy)?.reasons?.joinToString("; ")
-            is ParticipantStatus.Failed -> reason
-            else -> null
+        when (phase) {
+            is ParticipantPhase.ActiveWrapper -> {
+                (phase.value.current.health as? ProjectionHealth.UnhealthyWrapper)?.value?.reasons?.joinToString("; ")
+            }
+
+            is ParticipantPhase.FailedWrapper -> {
+                phase.value.reason
+            }
+
+            else -> {
+                null
+            }
         }
-    val activeArtifactVersion = projectionReference()?.runtimeVersions?.get(placement)?.value
-    return ChildRuntimeState(status = status, activeArtifactVersion = activeArtifactVersion, message = message, updatedAt = now)
+    return ChildRuntimeState(
+        status = status,
+        activeArtifactVersion = phase.projectionReference()?.runtimeVersion(placement),
+        message = message,
+        updatedAt = now,
+    )
 }
 
-private fun ParticipantStatus.projectionReference(): ProjectionReference? =
+private fun ParticipantPhase.projectionReference(): ProjectionReference? =
     when (this) {
-        is ParticipantStatus.Idle -> {
-            null
+        is ParticipantPhase.StagingWrapper -> {
+            value.candidate
         }
 
-        is ParticipantStatus.Staging -> {
-            candidate
+        is ParticipantPhase.StagedWrapper -> {
+            value.candidate
         }
 
-        is ParticipantStatus.Staged -> {
-            candidate
+        is ParticipantPhase.CommittingWrapper -> {
+            value.candidate
         }
 
-        is ParticipantStatus.Committing -> {
-            candidate
+        is ParticipantPhase.ActiveWrapper -> {
+            value.current.projection
         }
 
-        is ParticipantStatus.Active -> {
-            current.projection
+        is ParticipantPhase.AbortingWrapper -> {
+            value.candidate
         }
 
-        is ParticipantStatus.Aborting -> {
-            candidate
+        is ParticipantPhase.RollingBackWrapper -> {
+            value.failed
         }
 
-        is ParticipantStatus.RollingBack -> {
-            failed
-        }
-
-        is ParticipantStatus.Failed -> {
-            when (val state = recoverable) {
-                RecoverableParticipantState.Empty -> null
-                is RecoverableParticipantState.Active -> state.current.projection
-                is RecoverableParticipantState.Staged -> state.candidate
+        is ParticipantPhase.FailedWrapper -> {
+            when (val state = value.recoverable) {
+                is RecoverableParticipantState.ActiveWrapper -> state.value.current.projection
+                is RecoverableParticipantState.StagedWrapper -> state.value.candidate
+                else -> null
             }
+        }
+
+        else -> {
+            null
         }
     }
 

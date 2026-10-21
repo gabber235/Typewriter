@@ -31,32 +31,19 @@ import com.typewritermc.loader.deployment.ProjectedExtension
 import com.typewritermc.loader.deployment.ProjectedRuntime
 import com.typewritermc.loader.deployment.ProjectedSourcePart
 import com.typewritermc.loader.rollout.HostRolloutParticipant
-import com.typewritermc.loader.rollout.ParticipantStateChanged
-import com.typewritermc.loader.rollout.ParticipantStatus
-import com.typewritermc.loader.rollout.ParticipantStatusReply
-import com.typewritermc.loader.rollout.PresenceReply
-import com.typewritermc.loader.rollout.ProbeParticipantStatus
-import com.typewritermc.loader.rollout.ProbeRealmHosts
-import com.typewritermc.loader.rollout.ProjectionReference
 import com.typewritermc.loader.rollout.ProjectionSource
 import com.typewritermc.loader.rollout.RealmId
-import com.typewritermc.loader.rollout.RollbackTarget
-import com.typewritermc.loader.rollout.RolloutAttempt
-import com.typewritermc.loader.rollout.RolloutCommand
-import com.typewritermc.loader.rollout.RolloutEnvelope
 import com.typewritermc.loader.rollout.VerifiedArtifactSource
-import com.typewritermc.loader.rollout.commandResponsePolicy
-import com.typewritermc.loader.rollout.participantStatusResponsePolicy
-import com.typewritermc.loader.rollout.presenceResponsePolicy
-import com.typewritermc.loader.rollout.realmHostsProbe
-import com.typewritermc.loader.rollout.realmHostsStatus
-import com.typewritermc.loader.rollout.realmRolloutCommand
+import com.typewritermc.loader.rollout.toSkir
 import com.typewritermc.loader.runtime.HostedRuntimeLoader
 import com.typewritermc.loader.runtime.HostedRuntimeStager
 import com.typewritermc.loader.runtime.LoadedHostedRuntime
 import com.typewritermc.loader.shared.FileSharedArtifactRepository
 import com.typewritermc.loader.shared.SharedArtifactService
 import com.typewritermc.protocol.transport.RealmRouteScope
+import com.typewritermc.protocol.transport.generated.rolloutCommand
+import com.typewritermc.protocol.transport.generated.rolloutProbe
+import com.typewritermc.protocol.transport.generated.rolloutStatus
 import com.typewritermc.services.libs.communicator.address.MessageAddress
 import com.typewritermc.services.libs.communicator.client.Communicator
 import com.typewritermc.services.libs.communicator.contract.ResponseOutcome
@@ -90,6 +77,21 @@ import kotlinx.coroutines.test.advanceTimeBy
 import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.withTimeout
+import skirout.service.v1.rollout.ApplyRolloutCommandRequest
+import skirout.service.v1.rollout.ApplyRolloutCommandResponse
+import skirout.service.v1.rollout.ParticipantPhase
+import skirout.service.v1.rollout.ParticipantProjection
+import skirout.service.v1.rollout.ParticipantRollback
+import skirout.service.v1.rollout.ParticipantStatus
+import skirout.service.v1.rollout.ProbeRealmHostsRequest
+import skirout.service.v1.rollout.ProbeRealmHostsResponse
+import skirout.service.v1.rollout.ProjectionHealth
+import skirout.service.v1.rollout.ProjectionReference
+import skirout.service.v1.rollout.QueryParticipantStatusRequest
+import skirout.service.v1.rollout.QueryParticipantStatusResponse
+import skirout.service.v1.rollout.RollbackTarget
+import skirout.service.v1.rollout.RolloutAttempt
+import skirout.service.v1.rollout.RolloutCommand
 import java.net.URLClassLoader
 import java.nio.file.Files
 import java.nio.file.Path
@@ -172,50 +174,68 @@ val HostRolloutParticipantTest by testSuite {
     }
 
     test("participant status contract classifies its typed internal failure") {
-        val policy = participantStatusResponsePolicy
+        val policy = RealmRouteScope(organizationId = "organization", realmId = "realm").rolloutStatus.responsePolicy
         policy.classify(policy.internalFailureResponse).outcome shouldBe ResponseOutcome.INTERNAL_ERROR
-        policy
-            .classify(
-                ParticipantStatusReply.Status(
-                    ServiceId("service"),
-                    ParticipantStatus.Idle(RolloutAttempt(1, DeploymentGeneration(1)), ServiceId("service")),
-                ),
-            ).outcome shouldBe ResponseOutcome.SUCCESS
+        val status = ParticipantStatus(serviceId = "service", attempt = attempt(1, 1), phase = ParticipantPhase.IDLE)
+        policy.classify(QueryParticipantStatusResponse.StatusWrapper(status)).outcome shouldBe ResponseOutcome.SUCCESS
+    }
+
+    test("hosts that a command does not list stay silent") {
+        runTest {
+            val fixture = participantFixture(this)
+            val reference = fixture.reference("other host")
+            val other = ParticipantProjection(serviceId = "other", projection = reference.copy(serviceId = "other"))
+            val request =
+                ApplyRolloutCommandRequest(attempt = attempt(1, 1), command = RolloutCommand.createStage(participants = listOf(other)))
+
+            fixture.participant.apply(request) shouldBe null
+            fixture.stagedContexts.size shouldBe 0
+            fixture.events.size shouldBe 0
+            fixture.participant.close()
+        }
+    }
+
+    test("rejects an attempt without a positive ordinal") {
+        runTest {
+            val fixture = participantFixture(this)
+            val reference = fixture.reference("invalid")
+            shouldThrow<IllegalArgumentException> { fixture.participant.apply(fixture.stage(attempt(0, 1), reference)) }
+            shouldThrow<IllegalArgumentException> { fixture.participant.status(attempt(0, 1)) }
+            fixture.participant.close()
+        }
     }
 
     test("commands are serialized idempotent and projection specific") {
         runTest {
             val fixture = participantFixture(this)
-            val attempt = RolloutAttempt(2, DeploymentGeneration(1))
+            val attempt = attempt(2, 1)
             val reference = fixture.reference("first")
             val projection = fixture.projection(reference)
             fixture.projections[reference] = projection
-            val stage = fixture.envelope(attempt, reference, RolloutCommand.Stage)
-            val commit = fixture.envelope(attempt, reference, RolloutCommand.Commit)
+            val stage = fixture.stage(attempt, reference)
+            val commit = fixture.commit(attempt, reference)
 
-            fixture.participant.handle(stage).accepted shouldBe true
-            fixture.participant.handle(stage).accepted shouldBe true
+            fixture.participant.apply(stage) shouldBe fixture.accepted
+            fixture.participant.apply(stage) shouldBe fixture.accepted
             fixture.stagedContexts.size shouldBe 1
             fixture.stagedContexts.single().publicationTarget shouldBe projection.publicationTarget
             fixture.stagedContexts.single().engineImplementation shouldBe projection.runtimes.single().implementation
 
-            fixture.participant.handle(commit).accepted shouldBe true
-            fixture.participant.handle(commit).accepted shouldBe true
+            fixture.participant.apply(commit) shouldBe fixture.accepted
+            fixture.participant.apply(commit) shouldBe fixture.accepted
             fixture.runtimes.single().operations shouldContainExactly listOf("activate")
 
-            fixture.participant.handle(fixture.envelope(attempt, reference, RolloutCommand.Abort)).accepted shouldBe true
+            fixture.participant.apply(fixture.abort(attempt, reference)) shouldBe fixture.accepted
 
             val conflictReference = fixture.reference("conflict")
-            val conflict = fixture.participant.handle(fixture.envelope(attempt, conflictReference, RolloutCommand.Stage))
-            conflict.accepted shouldBe false
-            conflict.internalFailure shouldBe false
+            val conflict = fixture.participant.apply(fixture.stage(attempt, conflictReference))
+            conflict shouldBe ApplyRolloutCommandResponse.createAttemptConflictError(serviceId = "service")
 
             val older =
-                fixture.participant.handle(
-                    fixture.envelope(RolloutAttempt(1, DeploymentGeneration(1)), reference, RolloutCommand.Stage),
+                fixture.participant.apply(
+                    fixture.stage(attempt(1, 1), reference),
                 )
-            older.accepted shouldBe false
-            older.internalFailure shouldBe false
+            older shouldBe ApplyRolloutCommandResponse.createStaleAttemptError(serviceId = "service")
             fixture.participant.close()
         }
     }
@@ -223,31 +243,31 @@ val HostRolloutParticipantTest by testSuite {
     test("failed shutdown retains the participant for retry and closes each successful runtime once") {
         runTest {
             val fixture = participantFixture(this)
-            val attempt = RolloutAttempt(2, DeploymentGeneration(1))
+            val attempt = attempt(2, 1)
             val reference = fixture.reference("shutdown")
             fixture.projections[reference] = fixture.projection(reference)
-            fixture.participant.handle(fixture.envelope(attempt, reference, RolloutCommand.Stage)).accepted shouldBe true
-            fixture.participant.handle(fixture.envelope(attempt, reference, RolloutCommand.Commit)).accepted shouldBe true
+            fixture.participant.apply(fixture.stage(attempt, reference)) shouldBe fixture.accepted
+            fixture.participant.apply(fixture.commit(attempt, reference)) shouldBe fixture.accepted
             val runtime = fixture.runtimes.single()
             runtime.failOn += "close"
             shouldThrow<IllegalStateException> { fixture.participant.close() }
-            (fixture.participant.currentStatus(attempt) is ParticipantStatus.Active) shouldBe true
+            (fixture.participant.status(attempt).phase is ParticipantPhase.ActiveWrapper) shouldBe true
             runtime.failOn.clear()
             fixture.participant.close()
             fixture.participant.close()
             runtime.operations.count { it == "close" } shouldBe 2
-            (fixture.participant.currentStatus(attempt) is ParticipantStatus.Idle) shouldBe true
+            fixture.participant.status(attempt).phase shouldBe ParticipantPhase.IDLE
         }
     }
 
     test("runtime package preserves every source part disposition") {
         runTest {
             val fixture = participantFixture(this)
-            val attempt = RolloutAttempt(2, DeploymentGeneration(2))
+            val attempt = attempt(2, 2)
             val reference = fixture.reference("mixed")
             fixture.projections[reference] = fixture.projection(reference, includeExtension = true)
 
-            fixture.participant.handle(fixture.envelope(attempt, reference, RolloutCommand.Stage)).accepted shouldBe true
+            fixture.participant.apply(fixture.stage(attempt, reference)) shouldBe fixture.accepted
 
             val context = fixture.stagedContexts.single()
             val extension = context.artifacts.extensions.single()
@@ -275,12 +295,12 @@ val HostRolloutParticipantTest by testSuite {
     test("health changes are published after activation") {
         runTest {
             val fixture = participantFixture(this)
-            val attempt = RolloutAttempt(3, DeploymentGeneration(3))
+            val attempt = attempt(3, 3)
             val reference = fixture.reference("health")
             fixture.projections[reference] = fixture.projection(reference)
 
-            fixture.participant.handle(fixture.envelope(attempt, reference, RolloutCommand.Stage))
-            fixture.participant.handle(fixture.envelope(attempt, reference, RolloutCommand.Commit))
+            fixture.participant.apply(fixture.stage(attempt, reference))
+            fixture.participant.apply(fixture.commit(attempt, reference))
             fixture.runtimes
                 .single()
                 .healthState.value = RuntimeHealth.Unhealthy("fixture failure")
@@ -288,12 +308,10 @@ val HostRolloutParticipantTest by testSuite {
 
             val active =
                 fixture.events
-                    .map { it.status }
-                    .filterIsInstance<ParticipantStatus.Active>()
+                    .map { it.phase }
+                    .filterIsInstance<ParticipantPhase.ActiveWrapper>()
                     .last()
-            active.current.health shouldBe
-                com.typewritermc.loader.rollout.RuntimeHealthSnapshot
-                    .Unhealthy(listOf("fixture failure"))
+            active.value.current.health shouldBe ProjectionHealth.createUnhealthy(reasons = listOf("fixture failure"))
             fixture.participant.close()
         }
     }
@@ -301,19 +319,18 @@ val HostRolloutParticipantTest by testSuite {
     test("owned activation timeout reports failure without cancelling its caller") {
         runTest {
             val fixture = participantFixture(this)
-            val attempt = RolloutAttempt(1, DeploymentGeneration(1))
+            val attempt = attempt(1, 1)
             val reference = fixture.reference("deadline")
             fixture.projections[reference] = fixture.projection(reference)
-            fixture.participant.handle(fixture.envelope(attempt, reference, RolloutCommand.Stage))
+            fixture.participant.apply(fixture.stage(attempt, reference))
             fixture.runtimes.single().suspendOn += "activate"
             try {
-                val result = fixture.participant.handle(fixture.envelope(attempt, reference, RolloutCommand.Commit))
-                result.accepted shouldBe false
-                result.internalFailure shouldBe true
-                (fixture.events.last().status is ParticipantStatus.Failed) shouldBe true
+                val result = fixture.participant.apply(fixture.commit(attempt, reference))
+                (result is ApplyRolloutCommandResponse.CommandFailedErrorWrapper) shouldBe true
+                (fixture.events.last().phase is ParticipantPhase.FailedWrapper) shouldBe true
                 currentCoroutineContext().isActive shouldBe true
                 fixture.runtimes.single().operations shouldContainExactly listOf("activate", "close")
-                fixture.participant.currentStatus(attempt) shouldBe ParticipantStatus.Idle(attempt, fixture.serviceId)
+                fixture.participant.status(attempt) shouldBe fixture.idle(attempt)
             } finally {
                 fixture.participant.close()
             }
@@ -323,19 +340,19 @@ val HostRolloutParticipantTest by testSuite {
     test("caller cancellation during activation propagates and cleans up its candidate") {
         runTest {
             val fixture = participantFixture(this)
-            val attempt = RolloutAttempt(1, DeploymentGeneration(1))
+            val attempt = attempt(1, 1)
             val reference = fixture.reference("caller cancellation")
             fixture.projections[reference] = fixture.projection(reference)
-            fixture.participant.handle(fixture.envelope(attempt, reference, RolloutCommand.Stage))
+            fixture.participant.apply(fixture.stage(attempt, reference))
             fixture.runtimes.single().suspendOn += "activate"
-            val command = async { fixture.participant.handle(fixture.envelope(attempt, reference, RolloutCommand.Commit)) }
+            val command = async { fixture.participant.apply(fixture.commit(attempt, reference)) }
             runCurrent()
             command.cancelAndJoin()
             shouldThrow<CancellationException> { command.await() }
             currentCoroutineContext().isActive shouldBe true
             fixture.runtimes.single().operations shouldContainExactly listOf("activate", "close")
-            fixture.events.none { it.status is ParticipantStatus.Failed } shouldBe true
-            fixture.participant.currentStatus(attempt) shouldBe ParticipantStatus.Idle(attempt, fixture.serviceId)
+            fixture.events.none { it.phase is ParticipantPhase.FailedWrapper } shouldBe true
+            fixture.participant.status(attempt) shouldBe fixture.idle(attempt)
             fixture.participant.close()
         }
     }
@@ -343,30 +360,30 @@ val HostRolloutParticipantTest by testSuite {
     test("owned activation timeout preserves rollout status and presence routes") {
         runTest {
             val fixture = participantFixture(this)
-            val attempt = RolloutAttempt(1, DeploymentGeneration(1))
+            val attempt = attempt(1, 1)
             val reference = fixture.reference("router deadline")
             fixture.projections[reference] = fixture.projection(reference)
-            fixture.participant.handle(fixture.envelope(attempt, reference, RolloutCommand.Stage))
+            fixture.participant.apply(fixture.stage(attempt, reference))
             fixture.runtimes.single().suspendOn += "activate"
             val fake = FakeMessageTransport()
             val telemetry = OpenTelemetry.noop().serviceTelemetry("participant deadline test")
             val communicator = Communicator(fake, telemetry, ContextPropagators.noop())
             val address = RealmRouteScope(organizationId = "organization", realmId = fixture.realmId.value)
-            val commandContract = address.realmRolloutCommand(commandResponsePolicy)
-            val statusContract = address.realmHostsStatus(participantStatusResponsePolicy)
-            val probeContract = address.realmHostsProbe(presenceResponsePolicy)
+            val commandContract = address.rolloutCommand
+            val statusContract = address.rolloutStatus
+            val probeContract = address.rolloutProbe
             val routes =
                 communicatorRoutes {
-                    scatterAt(commandContract, address) { fixture.participant.handle(it.request) }
+                    scatterAt(commandContract, address) { fixture.participant.apply(it.request) }
                     scatterAt(statusContract, address) {
-                        ParticipantStatusReply.Status(fixture.serviceId, fixture.participant.currentStatus(it.request.attempt))
+                        QueryParticipantStatusResponse.StatusWrapper(fixture.participant.status(it.request.attempt))
                     }
-                    scatterAt(probeContract, address) { PresenceReply.Failed("presence route responded") }
+                    scatterAt(probeContract, address) { ProbeRealmHostsResponse.createInternalError() }
                 }
             val router = communicator.createRouter(routes, backgroundScope)
             router.start() shouldBe RouterResult.Success
             try {
-                val command = fixture.envelope(attempt, reference, RolloutCommand.Commit)
+                val command = fixture.commit(attempt, reference)
                 fake.deliver(
                     TransportDelivery.Message(
                         InboundMessage(
@@ -380,12 +397,12 @@ val HostRolloutParticipantTest by testSuite {
                 advanceTimeBy(1000)
                 runCurrent()
                 router.state shouldBe RouterState.RUNNING
-                (fixture.events.last().status is ParticipantStatus.Failed) shouldBe true
+                (fixture.events.last().phase is ParticipantPhase.FailedWrapper) shouldBe true
                 fake.deliver(
                     TransportDelivery.Message(
                         InboundMessage(
                             statusContract.requestAddress.render(address),
-                            statusContract.requestCodec.encode(ProbeParticipantStatus(fixture.realmId, attempt)).toByteArray(),
+                            statusContract.requestCodec.encode(QueryParticipantStatusRequest(attempt = attempt)).toByteArray(),
                             MessageAddress.of("reply.status"),
                         ),
                     ),
@@ -394,7 +411,7 @@ val HostRolloutParticipantTest by testSuite {
                     TransportDelivery.Message(
                         InboundMessage(
                             probeContract.requestAddress.render(address),
-                            probeContract.requestCodec.encode(ProbeRealmHosts(fixture.realmId)).toByteArray(),
+                            probeContract.requestCodec.encode(ProbeRealmHostsRequest.partial()).toByteArray(),
                             MessageAddress.of("reply.presence"),
                         ),
                     ),
@@ -415,21 +432,20 @@ val HostRolloutParticipantTest by testSuite {
     test("owned activation timeout restores the baseline and reports failure") {
         runTest {
             val fixture = participantFixture(this)
-            val baselineAttempt = RolloutAttempt(1, DeploymentGeneration(1))
+            val baselineAttempt = attempt(1, 1)
             val baseline = fixture.reference("deadline baseline")
             fixture.projections[baseline] = fixture.projection(baseline)
-            fixture.participant.handle(fixture.envelope(baselineAttempt, baseline, RolloutCommand.Stage))
-            fixture.participant.handle(fixture.envelope(baselineAttempt, baseline, RolloutCommand.Commit))
-            val attempt = RolloutAttempt(2, DeploymentGeneration(2))
+            fixture.participant.apply(fixture.stage(baselineAttempt, baseline))
+            fixture.participant.apply(fixture.commit(baselineAttempt, baseline))
+            val attempt = attempt(2, 2)
             val candidate = fixture.reference("deadline replacement")
             fixture.projections[candidate] = fixture.projection(candidate)
-            fixture.participant.handle(fixture.envelope(attempt, candidate, RolloutCommand.Stage))
+            fixture.participant.apply(fixture.stage(attempt, candidate))
             fixture.runtimes[1].suspendOn += "activate"
-            val result = fixture.participant.handle(fixture.envelope(attempt, candidate, RolloutCommand.Commit))
-            result.accepted shouldBe false
-            result.internalFailure shouldBe true
-            (fixture.events.last().status is ParticipantStatus.Failed) shouldBe true
-            (fixture.participant.currentStatus(attempt) as ParticipantStatus.Active).current.projection shouldBe baseline
+            val result = fixture.participant.apply(fixture.commit(attempt, candidate))
+            (result is ApplyRolloutCommandResponse.CommandFailedErrorWrapper) shouldBe true
+            (fixture.events.last().phase is ParticipantPhase.FailedWrapper) shouldBe true
+            fixture.participant.status(attempt).activeProjection shouldBe baseline
             fixture.runtimes[0].operations shouldContainExactly listOf("activate", "quiesce", "resume")
             fixture.runtimes[1].operations shouldContainExactly listOf("activate", "close")
             currentCoroutineContext().isActive shouldBe true
@@ -522,19 +538,19 @@ val HostRolloutParticipantTest by testSuite {
     test("external caller deadline remains cancellation rather than lifecycle failure") {
         runTest {
             val fixture = participantFixture(this)
-            val attempt = RolloutAttempt(1, DeploymentGeneration(1))
+            val attempt = attempt(1, 1)
             val reference = fixture.reference("external deadline")
             fixture.projections[reference] = fixture.projection(reference)
-            fixture.participant.handle(fixture.envelope(attempt, reference, RolloutCommand.Stage))
+            fixture.participant.apply(fixture.stage(attempt, reference))
             fixture.runtimes.single().suspendOn += "activate"
             shouldThrow<kotlinx.coroutines.TimeoutCancellationException> {
                 withTimeout(100.milliseconds) {
-                    fixture.participant.handle(fixture.envelope(attempt, reference, RolloutCommand.Commit))
+                    fixture.participant.apply(fixture.commit(attempt, reference))
                 }
             }
-            fixture.events.none { it.status is ParticipantStatus.Failed } shouldBe true
+            fixture.events.none { it.phase is ParticipantPhase.FailedWrapper } shouldBe true
             fixture.runtimes.single().operations shouldContainExactly listOf("activate", "close")
-            fixture.participant.currentStatus(attempt) shouldBe ParticipantStatus.Idle(attempt, fixture.serviceId)
+            fixture.participant.status(attempt) shouldBe fixture.idle(attempt)
             currentCoroutineContext().isActive shouldBe true
             fixture.participant.close()
         }
@@ -543,26 +559,24 @@ val HostRolloutParticipantTest by testSuite {
     test("failed candidate activation restores the complete baseline") {
         runTest {
             val fixture = participantFixture(this)
-            val baselineAttempt = RolloutAttempt(1, DeploymentGeneration(1))
+            val baselineAttempt = attempt(1, 1)
             val baseline = fixture.reference("baseline")
             fixture.projections[baseline] = fixture.projection(baseline)
-            fixture.participant.handle(fixture.envelope(baselineAttempt, baseline, RolloutCommand.Stage))
-            fixture.participant.handle(fixture.envelope(baselineAttempt, baseline, RolloutCommand.Commit))
+            fixture.participant.apply(fixture.stage(baselineAttempt, baseline))
+            fixture.participant.apply(fixture.commit(baselineAttempt, baseline))
 
-            val candidateAttempt = RolloutAttempt(2, DeploymentGeneration(2))
+            val candidateAttempt = attempt(2, 2)
             val candidate = fixture.reference("candidate")
             fixture.projections[candidate] = fixture.projection(candidate)
-            fixture.participant.handle(fixture.envelope(candidateAttempt, candidate, RolloutCommand.Stage))
+            fixture.participant.apply(fixture.stage(candidateAttempt, candidate))
             fixture.runtimes[1].failOn += "activate"
 
-            val result = fixture.participant.handle(fixture.envelope(candidateAttempt, candidate, RolloutCommand.Commit))
+            val result = fixture.participant.apply(fixture.commit(candidateAttempt, candidate))
 
-            result.accepted shouldBe false
-            result.internalFailure shouldBe true
+            (result is ApplyRolloutCommandResponse.CommandFailedErrorWrapper) shouldBe true
             fixture.runtimes[0].operations shouldContainExactly listOf("activate", "quiesce", "resume")
             fixture.runtimes[1].operations shouldContainExactly listOf("activate", "close")
-            val status = fixture.participant.currentStatus(candidateAttempt) as ParticipantStatus.Active
-            status.current.projection shouldBe baseline
+            fixture.participant.status(candidateAttempt).activeProjection shouldBe baseline
             fixture.participant.close()
         }
     }
@@ -570,28 +584,28 @@ val HostRolloutParticipantTest by testSuite {
     test("unavailable rollback target preserves the active runtime and health reporting") {
         runTest {
             val fixture = participantFixture(this)
-            val attempt = RolloutAttempt(1, DeploymentGeneration(1))
+            val attempt = attempt(1, 1)
             val reference = fixture.reference("active")
             fixture.projections[reference] = fixture.projection(reference)
-            fixture.participant.handle(fixture.envelope(attempt, reference, RolloutCommand.Stage))
-            fixture.participant.handle(fixture.envelope(attempt, reference, RolloutCommand.Commit))
+            fixture.participant.apply(fixture.stage(attempt, reference))
+            fixture.participant.apply(fixture.commit(attempt, reference))
             runCurrent()
-            val rollback =
-                RolloutCommand.Rollback(mapOf(fixture.serviceId to RollbackTarget.Projection(fixture.reference("missing"))))
+            val rollback = RollbackTarget.ProjectionWrapper(fixture.reference("missing"))
 
-            val result = fixture.participant.handle(fixture.envelope(attempt, reference, rollback))
+            val result = fixture.participant.apply(fixture.rollback(attempt, reference, rollback))
 
-            result.accepted shouldBe false
-            result.internalFailure shouldBe false
+            result shouldBe
+                ApplyRolloutCommandResponse.createCommandRejectedError(
+                    serviceId = "service",
+                    reason = "The requested rollback projection is not retained.",
+                )
             fixture.runtimes.single().operations shouldContainExactly listOf("activate")
             fixture.runtimes
                 .single()
                 .healthState.value = RuntimeHealth.Unhealthy("still monitored")
             runCurrent()
-            val status = fixture.events.last().status as ParticipantStatus.Active
-            status.current.health shouldBe
-                com.typewritermc.loader.rollout.RuntimeHealthSnapshot
-                    .Unhealthy(listOf("still monitored"))
+            val status = fixture.events.last().phase as ParticipantPhase.ActiveWrapper
+            status.value.current.health shouldBe ProjectionHealth.createUnhealthy(reasons = listOf("still monitored"))
             fixture.participant.close()
         }
     }
@@ -599,14 +613,14 @@ val HostRolloutParticipantTest by testSuite {
     test("failed fresh activation leaves the host empty") {
         runTest {
             val fixture = participantFixture(this)
-            val attempt = RolloutAttempt(1, DeploymentGeneration(1))
+            val attempt = attempt(1, 1)
             val reference = fixture.reference("fresh failure")
             fixture.projections[reference] = fixture.projection(reference)
-            fixture.participant.handle(fixture.envelope(attempt, reference, RolloutCommand.Stage))
+            fixture.participant.apply(fixture.stage(attempt, reference))
             fixture.runtimes.single().failOn += "activate"
 
-            fixture.participant.handle(fixture.envelope(attempt, reference, RolloutCommand.Commit)).accepted shouldBe false
-            fixture.participant.currentStatus(attempt) shouldBe ParticipantStatus.Idle(attempt, fixture.serviceId)
+            fixture.participant.apply(fixture.commit(attempt, reference)) shouldBe fixture.failed("Fixture activate failure")
+            fixture.participant.status(attempt) shouldBe fixture.idle(attempt)
             fixture.runtimes.single().operations shouldContainExactly listOf("activate", "close")
             fixture.stagedContexts.size shouldBe 1
             fixture.participant.close()
@@ -616,15 +630,15 @@ val HostRolloutParticipantTest by testSuite {
     test("rollback to empty closes a fresh host without loading an older runtime") {
         runTest {
             val fixture = participantFixture(this)
-            val attempt = RolloutAttempt(1, DeploymentGeneration(1))
+            val attempt = attempt(1, 1)
             val reference = fixture.reference("fresh")
             fixture.projections[reference] = fixture.projection(reference)
-            fixture.participant.handle(fixture.envelope(attempt, reference, RolloutCommand.Stage))
-            fixture.participant.handle(fixture.envelope(attempt, reference, RolloutCommand.Commit))
-            val rollback = RolloutCommand.Rollback(mapOf(fixture.serviceId to RollbackTarget.Empty))
+            fixture.participant.apply(fixture.stage(attempt, reference))
+            fixture.participant.apply(fixture.commit(attempt, reference))
+            val rollback = RollbackTarget.EMPTY
 
-            fixture.participant.handle(fixture.envelope(attempt, reference, rollback)).accepted shouldBe true
-            fixture.participant.currentStatus(attempt) shouldBe ParticipantStatus.Idle(attempt, fixture.serviceId)
+            fixture.participant.apply(fixture.rollback(attempt, reference, rollback)) shouldBe fixture.accepted
+            fixture.participant.status(attempt) shouldBe fixture.idle(attempt)
             fixture.runtimes.single().operations shouldContainExactly listOf("activate", "quiesce", "close")
             fixture.stagedContexts.size shouldBe 1
             fixture.participant.close()
@@ -634,29 +648,25 @@ val HostRolloutParticipantTest by testSuite {
     test("rollback restores the exact retained projection") {
         runTest {
             val fixture = participantFixture(this)
-            val baselineAttempt = RolloutAttempt(1, DeploymentGeneration(1))
+            val baselineAttempt = attempt(1, 1)
             val baseline = fixture.reference("baseline")
             fixture.projections[baseline] = fixture.projection(baseline)
-            fixture.participant.handle(fixture.envelope(baselineAttempt, baseline, RolloutCommand.Stage))
-            fixture.participant.handle(fixture.envelope(baselineAttempt, baseline, RolloutCommand.Commit))
+            fixture.participant.apply(fixture.stage(baselineAttempt, baseline))
+            fixture.participant.apply(fixture.commit(baselineAttempt, baseline))
 
-            val candidateAttempt = RolloutAttempt(2, DeploymentGeneration(2))
+            val candidateAttempt = attempt(2, 2)
             val candidate = fixture.reference("candidate")
             fixture.projections[candidate] = fixture.projection(candidate)
-            fixture.participant.handle(fixture.envelope(candidateAttempt, candidate, RolloutCommand.Stage))
-            fixture.participant.handle(fixture.envelope(candidateAttempt, candidate, RolloutCommand.Commit))
-            val rollback =
-                RolloutCommand.Rollback(
-                    mapOf(fixture.serviceId to RollbackTarget.Projection(baseline)),
-                )
+            fixture.participant.apply(fixture.stage(candidateAttempt, candidate))
+            fixture.participant.apply(fixture.commit(candidateAttempt, candidate))
+            val rollback = RollbackTarget.ProjectionWrapper(baseline)
 
-            fixture.participant.handle(fixture.envelope(candidateAttempt, candidate, rollback)).accepted shouldBe true
-            fixture.participant.handle(fixture.envelope(candidateAttempt, candidate, rollback)).accepted shouldBe true
+            fixture.participant.apply(fixture.rollback(candidateAttempt, candidate, rollback)) shouldBe fixture.accepted
+            fixture.participant.apply(fixture.rollback(candidateAttempt, candidate, rollback)) shouldBe fixture.accepted
 
             fixture.runtimes[1].operations shouldContainExactly listOf("activate", "quiesce", "close")
             fixture.runtimes[0].operations shouldContainExactly listOf("activate", "quiesce", "resume")
-            val status = fixture.participant.currentStatus(candidateAttempt) as ParticipantStatus.Active
-            status.current.projection shouldBe baseline
+            fixture.participant.status(candidateAttempt).activeProjection shouldBe baseline
             fixture.participant.close()
         }
     }
@@ -671,16 +681,56 @@ private class ParticipantFixture(
     val stagedContexts: MutableList<HostedDeploymentContext>,
     val classPaths: MutableList<List<Path>>,
     val runtimes: MutableList<RecordingRuntime>,
-    val events: MutableList<ParticipantStateChanged>,
+    val events: MutableList<ParticipantStatus>,
     val root: Path,
 ) {
+    val accepted = ApplyRolloutCommandResponse.createAccepted(serviceId = serviceId.value)
+
+    fun failed(reason: String) = ApplyRolloutCommandResponse.createCommandFailedError(serviceId = serviceId.value, reason = reason)
+
+    fun idle(attempt: RolloutAttempt) = ParticipantStatus(serviceId = serviceId.value, attempt = attempt, phase = ParticipantPhase.IDLE)
+
     fun reference(name: String) =
-        ProjectionReference(
-            realmId,
-            DeploymentGeneration(name.length.toLong()),
-            serviceId,
-            ArtifactDigest.sha256(name.encodeToByteArray()),
+        ProjectionReference.partial(
+            realmId = realmId.value,
+            generation = name.length.toLong(),
+            serviceId = serviceId.value,
+            blob = ArtifactDigest.sha256(name.encodeToByteArray()).toSkir(),
         )
+
+    fun stage(
+        attempt: RolloutAttempt,
+        reference: ProjectionReference,
+    ) = request(attempt, RolloutCommand.createStage(participants = projections(reference)))
+
+    fun commit(
+        attempt: RolloutAttempt,
+        reference: ProjectionReference,
+    ) = request(attempt, RolloutCommand.createCommit(participants = projections(reference)))
+
+    fun abort(
+        attempt: RolloutAttempt,
+        reference: ProjectionReference,
+    ) = request(attempt, RolloutCommand.createAbort(participants = projections(reference)))
+
+    fun rollback(
+        attempt: RolloutAttempt,
+        reference: ProjectionReference,
+        target: RollbackTarget,
+    ) = request(
+        attempt,
+        RolloutCommand.createRollBack(
+            participants = listOf(ParticipantRollback(serviceId = serviceId.value, projection = reference, target = target)),
+        ),
+    )
+
+    private fun projections(reference: ProjectionReference) =
+        listOf(ParticipantProjection(serviceId = serviceId.value, projection = reference))
+
+    private fun request(
+        attempt: RolloutAttempt,
+        command: RolloutCommand,
+    ) = ApplyRolloutCommandRequest(attempt = attempt, command = command)
 
     fun engineManifest(entrypointClass: String) =
         EngineManifest(
@@ -716,12 +766,6 @@ private class ParticipantFixture(
         host = host,
     )
 
-    fun envelope(
-        attempt: RolloutAttempt,
-        reference: ProjectionReference,
-        command: RolloutCommand,
-    ) = RolloutEnvelope(realmId, attempt, setOf(serviceId), mapOf(serviceId to reference), command)
-
     fun projection(
         reference: ProjectionReference,
         includeExtension: Boolean = false,
@@ -750,7 +794,7 @@ private class ParticipantFixture(
         val implementation = implementationTarget(runtime.coordinate.id, runtime.coordinate.version, runtime.digest)
         return HostDeploymentProjection(
             realmId.value,
-            reference.generation,
+            DeploymentGeneration(reference.generation),
             serviceId,
             listOf(ProjectedRuntime.primaryEngine(runtime).copy(implementation = implementation)),
             extensions,
@@ -798,7 +842,7 @@ private fun participantFixture(scope: TestScope): ParticipantFixture {
     val contexts = mutableListOf<HostedDeploymentContext>()
     val classPaths = mutableListOf<List<Path>>()
     val runtimes = mutableListOf<RecordingRuntime>()
-    val events = mutableListOf<ParticipantStateChanged>()
+    val events = mutableListOf<ParticipantStatus>()
     val blobs = FileDigestBlobStore(root)
     val shared = SharedArtifactService(realmId.value, blobs, FileSharedArtifactRepository(root.resolve("shared.cbor")))
     val host =
@@ -858,13 +902,21 @@ private fun participantFixture(scope: TestScope): ParticipantFixture {
                         }
                     }
             },
-            { event -> events += event },
+            { status -> events += status },
             scope,
             stager,
             1.seconds,
         )
     return ParticipantFixture(serviceId, realmId, host, participant, projections, contexts, classPaths, runtimes, events, root)
 }
+
+private fun attempt(
+    ordinal: Long,
+    generation: Long,
+) = RolloutAttempt(ordinal = ordinal, generation = generation)
+
+private val ParticipantStatus.activeProjection: ProjectionReference?
+    get() = (phase as? ParticipantPhase.ActiveWrapper)?.value?.current?.projection
 
 class TestHostedRuntimeEntrypoint : HostedRuntimeEntrypoint {
     override suspend fun stage(context: HostedDeploymentContext): StagedHostedRuntime = RecordingRuntime().also { stagedRuntime = it }

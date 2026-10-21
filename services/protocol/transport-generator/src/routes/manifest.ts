@@ -69,16 +69,6 @@ const ComponentName = z.string().regex(/^[a-z][a-z0-9-]*$/, {
   error: (issue) => `invalid component name ${JSON.stringify(issue.input)}`,
 });
 
-const KotlinSymbol = z.string().regex(/^[A-Za-z_][A-Za-z0-9_]*(\.[A-Za-z_][A-Za-z0-9_]*)*$/, {
-  error: (issue) => `invalid Kotlin symbol ${JSON.stringify(issue.input)}`,
-});
-
-const KotlinTarget = z.literal("loader_core", {
-  error: (issue) => `unsupported Kotlin generator target ${JSON.stringify(issue.input)}`,
-});
-
-const NativeKotlinFormat = z.literal("kotlin_serialization_cbor");
-
 /** Leading tokens that only the subject rule writes; an address never spells a family itself. */
 const FAMILY_PREFIXES = ["cloud", "typewriter", "service.to", "service.from"];
 
@@ -149,30 +139,6 @@ const Delivery = z.discriminatedUnion("kind", [
 
 const Updates = z.strictObject({ payload: Reference, address: Address, delivery: Delivery });
 
-const RequestResponseBinding = z.discriminatedUnion("kind", [
-  z.strictObject({ kind: z.literal("skir"), method: Reference }),
-  z.strictObject({
-    kind: z.literal("native_kotlin"),
-    format: NativeKotlinFormat,
-    target: KotlinTarget,
-    request_type: KotlinSymbol,
-    response_type: KotlinSymbol,
-    request_codec: KotlinSymbol,
-    response_codec: KotlinSymbol,
-  }),
-]);
-
-const EventBinding = z.discriminatedUnion("kind", [
-  z.strictObject({ kind: z.literal("skir"), payload: Reference }),
-  z.strictObject({
-    kind: z.literal("native_kotlin"),
-    format: NativeKotlinFormat,
-    target: KotlinTarget,
-    event_type: KotlinSymbol,
-    event_codec: KotlinSymbol,
-  }),
-]);
-
 const Operation = z.string().regex(/^[a-z][a-z0-9_]*(\.[a-z][a-z0-9_]*)*$/, {
   error: (issue) => `invalid operation name ${JSON.stringify(issue.input)}`,
 });
@@ -193,13 +159,13 @@ const Flow = z.discriminatedUnion("kind", [
   }),
   z.strictObject({
     kind: z.literal("scatter"),
-    binding: RequestResponseBinding,
+    method: Reference,
     operation: Operation,
     request: Address,
   }),
   z.strictObject({
     kind: z.literal("event"),
-    binding: EventBinding,
+    payload: Reference,
     operation: Operation,
     address: Address,
     delivery: Delivery,
@@ -229,14 +195,6 @@ export type RoleDeclaration = Readonly<z.output<typeof RoleDeclaration>> & {
 export type RoleDeclarations = ReadonlyMap<string, RoleDeclaration>;
 export type RequestFlow = Exclude<Flow, { kind: "event" }>;
 export type EventFlow = Extract<Flow, { kind: "event" }>;
-export type NativeKotlinRequestResponseBinding = Extract<
-  z.output<typeof RequestResponseBinding>,
-  { kind: "native_kotlin" }
->;
-export type NativeKotlinEventBinding = Extract<
-  z.output<typeof EventBinding>,
-  { kind: "native_kotlin" }
->;
 
 interface RouteCommon {
   readonly name: string;

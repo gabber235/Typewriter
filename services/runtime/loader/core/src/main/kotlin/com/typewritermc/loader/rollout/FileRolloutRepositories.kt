@@ -11,11 +11,13 @@ import com.typewritermc.services.libs.filetransfer.blob.BlobMetadata
 import com.typewritermc.services.libs.filetransfer.blob.BlobResult
 import com.typewritermc.services.libs.filetransfer.blob.DEFAULT_CHUNK_SIZE
 import com.typewritermc.services.libs.filetransfer.blob.TransferId
-import com.typewritermc.services.libs.registrar.ServiceId
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.cbor.Cbor
+import skirout.service.v1.rollout.ProjectionReference
+import skirout.service.v1.rollout.RolloutAttempt
+import skirout.service.v1.rollout.RuntimeVersion
 import java.nio.file.Files
 import java.nio.file.Path
 import java.nio.file.StandardCopyOption
@@ -50,43 +52,47 @@ class BlobProjectionRepository(
             blobs.complete(transfer).requireSuccess()
         }
         return ProjectionReference(
-            RealmId(projection.realmId),
-            projection.generation,
-            projection.serviceId,
-            digest,
-            projection.runtimes.associate { it.placement to it.artifact.coordinate.version },
+            realmId = projection.realmId,
+            generation = projection.generation.value,
+            serviceId = projection.serviceId.value,
+            blob = digest.toSkir(),
+            runtimeVersions =
+                projection.runtimes.map { runtime ->
+                    RuntimeVersion(placement = runtime.placement.toSkir(), version = runtime.artifact.coordinate.version.value)
+                },
         )
     }
 
     /** Downloads, bounds, authenticates, and validates projection bytes against the supplied reference. */
     override suspend fun fetch(reference: ProjectionReference): HostDeploymentProjection {
-        val metadata = blobs.metadata(reference.blob).requireSuccess()
+        val blob = reference.blob.toApi()
+        val metadata = blobs.metadata(blob).requireSuccess()
         require(metadata.size <= MAXIMUM_PROJECTION_SIZE) { "Deployment projection exceeds its maximum size." }
         val bytes = ByteArray(metadata.size.toInt())
         var offset = 0L
         while (offset < metadata.size) {
-            val chunk = blobs.read(reference.blob, offset, DEFAULT_CHUNK_SIZE).requireSuccess()
+            val chunk = blobs.read(blob, offset, DEFAULT_CHUNK_SIZE).requireSuccess()
             require(chunk.bytes.isNotEmpty()) { "Projection transfer ended before the declared blob size." }
             chunk.bytes.copyInto(bytes, offset.toInt())
             offset += chunk.bytes.size
         }
-        require(ArtifactDigest.sha256(bytes) == reference.blob) { "Deployment projection digest does not match." }
+        require(ArtifactDigest.sha256(bytes) == blob) { "Deployment projection digest does not match." }
         return HostDeploymentProjectionCodec.decode(bytes).also { projection ->
-            require(projection.realmId == reference.realmId.value) { "Deployment projection belongs to another Realm." }
-            require(projection.generation == reference.generation) { "Deployment projection generation does not match." }
-            require(projection.serviceId == reference.serviceId) { "Deployment projection belongs to another service." }
+            require(projection.realmId == reference.realmId) { "Deployment projection belongs to another Realm." }
+            require(projection.generation.value == reference.generation) { "Deployment projection generation does not match." }
+            require(projection.serviceId.value == reference.serviceId) { "Deployment projection belongs to another service." }
         }
     }
 }
 
 /**
- * Persists coordinator state and current and previous deployments for one Realm.
+ * Persists the attempt ordinal and the current and previous deployments for one Realm.
  *
- * A mutex serializes this instance and attempt ordinals survive restart. Events for other Realms are ignored. File
- * replacement is atomic when supported; disk failures propagate and no process lock is provided.
+ * A mutex serializes this instance and attempt ordinals survive restart. File replacement is atomic when supported;
+ * disk failures propagate and no process lock is provided.
  */
 class FileRolloutStateRepository(
-    private val realmId: RealmId,
+    realmId: RealmId,
     artifactsRoot: Path,
 ) : RolloutStateRepository {
     private val mutex = Mutex()
@@ -96,30 +102,15 @@ class FileRolloutStateRepository(
     /** Allocates and persists an ordinal before the coordinator sends any command for the generation. */
     override suspend fun nextAttempt(generation: DeploymentGeneration): RolloutAttempt =
         updateWithResult { current ->
-            val attempt = RolloutAttempt(current.lastAttemptOrdinal + 1, generation)
+            val attempt = RolloutAttempt(ordinal = current.lastAttemptOrdinal + 1, generation = generation.value)
             current.copy(lastAttemptOrdinal = attempt.ordinal) to attempt
         }
-
-    override suspend fun persist(rollout: PersistedRollout) = update { it.copy(rollout = rollout) }
-
-    override suspend fun participantStatuses(attempt: RolloutAttempt): Map<ServiceId, ParticipantStatus> =
-        mutex.withLock { stored.participants[attempt.ordinal].orEmpty() }
 
     override suspend fun committed(): CommittedDeployment? = mutex.withLock { stored.current }
 
     /** Moves the committed deployment to previous and makes [deployment] current in one state write. */
     override suspend fun commit(deployment: CommittedDeployment) =
         update { current -> current.copy(previous = current.current, current = deployment) }
-
-    /** Persists participant observations for this Realm and silently ignores events for another Realm. */
-    override suspend fun record(event: ParticipantStateChanged) {
-        if (event.realmId != realmId) return
-        update { current ->
-            val attempt = event.status.attempt.ordinal
-            val statuses = current.participants[attempt].orEmpty() + (event.status.serviceId to event.status)
-            current.copy(participants = current.participants + (attempt to statuses))
-        }
-    }
 
     suspend fun current(): CommittedDeployment? = committed()
 
@@ -145,13 +136,11 @@ class FileRolloutStateRepository(
 @Serializable
 private data class StoredRolloutState(
     val lastAttemptOrdinal: Long = 0,
-    val rollout: PersistedRollout? = null,
     val current: CommittedDeployment? = null,
     val previous: CommittedDeployment? = null,
-    val participants: Map<Long, Map<ServiceId, ParticipantStatus>> = emptyMap(),
 )
 
-internal val rolloutCbor = Cbor { encodeDefaults = true }
+private val rolloutCbor = Cbor { encodeDefaults = true }
 
 private const val MAXIMUM_PROJECTION_SIZE = 4L * 1024L * 1024L
 

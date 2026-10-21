@@ -53,8 +53,8 @@ describe("subject rule", () => {
       derive("realm", "updates", address("editor.catalog.invalidate"), [role("realm_coordinator")], [role("organization_member")], roles),
     ).toEqual({ client: "service.from.{realm}.organization.{organization}.realm.editor.catalog.invalidate" });
     expect(
-      derive("realm", "event", address("rollout.state"), [role("realm_participant")], [role("realm_coordinator")], roles),
-    ).toEqual({ client: "service.to.{realm}.organization.{organization}.realm.rollout.state" });
+      derive("realm", "event", address("participant.report"), [role("realm_participant")], [role("realm_coordinator")], roles),
+    ).toEqual({ client: "service.to.{realm}.organization.{organization}.realm.participant.report" });
   });
 
   test("a role talking to a component crosses the bridge in both directions", () => {

@@ -33,28 +33,19 @@ import com.typewritermc.loader.deployment.DeploymentGeneration
 import com.typewritermc.loader.deployment.DeploymentSnapshot
 import com.typewritermc.loader.deployment.RealmDeploymentSelection
 import com.typewritermc.loader.deployment.projectFor
-import com.typewritermc.loader.rollout.ActiveBaseline
-import com.typewritermc.loader.rollout.ActiveProjectionReference
 import com.typewritermc.loader.rollout.BlobProjectionRepository
-import com.typewritermc.loader.rollout.CommandAcceptance
 import com.typewritermc.loader.rollout.CoordinatedRollout
 import com.typewritermc.loader.rollout.FileRolloutStateRepository
-import com.typewritermc.loader.rollout.ParticipantStateChanged
-import com.typewritermc.loader.rollout.ParticipantStatus
-import com.typewritermc.loader.rollout.ProbeParticipantStatus
-import com.typewritermc.loader.rollout.ProbeRealmHosts
-import com.typewritermc.loader.rollout.ProjectionReference
-import com.typewritermc.loader.rollout.RealmHostPresence
 import com.typewritermc.loader.rollout.RealmId
-import com.typewritermc.loader.rollout.RetainedProjection
-import com.typewritermc.loader.rollout.RolloutAttempt
-import com.typewritermc.loader.rollout.RolloutCommand
-import com.typewritermc.loader.rollout.RolloutEnvelope
 import com.typewritermc.loader.rollout.RolloutMessenger
-import com.typewritermc.loader.rollout.RuntimeHealthSnapshot
+import com.typewritermc.loader.rollout.commandKind
 import com.typewritermc.loader.rollout.deploymentSelectionOrNull
+import com.typewritermc.loader.rollout.projectionOf
+import com.typewritermc.loader.rollout.serviceIds
+import com.typewritermc.loader.rollout.toApi
 import com.typewritermc.loader.rollout.toChildRuntimeState
 import com.typewritermc.loader.rollout.toDesiredHostExecution
+import com.typewritermc.loader.rollout.toSkir
 import com.typewritermc.loader.shared.FileSharedArtifactRepository
 import com.typewritermc.loader.shared.SharedArtifactService
 import com.typewritermc.protocol.transport.RealmRouteScope
@@ -88,6 +79,20 @@ import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.withTimeout
 import skirout.kernel.v1.record_id.RecordId
 import skirout.kernel.v1.record_id.RecordIdKey
+import skirout.service.v1.rollout.ActiveProjection
+import skirout.service.v1.rollout.ApplyRolloutCommandRequest
+import skirout.service.v1.rollout.ApplyRolloutCommandResponse
+import skirout.service.v1.rollout.ParticipantPhase
+import skirout.service.v1.rollout.ParticipantStatus
+import skirout.service.v1.rollout.ProjectionHealth
+import skirout.service.v1.rollout.ProjectionReference
+import skirout.service.v1.rollout.QueryParticipantStatusRequest
+import skirout.service.v1.rollout.RealmHostPresence
+import skirout.service.v1.rollout.RollbackTarget
+import skirout.service.v1.rollout.RolloutAttempt
+import skirout.service.v1.rollout.RolloutCommand
+import skirout.service.v1.rollout.RolloutCommandKind
+import skirout.service.v1.rollout.RuntimeVersion
 import skirout.service.v1.topology.ChildRuntimeState
 import skirout.service.v1.topology.ChildRuntimeStatus
 import skirout.service.v1.topology.EngineInstance
@@ -108,18 +113,9 @@ import kotlin.time.TestTimeSource
 
 val ArtifactDistributionTest by testSuite {
     test("Realm deployment selection requires one unambiguous Realm host and permits no primary engine") {
-        val realmId = RealmId("realm")
         val host = ServiceId("combined")
-        val probe = ProbeRealmHosts(realmId)
-        val realmOnly =
-            RealmHostPresence(
-                probe.probeId,
-                host,
-                ArtifactVersion("1.0.0"),
-                setOf(RuntimePlacement.REALM),
-                null,
-            )
-        val combined = realmOnly.copy(assignedRoles = RuntimePlacement.entries.toSet())
+        val realmOnly = presence(host, setOf(RuntimePlacement.REALM))
+        val combined = presence(host, RuntimePlacement.entries.toSet())
 
         emptyList<RealmHostPresence>().deploymentSelectionOrNull() shouldBe null
         listOf(realmOnly).deploymentSelectionOrNull() shouldBe
@@ -130,26 +126,12 @@ val ArtifactDistributionTest by testSuite {
     }
 
     test("distinct observed service identities remain distinct in deployment selection") {
-        val realmId = RealmId("realm")
-        val probe = ProbeRealmHosts(realmId)
         val standalone = ServiceId("standalone-service")
         val paper = ServiceId("paper-service")
         val selection =
             listOf(
-                RealmHostPresence(
-                    probe.probeId,
-                    standalone,
-                    ArtifactVersion("1.0.0"),
-                    setOf(RuntimePlacement.REALM),
-                    null,
-                ),
-                RealmHostPresence(
-                    probe.probeId,
-                    paper,
-                    ArtifactVersion("1.0.0"),
-                    setOf(RuntimePlacement.PRIMARY_ENGINE),
-                    null,
-                ),
+                presence(standalone, setOf(RuntimePlacement.REALM)),
+                presence(paper, setOf(RuntimePlacement.PRIMARY_ENGINE)),
             ).deploymentSelectionOrNull()
 
         selection shouldBe
@@ -417,7 +399,7 @@ val ArtifactDistributionTest by testSuite {
 
             repository.fetch(reference) shouldBe projection
             shouldThrow<IllegalArgumentException> {
-                repository.fetch(reference.copy(serviceId = ServiceId("another")))
+                repository.fetch(reference.copy(serviceId = "another"))
             }
         }
     }
@@ -436,7 +418,7 @@ val ArtifactDistributionTest by testSuite {
                 val host = ServiceId("realm-service")
                 val hostApi = ArtifactVersion("1.0.0")
                 val assignedRoles = setOf(RuntimePlacement.REALM, RuntimePlacement.PANEL_ENGINE)
-                val presence = RealmHostPresence(ProbeRealmHosts(realmId).probeId, host, hostApi, assignedRoles, null)
+                val presence = presence(host, assignedRoles)
                 val observedSelection = requireNotNull(listOf(presence).deploymentSelectionOrNull())
                 val absentEngine = ServiceId("absent-engine")
                 val selection =
@@ -467,51 +449,34 @@ val ArtifactDistributionTest by testSuite {
                         primary.coordinate.id to engineManifest(primary),
                     )
                 val state = FileRolloutStateRepository(realmId, root)
-                val commands = mutableListOf<RolloutEnvelope>()
+                val commands = mutableListOf<ApplyRolloutCommandRequest>()
                 var currentStatus: ParticipantStatus? = null
                 var realmResponding = true
                 val messenger =
                     object : RolloutMessenger {
                         override suspend fun discover(
-                            probe: ProbeRealmHosts,
                             expected: Set<ServiceId>,
                             timeout: Duration,
-                        ) = if (realmResponding) listOf(presence.copy(probeId = probe.probeId)) else emptyList()
+                        ) = if (realmResponding) listOf(presence) else emptyList()
 
                         override suspend fun command(
-                            envelope: RolloutEnvelope,
+                            request: ApplyRolloutCommandRequest,
                             timeout: Duration,
-                        ): List<CommandAcceptance> {
-                            commands += envelope
-                            val reference = envelope.projections.getValue(host)
+                        ): List<ApplyRolloutCommandResponse> {
+                            commands += request
+                            val reference = request.projectionFor(host)
                             currentStatus =
-                                when (envelope.command) {
-                                    RolloutCommand.Stage -> {
-                                        ParticipantStatus.Staged(envelope.attempt, host, reference, ActiveBaseline.Empty)
-                                    }
-
-                                    RolloutCommand.Commit -> {
-                                        ParticipantStatus.Active(
-                                            envelope.attempt,
-                                            host,
-                                            ActiveProjectionReference(reference, RuntimeHealthSnapshot.Healthy),
-                                            RetainedProjection.None,
-                                        )
-                                    }
-
-                                    RolloutCommand.Abort -> {
-                                        ParticipantStatus.Idle(envelope.attempt, host)
-                                    }
-
-                                    is RolloutCommand.Rollback -> {
-                                        error("Rollback was not expected.")
-                                    }
+                                when (request.command) {
+                                    is RolloutCommand.StageWrapper -> status(request.attempt, host, staged(reference))
+                                    is RolloutCommand.CommitWrapper -> status(request.attempt, host, active(reference))
+                                    is RolloutCommand.AbortWrapper -> status(request.attempt, host, ParticipantPhase.IDLE)
+                                    else -> error("Rollback was not expected.")
                                 }
-                            return listOf(CommandAcceptance(host, true))
+                            return listOf(accepted(host))
                         }
 
                         override suspend fun statuses(
-                            probe: ProbeParticipantStatus,
+                            request: QueryParticipantStatusRequest,
                             expected: Set<ServiceId>,
                             timeout: Duration,
                         ): Map<ServiceId, ParticipantStatus> = currentStatus?.let { mapOf(host to it) }.orEmpty()
@@ -533,9 +498,11 @@ val ArtifactDistributionTest by testSuite {
                 rollout.rollOut(snapshot)
 
                 val committed = requireNotNull(state.current())
-                val projection = projectionRepository.fetch(committed.projections.getValue(host))
-                commands.map { it.command } shouldContainExactly listOf(RolloutCommand.Stage, RolloutCommand.Commit)
-                commands.forEach { it.participants shouldBe setOf(host) }
+                val reference = commands.first().projectionFor(host)
+                committed.projections shouldBe mapOf(host to reference.blob.toApi())
+                val projection = projectionRepository.fetch(reference)
+                commands.map { it.command.commandKind } shouldContainExactly listOf(RolloutCommandKind.STAGE, RolloutCommandKind.COMMIT)
+                commands.forEach { it.command.serviceIds shouldBe setOf(host.value) }
                 projection.runtimes.map { it.placement } shouldContainExactly
                     listOf(RuntimePlacement.PANEL_ENGINE, RuntimePlacement.REALM)
 
@@ -573,83 +540,69 @@ val ArtifactDistributionTest by testSuite {
                     primary.coordinate.id to engineManifest(primary),
                 )
             val state = FileRolloutStateRepository(realmId, root)
-            val commands = mutableListOf<RolloutEnvelope>()
+            val commands = mutableListOf<ApplyRolloutCommandRequest>()
             var currentStatus: ParticipantStatus? = null
-            var activeProjection: ActiveProjectionReference? = null
+            var activeProjection: ActiveProjection? = null
             var rejectCommit = false
             val messenger =
                 object : RolloutMessenger {
                     override suspend fun discover(
-                        probe: ProbeRealmHosts,
                         expected: Set<ServiceId>,
                         timeout: Duration,
-                    ) = listOf(
-                        RealmHostPresence(
-                            probe.probeId,
-                            host,
-                            ArtifactVersion("1.0.0"),
-                            RuntimePlacement.entries.toSet(),
-                            activeProjection,
-                        ),
-                    )
+                    ) = listOf(presence(host, RuntimePlacement.entries.toSet(), activeProjection))
 
                     override suspend fun command(
-                        envelope: RolloutEnvelope,
+                        request: ApplyRolloutCommandRequest,
                         timeout: Duration,
-                    ): List<CommandAcceptance> {
-                        commands += envelope
+                    ): List<ApplyRolloutCommandResponse> {
+                        commands += request
                         withTimeout(timeout) { delay(6.seconds) }
-                        val reference = envelope.projections.getValue(host)
-                        currentStatus =
-                            when (envelope.command) {
-                                RolloutCommand.Stage -> {
-                                    ParticipantStatus.Staged(
-                                        envelope.attempt,
-                                        host,
-                                        reference,
-                                        activeProjection?.let(ActiveBaseline::Present) ?: ActiveBaseline.Empty,
-                                    )
+                        val reference = request.projectionFor(host)
+                        val phase =
+                            when (val command = request.command) {
+                                is RolloutCommand.StageWrapper -> {
+                                    staged(reference, activeProjection)
                                 }
 
-                                RolloutCommand.Commit -> {
-                                    ParticipantStatus
-                                        .Active(
-                                            envelope.attempt,
-                                            host,
-                                            ActiveProjectionReference(reference, RuntimeHealthSnapshot.Healthy),
-                                            RetainedProjection.None,
-                                        ).also { activeProjection = it.current }
+                                is RolloutCommand.CommitWrapper -> {
+                                    active(reference).also { activeProjection = it.value.current }
                                 }
 
-                                RolloutCommand.Abort -> {
-                                    ParticipantStatus.Idle(envelope.attempt, host)
-                                }
-
-                                is RolloutCommand.Rollback -> {
-                                    when (val target = envelope.command.targets.getValue(host)) {
-                                        com.typewritermc.loader.rollout.RollbackTarget.Empty -> {
-                                            activeProjection = null
-                                            ParticipantStatus.Idle(envelope.attempt, host)
+                                is RolloutCommand.RollBackWrapper -> {
+                                    when (
+                                        val target =
+                                            command.value.participants
+                                                .findByKey(host.value)
+                                                ?.target
+                                    ) {
+                                        is RollbackTarget.ProjectionWrapper -> {
+                                            active(target.value).also { activeProjection = it.value.current }
                                         }
 
-                                        is com.typewritermc.loader.rollout.RollbackTarget.Projection -> {
-                                            ParticipantStatus
-                                                .Active(
-                                                    envelope.attempt,
-                                                    host,
-                                                    ActiveProjectionReference(target.reference, RuntimeHealthSnapshot.Healthy),
-                                                    RetainedProjection.None,
-                                                ).also { activeProjection = it.current }
+                                        else -> {
+                                            activeProjection = null
+                                            ParticipantPhase.IDLE
                                         }
                                     }
                                 }
+
+                                else -> {
+                                    ParticipantPhase.IDLE
+                                }
                             }
-                        state.record(ParticipantStateChanged(realmId, requireNotNull(currentStatus)))
-                        return listOf(CommandAcceptance(host, !(rejectCommit && envelope.command == RolloutCommand.Commit)))
+                        currentStatus = status(request.attempt, host, phase)
+                        val rejected = rejectCommit && request.command is RolloutCommand.CommitWrapper
+                        return listOf(
+                            if (rejected) {
+                                ApplyRolloutCommandResponse.createCommandRejectedError(serviceId = host.value, reason = "rejected")
+                            } else {
+                                accepted(host)
+                            },
+                        )
                     }
 
                     override suspend fun statuses(
-                        probe: ProbeParticipantStatus,
+                        request: QueryParticipantStatusRequest,
                         expected: Set<ServiceId>,
                         timeout: Duration,
                     ): Map<ServiceId, ParticipantStatus> = currentStatus?.let { mapOf(host to it) }.orEmpty()
@@ -673,15 +626,15 @@ val ArtifactDistributionTest by testSuite {
 
             val committed = requireNotNull(state.current())
             committed.snapshot shouldBe snapshot
-            commands.map { it.command } shouldContainExactly listOf(RolloutCommand.Stage, RolloutCommand.Commit)
-            commands.forEach { it.participants shouldBe setOf(host) }
+            commands.map { it.command.commandKind } shouldContainExactly listOf(RolloutCommandKind.STAGE, RolloutCommandKind.COMMIT)
+            commands.forEach { it.command.serviceIds shouldBe setOf(host.value) }
 
             commands.clear()
             activeProjection = null
             rollout.reconcileCommitted(committed)
 
-            commands.map { it.command } shouldContainExactly listOf(RolloutCommand.Stage, RolloutCommand.Commit)
-            commands.forEach { it.participants shouldBe setOf(host) }
+            commands.map { it.command.commandKind } shouldContainExactly listOf(RolloutCommandKind.STAGE, RolloutCommandKind.COMMIT)
+            commands.forEach { it.command.serviceIds shouldBe setOf(host.value) }
 
             rejectCommit = true
             for (reconcile in listOf(false, true)) {
@@ -690,9 +643,11 @@ val ArtifactDistributionTest by testSuite {
                 shouldThrow<IllegalArgumentException> {
                     if (reconcile) rollout.reconcileCommitted(committed) else rollout.rollOut(snapshot)
                 }
-                val rollback = commands.last().command as RolloutCommand.Rollback
-                rollback.targets.getValue(host) shouldBe com.typewritermc.loader.rollout.RollbackTarget.Empty
-                currentStatus shouldBe ParticipantStatus.Idle(commands.last().attempt, host)
+                val rollback = commands.last().command as RolloutCommand.RollBackWrapper
+                rollback.value.participants
+                    .findByKey(host.value)
+                    ?.target shouldBe RollbackTarget.EMPTY
+                currentStatus shouldBe status(commands.last().attempt, host, ParticipantPhase.IDLE)
                 state.current() shouldBe committed
             }
         }
@@ -775,57 +730,32 @@ val ArtifactDistributionTest by testSuite {
             val messenger =
                 object : RolloutMessenger {
                     override suspend fun discover(
-                        probe: ProbeRealmHosts,
                         expected: Set<ServiceId>,
                         timeout: Duration,
-                    ) = listOf(
-                        RealmHostPresence(
-                            probe.probeId,
-                            host,
-                            ArtifactVersion("1.0.0"),
-                            RuntimePlacement.entries.toSet(),
-                            null,
-                        ),
-                    )
+                    ) = listOf(presence(host, RuntimePlacement.entries.toSet()))
 
                     override suspend fun command(
-                        envelope: RolloutEnvelope,
+                        request: ApplyRolloutCommandRequest,
                         timeout: Duration,
-                    ): List<CommandAcceptance> {
-                        val reference = envelope.projections.getValue(host)
-                        status =
-                            when (envelope.command) {
-                                RolloutCommand.Stage -> {
-                                    ParticipantStatus.Staged(envelope.attempt, host, reference, ActiveBaseline.Empty)
-                                }
-
-                                RolloutCommand.Commit -> {
-                                    ParticipantStatus.Active(
-                                        envelope.attempt,
-                                        host,
-                                        ActiveProjectionReference(reference, RuntimeHealthSnapshot.Healthy),
-                                        RetainedProjection.None,
-                                    )
-                                }
-
-                                RolloutCommand.Abort -> {
-                                    ParticipantStatus.Idle(envelope.attempt, host)
-                                }
-
-                                is RolloutCommand.Rollback -> {
-                                    ParticipantStatus.Idle(envelope.attempt, host)
-                                }
+                    ): List<ApplyRolloutCommandResponse> {
+                        val reference = request.projectionFor(host)
+                        val phase =
+                            when (request.command) {
+                                is RolloutCommand.StageWrapper -> staged(reference)
+                                is RolloutCommand.CommitWrapper -> active(reference)
+                                else -> ParticipantPhase.IDLE
                             }
-                        return listOf(CommandAcceptance(host, true))
+                        status = status(request.attempt, host, phase)
+                        return listOf(accepted(host))
                     }
 
                     override suspend fun statuses(
-                        probe: ProbeParticipantStatus,
+                        request: QueryParticipantStatusRequest,
                         expected: Set<ServiceId>,
                         timeout: Duration,
                     ): Map<ServiceId, ParticipantStatus> {
                         val current = status ?: return emptyMap()
-                        if (current is ParticipantStatus.Active) {
+                        if (current.phase is ParticipantPhase.ActiveWrapper) {
                             activeStatusCalls++
                             timeSource += 100.milliseconds
                             if (activeStatusCalls == 2) return emptyMap()
@@ -900,22 +830,16 @@ val ArtifactDistributionTest by testSuite {
 
     test("participant health maps to backend execution state") {
         val serviceId = ServiceId("service")
-        val generation = DeploymentGeneration(1)
         val reference =
             ProjectionReference(
-                realmId = RealmId("realm"),
-                generation = generation,
-                serviceId = serviceId,
-                blob = ArtifactDigest.sha256("projection".encodeToByteArray()),
-                runtimeVersions = mapOf(RuntimePlacement.PRIMARY_ENGINE to ArtifactVersion("1.2.3")),
+                realmId = "realm",
+                generation = 1,
+                serviceId = serviceId.value,
+                blob = ArtifactDigest.sha256("projection".encodeToByteArray()).toSkir(),
+                runtimeVersions = listOf(RuntimeVersion(placement = RuntimePlacement.PRIMARY_ENGINE.toSkir(), version = "1.2.3")),
             )
-        val status =
-            ParticipantStatus.Active(
-                attempt = RolloutAttempt(1, generation),
-                serviceId = serviceId,
-                current = ActiveProjectionReference(reference, RuntimeHealthSnapshot.Healthy),
-                retained = RetainedProjection.None,
-            )
+        val attempt = RolloutAttempt(ordinal = 1, generation = 1)
+        val status = status(attempt, serviceId, active(reference))
         val now = Instant.parse("2026-09-02T00:00:00Z")
 
         status.toChildRuntimeState(now, RuntimePlacement.PRIMARY_ENGINE) shouldBe
@@ -925,8 +849,9 @@ val ArtifactDistributionTest by testSuite {
                 message = null,
                 updatedAt = now,
             )
-        status
-            .copy(current = status.current.copy(health = RuntimeHealthSnapshot.Unhealthy(listOf("probe failed"))))
+        val unhealthy =
+            ActiveProjection(projection = reference, health = ProjectionHealth.createUnhealthy(reasons = listOf("probe failed")))
+        status(attempt, serviceId, ParticipantPhase.createActive(current = unhealthy, retained = null))
             .toChildRuntimeState(now, RuntimePlacement.PRIMARY_ENGINE) shouldBe
             ChildRuntimeState(
                 status = ChildRuntimeStatus.FAILED,
@@ -1096,3 +1021,33 @@ private fun writeArtifactJar(
         archive.closeEntry()
     }
 }
+
+private fun presence(
+    host: ServiceId,
+    roles: Set<RuntimePlacement>,
+    activeProjection: ActiveProjection? = null,
+) = RealmHostPresence(
+    serviceId = host.value,
+    hostApi = "1.0.0",
+    assignedRoles = roles.map { it.toSkir() },
+    activeProjection = activeProjection,
+)
+
+private fun ApplyRolloutCommandRequest.projectionFor(host: ServiceId): ProjectionReference =
+    requireNotNull(command.projectionOf(host.value))
+
+private fun accepted(host: ServiceId) = ApplyRolloutCommandResponse.createAccepted(serviceId = host.value)
+
+private fun status(
+    attempt: RolloutAttempt,
+    host: ServiceId,
+    phase: ParticipantPhase,
+) = ParticipantStatus(serviceId = host.value, attempt = attempt, phase = phase)
+
+private fun staged(
+    reference: ProjectionReference,
+    baseline: ActiveProjection? = null,
+) = ParticipantPhase.createStaged(candidate = reference, baseline = baseline)
+
+private fun active(reference: ProjectionReference) =
+    ParticipantPhase.createActive(current = ActiveProjection(projection = reference, health = ProjectionHealth.HEALTHY), retained = null)

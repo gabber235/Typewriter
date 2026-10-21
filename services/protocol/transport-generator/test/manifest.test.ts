@@ -20,21 +20,20 @@ const parse = (routes: string, components = ["user-organization"]) =>
 describe("manifest admission", () => {
   test("parses the complete route inventory", () => {
     const manifest = committedManifest();
-    expect(manifest.routes).toHaveLength(65);
+    expect(manifest.routes).toHaveLength(64);
     const methods = new Set<string>();
     const payloads = new Set<string>();
     for (const { flow } of manifest.routes) {
-      if (flow.kind === "unary" || flow.kind === "watch") {
+      if (flow.kind === "event") {
+        payloads.add(symbolRefText(flow.payload));
+      } else {
         methods.add(symbolRefText(flow.method));
       }
       if (flow.kind === "watch") {
         payloads.add(symbolRefText(flow.updates.payload));
       }
-      if (flow.kind === "event" && flow.binding.kind === "skir") {
-        payloads.add(symbolRefText(flow.binding.payload));
-      }
     }
-    expect(methods.size).toBe(55);
+    expect(methods.size).toBe(58);
     expect(payloads.size).toBe(17);
   });
 
@@ -137,7 +136,7 @@ describe("manifest admission", () => {
     server: { component: user-organization }
     flow:
       kind: event
-      binding: { kind: skir, payload: "organization/v1/presence.skir:PresenceEvent" }
+      payload: "organization/v1/presence.skir:PresenceEvent"
       operation: event.callers
       address: user.{user}.event
       delivery: { kind: transient }
@@ -192,19 +191,19 @@ ${unary("x", "{ role: authenticated_user }", "user.{user}.sample").split("\n").s
     ).toThrow('Unrecognized key: "grants"');
   });
 
-  test("rejects unsupported native targets and malformed Skir references", () => {
+  test("rejects the removed bindings and malformed Skir references", () => {
     expect(() =>
-      parse(`  - name: native_target
+      parse(`  - name: native_binding
     scope: realm
     callers: [{ role: realm_coordinator }]
     server: { role: realm_participant }
     flow:
       kind: scatter
-      binding: { kind: native_kotlin, format: kotlin_serialization_cbor, target: panel, request_type: a.B, response_type: a.C, request_codec: a.D.e, response_codec: a.D.f }
-      operation: native.target
+      binding: { kind: native_kotlin, format: kotlin_serialization_cbor, target: loader_core, request_type: a.B, response_type: a.C, request_codec: a.D.e, response_codec: a.D.f }
+      operation: native.binding
       request: rollout.probe
 `, []),
-    ).toThrow('unsupported Kotlin generator target "panel"');
+    ).toThrow('Unrecognized key: "binding"');
     expect(() =>
       parse(
         unary("bad_reference", "{ role: authenticated_user }", "user.{user}.sample").replace(

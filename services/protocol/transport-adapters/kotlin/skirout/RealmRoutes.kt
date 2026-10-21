@@ -6,6 +6,7 @@ import com.typewritermc.services.libs.communicator.contract.OperationName
 import com.typewritermc.services.libs.communicator.contract.ResponseClassification
 import com.typewritermc.services.libs.communicator.contract.ResponsePolicy
 import com.typewritermc.services.libs.communicator.skir.skirEventContract
+import com.typewritermc.services.libs.communicator.skir.skirScatterContract
 import com.typewritermc.services.libs.communicator.skir.skirUnaryContract
 import com.typewritermc.services.libs.communicator.skir.skirWatchContract
 import skirout.editor.v1.authoring.CommitPreparedEdit
@@ -35,6 +36,9 @@ import skirout.service.v1.artifact.FetchSharedArtifactCatalog
 import skirout.service.v1.artifact.PublishSharedArtifact
 import skirout.service.v1.artifact.ReadArtifactBlob
 import skirout.service.v1.artifact.WriteArtifactBlobChunk
+import skirout.service.v1.rollout.ApplyRolloutCommand
+import skirout.service.v1.rollout.ProbeRealmHosts
+import skirout.service.v1.rollout.QueryParticipantStatus
 
 private val catalogFetchResultPolicy = ResponsePolicy<skirout.editor.v1.catalog.CatalogFetchResult>(
     skirout.editor.v1.catalog.CatalogFetchResult.InternalErrorWrapper(skirout.kernel.v1.errors.InternalError.partial()),
@@ -370,6 +374,40 @@ private val completeArtifactBlobWriteResponsePolicy = ResponsePolicy<skirout.ser
     }
 }
 
+private val probeRealmHostsResponsePolicy = ResponsePolicy<skirout.service.v1.rollout.ProbeRealmHostsResponse>(
+    skirout.service.v1.rollout.ProbeRealmHostsResponse.InternalErrorWrapper(skirout.kernel.v1.errors.InternalError.partial()),
+) { response ->
+    when (response.kind) {
+        skirout.service.v1.rollout.ProbeRealmHostsResponse.Kind.PRESENT_WRAPPER -> ResponseClassification.success("present")
+        skirout.service.v1.rollout.ProbeRealmHostsResponse.Kind.INTERNAL_ERROR_WRAPPER -> ResponseClassification.internalError("internal-error")
+        else -> ResponseClassification.internalError("unknown")
+    }
+}
+
+private val applyRolloutCommandResponsePolicy = ResponsePolicy<skirout.service.v1.rollout.ApplyRolloutCommandResponse>(
+    skirout.service.v1.rollout.ApplyRolloutCommandResponse.InternalErrorWrapper(skirout.kernel.v1.errors.InternalError.partial()),
+) { response ->
+    when (response.kind) {
+        skirout.service.v1.rollout.ApplyRolloutCommandResponse.Kind.ACCEPTED_WRAPPER -> ResponseClassification.success("accepted")
+        skirout.service.v1.rollout.ApplyRolloutCommandResponse.Kind.STALE_ATTEMPT_ERROR_WRAPPER -> ResponseClassification.domainError("stale-attempt-error")
+        skirout.service.v1.rollout.ApplyRolloutCommandResponse.Kind.ATTEMPT_CONFLICT_ERROR_WRAPPER -> ResponseClassification.domainError("attempt-conflict-error")
+        skirout.service.v1.rollout.ApplyRolloutCommandResponse.Kind.COMMAND_REJECTED_ERROR_WRAPPER -> ResponseClassification.domainError("command-rejected-error")
+        skirout.service.v1.rollout.ApplyRolloutCommandResponse.Kind.COMMAND_FAILED_ERROR_WRAPPER -> ResponseClassification.domainError("command-failed-error")
+        skirout.service.v1.rollout.ApplyRolloutCommandResponse.Kind.INTERNAL_ERROR_WRAPPER -> ResponseClassification.internalError("internal-error")
+        else -> ResponseClassification.internalError("unknown")
+    }
+}
+
+private val queryParticipantStatusResponsePolicy = ResponsePolicy<skirout.service.v1.rollout.QueryParticipantStatusResponse>(
+    skirout.service.v1.rollout.QueryParticipantStatusResponse.InternalErrorWrapper(skirout.kernel.v1.errors.InternalError.partial()),
+) { response ->
+    when (response.kind) {
+        skirout.service.v1.rollout.QueryParticipantStatusResponse.Kind.STATUS_WRAPPER -> ResponseClassification.success("status")
+        skirout.service.v1.rollout.QueryParticipantStatusResponse.Kind.INTERNAL_ERROR_WRAPPER -> ResponseClassification.internalError("internal-error")
+        else -> ResponseClassification.internalError("unknown")
+    }
+}
+
 private val editorCatalogFetchRequestAddress = "service.to.{realm}.organization.{organization}.realm.editor.catalog.fetch".realmTemplate()
 val RealmRouteScope.editorCatalogFetch get() = skirUnaryContract(
     method = FetchEditorCatalog, name = OperationName.of("editor.catalog.fetch"),
@@ -546,4 +584,22 @@ private val sharedBlobCompleteRequestAddress = "service.to.{realm}.organization.
 val RealmRouteScope.sharedBlobComplete get() = skirUnaryContract(
     method = CompleteArtifactBlobWrite, name = OperationName.of("shared.blob.complete"),
     address = sharedBlobCompleteRequestAddress.subscribedAt(this), responsePolicy = completeArtifactBlobWriteResponsePolicy,
+)
+
+private val rolloutProbeRequestAddress = "service.from.{realm}.organization.{organization}.realm.rollout.probe".realmTemplate()
+val RealmRouteScope.rolloutProbe get() = skirScatterContract(
+    method = ProbeRealmHosts, name = OperationName.of("realm.rollout.probe"),
+    address = rolloutProbeRequestAddress.subscribedAt(this), responsePolicy = probeRealmHostsResponsePolicy,
+)
+
+private val rolloutCommandRequestAddress = "service.from.{realm}.organization.{organization}.realm.rollout.command".realmTemplate()
+val RealmRouteScope.rolloutCommand get() = skirScatterContract(
+    method = ApplyRolloutCommand, name = OperationName.of("realm.rollout.command"),
+    address = rolloutCommandRequestAddress.subscribedAt(this), responsePolicy = applyRolloutCommandResponsePolicy,
+)
+
+private val rolloutStatusRequestAddress = "service.from.{realm}.organization.{organization}.realm.rollout.status".realmTemplate()
+val RealmRouteScope.rolloutStatus get() = skirScatterContract(
+    method = QueryParticipantStatus, name = OperationName.of("realm.rollout.status"),
+    address = rolloutStatusRequestAddress.subscribedAt(this), responsePolicy = queryParticipantStatusResponsePolicy,
 )

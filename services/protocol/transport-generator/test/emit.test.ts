@@ -3,7 +3,7 @@ import { describe, expect, test } from "bun:test";
 import { generatorFor, type Target } from "../src/index.js";
 import { methodResponses } from "../src/outcomes.js";
 import { emitDart } from "../src/routes/emit/dart.js";
-import { emitKotlin, emitKotlinLoader } from "../src/routes/emit/kotlin.js";
+import { emitKotlin } from "../src/routes/emit/kotlin.js";
 import { emitRust } from "../src/routes/emit/rust.js";
 import { symbolProviders } from "../src/symbols.js";
 import { committedRoutes, loadSkirInput, MANIFEST_PATH } from "./support.js";
@@ -15,16 +15,8 @@ function section(code: string, start: string, end: string): string {
 }
 
 describe("route emission", () => {
-  test("the complete inventory emits loader and backend routes", async () => {
+  test("the complete inventory emits backend routes", async () => {
     const { input, resolved } = await committedRoutes();
-    const [loader, ...otherLoaderFiles] = emitKotlinLoader(resolved);
-    expect(otherLoaderFiles).toEqual([]);
-    expect(loader!.path).toBe("RolloutRoutes.kt");
-    expect(loader!.code).toContain("fun RealmRouteScope.realmHostsProbe");
-    expect(loader!.code).toContain("RolloutCodecs.probeRequest");
-    expect(loader!.code).toContain("val RealmRouteScope.realmRolloutState");
-    expect(loader!.code).toContain("RolloutCodecs.participantState");
-
     const [rust, ...otherRustFiles] = emitRust(resolved, symbolProviders(input).rust, methodResponses(input));
     expect(otherRustFiles).toEqual([]);
     const code = rust!.code;
@@ -80,15 +72,32 @@ describe("route emission", () => {
   test("Kotlin route scopes are hand written once, not emitted", async () => {
     const { input, resolved } = await committedRoutes();
     const [realm, service] = emitKotlin(resolved, symbolProviders(input).kotlin);
-    const [loader] = emitKotlinLoader(resolved);
-    for (const file of [realm!, loader!]) {
-      expect(file.code).toContain("import com.typewritermc.protocol.transport.RealmRouteScope\n");
-      expect(file.code).toContain("import com.typewritermc.protocol.transport.realmTemplate\n");
-      expect(file.code).not.toContain("data class RealmRouteScope");
-      expect(file.code).not.toContain("addressTemplate(");
-    }
+    expect(realm!.code).toContain("import com.typewritermc.protocol.transport.RealmRouteScope\n");
+    expect(realm!.code).toContain("import com.typewritermc.protocol.transport.realmTemplate\n");
+    expect(realm!.code).not.toContain("data class RealmRouteScope");
+    expect(realm!.code).not.toContain("addressTemplate(");
     expect(service!.code).toContain("import com.typewritermc.protocol.transport.serviceTemplate\n");
     expect(service!.code).not.toContain("data class ServiceRouteScope");
+  });
+
+  test("rollout scatter routes take Skir methods with generated policies", async () => {
+    const { input, resolved } = await committedRoutes();
+    const [realm, service] = emitKotlin(resolved, symbolProviders(input).kotlin);
+    const command = section(realm!.code, "val RealmRouteScope.rolloutCommand get() =", "\n)\n");
+    expect(command).toContain("skirScatterContract(");
+    expect(command).toContain("method = ApplyRolloutCommand, name = OperationName.of(\"realm.rollout.command\"),");
+    expect(command).toContain("responsePolicy = applyRolloutCommandResponsePolicy,");
+    expect(realm!.code).toContain("import skirout.service.v1.rollout.ApplyRolloutCommand\n");
+    const policy = section(realm!.code, "private val applyRolloutCommandResponsePolicy =", "\n}\n");
+    expect(policy).toContain(
+      'ApplyRolloutCommandResponse.Kind.COMMAND_FAILED_ERROR_WRAPPER -> ResponseClassification.domainError("command-failed-error")',
+    );
+    expect(policy).toContain("ApplyRolloutCommandResponse.InternalErrorWrapper(");
+    for (const route of ["rolloutProbe", "rolloutStatus"]) {
+      expect(realm!.code).toContain(`val RealmRouteScope.${route} get() = skirScatterContract(`);
+    }
+    expect(realm!.code).not.toContain("rollout.state");
+    expect(service!.code).not.toContain("skirScatterContract");
   });
 
   test("Dart subjects interpolate tokens the hand written segment checks validated", async () => {
@@ -165,7 +174,6 @@ describe("reply framing limits", () => {
 describe("generator entry points", () => {
   const targets: Array<[Target, string[]]> = [
     ["kotlin", ["RealmRoutes.kt", "ServiceRegistrationRoutes.kt", "TransportLimits.kt"]],
-    ["kotlin-loader", ["RolloutRoutes.kt"]],
     ["dart", ["transport_routes.dart"]],
     ["rust", ["mod.rs"]],
   ];

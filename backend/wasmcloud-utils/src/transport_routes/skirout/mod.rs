@@ -203,9 +203,6 @@ impl crate::transport::RealmScope {
                 grants.publish.insert(format!(
                     "service.from.{realm}.organization.{organization}.realm.rollout.status"
                 ));
-                grants.subscribe.insert(format!(
-                    "service.to.{realm}.organization.{organization}.realm.rollout.state"
-                ));
             }
             RealmRole::RealmParticipant => {
                 grants
@@ -251,9 +248,6 @@ impl crate::transport::RealmScope {
                 ));
                 grants.subscribe.insert(format!(
                     "service.from.{realm}.organization.{organization}.realm.rollout.status"
-                ));
-                grants.publish.insert(format!(
-                    "service.to.{realm}.organization.{organization}.realm.rollout.state"
                 ));
             }
         }

@@ -47,6 +47,8 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
+import skirout.service.v1.rollout.ParticipantStatus
+import skirout.service.v1.rollout.RealmHostPresence
 import java.nio.file.Path
 import kotlin.time.Duration.Companion.hours
 import kotlin.time.Duration.Companion.seconds
@@ -291,10 +293,7 @@ internal class AssignmentRuntime(
             },
             projections,
             VerifiedArtifactCache(sharedArtifacts, localBlobs),
-            { event ->
-                status = event.status
-                ReconnectingParticipantStatePublisher(mutableMessaging).publish(event)
-            },
+            { changed -> status = changed },
             scope,
             telemetry = telemetry,
         )
@@ -329,30 +328,20 @@ internal class AssignmentRuntime(
     }
 
     private fun createRouter(session: HostedMessagingSession): CommunicatorRouter {
-        val artifactAddress =
-            RealmRouteScope(
-                organizationId = session.organizationId,
-                realmId = assignment.realmId.value,
-            )
+        val artifactAddress = session.realmScope()
         val routes =
             communicatorRoutes {
                 RolloutHostRoutes(
-                    presence = { probe ->
-                        if (probe.realmId != assignment.realmId) {
-                            null
-                        } else {
-                            RealmHostPresence(
-                                probe.probeId,
-                                serviceId,
-                                ArtifactVersion(HOST_API_VERSION),
-                                assignment.roles,
-                                participant.activeProjection,
-                            )
-                        }
+                    presence = {
+                        RealmHostPresence(
+                            serviceId = serviceId.value,
+                            hostApi = HOST_API_VERSION,
+                            assignedRoles = assignment.roles.map { it.toSkir() },
+                            activeProjection = participant.activeProjection,
+                        )
                     },
                     participant = participant,
                 ).register(this, artifactAddress)
-                rolloutState?.let { RolloutCoordinatorRoutes(it).register(this, artifactAddress) }
                 if (RuntimePlacement.REALM in assignment.roles) {
                     StableRealmArtifactRoutes(sharedArtifacts).register(this, artifactAddress)
                 }
@@ -366,9 +355,9 @@ internal class AssignmentRuntime(
     ) {
         val primaryEngine = requireNotNull(assignment.primaryEngine)
         val intent = requireNotNull(assignment.intent)
-        val messenger = CommunicatorRolloutMessenger(session.organizationId, session.communicator)
+        val messenger = CommunicatorRolloutMessenger(session.realmScope(), session.communicator)
         while (true) {
-            val selection = discoverDeploymentSelection(assignment.realmId, messenger)
+            val selection = messenger.discover(emptySet(), 5.seconds).deploymentSelectionOrNull()
             if (selection == null) {
                 delay(1.seconds)
                 continue
@@ -421,17 +410,7 @@ internal class AssignmentRuntime(
         }
     }
 
-    private suspend fun discoverDeploymentSelection(
-        realmId: RealmId,
-        messenger: RolloutMessenger,
-    ): RealmDeploymentSelection? {
-        val probe = ProbeRealmHosts(realmId)
-        val responses =
-            messenger
-                .discover(probe, emptySet(), 5.seconds)
-                .filter { it.probeId == probe.probeId }
-        return responses.deploymentSelectionOrNull()
-    }
+    private fun HostedMessagingSession.realmScope() = RealmRouteScope(organizationId = organizationId, realmId = assignment.realmId.value)
 
     override suspend fun close() {
         maintenance?.cancelAndJoin()
@@ -454,8 +433,8 @@ internal class AssignmentRuntime(
             val accepted = candidates.candidates()
             val projectionDigests =
                 buildSet {
-                    current?.projections?.values?.mapTo(this) { it.blob }
-                    previous?.projections?.values?.mapTo(this) { it.blob }
+                    current?.projections?.values?.let(::addAll)
+                    previous?.projections?.values?.let(::addAll)
                 }
             val protection =
                 DigestProtectionState(
@@ -480,30 +459,19 @@ internal class AssignmentRuntime(
 
 /** Derives artifact selection from unambiguous responding hosts without inferring absent assignments. */
 internal fun List<RealmHostPresence>.deploymentSelectionOrNull(): RealmDeploymentSelection? {
-    val responsesByService = groupBy(RealmHostPresence::serviceId)
+    val responsesByService = groupBy { ServiceId(it.serviceId) }
     if (responsesByService.values.any { it.size != 1 }) return null
     val observations = responsesByService.mapValues { it.value.single() }
-    val realmHosts = observations.values.filter { RuntimePlacement.REALM in it.assignedRoles }
+    val realmHosts = observations.filterValues { it.hosts(RuntimePlacement.REALM) }.keys
     if (realmHosts.size != 1) return null
-    val primaryHosts =
-        observations.values
-            .filter { RuntimePlacement.PRIMARY_ENGINE in it.assignedRoles }
-            .mapTo(linkedSetOf(), RealmHostPresence::serviceId)
     return RealmDeploymentSelection(
-        realmService = realmHosts.single().serviceId,
-        primaryEngineServices = primaryHosts,
-        serviceApis = observations.mapValues { it.value.hostApi },
+        realmService = realmHosts.single(),
+        primaryEngineServices = observations.filterValues { it.hosts(RuntimePlacement.PRIMARY_ENGINE) }.keys.toCollection(linkedSetOf()),
+        serviceApis = observations.mapValues { ArtifactVersion(it.value.hostApi) },
     )
 }
 
-private class ReconnectingParticipantStatePublisher(
-    private val sessions: StateFlow<HostedMessagingSession?>,
-) : ParticipantStatePublisher {
-    override suspend fun publish(event: ParticipantStateChanged) {
-        val session = sessions.value ?: return
-        CommunicatorParticipantStatePublisher(session.organizationId, session.communicator).publish(event)
-    }
-}
+private fun RealmHostPresence.hosts(placement: RuntimePlacement): Boolean = placement.toSkir() in assignedRoles
 
 private fun <Value> RegistrarResult<Value>.requireSuccess(): Value =
     when (this) {

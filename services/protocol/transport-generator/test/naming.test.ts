@@ -18,7 +18,7 @@ function generated(generator: CodeGenerator<object>, input: CodeGenerator.Input<
 
 function methods(routes: readonly ResolvedRoute[]) {
   return routes.flatMap(({ flow }) =>
-    flow.kind === "unary" || flow.kind === "watch" ? [flow.method] : [],
+    flow.kind === "event" ? [] : [flow.method],
   );
 }
 
@@ -26,13 +26,12 @@ function records(routes: readonly ResolvedRoute[]): RecordLocation[] {
   return routes.flatMap(({ flow }) => {
     switch (flow.kind) {
       case "unary":
+      case "scatter":
         return [flow.method.request, flow.method.response];
       case "watch":
         return [flow.method.request, flow.method.response, flow.updates.payload];
       case "event":
-        return flow.binding.kind === "skir" ? [flow.binding.payload] : [];
-      case "scatter":
-        return [];
+        return [flow.payload];
     }
   });
 }

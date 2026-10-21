@@ -71,8 +71,8 @@ function handledRoute(
     const response = uses.name(symbols.record(method.response).reference);
     bound = `AsyncFnOnce(${scope}, ${request}) -> Result<${response}, Error>`;
     serve = "serve_request";
-  } else if (flow.kind === "event" && flow.binding.kind === "skir") {
-    const event = uses.name(symbols.record(flow.binding.payload).reference);
+  } else if (flow.kind === "event") {
+    const event = uses.name(symbols.record(flow.payload).reference);
     bound = `AsyncFnOnce(${scope}, ${event}) -> Result<(), Error>`;
     serve = "serve_event";
   } else {
