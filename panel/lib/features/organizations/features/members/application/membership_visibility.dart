@@ -37,11 +37,12 @@ DateTime membershipDisplayTime(Ref ref) {
 }
 
 @riverpod
-AsyncValue<List<OrganizationJoinRequest>> visibleOrganizationJoinRequests(
+AsyncValue<List<skir.OrganizationJoinRequest>> visibleOrganizationJoinRequests(
   Ref ref,
 ) {
   final requests = ref.watch(organizationJoinRequestsProvider);
-  if (requests.mapUnready<List<OrganizationJoinRequest>>() case final value?) {
+  if (requests.mapUnready<List<skir.OrganizationJoinRequest>>()
+      case final value?) {
     return value;
   }
   final now = ref.watch(membershipDisplayTimeProvider);
@@ -65,9 +66,9 @@ AsyncValue<List<OrganizationJoinRequest>> visibleOrganizationJoinRequests(
 }
 
 @riverpod
-AsyncValue<List<OrganizationJoinCode>> visibleOrganizationJoinCodes(Ref ref) {
+AsyncValue<List<skir.JoinCode>> visibleOrganizationJoinCodes(Ref ref) {
   final codes = ref.watch(organizationJoinCodesProvider);
-  if (codes.mapUnready<List<OrganizationJoinCode>>() case final value?) {
+  if (codes.mapUnready<List<skir.JoinCode>>() case final value?) {
     return value;
   }
   final now = ref.watch(membershipDisplayTimeProvider);

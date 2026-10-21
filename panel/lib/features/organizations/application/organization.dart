@@ -2,43 +2,7 @@ import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
     as skir;
 import "package:typewriter_panel/typewriter_panel.dart";
 
-part "organization.freezed.dart";
 part "organization.g.dart";
-
-/// The display projection of an organization in the current user's membership list.
-///
-/// It is built from the user scoped organization stream, not fetched as an
-/// independent organization record. [organizationId] is the canonical identity
-/// used to select routes and to reconcile additions and removals.
-@freezed
-abstract class OrganizationData with _$OrganizationData {
-  @Assert("name != \"\"", "Name must not be empty.")
-  const factory OrganizationData({
-    required skir.RecordId organizationId,
-    required String name,
-    required String logoUrl,
-  }) = _OrganizationData;
-
-  const OrganizationData._();
-
-  /// Converts the wire projection into the panel's typed display model.
-  factory OrganizationData.fromSkir(skir.Organization org) {
-    return OrganizationData(
-      organizationId: org.organizationId,
-      name: org.name,
-      logoUrl: org.logoUrl,
-    );
-  }
-
-  /// Converts this display model back to the organization wire projection.
-  skir.Organization toSkir() {
-    return skir.Organization(
-      organizationId: this.organizationId,
-      name: name,
-      logoUrl: logoUrl,
-    );
-  }
-}
 
 /// Owns the current user's organization list projection.
 ///
@@ -49,10 +13,10 @@ abstract class OrganizationData with _$OrganizationData {
 /// second request while preserving the same sequence rules.
 @riverpod
 class Organizations extends _$Organizations {
-  final _sequenceState = SequencedCollection<List<OrganizationData>>();
+  final _sequenceState = SequencedCollection<List<skir.Organization>>();
 
   @override
-  Stream<List<OrganizationData>> build() async* {
+  Stream<List<skir.Organization>> build() async* {
     final userId = await ref.watch(userIdProvider.future);
     if (!ref.mounted) return;
 
@@ -61,13 +25,10 @@ class Organizations extends _$Organizations {
       return;
     }
 
-    yield* skir.WatchUserOrganizationsRequest().watch<List<OrganizationData>>(
+    yield* skir.WatchUserOrganizationsRequest().watch<List<skir.Organization>>(
       ref,
       userId: userId,
-      snapshot: (response) =>
-          _organizationSnapshot(response).values
-              .map(OrganizationData.fromSkir)
-              .toList(),
+      snapshot: (response) => _organizationSnapshot(response).values.toList(),
       reduce: _reduceOrganizations,
       reconciliation: ProjectionReconciliation.sequenced(
         snapshotSequence: (response) =>
@@ -148,8 +109,8 @@ skir.UserOrganizationsSnapshot _organizationSnapshot(
   ),
 };
 
-List<OrganizationData> _reduceOrganizations(
-  List<OrganizationData> organizations,
+List<skir.Organization> _reduceOrganizations(
+  List<skir.Organization> organizations,
   skir.UserOrganizationsChanged event,
 ) {
   return event.changes.fold(organizations, (current, change) {
@@ -159,7 +120,7 @@ List<OrganizationData> _reduceOrganizations(
       skir.UserOrganizationsChange_addWrapper(:final value) =>
         current.upsertByKey(
           (organization) => organization.organizationId,
-          OrganizationData.fromSkir(value),
+          value,
         ),
       skir.UserOrganizationsChange_removeWrapper(:final value) =>
         current
@@ -189,7 +150,7 @@ skir.RecordId? organizationId(Ref ref) {
 @riverpod
 class Organization extends _$Organization {
   @override
-  Future<OrganizationData?> build() async {
+  Future<skir.Organization?> build() async {
     final id = ref.watch(organizationIdProvider);
     if (id == null) {
       return null;

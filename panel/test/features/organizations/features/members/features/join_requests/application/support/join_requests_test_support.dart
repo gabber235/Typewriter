@@ -1,9 +1,11 @@
+import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
+    as skir;
 import "package:typewriter_panel/typewriter_panel.dart";
 
-Future<List<OrganizationJoinRequest>> readJoinRequests(
+Future<List<skir.OrganizationJoinRequest>> readJoinRequests(
   ProviderContainer container,
 ) async {
-  final result = Completer<List<OrganizationJoinRequest>>();
+  final result = Completer<List<skir.OrganizationJoinRequest>>();
   final subscription = container.listen(organizationJoinRequestsProvider, (
     previous,
     next,
@@ -41,23 +43,23 @@ Future<T> readProviderValue<T>(
 
 class LoadingJoinRequestsNotifier extends OrganizationJoinRequests {
   @override
-  Stream<List<OrganizationJoinRequest>> build() async* {
+  Stream<List<skir.OrganizationJoinRequest>> build() async* {
     await Completer<void>().future;
   }
 }
 
 class ErrorJoinRequestsNotifier extends OrganizationJoinRequests {
   @override
-  Stream<List<OrganizationJoinRequest>> build() =>
+  Stream<List<skir.OrganizationJoinRequest>> build() =>
       Stream.error(Exception("Test error"));
 }
 
 class MockJoinRequestsNotifier extends OrganizationJoinRequests {
   MockJoinRequestsNotifier(this.requests);
-  final List<OrganizationJoinRequest> requests;
+  final List<skir.OrganizationJoinRequest> requests;
 
   @override
-  Stream<List<OrganizationJoinRequest>> build() async* {
+  Stream<List<skir.OrganizationJoinRequest>> build() async* {
     yield requests;
   }
 }

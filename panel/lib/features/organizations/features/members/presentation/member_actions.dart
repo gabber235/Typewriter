@@ -26,7 +26,7 @@ class BulkMemberActions extends HookConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     void onClearSelection() => onUnselect(selectedIds);
     final theme = Theme.of(context);
-    final bulkRoles = useState<List<OrganizationRole>>([]);
+    final bulkRoles = useState<List<skir.OrganizationRole>>([]);
     final isApplying = useState(false);
 
     final roleDropdown = RoleMultiselectDropdown(
@@ -38,7 +38,7 @@ class BulkMemberActions extends HookConsumerWidget {
     Future<void> applyRoles() async {
       if (isApplying.value) return;
       isApplying.value = true;
-      final roles = List<OrganizationRole>.unmodifiable(bulkRoles.value);
+      final roles = List<skir.OrganizationRole>.unmodifiable(bulkRoles.value);
       final ids = Set<skir.RecordId>.unmodifiable(selectedIds);
       try {
         await ref.executeMembership(

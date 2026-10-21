@@ -1,3 +1,5 @@
+import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
+    as skir;
 import "package:typewriter_panel/typewriter_panel.dart";
 
 part "organization_route_access_binding.freezed.dart";
@@ -7,7 +9,7 @@ part "organization_route_access_binding.g.dart";
 abstract class _OrganizationAccessSnapshot with _$OrganizationAccessSnapshot {
   const factory _OrganizationAccessSnapshot({
     required AsyncValue<String?> principal,
-    required AsyncValue<List<OrganizationData>> membership,
+    required AsyncValue<List<skir.Organization>> membership,
   }) = __OrganizationAccessSnapshot;
 }
 
@@ -45,7 +47,7 @@ ProviderSubscription<Object?> bindOrganizationRouteAccess(
 /// provider's organization presentation model.
 OrganizationRouteAccessState organizationRouteAccessState(
   AsyncValue<String?> principal,
-  AsyncValue<List<OrganizationData>> membership,
+  AsyncValue<List<skir.Organization>> membership,
 ) {
   if (principal.isLoading) {
     return const OrganizationRouteAccessState.loading();

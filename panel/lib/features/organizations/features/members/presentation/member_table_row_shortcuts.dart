@@ -1,3 +1,5 @@
+import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
+    as skir;
 import "package:typewriter_panel/typewriter_panel.dart";
 
 /// Adds the member row's keyboard contract without changing its rendering.
@@ -20,7 +22,7 @@ class MemberTableRowShortcuts extends ConsumerWidget {
     super.key,
   });
 
-  final OrganizationMember member;
+  final skir.OrganizationMember member;
   final VoidCallback onToggleSelection;
   final VoidCallback onSelectAll;
   final VoidCallback onClearSelection;

@@ -9,8 +9,8 @@ import "package:typewriter_testkit/src/shared/testing/testing.dart";
 // Join Code Mocks
 // ============================================================================
 
-OrganizationJoinCode generateRandomJoinCode({
-  List<OrganizationRole>? availableRoles,
+skir.JoinCode generateRandomJoinCode({
+  List<skir.OrganizationRole>? availableRoles,
 }) {
   final random = faker.randomGenerator;
 
@@ -26,15 +26,15 @@ OrganizationJoinCode generateRandomJoinCode({
   // Randomly decide if auto-accept (40% chance)
   final hasAutoAccept = random.boolean() && random.boolean();
   final autoAccept = hasAutoAccept && availableRoles != null
-      ? JoinCodeAutoAccept(
+      ? skir.JoinCode_AutoAccept(
           roleIds: (availableRoles.toList()..shuffle())
               .take(random.integer(3, min: 1))
               .map((r) => r.roleId)
               .toList(),
         )
-      : JoinCodeAutoAccept();
+      : skir.JoinCode_AutoAccept(roleIds: const []);
 
-  return OrganizationJoinCode(
+  return skir.JoinCode(
     code: skir.recordId("organization_join_code:${generateCode(20)}"),
     createdAt: faker.date.dateTime(minYear: 2024, maxYear: 2025),
     expiresAt: expiresAt,
@@ -49,7 +49,7 @@ class OrganizationJoinCodesMock extends OrganizationJoinCodes {
   final DisplayState displayState;
 
   @override
-  Stream<List<OrganizationJoinCode>> build() async* {
+  Stream<List<skir.JoinCode>> build() async* {
     final availableRoles = await ref.watch(organizationRolesProvider.future);
     yield await displayState.generate(
       () => generateRandomJoinCode(availableRoles: availableRoles),

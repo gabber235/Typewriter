@@ -8,7 +8,7 @@ part of "route.dart";
 class _JoinOrganization extends HookConsumerWidget {
   const _JoinOrganization({required this.joinRequests});
 
-  final List<UserJoinRequest> joinRequests;
+  final List<skir.UserJoinRequest> joinRequests;
 
   static const _inviteLinkPrefix = "https://panel.typewritermc.com/join/";
   static const _maxPendingRequests = 5;
@@ -109,7 +109,7 @@ class _JoinOrganization extends HookConsumerWidget {
           ),
         ),
         spacer(hasActiveRequests ? 8 : 0),
-        AnimatedSliverList<UserJoinRequest>(
+        AnimatedSliverList<skir.UserJoinRequest>(
           items: activeRequests,
           identity: (item) => item.requestId,
           itemBuilder: (context, item) => _PendingJoinRequestTile(
@@ -175,7 +175,7 @@ class _JoinOrganization extends HookConsumerWidget {
   Future<void> _cancelJoinRequest({
     required BuildContext context,
     required WidgetRef ref,
-    required UserJoinRequest request,
+    required skir.UserJoinRequest request,
   }) async {
     final confirmed = await showConfirmationDialogue(
       context: context,
@@ -209,7 +209,7 @@ class _PendingJoinRequestTile extends StatelessWidget {
     required this.onExpire,
   });
 
-  final UserJoinRequest request;
+  final skir.UserJoinRequest request;
   final VoidCallback onCancel;
   final VoidCallback onExpire;
 

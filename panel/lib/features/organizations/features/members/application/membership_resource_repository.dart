@@ -44,10 +44,10 @@ final class MembershipResourceRepository {
 
   PreparedCommit<skir.ApproveOrganizationJoinRequestsResponse> approve(
     Iterable<skir.RecordId> requestIds,
-    List<OrganizationRole> roles,
+    List<skir.OrganizationRole> roles,
   ) {
     final ids = List<skir.RecordId>.unmodifiable(requestIds);
-    final selectedRoles = List<OrganizationRole>.unmodifiable(roles);
+    final selectedRoles = List<skir.OrganizationRole>.unmodifiable(roles);
     final request = skir.ApproveOrganizationJoinRequestsRequest(
       requestIds: ids,
       roleIds: selectedRoles.map((role) => role.roleId),
@@ -151,10 +151,10 @@ final class MembershipResourceRepository {
 
   PreparedCommit<skir.UpdateOrganizationMemberRolesResponse> updateRoles(
     Iterable<skir.RecordId> memberIds,
-    List<OrganizationRole> requestedRoles,
+    List<skir.OrganizationRole> requestedRoles,
   ) {
     final ids = List<skir.RecordId>.unmodifiable(memberIds);
-    final roles = List<OrganizationRole>.unmodifiable(requestedRoles);
+    final roles = List<skir.OrganizationRole>.unmodifiable(requestedRoles);
     final request = skir.UpdateOrganizationMemberRolesRequest(
       userIds: ids,
       roleIds: roles

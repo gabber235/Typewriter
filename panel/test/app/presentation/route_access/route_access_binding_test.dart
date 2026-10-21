@@ -13,13 +13,14 @@ final _authenticationDependency = StateProvider<Future<bool>>(
 final _principalDependency = StateProvider<Future<String?>>(
   (ref) => Future.value(null),
 );
-final _organizationsDependency = StateProvider<Stream<List<OrganizationData>>>(
+final _organizationsDependency = StateProvider<Stream<List<skir.Organization>>>(
   (ref) => const Stream.empty(),
 );
 
 final class _ControlledOrganizations extends Organizations {
   @override
-  Stream<List<OrganizationData>> build() => ref.watch(_organizationsDependency);
+  Stream<List<skir.Organization>> build() =>
+      ref.watch(_organizationsDependency);
 }
 
 RouteAccessCoordinator _coordinator() => RouteAccessCoordinator(
@@ -27,7 +28,7 @@ RouteAccessCoordinator _coordinator() => RouteAccessCoordinator(
   organizations: OrganizationRouteAccess(),
 );
 
-OrganizationData _organization(String id) => OrganizationData(
+skir.Organization _organization(String id) => skir.Organization(
   organizationId: skir.recordId("organization:$id"),
   name: id,
   logoUrl: "",
@@ -95,7 +96,7 @@ void main() {
     expect(
       organizationRouteAccessState(
         const AsyncData("user"),
-        AsyncError<List<OrganizationData>>(
+        AsyncError<List<skir.Organization>>(
           StateError("failed"),
           StackTrace.empty,
         ).copyWithPrevious(AsyncData([_organization("old")])),
@@ -112,7 +113,7 @@ void main() {
   });
 
   testWidgets("session switch never exposes stale membership", (tester) async {
-    final oldOrganizations = StreamController<List<OrganizationData>>(
+    final oldOrganizations = StreamController<List<skir.Organization>>(
       sync: true,
     );
     final access = _coordinator();
@@ -143,7 +144,7 @@ void main() {
     );
 
     final user2 = Completer<String?>();
-    final newOrganizations = StreamController<List<OrganizationData>>(
+    final newOrganizations = StreamController<List<skir.Organization>>(
       sync: true,
     );
     container.read(_principalDependency.notifier).state = user2.future;
@@ -180,7 +181,7 @@ void main() {
   testWidgets("organization loading before principal loading resolves", (
     tester,
   ) async {
-    final organizations = StreamController<List<OrganizationData>>(sync: true);
+    final organizations = StreamController<List<skir.Organization>>(sync: true);
     final principal = Completer<String?>();
     final access = _coordinator();
     await tester.pumpWidget(

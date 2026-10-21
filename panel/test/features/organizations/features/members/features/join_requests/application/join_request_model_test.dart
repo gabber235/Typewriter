@@ -4,9 +4,9 @@ import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
 import "package:typewriter_panel/typewriter_panel.dart";
 
 void main() {
-  group("OrganizationJoinRequest", () {
+  group("skir.OrganizationJoinRequest", () {
     test("isExpired returns true when expiresAt is in the past", () {
-      final request = OrganizationJoinRequest(
+      final request = skir.OrganizationJoinRequest(
         requestId: skir.recordId("request_to_join:req-1"),
         userId: skir.recordId("user:user1"),
         userName: "Test",
@@ -21,7 +21,7 @@ void main() {
     });
 
     test("isExpired returns false when expiresAt is in the future", () {
-      final request = OrganizationJoinRequest(
+      final request = skir.OrganizationJoinRequest(
         requestId: skir.recordId("request_to_join:req-1"),
         userId: skir.recordId("user:user1"),
         userName: "Test",

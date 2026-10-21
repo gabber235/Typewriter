@@ -26,7 +26,10 @@ final organizationMembersProvider = OrganizationMembersProvider._();
 /// events through the same ordered projection path as broker events.
 final class OrganizationMembersProvider
     extends
-        $StreamNotifierProvider<OrganizationMembers, List<OrganizationMember>> {
+        $StreamNotifierProvider<
+          OrganizationMembers,
+          List<skir.OrganizationMember>
+        > {
   /// Owns the current organization's member projection.
   ///
   /// The provider starts with a snapshot, applies later sequenced changes, and
@@ -53,7 +56,7 @@ final class OrganizationMembersProvider
 }
 
 String _$organizationMembersHash() =>
-    r'a664c438463dd1faed674379733b83ec0490a84a';
+    r'72be67c0ca0420960849bc9b921c15c7796b7785';
 
 /// Owns the current organization's member projection.
 ///
@@ -63,25 +66,25 @@ String _$organizationMembersHash() =>
 /// events through the same ordered projection path as broker events.
 
 abstract class _$OrganizationMembers
-    extends $StreamNotifier<List<OrganizationMember>> {
-  Stream<List<OrganizationMember>> build();
+    extends $StreamNotifier<List<skir.OrganizationMember>> {
+  Stream<List<skir.OrganizationMember>> build();
   @$mustCallSuper
   @override
   WhenComplete runBuild() {
     final ref =
         this.ref
             as $Ref<
-              AsyncValue<List<OrganizationMember>>,
-              List<OrganizationMember>
+              AsyncValue<List<skir.OrganizationMember>>,
+              List<skir.OrganizationMember>
             >;
     final element =
         ref.element
             as $ClassProviderElement<
               AnyNotifier<
-                AsyncValue<List<OrganizationMember>>,
-                List<OrganizationMember>
+                AsyncValue<List<skir.OrganizationMember>>,
+                List<skir.OrganizationMember>
               >,
-              AsyncValue<List<OrganizationMember>>,
+              AsyncValue<List<skir.OrganizationMember>>,
               Object?,
               Object?
             >;

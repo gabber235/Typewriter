@@ -2,49 +2,9 @@ import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
     as skir;
 import "package:typewriter_panel/typewriter_panel.dart";
 
-part "members.freezed.dart";
 part "members.g.dart";
 part "membership_outcomes.dart";
 part "membership_resource_repository.dart";
-
-/// Client model for one organization member.
-///
-/// The server projection is authoritative. The nullable profile fields are
-/// observations supplied by the identity system, while [roles] and [joinedAt]
-/// describe the membership projection. Conversion methods keep the UI model
-/// separate from generated protocol values.
-@freezed
-abstract class OrganizationMember with _$OrganizationMember {
-  const factory OrganizationMember({
-    required skir.RecordId userId,
-    required List<OrganizationRole> roles,
-    required DateTime joinedAt,
-    String? name,
-    String? email,
-    String? avatarUrl,
-  }) = _OrganizationMember;
-
-  const OrganizationMember._();
-
-  factory OrganizationMember.fromSkir(skir.OrganizationMember member) =>
-      OrganizationMember(
-        userId: member.userId,
-        name: member.name,
-        email: member.email,
-        avatarUrl: member.avatarUrl,
-        roles: member.roles.map(OrganizationRole.fromSkir).toList(),
-        joinedAt: member.joinedAt,
-      );
-
-  skir.OrganizationMember toSkir() => skir.OrganizationMember(
-    userId: this.userId,
-    name: name,
-    email: email,
-    avatarUrl: avatarUrl,
-    roles: roles.map((r) => r.toSkir()),
-    joinedAt: joinedAt,
-  );
-}
 
 /// Owns the current organization's member projection.
 ///
@@ -55,10 +15,11 @@ abstract class OrganizationMember with _$OrganizationMember {
 @riverpod
 class OrganizationMembers extends _$OrganizationMembers {
   @protected
-  final sequencedCollection = SequencedCollection<List<OrganizationMember>>();
+  final sequencedCollection =
+      SequencedCollection<List<skir.OrganizationMember>>();
 
   @override
-  Stream<List<OrganizationMember>> build() async* {
+  Stream<List<skir.OrganizationMember>> build() async* {
     final userId = await ref.watch(userIdProvider.future);
     if (!ref.mounted) return;
 
@@ -76,7 +37,7 @@ class OrganizationMembers extends _$OrganizationMembers {
         .watch(resourceRepositoriesProvider)
         .membership(organizationId);
     final request = skir.WatchOrganizationMembersRequest();
-    yield* request.watch<List<OrganizationMember>>(
+    yield* request.watch<List<skir.OrganizationMember>>(
       ref,
       userId: userId,
       organizationId: organizationId,
@@ -86,7 +47,7 @@ class OrganizationMembers extends _$OrganizationMembers {
         skir.WatchOrganizationMembersResponse_internalErrorWrapper() =>
           throw ApiException.internalServerError(),
         skir.WatchOrganizationMembersResponse_snapshotWrapper(:final value) =>
-          value.values.map(OrganizationMember.fromSkir).toList(),
+          value.values.toList(),
       },
       reduce: _reduceMembers,
       confirmedEvents: repository.members,
@@ -101,9 +62,9 @@ class OrganizationMembers extends _$OrganizationMembers {
   /// Preserves protected roles while normalizing an editor's assignable role
   /// choice. If the choice would leave a member without roles, returns the
   /// organization's default role instead of emitting an invalid request.
-  Future<List<OrganizationRole>> ensureCorrectRoles(
+  Future<List<skir.OrganizationRole>> ensureCorrectRoles(
     skir.RecordId memberId,
-    List<OrganizationRole> newRoles,
+    List<skir.OrganizationRole> newRoles,
   ) async {
     final oldRoles =
         state.requireValue
@@ -130,8 +91,8 @@ class OrganizationMembers extends _$OrganizationMembers {
 
   @override
   bool updateShouldNotify(
-    AsyncValue<List<OrganizationMember>> previous,
-    AsyncValue<List<OrganizationMember>> next,
+    AsyncValue<List<skir.OrganizationMember>> previous,
+    AsyncValue<List<skir.OrganizationMember>> next,
   ) => true;
 }
 
@@ -148,8 +109,8 @@ extension MemberSnapshotReply on skir.WatchOrganizationMembersResponse {
 
 /// Reduces complete add and update values, plus identity only removals, into
 /// the immutable member list used by the provider state.
-List<OrganizationMember> _reduceMembers(
-  List<OrganizationMember> members,
+List<skir.OrganizationMember> _reduceMembers(
+  List<skir.OrganizationMember> members,
   skir.OrganizationMembersChanged event,
 ) {
   return event.changes.fold(members, (current, change) {
@@ -159,10 +120,7 @@ List<OrganizationMember> _reduceMembers(
       skir.OrganizationMembersChange_addWrapper(:final value) ||
       skir.OrganizationMembersChange_updateWrapper(
         :final value,
-      ) => current.upsertByKey(
-        (member) => member.userId,
-        OrganizationMember.fromSkir(value),
-      ),
+      ) => current.upsertByKey((member) => member.userId, value),
       skir.OrganizationMembersChange_removeWrapper(:final value) =>
         current.where((member) => member.userId != value).toList(),
     };

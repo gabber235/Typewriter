@@ -27,7 +27,8 @@ final userJoinRequestsProvider = UserJoinRequestsProvider._();
 /// Cancellation is optimistic, but any failure restores the previous list and
 /// invalidates the stream so recovery uses server state.
 final class UserJoinRequestsProvider
-    extends $StreamNotifierProvider<UserJoinRequests, List<UserJoinRequest>> {
+    extends
+        $StreamNotifierProvider<UserJoinRequests, List<skir.UserJoinRequest>> {
   /// Owns the authenticated user's pending join request projection.
   ///
   /// Snapshot and change events are reconciled by the user scoped sequence. A gap
@@ -54,7 +55,7 @@ final class UserJoinRequestsProvider
   UserJoinRequests create() => UserJoinRequests();
 }
 
-String _$userJoinRequestsHash() => r'6f8a268ffb7984ab0910e13250237c2006198a7b';
+String _$userJoinRequestsHash() => r'7c13e5b9681e63ef8d7df05980040c25b8e29c8c';
 
 /// Owns the authenticated user's pending join request projection.
 ///
@@ -65,22 +66,25 @@ String _$userJoinRequestsHash() => r'6f8a268ffb7984ab0910e13250237c2006198a7b';
 /// invalidates the stream so recovery uses server state.
 
 abstract class _$UserJoinRequests
-    extends $StreamNotifier<List<UserJoinRequest>> {
-  Stream<List<UserJoinRequest>> build();
+    extends $StreamNotifier<List<skir.UserJoinRequest>> {
+  Stream<List<skir.UserJoinRequest>> build();
   @$mustCallSuper
   @override
   WhenComplete runBuild() {
     final ref =
         this.ref
-            as $Ref<AsyncValue<List<UserJoinRequest>>, List<UserJoinRequest>>;
+            as $Ref<
+              AsyncValue<List<skir.UserJoinRequest>>,
+              List<skir.UserJoinRequest>
+            >;
     final element =
         ref.element
             as $ClassProviderElement<
               AnyNotifier<
-                AsyncValue<List<UserJoinRequest>>,
-                List<UserJoinRequest>
+                AsyncValue<List<skir.UserJoinRequest>>,
+                List<skir.UserJoinRequest>
               >,
-              AsyncValue<List<UserJoinRequest>>,
+              AsyncValue<List<skir.UserJoinRequest>>,
               Object?,
               Object?
             >;

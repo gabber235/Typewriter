@@ -1,3 +1,5 @@
+import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
+    as skir;
 import "package:typewriter_panel/typewriter_panel.dart";
 
 /// Dropdown role editor for table and bulk member actions.
@@ -13,8 +15,8 @@ class RoleMultiselectDropdown extends HookConsumerWidget {
     super.key,
   });
 
-  final List<OrganizationRole> selectedRoles;
-  final ValueChanged<List<OrganizationRole>> onRolesChanged;
+  final List<skir.OrganizationRole> selectedRoles;
+  final ValueChanged<List<skir.OrganizationRole>> onRolesChanged;
   final String? placeholder;
 
   @override
@@ -24,7 +26,7 @@ class RoleMultiselectDropdown extends HookConsumerWidget {
     return rolesAsync(
       name: "Roles",
       builder: (availableRoles) {
-        return MultiselectDropdown<OrganizationRole>(
+        return MultiselectDropdown<skir.OrganizationRole>(
           inputFieldController: field,
           dropdownMenuEntries: [
             for (final role in availableRoles)
@@ -40,7 +42,7 @@ class RoleMultiselectDropdown extends HookConsumerWidget {
           placeholder: placeholder,
           itemBuilder: (role) => SmallChip(
             label: role.name,
-            color: role.color,
+            color: role.displayColor,
             onDelete: role.assignable
                 ? () {
                     onRolesChanged(
@@ -58,7 +60,7 @@ class RoleMultiselectDropdown extends HookConsumerWidget {
     );
   }
 
-  Widget _roleMenuEntry(BuildContext context, OrganizationRole role) {
+  Widget _roleMenuEntry(BuildContext context, skir.OrganizationRole role) {
     final isSelected = selectedRoles.contains(role);
     final theme = Theme.of(context);
     return Row(
@@ -66,7 +68,10 @@ class RoleMultiselectDropdown extends HookConsumerWidget {
         Container(
           width: 12,
           height: 12,
-          decoration: BoxDecoration(color: role.color, shape: BoxShape.circle),
+          decoration: BoxDecoration(
+            color: role.displayColor,
+            shape: BoxShape.circle,
+          ),
         ),
         SizedBox(width: context.spacing.space2),
         Text(role.name),

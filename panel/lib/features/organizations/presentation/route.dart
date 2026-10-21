@@ -1,3 +1,5 @@
+import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
+    as skir;
 import "package:typewriter_panel/typewriter_panel.dart";
 
 part "create_organization.dart";
@@ -86,8 +88,8 @@ class _IndexPageContent extends StatelessWidget {
     required this.joinRequests,
   });
 
-  final List<OrganizationData> organizations;
-  final List<UserJoinRequest> joinRequests;
+  final List<skir.Organization> organizations;
+  final List<skir.UserJoinRequest> joinRequests;
 
   Widget spacer(BuildContext context) => SliverGap(context.spacing.space6);
 

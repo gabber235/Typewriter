@@ -2,51 +2,13 @@ import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
     as skir;
 import "package:typewriter_panel/typewriter_panel.dart";
 
-part "user_join_requests.freezed.dart";
 part "user_join_requests.g.dart";
 
-/// The requesting user's read model for one pending organization invitation.
+/// Local expiry of the requesting user's pending organization invitation.
 ///
-/// This projection carries organization display data because it is not scoped to
-/// one organization. Expiry is server supplied; local expiry only removes stale
-/// UI rows and does not cancel the server request.
-@freezed
-abstract class UserJoinRequest with _$UserJoinRequest {
-  const factory UserJoinRequest({
-    required skir.RecordId requestId,
-    required skir.RecordId organizationId,
-    required String organizationName,
-    required String organizationLogoUrl,
-    required DateTime requestedAt,
-    required DateTime expiresAt,
-  }) = _UserJoinRequest;
-
-  const UserJoinRequest._();
-
-  /// Converts the user scoped wire projection into a panel read model.
-  factory UserJoinRequest.fromSkir(skir.UserJoinRequest request) {
-    return UserJoinRequest(
-      requestId: request.requestId,
-      organizationId: request.organizationId,
-      organizationName: request.organizationName,
-      organizationLogoUrl: request.organizationLogoUrl,
-      requestedAt: request.requestedAt,
-      expiresAt: request.expiresAt,
-    );
-  }
-
-  /// Converts this read model back to the shared wire shape.
-  skir.UserJoinRequest toSkir() {
-    return skir.UserJoinRequest(
-      requestId: requestId,
-      organizationId: this.organizationId,
-      organizationName: organizationName,
-      organizationLogoUrl: organizationLogoUrl,
-      requestedAt: requestedAt,
-      expiresAt: expiresAt,
-    );
-  }
-
+/// Expiry is server supplied; local expiry only removes stale UI rows and does
+/// not cancel the server request.
+extension UserJoinRequestExpiry on skir.UserJoinRequest {
   /// Time remaining according to the local clock, clamped at zero.
   Duration get remainingDuration {
     final remaining = expiresAt.difference(DateTime.now());
@@ -66,10 +28,10 @@ abstract class UserJoinRequest with _$UserJoinRequest {
 /// invalidates the stream so recovery uses server state.
 @riverpod
 class UserJoinRequests extends _$UserJoinRequests {
-  final _sequenceState = SequencedCollection<List<UserJoinRequest>>();
+  final _sequenceState = SequencedCollection<List<skir.UserJoinRequest>>();
 
   @override
-  Stream<List<UserJoinRequest>> build() async* {
+  Stream<List<skir.UserJoinRequest>> build() async* {
     final userId = await ref.watch(userIdProvider.future);
     if (userId == null) {
       yield [];
@@ -77,13 +39,11 @@ class UserJoinRequests extends _$UserJoinRequests {
     }
 
     final request = skir.WatchUserJoinRequestsRequest();
-    yield* request.watch<List<UserJoinRequest>>(
+    yield* request.watch<List<skir.UserJoinRequest>>(
       ref,
       userId: userId,
       snapshot: (response) =>
-          _userJoinRequestSnapshot(response).values
-              .map(UserJoinRequest.fromSkir)
-              .toList(),
+          _userJoinRequestSnapshot(response).values.toList(),
       reduce: _reduceUserJoinRequests,
       reconciliation: ProjectionReconciliation.sequenced(
         snapshotSequence: (response) =>
@@ -243,8 +203,8 @@ skir.UserJoinRequestsSnapshot _userJoinRequestSnapshot(
   ),
 };
 
-List<UserJoinRequest> _reduceUserJoinRequests(
-  List<UserJoinRequest> requests,
+List<skir.UserJoinRequest> _reduceUserJoinRequests(
+  List<skir.UserJoinRequest> requests,
   skir.UserJoinRequestsChanged event,
 ) {
   return event.changes.fold(requests, (current, change) {
@@ -252,10 +212,7 @@ List<UserJoinRequest> _reduceUserJoinRequests(
       skir.UserJoinRequestsChange_unknown() =>
         throw ApiException.unknownResponseMessage(),
       skir.UserJoinRequestsChange_addWrapper(:final value) =>
-        current.upsertByKey(
-          (request) => request.requestId,
-          UserJoinRequest.fromSkir(value),
-        ),
+        current.upsertByKey((request) => request.requestId, value),
       skir.UserJoinRequestsChange_removeWrapper(:final value) =>
         current.where((request) => request.requestId != value).toList(),
     };

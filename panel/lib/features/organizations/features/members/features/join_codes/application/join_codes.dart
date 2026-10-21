@@ -5,43 +5,13 @@ import "package:typewriter_panel/typewriter_panel.dart";
 part "join_codes.freezed.dart";
 part "join_codes.g.dart";
 
-/// The organization owned invitation projection shown in the member management UI.
+/// Local expiry of an organization owned invitation code.
 ///
-/// The service owns creation, expiration, consumption, and revocation. This
-/// value is the panel read model, translated at the Skir boundary and updated
-/// from the initial snapshot plus sequenced changes. A null [expiresAt] is the
-/// explicit never expires state, not an unknown timestamp.
-@freezed
-abstract class OrganizationJoinCode with _$OrganizationJoinCode {
-  const factory OrganizationJoinCode({
-    required skir.RecordId code,
-    required DateTime createdAt,
-    DateTime? expiresAt,
-    @Default(true) bool singleUse,
-    @Default(JoinCodeAutoAccept()) JoinCodeAutoAccept autoAccept,
-  }) = _OrganizationJoinCode;
-
-  const OrganizationJoinCode._();
-
-  /// Converts the service projection into the immutable panel read model.
-  factory OrganizationJoinCode.fromSkir(skir.JoinCode request) =>
-      OrganizationJoinCode(
-        code: request.code,
-        createdAt: request.createdAt,
-        expiresAt: request.expiresAt,
-        singleUse: request.singleUse,
-        autoAccept: JoinCodeAutoAccept.fromSkir(request.autoAccept),
-      );
-
-  /// Converts this read model back to the protocol shape for shared consumers.
-  skir.JoinCode toSkir() => skir.JoinCode(
-    code: code,
-    createdAt: createdAt,
-    expiresAt: expiresAt,
-    singleUse: singleUse,
-    autoAccept: autoAccept.toSkir(),
-  );
-
+/// The service owns creation, expiration, consumption, and revocation. A null
+/// [skir.JoinCode.expiresAt] is the explicit never expires state, not an
+/// unknown timestamp. An empty auto accept role list means the code follows
+/// the approval flow.
+extension JoinCodeExpiry on skir.JoinCode {
   /// Time remaining at read time, clamped to zero after expiration.
   Duration? get remainingDuration {
     if (expiresAt == null) return null;
@@ -57,27 +27,6 @@ abstract class OrganizationJoinCode with _$OrganizationJoinCode {
 
   /// Whether this code has the explicit no expiration policy.
   bool get neverExpires => expiresAt == null;
-}
-
-/// Roles assigned when a member joins through this code without approval.
-///
-/// An empty list means the code follows the approval flow. Role identifiers
-/// are kept as typed record identifiers so the service can validate ownership
-/// and assignability when the code is generated.
-@freezed
-abstract class JoinCodeAutoAccept with _$JoinCodeAutoAccept {
-  const factory JoinCodeAutoAccept({@Default([]) List<skir.RecordId> roleIds}) =
-      _JoinCodeAutoAccept;
-
-  const JoinCodeAutoAccept._();
-
-  /// Converts the protocol role policy into the panel model.
-  factory JoinCodeAutoAccept.fromSkir(skir.JoinCode_AutoAccept request) =>
-      JoinCodeAutoAccept(roleIds: request.roleIds.toList());
-
-  /// Converts the selected role policy for a generation request.
-  skir.JoinCode_AutoAccept toSkir() =>
-      skir.JoinCode_AutoAccept(roleIds: roleIds);
 }
 
 /// The two expiration policies accepted by join code generation.
@@ -117,10 +66,10 @@ abstract class JoinCodeOptions with _$JoinCodeOptions {
 /// authoritative snapshot.
 @riverpod
 class OrganizationJoinCodes extends _$OrganizationJoinCodes {
-  final _sequenceState = SequencedCollection<List<OrganizationJoinCode>>();
+  final _sequenceState = SequencedCollection<List<skir.JoinCode>>();
 
   @override
-  Stream<List<OrganizationJoinCode>> build() async* {
+  Stream<List<skir.JoinCode>> build() async* {
     final userId = await ref.watch(userIdProvider.future);
     if (!ref.mounted) return;
 
@@ -138,14 +87,11 @@ class OrganizationJoinCodes extends _$OrganizationJoinCodes {
         .watch(resourceRepositoriesProvider)
         .membership(organizationId);
     final request = skir.WatchOrganizationJoinCodesRequest();
-    yield* request.watch<List<OrganizationJoinCode>>(
+    yield* request.watch<List<skir.JoinCode>>(
       ref,
       userId: userId,
       organizationId: organizationId,
-      snapshot: (response) =>
-          _joinCodeSnapshot(response).values
-              .map(OrganizationJoinCode.fromSkir)
-              .toList(),
+      snapshot: (response) => _joinCodeSnapshot(response).values.toList(),
       reduce: _reduceJoinCodes,
       confirmedEvents: repository.codes,
       reconciliation: ProjectionReconciliation.sequenced(
@@ -174,8 +120,8 @@ skir.OrganizationJoinCodesSnapshot _joinCodeSnapshot(
 // The reducer is shared by initial event delivery and mutation responses so
 // both paths apply add and remove changes with the same ordering and identity
 // rules.
-List<OrganizationJoinCode> _reduceJoinCodes(
-  List<OrganizationJoinCode> codes,
+List<skir.JoinCode> _reduceJoinCodes(
+  List<skir.JoinCode> codes,
   skir.OrganizationJoinCodesChanged event,
 ) {
   return event.changes.fold(codes, (current, change) {
@@ -183,10 +129,7 @@ List<OrganizationJoinCode> _reduceJoinCodes(
       skir.OrganizationJoinCodesChange_unknown() =>
         throw ApiException.unknownResponseMessage(),
       skir.OrganizationJoinCodesChange_addWrapper(:final value) =>
-        current.upsertByKey(
-          (code) => code.code,
-          OrganizationJoinCode.fromSkir(value),
-        ),
+        current.upsertByKey((code) => code.code, value),
       skir.OrganizationJoinCodesChange_removeWrapper(:final value) =>
         current.where((code) => code.code != value).toList(),
     };

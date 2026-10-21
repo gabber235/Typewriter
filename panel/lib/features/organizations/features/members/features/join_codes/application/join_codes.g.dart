@@ -32,10 +32,7 @@ final organizationJoinCodesProvider = OrganizationJoinCodesProvider._();
 /// authoritative snapshot.
 final class OrganizationJoinCodesProvider
     extends
-        $StreamNotifierProvider<
-          OrganizationJoinCodes,
-          List<OrganizationJoinCode>
-        > {
+        $StreamNotifierProvider<OrganizationJoinCodes, List<skir.JoinCode>> {
   /// Owns the panel's live read model of invitation codes for the selected organization.
   ///
   /// The provider waits for authentication and organization selection, then
@@ -65,7 +62,7 @@ final class OrganizationJoinCodesProvider
 }
 
 String _$organizationJoinCodesHash() =>
-    r'06e5e60c9c523bc535d11e502c2a301f2d86b601';
+    r'41cf9a4c7e2bd6fadd3c27ce52052dac95fad11c';
 
 /// Owns the panel's live read model of invitation codes for the selected organization.
 ///
@@ -78,25 +75,18 @@ String _$organizationJoinCodesHash() =>
 /// authoritative snapshot.
 
 abstract class _$OrganizationJoinCodes
-    extends $StreamNotifier<List<OrganizationJoinCode>> {
-  Stream<List<OrganizationJoinCode>> build();
+    extends $StreamNotifier<List<skir.JoinCode>> {
+  Stream<List<skir.JoinCode>> build();
   @$mustCallSuper
   @override
   WhenComplete runBuild() {
     final ref =
-        this.ref
-            as $Ref<
-              AsyncValue<List<OrganizationJoinCode>>,
-              List<OrganizationJoinCode>
-            >;
+        this.ref as $Ref<AsyncValue<List<skir.JoinCode>>, List<skir.JoinCode>>;
     final element =
         ref.element
             as $ClassProviderElement<
-              AnyNotifier<
-                AsyncValue<List<OrganizationJoinCode>>,
-                List<OrganizationJoinCode>
-              >,
-              AsyncValue<List<OrganizationJoinCode>>,
+              AnyNotifier<AsyncValue<List<skir.JoinCode>>, List<skir.JoinCode>>,
+              AsyncValue<List<skir.JoinCode>>,
               Object?,
               Object?
             >;

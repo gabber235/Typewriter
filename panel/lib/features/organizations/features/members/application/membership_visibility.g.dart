@@ -141,11 +141,11 @@ final visibleOrganizationJoinRequestsProvider =
 final class VisibleOrganizationJoinRequestsProvider
     extends
         $FunctionalProvider<
-          AsyncValue<List<OrganizationJoinRequest>>,
-          AsyncValue<List<OrganizationJoinRequest>>,
-          AsyncValue<List<OrganizationJoinRequest>>
+          AsyncValue<List<skir.OrganizationJoinRequest>>,
+          AsyncValue<List<skir.OrganizationJoinRequest>>,
+          AsyncValue<List<skir.OrganizationJoinRequest>>
         >
-    with $Provider<AsyncValue<List<OrganizationJoinRequest>>> {
+    with $Provider<AsyncValue<List<skir.OrganizationJoinRequest>>> {
   VisibleOrganizationJoinRequestsProvider._()
     : super(
         from: null,
@@ -162,27 +162,30 @@ final class VisibleOrganizationJoinRequestsProvider
 
   @$internal
   @override
-  $ProviderElement<AsyncValue<List<OrganizationJoinRequest>>> $createElement(
-    $ProviderPointer pointer,
-  ) => $ProviderElement(pointer);
+  $ProviderElement<AsyncValue<List<skir.OrganizationJoinRequest>>>
+  $createElement($ProviderPointer pointer) => $ProviderElement(pointer);
 
   @override
-  AsyncValue<List<OrganizationJoinRequest>> create(Ref ref) {
+  AsyncValue<List<skir.OrganizationJoinRequest>> create(Ref ref) {
     return visibleOrganizationJoinRequests(ref);
   }
 
   /// {@macro riverpod.override_with_value}
-  Override overrideWithValue(AsyncValue<List<OrganizationJoinRequest>> value) {
+  Override overrideWithValue(
+    AsyncValue<List<skir.OrganizationJoinRequest>> value,
+  ) {
     return $ProviderOverride(
       origin: this,
       providerOverride:
-          $SyncValueProvider<AsyncValue<List<OrganizationJoinRequest>>>(value),
+          $SyncValueProvider<AsyncValue<List<skir.OrganizationJoinRequest>>>(
+            value,
+          ),
     );
   }
 }
 
 String _$visibleOrganizationJoinRequestsHash() =>
-    r'f70f8c301cedf4346078b4c8d5b889e3ef64195d';
+    r'8d8882635f91fdd0890a13b9a849b63df8b608a8';
 
 @ProviderFor(visibleOrganizationJoinCodes)
 final visibleOrganizationJoinCodesProvider =
@@ -191,11 +194,11 @@ final visibleOrganizationJoinCodesProvider =
 final class VisibleOrganizationJoinCodesProvider
     extends
         $FunctionalProvider<
-          AsyncValue<List<OrganizationJoinCode>>,
-          AsyncValue<List<OrganizationJoinCode>>,
-          AsyncValue<List<OrganizationJoinCode>>
+          AsyncValue<List<skir.JoinCode>>,
+          AsyncValue<List<skir.JoinCode>>,
+          AsyncValue<List<skir.JoinCode>>
         >
-    with $Provider<AsyncValue<List<OrganizationJoinCode>>> {
+    with $Provider<AsyncValue<List<skir.JoinCode>>> {
   VisibleOrganizationJoinCodesProvider._()
     : super(
         from: null,
@@ -212,24 +215,25 @@ final class VisibleOrganizationJoinCodesProvider
 
   @$internal
   @override
-  $ProviderElement<AsyncValue<List<OrganizationJoinCode>>> $createElement(
+  $ProviderElement<AsyncValue<List<skir.JoinCode>>> $createElement(
     $ProviderPointer pointer,
   ) => $ProviderElement(pointer);
 
   @override
-  AsyncValue<List<OrganizationJoinCode>> create(Ref ref) {
+  AsyncValue<List<skir.JoinCode>> create(Ref ref) {
     return visibleOrganizationJoinCodes(ref);
   }
 
   /// {@macro riverpod.override_with_value}
-  Override overrideWithValue(AsyncValue<List<OrganizationJoinCode>> value) {
+  Override overrideWithValue(AsyncValue<List<skir.JoinCode>> value) {
     return $ProviderOverride(
       origin: this,
-      providerOverride:
-          $SyncValueProvider<AsyncValue<List<OrganizationJoinCode>>>(value),
+      providerOverride: $SyncValueProvider<AsyncValue<List<skir.JoinCode>>>(
+        value,
+      ),
     );
   }
 }
 
 String _$visibleOrganizationJoinCodesHash() =>
-    r'bcd43890f3ab05b76238e5d6c59a0f4803e8d731';
+    r'86cd4495c04547ec2ca9edd6caf328cb8ceda941';

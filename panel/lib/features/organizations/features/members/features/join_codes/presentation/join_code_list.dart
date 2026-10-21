@@ -15,7 +15,7 @@ class JoinCodesCardList extends HookConsumerWidget {
     super.key,
   });
 
-  final List<OrganizationJoinCode> codes;
+  final List<skir.JoinCode> codes;
   final ValueNotifier<Set<skir.RecordId>> selectedCodes;
   final Future<void> Function() onRevokeSelection;
 
@@ -88,7 +88,7 @@ class JoinCodesCardList extends HookConsumerWidget {
 
   Widget _child(
     BuildContext context,
-    OrganizationJoinCode code,
+    skir.JoinCode code,
     Animation<double> animation, {
     bool deleting = false,
   }) => ExcludeInteraction(

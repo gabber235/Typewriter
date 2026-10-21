@@ -1,3 +1,5 @@
+import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
+    as skir;
 import "package:typewriter_panel/typewriter_panel.dart";
 
 /// Desktop row action that confirms and delegates membership removal.
@@ -9,7 +11,7 @@ import "package:typewriter_panel/typewriter_panel.dart";
 class MemberRowActions extends HookConsumerWidget {
   const MemberRowActions({required this.member, super.key});
 
-  final OrganizationMember member;
+  final skir.OrganizationMember member;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {

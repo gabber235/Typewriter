@@ -8,7 +8,7 @@ const openOrganizationCommandId = SearchCommandId("organization.open");
 const createOrganizationCommandId = SearchCommandId("organization.create");
 
 SearchCommand openOrganizationCommand() =>
-    SearchCommand.single<OrganizationData>(
+    SearchCommand.single<skir.Organization>(
       id: openOrganizationCommandId,
       presentation: const SearchCommandPresentation(
         label: "Open Organization",

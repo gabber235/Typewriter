@@ -19,7 +19,7 @@ const createOrganizationSearchResultType = SearchResultType(
 /// remain visible beside those results. Navigation and creation are returned
 /// by separate commands as host effects; this source performs no mutation.
 final class OrganizationsSearchSource(
-  final ValueListenable<AsyncValue<List<OrganizationData>>> organizations,
+  final ValueListenable<AsyncValue<List<skir.Organization>>> organizations,
 ) implements SearchSource {
   final _snapshotsController = BehaviorSubject<SearchSourceSnapshot>.seeded(
     SearchSourceSnapshot.loading(),
@@ -35,9 +35,9 @@ final class OrganizationsSearchSource(
     schema: Schema({"name": TypedField(.string)}),
   );
 
-  Map<String, OrganizationData> get orgs {
+  Map<String, skir.Organization> get orgs {
     return {
-      for (final org in organizations.value.value ?? <OrganizationData>[])
+      for (final org in organizations.value.value ?? <skir.Organization>[])
         org.organizationId.toSurrealQl(): org,
     };
   }

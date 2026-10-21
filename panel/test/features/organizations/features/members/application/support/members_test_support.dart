@@ -12,29 +12,29 @@ String get memberUpdateSubject =>
 String get memberRemoveSubject =>
     "cloud.to.user.$testUserId.organization.org1.members.remove";
 
-OrganizationRole createRole({
+skir.OrganizationRole createRole({
   String id = "r1",
   String name = "Role",
   Color color = Colors.grey,
   bool defaultRole = false,
   bool assignable = true,
   bool deletable = false,
-}) => OrganizationRole(
+}) => skir.OrganizationRole(
   roleId: skir.recordId("organization_role:$id"),
   name: name,
-  color: color,
+  color: color.toSkirColor(),
   defaultRole: defaultRole,
   assignable: assignable,
   deletable: deletable,
 );
 
-OrganizationMember createMember({
-  List<OrganizationRole> roles = const [],
+skir.OrganizationMember createMember({
+  List<skir.OrganizationRole> roles = const [],
   String name = "Test",
   String email = "test@test.com",
   String avatarUrl = "",
   DateTime? joinedAt,
-}) => OrganizationMember(
+}) => skir.OrganizationMember(
   userId: testMemberId,
   name: name,
   email: email,
@@ -114,16 +114,17 @@ Future<ProviderSubscription<AsyncValue<T>>> retainUntilReady<T>(
   }
 }
 
-Future<List<OrganizationMember>> readMembers(ProviderContainer container) =>
-    readAsyncData(
-      (listener) => container.listen(
-        organizationMembersProvider,
-        listener,
-        fireImmediately: true,
-      ),
-    );
+Future<List<skir.OrganizationMember>> readMembers(
+  ProviderContainer container,
+) => readAsyncData(
+  (listener) => container.listen(
+    organizationMembersProvider,
+    listener,
+    fireImmediately: true,
+  ),
+);
 
-Future<List<OrganizationRole>> readRoles(ProviderContainer container) =>
+Future<List<skir.OrganizationRole>> readRoles(ProviderContainer container) =>
     readAsyncData(
       (listener) => container.listen(
         organizationRolesProvider,
@@ -134,11 +135,11 @@ Future<List<OrganizationRole>> readRoles(ProviderContainer container) =>
 
 class MockMembersNotifier extends OrganizationMembers {
   MockMembersNotifier(this.members, {this.load});
-  final List<OrganizationMember> members;
-  final List<OrganizationMember> Function()? load;
+  final List<skir.OrganizationMember> members;
+  final List<skir.OrganizationMember> Function()? load;
 
   @override
-  Stream<List<OrganizationMember>> build() async* {
+  Stream<List<skir.OrganizationMember>> build() async* {
     final snapshot = load?.call() ?? members;
     sequencedCollection.snapshot = SequencedSnapshot(
       sequence: 0,
@@ -150,10 +151,10 @@ class MockMembersNotifier extends OrganizationMembers {
 
 class MockRolesNotifier extends OrganizationRoles {
   MockRolesNotifier(this.roles);
-  final List<OrganizationRole> roles;
+  final List<skir.OrganizationRole> roles;
 
   @override
-  Stream<List<OrganizationRole>> build() async* {
+  Stream<List<skir.OrganizationRole>> build() async* {
     yield roles;
   }
 }

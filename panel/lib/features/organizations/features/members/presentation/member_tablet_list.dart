@@ -15,7 +15,7 @@ class MembersTabletList extends HookConsumerWidget {
     super.key,
   });
 
-  final List<OrganizationMember> members;
+  final List<skir.OrganizationMember> members;
   final ValueNotifier<Set<skir.RecordId>> selectedIds;
   final Future<void> Function() onRemoveSelection;
 
@@ -100,7 +100,7 @@ class MembersTabletList extends HookConsumerWidget {
 
   Widget _child(
     BuildContext context,
-    OrganizationMember member,
+    skir.OrganizationMember member,
     ValueNotifier<Set<skir.RecordId>> selectedIds,
     Animation<double> animation, {
     bool ignorePointer = false,

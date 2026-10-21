@@ -1,3 +1,5 @@
+import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
+    as skir;
 import "package:typewriter_panel/typewriter_panel.dart";
 
 /// Expandable mobile card for one invitation code.
@@ -17,7 +19,7 @@ class JoinCodeCard extends HookConsumerWidget {
     super.key,
   });
 
-  final OrganizationJoinCode code;
+  final skir.JoinCode code;
   final bool isSelected;
   final ValueChanged<bool> onSelectionChanged;
   final VoidCallback onSelectAll;

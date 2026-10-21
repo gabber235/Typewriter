@@ -7,7 +7,7 @@ part of "route.dart";
 class _OrganizationsSelector extends HookWidget {
   const _OrganizationsSelector({required this.organizations});
 
-  final List<OrganizationData> organizations;
+  final List<skir.Organization> organizations;
 
   Widget spacer(BuildContext context) => SliverGap(context.spacing.space4);
 
@@ -53,7 +53,7 @@ class _OrganizationsSelector extends HookWidget {
             ),
           )
         else
-          AnimatedSliverList<OrganizationData>(
+          AnimatedSliverList<skir.Organization>(
             items: filteredOrganizations,
             identity: (item) => item.organizationId,
             itemBuilder: (context, item) =>
@@ -68,7 +68,7 @@ class _OrganizationsSelector extends HookWidget {
 class _OrganizationListTile extends StatelessWidget {
   const _OrganizationListTile({required this.organization});
 
-  final OrganizationData organization;
+  final skir.Organization organization;
 
   @override
   Widget build(BuildContext context) {

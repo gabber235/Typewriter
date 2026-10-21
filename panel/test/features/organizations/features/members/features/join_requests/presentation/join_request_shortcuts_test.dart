@@ -41,13 +41,14 @@ void main() {
     tester,
   ) async {
     var bulkDeclines = 0;
-    final request = OrganizationJoinRequest(
+    final request = skir.OrganizationJoinRequest(
       requestId: skir.recordId("request_to_join:selected"),
       userId: skir.recordId("user:selected"),
       userName: "Selected",
       userEmail: "selected@example.com",
       requestedAt: DateTime.now(),
       expiresAt: DateTime.now().add(const Duration(hours: 1)),
+      userAvatarUrl: null,
     );
 
     await tester.pumpWidget(

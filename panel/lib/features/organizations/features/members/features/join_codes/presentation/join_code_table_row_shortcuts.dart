@@ -1,3 +1,5 @@
+import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
+    as skir;
 import "package:typewriter_panel/typewriter_panel.dart";
 
 /// Binds row focus to the standard selection, copy, and revoke actions.
@@ -21,7 +23,7 @@ class JoinCodeTableRowShortcuts extends ConsumerWidget {
     super.key,
   });
 
-  final OrganizationJoinCode code;
+  final skir.JoinCode code;
   final VoidCallback onToggleSelection;
   final VoidCallback onSelectAll;
   final VoidCallback onClearSelection;
