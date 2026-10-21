@@ -1263,6 +1263,1656 @@ final class CompilationStatusSelection_suppliedRootsWrapper
 }
 
 // -----------------------------------------------------------------------------
+// struct InstancePath
+// -----------------------------------------------------------------------------
+
+sealed class InstancePath_orMutable {
+  _core.Iterable<_core.String> get segments;
+
+  InstancePath toFrozen();
+}
+
+/// Distinguishes one generated occurrence of an authored resource. The root occurrence has no segments.
+///
+/// Deeply immutable.
+final class InstancePath implements InstancePath_orMutable {
+  @_core.override
+  final _core.Iterable<_core.String> segments;
+  _skir.internal__UnrecognizedFields? _u;
+
+  factory InstancePath({required _core.Iterable<_core.String> segments}) =>
+      InstancePath._(_skir.internal__frozenCopy(segments));
+
+  InstancePath._(this.segments);
+
+  /// Default instance with all fields set to their default values.
+  static final defaultInstance = InstancePath._(_skir.KeyedIterable.empty);
+
+  /// Returns a new mutable instance.
+  /// Fields are initialized to their default values.
+  static InstancePath_mutable mutable() =>
+      InstancePath_mutable._(_skir.KeyedIterable.empty);
+
+  /// Returns this instance (no-op).
+  @_core.Deprecated("This instance is already frozen.")
+  @_core.override
+  InstancePath toFrozen() => this;
+
+  /// Returns a mutable shallow copy of this instance.
+  InstancePath_mutable toMutable() => InstancePath_mutable._(this.segments);
+
+  @_core.override
+  _core.bool operator ==(other) {
+    if (_core.identical(this, other)) return true;
+    if (other is! InstancePath) return false;
+    return _skir.internal__listEquality.equals(
+      _equality_proxy,
+      other._equality_proxy,
+    );
+  }
+
+  @_core.override
+  _core.int get hashCode => _skir.internal__listEquality.hash(_equality_proxy);
+
+  _core.List get _equality_proxy => [this.segments];
+
+  @_core.override
+  _core.String toString() => _skir.internal__stringify(this, serializer);
+
+  /// Serializer for `InstancePath` instances.
+  static _skir.StructSerializer<InstancePath, InstancePath_mutable>
+  get serializer {
+    if (_serializerBuilder.mustInitialize()) {
+      _serializerBuilder.addField(
+        "segments",
+        "segments",
+        0,
+        _skir.Serializers.iterable(_skir.Serializers.string),
+        "",
+        (it) => it.segments,
+        (it, v) => it.segments = v,
+      );
+      _serializerBuilder.finalize();
+    }
+    return _serializerBuilder.serializer;
+  }
+
+  static final _serializerBuilder = _skir.internal__StructSerializerBuilder(
+    recordId: "editor/v1/compiled_content.skir:InstancePath",
+    doc: "Distinguishes one generated occurrence of an authored resource. The root occurrence has no segments.",
+    defaultInstance: defaultInstance,
+    newMutable: (it) => (it != null) ? it.toMutable() : mutable(),
+    toFrozen: (InstancePath_mutable it) => it.toFrozen(),
+    getUnrecognizedFields: (it) => it._u,
+    setUnrecognizedFields: (it, u) => it._u = u,
+  );
+}
+
+/// Mutable version of [InstancePath].
+final class InstancePath_mutable implements InstancePath_orMutable {
+  _core.Iterable<_core.String> segments;
+  _skir.internal__UnrecognizedFields? _u;
+
+  InstancePath_mutable._(this.segments);
+
+  /// If the value of [segments] is already mutable, returns it as-is.
+  /// Otherwise, makes a mutable copy, assigns it back to [segments] and returns it.
+  _core.List<_core.String> get mutableSegments {
+    final value = this.segments;
+    if (value is _skir.internal__MutableList<_core.String>) {
+      return value;
+    } else {
+      return this.segments = _skir.internal__MutableList([...value]);
+    }
+  }
+
+  /// Returns a deeply immutable copy of this instance.
+  @_core.override
+  InstancePath toFrozen() =>
+      InstancePath(segments: this.segments).._u = this._u;
+}
+
+// -----------------------------------------------------------------------------
+// struct CompilationContext
+// -----------------------------------------------------------------------------
+
+sealed class CompilationContext_orMutable {
+  InstancePath_orMutable get instancePath;
+
+  CompilationContext toFrozen();
+}
+
+/// Deeply immutable.
+final class CompilationContext implements CompilationContext_orMutable {
+  @_core.override
+  final InstancePath instancePath;
+  _skir.internal__UnrecognizedFields? _u;
+
+  factory CompilationContext({required InstancePath_orMutable instancePath}) =>
+      CompilationContext._(instancePath.toFrozen());
+
+  CompilationContext._(this.instancePath);
+
+  /// Default instance with all fields set to their default values.
+  static final defaultInstance = CompilationContext._(
+    InstancePath.defaultInstance,
+  );
+
+  /// Returns a new mutable instance.
+  /// Fields are initialized to their default values.
+  static CompilationContext_mutable mutable() =>
+      CompilationContext_mutable._(InstancePath.defaultInstance);
+
+  /// Returns this instance (no-op).
+  @_core.Deprecated("This instance is already frozen.")
+  @_core.override
+  CompilationContext toFrozen() => this;
+
+  /// Returns a mutable shallow copy of this instance.
+  CompilationContext_mutable toMutable() =>
+      CompilationContext_mutable._(this.instancePath);
+
+  @_core.override
+  _core.bool operator ==(other) {
+    if (_core.identical(this, other)) return true;
+    if (other is! CompilationContext) return false;
+    return _skir.internal__listEquality.equals(
+      _equality_proxy,
+      other._equality_proxy,
+    );
+  }
+
+  @_core.override
+  _core.int get hashCode => _skir.internal__listEquality.hash(_equality_proxy);
+
+  _core.List get _equality_proxy => [this.instancePath];
+
+  @_core.override
+  _core.String toString() => _skir.internal__stringify(this, serializer);
+
+  /// Serializer for `CompilationContext` instances.
+  static _skir.StructSerializer<CompilationContext, CompilationContext_mutable>
+  get serializer {
+    if (_serializerBuilder.mustInitialize()) {
+      _serializerBuilder.addField(
+        "instance_path",
+        "instancePath",
+        0,
+        InstancePath.serializer,
+        "",
+        (it) => it.instancePath,
+        (it, v) => it.instancePath = v,
+      );
+      _serializerBuilder.finalize();
+    }
+    return _serializerBuilder.serializer;
+  }
+
+  static final _serializerBuilder = _skir.internal__StructSerializerBuilder(
+    recordId: "editor/v1/compiled_content.skir:CompilationContext",
+    doc: "",
+    defaultInstance: defaultInstance,
+    newMutable: (it) => (it != null) ? it.toMutable() : mutable(),
+    toFrozen: (CompilationContext_mutable it) => it.toFrozen(),
+    getUnrecognizedFields: (it) => it._u,
+    setUnrecognizedFields: (it, u) => it._u = u,
+  );
+}
+
+/// Mutable version of [CompilationContext].
+final class CompilationContext_mutable implements CompilationContext_orMutable {
+  InstancePath_orMutable instancePath;
+  _skir.internal__UnrecognizedFields? _u;
+
+  CompilationContext_mutable._(this.instancePath);
+
+  /// If the value of [instancePath] is already mutable, returns it as-is.
+  /// Otherwise, makes a mutable copy, assigns it back to [instancePath] and returns it.
+  InstancePath_mutable get mutableInstancePath {
+    final value = this.instancePath;
+    if (value is InstancePath_mutable) {
+      return value;
+    } else {
+      return this.instancePath = (value as InstancePath).toMutable();
+    }
+  }
+
+  /// Returns a deeply immutable copy of this instance.
+  @_core.override
+  CompilationContext toFrozen() =>
+      CompilationContext(instancePath: this.instancePath).._u = this._u;
+}
+
+// -----------------------------------------------------------------------------
+// struct CompiledResourceKey
+// -----------------------------------------------------------------------------
+
+sealed class CompiledResourceKey_orMutable {
+  _lib_editor_v1_type_catalog.ResourceId_orMutable get source;
+  CompilationContext_orMutable get context;
+
+  CompiledResourceKey toFrozen();
+}
+
+/// Identifies a resource in a compiled occurrence.
+///
+/// Deeply immutable.
+final class CompiledResourceKey implements CompiledResourceKey_orMutable {
+  @_core.override
+  final _lib_editor_v1_type_catalog.ResourceId source;
+  @_core.override
+  final CompilationContext context;
+  _skir.internal__UnrecognizedFields? _u;
+
+  factory CompiledResourceKey({
+    required _lib_editor_v1_type_catalog.ResourceId_orMutable source,
+    required CompilationContext_orMutable context,
+  }) => CompiledResourceKey._(source.toFrozen(), context.toFrozen());
+
+  CompiledResourceKey._(this.source, this.context);
+
+  /// Default instance with all fields set to their default values.
+  static final defaultInstance = CompiledResourceKey._(
+    _lib_editor_v1_type_catalog.ResourceId.defaultInstance,
+    CompilationContext.defaultInstance,
+  );
+
+  /// Returns a new mutable instance.
+  /// Fields are initialized to their default values.
+  static CompiledResourceKey_mutable mutable() => CompiledResourceKey_mutable._(
+    _lib_editor_v1_type_catalog.ResourceId.defaultInstance,
+    CompilationContext.defaultInstance,
+  );
+
+  /// Returns this instance (no-op).
+  @_core.Deprecated("This instance is already frozen.")
+  @_core.override
+  CompiledResourceKey toFrozen() => this;
+
+  /// Returns a mutable shallow copy of this instance.
+  CompiledResourceKey_mutable toMutable() =>
+      CompiledResourceKey_mutable._(this.source, this.context);
+
+  @_core.override
+  _core.bool operator ==(other) {
+    if (_core.identical(this, other)) return true;
+    if (other is! CompiledResourceKey) return false;
+    return _skir.internal__listEquality.equals(
+      _equality_proxy,
+      other._equality_proxy,
+    );
+  }
+
+  @_core.override
+  _core.int get hashCode => _skir.internal__listEquality.hash(_equality_proxy);
+
+  _core.List get _equality_proxy => [this.source, this.context];
+
+  @_core.override
+  _core.String toString() => _skir.internal__stringify(this, serializer);
+
+  /// Serializer for `CompiledResourceKey` instances.
+  static _skir.StructSerializer<
+    CompiledResourceKey,
+    CompiledResourceKey_mutable
+  >
+  get serializer {
+    if (_serializerBuilder.mustInitialize()) {
+      _serializerBuilder.addField(
+        "source",
+        "source",
+        0,
+        _lib_editor_v1_type_catalog.ResourceId.serializer,
+        "",
+        (it) => it.source,
+        (it, v) => it.source = v,
+      );
+      _serializerBuilder.addField(
+        "context",
+        "context",
+        1,
+        CompilationContext.serializer,
+        "",
+        (it) => it.context,
+        (it, v) => it.context = v,
+      );
+      _serializerBuilder.finalize();
+    }
+    return _serializerBuilder.serializer;
+  }
+
+  static final _serializerBuilder = _skir.internal__StructSerializerBuilder(
+    recordId: "editor/v1/compiled_content.skir:CompiledResourceKey",
+    doc: "Identifies a resource in a compiled occurrence.",
+    defaultInstance: defaultInstance,
+    newMutable: (it) => (it != null) ? it.toMutable() : mutable(),
+    toFrozen: (CompiledResourceKey_mutable it) => it.toFrozen(),
+    getUnrecognizedFields: (it) => it._u,
+    setUnrecognizedFields: (it, u) => it._u = u,
+  );
+}
+
+/// Mutable version of [CompiledResourceKey].
+final class CompiledResourceKey_mutable
+    implements CompiledResourceKey_orMutable {
+  _lib_editor_v1_type_catalog.ResourceId_orMutable source;
+  CompilationContext_orMutable context;
+  _skir.internal__UnrecognizedFields? _u;
+
+  CompiledResourceKey_mutable._(this.source, this.context);
+
+  /// If the value of [source] is already mutable, returns it as-is.
+  /// Otherwise, makes a mutable copy, assigns it back to [source] and returns it.
+  _lib_editor_v1_type_catalog.ResourceId_mutable get mutableSource {
+    final value = this.source;
+    if (value is _lib_editor_v1_type_catalog.ResourceId_mutable) {
+      return value;
+    } else {
+      return this.source = (value as _lib_editor_v1_type_catalog.ResourceId)
+          .toMutable();
+    }
+  }
+
+  /// If the value of [context] is already mutable, returns it as-is.
+  /// Otherwise, makes a mutable copy, assigns it back to [context] and returns it.
+  CompilationContext_mutable get mutableContext {
+    final value = this.context;
+    if (value is CompilationContext_mutable) {
+      return value;
+    } else {
+      return this.context = (value as CompilationContext).toMutable();
+    }
+  }
+
+  /// Returns a deeply immutable copy of this instance.
+  @_core.override
+  CompiledResourceKey toFrozen() =>
+      CompiledResourceKey(source: this.source, context: this.context)
+        .._u = this._u;
+}
+
+// -----------------------------------------------------------------------------
+// struct CompiledResource
+// -----------------------------------------------------------------------------
+
+sealed class CompiledResource_orMutable {
+  CompiledResourceKey_orMutable get key;
+  _lib_editor_v1_type_catalog.NamedTypeUse_orMutable get actualType;
+  _lib_editor_v1_type_catalog.NativeBindingId_orMutable get bindingProvider;
+  _core.String get bindingSignature;
+  _lib_editor_v1_type_catalog.NamedValue_orMutable get value;
+
+  CompiledResource toFrozen();
+}
+
+/// The typed record of one compiled resource before graph hydration, with the native binding that
+/// produced it. Engines hydrate it only through the same binding provider and signature.
+///
+/// Deeply immutable.
+final class CompiledResource implements CompiledResource_orMutable {
+  @_core.override
+  final CompiledResourceKey key;
+  @_core.override
+  final _lib_editor_v1_type_catalog.NamedTypeUse actualType;
+  @_core.override
+  final _lib_editor_v1_type_catalog.NativeBindingId bindingProvider;
+  @_core.override
+  final _core.String bindingSignature;
+  @_core.override
+  final _lib_editor_v1_type_catalog.NamedValue value;
+  _skir.internal__UnrecognizedFields? _u;
+
+  factory CompiledResource({
+    required CompiledResourceKey_orMutable key,
+    required _lib_editor_v1_type_catalog.NamedTypeUse_orMutable actualType,
+    required _lib_editor_v1_type_catalog.NativeBindingId_orMutable
+    bindingProvider,
+    required _core.String bindingSignature,
+    required _lib_editor_v1_type_catalog.NamedValue_orMutable value,
+  }) => CompiledResource._(
+    key.toFrozen(),
+    actualType.toFrozen(),
+    bindingProvider.toFrozen(),
+    bindingSignature,
+    value.toFrozen(),
+  );
+
+  CompiledResource._(
+    this.key,
+    this.actualType,
+    this.bindingProvider,
+    this.bindingSignature,
+    this.value,
+  );
+
+  /// Default instance with all fields set to their default values.
+  static final defaultInstance = CompiledResource._(
+    CompiledResourceKey.defaultInstance,
+    _lib_editor_v1_type_catalog.NamedTypeUse.defaultInstance,
+    _lib_editor_v1_type_catalog.NativeBindingId.defaultInstance,
+    "",
+    _lib_editor_v1_type_catalog.NamedValue.defaultInstance,
+  );
+
+  /// Returns a new mutable instance.
+  /// Fields are initialized to their default values.
+  static CompiledResource_mutable mutable() => CompiledResource_mutable._(
+    CompiledResourceKey.defaultInstance,
+    _lib_editor_v1_type_catalog.NamedTypeUse.defaultInstance,
+    _lib_editor_v1_type_catalog.NativeBindingId.defaultInstance,
+    "",
+    _lib_editor_v1_type_catalog.NamedValue.defaultInstance,
+  );
+
+  /// Returns this instance (no-op).
+  @_core.Deprecated("This instance is already frozen.")
+  @_core.override
+  CompiledResource toFrozen() => this;
+
+  /// Returns a mutable shallow copy of this instance.
+  CompiledResource_mutable toMutable() => CompiledResource_mutable._(
+    this.key,
+    this.actualType,
+    this.bindingProvider,
+    this.bindingSignature,
+    this.value,
+  );
+
+  @_core.override
+  _core.bool operator ==(other) {
+    if (_core.identical(this, other)) return true;
+    if (other is! CompiledResource) return false;
+    return _skir.internal__listEquality.equals(
+      _equality_proxy,
+      other._equality_proxy,
+    );
+  }
+
+  @_core.override
+  _core.int get hashCode => _skir.internal__listEquality.hash(_equality_proxy);
+
+  _core.List get _equality_proxy => [
+    this.key,
+    this.actualType,
+    this.bindingProvider,
+    this.bindingSignature,
+    this.value,
+  ];
+
+  @_core.override
+  _core.String toString() => _skir.internal__stringify(this, serializer);
+
+  /// Serializer for `CompiledResource` instances.
+  static _skir.StructSerializer<CompiledResource, CompiledResource_mutable>
+  get serializer {
+    if (_serializerBuilder.mustInitialize()) {
+      _serializerBuilder.addField(
+        "key",
+        "key",
+        0,
+        CompiledResourceKey.serializer,
+        "",
+        (it) => it.key,
+        (it, v) => it.key = v,
+      );
+      _serializerBuilder.addField(
+        "actual_type",
+        "actualType",
+        1,
+        _lib_editor_v1_type_catalog.NamedTypeUse.serializer,
+        "",
+        (it) => it.actualType,
+        (it, v) => it.actualType = v,
+      );
+      _serializerBuilder.addField(
+        "binding_provider",
+        "bindingProvider",
+        2,
+        _lib_editor_v1_type_catalog.NativeBindingId.serializer,
+        "",
+        (it) => it.bindingProvider,
+        (it, v) => it.bindingProvider = v,
+      );
+      _serializerBuilder.addField(
+        "binding_signature",
+        "bindingSignature",
+        3,
+        _skir.Serializers.string,
+        "",
+        (it) => it.bindingSignature,
+        (it, v) => it.bindingSignature = v,
+      );
+      _serializerBuilder.addField(
+        "value",
+        "value",
+        4,
+        _lib_editor_v1_type_catalog.NamedValue.serializer,
+        "",
+        (it) => it.value,
+        (it, v) => it.value = v,
+      );
+      _serializerBuilder.finalize();
+    }
+    return _serializerBuilder.serializer;
+  }
+
+  static final _serializerBuilder = _skir.internal__StructSerializerBuilder(
+    recordId: "editor/v1/compiled_content.skir:CompiledResource",
+    doc: "The typed record of one compiled resource before graph hydration, with the native binding that\nproduced it. Engines hydrate it only through the same binding provider and signature.",
+    defaultInstance: defaultInstance,
+    newMutable: (it) => (it != null) ? it.toMutable() : mutable(),
+    toFrozen: (CompiledResource_mutable it) => it.toFrozen(),
+    getUnrecognizedFields: (it) => it._u,
+    setUnrecognizedFields: (it, u) => it._u = u,
+  );
+}
+
+/// Mutable version of [CompiledResource].
+final class CompiledResource_mutable implements CompiledResource_orMutable {
+  CompiledResourceKey_orMutable key;
+  _lib_editor_v1_type_catalog.NamedTypeUse_orMutable actualType;
+  _lib_editor_v1_type_catalog.NativeBindingId_orMutable bindingProvider;
+  _core.String bindingSignature;
+  _lib_editor_v1_type_catalog.NamedValue_orMutable value;
+  _skir.internal__UnrecognizedFields? _u;
+
+  CompiledResource_mutable._(
+    this.key,
+    this.actualType,
+    this.bindingProvider,
+    this.bindingSignature,
+    this.value,
+  );
+
+  /// If the value of [key] is already mutable, returns it as-is.
+  /// Otherwise, makes a mutable copy, assigns it back to [key] and returns it.
+  CompiledResourceKey_mutable get mutableKey {
+    final value = this.key;
+    if (value is CompiledResourceKey_mutable) {
+      return value;
+    } else {
+      return this.key = (value as CompiledResourceKey).toMutable();
+    }
+  }
+
+  /// If the value of [actualType] is already mutable, returns it as-is.
+  /// Otherwise, makes a mutable copy, assigns it back to [actualType] and returns it.
+  _lib_editor_v1_type_catalog.NamedTypeUse_mutable get mutableActualType {
+    final value = this.actualType;
+    if (value is _lib_editor_v1_type_catalog.NamedTypeUse_mutable) {
+      return value;
+    } else {
+      return this.actualType =
+          (value as _lib_editor_v1_type_catalog.NamedTypeUse).toMutable();
+    }
+  }
+
+  /// If the value of [bindingProvider] is already mutable, returns it as-is.
+  /// Otherwise, makes a mutable copy, assigns it back to [bindingProvider] and returns it.
+  _lib_editor_v1_type_catalog.NativeBindingId_mutable
+  get mutableBindingProvider {
+    final value = this.bindingProvider;
+    if (value is _lib_editor_v1_type_catalog.NativeBindingId_mutable) {
+      return value;
+    } else {
+      return this.bindingProvider =
+          (value as _lib_editor_v1_type_catalog.NativeBindingId).toMutable();
+    }
+  }
+
+  /// If the value of [value] is already mutable, returns it as-is.
+  /// Otherwise, makes a mutable copy, assigns it back to [value] and returns it.
+  _lib_editor_v1_type_catalog.NamedValue_mutable get mutableValue {
+    final value = this.value;
+    if (value is _lib_editor_v1_type_catalog.NamedValue_mutable) {
+      return value;
+    } else {
+      return this.value = (value as _lib_editor_v1_type_catalog.NamedValue)
+          .toMutable();
+    }
+  }
+
+  /// Returns a deeply immutable copy of this instance.
+  @_core.override
+  CompiledResource toFrozen() => CompiledResource(
+    key: this.key,
+    actualType: this.actualType,
+    bindingProvider: this.bindingProvider,
+    bindingSignature: this.bindingSignature,
+    value: this.value,
+  ).._u = this._u;
+}
+
+// -----------------------------------------------------------------------------
+// struct CompiledRelationOrigin
+// -----------------------------------------------------------------------------
+
+sealed class CompiledRelationOrigin_orMutable {
+  _lib_editor_v1_type_catalog.RelationId_orMutable get relation;
+  _lib_editor_v1_type_catalog.ValuePath_orMutable? get firstLocation;
+  _lib_editor_v1_type_catalog.ValuePath_orMutable? get secondLocation;
+
+  CompiledRelationOrigin toFrozen();
+}
+
+/// The declared relation an edge projects, with the authored locations of both endpoints.
+///
+/// Deeply immutable.
+final class CompiledRelationOrigin implements CompiledRelationOrigin_orMutable {
+  @_core.override
+  final _lib_editor_v1_type_catalog.RelationId relation;
+  @_core.override
+  final _lib_editor_v1_type_catalog.ValuePath? firstLocation;
+  @_core.override
+  final _lib_editor_v1_type_catalog.ValuePath? secondLocation;
+  _skir.internal__UnrecognizedFields? _u;
+
+  factory CompiledRelationOrigin({
+    required _lib_editor_v1_type_catalog.RelationId_orMutable relation,
+    required _lib_editor_v1_type_catalog.ValuePath_orMutable? firstLocation,
+    required _lib_editor_v1_type_catalog.ValuePath_orMutable? secondLocation,
+  }) => CompiledRelationOrigin._(
+    relation.toFrozen(),
+    (firstLocation != null) ? firstLocation.toFrozen() : null,
+    (secondLocation != null) ? secondLocation.toFrozen() : null,
+  );
+
+  CompiledRelationOrigin._(
+    this.relation,
+    this.firstLocation,
+    this.secondLocation,
+  );
+
+  /// Default instance with all fields set to their default values.
+  static final defaultInstance = CompiledRelationOrigin._(
+    _lib_editor_v1_type_catalog.RelationId.defaultInstance,
+    null,
+    null,
+  );
+
+  /// Returns a new mutable instance.
+  /// Fields are initialized to their default values.
+  static CompiledRelationOrigin_mutable mutable() =>
+      CompiledRelationOrigin_mutable._(
+        _lib_editor_v1_type_catalog.RelationId.defaultInstance,
+        null,
+        null,
+      );
+
+  /// Returns this instance (no-op).
+  @_core.Deprecated("This instance is already frozen.")
+  @_core.override
+  CompiledRelationOrigin toFrozen() => this;
+
+  /// Returns a mutable shallow copy of this instance.
+  CompiledRelationOrigin_mutable toMutable() =>
+      CompiledRelationOrigin_mutable._(
+        this.relation,
+        this.firstLocation,
+        this.secondLocation,
+      );
+
+  @_core.override
+  _core.bool operator ==(other) {
+    if (_core.identical(this, other)) return true;
+    if (other is! CompiledRelationOrigin) return false;
+    return _skir.internal__listEquality.equals(
+      _equality_proxy,
+      other._equality_proxy,
+    );
+  }
+
+  @_core.override
+  _core.int get hashCode => _skir.internal__listEquality.hash(_equality_proxy);
+
+  _core.List get _equality_proxy => [
+    this.relation,
+    this.firstLocation,
+    this.secondLocation,
+  ];
+
+  @_core.override
+  _core.String toString() => _skir.internal__stringify(this, serializer);
+
+  /// Serializer for `CompiledRelationOrigin` instances.
+  static _skir.StructSerializer<
+    CompiledRelationOrigin,
+    CompiledRelationOrigin_mutable
+  >
+  get serializer {
+    if (_serializerBuilder.mustInitialize()) {
+      _serializerBuilder.addField(
+        "relation",
+        "relation",
+        0,
+        _lib_editor_v1_type_catalog.RelationId.serializer,
+        "",
+        (it) => it.relation,
+        (it, v) => it.relation = v,
+      );
+      _serializerBuilder.addField(
+        "first_location",
+        "firstLocation",
+        1,
+        _skir.Serializers.optional(
+          _lib_editor_v1_type_catalog.ValuePath.serializer,
+        ),
+        "",
+        (it) => it.firstLocation,
+        (it, v) => it.firstLocation = v,
+      );
+      _serializerBuilder.addField(
+        "second_location",
+        "secondLocation",
+        2,
+        _skir.Serializers.optional(
+          _lib_editor_v1_type_catalog.ValuePath.serializer,
+        ),
+        "",
+        (it) => it.secondLocation,
+        (it, v) => it.secondLocation = v,
+      );
+      _serializerBuilder.finalize();
+    }
+    return _serializerBuilder.serializer;
+  }
+
+  static final _serializerBuilder = _skir.internal__StructSerializerBuilder(
+    recordId: "editor/v1/compiled_content.skir:CompiledRelationOrigin",
+    doc: "The declared relation an edge projects, with the authored locations of both endpoints.",
+    defaultInstance: defaultInstance,
+    newMutable: (it) => (it != null) ? it.toMutable() : mutable(),
+    toFrozen: (CompiledRelationOrigin_mutable it) => it.toFrozen(),
+    getUnrecognizedFields: (it) => it._u,
+    setUnrecognizedFields: (it, u) => it._u = u,
+  );
+}
+
+/// Mutable version of [CompiledRelationOrigin].
+final class CompiledRelationOrigin_mutable
+    implements CompiledRelationOrigin_orMutable {
+  _lib_editor_v1_type_catalog.RelationId_orMutable relation;
+  _lib_editor_v1_type_catalog.ValuePath_orMutable? firstLocation;
+  _lib_editor_v1_type_catalog.ValuePath_orMutable? secondLocation;
+  _skir.internal__UnrecognizedFields? _u;
+
+  CompiledRelationOrigin_mutable._(
+    this.relation,
+    this.firstLocation,
+    this.secondLocation,
+  );
+
+  /// If the value of [relation] is already mutable, returns it as-is.
+  /// Otherwise, makes a mutable copy, assigns it back to [relation] and returns it.
+  _lib_editor_v1_type_catalog.RelationId_mutable get mutableRelation {
+    final value = this.relation;
+    if (value is _lib_editor_v1_type_catalog.RelationId_mutable) {
+      return value;
+    } else {
+      return this.relation = (value as _lib_editor_v1_type_catalog.RelationId)
+          .toMutable();
+    }
+  }
+
+  /// Returns a deeply immutable copy of this instance.
+  @_core.override
+  CompiledRelationOrigin toFrozen() => CompiledRelationOrigin(
+    relation: this.relation,
+    firstLocation: this.firstLocation,
+    secondLocation: this.secondLocation,
+  ).._u = this._u;
+}
+
+// -----------------------------------------------------------------------------
+// enum CompiledEdgeOrigin
+// -----------------------------------------------------------------------------
+
+/// To switch on the variants:
+///   ```
+///   switch (e) {
+///     case CompiledEdgeOrigin_unknown(): { ... }
+///     case CompiledEdgeOrigin_relation(:var value): { ... }
+///   }
+///   ```
+///
+/// Deeply immutable.
+sealed class CompiledEdgeOrigin {
+  /// Constant indicating an unknown `CompiledEdgeOrigin`.
+  /// Default value for fields of type `CompiledEdgeOrigin`.
+  static const CompiledEdgeOrigin unknown =
+      CompiledEdgeOrigin_unknown._instance;
+
+  /// Create a 'relation' variant wrapping around the given value.
+  factory CompiledEdgeOrigin.wrapRelation(CompiledRelationOrigin value) =>
+      CompiledEdgeOrigin_relationWrapper._(value);
+
+  /// Same as `wrapRelation(CompiledRelationOrigin(...))`.
+  factory CompiledEdgeOrigin.createRelation({
+    required _lib_editor_v1_type_catalog.RelationId_orMutable relation,
+    required _lib_editor_v1_type_catalog.ValuePath_orMutable? firstLocation,
+    required _lib_editor_v1_type_catalog.ValuePath_orMutable? secondLocation,
+  }) => CompiledEdgeOrigin.wrapRelation(
+    CompiledRelationOrigin(
+      relation: relation,
+      firstLocation: firstLocation,
+      secondLocation: secondLocation,
+    ),
+  );
+
+  /// Returns the kind of variant held by this CompiledEdgeOrigin.
+  CompiledEdgeOrigin_kind get kind;
+
+  /// Serializer for `CompiledEdgeOrigin` instances.
+  static _skir.EnumSerializer<CompiledEdgeOrigin> get serializer {
+    if (_serializerBuilder.mustInitialize()) {
+      _serializerBuilder.addWrapperVariant(
+        1,
+        "relation",
+        "wrapRelation",
+        CompiledRelationOrigin.serializer,
+        "",
+        CompiledEdgeOrigin_relationWrapper._,
+        (it) => it.value,
+        ordinal: CompiledEdgeOrigin_kind.relationWrapper._ordinal,
+      );
+      _serializerBuilder.finalize();
+    }
+    return _serializerBuilder.serializer;
+  }
+
+  static final _serializerBuilder = _skir.internal__EnumSerializerBuilder
+      .create(
+        recordId: "editor/v1/compiled_content.skir:CompiledEdgeOrigin",
+        doc: "",
+        unknownInstance: CompiledEdgeOrigin_unknown._instance,
+        enumInstance: CompiledEdgeOrigin.unknown,
+        getOrdinal: (it) => it.kind._ordinal,
+        wrapUnrecognized: CompiledEdgeOrigin_unknown._unrecognized,
+        getUnrecognized: (it) => it._u,
+      );
+}
+
+/// The kind of variant held by a `CompiledEdgeOrigin`.
+enum CompiledEdgeOrigin_kind {
+  unknown(0),
+  relationWrapper(1);
+
+  final _core.int _ordinal;
+
+  const CompiledEdgeOrigin_kind(this._ordinal);
+}
+
+final class CompiledEdgeOrigin_unknown implements CompiledEdgeOrigin {
+  static const _instance = CompiledEdgeOrigin_unknown._();
+
+  final _skir.internal__UnrecognizedVariant? _u;
+
+  const CompiledEdgeOrigin_unknown._() : _u = null;
+  CompiledEdgeOrigin_unknown._unrecognized(this._u);
+
+  @_core.override
+  CompiledEdgeOrigin_kind get kind => CompiledEdgeOrigin_kind.unknown;
+  @_core.override
+  _core.bool operator ==(other) => other is CompiledEdgeOrigin_unknown;
+  @_core.override
+  _core.int get hashCode => 8118964;
+  @_core.override
+  _core.String toString() =>
+      _skir.internal__stringify(this, CompiledEdgeOrigin.serializer);
+}
+
+sealed class _CompiledEdgeOrigin_wrapper implements CompiledEdgeOrigin {
+  _core.dynamic get value;
+
+  @_core.override
+  _core.bool operator ==(other) {
+    if (other is! _CompiledEdgeOrigin_wrapper) return false;
+    return kind == other.kind && value == other.value;
+  }
+
+  @_core.override
+  _core.int get hashCode => (kind._ordinal * 31) ^ value.hashCode;
+
+  @_core.override
+  _core.String toString() =>
+      _skir.internal__stringify(this, CompiledEdgeOrigin.serializer);
+}
+
+final class CompiledEdgeOrigin_relationWrapper
+    extends _CompiledEdgeOrigin_wrapper {
+  final CompiledRelationOrigin value;
+
+  CompiledEdgeOrigin_relationWrapper._(this.value);
+
+  @_core.override
+  CompiledEdgeOrigin_kind get kind => CompiledEdgeOrigin_kind.relationWrapper;
+}
+
+// -----------------------------------------------------------------------------
+// struct CompiledEdge
+// -----------------------------------------------------------------------------
+
+sealed class CompiledEdge_orMutable {
+  CompiledResourceKey_orMutable get source;
+  CompiledResourceKey_orMutable get target;
+  CompiledEdgeOrigin get origin;
+
+  CompiledEdge toFrozen();
+}
+
+/// A link between compiled keys, including keys outside its shard.
+///
+/// Deeply immutable.
+final class CompiledEdge implements CompiledEdge_orMutable {
+  @_core.override
+  final CompiledResourceKey source;
+  @_core.override
+  final CompiledResourceKey target;
+  @_core.override
+  final CompiledEdgeOrigin origin;
+  _skir.internal__UnrecognizedFields? _u;
+
+  factory CompiledEdge({
+    required CompiledResourceKey_orMutable source,
+    required CompiledResourceKey_orMutable target,
+    required CompiledEdgeOrigin origin,
+  }) => CompiledEdge._(source.toFrozen(), target.toFrozen(), origin);
+
+  CompiledEdge._(this.source, this.target, this.origin);
+
+  /// Default instance with all fields set to their default values.
+  static final defaultInstance = CompiledEdge._(
+    CompiledResourceKey.defaultInstance,
+    CompiledResourceKey.defaultInstance,
+    CompiledEdgeOrigin.unknown,
+  );
+
+  /// Returns a new mutable instance.
+  /// Fields are initialized to their default values.
+  static CompiledEdge_mutable mutable() => CompiledEdge_mutable._(
+    CompiledResourceKey.defaultInstance,
+    CompiledResourceKey.defaultInstance,
+    CompiledEdgeOrigin.unknown,
+  );
+
+  /// Returns this instance (no-op).
+  @_core.Deprecated("This instance is already frozen.")
+  @_core.override
+  CompiledEdge toFrozen() => this;
+
+  /// Returns a mutable shallow copy of this instance.
+  CompiledEdge_mutable toMutable() =>
+      CompiledEdge_mutable._(this.source, this.target, this.origin);
+
+  @_core.override
+  _core.bool operator ==(other) {
+    if (_core.identical(this, other)) return true;
+    if (other is! CompiledEdge) return false;
+    return _skir.internal__listEquality.equals(
+      _equality_proxy,
+      other._equality_proxy,
+    );
+  }
+
+  @_core.override
+  _core.int get hashCode => _skir.internal__listEquality.hash(_equality_proxy);
+
+  _core.List get _equality_proxy => [this.source, this.target, this.origin];
+
+  @_core.override
+  _core.String toString() => _skir.internal__stringify(this, serializer);
+
+  /// Serializer for `CompiledEdge` instances.
+  static _skir.StructSerializer<CompiledEdge, CompiledEdge_mutable>
+  get serializer {
+    if (_serializerBuilder.mustInitialize()) {
+      _serializerBuilder.addField(
+        "source",
+        "source",
+        0,
+        CompiledResourceKey.serializer,
+        "",
+        (it) => it.source,
+        (it, v) => it.source = v,
+      );
+      _serializerBuilder.addField(
+        "target",
+        "target",
+        1,
+        CompiledResourceKey.serializer,
+        "",
+        (it) => it.target,
+        (it, v) => it.target = v,
+      );
+      _serializerBuilder.addField(
+        "origin",
+        "origin",
+        2,
+        CompiledEdgeOrigin.serializer,
+        "",
+        (it) => it.origin,
+        (it, v) => it.origin = v,
+      );
+      _serializerBuilder.finalize();
+    }
+    return _serializerBuilder.serializer;
+  }
+
+  static final _serializerBuilder = _skir.internal__StructSerializerBuilder(
+    recordId: "editor/v1/compiled_content.skir:CompiledEdge",
+    doc: "A link between compiled keys, including keys outside its shard.",
+    defaultInstance: defaultInstance,
+    newMutable: (it) => (it != null) ? it.toMutable() : mutable(),
+    toFrozen: (CompiledEdge_mutable it) => it.toFrozen(),
+    getUnrecognizedFields: (it) => it._u,
+    setUnrecognizedFields: (it, u) => it._u = u,
+  );
+}
+
+/// Mutable version of [CompiledEdge].
+final class CompiledEdge_mutable implements CompiledEdge_orMutable {
+  CompiledResourceKey_orMutable source;
+  CompiledResourceKey_orMutable target;
+  CompiledEdgeOrigin origin;
+  _skir.internal__UnrecognizedFields? _u;
+
+  CompiledEdge_mutable._(this.source, this.target, this.origin);
+
+  /// If the value of [source] is already mutable, returns it as-is.
+  /// Otherwise, makes a mutable copy, assigns it back to [source] and returns it.
+  CompiledResourceKey_mutable get mutableSource {
+    final value = this.source;
+    if (value is CompiledResourceKey_mutable) {
+      return value;
+    } else {
+      return this.source = (value as CompiledResourceKey).toMutable();
+    }
+  }
+
+  /// If the value of [target] is already mutable, returns it as-is.
+  /// Otherwise, makes a mutable copy, assigns it back to [target] and returns it.
+  CompiledResourceKey_mutable get mutableTarget {
+    final value = this.target;
+    if (value is CompiledResourceKey_mutable) {
+      return value;
+    } else {
+      return this.target = (value as CompiledResourceKey).toMutable();
+    }
+  }
+
+  /// Returns a deeply immutable copy of this instance.
+  @_core.override
+  CompiledEdge toFrozen() => CompiledEdge(
+    source: this.source,
+    target: this.target,
+    origin: this.origin,
+  ).._u = this._u;
+}
+
+// -----------------------------------------------------------------------------
+// struct RuntimeRelationFact
+// -----------------------------------------------------------------------------
+
+sealed class RuntimeRelationFact_orMutable {
+  _lib_editor_v1_type_catalog.RelationId_orMutable get relation;
+  _core.bool get ownsResources;
+
+  RuntimeRelationFact toFrozen();
+}
+
+/// Deeply immutable.
+final class RuntimeRelationFact implements RuntimeRelationFact_orMutable {
+  @_core.override
+  final _lib_editor_v1_type_catalog.RelationId relation;
+  @_core.override
+  final _core.bool ownsResources;
+  _skir.internal__UnrecognizedFields? _u;
+
+  factory RuntimeRelationFact({
+    required _lib_editor_v1_type_catalog.RelationId_orMutable relation,
+    required _core.bool ownsResources,
+  }) => RuntimeRelationFact._(relation.toFrozen(), ownsResources);
+
+  RuntimeRelationFact._(this.relation, this.ownsResources);
+
+  /// Default instance with all fields set to their default values.
+  static final defaultInstance = RuntimeRelationFact._(
+    _lib_editor_v1_type_catalog.RelationId.defaultInstance,
+    false,
+  );
+
+  /// Returns a new mutable instance.
+  /// Fields are initialized to their default values.
+  static RuntimeRelationFact_mutable mutable() => RuntimeRelationFact_mutable._(
+    _lib_editor_v1_type_catalog.RelationId.defaultInstance,
+    false,
+  );
+
+  /// Returns this instance (no-op).
+  @_core.Deprecated("This instance is already frozen.")
+  @_core.override
+  RuntimeRelationFact toFrozen() => this;
+
+  /// Returns a mutable shallow copy of this instance.
+  RuntimeRelationFact_mutable toMutable() =>
+      RuntimeRelationFact_mutable._(this.relation, this.ownsResources);
+
+  @_core.override
+  _core.bool operator ==(other) {
+    if (_core.identical(this, other)) return true;
+    if (other is! RuntimeRelationFact) return false;
+    return _skir.internal__listEquality.equals(
+      _equality_proxy,
+      other._equality_proxy,
+    );
+  }
+
+  @_core.override
+  _core.int get hashCode => _skir.internal__listEquality.hash(_equality_proxy);
+
+  _core.List get _equality_proxy => [this.relation, this.ownsResources];
+
+  @_core.override
+  _core.String toString() => _skir.internal__stringify(this, serializer);
+
+  /// Serializer for `RuntimeRelationFact` instances.
+  static _skir.StructSerializer<
+    RuntimeRelationFact,
+    RuntimeRelationFact_mutable
+  >
+  get serializer {
+    if (_serializerBuilder.mustInitialize()) {
+      _serializerBuilder.addField(
+        "relation",
+        "relation",
+        0,
+        _lib_editor_v1_type_catalog.RelationId.serializer,
+        "",
+        (it) => it.relation,
+        (it, v) => it.relation = v,
+      );
+      _serializerBuilder.addField(
+        "owns_resources",
+        "ownsResources",
+        1,
+        _skir.Serializers.bool,
+        "",
+        (it) => it.ownsResources,
+        (it, v) => it.ownsResources = v,
+      );
+      _serializerBuilder.finalize();
+    }
+    return _serializerBuilder.serializer;
+  }
+
+  static final _serializerBuilder = _skir.internal__StructSerializerBuilder(
+    recordId: "editor/v1/compiled_content.skir:RuntimeRelationFact",
+    doc: "",
+    defaultInstance: defaultInstance,
+    newMutable: (it) => (it != null) ? it.toMutable() : mutable(),
+    toFrozen: (RuntimeRelationFact_mutable it) => it.toFrozen(),
+    getUnrecognizedFields: (it) => it._u,
+    setUnrecognizedFields: (it, u) => it._u = u,
+  );
+}
+
+/// Mutable version of [RuntimeRelationFact].
+final class RuntimeRelationFact_mutable
+    implements RuntimeRelationFact_orMutable {
+  _lib_editor_v1_type_catalog.RelationId_orMutable relation;
+  _core.bool ownsResources;
+  _skir.internal__UnrecognizedFields? _u;
+
+  RuntimeRelationFact_mutable._(this.relation, this.ownsResources);
+
+  /// If the value of [relation] is already mutable, returns it as-is.
+  /// Otherwise, makes a mutable copy, assigns it back to [relation] and returns it.
+  _lib_editor_v1_type_catalog.RelationId_mutable get mutableRelation {
+    final value = this.relation;
+    if (value is _lib_editor_v1_type_catalog.RelationId_mutable) {
+      return value;
+    } else {
+      return this.relation = (value as _lib_editor_v1_type_catalog.RelationId)
+          .toMutable();
+    }
+  }
+
+  /// Returns a deeply immutable copy of this instance.
+  @_core.override
+  RuntimeRelationFact toFrozen() => RuntimeRelationFact(
+    relation: this.relation,
+    ownsResources: this.ownsResources,
+  ).._u = this._u;
+}
+
+// -----------------------------------------------------------------------------
+// struct RuntimeCompilationFacts
+// -----------------------------------------------------------------------------
+
+sealed class RuntimeCompilationFacts_orMutable {
+  _core.int get formatRevision;
+  CompiledResourceKey_orMutable get root;
+  _core.Iterable<CompiledResource_orMutable> get resources;
+  _core.Iterable<CompiledEdge_orMutable> get edges;
+  _core.Iterable<_lib_editor_v1_type_catalog.TypeDefinition_orMutable>
+  get types;
+  _core.Iterable<RuntimeRelationFact_orMutable> get relations;
+
+  RuntimeCompilationFacts toFrozen();
+}
+
+/// The canonical resource graph of one compilation unit: its resources, edges, and the type and
+/// relation declarations engines need to admit them against their runtime catalog.
+///
+/// Deeply immutable.
+final class RuntimeCompilationFacts
+    implements RuntimeCompilationFacts_orMutable {
+  @_core.override
+  final _core.int formatRevision;
+  @_core.override
+  final CompiledResourceKey root;
+  @_core.override
+  final _core.Iterable<CompiledResource> resources;
+  @_core.override
+  final _core.Iterable<CompiledEdge> edges;
+  @_core.override
+  final _core.Iterable<_lib_editor_v1_type_catalog.TypeDefinition> types;
+  @_core.override
+  final _core.Iterable<RuntimeRelationFact> relations;
+  _skir.internal__UnrecognizedFields? _u;
+
+  factory RuntimeCompilationFacts({
+    required _core.int formatRevision,
+    required CompiledResourceKey_orMutable root,
+    required _core.Iterable<CompiledResource_orMutable> resources,
+    required _core.Iterable<CompiledEdge_orMutable> edges,
+    required _core.Iterable<
+      _lib_editor_v1_type_catalog.TypeDefinition_orMutable
+    >
+    types,
+    required _core.Iterable<RuntimeRelationFact_orMutable> relations,
+  }) => RuntimeCompilationFacts._(
+    formatRevision,
+    root.toFrozen(),
+    _skir.internal__frozenMappedCopy(resources, (it) => it.toFrozen()),
+    _skir.internal__frozenMappedCopy(edges, (it) => it.toFrozen()),
+    _skir.internal__frozenMappedCopy(types, (it) => it.toFrozen()),
+    _skir.internal__frozenMappedCopy(relations, (it) => it.toFrozen()),
+  );
+
+  RuntimeCompilationFacts._(
+    this.formatRevision,
+    this.root,
+    this.resources,
+    this.edges,
+    this.types,
+    this.relations,
+  );
+
+  /// Default instance with all fields set to their default values.
+  static final defaultInstance = RuntimeCompilationFacts._(
+    0,
+    CompiledResourceKey.defaultInstance,
+    _skir.KeyedIterable.empty,
+    _skir.KeyedIterable.empty,
+    _skir.KeyedIterable.empty,
+    _skir.KeyedIterable.empty,
+  );
+
+  /// Returns a new mutable instance.
+  /// Fields are initialized to their default values.
+  static RuntimeCompilationFacts_mutable mutable() =>
+      RuntimeCompilationFacts_mutable._(
+        0,
+        CompiledResourceKey.defaultInstance,
+        _skir.KeyedIterable.empty,
+        _skir.KeyedIterable.empty,
+        _skir.KeyedIterable.empty,
+        _skir.KeyedIterable.empty,
+      );
+
+  /// Returns this instance (no-op).
+  @_core.Deprecated("This instance is already frozen.")
+  @_core.override
+  RuntimeCompilationFacts toFrozen() => this;
+
+  /// Returns a mutable shallow copy of this instance.
+  RuntimeCompilationFacts_mutable toMutable() =>
+      RuntimeCompilationFacts_mutable._(
+        this.formatRevision,
+        this.root,
+        this.resources,
+        this.edges,
+        this.types,
+        this.relations,
+      );
+
+  @_core.override
+  _core.bool operator ==(other) {
+    if (_core.identical(this, other)) return true;
+    if (other is! RuntimeCompilationFacts) return false;
+    return _skir.internal__listEquality.equals(
+      _equality_proxy,
+      other._equality_proxy,
+    );
+  }
+
+  @_core.override
+  _core.int get hashCode => _skir.internal__listEquality.hash(_equality_proxy);
+
+  _core.List get _equality_proxy => [
+    this.formatRevision,
+    this.root,
+    this.resources,
+    this.edges,
+    this.types,
+    this.relations,
+  ];
+
+  @_core.override
+  _core.String toString() => _skir.internal__stringify(this, serializer);
+
+  /// Serializer for `RuntimeCompilationFacts` instances.
+  static _skir.StructSerializer<
+    RuntimeCompilationFacts,
+    RuntimeCompilationFacts_mutable
+  >
+  get serializer {
+    if (_serializerBuilder.mustInitialize()) {
+      _serializerBuilder.addField(
+        "format_revision",
+        "formatRevision",
+        0,
+        _skir.Serializers.int32,
+        "",
+        (it) => it.formatRevision,
+        (it, v) => it.formatRevision = v,
+      );
+      _serializerBuilder.addField(
+        "root",
+        "root",
+        1,
+        CompiledResourceKey.serializer,
+        "",
+        (it) => it.root,
+        (it, v) => it.root = v,
+      );
+      _serializerBuilder.addField(
+        "resources",
+        "resources",
+        2,
+        _skir.Serializers.iterable(CompiledResource.serializer),
+        "",
+        (it) => it.resources,
+        (it, v) => it.resources = v,
+      );
+      _serializerBuilder.addField(
+        "edges",
+        "edges",
+        3,
+        _skir.Serializers.iterable(CompiledEdge.serializer),
+        "",
+        (it) => it.edges,
+        (it, v) => it.edges = v,
+      );
+      _serializerBuilder.addField(
+        "types",
+        "types",
+        4,
+        _skir.Serializers.iterable(
+          _lib_editor_v1_type_catalog.TypeDefinition.serializer,
+        ),
+        "",
+        (it) => it.types,
+        (it, v) => it.types = v,
+      );
+      _serializerBuilder.addField(
+        "relations",
+        "relations",
+        5,
+        _skir.Serializers.iterable(RuntimeRelationFact.serializer),
+        "",
+        (it) => it.relations,
+        (it, v) => it.relations = v,
+      );
+      _serializerBuilder.finalize();
+    }
+    return _serializerBuilder.serializer;
+  }
+
+  static final _serializerBuilder = _skir.internal__StructSerializerBuilder(
+    recordId: "editor/v1/compiled_content.skir:RuntimeCompilationFacts",
+    doc: "The canonical resource graph of one compilation unit: its resources, edges, and the type and\nrelation declarations engines need to admit them against their runtime catalog.",
+    defaultInstance: defaultInstance,
+    newMutable: (it) => (it != null) ? it.toMutable() : mutable(),
+    toFrozen: (RuntimeCompilationFacts_mutable it) => it.toFrozen(),
+    getUnrecognizedFields: (it) => it._u,
+    setUnrecognizedFields: (it, u) => it._u = u,
+  );
+}
+
+/// Mutable version of [RuntimeCompilationFacts].
+final class RuntimeCompilationFacts_mutable
+    implements RuntimeCompilationFacts_orMutable {
+  _core.int formatRevision;
+  CompiledResourceKey_orMutable root;
+  _core.Iterable<CompiledResource_orMutable> resources;
+  _core.Iterable<CompiledEdge_orMutable> edges;
+  _core.Iterable<_lib_editor_v1_type_catalog.TypeDefinition_orMutable> types;
+  _core.Iterable<RuntimeRelationFact_orMutable> relations;
+  _skir.internal__UnrecognizedFields? _u;
+
+  RuntimeCompilationFacts_mutable._(
+    this.formatRevision,
+    this.root,
+    this.resources,
+    this.edges,
+    this.types,
+    this.relations,
+  );
+
+  /// If the value of [root] is already mutable, returns it as-is.
+  /// Otherwise, makes a mutable copy, assigns it back to [root] and returns it.
+  CompiledResourceKey_mutable get mutableRoot {
+    final value = this.root;
+    if (value is CompiledResourceKey_mutable) {
+      return value;
+    } else {
+      return this.root = (value as CompiledResourceKey).toMutable();
+    }
+  }
+
+  /// If the value of [resources] is already mutable, returns it as-is.
+  /// Otherwise, makes a mutable copy, assigns it back to [resources] and returns it.
+  _core.List<CompiledResource_orMutable> get mutableResources {
+    final value = this.resources;
+    if (value is _skir.internal__MutableList<CompiledResource_orMutable>) {
+      return value;
+    } else {
+      return this.resources = _skir.internal__MutableList([...value]);
+    }
+  }
+
+  /// If the value of [edges] is already mutable, returns it as-is.
+  /// Otherwise, makes a mutable copy, assigns it back to [edges] and returns it.
+  _core.List<CompiledEdge_orMutable> get mutableEdges {
+    final value = this.edges;
+    if (value is _skir.internal__MutableList<CompiledEdge_orMutable>) {
+      return value;
+    } else {
+      return this.edges = _skir.internal__MutableList([...value]);
+    }
+  }
+
+  /// If the value of [types] is already mutable, returns it as-is.
+  /// Otherwise, makes a mutable copy, assigns it back to [types] and returns it.
+  _core.List<_lib_editor_v1_type_catalog.TypeDefinition_orMutable>
+  get mutableTypes {
+    final value = this.types;
+    if (value
+        is _skir.internal__MutableList<
+          _lib_editor_v1_type_catalog.TypeDefinition_orMutable
+        >) {
+      return value;
+    } else {
+      return this.types = _skir.internal__MutableList([...value]);
+    }
+  }
+
+  /// If the value of [relations] is already mutable, returns it as-is.
+  /// Otherwise, makes a mutable copy, assigns it back to [relations] and returns it.
+  _core.List<RuntimeRelationFact_orMutable> get mutableRelations {
+    final value = this.relations;
+    if (value is _skir.internal__MutableList<RuntimeRelationFact_orMutable>) {
+      return value;
+    } else {
+      return this.relations = _skir.internal__MutableList([...value]);
+    }
+  }
+
+  /// Returns a deeply immutable copy of this instance.
+  @_core.override
+  RuntimeCompilationFacts toFrozen() => RuntimeCompilationFacts(
+    formatRevision: this.formatRevision,
+    root: this.root,
+    resources: this.resources,
+    edges: this.edges,
+    types: this.types,
+    relations: this.relations,
+  ).._u = this._u;
+}
+
+// -----------------------------------------------------------------------------
+// struct ResourceGraphShard
+// -----------------------------------------------------------------------------
+
+sealed class ResourceGraphShard_orMutable {
+  _core.String get digest;
+  RuntimeCompilationFacts_orMutable get facts;
+
+  ResourceGraphShard toFrozen();
+}
+
+/// The payload of a resource graph blob: canonical facts and their semantic digest, the lowercase
+/// SHA 256 of their canonical encoding. Consumers recompute the digest before admitting the facts.
+///
+/// Deeply immutable.
+final class ResourceGraphShard implements ResourceGraphShard_orMutable {
+  @_core.override
+  final _core.String digest;
+  @_core.override
+  final RuntimeCompilationFacts facts;
+  _skir.internal__UnrecognizedFields? _u;
+
+  factory ResourceGraphShard({
+    required _core.String digest,
+    required RuntimeCompilationFacts_orMutable facts,
+  }) => ResourceGraphShard._(digest, facts.toFrozen());
+
+  ResourceGraphShard._(this.digest, this.facts);
+
+  /// Default instance with all fields set to their default values.
+  static final defaultInstance = ResourceGraphShard._(
+    "",
+    RuntimeCompilationFacts.defaultInstance,
+  );
+
+  /// Returns a new mutable instance.
+  /// Fields are initialized to their default values.
+  static ResourceGraphShard_mutable mutable() =>
+      ResourceGraphShard_mutable._("", RuntimeCompilationFacts.defaultInstance);
+
+  /// Returns this instance (no-op).
+  @_core.Deprecated("This instance is already frozen.")
+  @_core.override
+  ResourceGraphShard toFrozen() => this;
+
+  /// Returns a mutable shallow copy of this instance.
+  ResourceGraphShard_mutable toMutable() =>
+      ResourceGraphShard_mutable._(this.digest, this.facts);
+
+  @_core.override
+  _core.bool operator ==(other) {
+    if (_core.identical(this, other)) return true;
+    if (other is! ResourceGraphShard) return false;
+    return _skir.internal__listEquality.equals(
+      _equality_proxy,
+      other._equality_proxy,
+    );
+  }
+
+  @_core.override
+  _core.int get hashCode => _skir.internal__listEquality.hash(_equality_proxy);
+
+  _core.List get _equality_proxy => [this.digest, this.facts];
+
+  @_core.override
+  _core.String toString() => _skir.internal__stringify(this, serializer);
+
+  /// Serializer for `ResourceGraphShard` instances.
+  static _skir.StructSerializer<ResourceGraphShard, ResourceGraphShard_mutable>
+  get serializer {
+    if (_serializerBuilder.mustInitialize()) {
+      _serializerBuilder.addField(
+        "digest",
+        "digest",
+        0,
+        _skir.Serializers.string,
+        "",
+        (it) => it.digest,
+        (it, v) => it.digest = v,
+      );
+      _serializerBuilder.addField(
+        "facts",
+        "facts",
+        1,
+        RuntimeCompilationFacts.serializer,
+        "",
+        (it) => it.facts,
+        (it, v) => it.facts = v,
+      );
+      _serializerBuilder.finalize();
+    }
+    return _serializerBuilder.serializer;
+  }
+
+  static final _serializerBuilder = _skir.internal__StructSerializerBuilder(
+    recordId: "editor/v1/compiled_content.skir:ResourceGraphShard",
+    doc: "The payload of a resource graph blob: canonical facts and their semantic digest, the lowercase\nSHA 256 of their canonical encoding. Consumers recompute the digest before admitting the facts.",
+    defaultInstance: defaultInstance,
+    newMutable: (it) => (it != null) ? it.toMutable() : mutable(),
+    toFrozen: (ResourceGraphShard_mutable it) => it.toFrozen(),
+    getUnrecognizedFields: (it) => it._u,
+    setUnrecognizedFields: (it, u) => it._u = u,
+  );
+}
+
+/// Mutable version of [ResourceGraphShard].
+final class ResourceGraphShard_mutable implements ResourceGraphShard_orMutable {
+  _core.String digest;
+  RuntimeCompilationFacts_orMutable facts;
+  _skir.internal__UnrecognizedFields? _u;
+
+  ResourceGraphShard_mutable._(this.digest, this.facts);
+
+  /// If the value of [facts] is already mutable, returns it as-is.
+  /// Otherwise, makes a mutable copy, assigns it back to [facts] and returns it.
+  RuntimeCompilationFacts_mutable get mutableFacts {
+    final value = this.facts;
+    if (value is RuntimeCompilationFacts_mutable) {
+      return value;
+    } else {
+      return this.facts = (value as RuntimeCompilationFacts).toMutable();
+    }
+  }
+
+  /// Returns a deeply immutable copy of this instance.
+  @_core.override
+  ResourceGraphShard toFrozen() =>
+      ResourceGraphShard(digest: this.digest, facts: this.facts).._u = this._u;
+}
+
+// -----------------------------------------------------------------------------
 // struct QueryPublishedContentRequest
 // -----------------------------------------------------------------------------
 

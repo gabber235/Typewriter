@@ -1,12 +1,9 @@
 package com.typewritermc.engine.runtime
 
-import com.typewritermc.engine.CompilationContext
-import com.typewritermc.engine.CompiledResourceKey
 import com.typewritermc.engine.ContentDigest
 import com.typewritermc.engine.RESOURCE_GRAPH_MEDIA_TYPE
 import com.typewritermc.engine.RESOURCE_GRAPH_PROJECTION
-import com.typewritermc.engine.ResourceGraphShard
-import com.typewritermc.engine.RuntimeCompilationFacts
+import com.typewritermc.engine.Root
 import com.typewritermc.services.libs.filetransfer.blob.ArtifactDigest
 import com.typewritermc.services.libs.filetransfer.blob.BlobChunk
 import com.typewritermc.services.libs.filetransfer.blob.BlobEndpoint
@@ -20,13 +17,15 @@ import de.infix.testBalloon.framework.core.testSuite
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.matchers.shouldBe
 import kotlinx.coroutines.test.runTest
-import kotlinx.serialization.encodeToString
-import kotlinx.serialization.json.Json
 import skirout.editor.v1.compilation_root.CompilationRoot
+import skirout.editor.v1.compiled_content.CompilationContext
 import skirout.editor.v1.compiled_content.CompiledArtifactReference
 import skirout.editor.v1.compiled_content.CompiledBlobPointer
+import skirout.editor.v1.compiled_content.CompiledResourceKey
 import skirout.editor.v1.compiled_content.PublishedContent
 import skirout.editor.v1.compiled_content.PublishedOutput
+import skirout.editor.v1.compiled_content.ResourceGraphShard
+import skirout.editor.v1.compiled_content.RuntimeCompilationFacts
 import skirout.editor.v1.type_catalog.CatalogGeneration
 import skirout.editor.v1.type_catalog.PublicationId
 
@@ -44,8 +43,7 @@ val BlobCompiledArtifactSourceTest by testSuite {
                 .map { it.reference }
                 .single()
                 .root.resource shouldBe ResourceId("page").toSkir()
-            Json.decodeFromString(
-                ResourceGraphShard.serializer(),
+            ResourceGraphShard.serializer.fromJsonCode(
                 loaded.artifacts
                     .single()
                     .payload
@@ -132,11 +130,11 @@ private fun shard(
     digestCharacter: String,
     pageKey: String,
 ) = ResourceGraphShard(
-    digest = ContentDigest(digestCharacter.repeat(64)),
+    digest = ContentDigest(digestCharacter.repeat(64)).value,
     facts =
         RuntimeCompilationFacts(
             formatRevision = com.typewritermc.engine.RESOURCE_GRAPH_FORMAT_REVISION,
-            root = CompiledResourceKey(ResourceId(pageKey), CompilationContext.Root),
+            root = CompiledResourceKey(source = ResourceId(pageKey).toSkir(), context = CompilationContext.Root),
             resources = emptyList(),
             edges = emptyList(),
             types = emptyList(),
@@ -157,15 +155,13 @@ private fun activation(
                         root =
                             CompilationRoot(
                                 projection = RESOURCE_GRAPH_PROJECTION,
-                                resource =
-                                    shard.facts.root.source
-                                        .toSkir(),
+                                resource = shard.facts.root.source,
                             ),
                         formatRevision = shard.facts.formatRevision,
                         mediaType = RESOURCE_GRAPH_MEDIA_TYPE,
-                        semanticDigest = shard.digest.value,
+                        semanticDigest = shard.digest,
                     ),
-                blob = blobs.put(Json.encodeToString(shard).encodeToByteArray()),
+                blob = blobs.put(ResourceGraphShard.serializer.toJsonCode(shard).encodeToByteArray()),
             )
         }
     return PublishedContent(

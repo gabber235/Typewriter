@@ -8,18 +8,12 @@ import com.typewritermc.authoring.payload
 import com.typewritermc.authoring.root
 import com.typewritermc.authoring.text
 import com.typewritermc.authoring.use
-import com.typewritermc.engine.CompilationContext
-import com.typewritermc.engine.CompiledEdge
-import com.typewritermc.engine.CompiledEdgeOrigin
-import com.typewritermc.engine.CompiledResource
-import com.typewritermc.engine.CompiledResourceKey
 import com.typewritermc.engine.ContentDigest
 import com.typewritermc.engine.RESOURCE_GRAPH_FORMAT_REVISION
 import com.typewritermc.engine.ResourceGraphCompileResult
-import com.typewritermc.engine.ResourceGraphShard
-import com.typewritermc.engine.RuntimeCompilationFacts
-import com.typewritermc.engine.RuntimeRelationFact
+import com.typewritermc.engine.Root
 import com.typewritermc.engine.canonicalized
+import com.typewritermc.engine.dataValue
 import com.typewritermc.engine.relation
 import com.typewritermc.engine.semanticDigest
 import com.typewritermc.realm.authoring.AuthoringView
@@ -34,7 +28,16 @@ import com.typewritermc.types.named
 import com.typewritermc.types.ownsResources
 import com.typewritermc.types.record
 import com.typewritermc.types.toResourceId
+import com.typewritermc.types.toSkir
 import com.typewritermc.types.use
+import skirout.editor.v1.compiled_content.CompilationContext
+import skirout.editor.v1.compiled_content.CompiledEdge
+import skirout.editor.v1.compiled_content.CompiledEdgeOrigin
+import skirout.editor.v1.compiled_content.CompiledResource
+import skirout.editor.v1.compiled_content.CompiledResourceKey
+import skirout.editor.v1.compiled_content.ResourceGraphShard
+import skirout.editor.v1.compiled_content.RuntimeCompilationFacts
+import skirout.editor.v1.compiled_content.RuntimeRelationFact
 import skirout.editor.v1.diagnostic.Diagnostic
 import skirout.editor.v1.diagnostic.DiagnosticSeverity
 import skirout.editor.v1.type_catalog.AuthoringRecord
@@ -127,13 +130,13 @@ internal class OwnershipClosureCompiler(
                 .filter { projection -> projection.first in owned || projection.second in owned }
                 .map { projection ->
                     CompiledEdge(
-                        source = CompiledResourceKey(projection.first, CompilationContext.Root),
-                        target = CompiledResourceKey(projection.second, CompilationContext.Root),
+                        source = CompiledResourceKey(source = projection.first.toSkir(), context = CompilationContext.Root),
+                        target = CompiledResourceKey(source = projection.second.toSkir(), context = CompilationContext.Root),
                         origin =
-                            CompiledEdgeOrigin.Relation(
-                                projection.contract,
-                                projection.firstLocation,
-                                projection.secondLocation,
+                            CompiledEdgeOrigin.createRelation(
+                                relation = projection.contract,
+                                firstLocation = projection.firstLocation,
+                                secondLocation = projection.secondLocation,
                             ),
                     )
                 }
@@ -167,9 +170,11 @@ internal class OwnershipClosureCompiler(
                     append("format:").append(formatRevision)
                     append("|catalog:").append(snapshot.catalog.generation.value)
                     append("|root:").append(root.value)
-                    resources.forEach { (id, record) -> append("|resource:").append(id.value).append(':').append(record) }
+                    resources.forEach { (id, record) ->
+                        append("|resource:").append(id.value).append(':').append(AuthoringRecord.serializer.toJsonCode(record))
+                    }
                     projectedEdges.sortedWith(compareBy({ it.source.source.value }, { it.target.source.value })).forEach { edge ->
-                        append("|edge:").append(edge)
+                        append("|edge:").append(CompiledEdge.serializer.toJsonCode(edge))
                     }
                 },
             )
@@ -182,13 +187,13 @@ internal class OwnershipClosureCompiler(
         val facts =
             RuntimeCompilationFacts(
                 formatRevision = formatRevision,
-                root = CompiledResourceKey(root, CompilationContext.Root),
+                root = CompiledResourceKey(source = root.toSkir(), context = CompilationContext.Root),
                 resources = runtimeResources,
                 edges = projectedEdges,
                 types =
                     snapshot.catalog.checked.runtimeDefinitions(
                         runtimeResources.flatMap { resource ->
-                            resource.value
+                            resource.dataValue
                                 .descendants()
                                 .mapNotNull { located ->
                                     (located.value as? DataValue.NamedWrapper)?.actualType?.use
@@ -200,14 +205,14 @@ internal class OwnershipClosureCompiler(
                         .filter { relation -> relation.id in relationIds }
                         .map { relation ->
                             RuntimeRelationFact(
-                                relation.id,
-                                relation.ownsResources,
+                                relation = relation.id,
+                                ownsResources = relation.ownsResources,
                             )
                         },
             )
         val canonical = facts.canonicalized()
         return ResourceGraphCompileResult.Success(
-            shard = ResourceGraphShard(canonical.semanticDigest(), canonical),
+            shard = ResourceGraphShard(digest = canonical.semanticDigest().value, facts = canonical),
             inputFingerprint = fingerprint,
         )
     }
@@ -231,11 +236,11 @@ private fun AuthoringRecord.compile(
     val actual = (configuration as TypeSelection.CompleteWrapper).use
     val binding = readiness.binding
     return CompiledResource(
-        key = CompiledResourceKey(id, CompilationContext.Root),
+        key = CompiledResourceKey(source = id.toSkir(), context = CompilationContext.Root),
         actualType = actual,
         bindingProvider = binding.provider,
         bindingSignature = binding.signature,
-        value = readiness.value.value as DataValue.NamedWrapper,
+        value = (readiness.value.value as DataValue.NamedWrapper).value,
     )
 }
 

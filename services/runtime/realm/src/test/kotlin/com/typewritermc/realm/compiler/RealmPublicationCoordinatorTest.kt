@@ -8,6 +8,7 @@ import com.typewritermc.engine.CompiledArtifact
 import com.typewritermc.engine.ContentDigest
 import com.typewritermc.engine.ResourceGraphCompileResult
 import com.typewritermc.engine.encodeShard
+import com.typewritermc.engine.semanticDigest
 import com.typewritermc.realm.authoring.AuthoringLease
 import com.typewritermc.realm.authoring.AuthoringSeed
 import com.typewritermc.realm.authoring.AuthoringView
@@ -375,7 +376,7 @@ val RealmPublicationCoordinatorTest by testSuite {
             artifact.formatRevision shouldBe com.typewritermc.engine.RESOURCE_GRAPH_FORMAT_REVISION
             artifact.mediaType shouldBe "application/vnd.typewriter.resource-graph+json"
             artifact.inputFingerprint shouldBe expected.inputFingerprint
-            artifact.semanticDigest shouldBe expected.shard.digest
+            artifact.semanticDigest shouldBe expected.shard.semanticDigest
             artifact.payload.toList() shouldBe
                 expected.shard.facts
                     .encodeShard()

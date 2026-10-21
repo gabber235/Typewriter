@@ -6,6 +6,7 @@ import com.typewritermc.engine.RESOURCE_GRAPH_MEDIA_TYPE
 import com.typewritermc.engine.RESOURCE_GRAPH_PROJECTION
 import com.typewritermc.engine.ResourceGraphCompileResult
 import com.typewritermc.engine.encodeShard
+import com.typewritermc.engine.semanticDigest
 import com.typewritermc.realm.authoring.AuthoringView
 import com.typewritermc.realm.authoring.ownershipRelationIds
 import com.typewritermc.types.toResourceId
@@ -42,7 +43,7 @@ internal object ResourceGraphArtifactProducer : CompiledArtifactProducer {
                             formatRevision = result.shard.facts.formatRevision,
                             mediaType = mediaType,
                             inputFingerprint = result.inputFingerprint,
-                            semanticDigest = result.shard.digest,
+                            semanticDigest = result.shard.semanticDigest,
                             payload = result.shard.facts.encodeShard(),
                         ),
                     )

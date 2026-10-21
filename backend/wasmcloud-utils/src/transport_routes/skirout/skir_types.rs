@@ -1182,6 +1182,66 @@ impl crate::SkirType
         !matches!(self, crate::skirout::base::editor::v1::compiled_content::CompilationStatusSelection::AllRoots | crate::skirout::base::editor::v1::compiled_content::CompilationStatusSelection::SuppliedRoots(_))
     }
 }
+impl crate::SkirType for crate::skirout::base::editor::v1::compiled_content::InstancePath {
+    fn serializer() -> crate::skir_client::Serializer<Self> {
+        Self::serializer()
+    }
+}
+impl crate::SkirType for crate::skirout::base::editor::v1::compiled_content::CompilationContext {
+    fn serializer() -> crate::skir_client::Serializer<Self> {
+        Self::serializer()
+    }
+}
+impl crate::SkirType for crate::skirout::base::editor::v1::compiled_content::CompiledResourceKey {
+    fn serializer() -> crate::skir_client::Serializer<Self> {
+        Self::serializer()
+    }
+}
+impl crate::SkirType for crate::skirout::base::editor::v1::compiled_content::CompiledResource {
+    fn serializer() -> crate::skir_client::Serializer<Self> {
+        Self::serializer()
+    }
+}
+impl crate::SkirType
+    for crate::skirout::base::editor::v1::compiled_content::CompiledRelationOrigin
+{
+    fn serializer() -> crate::skir_client::Serializer<Self> {
+        Self::serializer()
+    }
+}
+impl crate::SkirType for crate::skirout::base::editor::v1::compiled_content::CompiledEdgeOrigin {
+    fn serializer() -> crate::skir_client::Serializer<Self> {
+        Self::serializer()
+    }
+    fn is_unknown(&self) -> bool {
+        !matches!(
+            self,
+            crate::skirout::base::editor::v1::compiled_content::CompiledEdgeOrigin::Relation(_)
+        )
+    }
+}
+impl crate::SkirType for crate::skirout::base::editor::v1::compiled_content::CompiledEdge {
+    fn serializer() -> crate::skir_client::Serializer<Self> {
+        Self::serializer()
+    }
+}
+impl crate::SkirType for crate::skirout::base::editor::v1::compiled_content::RuntimeRelationFact {
+    fn serializer() -> crate::skir_client::Serializer<Self> {
+        Self::serializer()
+    }
+}
+impl crate::SkirType
+    for crate::skirout::base::editor::v1::compiled_content::RuntimeCompilationFacts
+{
+    fn serializer() -> crate::skir_client::Serializer<Self> {
+        Self::serializer()
+    }
+}
+impl crate::SkirType for crate::skirout::base::editor::v1::compiled_content::ResourceGraphShard {
+    fn serializer() -> crate::skir_client::Serializer<Self> {
+        Self::serializer()
+    }
+}
 impl crate::SkirType
     for crate::skirout::base::editor::v1::compiled_content::QueryPublishedContentRequest
 {

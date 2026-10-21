@@ -4,7 +4,6 @@ import com.typewritermc.authoring.CompilationUnitDefinition
 import com.typewritermc.authoring.of
 import com.typewritermc.configuration.FieldPatternSegment
 import com.typewritermc.configuration.RelativeFieldPattern
-import com.typewritermc.engine.CompiledEdgeOrigin
 import com.typewritermc.engine.ResourceGraphCompileResult
 import com.typewritermc.engine.relation
 import com.typewritermc.realm.authoring.AuthoringCatalogLease
@@ -33,6 +32,7 @@ import com.typewritermc.types.toSkir
 import com.typewritermc.types.use
 import de.infix.testBalloon.framework.core.testSuite
 import io.kotest.matchers.shouldBe
+import skirout.editor.v1.compiled_content.CompiledEdgeOrigin
 import skirout.editor.v1.type_catalog.AuthoringRecord
 import skirout.editor.v1.type_catalog.CatalogGeneration
 import skirout.editor.v1.type_catalog.CollectionKind
@@ -63,11 +63,11 @@ val OwnershipClosureCompilerTest by testSuite {
 
             result as ResourceGraphCompileResult.Success
             result.shard.facts.resources
-                .map { it.key.source }
+                .map { it.key.source.toResourceId() }
                 .toSet() shouldBe setOf(pageId, childId)
             result.shard.facts.edges.single().let { edge ->
-                edge.source.source shouldBe pageId
-                edge.target.source shouldBe childId
+                edge.source.source shouldBe pageId.toSkir()
+                edge.target.source shouldBe childId.toSkir()
                 edge.relation shouldBe OWNERSHIP
             }
         }
@@ -97,13 +97,13 @@ val OwnershipClosureCompilerTest by testSuite {
             val unit = with(captured.root) { compiler.compile(nested) } as ResourceGraphCompileResult.Success
 
             page.shard.facts.resources
-                .map { it.key.source }
+                .map { it.key.source.toResourceId() }
                 .toSet() shouldBe setOf(pageId, childId)
             page.shard.facts.edges
-                .map { it.target.source }
+                .map { it.target.source.toResourceId() }
                 .toSet() shouldBe setOf(childId, nested)
             unit.shard.facts.resources
-                .map { it.key.source } shouldBe listOf(nested)
+                .map { it.key.source.toResourceId() } shouldBe listOf(nested)
         }
     }
 
@@ -122,7 +122,7 @@ val OwnershipClosureCompilerTest by testSuite {
 
             result.shard.facts.edges.size shouldBe 2
             result.shard.facts.edges
-                .map { (it.origin as CompiledEdgeOrigin.Relation).firstLocation }
+                .map { (it.origin as CompiledEdgeOrigin.RelationWrapper).value.firstLocation }
                 .distinct()
                 .size shouldBe 2
         }
@@ -149,7 +149,7 @@ val OwnershipClosureCompilerTest by testSuite {
             with(captured.root) { compiler.compile(pageId) } as ResourceGraphCompileResult.Blocked
             val independent = with(captured.root) { compiler.compile(other) } as ResourceGraphCompileResult.Success
             independent.shard.facts.resources
-                .map { it.key.source } shouldBe listOf(other)
+                .map { it.key.source.toResourceId() } shouldBe listOf(other)
         }
     }
 

@@ -1143,6 +1143,1629 @@ sealed class CompilationStatusSelection private constructor() {
     }
 }
 
+sealed interface InstancePath_OrMutable {
+    val segments: kotlin.collections.List<kotlin.String>;
+
+    fun toFrozen(): skirout.editor.v1.compiled_content.InstancePath;
+}
+
+/**
+ * Distinguishes one generated occurrence of an authored resource. The root occurrence has no segments.
+ *
+ * Deeply immutable.
+ */
+@kotlin.Suppress("UNUSED_PARAMETER")
+class InstancePath private constructor(
+    override val segments: kotlin.collections.List<kotlin.String>,
+    internal val _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.compiled_content.InstancePath>? =
+        null,
+): skirout.editor.v1.compiled_content.InstancePath_OrMutable {
+    constructor(
+        _mustNameArguments: _MustNameArguments =
+            _MustNameArguments,
+        segments: kotlin.collections.Iterable<kotlin.String>,
+        _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.compiled_content.InstancePath>? =
+            null,
+    ): this(
+        build.skir.internal.toFrozenList(segments),
+        _unrecognizedFields,
+    ) {}
+
+    @kotlin.Deprecated("Already frozen", kotlin.ReplaceWith("this"))
+    override fun toFrozen() = this;
+
+    /** Returns a mutable shallow copy of this instance */
+    fun toMutable() = Mutable(
+        segments = this.segments,
+    );
+
+    /** Returns a shallow copy of this instance with the specified fields replaced. */
+    fun copy(
+        _mustNameArguments: _MustNameArguments =
+            _MustNameArguments,
+        segments: kotlin.collections.Iterable<kotlin.String> =
+            this.segments,
+    ) = skirout.editor.v1.compiled_content.InstancePath(
+        build.skir.internal.toFrozenList(segments),
+        this._unrecognizedFields,
+    );
+
+    @kotlin.Deprecated("No point in creating an exact copy of an immutable object", kotlin.ReplaceWith("this"))
+    fun copy() = this;
+
+    override fun equals(other: kotlin.Any?): kotlin.Boolean {
+        return this === other || (other is skirout.editor.v1.compiled_content.InstancePath && this.segments == other.segments);
+    }
+
+    override fun hashCode(): kotlin.Int {
+        return kotlin.collections.listOf<kotlin.Any?>(this.segments).hashCode();
+    }
+
+    override fun toString(): kotlin.String {
+        return build.skir.internal.toStringImpl(
+            this,
+            _SerializerRegistry.InstancePathSerializerImpl,
+        )
+    }
+
+    /** Mutable version of [InstancePath]. */
+    class Mutable internal constructor(
+        _mustNameArguments: _MustNameArguments =
+            _MustNameArguments,
+        override var segments: kotlin.collections.List<kotlin.String> =
+            build.skir.internal.emptyFrozenList<kotlin.String>(),
+        internal var _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.compiled_content.InstancePath>? =
+            null,
+    ): skirout.editor.v1.compiled_content.InstancePath_OrMutable {
+        /** Returns a deeply immutable copy of this instance */
+        override fun toFrozen() = skirout.editor.v1.compiled_content.InstancePath(
+            segments = this.segments,
+            _unrecognizedFields = this._unrecognizedFields,
+        );
+
+        /**
+         * If the value of [segments] is already mutable, returns it as-is.
+         * Otherwise, makes a mutable copy, assigns it back to [segments] and returns it.
+         */
+        val mutableSegments: kotlin.collections.MutableList<kotlin.String> get() {
+            var value = this.segments;
+            return when (value) {
+                is build.skir.internal.MutableList -> value;
+                else -> {
+                    value = build.skir.internal.MutableList(value);
+                    this.segments = value;
+                    value;
+                }
+            }
+        }
+    }
+
+    companion object {
+        private val default =
+            skirout.editor.v1.compiled_content.InstancePath(
+                build.skir.internal.emptyFrozenList<kotlin.String>(),
+            );
+
+        /** Returns an instance with all fields set to their default values. */
+        fun partial() = default;
+
+        /**
+         * Creates a new instance of [InstancePath].
+         * Unlike the constructor, does not require all fields to be specified.
+         * Missing fields will be set to their default values.
+         */
+        fun partial(
+            _mustNameArguments: _MustNameArguments =
+                _MustNameArguments,
+            segments: kotlin.collections.Iterable<kotlin.String> =
+                build.skir.internal.emptyFrozenList<kotlin.String>(),
+        ) = skirout.editor.v1.compiled_content.InstancePath(
+            segments = segments,
+            _unrecognizedFields = null,
+        );
+
+        /** Serializer for [InstancePath] instances. */
+        val serializer get() = _SerializerRegistry.InstancePathSerializer;
+
+        /** Describes the [InstancePath] type. Provides runtime introspection capabilities. */
+        val typeDescriptor get() = _SerializerRegistry.InstancePathSerializerImpl.typeDescriptor;
+    }
+}
+
+sealed interface CompilationContext_OrMutable {
+    val instancePath: skirout.editor.v1.compiled_content.InstancePath_OrMutable;
+
+    fun toFrozen(): skirout.editor.v1.compiled_content.CompilationContext;
+}
+
+/** Deeply immutable. */
+@kotlin.Suppress("UNUSED_PARAMETER")
+class CompilationContext private constructor(
+    override val instancePath: skirout.editor.v1.compiled_content.InstancePath,
+    internal val _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.compiled_content.CompilationContext>? =
+        null,
+): skirout.editor.v1.compiled_content.CompilationContext_OrMutable {
+    constructor(
+        _mustNameArguments: _MustNameArguments =
+            _MustNameArguments,
+        instancePath: skirout.editor.v1.compiled_content.InstancePath_OrMutable,
+        _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.compiled_content.CompilationContext>? =
+            null,
+    ): this(
+        instancePath.toFrozen(),
+        _unrecognizedFields,
+    ) {}
+
+    @kotlin.Deprecated("Already frozen", kotlin.ReplaceWith("this"))
+    override fun toFrozen() = this;
+
+    /** Returns a mutable shallow copy of this instance */
+    fun toMutable() = Mutable(
+        instancePath = this.instancePath,
+    );
+
+    /** Returns a shallow copy of this instance with the specified fields replaced. */
+    fun copy(
+        _mustNameArguments: _MustNameArguments =
+            _MustNameArguments,
+        instancePath: skirout.editor.v1.compiled_content.InstancePath_OrMutable =
+            this.instancePath,
+    ) = skirout.editor.v1.compiled_content.CompilationContext(
+        instancePath.toFrozen(),
+        this._unrecognizedFields,
+    );
+
+    @kotlin.Deprecated("No point in creating an exact copy of an immutable object", kotlin.ReplaceWith("this"))
+    fun copy() = this;
+
+    override fun equals(other: kotlin.Any?): kotlin.Boolean {
+        return this === other || (other is skirout.editor.v1.compiled_content.CompilationContext && this.instancePath == other.instancePath);
+    }
+
+    override fun hashCode(): kotlin.Int {
+        return kotlin.collections.listOf<kotlin.Any?>(this.instancePath).hashCode();
+    }
+
+    override fun toString(): kotlin.String {
+        return build.skir.internal.toStringImpl(
+            this,
+            _SerializerRegistry.CompilationContextSerializerImpl,
+        )
+    }
+
+    /** Mutable version of [CompilationContext]. */
+    class Mutable internal constructor(
+        _mustNameArguments: _MustNameArguments =
+            _MustNameArguments,
+        override var instancePath: skirout.editor.v1.compiled_content.InstancePath_OrMutable =
+            skirout.editor.v1.compiled_content.InstancePath.partial(),
+        internal var _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.compiled_content.CompilationContext>? =
+            null,
+    ): skirout.editor.v1.compiled_content.CompilationContext_OrMutable {
+        /** Returns a deeply immutable copy of this instance */
+        override fun toFrozen() = skirout.editor.v1.compiled_content.CompilationContext(
+            instancePath = this.instancePath,
+            _unrecognizedFields = this._unrecognizedFields,
+        );
+
+        /**
+         * If the value of [instancePath] is already mutable, returns it as-is.
+         * Otherwise, makes a mutable copy, assigns it back to [instancePath] and returns it.
+         */
+        val mutableInstancePath: skirout.editor.v1.compiled_content.InstancePath.Mutable get() {
+            var value = this.instancePath;
+            return when (value) {
+                is skirout.editor.v1.compiled_content.InstancePath -> {
+                    value = value.toMutable();
+                    this.instancePath = value;
+                    return value;
+                }
+                is skirout.editor.v1.compiled_content.InstancePath.Mutable -> value;
+            }
+        }
+    }
+
+    companion object {
+        private val default =
+            skirout.editor.v1.compiled_content.CompilationContext(
+                skirout.editor.v1.compiled_content.InstancePath.partial(),
+            );
+
+        /** Returns an instance with all fields set to their default values. */
+        fun partial() = default;
+
+        /**
+         * Creates a new instance of [CompilationContext].
+         * Unlike the constructor, does not require all fields to be specified.
+         * Missing fields will be set to their default values.
+         */
+        fun partial(
+            _mustNameArguments: _MustNameArguments =
+                _MustNameArguments,
+            instancePath: skirout.editor.v1.compiled_content.InstancePath_OrMutable =
+                skirout.editor.v1.compiled_content.InstancePath.partial(),
+        ) = skirout.editor.v1.compiled_content.CompilationContext(
+            instancePath = instancePath,
+            _unrecognizedFields = null,
+        );
+
+        /** Serializer for [CompilationContext] instances. */
+        val serializer get() = _SerializerRegistry.CompilationContextSerializer;
+
+        /** Describes the [CompilationContext] type. Provides runtime introspection capabilities. */
+        val typeDescriptor get() = _SerializerRegistry.CompilationContextSerializerImpl.typeDescriptor;
+    }
+}
+
+sealed interface CompiledResourceKey_OrMutable {
+    val source: skirout.editor.v1.type_catalog.ResourceId_OrMutable;
+    val context: skirout.editor.v1.compiled_content.CompilationContext_OrMutable;
+
+    fun toFrozen(): skirout.editor.v1.compiled_content.CompiledResourceKey;
+}
+
+/**
+ * Identifies a resource in a compiled occurrence.
+ *
+ * Deeply immutable.
+ */
+@kotlin.Suppress("UNUSED_PARAMETER")
+class CompiledResourceKey private constructor(
+    override val source: skirout.editor.v1.type_catalog.ResourceId,
+    override val context: skirout.editor.v1.compiled_content.CompilationContext,
+    internal val _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.compiled_content.CompiledResourceKey>? =
+        null,
+): skirout.editor.v1.compiled_content.CompiledResourceKey_OrMutable {
+    constructor(
+        _mustNameArguments: _MustNameArguments =
+            _MustNameArguments,
+        source: skirout.editor.v1.type_catalog.ResourceId_OrMutable,
+        context: skirout.editor.v1.compiled_content.CompilationContext_OrMutable,
+        _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.compiled_content.CompiledResourceKey>? =
+            null,
+    ): this(
+        source.toFrozen(),
+        context.toFrozen(),
+        _unrecognizedFields,
+    ) {}
+
+    @kotlin.Deprecated("Already frozen", kotlin.ReplaceWith("this"))
+    override fun toFrozen() = this;
+
+    /** Returns a mutable shallow copy of this instance */
+    fun toMutable() = Mutable(
+        source = this.source,
+        context = this.context,
+    );
+
+    /** Returns a shallow copy of this instance with the specified fields replaced. */
+    fun copy(
+        _mustNameArguments: _MustNameArguments =
+            _MustNameArguments,
+        source: skirout.editor.v1.type_catalog.ResourceId_OrMutable =
+            this.source,
+        context: skirout.editor.v1.compiled_content.CompilationContext_OrMutable =
+            this.context,
+    ) = skirout.editor.v1.compiled_content.CompiledResourceKey(
+        source.toFrozen(),
+        context.toFrozen(),
+        this._unrecognizedFields,
+    );
+
+    @kotlin.Deprecated("No point in creating an exact copy of an immutable object", kotlin.ReplaceWith("this"))
+    fun copy() = this;
+
+    override fun equals(other: kotlin.Any?): kotlin.Boolean {
+        return this === other || (other is skirout.editor.v1.compiled_content.CompiledResourceKey && this.source == other.source && this.context == other.context);
+    }
+
+    override fun hashCode(): kotlin.Int {
+        return kotlin.collections.listOf<kotlin.Any?>(this.source, this.context).hashCode();
+    }
+
+    override fun toString(): kotlin.String {
+        return build.skir.internal.toStringImpl(
+            this,
+            _SerializerRegistry.CompiledResourceKeySerializerImpl,
+        )
+    }
+
+    /** Mutable version of [CompiledResourceKey]. */
+    class Mutable internal constructor(
+        _mustNameArguments: _MustNameArguments =
+            _MustNameArguments,
+        override var source: skirout.editor.v1.type_catalog.ResourceId_OrMutable =
+            skirout.editor.v1.type_catalog.ResourceId.partial(),
+        override var context: skirout.editor.v1.compiled_content.CompilationContext_OrMutable =
+            skirout.editor.v1.compiled_content.CompilationContext.partial(),
+        internal var _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.compiled_content.CompiledResourceKey>? =
+            null,
+    ): skirout.editor.v1.compiled_content.CompiledResourceKey_OrMutable {
+        /** Returns a deeply immutable copy of this instance */
+        override fun toFrozen() = skirout.editor.v1.compiled_content.CompiledResourceKey(
+            source = this.source,
+            context = this.context,
+            _unrecognizedFields = this._unrecognizedFields,
+        );
+
+        /**
+         * If the value of [source] is already mutable, returns it as-is.
+         * Otherwise, makes a mutable copy, assigns it back to [source] and returns it.
+         */
+        val mutableSource: skirout.editor.v1.type_catalog.ResourceId.Mutable get() {
+            var value = this.source;
+            return when (value) {
+                is skirout.editor.v1.type_catalog.ResourceId -> {
+                    value = value.toMutable();
+                    this.source = value;
+                    return value;
+                }
+                is skirout.editor.v1.type_catalog.ResourceId.Mutable -> value;
+            }
+        }
+
+        /**
+         * If the value of [context] is already mutable, returns it as-is.
+         * Otherwise, makes a mutable copy, assigns it back to [context] and returns it.
+         */
+        val mutableContext: skirout.editor.v1.compiled_content.CompilationContext.Mutable get() {
+            var value = this.context;
+            return when (value) {
+                is skirout.editor.v1.compiled_content.CompilationContext -> {
+                    value = value.toMutable();
+                    this.context = value;
+                    return value;
+                }
+                is skirout.editor.v1.compiled_content.CompilationContext.Mutable -> value;
+            }
+        }
+    }
+
+    companion object {
+        private val default =
+            skirout.editor.v1.compiled_content.CompiledResourceKey(
+                skirout.editor.v1.type_catalog.ResourceId.partial(),
+                skirout.editor.v1.compiled_content.CompilationContext.partial(),
+            );
+
+        /** Returns an instance with all fields set to their default values. */
+        fun partial() = default;
+
+        /**
+         * Creates a new instance of [CompiledResourceKey].
+         * Unlike the constructor, does not require all fields to be specified.
+         * Missing fields will be set to their default values.
+         */
+        fun partial(
+            _mustNameArguments: _MustNameArguments =
+                _MustNameArguments,
+            source: skirout.editor.v1.type_catalog.ResourceId_OrMutable =
+                skirout.editor.v1.type_catalog.ResourceId.partial(),
+            context: skirout.editor.v1.compiled_content.CompilationContext_OrMutable =
+                skirout.editor.v1.compiled_content.CompilationContext.partial(),
+        ) = skirout.editor.v1.compiled_content.CompiledResourceKey(
+            source = source,
+            context = context,
+            _unrecognizedFields = null,
+        );
+
+        /** Serializer for [CompiledResourceKey] instances. */
+        val serializer get() = _SerializerRegistry.CompiledResourceKeySerializer;
+
+        /** Describes the [CompiledResourceKey] type. Provides runtime introspection capabilities. */
+        val typeDescriptor get() = _SerializerRegistry.CompiledResourceKeySerializerImpl.typeDescriptor;
+    }
+}
+
+sealed interface CompiledResource_OrMutable {
+    val key: skirout.editor.v1.compiled_content.CompiledResourceKey_OrMutable;
+    val actualType: skirout.editor.v1.type_catalog.NamedTypeUse_OrMutable;
+    val bindingProvider: skirout.editor.v1.type_catalog.NativeBindingId_OrMutable;
+    val bindingSignature: kotlin.String;
+    val value: skirout.editor.v1.type_catalog.NamedValue_OrMutable;
+
+    fun toFrozen(): skirout.editor.v1.compiled_content.CompiledResource;
+}
+
+/**
+ * The typed record of one compiled resource before graph hydration, with the native binding that
+ * produced it. Engines hydrate it only through the same binding provider and signature.
+ *
+ * Deeply immutable.
+ */
+@kotlin.Suppress("UNUSED_PARAMETER")
+class CompiledResource private constructor(
+    override val key: skirout.editor.v1.compiled_content.CompiledResourceKey,
+    override val actualType: skirout.editor.v1.type_catalog.NamedTypeUse,
+    override val bindingProvider: skirout.editor.v1.type_catalog.NativeBindingId,
+    override val bindingSignature: kotlin.String,
+    override val value: skirout.editor.v1.type_catalog.NamedValue,
+    internal val _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.compiled_content.CompiledResource>? =
+        null,
+): skirout.editor.v1.compiled_content.CompiledResource_OrMutable {
+    constructor(
+        _mustNameArguments: _MustNameArguments =
+            _MustNameArguments,
+        key: skirout.editor.v1.compiled_content.CompiledResourceKey_OrMutable,
+        actualType: skirout.editor.v1.type_catalog.NamedTypeUse_OrMutable,
+        bindingProvider: skirout.editor.v1.type_catalog.NativeBindingId_OrMutable,
+        bindingSignature: kotlin.String,
+        value: skirout.editor.v1.type_catalog.NamedValue_OrMutable,
+        _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.compiled_content.CompiledResource>? =
+            null,
+    ): this(
+        key.toFrozen(),
+        actualType.toFrozen(),
+        bindingProvider.toFrozen(),
+        bindingSignature,
+        value.toFrozen(),
+        _unrecognizedFields,
+    ) {}
+
+    @kotlin.Deprecated("Already frozen", kotlin.ReplaceWith("this"))
+    override fun toFrozen() = this;
+
+    /** Returns a mutable shallow copy of this instance */
+    fun toMutable() = Mutable(
+        key = this.key,
+        actualType = this.actualType,
+        bindingProvider = this.bindingProvider,
+        bindingSignature = this.bindingSignature,
+        value = this.value,
+    );
+
+    /** Returns a shallow copy of this instance with the specified fields replaced. */
+    fun copy(
+        _mustNameArguments: _MustNameArguments =
+            _MustNameArguments,
+        key: skirout.editor.v1.compiled_content.CompiledResourceKey_OrMutable =
+            this.key,
+        actualType: skirout.editor.v1.type_catalog.NamedTypeUse_OrMutable =
+            this.actualType,
+        bindingProvider: skirout.editor.v1.type_catalog.NativeBindingId_OrMutable =
+            this.bindingProvider,
+        bindingSignature: kotlin.String =
+            this.bindingSignature,
+        value: skirout.editor.v1.type_catalog.NamedValue_OrMutable =
+            this.value,
+    ) = skirout.editor.v1.compiled_content.CompiledResource(
+        key.toFrozen(),
+        actualType.toFrozen(),
+        bindingProvider.toFrozen(),
+        bindingSignature,
+        value.toFrozen(),
+        this._unrecognizedFields,
+    );
+
+    @kotlin.Deprecated("No point in creating an exact copy of an immutable object", kotlin.ReplaceWith("this"))
+    fun copy() = this;
+
+    override fun equals(other: kotlin.Any?): kotlin.Boolean {
+        return this === other || (other is skirout.editor.v1.compiled_content.CompiledResource && this.key == other.key && this.actualType == other.actualType && this.bindingProvider == other.bindingProvider && this.bindingSignature == other.bindingSignature && this.value == other.value);
+    }
+
+    override fun hashCode(): kotlin.Int {
+        return kotlin.collections.listOf<kotlin.Any?>(this.key, this.actualType, this.bindingProvider, this.bindingSignature, this.value).hashCode();
+    }
+
+    override fun toString(): kotlin.String {
+        return build.skir.internal.toStringImpl(
+            this,
+            _SerializerRegistry.CompiledResourceSerializerImpl,
+        )
+    }
+
+    /** Mutable version of [CompiledResource]. */
+    class Mutable internal constructor(
+        _mustNameArguments: _MustNameArguments =
+            _MustNameArguments,
+        override var key: skirout.editor.v1.compiled_content.CompiledResourceKey_OrMutable =
+            skirout.editor.v1.compiled_content.CompiledResourceKey.partial(),
+        override var actualType: skirout.editor.v1.type_catalog.NamedTypeUse_OrMutable =
+            skirout.editor.v1.type_catalog.NamedTypeUse.partial(),
+        override var bindingProvider: skirout.editor.v1.type_catalog.NativeBindingId_OrMutable =
+            skirout.editor.v1.type_catalog.NativeBindingId.partial(),
+        override var bindingSignature: kotlin.String =
+            "",
+        override var value: skirout.editor.v1.type_catalog.NamedValue_OrMutable =
+            skirout.editor.v1.type_catalog.NamedValue.partial(),
+        internal var _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.compiled_content.CompiledResource>? =
+            null,
+    ): skirout.editor.v1.compiled_content.CompiledResource_OrMutable {
+        /** Returns a deeply immutable copy of this instance */
+        override fun toFrozen() = skirout.editor.v1.compiled_content.CompiledResource(
+            key = this.key,
+            actualType = this.actualType,
+            bindingProvider = this.bindingProvider,
+            bindingSignature = this.bindingSignature,
+            value = this.value,
+            _unrecognizedFields = this._unrecognizedFields,
+        );
+
+        /**
+         * If the value of [key] is already mutable, returns it as-is.
+         * Otherwise, makes a mutable copy, assigns it back to [key] and returns it.
+         */
+        val mutableKey: skirout.editor.v1.compiled_content.CompiledResourceKey.Mutable get() {
+            var value = this.key;
+            return when (value) {
+                is skirout.editor.v1.compiled_content.CompiledResourceKey -> {
+                    value = value.toMutable();
+                    this.key = value;
+                    return value;
+                }
+                is skirout.editor.v1.compiled_content.CompiledResourceKey.Mutable -> value;
+            }
+        }
+
+        /**
+         * If the value of [actualType] is already mutable, returns it as-is.
+         * Otherwise, makes a mutable copy, assigns it back to [actualType] and returns it.
+         */
+        val mutableActualType: skirout.editor.v1.type_catalog.NamedTypeUse.Mutable get() {
+            var value = this.actualType;
+            return when (value) {
+                is skirout.editor.v1.type_catalog.NamedTypeUse -> {
+                    value = value.toMutable();
+                    this.actualType = value;
+                    return value;
+                }
+                is skirout.editor.v1.type_catalog.NamedTypeUse.Mutable -> value;
+            }
+        }
+
+        /**
+         * If the value of [bindingProvider] is already mutable, returns it as-is.
+         * Otherwise, makes a mutable copy, assigns it back to [bindingProvider] and returns it.
+         */
+        val mutableBindingProvider: skirout.editor.v1.type_catalog.NativeBindingId.Mutable get() {
+            var value = this.bindingProvider;
+            return when (value) {
+                is skirout.editor.v1.type_catalog.NativeBindingId -> {
+                    value = value.toMutable();
+                    this.bindingProvider = value;
+                    return value;
+                }
+                is skirout.editor.v1.type_catalog.NativeBindingId.Mutable -> value;
+            }
+        }
+
+        /**
+         * If the value of [value] is already mutable, returns it as-is.
+         * Otherwise, makes a mutable copy, assigns it back to [value] and returns it.
+         */
+        val mutableValue: skirout.editor.v1.type_catalog.NamedValue.Mutable get() {
+            var value = this.value;
+            return when (value) {
+                is skirout.editor.v1.type_catalog.NamedValue -> {
+                    value = value.toMutable();
+                    this.value = value;
+                    return value;
+                }
+                is skirout.editor.v1.type_catalog.NamedValue.Mutable -> value;
+            }
+        }
+    }
+
+    companion object {
+        private val default =
+            skirout.editor.v1.compiled_content.CompiledResource(
+                skirout.editor.v1.compiled_content.CompiledResourceKey.partial(),
+                skirout.editor.v1.type_catalog.NamedTypeUse.partial(),
+                skirout.editor.v1.type_catalog.NativeBindingId.partial(),
+                "",
+                skirout.editor.v1.type_catalog.NamedValue.partial(),
+            );
+
+        /** Returns an instance with all fields set to their default values. */
+        fun partial() = default;
+
+        /**
+         * Creates a new instance of [CompiledResource].
+         * Unlike the constructor, does not require all fields to be specified.
+         * Missing fields will be set to their default values.
+         */
+        fun partial(
+            _mustNameArguments: _MustNameArguments =
+                _MustNameArguments,
+            key: skirout.editor.v1.compiled_content.CompiledResourceKey_OrMutable =
+                skirout.editor.v1.compiled_content.CompiledResourceKey.partial(),
+            actualType: skirout.editor.v1.type_catalog.NamedTypeUse_OrMutable =
+                skirout.editor.v1.type_catalog.NamedTypeUse.partial(),
+            bindingProvider: skirout.editor.v1.type_catalog.NativeBindingId_OrMutable =
+                skirout.editor.v1.type_catalog.NativeBindingId.partial(),
+            bindingSignature: kotlin.String =
+                "",
+            value: skirout.editor.v1.type_catalog.NamedValue_OrMutable =
+                skirout.editor.v1.type_catalog.NamedValue.partial(),
+        ) = skirout.editor.v1.compiled_content.CompiledResource(
+            key = key,
+            actualType = actualType,
+            bindingProvider = bindingProvider,
+            bindingSignature = bindingSignature,
+            value = value,
+            _unrecognizedFields = null,
+        );
+
+        /** Serializer for [CompiledResource] instances. */
+        val serializer get() = _SerializerRegistry.CompiledResourceSerializer;
+
+        /** Describes the [CompiledResource] type. Provides runtime introspection capabilities. */
+        val typeDescriptor get() = _SerializerRegistry.CompiledResourceSerializerImpl.typeDescriptor;
+    }
+}
+
+sealed interface CompiledRelationOrigin_OrMutable {
+    val relation: skirout.editor.v1.type_catalog.RelationId_OrMutable;
+    val firstLocation: skirout.editor.v1.type_catalog.ValuePath_OrMutable?;
+    val secondLocation: skirout.editor.v1.type_catalog.ValuePath_OrMutable?;
+
+    fun toFrozen(): skirout.editor.v1.compiled_content.CompiledRelationOrigin;
+}
+
+/**
+ * The declared relation an edge projects, with the authored locations of both endpoints.
+ *
+ * Deeply immutable.
+ */
+@kotlin.Suppress("UNUSED_PARAMETER")
+class CompiledRelationOrigin private constructor(
+    override val relation: skirout.editor.v1.type_catalog.RelationId,
+    override val firstLocation: skirout.editor.v1.type_catalog.ValuePath?,
+    override val secondLocation: skirout.editor.v1.type_catalog.ValuePath?,
+    internal val _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.compiled_content.CompiledRelationOrigin>? =
+        null,
+): skirout.editor.v1.compiled_content.CompiledRelationOrigin_OrMutable {
+    constructor(
+        _mustNameArguments: _MustNameArguments =
+            _MustNameArguments,
+        relation: skirout.editor.v1.type_catalog.RelationId_OrMutable,
+        firstLocation: skirout.editor.v1.type_catalog.ValuePath_OrMutable?,
+        secondLocation: skirout.editor.v1.type_catalog.ValuePath_OrMutable?,
+        _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.compiled_content.CompiledRelationOrigin>? =
+            null,
+    ): this(
+        relation.toFrozen(),
+        if (firstLocation != null) firstLocation.toFrozen() else null,
+        if (secondLocation != null) secondLocation.toFrozen() else null,
+        _unrecognizedFields,
+    ) {}
+
+    @kotlin.Deprecated("Already frozen", kotlin.ReplaceWith("this"))
+    override fun toFrozen() = this;
+
+    /** Returns a mutable shallow copy of this instance */
+    fun toMutable() = Mutable(
+        relation = this.relation,
+        firstLocation = this.firstLocation,
+        secondLocation = this.secondLocation,
+    );
+
+    /** Returns a shallow copy of this instance with the specified fields replaced. */
+    fun copy(
+        _mustNameArguments: _MustNameArguments =
+            _MustNameArguments,
+        relation: skirout.editor.v1.type_catalog.RelationId_OrMutable =
+            this.relation,
+        firstLocation: skirout.editor.v1.type_catalog.ValuePath_OrMutable? =
+            this.firstLocation,
+        secondLocation: skirout.editor.v1.type_catalog.ValuePath_OrMutable? =
+            this.secondLocation,
+    ) = skirout.editor.v1.compiled_content.CompiledRelationOrigin(
+        relation.toFrozen(),
+        if (firstLocation != null) firstLocation.toFrozen() else null,
+        if (secondLocation != null) secondLocation.toFrozen() else null,
+        this._unrecognizedFields,
+    );
+
+    @kotlin.Deprecated("No point in creating an exact copy of an immutable object", kotlin.ReplaceWith("this"))
+    fun copy() = this;
+
+    override fun equals(other: kotlin.Any?): kotlin.Boolean {
+        return this === other || (other is skirout.editor.v1.compiled_content.CompiledRelationOrigin && this.relation == other.relation && this.firstLocation == other.firstLocation && this.secondLocation == other.secondLocation);
+    }
+
+    override fun hashCode(): kotlin.Int {
+        return kotlin.collections.listOf<kotlin.Any?>(this.relation, this.firstLocation, this.secondLocation).hashCode();
+    }
+
+    override fun toString(): kotlin.String {
+        return build.skir.internal.toStringImpl(
+            this,
+            _SerializerRegistry.CompiledRelationOriginSerializerImpl,
+        )
+    }
+
+    /** Mutable version of [CompiledRelationOrigin]. */
+    class Mutable internal constructor(
+        _mustNameArguments: _MustNameArguments =
+            _MustNameArguments,
+        override var relation: skirout.editor.v1.type_catalog.RelationId_OrMutable =
+            skirout.editor.v1.type_catalog.RelationId.partial(),
+        override var firstLocation: skirout.editor.v1.type_catalog.ValuePath_OrMutable? =
+            null,
+        override var secondLocation: skirout.editor.v1.type_catalog.ValuePath_OrMutable? =
+            null,
+        internal var _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.compiled_content.CompiledRelationOrigin>? =
+            null,
+    ): skirout.editor.v1.compiled_content.CompiledRelationOrigin_OrMutable {
+        /** Returns a deeply immutable copy of this instance */
+        override fun toFrozen() = skirout.editor.v1.compiled_content.CompiledRelationOrigin(
+            relation = this.relation,
+            firstLocation = this.firstLocation,
+            secondLocation = this.secondLocation,
+            _unrecognizedFields = this._unrecognizedFields,
+        );
+
+        /**
+         * If the value of [relation] is already mutable, returns it as-is.
+         * Otherwise, makes a mutable copy, assigns it back to [relation] and returns it.
+         */
+        val mutableRelation: skirout.editor.v1.type_catalog.RelationId.Mutable get() {
+            var value = this.relation;
+            return when (value) {
+                is skirout.editor.v1.type_catalog.RelationId -> {
+                    value = value.toMutable();
+                    this.relation = value;
+                    return value;
+                }
+                is skirout.editor.v1.type_catalog.RelationId.Mutable -> value;
+            }
+        }
+    }
+
+    companion object {
+        private val default =
+            skirout.editor.v1.compiled_content.CompiledRelationOrigin(
+                skirout.editor.v1.type_catalog.RelationId.partial(),
+                null,
+                null,
+            );
+
+        /** Returns an instance with all fields set to their default values. */
+        fun partial() = default;
+
+        /**
+         * Creates a new instance of [CompiledRelationOrigin].
+         * Unlike the constructor, does not require all fields to be specified.
+         * Missing fields will be set to their default values.
+         */
+        fun partial(
+            _mustNameArguments: _MustNameArguments =
+                _MustNameArguments,
+            relation: skirout.editor.v1.type_catalog.RelationId_OrMutable =
+                skirout.editor.v1.type_catalog.RelationId.partial(),
+            firstLocation: skirout.editor.v1.type_catalog.ValuePath_OrMutable? =
+                null,
+            secondLocation: skirout.editor.v1.type_catalog.ValuePath_OrMutable? =
+                null,
+        ) = skirout.editor.v1.compiled_content.CompiledRelationOrigin(
+            relation = relation,
+            firstLocation = firstLocation,
+            secondLocation = secondLocation,
+            _unrecognizedFields = null,
+        );
+
+        /** Serializer for [CompiledRelationOrigin] instances. */
+        val serializer get() = _SerializerRegistry.CompiledRelationOriginSerializer;
+
+        /** Describes the [CompiledRelationOrigin] type. Provides runtime introspection capabilities. */
+        val typeDescriptor get() = _SerializerRegistry.CompiledRelationOriginSerializerImpl.typeDescriptor;
+    }
+}
+
+/** Deeply immutable. */
+sealed class CompiledEdgeOrigin private constructor() {
+    /** The kind of variant held by a `CompiledEdgeOrigin`. */
+    enum class Kind {
+        UNKNOWN,
+        RELATION_WRAPPER,
+    }
+
+    class Unknown @kotlin.Deprecated("For internal use", kotlin.ReplaceWith("skirout.editor.v1.compiled_content.CompiledEdgeOrigin.UNKNOWN")) internal constructor(
+        internal val _kind: Kind,
+        internal override val _unrecognized: _UnrecognizedVariant<skirout.editor.v1.compiled_content.CompiledEdgeOrigin>?,
+    ) : skirout.editor.v1.compiled_content.CompiledEdgeOrigin() {
+        override val kind get() = _kind;
+
+        override fun equals(other: kotlin.Any?): kotlin.Boolean {
+            return other is skirout.editor.v1.compiled_content.CompiledEdgeOrigin && other.kind == kind;
+        }
+
+        override fun hashCode(): kotlin.Int {
+            return kind.ordinal;
+        }
+    }
+
+    class RelationWrapper private constructor (
+        val value: skirout.editor.v1.compiled_content.CompiledRelationOrigin,
+    ) : skirout.editor.v1.compiled_content.CompiledEdgeOrigin() {
+        constructor(
+            value: skirout.editor.v1.compiled_content.CompiledRelationOrigin_OrMutable,
+        ): this(value.toFrozen()) {}
+
+        override val kind get() = Kind.RELATION_WRAPPER;
+
+        override fun equals(other: kotlin.Any?): kotlin.Boolean {
+            return other is skirout.editor.v1.compiled_content.CompiledEdgeOrigin.RelationWrapper && value == other.value;
+        }
+
+        override fun hashCode(): kotlin.Int {
+            return this.value.hashCode() + -554436100;
+        }
+    }
+
+    internal open val _unrecognized: _UnrecognizedVariant<skirout.editor.v1.compiled_content.CompiledEdgeOrigin>? get() = null;
+
+    abstract val kind: Kind;
+
+    override fun toString(): kotlin.String {
+        return build.skir.internal.toStringImpl(
+            this,
+            _SerializerRegistry.CompiledEdgeOriginSerializerImpl,
+        )
+    }
+
+    companion object {
+        /**
+         * Constant indicating an unknown [CompiledEdgeOrigin].
+         * Default value for fields of type [CompiledEdgeOrigin].
+         */
+        val UNKNOWN = @kotlin.Suppress("DEPRECATION") Unknown(Kind.UNKNOWN, null);
+
+        /** Shortcut for `RelationWrapper(skirout.editor.v1.compiled_content.CompiledRelationOrigin(...))`. */
+        @kotlin.Suppress("UNUSED_PARAMETER")
+        fun createRelation(
+            _mustNameArguments: _MustNameArguments =
+                _MustNameArguments,
+            relation: skirout.editor.v1.type_catalog.RelationId_OrMutable,
+            firstLocation: skirout.editor.v1.type_catalog.ValuePath_OrMutable?,
+            secondLocation: skirout.editor.v1.type_catalog.ValuePath_OrMutable?,
+        ) = RelationWrapper(
+            skirout.editor.v1.compiled_content.CompiledRelationOrigin(
+                relation = relation,
+                firstLocation = firstLocation,
+                secondLocation = secondLocation,
+            )
+        );
+
+        /** Serializer for [CompiledEdgeOrigin] instances. */
+        val serializer get() = _SerializerRegistry.CompiledEdgeOriginSerializer;
+
+        /** Describes the [CompiledEdgeOrigin] type. Provides runtime introspection capabilities. */
+        val typeDescriptor get() = _SerializerRegistry.CompiledEdgeOriginSerializerImpl.typeDescriptor;
+    }
+}
+
+sealed interface CompiledEdge_OrMutable {
+    val source: skirout.editor.v1.compiled_content.CompiledResourceKey_OrMutable;
+    val target: skirout.editor.v1.compiled_content.CompiledResourceKey_OrMutable;
+    val origin: skirout.editor.v1.compiled_content.CompiledEdgeOrigin;
+
+    fun toFrozen(): skirout.editor.v1.compiled_content.CompiledEdge;
+}
+
+/**
+ * A link between compiled keys, including keys outside its shard.
+ *
+ * Deeply immutable.
+ */
+@kotlin.Suppress("UNUSED_PARAMETER")
+class CompiledEdge private constructor(
+    override val source: skirout.editor.v1.compiled_content.CompiledResourceKey,
+    override val target: skirout.editor.v1.compiled_content.CompiledResourceKey,
+    override val origin: skirout.editor.v1.compiled_content.CompiledEdgeOrigin,
+    internal val _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.compiled_content.CompiledEdge>? =
+        null,
+): skirout.editor.v1.compiled_content.CompiledEdge_OrMutable {
+    constructor(
+        _mustNameArguments: _MustNameArguments =
+            _MustNameArguments,
+        source: skirout.editor.v1.compiled_content.CompiledResourceKey_OrMutable,
+        target: skirout.editor.v1.compiled_content.CompiledResourceKey_OrMutable,
+        origin: skirout.editor.v1.compiled_content.CompiledEdgeOrigin,
+        _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.compiled_content.CompiledEdge>? =
+            null,
+    ): this(
+        source.toFrozen(),
+        target.toFrozen(),
+        origin,
+        _unrecognizedFields,
+    ) {}
+
+    @kotlin.Deprecated("Already frozen", kotlin.ReplaceWith("this"))
+    override fun toFrozen() = this;
+
+    /** Returns a mutable shallow copy of this instance */
+    fun toMutable() = Mutable(
+        source = this.source,
+        target = this.target,
+        origin = this.origin,
+    );
+
+    /** Returns a shallow copy of this instance with the specified fields replaced. */
+    fun copy(
+        _mustNameArguments: _MustNameArguments =
+            _MustNameArguments,
+        source: skirout.editor.v1.compiled_content.CompiledResourceKey_OrMutable =
+            this.source,
+        target: skirout.editor.v1.compiled_content.CompiledResourceKey_OrMutable =
+            this.target,
+        origin: skirout.editor.v1.compiled_content.CompiledEdgeOrigin =
+            this.origin,
+    ) = skirout.editor.v1.compiled_content.CompiledEdge(
+        source.toFrozen(),
+        target.toFrozen(),
+        origin,
+        this._unrecognizedFields,
+    );
+
+    @kotlin.Deprecated("No point in creating an exact copy of an immutable object", kotlin.ReplaceWith("this"))
+    fun copy() = this;
+
+    override fun equals(other: kotlin.Any?): kotlin.Boolean {
+        return this === other || (other is skirout.editor.v1.compiled_content.CompiledEdge && this.source == other.source && this.target == other.target && this.origin == other.origin);
+    }
+
+    override fun hashCode(): kotlin.Int {
+        return kotlin.collections.listOf<kotlin.Any?>(this.source, this.target, this.origin).hashCode();
+    }
+
+    override fun toString(): kotlin.String {
+        return build.skir.internal.toStringImpl(
+            this,
+            _SerializerRegistry.CompiledEdgeSerializerImpl,
+        )
+    }
+
+    /** Mutable version of [CompiledEdge]. */
+    class Mutable internal constructor(
+        _mustNameArguments: _MustNameArguments =
+            _MustNameArguments,
+        override var source: skirout.editor.v1.compiled_content.CompiledResourceKey_OrMutable =
+            skirout.editor.v1.compiled_content.CompiledResourceKey.partial(),
+        override var target: skirout.editor.v1.compiled_content.CompiledResourceKey_OrMutable =
+            skirout.editor.v1.compiled_content.CompiledResourceKey.partial(),
+        override var origin: skirout.editor.v1.compiled_content.CompiledEdgeOrigin =
+            skirout.editor.v1.compiled_content.CompiledEdgeOrigin.UNKNOWN,
+        internal var _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.compiled_content.CompiledEdge>? =
+            null,
+    ): skirout.editor.v1.compiled_content.CompiledEdge_OrMutable {
+        /** Returns a deeply immutable copy of this instance */
+        override fun toFrozen() = skirout.editor.v1.compiled_content.CompiledEdge(
+            source = this.source,
+            target = this.target,
+            origin = this.origin,
+            _unrecognizedFields = this._unrecognizedFields,
+        );
+
+        /**
+         * If the value of [source] is already mutable, returns it as-is.
+         * Otherwise, makes a mutable copy, assigns it back to [source] and returns it.
+         */
+        val mutableSource: skirout.editor.v1.compiled_content.CompiledResourceKey.Mutable get() {
+            var value = this.source;
+            return when (value) {
+                is skirout.editor.v1.compiled_content.CompiledResourceKey -> {
+                    value = value.toMutable();
+                    this.source = value;
+                    return value;
+                }
+                is skirout.editor.v1.compiled_content.CompiledResourceKey.Mutable -> value;
+            }
+        }
+
+        /**
+         * If the value of [target] is already mutable, returns it as-is.
+         * Otherwise, makes a mutable copy, assigns it back to [target] and returns it.
+         */
+        val mutableTarget: skirout.editor.v1.compiled_content.CompiledResourceKey.Mutable get() {
+            var value = this.target;
+            return when (value) {
+                is skirout.editor.v1.compiled_content.CompiledResourceKey -> {
+                    value = value.toMutable();
+                    this.target = value;
+                    return value;
+                }
+                is skirout.editor.v1.compiled_content.CompiledResourceKey.Mutable -> value;
+            }
+        }
+    }
+
+    companion object {
+        private val default =
+            skirout.editor.v1.compiled_content.CompiledEdge(
+                skirout.editor.v1.compiled_content.CompiledResourceKey.partial(),
+                skirout.editor.v1.compiled_content.CompiledResourceKey.partial(),
+                skirout.editor.v1.compiled_content.CompiledEdgeOrigin.UNKNOWN,
+            );
+
+        /** Returns an instance with all fields set to their default values. */
+        fun partial() = default;
+
+        /**
+         * Creates a new instance of [CompiledEdge].
+         * Unlike the constructor, does not require all fields to be specified.
+         * Missing fields will be set to their default values.
+         */
+        fun partial(
+            _mustNameArguments: _MustNameArguments =
+                _MustNameArguments,
+            source: skirout.editor.v1.compiled_content.CompiledResourceKey_OrMutable =
+                skirout.editor.v1.compiled_content.CompiledResourceKey.partial(),
+            target: skirout.editor.v1.compiled_content.CompiledResourceKey_OrMutable =
+                skirout.editor.v1.compiled_content.CompiledResourceKey.partial(),
+            origin: skirout.editor.v1.compiled_content.CompiledEdgeOrigin =
+                skirout.editor.v1.compiled_content.CompiledEdgeOrigin.UNKNOWN,
+        ) = skirout.editor.v1.compiled_content.CompiledEdge(
+            source = source,
+            target = target,
+            origin = origin,
+            _unrecognizedFields = null,
+        );
+
+        /** Serializer for [CompiledEdge] instances. */
+        val serializer get() = _SerializerRegistry.CompiledEdgeSerializer;
+
+        /** Describes the [CompiledEdge] type. Provides runtime introspection capabilities. */
+        val typeDescriptor get() = _SerializerRegistry.CompiledEdgeSerializerImpl.typeDescriptor;
+    }
+}
+
+sealed interface RuntimeRelationFact_OrMutable {
+    val relation: skirout.editor.v1.type_catalog.RelationId_OrMutable;
+    val ownsResources: kotlin.Boolean;
+
+    fun toFrozen(): skirout.editor.v1.compiled_content.RuntimeRelationFact;
+}
+
+/** Deeply immutable. */
+@kotlin.Suppress("UNUSED_PARAMETER")
+class RuntimeRelationFact private constructor(
+    override val relation: skirout.editor.v1.type_catalog.RelationId,
+    override val ownsResources: kotlin.Boolean,
+    internal val _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.compiled_content.RuntimeRelationFact>? =
+        null,
+): skirout.editor.v1.compiled_content.RuntimeRelationFact_OrMutable {
+    constructor(
+        _mustNameArguments: _MustNameArguments =
+            _MustNameArguments,
+        relation: skirout.editor.v1.type_catalog.RelationId_OrMutable,
+        ownsResources: kotlin.Boolean,
+        _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.compiled_content.RuntimeRelationFact>? =
+            null,
+    ): this(
+        relation.toFrozen(),
+        ownsResources,
+        _unrecognizedFields,
+    ) {}
+
+    @kotlin.Deprecated("Already frozen", kotlin.ReplaceWith("this"))
+    override fun toFrozen() = this;
+
+    /** Returns a mutable shallow copy of this instance */
+    fun toMutable() = Mutable(
+        relation = this.relation,
+        ownsResources = this.ownsResources,
+    );
+
+    /** Returns a shallow copy of this instance with the specified fields replaced. */
+    fun copy(
+        _mustNameArguments: _MustNameArguments =
+            _MustNameArguments,
+        relation: skirout.editor.v1.type_catalog.RelationId_OrMutable =
+            this.relation,
+        ownsResources: kotlin.Boolean =
+            this.ownsResources,
+    ) = skirout.editor.v1.compiled_content.RuntimeRelationFact(
+        relation.toFrozen(),
+        ownsResources,
+        this._unrecognizedFields,
+    );
+
+    @kotlin.Deprecated("No point in creating an exact copy of an immutable object", kotlin.ReplaceWith("this"))
+    fun copy() = this;
+
+    override fun equals(other: kotlin.Any?): kotlin.Boolean {
+        return this === other || (other is skirout.editor.v1.compiled_content.RuntimeRelationFact && this.relation == other.relation && this.ownsResources == other.ownsResources);
+    }
+
+    override fun hashCode(): kotlin.Int {
+        return kotlin.collections.listOf<kotlin.Any?>(this.relation, this.ownsResources).hashCode();
+    }
+
+    override fun toString(): kotlin.String {
+        return build.skir.internal.toStringImpl(
+            this,
+            _SerializerRegistry.RuntimeRelationFactSerializerImpl,
+        )
+    }
+
+    /** Mutable version of [RuntimeRelationFact]. */
+    class Mutable internal constructor(
+        _mustNameArguments: _MustNameArguments =
+            _MustNameArguments,
+        override var relation: skirout.editor.v1.type_catalog.RelationId_OrMutable =
+            skirout.editor.v1.type_catalog.RelationId.partial(),
+        override var ownsResources: kotlin.Boolean =
+            false,
+        internal var _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.compiled_content.RuntimeRelationFact>? =
+            null,
+    ): skirout.editor.v1.compiled_content.RuntimeRelationFact_OrMutable {
+        /** Returns a deeply immutable copy of this instance */
+        override fun toFrozen() = skirout.editor.v1.compiled_content.RuntimeRelationFact(
+            relation = this.relation,
+            ownsResources = this.ownsResources,
+            _unrecognizedFields = this._unrecognizedFields,
+        );
+
+        /**
+         * If the value of [relation] is already mutable, returns it as-is.
+         * Otherwise, makes a mutable copy, assigns it back to [relation] and returns it.
+         */
+        val mutableRelation: skirout.editor.v1.type_catalog.RelationId.Mutable get() {
+            var value = this.relation;
+            return when (value) {
+                is skirout.editor.v1.type_catalog.RelationId -> {
+                    value = value.toMutable();
+                    this.relation = value;
+                    return value;
+                }
+                is skirout.editor.v1.type_catalog.RelationId.Mutable -> value;
+            }
+        }
+    }
+
+    companion object {
+        private val default =
+            skirout.editor.v1.compiled_content.RuntimeRelationFact(
+                skirout.editor.v1.type_catalog.RelationId.partial(),
+                false,
+            );
+
+        /** Returns an instance with all fields set to their default values. */
+        fun partial() = default;
+
+        /**
+         * Creates a new instance of [RuntimeRelationFact].
+         * Unlike the constructor, does not require all fields to be specified.
+         * Missing fields will be set to their default values.
+         */
+        fun partial(
+            _mustNameArguments: _MustNameArguments =
+                _MustNameArguments,
+            relation: skirout.editor.v1.type_catalog.RelationId_OrMutable =
+                skirout.editor.v1.type_catalog.RelationId.partial(),
+            ownsResources: kotlin.Boolean =
+                false,
+        ) = skirout.editor.v1.compiled_content.RuntimeRelationFact(
+            relation = relation,
+            ownsResources = ownsResources,
+            _unrecognizedFields = null,
+        );
+
+        /** Serializer for [RuntimeRelationFact] instances. */
+        val serializer get() = _SerializerRegistry.RuntimeRelationFactSerializer;
+
+        /** Describes the [RuntimeRelationFact] type. Provides runtime introspection capabilities. */
+        val typeDescriptor get() = _SerializerRegistry.RuntimeRelationFactSerializerImpl.typeDescriptor;
+    }
+}
+
+sealed interface RuntimeCompilationFacts_OrMutable {
+    val formatRevision: kotlin.Int;
+    val root: skirout.editor.v1.compiled_content.CompiledResourceKey_OrMutable;
+    val resources: kotlin.collections.List<skirout.editor.v1.compiled_content.CompiledResource_OrMutable>;
+    val edges: kotlin.collections.List<skirout.editor.v1.compiled_content.CompiledEdge_OrMutable>;
+    val types: kotlin.collections.List<skirout.editor.v1.type_catalog.TypeDefinition_OrMutable>;
+    val relations: kotlin.collections.List<skirout.editor.v1.compiled_content.RuntimeRelationFact_OrMutable>;
+
+    fun toFrozen(): skirout.editor.v1.compiled_content.RuntimeCompilationFacts;
+}
+
+/**
+ * The canonical resource graph of one compilation unit: its resources, edges, and the type and
+ * relation declarations engines need to admit them against their runtime catalog.
+ *
+ * Deeply immutable.
+ */
+@kotlin.Suppress("UNUSED_PARAMETER")
+class RuntimeCompilationFacts private constructor(
+    override val formatRevision: kotlin.Int,
+    override val root: skirout.editor.v1.compiled_content.CompiledResourceKey,
+    override val resources: kotlin.collections.List<skirout.editor.v1.compiled_content.CompiledResource>,
+    override val edges: kotlin.collections.List<skirout.editor.v1.compiled_content.CompiledEdge>,
+    override val types: kotlin.collections.List<skirout.editor.v1.type_catalog.TypeDefinition>,
+    override val relations: kotlin.collections.List<skirout.editor.v1.compiled_content.RuntimeRelationFact>,
+    internal val _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.compiled_content.RuntimeCompilationFacts>? =
+        null,
+): skirout.editor.v1.compiled_content.RuntimeCompilationFacts_OrMutable {
+    constructor(
+        _mustNameArguments: _MustNameArguments =
+            _MustNameArguments,
+        formatRevision: kotlin.Int,
+        root: skirout.editor.v1.compiled_content.CompiledResourceKey_OrMutable,
+        resources: kotlin.collections.Iterable<skirout.editor.v1.compiled_content.CompiledResource_OrMutable>,
+        edges: kotlin.collections.Iterable<skirout.editor.v1.compiled_content.CompiledEdge_OrMutable>,
+        types: kotlin.collections.Iterable<skirout.editor.v1.type_catalog.TypeDefinition_OrMutable>,
+        relations: kotlin.collections.Iterable<skirout.editor.v1.compiled_content.RuntimeRelationFact_OrMutable>,
+        _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.compiled_content.RuntimeCompilationFacts>? =
+            null,
+    ): this(
+        formatRevision,
+        root.toFrozen(),
+        build.skir.internal.toFrozenList(resources, { it.toFrozen() }),
+        build.skir.internal.toFrozenList(edges, { it.toFrozen() }),
+        build.skir.internal.toFrozenList(types, { it.toFrozen() }),
+        build.skir.internal.toFrozenList(relations, { it.toFrozen() }),
+        _unrecognizedFields,
+    ) {}
+
+    @kotlin.Deprecated("Already frozen", kotlin.ReplaceWith("this"))
+    override fun toFrozen() = this;
+
+    /** Returns a mutable shallow copy of this instance */
+    fun toMutable() = Mutable(
+        formatRevision = this.formatRevision,
+        root = this.root,
+        resources = this.resources,
+        edges = this.edges,
+        types = this.types,
+        relations = this.relations,
+    );
+
+    /** Returns a shallow copy of this instance with the specified fields replaced. */
+    fun copy(
+        _mustNameArguments: _MustNameArguments =
+            _MustNameArguments,
+        formatRevision: kotlin.Int =
+            this.formatRevision,
+        root: skirout.editor.v1.compiled_content.CompiledResourceKey_OrMutable =
+            this.root,
+        resources: kotlin.collections.Iterable<skirout.editor.v1.compiled_content.CompiledResource_OrMutable> =
+            this.resources,
+        edges: kotlin.collections.Iterable<skirout.editor.v1.compiled_content.CompiledEdge_OrMutable> =
+            this.edges,
+        types: kotlin.collections.Iterable<skirout.editor.v1.type_catalog.TypeDefinition_OrMutable> =
+            this.types,
+        relations: kotlin.collections.Iterable<skirout.editor.v1.compiled_content.RuntimeRelationFact_OrMutable> =
+            this.relations,
+    ) = skirout.editor.v1.compiled_content.RuntimeCompilationFacts(
+        formatRevision,
+        root.toFrozen(),
+        build.skir.internal.toFrozenList(resources, { it.toFrozen() }),
+        build.skir.internal.toFrozenList(edges, { it.toFrozen() }),
+        build.skir.internal.toFrozenList(types, { it.toFrozen() }),
+        build.skir.internal.toFrozenList(relations, { it.toFrozen() }),
+        this._unrecognizedFields,
+    );
+
+    @kotlin.Deprecated("No point in creating an exact copy of an immutable object", kotlin.ReplaceWith("this"))
+    fun copy() = this;
+
+    override fun equals(other: kotlin.Any?): kotlin.Boolean {
+        return this === other || (other is skirout.editor.v1.compiled_content.RuntimeCompilationFacts && this.formatRevision == other.formatRevision && this.root == other.root && this.resources == other.resources && this.edges == other.edges && this.types == other.types && this.relations == other.relations);
+    }
+
+    override fun hashCode(): kotlin.Int {
+        return kotlin.collections.listOf<kotlin.Any?>(this.formatRevision, this.root, this.resources, this.edges, this.types, this.relations).hashCode();
+    }
+
+    override fun toString(): kotlin.String {
+        return build.skir.internal.toStringImpl(
+            this,
+            _SerializerRegistry.RuntimeCompilationFactsSerializerImpl,
+        )
+    }
+
+    /** Mutable version of [RuntimeCompilationFacts]. */
+    class Mutable internal constructor(
+        _mustNameArguments: _MustNameArguments =
+            _MustNameArguments,
+        override var formatRevision: kotlin.Int =
+            0,
+        override var root: skirout.editor.v1.compiled_content.CompiledResourceKey_OrMutable =
+            skirout.editor.v1.compiled_content.CompiledResourceKey.partial(),
+        override var resources: kotlin.collections.List<skirout.editor.v1.compiled_content.CompiledResource_OrMutable> =
+            build.skir.internal.emptyFrozenList<skirout.editor.v1.compiled_content.CompiledResource>(),
+        override var edges: kotlin.collections.List<skirout.editor.v1.compiled_content.CompiledEdge_OrMutable> =
+            build.skir.internal.emptyFrozenList<skirout.editor.v1.compiled_content.CompiledEdge>(),
+        override var types: kotlin.collections.List<skirout.editor.v1.type_catalog.TypeDefinition_OrMutable> =
+            build.skir.internal.emptyFrozenList<skirout.editor.v1.type_catalog.TypeDefinition>(),
+        override var relations: kotlin.collections.List<skirout.editor.v1.compiled_content.RuntimeRelationFact_OrMutable> =
+            build.skir.internal.emptyFrozenList<skirout.editor.v1.compiled_content.RuntimeRelationFact>(),
+        internal var _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.compiled_content.RuntimeCompilationFacts>? =
+            null,
+    ): skirout.editor.v1.compiled_content.RuntimeCompilationFacts_OrMutable {
+        /** Returns a deeply immutable copy of this instance */
+        override fun toFrozen() = skirout.editor.v1.compiled_content.RuntimeCompilationFacts(
+            formatRevision = this.formatRevision,
+            root = this.root,
+            resources = this.resources,
+            edges = this.edges,
+            types = this.types,
+            relations = this.relations,
+            _unrecognizedFields = this._unrecognizedFields,
+        );
+
+        /**
+         * If the value of [root] is already mutable, returns it as-is.
+         * Otherwise, makes a mutable copy, assigns it back to [root] and returns it.
+         */
+        val mutableRoot: skirout.editor.v1.compiled_content.CompiledResourceKey.Mutable get() {
+            var value = this.root;
+            return when (value) {
+                is skirout.editor.v1.compiled_content.CompiledResourceKey -> {
+                    value = value.toMutable();
+                    this.root = value;
+                    return value;
+                }
+                is skirout.editor.v1.compiled_content.CompiledResourceKey.Mutable -> value;
+            }
+        }
+
+        /**
+         * If the value of [resources] is already mutable, returns it as-is.
+         * Otherwise, makes a mutable copy, assigns it back to [resources] and returns it.
+         */
+        val mutableResources: kotlin.collections.MutableList<skirout.editor.v1.compiled_content.CompiledResource_OrMutable> get() {
+            var value = this.resources;
+            return when (value) {
+                is build.skir.internal.MutableList -> value;
+                else -> {
+                    value = build.skir.internal.MutableList(value);
+                    this.resources = value;
+                    value;
+                }
+            }
+        }
+
+        /**
+         * If the value of [edges] is already mutable, returns it as-is.
+         * Otherwise, makes a mutable copy, assigns it back to [edges] and returns it.
+         */
+        val mutableEdges: kotlin.collections.MutableList<skirout.editor.v1.compiled_content.CompiledEdge_OrMutable> get() {
+            var value = this.edges;
+            return when (value) {
+                is build.skir.internal.MutableList -> value;
+                else -> {
+                    value = build.skir.internal.MutableList(value);
+                    this.edges = value;
+                    value;
+                }
+            }
+        }
+
+        /**
+         * If the value of [types] is already mutable, returns it as-is.
+         * Otherwise, makes a mutable copy, assigns it back to [types] and returns it.
+         */
+        val mutableTypes: kotlin.collections.MutableList<skirout.editor.v1.type_catalog.TypeDefinition_OrMutable> get() {
+            var value = this.types;
+            return when (value) {
+                is build.skir.internal.MutableList -> value;
+                else -> {
+                    value = build.skir.internal.MutableList(value);
+                    this.types = value;
+                    value;
+                }
+            }
+        }
+
+        /**
+         * If the value of [relations] is already mutable, returns it as-is.
+         * Otherwise, makes a mutable copy, assigns it back to [relations] and returns it.
+         */
+        val mutableRelations: kotlin.collections.MutableList<skirout.editor.v1.compiled_content.RuntimeRelationFact_OrMutable> get() {
+            var value = this.relations;
+            return when (value) {
+                is build.skir.internal.MutableList -> value;
+                else -> {
+                    value = build.skir.internal.MutableList(value);
+                    this.relations = value;
+                    value;
+                }
+            }
+        }
+    }
+
+    companion object {
+        private val default =
+            skirout.editor.v1.compiled_content.RuntimeCompilationFacts(
+                0,
+                skirout.editor.v1.compiled_content.CompiledResourceKey.partial(),
+                build.skir.internal.emptyFrozenList<skirout.editor.v1.compiled_content.CompiledResource>(),
+                build.skir.internal.emptyFrozenList<skirout.editor.v1.compiled_content.CompiledEdge>(),
+                build.skir.internal.emptyFrozenList<skirout.editor.v1.type_catalog.TypeDefinition>(),
+                build.skir.internal.emptyFrozenList<skirout.editor.v1.compiled_content.RuntimeRelationFact>(),
+            );
+
+        /** Returns an instance with all fields set to their default values. */
+        fun partial() = default;
+
+        /**
+         * Creates a new instance of [RuntimeCompilationFacts].
+         * Unlike the constructor, does not require all fields to be specified.
+         * Missing fields will be set to their default values.
+         */
+        fun partial(
+            _mustNameArguments: _MustNameArguments =
+                _MustNameArguments,
+            formatRevision: kotlin.Int =
+                0,
+            root: skirout.editor.v1.compiled_content.CompiledResourceKey_OrMutable =
+                skirout.editor.v1.compiled_content.CompiledResourceKey.partial(),
+            resources: kotlin.collections.Iterable<skirout.editor.v1.compiled_content.CompiledResource_OrMutable> =
+                build.skir.internal.emptyFrozenList<skirout.editor.v1.compiled_content.CompiledResource>(),
+            edges: kotlin.collections.Iterable<skirout.editor.v1.compiled_content.CompiledEdge_OrMutable> =
+                build.skir.internal.emptyFrozenList<skirout.editor.v1.compiled_content.CompiledEdge>(),
+            types: kotlin.collections.Iterable<skirout.editor.v1.type_catalog.TypeDefinition_OrMutable> =
+                build.skir.internal.emptyFrozenList<skirout.editor.v1.type_catalog.TypeDefinition>(),
+            relations: kotlin.collections.Iterable<skirout.editor.v1.compiled_content.RuntimeRelationFact_OrMutable> =
+                build.skir.internal.emptyFrozenList<skirout.editor.v1.compiled_content.RuntimeRelationFact>(),
+        ) = skirout.editor.v1.compiled_content.RuntimeCompilationFacts(
+            formatRevision = formatRevision,
+            root = root,
+            resources = resources,
+            edges = edges,
+            types = types,
+            relations = relations,
+            _unrecognizedFields = null,
+        );
+
+        /** Serializer for [RuntimeCompilationFacts] instances. */
+        val serializer get() = _SerializerRegistry.RuntimeCompilationFactsSerializer;
+
+        /** Describes the [RuntimeCompilationFacts] type. Provides runtime introspection capabilities. */
+        val typeDescriptor get() = _SerializerRegistry.RuntimeCompilationFactsSerializerImpl.typeDescriptor;
+    }
+}
+
+sealed interface ResourceGraphShard_OrMutable {
+    val digest: kotlin.String;
+    val facts: skirout.editor.v1.compiled_content.RuntimeCompilationFacts_OrMutable;
+
+    fun toFrozen(): skirout.editor.v1.compiled_content.ResourceGraphShard;
+}
+
+/**
+ * The payload of a resource graph blob: canonical facts and their semantic digest, the lowercase
+ * SHA 256 of their canonical encoding. Consumers recompute the digest before admitting the facts.
+ *
+ * Deeply immutable.
+ */
+@kotlin.Suppress("UNUSED_PARAMETER")
+class ResourceGraphShard private constructor(
+    override val digest: kotlin.String,
+    override val facts: skirout.editor.v1.compiled_content.RuntimeCompilationFacts,
+    internal val _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.compiled_content.ResourceGraphShard>? =
+        null,
+): skirout.editor.v1.compiled_content.ResourceGraphShard_OrMutable {
+    constructor(
+        _mustNameArguments: _MustNameArguments =
+            _MustNameArguments,
+        digest: kotlin.String,
+        facts: skirout.editor.v1.compiled_content.RuntimeCompilationFacts_OrMutable,
+        _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.compiled_content.ResourceGraphShard>? =
+            null,
+    ): this(
+        digest,
+        facts.toFrozen(),
+        _unrecognizedFields,
+    ) {}
+
+    @kotlin.Deprecated("Already frozen", kotlin.ReplaceWith("this"))
+    override fun toFrozen() = this;
+
+    /** Returns a mutable shallow copy of this instance */
+    fun toMutable() = Mutable(
+        digest = this.digest,
+        facts = this.facts,
+    );
+
+    /** Returns a shallow copy of this instance with the specified fields replaced. */
+    fun copy(
+        _mustNameArguments: _MustNameArguments =
+            _MustNameArguments,
+        digest: kotlin.String =
+            this.digest,
+        facts: skirout.editor.v1.compiled_content.RuntimeCompilationFacts_OrMutable =
+            this.facts,
+    ) = skirout.editor.v1.compiled_content.ResourceGraphShard(
+        digest,
+        facts.toFrozen(),
+        this._unrecognizedFields,
+    );
+
+    @kotlin.Deprecated("No point in creating an exact copy of an immutable object", kotlin.ReplaceWith("this"))
+    fun copy() = this;
+
+    override fun equals(other: kotlin.Any?): kotlin.Boolean {
+        return this === other || (other is skirout.editor.v1.compiled_content.ResourceGraphShard && this.digest == other.digest && this.facts == other.facts);
+    }
+
+    override fun hashCode(): kotlin.Int {
+        return kotlin.collections.listOf<kotlin.Any?>(this.digest, this.facts).hashCode();
+    }
+
+    override fun toString(): kotlin.String {
+        return build.skir.internal.toStringImpl(
+            this,
+            _SerializerRegistry.ResourceGraphShardSerializerImpl,
+        )
+    }
+
+    /** Mutable version of [ResourceGraphShard]. */
+    class Mutable internal constructor(
+        _mustNameArguments: _MustNameArguments =
+            _MustNameArguments,
+        override var digest: kotlin.String =
+            "",
+        override var facts: skirout.editor.v1.compiled_content.RuntimeCompilationFacts_OrMutable =
+            skirout.editor.v1.compiled_content.RuntimeCompilationFacts.partial(),
+        internal var _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.compiled_content.ResourceGraphShard>? =
+            null,
+    ): skirout.editor.v1.compiled_content.ResourceGraphShard_OrMutable {
+        /** Returns a deeply immutable copy of this instance */
+        override fun toFrozen() = skirout.editor.v1.compiled_content.ResourceGraphShard(
+            digest = this.digest,
+            facts = this.facts,
+            _unrecognizedFields = this._unrecognizedFields,
+        );
+
+        /**
+         * If the value of [facts] is already mutable, returns it as-is.
+         * Otherwise, makes a mutable copy, assigns it back to [facts] and returns it.
+         */
+        val mutableFacts: skirout.editor.v1.compiled_content.RuntimeCompilationFacts.Mutable get() {
+            var value = this.facts;
+            return when (value) {
+                is skirout.editor.v1.compiled_content.RuntimeCompilationFacts -> {
+                    value = value.toMutable();
+                    this.facts = value;
+                    return value;
+                }
+                is skirout.editor.v1.compiled_content.RuntimeCompilationFacts.Mutable -> value;
+            }
+        }
+    }
+
+    companion object {
+        private val default =
+            skirout.editor.v1.compiled_content.ResourceGraphShard(
+                "",
+                skirout.editor.v1.compiled_content.RuntimeCompilationFacts.partial(),
+            );
+
+        /** Returns an instance with all fields set to their default values. */
+        fun partial() = default;
+
+        /**
+         * Creates a new instance of [ResourceGraphShard].
+         * Unlike the constructor, does not require all fields to be specified.
+         * Missing fields will be set to their default values.
+         */
+        fun partial(
+            _mustNameArguments: _MustNameArguments =
+                _MustNameArguments,
+            digest: kotlin.String =
+                "",
+            facts: skirout.editor.v1.compiled_content.RuntimeCompilationFacts_OrMutable =
+                skirout.editor.v1.compiled_content.RuntimeCompilationFacts.partial(),
+        ) = skirout.editor.v1.compiled_content.ResourceGraphShard(
+            digest = digest,
+            facts = facts,
+            _unrecognizedFields = null,
+        );
+
+        /** Serializer for [ResourceGraphShard] instances. */
+        val serializer get() = _SerializerRegistry.ResourceGraphShardSerializer;
+
+        /** Describes the [ResourceGraphShard] type. Provides runtime introspection capabilities. */
+        val typeDescriptor get() = _SerializerRegistry.ResourceGraphShardSerializerImpl.typeDescriptor;
+    }
+}
+
 sealed interface QueryPublishedContentRequest_OrMutable {
     fun toFrozen(): skirout.editor.v1.compiled_content.QueryPublishedContentRequest;
 }
@@ -1815,6 +3438,18 @@ val QueryCompiledResourceStatus: build.skir.service.Method<
 }
 
 private object _SerializerRegistry {
+    val CompilationContextSerializerImpl = build.skir.internal.StructSerializer(
+        recordId = "editor/v1/compiled_content.skir:CompilationContext",
+        doc = "",
+        defaultInstance = skirout.editor.v1.compiled_content.CompilationContext.partial(),
+        newMutableFn = { it?.toMutable() ?: skirout.editor.v1.compiled_content.CompilationContext.Mutable() },
+        toFrozenFn = { it.toFrozen() },
+        getUnrecognizedFields = { it._unrecognizedFields },
+        setUnrecognizedFields = { m, u -> m._unrecognizedFields = u },
+    );
+
+    val CompilationContextSerializer = build.skir.internal.makeSerializer(CompilationContextSerializerImpl);
+
     val CompilationStatusSelectionSerializerImpl =
         build.skir.internal.EnumSerializer.create<skirout.editor.v1.compiled_content.CompilationStatusSelection, skirout.editor.v1.compiled_content.CompilationStatusSelection.Unknown>(
             recordId = "editor/v1/compiled_content.skir:CompilationStatusSelection",
@@ -1864,6 +3499,67 @@ private object _SerializerRegistry {
 
     val CompiledContentChangedSerializer = build.skir.internal.makeSerializer(CompiledContentChangedSerializerImpl);
 
+    val CompiledEdgeSerializerImpl = build.skir.internal.StructSerializer(
+        recordId = "editor/v1/compiled_content.skir:CompiledEdge",
+        doc = "A link between compiled keys, including keys outside its shard.",
+        defaultInstance = skirout.editor.v1.compiled_content.CompiledEdge.partial(),
+        newMutableFn = { it?.toMutable() ?: skirout.editor.v1.compiled_content.CompiledEdge.Mutable() },
+        toFrozenFn = { it.toFrozen() },
+        getUnrecognizedFields = { it._unrecognizedFields },
+        setUnrecognizedFields = { m, u -> m._unrecognizedFields = u },
+    );
+
+    val CompiledEdgeSerializer = build.skir.internal.makeSerializer(CompiledEdgeSerializerImpl);
+
+    val CompiledEdgeOriginSerializerImpl =
+        build.skir.internal.EnumSerializer.create<skirout.editor.v1.compiled_content.CompiledEdgeOrigin, skirout.editor.v1.compiled_content.CompiledEdgeOrigin.Unknown>(
+            recordId = "editor/v1/compiled_content.skir:CompiledEdgeOrigin",
+            doc = "",
+            getKindOrdinal = { it.kind.ordinal },
+            kindCount = skirout.editor.v1.compiled_content.CompiledEdgeOrigin.Kind.values().size,
+            unknownInstance = skirout.editor.v1.compiled_content.CompiledEdgeOrigin.UNKNOWN,
+            wrapUnrecognized = { @kotlin.Suppress("DEPRECATION") skirout.editor.v1.compiled_content.CompiledEdgeOrigin.Unknown(skirout.editor.v1.compiled_content.CompiledEdgeOrigin.Kind.UNKNOWN, it) },
+            getUnrecognized = { it._unrecognized },
+        );
+
+    val CompiledEdgeOriginSerializer = build.skir.internal.makeSerializer(CompiledEdgeOriginSerializerImpl);
+
+    val CompiledRelationOriginSerializerImpl = build.skir.internal.StructSerializer(
+        recordId = "editor/v1/compiled_content.skir:CompiledRelationOrigin",
+        doc = "The declared relation an edge projects, with the authored locations of both endpoints.",
+        defaultInstance = skirout.editor.v1.compiled_content.CompiledRelationOrigin.partial(),
+        newMutableFn = { it?.toMutable() ?: skirout.editor.v1.compiled_content.CompiledRelationOrigin.Mutable() },
+        toFrozenFn = { it.toFrozen() },
+        getUnrecognizedFields = { it._unrecognizedFields },
+        setUnrecognizedFields = { m, u -> m._unrecognizedFields = u },
+    );
+
+    val CompiledRelationOriginSerializer = build.skir.internal.makeSerializer(CompiledRelationOriginSerializerImpl);
+
+    val CompiledResourceSerializerImpl = build.skir.internal.StructSerializer(
+        recordId = "editor/v1/compiled_content.skir:CompiledResource",
+        doc = "The typed record of one compiled resource before graph hydration, with the native binding that\nproduced it. Engines hydrate it only through the same binding provider and signature.",
+        defaultInstance = skirout.editor.v1.compiled_content.CompiledResource.partial(),
+        newMutableFn = { it?.toMutable() ?: skirout.editor.v1.compiled_content.CompiledResource.Mutable() },
+        toFrozenFn = { it.toFrozen() },
+        getUnrecognizedFields = { it._unrecognizedFields },
+        setUnrecognizedFields = { m, u -> m._unrecognizedFields = u },
+    );
+
+    val CompiledResourceSerializer = build.skir.internal.makeSerializer(CompiledResourceSerializerImpl);
+
+    val CompiledResourceKeySerializerImpl = build.skir.internal.StructSerializer(
+        recordId = "editor/v1/compiled_content.skir:CompiledResourceKey",
+        doc = "Identifies a resource in a compiled occurrence.",
+        defaultInstance = skirout.editor.v1.compiled_content.CompiledResourceKey.partial(),
+        newMutableFn = { it?.toMutable() ?: skirout.editor.v1.compiled_content.CompiledResourceKey.Mutable() },
+        toFrozenFn = { it.toFrozen() },
+        getUnrecognizedFields = { it._unrecognizedFields },
+        setUnrecognizedFields = { m, u -> m._unrecognizedFields = u },
+    );
+
+    val CompiledResourceKeySerializer = build.skir.internal.makeSerializer(CompiledResourceKeySerializerImpl);
+
     val CompiledResourceStateSerializerImpl =
         build.skir.internal.EnumSerializer.create<skirout.editor.v1.compiled_content.CompiledResourceState, skirout.editor.v1.compiled_content.CompiledResourceState.Unknown>(
             recordId = "editor/v1/compiled_content.skir:CompiledResourceState",
@@ -1888,6 +3584,18 @@ private object _SerializerRegistry {
     );
 
     val CompiledResourceStatusSerializer = build.skir.internal.makeSerializer(CompiledResourceStatusSerializerImpl);
+
+    val InstancePathSerializerImpl = build.skir.internal.StructSerializer(
+        recordId = "editor/v1/compiled_content.skir:InstancePath",
+        doc = "Distinguishes one generated occurrence of an authored resource. The root occurrence has no segments.",
+        defaultInstance = skirout.editor.v1.compiled_content.InstancePath.partial(),
+        newMutableFn = { it?.toMutable() ?: skirout.editor.v1.compiled_content.InstancePath.Mutable() },
+        toFrozenFn = { it.toFrozen() },
+        getUnrecognizedFields = { it._unrecognizedFields },
+        setUnrecognizedFields = { m, u -> m._unrecognizedFields = u },
+    );
+
+    val InstancePathSerializer = build.skir.internal.makeSerializer(InstancePathSerializerImpl);
 
     val PublishedContentSerializerImpl = build.skir.internal.StructSerializer(
         recordId = "editor/v1/compiled_content.skir:PublishedContent",
@@ -1987,7 +3695,54 @@ private object _SerializerRegistry {
 
     val QueryPublishedContentResponse_AbsentSerializer = build.skir.internal.makeSerializer(QueryPublishedContentResponse_AbsentSerializerImpl);
 
+    val ResourceGraphShardSerializerImpl = build.skir.internal.StructSerializer(
+        recordId = "editor/v1/compiled_content.skir:ResourceGraphShard",
+        doc = "The payload of a resource graph blob: canonical facts and their semantic digest, the lowercase\nSHA 256 of their canonical encoding. Consumers recompute the digest before admitting the facts.",
+        defaultInstance = skirout.editor.v1.compiled_content.ResourceGraphShard.partial(),
+        newMutableFn = { it?.toMutable() ?: skirout.editor.v1.compiled_content.ResourceGraphShard.Mutable() },
+        toFrozenFn = { it.toFrozen() },
+        getUnrecognizedFields = { it._unrecognizedFields },
+        setUnrecognizedFields = { m, u -> m._unrecognizedFields = u },
+    );
+
+    val ResourceGraphShardSerializer = build.skir.internal.makeSerializer(ResourceGraphShardSerializerImpl);
+
+    val RuntimeCompilationFactsSerializerImpl = build.skir.internal.StructSerializer(
+        recordId = "editor/v1/compiled_content.skir:RuntimeCompilationFacts",
+        doc = "The canonical resource graph of one compilation unit: its resources, edges, and the type and\nrelation declarations engines need to admit them against their runtime catalog.",
+        defaultInstance = skirout.editor.v1.compiled_content.RuntimeCompilationFacts.partial(),
+        newMutableFn = { it?.toMutable() ?: skirout.editor.v1.compiled_content.RuntimeCompilationFacts.Mutable() },
+        toFrozenFn = { it.toFrozen() },
+        getUnrecognizedFields = { it._unrecognizedFields },
+        setUnrecognizedFields = { m, u -> m._unrecognizedFields = u },
+    );
+
+    val RuntimeCompilationFactsSerializer = build.skir.internal.makeSerializer(RuntimeCompilationFactsSerializerImpl);
+
+    val RuntimeRelationFactSerializerImpl = build.skir.internal.StructSerializer(
+        recordId = "editor/v1/compiled_content.skir:RuntimeRelationFact",
+        doc = "",
+        defaultInstance = skirout.editor.v1.compiled_content.RuntimeRelationFact.partial(),
+        newMutableFn = { it?.toMutable() ?: skirout.editor.v1.compiled_content.RuntimeRelationFact.Mutable() },
+        toFrozenFn = { it.toFrozen() },
+        getUnrecognizedFields = { it._unrecognizedFields },
+        setUnrecognizedFields = { m, u -> m._unrecognizedFields = u },
+    );
+
+    val RuntimeRelationFactSerializer = build.skir.internal.makeSerializer(RuntimeRelationFactSerializerImpl);
+
     init {
+        CompilationContextSerializerImpl.addField(
+            "instance_path",
+            "instancePath",
+            0,
+            _SerializerRegistry.InstancePathSerializer,
+            "",
+            { it.instancePath },
+            { mut, v -> mut.instancePath = v },
+        );
+        CompilationContextSerializerImpl.finalizeStruct();
+
         CompilationStatusSelectionSerializerImpl.addConstantVariant(
             1,
             "all_roots",
@@ -2077,6 +3832,146 @@ private object _SerializerRegistry {
         );
         CompiledContentChangedSerializerImpl.finalizeStruct();
 
+        CompiledEdgeSerializerImpl.addField(
+            "source",
+            "source",
+            0,
+            _SerializerRegistry.CompiledResourceKeySerializer,
+            "",
+            { it.source },
+            { mut, v -> mut.source = v },
+        );
+        CompiledEdgeSerializerImpl.addField(
+            "target",
+            "target",
+            1,
+            _SerializerRegistry.CompiledResourceKeySerializer,
+            "",
+            { it.target },
+            { mut, v -> mut.target = v },
+        );
+        CompiledEdgeSerializerImpl.addField(
+            "origin",
+            "origin",
+            2,
+            _SerializerRegistry.CompiledEdgeOriginSerializer,
+            "",
+            { it.origin },
+            { mut, v -> mut.origin = v },
+        );
+        CompiledEdgeSerializerImpl.finalizeStruct();
+
+        CompiledEdgeOriginSerializerImpl.addWrapperVariant(
+            1,
+            "relation",
+            skirout.editor.v1.compiled_content.CompiledEdgeOrigin.Kind.RELATION_WRAPPER.ordinal,
+            _SerializerRegistry.CompiledRelationOriginSerializer,
+            "",
+            { skirout.editor.v1.compiled_content.CompiledEdgeOrigin.RelationWrapper(it) },
+            { it.value },
+        );
+        CompiledEdgeOriginSerializerImpl.finalizeEnum();
+
+        CompiledRelationOriginSerializerImpl.addField(
+            "relation",
+            "relation",
+            0,
+            skirout.editor.v1.type_catalog.RelationId.serializer,
+            "",
+            { it.relation },
+            { mut, v -> mut.relation = v },
+        );
+        CompiledRelationOriginSerializerImpl.addField(
+            "first_location",
+            "firstLocation",
+            1,
+            build.skir.Serializers.optional(
+                skirout.editor.v1.type_catalog.ValuePath.serializer,
+            ),
+            "",
+            { it.firstLocation },
+            { mut, v -> mut.firstLocation = v },
+        );
+        CompiledRelationOriginSerializerImpl.addField(
+            "second_location",
+            "secondLocation",
+            2,
+            build.skir.Serializers.optional(
+                skirout.editor.v1.type_catalog.ValuePath.serializer,
+            ),
+            "",
+            { it.secondLocation },
+            { mut, v -> mut.secondLocation = v },
+        );
+        CompiledRelationOriginSerializerImpl.finalizeStruct();
+
+        CompiledResourceSerializerImpl.addField(
+            "key",
+            "key",
+            0,
+            _SerializerRegistry.CompiledResourceKeySerializer,
+            "",
+            { it.key },
+            { mut, v -> mut.key = v },
+        );
+        CompiledResourceSerializerImpl.addField(
+            "actual_type",
+            "actualType",
+            1,
+            skirout.editor.v1.type_catalog.NamedTypeUse.serializer,
+            "",
+            { it.actualType },
+            { mut, v -> mut.actualType = v },
+        );
+        CompiledResourceSerializerImpl.addField(
+            "binding_provider",
+            "bindingProvider",
+            2,
+            skirout.editor.v1.type_catalog.NativeBindingId.serializer,
+            "",
+            { it.bindingProvider },
+            { mut, v -> mut.bindingProvider = v },
+        );
+        CompiledResourceSerializerImpl.addField(
+            "binding_signature",
+            "bindingSignature",
+            3,
+            build.skir.Serializers.string,
+            "",
+            { it.bindingSignature },
+            { mut, v -> mut.bindingSignature = v },
+        );
+        CompiledResourceSerializerImpl.addField(
+            "value",
+            "value",
+            4,
+            skirout.editor.v1.type_catalog.NamedValue.serializer,
+            "",
+            { it.value },
+            { mut, v -> mut.value = v },
+        );
+        CompiledResourceSerializerImpl.finalizeStruct();
+
+        CompiledResourceKeySerializerImpl.addField(
+            "source",
+            "source",
+            0,
+            skirout.editor.v1.type_catalog.ResourceId.serializer,
+            "",
+            { it.source },
+            { mut, v -> mut.source = v },
+        );
+        CompiledResourceKeySerializerImpl.addField(
+            "context",
+            "context",
+            1,
+            _SerializerRegistry.CompilationContextSerializer,
+            "",
+            { it.context },
+            { mut, v -> mut.context = v },
+        );
+        CompiledResourceKeySerializerImpl.finalizeStruct();
+
         CompiledResourceStateSerializerImpl.addConstantVariant(
             1,
             "not_compiled",
@@ -2114,6 +4009,19 @@ private object _SerializerRegistry {
             { mut, v -> mut.state = v },
         );
         CompiledResourceStatusSerializerImpl.finalizeStruct();
+
+        InstancePathSerializerImpl.addField(
+            "segments",
+            "segments",
+            0,
+            build.skir.Serializers.list(
+                build.skir.Serializers.string,
+            ),
+            "",
+            { it.segments },
+            { mut, v -> mut.segments = v },
+        );
+        InstancePathSerializerImpl.finalizeStruct();
 
         PublishedContentSerializerImpl.addField(
             "publication",
@@ -2260,5 +4168,109 @@ private object _SerializerRegistry {
         QueryPublishedContentResponseSerializerImpl.finalizeEnum();
 
         QueryPublishedContentResponse_AbsentSerializerImpl.finalizeStruct();
+
+        ResourceGraphShardSerializerImpl.addField(
+            "digest",
+            "digest",
+            0,
+            build.skir.Serializers.string,
+            "",
+            { it.digest },
+            { mut, v -> mut.digest = v },
+        );
+        ResourceGraphShardSerializerImpl.addField(
+            "facts",
+            "facts",
+            1,
+            _SerializerRegistry.RuntimeCompilationFactsSerializer,
+            "",
+            { it.facts },
+            { mut, v -> mut.facts = v },
+        );
+        ResourceGraphShardSerializerImpl.finalizeStruct();
+
+        RuntimeCompilationFactsSerializerImpl.addField(
+            "format_revision",
+            "formatRevision",
+            0,
+            build.skir.Serializers.int32,
+            "",
+            { it.formatRevision },
+            { mut, v -> mut.formatRevision = v },
+        );
+        RuntimeCompilationFactsSerializerImpl.addField(
+            "root",
+            "root",
+            1,
+            _SerializerRegistry.CompiledResourceKeySerializer,
+            "",
+            { it.root },
+            { mut, v -> mut.root = v },
+        );
+        RuntimeCompilationFactsSerializerImpl.addField(
+            "resources",
+            "resources",
+            2,
+            build.skir.Serializers.list(
+                _SerializerRegistry.CompiledResourceSerializer,
+            ),
+            "",
+            { it.resources },
+            { mut, v -> mut.resources = v },
+        );
+        RuntimeCompilationFactsSerializerImpl.addField(
+            "edges",
+            "edges",
+            3,
+            build.skir.Serializers.list(
+                _SerializerRegistry.CompiledEdgeSerializer,
+            ),
+            "",
+            { it.edges },
+            { mut, v -> mut.edges = v },
+        );
+        RuntimeCompilationFactsSerializerImpl.addField(
+            "types",
+            "types",
+            4,
+            build.skir.Serializers.list(
+                skirout.editor.v1.type_catalog.TypeDefinition.serializer,
+            ),
+            "",
+            { it.types },
+            { mut, v -> mut.types = v },
+        );
+        RuntimeCompilationFactsSerializerImpl.addField(
+            "relations",
+            "relations",
+            5,
+            build.skir.Serializers.list(
+                _SerializerRegistry.RuntimeRelationFactSerializer,
+            ),
+            "",
+            { it.relations },
+            { mut, v -> mut.relations = v },
+        );
+        RuntimeCompilationFactsSerializerImpl.finalizeStruct();
+
+        RuntimeRelationFactSerializerImpl.addField(
+            "relation",
+            "relation",
+            0,
+            skirout.editor.v1.type_catalog.RelationId.serializer,
+            "",
+            { it.relation },
+            { mut, v -> mut.relation = v },
+        );
+        RuntimeRelationFactSerializerImpl.addField(
+            "owns_resources",
+            "ownsResources",
+            1,
+            build.skir.Serializers.bool,
+            "",
+            { it.ownsResources },
+            { mut, v -> mut.ownsResources = v },
+        );
+        RuntimeRelationFactSerializerImpl.finalizeStruct();
     }
 }

@@ -1,22 +1,17 @@
 package com.typewritermc.engine
 
-import com.typewritermc.types.ResourceId
-import com.typewritermc.types.skir.NamedDataValueSerializer
-import com.typewritermc.types.skir.NamedTypeUseSerializer
-import com.typewritermc.types.skir.NativeBindingIdSerializer
-import com.typewritermc.types.skir.RelationIdSerializer
-import com.typewritermc.types.skir.TypeDefinitionSerializer
-import com.typewritermc.types.skir.ValuePathSerializer
-import kotlinx.serialization.SerialName
+import com.typewritermc.types.unknownVariant
 import kotlinx.serialization.Serializable
 import skirout.editor.v1.compilation_root.CompilationProjectionId
+import skirout.editor.v1.compiled_content.CompilationContext
+import skirout.editor.v1.compiled_content.CompiledEdge
+import skirout.editor.v1.compiled_content.CompiledEdgeOrigin
+import skirout.editor.v1.compiled_content.CompiledResource
+import skirout.editor.v1.compiled_content.InstancePath
+import skirout.editor.v1.compiled_content.ResourceGraphShard
 import skirout.editor.v1.diagnostic.Diagnostic
 import skirout.editor.v1.type_catalog.DataValue
-import skirout.editor.v1.type_catalog.NamedTypeUse
-import skirout.editor.v1.type_catalog.NativeBindingId
 import skirout.editor.v1.type_catalog.RelationId
-import skirout.editor.v1.type_catalog.TypeDefinition
-import skirout.editor.v1.type_catalog.ValuePath
 
 const val RESOURCE_GRAPH_FORMAT_REVISION = 1
 
@@ -26,72 +21,25 @@ val RESOURCE_GRAPH_PROJECTION = CompilationProjectionId(value = "typewriter.reso
 /** Names the serialized resource graph shard format. */
 const val RESOURCE_GRAPH_MEDIA_TYPE = "application/vnd.typewriter.resource-graph+json"
 
-/** Distinguishes one generated occurrence of an authored resource. */
-@Serializable
-data class InstancePath(
-    val segments: List<String>,
-) {
-    companion object {
-        val Root = InstancePath(emptyList())
-    }
-}
+/** The root occurrence of an authored resource, which has no instance path segments. */
+val InstancePath.Companion.Root: InstancePath get() = ROOT_INSTANCE_PATH
 
-@Serializable
-data class CompilationContext(
-    val instancePath: InstancePath,
-) {
-    companion object {
-        val Root = CompilationContext(InstancePath.Root)
-    }
-}
+/** The context of resources compiled at their root occurrence. */
+val CompilationContext.Companion.Root: CompilationContext get() = ROOT_COMPILATION_CONTEXT
 
-/** Identifies a resource in a compiled occurrence. */
-@Serializable
-data class CompiledResourceKey(
-    val source: ResourceId,
-    val context: CompilationContext,
-)
+private val ROOT_INSTANCE_PATH = InstancePath(segments = emptyList())
 
-/** Retains the typed scalar record before graph hydration. */
-@Serializable
-data class CompiledResource(
-    val key: CompiledResourceKey,
-    @Serializable(with = NamedTypeUseSerializer::class)
-    val actualType: NamedTypeUse,
-    @Serializable(with = NativeBindingIdSerializer::class)
-    val bindingProvider: NativeBindingId,
-    val bindingSignature: String,
-    @Serializable(with = NamedDataValueSerializer::class)
-    val value: DataValue.NamedWrapper,
-)
+private val ROOT_COMPILATION_CONTEXT = CompilationContext(instancePath = ROOT_INSTANCE_PATH)
 
-@Serializable
-sealed interface CompiledEdgeOrigin {
-    @Serializable
-    @SerialName("relation")
-    data class Relation(
-        @Serializable(with = RelationIdSerializer::class)
-        val relation: RelationId,
-        @Serializable(with = ValuePathSerializer::class)
-        val firstLocation: ValuePath?,
-        @Serializable(with = ValuePathSerializer::class)
-        val secondLocation: ValuePath?,
-    ) : CompiledEdgeOrigin
-}
-
-/** A link between compiled keys, including keys outside this shard. */
-@Serializable
-data class CompiledEdge(
-    val source: CompiledResourceKey,
-    val target: CompiledResourceKey,
-    val origin: CompiledEdgeOrigin,
-)
+/** The compiled value of this resource as the named data value native bindings decode. */
+val CompiledResource.dataValue: DataValue get() = DataValue.NamedWrapper(value)
 
 /** The declared relation this edge projects. */
 val CompiledEdge.relation: RelationId
     get() =
         when (val origin = origin) {
-            is CompiledEdgeOrigin.Relation -> origin.relation
+            is CompiledEdgeOrigin.RelationWrapper -> origin.value.relation
+            else -> unknownVariant(origin)
         }
 
 /**
@@ -117,32 +65,8 @@ internal fun requireContentDigest(value: String) {
 
 private val CONTENT_DIGEST = Regex("[0-9a-f]{64}")
 
-@Serializable
-data class RuntimeRelationFact(
-    @Serializable(with = RelationIdSerializer::class)
-    val relation: RelationId,
-    val ownsResources: Boolean,
-)
-
-@Serializable
-data class RuntimeCompilationFacts(
-    val formatRevision: Int,
-    val root: CompiledResourceKey,
-    val resources: List<CompiledResource>,
-    val edges: List<CompiledEdge>,
-    val types: List<
-        @Serializable(with = TypeDefinitionSerializer::class)
-        TypeDefinition,
-    >,
-    val relations: List<RuntimeRelationFact>,
-)
-
-/** A canonical graph rooted at one compilation unit, with its semantic identity. */
-@Serializable
-data class ResourceGraphShard(
-    val digest: ContentDigest,
-    val facts: RuntimeCompilationFacts,
-)
+/** The semantic digest of the facts of this shard. */
+val ResourceGraphShard.semanticDigest: ContentDigest get() = ContentDigest(digest)
 
 /**
  * Returns a reusable shard or diagnostics that block publication of that compilation unit.

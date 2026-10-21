@@ -6,12 +6,12 @@ import com.typewritermc.engine.PUBLISHED_CONTENT_FORMAT_REVISION
 import com.typewritermc.engine.RESOURCE_GRAPH_FORMAT_REVISION
 import com.typewritermc.engine.RESOURCE_GRAPH_MEDIA_TYPE
 import com.typewritermc.engine.RESOURCE_GRAPH_PROJECTION
-import com.typewritermc.engine.RuntimeCompilationFacts
 import com.typewritermc.engine.decodeResourceGraphShard
 import com.typewritermc.types.NativeBindingRegistry
 import com.typewritermc.types.RelationContract
 import com.typewritermc.types.catalog.CheckedCatalog
 import com.typewritermc.types.toSkir
+import skirout.editor.v1.compiled_content.RuntimeCompilationFacts
 import skirout.editor.v1.type_catalog.PublicationId
 
 /**
@@ -52,11 +52,11 @@ class ResourceGraphContentGateway(
             "Engine content does not support ${reference.root.projection.value} and ${reference.mediaType}."
         }
         val shard = payload.decodeResourceGraphShard()
-        require(shard.digest.value == reference.semanticDigest) {
+        require(shard.digest == reference.semanticDigest) {
             "Compiled resource graph artifact identity does not match its manifest."
         }
         val facts = shard.facts
-        require(facts.root.source.toSkir() == reference.root.resource) {
+        require(facts.root.source == reference.root.resource) {
             "Compiled resource graph artifact root does not match its payload."
         }
         require(facts.formatRevision == reference.formatRevision && facts.formatRevision == RESOURCE_GRAPH_FORMAT_REVISION) {
