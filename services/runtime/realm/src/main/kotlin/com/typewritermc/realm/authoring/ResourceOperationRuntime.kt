@@ -20,20 +20,13 @@ import com.typewritermc.checking.InputIdentity
 import com.typewritermc.discovery.ProviderOrigin
 import com.typewritermc.operations.AuthoringGraphFacts
 import com.typewritermc.operations.BoundResourceOperation
-import com.typewritermc.operations.DropCandidates
 import com.typewritermc.operations.NeedsChoices
-import com.typewritermc.operations.OperationAvailability
-import com.typewritermc.operations.OperationCardinality
-import com.typewritermc.operations.OperationConfirmation
 import com.typewritermc.operations.OperationIdentities
 import com.typewritermc.operations.OperationInvocation
 import com.typewritermc.operations.OperationPreparation
 import com.typewritermc.operations.OperationReads
-import com.typewritermc.operations.OperationTargets
 import com.typewritermc.operations.PreparationChoice
 import com.typewritermc.operations.PreparationChoices
-import com.typewritermc.operations.ResolvedResourceOperation
-import com.typewritermc.operations.ResolvedResourceOperations
 import com.typewritermc.operations.UnavailableAuthoredValue
 import com.typewritermc.operations.UnfinishedOperationInput
 import com.typewritermc.operations.asClosedUse
@@ -45,7 +38,14 @@ import com.typewritermc.types.DataValue
 import com.typewritermc.types.ResourceId
 import com.typewritermc.types.ResourceTarget
 import com.typewritermc.types.TypeTemplate
+import skirout.editor.v1.operation.OperationAvailability
+import skirout.editor.v1.operation.OperationCardinality
+import skirout.editor.v1.operation.OperationConfirmation
+import skirout.editor.v1.operation.ResolvedResourceOperation
+import skirout.editor.v1.operation.ResolvedResourceOperations
+import skirout.editor.v1.resource_operations.DropCandidates
 import java.util.UUID
+import skirout.editor.v1.type_catalog.ResourceId as SkirResourceId
 
 internal sealed interface OperationPreparationResult {
     data class Preview(
@@ -107,21 +107,19 @@ internal class ResourceOperationRuntime(
                     .mapNotNull { operation ->
                         val reads = CapturedAuthoringReads(AuthoredReadView.Original(view))
                         val availability = operation.evaluate(invocation.targets, RealmOperationReads(reads), reads)
-                        if (availability ==
-                            OperationAvailability.Hidden
-                        ) {
+                        if (availability == OperationAvailability.HIDDEN) {
                             null
                         } else {
-                            ResolvedResourceOperation(operation.definition, availability)
+                            ResolvedResourceOperation(definition = operation.definition, availability = availability)
                         }
                     }.sortedWith(
                         compareBy(
-                            { it.definition.presentation.group.ordinal },
+                            { it.definition.presentation.group.kind.ordinal },
                             { it.definition.presentation.order },
                             { it.definition.capability.value },
                         ),
                     )
-            ResolvedResourceOperations(operations)
+            ResolvedResourceOperations(operations = operations)
         }
 
     /**
@@ -143,7 +141,7 @@ internal class ResourceOperationRuntime(
                     val field = operation.dropField ?: return@mapNotNull null
                     val captured = CapturedAuthoringReads(AuthoredReadView.Original(view))
                     val reads = RealmOperationReads(captured)
-                    if (operation.evaluate(invocation.targets, reads, captured) != OperationAvailability.Enabled) return@mapNotNull null
+                    if (operation.evaluate(invocation.targets, reads, captured) != OperationAvailability.ENABLED) return@mapNotNull null
                     val destinations =
                         operation.guarded(captured) {
                             field
@@ -155,8 +153,8 @@ internal class ResourceOperationRuntime(
                                 .toList()
                         }
                     DropCandidates(
-                        operation.definition.id,
-                        destinations.take(DROP_CANDIDATE_LIMIT),
+                        operation = operation.definition.id,
+                        destinations = destinations.take(DROP_CANDIDATE_LIMIT).map { SkirResourceId(value = it.value) },
                         complete = destinations.size <= DROP_CANDIDATE_LIMIT,
                     )
                 }
@@ -182,13 +180,15 @@ internal class ResourceOperationRuntime(
             }
             val session = RuntimeOperationPreparation(invocation, choices, edit)
             when (val available = operation.evaluate(invocation.targets, session, edit.capturedReads)) {
-                OperationAvailability.Enabled -> Unit
+                OperationAvailability.ENABLED -> Unit
 
-                is OperationAvailability.Disabled -> return OperationPreparationResult.Unavailable(available.reason)
+                is OperationAvailability.DisabledWrapper -> return OperationPreparationResult.Unavailable(available.value)
 
-                OperationAvailability.Hidden -> return OperationPreparationResult.Unavailable(
+                OperationAvailability.HIDDEN -> return OperationPreparationResult.Unavailable(
                     "This operation does not apply to the captured selection",
                 )
+
+                else -> error("Unknown operation availability.")
             }
             validateOrigin(invocation, baseline, edit.capturedReads)
             operation.input.schema?.let { schema ->
@@ -266,7 +266,7 @@ internal fun OperationInvocation.applicableIn(
         reads.observeInput(InputIdentity.Form(ValueLocation(id, ValuePath())))
     }
     return view.catalog.operations.operations
-        .filter { it.definition.targets.covers(records, view) }
+        .filter { it.covers(records, view) }
 }
 
 /** Runs [body] for this operation and checks its reads; a failure or incomplete read is a resolution failure. */
@@ -286,17 +286,18 @@ internal fun <T> BoundResourceOperation.guarded(
         throw OperationResolutionFailure(origin, failure)
     }
 
-private fun OperationTargets.covers(
+private fun BoundResourceOperation.covers(
     records: List<AuthoringRecord>,
     view: AuthoringView,
 ): Boolean {
     val count =
-        when (cardinality) {
-            OperationCardinality.Single -> records.size == 1
-            OperationCardinality.Selection -> records.isNotEmpty()
+        when (definition.targets.cardinality) {
+            OperationCardinality.SINGLE -> records.size == 1
+            OperationCardinality.SELECTION -> records.isNotEmpty()
+            else -> false
         }
     return count &&
-        when (val subject = subject) {
+        when (val subject = target) {
             ResourceTarget.AnyResource -> true
             is ResourceTarget.Type -> records.all { it.matches(subject.template, view) }
         }

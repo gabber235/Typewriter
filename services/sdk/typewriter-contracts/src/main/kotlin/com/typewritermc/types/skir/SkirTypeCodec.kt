@@ -148,6 +148,8 @@ object SkirTypeCodec {
     fun encode(diagnostic: Diagnostic): SkirConversionResult<SkirDiagnostic> = captureSkirConversion { this.encode(diagnostic) }
 
     fun encode(rule: RuleId): SkirConversionResult<SkirRuleId> = captureSkirConversion { this.encode(rule) }
+
+    fun encode(target: ResourceTarget): SkirConversionResult<SkirResourceTarget> = captureSkirConversion { this.encode(target) }
 }
 
 internal fun ConversionScope.encodeTypeId(id: TypeId): SkirTypeId =
@@ -519,7 +521,7 @@ private fun ConversionScope.encodeSnapshot(snapshot: EditorCatalogSnapshot) =
         capabilities = snapshot.capabilities.mapIndexed { index, value -> at("capability $index") { encode(value) } },
         recommendations = snapshot.recommendations.mapIndexed { index, value -> at("recommendation $index") { encode(value) } },
         roleFallbacks = snapshot.roleFallbacks.mapIndexed { index, value -> at("role fallback $index") { encode(value) } },
-        resourceOperations = snapshot.resourceOperations.mapIndexed { index, value -> at("resource operation $index") { encode(value) } },
+        resourceOperations = snapshot.resourceOperations,
         realmRoot = encodeDefinitionId(snapshot.realmRoot),
     )
 
@@ -586,7 +588,7 @@ private fun ConversionScope.encode(capability: RealmCapabilityDescriptor): SkirC
                     capabilityId =
                         skirout.editor.v1.type_catalog
                             .CapabilityId(value = capability.id.value),
-                    targets = encode(capability.targets),
+                    targets = capability.targets,
                     input =
                         capability.requestType?.let { type ->
                             skirout.editor.v1.operation.OperationInputDefinition(

@@ -33,6 +33,7 @@ import com.typewritermc.operations.ResourceOperationSpecImpl
 import com.typewritermc.operations.Unlink
 import com.typewritermc.operations.UnlinkInput
 import com.typewritermc.operations.UnlinkInputDefinition
+import com.typewritermc.operations.capability
 import com.typewritermc.operations.collectOperation
 import com.typewritermc.operations.fillOnDrop
 import com.typewritermc.realm.TestRealmStructure

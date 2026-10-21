@@ -3,6 +3,7 @@ package com.typewritermc.presentation
 import com.typewritermc.expression.Expr
 import com.typewritermc.expression.Handled
 import skirout.editor.v1.action.EditorAction
+import skirout.editor.v1.presentation.ButtonVariant
 import skirout.editor.v1.presentation.PresentationElement
 import skirout.editor.v1.presentation.PresentationNode
 
@@ -134,12 +135,7 @@ internal class RuntimeActionAppearance(
 ) : ActionAppearanceScope,
     InputAppearanceScope by appearance {
     override fun variant(value: ButtonVariant) {
-        target.variant =
-            when (value) {
-                ButtonVariant.Filled -> skirout.editor.v1.presentation.ButtonVariant.FILLED
-                ButtonVariant.Outlined -> skirout.editor.v1.presentation.ButtonVariant.OUTLINED
-                ButtonVariant.Text -> skirout.editor.v1.presentation.ButtonVariant.TEXT
-            }
+        target.variant = value
     }
 
     override fun tooltip(value: String) {

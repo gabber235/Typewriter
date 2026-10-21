@@ -25,7 +25,6 @@ import com.typewritermc.imprint.ContributionName
 import com.typewritermc.imprint.ContributionSourceId
 import com.typewritermc.imprint.ProducerId
 import com.typewritermc.library.frameworkContributions
-import com.typewritermc.presentation.ButtonVariant
 import com.typewritermc.types.DataValue
 import com.typewritermc.types.DeclarationOwner
 import com.typewritermc.types.EndpointId
@@ -38,52 +37,48 @@ import com.typewritermc.types.TypeDefinitionId
 import com.typewritermc.types.TypeId
 import com.typewritermc.types.TypeUse
 import com.typewritermc.types.catalog.DefaultCheckedCatalog
-import com.typewritermc.types.skir.SkirOperationCodec
+import com.typewritermc.types.skir.SkirAuthoringValueCodec
 import com.typewritermc.types.skir.getOrThrow
 import de.infix.testBalloon.framework.core.testSuite
 import io.kotest.matchers.collections.shouldContainAll
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.string.shouldContain
+import skirout.editor.v1.operation.OperationAvailability
+import skirout.editor.v1.operation.OperationCardinality
+import skirout.editor.v1.operation.OperationDrop
+import skirout.editor.v1.operation.OperationGroup
+import skirout.editor.v1.operation.OperationInspector
+import skirout.editor.v1.operation.OperationShortcut
+import skirout.editor.v1.operation.ResourceOperationDefinition
+import skirout.editor.v1.presentation.ButtonVariant
+import skirout.editor.v1.presentation.HeaderActionTone
 
 val OperationDeclarationTest by testSuite {
-    test("declared appearance survives operation encoding with the tone following the group") {
-        ButtonVariant.entries.forEach { variant ->
+    test("declared appearance publishes with the tone following the group") {
+        listOf(ButtonVariant.FILLED, ButtonVariant.OUTLINED, ButtonVariant.TEXT).forEach { variant ->
             val declaration =
                 collect<Unit> {
                     appearance {
                         icon("mdi:delete-outline")
-                        group(OperationGroup.Destructive, order = 3)
-                        inspector(OperationInspector.Button(variant))
+                        group(OperationGroup.DESTRUCTIVE, order = 3)
+                        inspector(OperationInspector.ButtonWrapper(variant))
                     }
-                    gestures { shortcut(OperationShortcut.Delete) }
+                    gestures { shortcut(OperationShortcut.DELETE) }
                     confirm("Remove these?") { action("Remove") }
                     prepare { }
                 }
-            val bound = bind(declaration)
-            val encoded =
-                SkirOperationCodec
-                    .encode(ResolvedResourceOperations(listOf(ResolvedResourceOperation(bound.single(), OperationAvailability.Enabled))))
-                    .getOrThrow()
-            val definition = encoded.operations.single().definition
+            val definition = bind(declaration).single()
             val appearance = definition.presentation
             appearance.label shouldBe "Example operation"
             appearance.icon shouldBe "mdi:delete-outline"
             appearance.order shouldBe 3
-            appearance.tone shouldBe skirout.editor.v1.presentation.HeaderActionTone.DESTRUCTIVE
-            appearance.shortcut shouldBe skirout.editor.v1.operation.OperationShortcut.DELETE
+            appearance.tone shouldBe HeaderActionTone.DESTRUCTIVE
+            appearance.shortcut shouldBe OperationShortcut.DELETE
             appearance.confirmation?.title shouldBe "Example operation"
             appearance.confirmation?.confirmationLabel shouldBe "Remove"
-            (appearance.inspector as skirout.editor.v1.operation.OperationInspector.ButtonWrapper).value shouldBe
-                when (variant) {
-                    ButtonVariant.Filled -> skirout.editor.v1.presentation.ButtonVariant.FILLED
-                    ButtonVariant.Outlined -> skirout.editor.v1.presentation.ButtonVariant.OUTLINED
-                    ButtonVariant.Text -> skirout.editor.v1.presentation.ButtonVariant.TEXT
-                }
-            definition.capability.value shouldBe
-                bound
-                    .single()
-                    .id.capability.value
-            definition.targets.cardinality shouldBe skirout.editor.v1.operation.OperationCardinality.SELECTION
+            (appearance.inspector as OperationInspector.ButtonWrapper).value shouldBe variant
+            definition.capability.value shouldBe definition.id.capability.value
+            definition.targets.cardinality shouldBe OperationCardinality.SELECTION
             definition.drop shouldBe null
         }
     }
@@ -101,12 +96,12 @@ val OperationDeclarationTest by testSuite {
                 "Unlink" to "Unlink",
                 "LinkWithDuplicate" to "Link with duplicate",
             )
-        definitions.values.all { it.targets.subject == ResourceTarget.AnyResource } shouldBe true
-        definitions.getValue("LinkWithDuplicate").targets.cardinality shouldBe OperationCardinality.Single
-        definitions.getValue("Delete").presentation.shortcut shouldBe OperationShortcut.Delete
-        definitions.getValue("MoveToOwner").drop shouldBe OperationDrop(ValuePath().field("destination"), "Move here")
-        definitions.getValue("LinkWith").drop shouldBe OperationDrop(ValuePath().field("target"), "Link")
-        definitions.getValue("Unlink").drop shouldBe OperationDrop(ValuePath().field("target"), "Unlink")
+        definitions.values.all { it.targets.subject == skirout.editor.v1.type_catalog.ResourceTarget.ANY_RESOURCE } shouldBe true
+        definitions.getValue("LinkWithDuplicate").targets.cardinality shouldBe OperationCardinality.SINGLE
+        definitions.getValue("Delete").presentation.shortcut shouldBe OperationShortcut.DELETE
+        definitions.getValue("MoveToOwner").drop shouldBe drop(ValuePath().field("destination"), "Move here")
+        definitions.getValue("LinkWith").drop shouldBe drop(ValuePath().field("target"), "Link")
+        definitions.getValue("Unlink").drop shouldBe drop(ValuePath().field("target"), "Unlink")
         val searches = assembly.snapshot.capabilities.map { it.id }
         searches shouldContainAll
             listOf("MoveToOwner" to "destination", "LinkWith" to "target", "Unlink" to "target").map { (operation, field) ->
@@ -188,7 +183,7 @@ val OperationDeclarationTest by testSuite {
             collect<Unit> {
                 availableWhen {
                     invoked = true
-                    OperationAvailability.Enabled
+                    OperationAvailability.ENABLED
                 }
                 prepare { invoked = true }
             }
@@ -247,6 +242,11 @@ private fun bind(declaration: OperationDeclaration): List<ResourceOperationDefin
     bound.failures shouldBe emptyList()
     return bound.definitions
 }
+
+private fun drop(
+    input: ValuePath,
+    hint: String,
+) = OperationDrop(input = SkirAuthoringValueCodec.encode(input).getOrThrow(), hint = hint)
 
 private fun origin(): ProviderOrigin =
     ProviderOrigin(

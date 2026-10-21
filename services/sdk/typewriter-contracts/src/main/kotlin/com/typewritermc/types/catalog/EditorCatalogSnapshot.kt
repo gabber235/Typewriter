@@ -81,7 +81,7 @@ data class EditorCatalogSnapshot(
     val capabilities: List<RealmCapabilityDescriptor> = emptyList(),
     val recommendations: List<TypeRecommendation> = emptyList(),
     val roleFallbacks: List<RoleFallback> = emptyList(),
-    val resourceOperations: List<com.typewritermc.operations.ResourceOperationDefinition> = emptyList(),
+    val resourceOperations: List<skirout.editor.v1.operation.ResourceOperationDefinition> = emptyList(),
     /** The realm root type. The realm keeps exactly one instance of it, which owns every section. */
     val realmRoot: TypeDefinitionId,
 )

@@ -10,6 +10,7 @@ import com.typewritermc.authoring.ValueLocation
 import com.typewritermc.authoring.ValuePath
 import com.typewritermc.dsl.TypewriterDsl
 import com.typewritermc.types.ResourceId
+import skirout.editor.v1.operation.OperationAvailability
 
 data class OperationOrigin(
     val container: ResourceId? = null,
@@ -173,9 +174,9 @@ fun authored(values: Iterable<Availability<*>>): OperationAvailability {
         }
     }
     return if (missing.isEmpty()) {
-        OperationAvailability.Enabled
+        OperationAvailability.ENABLED
     } else {
-        OperationAvailability.Disabled(
+        OperationAvailability.DisabledWrapper(
             "Required authored values are missing: ${missing.joinToString()}",
         )
     }

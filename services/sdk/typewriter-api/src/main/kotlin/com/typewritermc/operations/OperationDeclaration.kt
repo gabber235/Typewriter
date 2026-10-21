@@ -15,6 +15,15 @@ import com.typewritermc.types.ResourceTarget
 import com.typewritermc.types.TypeDefinitionId
 import com.typewritermc.types.TypeUse
 import kotlinx.coroutines.CancellationException
+import skirout.editor.v1.operation.OperationAvailability
+import skirout.editor.v1.operation.OperationCardinality
+import skirout.editor.v1.operation.OperationConfirmation
+import skirout.editor.v1.operation.OperationGroup
+import skirout.editor.v1.operation.OperationInspector
+import skirout.editor.v1.operation.OperationPresentation
+import skirout.editor.v1.operation.OperationShortcut
+import skirout.editor.v1.operation.ResourceOperationId
+import skirout.editor.v1.presentation.ButtonVariant
 
 /** The input an operation receives, computed by codegen from its input type argument. */
 sealed interface OperationInput {
@@ -135,7 +144,7 @@ fun <D : ResourceDraft, I> collectOperation(
     defaultLabel: String,
     declare: (OperationSpec<D, I>) -> PreparedOperation,
 ): OperationDeclaration {
-    val id = ResourceOperationId(origin.artifact.value, origin.sourcePart, declaration)
+    val id = ResourceOperationId(artifact = origin.artifact.value, sourcePart = origin.sourcePart, declaration = declaration).requireValid()
     return try {
         val spec = OperationSpecBuilder<D, I>(defaultLabel, subjects)
         declare(spec)
@@ -157,15 +166,15 @@ private class OperationSpecBuilder<D : ResourceDraft, I>(
     private var label = defaultLabel
     private var description = ""
     private var icon: String? = null
-    private var group = OperationGroup.Edit
+    private var group: OperationGroup = OperationGroup.EDIT
     private var order = 0
-    private var inspector: OperationInspector = OperationInspector.Button()
+    private var inspector: OperationInspector = OperationInspector.ButtonWrapper(ButtonVariant.OUTLINED)
     private var shortcut: OperationShortcut? = null
     private var confirmation: ConfirmBuilder? = null
-    private var cardinality = OperationCardinality.Selection
+    private var cardinality: OperationCardinality = OperationCardinality.SELECTION
     private var form: PresentationReference? = null
     private val fields = mutableListOf<OperationFieldBuilder<D, *>>()
-    private var available: OperationReadScope<D>.() -> OperationAvailability = { OperationAvailability.Enabled }
+    private var available: OperationReadScope<D>.() -> OperationAvailability = { OperationAvailability.ENABLED }
     private var preparation: (suspend OperationPrepareScope<D, I>.() -> Unit)? = null
 
     override fun appearance(body: OperationAppearanceScope.() -> Unit) = body()
@@ -183,7 +192,7 @@ private class OperationSpecBuilder<D : ResourceDraft, I>(
     override fun gestures(body: OperationGestureScope.() -> Unit) = body()
 
     override fun singleSubject() {
-        cardinality = OperationCardinality.Single
+        cardinality = OperationCardinality.SINGLE
     }
 
     override fun availableWhen(body: OperationReadScope<D>.() -> OperationAvailability) {
@@ -206,6 +215,7 @@ private class OperationSpecBuilder<D : ResourceDraft, I>(
     }
 
     override fun icon(value: String) {
+        require(value.isNotBlank()) { "An operation icon cannot be blank." }
         icon = value
     }
 
@@ -255,17 +265,18 @@ private class OperationSpecBuilder<D : ResourceDraft, I>(
                 OperationPresentation(
                     label = label,
                     description = description,
-                    icon = icon,
+                    icon = icon.orEmpty(),
                     group = group,
                     order = order,
+                    tone = group.tone,
                     confirmation = confirmation?.build(label),
                     inspector = inspector,
                     shortcut = shortcut,
-                ),
+                ).requireValid(),
             cardinality = cardinality,
             form = form,
             fields = fields.map { it.erase(label, ::readScope) },
-            available = { ids, reads -> readScope(ids, reads).available() },
+            available = { ids, reads -> readScope(ids, reads).available().requireValid() },
             preparation = { ids, input, session ->
                 @Suppress("UNCHECKED_CAST")
                 OperationPrepareScope(ids, bind(ids, session), input as I, session).prepare()
@@ -335,5 +346,6 @@ private class ConfirmBuilder(
         action = value
     }
 
-    fun build(label: String) = OperationConfirmation(title ?: label, message, action ?: label)
+    fun build(label: String) =
+        OperationConfirmation(title = title ?: label, message = message, confirmationLabel = action ?: label).requireValid()
 }

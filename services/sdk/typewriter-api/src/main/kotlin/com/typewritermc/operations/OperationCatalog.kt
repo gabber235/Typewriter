@@ -27,7 +27,15 @@ import com.typewritermc.types.catalog.DeclarationOrigin
 import com.typewritermc.types.catalog.Resolution
 import com.typewritermc.types.catalog.ResolvedRepresentation
 import com.typewritermc.types.catalog.resolve
+import com.typewritermc.types.skir.SkirAuthoringValueCodec
+import com.typewritermc.types.skir.SkirTypeCodec
+import com.typewritermc.types.skir.getOrThrow
 import kotlinx.coroutines.CancellationException
+import skirout.editor.v1.operation.OperationAvailability
+import skirout.editor.v1.operation.OperationDrop
+import skirout.editor.v1.operation.OperationTargets
+import skirout.editor.v1.operation.ResourceOperationDefinition
+import skirout.editor.v1.type_catalog.CapabilityId as SkirCapabilityId
 
 class BoundOperationInput internal constructor(
     val schema: CheckedType?,
@@ -58,9 +66,13 @@ class CandidateSearch internal constructor(
         )
 }
 
-/** A published operation together with its executable callbacks and bound input. */
+/**
+ * A published operation together with its executable callbacks and bound input. [target] is the resource target the
+ * published [definition] carries in its wire form.
+ */
 class BoundResourceOperation internal constructor(
     val origin: ProviderOrigin,
+    val target: ResourceTarget,
     val definition: ResourceOperationDefinition,
     val input: BoundOperationInput,
     private val collected: CollectedOperation,
@@ -68,7 +80,7 @@ class BoundResourceOperation internal constructor(
 ) {
     val capability: RealmCapabilityDescriptor.Authoring =
         RealmCapabilityDescriptor.Authoring(
-            definition.capability,
+            definition.id.capability,
             input.schema?.use,
             definition.targets,
             input.presentation,
@@ -165,14 +177,23 @@ fun bindOperations(
                     }.mapTo(hashSetOf()) { it.path }
             val definition =
                 ResourceOperationDefinition(
-                    declaration.id,
-                    collected.presentation,
-                    OperationTargets(declaration.target, collected.cardinality),
-                    collected.fields.singleOrNull { it.drop != null }?.let { field ->
-                        OperationDrop(field.path, requireNotNull(field.drop))
-                    },
+                    id = declaration.id,
+                    presentation = collected.presentation,
+                    targets =
+                        OperationTargets(
+                            subject = SkirTypeCodec.encode(declaration.target).getOrThrow(),
+                            cardinality = collected.cardinality,
+                        ),
+                    capability = SkirCapabilityId(value = declaration.id.capability.value),
+                    drop =
+                        collected.fields.singleOrNull { it.drop != null }?.let { field ->
+                            OperationDrop(
+                                input = SkirAuthoringValueCodec.encode(field.path).getOrThrow(),
+                                hint = requireNotNull(field.drop),
+                            ).requireValid()
+                        },
                 )
-            operations += BoundResourceOperation(declaration.origin, definition, input, collected, resourceFields)
+            operations += BoundResourceOperation(declaration.origin, declaration.target, definition, input, collected, resourceFields)
         } catch (cancelled: CancellationException) {
             throw cancelled
         } catch (failure: Exception) {

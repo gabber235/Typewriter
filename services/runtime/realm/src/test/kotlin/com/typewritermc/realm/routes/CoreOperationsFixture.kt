@@ -34,7 +34,8 @@ import com.typewritermc.library.PageDefinition
 import com.typewritermc.library.PageElements
 import com.typewritermc.library.TagDefinition
 import com.typewritermc.operations.OperationDeclaration
-import com.typewritermc.operations.ResourceOperationId
+import com.typewritermc.operations.candidateSearch
+import com.typewritermc.operations.capability
 import com.typewritermc.presentation.DefaultPresentationRuntime
 import com.typewritermc.presentation.PresentationRuntime
 import com.typewritermc.protocol.transport.RealmRouteScope
@@ -65,6 +66,7 @@ import com.typewritermc.types.encodeGeneratedDefault
 import com.typewritermc.types.skir.getOrThrow
 import skirout.editor.v1.authoring.AuthoringObservationId
 import skirout.editor.v1.capability.InvocationId
+import skirout.editor.v1.operation.ResourceOperationId
 import skirout.editor.v1.resource_operations.AuthoringActionResult
 import skirout.editor.v1.resource_operations.OperationInvocation
 import skirout.editor.v1.resource_operations.OperationOrigin

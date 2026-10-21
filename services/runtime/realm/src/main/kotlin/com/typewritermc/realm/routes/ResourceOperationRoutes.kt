@@ -26,7 +26,6 @@ import com.typewritermc.services.libs.utils.rethrowExceptional
 import com.typewritermc.types.ResourceId
 import com.typewritermc.types.skir.SkirAuthoringValueCodec
 import com.typewritermc.types.skir.SkirDataValueCodec
-import com.typewritermc.types.skir.SkirOperationCodec
 import com.typewritermc.types.skir.getOrThrow
 import skirout.editor.v1.authoring.AuthoringDiagnostic
 import skirout.editor.v1.authoring.AuthoringObservationId
@@ -78,7 +77,7 @@ internal class ResourceOperationRoutes(
                     context.upserts,
                     context.removals,
                 )
-            ResolveResourceOperationsResult.ResolvedWrapper(SkirOperationCodec.encode(resolved).getOrThrow())
+            ResolveResourceOperationsResult.ResolvedWrapper(resolved)
         } catch (stale: StaleOperationObservation) {
             ResolveResourceOperationsResult.createStaleObservationError(actual = AuthoringObservationId(value = stale.actual))
         } catch (stale: OperationCatalogChanged) {
@@ -142,7 +141,7 @@ internal class ResourceOperationRoutes(
                     context.upserts,
                     context.removals,
                 )
-            ResolveDropCandidatesResult.ResolvedWrapper(SkirOperationCodec.encode(candidates).getOrThrow())
+            ResolveDropCandidatesResult.ResolvedWrapper(candidates)
         } catch (stale: StaleOperationObservation) {
             ResolveDropCandidatesResult.createStaleObservationError(actual = AuthoringObservationId(value = stale.actual))
         } catch (stale: OperationCatalogChanged) {
@@ -219,7 +218,7 @@ internal class ResourceOperationRoutes(
                         invocationId = request.invocation.invocationId,
                         inputRevision = request.inputRevision,
                         edit = SkirAuthoringOperationCodec.encode(result.edit).getOrThrow(),
-                        confirmation = result.confirmation?.let(SkirOperationCodec::encode),
+                        confirmation = result.confirmation,
                         selection =
                             result.selection?.let {
                                 OperationSelectionEffect.ReplaceWrapper(

@@ -26,13 +26,7 @@ import com.typewritermc.types.immutableSetCopy
 
 internal fun EditorCatalogSnapshot.immutableCopy(): EditorCatalogSnapshot =
     copy(
-        resourceOperations =
-            resourceOperations.immutableListCopy { operation ->
-                operation.copy(
-                    targets = operation.targets.copy(subject = operation.targets.subject.immutableCopy()),
-                    drop = operation.drop?.let { it.copy(input = it.input.immutableCopy()) },
-                )
-            },
+        resourceOperations = resourceOperations.immutableListCopy(),
         types = types.immutableListCopy(PublishedType::immutableCopy),
         relations = relations.immutableListCopy(RelationContract::immutableCopy),
         presentations = presentations.immutableListCopy(PresentationDescriptor::immutableCopy),
@@ -131,7 +125,7 @@ private fun RealmCapabilityDescriptor.immutableCopy(): RealmCapabilityDescriptor
         }
 
         is RealmCapabilityDescriptor.Authoring -> {
-            copy(requestType = requestType?.immutableCopy(), targets = targets.copy(subject = targets.subject.immutableCopy()))
+            copy(requestType = requestType?.immutableCopy())
         }
 
         is RealmCapabilityDescriptor.Command -> {

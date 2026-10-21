@@ -28,6 +28,7 @@ import com.typewritermc.configuration.RelativeFieldPattern
 import com.typewritermc.operations.OperationInvocation
 import com.typewritermc.operations.OperationOrigin
 import com.typewritermc.operations.PreparationChoices
+import com.typewritermc.operations.capability
 import com.typewritermc.realm.authoring.AuthoringView
 import com.typewritermc.realm.authoring.RuntimeOperationPreparation
 import com.typewritermc.realm.authoring.WorkingViewEditContext
@@ -161,10 +162,10 @@ class AuthoringMutationPlannerTest {
                                     )
                                 }
                             val state = com.typewritermc.operations.authored(authoredValues)
-                            if (state != com.typewritermc.operations.OperationAvailability.Enabled) return@availableWhen state
+                            if (state != skirout.editor.v1.operation.OperationAvailability.ENABLED) return@availableWhen state
                             val values = authoredValues.map { com.typewritermc.operations.requireAuthored(it) }
                             require(values.none { it == "availability-failure" }) { "Availability provider failed" }
-                            com.typewritermc.operations.OperationAvailability.Enabled
+                            skirout.editor.v1.operation.OperationAvailability.ENABLED
                         }
                         prepare {
                             for (subject in subjects) {
@@ -219,11 +220,11 @@ class AuthoringMutationPlannerTest {
                 partialResolution.operations
                     .single()
                     .availability
-                    .shouldBeInstanceOf<com.typewritermc.operations.OperationAvailability.Disabled>()
+                    .shouldBeInstanceOf<skirout.editor.v1.operation.OperationAvailability.DisabledWrapper>()
                 val capability =
                     resolved.operations
                         .single()
-                        .definition.capability
+                        .definition.id.capability
                 val preview =
                     runtime
                         .prepare(

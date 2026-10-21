@@ -8,6 +8,10 @@ import com.typewritermc.dsl.TypewriterDsl
 import com.typewritermc.presentation.PresentationReference
 import com.typewritermc.types.Resource
 import com.typewritermc.types.ResourceId
+import skirout.editor.v1.operation.OperationAvailability
+import skirout.editor.v1.operation.OperationGroup
+import skirout.editor.v1.operation.OperationInspector
+import skirout.editor.v1.operation.OperationShortcut
 
 /**
  * An operation on every resource. Codegen emits the same contract per resource type, `XOperation<I>`, whose spec

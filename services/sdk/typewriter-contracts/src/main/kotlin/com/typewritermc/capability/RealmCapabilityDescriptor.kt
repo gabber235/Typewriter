@@ -1,9 +1,9 @@
 package com.typewritermc.capability
 
-import com.typewritermc.operations.OperationTargets
 import com.typewritermc.types.PresentationId
 import com.typewritermc.types.TypeUse
 import kotlinx.serialization.Serializable
+import skirout.editor.v1.operation.OperationTargets
 
 @JvmInline
 @Serializable
