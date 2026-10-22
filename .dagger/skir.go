@@ -55,7 +55,7 @@ func (m *Typewriter) ProtocolGenerationCheck(
 func (m *Typewriter) TransportGeneratorCheck(
 	// +optional
 	// +defaultPath="/"
-	// +ignore=["*", "!package.json", "!bun.lock", "!skir-src", "!services/protocol/transport-routes.yaml", "!services/protocol/transport-generator", "**/node_modules"]
+	// +ignore=["*", "!package.json", "!bun.lock", "!skir.yml", "!skir-src", "!services/protocol/generate.ts", "!services/protocol/transport-routes.yaml", "!services/protocol/transport-generator", "**/node_modules"]
 	source *dagger.Directory,
 ) *dagger.Container {
 	return m.skirContainer(source).
