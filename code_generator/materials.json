@@ -12079,5 +12079,4551 @@
     "properties": [
       "item"
     ]
+  },
+  {
+    "name": "BLACK_BUNDLE",
+    "id": "black_bundle",
+    "properties": [
+      "item"
+    ]
+  },
+  {
+    "name": "BLACK_HARNESS",
+    "id": "black_harness",
+    "properties": [
+      "item"
+    ]
+  },
+  {
+    "name": "BLUE_BUNDLE",
+    "id": "blue_bundle",
+    "properties": [
+      "item"
+    ]
+  },
+  {
+    "name": "BLUE_HARNESS",
+    "id": "blue_harness",
+    "properties": [
+      "item"
+    ]
+  },
+  {
+    "name": "BROWN_BUNDLE",
+    "id": "brown_bundle",
+    "properties": [
+      "item"
+    ]
+  },
+  {
+    "name": "BROWN_HARNESS",
+    "id": "brown_harness",
+    "properties": [
+      "item"
+    ]
+  },
+  {
+    "name": "BUSH",
+    "id": "bush",
+    "properties": [
+      "block",
+      "item"
+    ]
+  },
+  {
+    "name": "CACTUS_FLOWER",
+    "id": "cactus_flower",
+    "properties": [
+      "block",
+      "item"
+    ]
+  },
+  {
+    "name": "CHISELED_RESIN_BRICKS",
+    "id": "chiseled_resin_bricks",
+    "properties": [
+      "block",
+      "item"
+    ]
+  },
+  {
+    "name": "CLOSED_EYEBLOSSOM",
+    "id": "closed_eyeblossom",
+    "properties": [
+      "block",
+      "item"
+    ]
+  },
+  {
+    "name": "COPPER_BULB",
+    "id": "copper_bulb",
+    "properties": [
+      "block",
+      "item"
+    ]
+  },
+  {
+    "name": "COPPER_DOOR",
+    "id": "copper_door",
+    "properties": [
+      "block",
+      "item"
+    ]
+  },
+  {
+    "name": "COPPER_GRATE",
+    "id": "copper_grate",
+    "properties": [
+      "block",
+      "item"
+    ]
+  },
+  {
+    "name": "COPPER_TRAPDOOR",
+    "id": "copper_trapdoor",
+    "properties": [
+      "block",
+      "item"
+    ]
+  },
+  {
+    "name": "COPPER_CHAIN",
+    "id": "copper_chain",
+    "properties": [
+      "block",
+      "item"
+    ]
+  },
+  {
+    "name": "COPPER_LANTERN",
+    "id": "copper_lantern",
+    "properties": [
+      "block",
+      "item"
+    ]
+  },
+  {
+    "name": "COPPER_PICKAXE",
+    "id": "copper_pickaxe",
+    "properties": [
+      "item",
+      "tool"
+    ]
+  },
+  {
+    "name": "COPPER_AXE",
+    "id": "copper_axe",
+    "properties": [
+      "item",
+      "tool"
+    ]
+  },
+  {
+    "name": "COPPER_SHOVEL",
+    "id": "copper_shovel",
+    "properties": [
+      "item",
+      "tool"
+    ]
+  },
+  {
+    "name": "COPPER_HOE",
+    "id": "copper_hoe",
+    "properties": [
+      "item",
+      "tool"
+    ]
+  },
+  {
+    "name": "COPPER_SWORD",
+    "id": "copper_sword",
+    "properties": [
+      "item",
+      "weapon",
+      "tool"
+    ]
+  },
+  {
+    "name": "COPPER_HELMET",
+    "id": "copper_helmet",
+    "properties": [
+      "item",
+      "armor"
+    ]
+  },
+  {
+    "name": "COPPER_CHESTPLATE",
+    "id": "copper_chestplate",
+    "properties": [
+      "item",
+      "armor"
+    ]
+  },
+  {
+    "name": "COPPER_LEGGINGS",
+    "id": "copper_leggings",
+    "properties": [
+      "item",
+      "armor"
+    ]
+  },
+  {
+    "name": "COPPER_BOOTS",
+    "id": "copper_boots",
+    "properties": [
+      "item",
+      "armor"
+    ]
+  },
+  {
+    "name": "COPPER_HORSE_ARMOR",
+    "id": "copper_horse_armor",
+    "properties": [
+      "item",
+      "armor"
+    ]
+  },
+  {
+    "name": "COPPER_NUGGET",
+    "id": "copper_nugget",
+    "properties": [
+      "item"
+    ]
+  },
+  {
+    "name": "COPPER_GOLEM_SPAWN_EGG",
+    "id": "copper_golem_spawn_egg",
+    "properties": [
+      "item"
+    ]
+  },
+  {
+    "name": "CREAKING_HEART",
+    "id": "creaking_heart",
+    "properties": [
+      "block",
+      "item"
+    ]
+  },
+  {
+    "name": "CREAKING_SPAWN_EGG",
+    "id": "creaking_spawn_egg",
+    "properties": [
+      "item"
+    ]
+  },
+  {
+    "name": "CYAN_BUNDLE",
+    "id": "cyan_bundle",
+    "properties": [
+      "item"
+    ]
+  },
+  {
+    "name": "CYAN_HARNESS",
+    "id": "cyan_harness",
+    "properties": [
+      "item"
+    ]
+  },
+  {
+    "name": "DRIED_GHAST",
+    "id": "dried_ghast",
+    "properties": [
+      "block",
+      "item"
+    ]
+  },
+  {
+    "name": "EXPOSED_COPPER_BULB",
+    "id": "exposed_copper_bulb",
+    "properties": [
+      "block",
+      "item"
+    ]
+  },
+  {
+    "name": "EXPOSED_COPPER_DOOR",
+    "id": "exposed_copper_door",
+    "properties": [
+      "block",
+      "item"
+    ]
+  },
+  {
+    "name": "EXPOSED_COPPER_GRATE",
+    "id": "exposed_copper_grate",
+    "properties": [
+      "block",
+      "item"
+    ]
+  },
+  {
+    "name": "EXPOSED_COPPER_TRAPDOOR",
+    "id": "exposed_copper_trapdoor",
+    "properties": [
+      "block",
+      "item"
+    ]
+  },
+  {
+    "name": "EXPOSED_COPPER_CHAIN",
+    "id": "exposed_copper_chain",
+    "properties": [
+      "block",
+      "item"
+    ]
+  },
+  {
+    "name": "EXPOSED_COPPER_LANTERN",
+    "id": "exposed_copper_lantern",
+    "properties": [
+      "block",
+      "item"
+    ]
+  },
+  {
+    "name": "FIREFLY_BUSH",
+    "id": "firefly_bush",
+    "properties": [
+      "block",
+      "item"
+    ]
+  },
+  {
+    "name": "GRAY_BUNDLE",
+    "id": "gray_bundle",
+    "properties": [
+      "item"
+    ]
+  },
+  {
+    "name": "GRAY_HARNESS",
+    "id": "gray_harness",
+    "properties": [
+      "item"
+    ]
+  },
+  {
+    "name": "GREEN_BUNDLE",
+    "id": "green_bundle",
+    "properties": [
+      "item"
+    ]
+  },
+  {
+    "name": "GREEN_HARNESS",
+    "id": "green_harness",
+    "properties": [
+      "item"
+    ]
+  },
+  {
+    "name": "HAPPY_GHAST_SPAWN_EGG",
+    "id": "happy_ghast_spawn_egg",
+    "properties": [
+      "item"
+    ]
+  },
+  {
+    "name": "LEAF_LITTER",
+    "id": "leaf_litter",
+    "properties": [
+      "block",
+      "item"
+    ]
+  },
+  {
+    "name": "LIGHT_BLUE_BUNDLE",
+    "id": "light_blue_bundle",
+    "properties": [
+      "item"
+    ]
+  },
+  {
+    "name": "LIGHT_BLUE_HARNESS",
+    "id": "light_blue_harness",
+    "properties": [
+      "item"
+    ]
+  },
+  {
+    "name": "LIGHT_GRAY_BUNDLE",
+    "id": "light_gray_bundle",
+    "properties": [
+      "item"
+    ]
+  },
+  {
+    "name": "LIGHT_GRAY_HARNESS",
+    "id": "light_gray_harness",
+    "properties": [
+      "item"
+    ]
+  },
+  {
+    "name": "LIME_BUNDLE",
+    "id": "lime_bundle",
+    "properties": [
+      "item"
+    ]
+  },
+  {
+    "name": "LIME_HARNESS",
+    "id": "lime_harness",
+    "properties": [
+      "item"
+    ]
+  },
+  {
+    "name": "MAGENTA_BUNDLE",
+    "id": "magenta_bundle",
+    "properties": [
+      "item"
+    ]
+  },
+  {
+    "name": "MAGENTA_HARNESS",
+    "id": "magenta_harness",
+    "properties": [
+      "item"
+    ]
+  },
+  {
+    "name": "MUSIC_DISC_LAVA_CHICKEN",
+    "id": "music_disc_lava_chicken",
+    "properties": [
+      "item"
+    ]
+  },
+  {
+    "name": "MUSIC_DISC_TEARS",
+    "id": "music_disc_tears",
+    "properties": [
+      "item"
+    ]
+  },
+  {
+    "name": "OPEN_EYEBLOSSOM",
+    "id": "open_eyeblossom",
+    "properties": [
+      "block",
+      "item"
+    ]
+  },
+  {
+    "name": "ORANGE_BUNDLE",
+    "id": "orange_bundle",
+    "properties": [
+      "item"
+    ]
+  },
+  {
+    "name": "ORANGE_HARNESS",
+    "id": "orange_harness",
+    "properties": [
+      "item"
+    ]
+  },
+  {
+    "name": "OXIDIZED_COPPER_BULB",
+    "id": "oxidized_copper_bulb",
+    "properties": [
+      "block",
+      "item"
+    ]
+  },
+  {
+    "name": "OXIDIZED_COPPER_DOOR",
+    "id": "oxidized_copper_door",
+    "properties": [
+      "block",
+      "item"
+    ]
+  },
+  {
+    "name": "OXIDIZED_COPPER_GRATE",
+    "id": "oxidized_copper_grate",
+    "properties": [
+      "block",
+      "item"
+    ]
+  },
+  {
+    "name": "OXIDIZED_COPPER_TRAPDOOR",
+    "id": "oxidized_copper_trapdoor",
+    "properties": [
+      "block",
+      "item"
+    ]
+  },
+  {
+    "name": "OXIDIZED_COPPER_CHAIN",
+    "id": "oxidized_copper_chain",
+    "properties": [
+      "block",
+      "item"
+    ]
+  },
+  {
+    "name": "OXIDIZED_COPPER_LANTERN",
+    "id": "oxidized_copper_lantern",
+    "properties": [
+      "block",
+      "item"
+    ]
+  },
+  {
+    "name": "PALE_HANGING_MOSS",
+    "id": "pale_hanging_moss",
+    "properties": [
+      "block",
+      "item"
+    ]
+  },
+  {
+    "name": "PALE_MOSS_BLOCK",
+    "id": "pale_moss_block",
+    "properties": [
+      "block",
+      "item"
+    ]
+  },
+  {
+    "name": "PALE_MOSS_CARPET",
+    "id": "pale_moss_carpet",
+    "properties": [
+      "block",
+      "item"
+    ]
+  },
+  {
+    "name": "PALE_OAK_BOAT",
+    "id": "pale_oak_boat",
+    "properties": [
+      "item"
+    ]
+  },
+  {
+    "name": "PALE_OAK_BUTTON",
+    "id": "pale_oak_button",
+    "properties": [
+      "block",
+      "item"
+    ]
+  },
+  {
+    "name": "PALE_OAK_CHEST_BOAT",
+    "id": "pale_oak_chest_boat",
+    "properties": [
+      "item"
+    ]
+  },
+  {
+    "name": "PALE_OAK_DOOR",
+    "id": "pale_oak_door",
+    "properties": [
+      "block",
+      "item"
+    ]
+  },
+  {
+    "name": "PALE_OAK_FENCE",
+    "id": "pale_oak_fence",
+    "properties": [
+      "block",
+      "item"
+    ]
+  },
+  {
+    "name": "PALE_OAK_FENCE_GATE",
+    "id": "pale_oak_fence_gate",
+    "properties": [
+      "block",
+      "item"
+    ]
+  },
+  {
+    "name": "PALE_OAK_HANGING_SIGN",
+    "id": "pale_oak_hanging_sign",
+    "properties": [
+      "block",
+      "item"
+    ]
+  },
+  {
+    "name": "PALE_OAK_LEAVES",
+    "id": "pale_oak_leaves",
+    "properties": [
+      "block",
+      "item"
+    ]
+  },
+  {
+    "name": "PALE_OAK_LOG",
+    "id": "pale_oak_log",
+    "properties": [
+      "block",
+      "item"
+    ]
+  },
+  {
+    "name": "PALE_OAK_PLANKS",
+    "id": "pale_oak_planks",
+    "properties": [
+      "block",
+      "item"
+    ]
+  },
+  {
+    "name": "PALE_OAK_PRESSURE_PLATE",
+    "id": "pale_oak_pressure_plate",
+    "properties": [
+      "block",
+      "item"
+    ]
+  },
+  {
+    "name": "PALE_OAK_SAPLING",
+    "id": "pale_oak_sapling",
+    "properties": [
+      "block",
+      "item"
+    ]
+  },
+  {
+    "name": "PALE_OAK_SIGN",
+    "id": "pale_oak_sign",
+    "properties": [
+      "block",
+      "item"
+    ]
+  },
+  {
+    "name": "PALE_OAK_SLAB",
+    "id": "pale_oak_slab",
+    "properties": [
+      "block",
+      "item"
+    ]
+  },
+  {
+    "name": "PALE_OAK_STAIRS",
+    "id": "pale_oak_stairs",
+    "properties": [
+      "block",
+      "item"
+    ]
+  },
+  {
+    "name": "PALE_OAK_TRAPDOOR",
+    "id": "pale_oak_trapdoor",
+    "properties": [
+      "block",
+      "item"
+    ]
+  },
+  {
+    "name": "PALE_OAK_WOOD",
+    "id": "pale_oak_wood",
+    "properties": [
+      "block",
+      "item"
+    ]
+  },
+  {
+    "name": "PINK_BUNDLE",
+    "id": "pink_bundle",
+    "properties": [
+      "item"
+    ]
+  },
+  {
+    "name": "PINK_HARNESS",
+    "id": "pink_harness",
+    "properties": [
+      "item"
+    ]
+  },
+  {
+    "name": "PURPLE_BUNDLE",
+    "id": "purple_bundle",
+    "properties": [
+      "item"
+    ]
+  },
+  {
+    "name": "PURPLE_HARNESS",
+    "id": "purple_harness",
+    "properties": [
+      "item"
+    ]
+  },
+  {
+    "name": "RED_BUNDLE",
+    "id": "red_bundle",
+    "properties": [
+      "item"
+    ]
+  },
+  {
+    "name": "RED_HARNESS",
+    "id": "red_harness",
+    "properties": [
+      "item"
+    ]
+  },
+  {
+    "name": "RESIN_BLOCK",
+    "id": "resin_block",
+    "properties": [
+      "block",
+      "item"
+    ]
+  },
+  {
+    "name": "RESIN_BRICK",
+    "id": "resin_brick",
+    "properties": [
+      "item"
+    ]
+  },
+  {
+    "name": "RESIN_BRICK_SLAB",
+    "id": "resin_brick_slab",
+    "properties": [
+      "block",
+      "item"
+    ]
+  },
+  {
+    "name": "RESIN_BRICK_STAIRS",
+    "id": "resin_brick_stairs",
+    "properties": [
+      "block",
+      "item"
+    ]
+  },
+  {
+    "name": "RESIN_BRICK_WALL",
+    "id": "resin_brick_wall",
+    "properties": [
+      "block",
+      "item"
+    ]
+  },
+  {
+    "name": "RESIN_BRICKS",
+    "id": "resin_bricks",
+    "properties": [
+      "block",
+      "item"
+    ]
+  },
+  {
+    "name": "RESIN_CLUMP",
+    "id": "resin_clump",
+    "properties": [
+      "block",
+      "item"
+    ]
+  },
+  {
+    "name": "SHORT_DRY_GRASS",
+    "id": "short_dry_grass",
+    "properties": [
+      "block",
+      "item"
+    ]
+  },
+  {
+    "name": "SHORT_GRASS",
+    "id": "short_grass",
+    "properties": [
+      "block",
+      "item"
+    ]
+  },
+  {
+    "name": "TALL_DRY_GRASS",
+    "id": "tall_dry_grass",
+    "properties": [
+      "block",
+      "item"
+    ]
+  },
+  {
+    "name": "WAXED_COPPER_BULB",
+    "id": "waxed_copper_bulb",
+    "properties": [
+      "block",
+      "item"
+    ]
+  },
+  {
+    "name": "WAXED_COPPER_DOOR",
+    "id": "waxed_copper_door",
+    "properties": [
+      "block",
+      "item"
+    ]
+  },
+  {
+    "name": "WAXED_COPPER_GRATE",
+    "id": "waxed_copper_grate",
+    "properties": [
+      "block",
+      "item"
+    ]
+  },
+  {
+    "name": "WAXED_COPPER_TRAPDOOR",
+    "id": "waxed_copper_trapdoor",
+    "properties": [
+      "block",
+      "item"
+    ]
+  },
+  {
+    "name": "WAXED_EXPOSED_COPPER_BULB",
+    "id": "waxed_exposed_copper_bulb",
+    "properties": [
+      "block",
+      "item"
+    ]
+  },
+  {
+    "name": "WAXED_EXPOSED_COPPER_DOOR",
+    "id": "waxed_exposed_copper_door",
+    "properties": [
+      "block",
+      "item"
+    ]
+  },
+  {
+    "name": "WAXED_EXPOSED_COPPER_GRATE",
+    "id": "waxed_exposed_copper_grate",
+    "properties": [
+      "block",
+      "item"
+    ]
+  },
+  {
+    "name": "WAXED_EXPOSED_COPPER_TRAPDOOR",
+    "id": "waxed_exposed_copper_trapdoor",
+    "properties": [
+      "block",
+      "item"
+    ]
+  },
+  {
+    "name": "WAXED_EXPOSED_COPPER_LANTERN",
+    "id": "waxed_exposed_copper_lantern",
+    "properties": [
+      "block",
+      "item"
+    ]
+  },
+  {
+    "name": "WAXED_OXIDIZED_COPPER_BULB",
+    "id": "waxed_oxidized_copper_bulb",
+    "properties": [
+      "block",
+      "item"
+    ]
+  },
+  {
+    "name": "WAXED_OXIDIZED_COPPER_DOOR",
+    "id": "waxed_oxidized_copper_door",
+    "properties": [
+      "block",
+      "item"
+    ]
+  },
+  {
+    "name": "WAXED_OXIDIZED_COPPER_GRATE",
+    "id": "waxed_oxidized_copper_grate",
+    "properties": [
+      "block",
+      "item"
+    ]
+  },
+  {
+    "name": "WAXED_OXIDIZED_COPPER_TRAPDOOR",
+    "id": "waxed_oxidized_copper_trapdoor",
+    "properties": [
+      "block",
+      "item"
+    ]
+  },
+  {
+    "name": "WAXED_OXIDIZED_COPPER_LANTERN",
+    "id": "waxed_oxidized_copper_lantern",
+    "properties": [
+      "block",
+      "item"
+    ]
+  },
+  {
+    "name": "WAXED_WEATHERED_COPPER_BULB",
+    "id": "waxed_weathered_copper_bulb",
+    "properties": [
+      "block",
+      "item"
+    ]
+  },
+  {
+    "name": "WAXED_WEATHERED_COPPER_DOOR",
+    "id": "waxed_weathered_copper_door",
+    "properties": [
+      "block",
+      "item"
+    ]
+  },
+  {
+    "name": "WAXED_WEATHERED_COPPER_GRATE",
+    "id": "waxed_weathered_copper_grate",
+    "properties": [
+      "block",
+      "item"
+    ]
+  },
+  {
+    "name": "WAXED_WEATHERED_COPPER_TRAPDOOR",
+    "id": "waxed_weathered_copper_trapdoor",
+    "properties": [
+      "block",
+      "item"
+    ]
+  },
+  {
+    "name": "WAXED_WEATHERED_COPPER_LANTERN",
+    "id": "waxed_weathered_copper_lantern",
+    "properties": [
+      "block",
+      "item"
+    ]
+  },
+  {
+    "name": "WEATHERED_COPPER_BULB",
+    "id": "weathered_copper_bulb",
+    "properties": [
+      "block",
+      "item"
+    ]
+  },
+  {
+    "name": "WEATHERED_COPPER_DOOR",
+    "id": "weathered_copper_door",
+    "properties": [
+      "block",
+      "item"
+    ]
+  },
+  {
+    "name": "WEATHERED_COPPER_GRATE",
+    "id": "weathered_copper_grate",
+    "properties": [
+      "block",
+      "item"
+    ]
+  },
+  {
+    "name": "WEATHERED_COPPER_TRAPDOOR",
+    "id": "weathered_copper_trapdoor",
+    "properties": [
+      "block",
+      "item"
+    ]
+  },
+  {
+    "name": "WEATHERED_COPPER_LANTERN",
+    "id": "weathered_copper_lantern",
+    "properties": [
+      "block",
+      "item"
+    ]
+  },
+  {
+    "name": "WHITE_BUNDLE",
+    "id": "white_bundle",
+    "properties": [
+      "item"
+    ]
+  },
+  {
+    "name": "WHITE_HARNESS",
+    "id": "white_harness",
+    "properties": [
+      "item"
+    ]
+  },
+  {
+    "name": "WILDFLOWERS",
+    "id": "wildflowers",
+    "properties": [
+      "block",
+      "item"
+    ]
+  },
+  {
+    "name": "YELLOW_BUNDLE",
+    "id": "yellow_bundle",
+    "properties": [
+      "item"
+    ]
+  },
+  {
+    "name": "YELLOW_HARNESS",
+    "id": "yellow_harness",
+    "properties": [
+      "item"
+    ]
+  },
+  {
+    "name": "ACACIA_HANGING_SIGN",
+    "id": "acacia_hanging_sign",
+    "properties": [
+      "block",
+      "item",
+      "fuel",
+      "solid",
+      "burnable",
+      "flammable"
+    ]
+  },
+  {
+    "name": "ACACIA_SHELF",
+    "id": "acacia_shelf",
+    "properties": [
+      "item",
+      "fuel",
+      "burnable",
+      "flammable"
+    ]
+  },
+  {
+    "name": "ANGLER_POTTERY_SHERD",
+    "id": "angler_pottery_sherd",
+    "properties": [
+      "item"
+    ]
+  },
+  {
+    "name": "ARCHER_POTTERY_SHERD",
+    "id": "archer_pottery_sherd",
+    "properties": [
+      "item"
+    ]
+  },
+  {
+    "name": "ARMADILLO_SCUTE",
+    "id": "armadillo_scute",
+    "properties": [
+      "item"
+    ]
+  },
+  {
+    "name": "ARMADILLO_SPAWN_EGG",
+    "id": "armadillo_spawn_egg",
+    "properties": [
+      "item"
+    ]
+  },
+  {
+    "name": "ARMS_UP_POTTERY_SHERD",
+    "id": "arms_up_pottery_sherd",
+    "properties": [
+      "item"
+    ]
+  },
+  {
+    "name": "BAMBOO_BLOCK",
+    "id": "bamboo_block",
+    "properties": [
+      "block",
+      "item",
+      "fuel",
+      "occluding",
+      "solid",
+      "burnable",
+      "flammable"
+    ]
+  },
+  {
+    "name": "BAMBOO_BUTTON",
+    "id": "bamboo_button",
+    "properties": [
+      "block",
+      "item",
+      "fuel",
+      "interactable",
+      "flammable"
+    ]
+  },
+  {
+    "name": "BAMBOO_CHEST_RAFT",
+    "id": "bamboo_chest_raft",
+    "properties": [
+      "item"
+    ]
+  },
+  {
+    "name": "BAMBOO_DOOR",
+    "id": "bamboo_door",
+    "properties": [
+      "block",
+      "item",
+      "fuel",
+      "interactable",
+      "solid",
+      "flammable"
+    ]
+  },
+  {
+    "name": "BAMBOO_FENCE",
+    "id": "bamboo_fence",
+    "properties": [
+      "block",
+      "item",
+      "fuel",
+      "interactable",
+      "solid",
+      "burnable",
+      "flammable"
+    ]
+  },
+  {
+    "name": "BAMBOO_FENCE_GATE",
+    "id": "bamboo_fence_gate",
+    "properties": [
+      "block",
+      "item",
+      "fuel",
+      "interactable",
+      "solid",
+      "burnable",
+      "flammable"
+    ]
+  },
+  {
+    "name": "BAMBOO_HANGING_SIGN",
+    "id": "bamboo_hanging_sign",
+    "properties": [
+      "block",
+      "item",
+      "fuel",
+      "solid",
+      "burnable",
+      "flammable"
+    ]
+  },
+  {
+    "name": "BAMBOO_MOSAIC",
+    "id": "bamboo_mosaic",
+    "properties": [
+      "block",
+      "item",
+      "fuel",
+      "occluding",
+      "solid",
+      "burnable",
+      "flammable"
+    ]
+  },
+  {
+    "name": "BAMBOO_MOSAIC_SLAB",
+    "id": "bamboo_mosaic_slab",
+    "properties": [
+      "block",
+      "item"
+    ]
+  },
+  {
+    "name": "BAMBOO_MOSAIC_STAIRS",
+    "id": "bamboo_mosaic_stairs",
+    "properties": [
+      "block",
+      "item"
+    ]
+  },
+  {
+    "name": "BAMBOO_PLANKS",
+    "id": "bamboo_planks",
+    "properties": [
+      "block",
+      "item",
+      "fuel",
+      "occluding",
+      "solid",
+      "burnable",
+      "flammable"
+    ]
+  },
+  {
+    "name": "BAMBOO_PRESSURE_PLATE",
+    "id": "bamboo_pressure_plate",
+    "properties": [
+      "block",
+      "item",
+      "fuel",
+      "solid",
+      "flammable"
+    ]
+  },
+  {
+    "name": "BAMBOO_RAFT",
+    "id": "bamboo_raft",
+    "properties": [
+      "item"
+    ]
+  },
+  {
+    "name": "BAMBOO_SHELF",
+    "id": "bamboo_shelf",
+    "properties": [
+      "item",
+      "fuel",
+      "burnable",
+      "flammable"
+    ]
+  },
+  {
+    "name": "BAMBOO_SIGN",
+    "id": "bamboo_sign",
+    "properties": [
+      "block",
+      "item",
+      "fuel",
+      "solid",
+      "burnable",
+      "flammable"
+    ]
+  },
+  {
+    "name": "BAMBOO_SLAB",
+    "id": "bamboo_slab",
+    "properties": [
+      "block",
+      "item",
+      "fuel",
+      "solid",
+      "burnable",
+      "flammable"
+    ]
+  },
+  {
+    "name": "BAMBOO_STAIRS",
+    "id": "bamboo_stairs",
+    "properties": [
+      "block",
+      "item",
+      "fuel",
+      "interactable",
+      "solid",
+      "burnable",
+      "flammable"
+    ]
+  },
+  {
+    "name": "BAMBOO_TRAPDOOR",
+    "id": "bamboo_trapdoor",
+    "properties": [
+      "block",
+      "item",
+      "fuel",
+      "interactable",
+      "solid",
+      "flammable"
+    ]
+  },
+  {
+    "name": "BIRCH_HANGING_SIGN",
+    "id": "birch_hanging_sign",
+    "properties": [
+      "block",
+      "item",
+      "fuel",
+      "solid",
+      "burnable",
+      "flammable"
+    ]
+  },
+  {
+    "name": "BIRCH_SHELF",
+    "id": "birch_shelf",
+    "properties": [
+      "item",
+      "fuel",
+      "burnable",
+      "flammable"
+    ]
+  },
+  {
+    "name": "BLADE_POTTERY_SHERD",
+    "id": "blade_pottery_sherd",
+    "properties": [
+      "item"
+    ]
+  },
+  {
+    "name": "BLUE_EGG",
+    "id": "blue_egg",
+    "properties": [
+      "item"
+    ]
+  },
+  {
+    "name": "BOGGED_SPAWN_EGG",
+    "id": "bogged_spawn_egg",
+    "properties": [
+      "item"
+    ]
+  },
+  {
+    "name": "BOLT_ARMOR_TRIM_SMITHING_TEMPLATE",
+    "id": "bolt_armor_trim_smithing_template",
+    "properties": [
+      "item"
+    ]
+  },
+  {
+    "name": "BORDURE_INDENTED_BANNER_PATTERN",
+    "id": "bordure_indented_banner_pattern",
+    "properties": [
+      "item"
+    ]
+  },
+  {
+    "name": "BREEZE_ROD",
+    "id": "breeze_rod",
+    "properties": [
+      "item"
+    ]
+  },
+  {
+    "name": "BREEZE_SPAWN_EGG",
+    "id": "breeze_spawn_egg",
+    "properties": [
+      "item"
+    ]
+  },
+  {
+    "name": "BREWER_POTTERY_SHERD",
+    "id": "brewer_pottery_sherd",
+    "properties": [
+      "item"
+    ]
+  },
+  {
+    "name": "BROWN_EGG",
+    "id": "brown_egg",
+    "properties": [
+      "item"
+    ]
+  },
+  {
+    "name": "BRUSH",
+    "id": "brush",
+    "properties": [
+      "item",
+      "tool"
+    ]
+  },
+  {
+    "name": "BURN_POTTERY_SHERD",
+    "id": "burn_pottery_sherd",
+    "properties": [
+      "item"
+    ]
+  },
+  {
+    "name": "CALIBRATED_SCULK_SENSOR",
+    "id": "calibrated_sculk_sensor",
+    "properties": [
+      "block",
+      "item",
+      "solid"
+    ]
+  },
+  {
+    "name": "CAMEL_SPAWN_EGG",
+    "id": "camel_spawn_egg",
+    "properties": [
+      "item"
+    ]
+  },
+  {
+    "name": "CHERRY_BOAT",
+    "id": "cherry_boat",
+    "properties": [
+      "item"
+    ]
+  },
+  {
+    "name": "CHERRY_BUTTON",
+    "id": "cherry_button",
+    "properties": [
+      "block",
+      "item",
+      "fuel",
+      "interactable",
+      "flammable"
+    ]
+  },
+  {
+    "name": "CHERRY_CHEST_BOAT",
+    "id": "cherry_chest_boat",
+    "properties": [
+      "item"
+    ]
+  },
+  {
+    "name": "CHERRY_DOOR",
+    "id": "cherry_door",
+    "properties": [
+      "block",
+      "item",
+      "fuel",
+      "interactable",
+      "solid",
+      "flammable"
+    ]
+  },
+  {
+    "name": "CHERRY_FENCE",
+    "id": "cherry_fence",
+    "properties": [
+      "block",
+      "item",
+      "fuel",
+      "interactable",
+      "solid",
+      "burnable",
+      "flammable"
+    ]
+  },
+  {
+    "name": "CHERRY_FENCE_GATE",
+    "id": "cherry_fence_gate",
+    "properties": [
+      "block",
+      "item",
+      "fuel",
+      "interactable",
+      "solid",
+      "burnable",
+      "flammable"
+    ]
+  },
+  {
+    "name": "CHERRY_HANGING_SIGN",
+    "id": "cherry_hanging_sign",
+    "properties": [
+      "block",
+      "item",
+      "fuel",
+      "solid",
+      "burnable",
+      "flammable"
+    ]
+  },
+  {
+    "name": "CHERRY_LEAVES",
+    "id": "cherry_leaves",
+    "properties": [
+      "block",
+      "item",
+      "transparent",
+      "occluding",
+      "flammable",
+      "burnable"
+    ]
+  },
+  {
+    "name": "CHERRY_LOG",
+    "id": "cherry_log",
+    "properties": [
+      "block",
+      "item",
+      "fuel",
+      "occluding",
+      "solid",
+      "burnable",
+      "flammable"
+    ]
+  },
+  {
+    "name": "CHERRY_PLANKS",
+    "id": "cherry_planks",
+    "properties": [
+      "block",
+      "item",
+      "fuel",
+      "occluding",
+      "solid",
+      "burnable",
+      "flammable"
+    ]
+  },
+  {
+    "name": "CHERRY_PRESSURE_PLATE",
+    "id": "cherry_pressure_plate",
+    "properties": [
+      "block",
+      "item",
+      "fuel",
+      "solid",
+      "flammable"
+    ]
+  },
+  {
+    "name": "CHERRY_SAPLING",
+    "id": "cherry_sapling",
+    "properties": [
+      "block",
+      "item",
+      "fuel",
+      "transparent"
+    ]
+  },
+  {
+    "name": "CHERRY_SHELF",
+    "id": "cherry_shelf",
+    "properties": [
+      "item",
+      "fuel",
+      "burnable",
+      "flammable"
+    ]
+  },
+  {
+    "name": "CHERRY_SIGN",
+    "id": "cherry_sign",
+    "properties": [
+      "block",
+      "item",
+      "fuel",
+      "solid",
+      "burnable",
+      "flammable"
+    ]
+  },
+  {
+    "name": "CHERRY_SLAB",
+    "id": "cherry_slab",
+    "properties": [
+      "block",
+      "item",
+      "fuel",
+      "solid",
+      "burnable",
+      "flammable"
+    ]
+  },
+  {
+    "name": "CHERRY_STAIRS",
+    "id": "cherry_stairs",
+    "properties": [
+      "block",
+      "item",
+      "fuel",
+      "interactable",
+      "solid",
+      "burnable",
+      "flammable"
+    ]
+  },
+  {
+    "name": "CHERRY_TRAPDOOR",
+    "id": "cherry_trapdoor",
+    "properties": [
+      "block",
+      "item",
+      "fuel",
+      "interactable",
+      "solid",
+      "flammable"
+    ]
+  },
+  {
+    "name": "CHERRY_WOOD",
+    "id": "cherry_wood",
+    "properties": [
+      "block",
+      "item",
+      "fuel",
+      "occluding",
+      "solid",
+      "burnable",
+      "flammable"
+    ]
+  },
+  {
+    "name": "CHISELED_BOOKSHELF",
+    "id": "chiseled_bookshelf",
+    "properties": [
+      "block",
+      "item",
+      "fuel",
+      "solid",
+      "burnable",
+      "flammable"
+    ]
+  },
+  {
+    "name": "CHISELED_COPPER",
+    "id": "chiseled_copper",
+    "properties": [
+      "item"
+    ]
+  },
+  {
+    "name": "CHISELED_TUFF",
+    "id": "chiseled_tuff",
+    "properties": [
+      "item"
+    ]
+  },
+  {
+    "name": "CHISELED_TUFF_BRICKS",
+    "id": "chiseled_tuff_bricks",
+    "properties": [
+      "block",
+      "item"
+    ]
+  },
+  {
+    "name": "COAST_ARMOR_TRIM_SMITHING_TEMPLATE",
+    "id": "coast_armor_trim_smithing_template",
+    "properties": [
+      "item"
+    ]
+  },
+  {
+    "name": "COPPER_BARS",
+    "id": "copper_bars",
+    "properties": [
+      "item"
+    ]
+  },
+  {
+    "name": "COPPER_CHEST",
+    "id": "copper_chest",
+    "properties": [
+      "block",
+      "item"
+    ]
+  },
+  {
+    "name": "COPPER_GOLEM_STATUE",
+    "id": "copper_golem_statue",
+    "properties": [
+      "item"
+    ]
+  },
+  {
+    "name": "COPPER_TORCH",
+    "id": "copper_torch",
+    "properties": [
+      "item"
+    ]
+  },
+  {
+    "name": "CRAFTER",
+    "id": "crafter",
+    "properties": [
+      "item"
+    ]
+  },
+  {
+    "name": "CRIMSON_HANGING_SIGN",
+    "id": "crimson_hanging_sign",
+    "properties": [
+      "block",
+      "item",
+      "solid"
+    ]
+  },
+  {
+    "name": "CRIMSON_SHELF",
+    "id": "crimson_shelf",
+    "properties": [
+      "item"
+    ]
+  },
+  {
+    "name": "DANGER_POTTERY_SHERD",
+    "id": "danger_pottery_sherd",
+    "properties": [
+      "item"
+    ]
+  },
+  {
+    "name": "DARK_OAK_HANGING_SIGN",
+    "id": "dark_oak_hanging_sign",
+    "properties": [
+      "block",
+      "item",
+      "fuel",
+      "solid",
+      "burnable",
+      "flammable"
+    ]
+  },
+  {
+    "name": "DARK_OAK_SHELF",
+    "id": "dark_oak_shelf",
+    "properties": [
+      "item",
+      "fuel",
+      "burnable",
+      "flammable"
+    ]
+  },
+  {
+    "name": "DECORATED_POT",
+    "id": "decorated_pot",
+    "properties": [
+      "block",
+      "item",
+      "solid"
+    ]
+  },
+  {
+    "name": "DUNE_ARMOR_TRIM_SMITHING_TEMPLATE",
+    "id": "dune_armor_trim_smithing_template",
+    "properties": [
+      "item"
+    ]
+  },
+  {
+    "name": "ENDER_DRAGON_SPAWN_EGG",
+    "id": "ender_dragon_spawn_egg",
+    "properties": [
+      "item"
+    ]
+  },
+  {
+    "name": "EXPLORER_POTTERY_SHERD",
+    "id": "explorer_pottery_sherd",
+    "properties": [
+      "item"
+    ]
+  },
+  {
+    "name": "EXPOSED_CHISELED_COPPER",
+    "id": "exposed_chiseled_copper",
+    "properties": [
+      "item"
+    ]
+  },
+  {
+    "name": "EXPOSED_COPPER_BARS",
+    "id": "exposed_copper_bars",
+    "properties": [
+      "item"
+    ]
+  },
+  {
+    "name": "EXPOSED_COPPER_CHEST",
+    "id": "exposed_copper_chest",
+    "properties": [
+      "block",
+      "item"
+    ]
+  },
+  {
+    "name": "EXPOSED_COPPER_GOLEM_STATUE",
+    "id": "exposed_copper_golem_statue",
+    "properties": [
+      "item"
+    ]
+  },
+  {
+    "name": "EXPOSED_LIGHTNING_ROD",
+    "id": "exposed_lightning_rod",
+    "properties": [
+      "item"
+    ]
+  },
+  {
+    "name": "EYE_ARMOR_TRIM_SMITHING_TEMPLATE",
+    "id": "eye_armor_trim_smithing_template",
+    "properties": [
+      "item"
+    ]
+  },
+  {
+    "name": "FIELD_MASONED_BANNER_PATTERN",
+    "id": "field_masoned_banner_pattern",
+    "properties": [
+      "item"
+    ]
+  },
+  {
+    "name": "FLOW_ARMOR_TRIM_SMITHING_TEMPLATE",
+    "id": "flow_armor_trim_smithing_template",
+    "properties": [
+      "item"
+    ]
+  },
+  {
+    "name": "FLOW_BANNER_PATTERN",
+    "id": "flow_banner_pattern",
+    "properties": [
+      "item"
+    ]
+  },
+  {
+    "name": "FLOW_POTTERY_SHERD",
+    "id": "flow_pottery_sherd",
+    "properties": [
+      "item"
+    ]
+  },
+  {
+    "name": "FRIEND_POTTERY_SHERD",
+    "id": "friend_pottery_sherd",
+    "properties": [
+      "item"
+    ]
+  },
+  {
+    "name": "GUSTER_BANNER_PATTERN",
+    "id": "guster_banner_pattern",
+    "properties": [
+      "item"
+    ]
+  },
+  {
+    "name": "GUSTER_POTTERY_SHERD",
+    "id": "guster_pottery_sherd",
+    "properties": [
+      "item"
+    ]
+  },
+  {
+    "name": "HEART_POTTERY_SHERD",
+    "id": "heart_pottery_sherd",
+    "properties": [
+      "item"
+    ]
+  },
+  {
+    "name": "HEARTBREAK_POTTERY_SHERD",
+    "id": "heartbreak_pottery_sherd",
+    "properties": [
+      "item"
+    ]
+  },
+  {
+    "name": "HEAVY_CORE",
+    "id": "heavy_core",
+    "properties": [
+      "item"
+    ]
+  },
+  {
+    "name": "HOST_ARMOR_TRIM_SMITHING_TEMPLATE",
+    "id": "host_armor_trim_smithing_template",
+    "properties": [
+      "item"
+    ]
+  },
+  {
+    "name": "HOWL_POTTERY_SHERD",
+    "id": "howl_pottery_sherd",
+    "properties": [
+      "item"
+    ]
+  },
+  {
+    "name": "IRON_CHAIN",
+    "id": "iron_chain",
+    "properties": [
+      "item"
+    ]
+  },
+  {
+    "name": "IRON_GOLEM_SPAWN_EGG",
+    "id": "iron_golem_spawn_egg",
+    "properties": [
+      "item"
+    ]
+  },
+  {
+    "name": "JUNGLE_HANGING_SIGN",
+    "id": "jungle_hanging_sign",
+    "properties": [
+      "block",
+      "item",
+      "fuel",
+      "solid",
+      "burnable",
+      "flammable"
+    ]
+  },
+  {
+    "name": "JUNGLE_SHELF",
+    "id": "jungle_shelf",
+    "properties": [
+      "item",
+      "fuel",
+      "burnable",
+      "flammable"
+    ]
+  },
+  {
+    "name": "MACE",
+    "id": "mace",
+    "properties": [
+      "item"
+    ]
+  },
+  {
+    "name": "MANGROVE_HANGING_SIGN",
+    "id": "mangrove_hanging_sign",
+    "properties": [
+      "block",
+      "item",
+      "fuel",
+      "solid",
+      "burnable",
+      "flammable"
+    ]
+  },
+  {
+    "name": "MANGROVE_SHELF",
+    "id": "mangrove_shelf",
+    "properties": [
+      "item",
+      "fuel",
+      "burnable",
+      "flammable"
+    ]
+  },
+  {
+    "name": "MINER_POTTERY_SHERD",
+    "id": "miner_pottery_sherd",
+    "properties": [
+      "item"
+    ]
+  },
+  {
+    "name": "MOURNER_POTTERY_SHERD",
+    "id": "mourner_pottery_sherd",
+    "properties": [
+      "item"
+    ]
+  },
+  {
+    "name": "MUSIC_DISC_CREATOR",
+    "id": "music_disc_creator",
+    "properties": [
+      "item"
+    ]
+  },
+  {
+    "name": "MUSIC_DISC_CREATOR_MUSIC_BOX",
+    "id": "music_disc_creator_music_box",
+    "properties": [
+      "item"
+    ]
+  },
+  {
+    "name": "MUSIC_DISC_PRECIPICE",
+    "id": "music_disc_precipice",
+    "properties": [
+      "block",
+      "item",
+      "transparent"
+    ]
+  },
+  {
+    "name": "MUSIC_DISC_RELIC",
+    "id": "music_disc_relic",
+    "properties": [
+      "item"
+    ]
+  },
+  {
+    "name": "NETHERITE_UPGRADE_SMITHING_TEMPLATE",
+    "id": "netherite_upgrade_smithing_template",
+    "properties": [
+      "item"
+    ]
+  },
+  {
+    "name": "OAK_HANGING_SIGN",
+    "id": "oak_hanging_sign",
+    "properties": [
+      "block",
+      "item",
+      "fuel",
+      "solid",
+      "burnable",
+      "flammable"
+    ]
+  },
+  {
+    "name": "OAK_SHELF",
+    "id": "oak_shelf",
+    "properties": [
+      "item",
+      "fuel",
+      "burnable",
+      "flammable"
+    ]
+  },
+  {
+    "name": "OMINOUS_BOTTLE",
+    "id": "ominous_bottle",
+    "properties": [
+      "item"
+    ]
+  },
+  {
+    "name": "OMINOUS_TRIAL_KEY",
+    "id": "ominous_trial_key",
+    "properties": [
+      "item"
+    ]
+  },
+  {
+    "name": "OXIDIZED_CHISELED_COPPER",
+    "id": "oxidized_chiseled_copper",
+    "properties": [
+      "item"
+    ]
+  },
+  {
+    "name": "OXIDIZED_COPPER_BARS",
+    "id": "oxidized_copper_bars",
+    "properties": [
+      "item"
+    ]
+  },
+  {
+    "name": "OXIDIZED_COPPER_CHEST",
+    "id": "oxidized_copper_chest",
+    "properties": [
+      "block",
+      "item"
+    ]
+  },
+  {
+    "name": "OXIDIZED_COPPER_GOLEM_STATUE",
+    "id": "oxidized_copper_golem_statue",
+    "properties": [
+      "item"
+    ]
+  },
+  {
+    "name": "OXIDIZED_LIGHTNING_ROD",
+    "id": "oxidized_lightning_rod",
+    "properties": [
+      "item"
+    ]
+  },
+  {
+    "name": "PALE_OAK_SHELF",
+    "id": "pale_oak_shelf",
+    "properties": [
+      "item"
+    ]
+  },
+  {
+    "name": "PIGLIN_HEAD",
+    "id": "piglin_head",
+    "properties": [
+      "block",
+      "item"
+    ]
+  },
+  {
+    "name": "PINK_PETALS",
+    "id": "pink_petals",
+    "properties": [
+      "block",
+      "item"
+    ]
+  },
+  {
+    "name": "PITCHER_PLANT",
+    "id": "pitcher_plant",
+    "properties": [
+      "block",
+      "item"
+    ]
+  },
+  {
+    "name": "PITCHER_POD",
+    "id": "pitcher_pod",
+    "properties": [
+      "item"
+    ]
+  },
+  {
+    "name": "PLENTY_POTTERY_SHERD",
+    "id": "plenty_pottery_sherd",
+    "properties": [
+      "item"
+    ]
+  },
+  {
+    "name": "POLISHED_TUFF",
+    "id": "polished_tuff",
+    "properties": [
+      "item"
+    ]
+  },
+  {
+    "name": "POLISHED_TUFF_SLAB",
+    "id": "polished_tuff_slab",
+    "properties": [
+      "block",
+      "item"
+    ]
+  },
+  {
+    "name": "POLISHED_TUFF_STAIRS",
+    "id": "polished_tuff_stairs",
+    "properties": [
+      "block",
+      "item"
+    ]
+  },
+  {
+    "name": "POLISHED_TUFF_WALL",
+    "id": "polished_tuff_wall",
+    "properties": [
+      "block",
+      "item"
+    ]
+  },
+  {
+    "name": "PRIZE_POTTERY_SHERD",
+    "id": "prize_pottery_sherd",
+    "properties": [
+      "item"
+    ]
+  },
+  {
+    "name": "RAISER_ARMOR_TRIM_SMITHING_TEMPLATE",
+    "id": "raiser_armor_trim_smithing_template",
+    "properties": [
+      "item"
+    ]
+  },
+  {
+    "name": "RIB_ARMOR_TRIM_SMITHING_TEMPLATE",
+    "id": "rib_armor_trim_smithing_template",
+    "properties": [
+      "item"
+    ]
+  },
+  {
+    "name": "SCRAPE_POTTERY_SHERD",
+    "id": "scrape_pottery_sherd",
+    "properties": [
+      "item"
+    ]
+  },
+  {
+    "name": "SENTRY_ARMOR_TRIM_SMITHING_TEMPLATE",
+    "id": "sentry_armor_trim_smithing_template",
+    "properties": [
+      "item"
+    ]
+  },
+  {
+    "name": "SHAPER_ARMOR_TRIM_SMITHING_TEMPLATE",
+    "id": "shaper_armor_trim_smithing_template",
+    "properties": [
+      "item"
+    ]
+  },
+  {
+    "name": "SHEAF_POTTERY_SHERD",
+    "id": "sheaf_pottery_sherd",
+    "properties": [
+      "item"
+    ]
+  },
+  {
+    "name": "SHELTER_POTTERY_SHERD",
+    "id": "shelter_pottery_sherd",
+    "properties": [
+      "item"
+    ]
+  },
+  {
+    "name": "SILENCE_ARMOR_TRIM_SMITHING_TEMPLATE",
+    "id": "silence_armor_trim_smithing_template",
+    "properties": [
+      "item"
+    ]
+  },
+  {
+    "name": "SKULL_POTTERY_SHERD",
+    "id": "skull_pottery_sherd",
+    "properties": [
+      "item"
+    ]
+  },
+  {
+    "name": "SNIFFER_EGG",
+    "id": "sniffer_egg",
+    "properties": [
+      "block",
+      "item"
+    ]
+  },
+  {
+    "name": "SNIFFER_SPAWN_EGG",
+    "id": "sniffer_spawn_egg",
+    "properties": [
+      "item"
+    ]
+  },
+  {
+    "name": "SNORT_POTTERY_SHERD",
+    "id": "snort_pottery_sherd",
+    "properties": [
+      "item"
+    ]
+  },
+  {
+    "name": "SNOUT_ARMOR_TRIM_SMITHING_TEMPLATE",
+    "id": "snout_armor_trim_smithing_template",
+    "properties": [
+      "item"
+    ]
+  },
+  {
+    "name": "SNOW_GOLEM_SPAWN_EGG",
+    "id": "snow_golem_spawn_egg",
+    "properties": [
+      "block",
+      "item"
+    ]
+  },
+  {
+    "name": "SPIRE_ARMOR_TRIM_SMITHING_TEMPLATE",
+    "id": "spire_armor_trim_smithing_template",
+    "properties": [
+      "item"
+    ]
+  },
+  {
+    "name": "SPRUCE_HANGING_SIGN",
+    "id": "spruce_hanging_sign",
+    "properties": [
+      "block",
+      "item",
+      "fuel",
+      "solid",
+      "burnable",
+      "flammable"
+    ]
+  },
+  {
+    "name": "SPRUCE_SHELF",
+    "id": "spruce_shelf",
+    "properties": [
+      "item",
+      "fuel",
+      "burnable",
+      "flammable"
+    ]
+  },
+  {
+    "name": "STRIPPED_BAMBOO_BLOCK",
+    "id": "stripped_bamboo_block",
+    "properties": [
+      "block",
+      "item",
+      "fuel",
+      "occluding",
+      "solid",
+      "burnable",
+      "flammable"
+    ]
+  },
+  {
+    "name": "STRIPPED_CHERRY_LOG",
+    "id": "stripped_cherry_log",
+    "properties": [
+      "block",
+      "item",
+      "fuel",
+      "occluding",
+      "solid",
+      "burnable",
+      "flammable"
+    ]
+  },
+  {
+    "name": "STRIPPED_CHERRY_WOOD",
+    "id": "stripped_cherry_wood",
+    "properties": [
+      "block",
+      "item",
+      "fuel",
+      "occluding",
+      "solid",
+      "burnable",
+      "flammable"
+    ]
+  },
+  {
+    "name": "STRIPPED_PALE_OAK_LOG",
+    "id": "stripped_pale_oak_log",
+    "properties": [
+      "block",
+      "item"
+    ]
+  },
+  {
+    "name": "STRIPPED_PALE_OAK_WOOD",
+    "id": "stripped_pale_oak_wood",
+    "properties": [
+      "block",
+      "item"
+    ]
+  },
+  {
+    "name": "SUSPICIOUS_GRAVEL",
+    "id": "suspicious_gravel",
+    "properties": [
+      "block",
+      "item",
+      "solid"
+    ]
+  },
+  {
+    "name": "SUSPICIOUS_SAND",
+    "id": "suspicious_sand",
+    "properties": [
+      "block",
+      "item",
+      "solid"
+    ]
+  },
+  {
+    "name": "TEST_BLOCK",
+    "id": "test_block",
+    "properties": [
+      "block",
+      "item"
+    ]
+  },
+  {
+    "name": "TEST_INSTANCE_BLOCK",
+    "id": "test_instance_block",
+    "properties": [
+      "block",
+      "item"
+    ]
+  },
+  {
+    "name": "TIDE_ARMOR_TRIM_SMITHING_TEMPLATE",
+    "id": "tide_armor_trim_smithing_template",
+    "properties": [
+      "item"
+    ]
+  },
+  {
+    "name": "TORCHFLOWER",
+    "id": "torchflower",
+    "properties": [
+      "block",
+      "item"
+    ]
+  },
+  {
+    "name": "TORCHFLOWER_SEEDS",
+    "id": "torchflower_seeds",
+    "properties": [
+      "block",
+      "item"
+    ]
+  },
+  {
+    "name": "TRIAL_KEY",
+    "id": "trial_key",
+    "properties": [
+      "item"
+    ]
+  },
+  {
+    "name": "TRIAL_SPAWNER",
+    "id": "trial_spawner",
+    "properties": [
+      "item"
+    ]
+  },
+  {
+    "name": "TUFF_BRICK_SLAB",
+    "id": "tuff_brick_slab",
+    "properties": [
+      "block",
+      "item"
+    ]
+  },
+  {
+    "name": "TUFF_BRICK_STAIRS",
+    "id": "tuff_brick_stairs",
+    "properties": [
+      "block",
+      "item"
+    ]
+  },
+  {
+    "name": "TUFF_BRICK_WALL",
+    "id": "tuff_brick_wall",
+    "properties": [
+      "block",
+      "item"
+    ]
+  },
+  {
+    "name": "TUFF_BRICKS",
+    "id": "tuff_bricks",
+    "properties": [
+      "block",
+      "item"
+    ]
+  },
+  {
+    "name": "TUFF_SLAB",
+    "id": "tuff_slab",
+    "properties": [
+      "block",
+      "item"
+    ]
+  },
+  {
+    "name": "TUFF_STAIRS",
+    "id": "tuff_stairs",
+    "properties": [
+      "block",
+      "item"
+    ]
+  },
+  {
+    "name": "TUFF_WALL",
+    "id": "tuff_wall",
+    "properties": [
+      "block",
+      "item"
+    ]
+  },
+  {
+    "name": "TURTLE_SCUTE",
+    "id": "turtle_scute",
+    "properties": [
+      "item"
+    ]
+  },
+  {
+    "name": "VAULT",
+    "id": "vault",
+    "properties": [
+      "item"
+    ]
+  },
+  {
+    "name": "VEX_ARMOR_TRIM_SMITHING_TEMPLATE",
+    "id": "vex_armor_trim_smithing_template",
+    "properties": [
+      "item"
+    ]
+  },
+  {
+    "name": "WARD_ARMOR_TRIM_SMITHING_TEMPLATE",
+    "id": "ward_armor_trim_smithing_template",
+    "properties": [
+      "item"
+    ]
+  },
+  {
+    "name": "WARPED_HANGING_SIGN",
+    "id": "warped_hanging_sign",
+    "properties": [
+      "block",
+      "item",
+      "solid"
+    ]
+  },
+  {
+    "name": "WARPED_SHELF",
+    "id": "warped_shelf",
+    "properties": [
+      "item"
+    ]
+  },
+  {
+    "name": "WAXED_CHISELED_COPPER",
+    "id": "waxed_chiseled_copper",
+    "properties": [
+      "tool",
+      "item"
+    ]
+  },
+  {
+    "name": "WAXED_COPPER_BARS",
+    "id": "waxed_copper_bars",
+    "properties": [
+      "tool",
+      "item"
+    ]
+  },
+  {
+    "name": "WAXED_COPPER_CHAIN",
+    "id": "waxed_copper_chain",
+    "properties": [
+      "tool",
+      "item"
+    ]
+  },
+  {
+    "name": "WAXED_COPPER_CHEST",
+    "id": "waxed_copper_chest",
+    "properties": [
+      "tool",
+      "block",
+      "item"
+    ]
+  },
+  {
+    "name": "WAXED_COPPER_GOLEM_STATUE",
+    "id": "waxed_copper_golem_statue",
+    "properties": [
+      "tool",
+      "item"
+    ]
+  },
+  {
+    "name": "WAXED_COPPER_LANTERN",
+    "id": "waxed_copper_lantern",
+    "properties": [
+      "tool",
+      "block",
+      "item"
+    ]
+  },
+  {
+    "name": "WAXED_EXPOSED_CHISELED_COPPER",
+    "id": "waxed_exposed_chiseled_copper",
+    "properties": [
+      "tool",
+      "item"
+    ]
+  },
+  {
+    "name": "WAXED_EXPOSED_COPPER_BARS",
+    "id": "waxed_exposed_copper_bars",
+    "properties": [
+      "tool",
+      "item"
+    ]
+  },
+  {
+    "name": "WAXED_EXPOSED_COPPER_CHAIN",
+    "id": "waxed_exposed_copper_chain",
+    "properties": [
+      "tool",
+      "item"
+    ]
+  },
+  {
+    "name": "WAXED_EXPOSED_COPPER_CHEST",
+    "id": "waxed_exposed_copper_chest",
+    "properties": [
+      "tool",
+      "block",
+      "item"
+    ]
+  },
+  {
+    "name": "WAXED_EXPOSED_COPPER_GOLEM_STATUE",
+    "id": "waxed_exposed_copper_golem_statue",
+    "properties": [
+      "tool",
+      "item"
+    ]
+  },
+  {
+    "name": "WAXED_EXPOSED_LIGHTNING_ROD",
+    "id": "waxed_exposed_lightning_rod",
+    "properties": [
+      "tool",
+      "item"
+    ]
+  },
+  {
+    "name": "WAXED_LIGHTNING_ROD",
+    "id": "waxed_lightning_rod",
+    "properties": [
+      "tool",
+      "item"
+    ]
+  },
+  {
+    "name": "WAXED_OXIDIZED_CHISELED_COPPER",
+    "id": "waxed_oxidized_chiseled_copper",
+    "properties": [
+      "tool",
+      "item"
+    ]
+  },
+  {
+    "name": "WAXED_OXIDIZED_COPPER_BARS",
+    "id": "waxed_oxidized_copper_bars",
+    "properties": [
+      "tool",
+      "item"
+    ]
+  },
+  {
+    "name": "WAXED_OXIDIZED_COPPER_CHAIN",
+    "id": "waxed_oxidized_copper_chain",
+    "properties": [
+      "tool",
+      "item"
+    ]
+  },
+  {
+    "name": "WAXED_OXIDIZED_COPPER_CHEST",
+    "id": "waxed_oxidized_copper_chest",
+    "properties": [
+      "tool",
+      "block",
+      "item"
+    ]
+  },
+  {
+    "name": "WAXED_OXIDIZED_COPPER_GOLEM_STATUE",
+    "id": "waxed_oxidized_copper_golem_statue",
+    "properties": [
+      "tool",
+      "item"
+    ]
+  },
+  {
+    "name": "WAXED_OXIDIZED_LIGHTNING_ROD",
+    "id": "waxed_oxidized_lightning_rod",
+    "properties": [
+      "tool",
+      "item"
+    ]
+  },
+  {
+    "name": "WAXED_WEATHERED_CHISELED_COPPER",
+    "id": "waxed_weathered_chiseled_copper",
+    "properties": [
+      "tool",
+      "item"
+    ]
+  },
+  {
+    "name": "WAXED_WEATHERED_COPPER_BARS",
+    "id": "waxed_weathered_copper_bars",
+    "properties": [
+      "tool",
+      "item"
+    ]
+  },
+  {
+    "name": "WAXED_WEATHERED_COPPER_CHAIN",
+    "id": "waxed_weathered_copper_chain",
+    "properties": [
+      "tool",
+      "item"
+    ]
+  },
+  {
+    "name": "WAXED_WEATHERED_COPPER_CHEST",
+    "id": "waxed_weathered_copper_chest",
+    "properties": [
+      "tool",
+      "block",
+      "item"
+    ]
+  },
+  {
+    "name": "WAXED_WEATHERED_COPPER_GOLEM_STATUE",
+    "id": "waxed_weathered_copper_golem_statue",
+    "properties": [
+      "tool",
+      "item"
+    ]
+  },
+  {
+    "name": "WAXED_WEATHERED_LIGHTNING_ROD",
+    "id": "waxed_weathered_lightning_rod",
+    "properties": [
+      "tool",
+      "item"
+    ]
+  },
+  {
+    "name": "WAYFINDER_ARMOR_TRIM_SMITHING_TEMPLATE",
+    "id": "wayfinder_armor_trim_smithing_template",
+    "properties": [
+      "item"
+    ]
+  },
+  {
+    "name": "WEATHERED_CHISELED_COPPER",
+    "id": "weathered_chiseled_copper",
+    "properties": [
+      "item"
+    ]
+  },
+  {
+    "name": "WEATHERED_COPPER_BARS",
+    "id": "weathered_copper_bars",
+    "properties": [
+      "item"
+    ]
+  },
+  {
+    "name": "WEATHERED_COPPER_CHAIN",
+    "id": "weathered_copper_chain",
+    "properties": [
+      "item"
+    ]
+  },
+  {
+    "name": "WEATHERED_COPPER_CHEST",
+    "id": "weathered_copper_chest",
+    "properties": [
+      "block",
+      "item"
+    ]
+  },
+  {
+    "name": "WEATHERED_COPPER_GOLEM_STATUE",
+    "id": "weathered_copper_golem_statue",
+    "properties": [
+      "item"
+    ]
+  },
+  {
+    "name": "WEATHERED_LIGHTNING_ROD",
+    "id": "weathered_lightning_rod",
+    "properties": [
+      "item"
+    ]
+  },
+  {
+    "name": "WILD_ARMOR_TRIM_SMITHING_TEMPLATE",
+    "id": "wild_armor_trim_smithing_template",
+    "properties": [
+      "item"
+    ]
+  },
+  {
+    "name": "WIND_CHARGE",
+    "id": "wind_charge",
+    "properties": [
+      "item"
+    ]
+  },
+  {
+    "name": "WITHER_SPAWN_EGG",
+    "id": "wither_spawn_egg",
+    "properties": [
+      "item"
+    ]
+  },
+  {
+    "name": "WOLF_ARMOR",
+    "id": "wolf_armor",
+    "properties": [
+      "item"
+    ]
+  },
+  {
+    "name": "ACACIA_WALL_HANGING_SIGN",
+    "id": "acacia_wall_hanging_sign",
+    "properties": [
+      "block",
+      "interactable",
+      "solid",
+      "flammable"
+    ]
+  },
+  {
+    "name": "BAMBOO_WALL_HANGING_SIGN",
+    "id": "bamboo_wall_hanging_sign",
+    "properties": [
+      "block",
+      "interactable",
+      "solid",
+      "flammable"
+    ]
+  },
+  {
+    "name": "BAMBOO_WALL_SIGN",
+    "id": "bamboo_wall_sign",
+    "properties": [
+      "block",
+      "interactable",
+      "solid",
+      "flammable"
+    ]
+  },
+  {
+    "name": "BIRCH_WALL_HANGING_SIGN",
+    "id": "birch_wall_hanging_sign",
+    "properties": [
+      "block",
+      "interactable",
+      "solid",
+      "flammable"
+    ]
+  },
+  {
+    "name": "CHERRY_WALL_HANGING_SIGN",
+    "id": "cherry_wall_hanging_sign",
+    "properties": [
+      "block",
+      "interactable",
+      "solid",
+      "flammable"
+    ]
+  },
+  {
+    "name": "CHERRY_WALL_SIGN",
+    "id": "cherry_wall_sign",
+    "properties": [
+      "block",
+      "interactable",
+      "solid",
+      "flammable"
+    ]
+  },
+  {
+    "name": "CRIMSON_WALL_HANGING_SIGN",
+    "id": "crimson_wall_hanging_sign",
+    "properties": [
+      "block",
+      "interactable",
+      "solid",
+      "flammable"
+    ]
+  },
+  {
+    "name": "DARK_OAK_WALL_HANGING_SIGN",
+    "id": "dark_oak_wall_hanging_sign",
+    "properties": [
+      "block",
+      "interactable",
+      "solid",
+      "flammable"
+    ]
+  },
+  {
+    "name": "JUNGLE_WALL_HANGING_SIGN",
+    "id": "jungle_wall_hanging_sign",
+    "properties": [
+      "block",
+      "interactable",
+      "solid",
+      "flammable"
+    ]
+  },
+  {
+    "name": "MANGROVE_WALL_HANGING_SIGN",
+    "id": "mangrove_wall_hanging_sign",
+    "properties": [
+      "block",
+      "interactable",
+      "solid",
+      "flammable"
+    ]
+  },
+  {
+    "name": "OAK_WALL_HANGING_SIGN",
+    "id": "oak_wall_hanging_sign",
+    "properties": [
+      "block",
+      "interactable",
+      "solid",
+      "flammable"
+    ]
+  },
+  {
+    "name": "PIGLIN_WALL_HEAD",
+    "id": "piglin_wall_head",
+    "properties": [
+      "block",
+      "transparent"
+    ]
+  },
+  {
+    "name": "PITCHER_CROP",
+    "id": "pitcher_crop",
+    "properties": [
+      "block",
+      "transparent"
+    ]
+  },
+  {
+    "name": "POTTED_CHERRY_SAPLING",
+    "id": "potted_cherry_sapling",
+    "properties": [
+      "block",
+      "interactable",
+      "transparent"
+    ]
+  },
+  {
+    "name": "POTTED_TORCHFLOWER",
+    "id": "potted_torchflower",
+    "properties": [
+      "block",
+      "interactable",
+      "transparent"
+    ]
+  },
+  {
+    "name": "SPRUCE_WALL_HANGING_SIGN",
+    "id": "spruce_wall_hanging_sign",
+    "properties": [
+      "block",
+      "interactable",
+      "solid",
+      "flammable"
+    ]
+  },
+  {
+    "name": "TORCHFLOWER_CROP",
+    "id": "torchflower_crop",
+    "properties": [
+      "block",
+      "transparent"
+    ]
+  },
+  {
+    "name": "WARPED_WALL_HANGING_SIGN",
+    "id": "warped_wall_hanging_sign",
+    "properties": [
+      "block",
+      "interactable",
+      "solid",
+      "flammable"
+    ]
+  },
+  {
+    "name": "COPPER_WALL_TORCH",
+    "id": "copper_wall_torch",
+    "properties": [
+      "block",
+      "transparent"
+    ]
+  },
+  {
+    "name": "PALE_OAK_WALL_HANGING_SIGN",
+    "id": "pale_oak_wall_hanging_sign",
+    "properties": [
+      "block",
+      "interactable",
+      "solid",
+      "flammable"
+    ]
+  },
+  {
+    "name": "PALE_OAK_WALL_SIGN",
+    "id": "pale_oak_wall_sign",
+    "properties": [
+      "block",
+      "interactable",
+      "solid",
+      "flammable"
+    ]
+  },
+  {
+    "name": "POTTED_CLOSED_EYEBLOSSOM",
+    "id": "potted_closed_eyeblossom",
+    "properties": [
+      "block",
+      "interactable",
+      "transparent"
+    ]
+  },
+  {
+    "name": "POTTED_OPEN_EYEBLOSSOM",
+    "id": "potted_open_eyeblossom",
+    "properties": [
+      "block",
+      "interactable",
+      "transparent"
+    ]
+  },
+  {
+    "name": "POTTED_PALE_OAK_SAPLING",
+    "id": "potted_pale_oak_sapling",
+    "properties": [
+      "block",
+      "interactable",
+      "transparent"
+    ]
+  },
+  {
+    "name": "GOLDEN_DANDELION",
+    "id": "golden_dandelion",
+    "properties": [
+      "block",
+      "item",
+      "transparent",
+      "burnable"
+    ]
+  },
+  {
+    "name": "POTTED_GOLDEN_DANDELION",
+    "id": "potted_golden_dandelion",
+    "properties": [
+      "block",
+      "interactable",
+      "transparent"
+    ]
+  },
+  {
+    "name": "CHISELED_CINNABAR",
+    "id": "chiseled_cinnabar",
+    "properties": [
+      "block",
+      "item",
+      "occluding",
+      "solid"
+    ]
+  },
+  {
+    "name": "CHISELED_SULFUR",
+    "id": "chiseled_sulfur",
+    "properties": [
+      "block",
+      "item",
+      "occluding",
+      "solid"
+    ]
+  },
+  {
+    "name": "CINNABAR",
+    "id": "cinnabar",
+    "properties": [
+      "block",
+      "item",
+      "occluding",
+      "solid"
+    ]
+  },
+  {
+    "name": "CINNABAR_BRICK_SLAB",
+    "id": "cinnabar_brick_slab",
+    "properties": [
+      "block",
+      "item",
+      "solid"
+    ]
+  },
+  {
+    "name": "CINNABAR_BRICK_STAIRS",
+    "id": "cinnabar_brick_stairs",
+    "properties": [
+      "block",
+      "item",
+      "interactable",
+      "solid"
+    ]
+  },
+  {
+    "name": "CINNABAR_BRICK_WALL",
+    "id": "cinnabar_brick_wall",
+    "properties": [
+      "block",
+      "item",
+      "solid"
+    ]
+  },
+  {
+    "name": "CINNABAR_BRICKS",
+    "id": "cinnabar_bricks",
+    "properties": [
+      "block",
+      "item",
+      "occluding",
+      "solid"
+    ]
+  },
+  {
+    "name": "CINNABAR_SLAB",
+    "id": "cinnabar_slab",
+    "properties": [
+      "block",
+      "item",
+      "solid"
+    ]
+  },
+  {
+    "name": "CINNABAR_STAIRS",
+    "id": "cinnabar_stairs",
+    "properties": [
+      "block",
+      "item",
+      "interactable",
+      "solid"
+    ]
+  },
+  {
+    "name": "CINNABAR_WALL",
+    "id": "cinnabar_wall",
+    "properties": [
+      "block",
+      "item",
+      "solid"
+    ]
+  },
+  {
+    "name": "MUSIC_DISC_BOUNCE",
+    "id": "music_disc_bounce",
+    "properties": [
+      "item"
+    ]
+  },
+  {
+    "name": "POLISHED_CINNABAR",
+    "id": "polished_cinnabar",
+    "properties": [
+      "block",
+      "item",
+      "occluding",
+      "solid"
+    ]
+  },
+  {
+    "name": "POLISHED_CINNABAR_SLAB",
+    "id": "polished_cinnabar_slab",
+    "properties": [
+      "block",
+      "item",
+      "solid"
+    ]
+  },
+  {
+    "name": "POLISHED_CINNABAR_STAIRS",
+    "id": "polished_cinnabar_stairs",
+    "properties": [
+      "block",
+      "item",
+      "interactable",
+      "solid"
+    ]
+  },
+  {
+    "name": "POLISHED_CINNABAR_WALL",
+    "id": "polished_cinnabar_wall",
+    "properties": [
+      "block",
+      "item",
+      "solid"
+    ]
+  },
+  {
+    "name": "POLISHED_SULFUR",
+    "id": "polished_sulfur",
+    "properties": [
+      "block",
+      "item",
+      "occluding",
+      "solid"
+    ]
+  },
+  {
+    "name": "POLISHED_SULFUR_SLAB",
+    "id": "polished_sulfur_slab",
+    "properties": [
+      "block",
+      "item",
+      "solid"
+    ]
+  },
+  {
+    "name": "POLISHED_SULFUR_STAIRS",
+    "id": "polished_sulfur_stairs",
+    "properties": [
+      "block",
+      "item",
+      "interactable",
+      "solid"
+    ]
+  },
+  {
+    "name": "POLISHED_SULFUR_WALL",
+    "id": "polished_sulfur_wall",
+    "properties": [
+      "block",
+      "item",
+      "solid"
+    ]
+  },
+  {
+    "name": "POTENT_SULFUR",
+    "id": "potent_sulfur",
+    "properties": [
+      "block",
+      "item",
+      "occluding",
+      "solid"
+    ]
+  },
+  {
+    "name": "SULFUR",
+    "id": "sulfur",
+    "properties": [
+      "block",
+      "item",
+      "occluding",
+      "solid"
+    ]
+  },
+  {
+    "name": "SULFUR_BRICK_SLAB",
+    "id": "sulfur_brick_slab",
+    "properties": [
+      "block",
+      "item",
+      "solid"
+    ]
+  },
+  {
+    "name": "SULFUR_BRICK_STAIRS",
+    "id": "sulfur_brick_stairs",
+    "properties": [
+      "block",
+      "item",
+      "interactable",
+      "solid"
+    ]
+  },
+  {
+    "name": "SULFUR_BRICK_WALL",
+    "id": "sulfur_brick_wall",
+    "properties": [
+      "block",
+      "item",
+      "solid"
+    ]
+  },
+  {
+    "name": "SULFUR_BRICKS",
+    "id": "sulfur_bricks",
+    "properties": [
+      "block",
+      "item",
+      "occluding",
+      "solid"
+    ]
+  },
+  {
+    "name": "SULFUR_CUBE_BUCKET",
+    "id": "sulfur_cube_bucket",
+    "properties": [
+      "item"
+    ]
+  },
+  {
+    "name": "SULFUR_CUBE_SPAWN_EGG",
+    "id": "sulfur_cube_spawn_egg",
+    "properties": [
+      "item"
+    ]
+  },
+  {
+    "name": "SULFUR_SLAB",
+    "id": "sulfur_slab",
+    "properties": [
+      "block",
+      "item",
+      "solid"
+    ]
+  },
+  {
+    "name": "SULFUR_SPIKE",
+    "id": "sulfur_spike",
+    "properties": [
+      "block",
+      "item",
+      "solid"
+    ]
+  },
+  {
+    "name": "SULFUR_STAIRS",
+    "id": "sulfur_stairs",
+    "properties": [
+      "block",
+      "item",
+      "interactable",
+      "solid"
+    ]
+  },
+  {
+    "name": "SULFUR_WALL",
+    "id": "sulfur_wall",
+    "properties": [
+      "block",
+      "item",
+      "solid"
+    ]
+  },
+  {
+    "name": "ABANDONED_CAMP_MAP",
+    "id": "abandoned_camp_map",
+    "properties": [
+      "item"
+    ]
+  },
+  {
+    "name": "BLACK_CONCRETE_SLAB",
+    "id": "black_concrete_slab",
+    "properties": [
+      "block",
+      "item",
+      "solid"
+    ]
+  },
+  {
+    "name": "BLACK_CONCRETE_STAIRS",
+    "id": "black_concrete_stairs",
+    "properties": [
+      "block",
+      "item",
+      "interactable",
+      "solid"
+    ]
+  },
+  {
+    "name": "BLACK_CUSHION",
+    "id": "black_cushion",
+    "properties": [
+      "item"
+    ]
+  },
+  {
+    "name": "BLACK_WOOL_SLAB",
+    "id": "black_wool_slab",
+    "properties": [
+      "block",
+      "item",
+      "fuel",
+      "solid",
+      "burnable",
+      "flammable"
+    ]
+  },
+  {
+    "name": "BLACK_WOOL_STAIRS",
+    "id": "black_wool_stairs",
+    "properties": [
+      "block",
+      "item",
+      "fuel",
+      "interactable",
+      "solid",
+      "burnable",
+      "flammable"
+    ]
+  },
+  {
+    "name": "BLUE_CONCRETE_SLAB",
+    "id": "blue_concrete_slab",
+    "properties": [
+      "block",
+      "item",
+      "solid"
+    ]
+  },
+  {
+    "name": "BLUE_CONCRETE_STAIRS",
+    "id": "blue_concrete_stairs",
+    "properties": [
+      "block",
+      "item",
+      "interactable",
+      "solid"
+    ]
+  },
+  {
+    "name": "BLUE_CUSHION",
+    "id": "blue_cushion",
+    "properties": [
+      "item"
+    ]
+  },
+  {
+    "name": "BLUE_WOOL_SLAB",
+    "id": "blue_wool_slab",
+    "properties": [
+      "block",
+      "item",
+      "fuel",
+      "solid",
+      "burnable",
+      "flammable"
+    ]
+  },
+  {
+    "name": "BLUE_WOOL_STAIRS",
+    "id": "blue_wool_stairs",
+    "properties": [
+      "block",
+      "item",
+      "fuel",
+      "interactable",
+      "solid",
+      "burnable",
+      "flammable"
+    ]
+  },
+  {
+    "name": "BROWN_CONCRETE_SLAB",
+    "id": "brown_concrete_slab",
+    "properties": [
+      "block",
+      "item",
+      "solid"
+    ]
+  },
+  {
+    "name": "BROWN_CONCRETE_STAIRS",
+    "id": "brown_concrete_stairs",
+    "properties": [
+      "block",
+      "item",
+      "interactable",
+      "solid"
+    ]
+  },
+  {
+    "name": "BROWN_CUSHION",
+    "id": "brown_cushion",
+    "properties": [
+      "item"
+    ]
+  },
+  {
+    "name": "BROWN_WOOL_SLAB",
+    "id": "brown_wool_slab",
+    "properties": [
+      "block",
+      "item",
+      "fuel",
+      "solid",
+      "burnable",
+      "flammable"
+    ]
+  },
+  {
+    "name": "BROWN_WOOL_STAIRS",
+    "id": "brown_wool_stairs",
+    "properties": [
+      "block",
+      "item",
+      "fuel",
+      "interactable",
+      "solid",
+      "burnable",
+      "flammable"
+    ]
+  },
+  {
+    "name": "BURIED_ANCIENT_CITY_MAP",
+    "id": "buried_ancient_city_map",
+    "properties": [
+      "item"
+    ]
+  },
+  {
+    "name": "BURIED_MINESHAFT_MAP",
+    "id": "buried_mineshaft_map",
+    "properties": [
+      "item"
+    ]
+  },
+  {
+    "name": "BURIED_TREASURE_MAP",
+    "id": "buried_treasure_map",
+    "properties": [
+      "item"
+    ]
+  },
+  {
+    "name": "BURIED_TRIAL_CHAMBERS_MAP",
+    "id": "buried_trial_chambers_map",
+    "properties": [
+      "item"
+    ]
+  },
+  {
+    "name": "CYAN_CONCRETE_SLAB",
+    "id": "cyan_concrete_slab",
+    "properties": [
+      "block",
+      "item",
+      "solid"
+    ]
+  },
+  {
+    "name": "CYAN_CONCRETE_STAIRS",
+    "id": "cyan_concrete_stairs",
+    "properties": [
+      "block",
+      "item",
+      "interactable",
+      "solid"
+    ]
+  },
+  {
+    "name": "CYAN_CUSHION",
+    "id": "cyan_cushion",
+    "properties": [
+      "item"
+    ]
+  },
+  {
+    "name": "CYAN_WOOL_SLAB",
+    "id": "cyan_wool_slab",
+    "properties": [
+      "block",
+      "item",
+      "fuel",
+      "solid",
+      "burnable",
+      "flammable"
+    ]
+  },
+  {
+    "name": "CYAN_WOOL_STAIRS",
+    "id": "cyan_wool_stairs",
+    "properties": [
+      "block",
+      "item",
+      "fuel",
+      "interactable",
+      "solid",
+      "burnable",
+      "flammable"
+    ]
+  },
+  {
+    "name": "DESERT_PYRAMID_MAP",
+    "id": "desert_pyramid_map",
+    "properties": [
+      "item"
+    ]
+  },
+  {
+    "name": "DESERT_VILLAGE_MAP",
+    "id": "desert_village_map",
+    "properties": [
+      "item"
+    ]
+  },
+  {
+    "name": "GRAY_CONCRETE_SLAB",
+    "id": "gray_concrete_slab",
+    "properties": [
+      "block",
+      "item",
+      "solid"
+    ]
+  },
+  {
+    "name": "GRAY_CONCRETE_STAIRS",
+    "id": "gray_concrete_stairs",
+    "properties": [
+      "block",
+      "item",
+      "interactable",
+      "solid"
+    ]
+  },
+  {
+    "name": "GRAY_CUSHION",
+    "id": "gray_cushion",
+    "properties": [
+      "item"
+    ]
+  },
+  {
+    "name": "GRAY_WOOL_SLAB",
+    "id": "gray_wool_slab",
+    "properties": [
+      "block",
+      "item",
+      "fuel",
+      "solid",
+      "burnable",
+      "flammable"
+    ]
+  },
+  {
+    "name": "GRAY_WOOL_STAIRS",
+    "id": "gray_wool_stairs",
+    "properties": [
+      "block",
+      "item",
+      "fuel",
+      "interactable",
+      "solid",
+      "burnable",
+      "flammable"
+    ]
+  },
+  {
+    "name": "GREEN_CONCRETE_SLAB",
+    "id": "green_concrete_slab",
+    "properties": [
+      "block",
+      "item",
+      "solid"
+    ]
+  },
+  {
+    "name": "GREEN_CONCRETE_STAIRS",
+    "id": "green_concrete_stairs",
+    "properties": [
+      "block",
+      "item",
+      "interactable",
+      "solid"
+    ]
+  },
+  {
+    "name": "GREEN_CUSHION",
+    "id": "green_cushion",
+    "properties": [
+      "item"
+    ]
+  },
+  {
+    "name": "GREEN_WOOL_SLAB",
+    "id": "green_wool_slab",
+    "properties": [
+      "block",
+      "item",
+      "fuel",
+      "solid",
+      "burnable",
+      "flammable"
+    ]
+  },
+  {
+    "name": "GREEN_WOOL_STAIRS",
+    "id": "green_wool_stairs",
+    "properties": [
+      "block",
+      "item",
+      "fuel",
+      "interactable",
+      "solid",
+      "burnable",
+      "flammable"
+    ]
+  },
+  {
+    "name": "JUNGLE_PYRAMID_MAP",
+    "id": "jungle_pyramid_map",
+    "properties": [
+      "item"
+    ]
+  },
+  {
+    "name": "LIGHT_BLUE_CONCRETE_SLAB",
+    "id": "light_blue_concrete_slab",
+    "properties": [
+      "block",
+      "item",
+      "solid"
+    ]
+  },
+  {
+    "name": "LIGHT_BLUE_CONCRETE_STAIRS",
+    "id": "light_blue_concrete_stairs",
+    "properties": [
+      "block",
+      "item",
+      "interactable",
+      "solid"
+    ]
+  },
+  {
+    "name": "LIGHT_BLUE_CUSHION",
+    "id": "light_blue_cushion",
+    "properties": [
+      "item"
+    ]
+  },
+  {
+    "name": "LIGHT_BLUE_WOOL_SLAB",
+    "id": "light_blue_wool_slab",
+    "properties": [
+      "block",
+      "item",
+      "fuel",
+      "solid",
+      "burnable",
+      "flammable"
+    ]
+  },
+  {
+    "name": "LIGHT_BLUE_WOOL_STAIRS",
+    "id": "light_blue_wool_stairs",
+    "properties": [
+      "block",
+      "item",
+      "fuel",
+      "interactable",
+      "solid",
+      "burnable",
+      "flammable"
+    ]
+  },
+  {
+    "name": "LIGHT_GRAY_CONCRETE_SLAB",
+    "id": "light_gray_concrete_slab",
+    "properties": [
+      "block",
+      "item",
+      "solid"
+    ]
+  },
+  {
+    "name": "LIGHT_GRAY_CONCRETE_STAIRS",
+    "id": "light_gray_concrete_stairs",
+    "properties": [
+      "block",
+      "item",
+      "interactable",
+      "solid"
+    ]
+  },
+  {
+    "name": "LIGHT_GRAY_CUSHION",
+    "id": "light_gray_cushion",
+    "properties": [
+      "item"
+    ]
+  },
+  {
+    "name": "LIGHT_GRAY_WOOL_SLAB",
+    "id": "light_gray_wool_slab",
+    "properties": [
+      "block",
+      "item",
+      "fuel",
+      "solid",
+      "burnable",
+      "flammable"
+    ]
+  },
+  {
+    "name": "LIGHT_GRAY_WOOL_STAIRS",
+    "id": "light_gray_wool_stairs",
+    "properties": [
+      "block",
+      "item",
+      "fuel",
+      "interactable",
+      "solid",
+      "burnable",
+      "flammable"
+    ]
+  },
+  {
+    "name": "LIME_CONCRETE_SLAB",
+    "id": "lime_concrete_slab",
+    "properties": [
+      "block",
+      "item",
+      "solid"
+    ]
+  },
+  {
+    "name": "LIME_CONCRETE_STAIRS",
+    "id": "lime_concrete_stairs",
+    "properties": [
+      "block",
+      "item",
+      "interactable",
+      "solid"
+    ]
+  },
+  {
+    "name": "LIME_CUSHION",
+    "id": "lime_cushion",
+    "properties": [
+      "item"
+    ]
+  },
+  {
+    "name": "LIME_WOOL_SLAB",
+    "id": "lime_wool_slab",
+    "properties": [
+      "block",
+      "item",
+      "fuel",
+      "solid",
+      "burnable",
+      "flammable"
+    ]
+  },
+  {
+    "name": "LIME_WOOL_STAIRS",
+    "id": "lime_wool_stairs",
+    "properties": [
+      "block",
+      "item",
+      "fuel",
+      "interactable",
+      "solid",
+      "burnable",
+      "flammable"
+    ]
+  },
+  {
+    "name": "MAGENTA_CONCRETE_SLAB",
+    "id": "magenta_concrete_slab",
+    "properties": [
+      "block",
+      "item",
+      "solid"
+    ]
+  },
+  {
+    "name": "MAGENTA_CONCRETE_STAIRS",
+    "id": "magenta_concrete_stairs",
+    "properties": [
+      "block",
+      "item",
+      "interactable",
+      "solid"
+    ]
+  },
+  {
+    "name": "MAGENTA_CUSHION",
+    "id": "magenta_cushion",
+    "properties": [
+      "item"
+    ]
+  },
+  {
+    "name": "MAGENTA_WOOL_SLAB",
+    "id": "magenta_wool_slab",
+    "properties": [
+      "block",
+      "item",
+      "fuel",
+      "solid",
+      "burnable",
+      "flammable"
+    ]
+  },
+  {
+    "name": "MAGENTA_WOOL_STAIRS",
+    "id": "magenta_wool_stairs",
+    "properties": [
+      "block",
+      "item",
+      "fuel",
+      "interactable",
+      "solid",
+      "burnable",
+      "flammable"
+    ]
+  },
+  {
+    "name": "OCEAN_MONUMENT_MAP",
+    "id": "ocean_monument_map",
+    "properties": [
+      "item"
+    ]
+  },
+  {
+    "name": "ORANGE_CONCRETE_SLAB",
+    "id": "orange_concrete_slab",
+    "properties": [
+      "block",
+      "item",
+      "solid"
+    ]
+  },
+  {
+    "name": "ORANGE_CONCRETE_STAIRS",
+    "id": "orange_concrete_stairs",
+    "properties": [
+      "block",
+      "item",
+      "interactable",
+      "solid"
+    ]
+  },
+  {
+    "name": "ORANGE_CUSHION",
+    "id": "orange_cushion",
+    "properties": [
+      "item"
+    ]
+  },
+  {
+    "name": "ORANGE_POPLAR_LEAVES",
+    "id": "orange_poplar_leaves",
+    "properties": [
+      "block",
+      "item",
+      "solid",
+      "burnable",
+      "flammable"
+    ]
+  },
+  {
+    "name": "ORANGE_WOOL_SLAB",
+    "id": "orange_wool_slab",
+    "properties": [
+      "block",
+      "item",
+      "fuel",
+      "solid",
+      "burnable",
+      "flammable"
+    ]
+  },
+  {
+    "name": "ORANGE_WOOL_STAIRS",
+    "id": "orange_wool_stairs",
+    "properties": [
+      "block",
+      "item",
+      "fuel",
+      "interactable",
+      "solid",
+      "burnable",
+      "flammable"
+    ]
+  },
+  {
+    "name": "PINK_CONCRETE_SLAB",
+    "id": "pink_concrete_slab",
+    "properties": [
+      "block",
+      "item",
+      "solid"
+    ]
+  },
+  {
+    "name": "PINK_CONCRETE_STAIRS",
+    "id": "pink_concrete_stairs",
+    "properties": [
+      "block",
+      "item",
+      "interactable",
+      "solid"
+    ]
+  },
+  {
+    "name": "PINK_CUSHION",
+    "id": "pink_cushion",
+    "properties": [
+      "item"
+    ]
+  },
+  {
+    "name": "PINK_WOOL_SLAB",
+    "id": "pink_wool_slab",
+    "properties": [
+      "block",
+      "item",
+      "fuel",
+      "solid",
+      "burnable",
+      "flammable"
+    ]
+  },
+  {
+    "name": "PINK_WOOL_STAIRS",
+    "id": "pink_wool_stairs",
+    "properties": [
+      "block",
+      "item",
+      "fuel",
+      "interactable",
+      "solid",
+      "burnable",
+      "flammable"
+    ]
+  },
+  {
+    "name": "PLAINS_VILLAGE_MAP",
+    "id": "plains_village_map",
+    "properties": [
+      "item"
+    ]
+  },
+  {
+    "name": "POPLAR_BOAT",
+    "id": "poplar_boat",
+    "properties": [
+      "item",
+      "fuel"
+    ]
+  },
+  {
+    "name": "POPLAR_BUTTON",
+    "id": "poplar_button",
+    "properties": [
+      "block",
+      "item",
+      "fuel",
+      "interactable",
+      "transparent"
+    ]
+  },
+  {
+    "name": "POPLAR_CHEST_BOAT",
+    "id": "poplar_chest_boat",
+    "properties": [
+      "item",
+      "fuel"
+    ]
+  },
+  {
+    "name": "POPLAR_DOOR",
+    "id": "poplar_door",
+    "properties": [
+      "block",
+      "item",
+      "fuel",
+      "interactable",
+      "solid",
+      "flammable"
+    ]
+  },
+  {
+    "name": "POPLAR_FENCE",
+    "id": "poplar_fence",
+    "properties": [
+      "block",
+      "item",
+      "fuel",
+      "interactable",
+      "solid",
+      "burnable",
+      "flammable"
+    ]
+  },
+  {
+    "name": "POPLAR_FENCE_GATE",
+    "id": "poplar_fence_gate",
+    "properties": [
+      "block",
+      "item",
+      "fuel",
+      "interactable",
+      "solid",
+      "burnable",
+      "flammable"
+    ]
+  },
+  {
+    "name": "POPLAR_HANGING_SIGN",
+    "id": "poplar_hanging_sign",
+    "properties": [
+      "block",
+      "item",
+      "fuel",
+      "solid",
+      "burnable",
+      "flammable"
+    ]
+  },
+  {
+    "name": "POPLAR_LOG",
+    "id": "poplar_log",
+    "properties": [
+      "block",
+      "item",
+      "fuel",
+      "occluding",
+      "solid",
+      "burnable",
+      "flammable"
+    ]
+  },
+  {
+    "name": "POPLAR_PLANKS",
+    "id": "poplar_planks",
+    "properties": [
+      "block",
+      "item",
+      "fuel",
+      "occluding",
+      "solid",
+      "burnable",
+      "flammable"
+    ]
+  },
+  {
+    "name": "POPLAR_PRESSURE_PLATE",
+    "id": "poplar_pressure_plate",
+    "properties": [
+      "block",
+      "item",
+      "fuel",
+      "solid",
+      "flammable"
+    ]
+  },
+  {
+    "name": "POPLAR_SAPLING",
+    "id": "poplar_sapling",
+    "properties": [
+      "block",
+      "item",
+      "fuel",
+      "transparent"
+    ]
+  },
+  {
+    "name": "POPLAR_SHELF",
+    "id": "poplar_shelf",
+    "properties": [
+      "block",
+      "item",
+      "fuel",
+      "burnable",
+      "flammable"
+    ]
+  },
+  {
+    "name": "POPLAR_SIGN",
+    "id": "poplar_sign",
+    "properties": [
+      "block",
+      "item",
+      "fuel",
+      "interactable",
+      "solid",
+      "flammable"
+    ]
+  },
+  {
+    "name": "POPLAR_SLAB",
+    "id": "poplar_slab",
+    "properties": [
+      "block",
+      "item",
+      "fuel",
+      "solid",
+      "burnable",
+      "flammable"
+    ]
+  },
+  {
+    "name": "POPLAR_STAIRS",
+    "id": "poplar_stairs",
+    "properties": [
+      "block",
+      "item",
+      "fuel",
+      "interactable",
+      "solid",
+      "burnable",
+      "flammable"
+    ]
+  },
+  {
+    "name": "POPLAR_TRAPDOOR",
+    "id": "poplar_trapdoor",
+    "properties": [
+      "block",
+      "item",
+      "fuel",
+      "interactable",
+      "solid",
+      "flammable"
+    ]
+  },
+  {
+    "name": "POPLAR_WALL_HANGING_SIGN",
+    "id": "poplar_wall_hanging_sign",
+    "properties": [
+      "block",
+      "interactable",
+      "solid",
+      "flammable"
+    ]
+  },
+  {
+    "name": "POPLAR_WALL_SIGN",
+    "id": "poplar_wall_sign",
+    "properties": [
+      "block",
+      "interactable",
+      "solid",
+      "flammable"
+    ]
+  },
+  {
+    "name": "POPLAR_WOOD",
+    "id": "poplar_wood",
+    "properties": [
+      "block",
+      "item",
+      "fuel",
+      "occluding",
+      "solid",
+      "burnable",
+      "flammable"
+    ]
+  },
+  {
+    "name": "POTTED_POPLAR_SAPLING",
+    "id": "potted_poplar_sapling",
+    "properties": [
+      "block",
+      "interactable",
+      "transparent"
+    ]
+  },
+  {
+    "name": "PURPLE_CONCRETE_SLAB",
+    "id": "purple_concrete_slab",
+    "properties": [
+      "block",
+      "item",
+      "solid"
+    ]
+  },
+  {
+    "name": "PURPLE_CONCRETE_STAIRS",
+    "id": "purple_concrete_stairs",
+    "properties": [
+      "block",
+      "item",
+      "interactable",
+      "solid"
+    ]
+  },
+  {
+    "name": "PURPLE_CUSHION",
+    "id": "purple_cushion",
+    "properties": [
+      "item"
+    ]
+  },
+  {
+    "name": "PURPLE_WOOL_SLAB",
+    "id": "purple_wool_slab",
+    "properties": [
+      "block",
+      "item",
+      "fuel",
+      "solid",
+      "burnable",
+      "flammable"
+    ]
+  },
+  {
+    "name": "PURPLE_WOOL_STAIRS",
+    "id": "purple_wool_stairs",
+    "properties": [
+      "block",
+      "item",
+      "fuel",
+      "interactable",
+      "solid",
+      "burnable",
+      "flammable"
+    ]
+  },
+  {
+    "name": "RED_CONCRETE_SLAB",
+    "id": "red_concrete_slab",
+    "properties": [
+      "block",
+      "item",
+      "solid"
+    ]
+  },
+  {
+    "name": "RED_CONCRETE_STAIRS",
+    "id": "red_concrete_stairs",
+    "properties": [
+      "block",
+      "item",
+      "interactable",
+      "solid"
+    ]
+  },
+  {
+    "name": "RED_CUSHION",
+    "id": "red_cushion",
+    "properties": [
+      "item"
+    ]
+  },
+  {
+    "name": "RED_POPLAR_LEAVES",
+    "id": "red_poplar_leaves",
+    "properties": [
+      "block",
+      "item",
+      "solid",
+      "burnable",
+      "flammable"
+    ]
+  },
+  {
+    "name": "RED_SHRUB",
+    "id": "red_shrub",
+    "properties": [
+      "block",
+      "item",
+      "fuel",
+      "transparent",
+      "burnable",
+      "flammable"
+    ]
+  },
+  {
+    "name": "RED_WOOL_SLAB",
+    "id": "red_wool_slab",
+    "properties": [
+      "block",
+      "item",
+      "fuel",
+      "solid",
+      "burnable",
+      "flammable"
+    ]
+  },
+  {
+    "name": "RED_WOOL_STAIRS",
+    "id": "red_wool_stairs",
+    "properties": [
+      "block",
+      "item",
+      "fuel",
+      "interactable",
+      "solid",
+      "burnable",
+      "flammable"
+    ]
+  },
+  {
+    "name": "SAVANNA_VILLAGE_MAP",
+    "id": "savanna_village_map",
+    "properties": [
+      "item"
+    ]
+  },
+  {
+    "name": "SHELF_MUSHROOM",
+    "id": "shelf_mushroom",
+    "properties": [
+      "block",
+      "item",
+      "transparent"
+    ]
+  },
+  {
+    "name": "SNOWY_VILLAGE_MAP",
+    "id": "snowy_village_map",
+    "properties": [
+      "item"
+    ]
+  },
+  {
+    "name": "STRAW_BED",
+    "id": "straw_bed",
+    "properties": [
+      "block",
+      "item",
+      "interactable",
+      "solid",
+      "flammable"
+    ]
+  },
+  {
+    "name": "STRIPPED_POPLAR_LOG",
+    "id": "stripped_poplar_log",
+    "properties": [
+      "block",
+      "item",
+      "fuel",
+      "occluding",
+      "solid",
+      "burnable",
+      "flammable"
+    ]
+  },
+  {
+    "name": "STRIPPED_POPLAR_WOOD",
+    "id": "stripped_poplar_wood",
+    "properties": [
+      "block",
+      "item",
+      "fuel",
+      "occluding",
+      "solid",
+      "burnable",
+      "flammable"
+    ]
+  },
+  {
+    "name": "SWAMP_HUT_MAP",
+    "id": "swamp_hut_map",
+    "properties": [
+      "item"
+    ]
+  },
+  {
+    "name": "TAIGA_VILLAGE_MAP",
+    "id": "taiga_village_map",
+    "properties": [
+      "item"
+    ]
+  },
+  {
+    "name": "WARM_OCEAN_RUINS_MAP",
+    "id": "warm_ocean_ruins_map",
+    "properties": [
+      "item"
+    ]
+  },
+  {
+    "name": "WHITE_CONCRETE_SLAB",
+    "id": "white_concrete_slab",
+    "properties": [
+      "block",
+      "item",
+      "solid"
+    ]
+  },
+  {
+    "name": "WHITE_CONCRETE_STAIRS",
+    "id": "white_concrete_stairs",
+    "properties": [
+      "block",
+      "item",
+      "interactable",
+      "solid"
+    ]
+  },
+  {
+    "name": "WHITE_CUSHION",
+    "id": "white_cushion",
+    "properties": [
+      "item"
+    ]
+  },
+  {
+    "name": "WHITE_WOOL_SLAB",
+    "id": "white_wool_slab",
+    "properties": [
+      "block",
+      "item",
+      "fuel",
+      "solid",
+      "burnable",
+      "flammable"
+    ]
+  },
+  {
+    "name": "WHITE_WOOL_STAIRS",
+    "id": "white_wool_stairs",
+    "properties": [
+      "block",
+      "item",
+      "fuel",
+      "interactable",
+      "solid",
+      "burnable",
+      "flammable"
+    ]
+  },
+  {
+    "name": "WOODLAND_MANSION_MAP",
+    "id": "woodland_mansion_map",
+    "properties": [
+      "item"
+    ]
+  },
+  {
+    "name": "YELLOW_CONCRETE_SLAB",
+    "id": "yellow_concrete_slab",
+    "properties": [
+      "block",
+      "item",
+      "solid"
+    ]
+  },
+  {
+    "name": "YELLOW_CONCRETE_STAIRS",
+    "id": "yellow_concrete_stairs",
+    "properties": [
+      "block",
+      "item",
+      "interactable",
+      "solid"
+    ]
+  },
+  {
+    "name": "YELLOW_CUSHION",
+    "id": "yellow_cushion",
+    "properties": [
+      "item"
+    ]
+  },
+  {
+    "name": "YELLOW_POPLAR_LEAVES",
+    "id": "yellow_poplar_leaves",
+    "properties": [
+      "block",
+      "item",
+      "solid",
+      "burnable",
+      "flammable"
+    ]
+  },
+  {
+    "name": "YELLOW_WOOL_SLAB",
+    "id": "yellow_wool_slab",
+    "properties": [
+      "block",
+      "item",
+      "fuel",
+      "solid",
+      "burnable",
+      "flammable"
+    ]
+  },
+  {
+    "name": "YELLOW_WOOL_STAIRS",
+    "id": "yellow_wool_stairs",
+    "properties": [
+      "block",
+      "item",
+      "fuel",
+      "interactable",
+      "solid",
+      "burnable",
+      "flammable"
+    ]
   }
 ]

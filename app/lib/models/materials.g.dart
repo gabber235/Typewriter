@@ -62,4 +62,7 @@ const _$McVersionEnumMap = {
   McVersion.v1_19: 'v1_19',
   McVersion.v1_20: 'v1_20',
   McVersion.v1_21: 'v1_21',
+  McVersion.v26_1: 'v26_1',
+  McVersion.v26_2: 'v26_2',
+  McVersion.v26_3: 'v26_3',
 };

@@ -15,16 +15,20 @@ enum McVersion implements Comparable<McVersion> {
   v1_18("1.18"),
   v1_19("1.19"),
   v1_20("1.20"),
-  v1_21("1.21");
+  v1_21("1.21"),
+  v26_1("26.1"),
+  v26_2("26.2"),
+  v26_3("26.3");
 
   const McVersion(this.id);
   final String id;
 
-  static const latest = v1_21;
+  static const latest = v26_3;
 
   static McVersion? tryParse(String? id) {
     if (id == null) return null;
-    return McVersion.values.firstWhereOrNull((e) => id.startsWith(e.id));
+    return McVersion.values
+        .firstWhereOrNull((e) => id == e.id || id.startsWith("${e.id}."));
   }
 
   @override
