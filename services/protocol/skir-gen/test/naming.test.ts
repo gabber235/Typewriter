@@ -44,22 +44,22 @@ const last = (reference: string, separator: string) => reference.slice(reference
 describe("skir.yml configures the generators the providers assume", () => {
   test("every transport target reads one manifest with a valid config", () => {
     const targets = SKIR_GENERATORS.filter(
-      (generator) => generator.mod.startsWith("typewriter-transport/") && !generator.mod.startsWith("typewriter-transport/operations/"),
+      (generator) => generator.mod.startsWith("typewriter-skir-gen/routes/"),
     );
     expect(targets.map((generator) => generator.mod).sort()).toEqual([
-      "typewriter-transport/dart",
-      "typewriter-transport/kotlin",
-      "typewriter-transport/rust",
+      "typewriter-skir-gen/routes/dart",
+      "typewriter-skir-gen/routes/kotlin",
+      "typewriter-skir-gen/routes/rust",
     ]);
     const configs = targets.map((generator) => Config.parse(generator.config));
     expect(new Set(configs.map((config) => config.manifest)).size).toBe(1);
   });
 
   test("every operations target reads one manifest with a valid config", () => {
-    const targets = SKIR_GENERATORS.filter((generator) => generator.mod.startsWith("typewriter-transport/operations/"));
+    const targets = SKIR_GENERATORS.filter((generator) => generator.mod.startsWith("typewriter-skir-gen/operations/"));
     expect(targets.map((generator) => generator.mod).sort()).toEqual([
-      "typewriter-transport/operations/dart",
-      "typewriter-transport/operations/kotlin",
+      "typewriter-skir-gen/operations/dart",
+      "typewriter-skir-gen/operations/kotlin",
     ]);
     const configs = targets.map((generator) => OperationsConfig.parse(generator.config));
     expect(new Set(configs.map((config) => config.manifest)).size).toBe(1);

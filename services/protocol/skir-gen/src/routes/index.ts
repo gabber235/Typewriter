@@ -2,15 +2,15 @@ import { readFileSync } from "node:fs";
 
 import type { CodeGenerator } from "skir-internal";
 
-import { Config } from "./config.js";
-import { emitDart } from "./routes/emit/dart.js";
-import { emitKotlin } from "./routes/emit/kotlin.js";
-import { emitRust } from "./routes/emit/rust.js";
-import { parseManifest } from "./routes/manifest.js";
-import { resolveRoutes, type ResolvedRoutes } from "./routes/resolve.js";
-import { symbolProviders, type SymbolProviders } from "./symbols.js";
+import { Config } from "../config.js";
+import { emitDart } from "./emit/dart.js";
+import { emitKotlin } from "./emit/kotlin.js";
+import { emitRust } from "./emit/rust.js";
+import { parseManifest } from "./manifest.js";
+import { resolveRoutes, type ResolvedRoutes } from "./resolve.js";
+import { symbolProviders, type SymbolProviders } from "../symbols.js";
 
-export { Config } from "./config.js";
+export { Config } from "../config.js";
 
 /** A language whose transport route bindings one Skir generator entry writes. */
 export type Target = "kotlin" | "dart" | "rust";
@@ -40,7 +40,7 @@ function assertRelative(file: CodeGenerator.OutputFile): void {
  */
 export function generatorFor(target: Target): CodeGenerator<Config> {
   return {
-    id: `typewriter-transport-${target}`,
+    id: `typewriter-skir-gen-routes-${target}`,
     configType: Config,
     generateCode(input) {
       const { manifest: path } = input.config;

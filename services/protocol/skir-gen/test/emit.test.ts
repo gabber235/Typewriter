@@ -1,6 +1,6 @@
 import { describe, expect, test } from "bun:test";
 
-import { generatorFor, type Target } from "../src/index.js";
+import { generatorFor, type Target } from "../src/routes/index.js";
 import { emitDart } from "../src/routes/emit/dart.js";
 import { emitKotlin } from "../src/routes/emit/kotlin.js";
 import { emitRust } from "../src/routes/emit/rust.js";
@@ -196,7 +196,7 @@ describe("generator entry points", () => {
   test.each(targets)("%s writes its files relative to the output directory", async (target, paths) => {
     const input = await loadSkirInput();
     const generator = generatorFor(target);
-    expect(generator.id).toBe(`typewriter-transport-${target}`);
+    expect(generator.id).toBe(`typewriter-skir-gen-routes-${target}`);
     expect(generator.generateCode(input).files.map((file) => file.path)).toEqual(paths);
   });
 

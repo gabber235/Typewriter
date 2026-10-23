@@ -8,25 +8,25 @@ generators:
   - mod: skir-kotlin-gen
     outDir: ./services/protocol/src/main/kotlin/skirout
     config: {}
-  - mod: typewriter-transport/rust
+  - mod: typewriter-skir-gen/routes/rust
     outDir: ./backend/wasmcloud-utils/src/transport_routes/skirout
     config:
       manifest: ./services/protocol/transport-routes.yaml
-  - mod: typewriter-transport/kotlin
+  - mod: typewriter-skir-gen/routes/kotlin
     outDir: ./services/protocol/transport-adapters/kotlin/skirout
     config:
       manifest: ./services/protocol/transport-routes.yaml
-  - mod: typewriter-transport/dart
+  - mod: typewriter-skir-gen/routes/dart
     outDir: ./panel/lib/infrastructure/messaging/generated/skirout
     config:
       manifest: ./services/protocol/transport-routes.yaml
       dartImportUriPrefix: package:typewriter_panel/infrastructure/protocols/skir/skirout/
-  - mod: typewriter-transport/operations/kotlin
+  - mod: typewriter-skir-gen/operations/kotlin
     outDir: ./services/sdk/typewriter-api/src/main/skirout
     config:
       manifest: ./skir-src/editor/v1/operations.yaml
       unicodeData: ./services/protocol/unicode
-  - mod: typewriter-transport/operations/dart
+  - mod: typewriter-skir-gen/operations/dart
     outDir: ./panel/lib/infrastructure/protocols/operations/skirout
     config:
       manifest: ./skir-src/editor/v1/operations.yaml

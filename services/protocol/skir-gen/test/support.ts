@@ -32,7 +32,7 @@ export function generatorConfig(mod: string): Record<string, unknown> {
 }
 
 /** The config skir.yml gives the Dart transport target, the only one that takes every option. */
-const TRANSPORT_CONFIG = Config.parse(generatorConfig("typewriter-transport/dart"));
+const TRANSPORT_CONFIG = Config.parse(generatorConfig("typewriter-skir-gen/routes/dart"));
 
 /** The committed transport route manifest skir.yml configures. */
 export const MANIFEST_PATH = repository(TRANSPORT_CONFIG.manifest);
@@ -100,7 +100,7 @@ export const EMPTY_INPUT: CodeGenerator.Input<unknown> = {
 };
 
 /** The config skir.yml gives the Dart operations target, the only one that takes every option. */
-export const OPERATIONS_CONFIG = OperationsConfig.parse(generatorConfig("typewriter-transport/operations/dart"));
+export const OPERATIONS_CONFIG = OperationsConfig.parse(generatorConfig("typewriter-skir-gen/operations/dart"));
 
 /** Parses the committed operations manifest skir.yml configures. */
 export function committedOperations() {

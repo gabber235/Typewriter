@@ -153,7 +153,7 @@ export function unicodeTables(release: string, root: string): UnicodeTables {
 export function emitKotlinUnicodeTables(tables: UnicodeTables): string {
   const output = [
     `// Generated from operations.yaml's pinned Unicode ${tables.release} release by`,
-    "// services/protocol/transport-generator/src/operations/unicode.ts. Do not edit.",
+    "// services/protocol/skir-gen/src/operations/unicode.ts. Do not edit.",
     "",
     "package com.typewritermc.expression.operations",
     "",
@@ -185,7 +185,7 @@ export function emitKotlinUnicodeTables(tables: UnicodeTables): string {
 export function emitDartUnicodeTables(tables: UnicodeTables): string {
   const output = [
     `// Generated from operations.yaml's pinned Unicode ${tables.release} release by`,
-    "// services/protocol/transport-generator/src/operations/unicode.ts. Do not edit.",
+    "// services/protocol/skir-gen/src/operations/unicode.ts. Do not edit.",
     "",
     "/// Compact Unicode character data for the portable text operations.",
     "///",

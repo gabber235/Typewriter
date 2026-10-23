@@ -37,7 +37,7 @@ export type OperationsTarget = "kotlin" | "dart";
  */
 export function operationsGeneratorFor(target: OperationsTarget): CodeGenerator<OperationsConfig> {
   return {
-    id: `typewriter-operations-${target}`,
+    id: `typewriter-skir-gen-operations-${target}`,
     configType: OperationsConfig,
     generateCode(input) {
       const { manifest: path } = input.config;
