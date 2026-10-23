@@ -1,4 +1,4 @@
-package com.typewritermc.realm.repository
+package com.typewritermc.realm.edit
 
 import com.surrealdb.Surreal
 import com.typewritermc.authoring.field
@@ -7,14 +7,14 @@ import com.typewritermc.authoring.root
 import com.typewritermc.authoring.with
 import com.typewritermc.realm.authoring.AuthoringSeed
 import com.typewritermc.realm.authoring.InMemoryAuthoringViewStore
+import com.typewritermc.realm.authoring.TestCatalogLease
+import com.typewritermc.realm.authoring.location
+import com.typewritermc.realm.authoring.record
 import com.typewritermc.realm.checking.RealmCheckRuntime
-import com.typewritermc.realm.checking.TestCatalogLease
-import com.typewritermc.realm.checking.location
-import com.typewritermc.realm.checking.record
-import com.typewritermc.realm.compiler.AuthoringAcceptance
-import com.typewritermc.realm.repository.utils.decodeSkir
-import com.typewritermc.realm.schema.MigrationResources
-import com.typewritermc.realm.schema.openTestDatabase
+import com.typewritermc.realm.publication.AuthoringAcceptance
+import com.typewritermc.realm.storage.MigrationResources
+import com.typewritermc.realm.storage.decodeSkir
+import com.typewritermc.realm.storage.openTestDatabase
 import com.typewritermc.types.fields
 import com.typewritermc.types.integer
 import de.infix.testBalloon.framework.core.testSuite

@@ -1,4 +1,4 @@
-package com.typewritermc.realm.authoring
+package com.typewritermc.realm.operation
 
 import com.typewritermc.authoring.field
 import com.typewritermc.authoring.id
@@ -11,7 +11,9 @@ import com.typewritermc.authoring.payload
 import com.typewritermc.authoring.root
 import com.typewritermc.checking.InputIdentity
 import com.typewritermc.operations.OperationPreparation
-import com.typewritermc.realm.repository.ResourceValueMapper
+import com.typewritermc.realm.authoring.RelationReads
+import com.typewritermc.realm.authoring.ResourceValueMapper
+import com.typewritermc.realm.authoring.ownershipRelationIds
 import com.typewritermc.types.actualType
 import com.typewritermc.types.endpoint
 import com.typewritermc.types.field

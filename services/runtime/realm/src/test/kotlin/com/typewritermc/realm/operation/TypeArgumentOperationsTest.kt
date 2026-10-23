@@ -1,4 +1,4 @@
-package com.typewritermc.realm.authoring
+package com.typewritermc.realm.operation
 
 import com.typewritermc.authoring.fieldMap
 import com.typewritermc.authoring.of
@@ -7,11 +7,14 @@ import com.typewritermc.authoring.with
 import com.typewritermc.checking.InputIdentity
 import com.typewritermc.discovery.OwnedCheckRecipe
 import com.typewritermc.discovery.OwnedProviderRegistry
-import com.typewritermc.realm.checking.EmptyProviders
+import com.typewritermc.realm.authoring.AuthoringCatalogLease
+import com.typewritermc.realm.authoring.AuthoringSeed
+import com.typewritermc.realm.authoring.EmptyProviders
+import com.typewritermc.realm.authoring.InMemoryAuthoringViewStore
 import com.typewritermc.realm.checking.dependencies
-import com.typewritermc.realm.repository.AuthoringMutationPlanner
-import com.typewritermc.realm.repository.AuthoringRepository
-import com.typewritermc.realm.repository.MutationPlanningResult
+import com.typewritermc.realm.edit.AuthoringMutationPlanner
+import com.typewritermc.realm.edit.AuthoringRepository
+import com.typewritermc.realm.edit.MutationPlanningResult
 import com.typewritermc.types.FactoryNativeBindingRegistry
 import com.typewritermc.types.NativeBindingRegistry
 import com.typewritermc.types.catalog.CheckedCatalog

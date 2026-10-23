@@ -1,4 +1,4 @@
-package com.typewritermc.realm.compiler
+package com.typewritermc.realm.publication
 
 import com.typewritermc.authoring.CompilationUnitDefinition
 import com.typewritermc.authoring.of
@@ -14,7 +14,7 @@ import com.typewritermc.realm.authoring.AuthoringSeed
 import com.typewritermc.realm.authoring.AuthoringView
 import com.typewritermc.realm.authoring.AuthoringViewDelta
 import com.typewritermc.realm.authoring.InMemoryAuthoringViewStore
-import com.typewritermc.realm.checking.TestCatalogLease
+import com.typewritermc.realm.authoring.TestCatalogLease
 import com.typewritermc.services.libs.filetransfer.blob.ArtifactDigest
 import com.typewritermc.services.libs.filetransfer.blob.BlobEndpoint
 import com.typewritermc.services.libs.filetransfer.blob.BlobMetadata

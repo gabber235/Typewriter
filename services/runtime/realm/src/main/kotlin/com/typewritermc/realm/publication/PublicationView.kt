@@ -1,4 +1,4 @@
-package com.typewritermc.realm.compiler
+package com.typewritermc.realm.publication
 
 import com.typewritermc.types.unknownVariant
 import skirout.editor.v1.diagnostic.Diagnostic

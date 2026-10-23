@@ -1,6 +1,6 @@
 @file:OptIn(GeneratedSdkApi::class)
 
-package com.typewritermc.realm.checking
+package com.typewritermc.realm.authoring
 
 import com.typewritermc.authoring.GeneratedSdkApi
 import com.typewritermc.authoring.append
@@ -19,12 +19,7 @@ import com.typewritermc.discovery.OwnedPresentation
 import com.typewritermc.discovery.OwnedProviderRegistry
 import com.typewritermc.discovery.ProviderLease
 import com.typewritermc.discovery.ProviderOrigin
-import com.typewritermc.realm.authoring.AuthoringCatalogLease
-import com.typewritermc.realm.authoring.AuthoringSeed
-import com.typewritermc.realm.authoring.AuthoringViewDelta
-import com.typewritermc.realm.authoring.InMemoryAuthoringViewStore
-import com.typewritermc.realm.authoring.RESOURCE_SELECTION_INPUT
-import com.typewritermc.realm.authoring.operationObservation
+import com.typewritermc.realm.operation.operationObservation
 import com.typewritermc.types.FactoryNativeBindingRegistry
 import com.typewritermc.types.NativeBindingFactory
 import com.typewritermc.types.NativeBindingRegistry
@@ -101,7 +96,7 @@ val AuthoringViewStoreTest by testSuite {
             store.install(store.prepare(AuthoringViewDelta(mapOf(id to record(name = "Other panel")))))
             store.capture().use { next ->
                 (next.root.observationId != token) shouldBe true
-                shouldThrow<com.typewritermc.realm.authoring.StaleOperationObservation> {
+                shouldThrow<com.typewritermc.realm.operation.StaleOperationObservation> {
                     next.operationObservation(token, mapOf(id to record(name = "Draft")), emptySet())
                 }
             }

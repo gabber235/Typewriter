@@ -1,6 +1,6 @@
 @file:OptIn(GeneratedSdkApi::class)
 
-package com.typewritermc.realm.checking
+package com.typewritermc.realm.authoring
 
 import com.typewritermc.authoring.Availability
 import com.typewritermc.authoring.DraftBinding
@@ -13,9 +13,9 @@ import com.typewritermc.checking.InputIdentity
 import com.typewritermc.checking.ResourceTypeMatch
 import com.typewritermc.checking.TypedSelection
 import com.typewritermc.configuration.field
-import com.typewritermc.realm.authoring.AuthoringSeed
-import com.typewritermc.realm.authoring.AuthoringViewDelta
-import com.typewritermc.realm.authoring.InMemoryAuthoringViewStore
+import com.typewritermc.realm.checking.DefaultReverseDependencyIndex
+import com.typewritermc.realm.checking.dependencies
+import com.typewritermc.realm.checking.outcome
 import com.typewritermc.types.fields
 import com.typewritermc.types.named
 import com.typewritermc.types.namedTemplate

@@ -1,4 +1,4 @@
-package com.typewritermc.realm.repository.utils
+package com.typewritermc.realm.storage
 
 import build.skir.JsonFlavor
 import com.surrealdb.Value

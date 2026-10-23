@@ -9,8 +9,6 @@ import com.typewritermc.checking.InputIdentity
 import com.typewritermc.operations.AuthoringGraphFacts
 import com.typewritermc.operations.Cloneability
 import com.typewritermc.operations.LinkCapacity
-import com.typewritermc.realm.repository.CounterpartBinding
-import com.typewritermc.realm.repository.ResourceValueMapper
 import com.typewritermc.types.catalog.Resolution
 import com.typewritermc.types.ownsResources
 import com.typewritermc.types.toResourceId

@@ -1,14 +1,17 @@
-package com.typewritermc.realm.repository
+package com.typewritermc.realm.edit
 
 import com.surrealdb.Surreal
 import com.typewritermc.authoring.of
 import com.typewritermc.realm.authoring.AuthoringCatalogLease
 import com.typewritermc.realm.authoring.AuthoringViewDelta
 import com.typewritermc.realm.authoring.AuthoringViewStore
-import com.typewritermc.realm.repository.utils.encodeSkir
-import com.typewritermc.realm.repository.utils.inTransaction
-import com.typewritermc.realm.repository.utils.surrealRecordId
+import com.typewritermc.realm.authoring.CapturedAuthoringValues
+import com.typewritermc.realm.authoring.ResourceValueMapper
+import com.typewritermc.realm.authoring.conflicts
 import com.typewritermc.realm.search.authoredSearchText
+import com.typewritermc.realm.storage.encodeSkir
+import com.typewritermc.realm.storage.inTransaction
+import com.typewritermc.realm.storage.surrealRecordId
 import com.typewritermc.types.unknownVariant
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock

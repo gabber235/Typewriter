@@ -31,15 +31,15 @@ import com.typewritermc.loader.api.artifact.SharedArtifactProvenance
 import com.typewritermc.loader.api.artifact.SharedArtifactRevision
 import com.typewritermc.loader.api.artifact.SharedCatalogRevision
 import com.typewritermc.realm.authoring.AuthoringSeed
-import com.typewritermc.realm.authoring.PreparationEvaluator
 import com.typewritermc.realm.catalog.RealmCatalogIncarnation
 import com.typewritermc.realm.catalog.RealmCatalogStore
 import com.typewritermc.realm.catalog.installTestCatalog
-import com.typewritermc.realm.compiler.StagedEngineImplementationSource
-import com.typewritermc.realm.repository.AuthoringMutationPlan
-import com.typewritermc.realm.repository.SurrealAuthoringStorage
-import com.typewritermc.realm.schema.RealmDatabaseProvider
-import com.typewritermc.realm.schema.SchemaMigrator
+import com.typewritermc.realm.edit.AuthoringMutationPlan
+import com.typewritermc.realm.edit.SurrealAuthoringStorage
+import com.typewritermc.realm.operation.PreparationEvaluator
+import com.typewritermc.realm.publication.StagedEngineImplementationSource
+import com.typewritermc.realm.storage.RealmDatabaseProvider
+import com.typewritermc.realm.storage.SchemaMigrator
 import com.typewritermc.services.libs.communicator.address.MessageAddress
 import com.typewritermc.services.libs.communicator.client.Communicator
 import com.typewritermc.services.libs.communicator.testing.FakeMessageTransport
@@ -484,7 +484,7 @@ private class RealmLifecycleFixture(
     private val host =
         object : HostedRuntimeHost {
             override val publicationRetention =
-                com.typewritermc.realm.compiler
+                com.typewritermc.realm.publication
                     .TestPublicationRetention()
             override val messaging = this@RealmLifecycleFixture.messaging
             override val openTelemetry = telemetry.openTelemetry

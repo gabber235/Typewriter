@@ -1,7 +1,9 @@
-package com.typewritermc.realm.repository
+package com.typewritermc.realm.edit
 
 import com.typewritermc.authoring.links
 import com.typewritermc.authoring.of
+import com.typewritermc.realm.authoring.CurrentAuthoringValues
+import com.typewritermc.realm.authoring.ResourceValueMapper
 import com.typewritermc.types.toResourceId
 import com.typewritermc.types.toSkir
 import com.typewritermc.types.unknownVariant

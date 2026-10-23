@@ -1,4 +1,4 @@
-package com.typewritermc.realm.schema
+package com.typewritermc.realm.storage
 
 import com.surrealdb.Surreal
 import com.typewritermc.services.libs.telemetry.ErrorSlug

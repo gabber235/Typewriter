@@ -2,7 +2,7 @@ package com.typewritermc.realm.routes
 
 import com.typewritermc.protocol.transport.RealmRouteScope
 import com.typewritermc.protocol.transport.generated.authoringCompiledQuery
-import com.typewritermc.realm.compiler.PublicationResults
+import com.typewritermc.realm.publication.PublicationResults
 import com.typewritermc.services.libs.communicator.router.CommunicatorRoutesBuilder
 import skirout.editor.v1.compiled_content.QueryPublishedContentResponse
 

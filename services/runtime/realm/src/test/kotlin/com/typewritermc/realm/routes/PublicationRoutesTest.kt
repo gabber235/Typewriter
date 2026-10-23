@@ -2,8 +2,8 @@ package com.typewritermc.realm.routes
 
 import com.typewritermc.authoring.id
 import com.typewritermc.authoring.of
-import com.typewritermc.realm.compiler.PublicationFixture
-import com.typewritermc.realm.compiler.blocker
+import com.typewritermc.realm.publication.PublicationFixture
+import com.typewritermc.realm.publication.blocker
 import com.typewritermc.services.libs.communicator.router.communicatorRoutes
 import de.infix.testBalloon.framework.core.testSuite
 import io.kotest.matchers.shouldBe
@@ -67,7 +67,7 @@ val PublicationRoutesTest by testSuite {
                 ),
             )
         val finding =
-            com.typewritermc.realm.compiler.compilationDiagnostic(
+            com.typewritermc.realm.publication.compilationDiagnostic(
                 "unfinished_value",
                 "A required value is unfinished.",
                 location = location,

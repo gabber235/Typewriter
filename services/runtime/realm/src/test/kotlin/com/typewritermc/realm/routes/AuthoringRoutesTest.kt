@@ -9,12 +9,12 @@ import com.typewritermc.realm.authoring.AuthoringSeed
 import com.typewritermc.realm.authoring.AuthoringViewDelta
 import com.typewritermc.realm.authoring.AuthoringViewStore
 import com.typewritermc.realm.authoring.InMemoryAuthoringViewStore
-import com.typewritermc.realm.authoring.TypeArgumentOperations
+import com.typewritermc.realm.authoring.TestCatalogLease
+import com.typewritermc.realm.authoring.record
 import com.typewritermc.realm.catalog.RealmCatalogStore
 import com.typewritermc.realm.catalog.installTestCatalog
-import com.typewritermc.realm.checking.TestCatalogLease
-import com.typewritermc.realm.checking.record
-import com.typewritermc.realm.repository.AuthoringRepository
+import com.typewritermc.realm.edit.AuthoringRepository
+import com.typewritermc.realm.operation.TypeArgumentOperations
 import com.typewritermc.services.libs.communicator.router.communicatorRoutes
 import com.typewritermc.types.namedUse
 import com.typewritermc.types.qualified
@@ -320,7 +320,7 @@ val AuthoringRoutesTest by testSuite {
                 )
             val requested =
                 TypeSelection.createPending(
-                    definition = com.typewritermc.realm.checking.TEST_TYPE,
+                    definition = com.typewritermc.realm.authoring.TEST_TYPE,
                     arguments = listOf(ArgumentSelection.UNFILLED),
                 )
             val typeArguments = RecordingTypeArgumentOperations()

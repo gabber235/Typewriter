@@ -1,4 +1,4 @@
-package com.typewritermc.realm.authoring
+package com.typewritermc.realm.operation
 
 import com.typewritermc.authoring.definition
 import com.typewritermc.authoring.field
@@ -10,13 +10,15 @@ import com.typewritermc.authoring.requireValid
 import com.typewritermc.authoring.root
 import com.typewritermc.authoring.use
 import com.typewritermc.checking.InputIdentity
-import com.typewritermc.realm.checking.CapturedAuthoringReads
-import com.typewritermc.realm.repository.AuthoringMutationPlanner
-import com.typewritermc.realm.repository.MutationPlanningResult
-import com.typewritermc.realm.repository.ResourceValueMapper
-import com.typewritermc.realm.repository.conflicts
-import com.typewritermc.realm.repository.requiredExpectations
-import com.typewritermc.realm.repository.sameFact
+import com.typewritermc.realm.authoring.AuthoringLease
+import com.typewritermc.realm.authoring.AuthoringViewStore
+import com.typewritermc.realm.authoring.CapturedAuthoringReads
+import com.typewritermc.realm.authoring.ResourceValueMapper
+import com.typewritermc.realm.authoring.conflicts
+import com.typewritermc.realm.edit.AuthoringMutationPlanner
+import com.typewritermc.realm.edit.MutationPlanningResult
+import com.typewritermc.realm.edit.requiredExpectations
+import com.typewritermc.realm.edit.sameFact
 import com.typewritermc.types.actualType
 import com.typewritermc.types.catalog.CheckedCatalog
 import com.typewritermc.types.catalog.Resolution

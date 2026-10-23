@@ -1,6 +1,6 @@
 @file:OptIn(GeneratedSdkApi::class)
 
-package com.typewritermc.realm.authoring
+package com.typewritermc.realm.edit
 
 import com.surrealdb.Surreal
 import com.typewritermc.authoring.GeneratedSdkApi
@@ -20,17 +20,13 @@ import com.typewritermc.library.TagDefinition
 import com.typewritermc.library.TaxonomyDefinition
 import com.typewritermc.library.TaxonomyFields
 import com.typewritermc.library.TaxonomyTags
+import com.typewritermc.realm.authoring.InMemoryAuthoringViewStore
 import com.typewritermc.realm.catalog.RealmCatalogIncarnation
 import com.typewritermc.realm.catalog.RealmCatalogStore
 import com.typewritermc.realm.coreRealmCatalog
 import com.typewritermc.realm.record
-import com.typewritermc.realm.repository.AuthoringMutationPlanner
-import com.typewritermc.realm.repository.MutationPlanningResult
-import com.typewritermc.realm.repository.RealmAuthoringOwner
-import com.typewritermc.realm.repository.SurrealAuthoringStorage
-import com.typewritermc.realm.repository.valueAt
-import com.typewritermc.realm.schema.MigrationResources
-import com.typewritermc.realm.schema.openTestDatabase
+import com.typewritermc.realm.storage.MigrationResources
+import com.typewritermc.realm.storage.openTestDatabase
 import com.typewritermc.realm.testTag
 import com.typewritermc.types.Ref
 import com.typewritermc.types.catalog.Resolution

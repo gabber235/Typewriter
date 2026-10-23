@@ -1,8 +1,10 @@
-package com.typewritermc.realm.authoring
+package com.typewritermc.realm.operation
 
 import com.typewritermc.authoring.validateStructure
-import com.typewritermc.realm.repository.AuthoringMutationPlanner
-import com.typewritermc.realm.repository.ResourceValueMapper
+import com.typewritermc.realm.authoring.AuthoringLease
+import com.typewritermc.realm.authoring.AuthoringView
+import com.typewritermc.realm.authoring.ResourceValueMapper
+import com.typewritermc.realm.edit.AuthoringMutationPlanner
 import com.typewritermc.types.immutableMapCopy
 import skirout.editor.v1.diagnostic.StructuralResult
 import skirout.editor.v1.type_catalog.AuthoringRecord

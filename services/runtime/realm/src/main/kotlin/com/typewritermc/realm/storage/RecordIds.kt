@@ -1,4 +1,4 @@
-package com.typewritermc.realm.repository.utils
+package com.typewritermc.realm.storage
 
 import com.surrealdb.RecordId
 import com.typewritermc.types.requireValid

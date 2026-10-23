@@ -36,11 +36,11 @@ import com.typewritermc.presentation.PresentationRuntime
 import com.typewritermc.protocol.transport.RealmRouteScope
 import com.typewritermc.realm.authoring.AuthoringSeed
 import com.typewritermc.realm.authoring.InMemoryAuthoringViewStore
-import com.typewritermc.realm.authoring.ResourceOperationRuntime
 import com.typewritermc.realm.catalog.RealmCatalogIncarnation
 import com.typewritermc.realm.catalog.RealmCatalogStore
-import com.typewritermc.realm.repository.AuthoringMutationPlanner
-import com.typewritermc.realm.repository.MutationPlanningResult
+import com.typewritermc.realm.edit.AuthoringMutationPlanner
+import com.typewritermc.realm.edit.MutationPlanningResult
+import com.typewritermc.realm.operation.ResourceOperationRuntime
 import com.typewritermc.realm.testBook
 import com.typewritermc.realm.testTag
 import com.typewritermc.realm.withRealmStructure

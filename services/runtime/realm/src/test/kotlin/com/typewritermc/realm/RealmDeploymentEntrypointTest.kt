@@ -1,4 +1,4 @@
-package com.typewritermc.realm.deployment
+package com.typewritermc.realm
 
 import com.typewritermc.loader.api.RuntimeHealth
 import de.infix.testBalloon.framework.core.testSuite

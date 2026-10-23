@@ -1,4 +1,4 @@
-package com.typewritermc.realm.schema
+package com.typewritermc.realm.storage
 
 import de.infix.testBalloon.framework.core.testSuite
 import io.kotest.assertions.throwables.shouldThrow

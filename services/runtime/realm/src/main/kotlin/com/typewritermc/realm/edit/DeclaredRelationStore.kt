@@ -1,11 +1,12 @@
-package com.typewritermc.realm.repository
+package com.typewritermc.realm.edit
 
 import com.surrealdb.RecordId
 import com.surrealdb.Transaction
 import com.surrealdb.Value
-import com.typewritermc.realm.repository.utils.decodeSkir
-import com.typewritermc.realm.repository.utils.encodeSkir
-import com.typewritermc.realm.repository.utils.surrealRecordId
+import com.typewritermc.realm.authoring.StoredDeclaredEdge
+import com.typewritermc.realm.storage.decodeSkir
+import com.typewritermc.realm.storage.encodeSkir
+import com.typewritermc.realm.storage.surrealRecordId
 import com.typewritermc.types.requireValid
 import com.typewritermc.types.toSkir
 import skirout.editor.v1.authoring.RelationProjectionDelta

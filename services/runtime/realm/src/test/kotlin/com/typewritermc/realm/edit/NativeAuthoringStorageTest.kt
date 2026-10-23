@@ -1,11 +1,11 @@
-package com.typewritermc.realm.repository
+package com.typewritermc.realm.edit
 
 import com.surrealdb.Surreal
 import com.typewritermc.authoring.of
-import com.typewritermc.realm.checking.TEST_TYPE
-import com.typewritermc.realm.repository.utils.decodeSkir
-import com.typewritermc.realm.repository.utils.encodeSkir
-import com.typewritermc.realm.schema.openTestDatabase
+import com.typewritermc.realm.authoring.TEST_TYPE
+import com.typewritermc.realm.storage.decodeSkir
+import com.typewritermc.realm.storage.encodeSkir
+import com.typewritermc.realm.storage.openTestDatabase
 import com.typewritermc.types.bytes
 import com.typewritermc.types.fields
 import com.typewritermc.types.integer

@@ -1,4 +1,4 @@
-package com.typewritermc.realm.schema
+package com.typewritermc.realm.storage
 
 internal fun migrationResources(vararg entries: Pair<String, String>): MigrationResources {
     val content =

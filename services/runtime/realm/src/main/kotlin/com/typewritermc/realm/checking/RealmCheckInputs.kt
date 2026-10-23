@@ -12,6 +12,7 @@ import com.typewritermc.checking.CheckInput
 import com.typewritermc.checking.CheckRecipe
 import com.typewritermc.configuration.name
 import com.typewritermc.expression.operations.HostFailure
+import com.typewritermc.realm.authoring.CapturedAuthoringReads
 import com.typewritermc.services.libs.utils.rethrowExceptional
 import com.typewritermc.types.catalog.CheckedCatalog
 import com.typewritermc.types.catalog.CheckedType

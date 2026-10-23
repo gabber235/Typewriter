@@ -1,9 +1,9 @@
-package com.typewritermc.realm.compiler
+package com.typewritermc.realm.publication
 
 import build.skir.Serializers
 import com.surrealdb.Surreal
 import com.typewritermc.engine.requireValid
-import com.typewritermc.realm.repository.utils.decodeSkir
+import com.typewritermc.realm.storage.decodeSkir
 import com.typewritermc.types.requireValid
 import skirout.editor.v1.compiled_content.PublishedContent
 import skirout.editor.v1.diagnostic.Diagnostic

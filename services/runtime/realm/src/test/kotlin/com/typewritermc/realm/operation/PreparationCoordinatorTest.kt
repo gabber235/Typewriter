@@ -1,7 +1,7 @@
-package com.typewritermc.realm.authoring
+package com.typewritermc.realm.operation
 
 import com.typewritermc.authoring.of
-import com.typewritermc.realm.checking.TestCatalogLease
+import com.typewritermc.realm.authoring.TestCatalogLease
 import com.typewritermc.types.fieldMap
 import com.typewritermc.types.fields
 import com.typewritermc.types.qualified

@@ -1,9 +1,8 @@
-package com.typewritermc.realm
+package com.typewritermc.realm.routes
 
 import com.typewritermc.protocol.transport.RealmRouteScope
 import com.typewritermc.protocol.transport.generated.editorCatalogWatch
 import com.typewritermc.realm.catalog.RealmCatalogStore
-import com.typewritermc.realm.routes.requirePublished
 import com.typewritermc.services.libs.communicator.client.Communicator
 import com.typewritermc.services.libs.telemetry.ErrorSlug
 import com.typewritermc.services.libs.telemetry.ServiceTelemetry

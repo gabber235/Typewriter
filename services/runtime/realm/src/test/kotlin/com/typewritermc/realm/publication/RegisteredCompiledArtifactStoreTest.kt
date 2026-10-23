@@ -1,4 +1,4 @@
-package com.typewritermc.realm.compiler
+package com.typewritermc.realm.publication
 
 import com.typewritermc.engine.CompiledArtifact
 import com.typewritermc.engine.ContentDigest

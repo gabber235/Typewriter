@@ -1,4 +1,4 @@
-package com.typewritermc.realm.authoring
+package com.typewritermc.realm.operation
 
 import com.typewritermc.authoring.DefaultInitializationRuntime
 import com.typewritermc.authoring.record
@@ -6,9 +6,12 @@ import com.typewritermc.authoring.text
 import com.typewritermc.checking.InputIdentity
 import com.typewritermc.operations.OperationPreparation
 import com.typewritermc.operations.PreparationChoices
-import com.typewritermc.realm.repository.CounterpartBinding
-import com.typewritermc.realm.repository.ResourceValueMapper
-import com.typewritermc.realm.repository.valueAt
+import com.typewritermc.realm.authoring.CounterpartBinding
+import com.typewritermc.realm.authoring.RelationReads
+import com.typewritermc.realm.authoring.ResourceValueMapper
+import com.typewritermc.realm.authoring.authoredTypeAt
+import com.typewritermc.realm.authoring.unfilled
+import com.typewritermc.realm.edit.valueAt
 import com.typewritermc.types.catalog.Resolution
 import com.typewritermc.types.toResourceId
 import com.typewritermc.types.toSkir

@@ -1,4 +1,4 @@
-package com.typewritermc.realm
+package com.typewritermc.realm.routes
 
 import com.typewritermc.protocol.transport.RealmRouteScope
 import com.typewritermc.realm.catalog.RealmCatalogStore

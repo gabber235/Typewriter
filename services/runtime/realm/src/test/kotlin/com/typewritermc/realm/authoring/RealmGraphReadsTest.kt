@@ -16,11 +16,8 @@ import com.typewritermc.checking.InspectionCompletion
 import com.typewritermc.configuration.field
 import com.typewritermc.discovery.OwnedCheckRecipe
 import com.typewritermc.discovery.OwnedProviderRegistry
-import com.typewritermc.realm.checking.CapturedAuthoringReads
-import com.typewritermc.realm.checking.EmptyProviders
 import com.typewritermc.realm.checking.dependencies
-import com.typewritermc.realm.repository.conflicts
-import com.typewritermc.realm.repository.valueAt
+import com.typewritermc.realm.edit.valueAt
 import com.typewritermc.types.FactoryNativeBindingRegistry
 import com.typewritermc.types.NativeBindingRegistry
 import com.typewritermc.types.catalog.CheckedCatalog
@@ -559,7 +556,7 @@ class RealmGraphReadsTest {
             skirout.editor.v1.authoring_facts.EditExpectation
                 .createValue(at = buttons, expected = resources.getValue(source).valueAt(buttons.path))
         val actual =
-            com.typewritermc.realm.repository
+            com.typewritermc.realm.authoring
                 .CapturedAuthoringValues(mapOf(source to changedSource), emptyList())
         actual.conflicts(listOf(expected)).size shouldBe 1
         store.install(

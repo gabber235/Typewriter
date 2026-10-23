@@ -1,13 +1,13 @@
-package com.typewritermc.realm.authoring
+package com.typewritermc.realm.edit
 
 import com.typewritermc.authoring.AuthoredReads
 import com.typewritermc.authoring.BoundCollectionPath
 import com.typewritermc.authoring.CheckedWriteResult
 import com.typewritermc.authoring.EditContext
 import com.typewritermc.authoring.EditablePath
-import com.typewritermc.realm.checking.CapturedAuthoringReads
-import com.typewritermc.realm.repository.AuthoringPlanningSession
-import com.typewritermc.realm.repository.requiredExpectations
+import com.typewritermc.realm.authoring.AuthoredReadView
+import com.typewritermc.realm.authoring.AuthoringView
+import com.typewritermc.realm.authoring.CapturedAuthoringReads
 import com.typewritermc.types.NativeBinding
 import com.typewritermc.types.catalog.Resolution
 import com.typewritermc.types.immutableListCopy

@@ -1,6 +1,6 @@
 @file:OptIn(GeneratedSdkApi::class)
 
-package com.typewritermc.realm.authoring
+package com.typewritermc.realm.operation
 
 import com.typewritermc.authoring.CheckedWriteResult
 import com.typewritermc.authoring.GeneratedSdkApi
@@ -14,6 +14,8 @@ import com.typewritermc.authoring.name
 import com.typewritermc.authoring.of
 import com.typewritermc.checking.InputIdentity
 import com.typewritermc.operations.OperationPreparation
+import com.typewritermc.realm.authoring.RelationReads
+import com.typewritermc.realm.authoring.authoredTypeAt
 import com.typewritermc.types.catalog.Resolution
 import com.typewritermc.types.encodeGeneratedDefault
 import com.typewritermc.types.ownsResources

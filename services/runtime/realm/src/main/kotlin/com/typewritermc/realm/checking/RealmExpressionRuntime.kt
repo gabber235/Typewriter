@@ -9,6 +9,8 @@ import com.typewritermc.expression.ExpressionValueReader
 import com.typewritermc.expression.operations.CatalogPortableTypes
 import com.typewritermc.expression.operations.EvaluatorFailure
 import com.typewritermc.expression.operations.HostFailure
+import com.typewritermc.realm.authoring.CapturedAuthoringReads
+import com.typewritermc.realm.authoring.SelectionPredicateEvaluator
 import com.typewritermc.types.unwrapNamed
 import skirout.editor.v1.expression.EvaluationBudget
 import skirout.editor.v1.expression.EvaluationDiagnostic

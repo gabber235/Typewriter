@@ -1,6 +1,6 @@
 @file:OptIn(GeneratedSdkApi::class)
 
-package com.typewritermc.realm.repository
+package com.typewritermc.realm.edit
 
 import com.typewritermc.authoring.GeneratedSdkApi
 import com.typewritermc.authoring.append
@@ -16,8 +16,10 @@ import com.typewritermc.operations.OperationOrigin
 import com.typewritermc.operations.PreparationChoices
 import com.typewritermc.operations.capability
 import com.typewritermc.realm.authoring.AuthoringView
-import com.typewritermc.realm.authoring.RuntimeOperationPreparation
-import com.typewritermc.realm.authoring.WorkingViewEditContext
+import com.typewritermc.realm.authoring.CapturedAuthoringValues
+import com.typewritermc.realm.authoring.CounterpartBinding
+import com.typewritermc.realm.authoring.ResourceValueMapper
+import com.typewritermc.realm.operation.RuntimeOperationPreparation
 import com.typewritermc.types.ACYCLIC_RELATION_FAMILY_ID
 import com.typewritermc.types.RESOURCE_OWNERSHIP_FAMILY_ID
 import com.typewritermc.types.actualType
@@ -119,7 +121,7 @@ class AuthoringMutationPlannerTest {
                 }
             }
         val catalog =
-            com.typewritermc.realm.checking.TestCatalogLease(
+            com.typewritermc.realm.authoring.TestCatalogLease(
                 generation = GENERATION,
                 definitions = definitions,
                 relations = listOf(manyContract()),
@@ -129,7 +131,7 @@ class AuthoringMutationPlannerTest {
         val baseline = AuthoringView(catalog, resources, emptyMap())
         try {
             val reads =
-                com.typewritermc.realm.checking.CapturedAuthoringReads(
+                com.typewritermc.realm.authoring.CapturedAuthoringReads(
                     com.typewritermc.realm.authoring.AuthoredReadView
                         .Original(baseline),
                 )
@@ -237,7 +239,7 @@ class AuthoringMutationPlannerTest {
                 )
             try {
                 val runtime =
-                    com.typewritermc.realm.authoring
+                    com.typewritermc.realm.operation
                         .ResourceOperationRuntime(store)
                 val invocation = OperationInvocation("callback-operation", listOf(first, second).toResourceIds())
                 val token = store.capture().use { it.root.observationId }
@@ -265,7 +267,7 @@ class AuthoringMutationPlannerTest {
                             emptySet(),
                             null,
                             PreparationChoices(),
-                        ).shouldBeInstanceOf<com.typewritermc.realm.authoring.OperationPreparationResult.Preview>()
+                        ).shouldBeInstanceOf<com.typewritermc.realm.operation.OperationPreparationResult.Preview>()
                 preview.edit.intents.any {
                     it is EditIntent.SetValueWrapper && it.value.value ==
                         DataValue.StringValueWrapper(
@@ -289,13 +291,13 @@ class AuthoringMutationPlannerTest {
                         null,
                         PreparationChoices(),
                     )
-                (failed is com.typewritermc.realm.authoring.OperationPreparationResult.Failed) shouldBe true
+                (failed is com.typewritermc.realm.operation.OperationPreparationResult.Failed) shouldBe true
                 store.capture().use { it.root.resources } shouldBe resources
-                var resolutionFailure: com.typewritermc.realm.authoring.OperationResolutionFailure? = null
+                var resolutionFailure: com.typewritermc.realm.operation.OperationResolutionFailure? = null
                 try {
                     runtime.resolve(invocation, GENERATION, token, mapOf(second to record(label = "availability-failure")), emptySet())
                 } catch (
-                    failure: com.typewritermc.realm.authoring.OperationResolutionFailure,
+                    failure: com.typewritermc.realm.operation.OperationResolutionFailure,
                 ) {
                     resolutionFailure = failure
                 }
@@ -803,7 +805,7 @@ class AuthoringMutationPlannerTest {
                 }
             }
         val catalog =
-            com.typewritermc.realm.checking.TestCatalogLease(
+            com.typewritermc.realm.authoring.TestCatalogLease(
                 generation = GENERATION,
                 definitions = definitions,
                 relations =
@@ -860,7 +862,7 @@ class AuthoringMutationPlannerTest {
         val child = ResourceId(value = "normalized_child")
         val resources = mapOf(parent to record(), child to record())
         val catalog =
-            com.typewritermc.realm.checking.TestCatalogLease(
+            com.typewritermc.realm.authoring.TestCatalogLease(
                 generation = GENERATION,
                 definitions = DEFINITIONS,
                 relations = listOf(parentContract(RelationDeletePolicy.CLEAR, RelationDeletePolicy.CLEAR)),
@@ -2423,7 +2425,7 @@ private fun operationBaseline(
     contracts: List<RelationContract>,
 ): AuthoringView {
     val catalog =
-        com.typewritermc.realm.checking.TestCatalogLease(
+        com.typewritermc.realm.authoring.TestCatalogLease(
             generation = GENERATION,
             definitions =
                 DEFINITIONS + com.typewritermc.types.StandardTypes.definitions + com.typewritermc.types.ResourceIdDefinition.definition,

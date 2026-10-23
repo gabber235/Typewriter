@@ -1,4 +1,4 @@
-package com.typewritermc.realm.repository
+package com.typewritermc.realm.edit
 
 import com.typewritermc.authoring.field
 import com.typewritermc.authoring.id
@@ -11,6 +11,8 @@ import com.typewritermc.authoring.record
 import com.typewritermc.authoring.text
 import com.typewritermc.authoring.use
 import com.typewritermc.realm.authoring.AuthoringView
+import com.typewritermc.realm.authoring.CounterpartBinding
+import com.typewritermc.realm.authoring.ResourceValueMapper
 import com.typewritermc.realm.authoring.authoredTypeAt
 import com.typewritermc.services.libs.utils.sha256Hex
 import com.typewritermc.types.actualType

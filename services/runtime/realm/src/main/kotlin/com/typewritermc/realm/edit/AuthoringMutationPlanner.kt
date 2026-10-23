@@ -1,4 +1,4 @@
-package com.typewritermc.realm.repository
+package com.typewritermc.realm.edit
 
 import com.typewritermc.authoring.LocatedPortableValue
 import com.typewritermc.authoring.RealmRootDefinition
@@ -15,6 +15,9 @@ import com.typewritermc.authoring.root
 import com.typewritermc.authoring.use
 import com.typewritermc.authoring.validateStructure
 import com.typewritermc.authoring.writeField
+import com.typewritermc.realm.authoring.CounterpartBinding
+import com.typewritermc.realm.authoring.ProjectionResult
+import com.typewritermc.realm.authoring.ResourceValueMapper
 import com.typewritermc.realm.authoring.authoredTypeAt
 import com.typewritermc.services.libs.utils.sha256Hex
 import com.typewritermc.types.actualType

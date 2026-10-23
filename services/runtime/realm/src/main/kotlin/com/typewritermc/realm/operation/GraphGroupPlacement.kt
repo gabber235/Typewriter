@@ -1,4 +1,4 @@
-package com.typewritermc.realm.authoring
+package com.typewritermc.realm.operation
 
 import com.typewritermc.authoring.AuthoredReads
 import com.typewritermc.authoring.GraphPlacement
@@ -10,7 +10,8 @@ import com.typewritermc.authoring.definition
 import com.typewritermc.authoring.of
 import com.typewritermc.authoring.use
 import com.typewritermc.operations.requireAuthored
-import com.typewritermc.realm.repository.valueAt
+import com.typewritermc.realm.authoring.AuthoringCatalogLease
+import com.typewritermc.realm.edit.valueAt
 import com.typewritermc.types.actualType
 import com.typewritermc.types.use
 import skirout.editor.v1.type_catalog.AuthoringRecord

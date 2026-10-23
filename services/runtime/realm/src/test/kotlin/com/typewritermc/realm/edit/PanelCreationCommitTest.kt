@@ -1,13 +1,14 @@
-package com.typewritermc.realm.repository
+package com.typewritermc.realm.edit
 
 import com.surrealdb.Surreal
 import com.typewritermc.authoring.requireValid
 import com.typewritermc.configuration.field
 import com.typewritermc.configuration.name
 import com.typewritermc.realm.authoring.InMemoryAuthoringViewStore
-import com.typewritermc.realm.checking.TestCatalogLease
-import com.typewritermc.realm.schema.MigrationResources
-import com.typewritermc.realm.schema.openTestDatabase
+import com.typewritermc.realm.authoring.ResourceValueMapper
+import com.typewritermc.realm.authoring.TestCatalogLease
+import com.typewritermc.realm.storage.MigrationResources
+import com.typewritermc.realm.storage.openTestDatabase
 import com.typewritermc.types.of
 import com.typewritermc.types.requireValid
 import de.infix.testBalloon.framework.core.testSuite

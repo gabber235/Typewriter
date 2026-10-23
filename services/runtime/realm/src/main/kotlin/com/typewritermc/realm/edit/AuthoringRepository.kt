@@ -1,4 +1,4 @@
-package com.typewritermc.realm.repository
+package com.typewritermc.realm.edit
 
 import com.typewritermc.realm.authoring.AuthoringSeed
 import skirout.editor.v1.authoring.CommitPreparedEditResponse

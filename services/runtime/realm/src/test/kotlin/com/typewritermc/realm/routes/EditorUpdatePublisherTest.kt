@@ -5,9 +5,9 @@ import com.typewritermc.protocol.transport.RealmRouteScope
 import com.typewritermc.realm.authoring.AuthoringSeed
 import com.typewritermc.realm.authoring.AuthoringViewDelta
 import com.typewritermc.realm.authoring.InMemoryAuthoringViewStore
-import com.typewritermc.realm.checking.TestCatalogLease
-import com.typewritermc.realm.checking.record
-import com.typewritermc.realm.compiler.PublicationFixture
+import com.typewritermc.realm.authoring.TestCatalogLease
+import com.typewritermc.realm.authoring.record
+import com.typewritermc.realm.publication.PublicationFixture
 import com.typewritermc.services.libs.communicator.client.Communicator
 import com.typewritermc.services.libs.communicator.testing.FakeMessageTransport
 import com.typewritermc.services.libs.communicator.transport.MessageTransport

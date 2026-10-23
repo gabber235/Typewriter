@@ -1,4 +1,4 @@
-package com.typewritermc.realm.repository
+package com.typewritermc.realm.edit
 
 import com.typewritermc.services.libs.utils.sha256Hex
 import com.typewritermc.types.unknownVariant

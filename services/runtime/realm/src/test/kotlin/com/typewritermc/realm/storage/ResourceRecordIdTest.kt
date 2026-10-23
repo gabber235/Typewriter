@@ -1,8 +1,6 @@
-package com.typewritermc.realm.repository
+package com.typewritermc.realm.storage
 
 import com.surrealdb.RecordId
-import com.typewritermc.realm.repository.utils.surrealRecordId
-import com.typewritermc.realm.repository.utils.toResourceId
 import de.infix.testBalloon.framework.core.testSuite
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.matchers.shouldBe

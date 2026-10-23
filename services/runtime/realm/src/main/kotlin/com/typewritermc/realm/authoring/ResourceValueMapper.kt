@@ -1,4 +1,4 @@
-package com.typewritermc.realm.repository
+package com.typewritermc.realm.authoring
 
 import com.typewritermc.authoring.definition
 import com.typewritermc.authoring.descendants

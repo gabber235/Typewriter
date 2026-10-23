@@ -1,4 +1,4 @@
-package com.typewritermc.realm.authoring
+package com.typewritermc.realm.operation
 
 import com.typewritermc.authoring.GraphPlacement
 import com.typewritermc.authoring.PlacementAnchor

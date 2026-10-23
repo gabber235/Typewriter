@@ -15,8 +15,6 @@ import com.typewritermc.checking.InputIdentity
 import com.typewritermc.discovery.OwnedCheckRecipe
 import com.typewritermc.discovery.OwnedProviderRegistry
 import com.typewritermc.operations.OperationCatalog
-import com.typewritermc.realm.repository.CapturedAuthoringValues
-import com.typewritermc.realm.repository.ResourceValueMapper
 import com.typewritermc.types.NativeBindingRegistry
 import com.typewritermc.types.catalog.CheckedCatalog
 import com.typewritermc.types.field

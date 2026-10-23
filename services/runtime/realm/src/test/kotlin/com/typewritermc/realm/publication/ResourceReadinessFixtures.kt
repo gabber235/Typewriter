@@ -1,4 +1,4 @@
-package com.typewritermc.realm.compiler
+package com.typewritermc.realm.publication
 
 import com.typewritermc.authoring.CompletenessResult
 import com.typewritermc.authoring.complete

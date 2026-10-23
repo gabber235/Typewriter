@@ -8,11 +8,11 @@ import com.typewritermc.protocol.transport.generated.authoringStateQuery
 import com.typewritermc.protocol.transport.generated.authoringTypeCommit
 import com.typewritermc.protocol.transport.generated.authoringTypePreview
 import com.typewritermc.realm.authoring.AuthoringViewStore
-import com.typewritermc.realm.authoring.DefaultTypeArgumentOperations
-import com.typewritermc.realm.authoring.TypeArgumentOperations
-import com.typewritermc.realm.authoring.requireValid
-import com.typewritermc.realm.repository.AuthoringRepository
-import com.typewritermc.realm.repository.ResourceValueMapper
+import com.typewritermc.realm.authoring.ResourceValueMapper
+import com.typewritermc.realm.edit.AuthoringRepository
+import com.typewritermc.realm.operation.DefaultTypeArgumentOperations
+import com.typewritermc.realm.operation.TypeArgumentOperations
+import com.typewritermc.realm.operation.requireValid
 import com.typewritermc.services.libs.communicator.router.CommunicatorRoutesBuilder
 import com.typewritermc.types.catalog.of
 import com.typewritermc.types.requireValid

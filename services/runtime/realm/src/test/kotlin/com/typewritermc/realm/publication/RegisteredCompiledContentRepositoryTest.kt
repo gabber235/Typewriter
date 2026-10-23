@@ -1,10 +1,10 @@
-package com.typewritermc.realm.compiler
+package com.typewritermc.realm.publication
 
 import com.surrealdb.Surreal
 import com.typewritermc.engine.ContentDigest
-import com.typewritermc.realm.checking.TEST_TYPE
-import com.typewritermc.realm.schema.MigrationResources
-import com.typewritermc.realm.schema.openTestDatabase
+import com.typewritermc.realm.authoring.TEST_TYPE
+import com.typewritermc.realm.storage.MigrationResources
+import com.typewritermc.realm.storage.openTestDatabase
 import de.infix.testBalloon.framework.core.testSuite
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.matchers.shouldBe

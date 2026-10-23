@@ -1,7 +1,7 @@
 package com.typewritermc.realm
 
-import com.typewritermc.realm.schema.RealmDatabaseConfiguration
-import com.typewritermc.realm.schema.databaseConfiguration
+import com.typewritermc.realm.storage.RealmDatabaseConfiguration
+import com.typewritermc.realm.storage.databaseConfiguration
 
 /**
  * Collects resolved diagnostic and database policy before Realm composition.

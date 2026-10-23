@@ -5,6 +5,10 @@ import com.typewritermc.authoring.root
 import com.typewritermc.realm.authoring.AuthoringSeed
 import com.typewritermc.realm.authoring.AuthoringViewDelta
 import com.typewritermc.realm.authoring.InMemoryAuthoringViewStore
+import com.typewritermc.realm.authoring.TEST_TYPE
+import com.typewritermc.realm.authoring.TestCatalogLease
+import com.typewritermc.realm.authoring.location
+import com.typewritermc.realm.authoring.record
 import de.infix.testBalloon.framework.core.testSuite
 import io.kotest.matchers.shouldBe
 import skirout.editor.v1.authoring_facts.EditExpectation

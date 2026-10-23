@@ -1,6 +1,6 @@
 @file:OptIn(GeneratedSdkApi::class)
 
-package com.typewritermc.realm.authoring
+package com.typewritermc.realm.edit
 
 import com.typewritermc.authoring.DefaultInitializationRuntime
 import com.typewritermc.authoring.GeneratedSdkApi
@@ -14,8 +14,9 @@ import com.typewritermc.authoring.boundCollectionPath
 import com.typewritermc.authoring.definition
 import com.typewritermc.authoring.of
 import com.typewritermc.authoring.record
-import com.typewritermc.realm.repository.AuthoringRepository
-import com.typewritermc.realm.repository.valueAt
+import com.typewritermc.realm.authoring.AuthoringCatalogLease
+import com.typewritermc.realm.authoring.AuthoringView
+import com.typewritermc.realm.authoring.AuthoringViewStore
 import com.typewritermc.types.NativeBinding
 import com.typewritermc.types.Ref
 import com.typewritermc.types.actualType

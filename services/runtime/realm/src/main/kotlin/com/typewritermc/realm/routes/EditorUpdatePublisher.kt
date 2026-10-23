@@ -5,8 +5,8 @@ import com.typewritermc.protocol.transport.generated.authoringChanged
 import com.typewritermc.protocol.transport.generated.authoringPublicationWatch
 import com.typewritermc.realm.authoring.AuthoringView
 import com.typewritermc.realm.authoring.AuthoringViewStore
-import com.typewritermc.realm.compiler.RealmPublicationCoordinator
-import com.typewritermc.realm.repository.conflicts
+import com.typewritermc.realm.authoring.conflicts
+import com.typewritermc.realm.publication.RealmPublicationCoordinator
 import com.typewritermc.services.libs.communicator.client.Communicator
 import com.typewritermc.services.libs.telemetry.ErrorSlug
 import com.typewritermc.services.libs.telemetry.ServiceTelemetry

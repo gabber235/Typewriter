@@ -34,7 +34,7 @@ import com.typewritermc.operations.capability
 import com.typewritermc.operations.collectOperation
 import com.typewritermc.operations.fillOnDrop
 import com.typewritermc.realm.TestRealmStructure
-import com.typewritermc.realm.repository.MutationPlanningResult
+import com.typewritermc.realm.edit.MutationPlanningResult
 import com.typewritermc.realm.testTag
 import com.typewritermc.types.Ref
 import com.typewritermc.types.endpointId

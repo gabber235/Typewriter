@@ -1,4 +1,4 @@
-package com.typewritermc.realm.repository
+package com.typewritermc.realm.authoring
 
 import com.typewritermc.authoring.field
 import com.typewritermc.authoring.links
@@ -6,7 +6,6 @@ import com.typewritermc.authoring.of
 import com.typewritermc.authoring.resourceIds
 import com.typewritermc.authoring.root
 import com.typewritermc.authoring.with
-import com.typewritermc.realm.checking.record
 import com.typewritermc.types.actualType
 import com.typewritermc.types.fields
 import com.typewritermc.types.named

@@ -29,9 +29,6 @@ import com.typewritermc.checking.PartialSelection
 import com.typewritermc.checking.ResourceTypeMatch
 import com.typewritermc.checking.UndecidedCandidate
 import com.typewritermc.expression.operations.HostFailure
-import com.typewritermc.realm.checking.CapturedAuthoringReads
-import com.typewritermc.realm.repository.LinkSchemaCapabilities
-import com.typewritermc.realm.repository.ResourceValueMapper
 import com.typewritermc.types.catalog.Resolution
 import com.typewritermc.types.endpoint
 import com.typewritermc.types.record

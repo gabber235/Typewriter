@@ -1,4 +1,4 @@
-package com.typewritermc.realm.compiler
+package com.typewritermc.realm.publication
 
 import com.typewritermc.realm.authoring.AuthoringView
 import com.typewritermc.types.unknownVariant
