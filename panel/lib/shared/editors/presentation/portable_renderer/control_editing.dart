@@ -173,7 +173,7 @@ class _PortableEntryEditing extends HookWidget {
 
     Future<void> write(
       skir.DataValue payload, {
-      Iterable<PortableExpressionRead> reads = const [],
+      Iterable<skir.ValueLocation> reads = const [],
     }) async {
       if (!active.value || latestIdentity.value != identity) return;
       final current = latest.value;

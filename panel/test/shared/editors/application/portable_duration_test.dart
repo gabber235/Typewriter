@@ -62,27 +62,36 @@ void main() {
       }
     },
   );
-  test("duration formatter rejects raw values outside shared admission", () {
-    final expression = skir.ExpressionNode.createDurationFormat(
-      source: skir.ExpressionNode.wrapLiteral(
+  test("evaluation rejects durations outside the shared admission", () {
+    final evaluator = PortableExpressionEvaluator(
+      const {},
+      budget: skir.EvaluationBudget(maxSteps: 100, maxCollectionItems: 100),
+    );
+    final literal = evaluator.evaluate(
+      skir.ExpressionNode.wrapLiteral(
         skir.DataValue.createDuration(
           value: skir.Duration(
             milliseconds: PortableDurationMilliseconds.maximum + 1,
           ),
         ),
       ),
-      units: skir.ExpressionNode.wrapLiteral(
-        skir.DataValue.wrapStringValue("MinutesAndSeconds"),
-      ),
-      fractionDigits: skir.ExpressionNode.wrapLiteral(
-        skir.DataValue.wrapInteger("3"),
-      ),
     );
-    final result = PortableExpressionEvaluator(
-      const {},
-      budget: skir.EvaluationBudget(maxSteps: 100, maxCollectionItems: 100),
-    ).evaluate(expression);
-    expect(result, isA<PortableExpressionFailed>());
-    expect((result as PortableExpressionFailed).code, "duration_range");
+    expect(
+      (literal as PortableExpressionFailed).failure,
+      skir.PortableFailures.invalidExpressionLiteral,
+    );
+    final computed = evaluator.evaluate(
+      portableCall("duration.from_milliseconds", [
+        skir.ExpressionNode.wrapLiteral(
+          skir.DataValue.wrapInteger(
+            "${PortableDurationMilliseconds.maximum + 1}",
+          ),
+        ),
+      ]),
+    );
+    expect(
+      (computed as PortableExpressionFailed).failure,
+      skir.PortableFailures.durationRange,
+    );
   });
 }

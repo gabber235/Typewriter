@@ -457,30 +457,6 @@ final class _PortableSearchEvaluation {
     rowSchema: rowSchema,
   );
 
-  PortablePresentationBindingSchema? collectionItemSchema(
-    skir.ExpressionNode source,
-    SearchQueryContext query,
-    Iterable<skir.SearchSelectorDefinition> selectors,
-  ) {
-    final checked = environment.catalog.expressionPrograms.program(
-      source,
-      lexicalTypes: environment
-          .expressionBindings(
-            query: query,
-            queryBindingId: queryBindingId,
-            selectors: selectors,
-          )
-          .lexicalSchemas,
-    );
-    if (checked case CheckedExpressionReady(:final program)) {
-      final item = environment.catalog
-          .collectionItem(program.result)
-          ?.declaredUse();
-      if (item != null) return CompletePortablePresentationBinding(item);
-    }
-    return null;
-  }
-
   String? resultText(
     SearchResult result,
     skir.ExpressionNode expression,
@@ -497,9 +473,8 @@ final class _PortableSearchEvaluation {
         :final contextBindings,
       ) =>
         _text(
-          environment.catalog.evaluateExpression(
-            expression,
-            bindings: {
+          PortableExpressionEvaluator.located(
+            {
               ...environment.expressionBindings(
                 query: query,
                 queryBindingId: queryBindingId,
@@ -512,8 +487,9 @@ final class _PortableSearchEvaluation {
               ),
             },
             budget: environment.budget,
+            catalog: environment.catalog,
             queries: environment.context.queries,
-          ),
+          ).evaluate(expression),
         ),
       PortableCustomSearchPayload() => result.title,
     };
@@ -740,11 +716,6 @@ final class _PortableStaticSearchSource extends _PortableLeafSearchSource {
               items.map((item) => item.value),
               provider.result,
               context,
-              sourceSchema: evaluation.collectionItemSchema(
-                provider.values,
-                context,
-                selectorDefinitions,
-              ),
             ),
           ),
         );

@@ -214,43 +214,27 @@ abstract class PortablePresentationScope with _$PortablePresentationScope {
     resourceDiagnostics: resourceDiagnostics,
   );
 
-  PortableExpressionResult evaluate(skir.ExpressionNode expression) {
-    final checked = queries?.catalog ?? catalog ?? host?.document.catalog;
-    if (checked == null) {
-      return PortableExpressionEvaluator.located(
+  PortableExpressionResult evaluate(skir.ExpressionNode expression) =>
+      PortableExpressionEvaluator.located(
         bindings,
         budget: budget,
+        catalog: queries?.catalog ?? catalog ?? host?.document.catalog,
+        queries: queries,
+        subject: _subject,
       ).evaluate(expression);
-    }
-    return checked.evaluateExpression(
-      expression,
-      bindings: bindings,
-      budget: budget,
-      queries: queries,
-    );
-  }
 
-  /// Resolves declared expression typing without inspecting its runtime value.
-  PortablePresentationBindingSchema? expressionSchema(
-    skir.ExpressionNode expression,
-  ) {
-    if (expression case skir.ExpressionNode_inputWrapper(:final value)
-        when value.path.segments.isEmpty) {
-      final declared = bindings[value.binding]?.schema;
-      if (declared != null) return declared;
-    }
-    final checked = queries?.catalog ?? catalog ?? host?.document.catalog;
-    if (checked == null) return null;
-    return switch (checked.expressionPrograms.program(
-      expression,
-      lexicalTypes: bindings.lexicalSchemas,
-    )) {
-      CheckedExpressionReady(:final program) => switch (program.result
-          .declaredUse()) {
-        final use? => CompletePortablePresentationBinding(use),
+  /// The selection of the material's configured value, whose type parameters
+  /// the type arguments of generic materials name.
+  skir.TypeSelection? get _subject {
+    if (material == null) return null;
+    return switch (bindings[configuredValueBindingId]?.schema) {
+      CompletePortablePresentationBinding(:final use) => switch (use) {
+        skir.TypeUse_namedWrapper(:final value) =>
+          skir.TypeSelection.wrapComplete(value),
         _ => null,
       },
-      _ => null,
+      PartialPortablePresentationBinding(:final selection) => selection,
+      null => null,
     };
   }
 
@@ -367,7 +351,7 @@ abstract class PortablePresentationScope with _$PortablePresentationScope {
   Future<PortablePresentationWriteResult> apply(
     skir.BindingRef reference,
     skir.DataValue value, {
-    Iterable<PortableExpressionRead> reads = const [],
+    Iterable<skir.ValueLocation> reads = const [],
   }) async {
     final target = host;
     if (!enabled || readOnly || target == null) {
@@ -494,7 +478,7 @@ abstract class PortablePresentationScope with _$PortablePresentationScope {
     FutureOr<PortablePresentationWriteResult> writeConfigured(
       skir.BindingRef reference,
       skir.DataValue value, {
-      Iterable<PortableExpressionRead> reads = const [],
+      Iterable<skir.ValueLocation> reads = const [],
     }) {
       var replacement = value;
       if (reference.path.segments.isEmpty &&
@@ -601,7 +585,7 @@ abstract class PortablePresentationScope with _$PortablePresentationScope {
           (
             nestedReference,
             replacement, {
-            reads = const <PortableExpressionRead>[],
+            reads = const <skir.ValueLocation>[],
           }) {
             final original = skir.BindingRef(
               bindingId: reference.bindingId,
@@ -627,12 +611,7 @@ abstract class PortablePresentationScope with _$PortablePresentationScope {
           location: location,
           schema: reference.path.segments.isEmpty
               ? source.schema
-              : expressionSchema(
-                      skir.ExpressionNode.createInput(
-                        binding: reference.bindingId,
-                        path: reference.path,
-                      ),
-                    ) ??
+              : _declaredSchemaAt(source.schema, reference.path) ??
                     switch (expectedType(reference)) {
                       final use? => CompletePortablePresentationBinding(use),
                       null => null,
@@ -650,6 +629,27 @@ abstract class PortablePresentationScope with _$PortablePresentationScope {
             ),
       },
     );
+  }
+
+  /// The declared type at [path] below a binding declared as [schema]; a
+  /// projection of a declared type, never an inference from expressions.
+  PortablePresentationBindingSchema? _declaredSchemaAt(
+    PortablePresentationBindingSchema? schema,
+    skir.ValuePath path,
+  ) {
+    final checked = queries?.catalog ?? catalog ?? host?.document.catalog;
+    final named = switch (schema) {
+      CompletePortablePresentationBinding(:final use) => checked?.namedUse(use),
+      _ => null,
+    };
+    if (checked == null || named == null) return null;
+    return switch (checked.valueTypeAt(
+      skir.TypeSelection.wrapComplete(named),
+      path,
+    )) {
+      final use? => CompletePortablePresentationBinding(use),
+      null => null,
+    };
   }
 
   PortablePresentationScope withValues(

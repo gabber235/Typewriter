@@ -13,10 +13,7 @@ void main() {
       final catalog = _catalog();
       final first = _document(catalog, "First");
       final second = _document(catalog, "Second");
-      final expression = fieldExpression(
-        _query(skir.ExpressionQuery.wrapResourceValue),
-        "name",
-      );
+      final expression = fieldExpression(_resourceValue(), "name");
       expect(
         _evaluate(catalog, first, expression).value.authoredString,
         "First",
@@ -34,22 +31,14 @@ void main() {
 
   test("declaration color is read canonically without sibling projection", () {
     final catalog = _catalog();
-    final configuration = _query(
-      skir.ExpressionQuery.wrapResourceConfiguration,
-    );
-    final declaration = skir.ExpressionNode.wrapQuery(
-      skir.ExpressionQuery.wrapCatalogDeclaration(configuration),
-    );
+    final declaration = _declaration();
     final color = fieldExpression(
       fieldExpression(declaration, "display"),
       "color",
     );
     final result = _evaluate(catalog, _document(catalog, "Page"), color);
     expect(result.value, colorValue(0xff336699));
-    expect(
-      result.reads.where((read) => read.location?.resource == _resource),
-      isNotEmpty,
-    );
+    expect(result.reads, [_resourceRoot]);
   });
 
   test(
@@ -64,24 +53,19 @@ void main() {
           arguments: const [],
         ),
       );
-      final result = catalog.evaluateExpression(
-        _query(skir.ExpressionQuery.wrapResourceValue),
-        bindings: _bindings,
+      final result = PortableExpressionEvaluator.located(
+        _bindings,
         budget: _budget,
         queries: PortableExpressionQueries(
           catalog: catalog,
           authored: document,
         ),
-      );
+      ).evaluate(_resourceValue());
       expect(result, isA<PortableExpressionUnavailable>());
-      expect(
-        result.reads
-            .where((read) => read.location != null)
-            .single
-            .location
-            ?.resource,
-        _resource,
-      );
+      expect((result as PortableExpressionUnavailable).locations, [
+        _resourceRoot,
+      ]);
+      expect(result.reads, [_resourceRoot]);
     },
   );
 
@@ -95,16 +79,9 @@ void main() {
         arguments: const [skir.ArgumentSelection.unfilled],
       ),
     );
-    final name = fieldExpression(
-      _query(skir.ExpressionQuery.wrapResourceValue, generic: true),
-      "name",
-    );
+    final name = fieldExpression(_resourceValue(generic: true), "name");
     expect(_evaluate(catalog, document, name).value.authoredString, "Pending");
-    final declaration = skir.ExpressionNode.wrapQuery(
-      skir.ExpressionQuery.wrapCatalogDeclaration(
-        _query(skir.ExpressionQuery.wrapResourceConfiguration, generic: true),
-      ),
-    );
+    final declaration = _declaration();
     expect(
       _evaluate(
         catalog,
@@ -115,56 +92,44 @@ void main() {
     );
   });
 
-  test(
-    "absent resources remain missing while unsupported capabilities fail",
-    () {
-      final catalog = _catalog();
-      final expression = _query(skir.ExpressionQuery.wrapResourceValue);
-      final empty = AuthoringDocument(
-        catalog: catalog,
-        entries: const {},
-        links: const [],
-      );
-      final result = catalog.evaluateExpression(
-        expression,
-        bindings: _bindings,
-        budget: _budget,
-        queries: PortableExpressionQueries(catalog: catalog, authored: empty),
-      );
-      expect(result, isA<PortableExpressionUnavailable>());
-      expect(
-        result.reads
-            .where((read) => read.location != null)
-            .single
-            .location
-            ?.resource,
-        _resource,
-      );
-      final unsupported = catalog.evaluateExpression(
-        expression,
-        bindings: _bindings,
-        budget: _budget,
-      );
-      expect(unsupported, isA<PortableExpressionFailed>());
-      expect(
-        (unsupported as PortableExpressionFailed).code,
-        "unsupported_query",
-      );
-    },
-  );
+  test("absent resources remain missing while an evaluation without an authoring observation fails", () {
+    final catalog = _catalog();
+    final expression = _resourceValue();
+    final empty = AuthoringDocument(
+      catalog: catalog,
+      entries: const {},
+      links: const [],
+    );
+    final result = PortableExpressionEvaluator.located(
+      _bindings,
+      budget: _budget,
+      queries: PortableExpressionQueries(catalog: catalog, authored: empty),
+    ).evaluate(expression);
+    expect(result, isA<PortableExpressionUnavailable>());
+    expect((result as PortableExpressionUnavailable).locations, [
+      _resourceRoot,
+    ]);
+    expect(result.reads, [_resourceRoot]);
+    final unsupported = PortableExpressionEvaluator.located(
+      _bindings,
+      budget: _budget,
+      catalog: catalog,
+    ).evaluate(expression);
+    expect(unsupported, isA<PortableExpressionFailed>());
+    expect(
+      (unsupported as PortableExpressionFailed).failure,
+      skir.PortableFailures.outsideRuleProfile,
+    );
+  });
 
   test(
-    "unknown fields fail checking and an undeclared display reads the defaults",
+    "unknown fields are missing and an undeclared display reads the defaults",
     () {
       final catalog = _catalog(display: false);
       final document = _document(catalog, "Page");
-      final declaration = skir.ExpressionNode.wrapQuery(
-        skir.ExpressionQuery.wrapCatalogDeclaration(
-          _query(skir.ExpressionQuery.wrapResourceConfiguration),
-        ),
-      );
+      final declaration = _declaration();
       final expression = skir.ExpressionNode.createOrElse(
-        input: fieldExpression(
+        value: fieldExpression(
           fieldExpression(declaration, "display"),
           "color",
         ),
@@ -174,45 +139,16 @@ void main() {
         _evaluate(catalog, document, expression).value,
         colorValue(0xff607d8b),
       );
-      final invalid = catalog.evaluateExpression(
-        fieldExpression(declaration, "unknown"),
-        bindings: _bindings,
+      final unknown = PortableExpressionEvaluator.located(
+        _bindings,
         budget: _budget,
         queries: PortableExpressionQueries(
           catalog: catalog,
           authored: document,
         ),
-      );
-      expect(invalid, isA<PortableExpressionFailed>());
-    },
-  );
-
-  test(
-    "canonical projection shares expression step and collection budgets",
-    () {
-      final catalog = _catalog();
-      final document = _document(catalog, "Page");
-      final declaration = skir.ExpressionNode.wrapQuery(
-        skir.ExpressionQuery.wrapCatalogDeclaration(
-          _query(skir.ExpressionQuery.wrapResourceConfiguration),
-        ),
-      );
-      final result = catalog.evaluateExpression(
-        declaration,
-        bindings: _bindings,
-        budget: skir.EvaluationBudget(maxSteps: 8, maxCollectionItems: 1),
-        queries: PortableExpressionQueries(
-          catalog: catalog,
-          authored: document,
-        ),
-      );
-      expect(result, isA<PortableExpressionFailed>());
-      final leaf = _evaluate(
-        catalog,
-        document,
-        fieldExpression(fieldExpression(declaration, "display"), "color"),
-      );
-      expect(leaf.value, colorValue(0xff336699));
+      ).evaluate(fieldExpression(declaration, "unknown"));
+      expect(unknown, isA<PortableExpressionUnavailable>());
+      expect((unknown as PortableExpressionUnavailable).locations, isEmpty);
     },
   );
 
@@ -243,7 +179,7 @@ void main() {
       );
     },
   );
-  test("reference iteration keeps contracts for equal trees under different schemas", () {
+  test("lambda locals read the resources of links of different types", () {
     final base = _catalog();
     final pageRef = _definition("PageRef");
     final otherRef = _definition("OtherRef");
@@ -299,23 +235,19 @@ void main() {
     final left = skir.ExpressionBindingId(value: "left");
     final right = skir.ExpressionBindingId(value: "right");
     final body = fieldExpression(
-      skir.ExpressionNode.wrapQuery(
-        skir.ExpressionQuery.wrapResourceValue(
-          skir.ResourceQuerySource.wrapReference(
-            skir.ExpressionNode.createLocal(
-              depth: 0,
-              slot: 0,
-              path: editorRootPath,
-            ),
-          ),
+      portableCall("resource.value", [
+        skir.ExpressionNode.createLocal(
+          depth: 0,
+          slot: 0,
+          path: editorRootPath,
         ),
-      ),
+      ]),
       "name",
     );
     skir.ExpressionNode mapped(skir.ExpressionBindingId source) =>
-        skir.ExpressionNode.createMap(
-          source: skir.ExpressionNode.createOrElse(
-            input: skir.ExpressionNode.createInput(
+        portableCall("collection.map", [
+          skir.ExpressionNode.createOrElse(
+            value: skir.ExpressionNode.createInput(
               binding: source,
               path: editorRootPath,
             ),
@@ -323,24 +255,27 @@ void main() {
               skir.DataValue.createListValue(items: const []),
             ),
           ),
-          body: body,
-        );
+          skir.ExpressionNode.createLambda(arity: 1, body: body),
+        ]);
+    final empty = literalExpression(skir.DataValue.wrapStringValue(""));
     skir.ExpressionNode join(skir.ExpressionNode source) =>
-        skir.ExpressionNode.createTextJoin(
-          source: source,
-          separator: literalExpression(skir.DataValue.wrapStringValue("")),
+        portableCall("text.join", [source, empty]);
+    final result =
+        PortableExpressionEvaluator.located(
+          {
+            left: _referenceBinding(pageRef, _resource),
+            right: _referenceBinding(otherRef, other),
+          },
+          budget: _budget,
+          queries: PortableExpressionQueries(
+            catalog: catalog,
+            authored: document,
+          ),
+        ).evaluate(
+          join(
+            portableCall("list.of", [join(mapped(left)), join(mapped(right))]),
+          ),
         );
-    final result = catalog.evaluateExpression(
-      skir.ExpressionNode.createTextInterpolate(
-        parts: [join(mapped(left)), join(mapped(right))],
-      ),
-      bindings: {
-        left: _referenceBinding(pageRef, _resource),
-        right: _referenceBinding(otherRef, other),
-      },
-      budget: _budget,
-      queries: PortableExpressionQueries(catalog: catalog, authored: document),
-    );
     expect(
       result,
       isA<PortableExpressionAvailable>(),
@@ -403,16 +338,12 @@ void main() {
       );
       final result = aliasScope.evaluate(
         fieldExpression(
-          skir.ExpressionNode.wrapQuery(
-            skir.ExpressionQuery.wrapResourceValue(
-              skir.ResourceQuerySource.wrapReference(
-                skir.ExpressionNode.createInput(
-                  binding: alias,
-                  path: editorRootPath,
-                ),
-              ),
+          portableCall("resource.value", [
+            skir.ExpressionNode.createInput(
+              binding: alias,
+              path: editorRootPath,
             ),
-          ),
+          ]),
           "name",
         ),
       );
@@ -541,22 +472,18 @@ void main() {
             from: original,
           );
           expect(concurrent, isA<EditStaged>());
-          final expression = fieldExpression(
-            _query(skir.ExpressionQuery.wrapResourceValue),
-            "name",
-          );
+          final expression = fieldExpression(_resourceValue(), "name");
           final target = skir.BindingRef(
             bindingId: configured,
             path: _namePath,
           );
           final PortablePresentationWriteResult result;
           if (directWrite) {
-            final evaluated = catalog.evaluateExpression(
-              expression,
-              bindings: context.bindings,
+            final evaluated = PortableExpressionEvaluator.located(
+              context.bindings,
               budget: _budget,
               queries: context.queries,
-            ) as PortableExpressionAvailable;
+            ).evaluate(expression) as PortableExpressionAvailable;
             result = await host.write(
               target,
               evaluated.value,
@@ -676,21 +603,16 @@ void main() {
       );
       final expression = fieldExpression(
         fieldExpression(
-          skir.ExpressionNode.wrapQuery(
-            skir.ExpressionQuery.wrapCatalogDeclaration(
-              literalExpression(encoded),
-            ),
-          ),
+          portableCall("catalog.declaration", [literalExpression(encoded)]),
           "display",
         ),
         "name",
       );
-      final result = catalog.evaluateExpression(
-        expression,
-        bindings: const {},
+      final result = PortableExpressionEvaluator.located(
+        const {},
         budget: _budget,
         queries: PortableExpressionQueries(catalog: catalog),
-      );
+      ).evaluate(expression);
       expect(
         result,
         isA<PortableExpressionAvailable>(),
@@ -703,348 +625,47 @@ void main() {
     },
   );
 
-  test("malformed resource content does not become fallback text", () {
-    final catalog = _catalog();
-    final original = _document(catalog, "Page");
-    final record = original.entry(_resource)!;
-    final document = original.copyWith(
-      entries: {
-        _resource:
-            (record.toMutable()
-                  ..content =
-                      (record.content.toMutable()
-                            ..fields = [
-                              skir.FieldValue(
-                                name: "name",
-                                value: skir.DataValue.wrapBoolean(true),
-                              ),
-                            ])
-                          .toFrozen())
-                .toFrozen(),
-      },
-    );
-    final expression = skir.ExpressionNode.createOrElse(
-      input: fieldExpression(
-        _query(skir.ExpressionQuery.wrapResourceValue),
-        "name",
-      ),
-      fallback: literalExpression(skir.DataValue.wrapStringValue("fallback")),
-    );
-    final result = catalog.evaluateExpression(
-      expression,
-      bindings: _bindings,
-      budget: _budget,
-      queries: PortableExpressionQueries(catalog: catalog, authored: document),
-    );
-    expect(result, isA<PortableExpressionFailed>());
-    expect((result as PortableExpressionFailed).code, "invalid_resource_value");
-  });
-  test("admission rejects duplicate caller imports", () {
-    final catalog = _catalog();
-    final material = _resultMaterial(
-      presentationText("body", textLiteral("Title")),
-    );
-    final id = skir.ExpressionBindingId(value: "context:test.origin");
-    final dependency = skir.PresentationContextInput(
-      source: skir.PresentationContextSource.caller,
-      bindingId: id,
-      valueType: skir.TypeUse.wrapNamed(frameworkResourceIdUse),
-    );
-    final conflicting =
-        (material.toMutable()
-              ..dependencies =
-                  (material.dependencies.toMutable()
-                        ..contextInputs = [dependency, dependency])
-                      .toFrozen())
-            .toFrozen();
-    expect(
-      catalog.presentationExpressionProblems(conflicting, _pageSelection),
-      contains("duplicate_context_input"),
-    );
-  });
-
-  test("admission accepts host imports only with the host contract's type", () {
-    final catalog = _catalog();
-    final id = skir.ExpressionBindingId(value: "context:host.active");
-    skir.PresentationMaterial importing(skir.TypeUse type) {
-      final material = _resultMaterial(
-        presentationText("body", textLiteral("Title")),
+  test(
+    "trusted resource content is read as stored, not replaced by the fallback",
+    () {
+      final catalog = _catalog();
+      final original = _document(catalog, "Page");
+      final record = original.entry(_resource)!;
+      final document = original.copyWith(
+        entries: {
+          _resource:
+              (record.toMutable()
+                    ..content =
+                        (record.content.toMutable()
+                              ..fields = [
+                                skir.FieldValue(
+                                  name: "name",
+                                  value: skir.DataValue.wrapBoolean(true),
+                                ),
+                              ])
+                            .toFrozen())
+                  .toFrozen(),
+        },
       );
-      return (material.toMutable()
-            ..dependencies =
-                (material.dependencies.toMutable()
-                      ..contextInputs = [
-                        skir.PresentationContextInput(
-                          bindingId: id,
-                          source: skir.PresentationContextSource.wrapHost(
-                            skir.HostContextInput.activeResource,
-                          ),
-                          valueType: type,
-                        ),
-                      ])
-                    .toFrozen())
-          .toFrozen();
-    }
-
-    expect(
-      catalog.presentationExpressionProblems(
-        importing(skir.TypeUse.wrapScalar(skir.ScalarKind.text)),
-        _pageSelection,
-      ),
-      contains("invalid_host_context_input"),
-    );
-    expect(
-      catalog.presentationExpressionProblems(
-        importing(skir.TypeUse.wrapNamed(frameworkResourceIdUse)),
-        _pageSelection,
-      ),
-      isNot(contains("invalid_host_context_input")),
-    );
-  });
-
-  test("a resource presentation reads its subject appearance", () {
-    final catalog = _catalog();
-    final label = presentationText(
-      "label",
-      inputExpression(presentationSubjectAppearanceBindingId, field: "label"),
-    );
-    final missing = presentationText(
-      "missing",
-      inputExpression(presentationSubjectAppearanceBindingId, field: "title"),
-    );
-    expect(
-      catalog.presentationExpressionProblems(
-        _resultMaterial(label),
-        _pageSelection,
-      ),
-      isEmpty,
-    );
-    expect(
-      catalog.presentationExpressionProblems(
-        _resultMaterial(missing),
-        _pageSelection,
-      ),
-      isNotEmpty,
-    );
-  });
-
-  test("admission checks the paint of stacks, transforms and containers", () {
-    final catalog = _catalog();
-    final selected = skir.PresentationStateMatch(
-      required_: [skir.PresentationInteractionState.selected],
-      excluded: const [],
-    );
-    skir.PresentationNumber number(double value) =>
-        skir.PresentationNumber.wrapValue(numberLiteral(value));
-    final body = presentationText("body", textLiteral("Cover"));
-    List<String> problems(skir.PresentationElement element) =>
-        catalog.presentationExpressionProblems(
-          _resultMaterial(presentationNode("paint", element)),
-          _pageSelection,
-        );
-
-    final valid = skir.PresentationElement.wrapChildren(
-      skir.ChildrenElement.createStack(
-        alignment: null,
-        children: [
-          skir.StackChild.wrapFlow(body),
-          skir.StackChild.createPositioned(
-            child: body,
-            top: number(4),
-            start: null,
-            end: skir.PresentationNumber.createStates(
-              rules: [
-                skir.PresentationStateNumberRule(
-                  match: selected,
-                  value: numberLiteral(8),
-                ),
-              ],
-              fallback: numberLiteral(2),
-            ),
-            bottom: null,
-            width: number(30),
-            height: null,
-            transition: skir.PresentationTransitionPolicy(
-              rules: [
-                skir.PresentationStateTransitionRule(
-                  match: selected,
-                  transition: skir.PresentationTransition(
-                    milliseconds: 750,
-                    curve: skir.PresentationCurve.wrapElasticOut(0.9),
-                  ),
-                ),
-              ],
-              fallback: skir.PresentationTransition(
-                milliseconds: 300,
-                curve: skir.PresentationCurve.emphasized,
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-    expect(problems(valid), isEmpty);
-
-    final overconstrained = skir.PresentationElement.wrapChildren(
-      skir.ChildrenElement.createStack(
-        alignment: null,
-        children: [
-          skir.StackChild.createPositioned(
-            child: body,
-            top: null,
-            start: number(0),
-            end: number(0),
-            bottom: null,
-            width: number(10),
-            height: null,
-            transition: null,
-          ),
-        ],
-      ),
-    );
-    expect(
-      problems(overconstrained),
-      contains("overconstrained_positioned_child"),
-    );
-
-    final transform = skir.PresentationElement.createTransform(
-      child: body,
-      origin: skir.PresentationAlignment.center,
-      perspective: double.nan,
-      scale: skir.PresentationNumber.wrapValue(textLiteral("large")),
-      rotateX: null,
-      rotateY: null,
-      rotateZ: null,
-      translateX: null,
-      translateY: null,
-      transition: skir.PresentationTransitionPolicy(
-        rules: [
-          skir.PresentationStateTransitionRule(
-            match: skir.PresentationStateMatch(
-              required_: [skir.PresentationInteractionState.hovered],
-              excluded: [skir.PresentationInteractionState.hovered],
-            ),
-            transition: skir.PresentationTransition(
-              milliseconds: 10,
-              curve: skir.PresentationCurve.linear,
-            ),
-          ),
-        ],
-        fallback: skir.PresentationTransition(
-          milliseconds: -1,
-          curve: skir.PresentationCurve.wrapElasticOut(0),
+      final expression = skir.ExpressionNode.createOrElse(
+        value: fieldExpression(_resourceValue(), "name"),
+        fallback: literalExpression(skir.DataValue.wrapStringValue("fallback")),
+      );
+      final result = PortableExpressionEvaluator.located(
+        _bindings,
+        budget: _budget,
+        queries: PortableExpressionQueries(
+          catalog: catalog,
+          authored: document,
         ),
-      ),
-    );
-    expect(
-      problems(transform),
-      containsAll([
-        "invalid_transform_perspective",
-        "contradictory_presentation_state_match",
-        "invalid_presentation_transition",
-        "invalid_presentation_curve",
-      ]),
-    );
-    expect(problems(transform).length, greaterThan(4));
-
-    final accent = skir.PresentationColor.wrapValue(integerLiteral(0xff3366cc));
-    final container = skir.PresentationElement.createContainer(
-      child: body,
-      border: null,
-      backgroundColor: skir.PresentationColor.createBrightness(
-        light: skir.PresentationColor.createAdjusted(
-          source: accent,
-          lightness: 1.5,
-          chroma: 0,
-        ),
-        dark: accent,
-      ),
-      radius: skir.PresentationRadius.large,
-      foregroundColor: null,
-      transition: null,
-      shadows: [
-        skir.PresentationShadow(
-          color: accent,
-          blur: -2,
-          spread: 0,
-          offsetX: 0,
-          offsetY: 1,
-        ),
-      ],
-    );
-    expect(
-      problems(container),
-      containsAll([
-        "invalid_presentation_color_adjustment",
-        "invalid_presentation_shadow",
-      ]),
-    );
-    expect(
-      problems(
-        skir.PresentationElement.createSize(
-          child: body,
-          width: textLiteral("wide"),
-          height: numberLiteral(8),
-          minimumWidth: null,
-          maximumWidth: null,
-          minimumHeight: null,
-          maximumHeight: null,
-        ),
-      ),
-      isNotEmpty,
-    );
-  });
-
-  test("clipped axes reject flexible children and columns at admission", () {
-    final catalog = _catalog();
-    final child = presentationText(
-      "child",
-      literalExpression(skir.DataValue.wrapStringValue("Content")),
-    );
-    final clipped = (skir.AxisChildrenLayout.mutable()..clipOverflow = true)
-        .toFrozen();
-    final row =
-        (skir.PresentationNode.mutable()
-              ..nodeId = "row"
-              ..element = skir.PresentationElement.wrapChildren(
-                skir.ChildrenElement.createRow(
-                  children: [
-                    skir.AxisChild.createFlexible(
-                      child: child,
-                      flex: 1,
-                      fit: skir.FlexFit.loose,
-                    ),
-                  ],
-                  layout: clipped,
-                ),
-              ))
-            .toFrozen();
-    final column =
-        (skir.PresentationNode.mutable()
-              ..nodeId = "column"
-              ..element = skir.PresentationElement.wrapChildren(
-                skir.ChildrenElement.createColumn(
-                  children: [skir.AxisChild.wrapFixed(child)],
-                  layout: clipped,
-                ),
-              ))
-            .toFrozen();
-    final selection = skir.TypeSelection.createComplete(
-      definition: _page,
-      arguments: const [],
-    );
-    expect(
-      catalog.presentationExpressionProblems(_resultMaterial(row), selection),
-      contains("clipped_row_has_flexible_child"),
-    );
-    expect(
-      catalog.presentationExpressionProblems(
-        _resultMaterial(column),
-        selection,
-      ),
-      contains("clipped_column_not_supported"),
-    );
-  });
+      ).evaluate(expression);
+      expect(result, isA<PortableExpressionAvailable>());
+      expect(
+        (result as PortableExpressionAvailable).value,
+        skir.DataValue.wrapBoolean(true),
+      );
+    },
+  );
   test("named payload configuration and projected writes preserve one identity and reads", () async {
     final original = _catalog();
     final alias = _definition("Label");
@@ -1081,7 +702,7 @@ void main() {
     final configured = skir.ExpressionBindingId(value: "configured_value");
     final root = skir.BindingRef(bindingId: configured, path: editorRootPath);
     skir.DataValue? written;
-    List<PortableExpressionRead>? observed;
+    List<skir.ValueLocation>? observed;
     final payload = PortableNamedPayload(
       reference: root,
       actualType: use,
@@ -1089,12 +710,11 @@ void main() {
       location: skir.ValueLocation(resource: _resource, path: _namePath),
       bindings: const {},
       budget: _budget,
-      setBinding:
-          (reference, value, {reads = const <PortableExpressionRead>[]}) {
-            written = value;
-            observed = reads.toList();
-            return const PortablePresentationWriteApplied();
-          },
+      setBinding: (reference, value, {reads = const <skir.ValueLocation>[]}) {
+        written = value;
+        observed = reads.toList();
+        return const PortablePresentationWriteApplied();
+      },
     );
     final scope = PortablePresentationScope(
       bindings: const {},
@@ -1105,14 +725,12 @@ void main() {
       queries: PortableExpressionQueries(catalog: catalog),
     ).withNamedPayload(payload);
     final result = scope.evaluate(
-      skir.ExpressionNode.wrapQuery(
-        skir.ExpressionQuery.wrapValueConfiguration(
-          skir.ExpressionNode.createInput(
-            binding: configured,
-            path: editorRootPath,
-          ),
+      portableCall("value.configuration", [
+        skir.ExpressionNode.createInput(
+          binding: configured,
+          path: editorRootPath,
         ),
-      ),
+      ]),
     );
     expect(result, isA<PortableExpressionAvailable>());
     expect(
@@ -1121,13 +739,7 @@ void main() {
       ),
       skir.TypeSelection.wrapComplete(use),
     );
-    final reads = [
-      PortableExpressionRead(
-        source: PortableExpressionReadSource.input(configured),
-        path: _namePath,
-        location: skir.ValueLocation(resource: _resource, path: _namePath),
-      ),
-    ];
+    final reads = [skir.ValueLocation(resource: _resource, path: _namePath)];
     final applied = await scope.apply(
       root,
       skir.DataValue.createNamed(
@@ -1173,44 +785,52 @@ Map<skir.ExpressionBindingId, PortableExpressionBinding> get _bindings => {
   _id: _resource.toExpressionBinding(),
 };
 
+final _resourceRoot = skir.ValueLocation(
+  resource: _resource,
+  path: editorRootPath,
+);
+
 PortableExpressionAvailable _evaluate(
   CheckedEditorCatalog catalog,
   AuthoringDocument document,
   skir.ExpressionNode expression,
 ) {
-  final result = catalog.evaluateExpression(
-    expression,
-    bindings: _bindings,
+  final result = PortableExpressionEvaluator.located(
+    _bindings,
     budget: _budget,
     queries: PortableExpressionQueries(catalog: catalog, authored: document),
-  );
+  ).evaluate(expression);
   expect(
     result,
     isA<PortableExpressionAvailable>(),
     reason: result is PortableExpressionFailed
-        ? "${result.code}: ${result.message}"
+        ? "${result.failure.value}: ${result.message}"
         : "$result",
   );
   return result as PortableExpressionAvailable;
 }
 
-skir.ExpressionNode _query(
-  skir.ExpressionQuery Function(skir.ResourceQuerySource) query, {
-  bool generic = false,
-}) => skir.ExpressionNode.wrapQuery(
-  query(
-    skir.ResourceQuerySource.createIdentity(
-      identity: skir.ExpressionNode.createInput(
-        binding: _id,
-        path: editorRootPath,
-      ),
-      target: skir.TypeUse.createNamed(
-        definition: _page,
-        arguments: generic ? [_text] : const [],
-      ),
+skir.ExpressionNode get _identity =>
+    skir.ExpressionNode.createInput(binding: _id, path: editorRootPath);
+
+/// The configured value of the bound resource as a Page.
+skir.ExpressionNode _resourceValue({bool generic = false}) => portableCall(
+  "resource.value_of",
+  [_identity],
+  typeArguments: [
+    skir.TypeTemplate.createNamed(
+      definition: _page,
+      arguments: generic
+          ? [skir.TypeTemplate.wrapScalar(skir.ScalarKind.text)]
+          : const [],
     ),
-  ),
+  ],
 );
+
+/// The published declaration of the bound resource's configured type.
+skir.ExpressionNode _declaration() => portableCall("catalog.declaration", [
+  portableCall("resource.configuration", [_identity]),
+]);
 
 CheckedEditorCatalog _catalog({bool generic = false, bool display = true}) {
   final name = skir.FieldDeclaration(
@@ -1386,23 +1006,3 @@ PortableExpressionBinding _referenceBinding(
 final _namePath = skir.ValuePath(
   segments: [skir.PathSegment.createField(name: "name")],
 );
-
-final _pageSelection = skir.TypeSelection.createComplete(
-  definition: _page,
-  arguments: const [],
-);
-
-skir.PresentationMaterial _resultMaterial(skir.PresentationNode layout) =>
-    (skir.PresentationMaterial.mutable()
-          ..provider = skir.PresentationId(namespace: "test", name: "result")
-          ..role = skir.PresentationRole.resourceSearchResult
-          ..target = skir.PresentationTarget.createNamed(
-            definition: _page,
-            arguments: const [],
-          )
-          ..subject = skir.TypeTemplate.createNamed(
-            definition: _page,
-            arguments: const [],
-          )
-          ..layout = layout)
-        .toFrozen();

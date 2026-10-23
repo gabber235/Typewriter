@@ -717,7 +717,7 @@ String toString() {
 /// @nodoc
 mixin _$PortableInvocationContext {
 
- Map<skir.ExpressionBindingId, PortableExpressionBinding> get bindings; skir.CatalogGeneration get catalogGeneration; PortableExpressionQueries? get queries; ResourceDiagnosticReader get resourceDiagnostics; List<PortableExpressionRead> get expressionReads;
+ Map<skir.ExpressionBindingId, PortableExpressionBinding> get bindings; skir.CatalogGeneration get catalogGeneration; PortableExpressionQueries? get queries; ResourceDiagnosticReader get resourceDiagnostics; List<skir.ValueLocation> get expressionReads;
 
 
 
@@ -751,7 +751,7 @@ String toString() {
 
 
 class _PortableInvocationContext extends PortableInvocationContext {
-  const _PortableInvocationContext({required  Map<skir.ExpressionBindingId, PortableExpressionBinding> bindings, required this.catalogGeneration, required this.queries, required this.resourceDiagnostics, required  List<PortableExpressionRead> expressionReads}): _bindings = bindings,_expressionReads = expressionReads,super._();
+  const _PortableInvocationContext({required  Map<skir.ExpressionBindingId, PortableExpressionBinding> bindings, required this.catalogGeneration, required this.queries, required this.resourceDiagnostics, required  List<skir.ValueLocation> expressionReads}): _bindings = bindings,_expressionReads = expressionReads,super._();
   
 
  final  Map<skir.ExpressionBindingId, PortableExpressionBinding> _bindings;
@@ -764,8 +764,8 @@ class _PortableInvocationContext extends PortableInvocationContext {
 @override final  skir.CatalogGeneration catalogGeneration;
 @override final  PortableExpressionQueries? queries;
 @override final  ResourceDiagnosticReader resourceDiagnostics;
- final  List<PortableExpressionRead> _expressionReads;
-@override List<PortableExpressionRead> get expressionReads {
+ final  List<skir.ValueLocation> _expressionReads;
+@override List<skir.ValueLocation> get expressionReads {
   if (_expressionReads is EqualUnmodifiableListView) return _expressionReads;
   // ignore: implicit_dynamic_type
   return EqualUnmodifiableListView(_expressionReads);

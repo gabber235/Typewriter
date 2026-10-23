@@ -426,7 +426,6 @@ const _portableLiteralEscapes = r"fnrt\.*+?^${}()|[]/-";
 ///
 /// Matching and replacement charge work through the caller supplied step hook,
 /// allowing the enclosing expression evaluator to enforce its shared budget.
-/// [matches] requires the whole input, while [find] and [containsMatchIn] search.
 final class PortableRegexMatcher {
   PortableRegexMatcher._(this._instructions, this._start, this.groupCount);
 
@@ -445,36 +444,20 @@ final class PortableRegexMatcher {
   final int _start;
   final int groupCount;
 
-  bool containsMatchIn(String input, void Function() consumeStep) =>
-      find(input, consumeStep) != null;
-
-  bool matches(String input, void Function() consumeStep) {
-    final codePoints = input.runes.toList(growable: false);
-    final captures = List<int>.filled((groupCount + 1) * 2, _unsetCapture);
-    var current = _closure(
-      [_MachineThread(_start, captures)],
-      0,
-      codePoints.length,
-      consumeStep,
-    );
-    for (var index = 0; index < codePoints.length; index++) {
-      current = _advance(
-        current,
-        codePoints[index],
-        index + 1,
-        codePoints.length,
-        consumeStep,
-      );
-    }
-    return current.any(
-      (thread) =>
-          _instructions[thread.instruction].kind == _InstructionKind.match,
-    );
-  }
-
+  /// The first match in [input], or null.
   PortableRegexMatch? find(String input, void Function() consumeStep) =>
       _find(input.runes.toList(growable: false), 0, consumeStep);
 
+  /// Every non overlapping match in [input], left to right. After an empty
+  /// match the search resumes one code point further.
+  List<PortableRegexMatch> findAll(String input, void Function() consumeStep) =>
+      _findAll(input.runes.toList(growable: false), consumeStep);
+
+  /// [input] with every match replaced by [replacement], where `$n` inserts
+  /// group n (nothing when it did not take part) and `$$` a dollar sign. A
+  /// group number takes the longest digit run that names a group. Any other
+  /// `$` throws [PortableRegexCompileFailure]; every other character,
+  /// backslashes included, is literal.
   String replace(
     String input,
     String replacement,
@@ -483,10 +466,7 @@ final class PortableRegexMatcher {
     final codePoints = input.runes.toList(growable: false);
     final output = StringBuffer();
     var copiedUntil = 0;
-    var searchFrom = 0;
-    while (searchFrom <= codePoints.length) {
-      final match = _find(codePoints, searchFrom, consumeStep);
-      if (match == null) break;
+    for (final match in _findAll(codePoints, consumeStep)) {
       _appendCodePoints(
         output,
         codePoints,
@@ -503,11 +483,6 @@ final class PortableRegexMatcher {
         consumeStep,
       );
       copiedUntil = match.end;
-      searchFrom = match.start == match.end
-          ? (match.end == codePoints.length
-                ? codePoints.length + 1
-                : match.end + 1)
-          : match.end;
     }
     _appendCodePoints(
       output,
@@ -517,6 +492,21 @@ final class PortableRegexMatcher {
       consumeStep,
     );
     return output.toString();
+  }
+
+  List<PortableRegexMatch> _findAll(
+    List<int> codePoints,
+    void Function() consumeStep,
+  ) {
+    final matches = <PortableRegexMatch>[];
+    var searchFrom = 0;
+    while (searchFrom <= codePoints.length) {
+      final match = _find(codePoints, searchFrom, consumeStep);
+      if (match == null) break;
+      matches.add(match);
+      searchFrom = match.start == match.end ? match.end + 1 : match.end;
+    }
+    return matches;
   }
 
   PortableRegexMatch? _find(
@@ -547,19 +537,6 @@ final class PortableRegexMatcher {
     }
     return best;
   }
-
-  List<_MachineThread> _advance(
-    List<_MachineThread> current,
-    int codePoint,
-    int position,
-    int length,
-    void Function() consumeStep,
-  ) => _closure(
-    _consume(current, codePoint, consumeStep),
-    position,
-    length,
-    consumeStep,
-  );
 
   List<_MachineThread> _consume(
     List<_MachineThread> current,
@@ -1156,57 +1133,45 @@ void _appendReplacement(
   int groupCount,
   void Function() consumeStep,
 ) {
+  final marks = replacement.runes.toList(growable: false);
   var index = 0;
-  while (index < replacement.length) {
-    final marker = _codePointAt(replacement, index);
-    index += marker > 0xffff ? 2 : 1;
-    switch (marker) {
-      case 92:
-        if (index == replacement.length) {
-          throw const PortableRegexCompileFailure(
-            "The regular expression replacement is invalid",
-          );
-        }
-        final escaped = _codePointAt(replacement, index);
-        consumeStep();
-        output.writeCharCode(escaped);
-        index += escaped > 0xffff ? 2 : 1;
-      case 36:
-        if (index == replacement.length ||
-            !_isDigit(replacement.substring(index, index + 1))) {
-          throw const PortableRegexCompileFailure(
-            "The regular expression replacement is invalid",
-          );
-        }
-        var group = int.parse(replacement.substring(index, index + 1));
-        if (group > groupCount) {
-          throw const PortableRegexCompileFailure(
-            "The regular expression replacement is invalid",
-          );
-        }
-        index++;
-        while (index < replacement.length &&
-            _isDigit(replacement.substring(index, index + 1))) {
-          final candidate =
-              group * 10 + int.parse(replacement.substring(index, index + 1));
-          if (candidate > groupCount) break;
-          group = candidate;
-          index++;
-        }
-        final captureStart = captures[group * 2];
-        final captureEnd = captures[group * 2 + 1];
-        if (captureStart != _unsetCapture && captureEnd != _unsetCapture) {
-          _appendCodePoints(
-            output,
-            codePoints,
-            captureStart,
-            captureEnd,
-            consumeStep,
-          );
-        }
-      default:
-        consumeStep();
-        output.writeCharCode(marker);
+  while (index < marks.length) {
+    final marker = marks[index++];
+    if (marker != 36) {
+      consumeStep();
+      output.writeCharCode(marker);
+      continue;
+    }
+    if (index < marks.length && marks[index] == 36) {
+      index++;
+      consumeStep();
+      output.writeCharCode(36);
+      continue;
+    }
+    final first = index < marks.length ? marks[index] - 48 : -1;
+    if (first < 0 || first > 9 || first > groupCount) {
+      throw const PortableRegexCompileFailure(
+        r"A dollar sign in a replacement starts $$ or a group number",
+      );
+    }
+    var group = first;
+    index++;
+    while (index < marks.length) {
+      final digit = marks[index] - 48;
+      if (digit < 0 || digit > 9 || group * 10 + digit > groupCount) break;
+      group = group * 10 + digit;
+      index++;
+    }
+    final captureStart = captures[group * 2];
+    final captureEnd = captures[group * 2 + 1];
+    if (captureStart != _unsetCapture && captureEnd != _unsetCapture) {
+      _appendCodePoints(
+        output,
+        codePoints,
+        captureStart,
+        captureEnd,
+        consumeStep,
+      );
     }
   }
 }

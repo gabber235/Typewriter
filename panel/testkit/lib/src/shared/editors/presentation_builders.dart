@@ -51,7 +51,12 @@ skir.ExpressionNode localExpression(
 
 /// Reads field [name] from [source].
 skir.ExpressionNode fieldExpression(skir.ExpressionNode source, String name) =>
-    skir.ExpressionNode.createField(source: source, name: name);
+    skir.ExpressionNode.createField(
+      source: source,
+      path: skir.ValuePath(
+        segments: [skir.PathSegment.createField(name: name)],
+      ),
+    );
 
 /// A presentation node with default properties and no header.
 skir.PresentationNode presentationNode(

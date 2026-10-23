@@ -6,13 +6,7 @@ import "package:typewriter_panel/typewriter_panel.dart";
 void main() {
   test("expression edits enroll reads only after the mutation succeeds", () {
     final fixture = _fixture();
-    final read = PortableExpressionRead(
-      source: PortableExpressionReadSource.input(
-        skir.ExpressionBindingId(value: "configured_value"),
-      ),
-      path: fixture.title.path,
-      location: fixture.title,
-    );
+    final read = fixture.title;
 
     final rejected = fixture.draft.stageExpressionEdit([read], (_) => false);
     expect(rejected, isFalse);

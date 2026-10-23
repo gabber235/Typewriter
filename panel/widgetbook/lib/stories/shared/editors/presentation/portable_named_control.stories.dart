@@ -110,7 +110,7 @@ class PortableNamedControlHostStory extends HookWidget {
     PortablePresentationWriteResult write(
       skir.BindingRef reference,
       skir.DataValue value, {
-      Iterable<PortableExpressionRead> reads = const [],
+      Iterable<skir.ValueLocation> reads = const [],
     }) {
       element.value = skir.DataValue.createRecord(
         fields: [skir.FieldValue(name: "style", value: value)],

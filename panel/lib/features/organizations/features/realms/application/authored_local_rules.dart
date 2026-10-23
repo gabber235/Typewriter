@@ -199,10 +199,10 @@ final class _RuleProjectionBuilder {
         );
       case PortableExpressionUnavailable():
         return;
-      case PortableExpressionFailed(:final code, :final message):
+      case PortableExpressionFailed(:final failure, :final message):
         diagnostics.add(
           PortablePresentationDiagnostic(
-            code: code,
+            code: failure.value,
             origin: rule.id.origin,
             message: message,
             severity: skir.DiagnosticSeverity.error,

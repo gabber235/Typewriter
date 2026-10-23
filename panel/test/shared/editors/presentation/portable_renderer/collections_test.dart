@@ -52,19 +52,22 @@ void main() {
         properties: skir.PresentationProperties.defaultInstance,
         element: skir.PresentationElement.createCollectionGraph(
           sourceId: "tags",
-          roots: skir.ExpressionNode.createMap(
-            source: skir.ExpressionNode.createInput(
+          roots: portableCall("collection.map", [
+            skir.ExpressionNode.createInput(
               binding: _rootsBinding,
               path: skir.ValuePath(segments: const []),
             ),
-            body: skir.ExpressionNode.wrapLinkTarget(
-              skir.ExpressionNode.createLocal(
-                depth: 0,
-                slot: 0,
-                path: skir.ValuePath(segments: const []),
-              ),
+            skir.ExpressionNode.createLambda(
+              arity: 1,
+              body: portableCall("link.target", [
+                skir.ExpressionNode.createLocal(
+                  depth: 0,
+                  slot: 0,
+                  path: skir.ValuePath(segments: const []),
+                ),
+              ]),
             ),
-          ),
+          ]),
           rootSequence: _sequence(rootSlot),
           relationId: "next",
           direction: skir.CollectionGraphDirection.forward,
@@ -282,17 +285,16 @@ void main() {
       );
       final color = skir.PresentationColor.wrapValue(
         skir.ExpressionNode.createConditional(
-          test: skir.ExpressionNode.createValueCompare(
-            operation: skir.ValueCompareOperation.equal,
-            left: inputExpression(_rowBinding, field: "name"),
-            right: skir.ExpressionNode.wrapLiteral(
+          test: portableCall("value.equals", [
+            inputExpression(_rowBinding, field: "name"),
+            skir.ExpressionNode.wrapLiteral(
               skir.DataValue.wrapStringValue("Alpha"),
             ),
-          ),
-          yes: skir.ExpressionNode.wrapLiteral(
+          ]),
+          then: skir.ExpressionNode.wrapLiteral(
             skir.DataValue.wrapInteger("4294901760"),
           ),
-          no: skir.ExpressionNode.wrapLiteral(
+          otherwise: skir.ExpressionNode.wrapLiteral(
             skir.DataValue.wrapInteger("4278190335"),
           ),
         ),

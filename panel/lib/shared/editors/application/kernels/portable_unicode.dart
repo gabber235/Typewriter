@@ -1,4 +1,5 @@
-import "package:typewriter_panel/infrastructure/protocols/operations/skirout/portable_unicode_tables.dart";
+import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
+    as skir;
 import "package:typewriter_panel/typewriter_panel.dart";
 
 // Unicode text semantics of the portable expression language: case mapping,
@@ -144,18 +145,18 @@ final _normalizationTables = _NormalizationTables();
 
 /// The decoded case and white space tables.
 final class _CaseTables {
-  final whiteSpace = _RangeSet(PortableUnicodeTables.whiteSpace);
-  final cased = _RangeSet(PortableUnicodeTables.cased);
-  final caseIgnorable = _RangeSet(PortableUnicodeTables.caseIgnorable);
-  final finalSigmaLower = _multiMap(PortableUnicodeTables.finalSigmaLower);
-  final _simpleUpper = _CaseRuns(PortableUnicodeTables.simpleUpper);
-  final _simpleLower = _CaseRuns(PortableUnicodeTables.simpleLower);
-  final _simpleTitle = _CaseRuns(PortableUnicodeTables.simpleTitle);
-  final _simpleFold = _CaseRuns(PortableUnicodeTables.simpleFold);
-  final _specialUpper = _multiMap(PortableUnicodeTables.specialUpper);
-  final _specialLower = _multiMap(PortableUnicodeTables.specialLower);
-  final _specialTitle = _multiMap(PortableUnicodeTables.specialTitle);
-  final _fullFold = _multiMap(PortableUnicodeTables.fullFold);
+  final whiteSpace = _RangeSet(skir.PortableUnicodeTables.whiteSpace);
+  final cased = _RangeSet(skir.PortableUnicodeTables.cased);
+  final caseIgnorable = _RangeSet(skir.PortableUnicodeTables.caseIgnorable);
+  final finalSigmaLower = _multiMap(skir.PortableUnicodeTables.finalSigmaLower);
+  final _simpleUpper = _CaseRuns(skir.PortableUnicodeTables.simpleUpper);
+  final _simpleLower = _CaseRuns(skir.PortableUnicodeTables.simpleLower);
+  final _simpleTitle = _CaseRuns(skir.PortableUnicodeTables.simpleTitle);
+  final _simpleFold = _CaseRuns(skir.PortableUnicodeTables.simpleFold);
+  final _specialUpper = _multiMap(skir.PortableUnicodeTables.specialUpper);
+  final _specialLower = _multiMap(skir.PortableUnicodeTables.specialLower);
+  final _specialTitle = _multiMap(skir.PortableUnicodeTables.specialTitle);
+  final _fullFold = _multiMap(skir.PortableUnicodeTables.fullFold);
 
   List<int> upper(int codePoint) =>
       _specialUpper[codePoint] ?? [_simpleUpper.map(codePoint)];
@@ -186,7 +187,7 @@ final class _NormalizationTables {
   factory _NormalizationTables() {
     final canonical = <int, List<int>>{};
     final compatibility = <int, List<int>>{};
-    final reader = _TableReader(PortableUnicodeTables.decompositions);
+    final reader = _TableReader(skir.PortableUnicodeTables.decompositions);
     var codePoint = 0;
     var previous = const [0];
     while (reader.hasNext) {
@@ -204,7 +205,7 @@ final class _NormalizationTables {
     }
     final composites = <int, int>{};
     final primaries = _TableReader(
-      PortableUnicodeTables.primaryComposites,
+      skir.PortableUnicodeTables.primaryComposites,
     );
     var primary = 0;
     while (primaries.hasNext) {
@@ -213,7 +214,7 @@ final class _NormalizationTables {
       composites[_pairKey(pair[0], pair[1])] = primary;
     }
     return _NormalizationTables._(
-      _ClassRuns(PortableUnicodeTables.combiningClasses),
+      _ClassRuns(skir.PortableUnicodeTables.combiningClasses),
       canonical,
       compatibility,
       composites,
@@ -319,12 +320,12 @@ final class _NormalizationTables {
 int _pairKey(int first, int second) => first * _codePointLimit + second;
 
 final _continuationDigits =
-    PortableUnicodeTables.alphabet.length -
-    PortableUnicodeTables.terminalDigits;
+    skir.PortableUnicodeTables.alphabet.length -
+    skir.PortableUnicodeTables.terminalDigits;
 
 final _digits = () {
   final digits = List.filled(128, -1);
-  final alphabet = PortableUnicodeTables.alphabet;
+  final alphabet = skir.PortableUnicodeTables.alphabet;
   for (var value = 0; value < alphabet.length; value++) {
     digits[alphabet.codeUnitAt(value)] = value;
   }
@@ -341,7 +342,7 @@ final class _TableReader {
   bool get hasNext => _index < _data.length;
 
   int next() {
-    const terminal = PortableUnicodeTables.terminalDigits;
+    const terminal = skir.PortableUnicodeTables.terminalDigits;
     var value = 0;
     while (true) {
       final digit = _digits[_data.codeUnitAt(_index++)];

@@ -973,12 +973,12 @@ CheckedEditorCatalog authoringFixtureCatalog({
     resources(
       "fixture.book.pages",
       "pages",
-      order: skir.ExpressionNode.wrapLinkTarget(
+      order: portableCall("link.target", [
         skir.ExpressionNode.createInput(
           binding: fixtureResourcesItemBinding,
           path: editorRootPath,
         ),
-      ),
+      ]),
       skir.ResourcesLayout.createTree(
         path: editorRootPath.field("chapter"),
         groupBindingId: group,

@@ -43,7 +43,7 @@ extension PortableResourceHeading on skir.ExpressionNode {
     final identity = identifier == null
         ? null
         : skir.ExpressionNode.createOrElse(
-            input: identifier,
+            value: identifier,
             fallback: "".portableExpression,
           );
     final title =
@@ -66,18 +66,15 @@ extension PortableResourceHeading on skir.ExpressionNode {
     return node(
       "visible",
       skir.PresentationElement.createConditional(
-        condition: skir.ExpressionNode.createValueCompare(
-          operation: skir.ValueCompareOperation.equal,
-          left: skir.ExpressionNode.createOrElse(
-            input: panelSelectionCountInput.bindingId.readExpression(),
+        condition: portableCall("value.equals", [
+          skir.ExpressionNode.createOrElse(
+            value: panelSelectionCountInput.bindingId.readExpression(),
             fallback: skir.ExpressionNode.wrapLiteral(
               skir.DataValue.wrapInteger("1"),
             ),
           ),
-          right: skir.ExpressionNode.wrapLiteral(
-            skir.DataValue.wrapInteger("1"),
-          ),
-        ),
+          skir.ExpressionNode.wrapLiteral(skir.DataValue.wrapInteger("1")),
+        ]),
         whenTrue: node(
           "content",
           skir.PresentationElement.wrapChildren(
@@ -91,11 +88,12 @@ extension PortableResourceHeading on skir.ExpressionNode {
                     node(
                       "identity.visible",
                       skir.PresentationElement.createConditional(
-                        condition: skir.ExpressionNode.createValueCompare(
-                          operation: skir.ValueCompareOperation.notEqual,
-                          left: identity,
-                          right: "".portableExpression,
-                        ),
+                        condition: portableCall("boolean.not", [
+                          portableCall("value.equals", [
+                            identity,
+                            "".portableExpression,
+                          ]),
+                        ]),
                         whenTrue: node(
                           "identity",
                           skir.PresentationElement.wrapText(

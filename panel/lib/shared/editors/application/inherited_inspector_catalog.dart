@@ -232,18 +232,10 @@ extension InheritedInspectorCatalog on CheckedEditorCatalog {
         .toList();
   }
 
-  String? _memberProblem(
-    skir.PresentationMaterial material,
-    skir.TypeSelection owner,
-  ) {
-    final structural = _inheritableViews[material]!.diagnostic;
-    if (structural != null) return structural;
-    if (owner is skir.TypeSelection_pendingWrapper) return null;
-    final issues = presentationExpressionProblems(material, owner);
-    return issues.isEmpty
-        ? null
-        : "the source expressions are invalid (${issues.join(', ')})";
-  }
+  /// The structural problem of a member material. Its expressions were
+  /// checked when Realm built it.
+  String? _memberProblem(skir.PresentationMaterial material) =>
+      _inheritableViews[material]!.diagnostic;
 
   /// Continues only through strictly less specific named inspector targets.
   EditorInspectorLayoutSelection nextInspectorLayout({
@@ -269,7 +261,7 @@ extension InheritedInspectorCatalog on CheckedEditorCatalog {
       );
     }
     final selected = candidates.single;
-    final problem = _memberProblem(selected.material, actualOwner);
+    final problem = _memberProblem(selected.material);
     if (problem != null) {
       return InvalidEditorInspectorLayout(
         diagnostic:
@@ -346,7 +338,7 @@ extension InheritedInspectorCatalog on CheckedEditorCatalog {
       );
     }
     final material = local?.material ?? winners.single.material;
-    final problem = _memberProblem(material, owner);
+    final problem = _memberProblem(material);
     if (problem != null) {
       return InvalidEditorPartPresentation(diagnostic: diagnostic(problem));
     }

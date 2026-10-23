@@ -123,18 +123,7 @@ Future<void> _pump(
     configuration,
     skir.PresentationRole.resourceSearchResult,
   );
-  if (selection is UnavailableEditorPresentation) {
-    final material = document.catalog.snapshot.presentationMaterials
-        .singleWhere(
-          (material) =>
-              material.provider == selection.presentation &&
-              material.role == selection.role,
-        );
-    expect(
-      document.catalog.presentationExpressionProblems(material, configuration),
-      isEmpty,
-    );
-  }
+  expect(selection, isA<SelectedEditorPresentation>());
   await tester.pumpWidget(
     FakeApp(
       child: Center(

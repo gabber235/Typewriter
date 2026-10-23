@@ -142,38 +142,6 @@ void main() {
     );
   });
 
-  test("a published default request with invalid source expressions remains diagnostic", () {
-    final descriptor = _descriptor("base", _base);
-    final control =
-        (_control("name").toMutable()
-              ..label = skir.ExpressionNode.createInput(
-                binding: skir.ExpressionBindingId(value: "missing"),
-                path: skir.ValuePath.defaultInstance,
-              ))
-            .toFrozen();
-    final request = presentationNode(
-      "request",
-      skir.PresentationElement.createDefaultPresentation(
-        control: control,
-        presentationId: null,
-      ),
-    );
-    final catalog = _catalog(
-      [descriptor],
-      [
-        _material(descriptor, [request]),
-      ],
-    );
-    expect(
-      catalog.fieldPresentation(
-        _selection(_child),
-        "name",
-        skir.PresentationRole.inspector,
-      ),
-      isA<InvalidEditorFieldPresentation>(),
-    );
-  });
-
   test(
     "an invalid field only source never becomes an inspector continuation",
     () {

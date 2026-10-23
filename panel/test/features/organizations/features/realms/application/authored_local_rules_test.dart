@@ -530,15 +530,22 @@ _nestedRuleFixture({
             skir.OwnedRule(
               id: ruleId,
               descriptor: skir.RuleDescriptor(
-                predicate: skir.ExpressionNode.createRuleUnary(
-                  operation: skir.RuleUnaryOperation.positive,
-                  source: skir.ExpressionNode.createInput(
-                    binding: skir.ExpressionBindingId(
-                      value: "configured_value",
+                predicate: portableCall("value.equals", [
+                  portableCall("value.compare", [
+                    skir.ExpressionNode.createInput(
+                      binding: skir.ExpressionBindingId(
+                        value: "configured_value",
+                      ),
+                      path: skir.ValuePath(segments: const []),
                     ),
-                    path: skir.ValuePath(segments: const []),
+                    skir.ExpressionNode.wrapLiteral(
+                      skir.DataValue.wrapInteger("0"),
+                    ),
+                  ]),
+                  skir.ExpressionNode.wrapLiteral(
+                    skir.DataValue.wrapInteger("1"),
                   ),
-                ),
+                ]),
               ),
               diagnostic: skir.DiagnosticTemplate(
                 code: "positive",

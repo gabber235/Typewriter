@@ -103,9 +103,8 @@ final class PortableSearchEnvironment {
     skir.ExpressionBindingId? rowBinding,
     skir.DataValue? rowValue,
     PortablePresentationBindingSchema? rowSchema,
-  }) => catalog.evaluateExpression(
-    expression,
-    bindings: expressionBindings(
+  }) => PortableExpressionEvaluator.located(
+    expressionBindings(
       query: query,
       queryBindingId: queryBindingId,
       selectors: selectors,
@@ -114,8 +113,9 @@ final class PortableSearchEnvironment {
       rowSchema: rowSchema,
     ),
     budget: budget,
+    catalog: catalog,
     queries: context.queries,
-  );
+  ).evaluate(expression);
 
   PortableExpressionBinding? binding(skir.ExpressionBindingId id) =>
       context.bindings[id];

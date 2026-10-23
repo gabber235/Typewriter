@@ -145,7 +145,7 @@ abstract class PortableInvocationContext with _$PortableInvocationContext {
     required skir.CatalogGeneration catalogGeneration,
     PortableExpressionQueries? queries,
     ResourceDiagnosticReader resourceDiagnostics = noResourceDiagnostics,
-    Iterable<PortableExpressionRead> expressionReads = const [],
+    Iterable<skir.ValueLocation> expressionReads = const [],
   }) {
     if (queries != null &&
         queries.catalog.snapshot.generation != catalogGeneration) {
@@ -167,7 +167,7 @@ abstract class PortableInvocationContext with _$PortableInvocationContext {
     required skir.CatalogGeneration catalogGeneration,
     required PortableExpressionQueries? queries,
     required ResourceDiagnosticReader resourceDiagnostics,
-    required List<PortableExpressionRead> expressionReads,
+    required List<skir.ValueLocation> expressionReads,
   }) = _PortableInvocationContext;
 
   skir.DataValue? read(
@@ -205,7 +205,7 @@ abstract class PortableInvocationContext with _$PortableInvocationContext {
       read(reference, generation) == current;
 
   PortableInvocationContext withExpressionReads(
-    Iterable<PortableExpressionRead> reads,
+    Iterable<skir.ValueLocation> reads,
   ) => PortableInvocationContext(
     bindings: bindings,
     catalogGeneration: catalogGeneration,

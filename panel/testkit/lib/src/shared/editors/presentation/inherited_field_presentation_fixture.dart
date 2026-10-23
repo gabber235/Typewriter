@@ -250,13 +250,14 @@ skir.PresentationNode inheritedFieldTextInput(
                     display: null,
                     completion: skir.ExpressionMapping(
                       inputBinding: candidate,
-                      body: skir.ExpressionNode.createTextUnary(
-                        operation: skir.TextUnaryOperation.trim,
-                        source: skir.ExpressionNode.createInput(
-                          binding: candidate,
-                          path: editorRootPath,
-                        ),
-                      ),
+                      body: portableCall("text.trim_start", [
+                        portableCall("text.trim_end", [
+                          skir.ExpressionNode.createInput(
+                            binding: candidate,
+                            path: editorRootPath,
+                          ),
+                        ]),
+                      ]),
                     ),
                   )
                 : null)

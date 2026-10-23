@@ -61,6 +61,7 @@ dependencies:
   clock: ^1.1.0
   rxdart: ^0.28.0
   searchlight: ^0.2.3
+  timezone: ^0.11.2
   crypto: 3.0.7
 
 dev_dependencies:
