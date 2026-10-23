@@ -351,6 +351,10 @@ function checkWords(
   if (position === "result" && PARAMETER_ONLY.has(type.kind)) {
     throw fail(`${type.kind} describes how a call takes an argument, so no result uses it`);
   }
+  if (position === "result" && type.kind === "link") {
+    // A link's type is a catalog link declaration, which only an argument's own type can supply.
+    throw fail("link<T> has no structural expression type, so no result uses it");
+  }
   switch (type.kind) {
     case "scalar":
       return;

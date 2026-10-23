@@ -81,6 +81,11 @@ describe("operations manifest admission", () => {
     ["list results without item identities", operation("text.bad", "    parameters: [value: text]\n    result: list<text>\n"), /a list result declares item_ids/],
     ["concrete lists named by their source", operation("text.bad", "    parameters: [value: text]\n    result: list<text>\n    item_ids: source\n"), /a list of concrete values has positional item_ids/],
     ["item identities on scalar results", operation("text.bad", "    parameters: [value: text]\n    result: text\n    item_ids: source\n"), /only list, set and map results declare item_ids/],
+    [
+      "link results",
+      operation("link.bad", "    type_parameters: { T: any }\n    parameters: [value: T]\n    result: list<link<T>>\n    item_ids: positional\n"),
+      /operations\.link\.bad\.result: link<T> has no structural expression type, so no result uses it/,
+    ],
     ["properties with arguments", operation("text.bad", "    dsl: { property: true }\n    parameters: [value: text, other: text]\n    result: text\n"), /a property takes only its receiver/],
     ...["items<T>", "field_of<T>", "each<T, T>", "step<T, T>", "comparator<T>", "apply<T, T>", "partial<T>", "located<T>", "maybe<list<items<T>>>"].map(
       (result) =>
