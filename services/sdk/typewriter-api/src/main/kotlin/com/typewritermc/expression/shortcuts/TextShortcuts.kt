@@ -19,9 +19,11 @@ import com.typewritermc.expression.literal
 import com.typewritermc.expression.map
 import com.typewritermc.expression.minus
 import com.typewritermc.expression.not
+import com.typewritermc.expression.or
 import com.typewritermc.expression.plus
 import com.typewritermc.expression.rangeExpr
 import com.typewritermc.expression.reversed
+import com.typewritermc.expression.shr
 import com.typewritermc.expression.size
 import com.typewritermc.expression.split
 import com.typewritermc.expression.substring

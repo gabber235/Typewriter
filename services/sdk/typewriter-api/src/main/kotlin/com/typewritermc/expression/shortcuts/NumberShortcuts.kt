@@ -25,35 +25,35 @@ import java.math.BigInteger
 
 /** The negation of this number. */
 @JvmName("negateByte")
-operator fun <M : MissingPolicy> Expr<Byte, M>.unaryMinus(): Expr<Byte, M> = numericLiteral(0.toByte()).lift() - this
+operator fun <M : MissingPolicy> Expr<Byte, M>.unaryMinus(): Expr<Byte, M> = numericLiteral(0.toByte()).lift<Byte, M>() - this
 
 /** The negation of this number. */
 @JvmName("negateShort")
-operator fun <M : MissingPolicy> Expr<Short, M>.unaryMinus(): Expr<Short, M> = numericLiteral(0.toShort()).lift() - this
+operator fun <M : MissingPolicy> Expr<Short, M>.unaryMinus(): Expr<Short, M> = numericLiteral(0.toShort()).lift<Short, M>() - this
 
 /** The negation of this number. */
 @JvmName("negateInt")
-operator fun <M : MissingPolicy> Expr<Int, M>.unaryMinus(): Expr<Int, M> = numericLiteral(0).lift() - this
+operator fun <M : MissingPolicy> Expr<Int, M>.unaryMinus(): Expr<Int, M> = numericLiteral(0).lift<Int, M>() - this
 
 /** The negation of this number. */
 @JvmName("negateLong")
-operator fun <M : MissingPolicy> Expr<Long, M>.unaryMinus(): Expr<Long, M> = numericLiteral(0L).lift() - this
+operator fun <M : MissingPolicy> Expr<Long, M>.unaryMinus(): Expr<Long, M> = numericLiteral(0L).lift<Long, M>() - this
 
 /** The negation of this number. */
 @JvmName("negateBigInteger")
-operator fun <M : MissingPolicy> Expr<BigInteger, M>.unaryMinus(): Expr<BigInteger, M> = numericLiteral(BigInteger.ZERO).lift() - this
+operator fun <M : MissingPolicy> Expr<BigInteger, M>.unaryMinus(): Expr<BigInteger, M> = numericLiteral(BigInteger.ZERO).lift<BigInteger, M>() - this
 
 /** The negation of this number. */
 @JvmName("negateFloat")
-operator fun <M : MissingPolicy> Expr<Float, M>.unaryMinus(): Expr<Float, M> = numericLiteral(0f).lift() - this
+operator fun <M : MissingPolicy> Expr<Float, M>.unaryMinus(): Expr<Float, M> = numericLiteral(0f).lift<Float, M>() - this
 
 /** The negation of this number. */
 @JvmName("negateDouble")
-operator fun <M : MissingPolicy> Expr<Double, M>.unaryMinus(): Expr<Double, M> = numericLiteral(0.0).lift() - this
+operator fun <M : MissingPolicy> Expr<Double, M>.unaryMinus(): Expr<Double, M> = numericLiteral(0.0).lift<Double, M>() - this
 
 /** The negation of this number. */
 @JvmName("negateBigDecimal")
-operator fun <M : MissingPolicy> Expr<BigDecimal, M>.unaryMinus(): Expr<BigDecimal, M> = numericLiteral(BigDecimal.ZERO).lift() - this
+operator fun <M : MissingPolicy> Expr<BigDecimal, M>.unaryMinus(): Expr<BigDecimal, M> = numericLiteral(BigDecimal.ZERO).lift<BigDecimal, M>() - this
 
 /** The absolute value of this number. */
 @JvmName("absByte")

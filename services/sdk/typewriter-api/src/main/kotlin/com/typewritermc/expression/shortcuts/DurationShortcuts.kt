@@ -189,9 +189,9 @@ fun <M : MissingPolicy> Expr<Duration, M>.formatDuration(
                     val fraction =
                         when (fractionalSecondDigits) {
                             0 -> literal("").lift()
-                            1 -> literal(".").lift() + (millisecondsOfSecond / 100L).toText()
-                            2 -> literal(".").lift() + zeroPadded(millisecondsOfSecond / 10L, 2)
-                            else -> literal(".").lift() + zeroPadded(millisecondsOfSecond, 3)
+                            1 -> literal(".").lift<String, M>() + (millisecondsOfSecond / 100L).toText()
+                            2 -> literal(".").lift<String, M>() + zeroPadded(millisecondsOfSecond / 10L, 2)
+                            else -> literal(".").lift<String, M>() + zeroPadded(millisecondsOfSecond, 3)
                         }
                     concat(choose(milliseconds lt 0L, literal("-").lift(), literal("").lift()), whole, fraction)
                 }

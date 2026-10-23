@@ -8,6 +8,7 @@ import com.typewritermc.expression.literal
 import com.typewritermc.expression.operations.PortableOperationCatalog
 import com.typewritermc.expression.or
 import com.typewritermc.expression.parseInteger
+import com.typewritermc.expression.plus
 import com.typewritermc.expression.shl
 import com.typewritermc.expression.shr
 import com.typewritermc.expression.substring

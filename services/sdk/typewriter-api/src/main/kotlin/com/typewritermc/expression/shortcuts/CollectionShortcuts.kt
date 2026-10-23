@@ -5,6 +5,8 @@ package com.typewritermc.expression.shortcuts
 import com.typewritermc.expression.Expr
 import com.typewritermc.expression.MayBeMissing
 import com.typewritermc.expression.MissingPolicy
+import com.typewritermc.expression.contains
+import com.typewritermc.expression.div
 import com.typewritermc.expression.entryOf
 import com.typewritermc.expression.eq
 import com.typewritermc.expression.filter
