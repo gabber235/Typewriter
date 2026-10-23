@@ -1,6 +1,7 @@
 import "package:typewriter_panel/typewriter_panel.dart";
 
 export "loading_button_controller.dart";
+export "loading_button_controller_hook.dart";
 export "loading_icon_button.dart";
 
 /// Selects the Material button treatment used by [LoadingButton].

@@ -1,6 +1,6 @@
 import "package:flutter_test/flutter_test.dart";
 import "package:typewriter_panel/typewriter_panel.dart";
-import "package:widgetbook_workspace/stories/app/presentation/shell/appbar.stories.dart";
+import "package:widgetbook_workspace/stories/shared/shell/appbar.stories.dart";
 import "package:widgetbook_workspace/stories/shared/ui/components/anchored_popup.stories.dart";
 
 void main() {

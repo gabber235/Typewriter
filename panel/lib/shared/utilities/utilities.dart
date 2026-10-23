@@ -4,7 +4,6 @@
 /// configuration, canonical reconciliation, and small framework adapters.
 library;
 
-export "adaptive_single_activator.dart";
 export "animation.dart";
 export "app_config.dart";
 export "async.dart";
@@ -24,9 +23,6 @@ export "rect.dart";
 export "rect_converter.dart";
 export "relative_time.dart";
 export "render_box.dart";
-export "rive.dart";
-export "riverpod.dart";
-export "shortcut.dart";
 export "size.dart";
 export "snackbar.dart";
 export "spring_value.dart";

@@ -20,12 +20,6 @@ import 'package:widgetbook_workspace/stories/app/design_system/domain_color_show
     as _widgetbook_workspace_stories_app_design_system_domain_color_showcase_stories;
 import 'package:widgetbook_workspace/stories/app/design_system/foundation_showcase.stories.dart'
     as _widgetbook_workspace_stories_app_design_system_foundation_showcase_stories;
-import 'package:widgetbook_workspace/stories/app/presentation/shell/appbar.stories.dart'
-    as _widgetbook_workspace_stories_app_presentation_shell_appbar_stories;
-import 'package:widgetbook_workspace/stories/app/presentation/shell/appbar_control.stories.dart'
-    as _widgetbook_workspace_stories_app_presentation_shell_appbar_control_stories;
-import 'package:widgetbook_workspace/stories/app/presentation/shortcuts/action_shortcuts.stories.dart'
-    as _widgetbook_workspace_stories_app_presentation_shortcuts_action_shortcuts_stories;
 import 'package:widgetbook_workspace/stories/authoring/presentation/authored_presentation_renderer.stories.dart'
     as _widgetbook_workspace_stories_authoring_presentation_authored_presentation_renderer_stories;
 import 'package:widgetbook_workspace/stories/authoring/presentation/authored_resource_editor.stories.dart'
@@ -62,6 +56,8 @@ import 'package:widgetbook_workspace/stories/features/organizations/presentation
     as _widgetbook_workspace_stories_features_organizations_presentation_organization_selector_stories;
 import 'package:widgetbook_workspace/stories/features/organizations/presentation/route.stories.dart'
     as _widgetbook_workspace_stories_features_organizations_presentation_route_stories;
+import 'package:widgetbook_workspace/stories/features/organizations/search/presentation/primary_search.stories.dart'
+    as _widgetbook_workspace_stories_features_organizations_search_presentation_primary_search_stories;
 import 'package:widgetbook_workspace/stories/features/realms/presentation/realm_inbox.stories.dart'
     as _widgetbook_workspace_stories_features_realms_presentation_realm_inbox_stories;
 import 'package:widgetbook_workspace/stories/features/realms/presentation/realm_selector.stories.dart'
@@ -82,12 +78,10 @@ import 'package:widgetbook_workspace/stories/shared/editors/presentation/compone
     as _widgetbook_workspace_stories_shared_editors_presentation_components_color_picker_color_picker_field_stories;
 import 'package:widgetbook_workspace/stories/shared/editors/presentation/components/date_time_picker/date_time_picker_field.stories.dart'
     as _widgetbook_workspace_stories_shared_editors_presentation_components_date_time_picker_date_time_picker_field_stories;
-import 'package:widgetbook_workspace/stories/shared/editors/presentation/components/editor_text_field.stories.dart'
-    as _widgetbook_workspace_stories_shared_editors_presentation_components_editor_text_field_stories;
-import 'package:widgetbook_workspace/stories/shared/editors/presentation/components/input_field_container.stories.dart'
-    as _widgetbook_workspace_stories_shared_editors_presentation_components_input_field_container_stories;
-import 'package:widgetbook_workspace/stories/shared/editors/presentation/components/validated_text_field.stories.dart'
-    as _widgetbook_workspace_stories_shared_editors_presentation_components_validated_text_field_stories;
+import 'package:widgetbook_workspace/stories/shared/editors/presentation/components/resource_icon.stories.dart'
+    as _widgetbook_workspace_stories_shared_editors_presentation_components_resource_icon_stories;
+import 'package:widgetbook_workspace/stories/shared/editors/presentation/components/resource_item_chrome.stories.dart'
+    as _widgetbook_workspace_stories_shared_editors_presentation_components_resource_item_chrome_stories;
 import 'package:widgetbook_workspace/stories/shared/editors/presentation/configured_actions.stories.dart'
     as _widgetbook_workspace_stories_shared_editors_presentation_configured_actions_stories;
 import 'package:widgetbook_workspace/stories/shared/editors/presentation/configured_scalar_controls.stories.dart'
@@ -118,8 +112,8 @@ import 'package:widgetbook_workspace/stories/shared/inspector/presentation/inspe
     as _widgetbook_workspace_stories_shared_inspector_presentation_inspector_stories;
 import 'package:widgetbook_workspace/stories/shared/interaction_mode/presentation/mode_display_chip.stories.dart'
     as _widgetbook_workspace_stories_shared_interaction_mode_presentation_mode_display_chip_stories;
-import 'package:widgetbook_workspace/stories/shared/search/presentation/primary_search.stories.dart'
-    as _widgetbook_workspace_stories_shared_search_presentation_primary_search_stories;
+import 'package:widgetbook_workspace/stories/shared/search/presentation/query_bar/query_bar.stories.dart'
+    as _widgetbook_workspace_stories_shared_search_presentation_query_bar_query_bar_stories;
 import 'package:widgetbook_workspace/stories/shared/search/presentation/search_frame.stories.dart'
     as _widgetbook_workspace_stories_shared_search_presentation_search_frame_stories;
 import 'package:widgetbook_workspace/stories/shared/search/presentation/search_modal.stories.dart'
@@ -130,6 +124,14 @@ import 'package:widgetbook_workspace/stories/shared/selectables/operations/delet
     as _widgetbook_workspace_stories_shared_selectables_operations_delete_operation_stories;
 import 'package:widgetbook_workspace/stories/shared/selectables/presentation/selector.stories.dart'
     as _widgetbook_workspace_stories_shared_selectables_presentation_selector_stories;
+import 'package:widgetbook_workspace/stories/shared/selectables/presentation/selector_popup.stories.dart'
+    as _widgetbook_workspace_stories_shared_selectables_presentation_selector_popup_stories;
+import 'package:widgetbook_workspace/stories/shared/shell/appbar.stories.dart'
+    as _widgetbook_workspace_stories_shared_shell_appbar_stories;
+import 'package:widgetbook_workspace/stories/shared/shortcuts/action_shortcuts.stories.dart'
+    as _widgetbook_workspace_stories_shared_shortcuts_action_shortcuts_stories;
+import 'package:widgetbook_workspace/stories/shared/shortcuts/shortcut_display.stories.dart'
+    as _widgetbook_workspace_stories_shared_shortcuts_shortcut_display_stories;
 import 'package:widgetbook_workspace/stories/shared/ui/components/adaptive_choice_control.stories.dart'
     as _widgetbook_workspace_stories_shared_ui_components_adaptive_choice_control_stories;
 import 'package:widgetbook_workspace/stories/shared/ui/components/adaptive_leading_layout.stories.dart'
@@ -140,6 +142,8 @@ import 'package:widgetbook_workspace/stories/shared/ui/components/animated_slive
     as _widgetbook_workspace_stories_shared_ui_components_animated_slivers_stories;
 import 'package:widgetbook_workspace/stories/shared/ui/components/animated_status_content.stories.dart'
     as _widgetbook_workspace_stories_shared_ui_components_animated_status_content_stories;
+import 'package:widgetbook_workspace/stories/shared/ui/components/appbar_control.stories.dart'
+    as _widgetbook_workspace_stories_shared_ui_components_appbar_control_stories;
 import 'package:widgetbook_workspace/stories/shared/ui/components/blur_reveal.stories.dart'
     as _widgetbook_workspace_stories_shared_ui_components_blur_reveal_stories;
 import 'package:widgetbook_workspace/stories/shared/ui/components/countdown_badge.stories.dart'
@@ -172,12 +176,6 @@ import 'package:widgetbook_workspace/stories/shared/ui/components/outline_decora
     as _widgetbook_workspace_stories_shared_ui_components_outline_decorator_stories;
 import 'package:widgetbook_workspace/stories/shared/ui/components/page_heading.stories.dart'
     as _widgetbook_workspace_stories_shared_ui_components_page_heading_stories;
-import 'package:widgetbook_workspace/stories/shared/ui/components/query_bar.stories.dart'
-    as _widgetbook_workspace_stories_shared_ui_components_query_bar_stories;
-import 'package:widgetbook_workspace/stories/shared/ui/components/resource_icon.stories.dart'
-    as _widgetbook_workspace_stories_shared_ui_components_resource_icon_stories;
-import 'package:widgetbook_workspace/stories/shared/ui/components/resource_item_chrome.stories.dart'
-    as _widgetbook_workspace_stories_shared_ui_components_resource_item_chrome_stories;
 import 'package:widgetbook_workspace/stories/shared/ui/components/retry_indicator.stories.dart'
     as _widgetbook_workspace_stories_shared_ui_components_retry_indicator_stories;
 import 'package:widgetbook_workspace/stories/shared/ui/components/secret_field.stories.dart'
@@ -186,18 +184,20 @@ import 'package:widgetbook_workspace/stories/shared/ui/components/section.storie
     as _widgetbook_workspace_stories_shared_ui_components_section_stories;
 import 'package:widgetbook_workspace/stories/shared/ui/components/selection_initialization.stories.dart'
     as _widgetbook_workspace_stories_shared_ui_components_selection_initialization_stories;
-import 'package:widgetbook_workspace/stories/shared/ui/components/selector_popup.stories.dart'
-    as _widgetbook_workspace_stories_shared_ui_components_selector_popup_stories;
 import 'package:widgetbook_workspace/stories/shared/ui/components/shimmer.stories.dart'
     as _widgetbook_workspace_stories_shared_ui_components_shimmer_stories;
-import 'package:widgetbook_workspace/stories/shared/ui/components/shortcut_display.stories.dart'
-    as _widgetbook_workspace_stories_shared_ui_components_shortcut_display_stories;
 import 'package:widgetbook_workspace/stories/shared/ui/components/surface.stories.dart'
     as _widgetbook_workspace_stories_shared_ui_components_surface_stories;
 import 'package:widgetbook_workspace/stories/shared/ui/components/text_scroller.stories.dart'
     as _widgetbook_workspace_stories_shared_ui_components_text_scroller_stories;
 import 'package:widgetbook_workspace/stories/shared/ui/components/type_link.stories.dart'
     as _widgetbook_workspace_stories_shared_ui_components_type_link_stories;
+import 'package:widgetbook_workspace/stories/shared/ui/input/editor_text_field.stories.dart'
+    as _widgetbook_workspace_stories_shared_ui_input_editor_text_field_stories;
+import 'package:widgetbook_workspace/stories/shared/ui/input/input_field_container.stories.dart'
+    as _widgetbook_workspace_stories_shared_ui_input_input_field_container_stories;
+import 'package:widgetbook_workspace/stories/shared/ui/input/validated_text_field.stories.dart'
+    as _widgetbook_workspace_stories_shared_ui_input_validated_text_field_stories;
 import 'package:widgetbook_workspace/stories/shared/ui/screens/error_screen.stories.dart'
     as _widgetbook_workspace_stories_shared_ui_screens_error_screen_stories;
 
@@ -249,109 +249,6 @@ final directories = <_widgetbook.WidgetbookNode>[
                 builder:
                     _widgetbook_workspace_stories_app_design_system_foundation_showcase_stories
                         .foundationShowcaseUseCase,
-              ),
-            ],
-          ),
-        ],
-      ),
-      _widgetbook.WidgetbookFolder(
-        name: 'presentation',
-        children: [
-          _widgetbook.WidgetbookComponent(
-            name: 'PrimarySearchButton',
-            useCases: [
-              _widgetbook.WidgetbookUseCase(
-                name: 'App bar trigger',
-                builder:
-                    _widgetbook_workspace_stories_shared_search_presentation_primary_search_stories
-                        .primarySearchButtonUseCase,
-              ),
-            ],
-          ),
-          _widgetbook.WidgetbookFolder(
-            name: 'shell',
-            children: [
-              _widgetbook.WidgetbookComponent(
-                name: 'AppBarBreadcrumbs',
-                useCases: [
-                  _widgetbook.WidgetbookUseCase(
-                    name: 'Workspace navigation',
-                    builder:
-                        _widgetbook_workspace_stories_app_presentation_shell_appbar_stories
-                            .appBarBreadcrumbsUseCase,
-                  ),
-                ],
-              ),
-              _widgetbook.WidgetbookComponent(
-                name: 'AppBarControl',
-                useCases: [
-                  _widgetbook.WidgetbookUseCase(
-                    name: 'Text and filled',
-                    builder:
-                        _widgetbook_workspace_stories_app_presentation_shell_appbar_stories
-                            .appBarControlUseCase,
-                  ),
-                ],
-              ),
-              _widgetbook.WidgetbookComponent(
-                name: 'AppBarControlContent',
-                useCases: [
-                  _widgetbook.WidgetbookUseCase(
-                    name: 'Ordinary content',
-                    builder:
-                        _widgetbook_workspace_stories_app_presentation_shell_appbar_control_stories
-                            .appBarControlContentUseCase,
-                  ),
-                ],
-              ),
-              _widgetbook.WidgetbookComponent(
-                name: 'AppBarItem',
-                useCases: [
-                  _widgetbook.WidgetbookUseCase(
-                    name: 'Grouped presence',
-                    builder:
-                        _widgetbook_workspace_stories_app_presentation_shell_appbar_stories
-                            .appBarItemUseCase,
-                  ),
-                ],
-              ),
-              _widgetbook.WidgetbookComponent(
-                name: 'CustomAppBar',
-                useCases: [
-                  _widgetbook.WidgetbookUseCase(
-                    name: 'Progressive fitting',
-                    builder:
-                        _widgetbook_workspace_stories_app_presentation_shell_appbar_stories
-                            .customAppBarUseCase,
-                  ),
-                ],
-              ),
-              _widgetbook.WidgetbookComponent(
-                name: 'SidebarMenuButton',
-                useCases: [
-                  _widgetbook.WidgetbookUseCase(
-                    name: 'Route sidebar',
-                    builder:
-                        _widgetbook_workspace_stories_app_presentation_shell_appbar_stories
-                            .sidebarMenuUseCase,
-                  ),
-                ],
-              ),
-            ],
-          ),
-          _widgetbook.WidgetbookFolder(
-            name: 'shortcuts',
-            children: [
-              _widgetbook.WidgetbookComponent(
-                name: 'ActionRow',
-                useCases: [
-                  _widgetbook.WidgetbookUseCase(
-                    name: 'Default',
-                    builder:
-                        _widgetbook_workspace_stories_app_presentation_shortcuts_action_shortcuts_stories
-                            .actionRowUseCase,
-                  ),
-                ],
               ),
             ],
           ),
@@ -730,6 +627,27 @@ final directories = <_widgetbook.WidgetbookNode>[
                     builder:
                         _widgetbook_workspace_stories_features_organizations_presentation_organization_selector_stories
                             .organizationSelectorUseCase,
+                  ),
+                ],
+              ),
+            ],
+          ),
+          _widgetbook.WidgetbookFolder(
+            name: 'search',
+            children: [
+              _widgetbook.WidgetbookFolder(
+                name: 'presentation',
+                children: [
+                  _widgetbook.WidgetbookComponent(
+                    name: 'PrimarySearchButton',
+                    useCases: [
+                      _widgetbook.WidgetbookUseCase(
+                        name: 'App bar trigger',
+                        builder:
+                            _widgetbook_workspace_stories_features_organizations_search_presentation_primary_search_stories
+                                .primarySearchButtonUseCase,
+                      ),
+                    ],
                   ),
                 ],
               ),
@@ -1116,59 +1034,24 @@ final directories = <_widgetbook.WidgetbookNode>[
                 name: 'components',
                 children: [
                   _widgetbook.WidgetbookComponent(
-                    name: 'EditorTextField',
+                    name: 'ResourceIcon',
                     useCases: [
                       _widgetbook.WidgetbookUseCase(
-                        name: 'Default',
+                        name: 'Variants',
                         builder:
-                            _widgetbook_workspace_stories_shared_editors_presentation_components_editor_text_field_stories
-                                .editorTextFieldDefaultUseCase,
-                      ),
-                      _widgetbook.WidgetbookUseCase(
-                        name: 'Error',
-                        builder:
-                            _widgetbook_workspace_stories_shared_editors_presentation_components_editor_text_field_stories
-                                .editorTextFieldErrorUseCase,
-                      ),
-                      _widgetbook.WidgetbookUseCase(
-                        name: 'Multiline',
-                        builder:
-                            _widgetbook_workspace_stories_shared_editors_presentation_components_editor_text_field_stories
-                                .editorTextFieldMultilineUseCase,
-                      ),
-                      _widgetbook.WidgetbookUseCase(
-                        name: 'With Callbacks',
-                        builder:
-                            _widgetbook_workspace_stories_shared_editors_presentation_components_editor_text_field_stories
-                                .editorTextFieldWithCallbacksUseCase,
-                      ),
-                      _widgetbook.WidgetbookUseCase(
-                        name: 'With Prefix Icon',
-                        builder:
-                            _widgetbook_workspace_stories_shared_editors_presentation_components_editor_text_field_stories
-                                .editorTextFieldWithPrefixIconUseCase,
+                            _widgetbook_workspace_stories_shared_editors_presentation_components_resource_icon_stories
+                                .resourceIconVariantsUseCase,
                       ),
                     ],
                   ),
                   _widgetbook.WidgetbookComponent(
-                    name: 'InputFieldContainer',
+                    name: 'ResourceItemChrome',
                     useCases: [
                       _widgetbook.WidgetbookUseCase(
-                        name: 'Navigation and editing focus',
+                        name: 'States',
                         builder:
-                            _widgetbook_workspace_stories_shared_editors_presentation_components_input_field_container_stories
-                                .inputFieldContainerUseCase,
-                      ),
-                    ],
-                  ),
-                  _widgetbook.WidgetbookComponent(
-                    name: 'ValidatedTextField',
-                    useCases: [
-                      _widgetbook.WidgetbookUseCase(
-                        name: 'Parsed whole seconds',
-                        builder:
-                            _widgetbook_workspace_stories_shared_editors_presentation_components_validated_text_field_stories
-                                .validatedTextFieldUseCase,
+                            _widgetbook_workspace_stories_shared_editors_presentation_components_resource_item_chrome_stories
+                                .resourceItemChromeUseCase,
                       ),
                     ],
                   ),
@@ -1454,6 +1337,22 @@ final directories = <_widgetbook.WidgetbookNode>[
                   ),
                 ],
               ),
+              _widgetbook.WidgetbookFolder(
+                name: 'query_bar',
+                children: [
+                  _widgetbook.WidgetbookComponent(
+                    name: 'QueryBar',
+                    useCases: [
+                      _widgetbook.WidgetbookUseCase(
+                        name: 'Default',
+                        builder:
+                            _widgetbook_workspace_stories_shared_search_presentation_query_bar_query_bar_stories
+                                .queryBarDefaultUseCase,
+                      ),
+                    ],
+                  ),
+                ],
+              ),
             ],
           ),
         ],
@@ -1502,6 +1401,132 @@ final directories = <_widgetbook.WidgetbookNode>[
                             .selectableUseCase,
                   ),
                 ],
+              ),
+              _widgetbook.WidgetbookComponent(
+                name: 'SelectorPopup',
+                useCases: [
+                  _widgetbook.WidgetbookUseCase(
+                    name: 'Searchable sections',
+                    builder:
+                        _widgetbook_workspace_stories_shared_selectables_presentation_selector_popup_stories
+                            .selectorPopupUseCase,
+                  ),
+                ],
+              ),
+              _widgetbook.WidgetbookComponent(
+                name: 'SelectorPopupWithSelection',
+                useCases: [
+                  _widgetbook.WidgetbookUseCase(
+                    name: 'Current selection',
+                    builder:
+                        _widgetbook_workspace_stories_shared_selectables_presentation_selector_popup_stories
+                            .selectorPopupWithSelectionUseCase,
+                  ),
+                ],
+              ),
+              _widgetbook.WidgetbookComponent(
+                name: 'SelectorSearchField',
+                useCases: [
+                  _widgetbook.WidgetbookUseCase(
+                    name: 'Query input',
+                    builder:
+                        _widgetbook_workspace_stories_shared_selectables_presentation_selector_popup_stories
+                            .selectorSearchFieldUseCase,
+                  ),
+                ],
+              ),
+              _widgetbook.WidgetbookComponent(
+                name: 'SelectorSectionHeader',
+                useCases: [
+                  _widgetbook.WidgetbookUseCase(
+                    name: 'Section label',
+                    builder:
+                        _widgetbook_workspace_stories_shared_selectables_presentation_selector_popup_stories
+                            .selectorSectionHeaderUseCase,
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ],
+      ),
+      _widgetbook.WidgetbookFolder(
+        name: 'shell',
+        children: [
+          _widgetbook.WidgetbookComponent(
+            name: 'AppBarBreadcrumbs',
+            useCases: [
+              _widgetbook.WidgetbookUseCase(
+                name: 'Workspace navigation',
+                builder:
+                    _widgetbook_workspace_stories_shared_shell_appbar_stories
+                        .appBarBreadcrumbsUseCase,
+              ),
+            ],
+          ),
+          _widgetbook.WidgetbookComponent(
+            name: 'AppBarItem',
+            useCases: [
+              _widgetbook.WidgetbookUseCase(
+                name: 'Grouped presence',
+                builder:
+                    _widgetbook_workspace_stories_shared_shell_appbar_stories
+                        .appBarItemUseCase,
+              ),
+            ],
+          ),
+          _widgetbook.WidgetbookComponent(
+            name: 'CustomAppBar',
+            useCases: [
+              _widgetbook.WidgetbookUseCase(
+                name: 'Progressive fitting',
+                builder:
+                    _widgetbook_workspace_stories_shared_shell_appbar_stories
+                        .customAppBarUseCase,
+              ),
+            ],
+          ),
+          _widgetbook.WidgetbookComponent(
+            name: 'SidebarMenuButton',
+            useCases: [
+              _widgetbook.WidgetbookUseCase(
+                name: 'Route sidebar',
+                builder:
+                    _widgetbook_workspace_stories_shared_shell_appbar_stories
+                        .sidebarMenuUseCase,
+              ),
+            ],
+          ),
+        ],
+      ),
+      _widgetbook.WidgetbookFolder(
+        name: 'shortcuts',
+        children: [
+          _widgetbook.WidgetbookComponent(
+            name: 'ActionRow',
+            useCases: [
+              _widgetbook.WidgetbookUseCase(
+                name: 'Default',
+                builder:
+                    _widgetbook_workspace_stories_shared_shortcuts_action_shortcuts_stories
+                        .actionRowUseCase,
+              ),
+            ],
+          ),
+          _widgetbook.WidgetbookComponent(
+            name: 'ShortcutDisplay',
+            useCases: [
+              _widgetbook.WidgetbookUseCase(
+                name: 'Rotating',
+                builder:
+                    _widgetbook_workspace_stories_shared_shortcuts_shortcut_display_stories
+                        .rotatingShortcutsUseCase,
+              ),
+              _widgetbook.WidgetbookUseCase(
+                name: 'Single',
+                builder:
+                    _widgetbook_workspace_stories_shared_shortcuts_shortcut_display_stories
+                        .singleShortcutDisplayUseCase,
               ),
             ],
           ),
@@ -1565,6 +1590,28 @@ final directories = <_widgetbook.WidgetbookNode>[
                     builder:
                         _widgetbook_workspace_stories_shared_ui_components_animated_status_content_stories
                             .animatedStatusContentUseCase,
+                  ),
+                ],
+              ),
+              _widgetbook.WidgetbookComponent(
+                name: 'AppBarControl',
+                useCases: [
+                  _widgetbook.WidgetbookUseCase(
+                    name: 'Text and filled',
+                    builder:
+                        _widgetbook_workspace_stories_shared_shell_appbar_stories
+                            .appBarControlUseCase,
+                  ),
+                ],
+              ),
+              _widgetbook.WidgetbookComponent(
+                name: 'AppBarControlContent',
+                useCases: [
+                  _widgetbook.WidgetbookUseCase(
+                    name: 'Ordinary content',
+                    builder:
+                        _widgetbook_workspace_stories_shared_ui_components_appbar_control_stories
+                            .appBarControlContentUseCase,
                   ),
                 ],
               ),
@@ -1794,39 +1841,6 @@ final directories = <_widgetbook.WidgetbookNode>[
                 ],
               ),
               _widgetbook.WidgetbookComponent(
-                name: 'QueryBar',
-                useCases: [
-                  _widgetbook.WidgetbookUseCase(
-                    name: 'Default',
-                    builder:
-                        _widgetbook_workspace_stories_shared_ui_components_query_bar_stories
-                            .queryBarDefaultUseCase,
-                  ),
-                ],
-              ),
-              _widgetbook.WidgetbookComponent(
-                name: 'ResourceIcon',
-                useCases: [
-                  _widgetbook.WidgetbookUseCase(
-                    name: 'Variants',
-                    builder:
-                        _widgetbook_workspace_stories_shared_ui_components_resource_icon_stories
-                            .resourceIconVariantsUseCase,
-                  ),
-                ],
-              ),
-              _widgetbook.WidgetbookComponent(
-                name: 'ResourceItemChrome',
-                useCases: [
-                  _widgetbook.WidgetbookUseCase(
-                    name: 'States',
-                    builder:
-                        _widgetbook_workspace_stories_shared_ui_components_resource_item_chrome_stories
-                            .resourceItemChromeUseCase,
-                  ),
-                ],
-              ),
-              _widgetbook.WidgetbookComponent(
                 name: 'RetryIndicator',
                 useCases: [
                   _widgetbook.WidgetbookUseCase(
@@ -1895,50 +1909,6 @@ final directories = <_widgetbook.WidgetbookNode>[
                 ],
               ),
               _widgetbook.WidgetbookComponent(
-                name: 'SelectorPopup',
-                useCases: [
-                  _widgetbook.WidgetbookUseCase(
-                    name: 'Searchable sections',
-                    builder:
-                        _widgetbook_workspace_stories_shared_ui_components_selector_popup_stories
-                            .selectorPopupUseCase,
-                  ),
-                ],
-              ),
-              _widgetbook.WidgetbookComponent(
-                name: 'SelectorPopupWithSelection',
-                useCases: [
-                  _widgetbook.WidgetbookUseCase(
-                    name: 'Current selection',
-                    builder:
-                        _widgetbook_workspace_stories_shared_ui_components_selector_popup_stories
-                            .selectorPopupWithSelectionUseCase,
-                  ),
-                ],
-              ),
-              _widgetbook.WidgetbookComponent(
-                name: 'SelectorSearchField',
-                useCases: [
-                  _widgetbook.WidgetbookUseCase(
-                    name: 'Query input',
-                    builder:
-                        _widgetbook_workspace_stories_shared_ui_components_selector_popup_stories
-                            .selectorSearchFieldUseCase,
-                  ),
-                ],
-              ),
-              _widgetbook.WidgetbookComponent(
-                name: 'SelectorSectionHeader',
-                useCases: [
-                  _widgetbook.WidgetbookUseCase(
-                    name: 'Section label',
-                    builder:
-                        _widgetbook_workspace_stories_shared_ui_components_selector_popup_stories
-                            .selectorSectionHeaderUseCase,
-                  ),
-                ],
-              ),
-              _widgetbook.WidgetbookComponent(
                 name: 'Shimmer',
                 useCases: [
                   _widgetbook.WidgetbookUseCase(
@@ -1970,23 +1940,6 @@ final directories = <_widgetbook.WidgetbookNode>[
                     builder:
                         _widgetbook_workspace_stories_shared_ui_components_shimmer_stories
                             .shimmerSmallShapesListUseCase,
-                  ),
-                ],
-              ),
-              _widgetbook.WidgetbookComponent(
-                name: 'ShortcutDisplay',
-                useCases: [
-                  _widgetbook.WidgetbookUseCase(
-                    name: 'Rotating',
-                    builder:
-                        _widgetbook_workspace_stories_shared_ui_components_shortcut_display_stories
-                            .rotatingShortcutsUseCase,
-                  ),
-                  _widgetbook.WidgetbookUseCase(
-                    name: 'Single',
-                    builder:
-                        _widgetbook_workspace_stories_shared_ui_components_shortcut_display_stories
-                            .singleShortcutDisplayUseCase,
                   ),
                 ],
               ),
@@ -2102,6 +2055,68 @@ final directories = <_widgetbook.WidgetbookNode>[
                                 .loadingIconButtonPlaygroundUseCase,
                       ),
                     ],
+                  ),
+                ],
+              ),
+            ],
+          ),
+          _widgetbook.WidgetbookFolder(
+            name: 'input',
+            children: [
+              _widgetbook.WidgetbookComponent(
+                name: 'EditorTextField',
+                useCases: [
+                  _widgetbook.WidgetbookUseCase(
+                    name: 'Default',
+                    builder:
+                        _widgetbook_workspace_stories_shared_ui_input_editor_text_field_stories
+                            .editorTextFieldDefaultUseCase,
+                  ),
+                  _widgetbook.WidgetbookUseCase(
+                    name: 'Error',
+                    builder:
+                        _widgetbook_workspace_stories_shared_ui_input_editor_text_field_stories
+                            .editorTextFieldErrorUseCase,
+                  ),
+                  _widgetbook.WidgetbookUseCase(
+                    name: 'Multiline',
+                    builder:
+                        _widgetbook_workspace_stories_shared_ui_input_editor_text_field_stories
+                            .editorTextFieldMultilineUseCase,
+                  ),
+                  _widgetbook.WidgetbookUseCase(
+                    name: 'With Callbacks',
+                    builder:
+                        _widgetbook_workspace_stories_shared_ui_input_editor_text_field_stories
+                            .editorTextFieldWithCallbacksUseCase,
+                  ),
+                  _widgetbook.WidgetbookUseCase(
+                    name: 'With Prefix Icon',
+                    builder:
+                        _widgetbook_workspace_stories_shared_ui_input_editor_text_field_stories
+                            .editorTextFieldWithPrefixIconUseCase,
+                  ),
+                ],
+              ),
+              _widgetbook.WidgetbookComponent(
+                name: 'InputFieldContainer',
+                useCases: [
+                  _widgetbook.WidgetbookUseCase(
+                    name: 'Navigation and editing focus',
+                    builder:
+                        _widgetbook_workspace_stories_shared_ui_input_input_field_container_stories
+                            .inputFieldContainerUseCase,
+                  ),
+                ],
+              ),
+              _widgetbook.WidgetbookComponent(
+                name: 'ValidatedTextField',
+                useCases: [
+                  _widgetbook.WidgetbookUseCase(
+                    name: 'Parsed whole seconds',
+                    builder:
+                        _widgetbook_workspace_stories_shared_ui_input_validated_text_field_stories
+                            .validatedTextFieldUseCase,
                   ),
                 ],
               ),

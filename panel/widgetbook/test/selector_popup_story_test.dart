@@ -1,6 +1,6 @@
 import "package:flutter_test/flutter_test.dart";
 import "package:typewriter_panel/typewriter_panel.dart";
-import "package:widgetbook_workspace/stories/shared/ui/components/selector_popup.stories.dart";
+import "package:widgetbook_workspace/stories/shared/selectables/presentation/selector_popup.stories.dart";
 
 void main() {
   for (final withSelection in [false, true]) {

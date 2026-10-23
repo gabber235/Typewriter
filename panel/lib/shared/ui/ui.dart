@@ -5,4 +5,5 @@
 library;
 
 export "components/components.dart";
+export "input/input.dart";
 export "screens/screens.dart";

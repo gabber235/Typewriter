@@ -1,5 +1,6 @@
 library;
 
+export "query_bar/query_bar.dart";
 export "search.dart";
 export "search_body.dart";
 export "search_command_info.dart";
