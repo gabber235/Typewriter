@@ -102,7 +102,7 @@ class Parser {
     let signature: Signature;
     if (this.peek() === "<") {
       this.position++;
-      const first = this.signatureOrField();
+      const first = this.signature();
       if (UNARY.has(name)) {
         signature = { kind: name, value: first } as Signature;
       } else if (BINARY.has(name)) {
@@ -145,10 +145,6 @@ class Parser {
     }
   }
 
-  private signatureOrField(): Signature {
-    return this.signature();
-  }
-
   private identifier(): string {
     this.skipSpace();
     const match = /^[A-Za-z][A-Za-z0-9_]*/u.exec(this.source.slice(this.position));
@@ -174,6 +170,41 @@ class Parser {
 
   private skipSpace(): void {
     while (this.source[this.position] === " ") this.position++;
+  }
+}
+
+/** The signatures directly inside `signature`, in spelling order. */
+export function signatureChildren(signature: Signature): readonly Signature[] {
+  switch (signature.kind) {
+    case "scalar":
+    case "named":
+    case "variable":
+      return [];
+    case "map":
+    case "entry":
+      return [signature.key, signature.value];
+    case "each":
+    case "apply":
+      return [signature.input, signature.output];
+    case "step":
+      return [signature.accumulator, signature.item];
+    case "field_type":
+      return [signature.record];
+    default:
+      return [signature.value];
+  }
+}
+
+/** Whether a collection item type has a fixed kernel representation rather than an opaque value. */
+export function concreteItem(type: Signature): boolean {
+  switch (type.kind) {
+    case "scalar":
+    case "named":
+      return true;
+    case "nullable":
+      return concreteItem(type.value);
+    default:
+      return false;
   }
 }
 

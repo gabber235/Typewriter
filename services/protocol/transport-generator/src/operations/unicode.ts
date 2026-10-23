@@ -1,6 +1,8 @@
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
 
+import { wrapWords } from "./emit/shared.js";
+
 /**
  * Unicode character data for the portable expression text operations, read from one pinned Unicode
  * release and emitted as compact tables for Kotlin and Dart. Both runtimes implement case mapping,
@@ -224,17 +226,9 @@ function chunks(data: string): string[] {
   return parts;
 }
 
+/** A member dartdoc comment that stays within 80 columns. */
 function dartDoc(text: string): string[] {
-  const lines: string[] = [];
-  let line = "  ///";
-  for (const word of text.split(" ")) {
-    if (line.length + 1 + word.length > 80) {
-      lines.push(line);
-      line = "  ///";
-    }
-    line += ` ${word}`;
-  }
-  return [...lines, line];
+  return wrapWords(text, 80 - "  /// ".length).map((line) => `  /// ${line}`);
 }
 
 /** The digit alphabet: printable ASCII without the characters Kotlin or Dart literals would escape. */

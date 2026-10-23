@@ -82,6 +82,14 @@ describe("operations manifest admission", () => {
     ["concrete lists named by their source", operation("text.bad", "    parameters: [value: text]\n    result: list<text>\n    item_ids: source\n"), /a list of concrete values has positional item_ids/],
     ["item identities on scalar results", operation("text.bad", "    parameters: [value: text]\n    result: text\n    item_ids: source\n"), /only list, set and map results declare item_ids/],
     ["properties with arguments", operation("text.bad", "    dsl: { property: true }\n    parameters: [value: text, other: text]\n    result: text\n"), /a property takes only its receiver/],
+    ...["items<T>", "field_of<T>", "each<T, T>", "step<T, T>", "comparator<T>", "apply<T, T>", "partial<T>", "located<T>", "maybe<list<items<T>>>"].map(
+      (result) =>
+        [
+          `${result} results`,
+          operation("value.bad", `    type_parameters: { T: any }\n    parameters: [value: T]\n    result: ${result}\n`),
+          /operations\.value\.bad\.result: \w+ describes how a call takes an argument, so no result uses it/,
+        ] as const,
+    ),
   ];
   for (const [name, source, message] of rejections) {
     test(`rejects ${name} with the YAML path and line`, async () => {
@@ -116,6 +124,43 @@ describe("operations manifest admission", () => {
     expect(() => parseOperations(manifest(SAMPLE_FAILURE_USER).replace("profile: rule", "profile: rule\n    color: red"), "operations.yaml")).toThrow(
       /operations\.text\.sample_user: Unrecognized key/,
     );
+  });
+});
+
+describe("emitted sample operations", async () => {
+  const input = await loadSkirInput();
+  const longDoc = `${"Explains the sample at length. ".repeat(6)}A doc that writes */ inside a later line.`;
+  const catalog = await resolve(
+    operation("text.sample_short", "    parameters: [value: text]\n    result: text\n").replace("A sample.", "Ends */ early.") +
+      operation("text.sample_long", "    parameters: [value: text]\n    result: text\n").replace("A sample.", longDoc) +
+      operation("resource.sample_keys", "    type_parameters: { T: any }\n    parameters:\n      - source: map<link<T>, text>\n    result: boolean\n") +
+      operation(
+        "resource.sample_lambda",
+        "    type_parameters: { T: any }\n    parameters:\n      - source: list<T>\n      - body: each<link<T>, boolean>\n    result: boolean\n",
+      ),
+  );
+  const tables = unicodeTables(catalog.unicode, repository(OPERATIONS_CONFIG.unicodeData));
+  const kotlin = emitKotlinOperations(catalog, tables, symbolProviders(input).kotlin, input);
+  const dsl = kotlin.find((file) => file.path.endsWith("PortableOperationDsl.kt"))!.code;
+
+  test("no Kotlin documentation comment closes before its end, on any line", () => {
+    for (const file of kotlin) {
+      for (const line of file.code.split("\n").map((value) => value.trim())) {
+        if (line.startsWith("* ")) expect(line).not.toContain("*/");
+        if (line.startsWith("/** ")) expect(line.indexOf("*/")).toBe(line.length - 2);
+      }
+    }
+    expect(dsl).toContain("Ends *&#47; early.");
+    expect(dsl).toContain("writes *&#47;");
+  });
+
+  test("a type parameter linked anywhere in a signature is bound to Resource in the DSL", () => {
+    for (const name of ["resourceSampleKeys", "resourceSampleLambda"]) {
+      const lines = dsl.split("\n");
+      const annotation = lines.indexOf(`@JvmName("${name}")`);
+      expect(annotation).toBeGreaterThan(-1);
+      expect(lines[annotation + 1]).toContain("<T : Resource, M : MissingPolicy>");
+    }
   });
 });
 
