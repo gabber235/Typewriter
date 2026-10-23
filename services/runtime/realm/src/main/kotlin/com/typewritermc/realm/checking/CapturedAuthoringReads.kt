@@ -792,12 +792,13 @@ class CapturedAuthoringReads(
         return when (val located = valueAt(location)) {
             is LocatedValue.Available -> {
                 when (val value = located.value.unwrapNamed()) {
+                    // A list or set has items only; its keys and values are nothing.
                     is DataValue.ListValueWrapper -> {
-                        value.items.map { location.item(it.id) }
+                        if (part == CollectionPart.Item) value.items.map { location.item(it.id) } else emptyList()
                     }
 
                     is DataValue.SetValueWrapper -> {
-                        value.items.map { location.item(it.id) }
+                        if (part == CollectionPart.Item) value.items.map { location.item(it.id) } else emptyList()
                     }
 
                     is DataValue.MapValueWrapper -> {
