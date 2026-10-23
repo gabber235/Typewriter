@@ -150,7 +150,9 @@ internal class RuntimeLayout(
             state.node(
                 PresentationElement.createScopedBinding(
                     binding = base,
-                    scopeBindingId = CONFIGURED_VALUE,
+                    scopeBinding =
+                        skirout.editor.v1.presentation
+                            .BindingDeclaration(id = CONFIGURED_VALUE, type = checked.type),
                     child = node,
                 ),
             )

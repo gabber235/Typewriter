@@ -2,7 +2,8 @@ use wasmcloud_utils::skir::base::editor::v1::{
     authoring, authoring_facts as facts, binding, catalog, checking,
     expression::{CallExpression, ExpressionLocal, ExpressionNode, LambdaExpression, OperationId},
     presentation::{
-        AxisChild, AxisChildrenElement, AxisChildrenLayout, BoundControl, ChildrenElement,
+        AxisChild, AxisChildrenElement, AxisChildrenLayout, BindingDeclaration, BoundControl,
+        ChildrenElement,
         GraphDirection, GraphResourcesLayout, GridResourcesLayout, NamedControl,
         PresentationElement, PresentationNode, ResourcesElement, ResourcesLayout, RichTextContent,
         TextContent, TextFit, TextRun, TextSizing, TimelineResourcesLayout, TreeResourcesLayout,
@@ -309,8 +310,12 @@ fn resources_elements_preserve_their_field_binding_and_layout() {
                 }))],
                 _unrecognized: None,
             },
-            group_binding_id: ExpressionBindingId {
-                value: "group".to_owned(),
+            group_binding: BindingDeclaration {
+                id: ExpressionBindingId {
+                    value: "group".to_owned(),
+                    _unrecognized: None,
+                },
+                type_: TypeTemplate::Scalar(Box::new(ScalarKind::Text)),
                 _unrecognized: None,
             },
             initially_expanded: true,
@@ -323,8 +328,12 @@ fn resources_elements_preserve_their_field_binding_and_layout() {
             control: control.clone(),
             layout,
             order: None,
-            item_binding_id: ExpressionBindingId {
-                value: "resources_item".to_owned(),
+            item_binding: BindingDeclaration {
+                id: ExpressionBindingId {
+                    value: "resources_item".to_owned(),
+                    _unrecognized: None,
+                },
+                type_: TypeTemplate::Scalar(Box::new(ScalarKind::Text)),
                 _unrecognized: None,
             },
             _unrecognized: None,

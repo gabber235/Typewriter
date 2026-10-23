@@ -152,7 +152,7 @@ val FieldPresentationInferenceTest by testSuite {
                 ),
                 PresentationElement.createScopedBinding(
                     binding = fieldControl("name").binding,
-                    scopeBindingId = ExpressionBindingId(value = "scope"),
+                    scopeBinding = declared("scope"),
                     child = first,
                 ),
                 PresentationElement.createTypedField(
@@ -248,7 +248,7 @@ val FieldPresentationInferenceTest by testSuite {
                                             element =
                                                 PresentationElement.createScopedBinding(
                                                     binding = source,
-                                                    scopeBindingId = ExpressionBindingId(value = "alias"),
+                                                    scopeBinding = declared("alias"),
                                                     child = editor,
                                                 ),
                                         ),
@@ -291,7 +291,7 @@ val FieldPresentationInferenceTest by testSuite {
                 element =
                     PresentationElement.createScopedBinding(
                         binding = rootBinding,
-                        scopeBindingId = ExpressionBindingId(value = "record"),
+                        scopeBinding = declared("record"),
                         child = aliased.copy(nodeId = "aliased name"),
                     ),
             )
@@ -327,8 +327,8 @@ val FieldPresentationInferenceTest by testSuite {
                     PresentationElement.ListInputWrapper(
                         skirout.editor.v1.presentation.ListControl.partial(
                             control = fieldControl("items"),
-                            itemBindingId = ExpressionBindingId(value = "item"),
-                            indexBindingId = ExpressionBindingId(value = "index"),
+                            itemBinding = declared("item"),
+                            indexBinding = declared("index"),
                             itemPresentation = item,
                         ),
                     ),
@@ -397,7 +397,7 @@ val FieldPresentationInferenceTest by testSuite {
                 element =
                     PresentationElement.createScopedBinding(
                         binding = fieldControl("details").binding,
-                        scopeBindingId = ExpressionBindingId(value = "configured_value"),
+                        scopeBinding = declared("configured_value"),
                         child = remaining,
                     ),
             )
@@ -474,7 +474,7 @@ val FieldPresentationInferenceTest by testSuite {
                 element =
                     PresentationElement.createScopedBinding(
                         binding = fieldControl("name").binding,
-                        scopeBindingId = ExpressionBindingId(value = "owned"),
+                        scopeBinding = declared("owned"),
                         child = lookup,
                     ),
             )
@@ -493,7 +493,7 @@ val FieldPresentationInferenceTest by testSuite {
                     listOf(
                         skirout.editor.v1.presentation.PresentationCollectionDefinition.partial(
                             sourceId = "external",
-                            rowBindingId = ExpressionBindingId(value = "owned"),
+                            rowBinding = declared("owned"),
                         ),
                     ),
             )
@@ -503,7 +503,7 @@ val FieldPresentationInferenceTest by testSuite {
     test("search result aliases remain foreign through provider composition") {
         val result =
             skirout.editor.v1.presentation.SearchResultMapping.partial(
-                bindingId = ExpressionBindingId(value = "configured_value"),
+                binding = declared("configured_value"),
                 presentation = fieldNode("name"),
             )
         val source =
@@ -599,7 +599,7 @@ val FieldPresentationInferenceTest by testSuite {
                 element =
                     PresentationElement.createScopedBinding(
                         binding = fieldControl("details").binding,
-                        scopeBindingId = ExpressionBindingId(value = "configured_value"),
+                        scopeBinding = declared("configured_value"),
                         child = remainder("nested remainder"),
                     ),
             )
@@ -667,7 +667,7 @@ val FieldPresentationInferenceTest by testSuite {
                     element =
                         PresentationElement.createScopedBinding(
                             binding = fieldControl("details").binding,
-                            scopeBindingId = ExpressionBindingId(value = "local scope"),
+                            scopeBinding = declared("local scope"),
                             child = field,
                         ),
                 ),
@@ -763,3 +763,8 @@ private fun remainder(id: String): PresentationNode =
         nodeId = id,
         element = PresentationElement.createRemainingFields(excluded = emptyList(), excludedParts = emptyList()),
     )
+
+/** A binding declaration whose type does not matter to write scope inference. */
+private fun declared(id: String): skirout.editor.v1.presentation.BindingDeclaration =
+    skirout.editor.v1.presentation.BindingDeclaration
+        .partial(id = ExpressionBindingId(value = id))

@@ -121,9 +121,10 @@ internal class PresentationBuildState(
             val key = ExpressionBindingId(value = id)
             contextInputs[key] =
                 skirout.editor.v1.presentation.PresentationContextInput(
-                    bindingId = key,
+                    binding =
+                        skirout.editor.v1.presentation
+                            .BindingDeclaration(id = key, type = use.toTemplate()),
                     source = skirout.editor.v1.presentation.PresentationContextSource.CALLER,
-                    valueType = use,
                 )
             expressionTypes[key] = use.toTemplate()
             type(use)
@@ -268,9 +269,10 @@ internal class PresentationBuildState(
             }
         val declaration =
             skirout.editor.v1.presentation.PresentationContextInput(
-                bindingId = key.binding,
+                binding =
+                    skirout.editor.v1.presentation
+                        .BindingDeclaration(id = key.binding, type = use.toTemplate()),
                 source = key.source,
-                valueType = use,
             )
         val previous = contextInputs[key.binding]
         require(previous == null || previous == declaration) { "Context input types conflict." }
@@ -464,3 +466,6 @@ internal fun publishField(
 ) {
     if (target is PresentationAxisNodeList) target.addField(node) else target.add(node)
 }
+
+/** Placeholder type of bindings whose type the builder does not compute yet. */
+internal val UNTYPED_BINDING: TypeTemplate = TypeTemplate.ScalarWrapper(skirout.editor.v1.type_catalog.ScalarKind.UNIT)

@@ -578,12 +578,13 @@ private fun skirout.editor.v1.presentation.PresentationDependencies.validCollect
     catalog: CheckedCatalog,
     resourceTypes: Set<TypeDefinitionId>,
 ): Boolean {
-    if (contextInputs.map { it.bindingId }.distinct().size != contextInputs.size) return false
+    if (contextInputs.map { it.binding.id }.distinct().size != contextInputs.size) return false
     if (!contextInputs.all { input ->
-            input.bindingId.value.startsWith("context:") &&
+            input.binding.id.value
+                .startsWith("context:") &&
                 input.source.kind != skirout.editor.v1.presentation.PresentationContextSource.Kind.UNKNOWN &&
-                input.valueType.isValid &&
-                catalog.resolve(input.valueType) is Resolution.Ready
+                input.binding.type.isValid &&
+                (input.binding.type.apply(emptyMap()) as? Resolution.Ready)?.let { catalog.resolve(it.value) is Resolution.Ready } == true
         }
     ) {
         return false
@@ -598,7 +599,7 @@ private fun skirout.editor.v1.presentation.PresentationDependencies.validCollect
                 ?: return false
         }
     return collections.all { collection ->
-        val rowType = collection.rowType.takeIf { it.isValid } ?: return@all false
+        val rowType = collection.rowBinding.type.takeIf { it.isValid } ?: return@all false
         if (!rowType.isValidMaterialTemplate(definitions, parameterBounds, catalog)) return@all false
         collection.projection?.isValid(rowType, definitions, parameterBounds, catalog, resourceTypes) ?: true
     }

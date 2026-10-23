@@ -245,7 +245,12 @@ internal class RuntimeValueMappings<V>(
                 payload
             }
         state.checkMapping(result.toNode(), input, payload, output)
-        return WireExpressionMapping(inputBinding = input, body = expression(result))
+        return WireExpressionMapping(
+            inputBinding =
+                skirout.editor.v1.presentation
+                    .BindingDeclaration(id = input, type = payload),
+            body = expression(result),
+        )
     }
 }
 
@@ -1042,7 +1047,9 @@ internal class RuntimeSelectInputScope<V>(
     private val overrides = linkedMapOf<String, WireChoiceOptionAppearance.Mutable>()
 
     init {
-        options.queryBindingId = queryId
+        options.queryBinding =
+            skirout.editor.v1.presentation
+                .BindingDeclaration(id = queryId, type = ScalarKind.TEXT.template)
     }
 
     private fun option(id: String): WireChoiceOptionAppearance.Mutable {

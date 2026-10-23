@@ -45,6 +45,7 @@ import com.typewritermc.types.rows
 import com.typewritermc.types.setValue
 import com.typewritermc.types.template
 import com.typewritermc.types.text
+import com.typewritermc.types.toTemplate
 import com.typewritermc.types.use
 import de.infix.testBalloon.framework.core.testSuite
 import io.kotest.matchers.shouldBe
@@ -117,9 +118,11 @@ val DefaultPresentationRuntimeTest by testSuite {
                 )
             }
         val input = result.dependencies.contextInputs.single()
-        input.bindingId.value shouldBe "context:test.active_resource"
+        input.binding.id.value shouldBe "context:test.active_resource"
         input.source shouldBe skirout.editor.v1.presentation.PresentationContextSource.CALLER
-        input.valueType shouldBe com.typewritermc.types.ResourceIdDefinition.use.use
+        input.binding.type shouldBe
+            com.typewritermc.types.ResourceIdDefinition.use.use
+                .toTemplate()
     }
 
     test("host inputs declare their host source and the host contract's value types") {
@@ -144,17 +147,19 @@ val DefaultPresentationRuntimeTest by testSuite {
                     skirout.editor.v1.presentation.HostContextInput.ACTIVE_RESOURCE,
                 ),
             )
-        active.bindingId.value shouldBe EditorContext.activeResource.binding.value
-        active.valueType shouldBe com.typewritermc.types.ResourceIdDefinition.use.use
+        active.binding.id.value shouldBe EditorContext.activeResource.binding.value
+        active.binding.type shouldBe
+            com.typewritermc.types.ResourceIdDefinition.use.use
+                .toTemplate()
         val count =
             inputs.getValue(
                 skirout.editor.v1.presentation.PresentationContextSource.HostWrapper(
                     skirout.editor.v1.presentation.HostContextInput.SELECTION_COUNT,
                 ),
             )
-        count.bindingId.value shouldBe EditorContext.selectionCount.binding.value
-        count.valueType shouldBe
-            integerScalar(IntegerWidth.SIGNED_THIRTY_TWO).use
+        count.binding.id.value shouldBe EditorContext.selectionCount.binding.value
+        count.binding.type shouldBe
+            integerScalar(IntegerWidth.SIGNED_THIRTY_TWO).template
         inputs.size shouldBe 2
     }
 
@@ -254,7 +259,7 @@ val DefaultPresentationRuntimeTest by testSuite {
             listOf(
                 PathSegment.createField(name = "details"),
             )
-        scope.value.scopeBindingId.value shouldBe "configured_value"
+        scope.value.scopeBinding.id.value shouldBe "configured_value"
         val part = scope.value.child.element as PresentationElement.PartWrapper
         part.value.key.owner shouldBe nestedId
         part.value.body shouldBe null
@@ -1598,7 +1603,7 @@ val DefaultPresentationRuntimeTest by testSuite {
             .binding.path.segments.size shouldBe 2
         val scopedRemainder = nestedChildren.last().element as PresentationElement.ScopedBindingWrapper
         scopedRemainder.value.binding.path.segments.size shouldBe 1
-        scopedRemainder.value.scopeBindingId.value shouldBe "configured_value"
+        scopedRemainder.value.scopeBinding.id.value shouldBe "configured_value"
         (scopedRemainder.value.child.element is PresentationElement.RemainingFieldsWrapper) shouldBe true
 
         System.getenv("TYPEWRITER_CONTROL_FIXTURE_DIR")?.let { output ->
@@ -1903,14 +1908,14 @@ val DefaultPresentationRuntimeTest by testSuite {
 
         val elements = root.layout.fixedChildren().map(PresentationNode::element)
         val repeated = elements[0] as PresentationElement.RepeatedWrapper
-        repeated.value.itemBindingId.value
+        repeated.value.itemBinding.id.value
             .startsWith("presentation.repeated.item") shouldBe true
         (repeated.value.presentation.empty != null) shouldBe true
         val scoped = elements[1] as PresentationElement.ScopedBindingWrapper
         scoped.value.child
             .singleFixed()
             .boundControl()
-            .binding.bindingId shouldBe scoped.value.scopeBindingId
+            .binding.bindingId shouldBe scoped.value.scopeBinding.id
         val typed = elements[2] as PresentationElement.TypedFieldWrapper
         System.getenv("TYPEWRITER_CONTROL_FIXTURE_DIR")?.let { output ->
             java.io
@@ -1979,7 +1984,7 @@ val DefaultPresentationRuntimeTest by testSuite {
             }
         otherResult.dependencies.collections
             .single()
-            .rowType shouldBe
+            .rowBinding.type shouldBe
             ScalarKind.BOOLEAN.template
         otherResult.dependencies.presentations shouldBe emptyList()
 
