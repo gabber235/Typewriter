@@ -56,7 +56,7 @@ import com.typewritermc.types.ReferenceContract
 import com.typewritermc.types.RelationDeletePolicy
 import com.typewritermc.types.Resource
 import com.typewritermc.authoring.defaultLabel
-import com.typewritermc.expression.orIfBlank
+import com.typewritermc.expression.shortcuts.orIfBlank
 import com.typewritermc.types.ResourceId
 import com.typewritermc.types.TypeDisplay
 import com.typewritermc.types.TypewriterDisplay

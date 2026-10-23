@@ -15,6 +15,7 @@ import com.typewritermc.expression.literal
 import com.typewritermc.expression.map
 import com.typewritermc.expression.not
 import com.typewritermc.expression.operations.RegexMatch
+import com.typewritermc.expression.operations.portableRegexValidationError
 import com.typewritermc.expression.plus
 import com.typewritermc.expression.replaceRegex
 import com.typewritermc.expression.substring
@@ -25,21 +26,25 @@ import com.typewritermc.expression.zip
  * inputs have size limits (regex_limit) and the subset rejects host specific syntax (invalid_regex).
  */
 
-/** Whether the whole text matches [pattern], like Kotlin's matches. */
+/**
+ * Whether the whole text matches [pattern], like Kotlin's matches. The pattern is validated alone when the expression
+ * is built, so a pattern outside the portable subset (or one that only parses once anchored, such as `a)|(b`) throws
+ * [IllegalArgumentException] instead of changing meaning inside the anchoring group.
+ */
 @JvmName("textMatches")
-fun <M : MissingPolicy> Expr<String, M>.matches(pattern: Expr<String, M>): Expr<Boolean, M> =
-    find(concat(literal("^(").lift(), pattern, literal(")$").lift())).isNull().not()
-
-/** Whether the whole text matches [pattern], like Kotlin's matches. */
-@JvmName("textMatchesRaw")
-fun <M : MissingPolicy> Expr<String, M>.matches(pattern: String): Expr<Boolean, M> = find("^($pattern)$").isNull().not()
+fun <M : MissingPolicy> Expr<String, M>.matches(pattern: String): Expr<Boolean, M> =
+    find("^(${requirePortablePattern(pattern)})$").isNull().not()
 
 /** Whether [pattern] matches somewhere in the text. Stops at the first match. */
 fun <M : MissingPolicy> Expr<String, M>.containsMatchIn(pattern: Expr<String, M>): Expr<Boolean, M> = find(pattern).isNull().not()
 
-/** Whether [pattern] matches somewhere in the text. Stops at the first match. */
+/**
+ * Whether [pattern] matches somewhere in the text. Stops at the first match. The pattern is validated when the
+ * expression is built and throws [IllegalArgumentException] outside the portable subset.
+ */
 @JvmName("containsMatchInRaw")
-fun <M : MissingPolicy> Expr<String, M>.containsMatchIn(pattern: String): Expr<Boolean, M> = find(pattern).isNull().not()
+fun <M : MissingPolicy> Expr<String, M>.containsMatchIn(pattern: String): Expr<Boolean, M> =
+    find(requirePortablePattern(pattern)).isNull().not()
 
 /**
  * The text of capture [group] of the first match of [pattern]: group 0 is the whole match, a group that did not take
@@ -66,3 +71,9 @@ fun <M : MissingPolicy> Expr<String, M>.splitRegex(pattern: String): Expr<List<S
 
 /** This text with every regular expression metacharacter escaped, so that it matches itself as a pattern. */
 fun <M : MissingPolicy> Expr<String, M>.escapeRegex(): Expr<String, M> = replaceRegex("""([\\.^$|?*+()\[\]{}])""", """\$1""")
+
+/** [pattern] when it lies in the portable regex subset and its size limit; throws with the reason otherwise. */
+private fun requirePortablePattern(pattern: String): String {
+    pattern.portableRegexValidationError()?.let { reason -> throw IllegalArgumentException(reason) }
+    return pattern
+}

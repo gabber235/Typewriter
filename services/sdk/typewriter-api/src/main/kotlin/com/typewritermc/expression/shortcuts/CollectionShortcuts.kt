@@ -5,6 +5,7 @@ package com.typewritermc.expression.shortcuts
 import com.typewritermc.expression.Expr
 import com.typewritermc.expression.MayBeMissing
 import com.typewritermc.expression.MissingPolicy
+import com.typewritermc.expression.compare
 import com.typewritermc.expression.contains
 import com.typewritermc.expression.div
 import com.typewritermc.expression.entryOf
@@ -321,32 +322,46 @@ fun <A, B, M : MissingPolicy> Expr<out List<Map.Entry<A, B>>, M>.unzip(): Expr<M
 /** The first item with the smallest [selector] key; fails with collection_key_absent when empty. */
 fun <T, O, M : MissingPolicy> Expr<out Collection<T>, M>.minBy(
     selector: Expr<T, MayBeMissing>.() -> Expr<O, out MissingPolicy>,
-): Expr<T, MayBeMissing> = sortedBy(SortDirection.Ascending, selector).first()
+): Expr<T, MayBeMissing> = map { entryOf(selector(), this) }.firstExtremeBy(SMALLER).entryValue
 
 /** The first item with the largest [selector] key; fails with collection_key_absent when empty. */
 fun <T, O, M : MissingPolicy> Expr<out Collection<T>, M>.maxBy(
     selector: Expr<T, MayBeMissing>.() -> Expr<O, out MissingPolicy>,
-): Expr<T, MayBeMissing> = sortedBy(SortDirection.Descending, selector).first()
+): Expr<T, MayBeMissing> = map { entryOf(selector(), this) }.firstExtremeBy(LARGER).entryValue
 
 /** The first item with the smallest [selector] key, or null when empty. */
 fun <T, O, M : MissingPolicy> Expr<out Collection<T>, M>.minByOrNull(
     selector: Expr<T, MayBeMissing>.() -> Expr<O, out MissingPolicy>,
-): Expr<T?, MayBeMissing> = sortedBy(SortDirection.Ascending, selector).firstOrNull()
+): Expr<T?, MayBeMissing> = let(this) { items -> choose(items.isEmpty(), nullLiteral(), items.minBy(selector).orNull()) }
 
 /** The first item with the largest [selector] key, or null when empty. */
 fun <T, O, M : MissingPolicy> Expr<out Collection<T>, M>.maxByOrNull(
     selector: Expr<T, MayBeMissing>.() -> Expr<O, out MissingPolicy>,
-): Expr<T?, MayBeMissing> = sortedBy(SortDirection.Descending, selector).firstOrNull()
+): Expr<T?, MayBeMissing> = let(this) { items -> choose(items.isEmpty(), nullLiteral(), items.maxBy(selector).orNull()) }
 
 /** The smallest [selector] value; fails with collection_key_absent when empty. */
 fun <T, O, M : MissingPolicy> Expr<out Collection<T>, M>.minOf(
     selector: Expr<T, MayBeMissing>.() -> Expr<O, out MissingPolicy>,
-): Expr<O, MayBeMissing> = map(selector).sorted().first()
+): Expr<O, MayBeMissing> = map(selector).firstExtreme(SMALLER)
 
 /** The largest [selector] value; fails with collection_key_absent when empty. */
 fun <T, O, M : MissingPolicy> Expr<out Collection<T>, M>.maxOf(
     selector: Expr<T, MayBeMissing>.() -> Expr<O, out MissingPolicy>,
-): Expr<O, MayBeMissing> = map(selector).sortedDescending().first()
+): Expr<O, MayBeMissing> = map(selector).firstExtreme(LARGER)
+
+/**
+ * The first item that compares [direction] (value.compare: -1 smaller, 1 larger) to every earlier one, found in one
+ * fold; fails with collection_key_absent when the list is empty.
+ */
+private fun <O> Expr<out List<O>, MayBeMissing>.firstExtreme(direction: Int): Expr<O, MayBeMissing> =
+    reduce { best, next -> choose(next.compare(best) eq literal(direction).lift(), next, best) }
+
+/** The first entry whose key compares [direction] to every earlier key, as [firstExtreme] does for items. */
+private fun <K, V> Expr<out List<Map.Entry<K, V>>, MayBeMissing>.firstExtremeBy(direction: Int): Expr<Map.Entry<K, V>, MayBeMissing> =
+    reduce { best, next -> choose(next.entryKey.compare(best.entryKey) eq literal(direction).lift(), next, best) }
+
+private const val SMALLER = -1
+private const val LARGER = 1
 
 /** The items in ascending order; equal items keep their order. */
 fun <T, M : MissingPolicy> Expr<out Collection<T>, M>.sorted(): Expr<List<T>, MayBeMissing> = sortedBy { this }

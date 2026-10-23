@@ -1,11 +1,13 @@
 package com.typewritermc.expression.shortcuts
 
 import com.typewritermc.expression.Expr
+import com.typewritermc.expression.Handled
 import com.typewritermc.expression.MayBeMissing
 import com.typewritermc.expression.MissingPolicy
 import com.typewritermc.expression.and
 import com.typewritermc.expression.codePoints
 import com.typewritermc.expression.codePointsToText
+import com.typewritermc.expression.conditional
 import com.typewritermc.expression.eq
 import com.typewritermc.expression.flatten
 import com.typewritermc.expression.foldCase
@@ -20,6 +22,7 @@ import com.typewritermc.expression.map
 import com.typewritermc.expression.minus
 import com.typewritermc.expression.not
 import com.typewritermc.expression.or
+import com.typewritermc.expression.orElse
 import com.typewritermc.expression.plus
 import com.typewritermc.expression.rangeExpr
 import com.typewritermc.expression.reversed
@@ -58,6 +61,13 @@ fun <M : MissingPolicy> Expr<String, M>.isBlank(): Expr<Boolean, M> = trimStart(
 /** Whether this text has a code point besides portable whitespace. */
 @JvmName("textIsNotBlank")
 fun <M : MissingPolicy> Expr<String, M>.isNotBlank(): Expr<Boolean, M> = isBlank().not()
+
+/** This text when it is present and has a code point besides portable whitespace, otherwise [fallback]. */
+fun Expr<String, MissingPolicy>.orIfBlank(fallback: Expr<String, Handled>): Expr<String, Handled> =
+    conditional(isBlank(), fallback, this).orElse(fallback)
+
+/** This text when it is present and not blank, otherwise the literal [fallback]. */
+fun Expr<String, MissingPolicy>.orIfBlank(fallback: String): Expr<String, Handled> = orIfBlank(literal(fallback))
 
 /** Whether [other] occurs in this text. Stops at the first occurrence. */
 @JvmName("textContains")
