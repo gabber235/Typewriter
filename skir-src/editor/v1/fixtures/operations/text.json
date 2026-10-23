@@ -1,0 +1,1667 @@
+{
+  "cases": [
+    {
+      "id": "text_length_counts_code_points",
+      "expression": {
+        "kind": "call",
+        "value": {
+          "operation": {"value": "text.length"},
+          "type_arguments": [],
+          "arguments": [{"kind": "literal", "value": {"kind": "string_value", "value": "A😀B"}}]
+        }
+      },
+      "check": {
+        "resultType": {
+          "value": {
+            "kind": "nominal",
+            "value": {"kind": "scalar", "value": {"kind": "integer", "value": {"width": "signed_thirty_two"}}}
+          },
+          "may_be_missing": true
+        },
+        "failures": [],
+        "inferredType": {
+          "value": {
+            "kind": "nominal",
+            "value": {"kind": "scalar", "value": {"kind": "integer", "value": {"width": "signed_thirty_two"}}}
+          },
+          "may_be_missing": false
+        }
+      },
+      "expected": {"available": {"integer": "3"}, "reads": []}
+    },
+    {
+      "id": "text_length_empty",
+      "expression": {
+        "kind": "call",
+        "value": {
+          "operation": {"value": "text.length"},
+          "type_arguments": [],
+          "arguments": [{"kind": "literal", "value": {"kind": "string_value", "value": ""}}]
+        }
+      },
+      "expected": {"available": {"integer": "0"}, "reads": []}
+    },
+    {
+      "id": "text_length_keeps_leading_bom",
+      "expression": {
+        "kind": "call",
+        "value": {
+          "operation": {"value": "text.length"},
+          "type_arguments": [],
+          "arguments": [{"kind": "literal", "value": {"kind": "string_value", "value": "﻿ab"}}]
+        }
+      },
+      "expected": {"available": {"integer": "3"}, "reads": []}
+    },
+    {
+      "id": "text_length_of_integer_ill_typed",
+      "expression": {
+        "kind": "call",
+        "value": {
+          "operation": {"value": "text.length"},
+          "type_arguments": [],
+          "arguments": [{"kind": "literal", "value": {"kind": "integer", "value": "5"}}]
+        }
+      },
+      "check": {
+        "resultType": {
+          "value": {
+            "kind": "nominal",
+            "value": {"kind": "scalar", "value": {"kind": "integer", "value": {"width": "signed_thirty_two"}}}
+          },
+          "may_be_missing": true
+        },
+        "failures": ["invalid_operand_type"]
+      },
+      "expected": {"failed": "ill_typed_argument", "reads": []}
+    },
+    {
+      "id": "text_substring_code_points",
+      "expression": {
+        "kind": "call",
+        "value": {
+          "operation": {"value": "text.substring"},
+          "type_arguments": [],
+          "arguments": [
+            {"kind": "literal", "value": {"kind": "string_value", "value": "A😀B"}},
+            {"kind": "literal", "value": {"kind": "integer", "value": "1"}},
+            {"kind": "literal", "value": {"kind": "integer", "value": "2"}}
+          ]
+        }
+      },
+      "check": {
+        "resultType": {"value": {"kind": "nominal", "value": {"kind": "scalar", "value": "text"}}, "may_be_missing": true},
+        "failures": [],
+        "inferredType": {"value": {"kind": "nominal", "value": {"kind": "scalar", "value": "text"}}, "may_be_missing": false}
+      },
+      "expected": {"available": {"string": "😀"}, "reads": []}
+    },
+    {
+      "id": "text_substring_empty_at_end",
+      "expression": {
+        "kind": "call",
+        "value": {
+          "operation": {"value": "text.substring"},
+          "type_arguments": [],
+          "arguments": [
+            {"kind": "literal", "value": {"kind": "string_value", "value": "abc"}},
+            {"kind": "literal", "value": {"kind": "integer", "value": "3"}},
+            {"kind": "literal", "value": {"kind": "integer", "value": "3"}}
+          ]
+        }
+      },
+      "expected": {"available": {"string": ""}, "reads": []}
+    },
+    {
+      "id": "text_substring_end_before_start",
+      "expression": {
+        "kind": "call",
+        "value": {
+          "operation": {"value": "text.substring"},
+          "type_arguments": [],
+          "arguments": [
+            {"kind": "literal", "value": {"kind": "string_value", "value": "abc"}},
+            {"kind": "literal", "value": {"kind": "integer", "value": "2"}},
+            {"kind": "literal", "value": {"kind": "integer", "value": "1"}}
+          ]
+        }
+      },
+      "expected": {"failed": "substring_range", "reads": []}
+    },
+    {
+      "id": "text_substring_end_beyond_length",
+      "expression": {
+        "kind": "call",
+        "value": {
+          "operation": {"value": "text.substring"},
+          "type_arguments": [],
+          "arguments": [
+            {"kind": "literal", "value": {"kind": "string_value", "value": "A😀B"}},
+            {"kind": "literal", "value": {"kind": "integer", "value": "0"}},
+            {"kind": "literal", "value": {"kind": "integer", "value": "4"}}
+          ]
+        }
+      },
+      "expected": {"failed": "substring_range", "reads": []}
+    },
+    {
+      "id": "text_substring_negative_start",
+      "expression": {
+        "kind": "call",
+        "value": {
+          "operation": {"value": "text.substring"},
+          "type_arguments": [],
+          "arguments": [
+            {"kind": "literal", "value": {"kind": "string_value", "value": "abc"}},
+            {"kind": "literal", "value": {"kind": "integer", "value": "-1"}},
+            {"kind": "literal", "value": {"kind": "integer", "value": "1"}}
+          ]
+        }
+      },
+      "expected": {"failed": "substring_range", "reads": []}
+    },
+    {
+      "id": "text_index_of_first",
+      "expression": {
+        "kind": "call",
+        "value": {
+          "operation": {"value": "text.index_of"},
+          "type_arguments": [],
+          "arguments": [
+            {"kind": "literal", "value": {"kind": "string_value", "value": "banana"}},
+            {"kind": "literal", "value": {"kind": "string_value", "value": "an"}},
+            {"kind": "literal", "value": {"kind": "integer", "value": "0"}}
+          ]
+        }
+      },
+      "check": {
+        "resultType": {
+          "value": {
+            "kind": "nominal",
+            "value": {"kind": "scalar", "value": {"kind": "integer", "value": {"width": "signed_thirty_two"}}}
+          },
+          "may_be_missing": true
+        },
+        "failures": [],
+        "inferredType": {
+          "value": {
+            "kind": "nominal",
+            "value": {"kind": "scalar", "value": {"kind": "integer", "value": {"width": "signed_thirty_two"}}}
+          },
+          "may_be_missing": false
+        }
+      },
+      "expected": {"available": {"integer": "1"}, "reads": []}
+    },
+    {
+      "id": "text_index_of_from",
+      "expression": {
+        "kind": "call",
+        "value": {
+          "operation": {"value": "text.index_of"},
+          "type_arguments": [],
+          "arguments": [
+            {"kind": "literal", "value": {"kind": "string_value", "value": "banana"}},
+            {"kind": "literal", "value": {"kind": "string_value", "value": "an"}},
+            {"kind": "literal", "value": {"kind": "integer", "value": "2"}}
+          ]
+        }
+      },
+      "expected": {"available": {"integer": "3"}, "reads": []}
+    },
+    {
+      "id": "text_index_of_negative_from_acts_as_zero",
+      "expression": {
+        "kind": "call",
+        "value": {
+          "operation": {"value": "text.index_of"},
+          "type_arguments": [],
+          "arguments": [
+            {"kind": "literal", "value": {"kind": "string_value", "value": "banana"}},
+            {"kind": "literal", "value": {"kind": "string_value", "value": "an"}},
+            {"kind": "literal", "value": {"kind": "integer", "value": "-5"}}
+          ]
+        }
+      },
+      "expected": {"available": {"integer": "1"}, "reads": []}
+    },
+    {
+      "id": "text_index_of_absent",
+      "expression": {
+        "kind": "call",
+        "value": {
+          "operation": {"value": "text.index_of"},
+          "type_arguments": [],
+          "arguments": [
+            {"kind": "literal", "value": {"kind": "string_value", "value": "banana"}},
+            {"kind": "literal", "value": {"kind": "string_value", "value": "x"}},
+            {"kind": "literal", "value": {"kind": "integer", "value": "0"}}
+          ]
+        }
+      },
+      "expected": {"available": {"integer": "-1"}, "reads": []}
+    },
+    {
+      "id": "text_index_of_code_points",
+      "expression": {
+        "kind": "call",
+        "value": {
+          "operation": {"value": "text.index_of"},
+          "type_arguments": [],
+          "arguments": [
+            {"kind": "literal", "value": {"kind": "string_value", "value": "A😀B😀"}},
+            {"kind": "literal", "value": {"kind": "string_value", "value": "😀"}},
+            {"kind": "literal", "value": {"kind": "integer", "value": "2"}}
+          ]
+        }
+      },
+      "expected": {"available": {"integer": "3"}, "reads": []}
+    },
+    {
+      "id": "text_index_of_empty_needle",
+      "expression": {
+        "kind": "call",
+        "value": {
+          "operation": {"value": "text.index_of"},
+          "type_arguments": [],
+          "arguments": [
+            {"kind": "literal", "value": {"kind": "string_value", "value": "abc"}},
+            {"kind": "literal", "value": {"kind": "string_value", "value": ""}},
+            {"kind": "literal", "value": {"kind": "integer", "value": "2"}}
+          ]
+        }
+      },
+      "expected": {"available": {"integer": "2"}, "reads": []}
+    },
+    {
+      "id": "text_index_of_empty_needle_at_length",
+      "expression": {
+        "kind": "call",
+        "value": {
+          "operation": {"value": "text.index_of"},
+          "type_arguments": [],
+          "arguments": [
+            {"kind": "literal", "value": {"kind": "string_value", "value": "abc"}},
+            {"kind": "literal", "value": {"kind": "string_value", "value": ""}},
+            {"kind": "literal", "value": {"kind": "integer", "value": "3"}}
+          ]
+        }
+      },
+      "expected": {"available": {"integer": "3"}, "reads": []}
+    },
+    {
+      "id": "text_index_of_empty_needle_beyond_length",
+      "expression": {
+        "kind": "call",
+        "value": {
+          "operation": {"value": "text.index_of"},
+          "type_arguments": [],
+          "arguments": [
+            {"kind": "literal", "value": {"kind": "string_value", "value": "abc"}},
+            {"kind": "literal", "value": {"kind": "string_value", "value": ""}},
+            {"kind": "literal", "value": {"kind": "integer", "value": "4"}}
+          ]
+        }
+      },
+      "expected": {"available": {"integer": "-1"}, "reads": []}
+    },
+    {
+      "id": "text_last_index_of_from_end",
+      "expression": {
+        "kind": "call",
+        "value": {
+          "operation": {"value": "text.last_index_of"},
+          "type_arguments": [],
+          "arguments": [
+            {"kind": "literal", "value": {"kind": "string_value", "value": "banana"}},
+            {"kind": "literal", "value": {"kind": "string_value", "value": "an"}},
+            {"kind": "literal", "value": {"kind": "integer", "value": "5"}}
+          ]
+        }
+      },
+      "expected": {"available": {"integer": "3"}, "reads": []}
+    },
+    {
+      "id": "text_last_index_of_before_from",
+      "expression": {
+        "kind": "call",
+        "value": {
+          "operation": {"value": "text.last_index_of"},
+          "type_arguments": [],
+          "arguments": [
+            {"kind": "literal", "value": {"kind": "string_value", "value": "banana"}},
+            {"kind": "literal", "value": {"kind": "string_value", "value": "an"}},
+            {"kind": "literal", "value": {"kind": "integer", "value": "2"}}
+          ]
+        }
+      },
+      "expected": {"available": {"integer": "1"}, "reads": []}
+    },
+    {
+      "id": "text_last_index_of_from_beyond_length",
+      "expression": {
+        "kind": "call",
+        "value": {
+          "operation": {"value": "text.last_index_of"},
+          "type_arguments": [],
+          "arguments": [
+            {"kind": "literal", "value": {"kind": "string_value", "value": "banana"}},
+            {"kind": "literal", "value": {"kind": "string_value", "value": "an"}},
+            {"kind": "literal", "value": {"kind": "integer", "value": "100"}}
+          ]
+        }
+      },
+      "expected": {"available": {"integer": "3"}, "reads": []}
+    },
+    {
+      "id": "text_last_index_of_none_before_from",
+      "expression": {
+        "kind": "call",
+        "value": {
+          "operation": {"value": "text.last_index_of"},
+          "type_arguments": [],
+          "arguments": [
+            {"kind": "literal", "value": {"kind": "string_value", "value": "banana"}},
+            {"kind": "literal", "value": {"kind": "string_value", "value": "an"}},
+            {"kind": "literal", "value": {"kind": "integer", "value": "0"}}
+          ]
+        }
+      },
+      "expected": {"available": {"integer": "-1"}, "reads": []}
+    },
+    {
+      "id": "text_last_index_of_negative_from",
+      "expression": {
+        "kind": "call",
+        "value": {
+          "operation": {"value": "text.last_index_of"},
+          "type_arguments": [],
+          "arguments": [
+            {"kind": "literal", "value": {"kind": "string_value", "value": "banana"}},
+            {"kind": "literal", "value": {"kind": "string_value", "value": "an"}},
+            {"kind": "literal", "value": {"kind": "integer", "value": "-1"}}
+          ]
+        }
+      },
+      "expected": {"available": {"integer": "-1"}, "reads": []}
+    },
+    {
+      "id": "text_last_index_of_empty_needle_clamps",
+      "expression": {
+        "kind": "call",
+        "value": {
+          "operation": {"value": "text.last_index_of"},
+          "type_arguments": [],
+          "arguments": [
+            {"kind": "literal", "value": {"kind": "string_value", "value": "banana"}},
+            {"kind": "literal", "value": {"kind": "string_value", "value": ""}},
+            {"kind": "literal", "value": {"kind": "integer", "value": "10"}}
+          ]
+        }
+      },
+      "expected": {"available": {"integer": "6"}, "reads": []}
+    },
+    {
+      "id": "text_last_index_of_code_points",
+      "expression": {
+        "kind": "call",
+        "value": {
+          "operation": {"value": "text.last_index_of"},
+          "type_arguments": [],
+          "arguments": [
+            {"kind": "literal", "value": {"kind": "string_value", "value": "😀a😀a"}},
+            {"kind": "literal", "value": {"kind": "string_value", "value": "😀"}},
+            {"kind": "literal", "value": {"kind": "integer", "value": "3"}}
+          ]
+        }
+      },
+      "expected": {"available": {"integer": "2"}, "reads": []}
+    },
+    {
+      "id": "text_split_keeps_empty_parts",
+      "expression": {
+        "kind": "call",
+        "value": {
+          "operation": {"value": "text.split"},
+          "type_arguments": [],
+          "arguments": [
+            {"kind": "literal", "value": {"kind": "string_value", "value": "a,b,,c"}},
+            {"kind": "literal", "value": {"kind": "string_value", "value": ","}}
+          ]
+        }
+      },
+      "check": {
+        "resultType": {
+          "value": {
+            "kind": "list",
+            "value": {
+              "value": {"kind": "nominal", "value": {"kind": "scalar", "value": "text"}},
+              "may_be_missing": false
+            }
+          },
+          "may_be_missing": true
+        },
+        "failures": [],
+        "inferredType": {
+          "value": {
+            "kind": "list",
+            "value": {
+              "value": {"kind": "nominal", "value": {"kind": "scalar", "value": "text"}},
+              "may_be_missing": false
+            }
+          },
+          "may_be_missing": false
+        }
+      },
+      "expected": {
+        "available": {
+          "list": [
+            {"id": "0", "value": {"string": "a"}},
+            {"id": "1", "value": {"string": "b"}},
+            {"id": "2", "value": {"string": ""}},
+            {"id": "3", "value": {"string": "c"}}
+          ]
+        },
+        "reads": []
+      }
+    },
+    {
+      "id": "text_split_empty_text",
+      "expression": {
+        "kind": "call",
+        "value": {
+          "operation": {"value": "text.split"},
+          "type_arguments": [],
+          "arguments": [
+            {"kind": "literal", "value": {"kind": "string_value", "value": ""}},
+            {"kind": "literal", "value": {"kind": "string_value", "value": ","}}
+          ]
+        }
+      },
+      "expected": {"available": {"list": [{"id": "0", "value": {"string": ""}}]}, "reads": []}
+    },
+    {
+      "id": "text_split_only_separator",
+      "expression": {
+        "kind": "call",
+        "value": {
+          "operation": {"value": "text.split"},
+          "type_arguments": [],
+          "arguments": [
+            {"kind": "literal", "value": {"kind": "string_value", "value": ","}},
+            {"kind": "literal", "value": {"kind": "string_value", "value": ","}}
+          ]
+        }
+      },
+      "expected": {
+        "available": {"list": [{"id": "0", "value": {"string": ""}}, {"id": "1", "value": {"string": ""}}]},
+        "reads": []
+      }
+    },
+    {
+      "id": "text_split_multi_code_point_separator",
+      "expression": {
+        "kind": "call",
+        "value": {
+          "operation": {"value": "text.split"},
+          "type_arguments": [],
+          "arguments": [
+            {"kind": "literal", "value": {"kind": "string_value", "value": "a😀b😀"}},
+            {"kind": "literal", "value": {"kind": "string_value", "value": "😀"}}
+          ]
+        }
+      },
+      "expected": {
+        "available": {
+          "list": [
+            {"id": "0", "value": {"string": "a"}},
+            {"id": "1", "value": {"string": "b"}},
+            {"id": "2", "value": {"string": ""}}
+          ]
+        },
+        "reads": []
+      }
+    },
+    {
+      "id": "text_split_empty_separator",
+      "expression": {
+        "kind": "call",
+        "value": {
+          "operation": {"value": "text.split"},
+          "type_arguments": [],
+          "arguments": [
+            {"kind": "literal", "value": {"kind": "string_value", "value": "😀x"}},
+            {"kind": "literal", "value": {"kind": "string_value", "value": ""}}
+          ]
+        }
+      },
+      "expected": {"failed": "empty_separator", "reads": []}
+    },
+    {
+      "id": "text_join_parts",
+      "expression": {
+        "kind": "call",
+        "value": {
+          "operation": {"value": "text.join"},
+          "type_arguments": [],
+          "arguments": [
+            {
+              "kind": "literal",
+              "value": {
+                "kind": "list_value",
+                "value": {
+                  "items": [
+                    {"id": {"value": "p"}, "value": {"kind": "string_value", "value": "a"}},
+                    {"id": {"value": "q"}, "value": {"kind": "string_value", "value": "b"}},
+                    {"id": {"value": "r"}, "value": {"kind": "string_value", "value": "c"}}
+                  ]
+                }
+              }
+            },
+            {"kind": "literal", "value": {"kind": "string_value", "value": "-"}}
+          ]
+        }
+      },
+      "check": {
+        "resultType": {"value": {"kind": "nominal", "value": {"kind": "scalar", "value": "text"}}, "may_be_missing": true},
+        "failures": [],
+        "inferredType": {"value": {"kind": "nominal", "value": {"kind": "scalar", "value": "text"}}, "may_be_missing": false}
+      },
+      "expected": {"available": {"string": "a-b-c"}, "reads": []}
+    },
+    {
+      "id": "text_join_empty_list",
+      "expression": {
+        "kind": "call",
+        "value": {
+          "operation": {"value": "text.join"},
+          "type_arguments": [],
+          "arguments": [
+            {
+              "kind": "call",
+              "value": {"operation": {"value": "list.of"}, "type_arguments": [], "arguments": []}
+            },
+            {"kind": "literal", "value": {"kind": "string_value", "value": ","}}
+          ]
+        }
+      },
+      "expected": {"available": {"string": ""}, "reads": []}
+    },
+    {
+      "id": "text_trim_start_ideographic_space_and_bom",
+      "expression": {
+        "kind": "call",
+        "value": {
+          "operation": {"value": "text.trim_start"},
+          "type_arguments": [],
+          "arguments": [{"kind": "literal", "value": {"kind": "string_value", "value": "　﻿x"}}]
+        }
+      },
+      "expected": {"available": {"string": "x"}, "reads": []}
+    },
+    {
+      "id": "text_trim_start_only_bom",
+      "expression": {
+        "kind": "call",
+        "value": {
+          "operation": {"value": "text.trim_start"},
+          "type_arguments": [],
+          "arguments": [{"kind": "literal", "value": {"kind": "string_value", "value": "﻿"}}]
+        }
+      },
+      "expected": {"available": {"string": ""}, "reads": []}
+    },
+    {
+      "id": "text_trim_both_ends_with_leading_bom",
+      "expression": {
+        "kind": "call",
+        "value": {
+          "operation": {"value": "text.trim_end"},
+          "type_arguments": [],
+          "arguments": [
+            {
+              "kind": "call",
+              "value": {
+                "operation": {"value": "text.trim_start"},
+                "type_arguments": [],
+                "arguments": [{"kind": "literal", "value": {"kind": "string_value", "value": "﻿ value "}}]
+              }
+            }
+          ]
+        }
+      },
+      "expected": {"available": {"string": "value"}, "reads": []}
+    },
+    {
+      "id": "text_trim_end_next_line",
+      "expression": {
+        "kind": "call",
+        "value": {
+          "operation": {"value": "text.trim_end"},
+          "type_arguments": [],
+          "arguments": [{"kind": "literal", "value": {"kind": "string_value", "value": "x "}}]
+        }
+      },
+      "expected": {"available": {"string": "x"}, "reads": []}
+    },
+    {
+      "id": "text_trim_start_keeps_information_separator",
+      "expression": {
+        "kind": "call",
+        "value": {
+          "operation": {"value": "text.trim_start"},
+          "type_arguments": [],
+          "arguments": [{"kind": "literal", "value": {"kind": "string_value", "value": "\u001cx"}}]
+        }
+      },
+      "expected": {"available": {"string": "\u001cx"}, "reads": []}
+    },
+    {
+      "id": "text_trim_end_keeps_inner_space",
+      "expression": {
+        "kind": "call",
+        "value": {
+          "operation": {"value": "text.trim_end"},
+          "type_arguments": [],
+          "arguments": [{"kind": "literal", "value": {"kind": "string_value", "value": " a b \t\n"}}]
+        }
+      },
+      "expected": {"available": {"string": " a b"}, "reads": []}
+    },
+    {
+      "id": "text_code_points",
+      "expression": {
+        "kind": "call",
+        "value": {
+          "operation": {"value": "text.code_points"},
+          "type_arguments": [],
+          "arguments": [{"kind": "literal", "value": {"kind": "string_value", "value": "A😀"}}]
+        }
+      },
+      "expected": {
+        "available": {"list": [{"id": "0", "value": {"integer": "65"}}, {"id": "1", "value": {"integer": "128512"}}]},
+        "reads": []
+      }
+    },
+    {
+      "id": "text_from_code_points",
+      "expression": {
+        "kind": "call",
+        "value": {
+          "operation": {"value": "text.from_code_points"},
+          "type_arguments": [],
+          "arguments": [
+            {
+              "kind": "call",
+              "value": {
+                "operation": {"value": "list.of"},
+                "type_arguments": [],
+                "arguments": [
+                  {"kind": "literal", "value": {"kind": "integer", "value": "72"}},
+                  {"kind": "literal", "value": {"kind": "integer", "value": "128512"}}
+                ]
+              }
+            }
+          ]
+        }
+      },
+      "expected": {"available": {"string": "H😀"}, "reads": []}
+    },
+    {
+      "id": "text_from_code_points_beyond_unicode",
+      "expression": {
+        "kind": "call",
+        "value": {
+          "operation": {"value": "text.from_code_points"},
+          "type_arguments": [],
+          "arguments": [
+            {
+              "kind": "call",
+              "value": {
+                "operation": {"value": "list.of"},
+                "type_arguments": [],
+                "arguments": [{"kind": "literal", "value": {"kind": "integer", "value": "1114112"}}]
+              }
+            }
+          ]
+        }
+      },
+      "expected": {"failed": "invalid_code_point", "reads": []}
+    },
+    {
+      "id": "text_from_code_points_surrogate",
+      "expression": {
+        "kind": "call",
+        "value": {
+          "operation": {"value": "text.from_code_points"},
+          "type_arguments": [],
+          "arguments": [
+            {
+              "kind": "call",
+              "value": {
+                "operation": {"value": "list.of"},
+                "type_arguments": [],
+                "arguments": [{"kind": "literal", "value": {"kind": "integer", "value": "55296"}}]
+              }
+            }
+          ]
+        }
+      },
+      "expected": {"failed": "invalid_code_point", "reads": []}
+    },
+    {
+      "id": "text_from_code_points_negative",
+      "expression": {
+        "kind": "call",
+        "value": {
+          "operation": {"value": "text.from_code_points"},
+          "type_arguments": [],
+          "arguments": [
+            {
+              "kind": "call",
+              "value": {
+                "operation": {"value": "list.of"},
+                "type_arguments": [],
+                "arguments": [{"kind": "literal", "value": {"kind": "integer", "value": "-1"}}]
+              }
+            }
+          ]
+        }
+      },
+      "expected": {"failed": "invalid_code_point", "reads": []}
+    },
+    {
+      "id": "text_upper_special_casing",
+      "expression": {
+        "kind": "call",
+        "value": {
+          "operation": {"value": "text.upper"},
+          "type_arguments": [],
+          "arguments": [{"kind": "literal", "value": {"kind": "string_value", "value": "Straße"}}]
+        }
+      },
+      "check": {
+        "resultType": {"value": {"kind": "nominal", "value": {"kind": "scalar", "value": "text"}}, "may_be_missing": true},
+        "failures": [],
+        "inferredType": {"value": {"kind": "nominal", "value": {"kind": "scalar", "value": "text"}}, "may_be_missing": false}
+      },
+      "expected": {"available": {"string": "STRASSE"}, "reads": []}
+    },
+    {
+      "id": "text_upper_digraph",
+      "expression": {
+        "kind": "call",
+        "value": {
+          "operation": {"value": "text.upper"},
+          "type_arguments": [],
+          "arguments": [{"kind": "literal", "value": {"kind": "string_value", "value": "ǆ"}}]
+        }
+      },
+      "expected": {"available": {"string": "Ǆ"}, "reads": []}
+    },
+    {
+      "id": "text_lower_final_sigma",
+      "expression": {
+        "kind": "call",
+        "value": {
+          "operation": {"value": "text.lower"},
+          "type_arguments": [],
+          "arguments": [{"kind": "literal", "value": {"kind": "string_value", "value": "ΟΔΟΣ"}}]
+        }
+      },
+      "expected": {"available": {"string": "οδος"}, "reads": []}
+    },
+    {
+      "id": "text_lower_lone_sigma_is_not_final",
+      "expression": {
+        "kind": "call",
+        "value": {
+          "operation": {"value": "text.lower"},
+          "type_arguments": [],
+          "arguments": [{"kind": "literal", "value": {"kind": "string_value", "value": "Σ"}}]
+        }
+      },
+      "expected": {"available": {"string": "σ"}, "reads": []}
+    },
+    {
+      "id": "text_lower_dotted_capital_i_root_locale",
+      "expression": {
+        "kind": "call",
+        "value": {
+          "operation": {"value": "text.lower"},
+          "type_arguments": [],
+          "arguments": [{"kind": "literal", "value": {"kind": "string_value", "value": "İ"}}]
+        }
+      },
+      "expected": {"available": {"string": "i̇"}, "reads": []}
+    },
+    {
+      "id": "text_title_digraph",
+      "expression": {
+        "kind": "call",
+        "value": {
+          "operation": {"value": "text.title"},
+          "type_arguments": [],
+          "arguments": [{"kind": "literal", "value": {"kind": "string_value", "value": "ǆemal"}}]
+        }
+      },
+      "expected": {"available": {"string": "ǅemal"}, "reads": []}
+    },
+    {
+      "id": "text_title_words_and_rest_lowercased",
+      "expression": {
+        "kind": "call",
+        "value": {
+          "operation": {"value": "text.title"},
+          "type_arguments": [],
+          "arguments": [{"kind": "literal", "value": {"kind": "string_value", "value": "hELLO  wORLD"}}]
+        }
+      },
+      "expected": {"available": {"string": "Hello  World"}, "reads": []}
+    },
+    {
+      "id": "text_title_special_casing",
+      "expression": {
+        "kind": "call",
+        "value": {
+          "operation": {"value": "text.title"},
+          "type_arguments": [],
+          "arguments": [{"kind": "literal", "value": {"kind": "string_value", "value": "ßa"}}]
+        }
+      },
+      "expected": {"available": {"string": "Ssa"}, "reads": []}
+    },
+    {
+      "id": "text_fold_case_special",
+      "expression": {
+        "kind": "call",
+        "value": {
+          "operation": {"value": "text.fold_case"},
+          "type_arguments": [],
+          "arguments": [{"kind": "literal", "value": {"kind": "string_value", "value": "Straße"}}]
+        }
+      },
+      "expected": {"available": {"string": "strasse"}, "reads": []}
+    },
+    {
+      "id": "text_fold_case_sigma_has_no_final_form",
+      "expression": {
+        "kind": "call",
+        "value": {
+          "operation": {"value": "text.fold_case"},
+          "type_arguments": [],
+          "arguments": [{"kind": "literal", "value": {"kind": "string_value", "value": "ΣΑΣ"}}]
+        }
+      },
+      "expected": {"available": {"string": "σασ"}, "reads": []}
+    },
+    {
+      "id": "text_normalize_nfc",
+      "expression": {
+        "kind": "call",
+        "value": {
+          "operation": {"value": "text.normalize"},
+          "type_arguments": [],
+          "arguments": [
+            {"kind": "literal", "value": {"kind": "string_value", "value": "Å"}},
+            {
+              "kind": "literal",
+              "value": {
+                "kind": "named",
+                "value": {
+                  "actual_type": {
+                    "definition": {
+                      "type_id": {"kind": "declared", "value": {"value": "c01027913879448aa695e7f3416a8528"}},
+                      "revision": 1
+                    },
+                    "arguments": []
+                  },
+                  "payload": {"kind": "enum_case", "value": "Nfc"}
+                }
+              }
+            }
+          ]
+        }
+      },
+      "expected": {"available": {"string": "Å"}, "reads": []}
+    },
+    {
+      "id": "text_normalize_nfd",
+      "expression": {
+        "kind": "call",
+        "value": {
+          "operation": {"value": "text.normalize"},
+          "type_arguments": [],
+          "arguments": [
+            {"kind": "literal", "value": {"kind": "string_value", "value": "Å"}},
+            {
+              "kind": "literal",
+              "value": {
+                "kind": "named",
+                "value": {
+                  "actual_type": {
+                    "definition": {
+                      "type_id": {"kind": "declared", "value": {"value": "c01027913879448aa695e7f3416a8528"}},
+                      "revision": 1
+                    },
+                    "arguments": []
+                  },
+                  "payload": {"kind": "enum_case", "value": "Nfd"}
+                }
+              }
+            }
+          ]
+        }
+      },
+      "expected": {"available": {"string": "Å"}, "reads": []}
+    },
+    {
+      "id": "text_normalize_nfkc_ligature",
+      "expression": {
+        "kind": "call",
+        "value": {
+          "operation": {"value": "text.normalize"},
+          "type_arguments": [],
+          "arguments": [
+            {"kind": "literal", "value": {"kind": "string_value", "value": "ﬁ"}},
+            {
+              "kind": "literal",
+              "value": {
+                "kind": "named",
+                "value": {
+                  "actual_type": {
+                    "definition": {
+                      "type_id": {"kind": "declared", "value": {"value": "c01027913879448aa695e7f3416a8528"}},
+                      "revision": 1
+                    },
+                    "arguments": []
+                  },
+                  "payload": {"kind": "enum_case", "value": "Nfkc"}
+                }
+              }
+            }
+          ]
+        }
+      },
+      "expected": {"available": {"string": "fi"}, "reads": []}
+    },
+    {
+      "id": "text_normalize_nfkd_composed",
+      "expression": {
+        "kind": "call",
+        "value": {
+          "operation": {"value": "text.normalize"},
+          "type_arguments": [],
+          "arguments": [
+            {"kind": "literal", "value": {"kind": "string_value", "value": "Åﬁ"}},
+            {
+              "kind": "literal",
+              "value": {
+                "kind": "named",
+                "value": {
+                  "actual_type": {
+                    "definition": {
+                      "type_id": {"kind": "declared", "value": {"value": "c01027913879448aa695e7f3416a8528"}},
+                      "revision": 1
+                    },
+                    "arguments": []
+                  },
+                  "payload": {"kind": "enum_case", "value": "Nfkd"}
+                }
+              }
+            }
+          ]
+        }
+      },
+      "expected": {"available": {"string": "Åfi"}, "reads": []}
+    },
+    {
+      "id": "text_normalize_nfc_keeps_leading_bom",
+      "expression": {
+        "kind": "call",
+        "value": {
+          "operation": {"value": "text.normalize"},
+          "type_arguments": [],
+          "arguments": [
+            {"kind": "literal", "value": {"kind": "string_value", "value": "﻿Å"}},
+            {
+              "kind": "literal",
+              "value": {
+                "kind": "named",
+                "value": {
+                  "actual_type": {
+                    "definition": {
+                      "type_id": {"kind": "declared", "value": {"value": "c01027913879448aa695e7f3416a8528"}},
+                      "revision": 1
+                    },
+                    "arguments": []
+                  },
+                  "payload": {"kind": "enum_case", "value": "Nfc"}
+                }
+              }
+            }
+          ]
+        }
+      },
+      "expected": {"available": {"string": "﻿Å"}, "reads": []}
+    },
+    {
+      "id": "text_parse_integer_decimal",
+      "expression": {
+        "kind": "call",
+        "value": {
+          "operation": {"value": "text.parse_integer"},
+          "type_arguments": [],
+          "arguments": [
+            {"kind": "literal", "value": {"kind": "string_value", "value": "42"}},
+            {"kind": "literal", "value": {"kind": "integer", "value": "10"}}
+          ]
+        }
+      },
+      "check": {
+        "resultType": {
+          "value": {
+            "kind": "nominal",
+            "value": {"kind": "scalar", "value": {"kind": "integer", "value": {"width": "signed_sixty_four"}}}
+          },
+          "may_be_missing": true
+        },
+        "failures": [],
+        "inferredType": {
+          "value": {
+            "kind": "nominal",
+            "value": {"kind": "scalar", "value": {"kind": "integer", "value": {"width": "signed_sixty_four"}}}
+          },
+          "may_be_missing": false
+        }
+      },
+      "expected": {"available": {"integer": "42"}, "reads": []}
+    },
+    {
+      "id": "text_parse_integer_signed_hex",
+      "expression": {
+        "kind": "call",
+        "value": {
+          "operation": {"value": "text.parse_integer"},
+          "type_arguments": [],
+          "arguments": [
+            {"kind": "literal", "value": {"kind": "string_value", "value": "-fF"}},
+            {"kind": "literal", "value": {"kind": "integer", "value": "16"}}
+          ]
+        }
+      },
+      "expected": {"available": {"integer": "-255"}, "reads": []}
+    },
+    {
+      "id": "text_parse_integer_plus_sign",
+      "expression": {
+        "kind": "call",
+        "value": {
+          "operation": {"value": "text.parse_integer"},
+          "type_arguments": [],
+          "arguments": [
+            {"kind": "literal", "value": {"kind": "string_value", "value": "+7"}},
+            {"kind": "literal", "value": {"kind": "integer", "value": "10"}}
+          ]
+        }
+      },
+      "expected": {"available": {"integer": "7"}, "reads": []}
+    },
+    {
+      "id": "text_parse_integer_radix_36",
+      "expression": {
+        "kind": "call",
+        "value": {
+          "operation": {"value": "text.parse_integer"},
+          "type_arguments": [],
+          "arguments": [
+            {"kind": "literal", "value": {"kind": "string_value", "value": "Z"}},
+            {"kind": "literal", "value": {"kind": "integer", "value": "36"}}
+          ]
+        }
+      },
+      "expected": {"available": {"integer": "35"}, "reads": []}
+    },
+    {
+      "id": "text_parse_integer_arbitrary_precision",
+      "expression": {
+        "kind": "call",
+        "value": {
+          "operation": {"value": "text.parse_integer"},
+          "type_arguments": [],
+          "arguments": [
+            {"kind": "literal", "value": {"kind": "string_value", "value": "99999999999999999999999"}},
+            {"kind": "literal", "value": {"kind": "integer", "value": "10"}}
+          ]
+        }
+      },
+      "expected": {"available": {"integer": "99999999999999999999999"}, "reads": []}
+    },
+    {
+      "id": "text_parse_integer_digit_outside_radix",
+      "expression": {
+        "kind": "call",
+        "value": {
+          "operation": {"value": "text.parse_integer"},
+          "type_arguments": [],
+          "arguments": [
+            {"kind": "literal", "value": {"kind": "string_value", "value": "12"}},
+            {"kind": "literal", "value": {"kind": "integer", "value": "2"}}
+          ]
+        }
+      },
+      "expected": {"failed": "invalid_number_text", "reads": []}
+    },
+    {
+      "id": "text_parse_integer_whitespace",
+      "expression": {
+        "kind": "call",
+        "value": {
+          "operation": {"value": "text.parse_integer"},
+          "type_arguments": [],
+          "arguments": [
+            {"kind": "literal", "value": {"kind": "string_value", "value": " 1"}},
+            {"kind": "literal", "value": {"kind": "integer", "value": "10"}}
+          ]
+        }
+      },
+      "expected": {"failed": "invalid_number_text", "reads": []}
+    },
+    {
+      "id": "text_parse_integer_empty",
+      "expression": {
+        "kind": "call",
+        "value": {
+          "operation": {"value": "text.parse_integer"},
+          "type_arguments": [],
+          "arguments": [
+            {"kind": "literal", "value": {"kind": "string_value", "value": ""}},
+            {"kind": "literal", "value": {"kind": "integer", "value": "10"}}
+          ]
+        }
+      },
+      "expected": {"failed": "invalid_number_text", "reads": []}
+    },
+    {
+      "id": "text_parse_integer_sign_only",
+      "expression": {
+        "kind": "call",
+        "value": {
+          "operation": {"value": "text.parse_integer"},
+          "type_arguments": [],
+          "arguments": [
+            {"kind": "literal", "value": {"kind": "string_value", "value": "-"}},
+            {"kind": "literal", "value": {"kind": "integer", "value": "10"}}
+          ]
+        }
+      },
+      "expected": {"failed": "invalid_number_text", "reads": []}
+    },
+    {
+      "id": "text_parse_integer_radix_too_small",
+      "expression": {
+        "kind": "call",
+        "value": {
+          "operation": {"value": "text.parse_integer"},
+          "type_arguments": [],
+          "arguments": [
+            {"kind": "literal", "value": {"kind": "string_value", "value": "1"}},
+            {"kind": "literal", "value": {"kind": "integer", "value": "1"}}
+          ]
+        }
+      },
+      "expected": {"failed": "invalid_radix", "reads": []}
+    },
+    {
+      "id": "text_parse_integer_radix_too_large",
+      "expression": {
+        "kind": "call",
+        "value": {
+          "operation": {"value": "text.parse_integer"},
+          "type_arguments": [],
+          "arguments": [
+            {"kind": "literal", "value": {"kind": "string_value", "value": "1"}},
+            {"kind": "literal", "value": {"kind": "integer", "value": "37"}}
+          ]
+        }
+      },
+      "expected": {"failed": "invalid_radix", "reads": []}
+    },
+    {
+      "id": "text_parse_decimal_canonical",
+      "expression": {
+        "kind": "call",
+        "value": {
+          "operation": {"value": "text.parse_decimal"},
+          "type_arguments": [],
+          "arguments": [{"kind": "literal", "value": {"kind": "string_value", "value": "1.50"}}]
+        }
+      },
+      "check": {
+        "resultType": {
+          "value": {"kind": "nominal", "value": {"kind": "scalar", "value": "decimal"}},
+          "may_be_missing": true
+        },
+        "failures": [],
+        "inferredType": {
+          "value": {"kind": "nominal", "value": {"kind": "scalar", "value": "decimal"}},
+          "may_be_missing": false
+        }
+      },
+      "expected": {"available": {"decimal": "1.5"}, "reads": []}
+    },
+    {
+      "id": "text_parse_decimal_exponent",
+      "expression": {
+        "kind": "call",
+        "value": {
+          "operation": {"value": "text.parse_decimal"},
+          "type_arguments": [],
+          "arguments": [{"kind": "literal", "value": {"kind": "string_value", "value": "+2.5E-1"}}]
+        }
+      },
+      "expected": {"available": {"decimal": "0.25"}, "reads": []}
+    },
+    {
+      "id": "text_parse_decimal_large_exponent",
+      "expression": {
+        "kind": "call",
+        "value": {
+          "operation": {"value": "text.parse_decimal"},
+          "type_arguments": [],
+          "arguments": [{"kind": "literal", "value": {"kind": "string_value", "value": "1e3"}}]
+        }
+      },
+      "expected": {"available": {"decimal": "1000"}, "reads": []}
+    },
+    {
+      "id": "text_parse_decimal_leading_point",
+      "expression": {
+        "kind": "call",
+        "value": {
+          "operation": {"value": "text.parse_decimal"},
+          "type_arguments": [],
+          "arguments": [{"kind": "literal", "value": {"kind": "string_value", "value": ".5"}}]
+        }
+      },
+      "expected": {"available": {"decimal": "0.5"}, "reads": []}
+    },
+    {
+      "id": "text_parse_decimal_trailing_point",
+      "expression": {
+        "kind": "call",
+        "value": {
+          "operation": {"value": "text.parse_decimal"},
+          "type_arguments": [],
+          "arguments": [{"kind": "literal", "value": {"kind": "string_value", "value": "5."}}]
+        }
+      },
+      "expected": {"available": {"decimal": "5"}, "reads": []}
+    },
+    {
+      "id": "text_parse_decimal_negative_zero",
+      "expression": {
+        "kind": "call",
+        "value": {
+          "operation": {"value": "text.parse_decimal"},
+          "type_arguments": [],
+          "arguments": [{"kind": "literal", "value": {"kind": "string_value", "value": "-0.0"}}]
+        }
+      },
+      "expected": {"available": {"decimal": "0"}, "reads": []}
+    },
+    {
+      "id": "text_parse_decimal_two_points",
+      "expression": {
+        "kind": "call",
+        "value": {
+          "operation": {"value": "text.parse_decimal"},
+          "type_arguments": [],
+          "arguments": [{"kind": "literal", "value": {"kind": "string_value", "value": "1.2.3"}}]
+        }
+      },
+      "expected": {"failed": "invalid_number_text", "reads": []}
+    },
+    {
+      "id": "text_parse_decimal_empty_exponent",
+      "expression": {
+        "kind": "call",
+        "value": {
+          "operation": {"value": "text.parse_decimal"},
+          "type_arguments": [],
+          "arguments": [{"kind": "literal", "value": {"kind": "string_value", "value": "1e"}}]
+        }
+      },
+      "expected": {"failed": "invalid_number_text", "reads": []}
+    },
+    {
+      "id": "text_parse_float",
+      "expression": {
+        "kind": "call",
+        "value": {
+          "operation": {"value": "text.parse_float"},
+          "type_arguments": [],
+          "arguments": [{"kind": "literal", "value": {"kind": "string_value", "value": "1.5"}}]
+        }
+      },
+      "expected": {"available": {"float": 1.5}, "reads": []}
+    },
+    {
+      "id": "text_parse_float_rounds_to_nearest",
+      "expression": {
+        "kind": "call",
+        "value": {
+          "operation": {"value": "text.parse_float"},
+          "type_arguments": [],
+          "arguments": [{"kind": "literal", "value": {"kind": "string_value", "value": "9007199254740993"}}]
+        }
+      },
+      "expected": {"available": {"float": 9007199254740992.0}, "reads": []}
+    },
+    {
+      "id": "text_parse_float_tenth",
+      "expression": {
+        "kind": "call",
+        "value": {
+          "operation": {"value": "text.parse_float"},
+          "type_arguments": [],
+          "arguments": [{"kind": "literal", "value": {"kind": "string_value", "value": "0.1"}}]
+        }
+      },
+      "expected": {"available": {"float": 0.1}, "reads": []}
+    },
+    {
+      "id": "text_parse_float_underflow_is_zero",
+      "expression": {
+        "kind": "call",
+        "value": {
+          "operation": {"value": "text.parse_float"},
+          "type_arguments": [],
+          "arguments": [{"kind": "literal", "value": {"kind": "string_value", "value": "1e-400"}}]
+        }
+      },
+      "expected": {"available": {"float": 0.0}, "reads": []}
+    },
+    {
+      "id": "text_parse_float_overflow",
+      "expression": {
+        "kind": "call",
+        "value": {
+          "operation": {"value": "text.parse_float"},
+          "type_arguments": [],
+          "arguments": [{"kind": "literal", "value": {"kind": "string_value", "value": "1e400"}}]
+        }
+      },
+      "expected": {"failed": "invalid_number_text", "reads": []}
+    },
+    {
+      "id": "text_parse_float_rejects_infinity_word",
+      "expression": {
+        "kind": "call",
+        "value": {
+          "operation": {"value": "text.parse_float"},
+          "type_arguments": [],
+          "arguments": [{"kind": "literal", "value": {"kind": "string_value", "value": "Infinity"}}]
+        }
+      },
+      "expected": {"failed": "invalid_number_text", "reads": []}
+    },
+    {
+      "id": "text_parse_float_rejects_nan",
+      "expression": {
+        "kind": "call",
+        "value": {
+          "operation": {"value": "text.parse_float"},
+          "type_arguments": [],
+          "arguments": [{"kind": "literal", "value": {"kind": "string_value", "value": "NaN"}}]
+        }
+      },
+      "expected": {"failed": "invalid_number_text", "reads": []}
+    },
+    {
+      "id": "text_parse_duration_minutes_seconds",
+      "expression": {
+        "kind": "call",
+        "value": {
+          "operation": {"value": "text.parse_duration"},
+          "type_arguments": [],
+          "arguments": [{"kind": "literal", "value": {"kind": "string_value", "value": "PT1M30.5S"}}]
+        }
+      },
+      "expected": {"available": {"duration": "90500"}, "reads": []}
+    },
+    {
+      "id": "text_parse_duration_days_are_24_hours",
+      "expression": {
+        "kind": "call",
+        "value": {
+          "operation": {"value": "text.parse_duration"},
+          "type_arguments": [],
+          "arguments": [{"kind": "literal", "value": {"kind": "string_value", "value": "P1DT2H"}}]
+        }
+      },
+      "expected": {"available": {"duration": "93600000"}, "reads": []}
+    },
+    {
+      "id": "text_parse_duration_negative",
+      "expression": {
+        "kind": "call",
+        "value": {
+          "operation": {"value": "text.parse_duration"},
+          "type_arguments": [],
+          "arguments": [{"kind": "literal", "value": {"kind": "string_value", "value": "-PT1.5S"}}]
+        }
+      },
+      "expected": {"available": {"duration": "-1500"}, "reads": []}
+    },
+    {
+      "id": "text_parse_duration_zero",
+      "expression": {
+        "kind": "call",
+        "value": {
+          "operation": {"value": "text.parse_duration"},
+          "type_arguments": [],
+          "arguments": [{"kind": "literal", "value": {"kind": "string_value", "value": "PT0S"}}]
+        }
+      },
+      "expected": {"available": {"duration": "0"}, "reads": []}
+    },
+    {
+      "id": "text_parse_duration_millisecond",
+      "expression": {
+        "kind": "call",
+        "value": {
+          "operation": {"value": "text.parse_duration"},
+          "type_arguments": [],
+          "arguments": [{"kind": "literal", "value": {"kind": "string_value", "value": "PT0.001S"}}]
+        }
+      },
+      "expected": {"available": {"duration": "1"}, "reads": []}
+    },
+    {
+      "id": "text_parse_duration_largest_days",
+      "expression": {
+        "kind": "call",
+        "value": {
+          "operation": {"value": "text.parse_duration"},
+          "type_arguments": [],
+          "arguments": [{"kind": "literal", "value": {"kind": "string_value", "value": "P104249991D"}}]
+        }
+      },
+      "expected": {"available": {"duration": "9007199222400000"}, "reads": []}
+    },
+    {
+      "id": "text_parse_duration_empty_time_section",
+      "expression": {
+        "kind": "call",
+        "value": {
+          "operation": {"value": "text.parse_duration"},
+          "type_arguments": [],
+          "arguments": [{"kind": "literal", "value": {"kind": "string_value", "value": "PT"}}]
+        }
+      },
+      "expected": {"failed": "invalid_duration_text", "reads": []}
+    },
+    {
+      "id": "text_parse_duration_no_component",
+      "expression": {
+        "kind": "call",
+        "value": {
+          "operation": {"value": "text.parse_duration"},
+          "type_arguments": [],
+          "arguments": [{"kind": "literal", "value": {"kind": "string_value", "value": "P"}}]
+        }
+      },
+      "expected": {"failed": "invalid_duration_text", "reads": []}
+    },
+    {
+      "id": "text_parse_duration_four_fraction_digits",
+      "expression": {
+        "kind": "call",
+        "value": {
+          "operation": {"value": "text.parse_duration"},
+          "type_arguments": [],
+          "arguments": [{"kind": "literal", "value": {"kind": "string_value", "value": "PT1.5555S"}}]
+        }
+      },
+      "expected": {"failed": "invalid_duration_text", "reads": []}
+    },
+    {
+      "id": "text_parse_duration_lowercase",
+      "expression": {
+        "kind": "call",
+        "value": {
+          "operation": {"value": "text.parse_duration"},
+          "type_arguments": [],
+          "arguments": [{"kind": "literal", "value": {"kind": "string_value", "value": "pt1s"}}]
+        }
+      },
+      "expected": {"failed": "invalid_duration_text", "reads": []}
+    },
+    {
+      "id": "text_parse_duration_beyond_range",
+      "expression": {
+        "kind": "call",
+        "value": {
+          "operation": {"value": "text.parse_duration"},
+          "type_arguments": [],
+          "arguments": [{"kind": "literal", "value": {"kind": "string_value", "value": "P104249992D"}}]
+        }
+      },
+      "expected": {"failed": "duration_range", "reads": []}
+    },
+    {
+      "id": "text_parse_timestamp_utc",
+      "expression": {
+        "kind": "call",
+        "value": {
+          "operation": {"value": "text.parse_timestamp"},
+          "type_arguments": [],
+          "arguments": [{"kind": "literal", "value": {"kind": "string_value", "value": "2024-01-02T03:04:05Z"}}]
+        }
+      },
+      "expected": {"available": {"timestamp": "2024-01-02T03:04:05.000Z"}, "reads": []}
+    },
+    {
+      "id": "text_parse_timestamp_offset_truncates_fraction",
+      "expression": {
+        "kind": "call",
+        "value": {
+          "operation": {"value": "text.parse_timestamp"},
+          "type_arguments": [],
+          "arguments": [
+            {
+              "kind": "literal",
+              "value": {"kind": "string_value", "value": "2024-01-02T03:04:05.123456+01:00"}
+            }
+          ]
+        }
+      },
+      "expected": {"available": {"timestamp": "2024-01-02T02:04:05.123Z"}, "reads": []}
+    },
+    {
+      "id": "text_parse_timestamp_negative_offset",
+      "expression": {
+        "kind": "call",
+        "value": {
+          "operation": {"value": "text.parse_timestamp"},
+          "type_arguments": [],
+          "arguments": [{"kind": "literal", "value": {"kind": "string_value", "value": "2023-12-31T23:30:00-01:00"}}]
+        }
+      },
+      "expected": {"available": {"timestamp": "2024-01-01T00:30:00.000Z"}, "reads": []}
+    },
+    {
+      "id": "text_parse_timestamp_invalid_day",
+      "expression": {
+        "kind": "call",
+        "value": {
+          "operation": {"value": "text.parse_timestamp"},
+          "type_arguments": [],
+          "arguments": [{"kind": "literal", "value": {"kind": "string_value", "value": "2023-02-29T00:00:00Z"}}]
+        }
+      },
+      "expected": {"failed": "invalid_timestamp_text", "reads": []}
+    },
+    {
+      "id": "text_parse_timestamp_leap_second",
+      "expression": {
+        "kind": "call",
+        "value": {
+          "operation": {"value": "text.parse_timestamp"},
+          "type_arguments": [],
+          "arguments": [{"kind": "literal", "value": {"kind": "string_value", "value": "2016-12-31T23:59:60Z"}}]
+        }
+      },
+      "expected": {"failed": "invalid_timestamp_text", "reads": []}
+    },
+    {
+      "id": "text_parse_timestamp_space_separator",
+      "expression": {
+        "kind": "call",
+        "value": {
+          "operation": {"value": "text.parse_timestamp"},
+          "type_arguments": [],
+          "arguments": [{"kind": "literal", "value": {"kind": "string_value", "value": "2024-01-02 03:04:05Z"}}]
+        }
+      },
+      "expected": {"failed": "invalid_timestamp_text", "reads": []}
+    },
+    {
+      "id": "text_parse_timestamp_lowercase",
+      "expression": {
+        "kind": "call",
+        "value": {
+          "operation": {"value": "text.parse_timestamp"},
+          "type_arguments": [],
+          "arguments": [{"kind": "literal", "value": {"kind": "string_value", "value": "2024-01-02t03:04:05z"}}]
+        }
+      },
+      "expected": {"failed": "invalid_timestamp_text", "reads": []}
+    },
+    {
+      "id": "text_parse_timestamp_before_range",
+      "expression": {
+        "kind": "call",
+        "value": {
+          "operation": {"value": "text.parse_timestamp"},
+          "type_arguments": [],
+          "arguments": [{"kind": "literal", "value": {"kind": "string_value", "value": "0001-01-01T00:00:00+00:01"}}]
+        }
+      },
+      "expected": {"failed": "timestamp_range", "reads": []}
+    },
+    {
+      "id": "text_parse_timestamp_after_range",
+      "expression": {
+        "kind": "call",
+        "value": {
+          "operation": {"value": "text.parse_timestamp"},
+          "type_arguments": [],
+          "arguments": [{"kind": "literal", "value": {"kind": "string_value", "value": "9999-12-31T23:59:59.999-00:01"}}]
+        }
+      },
+      "expected": {"failed": "timestamp_range", "reads": []}
+    }
+  ]
+}

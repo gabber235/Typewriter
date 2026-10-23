@@ -1,0 +1,337 @@
+{
+  "cases": [
+    {
+      "id": "integer_gcd",
+      "expression": {
+        "kind": "call",
+        "value": {
+          "operation": {"value": "integer.gcd"},
+          "type_arguments": [],
+          "arguments": [
+            {"kind": "literal", "value": {"kind": "integer", "value": "12"}},
+            {"kind": "literal", "value": {"kind": "integer", "value": "18"}}
+          ]
+        }
+      },
+      "check": {
+        "resultType": {
+          "value": {
+            "kind": "nominal",
+            "value": {"kind": "scalar", "value": {"kind": "integer", "value": {"width": "signed_sixty_four"}}}
+          },
+          "may_be_missing": true
+        },
+        "failures": [],
+        "inferredType": {
+          "value": {
+            "kind": "nominal",
+            "value": {"kind": "scalar", "value": {"kind": "integer", "value": {"width": "signed_sixty_four"}}}
+          },
+          "may_be_missing": false
+        }
+      },
+      "expected": {"available": {"integer": "6"}, "reads": []}
+    },
+    {
+      "id": "integer_gcd_absolute_values",
+      "expression": {
+        "kind": "call",
+        "value": {
+          "operation": {"value": "integer.gcd"},
+          "type_arguments": [],
+          "arguments": [
+            {"kind": "literal", "value": {"kind": "integer", "value": "-12"}},
+            {"kind": "literal", "value": {"kind": "integer", "value": "18"}}
+          ]
+        }
+      },
+      "expected": {"available": {"integer": "6"}, "reads": []}
+    },
+    {
+      "id": "integer_gcd_with_zero",
+      "expression": {
+        "kind": "call",
+        "value": {
+          "operation": {"value": "integer.gcd"},
+          "type_arguments": [],
+          "arguments": [
+            {"kind": "literal", "value": {"kind": "integer", "value": "0"}},
+            {"kind": "literal", "value": {"kind": "integer", "value": "-5"}}
+          ]
+        }
+      },
+      "expected": {"available": {"integer": "5"}, "reads": []}
+    },
+    {
+      "id": "integer_gcd_of_zeros",
+      "expression": {
+        "kind": "call",
+        "value": {
+          "operation": {"value": "integer.gcd"},
+          "type_arguments": [],
+          "arguments": [
+            {"kind": "literal", "value": {"kind": "integer", "value": "0"}},
+            {"kind": "literal", "value": {"kind": "integer", "value": "0"}}
+          ]
+        }
+      },
+      "expected": {"available": {"integer": "0"}, "reads": []}
+    },
+    {
+      "id": "integer_bit_and",
+      "expression": {
+        "kind": "call",
+        "value": {
+          "operation": {"value": "integer.bit_and"},
+          "type_arguments": [],
+          "arguments": [
+            {"kind": "literal", "value": {"kind": "integer", "value": "12"}},
+            {"kind": "literal", "value": {"kind": "integer", "value": "10"}}
+          ]
+        }
+      },
+      "expected": {"available": {"integer": "8"}, "reads": []}
+    },
+    {
+      "id": "integer_bit_and_twos_complement",
+      "expression": {
+        "kind": "call",
+        "value": {
+          "operation": {"value": "integer.bit_and"},
+          "type_arguments": [],
+          "arguments": [
+            {"kind": "literal", "value": {"kind": "integer", "value": "-1"}},
+            {"kind": "literal", "value": {"kind": "integer", "value": "255"}}
+          ]
+        }
+      },
+      "expected": {"available": {"integer": "255"}, "reads": []}
+    },
+    {
+      "id": "integer_bit_and_variadic",
+      "expression": {
+        "kind": "call",
+        "value": {
+          "operation": {"value": "integer.bit_and"},
+          "type_arguments": [],
+          "arguments": [
+            {"kind": "literal", "value": {"kind": "integer", "value": "-8"}},
+            {"kind": "literal", "value": {"kind": "integer", "value": "15"}},
+            {"kind": "literal", "value": {"kind": "integer", "value": "12"}}
+          ]
+        }
+      },
+      "expected": {"available": {"integer": "8"}, "reads": []}
+    },
+    {
+      "id": "integer_bit_or_variadic",
+      "expression": {
+        "kind": "call",
+        "value": {
+          "operation": {"value": "integer.bit_or"},
+          "type_arguments": [],
+          "arguments": [
+            {"kind": "literal", "value": {"kind": "integer", "value": "1"}},
+            {"kind": "literal", "value": {"kind": "integer", "value": "2"}},
+            {"kind": "literal", "value": {"kind": "integer", "value": "4"}}
+          ]
+        }
+      },
+      "expected": {"available": {"integer": "7"}, "reads": []}
+    },
+    {
+      "id": "integer_bit_or_negative",
+      "expression": {
+        "kind": "call",
+        "value": {
+          "operation": {"value": "integer.bit_or"},
+          "type_arguments": [],
+          "arguments": [
+            {"kind": "literal", "value": {"kind": "integer", "value": "-16"}},
+            {"kind": "literal", "value": {"kind": "integer", "value": "3"}}
+          ]
+        }
+      },
+      "expected": {"available": {"integer": "-13"}, "reads": []}
+    },
+    {
+      "id": "integer_bit_xor",
+      "expression": {
+        "kind": "call",
+        "value": {
+          "operation": {"value": "integer.bit_xor"},
+          "type_arguments": [],
+          "arguments": [
+            {"kind": "literal", "value": {"kind": "integer", "value": "12"}},
+            {"kind": "literal", "value": {"kind": "integer", "value": "10"}}
+          ]
+        }
+      },
+      "expected": {"available": {"integer": "6"}, "reads": []}
+    },
+    {
+      "id": "integer_bit_xor_negative",
+      "expression": {
+        "kind": "call",
+        "value": {
+          "operation": {"value": "integer.bit_xor"},
+          "type_arguments": [],
+          "arguments": [
+            {"kind": "literal", "value": {"kind": "integer", "value": "-1"}},
+            {"kind": "literal", "value": {"kind": "integer", "value": "5"}}
+          ]
+        }
+      },
+      "expected": {"available": {"integer": "-6"}, "reads": []}
+    },
+    {
+      "id": "integer_bit_not_zero",
+      "expression": {
+        "kind": "call",
+        "value": {
+          "operation": {"value": "integer.bit_not"},
+          "type_arguments": [],
+          "arguments": [{"kind": "literal", "value": {"kind": "integer", "value": "0"}}]
+        }
+      },
+      "expected": {"available": {"integer": "-1"}, "reads": []}
+    },
+    {
+      "id": "integer_bit_not_positive",
+      "expression": {
+        "kind": "call",
+        "value": {
+          "operation": {"value": "integer.bit_not"},
+          "type_arguments": [],
+          "arguments": [{"kind": "literal", "value": {"kind": "integer", "value": "5"}}]
+        }
+      },
+      "expected": {"available": {"integer": "-6"}, "reads": []}
+    },
+    {
+      "id": "integer_shift_left_beyond_64_bits",
+      "expression": {
+        "kind": "call",
+        "value": {
+          "operation": {"value": "integer.shift_left"},
+          "type_arguments": [],
+          "arguments": [
+            {"kind": "literal", "value": {"kind": "integer", "value": "1"}},
+            {"kind": "literal", "value": {"kind": "integer", "value": "70"}}
+          ]
+        }
+      },
+      "expected": {"available": {"integer": "1180591620717411303424"}, "reads": []}
+    },
+    {
+      "id": "integer_shift_right_floors",
+      "expression": {
+        "kind": "call",
+        "value": {
+          "operation": {"value": "integer.shift_right"},
+          "type_arguments": [],
+          "arguments": [
+            {"kind": "literal", "value": {"kind": "integer", "value": "-5"}},
+            {"kind": "literal", "value": {"kind": "integer", "value": "1"}}
+          ]
+        }
+      },
+      "expected": {"available": {"integer": "-3"}, "reads": []}
+    },
+    {
+      "id": "integer_shift_right_positive",
+      "expression": {
+        "kind": "call",
+        "value": {
+          "operation": {"value": "integer.shift_right"},
+          "type_arguments": [],
+          "arguments": [
+            {"kind": "literal", "value": {"kind": "integer", "value": "5"}},
+            {"kind": "literal", "value": {"kind": "integer", "value": "1"}}
+          ]
+        }
+      },
+      "expected": {"available": {"integer": "2"}, "reads": []}
+    },
+    {
+      "id": "integer_shift_left_negative_bits",
+      "expression": {
+        "kind": "call",
+        "value": {
+          "operation": {"value": "integer.shift_left"},
+          "type_arguments": [],
+          "arguments": [
+            {"kind": "literal", "value": {"kind": "integer", "value": "1"}},
+            {"kind": "literal", "value": {"kind": "integer", "value": "-1"}}
+          ]
+        }
+      },
+      "expected": {"failed": "negative_shift", "reads": []}
+    },
+    {
+      "id": "integer_shift_right_negative_bits",
+      "expression": {
+        "kind": "call",
+        "value": {
+          "operation": {"value": "integer.shift_right"},
+          "type_arguments": [],
+          "arguments": [
+            {"kind": "literal", "value": {"kind": "integer", "value": "8"}},
+            {"kind": "literal", "value": {"kind": "integer", "value": "-2"}}
+          ]
+        }
+      },
+      "expected": {"failed": "negative_shift", "reads": []}
+    },
+    {
+      "id": "integer_shift_bits_outside_32_bits",
+      "expression": {
+        "kind": "call",
+        "value": {
+          "operation": {"value": "integer.shift_left"},
+          "type_arguments": [],
+          "arguments": [
+            {"kind": "literal", "value": {"kind": "integer", "value": "1"}},
+            {"kind": "literal", "value": {"kind": "integer", "value": "2147483648"}}
+          ]
+        }
+      },
+      "expected": {"failed": "integer_out_of_range", "reads": []}
+    },
+    {
+      "id": "integer_color_with_alpha_composition",
+      "expression": {
+        "kind": "call",
+        "value": {
+          "operation": {"value": "integer.bit_or"},
+          "type_arguments": [],
+          "arguments": [
+            {
+              "kind": "call",
+              "value": {
+                "operation": {"value": "integer.bit_and"},
+                "type_arguments": [],
+                "arguments": [
+                  {"kind": "literal", "value": {"kind": "integer", "value": "1122867"}},
+                  {"kind": "literal", "value": {"kind": "integer", "value": "16777215"}}
+                ]
+              }
+            },
+            {
+              "kind": "call",
+              "value": {
+                "operation": {"value": "integer.shift_left"},
+                "type_arguments": [],
+                "arguments": [
+                  {"kind": "literal", "value": {"kind": "integer", "value": "128"}},
+                  {"kind": "literal", "value": {"kind": "integer", "value": "24"}}
+                ]
+              }
+            }
+          ]
+        }
+      },
+      "expected": {"available": {"integer": "2148606515"}, "reads": []}
+    }
+  ]
+}

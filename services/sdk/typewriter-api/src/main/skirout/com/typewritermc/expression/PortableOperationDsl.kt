@@ -43,7 +43,7 @@ fun <M : MissingPolicy> Expr<out List<Int>, M>.toBytes(): Expr<ByteArray, M> =
 fun <M : MissingPolicy> Expr<ByteArray, M>.toByteList(): Expr<List<Int>, M> =
     call(PortableOperationCatalog.BYTES_TO_LIST, this)
 
-/** The published declaration of the type a selection names; missing when the catalog lacks it. */
+/** The published declaration of the type a selection names; missing at no location when the catalog lacks it. */
 @JvmName("catalogDeclaration")
 fun <M : MissingPolicy> Expr<TypeSelection, M>.declaration(): Expr<PublishedType, MayBeMissing> =
     call(PortableOperationCatalog.CATALOG_DECLARATION, this)
@@ -1385,8 +1385,8 @@ operator fun <M : MissingPolicy> Expr<ULong, M>.div(
     call(PortableOperationCatalog.NUMBER_DIVIDE, this, literal(divisor))
 
 /**
- * The value with exactly fraction_digits fraction digits (rounded half even) and the locale's CLDR digits,
- * grouping and symbols. Locale und uses no grouping.
+ * The value with exactly fraction_digits fraction digits (rounded half even; a float from its shortest round
+ * trip decimal) and the locale's CLDR digits, grouping and symbols. Locale und uses no grouping.
  */
 @JvmName("numberFormat")
 fun <N : Number, M : MissingPolicy> Expr<N, M>.formatNumber(
@@ -1396,8 +1396,8 @@ fun <N : Number, M : MissingPolicy> Expr<N, M>.formatNumber(
     call(PortableOperationCatalog.NUMBER_FORMAT, this, fractionDigits, locale)
 
 /**
- * The value with exactly fraction_digits fraction digits (rounded half even) and the locale's CLDR digits,
- * grouping and symbols. Locale und uses no grouping.
+ * The value with exactly fraction_digits fraction digits (rounded half even; a float from its shortest round
+ * trip decimal) and the locale's CLDR digits, grouping and symbols. Locale und uses no grouping.
  */
 @JvmName("numberFormatRaw")
 fun <N : Number, M : MissingPolicy> Expr<N, M>.formatNumber(
@@ -1407,8 +1407,8 @@ fun <N : Number, M : MissingPolicy> Expr<N, M>.formatNumber(
     call(PortableOperationCatalog.NUMBER_FORMAT, this, literal(fractionDigits), literal(locale))
 
 /**
- * The value with exactly fraction_digits fraction digits (rounded half even) and the locale's CLDR digits,
- * grouping and symbols. Locale und uses no grouping.
+ * The value with exactly fraction_digits fraction digits (rounded half even; a float from its shortest round
+ * trip decimal) and the locale's CLDR digits, grouping and symbols. Locale und uses no grouping.
  */
 @JvmName("numberFormatUByte")
 fun <M : MissingPolicy> Expr<UByte, M>.formatNumber(
@@ -1418,8 +1418,8 @@ fun <M : MissingPolicy> Expr<UByte, M>.formatNumber(
     call(PortableOperationCatalog.NUMBER_FORMAT, this, fractionDigits, locale)
 
 /**
- * The value with exactly fraction_digits fraction digits (rounded half even) and the locale's CLDR digits,
- * grouping and symbols. Locale und uses no grouping.
+ * The value with exactly fraction_digits fraction digits (rounded half even; a float from its shortest round
+ * trip decimal) and the locale's CLDR digits, grouping and symbols. Locale und uses no grouping.
  */
 @JvmName("numberFormatUByteRaw")
 fun <M : MissingPolicy> Expr<UByte, M>.formatNumber(
@@ -1429,8 +1429,8 @@ fun <M : MissingPolicy> Expr<UByte, M>.formatNumber(
     call(PortableOperationCatalog.NUMBER_FORMAT, this, literal(fractionDigits), literal(locale))
 
 /**
- * The value with exactly fraction_digits fraction digits (rounded half even) and the locale's CLDR digits,
- * grouping and symbols. Locale und uses no grouping.
+ * The value with exactly fraction_digits fraction digits (rounded half even; a float from its shortest round
+ * trip decimal) and the locale's CLDR digits, grouping and symbols. Locale und uses no grouping.
  */
 @JvmName("numberFormatUShort")
 fun <M : MissingPolicy> Expr<UShort, M>.formatNumber(
@@ -1440,8 +1440,8 @@ fun <M : MissingPolicy> Expr<UShort, M>.formatNumber(
     call(PortableOperationCatalog.NUMBER_FORMAT, this, fractionDigits, locale)
 
 /**
- * The value with exactly fraction_digits fraction digits (rounded half even) and the locale's CLDR digits,
- * grouping and symbols. Locale und uses no grouping.
+ * The value with exactly fraction_digits fraction digits (rounded half even; a float from its shortest round
+ * trip decimal) and the locale's CLDR digits, grouping and symbols. Locale und uses no grouping.
  */
 @JvmName("numberFormatUShortRaw")
 fun <M : MissingPolicy> Expr<UShort, M>.formatNumber(
@@ -1451,8 +1451,8 @@ fun <M : MissingPolicy> Expr<UShort, M>.formatNumber(
     call(PortableOperationCatalog.NUMBER_FORMAT, this, literal(fractionDigits), literal(locale))
 
 /**
- * The value with exactly fraction_digits fraction digits (rounded half even) and the locale's CLDR digits,
- * grouping and symbols. Locale und uses no grouping.
+ * The value with exactly fraction_digits fraction digits (rounded half even; a float from its shortest round
+ * trip decimal) and the locale's CLDR digits, grouping and symbols. Locale und uses no grouping.
  */
 @JvmName("numberFormatUInt")
 fun <M : MissingPolicy> Expr<UInt, M>.formatNumber(
@@ -1462,8 +1462,8 @@ fun <M : MissingPolicy> Expr<UInt, M>.formatNumber(
     call(PortableOperationCatalog.NUMBER_FORMAT, this, fractionDigits, locale)
 
 /**
- * The value with exactly fraction_digits fraction digits (rounded half even) and the locale's CLDR digits,
- * grouping and symbols. Locale und uses no grouping.
+ * The value with exactly fraction_digits fraction digits (rounded half even; a float from its shortest round
+ * trip decimal) and the locale's CLDR digits, grouping and symbols. Locale und uses no grouping.
  */
 @JvmName("numberFormatUIntRaw")
 fun <M : MissingPolicy> Expr<UInt, M>.formatNumber(
@@ -1473,8 +1473,8 @@ fun <M : MissingPolicy> Expr<UInt, M>.formatNumber(
     call(PortableOperationCatalog.NUMBER_FORMAT, this, literal(fractionDigits), literal(locale))
 
 /**
- * The value with exactly fraction_digits fraction digits (rounded half even) and the locale's CLDR digits,
- * grouping and symbols. Locale und uses no grouping.
+ * The value with exactly fraction_digits fraction digits (rounded half even; a float from its shortest round
+ * trip decimal) and the locale's CLDR digits, grouping and symbols. Locale und uses no grouping.
  */
 @JvmName("numberFormatULong")
 fun <M : MissingPolicy> Expr<ULong, M>.formatNumber(
@@ -1484,8 +1484,8 @@ fun <M : MissingPolicy> Expr<ULong, M>.formatNumber(
     call(PortableOperationCatalog.NUMBER_FORMAT, this, fractionDigits, locale)
 
 /**
- * The value with exactly fraction_digits fraction digits (rounded half even) and the locale's CLDR digits,
- * grouping and symbols. Locale und uses no grouping.
+ * The value with exactly fraction_digits fraction digits (rounded half even; a float from its shortest round
+ * trip decimal) and the locale's CLDR digits, grouping and symbols. Locale und uses no grouping.
  */
 @JvmName("numberFormatULongRaw")
 fun <M : MissingPolicy> Expr<ULong, M>.formatNumber(
@@ -1644,70 +1644,100 @@ fun <M : MissingPolicy> Expr<ULong, M>.pluralCategory(
 ): Expr<PluralCategory, M> =
     call(PortableOperationCatalog.NUMBER_PLURAL_CATEGORY, this, literal(locale))
 
-/** Value raised to a nonnegative integer exponent; exact for integers and decimals. */
+/**
+ * Value raised to a nonnegative integer exponent, where any value to the power 0 is 1; exact for integers and
+ * decimals.
+ */
 @JvmName("numberPower")
 fun <N : Number, M : MissingPolicy> Expr<N, M>.power(
     exponent: Expr<Int, M>,
 ): Expr<N, M> =
     call(PortableOperationCatalog.NUMBER_POWER, this, exponent)
 
-/** Value raised to a nonnegative integer exponent; exact for integers and decimals. */
+/**
+ * Value raised to a nonnegative integer exponent, where any value to the power 0 is 1; exact for integers and
+ * decimals.
+ */
 @JvmName("numberPowerRaw")
 fun <N : Number, M : MissingPolicy> Expr<N, M>.power(
     exponent: Int,
 ): Expr<N, M> =
     call(PortableOperationCatalog.NUMBER_POWER, this, literal(exponent))
 
-/** Value raised to a nonnegative integer exponent; exact for integers and decimals. */
+/**
+ * Value raised to a nonnegative integer exponent, where any value to the power 0 is 1; exact for integers and
+ * decimals.
+ */
 @JvmName("numberPowerUByte")
 fun <M : MissingPolicy> Expr<UByte, M>.power(
     exponent: Expr<Int, M>,
 ): Expr<UByte, M> =
     call(PortableOperationCatalog.NUMBER_POWER, this, exponent)
 
-/** Value raised to a nonnegative integer exponent; exact for integers and decimals. */
+/**
+ * Value raised to a nonnegative integer exponent, where any value to the power 0 is 1; exact for integers and
+ * decimals.
+ */
 @JvmName("numberPowerUByteRaw")
 fun <M : MissingPolicy> Expr<UByte, M>.power(
     exponent: Int,
 ): Expr<UByte, M> =
     call(PortableOperationCatalog.NUMBER_POWER, this, literal(exponent))
 
-/** Value raised to a nonnegative integer exponent; exact for integers and decimals. */
+/**
+ * Value raised to a nonnegative integer exponent, where any value to the power 0 is 1; exact for integers and
+ * decimals.
+ */
 @JvmName("numberPowerUShort")
 fun <M : MissingPolicy> Expr<UShort, M>.power(
     exponent: Expr<Int, M>,
 ): Expr<UShort, M> =
     call(PortableOperationCatalog.NUMBER_POWER, this, exponent)
 
-/** Value raised to a nonnegative integer exponent; exact for integers and decimals. */
+/**
+ * Value raised to a nonnegative integer exponent, where any value to the power 0 is 1; exact for integers and
+ * decimals.
+ */
 @JvmName("numberPowerUShortRaw")
 fun <M : MissingPolicy> Expr<UShort, M>.power(
     exponent: Int,
 ): Expr<UShort, M> =
     call(PortableOperationCatalog.NUMBER_POWER, this, literal(exponent))
 
-/** Value raised to a nonnegative integer exponent; exact for integers and decimals. */
+/**
+ * Value raised to a nonnegative integer exponent, where any value to the power 0 is 1; exact for integers and
+ * decimals.
+ */
 @JvmName("numberPowerUInt")
 fun <M : MissingPolicy> Expr<UInt, M>.power(
     exponent: Expr<Int, M>,
 ): Expr<UInt, M> =
     call(PortableOperationCatalog.NUMBER_POWER, this, exponent)
 
-/** Value raised to a nonnegative integer exponent; exact for integers and decimals. */
+/**
+ * Value raised to a nonnegative integer exponent, where any value to the power 0 is 1; exact for integers and
+ * decimals.
+ */
 @JvmName("numberPowerUIntRaw")
 fun <M : MissingPolicy> Expr<UInt, M>.power(
     exponent: Int,
 ): Expr<UInt, M> =
     call(PortableOperationCatalog.NUMBER_POWER, this, literal(exponent))
 
-/** Value raised to a nonnegative integer exponent; exact for integers and decimals. */
+/**
+ * Value raised to a nonnegative integer exponent, where any value to the power 0 is 1; exact for integers and
+ * decimals.
+ */
 @JvmName("numberPowerULong")
 fun <M : MissingPolicy> Expr<ULong, M>.power(
     exponent: Expr<Int, M>,
 ): Expr<ULong, M> =
     call(PortableOperationCatalog.NUMBER_POWER, this, exponent)
 
-/** Value raised to a nonnegative integer exponent; exact for integers and decimals. */
+/**
+ * Value raised to a nonnegative integer exponent, where any value to the power 0 is 1; exact for integers and
+ * decimals.
+ */
 @JvmName("numberPowerULongRaw")
 fun <M : MissingPolicy> Expr<ULong, M>.power(
     exponent: Int,
@@ -2002,7 +2032,10 @@ fun <M : MissingPolicy> Expr<String, M>.findAll(
 ): Expr<List<RegexMatch>, M> =
     call(PortableOperationCatalog.REGEX_FIND_ALL, this, literal(pattern))
 
-/** Replaces every match of pattern; $n in replacement inserts group n and $$ a dollar sign. */
+/**
+ * Replaces every match of pattern. In replacement, $n inserts group n (the longest digit run naming an existing
+ * group; empty when it did not take part) and $$ a dollar sign; any other $ fails invalid_regex.
+ */
 @JvmName("regexReplace")
 fun <M : MissingPolicy> Expr<String, M>.replaceRegex(
     pattern: Expr<String, M>,
@@ -2010,7 +2043,10 @@ fun <M : MissingPolicy> Expr<String, M>.replaceRegex(
 ): Expr<String, M> =
     call(PortableOperationCatalog.REGEX_REPLACE, this, pattern, replacement)
 
-/** Replaces every match of pattern; $n in replacement inserts group n and $$ a dollar sign. */
+/**
+ * Replaces every match of pattern. In replacement, $n inserts group n (the longest digit run naming an existing
+ * group; empty when it did not take part) and $$ a dollar sign; any other $ fails invalid_regex.
+ */
 @JvmName("regexReplaceRaw")
 fun <M : MissingPolicy> Expr<String, M>.replaceRegex(
     pattern: String,
@@ -2018,17 +2054,20 @@ fun <M : MissingPolicy> Expr<String, M>.replaceRegex(
 ): Expr<String, M> =
     call(PortableOperationCatalog.REGEX_REPLACE, this, literal(pattern), literal(replacement))
 
-/** The type selection of a resource by identity; missing when there is no such resource. */
+/** The type selection of a resource by identity. Reads the resource; missing at its root when there is none. */
 @JvmName("resourceConfiguration")
 fun <M : MissingPolicy> Expr<com.typewritermc.types.ResourceId, M>.configuration(): Expr<TypeSelection, MayBeMissing> =
     call(PortableOperationCatalog.RESOURCE_CONFIGURATION, this)
 
-/** The identity of the resource the link names; missing when the link is stale. */
+/** The identity of the resource the link names. Reads the resource; missing at its root when the link is stale. */
 @JvmName("resourceIdentity")
 fun <T : Resource, M : MissingPolicy> Expr<out Ref<*, T>, M>.identity(): Expr<com.typewritermc.types.ResourceId, MayBeMissing> =
     call(PortableOperationCatalog.RESOURCE_IDENTITY, this)
 
-/** The configured value of the resource the link names; missing when the link is stale. */
+/**
+ * The resource's fields as a record of its configured type. Reads the resource; missing at its root when the
+ * link is stale.
+ */
 @JvmName("resourceValue")
 fun <T : Resource, M : MissingPolicy> Expr<out Ref<*, T>, M>.value(): Expr<T, MayBeMissing> =
     call(PortableOperationCatalog.RESOURCE_VALUE, this)
@@ -2306,7 +2345,7 @@ fun <O, M : MissingPolicy> Expr<O, M>.compare(
 ): Expr<Int, M> =
     call(PortableOperationCatalog.VALUE_COMPARE, this, second)
 
-/** The actual type of a named value, as a type selection; missing for structural values. */
+/** The actual type of a named value, as a type selection; missing at no location for structural values. */
 @JvmName("valueConfiguration")
 fun <T, M : MissingPolicy> Expr<T, M>.configuration(): Expr<TypeSelection, MayBeMissing> =
     call(PortableOperationCatalog.VALUE_CONFIGURATION, this)
@@ -2331,7 +2370,10 @@ fun <T, R, M : MissingPolicy> let(
 ): Expr<R, MayBeMissing> =
     call(PortableOperationCatalog.VALUE_LET, value, lambdaOf(body))
 
-/** The value as canonical Skir readable JSON of its DataValue. */
+/**
+ * The value as canonical Skir readable JSON of its DataValue, without whitespace and with default fields
+ * omitted.
+ */
 @JvmName("valueToJson")
 fun <T, M : MissingPolicy> Expr<T, M>.toJson(): Expr<String, M> =
     call(PortableOperationCatalog.VALUE_TO_JSON, this)

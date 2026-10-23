@@ -1,0 +1,308 @@
+{
+  "cases": [
+    {
+      "id": "record_with_field_replaces_one_field",
+      "expression": {
+        "kind": "call",
+        "value": {
+          "operation": {"value": "record.with_field"},
+          "type_arguments": [],
+          "arguments": [
+            {
+              "kind": "literal",
+              "value": {
+                "kind": "record",
+                "value": {
+                  "fields": [
+                    {"name": "a", "value": {"kind": "integer", "value": "1"}},
+                    {"name": "b", "value": {"kind": "integer", "value": "2"}}
+                  ]
+                }
+              }
+            },
+            {"kind": "literal", "value": {"kind": "string_value", "value": "b"}},
+            {"kind": "literal", "value": {"kind": "integer", "value": "5"}}
+          ]
+        }
+      },
+      "expected": {"available": {"record": {"a": {"integer": "1"}, "b": {"integer": "5"}}}, "reads": []}
+    },
+    {
+      "id": "record_with_field_keeps_named_type",
+      "expression": {
+        "kind": "call",
+        "value": {
+          "operation": {"value": "record.with_field"},
+          "type_arguments": [],
+          "arguments": [
+            {
+              "kind": "literal",
+              "value": {
+                "kind": "named",
+                "value": {
+                  "actual_type": {
+                    "definition": {
+                      "type_id": {"kind": "qualified", "value": {"namespace": "fixture", "name": "Dog"}},
+                      "revision": 1
+                    },
+                    "arguments": []
+                  },
+                  "payload": {
+                    "kind": "record",
+                    "value": {"fields": [{"name": "name", "value": {"kind": "string_value", "value": "Rex"}}]}
+                  }
+                }
+              }
+            },
+            {"kind": "literal", "value": {"kind": "string_value", "value": "name"}},
+            {"kind": "literal", "value": {"kind": "string_value", "value": "Max"}}
+          ]
+        }
+      },
+      "typeDefinitions": [
+        {
+          "id": {
+            "type_id": {"kind": "qualified", "value": {"namespace": "fixture", "name": "Animal"}},
+            "revision": 1
+          },
+          "parameters": [],
+          "parents": [],
+          "representation": {
+            "kind": "record",
+            "value": {
+              "abstract": true,
+              "fields": [
+                {
+                  "owner": {
+                    "definition": {
+                      "type_id": {"kind": "qualified", "value": {"namespace": "fixture", "name": "Animal"}},
+                      "revision": 1
+                    },
+                    "name": "name"
+                  },
+                  "type": {"kind": "scalar", "value": "text"},
+                  "overrides": [],
+                  "has_constructor_default": false
+                }
+              ]
+            }
+          }
+        },
+        {
+          "id": {"type_id": {"kind": "qualified", "value": {"namespace": "fixture", "name": "Dog"}}, "revision": 1},
+          "parameters": [],
+          "parents": [
+            {
+              "definition": {
+                "type_id": {"kind": "qualified", "value": {"namespace": "fixture", "name": "Animal"}},
+                "revision": 1
+              },
+              "arguments": []
+            }
+          ],
+          "representation": {
+            "kind": "record",
+            "value": {
+              "abstract": false,
+              "fields": [
+                {
+                  "owner": {
+                    "definition": {
+                      "type_id": {"kind": "qualified", "value": {"namespace": "fixture", "name": "Dog"}},
+                      "revision": 1
+                    },
+                    "name": "name"
+                  },
+                  "type": {"kind": "scalar", "value": "text"},
+                  "overrides": [],
+                  "has_constructor_default": false
+                }
+              ]
+            }
+          }
+        }
+      ],
+      "check": {
+        "resultType": {
+          "value": {
+            "kind": "nominal",
+            "value": {
+              "kind": "named",
+              "value": {
+                "definition": {
+                  "type_id": {"kind": "qualified", "value": {"namespace": "fixture", "name": "Dog"}},
+                  "revision": 1
+                },
+                "arguments": []
+              }
+            }
+          },
+          "may_be_missing": true
+        },
+        "failures": [],
+        "inferredType": {
+          "value": {
+            "kind": "nominal",
+            "value": {
+              "kind": "named",
+              "value": {
+                "definition": {
+                  "type_id": {"kind": "qualified", "value": {"namespace": "fixture", "name": "Dog"}},
+                  "revision": 1
+                },
+                "arguments": []
+              }
+            }
+          },
+          "may_be_missing": false
+        }
+      },
+      "expected": {
+        "available": {
+          "named": {
+            "namespace": "fixture",
+            "name": "Dog",
+            "revision": 1,
+            "arguments": [],
+            "payload": {"record": {"name": {"string": "Max"}}}
+          }
+        },
+        "reads": []
+      }
+    },
+    {
+      "id": "record_with_field_name_must_be_literal",
+      "expression": {
+        "kind": "call",
+        "value": {
+          "operation": {"value": "record.with_field"},
+          "type_arguments": [],
+          "arguments": [
+            {
+              "kind": "literal",
+              "value": {
+                "kind": "named",
+                "value": {
+                  "actual_type": {
+                    "definition": {
+                      "type_id": {"kind": "qualified", "value": {"namespace": "fixture", "name": "Dog"}},
+                      "revision": 1
+                    },
+                    "arguments": []
+                  },
+                  "payload": {
+                    "kind": "record",
+                    "value": {"fields": [{"name": "name", "value": {"kind": "string_value", "value": "Rex"}}]}
+                  }
+                }
+              }
+            },
+            {
+              "kind": "call",
+              "value": {
+                "operation": {"value": "text.lower"},
+                "type_arguments": [],
+                "arguments": [{"kind": "literal", "value": {"kind": "string_value", "value": "NAME"}}]
+              }
+            },
+            {"kind": "literal", "value": {"kind": "string_value", "value": "Max"}}
+          ]
+        }
+      },
+      "typeDefinitions": [
+        {
+          "id": {
+            "type_id": {"kind": "qualified", "value": {"namespace": "fixture", "name": "Animal"}},
+            "revision": 1
+          },
+          "parameters": [],
+          "parents": [],
+          "representation": {
+            "kind": "record",
+            "value": {
+              "abstract": true,
+              "fields": [
+                {
+                  "owner": {
+                    "definition": {
+                      "type_id": {"kind": "qualified", "value": {"namespace": "fixture", "name": "Animal"}},
+                      "revision": 1
+                    },
+                    "name": "name"
+                  },
+                  "type": {"kind": "scalar", "value": "text"},
+                  "overrides": [],
+                  "has_constructor_default": false
+                }
+              ]
+            }
+          }
+        },
+        {
+          "id": {"type_id": {"kind": "qualified", "value": {"namespace": "fixture", "name": "Dog"}}, "revision": 1},
+          "parameters": [],
+          "parents": [
+            {
+              "definition": {
+                "type_id": {"kind": "qualified", "value": {"namespace": "fixture", "name": "Animal"}},
+                "revision": 1
+              },
+              "arguments": []
+            }
+          ],
+          "representation": {
+            "kind": "record",
+            "value": {
+              "abstract": false,
+              "fields": [
+                {
+                  "owner": {
+                    "definition": {
+                      "type_id": {"kind": "qualified", "value": {"namespace": "fixture", "name": "Dog"}},
+                      "revision": 1
+                    },
+                    "name": "name"
+                  },
+                  "type": {"kind": "scalar", "value": "text"},
+                  "overrides": [],
+                  "has_constructor_default": false
+                }
+              ]
+            }
+          }
+        }
+      ],
+      "check": {
+        "resultType": {
+          "value": {
+            "kind": "nominal",
+            "value": {
+              "kind": "named",
+              "value": {
+                "definition": {
+                  "type_id": {"kind": "qualified", "value": {"namespace": "fixture", "name": "Dog"}},
+                  "revision": 1
+                },
+                "arguments": []
+              }
+            }
+          },
+          "may_be_missing": true
+        },
+        "failures": ["literal_required"]
+      },
+      "expected": {
+        "available": {
+          "named": {
+            "namespace": "fixture",
+            "name": "Dog",
+            "revision": 1,
+            "arguments": [],
+            "payload": {"record": {"name": {"string": "Max"}}}
+          }
+        },
+        "reads": []
+      }
+    }
+  ]
+}

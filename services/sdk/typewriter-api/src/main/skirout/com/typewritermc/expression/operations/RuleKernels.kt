@@ -241,7 +241,10 @@ interface NumberKernel {
         rest: List<PortableNumber>,
     ): PortableNumber
 
-    /** Value raised to a nonnegative integer exponent; exact for integers and decimals. */
+    /**
+     * Value raised to a nonnegative integer exponent, where any value to the power 0 is 1; exact for integers and
+     * decimals.
+     */
     fun power(value: PortableNumber, exponent: Int): PortableNumber
 
     /** The remainder of truncating division; it has the sign of the dividend. */
@@ -290,7 +293,10 @@ interface RegexKernel {
         meter: PortableMeter,
     ): List<RegexMatch>
 
-    /** Replaces every match of pattern; $n in replacement inserts group n and $$ a dollar sign. */
+    /**
+     * Replaces every match of pattern. In replacement, $n inserts group n (the longest digit run naming an existing
+     * group; empty when it did not take part) and $$ a dollar sign; any other $ fails invalid_regex.
+     */
     fun replace(
         value: String,
         pattern: String,
@@ -439,7 +445,10 @@ interface ValueKernel {
     /** Evaluates value once and runs body with it bound as a lambda local. */
     fun let(value: DataValue, body: PortableApply): DataValue
 
-    /** The value as canonical Skir readable JSON of its DataValue. */
+    /**
+     * The value as canonical Skir readable JSON of its DataValue, without whitespace and with default fields
+     * omitted.
+     */
     fun toJson(value: DataValue): String
 
     /**

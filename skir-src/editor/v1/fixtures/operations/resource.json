@@ -1,0 +1,1242 @@
+{
+  "cases": [
+    {
+      "id": "resource_value",
+      "expression": {
+        "kind": "call",
+        "value": {
+          "operation": {"value": "resource.value"},
+          "type_arguments": [],
+          "arguments": [
+            {
+              "kind": "literal",
+              "value": {
+                "kind": "link",
+                "value": {"endpoint": {"value": "fixture.book"}, "target": {"resource": {"value": "book_1"}}}
+              }
+            }
+          ]
+        }
+      },
+      "typeDefinitions": [
+        {
+          "id": {"type_id": {"kind": "qualified", "value": {"namespace": "fixture", "name": "Work"}}, "revision": 1},
+          "parameters": [],
+          "parents": [],
+          "representation": {"kind": "record", "value": {"abstract": true, "fields": []}}
+        },
+        {
+          "id": {"type_id": {"kind": "qualified", "value": {"namespace": "fixture", "name": "Book"}}, "revision": 1},
+          "parameters": [],
+          "parents": [
+            {
+              "definition": {
+                "type_id": {"kind": "qualified", "value": {"namespace": "fixture", "name": "Work"}},
+                "revision": 1
+              },
+              "arguments": []
+            }
+          ],
+          "representation": {
+            "kind": "record",
+            "value": {
+              "abstract": false,
+              "fields": [
+                {
+                  "owner": {
+                    "definition": {
+                      "type_id": {"kind": "qualified", "value": {"namespace": "fixture", "name": "Book"}},
+                      "revision": 1
+                    },
+                    "name": "title"
+                  },
+                  "type": {"kind": "scalar", "value": "text"},
+                  "overrides": [],
+                  "has_constructor_default": false
+                }
+              ]
+            }
+          }
+        },
+        {
+          "id": {
+            "type_id": {"kind": "qualified", "value": {"namespace": "fixture", "name": "Author"}},
+            "revision": 1
+          },
+          "parameters": [],
+          "parents": [],
+          "representation": {
+            "kind": "record",
+            "value": {
+              "abstract": false,
+              "fields": [
+                {
+                  "owner": {
+                    "definition": {
+                      "type_id": {"kind": "qualified", "value": {"namespace": "fixture", "name": "Author"}},
+                      "revision": 1
+                    },
+                    "name": "name"
+                  },
+                  "type": {"kind": "scalar", "value": "text"},
+                  "overrides": [],
+                  "has_constructor_default": false
+                }
+              ]
+            }
+          }
+        }
+      ],
+      "resources": {
+        "book_1": {
+          "configuration": {
+            "kind": "complete",
+            "value": {
+              "definition": {
+                "type_id": {"kind": "qualified", "value": {"namespace": "fixture", "name": "Book"}},
+                "revision": 1
+              },
+              "arguments": []
+            }
+          },
+          "fields": {"title": {"string": "Dune"}}
+        },
+        "author_1": {
+          "configuration": {
+            "kind": "complete",
+            "value": {
+              "definition": {
+                "type_id": {"kind": "qualified", "value": {"namespace": "fixture", "name": "Author"}},
+                "revision": 1
+              },
+              "arguments": []
+            }
+          },
+          "fields": {"name": {"string": "Frank"}}
+        }
+      },
+      "expected": {
+        "available": {
+          "named": {
+            "namespace": "fixture",
+            "name": "Book",
+            "revision": 1,
+            "arguments": [],
+            "payload": {"record": {"title": {"string": "Dune"}}}
+          }
+        },
+        "reads": ["book_1"]
+      }
+    },
+    {
+      "id": "resource_value_stale_link",
+      "expression": {
+        "kind": "call",
+        "value": {
+          "operation": {"value": "resource.value"},
+          "type_arguments": [],
+          "arguments": [
+            {
+              "kind": "literal",
+              "value": {
+                "kind": "link",
+                "value": {"endpoint": {"value": "fixture.book"}, "target": {"resource": {"value": "ghost"}}}
+              }
+            }
+          ]
+        }
+      },
+      "typeDefinitions": [
+        {
+          "id": {"type_id": {"kind": "qualified", "value": {"namespace": "fixture", "name": "Work"}}, "revision": 1},
+          "parameters": [],
+          "parents": [],
+          "representation": {"kind": "record", "value": {"abstract": true, "fields": []}}
+        },
+        {
+          "id": {"type_id": {"kind": "qualified", "value": {"namespace": "fixture", "name": "Book"}}, "revision": 1},
+          "parameters": [],
+          "parents": [
+            {
+              "definition": {
+                "type_id": {"kind": "qualified", "value": {"namespace": "fixture", "name": "Work"}},
+                "revision": 1
+              },
+              "arguments": []
+            }
+          ],
+          "representation": {
+            "kind": "record",
+            "value": {
+              "abstract": false,
+              "fields": [
+                {
+                  "owner": {
+                    "definition": {
+                      "type_id": {"kind": "qualified", "value": {"namespace": "fixture", "name": "Book"}},
+                      "revision": 1
+                    },
+                    "name": "title"
+                  },
+                  "type": {"kind": "scalar", "value": "text"},
+                  "overrides": [],
+                  "has_constructor_default": false
+                }
+              ]
+            }
+          }
+        },
+        {
+          "id": {
+            "type_id": {"kind": "qualified", "value": {"namespace": "fixture", "name": "Author"}},
+            "revision": 1
+          },
+          "parameters": [],
+          "parents": [],
+          "representation": {
+            "kind": "record",
+            "value": {
+              "abstract": false,
+              "fields": [
+                {
+                  "owner": {
+                    "definition": {
+                      "type_id": {"kind": "qualified", "value": {"namespace": "fixture", "name": "Author"}},
+                      "revision": 1
+                    },
+                    "name": "name"
+                  },
+                  "type": {"kind": "scalar", "value": "text"},
+                  "overrides": [],
+                  "has_constructor_default": false
+                }
+              ]
+            }
+          }
+        }
+      ],
+      "resources": {
+        "book_1": {
+          "configuration": {
+            "kind": "complete",
+            "value": {
+              "definition": {
+                "type_id": {"kind": "qualified", "value": {"namespace": "fixture", "name": "Book"}},
+                "revision": 1
+              },
+              "arguments": []
+            }
+          },
+          "fields": {"title": {"string": "Dune"}}
+        },
+        "author_1": {
+          "configuration": {
+            "kind": "complete",
+            "value": {
+              "definition": {
+                "type_id": {"kind": "qualified", "value": {"namespace": "fixture", "name": "Author"}},
+                "revision": 1
+              },
+              "arguments": []
+            }
+          },
+          "fields": {"name": {"string": "Frank"}}
+        }
+      },
+      "expected": {"unavailable": ["ghost"], "reads": ["ghost"]}
+    },
+    {
+      "id": "resource_value_of_type",
+      "expression": {
+        "kind": "call",
+        "value": {
+          "operation": {"value": "resource.value_of"},
+          "type_arguments": [
+            {
+              "kind": "named",
+              "value": {
+                "definition": {
+                  "type_id": {"kind": "qualified", "value": {"namespace": "fixture", "name": "Book"}},
+                  "revision": 1
+                },
+                "arguments": []
+              }
+            }
+          ],
+          "arguments": [
+            {
+              "kind": "call",
+              "value": {
+                "operation": {"value": "link.target"},
+                "type_arguments": [],
+                "arguments": [
+                  {
+                    "kind": "literal",
+                    "value": {
+                      "kind": "link",
+                      "value": {"endpoint": {"value": "fixture.book"}, "target": {"resource": {"value": "book_1"}}}
+                    }
+                  }
+                ]
+              }
+            }
+          ]
+        }
+      },
+      "typeDefinitions": [
+        {
+          "id": {"type_id": {"kind": "qualified", "value": {"namespace": "fixture", "name": "Work"}}, "revision": 1},
+          "parameters": [],
+          "parents": [],
+          "representation": {"kind": "record", "value": {"abstract": true, "fields": []}}
+        },
+        {
+          "id": {"type_id": {"kind": "qualified", "value": {"namespace": "fixture", "name": "Book"}}, "revision": 1},
+          "parameters": [],
+          "parents": [
+            {
+              "definition": {
+                "type_id": {"kind": "qualified", "value": {"namespace": "fixture", "name": "Work"}},
+                "revision": 1
+              },
+              "arguments": []
+            }
+          ],
+          "representation": {
+            "kind": "record",
+            "value": {
+              "abstract": false,
+              "fields": [
+                {
+                  "owner": {
+                    "definition": {
+                      "type_id": {"kind": "qualified", "value": {"namespace": "fixture", "name": "Book"}},
+                      "revision": 1
+                    },
+                    "name": "title"
+                  },
+                  "type": {"kind": "scalar", "value": "text"},
+                  "overrides": [],
+                  "has_constructor_default": false
+                }
+              ]
+            }
+          }
+        },
+        {
+          "id": {
+            "type_id": {"kind": "qualified", "value": {"namespace": "fixture", "name": "Author"}},
+            "revision": 1
+          },
+          "parameters": [],
+          "parents": [],
+          "representation": {
+            "kind": "record",
+            "value": {
+              "abstract": false,
+              "fields": [
+                {
+                  "owner": {
+                    "definition": {
+                      "type_id": {"kind": "qualified", "value": {"namespace": "fixture", "name": "Author"}},
+                      "revision": 1
+                    },
+                    "name": "name"
+                  },
+                  "type": {"kind": "scalar", "value": "text"},
+                  "overrides": [],
+                  "has_constructor_default": false
+                }
+              ]
+            }
+          }
+        }
+      ],
+      "resources": {
+        "book_1": {
+          "configuration": {
+            "kind": "complete",
+            "value": {
+              "definition": {
+                "type_id": {"kind": "qualified", "value": {"namespace": "fixture", "name": "Book"}},
+                "revision": 1
+              },
+              "arguments": []
+            }
+          },
+          "fields": {"title": {"string": "Dune"}}
+        },
+        "author_1": {
+          "configuration": {
+            "kind": "complete",
+            "value": {
+              "definition": {
+                "type_id": {"kind": "qualified", "value": {"namespace": "fixture", "name": "Author"}},
+                "revision": 1
+              },
+              "arguments": []
+            }
+          },
+          "fields": {"name": {"string": "Frank"}}
+        }
+      },
+      "expected": {
+        "available": {
+          "named": {
+            "namespace": "fixture",
+            "name": "Book",
+            "revision": 1,
+            "arguments": [],
+            "payload": {"record": {"title": {"string": "Dune"}}}
+          }
+        },
+        "reads": ["book_1"]
+      }
+    },
+    {
+      "id": "resource_value_of_parent_type",
+      "expression": {
+        "kind": "call",
+        "value": {
+          "operation": {"value": "resource.value_of"},
+          "type_arguments": [
+            {
+              "kind": "named",
+              "value": {
+                "definition": {
+                  "type_id": {"kind": "qualified", "value": {"namespace": "fixture", "name": "Work"}},
+                  "revision": 1
+                },
+                "arguments": []
+              }
+            }
+          ],
+          "arguments": [
+            {
+              "kind": "call",
+              "value": {
+                "operation": {"value": "link.target"},
+                "type_arguments": [],
+                "arguments": [
+                  {
+                    "kind": "literal",
+                    "value": {
+                      "kind": "link",
+                      "value": {"endpoint": {"value": "fixture.book"}, "target": {"resource": {"value": "book_1"}}}
+                    }
+                  }
+                ]
+              }
+            }
+          ]
+        }
+      },
+      "typeDefinitions": [
+        {
+          "id": {"type_id": {"kind": "qualified", "value": {"namespace": "fixture", "name": "Work"}}, "revision": 1},
+          "parameters": [],
+          "parents": [],
+          "representation": {"kind": "record", "value": {"abstract": true, "fields": []}}
+        },
+        {
+          "id": {"type_id": {"kind": "qualified", "value": {"namespace": "fixture", "name": "Book"}}, "revision": 1},
+          "parameters": [],
+          "parents": [
+            {
+              "definition": {
+                "type_id": {"kind": "qualified", "value": {"namespace": "fixture", "name": "Work"}},
+                "revision": 1
+              },
+              "arguments": []
+            }
+          ],
+          "representation": {
+            "kind": "record",
+            "value": {
+              "abstract": false,
+              "fields": [
+                {
+                  "owner": {
+                    "definition": {
+                      "type_id": {"kind": "qualified", "value": {"namespace": "fixture", "name": "Book"}},
+                      "revision": 1
+                    },
+                    "name": "title"
+                  },
+                  "type": {"kind": "scalar", "value": "text"},
+                  "overrides": [],
+                  "has_constructor_default": false
+                }
+              ]
+            }
+          }
+        },
+        {
+          "id": {
+            "type_id": {"kind": "qualified", "value": {"namespace": "fixture", "name": "Author"}},
+            "revision": 1
+          },
+          "parameters": [],
+          "parents": [],
+          "representation": {
+            "kind": "record",
+            "value": {
+              "abstract": false,
+              "fields": [
+                {
+                  "owner": {
+                    "definition": {
+                      "type_id": {"kind": "qualified", "value": {"namespace": "fixture", "name": "Author"}},
+                      "revision": 1
+                    },
+                    "name": "name"
+                  },
+                  "type": {"kind": "scalar", "value": "text"},
+                  "overrides": [],
+                  "has_constructor_default": false
+                }
+              ]
+            }
+          }
+        }
+      ],
+      "resources": {
+        "book_1": {
+          "configuration": {
+            "kind": "complete",
+            "value": {
+              "definition": {
+                "type_id": {"kind": "qualified", "value": {"namespace": "fixture", "name": "Book"}},
+                "revision": 1
+              },
+              "arguments": []
+            }
+          },
+          "fields": {"title": {"string": "Dune"}}
+        },
+        "author_1": {
+          "configuration": {
+            "kind": "complete",
+            "value": {
+              "definition": {
+                "type_id": {"kind": "qualified", "value": {"namespace": "fixture", "name": "Author"}},
+                "revision": 1
+              },
+              "arguments": []
+            }
+          },
+          "fields": {"name": {"string": "Frank"}}
+        }
+      },
+      "expected": {
+        "available": {
+          "named": {
+            "namespace": "fixture",
+            "name": "Book",
+            "revision": 1,
+            "arguments": [],
+            "payload": {"record": {"title": {"string": "Dune"}}}
+          }
+        },
+        "reads": ["book_1"]
+      }
+    },
+    {
+      "id": "resource_value_of_other_type",
+      "expression": {
+        "kind": "call",
+        "value": {
+          "operation": {"value": "resource.value_of"},
+          "type_arguments": [
+            {
+              "kind": "named",
+              "value": {
+                "definition": {
+                  "type_id": {"kind": "qualified", "value": {"namespace": "fixture", "name": "Book"}},
+                  "revision": 1
+                },
+                "arguments": []
+              }
+            }
+          ],
+          "arguments": [
+            {
+              "kind": "call",
+              "value": {
+                "operation": {"value": "link.target"},
+                "type_arguments": [],
+                "arguments": [
+                  {
+                    "kind": "literal",
+                    "value": {
+                      "kind": "link",
+                      "value": {"endpoint": {"value": "fixture.book"}, "target": {"resource": {"value": "author_1"}}}
+                    }
+                  }
+                ]
+              }
+            }
+          ]
+        }
+      },
+      "typeDefinitions": [
+        {
+          "id": {"type_id": {"kind": "qualified", "value": {"namespace": "fixture", "name": "Work"}}, "revision": 1},
+          "parameters": [],
+          "parents": [],
+          "representation": {"kind": "record", "value": {"abstract": true, "fields": []}}
+        },
+        {
+          "id": {"type_id": {"kind": "qualified", "value": {"namespace": "fixture", "name": "Book"}}, "revision": 1},
+          "parameters": [],
+          "parents": [
+            {
+              "definition": {
+                "type_id": {"kind": "qualified", "value": {"namespace": "fixture", "name": "Work"}},
+                "revision": 1
+              },
+              "arguments": []
+            }
+          ],
+          "representation": {
+            "kind": "record",
+            "value": {
+              "abstract": false,
+              "fields": [
+                {
+                  "owner": {
+                    "definition": {
+                      "type_id": {"kind": "qualified", "value": {"namespace": "fixture", "name": "Book"}},
+                      "revision": 1
+                    },
+                    "name": "title"
+                  },
+                  "type": {"kind": "scalar", "value": "text"},
+                  "overrides": [],
+                  "has_constructor_default": false
+                }
+              ]
+            }
+          }
+        },
+        {
+          "id": {
+            "type_id": {"kind": "qualified", "value": {"namespace": "fixture", "name": "Author"}},
+            "revision": 1
+          },
+          "parameters": [],
+          "parents": [],
+          "representation": {
+            "kind": "record",
+            "value": {
+              "abstract": false,
+              "fields": [
+                {
+                  "owner": {
+                    "definition": {
+                      "type_id": {"kind": "qualified", "value": {"namespace": "fixture", "name": "Author"}},
+                      "revision": 1
+                    },
+                    "name": "name"
+                  },
+                  "type": {"kind": "scalar", "value": "text"},
+                  "overrides": [],
+                  "has_constructor_default": false
+                }
+              ]
+            }
+          }
+        }
+      ],
+      "resources": {
+        "book_1": {
+          "configuration": {
+            "kind": "complete",
+            "value": {
+              "definition": {
+                "type_id": {"kind": "qualified", "value": {"namespace": "fixture", "name": "Book"}},
+                "revision": 1
+              },
+              "arguments": []
+            }
+          },
+          "fields": {"title": {"string": "Dune"}}
+        },
+        "author_1": {
+          "configuration": {
+            "kind": "complete",
+            "value": {
+              "definition": {
+                "type_id": {"kind": "qualified", "value": {"namespace": "fixture", "name": "Author"}},
+                "revision": 1
+              },
+              "arguments": []
+            }
+          },
+          "fields": {"name": {"string": "Frank"}}
+        }
+      },
+      "expected": {"unavailable": ["author_1"], "reads": ["author_1"]}
+    },
+    {
+      "id": "resource_identity",
+      "expression": {
+        "kind": "call",
+        "value": {
+          "operation": {"value": "resource.identity"},
+          "type_arguments": [],
+          "arguments": [
+            {
+              "kind": "literal",
+              "value": {
+                "kind": "link",
+                "value": {"endpoint": {"value": "fixture.book"}, "target": {"resource": {"value": "book_1"}}}
+              }
+            }
+          ]
+        }
+      },
+      "typeDefinitions": [
+        {
+          "id": {"type_id": {"kind": "qualified", "value": {"namespace": "fixture", "name": "Work"}}, "revision": 1},
+          "parameters": [],
+          "parents": [],
+          "representation": {"kind": "record", "value": {"abstract": true, "fields": []}}
+        },
+        {
+          "id": {"type_id": {"kind": "qualified", "value": {"namespace": "fixture", "name": "Book"}}, "revision": 1},
+          "parameters": [],
+          "parents": [
+            {
+              "definition": {
+                "type_id": {"kind": "qualified", "value": {"namespace": "fixture", "name": "Work"}},
+                "revision": 1
+              },
+              "arguments": []
+            }
+          ],
+          "representation": {
+            "kind": "record",
+            "value": {
+              "abstract": false,
+              "fields": [
+                {
+                  "owner": {
+                    "definition": {
+                      "type_id": {"kind": "qualified", "value": {"namespace": "fixture", "name": "Book"}},
+                      "revision": 1
+                    },
+                    "name": "title"
+                  },
+                  "type": {"kind": "scalar", "value": "text"},
+                  "overrides": [],
+                  "has_constructor_default": false
+                }
+              ]
+            }
+          }
+        },
+        {
+          "id": {
+            "type_id": {"kind": "qualified", "value": {"namespace": "fixture", "name": "Author"}},
+            "revision": 1
+          },
+          "parameters": [],
+          "parents": [],
+          "representation": {
+            "kind": "record",
+            "value": {
+              "abstract": false,
+              "fields": [
+                {
+                  "owner": {
+                    "definition": {
+                      "type_id": {"kind": "qualified", "value": {"namespace": "fixture", "name": "Author"}},
+                      "revision": 1
+                    },
+                    "name": "name"
+                  },
+                  "type": {"kind": "scalar", "value": "text"},
+                  "overrides": [],
+                  "has_constructor_default": false
+                }
+              ]
+            }
+          }
+        }
+      ],
+      "resources": {
+        "book_1": {
+          "configuration": {
+            "kind": "complete",
+            "value": {
+              "definition": {
+                "type_id": {"kind": "qualified", "value": {"namespace": "fixture", "name": "Book"}},
+                "revision": 1
+              },
+              "arguments": []
+            }
+          },
+          "fields": {"title": {"string": "Dune"}}
+        },
+        "author_1": {
+          "configuration": {
+            "kind": "complete",
+            "value": {
+              "definition": {
+                "type_id": {"kind": "qualified", "value": {"namespace": "fixture", "name": "Author"}},
+                "revision": 1
+              },
+              "arguments": []
+            }
+          },
+          "fields": {"name": {"string": "Frank"}}
+        }
+      },
+      "expected": {
+        "available": {
+          "named": {
+            "namespace": "kotlin",
+            "name": "com.typewritermc.types.ResourceId",
+            "revision": 1,
+            "arguments": [],
+            "payload": {"string": "book_1"}
+          }
+        },
+        "reads": ["book_1"]
+      }
+    },
+    {
+      "id": "resource_identity_stale_link",
+      "expression": {
+        "kind": "call",
+        "value": {
+          "operation": {"value": "resource.identity"},
+          "type_arguments": [],
+          "arguments": [
+            {
+              "kind": "literal",
+              "value": {
+                "kind": "link",
+                "value": {"endpoint": {"value": "fixture.book"}, "target": {"resource": {"value": "ghost"}}}
+              }
+            }
+          ]
+        }
+      },
+      "typeDefinitions": [
+        {
+          "id": {"type_id": {"kind": "qualified", "value": {"namespace": "fixture", "name": "Work"}}, "revision": 1},
+          "parameters": [],
+          "parents": [],
+          "representation": {"kind": "record", "value": {"abstract": true, "fields": []}}
+        },
+        {
+          "id": {"type_id": {"kind": "qualified", "value": {"namespace": "fixture", "name": "Book"}}, "revision": 1},
+          "parameters": [],
+          "parents": [
+            {
+              "definition": {
+                "type_id": {"kind": "qualified", "value": {"namespace": "fixture", "name": "Work"}},
+                "revision": 1
+              },
+              "arguments": []
+            }
+          ],
+          "representation": {
+            "kind": "record",
+            "value": {
+              "abstract": false,
+              "fields": [
+                {
+                  "owner": {
+                    "definition": {
+                      "type_id": {"kind": "qualified", "value": {"namespace": "fixture", "name": "Book"}},
+                      "revision": 1
+                    },
+                    "name": "title"
+                  },
+                  "type": {"kind": "scalar", "value": "text"},
+                  "overrides": [],
+                  "has_constructor_default": false
+                }
+              ]
+            }
+          }
+        },
+        {
+          "id": {
+            "type_id": {"kind": "qualified", "value": {"namespace": "fixture", "name": "Author"}},
+            "revision": 1
+          },
+          "parameters": [],
+          "parents": [],
+          "representation": {
+            "kind": "record",
+            "value": {
+              "abstract": false,
+              "fields": [
+                {
+                  "owner": {
+                    "definition": {
+                      "type_id": {"kind": "qualified", "value": {"namespace": "fixture", "name": "Author"}},
+                      "revision": 1
+                    },
+                    "name": "name"
+                  },
+                  "type": {"kind": "scalar", "value": "text"},
+                  "overrides": [],
+                  "has_constructor_default": false
+                }
+              ]
+            }
+          }
+        }
+      ],
+      "resources": {
+        "book_1": {
+          "configuration": {
+            "kind": "complete",
+            "value": {
+              "definition": {
+                "type_id": {"kind": "qualified", "value": {"namespace": "fixture", "name": "Book"}},
+                "revision": 1
+              },
+              "arguments": []
+            }
+          },
+          "fields": {"title": {"string": "Dune"}}
+        },
+        "author_1": {
+          "configuration": {
+            "kind": "complete",
+            "value": {
+              "definition": {
+                "type_id": {"kind": "qualified", "value": {"namespace": "fixture", "name": "Author"}},
+                "revision": 1
+              },
+              "arguments": []
+            }
+          },
+          "fields": {"name": {"string": "Frank"}}
+        }
+      },
+      "expected": {"unavailable": ["ghost"], "reads": ["ghost"]}
+    },
+    {
+      "id": "resource_configuration",
+      "expression": {
+        "kind": "call",
+        "value": {
+          "operation": {"value": "resource.configuration"},
+          "type_arguments": [],
+          "arguments": [
+            {
+              "kind": "call",
+              "value": {
+                "operation": {"value": "link.target"},
+                "type_arguments": [],
+                "arguments": [
+                  {
+                    "kind": "literal",
+                    "value": {
+                      "kind": "link",
+                      "value": {"endpoint": {"value": "fixture.book"}, "target": {"resource": {"value": "book_1"}}}
+                    }
+                  }
+                ]
+              }
+            }
+          ]
+        }
+      },
+      "typeDefinitions": [
+        {
+          "id": {"type_id": {"kind": "qualified", "value": {"namespace": "fixture", "name": "Work"}}, "revision": 1},
+          "parameters": [],
+          "parents": [],
+          "representation": {"kind": "record", "value": {"abstract": true, "fields": []}}
+        },
+        {
+          "id": {"type_id": {"kind": "qualified", "value": {"namespace": "fixture", "name": "Book"}}, "revision": 1},
+          "parameters": [],
+          "parents": [
+            {
+              "definition": {
+                "type_id": {"kind": "qualified", "value": {"namespace": "fixture", "name": "Work"}},
+                "revision": 1
+              },
+              "arguments": []
+            }
+          ],
+          "representation": {
+            "kind": "record",
+            "value": {
+              "abstract": false,
+              "fields": [
+                {
+                  "owner": {
+                    "definition": {
+                      "type_id": {"kind": "qualified", "value": {"namespace": "fixture", "name": "Book"}},
+                      "revision": 1
+                    },
+                    "name": "title"
+                  },
+                  "type": {"kind": "scalar", "value": "text"},
+                  "overrides": [],
+                  "has_constructor_default": false
+                }
+              ]
+            }
+          }
+        },
+        {
+          "id": {
+            "type_id": {"kind": "qualified", "value": {"namespace": "fixture", "name": "Author"}},
+            "revision": 1
+          },
+          "parameters": [],
+          "parents": [],
+          "representation": {
+            "kind": "record",
+            "value": {
+              "abstract": false,
+              "fields": [
+                {
+                  "owner": {
+                    "definition": {
+                      "type_id": {"kind": "qualified", "value": {"namespace": "fixture", "name": "Author"}},
+                      "revision": 1
+                    },
+                    "name": "name"
+                  },
+                  "type": {"kind": "scalar", "value": "text"},
+                  "overrides": [],
+                  "has_constructor_default": false
+                }
+              ]
+            }
+          }
+        }
+      ],
+      "resources": {
+        "book_1": {
+          "configuration": {
+            "kind": "complete",
+            "value": {
+              "definition": {
+                "type_id": {"kind": "qualified", "value": {"namespace": "fixture", "name": "Book"}},
+                "revision": 1
+              },
+              "arguments": []
+            }
+          },
+          "fields": {"title": {"string": "Dune"}}
+        },
+        "author_1": {
+          "configuration": {
+            "kind": "complete",
+            "value": {
+              "definition": {
+                "type_id": {"kind": "qualified", "value": {"namespace": "fixture", "name": "Author"}},
+                "revision": 1
+              },
+              "arguments": []
+            }
+          },
+          "fields": {"name": {"string": "Frank"}}
+        }
+      },
+      "expected": {
+        "available": {
+          "named": {
+            "namespace": "skir",
+            "name": "editor/v1/type_catalog.skir:TypeSelection.complete",
+            "revision": 1,
+            "arguments": [],
+            "payload": {
+              "record": {
+                "value": {
+                  "named": {
+                    "namespace": "skir",
+                    "name": "editor/v1/type_catalog.skir:NamedTypeUse",
+                    "revision": 1,
+                    "arguments": [],
+                    "payload": {
+                      "record": {
+                        "arguments": {"list": []},
+                        "definition": {
+                          "named": {
+                            "namespace": "skir",
+                            "name": "editor/v1/type_catalog.skir:TypeDefinitionId",
+                            "revision": 1,
+                            "arguments": [],
+                            "payload": {
+                              "record": {
+                                "revision": {"integer": "1"},
+                                "type_id": {
+                                  "named": {
+                                    "namespace": "skir",
+                                    "name": "editor/v1/type_catalog.skir:TypeId.qualified",
+                                    "revision": 1,
+                                    "arguments": [],
+                                    "payload": {
+                                      "record": {
+                                        "value": {
+                                          "named": {
+                                            "namespace": "skir",
+                                            "name": "editor/v1/type_catalog.skir:QualifiedTypeId",
+                                            "revision": 1,
+                                            "arguments": [],
+                                            "payload": {
+                                              "record": {"name": {"string": "Book"}, "namespace": {"string": "fixture"}}
+                                            }
+                                          }
+                                        }
+                                      }
+                                    }
+                                  }
+                                }
+                              }
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "reads": ["book_1"]
+      }
+    },
+    {
+      "id": "resource_configuration_absent",
+      "expression": {
+        "kind": "call",
+        "value": {
+          "operation": {"value": "resource.configuration"},
+          "type_arguments": [],
+          "arguments": [
+            {
+              "kind": "call",
+              "value": {
+                "operation": {"value": "link.target"},
+                "type_arguments": [],
+                "arguments": [
+                  {
+                    "kind": "literal",
+                    "value": {
+                      "kind": "link",
+                      "value": {"endpoint": {"value": "fixture.book"}, "target": {"resource": {"value": "ghost"}}}
+                    }
+                  }
+                ]
+              }
+            }
+          ]
+        }
+      },
+      "typeDefinitions": [
+        {
+          "id": {"type_id": {"kind": "qualified", "value": {"namespace": "fixture", "name": "Work"}}, "revision": 1},
+          "parameters": [],
+          "parents": [],
+          "representation": {"kind": "record", "value": {"abstract": true, "fields": []}}
+        },
+        {
+          "id": {"type_id": {"kind": "qualified", "value": {"namespace": "fixture", "name": "Book"}}, "revision": 1},
+          "parameters": [],
+          "parents": [
+            {
+              "definition": {
+                "type_id": {"kind": "qualified", "value": {"namespace": "fixture", "name": "Work"}},
+                "revision": 1
+              },
+              "arguments": []
+            }
+          ],
+          "representation": {
+            "kind": "record",
+            "value": {
+              "abstract": false,
+              "fields": [
+                {
+                  "owner": {
+                    "definition": {
+                      "type_id": {"kind": "qualified", "value": {"namespace": "fixture", "name": "Book"}},
+                      "revision": 1
+                    },
+                    "name": "title"
+                  },
+                  "type": {"kind": "scalar", "value": "text"},
+                  "overrides": [],
+                  "has_constructor_default": false
+                }
+              ]
+            }
+          }
+        },
+        {
+          "id": {
+            "type_id": {"kind": "qualified", "value": {"namespace": "fixture", "name": "Author"}},
+            "revision": 1
+          },
+          "parameters": [],
+          "parents": [],
+          "representation": {
+            "kind": "record",
+            "value": {
+              "abstract": false,
+              "fields": [
+                {
+                  "owner": {
+                    "definition": {
+                      "type_id": {"kind": "qualified", "value": {"namespace": "fixture", "name": "Author"}},
+                      "revision": 1
+                    },
+                    "name": "name"
+                  },
+                  "type": {"kind": "scalar", "value": "text"},
+                  "overrides": [],
+                  "has_constructor_default": false
+                }
+              ]
+            }
+          }
+        }
+      ],
+      "resources": {
+        "book_1": {
+          "configuration": {
+            "kind": "complete",
+            "value": {
+              "definition": {
+                "type_id": {"kind": "qualified", "value": {"namespace": "fixture", "name": "Book"}},
+                "revision": 1
+              },
+              "arguments": []
+            }
+          },
+          "fields": {"title": {"string": "Dune"}}
+        },
+        "author_1": {
+          "configuration": {
+            "kind": "complete",
+            "value": {
+              "definition": {
+                "type_id": {"kind": "qualified", "value": {"namespace": "fixture", "name": "Author"}},
+                "revision": 1
+              },
+              "arguments": []
+            }
+          },
+          "fields": {"name": {"string": "Frank"}}
+        }
+      },
+      "expected": {"unavailable": ["ghost"], "reads": ["ghost"]}
+    }
+  ]
+}

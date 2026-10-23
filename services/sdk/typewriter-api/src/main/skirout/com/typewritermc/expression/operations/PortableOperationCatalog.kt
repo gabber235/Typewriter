@@ -68,12 +68,12 @@ object PortableOperationCatalog {
             itemIds = ItemIdentities.POSITIONAL,
         )
 
-    /** The published declaration of the type a selection names; missing when the catalog lacks it. */
+    /** The published declaration of the type a selection names; missing at no location when the catalog lacks it. */
     val CATALOG_DECLARATION: PortableOperation =
         PortableOperation(
             id = OperationId(value = "catalog.declaration"),
             profile = OperationProfile.PANEL,
-            doc = "The published declaration of the type a selection names; missing when the catalog lacks it.",
+            doc = "The published declaration of the type a selection names; missing at no location when the catalog lacks it.",
             typeParameters = listOf(),
             parameters =
                 listOf(
@@ -839,14 +839,14 @@ object PortableOperationCatalog {
         )
 
     /**
-     * The value with exactly fraction_digits fraction digits (rounded half even) and the locale's CLDR digits,
-     * grouping and symbols. Locale und uses no grouping.
+     * The value with exactly fraction_digits fraction digits (rounded half even; a float from its shortest round
+     * trip decimal) and the locale's CLDR digits, grouping and symbols. Locale und uses no grouping.
      */
     val NUMBER_FORMAT: PortableOperation =
         PortableOperation(
             id = OperationId(value = "number.format"),
             profile = OperationProfile.PANEL,
-            doc = "The value with exactly fraction_digits fraction digits (rounded half even) and the locale's CLDR digits, grouping and symbols. Locale und uses no grouping.",
+            doc = "The value with exactly fraction_digits fraction digits (rounded half even; a float from its shortest round trip decimal) and the locale's CLDR digits, grouping and symbols. Locale und uses no grouping.",
             typeParameters = listOf(OperationTypeParameter("N", TypeBound.NUMERIC, explicit = false)),
             parameters =
                 listOf(
@@ -897,12 +897,15 @@ object PortableOperationCatalog {
             itemIds = null,
         )
 
-    /** Value raised to a nonnegative integer exponent; exact for integers and decimals. */
+    /**
+     * Value raised to a nonnegative integer exponent, where any value to the power 0 is 1; exact for integers and
+     * decimals.
+     */
     val NUMBER_POWER: PortableOperation =
         PortableOperation(
             id = OperationId(value = "number.power"),
             profile = OperationProfile.RULE,
-            doc = "Value raised to a nonnegative integer exponent; exact for integers and decimals.",
+            doc = "Value raised to a nonnegative integer exponent, where any value to the power 0 is 1; exact for integers and decimals.",
             typeParameters = listOf(OperationTypeParameter("N", TypeBound.NUMERIC, explicit = false)),
             parameters =
                 listOf(
@@ -1045,12 +1048,15 @@ object PortableOperationCatalog {
             itemIds = ItemIdentities.POSITIONAL,
         )
 
-    /** Replaces every match of pattern; $n in replacement inserts group n and $$ a dollar sign. */
+    /**
+     * Replaces every match of pattern. In replacement, $n inserts group n (the longest digit run naming an existing
+     * group; empty when it did not take part) and $$ a dollar sign; any other $ fails invalid_regex.
+     */
     val REGEX_REPLACE: PortableOperation =
         PortableOperation(
             id = OperationId(value = "regex.replace"),
             profile = OperationProfile.RULE,
-            doc = "Replaces every match of pattern; \$n in replacement inserts group n and \$\$ a dollar sign.",
+            doc = "Replaces every match of pattern. In replacement, \$n inserts group n (the longest digit run naming an existing group; empty when it did not take part) and \$\$ a dollar sign; any other \$ fails invalid_regex.",
             typeParameters = listOf(),
             parameters =
                 listOf(
@@ -1064,12 +1070,12 @@ object PortableOperationCatalog {
             itemIds = null,
         )
 
-    /** The type selection of a resource by identity; missing when there is no such resource. */
+    /** The type selection of a resource by identity. Reads the resource; missing at its root when there is none. */
     val RESOURCE_CONFIGURATION: PortableOperation =
         PortableOperation(
             id = OperationId(value = "resource.configuration"),
             profile = OperationProfile.PANEL,
-            doc = "The type selection of a resource by identity; missing when there is no such resource.",
+            doc = "The type selection of a resource by identity. Reads the resource; missing at its root when there is none.",
             typeParameters = listOf(),
             parameters =
                 listOf(
@@ -1081,12 +1087,12 @@ object PortableOperationCatalog {
             itemIds = null,
         )
 
-    /** The identity of the resource the link names; missing when the link is stale. */
+    /** The identity of the resource the link names. Reads the resource; missing at its root when the link is stale. */
     val RESOURCE_IDENTITY: PortableOperation =
         PortableOperation(
             id = OperationId(value = "resource.identity"),
             profile = OperationProfile.PANEL,
-            doc = "The identity of the resource the link names; missing when the link is stale.",
+            doc = "The identity of the resource the link names. Reads the resource; missing at its root when the link is stale.",
             typeParameters = listOf(OperationTypeParameter("T", TypeBound.ANY, explicit = false)),
             parameters =
                 listOf(
@@ -1098,12 +1104,15 @@ object PortableOperationCatalog {
             itemIds = null,
         )
 
-    /** The configured value of the resource the link names; missing when the link is stale. */
+    /**
+     * The resource's fields as a record of its configured type. Reads the resource; missing at its root when the
+     * link is stale.
+     */
     val RESOURCE_VALUE: PortableOperation =
         PortableOperation(
             id = OperationId(value = "resource.value"),
             profile = OperationProfile.PANEL,
-            doc = "The configured value of the resource the link names; missing when the link is stale.",
+            doc = "The resource's fields as a record of its configured type. Reads the resource; missing at its root when the link is stale.",
             typeParameters = listOf(OperationTypeParameter("T", TypeBound.ANY, explicit = false)),
             parameters =
                 listOf(
@@ -1115,12 +1124,15 @@ object PortableOperationCatalog {
             itemIds = null,
         )
 
-    /** The configured value of a resource of type T by identity; missing when it is not a T. */
+    /**
+     * The fields of a resource of type T or a descendant, as a record of its configured type. Reads the resource;
+     * missing at its root when there is no such resource or it is not a T.
+     */
     val RESOURCE_VALUE_OF: PortableOperation =
         PortableOperation(
             id = OperationId(value = "resource.value_of"),
             profile = OperationProfile.PANEL,
-            doc = "The configured value of a resource of type T by identity; missing when it is not a T.",
+            doc = "The fields of a resource of type T or a descendant, as a record of its configured type. Reads the resource; missing at its root when there is no such resource or it is not a T.",
             typeParameters = listOf(OperationTypeParameter("T", TypeBound.ANY, explicit = true)),
             parameters =
                 listOf(
@@ -1685,12 +1697,12 @@ object PortableOperationCatalog {
             itemIds = null,
         )
 
-    /** The actual type of a named value, as a type selection; missing for structural values. */
+    /** The actual type of a named value, as a type selection; missing at no location for structural values. */
     val VALUE_CONFIGURATION: PortableOperation =
         PortableOperation(
             id = OperationId(value = "value.configuration"),
             profile = OperationProfile.PANEL,
-            doc = "The actual type of a named value, as a type selection; missing for structural values.",
+            doc = "The actual type of a named value, as a type selection; missing at no location for structural values.",
             typeParameters = listOf(OperationTypeParameter("T", TypeBound.ANY, explicit = false)),
             parameters =
                 listOf(
@@ -1789,12 +1801,15 @@ object PortableOperationCatalog {
             itemIds = null,
         )
 
-    /** The value as canonical Skir readable JSON of its DataValue. */
+    /**
+     * The value as canonical Skir readable JSON of its DataValue, without whitespace and with default fields
+     * omitted.
+     */
     val VALUE_TO_JSON: PortableOperation =
         PortableOperation(
             id = OperationId(value = "value.to_json"),
             profile = OperationProfile.RULE,
-            doc = "The value as canonical Skir readable JSON of its DataValue.",
+            doc = "The value as canonical Skir readable JSON of its DataValue, without whitespace and with default fields omitted.",
             typeParameters = listOf(OperationTypeParameter("T", TypeBound.ANY, explicit = false)),
             parameters =
                 listOf(
