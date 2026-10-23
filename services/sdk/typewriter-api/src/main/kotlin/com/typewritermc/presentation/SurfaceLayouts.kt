@@ -9,8 +9,8 @@ import skirout.editor.v1.presentation.PresentationTransitionPolicy
 
 /** Springs into the selected state and eases back out of it: the motion of cards that react to being picked. */
 val selectMotion: PresentationTransitionPolicy =
-    stateTransition(fallback = transition(milliseconds = 300, curve = PresentationCurve.EMPHASIZED)) {
-        whenAll(SELECTED, transition = transition(milliseconds = 750, curve = PresentationCurve.ElasticOutWrapper(0.9)))
+    stateTransition(fallback = transition(DisplayDelay(300), curve = PresentationCurve.EMPHASIZED)) {
+        whenAll(SELECTED, transition = transition(DisplayDelay(750), curve = PresentationCurve.ElasticOutWrapper(0.9)))
     }
 
 /** Grows and tilts [body] slightly while it is hovered. */
@@ -36,7 +36,7 @@ fun Layout.focusRing(
                 color = stateColor(accent.withAlpha(0.0)) { whenAll(FOCUSED, color = accent) },
             ),
         radius = PresentationRadius.Large,
-        transition = stateTransition(transition(milliseconds = 120)),
+        transition = stateTransition(transition(DisplayDelay(120))),
     ),
     body,
 )
@@ -125,7 +125,10 @@ private fun Layout.cardCover(
     stack {
         positioned(top = number(0.0), start = number(0.0), bottom = number(0.0), end = number(10.0)) {
             container(ContainerStyle(background = accent, foreground = accent.monochromeOn(), radius = PresentationRadius.Large)) {
-                padding(PresentationInsets(start = 24.0, top = 10.0, end = 10.0, bottom = 10.0), content)
+                padding(
+                    PresentationInsets(start = Spacing(24.0), top = Spacing(10.0), end = Spacing(10.0), bottom = Spacing(10.0)),
+                    content,
+                )
             }
         }
         positioned(top = number(0.0), start = number(0.0), bottom = number(0.0), width = number(16.0)) {

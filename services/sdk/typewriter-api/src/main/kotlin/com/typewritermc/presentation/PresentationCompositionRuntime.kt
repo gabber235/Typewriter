@@ -2,6 +2,7 @@ package com.typewritermc.presentation
 
 import com.typewritermc.expression.Expr
 import com.typewritermc.expression.Handled
+import com.typewritermc.types.toTemplate
 import com.typewritermc.types.use
 import skirout.editor.v1.binding.BindingRef
 import skirout.editor.v1.presentation.PresentationElement
@@ -25,7 +26,7 @@ internal class RuntimePresentationData(
         target +=
             state.node(
                 PresentationElement.createConditional(
-                    condition = expression(condition),
+                    condition = state.lower(condition, BOOLEAN_SLOT),
                     whenTrue = state.column(nodes),
                     whenFalse = falseNode,
                 ),
@@ -63,56 +64,52 @@ internal class RuntimePresentationData(
         typed: Boolean,
         body: Scope.() -> Unit,
     ) {
-        val children = mutableListOf<PresentationNode>()
-        val scopeBinding = if (typed) null else state.bindingId("scoped.value")
-        val localBinding =
-            if (typed) {
-                input.binding
-            } else {
-                BindingRef(
-                    path = WireValuePath(segments = emptyList()),
-                    bindingId = requireNotNull(scopeBinding),
-                )
-            }
-        val session = input.rebind?.invoke(localBinding, children) ?: input.session
+        if (typed) {
+            val expected = requireNotNull(input.expected) { "A typed presentation input must carry its expected type." }
+            val children = mutableListOf<PresentationNode>()
+            val session = input.rebind?.invoke(input.binding, children) ?: input.session
+            val child = scopedChild(session, body, children)
+            target +=
+                state.node(PresentationElement.createTypedField(binding = input.binding, expectedType = expected, presentation = child))
+            return
+        }
+        state.introduce("scoped.value", state.typeOf(input.binding)) { scope ->
+            val children = mutableListOf<PresentationNode>()
+            val local = BindingRef(path = WireValuePath(segments = emptyList()), bindingId = scope.id)
+            val session = input.rebind?.invoke(local, children) ?: input.session
+            val child = scopedChild(session, body, children)
+            target += state.node(PresentationElement.createScopedBinding(binding = input.binding, scopeBinding = scope, child = child))
+        }
+    }
+
+    private fun <Scope> scopedChild(
+        session: ControlScopeSession<Scope>,
+        body: Scope.() -> Unit,
+        children: MutableList<PresentationNode> = mutableListOf(),
+    ): PresentationNode {
         state.withTarget(children) {
             session.receiver.body()
             session.finishInto(children)
         }
-        val child = state.column(children)
-        target +=
-            if (typed) {
-                val expected = requireNotNull(input.expected) { "A typed presentation input must carry its expected type." }
-                state.node(
-                    PresentationElement.createTypedField(
-                        binding = input.binding,
-                        expectedType = expected,
-                        presentation = child,
-                    ),
-                )
-            } else {
-                state.node(
-                    PresentationElement.createScopedBinding(
-                        binding = input.binding,
-                        scopeBinding =
-                            skirout.editor.v1.presentation.BindingDeclaration(
-                                id = requireNotNull(scopeBinding),
-                                type = UNTYPED_BINDING,
-                            ),
-                        child = child,
-                    ),
-                )
-            }
+        return state.column(children)
     }
 
     override fun <V> polymorphicMatch(
         binding: PresentationInput<V, *>,
         cases: MatchScope<V>.() -> Unit,
     ) {
-        val scopeBinding = state.bindingId("match.value")
+        state.introduce("match.value", state.typeOf(binding.binding)) { scope -> renderMatch(binding, scope, cases) }
+    }
+
+    /** Each case sees the matched value through [scope], typed as the case's concrete type. */
+    private fun <V> renderMatch(
+        binding: PresentationInput<V, *>,
+        scope: skirout.editor.v1.presentation.BindingDeclaration,
+        cases: MatchScope<V>.() -> Unit,
+    ) {
         val wireCases = mutableListOf<skirout.editor.v1.presentation.PolymorphicMatchCase>()
         var fallback: PresentationNode? = null
-        val scope =
+        val matchScope =
             object : MatchScope<V> {
                 override fun <Subtype : V> case(
                     type: AppliedPresentation<Subtype>,
@@ -127,9 +124,9 @@ internal class RuntimePresentationData(
                     val caseScope =
                         object : MatchCaseScope<Subtype>, Layout by layout {
                             override val value =
-                                com.typewritermc.expression.inputExpression<Subtype, com.typewritermc.expression.MayBeMissing>(scopeBinding)
+                                com.typewritermc.expression.inputExpression<Subtype, com.typewritermc.expression.MayBeMissing>(scope.id)
                         }
-                    state.withTarget(nodes) { caseScope.body() }
+                    state.declare(scope.id, type.type.use.toTemplate()) { state.withTarget(nodes) { caseScope.body() } }
                     wireCases +=
                         skirout.editor.v1.presentation.PolymorphicMatchCase(
                             concreteType = type.type.use,
@@ -142,15 +139,13 @@ internal class RuntimePresentationData(
                     fallback = state.presentation(body)
                 }
             }
-        scope.cases()
+        matchScope.cases()
         require(wireCases.isNotEmpty()) { "A polymorphic match requires at least one concrete case." }
         target +=
             state.node(
                 PresentationElement.createPolymorphicMatch(
                     binding = binding.binding,
-                    scopeBinding =
-                        skirout.editor.v1.presentation
-                            .BindingDeclaration(id = scopeBinding, type = UNTYPED_BINDING),
+                    scopeBinding = scope,
                     cases = wireCases,
                     fallback = fallback,
                 ),

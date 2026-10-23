@@ -703,7 +703,7 @@ val SdkRuntimeConformanceTest by testSuite {
         assembly.editorCatalog.diagnostics.none { it.code == "conflicting_field_presentation" } shouldBe true
     }
 
-    test("catalog assembly rejects an inferred control outside its owning record") {
+    test("catalog assembly drops a material with an inferred control outside its owning record and keeps its type") {
         val origin = providerOrigin("invalid_field_presentation")
         val definition = recordDefinition("InvalidPresentationField", "actual", ScalarKind.TEXT.template)
         val provider =
@@ -722,11 +722,12 @@ val SdkRuntimeConformanceTest by testSuite {
                 declarations = listOf(OwnedTypeDeclaration(origin, definition)),
                 presentations = listOf(ownedPresentation(origin, provider, target, material)),
             ).assemble(CatalogAssemblyContext(CatalogGeneration(value = "invalid field")))
-        val status =
-            assembly.editorCatalog.types
-                .single { it.definition.id == definition.id }
-                .status as skirout.editor.v1.catalog.DeclarationStatus.UnavailableWrapper
-        status.value.map { it.code } shouldBe listOf("presentation_material_build_failed")
+        assembly.editorCatalog.types
+            .single { it.definition.id == definition.id }
+            .status shouldBe skirout.editor.v1.catalog.DeclarationStatus.READY
+        assembly.editorCatalog.presentationMaterials shouldBe emptyList()
+        assembly.editorCatalog.diagnostics.map { it.affected to it.code } shouldBe
+            listOf(definition.id to "presentation_material_build_failed")
     }
 
     test("catalog assembly admits bounded atomic parts and rejects foreign owners or owner remainders") {
@@ -793,18 +794,16 @@ val SdkRuntimeConformanceTest by testSuite {
                     declarations = listOf(OwnedTypeDeclaration(origin, definition), OwnedTypeDeclaration(origin, foreign)),
                     presentations = listOf(ownedPresentation(origin, provider, target, base.copy(layout = layout))),
                 ).assemble(CatalogAssemblyContext(CatalogGeneration(value = "atomic parts")))
-            val status =
-                assembly.editorCatalog.types
-                    .single { it.definition.id == definition.id }
-                    .status
+            assembly.editorCatalog.types
+                .single { it.definition.id == definition.id }
+                .status shouldBe skirout.editor.v1.catalog.DeclarationStatus.READY
             if (admitted) {
-                status shouldBe skirout.editor.v1.catalog.DeclarationStatus.READY
                 assembly.editorCatalog.presentationMaterials
                     .single()
                     .inheritableNodes shouldBe listOf("part")
             } else {
-                (status as skirout.editor.v1.catalog.DeclarationStatus.UnavailableWrapper).value.map { it.code } shouldBe
-                    listOf("presentation_material_build_failed")
+                assembly.editorCatalog.presentationMaterials shouldBe emptyList()
+                assembly.editorCatalog.diagnostics.map { it.code } shouldBe listOf("presentation_material_build_failed")
             }
         }
     }

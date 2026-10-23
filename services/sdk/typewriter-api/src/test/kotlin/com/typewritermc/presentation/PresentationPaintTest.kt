@@ -103,8 +103,8 @@ val PresentationPaintTest by testSuite {
         selected.transition.curve
             .shouldBeInstanceOf<PresentationCurve.ElasticOutWrapper>()
             .value shouldBe 0.9
-        shouldThrow<IllegalArgumentException> { transition(milliseconds = -1) }
-        shouldThrow<IllegalArgumentException> { transition(milliseconds = 10, curve = PresentationCurve.ElasticOutWrapper(0.0)) }
+        shouldThrow<IllegalArgumentException> { transition(DisplayDelay(-1)) }
+        shouldThrow<IllegalArgumentException> { transition(DisplayDelay(10), curve = PresentationCurve.ElasticOutWrapper(0.0)) }
     }
 
     test("size, transform and container shadows encode their paint") {
@@ -167,11 +167,16 @@ val PresentationPaintTest by testSuite {
 
     test("adjusted and brightness colors keep their source policy") {
         val accent = literalColor(Color(0xff3366ccu))
-        val color =
+        val brightnessColor =
             brightnessColor(
                 light = accent.adjusted(lightness = 0.3, chroma = -0.3),
                 dark = stateColor(accent) { whenAll(FOCUSED, color = accent.adjusted(lightness = -0.5)) },
-            ).wire()
+            )
+        val color =
+            build { scope -> scope.container(ContainerStyle(background = brightnessColor)) {} }
+                .element
+                .shouldBeInstanceOf<PresentationElement.ContainerWrapper>()
+                .value.backgroundColor
 
         val brightness = color.shouldBeInstanceOf<WireColor.BrightnessWrapper>().value
         val light = brightness.light.shouldBeInstanceOf<WireColor.AdjustedWrapper>().value

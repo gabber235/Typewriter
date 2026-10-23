@@ -81,10 +81,11 @@ interface SearchProviderSpec<Row> {
     fun rank(configure: RankingScope<Row>.() -> Unit): SearchProviderSpec<Row>
 }
 
+/** Wraps a search provider. Expressions are lowered with the search input's query and selectors bound. */
 sealed interface SearchDecoration {
     data class Gate(
-        val condition: skirout.editor.v1.expression.ExpressionNode,
-        val guidance: skirout.editor.v1.expression.ExpressionNode?,
+        val condition: Expr<Boolean, Handled>,
+        val guidance: Expr<String, Handled>?,
     ) : SearchDecoration
 
     data class Debounce(
@@ -97,20 +98,20 @@ sealed interface SearchDecoration {
     ) : SearchDecoration
 
     data class Limit(
-        val maximum: skirout.editor.v1.expression.ExpressionNode,
+        val maximum: Expr<Int, Handled>,
     ) : SearchDecoration
 
     data object Distinct : SearchDecoration
 
     data class History(
         val key: String,
-        val label: skirout.editor.v1.expression.ExpressionNode,
+        val label: Expr<String, Handled>,
         val capacity: Int,
     ) : SearchDecoration
 
     data class Section(
         val id: String,
-        val label: skirout.editor.v1.expression.ExpressionNode,
+        val label: Expr<String, Handled>,
     ) : SearchDecoration
 
     data class Rank(
@@ -118,15 +119,16 @@ sealed interface SearchDecoration {
     ) : SearchDecoration
 }
 
+/** A ranking key evaluated with the result row bound, of any comparable type, and its weight. */
 data class SearchRankingField(
-    val expression: ExpressionNode,
+    val expression: Expr<*, Handled>,
     val weight: Int,
 )
 
 fun <Row> SearchProviderSpec<Row>.gate(
     condition: Expr<Boolean, Handled>,
     guidance: Expr<String, Handled>? = null,
-): SearchProviderSpec<Row> = decorate(SearchDecoration.Gate(condition.toNode(), guidance?.toNode()))
+): SearchProviderSpec<Row> = decorate(SearchDecoration.Gate(condition, guidance))
 
 fun <Row> SearchProviderSpec<Row>.debounce(duration: Duration): SearchProviderSpec<Row> = decorate(SearchDecoration.Debounce(duration))
 
@@ -135,8 +137,7 @@ fun <Row> SearchProviderSpec<Row>.cache(
     retainStaleResults: Boolean,
 ): SearchProviderSpec<Row> = decorate(SearchDecoration.Cache(capacity, retainStaleResults))
 
-fun <Row> SearchProviderSpec<Row>.limit(maximum: Expr<Int, Handled>): SearchProviderSpec<Row> =
-    decorate(SearchDecoration.Limit(maximum.toNode()))
+fun <Row> SearchProviderSpec<Row>.limit(maximum: Expr<Int, Handled>): SearchProviderSpec<Row> = decorate(SearchDecoration.Limit(maximum))
 
 fun <Row> SearchProviderSpec<Row>.distinct(): SearchProviderSpec<Row> = decorate(SearchDecoration.Distinct)
 
@@ -144,12 +145,12 @@ fun <Row> SearchProviderSpec<Row>.history(
     key: String,
     label: Expr<String, Handled>,
     capacity: Int,
-): SearchProviderSpec<Row> = decorate(SearchDecoration.History(key, label.toNode(), capacity))
+): SearchProviderSpec<Row> = decorate(SearchDecoration.History(key, label, capacity))
 
 fun <Row> SearchProviderSpec<Row>.section(
     id: String,
     label: Expr<String, Handled>,
-): SearchProviderSpec<Row> = decorate(SearchDecoration.Section(id, label.toNode()))
+): SearchProviderSpec<Row> = decorate(SearchDecoration.Section(id, label))
 
 interface SearchSelectorsScope {
     fun selector(
@@ -213,8 +214,13 @@ interface HttpJsonSearchScope<Row> {
     fun timeout(value: Duration)
 }
 
+/** A Realm search capability with its payload and row types, so the payload and the result mapping are checked. */
 interface SearchCapability<Payload, Row> {
     val id: CapabilityId
+
+    val payload: TypeTemplate
+
+    val row: TypeTemplate
 }
 
 interface RankingScope<Row> {
@@ -228,16 +234,16 @@ interface RankingScope<Row> {
 
 internal sealed interface SearchProviderDescription<Row> {
     data class Static<Row>(
-        val values: ExpressionNode,
+        val values: Expr<List<Row>, Handled>,
     ) : SearchProviderDescription<Row>
 
     data class Collection<Row>(
         val source: CollectionSource<Row, *>,
-        val predicate: ExpressionNode?,
+        val predicate: Expr<Boolean, Handled>?,
     ) : SearchProviderDescription<Row>
 
     data class HttpJson<Row>(
-        val uri: ExpressionNode,
+        val uri: Expr<String, Handled>,
         val parameters: List<HttpParameter>,
         val resultPath: String,
         val resultType: TypeTemplate,
@@ -246,8 +252,8 @@ internal sealed interface SearchProviderDescription<Row> {
     ) : SearchProviderDescription<Row>
 
     data class RealmCallback<Row>(
-        val capability: CapabilityId,
-        val payload: ExpressionNode,
+        val capability: SearchCapability<*, Row>,
+        val payload: Expr<*, Handled>,
     ) : SearchProviderDescription<Row>
 
     data class Merge<Row>(
@@ -257,7 +263,7 @@ internal sealed interface SearchProviderDescription<Row> {
 
 internal data class HttpParameter(
     val name: String,
-    val value: ExpressionNode,
+    val value: Expr<String, Handled>,
     val omitIfEmpty: Boolean,
 )
 
@@ -285,7 +291,7 @@ internal data class DefaultSearchProviderSpec<Row>(
                     weight: Int,
                 ) {
                     require(weight > 0) { "Search ranking weight must be positive." }
-                    fields += SearchRankingField(value.toNode(), weight)
+                    fields += SearchRankingField(value, weight)
                 }
             }
         scope.configure()
@@ -296,14 +302,14 @@ internal data class DefaultSearchProviderSpec<Row>(
 
 internal object DefaultSearchSources : SearchSources {
     override fun <Row> staticValues(values: Expr<List<Row>, Handled>): SearchProviderSpec<Row> =
-        DefaultSearchProviderSpec(SearchProviderDescription.Static(values.toNode()))
+        DefaultSearchProviderSpec(SearchProviderDescription.Static(values))
 
     override fun <Row> collection(
         source: CollectionSource<Row, *>,
         where: PortableRowPredicate<Row>?,
     ): SearchProviderSpec<Row> =
         DefaultSearchProviderSpec(
-            SearchProviderDescription.Collection(source, where?.expression?.toNode()),
+            SearchProviderDescription.Collection(source, where?.expression),
         )
 
     override fun <Row> httpJson(configure: HttpJsonSearchScope<Row>.() -> Unit): SearchProviderSpec<Row> {
@@ -315,7 +321,7 @@ internal object DefaultSearchSources : SearchSources {
     override fun <Payload, Row> realmCallback(
         capability: SearchCapability<Payload, Row>,
         payload: Expr<Payload, Handled>,
-    ): SearchProviderSpec<Row> = DefaultSearchProviderSpec(SearchProviderDescription.RealmCallback(capability.id, payload.toNode()))
+    ): SearchProviderSpec<Row> = DefaultSearchProviderSpec(SearchProviderDescription.RealmCallback(capability, payload))
 
     override fun <Row> merge(vararg sources: SearchProviderSpec<Row>): SearchProviderSpec<Row> {
         val children = sources.map { it.runtime() }
@@ -326,7 +332,7 @@ internal object DefaultSearchSources : SearchSources {
 
 private class DefaultHttpJsonSearchScope<Row> : HttpJsonSearchScope<Row> {
     override val query = com.typewritermc.expression.inputExpression<String, Handled>(SEARCH_QUERY)
-    private var uri: ExpressionNode? = null
+    private var uri: Expr<String, Handled>? = null
     private val parameters = mutableListOf<HttpParameter>()
     private var resultPath: String? = null
     private var resultType: TypeTemplate? = null
@@ -334,7 +340,7 @@ private class DefaultHttpJsonSearchScope<Row> : HttpJsonSearchScope<Row> {
     private var timeout = Duration.parse("10s")
 
     override fun uri(value: Expr<String, Handled>) {
-        uri = value.toNode()
+        uri = value
     }
 
     override fun parameter(
@@ -343,7 +349,7 @@ private class DefaultHttpJsonSearchScope<Row> : HttpJsonSearchScope<Row> {
         omitIfEmpty: Boolean,
     ) {
         require(name.isNotBlank()) { "HTTP search parameter name must not be blank." }
-        parameters += HttpParameter(name, value.toNode(), omitIfEmpty)
+        parameters += HttpParameter(name, value, omitIfEmpty)
     }
 
     override fun result(

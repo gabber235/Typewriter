@@ -71,7 +71,7 @@ internal class RuntimePresentationBuildScope(
         target +=
             state.node(
                 PresentationElement.createConditional(
-                    condition = expression(condition),
+                    condition = state.lower(condition, BOOLEAN_SLOT),
                     whenTrue = state.column(whenTrueNodes),
                     whenFalse = whenFalseNode,
                 ),

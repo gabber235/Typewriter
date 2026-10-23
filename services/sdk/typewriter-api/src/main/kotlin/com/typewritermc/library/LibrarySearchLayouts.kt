@@ -18,6 +18,7 @@ import com.typewritermc.expression.target
 import com.typewritermc.presentation.Layout
 import com.typewritermc.presentation.PresentationInsets
 import com.typewritermc.presentation.ResourceExpr
+import com.typewritermc.presentation.Spacing
 import com.typewritermc.presentation.resource
 import com.typewritermc.types.ResourceId
 
@@ -50,8 +51,8 @@ internal fun Layout.pageLocation(
         previous: Expr<Boolean, Handled>,
     ) {
         showIf(previous, whenFalse = { part(label) }) {
-            padding(PresentationInsets(4.0, 0.0, 0.0, 0.0)) {
-                row(spacing = 4.0) {
+            padding(PresentationInsets(Spacing(4.0), Spacing(0.0), Spacing(0.0), Spacing(0.0))) {
+                row(spacing = Spacing(4.0)) {
                     separator()
                     part(label)
                 }
@@ -59,7 +60,7 @@ internal fun Layout.pageLocation(
         }
     }
 
-    clippedRow(spacing = 0.0) {
+    clippedRow(spacing = Spacing(0.0)) {
         showIf(showBook) {
             showIf(book.exists, whenFalse = {
                 prefixed(literal("Unavailable book"), literal(false))

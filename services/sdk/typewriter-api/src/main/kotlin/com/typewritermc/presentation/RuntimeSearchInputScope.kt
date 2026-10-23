@@ -5,7 +5,7 @@ package com.typewritermc.presentation
 import com.typewritermc.authoring.GeneratedSdkApi
 import com.typewritermc.expression.Expr
 import com.typewritermc.expression.Handled
-import com.typewritermc.types.template
+import com.typewritermc.expression.literal
 import skirout.editor.v1.expression.ExpressionNode
 import skirout.editor.v1.presentation.BoundControl
 import skirout.editor.v1.presentation.PopupSide
@@ -15,23 +15,29 @@ import skirout.editor.v1.presentation.SearchSelectionMode
 import skirout.editor.v1.presentation.SearchSelectorMultiplicity
 import skirout.editor.v1.presentation.SearchSelectorValues
 import skirout.editor.v1.type_catalog.ExpressionBindingId
+import skirout.editor.v1.type_catalog.TypeTemplate
 
-private val TEXT_TEMPLATE =
-    skirout.editor.v1.type_catalog.TypeTemplate
-        .ScalarWrapper(skirout.editor.v1.type_catalog.ScalarKind.TEXT)
+/** Binds the current value while the summary of a search input renders. */
+private val SEARCH_SUMMARY = ExpressionBindingId(value = "search_summary")
 
+/**
+ * Captures one search input. It is configured while the query binding is declared, so every expression of the input
+ * may read the query; selectors add their bindings to that scope. The result mapping is lowered once the provider
+ * fixes the row type, with the result row bound.
+ */
 internal class RuntimeSearchInputScope<Value, Row>(
     private val state: PresentationBuildState,
     private val author: RuntimePresentationBuildScope,
+    private val value: TypeTemplate,
     private val common: InputConfigurationDraft = InputConfigurationDraft(),
 ) : SearchInputScope<Value, Row>,
-    TextEntryAppearanceScope by common.appearance(),
+    TextEntryAppearanceScope by common.appearance(state),
     InputContentScope by common.content(state, author),
-    PopupAppearanceScope by common.popup() {
+    PopupAppearanceScope by common.popup(state) {
     override val query = com.typewritermc.expression.inputExpression<String, Handled>(SEARCH_QUERY)
     override val sources: SearchSources = SearchSources
     private val selectors = mutableListOf<skirout.editor.v1.presentation.SearchSelectorDefinition>()
-    private var result: skirout.editor.v1.presentation.SearchResultMapping? = null
+    private var result: (SearchResultScope<Value, Row>.() -> Unit)? = null
     private var summary: PresentationNode? = null
     private var initialQuery: skirout.editor.v1.expression.ExpressionNode? = null
     private var customValue: skirout.editor.v1.expression.ExpressionNode? = null
@@ -56,37 +62,27 @@ internal class RuntimeSearchInputScope<Value, Row>(
                 ): Expr<Any?, Handled> {
                     require(id.isNotBlank()) { "Search selector id must not be blank." }
                     require(key.isNotBlank()) { "Search selector key must not be blank." }
-                    val binding = ExpressionBindingId(value = "search_selector.$id")
+                    val type = if (multiplicity == SearchSelectorMultiplicity.MULTIPLE) listSlot(TEXT_SLOT) else TEXT_SLOT
+                    val binding = state.extendScope(ExpressionBindingId(value = "search_selector.$id"), type, mayBeMissing = false)
                     selectors +=
                         skirout.editor.v1.presentation.SearchSelectorDefinition(
                             selectorId = id,
                             key = key,
-                            valueBinding =
-                                skirout.editor.v1.presentation.BindingDeclaration(
-                                    id = binding,
-                                    type =
-                                        if (multiplicity == SearchSelectorMultiplicity.MULTIPLE) {
-                                            com.typewritermc.types.StandardTypes.list
-                                                .template(listOf(TEXT_TEMPLATE))
-                                        } else {
-                                            TEXT_TEMPLATE
-                                        },
-                                ),
+                            valueBinding = binding,
                             values = values,
                             caseSensitive = caseSensitive,
                             multiplicity = multiplicity,
                             color = color,
                         )
-                    return com.typewritermc.expression.inputExpression(binding)
+                    return com.typewritermc.expression.inputExpression(binding.id)
                 }
             }
         scope.configure()
     }
 
     override fun result(configure: SearchResultScope<Value, Row>.() -> Unit) {
-        val builder = RuntimeSearchResultScope<Value, Row>(state)
-        builder.configure()
-        result = builder.build()
+        check(result == null) { "Search input may declare one result mapping." }
+        result = configure
     }
 
     override fun summary(body: Layout.() -> Unit) {
@@ -94,15 +90,15 @@ internal class RuntimeSearchInputScope<Value, Row>(
     }
 
     override fun initialQuery(value: Expr<String, Handled>) {
-        initialQuery = expression(value)
+        initialQuery = state.lower(value, TEXT_SLOT)
     }
 
     override fun customValue(value: Expr<Value, Handled>) {
-        customValue = expression(value)
+        customValue = state.lower(value, this.value)
     }
 
     override fun initialQuery(value: String) {
-        initialQuery = expression(value)
+        initialQuery = state.lower(literal(value), TEXT_SLOT)
     }
 
     override fun popupSide(value: PopupSide) {
@@ -110,19 +106,19 @@ internal class RuntimeSearchInputScope<Value, Row>(
     }
 
     override fun emptyText(value: String) {
-        emptyText = expression(value)
+        emptyText = state.lower(literal(value), TEXT_SLOT)
     }
 
     override fun emptyText(value: Expr<String, Handled>) {
-        emptyText = expression(value)
+        emptyText = state.lower(value, TEXT_SLOT)
     }
 
     override fun loadingText(value: String) {
-        loadingText = expression(value)
+        loadingText = state.lower(literal(value), TEXT_SLOT)
     }
 
     override fun loadingText(value: Expr<String, Handled>) {
-        loadingText = expression(value)
+        loadingText = state.lower(value, TEXT_SLOT)
     }
 
     override fun empty(body: Layout.() -> Unit) {
@@ -141,23 +137,36 @@ internal class RuntimeSearchInputScope<Value, Row>(
         provider = source.runtime()
     }
 
-    fun element(control: BoundControl): PresentationElement {
-        val mapping = requireNotNull(result) { "Search input must declare its result mapping." }
+    /** Lowers the provider and the result mapping; the query binding must still be declared as [query]. */
+    fun finish(query: skirout.editor.v1.presentation.BindingDeclaration): (BoundControl) -> PresentationElement {
+        val configureResult = requireNotNull(result) { "Search input must declare its result mapping." }
         val source = requireNotNull(provider) { "Search input must declare a provider." }
+        val rowType = source.rowType(state)
+        val mapping =
+            state.declare(SEARCH_RESULT_ROW, rowType, mayBeMissing = false) { row ->
+                RuntimeSearchResultScope<Value, Row>(state, value).apply(configureResult).build(row)
+            }
+        val wireProvider = source.wire(state, mapping, selectors, rowType)
+        val maximumExtent = state.lower(literal(400.0), DOUBLE_SLOT)
+        return { control -> element(control, query, wireProvider, maximumExtent) }
+    }
+
+    private fun element(
+        control: BoundControl,
+        query: skirout.editor.v1.presentation.BindingDeclaration,
+        provider: skirout.editor.v1.presentation.SearchProvider,
+        defaultExtent: ExpressionNode,
+    ): PresentationElement {
         val frozen = common.freeze()
         return PresentationElement.createSearchInput(
             control = control,
             selectionMode = selectionMode,
-            queryBinding =
-                skirout.editor.v1.presentation
-                    .BindingDeclaration(id = SEARCH_QUERY, type = TEXT_TEMPLATE),
+            queryBinding = query,
             summaryBinding =
-                skirout.editor.v1.presentation.BindingDeclaration(
-                    id = ExpressionBindingId(value = "search_summary"),
-                    type = UNTYPED_BINDING,
-                ),
-            maximumExtent = frozen.popup.maximumExtent ?: expression(400.0),
-            provider = source.wire(state, mapping, selectors),
+                skirout.editor.v1.presentation
+                    .BindingDeclaration(id = SEARCH_SUMMARY, type = value),
+            maximumExtent = frozen.popup.maximumExtent ?: defaultExtent,
+            provider = provider,
             summary = summary,
             placeholder = frozen.content.placeholder,
             customValue = customValue,
@@ -176,6 +185,7 @@ internal class RuntimeSearchInputScope<Value, Row>(
 
 private class RuntimeSearchResultScope<Value, Row>(
     private val state: PresentationBuildState,
+    private val value: TypeTemplate,
 ) : SearchResultScope<Value, Row> {
     override val row = com.typewritermc.expression.inputExpression<Row, Handled>(SEARCH_RESULT_ROW)
     private var key: skirout.editor.v1.expression.ExpressionNode? = null
@@ -184,11 +194,11 @@ private class RuntimeSearchResultScope<Value, Row>(
     private var label: skirout.editor.v1.expression.ExpressionNode? = null
 
     override fun key(value: Expr<*, out com.typewritermc.expression.MissingPolicy>) {
-        key = expression(value)
+        key = state.lowerInferred(value).first
     }
 
     override fun selectedValue(value: Expr<Value, out com.typewritermc.expression.MissingPolicy>) {
-        selectedValue = expression(value)
+        selectedValue = state.lower(value, this.value, mayBeMissing = true)
     }
 
     override fun presentation(body: Layout.() -> Unit) {
@@ -197,14 +207,12 @@ private class RuntimeSearchResultScope<Value, Row>(
     }
 
     override fun label(value: Expr<String, Handled>) {
-        label = expression(value)
+        label = state.lower(value, TEXT_SLOT)
     }
 
-    fun build(): skirout.editor.v1.presentation.SearchResultMapping =
+    fun build(row: skirout.editor.v1.presentation.BindingDeclaration): skirout.editor.v1.presentation.SearchResultMapping =
         skirout.editor.v1.presentation.SearchResultMapping(
-            binding =
-                skirout.editor.v1.presentation
-                    .BindingDeclaration(id = SEARCH_RESULT_ROW, type = UNTYPED_BINDING),
+            binding = row,
             key = requireNotNull(key) { "Search result mapping must declare a key." },
             selectedValue = requireNotNull(selectedValue) { "Search result mapping must declare a selected value." },
             presentation = requireNotNull(presentation) { "Search result mapping must declare a presentation." },

@@ -34,21 +34,14 @@ internal class RuntimeLayout(
     override val subject: PresentationSubjectExpressions
         get() {
             state.type(com.typewritermc.types.ResourceIdDefinition.use.use)
-            return PresentationSubjectExpressions(
-                com.typewritermc.expression.inputExpression(
-                    skirout.editor.v1.type_catalog
-                        .ExpressionBindingId(value = "presentation.subject.identifier"),
-                    ValuePath.root,
-                ),
-            )
+            return PresentationSubjectExpressions(com.typewritermc.expression.inputExpression(SUBJECT_IDENTIFIER, ValuePath.root))
         }
     override val context = RuntimePresentationContext(state)
 
     override fun clippedRow(
-        spacing: Double,
+        spacing: Spacing,
         body: Layout.() -> Unit,
     ) {
-        require(spacing.isFinite() && spacing >= 0) { "Row spacing must be finite and nonnegative." }
         val children = mutableListOf<PresentationNode>()
         state.withTarget(children) { state.scope(children).body() }
         target +=
@@ -62,7 +55,7 @@ internal class RuntimeLayout(
                             },
                         layout =
                             skirout.editor.v1.presentation.AxisChildrenLayout(
-                                spacing = spacing,
+                                spacing = spacing.pixels,
                                 mainAxisAlignment = MainAxisAlignment.START,
                                 crossAxisAlignment = CrossAxisAlignment.CENTER,
                                 clipOverflow = true,
@@ -73,14 +66,14 @@ internal class RuntimeLayout(
     }
 
     override fun row(
-        spacing: Double,
+        spacing: Spacing,
         main: MainAxisAlignment,
         cross: CrossAxisAlignment,
         body: AxisLayout.() -> Unit,
     ) = axisLayout(true, spacing, main, cross, body)
 
     override fun column(
-        spacing: Double,
+        spacing: Spacing,
         main: MainAxisAlignment,
         cross: CrossAxisAlignment,
         body: AxisLayout.() -> Unit,
@@ -102,7 +95,7 @@ internal class RuntimeLayout(
             skirout.editor.v1.presentation.DividerAppearance
                 .partial()
                 .toMutable()
-        RuntimeDividerAppearanceScope(draft).configure()
+        RuntimeDividerAppearanceScope(state, draft).configure()
         target += state.node(PresentationElement.DividerWrapper(draft.toFrozen()))
     }
 
@@ -110,7 +103,13 @@ internal class RuntimeLayout(
         width: Expr<Double, Handled>?,
         height: Expr<Double, Handled>?,
     ) {
-        target += state.node(PresentationElement.createSpacer(width = width?.let(::expression), height = height?.let(::expression)))
+        target +=
+            state.node(
+                PresentationElement.createSpacer(
+                    width = width?.let { state.lower(it, DOUBLE_SLOT) },
+                    height = height?.let { state.lower(it, DOUBLE_SLOT) },
+                ),
+            )
     }
 
     override fun remainingFields(configure: RemainingFields.() -> Unit) {
@@ -168,12 +167,12 @@ internal class RuntimeLayout(
                 .partial()
                 .toMutable()
         val scope =
-            RuntimeTabsScope(RuntimeTextEntryAppearance(visual)) { id, label, icon, body ->
+            RuntimeTabsScope(RuntimeTextEntryAppearance(state, visual)) { id, label, icon, body ->
                 require(id.isNotBlank() && items.none { it.tabId == id }) { "Tab identifiers must be nonempty and unique." }
                 items +=
                     skirout.editor.v1.presentation.TabItem(
                         tabId = id,
-                        label = expression(label),
+                        label = state.lower(label, TEXT_SLOT),
                         child = child(body),
                         icon =
                             icon?.let {
@@ -202,7 +201,7 @@ internal class RuntimeLayout(
 
     private fun axisLayout(
         row: Boolean,
-        spacing: Double,
+        spacing: Spacing,
         main: MainAxisAlignment,
         cross: CrossAxisAlignment,
         body: AxisLayout.() -> Unit,
@@ -220,8 +219,8 @@ internal class RuntimeLayout(
     }
 
     override fun wrap(
-        spacing: Double,
-        runSpacing: Double,
+        spacing: Spacing,
+        runSpacing: Spacing,
         body: Layout.() -> Unit,
     ) {
         val children = mutableListOf<PresentationNode>()
@@ -233,8 +232,8 @@ internal class RuntimeLayout(
                         children = children,
                         layout =
                             WrapChildrenLayout(
-                                spacing = spacing,
-                                runSpacing = runSpacing,
+                                spacing = spacing.pixels,
+                                runSpacing = runSpacing.pixels,
                                 mainAxisAlignment = MainAxisAlignment.START,
                                 crossAxisAlignment = CrossAxisAlignment.START,
                             ),
@@ -245,8 +244,8 @@ internal class RuntimeLayout(
 
     override fun grid(
         columns: Int,
-        horizontalSpacing: Double,
-        verticalSpacing: Double,
+        horizontalSpacing: Spacing,
+        verticalSpacing: Spacing,
         body: Layout.() -> Unit,
     ) {
         val children = mutableListOf<PresentationNode>()
@@ -259,8 +258,8 @@ internal class RuntimeLayout(
                         layout =
                             GridChildrenLayout(
                                 columns = columns,
-                                horizontalSpacing = horizontalSpacing,
-                                verticalSpacing = verticalSpacing,
+                                horizontalSpacing = horizontalSpacing.pixels,
+                                verticalSpacing = verticalSpacing.pixels,
                             ),
                     ),
                 ),
@@ -290,7 +289,7 @@ internal class RuntimeLayout(
             state.node(
                 PresentationElement.createSection(
                     child = child(body),
-                    border = border?.wire(),
+                    border = border?.wire(state),
                 ),
                 header = RuntimeHeaderScope(state).apply(header).build(),
             )
@@ -304,10 +303,10 @@ internal class RuntimeLayout(
             state.node(
                 PresentationElement.createPadding(
                     child = child(body),
-                    top = insets.top,
-                    start = insets.start,
-                    end = insets.end,
-                    bottom = insets.bottom,
+                    top = insets.top.pixels,
+                    start = insets.start.pixels,
+                    end = insets.end.pixels,
+                    bottom = insets.bottom.pixels,
                 ),
             )
     }
@@ -320,12 +319,12 @@ internal class RuntimeLayout(
             state.node(
                 PresentationElement.createContainer(
                     child = child(body),
-                    border = style.border?.wire(),
-                    backgroundColor = style.background?.wire(),
-                    radius = style.radius.wire(),
-                    foregroundColor = style.foreground?.wire(),
+                    border = style.border?.wire(state),
+                    backgroundColor = style.background?.wire(state),
+                    radius = style.radius.wire(state),
+                    foregroundColor = style.foreground?.wire(state),
                     transition = style.transition?.requireValid(),
-                    shadows = style.shadows.map { it.wire() },
+                    shadows = style.shadows.map { it.wire(state) },
                 ),
             )
     }
@@ -351,12 +350,12 @@ internal class RuntimeLayout(
             state.node(
                 PresentationElement.createSize(
                     child = child(body),
-                    width = width?.let { expression(literal(it)) },
-                    height = height?.let { expression(literal(it)) },
-                    minimumWidth = minimumWidth?.let { expression(literal(it)) },
-                    maximumWidth = maximumWidth?.let { expression(literal(it)) },
-                    minimumHeight = minimumHeight?.let { expression(literal(it)) },
-                    maximumHeight = maximumHeight?.let { expression(literal(it)) },
+                    width = width?.let { state.lower(literal(it), DOUBLE_SLOT) },
+                    height = height?.let { state.lower(literal(it), DOUBLE_SLOT) },
+                    minimumWidth = minimumWidth?.let { state.lower(literal(it), DOUBLE_SLOT) },
+                    maximumWidth = maximumWidth?.let { state.lower(literal(it), DOUBLE_SLOT) },
+                    minimumHeight = minimumHeight?.let { state.lower(literal(it), DOUBLE_SLOT) },
+                    maximumHeight = maximumHeight?.let { state.lower(literal(it), DOUBLE_SLOT) },
                 ),
             )
     }
@@ -371,12 +370,12 @@ internal class RuntimeLayout(
                     child = child(body),
                     origin = style.origin,
                     perspective = style.perspective,
-                    scale = style.scale?.wire(),
-                    rotateX = style.rotateX?.wire(),
-                    rotateY = style.rotateY?.wire(),
-                    rotateZ = style.rotateZ?.wire(),
-                    translateX = style.translateX?.wire(),
-                    translateY = style.translateY?.wire(),
+                    scale = style.scale?.wire(state),
+                    rotateX = style.rotateX?.wire(state),
+                    rotateY = style.rotateY?.wire(state),
+                    rotateZ = style.rotateZ?.wire(state),
+                    translateX = style.translateX?.wire(state),
+                    translateY = style.translateY?.wire(state),
                     transition = style.transition?.requireValid(),
                 ),
             )
@@ -390,7 +389,7 @@ internal class RuntimeLayout(
             state.node(
                 PresentationElement.AppearanceDefaultsWrapper(
                     skirout.editor.v1.presentation
-                        .AppearanceDefaultsElement(appearance = appearance, child = child(body)),
+                        .AppearanceDefaultsElement(appearance = appearance.wire(), child = child(body)),
                 ),
             )
     }
@@ -418,7 +417,7 @@ internal class RuntimeLayout(
         configure: AnchorScope.() -> Unit,
         body: Layout.() -> Unit,
     ) {
-        val scope = RuntimeAnchorScope()
+        val scope = RuntimeAnchorScope(state)
         scope.configure()
         target +=
             state.node(
@@ -459,7 +458,7 @@ internal class RuntimeLayout(
                 nodeId = id,
                 properties =
                     skirout.editor.v1.presentation.PresentationProperties(
-                        enabledIf = properties.enabledIf?.let(::expression),
+                        enabledIf = properties.enabledIf?.let { state.lower(it, BOOLEAN_SLOT) },
                         readOnly = properties.readOnly,
                     ),
                 header = headerScope.build(),
@@ -469,6 +468,15 @@ internal class RuntimeLayout(
     override fun fixed(body: Layout.() -> Unit) {
         val axis = requireNotNull(axis) { "Fixed children are only available inside row and column layouts." }
         axis += child(body)
+    }
+
+    private fun InputAppearance.wire(): skirout.editor.v1.presentation.InputAppearance {
+        val draft =
+            skirout.editor.v1.presentation.InputAppearance
+                .partial()
+                .toMutable()
+        RuntimeTextEntryAppearance(state, draft).configure()
+        return draft.toFrozen()
     }
 
     override fun flexible(
@@ -503,12 +511,12 @@ private class RuntimeStackLayout(
         children.addPositioned(
             skirout.editor.v1.presentation.PositionedStackChild(
                 child = state.presentation(body),
-                top = top?.wire(),
-                start = start?.wire(),
-                end = end?.wire(),
-                bottom = bottom?.wire(),
-                width = width?.wire(),
-                height = height?.wire(),
+                top = top?.wire(state),
+                start = start?.wire(state),
+                end = end?.wire(state),
+                bottom = bottom?.wire(state),
+                width = width?.wire(state),
+                height = height?.wire(state),
                 transition = transition?.requireValid(),
             ),
         )
@@ -521,9 +529,9 @@ private class RuntimeAdaptiveLeadingScope(
     private var leading: PresentationNode? = null
     private var center: PresentationNode? = null
     private var suffix: PresentationNode? = null
-    private var padding = PresentationInsets(0.0, 0.0, 0.0, 0.0)
-    private var compactPadding = PresentationInsets(0.0, 0.0, 0.0, 0.0)
-    private var gap = 8.0
+    private var padding = PresentationInsets.all(Spacing.NONE)
+    private var compactPadding = PresentationInsets.all(Spacing.NONE)
+    private var gap = Spacing(8.0)
     private var minimumCenterWidth = 30.0
 
     override fun leading(body: Layout.() -> Unit) {
@@ -549,8 +557,7 @@ private class RuntimeAdaptiveLeadingScope(
         compactPadding = value
     }
 
-    override fun gap(value: Double) {
-        require(value.isFinite() && value >= 0.0) { "Adaptive leading gap must be finite and nonnegative." }
+    override fun gap(value: Spacing) {
         gap = value
     }
 
@@ -566,7 +573,7 @@ private class RuntimeAdaptiveLeadingScope(
             suffix = suffix,
             padding = padding.wire(),
             compactPadding = compactPadding.wire(),
-            gap = gap,
+            gap = gap.pixels,
             minimumCenterWidth = minimumCenterWidth,
         )
 }

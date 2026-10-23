@@ -3,11 +3,11 @@ package com.typewritermc.presentation
 import com.typewritermc.expression.Expr
 import com.typewritermc.expression.Handled
 import com.typewritermc.expression.inputExpression
+import com.typewritermc.expression.literal
 import com.typewritermc.types.requireValid
 import skirout.editor.v1.expression.ExpressionNode
 import skirout.editor.v1.presentation.ControlDensity
 import skirout.editor.v1.presentation.PresentationNode
-import skirout.editor.v1.type_catalog.ExpressionBindingId
 import skirout.editor.v1.type_catalog.PathSegment
 import skirout.editor.v1.type_catalog.ValuePath
 import skirout.editor.v1.presentation.CollectionAppearance as WireCollectionAppearance
@@ -16,11 +16,11 @@ import skirout.editor.v1.presentation.ResourceGraphAppearance as WireResourceGra
 import skirout.editor.v1.presentation.ResourceTimelineAppearance as WireResourceTimelineAppearance
 
 internal class RuntimeCollectionAppearance(
+    private val state: PresentationBuildState,
     private val target: WireCollectionAppearance.Mutable,
 ) : CollectionAppearanceScope {
-    override fun itemSpacing(value: Double) {
-        nonnegativeSize(value)
-        target.itemSpacing = value
+    override fun itemSpacing(value: Spacing) {
+        target.itemSpacing = value.pixels
     }
 
     override fun itemPadding(value: PresentationInsets) {
@@ -28,12 +28,12 @@ internal class RuntimeCollectionAppearance(
     }
 
     override fun itemSurface(value: ContainerStyle) {
-        target.itemBackground = value.background?.wire()
-        target.itemForeground = value.foreground?.wire()
-        target.itemBorder = value.border?.wire()
-        target.itemRadius = value.radius.wire()
+        target.itemBackground = value.background?.wire(state)
+        target.itemForeground = value.foreground?.wire(state)
+        target.itemBorder = value.border?.wire(state)
+        target.itemRadius = value.radius.wire(state)
         target.itemTransition = value.transition?.requireValid()
-        target.itemShadows = value.shadows.map { it.wire() }
+        target.itemShadows = value.shadows.map { it.wire(state) }
     }
 }
 
@@ -49,8 +49,8 @@ internal class RuntimeCollectionOperations(
     private val operations: CollectionOperationsDraft,
     private val target: WireCollectionContent.Mutable,
 ) : CollectionOperationScope,
-    CollectionOperationAppearanceScope by RuntimeCollectionOperationAppearance(target),
-    CollectionEmptyTextScope by RuntimeCollectionEmptyText({ target.emptyText = it }),
+    CollectionOperationAppearanceScope by RuntimeCollectionOperationAppearance(state, target),
+    CollectionEmptyTextScope by RuntimeCollectionEmptyText(state, { target.emptyText = it }),
     CollectionAddContentScope by RuntimeCollectionAddContent(state, target) {
     override fun allowAdd(value: Boolean) {
         operations.allowAdd = value
@@ -65,11 +65,11 @@ internal class RuntimeCollectionOperations(
     }
 
     override fun removeLabel(value: String) {
-        target.removeLabel = expression(value)
+        target.removeLabel = state.lower(literal(value), TEXT_SLOT)
     }
 
     override fun removeLabel(value: Expr<String, Handled>) {
-        target.removeLabel = expression(value)
+        target.removeLabel = state.lower(value, TEXT_SLOT)
     }
 
     override fun removeIcon(
@@ -85,7 +85,7 @@ internal class CollectionConfigurationDraft {
     val content = WireCollectionContent.partial().toMutable()
     val operations = CollectionOperationsDraft()
 
-    fun appearance() = RuntimeCollectionAppearance(appearance)
+    fun appearance(state: PresentationBuildState) = RuntimeCollectionAppearance(state, appearance)
 
     fun operations(
         state: PresentationBuildState,
@@ -133,6 +133,7 @@ internal class RuntimeSetInputScope<ItemScope>(
 }
 
 internal class RuntimeMapInputScope<KeyScope, ValueScope>(
+    private val state: PresentationBuildState,
     appearance: CollectionAppearanceScope,
     operations: CollectionOperationScope,
     private val content: WireCollectionContent.Mutable,
@@ -151,19 +152,19 @@ internal class RuntimeMapInputScope<KeyScope, ValueScope>(
     }
 
     override fun keyLabel(value: String) {
-        content.keyLabel = expression(value)
+        content.keyLabel = state.lower(literal(value), TEXT_SLOT)
     }
 
     override fun keyLabel(value: Expr<String, Handled>) {
-        content.keyLabel = expression(value)
+        content.keyLabel = state.lower(value, TEXT_SLOT)
     }
 
     override fun valueLabel(value: String) {
-        content.valueLabel = expression(value)
+        content.valueLabel = state.lower(literal(value), TEXT_SLOT)
     }
 
     override fun valueLabel(value: Expr<String, Handled>) {
-        content.valueLabel = expression(value)
+        content.valueLabel = state.lower(value, TEXT_SLOT)
     }
 }
 
@@ -190,9 +191,10 @@ internal class RuntimeNamedInputScope<PayloadScope>(
 }
 
 internal class RuntimeNullableInputScope<ValueScope>(
+    private val state: PresentationBuildState,
     private val draft: NullableContentDraft = NullableContentDraft(),
 ) : NullableInputScope<ValueScope>,
-    CollectionEmptyTextScope by RuntimeCollectionEmptyText({ draft.emptyText = it }) {
+    CollectionEmptyTextScope by RuntimeCollectionEmptyText(state, { draft.emptyText = it }) {
     var value: (ValueScope.() -> Unit)? = null
     val emptyText: skirout.editor.v1.expression.ExpressionNode? get() = draft.emptyText
     var clearLabel: skirout.editor.v1.expression.ExpressionNode? = null
@@ -202,11 +204,11 @@ internal class RuntimeNullableInputScope<ValueScope>(
     }
 
     override fun clearLabel(value: String) {
-        clearLabel = expression(value)
+        clearLabel = state.lower(literal(value), TEXT_SLOT)
     }
 
     override fun clearLabel(value: Expr<String, Handled>) {
-        clearLabel = expression(value)
+        clearLabel = state.lower(value, TEXT_SLOT)
     }
 }
 
@@ -222,16 +224,16 @@ internal class RuntimePolymorphicInputScope<V>(
     InputAppearanceScope by appearance,
     InputContentScope by content,
     CollectionAppearanceScope by collection,
-    CollectionOperationAppearanceScope by RuntimeCollectionOperationAppearance(operations),
+    CollectionOperationAppearanceScope by RuntimeCollectionOperationAppearance(state, operations),
     ChooseContentScope by RuntimeChooseContent(state, operations) {
     var searchHint: skirout.editor.v1.expression.ExpressionNode? = null
 
     override fun searchHint(value: String) {
-        searchHint = expression(value)
+        searchHint = state.lower(literal(value), TEXT_SLOT)
     }
 
     override fun searchHint(value: Expr<String, Handled>) {
-        searchHint = expression(value)
+        searchHint = state.lower(value, TEXT_SLOT)
     }
 }
 
@@ -247,8 +249,8 @@ internal class RuntimeLinkInputScope(
     InputContentScope by content,
     PopupAppearanceScope by popup,
     CollectionAppearanceScope by collection,
-    CollectionOperationAppearanceScope by RuntimeCollectionOperationAppearance(operations),
-    CollectionEmptyTextScope by RuntimeCollectionEmptyText({ operations.emptyText = it }),
+    CollectionOperationAppearanceScope by RuntimeCollectionOperationAppearance(state, operations),
+    CollectionEmptyTextScope by RuntimeCollectionEmptyText(state, { operations.emptyText = it }),
     CollectionAddContentScope by RuntimeCollectionAddContent(state, operations),
     ChooseContentScope by RuntimeChooseContent(state, operations) {
     override fun unlinkIcon(
@@ -265,28 +267,29 @@ internal class RuntimeLinkInputScope(
     }
 
     override fun unlinkLabel(value: String) {
-        operations.unlinkLabel = expression(value)
+        operations.unlinkLabel = state.lower(literal(value), TEXT_SLOT)
     }
 
     override fun unlinkLabel(value: Expr<String, Handled>) {
-        operations.unlinkLabel = expression(value)
+        operations.unlinkLabel = state.lower(value, TEXT_SLOT)
     }
 }
 
 internal class RuntimeGraphAppearanceScope(
+    private val state: PresentationBuildState,
     private val target: WireResourceGraphAppearance.Mutable,
 ) : GraphAppearanceScope {
     override fun cellSize(value: Double) {
         positiveSize(value)
-        target.cellSize = expression(value)
+        target.cellSize = state.lower(literal(value), DOUBLE_SLOT)
     }
 
     override fun cellSize(value: Expr<Double, Handled>) {
-        target.cellSize = expression(value)
+        target.cellSize = state.lower(value, DOUBLE_SLOT)
     }
 
     override fun edgeColor(value: PresentationColor) {
-        target.edgeColor = value.wire()
+        target.edgeColor = value.wire(state)
     }
 
     override fun cardPadding(value: PresentationInsets) {
@@ -295,6 +298,7 @@ internal class RuntimeGraphAppearanceScope(
 }
 
 internal class RuntimeTimelineAppearanceScope(
+    private val state: PresentationBuildState,
     private val target: WireResourceTimelineAppearance.Mutable,
 ) : TimelineAppearanceScope {
     override fun rulerHeight(value: Double) {
@@ -323,43 +327,44 @@ internal class RuntimeTimelineAppearanceScope(
     }
 
     override fun headerColor(value: PresentationColor) {
-        target.headerColor = value.wire()
+        target.headerColor = value.wire(state)
     }
 
     override fun rulerColor(value: PresentationColor) {
-        target.rulerColor = value.wire()
+        target.rulerColor = value.wire(state)
     }
 
     override fun trackColor(value: PresentationColor) {
-        target.trackColor = value.wire()
+        target.trackColor = value.wire(state)
     }
 
     override fun alternateTrackColor(value: PresentationColor) {
-        target.alternateTrackColor = value.wire()
+        target.alternateTrackColor = value.wire(state)
     }
 
     override fun gridMinorColor(value: PresentationColor) {
-        target.gridMinorColor = value.wire()
+        target.gridMinorColor = value.wire(state)
     }
 
     override fun gridMajorColor(value: PresentationColor) {
-        target.gridMajorColor = value.wire()
+        target.gridMajorColor = value.wire(state)
     }
 
     override fun textMutedColor(value: PresentationColor) {
-        target.textMutedColor = value.wire()
+        target.textMutedColor = value.wire(state)
     }
 }
 
 internal class RuntimeCollectionOperationAppearance(
+    private val state: PresentationBuildState,
     private val target: WireCollectionContent.Mutable,
 ) : CollectionOperationAppearanceScope {
     override fun operationTooltip(value: String) {
-        target.operationTooltip = expression(value)
+        target.operationTooltip = state.lower(literal(value), TEXT_SLOT)
     }
 
     override fun operationTooltip(value: Expr<String, Handled>) {
-        target.operationTooltip = expression(value)
+        target.operationTooltip = state.lower(value, TEXT_SLOT)
     }
 
     override fun operationDensity(value: ControlDensity) {
@@ -368,14 +373,15 @@ internal class RuntimeCollectionOperationAppearance(
 }
 
 internal class RuntimeCollectionEmptyText(
+    private val state: PresentationBuildState,
     private val set: (skirout.editor.v1.expression.ExpressionNode) -> Unit,
 ) : CollectionEmptyTextScope {
     override fun emptyText(value: String) {
-        set(expression(value))
+        set(state.lower(literal(value), TEXT_SLOT))
     }
 
     override fun emptyText(value: Expr<String, Handled>) {
-        set(expression(value))
+        set(state.lower(value, TEXT_SLOT))
     }
 }
 
@@ -384,11 +390,11 @@ internal class RuntimeCollectionAddContent(
     private val target: WireCollectionContent.Mutable,
 ) : CollectionAddContentScope {
     override fun addLabel(value: String) {
-        target.addLabel = expression(value)
+        target.addLabel = state.lower(literal(value), TEXT_SLOT)
     }
 
     override fun addLabel(value: Expr<String, Handled>) {
-        target.addLabel = expression(value)
+        target.addLabel = state.lower(value, TEXT_SLOT)
     }
 
     override fun addIcon(
@@ -404,11 +410,11 @@ internal class RuntimeChooseContent(
     private val target: WireCollectionContent.Mutable,
 ) : ChooseContentScope {
     override fun chooseLabel(value: String) {
-        target.chooseLabel = expression(value)
+        target.chooseLabel = state.lower(literal(value), TEXT_SLOT)
     }
 
     override fun chooseLabel(value: Expr<String, Handled>) {
-        target.chooseLabel = expression(value)
+        target.chooseLabel = state.lower(value, TEXT_SLOT)
     }
 
     override fun chooseIcon(
@@ -426,7 +432,7 @@ internal class NullableContentDraft {
 /** Captures the group header of a tree layout, with the group bound to [groupBinding]. */
 internal class RuntimeTreeScope(
     private val state: PresentationBuildState,
-    private val groupBinding: ExpressionBindingId,
+    private val groupBinding: skirout.editor.v1.presentation.BindingDeclaration,
 ) : TreeScope {
     var group: PresentationNode? = null
         private set
@@ -435,18 +441,19 @@ internal class RuntimeTreeScope(
 
     override fun group(body: TreeGroupScope.() -> Unit) {
         check(group == null) { "A tree layout may declare one group header." }
-        state.groupBinding(groupBinding)
         val expressions =
             HierarchyGroupExpressions(
-                path = inputExpression(groupBinding, groupField("path")),
-                name = inputExpression(groupBinding, groupField("name")),
-                members = inputExpression(groupBinding, groupField("members")),
+                path = inputExpression(groupBinding.id, groupField("path")),
+                name = inputExpression(groupBinding.id, groupField("name")),
+                members = inputExpression(groupBinding.id, groupField("members")),
             )
         group =
-            state.presentation {
-                object : TreeGroupScope, Layout by this {
-                    override val group = expressions
-                }.body()
+            state.declare(groupBinding.id, groupBinding.type, mayBeMissing = false) {
+                state.presentation {
+                    object : TreeGroupScope, Layout by this {
+                        override val group = expressions
+                    }.body()
+                }
             }
     }
 

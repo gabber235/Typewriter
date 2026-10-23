@@ -204,7 +204,7 @@ val CorePlacesTest by testSuite {
 }
 
 /** Builds a Book workspace whose only content is a button running the action [action] creates. */
-private fun CatalogAssembly.bookBuild(): (() -> EditorAction) -> Unit {
+private fun CatalogAssembly.bookBuild(): (() -> com.typewritermc.presentation.PresentationAction) -> Unit {
     val checked = (checked.resolve(BookDefinition.use.use) as Resolution.Ready).value
     val ownership =
         relations

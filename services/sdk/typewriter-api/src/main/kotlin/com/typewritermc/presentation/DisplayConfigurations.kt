@@ -38,9 +38,11 @@ interface ProgressAppearanceScope {
 }
 
 interface TooltipAppearanceScope : InputAppearanceScope {
-    fun waitMilliseconds(value: Int)
+    /** How long the pointer rests before the tooltip shows. */
+    fun waitDelay(value: DisplayDelay)
 
-    fun showMilliseconds(value: Int)
+    /** How long the tooltip stays after the pointer leaves. */
+    fun showDelay(value: DisplayDelay)
 
     fun preferBelow(value: Boolean)
 }

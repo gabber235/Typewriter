@@ -6,6 +6,7 @@ import com.typewritermc.expression.length
 import com.typewritermc.expression.literal
 import com.typewritermc.expression.orElse
 import com.typewritermc.expression.shortcuts.gte
+import com.typewritermc.presentation.Spacing
 import com.typewritermc.presentation.TextLines
 import com.typewritermc.presentation.cache
 import com.typewritermc.presentation.debounce
@@ -42,7 +43,7 @@ object CoreIconSdkProvider : IconIconifyPresentation, IconSvgPresentation {
                     selectedValue(row)
                     label(row)
                     presentation {
-                        row(spacing = 10.0) {
+                        row(spacing = Spacing(10.0)) {
                             icon(row)
                             flexible {
                                 text(row, paragraph = textParagraph(maxLines = 1, overflow = PresentationTextOverflow.ELLIPSIS))
@@ -51,7 +52,7 @@ object CoreIconSdkProvider : IconIconifyPresentation, IconSvgPresentation {
                     }
                 }
                 summary {
-                    row(spacing = 10.0) {
+                    row(spacing = Spacing(10.0)) {
                         icon(current.orElse(literal("material-symbols:book")))
                         flexible {
                             text(current, paragraph = textParagraph(maxLines = 1, overflow = PresentationTextOverflow.ELLIPSIS))
