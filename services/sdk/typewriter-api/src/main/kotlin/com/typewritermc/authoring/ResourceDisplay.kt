@@ -6,12 +6,12 @@ import com.typewritermc.expression.Expr
 import com.typewritermc.expression.Handled
 import com.typewritermc.expression.MayBeMissing
 import com.typewritermc.expression.color
+import com.typewritermc.expression.configuration
+import com.typewritermc.expression.declaration
 import com.typewritermc.expression.display
 import com.typewritermc.expression.icon
 import com.typewritermc.expression.inputExpression
 import com.typewritermc.expression.name
-import com.typewritermc.presentation.configuration
-import com.typewritermc.presentation.declaration
 import com.typewritermc.types.Color
 import com.typewritermc.types.Icon
 import com.typewritermc.types.Resource

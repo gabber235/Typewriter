@@ -14,9 +14,7 @@ import com.typewritermc.authoring.use
 import com.typewritermc.checking.PartialSelection
 import com.typewritermc.checking.TypedSelection
 import com.typewritermc.elements.CueDefinition
-import com.typewritermc.expression.DefaultExpressionEvaluator
-import com.typewritermc.expression.ExpressionBindings
-import com.typewritermc.expression.ExpressionValueReader
+import com.typewritermc.expression.descendants
 import com.typewritermc.expression.input
 import com.typewritermc.expression.literal
 import com.typewritermc.expression.orElse
@@ -46,13 +44,14 @@ import com.typewritermc.types.use
 import de.infix.testBalloon.framework.core.testSuite
 import io.kotest.matchers.collections.shouldNotContain
 import io.kotest.matchers.shouldBe
+import io.kotest.matchers.shouldNotBe
 import skirout.editor.v1.catalog.EndpointCardinality
 import skirout.editor.v1.catalog.EndpointDefinition
 import skirout.editor.v1.catalog.EndpointSlot
 import skirout.editor.v1.catalog.RelationContract
 import skirout.editor.v1.catalog.RelationDeletePolicy
 import skirout.editor.v1.diagnostic.DeclarationOrigin
-import skirout.editor.v1.expression.EvaluationBudget
+import skirout.editor.v1.expression.ExpressionNode
 import skirout.editor.v1.type_catalog.AuthoringRecord
 import skirout.editor.v1.type_catalog.CatalogGeneration
 import skirout.editor.v1.type_catalog.DataValue
@@ -69,12 +68,13 @@ import skirout.editor.v1.type_catalog.TypeSelection
 import skirout.editor.v1.type_catalog.TypeUse
 
 val ResourceDisplayAssemblyTest by testSuite {
-    test("a book with a blank title is labelled with its type name, and a titled book with its title") {
+    test("Realm labels a titled book with its title and leaves the type name fallback to editors") {
         val assembly = assemble()
 
-        assembly.label(book(title = "")) shouldBe "Book"
-        assembly.label(book(title = "   ")) shouldBe "Book"
         assembly.label(book(title = "Main story")) shouldBe "Main story"
+        // The type name comes from the published catalog, a panel profile read Realm does not evaluate.
+        assembly.label(book(title = "")) shouldBe null
+        assembly.label(book(title = "   ")) shouldBe null
     }
 
     test("the most specific declared display wins and every other resource uses the default display") {
@@ -107,9 +107,8 @@ val ResourceDisplayAssemblyTest by testSuite {
         val formulas = assembly.displays.displayFor(fixtureResource, assembly.checked)!!
 
         formulas.target shouldBe ResourceTarget.ANY_RESOURCE
-        assembly.label(record) shouldBe "Fixture resource"
-        assembly.evaluate(formulas.accent, record) shouldBe
-            DataValue.named(ColorDefinition.use, DataValue.integer(0xFF123456u.toString().toBigInteger()))
+        val reads = (formulas.label.callIds() + formulas.accent.callIds() + formulas.icon.callIds()).toSet()
+        reads shouldBe setOf("value.configuration", "catalog.declaration")
     }
 
     test("a display formula that reads a host context input is rejected") {
@@ -158,7 +157,7 @@ val ResourceDisplayAssemblyTest by testSuite {
         assembly.diagnosticCodes(BookDefinition.id) shouldBe listOf("duplicate_resource_display")
         assembly.editorCatalog.resourceDisplays
             .map { it.target } shouldBe listOf(skirout.editor.v1.type_catalog.ResourceTarget.ANY_RESOURCE)
-        assembly.label(book(title = "")) shouldBe "Book"
+        assembly.displays.displayFor(BookDefinition.id, assembly.checked)?.target shouldBe ResourceTarget.ANY_RESOURCE
     }
 
     test("an extension's any resource display is rejected while the framework default keeps naming every resource") {
@@ -176,7 +175,8 @@ val ResourceDisplayAssemblyTest by testSuite {
             )
         assembly.editorCatalog.resourceDisplays
             .map { it.target } shouldBe listOf(skirout.editor.v1.type_catalog.ResourceTarget.ANY_RESOURCE)
-        assembly.label(book(title = "")) shouldBe "Book"
+        assembly.displays.displayFor(BookDefinition.id, assembly.checked)!!.label shouldNotBe
+            ExpressionNode.LiteralWrapper(DataValue.StringValueWrapper("Extension"))
     }
 
     test("the realm root and its sections publish no search key and never conflict with a resource's") {
@@ -323,35 +323,9 @@ private fun CatalogAssembly.diagnosticCodes(type: TypeDefinitionId): List<String
 
 private fun CatalogAssembly.label(record: AuthoringRecord): String? = with(DisplayReads) { displays.label(record, checked) }
 
-/** Evaluates one checked display formula of the subject [record] the way editors do: the record is the subject. */
-private fun CatalogAssembly.evaluate(
-    formula: com.typewritermc.expression.CheckedExpressionProgram,
-    record: AuthoringRecord,
-): DataValue? {
-    val subject = DataValue.named((record.configuration as TypeSelection.CompleteWrapper).use, DataValue.RecordWrapper(record.payload))
-    val types = editorCatalog.types.associateBy { it.definition.id }
-    val queries =
-        object : com.typewritermc.expression.CanonicalQueryReader {
-            override val catalog = checked
-
-            context(reads: AuthoredReads)
-            override fun resource(id: ResourceId) = Availability.Unavailable(emptyList())
-
-            context(reads: AuthoredReads)
-            override fun declaration(id: TypeDefinitionId) = Availability.Available(types.getValue(id))
-        }
-    val result =
-        with(DisplayReads) {
-            DefaultExpressionEvaluator(ExpressionValueReader { error("The subject is a local value") }, queries)
-                .evaluateChecked(
-                    formula,
-                    ExpressionBindings(emptyMap()),
-                    EvaluationBudget(maxSteps = 1_000, maxCollectionItems = 1_000),
-                    mapOf(ExpressionBindingId(value = "configured_value") to subject),
-                )
-        }
-    return (result as? Availability.Available)?.value
-}
+/** The operations this formula calls. */
+private fun ExpressionNode.callIds(): List<String> =
+    descendants().filterIsInstance<ExpressionNode.CallWrapper>().map { it.value.operation.value }.toList()
 
 private object DisplayReads : AuthoredReads {
     override val catalog = CatalogGeneration(value = "resource displays")

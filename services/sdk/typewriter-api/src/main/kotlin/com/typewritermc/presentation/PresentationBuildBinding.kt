@@ -52,7 +52,7 @@ class CheckedPresentationTemplate internal constructor(
         TypeTemplate?,
         Set<skirout.editor.v1.type_catalog.ExpressionBindingId>,
         Boolean,
-    ) -> List<String>,
+    ) -> List<skirout.editor.v1.expression.FailureId>,
     private val payloadResolver: (TypeTemplate) -> TypeTemplate,
     private val linkResolver: (TypeTemplate) -> PresentationLinkTemplate?,
     private val subtypeChecker: (TypeDefinitionId, TypeDefinitionId) -> Boolean,
@@ -124,7 +124,7 @@ class CheckedPresentationTemplate internal constructor(
         expected: TypeTemplate?,
         present: Set<skirout.editor.v1.type_catalog.ExpressionBindingId> = emptySet(),
         mayBeMissing: Boolean = false,
-    ): List<String> = expressionChecker(body, bindings, expected, present, mayBeMissing)
+    ): List<skirout.editor.v1.expression.FailureId> = expressionChecker(body, bindings, expected, present, mayBeMissing)
 }
 
 /** A link type: the endpoint of its relation on the side of the resource holding it, and its target type. */
@@ -587,7 +587,7 @@ internal fun checkPresentationExpression(
     present: Set<skirout.editor.v1.type_catalog.ExpressionBindingId>,
     resolve: (TypeUse) -> Resolution<CheckedType>,
     mayBeMissing: Boolean = false,
-): List<String> {
+): List<skirout.editor.v1.expression.FailureId> {
     val checker = com.typewritermc.configuration.PortableExpressionChecker(resolve)
     val structural = checker.checkExpressionStructure(body, bindings.keys)
     if (structural.isNotEmpty()) return structural

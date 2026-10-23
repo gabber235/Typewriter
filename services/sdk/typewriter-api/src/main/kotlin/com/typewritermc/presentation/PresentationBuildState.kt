@@ -78,7 +78,7 @@ internal class PresentationBuildState(
         link: TypeTemplate,
     ) {
         val errors = type.checkExpression(body, expressionTypes + (item to link), null, setOf(item))
-        require(errors.isEmpty()) { "Invalid resources order: ${errors.joinToString()}." }
+        require(errors.isEmpty()) { "Invalid resources order: ${errors.joinToString { it.value }}." }
     }
 
     internal fun checkMapping(
@@ -88,7 +88,7 @@ internal class PresentationBuildState(
         output: TypeTemplate,
     ) {
         val errors = type.checkExpression(body, expressionTypes + (input to payload), output, setOf(input))
-        require(errors.isEmpty()) { "Invalid control expression: ${errors.joinToString()}." }
+        require(errors.isEmpty()) { "Invalid control expression: ${errors.joinToString { it.value }}." }
     }
 
     val currentTarget: MutableList<PresentationNode> get() = activeTarget
@@ -135,7 +135,7 @@ internal class PresentationBuildState(
                 val expression =
                     action.value.resource
                 val errors = type.checkExpression(expression, expressionTypes, resource.toTemplate(), expressionTypes.keys)
-                require(errors.isEmpty()) { "Invalid resource navigation expression: ${errors.joinToString()}." }
+                require(errors.isEmpty()) { "Invalid resource navigation expression: ${errors.joinToString { it.value }}." }
             }
 
             is skirout.editor.v1.action.EditorAction.AuthoringWrapper -> {
@@ -145,7 +145,7 @@ internal class PresentationBuildState(
                 val expression =
                     action.value.targets
                 val errors = type.checkExpression(expression, expressionTypes, selection.toTemplate(), expressionTypes.keys)
-                require(errors.isEmpty()) { "Invalid authoring target expression: ${errors.joinToString()}." }
+                require(errors.isEmpty()) { "Invalid authoring target expression: ${errors.joinToString { it.value }}." }
             }
 
             is skirout.editor.v1.action.EditorAction.CreateWrapper -> {
@@ -184,7 +184,7 @@ internal class PresentationBuildState(
             val field = requireNotNull(subject.at(path)) { "A create action preset ${path.segments} is not a field of $created." }
             // A preset that evaluates to missing leaves the field at its creation default.
             val errors = type.checkExpression(preset.value, expressionTypes, field.type, expressionTypes.keys, mayBeMissing = true)
-            require(errors.isEmpty()) { "Invalid create action preset: ${errors.joinToString()}." }
+            require(errors.isEmpty()) { "Invalid create action preset: ${errors.joinToString { it.value }}." }
         }
         type(created.use())
     }

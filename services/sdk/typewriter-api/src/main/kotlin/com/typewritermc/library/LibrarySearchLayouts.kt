@@ -6,15 +6,15 @@ import com.typewritermc.expression.Handled
 import com.typewritermc.expression.MayBeMissing
 import com.typewritermc.expression.and
 import com.typewritermc.expression.eq
-import com.typewritermc.expression.gt
 import com.typewritermc.expression.length
 import com.typewritermc.expression.literal
 import com.typewritermc.expression.not
 import com.typewritermc.expression.or
 import com.typewritermc.expression.orElse
 import com.typewritermc.expression.orIfBlank
+import com.typewritermc.expression.shortcuts.gt
+import com.typewritermc.expression.shortcuts.trim
 import com.typewritermc.expression.target
-import com.typewritermc.expression.trim
 import com.typewritermc.presentation.Layout
 import com.typewritermc.presentation.PresentationInsets
 import com.typewritermc.presentation.ResourceExpr

@@ -2,10 +2,10 @@ package com.typewritermc.types
 
 import com.typewritermc.expression.Expr
 import com.typewritermc.expression.Handled
-import com.typewritermc.expression.gte
 import com.typewritermc.expression.length
 import com.typewritermc.expression.literal
 import com.typewritermc.expression.orElse
+import com.typewritermc.expression.shortcuts.gte
 import com.typewritermc.presentation.TextLines
 import com.typewritermc.presentation.cache
 import com.typewritermc.presentation.debounce

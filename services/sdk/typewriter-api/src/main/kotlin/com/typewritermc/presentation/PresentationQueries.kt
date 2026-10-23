@@ -5,10 +5,15 @@ import com.typewritermc.expression.Expr
 import com.typewritermc.expression.Handled
 import com.typewritermc.expression.MayBeMissing
 import com.typewritermc.expression.MissingPolicy
+import com.typewritermc.expression.configuration
+import com.typewritermc.expression.declaration
+import com.typewritermc.expression.identity
 import com.typewritermc.expression.isNull
 import com.typewritermc.expression.literal
 import com.typewritermc.expression.not
 import com.typewritermc.expression.orElse
+import com.typewritermc.expression.resourceValue
+import com.typewritermc.expression.value
 import com.typewritermc.types.Ref
 import com.typewritermc.types.RelationshipEndpoint
 import com.typewritermc.types.Resource
@@ -17,8 +22,6 @@ import com.typewritermc.types.namedUse
 import com.typewritermc.types.use
 import skirout.editor.v1.catalog.PublishedType
 import skirout.editor.v1.expression.ExpressionNode
-import skirout.editor.v1.expression.ExpressionQuery
-import skirout.editor.v1.expression.ResourceQuerySource
 import skirout.editor.v1.type_catalog.NamedTypeTemplate
 import skirout.editor.v1.type_catalog.NamedTypeUse
 import skirout.editor.v1.type_catalog.TypeSelection
@@ -40,32 +43,38 @@ class ResourceExpr<T : Resource> internal constructor(
     internal val source: ResourceReadSource,
 ) {
     val exists: Expr<Boolean, Handled> get() = configuration.isNull().not().orElse(literal(false))
-    val id: Expr<ResourceId, MayBeMissing> get() = query { ExpressionQuery.ResourceIdentityWrapper(it) }
-    val value: Expr<T, MayBeMissing> get() = query { ExpressionQuery.ResourceValueWrapper(it) }
-    val configuration: Expr<TypeSelection, MayBeMissing> get() = query { ExpressionQuery.ResourceConfigurationWrapper(it) }
+
+    /** The identity of the resource: the identity a read by identity names, or the target of a live link. */
+    val id: Expr<ResourceId, MayBeMissing>
+        get() =
+            when (val selected = source) {
+                is ResourceReadSource.Identity -> selected.identityExpression()
+                is ResourceReadSource.Reference -> selected.linkExpression<T>().identity()
+            }
+
+    val value: Expr<T, MayBeMissing>
+        get() =
+            when (val selected = source) {
+                is ResourceReadSource.Identity -> selected.identityExpression().resourceValue(selected.expected.use)
+                is ResourceReadSource.Reference -> selected.linkExpression<T>().value()
+            }
+
+    val configuration: Expr<TypeSelection, MayBeMissing>
+        get() =
+            when (val selected = source) {
+                is ResourceReadSource.Identity -> selected.identityExpression().configuration()
+                is ResourceReadSource.Reference -> selected.linkExpression<T>().identity().configuration()
+            }
+
     val type: Expr<PublishedType, MayBeMissing> get() = configuration.declaration()
-
-    private fun <V> query(make: (ResourceQuerySource) -> ExpressionQuery): Expr<V, MayBeMissing> {
-        val selected = source
-        val witness = (selected as? ResourceReadSource.Identity)?.expected
-        return Expr { environment ->
-            val source =
-                when (selected) {
-                    is ResourceReadSource.Identity -> {
-                        ResourceQuerySource.createIdentity(
-                            identity = selected.expression.lower(environment),
-                            target = requireNotNull(witness).use,
-                        )
-                    }
-
-                    is ResourceReadSource.Reference -> {
-                        ResourceQuerySource.ReferenceWrapper(selected.expression.lower(environment))
-                    }
-                }
-            ExpressionNode.QueryWrapper(make(source))
-        }
-    }
 }
+
+@Suppress("UNCHECKED_CAST")
+private fun ResourceReadSource.Identity.identityExpression(): Expr<ResourceId, MayBeMissing> = expression as Expr<ResourceId, MayBeMissing>
+
+@Suppress("UNCHECKED_CAST")
+private fun <T : Resource> ResourceReadSource.Reference.linkExpression(): Expr<Ref<*, T>, MayBeMissing> =
+    expression as Expr<Ref<*, T>, MayBeMissing>
 
 /** Constructs reads with a checked expected resource contract. It performs no author process query. */
 interface PresentationQueries {
@@ -106,9 +115,3 @@ fun literal(value: TypeSelection): Expr<TypeSelection, Handled> {
     val encoded = CanonicalReadModels.typeSelection.encode(value)
     return Expr { ExpressionNode.LiteralWrapper(encoded) }
 }
-
-fun <M : MissingPolicy> Expr<TypeSelection, M>.declaration(): Expr<PublishedType, MayBeMissing> =
-    Expr { ExpressionNode.QueryWrapper(ExpressionQuery.CatalogDeclarationWrapper(lower(it))) }
-
-fun <M : MissingPolicy> Expr<*, M>.configuration(): Expr<TypeSelection, MayBeMissing> =
-    Expr { ExpressionNode.QueryWrapper(ExpressionQuery.ValueConfigurationWrapper(lower(it))) }
