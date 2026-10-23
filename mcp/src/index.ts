@@ -87,17 +87,37 @@ function setByPath(target: Record<string, unknown>, dotted: string, value: unkno
   if (keys.some((k) => k === "__proto__" || k === "constructor" || k === "prototype")) {
     throw new Error(`Invalid path: ${dotted}`);
   }
-  let cur: Record<string, unknown> | unknown[] = target;
-  for (let i = 0; i < keys.length - 1; i++) {
-    const k = keys[i];
-    const nextKey = keys[i + 1];
-    const asRec = cur as Record<string, unknown>;
-    if (asRec[k] === null || typeof asRec[k] !== "object") {
-      asRec[k] = /^\d+$/.test(nextKey) ? [] : {};
+
+  const resolveKey = (cur: unknown, key: string, pathSoFar: string): string | number => {
+    if (Array.isArray(cur)) {
+      if (!/^\d+$/.test(key)) throw new Error(`Invalid array index in path: ${pathSoFar}`);
+      const idx = Number(key);
+      if (idx < 0 || idx > cur.length) {
+        throw new Error(`Array index out of range in path: ${pathSoFar} (length ${cur.length})`);
+      }
+      return idx;
     }
-    cur = asRec[k] as Record<string, unknown> | unknown[];
+    return key;
+  };
+
+  let cur: unknown = target;
+  for (let i = 0; i < keys.length - 1; i++) {
+    const pathSoFar = keys.slice(0, i + 1).join(".");
+    const key = resolveKey(cur, keys[i], pathSoFar);
+    const nextKey = keys[i + 1];
+    const container = cur as Record<string | number, unknown>;
+    if (container[key] === null || typeof container[key] !== "object") {
+      if (Array.isArray(cur) && typeof key === "number" && key === cur.length) {
+        throw new Error(`Cannot descend through out-of-range array index: ${pathSoFar}`);
+      }
+      container[key] = /^\d+$/.test(nextKey) ? [] : {};
+    }
+    cur = container[key];
   }
-  (cur as Record<string, unknown>)[keys[keys.length - 1]] = value;
+
+  const lastPath = dotted;
+  const lastKey = resolveKey(cur, keys[keys.length - 1], lastPath);
+  (cur as Record<string | number, unknown>)[lastKey] = value;
 }
 
 async function pages(): Promise<TWPage[]> {
@@ -226,6 +246,8 @@ server.tool("replace_entry",
       const p = await findPage(page);
       if (!p) throw new Error("Page not found: " + page);
       if (typeof entry.id !== "string") throw new Error("entry must include its 'id'");
+      if (typeof entry.name !== "string" || !entry.name) throw new Error("entry must include a non-empty string 'name'");
+      if (typeof entry.type !== "string" || !entry.type) throw new Error("entry must include a non-empty string 'type'");
       if (SOCKET_MODE) { await (await ensureSocketConnected()).updateCompleteEntry(p.id, entry as unknown as TWPage["entries"][number]); return ok("Replaced " + entry.id); }
       return ok(await store!.replaceEntry(p.name, entry as unknown as TWPage["entries"][number]));
     } catch (e) { return fail(e); }

@@ -71,17 +71,35 @@ function setByPath(target, dotted, value) {
     if (keys.some((k) => k === "__proto__" || k === "constructor" || k === "prototype")) {
         throw new Error(`Invalid path: ${dotted}`);
     }
+    const resolveKey = (cur, key, pathSoFar) => {
+        if (Array.isArray(cur)) {
+            if (!/^\d+$/.test(key))
+                throw new Error(`Invalid array index in path: ${pathSoFar}`);
+            const idx = Number(key);
+            if (idx < 0 || idx > cur.length) {
+                throw new Error(`Array index out of range in path: ${pathSoFar} (length ${cur.length})`);
+            }
+            return idx;
+        }
+        return key;
+    };
     let cur = target;
     for (let i = 0; i < keys.length - 1; i++) {
-        const k = keys[i];
+        const pathSoFar = keys.slice(0, i + 1).join(".");
+        const key = resolveKey(cur, keys[i], pathSoFar);
         const nextKey = keys[i + 1];
-        const asRec = cur;
-        if (asRec[k] === null || typeof asRec[k] !== "object") {
-            asRec[k] = /^\d+$/.test(nextKey) ? [] : {};
+        const container = cur;
+        if (container[key] === null || typeof container[key] !== "object") {
+            if (Array.isArray(cur) && typeof key === "number" && key === cur.length) {
+                throw new Error(`Cannot descend through out-of-range array index: ${pathSoFar}`);
+            }
+            container[key] = /^\d+$/.test(nextKey) ? [] : {};
         }
-        cur = asRec[k];
+        cur = container[key];
     }
-    cur[keys[keys.length - 1]] = value;
+    const lastPath = dotted;
+    const lastKey = resolveKey(cur, keys[keys.length - 1], lastPath);
+    cur[lastKey] = value;
 }
 async function pages() {
     if (SOCKET_MODE)
@@ -238,6 +256,10 @@ server.tool("replace_entry", "Replace a whole entry with a new object (must keep
             throw new Error("Page not found: " + page);
         if (typeof entry.id !== "string")
             throw new Error("entry must include its 'id'");
+        if (typeof entry.name !== "string" || !entry.name)
+            throw new Error("entry must include a non-empty string 'name'");
+        if (typeof entry.type !== "string" || !entry.type)
+            throw new Error("entry must include a non-empty string 'type'");
         if (SOCKET_MODE) {
             await (await ensureSocketConnected()).updateCompleteEntry(p.id, entry);
             return ok("Replaced " + entry.id);
