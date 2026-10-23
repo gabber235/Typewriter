@@ -1,0 +1,1013 @@
+{
+  "expansions": [
+    {
+      "id": "empty_pattern_is_the_owner",
+      "value": {"record": {}},
+      "owner": "book_1",
+      "pattern": {"segments": []},
+      "expected": ["book_1"]
+    },
+    {
+      "id": "missing_field_still_yields",
+      "value": {"record": {}},
+      "owner": "book_1",
+      "pattern": {"segments": [{"kind": "field", "value": {"name": "title"}}]},
+      "expected": ["book_1.title"]
+    },
+    {
+      "id": "field_below_missing_field_yields",
+      "value": {"record": {}},
+      "owner": "book_1",
+      "pattern": {
+        "segments": [{"kind": "field", "value": {"name": "author"}}, {"kind": "field", "value": {"name": "name"}}]
+      },
+      "expected": ["book_1.author.name"]
+    },
+    {
+      "id": "field_below_unfilled_yields",
+      "value": {"record": {"author": {"unfilled": true}}},
+      "owner": "book_1",
+      "pattern": {
+        "segments": [{"kind": "field", "value": {"name": "author"}}, {"kind": "field", "value": {"name": "name"}}]
+      },
+      "expected": ["book_1.author.name"]
+    },
+    {
+      "id": "field_below_null_yields_nothing",
+      "value": {"record": {"author": {"null": true}}},
+      "owner": "book_1",
+      "pattern": {
+        "segments": [{"kind": "field", "value": {"name": "author"}}, {"kind": "field", "value": {"name": "name"}}]
+      },
+      "expected": []
+    },
+    {
+      "id": "field_below_named_null_yields_nothing",
+      "value": {
+        "record": {
+          "author": {
+            "named": {
+              "namespace": "fixture",
+              "name": "Author",
+              "revision": 1,
+              "arguments": [],
+              "payload": {"null": true}
+            }
+          }
+        }
+      },
+      "owner": "book_1",
+      "pattern": {
+        "segments": [{"kind": "field", "value": {"name": "author"}}, {"kind": "field", "value": {"name": "name"}}]
+      },
+      "expected": []
+    },
+    {
+      "id": "field_below_scalar_yields",
+      "value": {"record": {"title": {"string": "Dune"}}},
+      "owner": "book_1",
+      "pattern": {
+        "segments": [{"kind": "field", "value": {"name": "title"}}, {"kind": "field", "value": {"name": "length"}}]
+      },
+      "expected": ["book_1.title.length"]
+    },
+    {
+      "id": "empty_items_yield_nothing",
+      "value": {"record": {"tags": {"list": []}}},
+      "owner": "book_1",
+      "pattern": {"segments": [{"kind": "field", "value": {"name": "tags"}}, "items"]},
+      "expected": []
+    },
+    {
+      "id": "list_items_in_order",
+      "value": {
+        "record": {"tags": {"list": [{"id": "a", "value": {"string": "x"}}, {"id": "b", "value": {"string": "y"}}]}}
+      },
+      "owner": "book_1",
+      "pattern": {"segments": [{"kind": "field", "value": {"name": "tags"}}, "items"]},
+      "expected": ["book_1.tags[a]", "book_1.tags[b]"]
+    },
+    {
+      "id": "set_items_in_order",
+      "value": {
+        "record": {"tags": {"set": [{"id": "s2", "value": {"string": "y"}}, {"id": "s1", "value": {"string": "x"}}]}}
+      },
+      "owner": "book_1",
+      "pattern": {"segments": [{"kind": "field", "value": {"name": "tags"}}, "items"]},
+      "expected": ["book_1.tags[s2]", "book_1.tags[s1]"]
+    },
+    {
+      "id": "named_list_items",
+      "value": {
+        "record": {
+          "tags": {
+            "named": {
+              "namespace": "fixture",
+              "name": "Tags",
+              "revision": 1,
+              "arguments": [],
+              "payload": {"list": [{"id": "a", "value": {"string": "x"}}, {"id": "b", "value": {"string": "y"}}]}
+            }
+          }
+        }
+      },
+      "owner": "book_1",
+      "pattern": {"segments": [{"kind": "field", "value": {"name": "tags"}}, "items"]},
+      "expected": ["book_1.tags[a]", "book_1.tags[b]"]
+    },
+    {
+      "id": "unfilled_list_items_are_yielded",
+      "value": {"record": {"tags": {"list": [{"id": "a", "value": {"unfilled": true}}]}}},
+      "owner": "book_1",
+      "pattern": {"segments": [{"kind": "field", "value": {"name": "tags"}}, "items"]},
+      "expected": ["book_1.tags[a]"]
+    },
+    {
+      "id": "map_items_yield_key_and_value_per_row",
+      "value": {
+        "record": {
+          "scores": {
+            "map": [
+              {"id": "r1", "key": {"string": "a"}, "value": {"integer": "1"}},
+              {"id": "r2", "key": {"string": "b"}, "value": {"integer": "2"}}
+            ]
+          }
+        }
+      },
+      "owner": "book_1",
+      "pattern": {"segments": [{"kind": "field", "value": {"name": "scores"}}, "items"]},
+      "expected": [
+        "book_1.scores[r1].#key",
+        "book_1.scores[r1].#value",
+        "book_1.scores[r2].#key",
+        "book_1.scores[r2].#value"
+      ]
+    },
+    {
+      "id": "map_keys",
+      "value": {
+        "record": {
+          "scores": {
+            "map": [
+              {"id": "r1", "key": {"string": "a"}, "value": {"integer": "1"}},
+              {"id": "r2", "key": {"string": "b"}, "value": {"integer": "2"}}
+            ]
+          }
+        }
+      },
+      "owner": "book_1",
+      "pattern": {"segments": [{"kind": "field", "value": {"name": "scores"}}, "keys"]},
+      "expected": ["book_1.scores[r1].#key", "book_1.scores[r2].#key"]
+    },
+    {
+      "id": "map_values",
+      "value": {
+        "record": {
+          "scores": {
+            "map": [
+              {"id": "r1", "key": {"string": "a"}, "value": {"integer": "1"}},
+              {"id": "r2", "key": {"string": "b"}, "value": {"integer": "2"}}
+            ]
+          }
+        }
+      },
+      "owner": "book_1",
+      "pattern": {"segments": [{"kind": "field", "value": {"name": "scores"}}, "values"]},
+      "expected": ["book_1.scores[r1].#value", "book_1.scores[r2].#value"]
+    },
+    {
+      "id": "keys_of_a_list_yield_nothing",
+      "value": {
+        "record": {"tags": {"list": [{"id": "a", "value": {"string": "x"}}, {"id": "b", "value": {"string": "y"}}]}}
+      },
+      "owner": "book_1",
+      "pattern": {"segments": [{"kind": "field", "value": {"name": "tags"}}, "keys"]},
+      "expected": []
+    },
+    {
+      "id": "items_of_missing_field_yield_nothing",
+      "value": {"record": {}},
+      "owner": "book_1",
+      "pattern": {"segments": [{"kind": "field", "value": {"name": "tags"}}, "items"]},
+      "expected": []
+    },
+    {
+      "id": "items_of_unfilled_yield_nothing",
+      "value": {"record": {"tags": {"unfilled": true}}},
+      "owner": "book_1",
+      "pattern": {"segments": [{"kind": "field", "value": {"name": "tags"}}, "items"]},
+      "expected": []
+    },
+    {
+      "id": "items_of_null_yield_nothing",
+      "value": {"record": {"tags": {"null": true}}},
+      "owner": "book_1",
+      "pattern": {"segments": [{"kind": "field", "value": {"name": "tags"}}, "items"]},
+      "expected": []
+    },
+    {
+      "id": "items_of_record_yield_nothing",
+      "value": {"record": {"tags": {"record": {"a": {"integer": "1"}}}}},
+      "owner": "book_1",
+      "pattern": {"segments": [{"kind": "field", "value": {"name": "tags"}}, "items"]},
+      "expected": []
+    },
+    {
+      "id": "field_after_items_skips_null_items",
+      "value": {
+        "record": {
+          "chapters": {
+            "list": [
+              {"id": "c1", "value": {"record": {"title": {"string": "One"}}}},
+              {"id": "c2", "value": {"null": true}},
+              {"id": "c3", "value": {"unfilled": true}}
+            ]
+          }
+        }
+      },
+      "owner": "book_1",
+      "pattern": {
+        "segments": [
+          {"kind": "field", "value": {"name": "chapters"}},
+          "items",
+          {"kind": "field", "value": {"name": "title"}}
+        ]
+      },
+      "expected": ["book_1.chapters[c1].title", "book_1.chapters[c3].title"]
+    },
+    {
+      "id": "nested_items",
+      "value": {
+        "record": {
+          "rows": {
+            "list": [
+              {
+                "id": "r1",
+                "value": {"list": [{"id": "x", "value": {"integer": "1"}}, {"id": "y", "value": {"integer": "2"}}]}
+              },
+              {"id": "r2", "value": {"list": []}}
+            ]
+          }
+        }
+      },
+      "owner": "book_1",
+      "pattern": {"segments": [{"kind": "field", "value": {"name": "rows"}}, "items", "items"]},
+      "expected": ["book_1.rows[r1][x]", "book_1.rows[r1][y]"]
+    },
+    {
+      "id": "field_of_map_values",
+      "value": {
+        "record": {
+          "people": {
+            "map": [
+              {"id": "p1", "key": {"string": "lead"}, "value": {"record": {"name": {"string": "Ann"}}}},
+              {"id": "p2", "key": {"string": "guest"}, "value": {"null": true}}
+            ]
+          }
+        }
+      },
+      "owner": "book_1",
+      "pattern": {
+        "segments": [
+          {"kind": "field", "value": {"name": "people"}},
+          "values",
+          {"kind": "field", "value": {"name": "name"}}
+        ]
+      },
+      "expected": ["book_1.people[p1].#value.name"]
+    }
+  ],
+  "rules": [
+    {
+      "id": "finished_without_finding",
+      "value": {"record": {"title": {"string": "Dune"}}},
+      "owner": "book_1",
+      "recipe": {"segments": [{"kind": "field", "value": {"name": "title"}}]},
+      "predicate": {
+        "kind": "call",
+        "value": {
+          "operation": {"value": "boolean.not"},
+          "type_arguments": [],
+          "arguments": [
+            {
+              "kind": "call",
+              "value": {
+                "operation": {"value": "value.equals"},
+                "type_arguments": [],
+                "arguments": [
+                  {
+                    "kind": "call",
+                    "value": {
+                      "operation": {"value": "text.length"},
+                      "type_arguments": [],
+                      "arguments": [
+                        {
+                          "kind": "input",
+                          "value": {"binding": {"value": "configured_value"}, "path": {"segments": []}}
+                        }
+                      ]
+                    }
+                  },
+                  {"kind": "literal", "value": {"kind": "integer", "value": "0"}}
+                ]
+              }
+            }
+          ]
+        }
+      },
+      "diagnostic": {"code": "blank_title", "message": "Title is blank.", "severity": "warning", "targets": []},
+      "expected": [{"subject": "book_1.title", "outcome": "finished", "findings": []}]
+    },
+    {
+      "id": "finished_with_finding_at_subject",
+      "value": {"record": {"title": {"string": ""}}},
+      "owner": "book_1",
+      "recipe": {"segments": [{"kind": "field", "value": {"name": "title"}}]},
+      "predicate": {
+        "kind": "call",
+        "value": {
+          "operation": {"value": "boolean.not"},
+          "type_arguments": [],
+          "arguments": [
+            {
+              "kind": "call",
+              "value": {
+                "operation": {"value": "value.equals"},
+                "type_arguments": [],
+                "arguments": [
+                  {
+                    "kind": "call",
+                    "value": {
+                      "operation": {"value": "text.length"},
+                      "type_arguments": [],
+                      "arguments": [
+                        {
+                          "kind": "input",
+                          "value": {"binding": {"value": "configured_value"}, "path": {"segments": []}}
+                        }
+                      ]
+                    }
+                  },
+                  {"kind": "literal", "value": {"kind": "integer", "value": "0"}}
+                ]
+              }
+            }
+          ]
+        }
+      },
+      "diagnostic": {"code": "blank_title", "message": "Title is blank.", "severity": "warning", "targets": []},
+      "expected": [
+        {
+          "subject": "book_1.title",
+          "outcome": "finished",
+          "findings": [
+            {
+              "code": "blank_title",
+              "message": "Title is blank.",
+              "severity": "warning",
+              "primary": "book_1.title",
+              "related": []
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "unfilled_subject_needs_input",
+      "value": {"record": {"title": {"unfilled": true}}},
+      "owner": "book_1",
+      "recipe": {"segments": [{"kind": "field", "value": {"name": "title"}}]},
+      "predicate": {
+        "kind": "call",
+        "value": {
+          "operation": {"value": "boolean.not"},
+          "type_arguments": [],
+          "arguments": [
+            {
+              "kind": "call",
+              "value": {
+                "operation": {"value": "value.equals"},
+                "type_arguments": [],
+                "arguments": [
+                  {
+                    "kind": "call",
+                    "value": {
+                      "operation": {"value": "text.length"},
+                      "type_arguments": [],
+                      "arguments": [
+                        {
+                          "kind": "input",
+                          "value": {"binding": {"value": "configured_value"}, "path": {"segments": []}}
+                        }
+                      ]
+                    }
+                  },
+                  {"kind": "literal", "value": {"kind": "integer", "value": "0"}}
+                ]
+              }
+            }
+          ]
+        }
+      },
+      "diagnostic": {"code": "blank_title", "message": "Title is blank.", "severity": "warning", "targets": []},
+      "expected": [{"subject": "book_1.title", "outcome": {"needs_input": ["book_1.title"]}, "findings": []}]
+    },
+    {
+      "id": "missing_subject_needs_input",
+      "value": {"record": {}},
+      "owner": "book_1",
+      "recipe": {"segments": [{"kind": "field", "value": {"name": "title"}}]},
+      "predicate": {
+        "kind": "call",
+        "value": {
+          "operation": {"value": "boolean.not"},
+          "type_arguments": [],
+          "arguments": [
+            {
+              "kind": "call",
+              "value": {
+                "operation": {"value": "value.equals"},
+                "type_arguments": [],
+                "arguments": [
+                  {
+                    "kind": "call",
+                    "value": {
+                      "operation": {"value": "text.length"},
+                      "type_arguments": [],
+                      "arguments": [
+                        {
+                          "kind": "input",
+                          "value": {"binding": {"value": "configured_value"}, "path": {"segments": []}}
+                        }
+                      ]
+                    }
+                  },
+                  {"kind": "literal", "value": {"kind": "integer", "value": "0"}}
+                ]
+              }
+            }
+          ]
+        }
+      },
+      "diagnostic": {"code": "blank_title", "message": "Title is blank.", "severity": "warning", "targets": []},
+      "expected": [{"subject": "book_1.title", "outcome": {"needs_input": ["book_1.title"]}, "findings": []}]
+    },
+    {
+      "id": "needs_input_at_the_unfilled_entry",
+      "value": {
+        "record": {"tags": {"list": [{"id": "a", "value": {"string": "x"}}, {"id": "b", "value": {"unfilled": true}}]}}
+      },
+      "owner": "book_1",
+      "recipe": {"segments": [{"kind": "field", "value": {"name": "tags"}}]},
+      "predicate": {
+        "kind": "call",
+        "value": {
+          "operation": {"value": "collection.contains"},
+          "type_arguments": [],
+          "arguments": [
+            {"kind": "input", "value": {"binding": {"value": "configured_value"}, "path": {"segments": []}}},
+            {"kind": "literal", "value": {"kind": "string_value", "value": "x"}}
+          ]
+        }
+      },
+      "diagnostic": {"code": "blank_tag", "message": "Tag is blank.", "severity": "error", "targets": []},
+      "expected": [{"subject": "book_1.tags", "outcome": {"needs_input": ["book_1.tags[b]"]}, "findings": []}]
+    },
+    {
+      "id": "failure_is_a_failed_outcome",
+      "value": {"record": {"title": {"string": "Dune"}}},
+      "owner": "book_1",
+      "recipe": {"segments": [{"kind": "field", "value": {"name": "title"}}]},
+      "predicate": {
+        "kind": "call",
+        "value": {
+          "operation": {"value": "value.equals"},
+          "type_arguments": [],
+          "arguments": [
+            {
+              "kind": "call",
+              "value": {
+                "operation": {"value": "text.substring"},
+                "type_arguments": [],
+                "arguments": [
+                  {
+                    "kind": "input",
+                    "value": {"binding": {"value": "configured_value"}, "path": {"segments": []}}
+                  },
+                  {"kind": "literal", "value": {"kind": "integer", "value": "5"}},
+                  {"kind": "literal", "value": {"kind": "integer", "value": "6"}}
+                ]
+              }
+            },
+            {"kind": "literal", "value": {"kind": "string_value", "value": "x"}}
+          ]
+        }
+      },
+      "diagnostic": {"code": "blank_title", "message": "Title is blank.", "severity": "warning", "targets": []},
+      "expected": [
+        {
+          "subject": "book_1.title",
+          "outcome": {"failed": {"failure": "substring_range", "primary": "book_1.title", "related": []}},
+          "findings": []
+        }
+      ]
+    },
+    {
+      "id": "non_boolean_result_fails",
+      "value": {"record": {"title": {"string": "Dune"}}},
+      "owner": "book_1",
+      "recipe": {"segments": [{"kind": "field", "value": {"name": "title"}}]},
+      "predicate": {
+        "kind": "call",
+        "value": {
+          "operation": {"value": "text.length"},
+          "type_arguments": [],
+          "arguments": [{"kind": "input", "value": {"binding": {"value": "configured_value"}, "path": {"segments": []}}}]
+        }
+      },
+      "diagnostic": {"code": "blank_title", "message": "Title is blank.", "severity": "warning", "targets": []},
+      "expected": [
+        {
+          "subject": "book_1.title",
+          "outcome": {"failed": {"failure": "expression_result_not_boolean", "primary": "book_1.title", "related": []}},
+          "findings": []
+        }
+      ]
+    },
+    {
+      "id": "one_outcome_per_collection_subject",
+      "value": {
+        "record": {
+          "tags": {
+            "list": [
+              {"id": "a", "value": {"string": "x"}},
+              {"id": "b", "value": {"string": ""}},
+              {"id": "c", "value": {"unfilled": true}}
+            ]
+          }
+        }
+      },
+      "owner": "book_1",
+      "recipe": {"segments": [{"kind": "field", "value": {"name": "tags"}}, "items"]},
+      "predicate": {
+        "kind": "call",
+        "value": {
+          "operation": {"value": "boolean.not"},
+          "type_arguments": [],
+          "arguments": [
+            {
+              "kind": "call",
+              "value": {
+                "operation": {"value": "value.equals"},
+                "type_arguments": [],
+                "arguments": [
+                  {
+                    "kind": "call",
+                    "value": {
+                      "operation": {"value": "text.length"},
+                      "type_arguments": [],
+                      "arguments": [
+                        {
+                          "kind": "input",
+                          "value": {"binding": {"value": "configured_value"}, "path": {"segments": []}}
+                        }
+                      ]
+                    }
+                  },
+                  {"kind": "literal", "value": {"kind": "integer", "value": "0"}}
+                ]
+              }
+            }
+          ]
+        }
+      },
+      "diagnostic": {"code": "blank_tag", "message": "Tag is blank.", "severity": "error", "targets": []},
+      "expected": [
+        {"subject": "book_1.tags[a]", "outcome": "finished", "findings": []},
+        {
+          "subject": "book_1.tags[b]",
+          "outcome": "finished",
+          "findings": [
+            {
+              "code": "blank_tag",
+              "message": "Tag is blank.",
+              "severity": "error",
+              "primary": "book_1.tags[b]",
+              "related": []
+            }
+          ]
+        },
+        {"subject": "book_1.tags[c]", "outcome": {"needs_input": ["book_1.tags[c]"]}, "findings": []}
+      ]
+    },
+    {
+      "id": "empty_collection_has_no_subjects",
+      "value": {"record": {"tags": {"list": []}}},
+      "owner": "book_1",
+      "recipe": {"segments": [{"kind": "field", "value": {"name": "tags"}}, "items"]},
+      "predicate": {
+        "kind": "call",
+        "value": {
+          "operation": {"value": "boolean.not"},
+          "type_arguments": [],
+          "arguments": [
+            {
+              "kind": "call",
+              "value": {
+                "operation": {"value": "value.equals"},
+                "type_arguments": [],
+                "arguments": [
+                  {
+                    "kind": "call",
+                    "value": {
+                      "operation": {"value": "text.length"},
+                      "type_arguments": [],
+                      "arguments": [
+                        {
+                          "kind": "input",
+                          "value": {"binding": {"value": "configured_value"}, "path": {"segments": []}}
+                        }
+                      ]
+                    }
+                  },
+                  {"kind": "literal", "value": {"kind": "integer", "value": "0"}}
+                ]
+              }
+            }
+          ]
+        }
+      },
+      "diagnostic": {"code": "blank_tag", "message": "Tag is blank.", "severity": "error", "targets": []},
+      "expected": []
+    },
+    {
+      "id": "null_parent_has_no_subjects",
+      "value": {"record": {"author": {"null": true}}},
+      "owner": "book_1",
+      "recipe": {
+        "segments": [{"kind": "field", "value": {"name": "author"}}, {"kind": "field", "value": {"name": "name"}}]
+      },
+      "predicate": {
+        "kind": "call",
+        "value": {
+          "operation": {"value": "boolean.not"},
+          "type_arguments": [],
+          "arguments": [
+            {
+              "kind": "call",
+              "value": {
+                "operation": {"value": "value.equals"},
+                "type_arguments": [],
+                "arguments": [
+                  {
+                    "kind": "call",
+                    "value": {
+                      "operation": {"value": "text.length"},
+                      "type_arguments": [],
+                      "arguments": [
+                        {
+                          "kind": "input",
+                          "value": {"binding": {"value": "configured_value"}, "path": {"segments": []}}
+                        }
+                      ]
+                    }
+                  },
+                  {"kind": "literal", "value": {"kind": "integer", "value": "0"}}
+                ]
+              }
+            }
+          ]
+        }
+      },
+      "diagnostic": {"code": "blank_title", "message": "Title is blank.", "severity": "warning", "targets": []},
+      "expected": []
+    },
+    {
+      "id": "recipe_target_is_the_subject_and_others_expand",
+      "value": {
+        "record": {
+          "tags": {"list": [{"id": "a", "value": {"string": "x"}}, {"id": "b", "value": {"string": "y"}}]},
+          "title": {"string": ""}
+        }
+      },
+      "owner": "book_1",
+      "recipe": {"segments": [{"kind": "field", "value": {"name": "title"}}]},
+      "predicate": {
+        "kind": "call",
+        "value": {
+          "operation": {"value": "boolean.not"},
+          "type_arguments": [],
+          "arguments": [
+            {
+              "kind": "call",
+              "value": {
+                "operation": {"value": "value.equals"},
+                "type_arguments": [],
+                "arguments": [
+                  {
+                    "kind": "call",
+                    "value": {
+                      "operation": {"value": "text.length"},
+                      "type_arguments": [],
+                      "arguments": [
+                        {
+                          "kind": "input",
+                          "value": {"binding": {"value": "configured_value"}, "path": {"segments": []}}
+                        }
+                      ]
+                    }
+                  },
+                  {"kind": "literal", "value": {"kind": "integer", "value": "0"}}
+                ]
+              }
+            }
+          ]
+        }
+      },
+      "diagnostic": {
+        "code": "blank_title",
+        "message": "Title is blank.",
+        "severity": "error",
+        "targets": [
+          {"segments": [{"kind": "field", "value": {"name": "title"}}]},
+          {"segments": [{"kind": "field", "value": {"name": "tags"}}, "items"]}
+        ]
+      },
+      "expected": [
+        {
+          "subject": "book_1.title",
+          "outcome": "finished",
+          "findings": [
+            {
+              "code": "blank_title",
+              "message": "Title is blank.",
+              "severity": "error",
+              "primary": "book_1.title",
+              "related": ["book_1.tags[a]", "book_1.tags[b]"]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "wildcard_recipe_target_is_the_matched_subject",
+      "value": {
+        "record": {"tags": {"list": [{"id": "a", "value": {"string": ""}}, {"id": "b", "value": {"string": ""}}]}}
+      },
+      "owner": "book_1",
+      "recipe": {"segments": [{"kind": "field", "value": {"name": "tags"}}, "items"]},
+      "predicate": {
+        "kind": "call",
+        "value": {
+          "operation": {"value": "boolean.not"},
+          "type_arguments": [],
+          "arguments": [
+            {
+              "kind": "call",
+              "value": {
+                "operation": {"value": "value.equals"},
+                "type_arguments": [],
+                "arguments": [
+                  {
+                    "kind": "call",
+                    "value": {
+                      "operation": {"value": "text.length"},
+                      "type_arguments": [],
+                      "arguments": [
+                        {
+                          "kind": "input",
+                          "value": {"binding": {"value": "configured_value"}, "path": {"segments": []}}
+                        }
+                      ]
+                    }
+                  },
+                  {"kind": "literal", "value": {"kind": "integer", "value": "0"}}
+                ]
+              }
+            }
+          ]
+        }
+      },
+      "diagnostic": {
+        "code": "blank_tag",
+        "message": "Tag is blank.",
+        "severity": "error",
+        "targets": [{"segments": [{"kind": "field", "value": {"name": "tags"}}, "items"]}]
+      },
+      "expected": [
+        {
+          "subject": "book_1.tags[a]",
+          "outcome": "finished",
+          "findings": [
+            {
+              "code": "blank_tag",
+              "message": "Tag is blank.",
+              "severity": "error",
+              "primary": "book_1.tags[a]",
+              "related": []
+            }
+          ]
+        },
+        {
+          "subject": "book_1.tags[b]",
+          "outcome": "finished",
+          "findings": [
+            {
+              "code": "blank_tag",
+              "message": "Tag is blank.",
+              "severity": "error",
+              "primary": "book_1.tags[b]",
+              "related": []
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "empty_collection_target_falls_back_to_subject",
+      "value": {"record": {"tags": {"list": []}, "title": {"string": ""}}},
+      "owner": "book_1",
+      "recipe": {"segments": [{"kind": "field", "value": {"name": "title"}}]},
+      "predicate": {
+        "kind": "call",
+        "value": {
+          "operation": {"value": "boolean.not"},
+          "type_arguments": [],
+          "arguments": [
+            {
+              "kind": "call",
+              "value": {
+                "operation": {"value": "value.equals"},
+                "type_arguments": [],
+                "arguments": [
+                  {
+                    "kind": "call",
+                    "value": {
+                      "operation": {"value": "text.length"},
+                      "type_arguments": [],
+                      "arguments": [
+                        {
+                          "kind": "input",
+                          "value": {"binding": {"value": "configured_value"}, "path": {"segments": []}}
+                        }
+                      ]
+                    }
+                  },
+                  {"kind": "literal", "value": {"kind": "integer", "value": "0"}}
+                ]
+              }
+            }
+          ]
+        }
+      },
+      "diagnostic": {
+        "code": "blank_title",
+        "message": "Title is blank.",
+        "severity": "error",
+        "targets": [{"segments": [{"kind": "field", "value": {"name": "tags"}}, "items"]}]
+      },
+      "expected": [
+        {
+          "subject": "book_1.title",
+          "outcome": "finished",
+          "findings": [
+            {
+              "code": "blank_title",
+              "message": "Title is blank.",
+              "severity": "error",
+              "primary": "book_1.title",
+              "related": []
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "duplicate_targets_are_distinct",
+      "value": {"record": {"subtitle": {"string": ""}, "title": {"string": ""}}},
+      "owner": "book_1",
+      "recipe": {"segments": [{"kind": "field", "value": {"name": "title"}}]},
+      "predicate": {
+        "kind": "call",
+        "value": {
+          "operation": {"value": "boolean.not"},
+          "type_arguments": [],
+          "arguments": [
+            {
+              "kind": "call",
+              "value": {
+                "operation": {"value": "value.equals"},
+                "type_arguments": [],
+                "arguments": [
+                  {
+                    "kind": "call",
+                    "value": {
+                      "operation": {"value": "text.length"},
+                      "type_arguments": [],
+                      "arguments": [
+                        {
+                          "kind": "input",
+                          "value": {"binding": {"value": "configured_value"}, "path": {"segments": []}}
+                        }
+                      ]
+                    }
+                  },
+                  {"kind": "literal", "value": {"kind": "integer", "value": "0"}}
+                ]
+              }
+            }
+          ]
+        }
+      },
+      "diagnostic": {
+        "code": "blank_title",
+        "message": "Title is blank.",
+        "severity": "error",
+        "targets": [
+          {"segments": [{"kind": "field", "value": {"name": "subtitle"}}]},
+          {"segments": [{"kind": "field", "value": {"name": "title"}}]},
+          {"segments": [{"kind": "field", "value": {"name": "subtitle"}}]}
+        ]
+      },
+      "expected": [
+        {
+          "subject": "book_1.title",
+          "outcome": "finished",
+          "findings": [
+            {
+              "code": "blank_title",
+              "message": "Title is blank.",
+              "severity": "error",
+              "primary": "book_1.subtitle",
+              "related": ["book_1.title"]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "target_below_null_is_dropped",
+      "value": {"record": {"author": {"null": true}, "title": {"string": ""}}},
+      "owner": "book_1",
+      "recipe": {"segments": [{"kind": "field", "value": {"name": "title"}}]},
+      "predicate": {
+        "kind": "call",
+        "value": {
+          "operation": {"value": "boolean.not"},
+          "type_arguments": [],
+          "arguments": [
+            {
+              "kind": "call",
+              "value": {
+                "operation": {"value": "value.equals"},
+                "type_arguments": [],
+                "arguments": [
+                  {
+                    "kind": "call",
+                    "value": {
+                      "operation": {"value": "text.length"},
+                      "type_arguments": [],
+                      "arguments": [
+                        {
+                          "kind": "input",
+                          "value": {"binding": {"value": "configured_value"}, "path": {"segments": []}}
+                        }
+                      ]
+                    }
+                  },
+                  {"kind": "literal", "value": {"kind": "integer", "value": "0"}}
+                ]
+              }
+            }
+          ]
+        }
+      },
+      "diagnostic": {
+        "code": "blank_title",
+        "message": "Title is blank.",
+        "severity": "error",
+        "targets": [
+          {
+            "segments": [{"kind": "field", "value": {"name": "author"}}, {"kind": "field", "value": {"name": "name"}}]
+          },
+          {"segments": [{"kind": "field", "value": {"name": "title"}}]}
+        ]
+      },
+      "expected": [
+        {
+          "subject": "book_1.title",
+          "outcome": "finished",
+          "findings": [
+            {
+              "code": "blank_title",
+              "message": "Title is blank.",
+              "severity": "error",
+              "primary": "book_1.title",
+              "related": []
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
