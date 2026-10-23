@@ -544,9 +544,10 @@ final _interactionGallery = skir.PresentationNode(
           name: "unavailable_label",
         ),
         icon: textLiteral("material-symbols:edit"),
+        // A field the quest does not have: the label is missing data.
         label: skir.ExpressionNode.createInput(
-          binding: skir.ExpressionBindingId(value: "missing_header_value"),
-          path: skir.ValuePath(segments: const []),
+          binding: _interactionRoot,
+          path: editorRootPath.field("missing_header_value"),
         ),
         tooltip: null,
         action: skir.EditorAction.wrapLocal(
