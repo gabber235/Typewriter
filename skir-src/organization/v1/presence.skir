@@ -1,8 +1,8 @@
 // Presence is an ephemeral panel collaboration signal. It is not durable organization state and has no snapshot or recovery method.
 // Panels publish active heartbeats with a session sequence and publish left when a session closes. Consumers may expire stale sessions when heartbeats stop.
 
-import { ResourceId } from "editor/v1/type_catalog.skir";
 import { RecordId } from "kernel/v1/record_id.skir";
+import { ResourceId } from "kernel/v1/resource_id.skir";
 
 struct OrganizationPresence(812400001) {}
 

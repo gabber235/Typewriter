@@ -4,7 +4,7 @@ import skirout.editor.v1.authoring_facts.EditExpectation
 import skirout.editor.v1.authoring_facts.LinkProjection
 import skirout.editor.v1.authoring_facts.TraversalDirection
 import skirout.editor.v1.type_catalog.RelationId
-import skirout.editor.v1.type_catalog.ResourceId
+import skirout.kernel.v1.resource_id.ResourceId
 
 /*
  * Edit expectations are the generated Skir EditExpectation: facts from the original read view that must still hold

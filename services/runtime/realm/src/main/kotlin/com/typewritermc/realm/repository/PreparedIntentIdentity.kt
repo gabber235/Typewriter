@@ -13,9 +13,9 @@ import skirout.editor.v1.type_catalog.DataValue
 import skirout.editor.v1.type_catalog.ItemId
 import skirout.editor.v1.type_catalog.ListItem
 import skirout.editor.v1.type_catalog.NamedTypeUse
-import skirout.editor.v1.type_catalog.ResourceId
 import skirout.editor.v1.type_catalog.TypeSelection
 import skirout.editor.v1.type_catalog.ValueLocation
+import skirout.kernel.v1.resource_id.ResourceId
 import build.skir.Serializer as SkirSerializer
 
 /** Derives stable counterpart item identities from intent without retaining operation history. */

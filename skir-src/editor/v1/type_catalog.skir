@@ -4,6 +4,7 @@
 // stable collection identities, and unfinished input independently of native runtime objects.
 
 import { Duration } from "kernel/v1/duration.skir";
+import { ResourceId } from "kernel/v1/resource_id.skir";
 
 struct DeclaredTypeId(810100001) {
   value: string = 0;
@@ -149,57 +150,54 @@ struct TypeDefinition(810100030) {
   parents: [NamedTypeTemplate] = 3;
 }
 
-struct ResourceId(810100031) {
-  value: string = 0;
-}
 /// Stable authored collection occurrence identity. Reordering preserves it; equal values can
 /// still occupy different list positions or map rows with different identities.
-struct ItemId(810100032) {
+struct ItemId(810100031) {
   value: string = 0;
 }
 /// Targets an authored resource and optionally the exact inverse value location.
 /// An absent opposite path allows a relation authored on only one side.
-struct LinkTarget(810100033) {
+struct LinkTarget(810100032) {
   resource: ResourceId = 0;
   opposite: ValuePath? = 1;
 }
-struct LinkValue(810100034) {
+struct LinkValue(810100033) {
   endpoint: EndpointId = 0;
   target: LinkTarget = 1;
 }
-struct FieldValue(810100035) {
+struct FieldValue(810100034) {
   name: string = 0;
   value: DataValue = 1;
 }
-struct RecordPayload(810100036) {
+struct RecordPayload(810100035) {
   fields: [FieldValue|name] = 0;
 }
-struct NamedValue(810100037) {
+struct NamedValue(810100036) {
   actual_type: NamedTypeUse = 0;
   payload: DataValue = 1;
 }
-struct ListItem(810100038) {
+struct ListItem(810100037) {
   id: ItemId = 0;
   value: DataValue = 1;
 }
-struct ListPayload(810100039) {
+struct ListPayload(810100038) {
   items: [ListItem] = 0;
 }
-struct MapRow(810100040) {
+struct MapRow(810100039) {
   id: ItemId = 0;
   key: DataValue = 1;
   value: DataValue = 2;
 }
-struct MapPayload(810100041) {
+struct MapPayload(810100040) {
   rows: [MapRow] = 0;
 }
-struct DurationValue(810100042) {
+struct DurationValue(810100041) {
   value: Duration = 0;
 }
 /// Portable authored content. unfilled means input is unfinished, while null is an explicit
 /// nullable value. Named wrappers retain concrete type evidence; collection item identities
 /// are independent of value equality. Schema and completeness checks apply separately.
-enum DataValue(810100043) {
+enum DataValue(810100042) {
   unfilled = 1;
   null = 2;
   unit = 3;
@@ -220,83 +218,83 @@ enum DataValue(810100043) {
   link: LinkValue = 18;
 }
 
-enum ArgumentSelection(810100044) {
+enum ArgumentSelection(810100043) {
   chosen: TypeUse = 1;
   unfilled = 2;
 }
-struct PendingTypeSelection(810100045) {
+struct PendingTypeSelection(810100044) {
   definition: TypeDefinitionId = 0;
   arguments: [ArgumentSelection] = 1;
 }
 /// A resource configuration can retain unfinished generic arguments without inventing a closed type.
 /// Partial schema resolution exposes known fields while dependent fields await those arguments.
-enum TypeSelection(810100046) {
+enum TypeSelection(810100045) {
   complete: NamedTypeUse = 1;
   pending: PendingTypeSelection = 2;
 }
 /// Canonical authored configuration and fields for one resource, before native construction.
 /// It can be structurally valid while containing unfinished input that blocks publication.
-struct AuthoringRecord(810100047) {
+struct AuthoringRecord(810100046) {
   configuration: TypeSelection = 0;
   fields: [FieldValue|name] = 1;
 }
 
-struct PresentationId(810100048) {
+struct PresentationId(810100047) {
   namespace: string = 0;
   name: string = 1;
 }
-struct ConversionId(810100049) {
+struct ConversionId(810100048) {
   namespace: string = 0;
   name: string = 1;
 }
-struct CapabilityId(810100050) {
+struct CapabilityId(810100049) {
   value: string = 0;
 }
 /// Opaque identity for one assembled catalog incarnation. Compare for equality, not ordering;
 /// resource observations and publication identities have separate lifecycles.
-struct CatalogGeneration(810100051) {
+struct CatalogGeneration(810100050) {
   value: string = 0;
 }
-struct InputToken(810100052) {
+struct InputToken(810100051) {
   value: string = 0;
 }
-struct ExpressionBindingId(810100053) {
+struct ExpressionBindingId(810100052) {
   value: string = 0;
 }
-struct RuleOrigin(810100054) {
+struct RuleOrigin(810100053) {
   owner: TypeDefinitionId = 0;
   ordinal: int32 = 1;
 }
-struct RuleId(810100055) {
+struct RuleId(810100054) {
   origin: RuleOrigin = 0;
   local_index: int32 = 1;
 }
 
 /// Exact path within one resource or bound value. Collection segments use stable item identity,
 /// and map_key or map_value selects a branch after the map row item segment.
-struct ValuePath(810100056) {
+struct ValuePath(810100055) {
   segments: [PathSegment] = 0;
 }
-struct FieldPathSegment(810100057) {
+struct FieldPathSegment(810100056) {
   name: string = 0;
 }
-struct ItemPathSegment(810100058) {
+struct ItemPathSegment(810100057) {
   id: ItemId = 0;
 }
-enum PathSegment(810100059) {
+enum PathSegment(810100058) {
   field: FieldPathSegment = 1;
   item: ItemPathSegment = 2;
   map_key = 3;
   map_value = 4;
 }
-struct ValueLocation(810100060) {
+struct ValueLocation(810100059) {
   resource: ResourceId = 0;
   path: ValuePath = 1;
 }
-struct NamedFieldPatternSegment(810100061) {
+struct NamedFieldPatternSegment(810100060) {
   name: string = 0;
 }
-enum FieldPatternSegment(810100062) {
+enum FieldPatternSegment(810100061) {
   field: NamedFieldPatternSegment = 1;
   items = 2;
   keys = 3;
@@ -304,57 +302,57 @@ enum FieldPatternSegment(810100062) {
 }
 /// Schema pattern expanded against an owning occurrence. Collection wildcards describe many
 /// concrete value paths and do not themselves identify an editable item.
-struct RelativeFieldPattern(810100063) {
+struct RelativeFieldPattern(810100062) {
   segments: [FieldPatternSegment] = 0;
 }
-struct NativeBindingId(810100064) {
+struct NativeBindingId(810100063) {
   value: string = 0;
 }
-struct CheckExecutionId(810100065) {
+struct CheckExecutionId(810100064) {
   value: string = 0;
 }
-struct DiagnosticId(810100066) {
+struct DiagnosticId(810100065) {
   value: string = 0;
 }
-struct SelectionId(810100067) {
+struct SelectionId(810100066) {
   value: string = 0;
 }
-struct PublicationId(810100068) {
+struct PublicationId(810100067) {
   value: string = 0;
 }
-struct CanonicalValueHash(810100069) {
+struct CanonicalValueHash(810100068) {
   value: string = 0;
 }
-struct RelationId(810100070) {
+struct RelationId(810100069) {
   value: string = 0;
 }
-struct RelationFamilyId(810100071) {
+struct RelationFamilyId(810100070) {
   value: string = 0;
 }
 
-struct ScalarResolvedRepresentation(810100072) {
+struct ScalarResolvedRepresentation(810100071) {
   kind: ScalarKind = 0;
 }
-struct RecordResolvedRepresentation(810100073) {
+struct RecordResolvedRepresentation(810100072) {
   fields: [ResolvedField|key] = 0;
   abstract: bool = 1;
 }
-struct SequenceResolvedRepresentation(810100074) {
+struct SequenceResolvedRepresentation(810100073) {
   item: TypeUse = 0;
   kind: CollectionKind = 1;
 }
-struct MappingResolvedRepresentation(810100075) {
+struct MappingResolvedRepresentation(810100074) {
   key: TypeUse = 0;
   value: TypeUse = 1;
 }
-struct EnumerationResolvedRepresentation(810100076) {
+struct EnumerationResolvedRepresentation(810100075) {
   cases: [EnumVariant|key] = 0;
 }
-struct LinkResolvedRepresentation(810100077) {
+struct LinkResolvedRepresentation(810100076) {
   endpoint: EndpointId = 0;
   target: TypeUse = 1;
 }
-enum ResolvedRepresentation(810100078) {
+enum ResolvedRepresentation(810100077) {
   scalar: ScalarResolvedRepresentation = 1;
   record: RecordResolvedRepresentation = 2;
   sequence: SequenceResolvedRepresentation = 3;
@@ -362,13 +360,13 @@ enum ResolvedRepresentation(810100078) {
   enumeration: EnumerationResolvedRepresentation = 5;
   link: LinkResolvedRepresentation = 6;
 }
-struct ResolvedField(810100079) {
+struct ResolvedField(810100078) {
   key: string = 0;
   declaration_owner: TypeDefinitionId = 1;
   type: TypeUse = 2;
   guarantees: [RuleId] = 3;
 }
-struct AppliedSchema(810100080) {
+struct AppliedSchema(810100079) {
   use: TypeUse = 0;
   representation: ResolvedRepresentation = 1;
   fields: [ResolvedField|key] = 2;
@@ -376,48 +374,48 @@ struct AppliedSchema(810100080) {
 }
 /// Applied type evidence bound to a specific checked catalog generation.
 /// A resolved schema is separate from proving that a particular authored value is complete.
-struct CheckedType(810100081) {
+struct CheckedType(810100080) {
   catalog: CatalogGeneration = 0;
   use: TypeUse = 1;
   schema: AppliedSchema = 2;
 }
-struct ArgumentLocation(810100082) {
+struct ArgumentLocation(810100081) {
   index: int32 = 0;
 }
-struct DependentField(810100083) {
+struct DependentField(810100082) {
   owner: FieldOwner = 0;
   type: TypeTemplate = 1;
   missing: [ParameterKey] = 2;
 }
-struct PartialSchema(810100084) {
+struct PartialSchema(810100083) {
   known_fields: [ResolvedField|key] = 0;
   dependent_fields: [DependentField] = 1;
   pending_arguments: [ArgumentLocation] = 2;
 }
 
-struct ContributionSourceId(810100085) {
+struct ContributionSourceId(810100084) {
   value: string = 0;
 }
-struct ProducerId(810100086) {
+struct ProducerId(810100085) {
   value: string = 0;
 }
-struct ContributionName(810100087) {
+struct ContributionName(810100086) {
   value: string = 0;
 }
-struct ContributionKey(810100088) {
+struct ContributionKey(810100087) {
   source: ContributionSourceId = 0;
   source_part: string = 1;
   producer: ProducerId = 2;
   name: ContributionName = 3;
 }
-struct DeclarationOwner(810100089) {
+struct DeclarationOwner(810100088) {
   source: ContributionKey = 0;
   local_identity: string = 1;
 }
 
 /// Which resources a display or operation applies to: every application of one type template,
 /// or every resource when nothing more specific is declared.
-enum ResourceTarget(810100090) {
+enum ResourceTarget(810100089) {
   type: TypeTemplate = 1;
   any_resource = 2;
 }

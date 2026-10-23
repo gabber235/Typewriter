@@ -17,3 +17,4 @@ pub mod duration;
 pub mod errors;
 pub mod icon;
 pub mod record_id;
+pub mod resource_id;

@@ -15,6 +15,7 @@ import "dart:core" as _core;
 
 import "package:skir_client/skir_client.dart" as _skir;
 
+import "../../kernel/v1/resource_id.dart" as _lib_kernel_v1_resource_id;
 import "./type_catalog.dart" as _lib_editor_v1_type_catalog;
 
 // -----------------------------------------------------------------------------
@@ -23,8 +24,8 @@ import "./type_catalog.dart" as _lib_editor_v1_type_catalog;
 
 sealed class LinkProjection_orMutable {
   _lib_editor_v1_type_catalog.RelationId_orMutable get contract;
-  _lib_editor_v1_type_catalog.ResourceId_orMutable get first;
-  _lib_editor_v1_type_catalog.ResourceId_orMutable get second;
+  _lib_kernel_v1_resource_id.ResourceId_orMutable get first;
+  _lib_kernel_v1_resource_id.ResourceId_orMutable get second;
   _lib_editor_v1_type_catalog.ValuePath_orMutable? get firstLocation;
   _lib_editor_v1_type_catalog.ValuePath_orMutable? get secondLocation;
 
@@ -39,9 +40,9 @@ final class LinkProjection implements LinkProjection_orMutable {
   @_core.override
   final _lib_editor_v1_type_catalog.RelationId contract;
   @_core.override
-  final _lib_editor_v1_type_catalog.ResourceId first;
+  final _lib_kernel_v1_resource_id.ResourceId first;
   @_core.override
-  final _lib_editor_v1_type_catalog.ResourceId second;
+  final _lib_kernel_v1_resource_id.ResourceId second;
   @_core.override
   final _lib_editor_v1_type_catalog.ValuePath? firstLocation;
   @_core.override
@@ -50,8 +51,8 @@ final class LinkProjection implements LinkProjection_orMutable {
 
   factory LinkProjection({
     required _lib_editor_v1_type_catalog.RelationId_orMutable contract,
-    required _lib_editor_v1_type_catalog.ResourceId_orMutable first,
-    required _lib_editor_v1_type_catalog.ResourceId_orMutable second,
+    required _lib_kernel_v1_resource_id.ResourceId_orMutable first,
+    required _lib_kernel_v1_resource_id.ResourceId_orMutable second,
     required _lib_editor_v1_type_catalog.ValuePath_orMutable? firstLocation,
     required _lib_editor_v1_type_catalog.ValuePath_orMutable? secondLocation,
   }) => LinkProjection._(
@@ -73,8 +74,8 @@ final class LinkProjection implements LinkProjection_orMutable {
   /// Default instance with all fields set to their default values.
   static final defaultInstance = LinkProjection._(
     _lib_editor_v1_type_catalog.RelationId.defaultInstance,
-    _lib_editor_v1_type_catalog.ResourceId.defaultInstance,
-    _lib_editor_v1_type_catalog.ResourceId.defaultInstance,
+    _lib_kernel_v1_resource_id.ResourceId.defaultInstance,
+    _lib_kernel_v1_resource_id.ResourceId.defaultInstance,
     null,
     null,
   );
@@ -83,8 +84,8 @@ final class LinkProjection implements LinkProjection_orMutable {
   /// Fields are initialized to their default values.
   static LinkProjection_mutable mutable() => LinkProjection_mutable._(
     _lib_editor_v1_type_catalog.RelationId.defaultInstance,
-    _lib_editor_v1_type_catalog.ResourceId.defaultInstance,
-    _lib_editor_v1_type_catalog.ResourceId.defaultInstance,
+    _lib_kernel_v1_resource_id.ResourceId.defaultInstance,
+    _lib_kernel_v1_resource_id.ResourceId.defaultInstance,
     null,
     null,
   );
@@ -144,7 +145,7 @@ final class LinkProjection implements LinkProjection_orMutable {
         "first",
         "first",
         1,
-        _lib_editor_v1_type_catalog.ResourceId.serializer,
+        _lib_kernel_v1_resource_id.ResourceId.serializer,
         "",
         (it) => it.first,
         (it, v) => it.first = v,
@@ -153,7 +154,7 @@ final class LinkProjection implements LinkProjection_orMutable {
         "second",
         "second",
         2,
-        _lib_editor_v1_type_catalog.ResourceId.serializer,
+        _lib_kernel_v1_resource_id.ResourceId.serializer,
         "",
         (it) => it.second,
         (it, v) => it.second = v,
@@ -199,8 +200,8 @@ final class LinkProjection implements LinkProjection_orMutable {
 /// Mutable version of [LinkProjection].
 final class LinkProjection_mutable implements LinkProjection_orMutable {
   _lib_editor_v1_type_catalog.RelationId_orMutable contract;
-  _lib_editor_v1_type_catalog.ResourceId_orMutable first;
-  _lib_editor_v1_type_catalog.ResourceId_orMutable second;
+  _lib_kernel_v1_resource_id.ResourceId_orMutable first;
+  _lib_kernel_v1_resource_id.ResourceId_orMutable second;
   _lib_editor_v1_type_catalog.ValuePath_orMutable? firstLocation;
   _lib_editor_v1_type_catalog.ValuePath_orMutable? secondLocation;
   _skir.internal__UnrecognizedFields? _u;
@@ -227,24 +228,24 @@ final class LinkProjection_mutable implements LinkProjection_orMutable {
 
   /// If the value of [first] is already mutable, returns it as-is.
   /// Otherwise, makes a mutable copy, assigns it back to [first] and returns it.
-  _lib_editor_v1_type_catalog.ResourceId_mutable get mutableFirst {
+  _lib_kernel_v1_resource_id.ResourceId_mutable get mutableFirst {
     final value = this.first;
-    if (value is _lib_editor_v1_type_catalog.ResourceId_mutable) {
+    if (value is _lib_kernel_v1_resource_id.ResourceId_mutable) {
       return value;
     } else {
-      return this.first = (value as _lib_editor_v1_type_catalog.ResourceId)
+      return this.first = (value as _lib_kernel_v1_resource_id.ResourceId)
           .toMutable();
     }
   }
 
   /// If the value of [second] is already mutable, returns it as-is.
   /// Otherwise, makes a mutable copy, assigns it back to [second] and returns it.
-  _lib_editor_v1_type_catalog.ResourceId_mutable get mutableSecond {
+  _lib_kernel_v1_resource_id.ResourceId_mutable get mutableSecond {
     final value = this.second;
-    if (value is _lib_editor_v1_type_catalog.ResourceId_mutable) {
+    if (value is _lib_kernel_v1_resource_id.ResourceId_mutable) {
       return value;
     } else {
-      return this.second = (value as _lib_editor_v1_type_catalog.ResourceId)
+      return this.second = (value as _lib_kernel_v1_resource_id.ResourceId)
           .toMutable();
     }
   }
@@ -511,7 +512,7 @@ final class EditExpectation_Value_mutable
 // -----------------------------------------------------------------------------
 
 sealed class EditExpectation_Resource_orMutable {
-  _lib_editor_v1_type_catalog.ResourceId_orMutable get id;
+  _lib_kernel_v1_resource_id.ResourceId_orMutable get id;
   _lib_editor_v1_type_catalog.AuthoringRecord_orMutable? get expected;
 
   EditExpectation_Resource toFrozen();
@@ -521,13 +522,13 @@ sealed class EditExpectation_Resource_orMutable {
 final class EditExpectation_Resource
     implements EditExpectation_Resource_orMutable {
   @_core.override
-  final _lib_editor_v1_type_catalog.ResourceId id;
+  final _lib_kernel_v1_resource_id.ResourceId id;
   @_core.override
   final _lib_editor_v1_type_catalog.AuthoringRecord? expected;
   _skir.internal__UnrecognizedFields? _u;
 
   factory EditExpectation_Resource({
-    required _lib_editor_v1_type_catalog.ResourceId_orMutable id,
+    required _lib_kernel_v1_resource_id.ResourceId_orMutable id,
     required _lib_editor_v1_type_catalog.AuthoringRecord_orMutable? expected,
   }) => EditExpectation_Resource._(
     id.toFrozen(),
@@ -538,7 +539,7 @@ final class EditExpectation_Resource
 
   /// Default instance with all fields set to their default values.
   static final defaultInstance = EditExpectation_Resource._(
-    _lib_editor_v1_type_catalog.ResourceId.defaultInstance,
+    _lib_kernel_v1_resource_id.ResourceId.defaultInstance,
     null,
   );
 
@@ -546,7 +547,7 @@ final class EditExpectation_Resource
   /// Fields are initialized to their default values.
   static EditExpectation_Resource_mutable mutable() =>
       EditExpectation_Resource_mutable._(
-        _lib_editor_v1_type_catalog.ResourceId.defaultInstance,
+        _lib_kernel_v1_resource_id.ResourceId.defaultInstance,
         null,
       );
 
@@ -588,7 +589,7 @@ final class EditExpectation_Resource
         "id",
         "id",
         0,
-        _lib_editor_v1_type_catalog.ResourceId.serializer,
+        _lib_kernel_v1_resource_id.ResourceId.serializer,
         "",
         (it) => it.id,
         (it, v) => it.id = v,
@@ -623,7 +624,7 @@ final class EditExpectation_Resource
 /// Mutable version of [EditExpectation_Resource].
 final class EditExpectation_Resource_mutable
     implements EditExpectation_Resource_orMutable {
-  _lib_editor_v1_type_catalog.ResourceId_orMutable id;
+  _lib_kernel_v1_resource_id.ResourceId_orMutable id;
   _lib_editor_v1_type_catalog.AuthoringRecord_orMutable? expected;
   _skir.internal__UnrecognizedFields? _u;
 
@@ -631,12 +632,12 @@ final class EditExpectation_Resource_mutable
 
   /// If the value of [id] is already mutable, returns it as-is.
   /// Otherwise, makes a mutable copy, assigns it back to [id] and returns it.
-  _lib_editor_v1_type_catalog.ResourceId_mutable get mutableId {
+  _lib_kernel_v1_resource_id.ResourceId_mutable get mutableId {
     final value = this.id;
-    if (value is _lib_editor_v1_type_catalog.ResourceId_mutable) {
+    if (value is _lib_kernel_v1_resource_id.ResourceId_mutable) {
       return value;
     } else {
-      return this.id = (value as _lib_editor_v1_type_catalog.ResourceId)
+      return this.id = (value as _lib_kernel_v1_resource_id.ResourceId)
           .toMutable();
     }
   }
@@ -653,7 +654,7 @@ final class EditExpectation_Resource_mutable
 // -----------------------------------------------------------------------------
 
 sealed class EditExpectation_ResourceExists_orMutable {
-  _lib_editor_v1_type_catalog.ResourceId_orMutable get id;
+  _lib_kernel_v1_resource_id.ResourceId_orMutable get id;
   _core.bool get expected;
 
   EditExpectation_ResourceExists toFrozen();
@@ -663,13 +664,13 @@ sealed class EditExpectation_ResourceExists_orMutable {
 final class EditExpectation_ResourceExists
     implements EditExpectation_ResourceExists_orMutable {
   @_core.override
-  final _lib_editor_v1_type_catalog.ResourceId id;
+  final _lib_kernel_v1_resource_id.ResourceId id;
   @_core.override
   final _core.bool expected;
   _skir.internal__UnrecognizedFields? _u;
 
   factory EditExpectation_ResourceExists({
-    required _lib_editor_v1_type_catalog.ResourceId_orMutable id,
+    required _lib_kernel_v1_resource_id.ResourceId_orMutable id,
     required _core.bool expected,
   }) => EditExpectation_ResourceExists._(id.toFrozen(), expected);
 
@@ -677,7 +678,7 @@ final class EditExpectation_ResourceExists
 
   /// Default instance with all fields set to their default values.
   static final defaultInstance = EditExpectation_ResourceExists._(
-    _lib_editor_v1_type_catalog.ResourceId.defaultInstance,
+    _lib_kernel_v1_resource_id.ResourceId.defaultInstance,
     false,
   );
 
@@ -685,7 +686,7 @@ final class EditExpectation_ResourceExists
   /// Fields are initialized to their default values.
   static EditExpectation_ResourceExists_mutable mutable() =>
       EditExpectation_ResourceExists_mutable._(
-        _lib_editor_v1_type_catalog.ResourceId.defaultInstance,
+        _lib_kernel_v1_resource_id.ResourceId.defaultInstance,
         false,
       );
 
@@ -727,7 +728,7 @@ final class EditExpectation_ResourceExists
         "id",
         "id",
         0,
-        _lib_editor_v1_type_catalog.ResourceId.serializer,
+        _lib_kernel_v1_resource_id.ResourceId.serializer,
         "",
         (it) => it.id,
         (it, v) => it.id = v,
@@ -760,7 +761,7 @@ final class EditExpectation_ResourceExists
 /// Mutable version of [EditExpectation_ResourceExists].
 final class EditExpectation_ResourceExists_mutable
     implements EditExpectation_ResourceExists_orMutable {
-  _lib_editor_v1_type_catalog.ResourceId_orMutable id;
+  _lib_kernel_v1_resource_id.ResourceId_orMutable id;
   _core.bool expected;
   _skir.internal__UnrecognizedFields? _u;
 
@@ -768,12 +769,12 @@ final class EditExpectation_ResourceExists_mutable
 
   /// If the value of [id] is already mutable, returns it as-is.
   /// Otherwise, makes a mutable copy, assigns it back to [id] and returns it.
-  _lib_editor_v1_type_catalog.ResourceId_mutable get mutableId {
+  _lib_kernel_v1_resource_id.ResourceId_mutable get mutableId {
     final value = this.id;
-    if (value is _lib_editor_v1_type_catalog.ResourceId_mutable) {
+    if (value is _lib_kernel_v1_resource_id.ResourceId_mutable) {
       return value;
     } else {
-      return this.id = (value as _lib_editor_v1_type_catalog.ResourceId)
+      return this.id = (value as _lib_kernel_v1_resource_id.ResourceId)
           .toMutable();
     }
   }
@@ -929,7 +930,7 @@ final class EditExpectation_Configuration_mutable
 // -----------------------------------------------------------------------------
 
 sealed class EditExpectation_Links_orMutable {
-  _lib_editor_v1_type_catalog.ResourceId_orMutable get resource;
+  _lib_kernel_v1_resource_id.ResourceId_orMutable get resource;
   _lib_editor_v1_type_catalog.RelationId_orMutable get contract;
   TraversalDirection get direction;
   _core.Iterable<LinkProjection_orMutable> get expected;
@@ -940,7 +941,7 @@ sealed class EditExpectation_Links_orMutable {
 /// Deeply immutable.
 final class EditExpectation_Links implements EditExpectation_Links_orMutable {
   @_core.override
-  final _lib_editor_v1_type_catalog.ResourceId resource;
+  final _lib_kernel_v1_resource_id.ResourceId resource;
   @_core.override
   final _lib_editor_v1_type_catalog.RelationId contract;
   @_core.override
@@ -950,7 +951,7 @@ final class EditExpectation_Links implements EditExpectation_Links_orMutable {
   _skir.internal__UnrecognizedFields? _u;
 
   factory EditExpectation_Links({
-    required _lib_editor_v1_type_catalog.ResourceId_orMutable resource,
+    required _lib_kernel_v1_resource_id.ResourceId_orMutable resource,
     required _lib_editor_v1_type_catalog.RelationId_orMutable contract,
     required TraversalDirection direction,
     required _core.Iterable<LinkProjection_orMutable> expected,
@@ -970,7 +971,7 @@ final class EditExpectation_Links implements EditExpectation_Links_orMutable {
 
   /// Default instance with all fields set to their default values.
   static final defaultInstance = EditExpectation_Links._(
-    _lib_editor_v1_type_catalog.ResourceId.defaultInstance,
+    _lib_kernel_v1_resource_id.ResourceId.defaultInstance,
     _lib_editor_v1_type_catalog.RelationId.defaultInstance,
     TraversalDirection.unknown,
     _skir.KeyedIterable.empty,
@@ -980,7 +981,7 @@ final class EditExpectation_Links implements EditExpectation_Links_orMutable {
   /// Fields are initialized to their default values.
   static EditExpectation_Links_mutable mutable() =>
       EditExpectation_Links_mutable._(
-        _lib_editor_v1_type_catalog.ResourceId.defaultInstance,
+        _lib_kernel_v1_resource_id.ResourceId.defaultInstance,
         _lib_editor_v1_type_catalog.RelationId.defaultInstance,
         TraversalDirection.unknown,
         _skir.KeyedIterable.empty,
@@ -1033,7 +1034,7 @@ final class EditExpectation_Links implements EditExpectation_Links_orMutable {
         "resource",
         "resource",
         0,
-        _lib_editor_v1_type_catalog.ResourceId.serializer,
+        _lib_kernel_v1_resource_id.ResourceId.serializer,
         "",
         (it) => it.resource,
         (it, v) => it.resource = v,
@@ -1084,7 +1085,7 @@ final class EditExpectation_Links implements EditExpectation_Links_orMutable {
 /// Mutable version of [EditExpectation_Links].
 final class EditExpectation_Links_mutable
     implements EditExpectation_Links_orMutable {
-  _lib_editor_v1_type_catalog.ResourceId_orMutable resource;
+  _lib_kernel_v1_resource_id.ResourceId_orMutable resource;
   _lib_editor_v1_type_catalog.RelationId_orMutable contract;
   TraversalDirection direction;
   _core.Iterable<LinkProjection_orMutable> expected;
@@ -1099,12 +1100,12 @@ final class EditExpectation_Links_mutable
 
   /// If the value of [resource] is already mutable, returns it as-is.
   /// Otherwise, makes a mutable copy, assigns it back to [resource] and returns it.
-  _lib_editor_v1_type_catalog.ResourceId_mutable get mutableResource {
+  _lib_kernel_v1_resource_id.ResourceId_mutable get mutableResource {
     final value = this.resource;
-    if (value is _lib_editor_v1_type_catalog.ResourceId_mutable) {
+    if (value is _lib_kernel_v1_resource_id.ResourceId_mutable) {
       return value;
     } else {
-      return this.resource = (value as _lib_editor_v1_type_catalog.ResourceId)
+      return this.resource = (value as _lib_kernel_v1_resource_id.ResourceId)
           .toMutable();
     }
   }
@@ -1186,7 +1187,7 @@ sealed class EditExpectation {
 
   /// Same as `wrapResource(EditExpectation_Resource(...))`.
   factory EditExpectation.createResource({
-    required _lib_editor_v1_type_catalog.ResourceId_orMutable id,
+    required _lib_kernel_v1_resource_id.ResourceId_orMutable id,
     required _lib_editor_v1_type_catalog.AuthoringRecord_orMutable? expected,
   }) => EditExpectation.wrapResource(
     EditExpectation_Resource(id: id, expected: expected),
@@ -1199,7 +1200,7 @@ sealed class EditExpectation {
 
   /// Same as `wrapResourceExists(EditExpectation_ResourceExists(...))`.
   factory EditExpectation.createResourceExists({
-    required _lib_editor_v1_type_catalog.ResourceId_orMutable id,
+    required _lib_kernel_v1_resource_id.ResourceId_orMutable id,
     required _core.bool expected,
   }) => EditExpectation.wrapResourceExists(
     EditExpectation_ResourceExists(id: id, expected: expected),
@@ -1220,7 +1221,7 @@ sealed class EditExpectation {
 
   /// Create a 'resource_ids' variant wrapping around the given value.
   factory EditExpectation.wrapResourceIds(
-    _core.Iterable<_lib_editor_v1_type_catalog.ResourceId> value,
+    _core.Iterable<_lib_kernel_v1_resource_id.ResourceId> value,
   ) => EditExpectation_resourceIdsWrapper._(value);
 
   /// Create a 'links' variant wrapping around the given value.
@@ -1229,7 +1230,7 @@ sealed class EditExpectation {
 
   /// Same as `wrapLinks(EditExpectation_Links(...))`.
   factory EditExpectation.createLinks({
-    required _lib_editor_v1_type_catalog.ResourceId_orMutable resource,
+    required _lib_kernel_v1_resource_id.ResourceId_orMutable resource,
     required _lib_editor_v1_type_catalog.RelationId_orMutable contract,
     required TraversalDirection direction,
     required _core.Iterable<LinkProjection_orMutable> expected,
@@ -1293,7 +1294,7 @@ sealed class EditExpectation {
         "resource_ids",
         "wrapResourceIds",
         _skir.Serializers.iterable(
-          _lib_editor_v1_type_catalog.ResourceId.serializer,
+          _lib_kernel_v1_resource_id.ResourceId.serializer,
         ),
         "",
         EditExpectation_resourceIdsWrapper._,
@@ -1418,7 +1419,7 @@ final class EditExpectation_configurationWrapper
 
 final class EditExpectation_resourceIdsWrapper
     extends _EditExpectation_wrapper {
-  final _core.Iterable<_lib_editor_v1_type_catalog.ResourceId> value;
+  final _core.Iterable<_lib_kernel_v1_resource_id.ResourceId> value;
 
   EditExpectation_resourceIdsWrapper._(this.value);
 

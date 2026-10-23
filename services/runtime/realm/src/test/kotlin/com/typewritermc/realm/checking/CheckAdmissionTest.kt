@@ -14,10 +14,10 @@ import skirout.editor.v1.checking.CheckResult
 import skirout.editor.v1.checking.CheckTicket
 import skirout.editor.v1.type_catalog.CheckExecutionId
 import skirout.editor.v1.type_catalog.DataValue
-import skirout.editor.v1.type_catalog.ResourceId
 import skirout.editor.v1.type_catalog.RuleId
 import skirout.editor.v1.type_catalog.RuleOrigin
 import skirout.editor.v1.type_catalog.ValueLocation
+import skirout.kernel.v1.resource_id.ResourceId
 
 val CheckAdmissionTest by testSuite {
     val id = ResourceId(value = "page")

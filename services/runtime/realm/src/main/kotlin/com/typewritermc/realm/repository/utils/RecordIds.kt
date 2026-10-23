@@ -2,7 +2,7 @@ package com.typewritermc.realm.repository.utils
 
 import com.surrealdb.RecordId
 import com.typewritermc.types.requireValid
-import skirout.editor.v1.type_catalog.ResourceId
+import skirout.kernel.v1.resource_id.ResourceId
 
 /** Maps the opaque authored identity onto the single canonical resource table. */
 internal fun ResourceId.surrealRecordId(): RecordId = RecordId("resource", value)

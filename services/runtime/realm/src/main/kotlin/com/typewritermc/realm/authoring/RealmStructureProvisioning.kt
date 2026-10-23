@@ -36,10 +36,10 @@ import skirout.editor.v1.catalog.ValuePreparationRequest
 import skirout.editor.v1.type_catalog.AuthoringRecord
 import skirout.editor.v1.type_catalog.DataValue
 import skirout.editor.v1.type_catalog.NamedTypeUse
-import skirout.editor.v1.type_catalog.ResourceId
 import skirout.editor.v1.type_catalog.TypeSelection
 import skirout.editor.v1.type_catalog.TypeUse
 import skirout.editor.v1.type_catalog.ValueLocation
+import skirout.kernel.v1.resource_id.ResourceId
 import java.util.UUID
 
 /**

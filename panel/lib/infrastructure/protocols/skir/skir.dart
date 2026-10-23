@@ -42,6 +42,7 @@ export "skirout/kernel/v1/duration.dart";
 export "skirout/kernel/v1/errors.dart";
 export "skirout/kernel/v1/icon.dart";
 export "skirout/kernel/v1/record_id.dart";
+export "skirout/kernel/v1/resource_id.dart";
 export "skirout/organization/v1/join_codes.dart";
 export "skirout/organization/v1/join_request.dart";
 export "skirout/organization/v1/member.dart";

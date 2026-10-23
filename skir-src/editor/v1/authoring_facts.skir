@@ -3,11 +3,11 @@
 // They are equality witnesses checked against saved state, rather than a global revision
 // or permission to write.
 
+import { ResourceId } from "kernel/v1/resource_id.skir";
 import {
   AuthoringRecord,
   DataValue,
   RelationId,
-  ResourceId,
   TypeSelection,
   ValueLocation,
   ValuePath,

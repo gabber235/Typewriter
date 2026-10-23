@@ -6,7 +6,7 @@ import com.typewritermc.realm.repository.utils.toResourceId
 import de.infix.testBalloon.framework.core.testSuite
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.matchers.shouldBe
-import skirout.editor.v1.type_catalog.ResourceId
+import skirout.kernel.v1.resource_id.ResourceId
 
 val ResourceRecordIdTest by testSuite {
     test("round trips opaque resource identities through the canonical table") {

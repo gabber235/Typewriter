@@ -6,6 +6,8 @@ import "package:typewriter_panel/infrastructure/protocols/skir/skirout/editor/v1
     as _lib_editor_v1_expression;
 import "package:typewriter_panel/infrastructure/protocols/skir/skirout/editor/v1/type_catalog.dart"
     as _lib_editor_v1_type_catalog;
+import "package:typewriter_panel/infrastructure/protocols/skir/skirout/kernel/v1/resource_id.dart"
+    as _lib_kernel_v1_resource_id;
 
 /// How number.round resolves a value between two multiples of its increment.
 enum RoundingMode {
@@ -1519,7 +1521,7 @@ abstract interface class IntegerKernel {
 /// The operations of group link. A kernel that misses a method does not analyze.
 abstract interface class LinkKernel {
   /// The identity of the resource the link names.
-  _lib_editor_v1_type_catalog.ResourceId target(
+  _lib_kernel_v1_resource_id.ResourceId target(
     _lib_editor_v1_type_catalog.LinkValue reference,
   );
 }
@@ -1713,13 +1715,13 @@ abstract interface class ResourceKernel {
   /// The type selection of a resource by identity. Reads the resource; missing at
   /// its root when there is none. Panel profile.
   PortableMaybe<_lib_editor_v1_type_catalog.DataValue> configuration(
-    _lib_editor_v1_type_catalog.ResourceId identity,
+    _lib_kernel_v1_resource_id.ResourceId identity,
     PortableResources resources,
   );
 
   /// The identity of the resource the link names. Reads the resource; missing at
   /// its root when the link is stale. Panel profile.
-  PortableMaybe<_lib_editor_v1_type_catalog.ResourceId> identity(
+  PortableMaybe<_lib_kernel_v1_resource_id.ResourceId> identity(
     _lib_editor_v1_type_catalog.LinkValue reference,
     PortableResources resources,
   );
@@ -1735,7 +1737,7 @@ abstract interface class ResourceKernel {
   /// configured type. Reads the resource; missing at its root when there is no
   /// such resource or it is not a T. Panel profile.
   PortableMaybe<_lib_editor_v1_type_catalog.DataValue> valueOf(
-    _lib_editor_v1_type_catalog.ResourceId identity,
+    _lib_kernel_v1_resource_id.ResourceId identity,
     _lib_editor_v1_type_catalog.TypeUse tType,
     PortableResources resources,
   );

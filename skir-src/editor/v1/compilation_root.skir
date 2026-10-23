@@ -1,4 +1,4 @@
-import { ResourceId } from "editor/v1/type_catalog.skir";
+import { ResourceId } from "kernel/v1/resource_id.skir";
 
 struct CompilationProjectionId(811100001) {
   value: string = 0;

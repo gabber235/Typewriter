@@ -1,7 +1,7 @@
 package com.typewritermc.expression.operations
 
 import skirout.editor.v1.type_catalog.LinkValue
-import skirout.editor.v1.type_catalog.ResourceId
+import skirout.kernel.v1.resource_id.ResourceId
 
 /** Realm's kernel of the link operations. */
 internal object PortableLinkKernel : LinkKernel {

@@ -17,12 +17,12 @@ import {
   ResolvedResourceOperations,
   ResourceOperationId,
 } from "editor/v1/operation.skir";
+import { ResourceId } from "kernel/v1/resource_id.skir";
 import {
   AuthoringRecord,
   CapabilityId,
   CatalogGeneration,
   DataValue,
-  ResourceId,
   ValuePath,
 } from "editor/v1/type_catalog.skir";
 import { InternalError } from "kernel/v1/errors.skir";

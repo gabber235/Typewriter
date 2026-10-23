@@ -131,7 +131,7 @@ class CompilationProjectionId private constructor(
 
 sealed interface CompilationRoot_OrMutable {
     val projection: skirout.editor.v1.compilation_root.CompilationProjectionId_OrMutable;
-    val resource: skirout.editor.v1.type_catalog.ResourceId_OrMutable;
+    val resource: skirout.kernel.v1.resource_id.ResourceId_OrMutable;
 
     fun toFrozen(): skirout.editor.v1.compilation_root.CompilationRoot;
 }
@@ -145,7 +145,7 @@ sealed interface CompilationRoot_OrMutable {
 @kotlin.Suppress("UNUSED_PARAMETER")
 class CompilationRoot private constructor(
     override val projection: skirout.editor.v1.compilation_root.CompilationProjectionId,
-    override val resource: skirout.editor.v1.type_catalog.ResourceId,
+    override val resource: skirout.kernel.v1.resource_id.ResourceId,
     internal val _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.compilation_root.CompilationRoot>? =
         null,
 ): skirout.editor.v1.compilation_root.CompilationRoot_OrMutable {
@@ -153,7 +153,7 @@ class CompilationRoot private constructor(
         _mustNameArguments: _MustNameArguments =
             _MustNameArguments,
         projection: skirout.editor.v1.compilation_root.CompilationProjectionId_OrMutable,
-        resource: skirout.editor.v1.type_catalog.ResourceId_OrMutable,
+        resource: skirout.kernel.v1.resource_id.ResourceId_OrMutable,
         _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.compilation_root.CompilationRoot>? =
             null,
     ): this(
@@ -177,7 +177,7 @@ class CompilationRoot private constructor(
             _MustNameArguments,
         projection: skirout.editor.v1.compilation_root.CompilationProjectionId_OrMutable =
             this.projection,
-        resource: skirout.editor.v1.type_catalog.ResourceId_OrMutable =
+        resource: skirout.kernel.v1.resource_id.ResourceId_OrMutable =
             this.resource,
     ) = skirout.editor.v1.compilation_root.CompilationRoot(
         projection.toFrozen(),
@@ -209,8 +209,8 @@ class CompilationRoot private constructor(
             _MustNameArguments,
         override var projection: skirout.editor.v1.compilation_root.CompilationProjectionId_OrMutable =
             skirout.editor.v1.compilation_root.CompilationProjectionId.partial(),
-        override var resource: skirout.editor.v1.type_catalog.ResourceId_OrMutable =
-            skirout.editor.v1.type_catalog.ResourceId.partial(),
+        override var resource: skirout.kernel.v1.resource_id.ResourceId_OrMutable =
+            skirout.kernel.v1.resource_id.ResourceId.partial(),
         internal var _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.compilation_root.CompilationRoot>? =
             null,
     ): skirout.editor.v1.compilation_root.CompilationRoot_OrMutable {
@@ -241,15 +241,15 @@ class CompilationRoot private constructor(
          * If the value of [resource] is already mutable, returns it as-is.
          * Otherwise, makes a mutable copy, assigns it back to [resource] and returns it.
          */
-        val mutableResource: skirout.editor.v1.type_catalog.ResourceId.Mutable get() {
+        val mutableResource: skirout.kernel.v1.resource_id.ResourceId.Mutable get() {
             var value = this.resource;
             return when (value) {
-                is skirout.editor.v1.type_catalog.ResourceId -> {
+                is skirout.kernel.v1.resource_id.ResourceId -> {
                     value = value.toMutable();
                     this.resource = value;
                     return value;
                 }
-                is skirout.editor.v1.type_catalog.ResourceId.Mutable -> value;
+                is skirout.kernel.v1.resource_id.ResourceId.Mutable -> value;
             }
         }
     }
@@ -258,7 +258,7 @@ class CompilationRoot private constructor(
         private val default =
             skirout.editor.v1.compilation_root.CompilationRoot(
                 skirout.editor.v1.compilation_root.CompilationProjectionId.partial(),
-                skirout.editor.v1.type_catalog.ResourceId.partial(),
+                skirout.kernel.v1.resource_id.ResourceId.partial(),
             );
 
         /** Returns an instance with all fields set to their default values. */
@@ -274,8 +274,8 @@ class CompilationRoot private constructor(
                 _MustNameArguments,
             projection: skirout.editor.v1.compilation_root.CompilationProjectionId_OrMutable =
                 skirout.editor.v1.compilation_root.CompilationProjectionId.partial(),
-            resource: skirout.editor.v1.type_catalog.ResourceId_OrMutable =
-                skirout.editor.v1.type_catalog.ResourceId.partial(),
+            resource: skirout.kernel.v1.resource_id.ResourceId_OrMutable =
+                skirout.kernel.v1.resource_id.ResourceId.partial(),
         ) = skirout.editor.v1.compilation_root.CompilationRoot(
             projection = projection,
             resource = resource,
@@ -340,7 +340,7 @@ private object _SerializerRegistry {
             "resource",
             "resource",
             1,
-            skirout.editor.v1.type_catalog.ResourceId.serializer,
+            skirout.kernel.v1.resource_id.ResourceId.serializer,
             "",
             { it.resource },
             { mut, v -> mut.resource = v },

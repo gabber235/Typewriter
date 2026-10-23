@@ -22,8 +22,8 @@
 #[derive(Clone, Debug, PartialEq, Default)]
 pub struct LinkProjection {
     pub contract: crate::skirout::base::editor::v1::type_catalog::RelationId,
-    pub first: crate::skirout::base::editor::v1::type_catalog::ResourceId,
-    pub second: crate::skirout::base::editor::v1::type_catalog::ResourceId,
+    pub first: crate::skirout::base::kernel::v1::resource_id::ResourceId,
+    pub second: crate::skirout::base::kernel::v1::resource_id::ResourceId,
     pub first_location: Option<crate::skirout::base::editor::v1::type_catalog::ValuePath>,
     pub second_location: Option<crate::skirout::base::editor::v1::type_catalog::ValuePath>,
     /// Set this to None when you're creating a struct.
@@ -156,7 +156,7 @@ impl EditExpectation_Value {
 
 #[derive(Clone, Debug, PartialEq, Default)]
 pub struct EditExpectation_Resource {
-    pub id: crate::skirout::base::editor::v1::type_catalog::ResourceId,
+    pub id: crate::skirout::base::kernel::v1::resource_id::ResourceId,
     pub expected: Option<crate::skirout::base::editor::v1::type_catalog::AuthoringRecord>,
     /// Set this to None when you're creating a struct.
     pub _unrecognized: Option<crate::skir_client::UnrecognizedFields<EditExpectation_Resource>>,
@@ -200,7 +200,7 @@ impl EditExpectation_Resource {
 
 #[derive(Clone, Debug, PartialEq, Default)]
 pub struct EditExpectation_ResourceExists {
-    pub id: crate::skirout::base::editor::v1::type_catalog::ResourceId,
+    pub id: crate::skirout::base::kernel::v1::resource_id::ResourceId,
     pub expected: bool,
     /// Set this to None when you're creating a struct.
     pub _unrecognized:
@@ -290,7 +290,7 @@ impl EditExpectation_Configuration {
 
 #[derive(Clone, Debug, PartialEq, Default)]
 pub struct EditExpectation_Links {
-    pub resource: crate::skirout::base::editor::v1::type_catalog::ResourceId,
+    pub resource: crate::skirout::base::kernel::v1::resource_id::ResourceId,
     pub contract: crate::skirout::base::editor::v1::type_catalog::RelationId,
     pub direction: TraversalDirection,
     pub expected: Vec<LinkProjection>,
@@ -342,7 +342,7 @@ pub enum EditExpectation {
     Resource(Box<EditExpectation_Resource>),
     ResourceExists(Box<EditExpectation_ResourceExists>),
     Configuration(Box<EditExpectation_Configuration>),
-    ResourceIds(Vec<crate::skirout::base::editor::v1::type_catalog::ResourceId>),
+    ResourceIds(Vec<crate::skirout::base::kernel::v1::resource_id::ResourceId>),
     Links(Box<EditExpectation_Links>),
 }
 
@@ -447,7 +447,7 @@ fn initialize_module_serializers() {
             (*a).add_field(
                 "first",
                 1,
-                crate::skirout::base::editor::v1::type_catalog::ResourceId::serializer(),
+                crate::skirout::base::kernel::v1::resource_id::ResourceId::serializer(),
                 "",
                 |x: &LinkProjection| &x.first,
                 |x: &mut LinkProjection, v| x.first = v,
@@ -455,7 +455,7 @@ fn initialize_module_serializers() {
             (*a).add_field(
                 "second",
                 2,
-                crate::skirout::base::editor::v1::type_catalog::ResourceId::serializer(),
+                crate::skirout::base::kernel::v1::resource_id::ResourceId::serializer(),
                 "",
                 |x: &LinkProjection| &x.second,
                 |x: &mut LinkProjection, v| x.second = v,
@@ -519,7 +519,7 @@ fn initialize_module_serializers() {
             (*a).add_field(
                 "id",
                 0,
-                crate::skirout::base::editor::v1::type_catalog::ResourceId::serializer(),
+                crate::skirout::base::kernel::v1::resource_id::ResourceId::serializer(),
                 "",
                 |x: &EditExpectation_Resource| &x.id,
                 |x: &mut EditExpectation_Resource, v| x.id = v,
@@ -543,7 +543,7 @@ fn initialize_module_serializers() {
             (*a).add_field(
                 "id",
                 0,
-                crate::skirout::base::editor::v1::type_catalog::ResourceId::serializer(),
+                crate::skirout::base::kernel::v1::resource_id::ResourceId::serializer(),
                 "",
                 |x: &EditExpectation_ResourceExists| &x.id,
                 |x: &mut EditExpectation_ResourceExists, v| x.id = v,
@@ -587,7 +587,7 @@ fn initialize_module_serializers() {
             (*a).add_field(
                 "resource",
                 0,
-                crate::skirout::base::editor::v1::type_catalog::ResourceId::serializer(),
+                crate::skirout::base::kernel::v1::resource_id::ResourceId::serializer(),
                 "",
                 |x: &EditExpectation_Links| &x.resource,
                 |x: &mut EditExpectation_Links, v| x.resource = v,
@@ -688,7 +688,7 @@ fn initialize_module_serializers() {
                 5,
                 5,
                 crate::skir_client::Serializer::array(
-                    crate::skirout::base::editor::v1::type_catalog::ResourceId::serializer(),
+                    crate::skirout::base::kernel::v1::resource_id::ResourceId::serializer(),
                 ),
                 "",
                 |v| EditExpectation::ResourceIds(v),

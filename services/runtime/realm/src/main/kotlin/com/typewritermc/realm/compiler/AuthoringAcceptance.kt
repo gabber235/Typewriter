@@ -47,11 +47,11 @@ import skirout.editor.v1.type_catalog.DiagnosticId
 import skirout.editor.v1.type_catalog.NamedTypeUse
 import skirout.editor.v1.type_catalog.NativeBindingId
 import skirout.editor.v1.type_catalog.PathSegment
-import skirout.editor.v1.type_catalog.ResourceId
 import skirout.editor.v1.type_catalog.RuleOrigin
 import skirout.editor.v1.type_catalog.TypeDefinitionId
 import skirout.editor.v1.type_catalog.TypeSelection
 import skirout.editor.v1.type_catalog.ValueLocation
+import skirout.kernel.v1.resource_id.ResourceId
 
 data class NativeBindingRequirement(
     val actual: NamedTypeUse,

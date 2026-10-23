@@ -1767,7 +1767,7 @@ sealed class PublicationChange private constructor() {
             _mustNameArguments: _MustNameArguments =
                 _MustNameArguments,
             projection: skirout.editor.v1.compilation_root.CompilationProjectionId_OrMutable,
-            resource: skirout.editor.v1.type_catalog.ResourceId_OrMutable,
+            resource: skirout.kernel.v1.resource_id.ResourceId_OrMutable,
         ) = RootAddedWrapper(
             skirout.editor.v1.compilation_root.CompilationRoot(
                 projection = projection,
@@ -1781,7 +1781,7 @@ sealed class PublicationChange private constructor() {
             _mustNameArguments: _MustNameArguments =
                 _MustNameArguments,
             projection: skirout.editor.v1.compilation_root.CompilationProjectionId_OrMutable,
-            resource: skirout.editor.v1.type_catalog.ResourceId_OrMutable,
+            resource: skirout.kernel.v1.resource_id.ResourceId_OrMutable,
         ) = RootUpdatedWrapper(
             skirout.editor.v1.compilation_root.CompilationRoot(
                 projection = projection,
@@ -1795,7 +1795,7 @@ sealed class PublicationChange private constructor() {
             _mustNameArguments: _MustNameArguments =
                 _MustNameArguments,
             projection: skirout.editor.v1.compilation_root.CompilationProjectionId_OrMutable,
-            resource: skirout.editor.v1.type_catalog.ResourceId_OrMutable,
+            resource: skirout.kernel.v1.resource_id.ResourceId_OrMutable,
         ) = RootRemovedWrapper(
             skirout.editor.v1.compilation_root.CompilationRoot(
                 projection = projection,

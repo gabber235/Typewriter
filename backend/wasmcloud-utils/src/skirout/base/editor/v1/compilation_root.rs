@@ -64,7 +64,7 @@ impl CompilationProjectionId {
 #[derive(Clone, Debug, PartialEq, Default)]
 pub struct CompilationRoot {
     pub projection: CompilationProjectionId,
-    pub resource: crate::skirout::base::editor::v1::type_catalog::ResourceId,
+    pub resource: crate::skirout::base::kernel::v1::resource_id::ResourceId,
     /// Set this to None when you're creating a struct.
     pub _unrecognized: Option<crate::skir_client::UnrecognizedFields<CompilationRoot>>,
 }
@@ -133,7 +133,7 @@ fn initialize_module_serializers() {
             (*a).add_field(
                 "resource",
                 1,
-                crate::skirout::base::editor::v1::type_catalog::ResourceId::serializer(),
+                crate::skirout::base::kernel::v1::resource_id::ResourceId::serializer(),
                 "",
                 |x: &CompilationRoot| &x.resource,
                 |x: &mut CompilationRoot, v| x.resource = v,

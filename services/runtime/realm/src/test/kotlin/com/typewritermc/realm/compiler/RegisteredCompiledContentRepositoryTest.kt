@@ -22,8 +22,8 @@ import skirout.editor.v1.type_catalog.CatalogGeneration
 import skirout.editor.v1.type_catalog.DiagnosticId
 import skirout.editor.v1.type_catalog.InputToken
 import skirout.editor.v1.type_catalog.PublicationId
-import skirout.editor.v1.type_catalog.ResourceId
 import skirout.editor.v1.type_catalog.RuleOrigin
+import skirout.kernel.v1.resource_id.ResourceId
 
 val RegisteredCompiledContentRepositoryTest by testSuite {
     test("selection replaces the complete set and empty results remove every previous root") {

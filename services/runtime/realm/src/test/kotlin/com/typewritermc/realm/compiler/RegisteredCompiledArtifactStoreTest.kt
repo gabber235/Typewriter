@@ -16,7 +16,7 @@ import skirout.editor.v1.compilation_root.CompilationProjectionId
 import skirout.editor.v1.compilation_root.CompilationRoot
 import skirout.editor.v1.type_catalog.CatalogGeneration
 import skirout.editor.v1.type_catalog.PublicationId
-import skirout.editor.v1.type_catalog.ResourceId
+import skirout.kernel.v1.resource_id.ResourceId
 
 val RegisteredCompiledArtifactStoreTest by testSuite {
     test("publication outputs are complete and reuse verified payload blobs") {

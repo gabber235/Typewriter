@@ -15,8 +15,8 @@ import "dart:core" as _core;
 
 import "package:skir_client/skir_client.dart" as _skir;
 
-import "../../editor/v1/type_catalog.dart" as _lib_editor_v1_type_catalog;
 import "../../kernel/v1/record_id.dart" as _lib_kernel_v1_record_id;
+import "../../kernel/v1/resource_id.dart" as _lib_kernel_v1_resource_id;
 
 // -----------------------------------------------------------------------------
 // struct OrganizationPresence
@@ -576,7 +576,7 @@ final class RealmPresence_mutable implements RealmPresence_orMutable {
 
 sealed class ResourcePresence_orMutable {
   _lib_kernel_v1_record_id.RecordId_orMutable get realmId;
-  _lib_editor_v1_type_catalog.ResourceId_orMutable get resourceId;
+  _lib_kernel_v1_resource_id.ResourceId_orMutable get resourceId;
 
   ResourcePresence toFrozen();
 }
@@ -586,12 +586,12 @@ final class ResourcePresence implements ResourcePresence_orMutable {
   @_core.override
   final _lib_kernel_v1_record_id.RecordId realmId;
   @_core.override
-  final _lib_editor_v1_type_catalog.ResourceId resourceId;
+  final _lib_kernel_v1_resource_id.ResourceId resourceId;
   _skir.internal__UnrecognizedFields? _u;
 
   factory ResourcePresence({
     required _lib_kernel_v1_record_id.RecordId_orMutable realmId,
-    required _lib_editor_v1_type_catalog.ResourceId_orMutable resourceId,
+    required _lib_kernel_v1_resource_id.ResourceId_orMutable resourceId,
   }) => ResourcePresence._(realmId.toFrozen(), resourceId.toFrozen());
 
   ResourcePresence._(this.realmId, this.resourceId);
@@ -599,14 +599,14 @@ final class ResourcePresence implements ResourcePresence_orMutable {
   /// Default instance with all fields set to their default values.
   static final defaultInstance = ResourcePresence._(
     _lib_kernel_v1_record_id.RecordId.defaultInstance,
-    _lib_editor_v1_type_catalog.ResourceId.defaultInstance,
+    _lib_kernel_v1_resource_id.ResourceId.defaultInstance,
   );
 
   /// Returns a new mutable instance.
   /// Fields are initialized to their default values.
   static ResourcePresence_mutable mutable() => ResourcePresence_mutable._(
     _lib_kernel_v1_record_id.RecordId.defaultInstance,
-    _lib_editor_v1_type_catalog.ResourceId.defaultInstance,
+    _lib_kernel_v1_resource_id.ResourceId.defaultInstance,
   );
 
   /// Returns this instance (no-op).
@@ -653,7 +653,7 @@ final class ResourcePresence implements ResourcePresence_orMutable {
         "resource_id",
         "resourceId",
         1,
-        _lib_editor_v1_type_catalog.ResourceId.serializer,
+        _lib_kernel_v1_resource_id.ResourceId.serializer,
         "",
         (it) => it.resourceId,
         (it, v) => it.resourceId = v,
@@ -677,7 +677,7 @@ final class ResourcePresence implements ResourcePresence_orMutable {
 /// Mutable version of [ResourcePresence].
 final class ResourcePresence_mutable implements ResourcePresence_orMutable {
   _lib_kernel_v1_record_id.RecordId_orMutable realmId;
-  _lib_editor_v1_type_catalog.ResourceId_orMutable resourceId;
+  _lib_kernel_v1_resource_id.ResourceId_orMutable resourceId;
   _skir.internal__UnrecognizedFields? _u;
 
   ResourcePresence_mutable._(this.realmId, this.resourceId);
@@ -696,12 +696,12 @@ final class ResourcePresence_mutable implements ResourcePresence_orMutable {
 
   /// If the value of [resourceId] is already mutable, returns it as-is.
   /// Otherwise, makes a mutable copy, assigns it back to [resourceId] and returns it.
-  _lib_editor_v1_type_catalog.ResourceId_mutable get mutableResourceId {
+  _lib_kernel_v1_resource_id.ResourceId_mutable get mutableResourceId {
     final value = this.resourceId;
-    if (value is _lib_editor_v1_type_catalog.ResourceId_mutable) {
+    if (value is _lib_kernel_v1_resource_id.ResourceId_mutable) {
       return value;
     } else {
-      return this.resourceId = (value as _lib_editor_v1_type_catalog.ResourceId)
+      return this.resourceId = (value as _lib_kernel_v1_resource_id.ResourceId)
           .toMutable();
     }
   }
@@ -794,7 +794,7 @@ sealed class PresenceLocation {
   /// Same as `wrapResource(ResourcePresence(...))`.
   factory PresenceLocation.createResource({
     required _lib_kernel_v1_record_id.RecordId_orMutable realmId,
-    required _lib_editor_v1_type_catalog.ResourceId_orMutable resourceId,
+    required _lib_kernel_v1_resource_id.ResourceId_orMutable resourceId,
   }) => PresenceLocation.wrapResource(
     ResourcePresence(realmId: realmId, resourceId: resourceId),
   );

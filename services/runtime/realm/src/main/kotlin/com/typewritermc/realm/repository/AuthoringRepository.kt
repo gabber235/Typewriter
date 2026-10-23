@@ -5,7 +5,7 @@ import skirout.editor.v1.authoring.CommitPreparedEditResponse
 import skirout.editor.v1.authoring.PreparedEdit
 import skirout.editor.v1.authoring.RelationProjectionDelta
 import skirout.editor.v1.type_catalog.AuthoringRecord
-import skirout.editor.v1.type_catalog.ResourceId
+import skirout.kernel.v1.resource_id.ResourceId
 
 /** Accepts edits when their original expected facts still hold. */
 interface AuthoringRepository {

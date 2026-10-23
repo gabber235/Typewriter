@@ -29,10 +29,10 @@ import skirout.editor.v1.type_catalog.NamedTypeUse
 import skirout.editor.v1.type_catalog.RelationFamilyId
 import skirout.editor.v1.type_catalog.RelationId
 import skirout.editor.v1.type_catalog.RelativeFieldPattern
-import skirout.editor.v1.type_catalog.ResourceId
 import skirout.editor.v1.type_catalog.TypeDefinitionId
 import skirout.editor.v1.type_catalog.TypeTemplate
 import skirout.editor.v1.type_catalog.TypeUse
+import skirout.kernel.v1.resource_id.ResourceId
 import skirout.editor.v1.authoring.PreparedEdit as WireEdit
 import skirout.editor.v1.catalog.EndpointDefinition as WireEndpoint
 

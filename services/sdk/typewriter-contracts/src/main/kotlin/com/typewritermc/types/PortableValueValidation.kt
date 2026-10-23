@@ -8,9 +8,9 @@ import skirout.editor.v1.type_catalog.ListItem
 import skirout.editor.v1.type_catalog.MapRow
 import skirout.editor.v1.type_catalog.PathSegment
 import skirout.editor.v1.type_catalog.RecordPayload
-import skirout.editor.v1.type_catalog.ResourceId
 import skirout.editor.v1.type_catalog.ValueLocation
 import skirout.editor.v1.type_catalog.ValuePath
+import skirout.kernel.v1.resource_id.ResourceId
 
 /** The deepest nesting of authored values, counting each nominal wrapper, record field and collection entry. */
 const val MAX_VALUE_DEPTH = 512

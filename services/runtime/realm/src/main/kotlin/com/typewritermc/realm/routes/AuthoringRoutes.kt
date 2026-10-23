@@ -25,7 +25,7 @@ import skirout.editor.v1.checking.FindingSet
 import skirout.editor.v1.diagnostic.DeclarationDiagnostic
 import skirout.editor.v1.type_catalog.CatalogGeneration
 import skirout.editor.v1.type_catalog.RelationId
-import skirout.editor.v1.type_catalog.ResourceId
+import skirout.kernel.v1.resource_id.ResourceId
 import skirout.editor.v1.authoring.AuthoringResource as SkirAuthoringResource
 import skirout.editor.v1.authoring.AuthoringState as SkirAuthoringState
 import skirout.editor.v1.authoring.CatalogChanged as SkirCatalogChanged

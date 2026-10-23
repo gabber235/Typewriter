@@ -64,7 +64,7 @@ export function emitKotlinOperations(
     listItem: imported("editor/v1/type_catalog.skir:ListItem"),
     mapRow: imported("editor/v1/type_catalog.skir:MapRow"),
     linkValue: imported("editor/v1/type_catalog.skir:LinkValue"),
-    resourceId: imported("editor/v1/type_catalog.skir:ResourceId"),
+    resourceId: imported("kernel/v1/resource_id.skir:ResourceId"),
     typeUse: imported("editor/v1/type_catalog.skir:TypeUse"),
     operationId: imported("editor/v1/expression.skir:OperationId"),
     failureId: imported("editor/v1/expression.skir:FailureId"),

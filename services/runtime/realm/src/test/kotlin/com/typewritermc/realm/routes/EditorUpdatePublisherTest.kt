@@ -36,11 +36,11 @@ import skirout.editor.v1.checking.FindingSet
 import skirout.editor.v1.checking.FindingStatus
 import skirout.editor.v1.type_catalog.CatalogGeneration
 import skirout.editor.v1.type_catalog.CheckExecutionId
-import skirout.editor.v1.type_catalog.ResourceId
 import skirout.editor.v1.type_catalog.RuleId
 import skirout.editor.v1.type_catalog.RuleOrigin
 import skirout.editor.v1.type_catalog.TypeDefinitionId
 import skirout.editor.v1.type_catalog.ValueLocation
+import skirout.kernel.v1.resource_id.ResourceId
 import kotlin.time.Duration.Companion.seconds
 
 val EditorUpdatePublisherTest by testSuite {

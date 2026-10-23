@@ -36,9 +36,9 @@ import skirout.editor.v1.type_catalog.LinkTarget
 import skirout.editor.v1.type_catalog.ListItem
 import skirout.editor.v1.type_catalog.MapRow
 import skirout.editor.v1.type_catalog.PathSegment
-import skirout.editor.v1.type_catalog.ResourceId
 import skirout.editor.v1.type_catalog.ValueLocation
 import skirout.editor.v1.type_catalog.ValuePath
+import skirout.kernel.v1.resource_id.ResourceId
 
 /** Copies the ownership closure before reconnecting any of its references. */
 internal class OperationClonePreparation(

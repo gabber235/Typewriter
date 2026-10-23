@@ -4,6 +4,7 @@
 // application are separate facts.
 
 import { CompilationRoot } from "editor/v1/compilation_root.skir";
+import { ResourceId } from "kernel/v1/resource_id.skir";
 import {
   CatalogGeneration,
   NamedTypeUse,
@@ -11,7 +12,6 @@ import {
   NativeBindingId,
   PublicationId,
   RelationId,
-  ResourceId,
   TypeDefinition,
   ValuePath,
 } from "editor/v1/type_catalog.skir";

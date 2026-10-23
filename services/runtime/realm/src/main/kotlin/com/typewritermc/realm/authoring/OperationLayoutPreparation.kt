@@ -19,10 +19,10 @@ import com.typewritermc.types.encodeGeneratedDefault
 import com.typewritermc.types.ownsResources
 import com.typewritermc.types.use
 import skirout.editor.v1.type_catalog.PathSegment
-import skirout.editor.v1.type_catalog.ResourceId
 import skirout.editor.v1.type_catalog.TypeDefinitionId
 import skirout.editor.v1.type_catalog.ValueLocation
 import skirout.editor.v1.type_catalog.ValuePath
+import skirout.kernel.v1.resource_id.ResourceId
 
 /** Lays out moved members when their destination is laid out as a graph, without inferring layout from presentation. */
 internal class OperationLayoutPreparation(

@@ -6,7 +6,7 @@ import com.typewritermc.realm.repository.ResourceValueMapper
 import com.typewritermc.types.immutableMapCopy
 import skirout.editor.v1.diagnostic.StructuralResult
 import skirout.editor.v1.type_catalog.AuthoringRecord
-import skirout.editor.v1.type_catalog.ResourceId
+import skirout.kernel.v1.resource_id.ResourceId
 
 /** Signals that a caller must refresh saved state before inspecting its proposed overlay. */
 internal class StaleOperationObservation(

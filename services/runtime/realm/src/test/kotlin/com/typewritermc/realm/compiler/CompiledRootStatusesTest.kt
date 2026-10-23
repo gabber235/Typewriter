@@ -18,7 +18,7 @@ import skirout.editor.v1.compiled_content.PublishedOutput
 import skirout.editor.v1.publication.PublicationReport
 import skirout.editor.v1.type_catalog.CatalogGeneration
 import skirout.editor.v1.type_catalog.PublicationId
-import skirout.editor.v1.type_catalog.ResourceId
+import skirout.kernel.v1.resource_id.ResourceId
 
 val CompiledRootStatusesTest by testSuite {
     test("all roots combines producer roots with the selected publication in stable order") {

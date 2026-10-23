@@ -17,7 +17,7 @@ import skirout.editor.v1.publication.PublicationChange
 import skirout.editor.v1.type_catalog.CatalogGeneration
 import skirout.editor.v1.type_catalog.InputToken
 import skirout.editor.v1.type_catalog.PublicationId
-import skirout.editor.v1.type_catalog.ResourceId
+import skirout.kernel.v1.resource_id.ResourceId
 
 val PublicationComparisonTest by testSuite {
     test("publication identity catalog provenance input fingerprints and blob pointers are not runtime changes") {

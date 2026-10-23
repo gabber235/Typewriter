@@ -80,11 +80,11 @@ import skirout.editor.v1.type_catalog.FieldOwner
 import skirout.editor.v1.type_catalog.ItemId
 import skirout.editor.v1.type_catalog.PathSegment
 import skirout.editor.v1.type_catalog.RepresentationTemplate
-import skirout.editor.v1.type_catalog.ResourceId
 import skirout.editor.v1.type_catalog.TypeDefinition
 import skirout.editor.v1.type_catalog.TypeDefinitionId
 import skirout.editor.v1.type_catalog.TypeSelection
 import skirout.editor.v1.type_catalog.ValuePath
+import skirout.kernel.v1.resource_id.ResourceId
 import java.nio.file.Path
 
 /**
@@ -388,7 +388,7 @@ internal class CoreOperationsFixture(
                     .CatalogGeneration(value = catalogGeneration()),
             targets =
                 ids.map {
-                    skirout.editor.v1.type_catalog
+                    skirout.kernel.v1.resource_id
                         .ResourceId(value = it)
                 },
             origin = OperationOrigin(container = null, occurrences = emptyList()),

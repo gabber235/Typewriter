@@ -4174,11 +4174,6 @@ impl crate::SkirType for crate::skirout::base::editor::v1::type_catalog::TypeDef
         Self::serializer()
     }
 }
-impl crate::SkirType for crate::skirout::base::editor::v1::type_catalog::ResourceId {
-    fn serializer() -> crate::skir_client::Serializer<Self> {
-        Self::serializer()
-    }
-}
 impl crate::SkirType for crate::skirout::base::editor::v1::type_catalog::ItemId {
     fn serializer() -> crate::skir_client::Serializer<Self> {
         Self::serializer()
@@ -4631,6 +4626,11 @@ impl crate::SkirType for crate::skirout::base::kernel::v1::record_id::RecordIdVa
     }
 }
 impl crate::SkirType for crate::skirout::base::kernel::v1::record_id::ObjectRecordIdValue {
+    fn serializer() -> crate::skir_client::Serializer<Self> {
+        Self::serializer()
+    }
+}
+impl crate::SkirType for crate::skirout::base::kernel::v1::resource_id::ResourceId {
     fn serializer() -> crate::skir_client::Serializer<Self> {
         Self::serializer()
     }

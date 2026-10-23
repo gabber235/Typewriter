@@ -81,7 +81,7 @@ export function emitDartOperations(
     listItem: record("editor/v1/type_catalog.skir:ListItem"),
     mapRow: record("editor/v1/type_catalog.skir:MapRow"),
     linkValue: record("editor/v1/type_catalog.skir:LinkValue"),
-    resourceId: record("editor/v1/type_catalog.skir:ResourceId"),
+    resourceId: record("kernel/v1/resource_id.skir:ResourceId"),
     typeUse: record("editor/v1/type_catalog.skir:TypeUse"),
     failureId: record("editor/v1/expression.skir:FailureId"),
     namedValue: record("editor/v1/type_catalog.skir:NamedValue"),

@@ -14,9 +14,9 @@ import skirout.editor.v1.authoring_facts.TraversalDirection
 import skirout.editor.v1.type_catalog.AuthoringRecord
 import skirout.editor.v1.type_catalog.PathSegment
 import skirout.editor.v1.type_catalog.RelationId
-import skirout.editor.v1.type_catalog.ResourceId
 import skirout.editor.v1.type_catalog.ValueLocation
 import skirout.editor.v1.type_catalog.ValuePath
+import skirout.kernel.v1.resource_id.ResourceId
 
 /** Derives mandatory guards independently of client supplied expectations. */
 internal fun CurrentAuthoringValues.requiredExpectations(

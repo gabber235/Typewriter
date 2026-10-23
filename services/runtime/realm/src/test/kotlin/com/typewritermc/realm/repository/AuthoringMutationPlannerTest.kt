@@ -83,7 +83,6 @@ import skirout.editor.v1.type_catalog.RelationFamilyId
 import skirout.editor.v1.type_catalog.RelationId
 import skirout.editor.v1.type_catalog.RelativeFieldPattern
 import skirout.editor.v1.type_catalog.RepresentationTemplate
-import skirout.editor.v1.type_catalog.ResourceId
 import skirout.editor.v1.type_catalog.ScalarKind
 import skirout.editor.v1.type_catalog.TypeDefinition
 import skirout.editor.v1.type_catalog.TypeDefinitionId
@@ -91,6 +90,7 @@ import skirout.editor.v1.type_catalog.TypeParameter
 import skirout.editor.v1.type_catalog.TypeSelection
 import skirout.editor.v1.type_catalog.ValueLocation
 import skirout.editor.v1.type_catalog.ValuePath
+import skirout.kernel.v1.resource_id.ResourceId
 
 class AuthoringMutationPlannerTest {
     fun inverseOnlyReferencesDoNotOfferLinkedDuplication() {
@@ -318,7 +318,7 @@ class AuthoringMutationPlannerTest {
                                 GENERATION,
                                 targets =
                                     invocation.targets.map {
-                                        skirout.editor.v1.type_catalog
+                                        skirout.kernel.v1.resource_id
                                             .ResourceId(value = it.value)
                                     },
                                 origin =
@@ -336,7 +336,7 @@ class AuthoringMutationPlannerTest {
                                             listOf(
                                                 skirout.editor.v1.resource_operations.OperationResourceUpsert(
                                                     resource =
-                                                        skirout.editor.v1.type_catalog
+                                                        skirout.kernel.v1.resource_id
                                                             .ResourceId(value = second.value),
                                                     content = record(label = "availability-failure"),
                                                 ),

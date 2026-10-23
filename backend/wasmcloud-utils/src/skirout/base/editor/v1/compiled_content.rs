@@ -460,7 +460,7 @@ impl CompilationContext {
 /// Identifies a resource in a compiled occurrence.
 #[derive(Clone, Debug, PartialEq, Default)]
 pub struct CompiledResourceKey {
-    pub source: crate::skirout::base::editor::v1::type_catalog::ResourceId,
+    pub source: crate::skirout::base::kernel::v1::resource_id::ResourceId,
     pub context: CompilationContext,
     /// Set this to None when you're creating a struct.
     pub _unrecognized: Option<crate::skir_client::UnrecognizedFields<CompiledResourceKey>>,
@@ -1332,7 +1332,7 @@ fn initialize_module_serializers() {
             (*a).add_field(
                 "source",
                 0,
-                crate::skirout::base::editor::v1::type_catalog::ResourceId::serializer(),
+                crate::skirout::base::kernel::v1::resource_id::ResourceId::serializer(),
                 "",
                 |x: &CompiledResourceKey| &x.source,
                 |x: &mut CompiledResourceKey, v| x.source = v,

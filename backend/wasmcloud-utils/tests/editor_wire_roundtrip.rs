@@ -3,8 +3,7 @@ use wasmcloud_utils::skir::base::editor::v1::{
     expression::{CallExpression, ExpressionLocal, ExpressionNode, LambdaExpression, OperationId},
     presentation::{
         AxisChild, AxisChildrenElement, AxisChildrenLayout, BindingDeclaration, BoundControl,
-        ChildrenElement,
-        GraphDirection, GraphResourcesLayout, GridResourcesLayout, NamedControl,
+        ChildrenElement, GraphDirection, GraphResourcesLayout, GridResourcesLayout, NamedControl,
         PresentationElement, PresentationNode, ResourcesElement, ResourcesLayout, RichTextContent,
         TextContent, TextFit, TextRun, TextSizing, TimelineResourcesLayout, TreeResourcesLayout,
     },
@@ -13,10 +12,11 @@ use wasmcloud_utils::skir::base::editor::v1::{
         ArgumentSelection, AuthoringRecord, DataValue, DeclaredTypeId, EndpointId,
         ExpressionBindingId, FieldPathSegment, FieldValue, ItemId, LinkTarget, LinkValue, ListItem,
         ListPayload, MapPayload, MapRow, NamedTypeUse, NamedValue, PathSegment,
-        PendingTypeSelection, QualifiedTypeId, RecordPayload, ResourceId, ScalarKind,
-        TypeDefinitionId, TypeId, TypeSelection, TypeTemplate, TypeUse, ValuePath,
+        PendingTypeSelection, QualifiedTypeId, RecordPayload, ScalarKind, TypeDefinitionId, TypeId,
+        TypeSelection, TypeTemplate, TypeUse, ValuePath,
     },
 };
+use wasmcloud_utils::skir::base::kernel::v1::resource_id::ResourceId;
 use wasmcloud_utils::skir_client::{KeyedVec, UnrecognizedValues};
 
 const TEXT_ID: &str = "11111111-1111-4111-8111-111111111111";

@@ -38,8 +38,8 @@ import skirout.editor.v1.resource_operations.ResolveResourceOperationsResult
 import skirout.editor.v1.type_catalog.AuthoringRecord
 import skirout.editor.v1.type_catalog.CapabilityId
 import skirout.editor.v1.type_catalog.CatalogGeneration
-import skirout.editor.v1.type_catalog.ResourceId
 import skirout.editor.v1.type_catalog.ValueLocation
+import skirout.kernel.v1.resource_id.ResourceId
 import skirout.editor.v1.resource_operations.OperationInvocation as SkirOperationInvocation
 
 /**

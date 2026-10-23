@@ -26,9 +26,9 @@ import skirout.editor.v1.resource_operations.PreparationCounterpartOption
 import skirout.editor.v1.resource_operations.PreparationSourceOption
 import skirout.editor.v1.type_catalog.LinkTarget
 import skirout.editor.v1.type_catalog.ResolvedRepresentation
-import skirout.editor.v1.type_catalog.ResourceId
 import skirout.editor.v1.type_catalog.TypeSelection
 import skirout.editor.v1.type_catalog.TypeUse
+import skirout.kernel.v1.resource_id.ResourceId
 
 /** Prepares ownership transfers and links through the same session used by menus and drops. */
 internal class OperationRelationPreparation(

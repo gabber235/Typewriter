@@ -54,7 +54,7 @@ val PublicationRoutesTest by testSuite {
     }
     test("publication blockers retain exact locations and captured evidence") {
         val resource =
-            skirout.editor.v1.type_catalog
+            skirout.kernel.v1.resource_id
                 .ResourceId(value = "page")
         val location =
             ValueLocation.of(

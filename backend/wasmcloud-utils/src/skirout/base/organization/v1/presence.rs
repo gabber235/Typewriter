@@ -256,7 +256,7 @@ impl RealmPresence {
 #[derive(Clone, Debug, PartialEq, Default)]
 pub struct ResourcePresence {
     pub realm_id: crate::skirout::base::kernel::v1::record_id::RecordId,
-    pub resource_id: crate::skirout::base::editor::v1::type_catalog::ResourceId,
+    pub resource_id: crate::skirout::base::kernel::v1::resource_id::ResourceId,
     /// Set this to None when you're creating a struct.
     pub _unrecognized: Option<crate::skir_client::UnrecognizedFields<ResourcePresence>>,
 }
@@ -540,7 +540,7 @@ fn initialize_module_serializers() {
             (*a).add_field(
                 "resource_id",
                 1,
-                crate::skirout::base::editor::v1::type_catalog::ResourceId::serializer(),
+                crate::skirout::base::kernel::v1::resource_id::ResourceId::serializer(),
                 "",
                 |x: &ResourcePresence| &x.resource_id,
                 |x: &mut ResourcePresence, v| x.resource_id = v,

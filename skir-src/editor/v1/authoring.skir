@@ -15,6 +15,7 @@ import {
   Diagnostic,
   ValueProblem,
 } from "editor/v1/diagnostic.skir";
+import { ResourceId } from "kernel/v1/resource_id.skir";
 import {
   AuthoringRecord,
   CatalogGeneration,
@@ -24,7 +25,6 @@ import {
   LinkTarget,
   ListItem,
   NamedTypeUse,
-  ResourceId,
   TypeDefinitionId,
   TypeSelection,
   ValueLocation,

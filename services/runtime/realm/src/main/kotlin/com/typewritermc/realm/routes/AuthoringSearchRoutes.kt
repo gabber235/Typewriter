@@ -16,9 +16,9 @@ import skirout.editor.v1.authoring.SearchAuthoringResponse
 import skirout.editor.v1.type_catalog.AuthoringRecord
 import skirout.editor.v1.type_catalog.CatalogGeneration
 import skirout.editor.v1.type_catalog.DataValue
-import skirout.editor.v1.type_catalog.ResourceId
 import skirout.editor.v1.type_catalog.ScalarKind
 import skirout.editor.v1.typed_value.PortableValue
+import skirout.kernel.v1.resource_id.ResourceId
 
 internal class AuthoringSearchRoutes(
     private val repository: AuthoringSearchRepository,

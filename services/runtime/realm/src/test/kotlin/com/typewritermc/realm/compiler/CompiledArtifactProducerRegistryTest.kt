@@ -11,7 +11,7 @@ import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.matchers.shouldBe
 import skirout.editor.v1.compilation_root.CompilationProjectionId
 import skirout.editor.v1.compilation_root.CompilationRoot
-import skirout.editor.v1.type_catalog.ResourceId
+import skirout.kernel.v1.resource_id.ResourceId
 
 val CompiledArtifactProducerRegistryTest by testSuite {
     test("one blocked producer retains a partial ready batch and every producer receives the retained inputs") {

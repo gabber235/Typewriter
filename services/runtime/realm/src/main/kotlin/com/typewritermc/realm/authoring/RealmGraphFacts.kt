@@ -19,10 +19,10 @@ import com.typewritermc.types.toSkir
 import com.typewritermc.types.use
 import skirout.editor.v1.type_catalog.ItemId
 import skirout.editor.v1.type_catalog.ResolvedRepresentation
-import skirout.editor.v1.type_catalog.ResourceId
 import skirout.editor.v1.type_catalog.TypeSelection
 import skirout.editor.v1.type_catalog.TypeUse
 import skirout.editor.v1.type_catalog.ValueLocation
+import skirout.kernel.v1.resource_id.ResourceId
 import com.typewritermc.types.ResourceId as AuthorResourceId
 
 /**
