@@ -66,13 +66,38 @@ async function connectLive(url, forceReconnect = false) {
     await persistConnectUrl(url);
     return { connected: true, pageCount, reusedExisting: false };
 }
+function setByPath(target, dotted, value) {
+    const keys = dotted.split(".");
+    if (keys.some((k) => k === "__proto__" || k === "constructor" || k === "prototype")) {
+        throw new Error(`Invalid path: ${dotted}`);
+    }
+    let cur = target;
+    for (let i = 0; i < keys.length - 1; i++) {
+        const k = keys[i];
+        const nextKey = keys[i + 1];
+        const asRec = cur;
+        if (asRec[k] === null || typeof asRec[k] !== "object") {
+            asRec[k] = /^\d+$/.test(nextKey) ? [] : {};
+        }
+        cur = asRec[k];
+    }
+    cur[keys[keys.length - 1]] = value;
+}
 async function pages() {
     if (SOCKET_MODE)
         return await (await ensureSocketConnected()).fetchPages();
     const infos = await store.listPages();
     const out = [];
-    for (const i of infos)
-        out.push((await store.readPage(i.name)));
+    for (const i of infos) {
+        if (i.type === "unreadable")
+            continue;
+        try {
+            out.push((await store.readPage(i.name)));
+        }
+        catch (err) {
+            console.error(`typewriter-mcp: skipping unreadable page "${i.name}": ${err.message}`);
+        }
+    }
     return out;
 }
 async function findPage(nameOrId) {
@@ -195,9 +220,12 @@ server.tool("update_entry", "Update a single field of an entry by dotted path (e
             await (await ensureSocketConnected()).updateEntryField(p.id, entryId, fieldPath, value);
             return ok("Updated " + fieldPath);
         }
-        const patch = {};
-        patch[fieldPath] = value;
-        return ok(await store.updateEntry(p.name, entryId, patch));
+        const current = (p.entries ?? []).find((e) => e.id === entryId);
+        if (!current)
+            throw new Error(`Entry "${entryId}" not found on page "${p.name}"`);
+        const next = structuredClone(current);
+        setByPath(next, fieldPath, value);
+        return ok(await store.replaceEntry(p.name, next));
     }
     catch (e) {
         return fail(e);
@@ -214,7 +242,7 @@ server.tool("replace_entry", "Replace a whole entry with a new object (must keep
             await (await ensureSocketConnected()).updateCompleteEntry(p.id, entry);
             return ok("Replaced " + entry.id);
         }
-        return ok(await store.updateEntry(p.name, entry.id, entry));
+        return ok(await store.replaceEntry(p.name, entry));
     }
     catch (e) {
         return fail(e);
@@ -270,7 +298,7 @@ server.tool("search_entries", "Full-text search across all pages/entries.", { qu
         return fail(e);
     }
 });
-server.tool("validate_storyline", "Find broken references (triggers/triggeredBy pointing to missing ids).", {}, async () => {
+server.tool("validate_storyline", "Find broken references in triggers/triggeredBy and criteria.fact/modifiers.fact.", {}, async () => {
     try {
         const all = await pages();
         const ids = new Set();
@@ -286,6 +314,16 @@ server.tool("validate_storyline", "Find broken references (triggers/triggeredBy 
                         for (const r of v)
                             if (typeof r === "string" && r && !ids.has(r))
                                 problems.push(`"${e.name ?? e.id}" (page ${p.name}) -> missing "${r}" in ${f}`);
+                }
+                for (const f of ["criteria", "modifiers"]) {
+                    const v = e[f];
+                    if (Array.isArray(v))
+                        for (const r of v) {
+                            const fact = r && typeof r === "object" ? r.fact : undefined;
+                            if (typeof fact === "string" && fact && !ids.has(fact)) {
+                                problems.push(`"${e.name ?? e.id}" (page ${p.name}) -> missing fact "${fact}" in ${f}`);
+                            }
+                        }
                 }
             }
         return ok(problems.length ? problems : "OK: no problems found");

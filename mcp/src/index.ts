@@ -82,11 +82,36 @@ async function connectLive(url: string, forceReconnect = false): Promise<{ conne
   return { connected: true, pageCount, reusedExisting: false };
 }
 
+function setByPath(target: Record<string, unknown>, dotted: string, value: unknown): void {
+  const keys = dotted.split(".");
+  if (keys.some((k) => k === "__proto__" || k === "constructor" || k === "prototype")) {
+    throw new Error(`Invalid path: ${dotted}`);
+  }
+  let cur: Record<string, unknown> | unknown[] = target;
+  for (let i = 0; i < keys.length - 1; i++) {
+    const k = keys[i];
+    const nextKey = keys[i + 1];
+    const asRec = cur as Record<string, unknown>;
+    if (asRec[k] === null || typeof asRec[k] !== "object") {
+      asRec[k] = /^\d+$/.test(nextKey) ? [] : {};
+    }
+    cur = asRec[k] as Record<string, unknown> | unknown[];
+  }
+  (cur as Record<string, unknown>)[keys[keys.length - 1]] = value;
+}
+
 async function pages(): Promise<TWPage[]> {
   if (SOCKET_MODE) return await (await ensureSocketConnected()).fetchPages();
   const infos = await store!.listPages();
   const out: TWPage[] = [];
-  for (const i of infos) out.push((await store!.readPage(i.name)) as unknown as TWPage);
+  for (const i of infos) {
+    if (i.type === "unreadable") continue;
+    try {
+      out.push((await store!.readPage(i.name)) as unknown as TWPage);
+    } catch (err) {
+      console.error(`typewriter-mcp: skipping unreadable page "${i.name}": ${(err as Error).message}`);
+    }
+  }
   return out;
 }
 async function findPage(nameOrId: string): Promise<TWPage | undefined> {
@@ -185,8 +210,11 @@ server.tool("update_entry",
       const p = await findPage(page);
       if (!p) throw new Error("Page not found: " + page);
       if (SOCKET_MODE) { await (await ensureSocketConnected()).updateEntryField(p.id, entryId, fieldPath, value); return ok("Updated " + fieldPath); }
-      const patch: Record<string, unknown> = {}; patch[fieldPath] = value;
-      return ok(await store!.updateEntry(p.name, entryId, patch));
+      const current = (p.entries ?? []).find((e) => e.id === entryId);
+      if (!current) throw new Error(`Entry "${entryId}" not found on page "${p.name}"`);
+      const next = structuredClone(current) as Record<string, unknown>;
+      setByPath(next, fieldPath, value);
+      return ok(await store!.replaceEntry(p.name, next as TWPage["entries"][number]));
     } catch (e) { return fail(e); }
   });
 
@@ -199,7 +227,7 @@ server.tool("replace_entry",
       if (!p) throw new Error("Page not found: " + page);
       if (typeof entry.id !== "string") throw new Error("entry must include its 'id'");
       if (SOCKET_MODE) { await (await ensureSocketConnected()).updateCompleteEntry(p.id, entry as unknown as TWPage["entries"][number]); return ok("Replaced " + entry.id); }
-      return ok(await store!.updateEntry(p.name, entry.id, entry));
+      return ok(await store!.replaceEntry(p.name, entry as unknown as TWPage["entries"][number]));
     } catch (e) { return fail(e); }
   });
 
@@ -239,7 +267,7 @@ server.tool("search_entries", "Full-text search across all pages/entries.", { qu
   } catch (e) { return fail(e); }
 });
 
-server.tool("validate_storyline", "Find broken references (triggers/triggeredBy pointing to missing ids).", {}, async () => {
+server.tool("validate_storyline", "Find broken references in triggers/triggeredBy and criteria.fact/modifiers.fact.", {}, async () => {
   try {
     const all = await pages();
     const ids = new Set<string>();
@@ -250,6 +278,15 @@ server.tool("validate_storyline", "Find broken references (triggers/triggeredBy 
         const v = (e as Record<string, unknown>)[f];
         if (Array.isArray(v)) for (const r of v)
           if (typeof r === "string" && r && !ids.has(r)) problems.push(`"${e.name ?? e.id}" (page ${p.name}) -> missing "${r}" in ${f}`);
+      }
+      for (const f of ["criteria", "modifiers"]) {
+        const v = (e as Record<string, unknown>)[f];
+        if (Array.isArray(v)) for (const r of v) {
+          const fact = r && typeof r === "object" ? (r as Record<string, unknown>).fact : undefined;
+          if (typeof fact === "string" && fact && !ids.has(fact)) {
+            problems.push(`"${e.name ?? e.id}" (page ${p.name}) -> missing fact "${fact}" in ${f}`);
+          }
+        }
       }
     }
     return ok(problems.length ? problems : "OK: no problems found");

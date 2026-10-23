@@ -80,7 +80,15 @@ export class TypewriterStore {
 
   async writePage(page: TypewriterPage): Promise<void> {
     await this.ensureDir();
-    await fs.writeFile(this.pagePath(page.name), JSON.stringify(page, null, 2), "utf8");
+    const target = this.pagePath(page.name);
+    const tmp = `${target}.${crypto.randomBytes(6).toString("hex")}.tmp`;
+    try {
+      await fs.writeFile(tmp, JSON.stringify(page, null, 2), "utf8");
+      await fs.rename(tmp, target);
+    } catch (err) {
+      await fs.unlink(tmp).catch(() => {});
+      throw err;
+    }
   }
 
   async pageExists(pageName: string): Promise<boolean> {
@@ -149,6 +157,15 @@ export class TypewriterStore {
     page.entries[idx] = updated;
     await this.writePage(page);
     return updated;
+  }
+
+  async replaceEntry(pageName: string, entry: TypewriterEntry): Promise<TypewriterEntry> {
+    const page = await this.readPage(pageName);
+    const idx = page.entries.findIndex((e) => e.id === entry.id);
+    if (idx === -1) throw new Error(`Entry "${entry.id}" not found on page "${pageName}"`);
+    page.entries[idx] = entry;
+    await this.writePage(page);
+    return entry;
   }
 
   async deleteEntry(pageName: string, entryId: string): Promise<void> {

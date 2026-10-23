@@ -250,18 +250,20 @@ export function parseConnectUrl(url: string): SocketClientOptions {
     const params = new URLSearchParams(query);
     const host = params.get("host");
     if (!host) throw new Error("Connect URL is missing 'host' parameter");
+    const secure = params.get("secure") === "true";
+    const portParam = params.get("port");
     return {
       host,
-      port: parseInt(params.get("port") ?? "9092", 10),
+      port: portParam ? parseInt(portParam, 10) : secure ? 443 : 80,
       token: params.get("token") ?? undefined,
-      secure: params.get("secure") === "true",
+      secure,
     };
   }
   // ws://host:port?token=...
   const u = new URL(url);
   return {
     host: u.hostname,
-    port: u.port ? parseInt(u.port, 10) : u.protocol === "wss:" ? 443 : 9092,
+    port: u.port ? parseInt(u.port, 10) : u.protocol === "wss:" ? 443 : 80,
     token: u.searchParams.get("token") ?? undefined,
     secure: u.protocol === "wss:",
   };
