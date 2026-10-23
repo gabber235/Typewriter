@@ -42,6 +42,10 @@ internal fun <T, M : MissingPolicy> choose(
 @Suppress("UNCHECKED_CAST")
 internal fun <T, M : MissingPolicy> Expr<T, Handled>.lift(): Expr<T, M> = this as Expr<T, M>
 
+/** This expression where a nullable one is expected; a value of T is a value of T?. */
+@Suppress("UNCHECKED_CAST")
+internal fun <T, M : MissingPolicy> Expr<T, M>.orNull(): Expr<T?, M> = this as Expr<T?, M>
+
 /** The explicit null literal. */
 internal fun <T, M : MissingPolicy> nullLiteral(): Expr<T?, M> = portableLiteral<T?>(DataValue.NULL).lift()
 
