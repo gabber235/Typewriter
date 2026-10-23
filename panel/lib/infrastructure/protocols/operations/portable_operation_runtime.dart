@@ -143,7 +143,10 @@ final class PortableDecimal implements Comparable<PortableDecimal> {
   }
 
   /// [unscaled] times ten to the power of minus [scale], for any [scale].
-  factory PortableDecimal._scaled(BigInt unscaled, int scale) => scale < 0
+  factory PortableDecimal._scaled(BigInt unscaled, int scale) =>
+      unscaled == BigInt.zero
+      ? zero
+      : scale < 0
       ? PortableDecimal(unscaled * _ten.pow(-scale), 0)
       : PortableDecimal(unscaled, scale).normalized();
 

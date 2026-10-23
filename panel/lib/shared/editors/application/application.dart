@@ -22,6 +22,7 @@ export "kernels/map_kernel.dart";
 export "kernels/number_kernel.dart";
 export "kernels/panel_kernel.dart";
 export "kernels/portable_locale.dart";
+export "kernels/portable_magnitude.dart";
 export "kernels/portable_regex.dart";
 export "kernels/portable_time.dart";
 export "kernels/portable_unicode.dart";

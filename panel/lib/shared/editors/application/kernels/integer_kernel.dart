@@ -1,5 +1,6 @@
 import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
     as skir;
+import "package:typewriter_panel/typewriter_panel.dart";
 
 /// The panel's integer operations. Bitwise operations treat integers as
 /// unbounded two's complement, as Java's BigInteger does.
@@ -25,7 +26,14 @@ final class PanelIntegerKernel implements skir.IntegerKernel {
   BigInt gcd(BigInt first, BigInt second) => first.gcd(second);
 
   @override
-  BigInt shiftLeft(BigInt value, int bits) => value << _distance(bits);
+  BigInt shiftLeft(BigInt value, int bits) {
+    final distance = _distance(bits);
+    if (value != BigInt.zero &&
+        value.bitLength + distance > portableMaximumBits) {
+      portableMagnitudeLimit();
+    }
+    return requireIntegerMagnitude(value << distance);
+  }
 
   @override
   BigInt shiftRight(BigInt value, int bits) => value >> _distance(bits);

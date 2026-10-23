@@ -129,8 +129,8 @@ final class PanelNumberKernel implements skir.NumberKernel {
     (product, value) => _arithmetic(
       product,
       value,
-      integer: (left, right) => left * right,
-      decimal: (left, right) => left * right,
+      integer: (left, right) => requireIntegerMagnitude(left * right),
+      decimal: (left, right) => requireDecimalMagnitude(left * right),
       float: (left, right) => left * right,
     ),
   );
@@ -175,11 +175,22 @@ final class PanelNumberKernel implements skir.NumberKernel {
     }
     return switch (value) {
       skir.PortableInteger(:final value) => skir.PortableInteger(
-        value.pow(exponent),
+        requireIntegerMagnitude(_boundedPower(value, exponent)),
       ),
-      skir.PortableDecimalNumber(:final value) => skir.PortableDecimalNumber(
-        value.power(exponent),
-      ),
+      skir.PortableDecimalNumber(:final value) => () {
+        final base = value.normalized();
+        if (base.scale * exponent > portableMaximumDigits) {
+          portableMagnitudeLimit();
+        }
+        return skir.PortableDecimalNumber(
+          requireDecimalMagnitude(
+            skir.PortableDecimal(
+              _boundedPower(base.unscaled, exponent),
+              base.scale * exponent,
+            ).normalized(),
+          ),
+        );
+      }(),
       skir.PortableFloat(:final value) => skir.PortableFloat(
         _finite(_floatPower(value, exponent)),
       ),
@@ -317,6 +328,17 @@ double _finite(double value) => value.isFinite
     : throw skir.PortableOperationFailure(
         skir.PortableFailures.nonFiniteNumber,
       );
+
+/// [base] to the power [exponent], failing `magnitude_limit` before
+/// computing a power that surely has too many digits. The bases -1, 0 and 1
+/// take any exponent.
+BigInt _boundedPower(BigInt base, int exponent) {
+  if (base.abs() > BigInt.one &&
+      (base.bitLength - 1) * exponent > portableMaximumBits) {
+    portableMagnitudeLimit();
+  }
+  return base.pow(exponent);
+}
 
 /// Square and multiply over the exponent bits from the least significant,
 /// so both hosts round the same intermediate products.

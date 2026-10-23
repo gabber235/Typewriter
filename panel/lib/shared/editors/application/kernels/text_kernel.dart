@@ -79,12 +79,27 @@ final class PanelTextKernel implements skir.TextKernel {
   @override
   skir.PortableDecimal parseDecimal(String value) {
     final match = _numberText.firstMatch(value) ?? _invalidNumber(value);
-    try {
-      return skir.PortableDecimal.parse(_plainNumber(match));
-    } on FormatException {
-      // Only an exponent beyond the platform integer range gets here.
-      _invalidNumber(value);
+    final fraction = match.group(3) ?? match.group(4) ?? "";
+    final coefficient = "${match.group(2) ?? ""}$fraction".replaceFirst(
+      RegExp("^0+"),
+      "",
+    );
+    final exponent = BigInt.parse(match.group(5) ?? "0");
+    final scale = BigInt.from(fraction.length) - exponent;
+    // An exponent or scale beyond the 32 bit range no host represents is not
+    // a number either.
+    if (!_isInt32(exponent) || !_isInt32(scale)) _invalidNumber(value);
+    // Size the canonical plain notation before materializing it.
+    final significant = coefficient.replaceFirst(RegExp(r"0+$"), "");
+    if (significant.isNotEmpty &&
+        portableDecimalDigits(
+              significant.length,
+              scale.toInt() - (coefficient.length - significant.length),
+            ) >
+            portableMaximumDigits) {
+      portableMagnitudeLimit();
     }
+    return skir.PortableDecimal.parse(_plainNumber(match));
   }
 
   @override
@@ -133,7 +148,12 @@ final class PanelTextKernel implements skir.TextKernel {
       final digit = unit <= 0x39 ? unit - 0x30 : unit - 0x61 + 10;
       if (digit >= radix) _invalidNumber(value);
     }
-    final magnitude = BigInt.parse(digits, radix: radix);
+    if (digits.replaceFirst(RegExp("^0+"), "").length > portableMaximumBits) {
+      portableMagnitudeLimit();
+    }
+    final magnitude = requireIntegerMagnitude(
+      BigInt.parse(digits, radix: radix),
+    );
     return match.group(1) == "-" ? -magnitude : magnitude;
   }
 
@@ -234,6 +254,9 @@ String _plainNumber(RegExpMatch match) {
   return "${match.group(1)}$whole${fraction.isEmpty ? "" : ".$fraction"}"
       "${exponent == null ? "" : "e$exponent"}";
 }
+
+bool _isInt32(BigInt value) =>
+    value >= BigInt.from(-2147483648) && value <= BigInt.from(2147483647);
 
 Never _invalidNumber(String value) => throw skir.PortableOperationFailure(
   skir.PortableFailures.invalidNumberText,
