@@ -87,16 +87,15 @@ final class PortableExpressionEvaluator {
   }) : catalog = catalog ?? queries?.catalog,
        _bindings = Map.unmodifiable(bindings);
 
+  /// An evaluator over a configured value bound at its authored [location],
+  /// as Realm evaluates rules: with the type facts of [catalog].
   factory PortableExpressionEvaluator.configuredValue({
     required skir.DataValue value,
     required skir.ValueLocation location,
     required skir.EvaluationBudget budget,
-    Map<skir.ExpressionBindingId, PortableExpressionBinding> additional =
-        const {},
-    CheckedEditorCatalog? catalog,
+    required CheckedEditorCatalog catalog,
   }) => PortableExpressionEvaluator.located(
     {
-      ...additional,
       configuredValueBindingId: PortableExpressionBinding(
         value: value,
         location: location,
@@ -120,7 +119,7 @@ final class PortableExpressionEvaluator {
   final skir.TypeSelection? subject;
 
   final Map<skir.ExpressionBindingId, PortableExpressionBinding> _bindings;
-  final _frames = <List<PortableExpressionBinding>>[];
+  final _frames = <List<_Local>>[];
   // Insertion ordered: a repeated read keeps its first position.
   final _reads = <skir.ValueLocation>{};
   var _steps = 0;
@@ -162,7 +161,10 @@ final class PortableExpressionEvaluator {
       if (projection != null) return _project(projection);
       return switch (node) {
         skir.ExpressionNode_literalWrapper(:final value) => _Available(
-          _portableLiteral(value),
+          admitPortableValue(
+            value,
+            skir.PortableFailures.invalidExpressionLiteral,
+          ),
         ),
         skir.ExpressionNode_fieldWrapper(:final value) => _field(value),
         skir.ExpressionNode_andWrapper(:final value) => _logical(
@@ -235,11 +237,11 @@ final class PortableExpressionEvaluator {
     }
     // A local holds a value an input read or a literal produced; reading it
     // is never a new dependency.
-    final binding = _local(projection.local!);
+    final local = _local(projection.local!);
     return _readValue(
-      binding.value,
+      local.value,
       projection.path,
-      _below(binding.location, projection.path),
+      local.locationOf(projection.path),
     );
   }
 
@@ -253,7 +255,7 @@ final class PortableExpressionEvaluator {
     _ => _Unavailable([?location]),
   };
 
-  PortableExpressionBinding _local(skir.ExpressionLocal reference) {
+  _Local _local(skir.ExpressionLocal reference) {
     final frameIndex = _frames.length - 1 - reference.depth;
     if (reference.depth < 0 ||
         reference.slot < 0 ||
@@ -392,7 +394,9 @@ final class PortableExpressionEvaluator {
         ),
       )!;
       return switch (result) {
-        skir.PortableMaybeValue(:final value) => _Available(value),
+        skir.PortableMaybeValue(:final value) => _Available(
+          _chargeResult(value),
+        ),
         skir.PortableMaybeMissing(:final locations) => _Unavailable(locations),
       };
     } on _LambdaInterrupted catch (interrupted) {
@@ -400,11 +404,30 @@ final class PortableExpressionEvaluator {
     }
   }
 
+  /// Charges the size of an available call result as collection items: one
+  /// per item of a list or set and per top level row of a map, and one per
+  /// started 64 UTF-16 code units of text or 64 bytes. Results that grow
+  /// without collections, such as a fold doubling a text, stay bounded.
+  skir.DataValue _chargeResult(skir.DataValue value) {
+    _consumeItems(switch (value) {
+      skir.DataValue_listValueWrapper(value: final list) => list.items.length,
+      skir.DataValue_setValueWrapper(value: final set) => set.items.length,
+      skir.DataValue_mapValueWrapper(value: final map) => map.rows.length,
+      skir.DataValue_stringValueWrapper(value: final text) => _chunks(
+        text.length,
+      ),
+      skir.DataValue_bytesWrapper(value: final bytes) => _chunks(bytes.length),
+      _ => 0,
+    });
+    return value;
+  }
+
   /// Runs an each lambda for every item of [source], in item order, before
   /// the kernel. A missing item body makes the call missing after every item
   /// ran; a failed one returns at once.
   Object _each(skir.KernelArgument source, skir.ExpressionNode body) {
     final value = source as skir.KernelValue;
+    final entries = _isMap(value.value);
     final results = <skir.DataValue>[];
     final missing = <skir.ValueLocation>{};
     var incomplete = false;
@@ -414,7 +437,7 @@ final class PortableExpressionEvaluator {
         skir.PathSegment.createItem(id: item.id),
       ]);
       final result = _inFrame([
-        PortableExpressionBinding(value: item.value, location: location),
+        _Local(item.value, location, entry: entries),
       ], body);
       switch (result) {
         case _Available(:final value):
@@ -436,22 +459,24 @@ final class PortableExpressionEvaluator {
     skir.KernelArgument? source,
     skir.ExpressionNode body,
   ) {
-    final origin = switch (source) {
-      skir.KernelValue(:final location) => location,
-      _ => null,
+    final (origin, entries) = switch (source) {
+      skir.KernelValue(:final value, :final location) => (
+        location,
+        _isMap(value),
+      ),
+      _ => (null, false),
     };
     return skir.KernelLambda((locals) {
       final result = _inFrame([
         for (final local in locals)
-          PortableExpressionBinding(
-            value: local.value,
-            location: switch (local.item) {
-              final item? => _below(origin, [
-                skir.PathSegment.createItem(id: item),
-              ]),
-              null => null,
-            },
-          ),
+          switch (local.item) {
+            final item? => _Local(
+              local.value,
+              _below(origin, [skir.PathSegment.createItem(id: item)]),
+              entry: entries,
+            ),
+            null => _Local(local.value, null),
+          },
       ], body);
       return switch (result) {
         _Available(:final value) => value,
@@ -472,10 +497,7 @@ final class PortableExpressionEvaluator {
     ),
   };
 
-  _Evaluation _inFrame(
-    List<PortableExpressionBinding> locals,
-    skir.ExpressionNode body,
-  ) {
+  _Evaluation _inFrame(List<_Local> locals, skir.ExpressionNode body) {
     _frames.add(List.unmodifiable(locals));
     try {
       return _evaluate(body);
@@ -490,10 +512,9 @@ final class PortableExpressionEvaluator {
     final projection = _projection(argument);
     if (projection == null) return null;
     final input = projection.input;
-    final origin = input != null
-        ? _bindings[input.binding]?.location
-        : _local(projection.local!).location;
-    return _below(origin, projection.path);
+    return input != null
+        ? _below(_bindings[input.binding]?.location, projection.path)
+        : _local(projection.local!).locationOf(projection.path);
   }
 
   skir.TypeUse _closeType(skir.TypeTemplate template) {
@@ -535,8 +556,42 @@ final class PortableExpressionEvaluator {
 
 const _maximumDepth = 512;
 
+/// The started chunks of 64 units in [length]: ceil(length / 64).
+int _chunks(int length) => (length + 63) ~/ 64;
+
 Never _fail(skir.FailureId failure, [String? message]) =>
     throw skir.PortableOperationFailure(failure, message);
+
+/// A lambda local: an item, entry or accumulator value and, for an item of
+/// a located source, the item's location. A map entry is located at its
+/// row, so its `key` and `value` fields are the row's key and value.
+final class _Local {
+  const _Local(this.value, this.location, {this.entry = false});
+
+  final skir.DataValue value;
+  final skir.ValueLocation? location;
+  final bool entry;
+
+  /// The location of [path] below this local.
+  skir.ValueLocation? locationOf(List<skir.PathSegment> path) {
+    if (entry && path.isNotEmpty) {
+      final row = switch (path.first) {
+        skir.PathSegment_fieldWrapper(value: final field)
+            when field.name == "key" =>
+          skir.PathSegment.mapKey,
+        skir.PathSegment_fieldWrapper(value: final field)
+            when field.name == "value" =>
+          skir.PathSegment.mapValue,
+        _ => null,
+      };
+      if (row != null) return _below(location, [row, ...path.skip(1)]);
+    }
+    return _below(location, path);
+  }
+}
+
+bool _isMap(skir.DataValue value) =>
+    value.authoredPayload is skir.DataValue_mapValueWrapper;
 
 final class _Projection {
   const _Projection({
@@ -758,6 +813,10 @@ skir.ValueLocation? _below(
         path: skir.ValuePath(segments: [...location.path.segments, ...path]),
       );
 
+/// Whether [value] holds unfilled entries anywhere inside, as
+/// [unfilledPaths] finds them.
+bool containsUnfilled(skir.DataValue value) => unfilledPaths(value).isNotEmpty;
+
 /// The paths below [value] that hold unfilled entries, through named
 /// payloads, record fields, collection items and map row keys and values.
 /// The value itself being unfilled yields the empty path.
@@ -804,14 +863,23 @@ List<List<skir.PathSegment>> unfilledPaths(skir.DataValue value) {
   return paths;
 }
 
-/// The canonical form of a literal, as Kotlin's `requirePortable` admits it:
-/// integers in canonical notation and record fields in name order. A literal
-/// that is already canonical is returned as is. A value that is not portable
-/// fails `invalid_expression_literal`.
-skir.DataValue _portableLiteral(skir.DataValue value, [int depth = 0]) {
-  Never invalid(String message) =>
-      _fail(skir.PortableFailures.invalidExpressionLiteral, message);
-  if (depth > _maximumDepth) invalid("The literal is nested too deeply.");
+/// The canonical form of a value entering evaluation from outside the
+/// runtime (a literal or decoded JSON), as Kotlin's `requirePortable` admits
+/// it: integers in canonical notation and record fields in name order. A
+/// value that is already canonical is returned as is. A value that is not
+/// portable fails [failure].
+skir.DataValue admitPortableValue(
+  skir.DataValue value,
+  skir.FailureId failure,
+) => _admitPortable(value, failure, 0);
+
+skir.DataValue _admitPortable(
+  skir.DataValue value,
+  skir.FailureId failure,
+  int depth,
+) {
+  Never invalid(String message) => _fail(failure, message);
+  if (depth > _maximumDepth) invalid("The value is nested too deeply.");
   if (value == skir.DataValue.unfilled ||
       value == skir.DataValue.null_ ||
       value == skir.DataValue.unit) {
@@ -824,7 +892,7 @@ skir.DataValue _portableLiteral(skir.DataValue value, [int depth = 0]) {
     final checked = [
       for (final entry in source)
         () {
-          final admitted = _portableLiteral(entry.value, depth + 1);
+          final admitted = _admitPortable(entry.value, failure, depth + 1);
           item(entry.id);
           if (identical(admitted, entry.value)) return entry;
           changed = true;
@@ -840,13 +908,14 @@ skir.DataValue _portableLiteral(skir.DataValue value, [int depth = 0]) {
     skir.DataValue_bytesWrapper() ||
     skir.DataValue_timestampWrapper() ||
     skir.DataValue_enumCaseWrapper() => value,
-    skir.DataValue_integerWrapper(value: final text) => switch (BigInt.tryParse(
-      text,
-    )) {
-      final parsed? when parsed.toString() == text => value,
-      final parsed? => skir.integerValue(parsed),
-      null => invalid("The integer payload is invalid."),
-    },
+    // Kotlin's BigInteger syntax: an optional sign and decimal digits.
+    skir.DataValue_integerWrapper(value: final text) =>
+      _integerSyntax.hasMatch(text)
+          ? switch (BigInt.parse(text)) {
+              final parsed when parsed.toString() == text => value,
+              final parsed => skir.integerValue(parsed),
+            }
+          : invalid("The integer payload is invalid."),
     skir.DataValue_floatWrapper(value: final number) =>
       number.isFinite ? value : invalid("Float payloads must be finite."),
     skir.DataValue_decimalWrapper(value: final text) =>
@@ -862,7 +931,7 @@ skir.DataValue _portableLiteral(skir.DataValue value, [int depth = 0]) {
       final fields = [
         for (final field in record.fields)
           () {
-            final admitted = _portableLiteral(field.value, depth + 1);
+            final admitted = _admitPortable(field.value, failure, depth + 1);
             if (identical(admitted, field.value)) return field;
             changed = true;
             return skir.FieldValue(name: field.name, value: admitted);
@@ -884,7 +953,7 @@ skir.DataValue _portableLiteral(skir.DataValue value, [int depth = 0]) {
           : skir.DataValue.createRecord(fields: sorted);
     }(),
     skir.DataValue_namedWrapper(value: final named) => () {
-      final payload = _portableLiteral(named.payload, depth + 1);
+      final payload = _admitPortable(named.payload, failure, depth + 1);
       return identical(payload, named.payload)
           ? value
           : skir.DataValue.createNamed(
@@ -910,8 +979,8 @@ skir.DataValue _portableLiteral(skir.DataValue value, [int depth = 0]) {
         for (final row in map.rows)
           () {
             item(row.id);
-            final key = _portableLiteral(row.key, depth + 1);
-            final rowValue = _portableLiteral(row.value, depth + 1);
+            final key = _admitPortable(row.key, failure, depth + 1);
+            final rowValue = _admitPortable(row.value, failure, depth + 1);
             if (identical(key, row.key) && identical(rowValue, row.value)) {
               return row;
             }
@@ -931,6 +1000,8 @@ skir.DataValue _portableLiteral(skir.DataValue value, [int depth = 0]) {
 }
 
 final _canonicalDecimalSyntax = RegExp(r"^-?(0|[1-9][0-9]*)(\.[0-9]+)?$");
+
+final _integerSyntax = RegExp(r"^[+-]?[0-9]+$");
 
 /// A call node of the declared operation [operation], for panel built trees.
 /// The panel has no shortcuts: it composes primitives directly.

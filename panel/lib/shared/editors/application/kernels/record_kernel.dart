@@ -6,22 +6,14 @@ import "package:typewriter_panel/typewriter_panel.dart";
 final class PanelRecordKernel implements skir.RecordKernel {
   const PanelRecordKernel();
 
+  /// Replaces the field, or inserts it in name order when the record lacks
+  /// it. A named record keeps its type; only the payload changes.
   @override
   skir.DataValue withField(
     skir.DataValue source,
     String field,
     skir.DataValue value,
-  ) {
-    final fields = source.asRecordFields();
-    if (!fields.containsKey(field)) {
-      throw skir.PortableOperationFailure(
-        skir.PortableFailures.illTypedArgument,
-        "The record has no field $field.",
-      );
-    }
-    // A named record keeps its type; only the payload changes.
-    return source.withAuthoredPayload(
-      skir.recordValue({...fields, field: value}),
-    );
-  }
+  ) => source.withAuthoredPayload(
+    skir.recordValue({...source.asRecordFields(), field: value}),
+  );
 }

@@ -60,19 +60,22 @@ final class PanelNumberKernel implements skir.NumberKernel {
     );
   }
 
+  /// More than 20000 fraction digits, or a result of more than 20000 digits,
+  /// fails `magnitude_limit`.
   @override
   String format(skir.PortableNumber value, int fractionDigits, String locale) {
     if (fractionDigits < 0) {
       _illTyped("The fraction digits $fractionDigits are negative.");
     }
+    if (fractionDigits > portableMaximumDigits) portableMagnitudeLimit();
     final resolved = resolvePortableLocale(locale, NumberFormat.localeExists);
-    // A float formats from its shortest round trip decimal, as people read it.
-    final exact = switch (value) {
-      skir.PortableFloat(:final value) => skir.PortableDecimal.parse(
-        portableFloatText(value),
-      ),
-      _ => _exactDecimal(value),
-    };
+    final exact = _visibleDecimal(value);
+    // The whole part has at least this many digits, so an oversized result
+    // fails before it is rendered.
+    final wholeDigits = exact.unscaled.abs().toString().length - exact.scale;
+    if (wholeDigits + fractionDigits > portableMaximumDigits) {
+      portableMagnitudeLimit();
+    }
     final coefficient = skir.roundQuotient(
       exact.unscaled * _ten.pow(fractionDigits),
       _ten.pow(exact.scale),
@@ -82,6 +85,7 @@ final class PanelNumberKernel implements skir.NumberKernel {
       fractionDigits + 1,
       "0",
     );
+    if (digits.length > portableMaximumDigits) portableMagnitudeLimit();
     var whole = digits.substring(0, digits.length - fractionDigits);
     final fraction = digits.substring(digits.length - fractionDigits);
     if (resolved == null) {
@@ -135,24 +139,30 @@ final class PanelNumberKernel implements skir.NumberKernel {
     ),
   );
 
+  /// The CLDR operands come exactly from the value's visible decimal (a
+  /// float's shortest round trip decimal): `i` its integer digits, `v` its
+  /// fraction digit count and `f` and `t` its fraction digits. intl derives
+  /// operands from a double itself, which rounds `i` and loses digits, so
+  /// [_pluralOperands] hands it a small representative from which it
+  /// derives operands every one of its rules reads identically. A magnitude
+  /// of 10^21 or more, or more than 20 fraction digits, fails
+  /// `magnitude_limit`, as the operation declares.
   @override
   skir.PluralCategory pluralCategory(skir.PortableNumber value, String locale) {
     // intl itself falls back from region to language to the root rules.
     final resolved = resolvePortableLocale(locale, (_) => true);
+    final visible = _visibleDecimal(value).normalized();
+    // A number whose integer part has 22 digits is at least 10^21.
+    final wholeDigits =
+        visible.unscaled.abs().toString().length - visible.scale;
+    if (visible.scale > _pluralFractionDigits ||
+        (!visible.isZero && wholeDigits > _pluralWholeDigits)) {
+      portableMagnitudeLimit();
+    }
     if (resolved == null) return skir.PluralCategory.other;
-    final (amount, precision) = switch (value) {
-      skir.PortableInteger(:final value) => (value.toDouble(), 0),
-      skir.PortableDecimalNumber(:final value) => (
-        value.toDouble(),
-        value.normalized().scale,
-      ),
-      skir.PortableFloat(:final value) => (
-        value,
-        _fractionDigits(portableFloatText(value)),
-      ),
-    };
+    final (howMany, precision) = _pluralOperands(visible);
     return Intl.pluralLogic(
-      amount,
+      howMany,
       zero: skir.PluralCategory.zero,
       one: skir.PluralCategory.one,
       two: skir.PluralCategory.two,
@@ -418,14 +428,59 @@ skir.PortableNumber _toFloat(
   return skir.PortableFloat(candidate);
 }
 
-/// The number of digits after the point of [text], before any exponent.
-int _fractionDigits(String text) {
-  final mantissa = text.split("e").first;
-  final point = mantissa.indexOf(".");
-  final digits = point < 0 ? 0 : mantissa.length - point - 1;
-  final exponent = text.contains("e") ? int.parse(text.split("e").last) : 0;
-  return max(0, digits - exponent);
+/// The decimal people read for [value]: a float's shortest round trip
+/// decimal, otherwise the exact value.
+skir.PortableDecimal _visibleDecimal(skir.PortableNumber value) =>
+    switch (value) {
+      skir.PortableFloat(:final value) => skir.PortableDecimal.parse(
+        portableFloatText(value),
+      ),
+      _ => _exactDecimal(value),
+    };
+
+/// A number and precision from which intl's `startRuleEvaluation` derives
+/// operands that agree with the exact operands of [value] on everything its
+/// rules read.
+///
+/// intl's rules read `i` modulo 10, 100 and 1000000 and its equality with
+/// small numbers; `v` as zero, nonzero or two; `f` and `t` modulo 10 and
+/// 100 and their equality with zero or one; and `n` only through equality
+/// with integers, so a fractional `n` never matches. The representative
+/// keeps exactly these: `i` above 1000000 becomes 1000000 plus its remainder,
+/// `v` above three becomes three, and `f` above 100 becomes 100 plus its
+/// remainder (its last digit is nonzero, so `t` follows `f`). intl takes `i`
+/// as the rounded number and `f` from the floor of the scaled number, so the
+/// representative is `(i * 10^v + f + 0.5) / 10^v`, one lower when its
+/// fraction would round `i` up. All of it stays far inside the doubles intl
+/// computes with.
+(num, int) _pluralOperands(skir.PortableDecimal value) {
+  final magnitude = value.normalized();
+  final unscaled = magnitude.unscaled.abs();
+  final scale = magnitude.scale;
+  final integer = scale <= 0
+      ? unscaled * _ten.pow(-scale)
+      : unscaled ~/ _ten.pow(scale);
+  final fraction = scale <= 0 ? BigInt.zero : unscaled % _ten.pow(scale);
+  final i = integer < _million
+      ? integer.toInt()
+      : (_million + integer % _million).toInt();
+  if (scale <= 0) return (i, 0);
+  final v = min(scale, 3);
+  final f = fraction < _hundred
+      ? fraction.toInt()
+      : (_hundred + fraction % _hundred).toInt();
+  final base = pow(10, v).toInt();
+  final whole = 2 * f < base ? i : i - 1;
+  return ((whole * base + f + 0.5) / base, v);
 }
+
+/// The bounds number.plural_category declares: magnitudes below 10^21 (at
+/// most 21 integer digits) with at most 20 fraction digits.
+const _pluralWholeDigits = 21;
+const _pluralFractionDigits = 20;
+
+final _million = BigInt.from(1000000);
+final _hundred = BigInt.from(100);
 
 Never _familyMismatch() =>
     _illTyped("Numeric operands must use one numeric family.");

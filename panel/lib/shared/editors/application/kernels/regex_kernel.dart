@@ -32,6 +32,8 @@ final class PanelRegexKernel implements skir.RegexKernel {
     ];
   }
 
+  /// The replacement is parsed before matching, so a malformed one fails
+  /// even when nothing matches.
   @override
   String replace(
     String value,
@@ -40,14 +42,19 @@ final class PanelRegexKernel implements skir.RegexKernel {
     skir.PortableMeter meter,
   ) {
     final matcher = _compile(value, pattern);
+    final PortableRegexReplacement template;
     try {
-      return matcher.replace(value, replacement, () => meter.steps(1));
+      template = PortableRegexReplacement.parse(
+        replacement,
+        matcher.groupCount,
+      );
     } on PortableRegexCompileFailure catch (failure) {
       throw skir.PortableOperationFailure(
         skir.PortableFailures.invalidRegex,
         failure.message,
       );
     }
+    return matcher.replace(value, template, () => meter.steps(1));
   }
 }
 

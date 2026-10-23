@@ -76,32 +76,44 @@ final class PanelTextKernel implements skir.TextKernel {
     compose: form == skir.UnicodeForm.nfc || form == skir.UnicodeForm.nfkc,
   );
 
+  /// Digit counts are checked before any big number is built, so long text
+  /// costs time linear in its length.
   @override
   skir.PortableDecimal parseDecimal(String value) {
     final match = _numberText.firstMatch(value) ?? _invalidNumber(value);
     final fraction = match.group(3) ?? match.group(4) ?? "";
-    final coefficient = "${match.group(2) ?? ""}$fraction".replaceFirst(
-      RegExp("^0+"),
-      "",
-    );
-    final exponent = BigInt.parse(match.group(5) ?? "0");
-    final scale = BigInt.from(fraction.length) - exponent;
+    final exponentText = match.group(5) ?? "0";
     // An exponent or scale beyond the 32 bit range no host represents is not
     // a number either.
-    if (!_isInt32(exponent) || !_isInt32(scale)) _invalidNumber(value);
-    // Size the canonical plain notation before materializing it.
+    if (_withoutLeadingZeros(exponentText.replaceFirst(RegExp("^[+-]"), ""))
+            .length >
+        10) {
+      _invalidNumber(value);
+    }
+    final exponent = int.parse(exponentText);
+    if (!_isInt32(exponent) || !_isInt32(fraction.length - exponent)) {
+      _invalidNumber(value);
+    }
+    final coefficient = _withoutLeadingZeros(
+      "${match.group(2) ?? ""}$fraction",
+    );
     final significant = coefficient.replaceFirst(RegExp(r"0+$"), "");
-    if (significant.isNotEmpty &&
-        portableDecimalDigits(
-              significant.length,
-              scale.toInt() - (coefficient.length - significant.length),
-            ) >
-            portableMaximumDigits) {
+    if (significant.isEmpty) return skir.PortableDecimal.zero;
+    final scale =
+        fraction.length - exponent - (coefficient.length - significant.length);
+    if (portableDecimalDigits(significant.length, scale) >
+        portableMaximumDigits) {
       portableMagnitudeLimit();
     }
-    return skir.PortableDecimal.parse(_plainNumber(match));
+    var unscaled = BigInt.parse(significant);
+    if (match.group(1) == "-") unscaled = -unscaled;
+    return scale < 0
+        ? skir.PortableDecimal(unscaled * BigInt.from(10).pow(-scale), 0)
+        : skir.PortableDecimal(unscaled, scale);
   }
 
+  /// A component of more significant digits than the portable duration
+  /// range has fails `duration_range` before it is parsed.
   @override
   Duration parseDuration(String value) {
     final match = _durationText.firstMatch(value);
@@ -115,7 +127,17 @@ final class PanelTextKernel implements skir.TextKernel {
         "The text $value is not an ISO 8601 duration.",
       );
     }
-    BigInt part(int group) => BigInt.parse(match.group(group) ?? "0");
+    BigInt part(int group) {
+      final digits = _withoutLeadingZeros(match.group(group) ?? "");
+      if (digits.length > _durationDigits) {
+        throw skir.PortableOperationFailure(
+          skir.PortableFailures.durationRange,
+          "The duration $value exceeds the portable range.",
+        );
+      }
+      return digits.isEmpty ? BigInt.zero : BigInt.parse(digits);
+    }
+
     final fraction = (match.group(7) ?? "").padRight(3, "0");
     var milliseconds =
         part(2) * BigInt.from(86400000) +
@@ -148,7 +170,11 @@ final class PanelTextKernel implements skir.TextKernel {
       final digit = unit <= 0x39 ? unit - 0x30 : unit - 0x61 + 10;
       if (digit >= radix) _invalidNumber(value);
     }
-    if (digits.replaceFirst(RegExp("^0+"), "").length > portableMaximumBits) {
+    // A number of d significant digits is at least radix^(d - 1), so its
+    // size is known before it is built.
+    final significant = _withoutLeadingZeros(digits).length;
+    if (significant > 1 &&
+        (significant - 1) * log(radix) / ln2 > portableMaximumBits) {
       portableMagnitudeLimit();
     }
     final magnitude = requireIntegerMagnitude(
@@ -255,8 +281,14 @@ String _plainNumber(RegExpMatch match) {
       "${exponent == null ? "" : "e$exponent"}";
 }
 
-bool _isInt32(BigInt value) =>
-    value >= BigInt.from(-2147483648) && value <= BigInt.from(2147483647);
+bool _isInt32(int value) => value >= -2147483648 && value <= 2147483647;
+
+String _withoutLeadingZeros(String digits) =>
+    digits.replaceFirst(RegExp("^0+"), "");
+
+/// The digits of the largest portable duration, 9007199254740991 ms; a
+/// component with more significant digits exceeds it in any unit.
+const _durationDigits = 16;
 
 Never _invalidNumber(String value) => throw skir.PortableOperationFailure(
   skir.PortableFailures.invalidNumberText,

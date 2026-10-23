@@ -453,14 +453,11 @@ final class PortableRegexMatcher {
   List<PortableRegexMatch> findAll(String input, void Function() consumeStep) =>
       _findAll(input.runes.toList(growable: false), consumeStep);
 
-  /// [input] with every match replaced by [replacement], where `$n` inserts
-  /// group n (nothing when it did not take part) and `$$` a dollar sign. A
-  /// group number takes the longest digit run that names a group. Any other
-  /// `$` throws [PortableRegexCompileFailure]; every other character,
-  /// backslashes included, is literal.
+  /// [input] with every match replaced by [replacement] expanded for that
+  /// match.
   String replace(
     String input,
-    String replacement,
+    PortableRegexReplacement replacement,
     void Function() consumeStep,
   ) {
     final codePoints = input.runes.toList(growable: false);
@@ -474,14 +471,24 @@ final class PortableRegexMatcher {
         match.start,
         consumeStep,
       );
-      _appendReplacement(
-        output,
-        replacement,
-        codePoints,
-        match.captures,
-        groupCount,
-        consumeStep,
-      );
+      for (final part in replacement._parts) {
+        switch (part) {
+          case _ReplacementText(:final codePoints):
+            _appendCodePoints(
+              output,
+              codePoints,
+              0,
+              codePoints.length,
+              consumeStep,
+            );
+          case _ReplacementGroup(:final group):
+            final start = match.captures[group * 2];
+            final end = match.captures[group * 2 + 1];
+            if (start != _unsetCapture && end != _unsetCapture) {
+              _appendCodePoints(output, codePoints, start, end, consumeStep);
+            }
+        }
+      }
       copiedUntil = match.end;
     }
     _appendCodePoints(
@@ -1125,55 +1132,76 @@ final class _PortableRegexCompiler {
   }
 }
 
-void _appendReplacement(
-  StringBuffer output,
-  String replacement,
-  List<int> codePoints,
-  List<int> captures,
-  int groupCount,
-  void Function() consumeStep,
-) {
-  final marks = replacement.runes.toList(growable: false);
-  var index = 0;
-  while (index < marks.length) {
-    final marker = marks[index++];
-    if (marker != 36) {
-      consumeStep();
-      output.writeCharCode(marker);
-      continue;
+/// A parsed replacement template. `$n` inserts group n (nothing when the
+/// group did not take part), taking the longest digit run that names an
+/// existing group, and `$$` inserts one dollar sign. Every other character,
+/// backslashes included, is literal. Parsing happens before matching, so a
+/// malformed template fails even when nothing matches.
+final class PortableRegexReplacement {
+  const PortableRegexReplacement._(this._parts);
+
+  /// Parses [replacement] for a pattern with [groupCount] groups. A `$`
+  /// followed by neither a digit nor `$`, or naming a group the pattern
+  /// lacks, throws [PortableRegexCompileFailure].
+  factory PortableRegexReplacement.parse(String replacement, int groupCount) {
+    final marks = replacement.runes.toList(growable: false);
+    final parts = <_ReplacementPart>[];
+    final text = <int>[];
+    void flush() {
+      if (text.isNotEmpty) parts.add(_ReplacementText(List.of(text)));
+      text.clear();
     }
-    if (index < marks.length && marks[index] == 36) {
-      index++;
-      consumeStep();
-      output.writeCharCode(36);
-      continue;
-    }
-    final first = index < marks.length ? marks[index] - 48 : -1;
-    if (first < 0 || first > 9 || first > groupCount) {
-      throw const PortableRegexCompileFailure(
-        r"A dollar sign in a replacement starts $$ or a group number",
-      );
-    }
-    var group = first;
-    index++;
+
+    var index = 0;
     while (index < marks.length) {
-      final digit = marks[index] - 48;
-      if (digit < 0 || digit > 9 || group * 10 + digit > groupCount) break;
-      group = group * 10 + digit;
+      final marker = marks[index++];
+      if (marker != 36) {
+        text.add(marker);
+        continue;
+      }
+      if (index < marks.length && marks[index] == 36) {
+        index++;
+        text.add(36);
+        continue;
+      }
+      final first = index < marks.length ? marks[index] - 48 : -1;
+      if (first < 0 || first > 9 || first > groupCount) {
+        throw const PortableRegexCompileFailure(
+          r"A dollar sign in a replacement starts $$ or a group number",
+        );
+      }
+      var group = first;
       index++;
+      while (index < marks.length) {
+        final digit = marks[index] - 48;
+        if (digit < 0 || digit > 9 || group * 10 + digit > groupCount) break;
+        group = group * 10 + digit;
+        index++;
+      }
+      flush();
+      parts.add(_ReplacementGroup(group));
     }
-    final captureStart = captures[group * 2];
-    final captureEnd = captures[group * 2 + 1];
-    if (captureStart != _unsetCapture && captureEnd != _unsetCapture) {
-      _appendCodePoints(
-        output,
-        codePoints,
-        captureStart,
-        captureEnd,
-        consumeStep,
-      );
-    }
+    flush();
+    return PortableRegexReplacement._(List.unmodifiable(parts));
   }
+
+  final List<_ReplacementPart> _parts;
+}
+
+sealed class _ReplacementPart {
+  const _ReplacementPart();
+}
+
+final class _ReplacementText extends _ReplacementPart {
+  const _ReplacementText(this.codePoints);
+
+  final List<int> codePoints;
+}
+
+final class _ReplacementGroup extends _ReplacementPart {
+  const _ReplacementGroup(this.group);
+
+  final int group;
 }
 
 void _appendCodePoints(

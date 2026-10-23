@@ -8,8 +8,9 @@ import "../../../support/portable_fixture.dart";
 
 /// Runs every case of the shared operation fixture
 /// (`skir-src/editor/v1/fixtures/operations/*.json`, format in the README
-/// there). The panel runs every case, rule and panel profile alike; `check`
-/// belongs to the Kotlin checker and is ignored here.
+/// there). The panel runs every case, rule and panel profile alike, and
+/// compares the outcome and the reads of each in order; `check` belongs to
+/// the Kotlin checker and is ignored here.
 void main() {
   final directory = Directory("../skir-src/editor/v1/fixtures/operations");
   final files =
@@ -168,6 +169,7 @@ void _expectOutcome(
     "failed",
     "reads",
   }, "expected");
+  expect(expected, contains("reads"), reason: "every case states its reads");
   final outcomes = expected.keys.where((key) => key != "reads");
   expect(outcomes, hasLength(1), reason: "one expected outcome");
   final description = _describe(result);

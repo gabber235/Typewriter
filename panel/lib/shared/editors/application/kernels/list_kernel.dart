@@ -6,6 +6,8 @@ import "package:typewriter_panel/typewriter_panel.dart";
 final class PanelListKernel implements skir.ListKernel {
   const PanelListKernel();
 
+  /// An item that holds unfilled entries anywhere inside is missing at the
+  /// item's location.
   @override
   skir.PortableMaybe<skir.DataValue> at(
     skir.Located<List<skir.ListItem>> source,
@@ -18,7 +20,7 @@ final class PanelListKernel implements skir.ListKernel {
       );
     }
     final item = source.value[index];
-    if (item.value == skir.DataValue.unfilled) {
+    if (containsUnfilled(item.value)) {
       return skir.PortableMaybeMissing([?source.item(item.id)]);
     }
     return skir.PortableMaybeValue(item.value);
