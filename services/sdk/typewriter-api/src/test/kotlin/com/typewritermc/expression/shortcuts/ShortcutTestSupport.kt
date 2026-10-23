@@ -8,6 +8,7 @@ import com.typewritermc.expression.ExpressionValueReader
 import com.typewritermc.expression.FixtureReads
 import com.typewritermc.expression.MayBeMissing
 import com.typewritermc.expression.input
+import com.typewritermc.expression.testPortableTypes
 import com.typewritermc.types.integer
 import com.typewritermc.types.listValue
 import skirout.editor.v1.expression.EvaluationBudget
@@ -35,7 +36,12 @@ internal fun evaluate(
     subject: DataValue? = null,
 ): Availability<DataValue> =
     with(FixtureReads) {
-        DefaultExpressionEvaluator(ExpressionValueReader { error("Shortcut tests bind unlocated values only.") }).evaluateScoped(
+        DefaultExpressionEvaluator(
+            ExpressionValueReader {
+                error("Shortcut tests bind unlocated values only.")
+            },
+            testPortableTypes(),
+        ).evaluateScoped(
             node,
             ExpressionBindings(emptyMap()),
             subject?.let { mapOf(SUBJECT to it) } ?: emptyMap(),

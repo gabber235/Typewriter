@@ -43,6 +43,7 @@ import com.typewritermc.expression.operations.EvaluatorFailure
 import com.typewritermc.expression.operations.PortableOperationCatalog
 import com.typewritermc.expression.testInput
 import com.typewritermc.expression.testLiteral
+import com.typewritermc.expression.testPortableTypes
 import com.typewritermc.imprint.ArtifactId
 import com.typewritermc.imprint.ContributionName
 import com.typewritermc.imprint.ContributionSourceId
@@ -136,7 +137,8 @@ val SdkRuntimeConformanceTest by testSuite {
                 ResourceId("book:requested"),
                 ValuePath.root,
             )
-        val evaluator = DefaultExpressionEvaluator(ExpressionValueReader { DataValue.StringValueWrapper("Requested").available() })
+        val evaluator =
+            DefaultExpressionEvaluator(ExpressionValueReader { DataValue.StringValueWrapper("Requested").available() }, testPortableTypes())
 
         with(EmptyReads) {
             evaluator.evaluate(
@@ -166,6 +168,7 @@ val SdkRuntimeConformanceTest by testSuite {
                     reads += 1
                     result
                 },
+                testPortableTypes(),
             )
         val bindings = ExpressionBindings(mapOf(binding to location))
         val budget = EvaluationBudget(maxSteps = 100, maxCollectionItems = 100)
@@ -211,7 +214,7 @@ val SdkRuntimeConformanceTest by testSuite {
         repeat(PortableExpressionLimits.MAX_DEPTH + 1) {
             nested = ExpressionNode.createAnd(left = testLiteral(DataValue.BooleanWrapper(true)), right = nested)
         }
-        val evaluator = DefaultExpressionEvaluator(ExpressionValueReader { error("No reads expected") })
+        val evaluator = DefaultExpressionEvaluator(ExpressionValueReader { error("No reads expected") }, testPortableTypes())
         with(EmptyReads) {
             val failed =
                 evaluator.evaluate(
@@ -297,7 +300,8 @@ val SdkRuntimeConformanceTest by testSuite {
                 .descriptor.predicate
         val configured = ExpressionBindingId(value = "configured_value")
         val location = ValueLocation.of(ResourceId("counter:1"))
-        val evaluator = DefaultExpressionEvaluator(ExpressionValueReader { DataValue.integer(5.toBigInteger()).available() })
+        val evaluator =
+            DefaultExpressionEvaluator(ExpressionValueReader { DataValue.integer(5.toBigInteger()).available() }, testPortableTypes())
         with(EmptyReads) {
             evaluator.evaluate(
                 rule,
@@ -321,6 +325,7 @@ val SdkRuntimeConformanceTest by testSuite {
         val unsignedEvaluator =
             DefaultExpressionEvaluator(
                 ExpressionValueReader { DataValue.integer(ULong.MAX_VALUE.toString().toBigInteger()).available() },
+                testPortableTypes(),
             )
         with(EmptyReads) {
             unsignedEvaluator.evaluate(

@@ -14,19 +14,9 @@ import com.typewritermc.checking.TypedSelection
 import com.typewritermc.configuration.PortableExpressionChecker
 import com.typewritermc.configuration.ruleProfileViolations
 import com.typewritermc.expression.operations.CatalogPortableTypes
-import com.typewritermc.expression.operations.DateTimeFieldsDefinition
 import com.typewritermc.expression.operations.EvaluatorFailure
-import com.typewritermc.expression.operations.NameStyleDefinition
-import com.typewritermc.expression.operations.PluralCategoryDefinition
 import com.typewritermc.expression.operations.PortableOperationCatalog
-import com.typewritermc.expression.operations.RegexMatchDefinition
-import com.typewritermc.expression.operations.RoundingModeDefinition
-import com.typewritermc.expression.operations.SortDirectionDefinition
-import com.typewritermc.expression.operations.UnicodeFormDefinition
 import com.typewritermc.expression.operations.entryValue
-import com.typewritermc.types.ResourceIdDefinition
-import com.typewritermc.types.StandardTypes
-import com.typewritermc.types.catalog.DefaultCheckedCatalog
 import com.typewritermc.types.catalog.resolve
 import com.typewritermc.types.declared
 import com.typewritermc.types.duration
@@ -130,20 +120,6 @@ private val CHECK_KEYS = setOf("resultType", "failures", "inferredType")
 private val BUDGET_KEYS = setOf("maxSteps", "maxCollectionItems")
 private val OUTCOME_KEYS = setOf("available", "unavailable", "failed")
 
-/** The catalog declarations of the operation library the manifest declares, which every case may use. */
-private val LIBRARY_DEFINITIONS: List<TypeDefinition> =
-    StandardTypes.definitions +
-        listOf(
-            RoundingModeDefinition.definition,
-            SortDirectionDefinition.definition,
-            UnicodeFormDefinition.definition,
-            PluralCategoryDefinition.definition,
-            NameStyleDefinition.definition,
-            RegexMatchDefinition.definition,
-            DateTimeFieldsDefinition.definition,
-            ResourceIdDefinition.definition,
-        )
-
 private class FixtureInput(
     val value: DataValue,
     val type: ExpressionType?,
@@ -162,13 +138,7 @@ private class FixtureCase(
 ) {
     val expectedFailure: String? get() = expected["failed"]?.jsonPrimitive?.content
 
-    val catalog by lazy {
-        val declared = definitions.map { it.id }.toSet()
-        DefaultCheckedCatalog(
-            CatalogGeneration(value = "operation fixture"),
-            LIBRARY_DEFINITIONS.filterNot { it.id in declared } + definitions,
-        )
-    }
+    val catalog by lazy { testCatalog(definitions) }
 }
 
 private fun fixtureCases(): List<FixtureCase> =
@@ -257,7 +227,12 @@ private fun FixtureCase.checkWith(check: JsonObject) {
                 ExpressionType.serializer.fromJsonCode(check.getValue("resultType").toString()),
                 onInferred = { inferred = it },
             ).map { it.value }
-    failures.sorted() shouldBe check.getValue("failures").jsonArray.map { it.jsonPrimitive.content }.sorted()
+    failures.sorted() shouldBe
+        check
+            .getValue("failures")
+            .jsonArray
+            .map { it.jsonPrimitive.content }
+            .sorted()
     check["inferredType"]?.let { inferred shouldBe ExpressionType.serializer.fromJsonCode(it.toString()) }
 }
 

@@ -19,6 +19,7 @@ import com.typewritermc.expression.eq
 import com.typewritermc.expression.field
 import com.typewritermc.expression.input
 import com.typewritermc.expression.literal
+import com.typewritermc.expression.testPortableTypes
 import com.typewritermc.types.StandardTypes
 import com.typewritermc.types.declared
 import com.typewritermc.types.duration
@@ -146,7 +147,10 @@ private fun rule(configure: (ConfigurationCollectionScope) -> Unit): ExpressionN
 private infix fun ExpressionNode.holdsFor(value: DataValue): Boolean {
     val result =
         with(FixtureReads) {
-            DefaultExpressionEvaluator(ExpressionValueReader { error("Rule tests bind unlocated values only.") }).evaluateScoped(
+            DefaultExpressionEvaluator(
+                ExpressionValueReader { error("Rule tests bind unlocated values only.") },
+                testPortableTypes(),
+            ).evaluateScoped(
                 this@holdsFor,
                 ExpressionBindings(emptyMap()),
                 mapOf(CONFIGURED_VALUE to value),

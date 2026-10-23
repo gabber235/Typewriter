@@ -142,12 +142,9 @@ sealed interface KernelArgument {
 /** The capabilities a kernel may use besides its arguments, supplied by the evaluating host. */
 class KernelContext(
     val meter: PortableMeter,
-    private val typeFacts: PortableTypes?,
-) {
-    /** The catalog type facts; operations that use them fail on a host that has none. */
-    val types: PortableTypes
-        get() = typeFacts ?: throw OperationFailure(EvaluatorFailure.OutsideRuleProfile, "This host has no catalog type facts.")
-}
+    /** The type facts of the catalog the evaluation runs against. */
+    val types: PortableTypes,
+)
 
 /**
  * Runs one declared operation with converted arguments; generated per operation in the rule kernel dispatch.
