@@ -32,3 +32,12 @@ Each bounded context owns its own version folders, such as `editor/v1` or `servi
 - Keep declaration IDs and field or variant numbers contiguous and ascending within their respective sequences. Renumber after changes instead of reserving gaps for compatibility.
 - Each file numbers its declarations from its own unique prefix, such as `810700001`, `810700002`, and so on in `editor/v1/action.skir`. Each bounded context numbers its methods from its own range, such as `920001` onward for `editor`. `bun run generate:protocol` checks declaration and variant numbering before generating.
 - Define compatibility and versioning guarantees when a contract is actually published as stable.
+
+## Portable expression operations
+
+`editor/v1/operations.yaml` declares every primitive of the portable expression language: signature, profile, failures and item identities. Expressions call them through `ExpressionNode.call`; `expression.skir` does not change for a new operation.
+
+- Prefer a Kotlin shortcut (`services/sdk/typewriter-api/.../expression/shortcuts/`) over a new primitive. A primitive is only justified when no composition of primitives gives the same result (missing data, failures and list item identities included) without asymptotically more work or a lost early exit.
+- Adding a primitive: declare it, run `bun run generate:protocol`, implement the generated Kotlin kernel method (profile `rule` only) and the Dart kernel method, then add cases to `editor/v1/fixtures/operations/<group>.json`. The compilers and the coverage test point at each missing step.
+- Profile `panel` operations (localized formatting, time zones, resource reads) have no Kotlin kernel; rules and selection predicates cannot use them.
+- Failures are declared in the manifest and travel as `FailureId`; never raise or compare string codes.
