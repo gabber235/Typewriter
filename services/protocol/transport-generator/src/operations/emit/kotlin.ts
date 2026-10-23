@@ -858,10 +858,14 @@ function isCollectionType(type: Signature): boolean {
   return ["list", "set", "items", "map", "link"].includes(type.kind);
 }
 
-/** `Expr<T, M>`, with an out projection for collection types so List<String> fits Collection<String>. */
+/**
+ * `Expr<T, M>`, with an out projection for collection types so List<String> fits Collection<String>, and for nullable
+ * types so an expression of a non null type fits a parameter that also accepts null.
+ */
 function exprOf(type: Signature, variant: DslVariant, catalog: ResolvedOperations, skir: Skir, policy: string): string {
   const kotlin = dslType(type, variant, catalog, skir);
-  return `Expr<${isCollectionType(unwrapped(type)) ? "out " : ""}${kotlin}, ${policy}>`;
+  const shape = unwrapped(type);
+  return `Expr<${isCollectionType(shape) || shape.kind === "nullable" ? "out " : ""}${kotlin}, ${policy}>`;
 }
 
 function lambdaType(parameter: ResolvedParameter, variant: DslVariant, catalog: ResolvedOperations, skir: Skir, items?: Signature): string {
@@ -919,6 +923,8 @@ function dslFunction(
       return;
     }
     if (parameter.variadic) {
+      // Infix and operator functions take exactly one argument; longer chains nest the binary form.
+      if (dsl.operator || dsl.infix) return;
       declared.push(`vararg ${name}: ${exprOf(type, variant, catalog, skir, "M")}`);
       callArguments.push(`*${name}`);
       return;

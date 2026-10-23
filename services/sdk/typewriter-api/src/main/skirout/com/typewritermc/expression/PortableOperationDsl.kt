@@ -207,145 +207,127 @@ fun <K, V, M : MissingPolicy> entryOf(
 @JvmName("integerBitAndByte")
 infix fun <M : MissingPolicy> Expr<Byte, M>.and(
     second: Expr<Byte, M>,
-    vararg rest: Expr<Byte, M>,
 ): Expr<Byte, M> =
-    call(PortableOperationCatalog.INTEGER_BIT_AND, this, second, *rest)
+    call(PortableOperationCatalog.INTEGER_BIT_AND, this, second)
 
 /** Bitwise and, in two's complement. */
 @JvmName("integerBitAndByteRaw")
 infix fun <M : MissingPolicy> Expr<Byte, M>.and(
     second: Byte,
-    vararg rest: Expr<Byte, M>,
 ): Expr<Byte, M> =
-    call(PortableOperationCatalog.INTEGER_BIT_AND, this, numericLiteral(second), *rest)
+    call(PortableOperationCatalog.INTEGER_BIT_AND, this, numericLiteral(second))
 
 /** Bitwise and, in two's complement. */
 @JvmName("integerBitAndShort")
 infix fun <M : MissingPolicy> Expr<Short, M>.and(
     second: Expr<Short, M>,
-    vararg rest: Expr<Short, M>,
 ): Expr<Short, M> =
-    call(PortableOperationCatalog.INTEGER_BIT_AND, this, second, *rest)
+    call(PortableOperationCatalog.INTEGER_BIT_AND, this, second)
 
 /** Bitwise and, in two's complement. */
 @JvmName("integerBitAndShortRaw")
 infix fun <M : MissingPolicy> Expr<Short, M>.and(
     second: Short,
-    vararg rest: Expr<Short, M>,
 ): Expr<Short, M> =
-    call(PortableOperationCatalog.INTEGER_BIT_AND, this, numericLiteral(second), *rest)
+    call(PortableOperationCatalog.INTEGER_BIT_AND, this, numericLiteral(second))
 
 /** Bitwise and, in two's complement. */
 @JvmName("integerBitAndInt")
 infix fun <M : MissingPolicy> Expr<Int, M>.and(
     second: Expr<Int, M>,
-    vararg rest: Expr<Int, M>,
 ): Expr<Int, M> =
-    call(PortableOperationCatalog.INTEGER_BIT_AND, this, second, *rest)
+    call(PortableOperationCatalog.INTEGER_BIT_AND, this, second)
 
 /** Bitwise and, in two's complement. */
 @JvmName("integerBitAndIntRaw")
 infix fun <M : MissingPolicy> Expr<Int, M>.and(
     second: Int,
-    vararg rest: Expr<Int, M>,
 ): Expr<Int, M> =
-    call(PortableOperationCatalog.INTEGER_BIT_AND, this, numericLiteral(second), *rest)
+    call(PortableOperationCatalog.INTEGER_BIT_AND, this, numericLiteral(second))
 
 /** Bitwise and, in two's complement. */
 @JvmName("integerBitAndLong")
 infix fun <M : MissingPolicy> Expr<Long, M>.and(
     second: Expr<Long, M>,
-    vararg rest: Expr<Long, M>,
 ): Expr<Long, M> =
-    call(PortableOperationCatalog.INTEGER_BIT_AND, this, second, *rest)
+    call(PortableOperationCatalog.INTEGER_BIT_AND, this, second)
 
 /** Bitwise and, in two's complement. */
 @JvmName("integerBitAndLongRaw")
 infix fun <M : MissingPolicy> Expr<Long, M>.and(
     second: Long,
-    vararg rest: Expr<Long, M>,
 ): Expr<Long, M> =
-    call(PortableOperationCatalog.INTEGER_BIT_AND, this, numericLiteral(second), *rest)
+    call(PortableOperationCatalog.INTEGER_BIT_AND, this, numericLiteral(second))
 
 /** Bitwise and, in two's complement. */
 @JvmName("integerBitAndBigInteger")
 infix fun <M : MissingPolicy> Expr<BigInteger, M>.and(
     second: Expr<BigInteger, M>,
-    vararg rest: Expr<BigInteger, M>,
 ): Expr<BigInteger, M> =
-    call(PortableOperationCatalog.INTEGER_BIT_AND, this, second, *rest)
+    call(PortableOperationCatalog.INTEGER_BIT_AND, this, second)
 
 /** Bitwise and, in two's complement. */
 @JvmName("integerBitAndBigIntegerRaw")
 infix fun <M : MissingPolicy> Expr<BigInteger, M>.and(
     second: BigInteger,
-    vararg rest: Expr<BigInteger, M>,
 ): Expr<BigInteger, M> =
-    call(PortableOperationCatalog.INTEGER_BIT_AND, this, numericLiteral(second), *rest)
+    call(PortableOperationCatalog.INTEGER_BIT_AND, this, numericLiteral(second))
 
 /** Bitwise and, in two's complement. */
 @JvmName("integerBitAndUByte")
 infix fun <M : MissingPolicy> Expr<UByte, M>.and(
     second: Expr<UByte, M>,
-    vararg rest: Expr<UByte, M>,
 ): Expr<UByte, M> =
-    call(PortableOperationCatalog.INTEGER_BIT_AND, this, second, *rest)
+    call(PortableOperationCatalog.INTEGER_BIT_AND, this, second)
 
 /** Bitwise and, in two's complement. */
 @JvmName("integerBitAndUByteRaw")
 infix fun <M : MissingPolicy> Expr<UByte, M>.and(
     second: UByte,
-    vararg rest: Expr<UByte, M>,
 ): Expr<UByte, M> =
-    call(PortableOperationCatalog.INTEGER_BIT_AND, this, literal(second), *rest)
+    call(PortableOperationCatalog.INTEGER_BIT_AND, this, literal(second))
 
 /** Bitwise and, in two's complement. */
 @JvmName("integerBitAndUShort")
 infix fun <M : MissingPolicy> Expr<UShort, M>.and(
     second: Expr<UShort, M>,
-    vararg rest: Expr<UShort, M>,
 ): Expr<UShort, M> =
-    call(PortableOperationCatalog.INTEGER_BIT_AND, this, second, *rest)
+    call(PortableOperationCatalog.INTEGER_BIT_AND, this, second)
 
 /** Bitwise and, in two's complement. */
 @JvmName("integerBitAndUShortRaw")
 infix fun <M : MissingPolicy> Expr<UShort, M>.and(
     second: UShort,
-    vararg rest: Expr<UShort, M>,
 ): Expr<UShort, M> =
-    call(PortableOperationCatalog.INTEGER_BIT_AND, this, literal(second), *rest)
+    call(PortableOperationCatalog.INTEGER_BIT_AND, this, literal(second))
 
 /** Bitwise and, in two's complement. */
 @JvmName("integerBitAndUInt")
 infix fun <M : MissingPolicy> Expr<UInt, M>.and(
     second: Expr<UInt, M>,
-    vararg rest: Expr<UInt, M>,
 ): Expr<UInt, M> =
-    call(PortableOperationCatalog.INTEGER_BIT_AND, this, second, *rest)
+    call(PortableOperationCatalog.INTEGER_BIT_AND, this, second)
 
 /** Bitwise and, in two's complement. */
 @JvmName("integerBitAndUIntRaw")
 infix fun <M : MissingPolicy> Expr<UInt, M>.and(
     second: UInt,
-    vararg rest: Expr<UInt, M>,
 ): Expr<UInt, M> =
-    call(PortableOperationCatalog.INTEGER_BIT_AND, this, literal(second), *rest)
+    call(PortableOperationCatalog.INTEGER_BIT_AND, this, literal(second))
 
 /** Bitwise and, in two's complement. */
 @JvmName("integerBitAndULong")
 infix fun <M : MissingPolicy> Expr<ULong, M>.and(
     second: Expr<ULong, M>,
-    vararg rest: Expr<ULong, M>,
 ): Expr<ULong, M> =
-    call(PortableOperationCatalog.INTEGER_BIT_AND, this, second, *rest)
+    call(PortableOperationCatalog.INTEGER_BIT_AND, this, second)
 
 /** Bitwise and, in two's complement. */
 @JvmName("integerBitAndULongRaw")
 infix fun <M : MissingPolicy> Expr<ULong, M>.and(
     second: ULong,
-    vararg rest: Expr<ULong, M>,
 ): Expr<ULong, M> =
-    call(PortableOperationCatalog.INTEGER_BIT_AND, this, literal(second), *rest)
+    call(PortableOperationCatalog.INTEGER_BIT_AND, this, literal(second))
 
 /** Bitwise complement, in two's complement (the negation minus one). */
 @JvmName("integerBitNotByte")
@@ -396,289 +378,253 @@ fun <M : MissingPolicy> Expr<ULong, M>.inv(): Expr<ULong, M> =
 @JvmName("integerBitOrByte")
 infix fun <M : MissingPolicy> Expr<Byte, M>.or(
     second: Expr<Byte, M>,
-    vararg rest: Expr<Byte, M>,
 ): Expr<Byte, M> =
-    call(PortableOperationCatalog.INTEGER_BIT_OR, this, second, *rest)
+    call(PortableOperationCatalog.INTEGER_BIT_OR, this, second)
 
 /** Bitwise or, in two's complement. */
 @JvmName("integerBitOrByteRaw")
 infix fun <M : MissingPolicy> Expr<Byte, M>.or(
     second: Byte,
-    vararg rest: Expr<Byte, M>,
 ): Expr<Byte, M> =
-    call(PortableOperationCatalog.INTEGER_BIT_OR, this, numericLiteral(second), *rest)
+    call(PortableOperationCatalog.INTEGER_BIT_OR, this, numericLiteral(second))
 
 /** Bitwise or, in two's complement. */
 @JvmName("integerBitOrShort")
 infix fun <M : MissingPolicy> Expr<Short, M>.or(
     second: Expr<Short, M>,
-    vararg rest: Expr<Short, M>,
 ): Expr<Short, M> =
-    call(PortableOperationCatalog.INTEGER_BIT_OR, this, second, *rest)
+    call(PortableOperationCatalog.INTEGER_BIT_OR, this, second)
 
 /** Bitwise or, in two's complement. */
 @JvmName("integerBitOrShortRaw")
 infix fun <M : MissingPolicy> Expr<Short, M>.or(
     second: Short,
-    vararg rest: Expr<Short, M>,
 ): Expr<Short, M> =
-    call(PortableOperationCatalog.INTEGER_BIT_OR, this, numericLiteral(second), *rest)
+    call(PortableOperationCatalog.INTEGER_BIT_OR, this, numericLiteral(second))
 
 /** Bitwise or, in two's complement. */
 @JvmName("integerBitOrInt")
 infix fun <M : MissingPolicy> Expr<Int, M>.or(
     second: Expr<Int, M>,
-    vararg rest: Expr<Int, M>,
 ): Expr<Int, M> =
-    call(PortableOperationCatalog.INTEGER_BIT_OR, this, second, *rest)
+    call(PortableOperationCatalog.INTEGER_BIT_OR, this, second)
 
 /** Bitwise or, in two's complement. */
 @JvmName("integerBitOrIntRaw")
 infix fun <M : MissingPolicy> Expr<Int, M>.or(
     second: Int,
-    vararg rest: Expr<Int, M>,
 ): Expr<Int, M> =
-    call(PortableOperationCatalog.INTEGER_BIT_OR, this, numericLiteral(second), *rest)
+    call(PortableOperationCatalog.INTEGER_BIT_OR, this, numericLiteral(second))
 
 /** Bitwise or, in two's complement. */
 @JvmName("integerBitOrLong")
 infix fun <M : MissingPolicy> Expr<Long, M>.or(
     second: Expr<Long, M>,
-    vararg rest: Expr<Long, M>,
 ): Expr<Long, M> =
-    call(PortableOperationCatalog.INTEGER_BIT_OR, this, second, *rest)
+    call(PortableOperationCatalog.INTEGER_BIT_OR, this, second)
 
 /** Bitwise or, in two's complement. */
 @JvmName("integerBitOrLongRaw")
 infix fun <M : MissingPolicy> Expr<Long, M>.or(
     second: Long,
-    vararg rest: Expr<Long, M>,
 ): Expr<Long, M> =
-    call(PortableOperationCatalog.INTEGER_BIT_OR, this, numericLiteral(second), *rest)
+    call(PortableOperationCatalog.INTEGER_BIT_OR, this, numericLiteral(second))
 
 /** Bitwise or, in two's complement. */
 @JvmName("integerBitOrBigInteger")
 infix fun <M : MissingPolicy> Expr<BigInteger, M>.or(
     second: Expr<BigInteger, M>,
-    vararg rest: Expr<BigInteger, M>,
 ): Expr<BigInteger, M> =
-    call(PortableOperationCatalog.INTEGER_BIT_OR, this, second, *rest)
+    call(PortableOperationCatalog.INTEGER_BIT_OR, this, second)
 
 /** Bitwise or, in two's complement. */
 @JvmName("integerBitOrBigIntegerRaw")
 infix fun <M : MissingPolicy> Expr<BigInteger, M>.or(
     second: BigInteger,
-    vararg rest: Expr<BigInteger, M>,
 ): Expr<BigInteger, M> =
-    call(PortableOperationCatalog.INTEGER_BIT_OR, this, numericLiteral(second), *rest)
+    call(PortableOperationCatalog.INTEGER_BIT_OR, this, numericLiteral(second))
 
 /** Bitwise or, in two's complement. */
 @JvmName("integerBitOrUByte")
 infix fun <M : MissingPolicy> Expr<UByte, M>.or(
     second: Expr<UByte, M>,
-    vararg rest: Expr<UByte, M>,
 ): Expr<UByte, M> =
-    call(PortableOperationCatalog.INTEGER_BIT_OR, this, second, *rest)
+    call(PortableOperationCatalog.INTEGER_BIT_OR, this, second)
 
 /** Bitwise or, in two's complement. */
 @JvmName("integerBitOrUByteRaw")
 infix fun <M : MissingPolicy> Expr<UByte, M>.or(
     second: UByte,
-    vararg rest: Expr<UByte, M>,
 ): Expr<UByte, M> =
-    call(PortableOperationCatalog.INTEGER_BIT_OR, this, literal(second), *rest)
+    call(PortableOperationCatalog.INTEGER_BIT_OR, this, literal(second))
 
 /** Bitwise or, in two's complement. */
 @JvmName("integerBitOrUShort")
 infix fun <M : MissingPolicy> Expr<UShort, M>.or(
     second: Expr<UShort, M>,
-    vararg rest: Expr<UShort, M>,
 ): Expr<UShort, M> =
-    call(PortableOperationCatalog.INTEGER_BIT_OR, this, second, *rest)
+    call(PortableOperationCatalog.INTEGER_BIT_OR, this, second)
 
 /** Bitwise or, in two's complement. */
 @JvmName("integerBitOrUShortRaw")
 infix fun <M : MissingPolicy> Expr<UShort, M>.or(
     second: UShort,
-    vararg rest: Expr<UShort, M>,
 ): Expr<UShort, M> =
-    call(PortableOperationCatalog.INTEGER_BIT_OR, this, literal(second), *rest)
+    call(PortableOperationCatalog.INTEGER_BIT_OR, this, literal(second))
 
 /** Bitwise or, in two's complement. */
 @JvmName("integerBitOrUInt")
 infix fun <M : MissingPolicy> Expr<UInt, M>.or(
     second: Expr<UInt, M>,
-    vararg rest: Expr<UInt, M>,
 ): Expr<UInt, M> =
-    call(PortableOperationCatalog.INTEGER_BIT_OR, this, second, *rest)
+    call(PortableOperationCatalog.INTEGER_BIT_OR, this, second)
 
 /** Bitwise or, in two's complement. */
 @JvmName("integerBitOrUIntRaw")
 infix fun <M : MissingPolicy> Expr<UInt, M>.or(
     second: UInt,
-    vararg rest: Expr<UInt, M>,
 ): Expr<UInt, M> =
-    call(PortableOperationCatalog.INTEGER_BIT_OR, this, literal(second), *rest)
+    call(PortableOperationCatalog.INTEGER_BIT_OR, this, literal(second))
 
 /** Bitwise or, in two's complement. */
 @JvmName("integerBitOrULong")
 infix fun <M : MissingPolicy> Expr<ULong, M>.or(
     second: Expr<ULong, M>,
-    vararg rest: Expr<ULong, M>,
 ): Expr<ULong, M> =
-    call(PortableOperationCatalog.INTEGER_BIT_OR, this, second, *rest)
+    call(PortableOperationCatalog.INTEGER_BIT_OR, this, second)
 
 /** Bitwise or, in two's complement. */
 @JvmName("integerBitOrULongRaw")
 infix fun <M : MissingPolicy> Expr<ULong, M>.or(
     second: ULong,
-    vararg rest: Expr<ULong, M>,
 ): Expr<ULong, M> =
-    call(PortableOperationCatalog.INTEGER_BIT_OR, this, literal(second), *rest)
+    call(PortableOperationCatalog.INTEGER_BIT_OR, this, literal(second))
 
 /** Bitwise exclusive or, in two's complement. */
 @JvmName("integerBitXorByte")
 infix fun <M : MissingPolicy> Expr<Byte, M>.xor(
     second: Expr<Byte, M>,
-    vararg rest: Expr<Byte, M>,
 ): Expr<Byte, M> =
-    call(PortableOperationCatalog.INTEGER_BIT_XOR, this, second, *rest)
+    call(PortableOperationCatalog.INTEGER_BIT_XOR, this, second)
 
 /** Bitwise exclusive or, in two's complement. */
 @JvmName("integerBitXorByteRaw")
 infix fun <M : MissingPolicy> Expr<Byte, M>.xor(
     second: Byte,
-    vararg rest: Expr<Byte, M>,
 ): Expr<Byte, M> =
-    call(PortableOperationCatalog.INTEGER_BIT_XOR, this, numericLiteral(second), *rest)
+    call(PortableOperationCatalog.INTEGER_BIT_XOR, this, numericLiteral(second))
 
 /** Bitwise exclusive or, in two's complement. */
 @JvmName("integerBitXorShort")
 infix fun <M : MissingPolicy> Expr<Short, M>.xor(
     second: Expr<Short, M>,
-    vararg rest: Expr<Short, M>,
 ): Expr<Short, M> =
-    call(PortableOperationCatalog.INTEGER_BIT_XOR, this, second, *rest)
+    call(PortableOperationCatalog.INTEGER_BIT_XOR, this, second)
 
 /** Bitwise exclusive or, in two's complement. */
 @JvmName("integerBitXorShortRaw")
 infix fun <M : MissingPolicy> Expr<Short, M>.xor(
     second: Short,
-    vararg rest: Expr<Short, M>,
 ): Expr<Short, M> =
-    call(PortableOperationCatalog.INTEGER_BIT_XOR, this, numericLiteral(second), *rest)
+    call(PortableOperationCatalog.INTEGER_BIT_XOR, this, numericLiteral(second))
 
 /** Bitwise exclusive or, in two's complement. */
 @JvmName("integerBitXorInt")
 infix fun <M : MissingPolicy> Expr<Int, M>.xor(
     second: Expr<Int, M>,
-    vararg rest: Expr<Int, M>,
 ): Expr<Int, M> =
-    call(PortableOperationCatalog.INTEGER_BIT_XOR, this, second, *rest)
+    call(PortableOperationCatalog.INTEGER_BIT_XOR, this, second)
 
 /** Bitwise exclusive or, in two's complement. */
 @JvmName("integerBitXorIntRaw")
 infix fun <M : MissingPolicy> Expr<Int, M>.xor(
     second: Int,
-    vararg rest: Expr<Int, M>,
 ): Expr<Int, M> =
-    call(PortableOperationCatalog.INTEGER_BIT_XOR, this, numericLiteral(second), *rest)
+    call(PortableOperationCatalog.INTEGER_BIT_XOR, this, numericLiteral(second))
 
 /** Bitwise exclusive or, in two's complement. */
 @JvmName("integerBitXorLong")
 infix fun <M : MissingPolicy> Expr<Long, M>.xor(
     second: Expr<Long, M>,
-    vararg rest: Expr<Long, M>,
 ): Expr<Long, M> =
-    call(PortableOperationCatalog.INTEGER_BIT_XOR, this, second, *rest)
+    call(PortableOperationCatalog.INTEGER_BIT_XOR, this, second)
 
 /** Bitwise exclusive or, in two's complement. */
 @JvmName("integerBitXorLongRaw")
 infix fun <M : MissingPolicy> Expr<Long, M>.xor(
     second: Long,
-    vararg rest: Expr<Long, M>,
 ): Expr<Long, M> =
-    call(PortableOperationCatalog.INTEGER_BIT_XOR, this, numericLiteral(second), *rest)
+    call(PortableOperationCatalog.INTEGER_BIT_XOR, this, numericLiteral(second))
 
 /** Bitwise exclusive or, in two's complement. */
 @JvmName("integerBitXorBigInteger")
 infix fun <M : MissingPolicy> Expr<BigInteger, M>.xor(
     second: Expr<BigInteger, M>,
-    vararg rest: Expr<BigInteger, M>,
 ): Expr<BigInteger, M> =
-    call(PortableOperationCatalog.INTEGER_BIT_XOR, this, second, *rest)
+    call(PortableOperationCatalog.INTEGER_BIT_XOR, this, second)
 
 /** Bitwise exclusive or, in two's complement. */
 @JvmName("integerBitXorBigIntegerRaw")
 infix fun <M : MissingPolicy> Expr<BigInteger, M>.xor(
     second: BigInteger,
-    vararg rest: Expr<BigInteger, M>,
 ): Expr<BigInteger, M> =
-    call(PortableOperationCatalog.INTEGER_BIT_XOR, this, numericLiteral(second), *rest)
+    call(PortableOperationCatalog.INTEGER_BIT_XOR, this, numericLiteral(second))
 
 /** Bitwise exclusive or, in two's complement. */
 @JvmName("integerBitXorUByte")
 infix fun <M : MissingPolicy> Expr<UByte, M>.xor(
     second: Expr<UByte, M>,
-    vararg rest: Expr<UByte, M>,
 ): Expr<UByte, M> =
-    call(PortableOperationCatalog.INTEGER_BIT_XOR, this, second, *rest)
+    call(PortableOperationCatalog.INTEGER_BIT_XOR, this, second)
 
 /** Bitwise exclusive or, in two's complement. */
 @JvmName("integerBitXorUByteRaw")
 infix fun <M : MissingPolicy> Expr<UByte, M>.xor(
     second: UByte,
-    vararg rest: Expr<UByte, M>,
 ): Expr<UByte, M> =
-    call(PortableOperationCatalog.INTEGER_BIT_XOR, this, literal(second), *rest)
+    call(PortableOperationCatalog.INTEGER_BIT_XOR, this, literal(second))
 
 /** Bitwise exclusive or, in two's complement. */
 @JvmName("integerBitXorUShort")
 infix fun <M : MissingPolicy> Expr<UShort, M>.xor(
     second: Expr<UShort, M>,
-    vararg rest: Expr<UShort, M>,
 ): Expr<UShort, M> =
-    call(PortableOperationCatalog.INTEGER_BIT_XOR, this, second, *rest)
+    call(PortableOperationCatalog.INTEGER_BIT_XOR, this, second)
 
 /** Bitwise exclusive or, in two's complement. */
 @JvmName("integerBitXorUShortRaw")
 infix fun <M : MissingPolicy> Expr<UShort, M>.xor(
     second: UShort,
-    vararg rest: Expr<UShort, M>,
 ): Expr<UShort, M> =
-    call(PortableOperationCatalog.INTEGER_BIT_XOR, this, literal(second), *rest)
+    call(PortableOperationCatalog.INTEGER_BIT_XOR, this, literal(second))
 
 /** Bitwise exclusive or, in two's complement. */
 @JvmName("integerBitXorUInt")
 infix fun <M : MissingPolicy> Expr<UInt, M>.xor(
     second: Expr<UInt, M>,
-    vararg rest: Expr<UInt, M>,
 ): Expr<UInt, M> =
-    call(PortableOperationCatalog.INTEGER_BIT_XOR, this, second, *rest)
+    call(PortableOperationCatalog.INTEGER_BIT_XOR, this, second)
 
 /** Bitwise exclusive or, in two's complement. */
 @JvmName("integerBitXorUIntRaw")
 infix fun <M : MissingPolicy> Expr<UInt, M>.xor(
     second: UInt,
-    vararg rest: Expr<UInt, M>,
 ): Expr<UInt, M> =
-    call(PortableOperationCatalog.INTEGER_BIT_XOR, this, literal(second), *rest)
+    call(PortableOperationCatalog.INTEGER_BIT_XOR, this, literal(second))
 
 /** Bitwise exclusive or, in two's complement. */
 @JvmName("integerBitXorULong")
 infix fun <M : MissingPolicy> Expr<ULong, M>.xor(
     second: Expr<ULong, M>,
-    vararg rest: Expr<ULong, M>,
 ): Expr<ULong, M> =
-    call(PortableOperationCatalog.INTEGER_BIT_XOR, this, second, *rest)
+    call(PortableOperationCatalog.INTEGER_BIT_XOR, this, second)
 
 /** Bitwise exclusive or, in two's complement. */
 @JvmName("integerBitXorULongRaw")
 infix fun <M : MissingPolicy> Expr<ULong, M>.xor(
     second: ULong,
-    vararg rest: Expr<ULong, M>,
 ): Expr<ULong, M> =
-    call(PortableOperationCatalog.INTEGER_BIT_XOR, this, literal(second), *rest)
+    call(PortableOperationCatalog.INTEGER_BIT_XOR, this, literal(second))
 
 /** Greatest common divisor of the absolute values; gcd(0, 0) is 0. */
 @JvmName("integerGcdByte")
@@ -1081,9 +1027,8 @@ operator fun <T, M : MissingPolicy> Expr<out List<T>, M>.get(
 @JvmName("listConcat")
 operator fun <T, M : MissingPolicy> Expr<out List<T>, M>.plus(
     second: Expr<out List<T>, M>,
-    vararg rest: Expr<out List<T>, M>,
 ): Expr<List<T>, M> =
-    call(PortableOperationCatalog.LIST_CONCAT, this, second, *rest)
+    call(PortableOperationCatalog.LIST_CONCAT, this, second)
 
 /** The items of every inner list in order. */
 @JvmName("listFlatten")
@@ -1208,81 +1153,71 @@ fun <K, V, R, M : MissingPolicy> Expr<out Map<K, V>, M>.mapValues(
 @JvmName("numberAdd")
 operator fun <N : Number, M : MissingPolicy> Expr<N, M>.plus(
     second: Expr<N, M>,
-    vararg rest: Expr<N, M>,
 ): Expr<N, M> =
-    call(PortableOperationCatalog.NUMBER_ADD, this, second, *rest)
+    call(PortableOperationCatalog.NUMBER_ADD, this, second)
 
 /** The sum. */
 @JvmName("numberAddRaw")
 operator fun <N : Number, M : MissingPolicy> Expr<N, M>.plus(
     second: N,
-    vararg rest: Expr<N, M>,
 ): Expr<N, M> =
-    call(PortableOperationCatalog.NUMBER_ADD, this, numericLiteral(second), *rest)
+    call(PortableOperationCatalog.NUMBER_ADD, this, numericLiteral(second))
 
 /** The sum. */
 @JvmName("numberAddUByte")
 operator fun <M : MissingPolicy> Expr<UByte, M>.plus(
     second: Expr<UByte, M>,
-    vararg rest: Expr<UByte, M>,
 ): Expr<UByte, M> =
-    call(PortableOperationCatalog.NUMBER_ADD, this, second, *rest)
+    call(PortableOperationCatalog.NUMBER_ADD, this, second)
 
 /** The sum. */
 @JvmName("numberAddUByteRaw")
 operator fun <M : MissingPolicy> Expr<UByte, M>.plus(
     second: UByte,
-    vararg rest: Expr<UByte, M>,
 ): Expr<UByte, M> =
-    call(PortableOperationCatalog.NUMBER_ADD, this, literal(second), *rest)
+    call(PortableOperationCatalog.NUMBER_ADD, this, literal(second))
 
 /** The sum. */
 @JvmName("numberAddUShort")
 operator fun <M : MissingPolicy> Expr<UShort, M>.plus(
     second: Expr<UShort, M>,
-    vararg rest: Expr<UShort, M>,
 ): Expr<UShort, M> =
-    call(PortableOperationCatalog.NUMBER_ADD, this, second, *rest)
+    call(PortableOperationCatalog.NUMBER_ADD, this, second)
 
 /** The sum. */
 @JvmName("numberAddUShortRaw")
 operator fun <M : MissingPolicy> Expr<UShort, M>.plus(
     second: UShort,
-    vararg rest: Expr<UShort, M>,
 ): Expr<UShort, M> =
-    call(PortableOperationCatalog.NUMBER_ADD, this, literal(second), *rest)
+    call(PortableOperationCatalog.NUMBER_ADD, this, literal(second))
 
 /** The sum. */
 @JvmName("numberAddUInt")
 operator fun <M : MissingPolicy> Expr<UInt, M>.plus(
     second: Expr<UInt, M>,
-    vararg rest: Expr<UInt, M>,
 ): Expr<UInt, M> =
-    call(PortableOperationCatalog.NUMBER_ADD, this, second, *rest)
+    call(PortableOperationCatalog.NUMBER_ADD, this, second)
 
 /** The sum. */
 @JvmName("numberAddUIntRaw")
 operator fun <M : MissingPolicy> Expr<UInt, M>.plus(
     second: UInt,
-    vararg rest: Expr<UInt, M>,
 ): Expr<UInt, M> =
-    call(PortableOperationCatalog.NUMBER_ADD, this, literal(second), *rest)
+    call(PortableOperationCatalog.NUMBER_ADD, this, literal(second))
 
 /** The sum. */
 @JvmName("numberAddULong")
 operator fun <M : MissingPolicy> Expr<ULong, M>.plus(
     second: Expr<ULong, M>,
-    vararg rest: Expr<ULong, M>,
 ): Expr<ULong, M> =
-    call(PortableOperationCatalog.NUMBER_ADD, this, second, *rest)
+    call(PortableOperationCatalog.NUMBER_ADD, this, second)
 
 /** The sum. */
 @JvmName("numberAddULongRaw")
 operator fun <M : MissingPolicy> Expr<ULong, M>.plus(
     second: ULong,
-    vararg rest: Expr<ULong, M>,
 ): Expr<ULong, M> =
-    call(PortableOperationCatalog.NUMBER_ADD, this, literal(second), *rest)
+    call(PortableOperationCatalog.NUMBER_ADD, this, literal(second))
 
 /**
  * The quotient. Integers truncate toward zero; decimals round to 34 significant digits, half even; floats follow
@@ -1498,81 +1433,71 @@ fun <M : MissingPolicy> Expr<ULong, M>.formatNumber(
 @JvmName("numberMultiply")
 operator fun <N : Number, M : MissingPolicy> Expr<N, M>.times(
     second: Expr<N, M>,
-    vararg rest: Expr<N, M>,
 ): Expr<N, M> =
-    call(PortableOperationCatalog.NUMBER_MULTIPLY, this, second, *rest)
+    call(PortableOperationCatalog.NUMBER_MULTIPLY, this, second)
 
 /** The product. */
 @JvmName("numberMultiplyRaw")
 operator fun <N : Number, M : MissingPolicy> Expr<N, M>.times(
     second: N,
-    vararg rest: Expr<N, M>,
 ): Expr<N, M> =
-    call(PortableOperationCatalog.NUMBER_MULTIPLY, this, numericLiteral(second), *rest)
+    call(PortableOperationCatalog.NUMBER_MULTIPLY, this, numericLiteral(second))
 
 /** The product. */
 @JvmName("numberMultiplyUByte")
 operator fun <M : MissingPolicy> Expr<UByte, M>.times(
     second: Expr<UByte, M>,
-    vararg rest: Expr<UByte, M>,
 ): Expr<UByte, M> =
-    call(PortableOperationCatalog.NUMBER_MULTIPLY, this, second, *rest)
+    call(PortableOperationCatalog.NUMBER_MULTIPLY, this, second)
 
 /** The product. */
 @JvmName("numberMultiplyUByteRaw")
 operator fun <M : MissingPolicy> Expr<UByte, M>.times(
     second: UByte,
-    vararg rest: Expr<UByte, M>,
 ): Expr<UByte, M> =
-    call(PortableOperationCatalog.NUMBER_MULTIPLY, this, literal(second), *rest)
+    call(PortableOperationCatalog.NUMBER_MULTIPLY, this, literal(second))
 
 /** The product. */
 @JvmName("numberMultiplyUShort")
 operator fun <M : MissingPolicy> Expr<UShort, M>.times(
     second: Expr<UShort, M>,
-    vararg rest: Expr<UShort, M>,
 ): Expr<UShort, M> =
-    call(PortableOperationCatalog.NUMBER_MULTIPLY, this, second, *rest)
+    call(PortableOperationCatalog.NUMBER_MULTIPLY, this, second)
 
 /** The product. */
 @JvmName("numberMultiplyUShortRaw")
 operator fun <M : MissingPolicy> Expr<UShort, M>.times(
     second: UShort,
-    vararg rest: Expr<UShort, M>,
 ): Expr<UShort, M> =
-    call(PortableOperationCatalog.NUMBER_MULTIPLY, this, literal(second), *rest)
+    call(PortableOperationCatalog.NUMBER_MULTIPLY, this, literal(second))
 
 /** The product. */
 @JvmName("numberMultiplyUInt")
 operator fun <M : MissingPolicy> Expr<UInt, M>.times(
     second: Expr<UInt, M>,
-    vararg rest: Expr<UInt, M>,
 ): Expr<UInt, M> =
-    call(PortableOperationCatalog.NUMBER_MULTIPLY, this, second, *rest)
+    call(PortableOperationCatalog.NUMBER_MULTIPLY, this, second)
 
 /** The product. */
 @JvmName("numberMultiplyUIntRaw")
 operator fun <M : MissingPolicy> Expr<UInt, M>.times(
     second: UInt,
-    vararg rest: Expr<UInt, M>,
 ): Expr<UInt, M> =
-    call(PortableOperationCatalog.NUMBER_MULTIPLY, this, literal(second), *rest)
+    call(PortableOperationCatalog.NUMBER_MULTIPLY, this, literal(second))
 
 /** The product. */
 @JvmName("numberMultiplyULong")
 operator fun <M : MissingPolicy> Expr<ULong, M>.times(
     second: Expr<ULong, M>,
-    vararg rest: Expr<ULong, M>,
 ): Expr<ULong, M> =
-    call(PortableOperationCatalog.NUMBER_MULTIPLY, this, second, *rest)
+    call(PortableOperationCatalog.NUMBER_MULTIPLY, this, second)
 
 /** The product. */
 @JvmName("numberMultiplyULongRaw")
 operator fun <M : MissingPolicy> Expr<ULong, M>.times(
     second: ULong,
-    vararg rest: Expr<ULong, M>,
 ): Expr<ULong, M> =
-    call(PortableOperationCatalog.NUMBER_MULTIPLY, this, literal(second), *rest)
+    call(PortableOperationCatalog.NUMBER_MULTIPLY, this, literal(second))
 
 /** The CLDR plural category of the value in the locale. */
 @JvmName("numberPluralCategory")
@@ -2359,7 +2284,7 @@ infix fun <T, M : MissingPolicy> Expr<T, M>.eq(
 
 /** Whether the value is the explicit null. Missing data is not null. */
 @JvmName("valueIsNull")
-fun <T, M : MissingPolicy> Expr<T?, M>.isNull(): Expr<Boolean, M> =
+fun <T, M : MissingPolicy> Expr<out T?, M>.isNull(): Expr<Boolean, M> =
     call(PortableOperationCatalog.VALUE_IS_NULL, this)
 
 /** Evaluates value once and runs body with it bound as a lambda local. */
