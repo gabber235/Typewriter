@@ -1,0 +1,31 @@
+﻿{
+  "name": "typewriter-mcp",
+  "version": "2.0.0",
+  "description": "MCP server for Typewriter. Edit storylines live over websocket or via page files",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/gabber235/Typewriter.git",
+    "directory": "mcp"
+  },
+  "license": "SEE LICENSE IN ../LICENSE",
+  "type": "module",
+  "bin": {
+    "typewriter-mcp": "dist/index.js"
+  },
+  "main": "dist/index.js",
+  "scripts": {
+    "build": "tsc",
+    "start": "node dist/index.js",
+    "dev": "tsc --watch"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.11.0",
+    "socket.io-client": "^2.5.0",
+    "zod": "^3.24.1"
+  },
+  "devDependencies": {
+    "@types/node": "^22.10.0",
+    "@types/socket.io-client": "^1.4.36",
+    "typescript": "^5.7.0"
+  }
+}

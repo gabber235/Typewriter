@@ -1,0 +1,4 @@
+node_modules/
+.typewriter-session-url
+*.log
+.DS_Store
