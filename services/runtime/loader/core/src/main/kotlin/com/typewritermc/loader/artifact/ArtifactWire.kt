@@ -17,9 +17,10 @@ import skirout.service.v1.artifact.SharedArtifactDescriptor as SkirSharedArtifac
 import skirout.service.v1.artifact.SharedArtifactProvenance as SkirSharedArtifactProvenance
 
 /*
- * The one place the loader translates artifact values between the host API, which hosted runtimes share across
- * class loaders without the generated protocol, and the Skir artifact contracts. Decoding goes through the host API
- * constructors, so wire values are checked by the same invariants as locally produced ones.
+ * The one place the loader translates artifact values between the loader host API and the Skir artifact contracts.
+ * The host API is versioned on its own (hostApi ^1), so its signatures never expose generated protocol types and a
+ * contract change cannot break a hosted runtime compiled against it. Decoding goes through the host API constructors,
+ * so wire values are checked by the same invariants as locally produced ones.
  */
 
 internal fun ArtifactDigest.toSkir() = SkirArtifactDigest(algorithm = SkirDigestAlgorithm.SHA256, value = value)
