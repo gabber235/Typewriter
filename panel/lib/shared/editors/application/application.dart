@@ -7,6 +7,7 @@ export "color_library.dart";
 export "edit_owner.dart";
 export "editor_retry.dart";
 export "host_context.dart";
+export "kernels/portable_unicode.dart";
 export "multi_edit_owner.dart";
 export "portable_authoring_document.dart";
 export "portable_duration_admission.dart";
