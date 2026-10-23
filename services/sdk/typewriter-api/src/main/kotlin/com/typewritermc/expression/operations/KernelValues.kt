@@ -33,8 +33,7 @@ import kotlin.time.Instant
  * tree that skipped checking. Encoders produce structural values; a named result is built by its generated encoder.
  */
 
-internal fun KernelArgument.value(): DataValue =
-    (this as? KernelArgument.Value)?.value ?: throw illTyped("Expected an evaluated argument.")
+internal fun KernelArgument.value(): DataValue = (this as? KernelArgument.Value)?.value ?: throw illTyped("Expected an evaluated argument.")
 
 internal fun <T> KernelArgument.located(decode: (DataValue) -> T): Located<T> {
     val argument = this as? KernelArgument.Value ?: throw illTyped("Expected an evaluated argument.")
@@ -88,9 +87,11 @@ internal fun DataValue.asDecimal(): BigDecimal =
 
 internal fun DataValue.asBytes(): ByteString = (unwrapNamed() as? DataValue.BytesWrapper)?.value ?: throw illTyped("Expected bytes.")
 
-internal fun DataValue.asDuration(): Duration = (unwrapNamed() as? DataValue.DurationWrapper)?.duration ?: throw illTyped("Expected a duration.")
+internal fun DataValue.asDuration(): Duration =
+    (unwrapNamed() as? DataValue.DurationWrapper)?.duration ?: throw illTyped("Expected a duration.")
 
-internal fun DataValue.asTimestamp(): Instant = (unwrapNamed() as? DataValue.TimestampWrapper)?.instant ?: throw illTyped("Expected a timestamp.")
+internal fun DataValue.asTimestamp(): Instant =
+    (unwrapNamed() as? DataValue.TimestampWrapper)?.instant ?: throw illTyped("Expected a timestamp.")
 
 /** A resource identity: the named ResourceId value over its text payload. */
 internal fun DataValue.asResourceId(): ResourceId = ResourceId(value = asText())
@@ -114,7 +115,8 @@ internal fun DataValue.asItems(): List<ListItem> =
         else -> throw illTyped("Expected a collection.")
     }
 
-internal fun DataValue.asRows(): List<MapRow> = (unwrapNamed() as? DataValue.MapValueWrapper)?.value?.rows ?: throw illTyped("Expected a map.")
+internal fun DataValue.asRows(): List<MapRow> =
+    (unwrapNamed() as? DataValue.MapValueWrapper)?.value?.rows ?: throw illTyped("Expected a map.")
 
 internal fun <T> DataValue.asNullable(decode: (DataValue) -> T): T? = if (unwrapNamed() == DataValue.NULL) null else decode(this)
 
@@ -141,7 +143,8 @@ internal fun durationValue(value: Duration): DataValue = DataValue.duration(valu
 
 internal fun timestampValue(value: Instant): DataValue = DataValue.timestamp(value)
 
-internal fun resourceIdValue(value: ResourceId): DataValue = DataValue.named(ResourceIdDefinition.use, DataValue.StringValueWrapper(value.value))
+internal fun resourceIdValue(value: ResourceId): DataValue =
+    DataValue.named(ResourceIdDefinition.use, DataValue.StringValueWrapper(value.value))
 
 internal fun linkValue(value: LinkValue): DataValue = DataValue.LinkWrapper(value)
 
@@ -193,4 +196,26 @@ fun nestedItemId(
 fun BigDecimal.canonicalDecimal(): String =
     stripTrailingZeros().let { if (it.scale() < 0) it.setScale(0) else it }.toPlainString().let { if (it == "-0") "0" else it }
 
-private fun illTyped(message: String) = OperationFailure(EvaluatorFailure.IllTypedArgument, message)
+/** The failure for a value of the wrong kind: checked programs never raise it, so it marks a tree that skipped checking. */
+internal fun illTyped(message: String) = OperationFailure(EvaluatorFailure.IllTypedArgument, message)
+
+/** The Unicode code points of this text; portable text indexes and lengths count them. */
+internal fun String.codePointArray(): IntArray = codePoints().toArray()
+
+/** The text of the code points from [start] up to, not including, [end]. */
+internal fun IntArray.codePointText(
+    start: Int = 0,
+    end: Int = size,
+): String = String(this, start, end - start)
+
+/** Whether an unfilled entry occurs anywhere inside, through nominal wrappers, records, lists, sets and maps. */
+internal fun DataValue.containsUnfilled(): Boolean =
+    when (this) {
+        DataValue.UNFILLED -> true
+        is DataValue.NamedWrapper -> value.payload.containsUnfilled()
+        is DataValue.RecordWrapper -> value.fields.any { it.value.containsUnfilled() }
+        is DataValue.ListValueWrapper -> value.items.any { it.value.containsUnfilled() }
+        is DataValue.SetValueWrapper -> value.items.any { it.value.containsUnfilled() }
+        is DataValue.MapValueWrapper -> value.rows.any { it.key.containsUnfilled() || it.value.containsUnfilled() }
+        else -> false
+    }

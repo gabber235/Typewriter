@@ -1,4 +1,4 @@
-package com.typewritermc.expression
+package com.typewritermc.expression.operations
 
 /**
  * Admits the shared portable pattern subset and expands shorthand classes to explicit cross runtime character sets.
@@ -7,9 +7,6 @@ package com.typewritermc.expression
  */
 internal fun String.normalizePortableRegex(): PortableRegexNormalization {
     val pattern = this
-    if (pattern.length > PortableExpressionLimits.MAX_REGEX_PATTERN_CODE_UNITS) {
-        return PortableRegexNormalization.Unsupported("The regular expression pattern exceeds its limit.")
-    }
     val output = StringBuilder(pattern.length)
     var index = 0
     var groupDepth = 0
@@ -186,12 +183,41 @@ internal fun String.normalizePortableRegex(): PortableRegexNormalization {
     return PortableRegexNormalization.Ready(output.toString())
 }
 
+/**
+ * Why this pattern cannot run as a portable regular expression, or null when it can: it exceeds the pattern limit or
+ * lies outside the portable subset. Lets authoring reject a literal pattern before any evaluation.
+ */
 internal fun String.portableRegexValidationError(): String? =
-    when (val normalization = normalizePortableRegex()) {
-        is PortableRegexNormalization.Ready -> null
-        is PortableRegexNormalization.Invalid -> normalization.reason
-        is PortableRegexNormalization.Unsupported -> normalization.reason
+    when {
+        length > MAX_REGEX_PATTERN_CODE_UNITS -> "The regular expression pattern exceeds its limit."
+        else -> compiledPortableRegex().exceptionOrNull()?.message
     }
+
+/** Compiles a pattern of the portable subset, failing with the reason when it lies outside the subset. */
+internal fun String.compiledPortableRegex(): Result<PortableRegexMatcher> =
+    when (val normalization = normalizePortableRegex()) {
+        is PortableRegexNormalization.Ready -> {
+            try {
+                Result.success(PortableRegexMatcher.compile(normalization.pattern))
+            } catch (failure: PortableRegexCompileFailure) {
+                Result.failure(failure)
+            }
+        }
+
+        is PortableRegexNormalization.Invalid -> {
+            Result.failure(PortableRegexCompileFailure(normalization.reason))
+        }
+
+        is PortableRegexNormalization.Unsupported -> {
+            Result.failure(PortableRegexCompileFailure(normalization.reason))
+        }
+    }
+
+/** The longest pattern, in UTF-16 code units, that both hosts compile. */
+internal const val MAX_REGEX_PATTERN_CODE_UNITS = 512
+
+/** The longest input, in UTF-16 code units, that both hosts match against. */
+internal const val MAX_REGEX_INPUT_CODE_UNITS = 16_384
 
 internal sealed interface PortableRegexNormalization {
     data class Ready(
