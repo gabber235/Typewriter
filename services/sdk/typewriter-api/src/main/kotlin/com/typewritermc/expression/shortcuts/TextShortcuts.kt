@@ -410,4 +410,4 @@ private fun utf8Bytes(point: Expr<Int, MayBeMissing>): Expr<List<Int>, MayBeMiss
 
 private val String.codePointLength: Int get() = codePointCount(0, length)
 
-private val LINE_BREAKS = listOf("\n", "\r", " ", " ")
+private val LINE_BREAKS = listOf("\n", "\r", "\u2028", "\u2029")
