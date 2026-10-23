@@ -56,7 +56,6 @@ import skirout.editor.v1.authoring.LinkOccurrenceId
 import skirout.editor.v1.authoring.PreparedEdit
 import skirout.editor.v1.authoring.RelationProjectionDelta
 import skirout.editor.v1.authoring_facts.LinkProjection
-import skirout.editor.v1.catalog.EndpointBindingTemplate
 import skirout.editor.v1.catalog.EndpointCardinality
 import skirout.editor.v1.catalog.EndpointDefinition
 import skirout.editor.v1.catalog.EndpointSlot
@@ -73,7 +72,6 @@ import skirout.editor.v1.type_catalog.DeclarationOwner
 import skirout.editor.v1.type_catalog.EndpointId
 import skirout.editor.v1.type_catalog.FieldDeclaration
 import skirout.editor.v1.type_catalog.FieldOwner
-import skirout.editor.v1.type_catalog.FieldPatternSegment
 import skirout.editor.v1.type_catalog.IntegerWidth
 import skirout.editor.v1.type_catalog.ItemId
 import skirout.editor.v1.type_catalog.LinkTarget
@@ -83,7 +81,6 @@ import skirout.editor.v1.type_catalog.ParameterKey
 import skirout.editor.v1.type_catalog.PathSegment
 import skirout.editor.v1.type_catalog.RelationFamilyId
 import skirout.editor.v1.type_catalog.RelationId
-import skirout.editor.v1.type_catalog.RelativeFieldPattern
 import skirout.editor.v1.type_catalog.RepresentationTemplate
 import skirout.editor.v1.type_catalog.ResourceId
 import skirout.editor.v1.type_catalog.ScalarKind
@@ -125,7 +122,6 @@ class AuthoringMutationPlannerTest {
                 generation = GENERATION,
                 definitions = definitions,
                 relations = listOf(manyContract()),
-                endpointBindings = BINDINGS,
             )
         val resources = mapOf(id to record().let { it.copy(fields = it.fields.filterNot { it.name == "manyFirst" }) })
         val baseline = AuthoringView(catalog, resources, emptyMap())
@@ -814,7 +810,6 @@ class AuthoringMutationPlannerTest {
                             it.copy(second = it.second.copy(cardinality = EndpointCardinality.MANY))
                         },
                     ),
-                endpointBindings = BINDINGS,
             )
         val resources = mapOf(source to record(), target to record())
         val baseline =
@@ -866,7 +861,6 @@ class AuthoringMutationPlannerTest {
                 generation = GENERATION,
                 definitions = DEFINITIONS,
                 relations = listOf(parentContract(RelationDeletePolicy.CLEAR, RelationDeletePolicy.CLEAR)),
-                endpointBindings = BINDINGS,
             )
         val baseline =
             com.typewritermc.realm.authoring.AuthoringView(
@@ -1675,7 +1669,7 @@ class AuthoringMutationPlannerTest {
 
     fun ordinaryContainingRecordSetAndClearSynchronizeNestedLinks() {
         val contract = nestedContract()
-        val planner = AuthoringMutationPlanner(CATALOG, listOf(contract), NESTED_BINDINGS)
+        val planner = AuthoringMutationPlanner(CATALOG, listOf(contract))
         val source = ResourceId(value = "source")
         val target = ResourceId(value = "target")
         val nestedPath = ValuePath(segments = listOf(PathSegment.createField(name = "wrapper"), PathSegment.createField(name = "inner")))
@@ -2418,7 +2412,7 @@ class AuthoringMutationPlannerTest {
     }
 }
 
-private fun planner(contract: RelationContract) = AuthoringMutationPlanner(CATALOG, listOf(contract), BINDINGS)
+private fun planner(contract: RelationContract) = AuthoringMutationPlanner(CATALOG, listOf(contract))
 
 private fun operationBaseline(
     resources: Map<ResourceId, AuthoringRecord>,
@@ -2430,7 +2424,6 @@ private fun operationBaseline(
             definitions =
                 DEFINITIONS + com.typewritermc.types.StandardTypes.definitions + com.typewritermc.types.ResourceIdDefinition.definition,
             relations = contracts,
-            endpointBindings = BINDINGS,
         )
     return AuthoringView(
         catalog,
@@ -2617,27 +2610,6 @@ private fun field(
     type: TypeDefinitionId,
 ) = FieldDeclaration.partial(owner = FieldOwner(definition = NODE, name = name), type = type.template())
 
-private fun binding(
-    endpoint: EndpointId,
-    owner: TypeDefinitionId,
-    field: String,
-    containsCollection: Boolean,
-) = EndpointBindingTemplate(
-    endpoint = endpoint,
-    containingResource = NODE.namedTemplate(),
-    valueOwner = owner,
-    relativePath =
-        RelativeFieldPattern(
-            segments =
-                buildList {
-                    add(FieldPatternSegment.field(field))
-                    if (containsCollection) add(FieldPatternSegment.ITEMS)
-                },
-        ),
-    target = NODE.template(),
-    containsCollection = containsCollection,
-)
-
 private val GENERATION = CatalogGeneration(value = "catalog")
 private val NODE = id("node")
 private val OWNING_FAMILIES =
@@ -2714,34 +2686,6 @@ private val DEFINITIONS =
         listDefinition(MANY_SECOND_LIST_USE.definition, MANY_SECOND_TYPE.definition),
     )
 private val CATALOG = DefaultCheckedCatalog(GENERATION, DEFINITIONS)
-private val BINDINGS =
-    listOf(
-        binding(PAIR_FIRST, PAIR_FIRST_TYPE.definition, "first", false),
-        binding(PAIR_SECOND, PAIR_SECOND_TYPE.definition, "second", false),
-        binding(PARENT_FIRST, PARENT_FIRST_TYPE.definition, "children", true),
-        binding(PARENT_SECOND, PARENT_SECOND_TYPE.definition, "parent", false),
-        binding(MANY_FIRST, MANY_FIRST_TYPE.definition, "manyFirst", true),
-        binding(MANY_SECOND, MANY_SECOND_TYPE.definition, "manySecond", true),
-    )
-private val NESTED_BINDINGS =
-    listOf(
-        EndpointBindingTemplate(
-            endpoint = NESTED_FIRST,
-            containingResource = NODE.namedTemplate(),
-            valueOwner = NESTED_FIRST_TYPE.definition,
-            relativePath =
-                RelativeFieldPattern(
-                    segments =
-                        listOf(
-                            FieldPatternSegment.field("wrapper"),
-                            FieldPatternSegment.field("inner"),
-                        ),
-                ),
-            target = NODE.template(),
-            containsCollection = false,
-        ),
-        binding(NESTED_SECOND, NESTED_SECOND_TYPE.definition, "nestedSecond", false),
-    )
 
 val AuthoringMutationPlannerTestSuite by testSuite {
     test("inverseOnlyReferencesDoNotOfferLinkedDuplication") {

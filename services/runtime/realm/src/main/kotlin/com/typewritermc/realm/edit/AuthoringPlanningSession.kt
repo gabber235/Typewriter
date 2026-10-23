@@ -74,7 +74,7 @@ internal class AuthoringPlanningSession(
     val baseline: AuthoringView,
     private val invocationId: String,
 ) {
-    val planner = AuthoringMutationPlanner(baseline.catalog.checked, baseline.catalog.relations, baseline.catalog.endpointBindings)
+    val planner = AuthoringMutationPlanner(baseline.catalog.checked, baseline.catalog.relations)
     private val staged = baseline.resources.toMutableMap()
     private val removed = linkedSetOf<ResourceId>()
     val resources: Map<ResourceId, AuthoringRecord> = Collections.unmodifiableMap(staged)

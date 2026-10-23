@@ -74,7 +74,7 @@ internal class RealmAuthoringOwner(
                 val values = CapturedAuthoringValues(current.resources, projections.projections)
                 val conflicts = values.conflicts(edit.expectations)
                 if (conflicts.isNotEmpty()) return@read CommitPreparedEditResponse.ConflictErrorWrapper(conflicts)
-                val planner = AuthoringMutationPlanner(current.catalog.checked, current.catalog.relations, current.catalog.endpointBindings)
+                val planner = AuthoringMutationPlanner(current.catalog.checked, current.catalog.relations)
                 val plan =
                     when (val planned = planner.plan(current.resources, edit)) {
                         is MutationPlanningResult.Rejected -> return@read CommitPreparedEditResponse.RejectedErrorWrapper(planned.problems)

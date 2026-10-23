@@ -9,7 +9,6 @@ import com.typewritermc.types.NativeBindingRegistry
 import com.typewritermc.types.catalog.CheckedCatalog
 import com.typewritermc.types.ownsResources
 import skirout.editor.v1.catalog.ConfigurationRecipe
-import skirout.editor.v1.catalog.EndpointBindingTemplate
 import skirout.editor.v1.catalog.RelationContract
 import skirout.editor.v1.type_catalog.CatalogGeneration
 import skirout.editor.v1.type_catalog.RelationId
@@ -30,7 +29,6 @@ interface AuthoringCatalogLease : AutoCloseable {
     val providers: OwnedProviderRegistry
     val checks: List<OwnedCheckRecipe>
     val relations: List<RelationContract>
-    val endpointBindings: List<EndpointBindingTemplate>
     val configuration: List<ConfigurationRecipe>
     val operations: OperationCatalog
 

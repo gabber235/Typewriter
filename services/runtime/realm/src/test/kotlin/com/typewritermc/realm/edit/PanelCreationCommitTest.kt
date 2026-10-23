@@ -2,7 +2,6 @@ package com.typewritermc.realm.edit
 
 import com.surrealdb.Surreal
 import com.typewritermc.authoring.requireValid
-import com.typewritermc.configuration.field
 import com.typewritermc.configuration.name
 import com.typewritermc.realm.authoring.InMemoryAuthoringViewStore
 import com.typewritermc.realm.authoring.ResourceValueMapper
@@ -17,7 +16,6 @@ import io.kotest.matchers.types.shouldBeInstanceOf
 import skirout.editor.v1.authoring.CommitPreparedEditResponse
 import skirout.editor.v1.authoring.EditIntent
 import skirout.editor.v1.catalog.EditorCatalog
-import skirout.editor.v1.catalog.EndpointBindingTemplate
 import skirout.editor.v1.catalog.EndpointCardinality
 import skirout.editor.v1.catalog.EndpointDefinition
 import skirout.editor.v1.catalog.EndpointSlot
@@ -25,11 +23,9 @@ import skirout.editor.v1.catalog.RelationContract
 import skirout.editor.v1.catalog.RelationDeletePolicy
 import skirout.editor.v1.type_catalog.CatalogGeneration
 import skirout.editor.v1.type_catalog.EndpointId
-import skirout.editor.v1.type_catalog.FieldPatternSegment
 import skirout.editor.v1.type_catalog.NamedTypeUse
 import skirout.editor.v1.type_catalog.RelationFamilyId
 import skirout.editor.v1.type_catalog.RelationId
-import skirout.editor.v1.type_catalog.RelativeFieldPattern
 import skirout.editor.v1.type_catalog.ResourceId
 import skirout.editor.v1.type_catalog.TypeDefinitionId
 import skirout.editor.v1.type_catalog.TypeTemplate
@@ -108,43 +104,6 @@ private fun panelCreationCatalog(snapshot: EditorCatalog): TestCatalogLease =
                     endpoint(relation.first),
                     endpoint(relation.second),
                     relation.families.toSet(),
-                )
-            },
-        endpointBindings =
-            snapshot.endpointBindings.map { binding ->
-                EndpointBindingTemplate(
-                    endpoint = binding.endpoint.requireValid(),
-                    containingResource = binding.containingResource.requireValid(),
-                    valueOwner = binding.valueOwner.requireValid(),
-                    relativePath =
-                        RelativeFieldPattern(
-                            segments =
-                                binding.relativePath.segments.map { segment ->
-                                    when (segment) {
-                                        is skirout.editor.v1.type_catalog.FieldPatternSegment.FieldWrapper -> {
-                                            FieldPatternSegment.field(segment.value.name)
-                                        }
-
-                                        skirout.editor.v1.type_catalog.FieldPatternSegment.ITEMS -> {
-                                            FieldPatternSegment.ITEMS
-                                        }
-
-                                        skirout.editor.v1.type_catalog.FieldPatternSegment.KEYS -> {
-                                            FieldPatternSegment.KEYS
-                                        }
-
-                                        skirout.editor.v1.type_catalog.FieldPatternSegment.VALUES -> {
-                                            FieldPatternSegment.VALUES
-                                        }
-
-                                        else -> {
-                                            error("Unknown captured field pattern")
-                                        }
-                                    }
-                                },
-                        ),
-                    target = binding.target.requireValid(),
-                    containsCollection = binding.containsCollection,
                 )
             },
     )

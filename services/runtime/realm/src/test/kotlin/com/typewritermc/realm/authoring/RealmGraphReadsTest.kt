@@ -39,7 +39,6 @@ import de.infix.testBalloon.framework.core.testSuite
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.types.shouldBeInstanceOf
 import skirout.editor.v1.authoring_facts.TraversalDirection
-import skirout.editor.v1.catalog.EndpointBindingTemplate
 import skirout.editor.v1.catalog.EndpointCardinality
 import skirout.editor.v1.catalog.EndpointDefinition
 import skirout.editor.v1.catalog.EndpointSlot
@@ -52,7 +51,6 @@ import skirout.editor.v1.type_catalog.DataValue
 import skirout.editor.v1.type_catalog.EndpointId
 import skirout.editor.v1.type_catalog.FieldDeclaration
 import skirout.editor.v1.type_catalog.FieldOwner
-import skirout.editor.v1.type_catalog.FieldPatternSegment
 import skirout.editor.v1.type_catalog.ItemId
 import skirout.editor.v1.type_catalog.LinkTarget
 import skirout.editor.v1.type_catalog.ListItem
@@ -60,7 +58,6 @@ import skirout.editor.v1.type_catalog.ParameterKey
 import skirout.editor.v1.type_catalog.PathSegment
 import skirout.editor.v1.type_catalog.RelationFamilyId
 import skirout.editor.v1.type_catalog.RelationId
-import skirout.editor.v1.type_catalog.RelativeFieldPattern
 import skirout.editor.v1.type_catalog.RepresentationTemplate
 import skirout.editor.v1.type_catalog.ResourceId
 import skirout.editor.v1.type_catalog.ScalarKind
@@ -617,7 +614,6 @@ private class GraphCatalogLease(
     override val providers: OwnedProviderRegistry = EmptyProviders
     override val checks: List<OwnedCheckRecipe> = emptyList()
     override val relations: List<RelationContract> = listOf(EDGE, BAD)
-    override val endpointBindings: List<EndpointBindingTemplate> = listOf(EDGE_BINDING, BAD_BINDING)
 
     override val configuration: List<skirout.editor.v1.catalog.ConfigurationRecipe> = emptyList()
     override val operations = com.typewritermc.operations.OperationCatalog()
@@ -737,24 +733,6 @@ private val BAD =
             cardinality = EndpointCardinality.MANY,
             onDelete = RelationDeletePolicy.CLEAR,
         ),
-    )
-private val EDGE_BINDING =
-    EndpointBindingTemplate(
-        endpoint = EDGE_SOURCE,
-        containingResource = NODE.namedTemplate(),
-        valueOwner = NODE,
-        relativePath = RelativeFieldPattern(segments = listOf(FieldPatternSegment.field("outgoing"), FieldPatternSegment.ITEMS)),
-        target = NODE.template(),
-        containsCollection = true,
-    )
-private val BAD_BINDING =
-    EndpointBindingTemplate(
-        endpoint = BAD_ENDPOINT,
-        containingResource = NODE.namedTemplate(),
-        valueOwner = NODE,
-        relativePath = RelativeFieldPattern(segments = listOf(FieldPatternSegment.field("bad"))),
-        target = NODE.template(),
-        containsCollection = false,
     )
 private val GRAPH_DEFINITIONS =
     listOf(

@@ -35,7 +35,6 @@ import io.kotest.matchers.shouldBe
 import kotlinx.coroutines.test.runTest
 import skirout.editor.v1.authoring.EditIntent
 import skirout.editor.v1.authoring.PreparedEdit
-import skirout.editor.v1.catalog.EndpointBindingTemplate
 import skirout.editor.v1.catalog.EndpointCardinality
 import skirout.editor.v1.catalog.EndpointDefinition
 import skirout.editor.v1.catalog.EndpointSlot
@@ -48,13 +47,11 @@ import skirout.editor.v1.type_catalog.DataValue
 import skirout.editor.v1.type_catalog.EndpointId
 import skirout.editor.v1.type_catalog.FieldDeclaration
 import skirout.editor.v1.type_catalog.FieldOwner
-import skirout.editor.v1.type_catalog.FieldPatternSegment
 import skirout.editor.v1.type_catalog.ItemId
 import skirout.editor.v1.type_catalog.LinkTarget
 import skirout.editor.v1.type_catalog.ListItem
 import skirout.editor.v1.type_catalog.RelationFamilyId
 import skirout.editor.v1.type_catalog.RelationId
-import skirout.editor.v1.type_catalog.RelativeFieldPattern
 import skirout.editor.v1.type_catalog.RepresentationTemplate
 import skirout.editor.v1.type_catalog.ResourceId
 import skirout.editor.v1.type_catalog.ScalarKind
@@ -101,7 +98,7 @@ val OwnershipRulesTest by testSuite {
             seed() +
                 (root to AuthoringRecord.of(TypeSelection.CompleteWrapper(ROOT_USE), mapOf("frame" to DataValue.StringValueWrapper("0"))))
         val catalog = OwnerSideCatalogLease()
-        val planner = AuthoringMutationPlanner(catalog.checked, listOf(OWNERSHIP_CONTRACT), listOf(OWNER_BINDING))
+        val planner = AuthoringMutationPlanner(catalog.checked, listOf(OWNERSHIP_CONTRACT))
         val edit =
             PreparedEdit(
                 catalog = catalog.generation,
@@ -135,7 +132,7 @@ private inline fun withPreparation(body: (RuntimeOperationPreparation, WorkingVi
 /** The saved resources once the finished edit of this preparation is planned against them. */
 private fun WorkingViewEditContext.planned(): Map<ResourceId, AuthoringRecord> {
     val edit = finish()
-    val planner = AuthoringMutationPlanner(session.baseline.catalog.checked, listOf(OWNERSHIP_CONTRACT), listOf(OWNER_BINDING))
+    val planner = AuthoringMutationPlanner(session.baseline.catalog.checked, listOf(OWNERSHIP_CONTRACT))
     val accepted = planner.plan(session.baseline.resources, edit) as MutationPlanningResult.Accepted
     return session.baseline.resources + accepted.plan.resources - accepted.plan.removedResources
 }
@@ -195,7 +192,6 @@ private class OwnerSideCatalogLease : AuthoringCatalogLease {
     override val providers = EmptyProviders
     override val checks = emptyList<com.typewritermc.discovery.OwnedCheckRecipe>()
     override val relations = listOf(OWNERSHIP_CONTRACT)
-    override val endpointBindings = listOf(OWNER_BINDING)
     override val configuration: List<skirout.editor.v1.catalog.ConfigurationRecipe> = emptyList()
     override val operations = com.typewritermc.operations.OperationCatalog()
     override val placementFields = emptyMap<TypeDefinitionId, ValuePath>()
@@ -235,15 +231,6 @@ private val OWNERSHIP_CONTRACT =
             onDelete = RelationDeletePolicy.CLEAR,
         ),
         setOf(RelationFamilyId(value = RESOURCE_OWNERSHIP_FAMILY_ID)),
-    )
-private val OWNER_BINDING =
-    EndpointBindingTemplate(
-        endpoint = OWNER_ENDPOINT,
-        containingResource = OWNER.namedTemplate(),
-        valueOwner = OWNER,
-        relativePath = RelativeFieldPattern(segments = listOf(FieldPatternSegment.field("children"), FieldPatternSegment.ITEMS)),
-        target = MEMBER.template(),
-        containsCollection = true,
     )
 private val DEFINITIONS =
     listOf(

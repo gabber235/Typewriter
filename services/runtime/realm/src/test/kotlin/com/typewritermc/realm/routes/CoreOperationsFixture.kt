@@ -423,7 +423,7 @@ internal class CoreOperationsFixture(
     fun plan(edit: PreparedEdit): MutationPlanningResult =
         views.capture().use { lease ->
             val catalog = lease.root.catalog
-            AuthoringMutationPlanner(catalog.checked, catalog.relations, catalog.endpointBindings).plan(lease.root.resources, edit)
+            AuthoringMutationPlanner(catalog.checked, catalog.relations).plan(lease.root.resources, edit)
         }
 
     /** Prepares [request] through the wire route and replays its preview edit onto the saved resources. */

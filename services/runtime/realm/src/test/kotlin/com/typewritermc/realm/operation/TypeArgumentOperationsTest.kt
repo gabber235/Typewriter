@@ -41,7 +41,6 @@ import skirout.editor.v1.authoring.PrepareTypeArgumentChangeResponse
 import skirout.editor.v1.authoring.PreparedEdit
 import skirout.editor.v1.authoring.PreviewTypeArgumentChangeResponse
 import skirout.editor.v1.authoring.TypeArgumentChangePreview
-import skirout.editor.v1.catalog.EndpointBindingTemplate
 import skirout.editor.v1.catalog.EndpointCardinality
 import skirout.editor.v1.catalog.EndpointDefinition
 import skirout.editor.v1.catalog.EndpointSlot
@@ -436,7 +435,6 @@ private class RepairCatalogLease(
     override val providers: OwnedProviderRegistry = EmptyProviders
     override val checks: List<OwnedCheckRecipe> = emptyList()
     override val relations: List<RelationContract> = listOf(DUAL_RELATION)
-    override val endpointBindings: List<EndpointBindingTemplate> = emptyList()
     override val configuration: List<skirout.editor.v1.catalog.ConfigurationRecipe> = emptyList()
     override val operations = com.typewritermc.operations.OperationCatalog()
     override val placementFields = emptyMap<TypeDefinitionId, ValuePath>()

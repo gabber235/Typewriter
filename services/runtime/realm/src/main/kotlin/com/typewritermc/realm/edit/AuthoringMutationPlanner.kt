@@ -44,7 +44,6 @@ import skirout.editor.v1.authoring.LinkOccurrenceId
 import skirout.editor.v1.authoring.PreparedEdit
 import skirout.editor.v1.authoring.RelationProjectionDelta
 import skirout.editor.v1.authoring_facts.LinkProjection
-import skirout.editor.v1.catalog.EndpointBindingTemplate
 import skirout.editor.v1.catalog.EndpointCardinality
 import skirout.editor.v1.catalog.PreparedContent
 import skirout.editor.v1.catalog.RelationContract
@@ -97,7 +96,6 @@ private data class AuthoredCollection(
 internal class AuthoringMutationPlanner(
     private val catalog: CheckedCatalog,
     private val contracts: List<RelationContract>,
-    private val endpointBindings: List<EndpointBindingTemplate>? = null,
 ) {
     fun plan(
         latestResources: Map<ResourceId, AuthoringRecord>,
@@ -1100,8 +1098,6 @@ private fun problem(
 private fun projectionKey(value: LinkProjection): String =
     "${value.contract.value}:${value.first.value}:${value.second.value}:" +
         "${value.firstLocation?.let(ValuePath.serializer::toJsonCode)}:${value.secondLocation?.let(ValuePath.serializer::toJsonCode)}"
-
-private fun projectionEndpoints(value: LinkProjection): String = "${value.contract.value}:${value.first.value}:${value.second.value}"
 
 private fun resourceLinks(
     resources: Map<ResourceId, AuthoringRecord>,

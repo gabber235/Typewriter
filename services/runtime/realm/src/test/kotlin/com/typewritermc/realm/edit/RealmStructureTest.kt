@@ -242,7 +242,7 @@ private class RealmStructureFixture(
     /** The planner's problems for [intent] on the saved resources, as resource and code pairs. */
     fun reject(intent: EditIntent): List<Pair<String, String>> =
         views.read { view ->
-            val planner = AuthoringMutationPlanner(view.catalog.checked, view.catalog.relations, view.catalog.endpointBindings)
+            val planner = AuthoringMutationPlanner(view.catalog.checked, view.catalog.relations)
             val result =
                 planner.plan(
                     view.resources,

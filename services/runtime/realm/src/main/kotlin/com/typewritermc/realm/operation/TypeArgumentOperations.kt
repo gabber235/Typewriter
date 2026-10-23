@@ -184,7 +184,6 @@ internal class DefaultTypeArgumentOperations(
             AuthoringMutationPlanner(
                 root.catalog.checked,
                 root.catalog.relations,
-                root.catalog.endpointBindings,
             ).plan(
                 root.resources,
                 PreparedEdit(

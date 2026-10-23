@@ -34,7 +34,7 @@ internal fun AuthoringLease.operationObservation(
     val links = ResourceValueMapper.discover(resources)
     val projected = ResourceValueMapper.project(links, resources, root.catalog.relations, root.catalog.checked)
     val problems =
-        AuthoringMutationPlanner(root.catalog.checked, root.catalog.relations, root.catalog.endpointBindings)
+        AuthoringMutationPlanner(root.catalog.checked, root.catalog.relations)
             .validateSnapshot(root.resources, resources, upserts.keys + removals, projected)
     require(problems.isEmpty()) { "An overlay violates resource structure or relation policy: $problems" }
     return AuthoringView(

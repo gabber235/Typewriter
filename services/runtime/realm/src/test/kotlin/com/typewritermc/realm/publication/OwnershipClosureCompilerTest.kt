@@ -2,7 +2,6 @@ package com.typewritermc.realm.publication
 
 import com.typewritermc.authoring.CompilationUnitDefinition
 import com.typewritermc.authoring.of
-import com.typewritermc.configuration.field
 import com.typewritermc.engine.ResourceGraphCompileResult
 import com.typewritermc.engine.relation
 import com.typewritermc.realm.authoring.AuthoringSeed
@@ -23,7 +22,6 @@ import com.typewritermc.types.template
 import com.typewritermc.types.use
 import de.infix.testBalloon.framework.core.testSuite
 import io.kotest.matchers.shouldBe
-import skirout.editor.v1.catalog.EndpointBindingTemplate
 import skirout.editor.v1.catalog.EndpointCardinality
 import skirout.editor.v1.catalog.EndpointDefinition
 import skirout.editor.v1.catalog.EndpointSlot
@@ -37,12 +35,10 @@ import skirout.editor.v1.type_catalog.DataValue
 import skirout.editor.v1.type_catalog.EndpointId
 import skirout.editor.v1.type_catalog.FieldDeclaration
 import skirout.editor.v1.type_catalog.FieldOwner
-import skirout.editor.v1.type_catalog.FieldPatternSegment
 import skirout.editor.v1.type_catalog.ItemId
 import skirout.editor.v1.type_catalog.LinkTarget
 import skirout.editor.v1.type_catalog.ListItem
 import skirout.editor.v1.type_catalog.RelationId
-import skirout.editor.v1.type_catalog.RelativeFieldPattern
 import skirout.editor.v1.type_catalog.RepresentationTemplate
 import skirout.editor.v1.type_catalog.ResourceId
 import skirout.editor.v1.type_catalog.ScalarKind
@@ -266,7 +262,6 @@ private class CompilerCatalogLease private constructor(
     override val providers = EmptyProviders
     override val checks = emptyList<com.typewritermc.discovery.OwnedCheckRecipe>()
     override val relations = listOf(OWNERSHIP_CONTRACT)
-    override val endpointBindings = listOf(PAGE_BINDING)
     override val configuration: List<skirout.editor.v1.catalog.ConfigurationRecipe> = emptyList()
     override val operations = com.typewritermc.operations.OperationCatalog()
     override val placementFields = emptyMap<TypeDefinitionId, ValuePath>()
@@ -311,15 +306,6 @@ private val OWNERSHIP_CONTRACT =
             cardinality = EndpointCardinality.MANY,
             onDelete = RelationDeletePolicy.CLEAR,
         ),
-    )
-private val PAGE_BINDING =
-    EndpointBindingTemplate(
-        endpoint = PAGE_ENDPOINT,
-        containingResource = PAGE.namedTemplate(),
-        valueOwner = PAGE,
-        relativePath = RelativeFieldPattern(segments = listOf(FieldPatternSegment.field("children"), FieldPatternSegment.ITEMS)),
-        target = CHILD.template(),
-        containsCollection = true,
     )
 private val DEFINITIONS =
     listOf(

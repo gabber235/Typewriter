@@ -34,7 +34,6 @@ import com.typewritermc.types.qualified
 import com.typewritermc.types.rows
 import com.typewritermc.types.template
 import com.typewritermc.types.use
-import skirout.editor.v1.catalog.EndpointBindingTemplate
 import skirout.editor.v1.catalog.RelationContract
 import skirout.editor.v1.type_catalog.AuthoringRecord
 import skirout.editor.v1.type_catalog.CatalogGeneration
@@ -79,7 +78,6 @@ internal class TestCatalogLease private constructor(
     private val definitions: List<TypeDefinition>,
     private val nativeBindingFactories: List<NativeBindingFactory>,
     override val relations: List<RelationContract>,
-    override val endpointBindings: List<EndpointBindingTemplate>,
 ) : AuthoringCatalogLease {
     constructor(
         generation: CatalogGeneration = CatalogGeneration(value = "catalog"),
@@ -89,7 +87,6 @@ internal class TestCatalogLease private constructor(
         definitions: List<TypeDefinition> = listOf(TEST_DEFINITION, LIST_DEFINITION),
         nativeBindingFactories: List<NativeBindingFactory> = emptyList(),
         relations: List<RelationContract> = emptyList(),
-        endpointBindings: List<EndpointBindingTemplate> = emptyList(),
     ) : this(
         State(),
         generation,
@@ -99,7 +96,6 @@ internal class TestCatalogLease private constructor(
         definitions,
         nativeBindingFactories,
         relations,
-        endpointBindings,
     )
 
     override val checked: CheckedCatalog = DefaultCheckedCatalog(generation, definitions)
@@ -119,7 +115,6 @@ internal class TestCatalogLease private constructor(
             definitions,
             nativeBindingFactories,
             relations,
-            endpointBindings,
         )
     }
 
