@@ -22,7 +22,7 @@ void main() {
     expect(portableTitle("ǆemal"), "ǅemal");
     expect(portableTitle("hello wORLD"), "Hello World");
     expect(portableTitle("ΟΔΟΣ ΑΒ"), "Οδος Αβ");
-    expect(portableTitle("ﬂour　ﬁx"), "Flour　Fix");
+    expect(portableTitle("ﬂour\u3000ﬁx"), "Flour\u3000Fix");
     expect(portableTitle("a-b c"), "A-b C");
   });
 
@@ -44,14 +44,14 @@ void main() {
   });
 
   test("white space is the pinned White_Space property plus U+FEFF", () {
-    expect(portableTrimStart("　﻿x"), "x");
+    expect(portableTrimStart("\u3000\uFEFFx"), "x");
     expect(portableTrimEnd("x\u0085"), "x");
     expect(portableTrimStart(" \tx "), "x ");
-    expect(portableTrimEnd(" x  "), " x");
-    expect(portableTrimEnd("x​"), "x​");
+    expect(portableTrimEnd(" x\u2028\u00A0"), " x");
+    expect(portableTrimEnd("x\u200B"), "x\u200B");
     expect(portableTrimStart(" \u{10400}"), "\u{10400}");
     expect(portableTrimEnd("\u{10400} "), "\u{10400}");
-    expect(portableTrimEnd("　"), "");
+    expect(portableTrimEnd("\u3000"), "");
     expect(portableIsWhiteSpace(0x180E), isFalse);
     expect(portableIsWhiteSpace(0x1680), isTrue);
   });
