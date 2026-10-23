@@ -211,6 +211,15 @@ val ShortcutEvaluationTest by testSuite {
         evaluate(subject<String>().oneOf(literal("a"), literal("b")), text("c")) shouldBe available(false)
     }
 
+    test("color shortcuts apply to color literals as to authored colors") {
+        val color = literal(Color(0xFF123456u))
+        evaluate(color.red) shouldBe available(0x12L)
+        evaluate(color.opaque()) shouldBe available(true)
+        evaluate(color.toHexString()) shouldBe available("#123456")
+        evaluate(color.withAlpha(0x80)) shouldBe
+            Availability.Available(DataValue.named(ColorDefinition.use, DataValue.integer(0x80123456L)))
+    }
+
     test("color shortcuts read and replace channels of the ARGB word") {
         val color = DataValue.named(ColorDefinition.use, DataValue.integer(0xFF123456L))
         evaluate(subject<Color>().opaque(), color) shouldBe available(true)

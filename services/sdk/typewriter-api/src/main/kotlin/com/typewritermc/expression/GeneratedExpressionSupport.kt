@@ -5,6 +5,7 @@ import com.typewritermc.authoring.append
 import com.typewritermc.authoring.root
 import com.typewritermc.expression.operations.PortableOperationCatalog
 import com.typewritermc.types.Color
+import com.typewritermc.types.ColorDefinition
 import com.typewritermc.types.Icon
 import com.typewritermc.types.IconIconifyDefinition
 import com.typewritermc.types.IconSvgDefinition
@@ -176,7 +177,11 @@ fun literal(value: Instant): Expr<Instant, Handled> = portableLiteral(DataValue.
 
 fun literal(value: Duration): Expr<Duration, Handled> = portableLiteral(DataValue.duration(value))
 
-fun literal(value: Color): Expr<Color, Handled> = portableLiteral(DataValue.integer(value.argb.toString().toBigInteger()))
+/** A named Color value, so the color shortcuts, which read the ARGB payload of a named Color, apply to it. */
+fun literal(value: Color): Expr<Color, Handled> = portableLiteral(value.portableValue())
+
+/** This color as a portable value: a named Color around its ARGB integer. */
+internal fun Color.portableValue(): DataValue = DataValue.named(ColorDefinition.use, DataValue.integer(argb.toString().toBigInteger()))
 
 fun literal(value: Icon): Expr<Icon, Handled> =
     portableLiteral(
