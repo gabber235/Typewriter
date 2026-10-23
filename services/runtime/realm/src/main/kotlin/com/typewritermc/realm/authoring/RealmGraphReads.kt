@@ -45,6 +45,7 @@ import skirout.editor.v1.authoring_facts.TraversalDirection
 import skirout.editor.v1.catalog.RelationContract
 import skirout.editor.v1.diagnostic.ValueProblem
 import skirout.editor.v1.expression.EvaluationDiagnostic
+import skirout.editor.v1.expression.FailureId
 import skirout.editor.v1.type_catalog.AuthoringRecord
 import skirout.editor.v1.type_catalog.DataValue
 import skirout.editor.v1.type_catalog.RelationFamilyId
@@ -218,7 +219,7 @@ private class CapturedGraph(
             if (reportedProblems.add(problem)) {
                 reads.recordFailure(
                     EvaluationDiagnostic(
-                        code = problem.code,
+                        failure = FailureId(value = problem.code),
                         message = "Declared graph projection is inconsistent.",
                         locations = listOf(problem.location),
                     ),
