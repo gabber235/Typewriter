@@ -1,0 +1,240 @@
+{
+  "cases": [
+    {
+      "id": "enum_from_name",
+      "expression": {
+        "kind": "call",
+        "value": {
+          "operation": {"value": "enum.from_name"},
+          "type_arguments": [
+            {
+              "kind": "named",
+              "value": {
+                "definition": {
+                  "type_id": {"kind": "qualified", "value": {"namespace": "fixture", "name": "Color"}},
+                  "revision": 1
+                },
+                "arguments": []
+              }
+            }
+          ],
+          "arguments": [{"kind": "literal", "value": {"kind": "string_value", "value": "Green"}}]
+        }
+      },
+      "typeDefinitions": [
+        {
+          "id": {
+            "type_id": {"kind": "qualified", "value": {"namespace": "fixture", "name": "Color"}},
+            "revision": 1
+          },
+          "parameters": [],
+          "parents": [],
+          "representation": {"kind": "enumeration", "value": {"cases": [{"key": "Red"}, {"key": "Green"}, {"key": "Blue"}]}}
+        }
+      ],
+      "check": {
+        "resultType": {
+          "value": {
+            "kind": "nullable",
+            "value": {
+              "value": {
+                "kind": "nominal",
+                "value": {
+                  "kind": "named",
+                  "value": {
+                    "definition": {
+                      "type_id": {"kind": "qualified", "value": {"namespace": "fixture", "name": "Color"}},
+                      "revision": 1
+                    },
+                    "arguments": []
+                  }
+                }
+              },
+              "may_be_missing": false
+            }
+          },
+          "may_be_missing": true
+        },
+        "failures": [],
+        "inferredType": {
+          "value": {
+            "kind": "nullable",
+            "value": {
+              "value": {
+                "kind": "nominal",
+                "value": {
+                  "kind": "named",
+                  "value": {
+                    "definition": {
+                      "type_id": {"kind": "qualified", "value": {"namespace": "fixture", "name": "Color"}},
+                      "revision": 1
+                    },
+                    "arguments": []
+                  }
+                }
+              },
+              "may_be_missing": false
+            }
+          },
+          "may_be_missing": false
+        }
+      },
+      "expected": {
+        "available": {
+          "named": {
+            "namespace": "fixture",
+            "name": "Color",
+            "revision": 1,
+            "arguments": [],
+            "payload": {"enum_case": "Green"}
+          }
+        },
+        "reads": []
+      }
+    },
+    {
+      "id": "enum_from_name_unknown_is_null",
+      "expression": {
+        "kind": "call",
+        "value": {
+          "operation": {"value": "enum.from_name"},
+          "type_arguments": [
+            {
+              "kind": "named",
+              "value": {
+                "definition": {
+                  "type_id": {"kind": "qualified", "value": {"namespace": "fixture", "name": "Color"}},
+                  "revision": 1
+                },
+                "arguments": []
+              }
+            }
+          ],
+          "arguments": [{"kind": "literal", "value": {"kind": "string_value", "value": "Purple"}}]
+        }
+      },
+      "typeDefinitions": [
+        {
+          "id": {
+            "type_id": {"kind": "qualified", "value": {"namespace": "fixture", "name": "Color"}},
+            "revision": 1
+          },
+          "parameters": [],
+          "parents": [],
+          "representation": {"kind": "enumeration", "value": {"cases": [{"key": "Red"}, {"key": "Green"}, {"key": "Blue"}]}}
+        }
+      ],
+      "expected": {"available": {"null": true}, "reads": []}
+    },
+    {
+      "id": "enum_from_name_is_case_sensitive",
+      "expression": {
+        "kind": "call",
+        "value": {
+          "operation": {"value": "enum.from_name"},
+          "type_arguments": [
+            {
+              "kind": "named",
+              "value": {
+                "definition": {
+                  "type_id": {"kind": "qualified", "value": {"namespace": "fixture", "name": "Color"}},
+                  "revision": 1
+                },
+                "arguments": []
+              }
+            }
+          ],
+          "arguments": [{"kind": "literal", "value": {"kind": "string_value", "value": "green"}}]
+        }
+      },
+      "typeDefinitions": [
+        {
+          "id": {
+            "type_id": {"kind": "qualified", "value": {"namespace": "fixture", "name": "Color"}},
+            "revision": 1
+          },
+          "parameters": [],
+          "parents": [],
+          "representation": {"kind": "enumeration", "value": {"cases": [{"key": "Red"}, {"key": "Green"}, {"key": "Blue"}]}}
+        }
+      ],
+      "expected": {"available": {"null": true}, "reads": []}
+    },
+    {
+      "id": "enum_cases_in_declaration_order",
+      "expression": {
+        "kind": "call",
+        "value": {
+          "operation": {"value": "enum.cases"},
+          "type_arguments": [
+            {
+              "kind": "named",
+              "value": {
+                "definition": {
+                  "type_id": {"kind": "qualified", "value": {"namespace": "fixture", "name": "Color"}},
+                  "revision": 1
+                },
+                "arguments": []
+              }
+            }
+          ],
+          "arguments": []
+        }
+      },
+      "typeDefinitions": [
+        {
+          "id": {
+            "type_id": {"kind": "qualified", "value": {"namespace": "fixture", "name": "Color"}},
+            "revision": 1
+          },
+          "parameters": [],
+          "parents": [],
+          "representation": {"kind": "enumeration", "value": {"cases": [{"key": "Red"}, {"key": "Green"}, {"key": "Blue"}]}}
+        }
+      ],
+      "expected": {
+        "available": {
+          "list": [
+            {
+              "id": "0",
+              "value": {
+                "named": {
+                  "namespace": "fixture",
+                  "name": "Color",
+                  "revision": 1,
+                  "arguments": [],
+                  "payload": {"enum_case": "Red"}
+                }
+              }
+            },
+            {
+              "id": "1",
+              "value": {
+                "named": {
+                  "namespace": "fixture",
+                  "name": "Color",
+                  "revision": 1,
+                  "arguments": [],
+                  "payload": {"enum_case": "Green"}
+                }
+              }
+            },
+            {
+              "id": "2",
+              "value": {
+                "named": {
+                  "namespace": "fixture",
+                  "name": "Color",
+                  "revision": 1,
+                  "arguments": [],
+                  "payload": {"enum_case": "Blue"}
+                }
+              }
+            }
+          ]
+        },
+        "reads": []
+      }
+    }
+  ]
+}

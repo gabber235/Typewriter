@@ -1,0 +1,167 @@
+{
+  "cases": [
+    {
+      "id": "set_intersect_keeps_first_ids",
+      "expression": {
+        "kind": "call",
+        "value": {
+          "operation": {"value": "set.intersect"},
+          "type_arguments": [],
+          "arguments": [
+            {
+              "kind": "literal",
+              "value": {
+                "kind": "set_value",
+                "value": {
+                  "items": [
+                    {"id": {"value": "a"}, "value": {"kind": "integer", "value": "1"}},
+                    {"id": {"value": "b"}, "value": {"kind": "integer", "value": "2"}},
+                    {"id": {"value": "c"}, "value": {"kind": "integer", "value": "3"}}
+                  ]
+                }
+              }
+            },
+            {
+              "kind": "literal",
+              "value": {
+                "kind": "set_value",
+                "value": {
+                  "items": [
+                    {"id": {"value": "x"}, "value": {"kind": "integer", "value": "3"}},
+                    {"id": {"value": "y"}, "value": {"kind": "integer", "value": "1"}}
+                  ]
+                }
+              }
+            }
+          ]
+        }
+      },
+      "expected": {
+        "available": {"set": [{"id": "a", "value": {"integer": "1"}}, {"id": "c", "value": {"integer": "3"}}]},
+        "reads": []
+      }
+    },
+    {
+      "id": "set_intersect_disjoint",
+      "expression": {
+        "kind": "call",
+        "value": {
+          "operation": {"value": "set.intersect"},
+          "type_arguments": [],
+          "arguments": [
+            {
+              "kind": "literal",
+              "value": {
+                "kind": "set_value",
+                "value": {"items": [{"id": {"value": "a"}, "value": {"kind": "integer", "value": "1"}}]}
+              }
+            },
+            {
+              "kind": "literal",
+              "value": {
+                "kind": "set_value",
+                "value": {"items": [{"id": {"value": "x"}, "value": {"kind": "integer", "value": "2"}}]}
+              }
+            }
+          ]
+        }
+      },
+      "expected": {"available": {"set": []}, "reads": []}
+    },
+    {
+      "id": "set_difference",
+      "expression": {
+        "kind": "call",
+        "value": {
+          "operation": {"value": "set.difference"},
+          "type_arguments": [],
+          "arguments": [
+            {
+              "kind": "literal",
+              "value": {
+                "kind": "set_value",
+                "value": {
+                  "items": [
+                    {"id": {"value": "a"}, "value": {"kind": "integer", "value": "1"}},
+                    {"id": {"value": "b"}, "value": {"kind": "integer", "value": "2"}},
+                    {"id": {"value": "c"}, "value": {"kind": "integer", "value": "3"}}
+                  ]
+                }
+              }
+            },
+            {
+              "kind": "literal",
+              "value": {
+                "kind": "set_value",
+                "value": {
+                  "items": [
+                    {"id": {"value": "x"}, "value": {"kind": "integer", "value": "3"}},
+                    {"id": {"value": "y"}, "value": {"kind": "integer", "value": "1"}}
+                  ]
+                }
+              }
+            }
+          ]
+        }
+      },
+      "expected": {"available": {"set": [{"id": "b", "value": {"integer": "2"}}]}, "reads": []}
+    },
+    {
+      "id": "set_difference_structural_items",
+      "expression": {
+        "kind": "call",
+        "value": {
+          "operation": {"value": "set.difference"},
+          "type_arguments": [],
+          "arguments": [
+            {
+              "kind": "literal",
+              "value": {
+                "kind": "set_value",
+                "value": {
+                  "items": [
+                    {
+                      "id": {"value": "a"},
+                      "value": {
+                        "kind": "list_value",
+                        "value": {"items": [{"id": {"value": "p"}, "value": {"kind": "integer", "value": "1"}}]}
+                      }
+                    },
+                    {
+                      "id": {"value": "b"},
+                      "value": {
+                        "kind": "list_value",
+                        "value": {"items": [{"id": {"value": "q"}, "value": {"kind": "integer", "value": "2"}}]}
+                      }
+                    }
+                  ]
+                }
+              }
+            },
+            {
+              "kind": "literal",
+              "value": {
+                "kind": "set_value",
+                "value": {
+                  "items": [
+                    {
+                      "id": {"value": "x"},
+                      "value": {
+                        "kind": "list_value",
+                        "value": {"items": [{"id": {"value": "z"}, "value": {"kind": "integer", "value": "1"}}]}
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          ]
+        }
+      },
+      "expected": {
+        "available": {"set": [{"id": "b", "value": {"list": [{"id": "q", "value": {"integer": "2"}}]}}]},
+        "reads": []
+      }
+    }
+  ]
+}
